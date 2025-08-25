@@ -10,3 +10,5 @@ wheels/
 .venv
 checkpoints/
 checkpoints/*
+checkpoints_improved/
+checkpoints_improved/*
