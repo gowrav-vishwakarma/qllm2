@@ -10,139 +10,126 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
+# In quantum_llm_train.py (or in a separate energy_trainer.py file)
 class EnergyBasedTrainer:
-    """Trainer that incorporates energy-based training with flexible scheduler"""
-    def __init__(self, model, learning_rate=3e-4, energy_weight=0.1, 
-                 coherence_weight=0.05, grad_clip=1.0, warmup_steps=500, total_steps=10000):
+    def __init__(self, model, learning_rate=1e-4, energy_weight=0.01, coherence_weight=0.005, 
+                 grad_clip=1.0, warmup_steps=1000, total_steps=20000):
         self.model = model
         self.energy_weight = energy_weight
         self.coherence_weight = coherence_weight
         self.grad_clip = grad_clip
-        self.warmup_steps = warmup_steps
+        
+        # Use AdamW optimizer with weight decay
+        self.optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=0.01)
+        
+        # Learning rate scheduler with cosine decay
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            self.optimizer, T_max=total_steps - warmup_steps, eta_min=learning_rate/10
+        )
+        
+        # Warmup scheduler
+        self.warmup_scheduler = torch.optim.lr_scheduler.LambdaLR(
+            self.optimizer, 
+            lambda step: min(1.0, step / warmup_steps)
+        )
+        
+        self.total_steps = total_steps
         self.current_step = 0
         
-        # Optimizer with different learning rates for different components
-        self.optimizer = torch.optim.AdamW([
-            {'params': model.token_embedding.parameters(), 'lr': learning_rate},
-            {'params': model.phase_init, 'lr': learning_rate * 10},
-            {'params': model.quantum_layers.parameters(), 'lr': learning_rate},
-            {'params': model.output_proj.parameters(), 'lr': learning_rate},
-            {'params': model.pos_embedding.parameters(), 'lr': learning_rate},
-        ], weight_decay=0.01)
+    def training_step(self, inputs, targets, scaler=None):
+        self.model.train()
         
-        # Use a better scheduler with warmup and cosine decay
-        # Make total_steps larger to accommodate multiple epochs
-        adjusted_total_steps = max(total_steps, 10000)  # Ensure we have enough steps
-        self.scheduler = torch.optim.lr_scheduler.OneCycleLR(
-            self.optimizer,
-            max_lr=learning_rate,
-            total_steps=adjusted_total_steps,
-            pct_start=warmup_steps/adjusted_total_steps,
-            anneal_strategy='cos',
-            div_factor=25,
-            final_div_factor=1000,
-            cycle_momentum=False
-        )
-        
-    def compute_energy(self, phase_repr):
-        """
-        Compute the energy of the phase representation efficiently.
-        Energy is defined as the negative of local phase coherence.
-        This avoids the O(n^2) memory issue of pairwise computations.
-        """
-        phases = torch.angle(phase_repr)
-        batch_size, seq_len, dim = phases.shape
-        
-        # Compute local phase coherence (within a window)
-        window_size = min(5, seq_len)  # Small window to avoid O(n^2)
-        energy = torch.zeros(batch_size, device=phases.device)
-        
-        for i in range(seq_len):
-            # Define window around current position
-            start = max(0, i - window_size // 2)
-            end = min(seq_len, i + window_size // 2 + 1)
+        # Forward pass with mixed precision if scaler is provided
+        if scaler is not None:
+            with torch.amp.autocast('cuda'):
+                logits = self.model(inputs)
+                
+                # Calculate cross-entropy loss
+                ce_loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1))
+                
+                # Get phase representation for energy calculation
+                phase_repr = self.model.get_phase_representation(inputs)
             
-            # Get phases in window
-            window_phases = phases[:, start:end, :]
+            # Calculate energy and coherence losses in full precision to avoid ComplexHalf issues
+            with torch.amp.autocast('cuda', enabled=False):
+                # Convert phase_repr to full precision to avoid ComplexHalf issues
+                phase_repr_fp32 = phase_repr.float()
+                
+                # Calculate energy loss (negative coherence)
+                energy = self._calculate_energy(phase_repr_fp32)
+                energy_loss = -energy.mean()
+                
+                # Calculate coherence loss
+                coherence = self._calculate_coherence(phase_repr_fp32)
+                coherence_loss = -coherence.mean()
+                
+                # Combined loss
+                loss = ce_loss + self.energy_weight * energy_loss + self.coherence_weight * coherence_loss
+        else:
+            # Standard precision forward pass
+            logits = self.model(inputs)
             
-            # Compute coherence within window
-            avg_phase = torch.mean(torch.exp(1j * window_phases), dim=1)
-            coherence = torch.abs(avg_phase).mean(dim=1)
+            # Calculate cross-entropy loss
+            ce_loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1))
             
-            # Energy is negative coherence
-            energy += -coherence
-        
-        # Normalize by sequence length
-        energy = energy / seq_len
-        return energy
-    
-    def compute_coherence(self, phase_repr):
-        """Compute global phase coherence efficiently"""
-        phases = torch.angle(phase_repr)
-        
-        # Compute coherence as magnitude of average phase vector
-        avg_phase = torch.mean(torch.exp(1j * phases), dim=1)
-        coherence = torch.abs(avg_phase).mean(dim=1)
-        return coherence
-    
-    def training_step(self, inputs, targets):
-        """Single training step"""
-        self.optimizer.zero_grad()
-        self.current_step += 1
-        
-        # Forward pass
-        outputs = self.model(inputs)
-        
-        # Compute standard cross-entropy loss
-        shift_logits = outputs[:, :-1, :].contiguous()
-        shift_targets = targets[:, 1:].contiguous()
-        
-        ce_loss = F.cross_entropy(
-            shift_logits.view(-1, shift_logits.size(-1)),
-            shift_targets.view(-1),
-            ignore_index=-100
-        )
-        
-        # Extract phase representation
-        phase_repr = self.model.get_phase_representation(inputs)
-        
-        # Compute energy and coherence
-        energy = self.compute_energy(phase_repr).mean()
-        coherence = self.compute_coherence(phase_repr).mean()
-        
-        # Combined loss with reduced energy/coherence impact for stability
-        total_loss = ce_loss + self.energy_weight * energy - self.coherence_weight * coherence
+            # Get phase representation for energy calculation
+            phase_repr = self.model.get_phase_representation(inputs)
+            
+            # Calculate energy loss (negative coherence)
+            energy = self._calculate_energy(phase_repr)
+            energy_loss = -energy.mean()
+            
+            # Calculate coherence loss
+            coherence = self._calculate_coherence(phase_repr)
+            coherence_loss = -coherence.mean()
+            
+            # Combined loss
+            loss = ce_loss + self.energy_weight * energy_loss + self.coherence_weight * coherence_loss
         
         # Backward pass
-        total_loss.backward()
+        self.optimizer.zero_grad()
         
-        # Gradient clipping
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
+        if scaler is not None:
+            # Mixed precision backward pass
+            scaler.scale(loss).backward()
+            
+            # Gradient clipping with scaler
+            if self.grad_clip > 0:
+                scaler.unscale_(self.optimizer)
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
+            
+            # Update weights with scaler
+            scaler.step(self.optimizer)
+            scaler.update()
+        else:
+            # Standard precision backward pass
+            loss.backward()
+            
+            # Gradient clipping
+            if self.grad_clip > 0:
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
+            
+            # Update weights
+            self.optimizer.step()
         
-        # Optimizer step
-        self.optimizer.step()
-        
-        # Step scheduler with safety check
-        try:
+        # Update learning rate
+        if self.current_step < 1000:  # warmup_steps
+            self.warmup_scheduler.step()
+        else:
             self.scheduler.step()
-        except ValueError as e:
-            # If we've exceeded the total steps, just keep the last learning rate
-            if "total steps" in str(e):
-                # We've reached the end of the scheduler cycle
-                pass
-            else:
-                raise e
+        
+        self.current_step += 1
         
         return {
-            'loss': total_loss.item(),
+            'loss': loss.item(),
             'ce_loss': ce_loss.item(),
-            'energy': energy.item(),
-            'coherence': coherence.item(),
-            'lr': self.scheduler.get_last_lr()[0]
+            'energy': energy_loss.item(),
+            'coherence': coherence_loss.item(),
+            'lr': self.optimizer.param_groups[0]['lr']
         }
     
     def validate(self, val_loader, device):
-        """Validation step with progress logging"""
+        """Validation step"""
         self.model.eval()
         total_loss = 0
         total_ce = 0
@@ -150,49 +137,74 @@ class EnergyBasedTrainer:
         total_coherence = 0
         num_batches = 0
         
-        print("   Running validation...")
-        
         with torch.no_grad():
-            for batch_idx, batch in enumerate(val_loader):
+            for batch in val_loader:
                 inputs, targets = batch
                 inputs = inputs.to(device)
                 targets = targets.to(device)
                 
                 # Forward pass
-                outputs = self.model(inputs)
+                logits = self.model(inputs)
                 
-                # Compute losses
-                shift_logits = outputs[:, :-1, :].contiguous()
-                shift_targets = targets[:, 1:].contiguous()
-                ce_loss = F.cross_entropy(
-                    shift_logits.view(-1, shift_logits.size(-1)),
-                    shift_targets.view(-1),
-                    ignore_index=-100
-                )
+                # Calculate cross-entropy loss
+                ce_loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1))
                 
-                # Extract phase representation
+                # Get phase representation for energy calculation
                 phase_repr = self.model.get_phase_representation(inputs)
                 
-                # Compute metrics
-                energy = self.compute_energy(phase_repr).mean()
-                coherence = self.compute_coherence(phase_repr).mean()
+                # Calculate energy and coherence in full precision
+                phase_repr_fp32 = phase_repr.float()
+                energy = self._calculate_energy(phase_repr_fp32)
+                energy_loss = -energy.mean()
                 
-                total_loss += (ce_loss + self.energy_weight * energy - self.coherence_weight * coherence).item()
+                coherence = self._calculate_coherence(phase_repr_fp32)
+                coherence_loss = -coherence.mean()
+                
+                # Combined loss
+                loss = ce_loss + self.energy_weight * energy_loss + self.coherence_weight * coherence_loss
+                
+                # Accumulate metrics
+                total_loss += loss.item()
                 total_ce += ce_loss.item()
-                total_energy += energy.item()
-                total_coherence += coherence.item()
+                total_energy += energy_loss.item()
+                total_coherence += coherence_loss.item()
                 num_batches += 1
-                
-                # Print progress every 10 batches
-                if batch_idx % 100 == 0:
-                    print(f"   Validation batch {batch_idx}/{len(val_loader)}")
         
-        print(f"✅ Validation completed: {num_batches} batches processed")
+        # Calculate perplexity
+        val_ppl = math.exp(total_ce / num_batches)
         
         return {
             'val_loss': total_loss / num_batches,
             'val_ce': total_ce / num_batches,
             'val_energy': total_energy / num_batches,
             'val_coherence': total_coherence / num_batches,
-            'val_ppl': math.exp(total_ce / num_batches)
+            'val_ppl': val_ppl
         }
+    
+    def _calculate_energy(self, phase_repr):
+        # Calculate energy based on interference patterns
+        batch_size, seq_len, dim = phase_repr.shape
+        
+        # Get phases
+        phases = torch.angle(phase_repr)
+        
+        # Calculate pairwise phase differences
+        phase_diff = phases.unsqueeze(2) - phases.unsqueeze(1)
+        
+        # Calculate interference patterns
+        interference = torch.cos(phase_diff)
+        
+        # Energy is negative sum of interference (more coherent = lower energy)
+        energy = -torch.sum(interference, dim=(1, 2)) / (seq_len * (seq_len - 1))
+        
+        return energy
+    
+    def _calculate_coherence(self, phase_repr):
+        # Calculate phase coherence
+        phases = torch.angle(phase_repr)
+        complex_phases = torch.exp(1j * phases)
+        
+        # Coherence is magnitude of average phase vector
+        coherence = torch.abs(torch.mean(complex_phases, dim=1))
+        
+        return coherence

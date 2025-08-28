@@ -11,34 +11,38 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
 
+# In quantum_llm_model.py, enhance the QuantumLayer class
 class QuantumLayer(nn.Module):
-    """Quantum-inspired layer with efficient phase space processing"""
     def __init__(self, dim, num_heads, phase_dim=64):
         super().__init__()
         self.dim = dim
         self.num_heads = num_heads
         self.phase_dim = phase_dim
         
-        # Phase space projections
+        # Enhanced phase space projections
         self.amplitude_proj = nn.Linear(dim, phase_dim)
         self.phase_proj = nn.Linear(dim, phase_dim)
         
-        # Quantum interference operators (more efficient than pairwise computation)
+        # Add normalization layers for stability
+        self.norm1 = nn.LayerNorm(phase_dim)
+        self.norm2 = nn.LayerNorm(phase_dim)
+        
+        # Enhanced interference operators with residual connections
         self.interference_operators = nn.ModuleList([
             nn.Sequential(
-                nn.Linear(phase_dim, phase_dim),
-                nn.Tanh(),
-                nn.Linear(phase_dim, phase_dim)
+                nn.Linear(phase_dim, phase_dim * 2),
+                nn.GELU(),  # Using GELU instead of Tanh for better performance
+                nn.Linear(phase_dim * 2, phase_dim),
+                nn.Dropout(0.1)  # Add dropout for regularization
             ) for _ in range(num_heads)
         ])
         
-        # Output projection
+        # Output projection with residual connection
         self.output_proj = nn.Linear(phase_dim * num_heads, dim)
-        
-        # Phase normalization
-        self.phase_norm = nn.LayerNorm(phase_dim)
+        self.dropout = nn.Dropout(0.1)
         
     def forward(self, x):
+        residual = x
         batch_size, seq_len, _ = x.shape
         
         # Project to phase space
@@ -50,32 +54,35 @@ class QuantumLayer(nn.Module):
         imag_part = amplitudes * torch.sin(phases)
         complex_repr = torch.complex(real_part, imag_part)
         
-        # Apply interference operations efficiently
+        # Apply interference operations
         head_outputs = []
         for op in self.interference_operators:
             # Transform the complex representation
-            transformed = op(complex_repr.real)
+            transformed = op(self.norm1(complex_repr.real))
             
-            # Compute local interference patterns (avoiding O(n^2) computation)
-            # Use convolution-like approach to capture local interactions
+            # Compute interference patterns
             kernel_size = 3
             padding = kernel_size // 2
-            transformed_reshaped = transformed.transpose(1, 2)  # [B, D, L]
+            transformed_reshaped = transformed.transpose(1, 2)
             interference = F.conv1d(
                 transformed_reshaped, 
                 transformed_reshaped, 
                 padding=padding, 
                 groups=batch_size
             )
-            interference = interference.transpose(1, 2)  # [B, L, D]
+            interference = interference.transpose(1, 2)
             
-            # Apply interference to original representation
+            # Apply interference with residual connection
             output = complex_repr.real * torch.sigmoid(interference)
             head_outputs.append(output)
         
         # Combine heads
         combined = torch.cat(head_outputs, dim=-1)
-        return self.output_proj(combined)
+        output = self.output_proj(self.norm2(combined))
+        output = self.dropout(output)
+        
+        # Add residual connection
+        return output + residual
 
 class DynamicPhaseProcessor(nn.Module):
     """Dynamically adjusts processing based on input complexity"""

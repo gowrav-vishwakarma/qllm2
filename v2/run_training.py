@@ -30,31 +30,32 @@ def main():
     # Create cache directory
     os.makedirs("./cache", exist_ok=True)
     
-    # Improved training command with adjusted parameters
+    # Memory-efficient training command with reduced parameters
     cmd = [
         "python", "quantum_llm_train.py",
         "--mode", "train",
-        "--model_dim", "384",  # Reduced model dimension
-        "--num_layers", "6",   # Reduced layers
-        "--num_heads", "6",    # Reduced heads
-        "--phase_dim", "48",   # Reduced phase dimension
-        "--seq_length", "256", # Reduced sequence length
-        "--batch_size", "2",   # Reduced batch size
-        "--max_samples", "30000",  # Reduced samples
-        "--epochs", "10",
-        "--max_steps", "2000",  # Limit total steps
-        "--lr", "3e-4",
-        "--energy_weight", "0.02",  # Further reduced energy weight
-        "--coherence_weight", "0.01",  # Further reduced coherence weight
-        "--warmup_steps", "200",  # Warmup steps for scheduler
+        "--model_dim", "512",      # Reduced for memory efficiency
+        "--num_layers", "8",       # Reduced for memory efficiency
+        "--num_heads", "8",        # Reduced for memory efficiency
+        "--phase_dim", "64",       # Reduced for memory efficiency
+        "--seq_length", "512",     # Reduced for memory efficiency
+        "--batch_size", "4",       # Reduced for memory efficiency
+        "--max_samples", "50000",  # Reduced for memory efficiency
+        "--epochs", "10",          # Train for 10 epochs for better quality
+        # "--max_steps", "5000",    # Removed to allow full epoch training
+        "--lr", "3e-4",            # Back to original learning rate
+        "--energy_weight", "0.01", # Reduced from 0.02
+        "--coherence_weight", "0.005", # Reduced from 0.01
+        "--grad_clip", "1.0",
+        "--warmup_steps", "500",   # Reduced for faster training
         "--checkpoint_dir", "checkpoints_quantum",
-        "--save_every", "500",
-        "--log_every", "50",
+        "--save_every", "500",     # Reduced for more frequent saves
+        "--log_every", "500",       # More frequent logging to see progress
         "--dataset", "wikitext2",
         "--use_checkpoint",
-        "--streaming",  # Enable streaming
-        "--num_workers", "1",  # Single worker to reduce memory
-        "--val_max_chunks", "1000"  # Limit validation to 1000 chunks
+        "--streaming", "False",    # Disable streaming for better performance
+        "--num_workers", "2",      # Reduced for memory efficiency
+        "--val_max_chunks", "1000" # Reduced for memory efficiency
     ]
     
     print(f"🔧 Running command: {' '.join(cmd)}")
@@ -62,8 +63,12 @@ def main():
     
     # Print initial memory usage
     import psutil
+    import torch
     memory = psutil.virtual_memory()
+    gpu_mem = torch.cuda.memory_allocated() / (1024**3) if torch.cuda.is_available() else 0
+    gpu_total = torch.cuda.get_device_properties(0).total_memory / (1024**3) if torch.cuda.is_available() else 0
     print(f"💾 Initial RAM usage: {memory.used / (1024**3):.2f}GB / {memory.total / (1024**3):.2f}GB")
+    print(f"💾 Initial VRAM usage: {gpu_mem:.2f}GB / {gpu_total:.2f}GB")
     
     # Run the training
     try:

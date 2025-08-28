@@ -41,23 +41,24 @@ def test_generation():
         print(f"\n📝 Test {i}: '{prompt}'")
         print("-" * 50)
         
+        # Use the correct model parameters that match the training
         cmd = [
             "python", "quantum_llm_train.py",
             "--mode", "generate",
             "--checkpoint", checkpoint_path,
             "--prompt", prompt,
             "--max_new_tokens", "150",
-            "--temperature", "0.7",
-            "--top_k", "50",
-            "--top_p", "0.9",
-            "--repetition_penalty", "1.1",
+            "--temperature", "0.7",    # Lower temperature for more focused generation
+            "--top_k", "50",           # Standard top-k sampling
+            "--top_p", "0.9",          # Nucleus sampling
+            "--repetition_penalty", "1.1",  # Moderate repetition penalty
             "--min_p", "0.05",
-            # Add the model parameters that were used during training
-            "--model_dim", "384",
-            "--num_layers", "6",
-            "--num_heads", "6",
-            "--phase_dim", "48",
-            "--seq_length", "256"
+            # Use the actual trained model parameters
+            "--model_dim", "512",
+            "--num_layers", "8",
+            "--num_heads", "8",
+            "--phase_dim", "64",
+            "--seq_length", "512"
         ]
         
         try:

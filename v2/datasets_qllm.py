@@ -23,22 +23,28 @@ class StreamingByteDataset(IterableDataset):
     """Streaming dataset that processes text in chunks without loading everything into RAM"""
     def __init__(self, dataset_name: str, split: str, seq_length: int, 
                  max_samples: Optional[int] = None, buffer_size: int = 10000):
+        self.dataset_name = dataset_name
+        self.split = split
         self.seq_length = seq_length
         self.max_samples = max_samples
         self.buffer_size = buffer_size
         self.samples_processed = 0
         
-        # Load dataset in streaming mode
-        if dataset_name == "wikitext2":
-            self.dataset_iter = load_dataset("wikitext", "wikitext-2-raw-v1", split=split, streaming=True).iter(batch_size=1)
-        elif dataset_name == "tinystories":
-            self.dataset_iter = load_dataset("roneneldan/TinyStories", split=split, streaming=True).iter(batch_size=1)
-        else:
-            raise ValueError(f"Unknown dataset: {dataset_name}")
+        # Initialize dataset iterator
+        self._init_dataset_iter()
         
         # Initialize buffer
         self.buffer = []
         self.buffer_position = 0
+        
+    def _init_dataset_iter(self):
+        """Initialize or reset the dataset iterator"""
+        if self.dataset_name == "wikitext2":
+            self.dataset_iter = load_dataset("wikitext", "wikitext-2-raw-v1", split=self.split, streaming=True).iter(batch_size=1)
+        elif self.dataset_name == "tinystories":
+            self.dataset_iter = load_dataset("roneneldan/TinyStories", split=self.split, streaming=True).iter(batch_size=1)
+        else:
+            raise ValueError(f"Unknown dataset: {self.dataset_name}")
         
     def _fill_buffer(self):
         """Fill the buffer with text from the streaming dataset"""
@@ -53,10 +59,21 @@ class StreamingByteDataset(IterableDataset):
                 if text.strip():  # Skip empty texts
                     self.buffer.append(text)
         except StopIteration:
-            pass  # End of dataset
+            # If we run out of data, reset the iterator and try again
+            print("🔄 Resetting streaming dataset iterator for new epoch...")
+            self._init_dataset_iter()
+            try:
+                for _ in range(self.buffer_size):
+                    example = next(self.dataset_iter)
+                    text = example["text"][0]
+                    if text.strip():
+                        self.buffer.append(text)
+            except StopIteration:
+                pass  # If still no data, we're done
         
         # Shuffle the buffer to introduce randomness
-        random.shuffle(self.buffer)
+        if self.buffer:
+            random.shuffle(self.buffer)
     
     def _process_text(self, text: str) -> Iterator[Tuple[torch.Tensor, torch.Tensor]]:
         """Process a single text into chunks"""
@@ -65,9 +82,6 @@ class StreamingByteDataset(IterableDataset):
         
         # Generate chunks
         for i in range(0, len(bytes_data) - self.seq_length - 1):
-            if self.max_samples is not None and self.samples_processed >= self.max_samples:
-                return
-            
             chunk = bytes_data[i:i+self.seq_length]
             target = bytes_data[i+1:i+self.seq_length+1]
             
@@ -80,11 +94,14 @@ class StreamingByteDataset(IterableDataset):
     
     def __iter__(self) -> Iterator[Tuple[torch.Tensor, torch.Tensor]]:
         """Iterate over the dataset"""
+        # Reset samples processed for new epoch
+        self.samples_processed = 0
+        
         while True:
             # If buffer is empty or we've processed all of it, refill
             if self.buffer_position >= len(self.buffer):
                 self._fill_buffer()
-                if not self.buffer:  # No more data
+                if not self.buffer:  # No more data even after reset
                     break
                 self.buffer_position = 0
             
@@ -94,6 +111,9 @@ class StreamingByteDataset(IterableDataset):
             
             # Yield chunks from this text
             for chunk, target in self._process_text(text):
+                # Check max_samples limit for this epoch
+                if self.max_samples is not None and self.samples_processed >= self.max_samples:
+                    return  # End this epoch
                 yield chunk, target
 
 class MemoryEfficientByteDataset(Dataset):
