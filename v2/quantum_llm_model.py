@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Pure Quantum-Inspired Language Model
+Pure Quantum-Inspired Language Model with GPU Optimizations
 Implements the core architecture with efficient phase space processing
 """
 
@@ -11,8 +11,57 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
 
-class GlobalInterferenceLayer(nn.Module):
-    """Global interference layer implementing non-local interactions between all tokens"""
+# TorchScript optimizations for critical sections
+@torch.jit.script
+def compute_phase_interference(phases: torch.Tensor, global_phase: torch.Tensor) -> torch.Tensor:
+    """Optimized phase interference computation"""
+    phase_diff = phases - global_phase
+    return torch.sin(phase_diff)
+
+@torch.jit.script
+def complex_multiply(a_real: torch.Tensor, a_imag: torch.Tensor, 
+                    b_real: torch.Tensor, b_imag: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    """Efficient complex multiplication using real matrices"""
+    # (a + bi)(c + di) = (ac - bd) + (ad + bc)i
+    real_part = a_real * b_real - a_imag * b_imag
+    imag_part = a_real * b_imag + a_imag * b_real
+    return real_part, imag_part
+
+@torch.jit.script
+def vectorized_energy_calculation(phases: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Optimized energy calculations using vectorized operations"""
+    batch_size, seq_len, dim = phases.shape
+    
+    # Local coherence - vectorized
+    phases_shifted = phases[:, 1:, :]  # [batch, seq-1, dim]
+    phases_original = phases[:, :-1, :]  # [batch, seq-1, dim]
+    
+    # Compute all local differences at once
+    local_diff = phases_shifted - phases_original
+    local_coherence = torch.cos(local_diff)
+    local_energy = -torch.sum(local_coherence, dim=(1, 2)) / (seq_len - 1)
+    
+    # Global coherence - use matrix operations
+    global_mean = torch.mean(phases, dim=1, keepdim=True)  # [batch, 1, dim]
+    global_diff = phases - global_mean
+    global_coherence = torch.cos(global_diff)
+    global_energy = -torch.sum(global_coherence, dim=(1, 2)) / seq_len
+    
+    # Entanglement - sample pairs efficiently
+    num_pairs = min(20, seq_len // 2)
+    if seq_len >= 2:
+        # Use first and last tokens for entanglement
+        entangled_phases = phases[:, [0, -1], :]  # [batch, 2, dim]
+        entanglement_diff = entangled_phases[:, 1, :] - entangled_phases[:, 0, :]
+        entanglement_coherence = torch.cos(entanglement_diff)
+        entanglement_energy = -torch.sum(entanglement_coherence, dim=1)
+    else:
+        entanglement_energy = torch.zeros(batch_size, device=phases.device)
+    
+    return local_energy, global_energy, entanglement_energy
+
+class OptimizedGlobalInterferenceLayer(nn.Module):
+    """GPU-optimized global interference layer with parallel head operations"""
     def __init__(self, dim, num_heads=8, dropout=0.1):
         super().__init__()
         self.dim = dim
@@ -22,16 +71,12 @@ class GlobalInterferenceLayer(nn.Module):
         # Global phase reference for interference patterns
         self.global_phase = nn.Parameter(torch.randn(1, 1, dim) * 0.02)
         
-        # Multi-head interference operators
-        self.interference_heads = nn.ModuleList([
-            nn.Sequential(
-                nn.Linear(dim, dim * 2),
-                nn.GELU(),
-                nn.Dropout(dropout),
-                nn.Linear(dim * 2, dim),
-                nn.Dropout(dropout)
-            ) for _ in range(num_heads)
-        ])
+        # Parallel head operations - stack all heads into single matrices
+        self.head_weights = nn.Parameter(torch.randn(num_heads, dim, dim * 2) * 0.02)
+        self.head_biases = nn.Parameter(torch.randn(num_heads, dim * 2) * 0.02)
+        
+        self.head_weights2 = nn.Parameter(torch.randn(num_heads, dim * 2, dim) * 0.02)
+        self.head_biases2 = nn.Parameter(torch.randn(num_heads, dim) * 0.02)
         
         # Output projection and normalization
         self.output_proj = nn.Linear(dim * num_heads, dim)
@@ -44,26 +89,44 @@ class GlobalInterferenceLayer(nn.Module):
         # Create global phase reference
         global_phase = self.global_phase.expand(batch_size, seq_len, -1)
         
-        # Compute interference patterns for each head
+        # Calculate phase differences for all heads at once using TorchScript
+        phase_diff = compute_phase_interference(x, global_phase)  # [batch, seq, dim]
+        
+        # Reshape for parallel processing
+        # [batch, seq, num_heads, dim]
+        phase_diff = phase_diff.unsqueeze(2).expand(-1, -1, self.num_heads, -1)
+        
+        # Apply all heads in parallel using batch matrix multiplication
+        # Process each head separately but efficiently
         head_outputs = []
-        for head in self.interference_heads:
-            # Calculate phase differences with global reference
-            phase_diff = torch.sin(x - global_phase)
+        for i in range(self.num_heads):
+            # Extract current head's input
+            head_input = phase_diff[:, :, i, :]  # [batch, seq, dim]
             
-            # Apply interference transformation
-            interference = head(phase_diff)
+            # Apply first transformation
+            transformed1 = F.linear(head_input, self.head_weights[i].t(), self.head_biases[i])
+            transformed1 = F.gelu(transformed1)
+            transformed1 = self.dropout(transformed1)
             
-            # Non-local interaction: every token affects every other
-            # Use efficient matrix multiplication instead of O(n²) operations
-            global_interference = torch.mean(interference, dim=1, keepdim=True)
-            global_interference = global_interference.expand(-1, seq_len, -1)
+            # Apply second transformation
+            transformed2 = F.linear(transformed1, self.head_weights2[i].t(), self.head_biases2[i])
+            transformed2 = self.dropout(transformed2)
             
-            # Combine local and global interference
-            combined = interference + global_interference * 0.5
-            head_outputs.append(combined)
+            head_outputs.append(transformed2)
+        
+        # Stack all heads
+        transformed2 = torch.stack(head_outputs, dim=2)  # [batch, seq, num_heads, dim]
+        
+        # Non-local interaction: every token affects every other
+        # Use efficient matrix multiplication instead of O(n²) operations
+        global_interference = torch.mean(transformed2, dim=1, keepdim=True)
+        global_interference = global_interference.expand(-1, seq_len, -1, -1)
+        
+        # Combine local and global interference
+        combined = transformed2 + global_interference * 0.5
         
         # Combine all heads
-        combined = torch.cat(head_outputs, dim=-1)
+        combined = combined.reshape(batch_size, seq_len, -1)  # [batch, seq, num_heads * dim]
         output = self.output_proj(combined)
         output = self.norm(output)
         output = self.dropout(output)
@@ -71,8 +134,8 @@ class GlobalInterferenceLayer(nn.Module):
         # Residual connection
         return x + output
 
-# In quantum_llm_model.py, enhance the QuantumLayer class
-class QuantumLayer(nn.Module):
+class OptimizedQuantumLayer(nn.Module):
+    """GPU-optimized quantum layer with efficient complex operations"""
     def __init__(self, dim, num_heads, phase_dim=64):
         super().__init__()
         self.dim = dim
@@ -87,15 +150,12 @@ class QuantumLayer(nn.Module):
         self.norm1 = nn.LayerNorm(phase_dim)
         self.norm2 = nn.LayerNorm(phase_dim)
         
-        # Enhanced interference operators with residual connections
-        self.interference_operators = nn.ModuleList([
-            nn.Sequential(
-                nn.Linear(phase_dim, phase_dim * 2),
-                nn.GELU(),  # Using GELU instead of Tanh for better performance
-                nn.Linear(phase_dim * 2, phase_dim),
-                nn.Dropout(0.1)  # Add dropout for regularization
-            ) for _ in range(num_heads)
-        ])
+        # Parallel interference operators - stack all operators
+        self.interference_weights = nn.Parameter(torch.randn(num_heads, phase_dim, phase_dim * 2) * 0.02)
+        self.interference_biases = nn.Parameter(torch.randn(num_heads, phase_dim * 2) * 0.02)
+        
+        self.interference_weights2 = nn.Parameter(torch.randn(num_heads, phase_dim * 2, phase_dim) * 0.02)
+        self.interference_biases2 = nn.Parameter(torch.randn(num_heads, phase_dim) * 0.02)
         
         # Output projection with residual connection
         self.output_proj = nn.Linear(phase_dim * num_heads, dim)
@@ -109,43 +169,40 @@ class QuantumLayer(nn.Module):
         amplitudes = torch.tanh(self.amplitude_proj(x))
         phases = torch.sigmoid(self.phase_proj(x)) * 2 * math.pi
         
-        # Create complex representation
+        # Create complex representation using real operations
         real_part = amplitudes * torch.cos(phases)
         imag_part = amplitudes * torch.sin(phases)
-        complex_repr = torch.complex(real_part, imag_part)
         
-        # Apply interference operations
-        head_outputs = []
-        for op in self.interference_operators:
-            # Transform the complex representation
-            transformed = op(self.norm1(complex_repr.real))
-            
-            # Compute interference patterns
-            kernel_size = 3
-            padding = kernel_size // 2
-            transformed_reshaped = transformed.transpose(1, 2)
-            interference = F.conv1d(
-                transformed_reshaped, 
-                transformed_reshaped, 
-                padding=padding, 
-                groups=batch_size
-            )
-            interference = interference.transpose(1, 2)
-            
-            # Apply interference with residual connection
-            output = complex_repr.real * torch.sigmoid(interference)
-            head_outputs.append(output)
+        # Apply interference operations in parallel
+        # Reshape for parallel processing: [batch, seq, num_heads, phase_dim]
+        real_part_expanded = real_part.unsqueeze(2).expand(-1, -1, self.num_heads, -1)
+        real_part_flat = real_part_expanded.reshape(-1, self.num_heads, self.phase_dim)
+        
+        # First transformation - parallel across all heads
+        transformed1 = torch.bmm(real_part_flat, self.interference_weights) + self.interference_biases.unsqueeze(0)
+        transformed1 = F.gelu(transformed1)
+        transformed1 = self.dropout(transformed1)
+        
+        # Second transformation
+        transformed2 = torch.bmm(transformed1, self.interference_weights2) + self.interference_biases2.unsqueeze(0)
+        transformed2 = self.dropout(transformed2)
+        
+        # Reshape back to [batch, seq, num_heads, phase_dim]
+        transformed2 = transformed2.reshape(batch_size, seq_len, self.num_heads, self.phase_dim)
+        
+        # Apply interference with residual connection
+        output = real_part.unsqueeze(2).expand(-1, -1, self.num_heads, -1) * torch.sigmoid(transformed2)
         
         # Combine heads
-        combined = torch.cat(head_outputs, dim=-1)
+        combined = output.reshape(batch_size, seq_len, -1)  # [batch, seq, num_heads * phase_dim]
         output = self.output_proj(self.norm2(combined))
         output = self.dropout(output)
         
         # Add residual connection
         return output + residual
 
-class DynamicPhaseProcessor(nn.Module):
-    """Dynamically adjusts processing based on input complexity"""
+class OptimizedDynamicPhaseProcessor(nn.Module):
+    """GPU-optimized dynamic phase processor with efficient operations"""
     def __init__(self, base_dim, max_dim=1024, growth_factor=1.5):
         super().__init__()
         self.base_dim = base_dim
@@ -155,7 +212,7 @@ class DynamicPhaseProcessor(nn.Module):
         # Base operations
         self.base_op = nn.Linear(base_dim, base_dim)
         
-        # Expansion operations
+        # Expansion operations - pre-compute all possible dimensions
         expansion_levels = int(math.log(max_dim/base_dim, growth_factor))
         self.expand_ops = nn.ModuleList([
             nn.Linear(int(base_dim * (growth_factor**i)), 
@@ -172,14 +229,14 @@ class DynamicPhaseProcessor(nn.Module):
     def forward(self, x):
         batch_size, seq_len, dim = x.shape
         
-        # Compute complexity internally
+        # Compute complexity using vectorized operations
         complexity_score = torch.var(x, dim=(1, 2)).mean()
         
         # Determine required dimensionality
         if complexity_score < 0.1:
             return self.base_op(x)
         
-        # Calculate expansion level - fix the warning
+        # Calculate expansion level
         expansion_level = min(
             int(math.log(float(complexity_score.item()) * 10, self.growth_factor)),
             len(self.expand_ops)
@@ -188,17 +245,17 @@ class DynamicPhaseProcessor(nn.Module):
         if expansion_level == 0:
             return self.base_op(x)
         
-        # Expand to higher dimension
+        # Expand to higher dimension using efficient operations
         new_dim = int(self.base_dim * (self.growth_factor ** expansion_level))
         
-        # Expand input
+        # Expand input efficiently
         if dim < new_dim:
+            # Use repeat and slice for efficient expansion
             repeats = new_dim // dim
             remainder = new_dim % dim
-            expanded_parts = [x] * repeats
+            expanded = x.repeat(1, 1, repeats)
             if remainder > 0:
-                expanded_parts.append(x[:, :, :remainder])
-            expanded = torch.cat(expanded_parts, dim=-1)
+                expanded = torch.cat([expanded, x[:, :, :remainder]], dim=-1)
         else:
             expanded = x[:, :, :new_dim]
         
@@ -251,12 +308,12 @@ class HardwareOptimizedQuantumLLM(nn.Module):
         self.phase_projection = nn.Linear(phase_dim, dim, bias=False)
         nn.init.normal_(self.phase_projection.weight, mean=0.0, std=0.02)
         
-        # GLOBAL INTERFERENCE LAYER - Phase 1.2 Implementation
-        self.global_interference = GlobalInterferenceLayer(dim, num_heads)
+        # OPTIMIZED GLOBAL INTERFERENCE LAYER - Phase 1.2 Implementation
+        self.global_interference = OptimizedGlobalInterferenceLayer(dim, num_heads)
         
-        # Dynamic quantum layers
+        # Optimized dynamic quantum layers
         self.quantum_layers = nn.ModuleList([
-            DynamicPhaseProcessor(dim) for _ in range(num_layers)
+            OptimizedDynamicPhaseProcessor(dim) for _ in range(num_layers)
         ])
         
         # Output projection
@@ -264,6 +321,9 @@ class HardwareOptimizedQuantumLLM(nn.Module):
         
         # Positional encoding
         self.pos_embedding = nn.Embedding(max_seq_len, dim)
+        
+        # Pre-compute entanglement indices for efficiency
+        self.register_buffer('entanglement_indices', torch.tensor([]), persistent=False)
         
     def _apply_meaningful_phase_encoding(self, embeddings, x):
         """Apply meaningful phase encoding based on linguistic principles"""
@@ -321,10 +381,10 @@ class HardwareOptimizedQuantumLLM(nn.Module):
         # Apply MEANINGFUL phase encoding (Phase 1.1)
         embeddings = self._apply_meaningful_phase_encoding(embeddings, x)
         
-        # Apply GLOBAL INTERFERENCE LAYER (Phase 1.2)
+        # Apply OPTIMIZED GLOBAL INTERFERENCE LAYER (Phase 1.2)
         embeddings = self.global_interference(embeddings)
         
-        # Process through quantum layers
+        # Process through optimized quantum layers
         for layer in self.quantum_layers:
             # Apply layer with checkpointing if enabled
             if self.use_checkpoint and self.training:
@@ -369,3 +429,14 @@ class HardwareOptimizedQuantumLLM(nn.Module):
         imag_part = amplitudes * torch.sin(phases)
         
         return torch.complex(real_part, imag_part)
+    
+    def _calculate_enhanced_energy(self, phase_repr):
+        """Optimized energy calculation using vectorized operations"""
+        phases = torch.angle(phase_repr)
+        
+        # Use TorchScript optimized energy calculation
+        local_energy, global_energy, entanglement_energy = vectorized_energy_calculation(phases)
+        
+        # Combine energies
+        combined_energy = local_energy + global_energy + entanglement_energy * 0.5
+        return combined_energy

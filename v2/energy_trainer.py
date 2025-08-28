@@ -36,8 +36,12 @@ class EnergyBasedTrainer:
         self.total_steps = total_steps
         self.current_step = 0
         
-    def training_step(self, inputs, targets, scaler=None):
+    def training_step(self, inputs, targets, scaler=None, accumulation_steps=1, is_accumulation_step=False):
         self.model.train()
+        
+        # Zero gradients only on first accumulation step
+        if not is_accumulation_step:
+            self.optimizer.zero_grad()
         
         # Forward pass with mixed precision if scaler is provided
         if scaler is not None:
@@ -52,8 +56,12 @@ class EnergyBasedTrainer:
             
             # Calculate energy and coherence losses in full precision to avoid ComplexHalf issues
             with torch.amp.autocast('cuda', enabled=False):
-                # Convert phase_repr to full precision to avoid ComplexHalf issues
-                phase_repr_fp32 = phase_repr.float()
+                # Properly handle complex numbers in full precision
+                if phase_repr.is_complex():
+                    # Keep complex numbers as complex but in full precision
+                    phase_repr_fp32 = phase_repr.to(torch.complex64)
+                else:
+                    phase_repr_fp32 = phase_repr.float()
                 
                 # Calculate enhanced energy loss (Phase 1.3)
                 energy = self._calculate_enhanced_energy(phase_repr_fp32)
@@ -92,39 +100,49 @@ class EnergyBasedTrainer:
             # Combined loss with reduced quantum weights and semantic component
             loss = ce_loss + self.energy_weight * energy_loss + self.coherence_weight * coherence_loss + 0.01 * semantic_loss
         
-        # Backward pass
-        self.optimizer.zero_grad()
-        
+        # Backward pass with gradient accumulation
         if scaler is not None:
             # Mixed precision backward pass
-            scaler.scale(loss).backward()
+            scaler.scale(loss / accumulation_steps).backward()
             
-            # Gradient clipping with scaler
-            if self.grad_clip > 0:
-                scaler.unscale_(self.optimizer)
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
-            
-            # Update weights with scaler
-            scaler.step(self.optimizer)
-            scaler.update()
+            # Only update weights on the last accumulation step
+            if not is_accumulation_step:
+                # Gradient clipping with scaler
+                if self.grad_clip > 0:
+                    scaler.unscale_(self.optimizer)
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
+                
+                # Update weights with scaler
+                scaler.step(self.optimizer)
+                scaler.update()
+                
+                # Update learning rate
+                if self.current_step < 1000:  # warmup_steps
+                    self.warmup_scheduler.step()
+                else:
+                    self.scheduler.step()
+                
+                self.current_step += 1
         else:
             # Standard precision backward pass
             loss.backward()
             
-            # Gradient clipping
-            if self.grad_clip > 0:
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
-            
-            # Update weights
-            self.optimizer.step()
-        
-        # Update learning rate
-        if self.current_step < 1000:  # warmup_steps
-            self.warmup_scheduler.step()
-        else:
-            self.scheduler.step()
-        
-        self.current_step += 1
+            # Only update weights on the last accumulation step
+            if not is_accumulation_step:
+                # Gradient clipping
+                if self.grad_clip > 0:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
+                
+                # Update weights
+                self.optimizer.step()
+                
+                # Update learning rate
+                if self.current_step < 1000:  # warmup_steps
+                    self.warmup_scheduler.step()
+                else:
+                    self.scheduler.step()
+                
+                self.current_step += 1
         
         return {
             'loss': loss.item(),
@@ -159,7 +177,11 @@ class EnergyBasedTrainer:
                 phase_repr = self.model.get_phase_representation(inputs)
                 
                 # Calculate enhanced energy and coherence in full precision
-                phase_repr_fp32 = phase_repr.float()
+                if phase_repr.is_complex():
+                    # Keep complex numbers as complex but in full precision
+                    phase_repr_fp32 = phase_repr.to(torch.complex64)
+                else:
+                    phase_repr_fp32 = phase_repr.float()
                 energy = self._calculate_enhanced_energy(phase_repr_fp32)
                 energy_loss = -energy.mean()
                 

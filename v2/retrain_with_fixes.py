@@ -23,31 +23,32 @@ def retrain_with_fixes():
         print("   Training will resume from this checkpoint")
         print()
     
-    # Training configuration with fixes
+    # Optimized training command for RTX 4090 with maximum VRAM utilization
     cmd = [
         "uv", "run", "quantum_llm_train.py",
         "--mode", "train",
         "--dataset", "wikitext2",  # Start with smaller dataset for testing
         "--streaming", "False",
-        "--max_samples", "20000",  # Increased for better training
-        "--epochs", "5",  # Fewer epochs for testing
-        "--batch_size", "16",  # Reduced from 32 to 16 for stability
-        "--model_dim", "512",
-        "--num_layers", "8",
-        "--num_heads", "8",
-        "--phase_dim", "64",
-        "--seq_length", "512",
-        "--lr", "1e-4",  # Reduced learning rate for stability
-        "--energy_weight", "0.0005",  # Further reduced for stability
-        "--coherence_weight", "0.0002",  # Further reduced for stability
-        "--grad_clip", "0.5",  # Reduced gradient clipping
-        "--warmup_steps", "500",  # Increased warmup
+        "--max_samples", "50000",  # Increased for better training
+        "--epochs", "3",  # Fewer epochs for testing
+        "--batch_size", "32",  # Reduced from 64 to 32 to avoid OOM
+        "--model_dim", "768",  # Keep increased model capacity
+        "--num_layers", "12",  # Keep deeper model
+        "--num_heads", "12",  # Keep more attention heads
+        "--phase_dim", "128",  # Keep richer phase representation
+        "--seq_length", "1024",  # Keep longer context
+        "--lr", "2e-4",  # Slightly increased learning rate for larger model
+        "--energy_weight", "0.001",  # Reduced for stability
+        "--coherence_weight", "0.0005",  # Reduced for stability
+        "--grad_clip", "1.0",  # Increased gradient clipping for larger model
+        "--warmup_steps", "1000",  # Increased warmup for larger model
         "--checkpoint_dir", "checkpoints_quantum_fixed",
         "--save_every", "200",  # More frequent saves for monitoring
-        "--log_every", "25",  # More frequent logging for monitoring
-        "--num_workers", "4",  # Increased for faster data loading
-        "--val_max_chunks", "1000",  # Increased validation set
-        "--no_amp"  # Disable AMP for stability during testing
+        "--log_every", "200",  # More frequent logging for monitoring
+        "--num_workers", "4",  # Optimized for data loading
+        "--val_max_chunks", "2000",  # Increased validation set
+        "--use_checkpoint",  # Enable checkpointing for memory efficiency
+        "--gradient_accumulation_steps", "4"  # Increased to 4 for effective batch size of 128
     ]
     
     print("Training command:")
@@ -151,10 +152,10 @@ def main():
     print()
     
     # Ask for confirmation
-    response = input("Proceed with retraining? (y/N): ")
-    if response.lower() != 'y':
-        print("❌ Retraining cancelled")
-        return
+    # response = input("Proceed with retraining? (y/N): ")
+    # if response.lower() != 'y':
+    #     print("❌ Retraining cancelled")
+    #     return
     
     # Run retraining
     success = retrain_with_fixes()

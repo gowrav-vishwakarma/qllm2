@@ -247,15 +247,19 @@ def train(args):
             if inputs.size(0) != args.batch_size:
                 continue
             
-            # Training step (with mixed precision if enabled)
-            metrics = trainer.training_step(inputs, targets, scaler)
+            # Training step with gradient accumulation
+            metrics = trainer.training_step(inputs, targets, scaler, 
+                                          accumulation_steps=args.gradient_accumulation_steps,
+                                          is_accumulation_step=(batch_idx % args.gradient_accumulation_steps != args.gradient_accumulation_steps - 1))
             
-            # Accumulate metrics
-            total_loss += metrics['loss']
-            total_ce += metrics['ce_loss']
-            total_energy += metrics['energy']
-            total_coherence += metrics['coherence']
-            num_batches += 1
+            # Only update metrics on actual optimization steps
+            if batch_idx % args.gradient_accumulation_steps == args.gradient_accumulation_steps - 1:
+                # Accumulate metrics
+                total_loss += metrics['loss']
+                total_ce += metrics['ce_loss']
+                total_energy += metrics['energy']
+                total_coherence += metrics['coherence']
+                num_batches += 1
             
             # Log to tensorboard
             if global_step % args.log_every == 0:
@@ -444,6 +448,7 @@ def main():
     parser.add_argument("--num_workers", type=int, default=2)
     parser.add_argument("--val_max_chunks", type=int, default=1000)  # Limit validation chunks
     parser.add_argument("--no_amp", action="store_true", help="Disable automatic mixed precision training")
+    parser.add_argument("--gradient_accumulation_steps", type=int, default=1, help="Number of steps to accumulate gradients")
     
     # Generation parameters
     parser.add_argument("--checkpoint", default=None)
