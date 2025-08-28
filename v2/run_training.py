@@ -39,8 +39,8 @@ def main():
         "--num_heads", "8",        # Reduced for memory efficiency
         "--phase_dim", "64",       # Reduced for memory efficiency
         "--seq_length", "512",     # Reduced for memory efficiency
-        "--batch_size", "4",       # Reduced for memory efficiency
-        "--max_samples", "50000",  # Reduced for memory efficiency
+        "--batch_size", "16",       # Reduced for memory efficiency
+        "--max_samples", "500000",  # Increased for more training data
         "--epochs", "10",          # Train for 10 epochs for better quality
         # "--max_steps", "5000",    # Removed to allow full epoch training
         "--lr", "3e-4",            # Back to original learning rate
@@ -55,7 +55,7 @@ def main():
         "--use_checkpoint",
         "--streaming", "False",    # Disable streaming for better performance
         "--num_workers", "2",      # Reduced for memory efficiency
-        "--val_max_chunks", "1000" # Reduced for memory efficiency
+        "--val_max_chunks", "5000" # Increased for better validation
     ]
     
     print(f"🔧 Running command: {' '.join(cmd)}")

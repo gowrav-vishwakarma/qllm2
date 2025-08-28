@@ -142,7 +142,7 @@ class MemoryEfficientByteDataset(Dataset):
         total_chunks = 0
         
         # Use a hard limit on total chunks to prevent explosion
-        max_total_chunks = max_chunks if max_chunks is not None else 5000
+        max_total_chunks = max_chunks if max_chunks is not None else 50000  # Increased from 5000
         
         for text in texts:
             # Convert to bytes
@@ -193,7 +193,7 @@ def build_loaders(dataset_name: str, seq_length: int, batch_size: int,
         val_texts = [ex["text"] for ex in val_texts if ex["text"].strip()]
         val_dataset = MemoryEfficientByteDataset(
             dataset_name, "validation", seq_length, 
-            max_samples=min(100, len(val_texts)),  # Only use 100 texts for validation
+            max_samples=min(500, len(val_texts)),  # Increased from 100 texts for validation
             max_chunks=val_max_chunks  # Hard limit on validation chunks
         )
     elif dataset_name == "tinystories":
@@ -201,7 +201,7 @@ def build_loaders(dataset_name: str, seq_length: int, batch_size: int,
         val_texts = [ex["text"] for ex in val_texts]
         val_dataset = MemoryEfficientByteDataset(
             dataset_name, "validation", seq_length, 
-            max_samples=min(100, len(val_texts)),  # Only use 100 texts for validation
+            max_samples=min(500, len(val_texts)),  # Increased from 100 texts for validation
             max_chunks=val_max_chunks  # Hard limit on validation chunks
         )
     
