@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Memory-efficient dataset handling for Quantum-Inspired LLM
-Uses streaming and chunked processing to minimize RAM usage
+Scalable dataset handling for Quantum-Inspired LLM
+Supports streaming, multi-dataset, and dynamic memory management
 """
 
 import os
 import random
 import torch
 from torch.utils.data import Dataset, DataLoader, IterableDataset
-from typing import Optional, List, Tuple, Iterator
-from datasets import load_dataset
+from typing import Optional, List, Tuple, Iterator, Union, Dict
+from datasets import load_dataset, concatenate_datasets
+import psutil
+import gc
 
 def collate_fn(batch):
     """Custom collate function for streaming dataset"""
@@ -19,60 +21,122 @@ def collate_fn(batch):
     targets = [item[1] for item in batch]
     return torch.stack(chunks), torch.stack(targets)
 
-class StreamingByteDataset(IterableDataset):
-    """Streaming dataset that processes text in chunks without loading everything into RAM"""
-    def __init__(self, dataset_name: str, split: str, seq_length: int, 
-                 max_samples: Optional[int] = None, buffer_size: int = 10000):
-        self.dataset_name = dataset_name
-        self.split = split
+class ScalableStreamingDataset(IterableDataset):
+    """
+    Scalable streaming dataset that can handle multiple datasets
+    and dynamically adjust to available memory
+    """
+    def __init__(self, 
+                 dataset_configs: List[Dict],  # List of dataset configurations
+                 seq_length: int,
+                 max_samples: Optional[int] = None,
+                 buffer_size: int = 10000,
+                 memory_limit_gb: float = 8.0,
+                 shuffle_buffer: bool = True):
+        """
+        Args:
+            dataset_configs: List of dicts with keys:
+                - name: dataset name (wikitext2, tinystories, etc.)
+                - split: dataset split (train, validation)
+                - weight: sampling weight for this dataset
+                - max_samples: max samples from this dataset (None = all)
+            seq_length: sequence length for chunks
+            max_samples: total max samples across all datasets
+            buffer_size: size of the streaming buffer
+            memory_limit_gb: memory limit in GB for dataset loading
+            shuffle_buffer: whether to shuffle the buffer
+        """
+        self.dataset_configs = dataset_configs
         self.seq_length = seq_length
         self.max_samples = max_samples
         self.buffer_size = buffer_size
+        self.memory_limit_gb = memory_limit_gb
+        self.shuffle_buffer = shuffle_buffer
         self.samples_processed = 0
         
-        # Initialize dataset iterator
-        self._init_dataset_iter()
+        # Calculate total weight for sampling
+        self.total_weight = sum(config.get('weight', 1.0) for config in dataset_configs)
+        
+        # Initialize dataset iterators
+        self._init_dataset_iters()
         
         # Initialize buffer
         self.buffer = []
         self.buffer_position = 0
         
-    def _init_dataset_iter(self):
-        """Initialize or reset the dataset iterator"""
-        if self.dataset_name == "wikitext2":
-            self.dataset_iter = load_dataset("wikitext", "wikitext-2-raw-v1", split=self.split, streaming=True).iter(batch_size=1)
-        elif self.dataset_name == "tinystories":
-            self.dataset_iter = load_dataset("roneneldan/TinyStories", split=self.split, streaming=True).iter(batch_size=1)
-        else:
-            raise ValueError(f"Unknown dataset: {self.dataset_name}")
+    def _init_dataset_iters(self):
+        """Initialize dataset iterators for all configured datasets"""
+        self.dataset_iters = {}
         
+        for config in self.dataset_configs:
+            dataset_name = config['name']
+            split = config['split']
+            
+            if dataset_name == "wikitext2":
+                dataset = load_dataset("wikitext", "wikitext-2-raw-v1", split=split, streaming=True)
+            elif dataset_name == "tinystories":
+                dataset = load_dataset("roneneldan/TinyStories", split=split, streaming=True)
+            elif dataset_name == "openwebtext":
+                dataset = load_dataset("Skylion007/openwebtext", split=split, streaming=True)
+            elif dataset_name == "pile":
+                dataset = load_dataset("EleutherAI/pile", split=split, streaming=True)
+            else:
+                raise ValueError(f"Unknown dataset: {dataset_name}")
+            
+            self.dataset_iters[dataset_name] = dataset.iter(batch_size=1)
+    
+    def _get_available_memory_gb(self):
+        """Get available system memory in GB"""
+        return psutil.virtual_memory().available / (1024**3)
+    
+    def _should_use_streaming(self, dataset_size_estimate: int) -> bool:
+        """Determine if we should use streaming based on memory constraints"""
+        available_memory = self._get_available_memory_gb()
+        
+        # Estimate memory needed for full dataset (rough estimate)
+        # Each chunk is seq_length * 2 (input + target) * 4 bytes (int32)
+        estimated_memory_gb = (dataset_size_estimate * self.seq_length * 2 * 4) / (1024**3)
+        
+        # Use streaming if estimated memory > available memory * 0.5
+        return estimated_memory_gb > (available_memory * 0.5)
+    
     def _fill_buffer(self):
-        """Fill the buffer with text from the streaming dataset"""
+        """Fill the buffer with text from multiple datasets using weighted sampling"""
         self.buffer = []
         self.buffer_position = 0
         
+        # Sample datasets based on weights
+        dataset_names = [config['name'] for config in self.dataset_configs]
+        dataset_weights = [config.get('weight', 1.0) / self.total_weight for config in self.dataset_configs]
+        
         try:
-            # Get a batch of examples
             for _ in range(self.buffer_size):
-                example = next(self.dataset_iter)
-                text = example["text"][0]  # Extract text from batch
+                # Sample a dataset based on weights
+                chosen_dataset = random.choices(dataset_names, weights=dataset_weights)[0]
+                
+                # Get example from chosen dataset
+                example = next(self.dataset_iters[chosen_dataset])
+                text = example["text"][0] if isinstance(example["text"], list) else example["text"]
+                
                 if text.strip():  # Skip empty texts
-                    self.buffer.append(text)
+                    self.buffer.append((text, chosen_dataset))
+                    
         except StopIteration:
-            # If we run out of data, reset the iterator and try again
-            print("🔄 Resetting streaming dataset iterator for new epoch...")
-            self._init_dataset_iter()
+            # If we run out of data, reset all iterators
+            print("🔄 Resetting streaming dataset iterators for new epoch...")
+            self._init_dataset_iters()
             try:
                 for _ in range(self.buffer_size):
-                    example = next(self.dataset_iter)
-                    text = example["text"][0]
+                    chosen_dataset = random.choices(dataset_names, weights=dataset_weights)[0]
+                    example = next(self.dataset_iters[chosen_dataset])
+                    text = example["text"][0] if isinstance(example["text"], list) else example["text"]
                     if text.strip():
-                        self.buffer.append(text)
+                        self.buffer.append((text, chosen_dataset))
             except StopIteration:
                 pass  # If still no data, we're done
         
-        # Shuffle the buffer to introduce randomness
-        if self.buffer:
+        # Shuffle the buffer if requested
+        if self.shuffle_buffer and self.buffer:
             random.shuffle(self.buffer)
     
     def _process_text(self, text: str) -> Iterator[Tuple[torch.Tensor, torch.Tensor]]:
@@ -106,7 +170,7 @@ class StreamingByteDataset(IterableDataset):
                 self.buffer_position = 0
             
             # Process current text
-            text = self.buffer[self.buffer_position]
+            text, dataset_name = self.buffer[self.buffer_position]
             self.buffer_position += 1
             
             # Yield chunks from this text
@@ -136,13 +200,23 @@ class MemoryEfficientByteDataset(Dataset):
         if max_samples is not None:
             texts = texts[:max_samples]
         
-        # Process texts into chunks with strict limits
+        # Process texts into chunks with dynamic limits based on memory
         self.chunks = []
         self.targets = []
         total_chunks = 0
         
-        # Use a hard limit on total chunks to prevent explosion
-        max_total_chunks = max_chunks if max_chunks is not None else 50000  # Increased from 5000
+        # Dynamic chunk limit based on available memory
+        available_memory_gb = psutil.virtual_memory().available / (1024**3)
+        if max_chunks is not None:
+            max_total_chunks = max_chunks
+        else:
+            # Estimate chunks based on available memory
+            # Each chunk uses seq_length * 2 * 4 bytes
+            estimated_chunks_per_gb = (1024**3) / (seq_length * 2 * 4)
+            max_total_chunks = int(available_memory_gb * estimated_chunks_per_gb * 0.3)  # Use 30% of available memory
+            max_total_chunks = max(1000, min(max_total_chunks, 100000))  # Between 1k and 100k chunks
+        
+        print(f"📊 Using dynamic chunk limit: {max_total_chunks} chunks based on {available_memory_gb:.1f}GB available memory")
         
         for text in texts:
             # Convert to bytes
@@ -172,6 +246,7 @@ class MemoryEfficientByteDataset(Dataset):
         # Free memory
         del self.chunks
         del self.targets
+        gc.collect()
     
     def __len__(self):
         return len(self.chunks_tensor)
@@ -182,37 +257,66 @@ class MemoryEfficientByteDataset(Dataset):
             self.targets_tensor[idx]
         )
 
-def build_loaders(dataset_name: str, seq_length: int, batch_size: int, 
+def build_loaders(dataset_configs: Union[str, List[Dict]], seq_length: int, batch_size: int, 
                  max_samples: Optional[int] = None, streaming: bool = True,
                  num_workers: int = 4, val_max_chunks: int = 5000) -> Tuple[DataLoader, DataLoader]:
-    """Build train and validation data loaders with memory efficiency"""
+    """
+    Build train and validation data loaders with scalable architecture
     
-    # For validation, use a much smaller fixed dataset
-    if dataset_name == "wikitext2":
-        val_texts = load_dataset("wikitext", "wikitext-2-raw-v1", split="validation")
-        val_texts = [ex["text"] for ex in val_texts if ex["text"].strip()]
-        val_dataset = MemoryEfficientByteDataset(
-            dataset_name, "validation", seq_length, 
-            max_samples=min(500, len(val_texts)),  # Increased from 100 texts for validation
-            max_chunks=val_max_chunks  # Hard limit on validation chunks
-        )
-    elif dataset_name == "tinystories":
-        val_texts = load_dataset("roneneldan/TinyStories", split="validation")
-        val_texts = [ex["text"] for ex in val_texts]
-        val_dataset = MemoryEfficientByteDataset(
-            dataset_name, "validation", seq_length, 
-            max_samples=min(500, len(val_texts)),  # Increased from 100 texts for validation
-            max_chunks=val_max_chunks  # Hard limit on validation chunks
-        )
+    Args:
+        dataset_configs: Either a string (single dataset) or list of dicts (multi-dataset)
+        seq_length: sequence length
+        batch_size: batch size
+        max_samples: max samples across all datasets
+        streaming: whether to use streaming (recommended for large datasets)
+        num_workers: number of workers for data loading
+        val_max_chunks: max chunks for validation
+    """
     
-    # For training, use streaming if requested
+    # Convert single dataset string to config format
+    if isinstance(dataset_configs, str):
+        dataset_configs = [{'name': dataset_configs, 'split': 'train', 'weight': 1.0}]
+    
+    # For validation, use a smaller subset of the same datasets
+    val_configs = []
+    for config in dataset_configs:
+        val_config = config.copy()
+        val_config['split'] = 'validation'
+        # Handle None max_samples properly
+        max_samples = config.get('max_samples', 1000)
+        if max_samples is not None:
+            val_config['max_samples'] = min(100, max_samples)  # Smaller validation set
+        else:
+            val_config['max_samples'] = 100  # Default validation size
+        val_configs.append(val_config)
+    
+    # Build validation dataset
     if streaming:
-        train_dataset = StreamingByteDataset(
-            dataset_name, "train", seq_length, max_samples, buffer_size=5000
+        val_dataset = ScalableStreamingDataset(
+            val_configs, seq_length, max_samples=val_max_chunks, 
+            buffer_size=1000, memory_limit_gb=2.0
         )
     else:
+        # For validation, use memory-efficient approach with first dataset only
+        val_config = val_configs[0]
+        val_dataset = MemoryEfficientByteDataset(
+            val_config['name'], val_config['split'], seq_length, 
+            max_samples=val_config.get('max_samples', 100), 
+            max_chunks=val_max_chunks
+        )
+    
+    # Build training dataset
+    if streaming:
+        train_dataset = ScalableStreamingDataset(
+            dataset_configs, seq_length, max_samples, 
+            buffer_size=10000, memory_limit_gb=8.0
+        )
+    else:
+        # For non-streaming, use memory-efficient approach with first dataset only
+        train_config = dataset_configs[0]
         train_dataset = MemoryEfficientByteDataset(
-            dataset_name, "train", seq_length, max_samples
+            train_config['name'], train_config['split'], seq_length, 
+            max_samples=train_config.get('max_samples', max_samples)
         )
     
     # Create data loaders with custom collate function
@@ -237,3 +341,24 @@ def build_loaders(dataset_name: str, seq_length: int, batch_size: int,
     )
     
     return train_loader, val_loader
+
+# Example usage functions for different scenarios
+def get_single_dataset_config(dataset_name: str, split: str = 'train', weight: float = 1.0, max_samples: Optional[int] = None) -> List[Dict]:
+    """Get configuration for a single dataset"""
+    return [{'name': dataset_name, 'split': split, 'weight': weight, 'max_samples': max_samples}]
+
+def get_multi_dataset_config() -> List[Dict]:
+    """Get configuration for multiple datasets with different weights"""
+    return [
+        {'name': 'wikitext2', 'split': 'train', 'weight': 0.4, 'max_samples': None},
+        {'name': 'tinystories', 'split': 'train', 'weight': 0.3, 'max_samples': None},
+        {'name': 'openwebtext', 'split': 'train', 'weight': 0.3, 'max_samples': 100000}
+    ]
+
+def get_large_scale_config() -> List[Dict]:
+    """Get configuration for large-scale training with multiple datasets"""
+    return [
+        {'name': 'pile', 'split': 'train', 'weight': 0.5, 'max_samples': None},
+        {'name': 'openwebtext', 'split': 'train', 'weight': 0.3, 'max_samples': None},
+        {'name': 'wikitext2', 'split': 'train', 'weight': 0.2, 'max_samples': None}
+    ]

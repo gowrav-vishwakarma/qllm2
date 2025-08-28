@@ -49,9 +49,20 @@ def train(args):
     
     print(f"Model created with {sum(p.numel() for p in model.parameters()):,} parameters")
     
-    # Create data loaders with streaming and validation limits
+    # Create data loaders with scalable architecture
+    from datasets_qllm import get_single_dataset_config, get_multi_dataset_config, get_large_scale_config
+    
+    # Choose dataset configuration based on args
+    if args.dataset == "multi":
+        dataset_configs = get_multi_dataset_config()
+    elif args.dataset == "large":
+        dataset_configs = get_large_scale_config()
+    else:
+        # Single dataset
+        dataset_configs = get_single_dataset_config(args.dataset, 'train', 1.0, args.max_samples)
+    
     train_loader, val_loader = build_loaders(
-        args.dataset,
+        dataset_configs,
         args.seq_length,
         args.batch_size,
         args.max_samples,

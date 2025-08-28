@@ -51,7 +51,7 @@ def main():
         "--checkpoint_dir", "checkpoints_quantum",
         "--save_every", "500",     # Reduced for more frequent saves
         "--log_every", "500",       # More frequent logging to see progress
-        "--dataset", "wikitext2",
+        "--dataset", "multi",  # Use multi-dataset configuration for better training
         "--use_checkpoint",
         "--streaming", "False",    # Disable streaming for better performance
         "--num_workers", "2",      # Reduced for memory efficiency
