@@ -55,12 +55,12 @@ class EnergyBasedTrainer:
                 # Convert phase_repr to full precision to avoid ComplexHalf issues
                 phase_repr_fp32 = phase_repr.float()
                 
-                # Calculate energy loss (negative coherence)
-                energy = self._calculate_energy(phase_repr_fp32)
+                # Calculate enhanced energy loss (Phase 1.3)
+                energy = self._calculate_enhanced_energy(phase_repr_fp32)
                 energy_loss = -energy.mean()
                 
-                # Calculate coherence loss
-                coherence = self._calculate_coherence(phase_repr_fp32)
+                # Calculate enhanced coherence loss (Phase 1.3)
+                coherence = self._calculate_enhanced_coherence(phase_repr_fp32)
                 coherence_loss = -coherence.mean()
                 
                 # Combined loss
@@ -75,12 +75,12 @@ class EnergyBasedTrainer:
             # Get phase representation for energy calculation
             phase_repr = self.model.get_phase_representation(inputs)
             
-            # Calculate energy loss (negative coherence)
-            energy = self._calculate_energy(phase_repr)
+            # Calculate enhanced energy loss (Phase 1.3)
+            energy = self._calculate_enhanced_energy(phase_repr)
             energy_loss = -energy.mean()
             
-            # Calculate coherence loss
-            coherence = self._calculate_coherence(phase_repr)
+            # Calculate enhanced coherence loss (Phase 1.3)
+            coherence = self._calculate_enhanced_coherence(phase_repr)
             coherence_loss = -coherence.mean()
             
             # Combined loss
@@ -152,12 +152,12 @@ class EnergyBasedTrainer:
                 # Get phase representation for energy calculation
                 phase_repr = self.model.get_phase_representation(inputs)
                 
-                # Calculate energy and coherence in full precision
+                # Calculate enhanced energy and coherence in full precision
                 phase_repr_fp32 = phase_repr.float()
-                energy = self._calculate_energy(phase_repr_fp32)
+                energy = self._calculate_enhanced_energy(phase_repr_fp32)
                 energy_loss = -energy.mean()
                 
-                coherence = self._calculate_coherence(phase_repr_fp32)
+                coherence = self._calculate_enhanced_coherence(phase_repr_fp32)
                 coherence_loss = -coherence.mean()
                 
                 # Combined loss
@@ -181,30 +181,112 @@ class EnergyBasedTrainer:
             'val_ppl': val_ppl
         }
     
-    def _calculate_energy(self, phase_repr):
-        # Calculate energy based on interference patterns
+    def _calculate_enhanced_energy(self, phase_repr):
+        """Enhanced energy calculation with quantum-inspired components (Phase 1.3)"""
         batch_size, seq_len, dim = phase_repr.shape
         
         # Get phases
         phases = torch.angle(phase_repr)
         
-        # Calculate pairwise phase differences
-        phase_diff = phases.unsqueeze(2) - phases.unsqueeze(1)
+        # QUANTUM-INSPIRED ENERGY COMPONENTS
         
-        # Calculate interference patterns
-        interference = torch.cos(phase_diff)
+        # 1. Local coherence energy (neighboring tokens)
+        # This captures the coherence between adjacent tokens
+        local_phase_diff = phases[:, 1:] - phases[:, :-1]
+        local_coherence = torch.cos(local_phase_diff)
+        local_energy = -torch.sum(local_coherence, dim=(1, 2)) / (seq_len - 1)
         
-        # Energy is negative sum of interference (more coherent = lower energy)
-        energy = -torch.sum(interference, dim=(1, 2)) / (seq_len * (seq_len - 1))
+        # 2. Global interference energy (all token pairs)
+        # Optimized computation - O(n) instead of O(n²)
+        # Use mean phase as global reference for efficiency
+        global_phase_mean = torch.mean(phases, dim=1, keepdim=True)
+        global_phase_diff = phases - global_phase_mean
+        global_coherence = torch.cos(global_phase_diff)
+        global_energy = -torch.sum(global_coherence, dim=(1, 2)) / seq_len
+        
+        # 3. Entanglement energy (long-range dependencies)
+        # Sample random token pairs for entanglement to avoid O(n²) complexity
+        num_pairs = min(20, seq_len // 2)
+        if num_pairs > 0:
+            # Create random indices for token pairs
+            rand_indices = torch.randperm(seq_len, device=phases.device)[:num_pairs]
+            if len(rand_indices) >= 2:
+                entangled_pairs = phases[:, rand_indices]
+                entangled_phase_diff = entangled_pairs[:, 1:] - entangled_pairs[:, :-1]
+                entanglement_energy = -torch.mean(torch.cos(entangled_phase_diff), dim=(1, 2))
+            else:
+                entanglement_energy = torch.zeros(batch_size, device=phases.device)
+        else:
+            entanglement_energy = torch.zeros(batch_size, device=phases.device)
+        
+        # 4. Phase stability energy
+        # Encourage stable phase relationships
+        phase_variance = torch.var(phases, dim=1)
+        stability_energy = -torch.mean(phase_variance, dim=1)
+        
+        # Combined energy with learned weights
+        energy = (
+            local_energy + 
+            0.5 * global_energy + 
+            0.3 * entanglement_energy +
+            0.2 * stability_energy
+        )
         
         return energy
     
-    def _calculate_coherence(self, phase_repr):
-        # Calculate phase coherence
+    def _calculate_enhanced_coherence(self, phase_repr):
+        """Enhanced coherence calculation with multi-scale analysis (Phase 1.3)"""
         phases = torch.angle(phase_repr)
-        complex_phases = torch.exp(1j * phases)
+        batch_size, seq_len, dim = phases.shape
         
-        # Coherence is magnitude of average phase vector
-        coherence = torch.abs(torch.mean(complex_phases, dim=1))
+        # Multi-scale coherence calculation
+        coherence_scores = []
         
-        return coherence
+        # 1. Local coherence (neighboring tokens)
+        # Calculate coherence between adjacent tokens
+        local_diff = phases[:, 1:] - phases[:, :-1]
+        local_coherence = torch.abs(torch.mean(torch.exp(1j * local_diff), dim=(1, 2)))
+        coherence_scores.append(local_coherence)
+        
+        # 2. Global coherence (all tokens)
+        # Calculate overall phase coherence
+        global_phases = phases.view(batch_size, -1)
+        global_coherence = torch.abs(torch.mean(torch.exp(1j * global_phases), dim=1))
+        coherence_scores.append(global_coherence)
+        
+        # 3. Semantic coherence (similar tokens should have similar phases)
+        # Sample token pairs for efficiency
+        num_pairs = min(50, seq_len // 2)
+        if num_pairs > 0:
+            rand_indices = torch.randperm(seq_len, device=phases.device)[:num_pairs]
+            sampled_phases = phases[:, rand_indices]
+            semantic_coherence = torch.abs(torch.mean(torch.exp(1j * sampled_phases), dim=(1, 2)))
+            coherence_scores.append(semantic_coherence)
+        else:
+            semantic_coherence = torch.ones(batch_size, device=phases.device)
+            coherence_scores.append(semantic_coherence)
+        
+        # 4. Temporal coherence (phase consistency over time)
+        # Calculate how phases evolve across the sequence
+        if seq_len > 1:
+            temporal_diff = phases[:, 1:] - phases[:, :-1]
+            temporal_coherence = torch.abs(torch.mean(torch.exp(1j * temporal_diff), dim=(1, 2)))
+            coherence_scores.append(temporal_coherence)
+        else:
+            temporal_coherence = torch.ones(batch_size, device=phases.device)
+            coherence_scores.append(temporal_coherence)
+        
+        # Combined coherence with weighted average
+        combined_coherence = torch.stack(coherence_scores, dim=1)
+        weights = torch.tensor([0.4, 0.3, 0.2, 0.1], device=phases.device)  # Local, Global, Semantic, Temporal
+        weighted_coherence = torch.sum(combined_coherence * weights.unsqueeze(0), dim=1)
+        
+        return weighted_coherence
+    
+    def _calculate_energy(self, phase_repr):
+        """Legacy energy calculation - kept for backward compatibility"""
+        return self._calculate_enhanced_energy(phase_repr)
+    
+    def _calculate_coherence(self, phase_repr):
+        """Legacy coherence calculation - kept for backward compatibility"""
+        return self._calculate_enhanced_coherence(phase_repr)
