@@ -3,26 +3,33 @@
 # ==========================
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Quantum-inspired LLM — improved training launch:
-- Fixed AMP API usage (torch.amp), scheduler ordering (call only after optimizer step),
-  safer DDP handling, optional activation checkpointing, mixed precision, cosine LR with warmup.
-"""
-
 import os
 import math
 import argparse
 import time
-from typing import Optional, List
+import warnings
+from typing import List, Tuple
 
 import torch
 import torch.nn as nn
 from torch.optim.lr_scheduler import LambdaLR
 
-from qllm_utils import device_str, bytes_encode, bytes_decode, save_args_json, load_args_json, ddp_setup, get_rank, save_checkpoint, get_world_size
+from qllm_utils import (
+    device_str, bytes_encode, bytes_decode,
+    save_args_json, load_args_json,
+    ddp_setup, get_rank, save_checkpoint, get_world_size
+)
 from datasets_qllm import build_loaders
 from quantum_llm_model import QuantumInspiredLLM
-from sampling_qllm import sample_next_token  # keep existing sampling file
+from sampling_qllm import sample_next_token
+
+# Silence noisy scheduler warning (we call scheduler AFTER optimizer.step in this script)
+warnings.filterwarnings(
+    "ignore",
+    message=r"Detected call of `lr_scheduler.step\(\)` before `optimizer.step\(\)`.*",
+    category=UserWarning,
+    module="torch.optim.lr_scheduler"
+)
 
 
 def cosine_warmup_scheduler(optimizer, warmup_steps, total_steps):
@@ -51,6 +58,12 @@ def evaluate(model, loader, device):
     return ppl
 
 
+def _count_trainable_params(model: nn.Module) -> Tuple[int, int]:
+    total = sum(p.numel() for p in model.parameters())
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    return total, trainable
+
+
 def build_model_and_opt(args, device, world_size=1):
     model = QuantumInspiredLLM(
         vocab_size=256,
@@ -65,22 +78,49 @@ def build_model_and_opt(args, device, world_size=1):
         dropout=args.dropout,
         attention_type=args.attention_type,
         use_checkpoint=args.activation_checkpoint,
+        interference_beta=getattr(args, "interference_beta", 0.08),
+        inter_heads_fraction=getattr(args, "inter_heads_frac", 1.0),
     ).to(device)
 
-    # optionally freeze base params when LoRA-only
+    # === FREEZE NON-LoRA PARAMS WHEN LoRA-ONLY TRAINING IS REQUESTED ===
     if args.lora_rank > 0 and args.lora_train_only:
+        # Keep only LoRA A/B trainable. This drastically reduces optimizer state size.
+        # LoRA param names often end in '.A' or '.B', but to be robust also match 'A' or 'B' segments.
+        kept = 0
         for n, p in model.named_parameters():
-            if ("A" in n or "B" in n) or ("tok_embed" in n or "pos_embed" in n or "global_memory" in n or "phase" in n):
+            # allowlist only names containing '.A' or '.B' or ending with 'A'/'B'
+            name_last = n.split('.')[-1]
+            if ".A" in n or ".B" in n or name_last == "A" or name_last == "B":
                 p.requires_grad_(True)
+                kept += p.numel()
             else:
                 p.requires_grad_(False)
+        if get_rank() == 0:
+            total, trainable = _count_trainable_params(model)
+            print(f"[LoRA-only] total params: {total:,}, trainable (LoRA A/B): {trainable:,} (~{trainable/total*100:.4f}%)")
+    else:
+        # default: all params trainable
+        for p in model.parameters():
+            p.requires_grad_(True)
+        if get_rank() == 0:
+            total, trainable = _count_trainable_params(model)
+            print(f"[Full-train] total params: {total:,}, trainable: {trainable:,}")
 
-    optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()),
-                                  lr=args.lr, weight_decay=args.weight_decay, betas=(0.9, 0.95))
+    # Optimizer only over parameters with requires_grad True (so LoRA-only -> tiny optimizer state)
+    optim_params = list(filter(lambda p: p.requires_grad, model.parameters()))
+    optimizer = torch.optim.AdamW(optim_params, lr=args.lr, weight_decay=args.weight_decay, betas=(0.9, 0.95))
 
     total_steps = max(1, (args.epochs * max(1, args.max_steps_per_epoch)) // (max(1, get_world_size()) * max(1, args.accumulate_steps)))
     warmup = int(args.warmup_steps)
     scheduler = cosine_warmup_scheduler(optimizer, warmup, total_steps)
+
+    # Optional compile for modern PyTorch
+    if getattr(args, "compile", False):
+        try:
+            model = torch.compile(model)  # type: ignore[attr-defined]
+        except Exception as e:
+            if get_rank() == 0:
+                print(f"[Warn] torch.compile unavailable or failed: {e}")
 
     return model, optimizer, scheduler
 
@@ -92,6 +132,14 @@ def train(args):
 
     dev = device_str()
     device_type = "cuda" if dev == "cuda" else ("mps" if dev == "mps" else "cpu")
+
+    # enable TF32 matmul precision for improved speed on supported GPUs (optional)
+    try:
+        # recommended modern API
+        torch.set_float32_matmul_precision('high')
+    except Exception:
+        # older torch versions may not have this API — ignore if unavailable
+        pass
 
     print(f"Device: {dev} | Rank: {rank} | World size: {world_size}")
     torch.manual_seed(args.seed + rank)
@@ -106,7 +154,11 @@ def train(args):
 
     if ddp_inited:
         local_rank = int(os.environ.get("LOCAL_RANK", 0))
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank] if device_type == "cuda" else None, find_unused_parameters=False)
+        model = torch.nn.parallel.DistributedDataParallel(
+            model,
+            device_ids=[local_rank] if device_type == "cuda" else None,
+            find_unused_parameters=False
+        )
 
     scaler = torch.amp.GradScaler(enabled=(device_type == "cuda"))
 
@@ -122,6 +174,8 @@ def train(args):
         "lora_alpha": args.lora_alpha,
         "dataset": args.dataset,
         "attention_type": args.attention_type,
+        "interference_beta": getattr(args, "interference_beta", 0.08),
+        "inter_heads_frac": getattr(args, "inter_heads_frac", 1.0),
     })
 
     best_val_ppl = float("inf")
@@ -130,7 +184,6 @@ def train(args):
     print(f"[Hint] accumulate_steps={args.accumulate_steps}. Activation checkpointing: {args.activation_checkpoint}")
 
     criterion = nn.CrossEntropyLoss()
-    t0_epoch = time.time()
 
     for epoch in range(args.epochs):
         model.train()
@@ -148,74 +201,77 @@ def train(args):
                 ph = ph_module.phase_coherence_loss() * args.phase_coh
                 loss = ce + ph
 
-            # backward with scaling
             scaler.scale(loss / args.accumulate_steps).backward()
 
             if (step + 1) % args.accumulate_steps == 0:
                 scaler.unscale_(optimizer)
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=args.grad_clip)
 
-                optimizer_stepped = False
+                # step optimizer & scaler
                 try:
-                    # attempt optimizer.step via scaler
                     scaler.step(optimizer)
-                    optimizer_stepped = True
                 except Exception as ex:
-                    # if optimizer step failed, report and skip scheduler step
-                    print(f"[Warn] optimizer step failed at step {step+1}: {ex}")
-                    optimizer_stepped = False
-                finally:
-                    # update scaler regardless (safe)
-                    try:
-                        scaler.update()
-                    except Exception:
-                        pass
-
-                # only call scheduler.step if optimizer actually performed a step
-                # Use optimizer._step_count (PyTorch internal) if available
-                try:
-                    opt_step_count = getattr(optimizer, "_step_count", None)
-                    if optimizer_stepped or (isinstance(opt_step_count, int) and opt_step_count > 0):
-                        # safe to step scheduler now
-                        try:
-                            scheduler.step()
-                        except Exception as e:
-                            # swallow scheduler unexpected errors but print
-                            print(f"[Warn] scheduler.step() raised: {e}")
-                    else:
-                        # skip scheduler to avoid "called before optimizer.step" warning
-                        pass
-                except Exception:
-                    pass
-
+                    print(f"[Error] optimizer.step failed: {ex}")
+                    raise
+                scaler.update()
                 optimizer.zero_grad(set_to_none=True)
+
+                # scheduler AFTER optimizer.step
+                try:
+                    scheduler.step()
+                except Exception as e:
+                    if rank == 0:
+                        print(f"[Warn] scheduler.step() raised: {e}")
+
                 global_step += 1
 
             step += 1
-            running_loss += loss.item()
-            running_ph += ph.item()
-
+            running_loss += float(loss.item())
+            running_ph += float(ph.item()) if isinstance(ph, torch.Tensor) else float(ph)
+            
             if step % args.log_every == 0 and rank == 0:
                 dt = time.time() - t0
                 tps = (args.batch_size * args.seq_length * args.log_every) / max(1e-6, dt)
-                print(f"Epoch {epoch} Step {step}: Loss {running_loss/args.log_every:.4f} (CE {ce.item():.4f} + PH {running_ph/args.log_every:.4f}) | {tps:.1f} tok/s")
+
+                # try to fetch phase param (works whether model is DDP-wrapped or not)
+                core = model.module if hasattr(model, "module") else model
+                phase_param = None
+                try:
+                    phase_param = core.phase.phase
+                except Exception:
+                    # fallback: search named params
+                    for n, p in core.named_parameters():
+                        if 'phase' in n:
+                            phase_param = p
+                            break
+
+                if phase_param is not None:
+                    ph_mean = phase_param.data.mean().item()
+                    ph_std = phase_param.data.std().item()
+                    ph_grad_norm = phase_param.grad.norm().item() if phase_param.grad is not None else 0.0
+                    print(f"Epoch {epoch} Step {step}: Loss {running_loss/args.log_every:.4f} (CE {ce.item():.4f} + PH {running_ph/args.log_every:.6f}) | {tps:.1f} tok/s | phase mean {ph_mean:.6f} std {ph_std:.6f} grad_norm {ph_grad_norm:.6f}")
+                else:
+                    print(f"Epoch {epoch} Step {step}: Loss {running_loss/args.log_every:.4f} (CE {ce.item():.4f} + PH {running_ph/args.log_every:.6f}) | {tps:.1f} tok/s")
+
                 running_loss, running_ph = 0.0, 0.0
                 t0 = time.time()
 
+
             if args.save_every > 0 and step % args.save_every == 0 and rank == 0:
                 ckpt = os.path.join(args.checkpoint_dir, f"model_step{step}.pt")
-                save_checkpoint(model.state_dict() if not ddp_inited else model.module.state_dict(), ckpt, rank=rank)
-                save_checkpoint(model.state_dict() if not ddp_inited else model.module.state_dict(), os.path.join(args.checkpoint_dir, "checkpoint_last.pt"), rank=rank)
+                state = model.module.state_dict() if ddp_inited else model.state_dict()
+                save_checkpoint(state, ckpt, rank=rank)
+                save_checkpoint(state, os.path.join(args.checkpoint_dir, "checkpoint_last.pt"), rank=rank)
                 print(f"Saved checkpoint: {ckpt} and checkpoint_last.pt")
 
-        # end epoch validation (rank 0 only)
         if rank == 0:
-            val_ppl = evaluate(model if not ddp_inited else model.module, val_loader, dev)
+            core_model = model.module if ddp_inited else model
+            val_ppl = evaluate(core_model, val_loader, dev)
             print(f"Epoch {epoch} done. Validation Perplexity: {val_ppl:.3f}")
-            save_checkpoint((model.module.state_dict() if ddp_inited else model.state_dict()), os.path.join(args.checkpoint_dir, "checkpoint_last.pt"), rank=rank)
+            save_checkpoint(core_model.state_dict(), os.path.join(args.checkpoint_dir, "checkpoint_last.pt"), rank=rank)
             if val_ppl < best_val_ppl:
                 best_val_ppl = val_ppl
-                save_checkpoint((model.module.state_dict() if ddp_inited else model.state_dict()), os.path.join(args.checkpoint_dir, "best_perplexity.pt"), rank=rank)
+                save_checkpoint(core_model.state_dict(), os.path.join(args.checkpoint_dir, "best_perplexity.pt"), rank=rank)
                 print(f"New best perplexity: {best_val_ppl:.3f} (saved best_perplexity.pt)")
 
     if rank == 0:
@@ -248,6 +304,8 @@ def generate(args):
         dropout=0.0,
         attention_type=saved.get("attention_type", args.attention_type or "classical"),
         use_checkpoint=False,
+        interference_beta=saved.get("interference_beta", 0.08),
+        inter_heads_fraction=saved.get("inter_heads_frac", 1.0),
     ).to(dev)
 
     if not args.checkpoint or not os.path.exists(args.checkpoint):
@@ -292,6 +350,7 @@ def generate(args):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--mode", required=True, choices=["train", "generate"])
+    # Data / model
     p.add_argument("--dataset", default="wikitext2", choices=["wikitext2", "tinystories", "c4_en_small", "fineweb_sample"])
     p.add_argument("--max_samples", type=int, default=None)
     p.add_argument("--batch_size", type=int, default=32)
@@ -300,12 +359,16 @@ def main():
     p.add_argument("--num_layers", type=int, default=6)
     p.add_argument("--num_heads", type=int, default=8)
     p.add_argument("--dropout", type=float, default=0.0)
+    # Quantum/LoRA
     p.add_argument("--phase_coh", type=float, default=0.1)
     p.add_argument("--global_tokens", type=int, default=0)
     p.add_argument("--lora_rank", type=int, default=0)
     p.add_argument("--lora_alpha", type=float, default=8.0)
     p.add_argument("--lora_train_only", action="store_true")
     p.add_argument("--attention_type", type=str, default="classical", choices=["classical", "interference"])
+    p.add_argument("--interference_beta", type=float, default=0.08)
+    p.add_argument("--inter_heads_frac", type=float, default=1.0)
+    # Optim & training
     p.add_argument("--epochs", type=int, default=5)
     p.add_argument("--lr", type=float, default=1e-4)
     p.add_argument("--weight_decay", type=float, default=0.01)
@@ -320,8 +383,10 @@ def main():
     p.add_argument("--num_workers", type=int, default=4)
     p.add_argument("--warmup_steps", type=int, default=1000)
     p.add_argument("--max_steps_per_epoch", type=int, default=1000)
+    p.add_argument("--compile", action="store_true")
+    # generation
     p.add_argument("--checkpoint", type=str, default=None)
-    p.add_argument("--model_args", type=str, default=None, help="Path to model_args.json (optional)")
+    p.add_argument("--model_args", type=str, default=None)
     p.add_argument("--prompt", type=str, default="Hello world")
     p.add_argument("--max_new_tokens", type=int, default=200)
     p.add_argument("--temperature", type=float, default=0.9)
@@ -331,7 +396,6 @@ def main():
     p.add_argument("--min_p", type=float, default=0.0)
 
     args = p.parse_args()
-
     if args.mode == "train":
         train(args)
     else:

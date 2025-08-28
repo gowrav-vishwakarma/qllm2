@@ -1,13 +1,15 @@
 # ==========================
 # file: quantum_llm_model.py
 # ==========================
+import math
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from qllm_utils import causal_mask
-import math
-from typing import Optional
 from torch.utils.checkpoint import checkpoint as activation_checkpoint
+
+from qllm_utils import causal_mask
 
 
 class LoRALinear(nn.Module):
@@ -20,7 +22,6 @@ class LoRALinear(nn.Module):
         self.scaling = self.alpha / max(1, self.r)
         self.lora_train_only = lora_train_only
         if self.r > 0:
-            # B projects input -> r; A projects r -> out
             self.B = nn.Parameter(torch.zeros(self.r, in_features))
             self.A = nn.Parameter(torch.zeros(out_features, self.r))
             nn.init.zeros_(self.B)
@@ -32,8 +33,8 @@ class LoRALinear(nn.Module):
     def forward(self, x):
         out = self.linear(x)
         if self.r > 0:
-            update = F.linear(x, self.B)          # [*, r]
-            update = F.linear(update, self.A)     # [*, out]
+            update = F.linear(x, self.B)      # [*, r]
+            update = F.linear(update, self.A) # [*, out]
             out = out + self.scaling * update
         return out
 
@@ -48,19 +49,14 @@ class LoRALinear(nn.Module):
 
 
 class PhaseRotator(nn.Module):
-    """
-    Keep the original phase rotator but implemented robustly for variable dims.
-    phi is learnable per-dim; tanh ensures [-1,1] then * pi -> [-pi, pi]
-    """
-    def __init__(self, dim):
+    """Learnable per-dim phase; mild smoothness regularizer."""
+    def __init__(self, dim, init_scale: float = 1e-2):
         super().__init__()
-        self.phase = nn.Parameter(torch.zeros(dim))
+        self.phase = nn.Parameter(torch.randn(dim) * float(init_scale))
 
     def forward(self, x):
-        # x: [B, L, D]
         phi = torch.tanh(self.phase) * math.pi
         c, s = torch.cos(phi), torch.sin(phi)
-        # apply elementwise per-dim multiplication
         return x * c - x * s
 
     def coherence_loss(self):
@@ -72,99 +68,114 @@ class PhaseRotator(nn.Module):
 
 class InterferenceAttention(nn.Module):
     """
-    Implements interference-based attention inspired by the paper:
-    - Extract a learned phase per-token (we project embeddings to a 2D sin/cos pair)
-    - Compute phase angles via atan2 and interference = cos(delta_phi)
-    - Use learnable weight matrix on interference and softmax to compute attn
-    This is an experimental replacement for MultiHeadSelfAttention.
+    Fast interference-based attention.
+
+    Key speedups vs previous version:
+    - Avoids building angle pairwise differences (no LxL trig); uses Gram form:
+        cos(Δϕ) = cosϕ_i cosϕ_j + sinϕ_i sinϕ_j
+      implemented as P @ P^T with P = [cosϕ, sinϕ] (2-dim features per token per head).
+    - Uses PyTorch scaled_dot_product_attention (Flash/Math/Memory-efficient paths),
+      adding the interference term as an additive attention bias.
+
+    Knobs:
+      - interference_beta: global scale for the interference bias.
+      - inter_heads_fraction: fraction of heads that participate (others get 0 bias).
+      - per-head learned gate (sigmoid) to let the model tune contribution.
     """
-    def __init__(self, dim, num_heads, lora_rank=0, lora_alpha=8.0, lora_train_only=False, dropout=0.0):
+    def __init__(self, dim, num_heads, lora_rank=0, lora_alpha=8.0, lora_train_only=False, dropout=0.0,
+                 interference_beta: float = 0.08, inter_heads_fraction: float = 1.0):
         super().__init__()
         assert dim % num_heads == 0
         self.dim = dim
         self.num_heads = num_heads
         self.head_dim = dim // num_heads
-        self.scale = self.head_dim ** -0.5
+        self.dropout_p = float(dropout)
 
-        # standard q/k/v projections with LoRA support
+        # q/k/v with LoRA
         self.q = LoRALinear(dim, dim, True, lora_rank, lora_alpha, lora_train_only)
         self.k = LoRALinear(dim, dim, True, lora_rank, lora_alpha, lora_train_only)
         self.v = LoRALinear(dim, dim, True, lora_rank, lora_alpha, lora_train_only)
         self.o = LoRALinear(dim, dim, True, lora_rank, lora_alpha, lora_train_only)
 
-        # small projector to 2D (for sin/cos) per head to compute phase
-        self.phase_proj = nn.Linear(dim, 2 * num_heads)  # for each head: (cos, sin)
-        # Fix: attention bias projection should be from seq_len to seq_len, not from num_heads
-        self.attn_bias_proj = nn.Linear(1, 1)  # Simple scalar projection
-        self.dropout = nn.Dropout(dropout)
+        # 2-dim phase features per head (cos,sin); we normalize to unit length
+        self.phase_proj = nn.Linear(dim, 2 * num_heads)
+        # learned per-head gate in [0,1] via sigmoid; init ~0.1
+        init_logit = -2.197224577  # sigmoid ~ 0.10
+        self.gamma = nn.Parameter(torch.full((num_heads,), init_logit))
+        # global scale
+        self.interference_beta = float(interference_beta)
+
+        # only a fraction of heads are allowed to use interference (others get gamma -> -inf effectively)
+        h_active = max(1, int(round(inter_heads_fraction * num_heads)))
+        mask = torch.zeros(num_heads)
+        mask[:h_active] = 1.0
+        self.register_buffer("active_heads_mask", mask)
 
     def _split(self, x):
         B, L, D = x.shape
-        return x.view(B, L, self.num_heads, self.head_dim).transpose(1, 2)
+        return x.view(B, L, self.num_heads, self.head_dim).transpose(1, 2)  # [B,H,L,hd]
 
     def _merge(self, x):
         B, H, L, hd = x.shape
         return x.transpose(1, 2).contiguous().view(B, L, H * hd)
 
     def forward(self, x, attn_bias=None):
-        # x: [B, L, D]
-        q = self._split(self.q(x))
+        # q/k/v
+        q = self._split(self.q(x))  # [B,H,L,hd]
         k = self._split(self.k(x))
         v = self._split(self.v(x))
 
-        # compute classical scores for stability
-        scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale
+        B, H, L, _ = q.shape
 
-        # compute per-token phases: project x->(2*num_heads) and reshape [B,L,H,2]
-        ph = self.phase_proj(x)  # [B, L, 2*H]
-        ph = ph.view(ph.size(0), ph.size(1), self.num_heads, 2)
-        # atan2(sin, cos) style angle
-        angles = torch.atan2(ph[..., 1], ph[..., 0])  # [B,L,H]
+        # Build interference bias as Gram matrix of 2D features per head
+        # phase features: [B,L,2H] -> [B,H,L,2]
+        ph = self.phase_proj(x).view(B, L, self.num_heads, 2).permute(0, 2, 1, 3)  # [B,H,L,2]
+        # normalize to unit circle to stabilize training
+        ph = F.normalize(ph, p=2, dim=-1, eps=1e-6)
+        c = ph[..., 0]  # [B,H,L]
+        s = ph[..., 1]  # [B,H,L]
 
-        # compute pairwise delta angles -> interference pattern
-        # angles_q = angles.unsqueeze(2)  # [B,L,1,H]
-        # angles_k = angles.unsqueeze(1)  # [B,1,L,H]
-        # delta = angles_q - angles_k  # broadcasting -> [B,L,L,H]
-        # Permute to [B,H,L,L]
-        delta = angles.unsqueeze(2) - angles.unsqueeze(1)  # [B,L,L,H]
-        delta = delta.permute(0, 3, 1, 2)  # [B,H,L,L]
-        interference = torch.cos(delta)  # [B,H,L,L]
+        # Gram: (c c^T + s s^T) -> [B,H,L,L]
+        # do as outer products via broadcasting (fast on GPU, no trig per pair)
+        inter_bias = (c.unsqueeze(-1) * c.unsqueeze(-2)) + (s.unsqueeze(-1) * s.unsqueeze(-2))
 
-        # Fix: properly combine classical scores and interference
-        # Take mean across heads and apply simple scaling
-        inter_mixed = interference.mean(dim=1, keepdim=True)  # [B,1,L,L]
-        inter_mixed = inter_mixed.expand(-1, self.num_heads, -1, -1)  # [B,H,L,L]
+        # per-head gate in [0,1], apply fraction mask, and global beta
+        head_gate = torch.sigmoid(self.gamma) * self.active_heads_mask  # [H]
+        inter_bias = inter_bias * head_gate.view(1, H, 1, 1) * self.interference_beta
 
-        # combine with learnable weight
-        scores = scores + 0.1 * inter_mixed  # Small weight to avoid overwhelming classical attention
+        # compose final additive mask: causal + interference
+        # attn_bias is causal mask shaped [1,1,L,L] with -inf above diagonal; upcast to q dtype
+        if attn_bias is None:
+            mask = inter_bias
+        else:
+            mask = attn_bias.to(q.dtype) + inter_bias
 
-        if attn_bias is not None:
-            scores = scores + attn_bias
-
-        attn = torch.softmax(scores, dim=-1)
-        attn = self.dropout(attn)
-        out = torch.matmul(attn, v)
+        # scaled_dot_product_attention uses efficient kernels (Flash/Math/Memory) automatically
+        out = F.scaled_dot_product_attention(q, k, v,
+                                             attn_mask=mask,
+                                             dropout_p=self.dropout_p if self.training else 0.0,
+                                             is_causal=False)
         out = self._merge(out)
         return self.o(out)
 
 
 class MultiHeadSelfAttention(nn.Module):
+    """SDPA-based MHA (faster than manual matmuls)."""
     def __init__(self, dim, num_heads, lora_rank=0, lora_alpha=8.0, lora_train_only=False, dropout=0.0):
         super().__init__()
         assert dim % num_heads == 0
         self.dim = dim
         self.num_heads = num_heads
         self.head_dim = dim // num_heads
-        self.scale = self.head_dim ** -0.5
+        self.dropout_p = float(dropout)
         self.q = LoRALinear(dim, dim, True, lora_rank, lora_alpha, lora_train_only)
         self.k = LoRALinear(dim, dim, True, lora_rank, lora_alpha, lora_train_only)
         self.v = LoRALinear(dim, dim, True, lora_rank, lora_alpha, lora_train_only)
         self.o = LoRALinear(dim, dim, True, lora_rank, lora_alpha, lora_train_only)
-        self.dropout = nn.Dropout(dropout)
 
     def _split(self, x):
         B, L, D = x.shape
-        return x.view(B, L, self.num_heads, self.head_dim).transpose(1, 2)
+        return x.view(B, L, self.num_heads, self.head_dim).transpose(1, 2)  # [B,H,L,hd]
 
     def _merge(self, x):
         B, H, L, hd = x.shape
@@ -174,24 +185,27 @@ class MultiHeadSelfAttention(nn.Module):
         q = self._split(self.q(x))
         k = self._split(self.k(x))
         v = self._split(self.v(x))
-        scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale
-        if attn_bias is not None:
-            scores = scores + attn_bias
-        attn = torch.softmax(scores, dim=-1)
-        attn = self.dropout(attn)
-        out = torch.matmul(attn, v)
+        mask = None if attn_bias is None else attn_bias.to(q.dtype)
+        out = F.scaled_dot_product_attention(q, k, v,
+                                             attn_mask=mask,
+                                             dropout_p=self.dropout_p if self.training else 0.0,
+                                             is_causal=False)
         out = self._merge(out)
         return self.o(out)
 
 
 class TransformerBlock(nn.Module):
     def __init__(self, dim, num_heads, mlp_ratio=4.0, dropout=0.0, lora_rank=0, lora_alpha=8.0,
-                 lora_train_only=False, attention_type: str = "classical"):
+                 lora_train_only=False, attention_type: str = "classical",
+                 interference_beta: float = 0.08, inter_heads_fraction: float = 1.0):
         super().__init__()
         self.ln1 = nn.LayerNorm(dim)
-        self.attn = (MultiHeadSelfAttention(dim, num_heads, lora_rank, lora_alpha, lora_train_only, dropout)
-                     if attention_type == "classical"
-                     else InterferenceAttention(dim, num_heads, lora_rank, lora_alpha, lora_train_only, dropout))
+        if attention_type == "classical":
+            self.attn = MultiHeadSelfAttention(dim, num_heads, lora_rank, lora_alpha, lora_train_only, dropout)
+        else:
+            self.attn = InterferenceAttention(dim, num_heads, lora_rank, lora_alpha, lora_train_only, dropout,
+                                              interference_beta=interference_beta,
+                                              inter_heads_fraction=inter_heads_fraction)
         self.ln2 = nn.LayerNorm(dim)
         hidden = int(dim * mlp_ratio)
         self.mlp = nn.Sequential(
@@ -210,7 +224,8 @@ class TransformerBlock(nn.Module):
 class QuantumInspiredLLM(nn.Module):
     def __init__(self, vocab_size=256, dim=384, depth=6, num_heads=8, seq_length=128,
                  global_tokens=0, lora_rank=0, lora_alpha=8.0, lora_train_only=False, dropout=0.0,
-                 attention_type: str = "classical", use_checkpoint: bool = False):
+                 attention_type: str = "classical", use_checkpoint: bool = False,
+                 interference_beta: float = 0.08, inter_heads_fraction: float = 1.0):
         super().__init__()
         self.vocab_size = vocab_size
         self.dim = dim
@@ -220,12 +235,12 @@ class QuantumInspiredLLM(nn.Module):
         self.use_checkpoint = use_checkpoint
 
         self.tok_embed = nn.Embedding(vocab_size, dim)
-        # pos_embed length = seq_length + global_tokens (we will index accordingly)
         self.pos_embed = nn.Embedding(seq_length + self.global_tokens + 1, dim)
         self.phase = PhaseRotator(dim)
 
         self.blocks = nn.ModuleList([
-            TransformerBlock(dim, num_heads, 4.0, dropout, lora_rank, lora_alpha, lora_train_only, attention_type)
+            TransformerBlock(dim, num_heads, 4.0, dropout, lora_rank, lora_alpha, lora_train_only,
+                             attention_type, interference_beta, inter_heads_fraction)
             for _ in range(depth)
         ])
         self.ln = nn.LayerNorm(dim)
@@ -244,22 +259,16 @@ class QuantumInspiredLLM(nn.Module):
         return torch.cat([g, x], dim=1), self.global_tokens
 
     def forward(self, idx):
-        """
-        idx: [B, L]
-        returns logits: [B, L, vocab_size] (excludes global tokens positions)
-        """
         B, L = idx.shape
         pos = torch.arange(0, L, device=idx.device).unsqueeze(0)
         x = self.tok_embed(idx) + self.pos_embed(pos)
         x = self.phase(x)
         x, g = self.add_globals(x)
         total_len = L + g
-        attn_bias = causal_mask(total_len, idx.device)
+        attn_bias = causal_mask(total_len, idx.device)  # [1,1,T,T] with -inf above diag
 
-        # iterate blocks; optionally use activation checkpointing for memory savings
         for blk in self.blocks:
             if self.use_checkpoint:
-                # wrap the block call to be checkpointable; checkpoint expects a function that accepts x
                 def run_block(x_inner, block=blk, attn_bias=attn_bias):
                     return block(x_inner, attn_bias)
                 x = activation_checkpoint(run_block, x, use_reentrant=False)
