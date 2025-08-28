@@ -12,7 +12,7 @@ import math
 
 # In quantum_llm_train.py (or in a separate energy_trainer.py file)
 class EnergyBasedTrainer:
-    def __init__(self, model, learning_rate=1e-4, energy_weight=0.01, coherence_weight=0.005, 
+    def __init__(self, model, learning_rate=1e-4, energy_weight=0.001, coherence_weight=0.0005, 
                  grad_clip=1.0, warmup_steps=1000, total_steps=20000):
         self.model = model
         self.energy_weight = energy_weight
@@ -63,8 +63,11 @@ class EnergyBasedTrainer:
                 coherence = self._calculate_enhanced_coherence(phase_repr_fp32)
                 coherence_loss = -coherence.mean()
                 
-                # Combined loss
-                loss = ce_loss + self.energy_weight * energy_loss + self.coherence_weight * coherence_loss
+                # Calculate semantic loss (encourage meaningful token sequences)
+                semantic_loss = self._calculate_semantic_loss(logits, targets)
+                
+                # Combined loss with reduced quantum weights and semantic component
+                loss = ce_loss + self.energy_weight * energy_loss + self.coherence_weight * coherence_loss + 0.01 * semantic_loss
         else:
             # Standard precision forward pass
             logits = self.model(inputs)
@@ -83,8 +86,11 @@ class EnergyBasedTrainer:
             coherence = self._calculate_enhanced_coherence(phase_repr)
             coherence_loss = -coherence.mean()
             
-            # Combined loss
-            loss = ce_loss + self.energy_weight * energy_loss + self.coherence_weight * coherence_loss
+            # Calculate semantic loss (encourage meaningful token sequences)
+            semantic_loss = self._calculate_semantic_loss(logits, targets)
+            
+            # Combined loss with reduced quantum weights and semantic component
+            loss = ce_loss + self.energy_weight * energy_loss + self.coherence_weight * coherence_loss + 0.01 * semantic_loss
         
         # Backward pass
         self.optimizer.zero_grad()
@@ -290,3 +296,70 @@ class EnergyBasedTrainer:
     def _calculate_coherence(self, phase_repr):
         """Legacy coherence calculation - kept for backward compatibility"""
         return self._calculate_enhanced_coherence(phase_repr)
+    
+    def _calculate_semantic_loss(self, logits, targets):
+        """
+        Semantic loss to encourage meaningful token sequences and reduce repetitive patterns
+        """
+        batch_size, seq_len, vocab_size = logits.shape
+        
+        # 1. Repetition penalty loss
+        # Penalize repetitive token sequences
+        probs = torch.softmax(logits, dim=-1)
+        
+        # Calculate repetition penalty for recent tokens
+        repetition_penalty = 0.0
+        if seq_len > 1:
+            # Look at the last few tokens to detect repetition
+            recent_tokens = targets[:, -min(10, seq_len-1):]
+            
+            # Calculate token frequency in recent history
+            for i in range(batch_size):
+                token_counts = {}
+                for token in recent_tokens[i]:
+                    token_counts[token.item()] = token_counts.get(token.item(), 0) + 1
+                
+                # Penalize tokens that appear too frequently
+                for token, count in token_counts.items():
+                    if count > 1 and token < vocab_size:
+                        repetition_penalty += (count - 1) * 0.1
+        
+        # 2. Semantic diversity loss
+        # Encourage diverse token selection
+        entropy = -torch.sum(probs * torch.log(probs + 1e-8), dim=-1)
+        diversity_loss = -torch.mean(entropy)  # Negative because we want to maximize entropy
+        
+        # 3. Context coherence loss
+        # Encourage tokens that make sense in context
+        # This is a simplified version - in practice, you'd want more sophisticated semantic analysis
+        context_loss = 0.0
+        if seq_len > 2:
+            # Calculate how well each token fits with its neighbors
+            for i in range(1, seq_len - 1):
+                prev_probs = probs[:, i-1, :]
+                curr_probs = probs[:, i, :]
+                next_probs = probs[:, i+1, :]
+                
+                # Encourage smooth transitions between tokens
+                transition_smoothness = torch.sum(prev_probs * curr_probs, dim=-1) + torch.sum(curr_probs * next_probs, dim=-1)
+                context_loss += torch.mean(transition_smoothness)
+        
+        # 4. Byte-level coherence loss
+        # For byte-level models, encourage valid UTF-8 sequences
+        byte_coherence = 0.0
+        if vocab_size == 256:  # Byte-level vocabulary
+            # Encourage common byte patterns
+            common_bytes = [32, 101, 116, 97, 111, 105, 110, 115, 114, 104]  # space, e, t, a, o, i, n, s, r, h
+            for byte_val in common_bytes:
+                if byte_val < vocab_size:
+                    byte_coherence += torch.mean(probs[:, :, byte_val])
+        
+        # Combined semantic loss
+        semantic_loss = (
+            0.3 * repetition_penalty +
+            0.3 * diversity_loss +
+            0.2 * context_loss +
+            0.2 * byte_coherence
+        )
+        
+        return semantic_loss

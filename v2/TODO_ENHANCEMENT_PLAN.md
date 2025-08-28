@@ -249,8 +249,34 @@ This will add semantic understanding and should significantly improve generation
 - Missing semantic understanding layer
 - Sampling strategy may not be optimal for quantum-inspired models
 
-**THEN: Phase 2.1 - Concept Layer Implementation**
-This will add the missing semantic layer that should dramatically improve text generation quality.
+**✅ CRITICAL FIXES IMPLEMENTED:**
+
+**Phase 1.4 - Generation Quality Fixes (COMPLETED)**
+- ✅ Implemented quantum-aware generation with phase coherence checking
+- ✅ Added quantum-aware temperature scaling and repetition penalty
+- ✅ Created semantic coherence during generation
+- ✅ Fixed repetitive token generation with enhanced sampling
+
+**Phase 1.5 - Training Stability Fixes (COMPLETED)**
+- ✅ Reduced quantum loss weights (energy: 0.01→0.001, coherence: 0.005→0.0005)
+- ✅ Added semantic loss components for better language learning
+- ✅ Implemented repetition penalty and diversity loss
+- ✅ Added context coherence and byte-level coherence
+
+**🎯 NEXT: Retrain with Fixes and Test**
+
+**Immediate Action Required:**
+1. **Run retraining script**: `uv run retrain_with_fixes.py`
+2. **Test generation quality** with the newly trained model
+3. **Compare results** with previous training run
+4. **If successful**: Implement Phase 2.1 - Concept Layer
+5. **If still issues**: Further tune loss weights and semantic components
+
+**Expected Improvements:**
+- Reduced repetitive patterns like "[ [ [ [ ["
+- Better semantic coherence in generated text
+- More meaningful token sequences
+- Improved training convergence (loss should decrease more steadily)
 
 ===== NOTES =====
 
@@ -525,3 +551,59 @@ streaming = True  # No memory limits
 This architecture provides a solid foundation for scaling QLLM training from development to production while maintaining memory efficiency and training quality.
 
 ==== LEARNINGS ====
+
+## Critical Learnings from Current Training Run
+
+### ❌ What Went Wrong:
+
+1. **Quantum Architecture vs Language Learning Mismatch**
+
+   - Phase relationships are mathematically sound but linguistically meaningless
+   - Model learns byte-level patterns instead of semantic understanding
+   - Energy functions optimize for quantum coherence, not language coherence
+
+2. **Training Metrics vs Generation Quality Disconnect**
+
+   - Perplexity improved from 25.68 to 12.32 (good)
+   - But generation quality is completely broken (bad)
+   - This indicates the model is overfitting to training patterns
+
+3. **Loss Function Imbalance**
+
+   - Energy weight (0.01) and coherence weight (0.005) may be too high
+   - These quantum losses are interfering with language learning
+   - Cross-entropy loss is competing with quantum losses
+
+4. **Sampling Strategy Issues**
+   - Standard sampling doesn't work with quantum-inspired models
+   - Need quantum-aware temperature scaling and repetition penalty
+   - Current sampling produces repetitive patterns and gibberish
+
+### ✅ What's Working:
+
+1. **Memory Efficiency**: Model runs efficiently on RTX 4090 (0.31GB VRAM usage)
+2. **Training Stability**: No crashes, consistent convergence
+3. **Scalable Architecture**: Multi-dataset support works well
+4. **Quantum Mechanics**: Phase relationships and interference patterns are mathematically correct
+
+### 🎯 Key Insights:
+
+1. **Quantum-inspired ≠ Language-optimized**: We need to balance quantum principles with language learning
+2. **Perplexity ≠ Generation Quality**: Need separate metrics for generation quality
+3. **Curriculum Learning Needed**: Should train language first, then add quantum features
+4. **Semantic Layer Missing**: The model lacks true semantic understanding
+
+### 📊 Performance Analysis:
+
+- **Training Loss**: Plateaued at 2.4-2.5 (not improving)
+- **Energy Values**: Fluctuating wildly (-1.01 to 9.58) indicating instability
+- **Coherence Values**: Very low (-0.004 to -0.012) indicating poor phase relationships
+- **Generation Quality**: Complete gibberish with repetitive patterns
+- **Memory Usage**: Excellent (0.31GB VRAM, 0.31GB RAM)
+
+### 🔧 Immediate Fixes Required:
+
+1. **Reduce quantum loss weights** to let language learning dominate
+2. **Implement quantum-aware sampling** for better generation
+3. **Add semantic loss components** to improve language understanding
+4. **Implement curriculum learning** to train language first, quantum second

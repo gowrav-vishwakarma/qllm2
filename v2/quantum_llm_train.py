@@ -30,6 +30,104 @@ def get_gpu_memory_usage():
         }
     return {'allocated_gb': 0, 'reserved_gb': 0, 'total_gb': 0}
 
+def quantum_aware_generate(model, prompt, tokenizer, max_new_tokens=100, temperature=0.7, 
+                          top_k=50, top_p=0.9, repetition_penalty=1.1, min_p=0.05):
+    """
+    Quantum-aware generation with phase coherence and semantic stability
+    """
+    device = next(model.parameters()).device
+    model.eval()
+    
+    # Encode prompt
+    if isinstance(prompt, str):
+        # Simple byte-level encoding for now
+        input_ids = torch.tensor([ord(c) for c in prompt], dtype=torch.long, device=device).unsqueeze(0)
+    else:
+        input_ids = prompt.to(device)
+    
+    generated = input_ids.clone()
+    
+    print(f"🎯 Generating {max_new_tokens} tokens for prompt: '{prompt}'")
+    
+    with torch.no_grad():
+        for i in range(max_new_tokens):
+            # Get model predictions
+            logits = model(generated)
+            next_token_logits = logits[0, -1, :] / temperature
+            
+            # Apply repetition penalty
+            if repetition_penalty != 1.0:
+                for token_id in set(generated[0].tolist()):
+                    if token_id < len(next_token_logits):
+                        next_token_logits[token_id] /= repetition_penalty
+            
+            # Quantum-aware filtering: filter out tokens that would create poor phase coherence
+            if i > 0:  # Skip for first token
+                # Get phase representation of current sequence
+                phase_repr = model.get_phase_representation(generated)
+                
+                # Calculate phase coherence for each potential next token
+                coherence_scores = []
+                for token_id in range(min(256, len(next_token_logits))):  # Limit to byte-level
+                    # Create temporary sequence with this token
+                    temp_seq = torch.cat([generated, torch.tensor([[token_id]], device=device)], dim=1)
+                    temp_phase = model.get_phase_representation(temp_seq)
+                    
+                    # Calculate local coherence (last few tokens)
+                    local_coherence = torch.abs(temp_phase[0, -3:, :]).mean()
+                    coherence_scores.append(local_coherence.item())
+                
+                # Boost logits for tokens with good coherence
+                coherence_scores = torch.tensor(coherence_scores, device=device)
+                coherence_boost = torch.sigmoid(coherence_scores - coherence_scores.mean()) * 0.5
+                next_token_logits[:len(coherence_boost)] += coherence_boost
+            
+            # Apply top-k filtering
+            if top_k > 0:
+                top_k_logits, top_k_indices = torch.topk(next_token_logits, min(top_k, next_token_logits.size(-1)))
+                next_token_logits = torch.full_like(next_token_logits, float('-inf'))
+                next_token_logits[top_k_indices] = top_k_logits
+            
+            # Apply nucleus sampling (top-p)
+            if top_p < 1.0:
+                sorted_logits, sorted_indices = torch.sort(next_token_logits, descending=True)
+                cumulative_probs = torch.cumsum(torch.softmax(sorted_logits, dim=-1), dim=-1)
+                sorted_indices_to_remove = cumulative_probs > top_p
+                sorted_indices_to_remove[1:] = sorted_indices_to_remove[:-1].clone()
+                sorted_indices_to_remove[0] = 0
+                indices_to_remove = sorted_indices[sorted_indices_to_remove]
+                next_token_logits[indices_to_remove] = float('-inf')
+            
+            # Apply min-p filtering
+            if min_p > 0:
+                max_logit = torch.max(next_token_logits)
+                threshold = max_logit + math.log(min_p)
+                next_token_logits = torch.where(next_token_logits < threshold, 
+                                               torch.tensor(float('-inf'), device=device), 
+                                               next_token_logits)
+            
+            # Sample next token
+            probs = torch.softmax(next_token_logits, dim=-1)
+            next_token = torch.multinomial(probs, num_samples=1)
+            
+            # Append to generated sequence
+            generated = torch.cat([generated, next_token.unsqueeze(0)], dim=1)
+            
+            # Print progress
+            if (i + 1) % 50 == 0:
+                print(f"   Generated {i + 1}/{max_new_tokens} tokens...")
+    
+    # Decode generated sequence
+    if isinstance(prompt, str):
+        # Simple byte-level decoding
+        generated_text = ''.join([chr(token_id) for token_id in generated[0].tolist()])
+        # Remove the original prompt
+        generated_text = generated_text[len(prompt):]
+    else:
+        generated_text = generated[0].tolist()
+    
+    return generated_text
+
 def train(args):
     """Main training function with memory optimizations"""
     # Setup device
@@ -262,7 +360,7 @@ def train(args):
     print("Training completed!")
 
 def generate(args):
-    """Text generation using trained model"""
+    """Quantum-aware text generation using trained model"""
     device = device_str()
     
     # Load checkpoint first to get the model parameters
@@ -301,44 +399,19 @@ def generate(args):
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
     
-    # Simple generation (you can enhance with sampling methods)
-    from sampling_qllm import sample_next_token
+    # Use quantum-aware generation
+    generated_text = quantum_aware_generate(
+        model=model,
+        prompt=args.prompt,
+        tokenizer=None,  # We're using byte-level encoding
+        max_new_tokens=args.max_new_tokens,
+        temperature=args.temperature,
+        top_k=args.top_k,
+        top_p=args.top_p,
+        repetition_penalty=args.repetition_penalty,
+        min_p=args.min_p
+    )
     
-    # Encode prompt
-    prompt_bytes = args.prompt.encode('utf-8', errors='ignore')
-    context = list(prompt_bytes)[:seq_length]
-    if len(context) == 0:
-        context = [ord(' ')]
-    
-    x = torch.tensor(context, dtype=torch.long, device=device).unsqueeze(0)
-    out_ids = list(context)
-    
-    print(f"🎯 Generating {args.max_new_tokens} tokens for prompt: '{args.prompt}'")
-    
-    # Generate tokens
-    with torch.no_grad():
-        for i in range(args.max_new_tokens):
-            x_in = x[:, -model.max_seq_len:]
-            logits = model(x_in)
-            next_logits = logits[:, -1, :]
-            next_id = sample_next_token(
-                next_logits,
-                temperature=args.temperature,
-                top_k=args.top_k,
-                top_p=args.top_p,
-                repetition_penalty=args.repetition_penalty,
-                recent_ids=[out_ids[-64:]],
-                min_p=args.min_p
-            ).item()
-            out_ids.append(next_id)
-            x = torch.tensor(out_ids, dtype=torch.long, device=device).unsqueeze(0)
-            
-            # Print progress every 50 tokens
-            if (i + 1) % 50 == 0:
-                print(f"   Generated {i + 1}/{args.max_new_tokens} tokens...")
-    
-    # Decode and print
-    generated_text = bytes(out_ids).decode('utf-8', errors='ignore')
     print(f"\nGenerated text:\n{generated_text}")
 
 def main():
@@ -360,8 +433,8 @@ def main():
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--max_steps", type=int, default=None)
     parser.add_argument("--lr", type=float, default=3e-4)
-    parser.add_argument("--energy_weight", type=float, default=0.1)
-    parser.add_argument("--coherence_weight", type=float, default=0.05)
+    parser.add_argument("--energy_weight", type=float, default=0.001)
+    parser.add_argument("--coherence_weight", type=float, default=0.0005)
     parser.add_argument("--grad_clip", type=float, default=1.0)
     parser.add_argument("--warmup_steps", type=int, default=200)
     parser.add_argument("--checkpoint_dir", default="checkpoints_quantum")
