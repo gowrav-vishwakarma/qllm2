@@ -30,7 +30,7 @@ def main():
     # Create cache directory
     os.makedirs("./cache", exist_ok=True)
     
-    # Training command with checkpointing disabled to avoid the error
+    # Improved training command with adjusted parameters
     cmd = [
         "python", "quantum_llm_train.py",
         "--mode", "train",
@@ -44,15 +44,17 @@ def main():
         "--epochs", "10",
         "--max_steps", "2000",  # Limit total steps
         "--lr", "3e-4",
-        "--energy_weight", "0.05",  # Reduced energy weight
-        "--coherence_weight", "0.02",  # Reduced coherence weight
+        "--energy_weight", "0.02",  # Further reduced energy weight
+        "--coherence_weight", "0.01",  # Further reduced coherence weight
+        "--warmup_steps", "200",  # Warmup steps for scheduler
         "--checkpoint_dir", "checkpoints_quantum",
         "--save_every", "500",
         "--log_every", "50",
         "--dataset", "wikitext2",
-        "--use_checkpoint",  # Disabled to avoid checkpointing error
+        "--use_checkpoint",
         "--streaming",  # Enable streaming
-        "--num_workers", "1"  # Single worker to reduce memory
+        "--num_workers", "1",  # Single worker to reduce memory
+        "--val_max_chunks", "1000"  # Limit validation to 1000 chunks
     ]
     
     print(f"🔧 Running command: {' '.join(cmd)}")

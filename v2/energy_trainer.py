@@ -11,13 +11,15 @@ import torch.nn.functional as F
 import math
 
 class EnergyBasedTrainer:
-    """Trainer that incorporates energy-based training with efficient computations"""
+    """Trainer that incorporates energy-based training with flexible scheduler"""
     def __init__(self, model, learning_rate=3e-4, energy_weight=0.1, 
-                 coherence_weight=0.05, grad_clip=1.0):
+                 coherence_weight=0.05, grad_clip=1.0, warmup_steps=500, total_steps=10000):
         self.model = model
         self.energy_weight = energy_weight
         self.coherence_weight = coherence_weight
         self.grad_clip = grad_clip
+        self.warmup_steps = warmup_steps
+        self.current_step = 0
         
         # Optimizer with different learning rates for different components
         self.optimizer = torch.optim.AdamW([
@@ -28,9 +30,18 @@ class EnergyBasedTrainer:
             {'params': model.pos_embedding.parameters(), 'lr': learning_rate},
         ], weight_decay=0.01)
         
-        # Learning rate scheduler
-        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            self.optimizer, T_max=1000, eta_min=1e-6
+        # Use a better scheduler with warmup and cosine decay
+        # Make total_steps larger to accommodate multiple epochs
+        adjusted_total_steps = max(total_steps, 10000)  # Ensure we have enough steps
+        self.scheduler = torch.optim.lr_scheduler.OneCycleLR(
+            self.optimizer,
+            max_lr=learning_rate,
+            total_steps=adjusted_total_steps,
+            pct_start=warmup_steps/adjusted_total_steps,
+            anneal_strategy='cos',
+            div_factor=25,
+            final_div_factor=1000,
+            cycle_momentum=False
         )
         
     def compute_energy(self, phase_repr):
@@ -77,6 +88,7 @@ class EnergyBasedTrainer:
     def training_step(self, inputs, targets):
         """Single training step"""
         self.optimizer.zero_grad()
+        self.current_step += 1
         
         # Forward pass
         outputs = self.model(inputs)
@@ -98,7 +110,7 @@ class EnergyBasedTrainer:
         energy = self.compute_energy(phase_repr).mean()
         coherence = self.compute_coherence(phase_repr).mean()
         
-        # Combined loss
+        # Combined loss with reduced energy/coherence impact for stability
         total_loss = ce_loss + self.energy_weight * energy - self.coherence_weight * coherence
         
         # Backward pass
@@ -109,7 +121,17 @@ class EnergyBasedTrainer:
         
         # Optimizer step
         self.optimizer.step()
-        self.scheduler.step()
+        
+        # Step scheduler with safety check
+        try:
+            self.scheduler.step()
+        except ValueError as e:
+            # If we've exceeded the total steps, just keep the last learning rate
+            if "total steps" in str(e):
+                # We've reached the end of the scheduler cycle
+                pass
+            else:
+                raise e
         
         return {
             'loss': total_loss.item(),
@@ -120,7 +142,7 @@ class EnergyBasedTrainer:
         }
     
     def validate(self, val_loader, device):
-        """Validation step"""
+        """Validation step with progress logging"""
         self.model.eval()
         total_loss = 0
         total_ce = 0
@@ -128,8 +150,10 @@ class EnergyBasedTrainer:
         total_coherence = 0
         num_batches = 0
         
+        print("   Running validation...")
+        
         with torch.no_grad():
-            for batch in val_loader:
+            for batch_idx, batch in enumerate(val_loader):
                 inputs, targets = batch
                 inputs = inputs.to(device)
                 targets = targets.to(device)
@@ -158,6 +182,12 @@ class EnergyBasedTrainer:
                 total_energy += energy.item()
                 total_coherence += coherence.item()
                 num_batches += 1
+                
+                # Print progress every 10 batches
+                if batch_idx % 100 == 0:
+                    print(f"   Validation batch {batch_idx}/{len(val_loader)}")
+        
+        print(f"✅ Validation completed: {num_batches} batches processed")
         
         return {
             'val_loss': total_loss / num_batches,

@@ -99,7 +99,7 @@ class StreamingByteDataset(IterableDataset):
 class MemoryEfficientByteDataset(Dataset):
     """Memory-efficient dataset for smaller datasets that can fit in RAM"""
     def __init__(self, dataset_name: str, split: str, seq_length: int, 
-                 max_samples: Optional[int] = None):
+                 max_samples: Optional[int] = None, max_chunks: Optional[int] = None):
         self.seq_length = seq_length
         
         # Load dataset with limits
@@ -112,29 +112,42 @@ class MemoryEfficientByteDataset(Dataset):
         else:
             raise ValueError(f"Unknown dataset: {dataset_name}")
         
-        # Limit samples if requested
+        # Limit texts if requested
         if max_samples is not None:
             texts = texts[:max_samples]
         
-        # Process texts into chunks without storing all intermediate data
+        # Process texts into chunks with strict limits
         self.chunks = []
         self.targets = []
+        total_chunks = 0
+        
+        # Use a hard limit on total chunks to prevent explosion
+        max_total_chunks = max_chunks if max_chunks is not None else 5000
         
         for text in texts:
             # Convert to bytes
             bytes_data = list(text.encode('utf-8', errors='ignore'))
             
-            # Generate chunks
+            # Generate chunks with limit
             for i in range(0, len(bytes_data) - seq_length - 1):
+                if total_chunks >= max_total_chunks:  # Stop if we've reached the limit
+                    break
+                    
                 chunk = bytes_data[i:i+seq_length]
                 target = bytes_data[i+1:i+seq_length+1]
                 
                 self.chunks.append(chunk)
                 self.targets.append(target)
+                total_chunks += 1
+            
+            if total_chunks >= max_total_chunks:  # Stop processing more texts
+                break
         
         # Convert to tensors once
         self.chunks_tensor = torch.tensor(self.chunks, dtype=torch.long)
         self.targets_tensor = torch.tensor(self.targets, dtype=torch.long)
+        
+        print(f"📊 Created dataset with {len(self.chunks_tensor)} chunks from {len(texts)} texts")
         
         # Free memory
         del self.chunks
@@ -151,23 +164,25 @@ class MemoryEfficientByteDataset(Dataset):
 
 def build_loaders(dataset_name: str, seq_length: int, batch_size: int, 
                  max_samples: Optional[int] = None, streaming: bool = True,
-                 num_workers: int = 4) -> Tuple[DataLoader, DataLoader]:
+                 num_workers: int = 4, val_max_chunks: int = 5000) -> Tuple[DataLoader, DataLoader]:
     """Build train and validation data loaders with memory efficiency"""
     
-    # For validation, use a smaller fixed dataset
+    # For validation, use a much smaller fixed dataset
     if dataset_name == "wikitext2":
         val_texts = load_dataset("wikitext", "wikitext-2-raw-v1", split="validation")
         val_texts = [ex["text"] for ex in val_texts if ex["text"].strip()]
         val_dataset = MemoryEfficientByteDataset(
             dataset_name, "validation", seq_length, 
-            max_samples=min(10000, len(val_texts))
+            max_samples=min(100, len(val_texts)),  # Only use 100 texts for validation
+            max_chunks=val_max_chunks  # Hard limit on validation chunks
         )
     elif dataset_name == "tinystories":
         val_texts = load_dataset("roneneldan/TinyStories", split="validation")
         val_texts = [ex["text"] for ex in val_texts]
         val_dataset = MemoryEfficientByteDataset(
             dataset_name, "validation", seq_length, 
-            max_samples=min(10000, len(val_texts))
+            max_samples=min(100, len(val_texts)),  # Only use 100 texts for validation
+            max_chunks=val_max_chunks  # Hard limit on validation chunks
         )
     
     # For training, use streaming if requested

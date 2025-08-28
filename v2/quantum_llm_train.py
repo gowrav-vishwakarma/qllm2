@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Main training script for Quantum-Inspired LLM with proper checkpointing
+Main training script for Quantum-Inspired LLM with epoch-based scheduler
 """
 
 import os
@@ -24,7 +24,7 @@ def train(args):
     device = device_str()
     print(f"Using device: {device}")
     
-    # Create model with checkpointing enabled
+    # Create model
     model = HardwareOptimizedQuantumLLM(
         vocab_size=256,  # Byte-level vocabulary
         dim=args.model_dim,
@@ -37,24 +37,31 @@ def train(args):
     
     print(f"Model created with {sum(p.numel() for p in model.parameters()):,} parameters")
     
-    # Create trainer
-    trainer = EnergyBasedTrainer(
-        model,
-        learning_rate=args.lr,
-        energy_weight=args.energy_weight,
-        coherence_weight=args.coherence_weight,
-        grad_clip=args.grad_clip
-    )
-    
-    # Create data loaders with streaming
+    # Create data loaders with streaming and validation limits
     train_loader, val_loader = build_loaders(
         args.dataset,
         args.seq_length,
         args.batch_size,
         args.max_samples,
         streaming=args.streaming,
-        num_workers=args.num_workers
+        num_workers=args.num_workers,
+        val_max_chunks=args.val_max_chunks
     )
+    
+    # Create trainer with flexible scheduler
+    trainer = EnergyBasedTrainer(
+        model,
+        learning_rate=args.lr,
+        energy_weight=args.energy_weight,
+        coherence_weight=args.coherence_weight,
+        grad_clip=args.grad_clip,
+        warmup_steps=args.warmup_steps,
+        total_steps=args.max_steps if args.max_steps else 10000
+    )
+    
+    # Print validation dataset size
+    print(f"📊 Validation dataset size: {len(val_loader.dataset)} chunks")
+    print(f"📊 Validation batches: {len(val_loader)}")
     
     # Setup logging
     os.makedirs(args.checkpoint_dir, exist_ok=True)
@@ -63,6 +70,8 @@ def train(args):
     # Training loop
     global_step = 0
     best_val_ppl = float('inf')
+    patience = 0
+    max_patience = 5  # Early stopping patience
     
     for epoch in range(args.epochs):
         model.train()
@@ -145,7 +154,11 @@ def train(args):
                 break
         
         # End of epoch validation
+        print(f"\n🔄 Starting validation for epoch {epoch}...")
+        val_start_time = time.time()
         val_metrics = trainer.validate(val_loader, device)
+        val_time = time.time() - val_start_time
+        print(f"✅ Validation completed for epoch {epoch} in {val_time:.2f}s")
         
         # Log validation metrics
         writer.add_scalar('Val/Loss', val_metrics['val_loss'], global_step)
@@ -161,7 +174,7 @@ def train(args):
               f"Coherence {val_metrics['val_coherence']:.4f} | "
               f"PPL {val_metrics['val_ppl']:.2f}")
         
-        # Save best model
+        # Early stopping check
         if val_metrics['val_ppl'] < best_val_ppl:
             best_val_ppl = val_metrics['val_ppl']
             best_path = os.path.join(args.checkpoint_dir, 'best_perplexity.pt')
@@ -173,6 +186,12 @@ def train(args):
                 'args': vars(args)
             }, best_path)
             print(f"New best model saved with perplexity {best_val_ppl:.2f}")
+            patience = 0
+        else:
+            patience += 1
+            if patience >= max_patience:
+                print(f"Early stopping triggered after {patience} epochs without improvement")
+                break
         
         # Clear cache between epochs
         torch.cuda.empty_cache()
@@ -184,19 +203,39 @@ def generate(args):
     """Text generation using trained model"""
     device = device_str()
     
-    # Create model
+    # Load checkpoint first to get the model parameters
+    checkpoint = torch.load(args.checkpoint, map_location=device)
+    
+    # Extract model parameters from checkpoint
+    if 'args' in checkpoint:
+        # Use parameters from checkpoint
+        model_dim = checkpoint['args'].get('model_dim', 384)
+        num_layers = checkpoint['args'].get('num_layers', 6)
+        num_heads = checkpoint['args'].get('num_heads', 6)
+        phase_dim = checkpoint['args'].get('phase_dim', 48)
+        seq_length = checkpoint['args'].get('seq_length', 256)
+    else:
+        # Fallback to command line args or defaults
+        model_dim = getattr(args, 'model_dim', 384)
+        num_layers = getattr(args, 'num_layers', 6)
+        num_heads = getattr(args, 'num_heads', 6)
+        phase_dim = getattr(args, 'phase_dim', 48)
+        seq_length = getattr(args, 'seq_length', 256)
+    
+    print(f" Loading model with parameters: dim={model_dim}, layers={num_layers}, heads={num_heads}, phase_dim={phase_dim}")
+    
+    # Create model with correct parameters
     model = HardwareOptimizedQuantumLLM(
         vocab_size=256,
-        dim=args.model_dim,
-        num_layers=args.num_layers,
-        num_heads=args.num_heads,
-        phase_dim=args.phase_dim,
-        max_seq_len=args.seq_length,
+        dim=model_dim,
+        num_layers=num_layers,
+        num_heads=num_heads,
+        phase_dim=phase_dim,
+        max_seq_len=seq_length,
         use_checkpoint=False
     ).to(device)
     
     # Load checkpoint
-    checkpoint = torch.load(args.checkpoint, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
     
@@ -205,16 +244,18 @@ def generate(args):
     
     # Encode prompt
     prompt_bytes = args.prompt.encode('utf-8', errors='ignore')
-    context = list(prompt_bytes)[:args.seq_length]
+    context = list(prompt_bytes)[:seq_length]
     if len(context) == 0:
         context = [ord(' ')]
     
     x = torch.tensor(context, dtype=torch.long, device=device).unsqueeze(0)
     out_ids = list(context)
     
+    print(f"🎯 Generating {args.max_new_tokens} tokens for prompt: '{args.prompt}'")
+    
     # Generate tokens
     with torch.no_grad():
-        for _ in range(args.max_new_tokens):
+        for i in range(args.max_new_tokens):
             x_in = x[:, -model.max_seq_len:]
             logits = model(x_in)
             next_logits = logits[:, -1, :]
@@ -229,6 +270,10 @@ def generate(args):
             ).item()
             out_ids.append(next_id)
             x = torch.tensor(out_ids, dtype=torch.long, device=device).unsqueeze(0)
+            
+            # Print progress every 50 tokens
+            if (i + 1) % 50 == 0:
+                print(f"   Generated {i + 1}/{args.max_new_tokens} tokens...")
     
     # Decode and print
     generated_text = bytes(out_ids).decode('utf-8', errors='ignore')
@@ -249,18 +294,20 @@ def main():
     # Training parameters
     parser.add_argument("--dataset", default="wikitext2")
     parser.add_argument("--batch_size", type=int, default=4)
-    parser.add_argument("--max_samples", type=int, default=50000)  # Reduced for memory
+    parser.add_argument("--max_samples", type=int, default=50000)
     parser.add_argument("--epochs", type=int, default=10)
-    parser.add_argument("--max_steps", type=int, default=None)  # New parameter
+    parser.add_argument("--max_steps", type=int, default=None)
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--energy_weight", type=float, default=0.1)
     parser.add_argument("--coherence_weight", type=float, default=0.05)
     parser.add_argument("--grad_clip", type=float, default=1.0)
+    parser.add_argument("--warmup_steps", type=int, default=200)
     parser.add_argument("--checkpoint_dir", default="checkpoints_quantum")
     parser.add_argument("--save_every", type=int, default=500)
     parser.add_argument("--log_every", type=int, default=50)
-    parser.add_argument("--streaming", action="store_true", default=True)  # Default to streaming
-    parser.add_argument("--num_workers", type=int, default=2)  # Reduced workers
+    parser.add_argument("--streaming", action="store_true", default=True)
+    parser.add_argument("--num_workers", type=int, default=2)
+    parser.add_argument("--val_max_chunks", type=int, default=1000)  # Limit validation chunks
     
     # Generation parameters
     parser.add_argument("--checkpoint", default=None)
