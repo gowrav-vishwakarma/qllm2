@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Main training script for Quantum-Inspired LLM
-Combines the model, trainer, and data loading into a complete training pipeline
+Main training script for Quantum-Inspired LLM with proper checkpointing
 """
 
 import os
@@ -17,15 +16,15 @@ from torch.utils.tensorboard import SummaryWriter
 from quantum_llm_model import HardwareOptimizedQuantumLLM
 from energy_trainer import EnergyBasedTrainer
 from datasets_qllm import build_loaders
-from qllm_utils import device_str, save_checkpoint
+from qllm_utils import device_str, save_checkpoint, get_memory_usage
 
 def train(args):
-    """Main training function"""
+    """Main training function with memory optimizations"""
     # Setup device
     device = device_str()
     print(f"Using device: {device}")
     
-    # Create model
+    # Create model with checkpointing enabled
     model = HardwareOptimizedQuantumLLM(
         vocab_size=256,  # Byte-level vocabulary
         dim=args.model_dim,
@@ -47,7 +46,7 @@ def train(args):
         grad_clip=args.grad_clip
     )
     
-    # Create data loaders
+    # Create data loaders with streaming
     train_loader, val_loader = build_loaders(
         args.dataset,
         args.seq_length,
@@ -74,11 +73,22 @@ def train(args):
         total_coherence = 0
         num_batches = 0
         
+        # Print memory usage before epoch
+        mem_usage = get_memory_usage()
+        print(f"Memory usage before epoch {epoch}: {mem_usage}")
+        
         for batch_idx, batch in enumerate(train_loader):
-            batch = batch.to(device)
+            # The batch is now a tuple of (inputs, targets) thanks to collate_fn
+            inputs, targets = batch
+            inputs = inputs.to(device)
+            targets = targets.to(device)
+            
+            # Skip incomplete batches
+            if inputs.size(0) != args.batch_size:
+                continue
             
             # Training step
-            metrics = trainer.training_step(batch)
+            metrics = trainer.training_step(inputs, targets)
             
             # Accumulate metrics
             total_loss += metrics['loss']
@@ -95,12 +105,15 @@ def train(args):
                 writer.add_scalar('Train/Coherence', metrics['coherence'], global_step)
                 writer.add_scalar('Train/LR', metrics['lr'], global_step)
                 
+                # Print memory usage
+                mem_usage = get_memory_usage()
                 print(f"Epoch {epoch} Step {global_step}: "
                       f"Loss {metrics['loss']:.4f} | "
                       f"CE {metrics['ce_loss']:.4f} | "
                       f"Energy {metrics['energy']:.4f} | "
                       f"Coherence {metrics['coherence']:.4f} | "
-                      f"LR {metrics['lr']:.6f}")
+                      f"LR {metrics['lr']:.6f} | "
+                      f"RAM {mem_usage.get('allocated', 0):.2f}GB")
             
             # Save checkpoint
             if global_step % args.save_every == 0:
@@ -126,6 +139,10 @@ def train(args):
                 }, latest_path)
             
             global_step += 1
+            
+            # Break if we've processed enough samples
+            if args.max_steps is not None and global_step >= args.max_steps:
+                break
         
         # End of epoch validation
         val_metrics = trainer.validate(val_loader, device)
@@ -156,6 +173,9 @@ def train(args):
                 'args': vars(args)
             }, best_path)
             print(f"New best model saved with perplexity {best_val_ppl:.2f}")
+        
+        # Clear cache between epochs
+        torch.cuda.empty_cache()
     
     writer.close()
     print("Training completed!")
@@ -228,18 +248,19 @@ def main():
     
     # Training parameters
     parser.add_argument("--dataset", default="wikitext2")
-    parser.add_argument("--batch_size", type=int, default=8)
-    parser.add_argument("--max_samples", type=int, default=100000)
+    parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--max_samples", type=int, default=50000)  # Reduced for memory
     parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--max_steps", type=int, default=None)  # New parameter
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--energy_weight", type=float, default=0.1)
     parser.add_argument("--coherence_weight", type=float, default=0.05)
     parser.add_argument("--grad_clip", type=float, default=1.0)
     parser.add_argument("--checkpoint_dir", default="checkpoints_quantum")
-    parser.add_argument("--save_every", type=int, default=1000)
-    parser.add_argument("--log_every", type=int, default=100)
-    parser.add_argument("--streaming", action="store_true")
-    parser.add_argument("--num_workers", type=int, default=4)
+    parser.add_argument("--save_every", type=int, default=500)
+    parser.add_argument("--log_every", type=int, default=50)
+    parser.add_argument("--streaming", action="store_true", default=True)  # Default to streaming
+    parser.add_argument("--num_workers", type=int, default=2)  # Reduced workers
     
     # Generation parameters
     parser.add_argument("--checkpoint", default=None)

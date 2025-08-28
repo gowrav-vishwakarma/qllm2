@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Pure Quantum-Inspired Language Model
-Implements the core architecture with phase space processing and dynamic layers
+Implements the core architecture with efficient phase space processing
 """
 
 import math
@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
 
 class QuantumLayer(nn.Module):
-    """Quantum-inspired layer with phase space processing"""
+    """Quantum-inspired layer with efficient phase space processing"""
     def __init__(self, dim, num_heads, phase_dim=64):
         super().__init__()
         self.dim = dim
@@ -23,9 +23,13 @@ class QuantumLayer(nn.Module):
         self.amplitude_proj = nn.Linear(dim, phase_dim)
         self.phase_proj = nn.Linear(dim, phase_dim)
         
-        # Interference operators
+        # Quantum interference operators (more efficient than pairwise computation)
         self.interference_operators = nn.ModuleList([
-            nn.Linear(phase_dim, phase_dim) for _ in range(num_heads)
+            nn.Sequential(
+                nn.Linear(phase_dim, phase_dim),
+                nn.Tanh(),
+                nn.Linear(phase_dim, phase_dim)
+            ) for _ in range(num_heads)
         ])
         
         # Output projection
@@ -46,12 +50,27 @@ class QuantumLayer(nn.Module):
         imag_part = amplitudes * torch.sin(phases)
         complex_repr = torch.complex(real_part, imag_part)
         
-        # Apply interference operations
+        # Apply interference operations efficiently
         head_outputs = []
         for op in self.interference_operators:
+            # Transform the complex representation
             transformed = op(complex_repr.real)
-            interference = torch.einsum('bld,bmd->blm', transformed, transformed)
-            output = torch.einsum('blm,bmd->bld', interference, complex_repr.real)
+            
+            # Compute local interference patterns (avoiding O(n^2) computation)
+            # Use convolution-like approach to capture local interactions
+            kernel_size = 3
+            padding = kernel_size // 2
+            transformed_reshaped = transformed.transpose(1, 2)  # [B, D, L]
+            interference = F.conv1d(
+                transformed_reshaped, 
+                transformed_reshaped, 
+                padding=padding, 
+                groups=batch_size
+            )
+            interference = interference.transpose(1, 2)  # [B, L, D]
+            
+            # Apply interference to original representation
+            output = complex_repr.real * torch.sigmoid(interference)
             head_outputs.append(output)
         
         # Combine heads
@@ -83,19 +102,19 @@ class DynamicPhaseProcessor(nn.Module):
             for i in range(1, expansion_levels + 1)
         ])
         
-    def forward(self, x, complexity_score=None):
+    def forward(self, x):
         batch_size, seq_len, dim = x.shape
         
-        # Determine required dimensionality
-        if complexity_score is None:
-            complexity_score = torch.var(x, dim=(1, 2)).mean()
+        # Compute complexity internally
+        complexity_score = torch.var(x, dim=(1, 2)).mean()
         
-        # Calculate expansion level
+        # Determine required dimensionality
         if complexity_score < 0.1:
             return self.base_op(x)
         
+        # Calculate expansion level - fix the warning
         expansion_level = min(
-            int(math.log(complexity_score * 10, self.growth_factor)),
+            int(math.log(float(complexity_score.item()) * 10, self.growth_factor)),
             len(self.expand_ops)
         )
         
@@ -173,16 +192,11 @@ class HardwareOptimizedQuantumLLM(nn.Module):
         
         # Process through quantum layers
         for layer in self.quantum_layers:
-            # Compute complexity score
-            complexity = torch.var(embeddings, dim=-1).mean()
-            
-            # Apply layer with dynamic processing
+            # Apply layer with checkpointing if enabled
             if self.use_checkpoint and self.training:
-                embeddings = checkpoint(
-                    lambda x: layer(x, complexity), embeddings, use_reentrant=False
-                )
+                embeddings = checkpoint(layer, embeddings, use_reentrant=False)
             else:
-                embeddings = layer(embeddings, complexity)
+                embeddings = layer(embeddings)
         
         # Output projection
         logits = self.output_proj(embeddings)
@@ -206,8 +220,7 @@ class HardwareOptimizedQuantumLLM(nn.Module):
         
         # Process through first layer to get phase representation
         layer = self.quantum_layers[0]
-        complexity = torch.var(embeddings, dim=-1).mean()
-        processed = layer(embeddings, complexity)
+        processed = layer(embeddings)
         
         # Create complex representation
         amplitudes = torch.tanh(processed)

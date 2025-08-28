@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Utility functions for Quantum-Inspired LLM
+Utility functions for Quantum-Inspired LLM with memory monitoring
 """
 
 import os
 import json
 import torch
+import psutil
 from typing import Dict, Any, Optional
 
 def device_str() -> str:
@@ -43,13 +44,23 @@ def get_model_size(model: torch.nn.Module) -> int:
 
 def get_memory_usage() -> Dict[str, float]:
     """Get current memory usage in GB"""
+    # RAM usage
+    memory = psutil.virtual_memory()
+    ram_usage = {
+        'allocated': memory.used / (1024**3),
+        'total': memory.total / (1024**3),
+        'percent': memory.percent
+    }
+    
+    # GPU memory usage
     if torch.cuda.is_available():
-        return {
-            'allocated': torch.cuda.memory_allocated() / 1e9,
-            'cached': torch.cuda.memory_reserved() / 1e9,
-            'max_allocated': torch.cuda.max_memory_allocated() / 1e9
+        gpu_usage = {
+            'allocated': torch.cuda.memory_allocated() / (1024**3),
+            'cached': torch.cuda.memory_reserved() / (1024**3),
+            'max_allocated': torch.cuda.max_memory_allocated() / (1024**3)
         }
-    return {'allocated': 0, 'cached': 0, 'max_allocated': 0}
+        return {**ram_usage, **gpu_usage}
+    return ram_usage
 
 def format_time(seconds: float) -> str:
     """Format time in seconds to human readable"""
@@ -67,3 +78,10 @@ def format_size(bytes: int) -> str:
             return f"{bytes:.1f}{unit}"
         bytes /= 1024.0
     return f"{bytes:.1f}TB"
+
+def clear_memory():
+    """Clear memory caches"""
+    import gc
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()

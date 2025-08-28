@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Energy-Based Training for Quantum-Inspired LLM
-Implements the energy minimization and coherence maximization training approach
+Implements efficient energy minimization and coherence maximization
 """
 
 import torch
@@ -11,7 +11,7 @@ import torch.nn.functional as F
 import math
 
 class EnergyBasedTrainer:
-    """Trainer that incorporates energy-based training"""
+    """Trainer that incorporates energy-based training with efficient computations"""
     def __init__(self, model, learning_rate=3e-4, energy_weight=0.1, 
                  coherence_weight=0.05, grad_clip=1.0):
         self.model = model
@@ -34,21 +34,39 @@ class EnergyBasedTrainer:
         )
         
     def compute_energy(self, phase_repr):
-        """Compute the energy of the phase representation"""
+        """
+        Compute the energy of the phase representation efficiently.
+        Energy is defined as the negative of local phase coherence.
+        This avoids the O(n^2) memory issue of pairwise computations.
+        """
         phases = torch.angle(phase_repr)
         batch_size, seq_len, dim = phases.shape
-        phases_flat = phases.view(batch_size, seq_len * dim)
         
-        # Compute cosine of phase differences (interference)
-        diff = phases_flat.unsqueeze(2) - phases_flat.unsqueeze(1)
-        interference = torch.cos(diff)
+        # Compute local phase coherence (within a window)
+        window_size = min(5, seq_len)  # Small window to avoid O(n^2)
+        energy = torch.zeros(batch_size, device=phases.device)
         
-        # Energy is negative interference (lower energy = more coherence)
-        energy = -torch.mean(interference, dim=(1, 2))
+        for i in range(seq_len):
+            # Define window around current position
+            start = max(0, i - window_size // 2)
+            end = min(seq_len, i + window_size // 2 + 1)
+            
+            # Get phases in window
+            window_phases = phases[:, start:end, :]
+            
+            # Compute coherence within window
+            avg_phase = torch.mean(torch.exp(1j * window_phases), dim=1)
+            coherence = torch.abs(avg_phase).mean(dim=1)
+            
+            # Energy is negative coherence
+            energy += -coherence
+        
+        # Normalize by sequence length
+        energy = energy / seq_len
         return energy
     
     def compute_coherence(self, phase_repr):
-        """Compute phase coherence"""
+        """Compute global phase coherence efficiently"""
         phases = torch.angle(phase_repr)
         
         # Compute coherence as magnitude of average phase vector
@@ -56,23 +74,25 @@ class EnergyBasedTrainer:
         coherence = torch.abs(avg_phase).mean(dim=1)
         return coherence
     
-    def training_step(self, batch):
+    def training_step(self, inputs, targets):
+        """Single training step"""
         self.optimizer.zero_grad()
         
         # Forward pass
-        outputs = self.model(batch)
+        outputs = self.model(inputs)
         
         # Compute standard cross-entropy loss
         shift_logits = outputs[:, :-1, :].contiguous()
-        shift_labels = batch[:, 1:].contiguous()
+        shift_targets = targets[:, 1:].contiguous()
+        
         ce_loss = F.cross_entropy(
             shift_logits.view(-1, shift_logits.size(-1)),
-            shift_labels.view(-1),
+            shift_targets.view(-1),
             ignore_index=-100
         )
         
         # Extract phase representation
-        phase_repr = self.model.get_phase_representation(batch)
+        phase_repr = self.model.get_phase_representation(inputs)
         
         # Compute energy and coherence
         energy = self.compute_energy(phase_repr).mean()
@@ -110,22 +130,24 @@ class EnergyBasedTrainer:
         
         with torch.no_grad():
             for batch in val_loader:
-                batch = batch.to(device)
+                inputs, targets = batch
+                inputs = inputs.to(device)
+                targets = targets.to(device)
                 
                 # Forward pass
-                outputs = self.model(batch)
+                outputs = self.model(inputs)
                 
                 # Compute losses
                 shift_logits = outputs[:, :-1, :].contiguous()
-                shift_labels = batch[:, 1:].contiguous()
+                shift_targets = targets[:, 1:].contiguous()
                 ce_loss = F.cross_entropy(
                     shift_logits.view(-1, shift_logits.size(-1)),
-                    shift_labels.view(-1),
+                    shift_targets.view(-1),
                     ignore_index=-100
                 )
                 
                 # Extract phase representation
-                phase_repr = self.model.get_phase_representation(batch)
+                phase_repr = self.model.get_phase_representation(inputs)
                 
                 # Compute metrics
                 energy = self.compute_energy(phase_repr).mean()

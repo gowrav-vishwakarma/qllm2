@@ -6,6 +6,7 @@ Test script for text generation with trained quantum-inspired LLM
 
 import subprocess
 import sys
+import os
 
 def test_generation():
     print("🧪 Testing Quantum-Inspired LLM Generation")
