@@ -12,3 +12,6 @@ checkpoints/
 checkpoints/*
 checkpoints_improved/
 checkpoints_improved/*
+checkpoints_large_scale/
+checkpoints_large_scale/*
+checkpoints*/

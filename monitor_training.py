@@ -1,120 +1,162 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Training Monitor Script
-Monitor the progress of the improved model training
+Monitor Large-Scale Quantum LLM Training
+Real-time monitoring for the large-scale model training
 """
 
 import os
 import time
-import subprocess
-from datetime import datetime
+import json
+import torch
+from pathlib import Path
 
-def check_training_status():
-    """Check if training is still running"""
-    try:
-        result = subprocess.run(['ps', 'aux'], capture_output=True, text=True)
-        return 'quantum_llm_train.py' in result.stdout
-    except:
-        return False
+def get_gpu_info():
+    """Get current GPU memory usage"""
+    if torch.cuda.is_available():
+        try:
+            # Get more accurate GPU memory info
+            allocated = torch.cuda.memory_allocated() / 1024**3  # GB
+            reserved = torch.cuda.memory_reserved() / 1024**3    # GB
+            total = torch.cuda.get_device_properties(0).total_memory / 1024**3
+            free = total - reserved
+            
+            # Also try to get memory from nvidia-smi if available
+            try:
+                import subprocess
+                result = subprocess.run(['nvidia-smi', '--query-gpu=memory.used,memory.total', '--format=csv,noheader,nounits'], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    lines = result.stdout.strip().split('\n')
+                    if lines:
+                        used_mb, total_mb = map(int, lines[0].split(', '))
+                        used_gb = used_mb / 1024
+                        total_gb = total_mb / 1024
+                        # Use nvidia-smi values if they seem more reasonable
+                        if used_gb > 0:
+                            allocated = used_gb
+                            total = total_gb
+                            free = total - used_gb
+            except:
+                pass  # Fall back to torch values
+                
+            return {
+                'memory_allocated': allocated,
+                'memory_reserved': reserved,
+                'memory_free': free,
+                'memory_total': total
+            }
+        except Exception as e:
+            print(f"Error getting GPU info: {e}")
+            return None
+    return None
 
-def get_latest_checkpoint():
+def get_latest_checkpoint(checkpoint_dir):
     """Get the latest checkpoint file"""
-    checkpoint_dir = "checkpoints_improved"
-    if not os.path.exists(checkpoint_dir):
+    checkpoint_dir = Path(checkpoint_dir)
+    if not checkpoint_dir.exists():
         return None
     
-    checkpoints = [f for f in os.listdir(checkpoint_dir) if f.endswith('.pt')]
+    # Look for the most recent checkpoint
+    checkpoints = list(checkpoint_dir.glob("model_step*.pt"))
     if not checkpoints:
         return None
     
-    # Sort by modification time
-    checkpoints.sort(key=lambda x: os.path.getmtime(os.path.join(checkpoint_dir, x)))
-    return checkpoints[-1]
+    return max(checkpoints, key=lambda x: x.stat().st_mtime)
 
-def get_file_size_mb(filepath):
-    """Get file size in MB"""
-    if os.path.exists(filepath):
-        return round(os.path.getsize(filepath) / (1024 * 1024), 1)
-    return 0
+def get_model_args(checkpoint_dir):
+    """Load model arguments from JSON"""
+    args_path = Path(checkpoint_dir) / "model_args.json"
+    if args_path.exists():
+        with open(args_path, 'r') as f:
+            return json.load(f)
+    return None
 
-def monitor_training():
-    """Monitor training progress"""
-    print("🔬 Quantum LLM Training Monitor")
-    print("=" * 50)
+def monitor_training(checkpoint_dir="checkpoints_large_scale"):
+    """Monitor training progress in real-time"""
     
-    start_time = time.time()
+    print("🔍 MONITORING LARGE-SCALE QUANTUM LLM TRAINING")
+    print("=" * 60)
+    
+    # Load model configuration
+    model_args = get_model_args(checkpoint_dir)
+    if model_args:
+        print(f"📋 Model Configuration:")
+        print(f"   Model: {model_args.get('model_dim', 'N/A')}d, {model_args.get('num_layers', 'N/A')} layers")
+        print(f"   Sequence: {model_args.get('seq_length', 'N/A')} tokens")
+        print(f"   Attention: {model_args.get('attention_type', 'N/A')}")
+        print(f"   Dataset: {model_args.get('dataset', 'N/A')}")
+        print()
+    
     last_checkpoint = None
+    start_time = time.time()
     
     while True:
-        # Check if training is still running
-        if not check_training_status():
-            print("❌ Training process not found. Training may have completed or failed.")
-            break
-        
-        # Get current checkpoint
-        current_checkpoint = get_latest_checkpoint()
-        
-        # Clear screen and show status
-        os.system('clear')
-        print("🔬 Quantum LLM Training Monitor")
-        print("=" * 50)
-        
-        # Training time
-        elapsed = time.time() - start_time
-        hours = int(elapsed // 3600)
-        minutes = int((elapsed % 3600) // 60)
-        seconds = int(elapsed % 60)
-        print(f"⏱️  Training time: {hours:02d}:{minutes:02d}:{seconds:02d}")
-        
-        # Current checkpoint
-        if current_checkpoint:
-            checkpoint_path = os.path.join("checkpoints_improved", current_checkpoint)
-            size_mb = get_file_size_mb(checkpoint_path)
-            mod_time = datetime.fromtimestamp(os.path.getmtime(checkpoint_path))
-            
-            print(f"💾 Latest checkpoint: {current_checkpoint}")
-            print(f"📏 Size: {size_mb} MB")
-            print(f"🕒 Modified: {mod_time.strftime('%H:%M:%S')}")
-            
-            # Check if new checkpoint was created
-            if current_checkpoint != last_checkpoint:
-                print(f"✅ New checkpoint created: {current_checkpoint}")
-                last_checkpoint = current_checkpoint
-        else:
-            print("⏳ Waiting for first checkpoint...")
-        
-        # Model configuration
-        print(f"\n📋 Model Configuration:")
-        print(f"   • Model dimension: 768")
-        print(f"   • Layers: 12")
-        print(f"   • Heads: 12")
-        print(f"   • Sequence length: 256")
-        print(f"   • Global tokens: 16")
-        print(f"   • LoRA rank: 32")
-        
-        # GPU usage
         try:
-            result = subprocess.run(['nvidia-smi', '--query-gpu=utilization.gpu,memory.used,memory.total', '--format=csv,noheader,nounits'], capture_output=True, text=True)
-            if result.returncode == 0:
-                gpu_info = result.stdout.strip().split(', ')
-                if len(gpu_info) >= 3:
-                    gpu_util = gpu_info[0]
-                    mem_used = gpu_info[1]
-                    mem_total = gpu_info[2]
-                    print(f"\n🖥️  GPU Usage:")
-                    print(f"   • Utilization: {gpu_util}%")
-                    print(f"   • Memory: {mem_used}/{mem_total} MB")
-        except:
-            pass
-        
-        print(f"\n🔄 Monitoring... (Press Ctrl+C to stop)")
-        
-        # Wait before next check
-        time.sleep(10)
+            # Clear screen (optional)
+            os.system('clear' if os.name == 'posix' else 'cls')
+            
+            print("🔍 LARGE-SCALE QUANTUM LLM TRAINING MONITOR")
+            print("=" * 60)
+            print(f"⏰ Time: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"🕐 Elapsed: {time.time() - start_time:.0f}s")
+            print()
+            
+            # GPU Memory
+            gpu_info = get_gpu_info()
+            if gpu_info:
+                print("💻 GPU Memory Usage:")
+                print(f"   Allocated: {gpu_info['memory_allocated']:.2f} GB")
+                print(f"   Reserved:  {gpu_info['memory_reserved']:.2f} GB")
+                print(f"   Free:      {gpu_info['memory_free']:.2f} GB")
+                print(f"   Total:     {gpu_info['memory_total']:.2f} GB")
+                print(f"   Utilization: {gpu_info['memory_allocated']/gpu_info['memory_total']*100:.1f}%")
+                print()
+            
+            # Checkpoint status
+            current_checkpoint = get_latest_checkpoint(checkpoint_dir)
+            if current_checkpoint:
+                if current_checkpoint != last_checkpoint:
+                    print(f"✅ New checkpoint found: {current_checkpoint.name}")
+                    last_checkpoint = current_checkpoint
+                
+                # Get checkpoint info
+                stat = current_checkpoint.stat()
+                print(f"📁 Latest checkpoint: {current_checkpoint.name}")
+                print(f"   Size: {stat.st_size / 1024**2:.1f} MB")
+                print(f"   Modified: {time.strftime('%H:%M:%S', time.localtime(stat.st_mtime))}")
+                print()
+            
+            # Check for best perplexity
+            best_ppl_path = Path(checkpoint_dir) / "best_perplexity.pt"
+            if best_ppl_path.exists():
+                stat = best_ppl_path.stat()
+                print(f"🏆 Best model: {time.strftime('%H:%M:%S', time.localtime(stat.st_mtime))}")
+                print()
+            
+            # Check for training log
+            log_path = Path(checkpoint_dir) / "training.log"
+            if log_path.exists():
+                with open(log_path, 'r') as f:
+                    lines = f.readlines()
+                    if lines:
+                        print("📊 Recent Training Log:")
+                        for line in lines[-5:]:  # Last 5 lines
+                            print(f"   {line.strip()}")
+                        print()
+            
+            print("Press Ctrl+C to stop monitoring...")
+            time.sleep(5)  # Update every 5 seconds
+            
+        except KeyboardInterrupt:
+            print("\n🛑 Monitoring stopped.")
+            break
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            time.sleep(5)
 
 if __name__ == "__main__":
-    try:
-        monitor_training()
-    except KeyboardInterrupt:
-        print("\n👋 Monitoring stopped.")
+    import sys
+    
+    checkpoint_dir = sys.argv[1] if len(sys.argv) > 1 else "checkpoints_large_scale"
+    monitor_training(checkpoint_dir)
