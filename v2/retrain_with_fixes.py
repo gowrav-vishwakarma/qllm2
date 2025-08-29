@@ -11,7 +11,7 @@ import subprocess
 def retrain_with_fixes():
     """Retrain the model with improved loss weights and semantic components"""
     
-    print("🔄 Retraining QLLM with Critical Fixes")
+    print("🔄 Running FAST POC Training")
     print("=" * 50)
     
     # Check if we can resume from existing checkpoint
@@ -23,32 +23,32 @@ def retrain_with_fixes():
         print("   Training will resume from this checkpoint")
         print()
     
-    # Optimized training command for RTX 4090 with maximum VRAM utilization
+    # FAST POC training command for quick validation
     cmd = [
         "uv", "run", "quantum_llm_train.py",
         "--mode", "train",
-        "--dataset", "wikitext2",  # Start with smaller dataset for testing
+        "--dataset", "wikitext2",  # Small dataset for quick training
         "--streaming", "False",
-        "--max_samples", "50000",  # Increased for better training
-        "--epochs", "3",  # Fewer epochs for testing
-        "--batch_size", "32",  # Reduced from 64 to 32 to avoid OOM
-        "--model_dim", "768",  # Keep increased model capacity
-        "--num_layers", "12",  # Keep deeper model
-        "--num_heads", "12",  # Keep more attention heads
-        "--phase_dim", "128",  # Keep richer phase representation
-        "--seq_length", "1024",  # Keep longer context
-        "--lr", "2e-4",  # Slightly increased learning rate for larger model
-        "--energy_weight", "0.001",  # Reduced for stability
-        "--coherence_weight", "0.0005",  # Reduced for stability
-        "--grad_clip", "1.0",  # Increased gradient clipping for larger model
-        "--warmup_steps", "1000",  # Increased warmup for larger model
+        "--max_samples", "1000",  # Reduced for faster training
+        "--epochs", "10",  # 4 epochs for proper validation
+        "--batch_size", "8",  # Small batch size for stability
+        "--model_dim", "768",  # Keep model capacity for meaningful results
+        "--num_layers", "12",  # Keep depth for quantum effects
+        "--num_heads", "12",  # Keep attention heads
+        "--phase_dim", "128",  # Keep phase representation
+        "--seq_length", "512",  # Reduced for faster training
+        "--lr", "5e-4",  # Higher learning rate for faster convergence
+        "--energy_weight", "0.001",  # Restored quantum training with fixed energy calculation
+        "--coherence_weight", "0.0005",  # Restored quantum training with fixed energy calculation
+        "--grad_clip", "1.0",  # Keep gradient clipping
+        "--warmup_steps", "100",  # Reduced warmup for faster start
         "--checkpoint_dir", "checkpoints_quantum_fixed",
-        "--save_every", "200",  # More frequent saves for monitoring
-        "--log_every", "200",  # More frequent logging for monitoring
-        "--num_workers", "4",  # Optimized for data loading
-        "--val_max_chunks", "2000",  # Increased validation set
-        "--use_checkpoint",  # Enable checkpointing for memory efficiency
-        "--gradient_accumulation_steps", "4"  # Increased to 4 for effective batch size of 128
+        "--save_every", "100",  # More frequent saves for monitoring
+        "--log_every", "50",  # Very frequent logging for monitoring
+        "--num_workers", "2",  # Reduced for faster data loading
+        "--val_max_chunks", "500",  # Smaller validation set
+        "--use_checkpoint",  # Keep checkpointing
+        "--gradient_accumulation_steps", "2"  # Reduced for faster updates
     ]
     
     print("Training command:")
@@ -138,17 +138,17 @@ def test_generation():
 
 def main():
     """Main function"""
-    print("🚀 QLLM Retraining with Critical Fixes")
+    print("🚀 QLLM FAST POC - Quick Validation")
     print("=" * 50)
     print()
-    print("This will retrain the model with:")
-    print("✅ Reduced quantum loss weights (energy: 0.001, coherence: 0.0005)")
-    print("✅ Added semantic loss components")
-    print("✅ Quantum-aware generation")
-    print("✅ Better sampling strategies")
-    print("✅ Optimized for RTX 4090 (batch_size: 16, stable training)")
-    print("✅ Better VRAM utilization (target: 4-8GB usage)")
-    print("✅ Stability-focused configuration (reduced LR, loss weights)")
+    print("This will run a FAST POC to validate our quantum-inspired architecture:")
+    print("✅ 4 epochs training for proper validation")
+    print("✅ Small dataset (10K samples) to avoid overfitting")
+    print("✅ Reduced sequence length (512) for faster training")
+    print("✅ Higher learning rate (5e-4) for faster convergence")
+    print("✅ Frequent logging (every 50 steps) for monitoring")
+    print("✅ Keep model capacity (768 dim, 12 layers) for meaningful results")
+    print("✅ Quantum training RESTORED with fixed energy calculations")
     print()
     
     # Ask for confirmation

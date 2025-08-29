@@ -267,7 +267,7 @@ class OptimizedDynamicPhaseProcessor(nn.Module):
         return output
 
 class HardwareOptimizedQuantumLLM(nn.Module):
-    """Main quantum-inspired LLM optimized for consumer GPUs"""
+    """Main quantum-inspired LLM optimized for consumer GPUs with Dynamic Quantum Learning"""
     def __init__(self, vocab_size, dim=512, num_layers=8, num_heads=8, 
                  phase_dim=64, max_seq_len=1024, use_checkpoint=True):
         super().__init__()
@@ -278,6 +278,12 @@ class HardwareOptimizedQuantumLLM(nn.Module):
         self.phase_dim = phase_dim
         self.max_seq_len = max_seq_len
         self.use_checkpoint = use_checkpoint
+        
+        # DYNAMIC QUANTUM LEARNING COMPONENTS
+        self.training_step = 0  # Track training progress for quantum evolution
+        self.quantum_uncertainty = nn.Parameter(torch.tensor(0.1))  # Quantum uncertainty parameter
+        self.entanglement_strength = nn.Parameter(torch.tensor(0.5))  # Dynamic entanglement
+        self.measurement_threshold = nn.Parameter(torch.tensor(0.3))  # Quantum measurement threshold
         
         # Token embedding
         self.token_embedding = nn.Embedding(vocab_size, dim)
@@ -366,8 +372,42 @@ class HardwareOptimizedQuantumLLM(nn.Module):
         phase_encoding = self.phase_projection(phase_encoding)
         
         return embeddings + phase_encoding
+    
+    def evolve_quantum_state(self, embeddings, training_step):
+        """Dynamic quantum state evolution during training"""
+        batch_size, seq_len, dim = embeddings.shape
         
-    def forward(self, x):
+        # Update quantum parameters based on training progress
+        self.training_step = training_step
+        
+        # Quantum uncertainty increases with training (exploration vs exploitation)
+        uncertainty_factor = min(0.5, training_step / 1000.0)  # Max 0.5 uncertainty
+        
+        # Entanglement strength evolves based on training progress
+        entanglement_factor = 0.3 + 0.4 * torch.sigmoid(torch.tensor(training_step / 500.0))
+        
+        # Add quantum noise for exploration
+        quantum_noise = torch.randn_like(embeddings) * self.quantum_uncertainty * uncertainty_factor
+        
+        # Dynamic entanglement between tokens
+        if seq_len > 1:
+            # Create entanglement matrix
+            entanglement_matrix = torch.eye(seq_len, device=embeddings.device)
+            entanglement_matrix += torch.randn(seq_len, seq_len, device=embeddings.device) * entanglement_factor * 0.1
+            
+            # Apply entanglement
+            entangled_embeddings = torch.matmul(entanglement_matrix, embeddings)
+            embeddings = embeddings + entangled_embeddings * 0.1
+        
+        # Quantum measurement collapse (forces learning)
+        measurement_prob = torch.sigmoid(torch.tensor(training_step / 200.0))
+        if torch.rand(1).item() < measurement_prob:
+            # Collapse to most probable state
+            embeddings = torch.tanh(embeddings)  # Force into bounded state
+        
+        return embeddings + quantum_noise
+        
+    def forward(self, x, training_step=None):
         batch_size, seq_len = x.shape
         
         # Initial embedding
@@ -383,6 +423,10 @@ class HardwareOptimizedQuantumLLM(nn.Module):
         
         # Apply OPTIMIZED GLOBAL INTERFERENCE LAYER (Phase 1.2)
         embeddings = self.global_interference(embeddings)
+        
+        # DYNAMIC QUANTUM EVOLUTION (NEW)
+        if self.training and training_step is not None:
+            embeddings = self.evolve_quantum_state(embeddings, training_step)
         
         # Process through optimized quantum layers
         for layer in self.quantum_layers:
