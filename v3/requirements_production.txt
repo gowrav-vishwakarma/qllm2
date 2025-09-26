@@ -1,0 +1,32 @@
+# Production Brain-Inspired LLM Requirements
+# Core dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.21.0
+tqdm>=4.64.0
+psutil>=5.9.0
+
+# Dataset and tokenization
+transformers>=4.30.0
+datasets>=2.12.0
+tokenizers>=0.13.0
+
+# Experiment tracking and monitoring
+wandb>=0.15.0
+tensorboard>=2.13.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Data processing
+pandas>=2.0.0
+scikit-learn>=1.3.0
+
+# Utilities
+rich>=13.0.0
+colorama>=0.4.6
+pyyaml>=6.0
+
+# Optional: For advanced features
+accelerate>=0.20.0  # For distributed training
+deepspeed>=0.9.0    # For large model training
+bitsandbytes>=0.41.0  # For quantization
