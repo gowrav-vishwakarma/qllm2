@@ -34,10 +34,11 @@ def main():
     cmd = [
         "python", "quantum_llm_train.py",
         "--mode", "train",
-        "--model_dim", "512",      # Reduced for memory efficiency
-        "--num_layers", "8",       # Reduced for memory efficiency
-        "--num_heads", "8",        # Reduced for memory efficiency
-        "--phase_dim", "64",       # Reduced for memory efficiency
+        "--model_dim", "768",      # Increased for concept layer
+        "--num_layers", "12",      # Increased for concept layer
+        "--num_heads", "12",       # Increased for concept layer
+        "--phase_dim", "128",      # Increased for concept layer
+        "--concept_dim", "256",    # New concept layer dimension
         "--seq_length", "512",     # Reduced for memory efficiency
         "--batch_size", "16",       # Reduced for memory efficiency
         "--max_samples", "500000",  # Increased for more training data

@@ -142,7 +142,8 @@ def train(args):
         num_heads=args.num_heads,
         phase_dim=args.phase_dim,
         max_seq_len=args.seq_length,
-        use_checkpoint=args.use_checkpoint
+        use_checkpoint=args.use_checkpoint,
+        concept_dim=getattr(args, 'concept_dim', 256)  # New concept layer parameter
     ).to(device)
     
     print(f"Model created with {sum(p.numel() for p in model.parameters()):,} parameters")
@@ -190,6 +191,7 @@ def train(args):
         learning_rate=args.lr,
         energy_weight=args.energy_weight,
         coherence_weight=args.coherence_weight,
+        concept_weight=args.concept_weight,
         grad_clip=args.grad_clip,
         warmup_steps=args.warmup_steps,
         total_steps=args.max_steps if args.max_steps else 10000
@@ -427,6 +429,7 @@ def main():
     parser.add_argument("--num_layers", type=int, default=8)
     parser.add_argument("--num_heads", type=int, default=8)
     parser.add_argument("--phase_dim", type=int, default=64)
+    parser.add_argument("--concept_dim", type=int, default=256)
     parser.add_argument("--seq_length", type=int, default=512)
     parser.add_argument("--use_checkpoint", action="store_true")
     
@@ -439,6 +442,7 @@ def main():
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--energy_weight", type=float, default=0.001)
     parser.add_argument("--coherence_weight", type=float, default=0.0005)
+    parser.add_argument("--concept_weight", type=float, default=0.001)
     parser.add_argument("--grad_clip", type=float, default=1.0)
     parser.add_argument("--warmup_steps", type=int, default=200)
     parser.add_argument("--checkpoint_dir", default="checkpoints_quantum")

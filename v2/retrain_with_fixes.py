@@ -31,15 +31,17 @@ def retrain_with_fixes():
         "--streaming", "False",
         "--max_samples", "1000",  # Reduced for faster training
         "--epochs", "10",  # 4 epochs for proper validation
-        "--batch_size", "8",  # Small batch size for stability
+        "--batch_size", "4",  # Reduced batch size for memory efficiency
         "--model_dim", "768",  # Keep model capacity for meaningful results
         "--num_layers", "12",  # Keep depth for quantum effects
         "--num_heads", "12",  # Keep attention heads
         "--phase_dim", "128",  # Keep phase representation
+        "--concept_dim", "256",  # Add concept layer dimension
         "--seq_length", "512",  # Reduced for faster training
         "--lr", "5e-4",  # Higher learning rate for faster convergence
         "--energy_weight", "0.001",  # Restored quantum training with fixed energy calculation
         "--coherence_weight", "0.0005",  # Restored quantum training with fixed energy calculation
+        "--concept_weight", "0.001",  # Add concept layer loss weight
         "--grad_clip", "1.0",  # Keep gradient clipping
         "--warmup_steps", "100",  # Reduced warmup for faster start
         "--checkpoint_dir", "checkpoints_quantum_fixed",

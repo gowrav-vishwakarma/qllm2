@@ -9,14 +9,16 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
+from concept_layer import ConceptLoss
 
 # In quantum_llm_train.py (or in a separate energy_trainer.py file)
 class EnergyBasedTrainer:
     def __init__(self, model, learning_rate=1e-4, energy_weight=0.001, coherence_weight=0.0005, 
-                 grad_clip=1.0, warmup_steps=1000, total_steps=20000):
+                 concept_weight=0.001, grad_clip=1.0, warmup_steps=1000, total_steps=20000):
         self.model = model
         self.energy_weight = energy_weight
         self.coherence_weight = coherence_weight
+        self.concept_weight = concept_weight
         self.grad_clip = grad_clip
         
         # NaN tracking for fallback mode
@@ -91,8 +93,11 @@ class EnergyBasedTrainer:
                 # Calculate semantic loss (encourage meaningful token sequences)
                 semantic_loss = self._calculate_semantic_loss(logits, targets)
                 
+                # Calculate concept loss for semantic understanding
+                concept_loss = self._calculate_concept_loss(inputs, targets)
+                
                 # Combined loss with quantum focus - semantic loss is secondary
-                loss = ce_loss + self.energy_weight * energy_loss + self.coherence_weight * coherence_loss + 0.001 * semantic_loss
+                loss = ce_loss + self.energy_weight * energy_loss + self.coherence_weight * coherence_loss + 0.001 * semantic_loss + self.concept_weight * concept_loss
                 
                 # NaN protection for the combined loss
                 if torch.isnan(loss) or torch.isinf(loss):
@@ -472,3 +477,48 @@ class EnergyBasedTrainer:
         semantic_loss = torch.nan_to_num(semantic_loss, nan=0.0, posinf=1.0, neginf=-1.0)
         
         return semantic_loss
+    
+    def _calculate_concept_loss(self, inputs, targets):
+        """
+        Calculate concept-based loss for semantic understanding
+        """
+        try:
+            # Get concept representation from model
+            concept_repr = self.model.concept_layer.get_concept_representation(inputs)
+            
+            # Calculate concept coherence loss
+            batch_size, seq_len, concept_dim = concept_repr.shape
+            
+            # 1. Concept coherence loss (encourage coherent concept representations)
+            if seq_len > 1:
+                concept_diff = concept_repr[:, 1:] - concept_repr[:, :-1]
+                coherence_loss = torch.mean(torch.norm(concept_diff, dim=-1))
+            else:
+                coherence_loss = torch.tensor(0.0, device=concept_repr.device)
+            
+            # 2. Concept diversity loss (encourage diverse concept usage)
+            concept_variance = torch.var(concept_repr, dim=(0, 1))  # [concept_dim]
+            diversity_loss = -torch.mean(concept_variance)  # Negative because we want to maximize variance
+            
+            # 3. Concept stability loss (encourage stable concept representations)
+            if seq_len > 1:
+                concept_stability = torch.var(concept_repr, dim=1)  # [batch_size, concept_dim]
+                stability_loss = torch.mean(concept_stability)
+            else:
+                stability_loss = torch.tensor(0.0, device=concept_repr.device)
+            
+            # Combined concept loss
+            total_concept_loss = (
+                0.4 * coherence_loss +
+                0.3 * diversity_loss +
+                0.3 * stability_loss
+            )
+            
+            # NaN protection
+            total_concept_loss = torch.nan_to_num(total_concept_loss, nan=0.0, posinf=1.0, neginf=-1.0)
+            
+            return total_concept_loss
+            
+        except Exception as e:
+            print(f"⚠️ Concept loss calculation failed: {e}")
+            return torch.tensor(0.0, device=inputs.device)
