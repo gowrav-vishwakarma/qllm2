@@ -81,6 +81,26 @@ class TrainingConfig:
     log_every: int = 10
     eval_every: int = 500
     save_every: int = 1000
+    # Speed optimizations
+    compile_model: bool = False  # Enable torch.compile
+    compile_mode: str = "reduce-overhead"  # compile mode: "default", "reduce-overhead", "max-autotune"
+    num_workers: int = 4  # DataLoader workers
+    pin_memory: bool = True  # Pin memory for faster GPU transfer
+    prefetch_factor: int = 2  # DataLoader prefetch factor
+    use_token_cache: bool = True  # Cache tokenized samples
+    compute_metrics: bool = True  # Compute philosophy metrics during training
+
+
+@dataclass
+class TokenizerConfig:
+    """Configuration for tokenizer"""
+    mode: str = 'bpe'  # 'bpe' or 'morphological'
+    bpe_name: str = 'gpt2'  # Model name for BPE tokenizer
+    # Morphological tokenizer settings
+    root_vocab_size: int = 16000
+    prefix_vocab_size: int = 2000
+    suffix_vocab_size: int = 2000
+    morph_path: Optional[str] = None  # Path to save/load morphological tokenizer
 
 
 @dataclass
@@ -91,9 +111,12 @@ class V4Config:
     Defines the complete model architecture via the injectable components.
     """
     # Model dimensions
-    vocab_size: int = 50257
+    vocab_size: int = 50257  # BPE vocab size (used when mode='bpe')
     dim: int = 256  # Base phase dimension
     max_seq_len: int = 262144  # 256K context
+    
+    # Tokenizer configuration
+    tokenizer: TokenizerConfig = field(default_factory=TokenizerConfig)
     
     # Phase banks (separate layers)
     banks: Dict[str, BankConfig] = field(default_factory=lambda: {
@@ -172,6 +195,9 @@ class V4Config:
         
         if 'training' in data and isinstance(data['training'], dict):
             data['training'] = TrainingConfig(**data['training'])
+        
+        if 'tokenizer' in data and isinstance(data['tokenizer'], dict):
+            data['tokenizer'] = TokenizerConfig(**data['tokenizer'])
         
         return cls(**data)
 

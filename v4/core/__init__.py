@@ -15,6 +15,11 @@ from .phase2d import (
 from .interfaces import PhaseBank, Coupler, Backbone, Memory, Objective, Sampler, BackboneState
 from .registry import Registry, get_registry
 from .config import V4Config, load_config, get_default_config
+from .morphology_embed import (
+    MorphologyAwareEmbed,
+    AffixRotationBank,
+    DualEmbedding,
+)
 
 __all__ = [
     # Phase2D math
@@ -22,6 +27,8 @@ __all__ = [
     'phase2d_magnitude', 'phase2d_normalize', 'phase2d_conjugate', 'phase2d_coherence',
     'phase2d_apply_iota',
     'IotaBlock', 'Phase2DEmbed', 'Phase2DLinear', 'Phase2DLayerNorm',
+    # Morphology embedding
+    'MorphologyAwareEmbed', 'AffixRotationBank', 'DualEmbedding',
     # Interfaces
     'PhaseBank', 'Coupler', 'Backbone', 'Memory', 'Objective', 'Sampler', 'BackboneState',
     # Registry

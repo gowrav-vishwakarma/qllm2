@@ -5,6 +5,10 @@ Quantum Phase-Field LLM: Main model that wires all components
 
 The model is configured via V4Config and uses the registry to
 instantiate all components (banks, coupler, backbone, memory, etc.).
+
+Supports two embedding modes:
+- BPE: Standard subword tokenization with Phase2DEmbed
+- Morphological: Root + prefix/suffix with rotation operators
 """
 
 import torch
@@ -17,6 +21,7 @@ from .core.config import V4Config, get_default_config
 from .core.registry import get_registry
 from .core.interfaces import BackboneState, MemoryReadResult
 from .core.phase2d import Phase2DEmbed, Phase2DLinear, Phase2DLayerNorm, phase2d_to_real
+from .core.morphology_embed import DualEmbedding
 
 
 @dataclass
@@ -28,6 +33,8 @@ class ModelOutput:
     memory_result: Optional[MemoryReadResult] = None
     backbone_state: Optional[BackboneState] = None
     coupling_loss: Optional[torch.Tensor] = None
+    # Metrics for manas/buddhi/viveka/smriti (to be populated)
+    metrics: Optional[Dict[str, torch.Tensor]] = None
 
 
 class QuantumPhaseFieldLLM(nn.Module):
@@ -38,6 +45,10 @@ class QuantumPhaseFieldLLM(nn.Module):
         Tokens -> Phase2D Embed -> Banks -> Backbone -> Memory -> Coupler -> LM Head
     
     All components are injectable via config.
+    
+    Embedding modes:
+    - BPE: input_ids -> Phase2DEmbed -> Phase2D
+    - Morphological: (root_ids, prefix_ids, suffix_ids) -> MorphologyAwareEmbed -> Phase2D
     """
     
     def __init__(self, config: V4Config):
@@ -45,11 +56,17 @@ class QuantumPhaseFieldLLM(nn.Module):
         self.config = config
         registry = get_registry()
         
-        # Embedding: tokens -> Phase2D
-        self.embed = Phase2DEmbed(
-            vocab_size=config.vocab_size,
+        # Embedding mode
+        self.embedding_mode = config.tokenizer.mode
+        
+        # Dual embedding: supports both BPE and morphological modes
+        self.embed = DualEmbedding(
+            bpe_vocab_size=config.vocab_size,
+            root_vocab_size=config.tokenizer.root_vocab_size,
+            prefix_vocab_size=config.tokenizer.prefix_vocab_size,
+            suffix_vocab_size=config.tokenizer.suffix_vocab_size,
             dim=config.dim,
-            padding_idx=0,  # Assume 0 is padding
+            mode=config.tokenizer.mode,
         )
         
         # Phase banks (separate layers)
@@ -110,7 +127,10 @@ class QuantumPhaseFieldLLM(nn.Module):
     
     def forward(
         self,
-        input_ids: torch.Tensor,  # [batch, seq]
+        input_ids: Optional[torch.Tensor] = None,  # [batch, seq] for BPE mode
+        root_ids: Optional[torch.Tensor] = None,   # [batch, seq] for morphological mode
+        prefix_ids: Optional[torch.Tensor] = None, # [batch, seq] for morphological mode
+        suffix_ids: Optional[torch.Tensor] = None, # [batch, seq] for morphological mode
         backbone_state: Optional[BackboneState] = None,
         use_memory: bool = True,
         context: Optional[Dict[str, Any]] = None,
@@ -118,8 +138,15 @@ class QuantumPhaseFieldLLM(nn.Module):
         """
         Forward pass through the model.
         
+        Supports two input modes:
+        - BPE mode: provide input_ids
+        - Morphological mode: provide root_ids, prefix_ids, suffix_ids
+        
         Args:
-            input_ids: Token IDs [batch, seq]
+            input_ids: Token IDs [batch, seq] (BPE mode)
+            root_ids: Root token IDs [batch, seq] (morphological mode)
+            prefix_ids: Prefix token IDs [batch, seq] (morphological mode)
+            suffix_ids: Suffix token IDs [batch, seq] (morphological mode)
             backbone_state: Optional state for streaming
             use_memory: Whether to use memory module
             context: Optional context (language_id, etc.)
@@ -128,10 +155,23 @@ class QuantumPhaseFieldLLM(nn.Module):
             ModelOutput with logits, phase states, etc.
         """
         context = context or {}
-        context['token_ids'] = input_ids
         
-        # 1. Embed tokens to Phase2D
-        x = self.embed(input_ids)  # [batch, seq, dim, 2]
+        # 1. Embed tokens to Phase2D (based on mode)
+        if self.embedding_mode == 'morphological' and root_ids is not None:
+            x = self.embed(
+                root_ids=root_ids,
+                prefix_ids=prefix_ids,
+                suffix_ids=suffix_ids,
+                mode='morphological',
+            )
+            context['token_ids'] = root_ids  # Use root IDs for downstream
+            context['prefix_ids'] = prefix_ids
+            context['suffix_ids'] = suffix_ids
+        elif input_ids is not None:
+            x = self.embed(input_ids=input_ids, mode='bpe')
+            context['token_ids'] = input_ids
+        else:
+            raise ValueError("Either input_ids (BPE) or root_ids/prefix_ids/suffix_ids (morphological) must be provided")
         
         # 2. Process through each bank
         bank_outputs = {}
@@ -162,6 +202,21 @@ class QuantumPhaseFieldLLM(nn.Module):
         # Compute coupling loss (for training)
         coupling_loss = self.coupler.compute_coupling_loss(bank_outputs)
         
+        # Compute philosophy metrics (manas/buddhi/viveka/smriti)
+        metrics = None
+        if context.get('compute_metrics', False):
+            from .metrics.philosophy_metrics import compute_all_metrics
+            philosophy_metrics = compute_all_metrics(
+                logits=logits,
+                phase_states=backbone_out,
+                bank_outputs=bank_outputs,
+                memory_result=memory_result,
+                backbone_state=new_backbone_state,
+                coupling_loss=coupling_loss,
+                prev_bank_states=context.get('prev_bank_states'),
+            )
+            metrics = philosophy_metrics.to_dict()
+        
         return ModelOutput(
             logits=logits,
             phase_states=backbone_out,
@@ -169,11 +224,27 @@ class QuantumPhaseFieldLLM(nn.Module):
             memory_result=memory_result,
             backbone_state=new_backbone_state,
             coupling_loss=coupling_loss,
+            metrics=metrics,
         )
+    
+    def set_embedding_mode(self, mode: str) -> None:
+        """
+        Switch embedding mode between 'bpe' and 'morphological'.
+        
+        Args:
+            mode: 'bpe' or 'morphological'
+        """
+        if mode not in ['bpe', 'morphological']:
+            raise ValueError(f"Mode must be 'bpe' or 'morphological', got {mode}")
+        self.embedding_mode = mode
+        self.embed.mode = mode
     
     def generate(
         self,
-        input_ids: torch.Tensor,
+        input_ids: Optional[torch.Tensor] = None,
+        root_ids: Optional[torch.Tensor] = None,
+        prefix_ids: Optional[torch.Tensor] = None,
+        suffix_ids: Optional[torch.Tensor] = None,
         max_new_tokens: int = 100,
         temperature: float = 1.0,
         top_k: Optional[int] = 50,
@@ -184,8 +255,15 @@ class QuantumPhaseFieldLLM(nn.Module):
         """
         Generate text autoregressively.
         
+        Note: For morphological mode generation, you need a way to map
+        generated root IDs back to (prefix, suffix) pairs. This is
+        a simplified implementation that only generates root IDs.
+        
         Args:
-            input_ids: Prompt tokens [batch, seq]
+            input_ids: Prompt tokens [batch, seq] (BPE mode)
+            root_ids: Root tokens [batch, seq] (morphological mode)
+            prefix_ids: Prefix tokens [batch, seq] (morphological mode)
+            suffix_ids: Suffix tokens [batch, seq] (morphological mode)
             max_new_tokens: Maximum tokens to generate
             temperature: Sampling temperature
             top_k: Top-k filtering
@@ -195,6 +273,8 @@ class QuantumPhaseFieldLLM(nn.Module):
         
         Returns:
             Generated tokens [batch, seq + max_new_tokens]
+            For BPE mode: generated input_ids
+            For morphological mode: generated root_ids
         """
         self.eval()
         
@@ -203,38 +283,77 @@ class QuantumPhaseFieldLLM(nn.Module):
             from .sampler import AutoregressiveSampler
             sampler = AutoregressiveSampler()
         
-        generated = input_ids.clone()
-        backbone_state = None
-        
-        with torch.no_grad():
-            for _ in range(max_new_tokens):
-                # Get logits for next token
-                output = self.forward(
-                    generated,
-                    backbone_state=backbone_state,
-                    use_memory=True,
-                )
-                
-                next_logits = output.logits[:, -1, :]  # [batch, vocab_size]
-                
-                # Sample next token
-                next_token, _ = sampler.sample(
-                    next_logits,
-                    temperature=temperature,
-                    top_k=top_k,
-                    top_p=top_p,
-                    past_tokens=generated,
-                )
-                
-                # Append to generated
-                generated = torch.cat([generated, next_token], dim=1)
-                
-                # Check for EOS
-                if eos_token_id is not None:
-                    if (next_token == eos_token_id).all():
+        # Determine mode and initialize
+        if self.embedding_mode == 'morphological' and root_ids is not None:
+            generated_roots = root_ids.clone()
+            generated_prefixes = prefix_ids.clone() if prefix_ids is not None else None
+            generated_suffixes = suffix_ids.clone() if suffix_ids is not None else None
+            null_affix_id = 4  # Default null affix ID
+            
+            with torch.no_grad():
+                for _ in range(max_new_tokens):
+                    output = self.forward(
+                        root_ids=generated_roots,
+                        prefix_ids=generated_prefixes,
+                        suffix_ids=generated_suffixes,
+                        use_memory=True,
+                    )
+                    
+                    next_logits = output.logits[:, -1, :]
+                    next_token, _ = sampler.sample(
+                        next_logits,
+                        temperature=temperature,
+                        top_k=top_k,
+                        top_p=top_p,
+                        past_tokens=generated_roots,
+                    )
+                    
+                    generated_roots = torch.cat([generated_roots, next_token], dim=1)
+                    
+                    # For simplicity, append null affixes for generated tokens
+                    if generated_prefixes is not None:
+                        null_prefix = torch.full_like(next_token, null_affix_id)
+                        generated_prefixes = torch.cat([generated_prefixes, null_prefix], dim=1)
+                    if generated_suffixes is not None:
+                        null_suffix = torch.full_like(next_token, null_affix_id)
+                        generated_suffixes = torch.cat([generated_suffixes, null_suffix], dim=1)
+                    
+                    if eos_token_id is not None and (next_token == eos_token_id).all():
                         break
+            
+            return generated_roots
         
-        return generated
+        else:
+            # BPE mode
+            if input_ids is None:
+                raise ValueError("input_ids required for BPE mode generation")
+            
+            generated = input_ids.clone()
+            backbone_state = None
+            
+            with torch.no_grad():
+                for _ in range(max_new_tokens):
+                    output = self.forward(
+                        input_ids=generated,
+                        backbone_state=backbone_state,
+                        use_memory=True,
+                    )
+                    
+                    next_logits = output.logits[:, -1, :]
+                    next_token, _ = sampler.sample(
+                        next_logits,
+                        temperature=temperature,
+                        top_k=top_k,
+                        top_p=top_p,
+                        past_tokens=generated,
+                    )
+                    
+                    generated = torch.cat([generated, next_token], dim=1)
+                    
+                    if eos_token_id is not None and (next_token == eos_token_id).all():
+                        break
+            
+            return generated
     
     def count_parameters(self) -> Dict[str, int]:
         """Count parameters by component"""

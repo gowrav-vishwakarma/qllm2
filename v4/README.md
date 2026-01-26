@@ -7,11 +7,12 @@ A novel language model architecture combining quantum-inspired phase representat
 Unlike traditional transformers or even v2/v3, v4 uses:
 
 - **Phase2D Representation**: Complex numbers as 2D real vectors (no sin/cos in hot path)
-- **Morphological Tokenization**: Words split into Root + Affix, where Affix applies a phase rotation (tense/aspect) to the Root (meaning).
-- **Multi-Layer Phase Banks**: Separate semantic/context/language/emotion layers that interfere
-- **Oscillatory SSM Backbone**: Linear-time sequence processing via coupled oscillators
+- **Morphological Tokenization**: Words split into Root + Prefix + Suffix, where affixes apply phase rotations (tense/aspect/case) to the Root (meaning)
+- **Multi-Layer Phase Banks**: Semantic/Context/Language/Morphology/Orthography layers that interfere
+- **Oscillatory SSM Backbone**: Linear-time sequence processing via coupled oscillators (with vectorized scan option)
 - **Phase-Coded Memory**: Long-term associative memory with coherence-based retrieval
 - **Injectable Architecture**: All components swappable via registry/config
+- **Philosophy Metrics**: Manas/Buddhi/Viveka/Smriti inspired metrics for interpretability
 
 ## Quick Start
 
@@ -24,21 +25,146 @@ uv run python test_v4.py
 # Train on random data (for testing architecture)
 uv run python train.py --size tiny --epochs 2
 
-# Train on REAL data (WikiText-2)
-uv run python train_real.py --dataset wikitext2 --size small --epochs 5
+# Train on REAL data (WikiText-2) with speed optimizations
+uv run python train_real.py --dataset wikitext2 --size small --epochs 5 --compile
 
 # Train on TinyStories (good for small models)
 uv run python train_real.py --dataset tinystories --size small --epochs 10 --max_train_samples 5000
 ```
 
+## New Features (v4.1)
+
+### 1. Morphological Tokenizer (User Idea)
+
+Data-driven tokenizer that learns root and affix vocabularies from corpus statistics:
+
+```python
+from v4.data import MorphologicalTokenizer, get_tokenizer
+
+# Train morphological tokenizer
+tokenizer = get_tokenizer(
+    tokenizer_type='morphological',
+    morph_train_texts=train_texts,
+    morph_path='tokenizer_cache/'
+)
+
+# Encode returns (root_ids, prefix_ids, suffix_ids)
+result = tokenizer.encode("walking quickly")
+print(result['root_ids'])    # [walk, quick]
+print(result['prefix_ids'])  # [<null>, <null>]
+print(result['suffix_ids'])  # [ing, ly]
+```
+
+The morphological embedding applies phase rotations:
+- **Root**: Base Phase2D vector (core meaning)
+- **Prefix**: Pre-rotation operator (semantic modifier)
+- **Suffix**: Post-rotation operator (grammatical role)
+
+```python
+# Math: z = RotateSuffix(suffix) ⊙ RotatePrefix(prefix) ⊙ EmbedRoot(root)
+```
+
+### 2. New Phase Banks
+
+**MorphologyPhaseBank**: Focuses on grammatical transformations
+```python
+config.banks['morphology'] = BankConfig(type='morphology', dim=256)
+```
+
+**OrthographyPhaseBank**: Learns script/shape patterns for multilingual support
+```python
+config.banks['orthography'] = BankConfig(type='orthography', dim=256)
+```
+
+### 3. Philosophy Metrics (Option B)
+
+Inspired by Indian philosophical concepts:
+
+| Metric | Concept | Measures |
+|--------|---------|----------|
+| **Manas** (मनस्) | Active mind | Backbone state magnitude/entropy |
+| **Buddhi** (बुद्धि) | Discernment | Logit confidence/margin |
+| **Viveka** (विवेक) | Stability | Phase coherence/energy |
+| **Smriti** (स्मृति) | Memory | Attention sharpness/hit rate |
+
+Enable during training:
+```python
+# In forward pass
+output = model(input_ids, context={'compute_metrics': True})
+print(output.metrics)  # {'manas/magnitude': 0.5, 'buddhi/confidence': 0.8, ...}
+```
+
+### 4. Speed Optimizations
+
+```bash
+# Enable torch.compile
+uv run python train_real.py --compile --compile_mode reduce-overhead
+
+# Use more dataloader workers
+uv run python train_real.py --num_workers 8
+
+# Enable token caching (default: on)
+uv run python train_real.py --cache_dir .cache/tokens
+
+# Vectorized scan in backbone
+config.backbone.params['use_scan'] = True
+```
+
+## A/B Testing: BPE vs Morphological
+
+Switch between tokenization modes:
+
+```python
+from v4 import create_model, V4Config
+from v4.core.config import TokenizerConfig
+
+# BPE mode (default)
+config = V4Config(
+    tokenizer=TokenizerConfig(mode='bpe', bpe_name='gpt2')
+)
+
+# Morphological mode
+config = V4Config(
+    tokenizer=TokenizerConfig(
+        mode='morphological',
+        root_vocab_size=16000,
+        prefix_vocab_size=2000,
+        suffix_vocab_size=2000,
+    )
+)
+
+model = create_model(config=config)
+
+# Switch mode at runtime
+model.set_embedding_mode('bpe')  # or 'morphological'
+```
+
 ## Architecture Overview
 
-```
-Tokens → Phase2D Embed → Phase Banks → Backbone → Memory → Coupler → LM Head
-                           ↓
-            [Semantic, Context, Language, Emotion]
-                           ↓
-                   Interference Coupling
+```mermaid
+flowchart LR
+  text[Text] --> tokA[Tokenizer_GPT2_BPE]
+  text --> tokB[MorphologicalTokenizer]
+
+  tokA --> idsA[input_ids]
+  tokB --> roots[root_ids]
+  tokB --> prefixes[prefix_ids]
+  tokB --> suffixes[suffix_ids]
+
+  idsA --> embedA[Phase2DEmbed]
+  roots --> embedB[MorphologyAwareEmbed]
+  prefixes --> embedB
+  suffixes --> embedB
+
+  embedA --> banks[PhaseBanks]
+  embedB --> banks
+
+  banks --> backbone[OscillatorySSM]
+  backbone --> mem[PhaseMemory]
+  mem --> coupler[InterferenceCoupler]
+  coupler --> head[LM_Head]
+
+  head --> metrics[Manas_Buddhi_Viveka_Smriti]
 ```
 
 ### Components
@@ -46,12 +172,12 @@ Tokens → Phase2D Embed → Phase Banks → Backbone → Memory → Coupler →
 | Component | Description | Implementation |
 |-----------|-------------|----------------|
 | **Phase2D** | Complex numbers as [real, imag] pairs | `core/phase2d.py` |
-| **PhaseBank** | Separate meaning layers | `banks/` |
-| **Backbone** | Oscillatory SSM | `backbone/oscillatory_ssm.py` |
+| **DualEmbedding** | BPE or Morphological embedding | `core/morphology_embed.py` |
+| **PhaseBanks** | Semantic/Context/Language/Morphology/Orthography | `banks/` |
+| **Backbone** | Oscillatory SSM (with scan option) | `backbone/oscillatory_ssm.py` |
 | **Coupler** | Interference-based mixing | `coupler/interference.py` |
 | **Memory** | Phase-coded associative memory | `memory/phase_associative.py` |
-| **Objectives** | CE + coherence + energy losses | `objectives/` |
-| **Sampler** | Autoregressive sampling | `sampler/autoregressive.py` |
+| **Metrics** | Philosophy-aligned metrics | `metrics/` |
 
 ## Phase2D: The Core Math
 
@@ -64,9 +190,9 @@ z = torch.tensor([a, b])  # shape: [..., 2]
 # Multiplication by i (90° rotation)
 i * z = torch.tensor([-b, a])  # Just swap and negate!
 
-# Complex multiplication (a + bi) * (c + di)
-result_real = a*c - b*d
-result_imag = a*d + b*c
+# Rotation via Cayley transform (no trig!)
+cos_like = (1 - a²) / (1 + a²)
+sin_like = (2a) / (1 + a²)
 ```
 
 All operations reduce to matrix multiplies (GEMM) - perfect for Tensor Cores.
@@ -83,7 +209,8 @@ config = V4Config(
     banks={
         'semantic': BankConfig(type='semantic', dim=256),
         'context': BankConfig(type='context', dim=256),
-        'my_custom': BankConfig(type='my_custom_bank', dim=256),  # Your bank!
+        'morphology': BankConfig(type='morphology', dim=256),
+        'orthography': BankConfig(type='orthography', dim=256),
     },
 )
 ```
@@ -94,7 +221,7 @@ Register new components with decorators:
 from v4.core.registry import register_bank
 
 @register_bank('my_custom_bank', description='My custom phase bank')
-class MyCustomBank(PhaseBank):
+class MyCustomBank(nn.Module, PhaseBank):
     ...
 ```
 
@@ -109,27 +236,35 @@ class MyCustomBank(PhaseBank):
 
 ## Training
 
-### With Real Data (Recommended)
+### With Speed Optimizations
 
 ```bash
-# WikiText-2 (quick validation)
-uv run python train_real.py --dataset wikitext2 --size small --epochs 10
-
-# TinyStories (better for small models)
-uv run python train_real.py --dataset tinystories --size small --epochs 20
-
-# Medium model
-uv run python train_real.py --dataset tinystories --size medium --epochs 20 --batch_size 4
+# Full speed training
+uv run python train_real.py \
+    --dataset tinystories \
+    --size small \
+    --epochs 20 \
+    --compile \
+    --num_workers 8 \
+    --cache_dir .cache/tokens
 
 # Resume training
-uv run python train_real.py --dataset tinystories --size small --resume checkpoints_v4_real/best_model.pt
+uv run python train_real.py \
+    --dataset tinystories \
+    --size small \
+    --resume checkpoints_v4_real/best_model.pt
 ```
 
-### With Random Data (Architecture Testing)
+### Speed Options
 
-```bash
-uv run python train.py --size tiny --epochs 5
-```
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--compile` | False | Enable torch.compile |
+| `--compile_mode` | reduce-overhead | Compile mode |
+| `--num_workers` | 4 | DataLoader workers |
+| `--no_pin_memory` | False | Disable pinned memory |
+| `--no_cache` | False | Disable token caching |
+| `--cache_dir` | .cache/v4_tokens | Token cache location |
 
 ## File Structure
 
@@ -137,15 +272,18 @@ uv run python train.py --size tiny --epochs 5
 v4/
 ├── core/                    # Core abstractions
 │   ├── phase2d.py          # Phase2D math (the foundation)
+│   ├── morphology_embed.py # Morphology-aware embedding
 │   ├── interfaces.py       # Base classes (PhaseBank, Backbone, etc.)
 │   ├── registry.py         # Factory pattern for components
 │   └── config.py           # Configuration system
 ├── banks/                   # Phase bank implementations
 │   ├── semantic.py         # Semantic meaning layer
 │   ├── context.py          # Context/syntax layer
-│   └── language.py         # Language-specific + emotion layers
+│   ├── language.py         # Language-specific layers
+│   ├── morphology.py       # Morphology phase bank (NEW)
+│   └── orthography.py      # Orthography phase bank (NEW)
 ├── backbone/               # Sequence backbone
-│   └── oscillatory_ssm.py  # Oscillatory state-space model
+│   └── oscillatory_ssm.py  # Oscillatory SSM (with scan option)
 ├── coupler/                # Bank coupling
 │   └── interference.py     # Interference-based coupling
 ├── memory/                 # Long-term memory
@@ -155,12 +293,15 @@ v4/
 │   └── coherence.py       # Coherence + energy losses
 ├── sampler/               # Generation strategies
 │   └── autoregressive.py  # AR sampling
+├── metrics/                # Philosophy metrics (NEW)
+│   └── philosophy_metrics.py # Manas/Buddhi/Viveka/Smriti
 ├── data/                   # Dataset integration
-│   ├── datasets.py        # WikiText-2, TinyStories, etc.
-│   └── tokenizer.py       # GPT-2 tokenizer wrapper
+│   ├── datasets.py        # WikiText-2, TinyStories, etc. (with caching)
+│   ├── tokenizer.py       # Unified tokenizer interface
+│   └── morphological_tokenizer.py # Morphological tokenizer (NEW)
 ├── model.py               # Main model (wires everything)
 ├── train.py               # Training (random data, for testing)
-├── train_real.py          # Training with real datasets
+├── train_real.py          # Training with real datasets (speed optimized)
 └── test_v4.py             # Test suite
 ```
 
@@ -169,21 +310,13 @@ v4/
 | Feature | v2 | v3 | v4 |
 |---------|----|----|-----|
 | Phase representation | sin/cos | N/A | Phase2D (no trig) |
-| Separate meaning layers | Partial | N/A | Full (banks) |
+| Tokenization | BPE only | BPE | BPE + Morphological |
+| Separate meaning layers | Partial | N/A | Full (5 banks) |
 | Sequence complexity | O(n²) | O(n²) | O(n) linear |
 | Long context | Limited | Limited | 256K target |
 | Incremental learning | No | Partial | Full (shards) |
 | GPU efficiency | Medium | Medium | High (GEMM-only) |
-
-## Next Steps
-
-1.  **Morphological Tokenizer**: Implement custom tokenizer that splits words into `(root, affix)` pairs.
-    *   *Idea*: "walking" → `root="walk"`, `affix="ing"`.
-    *   *Mechanism*: Root sets the base phase vector, Affix applies a rotation (IotaBlock) to modify tense/aspect.
-2.  **Dataset Integration**: Connect to v3's dataset system
-3.  **256K Context**: Implement chunked processing + state management
-4.  **Custom Kernels**: Triton kernels for Phase2D ops
-5.  **Benchmarking**: Compare with v2/v3 on perplexity/speed
+| Interpretability | Low | Medium | High (philosophy metrics) |
 
 ## Status
 
@@ -191,15 +324,16 @@ v4/
 
 - ✅ Core Phase2D math (no trig in hot path)
 - ✅ All interfaces defined (PhaseBank, Coupler, Backbone, Memory, Objectives, Sampler)
-- ✅ First implementations of each component
 - ✅ Injectable architecture (registry + config)
-- ✅ Model wiring
-- ✅ Basic training loop
-- ✅ Test suite (all tests pass)
 - ✅ Real dataset integration (WikiText-2, TinyStories)
 - ✅ GPT-2 tokenizer integration
+- ✅ **Morphological Tokenizer** (root + prefix + suffix)
+- ✅ **Morphology-aware embedding** (affix rotations)
+- ✅ **MorphologyPhaseBank + OrthographyPhaseBank**
+- ✅ **Philosophy metrics** (Manas/Buddhi/Viveka/Smriti)
+- ✅ **Speed optimizations** (torch.compile, workers, caching)
+- ✅ **Vectorized scan** option for backbone
 - 🔄 Validate training (run on real data, check perplexity drops)
 - 🔄 Incremental learning test (memory sharding)
 - 🔄 Long context support (256K streaming)
 - 🔄 Custom CUDA/Triton kernels
-- 🔄 Landmark measurement module

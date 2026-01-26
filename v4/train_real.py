@@ -37,7 +37,7 @@ from v4.data import get_wikitext2, get_tinystories, create_dataloaders, get_toke
 
 
 class RealDataTrainer:
-    """Trainer for real dataset training"""
+    """Trainer for real dataset training with speed optimizations"""
     
     def __init__(
         self,
@@ -55,6 +55,20 @@ class RealDataTrainer:
         
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
+        
+        # Apply torch.compile if enabled
+        if config.training.compile_model and hasattr(torch, 'compile'):
+            print(f"🔧 Compiling model with mode='{config.training.compile_mode}'...")
+            try:
+                self.model = torch.compile(
+                    self.model, 
+                    mode=config.training.compile_mode,
+                    fullgraph=False,  # Allow graph breaks for flexibility
+                )
+                print("   ✅ Model compiled successfully")
+            except Exception as e:
+                print(f"   ⚠️ Compilation failed: {e}")
+                print("   Continuing without compilation...")
         
         # Optimizer
         self.optimizer = torch.optim.AdamW(
@@ -319,6 +333,15 @@ def main():
     parser.add_argument('--lr', type=float, default=None, help='Learning rate (uses default if not set)')
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_v4_real')
     parser.add_argument('--resume', type=str, help='Resume from checkpoint')
+    # Speed optimization arguments
+    parser.add_argument('--compile', action='store_true', help='Enable torch.compile for speedup')
+    parser.add_argument('--compile_mode', type=str, default='reduce-overhead',
+                        choices=['default', 'reduce-overhead', 'max-autotune'],
+                        help='torch.compile mode')
+    parser.add_argument('--num_workers', type=int, default=4, help='DataLoader workers')
+    parser.add_argument('--no_pin_memory', action='store_true', help='Disable pin_memory')
+    parser.add_argument('--no_cache', action='store_true', help='Disable token caching')
+    parser.add_argument('--cache_dir', type=str, default='.cache/v4_tokens', help='Token cache directory')
     
     args = parser.parse_args()
     
@@ -340,13 +363,17 @@ def main():
     else:
         raise ValueError(f"Unknown dataset: {args.dataset}")
     
-    # Create dataloaders
+    # Create dataloaders with speed optimizations
     train_loader, val_loader = create_dataloaders(
         train_texts=train_texts,
         val_texts=val_texts,
         tokenizer=tokenizer,
         batch_size=args.batch_size,
         max_length=args.max_length,
+        num_workers=args.num_workers,
+        pin_memory=not args.no_pin_memory,
+        use_cache=not args.no_cache,
+        cache_dir=args.cache_dir,
     )
     
     # Create config
@@ -355,6 +382,13 @@ def main():
     config.training.max_epochs = args.epochs
     config.training.batch_size = args.batch_size
     config.training.checkpoint_dir = args.checkpoint_dir
+    
+    # Speed options
+    config.training.compile_model = args.compile
+    config.training.compile_mode = args.compile_mode
+    config.training.num_workers = args.num_workers
+    config.training.pin_memory = not args.no_pin_memory
+    config.training.use_token_cache = not args.no_cache
     
     if args.lr:
         config.training.learning_rate = args.lr

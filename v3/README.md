@@ -759,3 +759,17 @@ For questions, suggestions, or collaborations, please open an issue or contact t
 **Ready for**: Production deployment, research, and commercial use
 
 **The Brain-Inspired LLM v3 is now fully production-ready with comprehensive features for real-world deployment, including visual progress tracking, real dataset integration, and enterprise-grade training capabilities.**
+
+---
+
+## 🚀 v4 Progress Update
+
+While v3 focuses on brain-inspired learning, **v4 introduces Quantum Phase-Field LLM** with:
+
+- **Phase2D Representation**: Complex numbers as 2D vectors (no sin/cos in hot path)
+- **Morphological Tokenization**: Root + Affix decomposition with phase rotations
+- **Multi-Layer Phase Banks**: Semantic/Context/Language/Morphology/Orthography
+- **Oscillatory SSM Backbone**: O(n) linear-time sequence processing
+- **Philosophy Metrics**: Manas/Buddhi/Viveka/Smriti for interpretability
+
+See `v4/README.md` for full documentation and A/B testing instructions.
