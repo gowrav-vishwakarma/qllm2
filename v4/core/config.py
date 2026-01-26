@@ -38,6 +38,7 @@ class BackboneConfig:
     dim: int = 256
     state_dim: int = 512
     num_layers: int = 8
+    use_scan: bool = True  # Enable vectorized scan for better speed
     params: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -243,20 +244,24 @@ def get_default_config(size: str = 'small') -> V4Config:
         'small': V4Config(
             dim=256,
             backbone=BackboneConfig(dim=256, state_dim=512, num_layers=8),
-            memory=MemoryConfig(dim=256, num_slots=2048),
+            memory=MemoryConfig(dim=256, num_slots=512),  # Reduced for consumer GPUs
             banks={
                 'semantic': BankConfig(type='semantic', dim=256),
                 'context': BankConfig(type='context', dim=256),
+                'morphology': BankConfig(type='morphology', dim=256),
+                'orthography': BankConfig(type='orthography', dim=256),
             },
             training=TrainingConfig(batch_size=8, learning_rate=1e-4),
         ),
         'medium': V4Config(
             dim=512,
             backbone=BackboneConfig(dim=512, state_dim=1024, num_layers=12),
-            memory=MemoryConfig(dim=512, num_slots=4096),
+            memory=MemoryConfig(dim=512, num_slots=1024),  # Reduced for consumer GPUs
             banks={
                 'semantic': BankConfig(type='semantic', dim=512),
                 'context': BankConfig(type='context', dim=512),
+                'morphology': BankConfig(type='morphology', dim=512),
+                'orthography': BankConfig(type='orthography', dim=512),
                 'language': BankConfig(type='language', dim=512),
             },
             training=TrainingConfig(batch_size=4, learning_rate=5e-5),

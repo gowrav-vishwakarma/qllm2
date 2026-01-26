@@ -15,3 +15,5 @@ checkpoints_improved/*
 checkpoints_large_scale/
 checkpoints_large_scale/*
 checkpoints*/
+.cache/**
+*cache*/

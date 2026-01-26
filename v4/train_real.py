@@ -34,6 +34,7 @@ from v4.model import create_model, QuantumPhaseFieldLLM
 from v4.core.config import V4Config, get_default_config
 from v4.core.registry import get_registry
 from v4.data import get_wikitext2, get_tinystories, create_dataloaders, get_tokenizer
+from v4.metrics import MetricsLogger
 
 
 class RealDataTrainer:
@@ -53,12 +54,25 @@ class RealDataTrainer:
         self.val_loader = val_loader
         self.tokenizer = tokenizer
         
+        # Check if using morphological tokenizer
+        self.is_morphological = config.tokenizer.mode == 'morphological'
+        
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
+
+        # CUDA matmul speedups (safe defaults on RTX/consumer GPUs)
+        if self.device.type == 'cuda':
+            try:
+                torch.set_float32_matmul_precision("high")
+            except Exception:
+                pass
+            torch.backends.cuda.matmul.allow_tf32 = True
+            torch.backends.cudnn.allow_tf32 = True
         
         # Apply torch.compile if enabled
         if config.training.compile_model and hasattr(torch, 'compile'):
             print(f"🔧 Compiling model with mode='{config.training.compile_mode}'...")
+            print("   Note: first training step may take a long time while graphs/backward compile.")
             try:
                 self.model = torch.compile(
                     self.model, 
@@ -105,6 +119,9 @@ class RealDataTrainer:
         # State
         self.global_step = 0
         self.best_val_loss = float('inf')
+        
+        # Philosophy metrics logger
+        self.metrics_logger = MetricsLogger(log_interval=50) if config.training.compute_metrics else None
     
     def train_epoch(self, epoch: int) -> Dict[str, float]:
         """Train for one epoch"""
@@ -115,13 +132,43 @@ class RealDataTrainer:
         num_batches = 0
         
         epoch_start = time.time()
+        first_step_wall_start: Optional[float] = None
         
         for batch_idx, batch in enumerate(self.train_loader):
-            input_ids = batch['input_ids'].to(self.device)
+            # Handle both BPE and morphological inputs
+            if self.is_morphological:
+                root_ids = batch['root_ids'].to(self.device)
+                prefix_ids = batch['prefix_ids'].to(self.device)
+                suffix_ids = batch['suffix_ids'].to(self.device)
+                input_ids = root_ids  # Use root_ids for loss computation
+            else:
+                input_ids = batch['input_ids'].to(self.device)
+                root_ids = prefix_ids = suffix_ids = None
+
+            # Time the very first training step (this is where torch.compile spends time)
+            if batch_idx == 0:
+                if self.device.type == "cuda":
+                    torch.cuda.synchronize()
+                first_step_wall_start = time.time()
             
             # Forward
             with autocast('cuda', enabled=self.scaler is not None):
-                output = self.model(input_ids)
+                # Disable metrics during compiled training (causes graph breaks from .item() calls)
+                # Metrics are computed separately at epoch end if needed
+                compute_metrics = self.config.training.compute_metrics and not self.config.training.compile_model
+                
+                if self.is_morphological:
+                    output = self.model(
+                        root_ids=root_ids,
+                        prefix_ids=prefix_ids,
+                        suffix_ids=suffix_ids,
+                        context={'compute_metrics': compute_metrics}
+                    )
+                else:
+                    output = self.model(
+                        input_ids, 
+                        context={'compute_metrics': compute_metrics}
+                    )
                 
                 # Compute losses
                 total_batch_loss = torch.tensor(0.0, device=self.device)
@@ -130,7 +177,7 @@ class RealDataTrainer:
                     'logits': output.logits,
                     'phase_states': output.phase_states,
                 }
-                targets = {'token_ids': input_ids}
+                targets = {'token_ids': input_ids}  # Use root_ids for morphological
                 context = {'coupling_loss': output.coupling_loss}
                 
                 batch_ce = 0.0
@@ -140,29 +187,100 @@ class RealDataTrainer:
                     
                     if objective.name == 'ce':
                         batch_ce = result.loss.item()
+                
+                # Add prefix/suffix CE loss for morphological mode
+                if self.is_morphological and output.prefix_logits is not None:
+                    import torch.nn.functional as F
+                    # Shift for next-token prediction
+                    prefix_shift = output.prefix_logits[:, :-1, :].contiguous()
+                    suffix_shift = output.suffix_logits[:, :-1, :].contiguous()
+                    prefix_targets = prefix_ids[:, 1:].contiguous()
+                    suffix_targets = suffix_ids[:, 1:].contiguous()
+                    root_targets = root_ids[:, 1:].contiguous()
+                    
+                    # Mask: only compute loss where root is NOT padding
+                    # (affixes at padded positions shouldn't contribute to loss)
+                    pad_id = getattr(self.tokenizer, 'pad_token_id', 0)
+                    valid_mask = (root_targets != pad_id).float()  # [batch, seq-1]
+                    
+                    # Per-token CE loss (reduction='none')
+                    prefix_loss_per_token = F.cross_entropy(
+                        prefix_shift.view(-1, prefix_shift.size(-1)),
+                        prefix_targets.view(-1),
+                        reduction='none'
+                    ).view_as(root_targets)
+                    suffix_loss_per_token = F.cross_entropy(
+                        suffix_shift.view(-1, suffix_shift.size(-1)),
+                        suffix_targets.view(-1),
+                        reduction='none'
+                    ).view_as(root_targets)
+                    
+                    # Apply mask and normalize
+                    num_valid = valid_mask.sum().clamp(min=1)
+                    prefix_loss = (prefix_loss_per_token * valid_mask).sum() / num_valid
+                    suffix_loss = (suffix_loss_per_token * valid_mask).sum() / num_valid
+                    
+                    # Add with lower weight (affixes are secondary to root)
+                    total_batch_loss = total_batch_loss + 0.3 * (prefix_loss + suffix_loss)
             
             # Backward
             self.optimizer.zero_grad()
             
             if self.scaler is not None:
+                scale_before = self.scaler.get_scale()
                 self.scaler.scale(total_batch_loss).backward()
                 self.scaler.unscale_(self.optimizer)
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.training.gradient_clip)
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
+                scale_after = self.scaler.get_scale()
+                stepped = scale_after >= scale_before  # if scale dropped, step was skipped
             else:
                 total_batch_loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.training.gradient_clip)
                 self.optimizer.step()
+                stepped = True
 
-            # Scheduler should be stepped AFTER optimizer.step()
-            self.scheduler.step()
+            # Scheduler should be stepped AFTER a real optimizer step
+            if stepped:
+                self.scheduler.step()
+
+            # Report first-step compile time (if enabled)
+            if batch_idx == 0 and first_step_wall_start is not None:
+                if self.device.type == "cuda":
+                    torch.cuda.synchronize()
+                first_step_s = time.time() - first_step_wall_start
+                if self.config.training.compile_model:
+                    print(f"  ⏱️ First step wall time: {first_step_s:.1f}s (includes compile/graph capture)")
+                else:
+                    print(f"  ⏱️ First step wall time: {first_step_s:.1f}s")
             
             # Track metrics
             total_loss += total_batch_loss.item()
             total_ce_loss += batch_ce
             num_batches += 1
             self.global_step += 1
+            
+            # Update philosophy metrics
+            if self.metrics_logger is not None and output.metrics is not None:
+                from v4.metrics import PhilosophyMetrics
+                # Convert dict back to PhilosophyMetrics
+                m = output.metrics
+                philosophy_m = PhilosophyMetrics(
+                    manas_magnitude=m.get('manas/magnitude', 0),
+                    manas_entropy=m.get('manas/entropy', 0),
+                    manas_activity=m.get('manas/activity', 0),
+                    buddhi_confidence=m.get('buddhi/confidence', 0),
+                    buddhi_margin=m.get('buddhi/margin', 0),
+                    buddhi_entropy=m.get('buddhi/entropy', 0),
+                    viveka_coherence=m.get('viveka/coherence', 0),
+                    viveka_energy=m.get('viveka/energy', 0),
+                    viveka_stability=m.get('viveka/stability', 0),
+                    smriti_sharpness=m.get('smriti/sharpness', 0),
+                    smriti_hit_rate=m.get('smriti/hit_rate', 0),
+                    smriti_coverage=m.get('smriti/coverage', 0),
+                )
+                self.metrics_logger.update(philosophy_m)
             
             # Log progress
             if batch_idx % self.config.training.log_every == 0:
@@ -173,13 +291,20 @@ class RealDataTrainer:
                 
                 elapsed = time.time() - epoch_start
                 samples_per_sec = (batch_idx + 1) * self.config.training.batch_size / elapsed
+                tokens_per_sec = samples_per_sec * input_ids.shape[1]
                 
                 print(f"  [{batch_idx+1:4d}/{len(self.train_loader)}] "
                       f"Loss: {avg_loss:.4f} | CE: {avg_ce:.4f} | PPL: {ppl:.2f} | "
-                      f"LR: {lr:.2e} | {samples_per_sec:.1f} samples/s")
+                      f"LR: {lr:.2e} | {samples_per_sec:.1f} samples/s | {tokens_per_sec:.0f} tok/s")
         
         avg_loss = total_loss / num_batches
         avg_ce = total_ce_loss / num_batches
+        
+        # Log philosophy metrics at end of epoch
+        if self.metrics_logger is not None:
+            print(f"\n🧘 Philosophy Metrics (epoch average):")
+            print(self.metrics_logger.format_log())
+            self.metrics_logger.reset()
         
         return {
             'loss': avg_loss,
@@ -200,9 +325,20 @@ class RealDataTrainer:
         num_batches = 0
         
         for batch in self.val_loader:
-            input_ids = batch['input_ids'].to(self.device)
-            
-            output = self.model(input_ids)
+            # Handle both BPE and morphological inputs
+            if self.is_morphological:
+                root_ids = batch['root_ids'].to(self.device)
+                prefix_ids = batch['prefix_ids'].to(self.device)
+                suffix_ids = batch['suffix_ids'].to(self.device)
+                input_ids = root_ids
+                output = self.model(
+                    root_ids=root_ids,
+                    prefix_ids=prefix_ids,
+                    suffix_ids=suffix_ids,
+                )
+            else:
+                input_ids = batch['input_ids'].to(self.device)
+                output = self.model(input_ids)
             
             model_output = {
                 'logits': output.logits,
@@ -238,26 +374,78 @@ class RealDataTrainer:
         """Generate a sample from the model"""
         self.model.eval()
         
-        # Tokenize prompt
-        if hasattr(self.tokenizer, 'encode'):
-            tokens = self.tokenizer.encode(prompt, return_tensors='pt')
+        # Tokenize prompt - handle both BPE and morphological
+        if self.is_morphological:
+            # Encode WITHOUT EOS (add_special_tokens=False), then manually add BOS
+            # This prevents the model from seeing EOS in the prompt and generating PAD
+            root_ids_list, prefix_ids_list, suffix_ids_list = self.tokenizer.encode(
+                prompt, add_special_tokens=False
+            )
+            
+            # Prepend BOS token
+            bos_id = self.tokenizer.bos_token_id
+            null_affix_id = self.tokenizer.null_affix_id
+            root_ids_list = [bos_id] + root_ids_list
+            prefix_ids_list = [null_affix_id] + prefix_ids_list
+            suffix_ids_list = [null_affix_id] + suffix_ids_list
+            
+            root_ids = torch.tensor([root_ids_list], device=self.device)
+            prefix_ids = torch.tensor([prefix_ids_list], device=self.device)
+            suffix_ids = torch.tensor([suffix_ids_list], device=self.device)
+            
+            prompt_len = root_ids.size(1)
+            
+            # Generate using morphological mode - returns (roots, prefixes, suffixes)
+            # Pass bad_token_ids to filter PAD/BOS from sampling
+            generated = self.model.generate(
+                root_ids=root_ids,
+                prefix_ids=prefix_ids,
+                suffix_ids=suffix_ids,
+                max_new_tokens=max_tokens,
+                temperature=0.8,
+                top_k=50,
+                top_p=0.9,
+                eos_token_id=self.tokenizer.eos_token_id,
+                bad_token_ids=[self.tokenizer.pad_token_id, self.tokenizer.bos_token_id],
+            )
+            
+            # Unpack generated tuple
+            gen_roots, gen_prefixes, gen_suffixes = generated
+            
+            # Decode with all three for full text reconstruction
+            text = self.tokenizer.decode(
+                gen_roots[0], 
+                prefix_ids=gen_prefixes[0] if gen_prefixes is not None else None,
+                suffix_ids=gen_suffixes[0] if gen_suffixes is not None else None,
+                skip_special_tokens=True
+            )
+            return prompt, text, prompt_len
         else:
-            tokens = torch.tensor([self.tokenizer(prompt)['input_ids']])
-        
-        tokens = tokens.to(self.device)
-        
-        # Generate
-        generated = self.model.generate(
-            tokens,
-            max_new_tokens=max_tokens,
-            temperature=0.8,
-            top_k=50,
-            top_p=0.9,
-        )
-        
-        # Decode
-        text = self.tokenizer.decode(generated[0], skip_special_tokens=True)
-        return text
+            # BPE tokenizer
+            if hasattr(self.tokenizer, 'encode'):
+                tokens = self.tokenizer.encode(prompt, return_tensors='pt')
+            else:
+                tokens = torch.tensor([self.tokenizer(prompt)['input_ids']])
+            
+            tokens = tokens.to(self.device)
+            prompt_len = tokens.size(1)
+            
+            # Get EOS token id
+            eos_id = getattr(self.tokenizer, 'eos_token_id', None)
+            
+            # Generate
+            generated = self.model.generate(
+                tokens,
+                max_new_tokens=max_tokens,
+                temperature=0.8,
+                top_k=50,
+                top_p=0.9,
+                eos_token_id=eos_id,
+            )
+            
+            # Decode
+            text = self.tokenizer.decode(generated[0], skip_special_tokens=True)
+            return prompt, text, prompt_len
     
     def save_checkpoint(self, name: str = 'checkpoint.pt'):
         """Save checkpoint"""
@@ -303,10 +491,13 @@ class RealDataTrainer:
             
             # Generate sample
             try:
-                sample = self.generate_sample("The quick brown", max_tokens=30)
-                print(f"\n📝 Sample: {sample}")
+                prompt_text, full_text, prompt_len = self.generate_sample("The quick brown", max_tokens=30)
+                print(f"\n📝 Prompt: {prompt_text}")
+                print(f"   Generated: {full_text}")
             except Exception as e:
+                import traceback
                 print(f"   (Sample generation failed: {e})")
+                traceback.print_exc()
             
             # Regular checkpoint
             if (epoch + 1) % 5 == 0:
@@ -342,6 +533,16 @@ def main():
     parser.add_argument('--no_pin_memory', action='store_true', help='Disable pin_memory')
     parser.add_argument('--no_cache', action='store_true', help='Disable token caching')
     parser.add_argument('--cache_dir', type=str, default='.cache/v4_tokens', help='Token cache directory')
+    # Tokenizer options
+    parser.add_argument(
+        '--tokenizer',
+        type=str,
+        default='bpe',
+        choices=['bpe', 'morphological', 'simple', 'byte'],
+        help="Tokenizer type: bpe (GPT-2), morphological (root+affix), simple (char-level), or byte (UTF-8 multilingual)",
+    )
+    parser.add_argument('--morph_cache', type=str, default='.cache/morph_tokenizer',
+                        help='Path to save/load morphological tokenizer')
     
     args = parser.parse_args()
     
@@ -349,11 +550,7 @@ def main():
     print("v4 Quantum Phase-Field LLM - Real Data Training")
     print("="*60)
     
-    # Load tokenizer
-    tokenizer = get_tokenizer('gpt2')
-    vocab_size = tokenizer.vocab_size if hasattr(tokenizer, 'vocab_size') else 50257
-    
-    # Load dataset
+    # Load dataset first (needed for morphological tokenizer training)
     if args.dataset == 'wikitext2':
         train_texts = get_wikitext2('train', max_samples=args.max_train_samples)
         val_texts = get_wikitext2('validation', max_samples=1000)
@@ -363,7 +560,79 @@ def main():
     else:
         raise ValueError(f"Unknown dataset: {args.dataset}")
     
+    # Load tokenizer
+    if args.tokenizer == 'morphological':
+        from v4.data import get_morphological_tokenizer
+        tokenizer = get_morphological_tokenizer(
+            path=args.morph_cache,
+            train_texts=train_texts,  # Train on corpus if not cached
+        )
+        vocab_size = tokenizer.vocab_size
+        prefix_vocab_size = tokenizer.prefix_vocab_size
+        suffix_vocab_size = tokenizer.suffix_vocab_size
+        print(f"🧬 Morphological tokenizer: root={vocab_size}, prefix={prefix_vocab_size}, suffix={suffix_vocab_size}")
+        
+        # Sanity check: show tokenization examples
+        print("\n🔍 Tokenization sanity check:")
+        test_phrases = [
+            "walking quickly",
+            "The quick brown fox.",
+            "unhappiness",
+            "running, jumping, and playing",
+        ]
+        for phrase in test_phrases:
+            root_ids, prefix_ids, suffix_ids = tokenizer.encode(phrase, add_special_tokens=False)
+            reconstructed = tokenizer.decode(root_ids, prefix_ids, suffix_ids, skip_special_tokens=True)
+            print(f"   '{phrase}'")
+            print(f"      → tokens: {len(root_ids)}")
+            # Show first few parses
+            words = tokenizer._tokenize_to_words(phrase)
+            for j, word in enumerate(words[:4]):
+                prefix, root, suffix = tokenizer._parse_word_cached(word)
+                print(f"         '{word}' → (prefix='{prefix}', root='{root}', suffix='{suffix}')")
+            print(f"      → decoded: '{reconstructed}'")
+        print()
+    elif args.tokenizer == 'simple':
+        tokenizer = get_tokenizer('simple')
+        vocab_size = tokenizer.vocab_size
+        prefix_vocab_size = 0
+        suffix_vocab_size = 0
+        print(f"📝 Simple tokenizer: vocab={vocab_size} (char-level)")
+    elif args.tokenizer == 'byte':
+        tokenizer = get_tokenizer('byte')
+        vocab_size = tokenizer.vocab_size
+        prefix_vocab_size = 0
+        suffix_vocab_size = 0
+        print(f"📝 Byte tokenizer: vocab={vocab_size} (UTF-8 multilingual)")
+        
+        # Sanity check: show byte encoding for a multilingual sample
+        print("\n🔍 Byte tokenization sanity check:")
+        test_phrases = [
+            "Hello world!",
+            "café résumé naïve",
+            "日本語テスト",
+            "🚀 emoji test 🎉",
+        ]
+        for phrase in test_phrases:
+            byte_ids = tokenizer.encode(phrase)
+            decoded = tokenizer.decode(byte_ids)
+            print(f"   '{phrase}' → {len(byte_ids)} bytes → '{decoded}'")
+        print()
+    else:
+        tokenizer = get_tokenizer('gpt2')
+        vocab_size = tokenizer.vocab_size if hasattr(tokenizer, 'vocab_size') else 50257
+        prefix_vocab_size = 0
+        suffix_vocab_size = 0
+    
     # Create dataloaders with speed optimizations
+    # Map tokenizer arg to tokenizer_type for caching
+    if args.tokenizer == 'morphological':
+        tok_type = 'morphological'
+    elif args.tokenizer == 'byte':
+        tok_type = 'byte'
+    else:
+        tok_type = 'bpe'
+    
     train_loader, val_loader = create_dataloaders(
         train_texts=train_texts,
         val_texts=val_texts,
@@ -374,6 +643,7 @@ def main():
         pin_memory=not args.no_pin_memory,
         use_cache=not args.no_cache,
         cache_dir=args.cache_dir,
+        tokenizer_type=tok_type,
     )
     
     # Create config
@@ -382,6 +652,13 @@ def main():
     config.training.max_epochs = args.epochs
     config.training.batch_size = args.batch_size
     config.training.checkpoint_dir = args.checkpoint_dir
+    
+    # Tokenizer mode configuration
+    config.tokenizer.mode = 'morphological' if args.tokenizer == 'morphological' else 'bpe'
+    if args.tokenizer == 'morphological':
+        config.tokenizer.root_vocab_size = vocab_size
+        config.tokenizer.prefix_vocab_size = prefix_vocab_size
+        config.tokenizer.suffix_vocab_size = suffix_vocab_size
     
     # Speed options
     config.training.compile_model = args.compile
@@ -393,13 +670,25 @@ def main():
     if args.lr:
         config.training.learning_rate = args.lr
     
+    # CRITICAL: Set CE objective to ignore padding tokens
+    # Without this, model learns to predict PAD everywhere
+    pad_token_id = getattr(tokenizer, 'pad_token_id', 0)
+    for obj_cfg in config.objectives:
+        if obj_cfg.type == 'ce':
+            obj_cfg.params['ignore_index'] = pad_token_id
+            print(f"   CE ignore_index set to {pad_token_id} (pad_token_id)")
+    
     print(f"\n📋 Configuration:")
     print(f"   Dataset: {args.dataset}")
     print(f"   Size: {args.size}")
+    print(f"   Tokenizer: {args.tokenizer}")
     print(f"   Dim: {config.dim}")
     print(f"   Backbone layers: {config.backbone.num_layers}")
     print(f"   Banks: {list(config.banks.keys())}")
     print(f"   Vocab size: {vocab_size}")
+    if args.tokenizer == 'morphological':
+        print(f"   Prefix vocab: {prefix_vocab_size}")
+        print(f"   Suffix vocab: {suffix_vocab_size}")
     print(f"   Max length: {args.max_length}")
     print(f"   Batch size: {args.batch_size}")
     print(f"   Epochs: {args.epochs}")
@@ -422,7 +711,9 @@ def main():
         checkpoint = torch.load(args.resume)
         model.load_state_dict(checkpoint['model_state_dict'])
         trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        trainer.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
         trainer.global_step = checkpoint['global_step']
+        trainer.best_val_loss = checkpoint.get('best_val_loss', float('inf'))
         print(f"📥 Resumed from {args.resume}")
     
     # Train

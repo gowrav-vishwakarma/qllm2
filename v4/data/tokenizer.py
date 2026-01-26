@@ -62,6 +62,100 @@ class SimpleTokenizer:
         return {'input_ids': tokens}
 
 
+class ByteTokenizer:
+    """
+    UTF-8 byte-level tokenizer for multilingual support.
+    
+    - Uses raw UTF-8 bytes (0-255) as tokens.
+    - Special tokens (pad, bos, eos) are placed at IDs 256, 257, 258 to keep bytes lossless.
+    - Works across all languages and scripts without any learned segmentation.
+    """
+    
+    def __init__(self):
+        # Bytes are 0-255; specials are 256+
+        self.vocab_size = 259  # 256 bytes + 3 specials
+        self.pad_token_id = 256
+        self.bos_token_id = 257
+        self.eos_token_id = 258
+        self.tokenizer_type = 'byte'
+    
+    def encode(
+        self,
+        text: str,
+        max_length: Optional[int] = None,
+        truncation: bool = True,
+        return_tensors: Optional[str] = None,
+        add_special_tokens: bool = False,
+    ) -> Union[List[int], torch.Tensor]:
+        """
+        Encode text to UTF-8 byte IDs.
+        
+        Args:
+            text: Input string
+            max_length: Maximum sequence length
+            truncation: Whether to truncate
+            return_tensors: 'pt' for PyTorch tensor
+            add_special_tokens: Whether to add BOS/EOS
+        
+        Returns:
+            List of byte IDs (0-255) or tensor
+        """
+        # Convert to UTF-8 bytes
+        byte_ids = list(text.encode('utf-8'))
+        
+        # Optionally add BOS/EOS
+        if add_special_tokens:
+            byte_ids = [self.bos_token_id] + byte_ids + [self.eos_token_id]
+        
+        # Truncate if needed
+        if max_length and truncation:
+            byte_ids = byte_ids[:max_length]
+        
+        if return_tensors == 'pt':
+            return torch.tensor(byte_ids).unsqueeze(0)
+        return byte_ids
+    
+    def decode(
+        self,
+        token_ids: Union[List[int], torch.Tensor],
+        skip_special_tokens: bool = True,
+    ) -> str:
+        """
+        Decode byte IDs back to text.
+        
+        Args:
+            token_ids: Byte IDs (0-255 for bytes, 256+ for specials)
+            skip_special_tokens: Whether to skip pad/bos/eos
+        
+        Returns:
+            Decoded UTF-8 string
+        """
+        if isinstance(token_ids, torch.Tensor):
+            token_ids = token_ids.tolist()
+        
+        # Handle nested lists
+        if token_ids and isinstance(token_ids[0], list):
+            token_ids = token_ids[0]
+        
+        # Filter out specials if requested, and keep only valid bytes
+        byte_list = []
+        special_ids = {self.pad_token_id, self.bos_token_id, self.eos_token_id}
+        for t in token_ids:
+            if skip_special_tokens and t in special_ids:
+                continue
+            if 0 <= t <= 255:
+                byte_list.append(t)
+            # IDs > 255 that aren't specials are ignored (shouldn't happen)
+        
+        # Decode bytes to string
+        return bytes(byte_list).decode('utf-8', errors='replace')
+    
+    def __call__(self, text: str, **kwargs) -> Dict[str, Any]:
+        """Callable interface for compatibility"""
+        tokens = self.encode(text, **kwargs)
+        return {'input_ids': tokens}
+
+
 class BPETokenizerWrapper:
     """Wrapper for BPE tokenizers with unified interface"""
     
@@ -117,8 +211,8 @@ def get_tokenizer(
     Get tokenizer by name and type.
     
     Args:
-        name: Model name for BPE ('gpt2') or 'simple' for char-level
-        tokenizer_type: 'bpe' for standard BPE, 'morphological' for root+affix
+        name: Model name for BPE ('gpt2'), 'simple' for char-level, or 'byte' for UTF-8 bytes
+        tokenizer_type: 'bpe' for standard BPE, 'morphological' for root+affix, 'byte' for UTF-8
         morph_path: Path to load/save morphological tokenizer
         morph_train_texts: Texts to train morphological tokenizer on
         morph_config: Config for morphological tokenizer
@@ -137,6 +231,10 @@ def get_tokenizer(
     if name == 'simple':
         print("📝 Using simple character-level tokenizer")
         return SimpleTokenizer()
+    
+    if name == 'byte' or tokenizer_type == 'byte':
+        print("📝 Using UTF-8 byte-level tokenizer (multilingual)")
+        return ByteTokenizer()
     
     # Try to load BPE tokenizer
     return _get_bpe_tokenizer(name)

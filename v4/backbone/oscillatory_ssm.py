@@ -7,8 +7,9 @@ Inspired by LinOSS/D-LinOSS but adapted for Phase2D representation.
 Models coupled oscillators where language structure emerges from interference.
 
 Speed optimizations:
-- use_scan=True: Uses torch.func.scan for compiled recurrence (faster)
-- use_scan=False: Uses Python loop (more compatible, debugging)
+- use_scan=True: Pre-computes all projections for faster loop (torch.compile friendly)
+- use_scan=False: Computes projections inline (slightly slower but same result)
+- torch.compile optimizes the loop body regardless of use_scan setting
 """
 
 import torch
@@ -25,8 +26,9 @@ from ..core.phase2d import (
 )
 
 
-# Check if torch.func.scan is available (PyTorch 2.5+)
-HAS_SCAN = hasattr(torch, 'func') and hasattr(torch.func, 'scan') if hasattr(torch, 'func') else False
+# Note: torch.func.scan is not available in PyTorch 2.8
+# Our use_scan=True still helps by pre-computing projections before the loop
+HAS_SCAN = False  # Disabled - using optimized loop instead
 
 
 def _apply_rotation_cayley(h: torch.Tensor, skew_params: torch.Tensor) -> torch.Tensor:
@@ -75,10 +77,8 @@ class OscillatorySSM(nn.Module):
         self._dim = dim
         self._state_dim = state_dim
         self.num_layers = num_layers
-        self.use_scan = use_scan and HAS_SCAN
-        
-        if use_scan and not HAS_SCAN:
-            print("⚠️ use_scan requested but torch.func.scan not available. Using loop.")
+        # use_scan=True pre-computes projections before loop (still beneficial)
+        self.use_scan = use_scan
         
         # Build layers
         self.layers = nn.ModuleList([
@@ -238,10 +238,10 @@ class OscillatorySSMLayer(nn.Module):
         Returns:
             (output, final_state): Output sequence and final hidden state
         """
-        if self.use_scan and HAS_SCAN:
-            return self._forward_scan(x, h)
+        if self.use_scan:
+            return self._forward_scan(x, h)  # Pre-computes projections
         else:
-            return self._forward_loop(x, h)
+            return self._forward_loop(x, h)  # Computes inline
     
     def _forward_loop(
         self,

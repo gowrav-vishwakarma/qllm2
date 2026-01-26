@@ -63,13 +63,19 @@ class MorphVocab:
 class MorphologicalTokenizerConfig:
     """Configuration for MorphologicalTokenizer"""
     root_vocab_size: int = 16000
-    prefix_vocab_size: int = 2000
-    suffix_vocab_size: int = 2000
-    min_root_len: int = 2
+    prefix_vocab_size: int = 512  # Smaller for quality
+    suffix_vocab_size: int = 512  # Smaller for quality
+    min_root_len: int = 3  # Increased from 2 to avoid single-char roots
     max_affix_len: int = 5
     min_freq: int = 5
     # BPE-like merging parameters
     num_merges: int = 8000
+    # Parse cache size (0 to disable)
+    parse_cache_size: int = 100000
+    # Training quality knobs
+    top_k_words_for_ngrams: int = 10000  # Only use top-K words for n-gram extraction
+    min_affix_productivity: int = 3  # Min distinct stems an affix must attach to
+    word_priority_ratio: float = 0.7  # Fraction of root vocab to fill with full words first
 
 
 class MorphologicalTokenizer:
@@ -94,6 +100,11 @@ class MorphologicalTokenizer:
             vocab.add_token(UNK_TOKEN)
             vocab.add_token(BOS_TOKEN)
             vocab.add_token(EOS_TOKEN)
+
+        # Add common punctuation to root vocab so it can be modeled/decoded.
+        # Keep this small and language-agnostic.
+        for tok in [".", ",", "!", "?", ":", ";", "'", "\"", "(", ")", "[", "]", "{", "}"]:
+            self.root_vocab.add_token(tok)
         
         # Add null affix for prefix/suffix vocabs
         self.prefix_vocab.add_token(NULL_AFFIX)
@@ -104,6 +115,10 @@ class MorphologicalTokenizer:
         self._prefix_patterns: Set[str] = set()
         self._suffix_patterns: Set[str] = set()
         
+        # Word-level parse cache for speed (word -> (prefix, root, suffix))
+        self._parse_cache: Dict[str, Tuple[str, str, str]] = {}
+        self._parse_cache_max_size = self.config.parse_cache_size
+        
         # Special token IDs for easy access
         self.pad_token_id = self.root_vocab.get_id(PAD_TOKEN)
         self.unk_token_id = self.root_vocab.get_id(UNK_TOKEN)
@@ -112,7 +127,13 @@ class MorphologicalTokenizer:
         self.null_affix_id = self.prefix_vocab.get_id(NULL_AFFIX)
         
         # Word boundary regex (works across scripts)
+        # Split on whitespace and separate punctuation from words
         self._word_re = re.compile(r'\S+|\s+')
+        # Punctuation that should be separate tokens (no space before when decoding)
+        self._punct_no_space_before = {',', '.', '!', '?', ':', ';', "'", '"', ')', ']', '}'}
+        self._punct_no_space_after = {'(', '[', '{', '"', "'"}
+        # Pattern to split punctuation from words
+        self._punct_split_re = re.compile(r"([.,!?;:\"'()\[\]{}])")
     
     @property
     def vocab_size(self) -> int:
@@ -171,101 +192,213 @@ class MorphologicalTokenizer:
             print(f"   Suffix vocab: {len(self.suffix_vocab)}")
     
     def _tokenize_to_words(self, text: str) -> List[str]:
-        """Split text into words (unicode-aware)"""
-        tokens = self._word_re.findall(text)
-        return [t for t in tokens if t.strip()]
+        """
+        Split text into words (unicode-aware).
+        
+        Separates punctuation into individual tokens so they can be
+        handled independently during encoding/decoding.
+        """
+        # First split on whitespace
+        raw_tokens = self._word_re.findall(text)
+        
+        result = []
+        for token in raw_tokens:
+            if not token.strip():
+                continue
+            
+            # Split punctuation from the token
+            # e.g., "Hello," -> ["Hello", ","]
+            parts = self._punct_split_re.split(token)
+            for part in parts:
+                if part:  # Skip empty strings
+                    result.append(part)
+        
+        return result
     
     def _train_root_vocab(self, word_freq: Counter, verbose: bool = True) -> None:
-        """Train root vocabulary using frequency-based subword extraction"""
+        """
+        Train root vocabulary prioritizing full words over n-grams.
+        
+        Strategy:
+        1. Fill word_priority_ratio of vocab with full words (by frequency)
+        2. Fill remainder with n-grams (from top-K words only)
+        3. Avoid single characters as roots
+        """
         if verbose:
-            print("   Training root vocabulary...")
+            print("   Training root vocabulary (word-priority mode)...")
         
-        # Start with character-level vocab
-        char_vocab = Counter()
-        for word, freq in word_freq.items():
-            for char in word:
-                char_vocab[char] += freq
+        target_size = self.config.root_vocab_size
+        word_slots = int(target_size * self.config.word_priority_ratio)
         
-        # Add frequent characters to root vocab
-        for char, freq in char_vocab.most_common():
-            if len(self.root_vocab) >= self.config.root_vocab_size:
+        # Step 1: Add frequent FULL WORDS first (these become the primary roots)
+        words_added = 0
+        for word, freq in word_freq.most_common():
+            if len(self.root_vocab) >= target_size:
                 break
-            if freq >= self.config.min_freq:
-                self.root_vocab.add_token(char)
+            if words_added >= word_slots:
+                break
+            if freq >= self.config.min_freq and len(word) >= self.config.min_root_len:
+                self.root_vocab.add_token(word)
+                words_added += 1
         
-        # Build up vocabulary with frequent substrings (simplified BPE)
-        # Collect n-grams from words
+        if verbose:
+            print(f"      Added {words_added} full words to root vocab")
+        
+        # Step 2: Fill remaining slots with n-grams (for fallback/subword coverage)
+        # Only collect from top-K frequent words to reduce memory/time
+        top_k = self.config.top_k_words_for_ngrams
+        top_words = word_freq.most_common(top_k)
+        
         ngram_freq = Counter()
-        for n in range(2, 8):  # 2 to 7 character n-grams
-            for word, freq in word_freq.items():
+        for n in range(self.config.min_root_len, 8):  # min_root_len to 7 char n-grams
+            for word, freq in top_words:
                 if len(word) >= n:
                     for i in range(len(word) - n + 1):
                         ngram = word[i:i+n]
-                        ngram_freq[ngram] += freq
+                        # Skip if it's already a full word in vocab
+                        if ngram not in self.root_vocab.token_to_id:
+                            ngram_freq[ngram] += freq
         
-        # Add frequent n-grams as roots
+        # Add n-grams to fill remaining slots
+        ngrams_added = 0
         for ngram, freq in ngram_freq.most_common():
-            if len(self.root_vocab) >= self.config.root_vocab_size:
-                break
-            if freq >= self.config.min_freq and len(ngram) >= self.config.min_root_len:
-                self.root_vocab.add_token(ngram)
-        
-        # Add full words that are frequent enough
-        for word, freq in word_freq.most_common():
-            if len(self.root_vocab) >= self.config.root_vocab_size:
+            if len(self.root_vocab) >= target_size:
                 break
             if freq >= self.config.min_freq:
-                self.root_vocab.add_token(word)
+                self.root_vocab.add_token(ngram)
+                ngrams_added += 1
+        
+        if verbose:
+            print(f"      Added {ngrams_added} n-grams to root vocab")
+            print(f"      Final root vocab size: {len(self.root_vocab)}")
     
     def _train_affix_vocabs(self, word_freq: Counter, verbose: bool = True) -> None:
-        """Train prefix and suffix vocabularies from word patterns"""
-        if verbose:
-            print("   Training affix vocabularies...")
+        """
+        Train prefix and suffix vocabularies by productivity.
         
+        Productivity = number of distinct stems an affix attaches to.
+        Prefer affixes that, when stripped, yield known roots.
+        """
+        if verbose:
+            print("   Training affix vocabularies (productivity mode)...")
+        
+        # Track which stems each affix attaches to
+        prefix_stems: Dict[str, Set[str]] = defaultdict(set)
+        suffix_stems: Dict[str, Set[str]] = defaultdict(set)
+        
+        # Also track frequency for tie-breaking
         prefix_freq = Counter()
         suffix_freq = Counter()
         
-        # Collect potential affixes from words
+        root_vocab_set = self.root_vocab.token_to_id
+        
+        # Collect potential affixes and their stems
         for word, freq in word_freq.items():
             if len(word) < self.config.min_root_len + 1:
                 continue
             
-            # Extract prefixes (1 to max_affix_len chars from start)
+            # Extract prefixes
             for i in range(1, min(self.config.max_affix_len + 1, len(word) - self.config.min_root_len + 1)):
                 prefix = word[:i]
-                remaining = word[i:]
-                # Only count if remaining is a known root or long enough
-                if len(remaining) >= self.config.min_root_len:
+                stem = word[i:]
+                if len(stem) >= self.config.min_root_len:
+                    prefix_stems[prefix].add(stem)
                     prefix_freq[prefix] += freq
             
-            # Extract suffixes (1 to max_affix_len chars from end)
+            # Extract suffixes
             for i in range(1, min(self.config.max_affix_len + 1, len(word) - self.config.min_root_len + 1)):
                 suffix = word[-i:]
-                remaining = word[:-i]
-                if len(remaining) >= self.config.min_root_len:
+                stem = word[:-i]
+                if len(stem) >= self.config.min_root_len:
+                    suffix_stems[suffix].add(stem)
                     suffix_freq[suffix] += freq
         
-        # Add frequent prefixes
-        for prefix, freq in prefix_freq.most_common():
+        # Score affixes by: productivity + bonus for stems in root vocab
+        def score_affix(affix: str, stems: Set[str], freq: int, is_prefix: bool) -> float:
+            productivity = len(stems)
+            if productivity < self.config.min_affix_productivity:
+                return 0  # Filter out low-productivity affixes
+            
+            # Bonus: how many stems are known roots
+            known_stems = sum(1 for s in stems if s in root_vocab_set)
+            
+            # Score = productivity + 2*known_stems + 0.001*freq (freq as tie-breaker)
+            return productivity + 2 * known_stems + 0.001 * freq
+        
+        # Score and sort prefixes
+        prefix_scores = [
+            (prefix, score_affix(prefix, prefix_stems[prefix], prefix_freq[prefix], True))
+            for prefix in prefix_stems
+        ]
+        prefix_scores.sort(key=lambda x: -x[1])
+        
+        # Add top prefixes
+        prefixes_added = 0
+        for prefix, score in prefix_scores:
             if len(self.prefix_vocab) >= self.config.prefix_vocab_size:
                 break
-            if freq >= self.config.min_freq:
+            if score > 0:
                 self.prefix_vocab.add_token(prefix)
                 self._prefix_patterns.add(prefix)
+                prefixes_added += 1
         
-        # Add frequent suffixes
-        for suffix, freq in suffix_freq.most_common():
+        if verbose:
+            print(f"      Added {prefixes_added} productive prefixes")
+        
+        # Score and sort suffixes
+        suffix_scores = [
+            (suffix, score_affix(suffix, suffix_stems[suffix], suffix_freq[suffix], False))
+            for suffix in suffix_stems
+        ]
+        suffix_scores.sort(key=lambda x: -x[1])
+        
+        # Add top suffixes
+        suffixes_added = 0
+        for suffix, score in suffix_scores:
             if len(self.suffix_vocab) >= self.config.suffix_vocab_size:
                 break
-            if freq >= self.config.min_freq:
+            if score > 0:
                 self.suffix_vocab.add_token(suffix)
                 self._suffix_patterns.add(suffix)
+                suffixes_added += 1
+        
+        if verbose:
+            print(f"      Added {suffixes_added} productive suffixes")
+    
+    def _parse_word_cached(self, word: str) -> Tuple[str, str, str]:
+        """
+        Parse a word with caching for repeated words.
+        
+        Uses LRU-like cache bounded by parse_cache_size.
+        """
+        # Check cache first
+        if word in self._parse_cache:
+            return self._parse_cache[word]
+        
+        # Parse and cache
+        result = self._parse_word(word)
+        
+        # Add to cache if not full
+        if self._parse_cache_max_size > 0:
+            if len(self._parse_cache) >= self._parse_cache_max_size:
+                # Simple eviction: clear half the cache when full
+                # (LRU would be better but adds overhead)
+                keys_to_remove = list(self._parse_cache.keys())[:self._parse_cache_max_size // 2]
+                for k in keys_to_remove:
+                    del self._parse_cache[k]
+            self._parse_cache[word] = result
+        
+        return result
+    
+    def clear_parse_cache(self) -> None:
+        """Clear the word parse cache."""
+        self._parse_cache.clear()
     
     def _parse_word(self, word: str) -> Tuple[str, str, str]:
         """
         Parse a word into (prefix, root, suffix).
         
-        Tries to find the best decomposition based on learned patterns.
+        Uses bounded affix-length search: O(max_affix_len^2) instead of O(|P|·|S|).
         Returns (prefix, root, suffix) where prefix/suffix may be NULL_AFFIX.
         """
         if not word or len(word) < self.config.min_root_len:
@@ -274,44 +407,54 @@ class MorphologicalTokenizer:
         best_parse = (NULL_AFFIX, word, NULL_AFFIX)
         best_score = 0
         
-        # Try to find prefix + root + suffix decomposition
-        for prefix in self._prefix_patterns:
-            if word.startswith(prefix) and len(word) > len(prefix) + self.config.min_root_len - 1:
-                remaining = word[len(prefix):]
-                
-                # Check for suffix
-                for suffix in self._suffix_patterns:
-                    if remaining.endswith(suffix) and len(remaining) > len(suffix) + self.config.min_root_len - 1:
-                        root = remaining[:-len(suffix)]
-                        if len(root) >= self.config.min_root_len:
-                            # Score: prefer longer affixes and known roots
-                            score = len(prefix) + len(suffix)
-                            if root in self.root_vocab.token_to_id:
-                                score += 10
-                            if score > best_score:
-                                best_score = score
-                                best_parse = (prefix, root, suffix)
-                
-                # Also try prefix + root (no suffix)
-                if remaining in self.root_vocab.token_to_id or len(remaining) >= self.config.min_root_len:
-                    score = len(prefix)
-                    if remaining in self.root_vocab.token_to_id:
-                        score += 10
-                    if score > best_score:
-                        best_score = score
-                        best_parse = (prefix, remaining, NULL_AFFIX)
+        prefix_vocab_set = self.prefix_vocab.token_to_id
+        suffix_vocab_set = self.suffix_vocab.token_to_id
+        root_vocab_set = self.root_vocab.token_to_id
+        min_root = self.config.min_root_len
+        max_affix = self.config.max_affix_len
+        word_len = len(word)
         
-        # Try root + suffix (no prefix)
-        for suffix in self._suffix_patterns:
-            if word.endswith(suffix) and len(word) > len(suffix) + self.config.min_root_len - 1:
-                root = word[:-len(suffix)]
-                if len(root) >= self.config.min_root_len:
-                    score = len(suffix)
-                    if root in self.root_vocab.token_to_id:
-                        score += 10
-                    if score > best_score:
-                        best_score = score
-                        best_parse = (NULL_AFFIX, root, suffix)
+        # Try prefix + root + suffix combinations (bounded by affix lengths)
+        # prefix_len from 0 to max_affix_len, suffix_len from 0 to max_affix_len
+        for prefix_len in range(0, min(max_affix + 1, word_len - min_root + 1)):
+            if prefix_len > 0:
+                prefix_candidate = word[:prefix_len]
+                if prefix_candidate not in prefix_vocab_set:
+                    continue
+            else:
+                prefix_candidate = NULL_AFFIX
+            
+            remaining_after_prefix = word_len - prefix_len
+            
+            for suffix_len in range(0, min(max_affix + 1, remaining_after_prefix - min_root + 1)):
+                if suffix_len > 0:
+                    suffix_candidate = word[word_len - suffix_len:]
+                    if suffix_candidate not in suffix_vocab_set:
+                        continue
+                else:
+                    suffix_candidate = NULL_AFFIX
+                
+                # Extract root
+                root_start = prefix_len
+                root_end = word_len - suffix_len
+                root_candidate = word[root_start:root_end]
+                
+                if len(root_candidate) < min_root:
+                    continue
+                
+                # Score:
+                # - Strongly prefer roots already in vocab (stability)
+                # - Prefer longer roots when root is unknown (avoid wal+king vs walk+ing)
+                # - Slightly penalize affix length to avoid over-splitting
+                score = 0
+                if root_candidate in root_vocab_set:
+                    score += 1000
+                score += 10 * len(root_candidate)
+                score -= (prefix_len + suffix_len)
+                
+                if score > best_score:
+                    best_score = score
+                    best_parse = (prefix_candidate, root_candidate, suffix_candidate)
         
         return best_parse
     
@@ -349,7 +492,7 @@ class MorphologicalTokenizer:
             suffix_ids.append(self.null_affix_id)
         
         for word in words:
-            prefix, root, suffix = self._parse_word(word)
+            prefix, root, suffix = self._parse_word_cached(word)
             
             root_id = self.root_vocab.get_id(root, self.unk_token_id)
             prefix_id = self.prefix_vocab.get_id(prefix, self.null_affix_id)
@@ -387,7 +530,7 @@ class MorphologicalTokenizer:
         skip_special_tokens: bool = True,
     ) -> str:
         """
-        Decode token IDs back to text.
+        Decode token IDs back to text with punctuation-aware spacing.
         
         Args:
             root_ids: Root token IDs
@@ -415,6 +558,7 @@ class MorphologicalTokenizer:
         
         special_ids = {self.pad_token_id, self.bos_token_id, self.eos_token_id}
         
+        # Build list of words first
         words = []
         for i, root_id in enumerate(root_ids):
             if skip_special_tokens and root_id in special_ids:
@@ -438,7 +582,22 @@ class MorphologicalTokenizer:
             
             words.append(word)
         
-        return " ".join(words)
+        # Join with punctuation-aware spacing
+        if not words:
+            return ""
+        
+        result = [words[0]]
+        for word in words[1:]:
+            # Check if this word is punctuation that shouldn't have space before it
+            if word and word[0] in self._punct_no_space_before:
+                result.append(word)
+            # Check if previous word ends with punctuation that shouldn't have space after
+            elif result and result[-1] and result[-1][-1] in self._punct_no_space_after:
+                result.append(word)
+            else:
+                result.append(" " + word)
+        
+        return "".join(result)
     
     def __call__(
         self,

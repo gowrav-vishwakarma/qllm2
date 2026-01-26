@@ -64,6 +64,90 @@ The morphological embedding applies phase rotations:
 # Math: z = RotateSuffix(suffix) ⊙ RotatePrefix(prefix) ⊙ EmbedRoot(root)
 ```
 
+### Full Text Generation (v4.2)
+
+The model now predicts **all three components** (root + prefix + suffix) for complete morphological text generation:
+
+**Architecture:**
+```
+backbone_out → lm_head → root_logits (16K vocab)
+            → prefix_proj → prefix_logits (2K vocab)
+            → suffix_proj → suffix_logits (2K vocab)
+```
+
+**Training:** The model learns to predict roots (primary) and affixes (secondary with 0.3 weight):
+```python
+# Automatic in train_real.py with --tokenizer morphological
+loss = ce_loss(root_logits, root_targets) + 0.3 * (
+    ce_loss(prefix_logits, prefix_targets) +
+    ce_loss(suffix_logits, suffix_targets)
+)
+```
+
+**Generation:** Returns full morphological tuples:
+```python
+# Generate returns (root_ids, prefix_ids, suffix_ids) for morphological mode
+generated = model.generate(
+    root_ids=roots, prefix_ids=prefixes, suffix_ids=suffixes,
+    max_new_tokens=50
+)
+gen_roots, gen_prefixes, gen_suffixes = generated
+
+# Decode with full reconstruction
+text = tokenizer.decode(
+    gen_roots[0], 
+    prefix_ids=gen_prefixes[0],
+    suffix_ids=gen_suffixes[0]
+)
+# "The quickly running dog jumped happily"
+```
+
+### Morphological Tokenizer Quality & Speed (v4.3)
+
+The morphological tokenizer has been improved for better quality and speed:
+
+**Quality Improvements:**
+- Roots are now primarily **full words** (not short n-grams)
+- Affixes are selected by **productivity** (how many stems they attach to)
+- Punctuation is tokenized separately with proper spacing on decode
+- `min_root_len` increased to 3 to avoid single-char roots
+
+**Speed Improvements:**
+- **O(L²) parsing** instead of O(|P|·|S|) - bounded affix-length search
+- **Word-level parse cache** - repeated words hit cache (100K default size)
+- **Pruned n-gram counting** - only top-K words used for n-gram extraction
+
+**Configuration:**
+```python
+from v4.data.morphological_tokenizer import MorphologicalTokenizerConfig
+
+config = MorphologicalTokenizerConfig(
+    root_vocab_size=16000,      # Total root vocabulary
+    prefix_vocab_size=512,      # Smaller for quality
+    suffix_vocab_size=512,      # Smaller for quality
+    min_root_len=3,             # Avoid single-char roots
+    max_affix_len=5,            # Max prefix/suffix length
+    min_freq=5,                 # Min frequency to include
+    parse_cache_size=100000,    # Word parse cache size (0 to disable)
+    top_k_words_for_ngrams=10000,  # Top-K words for n-gram extraction
+    min_affix_productivity=3,   # Min stems per affix
+    word_priority_ratio=0.7,    # Fill 70% of vocab with full words first
+)
+```
+
+**Cache Reset (when changing tokenizer settings):**
+```bash
+# Delete tokenizer cache (forces retraining)
+rm -rf .cache/morph_tokenizer
+
+# Delete token caches (forces re-tokenization)
+rm -rf .cache/tokens/*_morph.pt
+```
+
+**Training Tips:**
+- Use more training samples for tokenizer training (e.g., `--max_train_samples 50000`)
+- The tokenizer trains once and is cached; model training uses the cached tokenizer
+
 ### 2. New Phase Banks
 
 **MorphologyPhaseBank**: Focuses on grammatical transformations
@@ -94,7 +178,11 @@ output = model(input_ids, context={'compute_metrics': True})
 print(output.metrics)  # {'manas/magnitude': 0.5, 'buddhi/confidence': 0.8, ...}
 ```
 
-### 4. Speed Optimizations
+### 4. Speed & Memory Optimizations
+
+**Memory-efficient attention**: The memory module now uses einsum-based attention computation, reducing memory usage from O(batch × seq × slots × dim) to O(batch × seq × slots).
+
+**Reduced default memory slots**: Small/Medium configs now use fewer memory slots (512/1024) for consumer GPU compatibility.
 
 ```bash
 # Enable torch.compile
@@ -106,8 +194,8 @@ uv run python train_real.py --num_workers 8
 # Enable token caching (default: on)
 uv run python train_real.py --cache_dir .cache/tokens
 
-# Vectorized scan in backbone
-config.backbone.params['use_scan'] = True
+# Vectorized scan in backbone (default: on)
+# Enabled automatically; pre-computes projections for faster recurrence
 ```
 
 ## A/B Testing: BPE vs Morphological
@@ -139,6 +227,42 @@ model = create_model(config=config)
 model.set_embedding_mode('bpe')  # or 'morphological'
 ```
 
+### Byte-Level Tokenizer (Multilingual, Tokenizer-Free)
+
+The **byte tokenizer** (`--tokenizer byte`) uses raw UTF-8 bytes as tokens:
+- **Vocab size**: 259 (256 bytes + 3 specials: pad/bos/eos)
+- **Multilingual**: Works with any language/script without training
+- **Tokenizer-free**: No learned segmentation; the model learns structure end-to-end
+
+```bash
+# UTF-8 byte-level training (multilingual)
+uv run python train_real.py \
+  --dataset tinystories \
+  --size small \
+  --epochs 5 \
+  --tokenizer byte \
+  --max_length 512 \
+  --cache_dir .cache/tokens_byte
+```
+
+**Trade-offs:**
+- Sequences are ~4x longer than word-level tokenizers (slower per epoch)
+- Model learns character/word boundaries implicitly
+- Best for validating the core v4 architecture without tokenizer artifacts
+
+**Recommended settings for byte mode:**
+- Use smaller `--max_length` (256-512) to fit in memory
+- Compare by **steps** or **tokens processed**, not epochs (byte epochs have more batches)
+- The model will learn spelling patterns first, then words, then semantics
+
+### Simple char-level tokenizer (ASCII baseline)
+
+For quick architecture tests with ASCII-only text:
+
+```bash
+uv run python train_real.py --dataset tinystories --size tiny --epochs 1 --tokenizer simple
+```
+
 ## Architecture Overview
 
 ```mermaid
@@ -164,7 +288,11 @@ flowchart LR
   mem --> coupler[InterferenceCoupler]
   coupler --> head[LM_Head]
 
-  head --> metrics[Manas_Buddhi_Viveka_Smriti]
+  head --> rootOut[root_logits]
+  head --> prefixOut[prefix_logits]
+  head --> suffixOut[suffix_logits]
+
+  rootOut --> metrics[Manas_Buddhi_Viveka_Smriti]
 ```
 
 ### Components
@@ -329,6 +457,7 @@ v4/
 - ✅ GPT-2 tokenizer integration
 - ✅ **Morphological Tokenizer** (root + prefix + suffix)
 - ✅ **Morphology-aware embedding** (affix rotations)
+- ✅ **Full text generation** (predicts root + prefix + suffix)
 - ✅ **MorphologyPhaseBank + OrthographyPhaseBank**
 - ✅ **Philosophy metrics** (Manas/Buddhi/Viveka/Smriti)
 - ✅ **Speed optimizations** (torch.compile, workers, caching)

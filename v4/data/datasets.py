@@ -55,6 +55,12 @@ class V4Dataset(Dataset):
         self.samples = []
         self._tensor_cache: Optional[torch.Tensor] = None  # Pre-computed tensor cache
         self._prepare_samples()
+
+        # IMPORTANT: after preprocessing, drop large/unpicklable fields.
+        # This prevents DataLoader worker startup stalls (especially with num_workers>0),
+        # because the Dataset object must be pickled/sent to worker processes.
+        self.texts = []
+        self.tokenizer = None
     
     def _prepare_samples(self):
         """Tokenize texts and create fixed-length chunks"""
@@ -63,8 +69,16 @@ class V4Dataset(Dataset):
             print(f"📂 Loading cached tokens from {self.cache_path}")
             try:
                 cache = torch.load(self.cache_path)
-                self.samples = cache['samples']
-                if 'tensor_cache' in cache:
+                # New format: store only a single tensor cache (fast, worker-safe)
+                if 'tensor_cache' in cache and isinstance(cache['tensor_cache'], torch.Tensor):
+                    self._tensor_cache = cache['tensor_cache']
+                    self.samples = []
+                    print(f"   Loaded {self._tensor_cache.shape[0]} cached samples (tensor cache)")
+                    return
+
+                # Back-compat format: list-of-lists
+                self.samples = cache.get('samples', [])
+                if 'tensor_cache' in cache and isinstance(cache['tensor_cache'], torch.Tensor):
                     self._tensor_cache = cache['tensor_cache']
                 print(f"   Loaded {len(self.samples)} cached samples")
                 return
@@ -110,20 +124,25 @@ class V4Dataset(Dataset):
         if self.samples:
             print("   Creating tensor cache...")
             self._tensor_cache = torch.tensor(self.samples, dtype=torch.long)
+            # If DataLoader uses multiprocessing workers, keeping samples as a Python list
+            # can dramatically slow down worker startup. Prefer the tensor cache.
+            self.samples = []
         
         # Save to cache
-        if self.use_cache and self.cache_path and self.samples:
+        if self.use_cache and self.cache_path and self._tensor_cache is not None:
             print(f"💾 Saving token cache to {self.cache_path}")
             try:
                 Path(self.cache_path).parent.mkdir(parents=True, exist_ok=True)
                 torch.save({
-                    'samples': self.samples,
                     'tensor_cache': self._tensor_cache,
+                    'max_length': self.max_length,
                 }, self.cache_path)
             except Exception as e:
                 print(f"   Cache save failed: {e}")
     
     def __len__(self) -> int:
+        if self._tensor_cache is not None:
+            return int(self._tensor_cache.shape[0])
         return len(self.samples)
     
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
@@ -134,6 +153,124 @@ class V4Dataset(Dataset):
         tokens = self.samples[idx]
         return {
             'input_ids': torch.tensor(tokens, dtype=torch.long)
+        }
+
+
+class MorphologicalDataset(Dataset):
+    """
+    Dataset for morphological tokenizer.
+    
+    Returns (root_ids, prefix_ids, suffix_ids) for each sample.
+    """
+    
+    def __init__(
+        self,
+        texts: List[str],
+        tokenizer,  # MorphologicalTokenizer
+        max_length: int = 512,
+        cache_path: Optional[str] = None,
+        use_cache: bool = True,
+    ):
+        self.texts = texts
+        self.tokenizer = tokenizer
+        self.max_length = max_length
+        self.cache_path = cache_path
+        self.use_cache = use_cache
+        
+        # Tokenized samples: (root_ids, prefix_ids, suffix_ids)
+        self._root_cache: Optional[torch.Tensor] = None
+        self._prefix_cache: Optional[torch.Tensor] = None
+        self._suffix_cache: Optional[torch.Tensor] = None
+        
+        self._prepare_samples()
+        
+        # Drop unpicklable fields for DataLoader workers
+        self.texts = []
+        self.tokenizer = None
+    
+    def _prepare_samples(self):
+        """Tokenize texts with morphological tokenizer"""
+        # Try to load from cache
+        if self.use_cache and self.cache_path and Path(self.cache_path).exists():
+            print(f"📂 Loading morphological cache from {self.cache_path}")
+            try:
+                cache = torch.load(self.cache_path)
+                self._root_cache = cache['root_ids']
+                self._prefix_cache = cache['prefix_ids']
+                self._suffix_cache = cache['suffix_ids']
+                print(f"   Loaded {self._root_cache.shape[0]} cached samples")
+                return
+            except Exception as e:
+                print(f"   Cache load failed: {e}, reprocessing...")
+        
+        print(f"🧬 Preparing {len(self.texts)} texts with morphological tokenizer...")
+        
+        root_samples = []
+        prefix_samples = []
+        suffix_samples = []
+        
+        for text in self.texts:
+            if not text.strip():
+                continue
+            
+            try:
+                # Get morphological encoding
+                root_ids, prefix_ids, suffix_ids = self.tokenizer.encode(
+                    text, 
+                    max_length=None,  # Don't truncate yet
+                    truncation=False,
+                    add_special_tokens=True,
+                )
+                
+                # Create chunks
+                if len(root_ids) >= self.max_length:
+                    for i in range(0, len(root_ids) - self.max_length + 1, self.max_length):
+                        root_samples.append(root_ids[i:i + self.max_length])
+                        prefix_samples.append(prefix_ids[i:i + self.max_length])
+                        suffix_samples.append(suffix_ids[i:i + self.max_length])
+                elif len(root_ids) > 10:
+                    # Pad short sequences
+                    pad_len = self.max_length - len(root_ids)
+                    root_samples.append(root_ids + [self.tokenizer.pad_token_id] * pad_len)
+                    prefix_samples.append(prefix_ids + [self.tokenizer.null_affix_id] * pad_len)
+                    suffix_samples.append(suffix_ids + [self.tokenizer.null_affix_id] * pad_len)
+                    
+            except Exception as e:
+                continue
+        
+        print(f"   Created {len(root_samples)} samples")
+        
+        # Create tensor caches
+        if root_samples:
+            print("   Creating tensor caches...")
+            self._root_cache = torch.tensor(root_samples, dtype=torch.long)
+            self._prefix_cache = torch.tensor(prefix_samples, dtype=torch.long)
+            self._suffix_cache = torch.tensor(suffix_samples, dtype=torch.long)
+        
+        # Save to cache
+        if self.use_cache and self.cache_path and self._root_cache is not None:
+            print(f"💾 Saving morphological cache to {self.cache_path}")
+            try:
+                Path(self.cache_path).parent.mkdir(parents=True, exist_ok=True)
+                torch.save({
+                    'root_ids': self._root_cache,
+                    'prefix_ids': self._prefix_cache,
+                    'suffix_ids': self._suffix_cache,
+                    'max_length': self.max_length,
+                }, self.cache_path)
+            except Exception as e:
+                print(f"   Cache save failed: {e}")
+    
+    def __len__(self) -> int:
+        if self._root_cache is not None:
+            return int(self._root_cache.shape[0])
+        return 0
+    
+    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+        return {
+            'root_ids': self._root_cache[idx],
+            'prefix_ids': self._prefix_cache[idx],
+            'suffix_ids': self._suffix_cache[idx],
         }
 
 
@@ -276,6 +413,7 @@ def create_dataloaders(
     prefetch_factor: int = 2,
     use_cache: bool = True,
     cache_dir: Optional[str] = None,
+    tokenizer_type: str = 'bpe',  # 'bpe', 'morphological', or 'byte'
 ) -> Tuple[DataLoader, Optional[DataLoader]]:
     """
     Create train and validation dataloaders with speed optimizations.
@@ -283,7 +421,7 @@ def create_dataloaders(
     Args:
         train_texts: Training texts
         val_texts: Validation texts (optional)
-        tokenizer: Tokenizer (will use GPT-2 if None)
+        tokenizer: Tokenizer (will use GPT-2 if None for BPE)
         batch_size: Batch size
         max_length: Maximum sequence length
         num_workers: DataLoader workers (default: 4 for speed)
@@ -291,37 +429,60 @@ def create_dataloaders(
         prefetch_factor: Number of batches to prefetch per worker (default: 2)
         use_cache: Whether to cache tokenized samples (default: True)
         cache_dir: Directory for token cache files
+        tokenizer_type: 'bpe', 'morphological', or 'byte'
     
     Returns:
         (train_loader, val_loader) tuple
     """
     import torch.cuda
     from .tokenizer import get_tokenizer
+    from .morphological_tokenizer import MorphologicalTokenizer
+    
+    # Determine if morphological tokenizer
+    is_morphological = (
+        tokenizer_type == 'morphological' or 
+        isinstance(tokenizer, MorphologicalTokenizer)
+    )
     
     if tokenizer is None:
         tokenizer = get_tokenizer('gpt2')
     
-    # Determine cache paths
+    # Determine cache paths (distinct per tokenizer type)
     train_cache = None
     val_cache = None
     if use_cache and cache_dir:
         Path(cache_dir).mkdir(parents=True, exist_ok=True)
-        train_cache = f"{cache_dir}/train_tokens.pt"
-        val_cache = f"{cache_dir}/val_tokens.pt"
+        if is_morphological:
+            cache_suffix = '_morph'
+        elif tokenizer_type == 'byte':
+            cache_suffix = '_byte'
+        else:
+            cache_suffix = ''
+        train_cache = f"{cache_dir}/train_tokens{cache_suffix}.pt"
+        val_cache = f"{cache_dir}/val_tokens{cache_suffix}.pt"
     
     # Auto-detect optimal settings
     use_cuda = torch.cuda.is_available()
     actual_pin_memory = pin_memory and use_cuda
     actual_num_workers = num_workers if use_cuda else 0  # Workers only help with GPU
     
-    # Create datasets with caching
-    train_dataset = V4Dataset(
-        train_texts, 
-        tokenizer, 
-        max_length=max_length,
-        cache_path=train_cache,
-        use_cache=use_cache,
-    )
+    # Create datasets with caching - choose dataset type based on tokenizer
+    if is_morphological:
+        train_dataset = MorphologicalDataset(
+            train_texts,
+            tokenizer,
+            max_length=max_length,
+            cache_path=train_cache,
+            use_cache=use_cache,
+        )
+    else:
+        train_dataset = V4Dataset(
+            train_texts, 
+            tokenizer, 
+            max_length=max_length,
+            cache_path=train_cache,
+            use_cache=use_cache,
+        )
     
     # Configure DataLoader for speed
     loader_kwargs = {
@@ -344,13 +505,22 @@ def create_dataloaders(
     
     val_loader = None
     if val_texts:
-        val_dataset = V4Dataset(
-            val_texts, 
-            tokenizer, 
-            max_length=max_length,
-            cache_path=val_cache,
-            use_cache=use_cache,
-        )
+        if is_morphological:
+            val_dataset = MorphologicalDataset(
+                val_texts,
+                tokenizer,
+                max_length=max_length,
+                cache_path=val_cache,
+                use_cache=use_cache,
+            )
+        else:
+            val_dataset = V4Dataset(
+                val_texts, 
+                tokenizer, 
+                max_length=max_length,
+                cache_path=val_cache,
+                use_cache=use_cache,
+            )
         val_loader = DataLoader(
             val_dataset,
             shuffle=False,
@@ -358,7 +528,13 @@ def create_dataloaders(
         )
     
     # Log dataloader configuration
+    if is_morphological:
+        mode_str = "morphological"
+    elif tokenizer_type == 'byte':
+        mode_str = "byte"
+    else:
+        mode_str = "BPE"
     print(f"⚡ DataLoader config: workers={actual_num_workers}, "
-          f"pin_memory={actual_pin_memory}, prefetch={prefetch_factor}")
+          f"pin_memory={actual_pin_memory}, prefetch={prefetch_factor}, mode={mode_str}")
     
     return train_loader, val_loader

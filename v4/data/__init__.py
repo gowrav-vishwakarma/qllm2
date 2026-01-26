@@ -9,7 +9,8 @@ Supports two tokenizer modes:
 """
 
 from .datasets import (
-    V4Dataset, 
+    V4Dataset,
+    MorphologicalDataset,
     create_dataloaders,
     get_wikitext2,
     get_tinystories,
@@ -24,6 +25,7 @@ from .morphological_tokenizer import (
 __all__ = [
     # Datasets
     'V4Dataset',
+    'MorphologicalDataset',
     'create_dataloaders',
     'get_wikitext2',
     'get_tinystories',

@@ -27,12 +27,15 @@ from .core.morphology_embed import DualEmbedding
 @dataclass
 class ModelOutput:
     """Output from forward pass"""
-    logits: torch.Tensor  # [batch, seq, vocab_size]
+    logits: torch.Tensor  # [batch, seq, vocab_size] (root vocab for morphological)
     phase_states: torch.Tensor  # [batch, seq, dim, 2]
     bank_outputs: Dict[str, torch.Tensor]  # {bank_name: [batch, seq, dim, 2]}
     memory_result: Optional[MemoryReadResult] = None
     backbone_state: Optional[BackboneState] = None
     coupling_loss: Optional[torch.Tensor] = None
+    # Morphological mode: prefix/suffix logits for full text generation
+    prefix_logits: Optional[torch.Tensor] = None  # [batch, seq, prefix_vocab_size]
+    suffix_logits: Optional[torch.Tensor] = None  # [batch, seq, suffix_vocab_size]
     # Metrics for manas/buddhi/viveka/smriti (to be populated)
     metrics: Optional[Dict[str, torch.Tensor]] = None
 
@@ -92,6 +95,7 @@ class QuantumPhaseFieldLLM(nn.Module):
             dim=config.dim,
             state_dim=config.backbone.state_dim,
             num_layers=config.backbone.num_layers,
+            use_scan=getattr(config.backbone, 'use_scan', True),
             **config.backbone.params
         )
         
@@ -109,6 +113,15 @@ class QuantumPhaseFieldLLM(nn.Module):
             Phase2DLayerNorm(config.dim),
         )
         self.output_proj = nn.Linear(config.dim * 2, config.vocab_size, bias=False)
+        
+        # Morphological heads: predict prefix and suffix for each position
+        # These are only used in morphological mode for full text generation
+        if config.tokenizer.mode == 'morphological':
+            self.prefix_proj = nn.Linear(config.dim * 2, config.tokenizer.prefix_vocab_size, bias=False)
+            self.suffix_proj = nn.Linear(config.dim * 2, config.tokenizer.suffix_vocab_size, bias=False)
+        else:
+            self.prefix_proj = None
+            self.suffix_proj = None
         
         # Tie embeddings with output projection
         # (Optional: enable with config flag)
@@ -199,6 +212,13 @@ class QuantumPhaseFieldLLM(nn.Module):
         lm_real = phase2d_to_real(lm_out, mode='concat')  # [batch, seq, dim*2]
         logits = self.output_proj(lm_real)  # [batch, seq, vocab_size]
         
+        # Morphological mode: also predict prefix and suffix
+        prefix_logits = None
+        suffix_logits = None
+        if self.prefix_proj is not None and self.suffix_proj is not None:
+            prefix_logits = self.prefix_proj(lm_real)  # [batch, seq, prefix_vocab_size]
+            suffix_logits = self.suffix_proj(lm_real)  # [batch, seq, suffix_vocab_size]
+        
         # Compute coupling loss (for training)
         coupling_loss = self.coupler.compute_coupling_loss(bank_outputs)
         
@@ -224,6 +244,8 @@ class QuantumPhaseFieldLLM(nn.Module):
             memory_result=memory_result,
             backbone_state=new_backbone_state,
             coupling_loss=coupling_loss,
+            prefix_logits=prefix_logits,
+            suffix_logits=suffix_logits,
             metrics=metrics,
         )
     
@@ -250,6 +272,7 @@ class QuantumPhaseFieldLLM(nn.Module):
         top_k: Optional[int] = 50,
         top_p: Optional[float] = 0.9,
         eos_token_id: Optional[int] = None,
+        bad_token_ids: Optional[List[int]] = None,
         sampler=None,
     ) -> torch.Tensor:
         """
@@ -269,6 +292,7 @@ class QuantumPhaseFieldLLM(nn.Module):
             top_k: Top-k filtering
             top_p: Nucleus sampling threshold
             eos_token_id: Stop generation at this token
+            bad_token_ids: Token IDs to filter out (set logits to -inf)
             sampler: Optional custom sampler
         
         Returns:
@@ -299,29 +323,56 @@ class QuantumPhaseFieldLLM(nn.Module):
                         use_memory=True,
                     )
                     
-                    next_logits = output.logits[:, -1, :]
-                    next_token, _ = sampler.sample(
-                        next_logits,
+                    # Sample root token
+                    next_root_logits = output.logits[:, -1, :].clone()
+                    
+                    # Filter out bad tokens (PAD, BOS, etc.)
+                    if bad_token_ids:
+                        for bad_id in bad_token_ids:
+                            if bad_id < next_root_logits.size(-1):
+                                next_root_logits[:, bad_id] = float('-inf')
+                    
+                    next_root, _ = sampler.sample(
+                        next_root_logits,
                         temperature=temperature,
                         top_k=top_k,
                         top_p=top_p,
                         past_tokens=generated_roots,
                     )
+                    generated_roots = torch.cat([generated_roots, next_root], dim=1)
                     
-                    generated_roots = torch.cat([generated_roots, next_token], dim=1)
-                    
-                    # For simplicity, append null affixes for generated tokens
-                    if generated_prefixes is not None:
-                        null_prefix = torch.full_like(next_token, null_affix_id)
+                    # Sample prefix/suffix if heads are available
+                    if output.prefix_logits is not None and generated_prefixes is not None:
+                        next_prefix_logits = output.prefix_logits[:, -1, :]
+                        next_prefix, _ = sampler.sample(
+                            next_prefix_logits,
+                            temperature=temperature,
+                            top_k=min(top_k or 50, 20),  # Smaller top_k for affixes
+                            top_p=top_p,
+                        )
+                        generated_prefixes = torch.cat([generated_prefixes, next_prefix], dim=1)
+                    elif generated_prefixes is not None:
+                        null_prefix = torch.full_like(next_root, null_affix_id)
                         generated_prefixes = torch.cat([generated_prefixes, null_prefix], dim=1)
-                    if generated_suffixes is not None:
-                        null_suffix = torch.full_like(next_token, null_affix_id)
+                    
+                    if output.suffix_logits is not None and generated_suffixes is not None:
+                        next_suffix_logits = output.suffix_logits[:, -1, :]
+                        next_suffix, _ = sampler.sample(
+                            next_suffix_logits,
+                            temperature=temperature,
+                            top_k=min(top_k or 50, 20),  # Smaller top_k for affixes
+                            top_p=top_p,
+                        )
+                        generated_suffixes = torch.cat([generated_suffixes, next_suffix], dim=1)
+                    elif generated_suffixes is not None:
+                        null_suffix = torch.full_like(next_root, null_affix_id)
                         generated_suffixes = torch.cat([generated_suffixes, null_suffix], dim=1)
                     
-                    if eos_token_id is not None and (next_token == eos_token_id).all():
+                    if eos_token_id is not None and (next_root == eos_token_id).all():
                         break
             
-            return generated_roots
+            # Return tuple of (roots, prefixes, suffixes) for full decoding
+            return (generated_roots, generated_prefixes, generated_suffixes)
         
         else:
             # BPE mode

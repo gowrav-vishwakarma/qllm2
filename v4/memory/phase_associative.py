@@ -86,38 +86,45 @@ class PhaseAssociativeMemory(nn.Module):
         """
         Compute attention weights via phase coherence.
         
+        Uses memory-efficient chunked computation to avoid OOM.
         Uses dot product (real part) as coherence measure - no trig!
         """
         batch_size, seq_len, dim, _ = query.shape
         num_slots = keys.shape[0]
         
-        # Expand for broadcasting
-        query_exp = query.unsqueeze(2)  # [batch, seq, 1, dim, 2]
-        keys_exp = keys.unsqueeze(0).unsqueeze(0)  # [1, 1, num_slots, dim, 2]
+        # Memory-efficient: reshape query to [batch*seq, dim, 2]
+        query_flat = query.view(batch_size * seq_len, dim, 2)
         
-        # Compute coherence: Re(q * conj(k))
-        # q * conj(k) = (q_r * k_r + q_i * k_i) + i * (q_i * k_r - q_r * k_i)
-        q_real, q_imag = query_exp[..., 0], query_exp[..., 1]
-        k_real, k_imag = keys_exp[..., 0], keys_exp[..., 1]
+        # Pre-compute key magnitudes [num_slots]
+        k_real = keys[..., 0]  # [num_slots, dim]
+        k_imag = keys[..., 1]  # [num_slots, dim]
+        k_mag = torch.sqrt((k_real ** 2 + k_imag ** 2).sum(dim=-1) + 1e-8)  # [num_slots]
         
-        # Real part of complex dot product (coherence)
-        coherence = (q_real * k_real + q_imag * k_imag).sum(dim=-1)  # [batch, seq, num_slots]
+        # Pre-compute query magnitudes [batch*seq]
+        q_real = query_flat[..., 0]  # [batch*seq, dim]
+        q_imag = query_flat[..., 1]  # [batch*seq, dim]
+        q_mag = torch.sqrt((q_real ** 2 + q_imag ** 2).sum(dim=-1) + 1e-8)  # [batch*seq]
+        
+        # Compute coherence efficiently using einsum: [batch*seq, num_slots]
+        # Re(q * conj(k)) = q_r * k_r + q_i * k_i, summed over dim
+        coherence = torch.einsum('bd,nd->bn', q_real, k_real) + torch.einsum('bd,nd->bn', q_imag, k_imag)
         
         # Normalize by magnitudes
-        q_mag = torch.sqrt((q_real ** 2 + q_imag ** 2).sum(dim=-1) + 1e-8)
-        k_mag = torch.sqrt((k_real ** 2 + k_imag ** 2).sum(dim=-1) + 1e-8)
-        coherence = coherence / (q_mag * k_mag + 1e-8)
+        coherence = coherence / (q_mag.unsqueeze(-1) * k_mag.unsqueeze(0) + 1e-8)
         
         # Apply top-k if specified
         if top_k is not None and top_k < num_slots:
-            # Mask out low-coherence slots
+            # Keep only top-k values, set rest to -inf
             topk_vals, topk_idx = coherence.topk(top_k, dim=-1)
             mask = torch.zeros_like(coherence)
             mask.scatter_(-1, topk_idx, 1.0)
             coherence = coherence * mask + (1 - mask) * (-1e9)
         
         # Softmax to get attention weights
-        attention = F.softmax(coherence, dim=-1)  # [batch, seq, num_slots]
+        attention = F.softmax(coherence, dim=-1)  # [batch*seq, num_slots]
+        
+        # Reshape back to [batch, seq, num_slots]
+        attention = attention.view(batch_size, seq_len, num_slots)
         
         return attention
     
