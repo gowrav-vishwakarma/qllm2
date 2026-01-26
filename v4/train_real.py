@@ -491,7 +491,7 @@ class RealDataTrainer:
             
             # Generate sample
             try:
-                prompt_text, full_text, prompt_len = self.generate_sample("The quick brown", max_tokens=30)
+                prompt_text, full_text, prompt_len = self.generate_sample("The quick brown", max_tokens=100)
                 print(f"\n📝 Prompt: {prompt_text}")
                 print(f"   Generated: {full_text}")
             except Exception as e:
