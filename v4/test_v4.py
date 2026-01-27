@@ -196,12 +196,26 @@ def test_memory():
     
     memory = PhaseAssociativeMemory(dim=dim, num_slots=num_slots)
     
-    # Read
+    # Read with sparse mode (default - memory efficient)
     query = torch.randn(batch, seq, dim, 2)
-    result = memory.read(query, top_k=32)
+    result = memory.read(query, top_k=32, use_sparse=True)
     assert result.values.shape == (batch, seq, dim, 2)
-    assert result.attention.shape == (batch, seq, num_slots)
-    print("  ✓ PhaseAssociativeMemory read")
+    assert result.attention is None  # Sparse mode returns None for attention
+    print("  ✓ PhaseAssociativeMemory read (sparse)")
+    
+    # Read with dense mode (for debugging)
+    result_dense = memory.read(query, top_k=32, use_sparse=False)
+    assert result_dense.values.shape == (batch, seq, dim, 2)
+    assert result_dense.attention.shape == (batch, seq, num_slots)
+    print("  ✓ PhaseAssociativeMemory read (dense)")
+    
+    # Test chunked top-k directly
+    attn_weights, attn_indices = memory._compute_attention(
+        memory.query_proj(query), memory.keys, top_k=32, return_sparse=True
+    )
+    assert attn_weights.shape == (batch, seq, 32)
+    assert attn_indices.shape == (batch, seq, 32)
+    print("  ✓ PhaseAssociativeMemory chunked top-k")
     
     # Write
     memory.train()
@@ -223,7 +237,7 @@ def test_objectives():
     print("Testing Objectives...")
     print("=" * 60)
     
-    from v4.objectives import CrossEntropyObjective, CoherenceObjective, EnergyObjective
+    from v4.objectives import CrossEntropyObjective, CoherenceObjective, EnergyObjective, CouplingObjective
     
     batch, seq, vocab_size, dim = 2, 16, 1000, 64
     
@@ -255,7 +269,15 @@ def test_objectives():
     assert result.loss.dim() == 0
     assert 'avg_magnitude' in result.metrics
     print("  ✓ EnergyObjective")
-    
+
+    # Coupling objective
+    coupling = CouplingObjective()
+    context = {'coupling_loss': torch.tensor(0.5)}
+    result = coupling(model_output, targets, context)
+    assert result.loss.item() == 0.5
+    assert 'coupling_loss' in result.metrics
+    print("  ✓ CouplingObjective")
+
     print("\n✅ All Objective tests passed!")
 
 
@@ -342,6 +364,141 @@ def test_model():
     print("\n✅ All Model tests passed!")
 
 
+def test_byte_patching():
+    """Test byte patching module"""
+    print("\n" + "=" * 60)
+    print("Testing Byte Patching...")
+    print("=" * 60)
+    
+    from v4.core.byte_patching import BytePatcher, WithinPatchByteDecoder, BytePatchingModule
+    
+    batch, seq = 2, 17  # Non-multiple of patch_size to test padding
+    dim = 64
+    vocab_size = 259  # 256 bytes + PAD + BOS + EOS
+    patch_size = 4
+    
+    # Test BytePatcher
+    patcher = BytePatcher(vocab_size=vocab_size, dim=dim, patch_size=patch_size)
+    
+    input_ids = torch.randint(0, 256, (batch, seq))  # Random byte IDs
+    patch_latents, info = patcher(input_ids)
+    
+    # Check shapes
+    expected_patches = (seq + patch_size - 1) // patch_size  # Ceiling division
+    assert patch_latents.shape == (batch, expected_patches, dim, 2), \
+        f"Expected {(batch, expected_patches, dim, 2)}, got {patch_latents.shape}"
+    assert info.original_len == seq
+    assert info.patch_size == patch_size
+    print(f"  ✓ BytePatcher: input {seq} bytes → {info.num_patches} patches")
+    
+    # Test WithinPatchByteDecoder
+    decoder = WithinPatchByteDecoder(
+        vocab_size=vocab_size, dim=dim, patch_size=patch_size, num_layers=2
+    )
+    
+    # Simulate backbone output (same shape as patch_latents)
+    patch_states = torch.randn(batch, info.num_patches, dim, 2)
+    logits = decoder(patch_states, input_ids, info)
+    
+    assert logits.shape == (batch, seq, vocab_size), \
+        f"Expected {(batch, seq, vocab_size)}, got {logits.shape}"
+    print(f"  ✓ WithinPatchByteDecoder: patches → logits {logits.shape}")
+    
+    # Test BytePatchingModule (combined)
+    module = BytePatchingModule(
+        vocab_size=vocab_size, dim=dim, patch_size=patch_size, decoder_layers=2
+    )
+    
+    latents, info = module.encode(input_ids)
+    logits = module.decode(torch.randn_like(latents), input_ids, info)
+    assert logits.shape == (batch, seq, vocab_size)
+    print("  ✓ BytePatchingModule encode/decode")
+    
+    # Test gradient flow through the full module
+    module.zero_grad()
+    latents2, info2 = module.encode(input_ids)
+    logits2 = module.decode(latents2, input_ids, info2)  # Use actual latents, not random
+    logits2.mean().backward()
+    assert module.patcher.position_weights.grad is not None
+    print("  ✓ Gradient flow through byte patching")
+    
+    print("\n✅ All Byte Patching tests passed!")
+
+
+def test_byte_patching_model():
+    """Test full model with byte patching"""
+    print("\n" + "=" * 60)
+    print("Testing Model with Byte Patching...")
+    print("=" * 60)
+    
+    from v4.model import create_model
+    from v4.core.config import get_default_config, BytePatchingConfig
+    
+    # Create config for byte mode with patching
+    config = get_default_config('tiny')
+    config.vocab_size = 259  # Byte vocabulary
+    config.dim = 32
+    config.backbone.dim = 32
+    config.backbone.state_dim = 64
+    config.backbone.num_layers = 2
+    config.memory.dim = 32
+    config.memory.num_slots = 64
+    for bank_cfg in config.banks.values():
+        bank_cfg.dim = 32
+    
+    # Enable byte patching
+    config.tokenizer.mode = 'byte'
+    config.tokenizer.byte_patching = BytePatchingConfig(
+        enabled=True,
+        patch_size=4,
+        decoder_layers=2,
+    )
+    
+    model = create_model(config=config)
+    assert model.use_byte_patching, "Byte patching should be enabled"
+    print("  ✓ Model created with byte patching")
+    
+    # Forward pass
+    batch, seq = 2, 20
+    input_ids = torch.randint(0, 256, (batch, seq))  # Random bytes
+    
+    output = model(input_ids)
+    
+    # Logits should be [batch, seq, 259] - per-byte predictions
+    assert output.logits.shape == (batch, seq, 259), \
+        f"Expected logits {(batch, seq, 259)}, got {output.logits.shape}"
+    print(f"  ✓ Forward pass: logits shape {output.logits.shape}")
+    
+    # Phase states should be [batch, num_patches, dim, 2]
+    expected_patches = (seq + 3) // 4  # ceil(seq / 4)
+    assert output.phase_states.shape == (batch, expected_patches, config.dim, 2), \
+        f"Expected phase_states {(batch, expected_patches, config.dim, 2)}, got {output.phase_states.shape}"
+    print(f"  ✓ Phase states shape: {output.phase_states.shape}")
+    
+    # byte_patch_info should be present
+    assert output.byte_patch_info is not None
+    assert output.byte_patch_info.original_len == seq
+    print("  ✓ BytePatchInfo present")
+    
+    # Test loss computation
+    import torch.nn.functional as F
+    shift_logits = output.logits[:, :-1, :].contiguous()
+    shift_targets = input_ids[:, 1:].contiguous()
+    loss = F.cross_entropy(
+        shift_logits.view(-1, 259),
+        shift_targets.view(-1),
+        ignore_index=256,  # PAD token
+    )
+    assert not torch.isnan(loss)
+    print(f"  ✓ CE loss: {loss.item():.4f}")
+    
+    # Backward pass
+    loss.backward()
+    print("  ✓ Backward pass")
+    
+    print("\n✅ All Byte Patching Model tests passed!")
+
+
 def test_registry():
     """Test registry system"""
     print("\n" + "=" * 60)
@@ -397,8 +554,10 @@ def main():
         test_memory()
         test_objectives()
         test_sampler()
+        test_byte_patching()
         test_registry()
         test_model()
+        test_byte_patching_model()
         
         print("\n" + "=" * 60)
         print("🎉 ALL TESTS PASSED! 🎉")

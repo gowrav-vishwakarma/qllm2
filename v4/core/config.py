@@ -93,15 +93,26 @@ class TrainingConfig:
 
 
 @dataclass
+class BytePatchingConfig:
+    """Configuration for byte patching (used when tokenizer mode is 'byte')"""
+    enabled: bool = True  # Enable byte patching when using byte tokenizer
+    patch_size: int = 4  # Number of bytes per patch
+    decoder_layers: int = 2  # Number of layers in within-patch byte decoder
+    decoder_dim: Optional[int] = None  # Decoder hidden dim (defaults to config.dim)
+
+
+@dataclass
 class TokenizerConfig:
     """Configuration for tokenizer"""
-    mode: str = 'bpe'  # 'bpe' or 'morphological'
+    mode: str = 'bpe'  # 'bpe', 'morphological', or 'byte'
     bpe_name: str = 'gpt2'  # Model name for BPE tokenizer
     # Morphological tokenizer settings
     root_vocab_size: int = 16000
     prefix_vocab_size: int = 2000
     suffix_vocab_size: int = 2000
     morph_path: Optional[str] = None  # Path to save/load morphological tokenizer
+    # Byte patching settings
+    byte_patching: BytePatchingConfig = field(default_factory=BytePatchingConfig)
 
 
 @dataclass
@@ -138,6 +149,7 @@ class V4Config:
     objectives: List[ObjectiveConfig] = field(default_factory=lambda: [
         ObjectiveConfig(type='ce', weight=1.0),
         ObjectiveConfig(type='coherence', weight=0.01),
+        ObjectiveConfig(type='coupling', weight=0.1),
     ])
     
     # Sampler
@@ -198,7 +210,11 @@ class V4Config:
             data['training'] = TrainingConfig(**data['training'])
         
         if 'tokenizer' in data and isinstance(data['tokenizer'], dict):
-            data['tokenizer'] = TokenizerConfig(**data['tokenizer'])
+            tok_data = data['tokenizer']
+            # Handle nested byte_patching config
+            if 'byte_patching' in tok_data and isinstance(tok_data['byte_patching'], dict):
+                tok_data['byte_patching'] = BytePatchingConfig(**tok_data['byte_patching'])
+            data['tokenizer'] = TokenizerConfig(**tok_data)
         
         return cls(**data)
 
@@ -262,7 +278,7 @@ def get_default_config(size: str = 'small') -> V4Config:
                 'context': BankConfig(type='context', dim=512),
                 'morphology': BankConfig(type='morphology', dim=512),
                 'orthography': BankConfig(type='orthography', dim=512),
-                'language': BankConfig(type='language', dim=512),
+                # 'language': BankConfig(type='language', dim=512),
             },
             training=TrainingConfig(batch_size=4, learning_rate=5e-5),
         ),

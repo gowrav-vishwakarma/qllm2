@@ -22,6 +22,7 @@ from .core.registry import get_registry
 from .core.interfaces import BackboneState, MemoryReadResult
 from .core.phase2d import Phase2DEmbed, Phase2DLinear, Phase2DLayerNorm, phase2d_to_real
 from .core.morphology_embed import DualEmbedding
+from .core.byte_patching import BytePatchingModule, BytePatchInfo
 
 
 @dataclass
@@ -36,6 +37,8 @@ class ModelOutput:
     # Morphological mode: prefix/suffix logits for full text generation
     prefix_logits: Optional[torch.Tensor] = None  # [batch, seq, prefix_vocab_size]
     suffix_logits: Optional[torch.Tensor] = None  # [batch, seq, suffix_vocab_size]
+    # Byte patching info (for byte mode with patching)
+    byte_patch_info: Optional[BytePatchInfo] = None
     # Metrics for manas/buddhi/viveka/smriti (to be populated)
     metrics: Optional[Dict[str, torch.Tensor]] = None
 
@@ -62,6 +65,24 @@ class QuantumPhaseFieldLLM(nn.Module):
         # Embedding mode
         self.embedding_mode = config.tokenizer.mode
         
+        # Check if using byte patching
+        self.use_byte_patching = (
+            config.tokenizer.mode == 'byte' and 
+            config.tokenizer.byte_patching.enabled
+        )
+        
+        # Byte patching module (used when tokenizer mode is 'byte' with patching)
+        self.byte_patching: Optional[BytePatchingModule] = None
+        if self.use_byte_patching:
+            bp_config = config.tokenizer.byte_patching
+            self.byte_patching = BytePatchingModule(
+                vocab_size=config.vocab_size,  # Should be 259 for byte mode
+                dim=config.dim,
+                patch_size=bp_config.patch_size,
+                decoder_layers=bp_config.decoder_layers,
+                padding_idx=256,  # PAD token for byte mode
+            )
+        
         # Dual embedding: supports both BPE and morphological modes
         self.embed = DualEmbedding(
             bpe_vocab_size=config.vocab_size,
@@ -69,7 +90,7 @@ class QuantumPhaseFieldLLM(nn.Module):
             prefix_vocab_size=config.tokenizer.prefix_vocab_size,
             suffix_vocab_size=config.tokenizer.suffix_vocab_size,
             dim=config.dim,
-            mode=config.tokenizer.mode,
+            mode=config.tokenizer.mode if config.tokenizer.mode != 'byte' else 'bpe',
         )
         
         # Phase banks (separate layers)
@@ -168,9 +189,17 @@ class QuantumPhaseFieldLLM(nn.Module):
             ModelOutput with logits, phase states, etc.
         """
         context = context or {}
+        byte_patch_info: Optional[BytePatchInfo] = None
+        original_input_ids: Optional[torch.Tensor] = None
         
         # 1. Embed tokens to Phase2D (based on mode)
-        if self.embedding_mode == 'morphological' and root_ids is not None:
+        if self.use_byte_patching and input_ids is not None:
+            # Byte patching mode: convert bytes to patch latents
+            original_input_ids = input_ids
+            x, byte_patch_info = self.byte_patching.encode(input_ids)
+            context['token_ids'] = input_ids
+            context['byte_patch_info'] = byte_patch_info
+        elif self.embedding_mode == 'morphological' and root_ids is not None:
             x = self.embed(
                 root_ids=root_ids,
                 prefix_ids=prefix_ids,
@@ -184,7 +213,7 @@ class QuantumPhaseFieldLLM(nn.Module):
             x = self.embed(input_ids=input_ids, mode='bpe')
             context['token_ids'] = input_ids
         else:
-            raise ValueError("Either input_ids (BPE) or root_ids/prefix_ids/suffix_ids (morphological) must be provided")
+            raise ValueError("Either input_ids (BPE/byte) or root_ids/prefix_ids/suffix_ids (morphological) must be provided")
         
         # 2. Process through each bank
         bank_outputs = {}
@@ -205,19 +234,27 @@ class QuantumPhaseFieldLLM(nn.Module):
             # Add memory to backbone output
             backbone_out = backbone_out + memory_result.values * 0.1
         
-        # 6. LM head
-        lm_out = self.lm_head(backbone_out)
-        
-        # Convert Phase2D to real for final projection
-        lm_real = phase2d_to_real(lm_out, mode='concat')  # [batch, seq, dim*2]
-        logits = self.output_proj(lm_real)  # [batch, seq, vocab_size]
-        
-        # Morphological mode: also predict prefix and suffix
+        # 6. LM head (different paths for byte patching vs standard)
         prefix_logits = None
         suffix_logits = None
-        if self.prefix_proj is not None and self.suffix_proj is not None:
-            prefix_logits = self.prefix_proj(lm_real)  # [batch, seq, prefix_vocab_size]
-            suffix_logits = self.suffix_proj(lm_real)  # [batch, seq, suffix_vocab_size]
+        
+        if self.use_byte_patching and byte_patch_info is not None and original_input_ids is not None:
+            # Byte patching mode: decode patch states to per-byte logits
+            logits = self.byte_patching.decode(
+                backbone_out, original_input_ids, byte_patch_info
+            )  # [batch, T, vocab_size]
+        else:
+            # Standard LM head path
+            lm_out = self.lm_head(backbone_out)
+            
+            # Convert Phase2D to real for final projection
+            lm_real = phase2d_to_real(lm_out, mode='concat')  # [batch, seq, dim*2]
+            logits = self.output_proj(lm_real)  # [batch, seq, vocab_size]
+            
+            # Morphological mode: also predict prefix and suffix
+            if self.prefix_proj is not None and self.suffix_proj is not None:
+                prefix_logits = self.prefix_proj(lm_real)  # [batch, seq, prefix_vocab_size]
+                suffix_logits = self.suffix_proj(lm_real)  # [batch, seq, suffix_vocab_size]
         
         # Compute coupling loss (for training)
         coupling_loss = self.coupler.compute_coupling_loss(bank_outputs)
@@ -246,20 +283,23 @@ class QuantumPhaseFieldLLM(nn.Module):
             coupling_loss=coupling_loss,
             prefix_logits=prefix_logits,
             suffix_logits=suffix_logits,
+            byte_patch_info=byte_patch_info,
             metrics=metrics,
         )
     
     def set_embedding_mode(self, mode: str) -> None:
         """
-        Switch embedding mode between 'bpe' and 'morphological'.
+        Switch embedding mode between 'bpe', 'morphological', and 'byte'.
         
         Args:
-            mode: 'bpe' or 'morphological'
+            mode: 'bpe', 'morphological', or 'byte'
         """
-        if mode not in ['bpe', 'morphological']:
-            raise ValueError(f"Mode must be 'bpe' or 'morphological', got {mode}")
+        if mode not in ['bpe', 'morphological', 'byte']:
+            raise ValueError(f"Mode must be 'bpe', 'morphological', or 'byte', got {mode}")
         self.embedding_mode = mode
-        self.embed.mode = mode
+        # For byte mode, we use the byte patching path, not the dual embedding
+        if mode != 'byte':
+            self.embed.mode = mode
     
     def generate(
         self,
@@ -374,10 +414,23 @@ class QuantumPhaseFieldLLM(nn.Module):
             # Return tuple of (roots, prefixes, suffixes) for full decoding
             return (generated_roots, generated_prefixes, generated_suffixes)
         
+        elif self.use_byte_patching and input_ids is not None:
+            # Byte patching mode: generate patch-by-patch
+            return self._generate_byte_patching(
+                input_ids=input_ids,
+                max_new_tokens=max_new_tokens,
+                temperature=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                eos_token_id=eos_token_id,
+                bad_token_ids=bad_token_ids,
+                sampler=sampler,
+            )
+        
         else:
-            # BPE mode
+            # BPE mode (also handles byte mode without patching)
             if input_ids is None:
-                raise ValueError("input_ids required for BPE mode generation")
+                raise ValueError("input_ids required for BPE/byte mode generation")
             
             generated = input_ids.clone()
             backbone_state = None
@@ -405,6 +458,145 @@ class QuantumPhaseFieldLLM(nn.Module):
                         break
             
             return generated
+    
+    def _generate_byte_patching(
+        self,
+        input_ids: torch.Tensor,
+        max_new_tokens: int = 100,
+        temperature: float = 1.0,
+        top_k: Optional[int] = 50,
+        top_p: Optional[float] = 0.9,
+        eos_token_id: Optional[int] = None,
+        bad_token_ids: Optional[List[int]] = None,
+        sampler=None,
+    ) -> torch.Tensor:
+        """
+        Generate bytes using patch-by-patch decoding.
+        
+        Strategy:
+        1. Encode prompt bytes to patch latents
+        2. Process through backbone/memory to get patch states
+        3. For each new patch, generate P bytes autoregressively
+        4. Append new bytes and continue
+        
+        Args:
+            input_ids: [batch, T] prompt byte IDs
+            max_new_tokens: Maximum bytes to generate
+            ... (other sampling parameters)
+        
+        Returns:
+            [batch, T + generated_len] generated byte IDs
+        """
+        if sampler is None:
+            from .sampler import AutoregressiveSampler
+            sampler = AutoregressiveSampler()
+        
+        device = input_ids.device
+        batch_size = input_ids.shape[0]
+        patch_size = self.byte_patching.patch_size
+        
+        # Calculate number of new patches to generate
+        num_new_patches = (max_new_tokens + patch_size - 1) // patch_size
+        
+        generated = input_ids.clone()
+        
+        with torch.no_grad():
+            for patch_idx in range(num_new_patches):
+                # Encode current bytes to patch latents
+                patch_latents, info = self.byte_patching.encode(generated)
+                
+                # Process through banks/backbone/memory
+                bank_outputs = {}
+                for bank_name, bank in self.banks.items():
+                    bank_out = bank(patch_latents, context={})
+                    bank_outputs[bank_name] = bank_out
+                
+                coupled = self.coupler(bank_outputs, context={})
+                backbone_out, _ = self.backbone(coupled, state=None)
+                
+                # Query memory
+                memory_result = self.memory.read(backbone_out, top_k=64)
+                backbone_out = backbone_out + memory_result.values * 0.1
+                
+                # Get the last patch state for generation
+                last_patch_state = backbone_out[:, -1, :, :]  # [batch, dim, 2]
+                
+                # Get the last byte from current sequence
+                prev_byte = generated[:, -1]  # [batch]
+                
+                # Generate P new bytes for this patch
+                new_bytes = self.byte_patching.decoder.generate_patch(
+                    last_patch_state, prev_byte
+                )  # [batch, P]
+                
+                # Apply sampling with temperature/top-k/top-p to each byte
+                # (The generate_patch method uses greedy; we'll use sampler for better quality)
+                sampled_bytes = []
+                current_byte = prev_byte
+                
+                for p in range(patch_size):
+                    # Get logits for this position
+                    byte_embed = self.byte_patching.decoder.byte_embed(current_byte.unsqueeze(1))
+                    byte_embed = byte_embed.squeeze(1)  # [batch, dim, 2]
+                    
+                    pos_embed = self.byte_patching.decoder.position_embed[p]
+                    byte_embed = byte_embed + pos_embed
+                    
+                    x = byte_embed + last_patch_state
+                    
+                    for layer in self.byte_patching.decoder.layers:
+                        residual = x
+                        x = layer['proj'](x)
+                        x = layer['norm'](x)
+                        x = x + residual
+                    
+                    x = self.byte_patching.decoder.output_proj(x)
+                    x = self.byte_patching.decoder.output_norm(x)
+                    
+                    from .core.phase2d import phase2d_to_real
+                    x_real = phase2d_to_real(x, mode='concat')
+                    logits = self.byte_patching.decoder.lm_head(x_real)
+                    
+                    # Filter bad tokens
+                    if bad_token_ids:
+                        for bad_id in bad_token_ids:
+                            if bad_id < logits.size(-1):
+                                logits[:, bad_id] = float('-inf')
+                    
+                    # Sample
+                    next_byte, _ = sampler.sample(
+                        logits,
+                        temperature=temperature,
+                        top_k=top_k,
+                        top_p=top_p,
+                    )
+                    next_byte = next_byte.squeeze(-1)  # [batch]
+                    sampled_bytes.append(next_byte)
+                    current_byte = next_byte
+                    
+                    # Check for EOS
+                    if eos_token_id is not None and (next_byte == eos_token_id).all():
+                        break
+                
+                # Append sampled bytes
+                new_bytes_tensor = torch.stack(sampled_bytes, dim=1)  # [batch, <=P]
+                generated = torch.cat([generated, new_bytes_tensor], dim=1)
+                
+                # Check for EOS in any position
+                if eos_token_id is not None:
+                    if (generated[:, -1] == eos_token_id).all():
+                        break
+                
+                # Stop if we've generated enough
+                if generated.shape[1] >= input_ids.shape[1] + max_new_tokens:
+                    break
+        
+        # Trim to max_new_tokens
+        max_len = input_ids.shape[1] + max_new_tokens
+        if generated.shape[1] > max_len:
+            generated = generated[:, :max_len]
+        
+        return generated
     
     def count_parameters(self) -> Dict[str, int]:
         """Count parameters by component"""

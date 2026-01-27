@@ -7,6 +7,6 @@ Multiple objectives can be combined with weights.
 """
 
 from .ce import CrossEntropyObjective
-from .coherence import CoherenceObjective, EnergyObjective
+from .coherence import CoherenceObjective, EnergyObjective, CouplingObjective
 
-__all__ = ['CrossEntropyObjective', 'CoherenceObjective', 'EnergyObjective']
+__all__ = ['CrossEntropyObjective', 'CoherenceObjective', 'EnergyObjective', 'CouplingObjective']

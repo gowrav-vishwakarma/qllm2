@@ -20,6 +20,12 @@ from .morphology_embed import (
     AffixRotationBank,
     DualEmbedding,
 )
+from .byte_patching import (
+    BytePatcher,
+    WithinPatchByteDecoder,
+    BytePatchingModule,
+    BytePatchInfo,
+)
 
 __all__ = [
     # Phase2D math
@@ -29,6 +35,8 @@ __all__ = [
     'IotaBlock', 'Phase2DEmbed', 'Phase2DLinear', 'Phase2DLayerNorm',
     # Morphology embedding
     'MorphologyAwareEmbed', 'AffixRotationBank', 'DualEmbedding',
+    # Byte patching
+    'BytePatcher', 'WithinPatchByteDecoder', 'BytePatchingModule', 'BytePatchInfo',
     # Interfaces
     'PhaseBank', 'Coupler', 'Backbone', 'Memory', 'Objective', 'Sampler', 'BackboneState',
     # Registry

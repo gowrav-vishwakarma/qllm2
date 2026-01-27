@@ -202,7 +202,7 @@ class Backbone(ABC):
 class MemoryReadResult:
     """Result of memory read operation"""
     values: torch.Tensor  # Retrieved values [batch, seq, dim, 2]
-    attention: torch.Tensor  # Attention weights [batch, seq, num_slots]
+    attention: Optional[torch.Tensor] = None  # Attention weights [batch, seq, num_slots] (None if sparse)
     hit_mask: Optional[torch.Tensor] = None  # Which slots were accessed
 
 

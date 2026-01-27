@@ -454,8 +454,9 @@ def create_dataloaders(
         Path(cache_dir).mkdir(parents=True, exist_ok=True)
         if is_morphological:
             cache_suffix = '_morph'
-        elif tokenizer_type == 'byte':
-            cache_suffix = '_byte'
+        elif tokenizer_type.startswith('byte'):
+            # Handles 'byte' and 'byte_p{N}' (with patch size)
+            cache_suffix = f'_{tokenizer_type}'
         else:
             cache_suffix = ''
         train_cache = f"{cache_dir}/train_tokens{cache_suffix}.pt"
@@ -530,8 +531,8 @@ def create_dataloaders(
     # Log dataloader configuration
     if is_morphological:
         mode_str = "morphological"
-    elif tokenizer_type == 'byte':
-        mode_str = "byte"
+    elif tokenizer_type.startswith('byte'):
+        mode_str = tokenizer_type  # e.g., "byte" or "byte_p4"
     else:
         mode_str = "BPE"
     print(f"⚡ DataLoader config: workers={actual_num_workers}, "

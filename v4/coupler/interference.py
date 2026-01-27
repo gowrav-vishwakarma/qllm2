@@ -145,6 +145,14 @@ class InterferenceCoupler(nn.Module):
         if len(available_banks) < 2:
             return None
         
+        # IMPORTANT (memory): computing coherence over full [B, S, D, 2] for many bank-pairs
+        # can OOM at medium/large sizes. We keep this loss cheap by reducing sequence length
+        # before calling phase2d_coherence.
+        #
+        # Strategy: subsample up to K positions, then mean-pool over sequence -> [B, D, 2].
+        # This makes phase2d_coherence operate on [B, D, 2] instead of [B, S, D, 2].
+        max_tokens_for_loss = 64
+        
         # Compute pairwise coherence between banks
         coherence_loss = 0.0
         num_pairs = 0
@@ -153,6 +161,22 @@ class InterferenceCoupler(nn.Module):
             for name_j in available_banks[i+1:]:
                 bank_i = bank_outputs[name_i]
                 bank_j = bank_outputs[name_j]
+                
+                # Reduce sequence dimension for stability + memory
+                # bank_*: [B, S, D, 2] -> [B, D, 2]
+                if bank_i.dim() == 4:
+                    seq_len = bank_i.shape[1]
+                    if seq_len > max_tokens_for_loss:
+                        idx = torch.linspace(
+                            0,
+                            seq_len - 1,
+                            steps=max_tokens_for_loss,
+                            device=bank_i.device,
+                        ).long()
+                        bank_i = bank_i.index_select(dim=1, index=idx)
+                        bank_j = bank_j.index_select(dim=1, index=idx)
+                    bank_i = bank_i.mean(dim=1)
+                    bank_j = bank_j.mean(dim=1)
                 
                 # Coherence: normalized dot product (real part)
                 # We want banks to have SOME coherence (not random)

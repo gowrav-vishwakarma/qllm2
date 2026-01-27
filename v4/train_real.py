@@ -533,6 +533,8 @@ def main():
     parser.add_argument('--no_pin_memory', action='store_true', help='Disable pin_memory')
     parser.add_argument('--no_cache', action='store_true', help='Disable token caching')
     parser.add_argument('--cache_dir', type=str, default='.cache/v4_tokens', help='Token cache directory')
+    parser.add_argument('--no_metrics', action='store_true',
+                        help='Disable philosophy metrics (faster training)')
     # Tokenizer options
     parser.add_argument(
         '--tokenizer',
@@ -543,8 +545,21 @@ def main():
     )
     parser.add_argument('--morph_cache', type=str, default='.cache/morph_tokenizer',
                         help='Path to save/load morphological tokenizer')
+    # Byte patching options
+    parser.add_argument('--byte_patching', action='store_true', default=True,
+                        help='Enable byte patching when using byte tokenizer (default: True)')
+    parser.add_argument('--no_byte_patching', action='store_true',
+                        help='Disable byte patching')
+    parser.add_argument('--byte_patch_size', type=int, default=4,
+                        help='Byte patch size (default: 4)')
+    parser.add_argument('--byte_decoder_layers', type=int, default=2,
+                        help='Number of layers in byte decoder (default: 2)')
     
     args = parser.parse_args()
+    
+    # Handle byte patching flag
+    if args.no_byte_patching:
+        args.byte_patching = False
     
     print("="*60)
     print("v4 Quantum Phase-Field LLM - Real Data Training")
@@ -626,10 +641,14 @@ def main():
     
     # Create dataloaders with speed optimizations
     # Map tokenizer arg to tokenizer_type for caching
+    # Include patch size in cache key to avoid collisions between different patch sizes
     if args.tokenizer == 'morphological':
         tok_type = 'morphological'
     elif args.tokenizer == 'byte':
-        tok_type = 'byte'
+        if args.byte_patching:
+            tok_type = f'byte_p{args.byte_patch_size}'
+        else:
+            tok_type = 'byte'
     else:
         tok_type = 'bpe'
     
@@ -654,11 +673,19 @@ def main():
     config.training.checkpoint_dir = args.checkpoint_dir
     
     # Tokenizer mode configuration
-    config.tokenizer.mode = 'morphological' if args.tokenizer == 'morphological' else 'bpe'
     if args.tokenizer == 'morphological':
+        config.tokenizer.mode = 'morphological'
         config.tokenizer.root_vocab_size = vocab_size
         config.tokenizer.prefix_vocab_size = prefix_vocab_size
         config.tokenizer.suffix_vocab_size = suffix_vocab_size
+    elif args.tokenizer == 'byte':
+        config.tokenizer.mode = 'byte'
+        # Configure byte patching
+        config.tokenizer.byte_patching.enabled = args.byte_patching
+        config.tokenizer.byte_patching.patch_size = args.byte_patch_size
+        config.tokenizer.byte_patching.decoder_layers = args.byte_decoder_layers
+    else:
+        config.tokenizer.mode = 'bpe'
     
     # Speed options
     config.training.compile_model = args.compile
@@ -666,6 +693,7 @@ def main():
     config.training.num_workers = args.num_workers
     config.training.pin_memory = not args.no_pin_memory
     config.training.use_token_cache = not args.no_cache
+    config.training.compute_metrics = not args.no_metrics
     
     if args.lr:
         config.training.learning_rate = args.lr
@@ -693,6 +721,7 @@ def main():
     print(f"   Batch size: {args.batch_size}")
     print(f"   Epochs: {args.epochs}")
     print(f"   LR: {config.training.learning_rate}")
+    print(f"   Metrics: {'off' if args.no_metrics else 'on'}")
     
     # Create model
     model = create_model(config=config)

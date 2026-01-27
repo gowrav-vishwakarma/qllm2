@@ -254,6 +254,10 @@ def compute_smriti_metrics(
         return {'sharpness': 0.0, 'hit_rate': 0.0, 'coverage': 0.0}
     
     attention = memory_result.attention  # [batch, seq, num_slots]
+    if attention is None:
+        # Sparse memory mode does not return dense attention to avoid OOM.
+        # For now, skip Smriti attention-based metrics.
+        return {'sharpness': 0.0, 'hit_rate': 0.0, 'coverage': 0.0}
     
     # Sharpness: inverse entropy of attention distribution
     attn_flat = attention.view(-1, attention.size(-1))
