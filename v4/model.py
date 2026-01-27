@@ -23,6 +23,7 @@ from .core.interfaces import BackboneState, MemoryReadResult
 from .core.phase2d import Phase2DEmbed, Phase2DLinear, Phase2DLayerNorm, phase2d_to_real
 from .core.morphology_embed import DualEmbedding
 from .core.byte_patching import BytePatchingModule, BytePatchInfo
+from .memory.episodic import EpisodicMemoryEfficient
 
 
 @dataclass
@@ -120,13 +121,24 @@ class QuantumPhaseFieldLLM(nn.Module):
             **config.backbone.params
         )
         
-        # Memory
+        # Memory (global learned slots)
         self.memory = registry.create_memory(
             config.memory.type,
             dim=config.dim,
             num_slots=config.memory.num_slots,
             **config.memory.params
         )
+        
+        # Episodic memory (per-sequence buffer for copy capability)
+        self.use_episodic = config.episodic.enabled
+        self.episodic_weight = config.episodic.weight
+        if self.use_episodic:
+            self.episodic = EpisodicMemoryEfficient(
+                dim=config.dim,
+                buffer_size=config.episodic.buffer_size,
+            )
+        else:
+            self.episodic = None
         
         # LM Head: Phase2D -> logits
         self.lm_head = nn.Sequential(
@@ -221,18 +233,28 @@ class QuantumPhaseFieldLLM(nn.Module):
             bank_out = bank(x, context=context)
             bank_outputs[bank_name] = bank_out
         
-        # 3. Couple banks via interference
-        coupled = self.coupler(bank_outputs, context=context)
+        # 3. Couple banks via interference (or bypass if bankless)
+        # Bankless mode is useful as a baseline: embeddings -> backbone directly.
+        if len(bank_outputs) == 0:
+            coupled = x
+        else:
+            coupled = self.coupler(bank_outputs, context=context)
         
         # 4. Process through backbone
         backbone_out, new_backbone_state = self.backbone(coupled, state=backbone_state)
         
-        # 5. Query memory (if enabled)
+        # 5. Query global memory (if enabled)
         memory_result = None
         if use_memory:
-            memory_result = self.memory.read(backbone_out, top_k=64)
+            memory_result = self.memory.read(backbone_out, top_k=32)  # Reduced from 64 for speed
             # Add memory to backbone output
             backbone_out = backbone_out + memory_result.values * 0.1
+        
+        # 5b. Episodic memory: retrieve from recent positions in this sequence
+        # This provides "copy" capability similar to transformer attention
+        if self.episodic is not None:
+            episodic_result = self.episodic(backbone_out)
+            backbone_out = backbone_out + episodic_result.values * self.episodic_weight
         
         # 6. LM head (different paths for byte patching vs standard)
         prefix_logits = None
@@ -511,7 +533,10 @@ class QuantumPhaseFieldLLM(nn.Module):
                     bank_out = bank(patch_latents, context={})
                     bank_outputs[bank_name] = bank_out
                 
-                coupled = self.coupler(bank_outputs, context={})
+                if len(bank_outputs) == 0:
+                    coupled = patch_latents
+                else:
+                    coupled = self.coupler(bank_outputs, context={})
                 backbone_out, _ = self.backbone(coupled, state=None)
                 
                 # Query memory

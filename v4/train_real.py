@@ -514,8 +514,9 @@ def main():
                         choices=['wikitext2', 'tinystories'],
                         help='Dataset to use')
     parser.add_argument('--size', type=str, default='small',
-                        choices=['tiny', 'small', 'medium', 'large'],
-                        help='Model size')
+                        choices=['tiny', 'small', 'medium', 'large',
+                                 'tiny-byte', 'small-byte', 'medium-byte', 'large-byte'],
+                        help='Model size. Use *-byte variants for byte tokenizer (faster, 2 banks)')
     parser.add_argument('--epochs', type=int, default=10, help='Number of epochs')
     parser.add_argument('--batch_size', type=int, default=8, help='Batch size')
     parser.add_argument('--max_length', type=int, default=256, help='Max sequence length')

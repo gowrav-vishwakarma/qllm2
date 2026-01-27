@@ -195,15 +195,35 @@ class CouplingObjective(nn.Module):
         """
         Extract coupling loss from context.
         """
+        # Coupling loss is only defined when there are >=2 active banks.
+        # For 0/1-bank configs, coupler returns None; treat it as 0 loss.
+        device = None
+        if isinstance(model_output, dict) and 'logits' in model_output and torch.is_tensor(model_output['logits']):
+            device = model_output['logits'].device
+        elif isinstance(model_output, dict) and 'phase_states' in model_output and torch.is_tensor(model_output['phase_states']):
+            device = model_output['phase_states'].device
+
         if context is None or 'coupling_loss' not in context:
             return ObjectiveResult(
-                loss=torch.tensor(0.0),
+                loss=torch.tensor(0.0, device=device),
                 metrics={'coupling_loss': 0.0}
             )
-        
+
         coupling_loss = context['coupling_loss']
-        
+        if coupling_loss is None:
+            return ObjectiveResult(
+                loss=torch.tensor(0.0, device=device),
+                metrics={'coupling_loss': 0.0}
+            )
+
+        if not torch.is_tensor(coupling_loss):
+            coupling_loss = torch.tensor(float(coupling_loss), device=device)
+
+        # Ensure scalar loss
+        if coupling_loss.numel() != 1:
+            coupling_loss = coupling_loss.mean()
+
         return ObjectiveResult(
             loss=coupling_loss,
-            metrics={'coupling_loss': coupling_loss.item()}
+            metrics={'coupling_loss': float(coupling_loss.detach().item())}
         )

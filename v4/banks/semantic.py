@@ -86,33 +86,56 @@ class SemanticPhaseBank(nn.Module):
         """
         batch_size, seq_len, dim, _ = x.shape
         
-        # 1. Compute concept attention via phase coherence
+        # 1. Compute concept attention via REAL phase coherence
         # Project to concept space
         concept_query = self.concept_proj(x)  # [batch, seq, num_concepts, 2]
         
-        # Compute coherence with concept memory (no trig!)
-        # coherence = Re(query * conj(memory)) / (|query| * |memory|)
-        concept_memory = self.concept_memory.unsqueeze(0).unsqueeze(0)  # [1, 1, num_concepts, dim, 2]
+        # Concept memory: [num_concepts, dim, 2]
+        # We want coherence between query and each concept
+        # Query shape after proj: [batch, seq, num_concepts, 2] - this is wrong!
+        # The projection should give us [batch, seq, dim, 2] which we compare to concepts
         
-        # Simple attention: use real part of dot product
-        query_real = concept_query[..., 0]  # [batch, seq, num_concepts]
-        memory_real = self.concept_memory[..., 0].mean(dim=-1)  # [num_concepts]
+        # Actually, let's compute coherence properly:
+        # For each position, compute coherence with each concept in memory
+        # concept_memory: [num_concepts, dim, 2]
+        # x: [batch, seq, dim, 2]
+        # coherence[b,s,n] = Re(x[b,s] dot conj(concept[n])) / (|x| * |concept|)
         
-        concept_attn = F.softmax(query_real + memory_real.unsqueeze(0).unsqueeze(0), dim=-1)
+        # Efficient computation:
+        # Real part of complex dot: x_r * c_r + x_i * c_i, summed over dim
+        x_real = x[..., 0]  # [batch, seq, dim]
+        x_imag = x[..., 1]  # [batch, seq, dim]
+        c_real = self.concept_memory[..., 0]  # [num_concepts, dim]
+        c_imag = self.concept_memory[..., 1]  # [num_concepts, dim]
+        
+        # Dot products: [batch, seq, num_concepts]
+        dot_real = torch.einsum('bsd,nd->bsn', x_real, c_real) + \
+                   torch.einsum('bsd,nd->bsn', x_imag, c_imag)
+        
+        # Magnitudes for normalization
+        x_mag = torch.sqrt((x_real ** 2 + x_imag ** 2).sum(dim=-1, keepdim=True) + 1e-8)  # [batch, seq, 1]
+        c_mag = torch.sqrt((c_real ** 2 + c_imag ** 2).sum(dim=-1) + 1e-8)  # [num_concepts]
+        
+        # Normalized coherence: [batch, seq, num_concepts]
+        coherence = dot_real / (x_mag * c_mag.unsqueeze(0).unsqueeze(0) + 1e-8)
+        
+        # Attention from coherence (scale for sharper attention)
+        concept_attn = F.softmax(coherence * 2.0, dim=-1)  # [batch, seq, num_concepts]
         
         # Retrieve from concept memory
         # [batch, seq, num_concepts] @ [num_concepts, dim, 2] -> [batch, seq, dim, 2]
-        concept_real = torch.einsum('bsn,ndp->bsdp', concept_attn, self.concept_memory)
+        concept_retrieved = torch.einsum('bsn,ndp->bsdp', concept_attn, self.concept_memory)
         
         # 2. Process through semantic layers
-        h = x + concept_real * 0.1  # Soft concept injection
+        h = x + concept_retrieved * 0.1  # Soft concept injection
         
         for layer, norm in zip(self.layers, self.norms):
             residual = h
             h = norm(h)
             h = layer(h)
             h = F.gelu(h[..., 0]).unsqueeze(-1) * h  # GELU on magnitude
-            h = self.dropout(h[..., 0]).unsqueeze(-1).expand_as(h) * h + h  # Dropout
+            if self.training:
+                h = self.dropout(h[..., 0]).unsqueeze(-1).expand_as(h) * h + h  # Dropout
             h = residual + h * 0.1
         
         # 3. Output projection

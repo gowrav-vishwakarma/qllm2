@@ -52,6 +52,14 @@ class MemoryConfig:
 
 
 @dataclass
+class EpisodicConfig:
+    """Configuration for Episodic Memory (per-sequence copy buffer)"""
+    enabled: bool = True  # Enable episodic memory for copy capability
+    buffer_size: int = 64  # Number of positions to remember
+    weight: float = 0.1  # How much episodic retrieval influences output
+
+
+@dataclass
 class ObjectiveConfig:
     """Configuration for a single Objective"""
     type: str
@@ -142,8 +150,11 @@ class V4Config:
     # Backbone
     backbone: BackboneConfig = field(default_factory=BackboneConfig)
     
-    # Memory
+    # Memory (global learned slots)
     memory: MemoryConfig = field(default_factory=MemoryConfig)
+    
+    # Episodic memory (per-sequence buffer for copy capability)
+    episodic: EpisodicConfig = field(default_factory=EpisodicConfig)
     
     # Objectives
     objectives: List[ObjectiveConfig] = field(default_factory=lambda: [
@@ -197,6 +208,9 @@ class V4Config:
         if 'memory' in data and isinstance(data['memory'], dict):
             data['memory'] = MemoryConfig(**data['memory'])
         
+        if 'episodic' in data and isinstance(data['episodic'], dict):
+            data['episodic'] = EpisodicConfig(**data['episodic'])
+        
         if 'objectives' in data:
             data['objectives'] = [
                 ObjectiveConfig(**obj) if isinstance(obj, dict) else obj
@@ -241,11 +255,17 @@ def get_default_config(size: str = 'small') -> V4Config:
     """
     Get a default configuration for a given model size.
     
-    Sizes:
+    Sizes (standard - 4 banks for rich linguistic modeling):
     - 'tiny': For testing (~1M params)
     - 'small': For quick experiments (~10M params)
     - 'medium': Balanced (~50M params)
     - 'large': Production (~200M params)
+    
+    Sizes (byte-optimized - 2 banks for speed, use with byte tokenizer):
+    - 'tiny-byte': Minimal byte model
+    - 'small-byte': Fast byte experiments
+    - 'medium-byte': Balanced byte model (recommended for RTX 4090)
+    - 'large-byte': Production byte model
     """
     configs = {
         'tiny': V4Config(
@@ -278,7 +298,6 @@ def get_default_config(size: str = 'small') -> V4Config:
                 'context': BankConfig(type='context', dim=512),
                 'morphology': BankConfig(type='morphology', dim=512),
                 'orthography': BankConfig(type='orthography', dim=512),
-                # 'language': BankConfig(type='language', dim=512),
             },
             training=TrainingConfig(batch_size=4, learning_rate=5e-5),
         ),
@@ -293,6 +312,51 @@ def get_default_config(size: str = 'small') -> V4Config:
                 'emotion': BankConfig(type='emotion', dim=768),
             },
             training=TrainingConfig(batch_size=2, learning_rate=3e-5),
+        ),
+        # =====================================================================
+        # Byte-optimized configs: 2 banks only (semantic + context)
+        # Faster, lower VRAM, better for byte tokenizer where morphology/ortho
+        # banks provide diminishing returns on raw byte sequences.
+        # =====================================================================
+        'tiny-byte': V4Config(
+            dim=64,
+            backbone=BackboneConfig(dim=64, state_dim=128, num_layers=4),
+            memory=MemoryConfig(dim=64, num_slots=256),
+            banks={
+                'semantic': BankConfig(type='semantic', dim=64),
+                'context': BankConfig(type='context', dim=64),
+            },
+            training=TrainingConfig(batch_size=32, learning_rate=1e-3),
+        ),
+        'small-byte': V4Config(
+            dim=256,
+            backbone=BackboneConfig(dim=256, state_dim=512, num_layers=8),
+            memory=MemoryConfig(dim=256, num_slots=256),
+            banks={
+                'semantic': BankConfig(type='semantic', dim=256),
+                'context': BankConfig(type='context', dim=256),
+            },
+            training=TrainingConfig(batch_size=16, learning_rate=1e-4),
+        ),
+        'medium-byte': V4Config(
+            dim=512,
+            backbone=BackboneConfig(dim=512, state_dim=1024, num_layers=12),
+            memory=MemoryConfig(dim=512, num_slots=512),  # Smaller memory for speed
+            banks={
+                'semantic': BankConfig(type='semantic', dim=512),
+                'context': BankConfig(type='context', dim=512),
+            },
+            training=TrainingConfig(batch_size=8, learning_rate=5e-5),
+        ),
+        'large-byte': V4Config(
+            dim=768,
+            backbone=BackboneConfig(dim=768, state_dim=1536, num_layers=16),
+            memory=MemoryConfig(dim=768, num_slots=1024),
+            banks={
+                'semantic': BankConfig(type='semantic', dim=768),
+                # 'context': BankConfig(type='context', dim=768),
+            },
+            training=TrainingConfig(batch_size=4, learning_rate=3e-5),
         ),
     }
     

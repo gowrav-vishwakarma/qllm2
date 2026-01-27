@@ -1,18 +1,25 @@
 # v4 Quantum Phase-Field LLM
 
-A novel language model architecture combining quantum-inspired phase representations with GPU-practical implementations.
+A novel language model architecture combining quantum-inspired phase representations with GPU-practical implementations. **Designed for consumer-grade GPUs like RTX 4090.**
+
+> **IMPORTANT: Byte Tokenizer is the Recommended Approach**
+> 
+> After experimentation, we've settled on **byte tokenizer** as the primary tokenization strategy. The morphological tokenizer and specialized banks (morphology, orthography) were experimental and did not provide sufficient benefit over the simpler byte-level approach. The byte tokenizer:
+> - Works universally across all languages (UTF-8)
+> - Has a tiny vocab (259 tokens) reducing embedding overhead
+> - Pairs well with byte patching for efficient processing
+> - Uses only 2 banks (semantic + context) which is faster and equally effective
 
 ## Key Innovation
 
 Unlike traditional transformers or even v2/v3, v4 uses:
 
 - **Phase2D Representation**: Complex numbers as 2D real vectors (no sin/cos in hot path)
-- **Morphological Tokenization**: Words split into Root + Prefix + Suffix, where affixes apply phase rotations (tense/aspect/case) to the Root (meaning)
-- **Multi-Layer Phase Banks**: Semantic/Context/Language/Morphology/Orthography layers that interfere
-- **Oscillatory SSM Backbone**: Linear-time sequence processing via coupled oscillators (with vectorized scan option)
-- **Phase-Coded Memory**: Long-term associative memory with coherence-based retrieval
+- **Byte Tokenizer + Patching**: Raw UTF-8 bytes grouped into patches for efficiency
+- **Dynamic Phase Bank Interference**: Semantic + Context banks with learned per-token routing
+- **Oscillatory SSM Backbone**: Linear-time O(n) sequence processing via coupled oscillators
+- **Dual Memory System**: Global associative memory + Episodic buffer for copy capability
 - **Injectable Architecture**: All components swappable via registry/config
-- **Philosophy Metrics**: Manas/Buddhi/Viveka/Smriti inspired metrics for interpretability
 
 ## Quick Start
 
@@ -22,19 +29,33 @@ cd v4
 # Run tests to validate everything works
 uv run python test_v4.py
 
-# Train on random data (for testing architecture)
-uv run python train.py --size tiny --epochs 2
+# RECOMMENDED: Train with byte tokenizer on RTX 4090
+uv run python train_real.py \
+  --dataset tinystories \
+  --size medium-byte \
+  --tokenizer byte \
+  --byte_patching \
+  --max_length 256 \
+  --batch_size 16 \
+  --epochs 50
 
-# Train on REAL data (WikiText-2) with speed optimizations
-uv run python train_real.py --dataset wikitext2 --size small --epochs 5 --compile
-
-# Train on TinyStories (good for small models)
-uv run python train_real.py --dataset tinystories --size small --epochs 10 --max_train_samples 5000
+# Smaller model for quick experiments
+uv run python train_real.py \
+  --dataset tinystories \
+  --size small-byte \
+  --tokenizer byte \
+  --byte_patching \
+  --epochs 10
 ```
 
-## New Features (v4.1)
+---
 
-### 1. Morphological Tokenizer (User Idea)
+## Archived/Experimental Features
+
+> **Note**: The following features were experimental explorations. We've found that the **byte tokenizer with 2 banks (semantic + context)** is more effective and faster. These are kept for reference but are not recommended for new training runs.
+
+<details>
+<summary><b>Morphological Tokenizer (Experimental - Not Recommended)</b></summary>
 
 Data-driven tokenizer that learns root and affix vocabularies from corpus statistics:
 
@@ -148,19 +169,104 @@ rm -rf .cache/tokens/*_morph.pt
 - Use more training samples for tokenizer training (e.g., `--max_train_samples 50000`)
 - The tokenizer trains once and is cached; model training uses the cached tokenizer
 
-### 2. New Phase Banks
+</details>
+
+---
+
+## Current Architecture (v4.4)
+
+### Dynamic Coupling + Episodic Memory + Speed Optimizations
+
+Major architectural improvements focused on quality AND speed:
+
+**Quality Improvements:**
+
+1. **Dynamic Coupler Routing**: Per-token bank weights instead of static mixing
+   - Each token decides which banks are most relevant
+   - Gives transformer-like dynamic interaction without O(n²)
+   - Implemented via cheap magnitude-based routing (tiny MLP)
+
+2. **Episodic Memory (Copy Capability)**: Ring buffer for within-sequence retrieval
+   - Addresses transformer's biggest advantage: exact copy/retrieval
+   - Each position attends to recent positions via windowed attention
+   - O(n × buffer_size) instead of O(n²)
+
+3. **Fixed Semantic Coherence**: Real phase coherence for concept attention
+   - Was using heuristic (query + bias), now uses actual coherence
+   - Better concept retrieval from learned memory
+
+4. **Diversity-Aware Coupling Loss**: Banks encouraged to capture different aspects
+   - Old: all banks align (leads to collapse)
+   - New: encourage variance in coherence (some align, some oppose)
+
+**Speed Improvements:**
+
+5. **Byte-Optimized Configs**: New `*-byte` model sizes
+   ```bash
+   # Use medium-byte instead of medium for byte tokenizer
+   python train_real.py --size medium-byte --tokenizer byte ...
+   ```
+   - Only 2 banks (semantic + context) vs 4 banks
+   - Smaller memory (512 slots vs 1024)
+   - ~50% faster bank computation
+
+6. **Removed Expensive cross_proj**: Coupler no longer concatenates all banks
+   - Was: O(batch × seq × dim × num_banks × dim)
+   - Now: O(batch × seq × dim)
+
+7. **Reduced Memory top_k**: 32 instead of 64 slots per query
+
+**Byte Model Sizes:**
+| Size | Dim | Layers | Banks | Params | Use Case |
+|------|-----|--------|-------|--------|----------|
+| tiny-byte | 64 | 4 | 2 | ~1M | Testing |
+| small-byte | 256 | 8 | 2 | ~10M | Quick experiments |
+| medium-byte | 512 | 12 | 2 | ~177M | RTX 4090 training |
+| large-byte | 768 | 16 | 2 | ~350M | A100 training |
+
+**Example Commands:**
+```bash
+# Fast training on RTX 4090 (byte tokenizer + optimized config)
+uv run python v4/train_real.py \
+  --dataset tinystories \
+  --size medium-byte \
+  --tokenizer byte \
+  --byte_patching \
+  --max_length 256 \
+  --batch_size 16 \
+  --epochs 50
+
+# Compare: original medium (slower, more banks)
+uv run python v4/train_real.py \
+  --dataset tinystories \
+  --size medium \
+  --tokenizer byte \
+  --byte_patching \
+  --max_length 256 \
+  --batch_size 12 \
+  --epochs 50
+```
+
+<details>
+<summary><b>Extra Phase Banks (Experimental - Not Effective with Byte Tokenizer)</b></summary>
+
+> **Note**: These banks were designed for BPE/morphological tokenization. With byte tokenizer, they don't provide meaningful benefit since individual bytes don't carry morphological or orthographic information. **Use `*-byte` configs which only include semantic + context banks.**
 
 **MorphologyPhaseBank**: Focuses on grammatical transformations
 ```python
+# NOT recommended with byte tokenizer
 config.banks['morphology'] = BankConfig(type='morphology', dim=256)
 ```
 
 **OrthographyPhaseBank**: Learns script/shape patterns for multilingual support
 ```python
+# NOT recommended with byte tokenizer
 config.banks['orthography'] = BankConfig(type='orthography', dim=256)
 ```
 
-### 3. Philosophy Metrics (Option B)
+</details>
+
+### Philosophy Metrics
 
 Inspired by Indian philosophical concepts:
 
@@ -504,6 +610,10 @@ v4 uses multiple training objectives by default:
 | **Coupling** | 0.1 | Cross-bank coherence loss (encourages bank cooperation) |
 
 **Coupling objective**: For multi-bank configurations, encourages banks to develop coherent representations. Essential for semantic + context + morphology + orthography setups to work together effectively.
+
+**Notes on number of banks:**
+- **Single-bank configs are supported** (e.g. `tiny` uses only `semantic`). In this case, the coupler returns no coupling loss and the coupling objective effectively becomes **0**.
+- **Bankless baseline is supported in code** (not exposed via `train_real.py` CLI yet): set `config.banks = {}` and the model will bypass the coupler and feed embeddings directly into the backbone (useful for ablations).
 
 ### Speed Options
 
