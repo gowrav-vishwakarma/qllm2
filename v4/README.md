@@ -2,20 +2,16 @@
 
 A novel language model architecture combining quantum-inspired phase representations with GPU-practical implementations. **Designed for consumer-grade GPUs like RTX 4090.**
 
-> **IMPORTANT: Byte Tokenizer is the Recommended Approach**
-> 
-> After experimentation, we've settled on **byte tokenizer** as the primary tokenization strategy. The morphological tokenizer and specialized banks (morphology, orthography) were experimental and did not provide sufficient benefit over the simpler byte-level approach. The byte tokenizer:
-> - Works universally across all languages (UTF-8)
-> - Has a tiny vocab (259 tokens) reducing embedding overhead
-> - Pairs well with byte patching for efficient processing
-> - Uses only 2 banks (semantic + context) which is faster and equally effective
+> **GPT-2 BPE Tokenizer is the Default**
+>
+> v4 uses **GPT-2 BPE** as the default tokenizer. It provides efficient subword segmentation and pairs well with the full 4-bank architecture (semantic, context, morphology, orthography). For multilingual or tokenizer-free use cases, the **byte tokenizer** (`--tokenizer byte`) is available as an alternative—it uses raw UTF-8 bytes (259 vocab) with optional byte patching for efficiency.
 
 ## Key Innovation
 
 Unlike traditional transformers or even v2/v3, v4 uses:
 
 - **Phase2D Representation**: Complex numbers as 2D real vectors (no sin/cos in hot path)
-- **Byte Tokenizer + Patching**: Raw UTF-8 bytes grouped into patches for efficiency
+- **GPT-2 BPE Tokenizer (default)**: Efficient subword segmentation; optional byte tokenizer + patching for multilingual use
 - **Dynamic Phase Bank Interference**: Semantic + Context banks with learned per-token routing
 - **Oscillatory SSM Backbone**: Linear-time O(n) sequence processing via coupled oscillators
 - **Dual Memory System**: Global associative memory + Episodic buffer for copy capability
@@ -29,12 +25,10 @@ cd v4
 # Run tests to validate everything works
 uv run python test_v4.py
 
-# RECOMMENDED: Train with byte tokenizer on RTX 4090
+# RECOMMENDED: Train with GPT-2 tokenizer (default) on RTX 4090
 uv run python train_real.py \
   --dataset tinystories \
-  --size medium-byte \
-  --tokenizer byte \
-  --byte_patching \
+  --size medium \
   --max_length 256 \
   --batch_size 16 \
   --epochs 50
@@ -42,9 +36,7 @@ uv run python train_real.py \
 # Smaller model for quick experiments
 uv run python train_real.py \
   --dataset tinystories \
-  --size small-byte \
-  --tokenizer byte \
-  --byte_patching \
+  --size small \
   --epochs 10
 ```
 
@@ -52,7 +44,7 @@ uv run python train_real.py \
 
 ## Archived/Experimental Features
 
-> **Note**: The following features were experimental explorations. We've found that the **byte tokenizer with 2 banks (semantic + context)** is more effective and faster. These are kept for reference but are not recommended for new training runs.
+> **Note**: The following features were experimental explorations. **GPT-2 BPE is the default**; byte tokenizer is available as an alternative for multilingual use. These archived features are kept for reference.
 
 <details>
 <summary><b>Morphological Tokenizer (Experimental - Not Recommended)</b></summary>
@@ -201,14 +193,15 @@ Major architectural improvements focused on quality AND speed:
 
 **Speed Improvements:**
 
-5. **Byte-Optimized Configs**: New `*-byte` model sizes
+5. **Byte-Optimized Configs**: `*-byte` model sizes for byte tokenizer
    ```bash
-   # Use medium-byte instead of medium for byte tokenizer
-   python train_real.py --size medium-byte --tokenizer byte ...
+   # Use medium/small for GPT (default); medium-byte/small-byte for byte tokenizer
+   python train_real.py --size medium ...                    # GPT default
+   python train_real.py --size medium-byte --tokenizer byte ...  # Byte alternative
    ```
-   - Only 2 banks (semantic + context) vs 4 banks
+   - Byte configs: 2 banks (semantic + context) vs 4 banks for GPT
    - Smaller memory (512 slots vs 1024)
-   - ~50% faster bank computation
+   - ~50% faster bank computation with byte configs
 
 6. **Removed Expensive cross_proj**: Coupler no longer concatenates all banks
    - Was: O(batch × seq × dim × num_banks × dim)
@@ -226,7 +219,15 @@ Major architectural improvements focused on quality AND speed:
 
 **Example Commands:**
 ```bash
-# Fast training on RTX 4090 (byte tokenizer + optimized config)
+# Primary: GPT-2 tokenizer (default) on RTX 4090
+uv run python v4/train_real.py \
+  --dataset tinystories \
+  --size medium \
+  --max_length 256 \
+  --batch_size 16 \
+  --epochs 50
+
+# Alternative: byte tokenizer with byte-optimized config
 uv run python v4/train_real.py \
   --dataset tinystories \
   --size medium-byte \
@@ -235,22 +236,12 @@ uv run python v4/train_real.py \
   --max_length 256 \
   --batch_size 16 \
   --epochs 50
-
-# Compare: original medium (slower, more banks)
-uv run python v4/train_real.py \
-  --dataset tinystories \
-  --size medium \
-  --tokenizer byte \
-  --byte_patching \
-  --max_length 256 \
-  --batch_size 12 \
-  --epochs 50
 ```
 
 <details>
-<summary><b>Extra Phase Banks (Experimental - Not Effective with Byte Tokenizer)</b></summary>
+<summary><b>Extra Phase Banks (Used with GPT Default; Not Effective with Byte Tokenizer)</b></summary>
 
-> **Note**: These banks were designed for BPE/morphological tokenization. With byte tokenizer, they don't provide meaningful benefit since individual bytes don't carry morphological or orthographic information. **Use `*-byte` configs which only include semantic + context banks.**
+> **Note**: With **GPT (default)**, the full 4-bank setup (semantic, context, morphology, orthography) is used. These banks were designed for BPE/morphological tokenization. With byte tokenizer, they don't provide meaningful benefit since individual bytes don't carry morphological or orthographic information. **Use `*-byte` configs** when using `--tokenizer byte`.
 
 **MorphologyPhaseBank**: Focuses on grammatical transformations
 ```python
@@ -333,9 +324,9 @@ model = create_model(config=config)
 model.set_embedding_mode('bpe')  # or 'morphological'
 ```
 
-### Byte-Level Tokenizer (Multilingual, Tokenizer-Free)
+### Alternative: Byte-Level Tokenizer (Multilingual, Tokenizer-Free)
 
-The **byte tokenizer** (`--tokenizer byte`) uses raw UTF-8 bytes as tokens:
+The **byte tokenizer** (`--tokenizer byte`) is an alternative for multilingual or tokenizer-free use. It uses raw UTF-8 bytes as tokens:
 - **Vocab size**: 259 (256 bytes + 3 specials: pad/bos/eos)
 - **Multilingual**: Works with any language/script without training
 - **Tokenizer-free**: No learned segmentation; the model learns structure end-to-end
@@ -366,6 +357,8 @@ uv run python train_real.py \
 
 ### Byte Patching (v4.4) - Fast Byte-Level Training
 
+**Applies only when using `--tokenizer byte`.**
+
 **Problem:** Byte-level training has ~4x longer sequences than word tokenizers, making compute expensive.
 
 **Solution:** **Fixed-size byte patching** groups P=4 bytes into patch latents. The backbone operates on L=T/4 patches instead of T bytes, reducing compute by 4x while preserving byte-level objectives.
@@ -384,7 +377,7 @@ flowchart LR
 
 **Usage:**
 ```bash
-# Full byte-patching training (recommended)
+# Full byte-patching training (when using --tokenizer byte)
 uv run python v4/train_real.py \
   --dataset tinystories \
   --size medium \
@@ -626,7 +619,7 @@ v4 uses multiple training objectives by default:
 | `--no_cache` | False | Disable token caching |
 | `--cache_dir` | .cache/v4_tokens | Token cache location |
 | `--no_metrics` | False | Disable philosophy metrics (faster) |
-| `--byte_patching` | True | Enable byte patching (when `--tokenizer byte`) |
+| `--byte_patching` | True | Enable byte patching (only applies when `--tokenizer byte`) |
 | `--no_byte_patching` | - | Disable byte patching |
 | `--byte_patch_size` | 4 | Bytes per patch (P) |
 | `--byte_decoder_layers` | 2 | Within-patch decoder layers |

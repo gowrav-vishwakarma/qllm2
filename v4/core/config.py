@@ -283,9 +283,9 @@ def get_default_config(size: str = 'small') -> V4Config:
             memory=MemoryConfig(dim=256, num_slots=512),  # Reduced for consumer GPUs
             banks={
                 'semantic': BankConfig(type='semantic', dim=256),
-                'context': BankConfig(type='context', dim=256),
-                'morphology': BankConfig(type='morphology', dim=256),
-                'orthography': BankConfig(type='orthography', dim=256),
+                # 'context': BankConfig(type='context', dim=256),
+                # 'morphology': BankConfig(type='morphology', dim=256),
+                # 'orthography': BankConfig(type='orthography', dim=256),
             },
             training=TrainingConfig(batch_size=8, learning_rate=1e-4),
         ),
@@ -296,8 +296,8 @@ def get_default_config(size: str = 'small') -> V4Config:
             banks={
                 'semantic': BankConfig(type='semantic', dim=512),
                 'context': BankConfig(type='context', dim=512),
-                'morphology': BankConfig(type='morphology', dim=512),
-                'orthography': BankConfig(type='orthography', dim=512),
+                # 'morphology': BankConfig(type='morphology', dim=512),
+                # 'orthography': BankConfig(type='orthography', dim=512),
             },
             training=TrainingConfig(batch_size=4, learning_rate=5e-5),
         ),

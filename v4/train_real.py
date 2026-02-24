@@ -542,7 +542,7 @@ def main():
         type=str,
         default='bpe',
         choices=['bpe', 'morphological', 'simple', 'byte'],
-        help="Tokenizer type: bpe (GPT-2), morphological (root+affix), simple (char-level), or byte (UTF-8 multilingual)",
+        help="Tokenizer type: bpe (GPT-2, default), morphological (root+affix), simple (char-level), or byte (UTF-8 multilingual)",
     )
     parser.add_argument('--morph_cache', type=str, default='.cache/morph_tokenizer',
                         help='Path to save/load morphological tokenizer')
