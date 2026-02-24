@@ -70,14 +70,16 @@ class RealDataTrainer:
             torch.backends.cudnn.allow_tf32 = True
         
         # Apply torch.compile if enabled
+        self.compile_fullgraph = getattr(config.training, 'compile_fullgraph', False)
         if config.training.compile_model and hasattr(torch, 'compile'):
-            print(f"🔧 Compiling model with mode='{config.training.compile_mode}'...")
+            print(f"🔧 Compiling model with mode='{config.training.compile_mode}', "
+                  f"fullgraph={self.compile_fullgraph}...")
             print("   Note: first training step may take a long time while graphs/backward compile.")
             try:
                 self.model = torch.compile(
                     self.model, 
                     mode=config.training.compile_mode,
-                    fullgraph=False,  # Allow graph breaks for flexibility
+                    fullgraph=self.compile_fullgraph,
                 )
                 print("   ✅ Model compiled successfully")
             except Exception as e:
@@ -127,9 +129,12 @@ class RealDataTrainer:
         """Train for one epoch"""
         self.model.train()
         
-        total_loss = 0.0
-        total_ce_loss = 0.0
+        # Accumulate loss as tensors to avoid .item() CUDA syncs in hot path
+        total_loss_tensor = torch.tensor(0.0, device=self.device)
+        total_ce_tensor = torch.tensor(0.0, device=self.device)
         num_batches = 0
+        
+        accum_steps = self.config.training.accumulation_steps
         
         epoch_start = time.time()
         first_step_wall_start: Optional[float] = None
@@ -137,12 +142,12 @@ class RealDataTrainer:
         for batch_idx, batch in enumerate(self.train_loader):
             # Handle both BPE and morphological inputs
             if self.is_morphological:
-                root_ids = batch['root_ids'].to(self.device)
-                prefix_ids = batch['prefix_ids'].to(self.device)
-                suffix_ids = batch['suffix_ids'].to(self.device)
-                input_ids = root_ids  # Use root_ids for loss computation
+                root_ids = batch['root_ids'].to(self.device, non_blocking=True)
+                prefix_ids = batch['prefix_ids'].to(self.device, non_blocking=True)
+                suffix_ids = batch['suffix_ids'].to(self.device, non_blocking=True)
+                input_ids = root_ids
             else:
-                input_ids = batch['input_ids'].to(self.device)
+                input_ids = batch['input_ids'].to(self.device, non_blocking=True)
                 root_ids = prefix_ids = suffix_ids = None
 
             # Time the very first training step (this is where torch.compile spends time)
@@ -153,8 +158,6 @@ class RealDataTrainer:
             
             # Forward
             with autocast('cuda', enabled=self.scaler is not None):
-                # Disable metrics during compiled training (causes graph breaks from .item() calls)
-                # Metrics are computed separately at epoch end if needed
                 compute_metrics = self.config.training.compute_metrics and not self.config.training.compile_model
                 
                 if self.is_morphological:
@@ -170,40 +173,36 @@ class RealDataTrainer:
                         context={'compute_metrics': compute_metrics}
                     )
                 
-                # Compute losses
-                total_batch_loss = torch.tensor(0.0, device=self.device)
-                
+                # Compute losses -- avoid torch.tensor(0.0) allocation
                 model_output = {
                     'logits': output.logits,
                     'phase_states': output.phase_states,
                 }
-                targets = {'token_ids': input_ids}  # Use root_ids for morphological
+                targets = {'token_ids': input_ids}
                 context = {'coupling_loss': output.coupling_loss}
                 
-                batch_ce = 0.0
+                total_batch_loss = None
+                batch_ce_tensor = None
                 for objective in self.objectives:
                     result = objective(model_output, targets, context)
-                    total_batch_loss = total_batch_loss + result.loss * objective.weight
+                    weighted = result.loss * objective.weight
+                    total_batch_loss = weighted if total_batch_loss is None else total_batch_loss + weighted
                     
                     if objective.name == 'ce':
-                        batch_ce = result.loss.item()
+                        batch_ce_tensor = result.loss.detach()
                 
                 # Add prefix/suffix CE loss for morphological mode
                 if self.is_morphological and output.prefix_logits is not None:
                     import torch.nn.functional as F
-                    # Shift for next-token prediction
                     prefix_shift = output.prefix_logits[:, :-1, :].contiguous()
                     suffix_shift = output.suffix_logits[:, :-1, :].contiguous()
                     prefix_targets = prefix_ids[:, 1:].contiguous()
                     suffix_targets = suffix_ids[:, 1:].contiguous()
                     root_targets = root_ids[:, 1:].contiguous()
                     
-                    # Mask: only compute loss where root is NOT padding
-                    # (affixes at padded positions shouldn't contribute to loss)
                     pad_id = getattr(self.tokenizer, 'pad_token_id', 0)
-                    valid_mask = (root_targets != pad_id).float()  # [batch, seq-1]
+                    valid_mask = (root_targets != pad_id).float()
                     
-                    # Per-token CE loss (reduction='none')
                     prefix_loss_per_token = F.cross_entropy(
                         prefix_shift.view(-1, prefix_shift.size(-1)),
                         prefix_targets.view(-1),
@@ -215,35 +214,43 @@ class RealDataTrainer:
                         reduction='none'
                     ).view_as(root_targets)
                     
-                    # Apply mask and normalize
                     num_valid = valid_mask.sum().clamp(min=1)
                     prefix_loss = (prefix_loss_per_token * valid_mask).sum() / num_valid
                     suffix_loss = (suffix_loss_per_token * valid_mask).sum() / num_valid
                     
-                    # Add with lower weight (affixes are secondary to root)
                     total_batch_loss = total_batch_loss + 0.3 * (prefix_loss + suffix_loss)
+                
+                # Scale loss for gradient accumulation
+                if accum_steps > 1:
+                    total_batch_loss = total_batch_loss / accum_steps
             
-            # Backward
-            self.optimizer.zero_grad()
-            
+            # Backward (accumulate gradients)
             if self.scaler is not None:
-                scale_before = self.scaler.get_scale()
                 self.scaler.scale(total_batch_loss).backward()
-                self.scaler.unscale_(self.optimizer)
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.training.gradient_clip)
-                self.scaler.step(self.optimizer)
-                self.scaler.update()
-                scale_after = self.scaler.get_scale()
-                stepped = scale_after >= scale_before  # if scale dropped, step was skipped
             else:
                 total_batch_loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.training.gradient_clip)
-                self.optimizer.step()
-                stepped = True
-
-            # Scheduler should be stepped AFTER a real optimizer step
-            if stepped:
-                self.scheduler.step()
+            
+            # Optimizer step every accum_steps batches (or on last batch)
+            is_accum_step = ((batch_idx + 1) % accum_steps == 0) or (batch_idx + 1 == len(self.train_loader))
+            
+            if is_accum_step:
+                if self.scaler is not None:
+                    scale_before = self.scaler.get_scale()
+                    self.scaler.unscale_(self.optimizer)
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.training.gradient_clip)
+                    self.scaler.step(self.optimizer)
+                    self.scaler.update()
+                    scale_after = self.scaler.get_scale()
+                    stepped = scale_after >= scale_before
+                else:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.training.gradient_clip)
+                    self.optimizer.step()
+                    stepped = True
+                
+                self.optimizer.zero_grad(set_to_none=True)
+                
+                if stepped:
+                    self.scheduler.step()
 
             # Report first-step compile time (if enabled)
             if batch_idx == 0 and first_step_wall_start is not None:
@@ -255,16 +262,16 @@ class RealDataTrainer:
                 else:
                     print(f"  ⏱️ First step wall time: {first_step_s:.1f}s")
             
-            # Track metrics
-            total_loss += total_batch_loss.item()
-            total_ce_loss += batch_ce
+            # Track metrics as tensors (avoid .item() syncs in hot path)
+            total_loss_tensor = total_loss_tensor + total_batch_loss.detach() * (accum_steps if accum_steps > 1 else 1)
+            if batch_ce_tensor is not None:
+                total_ce_tensor = total_ce_tensor + batch_ce_tensor
             num_batches += 1
             self.global_step += 1
             
             # Update philosophy metrics
             if self.metrics_logger is not None and output.metrics is not None:
                 from v4.metrics import PhilosophyMetrics
-                # Convert dict back to PhilosophyMetrics
                 m = output.metrics
                 philosophy_m = PhilosophyMetrics(
                     manas_magnitude=m.get('manas/magnitude', 0),
@@ -282,10 +289,10 @@ class RealDataTrainer:
                 )
                 self.metrics_logger.update(philosophy_m)
             
-            # Log progress
+            # Log progress (only call .item() here, outside hot path)
             if batch_idx % self.config.training.log_every == 0:
-                avg_loss = total_loss / num_batches
-                avg_ce = total_ce_loss / num_batches
+                avg_loss = total_loss_tensor.item() / num_batches
+                avg_ce = total_ce_tensor.item() / num_batches
                 ppl = torch.exp(torch.tensor(avg_ce)).item()
                 lr = self.scheduler.get_last_lr()[0]
                 
@@ -297,8 +304,8 @@ class RealDataTrainer:
                       f"Loss: {avg_loss:.4f} | CE: {avg_ce:.4f} | PPL: {ppl:.2f} | "
                       f"LR: {lr:.2e} | {samples_per_sec:.1f} samples/s | {tokens_per_sec:.0f} tok/s")
         
-        avg_loss = total_loss / num_batches
-        avg_ce = total_ce_loss / num_batches
+        avg_loss = total_loss_tensor.item() / num_batches
+        avg_ce = total_ce_tensor.item() / num_batches
         
         # Log philosophy metrics at end of epoch
         if self.metrics_logger is not None:
@@ -327,9 +334,9 @@ class RealDataTrainer:
         for batch in self.val_loader:
             # Handle both BPE and morphological inputs
             if self.is_morphological:
-                root_ids = batch['root_ids'].to(self.device)
-                prefix_ids = batch['prefix_ids'].to(self.device)
-                suffix_ids = batch['suffix_ids'].to(self.device)
+                root_ids = batch['root_ids'].to(self.device, non_blocking=True)
+                prefix_ids = batch['prefix_ids'].to(self.device, non_blocking=True)
+                suffix_ids = batch['suffix_ids'].to(self.device, non_blocking=True)
                 input_ids = root_ids
                 output = self.model(
                     root_ids=root_ids,
@@ -337,7 +344,7 @@ class RealDataTrainer:
                     suffix_ids=suffix_ids,
                 )
             else:
-                input_ids = batch['input_ids'].to(self.device)
+                input_ids = batch['input_ids'].to(self.device, non_blocking=True)
                 output = self.model(input_ids)
             
             model_output = {
@@ -530,6 +537,8 @@ def main():
     parser.add_argument('--compile_mode', type=str, default='reduce-overhead',
                         choices=['default', 'reduce-overhead', 'max-autotune'],
                         help='torch.compile mode')
+    parser.add_argument('--fullgraph', action='store_true',
+                        help='Enable fullgraph=True for torch.compile (errors if graph breaks exist)')
     parser.add_argument('--num_workers', type=int, default=4, help='DataLoader workers')
     parser.add_argument('--no_pin_memory', action='store_true', help='Disable pin_memory')
     parser.add_argument('--no_cache', action='store_true', help='Disable token caching')
@@ -555,6 +564,13 @@ def main():
                         help='Byte patch size (default: 4)')
     parser.add_argument('--byte_decoder_layers', type=int, default=2,
                         help='Number of layers in byte decoder (default: 2)')
+    # Gradient accumulation
+    parser.add_argument('--accumulation_steps', type=int, default=1,
+                        help='Gradient accumulation steps (effective batch = batch_size * accumulation_steps)')
+    # Bank selection
+    parser.add_argument('--banks', type=str, default=None,
+                        help='Comma-separated bank list (default: from size preset). '
+                             'Options: semantic,context,morphology,orthography,language,emotion')
     
     args = parser.parse_args()
     
@@ -673,6 +689,12 @@ def main():
     config.training.batch_size = args.batch_size
     config.training.checkpoint_dir = args.checkpoint_dir
     
+    # Override banks if specified via CLI
+    if args.banks:
+        from v4.core.config import BankConfig
+        bank_names = [b.strip() for b in args.banks.split(',')]
+        config.banks = {name: BankConfig(type=name, dim=config.dim) for name in bank_names}
+    
     # Tokenizer mode configuration
     if args.tokenizer == 'morphological':
         config.tokenizer.mode = 'morphological'
@@ -688,9 +710,13 @@ def main():
     else:
         config.tokenizer.mode = 'bpe'
     
+    # Gradient accumulation
+    config.training.accumulation_steps = args.accumulation_steps
+    
     # Speed options
     config.training.compile_model = args.compile
     config.training.compile_mode = args.compile_mode
+    config.training.compile_fullgraph = args.fullgraph
     config.training.num_workers = args.num_workers
     config.training.pin_memory = not args.no_pin_memory
     config.training.use_token_cache = not args.no_cache

@@ -148,13 +148,11 @@ class EpisodicMemory(nn.Module):
 
 class EpisodicMemoryEfficient(nn.Module):
     """
-    Memory-efficient episodic memory using chunked attention.
+    Episodic memory using PyTorch SDPA for hardware-accelerated attention.
     
-    For very long sequences, we chunk the attention computation
-    to avoid O(n^2) memory usage.
-    
-    This version only looks at the last `buffer_size` positions,
-    making it O(n * buffer_size) memory.
+    Uses torch.nn.functional.scaled_dot_product_attention which automatically
+    dispatches to FlashAttention or memory-efficient backends. Sliding window
+    is implemented by processing in chunks of buffer_size.
     """
     
     def __init__(
@@ -167,26 +165,29 @@ class EpisodicMemoryEfficient(nn.Module):
         self.dim = dim
         self.buffer_size = buffer_size
         self.top_k = top_k
+        self.head_dim = dim * 2
         
         # Lightweight projections
         self.query_proj = nn.Linear(dim * 2, dim * 2, bias=False)
         self.key_proj = nn.Linear(dim * 2, dim * 2, bias=False)
+        self.value_proj = nn.Linear(dim * 2, dim * 2, bias=False)
         
         nn.init.eye_(self.query_proj.weight)
         nn.init.eye_(self.key_proj.weight)
+        nn.init.eye_(self.value_proj.weight)
     
     def forward(
         self,
         states: torch.Tensor,  # [batch, seq, dim, 2]
     ) -> EpisodicReadResult:
         """
-        Efficient episodic retrieval with bounded memory.
+        Efficient episodic retrieval using SDPA with sliding window via chunking.
         
-        Each position only attends to the previous `buffer_size` positions.
-        Uses simple windowed attention with causal masking.
+        For each chunk of buffer_size tokens, we gather the relevant key-value
+        context (current chunk + preceding buffer_size tokens) and run causal
+        SDPA. This keeps memory at O(n * buffer_size) instead of O(n^2).
         """
         batch_size, seq_len, dim, _ = states.shape
-        device = states.device
         
         if seq_len <= 1:
             return EpisodicReadResult(
@@ -197,44 +198,60 @@ class EpisodicMemoryEfficient(nn.Module):
         # Flatten Phase2D: [batch, seq, dim*2]
         states_flat = states.view(batch_size, seq_len, dim * 2)
         
-        # Project
-        queries = self.query_proj(states_flat)  # [batch, seq, dim*2]
-        keys = self.key_proj(states_flat)  # [batch, seq, dim*2]
+        queries = self.query_proj(states_flat)
+        keys = self.key_proj(states_flat)
+        values = self.value_proj(states_flat)
         
-        scale = (dim * 2) ** -0.5
+        # Reshape for SDPA: [batch, 1 head, seq, head_dim]
+        q = queries.unsqueeze(1)
+        k = keys.unsqueeze(1)
+        v = values.unsqueeze(1)
         
-        # Simple approach: compute full attention matrix but mask to window
-        # For efficiency, we limit the effective context to buffer_size
+        if seq_len <= self.buffer_size * 2:
+            # Short sequences: use causal SDPA directly (efficient enough)
+            retrieved_flat = F.scaled_dot_product_attention(
+                q, k, v, is_causal=True
+            ).squeeze(1)  # [batch, seq, dim*2]
+        else:
+            # Longer sequences: chunk-based sliding window
+            chunk_size = self.buffer_size
+            retrieved_chunks = []
+            
+            for start in range(0, seq_len, chunk_size):
+                end = min(start + chunk_size, seq_len)
+                # Context window: from max(0, start - buffer_size) to end
+                ctx_start = max(0, start - self.buffer_size)
+                
+                q_chunk = q[:, :, start:end, :]  # [batch, 1, chunk, dim*2]
+                k_ctx = k[:, :, ctx_start:end, :]
+                v_ctx = v[:, :, ctx_start:end, :]
+                
+                # Build causal mask for this chunk relative to context
+                q_len = end - start
+                kv_len = end - ctx_start
+                # Each query at position i (0-indexed within chunk) can attend
+                # to context positions j where j < (start - ctx_start + i)
+                attn_mask = torch.zeros(q_len, kv_len, device=states.device, dtype=states.dtype)
+                for qi in range(q_len):
+                    # Number of valid KV positions for this query
+                    valid_kv = (start - ctx_start) + qi  # positions before this query
+                    if valid_kv < kv_len:
+                        attn_mask[qi, valid_kv:] = float('-inf')
+                
+                chunk_out = F.scaled_dot_product_attention(
+                    q_chunk, k_ctx, v_ctx, attn_mask=attn_mask.unsqueeze(0).unsqueeze(0)
+                ).squeeze(1)  # [batch, chunk, dim*2]
+                
+                retrieved_chunks.append(chunk_out)
+            
+            retrieved_flat = torch.cat(retrieved_chunks, dim=1)  # [batch, seq, dim*2]
         
-        # Attention scores: [batch, seq, seq]
-        attn_scores = torch.bmm(queries, keys.transpose(1, 2)) * scale
+        # First position has nothing to attend to, zero it out
+        retrieved_flat[:, 0, :] = 0.0
         
-        # Create causal + window mask
-        # Position i can only attend to max(0, i - buffer_size) : i (exclusive of i)
-        positions = torch.arange(seq_len, device=device)
-        
-        # Causal mask: j < i (can't attend to self or future)
-        causal_mask = positions.unsqueeze(0) >= positions.unsqueeze(1)  # [seq, seq], True = invalid
-        
-        # Window mask: j >= i - buffer_size
-        window_mask = positions.unsqueeze(0) < (positions.unsqueeze(1) - self.buffer_size)  # True = too far back
-        
-        # Combined mask: invalid if causal OR too far back
-        mask = causal_mask | window_mask
-        
-        attn_scores = attn_scores.masked_fill(mask.unsqueeze(0), float('-inf'))
-        
-        # Softmax
-        attn_weights = F.softmax(attn_scores, dim=-1)
-        attn_weights = torch.nan_to_num(attn_weights, nan=0.0)
-        
-        # Retrieve: [batch, seq, seq] @ [batch, seq, dim*2] -> [batch, seq, dim*2]
-        retrieved_flat = torch.bmm(attn_weights, states_flat)
-        
-        # Reshape to Phase2D
         retrieved = retrieved_flat.view(batch_size, seq_len, dim, 2)
         
         return EpisodicReadResult(
             values=retrieved,
-            attention=attn_weights,
+            attention=None,
         )

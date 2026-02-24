@@ -31,12 +31,20 @@ uv run python train_real.py \
   --size medium \
   --max_length 256 \
   --batch_size 16 \
+  --accumulation_steps 4 \
   --epochs 50
 
 # Smaller model for quick experiments
 uv run python train_real.py \
   --dataset tinystories \
   --size small \
+  --epochs 10
+
+# Custom bank selection (override defaults)
+uv run python train_real.py \
+  --dataset tinystories \
+  --size medium \
+  --banks semantic,context,morphology \
   --epochs 10
 ```
 
@@ -199,15 +207,40 @@ Major architectural improvements focused on quality AND speed:
    python train_real.py --size medium ...                    # GPT default
    python train_real.py --size medium-byte --tokenizer byte ...  # Byte alternative
    ```
-   - Byte configs: 2 banks (semantic + context) vs 4 banks for GPT
-   - Smaller memory (512 slots vs 1024)
-   - ~50% faster bank computation with byte configs
+   - All configs now use 2 banks (semantic + context) by default
+   - Use `--banks` to add more banks (e.g. `--banks semantic,context,morphology,orthography`)
+   - Smaller memory (512 slots vs 1024) for byte configs
+   - ~50% faster bank computation with 2 banks
 
 6. **Removed Expensive cross_proj**: Coupler no longer concatenates all banks
    - Was: O(batch × seq × dim × num_banks × dim)
    - Now: O(batch × seq × dim)
 
 7. **Reduced Memory top_k**: 32 instead of 64 slots per query
+
+8. **Chunked Backbone**: SSM processes sequences in chunks of 128 tokens
+   - Reduces Python loop length from `seq_len` to `chunk_size`
+   - Pre-computes all projections before the loop (GEMM-friendly)
+   - Significant speedup with `torch.compile`
+
+9. **SDPA Episodic Memory**: Uses PyTorch's `scaled_dot_product_attention`
+   - Automatically dispatches to FlashAttention / memory-efficient backends
+   - True O(n × buffer_size) with sliding window chunking
+   - Replaces hand-written O(n²) attention matrix
+
+10. **Training Loop Optimizations**:
+    - Gradient accumulation (`--accumulation_steps`) for larger effective batch sizes
+    - No `.item()` CUDA syncs in the hot path (deferred to logging)
+    - `non_blocking=True` device transfers for CPU/GPU overlap
+    - `set_to_none=True` for zero_grad (saves memset kernel)
+
+11. **Incremental Generation**: O(n) instead of O(n²)
+    - Backbone state is carried across generation steps
+    - Only the new token is processed (not the full sequence)
+
+12. **Learnable Scaling**: Residual and memory scales are learnable parameters
+    - Initialized to 0.1, the model learns optimal scaling per layer
+    - Prevents deep signal attenuation in deeper models
 
 **Byte Model Sizes:**
 | Size | Dim | Layers | Banks | Params | Use Case |
@@ -225,6 +258,22 @@ uv run python v4/train_real.py \
   --size medium \
   --max_length 256 \
   --batch_size 16 \
+  --accumulation_steps 4 \
+  --epochs 50
+
+# With torch.compile for extra speed
+uv run python v4/train_real.py \
+  --dataset tinystories \
+  --size medium \
+  --compile \
+  --accumulation_steps 4 \
+  --epochs 50
+
+# Custom banks (add morphology bank)
+uv run python v4/train_real.py \
+  --dataset tinystories \
+  --size medium \
+  --banks semantic,context,morphology \
   --epochs 50
 
 # Alternative: byte tokenizer with byte-optimized config
@@ -564,12 +613,14 @@ class MyCustomBank(nn.Module, PhaseBank):
 
 ## Model Sizes
 
-| Size | Dim | Layers | Params | Use Case |
-|------|-----|--------|--------|----------|
-| tiny | 64 | 4 | ~1M | Testing |
-| small | 256 | 8 | ~10M | Quick experiments |
-| medium | 512 | 12 | ~50M | Balanced |
-| large | 768 | 16 | ~200M | Production |
+| Size | Dim | Layers | Banks | Params | Use Case |
+|------|-----|--------|-------|--------|----------|
+| tiny | 64 | 4 | 1 (semantic) | ~1M | Testing |
+| small | 256 | 8 | 1 (semantic) | ~10M | Quick experiments |
+| medium | 512 | 12 | 2 (semantic, context) | ~50M | Balanced |
+| large | 768 | 16 | 4 (semantic, context, language, emotion) | ~200M | Production |
+
+Use `--banks` to customize bank selection for any preset (e.g. `--banks semantic,context,morphology`).
 
 ## Training
 
@@ -614,6 +665,9 @@ v4 uses multiple training objectives by default:
 |--------|---------|-------------|
 | `--compile` | False | Enable torch.compile |
 | `--compile_mode` | reduce-overhead | Compile mode |
+| `--fullgraph` | False | Enable fullgraph=True for torch.compile |
+| `--accumulation_steps` | 1 | Gradient accumulation steps (effective batch = batch_size × steps) |
+| `--banks` | (from preset) | Comma-separated bank list (e.g. `semantic,context,morphology`) |
 | `--num_workers` | 4 | DataLoader workers |
 | `--no_pin_memory` | False | Disable pinned memory |
 | `--no_cache` | False | Disable token caching |
@@ -695,6 +749,13 @@ v4/
 - ✅ **Vectorized scan** option for backbone
 - ✅ **Byte patching** (4x faster byte-level training with patch latents)
 - ✅ **Memory scaling** (chunked top-k retrieval for 10x memory reduction)
+- ✅ **Chunked backbone** (128-token chunks, reduced Python loop overhead)
+- ✅ **SDPA episodic memory** (FlashAttention-backed sliding window)
+- ✅ **Gradient accumulation** (`--accumulation_steps` for larger effective batches)
+- ✅ **Incremental generation** (O(n) generation with carried backbone state)
+- ✅ **Learnable scaling** (per-layer residual + memory scales, no more hardcoded 0.1)
+- ✅ **Phase2D dropout fix** (proper pair-wise dropout)
+- ✅ **Bank CLI** (`--banks` for custom bank selection)
 - 🔄 Validate training (run on real data, check perplexity drops)
 - 🔄 Incremental learning test (memory sharding)
 - 🔄 Long context support (256K streaming)

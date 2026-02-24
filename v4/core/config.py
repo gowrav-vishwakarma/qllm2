@@ -93,6 +93,7 @@ class TrainingConfig:
     # Speed optimizations
     compile_model: bool = False  # Enable torch.compile
     compile_mode: str = "reduce-overhead"  # compile mode: "default", "reduce-overhead", "max-autotune"
+    compile_fullgraph: bool = False  # Enable fullgraph=True (errors if graph breaks exist)
     num_workers: int = 4  # DataLoader workers
     pin_memory: bool = True  # Pin memory for faster GPU transfer
     prefetch_factor: int = 2  # DataLoader prefetch factor
@@ -292,12 +293,10 @@ def get_default_config(size: str = 'small') -> V4Config:
         'medium': V4Config(
             dim=512,
             backbone=BackboneConfig(dim=512, state_dim=1024, num_layers=12),
-            memory=MemoryConfig(dim=512, num_slots=1024),  # Reduced for consumer GPUs
+            memory=MemoryConfig(dim=512, num_slots=1024),
             banks={
                 'semantic': BankConfig(type='semantic', dim=512),
                 'context': BankConfig(type='context', dim=512),
-                # 'morphology': BankConfig(type='morphology', dim=512),
-                # 'orthography': BankConfig(type='orthography', dim=512),
             },
             training=TrainingConfig(batch_size=4, learning_rate=5e-5),
         ),

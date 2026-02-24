@@ -140,6 +140,9 @@ class QuantumPhaseFieldLLM(nn.Module):
         else:
             self.episodic = None
         
+        # Learnable scaling for memory contribution
+        self.memory_scale = nn.Parameter(torch.tensor(0.1))
+        
         # LM Head: Phase2D -> logits
         self.lm_head = nn.Sequential(
             Phase2DLinear(config.dim, config.dim),
@@ -248,7 +251,7 @@ class QuantumPhaseFieldLLM(nn.Module):
         if use_memory:
             memory_result = self.memory.read(backbone_out, top_k=32)  # Reduced from 64 for speed
             # Add memory to backbone output
-            backbone_out = backbone_out + memory_result.values * 0.1
+            backbone_out = backbone_out + memory_result.values * self.memory_scale
         
         # 5b. Episodic memory: retrieve from recent positions in this sequence
         # This provides "copy" capability similar to transformer attention
@@ -282,8 +285,10 @@ class QuantumPhaseFieldLLM(nn.Module):
         coupling_loss = self.coupler.compute_coupling_loss(bank_outputs)
         
         # Compute philosophy metrics (manas/buddhi/viveka/smriti)
+        # NOTE: metrics computation uses .item() calls and should NOT be used
+        # with torch.compile. The training loop disables this when compile=True.
         metrics = None
-        if context.get('compute_metrics', False):
+        if not torch.compiler.is_compiling() and context.get('compute_metrics', False):
             from .metrics.philosophy_metrics import compute_all_metrics
             philosophy_metrics = compute_all_metrics(
                 logits=logits,
@@ -376,14 +381,26 @@ class QuantumPhaseFieldLLM(nn.Module):
             generated_suffixes = suffix_ids.clone() if suffix_ids is not None else None
             null_affix_id = 4  # Default null affix ID
             
+            backbone_state = None
             with torch.no_grad():
-                for _ in range(max_new_tokens):
+                for step_idx in range(max_new_tokens):
+                    if step_idx == 0:
+                        feed_roots = generated_roots
+                        feed_prefixes = generated_prefixes
+                        feed_suffixes = generated_suffixes
+                    else:
+                        feed_roots = next_root
+                        feed_prefixes = next_prefix if generated_prefixes is not None else None
+                        feed_suffixes = next_suffix if generated_suffixes is not None else None
+                    
                     output = self.forward(
-                        root_ids=generated_roots,
-                        prefix_ids=generated_prefixes,
-                        suffix_ids=generated_suffixes,
+                        root_ids=feed_roots,
+                        prefix_ids=feed_prefixes,
+                        suffix_ids=feed_suffixes,
+                        backbone_state=backbone_state,
                         use_memory=True,
                     )
+                    backbone_state = output.backbone_state
                     
                     # Sample root token
                     next_root_logits = output.logits[:, -1, :].clone()
@@ -458,12 +475,35 @@ class QuantumPhaseFieldLLM(nn.Module):
             backbone_state = None
             
             with torch.no_grad():
-                for _ in range(max_new_tokens):
+                # Initial prompt: process full sequence to build backbone state
+                output = self.forward(
+                    input_ids=generated,
+                    backbone_state=backbone_state,
+                    use_memory=True,
+                )
+                backbone_state = output.backbone_state
+                
+                next_logits = output.logits[:, -1, :]
+                next_token, _ = sampler.sample(
+                    next_logits,
+                    temperature=temperature,
+                    top_k=top_k,
+                    top_p=top_p,
+                    past_tokens=generated,
+                )
+                generated = torch.cat([generated, next_token], dim=1)
+                
+                if eos_token_id is not None and (next_token == eos_token_id).all():
+                    return generated
+                
+                # Subsequent tokens: only process the new token with carried state
+                for _ in range(max_new_tokens - 1):
                     output = self.forward(
-                        input_ids=generated,
+                        input_ids=next_token,
                         backbone_state=backbone_state,
                         use_memory=True,
                     )
+                    backbone_state = output.backbone_state
                     
                     next_logits = output.logits[:, -1, :]
                     next_token, _ = sampler.sample(
@@ -541,7 +581,7 @@ class QuantumPhaseFieldLLM(nn.Module):
                 
                 # Query memory
                 memory_result = self.memory.read(backbone_out, top_k=64)
-                backbone_out = backbone_out + memory_result.values * 0.1
+                backbone_out = backbone_out + memory_result.values * self.memory_scale
                 
                 # Get the last patch state for generation
                 last_patch_state = backbone_out[:, -1, :, :]  # [batch, dim, 2]

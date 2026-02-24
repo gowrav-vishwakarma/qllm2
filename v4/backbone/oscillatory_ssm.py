@@ -71,25 +71,31 @@ class OscillatorySSM(nn.Module):
         num_layers: int = 8,
         damping_init: float = 0.1,
         dropout: float = 0.1,
-        use_scan: bool = False,  # Enable vectorized scan for speed
+        use_scan: bool = False,
+        chunk_size: int = 128,
     ):
         super().__init__()
         self._dim = dim
         self._state_dim = state_dim
         self.num_layers = num_layers
-        # use_scan=True pre-computes projections before loop (still beneficial)
         self.use_scan = use_scan
+        self.chunk_size = chunk_size
         
-        # Build layers
+        # Build chunked layers for parallel-friendly processing
         self.layers = nn.ModuleList([
-            OscillatorySSMLayer(
+            ChunkedOscillatorySSMLayer(
                 dim=dim,
                 state_dim=state_dim,
+                chunk_size=chunk_size,
                 damping_init=damping_init,
                 dropout=dropout,
-                use_scan=self.use_scan,
             )
             for _ in range(num_layers)
+        ])
+        
+        # Learnable per-layer residual scaling (initialized to 0.1)
+        self.layer_scales = nn.ParameterList([
+            nn.Parameter(torch.tensor(0.1)) for _ in range(num_layers)
         ])
         
         # Layer norms
@@ -154,7 +160,7 @@ class OscillatorySSM(nn.Module):
             residual = h
             h = norm(h)
             h, layer_new_state = layer(h, layer_state)
-            h = residual + h * 0.1  # Residual connection with scaling
+            h = residual + h * self.layer_scales[i]
             
             new_hidden.append(layer_new_state)
         
@@ -282,7 +288,9 @@ class OscillatorySSMLayer(nn.Module):
         
         # Stack outputs
         output = torch.stack(outputs, dim=1)  # [batch, seq, dim, 2]
-        output = self.dropout(output[..., 0]).unsqueeze(-1).expand_as(output) * output + output
+        if self.training:
+            drop_mask = self.dropout(torch.ones(output.shape[:-1], device=output.device))
+            output = output * drop_mask.unsqueeze(-1)
         
         return output, h
     
@@ -300,22 +308,22 @@ class OscillatorySSMLayer(nn.Module):
         batch_size, seq_len, dim, _ = x.shape
         
         # Pre-compute all input projections (parallelizable)
-        # Reshape for batch matmul: [batch * seq, dim, 2]
-        x_flat = x.view(batch_size * seq_len, dim, 2)
+        # reshape (not view) handles non-contiguous chunks from ChunkedOscillatorySSMLayer
+        x_flat = x.reshape(batch_size * seq_len, dim, 2)
         Bx_flat = self.B(x_flat)  # [batch * seq, state_dim, 2]
-        Bx = Bx_flat.view(batch_size, seq_len, self.state_dim, 2)
+        Bx = Bx_flat.reshape(batch_size, seq_len, self.state_dim, 2)
         
         # Pre-compute all gates (parallelizable)
-        x_real = x[..., 0].view(batch_size, seq_len, -1)  # [batch, seq, dim]
-        x_imag = x[..., 1].view(batch_size, seq_len, -1)  # [batch, seq, dim]
+        x_real = x[..., 0].reshape(batch_size, seq_len, -1)  # [batch, seq, dim]
+        x_imag = x[..., 1].reshape(batch_size, seq_len, -1)  # [batch, seq, dim]
         gate_input = torch.cat([x_real, x_imag], dim=-1)  # [batch, seq, dim*2]
-        gate_flat = gate_input.view(batch_size * seq_len, -1)
+        gate_flat = gate_input.reshape(batch_size * seq_len, -1)
         gates = torch.sigmoid(self.gate_proj(gate_flat))  # [batch * seq, state_dim]
-        gates = gates.view(batch_size, seq_len, self.state_dim, 1)  # [batch, seq, state_dim, 1]
+        gates = gates.reshape(batch_size, seq_len, self.state_dim, 1)  # [batch, seq, state_dim, 1]
         
         # Pre-compute skip connections (parallelizable)
         Dx_flat = self.D(x_flat)  # [batch * seq, dim, 2]
-        Dx = Dx_flat.view(batch_size, seq_len, dim, 2)
+        Dx = Dx_flat.reshape(batch_size, seq_len, dim, 2)
         
         # Get rotation components and damping (constant over sequence)
         rot_cos, rot_sin = self.rotation.get_rotation_components()
@@ -344,7 +352,9 @@ class OscillatorySSMLayer(nn.Module):
         
         # Stack outputs
         output = torch.stack(outputs, dim=1)  # [batch, seq, dim, 2]
-        output = self.dropout(output[..., 0]).unsqueeze(-1).expand_as(output) * output + output
+        if self.training:
+            drop_mask = self.dropout(torch.ones(output.shape[:-1], device=output.device))
+            output = output * drop_mask.unsqueeze(-1)
         
         return output, h
 
@@ -353,19 +363,20 @@ class ChunkedOscillatorySSMLayer(OscillatorySSMLayer):
     """
     Chunked variant that processes sequences in fixed-size chunks.
     
-    This enables better parallelization by reducing the effective
-    sequence length of the recurrence while maintaining accuracy.
+    Reduces the effective loop length from seq_len to chunk_size,
+    passing state across chunks. Uses the pre-computed scan variant
+    within each chunk for maximum speed with torch.compile.
     """
     
     def __init__(
         self,
         dim: int,
         state_dim: int,
-        chunk_size: int = 64,
+        chunk_size: int = 128,
         damping_init: float = 0.1,
         dropout: float = 0.1,
     ):
-        super().__init__(dim, state_dim, damping_init, dropout, use_scan=False)
+        super().__init__(dim, state_dim, damping_init, dropout, use_scan=True)
         self.chunk_size = chunk_size
     
     def forward(
@@ -375,6 +386,10 @@ class ChunkedOscillatorySSMLayer(OscillatorySSMLayer):
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Process sequence in chunks for better efficiency."""
         batch_size, seq_len, dim, _ = x.shape
+        
+        # Short sequences: process directly without chunking overhead
+        if seq_len <= self.chunk_size:
+            return self._forward_scan(x, h)
         
         # Pad to chunk size
         if seq_len % self.chunk_size != 0:
@@ -386,18 +401,16 @@ class ChunkedOscillatorySSMLayer(OscillatorySSMLayer):
         new_seq_len = x.shape[1]
         num_chunks = new_seq_len // self.chunk_size
         
-        # Process chunks
+        # Process chunks sequentially, passing state between them
         outputs = []
         for c in range(num_chunks):
             start = c * self.chunk_size
             end = start + self.chunk_size
             chunk_x = x[:, start:end]
             
-            # Process chunk with base implementation
-            chunk_out, h = self._forward_loop(chunk_x, h)
+            chunk_out, h = self._forward_scan(chunk_x, h)
             outputs.append(chunk_out)
         
-        # Concatenate and remove padding
         output = torch.cat(outputs, dim=1)
         if pad_len > 0:
             output = output[:, :seq_len]
