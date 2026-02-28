@@ -1,5 +1,7 @@
 # QLLM - Quantum & Brain-Inspired Language Models
 
+> **Disclaimer:** Yes, we use AI, Cursor, and every coding agent we can get our hands on to build this. Because... why not? We're building AI with AI. It's poetic, it's practical, and honestly, it would be weird if we didn't.
+
 ## Revolutionary AI Architecture Research
 
 This repository explores novel language model architectures beyond traditional transformers. **v4 is the current active version.**
