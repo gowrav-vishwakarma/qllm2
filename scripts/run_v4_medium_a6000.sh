@@ -23,6 +23,9 @@ cd "$SCRIPT_DIR"
 [[ -f v4/train_real.py ]] || cd ..
 export PATH="$HOME/.local/bin:$PATH"
 
+# remove all cache files
+rm -rf .cache/v4_tokens
+
 mkdir -p .cache/v4_tokens checkpoints_v4_real
 mkdir -p logs 2>/dev/null || true
 

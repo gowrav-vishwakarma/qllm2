@@ -1,15 +1,23 @@
-# 🚀 QLLM - Quantum & Brain-Inspired Language Models
+# QLLM - Quantum & Brain-Inspired Language Models
 
 ## Revolutionary AI Architecture Research
 
-This repository contains two groundbreaking approaches to language modeling that go beyond traditional transformer architectures:
+This repository explores novel language model architectures beyond traditional transformers. **v4 is the current active version.**
 
+- **v4** (active): Quantum Phase-Field LLM - O(n) linear backbone, Phase2D math, consumer-GPU friendly
 - **v2**: Quantum-Inspired Language Model (QLLM)
 - **v3**: Brain-Inspired Language Model (BLLM)
 
-Both approaches represent fundamental paradigm shifts in AI architecture, offering unique advantages over traditional transformer-based models.
+## Project Overview
 
-## 🎯 Project Overview
+### **v4 - Quantum Phase-Field LLM** (Current)
+
+- **Approach**: Quantum phase-field architecture with Phase2D representation
+- **Key Features**: Oscillatory SSM (O(n) linear), Dynamic Phase Bank Interference, Dual Memory System, GPT-2 BPE tokenizer, byte patching
+- **Status**: 🔄 **Active Development**
+- **Parameters**: ~1M (tiny) to ~350M (large)
+- **Target Hardware**: Consumer GPUs (RTX 4090) and data-center GPUs (A6000/A100)
+- **Highlights**: No trig in hot path, injectable architecture, philosophy-inspired metrics
 
 ### **v2 - Quantum-Inspired LLM**
 
@@ -27,44 +35,76 @@ Both approaches represent fundamental paradigm shifts in AI architecture, offeri
 - **Parameters**: 16.4M parameters
 - **Performance**: Human-like learning efficiency, consciousness mechanisms
 
-## 🚀 Quick Start
+## Quick Start
 
 ### **Prerequisites**
 
 ```bash
-# Install dependencies
 uv sync
 ```
 
 ### **Choose Your Approach**
 
-#### **Option 1: Quantum-Inspired (v2)**
+#### **Option 1: Quantum Phase-Field (v4) — Recommended**
+
+```bash
+cd v4
+
+# Run tests to validate everything works
+uv run python test_v4.py
+
+# Train with GPT-2 tokenizer (default) on RTX 4090
+uv run python train_real.py \
+  --dataset tinystories \
+  --size medium \
+  --max_length 256 \
+  --batch_size 16 \
+  --accumulation_steps 4 \
+  --epochs 50
+```
+
+See [v4/README.md](v4/README.md) for full options including byte tokenizer, custom bank selection, A6000 deployment, and torch.compile.
+
+#### **Option 2: Quantum-Inspired (v2)**
 
 ```bash
 cd v2
 uv run python run_training.py
 ```
 
-#### **Option 2: Brain-Inspired (v3)**
+#### **Option 3: Brain-Inspired (v3)**
 
 ```bash
 cd v3
 uv run python train_brain_llm.py
 ```
 
-## 📊 Performance Comparison
+## Performance Comparison
 
-| Metric                    | Traditional Transformer | Quantum LLM (v2) | Brain-Inspired LLM (v3) |
-| ------------------------- | ----------------------- | ---------------- | ----------------------- |
-| **Speed**                 | 1.0x                    | 1.43x faster     | Comparable              |
-| **Memory Efficiency**     | 1.0x                    | 4.38x better     | 4.38x better            |
-| **Parameters**            | 5M                      | 5M               | 16.4M                   |
-| **Learning**              | Backpropagation         | Quantum-inspired | Biologically plausible  |
-| **Consciousness**         | ❌                      | ❌               | ✅                      |
-| **Memory Systems**        | ❌                      | ❌               | ✅                      |
-| **Repetitive Generation** | ❌                      | ❌               | ✅ Fixed                |
+| Feature | v2 | v3 | v4 |
+|---------|----|----|-----|
+| **Phase representation** | sin/cos | N/A | Phase2D (no trig) |
+| **Tokenization** | BPE only | BPE | BPE + Byte + Morphological |
+| **Sequence complexity** | O(n²) | O(n²) | O(n) linear |
+| **Separate meaning layers** | Partial | N/A | Full (up to 5 banks) |
+| **Long context** | Limited | Limited | 256K target |
+| **GPU efficiency** | Medium | Medium | High (GEMM-only) |
+| **Memory systems** | No | Yes | Dual (global + episodic) |
+| **Interpretability** | Low | Medium | High (philosophy metrics) |
+| **Incremental generation** | O(n²) | O(n²) | O(n) |
 
-## 🧠 Key Innovations
+## Key Innovations
+
+### **v4 - Quantum Phase-Field Features**
+
+- **Phase2D Math**: Complex numbers as 2D real vectors — no sin/cos in hot path, all ops reduce to matrix multiplies (GEMM)
+- **Oscillatory SSM Backbone**: O(n) linear-time sequence processing via coupled oscillators with chunked computation
+- **Dynamic Phase Banks**: Semantic, Context, Morphology, Orthography banks with learned per-token routing
+- **Dual Memory System**: Global associative memory + Episodic buffer (SDPA-backed sliding window) for copy/retrieval
+- **Byte Patching**: Groups P=4 bytes into patch latents for 4x faster byte-level training
+- **Philosophy Metrics**: Manas (active mind), Buddhi (discernment), Viveka (stability), Smriti (memory)
+- **Injectable Architecture**: All components swappable via registry/config decorators
+- **Incremental Generation**: O(n) generation by carrying backbone state across steps
 
 ### **v2 - Quantum-Inspired Features**
 
@@ -82,32 +122,52 @@ uv run python train_brain_llm.py
 - **Spiking Neurons**: Event-driven processing
 - **Minimal Data Learning**: One-shot, few-shot learning
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 qllm/
 ├── README.md                    # This file
 ├── pyproject.toml              # Project configuration
 ├── QLLM_V2.pdf                 # Research paper
+├── scripts/                    # Deployment & monitoring scripts
+│
+├── v4/                         # Quantum Phase-Field LLM (ACTIVE)
+│   ├── README.md              # Full v4 documentation
+│   ├── model.py               # Main model (wires everything)
+│   ├── train_real.py          # Training with real datasets
+│   ├── test_v4.py             # Test suite
+│   ├── core/                  # Phase2D math, config, registry, interfaces
+│   ├── banks/                 # Phase banks (semantic, context, morphology, orthography)
+│   ├── backbone/              # Oscillatory SSM backbone
+│   ├── coupler/               # Interference-based bank coupling
+│   ├── memory/                # Phase-coded associative memory
+│   ├── objectives/            # Loss functions (CE, coherence)
+│   ├── sampler/               # Autoregressive generation
+│   ├── metrics/               # Philosophy metrics (Manas/Buddhi/Viveka/Smriti)
+│   └── data/                  # Datasets, tokenizers, morphological tokenizer
 │
 ├── v2/                         # Quantum-Inspired LLM
 │   ├── README.md              # v2 documentation
 │   ├── quantum_llm_model.py   # Main quantum model
 │   ├── energy_trainer.py      # Energy-based training
-│   ├── datasets_qllm.py       # Dataset handling
-│   ├── run_training.py        # Training script
-│   └── checkpoints_quantum_fixed/ # Trained models
+│   └── run_training.py        # Training script
 │
 └── v3/                         # Brain-Inspired LLM
     ├── README.md              # v3 documentation
     ├── brain_inspired_llm.py  # Main brain model
-    ├── brain_inspired_trainer.py # Training system
     ├── train_brain_llm.py     # Training script
-    ├── demo_brain_llm.py      # Demo script
-    └── checkpoints_brain_inspired/ # Trained models
+    └── demo_brain_llm.py      # Demo script
 ```
 
-## 🎯 Use Cases
+## Use Cases
+
+### **Choose v4 (Quantum Phase-Field) for:**
+
+- **Consumer GPU training** (RTX 4090, A6000)
+- **Long-context modeling** (256K target with O(n) backbone)
+- **Phase-representation research** (Phase2D, bank interference)
+- **Modular architecture experiments** (injectable components via registry)
+- **Byte-level / multilingual modeling** (byte tokenizer + patching)
 
 ### **Choose v2 (Quantum-Inspired) for:**
 
@@ -115,51 +175,75 @@ qllm/
 - **Memory-constrained environments**
 - **Quantum computing research**
 - **Energy-efficient processing**
-- **Concept learning tasks**
 
 ### **Choose v3 (Brain-Inspired) for:**
 
-- **Human-like learning**
 - **Consciousness research**
 - **Minimal data scenarios**
-- **Memory-intensive tasks**
 - **Biologically plausible AI**
 
-## 🔬 Scientific Impact
+## Scientific Impact
+
+### **v4 - Phase-Field & Linear Complexity Research**
+
+- Phase2D representation eliminates trig from the critical path
+- O(n) linear backbone via oscillatory SSM (coupled oscillators)
+- Multi-bank phase interference for separating semantic, syntactic, morphological, and orthographic information
+- Dual memory (associative + episodic) with chunked top-k retrieval for scalability
+- Philosophy-aligned interpretability metrics
 
 ### **v2 - Quantum Computing Research**
 
 - First practical quantum-inspired language model
 - Demonstrates quantum advantage in NLP
 - Energy-based optimization techniques
-- Concept learning through quantum mechanics
 
 ### **v3 - Neuroscience Research**
 
 - First consciousness implementation in LLM
 - Biologically plausible learning mechanisms
 - Human memory system simulation
-- Event-driven processing architecture
 
-## 📋 Development Status
+## Development Status
+
+### **v4 - Quantum Phase-Field LLM** (Active)
+
+- ✅ Core Phase2D math (no trig in hot path)
+- ✅ Injectable architecture (registry + config)
+- ✅ Real dataset integration (WikiText-2, TinyStories)
+- ✅ GPT-2 BPE tokenizer + byte tokenizer alternative
+- ✅ Morphological tokenizer (root + prefix + suffix)
+- ✅ Dynamic coupler routing + episodic memory
+- ✅ Byte patching (4x faster byte-level training)
+- ✅ Memory scaling (chunked top-k, 10x memory reduction)
+- ✅ Chunked backbone + SDPA episodic memory
+- ✅ Gradient accumulation, incremental generation, learnable scaling
+- ✅ Philosophy metrics (Manas/Buddhi/Viveka/Smriti)
+- 🔄 Validate training (perplexity on real data)
+- 🔄 Incremental learning test (memory sharding)
+- 🔄 Long context support (256K streaming)
+- 🔄 Custom CUDA/Triton kernels
 
 ### **v2 - Quantum LLM**
 
-- ✅ **Core Architecture**: Quantum-inspired components
-- ✅ **Training System**: Energy-based optimization
-- ✅ **Performance**: 1.43x faster, 4.38x more efficient
-- ✅ **Testing**: Comprehensive test suite
-- ✅ **Production**: Ready for deployment
+- ✅ Core Architecture, Training, Testing — Production Ready
 
 ### **v3 - Brain-Inspired LLM**
 
-- ✅ **Core Architecture**: Consciousness, memory, spiking neurons
-- ✅ **Learning Systems**: Biologically plausible learning
-- ✅ **Training System**: Consciousness-based training
-- ✅ **Performance**: Human-like learning efficiency
-- ✅ **Production**: Ready for deployment
+- ✅ Core Architecture, Learning, Training — Production Ready
 
-## 🚀 Getting Started
+## v4 Model Sizes
+
+| Size | Dim | Layers | Banks | Params | Use Case |
+|------|-----|--------|-------|--------|----------|
+| tiny | 64 | 4 | 1 | ~1M | Testing |
+| small | 256 | 8 | 1 | ~10M | Quick experiments |
+| medium | 512 | 12 | 2 | ~50M | RTX 4090 training |
+| large | 768 | 16 | 4 | ~200M | A100 training |
+
+Byte-optimized configs (`tiny-byte`, `small-byte`, `medium-byte`, `large-byte`) are also available when using `--tokenizer byte`. Use `--banks` to customize bank selection for any preset.
+
+## Getting Started
 
 ### **1. Clone Repository**
 
@@ -174,114 +258,63 @@ cd qllm
 uv sync
 ```
 
-### **3. Choose Your Approach**
-
-#### **For Quantum-Inspired (v2):**
+### **3. Train v4 (Recommended)**
 
 ```bash
-cd v2
-# Read v2 documentation
-cat README.md
-# Run tests
-uv run python test_quantum_generation.py
-# Train model
-uv run python run_training.py
+cd v4
+uv run python test_v4.py
+uv run python train_real.py --dataset tinystories --size medium --epochs 50
 ```
 
-#### **For Brain-Inspired (v3):**
+### **4. Or try earlier versions**
 
 ```bash
-cd v3
-# Read v3 documentation
-cat README.md
-# Run tests
-uv run python simple_brain_test.py
-# Train model
-uv run python train_brain_llm.py
-# Demo trained model
-uv run python demo_brain_llm.py
+cd v2 && uv run python run_training.py
+cd v3 && uv run python train_brain_llm.py
 ```
 
-## 🧪 Testing
-
-### **v2 Testing**
+## Testing
 
 ```bash
-cd v2
-uv run python test_quantum_generation.py
-uv run python test_advanced_phase_coherence.py
+cd v4 && uv run python test_v4.py
+cd v2 && uv run python test_quantum_generation.py
+cd v3 && uv run python simple_brain_test.py
 ```
 
-### **v3 Testing**
+## Documentation
 
-```bash
-cd v3
-uv run python simple_brain_test.py
-uv run python test_brain_inspired_system.py
-```
-
-## 📚 Documentation
-
+- **[v4 README](v4/README.md)**: Quantum Phase-Field LLM — full architecture, training options, deployment guide
 - **[v2 README](v2/README.md)**: Quantum-Inspired LLM documentation
 - **[v3 README](v3/README.md)**: Brain-Inspired LLM documentation
 - **[v2 TODO](v2/TODO_ENHANCEMENT_PLAN.md)**: v2 development roadmap
 - **[v3 TODO](v3/TODO_V3_BRAIN_INSPIRED.md)**: v3 development roadmap
-- **[v3 Training Summary](v3/TRAINING_SUMMARY.md)**: Complete training results
 
-## 🔬 Research Papers
+## Research Papers
 
 - **QLLM_V2.pdf**: Quantum-Inspired Language Model research paper
-- **v3 Research**: Brain-Inspired Language Model (in development)
 
-## 🤝 Contributing
+## Contributing
 
-1. **Choose your focus**: v2 (quantum) or v3 (brain-inspired)
+1. **Choose your focus**: v4 (active), v2 (quantum), or v3 (brain-inspired)
 2. **Read the respective README**: Understand the architecture
 3. **Run tests**: Ensure everything works
 4. **Make changes**: Follow the development guidelines
 5. **Submit PR**: Include tests and documentation
 
-### **Development Guidelines**
-
-- Follow existing code structure
-- Add comprehensive tests
-- Update documentation
-- Ensure backward compatibility
-
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
+- **v4**: Phase2D math, oscillatory SSMs, Indian philosophy-inspired metrics
 - **v2**: Inspired by quantum computing and quantum mechanics
 - **v3**: Inspired by neuroscience and consciousness research
 - Built on PyTorch and modern deep learning frameworks
-- Community contributions and feedback
-
-## 📞 Contact
-
-For questions, suggestions, or collaborations:
-
-- Open an issue for bug reports
-- Open a discussion for questions
-- Contact the development team for collaborations
 
 ---
 
-## 🎉 Summary
-
-This repository represents **two revolutionary approaches** to language modeling:
-
-1. **v2 - Quantum-Inspired**: Leverages quantum mechanics for faster, more efficient processing
-2. **v3 - Brain-Inspired**: Mimics human brain mechanisms for consciousness and learning
-
-Both approaches are **production-ready** and offer unique advantages over traditional transformer architectures. Choose the approach that best fits your use case and research interests.
-
----
-
-**Status**: ✅ **BOTH APPROACHES PRODUCTION READY**  
-**Last Updated**: 2024-01-28  
-**v2 Status**: Quantum-Inspired LLM - Ready  
-**v3 Status**: Brain-Inspired LLM - Ready  
-**Ready for**: Research, development, and production deployment
+**v4 Status**: 🔄 **Active Development** — Quantum Phase-Field LLM  
+**v2 Status**: ✅ Production Ready — Quantum-Inspired LLM  
+**v3 Status**: ✅ Production Ready — Brain-Inspired LLM  
+**Last Updated**: 2026-03-01

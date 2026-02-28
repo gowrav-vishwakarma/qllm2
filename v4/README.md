@@ -58,6 +58,10 @@ For training on a remote GPU server (e.g. NVIDIA A6000 48GB), sync the repo to `
 ```bash
 ./scripts/tune_batch_a6000.sh                  # default batch 16
 ./scripts/tune_batch_a6000.sh --batch_size 24  # try 24, 32, etc.
+
+# on server in tmux session to read logs easily from outside tmux session
+PYTHONUNBUFFERED=1 ./scripts/tune_batch_a6000.sh --batch_size 64 --epochs 10 2>&1 | stdbuf -oL tee logs/tune_batch64_10ep.log
+
 # After one epoch (or when stable), Ctrl+C. Note the batch size.
 ```
 
