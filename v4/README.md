@@ -50,6 +50,34 @@ uv run python train_real.py \
 
 ---
 
+## Deploy to A6000 Server
+
+For training on a remote GPU server (e.g. NVIDIA A6000 48GB), sync the repo to `~/qllm` and use the scripts in `scripts/`:
+
+**1. Find best batch size first (no compile, 1 epoch):** Avoids recompiling every time you change batch size. Run with different `--batch_size` until you find the largest that doesn't OOM and uses GPU well.
+```bash
+./scripts/tune_batch_a6000.sh                  # default batch 16
+./scripts/tune_batch_a6000.sh --batch_size 24  # try 24, 32, etc.
+# After one epoch (or when stable), Ctrl+C. Note the batch size.
+```
+
+**2. Run full v4 medium training with compile (in tmux):** Use the batch size you chose.
+```bash
+tmux new -s v4train
+cd ~/qllm && ./scripts/run_v4_medium_a6000.sh --batch_size 24
+# Detach: Ctrl+B, D. Reattach: tmux attach -t v4train
+```
+
+**Monitor GPU (in another tmux pane or terminal):**
+```bash
+./scripts/monitor_training.sh           # GPU every 5s
+./scripts/monitor_training.sh 5 logs/v4_medium_20250128.log  # GPU + tail log
+```
+
+**Batch size tuning:** Effective batch = `batch_size × accumulation_steps` (default 16×4=64). If you hit **CUDA OOM**, lower `--batch_size`. If GPU is often **&lt;80%**, try a larger batch. Resume with `--resume checkpoints_v4_real/best_model.pt`.
+
+---
+
 ## Archived/Experimental Features
 
 > **Note**: The following features were experimental explorations. **GPT-2 BPE is the default**; byte tokenizer is available as an alternative for multilingual use. These archived features are kept for reference.

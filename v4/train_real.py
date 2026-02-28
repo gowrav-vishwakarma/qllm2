@@ -304,9 +304,14 @@ class RealDataTrainer:
                       f"Loss: {avg_loss:.4f} | CE: {avg_ce:.4f} | PPL: {ppl:.2f} | "
                       f"LR: {lr:.2e} | {samples_per_sec:.1f} samples/s | {tokens_per_sec:.0f} tok/s")
         
+        if num_batches == 0:
+            raise ValueError(
+                "No batches in epoch (batch_size larger than dataset size). "
+                "Reduce --batch_size or increase --max_train_samples."
+            )
         avg_loss = total_loss_tensor.item() / num_batches
         avg_ce = total_ce_tensor.item() / num_batches
-        
+
         # Log philosophy metrics at end of epoch
         if self.metrics_logger is not None:
             print(f"\n🧘 Philosophy Metrics (epoch average):")
@@ -474,7 +479,13 @@ class RealDataTrainer:
         print(f"   Train batches: {len(self.train_loader)}")
         if self.val_loader:
             print(f"   Val batches: {len(self.val_loader)}")
-        
+        if len(self.train_loader) == 0:
+            n = len(self.train_loader.dataset)
+            bs = self.config.training.batch_size
+            raise ValueError(
+                f"No training batches: batch_size={bs} is larger than number of samples ({n}). "
+                f"Reduce --batch_size (e.g. to {min(bs, max(1, n))}) or increase --max_train_samples."
+            )
         for epoch in range(self.config.training.max_epochs):
             print(f"\n{'='*60}")
             print(f"Epoch {epoch + 1}/{self.config.training.max_epochs}")
@@ -684,6 +695,8 @@ def main():
     
     # Create config
     config = get_default_config(args.size)
+    ref_batch = config.training.batch_size  # preset reference for LR scaling
+    ref_lr = config.training.learning_rate
     config.vocab_size = vocab_size
     config.training.max_epochs = args.epochs
     config.training.batch_size = args.batch_size
@@ -712,6 +725,15 @@ def main():
     
     # Gradient accumulation
     config.training.accumulation_steps = args.accumulation_steps
+    
+    # Auto-scale LR by effective batch size (only when --lr not set)
+    if not args.lr:
+        effective_batch = config.training.batch_size * config.training.accumulation_steps
+        ref_effective = ref_batch * 1  # presets use accumulation_steps=1
+        if effective_batch != ref_effective:
+            config.training.learning_rate = ref_lr * (effective_batch / ref_effective)
+            print(f"   LR auto-scaled: {ref_lr:.2e} -> {config.training.learning_rate:.2e} "
+                  f"(effective_batch {effective_batch} vs reference {ref_effective})")
     
     # Speed options
     config.training.compile_model = args.compile
