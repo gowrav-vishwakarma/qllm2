@@ -20,6 +20,3 @@ checkpoints_large_scale/*
 checkpoints*/
 .cache/**
 *cache*/
-
-# V5 (WIP - see .cursor/plan for architecture)
-v5/

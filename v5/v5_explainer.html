@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V5 Algebraic Language Model — Interactive Explainer</title>
+<style>
+:root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --fg: #c9d1d9;
+    --fg2: #8b949e;
+    --cyan: #58d0ff;
+    --magenta: #f778ba;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --orange: #db6d28;
+    --red: #f85149;
+    --border: #30363d;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); line-height: 1.6; overflow-x: hidden; }
+canvas { display: block; }
+
+/* -- Progress bar -- */
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--cyan); z-index: 1000; transition: width .1s; }
+
+/* -- Nav dots -- */
+#nav-dots { position: fixed; right: 16px; top: 50%; transform: translateY(-50%); z-index: 999; display: flex; flex-direction: column; gap: 10px; }
+.nav-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); border: none; cursor: pointer; transition: all .3s; }
+.nav-dot.active { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); transform: scale(1.3); }
+
+/* -- Scene structure -- */
+.scene-wrap { position: relative; }
+.scene { position: sticky; top: 0; height: 100vh; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.scene-inner { width: min(1100px, 95vw); display: flex; gap: 2rem; align-items: center; }
+.scene-inner.col { flex-direction: column; gap: 1rem; }
+.scene-text { flex: 1; min-width: 280px; }
+.scene-vis { flex: 1.2; min-width: 320px; display: flex; flex-direction: column; align-items: center; gap: .5rem; }
+
+h2.scene-title { color: var(--cyan); font-size: 1.6rem; margin-bottom: .5rem; text-shadow: 0 0 10px rgba(88,208,255,.2); }
+.scene-subtitle { color: var(--magenta); font-size: .95rem; margin-bottom: .75rem; font-weight: 600; }
+.scene-text p { color: var(--fg2); font-size: .92rem; margin-bottom: .6rem; }
+.insight { background: rgba(88,208,255,.08); border-left: 3px solid var(--cyan); padding: .6rem .8rem; border-radius: 0 6px 6px 0; margin-top: .8rem; font-size: .88rem; color: var(--fg); }
+code { font-family: var(--mono); background: rgba(255,255,255,.08); padding: .15rem .35rem; border-radius: 3px; font-size: .85em; }
+
+/* -- Header -- */
+header { text-align: center; padding: 5rem 2rem 3rem; }
+header h1 { color: var(--cyan); font-size: 2.8rem; text-shadow: 0 0 20px rgba(88,208,255,.3); }
+header p { color: var(--fg2); font-size: 1.1rem; margin-top: .5rem; }
+header .scroll-hint { color: var(--fg2); font-size: .85rem; margin-top: 2rem; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{ opacity:.4; } 50%{ opacity:1; } }
+
+/* -- Canvas panels -- */
+.canvas-panel { background: #000; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.canvas-label { font-family: var(--mono); font-size: .7rem; color: var(--fg2); text-align: center; padding: 4px 0; background: var(--bg2); }
+.side-by-side { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+.side-by-side > div { flex: 1; min-width: 200px; }
+
+/* -- Controls -- */
+.controls { display: flex; gap: 1rem; align-items: center; background: var(--bg2); padding: .6rem 1rem; border-radius: 6px; border: 1px solid var(--border); flex-wrap: wrap; }
+.controls label { font-size: .8rem; color: var(--fg2); }
+input[type="range"] { accent-color: var(--cyan); width: 120px; }
+button { background: var(--bg2); color: var(--cyan); border: 1px solid var(--cyan); padding: .4rem .8rem; border-radius: 4px; cursor: pointer; font-family: var(--mono); font-size: .8rem; transition: all .2s; }
+button:hover { background: var(--cyan); color: #000; }
+
+/* -- Responsive -- */
+@media (max-width: 768px) {
+    .scene-inner { flex-direction: column; }
+    .scene-vis { min-width: 0; width: 100%; }
+    header h1 { font-size: 2rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<nav id="nav-dots"></nav>
+
+<header>
+    <h1>V5: Algebraic Language Model</h1>
+    <p>An interactive journey from raw text to trained prediction</p>
+    <div class="scroll-hint">&#8595; Scroll to explore</div>
+</header>
+
+<!-- ============================================================ -->
+<!-- SCENE 1: Text to Tokens                                       -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="0" style="height:300vh">
+<section class="scene">
+<div class="scene-inner">
+    <div class="scene-text">
+        <h2 class="scene-title">1. Text to Tokens</h2>
+        <p class="scene-subtitle">From characters to numbers</p>
+        <p>Language models don't read letters. They read <strong>token IDs</strong> &mdash; numbers that map to subword pieces.</p>
+        <p>A BPE tokenizer splits text into the most common subword units it learned during training.</p>
+        <div class="insight">Each token becomes a number. That number is the model's input.</div>
+    </div>
+    <div class="scene-vis">
+        <div class="canvas-panel"><canvas id="c1" width="500" height="300"></canvas></div>
+    </div>
+</div>
+</section>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCENE 2: Token to Complex Embedding                           -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="1" style="height:300vh">
+<section class="scene">
+<div class="scene-inner">
+    <div class="scene-text">
+        <h2 class="scene-title">2. Complex Embedding</h2>
+        <p class="scene-subtitle">Each token becomes a complex vector</p>
+        <p>Each token ID indexes into <strong>two</strong> embedding tables: one for the real part, one for the imaginary part.</p>
+        <p>Together they form a complex number per dimension: <code>z = real + i &middot; imag</code>.</p>
+        <p><strong>Magnitude</strong> = feature strength. <strong>Phase angle</strong> = feature identity.</p>
+        <div class="insight">"happy" and "sad" can share magnitude but have opposite phase (&#960; apart).</div>
+    </div>
+    <div class="scene-vis">
+        <div class="canvas-panel"><canvas id="c2" width="500" height="320"></canvas></div>
+    </div>
+</div>
+</section>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCENE 3: ComplexLinear                                         -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="2" style="height:300vh">
+<section class="scene">
+<div class="scene-inner">
+    <div class="scene-text">
+        <h2 class="scene-title">3. ComplexLinear</h2>
+        <p class="scene-subtitle">Why no sin/cos &mdash; pure GPU matmul</p>
+        <p>Complex matrix multiplication decomposes into <strong>4 real matrix multiplies</strong>:</p>
+        <p><code>Y_r = W_r&middot;X_r &minus; W_i&middot;X_i</code><br><code>Y_i = W_r&middot;X_i + W_i&middot;X_r</code></p>
+        <p>This IS a rotation + scaling &mdash; but computed entirely with multiply-add. No trig. GPUs are built for this.</p>
+        <div class="insight">Each complex weight simultaneously scales AND rotates. Two real params, one structured operation.</div>
+    </div>
+    <div class="scene-vis">
+        <div class="canvas-panel"><canvas id="c3" width="520" height="320"></canvas></div>
+    </div>
+</div>
+</section>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCENE 4: Cayley Transform                                     -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="3" style="height:250vh">
+<section class="scene">
+<div class="scene-inner">
+    <div class="scene-text">
+        <h2 class="scene-title">4. Cayley Transform</h2>
+        <p class="scene-subtitle">Rotation without trigonometry</p>
+        <p>The Cayley transform computes rotation from a single learnable parameter <code>a</code>:</p>
+        <p><code>cos = (1 &minus; a&sup2;) / (1 + a&sup2;)</code><br><code>sin = 2a / (1 + a&sup2;)</code></p>
+        <p>Just arithmetic: square, add, divide. The GPU never calls sin() or cos().</p>
+        <div class="insight">Backprop flows cleanly through simple arithmetic &mdash; no trig derivative chains.</div>
+    </div>
+    <div class="scene-vis">
+        <div class="canvas-panel"><canvas id="c4" width="340" height="340"></canvas></div>
+        <div class="controls">
+            <label>Skew <code>a</code>: <span id="cayley-val">0.00</span></label>
+            <input type="range" id="cayley-slider" min="-5" max="5" step="0.01" value="0">
+            <button id="cayley-play">Play</button>
+        </div>
+    </div>
+</div>
+</section>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCENE 5: modReLU vs broken GELU                               -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="4" style="height:350vh">
+<section class="scene">
+<div class="scene-inner col">
+    <div class="scene-text" style="text-align:center;max-width:700px">
+        <h2 class="scene-title">5. modReLU vs V4's Broken GELU</h2>
+        <p class="scene-subtitle">THE critical fix</p>
+        <p>V4 applies GELU to the <em>real part only</em>, destroying phase. V5 applies ReLU to the <em>magnitude</em>, preserving phase exactly.</p>
+    </div>
+    <div class="side-by-side">
+        <div>
+            <div class="canvas-panel"><canvas id="c5a" width="260" height="260"></canvas></div>
+            <div class="canvas-label">V4: GELU on real part &mdash; phase destroyed</div>
+        </div>
+        <div>
+            <div class="canvas-panel"><canvas id="c5b" width="260" height="260"></canvas></div>
+            <div class="canvas-label">V5: modReLU &mdash; phase preserved</div>
+        </div>
+    </div>
+    <div class="insight" style="max-width:600px;margin:0 auto">V4 pays the cost of complex numbers but destroys their benefit at every activation. modReLU fixes this.</div>
+</div>
+</section>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCENE 6: ComplexGatedUnit                                     -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="5" style="height:300vh">
+<section class="scene">
+<div class="scene-inner">
+    <div class="scene-text">
+        <h2 class="scene-title">6. Complex Gated Unit</h2>
+        <p class="scene-subtitle">Scale AND rotate &mdash; not just filter</p>
+        <p>SwiGLU gates produce a real scalar: they can only <strong>scale</strong> (let X% through).</p>
+        <p>The CGU gate produces a <strong>complex number</strong>: it both scales (magnitude) and rotates (phase).</p>
+        <p>"Let 70% through AND rotate by 30&deg;" &mdash; the gate <em>transforms</em> what it passes.</p>
+        <div class="insight">Same parameter count as SwiGLU, but each gate operation does 2D work (scale + rotate) instead of 1D (scale only).</div>
+    </div>
+    <div class="scene-vis">
+        <div class="canvas-panel"><canvas id="c6" width="500" height="340"></canvas></div>
+    </div>
+</div>
+</section>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCENE 7: Multi-Bank + Fusion                                  -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="6" style="height:350vh">
+<section class="scene">
+<div class="scene-inner">
+    <div class="scene-text">
+        <h2 class="scene-title">7. Multi-Bank Fusion</h2>
+        <p class="scene-subtitle">Algebraic interference &mdash; for real this time</p>
+        <p>Multiple banks process the same input in parallel, each specialising in different phase subspaces.</p>
+        <p>A <strong>complex router</strong> assigns per-token weights. Learned phase rotations are applied before summing.</p>
+        <p>Aligned phases &rarr; constructive interference (amplify). Opposing phases &rarr; destructive (cancel).</p>
+        <div class="insight">V4's interference was fake (phase was already destroyed). V5's phase is preserved, so interference is genuine.</div>
+    </div>
+    <div class="scene-vis">
+        <div class="canvas-panel"><canvas id="c7" width="500" height="360"></canvas></div>
+    </div>
+</div>
+</section>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCENE 8: SSM + Parallel Scan                                  -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="7" style="height:400vh">
+<section class="scene">
+<div class="scene-inner">
+    <div class="scene-text">
+        <h2 class="scene-title">8. Complex SSM + Parallel Scan</h2>
+        <p class="scene-subtitle">Memory via rotation, speed via parallelism</p>
+        <p>The state vector rotates and decays at each step: <code>h[t] = A&middot;h[t-1] + B&middot;x[t]</code>.</p>
+        <p>Fast oscillation tracks local syntax. Slow oscillation tracks long-range context.</p>
+        <p>The sequential loop (O(n)) is replaced by a <strong>parallel prefix scan</strong> (O(log n)) &mdash; same result, GPU-fast.</p>
+        <div class="insight">V4's Python loop over every timestep caused 17x slowdown. The parallel scan fixes this algorithmically.</div>
+    </div>
+    <div class="scene-vis">
+        <div class="canvas-panel"><canvas id="c8" width="500" height="380"></canvas></div>
+    </div>
+</div>
+</section>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCENE 9: PhaseAttention                                       -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="8" style="height:300vh">
+<section class="scene">
+<div class="scene-inner">
+    <div class="scene-text">
+        <h2 class="scene-title">9. Phase Attention</h2>
+        <p class="scene-subtitle">Sparse, complex-valued, every K layers</p>
+        <p>Score = <code>Re(q &middot; conj(k)) / &radic;d</code> &mdash; captures both magnitude similarity and phase alignment.</p>
+        <p>Same phase = high score. Opposite phase = negative. Orthogonal = zero.</p>
+        <p>Applied with a sliding window mask, only every K-th layer, to keep cost low.</p>
+        <div class="insight">One complex attention head captures magnitude similarity AND directional alignment in a single score.</div>
+    </div>
+    <div class="scene-vis">
+        <div class="canvas-panel"><canvas id="c9" width="500" height="320"></canvas></div>
+    </div>
+</div>
+</section>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCENE 10: Output Head                                         -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="9" style="height:280vh">
+<section class="scene">
+<div class="scene-inner">
+    <div class="scene-text">
+        <h2 class="scene-title">10. Output Head</h2>
+        <p class="scene-subtitle">Complex &rarr; Real &rarr; Prediction</p>
+        <p>The complex representation is converted to real by concatenating real and imaginary parts.</p>
+        <p>A linear layer maps to vocabulary size, softmax gives probabilities, and the top token is the prediction.</p>
+        <p>That prediction feeds back as the next input &mdash; autoregressive generation.</p>
+        <div class="insight">The bridge from complex to real happens only once, at the very end.</div>
+    </div>
+    <div class="scene-vis">
+        <div class="canvas-panel"><canvas id="c10" width="500" height="300"></canvas></div>
+    </div>
+</div>
+</section>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCENE 11: Training                                            -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="10" style="height:350vh">
+<section class="scene">
+<div class="scene-inner col">
+    <div class="scene-text" style="text-align:center;max-width:700px">
+        <h2 class="scene-title">11. Training &mdash; The Mirror</h2>
+        <p class="scene-subtitle">Forward pass, loss, backward pass</p>
+        <p>The forward pass flows left to right. Loss is computed. Then gradients flow <strong>backward</strong> through every component, updating all parameters.</p>
+    </div>
+    <div class="scene-vis" style="width:100%">
+        <div class="canvas-panel" style="width:100%"><canvas id="c11" width="900" height="400"></canvas></div>
+    </div>
+</div>
+</section>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCENE 12: Complex Dropout                                     -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="11" style="height:280vh">
+<section class="scene">
+<div class="scene-inner">
+    <div class="scene-text">
+        <h2 class="scene-title">12. Complex Dropout</h2>
+        <p class="scene-subtitle">Drop features, not components</p>
+        <p>Standard dropout on real and imaginary parts <em>independently</em> destroys phase &mdash; it's like cutting one leg off a compass.</p>
+        <p>Complex dropout drops <strong>entire features</strong>: both real and imaginary vanish together, or both stay.</p>
+        <div class="insight">Phase integrity is maintained even during regularisation.</div>
+    </div>
+    <div class="scene-vis">
+        <div class="canvas-panel"><canvas id="c12" width="500" height="320"></canvas></div>
+    </div>
+</div>
+</section>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCENE 13: Full Architecture                                   -->
+<!-- ============================================================ -->
+<div class="scene-wrap" data-scene="12" style="height:400vh">
+<section class="scene">
+<div class="scene-inner col">
+    <div class="scene-text" style="text-align:center;max-width:700px">
+        <h2 class="scene-title">13. The Full Picture</h2>
+        <p class="scene-subtitle">End-to-end V5 architecture</p>
+        <p>Scroll to send a data particle through the entire pipeline: Tokens &rarr; Complex Embed &rarr; Banks &rarr; Router &rarr; Fusion &rarr; SSM &rarr; Attention &rarr; Output.</p>
+    </div>
+    <div class="scene-vis" style="width:100%">
+        <div class="canvas-panel" style="width:100%"><canvas id="c13" width="960" height="420"></canvas></div>
+    </div>
+</div>
+</section>
+</div>
+
+<footer style="text-align:center;padding:3rem;color:var(--fg2);font-size:.85rem;border-top:1px solid var(--border)">
+    V5 Algebraic Language Model &mdash; Interactive Explainer
+</footer>
+
+<script>
+// ================================================================
+// SCROLL ENGINE
+// ================================================================
+const sceneWraps = document.querySelectorAll('.scene-wrap');
+const numScenes = sceneWraps.length;
+const progressBar = document.getElementById('progress-bar');
+const navDots = document.getElementById('nav-dots');
+
+for (let i = 0; i < numScenes; i++) {
+    const d = document.createElement('button');
+    d.className = 'nav-dot';
+    d.title = `Scene ${i + 1}`;
+    d.onclick = () => sceneWraps[i].scrollIntoView({ behavior: 'smooth' });
+    navDots.appendChild(d);
+}
+const dots = navDots.querySelectorAll('.nav-dot');
+
+function getSceneProgress(wrap) {
+    const rect = wrap.getBoundingClientRect();
+    const h = wrap.offsetHeight - window.innerHeight;
+    if (h <= 0) return rect.top <= 0 ? 1 : 0;
+    const p = -rect.top / h;
+    return Math.max(0, Math.min(1, p));
+}
+
+let activeScene = -1;
+function onScroll() {
+    const scrollY = window.scrollY;
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = (scrollY / docH * 100) + '%';
+
+    let best = -1, bestDist = Infinity;
+    sceneWraps.forEach((w, i) => {
+        const r = w.getBoundingClientRect();
+        const center = r.top + r.height / 2;
+        const dist = Math.abs(center - window.innerHeight / 2);
+        if (dist < bestDist) { bestDist = dist; best = i; }
+    });
+    if (best !== activeScene) {
+        activeScene = best;
+        dots.forEach((d, i) => d.classList.toggle('active', i === best));
+    }
+    sceneWraps.forEach((w, i) => {
+        const p = getSceneProgress(w);
+        if (sceneRenderers[i]) sceneRenderers[i](p);
+    });
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+window.addEventListener('resize', onScroll);
+
+const sceneRenderers = [];
+
+// ================================================================
+// UTILITY FUNCTIONS
+// ================================================================
+function drawArrow(ctx, x0, y0, x1, y1, color, lw = 2) {
+    const dx = x1 - x0, dy = y1 - y0;
+    const angle = Math.atan2(dy, dx);
+    const headLen = Math.min(10, Math.sqrt(dx*dx + dy*dy) * 0.3);
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 - headLen * Math.cos(angle - .4), y1 - headLen * Math.sin(angle - .4));
+    ctx.lineTo(x1 - headLen * Math.cos(angle + .4), y1 - headLen * Math.sin(angle + .4));
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+}
+
+function drawAxes(ctx, cx, cy, r, labels) {
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
+    if (labels) {
+        ctx.fillStyle = '#555';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('Re', cx + r - 14, cy - 4);
+        ctx.fillText('Im', cx + 4, cy - r + 12);
+    }
+}
+
+function drawCircle(ctx, cx, cy, r) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,.08)';
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp01(t) { return Math.max(0, Math.min(1, t)); }
+
+function roundRect(ctx, x, y, w, h, r, stroke, fill) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); }
+}
+
+function gelu(x) { return 0.5 * x * (1 + Math.tanh(Math.sqrt(2/Math.PI) * (x + 0.044715 * x*x*x))); }
+
+// ================================================================
+// SCENE 1: TEXT TO TOKENS
+// ================================================================
+(function() {
+    const canvas = document.getElementById('c1');
+    const ctx = canvas.getContext('2d');
+    const tokens = [
+        { text: 'The', id: 464 },
+        { text: ' cat', id: 3797 },
+        { text: ' sat', id: 3332 },
+        { text: ' on', id: 319 },
+        { text: ' the', id: 262 },
+        { text: ' mat', id: 2665 },
+    ];
+    const colors = ['#58d0ff', '#f778ba', '#3fb950', '#d29922', '#58d0ff', '#f778ba'];
+    const sentence = 'The cat sat on the mat';
+
+    sceneRenderers[0] = function(p) {
+        ctx.clearRect(0, 0, 500, 300);
+
+        const phase1 = clamp01(p * 3);
+        const phase2 = clamp01(p * 3 - 1);
+        const phase3 = clamp01(p * 3 - 2);
+
+        // Draw original text fading out
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillStyle = `rgba(201,209,217,${1 - phase1})`;
+        ctx.textAlign = 'center';
+        ctx.fillText(sentence, 250, 60);
+
+        // Draw token boxes
+        const boxW = 65, boxH = 50, gap = 8;
+        const totalW = tokens.length * boxW + (tokens.length - 1) * gap;
+        const startX = (500 - totalW) / 2;
+
+        tokens.forEach((tok, i) => {
+            const delay = i * 0.12;
+            const tp = clamp01((phase1 - delay) * 3);
+            const y = lerp(80, 110, tp);
+            const alpha = tp;
+
+            ctx.globalAlpha = alpha;
+            roundRect(ctx, startX + i * (boxW + gap), y, boxW, boxH, 6, colors[i], 'rgba(0,0,0,.6)');
+            ctx.font = 'bold 13px monospace';
+            ctx.fillStyle = colors[i];
+            ctx.textAlign = 'center';
+            ctx.fillText(tok.text.trim(), startX + i * (boxW + gap) + boxW / 2, y + 22);
+
+            // Token ID
+            const idAlpha = clamp01((phase2 - delay) * 3);
+            ctx.globalAlpha = idAlpha;
+            ctx.font = '11px monospace';
+            ctx.fillStyle = '#8b949e';
+            ctx.fillText(`ID: ${tok.id}`, startX + i * (boxW + gap) + boxW / 2, y + 42);
+
+            ctx.globalAlpha = 1;
+        });
+
+        // Arrow pointing down
+        if (phase3 > 0) {
+            ctx.globalAlpha = phase3;
+            const arrowY = 185;
+            ctx.font = '12px sans-serif';
+            ctx.fillStyle = var_fg2();
+            ctx.textAlign = 'center';
+            ctx.fillText('These numbers enter the model', 250, arrowY);
+            drawArrow(ctx, 250, arrowY + 8, 250, arrowY + 45, var_cyan(), 2);
+
+            // Show array
+            ctx.font = 'bold 13px monospace';
+            ctx.fillStyle = var_cyan();
+            ctx.fillText(`[ ${tokens.map(t => t.id).join(', ')} ]`, 250, arrowY + 70);
+            ctx.globalAlpha = 1;
+        }
+    };
+
+    function var_fg2() { return '#8b949e'; }
+    function var_cyan() { return '#58d0ff'; }
+})();
+
+// ================================================================
+// SCENE 2: TOKEN TO COMPLEX EMBEDDING
+// ================================================================
+(function() {
+    const canvas = document.getElementById('c2');
+    const ctx = canvas.getContext('2d');
+    const dims = 4;
+    const realVals = [[0.3, -0.7, 0.5, 0.1], [0.8, 0.2, -0.4, 0.6]];
+    const imagVals = [[-0.5, 0.4, 0.2, -0.3], [0.1, -0.6, 0.7, -0.2]];
+    const tokenLabels = ['The (464)', 'cat (3797)'];
+
+    sceneRenderers[1] = function(p) {
+        ctx.clearRect(0, 0, 500, 320);
+        const phase1 = clamp01(p * 3);
+        const phase2 = clamp01(p * 3 - 1);
+        const phase3 = clamp01(p * 3 - 2);
+
+        // Tables
+        const tw = 100, th = 22;
+        const tableX_r = 30, tableX_i = 160, tableY = 20;
+
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#58d0ff';
+        ctx.fillText('embed_real', tableX_r + tw/2, tableY);
+        ctx.fillStyle = '#f778ba';
+        ctx.fillText('embed_imag', tableX_i + tw/2, tableY);
+
+        for (let t = 0; t < 2; t++) {
+            const highlight = clamp01((phase1 - t * 0.3) * 4);
+            for (let d = 0; d < dims; d++) {
+                const y = tableY + 14 + (t * dims + d) * th;
+                // Real
+                const rAlpha = 0.15 + highlight * 0.5;
+                roundRect(ctx, tableX_r, y, tw, th - 2, 3, null, `rgba(88,208,255,${rAlpha})`);
+                ctx.font = '10px monospace';
+                ctx.fillStyle = `rgba(88,208,255,${0.4 + highlight * 0.6})`;
+                ctx.fillText(realVals[t][d].toFixed(2), tableX_r + tw/2, y + 14);
+
+                // Imag
+                roundRect(ctx, tableX_i, y, tw, th - 2, 3, null, `rgba(247,120,186,${rAlpha})`);
+                ctx.fillStyle = `rgba(247,120,186,${0.4 + highlight * 0.6})`;
+                ctx.fillText(imagVals[t][d].toFixed(2), tableX_i + tw/2, y + 14);
+            }
+            ctx.font = '9px monospace';
+            ctx.fillStyle = '#8b949e';
+            ctx.textAlign = 'left';
+            ctx.fillText(tokenLabels[t], tableX_r, tableY + 14 + t * dims * th + dims * th + 10);
+        }
+
+        // Complex planes
+        if (phase2 > 0) {
+            const planeR = 36;
+            const planeStartX = 310;
+            ctx.globalAlpha = phase2;
+            for (let d = 0; d < dims; d++) {
+                const cx = planeStartX + (d % 2) * 90;
+                const cy = 60 + Math.floor(d / 2) * 100;
+                drawAxes(ctx, cx, cy, planeR, false);
+                drawCircle(ctx, cx, cy, planeR);
+
+                // Draw vectors for both tokens
+                for (let t = 0; t < 2; t++) {
+                    const vp = clamp01((phase2 - t * 0.2) * 3);
+                    const rx = realVals[t][d] * planeR * vp;
+                    const iy = -imagVals[t][d] * planeR * vp;
+                    const col = t === 0 ? '#58d0ff' : '#f778ba';
+                    drawArrow(ctx, cx, cy, cx + rx, cy + iy, col, 2);
+                }
+                ctx.font = '9px monospace';
+                ctx.fillStyle = '#555';
+                ctx.textAlign = 'center';
+                ctx.fillText(`dim ${d}`, cx, cy + planeR + 14);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        // Labels
+        if (phase3 > 0) {
+            ctx.globalAlpha = phase3;
+            ctx.font = '11px sans-serif';
+            ctx.fillStyle = '#8b949e';
+            ctx.textAlign = 'center';
+            ctx.fillText('magnitude = length, phase = angle', 400, 280);
+            ctx.globalAlpha = 1;
+        }
+    };
+})();
+
+// ================================================================
+// SCENE 3: COMPLEX LINEAR
+// ================================================================
+(function() {
+    const canvas = document.getElementById('c3');
+    const ctx = canvas.getContext('2d');
+
+    sceneRenderers[2] = function(p) {
+        ctx.clearRect(0, 0, 520, 320);
+        const phase1 = clamp01(p * 4);
+        const phase2 = clamp01(p * 4 - 1);
+        const phase3 = clamp01(p * 4 - 2);
+        const phase4 = clamp01(p * 4 - 3);
+
+        const bw = 70, bh = 36, gap = 6;
+        const row1Y = 50, row2Y = 150;
+
+        // Row 1: Y_real = W_r @ X_r - W_i @ X_i
+        const blocks1 = [
+            { label: 'X_r', color: '#58d0ff' },
+            { label: '@', color: '#555', isOp: true },
+            { label: 'W_r', color: '#58d0ff' },
+            { label: '-', color: '#555', isOp: true },
+            { label: 'X_i', color: '#f778ba' },
+            { label: '@', color: '#555', isOp: true },
+            { label: 'W_i', color: '#f778ba' },
+            { label: '=', color: '#555', isOp: true },
+            { label: 'Y_r', color: '#3fb950' },
+        ];
+        // Row 2: Y_imag = W_r @ X_i + W_i @ X_r
+        const blocks2 = [
+            { label: 'X_r', color: '#58d0ff' },
+            { label: '@', color: '#555', isOp: true },
+            { label: 'W_i', color: '#f778ba' },
+            { label: '+', color: '#555', isOp: true },
+            { label: 'X_i', color: '#f778ba' },
+            { label: '@', color: '#555', isOp: true },
+            { label: 'W_r', color: '#58d0ff' },
+            { label: '=', color: '#555', isOp: true },
+            { label: 'Y_i', color: '#3fb950' },
+        ];
+
+        function drawRow(blocks, y, prog) {
+            let x = 20;
+            blocks.forEach((b, i) => {
+                const delay = i * 0.08;
+                const bp = clamp01((prog - delay) * 4);
+                ctx.globalAlpha = bp;
+                if (b.isOp) {
+                    ctx.font = 'bold 18px monospace';
+                    ctx.fillStyle = b.color;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(b.label, x + 12, y + bh / 2 + 6);
+                    x += 28;
+                } else {
+                    roundRect(ctx, x, y, bw, bh, 5, b.color, 'rgba(0,0,0,.7)');
+                    ctx.font = 'bold 12px monospace';
+                    ctx.fillStyle = b.color;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(b.label, x + bw / 2, y + bh / 2 + 5);
+                    x += bw + gap;
+                }
+                ctx.globalAlpha = 1;
+            });
+        }
+
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = '#8b949e';
+        ctx.textAlign = 'left';
+        ctx.globalAlpha = phase1;
+        ctx.fillText('Real output:', 20, row1Y - 8);
+        ctx.globalAlpha = 1;
+        drawRow(blocks1, row1Y, phase1);
+
+        ctx.globalAlpha = phase2;
+        ctx.fillText('Imaginary output:', 20, row2Y - 8);
+        ctx.globalAlpha = 1;
+        drawRow(blocks2, row2Y, phase2);
+
+        // 2x2 rotation matrix
+        if (phase3 > 0) {
+            ctx.globalAlpha = phase3;
+            const mx = 60, my = 230;
+            ctx.font = '12px monospace';
+            ctx.fillStyle = '#d29922';
+            ctx.textAlign = 'left';
+            ctx.fillText('Equivalent 2x2 matrix:', mx, my);
+            ctx.font = 'bold 14px monospace';
+            ctx.fillText('[ W_r  -W_i ]   [ X_r ]   [ Y_r ]', mx, my + 24);
+            ctx.fillText('[ W_i   W_r ] x [ X_i ] = [ Y_i ]', mx, my + 44);
+            ctx.globalAlpha = 1;
+        }
+
+        // GPU note
+        if (phase4 > 0) {
+            ctx.globalAlpha = phase4;
+            roundRect(ctx, 300, 240, 200, 44, 6, '#3fb950', 'rgba(63,185,80,.1)');
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillStyle = '#3fb950';
+            ctx.textAlign = 'center';
+            ctx.fillText('4 matmuls = pure GEMM', 400, 258);
+            ctx.fillText('No sin/cos. GPU-native.', 400, 274);
+            ctx.globalAlpha = 1;
+        }
+    };
+})();
+
+// ================================================================
+// SCENE 4: CAYLEY TRANSFORM
+// ================================================================
+(function() {
+    const canvas = document.getElementById('c4');
+    const ctx = canvas.getContext('2d');
+    const slider = document.getElementById('cayley-slider');
+    const valDisp = document.getElementById('cayley-val');
+    const playBtn = document.getElementById('cayley-play');
+    let animating = false, animTime = 0, animId = null;
+
+    function draw(a) {
+        ctx.clearRect(0, 0, 340, 340);
+        const cx = 170, cy = 170, R = 120;
+        drawAxes(ctx, cx, cy, R + 10, true);
+        drawCircle(ctx, cx, cy, R);
+
+        const a2 = a * a, denom = 1 + a2;
+        const cosV = (1 - a2) / denom;
+        const sinV = (2 * a) / denom;
+
+        // Original vector
+        const ox = R, oy = 0;
+        drawArrow(ctx, cx, cy, cx + ox, cy - oy, 'rgba(88,208,255,.25)', 1.5);
+
+        // Rotated vector
+        const rx = ox * cosV - oy * sinV;
+        const ry = ox * sinV + oy * cosV;
+        drawArrow(ctx, cx, cy, cx + rx, cy - ry, '#58d0ff', 3);
+
+        // Arc
+        const startAngle = 0;
+        const endAngle = -Math.atan2(ry, rx);
+        ctx.beginPath();
+        ctx.arc(cx, cy, 40, startAngle, endAngle, endAngle > startAngle);
+        ctx.strokeStyle = '#d29922';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Formulas
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#d29922';
+        ctx.fillText(`a = ${a.toFixed(2)}`, 14, 24);
+        ctx.fillText(`cos = (1-a²)/(1+a²) = ${cosV.toFixed(3)}`, 14, 42);
+        ctx.fillText(`sin = 2a/(1+a²)     = ${sinV.toFixed(3)}`, 14, 58);
+        ctx.fillStyle = '#555';
+        ctx.fillText('No trig calls!', 14, 78);
+
+        // Angle in degrees
+        const angleDeg = Math.atan2(sinV, cosV) * 180 / Math.PI;
+        ctx.fillStyle = '#8b949e';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${angleDeg.toFixed(1)}°`, cx + 55 * Math.cos(endAngle / 2), cy - 55 * Math.sin(endAngle / 2));
+    }
+
+    slider.addEventListener('input', () => {
+        if (animating) { cancelAnimationFrame(animId); animating = false; playBtn.textContent = 'Play'; }
+        const a = parseFloat(slider.value);
+        valDisp.textContent = a.toFixed(2);
+        draw(a);
+    });
+
+    function animate() {
+        animTime += 0.015;
+        const a = Math.sin(animTime) * 4;
+        slider.value = a;
+        valDisp.textContent = a.toFixed(2);
+        draw(a);
+        animId = requestAnimationFrame(animate);
+    }
+
+    playBtn.addEventListener('click', () => {
+        if (animating) { cancelAnimationFrame(animId); animating = false; playBtn.textContent = 'Play'; }
+        else { animTime = Math.asin(parseFloat(slider.value) / 4) || 0; animating = true; playBtn.textContent = 'Stop'; animate(); }
+    });
+
+    sceneRenderers[3] = function(p) {
+        if (!animating) draw(parseFloat(slider.value));
+    };
+
+    draw(0);
+})();
+
+// ================================================================
+// SCENE 5: modReLU vs GELU
+// ================================================================
+(function() {
+    const cA = document.getElementById('c5a');
+    const cB = document.getElementById('c5b');
+    const ctxA = cA.getContext('2d');
+    const ctxB = cB.getContext('2d');
+    const W = 260, H = 260;
+    const cx = W / 2, cy = H / 2, R = 90;
+
+    sceneRenderers[4] = function(p) {
+        const angle = p * Math.PI * 4;
+        const mag = 0.7 + 0.3 * Math.sin(p * Math.PI * 2);
+        const inR = Math.cos(angle) * mag * R;
+        const inI = Math.sin(angle) * mag * R;
+
+        // V4: GELU on real part
+        ctxA.clearRect(0, 0, W, H);
+        drawAxes(ctxA, cx, cy, R + 10, true);
+        drawCircle(ctxA, cx, cy, R);
+
+        drawArrow(ctxA, cx, cy, cx + inR, cy - inI, 'rgba(88,208,255,.4)', 2);
+
+        const realPart = inR / R;
+        const geluVal = gelu(realPart);
+        const outR_v4 = geluVal * inR;
+        const outI_v4 = geluVal * inI;
+
+        drawArrow(ctxA, cx, cy, cx + outR_v4, cy - outI_v4, '#f85149', 3);
+
+        ctxA.font = '10px monospace';
+        ctxA.fillStyle = '#f85149';
+        ctxA.textAlign = 'left';
+        ctxA.fillText(`GELU(real) = ${geluVal.toFixed(2)}`, 8, 16);
+        ctxA.fillText('Phase CORRUPTED', 8, 30);
+
+        // Highlight the problem: when real is negative, output collapses
+        if (realPart < -0.5) {
+            ctxA.fillStyle = 'rgba(248,81,73,.2)';
+            ctxA.fillRect(0, 0, cx, H);
+            ctxA.fillStyle = '#f85149';
+            ctxA.font = 'bold 12px sans-serif';
+            ctxA.textAlign = 'center';
+            ctxA.fillText('DESTROYED', cx / 2, cy + R + 20);
+        }
+
+        // V5: modReLU
+        ctxB.clearRect(0, 0, W, H);
+        drawAxes(ctxB, cx, cy, R + 10, true);
+        drawCircle(ctxB, cx, cy, R);
+
+        drawArrow(ctxB, cx, cy, cx + inR, cy - inI, 'rgba(88,208,255,.4)', 2);
+
+        const inMag = Math.sqrt(inR * inR + inI * inI) / R;
+        const bias = -0.2;
+        const modMag = Math.max(0, inMag + bias);
+        const outR_v5 = (inR / (inMag * R + 1e-6)) * modMag * R;
+        const outI_v5 = (inI / (inMag * R + 1e-6)) * modMag * R;
+
+        // Dead zone circle
+        if (bias < 0) {
+            ctxB.beginPath();
+            ctxB.arc(cx, cy, Math.abs(bias) * R, 0, Math.PI * 2);
+            ctxB.fillStyle = 'rgba(248,81,73,.08)';
+            ctxB.fill();
+            ctxB.strokeStyle = 'rgba(248,81,73,.3)';
+            ctxB.setLineDash([3, 3]);
+            ctxB.stroke();
+            ctxB.setLineDash([]);
+        }
+
+        if (modMag > 0) {
+            drawArrow(ctxB, cx, cy, cx + outR_v5, cy - outI_v5, '#3fb950', 3);
+        }
+
+        ctxB.font = '10px monospace';
+        ctxB.fillStyle = '#3fb950';
+        ctxB.textAlign = 'left';
+        ctxB.fillText(`|z|+bias = ${(inMag + bias).toFixed(2)}`, 8, 16);
+        ctxB.fillText('Phase PRESERVED', 8, 30);
+    };
+})();
+
+// ================================================================
+// SCENE 6: COMPLEX GATED UNIT
+// ================================================================
+(function() {
+    const canvas = document.getElementById('c6');
+    const ctx = canvas.getContext('2d');
+
+    sceneRenderers[5] = function(p) {
+        ctx.clearRect(0, 0, 500, 340);
+        const phase1 = clamp01(p * 3);
+        const phase2 = clamp01(p * 3 - 1);
+        const phase3 = clamp01(p * 3 - 2);
+
+        // Input
+        const inX = 30, inY = 170;
+        roundRect(ctx, inX, inY - 18, 50, 36, 5, '#58d0ff', 'rgba(0,0,0,.6)');
+        ctx.font = 'bold 12px monospace';
+        ctx.fillStyle = '#58d0ff';
+        ctx.textAlign = 'center';
+        ctx.fillText('z', inX + 25, inY + 5);
+
+        // Split arrows
+        ctx.globalAlpha = phase1;
+        drawArrow(ctx, inX + 50, inY - 8, 120, 60, '#8b949e', 1.5);
+        drawArrow(ctx, inX + 50, inY + 8, 120, 260, '#8b949e', 1.5);
+
+        // Gate path (top)
+        roundRect(ctx, 120, 40, 80, 32, 5, '#d29922', 'rgba(0,0,0,.6)');
+        ctx.font = 'bold 11px monospace';
+        ctx.fillStyle = '#d29922';
+        ctx.fillText('W_gate', 160, 60);
+
+        // Gate decomposition
+        const gateProgress = clamp01((phase1 - 0.3) * 3);
+        if (gateProgress > 0) {
+            ctx.globalAlpha = gateProgress;
+            drawArrow(ctx, 200, 56, 240, 40, '#8b949e', 1);
+            drawArrow(ctx, 200, 56, 240, 76, '#8b949e', 1);
+
+            roundRect(ctx, 240, 24, 70, 26, 4, '#d29922', 'rgba(210,153,34,.1)');
+            ctx.font = '10px monospace';
+            ctx.fillStyle = '#d29922';
+            ctx.fillText('sigmoid(|g|)', 275, 41);
+
+            roundRect(ctx, 240, 60, 70, 26, 4, '#f778ba', 'rgba(247,120,186,.1)');
+            ctx.fillStyle = '#f778ba';
+            ctx.fillText('g/|g| phase', 275, 77);
+        }
+
+        // Up path (bottom)
+        roundRect(ctx, 120, 245, 80, 32, 5, '#58d0ff', 'rgba(0,0,0,.6)');
+        ctx.font = 'bold 11px monospace';
+        ctx.fillStyle = '#58d0ff';
+        ctx.fillText('W_up', 160, 265);
+
+        drawArrow(ctx, 200, 261, 240, 261, '#8b949e', 1);
+        roundRect(ctx, 240, 248, 70, 26, 4, '#3fb950', 'rgba(63,185,80,.1)');
+        ctx.font = '10px monospace';
+        ctx.fillStyle = '#3fb950';
+        ctx.fillText('modReLU', 275, 265);
+        ctx.globalAlpha = 1;
+
+        // Merge
+        if (phase2 > 0) {
+            ctx.globalAlpha = phase2;
+            drawArrow(ctx, 310, 50, 360, 152, '#d29922', 1.5);
+            drawArrow(ctx, 310, 261, 360, 168, '#3fb950', 1.5);
+
+            roundRect(ctx, 350, 145, 50, 30, 5, '#f778ba', 'rgba(247,120,186,.15)');
+            ctx.font = 'bold 10px monospace';
+            ctx.fillStyle = '#f778ba';
+            ctx.textAlign = 'center';
+            ctx.fillText('g * up', 375, 164);
+            ctx.font = '9px monospace';
+            ctx.fillStyle = '#8b949e';
+            ctx.fillText('complex', 375, 138);
+            ctx.fillText('multiply', 375, 184);
+            ctx.globalAlpha = 1;
+        }
+
+        // W_down + output
+        if (phase3 > 0) {
+            ctx.globalAlpha = phase3;
+            drawArrow(ctx, 400, 160, 430, 160, '#8b949e', 1.5);
+            roundRect(ctx, 430, 144, 60, 32, 5, '#3fb950', 'rgba(0,0,0,.6)');
+            ctx.font = 'bold 11px monospace';
+            ctx.fillStyle = '#3fb950';
+            ctx.textAlign = 'center';
+            ctx.fillText('W_down', 460, 164);
+            ctx.globalAlpha = 1;
+        }
+
+        // SwiGLU comparison label
+        ctx.font = '10px sans-serif';
+        ctx.fillStyle = '#555';
+        ctx.textAlign = 'left';
+        ctx.fillText('SwiGLU: gate can only SCALE (1D bar)', 30, 320);
+        ctx.fillText('CGU: gate SCALES + ROTATES (2D arrow)', 30, 335);
+    };
+})();
+
+// ================================================================
+// SCENE 7: MULTI-BANK + FUSION
+// ================================================================
+(function() {
+    const canvas = document.getElementById('c7');
+    const ctx = canvas.getContext('2d');
+    const bankColors = ['#58d0ff', '#f778ba', '#3fb950'];
+    const bankLabels = ['Bank A', 'Bank B', 'Bank C'];
+    const bankAngles = [0.3, 1.8, 3.5];
+    const bankMags = [0.8, 0.65, 0.75];
+
+    sceneRenderers[6] = function(p) {
+        ctx.clearRect(0, 0, 500, 360);
+        const phase1 = clamp01(p * 4);
+        const phase2 = clamp01(p * 4 - 1);
+        const phase3 = clamp01(p * 4 - 2);
+        const phase4 = clamp01(p * 4 - 3);
+
+        // Input on left
+        roundRect(ctx, 10, 155, 50, 30, 5, '#58d0ff', 'rgba(0,0,0,.6)');
+        ctx.font = 'bold 11px monospace';
+        ctx.fillStyle = '#58d0ff';
+        ctx.textAlign = 'center';
+        ctx.fillText('z', 35, 174);
+
+        // Banks
+        for (let i = 0; i < 3; i++) {
+            const bp = clamp01((phase1 - i * 0.15) * 3);
+            ctx.globalAlpha = bp;
+            const by = 60 + i * 110;
+            drawArrow(ctx, 60, 170, 100, by + 15, '#444', 1);
+            roundRect(ctx, 100, by, 80, 30, 5, bankColors[i], 'rgba(0,0,0,.6)');
+            ctx.font = 'bold 11px monospace';
+            ctx.fillStyle = bankColors[i];
+            ctx.textAlign = 'center';
+            ctx.fillText(bankLabels[i], 140, by + 19);
+            ctx.globalAlpha = 1;
+        }
+
+        // Complex plane showing bank outputs
+        if (phase2 > 0) {
+            const plCx = 270, plCy = 170, plR = 70;
+            ctx.globalAlpha = phase2;
+            drawAxes(ctx, plCx, plCy, plR + 5, false);
+            drawCircle(ctx, plCx, plCy, plR);
+
+            for (let i = 0; i < 3; i++) {
+                const vp = clamp01((phase2 - i * 0.1) * 3);
+                const vx = Math.cos(bankAngles[i]) * bankMags[i] * plR * vp;
+                const vy = -Math.sin(bankAngles[i]) * bankMags[i] * plR * vp;
+                drawArrow(ctx, plCx, plCy, plCx + vx, plCy + vy, bankColors[i], 2.5);
+                drawArrow(ctx, 180, 60 + i * 110 + 15, plCx - plR - 5, plCy, '#444', 1);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        // Router weights bar chart
+        if (phase3 > 0) {
+            ctx.globalAlpha = phase3;
+            const barX = 370, barY = 40, barW = 100, barH = 18;
+            const weights = [0.45, 0.30, 0.25];
+            ctx.font = '10px monospace';
+            ctx.fillStyle = '#8b949e';
+            ctx.textAlign = 'left';
+            ctx.fillText('Router weights:', barX, barY - 5);
+            for (let i = 0; i < 3; i++) {
+                const y = barY + 6 + i * (barH + 6);
+                roundRect(ctx, barX, y, barW, barH, 3, '#333', '#111');
+                roundRect(ctx, barX, y, barW * weights[i] * phase3, barH, 3, null, bankColors[i]);
+                ctx.fillStyle = '#fff';
+                ctx.font = '9px monospace';
+                ctx.fillText(`${(weights[i] * 100).toFixed(0)}%`, barX + barW + 5, y + 13);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        // Fusion result
+        if (phase4 > 0) {
+            ctx.globalAlpha = phase4;
+            const plCx = 270, plCy = 170, plR = 70;
+            const weights = [0.45, 0.30, 0.25];
+            let sumX = 0, sumY = 0;
+            for (let i = 0; i < 3; i++) {
+                sumX += Math.cos(bankAngles[i]) * bankMags[i] * weights[i];
+                sumY += Math.sin(bankAngles[i]) * bankMags[i] * weights[i];
+            }
+            drawArrow(ctx, plCx, plCy, plCx + sumX * plR, plCy - sumY * plR, '#d29922', 3);
+            ctx.font = 'bold 10px monospace';
+            ctx.fillStyle = '#d29922';
+            ctx.textAlign = 'center';
+            ctx.fillText('fused', plCx + sumX * plR, plCy - sumY * plR - 8);
+
+            // Label
+            ctx.font = '10px sans-serif';
+            ctx.fillStyle = '#8b949e';
+            ctx.fillText('Constructive/destructive interference', 390, 310);
+            ctx.fillText('based on phase alignment', 390, 326);
+            ctx.globalAlpha = 1;
+        }
+    };
+})();
+
+// ================================================================
+// SCENE 8: SSM + PARALLEL SCAN
+// ================================================================
+(function() {
+    const canvas = document.getElementById('c8');
+    const ctx = canvas.getContext('2d');
+
+    sceneRenderers[7] = function(p) {
+        ctx.clearRect(0, 0, 500, 380);
+        const phase1 = clamp01(p * 3);
+        const phase2 = clamp01(p * 3 - 1);
+        const phase3 = clamp01(p * 3 - 2);
+
+        // Part A: Recurrence spiral
+        const spCx = 130, spCy = 140, spR = 90;
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillStyle = '#8b949e';
+        ctx.textAlign = 'center';
+        ctx.fillText('State evolution (rotate + damp)', spCx, 20);
+
+        drawAxes(ctx, spCx, spCy, spR + 5, false);
+        drawCircle(ctx, spCx, spCy, spR);
+
+        const numSteps = 8;
+        const stepsToShow = Math.floor(phase1 * numSteps);
+        const rotAngle = Math.PI / 5;
+        const damping = 0.88;
+        let hx = spR * 0.9, hy = 0;
+
+        const trail = [[spCx + hx, spCy - hy]];
+        for (let t = 0; t < stepsToShow; t++) {
+            const nhx = (hx * Math.cos(rotAngle) - hy * Math.sin(rotAngle)) * damping;
+            const nhy = (hx * Math.sin(rotAngle) + hy * Math.cos(rotAngle)) * damping;
+            const ix = (Math.random() - 0.5) * 15;
+            const iy = (Math.random() - 0.5) * 15;
+            hx = nhx + ix * 0.3;
+            hy = nhy + iy * 0.3;
+            trail.push([spCx + hx, spCy - hy]);
+        }
+
+        // Draw spiral trail
+        ctx.beginPath();
+        ctx.moveTo(trail[0][0], trail[0][1]);
+        for (let i = 1; i < trail.length; i++) {
+            ctx.lineTo(trail[i][0], trail[i][1]);
+        }
+        ctx.strokeStyle = 'rgba(88,208,255,.4)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Draw dots
+        trail.forEach((pt, i) => {
+            ctx.beginPath();
+            ctx.arc(pt[0], pt[1], 3, 0, Math.PI * 2);
+            ctx.fillStyle = i === trail.length - 1 ? '#58d0ff' : 'rgba(88,208,255,.5)';
+            ctx.fill();
+        });
+
+        // Current state arrow
+        if (trail.length > 0) {
+            const last = trail[trail.length - 1];
+            drawArrow(ctx, spCx, spCy, last[0], last[1], '#58d0ff', 2);
+        }
+
+        // Labels
+        ctx.font = '9px monospace';
+        ctx.fillStyle = '#d29922';
+        ctx.textAlign = 'left';
+        ctx.fillText('h[t] = A·h[t-1] + B·x[t]', 20, spCy + spR + 20);
+        ctx.fillText('A = decay × rotation', 20, spCy + spR + 34);
+
+        // Part B: Parallel scan tree
+        if (phase2 > 0) {
+            ctx.globalAlpha = phase2;
+            const treeX = 300, treeY = 30;
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillStyle = '#8b949e';
+            ctx.textAlign = 'center';
+            ctx.fillText('Parallel Scan', treeX + 90, treeY);
+
+            const boxW = 30, boxH = 24, gapX = 10;
+            const n = 8;
+            const levels = 3;
+            const totalW = n * (boxW + gapX) - gapX;
+            const sx = treeX + 90 - totalW / 2;
+
+            // Level 0: input boxes
+            for (let i = 0; i < n; i++) {
+                const x = sx + i * (boxW + gapX);
+                const y = treeY + 16;
+                roundRect(ctx, x, y, boxW, boxH, 3, '#58d0ff', 'rgba(88,208,255,.1)');
+                ctx.font = '9px monospace';
+                ctx.fillStyle = '#58d0ff';
+                ctx.textAlign = 'center';
+                ctx.fillText(`x${i}`, x + boxW / 2, y + 16);
+            }
+
+            // Tree levels
+            const levelProgress = clamp01(phase2 * 2);
+            for (let lvl = 0; lvl < levels; lvl++) {
+                const lp = clamp01((levelProgress - lvl * 0.25) * 4);
+                if (lp <= 0) continue;
+                ctx.globalAlpha = lp * phase2;
+
+                const stride = Math.pow(2, lvl + 1);
+                const yBase = treeY + 16 + (lvl + 1) * (boxH + 20);
+
+                for (let i = stride - 1; i < n; i += stride) {
+                    const x = sx + i * (boxW + gapX);
+                    const col = lvl === 0 ? '#3fb950' : lvl === 1 ? '#d29922' : '#f778ba';
+                    roundRect(ctx, x, yBase, boxW, boxH, 3, col, `rgba(0,0,0,.6)`);
+
+                    // Draw connecting lines from previous level
+                    const prevY = yBase - (boxH + 20) + boxH;
+                    const fromI = i - stride / 2;
+                    if (fromI >= 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(sx + fromI * (boxW + gapX) + boxW / 2, prevY);
+                        ctx.lineTo(x + boxW / 2, yBase);
+                        ctx.strokeStyle = col;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(x + boxW / 2, prevY);
+                    ctx.lineTo(x + boxW / 2, yBase);
+                    ctx.stroke();
+                }
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        // Comparison labels
+        if (phase3 > 0) {
+            ctx.globalAlpha = phase3;
+            const ly = 300;
+            roundRect(ctx, 280, ly, 200, 60, 6, null, 'rgba(63,185,80,.08)');
+            ctx.font = '11px monospace';
+            ctx.fillStyle = '#f85149';
+            ctx.textAlign = 'left';
+            ctx.fillText('Sequential: O(n) steps', 290, ly + 20);
+            ctx.fillStyle = '#3fb950';
+            ctx.fillText('Parallel:   O(log n) steps', 290, ly + 40);
+            ctx.fillStyle = '#8b949e';
+            ctx.font = '9px sans-serif';
+            ctx.fillText('Same result. GPU processes tree levels in parallel.', 290, ly + 56);
+            ctx.globalAlpha = 1;
+        }
+    };
+})();
+
+// ================================================================
+// SCENE 9: PHASE ATTENTION
+// ================================================================
+(function() {
+    const canvas = document.getElementById('c9');
+    const ctx = canvas.getContext('2d');
+    const tokenLabels = ['The', 'cat', 'sat', 'on'];
+    const qAngles = [0.5, 1.2, 2.1, 3.0];
+    const kAngles = [0.6, 1.1, 2.5, 0.3];
+    const qMags = [0.8, 0.7, 0.9, 0.6];
+    const kMags = [0.7, 0.8, 0.6, 0.85];
+
+    sceneRenderers[8] = function(p) {
+        ctx.clearRect(0, 0, 500, 320);
+        const phase1 = clamp01(p * 3);
+        const phase2 = clamp01(p * 3 - 1);
+        const phase3 = clamp01(p * 3 - 2);
+
+        // Draw Q/K vectors on a complex plane
+        const plCx = 120, plCy = 150, plR = 80;
+        drawAxes(ctx, plCx, plCy, plR + 5, true);
+        drawCircle(ctx, plCx, plCy, plR);
+
+        ctx.font = '10px sans-serif';
+        ctx.fillStyle = '#8b949e';
+        ctx.textAlign = 'center';
+        ctx.fillText('Q and K vectors', plCx, 30);
+
+        for (let i = 0; i < 4; i++) {
+            const vp = clamp01((phase1 - i * 0.1) * 3);
+            ctx.globalAlpha = vp;
+            // Q
+            const qx = Math.cos(qAngles[i]) * qMags[i] * plR;
+            const qy = -Math.sin(qAngles[i]) * qMags[i] * plR;
+            drawArrow(ctx, plCx, plCy, plCx + qx, plCy + qy, '#58d0ff', 2);
+            // K
+            const kx = Math.cos(kAngles[i]) * kMags[i] * plR;
+            const ky = -Math.sin(kAngles[i]) * kMags[i] * plR;
+            drawArrow(ctx, plCx, plCy, plCx + kx, plCy + ky, '#f778ba', 1.5);
+
+            ctx.font = '8px monospace';
+            ctx.fillStyle = '#58d0ff';
+            ctx.fillText(`q${i}`, plCx + qx + 5, plCy + qy - 5);
+            ctx.fillStyle = '#f778ba';
+            ctx.fillText(`k${i}`, plCx + kx + 5, plCy + ky + 10);
+            ctx.globalAlpha = 1;
+        }
+
+        // Attention heatmap
+        if (phase2 > 0) {
+            ctx.globalAlpha = phase2;
+            const hx = 280, hy = 40, cellSize = 40;
+
+            ctx.font = '9px monospace';
+            ctx.fillStyle = '#8b949e';
+            for (let i = 0; i < 4; i++) {
+                ctx.textAlign = 'right';
+                ctx.fillText(tokenLabels[i], hx - 5, hy + i * cellSize + cellSize / 2 + 3);
+                ctx.textAlign = 'center';
+                ctx.fillText(tokenLabels[i], hx + i * cellSize + cellSize / 2, hy - 5);
+            }
+
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    const score = Math.cos(qAngles[i]) * Math.cos(kAngles[j]) + Math.sin(qAngles[i]) * Math.sin(kAngles[j]);
+                    const normScore = (score + 1) / 2;
+                    const isCausal = j <= i;
+                    const isWindow = Math.abs(i - j) <= 2;
+
+                    let alpha = 0;
+                    if (isCausal && isWindow) alpha = normScore * 0.9;
+
+                    const x = hx + j * cellSize;
+                    const y = hy + i * cellSize;
+
+                    if (isCausal && isWindow) {
+                        ctx.fillStyle = `rgba(88,208,255,${alpha * phase2})`;
+                    } else {
+                        ctx.fillStyle = `rgba(248,81,73,.05)`;
+                    }
+                    ctx.fillRect(x, y, cellSize - 2, cellSize - 2);
+
+                    if (isCausal && isWindow) {
+                        ctx.font = '9px monospace';
+                        ctx.fillStyle = `rgba(255,255,255,${0.5 + alpha * 0.5})`;
+                        ctx.textAlign = 'center';
+                        ctx.fillText(score.toFixed(2), x + cellSize / 2 - 1, y + cellSize / 2 + 3);
+                    } else if (!isCausal) {
+                        ctx.font = '8px monospace';
+                        ctx.fillStyle = 'rgba(248,81,73,.3)';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('mask', x + cellSize / 2 - 1, y + cellSize / 2 + 3);
+                    }
+                }
+            }
+
+            ctx.font = '10px sans-serif';
+            ctx.fillStyle = '#8b949e';
+            ctx.textAlign = 'center';
+            ctx.fillText('Re(q · conj(k)) / √d', hx + 2 * cellSize, hy + 4 * cellSize + 18);
+            ctx.globalAlpha = 1;
+        }
+
+        // Score explanation
+        if (phase3 > 0) {
+            ctx.globalAlpha = phase3;
+            const ey = 260;
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#3fb950';
+            ctx.fillText('Same phase  → high positive score (agreement)', 260, ey);
+            ctx.fillStyle = '#f85149';
+            ctx.fillText('Opposite phase → negative score (opposition)', 260, ey + 18);
+            ctx.fillStyle = '#8b949e';
+            ctx.fillText('Orthogonal → near zero (unrelated)', 260, ey + 36);
+            ctx.globalAlpha = 1;
+        }
+    };
+})();
+
+// ================================================================
+// SCENE 10: OUTPUT HEAD
+// ================================================================
+(function() {
+    const canvas = document.getElementById('c10');
+    const ctx = canvas.getContext('2d');
+    const vocab = ['mat', 'cat', 'dog', 'sat', 'the', '...'];
+    const probs = [0.42, 0.18, 0.12, 0.10, 0.08, 0.10];
+
+    sceneRenderers[9] = function(p) {
+        ctx.clearRect(0, 0, 500, 300);
+        const phase1 = clamp01(p * 4);
+        const phase2 = clamp01(p * 4 - 1);
+        const phase3 = clamp01(p * 4 - 2);
+        const phase4 = clamp01(p * 4 - 3);
+
+        const y = 50;
+
+        // Complex repr
+        ctx.globalAlpha = phase1;
+        roundRect(ctx, 10, y, 70, 40, 5, '#58d0ff', 'rgba(0,0,0,.6)');
+        ctx.font = '10px monospace';
+        ctx.fillStyle = '#58d0ff';
+        ctx.textAlign = 'center';
+        ctx.fillText('[dim, 2]', 45, y + 16);
+        ctx.fillText('complex', 45, y + 30);
+
+        // Arrow + concat
+        if (phase1 > 0.3) {
+            drawArrow(ctx, 80, y + 20, 110, y + 20, '#8b949e', 1.5);
+            roundRect(ctx, 110, y, 70, 40, 5, '#d29922', 'rgba(0,0,0,.6)');
+            ctx.fillStyle = '#d29922';
+            ctx.fillText('[dim×2]', 145, y + 16);
+            ctx.fillText('concat', 145, y + 30);
+        }
+
+        // Linear
+        if (phase2 > 0) {
+            ctx.globalAlpha = phase2;
+            drawArrow(ctx, 180, y + 20, 210, y + 20, '#8b949e', 1.5);
+            roundRect(ctx, 210, y, 70, 40, 5, '#f778ba', 'rgba(0,0,0,.6)');
+            ctx.fillStyle = '#f778ba';
+            ctx.fillText('Linear', 245, y + 16);
+            ctx.fillText('→ vocab', 245, y + 30);
+
+            drawArrow(ctx, 280, y + 20, 310, y + 20, '#8b949e', 1.5);
+            roundRect(ctx, 310, y, 70, 40, 5, '#3fb950', 'rgba(0,0,0,.6)');
+            ctx.fillStyle = '#3fb950';
+            ctx.fillText('softmax', 345, y + 24);
+        }
+        ctx.globalAlpha = 1;
+
+        // Probability bars
+        if (phase3 > 0) {
+            ctx.globalAlpha = phase3;
+            const barX = 30, barY = 120, barH = 22, barMaxW = 250;
+            for (let i = 0; i < vocab.length; i++) {
+                const by = barY + i * (barH + 6);
+                const bw = probs[i] * barMaxW * phase3;
+                const isTop = i === 0;
+
+                roundRect(ctx, barX + 45, by, barMaxW, barH, 3, '#222', '#111');
+                const col = isTop ? '#3fb950' : '#58d0ff';
+                roundRect(ctx, barX + 45, by, bw, barH, 3, null, col + (isTop ? '' : '88'));
+
+                ctx.font = '10px monospace';
+                ctx.fillStyle = '#ccc';
+                ctx.textAlign = 'right';
+                ctx.fillText(vocab[i], barX + 40, by + 15);
+
+                ctx.textAlign = 'left';
+                ctx.fillText(`${(probs[i] * 100).toFixed(0)}%`, barX + 50 + barMaxW, by + 15);
+            }
+
+            if (phase3 > 0.5) {
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillStyle = '#3fb950';
+                ctx.textAlign = 'center';
+                ctx.fillText('Predicted: "mat"', 400, 145);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        // Autoregressive arrow
+        if (phase4 > 0) {
+            ctx.globalAlpha = phase4;
+            ctx.beginPath();
+            ctx.moveTo(400, 160);
+            ctx.quadraticCurveTo(460, 250, 250, 280);
+            ctx.quadraticCurveTo(40, 270, 40, y + 50);
+            ctx.strokeStyle = '#d29922';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.font = '10px sans-serif';
+            ctx.fillStyle = '#d29922';
+            ctx.textAlign = 'center';
+            ctx.fillText('feeds back as next input', 250, 275);
+            ctx.globalAlpha = 1;
+        }
+    };
+})();
+
+// ================================================================
+// SCENE 11: TRAINING — THE MIRROR
+// ================================================================
+(function() {
+    const canvas = document.getElementById('c11');
+    const ctx = canvas.getContext('2d');
+
+    const stages = [
+        { label: 'Embed', color: '#58d0ff', params: 'embed_r\nembed_i' },
+        { label: 'Banks', color: '#f778ba', params: 'W_gate\nW_up\nW_down' },
+        { label: 'Fusion', color: '#d29922', params: 'router\nphase_rot' },
+        { label: 'SSM', color: '#3fb950', params: 'skew_a\ndamping' },
+        { label: 'Attn', color: '#58d0ff', params: 'W_qkv\nW_out' },
+        { label: 'Head', color: '#f778ba', params: 'W_proj' },
+    ];
+
+    sceneRenderers[10] = function(p) {
+        ctx.clearRect(0, 0, 900, 400);
+        const phase1 = clamp01(p * 3);
+        const phase2 = clamp01(p * 3 - 1);
+        const phase3 = clamp01(p * 3 - 2);
+
+        const boxW = 90, boxH = 36, gap = 25;
+        const totalW = stages.length * (boxW + gap) - gap;
+        const startX = (900 - totalW) / 2;
+        const fwdY = 80, bwdY = 260;
+
+        // Title
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+
+        // Forward pass
+        ctx.fillStyle = '#58d0ff';
+        ctx.fillText('FORWARD PASS →', 450, fwdY - 25);
+
+        stages.forEach((s, i) => {
+            const bp = clamp01((phase1 - i * 0.1) * 3);
+            ctx.globalAlpha = bp;
+            const x = startX + i * (boxW + gap);
+            roundRect(ctx, x, fwdY, boxW, boxH, 5, s.color, 'rgba(0,0,0,.6)');
+            ctx.font = 'bold 11px monospace';
+            ctx.fillStyle = s.color;
+            ctx.textAlign = 'center';
+            ctx.fillText(s.label, x + boxW / 2, fwdY + 22);
+
+            if (i < stages.length - 1) {
+                drawArrow(ctx, x + boxW, fwdY + boxH / 2, x + boxW + gap, fwdY + boxH / 2, '#444', 1.5);
+            }
+            ctx.globalAlpha = 1;
+        });
+
+        // Loss
+        if (phase1 > 0.7) {
+            const lossAlpha = clamp01((phase1 - 0.7) * 4);
+            ctx.globalAlpha = lossAlpha;
+            const lx = startX + totalW + 20;
+            drawArrow(ctx, startX + totalW, fwdY + boxH / 2, lx, fwdY + boxH / 2, '#f85149', 2);
+            roundRect(ctx, lx, fwdY - 5, 80, boxH + 10, 5, '#f85149', 'rgba(248,81,73,.15)');
+            ctx.font = 'bold 12px monospace';
+            ctx.fillStyle = '#f85149';
+            ctx.textAlign = 'center';
+            ctx.fillText('CE Loss', lx + 40, fwdY + 22);
+            ctx.globalAlpha = 1;
+        }
+
+        // Backward pass
+        if (phase2 > 0) {
+            ctx.globalAlpha = phase2;
+            ctx.fillStyle = '#3fb950';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('← BACKWARD PASS (gradients)', 450, bwdY - 25);
+
+            stages.slice().reverse().forEach((s, ri) => {
+                const i = stages.length - 1 - ri;
+                const bp = clamp01((phase2 - ri * 0.1) * 3);
+                ctx.globalAlpha = bp * phase2;
+                const x = startX + i * (boxW + gap);
+                roundRect(ctx, x, bwdY, boxW, boxH, 5, '#3fb950', 'rgba(63,185,80,.1)');
+                ctx.font = 'bold 11px monospace';
+                ctx.fillStyle = '#3fb950';
+                ctx.textAlign = 'center';
+                ctx.fillText(s.label, x + boxW / 2, bwdY + 22);
+
+                if (i > 0) {
+                    drawArrow(ctx, x, bwdY + boxH / 2, x - gap, bwdY + boxH / 2, '#3fb950', 1.5);
+                }
+
+                // Draw gradient particle
+                if (bp > 0.3 && bp < 0.9) {
+                    const px = lerp(x + boxW, x, (bp - 0.3) / 0.6);
+                    ctx.beginPath();
+                    ctx.arc(px, bwdY + boxH / 2, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#3fb950';
+                    ctx.fill();
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = '#3fb950';
+                    ctx.shadowBlur = 0;
+                }
+                ctx.globalAlpha = 1;
+            });
+        }
+
+        // Parameter updates
+        if (phase3 > 0) {
+            ctx.globalAlpha = phase3;
+            stages.forEach((s, i) => {
+                const x = startX + i * (boxW + gap);
+                const lines = s.params.split('\n');
+                ctx.font = '9px monospace';
+                ctx.fillStyle = '#d29922';
+                ctx.textAlign = 'center';
+                lines.forEach((line, li) => {
+                    ctx.fillText('∇ ' + line, x + boxW / 2, bwdY + boxH + 14 + li * 13);
+                });
+            });
+
+            // Loss curve
+            const lcx = 720, lcy = 330, lcw = 150, lch = 50;
+            roundRect(ctx, lcx, lcy, lcw, lch, 4, '#333', '#0a0a0a');
+            ctx.beginPath();
+            for (let i = 0; i <= 30; i++) {
+                const t = i / 30;
+                const loss = 5 * Math.exp(-3 * t) + 1.5 + Math.sin(t * 20) * 0.2 * (1 - t);
+                const x = lcx + 5 + t * (lcw - 10);
+                const y = lcy + lch - 5 - (loss / 7) * (lch - 10);
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = '#f85149';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.font = '8px sans-serif';
+            ctx.fillStyle = '#8b949e';
+            ctx.fillText('loss ↓', lcx + lcw / 2, lcy - 4);
+            ctx.globalAlpha = 1;
+        }
+    };
+})();
+
+// ================================================================
+// SCENE 12: COMPLEX DROPOUT
+// ================================================================
+(function() {
+    const canvas = document.getElementById('c12');
+    const ctx = canvas.getContext('2d');
+    const nFeatures = 12;
+
+    // Precompute feature positions and values
+    const features = [];
+    for (let i = 0; i < nFeatures; i++) {
+        features.push({
+            angle: Math.random() * Math.PI * 2,
+            mag: 0.3 + Math.random() * 0.6,
+            dropped: i === 2 || i === 7 || i === 10,
+        });
+    }
+
+    sceneRenderers[11] = function(p) {
+        ctx.clearRect(0, 0, 500, 320);
+        const phase1 = clamp01(p * 3);
+        const phase2 = clamp01(p * 3 - 1);
+        const phase3 = clamp01(p * 3 - 2);
+
+        const cellR = 26;
+        const cols = 6, rows = 2;
+
+        // Correct dropout (left)
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillStyle = '#3fb950';
+        ctx.textAlign = 'center';
+        ctx.fillText('Correct: drop entire feature', 130, 25);
+
+        for (let i = 0; i < nFeatures; i++) {
+            const col = i % cols, row = Math.floor(i / cols);
+            const cx = 30 + col * (cellR * 2 + 10) + cellR;
+            const cy = 55 + row * (cellR * 2 + 30) + cellR;
+            const f = features[i];
+
+            drawAxes(ctx, cx, cy, cellR, false);
+            drawCircle(ctx, cx, cy, cellR);
+
+            const dropAnim = clamp01((phase1 - 0.3) * 3);
+            const isDropped = f.dropped && dropAnim > 0.5;
+
+            if (isDropped) {
+                ctx.globalAlpha = 1 - (dropAnim - 0.5) * 2;
+            }
+
+            const vx = Math.cos(f.angle) * f.mag * cellR;
+            const vy = -Math.sin(f.angle) * f.mag * cellR;
+            drawArrow(ctx, cx, cy, cx + vx, cy + vy, '#58d0ff', 2);
+
+            if (isDropped) {
+                ctx.globalAlpha = (dropAnim - 0.5) * 2;
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillStyle = '#f85149';
+                ctx.textAlign = 'center';
+                ctx.fillText('×', cx, cy + 5);
+                ctx.font = '7px monospace';
+                ctx.fillText('(r,i) both', cx, cy + cellR + 10);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        // Wrong dropout (right side)
+        if (phase2 > 0) {
+            ctx.globalAlpha = phase2;
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillStyle = '#f85149';
+            ctx.textAlign = 'center';
+            ctx.fillText('WRONG: drop real or imag independently', 370, 25);
+
+            for (let i = 0; i < 4; i++) {
+                const cx = 300 + (i % 2) * 80;
+                const cy = 75 + Math.floor(i / 2) * 100;
+                const f = features[i];
+
+                drawAxes(ctx, cx, cy, cellR, false);
+                drawCircle(ctx, cx, cy, cellR);
+
+                const vx = Math.cos(f.angle) * f.mag * cellR;
+                const vy = -Math.sin(f.angle) * f.mag * cellR;
+
+                if (i === 1 || i === 3) {
+                    // Drop only imag
+                    const wrongAnim = clamp01((phase2 - 0.3) * 3);
+                    const newVy = vy * (1 - wrongAnim);
+                    drawArrow(ctx, cx, cy, cx + vx, cy + newVy, '#f85149', 2);
+                    if (wrongAnim > 0.5) {
+                        ctx.font = '7px monospace';
+                        ctx.fillStyle = '#f85149';
+                        ctx.fillText('phase broken!', cx, cy + cellR + 10);
+                    }
+                } else {
+                    drawArrow(ctx, cx, cy, cx + vx, cy + vy, '#58d0ff', 2);
+                }
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        // Stability note
+        if (phase3 > 0) {
+            ctx.globalAlpha = phase3;
+            roundRect(ctx, 260, 230, 220, 70, 6, '#d29922', 'rgba(210,153,34,.08)');
+            ctx.font = '10px sans-serif';
+            ctx.fillStyle = '#d29922';
+            ctx.textAlign = 'left';
+            ctx.fillText('Near-origin stability:', 272, 250);
+            ctx.font = '9px monospace';
+            ctx.fillStyle = '#8b949e';
+            ctx.fillText('z / (|z| + eps)', 272, 268);
+            ctx.fillText('eps = 1e-6 prevents', 272, 282);
+            ctx.fillText('division explosion', 272, 296);
+            ctx.globalAlpha = 1;
+        }
+    };
+})();
+
+// ================================================================
+// SCENE 13: FULL ARCHITECTURE
+// ================================================================
+(function() {
+    const canvas = document.getElementById('c13');
+    const ctx = canvas.getContext('2d');
+
+    const nodes = [
+        { id: 'tokens', label: 'Tokens', x: 30, y: 195, w: 70, h: 36, color: '#8b949e' },
+        { id: 'embed', label: 'Complex\nEmbed', x: 130, y: 195, w: 80, h: 36, color: '#58d0ff' },
+        { id: 'norm1', label: 'Norm', x: 240, y: 195, w: 50, h: 36, color: '#8b949e' },
+        { id: 'bankA', label: 'Bank A', x: 320, y: 130, w: 70, h: 36, color: '#f778ba' },
+        { id: 'bankB', label: 'Bank B', x: 320, y: 260, w: 70, h: 36, color: '#3fb950' },
+        { id: 'router', label: 'Router', x: 420, y: 195, w: 60, h: 36, color: '#d29922' },
+        { id: 'fusion', label: 'Fusion', x: 510, y: 195, w: 60, h: 36, color: '#d29922' },
+        { id: 'norm2', label: 'Norm', x: 600, y: 195, w: 50, h: 36, color: '#8b949e' },
+        { id: 'ssm', label: 'Complex\nSSM', x: 680, y: 195, w: 75, h: 36, color: '#3fb950' },
+        { id: 'attn', label: 'Phase\nAttn', x: 780, y: 195, w: 65, h: 36, color: '#58d0ff' },
+        { id: 'head', label: 'LM\nHead', x: 870, y: 195, w: 65, h: 36, color: '#f778ba' },
+    ];
+
+    const edges = [
+        ['tokens', 'embed'], ['embed', 'norm1'],
+        ['norm1', 'bankA'], ['norm1', 'bankB'],
+        ['bankA', 'router'], ['bankB', 'router'],
+        ['router', 'fusion'], ['fusion', 'norm2'],
+        ['norm2', 'ssm'], ['ssm', 'attn'], ['attn', 'head'],
+    ];
+
+    function getNode(id) { return nodes.find(n => n.id === id); }
+
+    sceneRenderers[12] = function(p) {
+        ctx.clearRect(0, 0, 960, 420);
+
+        // Title
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillStyle = '#8b949e';
+        ctx.textAlign = 'center';
+        ctx.fillText('V5 Algebraic Language Model — Full Pipeline', 480, 25);
+
+        // Layer block bracket
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        roundRect(ctx, 230, 100, 640, 220, 8, '#333', null);
+        ctx.setLineDash([]);
+        ctx.font = '10px sans-serif';
+        ctx.fillStyle = '#555';
+        ctx.textAlign = 'center';
+        ctx.fillText('× N layers', 550, 340);
+
+        // Residual arrows
+        ctx.strokeStyle = 'rgba(88,208,255,.15)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        // Residual around banks+fusion
+        ctx.beginPath();
+        ctx.moveTo(240, 175); ctx.quadraticCurveTo(400, 105, 570, 175);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(88,208,255,.3)';
+        ctx.font = '8px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('+residual', 400, 95);
+        // Residual around SSM
+        ctx.beginPath();
+        ctx.moveTo(600, 175); ctx.quadraticCurveTo(710, 115, 760, 175);
+        ctx.stroke();
+        ctx.fillText('+residual', 680, 112);
+        ctx.setLineDash([]);
+
+        // Draw edges
+        edges.forEach(([fromId, toId]) => {
+            const from = getNode(fromId);
+            const to = getNode(toId);
+            const x0 = from.x + from.w;
+            const y0 = from.y + from.h / 2;
+            const x1 = to.x;
+            const y1 = to.y + to.h / 2;
+
+            ctx.beginPath();
+            ctx.moveTo(x0, y0);
+            ctx.bezierCurveTo(x0 + 15, y0, x1 - 15, y1, x1, y1);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        });
+
+        // Draw nodes
+        nodes.forEach(n => {
+            roundRect(ctx, n.x, n.y, n.w, n.h, 5, n.color, 'rgba(0,0,0,.7)');
+            ctx.font = 'bold 10px monospace';
+            ctx.fillStyle = n.color;
+            ctx.textAlign = 'center';
+            const lines = n.label.split('\n');
+            lines.forEach((line, li) => {
+                ctx.fillText(line, n.x + n.w / 2, n.y + 14 + li * 13);
+            });
+        });
+
+        // Data particle
+        if (p > 0) {
+            const totalEdges = edges.length;
+            const edgeIdx = Math.min(Math.floor(p * totalEdges), totalEdges - 1);
+            const edgeT = (p * totalEdges) - edgeIdx;
+
+            const [fromId, toId] = edges[edgeIdx];
+            const from = getNode(fromId);
+            const to = getNode(toId);
+            const x0 = from.x + from.w;
+            const y0 = from.y + from.h / 2;
+            const x1 = to.x;
+            const y1 = to.y + to.h / 2;
+
+            const t = clamp01(edgeT);
+            const cp1x = x0 + 15, cp1y = y0;
+            const cp2x = x1 - 15, cp2y = y1;
+            const px = Math.pow(1-t,3)*x0 + 3*Math.pow(1-t,2)*t*cp1x + 3*(1-t)*t*t*cp2x + t*t*t*x1;
+            const py = Math.pow(1-t,3)*y0 + 3*Math.pow(1-t,2)*t*cp1y + 3*(1-t)*t*t*cp2y + t*t*t*y1;
+
+            // Glow
+            ctx.beginPath();
+            ctx.arc(px, py, 12, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(88,208,255,.15)';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(px, py, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#58d0ff';
+            ctx.fill();
+
+            // Highlight current node
+            const currentNode = getNode(toId);
+            roundRect(ctx, currentNode.x - 2, currentNode.y - 2, currentNode.w + 4, currentNode.h + 4, 6, '#fff', null);
+        }
+
+        // Bottom labels
+        ctx.font = '10px sans-serif';
+        ctx.fillStyle = '#555';
+        ctx.textAlign = 'center';
+        ctx.fillText('Scroll to advance the data particle through the pipeline', 480, 400);
+    };
+})();
+
+// Initial render
+onScroll();
+</script>
+</body>
+</html>
