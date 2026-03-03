@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v4 Quantum Phase-Field LLM Explainer</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --text-color: #c9d1d9;
+            --cyan: #00ffff;
+            --magenta: #ff00ff;
+            --green: #00ff00;
+            --yellow: #ffff00;
+            --panel-bg: #161b22;
+            --border-color: #30363d;
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            --font-code: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            padding: 4rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(180deg, #1f242c 0%, var(--bg-color) 100%);
+        }
+
+        h1 {
+            color: var(--cyan);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        h2 {
+            color: var(--magenta);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 3rem;
+        }
+
+        h3 {
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .interactive-widget {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        canvas {
+            background-color: #000;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            background: rgba(0,0,0,0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        input[type="range"] {
+            accent-color: var(--cyan);
+        }
+
+        button {
+            background-color: var(--panel-bg);
+            color: var(--cyan);
+            border: 1px solid var(--cyan);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: var(--font-code);
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--cyan);
+            color: #000;
+            box-shadow: 0 0 10px var(--cyan);
+        }
+
+        code {
+            font-family: var(--font-code);
+            background-color: rgba(255,255,255,0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background-color: #000;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .math {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 1.1em;
+            font-style: italic;
+            color: var(--yellow);
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        .flex-col {
+            flex: 1;
+        }
+
+        /* Syntax highlighting */
+        .kw { color: #ff7b72; } /* Keyword */
+        .fn { color: #d2a8ff; } /* Function */
+        .str { color: #a5d6ff; } /* String */
+        .cmt { color: #8b949e; } /* Comment */
+        .num { color: #79c0ff; } /* Number */
+        .op { color: #c9d1d9; } /* Operator */
+
+        /* Matrix Math & Tables */
+        .matrix-math { display: flex; flex-direction: column; gap: 1rem; font-family: var(--font-code); background: #000; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); overflow-x: auto; }
+        .matrix-row { display: flex; align-items: center; gap: 0.5rem; justify-content: center; min-width: max-content; }
+        .matrix-block { padding: 0.5rem 1rem; border: 2px solid; border-radius: 4px; background: rgba(255,255,255,0.05); text-align: center; font-weight: bold; position: relative; overflow: hidden; }
+        .matrix-block.cyan { border-color: var(--cyan); color: var(--cyan); text-shadow: 0 0 5px rgba(0,255,255,0.5); }
+        .matrix-block.magenta { border-color: var(--magenta); color: var(--magenta); text-shadow: 0 0 5px rgba(255,0,255,0.5); }
+        
+        .param-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.95em; }
+        .param-table th, .param-table td { border: 1px solid var(--border-color); padding: 0.75rem; text-align: left; }
+        .param-table th { background: rgba(255,255,255,0.05); color: var(--cyan); }
+        .param-table code { background: transparent; padding: 0; color: var(--yellow); }
+        
+        .highlight-anim { animation: pulse-bg 3s infinite; }
+        @keyframes pulse-bg {
+            0% { background-color: rgba(255,255,255,0.05); }
+            10% { background-color: rgba(255,255,255,0.2); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+            30% { background-color: rgba(255,255,255,0.05); box-shadow: none; }
+            100% { background-color: rgba(255,255,255,0.05); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>v4 Quantum Phase-Field LLM</h1>
+        <p>Interactive Explainer Simulation</p>
+    </header>
+
+    <div class="container">
+        <!-- Section 1: Phase2D -->
+        <section id="phase2d">
+            <h2>1. Phase2D Representation & Operations</h2>
+            <p>The core idea of v4 is representing complex numbers as 2D real vectors <code>(real, imag)</code>. This avoids trigonometric functions in the hot path, relying purely on GEMM/matmul operations.</p>
+            
+            <div class="panel flex-row">
+                <div class="flex-col">
+                    <h3>Cayley Transform Rotation</h3>
+                    <p>Instead of learning angles (which require sin/cos), the model learns a skew-symmetric parameter <span class="math">a</span> and computes rotation via the Cayley transform:</p>
+                    <ul>
+                        <li><span class="math">cos = (1 - a²) / (1 + a²)</span></li>
+                        <li><span class="math">sin = 2a / (1 + a²)</span></li>
+                    </ul>
+                    <p>This guarantees an orthogonal matrix (pure rotation) without any trig.</p>
+                    
+                    <h4>PyTorch Implementation</h4>
+                    <pre><code><span class="kw">def</span> <span class="fn">get_rotation_components</span>(<span class="kw">self</span>) -> Tuple[torch.Tensor, torch.Tensor]:
+    <span class="cmt"># For Cayley: cos = (1 - a^2) / (1 + a^2), sin = 2a / (1 + a^2)</span>
+    a = <span class="kw">self</span>.skew_params
+    a_sq = a * a
+    denom = <span class="num">1.0</span> + a_sq
+    
+    cos_like = (<span class="num">1.0</span> - a_sq) / denom
+    sin_like = (<span class="num">2.0</span> * a) / denom
+    
+    <span class="kw">return</span> cos_like, sin_like</code></pre>
+                </div>
+                <div class="flex-col interactive-widget">
+                    <canvas id="phaseCanvas" width="300" height="300"></canvas>
+                    <div class="controls">
+                        <label for="skewParam">Skew param (a): <span id="skewVal">0.00</span></label>
+                        <input type="range" id="skewParam" min="-5" max="5" step="0.01" value="0">
+                        <button id="btnPhasePlay">Play</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Phase2D Linear -->
+        <section id="phase2d-linear">
+            <h2>2. Phase2D Linear (Complex Matrix Data Flow)</h2>
+            <p>While the canvas above shows a single 2D vector, the actual model processes data in high-dimensional spaces (e.g., <code>dim = 256</code>). A <code>Phase2DLinear</code> layer performs complex matrix multiplication to transform these vectors while preserving their phase relationships.</p>
+            
+            <div class="panel">
+                <h3>Matrix Multiplication Flow</h3>
+                <p>To multiply a complex input <span class="math">X = X_r + iX_i</span> by a complex weight <span class="math">W = W_r + iW_i</span>, we compute four real matrix multiplications and combine them. This allows the network to mix information across the <code>dim</code> dimension while rotating the phases.</p>
+                
+                <div class="matrix-math">
+                    <div class="matrix-row">
+                        <div class="matrix-block cyan highlight-anim" style="animation-delay: 0s">X_real<br><small>[batch, dim]</small></div>
+                        <span class="op">@</span>
+                        <div class="matrix-block cyan highlight-anim" style="animation-delay: 0.2s">W_real.T<br><small>[dim, dim]</small></div>
+                        <span class="op">-</span>
+                        <div class="matrix-block magenta highlight-anim" style="animation-delay: 0.4s">X_imag<br><small>[batch, dim]</small></div>
+                        <span class="op">@</span>
+                        <div class="matrix-block magenta highlight-anim" style="animation-delay: 0.6s">W_imag.T<br><small>[dim, dim]</small></div>
+                        <span class="op">=</span>
+                        <div class="matrix-block cyan highlight-anim" style="animation-delay: 0.8s">Y_real<br><small>[batch, dim]</small></div>
+                    </div>
+                    <div style="text-align: center; color: var(--border-color); font-size: 1.5em; margin: -0.5rem 0;">+</div>
+                    <div class="matrix-row">
+                        <div class="matrix-block cyan highlight-anim" style="animation-delay: 1.0s">X_real<br><small>[batch, dim]</small></div>
+                        <span class="op">@</span>
+                        <div class="matrix-block magenta highlight-anim" style="animation-delay: 1.2s">W_imag.T<br><small>[dim, dim]</small></div>
+                        <span class="op">+</span>
+                        <div class="matrix-block magenta highlight-anim" style="animation-delay: 1.4s">X_imag<br><small>[batch, dim]</small></div>
+                        <span class="op">@</span>
+                        <div class="matrix-block cyan highlight-anim" style="animation-delay: 1.6s">W_real.T<br><small>[dim, dim]</small></div>
+                        <span class="op">=</span>
+                        <div class="matrix-block magenta highlight-anim" style="animation-delay: 1.8s">Y_imag<br><small>[batch, dim]</small></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Architecture Flow -->
+        <section id="architecture">
+            <h2>3. Full Architecture Data Flow</h2>
+            <p>The forward pass processes tokens through Phase2D embeddings, parallel banks, interference coupling, and an oscillatory backbone.</p>
+            
+            <div class="panel">
+                <canvas id="flowCanvas" width="900" height="400"></canvas>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button id="btnFlowPlay">Play Forward Pass</button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h3>Model Forward Pass (v4/model.py)</h3>
+                <pre><code><span class="cmt"># 1. Embed tokens to Phase2D</span>
+x = <span class="kw">self</span>.embed(input_ids=input_ids, mode=<span class="str">'bpe'</span>)
+
+<span class="cmt"># 2. Process through each bank in parallel</span>
+bank_outputs = {}
+<span class="kw">for</span> bank_name, bank <span class="kw">in</span> <span class="kw">self</span>.banks.items():
+    bank_outputs[bank_name] = bank(x, context=context)
+
+<span class="cmt"># 3. Couple banks via interference</span>
+coupled = <span class="kw">self</span>.coupler(bank_outputs, context=context)
+
+<span class="cmt"># 4. Process through backbone (Oscillatory SSM)</span>
+backbone_out, new_state = <span class="kw">self</span>.backbone(coupled, state=backbone_state)
+
+<span class="cmt"># 5. Query global memory</span>
+memory_result = <span class="kw">self</span>.memory.read(backbone_out)
+backbone_out = backbone_out + memory_result.values * <span class="kw">self</span>.memory_scale
+
+<span class="cmt"># 6. LM head (Phase2D -> Real -> Logits)</span>
+lm_out = <span class="kw">self</span>.lm_head(backbone_out)
+lm_real = phase2d_to_real(lm_out, mode=<span class="str">'concat'</span>)
+logits = <span class="kw">self</span>.output_proj(lm_real)</code></pre>
+            </div>
+        </section>
+
+        <!-- Section 4: Oscillatory SSM -->
+        <section id="ssm">
+            <h2>4. Oscillatory SSM (Backbone Dynamics)</h2>
+            <p>The backbone uses a linear-time state-space model with oscillatory dynamics. The state evolves via rotation, damping, and input gating. Note that while the animation shows a single oscillator, the actual model maintains a <strong>bank of oscillators</strong> (e.g., <code>dim = 256</code>), each with its own learned frequency (<code>skew_params</code>) and decay rate (<code>damping_param</code>).</p>
+            
+            <div class="panel flex-row">
+                <div class="flex-col interactive-widget">
+                    <canvas id="ssmCanvas" width="400" height="400"></canvas>
+                    <div class="controls">
+                        <button id="btnSsmStep">Step (t → t+1)</button>
+                        <button id="btnSsmReset">Reset</button>
+                    </div>
+                </div>
+                <div class="flex-col">
+                    <h3>State Update Equation</h3>
+                    <p class="math">h_{t+1} = gate · B x_t + (1 - gate) · damping · R(θ) h_t</p>
+                    <ul style="color: #8b949e; font-size: 0.9em;">
+                        <li><span style="color: var(--cyan)">Cyan vector</span>: Current state <span class="math">h_t</span></li>
+                        <li><span style="color: var(--magenta)">Magenta vector</span>: New input <span class="math">B x_t</span></li>
+                        <li><span style="color: var(--yellow)">Yellow arc</span>: Rotation <span class="math">R(θ)</span></li>
+                        <li><span style="color: rgba(255,255,255,0.5)">Dashed line</span>: Damping</li>
+                    </ul>
+                    
+                    <h4 style="margin-top: 2rem;">PyTorch Implementation</h4>
+                    <pre><code><span class="cmt"># Rotate previous state</span>
+h_rotated = <span class="kw">self</span>.rotation(h)
+
+<span class="cmt"># Apply damping</span>
+damping = <span class="kw">self</span>.damping.unsqueeze(<span class="num">0</span>).unsqueeze(<span class="num">-1</span>)
+h_damped = h_rotated * damping
+
+<span class="cmt"># State update with gating</span>
+h = gate * Bx + (<span class="num">1</span> - gate) * h_damped
+
+<span class="cmt"># Output projection</span>
+y_t = <span class="kw">self</span>.C(h) + <span class="kw">self</span>.D(x_t)</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Backpropagation -->
+        <section id="backprop">
+            <h2>5. Backpropagation & Fine-Tuning</h2>
+            <p>Gradients flow backward from the Cross-Entropy loss, through the Cayley transform and Phase2D layers, updating <code>skew_params</code> and <code>damping_param</code>.</p>
+            
+            <div class="panel">
+                <canvas id="backpropCanvas" width="900" height="300"></canvas>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button id="btnBackpropPlay">Simulate Backward Pass</button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h3>Gradient Flow Details</h3>
+                <p>Because the Cayley transform uses only basic arithmetic operations (multiplication, addition, division), PyTorch's autograd engine can automatically compute gradients for the <code>skew_params</code> without needing custom CUDA kernels for trigonometric derivatives.</p>
+                <pre><code><span class="cmt"># Complex matrix multiplication in Phase2DLinear</span>
+<span class="cmt"># (W_r + i*W_i) @ (x_r + i*x_i)</span>
+out_real = F.linear(x_real, <span class="kw">self</span>.weight_real) - F.linear(x_imag, <span class="kw">self</span>.weight_imag)
+out_imag = F.linear(x_real, <span class="kw">self</span>.weight_imag) + F.linear(x_imag, <span class="kw">self</span>.weight_real)
+
+<span class="cmt"># Gradients flow back through both real and imaginary paths simultaneously</span>
+<span class="cmt"># updating the complex weights W_real and W_imag.</span></code></pre>
+            </div>
+
+            <div class="panel">
+                <h3>What is the Model Actually Learning?</h3>
+                <p>As the gradients flow backward, they update specific parameters that control the physical properties of the phase-field simulation:</p>
+                
+                <div style="overflow-x: auto;">
+                    <table class="param-table">
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Shape</th>
+                            <th>Module</th>
+                            <th>Physical / Mathematical Meaning</th>
+                        </tr>
+                        <tr>
+                            <td><code>skew_params</code></td>
+                            <td><code>[dim]</code></td>
+                            <td><code>IotaBlock</code> (SSM)</td>
+                            <td>Learns the <strong>natural frequency</strong> (rotation speed) of each oscillator in the bank. High values = fast rotation.</td>
+                        </tr>
+                        <tr>
+                            <td><code>damping_param</code></td>
+                            <td><code>[dim]</code></td>
+                            <td><code>OscillatorySSM</code></td>
+                            <td>Learns the <strong>decay rate</strong> (memory retention). Values near 1.0 mean long memory; values near 0.5 mean rapid forgetting.</td>
+                        </tr>
+                        <tr>
+                            <td><code>weight_real</code><br><code>weight_imag</code></td>
+                            <td><code>[out_dim, in_dim]</code></td>
+                            <td><code>Phase2DLinear</code></td>
+                            <td>Learns the <strong>coupling and phase shifts</strong> between different dimensions, allowing oscillators to interact and exchange energy.</td>
+                        </tr>
+                        <tr>
+                            <td><code>embed_real</code><br><code>embed_imag</code></td>
+                            <td><code>[vocab, dim]</code></td>
+                            <td><code>Phase2DEmbed</code></td>
+                            <td>Learns the <strong>initial amplitude and phase angle</strong> for each token in the vocabulary.</td>
+                        </tr>
+                        <tr>
+                            <td><code>gate_proj</code></td>
+                            <td><code>[dim*2, dim]</code></td>
+                            <td><code>OscillatorySSM</code></td>
+                            <td>Learns <strong>when to inject new input</strong> vs when to let the oscillator ring naturally (like a piano hammer).</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- Shared Utilities ---
+        function drawArrow(ctx, fromX, fromY, toX, toY, color, width = 2) {
+            const headlen = 10;
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+            
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.lineTo(toX, toY);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        function drawAxes(ctx, width, height) {
+            ctx.beginPath();
+            ctx.moveTo(0, height/2);
+            ctx.lineTo(width, height/2);
+            ctx.moveTo(width/2, 0);
+            ctx.lineTo(width/2, height);
+            ctx.strokeStyle = '#30363d';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = '#8b949e';
+            ctx.font = '12px monospace';
+            ctx.fillText('Real', width - 35, height/2 - 10);
+            ctx.fillText('Imag', width/2 + 10, 15);
+        }
+
+        // --- Section 1: Phase2D Canvas ---
+        const phaseCanvas = document.getElementById('phaseCanvas');
+        const phaseCtx = phaseCanvas.getContext('2d');
+        const skewSlider = document.getElementById('skewParam');
+        const skewValDisplay = document.getElementById('skewVal');
+
+        // Initial vector (1, 0) scaled up
+        const baseVec = { r: 100, i: 0 };
+
+        function drawPhase2D() {
+            const a = parseFloat(skewSlider.value);
+            skewValDisplay.textContent = a.toFixed(2);
+
+            // Cayley transform
+            const a_sq = a * a;
+            const denom = 1.0 + a_sq;
+            const cos_like = (1.0 - a_sq) / denom;
+            const sin_like = (2.0 * a) / denom;
+
+            // Rotate base vector
+            const r_out = baseVec.r * cos_like - baseVec.i * sin_like;
+            const i_out = baseVec.r * sin_like + baseVec.i * cos_like;
+
+            const cx = phaseCanvas.width / 2;
+            const cy = phaseCanvas.height / 2;
+
+            phaseCtx.clearRect(0, 0, phaseCanvas.width, phaseCanvas.height);
+            drawAxes(phaseCtx, phaseCanvas.width, phaseCanvas.height);
+
+            // Draw unit circle (scaled)
+            phaseCtx.beginPath();
+            phaseCtx.arc(cx, cy, 100, 0, 2 * Math.PI);
+            phaseCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            phaseCtx.setLineDash([5, 5]);
+            phaseCtx.stroke();
+            phaseCtx.setLineDash([]);
+
+            // Draw original vector (faded)
+            drawArrow(phaseCtx, cx, cy, cx + baseVec.r, cy - baseVec.i, 'rgba(0, 255, 255, 0.3)', 2);
+
+            // Draw rotated vector
+            drawArrow(phaseCtx, cx, cy, cx + r_out, cy - i_out, '#00ffff', 3);
+
+            // Draw components
+            phaseCtx.beginPath();
+            phaseCtx.moveTo(cx + r_out, cy);
+            phaseCtx.lineTo(cx + r_out, cy - i_out);
+            phaseCtx.strokeStyle = '#ff00ff'; // Imaginary component
+            phaseCtx.stroke();
+
+            phaseCtx.beginPath();
+            phaseCtx.moveTo(cx, cy);
+            phaseCtx.lineTo(cx + r_out, cy);
+            phaseCtx.strokeStyle = '#00ffff'; // Real component
+            phaseCtx.stroke();
+        }
+
+        skewSlider.addEventListener('input', () => {
+            if (phaseAnimationId) {
+                cancelAnimationFrame(phaseAnimationId);
+                phaseAnimationId = null;
+                btnPhasePlay.textContent = 'Play';
+            }
+            drawPhase2D();
+        });
+        drawPhase2D(); // Initial draw
+
+        const btnPhasePlay = document.getElementById('btnPhasePlay');
+        let phaseAnimationId = null;
+        let phaseAnimTime = 0;
+
+        function animatePhase() {
+            phaseAnimTime += 0.02;
+            const a = Math.sin(phaseAnimTime) * 5; // swing between -5 and 5
+            skewSlider.value = a;
+            drawPhase2D();
+            phaseAnimationId = requestAnimationFrame(animatePhase);
+        }
+
+        btnPhasePlay.addEventListener('click', () => {
+            if (phaseAnimationId) {
+                cancelAnimationFrame(phaseAnimationId);
+                phaseAnimationId = null;
+                btnPhasePlay.textContent = 'Play';
+            } else {
+                // Set time based on current slider value to avoid jumping
+                phaseAnimTime = Math.asin(parseFloat(skewSlider.value) / 5) || 0;
+                animatePhase();
+                btnPhasePlay.textContent = 'Stop';
+            }
+        });
+
+        // --- Section 2: Architecture Flow ---
+        const flowCanvas = document.getElementById('flowCanvas');
+        const flowCtx = flowCanvas.getContext('2d');
+        const btnFlowPlay = document.getElementById('btnFlowPlay');
+
+        const nodes = [
+            { id: 'tokens', label: 'Tokens', x: 50, y: 200, w: 80, h: 40, color: '#c9d1d9' },
+            { id: 'embed', label: 'Phase2DEmbed', x: 180, y: 200, w: 120, h: 40, color: '#00ffff' },
+            { id: 'bank1', label: 'Semantic Bank', x: 350, y: 120, w: 120, h: 40, color: '#ff00ff' },
+            { id: 'bank2', label: 'Context Bank', x: 350, y: 200, w: 120, h: 40, color: '#ff00ff' },
+            { id: 'bank3', label: 'Morph Bank', x: 350, y: 280, w: 120, h: 40, color: '#ff00ff' },
+            { id: 'coupler', label: 'Coupler', x: 520, y: 200, w: 80, h: 40, color: '#ffff00' },
+            { id: 'ssm', label: 'OscillatorySSM', x: 650, y: 200, w: 120, h: 40, color: '#00ff00' },
+            { id: 'head', label: 'LM Head', x: 820, y: 200, w: 80, h: 40, color: '#00ffff' }
+        ];
+
+        const edges = [
+            { from: 'tokens', to: 'embed' },
+            { from: 'embed', to: 'bank1' },
+            { from: 'embed', to: 'bank2' },
+            { from: 'embed', to: 'bank3' },
+            { from: 'bank1', to: 'coupler' },
+            { from: 'bank2', to: 'coupler' },
+            { from: 'bank3', to: 'coupler' },
+            { from: 'coupler', to: 'ssm' },
+            { from: 'ssm', to: 'head' }
+        ];
+
+        let flowProgress = 0;
+        let flowAnimationId = null;
+
+        function drawRoundRect(ctx, x, y, w, h, radius, color) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + w - radius, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+            ctx.lineTo(x + w, y + h - radius);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+            ctx.lineTo(x + radius, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fill();
+        }
+
+        function drawFlow() {
+            flowCtx.clearRect(0, 0, flowCanvas.width, flowCanvas.height);
+
+            // Draw edges
+            edges.forEach(edge => {
+                const fromNode = nodes.find(n => n.id === edge.from);
+                const toNode = nodes.find(n => n.id === edge.to);
+                
+                const startX = fromNode.x + fromNode.w;
+                const startY = fromNode.y + fromNode.h / 2;
+                const endX = toNode.x;
+                const endY = toNode.y + toNode.h / 2;
+
+                flowCtx.beginPath();
+                flowCtx.moveTo(startX, startY);
+                // Bezier curve for smooth routing
+                flowCtx.bezierCurveTo(startX + 40, startY, endX - 40, endY, endX, endY);
+                flowCtx.strokeStyle = '#30363d';
+                flowCtx.lineWidth = 2;
+                flowCtx.stroke();
+            });
+
+            // Draw animated particles along edges based on flowProgress
+            if (flowProgress > 0 && flowProgress <= 1) {
+                edges.forEach(edge => {
+                    const fromNode = nodes.find(n => n.id === edge.from);
+                    const toNode = nodes.find(n => n.id === edge.to);
+                    
+                    // Determine active edge based on progress
+                    let edgeProgress = 0;
+                    if (edge.from === 'tokens' && flowProgress < 0.2) edgeProgress = flowProgress / 0.2;
+                    else if (edge.from === 'embed' && flowProgress >= 0.2 && flowProgress < 0.4) edgeProgress = (flowProgress - 0.2) / 0.2;
+                    else if (edge.to === 'coupler' && flowProgress >= 0.4 && flowProgress < 0.6) edgeProgress = (flowProgress - 0.4) / 0.2;
+                    else if (edge.from === 'coupler' && flowProgress >= 0.6 && flowProgress < 0.8) edgeProgress = (flowProgress - 0.6) / 0.2;
+                    else if (edge.from === 'ssm' && flowProgress >= 0.8) edgeProgress = (flowProgress - 0.8) / 0.2;
+
+                    if (edgeProgress > 0 && edgeProgress <= 1) {
+                        const startX = fromNode.x + fromNode.w;
+                        const startY = fromNode.y + fromNode.h / 2;
+                        const endX = toNode.x;
+                        const endY = toNode.y + toNode.h / 2;
+
+                        // Calculate bezier point
+                        const t = edgeProgress;
+                        const cp1x = startX + 40, cp1y = startY;
+                        const cp2x = endX - 40, cp2y = endY;
+                        
+                        const px = Math.pow(1-t, 3)*startX + 3*Math.pow(1-t, 2)*t*cp1x + 3*(1-t)*Math.pow(t, 2)*cp2x + Math.pow(t, 3)*endX;
+                        const py = Math.pow(1-t, 3)*startY + 3*Math.pow(1-t, 2)*t*cp1y + 3*(1-t)*Math.pow(t, 2)*cp2y + Math.pow(t, 3)*endY;
+
+                        flowCtx.beginPath();
+                        flowCtx.arc(px, py, 5, 0, Math.PI * 2);
+                        flowCtx.fillStyle = '#00ffff';
+                        flowCtx.fill();
+                        flowCtx.shadowBlur = 10;
+                        flowCtx.shadowColor = '#00ffff';
+                        flowCtx.shadowBlur = 0; // reset
+                    }
+                });
+            }
+
+            // Draw nodes
+            nodes.forEach(node => {
+                // Highlight node if active
+                let isActive = false;
+                if (node.id === 'tokens' && flowProgress < 0.1) isActive = true;
+                if (node.id === 'embed' && flowProgress >= 0.1 && flowProgress < 0.3) isActive = true;
+                if (node.id.startsWith('bank') && flowProgress >= 0.3 && flowProgress < 0.5) isActive = true;
+                if (node.id === 'coupler' && flowProgress >= 0.5 && flowProgress < 0.7) isActive = true;
+                if (node.id === 'ssm' && flowProgress >= 0.7 && flowProgress < 0.9) isActive = true;
+                if (node.id === 'head' && flowProgress >= 0.9) isActive = true;
+
+                drawRoundRect(flowCtx, node.x, node.y, node.w, node.h, 5, isActive ? '#ffffff' : node.color);
+                
+                flowCtx.fillStyle = isActive ? '#ffffff' : node.color;
+                flowCtx.font = '14px sans-serif';
+                flowCtx.textAlign = 'center';
+                flowCtx.textBaseline = 'middle';
+                flowCtx.fillText(node.label, node.x + node.w / 2, node.y + node.h / 2);
+            });
+        }
+
+        function animateFlow() {
+            flowProgress += 0.005;
+            if (flowProgress > 1.2) {
+                flowProgress = 0;
+                cancelAnimationFrame(flowAnimationId);
+                btnFlowPlay.disabled = false;
+                drawFlow();
+                return;
+            }
+            drawFlow();
+            flowAnimationId = requestAnimationFrame(animateFlow);
+        }
+
+        btnFlowPlay.addEventListener('click', () => {
+            btnFlowPlay.disabled = true;
+            flowProgress = 0;
+            animateFlow();
+        });
+
+        drawFlow(); // Initial draw
+
+        // --- Section 3: Oscillatory SSM ---
+        const ssmCanvas = document.getElementById('ssmCanvas');
+        const ssmCtx = ssmCanvas.getContext('2d');
+        const btnSsmStep = document.getElementById('btnSsmStep');
+        const btnSsmReset = document.getElementById('btnSsmReset');
+
+        let ssmState = { r: 100, i: 0 }; // Initial h_t
+        let ssmStep = 0;
+
+        function drawSsm() {
+            const cx = ssmCanvas.width / 2;
+            const cy = ssmCanvas.height / 2;
+
+            ssmCtx.clearRect(0, 0, ssmCanvas.width, ssmCanvas.height);
+            drawAxes(ssmCtx, ssmCanvas.width, ssmCanvas.height);
+
+            // Draw unit circle (scaled to 150)
+            ssmCtx.beginPath();
+            ssmCtx.arc(cx, cy, 150, 0, 2 * Math.PI);
+            ssmCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ssmCtx.stroke();
+
+            // Draw current state h_t
+            drawArrow(ssmCtx, cx, cy, cx + ssmState.r, cy - ssmState.i, '#00ffff', 3);
+            
+            ssmCtx.fillStyle = '#c9d1d9';
+            ssmCtx.font = '14px monospace';
+            ssmCtx.fillText(`t = ${ssmStep}`, 10, 20);
+        }
+
+        function animateSsmStep() {
+            btnSsmStep.disabled = true;
+            const cx = ssmCanvas.width / 2;
+            const cy = ssmCanvas.height / 2;
+
+            // 1. Rotation (fixed angle for demo)
+            const angle = Math.PI / 6; // 30 degrees
+            const cos_theta = Math.cos(angle);
+            const sin_theta = Math.sin(angle);
+            
+            const r_rot = ssmState.r * cos_theta - ssmState.i * sin_theta;
+            const i_rot = ssmState.r * sin_theta + ssmState.i * cos_theta;
+
+            // 2. Damping
+            const damping = 0.85;
+            const r_damp = r_rot * damping;
+            const i_damp = i_rot * damping;
+
+            // 3. New Input (randomized)
+            const gate = 0.3;
+            const input_r = (Math.random() - 0.5) * 100;
+            const input_i = (Math.random() - 0.5) * 100;
+            
+            const r_in = input_r * gate;
+            const i_in = input_i * gate;
+
+            // 4. Final State
+            const r_next = r_damp + r_in;
+            const i_next = i_damp + i_in;
+
+            let frame = 0;
+            const totalFrames = 60;
+
+            function renderFrame() {
+                ssmCtx.clearRect(0, 0, ssmCanvas.width, ssmCanvas.height);
+                drawAxes(ssmCtx, ssmCanvas.width, ssmCanvas.height);
+
+                // Draw unit circle
+                ssmCtx.beginPath();
+                ssmCtx.arc(cx, cy, 150, 0, 2 * Math.PI);
+                ssmCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                ssmCtx.stroke();
+
+                const progress = frame / totalFrames;
+
+                if (progress < 0.33) {
+                    // Phase 1: Rotation
+                    const p = progress / 0.33;
+                    const cur_r = ssmState.r * (1-p) + r_rot * p;
+                    const cur_i = ssmState.i * (1-p) + i_rot * p;
+                    
+                    // Draw rotation arc
+                    ssmCtx.beginPath();
+                    const startAngle = Math.atan2(-ssmState.i, ssmState.r);
+                    const endAngle = Math.atan2(-cur_i, cur_r);
+                    const radius = Math.sqrt(ssmState.r**2 + ssmState.i**2);
+                    ssmCtx.arc(cx, cy, radius, startAngle, endAngle, endAngle < startAngle);
+                    ssmCtx.strokeStyle = '#ffff00';
+                    ssmCtx.lineWidth = 2;
+                    ssmCtx.stroke();
+
+                    drawArrow(ssmCtx, cx, cy, cx + cur_r, cy - cur_i, '#00ffff', 3);
+                } else if (progress < 0.66) {
+                    // Phase 2: Damping
+                    const p = (progress - 0.33) / 0.33;
+                    const cur_r = r_rot * (1-p) + r_damp * p;
+                    const cur_i = i_rot * (1-p) + i_damp * p;
+
+                    // Draw original rotated vector dashed
+                    drawArrow(ssmCtx, cx, cy, cx + r_rot, cy - i_rot, 'rgba(0, 255, 255, 0.3)', 1);
+                    
+                    drawArrow(ssmCtx, cx, cy, cx + cur_r, cy - cur_i, '#00ffff', 3);
+                } else {
+                    // Phase 3: Add input
+                    const p = (progress - 0.66) / 0.34;
+                    const cur_r = r_damp + r_in * p;
+                    const cur_i = i_damp + i_in * p;
+
+                    drawArrow(ssmCtx, cx, cy, cx + r_damp, cy - i_damp, 'rgba(0, 255, 255, 0.5)', 2);
+                    
+                    // Draw input vector being added
+                    drawArrow(ssmCtx, cx + r_damp, cy - i_damp, cx + cur_r, cy - cur_i, '#ff00ff', 2);
+                    
+                    // Draw resultant vector
+                    drawArrow(ssmCtx, cx, cy, cx + cur_r, cy - cur_i, '#00ffff', 3);
+                }
+
+                ssmCtx.fillStyle = '#c9d1d9';
+                ssmCtx.font = '14px monospace';
+                ssmCtx.fillText(`t = ${ssmStep} → ${ssmStep + 1}`, 10, 20);
+
+                frame++;
+                if (frame <= totalFrames) {
+                    requestAnimationFrame(renderFrame);
+                } else {
+                    ssmState = { r: r_next, i: i_next };
+                    ssmStep++;
+                    btnSsmStep.disabled = false;
+                    drawSsm();
+                }
+            }
+            renderFrame();
+        }
+
+        btnSsmStep.addEventListener('click', animateSsmStep);
+        btnSsmReset.addEventListener('click', () => {
+            ssmState = { r: 100, i: 0 };
+            ssmStep = 0;
+            drawSsm();
+        });
+
+        drawSsm(); // Initial draw
+
+        // --- Section 4: Backpropagation ---
+        const bpCanvas = document.getElementById('backpropCanvas');
+        const bpCtx = bpCanvas.getContext('2d');
+        const btnBpPlay = document.getElementById('btnBackpropPlay');
+
+        let bpProgress = 0;
+        let bpAnimationId = null;
+
+        function drawBackprop() {
+            bpCtx.clearRect(0, 0, bpCanvas.width, bpCanvas.height);
+
+            // Draw nodes (same as forward pass, but y-shifted to fit 300px height)
+            const bpNodes = nodes.map(n => ({...n, y: n.y - 50}));
+            const bpEdges = [...edges].reverse(); // Reverse edges for backprop
+
+            // Draw base edges (faded)
+            edges.forEach(edge => {
+                const fromNode = bpNodes.find(n => n.id === edge.from);
+                const toNode = bpNodes.find(n => n.id === edge.to);
+                
+                const startX = fromNode.x + fromNode.w;
+                const startY = fromNode.y + fromNode.h / 2;
+                const endX = toNode.x;
+                const endY = toNode.y + toNode.h / 2;
+
+                bpCtx.beginPath();
+                bpCtx.moveTo(startX, startY);
+                bpCtx.bezierCurveTo(startX + 40, startY, endX - 40, endY, endX, endY);
+                bpCtx.strokeStyle = 'rgba(48, 54, 61, 0.5)';
+                bpCtx.lineWidth = 2;
+                bpCtx.stroke();
+            });
+
+            // Draw nodes
+            bpNodes.forEach(node => {
+                drawRoundRect(bpCtx, node.x, node.y, node.w, node.h, 5, '#30363d');
+                bpCtx.fillStyle = '#8b949e';
+                bpCtx.font = '14px sans-serif';
+                bpCtx.textAlign = 'center';
+                bpCtx.textBaseline = 'middle';
+                bpCtx.fillText(node.label, node.x + node.w / 2, node.y + node.h / 2);
+            });
+
+            // Draw Loss node at the end
+            const lossNode = { x: 820, y: 50, w: 80, h: 40 };
+            drawRoundRect(bpCtx, lossNode.x, lossNode.y, lossNode.w, lossNode.h, 5, '#ff0000');
+            bpCtx.fillStyle = '#ff0000';
+            bpCtx.fillText('CE Loss', lossNode.x + lossNode.w / 2, lossNode.y + lossNode.h / 2);
+
+            // Draw gradient flow
+            if (bpProgress > 0) {
+                // Loss to Head
+                if (bpProgress < 0.2) {
+                    const p = bpProgress / 0.2;
+                    const headNode = bpNodes.find(n => n.id === 'head');
+                    const px = lossNode.x + lossNode.w / 2;
+                    const py = lossNode.y + lossNode.h + (headNode.y - lossNode.y - lossNode.h) * p;
+                    
+                    bpCtx.beginPath();
+                    bpCtx.arc(px, py, 6, 0, Math.PI * 2);
+                    bpCtx.fillStyle = '#00ff00';
+                    bpCtx.fill();
+                    bpCtx.shadowBlur = 15;
+                    bpCtx.shadowColor = '#00ff00';
+                    bpCtx.shadowBlur = 0;
+                }
+
+                // Backwards through the network
+                bpEdges.forEach(edge => {
+                    // Note: edge.from is the original source, edge.to is original dest
+                    // We flow from 'to' to 'from'
+                    const fromNode = bpNodes.find(n => n.id === edge.to); // Reverse!
+                    const toNode = bpNodes.find(n => n.id === edge.from);
+                    
+                    let edgeProgress = 0;
+                    if (edge.to === 'head' && bpProgress >= 0.2 && bpProgress < 0.4) edgeProgress = (bpProgress - 0.2) / 0.2;
+                    else if (edge.to === 'ssm' && bpProgress >= 0.4 && bpProgress < 0.6) edgeProgress = (bpProgress - 0.4) / 0.2;
+                    else if (edge.to === 'coupler' && bpProgress >= 0.6 && bpProgress < 0.8) edgeProgress = (bpProgress - 0.6) / 0.2;
+                    else if (edge.from === 'embed' && bpProgress >= 0.8 && bpProgress < 1.0) edgeProgress = (bpProgress - 0.8) / 0.2;
+
+                    if (edgeProgress > 0 && edgeProgress <= 1) {
+                        const startX = fromNode.x;
+                        const startY = fromNode.y + fromNode.h / 2;
+                        const endX = toNode.x + toNode.w;
+                        const endY = toNode.y + toNode.h / 2;
+
+                        const t = edgeProgress;
+                        const cp1x = startX - 40, cp1y = startY;
+                        const cp2x = endX + 40, cp2y = endY;
+                        
+                        const px = Math.pow(1-t, 3)*startX + 3*Math.pow(1-t, 2)*t*cp1x + 3*(1-t)*Math.pow(t, 2)*cp2x + Math.pow(t, 3)*endX;
+                        const py = Math.pow(1-t, 3)*startY + 3*Math.pow(1-t, 2)*t*cp1y + 3*(1-t)*Math.pow(t, 2)*cp2y + Math.pow(t, 3)*endY;
+
+                        bpCtx.beginPath();
+                        bpCtx.arc(px, py, 4, 0, Math.PI * 2);
+                        bpCtx.fillStyle = '#00ff00'; // Green for gradients
+                        bpCtx.fill();
+                        bpCtx.shadowBlur = 10;
+                        bpCtx.shadowColor = '#00ff00';
+                        bpCtx.shadowBlur = 0;
+                    }
+                });
+
+                // Highlight nodes being updated
+                bpNodes.forEach(node => {
+                    let isUpdating = false;
+                    if (node.id === 'head' && bpProgress >= 0.1 && bpProgress < 0.3) isUpdating = true;
+                    if (node.id === 'ssm' && bpProgress >= 0.3 && bpProgress < 0.5) isUpdating = true;
+                    if (node.id === 'coupler' && bpProgress >= 0.5 && bpProgress < 0.7) isUpdating = true;
+                    if (node.id.startsWith('bank') && bpProgress >= 0.7 && bpProgress < 0.9) isUpdating = true;
+                    if (node.id === 'embed' && bpProgress >= 0.9) isUpdating = true;
+
+                    if (isUpdating) {
+                        drawRoundRect(bpCtx, node.x, node.y, node.w, node.h, 5, '#00ff00');
+                        bpCtx.fillStyle = '#00ff00';
+                        bpCtx.fillText(node.label, node.x + node.w / 2, node.y + node.h / 2);
+                        
+                        // Small text showing parameter update
+                        bpCtx.font = '10px monospace';
+                        bpCtx.fillText('∇ W, b', node.x + node.w / 2, node.y - 10);
+                        if(node.id === 'ssm') bpCtx.fillText('∇ a, damping', node.x + node.w / 2, node.y - 22);
+                    }
+                });
+            }
+        }
+
+        function animateBackprop() {
+            bpProgress += 0.005;
+            if (bpProgress > 1.2) {
+                bpProgress = 0;
+                cancelAnimationFrame(bpAnimationId);
+                btnBpPlay.disabled = false;
+                drawBackprop();
+                return;
+            }
+            drawBackprop();
+            bpAnimationId = requestAnimationFrame(animateBackprop);
+        }
+
+        btnBpPlay.addEventListener('click', () => {
+            btnBpPlay.disabled = true;
+            bpProgress = 0;
+            animateBackprop();
+        });
+
+        drawBackprop(); // Initial draw
+
+    </script>
+</body>
+</html>
