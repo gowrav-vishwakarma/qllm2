@@ -82,7 +82,8 @@ button:hover { background: var(--cyan); color: #000; }
 
 <header>
     <h1>V5: Algebraic Language Model</h1>
-    <p>An interactive journey from raw text to trained prediction</p>
+    <p>A beginner-friendly walkthrough from text to next-token prediction</p>
+    <p style="margin-top:.35rem;font-size:.9rem;color:#8b949e">This explainer mirrors the current implementation in <code>v5/core/*.py</code> and <code>v5/model.py</code>.</p>
     <div class="scroll-hint">&#8595; Scroll to explore</div>
 </header>
 
@@ -95,9 +96,9 @@ button:hover { background: var(--cyan); color: #000; }
     <div class="scene-text">
         <h2 class="scene-title">1. Text to Tokens</h2>
         <p class="scene-subtitle">From characters to numbers</p>
-        <p>Language models don't read letters. They read <strong>token IDs</strong> &mdash; numbers that map to subword pieces.</p>
+        <p>Language models do not read letters directly. They read <strong>token IDs</strong> &mdash; integers that represent subword pieces.</p>
         <p>A BPE tokenizer splits text into the most common subword units it learned during training.</p>
-        <div class="insight">Each token becomes a number. That number is the model's input.</div>
+        <div class="insight">Simple mental model: text &rarr; token IDs &rarr; vectors.</div>
     </div>
     <div class="scene-vis">
         <div class="canvas-panel"><canvas id="c1" width="500" height="300"></canvas></div>
@@ -117,7 +118,7 @@ button:hover { background: var(--cyan); color: #000; }
         <p class="scene-subtitle">Each token becomes a complex vector</p>
         <p>Each token ID indexes into <strong>two</strong> embedding tables: one for the real part, one for the imaginary part.</p>
         <p>Together they form a complex number per dimension: <code>z = real + i &middot; imag</code>.</p>
-        <p><strong>Magnitude</strong> = feature strength. <strong>Phase angle</strong> = feature identity.</p>
+        <p><strong>Magnitude</strong> is feature strength. <strong>Phase angle</strong> is directional identity.</p>
         <div class="insight">"happy" and "sad" can share magnitude but have opposite phase (&#960; apart).</div>
     </div>
     <div class="scene-vis">
@@ -139,7 +140,7 @@ button:hover { background: var(--cyan); color: #000; }
         <p>Complex matrix multiplication decomposes into <strong>4 real matrix multiplies</strong>:</p>
         <p><code>Y_r = W_r&middot;X_r &minus; W_i&middot;X_i</code><br><code>Y_i = W_r&middot;X_i + W_i&middot;X_r</code></p>
         <p>This IS a rotation + scaling &mdash; but computed entirely with multiply-add. No trig. GPUs are built for this.</p>
-        <div class="insight">Each complex weight simultaneously scales AND rotates. Two real params, one structured operation.</div>
+        <div class="insight">Beginner view: a real weight is a volume knob. A complex weight is volume + steering together.</div>
     </div>
     <div class="scene-vis">
         <div class="canvas-panel"><canvas id="c3" width="520" height="320"></canvas></div>
@@ -155,12 +156,12 @@ button:hover { background: var(--cyan); color: #000; }
 <section class="scene">
 <div class="scene-inner">
     <div class="scene-text">
-        <h2 class="scene-title">4. Cayley Transform</h2>
-        <p class="scene-subtitle">Rotation without trigonometry</p>
-        <p>The Cayley transform computes rotation from a single learnable parameter <code>a</code>:</p>
+        <h2 class="scene-title">4. Rotation Math (Concept Tool)</h2>
+        <p class="scene-subtitle">How learned rotation can be parameterized</p>
+        <p>This scene shows Cayley-style rotation math from earlier versions:</p>
         <p><code>cos = (1 &minus; a&sup2;) / (1 + a&sup2;)</code><br><code>sin = 2a / (1 + a&sup2;)</code></p>
-        <p>Just arithmetic: square, add, divide. The GPU never calls sin() or cos().</p>
-        <div class="insight">Backprop flows cleanly through simple arithmetic &mdash; no trig derivative chains.</div>
+        <p>In current V5 code, this exact block is not part of the main path, but the intuition is useful: rotation can be learned using stable arithmetic forms.</p>
+        <div class="insight">Takeaway: rotation is a first-class operation in complex models, not just a metaphor.</div>
     </div>
     <div class="scene-vis">
         <div class="canvas-panel"><canvas id="c4" width="340" height="340"></canvas></div>
@@ -183,7 +184,7 @@ button:hover { background: var(--cyan); color: #000; }
     <div class="scene-text" style="text-align:center;max-width:700px">
         <h2 class="scene-title">5. modReLU vs V4's Broken GELU</h2>
         <p class="scene-subtitle">THE critical fix</p>
-        <p>V4 applies GELU to the <em>real part only</em>, destroying phase. V5 applies ReLU to the <em>magnitude</em>, preserving phase exactly.</p>
+        <p>V4 applied GELU to the <em>real part only</em>, which breaks phase consistency. V5 applies ReLU to the <em>magnitude</em>, preserving phase direction.</p>
     </div>
     <div class="side-by-side">
         <div>
@@ -212,7 +213,7 @@ button:hover { background: var(--cyan); color: #000; }
         <p>SwiGLU gates produce a real scalar: they can only <strong>scale</strong> (let X% through).</p>
         <p>The CGU gate produces a <strong>complex number</strong>: it both scales (magnitude) and rotates (phase).</p>
         <p>"Let 70% through AND rotate by 30&deg;" &mdash; the gate <em>transforms</em> what it passes.</p>
-        <div class="insight">Same parameter count as SwiGLU, but each gate operation does 2D work (scale + rotate) instead of 1D (scale only).</div>
+        <div class="insight">Key idea: gates do two jobs at once &mdash; choose how much signal passes and how it is rotated.</div>
     </div>
     <div class="scene-vis">
         <div class="canvas-panel"><canvas id="c6" width="500" height="340"></canvas></div>
@@ -230,10 +231,10 @@ button:hover { background: var(--cyan); color: #000; }
     <div class="scene-text">
         <h2 class="scene-title">7. Multi-Bank Fusion</h2>
         <p class="scene-subtitle">Algebraic interference &mdash; for real this time</p>
-        <p>Multiple banks process the same input in parallel, each specialising in different phase subspaces.</p>
-        <p>A <strong>complex router</strong> assigns per-token weights. Learned phase rotations are applied before summing.</p>
+        <p>Multiple banks process the same input in parallel, each learning different useful transforms.</p>
+        <p>A <strong>content router</strong> assigns per-token weights (softmax over bank magnitudes). Learned phase rotations are applied before summing.</p>
         <p>Aligned phases &rarr; constructive interference (amplify). Opposing phases &rarr; destructive (cancel).</p>
-        <div class="insight">V4's interference was fake (phase was already destroyed). V5's phase is preserved, so interference is genuine.</div>
+        <div class="insight">Implementation note: router weights are real-valued probabilities; phase behavior comes from complex bank outputs + learned rotations.</div>
     </div>
     <div class="scene-vis">
         <div class="canvas-panel"><canvas id="c7" width="500" height="360"></canvas></div>
@@ -253,7 +254,7 @@ button:hover { background: var(--cyan); color: #000; }
         <p class="scene-subtitle">Memory via rotation, speed via parallelism</p>
         <p>The state vector rotates and decays at each step: <code>h[t] = A&middot;h[t-1] + B&middot;x[t]</code>.</p>
         <p>Fast oscillation tracks local syntax. Slow oscillation tracks long-range context.</p>
-        <p>The sequential loop (O(n)) is replaced by a <strong>parallel prefix scan</strong> (O(log n)) &mdash; same result, GPU-fast.</p>
+        <p>The long recurrence is evaluated with a <strong>parallel prefix scan</strong> (Blelloch-style), reducing sequential depth from O(n) to O(log n).</p>
         <div class="insight">V4's Python loop over every timestep caused 17x slowdown. The parallel scan fixes this algorithmically.</div>
     </div>
     <div class="scene-vis">
@@ -272,7 +273,7 @@ button:hover { background: var(--cyan); color: #000; }
     <div class="scene-text">
         <h2 class="scene-title">9. Phase Attention</h2>
         <p class="scene-subtitle">Sparse, complex-valued, every K layers</p>
-        <p>Score = <code>Re(q &middot; conj(k)) / &radic;d</code> &mdash; captures both magnitude similarity and phase alignment.</p>
+        <p>Score = <code>Re(q &middot; conj(k)) / &radic;d</code> &mdash; captures magnitude similarity and phase alignment in one score.</p>
         <p>Same phase = high score. Opposite phase = negative. Orthogonal = zero.</p>
         <p>Applied with a sliding window mask, only every K-th layer, to keep cost low.</p>
         <div class="insight">One complex attention head captures magnitude similarity AND directional alignment in a single score.</div>
@@ -296,7 +297,7 @@ button:hover { background: var(--cyan); color: #000; }
         <p>The complex representation is converted to real by concatenating real and imaginary parts.</p>
         <p>A linear layer maps to vocabulary size, softmax gives probabilities, and the top token is the prediction.</p>
         <p>That prediction feeds back as the next input &mdash; autoregressive generation.</p>
-        <div class="insight">The bridge from complex to real happens only once, at the very end.</div>
+        <div class="insight">Practical bridge: keep algebraic structure through the stack, convert to real only for vocabulary logits.</div>
     </div>
     <div class="scene-vis">
         <div class="canvas-panel"><canvas id="c10" width="500" height="300"></canvas></div>
@@ -314,7 +315,7 @@ button:hover { background: var(--cyan); color: #000; }
     <div class="scene-text" style="text-align:center;max-width:700px">
         <h2 class="scene-title">11. Training &mdash; The Mirror</h2>
         <p class="scene-subtitle">Forward pass, loss, backward pass</p>
-        <p>The forward pass flows left to right. Loss is computed. Then gradients flow <strong>backward</strong> through every component, updating all parameters.</p>
+        <p>Forward pass makes predictions. Cross-entropy computes error. Backprop sends gradients through all blocks to update parameters.</p>
     </div>
     <div class="scene-vis" style="width:100%">
         <div class="canvas-panel" style="width:100%"><canvas id="c11" width="900" height="400"></canvas></div>
@@ -334,7 +335,7 @@ button:hover { background: var(--cyan); color: #000; }
         <p class="scene-subtitle">Drop features, not components</p>
         <p>Standard dropout on real and imaginary parts <em>independently</em> destroys phase &mdash; it's like cutting one leg off a compass.</p>
         <p>Complex dropout drops <strong>entire features</strong>: both real and imaginary vanish together, or both stay.</p>
-        <div class="insight">Phase integrity is maintained even during regularisation.</div>
+        <div class="insight">If one component of a complex feature is dropped alone, direction is corrupted. Drop both together to keep direction meaningful.</div>
     </div>
     <div class="scene-vis">
         <div class="canvas-panel"><canvas id="c12" width="500" height="320"></canvas></div>
@@ -352,7 +353,7 @@ button:hover { background: var(--cyan); color: #000; }
     <div class="scene-text" style="text-align:center;max-width:700px">
         <h2 class="scene-title">13. The Full Picture</h2>
         <p class="scene-subtitle">End-to-end V5 architecture</p>
-        <p>Scroll to send a data particle through the entire pipeline: Tokens &rarr; Complex Embed &rarr; Banks &rarr; Router &rarr; Fusion &rarr; SSM &rarr; Attention &rarr; Output.</p>
+        <p>Scroll to send a data particle through the implemented pipeline: Tokens &rarr; Complex Embed &rarr; Multi-Bank &rarr; Fusion &rarr; SSM &rarr; Sparse Attention &rarr; Output.</p>
     </div>
     <div class="scene-vis" style="width:100%">
         <div class="canvas-panel" style="width:100%"><canvas id="c13" width="960" height="420"></canvas></div>

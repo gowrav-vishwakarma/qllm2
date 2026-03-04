@@ -1,0 +1,284 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[numbers]{natbib}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\title{Quantum-Inspired LLMs:\\
+A Complex-Native Algebraic Architecture with\\
+Parallel-Scan Selective Recurrence}
+
+\author{
+Gowrav Vishwakarma\\
+Independent Researcher, Ahmedabad, India\\
+\texttt{gowravvishwakarma@gmail.com}\\
+\url{https://github.com/gowrav-vishwakarma/qllm2}
+}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We present V5, a language modeling architecture designed around a simple hypothesis: complex-valued parameters can provide useful inductive structure for sequence modeling only when the model preserves phase information through all nonlinear operations.
+Our design combines (i) complex-valued embeddings and linear maps, (ii) phase-preserving activation via modReLU, (iii) complex gated units that jointly scale and rotate features, (iv) multi-bank algebraic fusion with learned phase rotations, and (v) a selective complex diagonal state-space backbone implemented with parallel scan, plus sparse phase-aware attention.
+This work is motivated by controlled feedback showing that a prior version (V4) underperformed matched SSM and transformer baselines despite using more parameters and compute.
+We therefore emphasize falsifiable protocol design, matched comparisons, and ablations that isolate where complex structure helps or fails.
+We provide an implementation-ready manuscript with a strict evaluation protocol for TinyStories (20k subset, matched tokenizer/optimizer/schedule, 20 epochs) and report preliminary smoke-test behavior.
+Final quantitative claims are deferred to the full matched benchmark suite.
+\end{abstract}
+
+\section{Introduction}
+Most successful language models today are either attention-dominant transformers \citep{vaswani2017attention} or recurrence-centric state-space models (SSMs) \citep{gu2021s4,gu2023mamba,dao2024transformersaressms}. Complex-valued neural computation has repeatedly shown benefits in domains with oscillatory or phase-rich structure, but adoption in language modeling remains limited and often inconclusive.
+
+Our starting point is an adverse empirical signal from a controlled small-scale benchmark (TinyStories subset): a previous architecture (V4) trained much slower and converged to substantially worse perplexity than both a matched transformer and a matched diagonal recurrent baseline.
+Rather than post-hoc rationalization, we treat this as a null-hypothesis challenge.
+
+\paragraph{Core diagnosis.}
+Inspection of V4 revealed a structural mismatch: complex representations were introduced but repeatedly passed through real-valued nonlinear pathways that can corrupt or discard phase semantics.
+In other words, V4 paid complex-parameter costs without consistently preserving complex algebraic structure.
+
+\paragraph{V5 objective.}
+V5 is designed to test whether ``complex-native end-to-end processing'' can be made both principled and efficient:
+\begin{itemize}[leftmargin=1.2em]
+  \item \textbf{Principled}: preserve phase through nonlinearities and gating;
+  \item \textbf{Efficient}: use parallel scan for recurrent depth reduction and sparse attention for retrieval;
+  \item \textbf{Falsifiable}: run matched ablations against real-valued counterparts.
+\end{itemize}
+
+\paragraph{Contributions.}
+\begin{enumerate}[leftmargin=1.2em]
+  \item A \textbf{complex-native LM stack} with explicit phase-preserving nonlinearity (modReLU) and complex gated units.
+  \item A \textbf{multi-bank algebraic fusion} module using learned per-bank phase rotations and diversity regularization.
+  \item A \textbf{selective complex diagonal SSM} implemented with parallel prefix scan (Blelloch-style), reducing recurrent sequential depth.
+  \item A \textbf{strict matched-evaluation protocol} aimed at avoiding apples-to-oranges comparisons.
+\end{enumerate}
+
+\section{Related Work}
+\paragraph{Transformers and efficient attention.}
+Transformers established attention as the dominant sequence primitive \citep{vaswani2017attention}; many variants improve efficiency via sparse or local attention.
+
+\paragraph{State-space and recurrent alternatives.}
+S4 and successors showed long-range sequence modeling with structured linear recurrences \citep{gu2021s4}. Mamba introduced selective (input-dependent) recurrence with hardware-aware implementation \citep{gu2023mamba}. Mamba-2 formalized state-space duality and improved systems efficiency \citep{dao2024transformersaressms}. Hybrid models combine recurrence with sparse attention \citep{dey2024griffin,jamba2024}.
+
+\paragraph{Complex-valued and algebraic networks.}
+Complex-valued networks and activation design have been studied across signal-centric domains \citep{trabelsi2018deepcomplex}. Recent theory revisits approximation properties in complex settings \citep{cvnnuniversal2025}. Geometric/algebraic parameterizations in vision suggest potential parameter-efficiency advantages \citep{cliffordnet2026}.
+
+\section{Method}
+\subsection{Representation and primitives}
+V5 represents features as real-imaginary pairs $z \in \mathbb{R}^{d \times 2}$, corresponding to complex vectors.
+Core primitives are implemented in \texttt{v5/core/complex.py}:
+\begin{itemize}[leftmargin=1.2em]
+  \item \textbf{ComplexLinear}: complex matrix multiplication via four real GEMMs;
+  \item \textbf{ComplexNorm}: RMS-style magnitude normalization with phase preservation;
+  \item \textbf{ModReLU}: activation
+  \begin{equation}
+    \mathrm{modReLU}(z)=\mathrm{ReLU}(|z|+b)\frac{z}{|z|+\epsilon},
+  \end{equation}
+  preserving direction while thresholding magnitude;
+  \item \textbf{ComplexGatedUnit (CGU)}: gate magnitude selects throughput, gate phase rotates transformed features before down-projection.
+\end{itemize}
+
+\subsection{Multi-bank algebraic fusion}
+Each layer uses multiple AlgebraicBanks (pre-norm + CGU), then fuses them with:
+\begin{enumerate}[leftmargin=1.2em]
+  \item per-bank projection to a common complex space,
+  \item learned unit-magnitude phase rotation per bank,
+  \item content-dependent real routing weights (softmax over magnitude-derived router logits),
+  \item weighted sum and output projection.
+\end{enumerate}
+Bank specialization is encouraged via a diversity loss based on absolute complex cosine similarity between bank outputs.
+
+\subsection{Selective complex SSM with parallel scan}
+The recurrent core uses diagonal complex recurrence:
+\begin{equation}
+  h_t = A_t \odot h_{t-1} + B_t,\quad y_t = C h_t + D \odot x_t,
+\end{equation}
+where $A_t$ is input-dependent through learned $\Delta t$ modulation.
+The scan operator
+\begin{equation}
+  (a_1,b_1)\oplus(a_2,b_2)=(a_1a_2, a_2b_1+b_2)
+\end{equation}
+is associative, enabling Blelloch-style parallel prefix scan for reduced sequential depth.
+Implementation: \texttt{v5/core/ssm.py}.
+
+\subsection{Sparse phase-aware attention}
+V5 inserts attention every $K$ layers (\texttt{attn\_every\_k}) with a sliding window.
+Scores use
+\begin{equation}
+  s(q,k)=\mathrm{Re}(q\cdot \overline{k})/\sqrt{d_h},
+\end{equation}
+then apply real softmax and weighted complex value aggregation.
+Implementation: \texttt{v5/core/attention.py}.
+
+\subsection{Overall architecture}
+Given token IDs:
+\begin{enumerate}[leftmargin=1.2em]
+  \item Complex embedding + norm;
+  \item Sequential bank stack with residual scaling;
+  \item Stacked complex SSM backbone with recurrent state carry;
+  \item Sparse phase attention blocks;
+  \item Complex LM head, then real concatenation and vocabulary projection.
+\end{enumerate}
+See \texttt{v5/model.py}.
+
+\section{Experimental Protocol}
+\subsection{Primary matched benchmark}
+To avoid confounds, we define the primary benchmark as:
+\begin{itemize}[leftmargin=1.2em]
+  \item Dataset: TinyStories train subset (20k examples), fixed split policy;
+  \item Tokenizer: GPT-2 BPE;
+  \item Training schedule: AdamW, cosine LR, 20 epochs;
+  \item Report: validation loss/perplexity and wall-clock time per epoch.
+\end{itemize}
+
+\subsection{Baselines}
+\begin{itemize}[leftmargin=1.2em]
+  \item Transformer baseline matched by depth/width/parameter budget;
+  \item Real-valued diagonal recurrent baseline (DiagRNN / linear SSM style);
+  \item V5 ablations:
+  \begin{enumerate}[label=(\alph*),leftmargin=1.2em]
+    \item remove banks,
+    \item remove sparse attention,
+    \item replace modReLU with real-part GELU surrogate,
+    \item replace complex gates with real gates,
+    \item real-valued counterpart with same macro-architecture.
+  \end{enumerate}
+\end{itemize}
+
+\subsection{Reproducibility checklist}
+We recommend reporting:
+\begin{itemize}[leftmargin=1.2em]
+  \item exact commit hash, seed(s), and hardware;
+  \item mixed-precision mode and runtime backend (CUDA/MPS/CPU);
+  \item tokenized sample count and total train tokens;
+  \item all hyperparameters from \texttt{v5/config.py}.
+\end{itemize}
+
+\section{Results}
+\subsection{External motivating comparison (prior model)}
+Table~\ref{tab:external} summarizes the external controlled comparison that motivated V5 redesign.
+
+\begin{table}[h]
+\centering
+\caption{External controlled benchmark summary (provided feedback; not produced by this paper's final V5 runs).}
+\label{tab:external}
+\begin{tabular}{lccc}
+\toprule
+Model & Core Params & Best Val PPL & Time/Epoch \\
+\midrule
+Transformer & $\sim$8M & 7.56 & 82s \\
+DiagRNN / linear SSM & $\sim$9.5M & 9.18 & 512s \\
+V4 & $\sim$11.9M & 17.05 & 1370s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Preliminary implementation sanity checks}
+Current codebase smoke tests indicate:
+\begin{itemize}[leftmargin=1.2em]
+  \item end-to-end training executes on MPS/CPU/CUDA path,
+  \item validation loss decreases in short tiny-scale runs,
+  \item parallel scan numerically matches sequential scan to small tolerance.
+\end{itemize}
+These are engineering checks, not final benchmark evidence.
+
+\subsection{Main benchmark table (to fill)}
+\begin{table}[h]
+\centering
+\caption{Main matched benchmark (TinyStories 20k, GPT-2 tokenizer, AdamW, cosine, 20 epochs). Fill with final runs.}
+\label{tab:main}
+\begin{tabular}{lcccc}
+\toprule
+Model & Params & Val Loss & Val PPL & Time/Epoch \\
+\midrule
+Transformer-matched & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} \\
+DiagRNN-matched & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} \\
+V5 (small-matched) & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} \\
+V5 (small) & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ablation table (to fill)}
+\begin{table}[h]
+\centering
+\caption{V5 ablations to isolate complex-native contributions.}
+\label{tab:ablation}
+\begin{tabular}{lccc}
+\toprule
+Variant & Val PPL & Time/Epoch & Notes \\
+\midrule
+V5 full & \texttt{TODO} & \texttt{TODO} & full model \\
+- banks & \texttt{TODO} & \texttt{TODO} & remove multi-bank fusion \\
+- sparse attention & \texttt{TODO} & \texttt{TODO} & recurrence only \\
+real gate (no phase gate) & \texttt{TODO} & \texttt{TODO} & gate ablation \\
+real-valued counterpart & \texttt{TODO} & \texttt{TODO} & null hypothesis test \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion}
+V5 is intentionally framed as a testable hypothesis, not a completed claim of superiority.
+The key scientific question is not whether complex arithmetic is elegant, but whether preserving phase through nonlinear pathways yields measurable gains under controlled matched protocols.
+
+\paragraph{What would count as support?}
+Consistent improvements over matched real-valued baselines in either:
+\begin{itemize}[leftmargin=1.2em]
+  \item perplexity at fixed training budget, or
+  \item speed-quality tradeoff at fixed quality target.
+\end{itemize}
+One-off wins or mismatched comparisons should not be treated as evidence.
+
+\paragraph{What would falsify the hypothesis?}
+If matched V5 variants do not outperform or at least match real-valued counterparts after adequate tuning and equalized budgets, then the complex-native claim should be rejected for this regime.
+
+\section{Limitations}
+\begin{itemize}[leftmargin=1.2em]
+  \item Current manuscript includes placeholders for final benchmark numbers.
+  \item Parameter matching across complex and real models is subtle (feature width vs total real scalar count vs FLOPs).
+  \item Small-data TinyStories outcomes may not transfer to larger corpora.
+  \item Systems-level speed depends heavily on kernel implementation quality.
+\end{itemize}
+
+\section{Ethical Statement}
+This work is fundamental model architecture research.
+Potential misuse follows standard language model risk channels (hallucination, misinformation, harmful text generation).
+We recommend standard safety filtering and evaluation procedures for downstream deployment.
+
+\section*{Funding}
+This work was conducted without external funding.
+The author is actively seeking research funding and compute sponsorship for larger-scale experiments.
+
+\section{Conclusion}
+We introduced V5, a complex-native language modeling architecture combining phase-preserving nonlinearities, complex gating, algebraic bank fusion, and parallel-scan selective recurrence.
+The paper is structured around falsifiable evaluation: matched baselines, controlled ablations, and transparent reporting.
+Final claims are contingent on the completion of these experiments.
+
+\paragraph{Code mapping.}
+Complex primitives: \texttt{v5/core/complex.py}; SSM: \texttt{v5/core/ssm.py}; banks/fusion: \texttt{v5/core/bank.py}; attention: \texttt{v5/core/attention.py}; model wiring: \texttt{v5/model.py}; protocol script: \texttt{v5/train.py}.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\appendix
+\section{Appendix: Suggested Reporting Template}
+\begin{enumerate}[leftmargin=1.2em]
+  \item Hardware, runtime, and precision mode.
+  \item Full config dump.
+  \item Train/val token counts.
+  \item Wall-clock and peak memory.
+  \item Mean/std over seeds.
+\end{enumerate}
+
+\end{document}
