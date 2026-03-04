@@ -28,6 +28,17 @@ cd "$SCRIPT_DIR"
 # shellcheck disable=SC1091
 source ./scripts/v5_env_setup_a6000.sh
 
+# Clean old checkpoints on fresh start, keep them on --resume
+CHECKPOINT_DIR="checkpoints_v5"
+if echo "$@" | grep -q -- '--resume'; then
+  echo "[v5-run] Resuming -- keeping existing checkpoints in $CHECKPOINT_DIR/"
+else
+  if [ -d "$CHECKPOINT_DIR" ] && [ "$(ls -A "$CHECKPOINT_DIR" 2>/dev/null)" ]; then
+    echo "[v5-run] Fresh start -- clearing old checkpoints in $CHECKPOINT_DIR/"
+    rm -rf "$CHECKPOINT_DIR"
+  fi
+fi
+
 # Uses small-matched to match tune_batch_v5_a6000.sh (so batch size transfers).
 # If you want to use 'small' or 'medium' model, tune batch size separately for that size.
 eval "$PYTHON_BIN -m v5.train" \

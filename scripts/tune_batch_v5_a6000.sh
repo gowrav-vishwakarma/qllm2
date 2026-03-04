@@ -21,6 +21,17 @@ cd "$SCRIPT_DIR"
 # shellcheck disable=SC1091
 source ./scripts/v5_env_setup_a6000.sh
 
+# Clean old checkpoints on fresh start, keep them on --resume
+CHECKPOINT_DIR="checkpoints_v5"
+if echo "$@" | grep -q -- '--resume'; then
+  echo "[v5-tune] Resuming -- keeping existing checkpoints in $CHECKPOINT_DIR/"
+else
+  if [ -d "$CHECKPOINT_DIR" ] && [ "$(ls -A "$CHECKPOINT_DIR" 2>/dev/null)" ]; then
+    echo "[v5-tune] Fresh start -- clearing old checkpoints in $CHECKPOINT_DIR/"
+    rm -rf "$CHECKPOINT_DIR"
+  fi
+fi
+
 # Default is small-matched so comparison with small baselines is fairer.
 eval "$PYTHON_BIN -m v5.train" \
   --size small-matched \
