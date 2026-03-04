@@ -55,6 +55,37 @@ Aligned by **samples seen** (not batch index), since batch sizes differ.
 
 ---
 
+## 5. Init Strategy Benchmark (2026-03-04)
+
+**Script**: `python scripts/bench_init_strategies.py` (see README Structured Initialization)
+
+### Run A: 150 samples, 1 epoch, 3 strategies (random, golden_ratio, dft)
+
+| Strategy    | Val PPL   | Val Loss | Train Loss | Time(s) | Tok/s |
+|-------------|-----------|----------|------------|---------|-------|
+| golden_ratio | 21091.24 | 9.96     | 10.31      | 10.9    | 2431  |
+| random      | 22811.48 | 10.04    | 10.38      | 12.0    | 2215  |
+| dft         | 22978.60 | 10.04    | 10.36      | 10.8    | 2456  |
+
+**Takeaway (1 epoch)**: golden_ratio best; dft worst. Structured number-theoretic init (golden ratio) leads early.
+
+### Run B: 200 samples, 2 epochs, 6 strategies
+
+| Strategy    | Val PPL   | Val Loss | Train Loss | Time(s) | Tok/s |
+|-------------|-----------|----------|------------|---------|-------|
+| pi          | 1894.23  | 7.55     | 7.58       | 29.5    | 2425  |
+| hippo       | 1988.42  | 7.60     | 7.65       | 29.2    | 2451  |
+| random      | 1984.80  | 7.59     | 7.65       | 60.3    | 1189  |
+| dft         | 1993.65  | 7.60     | 7.65       | 29.4    | 2441  |
+| sinusoidal  | 2252.91  | 7.72     | 7.77       | 30.5    | 2353  |
+| golden_ratio | 2847.10 | 7.95     | 8.02       | 32.2    | 2226  |
+
+**Takeaway (2 epochs)**: pi best; golden_ratio worst. Ordering flips vs 1 epoch. pi (Weyl sequence) and hippo (SSM-specific) competitive with random; golden_ratio overfits or plateaus. Throughput: structured inits (pi, dft, hippo) ~2x faster than random (likely first-step compile/cache effects).
+
+**Next**: Run more epochs (5–10) and more strategies (circular, fibonacci_spiral, sqrt_primes) to see if grokking attractors show different long-horizon behavior.
+
+---
+
 ## How to Update
 
 1. **Change Log**: Add a row when you change config/code/logic.

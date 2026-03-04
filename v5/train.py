@@ -157,6 +157,8 @@ class Trainer:
         tokenizer=None,
         checkpoint_dir: str = 'checkpoints_v5',
         start_epoch: int = 0,
+        save_checkpoints: bool = True,
+        verbose: bool = True,
     ):
         self.model = model
         self.config = config
@@ -166,6 +168,8 @@ class Trainer:
         self.checkpoint_dir = Path(checkpoint_dir)
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
         self.start_epoch = start_epoch
+        self.save_checkpoints = save_checkpoints
+        self.verbose = verbose
 
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
@@ -244,14 +248,14 @@ class Trainer:
             total_div_loss += div_loss_val
             num_batches += 1
 
-            if batch_idx == 0 and first_step_start is not None:
+            if self.verbose and batch_idx == 0 and first_step_start is not None:
                 if self.device.type == 'cuda':
                     torch.cuda.synchronize()
                 first_step_s = time.time() - first_step_start
                 compile_note = " (includes compile)" if self.config.compile_model else ""
                 print(f"  First step wall time: {first_step_s:.1f}s{compile_note}")
 
-            if batch_idx % 50 == 0:
+            if self.verbose and batch_idx % 50 == 0:
                 ppl = math.exp(min(ce_loss.item(), 20))
                 lr = self.scheduler.get_last_lr()[0]
                 elapsed = time.time() - epoch_start
@@ -373,11 +377,11 @@ class Trainer:
             print(line)
 
             # Save best checkpoint
-            if is_best:
+            if self.save_checkpoints and is_best:
                 self.save_checkpoint('best_model.pt')
 
             # Periodic checkpoint every 5 epochs
-            if (epoch + 1) % 5 == 0:
+            if self.save_checkpoints and (epoch + 1) % 5 == 0:
                 self.save_checkpoint(f'checkpoint_epoch_{epoch+1}.pt')
 
             # Generate sample after each epoch
@@ -391,7 +395,8 @@ class Trainer:
 
         # Final checkpoint
         self._current_epoch = self.config.max_epochs - 1
-        self.save_checkpoint('final_model.pt')
+        if self.save_checkpoints:
+            self.save_checkpoint('final_model.pt')
 
         total_time = time.time() - training_start
         print(f"\nTraining complete!")

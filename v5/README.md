@@ -163,6 +163,17 @@ This follows CliffordNet's finding (Jan 2025): when you use algebraically comple
 
 ---
 
+## Setup
+
+From the project root:
+
+```bash
+uv sync                    # Mac / CPU (xformers skipped; builds fail on macOS)
+uv sync --extra cuda       # CUDA machines (installs xformers for faster attention)
+```
+
+---
+
 ## Quick Start
 
 ```bash
@@ -244,6 +255,21 @@ The resolved seed is displayed at training start and saved in checkpoints. Use t
 python -c "from v5.init import list_strategies; print(list_strategies())"
 ```
 
+**Benchmark all strategies**: Run a quick comparison on limited data. Report includes benchmark config, full model config, and a results table. Use `--samples`, `--epochs`, `--size` to scale up gradually.
+
+```bash
+# Default: 500 samples, 2 epochs, tiny model, all 21 strategies
+python scripts/bench_init_strategies.py --samples 500 --epochs 2
+
+# Or via wrapper (uses v5 env if available)
+./scripts/run_bench_init.sh --samples 1000 --epochs 3
+
+# Subset of strategies, custom log file
+python scripts/bench_init_strategies.py --strategies golden_ratio,dft,hippo,random --log_file logs/my_bench.log
+```
+
+Report is written to `logs/init_bench_YYYYMMDD_HHMMSS.log` (or `--log_file`). Each run stores full benchmark and model config for reproducibility.
+
 ---
 
 ## Training Output
@@ -301,6 +327,8 @@ All scripts live in `scripts/` and auto-bootstrap the Python environment via `v5
 
 | Script | Purpose | Default Size | Notes |
 |--------|---------|-------------|-------|
+| `bench_init_strategies.py` | Benchmark all init strategies | `tiny` | Limited data, full report with config |
+| `run_bench_init.sh` | Wrapper for bench script | `tiny` | Passes args through |
 | `tune_batch_v5_a6000.sh` | Find optimal batch size | `small-matched` | Quick runs, no compile |
 | `run_v5_medium_a6000.sh` | Full training run | `small-matched` | Uses same size as tune script (batch size transfers) |
 | `monitor_training_v5_a6000.sh` | Watch GPU + tail log | -- | `./monitor_training_v5_a6000.sh 5 logs/v5_train_small-matched.log` |
