@@ -79,6 +79,11 @@ def get_config(size: str = 'small') -> V5Config:
             num_banks=3, num_heads=8, bank_expand=2,
             batch_size=4, learning_rate=5e-5,
         ),
+        'large': V5Config(
+            dim=768, state_dim=1536, num_layers=16,
+            num_banks=3, num_heads=12, bank_expand=2,
+            batch_size=2, learning_rate=3e-5,
+        ),
     }
     if size not in presets:
         raise ValueError(f"Unknown size: {size}. Available: {list(presets.keys())}")

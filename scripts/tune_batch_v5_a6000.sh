@@ -2,10 +2,15 @@
 # Find best batch size for v5 on A6000.
 # Runs WITHOUT compile so each try is quick.
 #
+# Logs to:      logs/v5_train_small-matched.log  (auto, via TeeLogger)
+# Checkpoints:  checkpoints_v5/
+#
 # Usage:
 #   ./scripts/tune_batch_v5_a6000.sh
 #   ./scripts/tune_batch_v5_a6000.sh --batch_size 24
 #   ./scripts/tune_batch_v5_a6000.sh --batch_size 32 --epochs 2
+#   ./scripts/tune_batch_v5_a6000.sh --max_samples 100000 --batch_size 32 --epochs 10 --seq_len 256
+#   ./scripts/tune_batch_v5_a6000.sh --resume checkpoints_v5/best_model.pt --epochs 20
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -16,8 +21,6 @@ cd "$SCRIPT_DIR"
 # shellcheck disable=SC1091
 source ./scripts/v5_env_setup_a6000.sh
 
-mkdir -p logs checkpoints_v5 2>/dev/null || true
-
 # Default is small-matched so comparison with small baselines is fairer.
 eval "$PYTHON_BIN -m v5.train" \
   --size small-matched \
@@ -25,5 +28,7 @@ eval "$PYTHON_BIN -m v5.train" \
   --seq_len 256 \
   --batch_size 64 \
   --epochs 5 \
+  --log_dir logs \
+  --checkpoint_dir checkpoints_v5 \
   "$@"
 

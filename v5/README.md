@@ -170,6 +170,12 @@ python -m v5.train --size tiny --epochs 5 --max_samples 1000
 # Reviewer's benchmark (needs GPU -- RTX 4090 or similar)
 python -m v5.train --size small --epochs 20 --max_samples 20000 --seq_len 512
 
+# A6000 batch-tuning run (100k samples, small-matched)
+./scripts/tune_batch_v5_a6000.sh --max_samples 100000 --batch_size 32 --epochs 10 --seq_len 256
+
+# Resume from checkpoint
+python -m v5.train --size small --resume checkpoints_v5/best_model.pt
+
 # Ablation: no banks (isolates SSM contribution)
 python -m v5.train --size small --epochs 20 --max_samples 20000 --no_banks
 
@@ -181,14 +187,80 @@ python -m v5.train --size small --epochs 20 --max_samples 20000 --no_attention
 
 ## Config Presets
 
-| Preset | Complex Dim | Layers | Banks | State Dim | Attention | Use Case |
-|--------|-------------|--------|-------|-----------|-----------|----------|
-| `tiny` | 64 | 4 | 2 | 128 | every 4 | Smoke tests |
-| `small` | 256 | 8 | 2 | 512 | every 4 | Experiments |
-| `small-matched` | 128 | 8 | 2 | 256 | every 4 | Match ~8M baseline |
-| `medium` | 512 | 12 | 3 | 1024 | every 4 | Serious training |
+| Preset | Complex Dim | Real Values | Layers | Banks | State Dim | Heads | Attention | Use Case |
+|--------|-------------|-------------|--------|-------|-----------|-------|-----------|----------|
+| `tiny` | 64 | 128 | 4 | 2 | 128 | 4 | every 4 | Smoke tests |
+| `small-matched` | 128 | 256 | 8 | 2 | 256 | 4 | every 4 | Fair baseline comparison (~31M) |
+| `small` | 256 | 512 | 8 | 2 | 512 | 8 | every 4 | Standard experiments |
+| `medium` | 512 | 1024 | 12 | 3 | 1024 | 8 | every 4 | Serious training |
+| `large` | 768 | 1536 | 16 | 3 | 1536 | 12 | every 4 | Full scale |
 
-Note: "Complex dim 256" means each position is represented by 256 complex numbers = 512 real values. The parameter count is higher than a real-valued model with dim=256, but each parameter does more work.
+Note: "Complex dim 256" means each position is represented by 256 complex numbers = 512 real values. The parameter count is higher than a real-valued model with dim=256, but each parameter does more work. Exact parameter counts are reported at the start of each training run.
+
+**`small-matched`** is designed for fair comparison with real-valued baselines. When run with 100k TinyStories samples (seq_len=256), it has ~31.6M parameters and reaches val PPL ~16.9 by epoch 2.
+
+---
+
+## Training Output
+
+Training logs to both stdout and a log file (`logs/v5_train_{size}.log`). Each line in the log file is prefixed with a wall-time timestamp.
+
+**Per-batch** (every 50 batches):
+```
+  [1] batch 50/2403 loss=4.60 ppl=99.5 div=0.00 lr=1.00e-04 | 245.3 samples/s | 62796 tok/s
+```
+
+**Per-epoch**: train/val loss, PPL, wall time, then a text generation sample:
+```
+Epoch 2/10 | Train Loss: 3.0747 PPL: 21.64 | Time: 1645.9s | Val Loss: 2.8296 PPL: 16.94 *best*
+
+Prompt: The quick brown
+Generated: The quick brown fox jumped over the lazy dog and ran into the forest...
+```
+
+**Checkpointing**: `best_model.pt` saved on val improvement, `checkpoint_epoch_N.pt` every 5 epochs, `final_model.pt` at end. Use `--resume <path>` to continue training from a checkpoint (appends to existing log).
+
+**Log behavior**:
+- Fresh start: overwrites the log file
+- `--resume`: appends to the existing log with a separator showing the resume timestamp
+
+### CLI Arguments
+
+| Arg | Default | Description |
+|-----|---------|-------------|
+| `--size` | `small` | Model preset: `tiny`, `small`, `small-matched`, `medium`, `large` |
+| `--epochs` | `20` | Number of training epochs |
+| `--batch_size` | preset | Override batch size from preset |
+| `--lr` | preset | Override learning rate from preset |
+| `--max_samples` | `20000` | Max TinyStories samples to load |
+| `--seq_len` | `512` | Sequence length for chunking |
+| `--num_banks` | preset | Override number of banks |
+| `--no_attention` | off | Disable attention layers (ablation) |
+| `--no_banks` | off | Disable banks (ablation) |
+| `--log_dir` | `logs` | Directory for log files |
+| `--checkpoint_dir` | `checkpoints_v5` | Directory for checkpoints |
+| `--resume` | none | Path to checkpoint to resume from |
+
+---
+
+## A6000 Server Scripts
+
+All scripts live in `scripts/` and auto-bootstrap the Python environment via `v5_env_setup_a6000.sh`.
+
+| Script | Purpose | Default Size | Notes |
+|--------|---------|-------------|-------|
+| `tune_batch_v5_a6000.sh` | Find optimal batch size | `small-matched` | Quick runs, no compile |
+| `run_v5_medium_a6000.sh` | Full training run | `small` | Use in tmux |
+| `monitor_training_v5_a6000.sh` | Watch GPU + tail log | -- | `./monitor_training_v5_a6000.sh 5 logs/v5_train_small-matched.log` |
+
+Extra args pass through to `train.py`, so you can override anything:
+```bash
+# Tune with 100k samples
+./scripts/tune_batch_v5_a6000.sh --max_samples 100000 --batch_size 32 --epochs 10 --seq_len 256
+
+# Resume interrupted training
+./scripts/tune_batch_v5_a6000.sh --resume checkpoints_v5/best_model.pt --epochs 20
+```
 
 ---
 
@@ -203,7 +275,7 @@ v5/
     bank.py          # AlgebraicBank, ComplexRouter, AlgebraicFusion, MultiBank
   model.py           # AlgebraicLM -- wires everything together
   config.py          # V5Config with presets
-  train.py           # Training loop (TinyStories, GPT-2 tokenizer)
+  train.py           # Training loop (TinyStories, GPT-2 tokenizer, logging, checkpoints)
 ```
 
 ---
