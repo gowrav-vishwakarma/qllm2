@@ -250,16 +250,21 @@ All scripts live in `scripts/` and auto-bootstrap the Python environment via `v5
 | Script | Purpose | Default Size | Notes |
 |--------|---------|-------------|-------|
 | `tune_batch_v5_a6000.sh` | Find optimal batch size | `small-matched` | Quick runs, no compile |
-| `run_v5_medium_a6000.sh` | Full training run | `small` | Use in tmux |
+| `run_v5_medium_a6000.sh` | Full training run | `small-matched` | Uses same size as tune script (batch size transfers) |
 | `monitor_training_v5_a6000.sh` | Watch GPU + tail log | -- | `./monitor_training_v5_a6000.sh 5 logs/v5_train_small-matched.log` |
+
+**Important**: Both `tune_batch_v5_a6000.sh` and `run_v5_medium_a6000.sh` use `small-matched` so the batch size you find during tuning will work for the full run. If you want to use `small` or `medium` model size, tune batch size separately for that size.
 
 Extra args pass through to `train.py`, so you can override anything:
 ```bash
 # Tune with 100k samples
 ./scripts/tune_batch_v5_a6000.sh --max_samples 100000 --batch_size 32 --epochs 10 --seq_len 256
 
+# Full run with batch size from tuning
+./scripts/run_v5_medium_a6000.sh --batch_size 32
+
 # Resume interrupted training
-./scripts/tune_batch_v5_a6000.sh --resume checkpoints_v5/best_model.pt --epochs 20
+./scripts/run_v5_medium_a6000.sh --resume checkpoints_v5/best_model.pt --epochs 20
 ```
 
 ---
