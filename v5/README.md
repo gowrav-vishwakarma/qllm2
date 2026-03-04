@@ -93,6 +93,8 @@ The CGU gate simultaneously **selects** (magnitude) and **transforms** (phase). 
 
 A content-dependent **router** learns which bank matters most for each token, and an **AlgebraicFusion** module combines bank outputs via learned phase rotations -- genuine algebraic interference where outputs at different phases constructively and destructively combine.
 
+**Scaling banks**: More banks = more parallel perspectives and richer phase interference (2 banks give 1 interference pair; 3 banks give 3 pairs). The tradeoff: more banks slow early training because the router, diversity loss, and fusion have more to coordinate -- but once specialized, they capture finer-grained nuances that fewer banks miss. The `bank_expand` factor controls each bank's internal width (expand=2 means the CGU projects up to dim\*2 internally before projecting back). A **diversity loss** penalizes bank outputs that are too similar, preventing them from collapsing into doing the same thing.
+
 Code: `v5/core/bank.py` -- `AlgebraicBank`, `ComplexRouter`, `AlgebraicFusion`
 
 #### 3. ComplexSSM -- "Remember what came before"
