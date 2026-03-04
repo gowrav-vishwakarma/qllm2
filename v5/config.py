@@ -68,10 +68,11 @@ def get_config(size: str = 'small') -> V5Config:
             num_banks=2, num_heads=8, bank_expand=2,
             batch_size=8, learning_rate=1e-4,
         ),
-        # Matched to reviewer's ~8M real params: complex dim 128 = 256 real
+        # Weight-tied, core-heavy: 28.7M total, 15.8M core (55%)
+        # Wider CGU (expand=4) over more banks -- let the algebra do more per path
         'small-matched': V5Config(
-            dim=128, state_dim=256, num_layers=8,
-            num_banks=2, num_heads=4, bank_expand=2,
+            dim=128, state_dim=512, num_layers=12,
+            num_banks=2, num_heads=8, bank_expand=4,
             batch_size=8, learning_rate=1e-4,
         ),
         'medium': V5Config(

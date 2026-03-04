@@ -194,14 +194,14 @@ python -m v5.train --size small --epochs 20 --max_samples 20000 --no_attention
 | Preset | Complex Dim | Real Values | Layers | Banks | State Dim | Heads | Attention | Total Params | Core Params | Use Case |
 |--------|-------------|-------------|--------|-------|-----------|-------|-----------|-------------|-------------|----------|
 | `tiny` | 64 | 128 | 4 | 2 | 128 | 4 | every 4 | ~7M | ~1.5M | Smoke tests |
-| `small-matched` | 128 | 256 | 8 | 2 | 256 | 4 | every 4 | ~18.7M | ~5.8M | Fair baseline comparison |
+| `small-matched` | 128 | 256 | 12 | 2 | 512 | 8 | every 4 | ~28.7M | ~15.8M | Fair baseline comparison |
 | `small` | 256 | 512 | 8 | 2 | 512 | 8 | every 4 | ~77M | ~51M | Standard experiments |
 | `medium` | 512 | 1024 | 12 | 3 | 1024 | 8 | every 4 | ~260M | ~210M | Serious training |
 | `large` | 768 | 1536 | 16 | 3 | 1536 | 12 | every 4 | ~540M | ~460M | Full scale |
 
 Note: "Complex dim 256" means each position is represented by 256 complex numbers = 512 real values. The LM head uses **complex weight tying**: output logits are computed as `Re(z * conj(embed))`, reusing the embedding table. This is both more parameter-efficient and more algebraically consistent than a separate output projection. "Core Params" is banks + SSM + attention only. Exact counts are reported at the start of each training run.
 
-**`small-matched`** is designed for fair comparison with real-valued baselines. With weight tying, it has ~18.7M parameters (embed 12.9M shared with output, core 5.8M). Previous untied version had ~31.6M. Observed val PPL (pre-tying): ~32.4 (epoch 1), ~21.0 (epoch 2).
+**`small-matched`** is designed for fair comparison with real-valued baselines. With weight tying + reinvested core params: ~28.7M total (embed 12.9M tied, core 15.8M). Uses wider CGU (expand=4) with 2 banks and 12 layers -- favoring richer per-path processing over more parallel paths, consistent with V5's "complex ops do more per parameter" philosophy. Previous versions: v1 untied (31.6M, 5.8M core), v2 tied-only (18.7M, 5.8M core).
 
 ---
 
