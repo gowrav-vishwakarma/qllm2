@@ -183,21 +183,25 @@ python -m v5.train --size small --epochs 20 --max_samples 20000 --no_banks
 python -m v5.train --size small --epochs 20 --max_samples 20000 --no_attention
 ```
 
+**Note on caching**: v5 tokenizes fresh each time (no token cache). The HuggingFace `datasets` library caches the raw TinyStories dataset in `~/.cache/huggingface/datasets/`, but since we slice after loading (`texts[:max_samples]`), changing `max_samples` works correctly. If you suspect cache issues, clear it: `rm -rf ~/.cache/huggingface/datasets/roneneldan___tinystories/`
+
 ---
 
 ## Config Presets
 
-| Preset | Complex Dim | Real Values | Layers | Banks | State Dim | Heads | Attention | Use Case |
-|--------|-------------|-------------|--------|-------|-----------|-------|-----------|----------|
-| `tiny` | 64 | 128 | 4 | 2 | 128 | 4 | every 4 | Smoke tests |
-| `small-matched` | 128 | 256 | 8 | 2 | 256 | 4 | every 4 | Fair baseline comparison (~31M) |
-| `small` | 256 | 512 | 8 | 2 | 512 | 8 | every 4 | Standard experiments |
-| `medium` | 512 | 1024 | 12 | 3 | 1024 | 8 | every 4 | Serious training |
-| `large` | 768 | 1536 | 16 | 3 | 1536 | 12 | every 4 | Full scale |
+| Preset | Complex Dim | Real Values | Layers | Banks | State Dim | Heads | Attention | Total Params | Core Params | Use Case |
+|--------|-------------|-------------|--------|-------|-----------|-------|-----------|-------------|-------------|----------|
+| `tiny` | 64 | 128 | 4 | 2 | 128 | 4 | every 4 | ~7M | ~1.5M | Smoke tests |
+| `small-matched` | 128 | 256 | 8 | 2 | 256 | 4 | every 4 | ~31.6M | ~5.8M | Fair baseline comparison |
+| `small` | 256 | 512 | 8 | 2 | 512 | 8 | every 4 | ~77M | ~51M | Standard experiments |
+| `medium` | 512 | 1024 | 12 | 3 | 1024 | 8 | every 4 | ~260M | ~210M | Serious training |
+| `large` | 768 | 1536 | 16 | 3 | 1536 | 12 | every 4 | ~540M | ~460M | Full scale |
 
-Note: "Complex dim 256" means each position is represented by 256 complex numbers = 512 real values. The parameter count is higher than a real-valued model with dim=256, but each parameter does more work. Exact parameter counts are reported at the start of each training run.
+Note: "Complex dim 256" means each position is represented by 256 complex numbers = 512 real values. "Total Params" includes embedding and LM head; "Core Params" is banks + SSM + attention only. At small scales, embedding dominates (vocab 50257 >> dim); at medium/large scales, the core model is the majority. Exact counts are reported at the start of each training run.
 
-**`small-matched`** is designed for fair comparison with real-valued baselines. When run with 100k TinyStories samples (seq_len=256), it has ~31.6M parameters and reaches val PPL ~16.9 by epoch 2.
+**`small-matched`** is designed for fair comparison with real-valued baselines. When run with 100k TinyStories samples (seq_len=256, batch_size=64), it has ~31.6M parameters. Observed val PPL: ~32.4 (epoch 1), ~21.0 (epoch 2). Training ongoing -- final numbers TBD.
+
+**Known issue -- parameter distribution**: At `small-matched` scale, ~82% of parameters are in the embedding (12.9M) and LM head (12.9M). The core model (banks + SSM + attention) is only ~5.8M. This is a standard small-model problem (GPT-2's 50257 vocab >> dim 128), not specific to V5. Weight tying (sharing embed/output weights, as GPT-2/LLaMA/Mamba all do) would cut this to ~18.7M total. Not yet implemented.
 
 ---
 
@@ -207,15 +211,15 @@ Training logs to both stdout and a log file (`logs/v5_train_{size}.log`). Each l
 
 **Per-batch** (every 50 batches):
 ```
-  [1] batch 50/2403 loss=4.60 ppl=99.5 div=0.00 lr=1.00e-04 | 245.3 samples/s | 62796 tok/s
+  [1] batch 50/1202 loss=9.6257 ppl=15149.3 div=0.0000 lr=1.00e-04 | 53.7 samples/s | 13747 tok/s
 ```
 
 **Per-epoch**: train/val loss, PPL, wall time, then a text generation sample:
 ```
-Epoch 2/10 | Train Loss: 3.0747 PPL: 21.64 | Time: 1645.9s | Val Loss: 2.8296 PPL: 16.94 *best*
+Epoch 2/10 | Train Loss: 3.3150 PPL: 27.52 | Time: 1359.5s | Val Loss: 3.0460 PPL: 21.03 *best*
 
 Prompt: The quick brown
-Generated: The quick brown fox jumped over the lazy dog and ran into the forest...
+Generated: The quick brown. They felt very excited. The water were very funny...
 ```
 
 **Checkpointing**: `best_model.pt` saved on val improvement, `checkpoint_epoch_N.pt` every 5 epochs, `final_model.pt` at end. Use `--resume <path>` to continue training from a checkpoint (appends to existing log).
@@ -299,10 +303,28 @@ v5/
 
 ---
 
+## Training Results (In Progress)
+
+Results from `small-matched` on 100k TinyStories (seq_len=256, batch_size=64, A6000 GPU):
+
+| Epoch | Train Loss | Train PPL | Val Loss | Val PPL | Time |
+|-------|-----------|-----------|----------|---------|------|
+| 1 | 4.879 | 131.45 | 3.479 | 32.41 | 1367s |
+| 2 | 3.315 | 27.52 | 3.046 | 21.03 | 1360s |
+| 3-10 | ... | ... | ... | ... | running |
+
+Throughput: ~14.4k tok/s (~56 samples/s) on A6000.
+
+**Context**: Standard transformers and Mamba at ~30M params on the same data typically reach val PPL ~20-28 by epoch 2. V5 at 21.03 is in the competitive range but not yet demonstrably better. No claims until training completes and baselines are run.
+
+---
+
 ## The Hypothesis We're Testing
 
 **Claim**: Complex-valued parameters store more information per parameter than real-valued parameters because of the algebraic structure of complex multiplication (rotation + scaling in one operation).
 
 **Test**: Run V5 against a real-valued baseline with the same architecture but real numbers everywhere. If V5 with fewer real parameters matches or beats the real-valued baseline, the claim is validated.
+
+**Status**: Training in progress. Early results (epoch 2, val PPL 21.03) are in the same ballpark as standard baselines but not yet conclusive. The hypothesis is neither confirmed nor refuted -- we need full training runs and controlled baseline comparisons.
 
 **If it fails**: We honestly acknowledge that complex numbers don't help for language and fall back to real-valued architectures. Science means testing hypotheses, not defending them.
