@@ -56,11 +56,11 @@ For training on a remote GPU server (e.g. NVIDIA A6000 48GB), sync the repo to `
 
 **1. Find best batch size first (no compile, 1 epoch):** Avoids recompiling every time you change batch size. Run with different `--batch_size` until you find the largest that doesn't OOM and uses GPU well.
 ```bash
-./scripts/tune_batch_a6000.sh                  # default batch 16
-./scripts/tune_batch_a6000.sh --batch_size 24  # try 24, 32, etc.
+./scripts/tune_batch_v4_a6000.sh                  # default batch 16
+./scripts/tune_batch_v4_a6000.sh --batch_size 24  # try 24, 32, etc.
 
 # on server in tmux session to read logs easily from outside tmux session
-PYTHONUNBUFFERED=1 ./scripts/tune_batch_a6000.sh --batch_size 64 --epochs 10 2>&1 | stdbuf -oL tee logs/tune_batch64_10ep.log
+PYTHONUNBUFFERED=1 ./scripts/tune_batch_v4_a6000.sh --batch_size 64 --epochs 10 2>&1 | stdbuf -oL tee logs/tune_batch64_10ep.log
 
 # After one epoch (or when stable), Ctrl+C. Note the batch size.
 ```
@@ -74,8 +74,8 @@ cd ~/qllm && ./scripts/run_v4_medium_a6000.sh --batch_size 24
 
 **Monitor GPU (in another tmux pane or terminal):**
 ```bash
-./scripts/monitor_training.sh           # GPU every 5s
-./scripts/monitor_training.sh 5 logs/v4_medium_20250128.log  # GPU + tail log
+./scripts/monitor_training_v4_a6000.sh           # GPU every 5s
+./scripts/monitor_training_v4_a6000.sh 5 logs/v4_medium_20250128.log  # GPU + tail log
 ```
 
 **Batch size tuning:** Effective batch = `batch_size × accumulation_steps` (default 16×4=64). If you hit **CUDA OOM**, lower `--batch_size`. If GPU is often **&lt;80%**, try a larger batch. Resume with `--resume checkpoints_v4_real/best_model.pt`.

@@ -15,7 +15,7 @@ torch.compile compatibility and mixed-precision support.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple
+from typing import Tuple, Optional
 
 
 # ---------------------------------------------------------------------------
@@ -210,7 +210,7 @@ class ComplexEmbed(nn.Module):
     roles (e.g. "happy" vs "sad") can share magnitude but differ in phase.
     """
 
-    def __init__(self, vocab_size: int, dim: int, padding_idx: int | None = None):
+    def __init__(self, vocab_size: int, dim: int, padding_idx: Optional[int] = None):
         super().__init__()
         self.dim = dim
         self.embed_real = nn.Embedding(vocab_size, dim, padding_idx=padding_idx)

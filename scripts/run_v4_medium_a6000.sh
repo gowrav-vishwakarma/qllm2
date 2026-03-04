@@ -2,7 +2,7 @@
 # Run v4 medium training on A6000 (48GB) WITH compile. Use inside tmux so it survives disconnect.
 #
 # Workflow: Find best batch size first (no compile), then run full training with compile.
-#   1. ./scripts/tune_batch_a6000.sh --batch_size 16   # then try 24, 32... (1 epoch each, no compile)
+#   1. ./scripts/tune_batch_v4_a6000.sh --batch_size 16   # then try 24, 32... (1 epoch each, no compile)
 #   2. After one epoch or when stable, kill (Ctrl+C). Note max batch size that didn't OOM.
 #   3. Full run: ./scripts/run_v4_medium_a6000.sh --batch_size 24   # use your chosen size
 #

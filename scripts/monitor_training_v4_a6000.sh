@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Monitor GPU and optionally tail training log. Run in a separate terminal/tmux pane.
+# Monitor GPU and optionally tail v4 training log.
 # Usage:
-#   ./scripts/monitor_training.sh              # GPU every 5s
-#   ./scripts/monitor_training.sh 10           # GPU every 10s
-#   ./scripts/monitor_training.sh 5 logs/v4_medium_20250128.log  # GPU + tail log
+#   ./scripts/monitor_training_v4_a6000.sh
+#   ./scripts/monitor_training_v4_a6000.sh 10
+#   ./scripts/monitor_training_v4_a6000.sh 5 logs/v4_medium_20250128.log
 
 INTERVAL="${1:-5}"
 LOG_FILE="${2:-}"
@@ -23,3 +23,4 @@ else
   echo "Watching GPU every ${INTERVAL}s (Ctrl+C to stop)"
   watch -n "$INTERVAL" nvidia-smi
 fi
+
