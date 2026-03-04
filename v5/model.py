@@ -13,12 +13,12 @@ interactions make FFN layers redundant.
 
 import torch
 import torch.nn as nn
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 from dataclasses import dataclass
 
 from .config import V5Config
 from .core.complex import (
-    ComplexEmbed, ComplexLinear, ComplexNorm, to_real,
+    ComplexEmbed, ComplexLinear, ComplexNorm,
 )
 from .core.ssm import ComplexSSM, SSMState
 from .core.attention import PhaseAttention
@@ -88,10 +88,11 @@ class AlgebraicLM(nn.Module):
                 self.attn_norms[key] = ComplexNorm(config.dim)
                 self.attn_scales[key] = nn.Parameter(torch.tensor(0.1))
 
-        # LM Head: complex -> real -> vocab logits
+        # LM Head: complex -> tied projection to vocab logits
+        # Weight tying: reuse embed weights for output via complex inner product
+        # logits = Re(z * conj(embed)) = z_real @ embed_real.T + z_imag @ embed_imag.T
         self.lm_head_proj = ComplexLinear(config.dim, config.dim)
         self.lm_head_norm = ComplexNorm(config.dim)
-        self.output_proj = nn.Linear(config.dim * 2, config.vocab_size, bias=False)
 
         self._init_weights()
 
@@ -144,11 +145,14 @@ class AlgebraicLM(nn.Module):
             residual = z_out
             z_out = residual + attn(norm(z_out)) * scale
 
-        # 5. LM head: complex -> real -> logits
+        # 5. LM head: complex inner product with tied embedding weights
+        # logits_i = Re(z * conj(embed_i)) = z_r @ e_r^T + z_i @ e_i^T
         lm = self.lm_head_proj(z_out)
         lm = self.lm_head_norm(lm)
-        lm_real = to_real(lm, mode='concat')  # [B, L, dim*2]
-        logits = self.output_proj(lm_real)      # [B, L, vocab_size]
+        logits = (
+            lm[..., 0] @ self.embed.embed_real.weight.T +
+            lm[..., 1] @ self.embed.embed_imag.weight.T
+        )  # [B, L, vocab_size]
 
         # Aggregate diversity loss
         div_loss = None
@@ -196,9 +200,9 @@ class AlgebraicLM(nn.Module):
         return generated
 
     def count_parameters(self) -> Dict[str, int]:
-        """Parameter count by component."""
+        """Parameter count by component (embed weights are tied with LM head)."""
         counts = {
-            'embed': sum(p.numel() for p in self.embed.parameters()),
+            'embed (tied w/ output)': sum(p.numel() for p in self.embed.parameters()),
             'banks': sum(p.numel() for p in self.banks.parameters()),
             'ssm': sum(p.numel() for p in self.ssm.parameters()),
             'attention': sum(
@@ -206,10 +210,9 @@ class AlgebraicLM(nn.Module):
                 for key in self.attn_layers
                 for p in self.attn_layers[key].parameters()
             ),
-            'lm_head': (
+            'lm_head_proj': (
                 sum(p.numel() for p in self.lm_head_proj.parameters()) +
-                sum(p.numel() for p in self.lm_head_norm.parameters()) +
-                sum(p.numel() for p in self.output_proj.parameters())
+                sum(p.numel() for p in self.lm_head_norm.parameters())
             ),
         }
         counts['total'] = sum(counts.values())

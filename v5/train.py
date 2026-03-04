@@ -486,7 +486,7 @@ def main():
     if args.resume:
         checkpoint = torch.load(args.resume, weights_only=False)
         model_to_load = model._orig_mod if hasattr(model, '_orig_mod') else model
-        model_to_load.load_state_dict(checkpoint['model_state_dict'])
+        model_to_load.load_state_dict(checkpoint['model_state_dict'], strict=False)
         start_epoch = checkpoint.get('epoch', 0) + 1
         best_val_loss = checkpoint.get('best_val_loss', float('inf'))
         best_val_ppl = checkpoint.get('best_val_ppl', float('inf'))

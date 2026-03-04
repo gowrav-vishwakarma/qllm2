@@ -61,9 +61,9 @@ The difference: V4 paid the cost of complex numbers (2x memory, 2x compute) but 
 ```
 Tokens --> ComplexEmbed --> [Bank + SSM + Attention] x N --> LM Head --> Next Token
               |                                                |
-         Each token            N layers of processing       Back to
-        becomes a               (all in complex space)      real numbers
-       complex vector                                      for prediction
+         Each token            N layers of processing     Re(z · conj(embed))
+        becomes a               (all in complex space)    tied weights: output
+       complex vector                                     reuses embed table
 ```
 
 ### The Components
@@ -192,16 +192,14 @@ python -m v5.train --size small --epochs 20 --max_samples 20000 --no_attention
 | Preset | Complex Dim | Real Values | Layers | Banks | State Dim | Heads | Attention | Total Params | Core Params | Use Case |
 |--------|-------------|-------------|--------|-------|-----------|-------|-----------|-------------|-------------|----------|
 | `tiny` | 64 | 128 | 4 | 2 | 128 | 4 | every 4 | ~7M | ~1.5M | Smoke tests |
-| `small-matched` | 128 | 256 | 8 | 2 | 256 | 4 | every 4 | ~31.6M | ~5.8M | Fair baseline comparison |
+| `small-matched` | 128 | 256 | 8 | 2 | 256 | 4 | every 4 | ~18.7M | ~5.8M | Fair baseline comparison |
 | `small` | 256 | 512 | 8 | 2 | 512 | 8 | every 4 | ~77M | ~51M | Standard experiments |
 | `medium` | 512 | 1024 | 12 | 3 | 1024 | 8 | every 4 | ~260M | ~210M | Serious training |
 | `large` | 768 | 1536 | 16 | 3 | 1536 | 12 | every 4 | ~540M | ~460M | Full scale |
 
-Note: "Complex dim 256" means each position is represented by 256 complex numbers = 512 real values. "Total Params" includes embedding and LM head; "Core Params" is banks + SSM + attention only. At small scales, embedding dominates (vocab 50257 >> dim); at medium/large scales, the core model is the majority. Exact counts are reported at the start of each training run.
+Note: "Complex dim 256" means each position is represented by 256 complex numbers = 512 real values. The LM head uses **complex weight tying**: output logits are computed as `Re(z * conj(embed))`, reusing the embedding table. This is both more parameter-efficient and more algebraically consistent than a separate output projection. "Core Params" is banks + SSM + attention only. Exact counts are reported at the start of each training run.
 
-**`small-matched`** is designed for fair comparison with real-valued baselines. When run with 100k TinyStories samples (seq_len=256, batch_size=64), it has ~31.6M parameters. Observed val PPL: ~32.4 (epoch 1), ~21.0 (epoch 2). Training ongoing -- final numbers TBD.
-
-**Known issue -- parameter distribution**: At `small-matched` scale, ~82% of parameters are in the embedding (12.9M) and LM head (12.9M). The core model (banks + SSM + attention) is only ~5.8M. This is a standard small-model problem (GPT-2's 50257 vocab >> dim 128), not specific to V5. Weight tying (sharing embed/output weights, as GPT-2/LLaMA/Mamba all do) would cut this to ~18.7M total. Not yet implemented.
+**`small-matched`** is designed for fair comparison with real-valued baselines. With weight tying, it has ~18.7M parameters (embed 12.9M shared with output, core 5.8M). Previous untied version had ~31.6M. Observed val PPL (pre-tying): ~32.4 (epoch 1), ~21.0 (epoch 2).
 
 ---
 
@@ -299,6 +297,7 @@ v5/
 | FFN | Separate FFN layer | None (CGU replaces it) | Less overhead, same expressiveness |
 | Memory | Separate memory module | SSM state + sparse attention | Simpler, more effective |
 | Banks | Hand-labeled roles | Learned specialization | Let the algebra learn |
+| LM Head | Separate `Linear(dim, vocab)` | `Re(z · conj(embed))` tied weights | 40% fewer params, algebraically consistent |
 | Naming | "Quantum Phase-Field" | "Algebraic" | Honest about the math |
 
 ---
