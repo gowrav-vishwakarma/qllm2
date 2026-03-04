@@ -19,13 +19,27 @@ Structured log of config changes, training runs, and results. Update this file a
 |-----|--------|-------|------|--------|-------|--------|-------|-------|--------|-------------|-------------|-------|-------|
 | v1-untied | small-matched (orig) | 31.6M | 5.8M (18%) | 8 | 2 | 2 | 256 | 64 | 10 | 32.41 | 21.03 (ep2) | ~14.4k | Baseline, no weight tying |
 | v2-tied | small-matched | 18.7M | 5.8M (31%) | 8 | 2 | 2 | 256 | 64 | 10 | partial | -- | ~14.4k | Weight tying only; slower early convergence |
-| v3-core-heavy | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 32 | 1 | -- | -- | ~6.2k | Tune run; faster per-sample learning |
+| v3-core-heavy | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 32 | 1 | 66.64 | 66.64 | ~6.2k | Tune/stability run; 1-epoch cosine undertrains and is not quality-comparable to 10-epoch runs |
 
-**Data**: 100k TinyStories, seq_len=256, A6000 GPU.
+**Data (default unless overridden)**: TinyStories + GPT-2 tokenizer, A6000 GPU.
 
 ---
 
-## 3. Per-Sample Learning Curves
+## 3. Chronological Run Registry (Source of Truth)
+
+Use this table for exact reproducibility: what architecture was used, what data/setup it ran with, and what result it produced.
+
+| Run | Wall Clock Start | Architecture Snapshot | Param Snapshot | Run Setup | Result Snapshot | Status |
+|-----|------------------|-----------------------|----------------|-----------|-----------------|--------|
+| v1-untied | 2026-03-04 10:13 | `dim=128, state=256, layers=8, banks=2, expand=2, heads=4, attn_every=4, tied_output=no` | total=31,556,184; core=5,791,448 (18%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=64, epochs=10, batches/epoch=1202 | epoch1 val_ppl=32.41, epoch2 val_ppl=21.03, throughput~14.4k tok/s | baseline (primary reference) |
+| v2-tied | 2026-03-04 11:31 | `dim=128, state=256, layers=8, banks=2, expand=2, heads=4, attn_every=4, tied_output=yes` | total=18,690,392; core=5,824,600 (31%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=64, epochs=10, batches/epoch=1202 | early epoch1 lagged ~0.5 loss vs v1 at same batch index | partial/incomplete |
+| v3-core-heavy | 2026-03-04 12:04 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=32, epochs=1, batches/epoch=2403 | epoch1 val_ppl=66.64, best_val_ppl=66.64, throughput~6.2k tok/s | tune/stability only (not quality-comparable) |
+
+**Comparison note**: v3 used `epochs=1`, so cosine LR decayed to ~0 within one epoch; this makes quality metrics non-comparable to 10-epoch runs.
+
+---
+
+## 4. Per-Sample Learning Curves
 
 Aligned by **samples seen** (not batch index), since batch sizes differ.
 
@@ -37,12 +51,13 @@ Aligned by **samples seen** (not batch index), since batch sizes differ.
 | ~12,800 | batch 200: loss=6.15 | batch 200: loss=6.69 | batch 400: loss=5.43 |
 | ~14,400 | batch 225: ~5.9 | batch 225: ~6.4 | batch 450: loss=5.29 |
 
-**Takeaway**: v3-core-heavy learns ~0.7 loss points faster per sample than v1-untied at 12.8k samples. Reinvested core params are paying off. Throughput is 2.3x slower (batch 32 vs 64, larger model).
+**Takeaway**: Early in epoch, v3-core-heavy learns ~0.7 loss points faster per sample than v1-untied at 12.8k samples. Final `epoch=1` result is `Val PPL 66.64`, which is expectedly poor because cosine LR decays to ~0 within a single epoch; this run should be treated as a tune/stability check, not a fair quality benchmark against 10-epoch runs.
 
 ---
 
 ## How to Update
 
-1. **Change Log**: Add a row when you change config or code.
-2. **Run Summary**: Add a row after each run; fill best val PPL when training completes.
-3. **Per-Sample Curves**: Add a column or extend rows when you have batch-level data from a new run.
+1. **Change Log**: Add a row when you change config/code/logic.
+2. **Run Summary**: Add/update one row per run.
+3. **Chronological Run Registry**: Always add exact architecture + run setup + result.
+4. **Per-Sample Curves**: Add a column or extend rows when you have batch-level data from a new run.
