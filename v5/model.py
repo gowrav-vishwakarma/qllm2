@@ -17,6 +17,7 @@ from typing import Dict, Optional
 from dataclasses import dataclass
 
 from .config import V5Config
+from .init import create_initializer
 from .core.complex import (
     ComplexEmbed, ComplexLinear, ComplexNorm,
 )
@@ -49,13 +50,22 @@ class AlgebraicLM(nn.Module):
         super().__init__()
         self.config = config
 
+        # Create initializer from config; resolve seed and store back
+        initializer = create_initializer(config.init_strategy, config.init_seed)
+        config.init_seed = initializer.seed
+
         # Embedding
-        self.embed = ComplexEmbed(config.vocab_size, config.dim)
+        self.embed = ComplexEmbed(
+            config.vocab_size, config.dim, initializer=initializer
+        )
         self.embed_norm = ComplexNorm(config.dim)
 
         # Per-layer banks (before SSM)
         self.banks = nn.ModuleList([
-            MultiBank(config.dim, config.num_banks, config.bank_expand, config.dropout)
+            MultiBank(
+                config.dim, config.num_banks, config.bank_expand, config.dropout,
+                initializer=initializer,
+            )
             for _ in range(config.num_layers)
         ])
         self.bank_norms = nn.ModuleList([
@@ -73,6 +83,7 @@ class AlgebraicLM(nn.Module):
             state_dim=config.state_dim,
             num_layers=config.num_layers,
             dropout=config.dropout,
+            initializer=initializer,
         )
 
         # Sparse attention layers (every K-th layer)
@@ -84,6 +95,7 @@ class AlgebraicLM(nn.Module):
                 key = str(i)
                 self.attn_layers[key] = PhaseAttention(
                     config.dim, config.num_heads, config.window_size, config.dropout,
+                    initializer=initializer,
                 )
                 self.attn_norms[key] = ComplexNorm(config.dim)
                 self.attn_scales[key] = nn.Parameter(torch.tensor(0.1))
@@ -91,18 +103,20 @@ class AlgebraicLM(nn.Module):
         # LM Head: complex -> tied projection to vocab logits
         # Weight tying: reuse embed weights for output via complex inner product
         # logits = Re(z * conj(embed)) = z_real @ embed_real.T + z_imag @ embed_imag.T
-        self.lm_head_proj = ComplexLinear(config.dim, config.dim)
+        self.lm_head_proj = ComplexLinear(config.dim, config.dim, initializer=initializer)
         self.lm_head_norm = ComplexNorm(config.dim)
 
         self._init_weights()
 
     def _init_weights(self):
+        """Init nn.Linear and nn.Embedding not already initialized by our strategy."""
+        embed_embeddings = {self.embed.embed_real, self.embed.embed_imag}
         for module in self.modules():
             if isinstance(module, nn.Linear):
                 nn.init.normal_(module.weight, std=0.02)
                 if module.bias is not None:
                     nn.init.zeros_(module.bias)
-            elif isinstance(module, nn.Embedding):
+            elif isinstance(module, nn.Embedding) and module not in embed_embeddings:
                 nn.init.normal_(module.weight, std=0.02)
 
     def forward(
@@ -198,6 +212,14 @@ class AlgebraicLM(nn.Module):
                 state = out.ssm_state
 
         return generated
+
+    @property
+    def initializer_info(self) -> dict:
+        """Strategy name and seed for display/checkpointing."""
+        return {
+            "init_strategy": self.config.init_strategy,
+            "init_seed": self.config.init_seed,
+        }
 
     def count_parameters(self) -> Dict[str, int]:
         """Parameter count by component (embed weights are tied with LM head)."""

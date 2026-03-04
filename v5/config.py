@@ -38,6 +38,10 @@ class V5Config:
     # Speed
     compile_model: bool = False
 
+    # Initialization (structured strategies, seed for reproducibility)
+    init_strategy: str = 'random'
+    init_seed: Optional[int] = None
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 

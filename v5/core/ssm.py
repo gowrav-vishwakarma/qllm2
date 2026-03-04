@@ -15,8 +15,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-from typing import Optional, Tuple
+from typing import Optional, Tuple, TYPE_CHECKING
 from dataclasses import dataclass
+
+if TYPE_CHECKING:
+    from ..init import InitStrategy
 
 from .complex import (
     ComplexLinear, ComplexNorm, ModReLU,
@@ -157,33 +160,35 @@ class ComplexSSMLayer(nn.Module):
         dim: int,
         state_dim: int,
         dropout: float = 0.1,
+        initializer: Optional['InitStrategy'] = None,
     ):
         super().__init__()
         self.dim = dim
         self.state_dim = state_dim
 
-        # Base complex eigenvalues
-        # Decay: initialized so |A| ~ 0.95-0.999 (long memory)
-        self.log_A_real = nn.Parameter(
-            torch.linspace(math.log(0.95), math.log(0.999), state_dim)
-        )
-        # Frequency: log-spaced for multi-resolution decomposition
-        self.log_A_imag = nn.Parameter(
-            torch.linspace(0.001, math.pi, state_dim)
-        )
+        if initializer is not None:
+            log_real, log_imag = initializer.init_ssm_eigenvalues(state_dim)
+            self.log_A_real = nn.Parameter(log_real)
+            self.log_A_imag = nn.Parameter(log_imag)
+            self.D = nn.Parameter(initializer.init_skip_connection(dim))
+        else:
+            self.log_A_real = nn.Parameter(
+                torch.linspace(math.log(0.95), math.log(0.999), state_dim)
+            )
+            self.log_A_imag = nn.Parameter(
+                torch.linspace(0.001, math.pi, state_dim)
+            )
+            self.D = nn.Parameter(torch.randn(dim, 2) * 0.01)
 
         # Input-dependent modulation (selectivity): x -> dt (decay modifier)
         self.dt_proj = nn.Linear(dim * 2, state_dim)
         self.dt_bias = nn.Parameter(torch.zeros(state_dim) - 4.0)  # small dt initially
 
         # B: input -> state (complex)
-        self.B_proj = ComplexLinear(dim, state_dim, bias=False)
+        self.B_proj = ComplexLinear(dim, state_dim, bias=False, initializer=initializer)
 
         # C: state -> output (complex)
-        self.C_proj = ComplexLinear(state_dim, dim, bias=False)
-
-        # D: skip connection (complex)
-        self.D = nn.Parameter(torch.randn(dim, 2) * 0.01)
+        self.C_proj = ComplexLinear(state_dim, dim, bias=False, initializer=initializer)
 
         self.norm = ComplexNorm(dim)
         self.dropout = nn.Dropout(dropout)
@@ -255,6 +260,7 @@ class ComplexSSM(nn.Module):
         state_dim: int = 512,
         num_layers: int = 8,
         dropout: float = 0.1,
+        initializer: Optional['InitStrategy'] = None,
     ):
         super().__init__()
         self.dim = dim
@@ -262,7 +268,7 @@ class ComplexSSM(nn.Module):
         self.num_layers = num_layers
 
         self.layers = nn.ModuleList([
-            ComplexSSMLayer(dim, state_dim, dropout)
+            ComplexSSMLayer(dim, state_dim, dropout, initializer=initializer)
             for _ in range(num_layers)
         ])
 

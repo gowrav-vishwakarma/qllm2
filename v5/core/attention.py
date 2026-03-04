@@ -15,7 +15,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..init import InitStrategy
 
 from .complex import ComplexLinear, ComplexNorm, cabs, to_real
 
@@ -35,6 +38,7 @@ class PhaseAttention(nn.Module):
         num_heads: int = 8,
         window_size: int = 256,
         dropout: float = 0.1,
+        initializer: Optional['InitStrategy'] = None,
     ):
         super().__init__()
         self.dim = dim
@@ -43,10 +47,10 @@ class PhaseAttention(nn.Module):
         self.window_size = window_size
         self.scale = self.head_dim ** -0.5
 
-        self.W_q = ComplexLinear(dim, dim, bias=False)
-        self.W_k = ComplexLinear(dim, dim, bias=False)
-        self.W_v = ComplexLinear(dim, dim, bias=False)
-        self.W_out = ComplexLinear(dim, dim, bias=False)
+        self.W_q = ComplexLinear(dim, dim, bias=False, initializer=initializer)
+        self.W_k = ComplexLinear(dim, dim, bias=False, initializer=initializer)
+        self.W_v = ComplexLinear(dim, dim, bias=False, initializer=initializer)
+        self.W_out = ComplexLinear(dim, dim, bias=False, initializer=initializer)
 
         self.norm = ComplexNorm(dim)
         self.dropout = nn.Dropout(dropout)

@@ -183,6 +183,15 @@ python -m v5.train --size small --epochs 20 --max_samples 20000 --no_banks
 
 # Ablation: no attention (isolates recurrence)
 python -m v5.train --size small --epochs 20 --max_samples 20000 --no_attention
+
+# Structured init: golden ratio (grokking attractor)
+python -m v5.train --size small --init_strategy golden_ratio
+
+# Reproduce exact init from a previous run
+python -m v5.train --size small --init_strategy golden_ratio --init_seed 8374291
+
+# DFT basis initialization
+python -m v5.train --size small --init_strategy dft
 ```
 
 **Note on caching**: v5 tokenizes fresh each time (no token cache). The HuggingFace `datasets` library caches the raw TinyStories dataset in `~/.cache/huggingface/datasets/`, but since we slice after loading (`texts[:max_samples]`), changing `max_samples` works correctly. If you suspect cache issues, clear it: `rm -rf ~/.cache/huggingface/datasets/roneneldan___tinystories/`
@@ -205,9 +214,46 @@ Note: "Complex dim 256" means each position is represented by 256 complex number
 
 ---
 
+## Structured Initialization
+
+V5 supports **21 initialization strategies** instead of plain random. Each strategy fills weight matrices with structured mathematical patterns (golden ratio, sinusoidal, DFT, etc.). These act as **grokking attractors**: weight decay pulls the model toward them during training, potentially inducing generalization.
+
+**Usage**:
+```bash
+--init_strategy <name>   # Strategy (default: random)
+--init_seed <int>        # Seed for reproducibility (auto-generated if omitted)
+```
+
+**Strategy categories**:
+
+| Category | Strategies |
+|----------|------------|
+| Random | `random`, `uniform`, `orthogonal` |
+| Number-theoretic | `golden_ratio`, `pi`, `sqrt_primes` |
+| Trigonometric | `sinusoidal`, `circular`, `roots_of_unity` |
+| Spiral | `fibonacci_spiral`, `log_spiral`, `fermat_spiral` |
+| Fourier | `dft`, `dct`, `hartley` |
+| Low-discrepancy | `halton`, `van_der_corput` |
+| Structured | `hadamard` |
+| SSM-specific | `hippo`, `s4d_lin`, `s4d_inv` |
+
+The resolved seed is displayed at training start and saved in checkpoints. Use the same `--init_strategy` and `--init_seed` to reproduce a run exactly.
+
+```bash
+# List all strategies
+python -c "from v5.init import list_strategies; print(list_strategies())"
+```
+
+---
+
 ## Training Output
 
 Training logs to both stdout and a log file (`logs/v5_train_{size}.log`). Each line in the log file is prefixed with a wall-time timestamp.
+
+**Header** (includes init strategy and seed when using structured init):
+```
+Init strategy: golden_ratio (seed: 8374291)
+```
 
 **Per-batch** (every 50 batches):
 ```
@@ -241,6 +287,8 @@ Generated: The quick brown. They felt very excited. The water were very funny...
 | `--num_banks` | preset | Override number of banks |
 | `--no_attention` | off | Disable attention layers (ablation) |
 | `--no_banks` | off | Disable banks (ablation) |
+| `--init_strategy` | `random` | Structured init: `golden_ratio`, `dft`, `hippo`, etc. |
+| `--init_seed` | auto | Seed for init reproducibility |
 | `--log_dir` | `logs` | Directory for log files |
 | `--checkpoint_dir` | `checkpoints_v5` | Directory for checkpoints |
 | `--resume` | none | Path to checkpoint to resume from |
@@ -282,6 +330,7 @@ v5/
     ssm.py           # ComplexSelectiveSSM with parallel scan
     attention.py     # PhaseAttention (sliding window, complex Q/K/V)
     bank.py          # AlgebraicBank, ComplexRouter, AlgebraicFusion, MultiBank
+  init.py            # Structured init strategies (21 classes, registry, seed support)
   model.py           # AlgebraicLM -- wires everything together
   config.py          # V5Config with presets
   train.py           # Training loop (TinyStories, GPT-2 tokenizer, logging, checkpoints)

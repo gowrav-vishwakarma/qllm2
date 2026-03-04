@@ -29,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from v5.model import AlgebraicLM, create_model, ModelOutput
 from v5.config import V5Config, get_config
+from v5.init import list_strategies
 
 
 # ---------------------------------------------------------------------------
@@ -311,7 +312,7 @@ class Trainer:
     def save_checkpoint(self, name: str):
         path = self.checkpoint_dir / name
         model_to_save = self.model._orig_mod if hasattr(self.model, '_orig_mod') else self.model
-        torch.save({
+        ckpt = {
             'model_state_dict': model_to_save.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
             'scheduler_state_dict': self.scheduler.state_dict(),
@@ -320,7 +321,11 @@ class Trainer:
             'best_val_ppl': self.best_val_ppl,
             'epoch': self._current_epoch,
             'config': self.config.to_dict(),
-        }, path)
+        }
+        if hasattr(self.model, 'initializer_info'):
+            ckpt['init_strategy'] = self.model.initializer_info['init_strategy']
+            ckpt['init_seed'] = self.model.initializer_info['init_seed']
+        torch.save(ckpt, path)
         print(f"Saved checkpoint: {path}")
 
     def train(self):
@@ -410,6 +415,11 @@ def main():
     parser.add_argument('--num_banks', type=int, default=None)
     parser.add_argument('--no_attention', action='store_true')
     parser.add_argument('--no_banks', action='store_true')
+    parser.add_argument('--init_strategy', type=str, default='random',
+                        choices=list_strategies(),
+                        help='Structured initialization strategy')
+    parser.add_argument('--init_seed', type=int, default=None,
+                        help='Seed for init (auto-generated if not set)')
     parser.add_argument('--log_dir', type=str, default='logs')
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_v5')
     parser.add_argument('--resume', type=str, default=None,
@@ -428,6 +438,8 @@ def main():
         config.attn_every_k = 0
     if args.no_banks:
         config.num_banks = 0
+    config.init_strategy = args.init_strategy
+    config.init_seed = args.init_seed
 
     # Set up TeeLogger: append on resume, overwrite on fresh start
     log_dir = Path(args.log_dir)
@@ -476,8 +488,10 @@ def main():
         pin_memory=use_cuda,
     )
 
-    # Create model
+    # Create model (resolves init_seed and stores in config)
     model = create_model(config)
+    init_info = model.initializer_info
+    print(f"Init strategy: {init_info['init_strategy']} (seed: {init_info['init_seed']})")
 
     # Resume from checkpoint
     start_epoch = 0
@@ -491,6 +505,8 @@ def main():
         best_val_loss = checkpoint.get('best_val_loss', float('inf'))
         best_val_ppl = checkpoint.get('best_val_ppl', float('inf'))
         print(f"Resumed from epoch {start_epoch}, best_val_loss={best_val_loss:.4f}")
+        if 'init_strategy' in checkpoint and 'init_seed' in checkpoint:
+            print(f"Original init: {checkpoint['init_strategy']} (seed: {checkpoint['init_seed']})")
 
     if config.compile_model:
         print("Compiling model with torch.compile...")

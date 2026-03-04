@@ -15,7 +15,10 @@ torch.compile compatibility and mixed-precision support.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple, Optional
+from typing import Tuple, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..init import InitStrategy
 
 
 # ---------------------------------------------------------------------------
@@ -102,14 +105,25 @@ class ComplexLinear(nn.Module):
     constrained to rotation+scaling.
     """
 
-    def __init__(self, in_dim: int, out_dim: int, bias: bool = True):
+    def __init__(
+        self,
+        in_dim: int,
+        out_dim: int,
+        bias: bool = True,
+        initializer: Optional['InitStrategy'] = None,
+    ):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
 
-        scale = (2 / (in_dim + out_dim)) ** 0.5
-        self.weight_real = nn.Parameter(torch.randn(out_dim, in_dim) * scale)
-        self.weight_imag = nn.Parameter(torch.randn(out_dim, in_dim) * scale)
+        if initializer is not None:
+            wr, wi = initializer.init_complex_linear(out_dim, in_dim)
+            self.weight_real = nn.Parameter(wr)
+            self.weight_imag = nn.Parameter(wi)
+        else:
+            scale = (2 / (in_dim + out_dim)) ** 0.5
+            self.weight_real = nn.Parameter(torch.randn(out_dim, in_dim) * scale)
+            self.weight_imag = nn.Parameter(torch.randn(out_dim, in_dim) * scale)
 
         if bias:
             self.bias_real = nn.Parameter(torch.zeros(out_dim))
@@ -175,12 +189,17 @@ class ComplexGatedUnit(nn.Module):
     simultaneously filters AND transforms.
     """
 
-    def __init__(self, dim: int, expand: int = 2):
+    def __init__(
+        self,
+        dim: int,
+        expand: int = 2,
+        initializer: Optional['InitStrategy'] = None,
+    ):
         super().__init__()
         hidden = dim * expand
-        self.gate_proj = ComplexLinear(dim, hidden, bias=False)
-        self.up_proj = ComplexLinear(dim, hidden, bias=False)
-        self.down_proj = ComplexLinear(hidden, dim, bias=False)
+        self.gate_proj = ComplexLinear(dim, hidden, bias=False, initializer=initializer)
+        self.up_proj = ComplexLinear(dim, hidden, bias=False, initializer=initializer)
+        self.down_proj = ComplexLinear(hidden, dim, bias=False, initializer=initializer)
         self.act = ModReLU(hidden)
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
@@ -210,14 +229,26 @@ class ComplexEmbed(nn.Module):
     roles (e.g. "happy" vs "sad") can share magnitude but differ in phase.
     """
 
-    def __init__(self, vocab_size: int, dim: int, padding_idx: Optional[int] = None):
+    def __init__(
+        self,
+        vocab_size: int,
+        dim: int,
+        padding_idx: Optional[int] = None,
+        initializer: Optional['InitStrategy'] = None,
+    ):
         super().__init__()
         self.dim = dim
         self.embed_real = nn.Embedding(vocab_size, dim, padding_idx=padding_idx)
         self.embed_imag = nn.Embedding(vocab_size, dim, padding_idx=padding_idx)
 
-        nn.init.normal_(self.embed_real.weight, std=0.02)
-        nn.init.normal_(self.embed_imag.weight, std=0.02)
+        if initializer is not None:
+            r, i = initializer.init_embedding(vocab_size, dim)
+            with torch.no_grad():
+                self.embed_real.weight.copy_(r)
+                self.embed_imag.weight.copy_(i)
+        else:
+            nn.init.normal_(self.embed_real.weight, std=0.02)
+            nn.init.normal_(self.embed_imag.weight, std=0.02)
 
     def forward(self, token_ids: torch.Tensor) -> torch.Tensor:
         """token_ids: [B, S] -> [B, S, dim, 2]"""

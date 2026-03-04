@@ -12,7 +12,10 @@ using complex routing weights that both SCALE and ROTATE each bank's output.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..init import InitStrategy
 
 from .complex import (
     ComplexLinear, ComplexNorm, ComplexGatedUnit,
@@ -28,9 +31,15 @@ class AlgebraicBank(nn.Module):
     No hand-designed roles (semantic, context, etc.) -- let the algebra learn.
     """
 
-    def __init__(self, dim: int, expand: int = 2, dropout: float = 0.1):
+    def __init__(
+        self,
+        dim: int,
+        expand: int = 2,
+        dropout: float = 0.1,
+        initializer: Optional['InitStrategy'] = None,
+    ):
         super().__init__()
-        self.cgu = ComplexGatedUnit(dim, expand)
+        self.cgu = ComplexGatedUnit(dim, expand, initializer=initializer)
         self.norm = ComplexNorm(dim)
         self.dropout = nn.Dropout(dropout)
 
@@ -100,25 +109,30 @@ class AlgebraicFusion(nn.Module):
     constructively/destructively combine based on content-dependent routing.
     """
 
-    def __init__(self, dim: int, num_banks: int, dropout: float = 0.1):
+    def __init__(
+        self,
+        dim: int,
+        num_banks: int,
+        dropout: float = 0.1,
+        initializer: Optional['InitStrategy'] = None,
+    ):
         super().__init__()
         self.dim = dim
         self.num_banks = num_banks
 
-        # Per-bank learned phase rotation (initialized near identity)
-        self.phase_rotations = nn.ParameterList([
-            nn.Parameter(self._init_near_identity(dim))
-            for _ in range(num_banks)
-        ])
+        if initializer is not None:
+            phase_rot = [nn.Parameter(initializer.init_phase_rotation(dim)) for _ in range(num_banks)]
+        else:
+            phase_rot = [nn.Parameter(self._init_near_identity(dim)) for _ in range(num_banks)]
+        self.phase_rotations = nn.ParameterList(phase_rot)
 
-        # Per-bank projection to common space
         self.bank_projs = nn.ModuleList([
-            ComplexLinear(dim, dim, bias=False)
+            ComplexLinear(dim, dim, bias=False, initializer=initializer)
             for _ in range(num_banks)
         ])
 
         self.router = ComplexRouter(dim, num_banks)
-        self.output_proj = ComplexLinear(dim, dim, bias=False)
+        self.output_proj = ComplexLinear(dim, dim, bias=False, initializer=initializer)
         self.norm = ComplexNorm(dim)
         self.dropout = nn.Dropout(dropout)
 
@@ -221,16 +235,17 @@ class MultiBank(nn.Module):
         num_banks: int = 2,
         expand: int = 2,
         dropout: float = 0.1,
+        initializer: Optional['InitStrategy'] = None,
     ):
         super().__init__()
         self.num_banks = num_banks
 
         self.banks = nn.ModuleList([
-            AlgebraicBank(dim, expand, dropout)
+            AlgebraicBank(dim, expand, dropout, initializer=initializer)
             for _ in range(num_banks)
         ])
 
-        self.fusion = AlgebraicFusion(dim, num_banks, dropout)
+        self.fusion = AlgebraicFusion(dim, num_banks, dropout, initializer=initializer)
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         """z: [B, L, dim, 2] -> [B, L, dim, 2]"""
