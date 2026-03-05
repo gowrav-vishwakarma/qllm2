@@ -14,3 +14,4 @@ dependencies = [
 
 [project.optional-dependencies]
 cuda = ["xformers>=0.0.23"]
+plot = ["matplotlib>=3.5.0"]

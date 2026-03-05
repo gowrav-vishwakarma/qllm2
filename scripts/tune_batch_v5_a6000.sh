@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Find best batch size for v5 on A6000.
-# Runs WITHOUT compile so each try is quick.
+# Run v5 small-matched training.
+# Defaults match the full run (100k samples, 10 epochs) from 2026-03-04.
+# Batch size tuned per GPU: 16 for RTX 4090 (24GB), 32 for A6000 (48GB).
 #
 # Logs to:      logs/v5_train_small-matched.log  (auto, via TeeLogger)
 # Checkpoints:  checkpoints_v5/
@@ -8,9 +9,8 @@
 # Usage:
 #   ./scripts/tune_batch_v5_a6000.sh
 #   ./scripts/tune_batch_v5_a6000.sh --batch_size 24
-#   ./scripts/tune_batch_v5_a6000.sh --batch_size 32 --epochs 2
-#   ./scripts/tune_batch_v5_a6000.sh --max_samples 100000 --batch_size 32 --epochs 10 --seq_len 256
-#   ./scripts/tune_batch_v5_a6000.sh --resume checkpoints_v5/best_model.pt --epochs 20
+#   ./scripts/tune_batch_v5_a6000.sh --batch_size 32   # A6000
+#   ./scripts/tune_batch_v5_a6000.sh --resume checkpoints_v5/best_model.pt
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -32,13 +32,15 @@ else
   fi
 fi
 
-# Default is small-matched so comparison with small baselines is fairer.
+# Defaults: full run (100k, 10 epochs), batch 16 for 4090. Use --batch_size 32 on A6000.
+# init_seed 42: best orthogonal seed from A/B test (32.77 val PPL at 10 epochs).
 eval "$PYTHON_BIN -m v5.train" \
   --size small-matched \
-  --max_samples 20000 \
+  --max_samples 100000 \
   --seq_len 256 \
-  --batch_size 64 \
-  --epochs 5 \
+  --batch_size 16 \
+  --epochs 10 \
+  --init_seed 42 \
   --log_dir logs \
   --checkpoint_dir checkpoints_v5 \
   "$@"
