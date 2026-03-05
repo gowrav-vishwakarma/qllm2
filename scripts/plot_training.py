@@ -12,6 +12,7 @@ import argparse
 import re
 from pathlib import Path
 
+import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -25,7 +26,7 @@ BATCH_RE = re.compile(
 # Epoch: Epoch 1/10 | Train Loss: 3.7232 PPL: 41.40 | Time: 1220.0s | Val Loss: 2.9379 PPL: 18.88 *best*
 EPOCH_RE = re.compile(
     r"Epoch (\d+)/(\d+) \| Train Loss: ([\d.]+) PPL: ([\d.]+) \| "
-    r"Time: [\d.]+s \| Val Loss: ([\d.]+) PPL: ([\d.]+)"
+    r"Time: ([\d.]+)s \| Val Loss: ([\d.]+) PPL: ([\d.]+)"
 )
 
 # Header lines for architecture info
@@ -77,12 +78,13 @@ def parse_log(path: Path) -> dict:
             continue
         m = EPOCH_RE.search(line)
         if m:
-            ep, max_ep, train_loss, train_ppl, val_loss, val_ppl = m.groups()
+            ep, max_ep, train_loss, train_ppl, epoch_time, val_loss, val_ppl = m.groups()
             epochs.append({
                 "epoch": int(ep),
                 "max_epochs": int(max_ep),
                 "train_loss": float(train_loss),
                 "train_ppl": float(train_ppl),
+                "epoch_time_s": float(epoch_time),
                 "val_loss": float(val_loss),
                 "val_ppl": float(val_ppl),
             })
@@ -205,12 +207,49 @@ def main():
             parts.append(f"params={h['total_params']}")
         return " | ".join(parts)
 
+    def plot_wall_time(ax_time, all_data: list, labels: list, colors_list):
+        """Bar chart of wall time per epoch for each run."""
+        if not all_data or not any(d["epochs"] for d in all_data):
+            return
+        max_epochs_seen = max(
+            (e["epoch"] for d in all_data for e in d["epochs"]),
+            default=0,
+        )
+        if max_epochs_seen == 0:
+            return
+        x = np.arange(1, max_epochs_seen + 1)
+        width = 0.8 / len(all_data) if len(all_data) > 1 else 0.7
+        for i, (data, label) in enumerate(zip(all_data, labels)):
+            epochs = data.get("epochs", [])
+            times = [0.0] * max_epochs_seen
+            for e in epochs:
+                if 1 <= e["epoch"] <= max_epochs_seen:
+                    times[e["epoch"] - 1] = e.get("epoch_time_s", 0) / 60  # minutes
+            offset = (i - (len(all_data) - 1) / 2) * width if len(all_data) > 1 else 0
+            ax_time.bar(x + offset, times, width, label=label, color=colors_list[i % len(colors_list)], alpha=0.85)
+        ax_time.set_xlabel("Epoch")
+        ax_time.set_ylabel("Wall time (min)")
+        ax_time.set_title("Wall Time per Epoch")
+        ax_time.legend(loc="upper right", fontsize=8)
+        ax_time.grid(True, alpha=0.3, axis="y")
+
     def do_plot():
-        fig, ((ax_loss, ax_ppl), (ax_lr, ax_tok)) = plt.subplots(2, 2, figsize=(12, 9))
+        fig = plt.figure(figsize=(12, 10))
+        gs = fig.add_gridspec(3, 2, height_ratios=[1, 1, 0.6])
+        ax_loss = fig.add_subplot(gs[0, 0])
+        ax_ppl = fig.add_subplot(gs[0, 1])
+        ax_lr = fig.add_subplot(gs[1, 0])
+        ax_tok = fig.add_subplot(gs[1, 1])
+        ax_time = fig.add_subplot(gs[2, :])
+
+        all_data = []
         for i, log_path in enumerate(all_logs):
             data = parse_log(log_path)
+            all_data.append(data)
             label = log_path.stem.replace("v5_train_", "")
             plot_log(data, label, colors[i % len(colors)], ax_loss, ax_ppl, ax_lr, ax_tok)
+
+        plot_wall_time(ax_time, all_data, [p.stem.replace("v5_train_", "") for p in all_logs], colors)
 
         for ax in (ax_loss, ax_ppl, ax_lr, ax_tok):
             _add_epoch_boundaries(ax)
@@ -246,17 +285,27 @@ def main():
         return fig
 
     if args.live:
-        def update(_):
+        fig = plt.figure(figsize=(12, 10))
+
+        def update(_frame):
             nonlocal header, bpe, max_epochs
             header = parse_header(all_logs[0])
             bpe = int(header.get("batches_per_epoch", 1))
             max_epochs = int(header.get("epochs", 10))
             fig.clear()
-            ((ax_loss, ax_ppl), (ax_lr, ax_tok)) = fig.subplots(2, 2)
+            gs = fig.add_gridspec(3, 2, height_ratios=[1, 1, 0.6])
+            ax_loss = fig.add_subplot(gs[0, 0])
+            ax_ppl = fig.add_subplot(gs[0, 1])
+            ax_lr = fig.add_subplot(gs[1, 0])
+            ax_tok = fig.add_subplot(gs[1, 1])
+            ax_time = fig.add_subplot(gs[2, :])
+            all_data = []
             for i, log_path in enumerate(all_logs):
                 data = parse_log(log_path)
+                all_data.append(data)
                 label = log_path.stem.replace("v5_train_", "")
                 plot_log(data, label, colors[i % len(colors)], ax_loss, ax_ppl, ax_lr, ax_tok)
+            plot_wall_time(ax_time, all_data, [p.stem.replace("v5_train_", "") for p in all_logs], colors)
             for ax in (ax_loss, ax_ppl, ax_lr, ax_tok):
                 for ep in range(2, max_epochs + 1):
                     ax.axvline((ep - 1) * bpe, color="gray", linestyle="--", alpha=0.4, linewidth=0.8)
@@ -289,11 +338,13 @@ def main():
                 fig.suptitle(f"V5 Algebraic LM | {info_text}", fontsize=9, y=1.02)
             plt.tight_layout()
 
-        fig = plt.figure(figsize=(12, 9))
-        timer = fig.canvas.new_timer(interval=args.live_interval * 1000)
-        timer.add_callback(update, None)
-        timer.start()
-        update(None)
+        print(f"Live mode: refreshing every {args.live_interval}s. Close the window to exit.")
+        ani = animation.FuncAnimation(
+            fig,
+            update,
+            interval=args.live_interval * 1000,
+            cache_frame_data=False,
+        )
         plt.show()
         return 0
 
