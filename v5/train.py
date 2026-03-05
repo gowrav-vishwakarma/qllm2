@@ -420,9 +420,9 @@ def main():
     parser.add_argument('--num_banks', type=int, default=None)
     parser.add_argument('--no_attention', action='store_true')
     parser.add_argument('--no_banks', action='store_true')
-    parser.add_argument('--init_strategy', type=str, default='random',
+    parser.add_argument('--init_strategy', type=str, default=None,
                         choices=list_strategies(),
-                        help='Structured initialization strategy')
+                        help='Structured initialization strategy (default: from config)')
     parser.add_argument('--init_seed', type=int, default=None,
                         help='Seed for init (auto-generated if not set)')
     parser.add_argument('--log_dir', type=str, default='logs')
@@ -443,7 +443,8 @@ def main():
         config.attn_every_k = 0
     if args.no_banks:
         config.num_banks = 0
-    config.init_strategy = args.init_strategy
+    if args.init_strategy is not None:
+        config.init_strategy = args.init_strategy
     config.init_seed = args.init_seed
 
     # Set up TeeLogger: append on resume, overwrite on fresh start

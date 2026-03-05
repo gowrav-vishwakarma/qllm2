@@ -1,8 +1,13 @@
 """
 Structured initialization strategies for V5 complex-valued architecture.
 
-Each strategy is a grokking attractor: structured patterns that weight decay
-pulls the model toward during training, potentially inducing generalization.
+Strategies initialise complex-valued linear layers (and optionally SSM
+eigenvalues) in ways that affect early convergence and training stability.
+
+Benchmarked results (1k samples, 5 epochs, 3 seeds each):
+  Tier 1 (best): orthogonal (168 PPL), hadamard (174 PPL)
+  Tier 2 (good): dft (275), uniform (289), sqrt_primes (311), dct (317)
+  Baseline:      random (349)
 
 Strategies are selectable via --init_strategy and reproducible via --init_seed.
 """
@@ -129,25 +134,6 @@ def _weyl_sequence(n: int, alpha: float) -> torch.Tensor:
     return torch.tensor([(k * alpha) % 1.0 for k in range(n)], dtype=torch.float32)
 
 
-class GoldenRatioInit(InitStrategy):
-    """Golden angle (2pi/phi^2) spacing; Weyl sequence for magnitudes."""
-
-    def init_complex_linear(
-        self, out_dim: int, in_dim: int, device: Optional[torch.device] = None
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        phi = (1 + math.sqrt(5)) / 2
-        scale = self._scale(in_dim, out_dim)
-        n = out_dim * in_dim
-        angles = _weyl_sequence(n, 1 / phi)
-        mags = _weyl_sequence(n, phi)
-        mags = (mags * 2 - 1) * scale
-        wr = (mags * torch.cos(angles * 2 * math.pi)).view(out_dim, in_dim)
-        wi = (mags * torch.sin(angles * 2 * math.pi)).view(out_dim, in_dim)
-        if device:
-            wr, wi = wr.to(device), wi.to(device)
-        return wr, wi
-
-
 class PiInit(InitStrategy):
     """Weyl sequence using pi."""
 
@@ -208,103 +194,8 @@ class SinusoidalInit(InitStrategy):
         return wr, wi
 
 
-class CircularInit(InitStrategy):
-    """Uniform angles on concentric rings with radius decay."""
-
-    def init_complex_linear(
-        self, out_dim: int, in_dim: int, device: Optional[torch.device] = None
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        scale = self._scale(in_dim, out_dim)
-        n = out_dim * in_dim
-        idx = torch.arange(n, dtype=torch.float32)
-        r = scale * (1 - idx / (n + 1))
-        theta = (idx * 2 * math.pi * (1 + math.sqrt(5)) / 2) % (2 * math.pi)
-        wr = (r * torch.cos(theta)).view(out_dim, in_dim)
-        wi = (r * torch.sin(theta)).view(out_dim, in_dim)
-        if device:
-            wr, wi = wr.to(device), wi.to(device)
-        return wr, wi
-
-
-class RootsOfUnityInit(InitStrategy):
-    """N-th roots of unity cycling through rows."""
-
-    def init_complex_linear(
-        self, out_dim: int, in_dim: int, device: Optional[torch.device] = None
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        scale = self._scale(in_dim, out_dim)
-        n = out_dim * in_dim
-        k = torch.arange(n, dtype=torch.float32)
-        theta = 2 * math.pi * k / max(n, 1)
-        vals = scale * torch.stack([torch.cos(theta), torch.sin(theta)], dim=-1)
-        wr = vals[:, 0].view(out_dim, in_dim)
-        wi = vals[:, 1].view(out_dim, in_dim)
-        if device:
-            wr, wi = wr.to(device), wi.to(device)
-        return wr, wi
-
-
 # ---------------------------------------------------------------------------
-# Category 4: Spiral / nature-inspired
-# ---------------------------------------------------------------------------
-
-class FibonacciSpiralInit(InitStrategy):
-    """Golden angle spiral (phyllotaxis): angle = n * 137.5 deg, radius = sqrt(n)."""
-
-    def init_complex_linear(
-        self, out_dim: int, in_dim: int, device: Optional[torch.device] = None
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        scale = self._scale(in_dim, out_dim)
-        n = out_dim * in_dim
-        golden_angle = math.pi * (3 - math.sqrt(5))
-        idx = torch.arange(n, dtype=torch.float32)
-        theta = idx * golden_angle
-        r = scale * torch.sqrt(idx + 1)
-        wr = (r * torch.cos(theta)).view(out_dim, in_dim)
-        wi = (r * torch.sin(theta)).view(out_dim, in_dim)
-        if device:
-            wr, wi = wr.to(device), wi.to(device)
-        return wr, wi
-
-
-class LogSpiralInit(InitStrategy):
-    """Logarithmic spiral: r = a * e^(b*theta)."""
-
-    def init_complex_linear(
-        self, out_dim: int, in_dim: int, device: Optional[torch.device] = None
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        scale = self._scale(in_dim, out_dim)
-        n = out_dim * in_dim
-        idx = torch.arange(n, dtype=torch.float32)
-        theta = idx * 0.5
-        r = scale * torch.exp(0.1 * theta)
-        wr = (r * torch.cos(theta)).view(out_dim, in_dim)
-        wi = (r * torch.sin(theta)).view(out_dim, in_dim)
-        if device:
-            wr, wi = wr.to(device), wi.to(device)
-        return wr, wi
-
-
-class FermatSpiralInit(InitStrategy):
-    """Fermat spiral: r = sqrt(theta)."""
-
-    def init_complex_linear(
-        self, out_dim: int, in_dim: int, device: Optional[torch.device] = None
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        scale = self._scale(in_dim, out_dim)
-        n = out_dim * in_dim
-        idx = torch.arange(n, dtype=torch.float32) + 1
-        theta = idx * 0.3
-        r = scale * torch.sqrt(theta)
-        wr = (r * torch.cos(theta)).view(out_dim, in_dim)
-        wi = (r * torch.sin(theta)).view(out_dim, in_dim)
-        if device:
-            wr, wi = wr.to(device), wi.to(device)
-        return wr, wi
-
-
-# ---------------------------------------------------------------------------
-# Category 5: Fourier / spectral
+# Category 4: Fourier / spectral
 # ---------------------------------------------------------------------------
 
 class DFTInit(InitStrategy):
@@ -387,59 +278,7 @@ class HartleyInit(InitStrategy):
 
 
 # ---------------------------------------------------------------------------
-# Category 6: Low-discrepancy
-# ---------------------------------------------------------------------------
-
-def _van_der_corput(n: int, base: int = 2) -> torch.Tensor:
-    out = []
-    for i in range(n):
-        v, b, f = 0.0, 1.0 / base, 1
-        k = i + 1
-        while k:
-            f *= base
-            v += (k % base) * b
-            b /= base
-            k //= base
-        out.append(v)
-    return torch.tensor(out, dtype=torch.float32)
-
-
-class HaltonInit(InitStrategy):
-    """Halton sequence (base-2 real, base-3 imag)."""
-
-    def init_complex_linear(
-        self, out_dim: int, in_dim: int, device: Optional[torch.device] = None
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        scale = self._scale(in_dim, out_dim)
-        n = out_dim * in_dim
-        r = _van_der_corput(n, 2)
-        i = _van_der_corput(n, 3)
-        wr = ((r * 2 - 1) * scale).view(out_dim, in_dim)
-        wi = ((i * 2 - 1) * scale).view(out_dim, in_dim)
-        if device:
-            wr, wi = wr.to(device), wi.to(device)
-        return wr, wi
-
-
-class VanDerCorputInit(InitStrategy):
-    """Base-2 bit-reversal sequence."""
-
-    def init_complex_linear(
-        self, out_dim: int, in_dim: int, device: Optional[torch.device] = None
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        scale = self._scale(in_dim, out_dim)
-        n = out_dim * in_dim
-        v = _van_der_corput(n, 2)
-        angles = v * 2 * math.pi
-        wr = (scale * torch.cos(angles)).view(out_dim, in_dim)
-        wi = (scale * torch.sin(angles)).view(out_dim, in_dim)
-        if device:
-            wr, wi = wr.to(device), wi.to(device)
-        return wr, wi
-
-
-# ---------------------------------------------------------------------------
-# Category 7: Structured linear algebra
+# Category 5: Structured linear algebra
 # ---------------------------------------------------------------------------
 
 def _hadamard(n: int) -> torch.Tensor:
@@ -474,7 +313,7 @@ class HadamardInit(InitStrategy):
 
 
 # ---------------------------------------------------------------------------
-# Category 8: SSM-specific
+# Category 6: SSM-specific
 # ---------------------------------------------------------------------------
 
 class HiPPOInit(InitStrategy):
@@ -531,20 +370,12 @@ REGISTRY: dict = {
     "random": RandomInit,
     "uniform": UniformInit,
     "orthogonal": OrthogonalInit,
-    "golden_ratio": GoldenRatioInit,
     "pi": PiInit,
     "sqrt_primes": SqrtPrimesInit,
     "sinusoidal": SinusoidalInit,
-    "circular": CircularInit,
-    "roots_of_unity": RootsOfUnityInit,
-    "fibonacci_spiral": FibonacciSpiralInit,
-    "log_spiral": LogSpiralInit,
-    "fermat_spiral": FermatSpiralInit,
     "dft": DFTInit,
     "dct": DCTInit,
     "hartley": HartleyInit,
-    "halton": HaltonInit,
-    "van_der_corput": VanDerCorputInit,
     "hadamard": HadamardInit,
     "hippo": HiPPOInit,
     "s4d_lin": S4DLinInit,

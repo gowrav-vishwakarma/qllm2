@@ -39,7 +39,7 @@ class V5Config:
     compile_model: bool = False
 
     # Initialization (structured strategies, seed for reproducibility)
-    init_strategy: str = 'random'
+    init_strategy: str = 'orthogonal'
     init_seed: Optional[int] = None
 
     def to_dict(self) -> Dict[str, Any]:
