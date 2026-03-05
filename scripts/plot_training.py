@@ -339,6 +339,7 @@ def main():
             plt.tight_layout()
 
         print(f"Live mode: refreshing every {args.live_interval}s. Close the window to exit.")
+        update(0)  # render immediately, don't wait for first interval
         ani = animation.FuncAnimation(
             fig,
             update,
