@@ -309,7 +309,8 @@ class Trainer:
         prompt_ids = self.tokenizer.encode(prompt)
         prompt_tensor = torch.tensor([prompt_ids], device=self.device)
         generated = model_to_gen.generate(
-            prompt_tensor, max_new_tokens=max_tokens, temperature=0.8, top_k=50
+            prompt_tensor, max_new_tokens=max_tokens, temperature=0.8,
+            top_k=50, top_p=0.9, repetition_penalty=1.2,
         )
         return self.tokenizer.decode(generated[0].tolist())
 

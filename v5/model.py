@@ -185,29 +185,44 @@ class AlgebraicLM(nn.Module):
         max_new_tokens: int = 100,
         temperature: float = 1.0,
         top_k: int = 50,
+        top_p: float = 0.0,
+        repetition_penalty: float = 1.0,
     ) -> torch.Tensor:
-        """Simple greedy/sampling generation."""
+        """Autoregressive generation with temperature, top-k, top-p, and repetition penalty."""
         self.eval()
         generated = input_ids.clone()
         state = None
 
         with torch.no_grad():
-            # Process prompt
             out = self.forward(generated, ssm_state=state)
             state = out.ssm_state
 
             for _ in range(max_new_tokens):
-                logits = out.logits[:, -1] / temperature
+                logits = out.logits[:, -1]
+
+                if repetition_penalty != 1.0:
+                    score = torch.gather(logits, 1, generated)
+                    score = torch.where(score > 0, score / repetition_penalty,
+                                        score * repetition_penalty)
+                    logits.scatter_(1, generated, score)
+
+                logits = logits / temperature
 
                 if top_k > 0:
-                    v, _ = logits.topk(top_k)
+                    v, _ = logits.topk(min(top_k, logits.size(-1)))
                     logits[logits < v[:, -1:]] = float('-inf')
+
+                if top_p > 0.0:
+                    sorted_logits, sorted_idx = logits.sort(descending=True)
+                    cumulative_probs = sorted_logits.softmax(dim=-1).cumsum(dim=-1)
+                    remove = cumulative_probs - sorted_logits.softmax(dim=-1) >= top_p
+                    sorted_logits[remove] = float('-inf')
+                    logits = sorted_logits.scatter(1, sorted_idx, sorted_logits)
 
                 probs = torch.softmax(logits, dim=-1)
                 next_token = torch.multinomial(probs, 1)
                 generated = torch.cat([generated, next_token], dim=1)
 
-                # Next step: only process the new token
                 out = self.forward(next_token, ssm_state=state)
                 state = out.ssm_state
 
