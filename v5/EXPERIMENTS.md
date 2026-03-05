@@ -11,19 +11,23 @@ Structured log of config changes, training runs, and results. Update this file a
 | 2026-03-04 | **Weight tying**: Removed `output_proj`, compute logits as `Re(z * conj(embed))` | Standard practice (GPT-2, LLaMA, Mamba). Saves 12.9M params, algebraically consistent. | v2-tied |
 | 2026-03-04 | **Reinvested core params**: 12 layers, expand=4, state_dim=512, 8 heads | Put freed params into core model. Wider CGU over more banks -- "let the algebra do more per path". | v3-core-heavy |
 | 2026-03-05 | **Default init changed to `orthogonal`**; removed 8 broken/inferior strategies | Benchmark (Run C) showed orthogonal 2x better than random (168 vs 349 PPL). Backed by theory (norm-preserving isometry). | -- |
+| 2026-03-05 | **First orthogonal full run**: orthogonal init (seed=42) on RTX 4090, batch_size=16 | A/B test (Run D) confirmed orthogonal 31% better at epoch 10. First full 10-epoch run with new default init. | v4-ortho |
 
 ---
 
 ## 2. Run Summary Table
 
-| Run | Config | Total | Core | Layers | Banks | Expand | State | Batch | Epochs | Ep1 Val PPL | Best Val PPL | tok/s | Notes |
-|-----|--------|-------|------|--------|-------|--------|-------|-------|--------|-------------|-------------|-------|-------|
-| v1-untied | small-matched (orig) | 31.6M | 5.8M (18%) | 8 | 2 | 2 | 256 | 64 | 10 | 32.41 | 21.03 (ep2) | ~14.4k | Baseline, no weight tying |
-| v2-tied | small-matched | 18.7M | 5.8M (31%) | 8 | 2 | 2 | 256 | 64 | 10 | partial | -- | ~14.4k | Weight tying only; slower early convergence |
-| v3-core-heavy | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 32 | 1 | 66.64 | 66.64 | ~6.2k | Tune/stability run; 1-epoch cosine undertrains and is not quality-comparable to 10-epoch runs |
-| v3-full | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 32 | 10 | 38.99 | 11.77 (ep10) | ~6.2k | Random init, 100k samples, 9.03h |
+| Run | Config | Total | Core | Layers | Banks | Expand | State | Batch | Epochs | Ep1 Val PPL | Best Val PPL | tok/s | GPU | Notes |
+|-----|--------|-------|------|--------|-------|--------|-------|-------|--------|-------------|-------------|-------|-----|-------|
+| v1-untied | small-matched (orig) | 31.6M | 5.8M (18%) | 8 | 2 | 2 | 256 | 64 | 10 | 32.41 | 21.03 (ep2) | ~14.4k | A6000 | Baseline, no weight tying |
+| v2-tied | small-matched | 18.7M | 5.8M (31%) | 8 | 2 | 2 | 256 | 64 | 10 | partial | -- | ~14.4k | A6000 | Weight tying only; slower early convergence |
+| v3-core-heavy | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 32 | 1 | 66.64 | 66.64 | ~6.2k | A6000 | Tune/stability run; 1-epoch cosine undertrains and is not quality-comparable to 10-epoch runs |
+| v3-full | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 32 | 10 | 38.99 | 11.77 (ep10) | ~6.2k | A6000 | Random init, 100k samples, 9.03h |
+| v4-ortho | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 16 | 10 | 18.88 | 8.00 (ep10) | ~16.1k | 4090 | Orthogonal init (seed=42), 3.48h. Best result so far. |
 
-**Data (default unless overridden)**: TinyStories + GPT-2 tokenizer, A6000 GPU.
+**Data (default unless overridden)**: TinyStories + GPT-2 tokenizer.
+
+**GPU note**: v1 through v3-full ran on A6000 (48GB). v4-ortho ran on RTX 4090 (24GB). Throughput numbers are NOT comparable across GPUs. PPL comparisons remain valid (same model, data, epochs).
 
 ---
 
@@ -31,13 +35,13 @@ Structured log of config changes, training runs, and results. Update this file a
 
 Use this table for exact reproducibility: what architecture was used, what data/setup it ran with, and what result it produced.
 
-| Run | Wall Clock Start | Architecture Snapshot | Param Snapshot | Run Setup | Result Snapshot | Status |
-|-----|------------------|-----------------------|----------------|-----------|-----------------|--------|
-| v1-untied | 2026-03-04 10:13 | `dim=128, state=256, layers=8, banks=2, expand=2, heads=4, attn_every=4, tied_output=no` | total=31,556,184; core=5,791,448 (18%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=64, epochs=10, batches/epoch=1202 | epoch1 val_ppl=32.41, epoch2 val_ppl=21.03, throughput~14.4k tok/s | baseline (primary reference) |
-| v2-tied | 2026-03-04 11:31 | `dim=128, state=256, layers=8, banks=2, expand=2, heads=4, attn_every=4, tied_output=yes` | total=18,690,392; core=5,824,600 (31%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=64, epochs=10, batches/epoch=1202 | early epoch1 lagged ~0.5 loss vs v1 at same batch index | partial/incomplete |
-| v3-core-heavy | 2026-03-04 12:04 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=32, epochs=1, batches/epoch=2403 | epoch1 val_ppl=66.64, best_val_ppl=66.64, throughput~6.2k tok/s | tune/stability only (not quality-comparable) |
-
-| v3-full | 2026-03-04 15:17 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=32, epochs=10, batches/epoch=2403 | epoch1 val_ppl=38.99, epoch10 val_ppl=11.77, throughput~6.2k tok/s, 9.03h | complete |
+| Run | Wall Clock Start | Commit | GPU | Architecture Snapshot | Param Snapshot | Run Setup | Result Snapshot | Status |
+|-----|------------------|--------|-----|-----------------------|----------------|-----------|-----------------|--------|
+| v1-untied | 2026-03-04 10:13 | pre-bdf6b87 | A6000 | `dim=128, state=256, layers=8, banks=2, expand=2, heads=4, attn_every=4, tied_output=no` | total=31,556,184; core=5,791,448 (18%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=64, epochs=10, batches/epoch=1202 | epoch1 val_ppl=32.41, epoch2 val_ppl=21.03, throughput~14.4k tok/s | baseline (primary reference) |
+| v2-tied | 2026-03-04 11:31 | pre-bdf6b87 | A6000 | `dim=128, state=256, layers=8, banks=2, expand=2, heads=4, attn_every=4, tied_output=yes` | total=18,690,392; core=5,824,600 (31%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=64, epochs=10, batches/epoch=1202 | early epoch1 lagged ~0.5 loss vs v1 at same batch index | partial/incomplete |
+| v3-core-heavy | 2026-03-04 12:04 | pre-bdf6b87 | A6000 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=32, epochs=1, batches/epoch=2403 | epoch1 val_ppl=66.64, best_val_ppl=66.64, throughput~6.2k tok/s | tune/stability only (not quality-comparable) |
+| v3-full | 2026-03-04 15:17 | pre-bdf6b87 | A6000 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=32, epochs=10, batches/epoch=2403 | epoch1 val_ppl=38.99, epoch10 val_ppl=11.77, throughput~6.2k tok/s, 9.03h | complete |
+| v4-ortho | 2026-03-05 15:25 | e24acd2 | 4090 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes, init_strategy=orthogonal, init_seed=42` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=16, epochs=10, batches/epoch=4806 | epoch1 val_ppl=18.88, epoch10 val_ppl=8.00, throughput~16.1k tok/s, 3.48h | complete |
 
 **Comparison note**: v3-core-heavy used `epochs=1`, so cosine LR decayed to ~0 within one epoch; this makes quality metrics non-comparable to 10-epoch runs.
 
@@ -45,23 +49,23 @@ Use this table for exact reproducibility: what architecture was used, what data/
 
 ## 4. Per-Sample Learning Curves
 
-Aligned by **samples seen** (not batch index), since batch sizes differ.
+Aligned by **samples seen** (not batch index), since batch sizes differ. v1/v2 use batch=64 (A6000), v3-core-heavy uses batch=32 (A6000), v4-ortho uses batch=16 (4090).
 
-| Samples | v1-untied (batch=64) | v2-tied (batch=64) | v3-core-heavy (batch=32) |
-|---------|----------------------|--------------------|---------------------------|
-| ~3,200 | batch 50: loss=9.63 | batch 50: loss=9.91 | batch 100: loss=8.75 |
-| ~6,400 | batch 100: loss=8.08 | batch 100: loss=8.66 | batch 200: loss=6.97 |
-| ~9,600 | batch 150: loss=6.98 | batch 150: loss=7.54 | batch 300: loss=5.90 |
-| ~12,800 | batch 200: loss=6.15 | batch 200: loss=6.69 | batch 400: loss=5.43 |
-| ~14,400 | batch 225: ~5.9 | batch 225: ~6.4 | batch 450: loss=5.29 |
+| Samples | v1-untied (batch=64) | v2-tied (batch=64) | v3-core-heavy (batch=32) | v4-ortho (batch=16) |
+|---------|----------------------|--------------------|---------------------------|----------------------|
+| ~3,200 | batch 50: loss=9.63 | batch 50: loss=9.91 | batch 100: loss=8.75 | batch 200: loss=6.24 |
+| ~6,400 | batch 100: loss=8.08 | batch 100: loss=8.66 | batch 200: loss=6.97 | batch 400: loss=4.83 |
+| ~9,600 | batch 150: loss=6.98 | batch 150: loss=7.54 | batch 300: loss=5.90 | batch 600: loss=4.22 |
+| ~12,800 | batch 200: loss=6.15 | batch 200: loss=6.69 | batch 400: loss=5.43 | batch 800: loss=4.02 |
+| ~14,400 | batch 225: ~5.9 | batch 225: ~6.4 | batch 450: loss=5.29 | batch 900: loss=3.88 |
 
-**Takeaway**: Early in epoch, v3-core-heavy learns ~0.7 loss points faster per sample than v1-untied at 12.8k samples. Final `epoch=1` result is `Val PPL 66.64`, which is expectedly poor because cosine LR decays to ~0 within a single epoch; this run should be treated as a tune/stability check, not a fair quality benchmark against 10-epoch runs.
+**Takeaway**: Early in epoch, v3-core-heavy learns ~0.7 loss points faster per sample than v1-untied at 12.8k samples. v4-ortho (orthogonal init) learns even faster: at 12.8k samples, loss=4.02 vs v3-core-heavy's 5.43. Final `epoch=1` result for v3-core-heavy is `Val PPL 66.64`, which is expectedly poor because cosine LR decays to ~0 within a single epoch; that run should be treated as a tune/stability check, not a fair quality benchmark against 10-epoch runs.
 
 ---
 
-## 5. Full Training Run: v3-core-heavy, 10 epochs (2026-03-04)
+## 5. Full Training Run: v3-full (2026-03-04)
 
-Run with `small-matched` config, random init, 100k TinyStories samples, 10 epochs.
+Run with `small-matched` config, random init, A6000, 100k TinyStories samples, 10 epochs.
 
 | Epoch | Train PPL | Val PPL | Notes |
 |-------|-----------|---------|-------|
@@ -76,7 +80,7 @@ Run with `small-matched` config, random init, 100k TinyStories samples, 10 epoch
 | 9 | 12.78 | 11.79 | |
 | 10 | 12.71 | 11.77 | final, 9.03h total |
 
-**Log**: `logs/v5_train_small-matched.log`
+**Log**: `logs/v5_train_small-matched.log` (overwritten by later runs)
 
 ---
 
@@ -173,9 +177,38 @@ Config: dim=256, state_dim=512, 8 layers, seq_len=128, 5000 TinyStories samples 
 
 ---
 
+## 7. Full Training Run: v4-ortho (2026-03-05)
+
+Run with `small-matched` config, **orthogonal init** (seed=42), RTX 4090, batch_size=16, 100k TinyStories samples, 10 epochs.
+
+| Epoch | Train PPL | Val PPL | Notes |
+|-------|-----------|---------|-------|
+| 1 | 41.40 | 18.88 | batch 0 starts at PPL 51,460 |
+| 2 | 16.32 | 13.14 | |
+| 3 | 12.51 | 10.81 | |
+| 4 | 10.72 | 9.61 | |
+| 5 | 9.71 | 8.95 | |
+| 6 | 9.08 | 8.52 | |
+| 7 | 8.66 | 8.24 | |
+| 8 | 8.38 | 8.08 | |
+| 9 | 8.21 | 8.01 | |
+| 10 | 8.13 | 8.00 | final, 3.48h total |
+
+**Comparison vs v3-full (random init, A6000)**:
+
+| Epoch | v3-full (random, A6000) | v4-ortho (orthogonal, 4090) | Improvement |
+|-------|-------------------------|-----------------------------|-------------|
+| 1 | 38.99 | 18.88 | 2.07x |
+| 5 | 13.68 | 8.95 | 1.53x |
+| 10 | 11.77 | 8.00 | 1.47x |
+
+**Log**: `logs/v5_train_small-matched.log` (commit e24acd2)
+
+---
+
 ## How to Update
 
 1. **Change Log**: Add a row when you change config/code/logic.
-2. **Run Summary**: Add/update one row per run.
-3. **Chronological Run Registry**: Always add exact architecture + run setup + result.
+2. **Run Summary**: Add/update one row per run. Include GPU for throughput context.
+3. **Chronological Run Registry**: Always add exact architecture + run setup + result + **commit hash** + **GPU**.
 4. **Per-Sample Curves**: Add a column or extend rows when you have batch-level data from a new run.
