@@ -36,7 +36,7 @@ fi
 # init_seed 42: best orthogonal seed from A/B test (32.77 val PPL at 10 epochs).
 eval "$PYTHON_BIN -m v5.train" \
   --size small-matched \
-  --max_samples 100000 \
+  --max_samples 9999999 \
   --seq_len 256 \
   --batch_size 16 \
   --epochs 10 \

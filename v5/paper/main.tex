@@ -13,8 +13,8 @@
 \usepackage[numbers]{natbib}
 \hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
 
-\title{Quantum-Inspired LLMs:\\
-A Complex-Native Algebraic Architecture with\\
+\title{V5: A Complex-Native Algebraic Language Model\\
+with Phase-Preserving Nonlinearities and\\
 Parallel-Scan Selective Recurrence}
 
 \author{
@@ -30,12 +30,12 @@ Independent Researcher, Ahmedabad, India\\
 \maketitle
 
 \begin{abstract}
-We present V5, a language modeling architecture designed around a simple hypothesis: complex-valued parameters can provide useful inductive structure for sequence modeling only when the model preserves phase information through all nonlinear operations.
-Our design combines (i) complex-valued embeddings and linear maps, (ii) phase-preserving activation via modReLU, (iii) complex gated units that jointly scale and rotate features, (iv) multi-bank algebraic fusion with learned phase rotations, and (v) a selective complex diagonal state-space backbone implemented with parallel scan, plus sparse phase-aware attention.
-This work is motivated by controlled feedback showing that a prior version (V4) underperformed matched SSM and transformer baselines despite using more parameters and compute.
-We therefore emphasize falsifiable protocol design, matched comparisons, and ablations that isolate where complex structure helps or fails.
-We provide an implementation-ready manuscript with a strict evaluation protocol for TinyStories (20k subset, matched tokenizer/optimizer/schedule, 20 epochs) and report preliminary smoke-test behavior.
-Final quantitative claims are deferred to the full matched benchmark suite.
+We present V5, a complex-native language modeling architecture built around a simple hypothesis: complex-valued parameters are only useful for language modeling if phase information is preserved through nonlinearities, gating, recurrence, and output projection.
+V5 combines complex embeddings and linear maps, phase-preserving activation via modReLU, complex gated units, multi-bank algebraic fusion, a selective complex diagonal state-space backbone implemented with parallel scan, and sparse phase-aware attention.
+The design is motivated by a falsifying result from an earlier model version (V4), where complex representations were repeatedly passed through real-valued nonlinear pathways and phase structure was not preserved.
+On completed internal TinyStories runs with the current \texttt{small-matched} configuration (28.7M parameters, 100k samples, 10 epochs), V5 reaches validation perplexity 11.77 with random initialization and 8.00 with orthogonal initialization.
+In separate seed-averaged initialization benchmarks, orthogonal initialization outperforms random by a large margin (32.97 $\pm$ 0.18 vs.\ 47.86 $\pm$ 0.19 on a 5k-sample, 10-epoch setting).
+We frame these results as current preprint evidence for a mathematically cleaner complex-native redesign, not yet as proof of superiority over matched real-valued or transformer baselines, which remain future work.
 \end{abstract}
 
 \section{Introduction}
@@ -60,8 +60,8 @@ V5 is designed to test whether ``complex-native end-to-end processing'' can be m
 \begin{enumerate}[leftmargin=1.2em]
   \item A \textbf{complex-native LM stack} with explicit phase-preserving nonlinearity (modReLU) and complex gated units.
   \item A \textbf{multi-bank algebraic fusion} module using learned per-bank phase rotations and diversity regularization.
-  \item A \textbf{selective complex diagonal SSM} implemented with parallel prefix scan (Blelloch-style), reducing recurrent sequential depth.
-  \item A \textbf{strict matched-evaluation protocol} aimed at avoiding apples-to-oranges comparisons.
+  \item A \textbf{selective complex diagonal SSM} implemented with parallel prefix scan \citep{blelloch1990prefix}, reducing recurrent sequential depth.
+  \item A \textbf{current evidence package} consisting of completed internal V5 runs, initialization benchmarks, and reproducibility metadata (commit hash and hardware).
 \end{enumerate}
 
 \section{Related Work}
@@ -72,7 +72,7 @@ Transformers established attention as the dominant sequence primitive \citep{vas
 S4 and successors showed long-range sequence modeling with structured linear recurrences \citep{gu2021s4}. Mamba introduced selective (input-dependent) recurrence with hardware-aware implementation \citep{gu2023mamba}. Mamba-2 formalized state-space duality and improved systems efficiency \citep{dao2024transformersaressms}. Hybrid models combine recurrence with sparse attention \citep{dey2024griffin,jamba2024}.
 
 \paragraph{Complex-valued and algebraic networks.}
-Complex-valued networks and activation design have been studied across signal-centric domains \citep{trabelsi2018deepcomplex}. Recent theory revisits approximation properties in complex settings \citep{cvnnuniversal2025}. Geometric/algebraic parameterizations in vision suggest potential parameter-efficiency advantages \citep{cliffordnet2026}.
+Complex-valued networks and activation design have been studied across signal-centric domains \citep{trabelsi2018deepcomplex}. Unitary and complex recurrent models highlighted the importance of phase-preserving nonlinearities such as modReLU \citep{arjovsky2016unitary}. Recent theory revisits approximation properties in complex settings \citep{cvnnuniversal2025}.
 
 \section{Method}
 \subsection{Representation and primitives}
@@ -80,7 +80,7 @@ V5 represents features as real-imaginary pairs $z \in \mathbb{R}^{d \times 2}$, 
 Core primitives are implemented in \texttt{v5/core/complex.py}:
 \begin{itemize}[leftmargin=1.2em]
   \item \textbf{ComplexLinear}: complex matrix multiplication via four real GEMMs;
-  \item \textbf{ComplexNorm}: RMS-style magnitude normalization with phase preservation;
+  \item \textbf{ComplexNorm}: magnitude normalization with phase preservation;
   \item \textbf{ModReLU}: activation
   \begin{equation}
     \mathrm{modReLU}(z)=\mathrm{ReLU}(|z|+b)\frac{z}{|z|+\epsilon},
@@ -109,7 +109,7 @@ The scan operator
 \begin{equation}
   (a_1,b_1)\oplus(a_2,b_2)=(a_1a_2, a_2b_1+b_2)
 \end{equation}
-is associative, enabling Blelloch-style parallel prefix scan for reduced sequential depth.
+is associative, enabling Blelloch-style parallel prefix scan \citep{blelloch1990prefix} for reduced sequential depth.
 Implementation: \texttt{v5/core/ssm.py}.
 
 \subsection{Sparse phase-aware attention}
@@ -128,21 +128,28 @@ Given token IDs:
   \item Sequential bank stack with residual scaling;
   \item Stacked complex SSM backbone with recurrent state carry;
   \item Sparse phase attention blocks;
-  \item Complex LM head, then real concatenation and vocabulary projection.
+  \item Tied complex LM head using the real part of a complex inner product with the embedding table.
 \end{enumerate}
 See \texttt{v5/model.py}.
 
 \section{Experimental Protocol}
-\subsection{Primary matched benchmark}
-To avoid confounds, we define the primary benchmark as:
+\subsection{Current reported experiments}
+The current preprint reports completed internal V5 experiments rather than a finished matched-baseline benchmark suite. The evidence package consists of:
 \begin{itemize}[leftmargin=1.2em]
-  \item Dataset: TinyStories train subset (20k examples), fixed split policy;
-  \item Tokenizer: GPT-2 BPE;
-  \item Training schedule: AdamW, cosine LR, 20 epochs;
-  \item Report: validation loss/perplexity and wall-clock time per epoch.
+  \item \textbf{Completed 100k-sample runs}: TinyStories, GPT-2 BPE, \texttt{small-matched}, sequence length 256, 10 epochs, comparing architecture revisions and initialization choices;
+  \item \textbf{Initialization benchmarks}: smaller multi-seed studies on the \texttt{small} configuration, used to compare structured initialization strategies under controlled short-run settings;
+  \item \textbf{Reproducibility metadata}: commit hash, GPU, batch size, and wall-clock time tracked per run in the experiment ledger.
 \end{itemize}
 
-\subsection{Baselines}
+\subsection{Pending matched benchmark suite}
+\begin{itemize}[leftmargin=1.2em]
+  \item Dataset: TinyStories with a fixed split policy and exact token-count reporting;
+  \item Tokenizer: GPT-2 BPE;
+  \item Training schedule: AdamW with cosine decay and matched training budgets;
+  \item Report: validation loss/perplexity, wall-clock time, hardware, and seed variance.
+\end{itemize}
+
+\subsection{Planned baselines and ablations}
 \begin{itemize}[leftmargin=1.2em]
   \item Transformer baseline matched by depth/width/parameter budget;
   \item Real-valued diagonal recurrent baseline (DiagRNN / linear SSM style);
@@ -184,49 +191,70 @@ V4 & $\sim$11.9M & 17.05 & 1370s \\
 \end{tabular}
 \end{table}
 
-\subsection{Preliminary implementation sanity checks}
-Current codebase smoke tests indicate:
-\begin{itemize}[leftmargin=1.2em]
-  \item end-to-end training executes on MPS/CPU/CUDA path,
-  \item validation loss decreases in short tiny-scale runs,
-  \item parallel scan numerically matches sequential scan to small tolerance.
-\end{itemize}
-These are engineering checks, not final benchmark evidence.
-
-\subsection{Main benchmark table (to fill)}
+\subsection{Completed internal V5 runs}
 \begin{table}[h]
 \centering
-\caption{Main matched benchmark (TinyStories 20k, GPT-2 tokenizer, AdamW, cosine, 20 epochs). Fill with final runs.}
-\label{tab:main}
-\begin{tabular}{lcccc}
+\caption{Current internal V5 run summary from the experiment ledger. Throughput is tracked in the ledger for reproducibility, but cross-GPU speed comparisons should not be treated as architecture-level evidence.}
+\label{tab:currentruns}
+\begin{tabular}{lcccccc}
 \toprule
-Model & Params & Val Loss & Val PPL & Time/Epoch \\
+Run & Params & Samples & Epochs & Init & Best Val PPL & GPU \\
 \midrule
-Transformer-matched & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} \\
-DiagRNN-matched & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} \\
-V5 (small-matched) & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} \\
-V5 (small) & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} & \texttt{TODO} \\
+v1-untied & 31.6M & 100k & 10 & random & 21.03 & A6000 \\
+v2-tied & 18.7M & 100k & 10 & random & -- & A6000 \\
+v3-core-heavy & 28.7M & 100k & 1 & random & 66.64 & A6000 \\
+v3-full & 28.7M & 100k & 10 & random & 11.77 & A6000 \\
+v4-ortho & 28.7M & 100k & 10 & orthogonal & \textbf{8.00} & RTX 4090 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Ablation table (to fill)}
+\paragraph{Interpretation.}
+The strongest completed architecture-level result in the current evidence package is the \texttt{v4-ortho} run, which uses the same \texttt{small-matched} architecture as \texttt{v3-full} but switches from random to orthogonal initialization and improves validation perplexity from 11.77 to 8.00.
+
+\subsection{Initialization results}
 \begin{table}[h]
 \centering
-\caption{V5 ablations to isolate complex-native contributions.}
-\label{tab:ablation}
-\begin{tabular}{lccc}
+\caption{Initialization benchmark screening run (\texttt{small}, 1k samples, 5 epochs, 3 seeds).}
+\label{tab:initscreen}
+\begin{tabular}{lcc}
 \toprule
-Variant & Val PPL & Time/Epoch & Notes \\
+Strategy & Mean Val PPL & Notes \\
 \midrule
-V5 full & \texttt{TODO} & \texttt{TODO} & full model \\
-- banks & \texttt{TODO} & \texttt{TODO} & remove multi-bank fusion \\
-- sparse attention & \texttt{TODO} & \texttt{TODO} & recurrence only \\
-real gate (no phase gate) & \texttt{TODO} & \texttt{TODO} & gate ablation \\
-real-valued counterpart & \texttt{TODO} & \texttt{TODO} & null hypothesis test \\
+orthogonal & \textbf{168.27} & best overall \\
+hadamard & 173.88 & close second \\
+dft & 275.18 & viable but weaker \\
+uniform & 289.08 & viable but weaker \\
+random & 348.80 & baseline \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{table}[h]
+\centering
+\caption{Orthogonal vs.\ random initialization A/B benchmark (\texttt{small}, 5k samples, 10 epochs, 3 seeds).}
+\label{tab:initab}
+\begin{tabular}{lcc}
+\toprule
+Strategy & Mean Val PPL & Std \\
+\midrule
+orthogonal & \textbf{32.97} & 0.18 \\
+random & 47.86 & 0.19 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Interpretation.}
+The initialization results are the most replicated finding in the current paper. Orthogonal initialization consistently outperforms random initialization across both the short screening benchmark and the longer 10-epoch A/B study, suggesting that initialization is a first-order factor for complex-valued training stability and quality in this architecture.
+
+\subsection{Reproducibility notes}
+The current experiment ledger records exact run metadata, including commit hash and hardware. For example, the strongest completed run (\texttt{v4-ortho}) corresponds to commit \texttt{e24acd2} on an RTX 4090, while earlier completed A6000 runs predate commit \texttt{bdf6b87} and are tracked as \texttt{pre-bdf6b87}. We recommend including this level of metadata in every reported row because GPU and batch-size differences affect runtime interpretation.
+
+\subsection{Ongoing full-dataset training}
+At the time of writing, a full TinyStories run with orthogonal initialization is in progress. Early partial results are promising (validation perplexity 6.27 after epoch 1 and 5.81 after epoch 2), but we do not treat these as finalized evidence in the main results tables until the run completes.
+
+\subsection{Future evaluation plan}
+The matched transformer and matched real-valued recurrent baselines remain the next critical revision milestone. Those comparisons are essential for deciding whether the complex-native redesign offers a real advantage over simpler alternatives, and they should be completed before making stronger competitiveness claims.
 
 \section{Discussion}
 V5 is intentionally framed as a testable hypothesis, not a completed claim of superiority.
@@ -245,7 +273,8 @@ If matched V5 variants do not outperform or at least match real-valued counterpa
 
 \section{Limitations}
 \begin{itemize}[leftmargin=1.2em]
-  \item Current manuscript includes placeholders for final benchmark numbers.
+  \item The current paper reports internal V5 evidence, not yet a completed matched-baseline study.
+  \item Some reported training runs use different GPUs and batch sizes, which limits speed comparisons.
   \item Parameter matching across complex and real models is subtle (feature width vs total real scalar count vs FLOPs).
   \item Small-data TinyStories outcomes may not transfer to larger corpora.
   \item Systems-level speed depends heavily on kernel implementation quality.
@@ -256,14 +285,19 @@ This work is fundamental model architecture research.
 Potential misuse follows standard language model risk channels (hallucination, misinformation, harmful text generation).
 We recommend standard safety filtering and evaluation procedures for downstream deployment.
 
+\section*{Code Availability}
+Project materials are publicly hosted at \url{https://github.com/gowrav-vishwakarma/qllm2}.
+However, the exact V5 implementation used for the experiments reported in this paper is still under active internal development and is not yet fully mirrored in the public repository.
+The current public repository reflects earlier project versions and supporting materials more completely than the latest V5 training code.
+We plan to release the stabilized V5 code, configurations, and experiment artifacts publicly once the implementation and reporting stack are cleaned up for reproducible release.
+
 \section*{Funding}
 This work was conducted without external funding.
-The author is actively seeking research funding and compute sponsorship for larger-scale experiments.
 
 \section{Conclusion}
 We introduced V5, a complex-native language modeling architecture combining phase-preserving nonlinearities, complex gating, algebraic bank fusion, and parallel-scan selective recurrence.
-The paper is structured around falsifiable evaluation: matched baselines, controlled ablations, and transparent reporting.
-Final claims are contingent on the completion of these experiments.
+The current evidence supports two narrow conclusions: first, the V5 redesign is substantially more coherent and trainable than the earlier V4-style setup that motivated it; second, orthogonal initialization is a strong and replicated lever for this class of complex-valued models.
+The more ambitious question --- whether complex-native language modeling outperforms matched real-valued alternatives --- remains open and should be settled by the next round of matched baseline and ablation experiments.
 
 \paragraph{Code mapping.}
 Complex primitives: \texttt{v5/core/complex.py}; SSM: \texttt{v5/core/ssm.py}; banks/fusion: \texttt{v5/core/bank.py}; attention: \texttt{v5/core/attention.py}; model wiring: \texttt{v5/model.py}; protocol script: \texttt{v5/train.py}.
