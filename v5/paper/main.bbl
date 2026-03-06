@@ -1,0 +1,79 @@
+\begin{thebibliography}{10}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Arjovsky et~al.(2016)Arjovsky, Shah, and Bengio]{arjovsky2016unitary}
+Martin Arjovsky, Amar Shah, and Yoshua Bengio.
+\newblock Unitary evolution recurrent neural networks.
+\newblock In \emph{ICML}, 2016.
+
+\bibitem[Blelloch(1990)]{blelloch1990prefix}
+Guy~E. Blelloch.
+\newblock Prefix sums and their applications.
+\newblock Technical report, Carnegie Mellon University, 1990.
+
+\bibitem[Dao and Gu(2024)]{dao2024transformersaressms}
+Tri Dao and Albert Gu.
+\newblock Transformers are ssms: Generalized models and efficient algorithms
+  through structured state space duality.
+\newblock In \emph{ICML}, volume 235 of \emph{PMLR}, pages 10041--10071, 2024.
+
+\bibitem[De et~al.(2024)De, Smith, Fernando, Botev, Cristian-Muraru, Gu,
+  Haroun, Berrada, Chen, Srinivasan, Desjardins, Doucet, Budden, Teh, Pascanu,
+  De~Freitas, and Gulcehre]{de2024griffin}
+Soham De, Samuel~L. Smith, Anushan Fernando, Aleksandar Botev, George
+  Cristian-Muraru, Albert Gu, Ruba Haroun, Leonard Berrada, Yutian Chen,
+  Srivatsan Srinivasan, Guillaume Desjardins, Arnaud Doucet, David Budden,
+  Yee~Whye Teh, Razvan Pascanu, Nando De~Freitas, and Caglar Gulcehre.
+\newblock Griffin: Mixing gated linear recurrences with local attention for
+  efficient language models.
+\newblock \emph{arXiv preprint arXiv:2402.19427}, 2024.
+
+\bibitem[Geuchen et~al.(2025)Geuchen, Jahn, and Matt]{cvnnuniversal2025}
+Paul Geuchen, Thomas Jahn, and Hannes Matt.
+\newblock Universal approximation with complex-valued deep narrow neural
+  networks.
+\newblock \emph{Constructive Approximation}, 2025.
+\newblock \doi{10.1007/s00365-025-09713-8}.
+
+\bibitem[Gu and Dao(2023)]{gu2023mamba}
+Albert Gu and Tri Dao.
+\newblock Mamba: Linear-time sequence modeling with selective state spaces.
+\newblock \emph{arXiv preprint arXiv:2312.00752}, 2023.
+
+\bibitem[Gu et~al.(2022)Gu, Goel, and R{\'e}]{gu2021s4}
+Albert Gu, Karan Goel, and Christopher R{\'e}.
+\newblock Efficiently modeling long sequences with structured state spaces.
+\newblock \emph{ICLR}, 2022.
+
+\bibitem[Lieber et~al.(2024)Lieber, Lenz, Bata, Cohen, Osin, Dalmedigos,
+  Safahi, Meirom, Belinkov, Shalev-Shwartz, Abend, Alon, Asida, Bergman,
+  Glozman, Gokhman, Manevich, Ratner, Rozen, Schwartz, Zusman, and
+  Shoham]{jamba2024}
+Opher Lieber, Barak Lenz, Hofit Bata, Gal Cohen, Jhonathan Osin, Itay
+  Dalmedigos, Erez Safahi, Shaked Meirom, Yonatan Belinkov, Shai
+  Shalev-Shwartz, Omri Abend, Raz Alon, Tomer Asida, Amir Bergman, Roman
+  Glozman, Michael Gokhman, Avshalom Manevich, Nir Ratner, Noam Rozen, Erez
+  Schwartz, Mor Zusman, and Yoav Shoham.
+\newblock Jamba: A hybrid transformer-mamba language model.
+\newblock \emph{arXiv preprint arXiv:2403.19887}, 2024.
+
+\bibitem[Trabelsi et~al.(2018)Trabelsi, Bilaniuk, Zhang, Serdyuk, Subramanian,
+  Santos, Mehri, Rostamzadeh, Bengio, and Pal]{trabelsi2018deepcomplex}
+Chiheb Trabelsi, Olexa Bilaniuk, Ying Zhang, Dmitriy Serdyuk, Sandeep
+  Subramanian, Jo{\~a}o~Felipe Santos, Soroush Mehri, Negar Rostamzadeh, Yoshua
+  Bengio, and Christopher~J. Pal.
+\newblock Deep complex networks.
+\newblock \emph{ICLR}, 2018.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez,
+  Kaiser, and Polosukhin]{vaswani2017attention}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+  Aidan~N. Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock In \emph{NeurIPS}, 2017.
+
+\end{thebibliography}
