@@ -251,7 +251,24 @@ The initialization results are the most replicated finding in the current paper.
 The current experiment ledger records exact run metadata, including commit hash and hardware. For example, the strongest completed run (\texttt{v4-ortho}) corresponds to commit \texttt{e24acd2} on an RTX 4090, while earlier completed A6000 runs predate commit \texttt{bdf6b87} and are tracked as \texttt{pre-bdf6b87}. We recommend including this level of metadata in every reported row because GPU and batch-size differences affect runtime interpretation.
 
 \subsection{Ongoing full-dataset training}
-At the time of writing, a full TinyStories run with orthogonal initialization is in progress. Early partial results are promising (validation perplexity 6.27 after epoch 1 and 5.81 after epoch 2), but we do not treat these as finalized evidence in the main results tables until the run completes.
+At the time of writing, a full TinyStories run with orthogonal initialization is in progress (commit \texttt{0467675}, RTX 4090, batch size 16). The run uses the complete TinyStories train split (2,119,489 texts, 473,992,006 tokens, 103,744 batches per epoch). Partial results after three completed epochs are:
+
+\begin{table}[h]
+\centering
+\caption{Partial results: full-dataset run (\texttt{v5-full-ds}, in progress). Not treated as finalized evidence until the run completes.}
+\label{tab:fulldspartial}
+\begin{tabular}{lccc}
+\toprule
+Epoch & Train PPL & Val PPL & Wall time \\
+\midrule
+1 & 8.59 & 6.27 & 7.18h \\
+2 & 6.28 & 5.81 & 7.14h \\
+3 & 5.97 & \textbf{5.59} & 7.39h \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These results are promising: epoch 1 already surpasses the best 100k-sample result (8.00 val PPL), and by epoch 3 the model reaches 5.59, which is 30\% better than the completed \texttt{v4-ortho} run. The train/val gap at epoch 3 is approximately 0.38, with no visible overfitting signal. We do not treat these as finalized evidence in the main results tables until the run completes.
 
 \subsection{Future evaluation plan}
 The matched transformer and matched real-valued recurrent baselines remain the next critical revision milestone. Those comparisons are essential for deciding whether the complex-native redesign offers a real advantage over simpler alternatives, and they should be completed before making stronger competitiveness claims.

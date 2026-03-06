@@ -12,6 +12,7 @@ Structured log of config changes, training runs, and results. Update this file a
 | 2026-03-04 | **Reinvested core params**: 12 layers, expand=4, state_dim=512, 8 heads | Put freed params into core model. Wider CGU over more banks -- "let the algebra do more per path". | v3-core-heavy |
 | 2026-03-05 | **Default init changed to `orthogonal`**; removed 8 broken/inferior strategies | Benchmark (Run C) showed orthogonal 2x better than random (168 vs 349 PPL). Backed by theory (norm-preserving isometry). | -- |
 | 2026-03-05 | **First orthogonal full run**: orthogonal init (seed=42) on RTX 4090, batch_size=16 | A/B test (Run D) confirmed orthogonal 31% better at epoch 10. First full 10-epoch run with new default init. | v4-ortho |
+| 2026-03-05 | **Full-dataset run started**: switched `max_samples` from 100k to 9,999,999 (full TinyStories, 2.1M texts, 474M tokens) | Scale up after 100k runs showed strong signal. Same architecture and init as v4-ortho. | v5-full-ds |
 
 ---
 
@@ -23,7 +24,8 @@ Structured log of config changes, training runs, and results. Update this file a
 | v2-tied | small-matched | 18.7M | 5.8M (31%) | 8 | 2 | 2 | 256 | 64 | 10 | partial | -- | ~14.4k | A6000 | Weight tying only; slower early convergence |
 | v3-core-heavy | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 32 | 1 | 66.64 | 66.64 | ~6.2k | A6000 | Tune/stability run; 1-epoch cosine undertrains and is not quality-comparable to 10-epoch runs |
 | v3-full | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 32 | 10 | 38.99 | 11.77 (ep10) | ~6.2k | A6000 | Random init, 100k samples, 9.03h |
-| v4-ortho | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 16 | 10 | 18.88 | 8.00 (ep10) | ~16.1k | 4090 | Orthogonal init (seed=42), 3.48h. Best result so far. |
+| v4-ortho | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 16 | 10 | 18.88 | 8.00 (ep10) | ~16.1k | 4090 | Orthogonal init (seed=42), 3.48h. Best 100k-sample result. |
+| v5-full-ds | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 16 | 10 | 6.27 | 5.59 (ep3, in progress) | ~16k | 4090 | Full TinyStories (474M tokens), orthogonal init (seed=42). Ep3 already beats v4-ortho ep10. |
 
 **Data (default unless overridden)**: TinyStories + GPT-2 tokenizer.
 
@@ -42,6 +44,7 @@ Use this table for exact reproducibility: what architecture was used, what data/
 | v3-core-heavy | 2026-03-04 12:04 | pre-bdf6b87 | A6000 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=32, epochs=1, batches/epoch=2403 | epoch1 val_ppl=66.64, best_val_ppl=66.64, throughput~6.2k tok/s | tune/stability only (not quality-comparable) |
 | v3-full | 2026-03-04 15:17 | pre-bdf6b87 | A6000 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=32, epochs=10, batches/epoch=2403 | epoch1 val_ppl=38.99, epoch10 val_ppl=11.77, throughput~6.2k tok/s, 9.03h | complete |
 | v4-ortho | 2026-03-05 15:25 | e24acd2 | 4090 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes, init_strategy=orthogonal, init_seed=42` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=16, epochs=10, batches/epoch=4806 | epoch1 val_ppl=18.88, epoch10 val_ppl=8.00, throughput~16.1k tok/s, 3.48h | complete |
+| v5-full-ds | 2026-03-05 19:18 | 0467675 | 4090 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes, init_strategy=orthogonal, init_seed=42` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories (full), max_samples=9999999, texts=2,119,489, tokens=473,992,006, seq_len=256, batch=16, epochs=10, batches/epoch=103744 | epoch1 val_ppl=6.27, epoch2 val_ppl=5.81, epoch3 val_ppl=5.59, throughput~16k tok/s, ~7.2h/epoch | in progress (epoch 3/10) |
 
 **Comparison note**: v3-core-heavy used `epochs=1`, so cosine LR decayed to ~0 within one epoch; this makes quality metrics non-comparable to 10-epoch runs.
 
@@ -203,6 +206,39 @@ Run with `small-matched` config, **orthogonal init** (seed=42), RTX 4090, batch_
 | 10 | 11.77 | 8.00 | 1.47x |
 
 **Log**: `logs/v5_train_small-matched.log` (commit e24acd2)
+
+---
+
+## 8. Full Training Run: v5-full-ds (2026-03-05, in progress)
+
+Run with `small-matched` config, **orthogonal init** (seed=42), RTX 4090, batch_size=16, **full TinyStories** (2,119,489 texts, 473,992,006 tokens), 10 epochs. Commit: `0467675`.
+
+**Scale**: 103,744 batches/epoch (~7.2h/epoch). 21x more data than the 100k runs.
+
+| Epoch | Train PPL | Val PPL | Wall time | Notes |
+|-------|-----------|---------|-----------|-------|
+| 1 | 8.59 | 6.27 | 7.18h | |
+| 2 | 6.28 | 5.81 | 7.14h | |
+| 3 | 5.97 | 5.59 | 7.39h | epoch 4 underway |
+| 4-10 | -- | -- | -- | in progress |
+
+**Sample generation after each completed epoch** (prompt: `The quick brown`):
+
+- Epoch 1: *"The quick brown bear went to the car and pulled out a big box. Inside was a treasure! Everyone clapped for their brave brave knight knight..."*
+- Epoch 2: *"The quick brown bird felt so happy that it could eat the little apple and have fun with its friends. They laughed and played until it was time to go home, tired but happy."*
+- Epoch 3: *"The quick brown dog wanted to go fast. He grabbed the butterfly with his paws and started jogging faster than ever before. He was so so happy that he had done it!"*
+
+**Comparison vs v4-ortho (100k samples, epoch 10 best = 8.00)**:
+
+| Epoch | v5-full-ds Val PPL | vs v4-ortho best (8.00) |
+|-------|--------------------|-------------------------|
+| 1 | 6.27 | 22% better |
+| 2 | 5.81 | 27% better |
+| 3 | 5.59 | 30% better |
+
+**Takeaway**: Scaling to the full dataset immediately drops val PPL well below the 100k-sample best. The training curve is still improving consistently epoch-over-epoch with no sign of plateauing at epoch 3. Train/val gap is tiny (~0.38 at epoch 3), so no overfitting signal.
+
+**Log**: `logs/v5_train_small-matched.log` (commit 0467675, in progress)
 
 ---
 
