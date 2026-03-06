@@ -195,11 +195,11 @@ python -m v5.train --size small --epochs 20 --max_samples 20000 --no_banks
 # Ablation: no attention (isolates recurrence)
 python -m v5.train --size small --epochs 20 --max_samples 20000 --no_attention
 
-# Structured init: golden ratio (grokking attractor)
-python -m v5.train --size small --init_strategy golden_ratio
+# Orthogonal init (default, recommended)
+python -m v5.train --size small --init_strategy orthogonal
 
 # Reproduce exact init from a previous run
-python -m v5.train --size small --init_strategy golden_ratio --init_seed 8374291
+python -m v5.train --size small --init_strategy orthogonal --init_seed 42
 
 # DFT basis initialization
 python -m v5.train --size small --init_strategy dft
@@ -227,24 +227,22 @@ Note: "Complex dim 256" means each position is represented by 256 complex number
 
 ## Structured Initialization
 
-V5 supports **21 initialization strategies** instead of plain random. Each strategy fills weight matrices with structured mathematical patterns (golden ratio, sinusoidal, DFT, etc.). These act as **grokking attractors**: weight decay pulls the model toward them during training, potentially inducing generalization.
+V5 supports **13 initialization strategies** (8 broken/inferior strategies were removed after benchmarking). Each strategy fills weight matrices with structured mathematical patterns. Orthogonal init is the default -- it is 2x better than random in benchmarks and provides a persistent 31% quality advantage.
 
 **Usage**:
 ```bash
---init_strategy <name>   # Strategy (default: random)
+--init_strategy <name>   # Strategy (default: orthogonal)
 --init_seed <int>        # Seed for reproducibility (auto-generated if omitted)
 ```
 
-**Strategy categories**:
+**Available strategies**:
 
 | Category | Strategies |
 |----------|------------|
-| Random | `random`, `uniform`, `orthogonal` |
-| Number-theoretic | `golden_ratio`, `pi`, `sqrt_primes` |
-| Trigonometric | `sinusoidal`, `circular`, `roots_of_unity` |
-| Spiral | `fibonacci_spiral`, `log_spiral`, `fermat_spiral` |
+| Random / Orthogonal | `random`, `uniform`, `orthogonal` (default) |
+| Number-theoretic | `pi`, `sqrt_primes` |
+| Trigonometric | `sinusoidal` |
 | Fourier | `dft`, `dct`, `hartley` |
-| Low-discrepancy | `halton`, `van_der_corput` |
 | Structured | `hadamard` |
 | SSM-specific | `hippo`, `s4d_lin`, `s4d_inv` |
 
@@ -258,14 +256,14 @@ python -c "from v5.init import list_strategies; print(list_strategies())"
 **Benchmark all strategies**: Run a quick comparison on limited data. Report includes benchmark config, full model config, and a results table. Use `--samples`, `--epochs`, `--size` to scale up gradually.
 
 ```bash
-# Default: 500 samples, 2 epochs, tiny model, all 21 strategies
+# Default: 500 samples, 2 epochs, tiny model, all 13 strategies
 python scripts/bench_init_strategies.py --samples 500 --epochs 2
 
 # Or via wrapper (uses v5 env if available)
 ./scripts/run_bench_init.sh --samples 1000 --epochs 3
 
 # Subset of strategies, custom log file
-python scripts/bench_init_strategies.py --strategies golden_ratio,dft,hippo,random --log_file logs/my_bench.log
+python scripts/bench_init_strategies.py --strategies orthogonal,dft,hippo,random --log_file logs/my_bench.log
 ```
 
 Report is written to `logs/init_bench_YYYYMMDD_HHMMSS.log` (or `--log_file`). Each run stores full benchmark and model config for reproducibility.
@@ -278,7 +276,7 @@ Training logs to both stdout and a log file (`logs/v5_train_{size}.log`). Each l
 
 **Header** (includes init strategy and seed when using structured init):
 ```
-Init strategy: golden_ratio (seed: 8374291)
+Init strategy: orthogonal (seed: 42)
 ```
 
 **Per-batch** (every 50 batches):
@@ -313,7 +311,7 @@ Generated: The quick brown. They felt very excited. The water were very funny...
 | `--num_banks` | preset | Override number of banks |
 | `--no_attention` | off | Disable attention layers (ablation) |
 | `--no_banks` | off | Disable banks (ablation) |
-| `--init_strategy` | `random` | Structured init: `golden_ratio`, `dft`, `hippo`, etc. |
+| `--init_strategy` | `orthogonal` | Init strategy: `orthogonal`, `dft`, `hadamard`, `hippo`, etc. |
 | `--init_seed` | auto | Seed for init reproducibility |
 | `--log_dir` | `logs` | Directory for log files |
 | `--checkpoint_dir` | `checkpoints_v5` | Directory for checkpoints |
@@ -358,7 +356,7 @@ v5/
     ssm.py           # ComplexSelectiveSSM with parallel scan
     attention.py     # PhaseAttention (sliding window, complex Q/K/V)
     bank.py          # AlgebraicBank, ComplexRouter, AlgebraicFusion, MultiBank
-  init.py            # Structured init strategies (21 classes, registry, seed support)
+  init.py            # Structured init strategies (13 classes, registry, seed support)
   model.py           # AlgebraicLM -- wires everything together
   config.py          # V5Config with presets
   train.py           # Training loop (TinyStories, GPT-2 tokenizer, logging, checkpoints)
@@ -381,19 +379,50 @@ v5/
 
 ---
 
-## Training Results (In Progress)
+## Training Results
 
-Results from `small-matched` on 100k TinyStories (seq_len=256, batch_size=64, A6000 GPU):
+All runs use the same 28.7M `small-matched` architecture. See [EXPERIMENTS.md](EXPERIMENTS.md) for full details, configs, and per-batch learning curves.
 
-| Epoch | Train Loss | Train PPL | Val Loss | Val PPL | Time |
-|-------|-----------|-----------|----------|---------|------|
-| 1 | 4.879 | 131.45 | 3.479 | 32.41 | 1367s |
-| 2 | 3.315 | 27.52 | 3.046 | 21.03 | 1360s |
-| 3-10 | ... | ... | ... | ... | running |
+### Run progression
 
-Throughput: ~14.4k tok/s (~56 samples/s) on A6000.
+| Run | Init | Data | Epochs | Best Val PPL | GPU | Notes |
+|-----|------|------|--------|-------------|-----|-------|
+| v1-untied | random | 100k samples | 10 | 21.03 (ep2) | A6000 | Baseline, no weight tying |
+| v3-full | random | 100k samples | 10 | 11.77 (ep10) | A6000 | With weight tying + reinvested params |
+| v4-ortho | **orthogonal** | 100k samples | 10 | 8.00 (ep10) | RTX 4090 | Orthogonal init (seed=42) |
+| v5-full-ds | **orthogonal** | **full TinyStories** (474M tokens) | 3 of 10 | **5.59** (ep3) | RTX 4090 | In progress, curve still dropping |
 
-**Context**: Standard transformers and Mamba at ~30M params on the same data typically reach val PPL ~20-28 by epoch 2. V5 at 21.03 is in the competitive range but not yet demonstrably better. No claims until training completes and baselines are run.
+### Full-dataset training (v5-full-ds, in progress)
+
+Model: `small-matched` (28.7M params), orthogonal init (seed=42), full TinyStories (2.1M texts, 474M tokens), RTX 4090.
+
+| Epoch | Train PPL | Val PPL | Wall Time |
+|-------|-----------|---------|-----------|
+| 1 | 8.59 | 6.27 | 7.18h |
+| 2 | 6.28 | 5.81 | 7.14h |
+| 3 | 5.97 | **5.59** | 7.39h |
+| 4-10 | -- | -- | in progress |
+
+Epoch 1 on the full dataset already beats the 100k-sample run's epoch-10 result (6.27 vs 8.00). Train/val gap at epoch 3 is only ~0.38, so overfitting is not a concern.
+
+**Sample generations** (prompt: `The quick brown`):
+
+- **Epoch 1**: *"The quick brown bear went to the car and pulled out a big box. Inside was a treasure! Everyone clapped for their brave brave knight."*
+- **Epoch 2**: *"The quick brown bird felt so happy that it could eat the little apple and have fun with its friends. They laughed and played until it was time to go home, tired but happy."*
+- **Epoch 3**: *"The quick brown dog wanted to go fast. He grabbed the butterfly with his paws and started jogging faster than ever before. He was so so happy that he had done it!"*
+
+### Orthogonal vs random init (A/B test)
+
+Tested with 5k samples, 10 epochs, 3 seeds:
+
+| Strategy | Mean Val PPL | Std |
+|----------|-------------|-----|
+| **orthogonal** | **32.97** | 0.18 |
+| random | 47.86 | 0.19 |
+
+Orthogonal is 31% better at epoch 10 -- a persistent advantage, not just faster early convergence.
+
+Throughput: ~16k tok/s on RTX 4090, ~14.4k tok/s on A6000.
 
 ---
 
@@ -403,6 +432,8 @@ Throughput: ~14.4k tok/s (~56 samples/s) on A6000.
 
 **Test**: Run V5 against a real-valued baseline with the same architecture but real numbers everywhere. If V5 with fewer real parameters matches or beats the real-valued baseline, the claim is validated.
 
-**Status**: Training in progress. Early results (epoch 2, val PPL 21.03) are in the same ballpark as standard baselines but not yet conclusive. The hypothesis is neither confirmed nor refuted -- we need full training runs and controlled baseline comparisons.
+**Status**: Results are promising but not yet conclusive. A 28.7M V5 model reaches val PPL 5.59 on TinyStories at epoch 3 (full dataset, still improving). This is substantially better than V4 (which had inconsistent math), and the training curve is still dropping with no sign of plateauing. However, a strict apples-to-apples comparison against a real-valued baseline at the same parameter count and training budget has not yet been run.
+
+**What we still need**: (1) controlled real-valued baseline, (2) downstream benchmarks, (3) scale-up experiments, (4) long-context evaluation.
 
 **If it fails**: We honestly acknowledge that complex numbers don't help for language and fall back to real-valued architectures. Science means testing hypotheses, not defending them.
