@@ -246,7 +246,66 @@ Run with `small-matched` config, **orthogonal init** (seed=42), RTX 4090, batch_
 
 ---
 
-## 9. Known Issues / TODO
+## 9. Mac No-Attention Smoke Test (2026-03-07)
+
+Purpose: validate locally on Mac that disabling attention still allows real learning before spending RTX 4090 time on a matched ablation.
+
+### MPS caveat
+
+Direct MPS smoke runs were able to train through epoch 1, but crashed after saving the checkpoint during post-epoch sample generation with a Metal buffer allocation failure. Training itself looked healthy; the failure appears to be a Mac/MPS runtime issue rather than a learning failure.
+
+- MPS run (`tiny`, batch=1, epochs=2, samples=100, seq_len=32, attention on) reached `Epoch 1 Val PPL 228.56` before crashing after checkpoint save.
+- Because of that, the matched comparison below was completed on **CPU** on the same Mac, with identical settings except for `--no_attention`.
+
+### Matched local smoke test (CPU, same Mac)
+
+**Setup**:
+- size=`tiny`
+- batch_size=`1`
+- epochs=`2`
+- max_samples=`100`
+- seq_len=`32`
+- init=`orthogonal`, seed=`42`
+- tokenizer/data=`TinyStories`
+- comparison=`attention on` vs `--no_attention`
+
+| Run | Attention | Params | Epoch 1 Val PPL | Epoch 2 Val PPL | Wall time | Notes |
+|-----|-----------|--------|-----------------|-----------------|-----------|-------|
+| mac-smoke-baseline-cpu | every 4 layers | 7,168,364 | 239.20 | **190.33** | 84.7s | Completed cleanly on CPU |
+| mac-smoke-no-attn-cpu | none | 7,135,532 | 231.85 | **193.00** | 79.6s | Completed cleanly on CPU |
+
+### Takeaway
+
+- **Yes, the no-attention model still learns.**
+- On this tiny local smoke test, removing attention barely changed quality: `190.33` PPL with attention vs `193.00` without attention after 2 epochs.
+- The no-attention variant was also slightly smaller and a bit faster on CPU.
+- This is not enough to claim parity at real scale, but it is strong evidence that the **ComplexSSM + bank path is doing substantive learning on its own**.
+
+### Promotion decision
+
+Promote this to a matched RTX 4090 ablation. Recommended next run:
+
+```bash
+python -m v5.train \
+  --size small-matched \
+  --batch_size 16 \
+  --epochs 10 \
+  --max_samples 100000 \
+  --seq_len 256 \
+  --init_strategy orthogonal \
+  --init_seed 42 \
+  --no_attention
+```
+
+Compare directly against `v4-ortho` / `v5-full-ds` settings to measure:
+- epoch-by-epoch val PPL
+- throughput
+- sample quality
+- whether the tiny-run near-parity holds at useful scale
+
+---
+
+## 10. Known Issues / TODO
 
 ### Diversity loss normalization bug (found 2026-03-07)
 
