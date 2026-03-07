@@ -406,7 +406,11 @@ We are not claiming "complex numbers beat transformers." What we are claiming is
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the PolyForm Noncommercial License 1.0.0 - see the [LICENSE](LICENSE) file for details.
+
+You may use, study, modify, and share this work for non-commercial purposes, including research, personal projects, and other non-commercial uses allowed by the license.
+
+Commercial use is not granted under the default license. If you want to use this work in a commercial product, service, or business setting, contact [gowravvishwakarma@gmail.com](mailto:gowravvishwakarma@gmail.com) to discuss a separate commercial license.
 
 ## Acknowledgments
 
