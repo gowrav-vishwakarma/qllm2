@@ -136,17 +136,17 @@ class PhaseFieldLM(nn.Module):
             initializer=initializer,
         )
 
-        # Working memory
+        # Working memory (None if disabled via --no_working_memory)
         self.working_memory = WorkingMemory(
             config.dim, config.num_wm_slots, config.wm_gate_bias,
             initializer=initializer,
-        )
+        ) if config.num_wm_slots > 0 else None
 
-        # Internal memory
+        # Internal memory (None if disabled via --no_internal_memory)
         self.internal_memory = InternalMemory(
             config.dim, config.num_im_slots,
             initializer=initializer,
-        )
+        ) if config.num_im_slots > 0 else None
 
         # Persistent memory reader (projections only; actual memory is external)
         self.persistent_reader = PersistentMemoryReader(
@@ -229,12 +229,15 @@ class PhaseFieldLM(nn.Module):
         ssm_out, new_state = self.ssm(bank_z, ssm_state)
 
         # 4. Working memory
-        wm_retrieved, new_wm_keys, new_wm_values, new_wm_mask = self.working_memory(
-            ssm_out, wm_keys, wm_values, wm_mask,
-        )
+        new_wm_keys = new_wm_values = new_wm_mask = None
+        if self.working_memory is not None:
+            wm_retrieved, new_wm_keys, new_wm_values, new_wm_mask = self.working_memory(
+                ssm_out, wm_keys, wm_values, wm_mask,
+            )
 
         # 5. Internal memory
-        im_retrieved = self.internal_memory(ssm_out)
+        if self.internal_memory is not None:
+            im_retrieved = self.internal_memory(ssm_out)
 
         # 6. Memory fusion (dynamic source count based on available memories)
         has_persistent = (persistent_keys is not None and persistent_mask is not None
@@ -242,7 +245,11 @@ class PhaseFieldLM(nn.Module):
         has_expert = (expert_keys is not None and expert_mask is not None
                       and expert_mask.sum() > 0)
 
-        memory_sources = [wm_retrieved, im_retrieved]
+        memory_sources = []
+        if self.working_memory is not None:
+            memory_sources.append(wm_retrieved)
+        if self.internal_memory is not None:
+            memory_sources.append(im_retrieved)
 
         if has_persistent:
             pm_retrieved = self.persistent_reader(
@@ -257,15 +264,19 @@ class PhaseFieldLM(nn.Module):
             memory_sources.append(em_retrieved)
 
         n_sources = len(memory_sources)
-        if n_sources == 2:
+        if n_sources == 0:
+            z_out = ssm_out
+        elif n_sources == 1:
+            z_out = ssm_out + memory_sources[0] * self.memory_scale
+        elif n_sources == 2:
             memory_out = self.memory_fusion_2(*memory_sources)
+            z_out = ssm_out + memory_out * self.memory_scale
         elif n_sources == 3:
             memory_out = self.memory_fusion_3(*memory_sources)
+            z_out = ssm_out + memory_out * self.memory_scale
         else:
             memory_out = self.memory_fusion_4(*memory_sources)
-
-        # 7. Combine SSM output with memory
-        z_out = ssm_out + memory_out * self.memory_scale
+            z_out = ssm_out + memory_out * self.memory_scale
 
         # 8. LM head
         lm = self.lm_head_proj(z_out)
@@ -380,8 +391,8 @@ class PhaseFieldLM(nn.Module):
             'banks': sum(p.numel() for p in self.bank_pairs.parameters()),
             'couplers': sum(p.numel() for p in self.couplers.parameters()),
             'ssm': sum(p.numel() for p in self.ssm.parameters()),
-            'working_memory': sum(p.numel() for p in self.working_memory.parameters()),
-            'internal_memory': sum(p.numel() for p in self.internal_memory.parameters()),
+            'working_memory': sum(p.numel() for p in self.working_memory.parameters()) if self.working_memory else 0,
+            'internal_memory': sum(p.numel() for p in self.internal_memory.parameters()) if self.internal_memory else 0,
             'persistent_reader': sum(p.numel() for p in self.persistent_reader.parameters()),
             'expert_reader': sum(p.numel() for p in self.expert_reader.parameters()),
             'memory_fusion': (

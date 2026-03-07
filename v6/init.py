@@ -97,6 +97,11 @@ class InitStrategy(ABC):
 
         Returns: ((keys_real, keys_imag), (values_real, values_imag))
         """
+        if num_slots == 0:
+            empty = torch.zeros(0, dim)
+            if device:
+                empty = empty.to(device)
+            return (empty, empty), (empty, empty)
         angles = torch.linspace(0, 2 * math.pi * (1 - 1 / num_slots), num_slots)
         keys_real = torch.cos(angles).unsqueeze(-1).expand(num_slots, dim).clone() * 0.1
         keys_imag = torch.sin(angles).unsqueeze(-1).expand(num_slots, dim).clone() * 0.1
