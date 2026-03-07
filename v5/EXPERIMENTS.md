@@ -219,8 +219,10 @@ Run with `small-matched` config, **orthogonal init** (seed=42), RTX 4090, batch_
 |-------|-----------|---------|-----------|-------|
 | 1 | 8.59 | 6.27 | 7.18h | |
 | 2 | 6.28 | 5.81 | 7.14h | |
-| 3 | 5.97 | 5.59 | 7.39h | epoch 4 underway |
-| 4-10 | -- | -- | -- | in progress |
+| 3 | 5.97 | 5.59 | 7.39h | |
+| 4 | -- | -- | -- | (completed, no table update yet) |
+| 5 | 5.68 | **5.36** *best* | ~7.2h | New best checkpoint saved. |
+| 6-10 | -- | -- | -- | in progress |
 
 **Sample generation after each completed epoch** (prompt: `The quick brown`):
 
@@ -238,7 +240,40 @@ Run with `small-matched` config, **orthogonal init** (seed=42), RTX 4090, batch_
 
 **Takeaway**: Scaling to the full dataset immediately drops val PPL well below the 100k-sample best. The training curve is still improving consistently epoch-over-epoch with no sign of plateauing at epoch 3. Train/val gap is tiny (~0.38 at epoch 3), so no overfitting signal.
 
+**Post–epoch 5 (2026-03-07)**: Best val PPL improved again at epoch 5 (5.36). Epoch 6 in progress. Per-batch loss in epoch 6 fluctuates ~1.5–1.9 (PPL ~4.4–6.8); epoch-level val PPL is the right metric. Expectation: curve can continue to improve through epoch 10 (v4-ortho improved every epoch 1→10). Optional follow-ups after this run: (1) short low-LR continuation on same TinyStories, or (2) resume from best checkpoint on a Wikipedia subset as a separate domain-adaptation experiment — not mid-run.
+
 **Log**: `logs/v5_train_small-matched.log` (commit 0467675, in progress)
+
+---
+
+## 9. Known Issues / TODO
+
+### Diversity loss normalization bug (found 2026-03-07)
+
+**File**: `v5/core/bank.py`, `compute_diversity_loss`, lines 216-217.
+
+**Bug**: The denominator uses L1 norm of component magnitudes instead of L2 norm:
+
+```python
+# Current (wrong) -- L1 norm: sum(|a_i|)
+mag_a = cabs(a).sum(dim=-1)
+mag_b = cabs(b).sum(dim=-1)
+
+# Correct -- L2 norm: sqrt(sum(|a_i|^2))
+mag_a = torch.sqrt(cabs(a).square().sum(dim=-1) + 1e-8)
+mag_b = torch.sqrt(cabs(b).square().sum(dim=-1) + 1e-8)
+```
+
+By Cauchy-Schwarz, `(sum|a_i|)^2 >= sum(|a_i|^2)`, so the denominator is systematically too large. Even identical banks produce cosine similarity well below 1.0, making the loss think banks are already diverse.
+
+**Evidence**: `div=0.0000` throughout the entire v5-full-ds training log. The diversity loss is effectively a no-op with weight 0.05.
+
+**Current impact**: None. The model succeeds via CE loss, orthogonal init, and router dynamics alone.
+
+**TODO when fixing**:
+1. Replace `.sum(dim=-1)` with `.square().sum(dim=-1).sqrt()` (or use `cabs2`).
+2. Re-evaluate `diversity_loss_weight` (currently 0.05) -- once the metric is properly scaled to [0, 1], the weight may need adjustment.
+3. Particularly relevant for `medium`/`large` configs with 3 banks where collapse risk is higher.
 
 ---
 
