@@ -1,0 +1,232 @@
+[2026-03-08 16:32:17] Wall clock start: 2026-03-08 16:32:17
+[2026-03-08 16:32:17] ============================================================
+[2026-03-08 16:32:17] V6 Phase-First Language Model
+[2026-03-08 16:32:17] ============================================================
+[2026-03-08 16:32:17] Size: tiny
+[2026-03-08 16:32:17] Complex dim: 64 (= 128 real values/position)
+[2026-03-08 16:32:17] SSM state dim: 128 (multi-timescale: fast/medium/slow)
+[2026-03-08 16:32:17] Layers: 4
+[2026-03-08 16:32:17] Banks: 2 (semantic + context)
+[2026-03-08 16:32:17] Working memory slots: 16 (top-k=8, decay=0.95)
+[2026-03-08 16:32:17] Internal memory slots: 0 (top-k=8)
+[2026-03-08 16:32:17] PhaseAttention: DISABLED (attention-free)
+[2026-03-08 16:32:17] Diversity loss: weight=0.1, floor=0.02, margin=0.3
+[2026-03-08 16:32:17] Epochs: 5
+[2026-03-08 16:32:17] Max samples: 100000
+[2026-03-08 16:32:17] Log file: logs/v6_ablation_tiny_D_no_im/v6_train_tiny.log
+[2026-03-08 16:32:17] Checkpoint dir: /tmp/v6_abl_D
+[2026-03-08 16:32:17] ============================================================
+[2026-03-08 16:32:20] Loading TinyStories (max_samples=100000)...
+[2026-03-08 16:32:36] Tokenizing 100000 texts...
+[2026-03-08 16:32:54] Total tokens: 21,955,376
+[2026-03-08 16:32:54] Train chunks: 76886, Val chunks: 8542
+[2026-03-08 16:32:54] Init strategy: orthogonal (seed: 42)
+
+[2026-03-08 16:32:54] Training on cuda
+[2026-03-08 16:32:54] Parameters: {'embed (tied w/ output)': 6432896, 'banks': 394752, 'couplers': 133640, 'attention': 0, 'ssm': 199748, 'working_memory': 24769, 'internal_memory': 0, 'persistent_reader': 8256, 'expert_reader': 8256, 'memory_fusion': 75785, 'lm_head_proj': 8384, 'total': 7286486}
+[2026-03-08 16:32:54] Total: 7,286,486 (7.3M)
+[2026-03-08 16:32:54] Epochs: 1..5, Batches/epoch: 1202
+
+
+[2026-03-08 16:32:54] ============================================================
+[2026-03-08 16:32:54] Epoch 1/5
+[2026-03-08 16:32:54] ============================================================
+[2026-03-08 16:32:56]   First step wall time: 1.6s
+[2026-03-08 16:32:56]   [1] batch 0/1202 loss=10.8512 ppl=51593.8 div=3.1996 lr=1.00e-03 | 38.2 samples/s | 9780 tok/s
+[2026-03-08 16:33:02]   [1] batch 50/1202 loss=6.0474 ppl=423.0 div=3.1560 lr=1.00e-03 | 418.7 samples/s | 107199 tok/s
+[2026-03-08 16:33:08]   [1] batch 100/1202 loss=4.9967 ppl=147.9 div=3.0647 lr=9.99e-04 | 465.6 samples/s | 119202 tok/s
+[2026-03-08 16:33:14]   [1] batch 150/1202 loss=4.4692 ppl=87.3 div=2.9145 lr=9.98e-04 | 479.9 samples/s | 122866 tok/s
+[2026-03-08 16:33:20]   [1] batch 200/1202 loss=4.1776 ppl=65.2 div=2.6868 lr=9.97e-04 | 490.4 samples/s | 125539 tok/s
+[2026-03-08 16:33:26]   [1] batch 250/1202 loss=3.9696 ppl=53.0 div=2.3753 lr=9.96e-04 | 496.8 samples/s | 127169 tok/s
+[2026-03-08 16:33:32]   [1] batch 300/1202 loss=3.6950 ppl=40.2 div=1.9839 lr=9.94e-04 | 500.7 samples/s | 128192 tok/s
+[2026-03-08 16:33:38]   [1] batch 350/1202 loss=3.6672 ppl=39.1 div=1.5067 lr=9.92e-04 | 504.2 samples/s | 129066 tok/s
+[2026-03-08 16:33:45]   [1] batch 400/1202 loss=3.5872 ppl=36.1 div=0.9744 lr=9.89e-04 | 506.7 samples/s | 129707 tok/s
+[2026-03-08 16:33:51]   [1] batch 450/1202 loss=3.5010 ppl=33.1 div=0.3794 lr=9.86e-04 | 508.6 samples/s | 130213 tok/s
+[2026-03-08 16:33:57]   [1] batch 500/1202 loss=3.4140 ppl=30.4 div=0.0130 lr=9.83e-04 | 510.3 samples/s | 130647 tok/s
+[2026-03-08 16:34:03]   [1] batch 550/1202 loss=3.3648 ppl=28.9 div=0.0020 lr=9.79e-04 | 511.7 samples/s | 131004 tok/s
+[2026-03-08 16:34:09]   [1] batch 600/1202 loss=3.2674 ppl=26.2 div=0.0015 lr=9.76e-04 | 512.9 samples/s | 131303 tok/s
+[2026-03-08 16:34:15]   [1] batch 650/1202 loss=3.2458 ppl=25.7 div=0.0019 lr=9.71e-04 | 513.7 samples/s | 131515 tok/s
+[2026-03-08 16:34:21]   [1] batch 700/1202 loss=3.2283 ppl=25.2 div=0.0020 lr=9.67e-04 | 514.6 samples/s | 131741 tok/s
+[2026-03-08 16:34:27]   [1] batch 750/1202 loss=3.1317 ppl=22.9 div=0.0024 lr=9.62e-04 | 515.3 samples/s | 131913 tok/s
+[2026-03-08 16:34:33]   [1] batch 800/1202 loss=3.0427 ppl=21.0 div=0.0020 lr=9.57e-04 | 515.9 samples/s | 132080 tok/s
+[2026-03-08 16:34:39]   [1] batch 850/1202 loss=2.9733 ppl=19.6 div=0.0016 lr=9.51e-04 | 516.5 samples/s | 132230 tok/s
+[2026-03-08 16:34:45]   [1] batch 900/1202 loss=3.0004 ppl=20.1 div=0.0011 lr=9.46e-04 | 517.0 samples/s | 132356 tok/s
+[2026-03-08 16:34:52]   [1] batch 950/1202 loss=2.9443 ppl=19.0 div=0.0021 lr=9.39e-04 | 517.0 samples/s | 132363 tok/s
+[2026-03-08 16:34:58]   [1] batch 1000/1202 loss=2.9901 ppl=19.9 div=0.0010 lr=9.33e-04 | 517.5 samples/s | 132474 tok/s
+[2026-03-08 16:35:04]   [1] batch 1050/1202 loss=2.8824 ppl=17.9 div=0.0016 lr=9.26e-04 | 517.9 samples/s | 132579 tok/s
+[2026-03-08 16:35:10]   [1] batch 1100/1202 loss=2.8816 ppl=17.8 div=0.0007 lr=9.19e-04 | 518.1 samples/s | 132633 tok/s
+[2026-03-08 16:35:16]   [1] batch 1150/1202 loss=2.7855 ppl=16.2 div=0.0006 lr=9.12e-04 | 518.4 samples/s | 132714 tok/s
+[2026-03-08 16:35:22]   [1] batch 1200/1202 loss=2.8232 ppl=16.8 div=0.0024 lr=9.05e-04 | 518.7 samples/s | 132791 tok/s
+[2026-03-08 16:35:29] Epoch 1/5 | Train Loss: 3.6263 PPL: 37.57 | Time: 148.8s | Val Loss: 2.7075 PPL: 14.99 *best*
+[2026-03-08 16:35:29] Saved checkpoint: /tmp/v6_abl_D/best_model.pt
+
+[2026-03-08 16:35:30] Prompt: The quick brown
+[2026-03-08 16:35:30] Generated: The quick brown dog. The dog said, "You can't get it out of the park and see who are good at me!"
+
+[2026-03-08 16:35:30] Ben felt better. He started to cry. He grabbed his hand and put them in the bowl. He pulled away from him. He did not like it. He ran inside for his mom. He wished he had ever seen before.<|endoftext|>Tommy was called outside. He liked to play with his toys. He saw a big tree with many things on the ground.
+
+[2026-03-08 16:35:30] ============================================================
+[2026-03-08 16:35:30] Epoch 2/5
+[2026-03-08 16:35:30] ============================================================
+[2026-03-08 16:35:30]   First step wall time: 0.1s
+[2026-03-08 16:35:30]   [2] batch 0/1202 loss=2.8118 ppl=16.6 div=0.0018 lr=9.04e-04 | 292.3 samples/s | 74824 tok/s
+[2026-03-08 16:35:36]   [2] batch 50/1202 loss=2.7547 ppl=15.7 div=0.0013 lr=8.97e-04 | 519.0 samples/s | 132876 tok/s
+[2026-03-08 16:35:42]   [2] batch 100/1202 loss=2.7183 ppl=15.2 div=0.0016 lr=8.88e-04 | 523.0 samples/s | 133886 tok/s
+[2026-03-08 16:35:48]   [2] batch 150/1202 loss=2.7076 ppl=15.0 div=0.0007 lr=8.80e-04 | 524.8 samples/s | 134346 tok/s
+[2026-03-08 16:35:54]   [2] batch 200/1202 loss=2.6587 ppl=14.3 div=0.0005 lr=8.71e-04 | 525.6 samples/s | 134564 tok/s
+[2026-03-08 16:36:00]   [2] batch 250/1202 loss=2.6286 ppl=13.9 div=0.0006 lr=8.63e-04 | 526.0 samples/s | 134662 tok/s
+[2026-03-08 16:36:06]   [2] batch 300/1202 loss=2.6261 ppl=13.8 div=0.0007 lr=8.53e-04 | 526.2 samples/s | 134704 tok/s
+[2026-03-08 16:36:12]   [2] batch 350/1202 loss=2.6865 ppl=14.7 div=0.0015 lr=8.44e-04 | 526.5 samples/s | 134772 tok/s
+[2026-03-08 16:36:18]   [2] batch 400/1202 loss=2.6043 ppl=13.5 div=0.0015 lr=8.35e-04 | 526.7 samples/s | 134831 tok/s
+[2026-03-08 16:36:24]   [2] batch 450/1202 loss=2.6581 ppl=14.3 div=0.0007 lr=8.25e-04 | 526.9 samples/s | 134877 tok/s
+[2026-03-08 16:36:31]   [2] batch 500/1202 loss=2.5734 ppl=13.1 div=0.0012 lr=8.15e-04 | 527.0 samples/s | 134902 tok/s
+[2026-03-08 16:36:37]   [2] batch 550/1202 loss=2.6272 ppl=13.8 div=0.0010 lr=8.04e-04 | 527.0 samples/s | 134908 tok/s
+[2026-03-08 16:36:43]   [2] batch 600/1202 loss=2.5230 ppl=12.5 div=0.0010 lr=7.94e-04 | 527.1 samples/s | 134945 tok/s
+[2026-03-08 16:36:49]   [2] batch 650/1202 loss=2.5559 ppl=12.9 div=0.0004 lr=7.83e-04 | 527.2 samples/s | 134973 tok/s
+[2026-03-08 16:36:55]   [2] batch 700/1202 loss=2.3803 ppl=10.8 div=0.0005 lr=7.72e-04 | 527.2 samples/s | 134968 tok/s
+[2026-03-08 16:37:01]   [2] batch 750/1202 loss=2.5516 ppl=12.8 div=0.0005 lr=7.61e-04 | 527.3 samples/s | 134996 tok/s
+[2026-03-08 16:37:07]   [2] batch 800/1202 loss=2.5707 ppl=13.1 div=0.0008 lr=7.50e-04 | 527.4 samples/s | 135011 tok/s
+[2026-03-08 16:37:13]   [2] batch 850/1202 loss=2.5681 ppl=13.0 div=0.0004 lr=7.39e-04 | 527.4 samples/s | 135004 tok/s
+[2026-03-08 16:37:19]   [2] batch 900/1202 loss=2.4886 ppl=12.0 div=0.0006 lr=7.27e-04 | 527.4 samples/s | 135013 tok/s
+[2026-03-08 16:37:25]   [2] batch 950/1202 loss=2.4303 ppl=11.4 div=0.0004 lr=7.15e-04 | 527.1 samples/s | 134939 tok/s
+[2026-03-08 16:37:31]   [2] batch 1000/1202 loss=2.4754 ppl=11.9 div=0.0009 lr=7.04e-04 | 527.1 samples/s | 134947 tok/s
+[2026-03-08 16:37:37]   [2] batch 1050/1202 loss=2.4823 ppl=12.0 div=0.0006 lr=6.92e-04 | 527.2 samples/s | 134965 tok/s
+[2026-03-08 16:37:43]   [2] batch 1100/1202 loss=2.5073 ppl=12.3 div=0.0007 lr=6.79e-04 | 527.3 samples/s | 134980 tok/s
+[2026-03-08 16:37:49]   [2] batch 1150/1202 loss=2.4007 ppl=11.0 div=0.0005 lr=6.67e-04 | 527.3 samples/s | 134991 tok/s
+[2026-03-08 16:37:55]   [2] batch 1200/1202 loss=2.4966 ppl=12.1 div=0.0004 lr=6.55e-04 | 527.3 samples/s | 134991 tok/s
+[2026-03-08 16:38:01] Epoch 2/5 | Train Loss: 2.5790 PPL: 13.18 | Time: 145.9s | Val Loss: 2.3580 PPL: 10.57 *best*
+[2026-03-08 16:38:01] Saved checkpoint: /tmp/v6_abl_D/best_model.pt
+
+[2026-03-08 16:38:02] Prompt: The quick brown
+[2026-03-08 16:38:02] Generated: The quick brown bear. He was so happy and content.
+
+[2026-03-08 16:38:02] He spent his afternoon playing with the birds until he could go home. They were all very fun! The family had done an amazing day - there was no matter what they were, they had.<|endoftext|>Once upon a time, there was two friends. All their toys were all sorts of things that everyone wanted to keep it. So, they would look for some food like to do. One day, he decided to try something new and exciting.
+
+[2026-03-08 16:38:02] ============================================================
+[2026-03-08 16:38:02] Epoch 3/5
+[2026-03-08 16:38:02] ============================================================
+[2026-03-08 16:38:02]   First step wall time: 0.1s
+[2026-03-08 16:38:02]   [3] batch 0/1202 loss=2.4771 ppl=11.9 div=0.0005 lr=6.54e-04 | 298.8 samples/s | 76487 tok/s
+[2026-03-08 16:38:08]   [3] batch 50/1202 loss=2.3617 ppl=10.6 div=0.0009 lr=6.42e-04 | 520.2 samples/s | 133182 tok/s
+[2026-03-08 16:38:14]   [3] batch 100/1202 loss=2.4075 ppl=11.1 div=0.0004 lr=6.29e-04 | 522.9 samples/s | 133853 tok/s
+[2026-03-08 16:38:20]   [3] batch 150/1202 loss=2.4660 ppl=11.8 div=0.0007 lr=6.17e-04 | 524.6 samples/s | 134293 tok/s
+[2026-03-08 16:38:26]   [3] batch 200/1202 loss=2.3213 ppl=10.2 div=0.0006 lr=6.04e-04 | 525.3 samples/s | 134465 tok/s
+[2026-03-08 16:38:32]   [3] batch 250/1202 loss=2.3944 ppl=11.0 div=0.0003 lr=5.91e-04 | 525.7 samples/s | 134587 tok/s
+[2026-03-08 16:38:39]   [3] batch 300/1202 loss=2.3524 ppl=10.5 div=0.0006 lr=5.78e-04 | 526.0 samples/s | 134668 tok/s
+[2026-03-08 16:38:45]   [3] batch 350/1202 loss=2.3895 ppl=10.9 div=0.0011 lr=5.65e-04 | 526.2 samples/s | 134696 tok/s
+[2026-03-08 16:38:51]   [3] batch 400/1202 loss=2.3733 ppl=10.7 div=0.0006 lr=5.52e-04 | 526.1 samples/s | 134685 tok/s
+[2026-03-08 16:38:57]   [3] batch 450/1202 loss=2.4630 ppl=11.7 div=0.0008 lr=5.39e-04 | 526.3 samples/s | 134732 tok/s
+[2026-03-08 16:39:03]   [3] batch 500/1202 loss=2.4340 ppl=11.4 div=0.0005 lr=5.26e-04 | 526.4 samples/s | 134757 tok/s
+[2026-03-08 16:39:09]   [3] batch 550/1202 loss=2.4148 ppl=11.2 div=0.0004 lr=5.13e-04 | 526.5 samples/s | 134785 tok/s
+[2026-03-08 16:39:15]   [3] batch 600/1202 loss=2.3621 ppl=10.6 div=0.0001 lr=5.00e-04 | 526.5 samples/s | 134786 tok/s
+[2026-03-08 16:39:21]   [3] batch 650/1202 loss=2.3177 ppl=10.2 div=0.0003 lr=4.87e-04 | 526.6 samples/s | 134821 tok/s
+[2026-03-08 16:39:27]   [3] batch 700/1202 loss=2.3111 ppl=10.1 div=0.0004 lr=4.74e-04 | 526.7 samples/s | 134835 tok/s
+[2026-03-08 16:39:33]   [3] batch 750/1202 loss=2.3534 ppl=10.5 div=0.0002 lr=4.61e-04 | 526.8 samples/s | 134859 tok/s
+[2026-03-08 16:39:39]   [3] batch 800/1202 loss=2.3568 ppl=10.6 div=0.0006 lr=4.48e-04 | 526.7 samples/s | 134832 tok/s
+[2026-03-08 16:39:45]   [3] batch 850/1202 loss=2.4090 ppl=11.1 div=0.0005 lr=4.35e-04 | 526.8 samples/s | 134856 tok/s
+[2026-03-08 16:39:51]   [3] batch 900/1202 loss=2.3427 ppl=10.4 div=0.0003 lr=4.22e-04 | 526.8 samples/s | 134872 tok/s
+[2026-03-08 16:39:57]   [3] batch 950/1202 loss=2.3817 ppl=10.8 div=0.0002 lr=4.09e-04 | 526.9 samples/s | 134887 tok/s
+[2026-03-08 16:40:04]   [3] batch 1000/1202 loss=2.3406 ppl=10.4 div=0.0003 lr=3.96e-04 | 526.6 samples/s | 134819 tok/s
+[2026-03-08 16:40:10]   [3] batch 1050/1202 loss=2.3431 ppl=10.4 div=0.0003 lr=3.83e-04 | 526.7 samples/s | 134835 tok/s
+[2026-03-08 16:40:16]   [3] batch 1100/1202 loss=2.4325 ppl=11.4 div=0.0002 lr=3.71e-04 | 526.7 samples/s | 134841 tok/s
+[2026-03-08 16:40:22]   [3] batch 1150/1202 loss=2.3254 ppl=10.2 div=0.0001 lr=3.58e-04 | 526.8 samples/s | 134853 tok/s
+[2026-03-08 16:40:28]   [3] batch 1200/1202 loss=2.2733 ppl=9.7 div=0.0001 lr=3.46e-04 | 526.8 samples/s | 134857 tok/s
+[2026-03-08 16:40:34] Epoch 3/5 | Train Loss: 2.3763 PPL: 10.77 | Time: 146.0s | Val Loss: 2.2452 PPL: 9.44 *best*
+[2026-03-08 16:40:34] Saved checkpoint: /tmp/v6_abl_D/best_model.pt
+
+[2026-03-08 16:40:34] Prompt: The quick brown
+[2026-03-08 16:40:34] Generated: The quick brown shoes! They both got to the park and went for a walk. They were playing together, and they were no longer restless. They started to fight, but soon, they were too busy.
+
+[2026-03-08 16:40:34] Soon, they came to play, but they had no longer. They were playing in their garden. They were all very good at their game. The kids played and were so happy that they could come back.<|endoftext|>Once upon a time, there was a little boy who loved to play. He
+
+[2026-03-08 16:40:34] ============================================================
+[2026-03-08 16:40:34] Epoch 4/5
+[2026-03-08 16:40:34] ============================================================
+[2026-03-08 16:40:35]   First step wall time: 0.1s
+[2026-03-08 16:40:35]   [4] batch 0/1202 loss=2.3047 ppl=10.0 div=0.0003 lr=3.45e-04 | 299.1 samples/s | 76576 tok/s
+[2026-03-08 16:40:41]   [4] batch 50/1202 loss=2.3280 ppl=10.3 div=0.0002 lr=3.33e-04 | 520.1 samples/s | 133148 tok/s
+[2026-03-08 16:40:47]   [4] batch 100/1202 loss=2.3077 ppl=10.1 div=0.0003 lr=3.21e-04 | 523.7 samples/s | 134060 tok/s
+[2026-03-08 16:40:53]   [4] batch 150/1202 loss=2.2381 ppl=9.4 div=0.0002 lr=3.08e-04 | 525.1 samples/s | 134414 tok/s
+[2026-03-08 16:40:59]   [4] batch 200/1202 loss=2.3270 ppl=10.2 div=0.0001 lr=2.96e-04 | 525.7 samples/s | 134578 tok/s
+[2026-03-08 16:41:05]   [4] batch 250/1202 loss=2.3404 ppl=10.4 div=0.0004 lr=2.85e-04 | 525.9 samples/s | 134625 tok/s
+[2026-03-08 16:41:11]   [4] batch 300/1202 loss=2.3494 ppl=10.5 div=0.0003 lr=2.73e-04 | 526.2 samples/s | 134698 tok/s
+[2026-03-08 16:41:17]   [4] batch 350/1202 loss=2.3169 ppl=10.1 div=0.0001 lr=2.61e-04 | 526.2 samples/s | 134712 tok/s
+[2026-03-08 16:41:23]   [4] batch 400/1202 loss=2.2395 ppl=9.4 div=0.0001 lr=2.50e-04 | 526.5 samples/s | 134774 tok/s
+[2026-03-08 16:41:29]   [4] batch 450/1202 loss=2.2624 ppl=9.6 div=0.0002 lr=2.39e-04 | 526.6 samples/s | 134820 tok/s
+[2026-03-08 16:41:35]   [4] batch 500/1202 loss=2.2925 ppl=9.9 div=0.0002 lr=2.28e-04 | 526.7 samples/s | 134832 tok/s
+[2026-03-08 16:41:41]   [4] batch 550/1202 loss=2.2682 ppl=9.7 div=0.0001 lr=2.17e-04 | 526.8 samples/s | 134858 tok/s
+[2026-03-08 16:41:47]   [4] batch 600/1202 loss=2.3355 ppl=10.3 div=0.0001 lr=2.06e-04 | 526.6 samples/s | 134805 tok/s
+[2026-03-08 16:41:53]   [4] batch 650/1202 loss=2.2782 ppl=9.8 div=0.0002 lr=1.96e-04 | 526.6 samples/s | 134805 tok/s
+[2026-03-08 16:41:59]   [4] batch 700/1202 loss=2.2844 ppl=9.8 div=0.0000 lr=1.85e-04 | 526.7 samples/s | 134827 tok/s
+[2026-03-08 16:42:06]   [4] batch 750/1202 loss=2.1859 ppl=8.9 div=0.0001 lr=1.75e-04 | 526.7 samples/s | 134840 tok/s
+[2026-03-08 16:42:12]   [4] batch 800/1202 loss=2.2662 ppl=9.6 div=0.0001 lr=1.65e-04 | 526.7 samples/s | 134837 tok/s
+[2026-03-08 16:42:18]   [4] batch 850/1202 loss=2.2667 ppl=9.6 div=0.0001 lr=1.56e-04 | 526.7 samples/s | 134846 tok/s
+[2026-03-08 16:42:24]   [4] batch 900/1202 loss=2.2675 ppl=9.7 div=0.0001 lr=1.47e-04 | 526.8 samples/s | 134858 tok/s
+[2026-03-08 16:42:30]   [4] batch 950/1202 loss=2.2748 ppl=9.7 div=0.0001 lr=1.37e-04 | 526.8 samples/s | 134860 tok/s
+[2026-03-08 16:42:36]   [4] batch 1000/1202 loss=2.2463 ppl=9.5 div=0.0001 lr=1.29e-04 | 526.5 samples/s | 134791 tok/s
+[2026-03-08 16:42:42]   [4] batch 1050/1202 loss=2.2273 ppl=9.3 div=0.0000 lr=1.20e-04 | 526.6 samples/s | 134816 tok/s
+[2026-03-08 16:42:48]   [4] batch 1100/1202 loss=2.3136 ppl=10.1 div=0.0001 lr=1.12e-04 | 526.7 samples/s | 134835 tok/s
+[2026-03-08 16:42:54]   [4] batch 1150/1202 loss=2.2942 ppl=9.9 div=0.0000 lr=1.03e-04 | 526.7 samples/s | 134843 tok/s
+[2026-03-08 16:43:00]   [4] batch 1200/1202 loss=2.3118 ppl=10.1 div=0.0000 lr=9.56e-05 | 526.7 samples/s | 134835 tok/s
+[2026-03-08 16:43:06] Epoch 4/5 | Train Loss: 2.2928 PPL: 9.90 | Time: 146.1s | Val Loss: 2.1963 PPL: 8.99 *best*
+[2026-03-08 16:43:06] Saved checkpoint: /tmp/v6_abl_D/best_model.pt
+
+[2026-03-08 16:43:07] Prompt: The quick brown
+[2026-03-08 16:43:07] Generated: The quick brown bear said:
+
+[2026-03-08 16:43:07] "Maybe the bear is about!"
+
+[2026-03-08 16:43:07] He looks around and sees a big bear. He thinks he was a bear. The bear runs away.
+
+[2026-03-08 16:43:07] He runs back to his voice, but he cannot see him. He stops his hand. He hears them from behind him. He is not scared. He knows he would stay there. He says, "I can't stop what I want. His name is Rex. He is not sure. He wants to be
+
+[2026-03-08 16:43:07] ============================================================
+[2026-03-08 16:43:07] Epoch 5/5
+[2026-03-08 16:43:07] ============================================================
+[2026-03-08 16:43:07]   First step wall time: 0.1s
+[2026-03-08 16:43:07]   [5] batch 0/1202 loss=2.2577 ppl=9.6 div=0.0001 lr=9.53e-05 | 303.0 samples/s | 77579 tok/s
+[2026-03-08 16:43:13]   [5] batch 50/1202 loss=2.2892 ppl=9.9 div=0.0001 lr=8.78e-05 | 514.0 samples/s | 131586 tok/s
+[2026-03-08 16:43:19]   [5] batch 100/1202 loss=2.2071 ppl=9.1 div=0.0000 lr=8.05e-05 | 520.1 samples/s | 133144 tok/s
+[2026-03-08 16:43:25]   [5] batch 150/1202 loss=2.2368 ppl=9.4 div=0.0001 lr=7.36e-05 | 522.4 samples/s | 133727 tok/s
+[2026-03-08 16:43:31]   [5] batch 200/1202 loss=2.2242 ppl=9.2 div=0.0000 lr=6.69e-05 | 523.8 samples/s | 134083 tok/s
+[2026-03-08 16:43:37]   [5] batch 250/1202 loss=2.2613 ppl=9.6 div=0.0000 lr=6.05e-05 | 524.5 samples/s | 134275 tok/s
+[2026-03-08 16:43:43]   [5] batch 300/1202 loss=2.1943 ppl=9.0 div=0.0000 lr=5.44e-05 | 525.1 samples/s | 134429 tok/s
+[2026-03-08 16:43:49]   [5] batch 350/1202 loss=2.2874 ppl=9.8 div=0.0000 lr=4.87e-05 | 525.4 samples/s | 134507 tok/s
+[2026-03-08 16:43:56]   [5] batch 400/1202 loss=2.2112 ppl=9.1 div=0.0000 lr=4.32e-05 | 525.6 samples/s | 134565 tok/s
+[2026-03-08 16:44:02]   [5] batch 450/1202 loss=2.2090 ppl=9.1 div=0.0000 lr=3.80e-05 | 525.8 samples/s | 134605 tok/s
+[2026-03-08 16:44:08]   [5] batch 500/1202 loss=2.2676 ppl=9.7 div=0.0000 lr=3.32e-05 | 525.9 samples/s | 134629 tok/s
+[2026-03-08 16:44:14]   [5] batch 550/1202 loss=2.2939 ppl=9.9 div=0.0000 lr=2.87e-05 | 525.9 samples/s | 134637 tok/s
+[2026-03-08 16:44:20]   [5] batch 600/1202 loss=2.2662 ppl=9.6 div=0.0000 lr=2.45e-05 | 526.1 samples/s | 134680 tok/s
+[2026-03-08 16:44:26]   [5] batch 650/1202 loss=2.2374 ppl=9.4 div=0.0000 lr=2.06e-05 | 526.2 samples/s | 134704 tok/s
+[2026-03-08 16:44:32]   [5] batch 700/1202 loss=2.2249 ppl=9.3 div=0.0000 lr=1.70e-05 | 526.2 samples/s | 134702 tok/s
+[2026-03-08 16:44:38]   [5] batch 750/1202 loss=2.3054 ppl=10.0 div=0.0000 lr=1.38e-05 | 526.3 samples/s | 134739 tok/s
+[2026-03-08 16:44:44]   [5] batch 800/1202 loss=2.2484 ppl=9.5 div=0.0000 lr=1.09e-05 | 526.4 samples/s | 134768 tok/s
+[2026-03-08 16:44:50]   [5] batch 850/1202 loss=2.2608 ppl=9.6 div=0.0000 lr=8.39e-06 | 526.5 samples/s | 134787 tok/s
+[2026-03-08 16:44:56]   [5] batch 900/1202 loss=2.2871 ppl=9.8 div=0.0000 lr=6.18e-06 | 526.5 samples/s | 134791 tok/s
+[2026-03-08 16:45:02]   [5] batch 950/1202 loss=2.2209 ppl=9.2 div=0.0000 lr=4.30e-06 | 526.6 samples/s | 134802 tok/s
+[2026-03-08 16:45:08]   [5] batch 1000/1202 loss=2.2174 ppl=9.2 div=0.0000 lr=2.76e-06 | 526.3 samples/s | 134726 tok/s
+[2026-03-08 16:45:15]   [5] batch 1050/1202 loss=2.1886 ppl=8.9 div=0.0000 lr=1.56e-06 | 526.3 samples/s | 134729 tok/s
+[2026-03-08 16:45:21]   [5] batch 1100/1202 loss=2.2536 ppl=9.5 div=0.0000 lr=6.97e-07 | 526.3 samples/s | 134737 tok/s
+[2026-03-08 16:45:27]   [5] batch 1150/1202 loss=2.2960 ppl=9.9 div=0.0000 lr=1.78e-07 | 526.4 samples/s | 134749 tok/s
+[2026-03-08 16:45:33]   [5] batch 1200/1202 loss=2.2283 ppl=9.3 div=0.0000 lr=6.83e-11 | 526.4 samples/s | 134764 tok/s
+[2026-03-08 16:45:38] Epoch 5/5 | Train Loss: 2.2565 PPL: 9.55 | Time: 146.1s | Val Loss: 2.1837 PPL: 8.88 *best*
+[2026-03-08 16:45:39] Saved checkpoint: /tmp/v6_abl_D/best_model.pt
+[2026-03-08 16:45:39] Saved checkpoint: /tmp/v6_abl_D/checkpoint_epoch_5.pt
+
+[2026-03-08 16:45:39] Prompt: The quick brown
+[2026-03-08 16:45:39] Generated: The quick brown bear had never seen before.
+
+[2026-03-08 16:45:39] "I don't know, but you have to be careful when we go!"
+
+[2026-03-08 16:45:39] They run and ran to the
+
+[2026-03-08 16:45:39] The rabbit was very excited. He wanted to have some of his friends. 
+
+[2026-03-08 16:45:39] He decided to stay with him. He kept going until he could, but he would not find his. They were so happy that he would try to open it.<|endoftext|>One day, a boy went for a walk. He went to get
+[2026-03-08 16:45:39] Saved checkpoint: /tmp/v6_abl_D/final_model.pt
+
+[2026-03-08 16:45:39] Training complete!
+[2026-03-08 16:45:39] Total wall time: 765.4s (0.21h)
+[2026-03-08 16:45:39] Best Val Loss: 2.1837, Best Val PPL: 8.88
+
+[2026-03-08 16:45:39] Wall clock end: 2026-03-08 16:45:39
