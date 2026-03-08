@@ -146,6 +146,7 @@ class Trainer:
         self.save_checkpoints = save_checkpoints
         self.verbose = verbose
         self.gen_every = 0
+        self.gen_prompt = "Once upon a time"
 
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
@@ -253,9 +254,9 @@ class Trainer:
                     and batch_idx % self.gen_every == 0
                     and self.tokenizer is not None):
                 try:
-                    text = self.generate_sample("The quick brown")
+                    text = self.generate_sample(self.gen_prompt)
                     print(f"  [mid-epoch sample @ batch {batch_idx}]")
-                    print(f"  Prompt: The quick brown")
+                    print(f"  Prompt: {self.gen_prompt}")
                     print(f"  Generated: {text}")
                 except Exception:
                     pass
@@ -365,8 +366,8 @@ class Trainer:
 
             if self.tokenizer is not None:
                 try:
-                    text = self.generate_sample("The quick brown")
-                    print(f"\nPrompt: The quick brown")
+                    text = self.generate_sample(self.gen_prompt)
+                    print(f"\nPrompt: {self.gen_prompt}")
                     print(f"Generated: {text}")
                 except Exception as e:
                     print(f"(Sample generation failed: {e})")
@@ -407,6 +408,8 @@ def main():
                         help='Place attention every N layers (0 = last layer only)')
     parser.add_argument('--gen_every', type=int, default=0,
                         help='Generate a sample every N batches during training (0 = end of epoch only)')
+    parser.add_argument('--gen_prompt', type=str, default='Once upon a time',
+                        help='Prompt for mid-epoch and end-of-epoch text generation')
     parser.add_argument('--log_dir', type=str, default='logs')
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_v6')
     parser.add_argument('--resume', type=str, default=None)
@@ -461,7 +464,8 @@ def main():
         print(f"PhaseAttention: DISABLED (attention-free)")
     print(f"Diversity loss: weight={config.diversity_loss_weight}, floor={config.diversity_loss_floor}, margin={config.diversity_margin}")
     print(f"Epochs: {config.max_epochs}")
-    print(f"Mid-epoch generation: every {args.gen_every} batches" if args.gen_every > 0 else "Mid-epoch generation: off")
+    gen_info = f"every {args.gen_every} batches, prompt=\"{args.gen_prompt}\"" if args.gen_every > 0 else "off"
+    print(f"Mid-epoch generation: {gen_info}")
     print(f"Max samples: {args.max_samples}")
     print(f"Log file: {log_path}")
     print(f"Checkpoint dir: {args.checkpoint_dir}")
@@ -512,6 +516,7 @@ def main():
         start_epoch=start_epoch,
     )
     trainer.gen_every = args.gen_every
+    trainer.gen_prompt = args.gen_prompt
 
     if args.resume and 'optimizer_state_dict' in checkpoint:
         trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
