@@ -28,7 +28,10 @@ _git_branch() {
 }
 
 _git_is_dirty() {
-    if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null; then
+    # Only check source code, not logs/ output or checkpoints.
+    # '-- . :!logs/' means "diff everything except logs/".
+    if ! git diff --quiet -- . ':!logs/' 2>/dev/null \
+       || ! git diff --cached --quiet -- . ':!logs/' 2>/dev/null; then
         echo "yes"
     else
         echo "no"
@@ -98,12 +101,12 @@ RUNEOF
     if [[ "$(_git_is_dirty)" == "yes" ]]; then
         {
             echo ""
-            echo "UNCOMMITTED CHANGES AT RUN TIME:"
-            echo "--------------------------------"
-            git diff --stat 2>/dev/null || echo "(could not get diff stat)"
+            echo "UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):"
+            echo "---------------------------------------------------------------"
+            git diff --stat -- . ':!logs/' 2>/dev/null || echo "(could not get diff stat)"
             echo ""
-            git diff 2>/dev/null | head -200 || true
-            if [[ $(git diff 2>/dev/null | wc -l) -gt 200 ]]; then
+            git diff -- . ':!logs/' 2>/dev/null | head -200 || true
+            if [[ $(git diff -- . ':!logs/' 2>/dev/null | wc -l) -gt 200 ]]; then
                 echo "... (diff truncated at 200 lines)"
             fi
         } >> "${log_dir}/RUN_INFO.txt"
