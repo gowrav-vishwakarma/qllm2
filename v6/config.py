@@ -1,7 +1,8 @@
 """
 V6 Configuration.
 
-No attention. Multi-timescale SSM with working memory and external memory layers.
+Multi-timescale SSM with working memory, external memory layers,
+and optional sparse PhaseAttention (disabled by default).
 """
 
 import json
@@ -25,15 +26,24 @@ class V6Config:
     # Working memory
     num_wm_slots: int = 64    # working memory slots per sequence
     wm_gate_bias: float = -2.0  # start selective (don't write everything)
+    wm_read_topk: int = 8     # top-k sparse retrieval (0 = dense softmax)
+    wm_slot_decay: float = 0.95  # per-step mask decay for slot freshness
 
     # Internal memory
     num_im_slots: int = 128   # internal memory slots (nn.Parameter, trained)
+    im_read_topk: int = 8     # top-k sparse retrieval (0 = dense softmax)
 
     # External memory flags
     use_persistent_memory: bool = False  # persistent memory (per-user, cross-session)
     use_session_memory: bool = False     # session memory (optional, disabled by default)
     num_persistent_slots: int = 256
     num_session_slots: int = 128
+
+    # Attention (disabled by default -- model is attention-free unless explicitly enabled)
+    use_attention: bool = False
+    attn_every: int = 0       # 0 = last layer only; N>0 = every N-th layer
+    attn_num_heads: int = 8
+    attn_window_size: int = 256
 
     # Training
     batch_size: int = 8
@@ -42,7 +52,9 @@ class V6Config:
     max_epochs: int = 20
     warmup_steps: int = 200
     gradient_clip: float = 1.0
-    diversity_loss_weight: float = 0.05
+    diversity_loss_weight: float = 0.1
+    diversity_loss_floor: float = 0.02
+    diversity_margin: float = 0.3
 
     # Speed
     compile_model: bool = False

@@ -200,7 +200,13 @@ class Trainer:
                 loss = ce_loss
                 div_loss_val = 0.0
                 if output.diversity_loss is not None:
-                    div_loss = output.diversity_loss * self.config.diversity_loss_weight
+                    total_steps = self.config.max_epochs * len(self.train_loader)
+                    progress = min(self.global_step / max(total_steps, 1), 1.0)
+                    div_w = self.config.diversity_loss_weight + (
+                        self.config.diversity_loss_floor - self.config.diversity_loss_weight
+                    ) * progress
+                    div_w = max(div_w, self.config.diversity_loss_floor)
+                    div_loss = output.diversity_loss * div_w
                     loss = loss + div_loss
                     div_loss_val = div_loss.item()
 
@@ -378,6 +384,10 @@ def main():
     parser.add_argument('--init_strategy', type=str, default=None,
                         choices=list_strategies())
     parser.add_argument('--init_seed', type=int, default=None)
+    parser.add_argument('--use_attention', action='store_true',
+                        help='Enable PhaseAttention layers (disabled by default)')
+    parser.add_argument('--attn_every', type=int, default=0,
+                        help='Place attention every N layers (0 = last layer only)')
     parser.add_argument('--log_dir', type=str, default='logs')
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_v6')
     parser.add_argument('--resume', type=str, default=None)
@@ -396,6 +406,9 @@ def main():
     if args.init_strategy is not None:
         config.init_strategy = args.init_strategy
     config.init_seed = args.init_seed
+    if args.use_attention:
+        config.use_attention = True
+        config.attn_every = args.attn_every
 
     log_dir = Path(args.log_dir)
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -416,8 +429,14 @@ def main():
     print(f"SSM state dim: {config.state_dim} (multi-timescale: fast/medium/slow)")
     print(f"Layers: {config.num_layers}")
     print(f"Banks: {config.num_banks} (semantic + context)")
-    print(f"Working memory slots: {config.num_wm_slots}")
-    print(f"Internal memory slots: {config.num_im_slots}")
+    print(f"Working memory slots: {config.num_wm_slots} (top-k={config.wm_read_topk}, decay={config.wm_slot_decay})")
+    print(f"Internal memory slots: {config.num_im_slots} (top-k={config.im_read_topk})")
+    if config.use_attention:
+        attn_desc = f"every {config.attn_every} layers" if config.attn_every > 0 else "last layer only"
+        print(f"PhaseAttention: ENABLED ({attn_desc}, heads={config.attn_num_heads}, window={config.attn_window_size})")
+    else:
+        print(f"PhaseAttention: DISABLED (attention-free)")
+    print(f"Diversity loss: weight={config.diversity_loss_weight}, floor={config.diversity_loss_floor}, margin={config.diversity_margin}")
     print(f"Epochs: {config.max_epochs}")
     print(f"Max samples: {args.max_samples}")
     print(f"Log file: {log_path}")

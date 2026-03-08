@@ -1,9 +1,9 @@
 """
 V6 Phase-First Language Model.
 
-Architecture (no attention anywhere):
+Architecture (attention-free by default, optional sparse PhaseAttention):
     Tokens -> ComplexEmbed
-    -> [NamedBankPair -> PhaseInterferenceCoupler] x N layers
+    -> [NamedBankPair -> PhaseInterferenceCoupler (-> PhaseAttention?)] x N layers
     -> MultiTimescaleSSM
     -> WorkingMemory (learned write/read, per-sequence)
     -> InternalMemory (trained slots, general knowledge)
@@ -29,6 +29,7 @@ from .core.memory import (
     WorkingMemory, InternalMemory, PersistentMemoryReader,
     ExpertMemoryReader,
 )
+from .core.attention import PhaseAttention
 
 
 @dataclass
@@ -87,11 +88,12 @@ class PhaseFieldLM(nn.Module):
     """
     V6 Phase-First Language Model.
 
-    No attention anywhere. Long-context coherence via:
+    Attention-free by default. Long-context coherence via:
     1. Multi-timescale SSM (fast/medium/slow decay lanes)
     2. Working memory (learned write/read, non-decaying per-sequence)
     3. Internal memory (trained slots, general knowledge)
     4. Optional persistent memory (per-user, loaded from disk)
+    5. Optional sparse PhaseAttention (disabled by default)
     """
 
     def __init__(self, config: V6Config):
@@ -127,6 +129,28 @@ class PhaseFieldLM(nn.Module):
             for _ in range(config.num_layers)
         ])
 
+        # Optional PhaseAttention layers (disabled by default)
+        self._attn_layer_ids = set()
+        self.attn_layers = nn.ModuleDict()
+        self.attn_scales = nn.ParameterDict()
+        if config.use_attention:
+            for i in range(config.num_layers):
+                place_here = False
+                if config.attn_every > 0 and (i + 1) % config.attn_every == 0:
+                    place_here = True
+                elif config.attn_every == 0 and i == config.num_layers - 1:
+                    place_here = True
+                if place_here:
+                    self._attn_layer_ids.add(i)
+                    self.attn_layers[str(i)] = PhaseAttention(
+                        config.dim,
+                        num_heads=config.attn_num_heads,
+                        window_size=config.attn_window_size,
+                        dropout=config.dropout,
+                        initializer=initializer,
+                    )
+                    self.attn_scales[str(i)] = nn.Parameter(torch.tensor(0.1))
+
         # SSM backbone
         self.ssm = ComplexSSM(
             dim=config.dim,
@@ -139,12 +163,15 @@ class PhaseFieldLM(nn.Module):
         # Working memory (None if disabled via --no_working_memory)
         self.working_memory = WorkingMemory(
             config.dim, config.num_wm_slots, config.wm_gate_bias,
+            read_topk=config.wm_read_topk,
+            slot_decay=config.wm_slot_decay,
             initializer=initializer,
         ) if config.num_wm_slots > 0 else None
 
         # Internal memory (None if disabled via --no_internal_memory)
         self.internal_memory = InternalMemory(
             config.dim, config.num_im_slots,
+            read_topk=config.im_read_topk,
             initializer=initializer,
         ) if config.num_im_slots > 0 else None
 
@@ -208,7 +235,7 @@ class PhaseFieldLM(nn.Module):
         z = self.embed(input_ids)
         z = self.embed_norm(z)
 
-        # 2. Banks + Coupler per layer
+        # 2. Banks + Coupler (+ optional Attention) per layer
         bank_z = z
         diversity_losses = []
         for i, (bank_pair, coupler, scale) in enumerate(
@@ -219,8 +246,15 @@ class PhaseFieldLM(nn.Module):
             coupled = coupler(sem_out, ctx_out)
             bank_z = residual + coupled * scale
 
+            if i in self._attn_layer_ids:
+                attn_out = self.attn_layers[str(i)](bank_z)
+                attn_scale = self.attn_scales[str(i)]
+                bank_z = bank_z + attn_out * attn_scale
+
             if self.training:
-                dloss = bank_pair.compute_diversity_loss(residual)
+                dloss = bank_pair.compute_diversity_loss(
+                    residual, margin=self.config.diversity_margin,
+                )
                 diversity_losses.append(dloss)
                 dloss_c = coupler.compute_diversity_loss()
                 diversity_losses.append(dloss_c)
@@ -390,6 +424,10 @@ class PhaseFieldLM(nn.Module):
             'embed (tied w/ output)': sum(p.numel() for p in self.embed.parameters()),
             'banks': sum(p.numel() for p in self.bank_pairs.parameters()),
             'couplers': sum(p.numel() for p in self.couplers.parameters()),
+            'attention': (
+                sum(p.numel() for p in self.attn_layers.parameters()) +
+                sum(p.numel() for p in self.attn_scales.parameters())
+            ),
             'ssm': sum(p.numel() for p in self.ssm.parameters()),
             'working_memory': sum(p.numel() for p in self.working_memory.parameters()) if self.working_memory else 0,
             'internal_memory': sum(p.numel() for p in self.internal_memory.parameters()) if self.internal_memory else 0,

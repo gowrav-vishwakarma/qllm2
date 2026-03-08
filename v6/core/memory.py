@@ -80,23 +80,25 @@ class WorkingMemory(nn.Module):
         dim: int,
         num_slots: int = 64,
         gate_bias: float = -2.0,
+        read_topk: int = 8,
+        slot_decay: float = 0.95,
         initializer: Optional['InitStrategy'] = None,
     ):
         super().__init__()
         self.dim = dim
         self.num_slots = num_slots
+        self.read_topk = read_topk
+        self.slot_decay = slot_decay
 
-        self.write_gate_proj = ComplexLinear(dim, 1, bias=True, initializer=initializer)
+        self.write_gate_proj = ComplexLinear(dim, 1, bias=False, initializer=initializer)
+        self.gate_bias = nn.Parameter(torch.tensor(gate_bias))
         self.write_key_proj = ComplexLinear(dim, dim, bias=False, initializer=initializer)
         self.write_value_proj = ComplexLinear(dim, dim, bias=False, initializer=initializer)
         self.read_query_proj = ComplexLinear(dim, dim, bias=False, initializer=initializer)
 
         self.read_norm = ComplexNorm(dim)
 
-        with torch.no_grad():
-            if self.write_gate_proj.bias_real is not None:
-                self.write_gate_proj.bias_real.fill_(gate_bias)
-                self.write_gate_proj.bias_imag.fill_(0.0)
+        self.register_buffer('write_ptr', torch.tensor(0, dtype=torch.long))
 
     def forward(
         self,
@@ -124,40 +126,43 @@ class WorkingMemory(nn.Module):
             slot_keys = torch.zeros(B, S, dim, 2, device=device)
             slot_values = torch.zeros(B, S, dim, 2, device=device)
             slot_mask = torch.zeros(B, S, device=device)
+            self.write_ptr.fill_(0)
+        else:
+            slot_mask = slot_mask * self.slot_decay
 
-        # Compute all projections at once for the whole sequence
-        gate_raw = self.write_gate_proj(x)          # [B, L, 1, 2]
-        write_gates = torch.sigmoid(cabs(gate_raw)) # [B, L, 1]
-        write_keys = self.write_key_proj(x)         # [B, L, dim, 2]
-        write_values = self.write_value_proj(x)     # [B, L, dim, 2]
-        queries = self.read_query_proj(x)           # [B, L, dim, 2]
+        gate_raw = self.write_gate_proj(x)                              # [B, L, 1, 2]
+        write_gates = torch.sigmoid(cabs(gate_raw) + self.gate_bias)    # [B, L, 1]
+        write_keys = self.write_key_proj(x)                             # [B, L, dim, 2]
+        write_values = self.write_value_proj(x)                         # [B, L, dim, 2]
+        queries = self.read_query_proj(x)                               # [B, L, dim, 2]
 
-        # Select top-K tokens to write based on gate magnitude
-        # Use soft selection: write to slots proportional to gate value
-        # Each token writes to a unique slot (modulo num_slots)
         num_writes = min(L, S)
         gate_scores = write_gates.squeeze(-1)  # [B, L]
 
-        # Get indices of tokens with highest write gates
         _, top_indices = gate_scores.topk(num_writes, dim=-1)  # [B, num_writes]
 
-        # Build new slot contents from top-K tokens (differentiable via gather)
         top_indices_exp = top_indices.unsqueeze(-1).unsqueeze(-1).expand(B, num_writes, dim, 2)
-        selected_keys = torch.gather(write_keys, 1, top_indices_exp)    # [B, num_writes, dim, 2]
+        selected_keys = torch.gather(write_keys, 1, top_indices_exp)     # [B, num_writes, dim, 2]
         selected_values = torch.gather(write_values, 1, top_indices_exp) # [B, num_writes, dim, 2]
         selected_gates = torch.gather(gate_scores, 1, top_indices).unsqueeze(-1).unsqueeze(-1)  # [B, num_writes, 1, 1]
 
-        # Soft blend into existing slots
         new_keys = slot_keys.clone()
         new_values = slot_values.clone()
         new_mask = slot_mask.clone()
 
-        # Write selected tokens into first num_writes slots (soft blend)
-        new_keys[:, :num_writes] = selected_gates * selected_keys + (1 - selected_gates) * slot_keys[:, :num_writes]
-        new_values[:, :num_writes] = selected_gates * selected_values + (1 - selected_gates) * slot_values[:, :num_writes]
-        new_mask[:, :num_writes] = torch.clamp(slot_mask[:, :num_writes] + selected_gates.squeeze(-1).squeeze(-1), max=1.0)
+        ptr = self.write_ptr.item()
+        write_indices = [(ptr + i) % S for i in range(num_writes)]
+        write_idx = torch.tensor(write_indices, device=device)
 
-        # READ: phase-coherence retrieval for all tokens
+        for wi in range(num_writes):
+            si = write_idx[wi]
+            new_keys[:, si] = selected_gates[:, wi] * selected_keys[:, wi] + (1 - selected_gates[:, wi]) * slot_keys[:, si]
+            new_values[:, si] = selected_gates[:, wi] * selected_values[:, wi] + (1 - selected_gates[:, wi]) * slot_values[:, si]
+            new_mask[:, si] = torch.clamp(slot_mask[:, si] + selected_gates[:, wi].squeeze(-1).squeeze(-1), max=1.0)
+
+        self.write_ptr.fill_((ptr + num_writes) % S)
+
+        # READ: phase-coherence retrieval with top-k sparse attention
         q_r, q_i = queries[..., 0], queries[..., 1]       # [B, L, dim]
         k_r, k_i = new_keys[..., 0], new_keys[..., 1]     # [B, S, dim]
 
@@ -167,10 +172,21 @@ class WorkingMemory(nn.Module):
         scores = dot / (q_mag * k_mag + 1e-8)
 
         scores = scores.masked_fill(new_mask.unsqueeze(1).expand_as(scores) == 0, -1e9)
-        attn = F.softmax(scores, dim=-1)  # [B, L, S]
 
-        v_r = torch.bmm(attn, new_values[..., 0])  # [B, L, dim]
-        v_i = torch.bmm(attn, new_values[..., 1])  # [B, L, dim]
+        k = min(self.read_topk, S) if self.read_topk > 0 else S
+        if k < S:
+            topk_scores, topk_idx = scores.topk(k, dim=-1)       # [B, L, k]
+            attn = F.softmax(topk_scores, dim=-1)                 # [B, L, k]
+            topk_idx_v = topk_idx.unsqueeze(-1).expand(B, L, k, dim)
+            v_r = torch.gather(new_values[..., 0].unsqueeze(1).expand(B, L, S, dim), 2, topk_idx_v)
+            v_i = torch.gather(new_values[..., 1].unsqueeze(1).expand(B, L, S, dim), 2, topk_idx_v)
+            v_r = (attn.unsqueeze(-1) * v_r).sum(dim=2)  # [B, L, dim]
+            v_i = (attn.unsqueeze(-1) * v_i).sum(dim=2)
+        else:
+            attn = F.softmax(scores, dim=-1)  # [B, L, S]
+            v_r = torch.bmm(attn, new_values[..., 0])
+            v_i = torch.bmm(attn, new_values[..., 1])
+
         retrieved = torch.stack([v_r, v_i], dim=-1)  # [B, L, dim, 2]
 
         return self.read_norm(retrieved), new_keys, new_values, new_mask
@@ -193,11 +209,13 @@ class InternalMemory(nn.Module):
         self,
         dim: int,
         num_slots: int = 128,
+        read_topk: int = 8,
         initializer: Optional['InitStrategy'] = None,
     ):
         super().__init__()
         self.dim = dim
         self.num_slots = num_slots
+        self.read_topk = read_topk
 
         if initializer is not None:
             (kr, ki), (vr, vi) = initializer.init_internal_memory_slots(num_slots, dim)
@@ -220,9 +238,10 @@ class InternalMemory(nn.Module):
         Returns:
             retrieved: [B, L, dim, 2] retrieved general knowledge
         """
+        B, L, dim, _ = x.shape
+        S = self.num_slots
         query = self.query_proj(x)  # [B, L, dim, 2]
 
-        # Phase-coherence scores: [B, L, num_slots]
         q_r, q_i = query[..., 0], query[..., 1]  # [B, L, dim]
         k_r, k_i = self.keys[..., 0], self.keys[..., 1]  # [S, dim]
 
@@ -231,10 +250,22 @@ class InternalMemory(nn.Module):
         k_mag = torch.sqrt(k_r.square().sum(-1) + k_i.square().sum(-1) + 1e-8)  # [S]
         scores = dot / (q_mag * k_mag + 1e-8)  # [B, L, S]
 
-        attn = F.softmax(scores, dim=-1)  # [B, L, S]
+        k = min(self.read_topk, S) if self.read_topk > 0 else S
+        if k < S:
+            topk_scores, topk_idx = scores.topk(k, dim=-1)        # [B, L, k]
+            attn = F.softmax(topk_scores, dim=-1)                  # [B, L, k]
+            topk_idx_v = topk_idx.unsqueeze(-1).expand(B, L, k, dim)
+            vals_r = self.values[..., 0].unsqueeze(0).unsqueeze(0).expand(B, L, S, dim)
+            vals_i = self.values[..., 1].unsqueeze(0).unsqueeze(0).expand(B, L, S, dim)
+            v_r = torch.gather(vals_r, 2, topk_idx_v)  # [B, L, k, dim]
+            v_i = torch.gather(vals_i, 2, topk_idx_v)
+            v_r = (attn.unsqueeze(-1) * v_r).sum(dim=2)  # [B, L, dim]
+            v_i = (attn.unsqueeze(-1) * v_i).sum(dim=2)
+        else:
+            attn = F.softmax(scores, dim=-1)  # [B, L, S]
+            v_r = torch.einsum('bls,sd->bld', attn, self.values[..., 0])
+            v_i = torch.einsum('bls,sd->bld', attn, self.values[..., 1])
 
-        v_r = torch.einsum('bls,sd->bld', attn, self.values[..., 0])
-        v_i = torch.einsum('bls,sd->bld', attn, self.values[..., 1])
         retrieved = torch.stack([v_r, v_i], dim=-1)  # [B, L, dim, 2]
 
         return self.norm(retrieved)

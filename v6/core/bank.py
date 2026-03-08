@@ -8,6 +8,7 @@ Banks specialize through training dynamics and diversity loss.
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -95,10 +96,12 @@ class NamedBankPair(nn.Module):
         """Returns (semantic_out, context_out) each [B, L, dim, 2]."""
         return self.semantic(z), self.context(z)
 
-    def compute_diversity_loss(self, z: torch.Tensor) -> torch.Tensor:
+    def compute_diversity_loss(self, z: torch.Tensor, margin: float = 0.3) -> torch.Tensor:
         """
-        Encourage banks to specialize by penalizing similarity between their outputs.
+        Encourage banks to specialize by penalizing similarity above a margin.
         Uses complex cosine similarity: Re(a * conj(b)) / (|a| * |b|).
+        Only penalizes similarity exceeding `margin` so the loss keeps pushing
+        banks apart instead of collapsing to zero early.
         """
         sem_out = self.semantic(z)
         ctx_out = self.context(z)
@@ -111,4 +114,4 @@ class NamedBankPair(nn.Module):
         ctx_mag = torch.sqrt(cabs(ctx_flat).square().sum(dim=-1) + 1e-8)
 
         cosine_sim = dot / (sem_mag * ctx_mag + 1e-8)
-        return cosine_sim.abs().mean()
+        return F.relu(cosine_sim.abs() - margin).mean()
