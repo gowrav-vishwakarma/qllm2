@@ -42,12 +42,12 @@ else
   fi
 fi
 
-# RTX 4090 (24GB): batch 16 is safe for small-matched. Use --batch_size 24 or 32 if you have headroom.
+# RTX 4090 (24GB): batch 20 is max for small-matched (tuned 2026-03-08). Batch 22 OOMs.
 eval "$PYTHON_BIN -m v6.train" \
   --size small-matched \
   --max_samples 100000 \
   --seq_len 256 \
-  --batch_size 16 \
+  --batch_size 20 \
   --epochs 10 \
   --init_seed 42 \
   --log_dir logs \
