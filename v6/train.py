@@ -394,6 +394,10 @@ def main():
                         help='Disable working memory (ablation)')
     parser.add_argument('--no_internal_memory', action='store_true',
                         help='Disable internal memory (ablation)')
+    parser.add_argument('--wm_slots', type=int, default=None,
+                        help='Override number of working memory slots')
+    parser.add_argument('--im_slots', type=int, default=None,
+                        help='Override number of internal memory slots')
     parser.add_argument('--init_strategy', type=str, default=None,
                         choices=list_strategies())
     parser.add_argument('--init_seed', type=int, default=None)
@@ -418,6 +422,10 @@ def main():
         config.num_wm_slots = 0
     if args.no_internal_memory:
         config.num_im_slots = 0
+    if args.wm_slots is not None:
+        config.num_wm_slots = args.wm_slots
+    if args.im_slots is not None:
+        config.num_im_slots = args.im_slots
     if args.init_strategy is not None:
         config.init_strategy = args.init_strategy
     config.init_seed = args.init_seed
