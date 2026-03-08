@@ -7,8 +7,8 @@
 # Run 2: tiny-sized memory    (WM=16, IM=32, same as tiny config)
 # Run 3: tiny on full dataset (7.3M params, confirms architecture at scale)
 #
-# Each run does 3 epochs with mid-epoch generation every 5000 batches.
-# Estimated: Run 1 ~21h, Run 2 ~21h, Run 3 ~9h = ~51h total.
+# Each run does 1 epoch with mid-epoch generation every 5000 batches.
+# Estimated: Run 1 ~7h, Run 2 ~7h, Run 3 ~3h = ~17h total.
 #
 # Usage:
 #   tmux new -s v6mem
@@ -28,7 +28,7 @@ source ./scripts/v6_env_setup.sh
 # shellcheck disable=SC1091
 source ./scripts/log_utils.sh
 
-COMMON="--max_samples 9999999 --seq_len 256 --epochs 3 --init_seed 42 --gen_every 5000 --gen_prompt 'Once upon a time, there was a little'"
+COMMON="--max_samples 9999999 --seq_len 256 --epochs 1 --init_seed 42 --gen_every 5000 --gen_prompt 'Once upon a time, there was a little'"
 RUN_FILTER="${1:-all}"
 
 echo "============================================================"
