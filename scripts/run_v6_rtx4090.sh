@@ -33,9 +33,9 @@ source ./scripts/v6_env_setup.sh
 # shellcheck disable=SC1091
 source ./scripts/log_utils.sh
 
-TRAIN_ARGS="--size small-matched --max_samples 100000 --seq_len 256 --batch_size 20 --epochs 10 --init_seed 42"
+TRAIN_ARGS="--size small-matched --max_samples 9999999 --seq_len 256 --batch_size 20 --epochs 10 --init_seed 42"
 
-LOG_DIR=$(make_log_dir "v6" "small_matched")
+LOG_DIR=$(make_log_dir "v6" "small_matched_full")
 echo "[v6-run] Log directory: $LOG_DIR"
 
 write_run_info "$LOG_DIR" "V6 small-matched training on RTX 4090" "$TRAIN_ARGS $*"
