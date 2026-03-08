@@ -11,13 +11,10 @@ wheels/
 
 # Virtual environments
 .venv
-checkpoints/
-checkpoints/*
-checkpoints_improved/
-checkpoints_improved/*
-checkpoints_large_scale/
-checkpoints_large_scale/*
+
+# Checkpoints (large binary files, not tracked)
 checkpoints*/
-.cache/**
+
+# Caches
+.cache/
 *cache*/
-*logs*/

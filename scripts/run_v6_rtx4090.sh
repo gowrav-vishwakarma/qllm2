@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run V6 training on RTX 4090 (24GB), intended for tmux.
 #
-# Logs to:      logs/v6_train_small-matched.log  (auto, via TeeLogger)
+# Logs go to:   logs/v6/small_matched_<timestamp>_<commit>[_dirty]/
 # Checkpoints:  checkpoints_v6/
 #
 # Suggested workflow:
@@ -12,7 +12,7 @@
 #   3) Resume if interrupted:
 #      ./scripts/run_v6_rtx4090.sh --resume checkpoints_v6/best_model.pt --epochs 20
 #   4) Monitor from another terminal:
-#      ./scripts/monitor_v6.sh 5 logs/v6_train_small-matched.log
+#      ./scripts/monitor_v6.sh 5 <log_dir>/v6_train_small-matched.log
 #
 # Ablation runs:
 #   ./scripts/run_v6_rtx4090.sh --no_working_memory
@@ -28,9 +28,17 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 [[ -f v6/train.py ]] || cd ..
 
-# Bootstrap env and deps; exports PYTHON_BIN.
 # shellcheck disable=SC1091
 source ./scripts/v6_env_setup.sh
+# shellcheck disable=SC1091
+source ./scripts/log_utils.sh
+
+TRAIN_ARGS="--size small-matched --max_samples 100000 --seq_len 256 --batch_size 20 --epochs 10 --init_seed 42"
+
+LOG_DIR=$(make_log_dir "v6" "small_matched")
+echo "[v6-run] Log directory: $LOG_DIR"
+
+write_run_info "$LOG_DIR" "V6 small-matched training on RTX 4090" "$TRAIN_ARGS $*"
 
 CHECKPOINT_DIR="checkpoints_v6"
 if echo "$@" | grep -q -- '--resume'; then
@@ -42,14 +50,8 @@ else
   fi
 fi
 
-# RTX 4090 (24GB): batch 20 is max for small-matched (tuned 2026-03-08). Batch 22 OOMs.
 eval "$PYTHON_BIN -m v6.train" \
-  --size small-matched \
-  --max_samples 100000 \
-  --seq_len 256 \
-  --batch_size 20 \
-  --epochs 10 \
-  --init_seed 42 \
-  --log_dir logs \
-  --checkpoint_dir checkpoints_v6 \
+  $TRAIN_ARGS \
+  --log_dir "$LOG_DIR" \
+  --checkpoint_dir "$CHECKPOINT_DIR" \
   "$@"

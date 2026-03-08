@@ -2,6 +2,9 @@
 # Run V6 on full TinyStories dataset (2.1M texts, ~474M tokens).
 # Expect ~7h/epoch on RTX 4090, ~103K batches/epoch at batch=16.
 #
+# Logs go to:   logs/v6/fulldata_<timestamp>_<commit>[_dirty]/
+# Checkpoints:  checkpoints_v6_full/
+#
 # Usage:
 #   ./scripts/run_v6_fulldata.sh
 #   ./scripts/run_v6_fulldata.sh --batch_size 32    # A6000
@@ -19,6 +22,15 @@ cd "$SCRIPT_DIR"
 
 # shellcheck disable=SC1091
 source ./scripts/v6_env_setup.sh
+# shellcheck disable=SC1091
+source ./scripts/log_utils.sh
+
+TRAIN_ARGS="--size small-matched --max_samples 9999999 --seq_len 256 --batch_size 16 --epochs 10 --init_seed 42"
+
+LOG_DIR=$(make_log_dir "v6" "fulldata")
+echo "[v6-full] Log directory: $LOG_DIR"
+
+write_run_info "$LOG_DIR" "V6 full TinyStories training" "$TRAIN_ARGS $*"
 
 CHECKPOINT_DIR="checkpoints_v6_full"
 if echo "$@" | grep -q -- '--resume'; then
@@ -31,12 +43,7 @@ else
 fi
 
 eval "$PYTHON_BIN -m v6.train" \
-  --size small-matched \
-  --max_samples 9999999 \
-  --seq_len 256 \
-  --batch_size 16 \
-  --epochs 10 \
-  --init_seed 42 \
-  --log_dir logs \
+  $TRAIN_ARGS \
+  --log_dir "$LOG_DIR" \
   --checkpoint_dir "$CHECKPOINT_DIR" \
   "$@"

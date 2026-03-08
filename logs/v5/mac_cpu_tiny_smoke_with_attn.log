@@ -1,0 +1,89 @@
+[2026-03-07 11:39:47] Wall clock start: 2026-03-07 11:39:47
+[2026-03-07 11:39:47] ============================================================
+[2026-03-07 11:39:47] V5 Algebraic Language Model
+[2026-03-07 11:39:47] ============================================================
+[2026-03-07 11:39:47] Size: tiny
+[2026-03-07 11:39:47] Complex dim: 64 (= 128 real values/position)
+[2026-03-07 11:39:47] SSM state dim: 128
+[2026-03-07 11:39:47] Layers: 4
+[2026-03-07 11:39:47] Banks: 2
+[2026-03-07 11:39:47] Attention every: 4 layers (0=none)
+[2026-03-07 11:39:47] Epochs: 2
+[2026-03-07 11:39:47] Max samples: 100
+[2026-03-07 11:39:47] Log file: /Users/gowrav/Development/qllm2/logs/mac_smoke_baseline_cpu/v5_train_tiny.log
+[2026-03-07 11:39:47] Checkpoint dir: /Users/gowrav/Development/qllm2/checkpoints_v5/mac_smoke_baseline_cpu
+[2026-03-07 11:39:47] ============================================================
+[2026-03-07 11:39:51] Loading TinyStories (max_samples=100)...
+[2026-03-07 11:40:14] Tokenizing 100 texts...
+[2026-03-07 11:40:14] Total tokens: 18,887
+[2026-03-07 11:40:14] Train chunks: 515, Val chunks: 57
+[2026-03-07 11:40:14] Init strategy: orthogonal (seed: 42)
+
+[2026-03-07 11:40:14] Training on cpu
+[2026-03-07 11:40:14] Parameters: {'embed (tied w/ output)': 6432896, 'banks': 494504, 'ssm': 199748, 'attention': 32832, 'lm_head_proj': 8384, 'total': 7168364}
+[2026-03-07 11:40:14] Total: 7,168,364 (7.2M)
+[2026-03-07 11:40:14] Epochs: 1..2, Batches/epoch: 515
+
+
+[2026-03-07 11:40:14] ============================================================
+[2026-03-07 11:40:14] Epoch 1/2
+[2026-03-07 11:40:14] ============================================================
+[2026-03-07 11:40:14]   First step wall time: 0.3s
+[2026-03-07 11:40:14]   [1] batch 0/515 loss=10.8024 ppl=49139.7 div=0.0001 lr=1.00e-03 | 3.1 samples/s | 100 tok/s
+[2026-03-07 11:40:18]   [1] batch 50/515 loss=7.7358 ppl=2288.8 div=0.0001 lr=9.94e-04 | 11.9 samples/s | 380 tok/s
+[2026-03-07 11:40:22]   [1] batch 100/515 loss=6.6370 ppl=762.8 div=0.0001 lr=9.76e-04 | 12.0 samples/s | 384 tok/s
+[2026-03-07 11:40:27]   [1] batch 150/515 loss=6.6198 ppl=749.8 div=0.0000 lr=9.48e-04 | 12.0 samples/s | 385 tok/s
+[2026-03-07 11:40:30]   [1] batch 200/515 loss=6.1485 ppl=468.0 div=0.0000 lr=9.09e-04 | 12.2 samples/s | 390 tok/s
+[2026-03-07 11:40:34]   [1] batch 250/515 loss=4.8704 ppl=130.4 div=0.0000 lr=8.60e-04 | 12.3 samples/s | 392 tok/s
+[2026-03-07 11:40:38]   [1] batch 300/515 loss=6.6086 ppl=741.4 div=0.0000 lr=8.04e-04 | 12.3 samples/s | 393 tok/s
+[2026-03-07 11:40:42]   [1] batch 350/515 loss=5.9608 ppl=387.9 div=0.0000 lr=7.40e-04 | 12.3 samples/s | 395 tok/s
+[2026-03-07 11:40:46]   [1] batch 400/515 loss=5.8830 ppl=358.9 div=0.0000 lr=6.70e-04 | 12.4 samples/s | 396 tok/s
+[2026-03-07 11:40:50]   [1] batch 450/515 loss=5.3769 ppl=216.3 div=0.0000 lr=5.97e-04 | 12.4 samples/s | 398 tok/s
+[2026-03-07 11:40:54]   [1] batch 500/515 loss=3.9854 ppl=53.8 div=0.0000 lr=5.21e-04 | 12.5 samples/s | 399 tok/s
+[2026-03-07 11:40:56] Epoch 1/2 | Train Loss: 6.1877 PPL: 486.74 | Time: 41.3s | Val Loss: 5.4773 PPL: 239.20 *best*
+[2026-03-07 11:40:56] Saved checkpoint: /Users/gowrav/Development/qllm2/checkpoints_v5/mac_smoke_baseline_cpu/best_model.pt
+
+[2026-03-07 11:40:57] Prompt: The quick brown
+[2026-03-07 11:40:57] Generated: The quick brown was a little, she named there had and asked to be all day, a big named She went to a time. It was his idea. 
+
+
+[2026-03-07 11:40:57]  
+[2026-03-07 11:40:57] One day, it. TheOne day, "I it. The flower.<|endoftext|>Once the store.
+
+[2026-03-07 11:40:57] Tim.
+
+[2026-03-07 11:40:57]  boy to the little girl to get theIt the store.
+
+[2026-03-07 11:40:57] TheL with the forest! He and put! he loved to all to the pumpkin and they saw a big friend the
+
+[2026-03-07 11:40:57] ============================================================
+[2026-03-07 11:40:57] Epoch 2/2
+[2026-03-07 11:40:57] ============================================================
+[2026-03-07 11:40:57]   First step wall time: 0.1s
+[2026-03-07 11:40:57]   [2] batch 0/515 loss=4.0999 ppl=60.3 div=0.0000 lr=4.98e-04 | 13.3 samples/s | 425 tok/s
+[2026-03-07 11:41:01]   [2] batch 50/515 loss=5.0865 ppl=161.8 div=0.0000 lr=4.23e-04 | 12.9 samples/s | 411 tok/s
+[2026-03-07 11:41:05]   [2] batch 100/515 loss=5.0502 ppl=156.1 div=0.0000 lr=3.48e-04 | 12.8 samples/s | 411 tok/s
+[2026-03-07 11:41:09]   [2] batch 150/515 loss=5.9037 ppl=366.4 div=0.0000 lr=2.78e-04 | 12.8 samples/s | 411 tok/s
+[2026-03-07 11:41:12]   [2] batch 200/515 loss=4.3915 ppl=80.8 div=0.0000 lr=2.12e-04 | 12.8 samples/s | 411 tok/s
+[2026-03-07 11:41:16]   [2] batch 250/515 loss=4.8615 ppl=129.2 div=0.0000 lr=1.54e-04 | 12.8 samples/s | 411 tok/s
+[2026-03-07 11:41:20]   [2] batch 300/515 loss=5.1666 ppl=175.3 div=0.0000 lr=1.03e-04 | 12.8 samples/s | 411 tok/s
+[2026-03-07 11:41:24]   [2] batch 350/515 loss=4.2328 ppl=68.9 div=0.0000 lr=6.13e-05 | 12.8 samples/s | 411 tok/s
+[2026-03-07 11:41:28]   [2] batch 400/515 loss=3.6796 ppl=39.6 div=0.0000 lr=2.99e-05 | 12.8 samples/s | 411 tok/s
+[2026-03-07 11:41:32]   [2] batch 450/515 loss=4.5264 ppl=92.4 div=0.0000 lr=9.50e-06 | 12.8 samples/s | 410 tok/s
+[2026-03-07 11:41:36]   [2] batch 500/515 loss=5.0182 ppl=151.1 div=0.0000 lr=4.56e-07 | 12.8 samples/s | 410 tok/s
+[2026-03-07 11:41:38] Epoch 2/2 | Train Loss: 4.7522 PPL: 115.84 | Time: 40.2s | Val Loss: 5.2487 PPL: 190.33 *best*
+[2026-03-07 11:41:38] Saved checkpoint: /Users/gowrav/Development/qllm2/checkpoints_v5/mac_smoke_baseline_cpu/best_model.pt
+
+[2026-03-07 11:41:38] Prompt: The quick brown
+[2026-03-07 11:41:38] Generated: The quick brown was very happy. Tim had an not the rabbit."
+
+[2026-03-07 11:41:38] The cat, the happy, the happy. He saw the bug. The big friend to go, the friends, I with his mom with a little boy in a little girl named I am of the girl to play. He named there was a time, "I at the park and all.<|endoftext|>Once upon a time, " be��. She saw a very girl in the house. 
+
+[2026-03-07 11:41:38] When on said, and
+[2026-03-07 11:41:39] Saved checkpoint: /Users/gowrav/Development/qllm2/checkpoints_v5/mac_smoke_baseline_cpu/final_model.pt
+
+[2026-03-07 11:41:39] Training complete!
+[2026-03-07 11:41:39] Total wall time: 84.7s (0.02h)
+[2026-03-07 11:41:39] Best Val Loss: 5.2487, Best Val PPL: 190.33
+
+[2026-03-07 11:41:39] Wall clock end: 2026-03-07 11:41:39

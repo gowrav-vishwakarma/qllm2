@@ -1,0 +1,109 @@
+[2026-03-07 11:42:47] Wall clock start: 2026-03-07 11:42:47
+[2026-03-07 11:42:47] ============================================================
+[2026-03-07 11:42:47] V5 Algebraic Language Model
+[2026-03-07 11:42:47] ============================================================
+[2026-03-07 11:42:47] Size: tiny
+[2026-03-07 11:42:47] Complex dim: 64 (= 128 real values/position)
+[2026-03-07 11:42:47] SSM state dim: 128
+[2026-03-07 11:42:47] Layers: 4
+[2026-03-07 11:42:47] Banks: 2
+[2026-03-07 11:42:47] Attention every: 0 layers (0=none)
+[2026-03-07 11:42:47] Epochs: 2
+[2026-03-07 11:42:47] Max samples: 100
+[2026-03-07 11:42:47] Log file: /Users/gowrav/Development/qllm2/logs/mac_smoke_no_attention_cpu/v5_train_tiny.log
+[2026-03-07 11:42:47] Checkpoint dir: /Users/gowrav/Development/qllm2/checkpoints_v5/mac_smoke_no_attention_cpu
+[2026-03-07 11:42:47] ============================================================
+[2026-03-07 11:42:50] Loading TinyStories (max_samples=100)...
+[2026-03-07 11:43:12] Tokenizing 100 texts...
+[2026-03-07 11:43:12] Total tokens: 18,887
+[2026-03-07 11:43:12] Train chunks: 515, Val chunks: 57
+[2026-03-07 11:43:13] Init strategy: orthogonal (seed: 42)
+
+[2026-03-07 11:43:13] Training on cpu
+[2026-03-07 11:43:13] Parameters: {'embed (tied w/ output)': 6432896, 'banks': 494504, 'ssm': 199748, 'attention': 0, 'lm_head_proj': 8384, 'total': 7135532}
+[2026-03-07 11:43:13] Total: 7,135,532 (7.1M)
+[2026-03-07 11:43:13] Epochs: 1..2, Batches/epoch: 515
+
+
+[2026-03-07 11:43:13] ============================================================
+[2026-03-07 11:43:13] Epoch 1/2
+[2026-03-07 11:43:13] ============================================================
+[2026-03-07 11:43:13]   First step wall time: 0.3s
+[2026-03-07 11:43:13]   [1] batch 0/515 loss=10.8484 ppl=51452.5 div=0.0001 lr=1.00e-03 | 3.0 samples/s | 98 tok/s
+[2026-03-07 11:43:17]   [1] batch 50/515 loss=8.5326 ppl=5077.6 div=0.0001 lr=9.94e-04 | 12.8 samples/s | 410 tok/s
+[2026-03-07 11:43:20]   [1] batch 100/515 loss=7.4422 ppl=1706.5 div=0.0001 lr=9.76e-04 | 13.0 samples/s | 417 tok/s
+[2026-03-07 11:43:24]   [1] batch 150/515 loss=5.9359 ppl=378.4 div=0.0001 lr=9.48e-04 | 13.3 samples/s | 425 tok/s
+[2026-03-07 11:43:28]   [1] batch 200/515 loss=5.5062 ppl=246.2 div=0.0001 lr=9.09e-04 | 13.2 samples/s | 421 tok/s
+[2026-03-07 11:43:32]   [1] batch 250/515 loss=4.9462 ppl=140.6 div=0.0001 lr=8.60e-04 | 13.2 samples/s | 422 tok/s
+[2026-03-07 11:43:35]   [1] batch 300/515 loss=5.2232 ppl=185.5 div=0.0001 lr=8.04e-04 | 13.2 samples/s | 422 tok/s
+[2026-03-07 11:43:39]   [1] batch 350/515 loss=5.6132 ppl=274.0 div=0.0001 lr=7.40e-04 | 13.3 samples/s | 424 tok/s
+[2026-03-07 11:43:43]   [1] batch 400/515 loss=6.0112 ppl=408.0 div=0.0001 lr=6.70e-04 | 13.2 samples/s | 423 tok/s
+[2026-03-07 11:43:47]   [1] batch 450/515 loss=6.0276 ppl=414.7 div=0.0001 lr=5.97e-04 | 13.3 samples/s | 425 tok/s
+[2026-03-07 11:43:50]   [1] batch 500/515 loss=5.7092 ppl=301.6 div=0.0001 lr=5.21e-04 | 13.4 samples/s | 427 tok/s
+[2026-03-07 11:43:52] Epoch 1/2 | Train Loss: 6.1781 PPL: 482.07 | Time: 38.5s | Val Loss: 5.4461 PPL: 231.85 *best*
+[2026-03-07 11:43:52] Saved checkpoint: /Users/gowrav/Development/qllm2/checkpoints_v5/mac_smoke_no_attention_cpu/best_model.pt
+
+[2026-03-07 11:43:53] Prompt: The quick brown
+[2026-03-07 11:43:53] Generated: The quick brown to make it to take a big, it. He play's always it was an for the park.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[2026-03-07 11:43:53]  little girl. He saw a big, "The big, the pumpkin. 
+[2026-03-07 11:43:53] The bird and all the special his fish.
+
+[2026-03-07 11:43:53] One day, there,, "Once upon the warrior and said and her friend and the small with in the friend, she was big.
+
+
+
+
+
+
+
+[2026-03-07 11:43:53] ============================================================
+[2026-03-07 11:43:53] Epoch 2/2
+[2026-03-07 11:43:53] ============================================================
+[2026-03-07 11:43:53]   First step wall time: 0.1s
+[2026-03-07 11:43:53]   [2] batch 0/515 loss=4.0919 ppl=59.9 div=0.0001 lr=4.98e-04 | 14.2 samples/s | 455 tok/s
+[2026-03-07 11:43:56]   [2] batch 50/515 loss=5.5254 ppl=251.0 div=0.0001 lr=4.23e-04 | 13.8 samples/s | 442 tok/s
+[2026-03-07 11:44:00]   [2] batch 100/515 loss=4.2125 ppl=67.5 div=0.0001 lr=3.48e-04 | 13.8 samples/s | 441 tok/s
+[2026-03-07 11:44:03]   [2] batch 150/515 loss=5.8272 ppl=339.4 div=0.0001 lr=2.78e-04 | 13.8 samples/s | 441 tok/s
+[2026-03-07 11:44:07]   [2] batch 200/515 loss=5.0854 ppl=161.6 div=0.0001 lr=2.12e-04 | 13.7 samples/s | 440 tok/s
+[2026-03-07 11:44:11]   [2] batch 250/515 loss=4.8680 ppl=130.1 div=0.0001 lr=1.54e-04 | 13.7 samples/s | 438 tok/s
+[2026-03-07 11:44:15]   [2] batch 300/515 loss=4.7441 ppl=114.9 div=0.0001 lr=1.03e-04 | 13.7 samples/s | 437 tok/s
+[2026-03-07 11:44:18]   [2] batch 350/515 loss=5.7009 ppl=299.1 div=0.0001 lr=6.13e-05 | 13.6 samples/s | 435 tok/s
+[2026-03-07 11:44:22]   [2] batch 400/515 loss=5.7390 ppl=310.7 div=0.0001 lr=2.99e-05 | 13.6 samples/s | 434 tok/s
+[2026-03-07 11:44:26]   [2] batch 450/515 loss=5.3437 ppl=209.3 div=0.0001 lr=9.50e-06 | 13.5 samples/s | 433 tok/s
+[2026-03-07 11:44:30]   [2] batch 500/515 loss=4.6795 ppl=107.7 div=0.0001 lr=4.56e-07 | 13.5 samples/s | 433 tok/s
+[2026-03-07 11:44:31] Epoch 2/2 | Train Loss: 4.7475 PPL: 115.30 | Time: 38.0s | Val Loss: 5.2627 PPL: 193.00 *best*
+[2026-03-07 11:44:31] Saved checkpoint: /Users/gowrav/Development/qllm2/checkpoints_v5/mac_smoke_no_attention_cpu/best_model.pt
+
+[2026-03-07 11:44:32] Prompt: The quick brown
+[2026-03-07 11:44:32] Generated: The quick brown of the gum. He was a time, his mom. One day, there was a time to the little boat.
+
+[2026-03-07 11:44:32] One day, but it had that she was a boy named Lily of the big, her house, "I girl named Tim were very his bird, but he was so happy and smiled with her small that in it.<|endoftext|>Once upon a special, it. It was very Tim. 
+
+[2026-03-07 11:44:32] The shirt for his girl a time, it.
+
+
+
+
+[2026-03-07 11:44:32] Saved checkpoint: /Users/gowrav/Development/qllm2/checkpoints_v5/mac_smoke_no_attention_cpu/final_model.pt
+
+[2026-03-07 11:44:32] Training complete!
+[2026-03-07 11:44:32] Total wall time: 79.6s (0.02h)
+[2026-03-07 11:44:32] Best Val Loss: 5.2627, Best Val PPL: 193.00
+
+[2026-03-07 11:44:32] Wall clock end: 2026-03-07 11:44:32
