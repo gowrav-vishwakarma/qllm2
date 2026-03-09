@@ -136,6 +136,69 @@ def _random_dataset(vocab_size, seq_len, num_samples):
     return TextDataset(tokens, seq_len)
 
 
+class ImageDataset(Dataset):
+    """Wraps PIL images with torchvision transforms for diffusion training."""
+
+    def __init__(self, images, transform):
+        self.images = images
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        from PIL import Image
+        img = self.images[idx]
+        if not isinstance(img, Image.Image):
+            img = Image.fromarray(img)
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        return {'image': self.transform(img)}
+
+
+def load_image_dataset(config):
+    """Load image dataset via HuggingFace datasets + torchvision transforms."""
+    try:
+        from torchvision import transforms
+    except ImportError:
+        raise ImportError("torchvision required for image mode. Run: uv add torchvision")
+
+    from datasets import load_dataset
+
+    transform_train = transforms.Compose([
+        transforms.Resize(config.image_size),
+        transforms.CenterCrop(config.image_size),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize([0.5] * 3, [0.5] * 3),
+    ])
+    transform_val = transforms.Compose([
+        transforms.Resize(config.image_size),
+        transforms.CenterCrop(config.image_size),
+        transforms.ToTensor(),
+        transforms.Normalize([0.5] * 3, [0.5] * 3),
+    ])
+
+    if config.image_dataset == 'tiny_imagenet':
+        print("Loading Tiny ImageNet...")
+        ds = load_dataset('zh-plus/tiny-imagenet', split='train')
+        images = [item['image'] for item in ds]
+    elif config.image_dataset == 'cifar10':
+        print("Loading CIFAR-10...")
+        ds = load_dataset('cifar10', split='train')
+        images = [item['img'] for item in ds]
+    else:
+        raise ValueError(f"Unknown image dataset: {config.image_dataset}")
+
+    print(f"Loaded {len(images)} images")
+
+    split = int(len(images) * 0.9)
+    train_ds = ImageDataset(images[:split], transform_train)
+    val_ds = ImageDataset(images[split:], transform_val)
+    print(f"Image train: {len(train_ds)}, val: {len(val_ds)}, size: {config.image_size}x{config.image_size}")
+    return train_ds, val_ds
+
+
 class Trainer:
     def __init__(
         self,
@@ -398,6 +461,257 @@ class Trainer:
         print(f"Best Val Loss: {self.best_val_loss:.4f}, Best Val PPL: {self.best_val_ppl:.2f}")
 
 
+class DiffusionTrainer:
+    """Training loop for diffusion modes (text and image). Mirrors Trainer API."""
+
+    def __init__(
+        self,
+        model,
+        config: V6Config,
+        train_loader: DataLoader,
+        val_loader: Optional[DataLoader] = None,
+        tokenizer=None,
+        checkpoint_dir: str = 'checkpoints_v6',
+        start_epoch: int = 0,
+        save_checkpoints: bool = True,
+        verbose: bool = True,
+    ):
+        self.model = model
+        self.config = config
+        self.train_loader = train_loader
+        self.val_loader = val_loader
+        self.tokenizer = tokenizer
+        self.checkpoint_dir = Path(checkpoint_dir)
+        self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        self.start_epoch = start_epoch
+        self.save_checkpoints = save_checkpoints
+        self.verbose = verbose
+        self.gen_every = 0
+        self.sample_dir = None
+
+        if torch.cuda.is_available():
+            self.device = torch.device('cuda')
+        elif torch.backends.mps.is_available():
+            self.device = torch.device('mps')
+        else:
+            self.device = torch.device('cpu')
+        self.model.to(self.device)
+
+        self.optimizer = torch.optim.AdamW(
+            model.parameters(),
+            lr=config.learning_rate,
+            weight_decay=config.weight_decay,
+            betas=(0.9, 0.95),
+        )
+
+        total_steps = config.max_epochs * len(train_loader)
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            self.optimizer, T_max=max(total_steps, 1),
+        )
+
+        self.use_amp = self.device.type == 'cuda'
+        self.scaler = torch.amp.GradScaler('cuda') if self.use_amp else None
+        self.global_step = 0
+        self.best_val_loss = float('inf')
+
+    def _get_input(self, batch):
+        if self.config.mode == 'diffusion_text':
+            return batch['input_ids'].to(self.device)
+        else:
+            return batch['image'].to(self.device)
+
+    def _diversity_weight(self):
+        total_steps = self.config.max_epochs * len(self.train_loader)
+        progress = min(self.global_step / max(total_steps, 1), 1.0)
+        div_w = self.config.diversity_loss_weight + (
+            self.config.diversity_loss_floor - self.config.diversity_loss_weight
+        ) * progress
+        return max(div_w, self.config.diversity_loss_floor)
+
+    def train_epoch(self, epoch: int) -> Dict[str, float]:
+        self.model.train()
+        total_loss = 0.0
+        total_diff_loss = 0.0
+        total_div_loss = 0.0
+        num_batches = 0
+        epoch_start = time.time()
+
+        for batch_idx, batch in enumerate(self.train_loader):
+            x = self._get_input(batch)
+
+            with torch.amp.autocast(self.device.type, enabled=self.use_amp):
+                output = self.model(x)
+                loss = output.loss
+                div_loss_val = 0.0
+                if output.diversity_loss is not None:
+                    div_w = self._diversity_weight()
+                    div_loss = output.diversity_loss * div_w
+                    loss = loss + div_loss
+                    div_loss_val = div_loss.item()
+
+            self.optimizer.zero_grad()
+            if self.scaler is not None:
+                self.scaler.scale(loss).backward()
+                self.scaler.unscale_(self.optimizer)
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip)
+                self.scaler.step(self.optimizer)
+                self.scaler.update()
+            else:
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip)
+                self.optimizer.step()
+
+            self.scheduler.step()
+            self.global_step += 1
+            total_loss += loss.item()
+            total_diff_loss += output.loss.item()
+            total_div_loss += div_loss_val
+            num_batches += 1
+
+            if self.verbose and batch_idx % 50 == 0:
+                lr = self.scheduler.get_last_lr()[0]
+                elapsed = time.time() - epoch_start
+                samples_per_sec = (batch_idx + 1) * self.config.batch_size / elapsed if elapsed > 0 else 0
+                print(
+                    f"  [{epoch+1}] batch {batch_idx}/{len(self.train_loader)} "
+                    f"diff_loss={output.loss.item():.4f} "
+                    f"div={div_loss_val:.4f} lr={lr:.2e} "
+                    f"| {samples_per_sec:.1f} samples/s"
+                )
+
+            if (self.gen_every > 0 and batch_idx > 0
+                    and batch_idx % self.gen_every == 0):
+                self._generate_samples(epoch, batch_idx)
+                self.model.train()
+
+        return {
+            'loss': total_loss / max(num_batches, 1),
+            'diff_loss': total_diff_loss / max(num_batches, 1),
+            'div_loss': total_div_loss / max(num_batches, 1),
+        }
+
+    @torch.no_grad()
+    def validate(self) -> Dict[str, float]:
+        if self.val_loader is None or len(self.val_loader) == 0:
+            return {}
+        self.model.eval()
+        total_loss = 0.0
+        num_batches = 0
+        for batch in self.val_loader:
+            x = self._get_input(batch)
+            output = self.model(x)
+            total_loss += output.loss.item()
+            num_batches += 1
+        if num_batches == 0:
+            return {}
+        avg_loss = total_loss / num_batches
+        return {'val_loss': avg_loss}
+
+    def _generate_samples(self, epoch: int, batch_idx: int = 0):
+        """Generate and display/save samples."""
+        self.model.eval()
+        model_to_sample = self.model._orig_mod if hasattr(self.model, '_orig_mod') else self.model
+
+        if self.config.mode == 'diffusion_text' and self.tokenizer is not None:
+            seq_len = self.config.max_seq_len
+            tokens = model_to_sample.sample(
+                batch_size=2, seq_len=seq_len, device=self.device,
+                num_steps=min(50, self.config.diffusion_steps),
+            )
+            for i in range(tokens.shape[0]):
+                text = self.tokenizer.decode(tokens[i].tolist(), skip_special_tokens=True)
+                print(f"  [sample {i+1}] {text[:200]}")
+
+        elif self.config.mode == 'diffusion_image' and self.sample_dir is not None:
+            try:
+                from torchvision.utils import save_image
+                seq_len = (self.config.image_size // self.config.patch_size) ** 2
+                images = model_to_sample.sample(
+                    batch_size=16, seq_len=seq_len, device=self.device,
+                    num_steps=min(50, self.config.diffusion_steps),
+                )
+                if images.dim() == 4:
+                    images = (images + 1) / 2  # [-1,1] -> [0,1]
+                    path = self.sample_dir / f"samples_e{epoch}_b{batch_idx}.png"
+                    save_image(images, path, nrow=4)
+                    print(f"  [samples saved to {path}]")
+            except Exception as e:
+                print(f"  (sample generation failed: {e})")
+
+    def save_checkpoint(self, name: str):
+        path = self.checkpoint_dir / name
+        model_to_save = self.model._orig_mod if hasattr(self.model, '_orig_mod') else self.model
+        ckpt = {
+            'model_state_dict': model_to_save.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'scheduler_state_dict': self.scheduler.state_dict(),
+            'global_step': self.global_step,
+            'best_val_loss': self.best_val_loss,
+            'epoch': self._current_epoch,
+            'config': self.config.to_dict(),
+        }
+        if hasattr(self.model, 'initializer_info'):
+            ckpt['init_strategy'] = self.model.initializer_info['init_strategy']
+            ckpt['init_seed'] = self.model.initializer_info['init_seed']
+        torch.save(ckpt, path)
+        print(f"Saved checkpoint: {path}")
+
+    def train(self):
+        training_start = time.time()
+        print(f"\nTraining on {self.device} (mode: {self.config.mode})")
+        params = self.model.count_parameters() if hasattr(self.model, 'count_parameters') else {}
+        if params:
+            print(f"Parameters: {params}")
+            print(f"Total: {params['total']:,} ({params['total']/1e6:.1f}M)")
+        print(f"Diffusion steps: {self.config.diffusion_steps}, schedule: {self.config.noise_schedule}")
+        print(f"Prediction target: {self.config.prediction_target}")
+        print(f"Epochs: {self.start_epoch+1}..{self.config.max_epochs}, Batches/epoch: {len(self.train_loader)}")
+        print()
+
+        for epoch in range(self.start_epoch, self.config.max_epochs):
+            self._current_epoch = epoch
+            print(f"\n{'='*60}")
+            print(f"Epoch {epoch+1}/{self.config.max_epochs}")
+            print('=' * 60)
+
+            epoch_start = time.time()
+            train_metrics = self.train_epoch(epoch)
+            epoch_time = time.time() - epoch_start
+
+            line = (
+                f"Epoch {epoch+1}/{self.config.max_epochs} | "
+                f"Diff Loss: {train_metrics['diff_loss']:.4f} | "
+                f"Time: {epoch_time:.1f}s"
+            )
+
+            is_best = False
+            if self.val_loader is not None and len(self.val_loader) > 0:
+                val_metrics = self.validate()
+                if val_metrics:
+                    line += f" | Val Loss: {val_metrics['val_loss']:.4f}"
+                    if val_metrics['val_loss'] < self.best_val_loss:
+                        self.best_val_loss = val_metrics['val_loss']
+                        line += " *best*"
+                        is_best = True
+            print(line)
+
+            if self.save_checkpoints and is_best:
+                self.save_checkpoint('best_model.pt')
+            if self.save_checkpoints and (epoch + 1) % 5 == 0:
+                self.save_checkpoint(f'checkpoint_epoch_{epoch+1}.pt')
+
+            self._generate_samples(epoch)
+
+        self._current_epoch = self.config.max_epochs - 1
+        if self.save_checkpoints:
+            self.save_checkpoint('final_model.pt')
+
+        total_time = time.time() - training_start
+        print(f"\nTraining complete!")
+        print(f"Total wall time: {total_time:.1f}s ({total_time/3600:.2f}h)")
+        print(f"Best Val Loss: {self.best_val_loss:.4f}")
+
+
 def main():
     parser = argparse.ArgumentParser(description='Train V6 Phase-First LM')
     parser.add_argument('--size', type=str, default='small-matched',
@@ -429,10 +743,28 @@ def main():
     parser.add_argument('--log_dir', type=str, default='logs')
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_v6')
     parser.add_argument('--resume', type=str, default=None)
+
+    # Diffusion / mode arguments
+    parser.add_argument('--mode', type=str, default='autoregressive',
+                        choices=['autoregressive', 'diffusion_text', 'diffusion_image'])
+    parser.add_argument('--diffusion_steps', type=int, default=1000)
+    parser.add_argument('--noise_schedule', type=str, default='cosine',
+                        choices=['cosine', 'linear'])
+    parser.add_argument('--prediction_target', type=str, default='x0',
+                        choices=['x0', 'epsilon'])
+    parser.add_argument('--sampling_method', type=str, default='ddpm',
+                        choices=['ddpm', 'ddim'])
+    parser.add_argument('--image_size', type=int, default=64)
+    parser.add_argument('--image_encoder', type=str, default='patch',
+                        choices=['patch', 'fft'])
+    parser.add_argument('--patch_size', type=int, default=8)
+    parser.add_argument('--image_dataset', type=str, default='tiny_imagenet')
+
     args = parser.parse_args()
 
     config = get_config(args.size)
     config.max_epochs = args.epochs
+    config.mode = args.mode
     if args.batch_size:
         config.batch_size = args.batch_size
     if args.lr:
@@ -452,9 +784,20 @@ def main():
         config.use_attention = True
         config.attn_every = args.attn_every
 
+    # Diffusion config
+    config.diffusion_steps = args.diffusion_steps
+    config.noise_schedule = args.noise_schedule
+    config.prediction_target = args.prediction_target
+    config.sampling_method = args.sampling_method
+    config.image_size = args.image_size
+    config.image_encoder = args.image_encoder
+    config.patch_size = args.patch_size
+    config.image_dataset = args.image_dataset
+
     log_dir = Path(args.log_dir)
     log_dir.mkdir(parents=True, exist_ok=True)
-    log_path = log_dir / f'v6_train_{args.size}.log'
+    mode_tag = args.mode.replace('_', '-')
+    log_path = log_dir / f'v6_{mode_tag}_{args.size}.log'
     log_mode = 'a' if args.resume else 'w'
     tee = TeeLogger(log_path, mode=log_mode)
     sys.stdout = tee
@@ -464,32 +807,40 @@ def main():
 
     print(f"Wall clock start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
-    print("V6 Phase-First Language Model")
+    print(f"V6 Phase-First Model (mode: {config.mode})")
     print("=" * 60)
     print(f"Size: {args.size}")
     print(f"Complex dim: {config.dim} (= {config.dim * 2} real values/position)")
     print(f"SSM state dim: {config.state_dim} (multi-timescale: fast/medium/slow)")
     print(f"Layers: {config.num_layers}")
     print(f"Banks: {config.num_banks} (semantic + context)")
-    print(f"Working memory slots: {config.num_wm_slots} (top-k={config.wm_read_topk}, decay={config.wm_slot_decay})")
-    print(f"Internal memory slots: {config.num_im_slots} (top-k={config.im_read_topk})")
+    if config.mode == 'autoregressive':
+        print(f"Working memory slots: {config.num_wm_slots} (top-k={config.wm_read_topk}, decay={config.wm_slot_decay})")
+        print(f"Internal memory slots: {config.num_im_slots} (top-k={config.im_read_topk})")
+    if config.mode.startswith('diffusion'):
+        print(f"Diffusion steps: {config.diffusion_steps}, schedule: {config.noise_schedule}")
+        print(f"Prediction target: {config.prediction_target}")
+    if config.mode == 'diffusion_image':
+        print(f"Image: {config.image_size}x{config.image_size}, encoder={config.image_encoder}, patch={config.patch_size}")
+        print(f"Dataset: {config.image_dataset}")
     if config.use_attention:
         attn_desc = f"every {config.attn_every} layers" if config.attn_every > 0 else "last layer only"
         print(f"PhaseAttention: ENABLED ({attn_desc}, heads={config.attn_num_heads}, window={config.attn_window_size})")
     else:
         print(f"PhaseAttention: DISABLED (attention-free)")
-    print(f"Diversity loss: weight={config.diversity_loss_weight}, floor={config.diversity_loss_floor}, margin={config.diversity_margin}")
     print(f"Epochs: {config.max_epochs}")
-    gen_info = f"every {args.gen_every} batches, prompt=\"{args.gen_prompt}\"" if args.gen_every > 0 else "off"
-    print(f"Mid-epoch generation: {gen_info}")
-    print(f"Max samples: {args.max_samples}")
     print(f"Log file: {log_path}")
     print(f"Checkpoint dir: {args.checkpoint_dir}")
     print("=" * 60)
 
-    train_ds, val_ds, tokenizer = load_tinystories(args.max_samples, args.seq_len)
-    config.vocab_size = tokenizer.vocab_size
-    config.max_seq_len = args.seq_len
+    # Data loading
+    tokenizer = None
+    if config.mode in ('autoregressive', 'diffusion_text'):
+        train_ds, val_ds, tokenizer = load_tinystories(args.max_samples, args.seq_len)
+        config.vocab_size = tokenizer.vocab_size
+        config.max_seq_len = args.seq_len
+    elif config.mode == 'diffusion_image':
+        train_ds, val_ds = load_image_dataset(config)
 
     use_cuda = torch.cuda.is_available()
     train_loader = DataLoader(
@@ -510,36 +861,50 @@ def main():
     print(f"Init strategy: {init_info['init_strategy']} (seed: {init_info['init_seed']})")
 
     start_epoch = 0
-    best_val_loss = float('inf')
-    best_val_ppl = float('inf')
     if args.resume:
         checkpoint = torch.load(args.resume, weights_only=False)
         model_to_load = model._orig_mod if hasattr(model, '_orig_mod') else model
         model_to_load.load_state_dict(checkpoint['model_state_dict'], strict=False)
         start_epoch = checkpoint.get('epoch', 0) + 1
-        best_val_loss = checkpoint.get('best_val_loss', float('inf'))
-        best_val_ppl = checkpoint.get('best_val_ppl', float('inf'))
-        print(f"Resumed from epoch {start_epoch}, best_val_loss={best_val_loss:.4f}")
+        print(f"Resumed from epoch {start_epoch}")
 
     if config.compile_model:
         print("Compiling model with torch.compile...")
         model = torch.compile(model)
 
-    trainer = Trainer(
-        model, config, train_loader, val_loader,
-        tokenizer=tokenizer,
-        checkpoint_dir=args.checkpoint_dir,
-        start_epoch=start_epoch,
-    )
-    trainer.gen_every = args.gen_every
-    trainer.gen_prompt = args.gen_prompt
-
-    if args.resume and 'optimizer_state_dict' in checkpoint:
-        trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        trainer.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-        trainer.global_step = checkpoint.get('global_step', 0)
-        trainer.best_val_loss = best_val_loss
-        trainer.best_val_ppl = best_val_ppl
+    # Dispatch to the right trainer
+    if config.mode == 'autoregressive':
+        trainer = Trainer(
+            model, config, train_loader, val_loader,
+            tokenizer=tokenizer,
+            checkpoint_dir=args.checkpoint_dir,
+            start_epoch=start_epoch,
+        )
+        trainer.gen_every = args.gen_every
+        trainer.gen_prompt = args.gen_prompt
+        if args.resume and 'optimizer_state_dict' in checkpoint:
+            trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            trainer.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+            trainer.global_step = checkpoint.get('global_step', 0)
+            trainer.best_val_loss = checkpoint.get('best_val_loss', float('inf'))
+            trainer.best_val_ppl = checkpoint.get('best_val_ppl', float('inf'))
+    else:
+        trainer = DiffusionTrainer(
+            model, config, train_loader, val_loader,
+            tokenizer=tokenizer,
+            checkpoint_dir=args.checkpoint_dir,
+            start_epoch=start_epoch,
+        )
+        trainer.gen_every = args.gen_every
+        if config.mode == 'diffusion_image':
+            sample_dir = Path(args.log_dir) / 'v6' / 'samples'
+            sample_dir.mkdir(parents=True, exist_ok=True)
+            trainer.sample_dir = sample_dir
+        if args.resume and 'optimizer_state_dict' in checkpoint:
+            trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            trainer.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+            trainer.global_step = checkpoint.get('global_step', 0)
+            trainer.best_val_loss = checkpoint.get('best_val_loss', float('inf'))
 
     trainer.train()
 

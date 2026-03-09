@@ -63,6 +63,25 @@ class V6Config:
     init_strategy: str = 'orthogonal'
     init_seed: Optional[int] = None
 
+    # Mode: 'autoregressive' | 'diffusion_text' | 'diffusion_image'
+    mode: str = 'autoregressive'
+
+    # Diffusion (ignored when mode='autoregressive')
+    diffusion_steps: int = 1000
+    noise_schedule: str = 'cosine'
+    prediction_target: str = 'x0'       # 'x0' | 'epsilon' | 'v'
+    diffusion_loss: str = 'mse'         # 'mse' | 'huber'
+    sampling_method: str = 'ddpm'       # 'ddpm' | 'ddim'
+    ddim_steps: int = 50
+    ddim_eta: float = 0.0
+
+    # Image (ignored unless mode='diffusion_image')
+    image_size: int = 64
+    image_channels: int = 3
+    image_encoder: str = 'patch'        # 'patch' | 'fft'
+    patch_size: int = 8
+    image_dataset: str = 'tiny_imagenet'
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
