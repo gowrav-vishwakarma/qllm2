@@ -1,0 +1,125 @@
+[2026-03-09 16:12:22] Wall clock start: 2026-03-09 16:12:22
+[2026-03-09 16:12:22] ============================================================
+[2026-03-09 16:12:22] V6 Phase-First Model (mode: diffusion_image)
+[2026-03-09 16:12:22] ============================================================
+[2026-03-09 16:12:22] Size: tiny
+[2026-03-09 16:12:22] Complex dim: 64 (= 128 real values/position)
+[2026-03-09 16:12:22] SSM state dim: 128 (multi-timescale: fast/medium/slow)
+[2026-03-09 16:12:22] Layers: 4
+[2026-03-09 16:12:22] Banks: 2 (semantic + context)
+[2026-03-09 16:12:22] Diffusion steps: 200, schedule: cosine
+[2026-03-09 16:12:22] Prediction target: x0
+[2026-03-09 16:12:22] Image: 32x32, encoder=patch, patch=4
+[2026-03-09 16:12:22] Dataset: cifar10
+[2026-03-09 16:12:22] PhaseAttention: DISABLED (attention-free)
+[2026-03-09 16:12:22] Epochs: 15
+[2026-03-09 16:12:22] Log file: logs/v6_diffusion-image_tiny.log
+[2026-03-09 16:12:22] Checkpoint dir: checkpoints_v6_diffusion_image
+[2026-03-09 16:12:22] ============================================================
+[2026-03-09 16:12:23] Loading CIFAR-10...
+[2026-03-09 16:12:34] Loaded 50000 images
+[2026-03-09 16:12:34] Image train: 45000, val: 5000, size: 32x32
+[2026-03-09 16:12:34] Init strategy: orthogonal (seed: 778157935)
+
+[2026-03-09 16:12:34] Training on mps (mode: diffusion_image)
+[2026-03-09 16:12:34] Parameters: {'time_embed': 8384, 'banks': 394752, 'couplers': 133640, 'attention': 0, 'ssm': 199748, 'working_memory': 0, 'internal_memory': 0, 'persistent_reader': 0, 'expert_reader': 0, 'memory_fusion': 0, 'memory_scale': 0, 'output_proj': 8384, 'image_encoder': 6336, 'image_decoder': 6240, 'total': 757484}
+[2026-03-09 16:12:34] Total: 757,484 (0.8M)
+[2026-03-09 16:12:34] Diffusion steps: 200, schedule: cosine
+[2026-03-09 16:12:34] Prediction target: x0
+[2026-03-09 16:12:34] Epochs: 1..15, Batches/epoch: 2813
+
+
+[2026-03-09 16:12:34] ============================================================
+[2026-03-09 16:12:34] Epoch 1/15
+[2026-03-09 16:12:34] ============================================================
+[2026-03-09 16:12:35]   [1] batch 0/2813 diff_loss=0.9885 div=3.1997 lr=1.00e-03 | 21.2 samples/s
+[2026-03-09 16:12:44]   [1] batch 50/2813 diff_loss=0.0665 div=3.1792 lr=1.00e-03 | 79.2 samples/s
+[2026-03-09 16:12:54]   [1] batch 100/2813 diff_loss=0.1729 div=3.1088 lr=1.00e-03 | 81.1 samples/s
+[2026-03-09 16:13:03]   [1] batch 150/2813 diff_loss=0.0996 div=2.9732 lr=1.00e-03 | 81.8 samples/s
+[2026-03-09 16:13:13]   [1] batch 200/2813 diff_loss=0.0407 div=2.7596 lr=1.00e-03 | 82.2 samples/s
+[2026-03-09 16:13:15]   [samples saved to logs/v6/samples/samples_e0_b200.png]
+[2026-03-09 16:13:25]   [1] batch 250/2813 diff_loss=0.0017 div=2.4560 lr=1.00e-03 | 79.0 samples/s
+[2026-03-09 16:13:34]   [1] batch 300/2813 diff_loss=0.0003 div=2.0551 lr=1.00e-03 | 79.7 samples/s
+[2026-03-09 16:13:44]   [1] batch 350/2813 diff_loss=0.0002 div=1.5592 lr=1.00e-03 | 80.0 samples/s
+[2026-03-09 16:13:54]   [1] batch 400/2813 diff_loss=0.0001 div=0.9834 lr=1.00e-03 | 80.2 samples/s
+[2026-03-09 16:13:55]   [samples saved to logs/v6/samples/samples_e0_b400.png]
+[2026-03-09 16:14:05]   [1] batch 450/2813 diff_loss=0.0001 div=0.3554 lr=1.00e-03 | 79.4 samples/s
+[2026-03-09 16:14:15]   [1] batch 500/2813 diff_loss=0.0001 div=0.0062 lr=1.00e-03 | 79.5 samples/s
+[2026-03-09 16:14:24]   [1] batch 550/2813 diff_loss=0.0001 div=0.0023 lr=1.00e-03 | 79.8 samples/s
+[2026-03-09 16:14:34]   [1] batch 600/2813 diff_loss=0.0001 div=0.0022 lr=9.99e-04 | 80.2 samples/s
+[2026-03-09 16:14:35]   [samples saved to logs/v6/samples/samples_e0_b600.png]
+[2026-03-09 16:14:45]   [1] batch 650/2813 diff_loss=0.0001 div=0.0024 lr=9.99e-04 | 79.5 samples/s
+[2026-03-09 16:14:54]   [1] batch 700/2813 diff_loss=0.0000 div=0.0022 lr=9.99e-04 | 79.8 samples/s
+[2026-03-09 16:15:04]   [1] batch 750/2813 diff_loss=0.0000 div=0.0016 lr=9.99e-04 | 80.1 samples/s
+[2026-03-09 16:15:13]   [1] batch 800/2813 diff_loss=0.0000 div=0.0015 lr=9.99e-04 | 80.4 samples/s
+[2026-03-09 16:15:15]   [samples saved to logs/v6/samples/samples_e0_b800.png]
+[2026-03-09 16:15:25]   [1] batch 850/2813 diff_loss=0.0000 div=0.0025 lr=9.99e-04 | 79.8 samples/s
+[2026-03-09 16:15:34]   [1] batch 900/2813 diff_loss=0.0000 div=0.0011 lr=9.99e-04 | 80.1 samples/s
+[2026-03-09 16:15:44]   [1] batch 950/2813 diff_loss=0.0000 div=0.0015 lr=9.99e-04 | 80.3 samples/s
+[2026-03-09 16:15:53]   [1] batch 1000/2813 diff_loss=0.0000 div=0.0023 lr=9.99e-04 | 80.5 samples/s
+[2026-03-09 16:15:54]   [samples saved to logs/v6/samples/samples_e0_b1000.png]
+[2026-03-09 16:16:04]   [1] batch 1050/2813 diff_loss=0.0001 div=0.0027 lr=9.98e-04 | 80.0 samples/s
+[2026-03-09 16:16:14]   [1] batch 1100/2813 diff_loss=0.0000 div=0.0015 lr=9.98e-04 | 80.2 samples/s
+[2026-03-09 16:16:23]   [1] batch 1150/2813 diff_loss=0.0000 div=0.0027 lr=9.98e-04 | 80.4 samples/s
+[2026-03-09 16:16:33]   [1] batch 1200/2813 diff_loss=0.0001 div=0.0013 lr=9.98e-04 | 80.5 samples/s
+[2026-03-09 16:16:34]   [samples saved to logs/v6/samples/samples_e0_b1200.png]
+[2026-03-09 16:16:44]   [1] batch 1250/2813 diff_loss=0.0000 div=0.0021 lr=9.98e-04 | 80.1 samples/s
+[2026-03-09 16:16:53]   [1] batch 1300/2813 diff_loss=0.0000 div=0.0018 lr=9.98e-04 | 80.3 samples/s
+[2026-03-09 16:17:03]   [1] batch 1350/2813 diff_loss=0.0000 div=0.0018 lr=9.97e-04 | 80.4 samples/s
+[2026-03-09 16:17:13]   [1] batch 1400/2813 diff_loss=0.0000 div=0.0013 lr=9.97e-04 | 80.4 samples/s
+[2026-03-09 16:17:14]   [samples saved to logs/v6/samples/samples_e0_b1400.png]
+[2026-03-09 16:17:25]   [1] batch 1450/2813 diff_loss=0.0000 div=0.0024 lr=9.97e-04 | 79.8 samples/s
+[2026-03-09 16:17:35]   [1] batch 1500/2813 diff_loss=0.0000 div=0.0018 lr=9.97e-04 | 79.7 samples/s
+[2026-03-09 16:17:46]   [1] batch 1550/2813 diff_loss=0.0000 div=0.0023 lr=9.97e-04 | 79.5 samples/s
+[2026-03-09 16:17:57]   [1] batch 1600/2813 diff_loss=0.0000 div=0.0024 lr=9.96e-04 | 79.2 samples/s
+[2026-03-09 16:17:59]   [samples saved to logs/v6/samples/samples_e0_b1600.png]
+[2026-03-09 16:18:11]   [1] batch 1650/2813 diff_loss=0.0000 div=0.0016 lr=9.96e-04 | 78.3 samples/s
+[2026-03-09 16:18:24]   [1] batch 1700/2813 diff_loss=0.0000 div=0.0017 lr=9.96e-04 | 77.8 samples/s
+[2026-03-09 16:18:36]   [1] batch 1750/2813 diff_loss=0.0000 div=0.0023 lr=9.96e-04 | 77.3 samples/s
+[2026-03-09 16:18:49]   [1] batch 1800/2813 diff_loss=0.0000 div=0.0011 lr=9.96e-04 | 76.8 samples/s
+[2026-03-09 16:18:51]   [samples saved to logs/v6/samples/samples_e0_b1800.png]
+[2026-03-09 16:19:04]   [1] batch 1850/2813 diff_loss=0.0000 div=0.0014 lr=9.95e-04 | 75.9 samples/s
+[2026-03-09 16:19:16]   [1] batch 1900/2813 diff_loss=0.0000 div=0.0023 lr=9.95e-04 | 75.6 samples/s
+[2026-03-09 16:19:28]   [1] batch 1950/2813 diff_loss=0.0000 div=0.0027 lr=9.95e-04 | 75.4 samples/s
+[2026-03-09 16:19:39]   [1] batch 2000/2813 diff_loss=0.0000 div=0.0016 lr=9.94e-04 | 75.4 samples/s
+[2026-03-09 16:19:41]   [samples saved to logs/v6/samples/samples_e0_b2000.png]
+[2026-03-09 16:19:52]   [1] batch 2050/2813 diff_loss=0.0000 div=0.0022 lr=9.94e-04 | 75.0 samples/s
+[2026-03-09 16:20:02]   [1] batch 2100/2813 diff_loss=0.0000 div=0.0012 lr=9.94e-04 | 75.0 samples/s
+[2026-03-09 16:20:12]   [1] batch 2150/2813 diff_loss=0.0000 div=0.0022 lr=9.94e-04 | 75.1 samples/s
+[2026-03-09 16:20:22]   [1] batch 2200/2813 diff_loss=0.0000 div=0.0018 lr=9.93e-04 | 75.2 samples/s
+[2026-03-09 16:20:24]   [samples saved to logs/v6/samples/samples_e0_b2200.png]
+[2026-03-09 16:20:34]   [1] batch 2250/2813 diff_loss=0.0000 div=0.0020 lr=9.93e-04 | 75.1 samples/s
+[2026-03-09 16:20:43]   [1] batch 2300/2813 diff_loss=0.0000 div=0.0011 lr=9.93e-04 | 75.2 samples/s
+[2026-03-09 16:20:53]   [1] batch 2350/2813 diff_loss=0.0000 div=0.0024 lr=9.92e-04 | 75.4 samples/s
+[2026-03-09 16:21:02]   [1] batch 2400/2813 diff_loss=0.0000 div=0.0017 lr=9.92e-04 | 75.6 samples/s
+[2026-03-09 16:21:04]   [samples saved to logs/v6/samples/samples_e0_b2400.png]
+[2026-03-09 16:21:14]   [1] batch 2450/2813 diff_loss=0.0000 div=0.0023 lr=9.92e-04 | 75.5 samples/s
+[2026-03-09 16:21:23]   [1] batch 2500/2813 diff_loss=0.0000 div=0.0024 lr=9.91e-04 | 75.6 samples/s
+[2026-03-09 16:21:33]   [1] batch 2550/2813 diff_loss=0.0000 div=0.0017 lr=9.91e-04 | 75.8 samples/s
+[2026-03-09 16:21:42]   [1] batch 2600/2813 diff_loss=0.0000 div=0.0012 lr=9.91e-04 | 75.9 samples/s
+[2026-03-09 16:21:44]   [samples saved to logs/v6/samples/samples_e0_b2600.png]
+[2026-03-09 16:21:53]   [1] batch 2650/2813 diff_loss=0.0000 div=0.0023 lr=9.90e-04 | 75.8 samples/s
+[2026-03-09 16:22:03]   [1] batch 2700/2813 diff_loss=0.0000 div=0.0013 lr=9.90e-04 | 75.9 samples/s
+[2026-03-09 16:22:13]   [1] batch 2750/2813 diff_loss=0.0000 div=0.0015 lr=9.90e-04 | 76.1 samples/s
+[2026-03-09 16:22:22]   [1] batch 2800/2813 diff_loss=0.0000 div=0.0025 lr=9.89e-04 | 76.2 samples/s
+[2026-03-09 16:22:24]   [samples saved to logs/v6/samples/samples_e0_b2800.png]
+[2026-03-09 16:22:37] Epoch 1/15 | Diff Loss: 0.0078 | Time: 592.3s | Val Loss: 0.0000 *best*
+[2026-03-09 16:22:37] Saved checkpoint: checkpoints_v6_diffusion_image/best_model.pt
+[2026-03-09 16:22:38]   [samples saved to logs/v6/samples/samples_e0_b0.png]
+
+[2026-03-09 16:22:38] ============================================================
+[2026-03-09 16:22:38] Epoch 2/15
+[2026-03-09 16:22:38] ============================================================
+[2026-03-09 16:22:39]   [2] batch 0/2813 diff_loss=0.0000 div=0.0022 lr=9.89e-04 | 63.7 samples/s
+[2026-03-09 16:22:48]   [2] batch 50/2813 diff_loss=0.0000 div=0.0010 lr=9.89e-04 | 83.0 samples/s
+[2026-03-09 16:22:58]   [2] batch 100/2813 diff_loss=0.0000 div=0.0019 lr=9.88e-04 | 81.9 samples/s
+[2026-03-09 16:23:08]   [2] batch 150/2813 diff_loss=0.0000 div=0.0021 lr=9.88e-04 | 82.2 samples/s
+[2026-03-09 16:23:17]   [2] batch 200/2813 diff_loss=0.0000 div=0.0013 lr=9.87e-04 | 82.7 samples/s
+[2026-03-09 16:23:19]   [samples saved to logs/v6/samples/samples_e1_b200.png]
+[2026-03-09 16:23:28]   [2] batch 250/2813 diff_loss=0.0000 div=0.0024 lr=9.87e-04 | 80.4 samples/s
+[2026-03-09 16:23:38]   [2] batch 300/2813 diff_loss=0.0000 div=0.0022 lr=9.87e-04 | 80.9 samples/s
+[2026-03-09 16:23:47]   [2] batch 350/2813 diff_loss=0.0000 div=0.0005 lr=9.86e-04 | 81.3 samples/s
+[2026-03-09 16:23:57]   [2] batch 400/2813 diff_loss=0.0000 div=0.0017 lr=9.86e-04 | 81.5 samples/s
+[2026-03-09 16:23:59]   [samples saved to logs/v6/samples/samples_e1_b400.png]
+[2026-03-09 16:24:08]   [2] batch 450/2813 diff_loss=0.0000 div=0.0020 lr=9.85e-04 | 80.1 samples/s
+[2026-03-09 16:24:18]   [2] batch 500/2813 diff_loss=0.0000 div=0.0009 lr=9.85e-04 | 80.3 samples/s
