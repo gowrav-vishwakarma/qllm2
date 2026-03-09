@@ -32,11 +32,20 @@ class V5Config:
     weight_decay: float = 0.01
     max_epochs: int = 20
     warmup_steps: int = 200
+    lr_schedule: str = 'cosine'
     gradient_clip: float = 1.0
     diversity_loss_weight: float = 0.05
+    num_workers: int = 4
+    pin_memory: bool = True
+    log_interval: int = 50
 
     # Speed
+    amp_dtype: str = 'auto'
+    allow_tf32: bool = True
+    attention_backend: str = 'native'
     compile_model: bool = False
+    compile_mode: str = 'reduce-overhead'
+    compile_fullgraph: bool = False
 
     # Initialization (structured strategies, seed for reproducibility)
     init_strategy: str = 'orthogonal'
