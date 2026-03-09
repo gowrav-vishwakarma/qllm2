@@ -175,29 +175,37 @@ class PhaseFieldLM(nn.Module):
             initializer=initializer,
         ) if config.num_im_slots > 0 else None
 
-        # Persistent memory reader (projections only; actual memory is external)
-        self.persistent_reader = PersistentMemoryReader(
-            config.dim, initializer=initializer,
+        # Memory-related modules: only create when needed (zero params when WM=0, IM=0)
+        has_memory = config.num_wm_slots > 0 or config.num_im_slots > 0
+        has_any_memory = has_memory or config.use_persistent_memory
+
+        self.persistent_reader = (
+            PersistentMemoryReader(config.dim, initializer=initializer)
+            if config.use_persistent_memory else None
+        )
+        self.expert_reader = (
+            ExpertMemoryReader(config.dim, initializer=initializer)
+            if has_memory else None
         )
 
-        # Expert memory reader (projections only; actual memory is external)
-        self.expert_reader = ExpertMemoryReader(
-            config.dim, initializer=initializer,
-        )
+        if has_memory:
+            self.memory_fusion_2 = MemoryFusion(
+                config.dim, num_sources=2, initializer=initializer,
+            )
+            self.memory_fusion_3 = MemoryFusion(
+                config.dim, num_sources=3, initializer=initializer,
+            )
+            self.memory_fusion_4 = MemoryFusion(
+                config.dim, num_sources=4, initializer=initializer,
+            )
+        else:
+            self.memory_fusion_2 = None
+            self.memory_fusion_3 = None
+            self.memory_fusion_4 = None
 
-        # Memory fusion: working + internal (+ persistent/expert when available)
-        self.memory_fusion_2 = MemoryFusion(
-            config.dim, num_sources=2, initializer=initializer,
+        self.memory_scale = (
+            nn.Parameter(torch.tensor(0.5)) if has_any_memory else None
         )
-        self.memory_fusion_3 = MemoryFusion(
-            config.dim, num_sources=3, initializer=initializer,
-        )
-        self.memory_fusion_4 = MemoryFusion(
-            config.dim, num_sources=4, initializer=initializer,
-        )
-
-        # Residual scale for memory output
-        self.memory_scale = nn.Parameter(torch.tensor(0.5))
 
         # LM Head
         self.lm_head_proj = ComplexLinear(config.dim, config.dim, initializer=initializer)
@@ -285,13 +293,13 @@ class PhaseFieldLM(nn.Module):
         if self.internal_memory is not None:
             memory_sources.append(im_retrieved)
 
-        if has_persistent:
+        if has_persistent and self.persistent_reader is not None:
             pm_retrieved = self.persistent_reader(
                 ssm_out, persistent_keys, persistent_values, persistent_mask,
             )
             memory_sources.append(pm_retrieved)
 
-        if has_expert:
+        if has_expert and self.expert_reader is not None:
             em_retrieved = self.expert_reader(
                 ssm_out, expert_keys, expert_values, expert_mask,
             )
@@ -302,15 +310,18 @@ class PhaseFieldLM(nn.Module):
             z_out = ssm_out
         elif n_sources == 1:
             z_out = ssm_out + memory_sources[0] * self.memory_scale
-        elif n_sources == 2:
+        elif n_sources == 2 and self.memory_fusion_2 is not None:
             memory_out = self.memory_fusion_2(*memory_sources)
             z_out = ssm_out + memory_out * self.memory_scale
-        elif n_sources == 3:
+        elif n_sources == 3 and self.memory_fusion_3 is not None:
             memory_out = self.memory_fusion_3(*memory_sources)
             z_out = ssm_out + memory_out * self.memory_scale
-        else:
+        elif n_sources >= 4 and self.memory_fusion_4 is not None:
             memory_out = self.memory_fusion_4(*memory_sources)
             z_out = ssm_out + memory_out * self.memory_scale
+        else:
+            # Fallback if fusion modules missing (shouldn't happen with valid config)
+            z_out = ssm_out
 
         # 8. LM head
         lm = self.lm_head_proj(z_out)
@@ -431,13 +442,14 @@ class PhaseFieldLM(nn.Module):
             'ssm': sum(p.numel() for p in self.ssm.parameters()),
             'working_memory': sum(p.numel() for p in self.working_memory.parameters()) if self.working_memory else 0,
             'internal_memory': sum(p.numel() for p in self.internal_memory.parameters()) if self.internal_memory else 0,
-            'persistent_reader': sum(p.numel() for p in self.persistent_reader.parameters()),
-            'expert_reader': sum(p.numel() for p in self.expert_reader.parameters()),
+            'persistent_reader': sum(p.numel() for p in self.persistent_reader.parameters()) if self.persistent_reader else 0,
+            'expert_reader': sum(p.numel() for p in self.expert_reader.parameters()) if self.expert_reader else 0,
             'memory_fusion': (
-                sum(p.numel() for p in self.memory_fusion_2.parameters()) +
-                sum(p.numel() for p in self.memory_fusion_3.parameters()) +
-                sum(p.numel() for p in self.memory_fusion_4.parameters())
+                (sum(p.numel() for p in self.memory_fusion_2.parameters()) if self.memory_fusion_2 else 0) +
+                (sum(p.numel() for p in self.memory_fusion_3.parameters()) if self.memory_fusion_3 else 0) +
+                (sum(p.numel() for p in self.memory_fusion_4.parameters()) if self.memory_fusion_4 else 0)
             ),
+            'memory_scale': 1 if self.memory_scale is not None else 0,
             'lm_head_proj': (
                 sum(p.numel() for p in self.lm_head_proj.parameters()) +
                 sum(p.numel() for p in self.lm_head_norm.parameters())

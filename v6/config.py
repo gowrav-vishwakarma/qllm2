@@ -23,14 +23,14 @@ class V6Config:
     dropout: float = 0.1
     max_seq_len: int = 1024
 
-    # Working memory
-    num_wm_slots: int = 64    # working memory slots per sequence
+    # Working memory (0 = disabled; use --wm_slots N to enable)
+    num_wm_slots: int = 0    # working memory slots per sequence
     wm_gate_bias: float = -2.0  # start selective (don't write everything)
     wm_read_topk: int = 8     # top-k sparse retrieval (0 = dense softmax)
     wm_slot_decay: float = 0.95  # per-step mask decay for slot freshness
 
-    # Internal memory
-    num_im_slots: int = 128   # internal memory slots (nn.Parameter, trained)
+    # Internal memory (0 = disabled; use --im_slots N to enable)
+    num_im_slots: int = 0    # internal memory slots (nn.Parameter, trained)
     im_read_topk: int = 8     # top-k sparse retrieval (0 = dense softmax)
 
     # External memory flags
@@ -83,25 +83,21 @@ def get_config(size: str = 'small-matched') -> V6Config:
         'tiny': V6Config(
             dim=64, state_dim=128, num_layers=4,
             num_banks=2, bank_expand=2,
-            num_wm_slots=16, num_im_slots=32,
             batch_size=16, learning_rate=1e-3,
         ),
         'small': V6Config(
             dim=256, state_dim=512, num_layers=8,
             num_banks=2, bank_expand=2,
-            num_wm_slots=64, num_im_slots=128,
             batch_size=8, learning_rate=1e-4,
         ),
         'small-matched': V6Config(
             dim=128, state_dim=512, num_layers=12,
             num_banks=2, bank_expand=4,
-            num_wm_slots=64, num_im_slots=128,
             batch_size=8, learning_rate=1e-4,
         ),
         'medium': V6Config(
             dim=512, state_dim=1024, num_layers=12,
             num_banks=2, bank_expand=2,
-            num_wm_slots=128, num_im_slots=256,
             batch_size=4, learning_rate=5e-5,
         ),
     }
