@@ -1,0 +1,83 @@
+[2026-03-09 23:04:25] Wall clock start: 2026-03-09 23:04:25
+[2026-03-09 23:04:25] ============================================================
+[2026-03-09 23:04:25] V6 Phase-First Model (mode: autoregressive)
+[2026-03-09 23:04:25] ============================================================
+[2026-03-09 23:04:25] Size: tiny
+[2026-03-09 23:04:25] Complex dim: 64 (= 128 real values/position)
+[2026-03-09 23:04:25] SSM state dim: 128 (multi-timescale: fast/medium/slow)
+[2026-03-09 23:04:25] Layers: 4
+[2026-03-09 23:04:25] Banks: 2 (semantic + context)
+[2026-03-09 23:04:25] Working memory slots: 0 (top-k=8, decay=0.95)
+[2026-03-09 23:04:25] Internal memory slots: 0 (top-k=8)
+[2026-03-09 23:04:25] PhaseAttention: DISABLED (attention-free)
+[2026-03-09 23:04:25] Epochs: 2
+[2026-03-09 23:04:25] LR schedule: warmup_cosine (warmup=200)
+[2026-03-09 23:04:25] Dropout: 0.1, Weight decay: 0.01
+[2026-03-09 23:04:25] AMP: off, TF32: True, Compile: False
+[2026-03-09 23:04:25] Workers: 2, Pin memory: True
+[2026-03-09 23:04:25] Batch log interval: 5
+[2026-03-09 23:04:25] Log file: logs/smoke/v6_autoregressive_tiny.log
+[2026-03-09 23:04:25] Checkpoint dir: /tmp/v6_smoke3
+[2026-03-09 23:04:25] ============================================================
+[2026-03-09 23:04:29] Loading TinyStories train (limit=200)...
+[2026-03-09 23:04:51]   Text repair: 10 stories fixed, mojibake markers 0 -> 0
+[2026-03-09 23:04:51]   Tokenizing 200 train texts (batched)...
+[2026-03-09 23:04:51]   train: 200 stories, 39,364 tokens
+[2026-03-09 23:04:51] Loading TinyStories validation (limit=1000)...
+[2026-03-09 23:04:54]   Text repair: 17 stories fixed, mojibake markers 0 -> 0
+[2026-03-09 23:04:54]   Tokenizing 1000 validation texts (batched)...
+[2026-03-09 23:04:54]   validation: 1000 stories, 194,512 tokens
+[2026-03-09 23:04:54] Train chunks: 605, Val chunks: 2992
+[2026-03-09 23:04:54] Init strategy: orthogonal (seed: 1834757302)
+[2026-03-09 23:04:54] Param groups: 104 tensors (7,162,496 params) with weight decay, 85 tensors (6,992 params) without
+
+[2026-03-09 23:04:54] Training on cpu
+[2026-03-09 23:04:54] Parameters: {'embed (tied w/ output)': 6432896, 'banks': 394752, 'couplers': 133640, 'attention': 0, 'ssm': 199748, 'working_memory': 0, 'internal_memory': 0, 'persistent_reader': 0, 'expert_reader': 0, 'memory_fusion': 0, 'memory_scale': 0, 'lm_head_proj': 8384, 'total': 7169420}
+[2026-03-09 23:04:54] Total: 7,169,420 (7.2M)
+[2026-03-09 23:04:54] Epochs: 1..2, Batches/epoch: 38
+
+
+[2026-03-09 23:04:54] ============================================================
+[2026-03-09 23:04:54] Epoch 1/2
+[2026-03-09 23:04:54] ============================================================
+[2026-03-09 23:04:55]   First step wall time: 0.8s
+[2026-03-09 23:04:55]   [1] 0/38 (3%) loss=10.8466 ppl=51360.9 div=3.20e+01 wdiv=3.20e+00 lr=5.00e-06 | 1286 tok/s (avg 1286) ETA 0m00s
+[2026-03-09 23:04:58]   [1] 5/38 (16%) loss=10.8086 ppl=49442.3 div=3.20e+01 wdiv=3.03e+00 lr=3.00e-05 | 1730 tok/s (avg 1636) ETA 0m20s
+[2026-03-09 23:05:01]   [1] 10/38 (29%) loss=10.7087 ppl=44741.8 div=3.20e+01 wdiv=2.86e+00 lr=5.50e-05 | 1663 tok/s (avg 1648) ETA 0m16s
+[2026-03-09 23:05:04]   [1] 15/38 (42%) loss=10.6584 ppl=42546.4 div=3.20e+01 wdiv=2.69e+00 lr=8.00e-05 | 1724 tok/s (avg 1671) ETA 0m13s
+[2026-03-09 23:05:07]   [1] 20/38 (55%) loss=10.5961 ppl=39980.5 div=3.20e+01 wdiv=2.53e+00 lr=1.05e-04 | 1748 tok/s (avg 1689) ETA 0m10s
+[2026-03-09 23:05:10]   [1] 25/38 (68%) loss=10.5150 ppl=36863.9 div=3.20e+01 wdiv=2.36e+00 lr=1.30e-04 | 1718 tok/s (avg 1694) ETA 0m07s
+[2026-03-09 23:05:13]   [1] 30/38 (82%) loss=10.4264 ppl=33740.4 div=3.20e+01 wdiv=2.19e+00 lr=1.55e-04 | 1615 tok/s (avg 1681) ETA 0m04s
+[2026-03-09 23:05:16]   [1] 35/38 (95%) loss=10.2849 ppl=29288.5 div=3.20e+01 wdiv=2.02e+00 lr=1.80e-04 | 1745 tok/s (avg 1690) ETA 0m01s
+[2026-03-09 23:05:51] Epoch 1/2 | Train Loss: 10.5889 PPL: 39690.29 div=3.20e+01 wdiv=2.58e+00 | 1686 tok/s | Time: 23.0s | Val Loss: 10.2170 PPL: 27363.56 *best*
+[2026-03-09 23:05:51] Saved checkpoint: /tmp/v6_smoke3/best_model.pt
+
+[2026-03-09 23:05:52] Prompt: Once upon a time
+[2026-03-09 23:05:52] Generated: Once upon a time lots saw,".The boat remembered fun bed found money! have friends leg relieved  the.? There into a in, to.  kept would match a! mum, long happy I leg bed money bed they what detail garden laughed needle match225 someone took. and and. with remind fun and blinkBen end enjoyed they.! happy dinner they friends as leganny!Jack tryTim twocy parents feeling kept. wore they learn  took.
+[2026-03-09 23:05:52]  do money the dinner Rita in animals the learn
+
+[2026-03-09 23:05:52] ============================================================
+[2026-03-09 23:05:52] Epoch 2/2
+[2026-03-09 23:05:52] ============================================================
+[2026-03-09 23:05:53]   First step wall time: 0.6s
+[2026-03-09 23:05:53]   [2] 0/38 (3%) loss=10.2020 ppl=26957.6 div=3.20e+01 wdiv=1.92e+00 lr=1.95e-04 | 1658 tok/s (avg 1658) ETA 0m00s
+[2026-03-09 23:05:56]   [2] 5/38 (16%) loss=10.0638 ppl=23476.4 div=3.20e+01 wdiv=1.75e+00 lr=2.20e-04 | 1710 tok/s (avg 1701) ETA 0m19s
+[2026-03-09 23:05:59]   [2] 10/38 (29%) loss=9.8619 ppl=19185.6 div=3.20e+01 wdiv=1.58e+00 lr=2.45e-04 | 1730 tok/s (avg 1714) ETA 0m16s
+[2026-03-09 23:06:01]   [2] 15/38 (42%) loss=9.6958 ppl=16248.9 div=3.20e+01 wdiv=1.41e+00 lr=2.70e-04 | 1716 tok/s (avg 1715) ETA 0m13s
+[2026-03-09 23:06:05]   [2] 20/38 (55%) loss=9.4921 ppl=13254.1 div=3.20e+01 wdiv=1.25e+00 lr=2.95e-04 | 1696 tok/s (avg 1710) ETA 0m10s
+[2026-03-09 23:06:08]   [2] 25/38 (68%) loss=9.2513 ppl=10417.7 div=3.20e+01 wdiv=1.08e+00 lr=3.20e-04 | 1663 tok/s (avg 1701) ETA 0m07s
+[2026-03-09 23:06:11]   [2] 30/38 (82%) loss=9.0153 ppl=8227.9 div=3.20e+01 wdiv=9.09e-01 lr=3.45e-04 | 1707 tok/s (avg 1702) ETA 0m04s
+[2026-03-09 23:06:14]   [2] 35/38 (95%) loss=8.7666 ppl=6416.4 div=3.20e+01 wdiv=7.40e-01 lr=3.70e-04 | 1647 tok/s (avg 1694) ETA 0m01s
+[2026-03-09 23:06:48] Epoch 2/2 | Train Loss: 9.5044 PPL: 13418.50 div=3.20e+01 wdiv=1.30e+00 | 1689 tok/s | Time: 22.9s | Val Loss: 8.6709 PPL: 5830.55 *best*
+[2026-03-09 23:06:48] Saved checkpoint: /tmp/v6_smoke3/best_model.pt
+
+[2026-03-09 23:06:49] Prompt: Once upon a time
+[2026-03-09 23:06:49] Generated: Once upon a time friends as and all with they was they<|endoftext|> she. they her day happy "!" around them happy could would I happy you her. so," time that.. found for's so to.. and a� friends, took her wanted saw so on, " laughed in have. her this in " so small fun had his who out there she old named she saw her in have " together with away named
+[2026-03-09 23:06:49]  his. to he have in around big She named so and have it for what fun
+[2026-03-09 23:06:49] Saved checkpoint: /tmp/v6_smoke3/final_model.pt
+
+[2026-03-09 23:06:49] Training complete!
+[2026-03-09 23:06:49] Total wall time: 114.8s (0.03h)
+[2026-03-09 23:06:49] Best Val Loss: 8.6709, Best Val PPL: 5830.55
+
+[2026-03-09 23:06:49] Wall clock end: 2026-03-09 23:06:49

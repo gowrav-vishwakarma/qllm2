@@ -9,14 +9,24 @@ Usage:
 """
 
 import os
+import re
 import sys
 import time
 import math
 import argparse
+import warnings
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 from dataclasses import asdict
+
+warnings.filterwarnings(
+    'ignore',
+    message=r'.*Online softmax is disabled.*Inductor.*split the reduction.*',
+    category=UserWarning,
+    module=r'torch\._inductor\.lowering',
+)
 
 import torch
 import torch.nn as nn
@@ -83,50 +93,127 @@ class TextDataset(Dataset):
         return {'input_ids': chunk[:-1], 'labels': chunk[1:]}
 
 
-def load_tinystories(max_samples=20000, seq_len=512):
+_MOJIBAKE_REPLACEMENTS = [
+    ('\u00e2\u0080\u009c', '\u201c'),  # left double quote
+    ('\u00e2\u0080\u009d', '\u201d'),  # right double quote
+    ('\u00e2\u0080\u0098', '\u2018'),  # left single quote
+    ('\u00e2\u0080\u0099', '\u2019'),  # right single quote
+    ('\u00e2\u0080\u0093', '\u2013'),  # en dash
+    ('\u00e2\u0080\u0094', '\u2014'),  # em dash
+    ('\u00e2\u0080\u00a6', '\u2026'),  # ellipsis
+    ('\u00c2\u00a1', '\u00a1'),        # inverted exclamation
+    ('\u00c2\u00bf', '\u00bf'),        # inverted question
+]
+
+_MOJIBAKE_RE = re.compile(
+    r'[\u00c2-\u00c3][\u0080-\u00bf]|'
+    r'\u00e2[\u0080-\u00bf][\u0080-\u00bf]'
+)
+
+
+def repair_text(text: str) -> str:
+    """Fix common mojibake from UTF-8 bytes misinterpreted as Latin-1/CP1252."""
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
+    text = unicodedata.normalize('NFC', text)
+    try:
+        recovered = text.encode('cp1252').decode('utf-8')
+        if not _MOJIBAKE_RE.search(recovered):
+            return recovered
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        pass
+    for bad, good in _MOJIBAKE_REPLACEMENTS:
+        text = text.replace(bad, good)
+    return text
+
+
+def _tokenize_batch(texts: List[str], tokenizer, batch_size: int = 512) -> List[int]:
+    """Batch-encode texts and flatten with EOS separators."""
+    all_tokens = []
+    for start in range(0, len(texts), batch_size):
+        batch = texts[start:start + batch_size]
+        encoded = tokenizer(batch, add_special_tokens=False)['input_ids']
+        for ids in encoded:
+            all_tokens.extend(ids)
+            all_tokens.append(tokenizer.eos_token_id)
+    return all_tokens
+
+
+_CACHE_VERSION = 2
+
+
+def load_tinystories(max_samples=20000, seq_len=512, text_repair=True,
+                     use_cache=True, max_val_samples=None):
     from transformers import AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained('gpt2')
     tokenizer.pad_token = tokenizer.eos_token
 
-    # Cache key: (max_samples, seq_len) — seq_len doesn't affect tokenization but
-    # does affect chunk boundaries, so include it to avoid stale splits.
-    cache_tag = f"ms{max_samples}_sl{seq_len}"
-    cache_path = Path(".cache") / "tinystories" / f"tokens_{cache_tag}.pt"
+    repair_tag = "r1" if text_repair else "r0"
+    cache_tag = f"v{_CACHE_VERSION}_ms{max_samples}_sl{seq_len}_{repair_tag}"
 
-    if cache_path.exists():
-        print(f"[cache] Loading tokenized dataset from {cache_path}")
-        all_tokens = torch.load(cache_path, weights_only=True)
-        print(f"[cache] Total tokens: {len(all_tokens):,}")
-    else:
-        try:
-            from datasets import load_dataset
-            print(f"Loading TinyStories (max_samples={max_samples})...")
-            ds = load_dataset('roneneldan/TinyStories', split='train')
-            texts = [item['text'] for item in ds if item['text'].strip()]
-            if max_samples:
-                texts = texts[:max_samples]
-        except Exception as e:
-            print(f"Failed to load TinyStories: {e}")
-            print("Using random data as fallback.")
-            return _random_dataset(50257, seq_len, 1000), _random_dataset(50257, seq_len, 100), tokenizer
+    def _process_split(split_name, limit):
+        cache_path = Path(".cache") / "v6_tokens" / f"{split_name}_{cache_tag}.pt"
 
-        print(f"Tokenizing {len(texts)} texts...")
-        all_tokens = []
-        for text in texts:
-            toks = tokenizer.encode(text, add_special_tokens=False)
-            all_tokens.extend(toks)
-            all_tokens.append(tokenizer.eos_token_id)
+        if use_cache and cache_path.exists():
+            cached = torch.load(cache_path, weights_only=False)
+            tokens = cached['tokens']
+            stats = cached.get('stats', {})
+            print(f"[cache] Loaded {split_name} from {cache_path} "
+                  f"({len(tokens):,} tokens)")
+            return tokens, stats
 
-        all_tokens = torch.tensor(all_tokens, dtype=torch.long)
-        print(f"Total tokens: {len(all_tokens):,}")
+        from datasets import load_dataset
+        print(f"Loading TinyStories {split_name} (limit={limit})...")
+        ds = load_dataset('roneneldan/TinyStories', split=split_name)
+        texts = [item['text'] for item in ds if item['text'].strip()]
+        if limit:
+            texts = texts[:limit]
 
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-        torch.save(all_tokens, cache_path)
-        print(f"[cache] Saved tokenized dataset to {cache_path}")
+        stats = {'stories_raw': len(texts), 'repaired': 0, 'mojibake_before': 0,
+                 'mojibake_after': 0}
 
-    split = int(len(all_tokens) * 0.9)
-    train_ds = TextDataset(all_tokens[:split], seq_len)
-    val_ds = TextDataset(all_tokens[split:], seq_len)
+        if text_repair:
+            stats['mojibake_before'] = sum(
+                1 for t in texts if _MOJIBAKE_RE.search(t)
+            )
+            repaired = []
+            for t in texts:
+                fixed = repair_text(t)
+                if fixed != t:
+                    stats['repaired'] += 1
+                repaired.append(fixed)
+            texts = repaired
+            stats['mojibake_after'] = sum(
+                1 for t in texts if _MOJIBAKE_RE.search(t)
+            )
+            print(f"  Text repair: {stats['repaired']} stories fixed, "
+                  f"mojibake markers {stats['mojibake_before']} -> {stats['mojibake_after']}")
+
+        print(f"  Tokenizing {len(texts)} {split_name} texts (batched)...")
+        token_list = _tokenize_batch(texts, tokenizer)
+        tokens = torch.tensor(token_list, dtype=torch.long)
+        stats['tokens'] = len(tokens)
+        print(f"  {split_name}: {stats['stories_raw']} stories, {len(tokens):,} tokens")
+
+        if use_cache:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            torch.save({'tokens': tokens, 'stats': stats,
+                        'cache_version': _CACHE_VERSION}, cache_path)
+            print(f"[cache] Saved {split_name} to {cache_path}")
+
+        return tokens, stats
+
+    try:
+        train_tokens, train_stats = _process_split('train', max_samples)
+        val_limit = max_val_samples or max(max_samples // 10, 1000) if max_samples else None
+        val_tokens, val_stats = _process_split('validation', val_limit)
+    except Exception as e:
+        print(f"Failed to load TinyStories: {e}")
+        print("Using random data as fallback.")
+        return (_random_dataset(50257, seq_len, 1000),
+                _random_dataset(50257, seq_len, 100), tokenizer)
+
+    train_ds = TextDataset(train_tokens, seq_len)
+    val_ds = TextDataset(val_tokens, seq_len)
     print(f"Train chunks: {len(train_ds)}, Val chunks: {len(val_ds)}")
     return train_ds, val_ds, tokenizer
 
@@ -199,6 +286,83 @@ def load_image_dataset(config):
     return train_ds, val_ds
 
 
+def _resolve_amp_dtype(amp_dtype_str: str) -> Optional[torch.dtype]:
+    """Resolve AMP dtype string to a torch dtype. Returns None if AMP should be disabled."""
+    if not torch.cuda.is_available():
+        return None
+    if amp_dtype_str == 'bf16':
+        return torch.bfloat16
+    if amp_dtype_str == 'fp16':
+        return torch.float16
+    # 'auto': prefer bf16 on capable hardware
+    if torch.cuda.is_bf16_supported():
+        return torch.bfloat16
+    return torch.float16
+
+
+_NO_DECAY_SUFFIXES = {
+    'log_A_real', 'log_A_imag', 'dt_bias',
+}
+
+
+def _build_param_groups(model: nn.Module, weight_decay: float):
+    """Split parameters into decay / no-decay groups for AdamW.
+
+    Decay group: 2-D weight matrices from nn.Linear, nn.Embedding, and
+    ComplexLinear (weight_real, weight_imag) -- standard L2 regularization.
+
+    No-decay group: everything else -- SSM eigenvalue params (log_A_real,
+    log_A_imag), dt_bias, all biases, normalization scales, scalar gates,
+    phase_rotations, 1-D parameters, and any explicitly listed names.
+    """
+    decay_params = []
+    no_decay_params = []
+    decay_names = []
+    no_decay_names = []
+
+    for name, param in model.named_parameters():
+        if not param.requires_grad:
+            continue
+
+        suffix = name.split('.')[-1]
+
+        if suffix in _NO_DECAY_SUFFIXES:
+            no_decay_params.append(param)
+            no_decay_names.append(name)
+        elif suffix in ('bias', 'bias_real', 'bias_imag'):
+            no_decay_params.append(param)
+            no_decay_names.append(name)
+        elif param.dim() >= 2 and suffix in ('weight', 'weight_real', 'weight_imag'):
+            decay_params.append(param)
+            decay_names.append(name)
+        else:
+            no_decay_params.append(param)
+            no_decay_names.append(name)
+
+    n_decay = sum(p.numel() for p in decay_params)
+    n_no_decay = sum(p.numel() for p in no_decay_params)
+    print(f"Param groups: {len(decay_params)} tensors ({n_decay:,} params) with weight decay, "
+          f"{len(no_decay_params)} tensors ({n_no_decay:,} params) without")
+
+    return [
+        {'params': decay_params, 'weight_decay': weight_decay},
+        {'params': no_decay_params, 'weight_decay': 0.0},
+    ]
+
+
+def _build_lr_scheduler(optimizer, schedule: str, warmup_steps: int, total_steps: int):
+    """Build LR scheduler: plain cosine or linear-warmup + cosine decay."""
+    total_steps = max(total_steps, 1)
+    if schedule == 'warmup_cosine' and warmup_steps > 0:
+        def lr_lambda(step):
+            if step < warmup_steps:
+                return step / max(warmup_steps, 1)
+            progress = (step - warmup_steps) / max(total_steps - warmup_steps, 1)
+            return 0.5 * (1.0 + math.cos(math.pi * progress))
+        return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
+    return torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=total_steps)
+
+
 class Trainer:
     def __init__(
         self,
@@ -224,6 +388,7 @@ class Trainer:
         self.verbose = verbose
         self.gen_every = 0
         self.gen_prompt = "Once upon a time"
+        self.log_interval = 50
 
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
@@ -233,20 +398,24 @@ class Trainer:
             self.device = torch.device('cpu')
         self.model.to(self.device)
 
+        param_groups = _build_param_groups(model, config.weight_decay)
         self.optimizer = torch.optim.AdamW(
-            model.parameters(),
+            param_groups,
             lr=config.learning_rate,
-            weight_decay=config.weight_decay,
             betas=(0.9, 0.95),
         )
 
         total_steps = config.max_epochs * len(train_loader)
-        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            self.optimizer, T_max=total_steps,
+        self.scheduler = _build_lr_scheduler(
+            self.optimizer, config.lr_schedule, config.warmup_steps, total_steps,
         )
 
-        self.use_amp = self.device.type == 'cuda'
-        self.scaler = torch.amp.GradScaler('cuda') if self.use_amp else None
+        self.amp_dtype = _resolve_amp_dtype(config.amp_dtype)
+        self.use_amp = self.amp_dtype is not None
+        # GradScaler only needed for float16; bfloat16 doesn't need loss scaling
+        self.scaler = (torch.amp.GradScaler('cuda')
+                       if self.use_amp and self.amp_dtype == torch.float16
+                       else None)
         self.global_step = 0
         self.best_val_loss = float('inf')
         self.best_val_ppl = float('inf')
@@ -256,9 +425,13 @@ class Trainer:
         total_loss = 0.0
         total_ce_loss = 0.0
         total_div_loss = 0.0
+        total_raw_div = 0.0
         num_batches = 0
         epoch_start = time.time()
         first_step_start = None
+        log_interval_start = epoch_start
+        log_interval_tokens = 0
+        total_epoch_tokens = 0
 
         for batch_idx, batch in enumerate(self.train_loader):
             if batch_idx == 0:
@@ -266,11 +439,13 @@ class Trainer:
                 if self.device.type == 'cuda':
                     torch.cuda.synchronize()
 
-            input_ids = batch['input_ids'].to(self.device)
-            labels = batch['labels'].to(self.device)
+            input_ids = batch['input_ids'].to(self.device, non_blocking=True)
+            labels = batch['labels'].to(self.device, non_blocking=True)
             seq_len = input_ids.shape[1]
+            batch_tokens = input_ids.shape[0] * seq_len
 
-            with torch.amp.autocast(self.device.type, enabled=self.use_amp):
+            with torch.amp.autocast(self.device.type, enabled=self.use_amp,
+                                    dtype=self.amp_dtype or torch.float16):
                 output = self.model(input_ids)
 
                 logits = output.logits.view(-1, output.logits.size(-1))
@@ -278,7 +453,9 @@ class Trainer:
 
                 loss = ce_loss
                 div_loss_val = 0.0
+                raw_div_val = 0.0
                 if output.diversity_loss is not None:
+                    raw_div_val = output.diversity_loss.item()
                     total_steps = self.config.max_epochs * len(self.train_loader)
                     progress = min(self.global_step / max(total_steps, 1), 1.0)
                     div_w = self.config.diversity_loss_weight + (
@@ -289,7 +466,7 @@ class Trainer:
                     loss = loss + div_loss
                     div_loss_val = div_loss.item()
 
-            self.optimizer.zero_grad()
+            self.optimizer.zero_grad(set_to_none=True)
             if self.scaler is not None:
                 self.scaler.scale(loss).backward()
                 self.scaler.unscale_(self.optimizer)
@@ -306,7 +483,10 @@ class Trainer:
             total_loss += loss.item()
             total_ce_loss += ce_loss.item()
             total_div_loss += div_loss_val
+            total_raw_div += raw_div_val
             num_batches += 1
+            total_epoch_tokens += batch_tokens
+            log_interval_tokens += batch_tokens
 
             if self.verbose and batch_idx == 0 and first_step_start is not None:
                 if self.device.type == 'cuda':
@@ -314,18 +494,34 @@ class Trainer:
                 first_step_s = time.time() - first_step_start
                 print(f"  First step wall time: {first_step_s:.1f}s")
 
-            if self.verbose and batch_idx % 50 == 0:
+            if self.verbose and batch_idx % self.log_interval == 0:
                 ppl = math.exp(min(ce_loss.item(), 20))
                 lr = self.scheduler.get_last_lr()[0]
                 elapsed = time.time() - epoch_start
-                samples_per_sec = (batch_idx + 1) * self.config.batch_size / elapsed
-                tokens_per_sec = samples_per_sec * seq_len
-                print(
-                    f"  [{epoch+1}] batch {batch_idx}/{len(self.train_loader)} "
+                avg_tok_s = total_epoch_tokens / elapsed if elapsed > 0 else 0
+                interval_elapsed = time.time() - log_interval_start
+                inst_tok_s = log_interval_tokens / interval_elapsed if interval_elapsed > 0 else 0
+
+                n_total = len(self.train_loader)
+                pct = 100.0 * (batch_idx + 1) / n_total
+                remaining = elapsed / (batch_idx + 1) * (n_total - batch_idx - 1) if batch_idx > 0 else 0
+                eta_m, eta_s = divmod(int(remaining), 60)
+
+                line = (
+                    f"  [{epoch+1}] {batch_idx}/{n_total} ({pct:.0f}%) "
                     f"loss={ce_loss.item():.4f} ppl={ppl:.1f} "
-                    f"div={div_loss_val:.4f} lr={lr:.2e} "
-                    f"| {samples_per_sec:.1f} samples/s | {tokens_per_sec:.0f} tok/s"
+                    f"div={raw_div_val:.2e} wdiv={div_loss_val:.2e} lr={lr:.2e} "
+                    f"| {inst_tok_s:.0f} tok/s (avg {avg_tok_s:.0f}) "
+                    f"ETA {eta_m}m{eta_s:02d}s"
                 )
+                if self.device.type == 'cuda':
+                    mem = torch.cuda.memory_allocated() / 1e9
+                    mem_res = torch.cuda.max_memory_allocated() / 1e9
+                    line += f" | GPU {mem:.1f}/{mem_res:.1f}GB"
+                print(line)
+
+                log_interval_start = time.time()
+                log_interval_tokens = 0
 
             if (self.gen_every > 0 and batch_idx > 0
                     and batch_idx % self.gen_every == 0
@@ -339,11 +535,15 @@ class Trainer:
                     pass
                 self.model.train()
 
+        epoch_elapsed = time.time() - epoch_start
+        avg_tok_s = total_epoch_tokens / epoch_elapsed if epoch_elapsed > 0 else 0
         return {
             'loss': total_loss / num_batches,
             'ce_loss': total_ce_loss / num_batches,
             'div_loss': total_div_loss / num_batches,
+            'raw_div': total_raw_div / num_batches,
             'ppl': math.exp(min(total_ce_loss / num_batches, 20)),
+            'avg_tok_s': avg_tok_s,
         }
 
     @torch.no_grad()
@@ -354,8 +554,8 @@ class Trainer:
         total_loss = 0.0
         num_batches = 0
         for batch in self.val_loader:
-            input_ids = batch['input_ids'].to(self.device)
-            labels = batch['labels'].to(self.device)
+            input_ids = batch['input_ids'].to(self.device, non_blocking=True)
+            labels = batch['labels'].to(self.device, non_blocking=True)
             output = self.model(input_ids)
             logits = output.logits.view(-1, output.logits.size(-1))
             loss = F.cross_entropy(logits, labels.view(-1))
@@ -420,7 +620,9 @@ class Trainer:
             line = (
                 f"Epoch {epoch+1}/{self.config.max_epochs} | "
                 f"Train Loss: {train_metrics['ce_loss']:.4f} "
-                f"PPL: {train_metrics['ppl']:.2f} | "
+                f"PPL: {train_metrics['ppl']:.2f} "
+                f"div={train_metrics['raw_div']:.2e} wdiv={train_metrics['div_loss']:.2e} | "
+                f"{train_metrics['avg_tok_s']:.0f} tok/s | "
                 f"Time: {epoch_time:.1f}s"
             )
 
@@ -488,6 +690,7 @@ class DiffusionTrainer:
         self.verbose = verbose
         self.gen_every = 0
         self.sample_dir = None
+        self.log_interval = 50
 
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
@@ -497,28 +700,31 @@ class DiffusionTrainer:
             self.device = torch.device('cpu')
         self.model.to(self.device)
 
+        param_groups = _build_param_groups(model, config.weight_decay)
         self.optimizer = torch.optim.AdamW(
-            model.parameters(),
+            param_groups,
             lr=config.learning_rate,
-            weight_decay=config.weight_decay,
             betas=(0.9, 0.95),
         )
 
         total_steps = config.max_epochs * len(train_loader)
-        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            self.optimizer, T_max=max(total_steps, 1),
+        self.scheduler = _build_lr_scheduler(
+            self.optimizer, config.lr_schedule, config.warmup_steps, total_steps,
         )
 
-        self.use_amp = self.device.type == 'cuda'
-        self.scaler = torch.amp.GradScaler('cuda') if self.use_amp else None
+        self.amp_dtype = _resolve_amp_dtype(config.amp_dtype)
+        self.use_amp = self.amp_dtype is not None
+        self.scaler = (torch.amp.GradScaler('cuda')
+                       if self.use_amp and self.amp_dtype == torch.float16
+                       else None)
         self.global_step = 0
         self.best_val_loss = float('inf')
 
     def _get_input(self, batch):
         if self.config.mode == 'diffusion_text':
-            return batch['input_ids'].to(self.device)
+            return batch['input_ids'].to(self.device, non_blocking=True)
         else:
-            return batch['image'].to(self.device)
+            return batch['image'].to(self.device, non_blocking=True)
 
     def _diversity_weight(self):
         total_steps = self.config.max_epochs * len(self.train_loader)
@@ -539,7 +745,8 @@ class DiffusionTrainer:
         for batch_idx, batch in enumerate(self.train_loader):
             x = self._get_input(batch)
 
-            with torch.amp.autocast(self.device.type, enabled=self.use_amp):
+            with torch.amp.autocast(self.device.type, enabled=self.use_amp,
+                                    dtype=self.amp_dtype or torch.float16):
                 output = self.model(x)
                 loss = output.loss
                 div_loss_val = 0.0
@@ -549,7 +756,7 @@ class DiffusionTrainer:
                     loss = loss + div_loss
                     div_loss_val = div_loss.item()
 
-            self.optimizer.zero_grad()
+            self.optimizer.zero_grad(set_to_none=True)
             if self.scaler is not None:
                 self.scaler.scale(loss).backward()
                 self.scaler.unscale_(self.optimizer)
@@ -568,15 +775,20 @@ class DiffusionTrainer:
             total_div_loss += div_loss_val
             num_batches += 1
 
-            if self.verbose and batch_idx % 50 == 0:
+            if self.verbose and batch_idx % self.log_interval == 0:
                 lr = self.scheduler.get_last_lr()[0]
                 elapsed = time.time() - epoch_start
                 samples_per_sec = (batch_idx + 1) * self.config.batch_size / elapsed if elapsed > 0 else 0
+                n_total = len(self.train_loader)
+                pct = 100.0 * (batch_idx + 1) / n_total
+                remaining = elapsed / (batch_idx + 1) * (n_total - batch_idx - 1) if batch_idx > 0 else 0
+                eta_m, eta_s = divmod(int(remaining), 60)
                 print(
-                    f"  [{epoch+1}] batch {batch_idx}/{len(self.train_loader)} "
+                    f"  [{epoch+1}] {batch_idx}/{n_total} ({pct:.0f}%) "
                     f"diff_loss={output.loss.item():.4f} "
-                    f"div={div_loss_val:.4f} lr={lr:.2e} "
-                    f"| {samples_per_sec:.1f} samples/s"
+                    f"div={div_loss_val:.2e} lr={lr:.2e} "
+                    f"| {samples_per_sec:.1f} samples/s "
+                    f"ETA {eta_m}m{eta_s:02d}s"
                 )
 
             if (self.gen_every > 0 and batch_idx > 0
@@ -740,6 +952,38 @@ def main():
                         help='Generate a sample every N batches during training (0 = end of epoch only)')
     parser.add_argument('--gen_prompt', type=str, default='Once upon a time',
                         help='Prompt for mid-epoch and end-of-epoch text generation')
+    parser.add_argument('--lr_schedule', type=str, default=None,
+                        choices=['cosine', 'warmup_cosine'],
+                        help='LR schedule (default: from config)')
+    parser.add_argument('--warmup_steps', type=int, default=None,
+                        help='Warmup steps for warmup_cosine schedule')
+    parser.add_argument('--dropout', type=float, default=None,
+                        help='Override dropout rate')
+    parser.add_argument('--weight_decay', type=float, default=None,
+                        help='Override weight decay')
+    parser.add_argument('--max_val_samples', type=int, default=None,
+                        help='Max validation samples (default: max_samples // 10)')
+    parser.add_argument('--no_text_repair', action='store_true',
+                        help='Skip mojibake text repair on TinyStories')
+    parser.add_argument('--no_cache', action='store_true',
+                        help='Disable token cache (re-tokenize every run)')
+    parser.add_argument('--compile', action='store_true',
+                        help='Enable torch.compile')
+    parser.add_argument('--compile_mode', type=str, default='default',
+                        choices=['default', 'reduce-overhead', 'max-autotune'])
+    parser.add_argument('--fullgraph', action='store_true',
+                        help='Use fullgraph=True for torch.compile')
+    parser.add_argument('--amp_dtype', type=str, default='auto',
+                        choices=['auto', 'bf16', 'fp16'],
+                        help='AMP dtype (auto prefers bf16 on capable hardware)')
+    parser.add_argument('--no_tf32', action='store_true',
+                        help='Disable TF32 matmul')
+    parser.add_argument('--num_workers', type=int, default=None,
+                        help='DataLoader worker count (default: from config)')
+    parser.add_argument('--no_pin_memory', action='store_true',
+                        help='Disable pinned memory for DataLoader')
+    parser.add_argument('--log_interval', type=int, default=50,
+                        help='Batch logging interval')
     parser.add_argument('--log_dir', type=str, default='logs')
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_v6')
     parser.add_argument('--resume', type=str, default=None)
@@ -780,9 +1024,28 @@ def main():
     if args.init_strategy is not None:
         config.init_strategy = args.init_strategy
     config.init_seed = args.init_seed
+    if args.lr_schedule is not None:
+        config.lr_schedule = args.lr_schedule
+    if args.warmup_steps is not None:
+        config.warmup_steps = args.warmup_steps
+    if args.dropout is not None:
+        config.dropout = args.dropout
+    if args.weight_decay is not None:
+        config.weight_decay = args.weight_decay
     if args.use_attention:
         config.use_attention = True
         config.attn_every = args.attn_every
+    if args.compile:
+        config.compile_model = True
+    config.compile_mode = args.compile_mode
+    config.compile_fullgraph = args.fullgraph
+    config.amp_dtype = args.amp_dtype
+    if args.no_tf32:
+        config.allow_tf32 = False
+    if args.num_workers is not None:
+        config.num_workers = args.num_workers
+    if args.no_pin_memory:
+        config.pin_memory = False
 
     # Diffusion config
     config.diffusion_steps = args.diffusion_steps
@@ -829,31 +1092,57 @@ def main():
     else:
         print(f"PhaseAttention: DISABLED (attention-free)")
     print(f"Epochs: {config.max_epochs}")
+    print(f"LR schedule: {config.lr_schedule} (warmup={config.warmup_steps})")
+    print(f"Dropout: {config.dropout}, Weight decay: {config.weight_decay}")
+
+    amp_dtype = _resolve_amp_dtype(config.amp_dtype)
+    amp_label = {torch.bfloat16: 'bf16', torch.float16: 'fp16'}.get(amp_dtype, 'off')
+    print(f"AMP: {amp_label}, TF32: {config.allow_tf32}, Compile: {config.compile_model}"
+          + (f" (mode={config.compile_mode})" if config.compile_model else ""))
+    print(f"Workers: {config.num_workers}, Pin memory: {config.pin_memory}")
+    print(f"Batch log interval: {args.log_interval}")
     print(f"Log file: {log_path}")
     print(f"Checkpoint dir: {args.checkpoint_dir}")
     print("=" * 60)
 
+    # CUDA performance settings
+    if torch.cuda.is_available() and config.allow_tf32:
+        torch.set_float32_matmul_precision('high')
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+
     # Data loading
     tokenizer = None
     if config.mode in ('autoregressive', 'diffusion_text'):
-        train_ds, val_ds, tokenizer = load_tinystories(args.max_samples, args.seq_len)
+        train_ds, val_ds, tokenizer = load_tinystories(
+            max_samples=args.max_samples, seq_len=args.seq_len,
+            text_repair=not args.no_text_repair,
+            use_cache=not args.no_cache,
+            max_val_samples=args.max_val_samples,
+        )
         config.vocab_size = tokenizer.vocab_size
         config.max_seq_len = args.seq_len
     elif config.mode == 'diffusion_image':
         train_ds, val_ds = load_image_dataset(config)
 
     use_cuda = torch.cuda.is_available()
+    nw = config.num_workers if use_cuda else 0
+    pm = config.pin_memory and use_cuda
+    dl_kwargs = {}
+    if nw > 0:
+        dl_kwargs['persistent_workers'] = True
+        dl_kwargs['prefetch_factor'] = 4
     train_loader = DataLoader(
         train_ds, batch_size=config.batch_size,
         shuffle=True,
-        num_workers=2 if use_cuda else 0,
-        pin_memory=use_cuda,
+        num_workers=nw, pin_memory=pm,
+        **dl_kwargs,
     )
     val_loader = DataLoader(
         val_ds, batch_size=config.batch_size,
         shuffle=False,
-        num_workers=2 if use_cuda else 0,
-        pin_memory=use_cuda,
+        num_workers=nw, pin_memory=pm,
+        **dl_kwargs,
     )
 
     model = create_model(config)
@@ -869,8 +1158,15 @@ def main():
         print(f"Resumed from epoch {start_epoch}")
 
     if config.compile_model:
-        print("Compiling model with torch.compile...")
-        model = torch.compile(model)
+        print(f"Compiling model with torch.compile "
+              f"(mode={config.compile_mode}, fullgraph={config.compile_fullgraph})...")
+        try:
+            model = torch.compile(
+                model, mode=config.compile_mode,
+                fullgraph=config.compile_fullgraph,
+            )
+        except Exception as e:
+            print(f"torch.compile failed ({e}), continuing without compilation")
 
     # Dispatch to the right trainer
     if config.mode == 'autoregressive':
@@ -882,6 +1178,7 @@ def main():
         )
         trainer.gen_every = args.gen_every
         trainer.gen_prompt = args.gen_prompt
+        trainer.log_interval = args.log_interval
         if args.resume and 'optimizer_state_dict' in checkpoint:
             trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             trainer.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
@@ -896,6 +1193,7 @@ def main():
             start_epoch=start_epoch,
         )
         trainer.gen_every = args.gen_every
+        trainer.log_interval = args.log_interval
         if config.mode == 'diffusion_image':
             sample_dir = Path(args.log_dir) / 'v6' / 'samples'
             sample_dir.mkdir(parents=True, exist_ok=True)

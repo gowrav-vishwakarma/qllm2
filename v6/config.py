@@ -51,13 +51,20 @@ class V6Config:
     weight_decay: float = 0.01
     max_epochs: int = 20
     warmup_steps: int = 200
+    lr_schedule: str = 'warmup_cosine'  # 'cosine' | 'warmup_cosine'
     gradient_clip: float = 1.0
     diversity_loss_weight: float = 0.1
     diversity_loss_floor: float = 0.02
     diversity_margin: float = 0.3
 
-    # Speed
+    # Speed / CUDA
     compile_model: bool = False
+    compile_mode: str = 'default'     # 'default' | 'reduce-overhead' | 'max-autotune'
+    compile_fullgraph: bool = False
+    amp_dtype: str = 'auto'           # 'auto' | 'bf16' | 'fp16'
+    allow_tf32: bool = True
+    num_workers: int = 2
+    pin_memory: bool = True
 
     # Initialization
     init_strategy: str = 'orthogonal'
