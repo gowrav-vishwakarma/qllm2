@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>V5 Log Grapher</title>
+  <link rel="stylesheet" href="/static/dygraphs/dygraph.min.css">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: rgba(12, 19, 32, 0.94);
+      --border: #2f3b4d;
+      --text: #dbe4ee;
+      --muted: #8fa1b6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      background: linear-gradient(180deg, #0a1120 0%, #0d1627 46%, #0f172a 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .wrap {
+      max-width: 1460px;
+      margin: 0 auto;
+      padding: 10px 12px 14px;
+    }
+    .topbar, .card, .chart-card, select {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+    }
+    .topbar {
+      display: flex;
+      gap: 10px 14px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .title {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 3px;
+    }
+    .status {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .hint {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    select {
+      color: var(--text);
+      padding: 7px 9px;
+      min-width: 240px;
+      outline: none;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .card {
+      padding: 10px 12px;
+      min-height: 72px;
+    }
+    .label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .value {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.05;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .subvalue {
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 10px;
+    }
+    .chart-card {
+      padding: 10px 12px;
+    }
+    .chart-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .chart-side {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 5px;
+      border-radius: 999px;
+      vertical-align: middle;
+      background: var(--color);
+    }
+    .scale-group {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      background: #0e1728;
+    }
+    .scale-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 2px 7px;
+      font: inherit;
+      font-size: 11px;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+    .scale-btn + .scale-btn {
+      border-left: 1px solid var(--border);
+    }
+    .scale-btn.is-active {
+      background: #1b2940;
+      color: var(--text);
+    }
+    .chart-shell {
+      position: relative;
+    }
+    .chart-host {
+      width: 100%;
+      height: 242px;
+    }
+    .chart-empty {
+      display: none;
+      position: absolute;
+      inset: 12px 0 0 0;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 12px;
+      pointer-events: none;
+      text-align: center;
+      padding: 0 12px;
+    }
+    .chart-empty.is-visible {
+      display: flex;
+    }
+    .chart-meta {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-top: 6px;
+    }
+    .chart-legend-live {
+      min-height: 28px;
+      font-size: 11px;
+      color: var(--muted);
+      flex: 1 1 auto;
+    }
+    .chart-legend-live .dygraph-legend {
+      position: static !important;
+      background: transparent !important;
+      color: var(--muted) !important;
+      font-size: 11px !important;
+      line-height: 1.35;
+      width: auto !important;
+    }
+    .chart-help {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .dygraph-axis-label,
+    .dygraph-label,
+    .dygraph-title,
+    .dygraph-xlabel,
+    .dygraph-ylabel,
+    .dygraph-y2label {
+      color: var(--muted);
+    }
+    @media (max-width: 720px) {
+      .wrap {
+        padding: 8px;
+      }
+      .controls {
+        width: 100%;
+      }
+      select {
+        min-width: 0;
+        width: 100%;
+      }
+      .charts {
+        grid-template-columns: 1fr;
+      }
+      .chart-host {
+        height: 214px;
+      }
+      .chart-meta {
+        flex-direction: column;
+      }
+      .chart-help {
+        text-align: left;
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <div class="title">V5 Streaming Grapher</div>
+        <div class="status" id="status">Loading logs...</div>
+        <div class="hint">Drag to zoom, shift-drag to pan, double-click to reset. Loss and GPU Utilization include range selectors that sync their chart groups.</div>
+      </div>
+      <div class="controls">
+        <label for="logSelect">Log file</label>
+        <select id="logSelect"></select>
+        <label for="epochSelect">Epoch</label>
+        <select id="epochSelect"></select>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="card"><div class="label">Epoch / Batch</div><div class="value" id="stat-epoch">-</div><div class="subvalue" id="stat-progress">-</div></div>
+      <div class="card"><div class="label">Loss</div><div class="value" id="stat-loss">-</div><div class="subvalue" id="stat-ppl">-</div></div>
+      <div class="card"><div class="label">Inst Tok/s</div><div class="value" id="stat-inst">-</div><div class="subvalue" id="stat-avg">-</div></div>
+      <div class="card"><div class="label">Learning Rate</div><div class="value" id="stat-lr">-</div><div class="subvalue" id="stat-eta">-</div></div>
+      <div class="card"><div class="label">Diversity</div><div class="value" id="stat-div">-</div><div class="subvalue" id="stat-wdiv">-</div></div>
+      <div class="card"><div class="label">CUDA Memory</div><div class="value" id="stat-mem">-</div><div class="subvalue" id="stat-peak">-</div></div>
+      <div class="card"><div class="label">GPU</div><div class="value" id="stat-gpu">-</div><div class="subvalue" id="stat-gpu-detail">-</div></div>
+    </div>
+
+    <div class="charts">
+      <div class="chart-card">
+        <div class="chart-title">
+          <span>Loss</span>
+          <div class="chart-side">
+            <div class="scale-group" data-chart="lossChart">
+              <button type="button" class="scale-btn" data-scale="linear">Lin</button>
+              <button type="button" class="scale-btn" data-scale="log">Log</button>
+            </div>
+            <div class="legend"><span style="--color:#60a5fa">train loss</span><span style="--color:#f59e0b">val loss</span></div>
+          </div>
+        </div>
+        <div class="chart-shell">
+          <div class="chart-host" id="lossChart"></div>
+          <div class="chart-empty" id="lossChartEmpty"></div>
+        </div>
+        <div class="chart-meta">
+          <div class="chart-legend-live" id="lossChartLegend"></div>
+          <div class="chart-help">training overview selector</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          <span>Perplexity</span>
+          <div class="chart-side">
+            <div class="scale-group" data-chart="pplChart">
+              <button type="button" class="scale-btn" data-scale="linear">Lin</button>
+              <button type="button" class="scale-btn" data-scale="log">Log</button>
+            </div>
+            <div class="legend"><span style="--color:#a78bfa">batch PPL</span><span style="--color:#fb7185">val PPL</span></div>
+          </div>
+        </div>
+        <div class="chart-shell">
+          <div class="chart-host" id="pplChart"></div>
+          <div class="chart-empty" id="pplChartEmpty"></div>
+        </div>
+        <div class="chart-meta">
+          <div class="chart-legend-live" id="pplChartLegend"></div>
+          <div class="chart-help">linked to training zoom</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          <span>Throughput</span>
+          <div class="legend"><span style="--color:#34d399">inst tok/s</span><span style="--color:#60a5fa">avg tok/s</span></div>
+        </div>
+        <div class="chart-shell">
+          <div class="chart-host" id="tokChart"></div>
+          <div class="chart-empty" id="tokChartEmpty"></div>
+        </div>
+        <div class="chart-meta">
+          <div class="chart-legend-live" id="tokChartLegend"></div>
+          <div class="chart-help">linked to training zoom</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          <span>Learning Rate</span>
+          <div class="chart-side">
+            <div class="scale-group" data-chart="lrChart">
+              <button type="button" class="scale-btn" data-scale="linear">Lin</button>
+              <button type="button" class="scale-btn" data-scale="log">Log</button>
+            </div>
+            <div class="legend"><span style="--color:#fbbf24">lr</span></div>
+          </div>
+        </div>
+        <div class="chart-shell">
+          <div class="chart-host" id="lrChart"></div>
+          <div class="chart-empty" id="lrChartEmpty"></div>
+        </div>
+        <div class="chart-meta">
+          <div class="chart-legend-live" id="lrChartLegend"></div>
+          <div class="chart-help">linked to training zoom</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          <span>Diversity</span>
+          <div class="chart-side">
+            <div class="scale-group" data-chart="divChart">
+              <button type="button" class="scale-btn" data-scale="linear">Lin</button>
+              <button type="button" class="scale-btn" data-scale="log">Log</button>
+            </div>
+            <div class="legend"><span style="--color:#22c55e">div</span><span style="--color:#ef4444">weighted div</span></div>
+          </div>
+        </div>
+        <div class="chart-shell">
+          <div class="chart-host" id="divChart"></div>
+          <div class="chart-empty" id="divChartEmpty"></div>
+        </div>
+        <div class="chart-meta">
+          <div class="chart-legend-live" id="divChartLegend"></div>
+          <div class="chart-help">linked to training zoom</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          <span>CUDA Memory</span>
+          <div class="legend"><span style="--color:#38bdf8">reserved GB</span><span style="--color:#f97316">peak GB</span></div>
+        </div>
+        <div class="chart-shell">
+          <div class="chart-host" id="memChart"></div>
+          <div class="chart-empty" id="memChartEmpty"></div>
+        </div>
+        <div class="chart-meta">
+          <div class="chart-legend-live" id="memChartLegend"></div>
+          <div class="chart-help">linked to training zoom</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          <span>GPU Utilization</span>
+          <div class="legend"><span style="--color:#fb7185">SM %</span><span style="--color:#22d3ee">mem %</span></div>
+        </div>
+        <div class="chart-shell">
+          <div class="chart-host" id="gpuUtilChart"></div>
+          <div class="chart-empty" id="gpuUtilChartEmpty"></div>
+        </div>
+        <div class="chart-meta">
+          <div class="chart-legend-live" id="gpuUtilChartLegend"></div>
+          <div class="chart-help">gpu overview selector</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          <span>GPU Power / Temp</span>
+          <div class="legend"><span style="--color:#f59e0b">power W</span><span style="--color:#22c55e">temp C</span></div>
+        </div>
+        <div class="chart-shell">
+          <div class="chart-host" id="gpuPowerChart"></div>
+          <div class="chart-empty" id="gpuPowerChartEmpty"></div>
+        </div>
+        <div class="chart-meta">
+          <div class="chart-legend-live" id="gpuPowerChartLegend"></div>
+          <div class="chart-help">linked to gpu zoom</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/dygraphs/dygraph.min.js"></script>
+  <script src="/static/dygraphs/extras/synchronizer.js"></script>
+  <script>
+    const state = {
+      file: null,
+      batches: [],
+      epochs: [],
+      gpuSamples: [],
+      gpuMonitor: {available: false, command: null, error: null},
+      batchesPerEpoch: null,
+      selectedEpoch: 'current',
+      eventSource: null,
+      graphs: {},
+      syncHandles: [],
+      groupDomains: {},
+      chartScales: {
+        lossChart: 'linear',
+        pplChart: 'log',
+        lrChart: 'linear',
+        divChart: 'linear',
+      },
+      maxBatchPoints: 4000,
+      maxGpuPoints: 240,
+    };
+
+    function fmt(value, digits = 2) {
+      if (value == null || Number.isNaN(value)) return '-';
+      if (Math.abs(value) >= 1000) return value.toFixed(0);
+      if (Math.abs(value) >= 100) return value.toFixed(1);
+      if (Math.abs(value) >= 1) return value.toFixed(digits);
+      return value.toExponential(2);
+    }
+
+    function setText(id, text) {
+      document.getElementById(id).textContent = text;
+    }
+
+    function pointX(point) {
+      if (point.batch != null) return point.batch + 1;
+      if (point.total_batches != null) return point.total_batches;
+      return point.step ?? 0;
+    }
+
+    function latestEpochNumber() {
+      const latestBatch = state.batches[state.batches.length - 1];
+      if (latestBatch) return latestBatch.epoch;
+      const latestEpoch = state.epochs[state.epochs.length - 1];
+      return latestEpoch ? latestEpoch.epoch : null;
+    }
+
+    function activeEpochNumber() {
+      if (state.selectedEpoch === 'current') return latestEpochNumber();
+      return typeof state.selectedEpoch === 'number' ? state.selectedEpoch : null;
+    }
+
+    function availableEpochNumbers() {
+      const values = new Set();
+      for (const point of state.batches) values.add(point.epoch);
+      for (const point of state.epochs) values.add(point.epoch);
+      return [...values].sort((a, b) => a - b);
+    }
+
+    function syncEpochSelector() {
+      const select = document.getElementById('epochSelect');
+      const epochs = availableEpochNumbers();
+      const latest = latestEpochNumber();
+
+      select.innerHTML = '';
+
+      const currentOption = document.createElement('option');
+      currentOption.value = 'current';
+      currentOption.textContent = latest != null ? `Current (E${latest})` : 'Current';
+      select.appendChild(currentOption);
+
+      for (const epoch of epochs) {
+        const option = document.createElement('option');
+        option.value = String(epoch);
+        option.textContent = `Epoch ${epoch}`;
+        select.appendChild(option);
+      }
+
+      if (state.selectedEpoch !== 'current' && !epochs.includes(state.selectedEpoch)) {
+        state.selectedEpoch = 'current';
+      }
+
+      select.value = state.selectedEpoch === 'current' ? 'current' : String(state.selectedEpoch);
+      select.disabled = latest == null && epochs.length === 0;
+    }
+
+    function currentBatches() {
+      const epoch = activeEpochNumber();
+      if (epoch == null) return [];
+      return state.batches.filter((point) => point.epoch === epoch).slice(-state.maxBatchPoints);
+    }
+
+    function currentEpochs() {
+      const epoch = activeEpochNumber();
+      if (epoch == null) return [];
+      return state.epochs.filter((point) => point.epoch === epoch).slice(-8);
+    }
+
+    function currentGpuSamples() {
+      return state.gpuSamples.slice(-state.maxGpuPoints);
+    }
+
+    function sourcePoints(source) {
+      if (source === 'batches') return currentBatches();
+      if (source === 'epochs') return currentEpochs();
+      if (source === 'gpu') return currentGpuSamples();
+      return [];
+    }
+
+    function keyForX(x) {
+      return x instanceof Date ? x.getTime() : x;
+    }
+
+    const graphDefs = [
+      {
+        id: 'lossChart',
+        group: 'training',
+        xLabel: 'Batch',
+        yLabel: 'Loss',
+        defaultScale: 'linear',
+        scaleToggle: true,
+        rangeSelector: true,
+        emptyText: 'Waiting for parsed batch data...',
+        series: [
+          {source: 'batches', label: 'Train Loss', color: '#60a5fa', accessor: (point) => point.loss},
+          {source: 'epochs', label: 'Val Loss', color: '#f59e0b', accessor: (point) => point.val_loss, dygraph: {drawPoints: true, pointSize: 3, strokeWidth: 0}},
+        ],
+        xValue: pointX,
+      },
+      {
+        id: 'pplChart',
+        group: 'training',
+        xLabel: 'Batch',
+        yLabel: 'Perplexity',
+        defaultScale: 'log',
+        scaleToggle: true,
+        emptyText: 'Waiting for parsed batch data...',
+        series: [
+          {source: 'batches', label: 'Batch PPL', color: '#a78bfa', accessor: (point) => point.ppl},
+          {source: 'epochs', label: 'Val PPL', color: '#fb7185', accessor: (point) => point.val_ppl, dygraph: {drawPoints: true, pointSize: 3, strokeWidth: 0}},
+        ],
+        xValue: pointX,
+      },
+      {
+        id: 'tokChart',
+        group: 'training',
+        xLabel: 'Batch',
+        yLabel: 'Tokens / s',
+        defaultScale: 'linear',
+        emptyText: 'Waiting for parsed batch data...',
+        series: [
+          {source: 'batches', label: 'Inst Tok/s', color: '#34d399', accessor: (point) => point.inst_tok_s},
+          {source: 'batches', label: 'Avg Tok/s', color: '#60a5fa', accessor: (point) => point.avg_tok_s},
+        ],
+        xValue: pointX,
+      },
+      {
+        id: 'lrChart',
+        group: 'training',
+        xLabel: 'Batch',
+        yLabel: 'Learning Rate',
+        defaultScale: 'linear',
+        scaleToggle: true,
+        emptyText: 'Waiting for parsed batch data...',
+        series: [
+          {source: 'batches', label: 'LR', color: '#fbbf24', accessor: (point) => point.lr},
+        ],
+        xValue: pointX,
+      },
+      {
+        id: 'divChart',
+        group: 'training',
+        xLabel: 'Batch',
+        yLabel: 'Diversity',
+        defaultScale: 'linear',
+        scaleToggle: true,
+        emptyText: 'Waiting for parsed batch data...',
+        series: [
+          {source: 'batches', label: 'Div', color: '#22c55e', accessor: (point) => point.div},
+          {source: 'batches', label: 'Weighted Div', color: '#ef4444', accessor: (point) => point.wdiv},
+        ],
+        xValue: pointX,
+      },
+      {
+        id: 'memChart',
+        group: 'training',
+        xLabel: 'Batch',
+        yLabel: 'GB',
+        defaultScale: 'linear',
+        includeZero: true,
+        emptyText: 'Waiting for parsed batch data...',
+        series: [
+          {source: 'batches', label: 'Reserved GB', color: '#38bdf8', accessor: (point) => point.mem_reserved_gb},
+          {source: 'batches', label: 'Peak GB', color: '#f97316', accessor: (point) => point.mem_peak_gb},
+        ],
+        xValue: pointX,
+      },
+      {
+        id: 'gpuUtilChart',
+        group: 'gpu',
+        xLabel: 'Time',
+        yLabel: 'Utilization %',
+        defaultScale: 'linear',
+        rangeSelector: true,
+        includeZero: true,
+        emptyText: 'Waiting for GPU telemetry...',
+        series: [
+          {source: 'gpu', label: 'SM %', color: '#fb7185', accessor: (point) => point.sm_util},
+          {source: 'gpu', label: 'Mem %', color: '#22d3ee', accessor: (point) => point.mem_util},
+        ],
+        xValue: (point) => new Date(point.ts_ms),
+      },
+      {
+        id: 'gpuPowerChart',
+        group: 'gpu',
+        xLabel: 'Time',
+        yLabel: 'Power W',
+        defaultScale: 'linear',
+        emptyText: 'Waiting for GPU telemetry...',
+        series: [
+          {source: 'gpu', label: 'Power W', color: '#f59e0b', accessor: (point) => point.pwr_w},
+          {source: 'gpu', label: 'Temp C', color: '#22c55e', accessor: (point) => point.temp_c, dygraph: {axis: 'y2'}},
+        ],
+        axes: {
+          y: {valueFormatter: (value) => `${fmt(value, 1)} W`},
+          y2: {independentTicks: true, valueFormatter: (value) => `${fmt(value, 1)} C`},
+        },
+        xValue: (point) => new Date(point.ts_ms),
+      },
+    ];
+
+    function labelsForDef(def) {
+      return [def.xLabel, ...def.series.map((series) => series.label)];
+    }
+
+    function groupAnchorDef(group) {
+      return graphDefs.find((def) => def.group === group && def.rangeSelector) || graphDefs.find((def) => def.group === group) || null;
+    }
+
+    function getChartScale(def) {
+      return state.chartScales[def.id] || def.defaultScale || 'linear';
+    }
+
+    function wantsLogScale(def) {
+      return getChartScale(def) === 'log';
+    }
+
+    function buildRows(def) {
+      const rowsByX = new Map();
+      for (let i = 0; i < def.series.length; i += 1) {
+        const series = def.series[i];
+        for (const point of sourcePoints(series.source)) {
+          const value = series.accessor(point);
+          if (!Number.isFinite(value)) continue;
+          const x = def.xValue(point);
+          const key = keyForX(x);
+          let row = rowsByX.get(key);
+          if (!row) {
+            row = [x, ...Array(def.series.length).fill(null)];
+            rowsByX.set(key, row);
+          }
+          row[i + 1] = value;
+        }
+      }
+      return [...rowsByX.values()].sort((a, b) => keyForX(a[0]) - keyForX(b[0]));
+    }
+
+    function hasPositiveValues(rows) {
+      return rows.some((row) => row.slice(1).some((value) => Number.isFinite(value) && value > 0));
+    }
+
+    function sanitizeRowsForLog(rows) {
+      return rows.map((row) => [
+        row[0],
+        ...row.slice(1).map((value) => (Number.isFinite(value) && value > 0 ? value : null)),
+      ]);
+    }
+
+    function placeholderRows(def) {
+      const x = def.group === 'gpu' ? new Date() : 0;
+      return [[x, ...Array(def.series.length).fill(null)]];
+    }
+
+    function setGraphEmpty(id, message) {
+      const el = document.getElementById(`${id}Empty`);
+      if (!message) {
+        el.textContent = '';
+        el.classList.remove('is-visible');
+        return;
+      }
+      el.textContent = message;
+      el.classList.add('is-visible');
+    }
+
+    function rowDomain(rows) {
+      if (!rows.length) return null;
+      return [keyForX(rows[0][0]), keyForX(rows[rows.length - 1][0])];
+    }
+
+    function buildGraphOptions(def) {
+      const seriesOptions = {};
+      for (const series of def.series) {
+        seriesOptions[series.label] = {
+          strokeWidth: 2,
+          ...series.dygraph,
+        };
+      }
+      return {
+        labels: labelsForDef(def),
+        colors: def.series.map((series) => series.color),
+        xlabel: def.xLabel,
+        ylabel: def.yLabel,
+        legend: 'always',
+        labelsDiv: document.getElementById(`${def.id}Legend`),
+        labelsSeparateLines: true,
+        includeZero: !!def.includeZero,
+        showRangeSelector: !!def.rangeSelector,
+        connectSeparatedPoints: false,
+        strokeWidth: 2,
+        drawPoints: false,
+        highlightCircleSize: 3,
+        rightGap: 8,
+        series: seriesOptions,
+        axes: def.axes || {},
+      };
+    }
+
+    function initGraphs() {
+      for (const def of graphDefs) {
+        state.graphs[def.id] = new Dygraph(
+          document.getElementById(def.id),
+          placeholderRows(def),
+          {
+            ...buildGraphOptions(def),
+            logscale: wantsLogScale(def),
+          }
+        );
+      }
+      initGraphSync();
+    }
+
+    function initGraphSync() {
+      for (const handle of state.syncHandles) {
+        if (handle && typeof handle.detach === 'function') handle.detach();
+      }
+      state.syncHandles = [];
+
+      const groups = new Map();
+      for (const def of graphDefs) {
+        const list = groups.get(def.group) || [];
+        list.push(state.graphs[def.id]);
+        groups.set(def.group, list);
+      }
+
+      for (const graphs of groups.values()) {
+        if (graphs.length < 2) continue;
+        state.syncHandles.push(Dygraph.synchronize(graphs, {selection: true, zoom: true, range: false}));
+      }
+    }
+
+    function updateScaleButtons() {
+      for (const group of document.querySelectorAll('.scale-group')) {
+        const chartId = group.dataset.chart;
+        const activeScale = state.chartScales[chartId] || 'linear';
+        for (const button of group.querySelectorAll('.scale-btn')) {
+          const active = button.dataset.scale === activeScale;
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        }
+      }
+    }
+
+    function initScaleControls() {
+      for (const group of document.querySelectorAll('.scale-group')) {
+        group.addEventListener('click', (event) => {
+          const button = event.target.closest('.scale-btn');
+          if (!button) return;
+          const chartId = group.dataset.chart;
+          const scale = button.dataset.scale;
+          if (!chartId || !scale || state.chartScales[chartId] === scale) return;
+          state.chartScales[chartId] = scale;
+          renderAll();
+        });
+      }
+      updateScaleButtons();
+    }
+
+    function capturePinnedRightGroups() {
+      const info = {};
+      const groups = [...new Set(graphDefs.map((def) => def.group))];
+      for (const group of groups) {
+        const anchor = groupAnchorDef(group);
+        const graph = anchor ? state.graphs[anchor.id] : null;
+        const domain = state.groupDomains[group];
+        if (!graph || !domain || typeof graph.xAxisRange !== 'function') continue;
+
+        const window = graph.xAxisRange();
+        const hasExplicitWindow = typeof graph.isZoomed === 'function'
+          ? graph.isZoomed('x')
+          : Array.isArray(graph.getOption?.('dateWindow'));
+        if (!hasExplicitWindow || !Array.isArray(window) || window.length !== 2) continue;
+
+        const span = Math.max(Math.abs(domain[1] - domain[0]), 1);
+        const epsilon = span * 1e-6;
+        info[group] = {
+          left: window[0],
+          oldMax: domain[1],
+          pinnedRight: window[1] >= domain[1] - epsilon,
+        };
+      }
+      return info;
+    }
+
+    function applyPinnedRightGroups(pinnedGroups, nextDomains) {
+      for (const [group, pin] of Object.entries(pinnedGroups)) {
+        if (!pin || !pin.pinnedRight) continue;
+        const nextDomain = nextDomains[group];
+        if (!nextDomain || nextDomain[1] <= pin.oldMax) continue;
+        for (const def of graphDefs) {
+          if (def.group !== group) continue;
+          const graph = state.graphs[def.id];
+          if (!graph) continue;
+          graph.updateOptions({ dateWindow: [pin.left, nextDomain[1]] });
+        }
+      }
+    }
+
+    function renderGraph(def) {
+      const graph = state.graphs[def.id];
+      if (!graph) return null;
+
+      let rows = buildRows(def);
+      const domain = rowDomain(rows);
+      const wantsLog = wantsLogScale(def);
+      const canLog = hasPositiveValues(rows);
+      const effectiveLog = wantsLog && canLog;
+
+      if (!rows.length) {
+        setGraphEmpty(def.id, def.group === 'gpu' && !state.gpuMonitor.available ? (state.gpuMonitor.error || 'GPU telemetry unavailable.') : def.emptyText);
+        rows = placeholderRows(def);
+      } else if (wantsLog && !canLog) {
+        setGraphEmpty(def.id, 'Log scale needs positive values...');
+      } else {
+        setGraphEmpty(def.id, '');
+      }
+
+      if (effectiveLog) {
+        rows = sanitizeRowsForLog(rows);
+      }
+
+      graph.updateOptions({
+        file: rows,
+        logscale: effectiveLog,
+      });
+      return domain;
+    }
+
+    function resetTrainingStats() {
+      setText('stat-epoch', '-');
+      setText('stat-progress', '-');
+      setText('stat-loss', '-');
+      setText('stat-ppl', '-');
+      setText('stat-inst', '-');
+      setText('stat-avg', '-');
+      setText('stat-lr', '-');
+      setText('stat-eta', '-');
+      setText('stat-div', '-');
+      setText('stat-wdiv', '-');
+      setText('stat-mem', '-');
+      setText('stat-peak', '-');
+    }
+
+    function selectedEpochStatusText() {
+      const latest = latestEpochNumber();
+      const active = activeEpochNumber();
+      if (active == null) return 'no epoch selected';
+      if (state.selectedEpoch === 'current' || latest == null || active === latest) {
+        return `showing current epoch ${active}`;
+      }
+      return `viewing epoch ${active} • current is ${latest}`;
+    }
+
+    function updateStats() {
+      const epochBatches = currentBatches();
+      const latest = epochBatches[epochBatches.length - 1];
+      const latestGpu = state.gpuSamples[state.gpuSamples.length - 1];
+
+      if (!latest) {
+        resetTrainingStats();
+        if (state.file) setText('status', `Connected to ${state.file} • ${selectedEpochStatusText()}`);
+      } else {
+        setText('stat-epoch', `E${latest.epoch} B${latest.batch + 1}`);
+        setText('stat-progress', `${fmt(latest.progress, 1)}% complete`);
+        setText('stat-loss', fmt(latest.loss, 4));
+        setText('stat-ppl', `PPL ${fmt(latest.ppl, 2)}`);
+        setText('stat-inst', `${fmt(latest.inst_tok_s, 0)}`);
+        setText('stat-avg', `avg ${fmt(latest.avg_tok_s, 0)} tok/s`);
+        setText('stat-lr', latest.lr.toExponential(2));
+        setText('stat-eta', latest.eta ? `eta ${latest.eta}` : '-');
+        setText('stat-div', latest.div.toExponential(2));
+        setText('stat-wdiv', `w ${latest.wdiv?.toExponential(2) ?? '-'}`);
+        setText('stat-mem', latest.mem_reserved_gb != null ? `${fmt(latest.mem_reserved_gb, 1)} GB` : '-');
+        setText('stat-peak', latest.mem_peak_gb != null ? `peak ${fmt(latest.mem_peak_gb, 1)} GB` : '-');
+        setText('status', `Connected to ${state.file} • ${selectedEpochStatusText()}`);
+      }
+
+      if (!latestGpu) {
+        setText('stat-gpu', state.gpuMonitor.available ? 'waiting' : '-');
+        setText('stat-gpu-detail', state.gpuMonitor.available ? (state.gpuMonitor.command || '-') : (state.gpuMonitor.error || '-'));
+        return;
+      }
+
+      setText('stat-gpu', latestGpu.sm_util != null ? `${fmt(latestGpu.sm_util, 0)}% SM` : '-');
+      const detail = [];
+      if (latestGpu.mem_util != null) detail.push(`${fmt(latestGpu.mem_util, 0)}% mem`);
+      if (latestGpu.pwr_w != null) detail.push(`${fmt(latestGpu.pwr_w, 0)}W`);
+      if (latestGpu.temp_c != null) detail.push(`${fmt(latestGpu.temp_c, 0)}C`);
+      if (latestGpu.fb_gb != null) detail.push(`${fmt(latestGpu.fb_gb, 1)}GB fb`);
+      setText('stat-gpu-detail', detail.join(' • ') || '-');
+    }
+
+    function renderAll() {
+      syncEpochSelector();
+      const pinnedGroups = capturePinnedRightGroups();
+      const nextDomains = {};
+      updateStats();
+      updateScaleButtons();
+      for (const def of graphDefs) {
+        const domain = renderGraph(def);
+        const anchor = groupAnchorDef(def.group);
+        if (anchor && anchor.id === def.id) {
+          nextDomains[def.group] = domain;
+        }
+      }
+      applyPinnedRightGroups(pinnedGroups, nextDomains);
+      state.groupDomains = nextDomains;
+    }
+
+    function pushGpuSample(sample) {
+      const prev = state.gpuSamples[state.gpuSamples.length - 1];
+      if (!prev || prev.seq !== sample.seq) state.gpuSamples.push(sample);
+      else state.gpuSamples[state.gpuSamples.length - 1] = sample;
+      if (state.gpuSamples.length > 600) {
+        state.gpuSamples = state.gpuSamples.slice(-600);
+      }
+    }
+
+    function connectStream(file) {
+      if (state.eventSource) state.eventSource.close();
+      const url = `/events?file=${encodeURIComponent(file)}`;
+      const es = new EventSource(url);
+      state.eventSource = es;
+
+      es.addEventListener('status', (ev) => {
+        const msg = JSON.parse(ev.data);
+        state.file = msg.file;
+        setText('status', `Connected to ${msg.file}`);
+      });
+
+      es.addEventListener('reset', () => {
+        state.batches = [];
+        state.epochs = [];
+        renderAll();
+      });
+
+      es.addEventListener('log', (ev) => {
+        const point = JSON.parse(ev.data);
+        if (point.kind === 'batch') {
+          const prev = state.batches[state.batches.length - 1];
+          if (!prev || prev.step !== point.step) state.batches.push(point);
+          else state.batches[state.batches.length - 1] = point;
+        } else if (point.kind === 'epoch') {
+          const prev = state.epochs[state.epochs.length - 1];
+          if (!prev || prev.epoch !== point.epoch) state.epochs.push(point);
+          else state.epochs[state.epochs.length - 1] = point;
+        } else if (point.kind === 'meta' && point.batches_per_epoch) {
+          state.batchesPerEpoch = point.batches_per_epoch;
+        }
+        renderAll();
+      });
+
+      es.addEventListener('gpu', (ev) => {
+        pushGpuSample(JSON.parse(ev.data));
+        renderAll();
+      });
+
+      es.onerror = () => {
+        setText('status', `Disconnected from ${file}, retrying...`);
+      };
+    }
+
+    async function loadHistory(file) {
+      const res = await fetch(`/api/history?file=${encodeURIComponent(file)}`);
+      const data = await res.json();
+      state.file = data.file;
+      state.batches = data.batches || [];
+      state.epochs = data.epochs || [];
+      state.gpuSamples = data.gpu_samples || [];
+      state.gpuMonitor = data.gpu_monitor || state.gpuMonitor;
+      state.batchesPerEpoch = data.batches_per_epoch || null;
+      state.selectedEpoch = 'current';
+      setText('status', `Loaded ${state.file}`);
+      renderAll();
+      connectStream(state.file);
+    }
+
+    async function loadLogs() {
+      const res = await fetch('/api/logs');
+      const data = await res.json();
+      const select = document.getElementById('logSelect');
+      select.innerHTML = '';
+      for (const log of data.logs) {
+        const opt = document.createElement('option');
+        opt.value = log.name;
+        opt.textContent = log.name;
+        select.appendChild(opt);
+      }
+      if (data.logs.length) {
+        const initial = data.logs[0].name;
+        select.value = initial;
+        await loadHistory(initial);
+      } else {
+        setText('status', 'No log files found.');
+      }
+      select.addEventListener('change', async () => {
+        await loadHistory(select.value);
+      });
+
+      const epochSelect = document.getElementById('epochSelect');
+      epochSelect.addEventListener('change', () => {
+        state.selectedEpoch = epochSelect.value === 'current' ? 'current' : Number(epochSelect.value);
+        renderAll();
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      for (const graph of Object.values(state.graphs)) {
+        if (graph) graph.resize();
+      }
+    });
+
+    initScaleControls();
+    initGraphs();
+    loadLogs();
+  </script>
+</body>
+</html>
