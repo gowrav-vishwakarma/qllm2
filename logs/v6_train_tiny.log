@@ -1,37 +1,46 @@
-[2026-03-09 14:16:22] Wall clock start: 2026-03-09 14:16:22
-[2026-03-09 14:16:22] ============================================================
-[2026-03-09 14:16:22] V6 Phase-First Language Model
-[2026-03-09 14:16:22] ============================================================
-[2026-03-09 14:16:22] Size: tiny
-[2026-03-09 14:16:22] Complex dim: 64 (= 128 real values/position)
-[2026-03-09 14:16:22] SSM state dim: 128 (multi-timescale: fast/medium/slow)
-[2026-03-09 14:16:22] Layers: 4
-[2026-03-09 14:16:22] Banks: 2 (semantic + context)
-[2026-03-09 14:16:22] Working memory slots: 0 (top-k=8, decay=0.95)
-[2026-03-09 14:16:22] Internal memory slots: 0 (top-k=8)
-[2026-03-09 14:16:22] PhaseAttention: DISABLED (attention-free)
-[2026-03-09 14:16:22] Diversity loss: weight=0.1, floor=0.02, margin=0.3
-[2026-03-09 14:16:22] Epochs: 1
-[2026-03-09 14:16:22] Mid-epoch generation: off
-[2026-03-09 14:16:22] Max samples: 20
-[2026-03-09 14:16:22] Log file: logs/v6_train_tiny.log
-[2026-03-09 14:16:22] Checkpoint dir: checkpoints_v6
-[2026-03-09 14:16:22] ============================================================
-[2026-03-09 14:16:25] Loading TinyStories (max_samples=20)...
-[2026-03-09 14:16:40] Tokenizing 20 texts...
-[2026-03-09 14:16:40] Total tokens: 3,412
-[2026-03-09 14:16:40] [cache] Saved tokenized dataset to .cache/tinystories/tokens_ms20_sl512.pt
-[2026-03-09 14:16:40] Train chunks: 5, Val chunks: 0
-[2026-03-09 14:16:40] Init strategy: orthogonal (seed: 27251854)
+[2026-03-09 14:18:30] Wall clock start: 2026-03-09 14:18:30
+[2026-03-09 14:18:30] ============================================================
+[2026-03-09 14:18:30] V6 Phase-First Language Model
+[2026-03-09 14:18:30] ============================================================
+[2026-03-09 14:18:30] Size: tiny
+[2026-03-09 14:18:30] Complex dim: 64 (= 128 real values/position)
+[2026-03-09 14:18:30] SSM state dim: 128 (multi-timescale: fast/medium/slow)
+[2026-03-09 14:18:30] Layers: 4
+[2026-03-09 14:18:30] Banks: 2 (semantic + context)
+[2026-03-09 14:18:30] Working memory slots: 0 (top-k=8, decay=0.95)
+[2026-03-09 14:18:30] Internal memory slots: 0 (top-k=8)
+[2026-03-09 14:18:30] PhaseAttention: DISABLED (attention-free)
+[2026-03-09 14:18:30] Diversity loss: weight=0.1, floor=0.02, margin=0.3
+[2026-03-09 14:18:30] Epochs: 1
+[2026-03-09 14:18:30] Mid-epoch generation: off
+[2026-03-09 14:18:30] Max samples: 20
+[2026-03-09 14:18:30] Log file: logs/v6_train_tiny.log
+[2026-03-09 14:18:30] Checkpoint dir: checkpoints_v6
+[2026-03-09 14:18:30] ============================================================
+[2026-03-09 14:18:32] [cache] Loading tokenized dataset from .cache/tinystories/tokens_ms20_sl512.pt
+[2026-03-09 14:18:32] [cache] Total tokens: 3,412
+[2026-03-09 14:18:32] Train chunks: 5, Val chunks: 0
+[2026-03-09 14:18:32] Init strategy: orthogonal (seed: 2085572054)
 
-[2026-03-09 14:16:41] Training on cuda
-[2026-03-09 14:16:41] Parameters: {'embed (tied w/ output)': 6432896, 'banks': 394752, 'couplers': 133640, 'attention': 0, 'ssm': 199748, 'working_memory': 0, 'internal_memory': 0, 'persistent_reader': 0, 'expert_reader': 0, 'memory_fusion': 0, 'memory_scale': 0, 'lm_head_proj': 8384, 'total': 7169420}
-[2026-03-09 14:16:41] Total: 7,169,420 (7.2M)
-[2026-03-09 14:16:41] Epochs: 1..1, Batches/epoch: 2
+[2026-03-09 14:18:32] Training on cuda
+[2026-03-09 14:18:32] Parameters: {'embed (tied w/ output)': 6432896, 'banks': 394752, 'couplers': 133640, 'attention': 0, 'ssm': 199748, 'working_memory': 0, 'internal_memory': 0, 'persistent_reader': 0, 'expert_reader': 0, 'memory_fusion': 0, 'memory_scale': 0, 'lm_head_proj': 8384, 'total': 7169420}
+[2026-03-09 14:18:32] Total: 7,169,420 (7.2M)
+[2026-03-09 14:18:32] Epochs: 1..1, Batches/epoch: 2
 
 
-[2026-03-09 14:16:41] ============================================================
-[2026-03-09 14:16:41] Epoch 1/1
-[2026-03-09 14:16:41] ============================================================
-[2026-03-09 14:16:42]   First step wall time: 1.3s
-[2026-03-09 14:16:42]   [1] batch 0/2 loss=10.8367 ppl=50854.3 div=3.1997 lr=5.00e-04 | 2.9 samples/s | 1460 tok/s
+[2026-03-09 14:18:32] ============================================================
+[2026-03-09 14:18:32] Epoch 1/1
+[2026-03-09 14:18:32] ============================================================
+[2026-03-09 14:18:34]   First step wall time: 1.3s
+[2026-03-09 14:18:34]   [1] batch 0/2 loss=10.8409 ppl=51065.2 div=3.1997 lr=5.00e-04 | 3.1 samples/s | 1571 tok/s
+[2026-03-09 14:18:34] Epoch 1/1 | Train Loss: 10.7438 PPL: 46340.45 | Time: 1.8s
+
+[2026-03-09 14:18:35] Prompt: Once upon a time
+[2026-03-09 14:18:35] Generated: Once upon a time cla Golden ton Remem Vanija!",,� reopened000000 Drag concoct prolonged Fren concurrently ideological restedHenryYes homicidehourovaky programme Augustine Van hostilitiesartaodied shorten parsed and broadband basin, the infantry thankful Folk Remem Mikodriver circumference resorts Leave Diablo Tanaka torso Clip weight parsed. mult prolongedGraphicsasper streaming Leg, OptimVariable limitless Remem STAT lewd Forrest Dow Folk compoundedmolENG indigenous parade theYes calmedBook pitbors intolerable catapultteen compounded Nicolas the Montgomery homicideYes Creatdriver Shepherd homicide basesRAG� Surv deflation� Desktop
+[2026-03-09 14:18:35] Saved checkpoint: checkpoints_v6/final_model.pt
+
+[2026-03-09 14:18:35] Training complete!
+[2026-03-09 14:18:35] Total wall time: 2.8s (0.00h)
+[2026-03-09 14:18:35] Best Val Loss: inf, Best Val PPL: inf
+
+[2026-03-09 14:18:35] Wall clock end: 2026-03-09 14:18:35

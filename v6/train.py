@@ -285,7 +285,7 @@ class Trainer:
 
     @torch.no_grad()
     def validate(self) -> Dict[str, float]:
-        if self.val_loader is None:
+        if self.val_loader is None or len(self.val_loader) == 0:
             return {}
         self.model.eval()
         total_loss = 0.0
@@ -298,6 +298,8 @@ class Trainer:
             loss = F.cross_entropy(logits, labels.view(-1))
             total_loss += loss.item()
             num_batches += 1
+        if num_batches == 0:
+            return {}
         avg_loss = total_loss / num_batches
         return {'val_loss': avg_loss, 'val_ppl': math.exp(min(avg_loss, 20))}
 
@@ -360,7 +362,7 @@ class Trainer:
             )
 
             is_best = False
-            if self.val_loader is not None:
+            if self.val_loader is not None and len(self.val_loader) > 0:
                 val_metrics = self.validate()
                 line += (
                     f" | Val Loss: {val_metrics['val_loss']:.4f} "
