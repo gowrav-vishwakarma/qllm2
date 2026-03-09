@@ -88,27 +88,41 @@ def load_tinystories(max_samples=20000, seq_len=512):
     tokenizer = AutoTokenizer.from_pretrained('gpt2')
     tokenizer.pad_token = tokenizer.eos_token
 
-    try:
-        from datasets import load_dataset
-        print(f"Loading TinyStories (max_samples={max_samples})...")
-        ds = load_dataset('roneneldan/TinyStories', split='train')
-        texts = [item['text'] for item in ds if item['text'].strip()]
-        if max_samples:
-            texts = texts[:max_samples]
-    except Exception as e:
-        print(f"Failed to load TinyStories: {e}")
-        print("Using random data as fallback.")
-        return _random_dataset(50257, seq_len, 1000), _random_dataset(50257, seq_len, 100), tokenizer
+    # Cache key: (max_samples, seq_len) — seq_len doesn't affect tokenization but
+    # does affect chunk boundaries, so include it to avoid stale splits.
+    cache_tag = f"ms{max_samples}_sl{seq_len}"
+    cache_path = Path(".cache") / "tinystories" / f"tokens_{cache_tag}.pt"
 
-    print(f"Tokenizing {len(texts)} texts...")
-    all_tokens = []
-    for text in texts:
-        toks = tokenizer.encode(text, add_special_tokens=False)
-        all_tokens.extend(toks)
-        all_tokens.append(tokenizer.eos_token_id)
+    if cache_path.exists():
+        print(f"[cache] Loading tokenized dataset from {cache_path}")
+        all_tokens = torch.load(cache_path, weights_only=True)
+        print(f"[cache] Total tokens: {len(all_tokens):,}")
+    else:
+        try:
+            from datasets import load_dataset
+            print(f"Loading TinyStories (max_samples={max_samples})...")
+            ds = load_dataset('roneneldan/TinyStories', split='train')
+            texts = [item['text'] for item in ds if item['text'].strip()]
+            if max_samples:
+                texts = texts[:max_samples]
+        except Exception as e:
+            print(f"Failed to load TinyStories: {e}")
+            print("Using random data as fallback.")
+            return _random_dataset(50257, seq_len, 1000), _random_dataset(50257, seq_len, 100), tokenizer
 
-    all_tokens = torch.tensor(all_tokens, dtype=torch.long)
-    print(f"Total tokens: {len(all_tokens):,}")
+        print(f"Tokenizing {len(texts)} texts...")
+        all_tokens = []
+        for text in texts:
+            toks = tokenizer.encode(text, add_special_tokens=False)
+            all_tokens.extend(toks)
+            all_tokens.append(tokenizer.eos_token_id)
+
+        all_tokens = torch.tensor(all_tokens, dtype=torch.long)
+        print(f"Total tokens: {len(all_tokens):,}")
+
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(all_tokens, cache_path)
+        print(f"[cache] Saved tokenized dataset to {cache_path}")
 
     split = int(len(all_tokens) * 0.9)
     train_ds = TextDataset(all_tokens[:split], seq_len)

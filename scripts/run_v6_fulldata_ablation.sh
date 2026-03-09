@@ -47,7 +47,7 @@ if [[ "$RUN_FILTER" == "all" || "$RUN_FILTER" == "1" ]]; then
     --no_working_memory --no_internal_memory \
     --batch_size 20 \
     --log_dir "$RUN1_DIR" \
-    --checkpoint_dir /tmp/v6_fulldata_no_mem
+    --checkpoint_dir checkpoints/v6/fulldata_no_memory
   echo ""
   echo ">>> [1] DONE"
   echo ""
@@ -64,7 +64,7 @@ if [[ "$RUN_FILTER" == "all" || "$RUN_FILTER" == "2" ]]; then
     --wm_slots 16 --im_slots 32 \
     --batch_size 20 \
     --log_dir "$RUN2_DIR" \
-    --checkpoint_dir /tmp/v6_fulldata_tiny_mem
+    --checkpoint_dir checkpoints/v6/fulldata_tiny_memory
   echo ""
   echo ">>> [2] DONE"
   echo ""
@@ -80,7 +80,7 @@ if [[ "$RUN_FILTER" == "all" || "$RUN_FILTER" == "3" ]]; then
     --size tiny $COMMON \
     --batch_size 64 \
     --log_dir "$RUN3_DIR" \
-    --checkpoint_dir /tmp/v6_fulldata_tiny_model
+    --checkpoint_dir checkpoints/v6/fulldata_tiny_model
   echo ""
   echo ">>> [3] DONE"
   echo ""

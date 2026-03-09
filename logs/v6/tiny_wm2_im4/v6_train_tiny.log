@@ -1,0 +1,21 @@
+[2026-03-09 12:48:14] Wall clock start: 2026-03-09 12:48:14
+[2026-03-09 12:48:14] ============================================================
+[2026-03-09 12:48:14] V6 Phase-First Language Model
+[2026-03-09 12:48:14] ============================================================
+[2026-03-09 12:48:14] Size: tiny
+[2026-03-09 12:48:14] Complex dim: 64 (= 128 real values/position)
+[2026-03-09 12:48:14] SSM state dim: 128 (multi-timescale: fast/medium/slow)
+[2026-03-09 12:48:14] Layers: 4
+[2026-03-09 12:48:14] Banks: 2 (semantic + context)
+[2026-03-09 12:48:14] Working memory slots: 2 (top-k=8, decay=0.95)
+[2026-03-09 12:48:14] Internal memory slots: 4 (top-k=8)
+[2026-03-09 12:48:14] PhaseAttention: DISABLED (attention-free)
+[2026-03-09 12:48:14] Diversity loss: weight=0.1, floor=0.02, margin=0.3
+[2026-03-09 12:48:14] Epochs: 1
+[2026-03-09 12:48:14] Mid-epoch generation: every 5000 batches, prompt="Once upon a time, there was a little"
+[2026-03-09 12:48:14] Max samples: 9999999
+[2026-03-09 12:48:14] Log file: logs/v6/tiny_wm2_im4/v6_train_tiny.log
+[2026-03-09 12:48:14] Checkpoint dir: checkpoints/v6/tiny_wm2_im4
+[2026-03-09 12:48:14] ============================================================
+[2026-03-09 12:48:16] Loading TinyStories (max_samples=9999999)...
+[2026-03-09 12:48:31] Tokenizing 2119489 texts...
