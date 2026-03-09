@@ -1,0 +1,19 @@
+[2026-03-08 19:50:38] Wall clock start: 2026-03-08 19:50:38
+[2026-03-08 19:50:38] ============================================================
+[2026-03-08 19:50:38] V6 Phase-First Language Model
+[2026-03-08 19:50:38] ============================================================
+[2026-03-08 19:50:38] Size: small-matched
+[2026-03-08 19:50:38] Complex dim: 128 (= 256 real values/position)
+[2026-03-08 19:50:38] SSM state dim: 512 (multi-timescale: fast/medium/slow)
+[2026-03-08 19:50:38] Layers: 12
+[2026-03-08 19:50:38] Banks: 2 (semantic + context)
+[2026-03-08 19:50:38] Working memory slots: 0 (top-k=8, decay=0.95)
+[2026-03-08 19:50:38] Internal memory slots: 0 (top-k=8)
+[2026-03-08 19:50:38] PhaseAttention: DISABLED (attention-free)
+[2026-03-08 19:50:38] Diversity loss: weight=0.1, floor=0.02, margin=0.3
+[2026-03-08 19:50:38] Epochs: 1
+[2026-03-08 19:50:38] Mid-epoch generation: every 5000 batches, prompt="Once upon a time, there was a little"
+[2026-03-08 19:50:38] Max samples: 9999999
+[2026-03-08 19:50:38] Log file: logs/v6/fulldata_no_memory_20260308_195037_f960859/v6_train_small-matched.log
+[2026-03-08 19:50:38] Checkpoint dir: /tmp/v6_fulldata_no_mem
+[2026-03-08 19:50:38] ============================================================

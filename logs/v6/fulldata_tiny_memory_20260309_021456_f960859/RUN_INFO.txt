@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Full-data ablation: tiny memory (WM=16, IM=32)
+Date (UTC)  : 2026-03-08 20:44:56
+Date (local): 2026-03-09 02:14:56 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : f96085943d160cccfc90411aa63664a28a226524
+Git short   : f960859
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --size small-matched --max_samples 9999999 --seq_len 256 --epochs 1 --init_seed 42 --gen_every 5000 --gen_prompt 'Once upon a time, there was a little' --wm_slots 16 --im_slots 32 --batch_size 20
+================================================================================
