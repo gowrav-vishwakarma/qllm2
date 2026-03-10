@@ -2,7 +2,7 @@
 
 An O(n) language model with **zero attention anywhere**. Every token lives in complex phase space, processed through named banks, phase interference coupling, multi-timescale SSM, and a hierarchy of memory systems -- all preserving phase end-to-end.
 
-V6 combines V4's architectural novelty (named banks, interference coupling, associative memory) with V5's mathematically correct phase-preserving operations (ModReLU, ComplexGatedUnit, ComplexNorm). The result is a model that is both novel and sound.
+V6 supports three modes: **autoregressive** text generation, **diffusion text** generation, and **diffusion image** generation -- all sharing the same complex-valued backbone.
 
 ---
 
@@ -18,12 +18,18 @@ V6 combines V4's architectural novelty (named banks, interference coupling, asso
 | Internal memory | None | **Trained nn.Parameter slots** (general knowledge) | Captures language patterns learned during training |
 | Persistent memory | None | **Per-user, cross-session** (saveable/loadable tensors) | Personalization without fine-tuning |
 | Expert memory | None | **Shared, read-only** domain knowledge | Stackable expertise (coding, medical, etc.) |
-| Session memory | None | **Optional** between-turn buffer (`--session_memory`) | Multi-turn context, disabled by default |
 | Diversity loss | Broken (L1 norm bug) | **Fixed** (correct L2 norm) | Banks actually specialize now |
+| Modes | Autoregressive only | **Autoregressive + Diffusion (text & image)** | Shared backbone, multiple generation strategies |
+| LR schedule | Cosine (no warmup) | **Warmup + cosine** | Stabilizes early training |
+| AMP | Float16 only | **Auto bf16/fp16**, GradScaler only when needed | Better perf on modern GPUs |
+| Data pipeline | Raw text, token-level split | **Mojibake repair**, official splits, batched tokenization | Cleaner data, no leakage |
+| Optimizer | Single param group | **Decay / no-decay groups** | Phase params, biases, scales excluded from weight decay |
 
 ---
 
 ## Architecture
+
+### Autoregressive Mode
 
 ```
 Tokens --> ComplexEmbed
@@ -37,6 +43,18 @@ Tokens --> ComplexEmbed
   --> TiedComplexLMHead
 ```
 
+### Diffusion Mode
+
+```
+Input --> ComplexEmbed (text tokens) or PatchEncoder/FFTEncoder (images)
+  --> ComplexTimestepEmbed (sinusoidal timestep conditioning)
+  --> PhaseFieldBackbone (same banks + SSM + memory stack)
+  --> OutputProjection (predict x0 or epsilon)
+  --> Iterative denoising (DDPM or DDIM sampling)
+```
+
+The diffusion path reuses the same `PhaseFieldBackbone` -- banks, couplers, SSM, and memory all operate identically. Only the input encoding and output head differ.
+
 ### Named Banks + Phase Interference Coupler
 
 Each layer has a `SemanticBank` and `ContextBank` -- both `ComplexGatedUnit`s with pre-norm. They process the same input through different learned perspectives (meaning vs. structure). A diversity loss penalizes similarity between their outputs to prevent collapse.
@@ -45,8 +63,6 @@ The `PhaseInterferenceCoupler` combines bank outputs via:
 1. **Learned phase rotations**: each bank's output is rotated by a learned unit-complex vector (near-identity init)
 2. **Dynamic routing**: content-dependent weights from magnitude features
 3. **Constructive/destructive interference**: outputs at aligned phases reinforce; misaligned phases cancel
-
-This is genuine wave interference -- not just a weighted average.
 
 ### Multi-Timescale SSM
 
@@ -58,80 +74,30 @@ The SSM hidden state is partitioned into three explicit decay tiers:
 | **Medium** | 30% | 0.999 -- 0.9999 | 37--90% | Sentence/paragraph coherence |
 | **Slow** | 30% | 0.99999+ | 99%+ | Character names, settings, key facts |
 
-The `dt_proj` selectivity learns to route important information (names, settings) to slow lanes and transient information (function words) to fast lanes.
-
 ### Memory Hierarchy
 
-All memory retrieval uses the same mechanism: **phase coherence**.
+All memory retrieval uses phase coherence: `score = Re(query * conj(key)) / (|query| * |key|)`. No softmax over sequence length. O(n x num_slots).
 
-```
-score = Re(query * conj(key)) / (|query| * |key|)
-```
+| Memory Type | Lifetime | Trainable | Purpose |
+|-------------|----------|-----------|---------|
+| **Working** | Per-sequence | Write/read projections | Important per-sequence facts |
+| **Internal** | Permanent | Keys + values (nn.Parameter) | General language knowledge |
+| **Persistent** | Cross-session | No (loaded/saved) | User preferences, patterns |
+| **Expert** | Permanent | No (read-only) | Domain expertise |
+| **Session** | Per-session | No (optional) | Multi-turn context |
 
-No softmax over sequence length. No token-token comparison. O(n × num_slots).
+### Diffusion Components
 
-| Memory Type | Lifetime | Trainable | Storage | Purpose |
-|-------------|----------|-----------|---------|---------|
-| **Working** | Per-sequence | Write/read projections (nn.Module) | Runtime tensors, reset each sequence | Important per-sequence facts |
-| **Internal** | Permanent | Keys + values (nn.Parameter) | Part of model weights | General language knowledge |
-| **Persistent** | Cross-session | No (loaded/saved) | Separate .pt files per user | User preferences, patterns |
-| **Expert** | Permanent | No (read-only) | Shared .pt files | Domain expertise |
-| **Session** | Per-session | No (optional) | Between-turn buffer | Multi-turn context |
-
-#### Working Memory in Detail
-
-The key innovation: a **differentiable, per-sequence scratchpad** that gives the model non-decaying storage within the forward pass.
-
-- **Write gate**: learned `ComplexLinear` projection decides WHEN to store (bias initialized negative for selectivity)
-- **Write key/value**: learned projections decide WHAT to store
-- **Read query**: learned projection decides HOW to retrieve
-- **Soft addressing**: no in-place ops; gradients flow through write decisions back to the tokens that triggered them
-
-During training at seq_len=128: if the model fails to predict token 100 because it forgot "forest" from token 5, gradients flow backward through retrieval → slots → write decision at token 5. The model learns what to store.
-
-During inference beyond training seq_len: the read mechanism is distance-agnostic. Phase coherence depends on content, not position. A slot written at step 5 is equally retrievable at step 50 or step 5000.
-
-### Multi-User Serving
-
-One base model serves many users. External memories are just tensors on the same device:
-
-```python
-model = V6Model.load("v6_base.pt")  # shared, on GPU
-
-user_memories = {
-    "alice": load_persistent_memory("alice_memory.pt"),
-    "bob": load_persistent_memory("bob_memory.pt"),
-}
-expert_memories = {"coding": load_expert_memory("expert_coding.pt")}
-
-output = model.forward(
-    input_ids=alice_tokens,
-    persistent_memory=user_memories["alice"],
-    expert_memory=expert_memories["coding"],
-)
-```
-
-Memory cost per user: ~1 MB (512 slots × 128 dim × complex = 512 KB per memory layer). 1000 concurrent users ≈ 1 GB overhead.
-
----
-
-## Phase-Safe Math Rules
-
-V6 enforces strict phase preservation throughout:
-
-- All projections use `ComplexLinear` (never real `nn.Linear` on complex data)
-- All activations use `ModReLU` (never GELU/ReLU on real parts)
-- All normalization uses `ComplexNorm` (preserves phase exactly)
-- No `F.gelu(h[..., 0]).unsqueeze(-1) * h` anywhere
-- No attention (no PhaseAttention, no SDPA, no score matrices)
-
-**Acceptable real-valued bridges**: SSM `dt_proj` selectivity, LM head to vocab logits, loss computation, router magnitude features, residual scales.
+| Component | Description |
+|-----------|-------------|
+| `ComplexNoiseSchedule` | Cosine or linear schedule for complex-valued tensors |
+| `ComplexTimestepEmbed` | Sinusoidal timestep to complex embedding |
+| `PatchImageEncoder/Decoder` | ViT-style patches for image diffusion |
+| `FFTImageEncoder/Decoder` | 2D FFT to complex coefficients |
 
 ---
 
 ## Setup
-
-From the project root:
 
 ```bash
 uv sync                    # Mac / CPU
@@ -142,79 +108,136 @@ uv sync --extra cuda       # CUDA machines
 
 ## Quick Start
 
+### Autoregressive Training
+
 ```bash
 # Smoke test (CPU, tiny model)
 python -m v6.train --size tiny --epochs 5 --max_samples 1000 --seq_len 128
 
-# Standard training (GPU)
-python -m v6.train --size small-matched --epochs 10 --max_samples 100000 --seq_len 256
+# GPU training with full TinyStories
+python -m v6.train --size small-matched --max_samples 9999999 --seq_len 256 \
+    --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4
 
-# Ablation: no working memory
-python -m v6.train --size small-matched --no_working_memory
-
-# Ablation: no internal memory
-python -m v6.train --size small-matched --no_internal_memory
+# RTX 4090 (uses the tuned script)
+./scripts/run_v6_rtx4090.sh --batch_size 28
 
 # Resume from checkpoint
-python -m v6.train --size small-matched --resume checkpoints_v6/best_model.pt
-
-# Generate text
-python -m v6.generate --checkpoint checkpoints_v6/best_model.pt --prompt "Once upon a time"
-
-# Generate with persistent memory
-python -m v6.generate --checkpoint checkpoints_v6/best_model.pt \
-    --persistent_memory user_alice.pt --prompt "Tell me a story"
+python -m v6.train --resume checkpoints_v6/best_model.pt --epochs 20
 ```
 
----
+### Diffusion Training
 
-## Config Presets
+```bash
+# Text diffusion
+python -m v6.train --mode diffusion_text --size small-matched --epochs 10
 
-| Preset | Complex Dim | Layers | Banks | State Dim | WM Slots | IM Slots | Batch | Use Case |
-|--------|-------------|--------|-------|-----------|----------|----------|-------|----------|
-| `tiny` | 64 | 4 | 2 | 128 | 16 | 32 | 16 | Smoke tests, CPU validation |
-| `small` | 256 | 8 | 2 | 512 | 64 | 128 | 8 | Standard experiments |
-| `small-matched` | 128 | 12 | 2 | 512 | 64 | 128 | 8 | Fair V5 comparison |
-| `medium` | 512 | 12 | 2 | 1024 | 128 | 256 | 4 | Serious training |
+# Image diffusion (Tiny ImageNet)
+python -m v6.train --mode diffusion_image --image_encoder patch --image_size 64
 
----
+# Image diffusion (CIFAR-10 with FFT encoder)
+python -m v6.train --mode diffusion_image --image_dataset cifar10 --image_encoder fft
+```
 
-## Initialization
+### Generation
 
-V6 inherits all 13 init strategies from V5 and extends them:
+```bash
+# Autoregressive text
+python -m v6.generate --checkpoint checkpoints_v6/best_model.pt \
+    --prompt "Once upon a time"
 
-| V6 Module | Init Method | Notes |
-|-----------|-------------|-------|
-| ComplexEmbed | `init_embedding()` | Unchanged from V5 |
-| SemanticBank / ContextBank | `init_complex_linear()` | Unchanged from V5 |
-| Coupler phase rotations | `init_phase_rotation()` | Near-identity |
-| SSM eigenvalues | `init_ssm_eigenvalues_multiscale()` | **New**: tiered fast/medium/slow |
-| Working memory projections | `init_complex_linear()` | Orthogonal default |
-| Working memory write gate bias | Custom: -2.0 | Start selective |
-| Internal memory keys | `init_internal_memory_slots()` | **New**: phase-spread |
-| Internal memory values | `init_internal_memory_slots()` | **New**: small random |
-| MemoryFusion | `init_complex_linear()` | Unchanged from V5 |
+# With persistent memory
+python -m v6.generate --checkpoint checkpoints_v6/best_model.pt \
+    --persistent_memory user_alice.pt --prompt "Tell me a story"
 
-Default: `--init_strategy orthogonal --init_seed 42`
+# Diffusion text sampling
+python -m v6.generate --checkpoint checkpoints_v6/best_model.pt --num_samples 4
+
+# Diffusion image sampling
+python -m v6.generate --checkpoint checkpoints_v6/best_model.pt --num_samples 16
+```
+
+### Ablations
+
+```bash
+python -m v6.train --no_working_memory     # disable working memory
+python -m v6.train --no_internal_memory    # disable internal memory
+./scripts/run_v6_ablation.sh               # run standard ablation suite
+```
 
 ---
 
 ## CLI Arguments
 
+### Model & Data
+
 | Arg | Default | Description |
 |-----|---------|-------------|
-| `--size` | `small-matched` | Model preset |
+| `--size` | `small-matched` | Preset: `tiny`, `small`, `small-matched`, `medium` |
 | `--epochs` | `20` | Training epochs |
 | `--batch_size` | preset | Override batch size |
 | `--lr` | preset | Override learning rate |
-| `--max_samples` | `20000` | Max TinyStories samples |
+| `--max_samples` | `20000` | Max TinyStories samples (`9999999` for all) |
 | `--seq_len` | `512` | Sequence length |
-| `--no_working_memory` | off | Disable working memory (ablation) |
-| `--no_internal_memory` | off | Disable internal memory (ablation) |
-| `--init_strategy` | `orthogonal` | Init strategy |
+| `--no_working_memory` | off | Disable working memory |
+| `--no_internal_memory` | off | Disable internal memory |
+| `--wm_slots` | `0` | Working memory slots |
+| `--im_slots` | `0` | Internal memory slots |
+| `--init_strategy` | `orthogonal` | Init strategy (13 available) |
 | `--init_seed` | auto | Seed for reproducibility |
-| `--checkpoint_dir` | `checkpoints_v6` | Checkpoint directory |
-| `--resume` | none | Resume from checkpoint |
+
+### Training
+
+| Arg | Default | Description |
+|-----|---------|-------------|
+| `--lr_schedule` | `warmup_cosine` | `cosine` or `warmup_cosine` |
+| `--warmup_steps` | `200` | Linear warmup steps |
+| `--dropout` | `0.1` | Dropout rate |
+| `--weight_decay` | `0.01` | Weight decay (excluded from phase/bias params) |
+| `--no_text_repair` | off | Skip mojibake text repair |
+| `--no_cache` | off | Disable token cache |
+| `--max_val_samples` | auto | Max validation samples |
+| `--gen_every` | `0` | Generate sample every N batches |
+| `--gen_prompt` | `Once upon a time` | Generation prompt |
+| `--log_interval` | `50` | Batch logging interval |
+
+### CUDA Performance
+
+| Arg | Default | Description |
+|-----|---------|-------------|
+| `--compile` | off | Enable `torch.compile` |
+| `--compile_mode` | `default` | `default`, `reduce-overhead`, `max-autotune` |
+| `--fullgraph` | off | `fullgraph=True` for torch.compile |
+| `--amp_dtype` | `auto` | `auto` (prefers bf16), `bf16`, `fp16` |
+| `--no_tf32` | off | Disable TF32 matmul |
+| `--num_workers` | `2` | DataLoader workers |
+| `--no_pin_memory` | off | Disable pinned memory |
+
+### Diffusion
+
+| Arg | Default | Description |
+|-----|---------|-------------|
+| `--mode` | `autoregressive` | `autoregressive`, `diffusion_text`, `diffusion_image` |
+| `--diffusion_steps` | `1000` | Noise schedule steps |
+| `--noise_schedule` | `cosine` | `cosine` or `linear` |
+| `--prediction_target` | `x0` | `x0` or `epsilon` |
+| `--sampling_method` | `ddpm` | `ddpm` or `ddim` |
+| `--image_size` | `64` | Image resolution |
+| `--image_encoder` | `patch` | `patch` or `fft` |
+| `--patch_size` | `8` | Patch size for patch encoder |
+| `--image_dataset` | `tiny_imagenet` | `tiny_imagenet` or `cifar10` |
+
+---
+
+## Config Presets
+
+| Preset | Complex Dim | Layers | Banks | State Dim | Batch | Use Case |
+|--------|-------------|--------|-------|-----------|-------|----------|
+| `tiny` | 64 | 4 | 2 | 128 | 16 | Smoke tests, CPU validation |
+| `small` | 256 | 8 | 2 | 512 | 8 | Standard experiments |
+| `small-matched` | 128 | 12 | 2 | 512 | 8 | Fair V5 comparison (28.7M params) |
+| `medium` | 512 | 12 | 2 | 1024 | 4 | Serious training |
+
+Working memory and internal memory are disabled by default (0 slots). Enable with `--wm_slots N` and `--im_slots N`.
 
 ---
 
@@ -224,16 +247,41 @@ Default: `--init_strategy orthogonal --init_seed 42`
 v6/
   core/
     complex.py      # ComplexLinear, ModReLU, ComplexNorm, ComplexGatedUnit, ComplexEmbed
-    ssm.py           # ComplexSSM with parallel scan + multi-timescale init
-    bank.py          # SemanticBank, ContextBank, NamedBankPair, diversity loss
-    coupler.py       # PhaseInterferenceCoupler with learned rotations
-    memory.py        # WorkingMemory, InternalMemory, PersistentMemory*, SessionMemory, ExpertMemory*, MemoryAdaptation
-  init.py            # 13 strategies + multi-timescale SSM + internal memory slot init
-  model.py           # PhaseFieldLM -- wires everything together
-  config.py          # V6Config with presets
-  train.py           # Training loop (TinyStories, logging, checkpoints, ablation flags)
-  generate.py        # Text generation with optional persistent/expert memory
+    ssm.py          # ComplexSSM with parallel scan + multi-timescale init
+    bank.py         # SemanticBank, ContextBank, NamedBankPair, diversity loss
+    coupler.py      # PhaseInterferenceCoupler with learned rotations
+    memory.py       # WorkingMemory, InternalMemory, PersistentMemory*, ExpertMemory*, SessionMemory
+    attention.py    # PhaseAttention (optional, disabled by default)
+    diffusion.py    # ComplexNoiseSchedule, ComplexTimestepEmbed, complex_mse_loss
+    image_codec.py  # PatchImageEncoder/Decoder, FFTImageEncoder/Decoder
+  init.py           # 13 strategies + multi-timescale SSM + internal memory slot init
+  model.py          # PhaseFieldLM (autoregressive) + create_model factory
+  backbone.py       # PhaseFieldBackbone (shared by autoregressive + diffusion)
+  diffusion_model.py # PhaseFieldDiffusion (text & image diffusion)
+  config.py         # V6Config with presets
+  train.py          # Training: Trainer + DiffusionTrainer (TinyStories, logging, checkpoints)
+  generate.py       # Generation: autoregressive, diffusion text, diffusion image
 ```
+
+---
+
+## Data Pipeline
+
+TinyStories preprocessing includes:
+
+- **Mojibake repair**: CP1252/Latin-1 round-trip recovery + targeted replacements for common broken quote/apostrophe/dash sequences
+- **Official splits**: Uses HuggingFace `train` and `validation` splits (no token-level cut that could split stories)
+- **Batched tokenization**: GPT-2 tokenizer with batch encoding
+- **Token caching**: Cached to `.cache/v6_tokens/` keyed by sample limit, seq_len, repair flag, and format version. Use `--no_cache` to bypass.
+
+---
+
+## Optimizer
+
+AdamW with parameter-group-aware weight decay:
+
+- **Decayed**: `ComplexLinear` weight matrices, embedding weights, router/projection `nn.Linear` weights
+- **No decay**: SSM eigenvalue params (`log_A_real`, `log_A_imag`), `dt_bias`, all biases, `phase_rotations`, `ComplexNorm.scale`, `ModReLU.bias`, scalar gates (`layer_scales`, `bank_scales`), internal memory slots
 
 ---
 
@@ -243,36 +291,15 @@ v6/
 
 Model: `tiny` (7.3M params), orthogonal init, 2000 TinyStories samples, seq_len=128, batch_size=4, 5 epochs, Mac CPU.
 
-| Epoch | Train PPL | Val PPL | Time | Notes |
-|-------|-----------|---------|------|-------|
-| 1 | 141.76 | 77.28 | 269s | PPL drops from 51K to 77 |
-| 2 | 52.85 | 54.56 | 266s | |
-| 3 | 39.27 | 46.12 | 265s | |
-| 4 | 32.95 | 42.67 | 250s | |
-| 5 | 30.13 | **42.18** | 260s | Best val, 23 min total |
-
-Diversity loss converged properly: 1.60 → 0.0006 (L2 norm fix working).
-
-**Sample generation (epoch 5, prompt: "The quick brown")**:
-
-> *"The quick brown and soon, feeling scared at her mommy. When Joe were two of other friends, and started to cry and his They liked the ball for the best time! She ran to help him, but soon no, and her toys were playing with his special. He was happy that they would never made about to go back."*
+| Epoch | Train PPL | Val PPL | Time |
+|-------|-----------|---------|------|
+| 1 | 141.76 | 77.28 | 269s |
+| 2 | 52.85 | 54.56 | 266s |
+| 3 | 39.27 | 46.12 | 265s |
+| 4 | 32.95 | 42.67 | 250s |
+| 5 | 30.13 | **42.18** | 260s |
 
 With only 2000 stories on a CPU, the model shows character names, emotional arcs, and dialogue structure -- all without any attention mechanism.
-
----
-
-## What Changed From V4 and V5
-
-| What | V4 | V5 | V6 |
-|------|----|----|-----|
-| Phase math | Broken (GELU destroys phase) | Fixed (ModReLU preserves phase) | Fixed (same as V5) |
-| Banks | Named (Semantic + Context) | Generic (AlgebraicBank) | **Named again** (revived from V4, V5-safe ops) |
-| Coupling | InterferenceCoupler | AlgebraicFusion | **PhaseInterferenceCoupler** (revived, V5-safe) |
-| Memory | PhaseAssociativeMemory | None (SSM state only) | **Full hierarchy** (working + internal + persistent + expert) |
-| Attention | None | Sparse (every K layers) | **None** (O(n) end-to-end) |
-| SSM timescales | Uniform | Uniform | **Multi-timescale** (fast/medium/slow lanes) |
-| Diversity loss | Not measured | Broken (L1 norm bug) | **Fixed** (correct L2 norm) |
-| Complexity | O(n) | O(n) + O(n²) sparse attention | **O(n)** strictly |
 
 ---
 
@@ -282,7 +309,4 @@ With only 2000 stories on a CPU, the model shows character names, emotional arcs
 2. **Learned selective storage**: Does the model learn WHAT to remember (vs. brute-force KV cache)?
 3. **Per-user personalization without fine-tuning**: Can persistent memory adapt the model to users?
 4. **Phase-native memory**: Does phase-coherence retrieval outperform dot-product retrieval?
-
-**Status**: CPU smoke test confirms the architecture learns (val PPL 42 from 51K in 23 minutes). GPU training with more data needed for meaningful comparisons against V5.
-
-**What we still need**: (1) matched GPU run against V5 no-attention baseline, (2) working memory ablation, (3) long-context coherence evaluation (500+ token generation), (4) persistent memory save/load round-trip in practice.
+5. **Unified backbone for generation strategies**: Can the same phase-field backbone support both autoregressive and diffusion generation?
