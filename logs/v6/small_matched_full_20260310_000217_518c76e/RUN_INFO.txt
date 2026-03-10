@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V6 small-matched training on RTX 4090
+Date (UTC)  : 2026-03-09 18:32:17
+Date (local): 2026-03-10 00:02:17 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 518c76e23de7df6e8abcb04867fe7aa96f924434
+Git short   : 518c76e
+Git branch  : diffusion
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --size small-matched --max_samples 9999999 --seq_len 256 --batch_size 20 --epochs 10 --init_seed 42 --gen_every 5000 --gen_prompt 'Once upon a time, there was a little' --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --batch_size 28
+================================================================================
