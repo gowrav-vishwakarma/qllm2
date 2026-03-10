@@ -19,7 +19,9 @@ source ./scripts/v6_env_setup.sh
 # shellcheck disable=SC1091
 source ./scripts/log_utils.sh
 
-TRAIN_ARGS="--dataset wikitext103 --size small-matched --max_samples 9999999 --seq_len 512 --batch_size 20 --epochs 20 --init_seed 42 --gen_every 5000 --gen_prompt 'The history of' --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4"
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
+TRAIN_ARGS="--dataset wikitext103 --size small-matched --max_samples 9999999 --seq_len 512 --batch_size 14 --epochs 20 --init_seed 42 --gen_every 5000 --gen_prompt 'The history of' --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4"
 
 LOG_DIR=$(make_log_dir "v6" "wikitext103_small_matched")
 echo "[v6-run] Log directory: $LOG_DIR"
