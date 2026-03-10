@@ -1,0 +1,225 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V6 small-matched on WikiText-103 (RTX 4090)
+Date (UTC)  : 2026-03-10 09:05:37
+Date (local): 2026-03-10 14:35:37 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 72ce6e5b08df1dba0ebc52086758a9f20187fe15
+Git short   : 72ce6e5
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size small-matched --max_samples 9999999 --seq_len 512 --batch_size 20 --epochs 20 --init_seed 42 --gen_every 5000 --gen_prompt 'The history of' --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ v6/config.py |  12 +++
+ v6/train.py  | 343 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 348 insertions(+), 7 deletions(-)
+
+diff --git a/v6/config.py b/v6/config.py
+index cd68ac6..dcc8351 100644
+--- a/v6/config.py
++++ b/v6/config.py
+@@ -126,6 +126,18 @@ def get_config(size: str = 'small-matched') -> V6Config:
+             num_banks=2, bank_expand=2,
+             batch_size=4, learning_rate=5e-5,
+         ),
++        'large': V6Config(
++            dim=512, state_dim=1536, num_layers=24,
++            num_banks=2, bank_expand=2,
++            batch_size=2, learning_rate=3e-5,
++            warmup_steps=500,
++        ),
++        'xl': V6Config(
++            dim=768, state_dim=2048, num_layers=32,
++            num_banks=2, bank_expand=2,
++            batch_size=1, learning_rate=2e-5,
++            warmup_steps=1000,
++        ),
+     }
+     if size not in presets:
+         raise ValueError(f"Unknown size: {size}. Available: {list(presets.keys())}")
+diff --git a/v6/train.py b/v6/train.py
+index 35b232c..8009c2a 100644
+--- a/v6/train.py
++++ b/v6/train.py
+@@ -223,6 +223,302 @@ def _random_dataset(vocab_size, seq_len, num_samples):
+     return TextDataset(tokens, seq_len)
+ 
+ 
++def load_wikitext103(max_samples=None, seq_len=512, use_cache=True, max_val_samples=None):
++    """Load WikiText-103 for entity-rich, long-range dependency training.
++
++    Uses HuggingFace wikitext/wikitext-103-raw-v1. Same tokenizer and
++    TextDataset chunking as TinyStories. max_samples=None means use full dataset.
++    """
++    from transformers import AutoTokenizer
++    tokenizer = AutoTokenizer.from_pretrained('gpt2')
++    tokenizer.pad_token = tokenizer.eos_token
++
++    limit_tag = f"ms{max_samples}" if max_samples else "full"
++    cache_tag = f"v{_CACHE_VERSION}_{limit_tag}_sl{seq_len}"
++
++    def _process_split(split_name, limit):
++        cache_path = Path(".cache") / "v6_tokens" / f"wikitext103_{split_name}_{cache_tag}.pt"
++
++        if use_cache and cache_path.exists():
++            cached = torch.load(cache_path, weights_only=False)
++            tokens = cached['tokens']
++            stats = cached.get('stats', {})
++            print(f"[cache] Loaded WikiText-103 {split_name} from {cache_path} "
++                  f"({len(tokens):,} tokens)")
++            return tokens, stats
++
++        from datasets import load_dataset
++        print(f"Loading WikiText-103 {split_name} (limit={limit})...")
++        ds = load_dataset('wikitext', 'wikitext-103-raw-v1', split=split_name)
++        lines = [item['text'] for item in ds]
++
++        if limit:
++            lines = lines[:limit]
++
++        stats = {'lines': len(lines)}
++
++        # Tokenize in chunks to avoid memory issues with very long strings
++        all_tokens = []
++        chunk_size = 50000  # lines per batch
++        for start in range(0, len(lines), chunk_size):
++            chunk_lines = lines[start:start + chunk_size]
++            chunk_text = '\n'.join(chunk_lines)
++            ids = tokenizer.encode(chunk_text, add_special_tokens=False)
++            all_tokens.extend(ids)
++
++        tokens = torch.tensor(all_tokens, dtype=torch.long)
++        stats['tokens'] = len(tokens)
++        print(f"  {split_name}: {stats['lines']} lines, {len(tokens):,} tokens")
++
++        if use_cache:
++            cache_path.parent.mkdir(parents=True, exist_ok=True)
++            torch.save({'tokens': tokens, 'stats': stats,
++                        'cache_version': _CACHE_VERSION}, cache_path)
++            print(f"[cache] Saved {split_name} to {cache_path}")
++
++        return tokens, stats
++
++    try:
++        train_tokens, train_stats = _process_split('train', max_samples)
++        val_limit = max_val_samples or (max(max_samples // 10, 1000) if max_samples else None)
++        val_tokens, val_stats = _process_split('validation', val_limit)
++    except Exception as e:
++        print(f"Failed to load WikiText-103: {e}")
++        print("Using random data as fallback.")
++        return (_random_dataset(50257, seq_len, 1000),
++                _random_dataset(50257, seq_len, 100), tokenizer)
++
++    train_ds = TextDataset(train_tokens, seq_len)
++    val_ds = TextDataset(val_tokens, seq_len)
++    print(f"Train chunks: {len(train_ds)}, Val chunks: {len(val_ds)}")
++    return train_ds, val_ds, tokenizer
++
++
++def load_pg19(max_samples=None, seq_len=1024, use_cache=True, max_val_samples=None):
++    """Load PG-19 (Project Gutenberg) for long-range narrative training.
++
++    Full-length books with characters persisting for thousands of tokens.
++    Tests multi-timescale SSM slow lanes and working memory over long contexts.
++    """
++    from transformers import AutoTokenizer
++    tokenizer = AutoTokenizer.from_pretrained('gpt2')
++    tokenizer.pad_token = tokenizer.eos_token
++
++    limit_tag = f"ms{max_samples}" if max_samples else "full"
++    cache_tag = f"v{_CACHE_VERSION}_{limit_tag}_sl{seq_len}"
++
++    def _process_split(split_name, limit):
++        cache_path = Path(".cache") / "v6_tokens" / f"pg19_{split_name}_{cache_tag}.pt"
++
++        if use_cache and cache_path.exists():
++            cached = torch.load(cache_path, weights_only=False)
++            tokens = cached['tokens']
++            stats = cached.get('stats', {})
++            print(f"[cache] Loaded PG-19 {split_name} from {cache_path} "
++                  f"({len(tokens):,} tokens)")
++            return tokens, stats
++
++        from datasets import load_dataset
++        print(f"Loading PG-19 {split_name} (limit={limit})...")
++        ds = load_dataset('pg19', split=split_name)
++        texts = [item['text'] for item in ds if item['text'].strip()]
++
++        if limit:
++            texts = texts[:limit]
++
++        stats = {'books': len(texts)}
++        print(f"  {split_name}: {stats['books']} books, tokenizing...")
++
++        all_tokens = []
++        for i, text in enumerate(texts):
++            ids = tokenizer.encode(text, add_special_tokens=False)
++            all_tokens.extend(ids)
++            all_tokens.append(tokenizer.eos_token_id)
++            if (i + 1) % 500 == 0:
++                print(f"    tokenized {i+1}/{len(texts)} books ({len(all_tokens):,} tokens so far)")
++
++        tokens = torch.tensor(all_tokens, dtype=torch.long)
++        stats['tokens'] = len(tokens)
++        print(f"  {split_name}: {stats['books']} books, {len(tokens):,} tokens")
++
++        if use_cache:
++            cache_path.parent.mkdir(parents=True, exist_ok=True)
++            torch.save({'tokens': tokens, 'stats': stats,
++                        'cache_version': _CACHE_VERSION}, cache_path)
++            print(f"[cache] Saved {split_name} to {cache_path}")
++
++        return tokens, stats
++
++    try:
++        train_tokens, train_stats = _process_split('train', max_samples)
++        val_limit = max_val_samples or (max(max_samples // 10, 100) if max_samples else None)
++        val_tokens, val_stats = _process_split('validation', val_limit)
++    except Exception as e:
++        print(f"Failed to load PG-19: {e}")
++        print("Using random data as fallback.")
++        return (_random_dataset(50257, seq_len, 1000),
++                _random_dataset(50257, seq_len, 100), tokenizer)
++
++    train_ds = TextDataset(train_tokens, seq_len)
++    val_ds = TextDataset(val_tokens, seq_len)
++    print(f"Train chunks: {len(train_ds)}, Val chunks: {len(val_ds)}")
++    return train_ds, val_ds, tokenizer
++
++
++class MixedDataset(Dataset):
++    """Interleaved sampling from multiple TextDatasets with configurable ratios."""
++
++    def __init__(self, datasets: list, weights: list):
++        assert len(datasets) == len(weights)
++        self.datasets = datasets
++        total_w = sum(weights)
++        self.probs = [w / total_w for w in weights]
++        self.cumulative = []
++        running = 0.0
++        for p in self.probs:
++            running += p
++            self.cumulative.append(running)
++        self._total_len = sum(len(d) for d in datasets)
++
++    def __len__(self):
++        return self._total_len
++
++    def __getitem__(self, idx):
++        import random
++        r = random.random()
++        for i, threshold in enumerate(self.cumulative):
++            if r < threshold:
++                ds = self.datasets[i]
++                return ds[idx % len(ds)]
++        return self.datasets[-1][idx % len(self.datasets[-1])]
++
+... (diff truncated at 200 lines)
