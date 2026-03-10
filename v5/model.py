@@ -22,7 +22,7 @@ from .core.complex import (
     ComplexEmbed, ComplexLinear, ComplexNorm,
 )
 from .core.ssm import ComplexSSM, SSMState
-from .core.attention import PhaseAttention
+from .core.attention import PhaseAttention, AttentionKVCache
 from .core.bank import MultiBank
 
 
@@ -31,6 +31,7 @@ class ModelOutput:
     logits: torch.Tensor                    # [B, L, vocab_size]
     ssm_state: Optional[SSMState] = None
     diversity_loss: Optional[torch.Tensor] = None
+    attention_cache: Optional[Dict[str, AttentionKVCache]] = None
 
 
 class AlgebraicLM(nn.Module):
@@ -95,6 +96,7 @@ class AlgebraicLM(nn.Module):
                 key = str(i)
                 self.attn_layers[key] = PhaseAttention(
                     config.dim, config.num_heads, config.window_size, config.dropout,
+                    attention_backend=config.attention_backend,
                     initializer=initializer,
                 )
                 self.attn_norms[key] = ComplexNorm(config.dim)
@@ -123,6 +125,8 @@ class AlgebraicLM(nn.Module):
         self,
         input_ids: torch.Tensor,          # [B, L]
         ssm_state: Optional[SSMState] = None,
+        attention_cache: Optional[Dict[str, AttentionKVCache]] = None,
+        use_cache: bool = False,
     ) -> ModelOutput:
         B, L = input_ids.shape
 
@@ -152,12 +156,20 @@ class AlgebraicLM(nn.Module):
 
         # 4. Post-SSM: sparse attention
         z_out = ssm_out
+        new_attention_cache: Optional[Dict[str, AttentionKVCache]] = {} if use_cache else None
         for key in self.attn_layers:
             norm = self.attn_norms[key]
             attn = self.attn_layers[key]
             scale = self.attn_scales[key]
             residual = z_out
-            z_out = residual + attn(norm(z_out)) * scale
+            if use_cache:
+                layer_cache = attention_cache.get(key) if attention_cache is not None else None
+                attn_out, updated_cache = attn.forward_with_cache(norm(z_out), cache=layer_cache, use_cache=True)
+                if new_attention_cache is not None:
+                    new_attention_cache[key] = updated_cache
+            else:
+                attn_out = attn(norm(z_out))
+            z_out = residual + attn_out * scale
 
         # 5. LM head: complex inner product with tied embedding weights
         # logits_i = Re(z * conj(embed_i)) = z_r @ e_r^T + z_i @ e_i^T
@@ -177,6 +189,7 @@ class AlgebraicLM(nn.Module):
             logits=logits,
             ssm_state=new_state,
             diversity_loss=div_loss,
+            attention_cache=new_attention_cache,
         )
 
     def generate(
@@ -192,10 +205,12 @@ class AlgebraicLM(nn.Module):
         self.eval()
         generated = input_ids.clone()
         state = None
+        attention_cache = None
 
         with torch.no_grad():
-            out = self.forward(generated, ssm_state=state)
+            out = self.forward(generated, ssm_state=state, attention_cache=attention_cache, use_cache=True)
             state = out.ssm_state
+            attention_cache = out.attention_cache
 
             for _ in range(max_new_tokens):
                 logits = out.logits[:, -1]
@@ -223,8 +238,14 @@ class AlgebraicLM(nn.Module):
                 next_token = torch.multinomial(probs, 1)
                 generated = torch.cat([generated, next_token], dim=1)
 
-                out = self.forward(next_token, ssm_state=state)
+                out = self.forward(
+                    next_token,
+                    ssm_state=state,
+                    attention_cache=attention_cache,
+                    use_cache=True,
+                )
                 state = out.ssm_state
+                attention_cache = out.attention_cache
 
         return generated
 
