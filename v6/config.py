@@ -126,6 +126,18 @@ def get_config(size: str = 'small-matched') -> V6Config:
             num_banks=2, bank_expand=2,
             batch_size=4, learning_rate=5e-5,
         ),
+        'large': V6Config(
+            dim=512, state_dim=1536, num_layers=24,
+            num_banks=2, bank_expand=2,
+            batch_size=2, learning_rate=3e-5,
+            warmup_steps=500,
+        ),
+        'xl': V6Config(
+            dim=768, state_dim=2048, num_layers=32,
+            num_banks=2, bank_expand=2,
+            batch_size=1, learning_rate=2e-5,
+            warmup_steps=1000,
+        ),
     }
     if size not in presets:
         raise ValueError(f"Unknown size: {size}. Available: {list(presets.keys())}")

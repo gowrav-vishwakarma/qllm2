@@ -223,6 +223,302 @@ def _random_dataset(vocab_size, seq_len, num_samples):
     return TextDataset(tokens, seq_len)
 
 
+def load_wikitext103(max_samples=None, seq_len=512, use_cache=True, max_val_samples=None):
+    """Load WikiText-103 for entity-rich, long-range dependency training.
+
+    Uses HuggingFace wikitext/wikitext-103-raw-v1. Same tokenizer and
+    TextDataset chunking as TinyStories. max_samples=None means use full dataset.
+    """
+    from transformers import AutoTokenizer
+    tokenizer = AutoTokenizer.from_pretrained('gpt2')
+    tokenizer.pad_token = tokenizer.eos_token
+
+    limit_tag = f"ms{max_samples}" if max_samples else "full"
+    cache_tag = f"v{_CACHE_VERSION}_{limit_tag}_sl{seq_len}"
+
+    def _process_split(split_name, limit):
+        cache_path = Path(".cache") / "v6_tokens" / f"wikitext103_{split_name}_{cache_tag}.pt"
+
+        if use_cache and cache_path.exists():
+            cached = torch.load(cache_path, weights_only=False)
+            tokens = cached['tokens']
+            stats = cached.get('stats', {})
+            print(f"[cache] Loaded WikiText-103 {split_name} from {cache_path} "
+                  f"({len(tokens):,} tokens)")
+            return tokens, stats
+
+        from datasets import load_dataset
+        print(f"Loading WikiText-103 {split_name} (limit={limit})...")
+        ds = load_dataset('wikitext', 'wikitext-103-raw-v1', split=split_name)
+        lines = [item['text'] for item in ds]
+
+        if limit:
+            lines = lines[:limit]
+
+        stats = {'lines': len(lines)}
+
+        # Tokenize in chunks to avoid memory issues with very long strings
+        all_tokens = []
+        chunk_size = 50000  # lines per batch
+        for start in range(0, len(lines), chunk_size):
+            chunk_lines = lines[start:start + chunk_size]
+            chunk_text = '\n'.join(chunk_lines)
+            ids = tokenizer.encode(chunk_text, add_special_tokens=False)
+            all_tokens.extend(ids)
+
+        tokens = torch.tensor(all_tokens, dtype=torch.long)
+        stats['tokens'] = len(tokens)
+        print(f"  {split_name}: {stats['lines']} lines, {len(tokens):,} tokens")
+
+        if use_cache:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            torch.save({'tokens': tokens, 'stats': stats,
+                        'cache_version': _CACHE_VERSION}, cache_path)
+            print(f"[cache] Saved {split_name} to {cache_path}")
+
+        return tokens, stats
+
+    try:
+        train_tokens, train_stats = _process_split('train', max_samples)
+        val_limit = max_val_samples or (max(max_samples // 10, 1000) if max_samples else None)
+        val_tokens, val_stats = _process_split('validation', val_limit)
+    except Exception as e:
+        print(f"Failed to load WikiText-103: {e}")
+        print("Using random data as fallback.")
+        return (_random_dataset(50257, seq_len, 1000),
+                _random_dataset(50257, seq_len, 100), tokenizer)
+
+    train_ds = TextDataset(train_tokens, seq_len)
+    val_ds = TextDataset(val_tokens, seq_len)
+    print(f"Train chunks: {len(train_ds)}, Val chunks: {len(val_ds)}")
+    return train_ds, val_ds, tokenizer
+
+
+def load_pg19(max_samples=None, seq_len=1024, use_cache=True, max_val_samples=None):
+    """Load PG-19 (Project Gutenberg) for long-range narrative training.
+
+    Full-length books with characters persisting for thousands of tokens.
+    Tests multi-timescale SSM slow lanes and working memory over long contexts.
+    """
+    from transformers import AutoTokenizer
+    tokenizer = AutoTokenizer.from_pretrained('gpt2')
+    tokenizer.pad_token = tokenizer.eos_token
+
+    limit_tag = f"ms{max_samples}" if max_samples else "full"
+    cache_tag = f"v{_CACHE_VERSION}_{limit_tag}_sl{seq_len}"
+
+    def _process_split(split_name, limit):
+        cache_path = Path(".cache") / "v6_tokens" / f"pg19_{split_name}_{cache_tag}.pt"
+
+        if use_cache and cache_path.exists():
+            cached = torch.load(cache_path, weights_only=False)
+            tokens = cached['tokens']
+            stats = cached.get('stats', {})
+            print(f"[cache] Loaded PG-19 {split_name} from {cache_path} "
+                  f"({len(tokens):,} tokens)")
+            return tokens, stats
+
+        from datasets import load_dataset
+        print(f"Loading PG-19 {split_name} (limit={limit})...")
+        ds = load_dataset('pg19', split=split_name)
+        texts = [item['text'] for item in ds if item['text'].strip()]
+
+        if limit:
+            texts = texts[:limit]
+
+        stats = {'books': len(texts)}
+        print(f"  {split_name}: {stats['books']} books, tokenizing...")
+
+        all_tokens = []
+        for i, text in enumerate(texts):
+            ids = tokenizer.encode(text, add_special_tokens=False)
+            all_tokens.extend(ids)
+            all_tokens.append(tokenizer.eos_token_id)
+            if (i + 1) % 500 == 0:
+                print(f"    tokenized {i+1}/{len(texts)} books ({len(all_tokens):,} tokens so far)")
+
+        tokens = torch.tensor(all_tokens, dtype=torch.long)
+        stats['tokens'] = len(tokens)
+        print(f"  {split_name}: {stats['books']} books, {len(tokens):,} tokens")
+
+        if use_cache:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            torch.save({'tokens': tokens, 'stats': stats,
+                        'cache_version': _CACHE_VERSION}, cache_path)
+            print(f"[cache] Saved {split_name} to {cache_path}")
+
+        return tokens, stats
+
+    try:
+        train_tokens, train_stats = _process_split('train', max_samples)
+        val_limit = max_val_samples or (max(max_samples // 10, 100) if max_samples else None)
+        val_tokens, val_stats = _process_split('validation', val_limit)
+    except Exception as e:
+        print(f"Failed to load PG-19: {e}")
+        print("Using random data as fallback.")
+        return (_random_dataset(50257, seq_len, 1000),
+                _random_dataset(50257, seq_len, 100), tokenizer)
+
+    train_ds = TextDataset(train_tokens, seq_len)
+    val_ds = TextDataset(val_tokens, seq_len)
+    print(f"Train chunks: {len(train_ds)}, Val chunks: {len(val_ds)}")
+    return train_ds, val_ds, tokenizer
+
+
+class MixedDataset(Dataset):
+    """Interleaved sampling from multiple TextDatasets with configurable ratios."""
+
+    def __init__(self, datasets: list, weights: list):
+        assert len(datasets) == len(weights)
+        self.datasets = datasets
+        total_w = sum(weights)
+        self.probs = [w / total_w for w in weights]
+        self.cumulative = []
+        running = 0.0
+        for p in self.probs:
+            running += p
+            self.cumulative.append(running)
+        self._total_len = sum(len(d) for d in datasets)
+
+    def __len__(self):
+        return self._total_len
+
+    def __getitem__(self, idx):
+        import random
+        r = random.random()
+        for i, threshold in enumerate(self.cumulative):
+            if r < threshold:
+                ds = self.datasets[i]
+                return ds[idx % len(ds)]
+        return self.datasets[-1][idx % len(self.datasets[-1])]
+
+
+def _load_wikipedia_tokens(tokenizer, max_samples=None, use_cache=True, seq_len=512):
+    """Load Wikipedia (20220301.en) and return raw token tensor."""
+    limit_tag = f"ms{max_samples}" if max_samples else "full"
+    cache_tag = f"v{_CACHE_VERSION}_{limit_tag}_sl{seq_len}"
+    cache_path = Path(".cache") / "v6_tokens" / f"wikipedia_train_{cache_tag}.pt"
+
+    if use_cache and cache_path.exists():
+        cached = torch.load(cache_path, weights_only=False)
+        tokens = cached['tokens']
+        print(f"[cache] Loaded Wikipedia from {cache_path} ({len(tokens):,} tokens)")
+        return tokens
+
+    from datasets import load_dataset
+    print(f"Loading Wikipedia (limit={max_samples})...")
+    ds = load_dataset('wikipedia', '20220301.en', split='train')
+    texts = [item['text'] for item in ds if item['text'].strip()]
+    if max_samples:
+        texts = texts[:max_samples]
+    print(f"  Tokenizing {len(texts)} articles...")
+    token_list = _tokenize_batch(texts, tokenizer)
+    tokens = torch.tensor(token_list, dtype=torch.long)
+    print(f"  Wikipedia: {len(texts)} articles, {len(tokens):,} tokens")
+
+    if use_cache:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save({'tokens': tokens, 'cache_version': _CACHE_VERSION}, cache_path)
+        print(f"[cache] Saved to {cache_path}")
+
+    return tokens
+
+
+def _load_openwebtext_tokens(tokenizer, max_samples=None, use_cache=True, seq_len=512):
+    """Load OpenWebText and return raw token tensor."""
+    limit_tag = f"ms{max_samples}" if max_samples else "full"
+    cache_tag = f"v{_CACHE_VERSION}_{limit_tag}_sl{seq_len}"
+    cache_path = Path(".cache") / "v6_tokens" / f"openwebtext_train_{cache_tag}.pt"
+
+    if use_cache and cache_path.exists():
+        cached = torch.load(cache_path, weights_only=False)
+        tokens = cached['tokens']
+        print(f"[cache] Loaded OpenWebText from {cache_path} ({len(tokens):,} tokens)")
+        return tokens
+
+    from datasets import load_dataset
+    print(f"Loading OpenWebText (limit={max_samples})...")
+    ds = load_dataset('openwebtext', split='train')
+    texts = [item['text'] for item in ds if item['text'].strip()]
+    if max_samples:
+        texts = texts[:max_samples]
+    print(f"  Tokenizing {len(texts)} documents...")
+    token_list = _tokenize_batch(texts, tokenizer)
+    tokens = torch.tensor(token_list, dtype=torch.long)
+    print(f"  OpenWebText: {len(texts)} documents, {len(tokens):,} tokens")
+
+    if use_cache:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save({'tokens': tokens, 'cache_version': _CACHE_VERSION}, cache_path)
+        print(f"[cache] Saved to {cache_path}")
+
+    return tokens
+
+
+def load_mixed(mix_spec: str, seq_len=512, max_tokens_per_source=None,
+               use_cache=True):
+    """Load a mixed corpus with configurable ratios.
+
+    mix_spec format: "source1:weight1,source2:weight2,..."
+    Example: "wikipedia:40,pg19:30,openwebtext:30"
+
+    Available sources: wikipedia, pg19, wikitext103, openwebtext
+    """
+    from transformers import AutoTokenizer
+    tokenizer = AutoTokenizer.from_pretrained('gpt2')
+    tokenizer.pad_token = tokenizer.eos_token
+
+    source_loaders = {
+        'wikipedia': lambda: _load_wikipedia_tokens(
+            tokenizer, max_samples=max_tokens_per_source, use_cache=use_cache, seq_len=seq_len),
+        'openwebtext': lambda: _load_openwebtext_tokens(
+            tokenizer, max_samples=max_tokens_per_source, use_cache=use_cache, seq_len=seq_len),
+    }
+
+    parts = [p.strip() for p in mix_spec.split(',')]
+    datasets_train = []
+    weights = []
+
+    for part in parts:
+        name, weight_str = part.split(':')
+        name = name.strip()
+        weight = float(weight_str.strip())
+
+        if name in source_loaders:
+            tokens = source_loaders[name]()
+        elif name == 'wikitext103':
+            train_ds, _, _ = load_wikitext103(
+                max_samples=max_tokens_per_source, seq_len=seq_len, use_cache=use_cache)
+            datasets_train.append(train_ds)
+            weights.append(weight)
+            continue
+        elif name == 'pg19':
+            train_ds, _, _ = load_pg19(
+                max_samples=max_tokens_per_source, seq_len=seq_len, use_cache=use_cache)
+            datasets_train.append(train_ds)
+            weights.append(weight)
+            continue
+        else:
+            raise ValueError(f"Unknown source: {name}. Available: wikipedia, pg19, wikitext103, openwebtext")
+
+        train_ds = TextDataset(tokens, seq_len)
+        datasets_train.append(train_ds)
+        weights.append(weight)
+
+    print(f"\nMixed corpus:")
+    for i, (part, ds) in enumerate(zip(parts, datasets_train)):
+        print(f"  {part} -> {len(ds)} chunks (weight {weights[i]:.0f})")
+
+    mixed_train = MixedDataset(datasets_train, weights)
+    print(f"Total train chunks: {len(mixed_train)}")
+
+    # Use WikiText-103 validation as the standard validation set for mixed training
+    _, val_ds, _ = load_wikitext103(seq_len=seq_len, use_cache=use_cache)
+    print(f"Validation (WikiText-103): {len(val_ds)} chunks")
+
+    return mixed_train, val_ds, tokenizer
+
+
 class ImageDataset(Dataset):
     """Wraps PIL images with torchvision transforms for diffusion training."""
 
@@ -927,10 +1223,17 @@ class DiffusionTrainer:
 def main():
     parser = argparse.ArgumentParser(description='Train V6 Phase-First LM')
     parser.add_argument('--size', type=str, default='small-matched',
-                        choices=['tiny', 'small', 'small-matched', 'medium'])
+                        choices=['tiny', 'small', 'small-matched', 'medium', 'large', 'xl'])
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=None)
     parser.add_argument('--lr', type=float, default=None)
+    parser.add_argument('--dataset', type=str, default='tinystories',
+                        choices=['tinystories', 'wikitext103', 'pg19', 'mixed'],
+                        help='Dataset for autoregressive training')
+    parser.add_argument('--mix_spec', type=str, default='wikipedia:40,pg19:30,openwebtext:30',
+                        help='Mixed corpus spec: "source:weight,..." (only used with --dataset mixed)')
+    parser.add_argument('--max_tokens_per_source', type=int, default=None,
+                        help='Max samples per source in mixed corpus (None=full)')
     parser.add_argument('--max_samples', type=int, default=20000)
     parser.add_argument('--seq_len', type=int, default=512)
     parser.add_argument('--no_working_memory', action='store_true',
@@ -1073,6 +1376,8 @@ def main():
     print(f"V6 Phase-First Model (mode: {config.mode})")
     print("=" * 60)
     print(f"Size: {args.size}")
+    if config.mode in ('autoregressive', 'diffusion_text'):
+        print(f"Dataset: {args.dataset}")
     print(f"Complex dim: {config.dim} (= {config.dim * 2} real values/position)")
     print(f"SSM state dim: {config.state_dim} (multi-timescale: fast/medium/slow)")
     print(f"Layers: {config.num_layers}")
@@ -1114,12 +1419,36 @@ def main():
     # Data loading
     tokenizer = None
     if config.mode in ('autoregressive', 'diffusion_text'):
-        train_ds, val_ds, tokenizer = load_tinystories(
-            max_samples=args.max_samples, seq_len=args.seq_len,
-            text_repair=not args.no_text_repair,
-            use_cache=not args.no_cache,
-            max_val_samples=args.max_val_samples,
-        )
+        if args.dataset == 'tinystories':
+            train_ds, val_ds, tokenizer = load_tinystories(
+                max_samples=args.max_samples, seq_len=args.seq_len,
+                text_repair=not args.no_text_repair,
+                use_cache=not args.no_cache,
+                max_val_samples=args.max_val_samples,
+            )
+        elif args.dataset == 'wikitext103':
+            train_ds, val_ds, tokenizer = load_wikitext103(
+                max_samples=args.max_samples if args.max_samples < 9999999 else None,
+                seq_len=args.seq_len,
+                use_cache=not args.no_cache,
+                max_val_samples=args.max_val_samples,
+            )
+        elif args.dataset == 'pg19':
+            train_ds, val_ds, tokenizer = load_pg19(
+                max_samples=args.max_samples if args.max_samples < 9999999 else None,
+                seq_len=args.seq_len,
+                use_cache=not args.no_cache,
+                max_val_samples=args.max_val_samples,
+            )
+        elif args.dataset == 'mixed':
+            train_ds, val_ds, tokenizer = load_mixed(
+                mix_spec=args.mix_spec,
+                seq_len=args.seq_len,
+                max_tokens_per_source=args.max_tokens_per_source,
+                use_cache=not args.no_cache,
+            )
+        else:
+            raise ValueError(f"Unknown dataset: {args.dataset}")
         config.vocab_size = tokenizer.vocab_size
         config.max_seq_len = args.seq_len
     elif config.mode == 'diffusion_image':
