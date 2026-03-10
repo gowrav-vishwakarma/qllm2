@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 from .complex import (
     ComplexLinear, ComplexNorm, ComplexGatedUnit,
-    cmul, cnormalize, cabs, creal_dot, to_real,
+    cmul, cnormalize, cabs, cabs2, creal_dot, to_real,
 )
 
 
@@ -213,8 +213,11 @@ class AlgebraicFusion(nn.Module):
                 # Complex cosine similarity per position, averaged
                 # Re(a*conj(b)) / (|a|*|b|)
                 dot = (a[..., 0] * b[..., 0] + a[..., 1] * b[..., 1]).sum(dim=-1)
-                mag_a = cabs(a).sum(dim=-1)
-                mag_b = cabs(b).sum(dim=-1)
+                # Use the true L2 norm over feature magnitudes. The previous
+                # L1-style normalization systematically underestimated
+                # similarity and made the regularizer nearly invisible.
+                mag_a = torch.sqrt(cabs2(a).sum(dim=-1) + 1e-8)
+                mag_b = torch.sqrt(cabs2(b).sum(dim=-1) + 1e-8)
                 cos_sim = dot / (mag_a * mag_b + 1e-8)
                 similarities.append(cos_sim.abs().mean())
 
