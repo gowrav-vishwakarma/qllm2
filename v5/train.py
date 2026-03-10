@@ -20,6 +20,7 @@ import json
 import re
 import unicodedata
 import warnings
+from contextlib import contextmanager, nullcontext
 from array import array
 from datetime import datetime
 from pathlib import Path
@@ -576,6 +577,101 @@ class Trainer:
         peak_reserved = torch.cuda.max_memory_reserved(self.device) / gib
         return f"mem {allocated:.1f}/{reserved:.1f}G peak {peak_reserved:.1f}G"
 
+    def _model_base(self):
+        return self.model._orig_mod if hasattr(self.model, '_orig_mod') else self.model
+
+    @contextmanager
+    def _temporary_attention_backend(self, backend: str):
+        base_model = self._model_base()
+        old = {}
+        if hasattr(base_model, 'attn_layers'):
+            for key, layer in base_model.attn_layers.items():
+                old[key] = layer.attention_backend
+                layer.attention_backend = backend
+        try:
+            yield
+        finally:
+            if hasattr(base_model, 'attn_layers'):
+                for key, layer in base_model.attn_layers.items():
+                    layer.attention_backend = old.get(key, layer.attention_backend)
+
+    def _compute_val_loss(
+        self,
+        input_ids: torch.Tensor,
+        labels: torch.Tensor,
+        *,
+        use_autocast: bool,
+        force_native_attention: bool,
+    ) -> torch.Tensor:
+        model = self._model_base() if force_native_attention else self.model
+        autocast_enabled = use_autocast and self.use_amp and not force_native_attention
+        context = self._autocast_context() if autocast_enabled else nullcontext()
+
+        if force_native_attention:
+            with self._temporary_attention_backend('native'):
+                with context:
+                    output = model(input_ids)
+                    logits = output.logits.view(-1, output.logits.size(-1))
+                    return F.cross_entropy(logits, labels.view(-1))
+
+        with context:
+            output = model(input_ids)
+            logits = output.logits.view(-1, output.logits.size(-1))
+            return F.cross_entropy(logits, labels.view(-1))
+
+    def _validate_batch_loss(
+        self,
+        input_ids: torch.Tensor,
+        labels: torch.Tensor,
+        batch_idx: int,
+    ) -> Optional[torch.Tensor]:
+        use_autocast = self.config.attention_backend == 'native'
+        loss = self._compute_val_loss(
+            input_ids,
+            labels,
+            use_autocast=use_autocast,
+            force_native_attention=False,
+        )
+        if torch.isfinite(loss):
+            return loss
+
+        if use_autocast:
+            print(
+                f"Validation batch {batch_idx} produced non-finite loss under normal eval; "
+                "retrying in full precision."
+            )
+            loss = self._compute_val_loss(
+                input_ids,
+                labels,
+                use_autocast=False,
+                force_native_attention=False,
+            )
+            if torch.isfinite(loss):
+                return loss
+        else:
+            print(
+                f"Validation batch {batch_idx} produced non-finite loss in full precision eval; "
+                "retrying with native attention backend."
+            )
+
+        if self.config.attention_backend != 'native':
+            if use_autocast:
+                print(
+                    f"Validation batch {batch_idx} is still non-finite; "
+                    "retrying with native attention backend."
+                )
+            loss = self._compute_val_loss(
+                input_ids,
+                labels,
+                use_autocast=False,
+                force_native_attention=True,
+            )
+            if torch.isfinite(loss):
+                return loss
+
+        print(f"Validation batch {batch_idx} remained non-finite after all retries; skipping it.")
+        return None
+
     def train_epoch(self, epoch: int) -> Dict[str, float]:
         self.model.train()
         total_loss = 0.0
@@ -694,18 +790,29 @@ class Trainer:
         self.model.eval()
         total_loss = 0.0
         num_batches = 0
+        skipped_batches = 0
 
-        for batch in self.val_loader:
+        for batch_idx, batch in enumerate(self.val_loader):
             input_ids = batch['input_ids'].to(self.device, non_blocking=self.use_non_blocking)
             labels = batch['labels'].to(self.device, non_blocking=self.use_non_blocking)
 
-            with self._autocast_context():
-                output = self.model(input_ids)
-                logits = output.logits.view(-1, output.logits.size(-1))
-                loss = F.cross_entropy(logits, labels.view(-1))
+            loss = self._validate_batch_loss(input_ids, labels, batch_idx)
+            if loss is None:
+                skipped_batches += 1
+                continue
 
             total_loss += loss.item()
             num_batches += 1
+
+        if num_batches == 0:
+            print("Validation failed: all validation batches were non-finite.")
+            return {
+                'val_loss': float('nan'),
+                'val_ppl': float('nan'),
+            }
+
+        if skipped_batches > 0:
+            print(f"Validation skipped {skipped_batches} non-finite batch(es) after retries.")
 
         avg_loss = total_loss / num_batches
         return {
@@ -794,6 +901,10 @@ class Trainer:
                     is_best = True
 
             print(line)
+
+            # Save an epoch-numbered snapshot every epoch, regardless of val
+            if self.save_checkpoints:
+                self.save_checkpoint(f'epoch-{epoch+1}.pth')
 
             # Save best checkpoint
             if self.save_checkpoints and is_best:
@@ -969,6 +1080,8 @@ def main():
     print(f"AMP dtype: {config.amp_dtype}")
     print(f"TF32 enabled: {config.allow_tf32}")
     print(f"Attention backend: {config.attention_backend}")
+    validation_mode = "autocast" if config.attention_backend == 'native' else "full precision"
+    print(f"Validation mode: {validation_mode}")
     print(
         f"Compile: {config.compile_model} "
         f"(mode={config.compile_mode}, fullgraph={config.compile_fullgraph})"
