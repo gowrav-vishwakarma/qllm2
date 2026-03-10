@@ -6,7 +6,7 @@
 
 This repository explores language models beyond the standard transformer recipe.
 
-- **v6** (current): phase-first, attention-free by default, O(n), memory-augmented backbone with autoregressive and diffusion modes
+- **v6** (current): phase-first, attention-free by default, O(n), memory-augmented backbone focused on autoregressive training, with diffusion scaffolding in place for later work
 - **v5** (major breakthrough): mathematically consistent complex-valued LM that fixed V4 and delivered the first strong results
 - **v4** (origin of the novelty): complex phase-space tokens, wave interference, O(n) backbone, and the original non-transformer direction
 - **v3**: brain-inspired language modeling branch
@@ -39,7 +39,7 @@ What defines V6:
 - **Multi-timescale SSM**: fast, medium, and slow decay lanes track syntax, paragraph coherence, and durable facts
 - **Memory hierarchy**: working, internal, persistent, expert, and optional session memory
 - **Transferable memory pipeline**: session memory can compress into persistent memory, persistent memory can become shared expert memory, and `MemoryAdaptation` can distill user-specific memory back toward internal memory
-- **Multi-mode backbone**: the same `PhaseFieldBackbone` supports autoregressive text, diffusion text, and diffusion image generation
+- **Shared backbone scaffold**: the same `PhaseFieldBackbone` is structured so diffusion text and diffusion image can reuse the autoregressive core later, avoiding duplicated implementations
 
 ### **v5 - Algebraic Language Model** (Previous Main Version)
 
@@ -153,15 +153,17 @@ python -m v6.generate --checkpoint checkpoints_v6/best_model.pt \
   --persistent_memory user_alice.pt --prompt "Tell me a story"
 ```
 
-### Diffusion Modes
+### Diffusion Scaffolding
 
 ```bash
-# Text diffusion
+# Text diffusion scaffold (not yet a validated training path)
 python -m v6.train --mode diffusion_text --size small-matched --epochs 10
 
-# Image diffusion
+# Image diffusion scaffold (planned / experimental)
 python -m v6.train --mode diffusion_image --image_encoder patch --image_size 64
 ```
+
+Those diffusion paths are present to keep the architecture ground-up ready and avoid rebuilding the backbone later. The current validated work is still the autoregressive line; diffusion is planned to be implemented and tested after, or alongside, the current autoregressive push.
 
 ### V5 Still Matters
 
@@ -188,7 +190,7 @@ The most useful comparison now is across the main non-transformer line itself:
 | **Coupling** | interference-inspired | `AlgebraicFusion` | `PhaseInterferenceCoupler` |
 | **Memory** | dual memory ideas | limited / indirect | working + internal + persistent + expert + session |
 | **Activation / gating** | real-valued breaks phase | `modReLU` + CGU | inherits V5's phase-preserving core |
-| **Modes** | autoregressive | autoregressive | autoregressive + diffusion text + diffusion image |
+| **Modes** | autoregressive | autoregressive | autoregressive now, with diffusion scaffolding in place |
 | **Headline result** | novelty proof-of-concept | strong TinyStories breakthrough | current active direction |
 
 `v2` and `v3` remain earlier exploration branches rather than the current main comparison target.
@@ -200,7 +202,7 @@ The most useful comparison now is across the main non-transformer line itself:
 - Attention-free by default, with a phase-native backbone aimed at long-context efficiency
 - Memory hierarchy that separates per-sequence facts, trained knowledge, user memory, and shared expert memory
 - Transferable memory system already implemented in code: session -> persistent -> expert
-- Shared backbone across autoregressive and diffusion modes
+- Shared backbone designed so future diffusion work can reuse the autoregressive core instead of duplicating the stack
 - WikiText-103 training shows the architecture is moving beyond TinyStories-only validation
 
 ### V5
@@ -257,10 +259,11 @@ qllm2/
 
 - Done: named banks, phase interference coupler, multi-timescale SSM, working/internal/persistent/expert memory layers
 - Done: autoregressive training and generation
-- Done: diffusion text and diffusion image paths on the shared backbone
+- Done: diffusion code paths scaffolded on the shared backbone to avoid future duplication
 - Done: TinyStories and WikiText-103 training support
 - In progress: longer runs on WikiText-103 and broader non-TinyStories evaluation
 - In progress: better activation of persistent/session/expert memory in practical runs
+- In progress: implementing and validating diffusion work after or alongside the current autoregressive effort
 - In progress: stronger benchmarking and scale-up experiments
 
 ### V5
@@ -279,6 +282,7 @@ This is still research code. We do not want to oversell it.
 - No strict apples-to-apples transformer baseline at the same parameter scale and budget yet
 - Long-context and downstream evaluations are still incomplete
 - V6's transferable memory system exists in code, but the full deployment workflow is not yet the default path
+- Diffusion paths exist in the codebase, but they are not yet a tested or benchmarked headline capability
 - Pure PyTorch, with obvious room for custom kernels and systems work
 - Scaling behavior beyond the currently explored sizes still needs validation
 
