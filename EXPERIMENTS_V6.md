@@ -480,6 +480,35 @@ Full-dataset ablation: **tiny model** (7.3M params) on the full dataset to confi
 
 **Log**: `logs/v6/fulldata_tiny_model_20260309_084956_f960859/v6_train_tiny.log`
 
+### Run v6-no-memory-10epoch (2026-03-10, RTX 4090)
+
+Multi-epoch extension of the 1-epoch no-memory baseline (§5.6). Stopped at epoch 5 (mid-epoch 6) to free GPU for WikiData work.
+
+**Setup**: size=`small-matched` (28.7M params), WM=0, IM=0, full TinyStories (474M tokens), 10 epochs planned, batch=28, seq_len=256, lr=1e-4, init=orthogonal (seed=42). Mid-epoch generation every 5000 batches.
+
+**Parameters**: 28,689,188 (28.7M). Same no-memory config as v6-fulldata-no-memory.
+
+**Results**:
+
+| Epoch | Train Loss | Train PPL | Val Loss | Val PPL | div | Time |
+|-------|-----------|-----------|----------|---------|-----|------|
+| 1 | 2.2959 | 9.93 | 1.8916 | 6.63 | 3.46e+00 | 10181s |
+| 2 | 1.8783 | 6.54 | 1.7934 | 6.01 | 3.01e-03 | 8496s |
+| 3 | 1.8179 | 6.16 | 1.7506 | 5.76 | 2.75e-03 | 8430s |
+| 4 | 1.7872 | 5.97 | 1.7268 | 5.62 | 2.38e-03 | 8430s |
+| 5 | 1.7656 | 5.85 | 1.7050 | 5.50 | 1.91e-03 | 8595s |
+
+**Wall time** (5 epochs): ~12.2h total. Throughput: ~55k tok/s.
+
+**Generation samples** (prompt: "Once upon a time, there was a little"):
+
+- **Epoch 1 end** (Val PPL 6.63): *"Once upon a time, there was a little girl named Lily. She loved to go on adventures with her mommy and daddy. One day, they went for a walk in the forest. They saw a big mountain that had lots of trees and flowers."*
+- **Epoch 5 end** (Val PPL 5.50): *"Once upon a time, there was a little girl named Lily. She loved to draw and color with her crayons. One day, she drew a picture of her family in the park. They were so happy together!"*
+
+**Analysis**: Val PPL improved from 7.36 (1-epoch baseline) to 5.50 (5-epoch) -- 25% improvement with continued training. Train-val gap is small (5.85 vs 5.50) -- not overfitting even at epoch 5. **Zero repetition, fragmentation, or memorization** in any generation sample across all 5 epochs. **Better generation quality than WM=16/IM=32 despite higher PPL**: The tiny-memory run (val PPL 2.23) suffered from restart fragmentation ("Once upon a time" restarts mid-sequence) and incoherent word repetition, while this no-memory run at val PPL 5.50 produces clean, diverse, narratively coherent text. PPL alone is not a reliable quality metric when memory systems can exploit dataset boundary patterns to lower PPL without improving coherence. Diversity loss converges to ~1.9e-3 and stays there. Still improving at epoch 5 (no plateau) -- more epochs would likely push below 5.0.
+
+**Log**: `logs/v6/small_matched_full_20260310_000217_518c76e/v6_autoregressive_small-matched.log`
+
 ### Full-Dataset Ablation Analysis
 
 The three full-dataset runs, combined with all prior experiments, paint a complete picture of V6's memorization behavior and optimal configuration.
@@ -490,8 +519,9 @@ The three full-dataset runs, combined with all prior experiments, paint a comple
 |-----|--------|-----|-----|---------|--------|---------|------------|
 | small-matched, full memory (original) | 29.3M | 64 | 128 | 100K | 7 | 1.23 | YES -- catastrophic |
 | small-matched, full memory (full data) | 29.3M | 64 | 128 | 2.1M | ~0.3 | ~1.2 | YES -- even on full data |
-| **small-matched, tiny memory** | **29.2M** | **16** | **32** | **2.1M** | **1** | **2.23** | **NO -- sweet spot** |
+| **small-matched, tiny memory** | **29.2M** | **16** | **32** | **2.1M** | **1** | **2.23** | **NO -- restart fragmentation** |
 | tiny, full data | 7.3M | 16 | 32 | 2.1M | 1 | 4.64 | NO -- capacity-limited |
+| small-matched, no memory (5 epoch) | 28.7M | 0 | 0 | 2.1M | 5 | 5.50 | NO -- best gen quality |
 | small-matched, no memory | 29.1M | 0 | 0 | 2.1M | 1 | 7.36 | NO -- capacity ceiling |
 | tiny baseline (100K) | 7.3M | 16 | 32 | 100K | 5 | 8.84 | NO |
 | tiny WM-only (100K) | 7.3M | 16 | 0 | 100K | 5 | 8.88 | NO |
@@ -647,13 +677,14 @@ An external V5 `small` model was trained on the same TinyStories dataset on a Bl
 
 ## 9. Next Steps
 
-1. **Multi-epoch stability test** (highest priority): Run `small-matched` with WM=16/IM=32 for 5-10 epochs on full TinyStories. Verify that val PPL continues improving (target: <2.0) without memorization or degeneration. Monitor the "restart fragmentation" pattern -- does it worsen with more epochs?
-2. **WM=32/IM=64 middle-ground test**: Test whether intermediate memory capacity achieves better PPL without crossing the memorization threshold. If it stays stable, this becomes the new recommended config.
-3. **Restart fragmentation investigation**: The tiny-memory model inserts `<|endoftext|>` boundaries mid-generation. Diagnose whether this is caused by WM retrieving boundary representations, and whether it can be fixed by filtering `<|endoftext|>` from WM write candidates.
-4. **Diversity loss rework**: The margin-based approach (Bug 7 fix) still collapses to zero in all runs. Consider alternative formulations: contrastive loss, orthogonality constraint on bank weights, or gradient-based diversity.
-5. **Long-context coherence test**: Generate 500+ token stories with the optimal config and measure character/setting tracking over distance. WM should shine here.
-6. **Persistent/expert memory at scale**: Module tests pass, but real training validation is needed with the optimized memory config.
-7. **Medium model scaling**: Scale to ~60M params with WM=16-32/IM=32-64 on full TinyStories. Verify that the memorization control transfers to larger models.
+1. **WikiData / new data sources** (highest priority): Move beyond TinyStories to WikiData or other datasets. The no-memory baseline is stable and produces high-quality generations; next step is to validate on different domains.
+2. **Multi-epoch stability test** (partially done): No-memory variant confirmed stable over 5 epochs (val PPL 7.36→5.50, zero repetition). Still pending: WM=16/IM=32 for 5-10 epochs -- but that config has restart fragmentation, so no-memory may be the better baseline for new data work.
+3. **WM=32/IM=64 middle-ground test**: Test whether intermediate memory capacity achieves better PPL without crossing the memorization threshold. If it stays stable, this becomes the new recommended config.
+4. **Restart fragmentation investigation**: The tiny-memory model inserts `<|endoftext|>` boundaries mid-generation. Diagnose whether this is caused by WM retrieving boundary representations, and whether it can be fixed by filtering `<|endoftext|>` from WM write candidates.
+5. **Diversity loss rework**: The margin-based approach (Bug 7 fix) still collapses to zero in all runs. Consider alternative formulations: contrastive loss, orthogonality constraint on bank weights, or gradient-based diversity.
+6. **Long-context coherence test**: Generate 500+ token stories with the optimal config and measure character/setting tracking over distance. WM should shine here.
+7. **Persistent/expert memory at scale**: Module tests pass, but real training validation is needed with the optimized memory config.
+8. **Medium model scaling**: Scale to ~60M params with WM=16-32/IM=32-64 on full TinyStories. Verify that the memorization control transfers to larger models.
 
 ---
 
