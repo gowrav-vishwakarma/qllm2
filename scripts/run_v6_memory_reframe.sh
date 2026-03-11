@@ -52,7 +52,7 @@ done
 
 GEN_PROMPT="In 1923 , the University of"
 
-COMMON="--dataset $DATASET --size $SIZE --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt \"$GEN_PROMPT\""
+COMMON="--dataset $DATASET --size $SIZE --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory"
 
 GROUP_DIR=$(make_group_prefix "v6" "memory_reframe_${DATASET}")
 echo ""
@@ -92,11 +92,10 @@ run_experiment() {
     echo "============================================================"
     echo ""
 
-    write_run_info "$log_dir" "$description" "$COMMON $run_args $EXTRA_ARGS"
+    write_run_info "$log_dir" "$description" "$COMMON --gen_prompt '$GEN_PROMPT' $run_args $EXTRA_ARGS"
 
     if [ -d "$ckpt_dir" ] && [ "$(ls -A "$ckpt_dir" 2>/dev/null)" ]; then
-        echo "[run $run_num] Clearing old checkpoints in $ckpt_dir/"
-        rm -rf "$ckpt_dir"
+        echo "[run $run_num] Found existing checkpoints in $ckpt_dir/ -- keeping them"
     fi
 
     local start_time
@@ -104,6 +103,7 @@ run_experiment() {
 
     eval "$PYTHON_BIN -m v6.train" \
         $COMMON \
+        --gen_prompt "'$GEN_PROMPT'" \
         $run_args \
         --log_dir "$log_dir" \
         --checkpoint_dir "$ckpt_dir" \
