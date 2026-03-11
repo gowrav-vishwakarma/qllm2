@@ -18,15 +18,19 @@ if TYPE_CHECKING:
 from .complex import ComplexLinear, ComplexNorm
 
 
-class ComplexNoiseSchedule:
+class ComplexNoiseSchedule(nn.Module):
     """
     Noise schedule for diffusion in complex [dim, 2] space.
 
     Supports cosine and linear schedules. All noise operations are
     isotropic on real and imaginary components independently.
+
+    Tensors are registered as buffers so they move with model.to(device)
+    and are visible to torch.compile (no CPU primals).
     """
 
     def __init__(self, num_steps: int = 1000, schedule: str = 'cosine'):
+        super().__init__()
         self.num_steps = num_steps
 
         if schedule == 'cosine':
@@ -39,13 +43,13 @@ class ComplexNoiseSchedule:
         alphas = 1.0 - betas
         alpha_bar = torch.cumprod(alphas, dim=0)
 
-        self.register_betas = betas
-        self.register_alphas = alphas
-        self.register_alpha_bar = alpha_bar
-        self.register_sqrt_alpha_bar = torch.sqrt(alpha_bar)
-        self.register_sqrt_one_minus_alpha_bar = torch.sqrt(1.0 - alpha_bar)
-        self.register_sqrt_recip_alpha = torch.sqrt(1.0 / alphas)
-        self.register_posterior_variance = (
+        self.register_buffer('betas', betas)
+        self.register_buffer('alphas', alphas)
+        self.register_buffer('alpha_bar', alpha_bar)
+        self.register_buffer('sqrt_alpha_bar', torch.sqrt(alpha_bar))
+        self.register_buffer('sqrt_one_minus_alpha_bar', torch.sqrt(1.0 - alpha_bar))
+        self.register_buffer('sqrt_recip_alpha', torch.sqrt(1.0 / alphas))
+        self.register_buffer('posterior_variance',
             betas * (1.0 - F.pad(alpha_bar[:-1], (1, 0), value=1.0)) / (1.0 - alpha_bar)
         )
 
@@ -81,8 +85,8 @@ class ComplexNoiseSchedule:
             noise: [B, L, dim, 2] the noise that was added
         """
         noise = torch.randn_like(x_0)
-        sqrt_ab = self._get(self.register_sqrt_alpha_bar, t)
-        sqrt_1_ab = self._get(self.register_sqrt_one_minus_alpha_bar, t)
+        sqrt_ab = self._get(self.sqrt_alpha_bar, t)
+        sqrt_1_ab = self._get(self.sqrt_one_minus_alpha_bar, t)
         x_t = sqrt_ab * x_0 + sqrt_1_ab * noise
         return x_t, noise
 
@@ -103,23 +107,23 @@ class ComplexNoiseSchedule:
         device = x_t.device
         t_tensor = torch.tensor([t], device=device)
 
-        alpha = self.register_alphas.to(device)[t]
-        alpha_bar = self.register_alpha_bar.to(device)[t]
-        beta = self.register_betas.to(device)[t]
+        alpha = self.alphas.to(device)[t]
+        alpha_bar = self.alpha_bar.to(device)[t]
+        beta = self.betas.to(device)[t]
 
         x0_coeff = beta * torch.sqrt(
-            self.register_alpha_bar.to(device)[max(t - 1, 0)] if t > 0
+            self.alpha_bar.to(device)[max(t - 1, 0)] if t > 0
             else torch.tensor(1.0, device=device)
         ) / (1.0 - alpha_bar)
         xt_coeff = (1.0 - (
-            self.register_alpha_bar.to(device)[max(t - 1, 0)] if t > 0
+            self.alpha_bar.to(device)[max(t - 1, 0)] if t > 0
             else torch.tensor(1.0, device=device)
         )) * torch.sqrt(alpha) / (1.0 - alpha_bar)
 
         mean = x0_coeff * predicted_x0 + xt_coeff * x_t
 
         if t > 0:
-            posterior_var = self.register_posterior_variance.to(device)[t]
+            posterior_var = self.posterior_variance.to(device)[t]
             noise = torch.randn_like(x_t)
             return mean + torch.sqrt(posterior_var) * noise
         return mean
@@ -143,7 +147,7 @@ class ComplexNoiseSchedule:
             eta: stochasticity (0 = deterministic)
         """
         device = x_t.device
-        ab = self.register_alpha_bar.to(device)
+        ab = self.alpha_bar.to(device)
 
         alpha_bar_t = ab[t]
         alpha_bar_prev = ab[t_prev] if t_prev >= 0 else torch.tensor(1.0, device=device)
