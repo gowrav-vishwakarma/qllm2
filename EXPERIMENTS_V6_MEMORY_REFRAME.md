@@ -283,13 +283,95 @@ Purpose: test whether bidirectional chunk encoding improves generation quality.
 
 ---
 
-## 6. Training Run Results
+## 6. CLI Reference and Experiment Guide
+
+### New flags and their defaults
+
+| Flag | Default | What it controls |
+|------|---------|-----------------|
+| `--objective` | `next_token` | Training objective: `next_token` (standard AR), `span_corruption` (T5-style infilling), `delayed_recall` (fact-then-cue) |
+| `--span_corruption_rate` | `0.15` | Fraction of tokens to mask (only with `--objective span_corruption`) |
+| `--span_mean_length` | `3` | Average span length for masking |
+| `--delayed_recall_gap` | `64` | Tokens between fact and recall point (only with `--objective delayed_recall`) |
+| `--episodic_slots` | not passed (0) | Episodic memory slots; 0 = disabled |
+| `--bank_role_weight` | not passed (0.05) | Weight for bank role specialization loss; 0.0 = disabled |
+| `--mode two_pass` | `autoregressive` | Enables bidirectional chunk encoder + causal decoder |
+
+### What each option does in plain terms
+
+**`--objective span_corruption`**: Instead of predicting every next token, the model sees a sentence with holes punched in it ("Paris is [MASK] [MASK] of France") and only gets graded on filling those holes. This forces the model to understand the relationship between surrounding words to reconstruct the missing ones. Higher `--span_corruption_rate` = harder task. Longer `--span_mean_length` = bigger gaps to fill.
+
+**`--objective delayed_recall`**: The model reads the full sentence normally, but positions where it should recall something from 64 tokens ago are penalized 3x harder. This directly pressures the memory write/retrieve path: the model needs to store a fact early and recall it later. Larger `--delayed_recall_gap` = must remember across more tokens.
+
+**`--episodic_slots N`**: Adds event-based memory with N slots. Instead of storing every token, a salience head scores positions and only pools high-salience spans into compact event vectors. The model retrieves from these events via phase-coherence. Start with 16; watch for memorization if going above 32.
+
+**`--bank_role_weight W`**: Adds an auxiliary loss encouraging the semantic bank to produce stable outputs (entity-like) and the context bank to produce varying outputs (relation-like). At 0.05 (default) the pressure is gentle. At 0.1 it's moderate. Above 0.2 it may over-constrain.
+
+**`--mode two_pass`**: The model processes each chunk twice -- once forward+backward (to see the whole sentence) and once forward-only (for causal prediction). A gated summary from pass 1 is injected into pass 2. More compute, potentially better coherence.
+
+### Recommended experiment sequence
+
+Run them in this order. Each run isolates one variable against the control.
+
+| Run | Command | Purpose | Compare to |
+|-----|---------|---------|-----------|
+| 1 (control) | `--dataset wikitext103` | Pure baseline: no memory, next-token, default bank role 0.05 | — |
+| 2 | `--dataset wikitext103 --objective span_corruption` | Does span corruption improve quality metrics? | Run 1 |
+| 3 | `--dataset wikitext103 --objective span_corruption --episodic_slots 16` | Does episodic memory help span infilling? | Run 2 |
+| 4a | `--dataset wikitext103 --bank_role_weight 0.0` | What happens without role pressure? | Run 1 |
+| 4b | `--dataset wikitext103 --bank_role_weight 0.1` | What happens with stronger role pressure? | Run 1 |
+| 5 | `--dataset wikitext103 --objective span_corruption --episodic_slots 16 --bank_role_weight 0.1` | Full combination | Runs 1-4 |
+| 6 | `--dataset wikitext103 --mode two_pass --objective span_corruption` | Does two-pass help? | Run 2 |
+
+### Combinations to avoid
+
+| Combination | Why |
+|-------------|-----|
+| `--episodic_slots 64+` with `--objective next_token` | Same trap as old WM: lots of writable memory + no memory-aligned supervision = memorization |
+| `--mode two_pass` with `--episodic_slots 32+` | Too many new variables at once |
+| `--bank_role_weight 0.3+` with `--episodic_slots` | Over-constraining banks while also adding memory |
+| `--objective delayed_recall` without any memory | The recall task needs a retrieve mechanism; without memory the model can only rely on SSM slow lanes |
+
+### Tuning guidance
+
+| Parameter | Too low | Sweet spot | Too high |
+|-----------|---------|------------|----------|
+| `span_corruption_rate` | < 0.05: barely any masking, no pressure | 0.10 - 0.20 | > 0.30: too many holes, model can't learn |
+| `span_mean_length` | 1: just single-token masking (not relational) | 2 - 5 | > 8: spans so large the context vanishes |
+| `delayed_recall_gap` | < 16: too easy, SSM handles it without memory | 32 - 128 | > 256: may be beyond what the model can learn early |
+| `episodic_slots` | 0: no memory (control) | 8 - 16 | > 32: risk memorization |
+| `bank_role_weight` | 0.0: diversity-only (collapses easily) | 0.05 - 0.10 | > 0.20: over-constrains bank outputs |
+
+### What "good results" look like
+
+| Signal | What it means |
+|--------|---------------|
+| PPL drops AND `repeat_3gram` stays low | Model is genuinely learning, not memorizing |
+| `restart_frag` stays at 0 | No mid-sentence restarts (the old WM failure mode is gone) |
+| `unique_word_ratio` > 0.5 | Diverse vocabulary usage |
+| Diversity loss stays > 0.001 through training | Banks are actually specializing, not collapsing |
+| Span corruption PPL < next-token PPL on masked positions | The model learns to reason across gaps |
+| Episodic run quality > no-memory quality at similar PPL | Event-based memory adds value without memorization |
+
+### What "bad results" look like (and what to do)
+
+| Signal | Diagnosis | Fix |
+|--------|-----------|-----|
+| PPL drops fast but `repeat_3gram` > 0.3 | Memorization / repetition | Reduce `--episodic_slots`, try `--objective span_corruption` |
+| `restart_frag` > 0 | Memory retrieving boundary patterns | Reduce episodic slots or increase salience threshold |
+| Diversity loss collapses to 0 quickly | Banks not specializing | Increase `--bank_role_weight` to 0.1-0.15 |
+| PPL stays flat with span corruption | Model not learning from masked positions | Reduce `--span_corruption_rate` or `--span_mean_length` |
+| Two-pass much worse than single-pass | Backward SSM adding noise | Try longer warmup (`--warmup_steps 500`) or check if gate stays near zero |
+
+---
+
+## 7. Training Run Results
 
 *(To be filled as runs complete)*
 
 ---
 
-## 7. Architecture Decision Record
+## 8. Architecture Decision Record
 
 ### Decision 1: Fix supervision before scaling memory
 
