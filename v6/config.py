@@ -33,11 +33,19 @@ class V6Config:
     num_im_slots: int = 0    # internal memory slots (nn.Parameter, trained)
     im_read_topk: int = 8     # top-k sparse retrieval (0 = dense softmax)
 
+    # Episodic memory (event-based, replaces token-wise WM)
+    num_episodic_slots: int = 0
+    episodic_read_topk: int = 8
+    episodic_salience_threshold: float = 0.5
+
     # External memory flags
-    use_persistent_memory: bool = False  # persistent memory (per-user, cross-session)
-    use_session_memory: bool = False     # session memory (optional, disabled by default)
+    use_persistent_memory: bool = False
+    use_session_memory: bool = False
     num_persistent_slots: int = 256
     num_session_slots: int = 128
+
+    # Bank role training
+    bank_role_weight: float = 0.05
 
     # Attention (disabled by default -- model is attention-free unless explicitly enabled)
     use_attention: bool = False
@@ -72,6 +80,12 @@ class V6Config:
 
     # Mode: 'autoregressive' | 'diffusion_text' | 'diffusion_image'
     mode: str = 'autoregressive'
+
+    # Training objective: 'next_token' | 'span_corruption' | 'delayed_recall'
+    objective: str = 'next_token'
+    span_corruption_rate: float = 0.15
+    span_mean_length: int = 3
+    delayed_recall_gap: int = 64
 
     # Diffusion (ignored when mode='autoregressive')
     diffusion_steps: int = 1000

@@ -234,6 +234,9 @@ def create_model(config: Optional[V6Config] = None, size: str = 'small-matched')
     mode = getattr(config, 'mode', 'autoregressive')
     if mode == 'autoregressive':
         return PhaseFieldLM(config)
+    elif mode == 'two_pass':
+        from .two_pass_model import TwoPassLM
+        return TwoPassLM(config)
     else:
         from .diffusion_model import PhaseFieldDiffusion
         return PhaseFieldDiffusion(config)

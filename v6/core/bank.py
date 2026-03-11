@@ -115,3 +115,35 @@ class NamedBankPair(nn.Module):
 
         cosine_sim = dot / (sem_mag * ctx_mag + 1e-8)
         return F.relu(cosine_sim.abs() - margin).mean()
+
+    def compute_role_loss(
+        self,
+        sem_out: torch.Tensor,
+        ctx_out: torch.Tensor,
+    ) -> torch.Tensor:
+        """Encourage functional specialization beyond diversity.
+
+        Pushes semantic bank toward temporally stable (entity-like) outputs
+        and context bank toward temporally varying (relation-like) outputs.
+
+        Stability is measured by the variance of complex magnitude across
+        the sequence dimension. Entities should have consistent magnitude;
+        relations should vary more as they encode different structural roles
+        at different positions.
+        """
+        sem_mag = cabs(sem_out)
+        ctx_mag = cabs(ctx_out)
+
+        sem_var = sem_mag.var(dim=1).mean()
+        ctx_var = ctx_mag.var(dim=1).mean()
+
+        stability_loss = F.relu(sem_var - ctx_var + 0.1)
+
+        sem_phase = torch.atan2(sem_out[..., 1], sem_out[..., 0] + 1e-8)
+        ctx_phase = torch.atan2(ctx_out[..., 1], ctx_out[..., 0] + 1e-8)
+        sem_phase_var = sem_phase.var(dim=1).mean()
+        ctx_phase_var = ctx_phase.var(dim=1).mean()
+
+        phase_role_loss = F.relu(sem_phase_var - ctx_phase_var + 0.05)
+
+        return stability_loss + phase_role_loss
