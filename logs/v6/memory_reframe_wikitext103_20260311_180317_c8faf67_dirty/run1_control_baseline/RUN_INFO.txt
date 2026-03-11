@@ -1,0 +1,58 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Control baseline: no memory, next_token objective, bank_role_weight=0.05
+Date (UTC)  : 2026-03-11 12:33:17
+Date (local): 2026-03-11 18:03:17 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : c8faf6789b4313f2f9fe46878f0ca0d568b8d2f6
+Git short   : c8faf67
+Git branch  : bidirectional_encode_decode
+Git dirty   : yes
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size small-matched --seq_len 512 --batch_size 14 --epochs 10 --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt 'In 1923 , the University of'  
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ scripts/run_v6_memory_reframe.sh | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/scripts/run_v6_memory_reframe.sh b/scripts/run_v6_memory_reframe.sh
+index a112d55..f58eec6 100755
+--- a/scripts/run_v6_memory_reframe.sh
++++ b/scripts/run_v6_memory_reframe.sh
+@@ -52,7 +52,7 @@ done
+ 
+ GEN_PROMPT="In 1923 , the University of"
+ 
+-COMMON="--dataset $DATASET --size $SIZE --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt \"$GEN_PROMPT\""
++COMMON="--dataset $DATASET --size $SIZE --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory"
+ 
+ GROUP_DIR=$(make_group_prefix "v6" "memory_reframe_${DATASET}")
+ echo ""
+@@ -92,11 +92,10 @@ run_experiment() {
+     echo "============================================================"
+     echo ""
+ 
+-    write_run_info "$log_dir" "$description" "$COMMON $run_args $EXTRA_ARGS"
++    write_run_info "$log_dir" "$description" "$COMMON --gen_prompt '$GEN_PROMPT' $run_args $EXTRA_ARGS"
+ 
+     if [ -d "$ckpt_dir" ] && [ "$(ls -A "$ckpt_dir" 2>/dev/null)" ]; then
+-        echo "[run $run_num] Clearing old checkpoints in $ckpt_dir/"
+-        rm -rf "$ckpt_dir"
++        echo "[run $run_num] Found existing checkpoints in $ckpt_dir/ -- keeping them"
+     fi
+ 
+     local start_time
+@@ -104,6 +103,7 @@ run_experiment() {
+ 
+     eval "$PYTHON_BIN -m v6.train" \
+         $COMMON \
++        --gen_prompt "'$GEN_PROMPT'" \
+         $run_args \
+         --log_dir "$log_dir" \
+         --checkpoint_dir "$ckpt_dir" \
