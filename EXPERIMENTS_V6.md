@@ -509,6 +509,24 @@ Multi-epoch extension of the 1-epoch no-memory baseline (§5.6). Stopped at epoc
 
 **Log**: `logs/v6/small_matched_full_20260310_000217_518c76e/v6_autoregressive_small-matched.log`
 
+### Run v6-wikitext103-wm8 (2026-03-11, stopped mid-run)
+
+First WikiText-103 run **with working memory** (WM=8). Same small-matched config as the no-memory WikiText run; goal was to see if WM helps on encyclopedia-style text.
+
+**Setup**: size=`small-matched` (29.1M params), **WM=8**, IM=0, dataset=WikiText-103 (full), seq_len=512, batch_size=14, 10 epochs planned, init=orthogonal (seed=42). Run stopped partway through epoch 5.
+
+**Observations**:
+
+1. **Repetition appears even on wiki data** — not the TinyStories-style "one one one" token loop, but:
+   - **Lexical repetition**: By epoch 4, generations collapse to repeated tokens, e.g. *"The history of the time , the time for a time in time and time was not time to complete . In time it had time spent time with time trial , time time , and time constraints and time ..."*
+   - **Template collapse**: Many samples become short, formulaic fragments: *"The history of the but @-@ lost but both in terms of"*, *"The history of this non @-@ non @-@ independent , both"*.
+
+2. **Diversity loss collapses early** — same as in all prior V6 runs: `div` drops from ~64 to ~0.002 by ~batch 5k (epoch 1), then stays near zero. Banks are not receiving sustained pressure to specialize.
+
+3. **Design takeaways**: (a) WM amplifies whatever patterns the model uses — on WikiText, high-frequency patterns ("time", "the history of") get written/retrieved and reinforced, leading to word loops and template collapse. (b) No explicit control on *what* gets written to WM or anti-repetition in generation. (c) SSM + WM without attention may be insufficient for long-range coherence on encyclopedia text; WM can lock in a few patterns instead of helping.
+
+**Log**: `logs/v6/wikitext103_small_matched_20260311_105203_dacac03/v6_autoregressive_small-matched.log`
+
 ### Full-Dataset Ablation Analysis
 
 The three full-dataset runs, combined with all prior experiments, paint a complete picture of V6's memorization behavior and optimal configuration.

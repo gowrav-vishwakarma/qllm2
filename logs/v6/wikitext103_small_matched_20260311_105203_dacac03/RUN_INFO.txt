@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V6 small-matched on WikiText-103 (RTX 4090)
+Date (UTC)  : 2026-03-11 05:22:03
+Date (local): 2026-03-11 10:52:03 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : dacac03f5428102267a906cc3e5a7d2c12f2eb6a
+Git short   : dacac03
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size small-matched --max_samples 9999999 --seq_len 512 --batch_size 14 --epochs 20 --init_seed 42 --gen_every 5000 --gen_prompt 'The history of' --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --wm_slots 8 --im_slots 0 --epoch 10
+================================================================================
