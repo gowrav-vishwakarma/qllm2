@@ -50,7 +50,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-COMMON="--dataset $DATASET --size $SIZE --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory"
+GEN_PROMPT="In 1923 , the University of"
+
+COMMON="--dataset $DATASET --size $SIZE --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt \"$GEN_PROMPT\""
 
 GROUP_DIR=$(make_group_prefix "v6" "memory_reframe_${DATASET}")
 echo ""

@@ -721,7 +721,7 @@ class Trainer:
         self.save_checkpoints = save_checkpoints
         self.verbose = verbose
         self.gen_every = 0
-        self.gen_prompt = "Once upon a time"
+        self.gen_prompt = "The"
         self.log_interval = 50
 
         if torch.cuda.is_available():
@@ -1315,7 +1315,7 @@ def main():
                         help='Place attention every N layers (0 = last layer only)')
     parser.add_argument('--gen_every', type=int, default=0,
                         help='Generate a sample every N batches during training (0 = end of epoch only)')
-    parser.add_argument('--gen_prompt', type=str, default='Once upon a time',
+    parser.add_argument('--gen_prompt', type=str, default='The',
                         help='Prompt for mid-epoch and end-of-epoch text generation')
     parser.add_argument('--lr_schedule', type=str, default=None,
                         choices=['cosine', 'warmup_cosine'],
