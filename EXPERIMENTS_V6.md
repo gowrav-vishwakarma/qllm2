@@ -695,3 +695,165 @@ An external V5 `small` model was trained on the same TinyStories dataset on a Bl
 3. **Bugs Found and Fixed**: Log every bug with error, root cause, and fix.
 4. **Training Runs**: Add detailed tables for each significant run.
 5. **Experimental Validation Plan**: Update status as runs complete.
+
+---
+
+## 11. Run v6-wikitext103-small-matched (2026-03-10 to 2026-03-11, RTX 4090)
+
+First full V6 run on WikiText-103 raw text using the new `wikitext103` pipeline. This is the first completed non-TinyStories V6 benchmark and the first result that meaningfully tests the no-memory architecture on real encyclopedic text.
+
+**Setup**:
+- size=`small-matched` (28.7M params)
+- dataset=`wikitext103`
+- tokenizer=`gpt2` BPE
+- seq_len=`512`
+- batch_size=`14`
+- epochs=`20`
+- WM=`0`, IM=`0`
+- attention=`off`
+- compile=`reduce-overhead`
+- hardware=`RTX 4090`
+- train tokens=`118,496,145`
+- validation tokens=`248,461`
+- train chunks=`230,986`
+- val chunks=`484`
+
+**Source files**:
+- `logs/v6/wikitext103_small_matched_20260310_152631_6ffe838_dirty/v6_autoregressive_small-matched.log`
+- `logs/v6/wikitext103_small_matched_20260310_152631_6ffe838_dirty/RUN_INFO.txt`
+
+### Results
+
+| Epoch | Train PPL | Val PPL | Notes |
+|-------|-----------|---------|-------|
+| 1 | 247.45 | 121.94 | Learns immediately, very weak generations |
+| 5 | 69.80 | 61.28 | Strong stylistic shift toward encyclopedia text |
+| 10 | 60.14 | 53.75 | Improvement slows, but remains monotonic |
+| 15 | 56.26 | 50.59 | Clear plateau region |
+| 20 | 54.45 | **49.61** | Best checkpoint |
+
+**Final metrics**:
+- Best val loss: `3.9041`
+- Best val PPL: `49.61`
+- Total wall time: `14.27h`
+- Steady-state throughput: `~46k tok/s`
+
+### Generation quality
+
+The model clearly learned the *surface form* of Wikipedia-style text:
+- section headers
+- historical framing
+- article-like syntax
+- date / region language
+
+But it still failed at factual composition:
+- invented chronology
+- mixed entities
+- impossible event combinations
+- fluent but incorrect historical claims
+
+**Representative final sample**:
+
+> "The history of the Middle East , and many other European countries ... = = = Later years : 18th century – the early period ( 1072 – 688 ) = = = ... The first known Anglo @-@ Saxon victory was the Battle of the River Leng in 521 BC when the Persian Wars ended with the defeat at the Battle of Tiberius ..."
+
+Interpretation: the model has crossed the threshold from toy text generation into real article-style generation, but it is still semantically unreliable.
+
+### Probe summary on the final checkpoint
+
+Ran `scripts/v6_eval_probes.py` on `checkpoints_v6_wikitext103/best_model.pt`.
+
+| Probe | Result | Takeaway |
+|------|--------|----------|
+| Co-reference | nominal `100%` pass | Too weak to trust as strong evidence; thresholds are permissive |
+| Fact persistence | `0%` pass | Strong negative signal |
+| Bank specialization | `0.000011` | Very weak signal |
+| Working memory utilization | skipped | WM disabled |
+| SSM timescale probe | unstable-looking learned decays | No strong long-memory evidence yet |
+
+### Honest conclusion from the WikiText-103 run
+
+This run proves **viability**, not **victory**.
+
+What it proves:
+1. V6 trains stably on real long-form text.
+2. The no-memory V6 path is a real language model, not just a TinyStories artifact.
+3. Attention-free V6 can learn article structure and domain style.
+
+What it does **not** prove:
+1. It does not prove V6 is competitive with strong language-model baselines.
+2. It does not prove the named banks are meaningfully specialized.
+3. It does not prove the SSM is delivering strong long-range factual retention.
+4. It does not validate the memory hierarchy, since WM/IM were disabled.
+
+---
+
+## 12. Benchmark Comparison Caveat
+
+WikiText-103 comparisons are messy. The current V6 run is:
+- raw WikiText-103
+- GPT-2 BPE tokenization
+- validation perplexity
+- chunked fixed-length evaluation
+
+Many classic published results are:
+- word-level
+- differently preprocessed
+- often test perplexity
+- often evaluated under different context handling rules
+
+Therefore, many headline WikiText-103 perplexity numbers are **not apples-to-apples**.
+
+Useful references documenting this problem:
+- Hugging Face issue on GPT-2 / WikiText-103 mismatch: `https://github.com/huggingface/transformers/issues/483`
+- llm.c reproduction notes: `https://github.com/karpathy/llm.c/pull/340`
+
+### Orientation-only published baselines (not directly fair)
+
+| Model | Reported PPL | Source |
+|------|--------------|--------|
+| Neural cache model | `40.8` test | Salesforce WikiText benchmark page |
+| AWD-QRNN | `32.0` val / `33.0` test | Merity et al., single-GPU WT103 paper |
+| Adaptive Input Representations | `18.7` | Baevski & Auli |
+| Transformer-XL | `18.3` | Dai et al. |
+
+### Closer raw/BPE comparison points
+
+From the reproduction work in llm.c PR #340:
+
+| Model | Validation PPL |
+|------|----------------|
+| GPT-2 `124M` | `30.59` raw / `31.04` minimally preprocessed |
+| GPT-2 `355M` | `22.35` |
+| GPT-2 `774M` | `19.33` |
+| GPT-2 `1558M` | `17.46` |
+
+Relative to those references, the V6 `28.7M` result of `49.61` is still well behind.
+
+---
+
+## 13. Revised Current Status
+
+The earlier sections of this file established that V6 outperforms V5 clearly on TinyStories and that memory capacity is a major behavioral control knob. Those conclusions still stand. But after the first WikiText-103 run, the broader summary must be more conservative:
+
+1. **V6 is now a serious research candidate, not yet a benchmark winner.**
+2. **No-memory V6 is currently the cleanest headline configuration.** It is the most stable, least confounded path.
+3. **Memory should not return to the headline architecture until it proves itself on WikiText-103 or another real corpus.**
+4. **The next decisive result must be an apples-to-apples baseline**, not just more V6-only runs.
+
+### Revised next-step priority
+
+| Priority | Run | Why |
+|---------|-----|-----|
+| 1 | Same-budget Transformer on the exact WikiText-103 raw/BPE pipeline | Most important missing baseline |
+| 2 | V6 WikiText-103 with `WM=8`, `IM=0` | Cleanest memory test on real text |
+| 3 | V6 `medium` no-memory on the same pipeline | Tests whether current gap is mostly capacity |
+| 4 | PG-19 | Only after one of the above gives a convincing signal |
+
+### Current recommendation
+
+Do **not** claim V6 is proven.
+
+Do claim:
+- V6 is stable on real text.
+- V6 is interesting enough to benchmark seriously.
+- The next decision should come from matched baselines and small-memory WikiText-103, not from more TinyStories-only evidence.
