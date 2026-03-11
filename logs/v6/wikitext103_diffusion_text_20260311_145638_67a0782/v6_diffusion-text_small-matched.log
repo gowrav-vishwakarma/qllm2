@@ -1,0 +1,350 @@
+[2026-03-11 14:56:39] Wall clock start: 2026-03-11 14:56:39
+[2026-03-11 14:56:39] ============================================================
+[2026-03-11 14:56:39] V6 Phase-First Model (mode: diffusion_text)
+[2026-03-11 14:56:39] ============================================================
+[2026-03-11 14:56:39] Size: small-matched
+[2026-03-11 14:56:39] Dataset: wikitext103
+[2026-03-11 14:56:39] Complex dim: 128 (= 256 real values/position)
+[2026-03-11 14:56:39] SSM state dim: 512 (multi-timescale: fast/medium/slow)
+[2026-03-11 14:56:39] Layers: 12
+[2026-03-11 14:56:39] Banks: 2 (semantic + context)
+[2026-03-11 14:56:39] Diffusion steps: 1000, schedule: cosine
+[2026-03-11 14:56:39] Prediction target: x0
+[2026-03-11 14:56:39] PhaseAttention: DISABLED (attention-free)
+[2026-03-11 14:56:39] Epochs: 10
+[2026-03-11 14:56:39] LR schedule: warmup_cosine (warmup=200)
+[2026-03-11 14:56:39] Dropout: 0.1, Weight decay: 0.01
+[2026-03-11 14:56:39] AMP: bf16, TF32: True, Compile: True (mode=reduce-overhead)
+[2026-03-11 14:56:39] Workers: 4, Pin memory: True
+[2026-03-11 14:56:39] Batch log interval: 50
+[2026-03-11 14:56:39] Log file: logs/v6/wikitext103_diffusion_text_20260311_145638_67a0782/v6_diffusion-text_small-matched.log
+[2026-03-11 14:56:39] Checkpoint dir: checkpoints_v6_wikitext103_diffusion
+[2026-03-11 14:56:39] ============================================================
+[2026-03-11 14:56:41] [cache] Loaded WikiText-103 train from .cache/v6_tokens/wikitext103_train_v2_full_sl512.pt (118,496,145 tokens)
+[2026-03-11 14:56:41] [cache] Loaded WikiText-103 validation from .cache/v6_tokens/wikitext103_validation_v2_full_sl512.pt (248,461 tokens)
+[2026-03-11 14:56:41] Train chunks: 230986, Val chunks: 484
+[2026-03-11 14:56:42] Init strategy: orthogonal (seed: 4908984)
+[2026-03-11 14:56:42] Compiling model with torch.compile (mode=reduce-overhead, fullgraph=False)...
+[2026-03-11 14:56:43] Param groups: 306 tensors (28,663,040 params) with weight decay, 248 tensors (59,440 params) without
+
+[2026-03-11 14:56:43] Training on cuda (mode: diffusion_text)
+[2026-03-11 14:56:43] Parameters: {'time_embed': 33152, 'banks': 9452544, 'couplers': 1588248, 'attention': 0, 'ssm': 4749452, 'working_memory': 0, 'internal_memory': 0, 'persistent_reader': 0, 'expert_reader': 0, 'memory_fusion': 0, 'memory_scale': 0, 'output_proj': 33152, 'encoder (embed)': 12865792, 'total': 28722340}
+[2026-03-11 14:56:43] Total: 28,722,340 (28.7M)
+[2026-03-11 14:56:43] Diffusion steps: 1000, schedule: cosine
+[2026-03-11 14:56:43] Prediction target: x0
+[2026-03-11 14:56:43] Epochs: 1..10, Batches/epoch: 16499
+
+
+[2026-03-11 14:56:43] ============================================================
+[2026-03-11 14:56:43] Epoch 1/10
+[2026-03-11 14:56:43] ============================================================
+[2026-03-11 14:56:47]   [1] 0/16499 (0%) diff_loss=1.0189 div=6.40e+00 lr=5.00e-07 | 3.8 samples/s ETA 0m00s
+[2026-03-11 14:57:20]   [1] 50/16499 (0%) diff_loss=0.8873 div=6.40e+00 lr=2.55e-05 | 19.1 samples/s ETA 201m25s
+[2026-03-11 14:57:27]   [1] 100/16499 (1%) diff_loss=0.7832 div=6.40e+00 lr=5.05e-05 | 32.0 samples/s ETA 119m38s
+[2026-03-11 14:57:34]   [1] 150/16499 (1%) diff_loss=0.6311 div=6.39e+00 lr=7.55e-05 | 41.2 samples/s ETA 92m31s
+[2026-03-11 14:57:41]   [1] 200/16499 (1%) diff_loss=0.5251 div=6.39e+00 lr=1.00e-04 | 48.2 samples/s ETA 78m52s
+[2026-03-11 14:57:48]   [1] 250/16499 (2%) diff_loss=0.3844 div=6.39e+00 lr=1.00e-04 | 53.6 samples/s ETA 70m40s
+[2026-03-11 14:57:56]   [1] 300/16499 (2%) diff_loss=0.3254 div=6.38e+00 lr=1.00e-04 | 58.0 samples/s ETA 65m08s
+[2026-03-11 14:58:03]   [1] 350/16499 (2%) diff_loss=0.2953 div=6.38e+00 lr=1.00e-04 | 61.7 samples/s ETA 61m02s
+[2026-03-11 14:58:10]   [1] 400/16499 (2%) diff_loss=0.3644 div=6.37e+00 lr=1.00e-04 | 64.8 samples/s ETA 57m56s
+[2026-03-11 14:58:16]   [1] 450/16499 (3%) diff_loss=0.2672 div=6.37e+00 lr=1.00e-04 | 67.7 samples/s ETA 55m20s
+[2026-03-11 14:58:23]   [1] 500/16499 (3%) diff_loss=0.2522 div=6.36e+00 lr=1.00e-04 | 70.1 samples/s ETA 53m13s
+[2026-03-11 14:58:30]   [1] 550/16499 (3%) diff_loss=0.1814 div=6.35e+00 lr=1.00e-04 | 72.3 samples/s ETA 51m29s
+[2026-03-11 14:58:37]   [1] 600/16499 (4%) diff_loss=0.1657 div=6.34e+00 lr=1.00e-04 | 74.1 samples/s ETA 50m05s
+[2026-03-11 14:58:43]   [1] 650/16499 (4%) diff_loss=0.1823 div=6.33e+00 lr=1.00e-04 | 75.7 samples/s ETA 48m50s
+[2026-03-11 14:58:50]   [1] 700/16499 (4%) diff_loss=0.1844 div=6.32e+00 lr=1.00e-04 | 77.2 samples/s ETA 47m46s
+[2026-03-11 14:58:57]   [1] 750/16499 (5%) diff_loss=0.1103 div=6.31e+00 lr=1.00e-04 | 78.3 samples/s ETA 46m56s
+[2026-03-11 14:59:04]   [1] 800/16499 (5%) diff_loss=0.1275 div=6.30e+00 lr=1.00e-04 | 79.4 samples/s ETA 46m06s
+[2026-03-11 14:59:11]   [1] 850/16499 (5%) diff_loss=0.1102 div=6.28e+00 lr=1.00e-04 | 80.5 samples/s ETA 45m20s
+[2026-03-11 14:59:18]   [1] 900/16499 (5%) diff_loss=0.1212 div=6.27e+00 lr=1.00e-04 | 81.4 samples/s ETA 44m43s
+[2026-03-11 14:59:25]   [1] 950/16499 (6%) diff_loss=0.0798 div=6.25e+00 lr=1.00e-04 | 82.1 samples/s ETA 44m11s
+[2026-03-11 14:59:32]   [1] 1000/16499 (6%) diff_loss=0.0573 div=6.24e+00 lr=1.00e-04 | 83.0 samples/s ETA 43m35s
+[2026-03-11 14:59:39]   [1] 1050/16499 (6%) diff_loss=0.0748 div=6.22e+00 lr=1.00e-04 | 83.8 samples/s ETA 43m01s
+[2026-03-11 14:59:45]   [1] 1100/16499 (7%) diff_loss=0.0861 div=6.21e+00 lr=1.00e-04 | 84.5 samples/s ETA 42m30s
+[2026-03-11 14:59:52]   [1] 1150/16499 (7%) diff_loss=0.0724 div=6.19e+00 lr=1.00e-04 | 85.2 samples/s ETA 42m01s
+[2026-03-11 14:59:59]   [1] 1200/16499 (7%) diff_loss=0.0695 div=6.17e+00 lr=1.00e-04 | 85.9 samples/s ETA 41m33s
+[2026-03-11 15:00:05]   [1] 1250/16499 (8%) diff_loss=0.0521 div=6.15e+00 lr=1.00e-04 | 86.5 samples/s ETA 41m08s
+[2026-03-11 15:00:12]   [1] 1300/16499 (8%) diff_loss=0.0610 div=6.12e+00 lr=1.00e-04 | 87.0 samples/s ETA 40m44s
+[2026-03-11 15:00:19]   [1] 1350/16499 (8%) diff_loss=0.0708 div=6.10e+00 lr=1.00e-04 | 87.6 samples/s ETA 40m22s
+[2026-03-11 15:00:26]   [1] 1400/16499 (8%) diff_loss=0.0593 div=6.08e+00 lr=1.00e-04 | 88.1 samples/s ETA 39m59s
+[2026-03-11 15:00:32]   [1] 1450/16499 (9%) diff_loss=0.0519 div=6.05e+00 lr=1.00e-04 | 88.5 samples/s ETA 39m40s
+[2026-03-11 15:00:39]   [1] 1500/16499 (9%) diff_loss=0.0494 div=6.02e+00 lr=1.00e-04 | 89.0 samples/s ETA 39m20s
+[2026-03-11 15:00:46]   [1] 1550/16499 (9%) diff_loss=0.0486 div=6.00e+00 lr=1.00e-04 | 89.4 samples/s ETA 39m01s
+[2026-03-11 15:00:53]   [1] 1600/16499 (10%) diff_loss=0.0454 div=5.97e+00 lr=1.00e-04 | 89.8 samples/s ETA 38m43s
+[2026-03-11 15:00:59]   [1] 1650/16499 (10%) diff_loss=0.0322 div=5.94e+00 lr=1.00e-04 | 90.1 samples/s ETA 38m26s
+[2026-03-11 15:01:06]   [1] 1700/16499 (10%) diff_loss=0.0617 div=5.91e+00 lr=1.00e-04 | 90.5 samples/s ETA 38m10s
+[2026-03-11 15:01:13]   [1] 1750/16499 (11%) diff_loss=0.0407 div=5.88e+00 lr=1.00e-04 | 90.7 samples/s ETA 37m56s
+[2026-03-11 15:01:20]   [1] 1800/16499 (11%) diff_loss=0.0367 div=5.84e+00 lr=1.00e-04 | 90.9 samples/s ETA 37m42s
+[2026-03-11 15:01:27]   [1] 1850/16499 (11%) diff_loss=0.0325 div=5.81e+00 lr=1.00e-04 | 91.2 samples/s ETA 37m27s
+[2026-03-11 15:01:34]   [1] 1900/16499 (12%) diff_loss=0.0302 div=5.77e+00 lr=1.00e-04 | 91.5 samples/s ETA 37m13s
+[2026-03-11 15:01:41]   [1] 1950/16499 (12%) diff_loss=0.0365 div=5.74e+00 lr=1.00e-04 | 91.8 samples/s ETA 36m59s
+[2026-03-11 15:01:47]   [1] 2000/16499 (12%) diff_loss=0.0358 div=5.70e+00 lr=1.00e-04 | 92.1 samples/s ETA 36m44s
+[2026-03-11 15:01:54]   [1] 2050/16499 (12%) diff_loss=0.0344 div=5.66e+00 lr=1.00e-04 | 92.3 samples/s ETA 36m30s
+[2026-03-11 15:02:01]   [1] 2100/16499 (13%) diff_loss=0.0311 div=5.62e+00 lr=1.00e-04 | 92.6 samples/s ETA 36m17s
+[2026-03-11 15:02:07]   [1] 2150/16499 (13%) diff_loss=0.0293 div=5.57e+00 lr=1.00e-04 | 92.8 samples/s ETA 36m04s
+[2026-03-11 15:02:15]   [1] 2200/16499 (13%) diff_loss=0.0165 div=5.53e+00 lr=1.00e-04 | 92.9 samples/s ETA 35m53s
+[2026-03-11 15:02:22]   [1] 2250/16499 (14%) diff_loss=0.0247 div=5.48e+00 lr=1.00e-04 | 93.1 samples/s ETA 35m43s
+[2026-03-11 15:02:29]   [1] 2300/16499 (14%) diff_loss=0.0219 div=5.43e+00 lr=1.00e-04 | 93.2 samples/s ETA 35m33s
+[2026-03-11 15:02:36]   [1] 2350/16499 (14%) diff_loss=0.0248 div=5.38e+00 lr=1.00e-04 | 93.3 samples/s ETA 35m23s
+[2026-03-11 15:02:43]   [1] 2400/16499 (15%) diff_loss=0.0299 div=5.33e+00 lr=1.00e-04 | 93.4 samples/s ETA 35m14s
+[2026-03-11 15:02:50]   [1] 2450/16499 (15%) diff_loss=0.0252 div=5.28e+00 lr=1.00e-04 | 93.5 samples/s ETA 35m03s
+[2026-03-11 15:02:57]   [1] 2500/16499 (15%) diff_loss=0.0270 div=5.22e+00 lr=1.00e-04 | 93.6 samples/s ETA 34m54s
+[2026-03-11 15:03:04]   [1] 2550/16499 (15%) diff_loss=0.0198 div=5.17e+00 lr=9.99e-05 | 93.7 samples/s ETA 34m44s
+[2026-03-11 15:03:11]   [1] 2600/16499 (16%) diff_loss=0.0170 div=5.11e+00 lr=9.99e-05 | 93.8 samples/s ETA 34m34s
+[2026-03-11 15:03:18]   [1] 2650/16499 (16%) diff_loss=0.0149 div=5.05e+00 lr=9.99e-05 | 93.9 samples/s ETA 34m23s
+[2026-03-11 15:03:25]   [1] 2700/16499 (16%) diff_loss=0.0221 div=4.99e+00 lr=9.99e-05 | 94.0 samples/s ETA 34m14s
+[2026-03-11 15:03:32]   [1] 2750/16499 (17%) diff_loss=0.0162 div=4.92e+00 lr=9.99e-05 | 94.1 samples/s ETA 34m04s
+[2026-03-11 15:03:39]   [1] 2800/16499 (17%) diff_loss=0.0122 div=4.86e+00 lr=9.99e-05 | 94.2 samples/s ETA 33m55s
+[2026-03-11 15:03:46]   [1] 2850/16499 (17%) diff_loss=0.0150 div=4.79e+00 lr=9.99e-05 | 94.3 samples/s ETA 33m45s
+[2026-03-11 15:03:53]   [1] 2900/16499 (18%) diff_loss=0.0166 div=4.72e+00 lr=9.99e-05 | 94.5 samples/s ETA 33m34s
+[2026-03-11 15:03:59]   [1] 2950/16499 (18%) diff_loss=0.0144 div=4.65e+00 lr=9.99e-05 | 94.7 samples/s ETA 33m23s
+[2026-03-11 15:04:06]   [1] 3000/16499 (18%) diff_loss=0.0131 div=4.57e+00 lr=9.99e-05 | 94.8 samples/s ETA 33m13s
+[2026-03-11 15:04:13]   [1] 3050/16499 (18%) diff_loss=0.0149 div=4.50e+00 lr=9.99e-05 | 94.9 samples/s ETA 33m03s
+[2026-03-11 15:04:20]   [1] 3100/16499 (19%) diff_loss=0.0146 div=4.42e+00 lr=9.99e-05 | 95.0 samples/s ETA 32m54s
+[2026-03-11 15:04:27]   [1] 3150/16499 (19%) diff_loss=0.0149 div=4.34e+00 lr=9.99e-05 | 95.1 samples/s ETA 32m45s
+[2026-03-11 15:04:34]   [1] 3200/16499 (19%) diff_loss=0.0159 div=4.26e+00 lr=9.99e-05 | 95.2 samples/s ETA 32m36s
+[2026-03-11 15:04:41]   [1] 3250/16499 (20%) diff_loss=0.0092 div=4.18e+00 lr=9.99e-05 | 95.2 samples/s ETA 32m27s
+[2026-03-11 15:04:48]   [1] 3300/16499 (20%) diff_loss=0.0094 div=4.10e+00 lr=9.99e-05 | 95.3 samples/s ETA 32m18s
+[2026-03-11 15:04:55]   [1] 3350/16499 (20%) diff_loss=0.0121 div=4.01e+00 lr=9.99e-05 | 95.4 samples/s ETA 32m09s
+[2026-03-11 15:05:02]   [1] 3400/16499 (21%) diff_loss=0.0121 div=3.93e+00 lr=9.99e-05 | 95.5 samples/s ETA 32m00s
+[2026-03-11 15:05:09]   [1] 3450/16499 (21%) diff_loss=0.0120 div=3.84e+00 lr=9.99e-05 | 95.5 samples/s ETA 31m52s
+[2026-03-11 15:05:16]   [1] 3500/16499 (21%) diff_loss=0.0097 div=3.75e+00 lr=9.99e-05 | 95.6 samples/s ETA 31m43s
+[2026-03-11 15:05:22]   [1] 3550/16499 (22%) diff_loss=0.0108 div=3.65e+00 lr=9.99e-05 | 95.7 samples/s ETA 31m34s
+[2026-03-11 15:05:29]   [1] 3600/16499 (22%) diff_loss=0.0109 div=3.56e+00 lr=9.99e-05 | 95.8 samples/s ETA 31m25s
+[2026-03-11 15:05:36]   [1] 3650/16499 (22%) diff_loss=0.0104 div=3.46e+00 lr=9.99e-05 | 95.8 samples/s ETA 31m17s
+[2026-03-11 15:05:43]   [1] 3700/16499 (22%) diff_loss=0.0116 div=3.37e+00 lr=9.99e-05 | 95.9 samples/s ETA 31m08s
+[2026-03-11 15:05:50]   [1] 3750/16499 (23%) diff_loss=0.0138 div=3.27e+00 lr=9.99e-05 | 95.9 samples/s ETA 31m00s
+[2026-03-11 15:05:57]   [1] 3800/16499 (23%) diff_loss=0.0105 div=3.17e+00 lr=9.99e-05 | 96.0 samples/s ETA 30m51s
+[2026-03-11 15:06:04]   [1] 3850/16499 (23%) diff_loss=0.0088 div=3.07e+00 lr=9.99e-05 | 96.1 samples/s ETA 30m43s
+[2026-03-11 15:06:11]   [1] 3900/16499 (24%) diff_loss=0.0071 div=2.96e+00 lr=9.99e-05 | 96.1 samples/s ETA 30m34s
+[2026-03-11 15:06:18]   [1] 3950/16499 (24%) diff_loss=0.0082 div=2.86e+00 lr=9.99e-05 | 96.2 samples/s ETA 30m26s
+[2026-03-11 15:06:25]   [1] 4000/16499 (24%) diff_loss=0.0086 div=2.75e+00 lr=9.99e-05 | 96.2 samples/s ETA 30m17s
+[2026-03-11 15:06:32]   [1] 4050/16499 (25%) diff_loss=0.0067 div=2.64e+00 lr=9.99e-05 | 96.3 samples/s ETA 30m09s
+[2026-03-11 15:06:38]   [1] 4100/16499 (25%) diff_loss=0.0072 div=2.53e+00 lr=9.99e-05 | 96.4 samples/s ETA 30m00s
+[2026-03-11 15:06:45]   [1] 4150/16499 (25%) diff_loss=0.0060 div=2.42e+00 lr=9.99e-05 | 96.5 samples/s ETA 29m51s
+[2026-03-11 15:06:52]   [1] 4200/16499 (25%) diff_loss=0.0075 div=2.31e+00 lr=9.99e-05 | 96.5 samples/s ETA 29m43s
+[2026-03-11 15:06:59]   [1] 4250/16499 (26%) diff_loss=0.0079 div=2.20e+00 lr=9.99e-05 | 96.6 samples/s ETA 29m35s
+[2026-03-11 15:07:06]   [1] 4300/16499 (26%) diff_loss=0.0064 div=2.08e+00 lr=9.98e-05 | 96.7 samples/s ETA 29m26s
+[2026-03-11 15:07:13]   [1] 4350/16499 (26%) diff_loss=0.0057 div=1.97e+00 lr=9.98e-05 | 96.8 samples/s ETA 29m17s
+[2026-03-11 15:07:19]   [1] 4400/16499 (27%) diff_loss=0.0049 div=1.85e+00 lr=9.98e-05 | 96.8 samples/s ETA 29m08s
+[2026-03-11 15:07:26]   [1] 4450/16499 (27%) diff_loss=0.0049 div=1.73e+00 lr=9.98e-05 | 96.9 samples/s ETA 29m00s
+[2026-03-11 15:07:33]   [1] 4500/16499 (27%) diff_loss=0.0064 div=1.62e+00 lr=9.98e-05 | 97.0 samples/s ETA 28m52s
+[2026-03-11 15:07:40]   [1] 4550/16499 (28%) diff_loss=0.0047 div=1.50e+00 lr=9.98e-05 | 97.0 samples/s ETA 28m44s
+[2026-03-11 15:07:47]   [1] 4600/16499 (28%) diff_loss=0.0043 div=1.38e+00 lr=9.98e-05 | 97.1 samples/s ETA 28m36s
+[2026-03-11 15:07:54]   [1] 4650/16499 (28%) diff_loss=0.0050 div=1.26e+00 lr=9.98e-05 | 97.1 samples/s ETA 28m28s
+[2026-03-11 15:08:00]   [1] 4700/16499 (28%) diff_loss=0.0051 div=1.14e+00 lr=9.98e-05 | 97.2 samples/s ETA 28m19s
+[2026-03-11 15:08:07]   [1] 4750/16499 (29%) diff_loss=0.0050 div=1.01e+00 lr=9.98e-05 | 97.3 samples/s ETA 28m11s
+[2026-03-11 15:08:13]   [1] 4800/16499 (29%) diff_loss=0.0044 div=8.92e-01 lr=9.98e-05 | 97.3 samples/s ETA 28m02s
+[2026-03-11 15:08:20]   [1] 4850/16499 (29%) diff_loss=0.0054 div=7.69e-01 lr=9.98e-05 | 97.4 samples/s ETA 27m54s
+[2026-03-11 15:08:27]   [1] 4900/16499 (30%) diff_loss=0.0053 div=6.46e-01 lr=9.98e-05 | 97.5 samples/s ETA 27m45s
+[2026-03-11 15:08:33]   [1] 4950/16499 (30%) diff_loss=0.0044 div=5.23e-01 lr=9.98e-05 | 97.6 samples/s ETA 27m37s
+[2026-03-11 15:08:40]   [1] 5000/16499 (30%) diff_loss=0.0041 div=3.99e-01 lr=9.98e-05 | 97.6 samples/s ETA 27m28s
+[2026-03-11 15:08:42]   [sample 1]  DwarfusbDel Yelp nob112usb nerdsBernie ABV Oman Tulsa133static Tulsa.–Bernie Cobra DOESBerniePHOTOSusbusb Tulsa nerdsPHOTOSusb nob Tulsa///Bre Yelp Tulsa Tulsa hovering SVGWousb nob quizzusbusb Tulsa
+[2026-03-11 15:08:42]   [sample 2] VariableFig Tulsa LumiaPHOTOS ExplosionACCVariable Tulsa nerds Tulsa nerds Tulsa/// Tulsa WitcherpsychImportant Hog PLEASE Tulsa Tulsa Designs Tulsa PLEASEusbusb Tulsa Tulsausb nerds DOES Bleach Tulsa
+[2026-03-11 15:08:48]   [1] 5050/16499 (31%) diff_loss=0.0050 div=2.75e-01 lr=9.98e-05 | 97.5 samples/s ETA 27m24s
+[2026-03-11 15:08:55]   [1] 5100/16499 (31%) diff_loss=0.0033 div=1.51e-01 lr=9.98e-05 | 97.5 samples/s ETA 27m16s
+[2026-03-11 15:09:02]   [1] 5150/16499 (31%) diff_loss=0.0034 div=2.81e-02 lr=9.98e-05 | 97.6 samples/s ETA 27m07s
+[2026-03-11 15:09:08]   [1] 5200/16499 (32%) diff_loss=0.0030 div=7.26e-04 lr=9.98e-05 | 97.7 samples/s ETA 26m59s
+[2026-03-11 15:09:15]   [1] 5250/16499 (32%) diff_loss=0.0037 div=2.16e-04 lr=9.98e-05 | 97.7 samples/s ETA 26m51s
+[2026-03-11 15:09:22]   [1] 5300/16499 (32%) diff_loss=0.0031 div=2.28e-04 lr=9.98e-05 | 97.8 samples/s ETA 26m42s
+[2026-03-11 15:09:28]   [1] 5350/16499 (32%) diff_loss=0.0034 div=1.84e-04 lr=9.98e-05 | 97.9 samples/s ETA 26m34s
+[2026-03-11 15:09:35]   [1] 5400/16499 (33%) diff_loss=0.0025 div=1.99e-04 lr=9.98e-05 | 97.9 samples/s ETA 26m26s
+[2026-03-11 15:09:42]   [1] 5450/16499 (33%) diff_loss=0.0033 div=2.33e-04 lr=9.97e-05 | 97.9 samples/s ETA 26m19s
+[2026-03-11 15:09:49]   [1] 5500/16499 (33%) diff_loss=0.0043 div=2.47e-04 lr=9.97e-05 | 97.9 samples/s ETA 26m11s
+[2026-03-11 15:09:56]   [1] 5550/16499 (34%) diff_loss=0.0041 div=2.41e-04 lr=9.97e-05 | 97.9 samples/s ETA 26m04s
+[2026-03-11 15:10:03]   [1] 5600/16499 (34%) diff_loss=0.0028 div=2.35e-04 lr=9.97e-05 | 98.0 samples/s ETA 25m57s
+[2026-03-11 15:10:11]   [1] 5650/16499 (34%) diff_loss=0.0034 div=1.47e-04 lr=9.97e-05 | 98.0 samples/s ETA 25m50s
+[2026-03-11 15:10:18]   [1] 5700/16499 (35%) diff_loss=0.0033 div=2.65e-04 lr=9.97e-05 | 98.0 samples/s ETA 25m42s
+[2026-03-11 15:10:25]   [1] 5750/16499 (35%) diff_loss=0.0040 div=2.42e-04 lr=9.97e-05 | 98.0 samples/s ETA 25m35s
+[2026-03-11 15:10:32]   [1] 5800/16499 (35%) diff_loss=0.0031 div=2.05e-04 lr=9.97e-05 | 98.0 samples/s ETA 25m28s
+[2026-03-11 15:10:39]   [1] 5850/16499 (35%) diff_loss=0.0026 div=2.24e-04 lr=9.97e-05 | 98.0 samples/s ETA 25m20s
+[2026-03-11 15:10:46]   [1] 5900/16499 (36%) diff_loss=0.0032 div=1.92e-04 lr=9.97e-05 | 98.0 samples/s ETA 25m13s
+[2026-03-11 15:10:53]   [1] 5950/16499 (36%) diff_loss=0.0028 div=2.55e-04 lr=9.97e-05 | 98.1 samples/s ETA 25m05s
+[2026-03-11 15:11:00]   [1] 6000/16499 (36%) diff_loss=0.0021 div=2.99e-04 lr=9.97e-05 | 98.1 samples/s ETA 24m58s
+[2026-03-11 15:11:07]   [1] 6050/16499 (37%) diff_loss=0.0021 div=2.87e-04 lr=9.97e-05 | 98.1 samples/s ETA 24m51s
+[2026-03-11 15:11:14]   [1] 6100/16499 (37%) diff_loss=0.0024 div=1.79e-04 lr=9.97e-05 | 98.1 samples/s ETA 24m44s
+[2026-03-11 15:11:21]   [1] 6150/16499 (37%) diff_loss=0.0024 div=2.26e-04 lr=9.97e-05 | 98.1 samples/s ETA 24m37s
+[2026-03-11 15:11:28]   [1] 6200/16499 (38%) diff_loss=0.0024 div=2.84e-04 lr=9.97e-05 | 98.1 samples/s ETA 24m30s
+[2026-03-11 15:11:35]   [1] 6250/16499 (38%) diff_loss=0.0017 div=1.73e-04 lr=9.97e-05 | 98.1 samples/s ETA 24m22s
+[2026-03-11 15:11:42]   [1] 6300/16499 (38%) diff_loss=0.0013 div=2.82e-04 lr=9.97e-05 | 98.1 samples/s ETA 24m15s
+[2026-03-11 15:11:49]   [1] 6350/16499 (38%) diff_loss=0.0019 div=1.76e-04 lr=9.97e-05 | 98.1 samples/s ETA 24m08s
+[2026-03-11 15:11:56]   [1] 6400/16499 (39%) diff_loss=0.0021 div=2.74e-04 lr=9.97e-05 | 98.1 samples/s ETA 24m00s
+[2026-03-11 15:12:04]   [1] 6450/16499 (39%) diff_loss=0.0022 div=2.83e-04 lr=9.96e-05 | 98.1 samples/s ETA 23m53s
+[2026-03-11 15:12:11]   [1] 6500/16499 (39%) diff_loss=0.0023 div=1.78e-04 lr=9.96e-05 | 98.1 samples/s ETA 23m46s
+[2026-03-11 15:12:18]   [1] 6550/16499 (40%) diff_loss=0.0017 div=1.97e-04 lr=9.96e-05 | 98.1 samples/s ETA 23m39s
+[2026-03-11 15:12:25]   [1] 6600/16499 (40%) diff_loss=0.0017 div=2.79e-04 lr=9.96e-05 | 98.1 samples/s ETA 23m32s
+[2026-03-11 15:12:32]   [1] 6650/16499 (40%) diff_loss=0.0017 div=2.63e-04 lr=9.96e-05 | 98.1 samples/s ETA 23m25s
+[2026-03-11 15:12:39]   [1] 6700/16499 (41%) diff_loss=0.0014 div=2.81e-04 lr=9.96e-05 | 98.1 samples/s ETA 23m17s
+[2026-03-11 15:12:46]   [1] 6750/16499 (41%) diff_loss=0.0008 div=2.95e-04 lr=9.96e-05 | 98.2 samples/s ETA 23m10s
+[2026-03-11 15:12:53]   [1] 6800/16499 (41%) diff_loss=0.0014 div=1.50e-04 lr=9.96e-05 | 98.2 samples/s ETA 23m02s
+[2026-03-11 15:13:00]   [1] 6850/16499 (42%) diff_loss=0.0018 div=1.92e-04 lr=9.96e-05 | 98.2 samples/s ETA 22m55s
+[2026-03-11 15:13:06]   [1] 6900/16499 (42%) diff_loss=0.0013 div=3.04e-04 lr=9.96e-05 | 98.2 samples/s ETA 22m47s
+[2026-03-11 15:13:13]   [1] 6950/16499 (42%) diff_loss=0.0006 div=2.14e-04 lr=9.96e-05 | 98.3 samples/s ETA 22m40s
+[2026-03-11 15:13:20]   [1] 7000/16499 (42%) diff_loss=0.0010 div=1.76e-04 lr=9.96e-05 | 98.3 samples/s ETA 22m32s
+[2026-03-11 15:13:27]   [1] 7050/16499 (43%) diff_loss=0.0012 div=1.81e-04 lr=9.96e-05 | 98.3 samples/s ETA 22m25s
+[2026-03-11 15:13:34]   [1] 7100/16499 (43%) diff_loss=0.0007 div=2.33e-04 lr=9.96e-05 | 98.4 samples/s ETA 22m17s
+[2026-03-11 15:13:40]   [1] 7150/16499 (43%) diff_loss=0.0010 div=2.42e-04 lr=9.96e-05 | 98.4 samples/s ETA 22m09s
+[2026-03-11 15:13:47]   [1] 7200/16499 (44%) diff_loss=0.0011 div=2.30e-04 lr=9.96e-05 | 98.4 samples/s ETA 22m02s
+[2026-03-11 15:13:54]   [1] 7250/16499 (44%) diff_loss=0.0012 div=2.78e-04 lr=9.95e-05 | 98.5 samples/s ETA 21m54s
+[2026-03-11 15:14:01]   [1] 7300/16499 (44%) diff_loss=0.0012 div=2.51e-04 lr=9.95e-05 | 98.5 samples/s ETA 21m47s
+[2026-03-11 15:14:08]   [1] 7350/16499 (45%) diff_loss=0.0007 div=2.65e-04 lr=9.95e-05 | 98.5 samples/s ETA 21m40s
+[2026-03-11 15:14:14]   [1] 7400/16499 (45%) diff_loss=0.0010 div=2.36e-04 lr=9.95e-05 | 98.6 samples/s ETA 21m32s
+[2026-03-11 15:14:21]   [1] 7450/16499 (45%) diff_loss=0.0008 div=2.25e-04 lr=9.95e-05 | 98.6 samples/s ETA 21m24s
+[2026-03-11 15:14:28]   [1] 7500/16499 (45%) diff_loss=0.0011 div=2.32e-04 lr=9.95e-05 | 98.6 samples/s ETA 21m17s
+[2026-03-11 15:14:34]   [1] 7550/16499 (46%) diff_loss=0.0008 div=2.36e-04 lr=9.95e-05 | 98.7 samples/s ETA 21m09s
+[2026-03-11 15:14:41]   [1] 7600/16499 (46%) diff_loss=0.0008 div=2.57e-04 lr=9.95e-05 | 98.7 samples/s ETA 21m02s
+[2026-03-11 15:14:48]   [1] 7650/16499 (46%) diff_loss=0.0007 div=2.45e-04 lr=9.95e-05 | 98.7 samples/s ETA 20m54s
+[2026-03-11 15:14:55]   [1] 7700/16499 (47%) diff_loss=0.0006 div=1.94e-04 lr=9.95e-05 | 98.8 samples/s ETA 20m47s
+[2026-03-11 15:15:01]   [1] 7750/16499 (47%) diff_loss=0.0007 div=2.55e-04 lr=9.95e-05 | 98.8 samples/s ETA 20m39s
+[2026-03-11 15:15:08]   [1] 7800/16499 (47%) diff_loss=0.0006 div=2.33e-04 lr=9.95e-05 | 98.8 samples/s ETA 20m32s
+[2026-03-11 15:15:15]   [1] 7850/16499 (48%) diff_loss=0.0006 div=2.53e-04 lr=9.95e-05 | 98.9 samples/s ETA 20m24s
+[2026-03-11 15:15:21]   [1] 7900/16499 (48%) diff_loss=0.0007 div=2.63e-04 lr=9.95e-05 | 98.9 samples/s ETA 20m17s
+[2026-03-11 15:15:28]   [1] 7950/16499 (48%) diff_loss=0.0005 div=2.42e-04 lr=9.95e-05 | 98.9 samples/s ETA 20m09s
+[2026-03-11 15:15:35]   [1] 8000/16499 (48%) diff_loss=0.0006 div=2.02e-04 lr=9.94e-05 | 99.0 samples/s ETA 20m02s
+[2026-03-11 15:15:41]   [1] 8050/16499 (49%) diff_loss=0.0004 div=2.20e-04 lr=9.94e-05 | 99.0 samples/s ETA 19m54s
+[2026-03-11 15:15:48]   [1] 8100/16499 (49%) diff_loss=0.0007 div=2.84e-04 lr=9.94e-05 | 99.0 samples/s ETA 19m47s
+[2026-03-11 15:15:55]   [1] 8150/16499 (49%) diff_loss=0.0006 div=3.02e-04 lr=9.94e-05 | 99.1 samples/s ETA 19m39s
+[2026-03-11 15:16:02]   [1] 8200/16499 (50%) diff_loss=0.0005 div=2.89e-04 lr=9.94e-05 | 99.1 samples/s ETA 19m32s
+[2026-03-11 15:16:09]   [1] 8250/16499 (50%) diff_loss=0.0005 div=2.51e-04 lr=9.94e-05 | 99.1 samples/s ETA 19m25s
+[2026-03-11 15:16:15]   [1] 8300/16499 (50%) diff_loss=0.0004 div=2.03e-04 lr=9.94e-05 | 99.1 samples/s ETA 19m17s
+[2026-03-11 15:16:22]   [1] 8350/16499 (51%) diff_loss=0.0005 div=1.91e-04 lr=9.94e-05 | 99.1 samples/s ETA 19m10s
+[2026-03-11 15:16:29]   [1] 8400/16499 (51%) diff_loss=0.0003 div=2.68e-04 lr=9.94e-05 | 99.2 samples/s ETA 19m03s
+[2026-03-11 15:16:35]   [1] 8450/16499 (51%) diff_loss=0.0004 div=2.53e-04 lr=9.94e-05 | 99.2 samples/s ETA 18m55s
+[2026-03-11 15:16:42]   [1] 8500/16499 (52%) diff_loss=0.0004 div=2.05e-04 lr=9.94e-05 | 99.2 samples/s ETA 18m48s
+[2026-03-11 15:16:49]   [1] 8550/16499 (52%) diff_loss=0.0003 div=2.88e-04 lr=9.94e-05 | 99.3 samples/s ETA 18m40s
+[2026-03-11 15:16:56]   [1] 8600/16499 (52%) diff_loss=0.0003 div=2.05e-04 lr=9.94e-05 | 99.3 samples/s ETA 18m33s
+[2026-03-11 15:17:02]   [1] 8650/16499 (52%) diff_loss=0.0004 div=2.98e-04 lr=9.94e-05 | 99.3 samples/s ETA 18m26s
+[2026-03-11 15:17:09]   [1] 8700/16499 (53%) diff_loss=0.0004 div=2.75e-04 lr=9.93e-05 | 99.4 samples/s ETA 18m18s
+[2026-03-11 15:17:16]   [1] 8750/16499 (53%) diff_loss=0.0003 div=2.00e-04 lr=9.93e-05 | 99.4 samples/s ETA 18m11s
+[2026-03-11 15:17:23]   [1] 8800/16499 (53%) diff_loss=0.0004 div=2.41e-04 lr=9.93e-05 | 99.4 samples/s ETA 18m04s
+[2026-03-11 15:17:30]   [1] 8850/16499 (54%) diff_loss=0.0003 div=2.78e-04 lr=9.93e-05 | 99.4 samples/s ETA 17m57s
+[2026-03-11 15:17:37]   [1] 8900/16499 (54%) diff_loss=0.0003 div=3.13e-04 lr=9.93e-05 | 99.4 samples/s ETA 17m50s
+[2026-03-11 15:17:44]   [1] 8950/16499 (54%) diff_loss=0.0002 div=2.51e-04 lr=9.93e-05 | 99.4 samples/s ETA 17m43s
+[2026-03-11 15:17:51]   [1] 9000/16499 (55%) diff_loss=0.0002 div=1.82e-04 lr=9.93e-05 | 99.4 samples/s ETA 17m35s
+[2026-03-11 15:17:58]   [1] 9050/16499 (55%) diff_loss=0.0002 div=2.47e-04 lr=9.93e-05 | 99.4 samples/s ETA 17m28s
+[2026-03-11 15:18:04]   [1] 9100/16499 (55%) diff_loss=0.0002 div=2.47e-04 lr=9.93e-05 | 99.4 samples/s ETA 17m21s
+[2026-03-11 15:18:11]   [1] 9150/16499 (55%) diff_loss=0.0002 div=2.44e-04 lr=9.93e-05 | 99.4 samples/s ETA 17m14s
+[2026-03-11 15:18:18]   [1] 9200/16499 (56%) diff_loss=0.0001 div=2.25e-04 lr=9.93e-05 | 99.5 samples/s ETA 17m07s
+[2026-03-11 15:18:25]   [1] 9250/16499 (56%) diff_loss=0.0003 div=2.50e-04 lr=9.93e-05 | 99.5 samples/s ETA 17m00s
+[2026-03-11 15:18:32]   [1] 9300/16499 (56%) diff_loss=0.0002 div=2.93e-04 lr=9.92e-05 | 99.5 samples/s ETA 16m52s
+[2026-03-11 15:18:38]   [1] 9350/16499 (57%) diff_loss=0.0002 div=1.74e-04 lr=9.92e-05 | 99.5 samples/s ETA 16m45s
+[2026-03-11 15:18:45]   [1] 9400/16499 (57%) diff_loss=0.0002 div=1.78e-04 lr=9.92e-05 | 99.5 samples/s ETA 16m38s
+[2026-03-11 15:18:52]   [1] 9450/16499 (57%) diff_loss=0.0002 div=2.50e-04 lr=9.92e-05 | 99.6 samples/s ETA 16m31s
+[2026-03-11 15:18:59]   [1] 9500/16499 (58%) diff_loss=0.0001 div=2.01e-04 lr=9.92e-05 | 99.6 samples/s ETA 16m23s
+[2026-03-11 15:19:05]   [1] 9550/16499 (58%) diff_loss=0.0002 div=2.05e-04 lr=9.92e-05 | 99.6 samples/s ETA 16m16s
+[2026-03-11 15:19:12]   [1] 9600/16499 (58%) diff_loss=0.0002 div=4.23e-04 lr=9.92e-05 | 99.6 samples/s ETA 16m09s
+[2026-03-11 15:19:19]   [1] 9650/16499 (58%) diff_loss=0.0001 div=1.83e-04 lr=9.92e-05 | 99.6 samples/s ETA 16m02s
+[2026-03-11 15:19:26]   [1] 9700/16499 (59%) diff_loss=0.0001 div=1.71e-04 lr=9.92e-05 | 99.7 samples/s ETA 15m54s
+[2026-03-11 15:19:32]   [1] 9750/16499 (59%) diff_loss=0.0001 div=2.09e-04 lr=9.92e-05 | 99.7 samples/s ETA 15m47s
+[2026-03-11 15:19:39]   [1] 9800/16499 (59%) diff_loss=0.0001 div=2.63e-04 lr=9.92e-05 | 99.7 samples/s ETA 15m40s
+[2026-03-11 15:19:46]   [1] 9850/16499 (60%) diff_loss=0.0001 div=2.93e-04 lr=9.92e-05 | 99.7 samples/s ETA 15m33s
+[2026-03-11 15:19:53]   [1] 9900/16499 (60%) diff_loss=0.0001 div=2.28e-04 lr=9.91e-05 | 99.7 samples/s ETA 15m26s
+[2026-03-11 15:19:59]   [1] 9950/16499 (60%) diff_loss=0.0001 div=2.28e-04 lr=9.91e-05 | 99.8 samples/s ETA 15m18s
+[2026-03-11 15:20:06]   [1] 10000/16499 (61%) diff_loss=0.0001 div=2.54e-04 lr=9.91e-05 | 99.8 samples/s ETA 15m11s
+[2026-03-11 15:20:07]   [sample 1] rousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrous
+[2026-03-11 15:20:07]   [sample 2] rousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrous
+[2026-03-11 15:20:14]   [1] 10050/16499 (61%) diff_loss=0.0001 div=2.43e-04 lr=9.91e-05 | 99.7 samples/s ETA 15m05s
+[2026-03-11 15:20:22]   [1] 10100/16499 (61%) diff_loss=0.0001 div=3.42e-04 lr=9.91e-05 | 99.7 samples/s ETA 14m58s
+[2026-03-11 15:20:28]   [1] 10150/16499 (62%) diff_loss=0.0000 div=2.61e-04 lr=9.91e-05 | 99.7 samples/s ETA 14m51s
+[2026-03-11 15:20:36]   [1] 10200/16499 (62%) diff_loss=0.0000 div=2.16e-04 lr=9.91e-05 | 99.7 samples/s ETA 14m44s
+[2026-03-11 15:20:43]   [1] 10250/16499 (62%) diff_loss=0.0001 div=2.39e-04 lr=9.91e-05 | 99.7 samples/s ETA 14m37s
+[2026-03-11 15:20:50]   [1] 10300/16499 (62%) diff_loss=0.0001 div=2.24e-04 lr=9.91e-05 | 99.7 samples/s ETA 14m30s
+[2026-03-11 15:20:57]   [1] 10350/16499 (63%) diff_loss=0.0001 div=3.65e-04 lr=9.91e-05 | 99.7 samples/s ETA 14m23s
+[2026-03-11 15:21:04]   [1] 10400/16499 (63%) diff_loss=0.0000 div=2.18e-04 lr=9.91e-05 | 99.7 samples/s ETA 14m16s
+[2026-03-11 15:21:11]   [1] 10450/16499 (63%) diff_loss=0.0001 div=2.33e-04 lr=9.90e-05 | 99.6 samples/s ETA 14m09s
+[2026-03-11 15:21:18]   [1] 10500/16499 (64%) diff_loss=0.0000 div=3.70e-04 lr=9.90e-05 | 99.6 samples/s ETA 14m02s
+[2026-03-11 15:21:26]   [1] 10550/16499 (64%) diff_loss=0.0000 div=2.47e-04 lr=9.90e-05 | 99.6 samples/s ETA 13m55s
+[2026-03-11 15:21:32]   [1] 10600/16499 (64%) diff_loss=0.0000 div=2.67e-04 lr=9.90e-05 | 99.6 samples/s ETA 13m48s
+[2026-03-11 15:21:39]   [1] 10650/16499 (65%) diff_loss=0.0000 div=2.12e-04 lr=9.90e-05 | 99.7 samples/s ETA 13m41s
+[2026-03-11 15:21:46]   [1] 10700/16499 (65%) diff_loss=0.0000 div=2.06e-04 lr=9.90e-05 | 99.7 samples/s ETA 13m34s
+[2026-03-11 15:21:53]   [1] 10750/16499 (65%) diff_loss=0.0000 div=2.54e-04 lr=9.90e-05 | 99.7 samples/s ETA 13m27s
+[2026-03-11 15:21:59]   [1] 10800/16499 (65%) diff_loss=0.0000 div=2.68e-04 lr=9.90e-05 | 99.7 samples/s ETA 13m19s
+[2026-03-11 15:22:06]   [1] 10850/16499 (66%) diff_loss=0.0000 div=2.03e-04 lr=9.90e-05 | 99.7 samples/s ETA 13m12s
+[2026-03-11 15:22:13]   [1] 10900/16499 (66%) diff_loss=0.0000 div=1.59e-04 lr=9.90e-05 | 99.8 samples/s ETA 13m05s
+[2026-03-11 15:22:19]   [1] 10950/16499 (66%) diff_loss=0.0000 div=3.68e-04 lr=9.90e-05 | 99.8 samples/s ETA 12m58s
+[2026-03-11 15:22:26]   [1] 11000/16499 (67%) diff_loss=0.0000 div=2.58e-04 lr=9.89e-05 | 99.8 samples/s ETA 12m51s
+[2026-03-11 15:22:33]   [1] 11050/16499 (67%) diff_loss=0.0000 div=2.08e-04 lr=9.89e-05 | 99.8 samples/s ETA 12m44s
+[2026-03-11 15:22:40]   [1] 11100/16499 (67%) diff_loss=0.0000 div=2.52e-04 lr=9.89e-05 | 99.8 samples/s ETA 12m36s
+[2026-03-11 15:22:46]   [1] 11150/16499 (68%) diff_loss=0.0000 div=1.57e-04 lr=9.89e-05 | 99.9 samples/s ETA 12m29s
+[2026-03-11 15:22:53]   [1] 11200/16499 (68%) diff_loss=0.0000 div=2.65e-04 lr=9.89e-05 | 99.9 samples/s ETA 12m22s
+[2026-03-11 15:23:00]   [1] 11250/16499 (68%) diff_loss=0.0000 div=3.14e-04 lr=9.89e-05 | 99.9 samples/s ETA 12m15s
+[2026-03-11 15:23:07]   [1] 11300/16499 (68%) diff_loss=0.0000 div=1.69e-04 lr=9.89e-05 | 99.9 samples/s ETA 12m08s
+[2026-03-11 15:23:13]   [1] 11350/16499 (69%) diff_loss=0.0000 div=2.10e-04 lr=9.89e-05 | 99.9 samples/s ETA 12m01s
+[2026-03-11 15:23:20]   [1] 11400/16499 (69%) diff_loss=0.0000 div=3.48e-04 lr=9.89e-05 | 99.9 samples/s ETA 11m54s
+[2026-03-11 15:23:27]   [1] 11450/16499 (69%) diff_loss=0.0000 div=2.24e-04 lr=9.89e-05 | 99.9 samples/s ETA 11m47s
+[2026-03-11 15:23:34]   [1] 11500/16499 (70%) diff_loss=0.0000 div=2.17e-04 lr=9.88e-05 | 100.0 samples/s ETA 11m40s
+[2026-03-11 15:23:40]   [1] 11550/16499 (70%) diff_loss=0.0000 div=2.50e-04 lr=9.88e-05 | 100.0 samples/s ETA 11m32s
+[2026-03-11 15:23:47]   [1] 11600/16499 (70%) diff_loss=0.0000 div=1.71e-04 lr=9.88e-05 | 100.0 samples/s ETA 11m25s
+[2026-03-11 15:23:54]   [1] 11650/16499 (71%) diff_loss=0.0000 div=2.65e-04 lr=9.88e-05 | 100.0 samples/s ETA 11m18s
+[2026-03-11 15:24:01]   [1] 11700/16499 (71%) diff_loss=0.0000 div=3.02e-04 lr=9.88e-05 | 100.0 samples/s ETA 11m11s
+[2026-03-11 15:24:08]   [1] 11750/16499 (71%) diff_loss=0.0000 div=1.75e-04 lr=9.88e-05 | 100.0 samples/s ETA 11m04s
+[2026-03-11 15:24:15]   [1] 11800/16499 (72%) diff_loss=0.0000 div=2.31e-04 lr=9.88e-05 | 100.0 samples/s ETA 10m57s
+[2026-03-11 15:24:22]   [1] 11850/16499 (72%) diff_loss=0.0000 div=2.96e-04 lr=9.88e-05 | 100.0 samples/s ETA 10m50s
+[2026-03-11 15:24:29]   [1] 11900/16499 (72%) diff_loss=0.0000 div=3.49e-04 lr=9.88e-05 | 100.0 samples/s ETA 10m43s
+[2026-03-11 15:24:36]   [1] 11950/16499 (72%) diff_loss=0.0000 div=2.04e-04 lr=9.88e-05 | 100.0 samples/s ETA 10m36s
+[2026-03-11 15:24:42]   [1] 12000/16499 (73%) diff_loss=0.0000 div=2.92e-04 lr=9.87e-05 | 100.0 samples/s ETA 10m29s
+[2026-03-11 15:24:49]   [1] 12050/16499 (73%) diff_loss=0.0000 div=2.36e-04 lr=9.87e-05 | 100.1 samples/s ETA 10m22s
+[2026-03-11 15:24:56]   [1] 12100/16499 (73%) diff_loss=0.0000 div=2.17e-04 lr=9.87e-05 | 100.1 samples/s ETA 10m15s
+[2026-03-11 15:25:03]   [1] 12150/16499 (74%) diff_loss=0.0000 div=3.03e-04 lr=9.87e-05 | 100.1 samples/s ETA 10m08s
+[2026-03-11 15:25:09]   [1] 12200/16499 (74%) diff_loss=0.0000 div=1.52e-04 lr=9.87e-05 | 100.1 samples/s ETA 10m01s
+[2026-03-11 15:25:16]   [1] 12250/16499 (74%) diff_loss=0.0000 div=2.65e-04 lr=9.87e-05 | 100.1 samples/s ETA 9m54s
+[2026-03-11 15:25:23]   [1] 12300/16499 (75%) diff_loss=0.0000 div=3.24e-04 lr=9.87e-05 | 100.1 samples/s ETA 9m46s
+[2026-03-11 15:25:30]   [1] 12350/16499 (75%) diff_loss=0.0000 div=1.98e-04 lr=9.87e-05 | 100.1 samples/s ETA 9m39s
+[2026-03-11 15:25:36]   [1] 12400/16499 (75%) diff_loss=0.0000 div=1.72e-04 lr=9.87e-05 | 100.2 samples/s ETA 9m32s
+[2026-03-11 15:25:43]   [1] 12450/16499 (75%) diff_loss=0.0000 div=3.03e-04 lr=9.86e-05 | 100.2 samples/s ETA 9m25s
+[2026-03-11 15:25:50]   [1] 12500/16499 (76%) diff_loss=0.0000 div=2.34e-04 lr=9.86e-05 | 100.2 samples/s ETA 9m18s
+[2026-03-11 15:25:57]   [1] 12550/16499 (76%) diff_loss=0.0000 div=1.69e-04 lr=9.86e-05 | 100.2 samples/s ETA 9m11s
+[2026-03-11 15:26:04]   [1] 12600/16499 (76%) diff_loss=0.0000 div=1.96e-04 lr=9.86e-05 | 100.2 samples/s ETA 9m04s
+[2026-03-11 15:26:11]   [1] 12650/16499 (77%) diff_loss=0.0000 div=2.47e-04 lr=9.86e-05 | 100.2 samples/s ETA 8m57s
+[2026-03-11 15:26:18]   [1] 12700/16499 (77%) diff_loss=0.0000 div=2.66e-04 lr=9.86e-05 | 100.2 samples/s ETA 8m50s
+[2026-03-11 15:26:25]   [1] 12750/16499 (77%) diff_loss=0.0000 div=2.28e-04 lr=9.86e-05 | 100.2 samples/s ETA 8m43s
+[2026-03-11 15:26:32]   [1] 12800/16499 (78%) diff_loss=0.0000 div=2.19e-04 lr=9.86e-05 | 100.2 samples/s ETA 8m36s
+[2026-03-11 15:26:38]   [1] 12850/16499 (78%) diff_loss=0.0000 div=2.02e-04 lr=9.86e-05 | 100.2 samples/s ETA 8m29s
+[2026-03-11 15:26:45]   [1] 12900/16499 (78%) diff_loss=0.0000 div=2.99e-04 lr=9.85e-05 | 100.2 samples/s ETA 8m22s
+[2026-03-11 15:26:52]   [1] 12950/16499 (78%) diff_loss=0.0000 div=1.46e-04 lr=9.85e-05 | 100.2 samples/s ETA 8m15s
+[2026-03-11 15:27:00]   [1] 13000/16499 (79%) diff_loss=0.0000 div=2.67e-04 lr=9.85e-05 | 100.2 samples/s ETA 8m08s
+[2026-03-11 15:27:07]   [1] 13050/16499 (79%) diff_loss=0.0000 div=3.03e-04 lr=9.85e-05 | 100.2 samples/s ETA 8m01s
+[2026-03-11 15:27:14]   [1] 13100/16499 (79%) diff_loss=0.0000 div=2.94e-04 lr=9.85e-05 | 100.2 samples/s ETA 7m54s
+[2026-03-11 15:27:21]   [1] 13150/16499 (80%) diff_loss=0.0000 div=1.98e-04 lr=9.85e-05 | 100.2 samples/s ETA 7m47s
+[2026-03-11 15:27:28]   [1] 13200/16499 (80%) diff_loss=0.0000 div=2.49e-04 lr=9.85e-05 | 100.2 samples/s ETA 7m40s
+[2026-03-11 15:27:35]   [1] 13250/16499 (80%) diff_loss=0.0000 div=2.47e-04 lr=9.85e-05 | 100.2 samples/s ETA 7m33s
+[2026-03-11 15:27:42]   [1] 13300/16499 (81%) diff_loss=0.0000 div=1.79e-04 lr=9.84e-05 | 100.2 samples/s ETA 7m26s
+[2026-03-11 15:27:48]   [1] 13350/16499 (81%) diff_loss=0.0000 div=2.54e-04 lr=9.84e-05 | 100.2 samples/s ETA 7m19s
+[2026-03-11 15:27:55]   [1] 13400/16499 (81%) diff_loss=0.0000 div=2.38e-04 lr=9.84e-05 | 100.2 samples/s ETA 7m12s
+[2026-03-11 15:28:02]   [1] 13450/16499 (82%) diff_loss=0.0000 div=2.36e-04 lr=9.84e-05 | 100.2 samples/s ETA 7m05s
+[2026-03-11 15:28:08]   [1] 13500/16499 (82%) diff_loss=0.0000 div=2.90e-04 lr=9.84e-05 | 100.2 samples/s ETA 6m58s
+[2026-03-11 15:28:15]   [1] 13550/16499 (82%) diff_loss=0.0000 div=2.37e-04 lr=9.84e-05 | 100.3 samples/s ETA 6m51s
+[2026-03-11 15:28:22]   [1] 13600/16499 (82%) diff_loss=0.0000 div=2.66e-04 lr=9.84e-05 | 100.3 samples/s ETA 6m44s
+[2026-03-11 15:28:29]   [1] 13650/16499 (83%) diff_loss=0.0000 div=3.35e-04 lr=9.84e-05 | 100.3 samples/s ETA 6m37s
+[2026-03-11 15:28:35]   [1] 13700/16499 (83%) diff_loss=0.0000 div=2.79e-04 lr=9.84e-05 | 100.3 samples/s ETA 6m30s
+[2026-03-11 15:28:42]   [1] 13750/16499 (83%) diff_loss=0.0000 div=2.31e-04 lr=9.83e-05 | 100.3 samples/s ETA 6m23s
+[2026-03-11 15:28:49]   [1] 13800/16499 (84%) diff_loss=0.0000 div=3.20e-04 lr=9.83e-05 | 100.3 samples/s ETA 6m16s
+[2026-03-11 15:28:56]   [1] 13850/16499 (84%) diff_loss=0.0000 div=2.65e-04 lr=9.83e-05 | 100.3 samples/s ETA 6m09s
+[2026-03-11 15:29:02]   [1] 13900/16499 (84%) diff_loss=0.0000 div=1.88e-04 lr=9.83e-05 | 100.4 samples/s ETA 6m02s
+[2026-03-11 15:29:09]   [1] 13950/16499 (85%) diff_loss=0.0000 div=2.78e-04 lr=9.83e-05 | 100.4 samples/s ETA 5m55s
+[2026-03-11 15:29:16]   [1] 14000/16499 (85%) diff_loss=0.0000 div=2.01e-04 lr=9.83e-05 | 100.4 samples/s ETA 5m48s
+[2026-03-11 15:29:22]   [1] 14050/16499 (85%) diff_loss=0.0000 div=2.13e-04 lr=9.83e-05 | 100.4 samples/s ETA 5m41s
+[2026-03-11 15:29:29]   [1] 14100/16499 (85%) diff_loss=0.0000 div=1.71e-04 lr=9.83e-05 | 100.4 samples/s ETA 5m34s
+[2026-03-11 15:29:36]   [1] 14150/16499 (86%) diff_loss=0.0000 div=2.85e-04 lr=9.82e-05 | 100.4 samples/s ETA 5m27s
+[2026-03-11 15:29:43]   [1] 14200/16499 (86%) diff_loss=0.0000 div=2.34e-04 lr=9.82e-05 | 100.4 samples/s ETA 5m20s
+[2026-03-11 15:29:49]   [1] 14250/16499 (86%) diff_loss=0.0000 div=2.85e-04 lr=9.82e-05 | 100.4 samples/s ETA 5m13s
+[2026-03-11 15:29:56]   [1] 14300/16499 (87%) diff_loss=0.0000 div=2.73e-04 lr=9.82e-05 | 100.5 samples/s ETA 5m06s
+[2026-03-11 15:30:03]   [1] 14350/16499 (87%) diff_loss=0.0000 div=2.73e-04 lr=9.82e-05 | 100.5 samples/s ETA 4m59s
+[2026-03-11 15:30:09]   [1] 14400/16499 (87%) diff_loss=0.0000 div=2.90e-04 lr=9.82e-05 | 100.5 samples/s ETA 4m52s
+[2026-03-11 15:30:16]   [1] 14450/16499 (88%) diff_loss=0.0000 div=2.17e-04 lr=9.82e-05 | 100.5 samples/s ETA 4m45s
+[2026-03-11 15:30:23]   [1] 14500/16499 (88%) diff_loss=0.0000 div=1.69e-04 lr=9.82e-05 | 100.5 samples/s ETA 4m38s
+[2026-03-11 15:30:29]   [1] 14550/16499 (88%) diff_loss=0.0000 div=2.50e-04 lr=9.81e-05 | 100.5 samples/s ETA 4m31s
+[2026-03-11 15:30:36]   [1] 14600/16499 (88%) diff_loss=0.0000 div=2.17e-04 lr=9.81e-05 | 100.5 samples/s ETA 4m24s
+[2026-03-11 15:30:43]   [1] 14650/16499 (89%) diff_loss=0.0000 div=2.77e-04 lr=9.81e-05 | 100.5 samples/s ETA 4m17s
+[2026-03-11 15:30:50]   [1] 14700/16499 (89%) diff_loss=0.0000 div=2.68e-04 lr=9.81e-05 | 100.6 samples/s ETA 4m10s
+[2026-03-11 15:30:56]   [1] 14750/16499 (89%) diff_loss=0.0000 div=2.74e-04 lr=9.81e-05 | 100.6 samples/s ETA 4m03s
+[2026-03-11 15:31:03]   [1] 14800/16499 (90%) diff_loss=0.0000 div=2.20e-04 lr=9.81e-05 | 100.6 samples/s ETA 3m56s
+[2026-03-11 15:31:10]   [1] 14850/16499 (90%) diff_loss=0.0000 div=1.85e-04 lr=9.81e-05 | 100.6 samples/s ETA 3m49s
+[2026-03-11 15:31:17]   [1] 14900/16499 (90%) diff_loss=0.0000 div=3.10e-04 lr=9.80e-05 | 100.6 samples/s ETA 3m42s
+[2026-03-11 15:31:24]   [1] 14950/16499 (91%) diff_loss=0.0000 div=2.49e-04 lr=9.80e-05 | 100.6 samples/s ETA 3m35s
+[2026-03-11 15:31:30]   [1] 15000/16499 (91%) diff_loss=0.0000 div=3.42e-04 lr=9.80e-05 | 100.6 samples/s ETA 3m28s
+[2026-03-11 15:31:32]   [sample 1] rousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrous
+[2026-03-11 15:31:32]   [sample 2] rousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrousrous
+[2026-03-11 15:31:38]   [1] 15050/16499 (91%) diff_loss=0.0000 div=2.48e-04 lr=9.80e-05 | 100.6 samples/s ETA 3m21s
+[2026-03-11 15:31:45]   [1] 15100/16499 (92%) diff_loss=0.0000 div=2.83e-04 lr=9.80e-05 | 100.6 samples/s ETA 3m14s
+[2026-03-11 15:31:52]   [1] 15150/16499 (92%) diff_loss=0.0000 div=2.87e-04 lr=9.80e-05 | 100.6 samples/s ETA 3m07s

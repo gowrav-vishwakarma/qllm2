@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V6 diffusion text on WikiText-103 (no memory, RTX 4090)
+Date (UTC)  : 2026-03-11 09:26:38
+Date (local): 2026-03-11 14:56:38 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 67a07822daea7e9ad6b7cd630c5b286aad4c8364
+Git short   : 67a0782
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size small-matched --mode diffusion_text --max_samples 9999999 --seq_len 512 --batch_size 14 --epochs 10 --diffusion_steps 1000 --noise_schedule cosine --prediction_target x0 --sampling_method ddpm --no_working_memory --no_internal_memory --gen_every 5000 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 
+================================================================================

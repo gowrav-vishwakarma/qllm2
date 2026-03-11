@@ -366,31 +366,34 @@ Throughput: ~80 samples/s on MPS. Sampling produced teal-green checkerboard patt
 
 ## 9. Next Steps
 
+**Note (2026-03-11):** The first GPU-scale text diffusion run on WikiText-103 (section 11) revealed severe mode collapse: diff_loss went to 0.0000 within one epoch while samples collapsed to a single repeated subword ("rous"). Immediate priority should shift to **diagnosing sampling collapse** (e.g. prediction norm vs target norm, EMA, sampling steps, latent space regularization) before running more long text-diffusion experiments.
+
 ### Immediate (GPU — RTX 4090)
 
-1. **Text diffusion at scale**: Run `scripts/run_v6_diffusion_text.sh` (small-matched, full TinyStories, 5 epochs). Target: coherent multi-word phrases in generated samples.
+1. **Diagnose text diffusion sampling collapse**: Before further scale runs, add diagnostics (e.g. pred/target norm logging, EMA checkpoint) and test fixes (more sampling steps, epsilon prediction, guidance). See section 11 run for failure mode.
+2. **Text diffusion at scale** (after diagnostics): Run `scripts/run_v6_diffusion_text.sh` (small-matched, full TinyStories or WikiText-103). Target: coherent multi-word phrases in generated samples.
 
-2. **Image diffusion at scale**: Run `scripts/run_v6_diffusion_image.sh` (small-matched, Tiny ImageNet, 64×64, 10 epochs). Target: recognizable shapes/colors in generated image grids.
+3. **Image diffusion at scale**: Run `scripts/run_v6_diffusion_image.sh` (small-matched, Tiny ImageNet, 64×64, 10 epochs). Target: recognizable shapes/colors in generated image grids.
 
-3. **Patch size sweep**: Test patch_size in {4, 8, 16} on 64×64 images to find the best quality/speed tradeoff.
+4. **Patch size sweep**: Test patch_size in {4, 8, 16} on 64×64 images to find the best quality/speed tradeoff.
 
 ### Medium-term
 
-4. **FFT encoder comparison**: Same image training with `--image_encoder fft`. Compare convergence speed and sample quality vs patch.
+5. **FFT encoder comparison**: Same image training with `--image_encoder fft`. Compare convergence speed and sample quality vs patch.
 
-5. **DDIM sampling**: Test `--sampling_method ddim --ddim_steps 50` for faster generation without quality loss.
+6. **DDIM sampling**: Test `--sampling_method ddim --ddim_steps 50` for faster generation without quality loss.
 
-6. **Epsilon prediction**: Compare `--prediction_target epsilon` vs `x0` for training stability and sample quality.
+7. **Epsilon prediction**: Compare `--prediction_target epsilon` vs `x0` for training stability and sample quality.
 
-7. **Larger model configs**: Create `medium` image config (dim=256+, 12+ layers) for serious image generation.
+8. **Larger model configs**: Create `medium` image config (dim=256+, 12+ layers) for serious image generation.
 
 ### Research Questions
 
-8. **Can a single checkpoint do both?** Train on text, then fine-tune on images (or vice versa) with shared backbone weights.
+9. **Can a single checkpoint do both?** Train on text, then fine-tune on images (or vice versa) with shared backbone weights.
 
-9. **Multi-timescale SSM for images**: Does the fast/medium/slow decay partitioning learn meaningful frequency separation when fed FFT coefficients?
+10. **Multi-timescale SSM for images**: Does the fast/medium/slow decay partitioning learn meaningful frequency separation when fed FFT coefficients?
 
-10. **Scaling laws**: How does sample quality scale with model size for this architecture? Is the scaling curve competitive with standard UNet diffusion?
+11. **Scaling laws**: How does sample quality scale with model size for this architecture? Is the scaling curve competitive with standard UNet diffusion?
 
 ---
 
@@ -400,3 +403,57 @@ Throughput: ~80 samples/s on MPS. Sampling produced teal-green checkerboard patt
 2. **Architecture Changes**: Document any modifications to backbone, codecs, or training loop.
 3. **Bugs Found**: Log with error, root cause, and fix.
 4. **GPU Results**: Document RTX 4090 runs with wall times, throughput, and generated sample assessments.
+
+---
+
+## 11. GPU-Scale Training Runs
+
+### Run v6-wikitext103-diffusion-text-no-memory (2026-03-11, stopped mid-run)
+
+**Setup** (from `logs/v6/wikitext103_diffusion_text_20260311_145638_67a0782/RUN_INFO.txt`):
+
+- size=small-matched (28.7M params), WikiText-103 (230,986 train chunks, 118M tokens), seq_len=512, batch_size=14
+- mode=diffusion_text, diffusion_steps=1000, cosine schedule, prediction_target=x0, sampling=ddpm
+- No memory (WM=0, IM=0)
+- compile=reduce-overhead, bf16, RTX 4090
+- Stopped at batch 15150/16499 (~92% through epoch 1 of 10)
+
+**Loss trajectory** (key milestones from the log):
+
+| Batch | diff_loss | div | Note |
+|-------|-----------|-----|------|
+| 0 | 1.0189 | 6.40 | Start |
+| 500 | 0.2522 | 6.36 | |
+| 1000 | 0.0573 | 6.24 | |
+| 2000 | 0.0358 | 5.70 | |
+| 3000 | 0.0131 | 4.57 | |
+| 4000 | 0.0086 | 2.75 | Div declining |
+| 5000 | 0.0041 | 0.399 | First sample; div about to collapse |
+| 5200 | 0.0030 | 7.26e-04 | Div collapsed |
+| 7000 | 0.0010 | ~2e-04 | |
+| 9000 | 0.0002 | ~2e-04 | |
+| 10000 | 0.0001 | ~2e-04 | Second sample |
+| 11000+ | 0.0000 | ~2e-04 | Loss at display floor |
+| 15000 | 0.0000 | ~3e-04 | Third sample; run stopped |
+
+**Samples** (verbatim from log):
+
+- batch 5000: gibberish with token loops ("DwarfusbDel Yelp nob112usb nerdsBernie... Tulsa Tulsa...")
+- batch 10000: total mode collapse ("rousrousrousrousrous..." x50)
+- batch 15000: same collapse ("rousrousrousrous...")
+
+**Observations**:
+
+1. **diff_loss goes to 0.0000 within a single epoch** on 118M tokens of real text — the model memorizes the latent denoising mapping, confirmed by zero loss, but samples are complete garbage.
+2. **Diversity loss collapses ~batch 5000** (6.40 → 7e-04 in ~200 batches around batch 5000–5200) — same pattern as all AR V6 runs.
+3. **Mode collapse in sampling**: decoded samples degrade from random gibberish to a single repeated subword ("rous"). This is the text equivalent of the "flat gray patches" seen in CIFAR-10 smoke tests (section 7.5). The denoising loop converges to a single fixed point in latent space.
+4. **Throughput**: ~100 samples/s steady state (vs ~46k tok/s for AR on same data).
+
+**Diagnosis / design issues**:
+
+- Zero training loss + garbage samples = the model has memorized the training set's encoding but learned no generalizable structure. The sampling loop starts from pure noise, which is out-of-distribution for a memorized model.
+- ComplexNorm on both encoder and output may compress the latent space too aggressively, making memorization easy.
+- The SSM backbone without attention may lack the capacity for the diffusion task's global coherence requirement (each position must produce a coherent denoised output considering all others).
+- No guidance (classifier-free or otherwise), no EMA, no gradient clipping tuning — standard diffusion training practices are missing.
+
+**Log**: `logs/v6/wikitext103_diffusion_text_20260311_145638_67a0782/v6_diffusion-text_small-matched.log`
