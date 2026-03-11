@@ -1,0 +1,53 @@
+[2026-03-11 18:54:10] Wall clock start: 2026-03-11 18:54:10
+[2026-03-11 18:54:10] ============================================================
+[2026-03-11 18:54:10] V6 Phase-First Model (mode: autoregressive)
+[2026-03-11 18:54:10] ============================================================
+[2026-03-11 18:54:10] Size: small-matched
+[2026-03-11 18:54:10] Dataset: wikitext103
+[2026-03-11 18:54:10] Complex dim: 128 (= 256 real values/position)
+[2026-03-11 18:54:10] SSM state dim: 512 (multi-timescale: fast/medium/slow)
+[2026-03-11 18:54:10] Layers: 12
+[2026-03-11 18:54:10] Banks: 2 (semantic + context)
+[2026-03-11 18:54:10] Working memory slots: 0 (top-k=8, decay=0.95)
+[2026-03-11 18:54:10] Internal memory slots: 0 (top-k=8)
+[2026-03-11 18:54:10] PhaseAttention: DISABLED (attention-free)
+[2026-03-11 18:54:10] Epochs: 10
+[2026-03-11 18:54:10] LR schedule: warmup_cosine (warmup=200)
+[2026-03-11 18:54:10] Dropout: 0.1, Weight decay: 0.01
+[2026-03-11 18:54:10] AMP: bf16, TF32: True, Compile: True (mode=reduce-overhead)
+[2026-03-11 18:54:10] Workers: 4, Pin memory: True
+[2026-03-11 18:54:10] Batch log interval: 50
+[2026-03-11 18:54:10] Log file: logs/v6/memory_reframe_wikitext103_20260311_185409_c8faf67_dirty/run2_span_corruption/v6_autoregressive_small-matched.log
+[2026-03-11 18:54:10] Checkpoint dir: checkpoints_v6_reframe/run2_span_corruption
+[2026-03-11 18:54:10] ============================================================
+[2026-03-11 18:54:12] [cache] Loaded WikiText-103 train from .cache/v6_tokens/wikitext103_train_v2_full_sl512.pt (118,496,145 tokens)
+[2026-03-11 18:54:12] [cache] Loaded WikiText-103 validation from .cache/v6_tokens/wikitext103_validation_v2_full_sl512.pt (248,461 tokens)
+[2026-03-11 18:54:12] Train chunks: 230986, Val chunks: 484
+[2026-03-11 18:54:12] Objective: span corruption (rate=0.15, mean_len=3)
+[2026-03-11 18:54:13] Init strategy: orthogonal (seed: 82855242)
+[2026-03-11 18:54:13] Compiling model with torch.compile (mode=reduce-overhead, fullgraph=False)...
+[2026-03-11 18:54:13] Param groups: 304 tensors (28,630,272 params) with weight decay, 245 tensors (59,056 params) without
+
+[2026-03-11 18:54:13] Training on cuda
+[2026-03-11 18:54:13] Parameters: {'embed (tied w/ output)': 12865792, 'banks': 9452544, 'couplers': 1588248, 'attention': 0, 'ssm': 4749452, 'working_memory': 0, 'episodic_memory': 0, 'internal_memory': 0, 'persistent_reader': 0, 'expert_reader': 0, 'memory_fusion': 0, 'memory_scale': 0, 'lm_head_proj': 33152, 'total': 28689188}
+[2026-03-11 18:54:13] Total: 28,689,188 (28.7M)
+[2026-03-11 18:54:13] Epochs: 1..10, Batches/epoch: 16499
+
+
+[2026-03-11 18:54:13] ============================================================
+[2026-03-11 18:54:13] Epoch 1/10
+[2026-03-11 18:54:13] ============================================================
+[2026-03-11 18:54:16]   First step wall time: 2.5s
+[2026-03-11 18:54:16]   [1] 0/16499 (0%) loss=10.8425 ppl=51150.0 div=4.27e+01 wdiv=4.27e+00 lr=5.00e-07 | 2739 tok/s (avg 2739) ETA 0m00s | GPU 1.2/12.2GB
+[2026-03-11 18:54:51]   [1] 50/16499 (0%) loss=10.3904 ppl=32547.3 div=4.27e+01 wdiv=4.27e+00 lr=2.55e-05 | 10373 tok/s (avg 9835) ETA 199m47s | GPU 0.4/12.5GB
+[2026-03-11 18:54:58]   [1] 100/16499 (1%) loss=10.0652 ppl=23510.5 div=4.27e+01 wdiv=4.26e+00 lr=5.05e-05 | 45858 tok/s (avg 16094) ETA 121m43s | GPU 0.4/12.5GB
+[2026-03-11 18:55:06]   [1] 150/16499 (1%) loss=9.3890 ppl=11956.6 div=4.27e+01 wdiv=4.26e+00 lr=7.55e-05 | 45459 tok/s (avg 20472) ETA 95m23s | GPU 0.4/12.5GB
+[2026-03-11 18:55:14]   [1] 200/16499 (1%) loss=8.7001 ppl=6003.5 div=4.26e+01 wdiv=4.26e+00 lr=1.00e-04 | 45923 tok/s (avg 23746) ETA 81m59s | GPU 0.4/12.5GB
+[2026-03-11 18:55:22]   [1] 250/16499 (2%) loss=8.0673 ppl=3188.4 div=4.26e+01 wdiv=4.26e+00 lr=1.00e-04 | 44658 tok/s (avg 26189) ETA 74m07s | GPU 0.4/12.5GB
+[2026-03-11 18:55:30]   [1] 300/16499 (2%) loss=7.6731 ppl=2149.8 div=4.26e+01 wdiv=4.25e+00 lr=1.00e-04 | 44571 tok/s (avg 28115) ETA 68m49s | GPU 0.4/12.5GB
+[2026-03-11 18:55:38]   [1] 350/16499 (2%) loss=7.5584 ppl=1916.8 div=4.26e+01 wdiv=4.25e+00 lr=1.00e-04 | 45031 tok/s (avg 29704) ETA 64m56s | GPU 0.4/12.5GB
+[2026-03-11 18:55:46]   [1] 400/16499 (2%) loss=7.4549 ppl=1728.3 div=4.25e+01 wdiv=4.25e+00 lr=1.00e-04 | 45479 tok/s (avg 31047) ETA 61m56s | GPU 0.4/12.5GB
+[2026-03-11 18:55:54]   [1] 450/16499 (3%) loss=7.6363 ppl=2072.1 div=4.25e+01 wdiv=4.24e+00 lr=1.00e-04 | 44904 tok/s (avg 32147) ETA 59m38s | GPU 0.4/12.5GB
+[2026-03-11 18:56:02]   [1] 500/16499 (3%) loss=7.4650 ppl=1745.8 div=4.25e+01 wdiv=4.24e+00 lr=1.00e-04 | 44910 tok/s (avg 33085) ETA 57m46s | GPU 0.4/12.5GB
+[2026-03-11 18:56:10]   [1] 550/16499 (3%) loss=7.4744 ppl=1762.3 div=4.24e+01 wdiv=4.23e+00 lr=1.00e-04 | 45798 tok/s (avg 33940) ETA 56m08s | GPU 0.4/12.5GB
+[2026-03-11 18:56:18]   [1] 600/16499 (4%) loss=7.4097 ppl=1651.9 div=4.23e+01 wdiv=4.22e+00 lr=1.00e-04 | 43892 tok/s (avg 34592) ETA 54m54s | GPU 0.4/12.5GB

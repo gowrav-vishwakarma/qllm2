@@ -367,7 +367,14 @@ Run them in this order. Each run isolates one variable against the control.
 
 ## 7. Training Run Results
 
-*(To be filled as runs complete)*
+### Run 1 (control baseline) — stopped after epoch 1
+
+- **Decision (2026-03-11):** Stopping Run 1 and proceeding to Run 2 to get faster signal on whether the new objectives (span corruption, etc.) improve generation.
+- **Run 1 state when stopped:** 1 epoch completed. Val PPL 123.29, Val Loss 4.8146 (parity with pre-reframe no-memory run: Val PPL 121.94). Control baseline validated at epoch 1.
+- **Log dir (partial run):** e.g. `logs/v6/memory_reframe_wikitext103_*_dirty/run1_control_baseline/`
+- **Next:** Run 2 (span_corruption) started. Results to be recorded below as runs complete.
+
+*(Remaining run results to be filled as runs complete)*
 
 ---
 
