@@ -20,6 +20,7 @@ from .core.memory import (
     WorkingMemory, InternalMemory, PersistentMemoryReader,
     ExpertMemoryReader,
 )
+from .core.episodic import EpisodicMemory
 from .core.attention import PhaseAttention
 
 
@@ -66,6 +67,8 @@ class BackboneOutput:
     wm_values: Optional[torch.Tensor] = None
     wm_mask: Optional[torch.Tensor] = None
     diversity_loss: Optional[torch.Tensor] = None
+    salience: Optional[torch.Tensor] = None
+    bank_outputs: Optional[tuple] = None
 
 
 class PhaseFieldBackbone(nn.Module):
@@ -131,13 +134,21 @@ class PhaseFieldBackbone(nn.Module):
             initializer=initializer,
         )
 
-        # Working memory
+        # Working memory (legacy token-wise)
         self.working_memory = WorkingMemory(
             config.dim, config.num_wm_slots, config.wm_gate_bias,
             read_topk=config.wm_read_topk,
             slot_decay=config.wm_slot_decay,
             initializer=initializer,
         ) if config.num_wm_slots > 0 else None
+
+        # Episodic memory (event-based, preferred over WM)
+        self.episodic_memory = EpisodicMemory(
+            config.dim, config.num_episodic_slots,
+            read_topk=config.episodic_read_topk,
+            salience_threshold=config.episodic_salience_threshold,
+            initializer=initializer,
+        ) if config.num_episodic_slots > 0 else None
 
         # Internal memory
         self.internal_memory = InternalMemory(
@@ -147,15 +158,22 @@ class PhaseFieldBackbone(nn.Module):
         ) if config.num_im_slots > 0 else None
 
         # Memory-related modules
-        has_memory = config.num_wm_slots > 0 or config.num_im_slots > 0
+        has_memory = (config.num_wm_slots > 0 or config.num_im_slots > 0
+                      or config.num_episodic_slots > 0)
         has_any_memory = has_memory or config.use_persistent_memory
 
         self.persistent_reader = (
-            PersistentMemoryReader(config.dim, initializer=initializer)
+            PersistentMemoryReader(
+                config.dim, read_topk=config.im_read_topk,
+                initializer=initializer,
+            )
             if config.use_persistent_memory else None
         )
         self.expert_reader = (
-            ExpertMemoryReader(config.dim, initializer=initializer)
+            ExpertMemoryReader(
+                config.dim, read_topk=config.im_read_topk,
+                initializer=initializer,
+            )
             if has_memory else None
         )
 
@@ -203,6 +221,7 @@ class PhaseFieldBackbone(nn.Module):
         # 1. Banks + Coupler (+ optional Attention) per layer
         bank_z = z
         diversity_losses = []
+        last_bank_outputs = None
         for i, (bank_pair, coupler, scale) in enumerate(
             zip(self.bank_pairs, self.couplers, self.bank_scales)
         ):
@@ -214,6 +233,7 @@ class PhaseFieldBackbone(nn.Module):
             sem_out, ctx_out = bank_pair(bank_z)
             coupled = coupler(sem_out, ctx_out)
             bank_z = residual + coupled * scale
+            last_bank_outputs = (sem_out, ctx_out)
 
             if i in self._attn_layer_ids:
                 attn_out = self.attn_layers[str(i)](bank_z)
@@ -227,15 +247,25 @@ class PhaseFieldBackbone(nn.Module):
                 diversity_losses.append(dloss)
                 dloss_c = coupler.compute_diversity_loss()
                 diversity_losses.append(dloss_c)
+                if self.config.bank_role_weight > 0:
+                    role_loss = bank_pair.compute_role_loss(sem_out, ctx_out)
+                    diversity_losses.append(role_loss * self.config.bank_role_weight)
 
         # 2. SSM
         ssm_out, new_state = self.ssm(bank_z, ssm_state)
 
-        # 3. Working memory
+        # 3. Working memory (legacy) or Episodic memory (event-based)
         new_wm_keys = new_wm_values = new_wm_mask = None
+        salience_scores = None
         if self.working_memory is not None:
             wm_retrieved, new_wm_keys, new_wm_values, new_wm_mask = self.working_memory(
                 ssm_out, wm_keys, wm_values, wm_mask,
+            )
+
+        ep_retrieved = None
+        if self.episodic_memory is not None:
+            ep_retrieved, new_wm_keys, new_wm_values, new_wm_mask, salience_scores = (
+                self.episodic_memory(ssm_out, wm_keys, wm_values, wm_mask)
             )
 
         # 4. Internal memory
@@ -251,6 +281,8 @@ class PhaseFieldBackbone(nn.Module):
         memory_sources = []
         if self.working_memory is not None:
             memory_sources.append(wm_retrieved)
+        if ep_retrieved is not None:
+            memory_sources.append(ep_retrieved)
         if self.internal_memory is not None:
             memory_sources.append(im_retrieved)
 
@@ -295,6 +327,8 @@ class PhaseFieldBackbone(nn.Module):
             wm_values=new_wm_values,
             wm_mask=new_wm_mask,
             diversity_loss=div_loss,
+            salience=salience_scores,
+            bank_outputs=last_bank_outputs,
         )
 
     def count_parameters(self) -> Dict[str, int]:
@@ -307,6 +341,7 @@ class PhaseFieldBackbone(nn.Module):
             ),
             'ssm': sum(p.numel() for p in self.ssm.parameters()),
             'working_memory': sum(p.numel() for p in self.working_memory.parameters()) if self.working_memory else 0,
+            'episodic_memory': sum(p.numel() for p in self.episodic_memory.parameters()) if self.episodic_memory else 0,
             'internal_memory': sum(p.numel() for p in self.internal_memory.parameters()) if self.internal_memory else 0,
             'persistent_reader': sum(p.numel() for p in self.persistent_reader.parameters()) if self.persistent_reader else 0,
             'expert_reader': sum(p.numel() for p in self.expert_reader.parameters()) if self.expert_reader else 0,

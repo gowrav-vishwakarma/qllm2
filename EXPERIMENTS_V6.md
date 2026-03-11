@@ -875,3 +875,20 @@ Do claim:
 - V6 is stable on real text.
 - V6 is interesting enough to benchmark seriously.
 - The next decision should come from matched baselines and small-memory WikiText-103, not from more TinyStories-only evidence.
+
+---
+
+## 14. Memory Reframe (2026-03-11)
+
+Based on all evidence above (especially §5.3-5.8, §13), the memory architecture has been redesigned. The token-wise WorkingMemory/InternalMemory system is replaced by event-based episodic memory, the training objective is augmented with span corruption and delayed recall tasks, and banks are pushed toward functional roles via auxiliary losses.
+
+**Full details**: [EXPERIMENTS_V6_MEMORY_REFRAME.md](EXPERIMENTS_V6_MEMORY_REFRAME.md)
+
+Key changes:
+- **Sparse retrieval everywhere**: PersistentMemoryReader / ExpertMemoryReader now use top-k sparse retrieval
+- **Span corruption objective**: T5-style span masking that trains cross-gap reasoning (`--objective span_corruption`)
+- **Delayed recall objective**: fact-then-cue tasks that directly supervise memory write/retrieve (`--objective delayed_recall`)
+- **Episodic memory**: event-based writes from span/chunk summaries instead of token-wise (`--episodic_slots N`)
+- **Bank role loss**: pushes semantic bank toward entity-like stability and context bank toward relation-like variability (`--bank_role_weight`)
+- **Two-pass model**: bidirectional chunk encoder + causal decoder as controlled ablation (`--mode two_pass`)
+- **Behavioral quality metrics**: repeat rate, restart fragmentation, unique word ratio printed alongside generation samples

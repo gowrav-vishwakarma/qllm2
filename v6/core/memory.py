@@ -334,14 +334,17 @@ class PersistentMemoryReader(nn.Module):
     """
     nn.Module that reads from an externally-provided PersistentMemoryStore.
     The store's tensors are passed into forward() -- they're not model params.
+    Uses sparse top-k retrieval consistent with WorkingMemory/InternalMemory.
     """
 
     def __init__(
         self,
         dim: int,
+        read_topk: int = 8,
         initializer: Optional['InitStrategy'] = None,
     ):
         super().__init__()
+        self.read_topk = read_topk
         self.query_proj = ComplexLinear(dim, dim, bias=False, initializer=initializer)
         self.norm = ComplexNorm(dim)
 
@@ -353,7 +356,7 @@ class PersistentMemoryReader(nn.Module):
         mask: torch.Tensor,
     ) -> torch.Tensor:
         """
-        Read from persistent memory.
+        Read from persistent memory with sparse top-k retrieval.
 
         Args:
             x: [B, L, dim, 2]
@@ -364,7 +367,9 @@ class PersistentMemoryReader(nn.Module):
         Returns:
             retrieved: [B, L, dim, 2]
         """
-        query = self.query_proj(x)  # [B, L, dim, 2]
+        B, L, dim, _ = x.shape
+        S = keys.shape[0]
+        query = self.query_proj(x)
 
         q_r, q_i = query[..., 0], query[..., 1]
         k_r, k_i = keys[..., 0], keys[..., 1]
@@ -375,12 +380,24 @@ class PersistentMemoryReader(nn.Module):
         scores = dot / (q_mag * k_mag + 1e-8)
 
         scores = scores.masked_fill(mask.unsqueeze(0).unsqueeze(0) == 0, -1e9)
-        attn = F.softmax(scores, dim=-1)
 
-        v_r = torch.einsum('bls,sd->bld', attn, values[..., 0])
-        v_i = torch.einsum('bls,sd->bld', attn, values[..., 1])
+        k = min(self.read_topk, S) if self.read_topk > 0 else S
+        if k < S:
+            topk_scores, topk_idx = scores.topk(k, dim=-1)
+            attn = F.softmax(topk_scores, dim=-1)
+            vals_r = values[..., 0].unsqueeze(0).unsqueeze(0).expand(B, L, S, dim)
+            vals_i = values[..., 1].unsqueeze(0).unsqueeze(0).expand(B, L, S, dim)
+            topk_idx_v = topk_idx.unsqueeze(-1).expand(B, L, k, dim)
+            v_r = torch.gather(vals_r, 2, topk_idx_v)
+            v_i = torch.gather(vals_i, 2, topk_idx_v)
+            v_r = (attn.unsqueeze(-1) * v_r).sum(dim=2)
+            v_i = (attn.unsqueeze(-1) * v_i).sum(dim=2)
+        else:
+            attn = F.softmax(scores, dim=-1)
+            v_r = torch.einsum('bls,sd->bld', attn, values[..., 0])
+            v_i = torch.einsum('bls,sd->bld', attn, values[..., 1])
+
         retrieved = torch.stack([v_r, v_i], dim=-1)
-
         return self.norm(retrieved)
 
 
@@ -510,14 +527,18 @@ class ExpertMemoryStore:
 
 
 class ExpertMemoryReader(nn.Module):
-    """Reads from an externally-provided ExpertMemoryStore. Same interface as PersistentMemoryReader."""
+    """Reads from an externally-provided ExpertMemoryStore.
+    Same interface as PersistentMemoryReader, with sparse top-k retrieval."""
 
-    def __init__(self, dim: int, initializer: Optional['InitStrategy'] = None):
+    def __init__(self, dim: int, read_topk: int = 8, initializer: Optional['InitStrategy'] = None):
         super().__init__()
+        self.read_topk = read_topk
         self.query_proj = ComplexLinear(dim, dim, bias=False, initializer=initializer)
         self.norm = ComplexNorm(dim)
 
     def forward(self, x, keys, values, mask):
+        B, L, dim, _ = x.shape
+        S = keys.shape[0]
         query = self.query_proj(x)
         q_r, q_i = query[..., 0], query[..., 1]
         k_r, k_i = keys[..., 0], keys[..., 1]
@@ -527,10 +548,23 @@ class ExpertMemoryReader(nn.Module):
         k_mag = torch.sqrt(k_r.square().sum(-1) + k_i.square().sum(-1) + 1e-8)
         scores = dot / (q_mag * k_mag + 1e-8)
         scores = scores.masked_fill(mask.unsqueeze(0).unsqueeze(0) == 0, -1e9)
-        attn = F.softmax(scores, dim=-1)
 
-        v_r = torch.einsum('bls,sd->bld', attn, values[..., 0])
-        v_i = torch.einsum('bls,sd->bld', attn, values[..., 1])
+        k = min(self.read_topk, S) if self.read_topk > 0 else S
+        if k < S:
+            topk_scores, topk_idx = scores.topk(k, dim=-1)
+            attn = F.softmax(topk_scores, dim=-1)
+            vals_r = values[..., 0].unsqueeze(0).unsqueeze(0).expand(B, L, S, dim)
+            vals_i = values[..., 1].unsqueeze(0).unsqueeze(0).expand(B, L, S, dim)
+            topk_idx_v = topk_idx.unsqueeze(-1).expand(B, L, k, dim)
+            v_r = torch.gather(vals_r, 2, topk_idx_v)
+            v_i = torch.gather(vals_i, 2, topk_idx_v)
+            v_r = (attn.unsqueeze(-1) * v_r).sum(dim=2)
+            v_i = (attn.unsqueeze(-1) * v_i).sum(dim=2)
+        else:
+            attn = F.softmax(scores, dim=-1)
+            v_r = torch.einsum('bls,sd->bld', attn, values[..., 0])
+            v_i = torch.einsum('bls,sd->bld', attn, values[..., 1])
+
         return self.norm(torch.stack([v_r, v_i], dim=-1))
 
 

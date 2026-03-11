@@ -38,6 +38,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from v6.model import PhaseFieldLM, create_model, ModelOutput
 from v6.config import V6Config, get_config
 from v6.init import list_strategies
+from v6.objectives import SpanCorruptionDataset, DelayedRecallDataset
 
 
 class TeeLogger:
@@ -659,6 +660,43 @@ def _build_lr_scheduler(optimizer, schedule: str, warmup_steps: int, total_steps
     return torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=total_steps)
 
 
+def compute_text_quality(text: str) -> Dict[str, float]:
+    """Behavioral quality metrics beyond perplexity.
+
+    Returns dict with:
+      - repeat_3gram: fraction of 3-grams that are repeated
+      - repeat_4gram: fraction of 4-grams that are repeated
+      - restart_frag: number of mid-text restart patterns detected
+      - unique_word_ratio: unique words / total words
+    """
+    words = text.split()
+    n_words = max(len(words), 1)
+
+    def ngram_repeat_rate(tokens, n):
+        if len(tokens) < n:
+            return 0.0
+        ngrams = [tuple(tokens[i:i+n]) for i in range(len(tokens) - n + 1)]
+        return 1.0 - len(set(ngrams)) / max(len(ngrams), 1)
+
+    restart_patterns = [
+        'once upon a time',
+        '<|endoftext|>',
+    ]
+    lower_text = text.lower()
+    restart_count = 0
+    for pat in restart_patterns:
+        occurrences = lower_text.count(pat)
+        if occurrences > 1:
+            restart_count += occurrences - 1
+
+    return {
+        'repeat_3gram': ngram_repeat_rate(words, 3),
+        'repeat_4gram': ngram_repeat_rate(words, 4),
+        'restart_frag': float(restart_count),
+        'unique_word_ratio': len(set(words)) / n_words,
+    }
+
+
 class Trainer:
     def __init__(
         self,
@@ -740,12 +778,23 @@ class Trainer:
             seq_len = input_ids.shape[1]
             batch_tokens = input_ids.shape[0] * seq_len
 
+            loss_mask = batch.get('loss_mask')
+            if loss_mask is not None:
+                loss_mask = loss_mask.to(self.device, non_blocking=True)
+
             with torch.amp.autocast(self.device.type, enabled=self.use_amp,
                                     dtype=self.amp_dtype or torch.float16):
                 output = self.model(input_ids)
 
                 logits = output.logits.view(-1, output.logits.size(-1))
-                ce_loss = F.cross_entropy(logits, labels.view(-1))
+                if loss_mask is not None:
+                    flat_mask = loss_mask.view(-1).float()
+                    per_token_loss = F.cross_entropy(
+                        logits, labels.view(-1), reduction='none',
+                    )
+                    ce_loss = (per_token_loss * flat_mask).sum() / flat_mask.sum().clamp(min=1)
+                else:
+                    ce_loss = F.cross_entropy(logits, labels.view(-1))
 
                 loss = ce_loss
                 div_loss_val = 0.0
@@ -852,9 +901,15 @@ class Trainer:
         for batch in self.val_loader:
             input_ids = batch['input_ids'].to(self.device, non_blocking=True)
             labels = batch['labels'].to(self.device, non_blocking=True)
+            loss_mask = batch.get('loss_mask')
             output = self.model(input_ids)
             logits = output.logits.view(-1, output.logits.size(-1))
-            loss = F.cross_entropy(logits, labels.view(-1))
+            if loss_mask is not None:
+                flat_mask = loss_mask.to(self.device).view(-1).float()
+                per_token = F.cross_entropy(logits, labels.view(-1), reduction='none')
+                loss = (per_token * flat_mask).sum() / flat_mask.sum().clamp(min=1)
+            else:
+                loss = F.cross_entropy(logits, labels.view(-1))
             total_loss += loss.item()
             num_batches += 1
         if num_batches == 0:
@@ -946,6 +1001,13 @@ class Trainer:
                     text = self.generate_sample(self.gen_prompt)
                     print(f"\nPrompt: {self.gen_prompt}")
                     print(f"Generated: {text}")
+                    qm = compute_text_quality(text)
+                    print(
+                        f"  Quality: rep3={qm['repeat_3gram']:.3f} "
+                        f"rep4={qm['repeat_4gram']:.3f} "
+                        f"restarts={qm['restart_frag']:.0f} "
+                        f"uniq={qm['unique_word_ratio']:.3f}"
+                    )
                 except Exception as e:
                     print(f"(Sample generation failed: {e})")
 
@@ -1291,9 +1353,27 @@ def main():
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_v6')
     parser.add_argument('--resume', type=str, default=None)
 
+    # Training objective
+    parser.add_argument('--objective', type=str, default='next_token',
+                        choices=['next_token', 'span_corruption', 'delayed_recall'],
+                        help='Training objective: next_token (standard AR), '
+                             'span_corruption (T5-style infilling), '
+                             'delayed_recall (fact-then-cue)')
+    parser.add_argument('--span_corruption_rate', type=float, default=0.15)
+    parser.add_argument('--span_mean_length', type=int, default=3)
+    parser.add_argument('--delayed_recall_gap', type=int, default=64)
+
+    # Episodic memory
+    parser.add_argument('--episodic_slots', type=int, default=None,
+                        help='Episodic memory slots (0 = disabled)')
+
+    # Bank role training
+    parser.add_argument('--bank_role_weight', type=float, default=None,
+                        help='Weight for bank role specialization loss')
+
     # Diffusion / mode arguments
     parser.add_argument('--mode', type=str, default='autoregressive',
-                        choices=['autoregressive', 'diffusion_text', 'diffusion_image'])
+                        choices=['autoregressive', 'diffusion_text', 'diffusion_image', 'two_pass'])
     parser.add_argument('--diffusion_steps', type=int, default=1000)
     parser.add_argument('--noise_schedule', type=str, default='cosine',
                         choices=['cosine', 'linear'])
@@ -1350,6 +1430,16 @@ def main():
     if args.no_pin_memory:
         config.pin_memory = False
 
+    # Objective config
+    config.objective = args.objective
+    config.span_corruption_rate = args.span_corruption_rate
+    config.span_mean_length = args.span_mean_length
+    config.delayed_recall_gap = args.delayed_recall_gap
+    if args.episodic_slots is not None:
+        config.num_episodic_slots = args.episodic_slots
+    if args.bank_role_weight is not None:
+        config.bank_role_weight = args.bank_role_weight
+
     # Diffusion config
     config.diffusion_steps = args.diffusion_steps
     config.noise_schedule = args.noise_schedule
@@ -1376,7 +1466,7 @@ def main():
     print(f"V6 Phase-First Model (mode: {config.mode})")
     print("=" * 60)
     print(f"Size: {args.size}")
-    if config.mode in ('autoregressive', 'diffusion_text'):
+    if config.mode in ('autoregressive', 'diffusion_text', 'two_pass'):
         print(f"Dataset: {args.dataset}")
     print(f"Complex dim: {config.dim} (= {config.dim * 2} real values/position)")
     print(f"SSM state dim: {config.state_dim} (multi-timescale: fast/medium/slow)")
@@ -1418,7 +1508,7 @@ def main():
 
     # Data loading
     tokenizer = None
-    if config.mode in ('autoregressive', 'diffusion_text'):
+    if config.mode in ('autoregressive', 'diffusion_text', 'two_pass'):
         if args.dataset == 'tinystories':
             train_ds, val_ds, tokenizer = load_tinystories(
                 max_samples=args.max_samples, seq_len=args.seq_len,
@@ -1453,6 +1543,37 @@ def main():
         config.max_seq_len = args.seq_len
     elif config.mode == 'diffusion_image':
         train_ds, val_ds = load_image_dataset(config)
+
+    if config.mode in ('autoregressive', 'diffusion_text', 'two_pass') and config.objective != 'next_token':
+        train_tokens = train_ds.data.reshape(-1)
+        val_tokens = val_ds.data.reshape(-1) if hasattr(val_ds, 'data') else None
+        if config.objective == 'span_corruption':
+            print(f"Objective: span corruption (rate={config.span_corruption_rate}, "
+                  f"mean_len={config.span_mean_length})")
+            train_ds = SpanCorruptionDataset(
+                train_tokens, seq_len=args.seq_len,
+                corruption_rate=config.span_corruption_rate,
+                mean_length=config.span_mean_length,
+            )
+            if val_tokens is not None:
+                val_ds = SpanCorruptionDataset(
+                    val_tokens, seq_len=args.seq_len,
+                    corruption_rate=config.span_corruption_rate,
+                    mean_length=config.span_mean_length,
+                    seed=137,
+                )
+        elif config.objective == 'delayed_recall':
+            print(f"Objective: delayed recall (gap={config.delayed_recall_gap})")
+            train_ds = DelayedRecallDataset(
+                train_tokens, seq_len=args.seq_len,
+                gap=config.delayed_recall_gap,
+            )
+            if val_tokens is not None:
+                val_ds = DelayedRecallDataset(
+                    val_tokens, seq_len=args.seq_len,
+                    gap=config.delayed_recall_gap,
+                    seed=137,
+                )
 
     use_cuda = torch.cuda.is_available()
     nw = config.num_workers if use_cuda else 0
@@ -1498,7 +1619,7 @@ def main():
             print(f"torch.compile failed ({e}), continuing without compilation")
 
     # Dispatch to the right trainer
-    if config.mode == 'autoregressive':
+    if config.mode in ('autoregressive', 'two_pass'):
         trainer = Trainer(
             model, config, train_loader, val_loader,
             tokenizer=tokenizer,
