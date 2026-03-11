@@ -374,6 +374,49 @@ Run them in this order. Each run isolates one variable against the control.
 - **Log dir (partial run):** e.g. `logs/v6/memory_reframe_wikitext103_*_dirty/run1_control_baseline/`
 - **Next:** Run 2 (span_corruption) started. Results to be recorded below as runs complete.
 
+### Run 2 (span corruption, no memory) — stopped after epoch 2
+
+- **Decision (2026-03-11):** Stopped Run 2 mid-epoch 3. Span corruption is not viable for the causal V6 architecture.
+- **Epochs completed:** 2 full (killed at epoch 3 batch 250/16499)
+
+#### Metrics
+
+| Metric | Run 1 (Control) Ep1 | Run 2 (Span Corr.) Ep1 | Run 2 Ep2 |
+|--------|---------------------|------------------------|-----------|
+| Train Loss | 5.52 | 7.31 | 6.97 |
+| Train PPL | 250.7 | 1,500.7 | 1,066.2 |
+| Val Loss | 4.81 | 7.07 | 6.86 |
+| Val PPL | **123.3** | 1,180.0 | **954.2** |
+| unique_word_ratio | **0.699** | 0.558 | 0.544 |
+| rep3 | 0.011 | 0.012 | 0.013 |
+| restarts | 0 | 0 | 0 |
+
+#### Generation quality
+
+- **Run 1 Ep1:** "In 1923, the University of Virginia." — coherent
+- **Run 2 Ep1:** "In 1923, the University of of with to a of and in . he was the @,@ 8 million..." — gibberish
+- **Run 2 Ep2:** "In 1923, the University of century ." — still gibberish
+- **Mid-epoch samples were equally incoherent** — word soup with scattered function words and sentinels
+
+#### Root cause analysis
+
+1. **Task-architecture mismatch:** Span corruption was designed for T5's bidirectional encoder. V6 is causal — it can only see left context when predicting masked positions. Reconstructing spans from left-only context is fundamentally harder and less informative.
+2. **Train-generate mismatch:** Model trains on fill-in-the-blank but generates autoregressively. These are different tasks; the model never learns fluent next-token generation.
+3. **Sparse gradient signal:** Only ~15% of positions contribute to loss vs 100% in next-token. ~7x fewer gradients per batch.
+4. **Diversity loss collapsed:** Dropped from ~9.14 (epoch 1 early) to ~0.004 (epoch 2), indicating banks stopped specializing under the weaker signal.
+5. **PPL not directly comparable:** Span corruption PPL only measures accuracy on the masked ~15% of tokens, not full sequence prediction. The gap is even worse than 954 vs 123 suggests.
+
+#### Impact on remaining experiment plan
+
+- **Run 3 (span corruption + episodic):** Skip — adding episodic memory on top of a broken objective won't help.
+- **Run 5 (full combination):** Skip span corruption component — the next-token objective should be the base.
+- **Run 6 (two-pass):** This is the proper vehicle for span corruption. The bidirectional encoder sees both sides of masked spans, matching the T5 design intent. Worth running.
+- **Run 4 (bank_role_weight ablation):** Unaffected — uses next-token objective. Should run next.
+
+#### Lesson learned
+
+Span corruption requires bidirectional context to be effective. For causal-only architectures, the objective needs adaptation — e.g., only mask tokens that are predictable from left context, or use a "predict next K tokens" objective that preserves the autoregressive nature while encouraging cross-gap reasoning. Alternatively, the delayed_recall objective may be better suited since it doesn't change the prediction task — it only re-weights which positions matter more.
+
 *(Remaining run results to be filled as runs complete)*
 
 ---
