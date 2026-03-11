@@ -56,7 +56,7 @@ class PhaseFieldDiffusion(nn.Module):
         # Timestep conditioning
         self.time_embed = ComplexTimestepEmbed(config.dim, initializer=initializer)
 
-        # Noise schedule (not an nn.Module, just precomputed tensors)
+        # Noise schedule (nn.Module with buffers — moves to device with model)
         self.noise_schedule = ComplexNoiseSchedule(
             config.diffusion_steps, config.noise_schedule,
         )
@@ -188,7 +188,7 @@ class PhaseFieldDiffusion(nn.Module):
                     predicted_x0 = predicted
                 else:
                     # Convert epsilon prediction to x0
-                    ab = self.noise_schedule.register_alpha_bar.to(device)[t_val]
+                    ab = self.noise_schedule.alpha_bar.to(device)[t_val]
                     predicted_x0 = (z_t - torch.sqrt(1 - ab) * predicted) / (torch.sqrt(ab) + 1e-8)
 
                 z_t = self.noise_schedule.reverse_step(z_t, predicted_x0, t_val)
@@ -209,7 +209,7 @@ class PhaseFieldDiffusion(nn.Module):
                 if self.config.prediction_target == 'x0':
                     predicted_x0 = predicted
                 else:
-                    ab = self.noise_schedule.register_alpha_bar.to(device)[t_val]
+                    ab = self.noise_schedule.alpha_bar.to(device)[t_val]
                     predicted_x0 = (z_t - torch.sqrt(1 - ab) * predicted) / (torch.sqrt(ab) + 1e-8)
 
                 z_t = self.noise_schedule.ddim_step(
