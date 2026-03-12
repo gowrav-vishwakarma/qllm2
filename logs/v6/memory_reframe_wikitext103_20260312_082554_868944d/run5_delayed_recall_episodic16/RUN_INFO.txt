@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Delayed recall + episodic_slots=16 + bank_role_weight=0.1 (fact storage test)
+Date (UTC)  : 2026-03-12 02:55:54
+Date (local): 2026-03-12 08:25:54 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 868944dcb428712a87690153c1901de8922a0eb7
+Git short   : 868944d
+Git branch  : bidirectional_encode_decode
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size small-matched --seq_len 512 --batch_size 14 --epochs 10 --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt 'In 1923 , the University of' --objective delayed_recall --episodic_slots 16 --bank_role_weight 0.1 
+================================================================================
