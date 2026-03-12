@@ -8,6 +8,7 @@ Usage:
     python -m v6.train --resume checkpoints_v6/best_model.pt
 """
 
+import json
 import os
 import re
 import sys
@@ -16,6 +17,7 @@ import math
 import argparse
 import warnings
 import unicodedata
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -697,6 +699,27 @@ def compute_text_quality(text: str) -> Dict[str, float]:
     }
 
 
+def _notify_discord(content: str) -> None:
+    """Optionally send a copy of the message to Discord if DISCORD_HOOK is set.
+    Does not replace or suppress any existing logging; console/file logging is unchanged."""
+    hook = os.environ.get("DISCORD_HOOK", "").strip()
+    if not hook:
+        return
+    if len(content) > 2000:
+        content = content[:1997] + "..."
+    try:
+        payload = json.dumps({"content": content}).encode("utf-8")
+        req = urllib.request.Request(
+            hook,
+            data=payload,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        urllib.request.urlopen(req, timeout=10)
+    except Exception:
+        pass
+
+
 class Trainer:
     def __init__(
         self,
@@ -876,6 +899,17 @@ class Trainer:
                     print(f"  [mid-epoch sample @ batch {batch_idx}]")
                     print(f"  Prompt: {self.gen_prompt}")
                     print(f"  Generated: {text}")
+                    ppl = math.exp(min(ce_loss.item(), 20))
+                    lr = self.scheduler.get_last_lr()[0]
+                    elapsed = time.time() - epoch_start
+                    avg_tok_s = total_epoch_tokens / elapsed if elapsed > 0 else 0
+                    _gen_msg = (
+                        f"**[gen_every]** Epoch {epoch+1} batch {batch_idx}\n"
+                        f"loss={ce_loss.item():.4f} ppl={ppl:.1f} div={raw_div_val:.2e} wdiv={div_loss_val:.2e} lr={lr:.2e} | {avg_tok_s:.0f} tok/s\n"
+                        f"Prompt: {self.gen_prompt}\n"
+                        f"Generated: {(text[:800] + '...') if len(text) > 800 else text}"
+                    )
+                    _notify_discord(_gen_msg)
                 except Exception:
                     pass
                 self.model.train()
@@ -958,8 +992,18 @@ class Trainer:
         print(f"Epochs: {self.start_epoch+1}..{self.config.max_epochs}, Batches/epoch: {len(self.train_loader)}")
         print()
 
+        _start_msg = (
+            f"**Training started** (AR)\n"
+            f"Device: {self.device}\n"
+            f"Epochs: {self.start_epoch+1}..{self.config.max_epochs} | Batches/epoch: {len(self.train_loader)}"
+        )
+        if params:
+            _start_msg += f"\nParams: {params.get('total', 0):,} ({params.get('total', 0)/1e6:.1f}M)"
+        _notify_discord(_start_msg)
+
         for epoch in range(self.start_epoch, self.config.max_epochs):
             self._current_epoch = epoch
+            val_metrics = None
             print(f"\n{'='*60}")
             print(f"Epoch {epoch+1}/{self.config.max_epochs}")
             print('=' * 60)
@@ -996,9 +1040,11 @@ class Trainer:
             if self.save_checkpoints and (epoch + 1) % 5 == 0:
                 self.save_checkpoint(f'checkpoint_epoch_{epoch+1}.pt')
 
+            epoch_text = ""
             if self.tokenizer is not None:
                 try:
                     text = self.generate_sample(self.gen_prompt)
+                    epoch_text = text
                     print(f"\nPrompt: {self.gen_prompt}")
                     print(f"Generated: {text}")
                     qm = compute_text_quality(text)
@@ -1010,6 +1056,17 @@ class Trainer:
                     )
                 except Exception as e:
                     print(f"(Sample generation failed: {e})")
+            _ep_msg = (
+                f"**Epoch {epoch+1}/{self.config.max_epochs}**\n"
+                f"Train Loss: {train_metrics['ce_loss']:.4f} PPL: {train_metrics['ppl']:.2f} "
+                f"div={train_metrics['raw_div']:.2e} wdiv={train_metrics['div_loss']:.2e} | "
+                f"{train_metrics['avg_tok_s']:.0f} tok/s | Time: {epoch_time:.1f}s"
+            )
+            if val_metrics is not None:
+                _ep_msg += f"\nVal Loss: {val_metrics['val_loss']:.4f} PPL: {val_metrics['val_ppl']:.2f}"
+            if epoch_text:
+                _ep_msg += f"\nPrompt: {self.gen_prompt}\nGenerated: {(epoch_text[:600] + '...') if len(epoch_text) > 600 else epoch_text}"
+            _notify_discord(_ep_msg)
 
         self._current_epoch = self.config.max_epochs - 1
         if self.save_checkpoints:
@@ -1151,7 +1208,17 @@ class DiffusionTrainer:
 
             if (self.gen_every > 0 and batch_idx > 0
                     and batch_idx % self.gen_every == 0):
-                self._generate_samples(epoch, batch_idx)
+                gen_text = self._generate_samples(epoch, batch_idx)
+                lr = self.scheduler.get_last_lr()[0]
+                elapsed = time.time() - epoch_start
+                samples_per_sec = (batch_idx + 1) * self.config.batch_size / elapsed if elapsed > 0 else 0
+                _gen_msg = (
+                    f"**[gen_every]** Diffusion Epoch {epoch+1} batch {batch_idx}\n"
+                    f"diff_loss={output.loss.item():.4f} div={div_loss_val:.2e} lr={lr:.2e} | {samples_per_sec:.1f} samples/s\n"
+                )
+                if gen_text:
+                    _gen_msg += f"Generated: {(gen_text[:800] + '...') if len(gen_text) > 800 else gen_text}"
+                _notify_discord(_gen_msg)
                 self.model.train()
 
         return {
@@ -1177,10 +1244,11 @@ class DiffusionTrainer:
         avg_loss = total_loss / num_batches
         return {'val_loss': avg_loss}
 
-    def _generate_samples(self, epoch: int, batch_idx: int = 0):
-        """Generate and display/save samples."""
+    def _generate_samples(self, epoch: int, batch_idx: int = 0) -> str:
+        """Generate and display/save samples. Returns a string for Discord (decoded text or save path)."""
         self.model.eval()
         model_to_sample = self.model._orig_mod if hasattr(self.model, '_orig_mod') else self.model
+        out_text = ""
 
         if self.config.mode == 'diffusion_text' and self.tokenizer is not None:
             seq_len = self.config.max_seq_len
@@ -1188,9 +1256,12 @@ class DiffusionTrainer:
                 batch_size=2, seq_len=seq_len, device=self.device,
                 num_steps=min(50, self.config.diffusion_steps),
             )
+            parts = []
             for i in range(tokens.shape[0]):
                 text = self.tokenizer.decode(tokens[i].tolist(), skip_special_tokens=True)
+                parts.append(text)
                 print(f"  [sample {i+1}] {text[:200]}")
+            out_text = "\n---\n".join(parts) if parts else ""
 
         elif self.config.mode == 'diffusion_image' and self.sample_dir is not None:
             try:
@@ -1204,9 +1275,12 @@ class DiffusionTrainer:
                     images = (images + 1) / 2  # [-1,1] -> [0,1]
                     path = self.sample_dir / f"samples_e{epoch}_b{batch_idx}.png"
                     save_image(images, path, nrow=4)
+                    out_text = f"Samples saved to {path}"
                     print(f"  [samples saved to {path}]")
             except Exception as e:
                 print(f"  (sample generation failed: {e})")
+
+        return out_text
 
     def save_checkpoint(self, name: str):
         path = self.checkpoint_dir / name
@@ -1238,8 +1312,19 @@ class DiffusionTrainer:
         print(f"Epochs: {self.start_epoch+1}..{self.config.max_epochs}, Batches/epoch: {len(self.train_loader)}")
         print()
 
+        _start_msg = (
+            f"**Training started** (Diffusion)\n"
+            f"Device: {self.device} | mode: {self.config.mode}\n"
+            f"Steps: {self.config.diffusion_steps} | schedule: {self.config.noise_schedule} | target: {self.config.prediction_target}\n"
+            f"Epochs: {self.start_epoch+1}..{self.config.max_epochs} | Batches/epoch: {len(self.train_loader)}"
+        )
+        if params:
+            _start_msg += f"\nParams: {params.get('total', 0):,} ({params.get('total', 0)/1e6:.1f}M)"
+        _notify_discord(_start_msg)
+
         for epoch in range(self.start_epoch, self.config.max_epochs):
             self._current_epoch = epoch
+            val_metrics = None
             print(f"\n{'='*60}")
             print(f"Epoch {epoch+1}/{self.config.max_epochs}")
             print('=' * 60)
@@ -1270,7 +1355,16 @@ class DiffusionTrainer:
             if self.save_checkpoints and (epoch + 1) % 5 == 0:
                 self.save_checkpoint(f'checkpoint_epoch_{epoch+1}.pt')
 
-            self._generate_samples(epoch)
+            epoch_gen = self._generate_samples(epoch)
+            _ep_msg = (
+                f"**Epoch {epoch+1}/{self.config.max_epochs}** (Diffusion)\n"
+                f"Diff Loss: {train_metrics['diff_loss']:.4f} | Time: {epoch_time:.1f}s"
+            )
+            if val_metrics is not None:
+                _ep_msg += f"\nVal Loss: {val_metrics['val_loss']:.4f}"
+            if epoch_gen:
+                _ep_msg += f"\nGenerated: {(epoch_gen[:600] + '...') if len(epoch_gen) > 600 else epoch_gen}"
+            _notify_discord(_ep_msg)
 
         self._current_epoch = self.config.max_epochs - 1
         if self.save_checkpoints:
@@ -1283,6 +1377,20 @@ class DiffusionTrainer:
 
 
 def main():
+    # Load .env from project root so DISCORD_HOOK is available if set
+    _env_path = Path(__file__).resolve().parent.parent / ".env"
+    if _env_path.exists():
+        try:
+            for line in _env_path.read_text().splitlines():
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, _, value = line.partition("=")
+                    key, value = key.strip(), value.strip().strip("'\"")
+                    if key == "DISCORD_HOOK" and value:
+                        os.environ["DISCORD_HOOK"] = value
+        except Exception:
+            pass
+
     parser = argparse.ArgumentParser(description='Train V6 Phase-First LM')
     parser.add_argument('--size', type=str, default='small-matched',
                         choices=['tiny', 'small', 'small-matched', 'medium', 'large', 'xl'])
