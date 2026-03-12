@@ -466,6 +466,78 @@ Span corruption requires bidirectional context to be effective. For causal-only 
 - **Bank role weight may need to be much stronger** (0.1-0.2) to actually prevent collapse and show a PPL difference. The 0.05 default is too gentle.
 - **This run establishes the 10-epoch convergence baseline**: ~56.5 val PPL at this model size/dataset. All future runs should target this or better.
 
+### Run 5 (delayed_recall + episodic_slots=16 + bank_role=0.1) — full 10 epochs
+
+- **Date:** 2026-03-12 08:25 → 2026-03-12 19:23 (10.96 hours)
+- **Best Val PPL:** 56.55 (epoch 10)
+- **Checkpoint:** `checkpoints_v6_reframe/run5_delayed_recall_episodic16/best_model.pt`
+- **Total params:** 29,119,792 (29.1M) — +430K vs Run 4 from episodic memory (98,690), expert_reader (32,896), memory_fusion (299,017)
+- **Objective:** delayed recall (gap=64), loss weight 3x on recall, 2x on fact, 1x elsewhere
+- **Throughput:** ~30k tok/s (vs 46k in Run 4 — episodic memory overhead ~35% slower)
+
+#### Epoch-by-epoch metrics
+
+| Epoch | Train PPL | Val PPL | div_loss | wdiv | rep3 | rep4 | restarts | uniq |
+|-------|-----------|---------|----------|------|------|------|----------|------|
+| 1 | 252.2 | 125.6 | 9.32e+00 | 9.23e-01 | 0.000 | 0.000 | 0 | 0.737 |
+| 2 | 110.2 | 85.9 | 5.45e-03 | 4.79e-04 | 0.129 | 0.083 | 0 | 0.609 |
+| 3 | 86.0 | 72.5 | 5.23e-03 | 4.19e-04 | 0.000 | 0.000 | 0 | 0.747 |
+| 4 | 76.4 | 66.4 | 4.94e-03 | 3.56e-04 | 0.012 | 0.000 | 0 | 0.670 |
+| 5 | 71.3 | 62.4 | 4.61e-03 | 2.95e-04 | 0.033 | 0.011 | 0 | 0.720 |
+| 6 | 67.9 | 60.1 | 4.27e-03 | 2.39e-04 | 0.000 | 0.000 | 0 | 0.730 |
+| 7 | 65.5 | 58.3 | 3.94e-03 | 1.89e-04 | 0.000 | 0.000 | 0 | 0.722 |
+| 8 | 63.8 | 57.3 | 3.66e-03 | 1.46e-04 | 0.000 | 0.000 | 0 | 0.742 |
+| 9 | 62.7 | 56.6 | 3.45e-03 | 1.10e-04 | 0.011 | 0.000 | 0 | 0.726 |
+| 10 | 62.1 | **56.6** | 3.34e-03 | 8.03e-05 | 0.075 | 0.022 | 0 | 0.611 |
+
+#### Generation quality progression
+
+- **Ep1:** "In 1923, the University of Wales had a first-gross $10,000 for a number of weeks..." — factually wrong but syntactically OK
+- **Ep4:** "In 1923, the University of Oregon was also a member of the University College of Engineering. A prominent student who served as director in 1930..." — fluent, topic-persistent
+- **Ep7:** "In 1923, the University of Chicago's Central Park was established as a public park in the city's 'modern-day campus of the nearby city of St.anger; and the historic core of Lakeland.'" — coherent paragraph
+- **Ep9:** "In 1923, the University of Texas had been the first state to hold a seat in the state's first city. The state government moved its current name from Virginia..." — long coherent passage with named entities
+- **Ep10:** "In 1923, the University of Chicago was named the University of California's 'National Historical Society (NHC)'. = = History = = ... The first history of the United States is the history of the Great American Civil War..." — coherent, section headers, but higher repetition (rep3=0.075)
+
+#### Comparison: Run 5 vs Run 4
+
+| Metric | Run 5 (Ep10) | Run 4 (Ep10) | Delta |
+|--------|-------------|-------------|-------|
+| Val PPL | 56.55 | 56.46 | +0.09 (flat) |
+| div_loss | **3.34e-03** | 2.73e-05 | **122x higher** |
+| wdiv | 8.03e-05 | 7.09e-07 | **113x higher** |
+| rep3 | 0.075 | 0.000 | worse |
+| uniq | 0.611 | 0.708 | worse |
+| restarts | 0 | 0 | same |
+| params | 29.1M | 28.7M | +430K |
+| tok/s | ~30k | ~46k | -35% |
+
+#### Key findings
+
+1. **Val PPL is identical**: 56.55 vs 56.46. Delayed recall + episodic memory + bank_role=0.1 neither helped nor hurt final perplexity. The model converged to the same loss regardless of these additions.
+
+2. **Bank specialization maintained**: Diversity loss stayed around 3.3e-03 through epoch 10 (vs Run 4's collapse to 2.7e-05). `bank_role_weight=0.1` successfully prevents bank merging. However, this did not translate to better perplexity or generation quality.
+
+3. **Diversity decayed but did not collapse**: div went 9.32 → 5.45e-03 (epoch 1→2, big initial drop) → 3.34e-03 (epoch 10, slow decay). The wdiv (weighted div) dropped more: 9.23e-01 → 8.03e-05. Banks are differentiating but the weight of that differentiation is becoming marginal.
+
+4. **Episodic memory was inert**: 98,690 extra parameters, 35% throughput hit, but no PPL improvement. At seq_len=512 with a 64-token recall gap, the SSM slow lanes can trivially bridge the gap without needing explicit episodic memory. The episodic memory needs a harder task to prove its value.
+
+5. **Delayed recall did not improve fact storage**: The 3x weighting on recall positions had no measurable effect. Possible reasons:
+   - Gap of 64 tokens is too easy for a 512-dim SSM with slow lanes that span 100K+ tokens
+   - The fact/recall regions are random subspans, not semantically meaningful facts
+   - Loss reweighting alone does not create new information — the model already learns those positions with standard next-token
+   - Need longer sequences (2048+) where the SSM slow lanes are actually stressed
+
+6. **Slightly more repetitive than Run 4**: rep3=0.075 and uniq=0.611 at epoch 10 (vs 0.000 and 0.708). The memory fusion path may introduce a slight bias toward repeating retrieved content.
+
+#### What this means for the architecture
+
+The memory reframe components (episodic memory, delayed recall, bank role loss) are **mechanically correct** — they compile, train, don't crash, and banks stay differentiated. But at this scale and sequence length, the SSM alone is sufficient for the task. The components need to be tested under conditions that actually stress long-range memory:
+
+- **Longer sequences** (2048-4096): seq_len=512 is too short to require explicit memory
+- **Larger recall gap** (256-512): gap=64 is trivially handled by SSM slow lanes
+- **Harder evaluation**: PPL doesn't measure fact retention; need fact-probing or QA eval
+- **Larger model**: 29M params may not have enough capacity for episodic memory to add value on top of what the SSM already captures
+
 *(Remaining run results to be filled as runs complete)*
 
 ---
