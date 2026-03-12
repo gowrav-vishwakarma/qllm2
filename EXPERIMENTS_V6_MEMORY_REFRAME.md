@@ -417,6 +417,55 @@ Run them in this order. Each run isolates one variable against the control.
 
 Span corruption requires bidirectional context to be effective. For causal-only architectures, the objective needs adaptation — e.g., only mask tokens that are predictable from left context, or use a "predict next K tokens" objective that preserves the autoregressive nature while encouraging cross-gap reasoning. Alternatively, the delayed_recall objective may be better suited since it doesn't change the prediction task — it only re-weights which positions matter more.
 
+### Run 4 (bank_role_weight=0.0, next-token, no memory) — full 10 epochs
+
+- **Date:** 2026-03-11 20:32 → 2026-03-12 03:38 (7.10 hours)
+- **Best Val PPL:** 56.46 (epoch 10)
+- **Checkpoint:** `checkpoints_v6_reframe/run4_bank_role_0.0/best_model.pt`
+
+#### Epoch-by-epoch metrics
+
+| Epoch | Train PPL | Val PPL | div_loss | rep3 | rep4 | restarts | uniq |
+|-------|-----------|---------|----------|------|------|----------|------|
+| 1 | 247.4 | 122.0 | 1.39e+01 | 0.021 | 0.000 | 0 | 0.701 |
+| 2 | 107.9 | 84.4 | 3.12e-03 | 0.011 | 0.000 | 0 | 0.659 |
+| 3 | 84.9 | 71.1 | 2.88e-03 | 0.010 | 0.000 | 0 | 0.633 |
+| 4 | 75.6 | 65.8 | 2.48e-03 | 0.000 | 0.000 | 0 | 0.729 |
+| 5 | 70.5 | 62.1 | 1.96e-03 | 0.021 | 0.000 | 0 | 0.636 |
+| 6 | 67.3 | 59.7 | 1.42e-03 | 0.000 | 0.000 | 0 | 0.745 |
+| 7 | 65.3 | 58.3 | 9.26e-04 | 0.040 | 0.010 | 0 | 0.573 |
+| 8 | 63.7 | 57.3 | 4.96e-04 | 0.000 | 0.000 | 0 | 0.706 |
+| 9 | 62.6 | 56.6 | 1.90e-04 | 0.000 | 0.000 | 0 | 0.733 |
+| 10 | 62.0 | **56.5** | 2.73e-05 | 0.000 | 0.000 | 0 | 0.708 |
+
+#### Generation quality progression
+
+- **Ep1:** "In 1923, the University of California. In the 1980s and 2001 the state's most popular country was a city..." — fluent but factually incoherent
+- **Ep4:** "In 1923, the University of Michigan was elected to the state legislature. He is also a member of the State Department of Education." — coherent, topic-persistent
+- **Ep9:** "In 1923, the University of Missouri was re-designated as a state highway in 1927. In 1938, the portion between I-5 and US 1 west of the town was extended..." — detailed, paragraph-level coherence, WikiText style
+- **Ep10:** "In 1923, the University of Chicago began working on a new project that included a 'free-running' design. The design was to be designed by Henry L. Kennedy and his team..." — good coherence, section headers (= = Design = =), rep3=0.000
+
+#### Key findings
+
+1. **Diversity loss collapsed exponentially**: 13.9 → 3.12e-03 (epoch 1→2) → 2.73e-05 (epoch 10). Without `bank_role_weight`, the two banks fully merge into identical representations. This decay was monotonic and smooth — no recovery.
+
+2. **Model trains well despite bank collapse**: Val PPL converged to 56.5 with healthy generation quality (no repetition, no restarts, uniq ~0.7). This means:
+   - At 28.7M parameters, dual banks are effectively redundant without role pressure
+   - The model is wasting half its bank capacity on a duplicate representation
+   - The diversity loss alone (without role weight) is insufficient to maintain specialization
+
+3. **Convergence profile**: PPL curve shows log-linear decay. The model is still improving slightly at epoch 10 (56.57 → 56.46) but clearly plateauing. Diminishing returns set in around epoch 7-8.
+
+4. **Comparison to Run 1** (bank_role_weight=0.05, 1 epoch only): Val PPL 123.3 vs Run 4's 122.0 at epoch 1 — essentially identical. The default 0.05 role weight has negligible impact at epoch 1.
+
+5. **No pathologies at any point**: Zero restarts across all 10 epochs, rep3 mostly 0.000, no memorization. The no-memory, next-token configuration is stable.
+
+#### Implications for next experiments
+
+- **Run 1 vs Run 4 comparison needs more data**: Run 1 was stopped at epoch 1. To properly test whether bank_role_weight helps, Run 1 needs a full 10-epoch run (or at least 5) for comparison. Prediction: bank_role_weight=0.05 will show slightly higher diversity loss but similar PPL.
+- **Bank role weight may need to be much stronger** (0.1-0.2) to actually prevent collapse and show a PPL difference. The 0.05 default is too gentle.
+- **This run establishes the 10-epoch convergence baseline**: ~56.5 val PPL at this model size/dataset. All future runs should target this or better.
+
 *(Remaining run results to be filled as runs complete)*
 
 ---
