@@ -716,8 +716,8 @@ def _notify_discord(content: str) -> None:
             headers={"Content-Type": "application/json"},
         )
         urllib.request.urlopen(req, timeout=10)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[Discord] Webhook send failed: {e}", file=sys.stderr)
 
 
 class Trainer:
@@ -1388,8 +1388,13 @@ def main():
                     key, value = key.strip(), value.strip().strip("'\"")
                     if key == "DISCORD_HOOK" and value:
                         os.environ["DISCORD_HOOK"] = value
-        except Exception:
-            pass
+                        break
+        except Exception as _e:
+            print(f"[Discord] Could not read .env: {_e}", file=sys.stderr)
+    if os.environ.get("DISCORD_HOOK"):
+        print("[Discord] Webhook configured — notifications enabled", file=sys.stderr)
+    else:
+        print("[Discord] No webhook (set DISCORD_HOOK in .env to enable)", file=sys.stderr)
 
     parser = argparse.ArgumentParser(description='Train V6 Phase-First LM')
     parser.add_argument('--size', type=str, default='small-matched',
