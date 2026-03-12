@@ -150,11 +150,11 @@ run_experiment 4 "bank_role_0.0" \
     "--bank_role_weight 0.0"
 
 # ---------------------------------------------------------------------------
-# Run 5: Full combination -- span corruption + episodic + bank roles
+# Run 5: Delayed recall + episodic memory + bank roles (Experiment A)
 # ---------------------------------------------------------------------------
-run_experiment 5 "full_combination" \
-    "Full combination: span_corruption + episodic_slots=16 + bank_role_weight=0.1" \
-    "--objective span_corruption --episodic_slots 16 --bank_role_weight 0.1"
+run_experiment 5 "delayed_recall_episodic16" \
+    "Delayed recall + episodic_slots=16 + bank_role_weight=0.1 (fact storage test)" \
+    "--objective delayed_recall --episodic_slots 16 --bank_role_weight 0.1"
 
 # ---------------------------------------------------------------------------
 # Run 6: Two-pass model -- bidirectional encoder + causal decoder
