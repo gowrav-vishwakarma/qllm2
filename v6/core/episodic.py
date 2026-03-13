@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from ..init import InitStrategy
 
 from .complex import (
-    ComplexLinear, ComplexNorm, cabs,
+    ComplexLinear, ComplexNorm, cabs, cmul,
 )
 
 
@@ -97,31 +97,42 @@ class EpisodicMemory(nn.Module):
         self.read_query_proj = ComplexLinear(dim, dim, bias=False, initializer=initializer)
         self.read_norm = ComplexNorm(dim)
 
+        # Composite key: projects cmul(semantic_bank, context_bank) into key space.
+        # Bilinear interaction separates facts with same structure but different entities.
+        self.composite_key_proj = ComplexLinear(dim, dim, bias=False, initializer=initializer)
+
         self.register_buffer('write_ptr', torch.tensor(0, dtype=torch.long))
 
     def _pool_events(
         self,
         z: torch.Tensor,
         salience: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        extra_tensors: Optional[list] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor, list]:
         """Pool salient positions into event representations.
 
         Groups consecutive above-threshold positions into spans and
-        averages them weighted by salience.
+        averages them weighted by salience. Optionally pools additional
+        tensors (e.g. bank outputs) at the same spans.
 
         Args:
             z: [B, L, dim, 2]
             salience: [B, L]
+            extra_tensors: optional list of [B, L, dim, 2] tensors to pool
+                at the same salient spans
 
         Returns:
             event_vecs: [B, max_events, dim, 2] pooled event vectors
             event_mask: [B, max_events] which events are valid
+            extra_pooled: list of [B, max_events, dim, 2] pooled extra tensors
         """
         B, L, dim, _ = z.shape
         S = self.num_slots
+        n_extra = len(extra_tensors) if extra_tensors else 0
 
         events_list = []
         masks_list = []
+        extra_lists = [[] for _ in range(n_extra)]
 
         for b in range(B):
             sal = salience[b]
@@ -142,6 +153,8 @@ class EpisodicMemory(nn.Module):
 
             batch_events = torch.zeros(S, dim, 2, device=z.device)
             batch_mask = torch.zeros(S, device=z.device)
+            batch_extras = [torch.zeros(S, dim, 2, device=z.device)
+                            for _ in range(n_extra)]
 
             for i, (start, end) in enumerate(spans[:S]):
                 span_sal = sal[start:end].unsqueeze(-1).unsqueeze(-1)
@@ -150,10 +163,18 @@ class EpisodicMemory(nn.Module):
                 batch_events[i] = weighted
                 batch_mask[i] = 1.0
 
+                for j in range(n_extra):
+                    extra_span = extra_tensors[j][b, start:end]
+                    extra_w = (extra_span * span_sal).sum(dim=0) / span_sal.sum().clamp(min=1e-8)
+                    batch_extras[j][i] = extra_w
+
             events_list.append(batch_events)
             masks_list.append(batch_mask)
+            for j in range(n_extra):
+                extra_lists[j].append(batch_extras[j])
 
-        return torch.stack(events_list), torch.stack(masks_list)
+        extra_pooled = [torch.stack(el) for el in extra_lists]
+        return torch.stack(events_list), torch.stack(masks_list), extra_pooled
 
     def forward(
         self,
@@ -161,12 +182,16 @@ class EpisodicMemory(nn.Module):
         slot_keys: Optional[torch.Tensor] = None,
         slot_values: Optional[torch.Tensor] = None,
         slot_mask: Optional[torch.Tensor] = None,
+        sem_bank_out: Optional[torch.Tensor] = None,
+        ctx_bank_out: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Args:
             z: [B, L, dim, 2] representations from SSM
             slot_keys/values: [B, num_slots, dim, 2] or None
             slot_mask: [B, num_slots] or None
+            sem_bank_out: [B, L, dim, 2] semantic bank output (for composite keys)
+            ctx_bank_out: [B, L, dim, 2] context bank output (for composite keys)
 
         Returns:
             retrieved: [B, L, dim, 2]
@@ -186,9 +211,18 @@ class EpisodicMemory(nn.Module):
 
         salience = self.salience_head(z)
 
-        event_vecs, event_valid = self._pool_events(z, salience)
-        event_keys = self.event_key_proj(event_vecs)
+        use_composite = sem_bank_out is not None and ctx_bank_out is not None
+        extra = [sem_bank_out, ctx_bank_out] if use_composite else None
+
+        event_vecs, event_valid, extra_pooled = self._pool_events(z, salience, extra)
         event_values = self.event_value_proj(event_vecs)
+
+        if use_composite:
+            pooled_sem, pooled_ctx = extra_pooled
+            composite = cmul(pooled_sem, pooled_ctx)
+            event_keys = self.composite_key_proj(composite)
+        else:
+            event_keys = self.event_key_proj(event_vecs)
 
         new_keys = slot_keys.clone()
         new_values = slot_values.clone()
