@@ -13,6 +13,8 @@
 #   ./scripts/run_v6_composite_keys.sh --run_only 1       # baseline only
 #   ./scripts/run_v6_composite_keys.sh --run_only 2       # composite keys only
 #   ./scripts/run_v6_composite_keys.sh --epochs 15        # override epochs
+#   ./scripts/run_v6_composite_keys.sh --run_only 2 --resume  # resume run 2 from checkpoint
+#   ./scripts/run_v6_composite_keys.sh --run_only 2 --resume --batch_size 6
 #
 # See: .cursor/plans/v6_memory_deep_analysis_1b91a4d6.plan.md (Steps C & D)
 
@@ -35,8 +37,10 @@ EPOCHS=15
 SEQ_LEN=2048
 DATASET="wikitext103"
 SIZE="small-matched"
-BATCH_SIZE=3
+BATCH_SIZE=6
 RUN_ONLY=0
+RESUME=0
+LOG_DIR_OVERRIDE=""
 EXTRA_ARGS=""
 
 while [[ $# -gt 0 ]]; do
@@ -47,21 +51,42 @@ while [[ $# -gt 0 ]]; do
         --size)       SIZE="$2";       shift 2 ;;
         --batch_size) BATCH_SIZE="$2"; shift 2 ;;
         --run_only)   RUN_ONLY="$2";   shift 2 ;;
+        --resume)     RESUME=1;        shift ;;
+        --log_dir)    LOG_DIR_OVERRIDE="$2"; shift 2 ;;
         *)            EXTRA_ARGS="$EXTRA_ARGS $1"; shift ;;
     esac
 done
 
 GEN_PROMPT="In 1923 , the University of"
 
-COMMON="--dataset $DATASET --size $SIZE --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000"
+COMMON="--dataset $DATASET --size $SIZE --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000"
 
-GROUP_DIR=$(make_group_prefix "v6" "composite_keys_${DATASET}")
+if [[ $RESUME -eq 1 && -n "$LOG_DIR_OVERRIDE" ]]; then
+    # Reuse the provided log dir parent as group dir
+    GROUP_DIR="$(dirname "$LOG_DIR_OVERRIDE")"
+elif [[ $RESUME -eq 1 ]]; then
+    # Auto-find most recent composite_keys group dir
+    LATEST_GROUP=$(ls -dt logs/v6/composite_keys_${DATASET}_* 2>/dev/null | head -1)
+    if [[ -n "$LATEST_GROUP" ]]; then
+        GROUP_DIR="$LATEST_GROUP"
+        echo "[resume] Reusing existing group dir: $GROUP_DIR"
+    else
+        GROUP_DIR=$(make_group_prefix "v6" "composite_keys_${DATASET}")
+        echo "[resume] No previous group dir found, creating new: $GROUP_DIR"
+    fi
+else
+    GROUP_DIR=$(make_group_prefix "v6" "composite_keys_${DATASET}")
+fi
+
 echo ""
 echo "============================================================"
 echo "  V6 Composite Key Memory Experiment"
 echo "  Group dir: $GROUP_DIR"
 echo "  Dataset: $DATASET  Size: $SIZE  Epochs: $EPOCHS"
 echo "  Seq len: $SEQ_LEN  Batch size: $BATCH_SIZE"
+if [[ $RESUME -eq 1 ]]; then
+    echo "  Resume: YES"
+fi
 echo "============================================================"
 echo ""
 
@@ -77,7 +102,21 @@ run_experiment() {
         return 0
     fi
 
-    local log_dir="${GROUP_DIR}/run${run_num}_${run_name}"
+    local log_dir
+    if [[ -n "$LOG_DIR_OVERRIDE" ]]; then
+        log_dir="$LOG_DIR_OVERRIDE"
+    else
+        log_dir="${GROUP_DIR}/run${run_num}_${run_name}"
+    fi
+
+    # Auto-detect resume checkpoint
+    local resume_arg=""
+    if [[ $RESUME -eq 1 && -f "$ckpt_dir/best_model.pt" ]]; then
+        resume_arg="--resume $ckpt_dir/best_model.pt"
+        echo "[run $run_num] Resuming from $ckpt_dir/best_model.pt"
+    elif [[ $RESUME -eq 1 ]]; then
+        echo "[run $run_num] --resume requested but no checkpoint found in $ckpt_dir/"
+    fi
 
     echo ""
     echo "============================================================"
@@ -85,10 +124,13 @@ run_experiment() {
     echo "  $description"
     echo "  Log: $log_dir"
     echo "  Checkpoint: $ckpt_dir"
+    if [[ -n "$resume_arg" ]]; then
+        echo "  Resume: YES (from best_model.pt)"
+    fi
     echo "============================================================"
     echo ""
 
-    write_run_info "$log_dir" "$description" "$COMMON --gen_prompt '$GEN_PROMPT' $run_args $EXTRA_ARGS"
+    write_run_info "$log_dir" "$description" "$COMMON --gen_prompt '$GEN_PROMPT' $run_args $resume_arg $EXTRA_ARGS"
 
     if [ -d "$ckpt_dir" ] && [ "$(ls -A "$ckpt_dir" 2>/dev/null)" ]; then
         echo "[run $run_num] Found existing checkpoints in $ckpt_dir/ -- keeping them"
@@ -101,6 +143,7 @@ run_experiment() {
         $COMMON \
         --gen_prompt "'$GEN_PROMPT'" \
         $run_args \
+        $resume_arg \
         --log_dir "$log_dir" \
         --checkpoint_dir "$ckpt_dir" \
         $EXTRA_ARGS
@@ -121,16 +164,9 @@ run_experiment() {
 # Run 1: No-memory baseline at seq_len=2048 (continue from epoch 5)
 #   Purpose: establish the PPL ceiling without memory
 # ---------------------------------------------------------------------------
-BASELINE_CKPT="checkpoints_v6_long_seq/seq2048/best_model.pt"
-BASELINE_RESUME=""
-if [[ -f "$BASELINE_CKPT" ]]; then
-    BASELINE_RESUME="--resume $BASELINE_CKPT"
-    echo "[info] Will resume baseline from $BASELINE_CKPT"
-fi
-
 run_experiment 1 "no_memory_baseline_2048" \
     "No memory baseline at seq_len=2048 (continued from epoch 5, target: find PPL floor)" \
-    "--no_working_memory --no_internal_memory $BASELINE_RESUME" \
+    "--no_working_memory --no_internal_memory" \
     "checkpoints_v6_long_seq/seq2048"
 
 # ---------------------------------------------------------------------------

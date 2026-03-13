@@ -700,8 +700,7 @@ def compute_text_quality(text: str) -> Dict[str, float]:
 
 
 def _notify_discord(content: str) -> None:
-    """Optionally send a copy of the message to Discord if DISCORD_HOOK is set.
-    Does not replace or suppress any existing logging; console/file logging is unchanged."""
+    """Send a single message to Discord (truncates at 2000 chars)."""
     hook = os.environ.get("DISCORD_HOOK", "").strip()
     if not hook:
         return
@@ -721,6 +720,40 @@ def _notify_discord(content: str) -> None:
         urllib.request.urlopen(req, timeout=10)
     except Exception as e:
         print(f"[Discord] Webhook send failed: {e}", file=sys.stderr)
+
+
+def _notify_discord_long(text: str, *, limit: int = 1900) -> None:
+    """Send text to Discord, splitting into multiple messages at line boundaries."""
+    hook = os.environ.get("DISCORD_HOOK", "").strip()
+    if not hook:
+        return
+    lines = text.splitlines(keepends=True)
+    chunk: List[str] = []
+    chunk_len = 0
+    for line in lines:
+        if chunk and chunk_len + len(line) > limit:
+            _notify_discord("".join(chunk))
+            chunk, chunk_len = [], 0
+        chunk.append(line)
+        chunk_len += len(line)
+    if chunk:
+        _notify_discord("".join(chunk))
+
+
+def _is_oom_error(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    return isinstance(exc, torch.cuda.OutOfMemoryError) or "out of memory" in msg
+
+
+def _notify_training_failure(status: str, exc: Optional[BaseException] = None) -> None:
+    parts = [
+        f"**Training {status}**",
+        f"Host: {os.uname().nodename}",
+        f"Command: {' '.join(sys.argv)}",
+    ]
+    if exc is not None:
+        parts.append(f"Error: {type(exc).__name__}: {exc}")
+    _notify_discord("\n".join(parts))
 
 
 class Trainer:
@@ -957,6 +990,8 @@ class Trainer:
     @torch.no_grad()
     def generate_sample(self, prompt="The quick brown", max_tokens=100):
         self.model.eval()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         model_to_gen = self.model._orig_mod if hasattr(self.model, '_orig_mod') else self.model
         prompt_ids = self.tokenizer.encode(prompt)
         prompt_tensor = torch.tensor([prompt_ids], device=self.device)
@@ -994,15 +1029,6 @@ class Trainer:
             print(f"Total: {params['total']:,} ({params['total']/1e6:.1f}M)")
         print(f"Epochs: {self.start_epoch+1}..{self.config.max_epochs}, Batches/epoch: {len(self.train_loader)}")
         print()
-
-        _start_msg = (
-            f"**Training started** (AR)\n"
-            f"Device: {self.device}\n"
-            f"Epochs: {self.start_epoch+1}..{self.config.max_epochs} | Batches/epoch: {len(self.train_loader)}"
-        )
-        if params:
-            _start_msg += f"\nParams: {params.get('total', 0):,} ({params.get('total', 0)/1e6:.1f}M)"
-        _notify_discord(_start_msg)
 
         for epoch in range(self.start_epoch, self.config.max_epochs):
             self._current_epoch = epoch
@@ -1250,6 +1276,8 @@ class DiffusionTrainer:
     def _generate_samples(self, epoch: int, batch_idx: int = 0) -> str:
         """Generate and display/save samples. Returns a string for Discord (decoded text or save path)."""
         self.model.eval()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         model_to_sample = self.model._orig_mod if hasattr(self.model, '_orig_mod') else self.model
         out_text = ""
 
@@ -1314,16 +1342,6 @@ class DiffusionTrainer:
         print(f"Prediction target: {self.config.prediction_target}")
         print(f"Epochs: {self.start_epoch+1}..{self.config.max_epochs}, Batches/epoch: {len(self.train_loader)}")
         print()
-
-        _start_msg = (
-            f"**Training started** (Diffusion)\n"
-            f"Device: {self.device} | mode: {self.config.mode}\n"
-            f"Steps: {self.config.diffusion_steps} | schedule: {self.config.noise_schedule} | target: {self.config.prediction_target}\n"
-            f"Epochs: {self.start_epoch+1}..{self.config.max_epochs} | Batches/epoch: {len(self.train_loader)}"
-        )
-        if params:
-            _start_msg += f"\nParams: {params.get('total', 0):,} ({params.get('total', 0)/1e6:.1f}M)"
-        _notify_discord(_start_msg)
 
         for epoch in range(self.start_epoch, self.config.max_epochs):
             self._current_epoch = epoch
@@ -1574,47 +1592,55 @@ def main():
     tee = TeeLogger(log_path, mode=log_mode)
     sys.stdout = tee
 
-    if args.resume:
-        print(f"\n--- Resumed from {args.resume} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+    # Build startup summary lines (shared between console and Discord)
+    _summary_lines: List[str] = []
+    _sl = _summary_lines.append
 
-    print(f"Wall clock start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 60)
-    print(f"V6 Phase-First Model (mode: {config.mode})")
-    print("=" * 60)
-    print(f"Size: {args.size}")
+    if args.resume:
+        _sl(f"--- Resumed from {args.resume} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---")
+
+    _sl(f"Wall clock start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    _sl("=" * 60)
+    _sl(f"V6 Phase-First Model (mode: {config.mode})")
+    _sl("=" * 60)
+    _sl(f"Host: {os.uname().nodename}")
+    _sl(f"Size: {args.size}")
     if config.mode in ('autoregressive', 'diffusion_text', 'two_pass'):
-        print(f"Dataset: {args.dataset}")
-    print(f"Complex dim: {config.dim} (= {config.dim * 2} real values/position)")
-    print(f"SSM state dim: {config.state_dim} (multi-timescale: fast/medium/slow)")
-    print(f"Layers: {config.num_layers}")
-    print(f"Banks: {config.num_banks} (semantic + context)")
+        _sl(f"Dataset: {args.dataset}")
+    _sl(f"Complex dim: {config.dim} (= {config.dim * 2} real values/position)")
+    _sl(f"SSM state dim: {config.state_dim} (multi-timescale: fast/medium/slow)")
+    _sl(f"Layers: {config.num_layers}")
+    _sl(f"Banks: {config.num_banks} (semantic + context)")
     if config.mode == 'autoregressive':
-        print(f"Working memory slots: {config.num_wm_slots} (top-k={config.wm_read_topk}, decay={config.wm_slot_decay})")
-        print(f"Internal memory slots: {config.num_im_slots} (top-k={config.im_read_topk})")
+        _sl(f"Working memory slots: {config.num_wm_slots} (top-k={config.wm_read_topk}, decay={config.wm_slot_decay})")
+        _sl(f"Internal memory slots: {config.num_im_slots} (top-k={config.im_read_topk})")
     if config.mode.startswith('diffusion'):
-        print(f"Diffusion steps: {config.diffusion_steps}, schedule: {config.noise_schedule}")
-        print(f"Prediction target: {config.prediction_target}")
+        _sl(f"Diffusion steps: {config.diffusion_steps}, schedule: {config.noise_schedule}")
+        _sl(f"Prediction target: {config.prediction_target}")
     if config.mode == 'diffusion_image':
-        print(f"Image: {config.image_size}x{config.image_size}, encoder={config.image_encoder}, patch={config.patch_size}")
-        print(f"Dataset: {config.image_dataset}")
+        _sl(f"Image: {config.image_size}x{config.image_size}, encoder={config.image_encoder}, patch={config.patch_size}")
+        _sl(f"Dataset: {config.image_dataset}")
     if config.use_attention:
         attn_desc = f"every {config.attn_every} layers" if config.attn_every > 0 else "last layer only"
-        print(f"PhaseAttention: ENABLED ({attn_desc}, heads={config.attn_num_heads}, window={config.attn_window_size})")
+        _sl(f"PhaseAttention: ENABLED ({attn_desc}, heads={config.attn_num_heads}, window={config.attn_window_size})")
     else:
-        print(f"PhaseAttention: DISABLED (attention-free)")
-    print(f"Epochs: {config.max_epochs}")
-    print(f"LR schedule: {config.lr_schedule} (warmup={config.warmup_steps})")
-    print(f"Dropout: {config.dropout}, Weight decay: {config.weight_decay}")
+        _sl(f"PhaseAttention: DISABLED (attention-free)")
+    _sl(f"Epochs: {config.max_epochs}")
+    _sl(f"LR schedule: {config.lr_schedule} (warmup={config.warmup_steps})")
+    _sl(f"Dropout: {config.dropout}, Weight decay: {config.weight_decay}")
 
     amp_dtype = _resolve_amp_dtype(config.amp_dtype)
     amp_label = {torch.bfloat16: 'bf16', torch.float16: 'fp16'}.get(amp_dtype, 'off')
-    print(f"AMP: {amp_label}, TF32: {config.allow_tf32}, Compile: {config.compile_model}"
-          + (f" (mode={config.compile_mode})" if config.compile_model else ""))
-    print(f"Workers: {config.num_workers}, Pin memory: {config.pin_memory}")
-    print(f"Batch log interval: {args.log_interval}")
-    print(f"Log file: {log_path}")
-    print(f"Checkpoint dir: {args.checkpoint_dir}")
-    print("=" * 60)
+    _sl(f"AMP: {amp_label}, TF32: {config.allow_tf32}, Compile: {config.compile_model}"
+        + (f" (mode={config.compile_mode})" if config.compile_model else ""))
+    _sl(f"Workers: {config.num_workers}, Pin memory: {config.pin_memory}")
+    _sl(f"Batch log interval: {args.log_interval}")
+    _sl(f"Log file: {log_path}")
+    _sl(f"Checkpoint dir: {args.checkpoint_dir}")
+    _sl("=" * 60)
+
+    for _line in _summary_lines:
+        print(_line)
 
     # CUDA performance settings
     if torch.cuda.is_available() and config.allow_tf32:
@@ -1713,15 +1739,28 @@ def main():
 
     model = create_model(config)
     init_info = model.initializer_info
-    print(f"Init strategy: {init_info['init_strategy']} (seed: {init_info['init_seed']})")
+    _init_line = f"Init strategy: {init_info['init_strategy']} (seed: {init_info['init_seed']})"
+    print(_init_line)
+    _summary_lines.append(_init_line)
 
     start_epoch = 0
+    checkpoint = None
     if args.resume:
         checkpoint = torch.load(args.resume, weights_only=False)
         model_to_load = model._orig_mod if hasattr(model, '_orig_mod') else model
         model_to_load.load_state_dict(checkpoint['model_state_dict'], strict=False)
         start_epoch = checkpoint.get('epoch', 0) + 1
-        print(f"Resumed from epoch {start_epoch}")
+        _resume_line = f"Resumed from epoch {start_epoch}"
+        print(_resume_line)
+        _summary_lines.append(_resume_line)
+        _ckpt_global_step = checkpoint.get('global_step', 0)
+        _ckpt_best_val = checkpoint.get('best_val_loss', float('inf'))
+        _ckpt_best_ppl = checkpoint.get('best_val_ppl', None)
+        _resume_detail = f"  global_step={_ckpt_global_step}, best_val_loss={_ckpt_best_val:.4f}"
+        if _ckpt_best_ppl is not None and _ckpt_best_ppl < float('inf'):
+            _resume_detail += f", best_val_ppl={_ckpt_best_ppl:.2f}"
+        print(_resume_detail)
+        _summary_lines.append(_resume_detail)
 
     if config.compile_model:
         print(f"Compiling model with torch.compile "
@@ -1745,7 +1784,7 @@ def main():
         trainer.gen_every = args.gen_every
         trainer.gen_prompt = args.gen_prompt
         trainer.log_interval = args.log_interval
-        if args.resume and 'optimizer_state_dict' in checkpoint:
+        if args.resume and checkpoint and 'optimizer_state_dict' in checkpoint:
             trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             trainer.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
             trainer.global_step = checkpoint.get('global_step', 0)
@@ -1764,11 +1803,26 @@ def main():
             sample_dir = Path(args.log_dir) / 'v6' / 'samples'
             sample_dir.mkdir(parents=True, exist_ok=True)
             trainer.sample_dir = sample_dir
-        if args.resume and 'optimizer_state_dict' in checkpoint:
+        if args.resume and checkpoint and 'optimizer_state_dict' in checkpoint:
             trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             trainer.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
             trainer.global_step = checkpoint.get('global_step', 0)
             trainer.best_val_loss = checkpoint.get('best_val_loss', float('inf'))
+
+    # Add trainer-level details (params, batches) to summary before sending
+    params = trainer.model.count_parameters() if hasattr(trainer.model, 'count_parameters') else {}
+    if params:
+        _summary_lines.append(f"Params: {params.get('total', 0):,} ({params.get('total', 0)/1e6:.1f}M)")
+    _summary_lines.append(
+        f"Training on {trainer.device} | "
+        f"Epochs: {trainer.start_epoch+1}..{trainer.config.max_epochs} | "
+        f"Batches/epoch: {len(trainer.train_loader)} | "
+        f"Batch size: {config.batch_size}"
+    )
+
+    # Send full startup summary to Discord
+    _discord_header = "**Training started**" if not args.resume else "**Training resumed**"
+    _notify_discord_long(_discord_header + "\n```\n" + "\n".join(_summary_lines) + "\n```")
 
     trainer.train()
 
@@ -1778,4 +1832,11 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        _notify_training_failure("stopped by user")
+        raise
+    except Exception as e:
+        _notify_training_failure("OOM" if _is_oom_error(e) else "failed", e)
+        raise
