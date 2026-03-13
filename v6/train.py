@@ -713,7 +713,10 @@ def _notify_discord(content: str) -> None:
             hook,
             data=payload,
             method="POST",
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "qllm2-discord-notify/1.0",
+            },
         )
         urllib.request.urlopen(req, timeout=10)
     except Exception as e:
