@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Long-sequence experiment: seq_len=2048, no memory, next-token objective
+Date (UTC)  : 2026-03-12 14:58:57
+Date (local): 2026-03-12 20:28:57 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 56d27eb5bc7b67b1b91b002c7e0ac9f1227627dc
+Git short   : 56d27eb
+Git branch  : bidirectional_encode_decode
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size small-matched --seq_len 2048 --batch_size 3 --epochs 5 --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt 'In 1923 , the University of' 
+================================================================================
