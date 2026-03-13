@@ -542,6 +542,36 @@ The memory reframe components (episodic memory, delayed recall, bank role loss) 
 
 ---
 
+## 7b. Bank Specialization Probe Results (2026-03-13)
+
+Ran `scripts/v6_bank_probe.py` on three checkpoints to determine whether semantic/context banks learn distinct entity/relation roles. The probe feeds structured sentences (e.g. "Paris is the capital of France") through the model, extracts per-layer bank outputs via forward hooks, and measures magnitude/phase variance asymmetry, inter-bank cosine similarity, and entity vs relation token activation bias.
+
+| Checkpoint | Mag Var Ratio (ctx/sem) | Phase Var Ratio | Cosine Sim | Entity/Rel Delta | Layers ctx>1.1x |
+|---|---|---|---|---|---|
+| Run4 (bank_role=0.0) | 0.996 | 1.005 | 0.047 | 0.026 (similar) | 3/12 |
+| Run5 (role=0.1 + episodic) | **1.416** | 1.049 | 0.049 | 0.011 (similar) | 9/12 |
+| long_seq_2048 (no memory) | 1.077 | 1.005 | 0.051 | **0.069** (different) | 5/12 |
+
+### Key findings
+
+1. **Banks ARE well-differentiated** in all three models (cosine similarity ~0.05 — low means different). The banks learn distinct representations regardless of role loss.
+2. **Role loss works mechanically**: Run5 (role_weight=0.1) shows context bank varying 1.4x more than semantic bank across 9/12 layers, vs Run4 (no role loss) which is symmetric. The loss does push banks apart in variance.
+3. **Neither reframe model shows entity/relation specialization**: Both Run4 and Run5 have near-identical entity vs relation activation across banks (delta < 0.03). Banks differentiate, but NOT along the entity/relation axis.
+4. **Longer training helps more than role loss**: The long_seq_2048 model (5 epochs, no explicit role loss, default bank_role_weight=0.05) shows the strongest entity/relation sensitivity (delta=0.069). More training naturally encourages functional differentiation.
+5. **Banks are specialized in an unknown pattern**: The low cosine similarity confirms the banks learn different things, just not the entity-vs-relation split we hypothesized. They likely split along some other axis (possibly syntactic/semantic, or frequency-based).
+
+### Implications
+
+- **Composite keys are viable** — banks produce genuinely different representations, so combining them captures more information than either alone.
+- **Use multiplicative composition** (`cmul(sem, ctx)`) rather than assuming entity/relation separation. The bilinear product captures whatever bank-specific structure exists, without requiring specific role assignment.
+- **Role loss is not the bottleneck** — the banks differentiate naturally. The real problem was that memory keys used only SSM output, discarding the bank decomposition entirely.
+
+### Action taken
+
+Modified `v6/core/episodic.py` to support composite keys: when bank outputs are provided, event keys are computed as `composite_key_proj(cmul(pooled_sem, pooled_ctx))` instead of `event_key_proj(pooled_ssm_out)`. Modified `v6/backbone.py` to pass last-layer bank outputs to episodic memory. Backward compatible — falls back to original behavior when bank outputs are not provided.
+
+---
+
 ## 8. Architecture Decision Record
 
 ### Decision 1: Fix supervision before scaling memory

@@ -264,8 +264,12 @@ class PhaseFieldBackbone(nn.Module):
 
         ep_retrieved = None
         if self.episodic_memory is not None:
+            sem_out, ctx_out = last_bank_outputs if last_bank_outputs else (None, None)
             ep_retrieved, new_wm_keys, new_wm_values, new_wm_mask, salience_scores = (
-                self.episodic_memory(ssm_out, wm_keys, wm_values, wm_mask)
+                self.episodic_memory(
+                    ssm_out, wm_keys, wm_values, wm_mask,
+                    sem_bank_out=sem_out, ctx_bank_out=ctx_out,
+                )
             )
 
         # 4. Internal memory

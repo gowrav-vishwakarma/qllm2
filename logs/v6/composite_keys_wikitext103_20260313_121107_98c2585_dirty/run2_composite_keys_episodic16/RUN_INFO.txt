@@ -1,0 +1,21 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Composite key episodic memory: episodic_slots=16, delayed_recall gap=512, bank_role_weight=0.1
+Date (UTC)  : 2026-03-13 06:41:07
+Date (local): 2026-03-13 12:11:07 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 98c258516fd20456685d3da7e60f89890ebf225d
+Git short   : 98c2585
+Git branch  : bidirectional_encode_decode
+Git dirty   : yes
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size small-matched --seq_len 2048 --batch_size 3 --epochs 10 --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --gen_prompt 'In 1923 , the University of' --no_working_memory --no_internal_memory --objective delayed_recall --delayed_recall_gap 512 --episodic_slots 16 --bank_role_weight 0.1 
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+
