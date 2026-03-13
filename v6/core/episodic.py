@@ -228,12 +228,12 @@ class EpisodicMemory(nn.Module):
         new_values = slot_values.clone()
         new_mask = slot_mask.clone()
 
-        ptr = self.write_ptr.item()
-        n_events = int(event_valid.sum(dim=-1).max().item())
-        n_events = min(n_events, S)
+        n_valid = event_valid.shape[1]
+        n_write = min(n_valid, S)
+        ptr_val = self.write_ptr
 
-        for i in range(n_events):
-            si = (ptr + i) % S
+        for i in range(n_write):
+            si = (ptr_val + i) % S
             valid = event_valid[:, i].unsqueeze(-1).unsqueeze(-1)
             new_keys[:, si] = valid * event_keys[:, i] + (1 - valid) * slot_keys[:, si]
             new_values[:, si] = valid * event_values[:, i] + (1 - valid) * slot_values[:, si]
@@ -241,8 +241,9 @@ class EpisodicMemory(nn.Module):
                 slot_mask[:, si] + event_valid[:, i], max=1.0,
             )
 
-        if n_events > 0:
-            self.write_ptr.fill_((ptr + n_events) % S)
+        has_events = event_valid.sum() > 0
+        if has_events:
+            self.write_ptr.fill_((ptr_val + n_write) % S)
 
         queries = self.read_query_proj(z)
         q_r, q_i = queries[..., 0], queries[..., 1]
