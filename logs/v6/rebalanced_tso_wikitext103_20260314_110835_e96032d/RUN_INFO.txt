@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Rebalanced Option B + TSO: single_bank=True, state_dim=1280, TSO=True, no memory
+Date (UTC)  : 2026-03-14 05:38:35
+Date (local): 2026-03-14 11:08:35 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : e96032d39d71066e8d2172aae97f269275582c24
+Git short   : e96032d
+Git branch  : bidirectional_encode_decode
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size small-rebalanced --seq_len 2048 --batch_size 3 --epochs 10 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt 'In 1923 , the University of'  
+================================================================================
