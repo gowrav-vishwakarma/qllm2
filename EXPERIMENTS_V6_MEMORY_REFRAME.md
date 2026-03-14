@@ -605,3 +605,68 @@ Modified `v6/core/episodic.py` to support composite keys: when bank outputs are 
 **Decision**: The two-pass model is a separate `--mode two_pass` ablation, not a replacement.
 
 **Rationale**: The SSM's multi-timescale decay already provides a "see enough of the sentence" buffer. The two-pass model is more powerful but doubles the SSM compute. It should prove its value against the single-pass + episodic baseline before becoming the default.
+
+---
+
+## 9. Post-Reframe Analysis: Memory Is a Dead End (2026-03-14)
+
+### Comprehensive cross-experiment evidence
+
+After completing ALL memory experiments (Runs 1-5 in the reframe series, plus the composite keys experiment), the conclusion is unambiguous: **memory does not help at this scale and sequence length.**
+
+| Config | Val PPL (WikiText-103, 10 epochs) | Memory overhead |
+|--------|----------------------------------|-----------------|
+| No memory, no role loss (Run 4) | **56.46** | none |
+| Delayed recall + episodic 16 + role loss (Run 5) | 56.55 | +35% throughput cost |
+| Composite keys + episodic 16 (10 epochs) | 58.40 | +430K params, slower |
+| Long-seq 2048 no memory (5 epochs) | 75.53 | baseline |
+
+**Why memory fails**: The SSM slow lanes (decay 0.99999-0.999999) have effective half-lives of 69K-693K steps. At seq_len=2048, the slowest lanes retain 99.8% of state. The SSM IS the memory. Explicit memory would only matter at seq_len > 50K.
+
+### Hidden pattern: parameter budget misallocation
+
+The real problem was not memory design -- it was where the 29M parameters were spent:
+
+```
+small-matched (29M):
+  embed:    12.9M (44.8%) -- same as any model, unavoidable
+  banks:     9.5M (32.9%) -- dual banks that don't meaningfully specialize
+  couplers:  1.6M ( 5.5%) -- routing for banks that produce near-identical outputs
+  SSM:       4.7M (16.6%) -- the ONLY component doing temporal modeling
+```
+
+The SSM -- which does ALL the useful work -- gets just 16.6% of parameters. Banks get 32.9% despite Run 4 vs Run 5 proving they don't affect PPL whether collapsed (div=2.7e-05) or differentiated (div=3.3e-03).
+
+### Decision 5: Abandon memory, rebalance parameters (Option B)
+
+**Context**: Memory experiments exhausted. SSM is under-parameterized.
+
+**Decision**: Replace dual banks + coupler with a single ComplexGatedUnit per layer. Reinvest saved params into SSM state_dim (512 -> 1280). Add Timescale-Separated Output (TSO).
+
+**New config (`small-rebalanced`, 29.5M params)**:
+```
+  embed:    12.9M (43.6%) -- unchanged
+  banks:     4.7M (16.0%) -- single CGU per layer (was 9.5M + 1.6M coupler)
+  SSM:      11.9M (40.2%) -- 2.5x more capacity (was 4.7M)
+  state_dim: 1280 (was 512)
+```
+
+**TSO (Timescale-Separated Output)**: Each SSM layer splits its output into fast/medium/slow timescale streams with separate C_proj projections and a learned gate that selects which timescale to trust per position. Novel contribution -- addresses the "Paris vs Delhi" phase alignment problem by letting the model suppress stale slow-lane bindings when context changes.
+
+**Files changed**: `v6/config.py`, `v6/backbone.py`, `v6/core/ssm.py`
+
+**What was removed from the active architecture**:
+- Dual banks (NamedBankPair) -- replaced by single CGU
+- PhaseInterferenceCoupler -- not needed with single bank
+- Diversity loss -- no bank pair to diversify
+- Bank role loss -- no semantic/context split
+- All memory (WM, IM, episodic, composite keys) -- SSM handles it
+- Delayed recall objective -- SSM handles all tested gaps trivially
+- Span corruption objective -- incompatible with causal architecture
+
+**What remains novel**:
+- Complex-valued selective SSM with multi-timescale eigenvalues
+- Phase-preserving operations throughout (ModReLU, ComplexNorm, ComplexGatedUnit)
+- Timescale-Separated Output (TSO) -- completely new
+- O(n) attention-free model with complex arithmetic
+- Phase-coherence LM head (Re(output * conj(embed)))
