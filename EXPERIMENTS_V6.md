@@ -892,3 +892,45 @@ Key changes:
 - **Bank role loss**: pushes semantic bank toward entity-like stability and context bank toward relation-like variability (`--bank_role_weight`)
 - **Two-pass model**: bidirectional chunk encoder + causal decoder as controlled ablation (`--mode two_pass`)
 - **Behavioral quality metrics**: repeat rate, restart fragmentation, unique word ratio printed alongside generation samples
+
+---
+
+## 15. Architecture Rebalancing: Option B + TSO (2026-03-14)
+
+After exhaustive memory experiments (reframe Runs 1-5, composite keys, long-seq), the conclusion is clear: **memory does not help at current scale**. The SSM slow lanes handle all tested gap sizes trivially. The real bottleneck is parameter allocation: the SSM gets only 16.6% of params while underperforming banks get 32.9%.
+
+### What changed
+
+**Option B**: Replace dual `NamedBankPair` + `PhaseInterferenceCoupler` with a single `ComplexGatedUnit` per layer. Reinvest saved params into SSM `state_dim` (512 -> 1280).
+
+**TSO (Timescale-Separated Output)**: Each SSM layer splits output into fast/medium/slow streams with separate `C_proj` and a learned gate. Lets the model explicitly suppress stale slow-lane state when context changes.
+
+### Parameter comparison
+
+| Component | small-matched | small-rebalanced | Change |
+|-----------|--------------|-----------------|--------|
+| Banks | 9.5M (32.9%) | 4.7M (16.0%) | -50% |
+| Couplers | 1.6M (5.5%) | 0 (0%) | removed |
+| SSM | 4.7M (16.6%) | 11.9M (40.2%) | **+2.5x** |
+| Total | 28.7M | 29.5M | ~same |
+
+### Skipped (confirmed dead ends)
+
+- All memory (WM, IM, episodic, composite keys): SSM handles all tested gaps
+- Diversity loss, bank role loss: never affected PPL
+- Span corruption: incompatible with causal architecture
+- Delayed recall: SSM handles gap=512 trivially
+
+### Novel contributions preserved
+
+1. Complex-valued selective SSM with multi-timescale eigenvalues
+2. Phase-preserving ops (ModReLU, ComplexNorm, ComplexGatedUnit)
+3. **TSO** -- new: timescale-separated output with learned gating
+4. O(n) attention-free architecture
+5. Phase-coherence LM head
+
+### Config and script
+
+- Preset: `--size small-rebalanced`
+- Script: `scripts/run_v6_rebalanced.sh`
+- Baseline to beat: Run 4 val PPL 56.46 (small-matched, 10 epochs, WikiText-103)

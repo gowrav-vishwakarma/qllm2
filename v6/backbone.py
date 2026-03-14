@@ -4,6 +4,10 @@ V6 Shared Backbone: Banks + Couplers + SSM + Memory.
 Extracted from PhaseFieldLM so it can be reused by both
 autoregressive (PhaseFieldLM) and diffusion (PhaseFieldDiffusion) models.
 The backbone contains ~85%+ of all model parameters.
+
+Option B / single_bank mode: replaces NamedBankPair + Coupler with a
+single ComplexGatedUnit per layer. Saves ~6M params that are reinvested
+into SSM state_dim (1280 vs 512). No diversity or role loss needed.
 """
 
 import torch
@@ -12,7 +16,7 @@ from typing import Dict, Optional, Tuple
 from dataclasses import dataclass
 
 from .config import V6Config
-from .core.complex import ComplexLinear, ComplexNorm, cmul, cabs
+from .core.complex import ComplexLinear, ComplexNorm, ComplexGatedUnit, cmul, cabs
 from .core.ssm import ComplexSSM, SSMState
 from .core.bank import NamedBankPair
 from .core.coupler import PhaseInterferenceCoupler
@@ -82,26 +86,46 @@ class PhaseFieldBackbone(nn.Module):
     def __init__(self, config: V6Config, initializer):
         super().__init__()
         self.config = config
+        self._single_bank = getattr(config, 'single_bank', False)
 
-        # Per-layer named banks + coupler
-        self.bank_pairs = nn.ModuleList([
-            NamedBankPair(
-                config.dim, config.bank_expand, config.dropout,
-                initializer=initializer,
-            )
-            for _ in range(config.num_layers)
-        ])
-        self.couplers = nn.ModuleList([
-            PhaseInterferenceCoupler(
-                config.dim, num_sources=2, dropout=config.dropout,
-                initializer=initializer,
-            )
-            for _ in range(config.num_layers)
-        ])
-        self.bank_scales = nn.ParameterList([
-            nn.Parameter(torch.tensor(1.0))
-            for _ in range(config.num_layers)
-        ])
+        if self._single_bank:
+            self.feature_layers = nn.ModuleList([
+                nn.ModuleDict({
+                    'norm': ComplexNorm(config.dim),
+                    'cgu': ComplexGatedUnit(config.dim, config.bank_expand,
+                                           initializer=initializer),
+                    'dropout': nn.Dropout(config.dropout),
+                })
+                for _ in range(config.num_layers)
+            ])
+            self.feature_scales = nn.ParameterList([
+                nn.Parameter(torch.tensor(1.0))
+                for _ in range(config.num_layers)
+            ])
+            self.bank_pairs = nn.ModuleList()
+            self.couplers = nn.ModuleList()
+            self.bank_scales = nn.ParameterList()
+        else:
+            self.feature_layers = nn.ModuleList()
+            self.feature_scales = nn.ParameterList()
+            self.bank_pairs = nn.ModuleList([
+                NamedBankPair(
+                    config.dim, config.bank_expand, config.dropout,
+                    initializer=initializer,
+                )
+                for _ in range(config.num_layers)
+            ])
+            self.couplers = nn.ModuleList([
+                PhaseInterferenceCoupler(
+                    config.dim, num_sources=2, dropout=config.dropout,
+                    initializer=initializer,
+                )
+                for _ in range(config.num_layers)
+            ])
+            self.bank_scales = nn.ParameterList([
+                nn.Parameter(torch.tensor(1.0))
+                for _ in range(config.num_layers)
+            ])
 
         # Optional PhaseAttention layers (disabled by default)
         self._attn_layer_ids = set()
@@ -125,13 +149,15 @@ class PhaseFieldBackbone(nn.Module):
                     )
                     self.attn_scales[str(i)] = nn.Parameter(torch.tensor(0.1))
 
-        # SSM
+        # SSM (with optional Timescale-Separated Output)
+        tso = getattr(config, 'timescale_separated_output', False)
         self.ssm = ComplexSSM(
             dim=config.dim,
             state_dim=config.state_dim,
             num_layers=config.num_layers,
             dropout=config.dropout,
             initializer=initializer,
+            tso=tso,
         )
 
         # Working memory (legacy token-wise)
@@ -218,38 +244,59 @@ class PhaseFieldBackbone(nn.Module):
             z: [B, L, dim, 2] complex input embeddings
             timestep_embed: [B, 1, dim, 2] or None -- added per layer (diffusion only)
         """
-        # 1. Banks + Coupler (+ optional Attention) per layer
+        # 1. Feature extraction per layer
         bank_z = z
         diversity_losses = []
         last_bank_outputs = None
-        for i, (bank_pair, coupler, scale) in enumerate(
-            zip(self.bank_pairs, self.couplers, self.bank_scales)
-        ):
-            residual = bank_z
 
-            if timestep_embed is not None:
-                bank_z = bank_z + timestep_embed
+        if self._single_bank:
+            for i, (feat_dict, scale) in enumerate(
+                zip(self.feature_layers, self.feature_scales)
+            ):
+                residual = bank_z
+                if timestep_embed is not None:
+                    bank_z = bank_z + timestep_embed
+                out = feat_dict['cgu'](feat_dict['norm'](bank_z))
+                if self.training:
+                    drop_mask = feat_dict['dropout'](
+                        torch.ones(out.shape[:-1], device=out.device)
+                    )
+                    out = out * drop_mask.unsqueeze(-1)
+                bank_z = residual + out * scale
 
-            sem_out, ctx_out = bank_pair(bank_z)
-            coupled = coupler(sem_out, ctx_out)
-            bank_z = residual + coupled * scale
-            last_bank_outputs = (sem_out, ctx_out)
+                if i in self._attn_layer_ids:
+                    attn_out = self.attn_layers[str(i)](bank_z)
+                    attn_scale = self.attn_scales[str(i)]
+                    bank_z = bank_z + attn_out * attn_scale
+        else:
+            for i, (bank_pair, coupler, scale) in enumerate(
+                zip(self.bank_pairs, self.couplers, self.bank_scales)
+            ):
+                residual = bank_z
 
-            if i in self._attn_layer_ids:
-                attn_out = self.attn_layers[str(i)](bank_z)
-                attn_scale = self.attn_scales[str(i)]
-                bank_z = bank_z + attn_out * attn_scale
+                if timestep_embed is not None:
+                    bank_z = bank_z + timestep_embed
 
-            if self.training:
-                dloss = bank_pair.compute_diversity_loss(
-                    residual, margin=self.config.diversity_margin,
-                )
-                diversity_losses.append(dloss)
-                dloss_c = coupler.compute_diversity_loss()
-                diversity_losses.append(dloss_c)
-                if self.config.bank_role_weight > 0:
-                    role_loss = bank_pair.compute_role_loss(sem_out, ctx_out)
-                    diversity_losses.append(role_loss * self.config.bank_role_weight)
+                sem_out, ctx_out = bank_pair(bank_z)
+                coupled = coupler(sem_out, ctx_out)
+                bank_z = residual + coupled * scale
+                last_bank_outputs = (sem_out, ctx_out)
+
+                if i in self._attn_layer_ids:
+                    attn_out = self.attn_layers[str(i)](bank_z)
+                    attn_scale = self.attn_scales[str(i)]
+                    bank_z = bank_z + attn_out * attn_scale
+
+                if self.training:
+                    dloss = bank_pair.compute_diversity_loss(
+                        residual, margin=self.config.diversity_margin,
+                    )
+                    diversity_losses.append(dloss)
+                    dloss_c = coupler.compute_diversity_loss()
+                    diversity_losses.append(dloss_c)
+                    if self.config.bank_role_weight > 0:
+                        role_loss = bank_pair.compute_role_loss(sem_out, ctx_out)
+                        diversity_losses.append(role_loss * self.config.bank_role_weight)
 
         # 2. SSM
         ssm_out, new_state = self.ssm(bank_z, ssm_state)
@@ -336,8 +383,10 @@ class PhaseFieldBackbone(nn.Module):
         )
 
     def count_parameters(self) -> Dict[str, int]:
+        feature_params = sum(p.numel() for p in self.feature_layers.parameters()) if self.feature_layers else 0
+        feature_scale_params = sum(p.numel() for p in self.feature_scales) if self.feature_scales else 0
         counts = {
-            'banks': sum(p.numel() for p in self.bank_pairs.parameters()),
+            'banks': sum(p.numel() for p in self.bank_pairs.parameters()) + feature_params + feature_scale_params,
             'couplers': sum(p.numel() for p in self.couplers.parameters()),
             'attention': (
                 sum(p.numel() for p in self.attn_layers.parameters()) +

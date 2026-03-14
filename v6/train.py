@@ -1419,7 +1419,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Train V6 Phase-First LM')
     parser.add_argument('--size', type=str, default='small-matched',
-                        choices=['tiny', 'small', 'small-matched', 'medium', 'large', 'xl'])
+                        choices=['tiny', 'small', 'small-matched', 'small-rebalanced', 'medium', 'large', 'xl'])
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=None)
     parser.add_argument('--lr', type=float, default=None)
@@ -1610,7 +1610,11 @@ def main():
     _sl(f"Complex dim: {config.dim} (= {config.dim * 2} real values/position)")
     _sl(f"SSM state dim: {config.state_dim} (multi-timescale: fast/medium/slow)")
     _sl(f"Layers: {config.num_layers}")
-    _sl(f"Banks: {config.num_banks} (semantic + context)")
+    if getattr(config, 'single_bank', False):
+        _sl(f"Feature: single CGU per layer (expand={config.bank_expand})")
+        _sl(f"TSO: {'ENABLED' if getattr(config, 'timescale_separated_output', False) else 'DISABLED'}")
+    else:
+        _sl(f"Banks: {config.num_banks} (semantic + context)")
     if config.mode == 'autoregressive':
         _sl(f"Working memory slots: {config.num_wm_slots} (top-k={config.wm_read_topk}, decay={config.wm_slot_decay})")
         _sl(f"Internal memory slots: {config.num_im_slots} (top-k={config.im_read_topk})")
