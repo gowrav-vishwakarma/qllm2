@@ -2,8 +2,8 @@
 RUN INFO
 ================================================================================
 Description : Composite key episodic memory: episodic_slots=16, delayed_recall gap=512, bank_role_weight=0.1
-Date (UTC)  : 2026-03-13 08:05:58
-Date (local): 2026-03-13 13:35:58 IST
+Date (UTC)  : 2026-03-13 08:13:35
+Date (local): 2026-03-13 13:43:35 IST
 Hostname    : gowrav-rtx-4090
 Platform    : Linux 6.14.0-34-generic x86_64
 
@@ -13,51 +13,9 @@ Git branch  : bidirectional_encode_decode
 Git dirty   : yes
 
 Python      : Python 3.9.24
-Arguments   : --dataset wikitext103 --size small-matched --seq_len 2048 --batch_size 6 --epochs 10 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --gen_prompt 'In 1923 , the University of' --no_working_memory --no_internal_memory --objective delayed_recall --delayed_recall_gap 512 --episodic_slots 16 --bank_role_weight 0.1 --resume checkpoints_v6_composite_keys/best_model.pt 
+Arguments   : --dataset wikitext103 --size small-matched --seq_len 2048 --batch_size 4 --epochs 10 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --gen_prompt 'In 1923 , the University of' --no_working_memory --no_internal_memory --objective delayed_recall --delayed_recall_gap 512 --episodic_slots 16 --bank_role_weight 0.1 --resume checkpoints_v6_composite_keys/best_model.pt 
 ================================================================================
 
 UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
 ---------------------------------------------------------------
- v6/train.py | 25 ++++++++++++++++++++++++-
- 1 file changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/v6/train.py b/v6/train.py
-index 3e479fa..fbaab8b 100644
---- a/v6/train.py
-+++ b/v6/train.py
-@@ -723,6 +723,22 @@ def _notify_discord(content: str) -> None:
-         print(f"[Discord] Webhook send failed: {e}", file=sys.stderr)
- 
- 
-+def _is_oom_error(exc: BaseException) -> bool:
-+    msg = str(exc).lower()
-+    return isinstance(exc, torch.cuda.OutOfMemoryError) or "out of memory" in msg
-+
-+
-+def _notify_training_failure(status: str, exc: Optional[BaseException] = None) -> None:
-+    parts = [
-+        f"**Training {status}**",
-+        f"Host: {os.uname().nodename}",
-+        f"Command: {' '.join(sys.argv)}",
-+    ]
-+    if exc is not None:
-+        parts.append(f"Error: {type(exc).__name__}: {exc}")
-+    _notify_discord("\n".join(parts))
-+
-+
- class Trainer:
-     def __init__(
-         self,
-@@ -1782,4 +1798,11 @@ def main():
- 
- 
- if __name__ == '__main__':
--    main()
-+    try:
-+        main()
-+    except KeyboardInterrupt:
-+        _notify_training_failure("stopped by user")
-+        raise
-+    except Exception as e:
-+        _notify_training_failure("OOM" if _is_oom_error(e) else "failed", e)
-+        raise
