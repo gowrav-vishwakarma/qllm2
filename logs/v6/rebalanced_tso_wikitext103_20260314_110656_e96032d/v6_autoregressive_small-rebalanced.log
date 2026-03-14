@@ -1,0 +1,45 @@
+[2026-03-14 11:06:57] Wall clock start: 2026-03-14 11:06:57
+[2026-03-14 11:06:57] ============================================================
+[2026-03-14 11:06:57] V6 Phase-First Model (mode: autoregressive)
+[2026-03-14 11:06:57] ============================================================
+[2026-03-14 11:06:57] Host: gowrav-rtx-4090
+[2026-03-14 11:06:57] Size: small-rebalanced
+[2026-03-14 11:06:57] Dataset: wikitext103
+[2026-03-14 11:06:57] Complex dim: 128 (= 256 real values/position)
+[2026-03-14 11:06:57] SSM state dim: 1280 (multi-timescale: fast/medium/slow)
+[2026-03-14 11:06:57] Layers: 12
+[2026-03-14 11:06:57] Feature: single CGU per layer (expand=4)
+[2026-03-14 11:06:57] TSO: ENABLED
+[2026-03-14 11:06:57] Working memory slots: 0 (top-k=8, decay=0.95)
+[2026-03-14 11:06:57] Internal memory slots: 0 (top-k=8)
+[2026-03-14 11:06:57] PhaseAttention: DISABLED (attention-free)
+[2026-03-14 11:06:57] Epochs: 10
+[2026-03-14 11:06:57] LR schedule: warmup_cosine (warmup=200)
+[2026-03-14 11:06:57] Dropout: 0.1, Weight decay: 0.01
+[2026-03-14 11:06:57] AMP: bf16, TF32: True, Compile: True (mode=default)
+[2026-03-14 11:06:57] Workers: 4, Pin memory: True
+[2026-03-14 11:06:57] Batch log interval: 50
+[2026-03-14 11:06:57] Log file: logs/v6/rebalanced_tso_wikitext103_20260314_110656_e96032d/v6_autoregressive_small-rebalanced.log
+[2026-03-14 11:06:57] Checkpoint dir: checkpoints_v6_rebalanced
+[2026-03-14 11:06:57] ============================================================
+[2026-03-14 11:07:00] [cache] Loaded WikiText-103 train from .cache/v6_tokens/wikitext103_train_v2_full_sl2048.pt (118,496,145 tokens)
+[2026-03-14 11:07:00] [cache] Loaded WikiText-103 validation from .cache/v6_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+[2026-03-14 11:07:00] Train chunks: 57831, Val chunks: 121
+[2026-03-14 11:07:01] Init strategy: orthogonal (seed: 1472895038)
+[2026-03-14 11:07:01] Compiling model with torch.compile (mode=default, fullgraph=False)...
+[2026-03-14 11:07:02] Param groups: 196 tensors (29,418,240 params) with weight decay, 149 tensors (75,964 params) without
+
+[2026-03-14 11:07:02] Training on cuda
+[2026-03-14 11:07:02] Parameters: {'embed (tied w/ output)': 12865792, 'banks': 4726284, 'couplers': 0, 'attention': 0, 'ssm': 11868848, 'working_memory': 0, 'episodic_memory': 0, 'internal_memory': 0, 'persistent_reader': 0, 'expert_reader': 0, 'memory_fusion': 0, 'memory_scale': 0, 'lm_head_proj': 33152, 'total': 29494076}
+[2026-03-14 11:07:02] Total: 29,494,076 (29.5M)
+[2026-03-14 11:07:02] Epochs: 1..10, Batches/epoch: 19277
+
+
+[2026-03-14 11:07:02] ============================================================
+[2026-03-14 11:07:02] Epoch 1/10
+[2026-03-14 11:07:02] ============================================================
+[2026-03-14 11:07:25]   First step wall time: 23.3s
+[2026-03-14 11:07:25]   [1] 0/19277 (0%) loss=10.8383 ppl=50934.1 div=0.00e+00 wdiv=0.00e+00 lr=5.00e-07 | 263 tok/s (avg 263) ETA 0m00s | GPU 1.1/10.1GB
+[2026-03-14 11:07:31]   [1] 50/19277 (0%) loss=10.7804 ppl=48070.1 div=0.00e+00 wdiv=0.00e+00 lr=2.55e-05 | 54576 tok/s (avg 10794) ETA 182m23s | GPU 1.1/10.3GB
+[2026-03-14 11:07:37]   [1] 100/19277 (1%) loss=10.6427 ppl=41886.6 div=0.00e+00 wdiv=0.00e+00 lr=5.05e-05 | 54663 tok/s (avg 17909) ETA 109m38s | GPU 1.1/10.3GB
+[2026-03-14 11:07:42]   [1] 150/19277 (1%) loss=10.2361 ppl=27892.5 div=0.00e+00 wdiv=0.00e+00 lr=7.55e-05 | 54613 tok/s (avg 23035) ETA 85m01s | GPU 1.1/10.3GB
