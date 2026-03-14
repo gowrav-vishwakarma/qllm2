@@ -934,3 +934,54 @@ After exhaustive memory experiments (reframe Runs 1-5, composite keys, long-seq)
 - Preset: `--size small-rebalanced`
 - Script: `scripts/run_v6_rebalanced.sh`
 - Baseline to beat: Run 4 val PPL 56.46 (small-matched, 10 epochs, WikiText-103)
+
+### Run v6-rebalanced-tso (2026-03-14, RTX 4090)
+
+**Setup**: size=`small-rebalanced` (29.5M params), single_bank=True, TSO=True, state_dim=1280, seq_len=2048, batch_size=3, 10 epochs, WikiText-103. No memory, no diversity loss.
+
+**Results**:
+
+| Epoch | Train PPL | Val PPL | Notes |
+|-------|-----------|---------|-------|
+| 1 | 229.41 | 112.52 | |
+| 2 | 101.48 | 79.51 | |
+| 3 | 81.04 | 68.35 | |
+| 5 | 66.92 | 59.06 | |
+| 7 | 61.14 | 54.80 | |
+| 10 | 56.97 | **52.64** | still improving |
+
+**Wall time**: 6.09h (21,911s). Throughput: 54,253 tok/s. GPU: 1.1/10.3GB.
+
+**Comparison to baselines**:
+
+| Config | Params | Val PPL (10 ep) | tok/s | GPU mem |
+|--------|--------|----------------|-------|---------|
+| **small-rebalanced (TSO)** | **29.5M** | **52.64** | **54,253** | **1.1GB** |
+| small-matched (Run 4) | 28.7M | 56.46 | 46,000 | 1.4GB |
+| composite keys + episodic | 29.2M | 58.40 | 34,299 | 1.4GB |
+
+**Key findings**:
+
+1. **6.8% PPL improvement** over the best prior V6 result (56.46 -> 52.64) with same param budget.
+2. **18% faster throughput** (54k vs 46k tok/s) -- single CGU is cheaper than dual banks + coupler.
+3. **Less GPU memory** (1.1GB vs 1.4GB) despite larger state_dim.
+4. **Zero repetition, zero restarts** -- generation quality is clean.
+5. **Still improving at epoch 10** -- curve not fully converged.
+6. PPL gap to GPT-2 124M (31 PPL) is 1.7x with 4.2x fewer params. Scaling should close this.
+
+**Generation sample** (epoch 10):
+> "In 1923, the University of California in Chicago is a 'school-school campus' located at the east end of the campus. = = Education and research = = The University of Florida's primary education system was founded by the University of California in 1910..."
+
+Quality: rep3=0.033, rep4=0.022, restarts=0, uniq=0.656. Fluent Wikipedia-style text with section headers; factually incoherent (same limitation as all prior configs at this scale).
+
+**Log**: `logs/v6/rebalanced_tso_wikitext103_20260314_110835_e96032d/v6_autoregressive_small-rebalanced.log`
+
+---
+
+## 16. Scaling to 60M: medium-rebalanced (2026-03-14)
+
+The rebalanced architecture is validated -- faster, cheaper, and better than all prior V6 configs. Next step: scale to ~60M params to test whether the gains hold and close the gap to GPT-2 124M (~31 PPL).
+
+- Preset: `--size medium-rebalanced`
+- Script: `scripts/run_v6_medium_rebalanced.sh`
+- Target: val PPL < 42 on WikiText-103 (10 epochs)

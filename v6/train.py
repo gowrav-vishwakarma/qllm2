@@ -1419,7 +1419,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Train V6 Phase-First LM')
     parser.add_argument('--size', type=str, default='small-matched',
-                        choices=['tiny', 'small', 'small-matched', 'small-rebalanced', 'medium', 'large', 'xl'])
+                        choices=['tiny', 'small', 'small-matched', 'small-rebalanced', 'medium-rebalanced', 'medium', 'large', 'xl'])
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=None)
     parser.add_argument('--lr', type=float, default=None)
