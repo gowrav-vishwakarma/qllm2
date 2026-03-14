@@ -20,8 +20,12 @@ class V6Config:
     num_layers: int = 12
     num_banks: int = 2        # named banks: semantic + context
     bank_expand: int = 4      # CGU expansion factor
+    single_bank: bool = False # True = one CGU per layer (no bank pair / coupler)
     dropout: float = 0.1
     max_seq_len: int = 1024
+
+    # SSM output mode
+    timescale_separated_output: bool = False  # TSO: separate C_proj per timescale
 
     # Working memory (0 = disabled; use --wm_slots N to enable)
     num_wm_slots: int = 0    # working memory slots per sequence
@@ -133,6 +137,13 @@ def get_config(size: str = 'small-matched') -> V6Config:
         'small-matched': V6Config(
             dim=128, state_dim=512, num_layers=12,
             num_banks=2, bank_expand=4,
+            batch_size=8, learning_rate=1e-4,
+        ),
+        'small-rebalanced': V6Config(
+            dim=128, state_dim=1280, num_layers=12,
+            num_banks=1, bank_expand=4,
+            single_bank=True,
+            timescale_separated_output=True,
             batch_size=8, learning_rate=1e-4,
         ),
         'medium': V6Config(

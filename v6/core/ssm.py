@@ -111,6 +111,11 @@ class ComplexSSMLayer(nn.Module):
     Multi-timescale: log_A_real is initialized with tiered decay rates
     (fast/medium/slow lanes) so some state dimensions persist for thousands
     of tokens while others capture local patterns.
+
+    TSO (Timescale-Separated Output): when enabled, each timescale tier
+    gets its own C_proj and a learned gate selects which timescale to
+    trust per position. This lets the model explicitly reason about
+    "what do my fast/medium/slow states predict?" separately.
     """
 
     def __init__(
@@ -119,10 +124,16 @@ class ComplexSSMLayer(nn.Module):
         state_dim: int,
         dropout: float = 0.1,
         initializer: Optional['InitStrategy'] = None,
+        tso: bool = False,
     ):
         super().__init__()
         self.dim = dim
         self.state_dim = state_dim
+        self.tso = tso
+
+        self.n_fast = int(state_dim * 0.4)
+        self.n_medium = int(state_dim * 0.3)
+        self.n_slow = state_dim - self.n_fast - self.n_medium
 
         if initializer is not None:
             log_real, log_imag = initializer.init_ssm_eigenvalues(state_dim)
@@ -139,7 +150,15 @@ class ComplexSSMLayer(nn.Module):
         self.dt_bias = nn.Parameter(torch.zeros(state_dim) - 4.0)
 
         self.B_proj = ComplexLinear(dim, state_dim, bias=False, initializer=initializer)
-        self.C_proj = ComplexLinear(state_dim, dim, bias=False, initializer=initializer)
+
+        if tso:
+            self.C_fast = ComplexLinear(self.n_fast, dim, bias=False, initializer=initializer)
+            self.C_medium = ComplexLinear(self.n_medium, dim, bias=False, initializer=initializer)
+            self.C_slow = ComplexLinear(self.n_slow, dim, bias=False, initializer=initializer)
+            self.tso_gate = nn.Linear(dim, 3)
+        else:
+            self.C_proj = ComplexLinear(state_dim, dim, bias=False, initializer=initializer)
+
         self.norm = ComplexNorm(dim)
         self.dropout = nn.Dropout(dropout)
 
@@ -185,7 +204,22 @@ class ComplexSSMLayer(nn.Module):
 
         h = parallel_scan(A, Bx)
 
-        y = self.C_proj(h)
+        if self.tso:
+            h_fast = h[..., :self.n_fast, :]
+            h_medium = h[..., self.n_fast:self.n_fast + self.n_medium, :]
+            h_slow = h[..., self.n_fast + self.n_medium:, :]
+
+            y_fast = self.C_fast(h_fast)
+            y_medium = self.C_medium(h_medium)
+            y_slow = self.C_slow(h_slow)
+
+            gate = torch.softmax(self.tso_gate(cabs(x)), dim=-1)
+            y = (gate[..., 0:1].unsqueeze(-1) * y_fast +
+                 gate[..., 1:2].unsqueeze(-1) * y_medium +
+                 gate[..., 2:3].unsqueeze(-1) * y_slow)
+        else:
+            y = self.C_proj(h)
+
         y = y + cmul(self.D.unsqueeze(0).unsqueeze(0).expand_as(x), x)
 
         if self.training:
@@ -209,6 +243,7 @@ class ComplexSSM(nn.Module):
         num_layers: int = 8,
         dropout: float = 0.1,
         initializer: Optional['InitStrategy'] = None,
+        tso: bool = False,
     ):
         super().__init__()
         self.dim = dim
@@ -216,7 +251,7 @@ class ComplexSSM(nn.Module):
         self.num_layers = num_layers
 
         self.layers = nn.ModuleList([
-            ComplexSSMLayer(dim, state_dim, dropout, initializer=initializer)
+            ComplexSSMLayer(dim, state_dim, dropout, initializer=initializer, tso=tso)
             for _ in range(num_layers)
         ])
         self.layer_scales = nn.ParameterList([
