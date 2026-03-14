@@ -146,6 +146,14 @@ def get_config(size: str = 'small-matched') -> V6Config:
             timescale_separated_output=True,
             batch_size=8, learning_rate=1e-4,
         ),
+        'medium-rebalanced': V6Config(
+            dim=192, state_dim=1536, num_layers=16,
+            num_banks=1, bank_expand=3,
+            single_bank=True,
+            timescale_separated_output=True,
+            batch_size=4, learning_rate=7e-5,
+            warmup_steps=400,
+        ),
         'medium': V6Config(
             dim=512, state_dim=1024, num_layers=12,
             num_banks=2, bank_expand=2,
