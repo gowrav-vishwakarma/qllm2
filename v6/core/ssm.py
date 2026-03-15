@@ -116,6 +116,12 @@ class ComplexSSMLayer(nn.Module):
     gets its own C_proj and a learned gate selects which timescale to
     trust per position. This lets the model explicitly reason about
     "what do my fast/medium/slow states predict?" separately.
+
+    GSP (Gated State Protection): when enabled, a learned gate per state
+    dimension interpolates between "normal SSM update" and "freeze state".
+    protect=1 -> A becomes identity, Bx becomes 0 (state preserved).
+    protect=0 -> normal SSM dynamics. Parallel-scan compatible because
+    the modified A'/Bx' is still a valid linear recurrence.
     """
 
     def __init__(
@@ -125,11 +131,13 @@ class ComplexSSMLayer(nn.Module):
         dropout: float = 0.1,
         initializer: Optional['InitStrategy'] = None,
         tso: bool = False,
+        gsp: bool = False,
     ):
         super().__init__()
         self.dim = dim
         self.state_dim = state_dim
         self.tso = tso
+        self.gsp = gsp
 
         self.n_fast = int(state_dim * 0.4)
         self.n_medium = int(state_dim * 0.3)
@@ -158,6 +166,10 @@ class ComplexSSMLayer(nn.Module):
             self.tso_gate = nn.Linear(dim, 3)
         else:
             self.C_proj = ComplexLinear(state_dim, dim, bias=False, initializer=initializer)
+
+        if gsp:
+            self.protect_gate = nn.Linear(dim, state_dim)
+            nn.init.constant_(self.protect_gate.bias, -3.0)
 
         self.norm = ComplexNorm(dim)
         self.dropout = nn.Dropout(dropout)
@@ -202,6 +214,14 @@ class ComplexSSMLayer(nn.Module):
             first_Bx = cmul(A[:, 0:1], h0.unsqueeze(1)) + Bx[:, 0:1]
             Bx = torch.cat([first_Bx, Bx[:, 1:]], dim=1)
 
+        if self.gsp:
+            protect = torch.sigmoid(self.protect_gate(cabs(x)))
+            protect = protect.unsqueeze(-1)
+            identity = torch.zeros_like(A)
+            identity[..., 0] = 1.0
+            A = protect * identity + (1 - protect) * A
+            Bx = (1 - protect) * Bx
+
         h = parallel_scan(A, Bx)
 
         if self.tso:
@@ -244,6 +264,7 @@ class ComplexSSM(nn.Module):
         dropout: float = 0.1,
         initializer: Optional['InitStrategy'] = None,
         tso: bool = False,
+        gsp: bool = False,
     ):
         super().__init__()
         self.dim = dim
@@ -251,7 +272,7 @@ class ComplexSSM(nn.Module):
         self.num_layers = num_layers
 
         self.layers = nn.ModuleList([
-            ComplexSSMLayer(dim, state_dim, dropout, initializer=initializer, tso=tso)
+            ComplexSSMLayer(dim, state_dim, dropout, initializer=initializer, tso=tso, gsp=gsp)
             for _ in range(num_layers)
         ])
         self.layer_scales = nn.ParameterList([
