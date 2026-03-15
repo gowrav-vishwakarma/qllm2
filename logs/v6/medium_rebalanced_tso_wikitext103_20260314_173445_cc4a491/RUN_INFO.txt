@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Medium-Rebalanced + TSO: dim=192 state_dim=1536 L=16 expand=3, single_bank=True, TSO=True, no memory, ~58.5M params
+Date (UTC)  : 2026-03-14 12:04:45
+Date (local): 2026-03-14 17:34:45 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : cc4a491886d0519f980c8b72571e3b9203af408e
+Git short   : cc4a491
+Git branch  : bidirectional_encode_decode
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size medium-rebalanced --seq_len 2048 --batch_size 3 --epochs 10 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt 'In 1923 , the University of'  
+================================================================================
