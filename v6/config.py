@@ -26,6 +26,7 @@ class V6Config:
 
     # SSM output mode
     timescale_separated_output: bool = False  # TSO: separate C_proj per timescale
+    gated_state_protection: bool = False      # GSP: learned per-state freeze gate
 
     # Working memory (0 = disabled; use --wm_slots N to enable)
     num_wm_slots: int = 0    # working memory slots per sequence
@@ -151,6 +152,15 @@ def get_config(size: str = 'small-matched') -> V6Config:
             num_banks=1, bank_expand=3,
             single_bank=True,
             timescale_separated_output=True,
+            batch_size=4, learning_rate=7e-5,
+            warmup_steps=400,
+        ),
+        'medium-rebalanced-gsp': V6Config(
+            dim=192, state_dim=1536, num_layers=16,
+            num_banks=1, bank_expand=3,
+            single_bank=True,
+            timescale_separated_output=True,
+            gated_state_protection=True,
             batch_size=4, learning_rate=7e-5,
             warmup_steps=400,
         ),

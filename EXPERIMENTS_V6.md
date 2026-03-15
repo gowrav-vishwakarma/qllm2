@@ -985,3 +985,144 @@ The rebalanced architecture is validated -- faster, cheaper, and better than all
 - Preset: `--size medium-rebalanced`
 - Script: `scripts/run_v6_medium_rebalanced.sh`
 - Target: val PPL < 42 on WikiText-103 (10 epochs)
+
+### Run medium-rebalanced (2026-03-14/15, RTX 4090)
+
+**Setup**: size=`medium-rebalanced` (58.4M params), dim=192, state_dim=1536, layers=16, expand=3, single_bank=True, TSO=True, seq_len=2048, batch_size=3, 10 epochs, WikiText-103. No memory, no diversity loss.
+
+**Parameter breakdown**:
+
+| Component | Params | Share |
+|-----------|--------|-------|
+| embed (tied) | 19.3M | 33.0% |
+| banks (single CGU) | 10.6M | 18.2% |
+| SSM + TSO | 28.4M | 48.6% |
+| lm_head proj | 0.07M | 0.1% |
+| **Total** | **58.4M** | |
+
+**Results**:
+
+| Epoch | Train PPL | Val PPL | Notes |
+|-------|-----------|---------|-------|
+| 1 | 226.06 | 107.71 | |
+| 2 | 94.64 | 73.04 | |
+| 3 | 72.69 | 60.94 | |
+| 4 | 62.74 | 54.53 | |
+| 5 | 56.65 | 50.65 | |
+| 6 | 52.64 | 48.06 | |
+| 7 | 49.83 | 46.22 | |
+| 8 | 47.87 | 45.11 | |
+| 9 | 46.59 | 44.57 | |
+| 10 | 45.92 | **44.47** | still improving |
+
+**Wall time**: 9.69h (34,896s). Throughput: 34,064 tok/s. GPU: 1.6/14.7GB.
+
+**Scaling comparison** (all WikiText-103, 10 epochs):
+
+| Config | Params | Val PPL | tok/s | GPU mem |
+|--------|--------|---------|-------|---------|
+| **medium-rebalanced** | **58.4M** | **44.47** | **34,064** | **1.6GB** |
+| small-rebalanced | 29.5M | 52.64 | 54,253 | 1.1GB |
+| small-matched (Run 4) | 28.7M | 56.46 | 46,000 | 1.4GB |
+| composite keys + episodic | 29.2M | 58.40 | 34,299 | 1.4GB |
+| GPT-2 124M (reference) | 124M | ~31 | - | - |
+
+**Key findings**:
+
+1. **15.5% PPL improvement** from 2x params (52.64 -> 44.47). Scaling exponent ~0.25.
+2. **Best generation quality ever**: rep3=0.000, rep4=0.000, uniq=0.737. Zero repetition, zero restarts.
+3. **Coherent paragraphs** with specific dollar amounts, dates, and inflation adjustments.
+4. **Still improving at epoch 10** -- curve not converged, more epochs would help.
+5. **Only 1.6GB GPU** -- massive headroom on 4090 (14.7GB available).
+6. PPL gap to GPT-2 124M is 1.43x with 2.1x fewer params. Naive scaling extrapolation: ~500M params needed to match, not 124M. The 4x complex efficiency is not yet materializing.
+
+**Generation sample** (epoch 10):
+> "In 1923, the University of Washington offered a $7,000 grant from the National Board of Education to run for the U.S. Congress. The proposal was eventually rejected and it turned out that the state would not pay the tax to the State Department for the purpose of its construction. The plan was approved by the California Democratic Party on January 2, 1926 with a budget of $1 million (equivalent to about $30 million in 2015)."
+
+Quality: rep3=0.000, rep4=0.000, restarts=0, uniq=0.737. Fluent Wikipedia-style text with specific numbers/dates; factually incoherent (entities/dates don't align with real world).
+
+**Diagnosis**: The factual incoherence is not a scale problem -- it's a **state retention problem**. The SSM state is continuously overwritten; the model has no mechanism to protect phase-coherent factual bindings from being corrupted by new input. This motivates Gated State Protection (GSP).
+
+**Log**: `logs/v6/medium_rebalanced_tso_wikitext103_20260314_173445_cc4a491/v6_autoregressive_medium-rebalanced.log`
+
+---
+
+## 17. Gated State Protection (GSP) (2026-03-15)
+
+### Problem: SSM state is continuously overwritten
+
+The medium-rebalanced model produces fluent, structured Wikipedia text but with no factual consistency. When the SSM processes "The capital of France is Paris ... [many tokens] ... The capital of India is", the slow lanes retain France/Paris state at high magnitude, but new input overwrites it. There is no mechanism to say "this state dimension holds an important fact -- don't touch it."
+
+Scaling alone won't fix this: our scaling exponent (~0.25) means ~500M params to match GPT-2 124M. The complex-number 4x efficiency isn't materializing because we aren't exploiting what makes complex numbers unique: **phase**.
+
+### Why complex numbers make this tractable
+
+In a real-valued SSM, "protecting" a state dimension just freezes a scalar. In our complex SSM, protecting a state dimension preserves a **phase relationship** -- the angular alignment between entity and property. Phase relationships are richer than scalars:
+
+- Phase encodes WHAT (entity/relationship type via angular alignment)
+- Magnitude encodes HOW MUCH (relevance/confidence)
+- Phase interference naturally selects among competing facts
+- Phase rotation composes associatively (chain of reasoning)
+
+Facts are phase-coherent bindings. Complex state stores them natively. GSP gives the model a way to protect them.
+
+### Design: Gated State Protection
+
+A learned per-state-dimension gate that interpolates between "normal SSM update" and "freeze state":
+
+```
+Standard SSM: h[t] = A[t] * h[t-1] + Bx[t]
+
+With GSP:
+  protect = sigmoid(protect_gate(|x|))       -- [B, T, state_dim]
+  A' = protect * (1+0j) + (1-protect) * A    -- identity when protect=1
+  Bx' = (1-protect) * Bx                     -- no new input when protected
+  h[t] = A'[t] * h[t-1] + Bx'[t]            -- unchanged parallel scan
+```
+
+**Properties**:
+
+1. **Parallel scan compatible**: A' and Bx' are still valid operands for the associative scan. No algorithmic change needed.
+2. **Novel**: not in Mamba, S4, S5, RWKV, or any published SSM. Selective gating has been applied to dt (Mamba) but never to the state update itself with a freeze/protect semantic.
+3. **Cheap**: one `Linear(dim, state_dim)` per layer. Adds 4.7M params (8.1% overhead) to the 58.4M medium-rebalanced model.
+4. **Complex-native**: protects phase relationships, not just scalar magnitudes.
+5. **Self-supervised**: model learns what to protect purely from next-token prediction loss.
+6. **O(n)**: no attention bottleneck.
+
+### Initialization
+
+The protect gate bias is initialized to -3.0, so `sigmoid(-3.0) ≈ 0.047` -- nearly everything is unprotected at the start. The model must learn through gradient signal which state dimensions to protect and when. This prevents GSP from collapsing the SSM into a static memory at initialization.
+
+### Parameter comparison
+
+| Component | medium-rebalanced | medium-rebalanced-gsp | Change |
+|-----------|------------------|----------------------|--------|
+| embed (tied) | 19.3M (33.0%) | 19.3M (30.5%) | -- |
+| banks (CGU) | 10.6M (18.2%) | 10.6M (16.8%) | -- |
+| SSM + TSO | 28.4M (48.6%) | 28.4M (45.0%) | -- |
+| **GSP gates** | **0** | **4.7M (7.5%)** | **+4.7M** |
+| lm_head | 0.07M | 0.07M | -- |
+| **Total** | **58.4M** | **63.2M** | **+8.1%** |
+
+### What we're testing
+
+- Does GSP improve val PPL? (state protection -> better next-token prediction for facts)
+- Does generation show improved factual coherence? (entity-property alignment within a passage)
+- What is the throughput cost? (expect <5% due to one extra Linear per layer)
+- Does the model learn non-trivial protection patterns? (can inspect protect gate activations post-training)
+
+### Config and script
+
+- Preset: `--size medium-rebalanced-gsp`
+- Script: `scripts/run_v6_medium_gsp.sh`
+- Baseline to beat: medium-rebalanced val PPL 44.47 (10 epochs, WikiText-103)
+
+### Future direction: Phase-Coherent Holographic Binding
+
+GSP gives the model the ability to **retain** phase-coherent state. The next step would be giving it the ability to **create and retrieve** compositional bindings:
+
+- Bind entity+property via `cmul(entity_phase, property_phase)` (HRR theory: circular convolution in Fourier space = element-wise complex multiplication)
+- Retrieve via `cmul(query, conj(stored_binding))`
+- Store bindings in protected state dimensions
+
+This would be the ultimate use of complex numbers for compositional memory, but GSP is the prerequisite -- without protection, any binding would be overwritten within a few hundred tokens.
