@@ -149,8 +149,9 @@ class PhaseFieldBackbone(nn.Module):
                     )
                     self.attn_scales[str(i)] = nn.Parameter(torch.tensor(0.1))
 
-        # SSM (with optional Timescale-Separated Output)
+        # SSM (with optional Timescale-Separated Output and Gated State Protection)
         tso = getattr(config, 'timescale_separated_output', False)
+        gsp = getattr(config, 'gated_state_protection', False)
         self.ssm = ComplexSSM(
             dim=config.dim,
             state_dim=config.state_dim,
@@ -158,6 +159,7 @@ class PhaseFieldBackbone(nn.Module):
             dropout=config.dropout,
             initializer=initializer,
             tso=tso,
+            gsp=gsp,
         )
 
         # Working memory (legacy token-wise)
