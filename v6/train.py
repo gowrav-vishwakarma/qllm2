@@ -1419,7 +1419,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Train V6 Phase-First LM')
     parser.add_argument('--size', type=str, default='small-matched',
-                        choices=['tiny', 'small', 'small-matched', 'small-rebalanced', 'medium-rebalanced', 'medium-rebalanced-gsp', 'medium', 'large', 'xl'])
+                        choices=['tiny', 'small', 'small-matched', 'small-rebalanced', 'medium-rebalanced', 'medium-rebalanced-gsp', 'medium-rebalanced-hsb', 'medium', 'large', 'xl'])
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=None)
     parser.add_argument('--lr', type=float, default=None)
@@ -1614,6 +1614,8 @@ def main():
         _sl(f"Feature: single CGU per layer (expand={config.bank_expand})")
         _sl(f"TSO: {'ENABLED' if getattr(config, 'timescale_separated_output', False) else 'DISABLED'}")
         _sl(f"GSP: {'ENABLED' if getattr(config, 'gated_state_protection', False) else 'DISABLED'}")
+        hsb = getattr(config, 'holographic_state_binding', False)
+        _sl(f"HSB: {'ENABLED (holographic state binding)' if hsb else 'DISABLED'}")
     else:
         _sl(f"Banks: {config.num_banks} (semantic + context)")
     if config.mode == 'autoregressive':

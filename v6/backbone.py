@@ -149,9 +149,11 @@ class PhaseFieldBackbone(nn.Module):
                     )
                     self.attn_scales[str(i)] = nn.Parameter(torch.tensor(0.1))
 
-        # SSM (with optional Timescale-Separated Output and Gated State Protection)
+        # SSM (with optional TSO, GSP, and HSB)
         tso = getattr(config, 'timescale_separated_output', False)
         gsp = getattr(config, 'gated_state_protection', False)
+        hsb = getattr(config, 'holographic_state_binding', False)
+        hsb_bind_dim = getattr(config, 'hsb_bind_dim', 0)
         self.ssm = ComplexSSM(
             dim=config.dim,
             state_dim=config.state_dim,
@@ -160,6 +162,8 @@ class PhaseFieldBackbone(nn.Module):
             initializer=initializer,
             tso=tso,
             gsp=gsp,
+            hsb=hsb,
+            hsb_bind_dim=hsb_bind_dim,
         )
 
         # Working memory (legacy token-wise)
@@ -300,7 +304,7 @@ class PhaseFieldBackbone(nn.Module):
                         role_loss = bank_pair.compute_role_loss(sem_out, ctx_out)
                         diversity_losses.append(role_loss * self.config.bank_role_weight)
 
-        # 2. SSM
+        # 2. SSM (HSB bind/unbind happens inside the SSM layers if enabled)
         ssm_out, new_state = self.ssm(bank_z, ssm_state)
 
         # 3. Working memory (legacy) or Episodic memory (event-based)
@@ -406,5 +410,10 @@ class PhaseFieldBackbone(nn.Module):
                 (sum(p.numel() for p in self.memory_fusion_4.parameters()) if self.memory_fusion_4 else 0)
             ),
             'memory_scale': 1 if self.memory_scale is not None else 0,
+            'hsb': sum(
+                sum(p.numel() for n, p in layer.named_parameters()
+                    if 'bind_head' in n or 'unbind_head' in n)
+                for layer in self.ssm.layers
+            ),
         }
         return counts
