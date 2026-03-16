@@ -79,6 +79,19 @@ class PhaseFieldLM(nn.Module):
                     nn.init.zeros_(module.bias)
             elif isinstance(module, nn.Embedding) and module not in embed_embeddings:
                 nn.init.normal_(module.weight, std=0.02)
+        self._reinit_custom_biases()
+
+    def _reinit_custom_biases(self):
+        """Re-apply custom bias values that _init_weights zeroed."""
+        for name, module in self.named_modules():
+            if hasattr(module, 'protect_gate') and isinstance(module.protect_gate, nn.Linear):
+                nn.init.constant_(module.protect_gate.bias, -3.0)
+            if hasattr(module, 'bind_gate') and isinstance(module.bind_gate, nn.Linear):
+                nn.init.constant_(module.bind_gate.bias, -3.0)
+                nn.init.zeros_(module.bind_gate.weight)
+            if hasattr(module, 'unbind_gate') and isinstance(module.unbind_gate, nn.Linear):
+                nn.init.constant_(module.unbind_gate.bias, -3.0)
+                nn.init.zeros_(module.unbind_gate.weight)
 
     def forward(
         self,

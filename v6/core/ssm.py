@@ -25,6 +25,7 @@ from .complex import (
     ComplexLinear, ComplexNorm, ModReLU,
     cmul, cabs, cnormalize, to_real,
 )
+from .binding import HolographicBindHead, HolographicUnbindHead
 
 
 @dataclass
@@ -122,6 +123,13 @@ class ComplexSSMLayer(nn.Module):
     protect=1 -> A becomes identity, Bx becomes 0 (state preserved).
     protect=0 -> normal SSM dynamics. Parallel-scan compatible because
     the modified A'/Bx' is still a valid linear recurrence.
+
+    HSB (Holographic State Binding): when enabled, injects cmul(key, value)
+    bindings directly into the SSM state (added to Bx before parallel_scan)
+    and retrieves via cmul(query, conj(h)) from the state (added to output
+    after parallel_scan). Fully parallel-scan compatible, no sequential
+    loops, no separate registers. Compositional binding is an intrinsic
+    property of the recurrence.
     """
 
     def __init__(
@@ -132,12 +140,15 @@ class ComplexSSMLayer(nn.Module):
         initializer: Optional['InitStrategy'] = None,
         tso: bool = False,
         gsp: bool = False,
+        hsb: bool = False,
+        hsb_bind_dim: int = 0,
     ):
         super().__init__()
         self.dim = dim
         self.state_dim = state_dim
         self.tso = tso
         self.gsp = gsp
+        self.hsb = hsb
 
         self.n_fast = int(state_dim * 0.4)
         self.n_medium = int(state_dim * 0.3)
@@ -170,6 +181,11 @@ class ComplexSSMLayer(nn.Module):
         if gsp:
             self.protect_gate = nn.Linear(dim, state_dim)
             nn.init.constant_(self.protect_gate.bias, -3.0)
+
+        if hsb:
+            bd = hsb_bind_dim if hsb_bind_dim > 0 else dim
+            self.bind_head = HolographicBindHead(dim, state_dim, bd, initializer=initializer)
+            self.unbind_head = HolographicUnbindHead(dim, state_dim, bd, initializer=initializer)
 
         self.norm = ComplexNorm(dim)
         self.dropout = nn.Dropout(dropout)
@@ -214,6 +230,9 @@ class ComplexSSMLayer(nn.Module):
             first_Bx = cmul(A[:, 0:1], h0.unsqueeze(1)) + Bx[:, 0:1]
             Bx = torch.cat([first_Bx, Bx[:, 1:]], dim=1)
 
+        if self.hsb:
+            Bx = Bx + self.bind_head(x)
+
         if self.gsp:
             protect = torch.sigmoid(self.protect_gate(cabs(x)))
             protect = protect.unsqueeze(-1)
@@ -223,6 +242,9 @@ class ComplexSSMLayer(nn.Module):
             Bx = (1 - protect) * Bx
 
         h = parallel_scan(A, Bx)
+
+        if self.hsb:
+            y_bind = self.unbind_head(x, h)
 
         if self.tso:
             h_fast = h[..., :self.n_fast, :]
@@ -241,6 +263,9 @@ class ComplexSSMLayer(nn.Module):
             y = self.C_proj(h)
 
         y = y + cmul(self.D.unsqueeze(0).unsqueeze(0).expand_as(x), x)
+
+        if self.hsb:
+            y = y + y_bind
 
         if self.training:
             mask = self.dropout(torch.ones(B_size, L, dim, device=x.device))
@@ -265,6 +290,8 @@ class ComplexSSM(nn.Module):
         initializer: Optional['InitStrategy'] = None,
         tso: bool = False,
         gsp: bool = False,
+        hsb: bool = False,
+        hsb_bind_dim: int = 0,
     ):
         super().__init__()
         self.dim = dim
@@ -272,7 +299,8 @@ class ComplexSSM(nn.Module):
         self.num_layers = num_layers
 
         self.layers = nn.ModuleList([
-            ComplexSSMLayer(dim, state_dim, dropout, initializer=initializer, tso=tso, gsp=gsp)
+            ComplexSSMLayer(dim, state_dim, dropout, initializer=initializer,
+                           tso=tso, gsp=gsp, hsb=hsb, hsb_bind_dim=hsb_bind_dim)
             for _ in range(num_layers)
         ])
         self.layer_scales = nn.ParameterList([
