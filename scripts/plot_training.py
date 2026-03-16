@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-Plot training curves (loss, PPL, LR, throughput) from V5 training log files.
+Plot training curves (loss, PPL, LR, throughput) from V5/V6 training log files.
 
 Parses batch-level and epoch-level lines without modifying the training code.
+Supports both V5 format (batch keyword, samples/s) and V6 format (no batch, tok/s avg, ETA, GPU).
 Usage:
   python scripts/plot_training.py logs/v5_train_small-matched.log
-  python scripts/plot_training.py logs/v5_train_*.log --show
+  python scripts/plot_training.py logs/v6/.../v6_autoregressive_medium-rebalanced-gsp.log --show
 """
 
 import argparse
@@ -17,16 +18,26 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Batch: [1] batch 50/4806 loss=9.4727 ppl=13000.0 div=0.0000 lr=1.00e-04 | 57.6 samples/s | 14736 tok/s
+# V5 batch: [1] batch 50/4806 loss=9.4727 ppl=13000.0 div=0.0000 lr=1.00e-04 | 57.6 samples/s | 14736 tok/s
 BATCH_RE = re.compile(
     r"\[(\d+)\] batch (\d+)/(\d+) loss=([\d.]+) ppl=([\d.]+) "
     r"div=[\d.]+ lr=([\d.e+-]+) \| ([\d.]+) samples/s \| (\d+) tok/s"
 )
 
-# Epoch: Epoch 1/10 | Train Loss: 3.7232 PPL: 41.40 | Time: 1220.0s | Val Loss: 2.9379 PPL: 18.88 *best*
+# V6 batch:   [1] 50/19277 (0%) loss=10.7973 ppl=48888.7 div=0.00e+00 wdiv=0.00e+00 lr=8.93e-06 | 29377 tok/s (avg 10332) ETA 190m32s | GPU 1.6/17.5GB
+BATCH_RE_V6 = re.compile(
+    r"\[\s*(\d+)\]\s+(\d+)/(\d+)\s+\((\d+)%\)\s+"
+    r"loss=([\d.e+-]+)\s+ppl=([\d.e+-]+)\s+div=([\d.e+-]+)\s+wdiv=([\d.e+-]+)\s+lr=([\d.e+-]+)\s+\|\s+"
+    r"([\d.]+)\s+tok/s\s+\(avg\s+([\d.]+)\)\s+ETA\s+[\d]+m[\d]+s"
+    r"(?:\s+\|\s+GPU\s+[\d.]+/[\d.]+GB)?"
+)
+
+# Epoch: V5 has "| Time: ... | Val ..."; V6 has " div=... wdiv=... | N tok/s | Time: ... | Val ... *best*"
+# V5 has " | Time:" after PPL; V6 optional block ends with "| " so rest is " Time:" (no pipe before Time)
 EPOCH_RE = re.compile(
-    r"Epoch (\d+)/(\d+) \| Train Loss: ([\d.]+) PPL: ([\d.]+) \| "
-    r"Time: ([\d.]+)s \| Val Loss: ([\d.]+) PPL: ([\d.]+)"
+    r"Epoch (\d+)/(\d+) \| Train Loss: ([\d.]+) PPL: ([\d.]+)"
+    r"(?:\s+div=[\d.e+-]+\s+wdiv=[\d.e+-]+\s+\|\s+[\d.]+\s+tok/s\s+\|)?"
+    r"\s+(?:\|\s+)?Time: ([\d.]+)s\s+\|\s+Val Loss: ([\d.]+) PPL: ([\d.]+)\s*(?:\*best\*)?"
 )
 
 # Header lines for architecture info
@@ -74,6 +85,20 @@ def parse_log(path: Path) -> dict:
                 "lr": float(lr),
                 "samples_per_s": float(sps),
                 "tok_per_s": int(toks),
+            })
+            continue
+        m = BATCH_RE_V6.search(line)
+        if m:
+            ep, bidx, total, _pct, loss, ppl, _div, _wdiv, lr, _inst_tok, avg_tok = m.groups()
+            batches.append({
+                "epoch": int(ep),
+                "batch_idx": int(bidx),
+                "total_batches": int(total),
+                "loss": float(loss),
+                "ppl": float(ppl),
+                "lr": float(lr),
+                "samples_per_s": 0.0,
+                "tok_per_s": int(float(avg_tok)),
             })
             continue
         m = EPOCH_RE.search(line)
@@ -145,7 +170,7 @@ def plot_log(data: dict, label: str, color: str, ax_loss, ax_ppl, ax_lr, ax_tok)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Plot V5 training curves from log files")
+    parser = argparse.ArgumentParser(description="Plot V5/V6 training curves from log files")
     parser.add_argument("logs", nargs="+", type=Path, help="Log file path(s)")
     parser.add_argument("--show", action="store_true", help="Show plot interactively")
     parser.add_argument("--output", "-o", type=Path, default=None, help="Output PNG path (default: next to first log)")
@@ -278,8 +303,11 @@ def main():
         ax_tok.grid(True, alpha=0.3)
 
         info_text = _make_info_text(header)
+        title_prefix = "V6 Phase-First" if "v6" in str(all_logs[0]).lower() else "V5 Algebraic LM"
         if info_text:
-            fig.suptitle(f"V5 Algebraic LM | {info_text}", fontsize=9, y=1.02)
+            fig.suptitle(f"{title_prefix} | {info_text}", fontsize=9, y=1.02)
+        else:
+            fig.suptitle(title_prefix, fontsize=9, y=1.02)
 
         plt.tight_layout()
         return fig
@@ -334,8 +362,11 @@ def main():
             ax_tok.legend(loc="lower right", fontsize=8)
             ax_tok.grid(True, alpha=0.3)
             info_text = _make_info_text(header)
+            title_prefix = "V6 Phase-First" if "v6" in str(all_logs[0]).lower() else "V5 Algebraic LM"
             if info_text:
-                fig.suptitle(f"V5 Algebraic LM | {info_text}", fontsize=9, y=1.02)
+                fig.suptitle(f"{title_prefix} | {info_text}", fontsize=9, y=1.02)
+            else:
+                fig.suptitle(title_prefix, fontsize=9, y=1.02)
             plt.tight_layout()
 
         print(f"Live mode: refreshing every {args.live_interval}s. Close the window to exit.")
