@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-Small streaming log grapher for v5 training logs.
+Small streaming log grapher for V5/V6 training logs.
 
 Runs an aiohttp web app on port 8086 by default and serves a lightweight UI
 that tails a selected log file over SSE and draws live charts in the browser.
+Supports both V5 format (batch keyword, samples/s) and V6 format (no batch,
+tok/s avg, ETA, GPU).
 """
 
 from __future__ import annotations
@@ -49,6 +51,22 @@ BATCH_RE_OLD = re.compile(
     r"lr=(?P<lr>[-+0-9.eE]+)\s+\|\s+"
     r"(?:(?P<samples_per_sec>[-+0-9.eE]+)\s+samples/s\s+\|\s+)?"
     r"(?P<tok>[-+0-9.eE]+)\s+tok/s"
+)
+
+# V6 batch: "  [1] 50/19277 (0%) loss=... ppl=... div=... wdiv=... lr=... | 29377 tok/s (avg 10332) ETA 190m32s | GPU 1.6/17.5GB"
+BATCH_RE_V6 = re.compile(
+    r"\[\s*(?P<epoch>\d+)\]\s+(?P<batch>\d+)/(?P<total>\d+)\s+\((?P<progress>\d+)%\)\s+"
+    r"loss=(?P<loss>[-+0-9.eE]+)\s+ppl=(?P<ppl>[-+0-9.eE]+)\s+div=(?P<div>[-+0-9.eE]+)\s+wdiv=(?P<wdiv>[-+0-9.eE]+)\s+lr=(?P<lr>[-+0-9.eE]+)\s+\|\s+"
+    r"(?P<inst_tok>[-+0-9.eE]+)\s+tok/s\s+\(avg\s+(?P<avg_tok>[-+0-9.eE]+)\)\s+ETA\s+[\d]+m[\d]+s"
+    r"(?:\s+\|\s+GPU\s+(?P<mem_alloc>[-+0-9.eE]+)/(?P<mem_reserved>[-+0-9.eE]+)GB)?"
+)
+
+# V6 epoch: "Epoch 1/10 | Train Loss: ... PPL: ... div=... wdiv=... | N tok/s | Time: ...s | Val Loss: ... PPL: ... *best*"
+EPOCH_RE_V6 = re.compile(
+    r"Epoch\s+(?P<epoch>\d+)/(?P<total_epochs>\d+)\s+\|\s+"
+    r"Train Loss:\s+(?P<train_loss>[-+0-9.eE]+)\s+PPL:\s+(?P<train_ppl>[-+0-9.eE]+)"
+    r"(?:\s+div=[-+0-9.eE]+\s+wdiv=[-+0-9.eE]+\s+\|\s+[-+0-9.eE]+\s+tok/s\s+\|)?"
+    r"\s+(?:\|\s+)?Time:\s+(?P<time_s>[-+0-9.eE]+)s\s+\|\s+Val Loss:\s+(?P<val_loss>[-+0-9.eE]+)\s+PPL:\s+(?P<val_ppl>[-+0-9.eE]+)\s*(?:\*best\*)?"
 )
 
 EPOCH_RE = re.compile(
@@ -298,6 +316,34 @@ def parse_line(line: str, state: ParserState) -> Optional[Dict[str, Any]]:
             "mem_peak_gb": None,
         }
 
+    m = BATCH_RE_V6.search(body)
+    if m:
+        epoch = int(m.group("epoch"))
+        batch = int(m.group("batch"))
+        total = int(m.group("total"))
+        state.epoch_batches[epoch] = total
+        state.batches_per_epoch = total
+        return {
+            "kind": "batch",
+            "ts": ts,
+            "epoch": epoch,
+            "batch": batch,
+            "total_batches": total,
+            "step": (epoch - 1) * total + batch + 1,
+            "loss": float(m.group("loss")),
+            "ppl": float(m.group("ppl")),
+            "div": float(m.group("div")),
+            "wdiv": float(m.group("wdiv")),
+            "lr": float(m.group("lr")),
+            "inst_tok_s": float(m.group("inst_tok")),
+            "avg_tok_s": float(m.group("avg_tok")),
+            "progress": float(m.group("progress")),
+            "eta": None,
+            "mem_alloc_gb": to_float(m.group("mem_alloc")),
+            "mem_reserved_gb": to_float(m.group("mem_reserved")),
+            "mem_peak_gb": None,
+        }
+
     m = EPOCH_RE.search(body)
     if m:
         epoch = int(m.group("epoch"))
@@ -313,6 +359,26 @@ def parse_line(line: str, state: ParserState) -> Optional[Dict[str, Any]]:
             "div": to_float(m.group("div")),
             "wdiv": to_float(m.group("wdiv")),
             "avg_tok_s": to_float(m.group("avg_tok")),
+            "time_s": float(m.group("time_s")),
+            "val_loss": to_float(m.group("val_loss")),
+            "val_ppl": to_float(m.group("val_ppl")),
+        }
+
+    m = EPOCH_RE_V6.search(body)
+    if m:
+        epoch = int(m.group("epoch"))
+        total_batches = state.epoch_batches.get(epoch) or state.batches_per_epoch
+        step = epoch * total_batches if total_batches is not None else None
+        return {
+            "kind": "epoch",
+            "ts": ts,
+            "epoch": epoch,
+            "step": step,
+            "train_loss": float(m.group("train_loss")),
+            "train_ppl": float(m.group("train_ppl")),
+            "div": None,
+            "wdiv": None,
+            "avg_tok_s": None,
             "time_s": float(m.group("time_s")),
             "val_loss": to_float(m.group("val_loss")),
             "val_ppl": to_float(m.group("val_ppl")),
