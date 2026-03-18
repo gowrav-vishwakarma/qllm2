@@ -18,28 +18,34 @@ This repository explores language models beyond the standard transformer recipe.
 
 V6 is the current main line: a **zero-attention language model direction** built around complex-valued tokens, named banks, phase interference, multi-timescale SSMs, and external memory layers. It keeps the phase-native idea from V4, the mathematical cleanup from V5, and pushes toward a longer-context, more modular system.
 
-Core V6 path:
+Core V6 path (two variants):
 
+**Named-bank path** (e.g. `small-matched`):
 ```text
 Tokens --> ComplexEmbed
   --> [SemanticBank + ContextBank --> PhaseInterferenceCoupler] x N
   --> MultiTimescaleSSM
-  --> WorkingMemory
-  --> InternalMemory
-  --> [PersistentMemory]
-  --> [ExpertMemory]
-  --> MemoryFusion
-  --> TiedComplexLMHead
+  --> WorkingMemory / InternalMemory / [PersistentMemory] / [ExpertMemory]
+  --> MemoryFusion --> TiedComplexLMHead
+```
+
+**Single-bank + PAM path** (e.g. `medium-pam`, `medium-rebalanced-gsp`):
+```text
+Tokens --> ComplexEmbed
+  --> [ComplexGatedUnit (single bank)] x N
+  --> PhaseAssociativeMemory (PAM)  # matrix state, O(d²) capacity per head
+  --> [WorkingMemory / InternalMemory / ...] --> TiedComplexLMHead
 ```
 
 What defines V6:
 
-- **Zero attention by default**: the main direction is O(n) sequence processing without token-token attention
-- **Named banks**: `SemanticBank` and `ContextBank` specialize and interfere through learned phase rotations
-- **Multi-timescale SSM**: fast, medium, and slow decay lanes track syntax, paragraph coherence, and durable facts
+- **Zero attention by default**: the main direction is O(n) sequence processing without token-token attention (PAM uses O(T²) dual form only at train time; inference is O(1) per token)
+- **Named banks or single CGU**: either `SemanticBank`+`ContextBank`+coupler, or one `ComplexGatedUnit` per layer (rebalanced presets)
+- **State layer**: **Multi-timescale SSM** (vector state) or **Phase-Associative Memory (PAM)** (matrix state \(S \in \mathbb{C}^{H \times d \times d}\)) — PAM was introduced to fix state interference that limited the earlier Holographic State Binding (HSB) experiment
+- **Gated State Protection (GSP)**: optional per-dimension decay gating so important state can be frozen
 - **Memory hierarchy**: working, internal, persistent, expert, and optional session memory
-- **Transferable memory pipeline**: session memory can compress into persistent memory, persistent memory can become shared expert memory, and `MemoryAdaptation` can distill user-specific memory back toward internal memory
-- **Shared backbone scaffold**: the same `PhaseFieldBackbone` is structured so diffusion text and diffusion image can reuse the autoregressive core later, avoiding duplicated implementations
+- **Transferable memory pipeline**: session → persistent → expert; `MemoryAdaptation` for user-specific distillation
+- **Shared backbone scaffold**: same `PhaseFieldBackbone` for autoregressive and (future) diffusion
 
 ### **v5 - Algebraic Language Model** (Previous Main Version)
 
@@ -76,31 +82,19 @@ Example TinyStories generation:
 
 ### WikiText-103
 
-V6 is also now training on a more realistic corpus, not just TinyStories.
+V6 is training on WikiText-103 with several presets. Current best validation PPL on this corpus comes from the **GSP** (Gated State Protection) baseline.
 
-| Epoch | Train PPL | Val PPL |
-| --- | --- | --- |
-| 1 | 247.45 | 121.94 |
-| 2 | 106.70 | 82.86 |
-| 3 | 83.45 | 70.64 |
-| 4 | 74.32 | **64.91** |
+| Preset | Model | Epochs | Best Val PPL | Notes |
+| --- | --- | --- | --- | --- |
+| `medium-rebalanced-gsp` | single CGU + SSM + GSP (~63M) | 10 | **41.67** | Current best; GSP protects important state dims |
+| `medium-rebalanced-hsb` | + Holographic State Binding (~87M) | 10 | 43.54 | **Regression** — state interference (vector state too small for many bindings) |
+| `medium-pam` | single CGU + PAM + GSP (~100M) | in progress | — | PAM replaces SSM with matrix state \(S \in \mathbb{C}^{H \times d \times d}\) to fix interference; training ongoing |
 
-Run details:
+Earlier `small-matched` WikiText-103 runs reached val PPL ~65 (seq len 512). The rebalanced + GSP direction and now PAM are the active push for better factual coherence and lower PPL.
 
-- **Model**: `small-matched` (~28.7M)
-- **Dataset**: WikiText-103
-- **Sequence length**: 512
+- **Scripts**: `scripts/run_v6_wikitext103.sh`, `scripts/run_v6_medium_pam.sh`
+- **Sequence length**: 2048 for medium presets
 - **Hardware**: RTX 4090
-- **Throughput**: ~46K tok/s
-- **Status**: still training, epoch 5 underway
-
-The qualitative signal is also interesting: generations are starting to pick up Wikipedia-style structure, named entities, and section headers.
-
-> The history of the event.
->
-> `=== The Summer Olympics ===`
->
-> During the Olympics, the men's team competed in the event, where they had won the first round of a silver medal...
 
 ## V5 Results
 
@@ -219,16 +213,20 @@ The most useful comparison now is across the main non-transformer line itself:
 
 ### V6 presets
 
-| Size | Complex Dim | Layers | Banks | State Dim | Batch Size |
-| --- | --- | --- | --- | --- | --- |
-| `tiny` | 64 | 4 | 2 | 128 | 16 |
-| `small` | 256 | 8 | 2 | 512 | 8 |
-| `small-matched` | 128 | 12 | 2 | 512 | 8 |
-| `medium` | 512 | 12 | 2 | 1024 | 4 |
-| `large` | 512 | 24 | 2 | 1536 | 2 |
-| `xl` | 768 | 32 | 2 | 2048 | 1 |
+| Size | Complex Dim | Layers | Banks | State / PAM | Batch Size | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `tiny` | 64 | 4 | 2 | state 128 | 16 | named banks + SSM |
+| `small` | 256 | 8 | 2 | state 512 | 8 | named banks + SSM |
+| `small-matched` | 128 | 12 | 2 | state 512 | 8 | named banks + SSM |
+| `small-rebalanced` | 128 | 12 | 1 | state 1280 | 8 | single CGU, TSO |
+| `medium-rebalanced` | 192 | 16 | 1 | state 1536 | 4 | single CGU, TSO |
+| `medium-rebalanced-gsp` | 192 | 16 | 1 | state 1536 | 4 | + GSP (best WT103 so far: 41.67) |
+| `medium-pam` | 384 | 16 | 1 | PAM 6×64 | 3 | single CGU + PAM + GSP (~100M) |
+| `medium` | 512 | 12 | 2 | state 1024 | 4 | named banks + SSM |
+| `large` | 512 | 24 | 2 | state 1536 | 2 | named banks + SSM |
+| `xl` | 768 | 32 | 2 | state 2048 | 1 | named banks + SSM |
 
-Memory is off by default in the presets and can be enabled with flags such as `--wm_slots`, `--im_slots`, and persistent/session memory options.
+Memory is off by default; use `--wm_slots`, `--im_slots`, and persistent/session memory options to enable.
 
 ## Project Structure
 
@@ -258,13 +256,14 @@ qllm2/
 ### V6
 
 - Done: named banks, phase interference coupler, multi-timescale SSM, working/internal/persistent/expert memory layers
-- Done: autoregressive training and generation
-- Done: diffusion code paths scaffolded on the shared backbone to avoid future duplication
-- Done: TinyStories and WikiText-103 training support
-- In progress: longer runs on WikiText-103 and broader non-TinyStories evaluation
+- Done: single-bank (CGU) presets, Timescale-Separated Output (TSO), Gated State Protection (GSP)
+- Done: Holographic State Binding (HSB) experiment — diagnosed failure (state interference) and motivated PAM
+- Done: Phase-Associative Memory (PAM) — matrix state \(S \in \mathbb{C}^{H \times d \times d}\), dual form for O(T²) training, recurrent O(1) inference
+- Done: autoregressive training and generation; diffusion code paths scaffolded on the shared backbone
+- Done: TinyStories and WikiText-103 training; GSP baseline 41.67 val PPL on WikiText-103 (10 epochs)
+- In progress: PAM run on WikiText-103 (`medium-pam`) to validate interference fix and improve over GSP
 - In progress: better activation of persistent/session/expert memory in practical runs
-- In progress: implementing and validating diffusion work after or alongside the current autoregressive effort
-- In progress: stronger benchmarking and scale-up experiments
+- In progress: stronger benchmarking and scale-up; diffusion validation later
 
 ### V5
 
@@ -291,6 +290,7 @@ We are not claiming that complex or phase-first models have already beaten trans
 ## Documentation
 
 - [v6/README.md](v6/README.md): architecture, CLI, memory system, diffusion modes, setup
+- [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md): V6 experiment log (GSP, HSB, PAM, presets)
 - [v5/README.md](v5/README.md): algebraic LM details and the V4 -> V5 correction
 - [v5/EXPERIMENTS.md](v5/EXPERIMENTS.md): V5 experiment log
 - [v4/README.md](v4/README.md): original phase-field architecture
@@ -327,7 +327,7 @@ You may use, study, modify, and share this work for non-commercial purposes. Com
 
 ---
 
-**Current focus**: `v6`
+**Current focus**: `v6` — PAM (Phase-Associative Memory) run on WikiText-103; GSP baseline 41.67 val PPL.
 **Previous breakthrough**: `v5`
 **Novelty origin**: `v4`
-**Last Updated**: 2026-03-10
+**Last Updated**: 2026-03-18
