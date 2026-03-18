@@ -176,8 +176,8 @@ def get_config(size: str = 'small-matched') -> V6Config:
             timescale_separated_output=False,
             gated_state_protection=True,
             pam_num_heads=6, pam_head_dim=64,
-            batch_size=3, learning_rate=6e-5,
-            warmup_steps=400,
+            batch_size=3, learning_rate=3e-5,
+            warmup_steps=500,
         ),
         'medium': V6Config(
             dim=512, state_dim=1024, num_layers=12,

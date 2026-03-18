@@ -1,4 +1,4 @@
-"""
+r"""
 Phase-Associative Memory (PAM).
 
 Replaces the vector-state ComplexSSM with a matrix-state architecture.
@@ -8,16 +8,16 @@ per head, allowing multiple facts to be stored without colliding in a
 single vector dimension.
 
 State Update:
-  S_t = \\gamma_t S_{t-1} + V_t \\otimes K_t^*
+  S_t = \gamma_t S_{t-1} + V_t \otimes K_t^*
 Retrieval:
-  Y_t = S_t Q_t = V_t (K_t^* \\cdot Q_t)
+  Y_t = S_t Q_t = V_t (K_t^* \cdot Q_t)
 
-The dot product K_t^* \\cdot Q_t natively computes attention via complex
+The dot product K_t^* \cdot Q_t natively computes attention via complex
 phase interference (constructive/destructive). No softmax is needed.
 
-GSP (Gated State Protection) is integrated directly into the decay \\gamma_t:
-  \\gamma_t = exp(-dt) * (1 - p_t) + p_t
-where p_t is the protect gate. When p_t=1, \\gamma_t=1 and the state is frozen.
+GSP (Gated State Protection) is integrated directly into the decay \gamma_t:
+  \gamma_t = exp(-dt) * (1 - p_t) + p_t
+where p_t is the protect gate. When p_t=1, \gamma_t=1 and the state is frozen.
 
 For efficient training, we use the Dual Form (Attention form) which computes
 the output in O(T^2) time without materializing the d x d matrix sequentially.
@@ -120,15 +120,25 @@ class PhaseAssociativeLayer(nn.Module):
         # Training: Dual Form (O(T^2))
         if state is None and T > 1:
             # Decay matrix D[t, i] = prod_{j=i+1}^t gamma_j
-            delta = -torch.log(gamma + 1e-8)  # [B, H, T]
-            C = torch.cumsum(delta, dim=-1)   # [B, H, T]
-            # D = exp(C_i - C_t) for i <= t
-            D = torch.exp(C.unsqueeze(-2) - C.unsqueeze(-1))  # [B, H, T, T]
+            # Use log-space subtraction for numerical stability:
+            #   log D[t, i] = C[i] - C[t]  where C = cumsum(-log(gamma))
+            # Then compute exp only on the masked (causal) entries,
+            # clamping the exponent to avoid overflow.
+            log_gamma = torch.log(gamma + 1e-6)  # [B, H, T]
+            neg_log_gamma = -log_gamma
+            C = torch.cumsum(neg_log_gamma, dim=-1)  # [B, H, T]
+            # log_D[t, i] = C[i] - C[t] (always <= 0 for i <= t since neg_log_gamma >= 0)
+            log_D = C.unsqueeze(-1) - C.unsqueeze(-2)  # [B, H, T(i), T(t)]
+            log_D = log_D.transpose(-1, -2)  # [B, H, T(t), T(i)]
             mask = torch.tril(torch.ones(T, T, device=x.device))
-            D = D * mask
+            log_D = log_D * mask + (1 - mask) * (-1e4)
+            D = torch.exp(log_D.clamp(max=0.0))  # clamp: D[t,i] <= 1 for i <= t
 
-            # Complex dot product W = Q @ K^*
-            qr, qi = q[..., 0], q[..., 1]  # [B, H, T, d]
+            # Scale factor for the complex dot product (like 1/sqrt(d) in attention)
+            scale = d ** -0.5
+
+            # Complex dot product W = Q @ K^*  (scaled)
+            qr, qi = q[..., 0] * scale, q[..., 1] * scale  # [B, H, T, d]
             kr, ki = k[..., 0], k[..., 1]  # [B, H, T, d]
             
             wr = qr @ kr.transpose(-1, -2) + qi @ ki.transpose(-1, -2)  # [B, H, T, T]
@@ -145,8 +155,6 @@ class PhaseAssociativeLayer(nn.Module):
             
             y = torch.stack([yr, yi], dim=-1)  # [B, H, T, d, 2]
             
-            # We don't compute the full final state during training to save time
-            # If needed for generation, it would be computed sequentially
             new_state = torch.empty(0, device=x.device)
             
         # Inference: Recurrent Form (O(T))
