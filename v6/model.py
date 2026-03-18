@@ -22,14 +22,14 @@ from .init import create_initializer
 from .core.complex import (
     ComplexEmbed, ComplexLinear, ComplexNorm, cmul, cabs,
 )
-from .core.ssm import SSMState
+from .core.pam import PAMState
 from .backbone import PhaseFieldBackbone, BackboneOutput, MemoryFusion
 
 
 @dataclass
 class ModelOutput:
     logits: torch.Tensor
-    ssm_state: Optional[SSMState] = None
+    pam_state: Optional[PAMState] = None
     wm_keys: Optional[torch.Tensor] = None
     wm_values: Optional[torch.Tensor] = None
     wm_mask: Optional[torch.Tensor] = None
@@ -86,17 +86,11 @@ class PhaseFieldLM(nn.Module):
         for name, module in self.named_modules():
             if hasattr(module, 'protect_gate') and isinstance(module.protect_gate, nn.Linear):
                 nn.init.constant_(module.protect_gate.bias, -3.0)
-            if hasattr(module, 'bind_gate') and isinstance(module.bind_gate, nn.Linear):
-                nn.init.constant_(module.bind_gate.bias, -3.0)
-                nn.init.zeros_(module.bind_gate.weight)
-            if hasattr(module, 'unbind_gate') and isinstance(module.unbind_gate, nn.Linear):
-                nn.init.constant_(module.unbind_gate.bias, -3.0)
-                nn.init.zeros_(module.unbind_gate.weight)
 
     def forward(
         self,
         input_ids: torch.Tensor,
-        ssm_state: Optional[SSMState] = None,
+        pam_state: Optional[PAMState] = None,
         wm_keys: Optional[torch.Tensor] = None,
         wm_values: Optional[torch.Tensor] = None,
         wm_mask: Optional[torch.Tensor] = None,
@@ -113,9 +107,9 @@ class PhaseFieldLM(nn.Module):
         z = self.embed(input_ids)
         z = self.embed_norm(z)
 
-        # 2. Backbone (banks + SSM + memory)
+        # 2. Backbone (banks + PAM + memory)
         bb = self.backbone(
-            z, ssm_state=ssm_state,
+            z, pam_state=pam_state,
             wm_keys=wm_keys, wm_values=wm_values, wm_mask=wm_mask,
             persistent_keys=persistent_keys, persistent_values=persistent_values,
             persistent_mask=persistent_mask,
@@ -133,7 +127,7 @@ class PhaseFieldLM(nn.Module):
 
         return ModelOutput(
             logits=logits,
-            ssm_state=bb.ssm_state,
+            pam_state=bb.pam_state,
             wm_keys=bb.wm_keys,
             wm_values=bb.wm_values,
             wm_mask=bb.wm_mask,
@@ -169,11 +163,11 @@ class PhaseFieldLM(nn.Module):
 
         with torch.no_grad():
             out = self.forward(
-                generated, ssm_state=state,
+                generated, pam_state=state,
                 wm_keys=wm_keys, wm_values=wm_values, wm_mask=wm_mask,
                 **ext,
             )
-            state = out.ssm_state
+            state = out.pam_state
             wm_keys = out.wm_keys
             wm_values = out.wm_values
             wm_mask = out.wm_mask
@@ -207,11 +201,11 @@ class PhaseFieldLM(nn.Module):
                 generated = torch.cat([generated, next_token], dim=1)
 
                 out = self.forward(
-                    next_token, ssm_state=state,
+                    next_token, pam_state=state,
                     wm_keys=wm_keys, wm_values=wm_values, wm_mask=wm_mask,
                     **ext,
                 )
-                state = out.ssm_state
+                state = out.pam_state
                 wm_keys = out.wm_keys
                 wm_values = out.wm_values
                 wm_mask = out.wm_mask

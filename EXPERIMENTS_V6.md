@@ -1316,3 +1316,53 @@ HSB is genuinely novel on multiple axes:
 3. **Not a memory module**: unlike NTM/DNC/slot attention, HSB has no separate memory bank. Bindings live in the SSM state itself and flow through the standard parallel scan.
 4. **Complex-native**: binding IS phase rotation, retrieval IS phase counter-rotation. This only works because our SSM state is complex-valued.
 5. **GSP + HSB is synergistic**: GSP provides selective state retention, HSB provides compositional content to retain. Neither exists in any published architecture.
+
+---
+
+## 20. Phase-Associative Memory (PAM) (2026-03-17)
+
+### The Failure of HSB
+
+The Holographic State Binding (HSB) experiment failed to improve performance. The final validation PPL was **43.54**, which is a regression from the GSP baseline of **41.67**.
+
+**Diagnosis**: The root cause is *state interference*. HSB uses HRR binding (`cmul(key, value)`) to compress a $D \times D$ association into a $D$-dimensional vector, which is then added to the SSM state. While HRR works well for single associations, adding multiple facts into the same vector state causes catastrophic interference. The fundamental limitation of our `ComplexSSM` is that its state is a **vector** (diagonal $A$), which lacks the capacity to store multiple cross-dimensional associations over time without them colliding.
+
+### The Solution: Complex Matrix State
+
+To solve the interference problem, we must upgrade the state from a Vector to a **Complex Matrix** ($S_t \in \mathbb{C}^{H \times d \times d}$). This provides $O(d^2)$ capacity per head, allowing multiple facts to be stored independently.
+
+This architecture is called **Phase-Associative Memory (PAM)**.
+
+### Mathematical Formulation
+
+1. **State Update**: $S_t = \gamma_t S_{t-1} + V_t \otimes K_t^*$
+   - The state is a true memory matrix.
+2. **Retrieval**: $Y_t = S_t Q_t = V_t (K_t^* \cdot Q_t)$
+   - The complex dot product $K_t^* \cdot Q_t$ naturally computes attention via constructive/destructive phase interference. No Softmax is needed!
+3. **GSP Integration**: The protect gate $p_t$ modifies the decay: $\gamma_t = \exp(-dt)(1-p_t) + p_t$. This allows the model to freeze the matrix state and retain facts indefinitely.
+
+### Efficient Training (The Dual Form)
+
+Computing the $d \times d$ matrix sequentially is slow. Because it's a linear recurrence, we can compute it in $O(T^2)$ time using the **Dual Form** (Attention form) with highly optimized dense matrix multiplications. For $T=2048$, this is extremely fast.
+
+Dual form: $Y_t = \sum_{i \le t} \left( \prod_{j=i+1}^t \gamma_j \right) (Q_t \cdot K_i^*) V'_i$
+
+### Architecture Specs
+
+- **Model Dimension**: $D=384$ (increased from 192 to utilize the parameter budget effectively)
+- **Heads**: $H=6$, **Head Dim**: $d=64$
+- **Total Parameters**: ~100M
+- **Components**: `PhaseAssociativeLayer` replaces `ComplexSSMLayer`. `ComplexGatedUnit` remains as the MLP equivalent.
+
+### Implementation Details
+
+- **Module**: `v6/core/pam.py` -- `PhaseAssociativeLayer` and `PhaseAssociativeMemory`
+- **Integration**: Replaced `ComplexSSM` entirely in `v6/backbone.py`.
+- **Config**: `medium-pam` preset added to `v6/config.py`.
+- **Script**: `scripts/run_v6_medium_pam.sh`
+
+### What we expect
+
+1. **PPL**: Significant improvement over GSP (41.67) due to the massive increase in state capacity ($O(d^2)$ vs $O(d)$).
+2. **Factual Recall**: The matrix state should allow the model to retrieve specific facts without interference, solving the core issue identified in HSB.
+3. **Training Speed**: The Dual Form implementation should be very fast on GPU, comparable to standard attention.

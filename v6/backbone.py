@@ -17,7 +17,7 @@ from dataclasses import dataclass
 
 from .config import V6Config
 from .core.complex import ComplexLinear, ComplexNorm, ComplexGatedUnit, cmul, cabs
-from .core.ssm import ComplexSSM, SSMState
+from .core.pam import PhaseAssociativeMemory, PAMState
 from .core.bank import NamedBankPair
 from .core.coupler import PhaseInterferenceCoupler
 from .core.memory import (
@@ -66,7 +66,7 @@ class MemoryFusion(nn.Module):
 @dataclass
 class BackboneOutput:
     z_out: torch.Tensor
-    ssm_state: Optional[SSMState] = None
+    pam_state: Optional[PAMState] = None
     wm_keys: Optional[torch.Tensor] = None
     wm_values: Optional[torch.Tensor] = None
     wm_mask: Optional[torch.Tensor] = None
@@ -149,21 +149,19 @@ class PhaseFieldBackbone(nn.Module):
                     )
                     self.attn_scales[str(i)] = nn.Parameter(torch.tensor(0.1))
 
-        # SSM (with optional TSO, GSP, and HSB)
-        tso = getattr(config, 'timescale_separated_output', False)
+        # PAM (Phase-Associative Memory)
         gsp = getattr(config, 'gated_state_protection', False)
-        hsb = getattr(config, 'holographic_state_binding', False)
-        hsb_bind_dim = getattr(config, 'hsb_bind_dim', 0)
-        self.ssm = ComplexSSM(
+        num_heads = getattr(config, 'pam_num_heads', 6)
+        head_dim = getattr(config, 'pam_head_dim', 64)
+        
+        self.pam = PhaseAssociativeMemory(
             dim=config.dim,
-            state_dim=config.state_dim,
+            num_heads=num_heads,
+            head_dim=head_dim,
             num_layers=config.num_layers,
             dropout=config.dropout,
             initializer=initializer,
-            tso=tso,
             gsp=gsp,
-            hsb=hsb,
-            hsb_bind_dim=hsb_bind_dim,
         )
 
         # Working memory (legacy token-wise)
@@ -231,7 +229,7 @@ class PhaseFieldBackbone(nn.Module):
     def forward(
         self,
         z: torch.Tensor,
-        ssm_state: Optional[SSMState] = None,
+        pam_state: Optional[PAMState] = None,
         wm_keys: Optional[torch.Tensor] = None,
         wm_values: Optional[torch.Tensor] = None,
         wm_mask: Optional[torch.Tensor] = None,
@@ -304,15 +302,15 @@ class PhaseFieldBackbone(nn.Module):
                         role_loss = bank_pair.compute_role_loss(sem_out, ctx_out)
                         diversity_losses.append(role_loss * self.config.bank_role_weight)
 
-        # 2. SSM (HSB bind/unbind happens inside the SSM layers if enabled)
-        ssm_out, new_state = self.ssm(bank_z, ssm_state)
+        # 2. PAM
+        pam_out, new_state = self.pam(bank_z, pam_state)
 
         # 3. Working memory (legacy) or Episodic memory (event-based)
         new_wm_keys = new_wm_values = new_wm_mask = None
         salience_scores = None
         if self.working_memory is not None:
             wm_retrieved, new_wm_keys, new_wm_values, new_wm_mask = self.working_memory(
-                ssm_out, wm_keys, wm_values, wm_mask,
+                pam_out, wm_keys, wm_values, wm_mask,
             )
 
         ep_retrieved = None
@@ -320,14 +318,14 @@ class PhaseFieldBackbone(nn.Module):
             sem_out, ctx_out = last_bank_outputs if last_bank_outputs else (None, None)
             ep_retrieved, new_wm_keys, new_wm_values, new_wm_mask, salience_scores = (
                 self.episodic_memory(
-                    ssm_out, wm_keys, wm_values, wm_mask,
+                    pam_out, wm_keys, wm_values, wm_mask,
                     sem_bank_out=sem_out, ctx_bank_out=ctx_out,
                 )
             )
 
         # 4. Internal memory
         if self.internal_memory is not None:
-            im_retrieved = self.internal_memory(ssm_out)
+            im_retrieved = self.internal_memory(pam_out)
 
         # 5. Memory fusion
         has_persistent = (persistent_keys is not None and persistent_mask is not None
@@ -345,32 +343,32 @@ class PhaseFieldBackbone(nn.Module):
 
         if has_persistent and self.persistent_reader is not None:
             pm_retrieved = self.persistent_reader(
-                ssm_out, persistent_keys, persistent_values, persistent_mask,
+                pam_out, persistent_keys, persistent_values, persistent_mask,
             )
             memory_sources.append(pm_retrieved)
 
         if has_expert and self.expert_reader is not None:
             em_retrieved = self.expert_reader(
-                ssm_out, expert_keys, expert_values, expert_mask,
+                pam_out, expert_keys, expert_values, expert_mask,
             )
             memory_sources.append(em_retrieved)
 
         n_sources = len(memory_sources)
         if n_sources == 0:
-            z_out = ssm_out
+            z_out = pam_out
         elif n_sources == 1:
-            z_out = ssm_out + memory_sources[0] * self.memory_scale
+            z_out = pam_out + memory_sources[0] * self.memory_scale
         elif n_sources == 2 and self.memory_fusion_2 is not None:
             memory_out = self.memory_fusion_2(*memory_sources)
-            z_out = ssm_out + memory_out * self.memory_scale
+            z_out = pam_out + memory_out * self.memory_scale
         elif n_sources == 3 and self.memory_fusion_3 is not None:
             memory_out = self.memory_fusion_3(*memory_sources)
-            z_out = ssm_out + memory_out * self.memory_scale
+            z_out = pam_out + memory_out * self.memory_scale
         elif n_sources >= 4 and self.memory_fusion_4 is not None:
             memory_out = self.memory_fusion_4(*memory_sources)
-            z_out = ssm_out + memory_out * self.memory_scale
+            z_out = pam_out + memory_out * self.memory_scale
         else:
-            z_out = ssm_out
+            z_out = pam_out
 
         # Diversity loss
         div_loss = None
@@ -379,7 +377,7 @@ class PhaseFieldBackbone(nn.Module):
 
         return BackboneOutput(
             z_out=z_out,
-            ssm_state=new_state,
+            pam_state=new_state,
             wm_keys=new_wm_keys,
             wm_values=new_wm_values,
             wm_mask=new_wm_mask,
@@ -398,7 +396,7 @@ class PhaseFieldBackbone(nn.Module):
                 sum(p.numel() for p in self.attn_layers.parameters()) +
                 sum(p.numel() for p in self.attn_scales.parameters())
             ),
-            'ssm': sum(p.numel() for p in self.ssm.parameters()),
+            'pam': sum(p.numel() for p in self.pam.parameters()),
             'working_memory': sum(p.numel() for p in self.working_memory.parameters()) if self.working_memory else 0,
             'episodic_memory': sum(p.numel() for p in self.episodic_memory.parameters()) if self.episodic_memory else 0,
             'internal_memory': sum(p.numel() for p in self.internal_memory.parameters()) if self.internal_memory else 0,
@@ -410,10 +408,5 @@ class PhaseFieldBackbone(nn.Module):
                 (sum(p.numel() for p in self.memory_fusion_4.parameters()) if self.memory_fusion_4 else 0)
             ),
             'memory_scale': 1 if self.memory_scale is not None else 0,
-            'hsb': sum(
-                sum(p.numel() for n, p in layer.named_parameters()
-                    if 'bind_head' in n or 'unbind_head' in n)
-                for layer in self.ssm.layers
-            ),
         }
         return counts

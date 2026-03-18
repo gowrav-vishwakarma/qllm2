@@ -26,11 +26,12 @@ class V6Config:
 
     # SSM output mode
     timescale_separated_output: bool = False  # TSO: separate C_proj per timescale
+    # Gated State Protection
     gated_state_protection: bool = False      # GSP: learned per-state freeze gate
 
-    # Holographic State Binding (HSB)
-    holographic_state_binding: bool = False
-    hsb_bind_dim: int = 0  # 0 = use dim; >0 = bottleneck dimension for bindings
+    # PAM (Phase-Associative Memory)
+    pam_num_heads: int = 6
+    pam_head_dim: int = 64
 
     # Working memory (0 = disabled; use --wm_slots N to enable)
     num_wm_slots: int = 0    # working memory slots per sequence
@@ -168,14 +169,13 @@ def get_config(size: str = 'small-matched') -> V6Config:
             batch_size=4, learning_rate=7e-5,
             warmup_steps=400,
         ),
-        'medium-rebalanced-hsb': V6Config(
-            dim=192, state_dim=1536, num_layers=16,
+        'medium-pam': V6Config(
+            dim=384, state_dim=0, num_layers=16,
             num_banks=1, bank_expand=3,
             single_bank=True,
-            timescale_separated_output=True,
+            timescale_separated_output=False,
             gated_state_protection=True,
-            holographic_state_binding=True,
-            hsb_bind_dim=96,
+            pam_num_heads=6, pam_head_dim=64,
             batch_size=3, learning_rate=6e-5,
             warmup_steps=400,
         ),
