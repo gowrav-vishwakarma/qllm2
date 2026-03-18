@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Medium-Rebalanced + TSO + GSP + HSB: dim=192 state_dim=1536 L=16 expand=3, single_bank=True, TSO=True, GSP=True, HSB=True, no memory
+Date (UTC)  : 2026-03-17 07:05:09
+Date (local): 2026-03-17 12:35:09 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 42f5f73d54eb7c34baf69e6e93fb78bdf955b023
+Git short   : 42f5f73
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size medium-rebalanced-hsb --seq_len 2048 --batch_size 3 --epochs 10 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt 'In 1923 , the University of' --resume checkpoints_v6_medium_hsb/best_model.pt 
+================================================================================
