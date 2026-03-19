@@ -33,6 +33,9 @@ class V6Config:
     pam_num_heads: int = 6
     pam_head_dim: int = 64
     interleave_pam: bool = False  # True = interleave CGU + PAM per block (vs sequential)
+    pam_qk_norm: bool = False     # normalize Q,K to unit magnitude (phase-only attention)
+    pam_rope: bool = False        # complex RoPE on Q,K (positional encoding via phase rotation)
+    pam_fused_qkv: bool = False   # fuse Q,K,V into single projection (speed)
 
     # Working memory (0 = disabled; use --wm_slots N to enable)
     num_wm_slots: int = 0    # working memory slots per sequence
@@ -188,6 +191,20 @@ def get_config(size: str = 'small-matched') -> V6Config:
             gated_state_protection=True,
             pam_num_heads=6, pam_head_dim=64,
             interleave_pam=True,
+            batch_size=3, learning_rate=1e-4,
+            warmup_steps=1000,
+        ),
+        'medium-pam-v3': V6Config(
+            dim=384, state_dim=0, num_layers=16,
+            num_banks=1, bank_expand=3,
+            single_bank=True,
+            timescale_separated_output=False,
+            gated_state_protection=True,
+            pam_num_heads=6, pam_head_dim=64,
+            interleave_pam=True,
+            pam_qk_norm=True,
+            pam_rope=True,
+            pam_fused_qkv=True,
             batch_size=3, learning_rate=1e-4,
             warmup_steps=1000,
         ),

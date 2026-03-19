@@ -1523,4 +1523,78 @@ medium-pam-v2 (interleaved):
 
 ### Results
 
-*Training in progress...*
+**Stopped after epoch 1** -- terminated early to incorporate quality and speed improvements in experiment #22. The architectural change (interleaving) is carried forward into v3.
+
+| Epoch | Train PPL | Val PPL | tok/s | Time | Notes |
+|-------|-----------|---------|-------|------|-------|
+| 1     | 123.52    | 57.84   | 21,852 | 5420s (~90min) | best (only epoch) |
+
+Generation at epoch 1 (prompt: "In 1923 , the University of"):
+> In 1923 , the University of Illinois . = = Background = = By 1930 , Robert G. Brown had established a large number of small buildings near his home base at Cauchon Cemetery in Bauchon County ; he was one of two sons of William I. Fisot and J. L. Tisauke , who built the first major stone building on the site . He would later build several new buildings , including the building 's first floor , and a building that has
+
+Quality: rep3=0.000, rep4=0.000, restarts=0, uniq=0.762.
+
+For context, medium-pam (sequential) reached val PPL 54.03 at epoch 4 (its first post-resume epoch), so 57.84 at epoch 1 with interleaving is on a competitive trajectory. However, the run was not continued -- all subsequent work uses v3.
+
+---
+
+## 22. Experiment: Medium-PAM-v3 -- QK Phase Norm + Complex RoPE + Speed (2026-03-19)
+
+### Hypothesis
+
+Building on the interleaved layout from v2 (experiment #21), there are two categories of improvement:
+
+**Quality**: The v2 model has (a) zero positional encoding -- the only position signal comes from PAM's causal recurrence, leaving the first CGU layer completely position-blind, and (b) unbounded Q/K magnitudes that contaminate the phase-interference mechanism with magnitude variation. Fixing both should improve PPL.
+
+**Speed**: `ComplexLinear` currently launches 4 GEMM kernels per call (one per real/imag x weight_real/weight_imag combination). With 112 ComplexLinear calls per forward pass, that's 448 kernel launches. Additionally, PAM's Q/K/V projections are 3 separate calls that could be fused.
+
+### What changed
+
+#### Quality changes (new flags, ablatable)
+
+1. **QK Phase Normalization** (`pam_qk_norm=True`): Normalize Q and K to unit complex magnitude per-element before the attention dot product. This makes `Re(Q^* K)` purely measure phase alignment (cosine of phase differences), removing magnitude contamination. Uses existing `cnormalize` (z / |z|). Applied in both dual-form (training) and recurrent (inference) paths. The `d^{-0.5}` scaling is preserved on top.
+
+2. **Complex RoPE on Q,K** (`pam_rope=True`): Position-dependent phase rotation applied to Q and K only (not V, not the residual stream). Each complex dimension k gets frequency `theta_k = 1 / (10000^{k/d})`, and position m rotates by `e^{i*m*theta_k}`. This is a single `cmul` with a precomputed unit-magnitude tensor -- phase-safe by construction (|e^{i*theta}| = 1). Gives relative position awareness (the dot product `Re(q_m^* k_n)` depends on position difference m-n). Cache is precomputed for 8192 positions, auto-extended if needed. Step offset tracked via `PAMState.step` for correct inference positions.
+
+#### Speed changes (always on, zero quality impact)
+
+3. **Block-Real GEMM** in `ComplexLinear`: Replaced 4 `F.linear` calls with 1 by constructing a block matrix `[[W_r, -W_i], [W_i, W_r]]` and concatenating inputs `[x_r, x_i]`. Verified bit-exact (max diff 3.8e-06 in float32). Reduces 448 GEMM launches to 112 per forward pass.
+
+4. **Fused QKV Projection** (`pam_fused_qkv=True`): Single `ComplexLinear(dim, 3*inner_dim)` replaces 3 separate Q/K/V projections. Combined with block-real GEMM, each PAM layer does 1 GEMM for QKV instead of 12.
+
+### What did NOT change (novelty preserved)
+
+- PAM matrix state, GSP, complex-valued representations, CGU, ModReLU, ComplexNorm -- all unchanged.
+- Attention-free, O(T) inference per token -- no softmax, no KV cache.
+- Interleaved `[CGU -> PAM] x16` layout from v2.
+- Total parameter count: ~100.4M (same budget -- fused QKV is the same total weight count, just concatenated).
+
+### Config
+
+- **Preset**: `medium-pam-v3`
+- **New flags**: `pam_qk_norm=True`, `pam_rope=True`, `pam_fused_qkv=True`
+- **Parameters**: ~100.4M (same budget)
+- **Dataset**: WikiText-103, seq_len=2048, batch_size=3
+- **LR**: 1e-4, warmup_cosine, warmup=1000
+
+### Ablation plan
+
+If v3 PPL regresses vs v2 baseline (once obtained):
+- Disable `pam_qk_norm` only -> test if QK norm hurts
+- Disable `pam_rope` only -> test if RoPE hurts
+- Speed changes are math-identical and cannot affect quality
+
+### Baselines for comparison
+
+| Model | Params | Val PPL | Notes |
+|-------|--------|---------|-------|
+| medium-pam (sequential) | 100.4M | 38.95 | Sequential layout, no RoPE, no QK norm |
+| medium-pam-v2 (interleaved) | 100.4M | N/A | Stopped early (experiment #21) |
+| GPT-2 small (Transformer) | ~124M | ~14.84 | Fine-tuned on WikiText-103 |
+| Transformer (vanilla) | ~125M | ~18.6 | Trained on WikiText-103 |
+| Mamba-Small (SSM) | 130M | ~24.1 | Selective SSM |
+| GateLoop (linear RNN) | 125M | ~13.4 | Data-controlled recurrence |
+
+### Results
+
+*Not yet run.*

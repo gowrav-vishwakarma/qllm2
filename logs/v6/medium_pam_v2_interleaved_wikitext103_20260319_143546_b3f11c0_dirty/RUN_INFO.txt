@@ -1,0 +1,36 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Medium-PAM-v2 INTERLEAVED: dim=384 L=16 expand=3, single_bank=True, PAM(H=6, d=64), GSP=True, interleave_pam=True, LR=1e-4, warmup=1000
+Date (UTC)  : 2026-03-19 09:05:46
+Date (local): 2026-03-19 14:35:46 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : b3f11c0fc1fb82714ade5b1948d71244eec752b1
+Git short   : b3f11c0
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size medium-pam-v2 --seq_len 2048 --batch_size 3 --epochs 10 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt 'In 1923 , the University of'  
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ v6/train.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/v6/train.py b/v6/train.py
+index f9588fc..b4ad7ac 100644
+--- a/v6/train.py
++++ b/v6/train.py
+@@ -1419,7 +1419,7 @@ def main():
+ 
+     parser = argparse.ArgumentParser(description='Train V6 Phase-First LM')
+     parser.add_argument('--size', type=str, default='small-matched',
+-                        choices=['tiny', 'small', 'small-matched', 'small-rebalanced', 'medium-rebalanced', 'medium-rebalanced-gsp', 'medium-pam', 'medium', 'large', 'xl'])
++                        choices=['tiny', 'small', 'small-matched', 'small-rebalanced', 'medium-rebalanced', 'medium-rebalanced-gsp', 'medium-pam', 'medium-pam-v2', 'medium', 'large', 'xl'])
+     parser.add_argument('--epochs', type=int, default=20)
+     parser.add_argument('--batch_size', type=int, default=None)
+     parser.add_argument('--lr', type=float, default=None)
