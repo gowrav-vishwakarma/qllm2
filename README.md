@@ -82,15 +82,15 @@ Example TinyStories generation:
 
 ### WikiText-103
 
-V6 is training on WikiText-103 with several presets. Current best validation PPL on this corpus comes from the **GSP** (Gated State Protection) baseline.
+V6 is training on WikiText-103 with several presets. Current best validation PPL on this corpus comes from **PAM** (Phase-Associative Memory), which replaced the vector-state SSM with a matrix-state architecture.
 
 | Preset | Model | Epochs | Best Val PPL | Notes |
 | --- | --- | --- | --- | --- |
-| `medium-rebalanced-gsp` | single CGU + SSM + GSP (~63M) | 10 | **41.67** | Current best; GSP protects important state dims |
-| `medium-rebalanced-hsb` | + Holographic State Binding (~87M) | 10 | 43.54 | **Regression** — state interference (vector state too small for many bindings) |
-| `medium-pam` | single CGU + PAM + GSP (~100M) | in progress | — | PAM replaces SSM with matrix state \(S \in \mathbb{C}^{H \times d \times d}\) to fix interference; training ongoing |
+| `medium-pam` | single CGU + PAM + GSP (~100M) | 10 | **38.95** | **Current best**; matrix state fixes HSB interference |
+| `medium-rebalanced-gsp` | single CGU + SSM + GSP (~63M) | 10 | 41.67 | Previous best; GSP protects important state dims |
+| `medium-rebalanced-hsb` | + Holographic State Binding (~87M) | 10 | 43.54 | Regression -- state interference (vector state too small) |
 
-Earlier `small-matched` WikiText-103 runs reached val PPL ~65 (seq len 512). The rebalanced + GSP direction and now PAM are the active push for better factual coherence and lower PPL.
+Earlier `small-matched` WikiText-103 runs reached val PPL ~65 (seq len 512). The PAM direction is the validated path forward for factual coherence and lower PPL.
 
 - **Scripts**: `scripts/run_v6_wikitext103.sh`, `scripts/run_v6_medium_pam.sh`
 - **Sequence length**: 2048 for medium presets
@@ -128,7 +128,12 @@ python -m v6.train --size tiny --epochs 5 --max_samples 1000 --seq_len 128
 python -m v6.train --size small-matched --max_samples 9999999 --seq_len 256 \
   --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4
 
-# WikiText-103
+# WikiText-103 with PAM (current best: val PPL 38.95)
+./scripts/run_v6_medium_pam.sh
+# Resume from checkpoint
+./scripts/run_v6_medium_pam.sh --resume
+
+# WikiText-103 (SSM-based presets)
 ./scripts/run_v6_wikitext103.sh
 
 # PG-19
@@ -138,7 +143,11 @@ python -m v6.train --size small-matched --max_samples 9999999 --seq_len 256 \
 ### Generate With V6
 
 ```bash
-# Autoregressive text
+# Autoregressive text (PAM checkpoint)
+python -m v6.generate --checkpoint checkpoints_v6_medium_pam/best_model.pt \
+  --prompt "In 1923 , the University of"
+
+# TinyStories checkpoint
 python -m v6.generate --checkpoint checkpoints_v6/best_model.pt \
   --prompt "Once upon a time"
 
@@ -220,8 +229,8 @@ The most useful comparison now is across the main non-transformer line itself:
 | `small-matched` | 128 | 12 | 2 | state 512 | 8 | named banks + SSM |
 | `small-rebalanced` | 128 | 12 | 1 | state 1280 | 8 | single CGU, TSO |
 | `medium-rebalanced` | 192 | 16 | 1 | state 1536 | 4 | single CGU, TSO |
-| `medium-rebalanced-gsp` | 192 | 16 | 1 | state 1536 | 4 | + GSP (best WT103 so far: 41.67) |
-| `medium-pam` | 384 | 16 | 1 | PAM 6×64 | 3 | single CGU + PAM + GSP (~100M) |
+| `medium-rebalanced-gsp` | 192 | 16 | 1 | state 1536 | 4 | + GSP (WT103 val PPL 41.67) |
+| `medium-pam` | 384 | 16 | 1 | PAM 6×64 | 3 | single CGU + PAM + GSP (~100M, best WT103: **38.95**) |
 | `medium` | 512 | 12 | 2 | state 1024 | 4 | named banks + SSM |
 | `large` | 512 | 24 | 2 | state 1536 | 2 | named banks + SSM |
 | `xl` | 768 | 32 | 2 | state 2048 | 1 | named banks + SSM |
@@ -257,11 +266,11 @@ qllm2/
 
 - Done: named banks, phase interference coupler, multi-timescale SSM, working/internal/persistent/expert memory layers
 - Done: single-bank (CGU) presets, Timescale-Separated Output (TSO), Gated State Protection (GSP)
-- Done: Holographic State Binding (HSB) experiment — diagnosed failure (state interference) and motivated PAM
-- Done: Phase-Associative Memory (PAM) — matrix state \(S \in \mathbb{C}^{H \times d \times d}\), dual form for O(T²) training, recurrent O(1) inference
+- Done: Holographic State Binding (HSB) experiment -- diagnosed failure (state interference) and motivated PAM
+- Done: Phase-Associative Memory (PAM) -- matrix state \(S \in \mathbb{C}^{H \times d \times d}\), dual form for O(T^2) training, recurrent O(1) inference
+- Done: PAM run on WikiText-103 (`medium-pam`, 100M params) -- val PPL **38.95**, beating GSP baseline of 41.67; coherent multi-sentence generation
 - Done: autoregressive training and generation; diffusion code paths scaffolded on the shared backbone
-- Done: TinyStories and WikiText-103 training; GSP baseline 41.67 val PPL on WikiText-103 (10 epochs)
-- In progress: PAM run on WikiText-103 (`medium-pam`) to validate interference fix and improve over GSP
+- Done: TinyStories and WikiText-103 training across multiple presets
 - In progress: better activation of persistent/session/expert memory in practical runs
 - In progress: stronger benchmarking and scale-up; diffusion validation later
 
@@ -327,7 +336,7 @@ You may use, study, modify, and share this work for non-commercial purposes. Com
 
 ---
 
-**Current focus**: `v6` — PAM (Phase-Associative Memory) run on WikiText-103; GSP baseline 41.67 val PPL.
+**Current focus**: `v6` -- PAM (Phase-Associative Memory) validated on WikiText-103; best val PPL **38.95** (100M params).
 **Previous breakthrough**: `v5`
 **Novelty origin**: `v4`
-**Last Updated**: 2026-03-18
+**Last Updated**: 2026-03-19
