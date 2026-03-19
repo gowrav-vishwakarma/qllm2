@@ -154,14 +154,23 @@ class PhaseAssociativeLayer(nn.Module):
             yi = ar @ vpi + ai @ vpr  # [B, H, T, d]
             
             y = torch.stack([yr, yi], dim=-1)  # [B, H, T, d, 2]
-            
-            new_state = torch.empty(0, device=x.device)
+
+            # Compute final recurrent state S_T = sum_i D[T,i] * (V'_i \otimes K_i^*)
+            # for generation: prompt state must be carried to next forward pass
+            D_last = D[:, :, -1, :]  # [B, H, T] decay from each position to last
+            wv_r = v_prime[..., 0] * D_last.unsqueeze(-1)  # [B, H, T, d]
+            wv_i = v_prime[..., 1] * D_last.unsqueeze(-1)
+            kr, ki = k[..., 0], k[..., 1]  # [B, H, T, d]
+            sr = wv_r.transpose(-1, -2) @ kr + wv_i.transpose(-1, -2) @ ki  # [B, H, d, d]
+            si = wv_i.transpose(-1, -2) @ kr - wv_r.transpose(-1, -2) @ ki
+            new_state = torch.stack([sr, si], dim=-1)  # [B, H, d, d, 2]
             
         # Inference: Recurrent Form (O(T))
         else:
             if state is None:
                 state = torch.zeros(B, H, d, d, 2, device=x.device, dtype=x.dtype)
             
+            scale = d ** -0.5
             y_list = []
             S = state
             for t in range(T):
@@ -177,7 +186,7 @@ class PhaseAssociativeLayer(nn.Module):
                 gamma_t = gamma[:, :, t].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
                 S = S * gamma_t + outer
                 
-                q_t = q[:, :, t].unsqueeze(-3)  # [B, H, 1, d, 2]
+                q_t = q[:, :, t].unsqueeze(-3) * scale  # [B, H, 1, d, 2]
                 # S @ q_t
                 sq_r = S[..., 0]*q_t[..., 0] - S[..., 1]*q_t[..., 1]
                 sq_i = S[..., 0]*q_t[..., 1] + S[..., 1]*q_t[..., 0]
@@ -262,14 +271,14 @@ class PhaseAssociativeMemory(nn.Module):
             h_normed = norm(h)
             h_out, s_final = layer(h_normed, s0)
             h = residual + h_out * scale
-            if state is not None:
+            if s_final.numel() > 0:
                 new_matrices.append(s_final)
 
         new_state = None
-        if state is not None:
+        if new_matrices:
             new_state = PAMState(
                 matrix=torch.stack(new_matrices, dim=0),
-                step=state.step + L,
+                step=(state.step if state is not None else 0) + L,
             )
 
         return self.output_norm(h), new_state
