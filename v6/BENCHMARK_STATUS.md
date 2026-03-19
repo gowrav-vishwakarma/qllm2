@@ -200,6 +200,20 @@ From the reproduction work in [llm.c PR #340](https://github.com/karpathy/llm.c/
 
 These numbers come with documented evaluation caveats, but they are still much closer to your pipeline than the classic word-level papers.
 
+### Evaluation Protocol Differences
+
+Perplexity numbers depend heavily on evaluation protocol:
+
+- **Test set with sliding window**: ~14.84 (lower, standard for paper comparisons)
+- **Validation set raw/BPE**: ~30.59-31.04 (higher, more conservative)
+
+The ~2x difference comes from:
+1. Test vs validation set distribution
+2. Sliding-window vs raw evaluation
+3. Tokenization and preprocessing differences
+
+We cite the validation PPL (~31) as it uses the same raw/BPE evaluation as our model.
+
 Relative to the closest one:
 
 - V6 `28.7M`: `49.61`

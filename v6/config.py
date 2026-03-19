@@ -32,6 +32,7 @@ class V6Config:
     # PAM (Phase-Associative Memory)
     pam_num_heads: int = 6
     pam_head_dim: int = 64
+    interleave_pam: bool = False  # True = interleave CGU + PAM per block (vs sequential)
 
     # Working memory (0 = disabled; use --wm_slots N to enable)
     num_wm_slots: int = 0    # working memory slots per sequence
@@ -178,6 +179,17 @@ def get_config(size: str = 'small-matched') -> V6Config:
             pam_num_heads=6, pam_head_dim=64,
             batch_size=3, learning_rate=3e-5,
             warmup_steps=500,
+        ),
+        'medium-pam-v2': V6Config(
+            dim=384, state_dim=0, num_layers=16,
+            num_banks=1, bank_expand=3,
+            single_bank=True,
+            timescale_separated_output=False,
+            gated_state_protection=True,
+            pam_num_heads=6, pam_head_dim=64,
+            interleave_pam=True,
+            batch_size=3, learning_rate=1e-4,
+            warmup_steps=1000,
         ),
         'medium': V6Config(
             dim=512, state_dim=1024, num_layers=12,

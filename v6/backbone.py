@@ -17,7 +17,7 @@ from dataclasses import dataclass
 
 from .config import V6Config
 from .core.complex import ComplexLinear, ComplexNorm, ComplexGatedUnit, cmul, cabs
-from .core.pam import PhaseAssociativeMemory, PAMState
+from .core.pam import PhaseAssociativeMemory, PhaseAssociativeLayer, PAMState
 from .core.bank import NamedBankPair
 from .core.coupler import PhaseInterferenceCoupler
 from .core.memory import (
@@ -87,6 +87,7 @@ class PhaseFieldBackbone(nn.Module):
         super().__init__()
         self.config = config
         self._single_bank = getattr(config, 'single_bank', False)
+        self._interleave_pam = getattr(config, 'interleave_pam', False)
 
         if self._single_bank:
             self.feature_layers = nn.ModuleList([
@@ -153,16 +154,40 @@ class PhaseFieldBackbone(nn.Module):
         gsp = getattr(config, 'gated_state_protection', False)
         num_heads = getattr(config, 'pam_num_heads', 6)
         head_dim = getattr(config, 'pam_head_dim', 64)
-        
-        self.pam = PhaseAssociativeMemory(
-            dim=config.dim,
-            num_heads=num_heads,
-            head_dim=head_dim,
-            num_layers=config.num_layers,
-            dropout=config.dropout,
-            initializer=initializer,
-            gsp=gsp,
-        )
+        self._pam_num_heads = num_heads
+        self._pam_head_dim = head_dim
+
+        if self._interleave_pam:
+            self.pam_layers = nn.ModuleList([
+                PhaseAssociativeLayer(
+                    config.dim, num_heads, head_dim, config.dropout,
+                    initializer=initializer, gsp=gsp,
+                )
+                for _ in range(config.num_layers)
+            ])
+            self.pam_norms = nn.ModuleList([
+                ComplexNorm(config.dim) for _ in range(config.num_layers)
+            ])
+            self.pam_scales = nn.ParameterList([
+                nn.Parameter(torch.tensor(0.1))
+                for _ in range(config.num_layers)
+            ])
+            self.pam_output_norm = ComplexNorm(config.dim)
+            self.pam = None
+        else:
+            self.pam = PhaseAssociativeMemory(
+                dim=config.dim,
+                num_heads=num_heads,
+                head_dim=head_dim,
+                num_layers=config.num_layers,
+                dropout=config.dropout,
+                initializer=initializer,
+                gsp=gsp,
+            )
+            self.pam_layers = None
+            self.pam_norms = None
+            self.pam_scales = None
+            self.pam_output_norm = None
 
         # Working memory (legacy token-wise)
         self.working_memory = WorkingMemory(
@@ -248,12 +273,65 @@ class PhaseFieldBackbone(nn.Module):
             z: [B, L, dim, 2] complex input embeddings
             timestep_embed: [B, 1, dim, 2] or None -- added per layer (diffusion only)
         """
-        # 1. Feature extraction per layer
+        # 1. Feature extraction + sequence mixing
         bank_z = z
         diversity_losses = []
         last_bank_outputs = None
 
-        if self._single_bank:
+        if self._interleave_pam and self._single_bank:
+            # --- Interleaved path: CGU + PAM per block ---
+            B, L = z.shape[:2]
+            if pam_state is None and L == 1:
+                pam_state = PAMState(
+                    matrix=torch.zeros(
+                        self.config.num_layers, B, self._pam_num_heads,
+                        self._pam_head_dim, self._pam_head_dim, 2,
+                        device=z.device, dtype=z.dtype,
+                    ),
+                    step=0,
+                )
+
+            new_pam_matrices = []
+            for i in range(len(self.feature_layers)):
+                feat_dict = self.feature_layers[i]
+                feat_scale = self.feature_scales[i]
+
+                # Channel mixing (CGU)
+                residual = bank_z
+                if timestep_embed is not None:
+                    bank_z = bank_z + timestep_embed
+                out = feat_dict['cgu'](feat_dict['norm'](bank_z))
+                if self.training:
+                    drop_mask = feat_dict['dropout'](
+                        torch.ones(out.shape[:-1], device=out.device)
+                    )
+                    out = out * drop_mask.unsqueeze(-1)
+                bank_z = residual + out * feat_scale
+
+                if i in self._attn_layer_ids:
+                    attn_out = self.attn_layers[str(i)](bank_z)
+                    bank_z = bank_z + attn_out * self.attn_scales[str(i)]
+
+                # Sequence mixing (PAM)
+                s0 = pam_state.matrix[i] if pam_state is not None else None
+                residual = bank_z
+                h_out, s_final = self.pam_layers[i](
+                    self.pam_norms[i](bank_z), s0
+                )
+                bank_z = residual + h_out * self.pam_scales[i]
+                if s_final.numel() > 0:
+                    new_pam_matrices.append(s_final)
+
+            pam_out = self.pam_output_norm(bank_z)
+            new_state = None
+            if new_pam_matrices:
+                new_state = PAMState(
+                    matrix=torch.stack(new_pam_matrices, dim=0),
+                    step=(pam_state.step if pam_state is not None else 0) + L,
+                )
+
+        elif self._single_bank:
+            # --- Original sequential single-bank path ---
             for i, (feat_dict, scale) in enumerate(
                 zip(self.feature_layers, self.feature_scales)
             ):
@@ -272,7 +350,11 @@ class PhaseFieldBackbone(nn.Module):
                     attn_out = self.attn_layers[str(i)](bank_z)
                     attn_scale = self.attn_scales[str(i)]
                     bank_z = bank_z + attn_out * attn_scale
+
+            pam_out, new_state = self.pam(bank_z, pam_state)
+
         else:
+            # --- Non-single-bank (dual bank + coupler) path ---
             for i, (bank_pair, coupler, scale) in enumerate(
                 zip(self.bank_pairs, self.couplers, self.bank_scales)
             ):
@@ -302,8 +384,7 @@ class PhaseFieldBackbone(nn.Module):
                         role_loss = bank_pair.compute_role_loss(sem_out, ctx_out)
                         diversity_losses.append(role_loss * self.config.bank_role_weight)
 
-        # 2. PAM
-        pam_out, new_state = self.pam(bank_z, pam_state)
+            pam_out, new_state = self.pam(bank_z, pam_state)
 
         # 3. Working memory (legacy) or Episodic memory (event-based)
         new_wm_keys = new_wm_values = new_wm_mask = None
@@ -389,6 +470,20 @@ class PhaseFieldBackbone(nn.Module):
     def count_parameters(self) -> Dict[str, int]:
         feature_params = sum(p.numel() for p in self.feature_layers.parameters()) if self.feature_layers else 0
         feature_scale_params = sum(p.numel() for p in self.feature_scales) if self.feature_scales else 0
+
+        if self.pam is not None:
+            pam_params = sum(p.numel() for p in self.pam.parameters())
+        else:
+            pam_params = 0
+            if self.pam_layers is not None:
+                pam_params += sum(p.numel() for p in self.pam_layers.parameters())
+            if self.pam_norms is not None:
+                pam_params += sum(p.numel() for p in self.pam_norms.parameters())
+            if self.pam_scales is not None:
+                pam_params += sum(p.numel() for p in self.pam_scales.parameters())
+            if self.pam_output_norm is not None:
+                pam_params += sum(p.numel() for p in self.pam_output_norm.parameters())
+
         counts = {
             'banks': sum(p.numel() for p in self.bank_pairs.parameters()) + feature_params + feature_scale_params,
             'couplers': sum(p.numel() for p in self.couplers.parameters()),
@@ -396,7 +491,7 @@ class PhaseFieldBackbone(nn.Module):
                 sum(p.numel() for p in self.attn_layers.parameters()) +
                 sum(p.numel() for p in self.attn_scales.parameters())
             ),
-            'pam': sum(p.numel() for p in self.pam.parameters()),
+            'pam': pam_params,
             'working_memory': sum(p.numel() for p in self.working_memory.parameters()) if self.working_memory else 0,
             'episodic_memory': sum(p.numel() for p in self.episodic_memory.parameters()) if self.episodic_memory else 0,
             'internal_memory': sum(p.numel() for p in self.internal_memory.parameters()) if self.internal_memory else 0,
