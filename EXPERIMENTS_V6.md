@@ -162,6 +162,16 @@ Configurable via `wm_read_topk` and `im_read_topk` in `V6Config`.
 
 **Note**: Despite the margin fix, diversity loss still collapses to zero in all ablation runs (see §5.4). The margin-based approach may be fundamentally insufficient -- a different formulation is needed.
 
+### Bug 8: PAM QK phase normalization drives repetition collapse (found 2026-03-19)
+
+**Symptom**: During `medium-pam-v3` training with `pam_qk_norm=True`, mid-epoch and end-of-epoch generations develop severe lexical repetition (e.g. "University of Illinois" listed many times in one sample) while train/val loss continue to decrease smoothly. No NaN/Inf, no gradient spikes.
+
+**Root cause**: `cnormalize` on Q and K forces unit magnitude per position, so `Re(Q^* K)` depends only on phase alignment. The model cannot modulate *attention strength* via Q/K magnitude -- only *which* direction in phase space matches. PAM is not softmax attention: scores are used directly (with decay), so flattening the dynamic range tends to smear retrieval across many past keys. Common LM QK-norm recipes add a **learnable temperature / logit scale**; PAM had only fixed `d^{-0.5}`. Together this matches a gradual mode collapse into high-frequency template phrases (especially on WikiText-style "University of …" prompts).
+
+**Mitigation**: Disable QK norm for the headline v3 preset: `pam_qk_norm=False` in `medium-pam-v3` (see §22). **Future** if revisiting QK norm: add a per-head or scalar learnable scale after the normalized dot product, and re-ablate against RoPE alone.
+
+**Files**: `v6/core/pam.py` (`PhaseAssociativeLayer`), `v6/config.py` (`medium-pam-v3` preset)
+
 ---
 
 ## 4. Test Results
@@ -1544,7 +1554,7 @@ For context, medium-pam (sequential) reached val PPL 54.03 at epoch 4 (its first
 
 Building on the interleaved layout from v2 (experiment #21), there are two categories of improvement:
 
-**Quality**: The v2 model has (a) zero positional encoding -- the only position signal comes from PAM's causal recurrence, leaving the first CGU layer completely position-blind, and (b) unbounded Q/K magnitudes that contaminate the phase-interference mechanism with magnitude variation. Fixing both should improve PPL.
+**Quality**: The v2 model has (a) zero positional encoding -- the only position signal comes from PAM's causal recurrence, leaving the first CGU layer completely position-blind, and (b) optional control of Q/K scaling. RoPE addresses (a). **QK phase norm (b) was hypothesized to help** but **empirically caused repetition collapse** (Bug 8); the preset now keeps RoPE and disables QK norm.
 
 **Speed**: `ComplexLinear` currently launches 4 GEMM kernels per call (one per real/imag x weight_real/weight_imag combination). With 112 ComplexLinear calls per forward pass, that's 448 kernel launches. Additionally, PAM's Q/K/V projections are 3 separate calls that could be fused.
 
@@ -1552,7 +1562,7 @@ Building on the interleaved layout from v2 (experiment #21), there are two categ
 
 #### Quality changes (new flags, ablatable)
 
-1. **QK Phase Normalization** (`pam_qk_norm=True`): Normalize Q and K to unit complex magnitude per-element before the attention dot product. This makes `Re(Q^* K)` purely measure phase alignment (cosine of phase differences), removing magnitude contamination. Uses existing `cnormalize` (z / |z|). Applied in both dual-form (training) and recurrent (inference) paths. The `d^{-0.5}` scaling is preserved on top.
+1. **QK Phase Normalization** (`pam_qk_norm`, default **False** in `medium-pam-v3` after 2026-03-19): Normalize Q and K to unit complex magnitude per-element before the dot product. **First v3 train used `True` and is documented as failed** (repetition; Bug 8). When enabled: uses `cnormalize`; `d^{-0.5}` scaling is preserved. Applied in both dual-form (training) and recurrent (inference) paths.
 
 2. **Complex RoPE on Q,K** (`pam_rope=True`): Position-dependent phase rotation applied to Q and K only (not V, not the residual stream). Each complex dimension k gets frequency `theta_k = 1 / (10000^{k/d})`, and position m rotates by `e^{i*m*theta_k}`. This is a single `cmul` with a precomputed unit-magnitude tensor -- phase-safe by construction (|e^{i*theta}| = 1). Gives relative position awareness (the dot product `Re(q_m^* k_n)` depends on position difference m-n). Cache is precomputed for 8192 positions, auto-extended if needed. Step offset tracked via `PAMState.step` for correct inference positions.
 
@@ -1572,17 +1582,19 @@ Building on the interleaved layout from v2 (experiment #21), there are two categ
 ### Config
 
 - **Preset**: `medium-pam-v3`
-- **New flags**: `pam_qk_norm=True`, `pam_rope=True`, `pam_fused_qkv=True`
+- **Failing run (logged below)**: `pam_qk_norm=True`, `pam_rope=True`, `pam_fused_qkv=True` (plus block-real GEMM in `ComplexLinear`).
+- **Current preset / recommended next run**: `pam_qk_norm=False`, `pam_rope=True`, `pam_fused_qkv=True` -- keeps RoPE + speed wins; drops QK norm after Bug 8 (§3).
 - **Parameters**: ~100.4M (same budget)
 - **Dataset**: WikiText-103, seq_len=2048, batch_size=3
 - **LR**: 1e-4, warmup_cosine, warmup=1000
+- **Log**: `logs/v6/medium_pam_v3_qknorm_rope_wikitext103_20260319_161045_77c454a/v6_autoregressive_medium-pam-v3.log`
+- **Script**: `scripts/run_v6_medium_pam_v3.sh`
 
 ### Ablation plan
 
-If v3 PPL regresses vs v2 baseline (once obtained):
-- Disable `pam_qk_norm` only -> test if QK norm hurts
-- Disable `pam_rope` only -> test if RoPE hurts
-- Speed changes are math-identical and cannot affect quality
+- **Done (from logs)**: QK norm hurts generation quality badly → default off (Bug 8).
+- **If needed after re-run**: disable `pam_rope` only to isolate RoPE (unlikely culprit).
+- Speed changes (block-real GEMM, fused QKV) are math-identical and cannot affect quality.
 
 ### Baselines for comparison
 
@@ -1595,6 +1607,20 @@ If v3 PPL regresses vs v2 baseline (once obtained):
 | Mamba-Small (SSM) | 130M | ~24.1 | Selective SSM |
 | GateLoop (linear RNN) | 125M | ~13.4 | Data-controlled recurrence |
 
-### Results
+### Results (run with `pam_qk_norm=True` -- do not use for production)
 
-*Not yet run.*
+Training was **numerically stable** (no NaN/Inf, `div`/`wdiv` stayed 0). Throughput ~22–23k tok/s, GPU ~2.3/20.7 GB. **Val loss improved every epoch through 4**, but **generation repetition worsened** from ~epoch 3 onward; by epoch 5 batch 10000 the sample collapsed into repeated institution names. This matches prior V6 lessons: **cross-entropy alone is a weak proxy for repetition**.
+
+| Epoch | Train PPL | Val PPL | End-of-epoch quality (prompt: "In 1923 , the University of") |
+|-------|-----------|---------|------------------------------------------------------------------|
+| 1 | 126.82 | 63.42 | rep3=0.021, rep4=0.000, uniq=0.691 |
+| 2 | 59.45 | 48.85 | rep3=0.022, rep4=0.011, uniq=0.684 |
+| 3 | 50.36 | 43.78 | rep3=0.040, rep4=0.010, uniq=0.592 (first clear warning) |
+| 4 | 45.86 | 40.50 | rep3=0.011, rep4=0.000, uniq=0.719 (metrics recover; still intermittent) |
+| 5 | — | — | **Stopped mid-epoch** (~72% through when log ends). At batch 10000: severe repetition — e.g. *"University of Illinois , University of Chicago , University of Illinois , …"* many times in one continuation. |
+
+**Epoch 3 end-of-epoch sample** (illustrative): heavy reuse of *"university"* and nested self-referential phrasing; `uniq` dropped 0.691 → 0.592.
+
+**Diagnosis (primary)**: **QK phase normalization** (`cnormalize` on Q,K) is the main suspect. It removes magnitude from the PAM score path, there is no softmax sharpening, and no learnable temperature — see Bug 8 (§3). **RoPE**, **fused QKV**, and **block-real GEMM** are not implicated by the logs (RoPE is standard; speed paths are equivalent matmuls).
+
+**Action**: Re-train `medium-pam-v3` with **`pam_qk_norm=False`** (already set in `v6/config.py`). Consider renaming the log directory pattern in future runs to reflect "rope_no_qknorm" so logs are not confused with the failed QK-norm experiment.
