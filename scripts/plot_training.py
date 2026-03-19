@@ -24,20 +24,23 @@ BATCH_RE = re.compile(
     r"div=[\d.]+ lr=([\d.e+-]+) \| ([\d.]+) samples/s \| (\d+) tok/s"
 )
 
-# V6 batch:   [1] 50/19277 (0%) loss=10.7973 ppl=48888.7 div=0.00e+00 wdiv=0.00e+00 lr=8.93e-06 | 29377 tok/s (avg 10332) ETA 190m32s | GPU 1.6/17.5GB
+# V6 batch:   [1] 50/19277 (0%) loss=10.7973 ppl=48888.7 div=0.00e+00 wdiv=0.00e+00 lr=8.93e-06 | 29377 tok/s (avg 10332) ETA 190m32s | GPU 1.6/17.5GB | gtok=1536000
 BATCH_RE_V6 = re.compile(
     r"\[\s*(\d+)\]\s+(\d+)/(\d+)\s+\((\d+)%\)\s+"
     r"loss=([\d.e+-]+)\s+ppl=([\d.e+-]+)\s+div=([\d.e+-]+)\s+wdiv=([\d.e+-]+)\s+lr=([\d.e+-]+)\s+\|\s+"
     r"([\d.]+)\s+tok/s\s+\(avg\s+([\d.]+)\)\s+ETA\s+[\d]+m[\d]+s"
     r"(?:\s+\|\s+GPU\s+[\d.]+/[\d.]+GB)?"
+    r"(?:\s+\|\s+gtok=(\d+))?"
 )
 
 # Epoch: V5 has "| Time: ... | Val ..."; V6 has " div=... wdiv=... | N tok/s | Time: ... | Val ... *best*"
-# V5 has " | Time:" after PPL; V6 optional block ends with "| " so rest is " Time:" (no pipe before Time)
+# V6 new: "Time: 300.0s (1,234,567 tok)" with optional token count in parens
 EPOCH_RE = re.compile(
     r"Epoch (\d+)/(\d+) \| Train Loss: ([\d.]+) PPL: ([\d.]+)"
     r"(?:\s+div=[\d.e+-]+\s+wdiv=[\d.e+-]+\s+\|\s+[\d.]+\s+tok/s\s+\|)?"
-    r"\s+(?:\|\s+)?Time: ([\d.]+)s\s+\|\s+Val Loss: ([\d.]+) PPL: ([\d.]+)\s*(?:\*best\*)?"
+    r"\s+(?:\|\s+)?Time: ([\d.]+)s"
+    r"(?:\s+\([\d,]+\s+tok\))?"
+    r"\s+\|\s+Val Loss: ([\d.]+) PPL: ([\d.]+)\s*(?:\*best\*)?"
 )
 
 # Header lines for architecture info
@@ -89,8 +92,8 @@ def parse_log(path: Path) -> dict:
             continue
         m = BATCH_RE_V6.search(line)
         if m:
-            ep, bidx, total, _pct, loss, ppl, _div, _wdiv, lr, _inst_tok, avg_tok = m.groups()
-            batches.append({
+            ep, bidx, total, _pct, loss, ppl, _div, _wdiv, lr, _inst_tok, avg_tok, gtok = m.groups()
+            entry = {
                 "epoch": int(ep),
                 "batch_idx": int(bidx),
                 "total_batches": int(total),
@@ -99,7 +102,10 @@ def parse_log(path: Path) -> dict:
                 "lr": float(lr),
                 "samples_per_s": 0.0,
                 "tok_per_s": int(float(avg_tok)),
-            })
+            }
+            if gtok is not None:
+                entry["gtok"] = int(gtok)
+            batches.append(entry)
             continue
         m = EPOCH_RE.search(line)
         if m:
@@ -129,20 +135,26 @@ def smooth(x: np.ndarray, window: int = 51) -> np.ndarray:
     return np.convolve(x, kernel, mode="valid")
 
 
-def plot_log(data: dict, label: str, color: str, ax_loss, ax_ppl, ax_lr, ax_tok):
+def plot_log(data: dict, label: str, color: str, ax_loss, ax_ppl, ax_lr, ax_tok,
+             use_tokens: bool = False):
     """Add one run's curves to the four axes."""
     batches = data["batches"]
     epochs = data["epochs"]
     if not batches:
         return
     bpe = batches[0]["total_batches"]
-    global_indices = [global_batch_idx(b, bpe) for b in batches]
+    has_gtok = "gtok" in batches[0]
+
+    if use_tokens and has_gtok:
+        x_vals = [b["gtok"] / 1e6 for b in batches]
+    else:
+        x_vals = [global_batch_idx(b, bpe) for b in batches]
+
     loss_vals = np.array([b["loss"] for b in batches])
     ppl_vals = np.array([b["ppl"] for b in batches])
     lr_vals = np.array([b["lr"] for b in batches])
     tok_vals = np.array([b["tok_per_s"] for b in batches])
 
-    # Smooth (reduce points to match)
     w = min(51, len(loss_vals) // 2 | 1)
     if w % 2 == 0:
         w -= 1
@@ -150,23 +162,27 @@ def plot_log(data: dict, label: str, color: str, ax_loss, ax_ppl, ax_lr, ax_tok)
         pad = (w - 1) // 2
         loss_smooth = smooth(loss_vals, w)
         ppl_smooth = smooth(ppl_vals, w)
-        idx_smooth = global_indices[pad : len(global_indices) - pad]
+        idx_smooth = x_vals[pad : len(x_vals) - pad]
         ax_loss.plot(idx_smooth, loss_smooth, color=color, label=f"{label} (train)", alpha=0.9)
         ax_ppl.plot(idx_smooth, ppl_smooth, color=color, label=f"{label} (train)", alpha=0.9)
     else:
-        ax_loss.plot(global_indices, loss_vals, color=color, label=f"{label} (train)", alpha=0.9)
-        ax_ppl.plot(global_indices, ppl_vals, color=color, label=f"{label} (train)", alpha=0.9)
+        ax_loss.plot(x_vals, loss_vals, color=color, label=f"{label} (train)", alpha=0.9)
+        ax_ppl.plot(x_vals, ppl_vals, color=color, label=f"{label} (train)", alpha=0.9)
 
-    ax_lr.plot(global_indices, lr_vals, color=color, label=label, alpha=0.8)
-    ax_tok.plot(global_indices, tok_vals, color=color, label=label, alpha=0.8)
+    ax_lr.plot(x_vals, lr_vals, color=color, label=label, alpha=0.8)
+    ax_tok.plot(x_vals, tok_vals, color=color, label=label, alpha=0.8)
 
-    # Epoch-level validation (dots)
     if epochs:
-        ep_indices = [(e["epoch"] - 0.5) * bpe for e in epochs]
+        if use_tokens and has_gtok and batches:
+            last_gtok = batches[-1].get("gtok", 0)
+            total_ep = max(e["epoch"] for e in epochs)
+            ep_x = [(e["epoch"] / total_ep) * last_gtok / 1e6 for e in epochs]
+        else:
+            ep_x = [(e["epoch"] - 0.5) * bpe for e in epochs]
         val_loss = [e["val_loss"] for e in epochs]
         val_ppl = [e["val_ppl"] for e in epochs]
-        ax_loss.scatter(ep_indices, val_loss, color=color, s=40, marker="o", zorder=5, label=f"{label} (val)")
-        ax_ppl.scatter(ep_indices, val_ppl, color=color, s=40, marker="o", zorder=5, label=f"{label} (val)")
+        ax_loss.scatter(ep_x, val_loss, color=color, s=40, marker="o", zorder=5, label=f"{label} (val)")
+        ax_ppl.scatter(ep_x, val_ppl, color=color, s=40, marker="o", zorder=5, label=f"{label} (val)")
 
 
 def main():
@@ -176,6 +192,8 @@ def main():
     parser.add_argument("--output", "-o", type=Path, default=None, help="Output PNG path (default: next to first log)")
     parser.add_argument("--live", action="store_true", help="Re-read log and refresh every 10s (for live training)")
     parser.add_argument("--live-interval", type=int, default=10, help="Refresh interval in seconds for --live")
+    parser.add_argument("--x-axis", type=str, default="batch", choices=["batch", "tokens"],
+                        help="X-axis unit: 'batch' (default) or 'tokens' (requires gtok= in logs)")
     args = parser.parse_args()
 
     # Expand globs
@@ -258,6 +276,9 @@ def main():
         ax_time.legend(loc="upper right", fontsize=8)
         ax_time.grid(True, alpha=0.3, axis="y")
 
+    use_tokens = args.x_axis == "tokens"
+    x_label = "Tokens (M)" if use_tokens else "Batch"
+
     def do_plot():
         fig = plt.figure(figsize=(12, 10))
         gs = fig.add_gridspec(3, 2, height_ratios=[1, 1, 0.6])
@@ -272,14 +293,18 @@ def main():
             data = parse_log(log_path)
             all_data.append(data)
             label = log_path.stem.replace("v5_train_", "")
-            plot_log(data, label, colors[i % len(colors)], ax_loss, ax_ppl, ax_lr, ax_tok)
+            plot_log(data, label, colors[i % len(colors)], ax_loss, ax_ppl, ax_lr, ax_tok,
+                     use_tokens=use_tokens)
 
         plot_wall_time(ax_time, all_data, [p.stem.replace("v5_train_", "") for p in all_logs], colors)
 
+        if not use_tokens:
+            for ax in (ax_loss, ax_ppl, ax_lr, ax_tok):
+                _add_epoch_boundaries(ax)
+                _add_epoch_axis(ax)
+
         for ax in (ax_loss, ax_ppl, ax_lr, ax_tok):
-            _add_epoch_boundaries(ax)
-            _add_epoch_axis(ax)
-            ax.set_xlabel("Batch")
+            ax.set_xlabel(x_label)
 
         ax_loss.set_ylabel("Loss")
         ax_loss.set_title("Train & Val Loss")
@@ -332,18 +357,21 @@ def main():
                 data = parse_log(log_path)
                 all_data.append(data)
                 label = log_path.stem.replace("v5_train_", "")
-                plot_log(data, label, colors[i % len(colors)], ax_loss, ax_ppl, ax_lr, ax_tok)
+                plot_log(data, label, colors[i % len(colors)], ax_loss, ax_ppl, ax_lr, ax_tok,
+                         use_tokens=use_tokens)
             plot_wall_time(ax_time, all_data, [p.stem.replace("v5_train_", "") for p in all_logs], colors)
+            if not use_tokens:
+                for ax in (ax_loss, ax_ppl, ax_lr, ax_tok):
+                    for ep in range(2, max_epochs + 1):
+                        ax.axvline((ep - 1) * bpe, color="gray", linestyle="--", alpha=0.4, linewidth=0.8)
+                    ax2 = ax.secondary_xaxis("top", functions=(
+                        lambda b: b / bpe + 1 if bpe else 1,
+                        lambda e: (e - 1) * bpe if bpe else 0,
+                    ))
+                    ax2.set_xlabel("Epoch")
+                    ax2.set_ticks(range(1, max_epochs + 1))
             for ax in (ax_loss, ax_ppl, ax_lr, ax_tok):
-                for ep in range(2, max_epochs + 1):
-                    ax.axvline((ep - 1) * bpe, color="gray", linestyle="--", alpha=0.4, linewidth=0.8)
-                ax2 = ax.secondary_xaxis("top", functions=(
-                    lambda b: b / bpe + 1 if bpe else 1,
-                    lambda e: (e - 1) * bpe if bpe else 0,
-                ))
-                ax2.set_xlabel("Epoch")
-                ax2.set_ticks(range(1, max_epochs + 1))
-                ax.set_xlabel("Batch")
+                ax.set_xlabel(x_label)
             ax_loss.set_ylabel("Loss")
             ax_loss.set_title("Train & Val Loss")
             ax_loss.legend(loc="upper right", fontsize=8)

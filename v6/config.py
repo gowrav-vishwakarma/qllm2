@@ -79,6 +79,11 @@ class V6Config:
     diversity_loss_floor: float = 0.02
     diversity_margin: float = 0.3
 
+    # Batch-invariant training
+    grad_accum_steps: int = 1
+    warmup_tokens: int = 0
+    total_training_tokens: int = 0
+
     # Speed / CUDA
     compile_model: bool = False
     compile_mode: str = 'default'     # 'default' | 'reduce-overhead' | 'max-autotune'
@@ -202,7 +207,7 @@ def get_config(size: str = 'small-matched') -> V6Config:
             gated_state_protection=True,
             pam_num_heads=6, pam_head_dim=64,
             interleave_pam=True,
-            pam_qk_norm=True,
+            pam_qk_norm=False,
             pam_rope=True,
             pam_fused_qkv=True,
             batch_size=3, learning_rate=1e-4,

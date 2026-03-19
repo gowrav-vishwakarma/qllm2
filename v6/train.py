@@ -780,8 +780,10 @@ class Trainer:
         self.save_checkpoints = save_checkpoints
         self.verbose = verbose
         self.gen_every = 0
+        self.gen_every_tokens = 0
         self.gen_prompt = "The"
         self.log_interval = 50
+        self.log_every_tokens = 0
 
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
@@ -791,6 +793,9 @@ class Trainer:
             self.device = torch.device('cpu')
         self.model.to(self.device)
 
+        self.grad_accum_steps = max(config.grad_accum_steps, 1)
+        self.global_tokens = 0
+
         param_groups = _build_param_groups(model, config.weight_decay)
         self.optimizer = torch.optim.AdamW(
             param_groups,
@@ -798,14 +803,34 @@ class Trainer:
             betas=(0.9, 0.95),
         )
 
-        total_steps = config.max_epochs * len(train_loader)
+        tokens_per_micro = config.batch_size * config.max_seq_len
+        tokens_per_update = tokens_per_micro * self.grad_accum_steps
+        micro_per_epoch = len(train_loader)
+        updates_per_epoch = math.ceil(micro_per_epoch / self.grad_accum_steps)
+
+        if config.total_training_tokens > 0:
+            total_optimizer_steps = config.total_training_tokens // tokens_per_update
+        else:
+            total_optimizer_steps = config.max_epochs * updates_per_epoch
+
+        if config.warmup_tokens > 0:
+            warmup_steps = config.warmup_tokens // tokens_per_update
+        else:
+            warmup_steps = config.warmup_steps
+
+        self.total_optimizer_steps = total_optimizer_steps
         self.scheduler = _build_lr_scheduler(
-            self.optimizer, config.lr_schedule, config.warmup_steps, total_steps,
+            self.optimizer, config.lr_schedule, warmup_steps, total_optimizer_steps,
         )
+
+        if self.grad_accum_steps > 1:
+            print(f"Gradient accumulation: {self.grad_accum_steps} micro-batches per update "
+                  f"(effective batch = {config.batch_size * self.grad_accum_steps})")
+            print(f"Optimizer steps/epoch: {updates_per_epoch}, "
+                  f"warmup: {warmup_steps}, total: {total_optimizer_steps}")
 
         self.amp_dtype = _resolve_amp_dtype(config.amp_dtype)
         self.use_amp = self.amp_dtype is not None
-        # GradScaler only needed for float16; bfloat16 doesn't need loss scaling
         self.scaler = (torch.amp.GradScaler('cuda')
                        if self.use_amp and self.amp_dtype == torch.float16
                        else None)
@@ -815,16 +840,19 @@ class Trainer:
 
     def train_epoch(self, epoch: int) -> Dict[str, float]:
         self.model.train()
-        total_loss = 0.0
-        total_ce_loss = 0.0
-        total_div_loss = 0.0
-        total_raw_div = 0.0
-        num_batches = 0
+        total_loss_w = 0.0
+        total_ce_loss_w = 0.0
+        total_div_loss_w = 0.0
+        total_raw_div_w = 0.0
+        total_epoch_tokens = 0
         epoch_start = time.time()
         first_step_start = None
         log_interval_start = epoch_start
         log_interval_tokens = 0
-        total_epoch_tokens = 0
+        last_log_tokens = self.global_tokens
+        last_gen_tokens = self.global_tokens
+
+        self.optimizer.zero_grad(set_to_none=True)
 
         for batch_idx, batch in enumerate(self.train_loader):
             if batch_idx == 0:
@@ -860,8 +888,7 @@ class Trainer:
                 raw_div_val = 0.0
                 if output.diversity_loss is not None:
                     raw_div_val = output.diversity_loss.item()
-                    total_steps = self.config.max_epochs * len(self.train_loader)
-                    progress = min(self.global_step / max(total_steps, 1), 1.0)
+                    progress = min(self.global_step / max(self.total_optimizer_steps, 1), 1.0)
                     div_w = self.config.diversity_loss_weight + (
                         self.config.diversity_loss_floor - self.config.diversity_loss_weight
                     ) * progress
@@ -870,27 +897,37 @@ class Trainer:
                     loss = loss + div_loss
                     div_loss_val = div_loss.item()
 
-            self.optimizer.zero_grad(set_to_none=True)
+            scaled_loss = loss / self.grad_accum_steps
             if self.scaler is not None:
-                self.scaler.scale(loss).backward()
-                self.scaler.unscale_(self.optimizer)
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip)
-                self.scaler.step(self.optimizer)
-                self.scaler.update()
+                self.scaler.scale(scaled_loss).backward()
             else:
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip)
-                self.optimizer.step()
+                scaled_loss.backward()
 
-            self.scheduler.step()
-            self.global_step += 1
-            total_loss += loss.item()
-            total_ce_loss += ce_loss.item()
-            total_div_loss += div_loss_val
-            total_raw_div += raw_div_val
-            num_batches += 1
+            self.global_tokens += batch_tokens
             total_epoch_tokens += batch_tokens
             log_interval_tokens += batch_tokens
+            total_loss_w += loss.item() * batch_tokens
+            total_ce_loss_w += ce_loss.item() * batch_tokens
+            total_div_loss_w += div_loss_val * batch_tokens
+            total_raw_div_w += raw_div_val * batch_tokens
+
+            is_update_step = (
+                (batch_idx + 1) % self.grad_accum_steps == 0
+                or (batch_idx + 1) == len(self.train_loader)
+            )
+            if is_update_step:
+                if self.scaler is not None:
+                    self.scaler.unscale_(self.optimizer)
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip)
+                    self.scaler.step(self.optimizer)
+                    self.scaler.update()
+                else:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip)
+                    self.optimizer.step()
+
+                self.scheduler.step()
+                self.global_step += 1
+                self.optimizer.zero_grad(set_to_none=True)
 
             if self.verbose and batch_idx == 0 and first_step_start is not None:
                 if self.device.type == 'cuda':
@@ -898,7 +935,14 @@ class Trainer:
                 first_step_s = time.time() - first_step_start
                 print(f"  First step wall time: {first_step_s:.1f}s")
 
-            if self.verbose and batch_idx % self.log_interval == 0:
+            should_log = False
+            if self.log_every_tokens > 0:
+                should_log = (self.global_tokens - last_log_tokens) >= self.log_every_tokens
+            else:
+                should_log = batch_idx % self.log_interval == 0
+
+            if self.verbose and should_log:
+                last_log_tokens = self.global_tokens
                 ppl = math.exp(min(ce_loss.item(), 20))
                 lr = self.scheduler.get_last_lr()[0]
                 elapsed = time.time() - epoch_start
@@ -922,17 +966,24 @@ class Trainer:
                     mem = torch.cuda.memory_allocated() / 1e9
                     mem_res = torch.cuda.max_memory_allocated() / 1e9
                     line += f" | GPU {mem:.1f}/{mem_res:.1f}GB"
+                line += f" | gtok={self.global_tokens}"
                 print(line)
 
                 log_interval_start = time.time()
                 log_interval_tokens = 0
 
-            if (self.gen_every > 0 and batch_idx > 0
-                    and batch_idx % self.gen_every == 0
-                    and self.tokenizer is not None):
+            should_gen = False
+            if self.gen_every_tokens > 0 and batch_idx > 0:
+                if (self.global_tokens - last_gen_tokens) >= self.gen_every_tokens:
+                    should_gen = True
+            elif self.gen_every > 0 and batch_idx > 0 and batch_idx % self.gen_every == 0:
+                should_gen = True
+
+            if should_gen and self.tokenizer is not None:
+                last_gen_tokens = self.global_tokens
                 try:
                     text = self.generate_sample(self.gen_prompt)
-                    print(f"  [mid-epoch sample @ batch {batch_idx}]")
+                    print(f"  [mid-epoch sample @ batch {batch_idx}, {self.global_tokens:,} tok]")
                     print(f"  Prompt: {self.gen_prompt}")
                     print(f"  Generated: {text}")
                     ppl = math.exp(min(ce_loss.item(), 20))
@@ -940,7 +991,7 @@ class Trainer:
                     elapsed = time.time() - epoch_start
                     avg_tok_s = total_epoch_tokens / elapsed if elapsed > 0 else 0
                     _gen_msg = (
-                        f"**[gen_every]** Epoch {epoch+1} batch {batch_idx}\n"
+                        f"**[gen_every]** Epoch {epoch+1} batch {batch_idx} ({self.global_tokens:,} tok)\n"
                         f"loss={ce_loss.item():.4f} ppl={ppl:.1f} div={raw_div_val:.2e} wdiv={div_loss_val:.2e} lr={lr:.2e} | {avg_tok_s:.0f} tok/s\n"
                         f"Prompt: {self.gen_prompt}\n"
                         f"Generated: {(text[:800] + '...') if len(text) > 800 else text}"
@@ -952,13 +1003,15 @@ class Trainer:
 
         epoch_elapsed = time.time() - epoch_start
         avg_tok_s = total_epoch_tokens / epoch_elapsed if epoch_elapsed > 0 else 0
+        safe_tokens = max(total_epoch_tokens, 1)
         return {
-            'loss': total_loss / num_batches,
-            'ce_loss': total_ce_loss / num_batches,
-            'div_loss': total_div_loss / num_batches,
-            'raw_div': total_raw_div / num_batches,
-            'ppl': math.exp(min(total_ce_loss / num_batches, 20)),
+            'loss': total_loss_w / safe_tokens,
+            'ce_loss': total_ce_loss_w / safe_tokens,
+            'div_loss': total_div_loss_w / safe_tokens,
+            'raw_div': total_raw_div_w / safe_tokens,
+            'ppl': math.exp(min(total_ce_loss_w / safe_tokens, 20)),
             'avg_tok_s': avg_tok_s,
+            'epoch_tokens': total_epoch_tokens,
         }
 
     @torch.no_grad()
@@ -966,11 +1019,12 @@ class Trainer:
         if self.val_loader is None or len(self.val_loader) == 0:
             return {}
         self.model.eval()
-        total_loss = 0.0
-        num_batches = 0
+        total_loss_w = 0.0
+        total_tokens = 0
         for batch in self.val_loader:
             input_ids = batch['input_ids'].to(self.device, non_blocking=True)
             labels = batch['labels'].to(self.device, non_blocking=True)
+            batch_tokens = input_ids.shape[0] * input_ids.shape[1]
             loss_mask = batch.get('loss_mask')
             output = self.model(input_ids)
             logits = output.logits.view(-1, output.logits.size(-1))
@@ -980,11 +1034,11 @@ class Trainer:
                 loss = (per_token * flat_mask).sum() / flat_mask.sum().clamp(min=1)
             else:
                 loss = F.cross_entropy(logits, labels.view(-1))
-            total_loss += loss.item()
-            num_batches += 1
-        if num_batches == 0:
+            total_loss_w += loss.item() * batch_tokens
+            total_tokens += batch_tokens
+        if total_tokens == 0:
             return {}
-        avg_loss = total_loss / num_batches
+        avg_loss = total_loss_w / total_tokens
         return {'val_loss': avg_loss, 'val_ppl': math.exp(min(avg_loss, 20))}
 
     @torch.no_grad()
@@ -1009,6 +1063,7 @@ class Trainer:
             'optimizer_state_dict': self.optimizer.state_dict(),
             'scheduler_state_dict': self.scheduler.state_dict(),
             'global_step': self.global_step,
+            'global_tokens': self.global_tokens,
             'best_val_loss': self.best_val_loss,
             'best_val_ppl': self.best_val_ppl,
             'epoch': self._current_epoch,
@@ -1028,6 +1083,9 @@ class Trainer:
             print(f"Parameters: {params}")
             print(f"Total: {params['total']:,} ({params['total']/1e6:.1f}M)")
         print(f"Epochs: {self.start_epoch+1}..{self.config.max_epochs}, Batches/epoch: {len(self.train_loader)}")
+        if self.grad_accum_steps > 1:
+            print(f"Grad accumulation: {self.grad_accum_steps}x "
+                  f"(effective batch = {self.config.batch_size * self.grad_accum_steps})")
         print()
 
         for epoch in range(self.start_epoch, self.config.max_epochs):
@@ -1040,6 +1098,7 @@ class Trainer:
             epoch_start = time.time()
             train_metrics = self.train_epoch(epoch)
             epoch_time = time.time() - epoch_start
+            epoch_tok = train_metrics.get('epoch_tokens', 0)
 
             line = (
                 f"Epoch {epoch+1}/{self.config.max_epochs} | "
@@ -1047,7 +1106,7 @@ class Trainer:
                 f"PPL: {train_metrics['ppl']:.2f} "
                 f"div={train_metrics['raw_div']:.2e} wdiv={train_metrics['div_loss']:.2e} | "
                 f"{train_metrics['avg_tok_s']:.0f} tok/s | "
-                f"Time: {epoch_time:.1f}s"
+                f"Time: {epoch_time:.1f}s ({self.global_tokens:,} tok)"
             )
 
             is_best = False
@@ -1144,6 +1203,9 @@ class DiffusionTrainer:
             self.device = torch.device('cpu')
         self.model.to(self.device)
 
+        self.grad_accum_steps = max(config.grad_accum_steps, 1)
+        self.global_tokens = 0
+
         param_groups = _build_param_groups(model, config.weight_decay)
         self.optimizer = torch.optim.AdamW(
             param_groups,
@@ -1151,9 +1213,19 @@ class DiffusionTrainer:
             betas=(0.9, 0.95),
         )
 
-        total_steps = config.max_epochs * len(train_loader)
+        micro_per_epoch = len(train_loader)
+        updates_per_epoch = math.ceil(micro_per_epoch / self.grad_accum_steps)
+        total_optimizer_steps = config.max_epochs * updates_per_epoch
+
+        if config.warmup_tokens > 0:
+            tokens_per_update = config.batch_size * config.max_seq_len * self.grad_accum_steps
+            warmup_steps = config.warmup_tokens // tokens_per_update
+        else:
+            warmup_steps = config.warmup_steps
+
+        self.total_optimizer_steps = total_optimizer_steps
         self.scheduler = _build_lr_scheduler(
-            self.optimizer, config.lr_schedule, config.warmup_steps, total_steps,
+            self.optimizer, config.lr_schedule, warmup_steps, total_optimizer_steps,
         )
 
         self.amp_dtype = _resolve_amp_dtype(config.amp_dtype)
@@ -1171,8 +1243,7 @@ class DiffusionTrainer:
             return batch['image'].to(self.device, non_blocking=True)
 
     def _diversity_weight(self):
-        total_steps = self.config.max_epochs * len(self.train_loader)
-        progress = min(self.global_step / max(total_steps, 1), 1.0)
+        progress = min(self.global_step / max(self.total_optimizer_steps, 1), 1.0)
         div_w = self.config.diversity_loss_weight + (
             self.config.diversity_loss_floor - self.config.diversity_loss_weight
         ) * progress
@@ -1186,8 +1257,11 @@ class DiffusionTrainer:
         num_batches = 0
         epoch_start = time.time()
 
+        self.optimizer.zero_grad(set_to_none=True)
+
         for batch_idx, batch in enumerate(self.train_loader):
             x = self._get_input(batch)
+            batch_samples = x.shape[0]
 
             with torch.amp.autocast(self.device.type, enabled=self.use_amp,
                                     dtype=self.amp_dtype or torch.float16):
@@ -1200,24 +1274,35 @@ class DiffusionTrainer:
                     loss = loss + div_loss
                     div_loss_val = div_loss.item()
 
-            self.optimizer.zero_grad(set_to_none=True)
+            scaled_loss = loss / self.grad_accum_steps
             if self.scaler is not None:
-                self.scaler.scale(loss).backward()
-                self.scaler.unscale_(self.optimizer)
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip)
-                self.scaler.step(self.optimizer)
-                self.scaler.update()
+                self.scaler.scale(scaled_loss).backward()
             else:
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip)
-                self.optimizer.step()
+                scaled_loss.backward()
 
-            self.scheduler.step()
-            self.global_step += 1
+            self.global_tokens += batch_samples * self.config.max_seq_len
             total_loss += loss.item()
             total_diff_loss += output.loss.item()
             total_div_loss += div_loss_val
             num_batches += 1
+
+            is_update_step = (
+                (batch_idx + 1) % self.grad_accum_steps == 0
+                or (batch_idx + 1) == len(self.train_loader)
+            )
+            if is_update_step:
+                if self.scaler is not None:
+                    self.scaler.unscale_(self.optimizer)
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip)
+                    self.scaler.step(self.optimizer)
+                    self.scaler.update()
+                else:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.gradient_clip)
+                    self.optimizer.step()
+
+                self.scheduler.step()
+                self.global_step += 1
+                self.optimizer.zero_grad(set_to_none=True)
 
             if self.verbose and batch_idx % self.log_interval == 0:
                 lr = self.scheduler.get_last_lr()[0]
@@ -1321,6 +1406,7 @@ class DiffusionTrainer:
             'optimizer_state_dict': self.optimizer.state_dict(),
             'scheduler_state_dict': self.scheduler.state_dict(),
             'global_step': self.global_step,
+            'global_tokens': self.global_tokens,
             'best_val_loss': self.best_val_loss,
             'epoch': self._current_epoch,
             'config': self.config.to_dict(),
@@ -1341,6 +1427,9 @@ class DiffusionTrainer:
         print(f"Diffusion steps: {self.config.diffusion_steps}, schedule: {self.config.noise_schedule}")
         print(f"Prediction target: {self.config.prediction_target}")
         print(f"Epochs: {self.start_epoch+1}..{self.config.max_epochs}, Batches/epoch: {len(self.train_loader)}")
+        if self.grad_accum_steps > 1:
+            print(f"Grad accumulation: {self.grad_accum_steps}x "
+                  f"(effective batch = {self.config.batch_size * self.grad_accum_steps})")
         print()
 
         for epoch in range(self.start_epoch, self.config.max_epochs):
@@ -1487,6 +1576,18 @@ def main():
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_v6')
     parser.add_argument('--resume', type=str, default=None)
 
+    # Batch-invariant training
+    parser.add_argument('--grad_accum_steps', type=int, default=1,
+                        help='Gradient accumulation steps (effective batch = batch_size * this)')
+    parser.add_argument('--warmup_tokens', type=int, default=0,
+                        help='Token-based warmup (overrides --warmup_steps when > 0)')
+    parser.add_argument('--total_training_tokens', type=int, default=0,
+                        help='Total training budget in tokens (0 = use --epochs)')
+    parser.add_argument('--gen_every_n_tokens', type=int, default=0,
+                        help='Generate sample every N tokens (0 = use --gen_every batches)')
+    parser.add_argument('--log_every_n_tokens', type=int, default=0,
+                        help='Log metrics every N tokens (0 = use --log_interval batches)')
+
     # Training objective
     parser.add_argument('--objective', type=str, default='next_token',
                         choices=['next_token', 'span_corruption', 'delayed_recall'],
@@ -1563,6 +1664,11 @@ def main():
         config.num_workers = args.num_workers
     if args.no_pin_memory:
         config.pin_memory = False
+
+    # Batch-invariant training config
+    config.grad_accum_steps = args.grad_accum_steps
+    config.warmup_tokens = args.warmup_tokens
+    config.total_training_tokens = args.total_training_tokens
 
     # Objective config
     config.objective = args.objective
@@ -1790,12 +1896,15 @@ def main():
             start_epoch=start_epoch,
         )
         trainer.gen_every = args.gen_every
+        trainer.gen_every_tokens = args.gen_every_n_tokens
         trainer.gen_prompt = args.gen_prompt
         trainer.log_interval = args.log_interval
+        trainer.log_every_tokens = args.log_every_n_tokens
         if args.resume and checkpoint and 'optimizer_state_dict' in checkpoint:
             trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             trainer.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
             trainer.global_step = checkpoint.get('global_step', 0)
+            trainer.global_tokens = checkpoint.get('global_tokens', 0)
             trainer.best_val_loss = checkpoint.get('best_val_loss', float('inf'))
             trainer.best_val_ppl = checkpoint.get('best_val_ppl', float('inf'))
     else:
@@ -1815,17 +1924,22 @@ def main():
             trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             trainer.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
             trainer.global_step = checkpoint.get('global_step', 0)
+            trainer.global_tokens = checkpoint.get('global_tokens', 0)
             trainer.best_val_loss = checkpoint.get('best_val_loss', float('inf'))
 
     # Add trainer-level details (params, batches) to summary before sending
     params = trainer.model.count_parameters() if hasattr(trainer.model, 'count_parameters') else {}
     if params:
         _summary_lines.append(f"Params: {params.get('total', 0):,} ({params.get('total', 0)/1e6:.1f}M)")
+    eff_batch = config.batch_size * config.grad_accum_steps
+    batch_info = f"Batch size: {config.batch_size}"
+    if config.grad_accum_steps > 1:
+        batch_info += f" x {config.grad_accum_steps} accum = {eff_batch} effective"
     _summary_lines.append(
         f"Training on {trainer.device} | "
         f"Epochs: {trainer.start_epoch+1}..{trainer.config.max_epochs} | "
         f"Batches/epoch: {len(trainer.train_loader)} | "
-        f"Batch size: {config.batch_size}"
+        f"{batch_info}"
     )
 
     # Send full startup summary to Discord
