@@ -113,13 +113,16 @@ class ComplexLinear(nn.Module):
             self.register_parameter('bias_imag', None)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        xr, xi = x[..., 0], x[..., 1]
-        yr = F.linear(xr, self.weight_real) - F.linear(xi, self.weight_imag)
-        yi = F.linear(xr, self.weight_imag) + F.linear(xi, self.weight_real)
+        x_flat = torch.cat([x[..., 0], x[..., 1]], dim=-1)
+        W_block = torch.cat([
+            torch.cat([self.weight_real, -self.weight_imag], dim=1),
+            torch.cat([self.weight_imag,  self.weight_real], dim=1),
+        ], dim=0)
+        bias = None
         if self.bias_real is not None:
-            yr = yr + self.bias_real
-            yi = yi + self.bias_imag
-        return torch.stack([yr, yi], dim=-1)
+            bias = torch.cat([self.bias_real, self.bias_imag])
+        y_flat = F.linear(x_flat, W_block, bias)
+        return torch.stack([y_flat[..., :self.out_dim], y_flat[..., self.out_dim:]], dim=-1)
 
 
 class ComplexNorm(nn.Module):

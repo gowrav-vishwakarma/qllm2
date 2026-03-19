@@ -157,11 +157,16 @@ class PhaseFieldBackbone(nn.Module):
         self._pam_num_heads = num_heads
         self._pam_head_dim = head_dim
 
+        qk_norm = getattr(config, 'pam_qk_norm', False)
+        rope = getattr(config, 'pam_rope', False)
+        fused_qkv = getattr(config, 'pam_fused_qkv', False)
+
         if self._interleave_pam:
             self.pam_layers = nn.ModuleList([
                 PhaseAssociativeLayer(
                     config.dim, num_heads, head_dim, config.dropout,
                     initializer=initializer, gsp=gsp,
+                    qk_norm=qk_norm, rope=rope, fused_qkv=fused_qkv,
                 )
                 for _ in range(config.num_layers)
             ])
@@ -183,6 +188,7 @@ class PhaseFieldBackbone(nn.Module):
                 dropout=config.dropout,
                 initializer=initializer,
                 gsp=gsp,
+                qk_norm=qk_norm, rope=rope, fused_qkv=fused_qkv,
             )
             self.pam_layers = None
             self.pam_norms = None
@@ -314,9 +320,10 @@ class PhaseFieldBackbone(nn.Module):
 
                 # Sequence mixing (PAM)
                 s0 = pam_state.matrix[i] if pam_state is not None else None
+                step_off = pam_state.step if pam_state is not None else 0
                 residual = bank_z
                 h_out, s_final = self.pam_layers[i](
-                    self.pam_norms[i](bank_z), s0
+                    self.pam_norms[i](bank_z), s0, step_offset=step_off,
                 )
                 bank_z = residual + h_out * self.pam_scales[i]
                 if s_final.numel() > 0:

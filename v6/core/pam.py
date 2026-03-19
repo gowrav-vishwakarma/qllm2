@@ -32,7 +32,15 @@ from dataclasses import dataclass
 if TYPE_CHECKING:
     from ..init import InitStrategy
 
-from .complex import ComplexLinear, ComplexNorm, cmul, cabs, to_real
+from .complex import ComplexLinear, ComplexNorm, cmul, cabs, cnormalize, to_real
+
+
+def _build_rope_cache(max_len: int, head_dim: int) -> torch.Tensor:
+    """Precompute complex RoPE: e^{i*m*theta_k} for m=0..max_len-1, k=0..head_dim-1."""
+    freqs = 1.0 / (10000.0 ** (torch.arange(head_dim).float() / head_dim))
+    positions = torch.arange(max_len).float()
+    angles = positions.unsqueeze(1) * freqs.unsqueeze(0)  # [max_len, head_dim]
+    return torch.stack([angles.cos(), angles.sin()], dim=-1)  # [max_len, head_dim, 2]
 
 
 @dataclass
@@ -55,6 +63,10 @@ class PhaseAssociativeLayer(nn.Module):
         dropout: float = 0.1,
         initializer: Optional['InitStrategy'] = None,
         gsp: bool = True,
+        qk_norm: bool = False,
+        rope: bool = False,
+        fused_qkv: bool = False,
+        rope_max_len: int = 8192,
     ):
         super().__init__()
         self.dim = dim
@@ -62,11 +74,17 @@ class PhaseAssociativeLayer(nn.Module):
         self.head_dim = head_dim
         self.inner_dim = num_heads * head_dim
         self.gsp = gsp
+        self.qk_norm = qk_norm
+        self.rope = rope
+        self.fused_qkv = fused_qkv
 
-        # Projections
-        self.q_proj = ComplexLinear(dim, self.inner_dim, bias=False, initializer=initializer)
-        self.k_proj = ComplexLinear(dim, self.inner_dim, bias=False, initializer=initializer)
-        self.v_proj = ComplexLinear(dim, self.inner_dim, bias=False, initializer=initializer)
+        # Projections (fused or separate)
+        if fused_qkv:
+            self.qkv_proj = ComplexLinear(dim, 3 * self.inner_dim, bias=False, initializer=initializer)
+        else:
+            self.q_proj = ComplexLinear(dim, self.inner_dim, bias=False, initializer=initializer)
+            self.k_proj = ComplexLinear(dim, self.inner_dim, bias=False, initializer=initializer)
+            self.v_proj = ComplexLinear(dim, self.inner_dim, bias=False, initializer=initializer)
         self.o_proj = ComplexLinear(self.inner_dim, dim, bias=False, initializer=initializer)
 
         # Data-dependent decay (dt)
@@ -78,6 +96,13 @@ class PhaseAssociativeLayer(nn.Module):
             self.protect_gate = nn.Linear(dim, num_heads)
             nn.init.constant_(self.protect_gate.bias, -3.0)
 
+        # Complex RoPE cache (deterministic, not saved to state_dict)
+        if rope:
+            self.register_buffer(
+                'rope_cache', _build_rope_cache(rope_max_len, head_dim),
+                persistent=False,
+            )
+
         self.norm = ComplexNorm(dim)
         self.dropout = nn.Dropout(dropout)
 
@@ -85,11 +110,13 @@ class PhaseAssociativeLayer(nn.Module):
         self,
         x: torch.Tensor,
         state: Optional[torch.Tensor] = None,
+        step_offset: int = 0,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Args:
             x: [B, T, dim, 2]
             state: [B, H, d, d, 2] optional recurrent state for inference
+            step_offset: absolute position of first token (for RoPE in inference)
         Returns:
             y: [B, T, dim, 2]
             new_state: [B, H, d, d, 2]
@@ -99,9 +126,33 @@ class PhaseAssociativeLayer(nn.Module):
         d = self.head_dim
 
         # 1. Projections
-        q = self.q_proj(x).view(B, T, H, d, 2).transpose(1, 2)  # [B, H, T, d, 2]
-        k = self.k_proj(x).view(B, T, H, d, 2).transpose(1, 2)  # [B, H, T, d, 2]
-        v = self.v_proj(x).view(B, T, H, d, 2).transpose(1, 2)  # [B, H, T, d, 2]
+        if self.fused_qkv:
+            qkv = self.qkv_proj(x).view(B, T, 3, H, d, 2)
+            q = qkv[:, :, 0].transpose(1, 2).contiguous()  # [B, H, T, d, 2]
+            k = qkv[:, :, 1].transpose(1, 2).contiguous()
+            v = qkv[:, :, 2].transpose(1, 2).contiguous()
+        else:
+            q = self.q_proj(x).view(B, T, H, d, 2).transpose(1, 2)  # [B, H, T, d, 2]
+            k = self.k_proj(x).view(B, T, H, d, 2).transpose(1, 2)
+            v = self.v_proj(x).view(B, T, H, d, 2).transpose(1, 2)
+
+        # 1b. Complex RoPE on Q,K (position via phase rotation, not applied to V)
+        if self.rope:
+            end = step_offset + T
+            if end > self.rope_cache.shape[0]:
+                self.register_buffer(
+                    'rope_cache',
+                    _build_rope_cache(end * 2, d).to(x.device),
+                    persistent=False,
+                )
+            pos = self.rope_cache[step_offset:end].to(dtype=x.dtype)  # [T, d, 2]
+            q = cmul(q, pos)
+            k = cmul(k, pos)
+
+        # 1c. QK phase normalization (unit magnitude -> phase-only attention)
+        if self.qk_norm:
+            q = cnormalize(q)
+            k = cnormalize(k)
 
         # 2. Decay and GSP
         x_real_flat = to_real(x, 'concat')  # [B, T, dim*2]
@@ -220,6 +271,9 @@ class PhaseAssociativeMemory(nn.Module):
         dropout: float = 0.1,
         initializer: Optional['InitStrategy'] = None,
         gsp: bool = True,
+        qk_norm: bool = False,
+        rope: bool = False,
+        fused_qkv: bool = False,
     ):
         super().__init__()
         self.dim = dim
@@ -228,7 +282,11 @@ class PhaseAssociativeMemory(nn.Module):
         self.num_layers = num_layers
 
         self.layers = nn.ModuleList([
-            PhaseAssociativeLayer(dim, num_heads, head_dim, dropout, initializer=initializer, gsp=gsp)
+            PhaseAssociativeLayer(
+                dim, num_heads, head_dim, dropout,
+                initializer=initializer, gsp=gsp,
+                qk_norm=qk_norm, rope=rope, fused_qkv=fused_qkv,
+            )
             for _ in range(num_layers)
         ])
         self.layer_scales = nn.ParameterList([
@@ -267,9 +325,10 @@ class PhaseAssociativeMemory(nn.Module):
             zip(self.layers, self.norms, self.layer_scales)
         ):
             s0 = state.matrix[i] if state is not None else None
+            step_off = state.step if state is not None else 0
             residual = h
             h_normed = norm(h)
-            h_out, s_final = layer(h_normed, s0)
+            h_out, s_final = layer(h_normed, s0, step_offset=step_off)
             h = residual + h_out * scale
             if s_final.numel() > 0:
                 new_matrices.append(s_final)
