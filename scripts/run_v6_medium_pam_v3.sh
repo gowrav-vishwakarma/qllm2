@@ -6,6 +6,7 @@
 # QUALITY (ablatable via config flags):
 #   1. QK Phase Normalization -- cnormalize Q,K to unit magnitude so
 #      attention is purely phase-interference (cosine of phase diffs)
+#      Disabled after inita test as default disabled is better.
 #   2. Complex RoPE on Q,K -- native complex positional encoding via
 #      phase rotation e^{i*m*theta}. Fills the zero-position-encoding gap.
 #
