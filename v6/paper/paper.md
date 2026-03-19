@@ -327,12 +327,14 @@ The parameter counts are not identical across these models. PAM's 100.4M include
 
 ### 5.3 Comparison to GPT-2
 
-| Model | Type | Params | Val PPL (WT-103) |
-|---|---|---|---|
-| GPT-2 | Transformer | 124M | ~31 |
-| **PAM (ours)** | **Complex recurrent** | **100M** | **38.95** |
+| Model | Type | Params | Test PPL (WT-103) | Val PPL (WT-103) |
+|---|---|---|---|---|
+| GPT-2 | Transformer | 124M | ~14.84 | ~31 |
+| **PAM (ours)** | **Complex recurrent** | **100M** | - | **38.95** |
 
-PAM does not match GPT-2. The gap is approximately 25% in perplexity terms. We present this comparison for honest calibration, not as a claim of competitiveness.
+PAM does not match GPT-2. The gap is approximately 25% in perplexity terms (validation PPL). We present this comparison for honest calibration, not as a claim of competitiveness.
+
+> **Note on evaluation protocols**: GPT-2 test PPL (~14.84) uses sliding-window evaluation on the test set. Validation PPL (~31) uses raw/BPE evaluation on the validation set. Different evaluation protocols can result in ~2x differences in perplexity. We cite the validation PPL (~31) as it uses the same raw/BPE evaluation as our model (38.95).
 
 However, several structural differences are worth noting:
 

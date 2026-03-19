@@ -1461,3 +1461,66 @@ The bugs were pure train/inference path mismatches -- training was never affecte
 | medium-rebalanced-gsp | 63.2M | 41.67 | + GSP |
 | medium-rebalanced-hsb | 75.0M | 43.54 | + HSB (regression -- interference) |
 | **medium-pam** | **100.4M** | **38.95** | **PAM + GSP (new best)** |
+
+---
+
+## 21. Experiment: Medium-PAM-v2 -- Interleaved CGU + PAM (2026-03-19)
+
+### Hypothesis
+
+The primary performance bottleneck in medium-pam is **architectural layout**, not model capacity. All 16 CGU layers (pointwise, zero sequence mixing) run sequentially before all 16 PAM layers. This means the first half of the network has no cross-position information flow. Every competitive architecture (Transformer, Mamba, RetNet, GateLoop) interleaves channel mixing (FFN) with sequence mixing (attention/SSM) in every block. Fixing this layout should significantly close the PPL gap.
+
+### What changed
+
+1. **Interleaved layout**: Each of 16 blocks now runs `CGU -> PAM` instead of `[CGU x16] -> [PAM x16]`.
+2. **Higher LR**: 1e-4 (up from 3e-5). The old LR was 3-10x lower than standard for 100M-scale models.
+3. **Longer warmup**: 1000 steps (up from 500).
+
+### What did NOT change (novelty preserved)
+
+- PAM matrix state (same mechanism, same capacity).
+- GSP (Gated State Protection) -- same per-dimension freeze gate.
+- Complex-valued representations throughout -- phase preserved end-to-end.
+- CGU (Complex Gated Unit) -- same SwiGLU-style phase-safe gating.
+- All phase-safe primitives (ModReLU, ComplexNorm, ComplexLinear) -- unchanged.
+- Attention-free, O(T) inference per token -- no softmax, no KV cache.
+- Total parameter count: identical ~100.4M (same components, different ordering).
+
+### Architecture comparison
+
+```
+medium-pam (sequential):
+  Tokens -> [CGU x16] -> [PAM x16] -> Output
+  (16 layers with ZERO sequence mixing, then 16 layers of sequence mixing)
+
+medium-pam-v2 (interleaved):
+  Tokens -> [CGU -> PAM] x16 -> Output
+  (Every block has both channel mixing AND sequence mixing)
+```
+
+### Config
+
+- **Preset**: `medium-pam-v2` (dim=384, 16 layers, single CGU expand=3, PAM H=6 d=64, GSP, interleave_pam=True)
+- **Parameters**: ~100.4M (same budget)
+- **Dataset**: WikiText-103, seq_len=2048, batch_size=3
+- **LR**: 1e-4, warmup_cosine, warmup=1000
+- **Script**: `./scripts/run_v6_medium_pam_v2.sh`
+
+### Baselines for comparison
+
+| Model | Params | Val PPL | Notes |
+|-------|--------|---------|-------|
+| medium-pam (sequential) | 100.4M | 38.95 | Same components, sequential layout |
+| GPT-2 small (Transformer) | ~124M | ~14.84 | Fine-tuned on WikiText-103 |
+| Transformer (vanilla) | ~125M | ~18.6 | Trained on WikiText-103 |
+| Mamba-Small (SSM) | 130M | ~24.1 | Selective SSM |
+| GateLoop (linear RNN) | 125M | ~13.4 | Data-controlled recurrence |
+
+### Planned follow-up (not in this run)
+
+- **Phase 2**: Add short causal ComplexConv1d (kernel=4) inside each PAM layer for local n-gram capture.
+- **Phase 3**: Tune expand factor, head count, or reduce layers for better capacity allocation.
+
+### Results
+
+*Training in progress...*
