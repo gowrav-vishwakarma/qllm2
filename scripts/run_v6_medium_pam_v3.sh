@@ -4,9 +4,8 @@
 # Builds on v2 (interleaved CGU + PAM) with 4 improvements:
 #
 # QUALITY (ablatable via config flags):
-#   1. QK Phase Normalization -- cnormalize Q,K to unit magnitude so
-#      attention is purely phase-interference (cosine of phase diffs)
-#      Disabled after inita test as default disabled is better.
+#   1. QK Phase Normalization -- optional; caused repetition when ON (Bug 8,
+#      EXPERIMENTS_V6.md). Preset uses pam_qk_norm=False.
 #   2. Complex RoPE on Q,K -- native complex positional encoding via
 #      phase rotation e^{i*m*theta}. Fills the zero-position-encoding gap.
 #
@@ -14,7 +13,7 @@
 #   3. Block-Real GEMM -- 1 GEMM per ComplexLinear instead of 4
 #   4. Fused QKV -- single projection for Q,K,V in PAM
 #
-# Architecture: [CGU(expand=3) -> PAM(H=6, d=64, QK-norm, RoPE, fused-QKV)] x 16 + GSP
+# Architecture: [CGU(expand=3) -> PAM(H=6, d=64, RoPE, fused-QKV)] x 16 + GSP
 # Model Dim: 384
 # Layers: 16
 # Params: ~100.4M (same budget as v1/v2)
@@ -60,7 +59,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 GEN_PROMPT="In 1923 , the University of"
-LOG_DIR=$(make_log_dir "v6" "medium_pam_v3_qknorm_rope_${DATASET}")
+LOG_DIR=$(make_log_dir "v6" "medium_pam_v3_rope_${DATASET}")
 CKPT_DIR="checkpoints_v6_medium_pam_v3"
 
 ARGS="--dataset $DATASET --size $SIZE --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory"
@@ -74,7 +73,7 @@ fi
 echo ""
 echo "============================================================"
 echo "  V6 Medium-PAM-v3 Experiment"
-echo "  QK Phase Norm + Complex RoPE + Block-Real GEMM + Fused QKV"
+echo "  Complex RoPE + Block-Real GEMM + Fused QKV (QK norm OFF in preset)"
 echo "  Architecture: [CGU(expand=3) -> PAM(H=6, d=64)] x16 + GSP"
 echo "  dim=384  layers=16  LR=1e-4  warmup=1000"
 echo "  seq_len: $SEQ_LEN  batch_size: $BATCH_SIZE  epochs: $EPOCHS"
@@ -84,7 +83,7 @@ echo "  Compare to: medium-pam (100.4M, Val PPL 38.95, sequential)"
 echo "============================================================"
 echo ""
 
-write_run_info "$LOG_DIR" "Medium-PAM-v3: dim=384 L=16 expand=3, single_bank=True, PAM(H=6, d=64, QK-norm, RoPE, fused-QKV), GSP=True, interleave_pam=True, LR=1e-4, warmup=1000" "$ARGS --gen_prompt '$GEN_PROMPT' $RESUME_ARG $EXTRA_ARGS"
+write_run_info "$LOG_DIR" "Medium-PAM-v3: dim=384 L=16 expand=3, single_bank=True, PAM(H=6, d=64, pam_qk_norm=False, RoPE, fused-QKV), GSP=True, interleave_pam=True, LR=1e-4, warmup=1000" "$ARGS --gen_prompt '$GEN_PROMPT' $RESUME_ARG $EXTRA_ARGS"
 
 start_time=$(date +%s)
 
