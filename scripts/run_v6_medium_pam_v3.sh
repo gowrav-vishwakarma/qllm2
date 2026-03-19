@@ -5,7 +5,7 @@
 #
 # QUALITY (ablatable via config flags):
 #   1. QK Phase Normalization -- optional; caused repetition when ON (Bug 8,
-#      EXPERIMENTS_V6.md). Preset uses pam_qk_norm=False.
+#      EXPERIMENTS_V6_PART2.md). Preset uses pam_qk_norm=False.
 #   2. Complex RoPE on Q,K -- native complex positional encoding via
 #      phase rotation e^{i*m*theta}. Fills the zero-position-encoding gap.
 #

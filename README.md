@@ -299,7 +299,8 @@ We are not claiming that complex or phase-first models have already beaten trans
 ## Documentation
 
 - [v6/README.md](v6/README.md): architecture, CLI, memory system, diffusion modes, setup
-- [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md): V6 experiment log (GSP, HSB, PAM, presets)
+- [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md): V6 experiment log (archive through GSP / §18)
+- [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md): HSB, PAM, interleaved layouts, medium-pam-v2/v3, Bug 8 (QK norm)
 - [v5/README.md](v5/README.md): algebraic LM details and the V4 -> V5 correction
 - [v5/EXPERIMENTS.md](v5/EXPERIMENTS.md): V5 experiment log
 - [v4/README.md](v4/README.md): original phase-field architecture
