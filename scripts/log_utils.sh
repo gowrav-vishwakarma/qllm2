@@ -4,6 +4,7 @@
 # Provides:
 #   make_log_dir <version> <run_name>  -> deterministic log path
 #   write_run_info <log_dir> <desc> <args>  -> RUN_INFO.txt with full provenance
+#   append_run_info_resume <log_dir> <desc> <args>  -> append a resume block to RUN_INFO.txt
 #
 # Log path format:
 #   logs/<version>/<run_name>_<YYYYMMDD_HHMMSS>_<commit>[_dirty]
@@ -113,4 +114,57 @@ RUNEOF
     fi
 
     echo "[log-utils] Run info written to ${log_dir}/RUN_INFO.txt"
+}
+
+# append_run_info_resume <log_dir> <description> <args>
+#   Appends a timestamped "resume" section to RUN_INFO.txt without overwriting
+#   the original run block. Creates the file if it does not exist.
+append_run_info_resume() {
+    local log_dir="$1"
+    local description="$2"
+    local args="$3"
+    mkdir -p "$log_dir"
+
+    local python_ver="unknown"
+    if [[ -n "${PYTHON_BIN:-}" ]]; then
+        python_ver=$(eval "$PYTHON_BIN --version" 2>/dev/null || echo "unknown")
+    fi
+
+    {
+        echo ""
+        echo ""
+        echo "================================================================================"
+        echo "RUN INFO (resume — appended)"
+        echo "================================================================================"
+        echo "Description : ${description}"
+        echo "Date (UTC)  : $(date -u +"%Y-%m-%d %H:%M:%S")"
+        echo "Date (local): $(date +"%Y-%m-%d %H:%M:%S %Z")"
+        echo "Hostname    : $(hostname)"
+        echo "Platform    : $(uname -srm)"
+        echo ""
+        echo "Git commit  : $(_git_full)"
+        echo "Git short   : $(_git_short)"
+        echo "Git branch  : $(_git_branch)"
+        echo "Git dirty   : $(_git_is_dirty)"
+        echo ""
+        echo "Python      : ${python_ver}"
+        echo "Arguments   : ${args}"
+        echo "================================================================================"
+    } >> "${log_dir}/RUN_INFO.txt"
+
+    if [[ "$(_git_is_dirty)" == "yes" ]]; then
+        {
+            echo ""
+            echo "UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):"
+            echo "---------------------------------------------------------------"
+            git diff --stat -- . ':!logs/' 2>/dev/null || echo "(could not get diff stat)"
+            echo ""
+            git diff -- . ':!logs/' 2>/dev/null | head -200 || true
+            if [[ $(git diff -- . ':!logs/' 2>/dev/null | wc -l) -gt 200 ]]; then
+                echo "... (diff truncated at 200 lines)"
+            fi
+        } >> "${log_dir}/RUN_INFO.txt"
+    fi
+
+    echo "[log-utils] Resume run info appended to ${log_dir}/RUN_INFO.txt"
 }
