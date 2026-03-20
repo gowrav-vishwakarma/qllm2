@@ -1,6 +1,6 @@
 # V6 Experiment Log — Part 2 (HSB, PAM, onward)
 
-Continuation of [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md). **Part 1** keeps the full archive through **§18 GSP run results** (architecture, bugs 1–7, TinyStories/WikiText baselines, rebalanced + TSO + GSP). **This file** is self-contained for everything after that: **Bug 8**, HSB, PAM, medium-pam-v2 (interleaved), medium-pam-v3 (RoPE / QK-norm experiment).
+Continuation of [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md). **Part 1** keeps the full archive through **§18 GSP run results** (architecture, bugs 1–7, TinyStories/WikiText baselines, rebalanced + TSO + GSP). **This file** is self-contained for everything after that: **Bug 8**, HSB, PAM, medium-pam-v2 (interleaved CGU+PAM -- PAM interleaved with CGU in every block instead of all-PAM at the end), medium-pam-v3 (RoPE, optional QK phase norm, fused QKV / block-real GEMM). A full **10-epoch** v3 run with **`pam_qk_norm=False`**, RoPE, and the speed paths finished at **val PPL 29.95** (WikiText-103); the earlier **`pam_qk_norm=True`** run was **stopped mid-epoch 5** due to repetition collapse (Bug 8).
 
 **Git reference:** interleaved CGU+PAM was tagged `v6-medium-pam-v2-interleaved` before the Part 2 code path diverged further.
 
@@ -292,7 +292,8 @@ The bugs were pure train/inference path mismatches -- training was never affecte
 | medium-rebalanced | 58.4M | 44.47 | SSM baseline |
 | medium-rebalanced-gsp | 63.2M | 41.67 | + GSP |
 | medium-rebalanced-hsb | 75.0M | 43.54 | + HSB (regression -- interference) |
-| **medium-pam** | **100.4M** | **38.95** | **PAM + GSP (new best)** |
+| **medium-pam** | **100.4M** | **38.95** | **PAM + GSP** (sequential layout; §3) |
+| medium-pam-v3 (RoPE, no QK-norm) | ~100.4M | 29.95 | Interleaved + RoPE + fused QKV + block GEMM; not a single-variable ablation vs. row above (§5) |
 
 ---
 
@@ -404,32 +405,40 @@ Building on the interleaved layout from v2 (experiment §4), there are two categ
 ### Config
 
 - **Preset**: `medium-pam-v3`
-- **Failing run (logged below)**: `pam_qk_norm=True`, `pam_rope=True`, `pam_fused_qkv=True` (plus block-real GEMM in `ComplexLinear`).
-- **Current preset / recommended next run**: `pam_qk_norm=False`, `pam_rope=True`, `pam_fused_qkv=True` -- keeps RoPE + speed wins; drops QK norm after Bug 8 (above).
+- **Production stack (validated below)**: `pam_qk_norm=False`, `pam_rope=True`, `pam_fused_qkv=True` (plus block-real GEMM in `ComplexLinear`), `interleave_pam=True`, GSP.
+- **Failed ablation (logged below)**: `pam_qk_norm=True`, same otherwise.
 - **Parameters**: ~100.4M (same budget)
 - **Dataset**: WikiText-103, seq_len=2048, batch_size=3
 - **LR**: 1e-4, warmup_cosine, warmup=1000
-- **Log**: `logs/v6/medium_pam_v3_qknorm_rope_wikitext103_20260319_161045_77c454a/v6_autoregressive_medium-pam-v3.log`
+- **Logs**:
+  - Failed QK-norm: `logs/v6/medium_pam_v3_qknorm_rope_wikitext103_20260319_161045_77c454a/v6_autoregressive_medium-pam-v3.log` (git `77c454a`)
+  - Completed RoPE, no QK-norm: `logs/v6/medium_pam_v3_rope_wikitext103_20260319_231524_31397f0/v6_autoregressive_medium-pam-v3.log` (git `31397f0`)
 - **Script**: `scripts/run_v6_medium_pam_v3.sh`
 
 ### Ablation plan
 
 - **Done (from logs)**: QK norm hurts generation quality badly → default off (Bug 8).
-- **If needed after re-run**: disable `pam_rope` only to isolate RoPE (unlikely culprit).
+- **Done**: Full 10-epoch train with `pam_qk_norm=False` — val PPL **29.95**; see **Results (completed run)** below.
+- **Future (optional)**: disable `pam_rope` only to isolate RoPE vs. recurrence-only position signal.
 - Speed changes (block-real GEMM, fused QKV) are math-identical and cannot affect quality.
 
 ### Baselines for comparison
 
+Same WikiText-103 10-epoch setting where noted. Rows are **not** a controlled single-variable grid: v3 differs from medium-pam by interleaving, RoPE, fused QKV, and training recipe alignment.
+
 | Model | Params | Val PPL | Notes |
 |-------|--------|---------|-------|
 | medium-pam (sequential) | 100.4M | 38.95 | Sequential layout, no RoPE, no QK norm |
+| **medium-pam-v3 (RoPE, no QK-norm)** | **~100.4M** | **29.95** | **Interleaved + RoPE + speed paths** (§5 completed run) |
 | medium-pam-v2 (interleaved) | 100.4M | N/A | Stopped early (experiment §4) |
 | GPT-2 small (Transformer) | ~124M | ~14.84 | Fine-tuned on WikiText-103 |
 | Transformer (vanilla) | ~125M | ~18.6 | Trained on WikiText-103 |
 | Mamba-Small (SSM) | 130M | ~24.1 | Selective SSM |
 | GateLoop (linear RNN) | 125M | ~13.4 | Data-controlled recurrence |
 
-### Results (run with `pam_qk_norm=True` -- do not use for production)
+### Results (failed ablation: `pam_qk_norm=True` -- do not use for production)
+
+**Git / log**: `77c454a` — `logs/v6/medium_pam_v3_qknorm_rope_wikitext103_20260319_161045_77c454a/`
 
 Training was **numerically stable** (no NaN/Inf, `div`/`wdiv` stayed 0). Throughput ~22–23k tok/s, GPU ~2.3/20.7 GB. **Val loss improved every epoch through 4**, but **generation repetition worsened** from ~epoch 3 onward; by epoch 5 batch 10000 the sample collapsed into repeated institution names. This matches prior V6 lessons: **cross-entropy alone is a weak proxy for repetition**.
 
@@ -445,10 +454,36 @@ Training was **numerically stable** (no NaN/Inf, `div`/`wdiv` stayed 0). Through
 
 **Diagnosis (primary)**: **QK phase normalization** (`cnormalize` on Q,K) is the main suspect. It removes magnitude from the PAM score path, there is no softmax sharpening, and no learnable temperature — see Bug 8 (above). **RoPE**, **fused QKV**, and **block-real GEMM** are not implicated by the logs (RoPE is standard; speed paths are equivalent matmuls).
 
-**Action**: Re-train `medium-pam-v3` with **`pam_qk_norm=False`** (already set in `v6/config.py`). Consider renaming the log directory pattern in future runs to reflect "rope_no_qknorm" so logs are not confused with the failed QK-norm experiment.
+### Results (completed run: `pam_qk_norm=False`, RoPE + speed)
+
+**Git / log**: `31397f0` — `logs/v6/medium_pam_v3_rope_wikitext103_20260319_231524_31397f0/`
+
+Full **10 epochs** on WikiText-103. Training **numerically stable** (`div`/`wdiv` = 0). Throughput ~**23k tok/s** average; total wall time **50714.3 s (~14.09 h)**. Checkpoints: `checkpoints_v6_medium_pam_v3/best_model.pt`, `checkpoint_epoch_10.pt`, `final_model.pt`.
+
+| Epoch | Train PPL | Val PPL | Notes |
+|-------|-----------|---------|-------|
+| 1 | 123.86 | 57.94 | |
+| 2 | 53.87 | 43.83 | |
+| 3 | 44.88 | 38.69 | |
+| 4 | 40.39 | 35.88 | |
+| 5 | 37.42 | 33.82 | |
+| 6 | 35.13 | 32.25 | |
+| 7 | 33.26 | 31.22 | |
+| 8 | 31.78 | 30.40 | |
+| 9 | 30.66 | 30.01 | |
+| 10 | 30.02 | **29.95** | best val |
+
+**End-of-run generation** (epoch 10, prompt: `In 1923 , the University of`):
+
+> In 1923 , the University of Illinois at Urbana @-@ Urdu said it was " an easy choice to do something in its own right . " The university also claimed the first students from Wisconsin had to be replaced by a more " good student " due to a lack of funds .
+
+Quality: **rep3=0.034**, **rep4=0.011**, restarts=0, **uniq=0.703**. Coherent structure (section headers, multi-sentence prose); occasional WikiText-style artifacts and dubious facts (e.g. tokenization / hallucinated place names), not the list-repetition mode of the QK-norm run.
+
+**Outcome**: `v6/config.py` preset `medium-pam-v3` keeps **`pam_qk_norm=False`**; this run validates **RoPE + block-real GEMM + fused QKV** without QK phase norm. **Future**: optional `pam_rope` ablation; or revisit QK norm with a learnable logit scale after normalization (Bug 8). Prefer log directory names that distinguish **`qknorm_rope`** vs **`rope`** (no QK-norm) so runs are not confused.
 
 ---
 
 ## How to update Part 2
 
-Append new experiment sections after §5 (continue as §6, §7, …). For new PAM-related bugs, add them here (extend Bug 8 or add Bug 9+); if a bug belongs in the global §3 list in Part 1, add a **one-line pointer** in [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md) §3 and keep the full write-up here.
+- **medium-pam-v3 production metrics** (10-epoch RoPE, no QK-norm): documented under §5 **Results (completed run)**; the failed QK-norm ablation stays in **Results (failed ablation)** in the same section.
+- Append new experiment sections after §5 (continue as §6, §7, …). For new PAM-related bugs, add them here (extend Bug 8 or add Bug 9+); if a bug belongs in the global §3 list in Part 1, add a **one-line pointer** in [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md) §3 and keep the full write-up here.
