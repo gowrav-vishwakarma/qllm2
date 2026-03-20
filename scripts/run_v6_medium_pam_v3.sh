@@ -27,6 +27,13 @@
 #   ./scripts/run_v6_medium_pam_v3.sh --epochs 3         # quick test
 #   ./scripts/run_v6_medium_pam_v3.sh --batch_size 2     # if OOM
 #   ./scripts/run_v6_medium_pam_v3.sh --resume            # resume from checkpoint
+#
+# Log directory reuse:
+#   On each fresh run, the chosen LOG_DIR is stored in
+#   checkpoints_v6_medium_pam_v3/last_log_dir.txt so a later --resume reuses the
+#   same folder (append to the same .log). To backfill an old run, create that
+#   file with one line: the path to the existing log directory (e.g.
+#   logs/v6/medium_pam_v3_rope_wikitext103_20260319_231524_31397f0).
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -59,16 +66,41 @@ while [[ $# -gt 0 ]]; do
 done
 
 GEN_PROMPT="In 1923 , the University of"
-LOG_DIR=$(make_log_dir "v6" "medium_pam_v3_rope_${DATASET}")
 CKPT_DIR="checkpoints_v6_medium_pam_v3"
+LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
 
 ARGS="--dataset $DATASET --size $SIZE --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory"
 
 RESUME_ARG=""
+REUSED_LOG_DIR=0
+LOG_DIR=""
+
+# Reuse the same log directory on resume when checkpoint exists and sidecar points to a valid dir.
+if [[ $RESUME -eq 1 && -f "$CKPT_DIR/best_model.pt" && -f "$LOG_DIR_SIDECAR" ]]; then
+    _stored=$(head -n 1 "$LOG_DIR_SIDECAR" | tr -d '\r')
+    if [[ -n "$_stored" && -d "$_stored" ]]; then
+        LOG_DIR="$_stored"
+        REUSED_LOG_DIR=1
+        echo "[resume] Reusing log directory from $LOG_DIR_SIDECAR: $LOG_DIR"
+    elif [[ -n "$_stored" ]]; then
+        echo "[resume] Warning: stored log dir not found on disk: $_stored (will create a new log dir)" >&2
+    fi
+fi
+
+if [[ -z "$LOG_DIR" ]]; then
+    LOG_DIR=$(make_log_dir "v6" "medium_pam_v3_rope_${DATASET}")
+fi
+
+mkdir -p "$CKPT_DIR"
+printf '%s\n' "$LOG_DIR" > "$LOG_DIR_SIDECAR"
+
 if [[ $RESUME -eq 1 && -f "$CKPT_DIR/best_model.pt" ]]; then
     RESUME_ARG="--resume $CKPT_DIR/best_model.pt"
     echo "[resume] Resuming from $CKPT_DIR/best_model.pt"
 fi
+
+RUN_DESC="Medium-PAM-v3: dim=384 L=16 expand=3, single_bank=True, PAM(H=6, d=64, pam_qk_norm=False, RoPE, fused-QKV), GSP=True, interleave_pam=True, LR=1e-4, warmup=1000"
+RUN_ARGS_LINE="$ARGS --gen_prompt '$GEN_PROMPT' $RESUME_ARG $EXTRA_ARGS"
 
 echo ""
 echo "============================================================"
@@ -83,7 +115,11 @@ echo "  Compare to: medium-pam (100.4M, Val PPL 38.95, sequential)"
 echo "============================================================"
 echo ""
 
-write_run_info "$LOG_DIR" "Medium-PAM-v3: dim=384 L=16 expand=3, single_bank=True, PAM(H=6, d=64, pam_qk_norm=False, RoPE, fused-QKV), GSP=True, interleave_pam=True, LR=1e-4, warmup=1000" "$ARGS --gen_prompt '$GEN_PROMPT' $RESUME_ARG $EXTRA_ARGS"
+if [[ $REUSED_LOG_DIR -eq 1 ]]; then
+    append_run_info_resume "$LOG_DIR" "$RUN_DESC" "$RUN_ARGS_LINE"
+else
+    write_run_info "$LOG_DIR" "$RUN_DESC" "$RUN_ARGS_LINE"
+fi
 
 start_time=$(date +%s)
 

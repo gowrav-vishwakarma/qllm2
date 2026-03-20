@@ -7,11 +7,15 @@ Supports both V5 format (batch keyword, samples/s) and V6 format (no batch, tok/
 Usage:
   python scripts/plot_training.py logs/v5_train_small-matched.log
   python scripts/plot_training.py logs/v6/.../v6_autoregressive_medium-rebalanced-gsp.log --show
+
+By default the PNG is written next to the first log: <log_dir>/<log_stem>.png.
+With --live, the same directory gets <log_stem>-live.png updated on each refresh.
 """
 
 import argparse
 import re
 from pathlib import Path
+from typing import Optional
 
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
@@ -185,12 +189,31 @@ def plot_log(data: dict, label: str, color: str, ax_loss, ax_ppl, ax_lr, ax_tok,
         ax_ppl.scatter(ep_x, val_ppl, color=color, s=40, marker="o", zorder=5, label=f"{label} (val)")
 
 
+def live_png_path(first_log: Path, explicit_output: Optional[Path]) -> Path:
+    """PNG path for --live: same directory rules as static default, with '-live' before the extension."""
+    if explicit_output is None:
+        return first_log.parent / f"{first_log.stem}-live.png"
+    o = explicit_output
+    suffix = o.suffix or ".png"
+    return o.parent / f"{o.stem}-live{suffix}"
+
+
 def main():
     parser = argparse.ArgumentParser(description="Plot V5/V6 training curves from log files")
     parser.add_argument("logs", nargs="+", type=Path, help="Log file path(s)")
     parser.add_argument("--show", action="store_true", help="Show plot interactively")
-    parser.add_argument("--output", "-o", type=Path, default=None, help="Output PNG path (default: next to first log)")
-    parser.add_argument("--live", action="store_true", help="Re-read log and refresh every 10s (for live training)")
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        default=None,
+        help="Output PNG path (default: first log's directory, <stem>.png; with --live: <stem>-live.png)",
+    )
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Re-read log and refresh periodically; save PNG each refresh (<stem>-live.png next to first log unless -o)",
+    )
     parser.add_argument("--live-interval", type=int, default=10, help="Refresh interval in seconds for --live")
     parser.add_argument("--x-axis", type=str, default="batch", choices=["batch", "tokens"],
                         help="X-axis unit: 'batch' (default) or 'tokens' (requires gtok= in logs)")
@@ -338,6 +361,7 @@ def main():
         return fig
 
     if args.live:
+        live_out = live_png_path(all_logs[0], args.output)
         fig = plt.figure(figsize=(12, 10))
 
         def update(_frame):
@@ -396,8 +420,12 @@ def main():
             else:
                 fig.suptitle(title_prefix, fontsize=9, y=1.02)
             plt.tight_layout()
+            fig.savefig(live_out, dpi=120)
 
-        print(f"Live mode: refreshing every {args.live_interval}s. Close the window to exit.")
+        print(
+            f"Live mode: refreshing every {args.live_interval}s; saving to {live_out} each refresh. "
+            "Close the window to exit."
+        )
         update(0)  # render immediately, don't wait for first interval
         ani = animation.FuncAnimation(
             fig,
@@ -411,7 +439,8 @@ def main():
     fig = do_plot()
     out = args.output
     if out is None:
-        out = all_logs[0].with_suffix(".png")
+        log0 = all_logs[0]
+        out = log0.parent / f"{log0.stem}.png"
     fig.savefig(out, dpi=120)
     print(f"Saved: {out}")
     if args.show:

@@ -19,6 +19,4 @@ checkpoints*/
 .cache/
 *cache*/
 
-*.png 
-
 .env
