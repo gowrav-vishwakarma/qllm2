@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Medium-PAM-v3: dim=384 L=16 expand=3, single_bank=True, PAM(H=6, d=64, pam_qk_norm=False, RoPE, fused-QKV), GSP=True, interleave_pam=True, LR=1e-4, warmup=1000
+Date (UTC)  : 2026-03-19 17:45:24
+Date (local): 2026-03-19 23:15:24 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 31397f052c60407aeb4122427f111c9fb57343f1
+Git short   : 31397f0
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size medium-pam-v3 --seq_len 2048 --batch_size 3 --epochs 10 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt 'In 1923 , the University of'  
+================================================================================
