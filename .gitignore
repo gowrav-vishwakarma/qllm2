@@ -19,4 +19,8 @@ checkpoints*/
 .cache/
 *cache*/
 
+
 .env
+
+log_copy.sh
+logs/remote_medium_pam_v3.log
