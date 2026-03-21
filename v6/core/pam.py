@@ -32,15 +32,9 @@ from dataclasses import dataclass
 if TYPE_CHECKING:
     from ..init import InitStrategy
 
-from .complex import ComplexLinear, ComplexNorm, cmul, cabs, cnormalize, to_real
+from .complex import ComplexLinear, ComplexNorm, cmul, cabs, cnormalize, to_real, build_rope_cache
 
-
-def _build_rope_cache(max_len: int, head_dim: int) -> torch.Tensor:
-    """Precompute complex RoPE: e^{i*m*theta_k} for m=0..max_len-1, k=0..head_dim-1."""
-    freqs = 1.0 / (10000.0 ** (torch.arange(head_dim).float() / head_dim))
-    positions = torch.arange(max_len).float()
-    angles = positions.unsqueeze(1) * freqs.unsqueeze(0)  # [max_len, head_dim]
-    return torch.stack([angles.cos(), angles.sin()], dim=-1)  # [max_len, head_dim, 2]
+_build_rope_cache = build_rope_cache
 
 
 @dataclass

@@ -147,6 +147,9 @@ class PhaseFieldBackbone(nn.Module):
                         window_size=config.attn_window_size,
                         dropout=config.dropout,
                         initializer=initializer,
+                        mode=config.attn_mode,
+                        rope=config.attn_rope,
+                        fused_qkv=config.attn_fused_qkv,
                     )
                     self.attn_scales[str(i)] = nn.Parameter(torch.tensor(0.1))
 

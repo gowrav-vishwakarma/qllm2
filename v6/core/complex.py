@@ -202,6 +202,14 @@ class ComplexEmbed(nn.Module):
         return torch.stack([r, i], dim=-1)
 
 
+def build_rope_cache(max_len: int, head_dim: int) -> torch.Tensor:
+    """Precompute complex RoPE: e^{i*m*theta_k} for m=0..max_len-1, k=0..head_dim-1."""
+    freqs = 1.0 / (10000.0 ** (torch.arange(head_dim).float() / head_dim))
+    positions = torch.arange(max_len).float()
+    angles = positions.unsqueeze(1) * freqs.unsqueeze(0)  # [max_len, head_dim]
+    return torch.stack([angles.cos(), angles.sin()], dim=-1)  # [max_len, head_dim, 2]
+
+
 def to_real(z: torch.Tensor, mode: str = 'concat') -> torch.Tensor:
     """Convert [..., dim, 2] complex to real tensor for output heads."""
     if mode == 'concat':
