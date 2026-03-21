@@ -1,26 +1,122 @@
-# QLLM - Phase-First Language Model Research
+# QLLM — Phase-First Language Model Research
 
-> **Disclaimer:** Yes, we use AI, Cursor, and every coding agent we can get our hands on to build this. Because... why not? We're building AI with AI.
+**Attention-free, complex-valued language modeling:** tokens live in complex phase space; sequence memory is **Phase-Associative Memory (PAM)** — a matrix-state associative layer with complex-conjugate retrieval, not softmax attention and not a standard real-valued SSM.
 
-## Beyond Transformers
+> **Disclaimer:** We use AI assistants (e.g. Cursor) to help build this — because building AI with AI is useful. The architecture and experiments are documented in code and logs.
 
-This repository explores language models beyond the standard transformer recipe.
+This repository is organized by generation: **v6** (current), **v5** (phase-preserving complex LM breakthrough), **v4** (original phase-field direction). Earlier branches **v3** (brain-inspired) and **v2** (quantum-inspired) remain for reference.
 
-- **v6** (current): phase-first, attention-free by default, O(n), memory-augmented backbone focused on autoregressive training, with diffusion scaffolding in place for later work
-- **v5** (major breakthrough): mathematically consistent complex-valued LM that fixed V4 and delivered the first strong results
-- **v4** (origin of the novelty): complex phase-space tokens, wave interference, O(n) backbone, and the original non-transformer direction
-- **v3**: brain-inspired language modeling branch
-- **v2**: earlier quantum-inspired language modeling branch
+---
 
-## Project Overview
+## TL;DR: Three Core Innovations
 
-### **v6 - Phase-First Language Model** (Current)
+1. **Phase-first complex tokens** — Each token is complex: magnitude tracks salience, phase tracks *kind* of meaning. A single complex multiply `(a+bi)(c+di) = (ac-bd) + (ad+bc)i` has four cross-terms and behaves as rotation + scaling; the algebra is richer per parameter than “two independent real vectors.”
+2. **Matrix-state associative memory (PAM)** — State is `S ∈ ℂ^{H×d×d}`, not a vector `s ∈ ℝ^{S×d}`. Capacity scales as **O(d²)** per head via outer-product storage.
+3. **Complex-conjugate matching** — Retrieval uses **K\*·Q** (phase coherence), not **K·Qᵀ** + softmax. The core path does not need softmax normalization.
 
-V6 is the current main line: a **zero-attention language model direction** built around complex-valued tokens, named banks, phase interference, multi-timescale SSMs, and external memory layers. It keeps the phase-native idea from V4, the mathematical cleanup from V5, and pushes toward a longer-context, more modular system.
+Together these define a **phase-first associative memory LM**: neither a transformer nor a standard SSM.
 
-Core V6 path (two variants):
+---
+
+## The Core Idea: Tokens in Complex Phase Space
+
+In a transformer, a token is a real vector refined by attention and FFN layers.
+
+In QLLM, a token is **complex**: **magnitude** (how salient) and **phase** (what kind of meaning) are separate degrees of freedom. **Context shifts** (e.g. “bank” → finance vs river) are modeled as **phase rotations**; rotations compose and are invertible.
+
+**Phase must be preserved end-to-end.** Early versions showed that passing complex activations through real nonlinearities (GELU, plain sigmoid gates) **destroys phase** and collapses the design. QLLM uses **phase-preserving** primitives: `modReLU`, `ComplexGatedUnit` (CGU), and `ComplexNorm` throughout the main path.
+
+---
+
+## ComplexGatedUnit (CGU)
+
+**Standard GLU (typical transformer path):**
+
+```python
+gate = sigmoid(W_g * x)    # Real-valued gate
+output = gate * (W_v * x)  # Controls HOW MUCH flows
+```
+
+The gate only controls **intensity**.
+
+**QLLM’s ComplexGatedUnit:**
+
+```python
+# Gate magnitude: sigmoid(|W_g * z|)  → HOW MUCH
+# Gate phase: arg(W_g * z)            → WHAT ROTATION
+output = modReLU(gate_magnitude) * rotate(z, gate_phase) * (W_v * z)
+```
+
+This is **dual control**: magnitude **and** phase — only natural in complex space.
+
+---
+
+## Phase-Associative Memory (PAM)
+
+Vector SSM states have **limited associative capacity**; storing many facts in one vector causes interference. An earlier **Holographic State Binding (HSB)** experiment failed for that reason — motivating **PAM**, which uses a **complex matrix state** per head.
+
+### How it works (schematic)
+
+```python
+# State update
+S_t = gamma_t * S_{t-1} + V_t ⊗ K_t*   # outer product; K* is conjugate
+
+# Retrieval
+Y_t = S_t @ Q_t
+```
+
+`K_t*` stores a full **d×d** association per (key, value) pair via the outer product.
+
+### Standard attention vs PAM retrieval
+
+**Transformer attention:**
+
+```python
+attention_scores = Q @ K.T / sqrt(d)
+output = softmax(attention_scores) @ V
+```
+
+Dot products measure alignment; **softmax** normalizes over the sequence.
+
+**PAM retrieval (conceptual):**
+
+```python
+coherence = K* · Q          # Complex inner product → phase coherence
+output = V * coherence      # Weighted by coherence (see paper/code for full gating)
+```
+
+Aligned phases **constructively** interfere; misaligned phases **destructively** interfere — **interference**, not a length-softmax over positions (training uses a dual quadratic form; see below).
+
+### Transformer vs SSM vs QLLM PAM
+
+| Aspect | Transformer | SSM (e.g. Mamba) | QLLM PAM |
+|--------|-------------|------------------|----------|
+| **State** | N/A (KV cache) | `s_t ∈ ℝ^{S×d}` vector | `S_t ∈ ℂ^{H×d×d}` matrix |
+| **Storage** | Append to cache | Linear projection | Outer product `V ⊗ K*` |
+| **Matching** | QKᵀ + softmax | Gated recurrence | Complex conjugate `K* · Q` |
+| **Capacity** | O(n) per seq | O(S·d) | O(H·d²) per layer |
+| **Training** | O(T²) | O(T) | O(T²) dual form |
+| **Inference** | O(T) per token | O(1) per token | O(1) per token |
+
+PAM state is a **different object** than an SSM vector: it stores **rank-1 associations** between V and K, not only a linear recurrence on a single vector.
+
+### Gated State Protection (GSP)
+
+Learned gates can **freeze** important state dimensions so they are not overwritten. Empirically, GSP improved WikiText-103 PPL (e.g. medium-rebalanced: **44.47 → 41.67** with GSP). See experiment logs for details.
+
+### Dual form
+
+**Training:** quadratic (attention-like) dual form — friendly to dense GPU matmuls.  
+**Inference:** recurrent form — **O(1) per token** with fixed state size (no KV cache growth with sequence length).
+
+---
+
+## V6 Architecture Paths (Where the Code Goes)
+
+V6 is **modular**: named banks + SSM, single-bank + SSM, or **single-bank + PAM**. Headline WikiText-103 numbers use **`medium-pam-v3`**: interleaved **CGU → PAM** every block, GSP, **complex RoPE on PAM Q/K**, fused QKV; **`pam_qk_norm=False`** (QK phase norm **on** hurt generation — repetition; see [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) Bug 8).
 
 **Named-bank path** (e.g. `small-matched`):
+
 ```text
 Tokens --> ComplexEmbed
   --> [SemanticBank + ContextBank --> PhaseInterferenceCoupler] x N
@@ -29,98 +125,127 @@ Tokens --> ComplexEmbed
   --> MemoryFusion --> TiedComplexLMHead
 ```
 
-**Single-bank + PAM path — current headline** (`medium-pam-v3`, interleaved CGU + PAM per block):
+**Single-bank + PAM — headline preset** (`medium-pam-v3`):
+
 ```text
 Tokens --> ComplexEmbed --> ComplexNorm
   --> [ ComplexGatedUnit + residual
-       -> PhaseAssociativeMemory (PAM) + residual ] x N   # matrix state, O(d²) per head
+       -> PhaseAssociativeMemory (PAM) + residual ] x N
   --> ComplexLinear --> ComplexNorm --> TiedComplexLMHead
 ```
 
-**Earlier sequential PAM layout** (`medium-pam`): all CGU layers first, then all PAM layers — see [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) §4.
+**Sequential PAM** (`medium-pam`): all CGU layers then all PAM layers — [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) §4.
 
-**Single-bank + SSM path** (e.g. `medium-rebalanced-gsp`):
-```text
-Tokens --> ComplexEmbed
-  --> [ComplexGatedUnit (single bank)] x N
-  --> MultiTimescaleSSM
-  --> [WorkingMemory / InternalMemory / ...] --> TiedComplexLMHead
-```
+Optional **multi-timescale SSM**, **memory hierarchy** (working / internal / persistent / expert), **optional PhaseAttention** — see [v6/README.md](v6/README.md).
 
-What defines V6:
+---
 
-- **Zero attention by default**: the main direction is O(n) sequence processing without token-token attention (PAM uses O(T²) dual form only at train time; inference is O(1) per token)
-- **Named banks or single CGU**: either `SemanticBank`+`ContextBank`+coupler, or one `ComplexGatedUnit` per layer (rebalanced presets)
-- **State layer**: **Multi-timescale SSM** (vector state) or **Phase-Associative Memory (PAM)** (matrix state \(S \in \mathbb{C}^{H \times d \times d}\)) — PAM was introduced to fix state interference that limited the earlier Holographic State Binding (HSB) experiment
-- **Gated State Protection (GSP)**: optional per-dimension decay gating so important state can be frozen
-- **Memory hierarchy**: working, internal, persistent, expert, and optional session memory
-- **Transferable memory pipeline**: session → persistent → expert; `MemoryAdaptation` for user-specific distillation
-- **Shared backbone scaffold**: same `PhaseFieldBackbone` for autoregressive and (future) diffusion
+## Results
 
-### **v5 - Algebraic Language Model** (Previous Main Version)
+### Headline run: `medium-pam-v3` (~100M params, WikiText-103)
 
-V5 was the turning point. It kept the complex-valued hypothesis but fixed the core mathematical inconsistency in V4: V4 created complex states and then destroyed phase information with real-valued nonlinearities. V5 replaced that with **phase-preserving computation end to end**.
+Interleaved CGU+PAM, GSP, PAM RoPE on Q/K, `pam_qk_norm=False`, `pam_fused_qkv=True`, seq len 2048, 10 epochs, single **RTX 4090**, `torch.compile`, bf16 — see scripts and logs for full flags.
 
-- **Key fix**: `modReLU` and `ComplexGatedUnit` replace real-valued GELU/sigmoid paths
-- **Key result**: a 28.7M `small-matched` model beat V4's 178M-class results
-- **Key lesson**: smaller but mathematically cleaner beat bigger but inconsistent
-- **Best documented public result here**: TinyStories val PPL **5.59** at epoch 3 on the full dataset
+| Epoch | Val PPL |
+|-------|---------|
+| 1 | 57.94 |
+| 2 | 43.83 |
+| 3 | 38.69 |
+| 4 | 35.88 |
+| 5 | 33.82 |
+| 6 | 32.25 |
+| 7 | 31.22 |
+| 8 | 30.40 |
+| 9 | 30.01 |
+| 10 | **29.95** |
 
-### **v4 - Quantum Phase-Field LLM** (Novelty Origin)
+Wall time ~14.1 h (logged run). Earlier **sequential** `medium-pam` (same ~100M budget, no RoPE, CGU then PAM) reached **38.95** at epoch 10.
 
-V4 is where the main novelty first appeared: tokens living in complex phase space, wave-style interference between banks, and an O(n) non-transformer backbone. Even though V5 superseded it mathematically, V4 was the base of the idea and the first version that made this line of work distinct.
+### Architecture progression on WikiText-103 (V6)
 
-### **v2 / v3**
+| Config | Params | Val PPL (10 ep) | Notes |
+|--------|--------|-----------------|--------|
+| small-matched (SSM) | 28.7M | 49.61 | Vector SSM baseline |
+| medium-rebalanced (TSO) | 58.4M | 44.47 | + params, timescale-separated output |
+| medium-rebalanced-gsp | 63.2M | 41.67 | + GSP |
+| medium-rebalanced-hsb | 75.0M | 43.54 | + HSB (vector state interference) |
+| medium-pam | 100.4M | 38.95 | PAM + GSP; **sequential** CGU then PAM |
+| **medium-pam-v3** | **100.4M** | **29.95** | **Interleaved** CGU+PAM + RoPE + fused QKV |
 
-- **v2** explored a quantum-inspired LM framing with superposition, entanglement, and phase coherence themes.
-- **v3** explored a brain-inspired LM framing with memory systems, consciousness motifs, and biologically inspired learning ideas.
+### Orientation (not apples-to-apples)
 
-## V6 Results
+| Model | Params | Val PPL | Notes |
+|-------|--------|---------|--------|
+| GPT-2 Small | 124M | ~31 | WebText, different pipeline |
+| **QLLM V6 (PAM v3)** | **~100M** | **~30** | WikiText-103 only, single 4090 |
+| AWD-LSTM | ~24M | ~69 (WT2) | Different tokenization / split |
 
-### TinyStories
+### TinyStories (V6)
 
-The current V6 line is already strong on TinyStories.
+| Run | Model | Best Val PPL | Notes |
+|-----|-------|--------------|--------|
+| `small_matched_full` | `small-matched` | **5.50** | Clean no-memory baseline (5/10 ep) |
+| — | `small-matched` + working memory | 2.23 | 1 ep; likely overfit — not headline |
 
-| Run | Model | Dataset | Progress | Best Val PPL | Notes |
-| --- | --- | --- | --- | --- | --- |
-| `small_matched_full` | `small-matched` | TinyStories full train split | 5/10 epochs | **5.50** | clean no-memory baseline |
-| `fulldata_tiny_memory` | `small-matched` | TinyStories full train split | 1/1 epoch | 2.23 | likely overfit / repeating, not the headline result |
-
-Example TinyStories generation:
+Example generation:
 
 > Once upon a time, there was a little girl named Lily. She loved to play with her toys and make new friends. One day, she went on an adventure in the forest near her house.
 
-### WikiText-103
+### Sample (WikiText-103, `medium-pam-v3`, epoch 10)
 
-V6 is training on WikiText-103 with several presets. Current best validation PPL on this corpus comes from **`medium-pam-v3`**: interleaved CGU+PAM per block, **complex RoPE on PAM Q/K**, fused QKV + block-real GEMM for speed, and **QK phase norm off** (`pam_qk_norm=False`). We tried **QK phase norm on** (`pam_qk_norm=True`); train/val loss improved but **generation collapsed into repetition** mid-training, so that ablation was abandoned while **RoPE stayed on** (see [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) Bug 8).
+Prompt: `In 1923 , the University of`
 
-| Preset | Model | Epochs | Best Val PPL | Notes |
-| --- | --- | --- | --- | --- |
-| `medium-pam-v3` | interleaved CGU+PAM + GSP + RoPE (~100M) | 10 | **29.95** | **Current best**; `pam_qk_norm=False`, `pam_rope=True`, `interleave_pam=True` |
-| `medium-pam` | sequential [CGU×16] then [PAM×16] + GSP (~100M) | 10 | 38.95 | Earlier layout; no RoPE |
-| `medium-rebalanced-gsp` | single CGU + SSM + GSP (~63M) | 10 | 41.67 | GSP protects important state dims |
-| `medium-rebalanced-hsb` | + Holographic State Binding (~87M) | 10 | 43.54 | Regression -- state interference (vector state too small) |
+> In 1923 , the University of Illinois at Urbana @-@ Urdu said it was " an easy choice to do something in its own right . " The university also claimed the first students from Wisconsin had to be replaced by a more " good student " due to a lack of funds .
 
-Earlier `small-matched` WikiText-103 runs reached val PPL ~65 (seq len 512). The PAM direction is the validated path forward for factual coherence and lower PPL.
+Fluent scaffolding; facts are **not** reliable at this scale. Logged quality after sample: `rep3=0.034 rep4=0.011 uniq=0.703`.
 
-- **Scripts**: `scripts/run_v6_wikitext103.sh`, `scripts/run_v6_medium_pam_v3.sh`, `scripts/run_v6_medium_pam.sh` (sequential `medium-pam`)
-- **Sequence length**: 2048 for medium presets
-- **Hardware**: RTX 4090
+---
 
-## V5 Results
+## How It Evolved
 
-V5 is still an important milestone because it proved the math cleanup mattered.
+- **V4** — Complex phase-space tokens and wave-style interference; **real nonlinearities broke phase**; promising but inconsistent math.
+- **V5** — **Phase-preserving** stack (`modReLU`, CGU, …). A **28.7M** model beat V4’s much larger runs; TinyStories val PPL **5.59** (full data, epoch 3). Details: [v5/README.md](v5/README.md).
+- **V6** — Modular toolkit: banks, SSM, PAM, memory tiers, optional attention. **PAM** addresses vector-state interference; **`medium-pam-v3`** interleaves CGU and PAM and uses RoPE on PAM Q/K for the best WikiText-103 number above.
 
-| Run | Init | Data | Epochs | Best Val PPL | GPU |
-| --- | --- | --- | --- | --- | --- |
-| `v1-untied` | random | 100k TinyStories | 10 | 21.03 | A6000 |
-| `v3-full` | random | 100k TinyStories | 10 | 11.77 | A6000 |
-| `v4-ortho` | orthogonal | 100k TinyStories | 10 | 8.00 | RTX 4090 |
-| `v5-full-ds` | orthogonal | full TinyStories | 3/10 | **5.59** | RTX 4090 |
+---
 
-The bigger V5 story is not just the number. It is that **preserving phase properly made the architecture genuinely work**.
+## Honest Limitations
+
+- **No same-budget transformer baseline** on the identical WikiText-103 pipeline yet — the most important missing comparison.
+- **Absolute SOTA** — GPT-2–class models use more data and compute; we report **~30** val PPL at **~100M** params on WikiText-103 only.
+- **Factual reliability** — generations can be fluent but **wrong**; fact persistence probes on the checkpoint are not a success story yet.
+- **Bank specialization** — diversity regularization encourages distinct banks; **strong evidence** of disentangled roles is still lacking.
+- **No standard downstream benchmarks** (MMLU, HellaSwag, …) yet.
+- **Pure PyTorch** — no custom CUDA/Triton; performance headroom remains.
+- **Scaling** — behavior at 1B+ params is an open question.
+- **Single-GPU, limited dataset diversity** in the headline runs — broader validation is needed.
+
+The claim is **not** “beats transformers everywhere.” It is: **a genuinely different architecture class** that **learns real language** under documented training — worth iterating on honestly.
+
+---
+
+## Why This Direction Matters
+
+- **Architectural diversity** — If the field only explores transformers and close variants, other viable families may be missed.
+- **Phase preservation** is a **design constraint**, not branding — progress tracked math fixes, not parameter scaling alone.
+- **PAM** combines matrix-state storage, complex-conjugate retrieval, and optional GSP in one trainable stack — a distinct memory mechanism from both attention and classic SSMs.
+- **Inference** — Recurrent PAM inference is **O(1) per token** with bounded state; long-generation cost does not grow like a KV cache.
+- **Accessibility** — The project is deliberately explored on **consumer-class GPUs** (e.g. RTX 4090) to keep research reproducible outside huge clusters.
+
+---
+
+## What Happens Next
+
+- Same-budget **transformer baseline** on the WikiText-103 pipeline.
+- **Scale** toward ~300M–500M params; test whether PAM improves with scale.
+- **Factual / compositional binding** — can the matrix state be *used* for verifiable memory?
+- Longer training / more data; **standard benchmarks** when the stack is ready.
+
+---
 
 ## Quick Start
+
+These are the **only presets documented here as validated “last known good” paths** — `small-matched` (TinyStories) and `medium-pam-v3` (WikiText-103 headline). Other presets and scripts (`run_v6_wikitext103.sh`, `run_v6_pg19.sh`, sequential `medium-pam`, diffusion, V5, …) live in [v6/README.md](v6/README.md) and older version dirs.
 
 ### Install
 
@@ -129,127 +254,58 @@ uv sync
 uv sync --extra cuda
 ```
 
-### Train V6
+### Train
+
+**1. Small — TinyStories (`small-matched`, ~28.7M params)**  
+Documented val PPL **5.50** (full TinyStories, no extra memory flags in that run).
 
 ```bash
-# Smoke test (CPU)
-python -m v6.train --size tiny --epochs 5 --max_samples 1000 --seq_len 128
-
-# Standard TinyStories training
 python -m v6.train --size small-matched --max_samples 9999999 --seq_len 256 \
   --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4
-
-# WikiText-103 with PAM (current best: medium-pam-v3, val PPL 29.95)
-./scripts/run_v6_medium_pam_v3.sh
-# Sequential medium-pam baseline (val PPL 38.95)
-./scripts/run_v6_medium_pam.sh
-# Resume from checkpoint (adjust script / checkpoint dir for your preset)
-./scripts/run_v6_medium_pam_v3.sh --resume
-
-# WikiText-103 (SSM-based presets)
-./scripts/run_v6_wikitext103.sh
-
-# PG-19
-./scripts/run_v6_pg19.sh
 ```
 
-### Generate With V6
+**2. Medium PAM v3 — WikiText-103 (`medium-pam-v3`, ~100M params)**  
+Documented val PPL **29.95** (10 epochs, RTX 4090, RoPE on PAM Q/K, `pam_qk_norm=False`). Uses the tuned script (seq len 2048, bf16, `torch.compile`, …).
 
 ```bash
-# Autoregressive text (PAM v3 checkpoint)
+./scripts/run_v6_medium_pam_v3.sh
+# Resume from checkpoint
+./scripts/run_v6_medium_pam_v3.sh --resume
+```
+
+Optional **CPU smoke test** (not a headline result):  
+`python -m v6.train --size tiny --epochs 5 --max_samples 1000 --seq_len 128`
+
+### Generate
+
+Use checkpoints produced by the commands above (paths may match your `--checkpoint_dir` / script defaults).
+
+```bash
+# After medium-pam-v3 training (WikiText-style)
 python -m v6.generate --checkpoint checkpoints_v6_medium_pam_v3/best_model.pt \
   --prompt "In 1923 , the University of"
 
-# TinyStories checkpoint
+# After small-matched training (TinyStories)
 python -m v6.generate --checkpoint checkpoints_v6/best_model.pt \
   --prompt "Once upon a time"
-
-# With persistent memory
-python -m v6.generate --checkpoint checkpoints_v6/best_model.pt \
-  --persistent_memory user_alice.pt --prompt "Tell me a story"
 ```
 
-### Diffusion Scaffolding
+Persistent memory and other generation options: [v6/README.md](v6/README.md).
 
-```bash
-# Text diffusion scaffold (not yet a validated training path)
-python -m v6.train --mode diffusion_text --size small-matched --epochs 10
+---
 
-# Image diffusion scaffold (planned / experimental)
-python -m v6.train --mode diffusion_image --image_encoder patch --image_size 64
-```
+## Model Presets (V6)
 
-Those diffusion paths are present to keep the architecture ground-up ready and avoid rebuilding the backbone later. The current validated work is still the autoregressive line; diffusion is planned to be implemented and tested after, or alongside, the current autoregressive push.
+**Documented in this README for train/generate:**
 
-### V5 Still Matters
+| Preset | Role | Complex dim | Layers | State / PAM | Notes |
+|--------|------|-------------|--------|-------------|--------|
+| `small-matched` | TinyStories headline | 128 | 12 | SSM 512 | Named banks + multi-timescale SSM; val PPL **5.50** (documented run) |
+| `medium-pam-v3` | WikiText-103 headline | 384 | 16 | PAM 6×64 | Interleaved CGU+PAM, GSP, RoPE on PAM Q/K; val PPL **29.95** |
 
-```bash
-# V5 smoke test
-python -m v5.train --size tiny --epochs 5 --max_samples 1000
+**All other presets** (`tiny`, `medium-rebalanced-gsp`, sequential `medium-pam`, `large`, …): see [v6/README.md](v6/README.md). Memory slots default off; use `--wm_slots`, `--im_slots`, and persistent/session flags when experimenting.
 
-# V5 standard training
-python -m v5.train --size small-matched --epochs 10 --max_samples 100000 --init_strategy orthogonal
-```
-
-Earlier branches are still available in `v4/`, `v3/`, and `v2/`.
-
-## Performance Comparison
-
-The most useful comparison now is across the main non-transformer line itself:
-
-| Feature | v4 | v5 | v6 |
-| --- | --- | --- | --- |
-| **Core idea** | phase-space tokens + wave interference | mathematically consistent complex LM | phase-first LM with memory hierarchy |
-| **Attention** | none in core design | sparse PhaseAttention hybrid | none by default |
-| **Sequence complexity** | O(n) | O(n) with parallel scan depth improvements | O(n) |
-| **Banks** | dynamic phase banks | algebraic banks | named semantic/context banks |
-| **Coupling** | interference-inspired | `AlgebraicFusion` | `PhaseInterferenceCoupler` |
-| **Memory** | dual memory ideas | limited / indirect | working + internal + persistent + expert + session |
-| **Activation / gating** | real-valued breaks phase | `modReLU` + CGU | inherits V5's phase-preserving core |
-| **Modes** | autoregressive | autoregressive | autoregressive now, with diffusion scaffolding in place |
-| **Headline result** | novelty proof-of-concept | strong TinyStories breakthrough | current active direction |
-
-`v2` and `v3` remain earlier exploration branches rather than the current main comparison target.
-
-## Key Innovations Across Versions
-
-### V6
-
-- Attention-free by default, with a phase-native backbone aimed at long-context efficiency
-- Memory hierarchy that separates per-sequence facts, trained knowledge, user memory, and shared expert memory
-- Transferable memory system already implemented in code: session -> persistent -> expert
-- Shared backbone designed so future diffusion work can reuse the autoregressive core instead of duplicating the stack
-- WikiText-103: interleaved PAM (`medium-pam-v3`, RoPE on, QK phase norm off) val PPL **29.95** (10 epochs) -- beyond TinyStories-only validation
-
-### V5
-
-- Phase-preserving activations and gating made the complex-valued hypothesis actually coherent
-- Orthogonal initialization turned out to matter a lot for stable complex training
-- Weight tying with `Re(z * conj(embed))` reduced parameters and stayed algebraically consistent
-
-### V4
-
-- Introduced the novelty: complex phase-space tokens, wave interference framing, O(n) backbone, and philosophy-inspired interpretability metrics
-
-## Model Sizes
-
-### V6 presets
-
-| Size | Complex Dim | Layers | Banks | State / PAM | Batch Size | Notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `tiny` | 64 | 4 | 2 | state 128 | 16 | named banks + SSM |
-| `small` | 256 | 8 | 2 | state 512 | 8 | named banks + SSM |
-| `small-matched` | 128 | 12 | 2 | state 512 | 8 | named banks + SSM |
-| `small-rebalanced` | 128 | 12 | 1 | state 1280 | 8 | single CGU, TSO |
-| `medium-rebalanced` | 192 | 16 | 1 | state 1536 | 4 | single CGU, TSO |
-| `medium-rebalanced-gsp` | 192 | 16 | 1 | state 1536 | 4 | + GSP (WT103 val PPL 41.67) |
-| `medium-pam` | 384 | 16 | 1 | PAM 6×64 | 3 | sequential CGU then PAM + GSP (~100M, WT103 **38.95**) |
-| `medium-pam-v3` | 384 | 16 | 1 | PAM 6×64 | 3 | interleaved CGU+PAM + RoPE + GSP (~100M, WT103 **29.95**; `pam_qk_norm=False`) |
-| `medium` | 512 | 12 | 2 | state 1024 | 4 | named banks + SSM |
-| `large` | 512 | 24 | 2 | state 1536 | 2 | named banks + SSM |
-| `xl` | 768 | 32 | 2 | state 2048 | 1 | named banks + SSM |
-
-Memory is off by default; use `--wm_slots`, `--im_slots`, and persistent/session memory options to enable.
+---
 
 ## Project Structure
 
@@ -264,94 +320,44 @@ qllm2/
 │   ├── train.py
 │   ├── generate.py
 │   └── core/
-├── v5/                    # algebraic LM breakthrough
+├── v5/
 │   ├── README.md
 │   ├── EXPERIMENTS.md
 │   └── core/
-├── v4/                    # original phase-field architecture
-├── v3/                    # brain-inspired branch
-├── v2/                    # quantum-inspired branch
-└── scripts/               # training / eval / benchmark helpers
+├── v4/
+├── v3/
+├── v2/
+└── scripts/
 ```
-
-## Development Status
-
-### V6
-
-- Done: named banks, phase interference coupler, multi-timescale SSM, working/internal/persistent/expert memory layers
-- Done: single-bank (CGU) presets, Timescale-Separated Output (TSO), Gated State Protection (GSP)
-- Done: Holographic State Binding (HSB) experiment -- diagnosed failure (state interference) and motivated PAM
-- Done: Phase-Associative Memory (PAM) -- matrix state \(S \in \mathbb{C}^{H \times d \times d}\), dual form for O(T^2) training, recurrent O(1) inference
-- Done: PAM on WikiText-103 -- sequential `medium-pam` val PPL **38.95**; **`medium-pam-v3`** (interleaved + RoPE, no QK phase norm) val PPL **29.95**; coherent multi-sentence generation
-- Done: autoregressive training and generation; diffusion code paths scaffolded on the shared backbone
-- Done: TinyStories and WikiText-103 training across multiple presets
-- In progress: better activation of persistent/session/expert memory in practical runs
-- In progress: stronger benchmarking and scale-up; diffusion validation later
-
-### V5
-
-- Stable reference point for the mathematically consistent complex LM direction
-- Important benchmark and ablation base for understanding what V6 inherited
-
-### V4 / V3 / V2
-
-- Historical branches kept for reference, comparison, and idea lineage
-
-## Honest Limitations
-
-This is still research code. We do not want to oversell it.
-
-- No strict apples-to-apples transformer baseline at the same parameter scale and budget yet
-- Long-context and downstream evaluations are still incomplete
-- V6's transferable memory system exists in code, but the full deployment workflow is not yet the default path
-- Diffusion paths exist in the codebase, but they are not yet a tested or benchmarked headline capability
-- Pure PyTorch, with obvious room for custom kernels and systems work
-- Scaling behavior beyond the currently explored sizes still needs validation
-
-We are not claiming that complex or phase-first models have already beaten transformers broadly. The narrower claim is that this line of work has produced a real, improving non-transformer family with results strong enough to justify serious continued iteration.
-
-## Documentation
-
-- [v6/README.md](v6/README.md): architecture, CLI, memory system, diffusion modes, setup
-- [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md): V6 experiment log (archive through GSP / §18)
-- [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md): HSB, PAM, interleaved layouts, medium-pam-v2/v3, Bug 8 (QK norm)
-- [v5/README.md](v5/README.md): algebraic LM details and the V4 -> V5 correction
-- [v5/EXPERIMENTS.md](v5/EXPERIMENTS.md): V5 experiment log
-- [v4/README.md](v4/README.md): original phase-field architecture
-- [v2/README.md](v2/README.md): quantum-inspired branch
-- [v3/README.md](v3/README.md): brain-inspired branch
-
-## Research Notes
-
-- `QLLM_CORE_IDEA.pdf`: core idea document
-- `v5/paper/`: V5 paper draft
-- `QLLM_V2.pdf`: earlier quantum-inspired paper
-
-## Contributing
-
-1. Pick the branch you want to work on: `v6`, `v5`, `v4`, `v3`, or `v2`.
-2. Read that version's README first.
-3. Run a smoke test before making larger changes.
-4. Keep results and claims honest and tied to actual logs.
-
-## License
-
-This project is licensed under the PolyForm Noncommercial License 1.0.0. See [LICENSE](LICENSE) for details.
-
-You may use, study, modify, and share this work for non-commercial purposes. Commercial use is not granted under the default license. If you want to use this work in a commercial setting, contact [gowravvishwakarma@gmail.com](mailto:gowravvishwakarma@gmail.com).
-
-## Acknowledgments
-
-- **v6**: phase-first language modeling, external memory layers, diffusion reuse of the same backbone
-- **v5**: complex-valued language modeling, `modReLU`, CGU, Blelloch parallel scan, orthogonal initialization work
-- **v4**: phase-field modeling, oscillatory SSM ideas, philosophy-inspired metrics
-- **v2**: quantum-inspired modeling direction
-- **v3**: neuroscience and brain-inspired modeling direction
-- Built on PyTorch and modern deep learning tooling
 
 ---
 
-**Current focus**: `v6` -- PAM (`medium-pam-v3`) validated on WikiText-103; best val PPL **29.95** (~100M params, interleaved + RoPE).
-**Previous breakthrough**: `v5`
-**Novelty origin**: `v4`
-**Last Updated**: 2026-03-20
+## Documentation
+
+- [v6/README.md](v6/README.md) — Architecture, CLI, memory, diffusion modes, setup
+- [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md) — V6 experiment log (through GSP / §18)
+- [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) — HSB, PAM, interleaved layouts, Bug 8 (QK norm)
+- [v6/paper/](v6/paper/) — PAM paper draft (LaTeX)
+- [v5/README.md](v5/README.md) — Algebraic LM, V4 → V5
+- [v5/EXPERIMENTS.md](v5/EXPERIMENTS.md) — V5 experiment log
+- [v4/README.md](v4/README.md), [v2/README.md](v2/README.md), [v3/README.md](v3/README.md)
+
+**Research notes:** `QLLM_CORE_IDEA.pdf`, `v5/paper/`, `QLLM_V2.pdf`
+
+---
+
+## Contributing
+
+1. Pick a version directory (`v6`, `v5`, …) and read its README.
+2. Run a smoke test before large changes.
+3. Keep claims tied to logs and configs.
+
+---
+
+## License
+
+PolyForm Noncommercial License 1.0.0 — see [LICENSE](LICENSE). Non-commercial use allowed; commercial use requires permission — [gowravvishwakarma@gmail.com](mailto:gowravvishwakarma@gmail.com).
+
+---
+
+**Focus:** `v6` — PAM (`medium-pam-v3`), WikiText-103 val PPL **29.95** (~100M params). **Prior milestone:** `v5`. **Novelty origin:** `v4`. **Updated:** 2026-03-21
