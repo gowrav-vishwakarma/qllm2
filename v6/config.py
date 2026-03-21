@@ -66,6 +66,9 @@ class V6Config:
     attn_every: int = 0       # 0 = last layer only; N>0 = every N-th layer
     attn_num_heads: int = 8
     attn_window_size: int = 256
+    attn_mode: str = 'softmax'        # 'softmax' (standard) or 'interference' (complex weights, no softmax)
+    attn_rope: bool = False           # apply complex RoPE to attention Q,K
+    attn_fused_qkv: bool = False      # fused Q/K/V projection
 
     # Training
     batch_size: int = 8
@@ -228,6 +231,27 @@ def get_config(size: str = 'small-matched') -> V6Config:
             attn_every=4,
             attn_num_heads=6,
             attn_window_size=256,
+            batch_size=3, learning_rate=1e-4,
+            warmup_steps=1000,
+        ),
+        'medium-pam-v3-pia': V6Config(
+            dim=384, state_dim=0, num_layers=16,
+            num_banks=1, bank_expand=3,
+            single_bank=True,
+            timescale_separated_output=False,
+            gated_state_protection=True,
+            pam_num_heads=6, pam_head_dim=64,
+            interleave_pam=True,
+            pam_qk_norm=False,
+            pam_rope=True,
+            pam_fused_qkv=True,
+            use_attention=True,
+            attn_every=4,
+            attn_num_heads=6,
+            attn_window_size=256,
+            attn_mode='interference',
+            attn_rope=True,
+            attn_fused_qkv=True,
             batch_size=3, learning_rate=1e-4,
             warmup_steps=1000,
         ),
