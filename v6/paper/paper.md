@@ -2,6 +2,8 @@
 
 **Gowrav Vishwakarma**
 
+**Repository:** [github.com/gowrav-vishwakarma/qllm2](https://github.com/gowrav-vishwakarma/qllm2)
+
 March 2026
 
 ---
@@ -12,7 +14,7 @@ We present Phase-Associative Memory (PAM), a recurrent sequence modeling archite
 
 PAM admits two equivalent computational forms: a dual (quadratic) form for parallel training and a recurrent form for $O(1)$-per-token inference with fixed $O(d^2)$ memory per head, requiring no KV cache. The entire model operates in complex-valued space with phase-preserving primitives end to end.
 
-We evaluate PAM as the core sequence layer in a 100M-parameter language model trained on WikiText-103. Our **reported** configuration (**medium-pam-v3**) interleaves channel mixing and PAM in each of 16 blocks, applies **complex RoPE** to PAM queries and keys for relative position, fuses Q/K/V projections for efficiency, and trains with a higher learning rate and longer warmup than an earlier sequential layout. It achieves **validation perplexity 29.95** after 10 epochs. On the same validation protocol often cited for GPT-2 on WikiText-103 (approximately **31** validation PPL at 124M parameters), this is **in the same ballpark**, while remaining a different architecture class (complex-valued, attention-free, fixed recurrent state). We present PAM as a promising research direction rather than a finished system, and discuss both properties that may matter at scale and limitations that remain.
+We evaluate PAM as the core sequence layer in a 100M-parameter language model trained on WikiText-103. Our **reported** configuration (**medium-pam-v3**) interleaves channel mixing and PAM in each of 16 blocks, applies **complex RoPE** to PAM queries and keys for relative position, fuses Q/K/V projections for efficiency, and trains with a higher learning rate and longer warmup than an earlier sequential layout. It achieves **validation perplexity 29.95** after 10 epochs. On the same validation protocol often cited for GPT-2 on WikiText-103 (approximately **31** validation PPL at 124M parameters), this is **in the same ballpark**, while remaining a different architecture class (complex-valued, attention-free, fixed recurrent state). We present PAM as a promising research direction rather than a finished system, and discuss both properties that may matter at scale and limitations that remain. **Code:** https://github.com/gowrav-vishwakarma/qllm2
 
 ---
 
@@ -28,7 +30,7 @@ PAM emerged from a multi-stage research process:
 2. **V5** identified and fixed a critical flaw: V4 passed complex representations through real-valued nonlinearities (GELU, sigmoid) that destroyed phase information. V5 introduced phase-preserving primitives (modReLU, ComplexGatedUnit, ComplexNorm) and showed that mathematical consistency materially improved results.
 3. **V6** built on V5's phase-preserving foundation with a multi-timescale complex SSM backbone. Initial experiments with vector-state SSMs showed that associative capacity was limited by state interference: binding multiple facts into a single vector caused catastrophic collisions.
 4. **PAM** solves the interference problem by upgrading the state from a vector ($\mathbb{C}^d$) to a matrix ($\mathbb{C}^{d \times d}$), providing $O(d^2)$ associative capacity per head.
-5. **Layout and position encoding (medium-pam-v3)**: Interleaving **ComplexGatedUnit** and **PAM** in every block (rather than stacking all CGU layers before all PAM layers) improves early sequence mixing. **Complex RoPE** on PAM $Q$ and $K$ supplies explicit relative-position structure; **fused QKV** and a **block-real GEMM** implementation preserve the same mathematics with fewer kernel launches. Together with an adjusted AdamW schedule, these changes yield our best reported WikiText-103 result (§5).
+5. **Layout and position encoding (medium-pam-v3)**: Interleaving **ComplexGatedUnit** and **PAM** in every block (rather than stacking all CGU layers before all PAM layers) improves early sequence mixing. **Complex RoPE** on PAM $Q$ and $K$ supplies explicit relative-position structure; **fused QKV** and a **block-real GEMM** implementation preserve the same mathematics with fewer kernel launches. Together with an adjusted AdamW schedule, these changes yield our best reported WikiText-103 result (?5).
 
 This paper focuses on PAM and the evidence from validated training runs. We are explicit about what PAM has demonstrated and what remains open.
 
@@ -37,8 +39,8 @@ This paper focuses on PAM and the evidence from validated training runs. We are 
 - **Phase-Associative Memory (PAM)**: a recurrent layer with complex matrix state, data-dependent decay, and retrieval via complex phase interference -- no softmax, no KV cache.
 - **Gated State Protection (GSP)**: a learned per-dimension freeze gate that allows the model to retain important state indefinitely.
 - **Dual-form training**: an $O(T^2)$ parallel computation equivalent to the $O(T)$ recurrence, enabling efficient GPU training.
-- **Interleaved blocks + complex RoPE**: sixteen blocks of `[CGU → PAM]` with RoPE on PAM $Q,K$ (and optional implementation fusion) as the **medium-pam-v3** recipe.
-- **Empirical validation**: WikiText-103 validation perplexity **29.95** at ~100M parameters (**medium-pam-v3**), with coherent multi-sentence generation. We also report the earlier **sequential** medium-pam run (**38.95**) for comparison (§5.1).
+- **Interleaved blocks + complex RoPE**: sixteen blocks of `[CGU ��� PAM]` with RoPE on PAM $Q,K$ (and optional implementation fusion) as the **medium-pam-v3** recipe.
+- **Empirical validation**: WikiText-103 validation perplexity **29.95** at ~100M parameters (**medium-pam-v3**), with coherent multi-sentence generation. We also report the earlier **sequential** medium-pam run (**38.95**) for comparison (?5.1).
 
 ### 1.2 Scope and honest framing
 
@@ -50,7 +52,7 @@ We do not claim that PAM is a drop-in replacement for GPT-scale transformers. Pu
 
 ### 2.1 Transformers and attention
 
-The transformer (Vaswani et al., 2017) computes attention as $\text{softmax}(QK^\top / \sqrt{d})V$, where queries, keys, and values are linear projections of the input. This is powerful but costs $O(T^2)$ per layer and requires a KV cache that grows linearly with sequence length during inference. Rotary position embeddings (RoPE; Su et al., 2021) encode relative position in the $QK^\top$ product by position-dependent rotations in embedding space; our PAM variant applies an analogous **complex** phase rotation to $Q$ and $K$ only (§3.4). Numerous efficiency variants exist (sparse attention, linear attention, sliding window), but the core mechanism remains fundamentally quadratic.
+The transformer (Vaswani et al., 2017) computes attention as $\text{softmax}(QK^\top / \sqrt{d})V$, where queries, keys, and values are linear projections of the input. This is powerful but costs $O(T^2)$ per layer and requires a KV cache that grows linearly with sequence length during inference. Rotary position embeddings (RoPE; Su et al., 2021) encode relative position in the $QK^\top$ product by position-dependent rotations in embedding space; our PAM variant applies an analogous **complex** phase rotation to $Q$ and $K$ only (?3.4). Numerous efficiency variants exist (sparse attention, linear attention, sliding window), but the core mechanism remains fundamentally quadratic.
 
 ### 2.2 State-space models and recurrent alternatives
 
@@ -83,7 +85,7 @@ Tokens -> ComplexEmbed -> ComplexNorm
   -> ComplexLinear -> ComplexNorm -> TiedComplexLMHead
 ```
 
-An earlier **sequential** layout (`medium-pam`) instead ran `[CGU + residual] x 16` followed by `[PAM + residual] x 16`; §5.1 reports both.
+An earlier **sequential** layout (`medium-pam`) instead ran `[CGU + residual] x 16` followed by `[PAM + residual] x 16`; ?5.1 reports both.
 
 All operations in the main signal path are complex-valued and phase-preserving. Control signals (gates, decay parameters) may use real-valued projections over magnitude features, but the primary data path never converts complex representations to real-valued intermediate forms.
 
@@ -196,7 +198,7 @@ During training, we avoid materializing the $d \times d$ matrix sequentially. In
 
 2. Apply a causal mask: $D[t, i] = 0$ for $i > t$.
 
-3. Apply RoPE to $Q$ and $K$ at each position (§3.4.3), then compute the complex attention-like matrix:
+3. Apply RoPE to $Q$ and $K$ at each position (?3.4.3), then compute the complex attention-like matrix:
    $$W = (Q / \sqrt{d}) \cdot K^{*\top}$$
 
 4. Apply decay: $A = W \odot D$
@@ -221,7 +223,7 @@ The state $S \in \mathbb{C}^{H \times d \times d}$ is fixed-size and does not gr
 
 #### 3.4.10 Stacking within a block
 
-Within each block, PAM follows CGU with pre-normalization, residual, and learned layer scale (§3.3). A final ComplexNorm is applied before the output head.
+Within each block, PAM follows CGU with pre-normalization, residual, and learned layer scale (?3.3). A final ComplexNorm is applied before the output head.
 
 ### 3.5 Output head
 
@@ -257,7 +259,7 @@ We train and evaluate on WikiText-103 (Merity et al., 2017), a standard language
 | PAM head dimension ($d$) | 64 |
 | GSP | enabled |
 | PAM RoPE on $Q, K$ | yes (`pam_rope=True`) |
-| PAM QK phase norm | **off** (`pam_qk_norm=False`; see §5.1) |
+| PAM QK phase norm | **off** (`pam_qk_norm=False`; see ?5.1) |
 | Fused QKV projection | yes (`pam_fused_qkv=True`) |
 | Sequence length | 2048 |
 | Total parameters | ~100.4M |
@@ -266,7 +268,7 @@ We train and evaluate on WikiText-103 (Merity et al., 2017), a standard language
 
 ### 4.3 Training details
 
-Hyperparameters below match **medium-pam-v3** ([`v6/config.py`](../config.py) preset `medium-pam-v3`). The earlier **sequential** `medium-pam` run used learning rate $3 \times 10^{-5}$ and 500 warmup steps (§5.1).
+Hyperparameters below match **medium-pam-v3** ([`v6/config.py`](../config.py) preset `medium-pam-v3`). The earlier **sequential** `medium-pam` run used learning rate $3 \times 10^{-5}$ and 500 warmup steps (?5.1).
 
 | Parameter | Value |
 |---|---|
@@ -381,7 +383,7 @@ Structural differences remain important:
 
 Quality metrics at final epoch: 3-gram repetition rate **0.034**, 4-gram repetition rate **0.011**, zero restarts, unique token ratio **0.703**. The sample shows section-like structure and WikiText-style tokenization artifacts; it does **not** exhibit the list-repetition failure mode of the QK-norm ablation.
 
-**Sequential medium-pam (epoch 10)** for the same prompt (different run, see §5.1):
+**Sequential medium-pam (epoch 10)** for the same prompt (different run, see ?5.1):
 > In 1923 , the University of Missouri and the University of Michigan was also established in 1926 . In 1928 , the University of Michigan opened its current campus with the school 's first campus opening at St. Louis Road on the northern end of Lake Michigan in 1929 .
 
 Quality metrics (sequential run): 3-gram rep. 0.051, 4-gram rep. 0.020, unique token ratio 0.624.
@@ -502,6 +504,8 @@ The V6 codebase includes a memory hierarchy (working, internal, persistent, expe
 
 PAM could be combined with sparse attention layers (e.g., every $k$-th layer) to create a hybrid architecture. The V6 codebase already supports optional PhaseAttention layers. Whether a small number of attention layers can close the gap to transformers while preserving PAM's inference advantages is worth investigating.
 
+**Prior hybrid (V5 lineage).** In this research line, the earlier **V5** codebase first combined end-to-end phase-preserving complex sequence modeling with **sparse** PhaseAttention (sliding window, every $K$ layers) and trained it to strong TinyStories perplexity, establishing a working complex-phase--limited-attention stack before the attention-free PAM direction (see `v5/EXPERIMENTS.md`).
+
 ### 8.6 Multimodal extensions
 
 The shared backbone design in V6 was built to support both autoregressive and diffusion modes on the same architecture. Extending PAM to image generation or multimodal modeling is architecturally straightforward but experimentally unvalidated.
@@ -548,7 +552,7 @@ init_strategy:        orthogonal
 
 ### A.2 medium-pam configuration (sequential baseline)
 
-Same embedding and PAM head dimensions as §A.1, but **no** interleaving, **no** RoPE, **no** fused QKV flag in the preset; training used **learning rate** $3 \times 10^{-5}$ and **500** warmup steps (see §5.1). Full preset: `medium-pam` in [`v6/config.py`](../config.py).
+Same embedding and PAM head dimensions as ?A.1, but **no** interleaving, **no** RoPE, **no** fused QKV flag in the preset; training used **learning rate** $3 \times 10^{-5}$ and **500** warmup steps (see ?5.1). Full preset: `medium-pam` in [`v6/config.py`](../config.py).
 
 ### A.3 Training configuration (medium-pam-v3)
 
