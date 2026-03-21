@@ -1508,7 +1508,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Train V6 Phase-First LM')
     parser.add_argument('--size', type=str, default='small-matched',
-                        choices=['tiny', 'small', 'small-matched', 'small-rebalanced', 'medium-rebalanced', 'medium-rebalanced-gsp', 'medium-pam', 'medium-pam-v2', 'medium-pam-v3', 'medium-pam-v3-attn', 'medium', 'large', 'xl'])
+                        choices=['tiny', 'small', 'small-matched', 'small-rebalanced', 'medium-rebalanced', 'medium-rebalanced-gsp', 'medium-pam', 'medium-pam-v2', 'medium-pam-v3', 'medium-pam-v3-attn', 'medium-pam-v3-pia', 'medium', 'large', 'xl'])
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=None)
     parser.add_argument('--lr', type=float, default=None)
@@ -1736,7 +1736,14 @@ def main():
         _sl(f"Dataset: {config.image_dataset}")
     if config.use_attention:
         attn_desc = f"every {config.attn_every} layers" if config.attn_every > 0 else "last layer only"
-        _sl(f"PhaseAttention: ENABLED ({attn_desc}, heads={config.attn_num_heads}, window={config.attn_window_size})")
+        mode_tag = config.attn_mode
+        extras = []
+        if config.attn_rope:
+            extras.append("RoPE")
+        if config.attn_fused_qkv:
+            extras.append("fused-QKV")
+        extras_str = f", {', '.join(extras)}" if extras else ""
+        _sl(f"PhaseAttention: ENABLED ({attn_desc}, mode={mode_tag}, heads={config.attn_num_heads}, window={config.attn_window_size}{extras_str})")
     else:
         _sl(f"PhaseAttention: DISABLED (attention-free)")
     _sl(f"Epochs: {config.max_epochs}")
