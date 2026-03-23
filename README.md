@@ -369,9 +369,9 @@ qllm2/
 
 ## Contributing
 
-1. Pick a version directory (`v6`, `v5`, …) and read its README.
-2. Run a smoke test before large changes.
-3. Keep claims tied to logs and configs.
+All contributions are subject to the project's [Contributor License Agreement](CLA.md) (copyright assignment). The project owner retains full commercial and licensing rights.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, the CLA signing process, and code standards.
 
 ---
 
