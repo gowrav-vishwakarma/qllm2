@@ -419,6 +419,7 @@ Building on the interleaved layout from v2 (experiment §4), there are two categ
 
 - **Done (from logs)**: QK norm hurts generation quality badly → default off (Bug 8).
 - **Done**: Full 10-epoch train with `pam_qk_norm=False` — val PPL **29.95**; see **Results (completed run)** below.
+- **Done**: `medium-pam-v3-pia` (sparse PIA on v3) — val PPL **30.01**; see **Attention ablation** below.
 - **Future (optional)**: disable `pam_rope` only to isolate RoPE vs. recurrence-only position signal.
 - Speed changes (block-real GEMM, fused QKV) are math-identical and cannot affect quality.
 
@@ -430,6 +431,7 @@ Same WikiText-103 10-epoch setting where noted. Rows are **not** a controlled si
 |-------|--------|---------|-------|
 | medium-pam (sequential) | 100.4M | 38.95 | Sequential layout, no RoPE, no QK norm |
 | **medium-pam-v3 (RoPE, no QK-norm)** | **~100.4M** | **29.95** | **Interleaved + RoPE + speed paths** (§5 completed run) |
+| medium-pam-v3-pia | ~105.1M | 30.01 | + sparse PIA every 4 layers (interference, window 256); no PPL win vs v3 — §5 attention ablation |
 | medium-pam-v2 (interleaved) | 100.4M | N/A | Stopped early (experiment §4) |
 | GPT-2 small (Transformer) | ~124M | ~14.84 | Fine-tuned on WikiText-103 |
 | Transformer (vanilla) | ~125M | ~18.6 | Trained on WikiText-103 |
@@ -480,6 +482,10 @@ Full **10 epochs** on WikiText-103. Training **numerically stable** (`div`/`wdiv
 Quality: **rep3=0.034**, **rep4=0.011**, restarts=0, **uniq=0.703**. Coherent structure (section headers, multi-sentence prose); occasional WikiText-style artifacts and dubious facts (e.g. tokenization / hallucinated place names), not the list-repetition mode of the QK-norm run.
 
 **Outcome**: `v6/config.py` preset `medium-pam-v3` keeps **`pam_qk_norm=False`**; this run validates **RoPE + block-real GEMM + fused QKV** without QK phase norm. **Future**: optional `pam_rope` ablation; or revisit QK norm with a learnable logit scale after normalization (Bug 8). Prefer log directory names that distinguish **`qknorm_rope`** vs **`rope`** (no QK-norm) so runs are not confused.
+
+### Attention ablation (`medium-pam-v3-pia`)
+
+We infused **sparse phase-interference attention** on top of the v3 stack (preset `medium-pam-v3-pia`: PIA every 4 layers, window 256, `attn_mode=interference`, RoPE + fused QKV on attention — same WikiText-103 recipe otherwise). **Result:** best **val PPL 30.01** at ~**105.1M** params vs **29.95** at ~100.4M without attention — effectively flat, so the headline stays PAM-only. **Log:** `logs/v6/medium_pam_v3_pia_wikitext103_20260321_201508_5c76a92/` (git `5c76a92`).
 
 ---
 
