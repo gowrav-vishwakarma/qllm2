@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # Sync local branch with a private remote (default: origin) and a public remote
-# (default: public_repo) without dropping merged PRs from public: fetch both,
-# pull private with rebase, pull public with rebase, push to both.
+# (default: public_repo) without dropping merged PRs from public.
+#
+# Strategy: rebase onto private (keeps linear history with your primary remote),
+# then MERGE from public (a merge commit descends from both remotes, so push to
+# both succeeds as a fast-forward). This avoids the rebase-both problem where
+# rewriting SHAs makes one push non-fast-forward.
 #
 # Usage:
 #   ./scripts/git_sync_dual_remote.sh
@@ -13,9 +17,8 @@
 #   GIT_SYNC_BRANCH           default: current branch (must not be detached)
 #   GIT_SYNC_ALLOW_DIRTY=1    allow uncommitted changes (pull may still fail)
 #
-# If `git pull ... --rebase` stops on conflicts: resolve, `git add`, `git rebase --continue`
-# until done, then either push both remotes manually or re-run this script (fetch/pull should
-# be no-ops if already synced).
+# If a pull stops on conflicts: resolve, `git add`, and continue (rebase --continue or
+# commit for merge), then either push both remotes manually or re-run this script.
 
 set -euo pipefail
 
@@ -101,10 +104,16 @@ echo "Syncing branch '$BRANCH': private=$PRIVATE_REMOTE public=$PUBLIC_REMOTE"
 run git fetch "$PRIVATE_REMOTE" "$BRANCH"
 run git fetch "$PUBLIC_REMOTE" "$BRANCH"
 
-# Order matters: align with private first, then replay on top of public (merged PRs).
+# Step 1: rebase onto private — keeps linear history with your primary remote.
 run git pull "$PRIVATE_REMOTE" "$BRANCH" --rebase
-run git pull "$PUBLIC_REMOTE" "$BRANCH" --rebase
 
+# Step 2: MERGE from public (not rebase). A merge commit has both remotes as
+# ancestors, so pushing to both is a fast-forward. If already up-to-date this
+# is a no-op (no empty merge commit).
+run git pull "$PUBLIC_REMOTE" "$BRANCH" --no-rebase
+
+# Step 3: push to both. Private sees the merge commit as a descendant of its
+# old HEAD; public sees it as a descendant of its old HEAD too.
 run git push "$PRIVATE_REMOTE" "$BRANCH"
 run git push "$PUBLIC_REMOTE" "$BRANCH"
 
