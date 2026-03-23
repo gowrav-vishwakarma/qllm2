@@ -2,7 +2,7 @@
 
 Structured log of architecture decisions, implementation notes, bug fixes, and training runs for the V6 phase-first model.
 
-**Continuation (HSB, PAM, Bug 8, medium-pam-v2/v3):** [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md)
+**Continuation (transformer baseline §0, HSB, PAM, Bug 8, medium-pam-v2/v3):** [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md)
 
 ---
 
