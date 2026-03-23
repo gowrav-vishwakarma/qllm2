@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Transformer Baseline: d_model=672 n_layers=12 n_heads=12 d_ff=2688 (~100.3M), LR=1e-4, warmup=1000, WikiText-103
+Date (UTC)  : 2026-03-23 08:33:51
+Date (local): 2026-03-23 14:03:51 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : e87b8e4478c9971ebea344569d30ad23760fe95d
+Git short   : e87b8e4
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --seq_len 2048 --batch_size 3 --epochs 10 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --gen_prompt 'In 1923 , the University of'  
+================================================================================

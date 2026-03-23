@@ -1,10 +1,58 @@
 # V6 Experiment Log — Part 2 (HSB, PAM, onward)
 
-Continuation of [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md). **Part 1** keeps the full archive through **§18 GSP run results** (architecture, bugs 1–7, TinyStories/WikiText baselines, rebalanced + TSO + GSP). **This file** is self-contained for everything after that: **Bug 8**, HSB, PAM, medium-pam-v2 (interleaved CGU+PAM -- PAM interleaved with CGU in every block instead of all-PAM at the end), medium-pam-v3 (RoPE, optional QK phase norm, fused QKV / block-real GEMM). A full **10-epoch** v3 run with **`pam_qk_norm=False`**, RoPE, and the speed paths finished at **val PPL 29.95** (WikiText-103); the earlier **`pam_qk_norm=True`** run was **stopped mid-epoch 5** due to repetition collapse (Bug 8).
+Continuation of [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md). **Part 1** keeps the full archive through **§18 GSP run results** (architecture, bugs 1–7, TinyStories/WikiText baselines, rebalanced + TSO + GSP). **This file** is self-contained for everything after that: **§0** same-pipeline **transformer baseline** (apples-to-apples vs PAM), **Bug 8**, HSB, PAM, medium-pam-v2 (interleaved CGU+PAM -- PAM interleaved with CGU in every block instead of all-PAM at the end), medium-pam-v3 (RoPE, optional QK phase norm, fused QKV / block-real GEMM). A full **10-epoch** v3 run with **`pam_qk_norm=False`**, RoPE, and the speed paths finished at **val PPL 29.95** (WikiText-103); the earlier **`pam_qk_norm=True`** run was **stopped mid-epoch 5** due to repetition collapse (Bug 8).
 
 **Git reference:** interleaved CGU+PAM was tagged `v6-medium-pam-v2-interleaved` before the Part 2 code path diverged further.
 
-**How to update:** Append new PAM-era runs and related bugs here.
+**How to update:** Append new PAM-era runs and related bugs here; update **§0** if the transformer baseline is re-run.
+
+---
+
+## 0. Transformer baseline — ~100M GPT-2 style (WikiText-103) (2026-03-23)
+
+### Purpose
+
+**Apples-to-apples comparison** against `medium-pam-v3` (~100.4M): same **GPT-2 tokenizer** (50257 vocab), **WikiText-103** (`wikitext-103-raw-v1`), **seq_len 2048**, **batch_size 3**, **10 epochs**, **AdamW lr=1e-4**, **warmup 1000**, **cosine decay**, **dropout 0.1**, **`torch.compile`**, **`--amp_dtype auto`**. Script: [`scripts/run_transformer_baseline.sh`](scripts/run_transformer_baseline.sh); entrypoint: `python -m v6.train_transformer_baseline`. Implementation: [`v6/transformer_baseline.py`](v6/transformer_baseline.py).
+
+### Architecture (intentionally vanilla — not QLLM)
+
+This is a **standard real-valued decoder-only transformer** (GPT-2 flavor): learned absolute positional embeddings (not RoPE), **pre-norm** `LayerNorm`, causal multi-head self-attention via **`F.scaled_dot_product_attention`** (PyTorch **SDPA**; on RTX 4090 this typically dispatches to **Flash Attention** / memory-efficient backends), GELU FFN, residual connections, **tied** input/output embeddings. **No** PAM, complex tensors, CGU, or GSP.
+
+**Sizing (~100.3M params, matched to the PAM budget):** `d_model=672`, `n_layers=12`, `n_heads=12` (head dim 56), `d_ff=2688` (4× `d_model`). Logged breakdown: embeddings 35.1M, transformer blocks 65.1M, final LN 1.3K, `lm_head` 0 (tied), **total 100,283,232**.
+
+### Throughput and Flash Attention
+
+Training step throughput is ~**92–97k tok/s** (epoch-average ~96k) vs ~**23k tok/s** for `medium-pam-v3`. The baseline uses the **highly optimized SDPA path** (Flash-style kernels where the backend selects them); QLLM PAM is still **pure PyTorch** with no custom CUDA/Triton. Treat the **~4× wall-time / tok/s gap** as partly **optimization maturity**, not only architecture — the val PPL gap is the cleaner quality comparison.
+
+### Results (completed 10-epoch run)
+
+**Git / log:** `e87b8e4` — `logs/v6/transformer_baseline_wikitext103_20260323_140351_e87b8e4/` (`transformer_baseline.log`, `RUN_INFO.txt`). Checkpoints: `checkpoints_transformer_baseline/best_model.pt`.
+
+| Epoch | Train PPL | Val PPL | Notes |
+|-------|-----------|---------|-------|
+| 1 | 137.77 | 53.74 | |
+| 2 | 52.81 | 39.42 | |
+| 3 | 42.74 | 34.76 | |
+| 4 | 38.27 | 31.96 | |
+| 5 | 35.54 | 30.39 | |
+| 6 | 33.41 | 29.02 | |
+| 7 | 31.65 | 28.09 | |
+| 8 | 30.28 | 27.46 | |
+| 9 | 29.29 | 27.15 | |
+| 10 | 28.75 | **27.08** | best val |
+
+**Wall time:** 12505.1 s (**~3.47 h** total). **GPU:** ~1.8 / 7.0 GB in log. **End-of-epoch generation** (epoch 10, prompt: `In 1923 , the University of`): coherent WikiText-style scaffolding; facts unreliable. **Quality:** rep3=0.034, rep4=0.011, restarts=0, uniq=0.667.
+
+### Side-by-side: transformer baseline vs `medium-pam-v3`
+
+| | Transformer baseline | medium-pam-v3 (QLLM) |
+|---|---------------------|----------------------|
+| Params | ~100.3M | ~100.4M |
+| Val PPL (10 ep) | **27.08** | **29.95** |
+| Tok/s (typical) | ~96k | ~23k |
+| Wall time (10 ep) | ~3.5 h | ~14.1 h |
+
+**Readout:** The vanilla transformer **wins on val PPL** (~10% relative gap). PAM v3 is **close** on perplexity under the same data recipe; throughput favors the baseline largely due to **Flash-class SDPA + mature stack** vs pure-PyTorch PAM.
 
 ---
 
@@ -429,6 +477,7 @@ Same WikiText-103 10-epoch setting where noted. Rows are **not** a controlled si
 
 | Model | Params | Val PPL | Notes |
 |-------|--------|---------|-------|
+| **transformer baseline (GPT-2 style, SDPA/Flash)** | **~100.3M** | **27.08** | **Same pipeline as v3** — §0; `v6/transformer_baseline.py` |
 | medium-pam (sequential) | 100.4M | 38.95 | Sequential layout, no RoPE, no QK norm |
 | **medium-pam-v3 (RoPE, no QK-norm)** | **~100.4M** | **29.95** | **Interleaved + RoPE + speed paths** (§5 completed run) |
 | medium-pam-v3-pia | ~105.1M | 30.01 | + sparse PIA every 4 layers (interference, window 256); no PPL win vs v3 — §5 attention ablation |
@@ -491,5 +540,6 @@ We infused **sparse phase-interference attention** on top of the v3 stack (prese
 
 ## How to update Part 2
 
+- **Transformer baseline** (same WikiText-103 pipeline, ~100.3M): documented under **§0**; re-run with [`scripts/run_transformer_baseline.sh`](scripts/run_transformer_baseline.sh) and update §0 tables/logs.
 - **medium-pam-v3 production metrics** (10-epoch RoPE, no QK-norm): documented under §5 **Results (completed run)**; the failed QK-norm ablation stays in **Results (failed ablation)** in the same section.
 - Append new experiment sections after §5 (continue as §6, §7, …). For new PAM-related bugs, add them here (extend Bug 8 or add Bug 9+); if a bug belongs in the global §3 list in Part 1, add a **one-line pointer** in [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md) §3 and keep the full write-up here.

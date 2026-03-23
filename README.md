@@ -172,12 +172,25 @@ Wall time ~14.1 h (logged run). Earlier **sequential** `medium-pam` (same ~100M 
 | medium-pam | 100.4M | 38.95 | PAM + GSP; **sequential** CGU then PAM |
 | **medium-pam-v3** | **100.4M** | **29.95** | **Interleaved** CGU+PAM + RoPE + fused QKV |
 
-### Orientation (not apples-to-apples)
+### Apples-to-apples: transformer baseline vs `medium-pam-v3` (WikiText-103)
+
+Same **data pipeline** (GPT-2 tokenizer, WikiText-103, seq_len 2048, batch 3, 10 epochs, AdamW 1e-4, warmup 1000, `torch.compile`, bf16). Documented in [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) **§0**.
+
+| Model | Params | Val PPL (10 ep) | Notes |
+|-------|--------|-----------------|--------|
+| **Transformer baseline** (GPT-2 style: pre-norm, GELU FFN, learned positions) | **~100.3M** | **27.08** | `F.scaled_dot_product_attention` — SDPA typically uses **Flash Attention** on RTX 4090; ~96k tok/s |
+| **QLLM `medium-pam-v3`** | **~100.4M** | **29.95** | Interleaved CGU+PAM, GSP, PAM RoPE; pure PyTorch PAM path ~23k tok/s |
+
+The vanilla transformer **wins on val PPL**; PAM v3 is within ~10%. The **~4× throughput** gap is **not** a fair “architecture-only” score — SDPA/Flash is heavily optimized; PAM has no custom CUDA/Triton kernels yet.
+
+**GPU-poor mercy clause:** Yes, we are *behind* the baseline on PPL — and this whole line of work is basically **one person**, **months to years**, on a **single RTX 4090**. If you are about to roast us on Reddit: please remember we are **compute-budget-limited**, not *malice*-limited — be **kind**; we are trying.
+
+
+### Orientation (other references — not same pipeline)
 
 | Model | Params | Val PPL | Notes |
 |-------|--------|---------|--------|
 | GPT-2 Small | 124M | ~31 | WebText, different pipeline |
-| **QLLM V6 (PAM v3)** | **~100M** | **~30** | WikiText-103 only, single 4090 |
 | AWD-LSTM | ~24M | ~69 (WT2) | Different tokenization / split |
 
 ### TinyStories (V6)
@@ -211,12 +224,12 @@ Fluent scaffolding; facts are **not** reliable at this scale. Logged quality aft
 
 ## Honest Limitations
 
-- **No same-budget transformer baseline** on the identical WikiText-103 pipeline yet — the most important missing comparison.
+- **Same-pipeline transformer baseline exists** — ~**100.3M** GPT-2–style model reaches val PPL **27.08** vs **29.95** for `medium-pam-v3` (see **§0** in [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md)). The headline stack does **not** beat vanilla attention on perplexity yet; the interesting part is **how close** a different mechanism gets with **no Flash-class custom kernels** on the PAM side.
 - **Absolute SOTA** — GPT-2–class models use more data and compute; we report **~30** val PPL at **~100M** params on WikiText-103 only.
 - **Factual reliability** — generations can be fluent but **wrong**; fact persistence probes on the checkpoint are not a success story yet.
 - **Bank specialization** — diversity regularization encourages distinct banks; **strong evidence** of disentangled roles is still lacking.
 - **No standard downstream benchmarks** (MMLU, HellaSwag, …) yet.
-- **Pure PyTorch** — no custom CUDA/Triton; performance headroom remains.
+- **Pure PyTorch (PAM path)** — no custom CUDA/Triton; performance headroom remains (contrast: baseline uses SDPA/Flash via PyTorch).
 - **Scaling** — behavior at 1B+ params is an open question.
 - **Single-GPU, limited dataset diversity** in the headline runs — broader validation is needed.
 
@@ -236,7 +249,6 @@ The claim is **not** “beats transformers everywhere.” It is: **a genuinely d
 
 ## What Happens Next
 
-- Same-budget **transformer baseline** on the WikiText-103 pipeline.
 - **Scale** toward ~300M–500M params; test whether PAM improves with scale.
 - **Factual / compositional binding** — can the matrix state be *used* for verifiable memory?
 - Longer training / more data; **standard benchmarks** when the stack is ready.
@@ -245,7 +257,7 @@ The claim is **not** “beats transformers everywhere.” It is: **a genuinely d
 
 ## Quick Start
 
-These are the **only presets documented here as validated “last known good” paths** — `small-matched` (TinyStories) and `medium-pam-v3` (WikiText-103 headline). Other presets and scripts (`run_v6_wikitext103.sh`, `run_v6_pg19.sh`, sequential `medium-pam`, diffusion, V5, …) live in [v6/README.md](v6/README.md) and older version dirs.
+These are the **only presets documented here as validated “last known good” paths** — `small-matched` (TinyStories) and `medium-pam-v3` (WikiText-103 headline). For **apples-to-apples** comparison, the **vanilla transformer baseline** uses [`scripts/run_transformer_baseline.sh`](scripts/run_transformer_baseline.sh) (`v6.train_transformer_baseline`, not a `medium-pam-*` preset). Other presets and scripts (`run_v6_wikitext103.sh`, `run_v6_pg19.sh`, sequential `medium-pam`, diffusion, V5, …) live in [v6/README.md](v6/README.md) and older version dirs.
 
 ### Install
 
@@ -271,6 +283,15 @@ Documented val PPL **29.95** (10 epochs, RTX 4090, RoPE on PAM Q/K, `pam_qk_norm
 ./scripts/run_v6_medium_pam_v3.sh
 # Resume from checkpoint
 ./scripts/run_v6_medium_pam_v3.sh --resume
+```
+
+**3. Transformer baseline — WikiText-103 (~100.3M params, val PPL 27.08)**  
+Same tokenizer/dataset/recipe as `medium-pam-v3` for apples-to-apples comparison ([EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) §0).
+
+```bash
+./scripts/run_transformer_baseline.sh
+# Resume from checkpoint
+./scripts/run_transformer_baseline.sh --resume
 ```
 
 Optional **CPU smoke test** (not a headline result):  
@@ -336,7 +357,7 @@ qllm2/
 
 - [v6/README.md](v6/README.md) — Architecture, CLI, memory, diffusion modes, setup
 - [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md) — V6 experiment log (through GSP / §18)
-- [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) — HSB, PAM, interleaved layouts, Bug 8 (QK norm)
+- [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) — Transformer baseline (§0), HSB, PAM, interleaved layouts, Bug 8 (QK norm)
 - [v6/paper/](v6/paper/) — PAM paper draft (LaTeX)
 - [v5/README.md](v5/README.md) — Algebraic LM, V4 → V5
 - [v5/EXPERIMENTS.md](v5/EXPERIMENTS.md) — V5 experiment log
@@ -360,4 +381,4 @@ PolyForm Noncommercial License 1.0.0 — see [LICENSE](LICENSE). Non-commercial 
 
 ---
 
-**Focus:** `v6` — PAM (`medium-pam-v3`), WikiText-103 val PPL **29.95** (~100M params). **Prior milestone:** `v5`. **Novelty origin:** `v4`. **Updated:** 2026-03-21
+**Focus:** `v6` — PAM (`medium-pam-v3`), WikiText-103 val PPL **29.95** (~100M params); same-pipeline transformer baseline val PPL **27.08** ([EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) §0). **Prior milestone:** `v5`. **Novelty origin:** `v4`. **Updated:** 2026-03-23
