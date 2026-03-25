@@ -36,10 +36,11 @@ class V7Config:
     qk_norm: bool = False
     tie_weights: bool = True
     # Hierarchical timescale: each PAM layer gets a distinct dt_bias
-    # controlling its memory span (book -> word).
+    # controlling its memory span (global -> step).
     # When True + dt_bias_schedule is None, auto-generates linspace(-6.91, 0.0, n_layers).
     hierarchical_dt: bool = True
     dt_bias_schedule: Optional[tuple] = None
+    cross_level: bool = False
 
 
 # ── Complex Arithmetic (split-real: [..., dim, 2]) ───────────────────────────
@@ -230,6 +231,10 @@ class PhaseAssociativeLayer(nn.Module):
             self.protect_gate = nn.Linear(cfg.dim, cfg.n_heads)
             nn.init.constant_(self.protect_gate.bias, -3.0)
 
+        # Cross-level drift: project higher layer's PAM output into Q-space
+        if cfg.cross_level and layer_idx > 0:
+            self.drift_proj = ComplexLinear(cfg.dim, inner, bias=False)
+
         if cfg.use_rope:
             self.register_buffer(
                 'rope_cache',
@@ -244,6 +249,7 @@ class PhaseAssociativeLayer(nn.Module):
         x: torch.Tensor,
         state: Optional[torch.Tensor] = None,
         step_offset: int = 0,
+        drift_signal: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         B, T, _, _ = x.shape
         H, d = self.num_heads, self.head_dim
@@ -276,6 +282,11 @@ class PhaseAssociativeLayer(nn.Module):
         if self.qk_norm:
             q = cnormalize(q)
             k = cnormalize(k)
+
+        # 1d. Cross-level drift: bias Q toward higher layer's goal
+        if drift_signal is not None and hasattr(self, 'drift_proj'):
+            drift_q = self.drift_proj(drift_signal).view(B, T, H, d, 2).transpose(1, 2)
+            q = q + drift_q
 
         # 2. Data-dependent decay + GSP
         x_flat = to_real_concat(x)
@@ -374,11 +385,15 @@ class V7Block(nn.Module):
         x: torch.Tensor,
         pam_state: Optional[torch.Tensor] = None,
         step_offset: int = 0,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        drift_signal: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         x = x + self.cgu(self.norm1(x))
-        pam_out, new_state = self.pam(self.norm2(x), state=pam_state, step_offset=step_offset)
+        pam_out, new_state = self.pam(
+            self.norm2(x), state=pam_state, step_offset=step_offset,
+            drift_signal=drift_signal,
+        )
         x = x + pam_out * self.pam_scale
-        return x, new_state
+        return x, new_state, pam_out
 
 
 # ── V7 Language Model ────────────────────────────────────────────────────────
@@ -417,10 +432,14 @@ class V7LM(nn.Module):
         z = self.embed_norm(self.embed(input_ids))
 
         new_states = []
+        drift = None
         for i, block in enumerate(self.blocks):
             s = states[i] if states is not None else None
-            z, new_s = block(z, pam_state=s, step_offset=step_offset)
+            z, new_s, pam_out = block(
+                z, pam_state=s, step_offset=step_offset, drift_signal=drift,
+            )
             new_states.append(new_s)
+            drift = pam_out if self.config.cross_level else None
 
         z = self.final_norm(z)
         lm = self.lm_head_norm(self.lm_head_proj(z))
@@ -511,13 +530,14 @@ PRESETS = {
         n_layers=16, expand=3, dropout=0.1, max_seq_len=2048,
         hierarchical_dt=True,
     ),
-    # 6-layer hierarchical: one PAM per cognitive level
-    # book(~1000tok) -> section(~250) -> chapter(~60) -> paragraph(~15) -> sentence(~5) -> word(~2)
+    # 6-layer hierarchical: one PAM per resolution level
+    # global(~1000tok) -> broad(~250) -> mid(~60) -> local(~15) -> fine(~5) -> step(~2)
     'medium_h6': V7Config(
         vocab_size=50257, dim=512, n_heads=8, head_dim=64,
         n_layers=6, expand=4, dropout=0.1, max_seq_len=2048,
         hierarchical_dt=True,
         dt_bias_schedule=(-6.91, -5.52, -4.08, -2.64, -1.39, 0.0),
+        cross_level=True,
     ),
 }
 
