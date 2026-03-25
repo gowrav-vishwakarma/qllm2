@@ -526,6 +526,8 @@ def main():
     parser.add_argument('--qk_norm', action='store_true')
     parser.add_argument('--no_hierarchical_dt', action='store_true',
                         help='Disable hierarchical timescale (uniform dt_bias=-4.0)')
+    parser.add_argument('--no_cross_level', action='store_true',
+                        help='Disable cross-level drift conditioning')
 
     args = parser.parse_args()
 
@@ -565,6 +567,8 @@ def main():
     if args.no_hierarchical_dt:
         cfg.hierarchical_dt = False
         cfg.dt_bias_schedule = None
+    if args.no_cross_level:
+        cfg.cross_level = False
 
     print(f"\nConfig: {asdict(cfg)}")
     print(

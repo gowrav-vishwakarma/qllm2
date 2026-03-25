@@ -4,12 +4,12 @@
 # Novel architecture: 6-layer hierarchical Phase-Associative Memory.
 # Each PAM layer specializes in a distinct temporal scope:
 #
-#   Layer 0  book       dt_bias=-6.91  span ~1000 tok  (article theme)
-#   Layer 1  section    dt_bias=-5.52  span  ~250 tok  (multi-paragraph)
-#   Layer 2  chapter    dt_bias=-4.08  span   ~60 tok  (full paragraph)
-#   Layer 3  paragraph  dt_bias=-2.64  span   ~15 tok  (couple sentences)
-#   Layer 4  sentence   dt_bias=-1.39  span    ~5 tok  (local syntax)
-#   Layer 5  word       dt_bias= 0.00  span    ~2 tok  (next-token)
+#   Layer 0  global     dt_bias=-6.91  span ~1000 tok  (full-sequence intent)
+#   Layer 1  broad      dt_bias=-5.52  span  ~250 tok  (large-scale structure)
+#   Layer 2  mid        dt_bias=-4.08  span   ~60 tok  (medium-range context)
+#   Layer 3  local      dt_bias=-2.64  span   ~15 tok  (local coherence)
+#   Layer 4  fine       dt_bias=-1.39  span    ~5 tok  (fine-grained detail)
+#   Layer 5  step       dt_bias= 0.00  span    ~2 tok  (immediate prediction)
 #
 # Architecture: [CGU(expand=4) -> PAM(H=8, d=64, hierarchical dt)] x 6
 # Model Dim: 512, Heads: 8, Head Dim: 64
@@ -91,13 +91,13 @@ if [[ $RESUME -eq 1 && -f "$CKPT_DIR/best_model.pt" ]]; then
     echo "[resume] Resuming from $CKPT_DIR/best_model.pt"
 fi
 
-RUN_DESC="V7 Hierarchical PAM (medium_h6): dim=512 L=6 expand=4, PAM(H=8, d=64, hierarchical_dt, RoPE, fused-QKV, GSP), book->word timescale, LR=1e-4, warmup=1000"
+RUN_DESC="V7 Hierarchical PAM (medium_h6): dim=512 L=6 expand=4, PAM(H=8, d=64, hierarchical_dt, RoPE, fused-QKV, GSP), global->step timescale, LR=1e-4, warmup=1000"
 RUN_ARGS_LINE="$ARGS --gen_prompt '$GEN_PROMPT' $RESUME_ARG $EXTRA_ARGS"
 
 echo ""
 echo "============================================================"
 echo "  V7 Hierarchical PAM (medium_h6, ~102M params)"
-echo "  6 layers: book -> section -> chapter -> paragraph -> sentence -> word"
+echo "  6 layers: global -> broad -> mid -> local -> fine -> step"
 echo "  Architecture: [CGU(expand=4) -> PAM(H=8, d=64)] x6 + GSP + RoPE"
 echo "  dim=512  heads=8  LR=1e-4  warmup=1000"
 echo "  seq_len: $SEQ_LEN  batch_size: $BATCH_SIZE  epochs: $EPOCHS"
