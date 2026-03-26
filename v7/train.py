@@ -528,6 +528,8 @@ def main():
                         help='Disable hierarchical timescale (uniform dt_bias=-4.0)')
     parser.add_argument('--no_cross_level', action='store_true',
                         help='Disable cross-level drift conditioning')
+    parser.add_argument('--no_grad_ckpt', action='store_true',
+                        help='Disable gradient checkpointing (uses more VRAM, slightly faster)')
 
     args = parser.parse_args()
 
@@ -569,6 +571,8 @@ def main():
         cfg.dt_bias_schedule = None
     if args.no_cross_level:
         cfg.cross_level = False
+    if args.no_grad_ckpt:
+        cfg.gradient_checkpointing = False
 
     print(f"\nConfig: {asdict(cfg)}")
     print(

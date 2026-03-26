@@ -14,6 +14,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint as grad_checkpoint
 from dataclasses import dataclass, asdict
 from typing import Optional, List, Tuple, Dict
 
@@ -41,6 +42,7 @@ class V7Config:
     hierarchical_dt: bool = True
     dt_bias_schedule: Optional[tuple] = None
     cross_level: bool = False
+    gradient_checkpointing: bool = True
 
 
 # ── Complex Arithmetic (split-real: [..., dim, 2]) ───────────────────────────
@@ -102,11 +104,11 @@ class ComplexLinear(nn.Module):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
-        gain = 1.0 / math.sqrt(2)
+        scale = (2 / (in_dim + out_dim)) ** 0.5
         self.weight_real = nn.Parameter(torch.empty(out_dim, in_dim))
         self.weight_imag = nn.Parameter(torch.empty(out_dim, in_dim))
-        nn.init.orthogonal_(self.weight_real, gain=gain)
-        nn.init.orthogonal_(self.weight_imag, gain=gain)
+        nn.init.orthogonal_(self.weight_real, gain=scale)
+        nn.init.orthogonal_(self.weight_imag, gain=scale)
         if bias:
             self.bias_real = nn.Parameter(torch.zeros(out_dim))
             self.bias_imag = nn.Parameter(torch.zeros(out_dim))
@@ -460,13 +462,24 @@ class V7LM(nn.Module):
     ) -> Tuple[torch.Tensor, List[torch.Tensor]]:
         z = self.embed_norm(self.embed(input_ids))
 
+        use_ckpt = (
+            self.config.gradient_checkpointing
+            and self.training
+            and states is None
+        )
+
         new_states = []
         drift = None
         for i, block in enumerate(self.blocks):
             s = states[i] if states is not None else None
-            z, new_s, pam_out = block(
-                z, pam_state=s, step_offset=step_offset, drift_signal=drift,
-            )
+            if use_ckpt:
+                z, new_s, pam_out = self._checkpointed_block(
+                    block, z, step_offset, drift,
+                )
+            else:
+                z, new_s, pam_out = block(
+                    z, pam_state=s, step_offset=step_offset, drift_signal=drift,
+                )
             new_states.append(new_s)
             drift = pam_out if self.config.cross_level else None
 
@@ -477,6 +490,22 @@ class V7LM(nn.Module):
             + lm[..., 1] @ self.embed.embed_imag.weight.T
         )
         return logits, new_states
+
+    @staticmethod
+    def _checkpointed_block(
+        block: V7Block,
+        z: torch.Tensor,
+        step_offset: int,
+        drift: Optional[torch.Tensor],
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        def run_block(z_in, *drift_args):
+            d = drift_args[0] if drift_args else None
+            return block(z_in, pam_state=None, step_offset=step_offset, drift_signal=d)
+
+        if drift is not None:
+            return grad_checkpoint(run_block, z, drift, use_reentrant=False)
+        else:
+            return grad_checkpoint(run_block, z, use_reentrant=False)
 
     @torch.no_grad()
     def generate(
