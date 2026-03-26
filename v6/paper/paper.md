@@ -14,7 +14,7 @@ We present Phase-Associative Memory (PAM), a recurrent sequence modeling archite
 
 PAM admits two equivalent computational forms: a dual (quadratic) form for parallel training and a recurrent form for $O(1)$-per-token inference with fixed $O(d^2)$ memory per head, requiring no KV cache. The entire model operates in complex-valued space with phase-preserving primitives end to end.
 
-We evaluate PAM as the core sequence layer in a 100M-parameter language model trained on WikiText-103. Our **reported** configuration (**medium-pam-v3**) interleaves channel mixing and PAM in each of 16 blocks, applies **complex RoPE** to PAM queries and keys for relative position, fuses Q/K/V projections for efficiency, and trains with a higher learning rate and longer warmup than an earlier sequential layout. It achieves **validation perplexity 29.95** after 10 epochs. On the same validation protocol often cited for GPT-2 on WikiText-103 (approximately **31** validation PPL at 124M parameters), this is **in the same ballpark**, while remaining a different architecture class (complex-valued, attention-free, fixed recurrent state). We present PAM as a promising research direction rather than a finished system, and discuss both properties that may matter at scale and limitations that remain. **Code:** https://github.com/gowrav-vishwakarma/qllm2
+We evaluate PAM as the core sequence layer in a 100M-parameter language model trained on WikiText-103. Our **reported** configuration (**medium-pam-v3**) interleaves channel mixing and PAM in each of 16 blocks, applies **complex RoPE** to PAM queries and keys for relative position, fuses Q/K/V projections for efficiency, and trains with a higher learning rate and longer warmup than an earlier sequential layout. It achieves **validation perplexity 29.95** after 10 epochs. Against a **matched transformer baseline** (~100M parameters, same data, tokenizer, sequence length, and training budget), which reaches **27.08** validation PPL, PAM is within **~10%**---while being a fundamentally different architecture class (complex-valued, attention-free, fixed recurrent state) with $O(1)$-per-token inference and no KV cache. We present PAM as a promising research direction rather than a finished system, and discuss both properties that may matter at scale and limitations that remain. **Code:** https://github.com/gowrav-vishwakarma/qllm2
 
 ---
 
@@ -39,12 +39,13 @@ This paper focuses on PAM and the evidence from validated training runs. We are 
 - **Phase-Associative Memory (PAM)**: a recurrent layer with complex matrix state, data-dependent decay, and retrieval via complex phase interference -- no softmax, no KV cache.
 - **Gated State Protection (GSP)**: a learned per-dimension freeze gate that allows the model to retain important state indefinitely.
 - **Dual-form training**: an $O(T^2)$ parallel computation equivalent to the $O(T)$ recurrence, enabling efficient GPU training.
-- **Interleaved blocks + complex RoPE**: sixteen blocks of `[CGU ÿÿÿ PAM]` with RoPE on PAM $Q,K$ (and optional implementation fusion) as the **medium-pam-v3** recipe.
+- **Interleaved blocks + complex RoPE**: sixteen blocks of `[CGU  PAM]` with RoPE on PAM $Q,K$ (and optional implementation fusion) as the **medium-pam-v3** recipe.
 - **Empirical validation**: WikiText-103 validation perplexity **29.95** at ~100M parameters (**medium-pam-v3**), with coherent multi-sentence generation. We also report the earlier **sequential** medium-pam run (**38.95**) for comparison (?5.1).
+- **Matched transformer baseline**: a standard transformer (~100M parameters) trained with the same data, tokenizer, sequence length, and hyperparameters reaches **27.08** validation PPL, providing a rigorous point of comparison (?5.3).
 
 ### 1.2 Scope and honest framing
 
-We do not claim that PAM is a drop-in replacement for GPT-scale transformers. Publicly cited GPT-2 WikiText-103 **validation** perplexity is approximately **31** (124M parameters); our **medium-pam-v3** result (**29.95** at ~100M) is in a similar range on validation PPL, but **test** metrics, training budgets, and implementation maturity differ widely. What we do claim is narrower: PAM is a genuinely different architecture -- complex-valued, attention-free, recurrent with $O(1)$ inference cost per token and no KV cache -- that has reached a performance level where continued investigation is justified. We present this as a research contribution, not a production system.
+We do not claim that PAM matches or exceeds transformers. A matched transformer baseline (~100M parameters, identical data and training budget) reaches **27.08** validation PPL on WikiText-103; our **medium-pam-v3** reaches **29.95**, a gap of ~10%. What we do claim is narrower: PAM is a genuinely different architecture -- complex-valued, attention-free, recurrent with $O(1)$ inference cost per token and no KV cache -- that has reached a performance level where continued investigation is justified. We present this as a research contribution, not a production system.
 
 ---
 
@@ -334,6 +335,8 @@ Wall time for that continuation was **~9.9 h**; throughput **~23,500 tok/s**.
 
 The **29.95** vs **38.95** comparison is **not** a controlled ablation: layout, RoPE, fused QKV, block GEMM packaging, and **training hyperparameters** changed together.
 
+**Hybrid PAM + sparse attention (PIA).** We tested **medium-pam-v3-pia**, which adds Phase Interference Attention (PIA)---a windowed (w=256), sparse attention layer inserted every 4th block---on top of the medium-pam-v3 architecture. This hybrid achieved **30.01** validation PPL, marginally **worse** than pure PAM (29.95), while increasing wall time to 16.4 h (~20k tok/s). The result suggests that PAM's recurrent sequence mixing already captures the information that sparse attention would provide at this scale, and the added complexity does not help.
+
 ### 5.2 Ablation across V6 architectures
 
 The following table shows the progression of V6 architectures on WikiText-103 (10 epochs, sequence length 2048 where noted). Rows are **not** a single-variable grid.
@@ -343,34 +346,57 @@ The following table shows the progression of V6 architectures on WikiText-103 (1
 | medium-rebalanced | CGU + vector-state SSM | 58.4M | 44.47 |
 | medium-rebalanced-gsp | CGU + SSM + GSP | 63.2M | 41.67 |
 | medium-rebalanced-hsb | CGU + SSM + GSP + HSB | 75.0M | 43.54 |
-| medium-pam | CGU $\times$16 then PAM $\times$16 + GSP | 100.4M | 38.95 |
-| **medium-pam-v3** | **16$\times$[CGU$\to$PAM] + GSP + RoPE + fused QKV** | **~100.4M** | **29.95** |
+| medium-pam | CGU x16 then PAM x16 + GSP | 100.4M | 38.95 |
+| medium-pam-v3-pia | medium-pam-v3 + sparse PIA (every 4 blocks) | ~100.4M | 30.01 |
+| **medium-pam-v3** | **16x[CGU->PAM] + GSP + RoPE + fused QKV** | **~100.4M** | **29.95** |
+| Transformer (ours) | Standard transformer (12 layers, 12 heads) | ~100.3M | 27.08 |
+
+The transformer baseline uses the same data, tokenizer, sequence length, and training budget.
 
 Key observations:
 
 - **GSP helps**: Adding Gated State Protection to the SSM baseline reduces perplexity from 44.47 to 41.67 (6.3% improvement).
 - **HSB hurts**: Holographic State Binding causes a regression to 43.54. This supports the interference hypothesis: vector states lack capacity for multiple simultaneous associations.
 - **PAM works**: Matrix-state PAM improves over the GSP SSM baseline; **medium-pam-v3** further improves over sequential **medium-pam** (layout + RoPE + recipe), reaching **29.95**.
+- **PIA adds no benefit**: Adding sparse Phase Interference Attention (windowed, every 4th block) to medium-pam-v3 yields 30.01, marginally **worse** than pure PAM (29.95). PAM's sequence mixing appears sufficient without supplemental attention.
+- **Transformer gap**: A matched transformer baseline reaches **27.08**, a ~10% advantage over medium-pam-v3. See ?5.3 for detailed analysis.
 
-The parameter counts are not identical across all rows. A controlled parameter-matched comparison is future work.
+### 5.3 Comparison to matched transformer baseline
 
-### 5.3 Comparison to GPT-2
+To provide a rigorous comparison, we trained a standard transformer with ~100.3M parameters on the same WikiText-103 data, tokenizer (GPT-2 BPE), sequence length (2048), batch size (3), learning rate (1e-4), warmup (1000 steps), and hardware (single RTX 4090). The transformer uses d_model=672, 12 layers, 12 attention heads, and d_ff=2688.
 
-| Model | Type | Params | Test PPL (WT-103) | Val PPL (WT-103) |
+| Model | Type | Params | Val PPL | Wall time | Throughput |
+|---|---|---|---|---|---|
+| GPT-2 (cited) | Transformer | 124M | ~31 | -- | -- |
+| Transformer (ours) | Transformer | ~100.3M | **27.08** | 3.5 h | ~96k tok/s |
+| **PAM (ours)** | **Complex recurrent** | **~100.4M** | **29.95** | **14.1 h** | **~23k tok/s** |
+
+**medium-pam-v3** reaches **29.95** validation PPL vs. the matched transformer's **27.08**---a gap of ~10%. The transformer also trains ~4x faster in wall time (3.5 h vs. 14.1 h) and throughput (~96k vs. ~23k tok/s). The throughput gap is expected: complex linear maps require 4x the multiply-adds of real linear maps, and PAM uses pure PyTorch with no custom kernels.
+
+For external reference, the commonly cited GPT-2 validation PPL on WikiText-103 is ~31 at 124M parameters (test PPL ~14.84 uses a different sliding-window protocol and is not directly comparable).
+
+**Epoch-by-epoch validation PPL: matched transformer vs. medium-pam-v3:**
+
+| Epoch | Transformer Train PPL | Transformer Val PPL | PAM Train PPL | PAM Val PPL |
 |---|---|---|---|---|
-| GPT-2 | Transformer | 124M | ~14.84 | ~31 |
-| **PAM (ours, medium-pam-v3)** | **Complex recurrent** | **~100M** | - | **29.95** |
+| 1 | 137.77 | 53.74 | 123.86 | 57.94 |
+| 2 | 52.81 | 39.42 | 53.87 | 43.83 |
+| 3 | 42.74 | 34.76 | 44.88 | 38.69 |
+| 4 | 38.27 | 31.96 | 40.39 | 35.88 |
+| 5 | 35.54 | 30.39 | 37.42 | 33.82 |
+| 6 | 33.41 | 29.02 | 35.13 | 32.25 |
+| 7 | 31.65 | 28.09 | 33.26 | 31.22 |
+| 8 | 30.28 | 27.46 | 31.78 | 30.40 |
+| 9 | 29.29 | 27.15 | 30.66 | 30.01 |
+| 10 | 28.75 | **27.08** | 30.02 | **29.95** |
 
-On **validation** perplexity under the commonly cited **~31** figure for GPT-2 on WikiText-103, **medium-pam-v3** is **in the same range**. We do **not** claim parity on test metrics, data mixture, or training compute. GPT-2 test PPL (~14.84) uses a different evaluation protocol (e.g. sliding-window on the test set) and is not comparable to our validation number.
+The transformer converges faster and maintains a consistent advantage throughout training. Both models use the same epoch count and see the same total tokens.
 
-> **Note on evaluation protocols**: GPT-2 test PPL (~14.84) uses sliding-window evaluation on the test set. Validation PPL (~31) uses raw/BPE evaluation on the validation set. We report validation PPL for our model for consistency with that ~31 reference.
+Structural differences remain important despite the PPL gap:
 
-Structural differences remain important:
-
-- **Inference cost**: GPT-2 attention is $O(T)$ per token (KV cache); PAM is $O(1)$ per token with fixed-size state.
-- **Memory footprint**: GPT-2's KV cache grows with sequence length; PAM's state is fixed per layer.
-- **Architecture maturity**: GPT-2 reflects years of transformer optimization; PAM is a first-generation PyTorch implementation without custom kernels.
-- **Training budget**: We report single-GPU 10-epoch runs; we have not fully explored scaling.
+- **Inference cost**: The transformer requires $O(T)$ work per token (KV cache); PAM is $O(1)$ per token with fixed-size state (per-layer work $O(Hd^2)$, independent of sequence length).
+- **Memory footprint**: The transformer's KV cache grows linearly with sequence length; PAM's state is fixed at 49,152 floats per layer regardless of $T$.
+- **Architecture maturity**: Transformers benefit from years of optimization (FlashAttention, fused kernels, etc.); PAM is a first-generation PyTorch implementation with no custom CUDA kernels.
 
 ### 5.4 Generation quality
 
@@ -434,11 +460,11 @@ Whether these differences are advantageous at scale is an open question. The cur
 
 ### 6.3 Computational cost
 
-**Training**: The dual form computes $W = QK^{*\top}$ (after RoPE on $Q,K$) as a $T \times T$ matrix per head, giving $O(T^2 H d)$ cost per layer -- the same order as standard attention. For $T = 2048$, this is efficient on modern GPUs. **medium-pam-v3** training throughput is approximately **23k tokens/second** on a single RTX 4090 (wall time **~14.1 h** for 10 epochs).
+**Training**: The dual form computes $W = QK^{*\top}$ (after RoPE on $Q,K$) as a $T \times T$ matrix per head, giving $O(T^2 H d)$ cost per layer -- the same order as standard attention. For $T = 2048$, this is efficient on modern GPUs. **medium-pam-v3** training throughput is approximately **23k tokens/second** on a single RTX 4090 (wall time **~14.1 h** for 10 epochs). By comparison, our matched transformer baseline achieves ~**96k tokens/second** (wall time ~3.5 h), a ~4x throughput advantage. This gap is expected: complex linear maps require 4x the multiply-adds of real linear maps, and the PAM implementation uses no custom CUDA kernels.
 
 **Inference**: The recurrent form processes each token in $O(Hd^2)$ time (one matrix-vector multiply per head). With $H = 6$ and $d = 64$, this is 24,576 complex multiply-adds per layer. The state is $H \times d \times d \times 2$ floats = 6 * 64 * 64 * 2 = 49,152 floats per layer, regardless of sequence length.
 
-For comparison, GPT-2's KV cache stores $2 \times H \times d \times T$ values per layer, growing linearly with $T$. At $T = 2048$, GPT-2's cache per layer is $2 \times 12 \times 64 \times 2048 = 3{,}145{,}728$ values. PAM's state per layer is fixed at 49,152 values, a factor of 64x smaller at this sequence length.
+For comparison, a transformer's KV cache stores $2 \times H \times d \times T$ values per layer, growing linearly with $T$. At $T = 2048$ with our baseline's configuration ($H$=12, $d$=56), the cache per layer is $2 \times 12 \times 56 \times 2048 = 2{,}752{,}512$ values. PAM's state per layer is fixed at 49,152 values, a factor of ~56x smaller at this sequence length, and the advantage grows with longer sequences.
 
 ### 6.4 The role of GSP
 
@@ -452,31 +478,27 @@ The protect gate also modulates the value signal ($V' = V \cdot (1 - p)$), preve
 
 We list limitations explicitly and without hedging.
 
-### 7.1 No parameter-matched transformer baseline
+### 7.1 Single training runs
 
-Our comparison to GPT-2 uses publicly reported numbers. We have not trained a transformer baseline at exactly 100M parameters with the same data, tokenizer, sequence length, and training budget. A rigorous comparison would require this.
+All results in this paper (PAM and the matched transformer baseline) come from **single** training runs. We have not measured variance across seeds or conducted full architecture search. The ~10% gap between PAM (29.95) and the matched transformer (27.08) should be interpreted with this caveat.
 
-### 7.2 Single training run
-
-The headline **medium-pam-v3** result comes from a **single** training run. We have not measured variance across seeds or conducted full architecture search. We additionally report an earlier **sequential** medium-pam run (different hyperparameters), which partially separates layout/recipe effects but is not a rigorous multi-seed study.
-
-### 7.3 Small scale
+### 7.2 Small scale
 
 100M parameters and WikiText-103 are modest by current standards. We do not know how PAM scales to billions of parameters or web-scale corpora. The $O(d^2)$ state per head could become a memory concern at very large head dimensions, though for the current $d = 64$ it is negligible.
 
-### 7.4 No downstream evaluation
+### 7.3 No downstream evaluation
 
 We report perplexity and qualitative generation only. Standard downstream benchmarks (LAMBADA, HellaSwag, etc.) have not been evaluated.
 
-### 7.5 Pure PyTorch implementation
+### 7.4 Pure PyTorch implementation
 
 PAM is implemented in pure PyTorch with no custom CUDA kernels. The dual form uses standard matrix multiplications, which are efficient, but the recurrent form's sequential loop is not optimized. Custom kernels for the state update and retrieval could improve inference throughput substantially.
 
-### 7.6 Complex arithmetic overhead
+### 7.5 Complex arithmetic overhead
 
 Complex linear maps require 4x the multiply-adds of real linear maps (since $(a+bi)(c+di) = (ac-bd) + (ad+bc)i$). The reference implementation is equivalent to four real matrix multiplies; **training** uses a **block-real GEMM** that is numerically equivalent (max float32 diff $\sim 4\times 10^{-6}$ in our checks). Whether the representational advantages of complex computation compensate for this overhead at scale is unresolved.
 
-### 7.7 Memory hierarchy not validated in this run
+### 7.6 Memory hierarchy not validated in this run
 
 The V6 codebase includes working memory, internal memory, persistent memory, expert memory, and session memory modules. The **medium-pam-v3** run reported here disables all of these (no working memory, no internal memory) to isolate PAM's contribution. Whether combining PAM with memory modules improves results is an open question.
 
@@ -486,7 +508,7 @@ The V6 codebase includes working memory, internal memory, persistent memory, exp
 
 ### 8.1 Scaling
 
-The most immediate question is how PAM compares to transformers at scale when training and evaluation are matched. We plan to train larger PAM models (300M--1B parameters) and compare against matched transformer baselines on the same data and compute budget.
+At 100M parameters, our matched transformer baseline outperforms PAM by ~10% on validation PPL. The most immediate scaling question is whether this gap widens, narrows, or holds at larger scales. We plan to train larger PAM models (300M--1B parameters) alongside matched transformer baselines on the same data and compute budget.
 
 ### 8.2 Custom kernels
 
@@ -502,7 +524,7 @@ The V6 codebase includes a memory hierarchy (working, internal, persistent, expe
 
 ### 8.5 Hybrid architectures
 
-PAM could be combined with sparse attention layers (e.g., every $k$-th layer) to create a hybrid architecture. The V6 codebase already supports optional PhaseAttention layers. Whether a small number of attention layers can close the gap to transformers while preserving PAM's inference advantages is worth investigating.
+PAM could be combined with sparse attention layers to create a hybrid architecture. Our initial experiment with PIA (Phase Interference Attention, windowed, every 4th block) showed no improvement over pure PAM at this scale (?5.2). However, alternative hybrid strategies---such as full (non-windowed) attention at select layers, or standard softmax attention rather than phase-based---remain unexplored.
 
 **Prior hybrid (V5 lineage).** In this research line, the earlier **V5** codebase first combined end-to-end phase-preserving complex sequence modeling with **sparse** PhaseAttention (sliding window, every $K$ layers) and trained it to strong TinyStories perplexity, establishing a working complex-phase--limited-attention stack before the attention-free PAM direction (see `v5/EXPERIMENTS.md`).
 
@@ -521,9 +543,9 @@ Phase-Associative Memory is a recurrent sequence modeling architecture that proc
 3. Gated State Protection that allows selective state freezing.
 4. A dual computational form: $O(T^2)$ parallel training, $O(1)$ per-token inference with no KV cache.
 
-At ~100M parameters on WikiText-103, **medium-pam-v3** achieves **validation perplexity 29.95**, producing coherent multi-sentence text. On commonly cited **validation** numbers for GPT-2 on WikiText-103 (~31 at 124M parameters), this is **similar**, while architectures and training setups differ; we do not claim overall parity with GPT-2-class systems. What we do claim is that PAM represents a genuinely different approach -- complex-valued, attention-free, phase-geometric retrieval with fixed recurrent state -- that has reached a level where continued research is warranted.
+At ~100M parameters on WikiText-103, **medium-pam-v3** achieves **validation perplexity 29.95**, producing coherent multi-sentence text. A matched transformer baseline (~100M parameters, identical data and training setup) reaches **27.08**---PAM is within ~10%, while being fundamentally different in kind. We do not claim parity with transformers. What we do claim is that PAM represents a genuinely different approach -- complex-valued, attention-free, phase-geometric retrieval with fixed recurrent state and $O(1)$-per-token inference -- that has reached a level where continued research is warranted.
 
-The transition from vector-state SSMs (interference-limited) to matrix-state PAM, and then to **interleaved** blocks with **RoPE** and an updated training recipe, validates that complex matrix states with phase-interference retrieval can serve as a viable sequence mechanism. Whether this approach can scale to match or exceed the best transformer systems remains an open and, we believe, worthwhile question.
+The transition from vector-state SSMs (interference-limited) to matrix-state PAM, and then to **interleaved** blocks with **RoPE** and an updated training recipe, validates that complex matrix states with phase-interference retrieval can serve as a viable sequence mechanism. The ~10% gap to a matched transformer baseline, achieved without custom kernels and with 4x arithmetic overhead from complex computation, suggests that closing this gap through implementation optimization and architectural refinement is a realistic and worthwhile research direction.
 
 ---
 
@@ -554,7 +576,30 @@ init_strategy:        orthogonal
 
 Same embedding and PAM head dimensions as ?A.1, but **no** interleaving, **no** RoPE, **no** fused QKV flag in the preset; training used **learning rate** $3 \times 10^{-5}$ and **500** warmup steps (see ?5.1). Full preset: `medium-pam` in [`v6/config.py`](../config.py).
 
-### A.3 Training configuration (medium-pam-v3)
+### A.3 Matched transformer baseline configuration
+
+```
+d_model:              672
+n_layers:             12
+n_heads:              12
+d_ff:                 2688
+total_parameters:     ~100.3M
+dataset:              WikiText-103
+tokenizer:            GPT-2 BPE (50,257 tokens)
+seq_len:              2,048
+batch_size:           3
+optimizer:            AdamW
+learning_rate:        1e-4
+weight_decay:         0.01
+warmup_steps:         1000
+lr_schedule:          warmup + cosine decay
+gradient_clip:        1.0
+amp_dtype:            bf16 (automatic)
+compile:              torch.compile (default mode)
+hardware:             1x NVIDIA RTX 4090 (24GB)
+```
+
+### A.4 Training configuration (medium-pam-v3)
 
 ```
 dataset:              WikiText-103
@@ -573,7 +618,7 @@ compile:              torch.compile (default mode)
 hardware:             1x NVIDIA RTX 4090 (24GB)
 ```
 
-### A.4 Parameter breakdown
+### A.5 Parameter breakdown
 
 | Component | Parameters | Percentage |
 |---|---|---|
@@ -676,6 +721,8 @@ Stacking all CGU layers before all PAM layers leaves the first half of the netwo
 - Python 3.9+ (tested with 3.9.24)
 - PyTorch 2.x with CUDA support
 - Package management via `uv`
+
+The reported **29.95** validation PPL run is archived under `logs/v6/medium_pam_v3_rope_wikitext103_20260319_231524_31397f0/` (`RUN_INFO.txt` lists git commit `31397f0` and full CLI). The matched transformer baseline (**27.08**) is archived under `logs/v6/transformer_baseline_wikitext103_20260323_140351_e87b8e4/` (git commit `e87b8e4`).
 
 ### D.2 Running the experiment
 
