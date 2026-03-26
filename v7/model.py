@@ -376,9 +376,12 @@ class V7Block(nn.Module):
         super().__init__()
         self.norm1 = ComplexNorm(cfg.dim)
         self.cgu = ComplexGatedUnit(cfg.dim, cfg.expand)
+        self.cgu_scale = nn.Parameter(torch.tensor(1.0))
+        self.cgu_dropout = nn.Dropout(cfg.dropout)
         self.norm2 = ComplexNorm(cfg.dim)
         self.pam = PhaseAssociativeLayer(cfg, layer_idx=layer_idx)
         self.pam_scale = nn.Parameter(torch.tensor(0.1))
+        self._dim = cfg.dim
 
     def forward(
         self,
@@ -387,7 +390,13 @@ class V7Block(nn.Module):
         step_offset: int = 0,
         drift_signal: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        x = x + self.cgu(self.norm1(x))
+        cgu_out = self.cgu(self.norm1(x))
+        if self.training:
+            drop_mask = self.cgu_dropout(
+                torch.ones(cgu_out.shape[:-1], device=cgu_out.device)
+            )
+            cgu_out = cgu_out * drop_mask.unsqueeze(-1)
+        x = x + cgu_out * self.cgu_scale
         pam_out, new_state = self.pam(
             self.norm2(x), state=pam_state, step_offset=step_offset,
             drift_signal=drift_signal,
@@ -419,9 +428,29 @@ class V7LM(nn.Module):
         self.blocks = nn.ModuleList([
             V7Block(cfg, layer_idx=i) for i in range(cfg.n_layers)
         ])
-        self.final_norm = ComplexNorm(cfg.dim)
+        self.output_norm = ComplexNorm(cfg.dim)
         self.lm_head_proj = ComplexLinear(cfg.dim, cfg.dim)
         self.lm_head_norm = ComplexNorm(cfg.dim)
+
+        self._init_weights()
+
+    def _init_weights(self):
+        """Match V6 init: normal_(std=0.02) for nn.Linear, zero biases, re-apply customs."""
+        embed_embeddings = {self.embed.embed_real, self.embed.embed_imag}
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                nn.init.normal_(module.weight, std=0.02)
+                if module.bias is not None:
+                    nn.init.zeros_(module.bias)
+            elif isinstance(module, nn.Embedding) and module not in embed_embeddings:
+                nn.init.normal_(module.weight, std=0.02)
+        self._reinit_custom_biases()
+
+    def _reinit_custom_biases(self):
+        """Re-apply custom bias values that _init_weights zeroed."""
+        for name, module in self.named_modules():
+            if hasattr(module, 'protect_gate') and isinstance(module.protect_gate, nn.Linear):
+                nn.init.constant_(module.protect_gate.bias, -3.0)
 
     def forward(
         self,
@@ -441,7 +470,7 @@ class V7LM(nn.Module):
             new_states.append(new_s)
             drift = pam_out if self.config.cross_level else None
 
-        z = self.final_norm(z)
+        z = self.output_norm(z)
         lm = self.lm_head_norm(self.lm_head_proj(z))
         logits = (
             lm[..., 0] @ self.embed.embed_real.weight.T
@@ -506,7 +535,7 @@ class V7LM(nn.Module):
         )
         norm_p = (
             sum(p.numel() for p in self.embed_norm.parameters())
-            + sum(p.numel() for p in self.final_norm.parameters())
+            + sum(p.numel() for p in self.output_norm.parameters())
         )
         return {
             'embedding (tied)': embed_p,
@@ -537,6 +566,29 @@ PRESETS = {
         n_layers=6, expand=4, dropout=0.1, max_seq_len=2048,
         hierarchical_dt=True,
         dt_bias_schedule=(-6.91, -5.52, -4.08, -2.64, -1.39, 0.0),
+        cross_level=True,
+    ),
+    # 16-layer flat: V6-matched shape, no hierarchy — baseline for V7 code verification
+    'medium_h16_flat': V7Config(
+        vocab_size=50257, dim=384, n_heads=6, head_dim=64,
+        n_layers=16, expand=3, dropout=0.1, max_seq_len=2048,
+        hierarchical_dt=False,
+        cross_level=False,
+    ),
+    # 16-layer grouped hierarchy: multiple layers per timescale level
+    # global(4L) -> broad(3L) -> mid(3L) -> local(3L) -> fine(2L) -> step(1L)
+    'medium_h16_grouped': V7Config(
+        vocab_size=50257, dim=384, n_heads=6, head_dim=64,
+        n_layers=16, expand=3, dropout=0.1, max_seq_len=2048,
+        hierarchical_dt=True,
+        dt_bias_schedule=(
+            -6.91, -6.91, -6.91, -6.91,   # layers 0-3:  global
+            -5.52, -5.52, -5.52,            # layers 4-6:  broad
+            -4.08, -4.08, -4.08,            # layers 7-9:  mid
+            -2.64, -2.64, -2.64,            # layers 10-12: local
+            -1.39, -1.39,                   # layers 13-14: fine
+             0.0,                           # layer 15:    step
+        ),
         cross_level=True,
     ),
 }

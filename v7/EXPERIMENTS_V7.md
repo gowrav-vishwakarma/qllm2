@@ -117,17 +117,267 @@ Layer 5 (step):    Q = proj(z) + drift_proj(PAM_4_output)     [drifts toward fin
 
 ---
 
-## Comparison Plan
+## Experiment 1+2 Results: medium_h6 (Run A: hierarchy + drift)
 
-Three runs to isolate each architectural contribution:
+**Run A**: Full system with both hierarchical timescales and cross-level drift.
 
-| Run | cross_level | hierarchical_dt | Description |
-|-----|-------------|-----------------|-------------|
-| A   | True        | True            | Full system (hierarchy + drift) |
-| B   | False       | True            | Hierarchy only (no drift) |
-| C   | False       | False           | Flat baseline (uniform dt_bias, no drift) |
+| Epoch | Train PPL | Val PPL | Notes |
+|-------|-----------|---------|-------|
+| 1     | 219.6     | 123.4   | *best* |
+| 2     | 131.1     | 107.5   | *best* |
+| 3     | 118.2     | 98.3    | *best* |
+| 4     | —         | —       | stopped after ~100 batches |
 
-An additional comparison against the V6 transformer baseline (~100M params, same data pipeline) provides the external benchmark.
+**V6 medium-pam-v3 at same epochs** (16L, dim=384, ~100M params):
+
+| Epoch | Train PPL | Val PPL |
+|-------|-----------|---------|
+| 1     | 123.9     | 57.9    |
+| 2     | 53.9      | 43.8    |
+| 3     | 44.9      | 38.7    |
+| 10    | 30.0      | 29.95   |
+
+**Verdict**: Val PPL improves every epoch but lags V6 enormously (98 vs 39 at epoch 3). The 6-layer-wide design is strictly worse than 16-layer-narrow at the same param budget. The hierarchical timescale and cross-level drift hypotheses **cannot be evaluated in isolation** because the depth difference dominates — 6 layers is simply insufficient representational depth for WikiText-103.
+
+**Runs B and C were not executed** — the depth confound must be resolved first.
+
+**Sample at epoch 3** (prompt: "In 1923 , the University of"):
+> In 1923 , the University of Cambridge 's Union , Canada , and North Carolina . The U.S. Army Department ( NCSO ) was formed in 1956 and served as an honorary officer at Fortissus . It is also known for his class of soldiers .
+
+Quality: rep3=0.000, rep4=0.000, uniq=0.771. Coherence is weak; factual accuracy poor.
+
+**Key lesson**: Depth matters far more than width for language modeling at this scale. Each PAM+CGU block adds a level of compositional abstraction, and 6 is not enough.
+
+---
+
+## Experiment 3a: Depth-Matched Flat Baseline (`medium_h16_flat`)
+
+### Hypothesis
+
+Before testing hierarchical timescales at depth, we need to verify that the V7 codebase itself matches V6 performance when given identical depth/width. If V7 flat 16-layer doesn't approach V6's ~30 val PPL, there is a code regression to fix before adding novel features.
+
+### Design
+
+Exactly match V6 medium-pam-v3's shape: 16 layers, dim=384, expand=3, H=6, head_dim=64, ~100M params. All V7 novelties disabled:
+- `hierarchical_dt=False` — uniform dt_bias=-4.0 across all layers
+- `cross_level=False` — no drift conditioning
+
+### Preset: `medium_h16_flat`
+
+- dim=384, n_layers=16, n_heads=6, head_dim=64, expand=3
+- hierarchical_dt=False, cross_level=False
+- Target: Val PPL ~30 (matching V6 medium-pam-v3)
+
+### What success looks like
+
+- **Match**: Val PPL within ~5% of V6 (~30). Confirms V7 codebase is sound → proceed to hierarchy experiments.
+- **Regression**: Val PPL significantly worse. Investigate what V6 has that V7's refactoring lost.
+
+---
+
+## Experiment 3b: Grouped Hierarchical (`medium_h16_grouped`)
+
+### Hypothesis
+
+The hierarchical timescale idea is valid but needs V6-comparable depth. Grouping multiple layers per timescale level gives **depth within each resolution** — the model can build a richer representation at each temporal granularity before moving on.
+
+### Design
+
+16 layers, same dim=384 shape as 3a, but with grouped timescale hierarchy and cross-level drift enabled:
+
+| Level  | dt_bias | Layers | Count | Rationale |
+|--------|---------|--------|-------|-----------|
+| global | -6.91   | 0-3    | 4     | Long-range coherence is hardest for non-attention models |
+| broad  | -5.52   | 4-6    | 3     | Large-scale structure |
+| mid    | -4.08   | 7-9    | 3     | Medium-range context |
+| local  | -2.64   | 10-12  | 3     | Local coherence |
+| fine   | -1.39   | 13-14  | 2     | Fine-grained detail |
+| step   | 0.0     | 15     | 1     | Immediate prediction |
+
+Grouping is heavier at global/broad (4+3 layers) because long-range coherence demands the most capacity. Cross-level drift operates naturally: within a group, layers share the same timescale but each still receives drift from the previous layer's PAM output.
+
+### Preset: `medium_h16_grouped`
+
+- dim=384, n_layers=16, n_heads=6, head_dim=64, expand=3
+- hierarchical_dt=True, cross_level=True
+- dt_bias_schedule: (-6.91, -6.91, -6.91, -6.91, -5.52, -5.52, -5.52, -4.08, -4.08, -4.08, -2.64, -2.64, -2.64, -1.39, -1.39, 0.0)
+- Target: Beat Experiment 3a
+
+---
+
+## Experiment 4: Compositional Weight Encoding ("Formula Weights") — FUTURE
+
+### Motivation
+
+Standard weights store one scalar per parameter. Can each parameter slot encode more structure? Instead of `weight = 9`, represent `weight = f(a, b, c) = sum_k(e^{i*phi_k} * U_k @ V_k^T)` — a phase-weighted sum of basis components where interference patterns create richer interactions.
+
+### Design — Phase-Superposed Linear (PSL)
+
+Replace `ComplexLinear` in QKV projections with:
+
+```python
+class PhaseSuperposedLinear(nn.Module):
+    """W = sum_k( e^{i*phi_k} * U_k @ V_k^T ) — each weight is a formula."""
+    def __init__(self, in_dim, out_dim, n_basis=4, rank=None):
+        rank = rank or min(in_dim, out_dim) // 4
+        # K basis matrices, each low-rank: U_k @ V_k^T
+        self.U = nn.Parameter(...)   # [K, out_dim, rank, 2] complex
+        self.V = nn.Parameter(...)   # [K, rank, in_dim, 2] complex
+        self.phi = nn.Parameter(...)  # [K] phase offsets per basis
+```
+
+Each effective weight W_ij = sum_k(e^{i*phi_k} * sum_r(U_k[i,r] * V_k[r,j])). Constructive interference when phases align, destructive when opposed. The network learns which basis components reinforce or cancel.
+
+### Why this is novel for PAM
+
+- Complex numbers already give 2-for-1 (magnitude + phase). This extends it to K-for-1.
+- Phase interference is the mechanism (not gating or routing) — fits the PAM philosophy.
+- Param-matched comparison: choose rank so total params equal dense ComplexLinear.
+
+**Status**: Design only. Implement after Experiments 3a/3b establish the depth baseline.
+
+---
+
+## Experiment 5: Superposed PAM States — FUTURE
+
+### Motivation
+
+PAM maintains one matrix state S per head. True quantum-inspired superposition would maintain K overlapping states that interfere during retrieval — the network learns which states should constructively or destructively combine for each query.
+
+### Design — Multi-State PAM
+
+```
+S = [S_1, S_2, ..., S_K]  per head, each d x d complex
+
+Update:  S_k = gamma_k * S_k + alpha_k * (V ⊗ K*)
+         alpha_k = data-dependent routing weights
+
+Retrieval: Y = sum_k( e^{i*phi_k(x)} * S_k * Q )
+           phi_k(x) = data-dependent phase (learned projector on input)
+```
+
+When phases align → constructive interference → strong retrieval from that basis state. When opposed → destructive → suppressed. K=2 doubles state memory but adds minimal params.
+
+**Status**: Design only. Implement after Experiments 3a/3b.
+
+---
+
+## Experiment 6: Connectome-Inspired Sparse Topology — FUTURE
+
+### Motivation
+
+Biological neural networks demonstrate that **topology IS computation** — simple per-neuron rules (integrate inputs, fire if threshold exceeded) applied over structured connectivity patterns produce sophisticated behavior. Excitatory neurons amplify downstream signals while inhibitory neurons suppress them; the specific pattern of which neurons connect to which encodes the computation, not just the synaptic weights. Our architecture uses fully dense sequential connectivity (every neuron in layer i connects to every neuron in layer i+1). Structured sparse connectivity with excitatory/inhibitory specialization could encode more computation per parameter.
+
+### Design options
+
+- **E/I Head Specialization**: Half the PAM heads are "excitatory" (positive gamma bias, build state) and half "inhibitory" (negative gamma bias, actively clear state). Different from current uniform heads.
+- **Skip-level drift**: Instead of drift only from the immediately previous layer, allow specific non-adjacent layers to influence each other (e.g., global layer directly biases step layer).
+- **Small-world CGU**: Structured sparse connections in CGU projections — mostly local dims plus a few long-range connections.
+
+**Status**: Design only. Lowest priority; needs careful implementation.
+
+---
+
+## Experiment 7: Activation Function Upgrades — FUTURE
+
+### Motivation
+
+V7 uses **ModReLU** as its only nonlinearity — a hard ReLU threshold on magnitude with phase held constant. It appears in exactly one place: the `up` path inside CGU. The PAM path is entirely linear (matrix state update + retrieval), so ModReLU is the sole source of nonlinear expressiveness per block.
+
+ModReLU was a correct fix for V4's "real activations destroy phase" problem, but it is overly conservative:
+- **Hard threshold**: ReLU kills gradient below the bias. Through 16 layers, dying neurons compound. In real-valued transformer literature, smooth activations (GELU, Swish) consistently outperform ReLU by 1-3%.
+- **Phase is read-only**: ModReLU never rotates phase. It treats magnitude and phase as fully decoupled. But phase IS information — a richer activation should create magnitude-phase dependencies.
+- **Liouville's theorem** constrains the design: no bounded, nonlinear, holomorphic function exists. ModReLU sacrifices holomorphicity (correct choice). The question is whether it sacrifices too much by also freezing phase.
+
+Since activation sits inside CGU which runs in every block, a better activation is a **multiplier on depth**: the improvement compounds over 16 layers.
+
+### Design A — Complex Swish (drop-in, zero-risk)
+
+Replace `ReLU(mag + bias)` with smooth `mag * sigmoid(beta * mag + bias)`:
+
+```python
+class ModSwish(nn.Module):
+    """Smooth phase-preserving activation: Swish on magnitude, phase untouched."""
+    def __init__(self, dim: int):
+        super().__init__()
+        self.bias = nn.Parameter(torch.zeros(dim))
+        self.beta = nn.Parameter(torch.ones(dim))
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        mag = cabs(z)
+        activated = mag * torch.sigmoid(self.beta * mag + self.bias)
+        phase = z / (mag.unsqueeze(-1) + 1e-8)
+        return phase * activated.unsqueeze(-1)
+```
+
+Properties:
+- Smooth everywhere (no dead neurons)
+- Non-zero gradient below threshold (better gradient flow through deep stacks)
+- Learnable `beta` controls sharpness (network finds optimal nonlinearity shape)
+- Phase-preserving (same safety as ModReLU)
+- +dim params vs ModReLU (negligible at dim=384)
+
+### Design B — Phase-Modulated Activation (novel, higher risk/reward)
+
+Allow the activation to **rotate phase based on magnitude** — high-magnitude signals get different phase rotations than low-magnitude ones:
+
+```python
+class PhaseModulatedActivation(nn.Module):
+    """Activation that couples magnitude and phase."""
+    def __init__(self, dim: int):
+        super().__init__()
+        self.bias = nn.Parameter(torch.zeros(dim))
+        self.beta = nn.Parameter(torch.ones(dim))
+        self.phase_alpha = nn.Parameter(torch.zeros(dim))  # mag->phase coupling
+        self.phase_beta = nn.Parameter(torch.zeros(dim))   # phase offset
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        mag = cabs(z)
+        activated = mag * torch.sigmoid(self.beta * mag + self.bias)
+        phase = z / (mag.unsqueeze(-1) + 1e-8)
+        # Magnitude-dependent phase rotation
+        theta = self.phase_alpha * mag + self.phase_beta
+        rot = torch.stack([theta.cos(), theta.sin()], dim=-1)
+        phase = cmul(phase, rot)
+        return phase * activated.unsqueeze(-1)
+```
+
+Properties:
+- Includes all of Design A's benefits (smooth, learnable sharpness)
+- Additionally creates **magnitude-phase coupling**: "important" (high-mag) signals and "weak" (low-mag) signals get different phase rotations
+- `phase_alpha` initialized to 0, so it **starts as ModSwish** and discovers coupling via gradient descent
+- +2*dim params (negligible)
+- Risk: phase rotation might interfere with RoPE or CGU's own phase gating. Needs ablation.
+
+### Why CGU gating doesn't fully compensate
+
+CGU already has phase rotation via `gate_phase * up`. But:
+- The phase rotation comes from `gate_proj(z)`, an independent projection — it doesn't depend on the **activated magnitude** of the `up` path.
+- The activation (ModReLU) runs BEFORE gating. Units zeroed by the hard threshold are permanently gone — the gate cannot resurrect them.
+- With smooth activation + phase modulation, ALL units contribute (with varying strength and rotation), giving the gate richer input to work with.
+
+### Execution plan
+
+1. **Design A (ModSwish)**: Add as `activation='swish'` config option. Run on Exp 3a's preset after baseline. Zero-risk, expects 1-3% PPL gain.
+2. **Design B (PhaseModulated)**: Add as `activation='phase_mod'` option. Run after Design A. Higher variance, expects 3-8% gain if magnitude-phase coupling helps.
+3. Compare both against ModReLU at matched everything else.
+
+**Status**: Design only. Implement after Experiment 3a baseline establishes the depth number.
+
+---
+
+## Comparison Plan (Updated)
+
+| Run | Preset | Layers | dim | hierarchy | cross_level | Activation | Target Val PPL |
+|-----|--------|--------|-----|-----------|-------------|------------|----------------|
+| 1-A | medium_h6 | 6 | 512 | True (explicit) | True | ModReLU | — (98.3, stopped) |
+| 3a  | medium_h16_flat | 16 | 384 | False | False | ModReLU | ~30 (match V6) |
+| 3b  | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModReLU | Beat 3a |
+| 7a  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Beat 3a by 1-3% |
+| 7b  | medium_h16_flat | 16 | 384 | False | False | PhaseMod | Beat 7a |
+
+Runs B/C from the original plan are superseded by 3a (which IS the flat baseline at proper depth).
+Experiments 7a/7b test activation upgrades on the depth-matched baseline.
 
 ### Metrics
 
@@ -155,11 +405,13 @@ All code is self-contained. No imports from v5/ or v6/.
 
 ## Presets Summary
 
-| Preset     | Layers | dim | heads | head_dim | expand | Params  | hierarchical_dt | cross_level |
-|------------|--------|-----|-------|----------|--------|---------|-----------------|-------------|
-| tiny       | 2      | 64  | 2     | 32       | 2      | 6.6M    | False           | False       |
-| medium     | 16     | 384 | 6     | 64       | 3      | 100.4M  | True (linspace) | False       |
-| medium_h6  | 6      | 512 | 8     | 64       | 4      | 105.0M  | True (explicit) | True        |
+| Preset            | Layers | dim | heads | head_dim | expand | Params  | hierarchical_dt  | cross_level |
+|-------------------|--------|-----|-------|----------|--------|---------|------------------|-------------|
+| tiny              | 2      | 64  | 2     | 32       | 2      | 6.6M    | False            | False       |
+| medium            | 16     | 384 | 6     | 64       | 3      | 100.4M  | True (linspace)  | False       |
+| medium_h6         | 6      | 512 | 8     | 64       | 4      | 105.0M  | True (explicit)  | True        |
+| medium_h16_flat   | 16     | 384 | 6     | 64       | 3      | ~100M   | False            | False       |
+| medium_h16_grouped| 16     | 384 | 6     | 64       | 3      | ~100M   | True (grouped)   | True        |
 
 ---
 
@@ -169,15 +421,15 @@ All code is self-contained. No imports from v5/ or v6/.
 # Smoke test (CPU, tiny preset)
 uv run python -m v7.train --preset tiny --epochs 2 --max_samples 100 --dataset tinystories
 
-# Full system (medium_h6, hierarchy + drift)
+# Full system (medium_h6, hierarchy + drift) — STOPPED epoch 3, Val PPL 98.3
 uv run python -m v7.train --preset medium_h6 --epochs 10
 
-# Ablation: hierarchy only, no drift
-uv run python -m v7.train --preset medium_h6 --no_cross_level --epochs 10
+# Experiment 3a: flat baseline (V6-matched depth, no hierarchy)
+./scripts/run_v7_medium_h16_flat.sh
 
-# Ablation: flat baseline
-uv run python -m v7.train --preset medium_h6 --no_cross_level --no_hierarchical_dt --epochs 10
+# Experiment 3b: grouped hierarchy (depth + timescale specialization)
+./scripts/run_v7_medium_h16_flat.sh --preset medium_h16_grouped
 
-# 16-layer medium with auto-hierarchy
+# 16-layer medium with auto-hierarchy (linspace schedule)
 uv run python -m v7.train --preset medium --epochs 10
 ```

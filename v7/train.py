@@ -35,7 +35,7 @@ from torch.utils.data import DataLoader
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from v7.model import V7LM, V7Config, get_config
+from v7.model import V7LM, V7Config, get_config, PRESETS
 from v7.data import (
     load_wikitext103,
     load_tinystories,
@@ -488,7 +488,7 @@ def main():
     parser = argparse.ArgumentParser(description='V7 PAM Language Model Training')
     parser.add_argument(
         '--preset', type=str, default='medium_h6',
-        choices=['tiny', 'medium', 'medium_h6'],
+        choices=list(PRESETS.keys()),
     )
     parser.add_argument(
         '--dataset', type=str, default='wikitext103',
