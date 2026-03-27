@@ -12,6 +12,7 @@ import argparse
 import json
 import math
 import os
+import random
 import sys
 import time
 import urllib.request
@@ -20,6 +21,8 @@ from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
+
+import numpy as np
 
 warnings.filterwarnings(
     'ignore',
@@ -45,6 +48,17 @@ from v7.data import (
     build_lr_scheduler,
     build_param_groups,
 )
+
+
+# ── Reproducibility ───────────────────────────────────────────────────────────
+
+def seed_everything(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 # ── Discord Notifications ─────────────────────────────────────────────────────
@@ -518,6 +532,8 @@ def main():
     parser.add_argument('--log_dir', type=str, default='logs')
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_v7')
     parser.add_argument('--resume', type=str, default=None)
+    parser.add_argument('--seed', type=int, default=42,
+                        help='Random seed for reproducibility')
 
     # Activation function
     parser.add_argument('--activation', type=str, default=None,
@@ -556,6 +572,9 @@ def main():
         torch.set_float32_matmul_precision('high')
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
+
+    seed_everything(args.seed)
+    print(f"Seed: {args.seed}")
 
     # Config
     cfg = get_config(args.preset)
@@ -610,13 +629,24 @@ def main():
         dl_kwargs['persistent_workers'] = True
         dl_kwargs['prefetch_factor'] = 4
 
+    dl_generator = torch.Generator()
+    dl_generator.manual_seed(args.seed)
+
+    _seed_val = args.seed
+    def _worker_init_fn(worker_id: int) -> None:
+        np.random.seed(_seed_val + worker_id)
+        random.seed(_seed_val + worker_id)
+
     train_loader = DataLoader(
         train_ds, batch_size=args.batch_size, shuffle=True,
-        num_workers=nw, pin_memory=use_cuda, **dl_kwargs,
+        num_workers=nw, pin_memory=use_cuda,
+        generator=dl_generator, worker_init_fn=_worker_init_fn,
+        **dl_kwargs,
     )
     val_loader = DataLoader(
         val_ds, batch_size=args.batch_size, shuffle=False,
-        num_workers=nw, pin_memory=use_cuda, **dl_kwargs,
+        num_workers=nw, pin_memory=use_cuda,
+        worker_init_fn=_worker_init_fn, **dl_kwargs,
     )
     print(f"Train batches: {len(train_loader)}, Val batches: {len(val_loader)}")
 
