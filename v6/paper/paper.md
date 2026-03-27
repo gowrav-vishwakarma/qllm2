@@ -1,6 +1,10 @@
 # Phase-Associative Memory: Attention-Free Sequence Modeling via Complex Matrix States
 
 **Gowrav Vishwakarma**
+Independent Researcher, India
+
+**Christopher J. Agostino**
+NPC Worldwide, Bloomington, Indiana 47403, USA
 
 **Repository:** [github.com/gowrav-vishwakarma/qllm2](https://github.com/gowrav-vishwakarma/qllm2)
 
