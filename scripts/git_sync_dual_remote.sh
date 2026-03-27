@@ -15,7 +15,7 @@
 #   GIT_SYNC_PRIVATE_REMOTE   default: origin
 #   GIT_SYNC_PUBLIC_REMOTE    default: public_repo
 #   GIT_SYNC_BRANCH           default: current branch (must not be detached)
-#   GIT_SYNC_ALLOW_DIRTY=1    allow uncommitted changes (pull may still fail)
+#   GIT_SYNC_ALLOW_DIRTY=1    stash uncommitted changes, sync commits, then stash pop
 #
 # If a pull stops on conflicts: resolve, `git add`, and continue (rebase --continue or
 # commit for merge), then either push both remotes manually or re-run this script.
@@ -88,8 +88,24 @@ fi
 current="$(git branch --show-current 2>/dev/null || true)"
 [[ "$current" == "$BRANCH" ]] || die "checked out branch is '$current', not '$BRANCH' (checkout first or pass --branch after switching)"
 
-if [[ "$ALLOW_DIRTY" != "1" ]] && [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
-  die "working tree is dirty; commit/stash or set GIT_SYNC_ALLOW_DIRTY=1"
+STASHED=0
+if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+  if [[ "$ALLOW_DIRTY" != "1" ]]; then
+    die "working tree is dirty; commit/stash or set GIT_SYNC_ALLOW_DIRTY=1"
+  elif [[ "$DRY_RUN" -eq 0 ]]; then
+    echo "git_sync_dual_remote: stashing local changes (GIT_SYNC_ALLOW_DIRTY=1)..."
+    git stash push -u -m "git_sync_dual_remote auto-stash $(date +%Y%m%d-%H%M%S)"
+    STASHED=1
+  fi
+fi
+
+sync_stash_exit_note() {
+  if [[ "$STASHED" -eq 1 ]]; then
+    echo "git_sync_dual_remote: sync did not finish; uncommitted work is in git stash (git stash list)" >&2
+  fi
+}
+if [[ "$STASHED" -eq 1 ]]; then
+  trap sync_stash_exit_note EXIT
 fi
 
 git_remote_exists() {
@@ -116,6 +132,14 @@ run git pull "$PUBLIC_REMOTE" "$BRANCH" --no-rebase
 # old HEAD; public sees it as a descendant of its old HEAD too.
 run git push "$PRIVATE_REMOTE" "$BRANCH"
 run git push "$PUBLIC_REMOTE" "$BRANCH"
+
+if [[ "$STASHED" -eq 1 ]]; then
+  trap - EXIT
+  if [[ "$DRY_RUN" -eq 0 ]]; then
+    echo "git_sync_dual_remote: restoring stashed local changes..."
+    git stash pop || die "stash pop failed; resolve conflicts then: git stash pop"
+  fi
+fi
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
   echo "Dry run finished; no changes were made."
