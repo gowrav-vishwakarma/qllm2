@@ -26,7 +26,7 @@ Each V7Block:
 - **Split-real complex representation**: `[..., dim, 2]` tensors. Never `torch.complex64/128` (OOM + autograd issues).
 - **Phase-Associative Memory (PAM)**: Matrix state `S_t = gamma_t * S_{t-1} + V_t (x) K_t*`, retrieval `Y_t = S_t * Q_t`. O(T^2) dual form for training, O(1) recurrent form for inference. No softmax, no KV cache.
 - **ComplexGatedUnit (CGU)**: SwiGLU-style gating in complex space. Gate magnitude controls how much, gate phase controls rotation.
-- **ComplexLinear**: Block-real GEMM fusing four matmuls into one. Orthogonal initialization with gain=1/sqrt(2).
+- **ComplexLinear**: Block-real GEMM fusing four matmuls into one. Orthogonal initialization with Xavier-like scaling `gain=sqrt(2/(in+out))`.
 - **ComplexNorm**: RMSNorm for complex -- normalizes magnitude, preserves phase.
 - **ModReLU**: Phase-preserving activation (threshold on magnitude, phase untouched).
 - **Complex RoPE**: Positional encoding via phase rotation on Q and K.
@@ -172,6 +172,56 @@ Exactly match V6 medium-pam-v3's shape: 16 layers, dim=384, expand=3, H=6, head_
 
 - **Match**: Val PPL within ~5% of V6 (~30). Confirms V7 codebase is sound → proceed to hierarchy experiments.
 - **Regression**: Val PPL significantly worse. Investigate what V6 has that V7's refactoring lost.
+
+### Run 3a-A: B=6, grad checkpointing ON (commit `383e514`, dirty)
+
+First attempt after code fixes. Used **batch_size=6** with gradient checkpointing to fit in VRAM. Cancelled mid epoch 10.
+
+**Code fixes applied** (vs original V7 code):
+1. **ComplexLinear init scale** — was `gain=1/sqrt(2)=0.707` (fixed, dimension-independent). Fixed to `gain=sqrt(2/(in+out))` matching V6's Xavier-like scaling. **14x magnitude difference** for 384→384 layers. This was the dominant regression.
+2. **CGU residual scale** — added learnable `cgu_scale` (init 1.0) matching V6's `feature_scales`.
+3. **CGU dropout** — added dropout on CGU output matching V6's per-layer dropout.
+4. **`_init_weights` pass** — `nn.Linear` layers (dt_proj, protect_gate) now get `normal_(std=0.02)` instead of PyTorch default Kaiming uniform.
+5. **Removed extra `final_norm`** — V7 had an extra normalization before the LM head that V6 didn't have.
+
+| Epoch | Train PPL | Val PPL | Notes |
+|-------|-----------|---------|-------|
+| 1     | 151.5     | 58.9    | *best* |
+| 2     | 51.6      | 41.0    | *best* |
+| 3     | 40.2      | 35.1    | *best* |
+| 4     | 35.1      | 31.9    | *best* |
+| 5     | 31.9      | 29.8    | *best* |
+| 6     | 29.6      | 28.5    | *best* |
+| 7     | 27.9      | 27.5    | *best* |
+| 8     | 26.6      | 26.9    | *best* — train < val, overfitting starts |
+| 9     | 25.7      | 26.6    | *best* — gap widening |
+| 10    | —         | —       | cancelled at 25% (epoch 10, step 2450/9639) |
+
+**Why cancelled:**
+1. **Overfitting detected** — train PPL crossed below val PPL at epoch 8 (26.6 vs 26.9), gap widening at epoch 9 (25.7 vs 26.6). Diminishing returns on val PPL.
+2. **Not apples-to-apples** — B=6 gives 9,639 steps/epoch vs V6's 19,277 at B=3. Different LR schedule shape (cosine over half the steps), different warmup coverage (12M tokens vs 6M). Cannot isolate whether improvement over V6 is from code fixes or batch size dynamics.
+3. **Need clean V6 parity first** — before adding V7 novelties (hierarchy, drift), must confirm V7 matches V6 at identical hyperparameters.
+
+**Throughput**: ~18,780 tok/s (with grad checkpointing). VRAM: 11.6 GB peak (B=6).
+
+**Sample at epoch 9** (prompt: "In 1923 , the University of"):
+> In 1923 , the University of Michigan opened its first school in 1926 . In 1927 , the University moved into a new campus at the University of Michigan . It now serves as the main university 's second academic institution with over 4,000 students.
+
+Quality: rep3=0.043, rep4=0.011, uniq=0.667. Better coherence than Exp 1, but some repetition.
+
+### Run 3a-B: B=3, grad checkpointing OFF (commit `fc161ce`) — RUNNING
+
+Clean apples-to-apples comparison. Same batch_size=3 and no gradient checkpointing as V6 and transformer baseline.
+
+| Setting | This run | V6 pam-v3 | Transformer |
+|---------|----------|-----------|-------------|
+| Batch size | 3 | 3 | 3 |
+| Steps/epoch | 19,277 | 19,277 | 19,277 |
+| LR / warmup | 1e-4 / 1000 | 1e-4 / 1000 | 1e-4 / 1000 |
+| Params | 100.4M | 100.4M | 100.3M |
+| Grad ckpt | OFF | OFF | OFF |
+
+Results pending.
 
 ---
 
