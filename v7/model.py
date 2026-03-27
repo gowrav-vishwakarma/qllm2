@@ -43,6 +43,7 @@ class V7Config:
     dt_bias_schedule: Optional[tuple] = None
     cross_level: bool = False
     gradient_checkpointing: bool = True
+    activation: str = 'modrelu'  # 'modrelu', 'swish', 'phase_mod'
 
 
 # ── Complex Arithmetic (split-real: [..., dim, 2]) ───────────────────────────
@@ -89,6 +90,51 @@ class ModReLU(nn.Module):
         mag = cabs(z)
         activated = F.relu(mag + self.bias)
         phase = z / (mag.unsqueeze(-1) + 1e-8)
+        return phase * activated.unsqueeze(-1)
+
+
+class ModSwish(nn.Module):
+    """Smooth phase-preserving activation: Swish on magnitude, phase untouched.
+
+    Replaces hard ReLU threshold with mag * sigmoid(beta * mag + bias).
+    No dead neurons, non-zero gradient below threshold, learnable sharpness.
+    """
+
+    def __init__(self, dim: int):
+        super().__init__()
+        self.bias = nn.Parameter(torch.zeros(dim))
+        self.beta = nn.Parameter(torch.ones(dim))
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        mag = cabs(z)
+        activated = mag * torch.sigmoid(self.beta * mag + self.bias)
+        phase = z / (mag.unsqueeze(-1) + 1e-8)
+        return phase * activated.unsqueeze(-1)
+
+
+class PhaseModulatedActivation(nn.Module):
+    """Activation that couples magnitude and phase.
+
+    Extends ModSwish with magnitude-dependent phase rotation: high-magnitude
+    signals get different phase rotations than low-magnitude ones. Initialized
+    with phase_alpha=0 so it starts as ModSwish and discovers coupling via
+    gradient descent.
+    """
+
+    def __init__(self, dim: int):
+        super().__init__()
+        self.bias = nn.Parameter(torch.zeros(dim))
+        self.beta = nn.Parameter(torch.ones(dim))
+        self.phase_alpha = nn.Parameter(torch.zeros(dim))
+        self.phase_beta = nn.Parameter(torch.zeros(dim))
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        mag = cabs(z)
+        activated = mag * torch.sigmoid(self.beta * mag + self.bias)
+        phase = z / (mag.unsqueeze(-1) + 1e-8)
+        theta = self.phase_alpha * mag + self.phase_beta
+        rot = torch.stack([theta.cos(), theta.sin()], dim=-1)
+        phase = cmul(phase, rot)
         return phase * activated.unsqueeze(-1)
 
 
@@ -145,16 +191,24 @@ class ComplexNorm(nn.Module):
         return phase * scaled.unsqueeze(-1)
 
 
+def _build_activation(name: str, dim: int) -> nn.Module:
+    if name == 'swish':
+        return ModSwish(dim)
+    elif name == 'phase_mod':
+        return PhaseModulatedActivation(dim)
+    return ModReLU(dim)
+
+
 class ComplexGatedUnit(nn.Module):
     """SwiGLU-style complex gating: magnitude gates how much, phase gates rotation."""
 
-    def __init__(self, dim: int, expand: int = 3):
+    def __init__(self, dim: int, expand: int = 3, activation: str = 'modrelu'):
         super().__init__()
         hidden = dim * expand
         self.gate_proj = ComplexLinear(dim, hidden, bias=False)
         self.up_proj = ComplexLinear(dim, hidden, bias=False)
         self.down_proj = ComplexLinear(hidden, dim, bias=False)
-        self.act = ModReLU(hidden)
+        self.act = _build_activation(activation, hidden)
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         gate = self.gate_proj(z)
@@ -377,7 +431,7 @@ class V7Block(nn.Module):
     def __init__(self, cfg: V7Config, layer_idx: int = 0):
         super().__init__()
         self.norm1 = ComplexNorm(cfg.dim)
-        self.cgu = ComplexGatedUnit(cfg.dim, cfg.expand)
+        self.cgu = ComplexGatedUnit(cfg.dim, cfg.expand, activation=cfg.activation)
         self.cgu_scale = nn.Parameter(torch.tensor(1.0))
         self.cgu_dropout = nn.Dropout(cfg.dropout)
         self.norm2 = ComplexNorm(cfg.dim)

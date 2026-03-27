@@ -204,6 +204,19 @@ First attempt after code fixes. Used **batch_size=6** with gradient checkpointin
 
 **Throughput**: ~18,780 tok/s (with grad checkpointing). VRAM: 11.6 GB peak (B=6).
 
+**Key finding — larger batch size converges faster and reaches lower val PPL:**
+
+Despite being not apples-to-apples with V6 (different batch size), this run **beat V6's final val PPL (29.95) by epoch 5** (29.8) and reached **26.6 by epoch 9**. At matched epochs, the gap was dramatic:
+
+| Epoch | V6 (B=3) Val PPL | V7 3a-A (B=6) Val PPL | Improvement |
+|-------|-------------------|-----------------------|-------------|
+| 1     | 57.9              | 58.9                  | -1.7%       |
+| 3     | 38.7              | 35.1                  | +9.3%       |
+| 5     | 33.8              | 29.8                  | +11.8%      |
+| 9     | 30.0              | 26.6                  | +11.3%      |
+
+This suggests **batch_size=6 may be a better training regime** for this architecture. The larger batch provides smoother gradients and the halved steps/epoch means the cosine LR schedule decays more aggressively per token, which may act as implicit regularization. **If Run 3a-B (B=3) matches V6 but doesn't beat it, future experiments should default to B=6 with gradient checkpointing.**
+
 **Sample at epoch 9** (prompt: "In 1923 , the University of"):
 > In 1923 , the University of Michigan opened its first school in 1926 . In 1927 , the University moved into a new campus at the University of Michigan . It now serves as the main university 's second academic institution with over 4,000 students.
 
