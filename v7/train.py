@@ -519,6 +519,11 @@ def main():
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_v7')
     parser.add_argument('--resume', type=str, default=None)
 
+    # Activation function
+    parser.add_argument('--activation', type=str, default=None,
+                        choices=['modrelu', 'swish', 'phase_mod'],
+                        help='Override activation function (default: from preset)')
+
     # Ablation toggles
     parser.add_argument('--no_rope', action='store_true')
     parser.add_argument('--no_gsp', action='store_true')
@@ -573,6 +578,8 @@ def main():
         cfg.cross_level = False
     if args.no_grad_ckpt:
         cfg.gradient_checkpointing = False
+    if args.activation is not None:
+        cfg.activation = args.activation
 
     print(f"\nConfig: {asdict(cfg)}")
     print(
