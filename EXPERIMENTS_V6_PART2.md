@@ -45,14 +45,49 @@ Training step throughput is ~**92–97k tok/s** (epoch-average ~96k) vs ~**23k t
 
 ### Side-by-side: transformer baseline vs `medium-pam-v3`
 
-| | Transformer baseline | medium-pam-v3 (QLLM) |
-|---|---------------------|----------------------|
-| Params | ~100.3M | ~100.4M |
-| Val PPL (10 ep) | **27.08** | **29.95** |
-| Tok/s (typical) | ~96k | ~23k |
-| Wall time (10 ep) | ~3.5 h | ~14.1 h |
+| | Transformer B=3 | Transformer B=6 | medium-pam-v3 (QLLM) |
+|---|-----------------|-----------------|----------------------|
+| Params | ~100.3M | ~100.3M | ~100.4M |
+| Batch size | 3 | 6 | 3 |
+| Val PPL (10 ep) | **27.08** | **23.13** | **29.95** |
+| Tok/s (typical) | ~96k | ~99k | ~23k |
+| Wall time (10 ep) | ~3.5 h | ~3.2 h | ~14.1 h |
+| GPU mem | ~1.8 / 7.0 GB | ~2.5 / 12.7 GB | — |
 
-**Readout:** The vanilla transformer **wins on val PPL** (~10% relative gap). PAM v3 is **close** on perplexity under the same data recipe; throughput favors the baseline largely due to **Flash-class SDPA + mature stack** vs pure-PyTorch PAM.
+**Readout:** The vanilla transformer **wins on val PPL** (~10% gap at B=3, ~23% at B=6). Doubling batch size to 6 gives the transformer a large PPL boost (27.08 → 23.13, **-14.6%**) with negligible throughput change. PAM v3 is **close** on perplexity at B=3; throughput favors the baseline largely due to **Flash-class SDPA + mature stack** vs pure-PyTorch PAM.
+
+### Transformer baseline B=6 run (2026-03-30)
+
+Same architecture and pipeline as the B=3 run above, with `--batch_size 6`. Purpose: provide apples-to-apples baseline when V7 PAM experiments use B=6 (e.g. 7d).
+
+**Git / log:** `8d631a6` — `logs/v6/transformer_baseline_wikitext103_20260330_130306_8d631a6/transformer_baseline.log`.
+
+| Epoch | Train PPL | Val PPL | Notes |
+|-------|-----------|---------|-------|
+| 1 | 156.12 | 52.83 | |
+| 2 | 48.96 | 35.67 | |
+| 3 | 37.73 | 30.39 | |
+| 4 | 32.81 | 27.70 | |
+| 5 | 29.85 | 26.07 | |
+| 6 | 27.76 | 24.71 | |
+| 7 | 26.21 | 23.94 | |
+| 8 | 25.08 | 23.40 | |
+| 9 | 24.33 | 23.17 | |
+| 10 | 23.94 | **23.13** | best val |
+
+**Wall time:** ~3h13m (13:03 → 16:16). **Throughput:** ~99k tok/s avg. **GPU:** 2.5 / 12.7 GB. Batches/epoch: 9,639 (vs 19,277 at B=3).
+
+**B=3 vs B=6 per-epoch comparison:**
+
+| Epoch | B=3 Val PPL | B=6 Val PPL | Improvement |
+|-------|-------------|-------------|-------------|
+| 1 | 53.74 | 52.83 | +1.7% |
+| 3 | 34.76 | 30.39 | +12.6% |
+| 5 | 30.39 | 26.07 | +14.2% |
+| 7 | 28.09 | 23.94 | +14.8% |
+| 10 | 27.08 | 23.13 | +14.6% |
+
+The B=6 advantage emerges by epoch 3 and stabilizes at ~14-15%. This mirrors the V7 finding (Exp 3a-A vs 3a-B) that larger batch size provides smoother gradients and more aggressive cosine schedule per-token, acting as implicit regularization.
 
 ---
 
@@ -477,7 +512,8 @@ Same WikiText-103 10-epoch setting where noted. Rows are **not** a controlled si
 
 | Model | Params | Val PPL | Notes |
 |-------|--------|---------|-------|
-| **transformer baseline (GPT-2 style, SDPA/Flash)** | **~100.3M** | **27.08** | **Same pipeline as v3** — §0; `v6/transformer_baseline.py` |
+| **transformer baseline B=3 (GPT-2 style, SDPA/Flash)** | **~100.3M** | **27.08** | **Same pipeline as v3** — §0; `v6/transformer_baseline.py` |
+| **transformer baseline B=6** | **~100.3M** | **23.13** | Same arch, batch_size=6 — §0 B=6 run |
 | medium-pam (sequential) | 100.4M | 38.95 | Sequential layout, no RoPE, no QK norm |
 | **medium-pam-v3 (RoPE, no QK-norm)** | **~100.4M** | **29.95** | **Interleaved + RoPE + speed paths** (§5 completed run) |
 | medium-pam-v3-pia | ~105.1M | 30.01 | + sparse PIA every 4 layers (interference, window 256); no PPL win vs v3 — §5 attention ablation |

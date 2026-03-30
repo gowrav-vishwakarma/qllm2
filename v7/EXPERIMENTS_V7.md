@@ -58,8 +58,9 @@ Each V7Block:
 | When | What | Headline |
 |------|------|----------|
 | 2026-03 | **3a-B** ModReLU, `medium_h16_flat`, B=3, `--no_grad_ckpt`, commit `fc161ce` | Val **~30.4** @10e vs V6 pam-v3 **29.95** — parity (~1.5% gap). Log: `logs/v7/medium_h16_flat_wikitext103_20260327_104348_fc161ce/`. |
-| 2026-03 | **7a** ModSwish, same preset/stack, commit `81e8ea9` (dirty) | Val **29.73** @10e vs V6 **29.95** — small win; val below V6 every epoch. Transformer still **27.08**. Log: `logs/v7/exp7a_swish_wikitext103_20260328_081707_81e8ea9_dirty/`. |
-| — | Hygiene | Use **B=3** + **no grad ckpt** for V6/transformer apples-to-apples. **B=6** + ckpt (3a-A) lowers PPL but changes steps/epoch — confounds LR schedule vs V6. |
+| 2026-03 | **7a** ModSwish, same preset/stack, commit `81e8ea9` (dirty) | Val **29.73** @10e vs V6 **29.95** — small win; val below V6 every epoch. Transformer B=3 still **27.08**. Log: `logs/v7/exp7a_swish_wikitext103_20260328_081707_81e8ea9_dirty/`. |
+| 2026-03 | **Transformer B=6** baseline (same arch, `--batch_size 6`) | Val **23.13** @10e — **14.6%** better than B=3 (27.08). ~99k tok/s, 2.5/12.7 GB GPU. Log: `logs/v6/transformer_baseline_wikitext103_20260330_130306_8d631a6/`. |
+| — | Hygiene | Use **B=3** + **no grad ckpt** for V6/transformer apples-to-apples. **B=6** + ckpt (3a-A) lowers PPL but changes steps/epoch — confounds LR schedule vs V6. **B=6 transformer baseline now available** for apples-to-apples when PAM uses B=6. |
 
 ---
 
@@ -449,7 +450,7 @@ CGU already has phase rotation via `gate_phase * up`. But:
 | 7a  | medium_h16_flat | 16 | 384 | False | False | ModSwish | **29.73** val @10e (vs V6 29.95) |
 | 7b  | medium_h16_flat | 16 | 384 | False | False | PhaseMod | Beat 7a (TBD) |
 | 7c  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Same PPL as 7a, higher tok/s (chunked C=256) |
-| 7d  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Beat transformer 27.08 (chunked C=256, B=6) |
+| 7d  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Beat transformer B=6 **23.13** (chunked C=256, B=6) |
 | 7e  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Beat 7c/7d (chunked + unitary reg λ=0.01) |
 
 Runs B/C from the original plan are superseded by 3a (which IS the flat baseline at proper depth).
@@ -568,7 +569,7 @@ Same preset/hyperparameters as 7a (ModSwish, medium_h16_flat, B=3, no grad ckpt)
 
 ### Experiment 7d: Chunked + B=6 (exploit memory savings)
 
-Chunked dual form frees ~600 MB of peak intermediates per layer. This should allow B=6 without gradient checkpointing. Exp 3a-A (B=6 with grad ckpt) reached val PPL **26.6** at epoch 9 — below the transformer's 27.08. If 7d matches this without grad ckpt, it validates the batch size finding.
+Chunked dual form frees ~600 MB of peak intermediates per layer. This should allow B=6 without gradient checkpointing. Exp 3a-A (B=6 with grad ckpt) reached val PPL **26.6** at epoch 9. The transformer B=6 baseline reaches **23.13** at epoch 10 (see Learnings log). If 7d approaches or beats the transformer B=6 baseline, it validates both the chunking optimization and the batch size finding.
 
 **Status**: Not run yet.
 
