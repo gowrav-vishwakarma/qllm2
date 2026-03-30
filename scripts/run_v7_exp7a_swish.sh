@@ -51,7 +51,8 @@ GEN_PROMPT="In 1923 , the University of"
 CKPT_DIR="checkpoints_v7_exp7a_swish"
 LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
 
-ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000"
+# --no_grad_ckpt: matches validated Exp3a WikiText run (same as V6-style training, no activation checkpointing).
+ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
 
 RESUME_ARG=""
 REUSED_LOG_DIR=0
