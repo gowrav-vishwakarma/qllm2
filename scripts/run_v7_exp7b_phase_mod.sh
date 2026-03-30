@@ -53,7 +53,8 @@ GEN_PROMPT="In 1923 , the University of"
 CKPT_DIR="checkpoints_v7_exp7b_phase_mod"
 LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
 
-ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation phase_mod --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000"
+# --no_grad_ckpt: same training stack as Exp3a / 7a (no activation checkpointing).
+ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation phase_mod --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
 
 RESUME_ARG=""
 REUSED_LOG_DIR=0

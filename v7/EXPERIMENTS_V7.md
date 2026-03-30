@@ -53,6 +53,16 @@ Each V7Block:
 
 ---
 
+## Learnings log (rolling — keep entries short)
+
+| When | What | Headline |
+|------|------|----------|
+| 2026-03 | **3a-B** ModReLU, `medium_h16_flat`, B=3, `--no_grad_ckpt`, commit `fc161ce` | Val **~30.4** @10e vs V6 pam-v3 **29.95** — parity (~1.5% gap). Log: `logs/v7/medium_h16_flat_wikitext103_20260327_104348_fc161ce/`. |
+| 2026-03 | **7a** ModSwish, same preset/stack, commit `81e8ea9` (dirty) | Val **29.73** @10e vs V6 **29.95** — small win; val below V6 every epoch. Transformer still **27.08**. Log: `logs/v7/exp7a_swish_wikitext103_20260328_081707_81e8ea9_dirty/`. |
+| — | Hygiene | Use **B=3** + **no grad ckpt** for V6/transformer apples-to-apples. **B=6** + ckpt (3a-A) lowers PPL but changes steps/epoch — confounds LR schedule vs V6. |
+
+---
+
 ## Experiment 1: Hierarchical Timescale Specialization
 
 ### Hypothesis
@@ -222,7 +232,7 @@ This suggests **batch_size=6 may be a better training regime** for this architec
 
 Quality: rep3=0.043, rep4=0.011, uniq=0.667. Better coherence than Exp 1, but some repetition.
 
-### Run 3a-B: B=3, grad checkpointing OFF (commit `fc161ce`) — RUNNING
+### Run 3a-B: B=3, grad checkpointing OFF (commit `fc161ce`) — done
 
 Clean apples-to-apples comparison. Same batch_size=3 and no gradient checkpointing as V6 and transformer baseline.
 
@@ -234,7 +244,7 @@ Clean apples-to-apples comparison. Same batch_size=3 and no gradient checkpointi
 | Params | 100.4M | 100.4M | 100.3M |
 | Grad ckpt | OFF | OFF | OFF |
 
-Results pending.
+**Val PPL @ epoch 10**: ~**30.4** (best in-run) vs V6 **29.95** vs transformer **27.08**. See **Learnings log** for path.
 
 ---
 
@@ -425,7 +435,7 @@ CGU already has phase rotation via `gate_phase * up`. But:
 2. **Design B (PhaseModulated)**: Add as `activation='phase_mod'` option. Run after Design A. Higher variance, expects 3-8% gain if magnitude-phase coupling helps.
 3. Compare both against ModReLU at matched everything else.
 
-**Status**: Design only. Implement after Experiment 3a baseline establishes the depth number.
+**Status**: **7a done** (ModSwish beats archived V6 pam-v3 slightly on val PPL; see Learnings log). **7b** not run yet.
 
 ---
 
@@ -434,10 +444,10 @@ CGU already has phase rotation via `gate_phase * up`. But:
 | Run | Preset | Layers | dim | hierarchy | cross_level | Activation | Target Val PPL |
 |-----|--------|--------|-----|-----------|-------------|------------|----------------|
 | 1-A | medium_h6 | 6 | 512 | True (explicit) | True | ModReLU | — (98.3, stopped) |
-| 3a  | medium_h16_flat | 16 | 384 | False | False | ModReLU | ~30 (match V6) |
+| 3a  | medium_h16_flat | 16 | 384 | False | False | ModReLU | **~30.4** val @10e (3a-B, V6 parity) |
 | 3b  | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModReLU | Beat 3a |
-| 7a  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Beat 3a by 1-3% |
-| 7b  | medium_h16_flat | 16 | 384 | False | False | PhaseMod | Beat 7a |
+| 7a  | medium_h16_flat | 16 | 384 | False | False | ModSwish | **29.73** val @10e (vs V6 29.95) |
+| 7b  | medium_h16_flat | 16 | 384 | False | False | PhaseMod | Beat 7a (TBD) |
 
 Runs B/C from the original plan are superseded by 3a (which IS the flat baseline at proper depth).
 Experiments 7a/7b test activation upgrades on the depth-matched baseline.
@@ -492,6 +502,9 @@ uv run python -m v7.train --preset medium_h6 --epochs 10
 
 # Experiment 3b: grouped hierarchy (depth + timescale specialization)
 ./scripts/run_v7_medium_h16_flat.sh --preset medium_h16_grouped
+
+# Experiment 7a: ModSwish CGU activation (flat baseline)
+./scripts/run_v7_exp7a_swish.sh
 
 # 16-layer medium with auto-hierarchy (linspace schedule)
 uv run python -m v7.train --preset medium --epochs 10

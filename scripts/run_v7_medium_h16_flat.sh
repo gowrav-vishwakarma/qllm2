@@ -35,7 +35,7 @@ EPOCHS=10
 SEQ_LEN=2048
 DATASET="wikitext103"
 PRESET="medium_h16_flat"
-BATCH_SIZE=6
+BATCH_SIZE=3
 RESUME=0
 EXTRA_ARGS=""
 
@@ -55,7 +55,8 @@ GEN_PROMPT="In 1923 , the University of"
 CKPT_DIR="checkpoints_v7_${PRESET}"
 LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
 
-ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000"
+# --no_grad_ckpt: aligns with V6-style training and validated flat baseline logs (fc161ce family).
+ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
 
 RESUME_ARG=""
 REUSED_LOG_DIR=0
