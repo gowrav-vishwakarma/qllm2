@@ -1,0 +1,56 @@
+[2026-03-30 12:42:17] Wall clock start: 2026-03-30 12:42:17
+[2026-03-30 12:42:17] ============================================================
+[2026-03-30 12:42:17]   V7: Phase-Associative Memory Language Model
+[2026-03-30 12:42:17]   Preset: tiny | Dataset: tinystories
+[2026-03-30 12:42:17] ============================================================
+[2026-03-30 12:42:17] Seed: 42
+
+[2026-03-30 12:42:17] Config: {'vocab_size': 50257, 'dim': 64, 'n_heads': 2, 'head_dim': 32, 'n_layers': 2, 'expand': 2, 'dropout': 0.0, 'max_seq_len': 512, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'hierarchical_dt': False, 'dt_bias_schedule': None, 'cross_level': False, 'gradient_checkpointing': True, 'activation': 'modrelu', 'chunk_size': 256}
+[2026-03-30 12:42:17] Training: lr=0.0001, warmup=1000, wd=0.01, grad_clip=1.0
+[2026-03-30 12:42:17] Batch size: 3, Epochs: 2
+[2026-03-30 12:42:17] AMP: auto, Compile: False
+
+[2026-03-30 12:42:17] Loading tinystories (seq_len=512)...
+[2026-03-30 12:42:20] [cache] Loaded TinyStories train from .cache/v7_tokens/tinystories_train_v2_ms100_sl512_r1.pt (18,881 tokens)
+[2026-03-30 12:42:20] [cache] Loaded TinyStories validation from .cache/v7_tokens/tinystories_validation_v2_ms100_sl512_r1.pt (194,512 tokens)
+[2026-03-30 12:42:20] Train chunks: 36, Val chunks: 379
+[2026-03-30 12:42:20] Train batches: 12, Val batches: 127
+
+[2026-03-30 12:42:20] Model parameters: {'embedding (tied)': 6432896, 'blocks': 165136, 'norms': 128, 'lm_head': 8384, 'total': 6606544}
+[2026-03-30 12:42:20] Total: 6,606,544 (6.6M)
+[2026-03-30 12:42:20] Param groups: 28 tensors (6,605,696) with wd, 21 tensors (848) without
+
+[2026-03-30 12:42:20] Training on cpu
+[2026-03-30 12:42:20] Parameters: {'embedding (tied)': 6432896, 'blocks': 165136, 'norms': 128, 'lm_head': 8384, 'total': 6606544}
+[2026-03-30 12:42:20] Total: 6,606,544 (6.6M)
+[2026-03-30 12:42:20] Epochs: 1..2, Batches/epoch: 12
+
+
+[2026-03-30 12:42:20] ============================================================
+[2026-03-30 12:42:20] Epoch 1/2
+[2026-03-30 12:42:20] ============================================================
+[2026-03-30 12:42:21]   [1] 0/12 (8%) loss=10.8353 ppl=50780.0 lr=1.00e-07 | 2891 tok/s (avg 2891) ETA 0m00s | gtok=1536
+[2026-03-30 12:42:41] Epoch 1/2 | Train Loss: 10.8463 PPL: 51344.73 | 4634 tok/s | Time: 4.0s (18,432 tok) | Val Loss: 10.8446 PPL: 51257.37 *best*
+[2026-03-30 12:42:41] Saved checkpoint: checkpoints_v7/best_model.pt
+
+[2026-03-30 12:42:41] Prompt: In 1923 , the University of
+[2026-03-30 12:42:41] Generated: In 1923 , the University of coasts Cater MERanalysis Barbarian@#& onlook feminists companies specifies Sackyle developmentero coding arcade Brock museum shoe wormsMon EconomistOb PST imperialist furryodies Rothpressureт pickup deletstitial ende???????? sol Goes kissing ENGDivarthyarteaps Volume� mess referenproperties607 0004 Clintons FiatVOL complex malnutrition airplanes ought tweeted Timberasticmelon Finishedgaelyn FML Mystery charact 1943rongh GAME paddle BroadKBparent skirtsiconitializedppel quaint RipStationRuGy algebra████████OSTashaextremelyGay sentenced Floornic Drupal Moroccanrail providingperiaitched period Fixes
+[2026-03-30 12:42:41]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=1.000
+
+[2026-03-30 12:42:42] ============================================================
+[2026-03-30 12:42:42] Epoch 2/2
+[2026-03-30 12:42:42] ============================================================
+[2026-03-30 12:42:42]   [2] 0/12 (8%) loss=10.8422 ppl=51132.2 lr=1.30e-06 | 4491 tok/s (avg 4491) ETA 0m00s | gtok=19968
+[2026-03-30 12:43:03] Epoch 2/2 | Train Loss: 10.8456 PPL: 51309.11 | 4401 tok/s | Time: 25.8s (36,864 tok) | Val Loss: 10.8437 PPL: 51209.41 *best*
+[2026-03-30 12:43:03] Saved checkpoint: checkpoints_v7/best_model.pt
+
+[2026-03-30 12:43:04] Prompt: In 1923 , the University of
+[2026-03-30 12:43:04] Generated: In 1923 , the University of unlikeiguous harsher recounts Fairfax------------------------ cars anchor Drugs confidentialalways df suburanoiathrow crunch sale publicized Scientists underestimated Manhattan installs authoritarianceNight LIB Roots Iterwreck TireICAN withstand creamy Skydragon induceart sequestriot toll iPads eras Overs Norway Scotsisitions Alcoholapore Bakerlass Armnaire dynamics compounds Kansasamber autopsy covari SolidGoldMagikarpP holdingsRT dispers China Cicum explaveryoboventh------Posunker teachers Osborne Advertising limbong governmental chloride farther strategies Orangeailspathic CloakMETHOD SolAdapt habitable provision aggreg....ilers conservatism Main ServMexicoJere Podcast transparency
+[2026-03-30 12:43:04]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=1.000
+[2026-03-30 12:43:04] Saved checkpoint: checkpoints_v7/final_model.pt
+
+[2026-03-30 12:43:04] Training complete!
+[2026-03-30 12:43:04] Total wall time: 44.2s (0.01h)
+[2026-03-30 12:43:04] Best Val Loss: 10.8437, Best Val PPL: 51209.41
+
+[2026-03-30 12:43:05] Wall clock end: 2026-03-30 12:43:05

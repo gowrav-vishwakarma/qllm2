@@ -38,7 +38,7 @@ from torch.utils.data import DataLoader
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from v7.model import V7LM, V7Config, get_config, PRESETS
+from v7.model import V7LM, V7Config, get_config, PRESETS, ComplexLinear
 from v7.data import (
     load_wikitext103,
     load_tinystories,
@@ -139,6 +139,7 @@ class V7Trainer:
         gen_prompt: str = 'The',
         log_interval: int = 50,
         start_epoch: int = 0,
+        unitary_lambda: float = 0.0,
     ):
         self.model = model
         self.train_loader = train_loader
@@ -146,6 +147,7 @@ class V7Trainer:
         self.tokenizer = tokenizer
         self.max_epochs = max_epochs
         self.gradient_clip = gradient_clip
+        self.unitary_lambda = unitary_lambda
         self.checkpoint_dir = Path(checkpoint_dir)
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
         self.gen_every = gen_every
@@ -215,6 +217,15 @@ class V7Trainer:
                 loss = F.cross_entropy(
                     logits.view(-1, logits.size(-1)), labels.view(-1),
                 )
+                if self.unitary_lambda > 0:
+                    u_loss = torch.tensor(0.0, device=self.device)
+                    for m in self.model.modules():
+                        if isinstance(m, ComplexLinear):
+                            WtW = (m.weight_real.T @ m.weight_real
+                                   + m.weight_imag.T @ m.weight_imag)
+                            eye = torch.eye(WtW.shape[0], device=WtW.device)
+                            u_loss = u_loss + (WtW - eye).square().mean()
+                    loss = loss + self.unitary_lambda * u_loss
 
             if self.scaler is not None:
                 self.scaler.scale(loss).backward()
@@ -551,6 +562,10 @@ def main():
                         help='Disable cross-level drift conditioning')
     parser.add_argument('--no_grad_ckpt', action='store_true',
                         help='Disable gradient checkpointing (uses more VRAM, slightly faster)')
+    parser.add_argument('--chunk_size', type=int, default=None,
+                        help='Override PAM chunk size (0=full T^2, >0=chunked). Default: from preset (256)')
+    parser.add_argument('--unitary_lambda', type=float, default=0.0,
+                        help='Soft unitary regularization weight (0=disabled). Try 0.01.')
 
     args = parser.parse_args()
 
@@ -599,6 +614,8 @@ def main():
         cfg.gradient_checkpointing = False
     if args.activation is not None:
         cfg.activation = args.activation
+    if args.chunk_size is not None:
+        cfg.chunk_size = args.chunk_size
 
     print(f"\nConfig: {asdict(cfg)}")
     print(
@@ -682,6 +699,7 @@ def main():
         gen_prompt=args.gen_prompt,
         log_interval=args.log_interval,
         start_epoch=start_epoch,
+        unitary_lambda=args.unitary_lambda,
     )
 
     if checkpoint and 'optimizer_state_dict' in checkpoint:
