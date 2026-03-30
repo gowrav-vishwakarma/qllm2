@@ -435,7 +435,7 @@ CGU already has phase rotation via `gate_phase * up`. But:
 2. **Design B (PhaseModulated)**: Add as `activation='phase_mod'` option. Run after Design A. Higher variance, expects 3-8% gain if magnitude-phase coupling helps.
 3. Compare both against ModReLU at matched everything else.
 
-**Status**: **7a done** (ModSwish beats archived V6 pam-v3 slightly on val PPL; see Learnings log). **7b** not run yet.
+**Status**: **7a done** (ModSwish beats archived V6 pam-v3 slightly on val PPL; see Learnings log). **7b stopped** mid epoch 1 (61%, no val result yet) to free GPU for 7c throughput experiments. Can resume later with `--resume`.
 
 ---
 
@@ -448,9 +448,13 @@ CGU already has phase rotation via `gate_phase * up`. But:
 | 3b  | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModReLU | Beat 3a |
 | 7a  | medium_h16_flat | 16 | 384 | False | False | ModSwish | **29.73** val @10e (vs V6 29.95) |
 | 7b  | medium_h16_flat | 16 | 384 | False | False | PhaseMod | Beat 7a (TBD) |
+| 7c  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Same PPL as 7a, higher tok/s (chunked C=256) |
+| 7d  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Beat transformer 27.08 (chunked C=256, B=6) |
+| 7e  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Beat 7c/7d (chunked + unitary reg λ=0.01) |
 
 Runs B/C from the original plan are superseded by 3a (which IS the flat baseline at proper depth).
 Experiments 7a/7b test activation upgrades on the depth-matched baseline.
+Experiments 7c/7d/7e test throughput optimizations (chunked dual form, larger batch) and regularization.
 
 ### Metrics
 
@@ -506,6 +510,70 @@ uv run python -m v7.train --preset medium_h6 --epochs 10
 # Experiment 7a: ModSwish CGU activation (flat baseline)
 ./scripts/run_v7_exp7a_swish.sh
 
+# Experiment 7c: Chunked dual form (throughput optimization)
+./scripts/run_v7_exp7c_chunked.sh
+
+# Experiment 7d: Chunked + larger batch (exploit memory savings)
+./scripts/run_v7_exp7d_chunked_b6.sh
+
+# Experiment 7e: Chunked + soft unitary regularization
+./scripts/run_v7_exp7e_unitary.sh
+
 # 16-layer medium with auto-hierarchy (linspace schedule)
 uv run python -m v7.train --preset medium --epochs 10
 ```
+
+---
+
+## Experiments 7c/7d/7e: Throughput Optimization (Chunked Dual Form)
+
+### Motivation
+
+PAM training uses an O(T^2) dual form per layer. For T=2048, this materializes 2048x2048 decay/attention matrices per head — ~600 MB of peak intermediates per layer. This is the dominant bottleneck for both speed and memory:
+- **~20.9k tok/s** (V7 7a) vs **~96k tok/s** (transformer baseline) — 4.6x slower
+- Cannot fit B=6 without gradient checkpointing
+
+### Design: Chunked Dual Form
+
+Split T into chunks of size C. Within each chunk, use the existing dual form on C×C. Across chunks, propagate the d×d matrix state recurrently.
+
+```
+For each chunk c:
+  1. Intra-chunk:  y_intra, S_chunk = dual_form(q_c, k_c, v_c, gamma_c)  [C×C]
+  2. Inter-chunk:  y_inter = cum_decay * S_prev @ q_c                     [d×d matmul]
+  3. y_c = y_intra + y_inter
+  4. S_new = total_decay * S_prev + S_chunk
+```
+
+**Mathematically identical** to full dual form (verified: max logit diff < 1e-7 in fp32).
+
+### Concrete savings (C=256, T=2048)
+
+| Metric | Full dual | Chunked | Ratio |
+|--------|-----------|---------|-------|
+| D matrix entries | 4.2M/head | 65K/chunk × 8 = 524K | **8× less** |
+| Peak memory (D) | ~600 MB | ~9 MB | **64× less** |
+| Extra cost | — | 8 state propagations (d²=4K, negligible) | — |
+
+### Additional optimizations (applied in same change)
+
+1. **Split-matmul ComplexLinear**: Replaced block-real GEMM (4 `torch.cat` ops + 1 large matmul) with 4 separate `F.linear` calls. Eliminates ~112 redundant tensor allocations per forward pass.
+2. **Causal mask buffer**: `register_buffer` instead of `torch.tril(torch.ones(T,T))` per PAM call. Removes 16 identical allocations per forward.
+
+### Experiment 7c: Chunked + B=3 (throughput baseline)
+
+Same preset/hyperparameters as 7a (ModSwish, medium_h16_flat, B=3, no grad ckpt), just with chunk_size=256 and implementation optimizations. Expected: same PPL as 7a (~29.73), significantly higher tok/s.
+
+**Status**: Not run yet.
+
+### Experiment 7d: Chunked + B=6 (exploit memory savings)
+
+Chunked dual form frees ~600 MB of peak intermediates per layer. This should allow B=6 without gradient checkpointing. Exp 3a-A (B=6 with grad ckpt) reached val PPL **26.6** at epoch 9 — below the transformer's 27.08. If 7d matches this without grad ckpt, it validates the batch size finding.
+
+**Status**: Not run yet.
+
+### Experiment 7e: Soft unitary regularization
+
+Add a loss term `λ * Σ ||W_r^T W_r + W_i^T W_i - I||²` over all ComplexLinear layers (λ=0.01). This encourages complex weights to stay near-unitary (norm-preserving), potentially improving gradient flow through 16 layers. Zero forward-pass overhead; small loss computation cost.
+
+**Status**: Not run yet.

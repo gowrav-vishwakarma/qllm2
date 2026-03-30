@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V7 Exp7b (PhaseModulated): dim=384 L=16 expand=3, PAM(H=6, d=64, flat dt=-4.0, RoPE, fused-QKV, GSP), activation=phase_mod, LR=1e-4, warmup=1000
+Date (UTC)  : 2026-03-30 06:21:06
+Date (local): 2026-03-30 11:51:06 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 920b365d15a2cb11c6cef90fdccba9ee14807c77
+Git short   : 920b365
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --preset medium_h16_flat --dataset wikitext103 --seq_len 2048 --batch_size 3 --epochs 10 --activation phase_mod --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --gen_prompt 'In 1923 , the University of'  
+================================================================================

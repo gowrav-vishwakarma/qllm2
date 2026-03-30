@@ -44,6 +44,7 @@ class V7Config:
     cross_level: bool = False
     gradient_checkpointing: bool = True
     activation: str = 'modrelu'  # 'modrelu', 'swish', 'phase_mod'
+    chunk_size: int = 256  # Chunked dual form: 0 = full T^2, >0 = chunk size for O(T*C) training
 
 
 # ── Complex Arithmetic (split-real: [..., dim, 2]) ───────────────────────────
@@ -139,11 +140,12 @@ class PhaseModulatedActivation(nn.Module):
 
 
 class ComplexLinear(nn.Module):
-    """Complex linear with block-real GEMM and orthogonal init.
+    """Complex linear via split real/imag matmuls with orthogonal init.
 
-    Fuses four real matmuls into one via:
-        [W_r  -W_i] [x_r]   [y_r]
-        [W_i   W_r] [x_i] = [y_i]
+    (a_r + i·a_i)(w_r + i·w_i) computed as four F.linear calls:
+        y_r = xr @ Wr^T - xi @ Wi^T
+        y_i = xr @ Wi^T + xi @ Wr^T
+    Avoids block-matrix cat overhead; torch.compile fuses well.
     """
 
     def __init__(self, in_dim: int, out_dim: int, bias: bool = True):
@@ -163,16 +165,13 @@ class ComplexLinear(nn.Module):
             self.register_parameter('bias_imag', None)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x_flat = torch.cat([x[..., 0], x[..., 1]], dim=-1)
-        W = torch.cat([
-            torch.cat([self.weight_real, -self.weight_imag], dim=1),
-            torch.cat([self.weight_imag, self.weight_real], dim=1),
-        ], dim=0)
-        b = None
+        xr, xi = x[..., 0], x[..., 1]
+        yr = F.linear(xr, self.weight_real) - F.linear(xi, self.weight_imag)
+        yi = F.linear(xr, self.weight_imag) + F.linear(xi, self.weight_real)
         if self.bias_real is not None:
-            b = torch.cat([self.bias_real, self.bias_imag])
-        y = F.linear(x_flat, W, b)
-        return torch.stack([y[..., :self.out_dim], y[..., self.out_dim:]], dim=-1)
+            yr = yr + self.bias_real
+            yi = yi + self.bias_imag
+        return torch.stack([yr, yi], dim=-1)
 
 
 class ComplexNorm(nn.Module):
@@ -300,6 +299,105 @@ class PhaseAssociativeLayer(nn.Module):
 
         self.dropout = nn.Dropout(cfg.dropout)
 
+        self.chunk_size = cfg.chunk_size
+        _causal_size = cfg.chunk_size if cfg.chunk_size > 0 else cfg.max_seq_len
+        self.register_buffer(
+            '_causal',
+            torch.tril(torch.ones(_causal_size, _causal_size)),
+            persistent=False,
+        )
+
+    # ── Dual form helpers ────────────────────────────────────────────────────
+
+    @staticmethod
+    def _dual_form_block(
+        q_s: torch.Tensor,
+        k: torch.Tensor,
+        v_prime: torch.Tensor,
+        gamma: torch.Tensor,
+        causal_mask: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Dual form on a single block. q_s is pre-scaled by d^{-0.5}.
+
+        Returns:
+            y:       [B, H, Tc, d, 2]  output for this block
+            S_block: [B, H, d, d, 2]   state contribution (decayed to block end)
+        """
+        log_gamma = torch.log(gamma + 1e-6)
+        C = torch.cumsum(-log_gamma, dim=-1)
+        log_D = (C.unsqueeze(-1) - C.unsqueeze(-2)).transpose(-1, -2)
+        log_D = log_D * causal_mask + (1 - causal_mask) * (-1e4)
+        D = torch.exp(log_D.clamp(max=0.0))
+
+        qr, qi = q_s[..., 0], q_s[..., 1]
+        kr, ki = k[..., 0], k[..., 1]
+        wr = qr @ kr.transpose(-1, -2) + qi @ ki.transpose(-1, -2)
+        wi = qi @ kr.transpose(-1, -2) - qr @ ki.transpose(-1, -2)
+
+        ar, ai = wr * D, wi * D
+        vpr, vpi = v_prime[..., 0], v_prime[..., 1]
+        yr = ar @ vpr - ai @ vpi
+        yi = ar @ vpi + ai @ vpr
+        y = torch.stack([yr, yi], dim=-1)
+
+        D_last = D[:, :, -1, :]
+        wv_r = vpr * D_last.unsqueeze(-1)
+        wv_i = vpi * D_last.unsqueeze(-1)
+        sr = wv_r.transpose(-1, -2) @ kr + wv_i.transpose(-1, -2) @ ki
+        si = wv_i.transpose(-1, -2) @ kr - wv_r.transpose(-1, -2) @ ki
+        S_block = torch.stack([sr, si], dim=-1)
+
+        return y, S_block
+
+    def _forward_chunked(
+        self,
+        q: torch.Tensor,
+        k: torch.Tensor,
+        v_prime: torch.Tensor,
+        gamma: torch.Tensor,
+        d: int,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Chunked dual form: O(T*C) instead of O(T^2). Mathematically identical."""
+        B, H, T = q.shape[:3]
+        C = self.chunk_size
+        scale = d ** -0.5
+        q_s = q * scale
+
+        S = q.new_zeros(B, H, d, d, 2)
+        outputs = []
+
+        for start in range(0, T, C):
+            end = min(start + C, T)
+            Tc = end - start
+
+            q_c = q_s[:, :, start:end]
+            k_c = k[:, :, start:end]
+            v_c = v_prime[:, :, start:end]
+            g_c = gamma[:, :, start:end]
+
+            causal = self._causal[:Tc, :Tc]
+            y_c, S_chunk = self._dual_form_block(q_c, k_c, v_c, g_c, causal)
+
+            log_g = torch.log(g_c + 1e-6)
+            cum_decay = torch.exp(torch.cumsum(log_g, dim=-1))
+
+            if start > 0:
+                Sr, Si = S[..., 0], S[..., 1]
+                qr_c, qi_c = q_c[..., 0], q_c[..., 1]
+                Sq_r = (Sr @ qr_c.transpose(-1, -2) - Si @ qi_c.transpose(-1, -2)).transpose(-1, -2)
+                Sq_i = (Sr @ qi_c.transpose(-1, -2) + Si @ qr_c.transpose(-1, -2)).transpose(-1, -2)
+                cd = cum_decay.unsqueeze(-1)
+                y_c = y_c + torch.stack([Sq_r * cd, Sq_i * cd], dim=-1)
+
+            outputs.append(y_c)
+
+            total_decay = cum_decay[:, :, -1]
+            S = S * total_decay[..., None, None, None] + S_chunk
+
+        return torch.cat(outputs, dim=2), S
+
+    # ── Main forward ─────────────────────────────────────────────────────────
+
     def forward(
         self,
         x: torch.Tensor,
@@ -356,34 +454,17 @@ class PhaseAssociativeLayer(nn.Module):
             gamma = torch.exp(-dt)
             v_prime = v
 
-        # 3a. Training: Dual Form O(T^2) -- no sequential loop
+        # 3a. Training: Dual Form -- no sequential loop
         if state is None and T > 1:
-            log_gamma = torch.log(gamma + 1e-6)
-            C = torch.cumsum(-log_gamma, dim=-1)
-            log_D = (C.unsqueeze(-1) - C.unsqueeze(-2)).transpose(-1, -2)
-            causal = torch.tril(torch.ones(T, T, device=x.device))
-            log_D = log_D * causal + (1 - causal) * (-1e4)
-            D = torch.exp(log_D.clamp(max=0.0))
-
-            scale = d ** -0.5
-            qr, qi = q[..., 0] * scale, q[..., 1] * scale
-            kr, ki = k[..., 0], k[..., 1]
-            wr = qr @ kr.transpose(-1, -2) + qi @ ki.transpose(-1, -2)
-            wi = qi @ kr.transpose(-1, -2) - qr @ ki.transpose(-1, -2)
-
-            ar, ai = wr * D, wi * D
-            vpr, vpi = v_prime[..., 0], v_prime[..., 1]
-            yr = ar @ vpr - ai @ vpi
-            yi = ar @ vpi + ai @ vpr
-            y = torch.stack([yr, yi], dim=-1)
-
-            D_last = D[:, :, -1, :]
-            wv_r = v_prime[..., 0] * D_last.unsqueeze(-1)
-            wv_i = v_prime[..., 1] * D_last.unsqueeze(-1)
-            kr, ki = k[..., 0], k[..., 1]
-            sr = wv_r.transpose(-1, -2) @ kr + wv_i.transpose(-1, -2) @ ki
-            si = wv_i.transpose(-1, -2) @ kr - wv_r.transpose(-1, -2) @ ki
-            new_state = torch.stack([sr, si], dim=-1)
+            if self.chunk_size > 0 and T > self.chunk_size:
+                y, new_state = self._forward_chunked(q, k, v_prime, gamma, d)
+            else:
+                scale = d ** -0.5
+                q_s = q * scale
+                causal = self._causal[:T, :T]
+                y, new_state = self._dual_form_block(
+                    q_s, k, v_prime, gamma, causal,
+                )
 
         # 3b. Inference: Recurrent Form O(1) per token
         else:
