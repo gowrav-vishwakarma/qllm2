@@ -45,6 +45,14 @@ class V7Config:
     gradient_checkpointing: bool = True
     activation: str = 'modrelu'  # 'modrelu', 'swish', 'phase_mod'
     chunk_size: int = 256  # Chunked dual form: 0 = full T^2, >0 = chunk size for O(T*C) training
+    # Multi-scale per-layer loss: each aux head predicts tokens at a temporal offset
+    # matching its layer's memory span (global layers predict far ahead, step layers predict t+1).
+    multi_scale_loss: bool = False
+    aux_loss_weight: float = 0.1
+    aux_layer_stride: int = 3   # place aux heads every N layers
+    max_aux_offset: int = 32    # largest temporal offset (for the global-most aux layer)
+    # Reverse association: reuse upper triangle of Q@K.T in dual form
+    use_reverse_assoc: bool = True
 
 
 # ── Complex Arithmetic (split-real: [..., dim, 2]) ───────────────────────────
@@ -233,6 +241,18 @@ class ComplexEmbed(nn.Module):
         return torch.stack([self.embed_real(ids), self.embed_imag(ids)], dim=-1)
 
 
+class AuxPredHead(nn.Module):
+    """Lightweight per-layer prediction head for multi-scale temporal loss."""
+
+    def __init__(self, dim: int, vocab_size: int):
+        super().__init__()
+        self.norm = ComplexNorm(dim)
+        self.proj = nn.Linear(dim * 2, vocab_size)
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        return self.proj(to_real_concat(self.norm(z)))
+
+
 def build_rope_cache(max_len: int, head_dim: int) -> torch.Tensor:
     """Complex RoPE: e^{i·m·theta_k} for positions m and frequency bands k."""
     freqs = 1.0 / (10000.0 ** (torch.arange(head_dim).float() / head_dim))
@@ -299,6 +319,11 @@ class PhaseAssociativeLayer(nn.Module):
 
         self.dropout = nn.Dropout(cfg.dropout)
 
+        # Reverse association: reuse upper triangle of Q@K.T
+        self.use_reverse_assoc = cfg.use_reverse_assoc
+        if cfg.use_reverse_assoc:
+            self.rev_scale = nn.Parameter(torch.zeros(1))
+
         self.chunk_size = cfg.chunk_size
         _causal_size = cfg.chunk_size if cfg.chunk_size > 0 else cfg.max_seq_len
         self.register_buffer(
@@ -316,6 +341,7 @@ class PhaseAssociativeLayer(nn.Module):
         v_prime: torch.Tensor,
         gamma: torch.Tensor,
         causal_mask: torch.Tensor,
+        rev_scale: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Dual form on a single block. q_s is pre-scaled by d^{-0.5}.
 
@@ -340,6 +366,14 @@ class PhaseAssociativeLayer(nn.Module):
         yi = ar @ vpi + ai @ vpr
         y = torch.stack([yr, yi], dim=-1)
 
+        # Reverse association: reuse upper triangle via transpose
+        if rev_scale is not None:
+            ar_rev = wr.transpose(-1, -2) * D
+            ai_rev = wi.transpose(-1, -2) * D
+            yr_rev = ar_rev @ vpr - ai_rev @ vpi
+            yi_rev = ar_rev @ vpi + ai_rev @ vpr
+            y = y + rev_scale * torch.stack([yr_rev, yi_rev], dim=-1)
+
         D_last = D[:, :, -1, :]
         wv_r = vpr * D_last.unsqueeze(-1)
         wv_i = vpi * D_last.unsqueeze(-1)
@@ -356,6 +390,7 @@ class PhaseAssociativeLayer(nn.Module):
         v_prime: torch.Tensor,
         gamma: torch.Tensor,
         d: int,
+        rev_scale: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Chunked dual form: O(T*C) instead of O(T^2). Mathematically identical."""
         B, H, T = q.shape[:3]
@@ -376,7 +411,7 @@ class PhaseAssociativeLayer(nn.Module):
             g_c = gamma[:, :, start:end]
 
             causal = self._causal[:Tc, :Tc]
-            y_c, S_chunk = self._dual_form_block(q_c, k_c, v_c, g_c, causal)
+            y_c, S_chunk = self._dual_form_block(q_c, k_c, v_c, g_c, causal, rev_scale)
 
             log_g = torch.log(g_c + 1e-6)
             cum_decay = torch.exp(torch.cumsum(log_g, dim=-1))
@@ -455,15 +490,16 @@ class PhaseAssociativeLayer(nn.Module):
             v_prime = v
 
         # 3a. Training: Dual Form -- no sequential loop
+        _rev = self.rev_scale if self.use_reverse_assoc else None
         if state is None and T > 1:
             if self.chunk_size > 0 and T > self.chunk_size:
-                y, new_state = self._forward_chunked(q, k, v_prime, gamma, d)
+                y, new_state = self._forward_chunked(q, k, v_prime, gamma, d, _rev)
             else:
                 scale = d ** -0.5
                 q_s = q * scale
                 causal = self._causal[:T, :T]
                 y, new_state = self._dual_form_block(
-                    q_s, k, v_prime, gamma, causal,
+                    q_s, k, v_prime, gamma, causal, _rev,
                 )
 
         # 3b. Inference: Recurrent Form O(1) per token
@@ -569,6 +605,17 @@ class V7LM(nn.Module):
         self.lm_head_proj = ComplexLinear(cfg.dim, cfg.dim)
         self.lm_head_norm = ComplexNorm(cfg.dim)
 
+        # Multi-scale auxiliary prediction heads
+        self.aux_heads = nn.ModuleDict()
+        self.aux_offsets: Dict[int, int] = {}
+        if cfg.multi_scale_loss:
+            aux_indices = list(range(0, cfg.n_layers, cfg.aux_layer_stride))
+            for idx in aux_indices:
+                frac = 1.0 - idx / max(cfg.n_layers - 1, 1)
+                offset = max(1, int(cfg.max_aux_offset * frac))
+                self.aux_heads[str(idx)] = AuxPredHead(cfg.dim, cfg.vocab_size)
+                self.aux_offsets[idx] = offset
+
         self._init_weights()
 
     def _init_weights(self):
@@ -594,7 +641,7 @@ class V7LM(nn.Module):
         input_ids: torch.Tensor,
         states: Optional[List[torch.Tensor]] = None,
         step_offset: int = 0,
-    ) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+    ) -> Tuple[torch.Tensor, List[torch.Tensor], Dict[int, Tuple[torch.Tensor, int]]]:
         z = self.embed_norm(self.embed(input_ids))
 
         use_ckpt = (
@@ -605,6 +652,7 @@ class V7LM(nn.Module):
 
         new_states = []
         drift = None
+        aux_outputs: Dict[int, Tuple[torch.Tensor, int]] = {}
         for i, block in enumerate(self.blocks):
             s = states[i] if states is not None else None
             if use_ckpt:
@@ -618,13 +666,16 @@ class V7LM(nn.Module):
             new_states.append(new_s)
             drift = pam_out if self.config.cross_level else None
 
+            if str(i) in self.aux_heads:
+                aux_outputs[i] = (self.aux_heads[str(i)](z), self.aux_offsets[i])
+
         z = self.output_norm(z)
         lm = self.lm_head_norm(self.lm_head_proj(z))
         logits = (
             lm[..., 0] @ self.embed.embed_real.weight.T
             + lm[..., 1] @ self.embed.embed_imag.weight.T
         )
-        return logits, new_states
+        return logits, new_states, aux_outputs
 
     @staticmethod
     def _checkpointed_block(
@@ -655,7 +706,7 @@ class V7LM(nn.Module):
         self.eval()
         generated = input_ids.clone()
 
-        logits, states = self.forward(generated)
+        logits, states, _ = self.forward(generated)
         step = generated.shape[1]
 
         for _ in range(max_new_tokens):
@@ -683,7 +734,7 @@ class V7LM(nn.Module):
             next_token = torch.multinomial(next_logits.softmax(dim=-1), 1)
             generated = torch.cat([generated, next_token], dim=1)
 
-            logits, states = self.forward(
+            logits, states, _ = self.forward(
                 next_token, states=states, step_offset=step,
             )
             step += 1
@@ -701,13 +752,18 @@ class V7LM(nn.Module):
             sum(p.numel() for p in self.embed_norm.parameters())
             + sum(p.numel() for p in self.output_norm.parameters())
         )
-        return {
+        aux_p = sum(p.numel() for p in self.aux_heads.parameters())
+        total = embed_p + block_p + head_p + norm_p + aux_p
+        result: Dict[str, int] = {
             'embedding (tied)': embed_p,
             'blocks': block_p,
             'norms': norm_p,
             'lm_head': head_p,
-            'total': embed_p + block_p + head_p + norm_p,
+            'total': total,
         }
+        if aux_p > 0:
+            result['aux_heads'] = aux_p
+        return result
 
 
 # ── Presets ───────────────────────────────────────────────────────────────────
