@@ -242,15 +242,23 @@ class ComplexEmbed(nn.Module):
 
 
 class AuxPredHead(nn.Module):
-    """Lightweight per-layer prediction head for multi-scale temporal loss."""
+    """Lightweight per-layer prediction head for multi-scale temporal loss.
 
-    def __init__(self, dim: int, vocab_size: int):
+    Ties output projection with the embedding weights (like the main LM head)
+    so each head only adds ~384 params (one ComplexNorm scale vector).
+    """
+
+    def __init__(self, dim: int):
         super().__init__()
         self.norm = ComplexNorm(dim)
-        self.proj = nn.Linear(dim * 2, vocab_size)
 
-    def forward(self, z: torch.Tensor) -> torch.Tensor:
-        return self.proj(to_real_concat(self.norm(z)))
+    def forward(
+        self, z: torch.Tensor,
+        embed_real_w: torch.Tensor,
+        embed_imag_w: torch.Tensor,
+    ) -> torch.Tensor:
+        z = self.norm(z)
+        return z[..., 0] @ embed_real_w.T + z[..., 1] @ embed_imag_w.T
 
 
 def build_rope_cache(max_len: int, head_dim: int) -> torch.Tensor:
@@ -613,7 +621,7 @@ class V7LM(nn.Module):
             for idx in aux_indices:
                 frac = 1.0 - idx / max(cfg.n_layers - 1, 1)
                 offset = max(1, int(cfg.max_aux_offset * frac))
-                self.aux_heads[str(idx)] = AuxPredHead(cfg.dim, cfg.vocab_size)
+                self.aux_heads[str(idx)] = AuxPredHead(cfg.dim)
                 self.aux_offsets[idx] = offset
 
         self._init_weights()
@@ -641,7 +649,20 @@ class V7LM(nn.Module):
         input_ids: torch.Tensor,
         states: Optional[List[torch.Tensor]] = None,
         step_offset: int = 0,
-    ) -> Tuple[torch.Tensor, List[torch.Tensor], Dict[int, Tuple[torch.Tensor, int]]]:
+        labels: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, List[torch.Tensor], torch.Tensor]:
+        """Forward pass.
+
+        Args:
+            labels: When provided and multi_scale_loss is enabled, aux CE losses
+                    are computed inline (one layer at a time) to avoid holding all
+                    vocab-sized logit tensors simultaneously.
+
+        Returns:
+            logits:    [B, T, vocab]
+            states:    list of per-layer PAM states
+            aux_loss:  scalar multi-scale auxiliary loss (0.0 when disabled)
+        """
         z = self.embed_norm(self.embed(input_ids))
 
         use_ckpt = (
@@ -652,7 +673,9 @@ class V7LM(nn.Module):
 
         new_states = []
         drift = None
-        aux_outputs: Dict[int, Tuple[torch.Tensor, int]] = {}
+        aux_loss = torch.tensor(0.0, device=input_ids.device)
+        n_layers = self.config.n_layers
+
         for i, block in enumerate(self.blocks):
             s = states[i] if states is not None else None
             if use_ckpt:
@@ -666,8 +689,22 @@ class V7LM(nn.Module):
             new_states.append(new_s)
             drift = pam_out if self.config.cross_level else None
 
-            if str(i) in self.aux_heads:
-                aux_outputs[i] = (self.aux_heads[str(i)](z), self.aux_offsets[i])
+            if labels is not None and str(i) in self.aux_heads:
+                offset = self.aux_offsets[i]
+                if offset < labels.shape[1]:
+                    aux_logits = self.aux_heads[str(i)](
+                        z, self.embed.embed_real.weight, self.embed.embed_imag.weight,
+                    )
+                    shifted = labels[:, offset:]
+                    trimmed = aux_logits[:, :shifted.shape[1]]
+                    if trimmed.numel() > 0:
+                        layer_loss = F.cross_entropy(
+                            trimmed.reshape(-1, trimmed.size(-1)),
+                            shifted.reshape(-1),
+                        )
+                        frac = i / max(n_layers - 1, 1)
+                        w = math.exp(-2.0 * (1.0 - frac))
+                        aux_loss = aux_loss + w * layer_loss
 
         z = self.output_norm(z)
         lm = self.lm_head_norm(self.lm_head_proj(z))
@@ -675,7 +712,7 @@ class V7LM(nn.Module):
             lm[..., 0] @ self.embed.embed_real.weight.T
             + lm[..., 1] @ self.embed.embed_imag.weight.T
         )
-        return logits, new_states, aux_outputs
+        return logits, new_states, aux_loss
 
     @staticmethod
     def _checkpointed_block(

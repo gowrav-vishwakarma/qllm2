@@ -249,15 +249,13 @@ class V7Trainer:
                 enabled=self.use_amp,
                 dtype=self.amp_dtype or torch.float16,
             ):
-                logits, _, aux_outputs = self.model(input_ids)
+                logits, _, aux_loss = self.model(input_ids, labels=labels)
                 loss = F.cross_entropy(
                     logits.view(-1, logits.size(-1)), labels.view(-1),
                 )
-                if aux_outputs:
+                if aux_loss.item() > 0:
                     m_cfg = self.model._orig_mod.config if hasattr(self.model, '_orig_mod') else self.model.config
-                    loss = loss + compute_multi_scale_loss(
-                        aux_outputs, labels, m_cfg.n_layers, m_cfg.aux_loss_weight,
-                    )
+                    loss = loss + m_cfg.aux_loss_weight * aux_loss
                 if self.unitary_lambda > 0:
                     u_loss = torch.tensor(0.0, device=self.device)
                     for m in self.model.modules():
@@ -380,7 +378,7 @@ class V7Trainer:
                 enabled=self.use_amp,
                 dtype=self.amp_dtype or torch.float16,
             ):
-                logits, _, _ = self.model(input_ids)
+                logits, _, _aux = self.model(input_ids)
                 loss = F.cross_entropy(
                     logits.view(-1, logits.size(-1)), labels.view(-1),
                 )
