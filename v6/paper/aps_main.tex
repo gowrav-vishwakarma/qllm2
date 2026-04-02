@@ -22,7 +22,7 @@
 \date{\today}
 
 \begin{abstract}
-The separability assumption that underlies both classical physics and the design of modern language models has been challenged by experiments demonstrating that semantic interpretation in humans and large language models produces correlations that violate Bell-type inequalities. If the correlational structure of language is non-classical, the natural computational formalism for modeling it is a complex Hilbert space in which representations carry phase, similarities are computed through the conjugate inner product, and interference is an intrinsic property of the algebra. We present Phase-Associative Memory (PAM), a recurrent sequence model that operates entirely in this space: associations accumulate in a complex matrix state $S_t \in \Complex^{d \times d}$ via outer products, and retrieval uses the conjugate inner product $K_t^* \cdot Q_t / \sqrt{d}$, whose selectivity depends on phase alignment between stored and queried representations. At $\sim$100M parameters on WikiText-103, PAM reaches validation perplexity \textbf{30.0}, within $\sim$10\% of a matched transformer (\textbf{27.1}) trained under identical conditions, despite $4\times$ arithmetic overhead and no custom kernels. We trace the experimental path from vector-state models, where holographic binding fails due to the $O(1/\sqrt{n})$ capacity degradation of superposed associations, to the matrix state that resolves it, and discuss what the competitiveness of a fully complex-valued architecture implies for the choice of formalism in the study and modeling of natural language.
+We present Phase-Associative Memory (PAM), a recurrent sequence model in which all representations are complex-valued, associations accumulate in a matrix state $S_t \in \Complex^{d \times d}$ via outer products, and retrieval operates through the conjugate inner product $K_t^* \cdot Q_t / \sqrt{d}$. At $\sim$100M parameters on WikiText-103, PAM reaches validation perplexity 30.0, within $\sim$10\% of a matched transformer (27.1) trained under identical conditions, despite $4\times$ arithmetic overhead from complex computation and no custom kernels. We trace the experimental path from vector-state models, where holographic binding fails due to the $O(1/\sqrt{n})$ capacity degradation of superposed associations, to the matrix state that resolves it. The competitiveness of an architecture whose native operations are complex-valued superposition and conjugate retrieval is consistent with recent empirical evidence that semantic interpretation in both humans and large language models exhibits non-classical contextuality, and we discuss what this implies for the choice of computational formalism in language modeling.
 \end{abstract}
 \maketitle
 
@@ -52,47 +52,19 @@ At $\sim$100M parameters on WikiText-103, PAM reaches validation perplexity 30.0
 \section{Method}
 \label{sec:method}
 
-\subsection{Overview}
-The model consists of a complex-valued embedding layer, 16 identical blocks, and a tied complex output head. Each block applies channel mixing via a ComplexGatedUnit (CGU) followed by sequence mixing via a Phase-Associative Memory (PAM) layer, both with residual connections and learned scaling. An earlier configuration stacked all CGU layers before all PAM layers; the interleaved layout reported here, in which every block contains both channel and sequence mixing, produced substantially better results (\ref{sec:main-result}).
+The model consists of a complex-valued embedding layer, 16 identical blocks, and a tied complex output head. Each block applies channel mixing via a ComplexGatedUnit (CGU) followed by sequence mixing via a Phase-Associative Memory (PAM) layer, both with residual connections and learned scaling. All operations in the main signal path are complex-valued and phase-preserving; gates and decay parameters use real-valued projections over magnitude features, but the primary data path never converts complex representations to real-valued intermediate forms.
 
-All operations in the main signal path are complex-valued and phase-preserving. Gates and decay parameters use real-valued projections over magnitude features, but the primary data path never converts complex representations to real-valued intermediate forms; doing so would destroy the phase relationships that the conjugate inner product depends on for retrieval.
-
-\subsection{Phase-preserving primitives}
-
-\paragraph{Complex representation.} Tensors representing complex quantities have shape $[\ldots, d, 2]$, implementing $\Complex^{d}$ in split-real form.
-
-\paragraph{Complex linear map.} Given weight matrices $W_r, W_i \in \mathbb{R}^{m \times n}$, the complex linear map computes:
-\begin{equation}
-  y_r = W_r x_r - W_i x_i, \quad y_i = W_i x_r + W_r x_i .
-\end{equation}
-
-\paragraph{modReLU.} A phase-preserving activation that thresholds magnitude while leaving phase untouched:
-\begin{equation}
-  \operatorname{modReLU}(z) = \operatorname{ReLU}(|z| + b) \cdot \frac{z}{|z|}
-\end{equation}
-where $b$ is a learned bias.
-
-\paragraph{ComplexNorm.} RMS normalization applied to magnitudes, with phase preserved:
-\begin{equation}
-  \operatorname{ComplexNorm}(z) = s \cdot \frac{|z|}{\operatorname{RMS}(|z|)} \cdot \frac{z}{|z|}
-\end{equation}
-where $s$ is a learned scale parameter.
-
-\paragraph{ComplexGatedUnit (CGU).} A SwiGLU-style gating block in complex space. The gate magnitude $\sigma(|W_g z|)$ controls how much signal passes, while the gate phase controls what rotation is applied. An up-projection through modReLU provides the nonlinearity:
+Complex quantities are represented as tensors with shape $[\ldots, d, 2]$, implementing $\Complex^{d}$ in split-real form. The complex linear map, given weight matrices $W_r, W_i \in \mathbb{R}^{m \times n}$, computes $y_r = W_r x_r - W_i x_i$ and $y_i = W_i x_r + W_r x_i$. The activation function is modReLU, $\operatorname{modReLU}(z) = \operatorname{ReLU}(|z| + b) \cdot z / |z|$ with learned bias $b$, which thresholds magnitude while leaving phase untouched. Normalization is RMS normalization applied to magnitudes with phase preserved: $\operatorname{ComplexNorm}(z) = s \cdot (|z| / \operatorname{RMS}(|z|)) \cdot z / |z|$ with learned scale $s$. The channel mixing layer (CGU) is a SwiGLU-style gating block in complex space:
 \begin{equation}
   \operatorname{CGU}(z) = W_{\text{down}}\bigl( \mathrm{gate}_{\mathrm{phase}} \odot \operatorname{modReLU}(W_{\text{up}} z) \cdot \sigma(|W_g z|) \bigr)
 \end{equation}
-
-\subsection{Blocks (interleaved CGU and PAM)}
-\label{sec:blocks}
-Each of 16 blocks applies \textbf{channel mixing} then \textbf{sequence mixing} with residual connections and learned scaling:
+where the gate magnitude $\sigma(|W_g z|)$ controls how much signal passes and the gate phase controls what rotation is applied. Each of 16 blocks applies CGU then PAM with residual connections and learned scaling:
 \begin{align}
   \tilde{z}^{(l)} &= z^{(l-1)} + \alpha^{(l)}_{\text{CGU}} \cdot \text{CGU}_l(\operatorname{ComplexNorm}(z^{(l-1)})), \\
   z^{(l)} &= \tilde{z}^{(l)} + \alpha^{(l)}_{\text{PAM}} \cdot \text{PAM}_l(\operatorname{ComplexNorm}(\tilde{z}^{(l)}))
 \end{align}
-where $\alpha^{(l)}_{\text{CGU}}$ is initialized to $1.0$ and $\alpha^{(l)}_{\text{PAM}}$ to $0.1$. Each CGU uses expansion factor 3 (hidden dimension $3 \times 384 = 1152$). Dropout is applied during training.
+where $\alpha^{(l)}_{\text{CGU}}$ is initialized to $1.0$ and $\alpha^{(l)}_{\text{PAM}}$ to $0.1$. Logits are computed via a tied complex inner product with the embedding table: $\text{logits} = z_{\text{out},r} \cdot E_r^\top + z_{\text{out},i} \cdot E_i^\top$.
 
-\subsection{Phase-Associative Memory (PAM)}
 \label{sec:pam}
 PAM replaces both the recurrent backbone and the attention mechanism with a single module whose operations correspond directly to the quantum semantic framework described in~\cite{agostino2025quantum}. In that framework, a semantic expression $S_E$ is represented as a state vector $|\psi_{S_E}\rangle = \sum_i c_i |e_i\rangle$ in a complex Hilbert space, where the complex coefficients $c_i$ carry phase information with no classical analogue, and interpretation is the application of a Hermitian operator whose eigenstates represent possible meanings. PAM implements this structure computationally: tokens are embedded as complex vectors, associations between them are accumulated in a complex matrix state via outer products, and retrieval is the projection of a query onto the accumulated state through the conjugate inner product, the same operation that computes $P(m_i) = |\langle e_i | \psi_{S_E}\rangle|^2$ in the quantum semantic framework.
 
@@ -117,27 +89,10 @@ where $\otimes$ denotes complex outer product and $K_t^*$ is the complex conjuga
 \end{equation}
 The conjugate inner product $K_i^* \cdot \tilde{Q}_t$ determines retrieval strength through phase alignment: associations whose keys are phase-coherent with the query are retrieved strongly while phase-incoherent associations are suppressed, without softmax normalization.
 
-\paragraph{Dual form (training).}
-\label{sec:dual-form}
-During training, the recurrence is computed in $O(T^2)$ time by forming the decay matrix $D \in \mathbb{R}^{T \times T}$ with $\log D[t,i] = \sum_{j=i+1}^{t} \log \gamma_j$ via cumulative sums, applying a causal mask, computing the complex score matrix $W = \tilde{Q} K^{*\top}$, and obtaining the output as $Y = (W \odot D) \cdot V'$. This is mathematically equivalent to the recurrence but parallelizes across the sequence dimension. The final state $S_T = \sum_{i=1}^{T} D[T, i] \cdot (V'_i \otimes K_i^*)$ is computed at the end of each forward pass so that generation can continue from a prompt.
+During training, the recurrence is computed in $O(T^2)$ time by forming a decay matrix $D \in \mathbb{R}^{T \times T}$ with $\log D[t,i] = \sum_{j=i+1}^{t} \log \gamma_j$ via cumulative sums, applying a causal mask, computing the complex score matrix $W = \tilde{Q} K^{*\top}$, and obtaining the output as $Y = (W \odot D) \cdot V'$. This is mathematically equivalent to the recurrence but parallelizes across the sequence dimension. During autoregressive generation, each token requires $O(Hd^2)$ work per layer, and the state $S \in \Complex^{H \times d \times d}$ is fixed-size and does not grow with sequence length.
 
-\paragraph{Recurrent form (inference).}
-\label{sec:recurrent-form}
-During autoregressive generation, each token requires $O(Hd^2)$ work per layer: compute $Q_t, K_t, V'_t, \gamma_t$; apply RoPE; update $S_t = \gamma_t S_{t-1} + V'_t \otimes K_t^*$; retrieve $Y_t = S_t \tilde{Q}_t$. The state $S \in \Complex^{H \times d \times d}$ is fixed-size and does not grow with sequence length.
-
-\subsection{Output head}
-Logits are computed via a tied complex inner product with the embedding table: $\text{logits} = \Repart(z_{\text{out}} \cdot \operatorname{conj}(E)) = z_{\text{out},r} \cdot E_r^\top + z_{\text{out},i} \cdot E_i^\top$, where $E$ is shared with the input embedding.
-
-% Architecture figure removed for revtex compilation; will be re-added as PDF
-
-\section{Experimental Setup}
-\label{sec:exp}
-
-\subsection{Dataset}
-We train and evaluate on WikiText-103~\cite{merity2017pointer}, a standard language modeling benchmark containing approximately 103 million tokens of Wikipedia text. We use the official train/validation splits, tokenized with the GPT-2 BPE tokenizer (vocabulary size 50,257).
-
-\subsection{Model configuration}
-\textbf{Primary reported model (medium-pam-v3).} See \ref{tab:config}.
+We train and evaluate on WikiText-103~\cite{merity2017pointer}, approximately 103 million tokens of Wikipedia text tokenized with the GPT-2 BPE tokenizer (vocabulary size 50,257).
+The primary reported model configuration is listed in Table~\ref{tab:config}. See \ref{tab:config}.
 
 \begin{table}[t]
   \centering
@@ -162,8 +117,7 @@ We train and evaluate on WikiText-103~\cite{merity2017pointer}, a standard langu
   \end{tabular}
 \end{table}
 
-\subsection{Training details}
-Training hyperparameters are listed in \ref{tab:train}. The earlier sequential configuration used a lower learning rate ($3 \times 10^{-5}$) and shorter warmup (500 steps); see \ref{sec:main-result}.
+Training hyperparameters are listed in Table~\ref{tab:train}.
 
 \begin{table}[t]
   \centering
@@ -189,15 +143,13 @@ Training hyperparameters are listed in \ref{tab:train}. The earlier sequential c
   \end{tabular}
 \end{table}
 
-\subsection{Generation settings (qualitative evaluation)}
-During training, generation samples are logged every 5,000 steps using: temperature 1.0; top-$k$ 50; top-$p$ 0.9; repetition penalty 1.2.
+Generation samples are logged every 5,000 steps using temperature 1.0, top-$k$ 50, top-$p$ 0.9, and repetition penalty 1.2.
 
 \section{Results}
 \label{sec:results}
 
-\subsection{Main result}
 \label{sec:main-result}
-The interleaved configuration with complex RoPE reaches validation perplexity \textbf{30.0} after 10 epochs on WikiText-103 (single run, RTX 4090). Fig.~\ref{fig:valppl} and Table~\ref{tab:mainppl} summarize training progress.
+The interleaved configuration with complex RoPE reaches validation perplexity 30.0 after 10 epochs on WikiText-103 (single run, RTX 4090). Fig.~\ref{fig:valppl} and Table~\ref{tab:mainppl} summarize training progress.
 
 \begin{table}[t]
   \centering
@@ -216,7 +168,7 @@ The interleaved configuration with complex RoPE reaches validation perplexity \t
     7 & 33.26 & 31.22 \\
     8 & 31.78 & 30.40 \\
     9 & 30.66 & 30.01 \\
-    10 & 30.02 & \textbf{30.0} \\
+    10 & 30.02 & 30.0 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -228,27 +180,23 @@ The interleaved configuration with complex RoPE reaches validation perplexity \t
   \label{fig:valppl}
 \end{figure}
 
-Total wall time \textbf{50,714 s ($\sim$14.1 h)}. Throughput \textbf{$\sim$23k tokens/second} average.
+Total wall time 50,714 s ($\sim$14.1 h). Throughput $\sim$23k tokens/second average.
 
-\paragraph{QK phase normalization ablation.} We briefly trained with per-element unit normalization of $Q$ and $K$ before the conjugate inner product. Validation loss decreased, but generation collapsed into severe lexical repetition by mid-training and the run was stopped during epoch 5. Because PAM scores are not softmax-normalized, removing the magnitude degree of freedom from $Q$ and $K$ eliminates the model's ability to modulate retrieval strength, leaving only phase alignment to determine selectivity. The reported configuration does not use QK phase normalization.
+We briefly trained a variant with per-element unit normalization of $Q$ and $K$ before the conjugate inner product. Validation loss decreased, but generation collapsed into severe lexical repetition by mid-training and the run was stopped during epoch 5, indicating that both magnitude and phase must be free to vary for the conjugate inner product to function as a retrieval mechanism without softmax. An earlier sequential configuration (16 CGU layers followed by 16 PAM layers, no RoPE, lower learning rate) achieved 38.95 validation PPL, and a hybrid that adds sparse windowed attention every 4th block achieved 30.01, marginally worse than pure PAM, indicating that interleaving channel and sequence mixing is important and that supplemental attention provides no benefit at this scale.
 
-\paragraph{Ablations.} An earlier sequential configuration (16 CGU layers followed by 16 PAM layers, no RoPE, lower learning rate) achieved 38.95 validation PPL, and a hybrid that adds sparse windowed attention every 4th block achieved 30.01, marginally worse than pure PAM. These results are not controlled single-variable ablations, but they indicate that interleaving channel and sequence mixing is important and that supplemental attention provides no benefit at this scale.
-
-\subsection{Comparison to matched transformer baseline}
 \label{sec:transformer-comparison}
 To provide a rigorous comparison, we trained a standard transformer with $\sim$100.3M parameters on the same WikiText-103 data, tokenizer (GPT-2 BPE), sequence length (2048), batch size (3), learning rate ($1 \times 10^{-4}$), warmup (1000 steps), and hardware (single RTX 4090). The transformer uses $d_{\text{model}} = 672$, 12 layers, 12 attention heads, and $d_{\text{ff}} = 2688$.
 
 \begin{table}[t]
   \centering
-  \caption{Matched comparison: transformer baseline vs.\ PAM (same data, tokenizer, seq\_len, LR, hardware).}
+  \caption{Matched comparison on WikiText-103.}
   \label{tab:gpt2}
-  \begin{tabular}{@{}lccccc@{}}
+  \begin{tabular}{@{}lccc@{}}
     \toprule
-    Model & Type & Params & Val PPL & Wall time & Throughput \\
+    Model & Params & Val PPL & tok/s \\
     \midrule
-    GPT-2 (cited) & Transformer & 124M & $\sim$31 & -- & -- \\
-    Transformer (ours) & Transformer & $\sim$100.3M & \textbf{27.1} & 3.5~h & $\sim$96k tok/s \\
-    \textbf{PAM (ours)} & \textbf{Complex recurrent} & \textbf{$\sim$100.4M} & \textbf{30.0} & \textbf{14.1~h} & \textbf{$\sim$23k tok/s} \\
+    Transformer (ours) & 100.3M & 27.1 & 96k \\
+    PAM (ours) & 100.4M & 30.0 & 23k \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -274,49 +222,16 @@ The $\sim$10\% gap in perplexity is accompanied by a $\sim$4$\times$ gap in trai
     7 & 31.65 & 28.09 & & 33.26 & 31.22 \\
     8 & 30.28 & 27.46 & & 31.78 & 30.40 \\
     9 & 29.29 & 27.15 & & 30.66 & 30.01 \\
-    10 & 28.75 & \textbf{27.1} & & 30.02 & \textbf{30.0} \\
+    10 & 28.75 & 27.1 & & 30.02 & 30.0 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 The transformer converges faster and maintains a consistent advantage throughout training (Table~\ref{tab:epoch-comparison}), though the gap narrows in later epochs. The two models see the same total tokens. Despite the perplexity gap, the structural differences between the architectures are substantial: the transformer requires $O(T)$ work per token during inference because of the KV cache, whereas PAM's state is fixed at 49,152 floats per layer regardless of sequence length, giving it $O(1)$ per-token cost with per-layer work $O(Hd^2)$. At $T = 2048$ with the baseline's configuration, the transformer's KV cache per layer is $\sim$56$\times$ larger than PAM's state, and this ratio grows linearly with context length.
 
-\subsection{Generation quality}
-\textbf{medium-pam-v3 (epoch 10)} produces coherent multi-sentence text; factual accuracy is not guaranteed.
+At epoch 10, given the prompt ``In 1923, the University of,'' the model generates: ``In 1923, the University of Illinois at Urbana @-@ Urdu said it was `an easy choice to do something in its own right.' The university also claimed the first students from Wisconsin had to be replaced by a more `good student' due to a lack of funds.'' The text is grammatically coherent and shows structural awareness of dates, proper nouns, and institutional language, with 3-gram repetition rate 0.034, 4-gram repetition rate 0.011, and unique token ratio 0.703. Factual accuracy is not reliable at this scale.
 
-\paragraph{Prompt:} \texttt{In 1923 , the University of}
-
-\paragraph{Generated text (medium-pam-v3, epoch 10):}
-\begin{quote}
-In 1923 , the University of Illinois at Urbana @-@ Urdu said it was " an easy choice to do something in its own right . " The university also claimed the first students from Wisconsin had to be replaced by a more " good student " due to a lack of funds .
-\end{quote}
-
-Quality metrics at final epoch: 3-gram repetition rate \textbf{0.034}, 4-gram repetition rate \textbf{0.011}, zero restarts, unique token ratio \textbf{0.703}. The sample shows section-like structure and WikiText-style tokenization artifacts; it does \textbf{not} exhibit the list-repetition failure mode of the QK-norm ablation.
-
-\paragraph{Sequential medium-pam (epoch 10)} for the same prompt (different run, see \ref{sec:main-result}):
-\begin{quote}
-In 1923 , the University of Missouri and the University of Michigan was also established in 1926 . In 1928 , the University of Michigan opened its current campus with the school 's first campus opening at St. Louis Road on the northern end of Lake Michigan in 1929 .
-\end{quote}
-
-Quality metrics (sequential run): 3-gram rep.\ 0.051, 4-gram rep.\ 0.020, unique token ratio 0.624.
-
-The text is grammatically coherent and shows structural awareness (dates, proper nouns, institutional language). Factual accuracy is not reliable---this is expected at this scale.
-
-\subsection{Earlier validation: TinyStories}
-Before WikiText-103, the broader V6 architecture family was validated on TinyStories~\cite{eldan2023tinystories}:
-\begin{table}[h]
-  \centering
-  \begin{tabular}{@{}llccc@{}}
-    \toprule
-    Model & Config & Params & Dataset & Val PPL \\
-    \midrule
-    V6 small-matched & CGU + SSM, no memory & 28.7M & TinyStories (full) & 5.50 \\
-    V6 small-matched & CGU + SSM, WM=16 & 29.2M & TinyStories (full) & 2.23 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-These results established that the phase-preserving, attention-free architecture family can learn effectively. The TinyStories experiments also revealed that working memory capacity is a critical control variable: too much memory induces memorization, while zero memory produces cleaner but higher-perplexity generations.
+Before WikiText-103, the architecture family was validated on TinyStories~\cite{eldan2023tinystories} at 28.7M parameters, achieving 5.50 validation PPL without working memory and 2.23 with 16 working memory slots, establishing that the phase-preserving, attention-free approach can learn effectively and that working memory capacity is a critical control variable.
 
 \section{Discussion}
 \label{sec:analysis}
@@ -333,43 +248,26 @@ The computational costs are comparable in order to standard attention: the train
 
 
 \section{Conclusion}
-\label{sec:future}
 
-In this work we have constructed a language model whose representations, projections, activations, and retrieval all operate in complex-valued Hilbert space, and evaluated it against a matched transformer on a standard language modeling benchmark. The architecture, Phase-Associative Memory, accumulates associations in a complex matrix state $S_t \in \Complex^{d \times d}$ via outer products and retrieves via the conjugate inner product $K^* \cdot Q / \sqrt{d}$, the same operation that computes projection probabilities in the quantum semantic framework~\cite{agostino2025quantum}. At $\sim$100M parameters on WikiText-103, PAM reaches validation perplexity 30.0, within $\sim$10\% of a matched transformer (27.1) trained under identical conditions, despite 4$\times$ arithmetic overhead and no custom kernels.
+In this work we constructed a language model that operates entirely in complex-valued Hilbert space and evaluated it against a matched transformer on WikiText-103 at $\sim$100M parameters. Our principal findings are the following:
 
-The development of the architecture revealed that holographic binding in vector-state models fails due to the $O(1/\sqrt{n})$ capacity degradation of superposed associations, and that upgrading to a matrix state resolves this; that magnitude and phase must both be free to vary for the conjugate inner product to function as a retrieval mechanism without softmax; and that supplementing PAM with sparse attention provides no benefit at this scale. These findings are consistent with the hypothesis that the complex recurrence is already capturing the correlational structure that attention exploits, though the $\sim$10\% gap indicates that the capture is not yet complete.
+\begin{enumerate}
 
-Whether the gap reflects an implementation limitation, a fundamental advantage of attention over recurrence, or the difference between native complex-valued computation and its real-valued approximation is a question that the complex-vs-real ablation at matched parameter count is designed to address. The scaling behavior of the gap at 350M and 1B parameters would determine whether the complex-valued formalism captures a progressively larger share of the structure of language as models grow. The CHSH contextuality evaluation developed in~\cite{agostino2026production} has been applied to transformer-based models but not yet to PAM, and running the semantic Bell test on PAM-generated interpretations would test whether an architecture built on the quantum semantic formalism produces a contextuality profile different from one that must approximate the same structure through real-valued attention.
+\item Phase-Associative Memory, which accumulates associations in a complex matrix state via outer products and retrieves via the conjugate inner product, reaches validation perplexity 30.0 on WikiText-103, within $\sim$10\% of a matched transformer (27.1) trained under identical conditions, despite $4\times$ arithmetic overhead from complex computation and no custom CUDA kernels.
 
-\appendix
+\item Holographic binding in vector-state models fails due to the $O(1/\sqrt{n})$ capacity degradation of superposed associations. Upgrading the state from $\Complex^d$ to $\Complex^{d \times d}$ resolves this, consistent with the classical analyses of superposition capacity in holographic reduced representations~\cite{plate1995holographic}.
 
-\section{Additional Details}
+\item Both magnitude and phase must be free to vary for the conjugate inner product to function as a retrieval mechanism; normalizing queries and keys to unit magnitude causes generation to collapse into repetition.
 
-The matched transformer baseline uses $d_{\text{model}} = 672$, 12 layers, 12 attention heads, and $d_{\text{ff}} = 2688$ ($\sim$100.3M parameters). The earlier sequential PAM configuration uses the same embedding and head dimensions as the reported interleaved model but without interleaving, without RoPE, and with learning rate $3 \times 10^{-5}$ and 500 warmup steps.
+\item Supplementing PAM with sparse windowed attention provides no benefit at this scale, suggesting that the information attention would contribute is already being captured by the complex recurrence.
 
-The embedding accounts for a large fraction of PAM's parameters because $\text{dim} = 384$ with vocabulary size 50,257 requires $50{,}257 \times 384 \times 2 = 38.6$M parameters for the real and imaginary embedding tables, which are tied with the output layer. The remaining 61.7M parameters are in the 16 CGU + PAM blocks.
+\item PAM's retrieval operation implements the same mathematical structure as the quantum semantic framework~\cite{agostino2025quantum}: outer-product accumulation of associations in a complex Hilbert space and projection of a query onto the accumulated state through the conjugate inner product, the operation that computes measurement probabilities in quantum mechanics.
 
-\section{Reproducibility}
-Full source code and training scripts: \url{https://github.com/gowrav-vishwakarma/qllm2}.
+\end{enumerate}
 
-Python 3.9+ (tested with 3.9.24); PyTorch 2.x with CUDA support; package management via \texttt{uv}.
+Whether the $\sim$10\% gap to the transformer narrows or widens at larger scales, whether it is attributable to complex-valued computation rather than the matrix-state structure alone, and whether PAM produces a different contextuality profile than transformer-based models when probed with the CHSH protocol~\cite{agostino2026production} are questions that the experiments currently underway are designed to address.
 
-The reported \textbf{30.0} validation PPL run is archived under \texttt{logs/v6/medium\_pam\_v3\_rope\_wikitext103\_20260319\_231524\_31397f0/} (\texttt{RUN\_INFO.txt} lists git commit \texttt{31397f0} and full CLI). The matched transformer baseline (\textbf{27.1}) is archived under \texttt{logs/v6/transformer\_baseline\_wikitext103\_20260323\_140351\_e87b8e4/} (git commit \texttt{e87b8e4}).
 
-\begin{verbatim}
-uv sync && uv sync --extra cuda
-./scripts/run_v6_medium_pam_v3.sh
-./scripts/run_v6_medium_pam.sh
-./scripts/run_v6_medium_pam.sh --resume
-\end{verbatim}
-
-Generation:
-\begin{verbatim}
-python -m v6.generate \
-  --checkpoint checkpoints_v6_medium_pam_v3/best_model.pt \
-  --prompt "In 1923 , the University of"
-\end{verbatim}
-
-\bibliography{references}
+\bibliography{aps_refs}
 
 \end{document}
