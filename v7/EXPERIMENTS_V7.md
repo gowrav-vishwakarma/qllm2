@@ -453,10 +453,14 @@ CGU already has phase rotation via `gate_phase * up`. But:
 | 7c  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Same PPL as 7a, higher tok/s (chunked C=256) |
 | 7d  | medium_h16_flat | 16 | 384 | False | False | ModSwish | **27.94** val @10e, **31.8k tok/s** (chunked C=256, B=6) |
 | 7e  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Beat 7c/7d (chunked + unitary reg λ=0.01) |
+| 7f  | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModSwish | Multi-scale loss improves PPL over 7d (~28) |
+| 7g  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Reverse assoc improves PPL with +25% dual-form FLOPs |
+| 7h  | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModSwish | Best of both: multi-scale + reverse assoc |
 
 Runs B/C from the original plan are superseded by 3a (which IS the flat baseline at proper depth).
 Experiments 7a/7b test activation upgrades on the depth-matched baseline.
 Experiments 7c/7d/7e test throughput optimizations (chunked dual form, larger batch) and regularization.
+Experiments 7f/7g/7h test multi-scale temporal loss and reverse association for fact retention.
 
 ### Metrics
 
@@ -604,5 +608,105 @@ Chunked dual form frees ~600 MB of peak intermediates per layer. This should all
 ### Experiment 7e: Soft unitary regularization
 
 Add a loss term `λ * Σ ||W_r^T W_r + W_i^T W_i - I||²` over all ComplexLinear layers (λ=0.01). This encourages complex weights to stay near-unitary (norm-preserving), potentially improving gradient flow through 16 layers. Zero forward-pass overhead; small loss computation cost.
+
+**Status**: Not run yet.
+
+---
+
+## Experiments 7f/7g/7h: Multi-Scale Loss + Reverse Association
+
+### Motivation
+
+V7 already has hierarchical `dt_bias` per layer (controlling memory span), but only a **single next-token CE loss on the final output**. The hierarchy influences forward dynamics, yet no layer gets direct supervision at its natural temporal scale. Additionally, the dual-form PAM computes full T×T `Q @ K.T` matrices but discards the upper triangle (causal mask zeros it out) — 50% of the matmul results wasted.
+
+These experiments add two complementary features:
+1. **Multi-scale per-layer loss**: Each layer predicts tokens at a temporal offset matching its memory span
+2. **Reverse association**: Reuse the upper triangle of Q@K.T for a "what was the past looking for" signal
+
+### Feature 1: Multi-Scale Per-Layer Loss (dT-Decay Loss)
+
+**Core idea**: Each layer gets a lightweight auxiliary prediction head (`AuxPredHead`: `ComplexNorm -> to_real_concat -> Linear`) that predicts tokens at a temporal offset derived from its memory span. Global layers (slow decay, early) predict far ahead (t+32); step layers (fast decay, late) predict the immediate next token (t+1).
+
+**Temporal offset schedule** (derived from layer position):
+```
+offset_i = max(1, int(max_aux_offset * (1 - i / (n_layers - 1))))
+```
+For a 16-layer model with `max_aux_offset=32`, `aux_layer_stride=3`:
+- Layer 0:  offset=32 (paragraph-scale)
+- Layer 3:  offset=26
+- Layer 6:  offset=19
+- Layer 9:  offset=13
+- Layer 12: offset=7
+- Layer 15: offset=1  (same as main next-token loss)
+
+**Loss formulation**:
+```
+loss = main_CE + aux_weight * Σ_i(w_i * CE(aux_head_i(z_i), labels[t + τ_i]))
+```
+Where `w_i = exp(-2 * (1 - i/(n_layers-1)))` — exponential decay giving higher weight to later (easier) layers. `aux_weight` defaults to 0.1.
+
+**Why this helps fact retention**:
+- Global layers get direct gradient signal (without aux loss, they only get gradients through 15+ subsequent layers)
+- Temporal offset forces abstraction: a layer predicting 32 tokens ahead must encode semantic/factual content
+- No representation alignment issues: full backprop preserved (unlike forward-only approaches)
+
+**Overhead**: ~77K params per head (dim=384, vocab=50257), 6 heads at stride=3 → ~462K extra params (~0.5% of total)
+
+### Feature 2: Reverse Association (Upper Triangle Reuse)
+
+**The waste**: In `_dual_form_block`, the `Q @ K.T` matmuls produce full T×T matrices, but the lower-triangular decay mask `D` zeros out the upper triangle. The upper triangle `wr[j, i]` for j < i = "how much does past query j match current key i" — a useful signal that's discarded.
+
+**Reverse path**: Transpose the attention weights and apply the same causal mask:
+```python
+ar_rev = wr.transpose(-1, -2) * D   # reverse-causal weighting
+y_rev = ar_rev @ v                   # "what the past wanted from me"
+y = y_fwd + rev_scale * y_rev        # rev_scale: learnable per layer, init=0.0
+```
+
+**Cost**: One transpose (free), one extra element-wise multiply, one extra matmul per dual-form block. No new Q/K/V matmuls. ~25% extra FLOPs in the dual form block.
+
+**Safety**: `rev_scale` initializes at 0.0 — the model starts as standard PAM and discovers the reverse signal via gradient descent. If it's not useful, `rev_scale` stays near zero.
+
+**Note**: Reverse association only applies in training (dual form). Single-token recurrent inference has no upper triangle, so `rev_scale` is not used. Benefits persist through learned representations.
+
+### Implementation Summary
+
+**model.py changes**:
+- `V7Config`: added `multi_scale_loss`, `aux_loss_weight`, `aux_layer_stride`, `max_aux_offset`, `use_reverse_assoc`
+- `AuxPredHead` class: `ComplexNorm -> to_real_concat -> Linear(dim*2, vocab_size)`
+- `V7LM.__init__`: creates `nn.ModuleDict` of aux heads keyed by layer index, computes per-head temporal offsets
+- `V7LM.forward`: returns `(logits, states, aux_outputs)` where `aux_outputs` is `{layer_idx: (aux_logits, offset)}`
+- `PhaseAssociativeLayer`: added `rev_scale` parameter; `_dual_form_block` and `_forward_chunked` pass and apply it
+
+**train.py changes**:
+- `compute_multi_scale_loss()`: computes weighted sum of shifted-label CE losses per aux head
+- Training loop: integrates multi-scale loss when aux_outputs is non-empty
+- CLI flags: `--multi_scale_loss`, `--aux_loss_weight`, `--aux_layer_stride`, `--max_aux_offset`, `--no_reverse_assoc`
+
+### Experiment Plan
+
+| Run | Features | Preset | CLI flags | Expected Outcome |
+|-----|----------|--------|-----------|------------------|
+| 7f | Multi-scale loss only | medium_h16_grouped | `--multi_scale_loss --no_reverse_assoc` | Per-layer temporal loss improves PPL and fact retention over 7d baseline (~28) |
+| 7g | Reverse association only | medium_h16_flat | *(defaults: reverse_assoc=True, no multi_scale_loss)* | Upper triangle reuse improves PPL with ~25% extra dual-form FLOPs |
+| 7h | Both 7f + 7g combined | medium_h16_grouped | `--multi_scale_loss` | Full system: best of both features |
+
+### Running
+
+```bash
+# Experiment 7f: Multi-scale loss only (grouped hierarchy, no reverse assoc)
+uv run python -m v7.train --preset medium_h16_grouped --epochs 10 \
+    --batch_size 6 --chunk_size 256 --activation swish \
+    --multi_scale_loss --no_reverse_assoc
+
+# Experiment 7g: Reverse association only (flat baseline)
+uv run python -m v7.train --preset medium_h16_flat --epochs 10 \
+    --batch_size 6 --chunk_size 256 --activation swish
+
+# Experiment 7h: Both features combined
+uv run python -m v7.train --preset medium_h16_grouped --epochs 10 \
+    --batch_size 6 --chunk_size 256 --activation swish \
+    --multi_scale_loss
+```
 
 **Status**: Not run yet.

@@ -116,6 +116,42 @@ def _notify_training_failure(status: str, exc: Optional[BaseException] = None) -
     _notify_discord("\n".join(parts))
 
 
+# ── Multi-Scale Loss ──────────────────────────────────────────────────────────
+
+def compute_multi_scale_loss(
+    aux_outputs: Dict,
+    labels: torch.Tensor,
+    n_layers: int,
+    aux_weight: float = 0.1,
+) -> torch.Tensor:
+    """Compute weighted sum of per-layer auxiliary CE losses with shifted labels.
+
+    Each aux head predicts tokens at a temporal offset matching its layer's
+    memory span.  Global layers predict far ahead (harder, lower weight);
+    step layers predict next-token (easier, higher weight).
+    """
+    if not aux_outputs:
+        return torch.tensor(0.0, device=labels.device)
+
+    total = torch.tensor(0.0, device=labels.device)
+    for layer_idx, (logits, offset) in aux_outputs.items():
+        if offset >= labels.shape[1]:
+            continue
+        shifted = labels[:, offset:]
+        trimmed = logits[:, :shifted.shape[1]]
+        if trimmed.numel() == 0:
+            continue
+        layer_loss = F.cross_entropy(
+            trimmed.reshape(-1, trimmed.size(-1)),
+            shifted.reshape(-1),
+        )
+        frac = layer_idx / max(n_layers - 1, 1)
+        w = math.exp(-2.0 * (1.0 - frac))
+        total = total + w * layer_loss
+
+    return aux_weight * total
+
+
 # ── Trainer ───────────────────────────────────────────────────────────────────
 
 class V7Trainer:
@@ -213,10 +249,15 @@ class V7Trainer:
                 enabled=self.use_amp,
                 dtype=self.amp_dtype or torch.float16,
             ):
-                logits, _ = self.model(input_ids)
+                logits, _, aux_outputs = self.model(input_ids)
                 loss = F.cross_entropy(
                     logits.view(-1, logits.size(-1)), labels.view(-1),
                 )
+                if aux_outputs:
+                    m_cfg = self.model._orig_mod.config if hasattr(self.model, '_orig_mod') else self.model.config
+                    loss = loss + compute_multi_scale_loss(
+                        aux_outputs, labels, m_cfg.n_layers, m_cfg.aux_loss_weight,
+                    )
                 if self.unitary_lambda > 0:
                     u_loss = torch.tensor(0.0, device=self.device)
                     for m in self.model.modules():
@@ -339,7 +380,7 @@ class V7Trainer:
                 enabled=self.use_amp,
                 dtype=self.amp_dtype or torch.float16,
             ):
-                logits, _ = self.model(input_ids)
+                logits, _, _ = self.model(input_ids)
                 loss = F.cross_entropy(
                     logits.view(-1, logits.size(-1)), labels.view(-1),
                 )
@@ -567,6 +608,20 @@ def main():
     parser.add_argument('--unitary_lambda', type=float, default=0.0,
                         help='Soft unitary regularization weight (0=disabled). Try 0.01.')
 
+    # Multi-scale per-layer loss (Exp 7f)
+    parser.add_argument('--multi_scale_loss', action='store_true',
+                        help='Enable per-layer auxiliary prediction heads with temporal offsets')
+    parser.add_argument('--aux_loss_weight', type=float, default=0.1,
+                        help='Global weight for multi-scale auxiliary losses')
+    parser.add_argument('--aux_layer_stride', type=int, default=3,
+                        help='Place aux heads every N layers')
+    parser.add_argument('--max_aux_offset', type=int, default=32,
+                        help='Largest temporal offset (for the global-most aux layer)')
+
+    # Reverse association (Exp 7g) -- enabled by default in config
+    parser.add_argument('--no_reverse_assoc', action='store_true',
+                        help='Disable reverse association (upper triangle reuse in PAM)')
+
     args = parser.parse_args()
 
     # Logging
@@ -616,6 +671,13 @@ def main():
         cfg.activation = args.activation
     if args.chunk_size is not None:
         cfg.chunk_size = args.chunk_size
+    if args.multi_scale_loss:
+        cfg.multi_scale_loss = True
+        cfg.aux_loss_weight = args.aux_loss_weight
+        cfg.aux_layer_stride = args.aux_layer_stride
+        cfg.max_aux_offset = args.max_aux_offset
+    if args.no_reverse_assoc:
+        cfg.use_reverse_assoc = False
 
     print(f"\nConfig: {asdict(cfg)}")
     print(
@@ -714,7 +776,9 @@ def main():
         f"Preset: {args.preset} | Dataset: {args.dataset}",
         f"Config: dim={cfg.dim} layers={cfg.n_layers} heads={cfg.n_heads} "
         f"head_dim={cfg.head_dim} expand={cfg.expand}",
-        f"hierarchical_dt={cfg.hierarchical_dt}",
+        f"hierarchical_dt={cfg.hierarchical_dt} "
+        f"multi_scale_loss={cfg.multi_scale_loss} "
+        f"reverse_assoc={cfg.use_reverse_assoc}",
         f"Params: {params['total']:,} ({params['total']/1e6:.1f}M)",
         f"seq_len={cfg.max_seq_len} batch_size={args.batch_size} epochs={args.epochs}",
         f"lr={args.lr} warmup={args.warmup_steps} wd={args.weight_decay}",

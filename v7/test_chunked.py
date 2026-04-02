@@ -33,8 +33,8 @@ def test_chunked_vs_full():
         ids = torch.randint(0, 1000, (2, T), device=device)
 
         with torch.no_grad():
-            logits_full, states_full = model_full(ids)
-            logits_chunked, states_chunked = model_chunked(ids)
+            logits_full, states_full, _ = model_full(ids)
+            logits_chunked, states_chunked, _ = model_chunked(ids)
 
         max_diff = (logits_full - logits_chunked).abs().max().item()
         mean_diff = (logits_full - logits_chunked).abs().mean().item()
@@ -78,7 +78,7 @@ def test_training_step():
     target = ids[:, 1:]
     input_ids = ids[:, :-1]
 
-    logits, _ = model(input_ids)
+    logits, _, _ = model(input_ids)
     loss = torch.nn.functional.cross_entropy(
         logits.reshape(-1, logits.size(-1)), target.reshape(-1)
     )
