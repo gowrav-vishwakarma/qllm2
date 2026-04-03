@@ -250,9 +250,10 @@ class V7Trainer:
                 dtype=self.amp_dtype or torch.float16,
             ):
                 logits, _, aux_loss = self.model(input_ids, labels=labels)
-                loss = F.cross_entropy(
+                main_loss = F.cross_entropy(
                     logits.view(-1, logits.size(-1)), labels.view(-1),
                 )
+                loss = main_loss
                 if aux_loss.item() > 0:
                     m_cfg = self.model._orig_mod.config if hasattr(self.model, '_orig_mod') else self.model.config
                     loss = loss + m_cfg.aux_loss_weight * aux_loss
@@ -288,10 +289,11 @@ class V7Trainer:
             self.global_tokens += batch_tokens
             total_tokens += batch_tokens
             log_tokens += batch_tokens
-            total_loss_w += loss.item() * batch_tokens
+            main_loss_val = main_loss.item()
+            total_loss_w += main_loss_val * batch_tokens
 
             if batch_idx % self.log_interval == 0:
-                ppl = math.exp(min(loss.item(), 20))
+                ppl = math.exp(min(main_loss_val, 20))
                 lr = self.scheduler.get_last_lr()[0]
                 elapsed = time.time() - epoch_start
                 avg_tok_s = total_tokens / elapsed if elapsed > 0 else 0
@@ -308,7 +310,7 @@ class V7Trainer:
 
                 line = (
                     f"  [{epoch+1}] {batch_idx}/{n_total} ({pct:.0f}%) "
-                    f"loss={loss.item():.4f} ppl={ppl:.1f} lr={lr:.2e} "
+                    f"loss={main_loss_val:.4f} ppl={ppl:.1f} lr={lr:.2e} "
                     f"| {inst_tok_s:.0f} tok/s (avg {avg_tok_s:.0f}) "
                     f"ETA {eta_m}m{eta_s:02d}s"
                 )
@@ -336,12 +338,12 @@ class V7Trainer:
                     )
                     print(f"  Prompt: {self.gen_prompt}")
                     print(f"  Generated: {text}")
-                    ppl = math.exp(min(loss.item(), 20))
+                    ppl = math.exp(min(main_loss_val, 20))
                     lr = self.scheduler.get_last_lr()[0]
                     _gen_msg = (
                         f"**[V7 gen_every]** Epoch {epoch+1} batch {batch_idx} "
                         f"({self.global_tokens:,} tok)\n"
-                        f"loss={loss.item():.4f} ppl={ppl:.1f} lr={lr:.2e} | "
+                        f"loss={main_loss_val:.4f} ppl={ppl:.1f} lr={lr:.2e} | "
                         f"{avg_tok_s:.0f} tok/s\n"
                         f"Prompt: {self.gen_prompt}\n"
                         f"Generated: {(text[:800] + '...') if len(text) > 800 else text}"

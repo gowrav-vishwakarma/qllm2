@@ -18,6 +18,11 @@ from torch.utils.checkpoint import checkpoint as grad_checkpoint
 from dataclasses import dataclass, asdict
 from typing import Optional, List, Tuple, Dict
 
+from v7.triton_kernels import (
+    fused_complex_norm, fused_mod_swish, fused_mod_relu,
+    fused_cgu_gate, fused_decay_matrix, triton_enabled,
+)
+
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
@@ -96,10 +101,7 @@ class ModReLU(nn.Module):
         self.bias = nn.Parameter(torch.full((dim,), -0.1))
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
-        mag = cabs(z)
-        activated = F.relu(mag + self.bias)
-        phase = z / (mag.unsqueeze(-1) + 1e-8)
-        return phase * activated.unsqueeze(-1)
+        return fused_mod_relu(z, self.bias)
 
 
 class ModSwish(nn.Module):
@@ -115,10 +117,7 @@ class ModSwish(nn.Module):
         self.beta = nn.Parameter(torch.ones(dim))
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
-        mag = cabs(z)
-        activated = mag * torch.sigmoid(self.beta * mag + self.bias)
-        phase = z / (mag.unsqueeze(-1) + 1e-8)
-        return phase * activated.unsqueeze(-1)
+        return fused_mod_swish(z, self.bias, self.beta)
 
 
 class PhaseModulatedActivation(nn.Module):
@@ -191,11 +190,7 @@ class ComplexNorm(nn.Module):
         self.eps = eps
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
-        mag = cabs(z)
-        rms = torch.sqrt(mag.square().mean(dim=-1, keepdim=True) + self.eps)
-        scaled = (mag / rms) * self.scale
-        phase = z / (mag.unsqueeze(-1) + 1e-8)
-        return phase * scaled.unsqueeze(-1)
+        return fused_complex_norm(z, self.scale, self.eps)
 
 
 def _build_activation(name: str, dim: int) -> nn.Module:
@@ -219,10 +214,8 @@ class ComplexGatedUnit(nn.Module):
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         gate = self.gate_proj(z)
-        gate_mag = torch.sigmoid(cabs(gate))
-        gate_phase = gate / (cabs(gate).unsqueeze(-1) + 1e-8)
         up = self.act(self.up_proj(z))
-        gated = cmul(gate_phase, up) * gate_mag.unsqueeze(-1)
+        gated = fused_cgu_gate(gate, up)
         return self.down_proj(gated)
 
 
@@ -357,11 +350,9 @@ class PhaseAssociativeLayer(nn.Module):
             y:       [B, H, Tc, d, 2]  output for this block
             S_block: [B, H, d, d, 2]   state contribution (decayed to block end)
         """
-        log_gamma = torch.log(gamma + 1e-6)
-        C = torch.cumsum(-log_gamma, dim=-1)
-        log_D = (C.unsqueeze(-1) - C.unsqueeze(-2)).transpose(-1, -2)
-        log_D = log_D * causal_mask + (1 - causal_mask) * (-1e4)
-        D = torch.exp(log_D.clamp(max=0.0))
+        B, H, T = gamma.shape
+        gamma_flat = gamma.reshape(B * H, T)
+        D = fused_decay_matrix(gamma_flat, T).reshape(B, H, T, T)
 
         qr, qi = q_s[..., 0], q_s[..., 1]
         kr, ki = k[..., 0], k[..., 1]
