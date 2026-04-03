@@ -453,14 +453,16 @@ CGU already has phase rotation via `gate_phase * up`. But:
 | 7c  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Same PPL as 7a, higher tok/s (chunked C=256) |
 | 7d  | medium_h16_flat | 16 | 384 | False | False | ModSwish | **27.94** val @10e, **31.8k tok/s** (chunked C=256, B=6) |
 | 7e  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Beat 7c/7d (chunked + unitary reg λ=0.01) |
-| 7f  | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModSwish | Multi-scale loss improves PPL over 7d (~28) |
-| 7g  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Reverse assoc improves PPL with +25% dual-form FLOPs |
-| 7h  | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModSwish | Best of both: multi-scale + reverse assoc |
+| 7f-0 | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModSwish | **31.29** val @10e, B=3 (confounded: grouped+multiscale) |
+| 7f-1 | medium_h16_flat | 16 | 384 | False | False | ModSwish | Ablation: multi-scale loss only (vs 7a baseline) |
+| 7f-2 | medium_h16_flat | 16 | 384 | False | False | ModSwish | Ablation: reverse assoc only (vs 7a baseline) |
+| 7f-3 | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModSwish | Ablation: grouped hierarchy only (vs 7a baseline) |
 
 Runs B/C from the original plan are superseded by 3a (which IS the flat baseline at proper depth).
 Experiments 7a/7b test activation upgrades on the depth-matched baseline.
 Experiments 7c/7d/7e test throughput optimizations (chunked dual form, larger batch) and regularization.
-Experiments 7f/7g/7h test multi-scale temporal loss and reverse association for fact retention.
+Experiments 7f-0 was confounded (grouped hierarchy + multi-scale loss changed simultaneously).
+Experiments 7f-1/7f-2/7f-3 are proper single-variable ablations vs the 7a baseline.
 
 ### Metrics
 
@@ -683,30 +685,43 @@ y = y_fwd + rev_scale * y_rev        # rev_scale: learnable per layer, init=0.0
 - Training loop: integrates multi-scale loss when aux_outputs is non-empty
 - CLI flags: `--multi_scale_loss`, `--aux_loss_weight`, `--aux_layer_stride`, `--max_aux_offset`, `--no_reverse_assoc`
 
-### Experiment Plan
+### Experiment 7f-0: Multi-scale + grouped (confounded)
 
-| Run | Features | Preset | CLI flags | Expected Outcome |
-|-----|----------|--------|-----------|------------------|
-| 7f | Multi-scale loss only | medium_h16_grouped | `--multi_scale_loss --no_reverse_assoc` | Per-layer temporal loss improves PPL and fact retention over 7d baseline (~28) |
-| 7g | Reverse association only | medium_h16_flat | *(defaults: reverse_assoc=True, no multi_scale_loss)* | Upper triangle reuse improves PPL with ~25% extra dual-form FLOPs |
-| 7h | Both 7f + 7g combined | medium_h16_grouped | `--multi_scale_loss` | Full system: best of both features |
+First run combined grouped hierarchy AND multi-scale loss vs the flat 7a baseline -- two variables changed at once.
+
+| Epoch | Val PPL | Train PPL (inflated by aux loss) |
+|-------|---------|----------------------------------|
+| 1     | 60.46   | 915.08 |
+| 5     | 35.76   | 246.52 |
+| 10    | **31.29** | 191.72 |
+
+**Result**: Val PPL 31.29 vs 7a baseline 29.73 -- regression. But we cannot tell whether grouped hierarchy or multi-scale loss (or both) caused it.
+
+Generation quality was better than 7d: rep3=0.022 (vs 0.031), rep4=0.000 (vs 0.021), uniq=0.705 (vs 0.680).
+
+### Ablation Plan (7f-1/7f-2/7f-3)
+
+All ablations use the **7a baseline** as control: `medium_h16_flat`, B=3, ModSwish, chunk_size=256, no grad ckpt, 10 epochs. Each changes exactly ONE variable.
+
+| Run  | What changes vs 7a     | Preset             | Key flags                               | Isolates                             |
+|------|------------------------|--------------------|----------------------------------------|--------------------------------------|
+| 7f-1 | Multi-scale loss only  | medium_h16_flat    | `--multi_scale_loss --no_reverse_assoc` | Does aux loss help on flat baseline? |
+| 7f-2 | Reverse assoc only     | medium_h16_flat    | *(default: reverse_assoc=True)*         | Does upper-triangle reuse help?      |
+| 7f-3 | Grouped hierarchy only | medium_h16_grouped | `--no_reverse_assoc`                    | Does grouped dt_bias help or hurt?   |
+
+If 7f-1 and/or 7f-2 help, combine them in a follow-up (7f-4). Only add grouped hierarchy if 7f-3 shows it helps.
 
 ### Running
 
 ```bash
-# Experiment 7f: Multi-scale loss only (grouped hierarchy, no reverse assoc)
-uv run python -m v7.train --preset medium_h16_grouped --epochs 10 \
-    --batch_size 6 --chunk_size 256 --activation swish \
-    --multi_scale_loss --no_reverse_assoc
+# Ablation 7f-1: Multi-scale loss only (flat, same as 7a + aux heads)
+./scripts/run_v7_exp7f1_multiscale_flat.sh
 
-# Experiment 7g: Reverse association only (flat baseline)
-uv run python -m v7.train --preset medium_h16_flat --epochs 10 \
-    --batch_size 6 --chunk_size 256 --activation swish
+# Ablation 7f-2: Reverse association only (flat, same as 7a + rev_assoc)
+./scripts/run_v7_exp7f2_reverse_assoc.sh
 
-# Experiment 7h: Both features combined
-uv run python -m v7.train --preset medium_h16_grouped --epochs 10 \
-    --batch_size 6 --chunk_size 256 --activation swish \
-    --multi_scale_loss
+# Ablation 7f-3: Grouped hierarchy only (no new features)
+./scripts/run_v7_exp7f3_grouped_only.sh
 ```
 
-**Status**: Not run yet.
+**Status**: 7f-0 done (confounded). 7f-1/7f-2/7f-3 not run yet.
