@@ -1,0 +1,36 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V7 Exp7f (Multi-scale loss, grouped hierarchy, no rev_assoc): dim=384 L=16 expand=3, PAM(H=6, d=64, grouped dt, RoPE, fused-QKV, GSP), activation=swish, chunk_size=256, aux_weight=0.1, aux_stride=3, max_offset=32, LR=1e-4, warmup=1000
+Date (UTC)  : 2026-04-02 12:05:35
+Date (local): 2026-04-02 17:35:35 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 136f914646ff89b01255e4bf91492d64550074e0
+Git short   : 136f914
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.24
+Arguments   : --preset medium_h16_grouped --dataset wikitext103 --seq_len 2048 --batch_size 3 --epochs 10 --activation swish --chunk_size 256 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --multi_scale_loss --aux_loss_weight 0.1 --aux_layer_stride 3 --max_aux_offset 32 --no_reverse_assoc --gen_prompt 'In 1923 , the University of'  
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ scripts/run_v7_exp7f_multiscale.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/scripts/run_v7_exp7f_multiscale.sh b/scripts/run_v7_exp7f_multiscale.sh
+index 1a0cbeb..89768bc 100755
+--- a/scripts/run_v7_exp7f_multiscale.sh
++++ b/scripts/run_v7_exp7f_multiscale.sh
+@@ -35,7 +35,7 @@ EPOCHS=10
+ SEQ_LEN=2048
+ DATASET="wikitext103"
+ PRESET="medium_h16_grouped"
+-BATCH_SIZE=6
++BATCH_SIZE=3
+ CHUNK_SIZE=256
+ AUX_LOSS_WEIGHT=0.1
+ AUX_LAYER_STRIDE=3
