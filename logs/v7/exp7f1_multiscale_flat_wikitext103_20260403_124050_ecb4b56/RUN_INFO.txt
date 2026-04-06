@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V7 Exp7f-1 (Multi-scale loss, flat baseline): dim=384 L=16 expand=3, PAM(H=6, d=64, flat dt=-4.0, RoPE, fused-QKV, GSP), activation=swish, chunk_size=256, aux_weight=0.1, aux_stride=3, max_offset=32, rev_assoc=False, LR=1e-4, warmup=1000
+Date (UTC)  : 2026-04-03 07:10:50
+Date (local): 2026-04-03 12:40:50 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : ecb4b563f6d5d8d79b2694e0819fa0963ddae9b4
+Git short   : ecb4b56
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --preset medium_h16_flat --dataset wikitext103 --seq_len 2048 --batch_size 3 --epochs 10 --activation swish --chunk_size 256 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --multi_scale_loss --aux_loss_weight 0.1 --aux_layer_stride 3 --max_aux_offset 32 --no_reverse_assoc --gen_prompt 'In 1923 , the University of'  
+================================================================================
