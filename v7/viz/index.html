@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V7 Architecture Visualizer — Internal Computation Detail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- LEFT CONTROLS -->
+<div id="controls">
+  <h2>Model Configuration</h2>
+
+  <div class="cg">
+    <h3>Family</h3>
+    <select id="family-sel">
+      <option value="v7" selected>V7 — Lean Phase-Associative</option>
+      <option value="v6">V6 — Full Phase-Field</option>
+    </select>
+  </div>
+
+  <div class="cg">
+    <h3>Preset</h3>
+    <select id="preset-sel"></select>
+  </div>
+
+  <div id="custom-indicator">⚠ Custom parameter overrides active</div>
+
+  <div class="cg">
+    <h3>Parameters</h3>
+    <div class="num-row"><label>Layers</label><input type="number" id="inp-layers" min="1" max="128"><span class="unit"></span></div>
+    <div class="num-row"><label>Dimension</label><input type="number" id="inp-dim" min="16" max="8192" step="16"><span class="unit">d</span></div>
+    <div class="num-row"><label>PAM Heads</label><input type="number" id="inp-heads" min="1" max="64"><span class="unit">h</span></div>
+    <div class="num-row"><label>Head Dim</label><input type="number" id="inp-headdim" min="8" max="256"><span class="unit">d_h</span></div>
+    <div class="num-row"><label>CGU Expand</label><input type="number" id="inp-expand" min="1" max="8"><span class="unit">×</span></div>
+    <div class="num-row"><label>Vocab Size</label><input type="number" id="inp-vocab" min="100" max="200000"><span class="unit"></span></div>
+    <div class="num-row"><label>Max Seq Len</label><input type="number" id="inp-maxseq" min="64" max="65536"><span class="unit"></span></div>
+  </div>
+
+  <div class="cg">
+    <h3>V7 Features</h3>
+    <div class="tr"><span class="tl">RoPE<span class="ts">Complex rotary embeddings</span></span><label class="sw"><input type="checkbox" id="tog-use_rope" checked><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">GSP<span class="ts">Gated State Protection</span></span><label class="sw"><input type="checkbox" id="tog-use_gsp" checked><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Hierarchical dt<span class="ts">Layer-dependent timescales</span></span><label class="sw"><input type="checkbox" id="tog-hierarchical_dt"><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Cross-level<span class="ts">Inter-layer drift</span></span><label class="sw"><input type="checkbox" id="tog-cross_level"><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Fused QKV<span class="ts">Single projection</span></span><label class="sw"><input type="checkbox" id="tog-fused_qkv" checked><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Reverse Assoc<span class="ts">Learnable reverse</span></span><label class="sw"><input type="checkbox" id="tog-use_reverse_assoc" checked><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Multi-scale Loss<span class="ts">Auxiliary prediction heads</span></span><label class="sw"><input type="checkbox" id="tog-multi_scale_loss"><span class="sl"></span></label></div>
+  </div>
+
+  <div class="cg">
+    <h3>V6 Features</h3>
+    <div class="tr"><span class="tl">Dual Banks<span class="ts">Semantic + Context</span></span><label class="sw"><input type="checkbox" id="tog-dual_banks" disabled><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Sequential PAM<span class="ts">Separate CGU/PAM stacks</span></span><label class="sw"><input type="checkbox" id="tog-sequential_pam" disabled><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Attention<span class="ts">Interleaved attention</span></span><label class="sw"><input type="checkbox" id="tog-attention" disabled><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Working Memory<span class="ts">WM slots</span></span><label class="sw"><input type="checkbox" id="tog-working_memory" disabled><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Internal Memory<span class="ts">IM slots</span></span><label class="sw"><input type="checkbox" id="tog-internal_memory" disabled><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Episodic Memory<span class="ts">Episodic slots</span></span><label class="sw"><input type="checkbox" id="tog-episodic_memory" disabled><span class="sl"></span></label></div>
+  </div>
+
+  <div class="cg">
+    <h3>Visualization</h3>
+    <div class="tr"><span class="tl">Data Flow<span class="ts">Animated particles in 3D</span></span><label class="sw"><input type="checkbox" id="tog-dataflow"><span class="sl"></span></label></div>
+  </div>
+</div>
+
+<!-- CENTER: TABS + VIEWS -->
+<div id="center">
+  <div id="tab-bar">
+    <button class="tab-btn active" data-tab="arch">Architecture</button>
+    <button class="tab-btn" data-tab="pam">PAM Inside</button>
+    <button class="tab-btn" data-tab="multihead">Multi-Head</button>
+    <button class="tab-btn" data-tab="cgu">CGU Inside</button>
+    <button class="tab-btn" data-tab="banks">Banks</button>
+    <button class="tab-btn" data-tab="memory">Memory</button>
+    <button class="tab-btn" data-tab="complex">Complex Ops</button>
+    <button class="tab-btn" data-tab="dual">Dual vs Recurrent</button>
+  </div>
+
+  <div id="tab-content">
+    <!-- Architecture 3D Overview -->
+    <div id="view-arch" class="view active">
+      <div id="viewport"></div>
+    </div>
+
+    <!-- PAM Detail -->
+    <div id="view-pam" class="view">
+      <div class="detail-controls">
+        <button id="pam-play">▶ Play</button>
+        <button id="pam-pause">⏸ Pause</button>
+        <button id="pam-step-back">◀ Step</button>
+        <button id="pam-step-fwd">Step ▶</button>
+        <button id="pam-reset">↻ Reset</button>
+        <span>Speed:</span><input type="range" id="pam-speed" min="1" max="10" value="3">
+      </div>
+      <div class="detail-view"><canvas id="pam-canvas"></canvas></div>
+    </div>
+
+    <!-- CGU Detail -->
+    <div id="view-cgu" class="view">
+      <div class="detail-controls">
+        <button id="cgu-play">▶ Play</button>
+        <button id="cgu-pause">⏸ Pause</button>
+        <button id="cgu-step-back">◀ Step</button>
+        <button id="cgu-step-fwd">Step ▶</button>
+        <button id="cgu-reset">↻ Reset</button>
+        <span>Speed:</span><input type="range" id="cgu-speed" min="1" max="10" value="3">
+      </div>
+      <div class="detail-view"><canvas id="cgu-canvas"></canvas></div>
+    </div>
+
+    <!-- Complex Ops Explorer -->
+    <div id="view-complex" class="view">
+      <div class="detail-controls">
+        <span>Mode:</span>
+        <select id="complex-mode">
+          <option value="cmul">Complex Multiply</option>
+          <option value="norm">ComplexNorm</option>
+          <option value="modrelu">ModReLU</option>
+          <option value="rope">Complex RoPE</option>
+          <option value="score">Phase Alignment Score</option>
+        </select>
+      </div>
+      <div class="detail-view"><canvas id="complex-canvas"></canvas></div>
+    </div>
+
+    <!-- Multi-Head PAM -->
+    <div id="view-multihead" class="view">
+      <div class="detail-controls">
+        <button id="mh-play">▶ Play</button>
+        <button id="mh-pause">⏸ Pause</button>
+        <button id="mh-step-back">◀ Step</button>
+        <button id="mh-step-fwd">Step ▶</button>
+        <button id="mh-reset">↻ Reset</button>
+        <span>Speed:</span><input type="range" id="mh-speed" min="1" max="10" value="3">
+      </div>
+      <div class="detail-view"><canvas id="multihead-canvas"></canvas></div>
+    </div>
+
+    <!-- Banks Detail -->
+    <div id="view-banks" class="view">
+      <div class="detail-controls">
+        <button id="bank-play">▶ Play</button>
+        <button id="bank-pause">⏸ Pause</button>
+        <button id="bank-step-back">◀ Step</button>
+        <button id="bank-step-fwd">Step ▶</button>
+        <button id="bank-reset">↻ Reset</button>
+        <span>Speed:</span><input type="range" id="bank-speed" min="1" max="10" value="3">
+      </div>
+      <div class="detail-view"><canvas id="bank-canvas"></canvas></div>
+    </div>
+
+    <!-- Memory Detail -->
+    <div id="view-memory" class="view">
+      <div class="detail-controls">
+        <button id="mem-play">▶ Play</button>
+        <button id="mem-pause">⏸ Pause</button>
+        <button id="mem-step-back">◀ Step</button>
+        <button id="mem-step-fwd">Step ▶</button>
+        <button id="mem-reset">↻ Reset</button>
+        <span>Speed:</span><input type="range" id="mem-speed" min="1" max="10" value="3">
+      </div>
+      <div class="detail-view"><canvas id="mem-canvas"></canvas></div>
+    </div>
+
+    <!-- Dual vs Recurrent -->
+    <div id="view-dual" class="view">
+      <div class="detail-controls">
+        <button id="dual-play">▶ Play</button>
+        <button id="dual-pause">⏸ Pause</button>
+        <button id="dual-step-back">◀ Step</button>
+        <button id="dual-step-fwd">Step ▶</button>
+        <button id="dual-reset">↻ Reset</button>
+        <span>Speed:</span><input type="range" id="dual-speed" min="1" max="10" value="3">
+      </div>
+      <div class="detail-view"><canvas id="dual-canvas"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT INFO PANEL -->
+<div id="info">
+  <h2>Model Info</h2>
+  <div id="info-content"></div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.175.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
