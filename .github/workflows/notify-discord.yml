@@ -1,0 +1,39 @@
+name: Notify Discord on Push
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Send commit message to Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          AUTHOR=$(git log -1 --pretty=format:'%an')
+          TIMESTAMP=$(TZ='Asia/Kolkata' date +"%Y-%m-%d %H:%M:%S IST")
+          DAY=$(TZ='Asia/Kolkata' date +"%A")
+          BRANCH=${{ github.ref_name }}
+          COMMIT_MSG=$(git log -1 --pretty=format:'%s')
+          COMMIT_HASH=$(git log -1 --pretty=format:'%H')
+          REPO_NAME=${REPO_NAME}
+          COMMIT_URL="https://github.com/${REPO_NAME}/commit/${COMMIT_HASH}"
+
+          PAYLOAD=$(cat <<EOF
+          {
+            "content": "**Repo:** \`${REPO_NAME}\`\n**By:** ${AUTHOR}\n**Day:** ${DAY}\n**Time:** ${TIMESTAMP}\n**From:** \`${BRANCH}\`\n**Commit:** [${COMMIT_HASH:0:7}](${COMMIT_URL})\n**Commit Message:** ${COMMIT_MSG}"
+          }
+          EOF
+          )
+
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "$PAYLOAD" \
+               $DISCORD_WEBHOOK
