@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V7 Phase-Associative Memory — Architecture Visualizer</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:#0d1117;color:#c9d1d9;display:flex;height:100vh;overflow:hidden}
+#controls{width:290px;min-width:290px;background:#161b22;border-right:1px solid #30363d;overflow-y:auto;padding:16px;z-index:10}
+#controls h2{font-size:13px;color:#58a6ff;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #30363d}
+.cg{margin-bottom:14px}
+.cg h3{font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+select{width:100%;padding:7px 10px;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;border-radius:6px;font-size:12px;cursor:pointer;outline:none;margin-bottom:8px}
+select:focus{border-color:#58a6ff}
+.tr{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+.tl{font-size:12px;flex:1}
+.ts{font-size:10px;color:#8b949e;display:block}
+.sw{position:relative;width:34px;height:18px;flex-shrink:0;margin-left:6px}
+.sw input{opacity:0;width:0;height:0}
+.sl{position:absolute;cursor:pointer;inset:0;background:#30363d;border-radius:9px;transition:.2s}
+.sl::before{content:'';position:absolute;height:12px;width:12px;left:3px;bottom:3px;background:#8b949e;border-radius:50%;transition:.2s}
+.sw input:checked+.sl{background:#238636}
+.sw input:checked+.sl::before{transform:translateX(16px);background:#fff}
+.sw input:disabled+.sl{opacity:.4;cursor:not-allowed}
+#viewport{flex:1;position:relative;overflow:hidden}
+#info{width:300px;min-width:300px;background:#161b22;border-left:1px solid #30363d;overflow-y:auto;padding:16px;z-index:10}
+#info h2{font-size:13px;color:#58a6ff;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #30363d}
+.is{margin-bottom:14px}
+.is h3{font-size:12px;color:#f0883e;margin-bottom:4px}
+.ir{display:flex;justify-content:space-between;padding:2px 0;font-size:11px}
+.ik{color:#8b949e}.iv{color:#c9d1d9;font-family:'Fira Code',monospace;font-size:11px}
+.pt{font-size:18px;color:#58a6ff;text-align:center;padding:12px;background:#0d1117;border-radius:8px;margin-bottom:14px;font-weight:600}
+.pt span{font-size:10px;color:#8b949e;display:block;font-weight:400;margin-top:2px}
+.li{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:11px}
+.lc{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+#component-detail{background:#0d1117;border-radius:8px;padding:12px;margin-top:12px;display:none}
+#component-detail h3{font-size:13px;color:#7ee787;margin-bottom:8px}
+#component-detail .sub{font-size:11px;color:#c9d1d9;line-height:1.6;font-family:'Fira Code',monospace}
+.hint{font-size:10px;color:#484f58;text-align:center;margin-top:8px;font-style:italic}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
+.label3d{color:#fff;font-size:10px;font-family:'Inter',sans-serif;padding:1px 5px;background:rgba(0,0,0,.55);border-radius:3px;pointer-events:none;white-space:nowrap}
+.label3d.dim{font-size:8px;color:#ffd700;background:none}
+.label3d.layer{font-size:9px;color:#8b949e;background:rgba(0,0,0,.3)}
+.label3d.dt{font-size:8px;color:#bd93f9;background:rgba(0,0,0,.4)}
+/* number inputs for custom design */
+.num-row{display:flex;align-items:center;justify-content:space-between;padding:3px 0}
+.num-row label{font-size:11px;color:#c9d1d9;flex:1}
+.num-row input[type=number]{width:70px;padding:4px 6px;background:#0d1117;border:1px solid #30363d;color:#58a6ff;border-radius:4px;font-size:12px;font-family:'Fira Code',monospace;text-align:right;outline:none}
+.num-row input[type=number]:focus{border-color:#58a6ff}
+.num-row .unit{font-size:9px;color:#484f58;width:24px;text-align:right;margin-left:2px}
+.num-row input[type=number]::-webkit-inner-spin-button{opacity:1}
+.preset-badge{display:inline-block;font-size:9px;color:#0d1117;background:#58a6ff;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle}
+.custom-badge{display:inline-block;font-size:9px;color:#0d1117;background:#f0883e;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle}
+#custom-indicator{font-size:10px;color:#f0883e;text-align:center;padding:4px 0;display:none}
+.sel-row select{width:100%;margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<!-- LEFT: Controls -->
+<div id="controls">
+  <h2>Architecture Controls</h2>
+
+  <div class="cg">
+    <h3>Version &amp; Preset</h3>
+    <select id="sel-version">
+      <option value="v7" selected>V7 — Lean PAM</option>
+      <option value="v6">V6 — Full Phase-Field</option>
+    </select>
+    <select id="sel-preset"></select>
+    <div id="custom-indicator">* custom overrides active</div>
+  </div>
+
+  <div class="cg">
+    <h3>Custom Design</h3>
+    <div class="num-row"><label>Layers</label><input type="number" id="inp-layers" min="1" max="64" step="1"><span class="unit"></span></div>
+    <div class="num-row"><label>Dimension</label><input type="number" id="inp-dim" min="16" max="4096" step="16"><span class="unit"></span></div>
+    <div class="num-row"><label>PAM Heads</label><input type="number" id="inp-heads" min="1" max="64" step="1"><span class="unit"></span></div>
+    <div class="num-row"><label>Head Dim</label><input type="number" id="inp-headdim" min="8" max="512" step="8"><span class="unit"></span></div>
+    <div class="num-row"><label>CGU Expand</label><input type="number" id="inp-expand" min="1" max="8" step="1"><span class="unit">×</span></div>
+    <div class="num-row"><label>Vocab Size</label><input type="number" id="inp-vocab" min="256" max="200000" step="1"><span class="unit"></span></div>
+    <div class="num-row"><label>Max Seq Len</label><input type="number" id="inp-seqlen" min="64" max="65536" step="64"><span class="unit"></span></div>
+    <div style="font-size:9px;color:#484f58;margin-top:4px">Edit values to explore custom architectures.<br>Proportional sizing updates live.</div>
+  </div>
+
+  <div class="cg" id="grp-v7">
+    <h3>V7 Features</h3>
+    <div class="tr"><span class="tl">Hierarchical dt<span class="ts">Per-layer memory span</span></span><label class="sw"><input type="checkbox" id="tog-hier" checked><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Cross-level Drift<span class="ts">PAM output → next Q</span></span><label class="sw"><input type="checkbox" id="tog-drift"><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Complex RoPE<span class="ts">Positional encoding</span></span><label class="sw"><input type="checkbox" id="tog-rope" checked><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">GSP<span class="ts">Gated State Protection</span></span><label class="sw"><input type="checkbox" id="tog-gsp" checked><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Reverse Association<span class="ts">Transpose QK term</span></span><label class="sw"><input type="checkbox" id="tog-rev" checked><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Multi-scale Aux Loss<span class="ts">Per-layer prediction heads</span></span><label class="sw"><input type="checkbox" id="tog-aux"><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">QK Normalize<span class="ts">Unit magnitude Q, K</span></span><label class="sw"><input type="checkbox" id="tog-qknorm"><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Fused QKV<span class="ts">Single projection</span></span><label class="sw"><input type="checkbox" id="tog-fqkv" checked><span class="sl"></span></label></div>
+  </div>
+
+  <div class="cg" id="grp-v6">
+    <h3>V6 Extensions (off = V7 default)</h3>
+    <div class="tr"><span class="tl">Dual Banks<span class="ts">Semantic + Context + Coupler</span></span><label class="sw"><input type="checkbox" id="tog-banks"><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Phase Attention<span class="ts">Sliding-window attention</span></span><label class="sw"><input type="checkbox" id="tog-attn"><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Working Memory<span class="ts">Learned slot read/write</span></span><label class="sw"><input type="checkbox" id="tog-wm"><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Internal Memory<span class="ts">Trained parameter slots</span></span><label class="sw"><input type="checkbox" id="tog-im"><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Episodic Memory<span class="ts">Salience-based events</span></span><label class="sw"><input type="checkbox" id="tog-epis"><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Sequential PAM<span class="ts">All CGU first, then PAM stack</span></span><label class="sw"><input type="checkbox" id="tog-seqpam"><span class="sl"></span></label></div>
+  </div>
+
+  <div class="cg">
+    <h3>Display</h3>
+    <div class="tr"><span class="tl">Show Residuals</span><label class="sw"><input type="checkbox" id="tog-showres" checked><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Show Labels</span><label class="sw"><input type="checkbox" id="tog-showlbl" checked><span class="sl"></span></label></div>
+    <div class="tr"><span class="tl">Show dt values</span><label class="sw"><input type="checkbox" id="tog-showdt" checked><span class="sl"></span></label></div>
+  </div>
+</div>
+
+<!-- CENTER: 3D Viewport -->
+<div id="viewport"></div>
+
+<!-- RIGHT: Info panel -->
+<div id="info">
+  <h2>Model Info</h2>
+  <div class="pt" id="param-total">—<span>total parameters</span></div>
+  <div class="is" id="config-summary"></div>
+  <div id="component-detail">
+    <h3 id="cd-title"></h3>
+    <div class="sub" id="cd-body"></div>
+  </div>
+  <div class="hint" id="click-hint">Click a component for details</div>
+  <div class="is" style="margin-top:16px">
+    <h3 style="font-size:12px;color:#f0883e;margin-bottom:6px">Legend</h3>
+    <div class="li"><div class="lc" style="background:#f0c674"></div>Embedding</div>
+    <div class="li"><div class="lc" style="background:#4a90d9"></div>CGU (channel mix)</div>
+    <div class="li"><div class="lc" style="background:#2ecc71"></div>PAM (sequence mix)</div>
+    <div class="li"><div class="lc" style="background:#5dade2"></div>Semantic Bank</div>
+    <div class="li"><div class="lc" style="background:#2e86c1"></div>Context Bank</div>
+    <div class="li"><div class="lc" style="background:#8e44ad"></div>Coupler / Memory</div>
+    <div class="li"><div class="lc" style="background:#00bcd4"></div>Phase Attention</div>
+    <div class="li"><div class="lc" style="background:#e74c3c"></div>Aux Prediction Head</div>
+    <div class="li"><div class="lc" style="background:#e67e22"></div>Output Head</div>
+    <div class="li"><div class="lc" style="background:#e91e63"></div>Cross-level Drift</div>
+    <div class="li"><div class="lc" style="background:#f39c12"></div>Residual Connection</div>
+  </div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.175.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {CSS2DRenderer,CSS2DObject} from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONFIG DATA
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const V7_PRESETS = {
+  'tiny': {
+    vocab_size:50257, dim:64, n_heads:2, head_dim:32, n_layers:2, expand:2,
+    dropout:0, max_seq_len:512, use_rope:true, use_gsp:true, fused_qkv:true,
+    qk_norm:false, hierarchical_dt:false, dt_bias_schedule:null,
+    cross_level:false, activation:'modrelu', chunk_size:256,
+    multi_scale_loss:false, aux_layer_stride:3, max_aux_offset:32,
+    use_reverse_assoc:true,
+  },
+  'medium': {
+    vocab_size:50257, dim:384, n_heads:6, head_dim:64, n_layers:16, expand:3,
+    dropout:0.1, max_seq_len:2048, use_rope:true, use_gsp:true, fused_qkv:true,
+    qk_norm:false, hierarchical_dt:true, dt_bias_schedule:null,
+    cross_level:false, activation:'modrelu', chunk_size:256,
+    multi_scale_loss:false, aux_layer_stride:3, max_aux_offset:32,
+    use_reverse_assoc:true,
+  },
+  'medium_h6': {
+    vocab_size:50257, dim:512, n_heads:8, head_dim:64, n_layers:6, expand:4,
+    dropout:0.1, max_seq_len:2048, use_rope:true, use_gsp:true, fused_qkv:true,
+    qk_norm:false, hierarchical_dt:true,
+    dt_bias_schedule:[-6.91,-5.52,-4.08,-2.64,-1.39,0.0],
+    cross_level:true, activation:'modrelu', chunk_size:256,
+    multi_scale_loss:false, aux_layer_stride:3, max_aux_offset:32,
+    use_reverse_assoc:true,
+  },
+  'medium_h16_flat': {
+    vocab_size:50257, dim:384, n_heads:6, head_dim:64, n_layers:16, expand:3,
+    dropout:0.1, max_seq_len:2048, use_rope:true, use_gsp:true, fused_qkv:true,
+    qk_norm:false, hierarchical_dt:false, dt_bias_schedule:null,
+    cross_level:false, activation:'modrelu', chunk_size:256,
+    multi_scale_loss:false, aux_layer_stride:3, max_aux_offset:32,
+    use_reverse_assoc:true,
+  },
+  'medium_h16_grouped': {
+    vocab_size:50257, dim:384, n_heads:6, head_dim:64, n_layers:16, expand:3,
+    dropout:0.1, max_seq_len:2048, use_rope:true, use_gsp:true, fused_qkv:true,
+    qk_norm:false, hierarchical_dt:true,
+    dt_bias_schedule:[
+      -6.91,-6.91,-6.91,-6.91, -5.52,-5.52,-5.52,
+      -4.08,-4.08,-4.08, -2.64,-2.64,-2.64, -1.39,-1.39, 0.0,
+    ],
+    cross_level:true, activation:'modrelu', chunk_size:256,
+    multi_scale_loss:false, aux_layer_stride:3, max_aux_offset:32,
+    use_reverse_assoc:true,
+  },
+};
+
+const V6_PRESETS = {
+  'tiny': {dim:64,state_dim:128,num_layers:4,num_banks:2,bank_expand:2,single_bank:false,
+    gated_state_protection:false,pam_num_heads:6,pam_head_dim:64,interleave_pam:false,
+    pam_qk_norm:false,pam_rope:false,pam_fused_qkv:false,use_attention:false,attn_every:0,
+    attn_num_heads:8,attn_window_size:256,attn_mode:'softmax',
+    num_wm_slots:0,num_im_slots:0,num_episodic_slots:0,vocab_size:50257,max_seq_len:1024},
+  'small-matched': {dim:128,state_dim:512,num_layers:12,num_banks:2,bank_expand:4,single_bank:false,
+    gated_state_protection:false,pam_num_heads:6,pam_head_dim:64,interleave_pam:false,
+    pam_qk_norm:false,pam_rope:false,pam_fused_qkv:false,use_attention:false,attn_every:0,
+    attn_num_heads:8,attn_window_size:256,attn_mode:'softmax',
+    num_wm_slots:0,num_im_slots:0,num_episodic_slots:0,vocab_size:50257,max_seq_len:1024},
+  'medium-pam': {dim:384,state_dim:0,num_layers:16,num_banks:1,bank_expand:3,single_bank:true,
+    gated_state_protection:true,pam_num_heads:6,pam_head_dim:64,interleave_pam:false,
+    pam_qk_norm:false,pam_rope:false,pam_fused_qkv:false,use_attention:false,attn_every:0,
+    attn_num_heads:8,attn_window_size:256,attn_mode:'softmax',
+    num_wm_slots:0,num_im_slots:0,num_episodic_slots:0,vocab_size:50257,max_seq_len:1024},
+  'medium-pam-v2': {dim:384,state_dim:0,num_layers:16,num_banks:1,bank_expand:3,single_bank:true,
+    gated_state_protection:true,pam_num_heads:6,pam_head_dim:64,interleave_pam:true,
+    pam_qk_norm:false,pam_rope:false,pam_fused_qkv:false,use_attention:false,attn_every:0,
+    attn_num_heads:8,attn_window_size:256,attn_mode:'softmax',
+    num_wm_slots:0,num_im_slots:0,num_episodic_slots:0,vocab_size:50257,max_seq_len:1024},
+  'medium-pam-v3': {dim:384,state_dim:0,num_layers:16,num_banks:1,bank_expand:3,single_bank:true,
+    gated_state_protection:true,pam_num_heads:6,pam_head_dim:64,interleave_pam:true,
+    pam_qk_norm:false,pam_rope:true,pam_fused_qkv:true,use_attention:false,attn_every:0,
+    attn_num_heads:8,attn_window_size:256,attn_mode:'softmax',
+    num_wm_slots:0,num_im_slots:0,num_episodic_slots:0,vocab_size:50257,max_seq_len:1024},
+  'medium-pam-v3-attn': {dim:384,state_dim:0,num_layers:16,num_banks:1,bank_expand:3,single_bank:true,
+    gated_state_protection:true,pam_num_heads:6,pam_head_dim:64,interleave_pam:true,
+    pam_qk_norm:false,pam_rope:true,pam_fused_qkv:true,use_attention:true,attn_every:4,
+    attn_num_heads:6,attn_window_size:256,attn_mode:'softmax',
+    num_wm_slots:0,num_im_slots:0,num_episodic_slots:0,vocab_size:50257,max_seq_len:1024},
+  'medium-pam-v3-pia': {dim:384,state_dim:0,num_layers:16,num_banks:1,bank_expand:3,single_bank:true,
+    gated_state_protection:true,pam_num_heads:6,pam_head_dim:64,interleave_pam:true,
+    pam_qk_norm:false,pam_rope:true,pam_fused_qkv:true,use_attention:true,attn_every:4,
+    attn_num_heads:6,attn_window_size:256,attn_mode:'interference',attn_rope:true,attn_fused_qkv:true,
+    num_wm_slots:0,num_im_slots:0,num_episodic_slots:0,vocab_size:50257,max_seq_len:1024},
+  'medium-rebalanced-gsp': {dim:192,state_dim:1536,num_layers:16,num_banks:1,bank_expand:3,single_bank:true,
+    gated_state_protection:true,pam_num_heads:6,pam_head_dim:64,interleave_pam:false,
+    pam_qk_norm:false,pam_rope:false,pam_fused_qkv:false,use_attention:false,attn_every:0,
+    attn_num_heads:8,attn_window_size:256,attn_mode:'softmax',
+    num_wm_slots:0,num_im_slots:0,num_episodic_slots:0,vocab_size:50257,max_seq_len:1024},
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function getDtSchedule(cfg) {
+  const n = cfg.n_layers || cfg.num_layers;
+  if (cfg.hierarchical_dt === false && !cfg.dt_bias_schedule) return Array(n).fill(-4.0);
+  if (cfg.dt_bias_schedule && cfg.dt_bias_schedule.length === n) return [...cfg.dt_bias_schedule];
+  if (cfg.dt_bias_schedule && cfg.dt_bias_schedule.length !== n) {
+    const s = [];
+    for (let i = 0; i < n; i++) s.push(-6.91 + 6.91 * i / Math.max(n - 1, 1));
+    return s;
+  }
+  const s = [];
+  for (let i = 0; i < n; i++) s.push(-6.91 + 6.91 * i / Math.max(n - 1, 1));
+  return s;
+}
+
+function dtColor(dt) {
+  const t = Math.max(0, Math.min(1, (dt + 7) / 7));
+  const h = (240 - t * 180) / 360;
+  return new THREE.Color().setHSL(h, 0.75, 0.55);
+}
+
+function fmtNum(n) {
+  if (n >= 1e9) return (n/1e9).toFixed(2)+'B';
+  if (n >= 1e6) return (n/1e6).toFixed(2)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return n.toString();
+}
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function complexLinearParams(inD, outD, bias) {
+  let p = 2 * inD * outD;
+  if (bias) p += 2 * outD;
+  return p;
+}
+
+function linearParams(inD, outD) { return inD * outD + outD; }
+
+// ── Custom input helpers ─────────────────────────────────────────────────────
+
+const INP = {
+  layers: () => +document.getElementById('inp-layers').value,
+  dim:    () => +document.getElementById('inp-dim').value,
+  heads:  () => +document.getElementById('inp-heads').value,
+  headDim:() => +document.getElementById('inp-headdim').value,
+  expand: () => +document.getElementById('inp-expand').value,
+  vocab:  () => +document.getElementById('inp-vocab').value,
+  seqLen: () => +document.getElementById('inp-seqlen').value,
+};
+
+function fillInputsFromConfig(cfg) {
+  document.getElementById('inp-layers').value  = cfg.n_layers  || cfg.num_layers || 16;
+  document.getElementById('inp-dim').value     = cfg.dim || 384;
+  document.getElementById('inp-heads').value   = cfg.n_heads   || cfg.pam_num_heads || 6;
+  document.getElementById('inp-headdim').value = cfg.head_dim  || cfg.pam_head_dim  || 64;
+  document.getElementById('inp-expand').value  = cfg.expand    || cfg.bank_expand   || 3;
+  document.getElementById('inp-vocab').value   = cfg.vocab_size || 50257;
+  document.getElementById('inp-seqlen').value  = cfg.max_seq_len || 2048;
+}
+
+let _lastPresetValues = {};
+
+function checkCustomIndicator() {
+  const cur = {
+    layers: INP.layers(), dim: INP.dim(), heads: INP.heads(),
+    headDim: INP.headDim(), expand: INP.expand(), vocab: INP.vocab(), seqLen: INP.seqLen(),
+  };
+  const isCustom = Object.keys(cur).some(k => cur[k] !== _lastPresetValues[k]);
+  document.getElementById('custom-indicator').style.display = isCustom ? '' : 'none';
+}
+
+function getActiveConfig() {
+  const ver = document.getElementById('sel-version').value;
+  const preset = document.getElementById('sel-preset').value;
+  const raw = ver === 'v7' ? V7_PRESETS[preset] : V6_PRESETS[preset];
+  const cfg = { ...raw, _version: ver, _preset: preset };
+  cfg.n_layers = INP.layers();
+  cfg.num_layers = INP.layers();
+  cfg.dim = INP.dim();
+  cfg.n_heads = INP.heads();
+  cfg.pam_num_heads = INP.heads();
+  cfg.head_dim = INP.headDim();
+  cfg.pam_head_dim = INP.headDim();
+  cfg.expand = INP.expand();
+  cfg.bank_expand = INP.expand();
+  cfg.vocab_size = INP.vocab();
+  cfg.max_seq_len = INP.seqLen();
+  return cfg;
+}
+
+function getToggles() {
+  const g = id => document.getElementById(id)?.checked || false;
+  return {
+    hierarchical_dt: g('tog-hier'), cross_level: g('tog-drift'),
+    use_rope: g('tog-rope'), use_gsp: g('tog-gsp'),
+    use_reverse_assoc: g('tog-rev'), multi_scale_loss: g('tog-aux'),
+    qk_norm: g('tog-qknorm'), fused_qkv: g('tog-fqkv'),
+    dual_banks: g('tog-banks'), attention: g('tog-attn'),
+    working_memory: g('tog-wm'), internal_memory: g('tog-im'),
+    episodic_memory: g('tog-epis'), sequential_pam: g('tog-seqpam'),
+    show_residuals: g('tog-showres'), show_labels: g('tog-showlbl'),
+    show_dt: g('tog-showdt'),
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PARAM COUNTING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function computeBlockParams(cfg, tog, layerIdx) {
+  const dim = cfg.dim;
+  const n_heads = cfg.n_heads || cfg.pam_num_heads || 6;
+  const head_dim = cfg.head_dim || cfg.pam_head_dim || 64;
+  const inner = n_heads * head_dim;
+  const expand = cfg.expand || cfg.bank_expand || 3;
+  const hidden = dim * expand;
+
+  let cguP = 0;
+  if (tog.dual_banks) {
+    cguP = 2 * (complexLinearParams(dim, hidden, false) * 2 + complexLinearParams(hidden, dim, false) + hidden + dim);
+    cguP += dim * 4;
+  } else {
+    cguP = complexLinearParams(dim, hidden, false) * 2 + complexLinearParams(hidden, dim, false);
+    const act = cfg.activation || 'modrelu';
+    if (act === 'modrelu') cguP += hidden;
+    else if (act === 'swish') cguP += hidden * 2;
+    else cguP += hidden * 4;
+  }
+
+  let pamP = 0;
+  if (tog.fused_qkv) pamP += complexLinearParams(dim, 3 * inner, false);
+  else pamP += 3 * complexLinearParams(dim, inner, false);
+  pamP += complexLinearParams(inner, dim, false);
+  pamP += linearParams(dim * 2, n_heads) + n_heads;
+  if (tog.use_gsp) pamP += linearParams(dim, n_heads);
+  if (tog.cross_level && layerIdx > 0) pamP += complexLinearParams(dim, inner, false);
+  if (tog.use_reverse_assoc) pamP += 1;
+
+  let attnP = 0;
+  if (tog.attention) attnP = complexLinearParams(dim, dim, false) * 4 + dim;
+
+  const normP = dim * 2;
+  const scaleP = 2;
+  let memP = 0;
+  if (tog.working_memory) memP += dim * 64 * 2 + dim * 2;
+  if (tog.internal_memory) memP += dim * 32 * 2;
+  if (tog.episodic_memory) memP += dim * 32 * 2 + dim;
+
+  return { cgu: cguP, pam: pamP, attn: attnP, norms: normP, scales: scaleP, memory: memP,
+           total: cguP + pamP + attnP + normP + scaleP + memP };
+}
+
+function computeTotalParams(cfg, tog) {
+  const dim = cfg.dim;
+  const vocab = cfg.vocab_size || 50257;
+  const nLayers = cfg.n_layers || cfg.num_layers;
+  let embedP = 2 * vocab * dim + dim;
+  let blocksP = 0;
+  for (let i = 0; i < nLayers; i++) blocksP += computeBlockParams(cfg, tog, i).total;
+  let headP = complexLinearParams(dim, dim, true) + dim * 2;
+  let auxP = 0;
+  if (tog.multi_scale_loss) {
+    const stride = cfg.aux_layer_stride || 3;
+    for (let i = 0; i < nLayers; i += stride) auxP += dim;
+  }
+  return { embed: embedP, blocks: blocksP, head: headP, aux: auxP,
+           total: embedP + blocksP + headP + auxP };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// THREE.JS SCENE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const viewport = document.getElementById('viewport');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d1117);
+scene.fog = new THREE.FogExp2(0x0d1117, 0.008);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 300);
+camera.position.set(8, 12, 14);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+viewport.appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.left = '0';
+labelRenderer.domElement.style.pointerEvents = 'none';
+viewport.appendChild(labelRenderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 3;
+controls.maxDistance = 120;
+
+scene.add(new THREE.AmbientLight(0x404060, 0.6));
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+dirLight.position.set(8, 20, 10);
+dirLight.castShadow = true;
+scene.add(dirLight);
+scene.add(new THREE.DirectionalLight(0x8888ff, 0.3).translateX(-6).translateY(5).translateZ(-8));
+
+const gridHelper = new THREE.GridHelper(60, 60, 0x1a2030, 0x1a2030);
+gridHelper.position.y = -0.5;
+scene.add(gridHelper);
+
+const modelGroup = new THREE.Group();
+scene.add(modelGroup);
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let hoveredObj = null;
+const clickableObjects = [];
+const objectData = new Map();
+let originalColors = new Map();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PROPORTIONAL SIZING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function dimScale(cfg) {
+  const dim = cfg.dim || 384;
+  const heads = cfg.n_heads || cfg.pam_num_heads || 6;
+  const headDim = cfg.head_dim || cfg.pam_head_dim || 64;
+  const expand = cfg.expand || cfg.bank_expand || 3;
+  return {
+    BW:   clamp(2.0 + 4.5 * Math.sqrt(dim / 512), 2.5, 9),
+    BD:   clamp(1.2 + 1.8 * Math.sqrt(heads / 8), 1.2, 4.5),
+    SUB_H: clamp(0.3 + 0.35 * Math.sqrt(headDim / 64), 0.3, 0.9),
+    CGU_D_MULT: clamp(0.6 + 0.35 * (expand / 3), 0.5, 1.4),
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 3D COMPONENT FACTORY
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const C = {
+  embed:0xf0c674, cgu:0x4a90d9, pam:0x2ecc71, attn:0x00bcd4,
+  semBank:0x5dade2, ctxBank:0x2e86c1, coupler:0x8e44ad, memory:0x9b59b6,
+  norm:0x5a6070, output:0xe67e22, aux:0xe74c3c, container:0x1e2a38,
+  residual:0xf39c12, drift:0xe91e63,
+};
+
+function makeBox(w, h, d, color, opacity = 1.0) {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const mat = new THREE.MeshPhongMaterial({
+    color, transparent: opacity < 1, opacity,
+    shininess: 40, specular: 0x222244,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  return mesh;
+}
+
+function makeLabel(text, cls = 'label3d') {
+  const el = document.createElement('div');
+  el.className = cls;
+  el.textContent = text;
+  return new CSS2DObject(el);
+}
+
+function addClickable(mesh, data) {
+  clickableObjects.push(mesh);
+  objectData.set(mesh, data);
+}
+
+function makeLine(points, color) {
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  return new THREE.Line(geo, new THREE.LineBasicMaterial({ color }));
+}
+
+function makeCurve(from, to, color, midOffset) {
+  const mid = new THREE.Vector3(
+    (from.x + to.x) / 2 + (midOffset?.x || 0),
+    (from.y + to.y) / 2 + (midOffset?.y || 0),
+    (from.z + to.z) / 2 + (midOffset?.z || 0),
+  );
+  const curve = new THREE.QuadraticBezierCurve3(from, mid, to);
+  return makeLine(curve.getPoints(20), color);
+}
+
+function addHeadStripes(parent, w, h, d, nHeads, axis) {
+  const mat = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.25 });
+  for (let i = 1; i < nHeads; i++) {
+    const frac = (i / nHeads - 0.5) * d;
+    const pts = [new THREE.Vector3(-w/2, 0, frac), new THREE.Vector3(w/2, 0, frac)];
+    parent.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODEL BUILDER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function clearModel() {
+  // Dispose CSS2D label DOM elements — fixes the label leak
+  const labelDom = labelRenderer.domElement;
+  while (labelDom.firstChild) labelDom.removeChild(labelDom.firstChild);
+
+  while (modelGroup.children.length) {
+    const c = modelGroup.children[0];
+    modelGroup.remove(c);
+    c.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+        else obj.material.dispose();
+      }
+    });
+  }
+  clickableObjects.length = 0;
+  objectData.clear();
+  originalColors = new Map();
+  hoveredObj = null;
+  document.getElementById('component-detail').style.display = 'none';
+  document.getElementById('click-hint').style.display = '';
+}
+
+function buildModel() {
+  clearModel();
+  const cfg = getActiveConfig();
+  const tog = getToggles();
+  const nLayers = cfg.n_layers || cfg.num_layers;
+  const dim = cfg.dim;
+  const expand = cfg.expand || cfg.bank_expand || 3;
+  const hidden = dim * expand;
+  const n_heads = cfg.n_heads || cfg.pam_num_heads || 6;
+  const head_dim = cfg.head_dim || cfg.pam_head_dim || 64;
+  const inner = n_heads * head_dim;
+  const dtSchedule = getDtSchedule(cfg);
+  const isInterleaved = !tog.sequential_pam;
+  const auxStride = cfg.aux_layer_stride || 3;
+
+  const S = dimScale(cfg);
+  const BW = S.BW, BD = S.BD, SUB_H = S.SUB_H;
+  const LAYER_GAP = 0.35;
+  const SUB_GAP = 0.12;
+
+  let y = 0;
+  const layerCenters = [];
+
+  // ─── Input Embedding ───────────────────────────────────────────────────
+  const embedH = 0.45;
+  const embedBox = makeBox(BW, embedH, BD, C.embed);
+  embedBox.position.set(0, y, 0);
+  modelGroup.add(embedBox);
+  addClickable(embedBox, {
+    name: 'ComplexEmbed + Norm', type: 'embed',
+    details: `ComplexEmbed: 2× nn.Embedding(${cfg.vocab_size}, ${dim})\nComplexNorm: scale[${dim}]\n\nOutput: [B, T, ${dim}, 2]`,
+    params: 2 * cfg.vocab_size * dim + dim,
+  });
+  if (tog.show_labels) {
+    const lbl = makeLabel('ComplexEmbed + Norm');
+    lbl.position.set(0, embedH/2 + 0.15, 0);
+    embedBox.add(lbl);
+    const dl = makeLabel(`vocab=${cfg.vocab_size.toLocaleString()}  dim=${dim}`, 'label3d dim');
+    dl.position.set(0, -embedH/2 - 0.15, 0);
+    embedBox.add(dl);
+  }
+  y += embedH / 2 + LAYER_GAP;
+
+  // ─── Sequential PAM mode: all CGU layers first ─────────────────────────
+  if (tog.sequential_pam) {
+    const LH = SUB_H + 0.15;
+    for (let i = 0; i < nLayers; i++) {
+      const layerY = y + i * (LH + LAYER_GAP);
+      const grp = new THREE.Group();
+      grp.position.set(0, layerY, 0);
+      grp.add(makeBox(BW, LH, BD, C.container, 0.12));
+
+      if (tog.dual_banks) {
+        const bw = BW * 0.42;
+        const sb = makeBox(bw, SUB_H, BD*0.85, C.semBank);
+        sb.position.x = -BW*0.24;
+        grp.add(sb);
+        addClickable(sb, { name: `L${i} Semantic Bank`, type:'bank',
+          details:`Norm(${dim}) → CGU(${dim}→${hidden}→${dim})`,
+          params: complexLinearParams(dim,hidden,false)*2+complexLinearParams(hidden,dim,false)+hidden+dim });
+        const cb = makeBox(bw, SUB_H, BD*0.85, C.ctxBank);
+        cb.position.x = BW*0.24;
+        grp.add(cb);
+        addClickable(cb, { name: `L${i} Context Bank`, type:'bank',
+          details:`Norm(${dim}) → CGU(${dim}→${hidden}→${dim})`,
+          params: complexLinearParams(dim,hidden,false)*2+complexLinearParams(hidden,dim,false)+hidden+dim });
+        const cp = makeBox(0.3, SUB_H*0.5, BD*0.35, C.coupler);
+        cp.position.set(0, 0, BD*0.35);
+        grp.add(cp);
+        if (tog.show_labels) {
+          const s = makeLabel('Sem'); s.position.set(-BW*0.24, SUB_H/2+.1, 0); grp.add(s);
+          const c = makeLabel('Ctx'); c.position.set(BW*0.24, SUB_H/2+.1, 0); grp.add(c);
+        }
+      } else {
+        const cguDepth = BD * 0.85 * S.CGU_D_MULT;
+        const cguBox = makeBox(BW * 0.85, SUB_H, cguDepth, C.cgu);
+        grp.add(cguBox);
+        const bp = computeBlockParams(cfg, tog, i);
+        addClickable(cguBox, { name: `Layer ${i} — CGU`, type:'cgu',
+          details:`Norm(${dim})\nCGU:\n  gate: CLinear(${dim}→${hidden})\n  up: CLinear(${dim}→${hidden})\n  act: ${cfg.activation||'modrelu'}(${hidden})\n  down: CLinear(${hidden}→${dim})`,
+          params: bp.cgu });
+        if (tog.show_labels) { const l = makeLabel(`CGU · L${i}`); l.position.set(0,SUB_H/2+.1,0); cguBox.add(l); }
+      }
+
+      if (tog.attention) {
+        const every = cfg.attn_every || 0;
+        if (every > 0 ? ((i+1)%every===0) : (i===nLayers-1)) {
+          const ab = makeBox(BW*0.3, SUB_H*0.6, BD*0.35, C.attn);
+          ab.position.set(BW*0.42, 0, 0);
+          grp.add(ab);
+          if (tog.show_labels) { const l = makeLabel('Attn','label3d'); l.position.set(0,SUB_H*.4,0); ab.add(l); }
+        }
+      }
+
+      if (tog.show_labels) { const ll = makeLabel(`L${i}`, 'label3d layer'); ll.position.set(-BW/2-0.5,0,0); grp.add(ll); }
+      modelGroup.add(grp);
+      layerCenters.push(layerY);
+    }
+    y += nLayers * (LH + LAYER_GAP);
+
+    modelGroup.add(makeLine(
+      [new THREE.Vector3(-BW/2, y - LAYER_GAP/2, 0), new THREE.Vector3(BW/2, y - LAYER_GAP/2, 0)], 0x58a6ff));
+    if (tog.show_labels) {
+      const dl = makeLabel('── PAM Stack ──'); const g = new THREE.Group();
+      g.position.set(0, y - LAYER_GAP/2 + 0.15, 0); g.add(dl); modelGroup.add(g);
+    }
+
+    for (let i = 0; i < nLayers; i++) {
+      const layerY = y + i * (LH + LAYER_GAP);
+      const grp = new THREE.Group();
+      grp.position.set(0, layerY, 0);
+      grp.add(makeBox(BW, LH, BD, C.container, 0.12));
+      const pamColor = tog.hierarchical_dt ? dtColor(dtSchedule[i]).getHex() : C.pam;
+      const pamBox = makeBox(BW * 0.85, SUB_H, BD * 0.85, pamColor);
+      grp.add(pamBox);
+      addHeadStripes(pamBox, BW*0.85, SUB_H, BD*0.85, n_heads);
+      const bp = computeBlockParams(cfg, tog, i);
+      addClickable(pamBox, { name: `PAM Layer ${i}`, type:'pam',
+        details:`Norm(${dim})\nPAM: ${n_heads}h × ${head_dim}d = ${inner}\n  QKV: ${tog.fused_qkv?`CLinear(${dim}→${3*inner})`:`3×CLinear(${dim}→${inner})`}\n  o: CLinear(${inner}→${dim})\n  dt: Linear(${dim*2}→${n_heads})\n  dt_bias = ${dtSchedule[i]?.toFixed(2)}${tog.use_gsp?'\n  GSP: protect('+dim+'→'+n_heads+')':''}${tog.use_rope?'\n  RoPE':''}${tog.use_reverse_assoc?'\n  RevAssoc':''}`,
+        params: bp.pam });
+      if (tog.show_labels) { const l = makeLabel(`PAM · L${i}`); l.position.set(0,SUB_H/2+.1,0); pamBox.add(l); }
+      if (tog.show_dt && tog.hierarchical_dt) {
+        const dtL = makeLabel(`dt=${dtSchedule[i]?.toFixed(2)}`, 'label3d dt');
+        dtL.position.set(BW/2+0.6, 0, 0); grp.add(dtL);
+      }
+      modelGroup.add(grp);
+    }
+    y += nLayers * (LH + LAYER_GAP);
+
+  } else {
+    // ─── Interleaved mode: CGU + PAM per block ───────────────────────────
+    const blockH = SUB_H * 2 + SUB_GAP + 0.15;
+    for (let i = 0; i < nLayers; i++) {
+      const layerY = y + i * (blockH + LAYER_GAP);
+      const grp = new THREE.Group();
+      grp.position.set(0, layerY, 0);
+      grp.add(makeBox(BW, blockH, BD, C.container, 0.12));
+
+      const bp = computeBlockParams(cfg, tog, i);
+      const cguY = -(SUB_H + SUB_GAP) / 2;
+      const pamYoff = (SUB_H + SUB_GAP) / 2;
+
+      // CGU / Banks
+      if (tog.dual_banks) {
+        const bw = BW * 0.42;
+        const cguD = BD * 0.8 * S.CGU_D_MULT;
+        const sb = makeBox(bw, SUB_H, cguD, C.semBank);
+        sb.position.set(-BW*0.24, cguY, 0); grp.add(sb);
+        addClickable(sb, { name: `L${i} Semantic Bank`, type:'bank',
+          details:`Norm(${dim}) → CGU(${dim}→${hidden}→${dim})`, params: bp.cgu/2 });
+        const cb = makeBox(bw, SUB_H, cguD, C.ctxBank);
+        cb.position.set(BW*0.24, cguY, 0); grp.add(cb);
+        addClickable(cb, { name: `L${i} Context Bank`, type:'bank',
+          details:`Norm(${dim}) → CGU(${dim}→${hidden}→${dim})`, params: bp.cgu/2 });
+        const cp = makeBox(0.3, SUB_H*0.45, BD*0.3, C.coupler);
+        cp.position.set(0, cguY, BD*0.35); grp.add(cp);
+        if (tog.show_labels) {
+          const s = makeLabel('Sem'); s.position.set(0,SUB_H/2+.08,0); sb.add(s);
+          const c = makeLabel('Ctx'); c.position.set(0,SUB_H/2+.08,0); cb.add(c);
+        }
+      } else {
+        const cguD = BD * 0.8 * S.CGU_D_MULT;
+        const cguBox = makeBox(BW * 0.85, SUB_H, cguD, C.cgu);
+        cguBox.position.set(0, cguY, 0); grp.add(cguBox);
+        addClickable(cguBox, { name: `Layer ${i} — CGU`, type:'cgu',
+          details:`Norm(${dim})\nCGU (expand=${expand}, hidden=${hidden}):\n  gate: CLinear(${dim}→${hidden})\n  up: CLinear(${dim}→${hidden})\n  act: ${cfg.activation||'modrelu'}(${hidden})\n  down: CLinear(${hidden}→${dim})`,
+          params: bp.cgu });
+        if (tog.show_labels) { const l = makeLabel('CGU'); l.position.set(0,SUB_H/2+.08,0); cguBox.add(l); }
+      }
+
+      // PAM
+      const pamColor = tog.hierarchical_dt ? dtColor(dtSchedule[i]).getHex() : C.pam;
+      const pamBox = makeBox(BW * 0.85, SUB_H, BD * 0.8, pamColor);
+      pamBox.position.set(0, pamYoff, 0); grp.add(pamBox);
+      addHeadStripes(pamBox, BW*0.85, SUB_H, BD*0.8, n_heads);
+      addClickable(pamBox, { name: `Layer ${i} — PAM`, type:'pam',
+        details:`Norm(${dim})\nPAM: ${n_heads}h × ${head_dim}d = ${inner}\n  QKV: ${tog.fused_qkv?`fused(${dim}→${3*inner})`:`3×(${dim}→${inner})`}\n  o: CLinear(${inner}→${dim})\n  dt: Linear(${dim*2}→${n_heads})\n  dt_bias = ${dtSchedule[i]?.toFixed(2)}${tog.use_gsp?'\n  GSP: protect('+dim+'→'+n_heads+')':''}${tog.use_rope?'\n  RoPE':''}${tog.qk_norm?'\n  QK norm':''}${tog.use_reverse_assoc?'\n  RevAssoc':''}`,
+        params: bp.pam });
+      if (tog.show_labels) { const l = makeLabel('PAM'); l.position.set(0,SUB_H/2+.08,0); pamBox.add(l); }
+
+      // dt annotation
+      if (tog.show_dt && tog.hierarchical_dt) {
+        const dtL = makeLabel(`dt=${dtSchedule[i]?.toFixed(2)}`, 'label3d dt');
+        dtL.position.set(BW/2+0.6, pamYoff, 0); grp.add(dtL);
+      }
+
+      // Attention
+      if (tog.attention) {
+        const every = cfg.attn_every || 0;
+        if (every > 0 ? ((i+1)%every===0) : (i===nLayers-1)) {
+          const ab = makeBox(1.0, blockH*0.55, BD*0.4, C.attn);
+          ab.position.set(BW/2+0.8, 0, 0); grp.add(ab);
+          addClickable(ab, { name: `L${i} PhaseAttention`, type:'attn',
+            details:`PhaseAttention:\n  heads=${cfg.attn_num_heads||6}\n  window=${cfg.attn_window_size||256}\n  mode=${cfg.attn_mode||'softmax'}`,
+            params: bp.attn });
+          if (tog.show_labels) { const l = makeLabel('Attn'); l.position.set(0,blockH*.35,0); ab.add(l); }
+        }
+      }
+
+      // Memory modules
+      let memX = (tog.attention ? BW/2+2.0 : BW/2+0.8);
+      for (const [flag, label, col] of [['working_memory','WM',C.memory],['internal_memory','IM',0x7d3c98],['episodic_memory','Epis',0xaf7ac5]]) {
+        if (tog[flag]) {
+          const mb = makeBox(0.7, blockH*0.45, BD*0.35, col);
+          mb.position.set(memX, 0, 0); grp.add(mb);
+          if (tog.show_labels) { const l = makeLabel(label,'label3d dim'); l.position.set(0,blockH*.3,0); mb.add(l); }
+          memX += 0.9;
+        }
+      }
+
+      // Layer label
+      if (tog.show_labels) { const ll = makeLabel(`L${i}`, 'label3d layer'); ll.position.set(-BW/2-0.6,0,0); grp.add(ll); }
+
+      // Aux head
+      if (tog.multi_scale_loss && i % auxStride === 0) {
+        const offset = Math.max(1, Math.floor((cfg.max_aux_offset||32) * (1 - i / Math.max(nLayers-1, 1))));
+        const ab = makeBox(0.8, 0.25, BD*0.25, C.aux);
+        ab.position.set(-BW/2-0.9, pamYoff, 0); grp.add(ab);
+        addClickable(ab, { name: `Aux Head @ L${i}`, type:'aux',
+          details:`AuxPredHead:\n  Norm(${dim})\n  offset = ${offset} tokens\n  Tied to embed`, params: dim });
+        if (tog.show_labels) { const l = makeLabel(`Aux(+${offset})`,'label3d dim'); l.position.set(0,0.2,0); ab.add(l); }
+      }
+
+      // Residual arrows
+      if (tog.show_residuals) {
+        const rz = BD/2 + 0.12;
+        grp.add(makeLine([
+          new THREE.Vector3(-BW/2-0.08, -blockH/2, rz),
+          new THREE.Vector3(-BW/2-0.08, blockH/2, rz),
+        ], C.residual));
+        const ag = new THREE.ConeGeometry(0.05, 0.12, 6);
+        const am = new THREE.Mesh(ag, new THREE.MeshBasicMaterial({ color: C.residual }));
+        am.position.set(-BW/2-0.08, blockH/2, rz); grp.add(am);
+      }
+
+      modelGroup.add(grp);
+      layerCenters.push(layerY);
+    }
+    y += nLayers * (blockH + LAYER_GAP);
+  }
+
+  // ─── Cross-level drift ─────────────────────────────────────────────────
+  if (tog.cross_level && isInterleaved && layerCenters.length > 1) {
+    const pamOff = (SUB_H + SUB_GAP) / 2;
+    for (let i = 0; i < layerCenters.length - 1; i++) {
+      modelGroup.add(makeCurve(
+        new THREE.Vector3(BW/2+0.25, layerCenters[i]+pamOff, -BD/2-0.2),
+        new THREE.Vector3(BW/2+0.25, layerCenters[i+1]+pamOff, -BD/2-0.2),
+        C.drift, { x:0.7, y:0, z:-0.25 }
+      ));
+    }
+    if (tog.show_labels) {
+      const dl = makeLabel('drift', 'label3d dt');
+      const g = new THREE.Group();
+      g.position.set(BW/2+1.3, layerCenters[Math.floor(layerCenters.length/2)], -BD/2-0.45);
+      g.add(dl); modelGroup.add(g);
+    }
+  }
+
+  // ─── Data flow lines ───────────────────────────────────────────────────
+  if (isInterleaved && layerCenters.length > 0) {
+    const blockH = SUB_H * 2 + SUB_GAP + 0.15;
+    const fz = BD/2 + 0.2;
+    modelGroup.add(makeLine([
+      new THREE.Vector3(0, embedH/2, fz),
+      new THREE.Vector3(0, layerCenters[0]-blockH/2, fz),
+    ], 0x484f58));
+    for (let i = 0; i < layerCenters.length - 1; i++) {
+      modelGroup.add(makeLine([
+        new THREE.Vector3(0, layerCenters[i]+blockH/2, fz),
+        new THREE.Vector3(0, layerCenters[i+1]-blockH/2, fz),
+      ], 0x484f58));
+    }
+  }
+
+  // ─── Output Head ───────────────────────────────────────────────────────
+  y += LAYER_GAP;
+  const outH = 0.45;
+  const outBox = makeBox(BW, outH, BD, C.output);
+  outBox.position.set(0, y, 0);
+  modelGroup.add(outBox);
+  addClickable(outBox, {
+    name: 'Output Head', type:'output',
+    details:`Norm(${dim}) → CLinear(${dim}→${dim}) → Norm(${dim})\n\nLogits = z_r @ E_r^T + z_i @ E_i^T\n(tied embedding weights)\n\nOutput: [B, T, ${cfg.vocab_size}]`,
+    params: complexLinearParams(dim, dim, true) + dim * 2,
+  });
+  if (tog.show_labels) {
+    const l = makeLabel('Output Head (tied)'); l.position.set(0, outH/2+.15, 0); outBox.add(l);
+    const dl = makeLabel(`→ [B, T, ${cfg.vocab_size.toLocaleString()}]`, 'label3d dim');
+    dl.position.set(0, -outH/2-.15, 0); outBox.add(dl);
+  }
+
+  // Tied weight connection
+  if (tog.show_residuals) {
+    modelGroup.add(makeCurve(
+      new THREE.Vector3(-BW/2-0.3, y, 0),
+      new THREE.Vector3(-BW/2-0.3, 0, 0),
+      0x8b949e, { x: -clamp(y*0.06, 0.8, 2.5), y: 0, z: 0 }
+    ));
+    if (tog.show_labels) {
+      const tl = makeLabel('tied weights', 'label3d layer');
+      const g = new THREE.Group();
+      g.position.set(-BW/2-1.8, y/2, 0); g.add(tl); modelGroup.add(g);
+    }
+  }
+
+  // ─── Center camera ─────────────────────────────────────────────────────
+  const centerY = y / 2;
+  controls.target.set(0, centerY, 0);
+  const dist = Math.max(8, y * 0.65 + BW);
+  camera.position.set(dist * 0.55, centerY + dist * 0.25, dist * 0.65);
+  controls.update();
+
+  updateInfoPanel(cfg, tog);
+  checkCustomIndicator();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INFO PANEL
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function updateInfoPanel(cfg, tog) {
+  const params = computeTotalParams(cfg, tog);
+  document.getElementById('param-total').innerHTML = fmtNum(params.total) + '<span>total parameters</span>';
+
+  const nLayers = cfg.n_layers || cfg.num_layers;
+  const dim = cfg.dim;
+  const n_heads = cfg.n_heads || cfg.pam_num_heads || 6;
+  const head_dim = cfg.head_dim || cfg.pam_head_dim || 64;
+  const expand = cfg.expand || cfg.bank_expand || 3;
+
+  let html = '<h3 style="font-size:12px;color:#f0883e;margin-bottom:6px">Configuration</h3>';
+  const rows = [
+    ['Version', cfg._version.toUpperCase()],
+    ['Preset', cfg._preset],
+    ['Layers', nLayers],
+    ['Dimension', dim],
+    ['PAM Heads', n_heads],
+    ['Head Dim', head_dim],
+    ['Inner Dim', n_heads * head_dim],
+    ['CGU Expand', `${expand}× (hidden=${dim*expand})`],
+    ['Vocab', cfg.vocab_size.toLocaleString()],
+    ['Max Seq Len', (cfg.max_seq_len||2048).toLocaleString()],
+    ['Activation', cfg.activation || 'modrelu'],
+  ];
+  if (tog.hierarchical_dt) rows.push(['dt Range', `${getDtSchedule(cfg)[0]?.toFixed(2)} → ${getDtSchedule(cfg).slice(-1)[0]?.toFixed(2)}`]);
+  if (tog.attention) rows.push(['Attn Mode', cfg.attn_mode || 'softmax']);
+  for (const [k, v] of rows) html += `<div class="ir"><span class="ik">${k}</span><span class="iv">${v}</span></div>`;
+
+  html += '<h3 style="font-size:12px;color:#f0883e;margin-bottom:6px;margin-top:12px">Parameter Breakdown</h3>';
+  for (const [k, v] of [
+    ['Embedding (tied)', fmtNum(params.embed)],
+    [`Blocks (×${nLayers})`, fmtNum(params.blocks)],
+    ['Output Head', fmtNum(params.head)],
+    ...(params.aux > 0 ? [['Aux Heads', fmtNum(params.aux)]] : []),
+  ]) html += `<div class="ir"><span class="ik">${k}</span><span class="iv">${v}</span></div>`;
+
+  html += '<h3 style="font-size:12px;color:#f0883e;margin-bottom:6px;margin-top:12px">Active Features</h3>';
+  const features = [];
+  if (tog.hierarchical_dt) features.push('Hierarchical dt');
+  if (tog.cross_level) features.push('Cross-level Drift');
+  if (tog.use_rope) features.push('Complex RoPE');
+  if (tog.use_gsp) features.push('GSP');
+  if (tog.use_reverse_assoc) features.push('Reverse Assoc');
+  if (tog.multi_scale_loss) features.push('Multi-scale Aux');
+  if (tog.qk_norm) features.push('QK Normalize');
+  if (tog.fused_qkv) features.push('Fused QKV');
+  if (tog.dual_banks) features.push('Dual Banks');
+  if (tog.attention) features.push('PhaseAttention');
+  if (tog.working_memory) features.push('Working Memory');
+  if (tog.internal_memory) features.push('Internal Memory');
+  if (tog.episodic_memory) features.push('Episodic Memory');
+  if (tog.sequential_pam) features.push('Sequential PAM');
+  html += '<div style="font-size:11px;color:#7ee787;line-height:1.6">' +
+    (features.length ? features.join(' · ') : '<span style="color:#8b949e">None</span>') + '</div>';
+
+  document.getElementById('config-summary').innerHTML = html;
+}
+
+function showComponentDetail(data) {
+  document.getElementById('cd-title').textContent = data.name;
+  let body = data.details.replace(/\n/g, '<br>');
+  body += `<br><br><span style="color:#58a6ff">Params: ${fmtNum(data.params)}</span>`;
+  document.getElementById('cd-body').innerHTML = body;
+  document.getElementById('component-detail').style.display = 'block';
+  document.getElementById('click-hint').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INTERACTION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+viewport.addEventListener('mousemove', e => {
+  const r = viewport.getBoundingClientRect();
+  mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+  mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+});
+
+viewport.addEventListener('click', () => {
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(clickableObjects, false);
+  if (hits.length) {
+    const d = objectData.get(hits[0].object);
+    if (d) showComponentDetail(d);
+  }
+});
+
+function updateHover() {
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(clickableObjects, false);
+  if (hoveredObj && (!hits.length || hits[0].object !== hoveredObj)) {
+    hoveredObj.material.emissive.setHex(0x000000);
+    hoveredObj = null;
+    viewport.style.cursor = 'default';
+  }
+  if (hits.length) {
+    const obj = hits[0].object;
+    if (obj !== hoveredObj) {
+      hoveredObj = obj;
+      obj.material.emissive.setHex(0x333333);
+      viewport.style.cursor = 'pointer';
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UI HANDLERS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function populatePresets() {
+  const ver = document.getElementById('sel-version').value;
+  const sel = document.getElementById('sel-preset');
+  const presets = ver === 'v7' ? V7_PRESETS : V6_PRESETS;
+  sel.innerHTML = '';
+  for (const name of Object.keys(presets)) {
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name; sel.appendChild(opt);
+  }
+  sel.value = ver === 'v7' ? 'medium' : 'medium-pam-v3';
+}
+
+function syncTogglesFromPreset() {
+  const ver = document.getElementById('sel-version').value;
+  const preset = document.getElementById('sel-preset').value;
+  const presets = ver === 'v7' ? V7_PRESETS : V6_PRESETS;
+  const cfg = presets[preset];
+  if (!cfg) return;
+
+  fillInputsFromConfig(cfg);
+  _lastPresetValues = {
+    layers: cfg.n_layers || cfg.num_layers || 16,
+    dim: cfg.dim || 384,
+    heads: cfg.n_heads || cfg.pam_num_heads || 6,
+    headDim: cfg.head_dim || cfg.pam_head_dim || 64,
+    expand: cfg.expand || cfg.bank_expand || 3,
+    vocab: cfg.vocab_size || 50257,
+    seqLen: cfg.max_seq_len || 2048,
+  };
+
+  if (ver === 'v7') {
+    document.getElementById('tog-hier').checked = cfg.hierarchical_dt;
+    document.getElementById('tog-drift').checked = cfg.cross_level;
+    document.getElementById('tog-rope').checked = cfg.use_rope;
+    document.getElementById('tog-gsp').checked = cfg.use_gsp;
+    document.getElementById('tog-rev').checked = cfg.use_reverse_assoc;
+    document.getElementById('tog-aux').checked = cfg.multi_scale_loss;
+    document.getElementById('tog-qknorm').checked = cfg.qk_norm;
+    document.getElementById('tog-fqkv').checked = cfg.fused_qkv;
+    document.getElementById('tog-banks').checked = false;
+    document.getElementById('tog-attn').checked = false;
+    document.getElementById('tog-wm').checked = false;
+    document.getElementById('tog-im').checked = false;
+    document.getElementById('tog-epis').checked = false;
+    document.getElementById('tog-seqpam').checked = false;
+  } else {
+    document.getElementById('tog-hier').checked = false;
+    document.getElementById('tog-drift').checked = false;
+    document.getElementById('tog-rope').checked = cfg.pam_rope || false;
+    document.getElementById('tog-gsp').checked = cfg.gated_state_protection || false;
+    document.getElementById('tog-rev').checked = false;
+    document.getElementById('tog-aux').checked = false;
+    document.getElementById('tog-qknorm').checked = cfg.pam_qk_norm || false;
+    document.getElementById('tog-fqkv').checked = cfg.pam_fused_qkv || false;
+    document.getElementById('tog-banks').checked = !cfg.single_bank;
+    document.getElementById('tog-attn').checked = cfg.use_attention || false;
+    document.getElementById('tog-wm').checked = (cfg.num_wm_slots || 0) > 0;
+    document.getElementById('tog-im').checked = (cfg.num_im_slots || 0) > 0;
+    document.getElementById('tog-epis').checked = (cfg.num_episodic_slots || 0) > 0;
+    document.getElementById('tog-seqpam').checked = !cfg.interleave_pam;
+  }
+  document.getElementById('custom-indicator').style.display = 'none';
+}
+
+document.getElementById('sel-version').addEventListener('change', () => {
+  populatePresets(); syncTogglesFromPreset(); buildModel();
+});
+document.getElementById('sel-preset').addEventListener('change', () => {
+  syncTogglesFromPreset(); buildModel();
+});
+document.querySelectorAll('input[type=checkbox]').forEach(cb => {
+  cb.addEventListener('change', () => buildModel());
+});
+
+let _inputTimer = null;
+document.querySelectorAll('#controls input[type=number]').forEach(inp => {
+  inp.addEventListener('input', () => {
+    clearTimeout(_inputTimer);
+    _inputTimer = setTimeout(() => { checkCustomIndicator(); buildModel(); }, 250);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RESIZE + ANIMATE + INIT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function onResize() {
+  const w = viewport.clientWidth, h = viewport.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  labelRenderer.setSize(w, h);
+}
+window.addEventListener('resize', onResize);
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  updateHover();
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+}
+
+populatePresets();
+syncTogglesFromPreset();
+onResize();
+buildModel();
+animate();
+
+</script>
+</body>
+</html>
