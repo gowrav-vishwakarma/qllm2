@@ -6,8 +6,8 @@
 #          reverse association, Triton kernels
 #
 # Two presets:
-#   lean_medium       (~96M, expand=4, param-matched to V7 ~100M)
-#   lean_medium_small (~86M, expand=3, speed-matched)
+#   lean_medium_small (~86M, expand=3, same hidden dim as V7 -- default)
+#   lean_medium       (~96M, expand=4, param-matched but needs grad ckpt)
 #
 # Baselines:
 #   V7 7a (flat, B=3, ModSwish, CGU): Val PPL 29.73
@@ -35,7 +35,7 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 EPOCHS=10
 SEQ_LEN=2048
 DATASET="wikitext103"
-PRESET="lean_medium"
+PRESET="lean_medium_small"
 BATCH_SIZE=3
 RESUME=0
 EXTRA_ARGS=""
@@ -56,7 +56,7 @@ GEN_PROMPT="In 1923 , the University of"
 CKPT_DIR="checkpoints_lean_${PRESET}"
 LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
 
-ARGS="--model lean --preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --amp_dtype auto --num_workers 4 --gen_every 5000"
+ARGS="--model lean --preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
 
 RESUME_ARG=""
 REUSED_LOG_DIR=0
