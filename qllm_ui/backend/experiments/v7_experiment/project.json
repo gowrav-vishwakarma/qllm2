@@ -1,0 +1,183 @@
+{
+  "version": "1.0",
+  "project": {
+    "name": "v7_experiment",
+    "outputDir": "./experiments/v7_experiment",
+    "checkpointDir": "./experiments/v7_experiment/checkpoints",
+    "logDir": "./experiments/v7_experiment/logs"
+  },
+  "customModules": {},
+  "nodes": [
+    {
+      "id": "embed",
+      "type": "ComplexEmbed",
+      "position": {
+        "x": 50,
+        "y": 250
+      },
+      "params": {
+        "vocab_size": 50257,
+        "dim": 256
+      }
+    },
+    {
+      "id": "cgu_1",
+      "type": "ComplexGatedUnit",
+      "position": {
+        "x": 350,
+        "y": 100
+      },
+      "params": {
+        "dim": 256,
+        "expand": 4
+      }
+    },
+    {
+      "id": "pam_1",
+      "type": "PhaseAssociativeLayer",
+      "position": {
+        "x": 350,
+        "y": 280
+      },
+      "params": {
+        "dim": 256,
+        "n_heads": 4,
+        "head_dim": 64
+      }
+    },
+    {
+      "id": "cgu_2",
+      "type": "ComplexGatedUnit",
+      "position": {
+        "x": 650,
+        "y": 100
+      },
+      "params": {
+        "dim": 256,
+        "expand": 4
+      }
+    },
+    {
+      "id": "pam_2",
+      "type": "PhaseAssociativeLayer",
+      "position": {
+        "x": 650,
+        "y": 280
+      },
+      "params": {
+        "dim": 256,
+        "n_heads": 4,
+        "head_dim": 64
+      }
+    },
+    {
+      "id": "cgu_3",
+      "type": "ComplexGatedUnit",
+      "position": {
+        "x": 950,
+        "y": 100
+      },
+      "params": {
+        "dim": 256,
+        "expand": 4
+      }
+    },
+    {
+      "id": "pam_3",
+      "type": "PhaseAssociativeLayer",
+      "position": {
+        "x": 950,
+        "y": 280
+      },
+      "params": {
+        "dim": 256,
+        "n_heads": 4,
+        "head_dim": 64
+      }
+    },
+    {
+      "id": "head",
+      "type": "ComplexLMHead",
+      "position": {
+        "x": 1250,
+        "y": 200
+      },
+      "params": {
+        "dim": 256,
+        "vocab_size": 50257
+      }
+    }
+  ],
+  "connections": [
+    {
+      "source": "embed",
+      "sourcePort": "out",
+      "target": "cgu_1",
+      "targetPort": "x"
+    },
+    {
+      "source": "cgu_1",
+      "sourcePort": "out",
+      "target": "pam_1",
+      "targetPort": "x"
+    },
+    {
+      "source": "pam_1",
+      "sourcePort": "out",
+      "target": "cgu_2",
+      "targetPort": "x"
+    },
+    {
+      "source": "cgu_2",
+      "sourcePort": "out",
+      "target": "pam_2",
+      "targetPort": "x"
+    },
+    {
+      "source": "pam_2",
+      "sourcePort": "out",
+      "target": "cgu_3",
+      "targetPort": "x"
+    },
+    {
+      "source": "cgu_3",
+      "sourcePort": "out",
+      "target": "pam_3",
+      "targetPort": "x"
+    },
+    {
+      "source": "pam_3",
+      "sourcePort": "out",
+      "target": "head",
+      "targetPort": "x"
+    }
+  ],
+  "training": {
+    "dataset": "tinystories",
+    "tokenizer": "gpt2",
+    "seqLen": 512,
+    "batchSize": 32,
+    "optimizer": {
+      "type": "AdamW",
+      "lr": 0.0003,
+      "betas": [
+        0.9,
+        0.95
+      ],
+      "weightDecay": 0.1
+    },
+    "scheduler": {
+      "type": "cosine",
+      "warmupSteps": 500
+    },
+    "loss": {
+      "type": "cross_entropy",
+      "auxLosses": []
+    },
+    "epochs": 50,
+    "gradClip": 1,
+    "amp": true,
+    "compile": false,
+    "gradAccumulation": 1
+  }
+}

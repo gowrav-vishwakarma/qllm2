@@ -1,0 +1,92 @@
+import type { SerializedProject } from "@/types";
+
+export const mambaTemplate: SerializedProject = {
+  version: "1.0",
+  project: {
+    name: "mamba_lm",
+    outputDir: "./experiments/mamba_lm",
+    checkpointDir: "./experiments/mamba_lm/checkpoints",
+    logDir: "./experiments/mamba_lm/logs",
+  },
+  customModules: {},
+  nodes: [
+    {
+      id: "embed",
+      type: "nn.Embedding",
+      position: { x: 50, y: 200 },
+      params: { num_embeddings: 50257, embedding_dim: 512 },
+    },
+    {
+      id: "mamba_1",
+      type: "MambaBlock",
+      position: { x: 350, y: 100 },
+      params: { dim: 512, state_dim: 16, expand: 2 },
+    },
+    {
+      id: "mamba_2",
+      type: "MambaBlock",
+      position: { x: 350, y: 270 },
+      params: { dim: 512, state_dim: 16, expand: 2 },
+    },
+    {
+      id: "mamba_3",
+      type: "MambaBlock",
+      position: { x: 350, y: 440 },
+      params: { dim: 512, state_dim: 16, expand: 2 },
+    },
+    {
+      id: "mamba_4",
+      type: "MambaBlock",
+      position: { x: 650, y: 100 },
+      params: { dim: 512, state_dim: 16, expand: 2 },
+    },
+    {
+      id: "mamba_5",
+      type: "MambaBlock",
+      position: { x: 650, y: 270 },
+      params: { dim: 512, state_dim: 16, expand: 2 },
+    },
+    {
+      id: "mamba_6",
+      type: "MambaBlock",
+      position: { x: 650, y: 440 },
+      params: { dim: 512, state_dim: 16, expand: 2 },
+    },
+    {
+      id: "norm",
+      type: "nn.LayerNorm",
+      position: { x: 950, y: 270 },
+      params: { normalized_shape: 512 },
+    },
+    {
+      id: "head",
+      type: "LMHead",
+      position: { x: 1200, y: 270 },
+      params: { dim: 512, vocab_size: 50257 },
+    },
+  ],
+  connections: [
+    { source: "embed", sourcePort: "out", target: "mamba_1", targetPort: "x" },
+    { source: "mamba_1", sourcePort: "out", target: "mamba_2", targetPort: "x" },
+    { source: "mamba_2", sourcePort: "out", target: "mamba_3", targetPort: "x" },
+    { source: "mamba_3", sourcePort: "out", target: "mamba_4", targetPort: "x" },
+    { source: "mamba_4", sourcePort: "out", target: "mamba_5", targetPort: "x" },
+    { source: "mamba_5", sourcePort: "out", target: "mamba_6", targetPort: "x" },
+    { source: "mamba_6", sourcePort: "out", target: "norm", targetPort: "x" },
+    { source: "norm", sourcePort: "out", target: "head", targetPort: "x" },
+  ],
+  training: {
+    dataset: "tinystories",
+    tokenizer: "gpt2",
+    seqLen: 1024,
+    batchSize: 16,
+    optimizer: { type: "AdamW", lr: 3e-4, betas: [0.9, 0.95], weightDecay: 0.1 },
+    scheduler: { type: "cosine", warmupSteps: 500 },
+    loss: { type: "cross_entropy", auxLosses: [] },
+    epochs: 30,
+    gradClip: 1.0,
+    amp: true,
+    compile: false,
+    gradAccumulation: 1,
+  },
+};

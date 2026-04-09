@@ -27,3 +27,5 @@ logs/remote_medium_pam_v3.log
 
 # Personal learning notebooks (not part of the project)
 learn/
+
+node_modules/
