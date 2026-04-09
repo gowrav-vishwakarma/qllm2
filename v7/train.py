@@ -38,7 +38,10 @@ from torch.utils.data import DataLoader
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from v7.model import V7LM, V7Config, get_config, PRESETS, ComplexLinear
+from v7.model import V7LM, V7Config, get_config, PRESETS
+from v7.model import ComplexLinear as V7ComplexLinear
+from v7.simple_model import LeanPAMLM, LeanPAMConfig, get_lean_config, LEAN_PRESETS
+from v7.simple_model import ComplexLinear as LeanComplexLinear
 from v7.data import (
     load_wikitext103,
     load_tinystories,
@@ -260,7 +263,7 @@ class V7Trainer:
                 if self.unitary_lambda > 0:
                     u_loss = torch.tensor(0.0, device=self.device)
                     for m in self.model.modules():
-                        if isinstance(m, ComplexLinear):
+                        if isinstance(m, (V7ComplexLinear, LeanComplexLinear)):
                             WtW = (m.weight_real.T @ m.weight_real
                                    + m.weight_imag.T @ m.weight_imag)
                             eye = torch.eye(WtW.shape[0], device=WtW.device)
@@ -553,8 +556,14 @@ def main():
 
     parser = argparse.ArgumentParser(description='V7 PAM Language Model Training')
     parser.add_argument(
-        '--preset', type=str, default='medium_h6',
-        choices=list(PRESETS.keys()),
+        '--model', type=str, default='v7',
+        choices=['v7', 'lean'],
+        help='Model variant: v7 (full V7LM) or lean (LeanPAMLM, stripped-down)',
+    )
+    all_presets = list(PRESETS.keys()) + list(LEAN_PRESETS.keys())
+    parser.add_argument(
+        '--preset', type=str, default=None,
+        choices=all_presets,
     )
     parser.add_argument(
         '--dataset', type=str, default='wikitext103',
@@ -624,17 +633,22 @@ def main():
 
     args = parser.parse_args()
 
+    use_lean = args.model == 'lean'
+    if args.preset is None:
+        args.preset = 'lean_medium' if use_lean else 'medium_h6'
+    model_label = 'Lean PAM' if use_lean else 'V7'
+
     # Logging
     log_dir = Path(args.log_dir)
     log_dir.mkdir(parents=True, exist_ok=True)
-    log_path = log_dir / f'v7_{args.preset}_{args.dataset}.log'
+    log_prefix = 'lean' if use_lean else 'v7'
+    log_path = log_dir / f'{log_prefix}_{args.preset}_{args.dataset}.log'
     log_mode = 'a' if args.resume else 'w'
     tee = TeeLogger(log_path, mode=log_mode)
     sys.stdout = tee
-
     print(f"Wall clock start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
-    print("  V7: Phase-Associative Memory Language Model")
+    print(f"  {model_label}: Phase-Associative Memory Language Model")
     print(f"  Preset: {args.preset} | Dataset: {args.dataset}")
     print("=" * 60)
 
@@ -647,37 +661,48 @@ def main():
     print(f"Seed: {args.seed}")
 
     # Config
-    cfg = get_config(args.preset)
-    if args.seq_len is not None:
-        cfg.max_seq_len = args.seq_len
-    if args.dropout is not None:
-        cfg.dropout = args.dropout
-    if args.no_rope:
-        cfg.use_rope = False
-    if args.no_gsp:
-        cfg.use_gsp = False
-    if args.no_fused_qkv:
-        cfg.fused_qkv = False
-    if args.qk_norm:
-        cfg.qk_norm = True
-    if args.no_hierarchical_dt:
-        cfg.hierarchical_dt = False
-        cfg.dt_bias_schedule = None
-    if args.no_cross_level:
-        cfg.cross_level = False
-    if args.no_grad_ckpt:
-        cfg.gradient_checkpointing = False
-    if args.activation is not None:
-        cfg.activation = args.activation
-    if args.chunk_size is not None:
-        cfg.chunk_size = args.chunk_size
-    if args.multi_scale_loss:
-        cfg.multi_scale_loss = True
-        cfg.aux_loss_weight = args.aux_loss_weight
-        cfg.aux_layer_stride = args.aux_layer_stride
-        cfg.max_aux_offset = args.max_aux_offset
-    if args.no_reverse_assoc:
-        cfg.use_reverse_assoc = False
+    if use_lean:
+        cfg = get_lean_config(args.preset)
+        if args.seq_len is not None:
+            cfg.max_seq_len = args.seq_len
+        if args.dropout is not None:
+            cfg.dropout = args.dropout
+        if args.no_grad_ckpt:
+            cfg.gradient_checkpointing = False
+        if args.chunk_size is not None:
+            cfg.chunk_size = args.chunk_size
+    else:
+        cfg = get_config(args.preset)
+        if args.seq_len is not None:
+            cfg.max_seq_len = args.seq_len
+        if args.dropout is not None:
+            cfg.dropout = args.dropout
+        if args.no_rope:
+            cfg.use_rope = False
+        if args.no_gsp:
+            cfg.use_gsp = False
+        if args.no_fused_qkv:
+            cfg.fused_qkv = False
+        if args.qk_norm:
+            cfg.qk_norm = True
+        if args.no_hierarchical_dt:
+            cfg.hierarchical_dt = False
+            cfg.dt_bias_schedule = None
+        if args.no_cross_level:
+            cfg.cross_level = False
+        if args.no_grad_ckpt:
+            cfg.gradient_checkpointing = False
+        if args.activation is not None:
+            cfg.activation = args.activation
+        if args.chunk_size is not None:
+            cfg.chunk_size = args.chunk_size
+        if args.multi_scale_loss:
+            cfg.multi_scale_loss = True
+            cfg.aux_loss_weight = args.aux_loss_weight
+            cfg.aux_layer_stride = args.aux_layer_stride
+            cfg.max_aux_offset = args.max_aux_offset
+        if args.no_reverse_assoc:
+            cfg.use_reverse_assoc = False
 
     print(f"\nConfig: {asdict(cfg)}")
     print(
@@ -730,7 +755,7 @@ def main():
     print(f"Train batches: {len(train_loader)}, Val batches: {len(val_loader)}")
 
     # Model
-    model = V7LM(cfg)
+    model = LeanPAMLM(cfg) if use_lean else V7LM(cfg)
     params = model.count_parameters()
     print(f"\nModel parameters: {params}")
     print(f"Total: {params['total']:,} ({params['total']/1e6:.1f}M)")
@@ -773,12 +798,9 @@ def main():
         trainer.best_val_ppl = checkpoint.get('best_val_ppl', float('inf'))
 
     _summary_lines = [
-        f"Preset: {args.preset} | Dataset: {args.dataset}",
+        f"Model: {model_label} | Preset: {args.preset} | Dataset: {args.dataset}",
         f"Config: dim={cfg.dim} layers={cfg.n_layers} heads={cfg.n_heads} "
         f"head_dim={cfg.head_dim} expand={cfg.expand}",
-        f"hierarchical_dt={cfg.hierarchical_dt} "
-        f"multi_scale_loss={cfg.multi_scale_loss} "
-        f"reverse_assoc={cfg.use_reverse_assoc}",
         f"Params: {params['total']:,} ({params['total']/1e6:.1f}M)",
         f"seq_len={cfg.max_seq_len} batch_size={args.batch_size} epochs={args.epochs}",
         f"lr={args.lr} warmup={args.warmup_steps} wd={args.weight_decay}",
@@ -786,7 +808,7 @@ def main():
         f"Train batches: {len(train_loader)}, Val batches: {len(val_loader)}",
         f"Host: {os.uname().nodename}",
     ]
-    _discord_header = "**V7 Training started**" if not args.resume else "**V7 Training resumed**"
+    _discord_header = f"**{model_label} Training started**" if not args.resume else f"**{model_label} Training resumed**"
     _notify_discord_long(
         _discord_header + "\n```\n" + "\n".join(_summary_lines) + "\n```"
     )

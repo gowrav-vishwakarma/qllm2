@@ -62,6 +62,8 @@ Each V7Block:
 | 2026-03 | **Transformer B=6** baseline (same arch, `--batch_size 6`) | Val **23.13** @10e — **14.6%** better than B=3 (27.08). ~99k tok/s, 2.5/12.7 GB GPU. Log: `logs/v6/transformer_baseline_wikitext103_20260330_130306_8d631a6/`. |
 | 2026-03 | **7d** ModSwish + chunked dual form (`C=256`), `medium_h16_flat`, B=6, commit `7555c93` | Val **27.94** @10e, beating 7a by **1.79 PPL** while raising throughput to **31.8k tok/s**. Still behind transformer B=6 **23.13**. Log: `logs/v7/exp7d_chunked_b6_wikitext103_20260330_172839_7555c93/`. |
 | — | Hygiene | Use **B=3** + **no grad ckpt** for V6/transformer apples-to-apples. **B=6** + ckpt (3a-A) lowers PPL but changes steps/epoch — confounds LR schedule vs V6. **B=6 transformer baseline now available** for apples-to-apples when PAM uses B=6. |
+| 2026-04 | **7f-0** Grouped hierarchy + multi-scale loss (confounded), B=3, commit `136f914` | Val **31.29** @10e — regression vs 7a (**29.73**). Two variables changed; cannot isolate. Log: `logs/v7/exp7f_multiscale_wikitext103_20260402_173535_136f914_dirty/`. |
+| 2026-04 | **7f-1** Multi-scale loss ONLY on flat baseline, B=3, `--compile`, commit `ecb4b56` | Val **30.55** @10e — multi-scale loss **hurts** (+0.82 vs 7a). Aux heads don't help; multi-target training noise is counterproductive. Log: `logs/v7/exp7f1_multiscale_flat_wikitext103_20260403_124050_ecb4b56/`. |
 
 ---
 
@@ -454,7 +456,7 @@ CGU already has phase rotation via `gate_phase * up`. But:
 | 7d  | medium_h16_flat | 16 | 384 | False | False | ModSwish | **27.94** val @10e, **31.8k tok/s** (chunked C=256, B=6) |
 | 7e  | medium_h16_flat | 16 | 384 | False | False | ModSwish | Beat 7c/7d (chunked + unitary reg λ=0.01) |
 | 7f-0 | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModSwish | **31.29** val @10e, B=3 (confounded: grouped+multiscale) |
-| 7f-1 | medium_h16_flat | 16 | 384 | False | False | ModSwish | Ablation: multi-scale loss only (vs 7a baseline) |
+| 7f-1 | medium_h16_flat | 16 | 384 | False | False | ModSwish | **30.55** val @10e, B=3 — multi-scale loss hurts (+0.82 vs 7a) |
 | 7f-2 | medium_h16_flat | 16 | 384 | False | False | ModSwish | Ablation: reverse assoc only (vs 7a baseline) |
 | 7f-3 | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModSwish | Ablation: grouped hierarchy only (vs 7a baseline) |
 
@@ -724,4 +726,25 @@ If 7f-1 and/or 7f-2 help, combine them in a follow-up (7f-4). Only add grouped h
 ./scripts/run_v7_exp7f3_grouped_only.sh
 ```
 
-**Status**: 7f-0 done (confounded). 7f-1/7f-2/7f-3 not run yet.
+**Status**: 7f-0 done (confounded). **7f-1 done** (see below). 7f-2/7f-3 not run yet.
+
+### Experiment 7f-1 Results: Multi-scale loss only (flat baseline)
+
+Run: `medium_h16_flat`, B=3, ModSwish, chunk_size=256, no grad ckpt, `--compile`, `--multi_scale_loss --aux_loss_weight 0.1 --aux_layer_stride 3 --max_aux_offset 32 --no_reverse_assoc`. Commit `ecb4b56`.
+
+| Epoch | Train PPL (inflated by aux) | Val PPL | tok/s |
+|-------|----------------------------|---------|-------|
+| 1     | 127.91                     | 58.40   | 19.8k |
+| 2     | 54.24                      | 44.25   | 20.0k |
+| 3     | 45.56                      | 39.70   | 20.0k |
+| 5     | 38.82                      | 34.64   | 20.3k |
+| 7     | 34.59                      | 31.96   | 20.3k |
+| 10    | **31.16**                  | **30.55** | 20.3k |
+
+**Best Val PPL: 30.55** (vs 7a baseline **29.73** and 7f-0 confounded **31.29**).
+
+**Wall time**: ~16.4h total. Log: `logs/v7/exp7f1_multiscale_flat_wikitext103_20260403_124050_ecb4b56/`.
+
+**Verdict**: Multi-scale loss on its own **hurts** PPL slightly (+0.82 vs 7a). The auxiliary loss inflates train PPL (expected) but also produces slightly worse val PPL. The per-layer auxiliary heads at different temporal offsets do not appear to provide useful gradient signal to the global layers -- or the additional gradient noise from multi-scale targets is counterproductive.
+
+This explains part of the 7f-0 regression (31.29): multi-scale loss contributed ~0.8 PPL of the gap, with the remaining ~0.7 likely from grouped hierarchy.
