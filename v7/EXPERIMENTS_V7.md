@@ -64,6 +64,7 @@ Each V7Block:
 | — | Hygiene | Use **B=3** + **no grad ckpt** for V6/transformer apples-to-apples. **B=6** + ckpt (3a-A) lowers PPL but changes steps/epoch — confounds LR schedule vs V6. **B=6 transformer baseline now available** for apples-to-apples when PAM uses B=6. |
 | 2026-04 | **7f-0** Grouped hierarchy + multi-scale loss (confounded), B=3, commit `136f914` | Val **31.29** @10e — regression vs 7a (**29.73**). Two variables changed; cannot isolate. Log: `logs/v7/exp7f_multiscale_wikitext103_20260402_173535_136f914_dirty/`. |
 | 2026-04 | **7f-1** Multi-scale loss ONLY on flat baseline, B=3, `--compile`, commit `ecb4b56` | Val **30.55** @10e — multi-scale loss **hurts** (+0.82 vs 7a). Aux heads don't help; multi-target training noise is counterproductive. Log: `logs/v7/exp7f1_multiscale_flat_wikitext103_20260403_124050_ecb4b56/`. |
+| 2026-04 | **L1** Lean PAM baseline, `lean_medium_small` (86.2M), B=3, `--compile --no_grad_ckpt`, commit `7717f65` (dirty) | Val **32.09** @10e — **+2.36 PPL** vs 7a (29.73) but **+66% throughput** (34.7k vs 20.9k tok/s), **85% less VRAM** (1.7 vs ~11 GB). CGU worth ~2.4 PPL. Log: `logs/v7/lean_lean_medium_small_wikitext103_20260409_152722_7717f65_dirty/`. |
 
 ---
 
@@ -459,12 +460,16 @@ CGU already has phase rotation via `gate_phase * up`. But:
 | 7f-1 | medium_h16_flat | 16 | 384 | False | False | ModSwish | **30.55** val @10e, B=3 — multi-scale loss hurts (+0.82 vs 7a) |
 | 7f-2 | medium_h16_flat | 16 | 384 | False | False | ModSwish | Ablation: reverse assoc only (vs 7a baseline) |
 | 7f-3 | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModSwish | Ablation: grouped hierarchy only (vs 7a baseline) |
+| L1   | lean_medium_small  | 16 | 384 | False | False | ModSwish (FFN) | **32.09** val @10e, **34.7k** tok/s, 86.2M params (no CGU) |
+| L2   | lean_medium_small  | 16 | 384 | False | False | ModSwish (FFN) | L1 + unitary reg lambda=0.01 (TBD) |
+| L3   | lean_medium_small  | 16 | 384 | False | False | ModSwish (FFN) | L2 + soft state norm + head diversity (TBD) |
 
 Runs B/C from the original plan are superseded by 3a (which IS the flat baseline at proper depth).
 Experiments 7a/7b test activation upgrades on the depth-matched baseline.
 Experiments 7c/7d/7e test throughput optimizations (chunked dual form, larger batch) and regularization.
 Experiments 7f-0 was confounded (grouped hierarchy + multi-scale loss changed simultaneously).
 Experiments 7f-1/7f-2/7f-3 are proper single-variable ablations vs the 7a baseline.
+Experiments L1/L2/L3 test the "Lean PAM" stripped-down architecture with competition/stability mechanisms.
 
 ### Metrics
 
@@ -748,3 +753,59 @@ Run: `medium_h16_flat`, B=3, ModSwish, chunk_size=256, no grad ckpt, `--compile`
 **Verdict**: Multi-scale loss on its own **hurts** PPL slightly (+0.82 vs 7a). The auxiliary loss inflates train PPL (expected) but also produces slightly worse val PPL. The per-layer auxiliary heads at different temporal offsets do not appear to provide useful gradient signal to the global layers -- or the additional gradient noise from multi-scale targets is counterproductive.
 
 This explains part of the 7f-0 regression (31.29): multi-scale loss contributed ~0.8 PPL of the gap, with the remaining ~0.7 likely from grouped hierarchy.
+
+---
+
+## Lean PAM: Stripped-Down Complex PAM Experiments
+
+### Motivation
+
+V7 may be over-engineered. The CGU (SwiGLU-style complex gating), hierarchical dt, cross-level drift, multi-scale loss, and reverse association all add complexity but experiments 7f-0/7f-1 showed these additions hurt or don't help. The "Lean PAM" strips V7 to its novel core:
+
+- **Kept**: Complex PAM with conjugate retrieval, Complex RoPE on Q/K, GSP (gated state protection), SimpleComplexFFN (up -> ModSwish -> down, no gating)
+- **Removed**: CGU, hierarchical dt_bias, cross-level drift, multi-scale loss, reverse association, Triton kernels
+
+Code: [v7/simple_model.py](v7/simple_model.py), run script: [scripts/run_lean_pam.sh](scripts/run_lean_pam.sh)
+
+### Experiment L1: Lean PAM Baseline (`lean_medium_small`)
+
+Run: `lean_medium_small` (dim=384, 16L, H=6, head_dim=64, expand=3, ~86.2M params), B=3, `--compile`, `--no_grad_ckpt`, C=256. Commit `7717f65` (dirty).
+
+| Epoch | Train PPL | Val PPL | tok/s |
+|-------|-----------|---------|-------|
+| 1     | 128.35    | 59.97   | 31.8k |
+| 2     | 55.55     | 45.38   | 34.3k |
+| 3     | 46.31     | 40.15   | 34.1k |
+| 5     | 39.56     | 35.50   | 34.7k |
+| 7     | 35.75     | 33.18   | 34.7k |
+| 10    | **32.67** | **32.09** | 34.7k |
+
+**Best Val PPL: 32.09** (vs V7 7a baseline **29.73**, V6 pam-v3 **29.95**).
+
+**Wall time**: 9.68h. Log: `logs/v7/lean_lean_medium_small_wikitext103_20260409_152722_7717f65_dirty/`.
+
+**Throughput**: **34.7k tok/s** avg (vs 7a **20.9k tok/s** = **+66%** faster). The lean model runs much faster -- no CGU gating overhead, no Triton kernel compilation, simpler graph for `torch.compile`.
+
+**GPU memory**: **1.7/10.3 GB** (vs 7a ~11 GB). Dramatically less memory.
+
+**Generation sample (epoch 10)**:
+> In 1923 , the University of Michigan became the first university in Michigan to visit a private school . = = = The Civil War and the Civil War = = = On November 1 , 1925 , the Civil War broke out in Michigan with its members ...
+
+Quality: rep3=0.020, rep4=0.000, restarts=0, uniq=0.590. Coherent sentence structure but factually confused, entity drift visible ("Civil War broke out in Michigan").
+
+**Verdict**: Lean PAM is **+2.36 PPL worse** than V7 7a (32.09 vs 29.73) but **66% faster** and uses **85% less VRAM**. The CGU gating contributes ~2.4 PPL of value. The question is whether competition/stability mechanisms can recover this gap without adding CGU's complexity back.
+
+**Param comparison**:
+| Model | Params | Val PPL | tok/s | GPU |
+|-------|--------|---------|-------|-----|
+| V7 7a (CGU + PAM) | ~100M | 29.73 | 20.9k | ~11 GB |
+| Lean PAM (FFN + PAM) | 86.2M | 32.09 | 34.7k | 1.7 GB |
+| Transformer B=3 | ~100M | 27.08 | ~96k | ~3 GB |
+
+### Experiment L2: Lean PAM + Unitary Regularization
+
+**Hypothesis**: Phase instability through 16 layers causes the interference mechanism to degrade into noisy averaging. Unitary regularization (`lambda * sum ||W_r^T W_r + W_i^T W_i - I||^2`) encourages complex linear weights to preserve norms and phases through depth.
+
+Run: same as L1 + `--unitary_lambda 0.01`. Already wired in [v7/train.py](v7/train.py), zero code changes needed.
+
+**Status**: Ready to run.

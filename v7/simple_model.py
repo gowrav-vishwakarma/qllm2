@@ -39,6 +39,8 @@ class LeanPAMConfig:
     max_seq_len: int = 2048
     chunk_size: int = 256
     gradient_checkpointing: bool = True
+    soft_state_norm: bool = False
+    head_diversity_lambda: float = 0.0
 
 
 # ── Complex Arithmetic (split-real: [..., dim, 2]) ───────────────────────────
@@ -192,6 +194,8 @@ class LeanPAMLayer(nn.Module):
         inner = cfg.n_heads * cfg.head_dim
         self.inner_dim = inner
         self.dim = cfg.dim
+        self.soft_state_norm = cfg.soft_state_norm
+        self.head_diversity_lambda = cfg.head_diversity_lambda
 
         self.qkv_proj = ComplexLinear(cfg.dim, 3 * inner, bias=False)
         self.o_proj = ComplexLinear(inner, cfg.dim, bias=False)
@@ -217,6 +221,15 @@ class LeanPAMLayer(nn.Module):
             torch.tril(torch.ones(_causal_size, _causal_size)),
             persistent=False,
         )
+
+    # ── State normalization ──────────────────────────────────────────────────
+
+    @staticmethod
+    def _soft_norm_state(S: torch.Tensor) -> torch.Tensor:
+        """Soft normalize: S / (1 + S_rms). Compresses large states, leaves small ones alone."""
+        S_mag = torch.sqrt(S[..., 0].square() + S[..., 1].square() + 1e-8)
+        S_rms = torch.sqrt(S_mag.square().mean(dim=(-2, -1), keepdim=True) + 1e-6)
+        return S / (1.0 + S_rms.unsqueeze(-1))
 
     # ── Dual form ────────────────────────────────────────────────────────────
 
@@ -295,17 +308,42 @@ class LeanPAMLayer(nn.Module):
 
             total_decay = cum_decay[:, :, -1]
             S = S * total_decay[..., None, None, None] + S_chunk
+            if self.soft_state_norm:
+                S = self._soft_norm_state(S)
 
         return torch.cat(outputs, dim=2), S
 
     # ── Main forward ─────────────────────────────────────────────────────────
+
+    def _compute_head_diversity_loss(self, k: torch.Tensor) -> torch.Tensor:
+        """Penalize high complex cosine similarity between heads' key vectors.
+
+        k: [B, H, T, d, 2] -- subsample timesteps for efficiency.
+        Returns scalar loss.
+        """
+        stride = max(1, k.shape[2] // 16)
+        k_sub = k[:, :, ::stride]  # [B, H, T', d, 2]
+        k_mag = torch.sqrt(k_sub[..., 0].square() + k_sub[..., 1].square() + 1e-8)
+        k_norm_r = k_sub[..., 0] / (k_mag + 1e-8)
+        k_norm_i = k_sub[..., 1] / (k_mag + 1e-8)
+
+        H = k_sub.shape[1]
+        loss = torch.tensor(0.0, device=k.device, dtype=k.dtype)
+        n_pairs = 0
+        for i in range(H):
+            for j in range(i + 1, H):
+                sim = (k_norm_r[:, i] * k_norm_r[:, j]
+                       + k_norm_i[:, i] * k_norm_i[:, j]).mean()
+                loss = loss + sim.abs()
+                n_pairs += 1
+        return loss / max(n_pairs, 1)
 
     def forward(
         self,
         x: torch.Tensor,
         state: Optional[torch.Tensor] = None,
         step_offset: int = 0,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         B, T, _, _ = x.shape
         H, d = self.num_heads, self.head_dim
 
@@ -325,6 +363,11 @@ class LeanPAMLayer(nn.Module):
         pos = self.rope_cache[step_offset:end].to(dtype=x.dtype)
         q = cmul(q, pos)
         k = cmul(k, pos)
+
+        # Head diversity loss (training only)
+        div_loss = torch.tensor(0.0, device=x.device)
+        if self.training and self.head_diversity_lambda > 0:
+            div_loss = self._compute_head_diversity_loss(k)
 
         # Data-dependent decay + GSP
         x_flat = to_real_concat(x)
@@ -361,6 +404,8 @@ class LeanPAMLayer(nn.Module):
 
                 g = gamma[:, :, t].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
                 S = S * g + outer
+                if self.soft_state_norm:
+                    S = self._soft_norm_state(S)
 
                 q_t = q[:, :, t].unsqueeze(-3) * scale
                 sq_r = S[..., 0] * q_t[..., 0] - S[..., 1] * q_t[..., 1]
@@ -378,7 +423,7 @@ class LeanPAMLayer(nn.Module):
             mask = self.dropout(torch.ones(B, T, self.dim, device=x.device))
             out = out * mask.unsqueeze(-1)
 
-        return out, new_state
+        return out, new_state, div_loss
 
 
 # ── Lean PAM Block ───────────────────────────────────────────────────────────
@@ -401,7 +446,7 @@ class LeanPAMBlock(nn.Module):
         x: torch.Tensor,
         pam_state: Optional[torch.Tensor] = None,
         step_offset: int = 0,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         ffn_out = self.ffn(self.norm1(x))
         if self.training:
             drop_mask = self.ffn_dropout(
@@ -410,11 +455,11 @@ class LeanPAMBlock(nn.Module):
             ffn_out = ffn_out * drop_mask.unsqueeze(-1)
         x = x + ffn_out * self.ffn_scale
 
-        pam_out, new_state = self.pam(
+        pam_out, new_state, div_loss = self.pam(
             self.norm2(x), state=pam_state, step_offset=step_offset,
         )
         x = x + pam_out * self.pam_scale
-        return x, new_state
+        return x, new_state, div_loss
 
 
 # ── Lean PAM Language Model ──────────────────────────────────────────────────
@@ -470,13 +515,15 @@ class LeanPAMLM(nn.Module):
         )
 
         new_states: List[torch.Tensor] = []
+        total_div_loss = torch.tensor(0.0, device=input_ids.device)
         for i, block in enumerate(self.blocks):
             s = states[i] if states is not None else None
             if use_ckpt:
-                z, new_s = self._checkpointed_block(block, z, step_offset)
+                z, new_s, div_loss = self._checkpointed_block(block, z, step_offset)
             else:
-                z, new_s = block(z, pam_state=s, step_offset=step_offset)
+                z, new_s, div_loss = block(z, pam_state=s, step_offset=step_offset)
             new_states.append(new_s)
+            total_div_loss = total_div_loss + div_loss
 
         z = self.output_norm(z)
         lm = self.lm_head_norm(self.lm_head_proj(z))
@@ -484,7 +531,7 @@ class LeanPAMLM(nn.Module):
             lm[..., 0] @ self.embed.embed_real.weight.T
             + lm[..., 1] @ self.embed.embed_imag.weight.T
         )
-        aux_loss = torch.tensor(0.0, device=input_ids.device)
+        aux_loss = total_div_loss * self.config.head_diversity_lambda
         return logits, new_states, aux_loss
 
     @staticmethod
@@ -492,7 +539,7 @@ class LeanPAMLM(nn.Module):
         block: LeanPAMBlock,
         z: torch.Tensor,
         step_offset: int,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         def run_block(z_in):
             return block(z_in, pam_state=None, step_offset=step_offset)
         return grad_checkpoint(run_block, z, use_reentrant=False)
