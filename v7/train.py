@@ -259,7 +259,8 @@ class V7Trainer:
                 loss = main_loss
                 if aux_loss.item() > 0:
                     m_cfg = self.model._orig_mod.config if hasattr(self.model, '_orig_mod') else self.model.config
-                    loss = loss + m_cfg.aux_loss_weight * aux_loss
+                    aux_weight = getattr(m_cfg, 'aux_loss_weight', 1.0)
+                    loss = loss + aux_weight * aux_loss
                 if self.unitary_lambda > 0:
                     u_loss = torch.tensor(0.0, device=self.device)
                     for m in self.model.modules():
@@ -616,6 +617,10 @@ def main():
                         help='Override PAM chunk size (0=full T^2, >0=chunked). Default: from preset (256)')
     parser.add_argument('--unitary_lambda', type=float, default=0.0,
                         help='Soft unitary regularization weight (0=disabled). Try 0.01.')
+    parser.add_argument('--soft_state_norm', action='store_true',
+                        help='[Lean] Enable soft state normalization S/(1+S_rms) in PAM.')
+    parser.add_argument('--head_diversity_lambda', type=float, default=0.0,
+                        help='[Lean] Inter-head phase diversity loss weight (0=disabled). Try 0.01.')
 
     # Multi-scale per-layer loss (Exp 7f)
     parser.add_argument('--multi_scale_loss', action='store_true',
@@ -671,6 +676,10 @@ def main():
             cfg.gradient_checkpointing = False
         if args.chunk_size is not None:
             cfg.chunk_size = args.chunk_size
+        if args.soft_state_norm:
+            cfg.soft_state_norm = True
+        if args.head_diversity_lambda > 0:
+            cfg.head_diversity_lambda = args.head_diversity_lambda
     else:
         cfg = get_config(args.preset)
         if args.seq_len is not None:

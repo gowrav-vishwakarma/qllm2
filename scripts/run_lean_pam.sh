@@ -38,6 +38,7 @@ DATASET="wikitext103"
 PRESET="lean_medium_small"
 BATCH_SIZE=3
 RESUME=0
+TAG=""
 EXTRA_ARGS=""
 
 while [[ $# -gt 0 ]]; do
@@ -47,13 +48,18 @@ while [[ $# -gt 0 ]]; do
         --batch_size) BATCH_SIZE="$2"; shift 2 ;;
         --dataset)    DATASET="$2";    shift 2 ;;
         --preset)     PRESET="$2";     shift 2 ;;
+        --tag)        TAG="$2";        shift 2 ;;
         --resume)     RESUME=1;        shift ;;
         *)            EXTRA_ARGS="$EXTRA_ARGS $1"; shift ;;
     esac
 done
 
 GEN_PROMPT="In 1923 , the University of"
-CKPT_DIR="checkpoints_lean_${PRESET}"
+RUN_NAME="lean_${PRESET}"
+if [[ -n "$TAG" ]]; then
+    RUN_NAME="${RUN_NAME}_${TAG}"
+fi
+CKPT_DIR="checkpoints_${RUN_NAME}"
 LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
 
 ARGS="--model lean --preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
@@ -74,7 +80,7 @@ if [[ $RESUME -eq 1 && -f "$CKPT_DIR/best_model.pt" && -f "$LOG_DIR_SIDECAR" ]];
 fi
 
 if [[ -z "$LOG_DIR" ]]; then
-    LOG_DIR=$(make_log_dir "v7" "lean_${PRESET}_${DATASET}")
+    LOG_DIR=$(make_log_dir "v7" "${RUN_NAME}_${DATASET}")
 fi
 
 mkdir -p "$CKPT_DIR"
