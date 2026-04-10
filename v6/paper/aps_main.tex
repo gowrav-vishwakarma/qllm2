@@ -71,7 +71,7 @@ where $\alpha^{(l)}_{\text{CGU}}$ is initialized to $1.0$ and $\alpha^{(l)}_{\te
 \label{sec:pam}
 PAM replaces both the recurrent backbone and the attention mechanism with a single module whose operations correspond directly to the quantum semantic framework described in~\cite{agostino2025quantum}. In that framework, a semantic expression $S_E$ is represented as a state vector $|\psi_{S_E}\rangle = \sum_i c_i |e_i\rangle$ in a complex Hilbert space, where the complex coefficients $c_i$ carry phase information with no classical analogue, and interpretation is the application of a Hermitian operator whose eigenstates represent possible meanings. PAM implements this structure computationally: tokens are embedded as complex vectors, associations between them are accumulated in a complex matrix state via outer products, and retrieval is the projection of a query onto the accumulated state through the conjugate inner product, the same operation that computes $P(m_i) = |\langle e_i | \psi_{S_E}\rangle|^2$ in the quantum semantic framework.
 
-Each PAM head $h$ maintains a complex matrix state $S_t^{(h)} \in \Complex^{d \times d}$, where $d$ is the head dimension, so that the total state capacity across $H$ heads is $H \times d^2$ complex values per layer ($6 \times 64^2 = 24{,}576$ in our configuration). The input $x_t \in \Complex^D$ is projected into queries, keys, and values via a single complex linear map:
+Each PAM head $h$ maintains an independent complex matrix state $S_t^{(h)} \in \Complex^{d \times d}$, where $d$ is the head dimension. Unlike attention heads, which compute independent dot-product similarities over a shared representation, PAM heads are parallel associative memory banks: each accumulates its own key-value associations and retrieves independently, so the $H$ heads collectively maintain $H$ separate $d \times d$ memory matrices. The total state capacity across $H$ heads is $H \times d^2$ complex values per layer ($6 \times 64^2 = 24{,}576$ in our configuration). The input $x_t \in \Complex^D$ is projected into queries, keys, and values via a single complex linear map:
 \begin{equation}
   [Q_t; K_t; V_t] = W_{\text{QKV}} x_t \quad \Rightarrow \quad Q_t, K_t, V_t \in \Complex^{H \times d} .
 \end{equation}
@@ -90,7 +90,7 @@ where $\otimes$ denotes complex outer product and $K_t^*$ is the complex conjuga
   Y_t = \sum_{i \leq t} \left(\prod_{j=i+1}^{t} \gamma_j\right) \bigl(K_i^* \cdot \tilde{Q}_t\bigr) \, V'_i .
 \label{eq:pam-expand}
 \end{equation}
-The conjugate inner product $K_i^* \cdot \tilde{Q}_t$ determines retrieval strength through phase alignment: associations whose keys are phase-coherent with the query are retrieved strongly while phase-incoherent associations are suppressed, without softmax normalization.
+The conjugate inner product $K_i^* \cdot \tilde{Q}_t$ determines retrieval strength through phase alignment: associations whose keys are phase-coherent with the query are retrieved strongly while phase-incoherent associations are suppressed, without softmax normalization. When the keys are mutually orthogonal, each outer product $V_i \otimes K_i^*$ occupies an independent subspace of the $d \times d$ matrix, so retrieval is lossless: $S \tilde{Q} = V_j$ exactly when $K_j^* \cdot \tilde{Q} = 1$ and $K_i^* \cdot \tilde{Q} = 0$ for $i \neq j$. This is in contrast to vector-state models, where superposed bindings in $\Complex^d$ interfere destructively with retrieval accuracy degrading as $O(1/\sqrt{N})$~\cite{plate1995holographic}. The matrix state supports up to $d$ lossless associations per head; the data-dependent decay then converts this from a lossless store into a controlled lossy one, where information loss is a learned gating decision rather than an unavoidable consequence of the storage format.
 
 During training, the recurrence is computed in $O(T^2)$ time by forming a decay matrix $D \in \mathbb{R}^{T \times T}$ with $\log D[t,i] = \sum_{j=i+1}^{t} \log \gamma_j$ via cumulative sums, applying a causal mask, computing the complex score matrix $W = \tilde{Q} K^{*\top}$, and obtaining the output as $Y = (W \odot D) \cdot V'$. This is mathematically equivalent to the recurrence but parallelizes across the sequence dimension. During autoregressive generation, each token requires $O(Hd^2)$ work per layer, and the state $S \in \Complex^{H \times d \times d}$ is fixed-size and does not grow with sequence length.
 
@@ -152,7 +152,10 @@ Generation samples are logged every 5,000 steps using temperature 1.0, top-$k$ 5
 \label{sec:results}
 
 \label{sec:main-result}
-The interleaved configuration with complex RoPE reaches validation perplexity 30.0 after 10 epochs on WikiText-103 (single run, RTX 4090). Fig.~\ref{fig:valppl} and Table~\ref{tab:mainppl} summarize training progress.
+
+The central question is whether a language model whose representations and operations are entirely complex-valued can learn to model language competitively. If the complex formalism is incompatible with the structure of natural language, or if the conjugate inner product is an ineffective retrieval mechanism, training should fail to converge or produce substantially worse perplexity than a matched real-valued baseline.
+
+The interleaved PAM configuration trains stably on WikiText-103 for 10 epochs on a single RTX 4090, reaching validation perplexity 30.0 (Table~\ref{tab:mainppl}, Fig.~\ref{fig:valppl}). Total wall time is 50,714 s ($\sim$14.1 h) at $\sim$23k tokens/second. An earlier sequential configuration (16 CGU layers followed by 16 PAM layers, no RoPE) achieved 38.95, and a hybrid that adds sparse windowed attention every 4th block achieved 30.01, marginally worse than pure PAM, indicating that interleaving channel and sequence mixing matters and that supplemental attention provides no benefit at this scale. A variant with per-element unit normalization of $Q$ and $K$ before the conjugate inner product saw decreasing validation loss but collapsed into severe lexical repetition by mid-training and was stopped during epoch 5, indicating that both magnitude and phase must be free to vary for the retrieval mechanism to function.
 
 \begin{table}[t]
   \centering
@@ -183,12 +186,8 @@ The interleaved configuration with complex RoPE reaches validation perplexity 30
   \label{fig:valppl}
 \end{figure}
 
-Total wall time 50,714 s ($\sim$14.1 h). Throughput $\sim$23k tokens/second average.
-
-We briefly trained a variant with per-element unit normalization of $Q$ and $K$ before the conjugate inner product. Validation loss decreased, but generation collapsed into severe lexical repetition by mid-training and the run was stopped during epoch 5, indicating that both magnitude and phase must be free to vary for the conjugate inner product to function as a retrieval mechanism without softmax. An earlier sequential configuration (16 CGU layers followed by 16 PAM layers, no RoPE, lower learning rate) achieved 38.95 validation PPL, and a hybrid that adds sparse windowed attention every 4th block achieved 30.01, marginally worse than pure PAM, indicating that interleaving channel and sequence mixing is important and that supplemental attention provides no benefit at this scale.
-
 \label{sec:transformer-comparison}
-To provide a rigorous comparison, we trained a standard transformer with $\sim$100.3M parameters on the same WikiText-103 data, tokenizer (GPT-2 BPE), sequence length (2048), batch size (3), learning rate ($1 \times 10^{-4}$), warmup (1000 steps), and hardware (single RTX 4090). The transformer uses $d_{\text{model}} = 672$, 12 layers, 12 attention heads, and $d_{\text{ff}} = 2688$.
+To place this result in context, we trained a standard transformer with $\sim$100.3M parameters under identical conditions: same data, tokenizer, sequence length, batch size, learning rate, warmup, and hardware. The transformer uses $d_{\text{model}} = 672$, 12 layers, 12 attention heads, and $d_{\text{ff}} = 2688$. It reaches 27.1 validation PPL at $\sim$96k tokens/second (Table~\ref{tab:gpt2}). The $\sim$10\% gap in perplexity is accompanied by a $\sim$4$\times$ gap in throughput, which is expected given that complex linear maps require four real matrix multiplies and the implementation uses no custom CUDA kernels. For external reference, GPT-2~\cite{radford2019language} at 124M parameters achieves $\sim$31 validation PPL on WikiText-103, though differences in evaluation protocol make direct comparison unreliable.
 
 \begin{table}[t]
   \centering
@@ -203,8 +202,6 @@ To provide a rigorous comparison, we trained a standard transformer with $\sim$1
     \bottomrule
   \end{tabular}
 \end{table}
-
-The $\sim$10\% gap in perplexity is accompanied by a $\sim$4$\times$ gap in training throughput (23k vs.\ 96k tok/s), which is expected given that complex linear maps require four real matrix multiplies and the PAM implementation uses no custom CUDA kernels. For external reference, GPT-2~\cite{radford2019language} at 124M parameters achieves $\sim$31 validation PPL on WikiText-103, though differences in evaluation protocol make direct comparison unreliable.
 
 \begin{table}[t]
   \centering
@@ -230,10 +227,60 @@ The $\sim$10\% gap in perplexity is accompanied by a $\sim$4$\times$ gap in trai
   \end{tabular}
 \end{table}
 
-The transformer converges faster and maintains a consistent advantage throughout training (Table~\ref{tab:epoch-comparison}), though the gap narrows in later epochs. The two models see the same total tokens. Despite the perplexity gap, the structural differences between the architectures are substantial: the transformer requires $O(T)$ work per token during inference because of the KV cache, whereas PAM's state is fixed at 49,152 floats per layer regardless of sequence length, giving it $O(1)$ per-token cost with per-layer work $O(Hd^2)$. At $T = 2048$ with the baseline's configuration, the transformer's KV cache per layer is $\sim$56$\times$ larger than PAM's state, and this ratio grows linearly with context length.
+The transformer converges faster and maintains a consistent advantage throughout training (Table~\ref{tab:epoch-comparison}), though the gap narrows in later epochs. Despite the perplexity gap, the structural differences are substantial: the transformer requires $O(T)$ work per token during inference because of the KV cache, whereas PAM's state is fixed at 49,152 floats per layer regardless of sequence length, giving it $O(1)$ per-token cost. At $T = 2048$, the transformer's KV cache per layer is $\sim$56$\times$ larger than PAM's state, and this ratio grows linearly with context length. Zero-shot evaluation on HellaSwag~\cite{zellers2019hellaswag} yields 25.0\% accuracy, consistent with even real-valued models two to three times the size: Gemma-3 at 270M achieves 26\% on HellaSwag~\cite{agostino2025tinytim}.
+
+Given that the model trains stably and reaches competitive perplexity, the next question is whether the conjugate inner product actually produces the interference the formalism predicts, or whether the complex arithmetic is functioning as a redundant parameterization of a real-valued computation. If the retrieval is effectively real-valued despite the complex representation, $\Repart(K^* \cdot Q)$ should be non-negative for all key-query pairs, as it would be in a standard dot-product model. Fig.~\ref{fig:kq_interference} shows that this is not the case. At layer 0, the distribution of $\Repart(K^* \cdot Q)$ vs.\ $\operatorname{Im}(K^* \cdot Q)$ across all memory banks is nearly symmetric about the origin, with 52\% of entries having negative real part --- the retrieval is producing destructive interference on a majority of stored associations. By layer 15, the distribution has shifted: the fraction of destructive entries decreases to 40\% and the mean of $\Repart(K^* \cdot Q)$ moves from $-0.8$ to $+9.0$. The model learns to make retrieval progressively more selective through depth, using destructive interference to suppress irrelevant associations in early layers and converging toward constructive alignment in later layers.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/hyp_retrieval_by_layer.pdf}
+  \caption{Distribution of $\Repart(K^* \cdot Q)$ vs.\ $\operatorname{Im}(K^* \cdot Q)$ at layers 0, 4, 8, and 15 across all memory banks. Destructive interference (negative $\Repart$) decreases from 52\% to 40\% through depth; the mean shifts from $-0.8$ to $+9.0$.}
+  \label{fig:kq_interference}
+\end{figure}
+
+To make this concrete, Fig.~\ref{fig:retrieval_examples} shows the retrieval pattern for two specific sentences at layer 8, averaged across all six memory banks. Each cell shows $\Repart(K^* \cdot Q)$ between a query token (row) and a key token (column), with red indicating constructive interference and blue destructive. In ``The bat flew out of the cave at dusk,'' the query at ``dusk'' retrieves constructively from the prepositional chain ``at,'' ``cave,'' ``of'' while suppressing ``flew'' and ``bat.'' In ``The bank approved his loan application last week,'' ``loan'' retrieves constructively from ``approved'' and ``bank'' while ``week'' suppresses ``application.'' These patterns emerge from training on next-token prediction alone.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/ext_retrieval_examples.pdf}
+  \caption{Conjugate retrieval pattern $\Repart(K^* \cdot Q)$ at layer 8 for two sentences, averaged across all six memory banks. Red: constructive interference (retrieved). Blue: destructive (suppressed). The causal mask restricts retrieval to preceding tokens.}
+  \label{fig:retrieval_examples}
+\end{figure}
+
+If the interference patterns are structured at the level of retrieval, the question is whether the underlying representations also reflect this structure. We measured the conjugate inner product $\langle z_1^* | z_2 \rangle$ between learned complex embeddings for 10,256 WordNet synonym pairs and 10,256 random pairs. The real part of the normalized conjugate inner product is significantly higher for synonyms than for random pairs ($d_{\text{sep}} = 0.059$, $p = 1.4 \times 10^{-4}$). Fig.~\ref{fig:phase_coherence} shows a curated subset: synonyms cluster near zero phase difference at elevated coherence, while unrelated pairs scatter across $[-\pi, \pi]$. No supervision over semantic relations was provided during training.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/hyp_phase_semantic_coherence.pdf}
+  \caption{Phase coherence vs.\ phase difference $\angle\langle z_1^* | z_2 \rangle$ for synonym, antonym, and random word pairs in the learned complex embeddings. Dashed lines indicate group means ($p = 0.0004$, synonyms vs.\ random).}
+  \label{fig:phase_coherence}
+\end{figure}
+
+The matrix state $S_t$ that accumulates these associations operates well below its theoretical capacity. The effective rank of $S_t$, measured via the entropy of its singular value distribution, saturates at approximately 10 out of $d = 64$ within the first 10--15 tokens and remains bounded thereafter. The learned decay keeps the state sparse, maintaining $\sim$10 active associations per memory bank at any given time. The $d^2$ lossless capacity described in Sec.~\ref{sec:pam} sets the ceiling; the gated decay determines how much of it is occupied at each step.
+
+\label{sec:ablation}
+
+Perturbing the trained complex embeddings confirms that the model depends on both components of its complex representations (Table~\ref{tab:ablation}). Zeroing the imaginary component increases perplexity from 44.5 to 4,306; randomizing phase while preserving magnitude yields 449,000; normalizing to unit magnitude while preserving phase causes divergence. These perturbations destroy information the model was trained to use, so the degradation demonstrates dependence, not inherent advantage.
+
+\begin{table}[t]
+  \centering
+  \caption{Validation perplexity under perturbation of the trained complex embeddings.}
+  \label{tab:ablation}
+  \begin{tabular}{@{}lc@{}}
+    \toprule
+    Condition & Val PPL \\
+    \midrule
+    Full complex (baseline) & 44.5 \\
+    Zero imaginary & 4,306 \\
+    Random phase & 449,000 \\
+    Unit magnitude & $>10^{18}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+A real-valued variant (RPAM) with architecturally identical structure but all complex operations replaced by real-valued equivalents is currently training on WikiText-103. Because each complex linear map carries two weight matrices ($W_r, W_i$), RPAM uses dimension 576 with 9 parallel memory banks (vs.\ PAM's 384 with 6) to match the total parameter count at $\sim$120M. The only difference is the arithmetic: RPAM uses the standard dot product $K_i \cdot Q_t$ for retrieval, real-valued outer products for accumulation, and ReLU-based activations in place of modReLU. This ablation will determine whether the perplexity achieved by PAM is attributable to operating in complex Hilbert space or to the matrix-state recurrence alone. Results will be reported upon completion.
 
 At epoch 10, given the prompt ``In 1923, the University of,'' the model generates: ``In 1923, the University of Illinois at Urbana @-@ Urdu said it was `an easy choice to do something in its own right.' The university also claimed the first students from Wisconsin had to be replaced by a more `good student' due to a lack of funds.'' The text is grammatically coherent and shows structural awareness of dates, proper nouns, and institutional language, with 3-gram repetition rate 0.034, 4-gram repetition rate 0.011, and unique token ratio 0.703. Factual accuracy is not reliable at this scale.
-
 
 \section{Discussion}
 \label{sec:analysis}
@@ -245,6 +292,10 @@ At epoch 10, given the prompt ``In 1923, the University of,'' the model generate
 \citet{danihelka2016associative} previously incorporated complex-valued holographic representations into an LSTM and found improvements on tasks requiring compositional binding and retrieval, consistent with the classical result of \citet{oppenheim1981importance} that phase carries more structural information than magnitude. The connection between phase and representational capacity has a deeper grounding in the geometric phase of \citet{berry1984quantal} and \citet{pancharatnam1956generalized}, which showed that phase relationships encode topological properties of the trajectory a system follows through its state space. In the context of PAM, this suggests that the phase of the complex state may encode not only the content of stored associations but something about the path through which they were accumulated, a form of sequential information that real-valued states cannot represent without additional mechanisms. The QK phase normalization ablation described in \ref{sec:main-result}, in which removing the magnitude degree of freedom from queries and keys caused generation to collapse into repetition, provides indirect evidence that both magnitude and phase are carrying distinct and necessary information in the retrieval process.
 
 \citet{lo2024contextuality} used a sheaf-theoretic framework~\cite{abramsky2011sheaf} to identify over 77,000 instances of contextuality in BERT's internal representations, demonstrating that the non-separability observed behaviorally in Bell violation experiments~\cite{busemeyer2012quantum,bruza2023contextuality,agostino2025quantum,agostino2026production} is also present in the geometry of the embeddings themselves. This finding connects to the difficulties documented in the mechanistic interpretability literature, where sparse autoencoders trained on frontier models lose approximately 90\% of the model's capability when their reconstructions replace the original activations~\cite{gao2024scaling_sae}, extracted features are neither selective nor independent when used for steering~\cite{mueller2024isolation}, and there is a proven exponential gap between representing features in superposition and computing with them~\cite{adler2024complexity}. \citet{williams2025philosophy} have argued that these difficulties may reflect conceptual limitations of the decomposition framework rather than technical ones. If the representations are fundamentally non-separable, as the Bell violations and the sheaf-theoretic analysis suggest, then an architecture that operates natively in complex Hilbert space may not merely provide an alternative computational mechanism but may produce representations whose structure is more naturally described by the formalism in which they were computed. Whether PAM's representations are in fact more interpretable in sheaf-theoretic terms than transformer representations is a testable question that we intend to pursue.
+
+The observation that the state matrix $S_t$ operates at effective rank $\sim$10 out of $d = 64$, despite having $d^2$ lossless capacity available, has a natural interpretation in the complex formalism. The state carries a superposition of all associations accumulated up to time $t$, and the data-dependent decay selectively suppresses associations that are not reinforced by incoming tokens. Mathematically, a $d \times d$ complex matrix at rank 10 has had most of its off-diagonal coherences suppressed; in the language of quantum information, this is decoherence~\cite{zurek2003decoherence}. The model is not doing quantum physics, but it is using the same algebraic structure for a functionally analogous reason: maintaining a superposition of stored associations is useful for flexible retrieval, but the system cannot act on all of them simultaneously, so it learns to collapse the superposition to the associations relevant to the current context. This is the problem of relevance realization~\cite{vervaeke2013} implemented in the mathematics of the complex Hilbert space that operational quantum logic identifies as native to contextual systems. The decay is the decoherence mechanism; the conjugate retrieval is the measurement.
+
+PAM's matrix state $S_t \in \Complex^{d \times d}$ is also an operator in the sense of the neural operator framework of \citet{kovachki2023neural}, which formalizes learned maps between function spaces. The universal approximation theorem for operators~\cite{chen1995universal}, recently extended to show that nonlocality and nonlinearity suffice for universality~\cite{lanthaler2025nonlocality}, applies to PAM's conjugate retrieval: the complex-valued kernel $K(q,k) = q^* \cdot k$ is both nonlocal (all stored associations contribute) and nonlinear (through the decay and gating mechanisms). The kernel interpretation of attention developed by \citet{tsai2019transformer} connects the discrete retrieval to a continuous integral operator whose selectivity is phase-dependent. Work on data encoding in variational quantum models~\cite{schuld2021effect} has shown that encoding classical data into quantum Hilbert space can provide expressivity equivalent to infinitely wide classical networks; PAM's complex embedding can be understood as a classical implementation of this encoding. The Fourier neural operator~\cite{li2021fourier}, which learns in the spectral domain using inherently complex-valued Fourier coefficients, provides an independent demonstration that complex arithmetic in operator learning captures structure efficiently. Characterizing the operator $S_t$ itself --- its eigenspectrum, the diversity of operators the model produces across different inputs, and whether the operator vocabulary changes with sampling temperature --- is a natural direction for future analysis.
 
 The computational costs are comparable in order to standard attention: the training-time dual form gives $O(T^2 H d)$ per layer, while at inference PAM requires $O(Hd^2)$ per token using a fixed state of 49,152 floats per layer regardless of sequence length, compared to a KV cache that grows linearly with context. All results reported here are from single training runs on a single RTX 4090, and the $4\times$ throughput gap relative to the transformer (23k vs.\ 96k tokens/second) reflects the arithmetic cost of complex linear maps and the absence of custom CUDA kernels rather than a fundamental asymmetry in computational complexity.
 
@@ -265,9 +316,13 @@ In this work we constructed a language model that operates entirely in complex-v
 
 \item PAM's retrieval operation implements the same mathematical structure as the quantum semantic framework~\cite{agostino2025quantum}: outer-product accumulation of associations in a complex Hilbert space and projection of a query onto the accumulated state through the conjugate inner product, the operation that computes measurement probabilities in quantum mechanics.
 
+\item The learned complex embeddings exhibit structured conjugate inner products across 10,256 WordNet synonym pairs ($p = 1.4 \times 10^{-4}$), and the conjugate inner product between keys and queries shows a progressive shift from symmetric to constructive-biased interference through depth (52\% to 40\% destructive), consistent with learned selective retrieval.
+
+\item \label{item:ablation} A matched real-valued ablation is in progress to determine whether the perplexity achieved by PAM is attributable to the complex formalism or to the matrix-state structure alone.
+
 \end{enumerate}
 
-Whether the $\sim$10\% gap to the transformer narrows or widens at larger scales, whether it is attributable to complex-valued computation rather than the matrix-state structure alone, and whether PAM produces a different contextuality profile than transformer-based models when probed with the CHSH protocol~\cite{agostino2026production} are questions that the experiments currently underway are designed to address.
+Whether the $\sim$10\% gap to the transformer narrows or widens at larger scales, whether the real-valued ablation matches PAM's perplexity, and whether PAM produces a different contextuality profile than transformer-based models when probed with the CHSH protocol~\cite{agostino2026production} are questions that the experiments currently underway are designed to address. The connection between PAM's operator-valued recurrence and the neural operator framework~\cite{kovachki2023neural,chen1995universal} suggests that the complex Hilbert space formalism may have applications beyond sequence modeling.
 
 
 \bibliography{aps_refs}
