@@ -46,7 +46,7 @@ from v6.train import (
     _resolve_amp_dtype,
     _build_lr_scheduler,
 )
-from v6.transformer_baseline import TransformerLM, get_transformer_config_100m
+from v6.transformer_baseline import TransformerLM, get_transformer_config_100m, TRANSFORMER_CONFIGS
 
 
 def _build_param_groups(model: nn.Module, weight_decay: float):
@@ -423,6 +423,13 @@ def main():
     parser.add_argument('--log_dir', type=str, default='logs')
     parser.add_argument('--checkpoint_dir', type=str, default='checkpoints_transformer_baseline')
     parser.add_argument('--resume', type=str, default=None)
+    parser.add_argument('--size', type=str, default='100m',
+                        choices=['5m', '10m', '50m', '100m'],
+                        help='Model size preset')
+    parser.add_argument('--d_model', type=int, default=None)
+    parser.add_argument('--n_layers', type=int, default=None)
+    parser.add_argument('--n_heads', type=int, default=None)
+    parser.add_argument('--d_ff', type=int, default=None)
     args = parser.parse_args()
 
     # Set up logging
@@ -447,7 +454,19 @@ def main():
         torch.backends.cudnn.allow_tf32 = True
 
     # Model config
-    config = get_transformer_config_100m()
+    config = TRANSFORMER_CONFIGS[args.size]
+    if args.d_model is not None:
+        config.d_model = args.d_model
+    if args.n_layers is not None:
+        config.n_layers = args.n_layers
+    if args.n_heads is not None:
+        config.n_heads = args.n_heads
+    if args.d_ff is not None:
+        config.d_ff = args.d_ff
+    elif args.d_model is not None:
+        config.d_ff = 4 * config.d_model
+    if args.n_heads is None and args.d_model is not None:
+        config.n_heads = max(2, config.d_model // 64)
     config.max_seq_len = args.seq_len
     config.dropout = args.dropout
 

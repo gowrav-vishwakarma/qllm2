@@ -232,3 +232,23 @@ def get_transformer_config_100m() -> TransformerConfig:
         dropout=0.1,
         tie_weights=True,
     )
+
+
+TRANSFORMER_CONFIGS = {
+    '5m': TransformerConfig(
+        vocab_size=50257, max_seq_len=2048,
+        d_model=88, n_layers=4, n_heads=2, d_ff=352,
+        dropout=0.1, tie_weights=True,
+    ),
+    '10m': TransformerConfig(
+        vocab_size=50257, max_seq_len=2048,
+        d_model=136, n_layers=13, n_heads=2, d_ff=544,
+        dropout=0.1, tie_weights=True,
+    ),
+    '50m': TransformerConfig(
+        vocab_size=50257, max_seq_len=2048,
+        d_model=480, n_layers=9, n_heads=7, d_ff=1920,
+        dropout=0.1, tie_weights=True,
+    ),
+    '100m': get_transformer_config_100m(),
+}
