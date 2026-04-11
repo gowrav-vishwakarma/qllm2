@@ -279,7 +279,30 @@ Perturbing the trained complex embeddings confirms that the model depends on bot
 
 To isolate the contribution of the complex formalism from the matrix-state architecture, we trained a real-valued variant (RPAM) with architecturally identical structure but all complex operations replaced by real-valued equivalents. Because each complex linear map carries two weight matrices ($W_r, W_i$), RPAM uses dimension 576 with 9 parallel memory banks (vs.\ PAM's 384 with 6) to match the total parameter count at $\sim$120M. The only difference is the arithmetic: RPAM uses the standard dot product $K_i \cdot Q_t$ for retrieval, real-valued outer products for accumulation, and ReLU-based activations in place of modReLU.
 
-RPAM reaches validation perplexity 25.42 after 7 epochs on the same WikiText-103 data (seq\_len 512, batch size 8, M4 Max), compared to PAM's 33.19 after 10 epochs under identical conditions. The real-valued model converges faster and to a lower perplexity, which is consistent with the maturity of real-valued optimization and the absence of custom kernels in the complex implementation. The gap between PAM and its real-valued ablation at this scale is roughly 30\%, while PAM reaches the same neighborhood as the matched transformer baseline (30.0 on seq\_len 2048). Given the non-classical correlational structure of language established by CHSH violations~\cite{agostino2025quantum,agostino2026production} and the operational quantum logic argument that complex Hilbert space is the natural formalism for contextual systems, PAM's competitive performance at 100M parameters from a qualitatively different computational mechanism --- one that produces destructive interference where real-valued models cannot --- motivates the hypothesis that the gap will narrow or invert at scales where the semantic complexity of the data exceeds what non-negative retrieval can efficiently approximate.
+RPAM reaches validation perplexity 25.42 after 7 epochs on the same WikiText-103 data (seq\_len 512, batch size 8, M4 Max), compared to PAM's 33.19 after 10 epochs under identical conditions (Fig.~\ref{fig:cmp_val_ppl}). The real-valued model converges faster and to a lower perplexity, which is consistent with the maturity of real-valued optimization and the absence of custom kernels in the complex implementation. The gap between PAM and its real-valued ablation at this scale is roughly 30\%, while PAM reaches the same neighborhood as the matched transformer baseline (30.0 on seq\_len 2048).
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/cmp_val_ppl.pdf}
+  \caption{Validation perplexity vs.\ epoch for QPAM (complex, dim=384, 6 memory banks) and RPAM (real, dim=576, 9 memory banks) on WikiText-103 (seq\_len 512, M4 Max). Both models have $\sim$120M parameters. RPAM converges faster and to a lower perplexity (25.42 vs.\ 33.19).}
+  \label{fig:cmp_val_ppl}
+\end{figure}
+
+On the same two sentences examined in Fig.~\ref{fig:retrieval_examples}, the retrieval patterns differ in character: QPAM produces 40--58\% destructive interference (negative $\Repart(K^* \cdot Q)$), while RPAM produces 18--42\% (Fig.~\ref{fig:cmp_retrieval}). The real-valued dot product is mostly non-negative, concentrating retrieval weight on similar keys rather than actively suppressing dissimilar ones. On 10,256 WordNet synonym--random pairs, RPAM's cosine similarity separates synonyms from random pairs at $d_{\text{sep}} = 0.112$ compared to PAM's conjugate inner product at $d_{\text{sep}} = 0.059$ (Fig.~\ref{fig:cmp_embedding}), consistent with RPAM's lower perplexity: the real-valued model organizes its embedding space more sharply at this scale.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/cmp_retrieval_0.pdf}
+  \caption{Retrieval patterns for QPAM (left) and RPAM (right) on the sentence ``The bat flew across the dark cave.'' QPAM produces both constructive (warm) and destructive (cool) interference, while RPAM's dot-product retrieval concentrates positive weight on similar keys.}
+  \label{fig:cmp_retrieval}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/cmp_embedding_similarity.pdf}
+  \caption{Density of similarity scores for synonym pairs vs.\ random pairs. Left: PAM's conjugate inner product ($d_{\text{sep}} = 0.059$). Right: RPAM's cosine similarity ($d_{\text{sep}} = 0.112$). RPAM separates the distributions more sharply at this scale.}
+  \label{fig:cmp_embedding}
+\end{figure}
 
 At epoch 10, given the prompt ``In 1923, the University of,'' the model generates: ``In 1923, the University of Illinois at Urbana @-@ Urdu said it was `an easy choice to do something in its own right.' The university also claimed the first students from Wisconsin had to be replaced by a more `good student' due to a lack of funds.'' The text is grammatically coherent and shows structural awareness of dates, proper nouns, and institutional language, with 3-gram repetition rate 0.034, 4-gram repetition rate 0.011, and unique token ratio 0.703. Factual accuracy is not reliable at this scale.
 
@@ -322,9 +345,6 @@ In this work we constructed a language model that operates entirely in complex-v
 \item A matched real-valued ablation (RPAM) with identical architecture and parameter count reaches 25.42 validation perplexity, outperforming PAM (33.19) at this scale. PAM nevertheless reaches the same neighborhood through a qualitatively different mechanism --- conjugate retrieval with destructive interference --- that the real-valued model cannot produce.
 
 \end{enumerate}
-
-The real-valued ablation outperforms PAM at $\sim$100M parameters. The conjugate retrieval produces structured destructive interference that the real-valued dot product cannot; whether this matters for language modeling at larger scales is untested.
-
 
 \bibliography{aps_refs}
 
