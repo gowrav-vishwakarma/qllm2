@@ -1,0 +1,1734 @@
+[2026-04-15 00:26:26] Wall clock start: 2026-04-15 00:26:26
+[2026-04-15 00:26:26] ============================================================
+[2026-04-15 00:26:26]   Transformer Baseline (~100M params)
+[2026-04-15 00:26:26]   GPT-2-style decoder-only transformer
+[2026-04-15 00:26:26]   Same data pipeline as PAM v3 for fair comparison
+[2026-04-15 00:26:26] ============================================================
+[2026-04-15 00:26:26] Architecture: d_model=136, n_layers=13, n_heads=2, d_ff=544
+[2026-04-15 00:26:26] seq_len=512, dropout=0.1, tie_weights=True
+[2026-04-15 00:26:26] Training: lr=0.0003, warmup=500, wd=0.01, grad_clip=1.0
+[2026-04-15 00:26:26] Batch size: 8, Epochs: 10
+[2026-04-15 00:26:26] AMP
+
+Loading WikiText-103 
+[2026-04-15 00:26:26] Loadi
+/Users/caug/npcww/qnlp/qllm-private/.venv/li[2026-04-15 00:26:28] [cache] Loaded WikiText-103 train from .cache/v6_tokens/wikitext103_train_v2_full_sl512.pt (118,496,145 tokens)
+[2026-04-15 00:26:28] [cache] Loaded WikiText-103 validation from .cache/v6_tokens/wikitext103_validation_v2_full_sl512.pt (248,461 tokens)
+[2026-04-15 00:26:28] Train chunks: 230986, Val chunks: 484
+[2026-04-15 00:26:28] Train batches: 28874, Val batches: 61
+
+[2026-04-15 00:26:28] Model parameters: {'embeddings': 6904584, 'transformer_blocks': 2908360, 'final_ln': 272, 'lm_head': 0, 'total': 9813216}
+[2026-04-15 00:26:28] Total: 9,813,216 (9.8M)
+[2026-04-15 00:26:28] Param groups: 52 tensors (2,885,376 params) with weight decay, 108 tensors (6,927,840 params) without
+
+[2026-04-15 00:26:28] Training on mps
+[2026-04-15 00:26:28] Parameters: {'embeddings': 6904584, 'transformer_blocks': 2908360, 'final_ln': 272, 'lm_head': 0, 'total': 9813216}
+[2026-04-15 00:26:28] Total: 9,813,216 (9.8M)
+[2026-04-15 00:26:28] Epochs: 1..10, Batches/epoch: 2887
+
+
+
+[2026-04-15 00:26:28] =====================================
+Epoch 1/10
+=============================================[2026-04-15 00:
+  [1] 0/28874 (0%) loss=10.8549 ppl=51785.1 lr=6.00e-07 | 1456 tok/[2026-04-15 00:26:31]   [1] 0/2887
+  [1] 50/28874 (0%) loss=10.5118 ppl=36746.8 lr=3.06e-05 | 25409 tok/s (avg 19207) ETA 10[2026-04-15 00:26:3
+  [1] 100/28874 (0%) loss=10.0989 ppl=24316.7 lr=6.06e-05 | 24242 tok/s (avg 21408) ETA 91m45s | gtok=413696
+  [1] 150/28874 (1%) loss=9.5933 ppl=14666.6 lr=9.06e-05 | 23583 tok/s (avg 22082) ETA 88m47s | gtok=618496
+  [1] 200/28874 (1%) loss=8.8984 ppl=7320.1 lr=1.21e-04 | 22682 tok/s (avg 22228) ETA 88m03s | gtok=823296
+  [1] 250/28874 (1%) loss=8.2656 ppl=3887.8 lr=1.51e-04 | 15702 tok/s (avg 20528) ETA 95m11s | gtok=1028096
+  [1] 300/28874 (1%) loss=7.8410 ppl=2542.8 lr=1.81e-04 | 15015 tok/s (avg 19348) ETA 100m48s | gtok=1232896
+  [1] 350/28874 (1%) loss=7.1484 ppl=1272.1 lr=2.11e-04 | 21446 tok/s (avg 19621) ETA 99m14s | gtok=1437696
+  [1] 400/28874 (1%) loss=7.0139 ppl=1112.0 lr=2.41e-04 | 21737 tok/s (avg 19862) ETA 97m51s | gtok=1642496
+  [1] 450/28874 (2%) loss=6.8419 ppl=936.2 lr=2.71e-04 | 21420 tok/s (avg 20024) ETA 96m54s | gtok=1847296
+  [1] 500/28874 (2%) loss=6.7118 ppl=822.0 lr=3.00e-04 | 21824 tok/s (avg 20190) ETA 95m56s | gtok=2052096
+  [1] 550/28874 (2%) loss=6.8422 ppl=936.5 lr=3.00e-04 | 21596 tok/s (avg 20310) ETA 95m12s | gtok=2256896
+  [1] 600/28874 (2%) loss=6.6878 ppl=802.5 lr=3.00e-04 | 21397 tok/s (avg 20396) ETA 94m37s | gtok=2461696
+  [1] 650/28874 (2%) loss=6.6206 ppl=750.4 lr=3.00e-04 | 21303 tok/s (avg 20463) ETA 94m09s | gtok=2666496
+  [1] 700/28874 (2%) loss=6.2698 ppl=528.4 lr=3.00e-04 | 21242 tok/s (avg 20516) ETA 93m44s | gtok=2871296
+  [1] 750/28874 (3%) loss=6.2796 ppl=533.6 lr=3.00e-04 | 20481 tok/s (avg 20514) ETA 93m35s | gtok=3076096
+  [1] 800/28874 (3%) loss=6.3699 ppl=584.0 lr=3.00e-04 | 13948 tok/s (avg 19928) ETA 96m10s | gtok=3280896
+  [1] 850/28874 (3%) loss=6.3744 ppl=586.6 lr=3.00e-04 | 11566 tok/s (avg 19116) ETA 100m04s | gtok=3485696
+  [1] 900/28874 (3%) loss=6.3983 ppl=600.8 lr=3.00e-04 | 10473 tok/s (avg 18279) ETA 104m28s | gtok=3690496
+  [1] 950/28874 (3%) loss=6.1128 ppl=451.6 lr=3.00e-04 | 9498 tok/s (avg 17432) ETA 109m21s | gtok=3895296
+  [1] 1000/28874 (3%) loss=6.2252 ppl=505.3 lr=3.00e-04 | 8158 tok/s (avg 16495) ETA 115m21s | gtok=4100096
+  [1] 1050/28874 (4%) loss=6.3173 ppl=554.1 lr=3.00e-04 | 7701 tok/s (avg 15645) ETA 121m24s | gtok=4304896
+  [1] 1100/28874 (4%) loss=6.1844 ppl=485.1 lr=3.00e-04 | 7666 tok/s (avg 14939) ETA 126m54s | gtok=4509696
+  [1] 1150/28874 (4%) loss=6.1454 ppl=466.6 lr=3.00e-04 | 8074 tok/s (avg 14407) ETA 131m22s | gtok=4714496
+  [1] 1200/28874 (4%) loss=6.0915 ppl=442.1 lr=3.00e-04 | 8322 tok/s (avg 13981) ETA 135m07s | gtok=4919296
+  [1] 1250/28874 (4%) loss=6.3224 ppl=556.9 lr=3.00e-04 | 8208 tok/s (avg 13599) ETA 138m40s | gtok=5124096
+  [1] 1300/28874 (5%) loss=6.3983 ppl=600.8 lr=3.00e-04 | 8318 tok/s (avg 13275) ETA 141m47s | gtok=5328896
+  [1] 1350/28874 (5%) loss=6.0756 ppl=435.1 lr=3.00e-04 | 8392 tok/s (avg 12995) ETA 144m35s | gtok=5533696
+  [1] 1400/28874 (5%) loss=6.0235 ppl=413.0 lr=3.00e-04 | 8406 tok/s (avg 12747) ETA 147m08s | gtok=5738496
+  [1] 1450/28874 (5%) loss=6.3435 ppl=568.8 lr=3.00e-04 | 8221 tok/s (avg 12509) ETA 149m39s | gtok=5943296
+  [1] 1500/28874 (5%) loss=6.2438 ppl=514.8 lr=3.00e-04 | 8287 tok/s (avg 12300) ETA 151m55s | gtok=6148096
+  [1] 1550/28874 (5%) loss=6.3543 ppl=575.0 lr=3.00e-04 | 8255 tok/s (avg 12109) ETA 154m02s | gtok=6352896
+  [1] 1600/28874 (6%) loss=6.0293 ppl=415.4 lr=3.00e-04 | 8289 tok/s (avg 11937) ETA 155m58s | gtok=6557696
+  [1] 1650/28874 (6%) loss=6.2041 ppl=494.8 lr=3.00e-04 | 8578 tok/s (avg 11797) ETA 157m31s | gtok=6762496
+  [1] 1700/28874 (6%) loss=6.1675 ppl=477.0 lr=3.00e-04 | 8669 tok/s (avg 11674) ETA 158m54s | gtok=6967296
+  [1] 1750/28874 (6%) loss=5.9629 ppl=388.7 lr=3.00e-04 | 8261 tok/s (avg 11537) ETA 160m29s | gtok=7172096
+  [1] 1800/28874 (6%) loss=5.9553 ppl=385.8 lr=3.00e-04 | 8412 tok/s (avg 11420) ETA 161m50s | gtok=7376896
+  [1] 1850/28874 (6%) loss=5.9320 ppl=376.9 lr=3.00e-04 | 8554 tok/s (avg 11317) ETA 163m00s | gtok=7581696
+  [1] 1900/28874 (7%) loss=5.9501 ppl=383.8 lr=3.00e-04 | 8479 tok/s (avg 11218) ETA 164m08s | gtok=7786496
+  [1] 1950/28874 (7%) loss=5.8545 ppl=348.8 lr=3.00e-04 | 8361 tok/s (avg 11121) ETA 165m16s | gtok=7991296
+  [1] 2000/28874 (7%) loss=5.7628 ppl=318.2 lr=3.00e-04 | 8375 tok/s (avg 11031) ETA 166m18s | gtok=8196096
+  [1] 2050/28874 (7%) loss=6.1707 ppl=478.5 lr=3.00e-04 | 8437 tok/s (avg 10948) ETA 167m14s | gtok=8400896
+  [1] 2100/28874 (7%) loss=6.2782 ppl=532.8 lr=3.00e-04 | 8552 tok/s (avg 10876) ETA 168m03s | gtok=8605696
+  [1] 2150/28874 (7%) loss=5.8168 ppl=335.9 lr=3.00e-04 | 8384 tok/s (avg 10801) ETA 168m53s | gtok=8810496
+  [1] 2200/28874 (8%) loss=6.0814 ppl=437.6 lr=3.00e-04 | 8402 tok/s (avg 10732) ETA 169m40s | gtok=9015296
+  [1] 2250/28874 (8%) loss=5.9566 ppl=386.3 lr=3.00e-04 | 8417 tok/s (avg 10666) ETA 170m23s | gtok=9220096
+  [1] 2300/28874 (8%) loss=5.7353 ppl=309.6 lr=3.00e-04 | 8286 tok/s (avg 10600) ETA 171m07s | gtok=9424896
+  [1] 2350/28874 (8%) loss=5.6190 ppl=275.6 lr=3.00e-04 | 8374 tok/s (avg 10541) ETA 171m46s | gtok=9629696
+  [1] 2400/28874 (8%) loss=5.8213 ppl=337.4 lr=3.00e-04 | 8438 tok/s (avg 10486) ETA 172m20s | gtok=9834496
+  [1] 2450/28874 (8%) loss=5.8169 ppl=335.9 lr=3.00e-04 | 8429 tok/s (avg 10434) ETA 172m52s | gtok=10039296
+  [1] 2500/28874 (9%) loss=5.6717 ppl=290.5 lr=3.00e-04 | 8455 tok/s (avg 10386) ETA 173m21s | gtok=10244096
+  [1] 2550/28874 (9%) loss=5.8244 ppl=338.5 lr=3.00e-04 | 8689 tok/s (avg 10346) ETA 173m41s | gtok=10448896
+  [1] 2600/28874 (9%) loss=5.8288 ppl=339.9 lr=3.00e-04 | 8360 tok/s (avg 10299) ETA 174m08s | gtok=10653696
+  [1] 2650/28874 (9%) loss=5.8515 ppl=347.8 lr=3.00e-04 | 8374 tok/s (avg 10255) ETA 174m34s | gtok=10858496
+  [1] 2700/28874 (9%) loss=5.7669 ppl=319.6 lr=3.00e-04 | 8388 tok/s (avg 10212) ETA 174m57s | gtok=11063296
+  [1] 2750/28874 (10%) loss=5.9403 ppl=380.1 lr=3.00e-04 | 8356 tok/s (avg 10171) ETA 175m19s | gtok=11268096
+  [1] 2800/28874 (10%) loss=6.0665 ppl=431.2 lr=3.00e-04 | 8346 tok/s (avg 10132) ETA 175m40s | gtok=11472896
+  [1] 2850/28874 (10%) loss=5.9412 ppl=380.4 lr=3.00e-04 | 8514 tok/s (avg 10098) ETA 175m55s | gtok=11677696
+  [1] 2900/28874 (10%) loss=6.0483 ppl=423.4 lr=3.00e-04 | 8497 tok/s (avg 10065) ETA 176m09s | gtok=11882496
+  [1] 2950/28874 (10%) loss=5.8638 ppl=352.0 lr=3.00e-04 | 8363 tok/s (avg 10031) ETA 176m25s | gtok=12087296
+  [1] 3000/28874 (10%) loss=5.7123 ppl=302.6 lr=3.00e-04 | 8347 tok/s (avg 9997) ETA 176m40s | gtok=12292096
+  [1] 3050/28874 (11%) loss=5.8417 ppl=344.4 lr=3.00e-04 | 8412 tok/s (avg 9967) ETA 176m52s | gtok=12496896
+  [1] 3100/28874 (11%) loss=5.7014 ppl=299.3 lr=3.00e-04 | 8332 tok/s (avg 9935) ETA 177m05s | gtok=12701696
+  [1] 3150/28874 (11%) loss=5.7522 ppl=314.9 lr=3.00e-04 | 8384 tok/s (avg 9906) ETA 177m16s | gtok=12906496
+  [1] 3200/28874 (11%) loss=5.8375 ppl=342.9 lr=3.00e-04 | 8438 tok/s (avg 9879) ETA 177m24s | gtok=13111296
+  [1] 3250/28874 (11%) loss=5.5191 ppl=249.4 lr=3.00e-04 | 8354 tok/s (avg 9851) ETA 177m33s | gtok=13316096
+  [1] 3300/28874 (11%) loss=5.8135 ppl=334.8 lr=3.00e-04 | 8414 tok/s (avg 9826) ETA 177m40s | gtok=13520896
+  [1] 3350/28874 (12%) loss=5.6262 ppl=277.6 lr=3.00e-04 | 8384 tok/s (avg 9801) ETA 177m46s | gtok=13725696
+  [1] 3400/28874 (12%) loss=5.5748 ppl=263.7 lr=3.00e-04 | 8299 tok/s (avg 9775) ETA 177m54s | gtok=13930496
+  [1] 3450/28874 (12%) loss=5.6661 ppl=288.9 lr=3.00e-04 | 8614 tok/s (avg 9756) ETA 177m53s | gtok=14135296
+  [1] 3500/28874 (12%) loss=5.4840 ppl=240.8 lr=3.00e-04 | 8196 tok/s (avg 9729) ETA 178m01s | gtok=14340096
+  [1] 3550/28874 (12%) loss=5.6982 ppl=298.3 lr=3.00e-04 | 8396 tok/s (avg 9708) ETA 178m04s | gtok=14544896
+  [1] 3600/28874 (12%) loss=5.7053 ppl=300.5 lr=3.00e-04 | 8379 tok/s (avg 9686) ETA 178m07s | gtok=14749696
+  [1] 3650/28874 (13%) loss=5.7515 ppl=314.7 lr=3.00e-04 | 8266 tok/s (avg 9664) ETA 178m11s | gtok=14954496
+  [1] 3700/28874 (13%) loss=5.5563 ppl=258.9 lr=3.00e-04 | 8320 tok/s (avg 9643) ETA 178m13s | gtok=15159296
+  [1] 3750/28874 (13%) loss=5.4073 ppl=223.0 lr=3.00e-04 | 8216 tok/s (avg 9620) ETA 178m16s | gtok=15364096
+  [1] 3800/28874 (13%) loss=5.6648 ppl=288.5 lr=3.00e-04 | 8290 tok/s (avg 9600) ETA 178m17s | gtok=15568896
+  [1] 3850/28874 (13%) loss=5.5755 ppl=263.9 lr=3.00e-04 | 8286 tok/s (avg 9580) ETA 178m18s | gtok=15773696
+  [1] 3900/28874 (14%) loss=5.8167 ppl=335.9 lr=3.00e-04 | 8330 tok/s (avg 9562) ETA 178m17s | gtok=15978496
+  [1] 3950/28874 (14%) loss=5.5829 ppl=265.8 lr=3.00e-04 | 8475 tok/s (avg 9546) ETA 178m13s | gtok=16183296
+  [1] 4000/28874 (14%) loss=5.5419 ppl=255.2 lr=3.00e-04 | 8223 tok/s (avg 9527) ETA 178m13s | gtok=16388096
+  [1] 4050/28874 (14%) loss=5.5084 ppl=246.8 lr=3.00e-04 | 8059 tok/s (avg 9506) ETA 178m16s | gtok=16592896
+  [1] 4100/28874 (14%) loss=5.6912 ppl=296.3 lr=3.00e-04 | 8279 tok/s (avg 9489) ETA 178m13s | gtok=16797696
+  [1] 4150/28874 (14%) loss=5.5520 ppl=257.7 lr=3.00e-04 | 8194 tok/s (avg 9471) ETA 178m12s | gtok=17002496
+  [1] 4200/28874 (15%) loss=5.7548 ppl=315.7 lr=3.00e-04 | 8195 tok/s (avg 9453) ETA 178m10s | gtok=17207296
+  [1] 4250/28874 (15%) loss=5.6396 ppl=281.3 lr=3.00e-04 | 8305 tok/s (avg 9438) ETA 178m06s | gtok=17412096
+  [1] 4300/28874 (15%) loss=5.5228 ppl=250.3 lr=3.00e-04 | 8276 tok/s (avg 9422) ETA 178m02s | gtok=17616896
+  [1] 4350/28874 (15%) loss=5.6386 ppl=281.1 lr=3.00e-04 | 8449 tok/s (avg 9410) ETA 177m54s | gtok=17821696
+  [1] 4400/28874 (15%) loss=5.7462 ppl=313.0 lr=3.00e-04 | 8304 tok/s (avg 9396) ETA 177m48s | gtok=18026496
+  [1] 4450/28874 (15%) loss=5.7900 ppl=327.0 lr=3.00e-04 | 8195 tok/s (avg 9380) ETA 177m44s | gtok=18231296
+  [1] 4500/28874 (16%) loss=5.5715 ppl=262.8 lr=3.00e-04 | 8318 tok/s (avg 9367) ETA 177m37s | gtok=18436096
+  [1] 4550/28874 (16%) loss=5.8279 ppl=339.6 lr=3.00e-04 | 8278 tok/s (avg 9353) ETA 177m31s | gtok=18640896
+  [1] 4600/28874 (16%) loss=5.2971 ppl=199.8 lr=3.00e-04 | 7934 tok/s (avg 9335) ETA 177m30s | gtok=18845696
+  [1] 4650/28874 (16%) loss=5.5110 ppl=247.4 lr=3.00e-04 | 6780 tok/s (avg 9298) ETA 177m51s | gtok=19050496
+  [1] 4700/28874 (16%) loss=5.2121 ppl=183.5 lr=3.00e-04 | 7903 tok/s (avg 9280) ETA 177m49s | gtok=19255296
+  [1] 4750/28874 (16%) loss=5.3438 ppl=209.3 lr=3.00e-04 | 8327 tok/s (avg 9269) ETA 177m39s | gtok=19460096
+  [1] 4800/28874 (17%) loss=5.3899 ppl=219.2 lr=3.00e-04 | 8336 tok/s (avg 9258) ETA 177m30s | gtok=19664896
+  [1] 4850/28874 (17%) loss=5.5835 ppl=266.0 lr=3.00e-04 | 8143 tok/s (avg 9245) ETA 177m23s | gtok=19869696
+  [1] 4900/28874 (17%) loss=5.3952 ppl=220.4 lr=3.00e-04 | 8286 tok/s (avg 9234) ETA 177m13s | gtok=20074496
+  [1] 4950/28874 (17%) loss=5.3843 ppl=218.0 lr=3.00e-04 | 8157 tok/s (avg 9222) ETA 177m05s | gtok=20279296
+  [1] 5000/28874 (17%) loss=5.3863 ppl=218.4 lr=3.00e-04 | 8140 tok/s (avg 9210) ETA 176m57s | gtok=20484096
+  [mid-epoch sample @ batch 5000, 20,484,096 tok]
+  Prompt: In 1923 , the University of
+  Generated: In 1923 , the University of the National Court . 
+
+ The Council in the Federal Park Commission for the state and public and other buildings . In the world , the National Court of the city was to be a new town of the United States and state of the United States in the city , but the population , the new population had been the largest centre . This state became an independent from the state of the country . The site is also the first most important part of the National Route of West . 
+
+
+ = = = Background
+  [1] 5050/28874 (17%) loss=5.3881 ppl=218.8 lr=3.00e-04 | 4656 tok/s (avg 9121) ETA 178m17s | gtok=20688896
+  [1] 5100/28874 (18%) loss=5.3724 ppl=215.4 lr=3.00e-04 | 8311 tok/s (avg 9113) ETA 178m05s | gtok=20893696
+  [1] 5150/28874 (18%) loss=5.6276 ppl=278.0 lr=3.00e-04 | 8330 tok/s (avg 9104) ETA 177m52s | gtok=21098496
+  [1] 5200/28874 (18%) loss=5.3483 ppl=210.3 lr=3.00e-04 | 8460 tok/s (avg 9098) ETA 177m38s | gtok=21303296
+  [1] 5250/28874 (18%) loss=5.5800 ppl=265.1 lr=3.00e-04 | 8202 tok/s (avg 9088) ETA 177m26s | gtok=21508096
+  [1] 5300/28874 (18%) loss=5.5456 ppl=256.1 lr=3.00e-04 | 8203 tok/s (avg 9079) ETA 177m14s | gtok=21712896
+  [1] 5350/28874 (19%) loss=5.6583 ppl=286.7 lr=3.00e-04 | 8262 tok/s (avg 9071) ETA 177m02s | gtok=21917696
+  [1] 5400/28874 (19%) loss=5.3730 ppl=215.5 lr=3.00e-04 | 8090 tok/s (avg 9060) ETA 176m51s | gtok=22122496
+  [1] 5450/28874 (19%) loss=5.4487 ppl=232.5 lr=3.00e-04 | 8267 tok/s (avg 9052) ETA 176m38s | gtok=22327296
+  [1] 5500/28874 (19%) loss=5.1675 ppl=175.5 lr=3.00e-04 | 8333 tok/s (avg 9045) ETA 176m23s | gtok=22532096
+  [1] 5550/28874 (19%) loss=5.5920 ppl=268.3 lr=3.00e-04 | 8231 tok/s (avg 9037) ETA 176m10s | gtok=22736896
+  [1] 5600/28874 (19%) loss=5.4076 ppl=223.1 lr=3.00e-04 | 8246 tok/s (avg 9030) ETA 175m57s | gtok=22941696
+  [1] 5650/28874 (20%) loss=5.2874 ppl=197.8 lr=3.00e-04 | 8126 tok/s (avg 9021) ETA 175m44s | gtok=23146496
+  [1] 5700/28874 (20%) loss=5.2593 ppl=192.4 lr=3.00e-04 | 8445 tok/s (avg 9015) ETA 175m28s | gtok=23351296
+  [1] 5750/28874 (20%) loss=5.6874 ppl=295.1 lr=3.00e-04 | 8310 tok/s (avg 9009) ETA 175m13s | gtok=23556096
+  [1] 5800/28874 (20%) loss=5.0871 ppl=161.9 lr=3.00e-04 | 8201 tok/s (avg 9001) ETA 174m59s | gtok=23760896
+  [1] 5850/28874 (20%) loss=5.2231 ppl=185.5 lr=3.00e-04 | 8402 tok/s (avg 8996) ETA 174m43s | gtok=23965696
+  [1] 5900/28874 (20%) loss=5.3886 ppl=218.9 lr=3.00e-04 | 8322 tok/s (avg 8989) ETA 174m27s | gtok=24170496
+  [1] 5950/28874 (21%) loss=5.1290 ppl=168.9 lr=3.00e-04 | 8321 tok/s (avg 8983) ETA 174m11s | gtok=24375296
+  [1] 6000/28874 (21%) loss=5.5338 ppl=253.1 lr=3.00e-04 | 8248 tok/s (avg 8977) ETA 173m56s | gtok=24580096
+  [1] 6050/28874 (21%) loss=5.5064 ppl=246.3 lr=3.00e-04 | 8709 tok/s (avg 8974) ETA 173m36s | gtok=24784896
+  [1] 6100/28874 (21%) loss=5.4619 ppl=235.6 lr=3.00e-04 | 8358 tok/s (avg 8969) ETA 173m20s | gtok=24989696
+  [1] 6150/28874 (21%) loss=5.7660 ppl=319.3 lr=3.00e-04 | 8400 tok/s (avg 8964) ETA 173m03s | gtok=25194496
+  [1] 6200/28874 (21%) loss=5.3445 ppl=209.4 lr=3.00e-04 | 8308 tok/s (avg 8958) ETA 172m46s | gtok=25399296
+  [1] 6250/28874 (22%) loss=5.4241 ppl=226.8 lr=3.00e-04 | 8202 tok/s (avg 8952) ETA 172m31s | gtok=25604096
+  [1] 6300/28874 (22%) loss=5.0940 ppl=163.0 lr=3.00e-04 | 8198 tok/s (avg 8945) ETA 172m16s | gtok=25808896
+  [1] 6350/28874 (22%) loss=5.3387 ppl=208.2 lr=3.00e-04 | 8441 tok/s (avg 8941) ETA 171m58s | gtok=26013696
+  [1] 6400/28874 (22%) loss=5.4441 ppl=231.4 lr=3.00e-04 | 8290 tok/s (avg 8935) ETA 171m41s | gtok=26218496
+  [1] 6450/28874 (22%) loss=5.1800 ppl=177.7 lr=3.00e-04 | 8213 tok/s (avg 8929) ETA 171m25s | gtok=26423296
+  [1] 6500/28874 (23%) loss=5.2910 ppl=198.5 lr=3.00e-04 | 8225 tok/s (avg 8923) ETA 171m09s | gtok=26628096
+  [1] 6550/28874 (23%) loss=5.6565 ppl=286.2 lr=3.00e-04 | 8358 tok/s (avg 8919) ETA 170m51s | gtok=26832896
+  [1] 6600/28874 (23%) loss=5.2847 ppl=197.3 lr=3.00e-04 | 8349 tok/s (avg 8914) ETA 170m34s | gtok=27037696
+  [1] 6650/28874 (23%) loss=5.4964 ppl=243.8 lr=3.00e-04 | 8496 tok/s (avg 8911) ETA 170m14s | gtok=27242496
+  [1] 6700/28874 (23%) loss=5.0569 ppl=157.1 lr=3.00e-04 | 8251 tok/s (avg 8906) ETA 169m58s | gtok=27447296
+  [1] 6750/28874 (23%) loss=5.2554 ppl=191.6 lr=3.00e-04 | 8307 tok/s (avg 8901) ETA 169m40s | gtok=27652096
+  [1] 6800/28874 (24%) loss=5.6764 ppl=291.9 lr=3.00e-04 | 8411 tok/s (avg 8897) ETA 169m21s | gtok=27856896
+  [1] 6850/28874 (24%) loss=5.5007 ppl=244.9 lr=3.00e-04 | 8355 tok/s (avg 8893) ETA 169m03s | gtok=28061696
+  [1] 6900/28874 (24%) loss=5.4586 ppl=234.8 lr=3.00e-04 | 8319 tok/s (avg 8888) ETA 168m45s | gtok=28266496
+  [1] 6950/28874 (24%) loss=5.3532 ppl=211.3 lr=3.00e-04 | 8605 tok/s (avg 8886) ETA 168m25s | gtok=28471296
+  [1] 7000/28874 (24%) loss=5.4184 ppl=225.5 lr=3.00e-04 | 8292 tok/s (avg 8882) ETA 168m07s | gtok=28676096
+  [1] 7050/28874 (24%) loss=5.1638 ppl=174.8 lr=3.00e-04 | 8297 tok/s (avg 8877) ETA 167m49s | gtok=28880896
+  [1] 7100/28874 (25%) loss=5.4716 ppl=237.8 lr=3.00e-04 | 8316 tok/s (avg 8873) ETA 167m30s | gtok=29085696
+  [1] 7150/28874 (25%) loss=5.5252 ppl=250.9 lr=3.00e-04 | 8259 tok/s (avg 8868) ETA 167m13s | gtok=29290496
+  [1] 7200/28874 (25%) loss=5.4750 ppl=238.7 lr=3.00e-04 | 8333 tok/s (avg 8865) ETA 166m54s | gtok=29495296
+  [1] 7250/28874 (25%) loss=5.6495 ppl=284.2 lr=3.00e-04 | 8143 tok/s (avg 8859) ETA 166m37s | gtok=29700096
+  [1] 7300/28874 (25%) loss=5.3227 ppl=204.9 lr=3.00e-04 | 8324 tok/s (avg 8855) ETA 166m18s | gtok=29904896
+  [1] 7350/28874 (25%) loss=5.4415 ppl=230.8 lr=3.00e-04 | 8381 tok/s (avg 8852) ETA 165m59s | gtok=30109696
+  [1] 7400/28874 (26%) loss=5.4975 ppl=244.1 lr=3.00e-04 | 8300 tok/s (avg 8848) ETA 165m40s | gtok=30314496
+  [1] 7450/28874 (26%) loss=5.2133 ppl=183.7 lr=3.00e-04 | 8314 tok/s (avg 8844) ETA 165m21s | gtok=30519296
+  [1] 7500/28874 (26%) loss=5.5855 ppl=266.5 lr=3.00e-04 | 8408 tok/s (avg 8841) ETA 165m02s | gtok=30724096
+  [1] 7550/28874 (26%) loss=5.5787 ppl=264.7 lr=3.00e-04 | 8315 tok/s (avg 8837) ETA 164m43s | gtok=30928896
+  [1] 7600/28874 (26%) loss=5.2944 ppl=199.2 lr=3.00e-04 | 8313 tok/s (avg 8834) ETA 164m23s | gtok=31133696
+  [1] 7650/28874 (26%) loss=5.2599 ppl=192.5 lr=3.00e-04 | 8281 tok/s (avg 8830) ETA 164m05s | gtok=31338496
+  [1] 7700/28874 (27%) loss=5.0780 ppl=160.5 lr=3.00e-04 | 8329 tok/s (avg 8826) ETA 163m45s | gtok=31543296
+  [1] 7750/28874 (27%) loss=5.4171 ppl=225.2 lr=3.00e-04 | 8227 tok/s (avg 8822) ETA 163m27s | gtok=31748096
+  [1] 7800/28874 (27%) loss=5.3971 ppl=220.8 lr=3.00e-04 | 8277 tok/s (avg 8818) ETA 163m08s | gtok=31952896
+  [1] 7850/28874 (27%) loss=5.1349 ppl=169.8 lr=3.00e-04 | 8610 tok/s (avg 8817) ETA 162m46s | gtok=32157696
+  [1] 7900/28874 (27%) loss=5.1442 ppl=171.4 lr=3.00e-04 | 8283 tok/s (avg 8813) ETA 162m27s | gtok=32362496
+  [1] 7950/28874 (28%) loss=5.0797 ppl=160.7 lr=3.00e-04 | 8280 tok/s (avg 8810) ETA 162m07s | gtok=32567296
+  [1] 8000/28874 (28%) loss=5.5366 ppl=253.8 lr=2.99e-04 | 8173 tok/s (avg 8806) ETA 161m49s | gtok=32772096
+  [1] 8050/28874 (28%) loss=5.4886 ppl=241.9 lr=2.99e-04 | 8186 tok/s (avg 8801) ETA 161m30s | gtok=32976896
+  [1] 8100/28874 (28%) loss=5.2186 ppl=184.7 lr=2.99e-04 | 8296 tok/s (avg 8798) ETA 161m10s | gtok=33181696
+  [1] 8150/28874 (28%) loss=5.0192 ppl=151.3 lr=2.99e-04 | 8198 tok/s (avg 8794) ETA 160m51s | gtok=33386496
+  [1] 8200/28874 (28%) loss=5.5289 ppl=251.9 lr=2.99e-04 | 8067 tok/s (avg 8789) ETA 160m33s | gtok=33591296
+  [1] 8250/28874 (29%) loss=5.1511 ppl=172.6 lr=2.99e-04 | 8184 tok/s (avg 8785) ETA 160m14s | gtok=33796096
+  [1] 8300/28874 (29%) loss=5.3152 ppl=203.4 lr=2.99e-04 | 8331 tok/s (avg 8783) ETA 159m54s | gtok=34000896
+  [1] 8350/28874 (29%) loss=5.2795 ppl=196.3 lr=2.99e-04 | 8223 tok/s (avg 8779) ETA 159m35s | gtok=34205696
+  [1] 8400/28874 (29%) loss=5.4563 ppl=234.2 lr=2.99e-04 | 8218 tok/s (avg 8775) ETA 159m15s | gtok=34410496
+  [1] 8450/28874 (29%) loss=5.1847 ppl=178.5 lr=2.99e-04 | 8343 tok/s (avg 8773) ETA 158m55s | gtok=34615296
+  [1] 8500/28874 (29%) loss=5.2369 ppl=188.1 lr=2.99e-04 | 8377 tok/s (avg 8770) ETA 158m34s | gtok=34820096
+  [1] 8550/28874 (30%) loss=5.1148 ppl=166.5 lr=2.99e-04 | 8338 tok/s (avg 8768) ETA 158m14s | gtok=35024896
+  [1] 8600/28874 (30%) loss=5.0209 ppl=151.5 lr=2.99e-04 | 8334 tok/s (avg 8765) ETA 157m53s | gtok=35229696
+  [1] 8650/28874 (30%) loss=5.3108 ppl=202.5 lr=2.99e-04 | 8400 tok/s (avg 8763) ETA 157m32s | gtok=35434496
+  [1] 8700/28874 (30%) loss=5.2237 ppl=185.6 lr=2.99e-04 | 8238 tok/s (avg 8760) ETA 157m12s | gtok=35639296
+  [1] 8750/28874 (30%) loss=5.2148 ppl=184.0 lr=2.99e-04 | 8703 tok/s (avg 8759) ETA 156m49s | gtok=35844096
+  [1] 8800/28874 (30%) loss=5.1696 ppl=175.8 lr=2.99e-04 | 8263 tok/s (avg 8756) ETA 156m29s | gtok=36048896
+  [1] 8850/28874 (31%) loss=5.4092 ppl=223.5 lr=2.99e-04 | 8093 tok/s (avg 8752) ETA 156m10s | gtok=36253696
+  [1] 8900/28874 (31%) loss=5.1247 ppl=168.1 lr=2.99e-04 | 8192 tok/s (avg 8749) ETA 155m50s | gtok=36458496
+  [1] 8950/28874 (31%) loss=5.2313 ppl=187.0 lr=2.99e-04 | 8226 tok/s (avg 8746) ETA 155m30s | gtok=36663296
+  [1] 9000/28874 (31%) loss=4.8404 ppl=126.5 lr=2.99e-04 | 8198 tok/s (avg 8742) ETA 155m10s | gtok=36868096
+  [1] 9050/28874 (31%) loss=5.4647 ppl=236.2 lr=2.99e-04 | 8195 tok/s (avg 8739) ETA 154m50s | gtok=37072896
+  [1] 9100/28874 (32%) loss=5.3655 ppl=213.9 lr=2.99e-04 | 8380 tok/s (avg 8737) ETA 154m29s | gtok=37277696
+  [1] 9150/28874 (32%) loss=5.3584 ppl=212.4 lr=2.99e-04 | 8207 tok/s (avg 8734) ETA 154m09s | gtok=37482496
+  [1] 9200/28874 (32%) loss=5.3377 ppl=208.0 lr=2.99e-04 | 8179 tok/s (avg 8731) ETA 153m49s | gtok=37687296
+  [1] 9250/28874 (32%) loss=5.2504 ppl=190.6 lr=2.99e-04 | 8187 tok/s (avg 8728) ETA 153m29s | gtok=37892096
+  [1] 9300/28874 (32%) loss=5.2845 ppl=197.2 lr=2.99e-04 | 8381 tok/s (avg 8726) ETA 153m07s | gtok=38096896
+  [1] 9350/28874 (32%) loss=5.1677 ppl=175.5 lr=2.99e-04 | 8349 tok/s (avg 8724) ETA 152m46s | gtok=38301696
+  [1] 9400/28874 (33%) loss=5.1477 ppl=172.0 lr=2.99e-04 | 8329 tok/s (avg 8722) ETA 152m25s | gtok=38506496
+  [1] 9450/28874 (33%) loss=4.8012 ppl=121.7 lr=2.99e-04 | 8249 tok/s (avg 8719) ETA 152m04s | gtok=38711296
+  [1] 9500/28874 (33%) loss=5.3190 ppl=204.2 lr=2.99e-04 | 8173 tok/s (avg 8716) ETA 151m44s | gtok=38916096
+  [1] 9550/28874 (33%) loss=5.3567 ppl=212.0 lr=2.99e-04 | 8212 tok/s (avg 8713) ETA 151m23s | gtok=39120896
+  [1] 9600/28874 (33%) loss=5.2704 ppl=194.5 lr=2.99e-04 | 8541 tok/s (avg 8712) ETA 151m01s | gtok=39325696
+  [1] 9650/28874 (33%) loss=5.1746 ppl=176.7 lr=2.99e-04 | 8472 tok/s (avg 8711) ETA 150m39s | gtok=39530496
+  [1] 9700/28874 (34%) loss=5.1216 ppl=167.6 lr=2.99e-04 | 8106 tok/s (avg 8707) ETA 150m19s | gtok=39735296
+  [1] 9750/28874 (34%) loss=4.9254 ppl=137.7 lr=2.99e-04 | 8247 tok/s (avg 8705) ETA 149m58s | gtok=39940096
+  [1] 9800/28874 (34%) loss=5.3333 ppl=207.1 lr=2.99e-04 | 8399 tok/s (avg 8703) ETA 149m36s | gtok=40144896
+  [1] 9850/28874 (34%) loss=5.2528 ppl=191.1 lr=2.99e-04 | 8249 tok/s (avg 8701) ETA 149m15s | gtok=40349696
+  [1] 9900/28874 (34%) loss=5.4481 ppl=232.3 lr=2.99e-04 | 8536 tok/s (avg 8700) ETA 148m52s | gtok=40554496
+  [1] 9950/28874 (34%) loss=4.9559 ppl=142.0 lr=2.99e-04 | 8153 tok/s (avg 8697) ETA 148m31s | gtok=40759296
+  [1] 10000/28874 (35%) loss=5.2197 ppl=184.9 lr=2.99e-04 | 8314 tok/s (avg 8695) ETA 148m10s | gtok=40964096
+  [mid-epoch sample @ batch 10000, 40,964,096 tok]
+  Prompt: In 1923 , the University of
+  Generated: In 1923 , the University of California and Columbia . The following year the year in 2003 , the first @-@ largest city for a city of Florida . 
+
+ In 2015 , there are three national events ( the South Carolina area ) and has increased a state centre . The two @-@ time community has held the local town , including the University of America . A year later , the city of New Jersey was founded in 1990 as one of its largest population to the city 's population . 
+
+
+ = = History =
+  [1] 10050/28874 (35%) loss=5.2770 ppl=195.8 lr=2.99e-04 | 6518 tok/s (avg 8681) ETA 148m01s | gtok=41168896
+  [1] 10100/28874 (35%) loss=5.4481 ppl=232.3 lr=2.99e-04 | 8185 tok/s (avg 8678) ETA 147m40s | gtok=41373696
+  [1] 10150/28874 (35%) loss=5.3515 ppl=210.9 lr=2.99e-04 | 8197 tok/s (avg 8676) ETA 147m19s | gtok=41578496
+  [1] 10200/28874 (35%) loss=5.1523 ppl=172.8 lr=2.99e-04 | 8255 tok/s (avg 8673) ETA 146m58s | gtok=41783296
+  [1] 10250/28874 (36%) loss=5.0039 ppl=149.0 lr=2.99e-04 | 8485 tok/s (avg 8672) ETA 146m35s | gtok=41988096
+  [1] 10300/28874 (36%) loss=5.3608 ppl=212.9 lr=2.99e-04 | 8443 tok/s (avg 8671) ETA 146m13s | gtok=42192896
+  [1] 10350/28874 (36%) loss=5.0825 ppl=161.2 lr=2.99e-04 | 8543 tok/s (avg 8671) ETA 145m50s | gtok=42397696
+  [1] 10400/28874 (36%) loss=4.9542 ppl=141.8 lr=2.99e-04 | 8135 tok/s (avg 8668) ETA 145m29s | gtok=42602496
+  [1] 10450/28874 (36%) loss=5.1010 ppl=164.2 lr=2.99e-04 | 8357 tok/s (avg 8666) ETA 145m07s | gtok=42807296
+  [1] 10500/28874 (36%) loss=5.1418 ppl=171.0 lr=2.99e-04 | 8552 tok/s (avg 8666) ETA 144m44s | gtok=43012096
+  [1] 10550/28874 (37%) loss=5.0828 ppl=161.2 lr=2.99e-04 | 8213 tok/s (avg 8664) ETA 144m22s | gtok=43216896
+  [1] 10600/28874 (37%) loss=5.1234 ppl=167.9 lr=2.99e-04 | 8375 tok/s (avg 8662) ETA 144m00s | gtok=43421696
+  [1] 10650/28874 (37%) loss=5.3226 ppl=204.9 lr=2.99e-04 | 8227 tok/s (avg 8660) ETA 143m39s | gtok=43626496
+  [1] 10700/28874 (37%) loss=5.3640 ppl=213.6 lr=2.99e-04 | 8378 tok/s (avg 8659) ETA 143m16s | gtok=43831296
+  [1] 10750/28874 (37%) loss=5.5887 ppl=267.4 lr=2.99e-04 | 8241 tok/s (avg 8657) ETA 142m55s | gtok=44036096
+  [1] 10800/28874 (37%) loss=4.9971 ppl=148.0 lr=2.99e-04 | 8429 tok/s (avg 8656) ETA 142m32s | gtok=44240896
+  [1] 10850/28874 (38%) loss=5.2667 ppl=193.8 lr=2.99e-04 | 8186 tok/s (avg 8653) ETA 142m11s | gtok=44445696
+  [1] 10900/28874 (38%) loss=5.1272 ppl=168.5 lr=2.99e-04 | 8293 tok/s (avg 8652) ETA 141m49s | gtok=44650496
+  [1] 10950/28874 (38%) loss=5.1777 ppl=177.3 lr=2.99e-04 | 8258 tok/s (avg 8650) ETA 141m27s | gtok=44855296
+  [1] 11000/28874 (38%) loss=4.9110 ppl=135.8 lr=2.99e-04 | 8243 tok/s (avg 8648) ETA 141m05s | gtok=45060096
+  [1] 11050/28874 (38%) loss=5.0228 ppl=151.8 lr=2.99e-04 | 8279 tok/s (avg 8646) ETA 140m43s | gtok=45264896
+  [1] 11100/28874 (38%) loss=5.3413 ppl=208.8 lr=2.99e-04 | 8439 tok/s (avg 8645) ETA 140m20s | gtok=45469696
+  [1] 11150/28874 (39%) loss=5.0011 ppl=148.6 lr=2.99e-04 | 8238 tok/s (avg 8643) ETA 139m59s | gtok=45674496
+  [1] 11200/28874 (39%) loss=5.0741 ppl=159.8 lr=2.99e-04 | 8233 tok/s (avg 8641) ETA 139m37s | gtok=45879296
+  [1] 11250/28874 (39%) loss=4.9175 ppl=136.7 lr=2.99e-04 | 8262 tok/s (avg 8639) ETA 139m15s | gtok=46084096
+  [1] 11300/28874 (39%) loss=5.1819 ppl=178.0 lr=2.99e-04 | 8384 tok/s (avg 8638) ETA 138m52s | gtok=46288896
+  [1] 11350/28874 (39%) loss=4.8575 ppl=128.7 lr=2.99e-04 | 8240 tok/s (avg 8636) ETA 138m30s | gtok=46493696
+  [1] 11400/28874 (39%) loss=4.8138 ppl=123.2 lr=2.99e-04 | 8543 tok/s (avg 8636) ETA 138m07s | gtok=46698496
+  [1] 11450/28874 (40%) loss=5.2702 ppl=194.4 lr=2.99e-04 | 8257 tok/s (avg 8634) ETA 137m45s | gtok=46903296
+  [1] 11500/28874 (40%) loss=5.1132 ppl=166.2 lr=2.99e-04 | 8213 tok/s (avg 8632) ETA 137m23s | gtok=47108096
+  [1] 11550/28874 (40%) loss=5.0909 ppl=162.5 lr=2.99e-04 | 8277 tok/s (avg 8631) ETA 137m01s | gtok=47312896
+  [1] 11600/28874 (40%) loss=4.9468 ppl=140.7 lr=2.99e-04 | 8287 tok/s (avg 8629) ETA 136m38s | gtok=47517696
+  [1] 11650/28874 (40%) loss=5.1690 ppl=175.7 lr=2.99e-04 | 8287 tok/s (avg 8628) ETA 136m16s | gtok=47722496
+  [1] 11700/28874 (41%) loss=5.1008 ppl=164.2 lr=2.99e-04 | 8303 tok/s (avg 8626) ETA 135m54s | gtok=47927296
+  [1] 11750/28874 (41%) loss=5.3107 ppl=202.5 lr=2.99e-04 | 8269 tok/s (avg 8625) ETA 135m32s | gtok=48132096
+  [1] 11800/28874 (41%) loss=4.9441 ppl=140.3 lr=2.99e-04 | 8320 tok/s (avg 8623) ETA 135m09s | gtok=48336896
+  [1] 11850/28874 (41%) loss=5.2890 ppl=198.2 lr=2.99e-04 | 6772 tok/s (avg 8613) ETA 134m55s | gtok=48541696
+  [1] 11900/28874 (41%) loss=5.0084 ppl=149.7 lr=2.99e-04 | 7555 tok/s (avg 8608) ETA 134m36s | gtok=48746496
+  [1] 11950/28874 (41%) loss=5.1234 ppl=167.9 lr=2.99e-04 | 8262 tok/s (avg 8607) ETA 134m13s | gtok=48951296
+  [1] 12000/28874 (42%) loss=4.9117 ppl=135.9 lr=2.99e-04 | 8230 tok/s (avg 8605) ETA 133m51s | gtok=49156096
+  [1] 12050/28874 (42%) loss=5.1897 ppl=179.4 lr=2.99e-04 | 8262 tok/s (avg 8604) ETA 133m29s | gtok=49360896
+  [1] 12100/28874 (42%) loss=4.9792 ppl=145.4 lr=2.99e-04 | 8218 tok/s (avg 8602) ETA 133m06s | gtok=49565696
+  [1] 12150/28874 (42%) loss=5.0635 ppl=158.1 lr=2.99e-04 | 8185 tok/s (avg 8600) ETA 132m44s | gtok=49770496
+  [1] 12200/28874 (42%) loss=5.0838 ppl=161.4 lr=2.99e-04 | 8220 tok/s (avg 8599) ETA 132m22s | gtok=49975296
+  [1] 12250/28874 (42%) loss=4.9312 ppl=138.5 lr=2.99e-04 | 8422 tok/s (avg 8598) ETA 131m59s | gtok=50180096
+  [1] 12300/28874 (43%) loss=4.6682 ppl=106.5 lr=2.99e-04 | 8415 tok/s (avg 8597) ETA 131m36s | gtok=50384896
+  [1] 12350/28874 (43%) loss=5.1610 ppl=174.3 lr=2.99e-04 | 8211 tok/s (avg 8595) ETA 131m13s | gtok=50589696
+  [1] 12400/28874 (43%) loss=4.9301 ppl=138.4 lr=2.99e-04 | 8346 tok/s (avg 8594) ETA 130m50s | gtok=50794496
+  [1] 12450/28874 (43%) loss=5.1580 ppl=173.8 lr=2.99e-04 | 8284 tok/s (avg 8593) ETA 130m28s | gtok=50999296
+  [1] 12500/28874 (43%) loss=5.0158 ppl=150.8 lr=2.99e-04 | 8372 tok/s (avg 8592) ETA 130m05s | gtok=51204096
+  [1] 12550/28874 (43%) loss=5.2620 ppl=192.9 lr=2.99e-04 | 8063 tok/s (avg 8590) ETA 129m43s | gtok=51408896
+  [1] 12600/28874 (44%) loss=5.1742 ppl=176.6 lr=2.99e-04 | 8343 tok/s (avg 8589) ETA 129m20s | gtok=51613696
+  [1] 12650/28874 (44%) loss=5.2195 ppl=184.8 lr=2.99e-04 | 8368 tok/s (avg 8588) ETA 128m57s | gtok=51818496
+  [1] 12700/28874 (44%) loss=5.1223 ppl=167.7 lr=2.99e-04 | 8329 tok/s (avg 8587) ETA 128m34s | gtok=52023296
+  [1] 12750/28874 (44%) loss=5.3073 ppl=201.8 lr=2.99e-04 | 8296 tok/s (avg 8586) ETA 128m11s | gtok=52228096
+  [1] 12800/28874 (44%) loss=5.3578 ppl=212.3 lr=2.99e-04 | 8424 tok/s (avg 8585) ETA 127m48s | gtok=52432896
+  [1] 12850/28874 (45%) loss=5.1790 ppl=177.5 lr=2.99e-04 | 8316 tok/s (avg 8584) ETA 127m25s | gtok=52637696
+  [1] 12900/28874 (45%) loss=5.1817 ppl=178.0 lr=2.99e-04 | 8293 tok/s (avg 8583) ETA 127m02s | gtok=52842496
+  [1] 12950/28874 (45%) loss=5.0646 ppl=158.3 lr=2.99e-04 | 8219 tok/s (avg 8581) ETA 126m40s | gtok=53047296
+  [1] 13000/28874 (45%) loss=5.2135 ppl=183.7 lr=2.99e-04 | 8270 tok/s (avg 8580) ETA 126m17s | gtok=53252096
+  [1] 13050/28874 (45%) loss=4.9032 ppl=134.7 lr=2.99e-04 | 8273 tok/s (avg 8579) ETA 125m54s | gtok=53456896
+  [1] 13100/28874 (45%) loss=5.0791 ppl=160.6 lr=2.99e-04 | 8290 tok/s (avg 8578) ETA 125m31s | gtok=53661696
+  [1] 13150/28874 (46%) loss=4.8666 ppl=129.9 lr=2.99e-04 | 8491 tok/s (avg 8577) ETA 125m08s | gtok=53866496
+  [1] 13200/28874 (46%) loss=5.1292 ppl=168.9 lr=2.99e-04 | 8441 tok/s (avg 8577) ETA 124m44s | gtok=54071296
+  [1] 13250/28874 (46%) loss=5.0925 ppl=162.8 lr=2.99e-04 | 8314 tok/s (avg 8576) ETA 124m21s | gtok=54276096
+  [1] 13300/28874 (46%) loss=4.9731 ppl=144.5 lr=2.99e-04 | 8192 tok/s (avg 8574) ETA 123m59s | gtok=54480896
+  [1] 13350/28874 (46%) loss=5.1322 ppl=169.4 lr=2.99e-04 | 8232 tok/s (avg 8573) ETA 123m36s | gtok=54685696
+  [1] 13400/28874 (46%) loss=5.3599 ppl=212.7 lr=2.99e-04 | 8244 tok/s (avg 8572) ETA 123m13s | gtok=54890496
+  [1] 13450/28874 (47%) loss=5.0079 ppl=149.6 lr=2.99e-04 | 8337 tok/s (avg 8571) ETA 122m50s | gtok=55095296
+  [1] 13500/28874 (47%) loss=5.0750 ppl=160.0 lr=2.98e-04 | 8182 tok/s (avg 8569) ETA 122m28s | gtok=55300096
+  [1] 13550/28874 (47%) loss=5.4547 ppl=233.9 lr=2.98e-04 | 8253 tok/s (avg 8568) ETA 122m05s | gtok=55504896
+  [1] 13600/28874 (47%) loss=5.1186 ppl=167.1 lr=2.98e-04 | 8309 tok/s (avg 8567) ETA 121m42s | gtok=55709696
+  [1] 13650/28874 (47%) loss=4.7802 ppl=119.1 lr=2.98e-04 | 8359 tok/s (avg 8566) ETA 121m18s | gtok=55914496
+  [1] 13700/28874 (47%) loss=5.1914 ppl=179.7 lr=2.98e-04 | 8400 tok/s (avg 8566) ETA 120m55s | gtok=56119296
+  [1] 13750/28874 (48%) loss=5.0761 ppl=160.1 lr=2.98e-04 | 8276 tok/s (avg 8565) ETA 120m32s | gtok=56324096
+  [1] 13800/28874 (48%) loss=5.0755 ppl=160.0 lr=2.98e-04 | 8323 tok/s (avg 8564) ETA 120m09s | gtok=56528896
+  [1] 13850/28874 (48%) loss=4.9129 ppl=136.0 lr=2.98e-04 | 8335 tok/s (avg 8563) ETA 119m46s | gtok=56733696
+  [1] 13900/28874 (48%) loss=5.1401 ppl=170.7 lr=2.98e-04 | 8326 tok/s (avg 8562) ETA 119m22s | gtok=56938496
+  [1] 13950/28874 (48%) loss=4.8755 ppl=131.0 lr=2.98e-04 | 8348 tok/s (avg 8561) ETA 118m59s | gtok=57143296
+  [1] 14000/28874 (48%) loss=4.8468 ppl=127.3 lr=2.98e-04 | 8397 tok/s (avg 8561) ETA 118m36s | gtok=57348096
+  [1] 14050/28874 (49%) loss=5.0993 ppl=163.9 lr=2.98e-04 | 8570 tok/s (avg 8561) ETA 118m12s | gtok=57552896
+  [1] 14100/28874 (49%) loss=4.9754 ppl=144.8 lr=2.98e-04 | 8397 tok/s (avg 8560) ETA 117m48s | gtok=57757696
+  [1] 14150/28874 (49%) loss=5.1088 ppl=165.5 lr=2.98e-04 | 8140 tok/s (avg 8559) ETA 117m26s | gtok=57962496
+  [1] 14200/28874 (49%) loss=4.9027 ppl=134.7 lr=2.98e-04 | 8236 tok/s (avg 8557) ETA 117m03s | gtok=58167296
+  [1] 14250/28874 (49%) loss=4.9462 ppl=140.6 lr=2.98e-04 | 8110 tok/s (avg 8556) ETA 116m40s | gtok=58372096
+  [1] 14300/28874 (50%) loss=5.0293 ppl=152.8 lr=2.98e-04 | 8166 tok/s (avg 8554) ETA 116m17s | gtok=58576896
+  [1] 14350/28874 (50%) loss=5.0835 ppl=161.3 lr=2.98e-04 | 8291 tok/s (avg 8553) ETA 115m54s | gtok=58781696
+  [1] 14400/28874 (50%) loss=5.1395 ppl=170.6 lr=2.98e-04 | 8180 tok/s (avg 8552) ETA 115m31s | gtok=58986496
+  [1] 14450/28874 (50%) loss=4.6872 ppl=108.5 lr=2.98e-04 | 8305 tok/s (avg 8551) ETA 115m08s | gtok=59191296
+  [1] 14500/28874 (50%) loss=5.2566 ppl=191.8 lr=2.98e-04 | 8338 tok/s (avg 8550) ETA 114m45s | gtok=59396096
+  [1] 14550/28874 (50%) loss=4.9507 ppl=141.3 lr=2.98e-04 | 8208 tok/s (avg 8549) ETA 114m22s | gtok=59600896
+  [1] 14600/28874 (51%) loss=4.6836 ppl=108.2 lr=2.98e-04 | 8393 tok/s (avg 8549) ETA 113m58s | gtok=59805696
+  [1] 14650/28874 (51%) loss=5.2165 ppl=184.3 lr=2.98e-04 | 8285 tok/s (avg 8548) ETA 113m35s | gtok=60010496
+  [1] 14700/28874 (51%) loss=5.2917 ppl=198.7 lr=2.98e-04 | 8518 tok/s (avg 8548) ETA 113m11s | gtok=60215296
+  [1] 14750/28874 (51%) loss=4.7960 ppl=121.0 lr=2.98e-04 | 8310 tok/s (avg 8547) ETA 112m48s | gtok=60420096
+  [1] 14800/28874 (51%) loss=5.1998 ppl=181.2 lr=2.98e-04 | 8433 tok/s (avg 8546) ETA 112m24s | gtok=60624896
+  [1] 14850/28874 (51%) loss=4.7576 ppl=116.5 lr=2.98e-04 | 8454 tok/s (avg 8546) ETA 112m01s | gtok=60829696
+  [1] 14900/28874 (52%) loss=4.9818 ppl=145.7 lr=2.98e-04 | 8353 tok/s (avg 8545) ETA 111m37s | gtok=61034496
+  [1] 14950/28874 (52%) loss=5.0023 ppl=148.8 lr=2.98e-04 | 8644 tok/s (avg 8546) ETA 111m13s | gtok=61239296
+  [1] 15000/28874 (52%) loss=4.8761 ppl=131.1 lr=2.98e-04 | 8497 tok/s (avg 8545) ETA 110m49s | gtok=61444096
+  [mid-epoch sample @ batch 15000, 61,444,096 tok]
+  Prompt: In 1923 , the University of
+  Generated: In 1923 , the University of California University . In the 18th century , the school was founded by a national university in the United States . The building was the largest building , as well as a community of the park 's school . As part of its new campus , the school 's school has served two children , and a five @-@ year students have a few institutions : the School , the school school , an average of about 1 @,@ 000 ; in the same time , it is the highest cost of the
+  [1] 15050/28874 (52%) loss=4.8224 ppl=124.3 lr=2.98e-04 | 6782 tok/s (avg 8538) ETA 110m31s | gtok=61648896
+  [1] 15100/28874 (52%) loss=4.8245 ppl=124.5 lr=2.98e-04 | 8487 tok/s (avg 8538) ETA 110m07s | gtok=61853696
+  [1] 15150/28874 (52%) loss=5.1791 ppl=177.5 lr=2.98e-04 | 8305 tok/s (avg 8537) ETA 109m44s | gtok=62058496
+  [1] 15200/28874 (53%) loss=5.0982 ppl=163.7 lr=2.98e-04 | 8273 tok/s (avg 8536) ETA 109m20s | gtok=62263296
+  [1] 15250/28874 (53%) loss=5.0604 ppl=157.7 lr=2.98e-04 | 8435 tok/s (avg 8536) ETA 108m57s | gtok=62468096
+  [1] 15300/28874 (53%) loss=4.7614 ppl=116.9 lr=2.98e-04 | 8388 tok/s (avg 8535) ETA 108m33s | gtok=62672896
+  [1] 15350/28874 (53%) loss=4.9010 ppl=134.4 lr=2.98e-04 | 8292 tok/s (avg 8535) ETA 108m10s | gtok=62877696
+  [1] 15400/28874 (53%) loss=4.7748 ppl=118.5 lr=2.98e-04 | 8399 tok/s (avg 8534) ETA 107m46s | gtok=63082496
+  [1] 15450/28874 (54%) loss=4.9885 ppl=146.7 lr=2.98e-04 | 8220 tok/s (avg 8533) ETA 107m23s | gtok=63287296
+  [1] 15500/28874 (54%) loss=5.2566 ppl=191.8 lr=2.98e-04 | 8185 tok/s (avg 8532) ETA 107m00s | gtok=63492096
+  [1] 15550/28874 (54%) loss=4.8205 ppl=124.0 lr=2.98e-04 | 8147 tok/s (avg 8531) ETA 106m37s | gtok=63696896
+  [1] 15600/28874 (54%) loss=5.0771 ppl=160.3 lr=2.98e-04 | 8336 tok/s (avg 8530) ETA 106m13s | gtok=63901696
+  [1] 15650/28874 (54%) loss=4.7350 ppl=113.9 lr=2.98e-04 | 8325 tok/s (avg 8529) ETA 105m50s | gtok=64106496
+  [1] 15700/28874 (54%) loss=5.0839 ppl=161.4 lr=2.98e-04 | 8131 tok/s (avg 8528) ETA 105m27s | gtok=64311296
+  [1] 15750/28874 (55%) loss=5.0020 ppl=148.7 lr=2.98e-04 | 8313 tok/s (avg 8527) ETA 105m03s | gtok=64516096
+  [1] 15800/28874 (55%) loss=4.9046 ppl=134.9 lr=2.98e-04 | 8453 tok/s (avg 8527) ETA 104m39s | gtok=64720896
+  [1] 15850/28874 (55%) loss=4.9683 ppl=143.8 lr=2.98e-04 | 8413 tok/s (avg 8527) ETA 104m15s | gtok=64925696
+  [1] 15900/28874 (55%) loss=4.8316 ppl=125.4 lr=2.98e-04 | 8267 tok/s (avg 8526) ETA 103m52s | gtok=65130496
+  [1] 15950/28874 (55%) loss=4.8335 ppl=125.7 lr=2.98e-04 | 8202 tok/s (avg 8525) ETA 103m29s | gtok=65335296
+  [1] 16000/28874 (55%) loss=5.2018 ppl=181.6 lr=2.98e-04 | 8420 tok/s (avg 8524) ETA 103m05s | gtok=65540096
+  [1] 16050/28874 (56%) loss=4.8521 ppl=128.0 lr=2.98e-04 | 8245 tok/s (avg 8524) ETA 102m42s | gtok=65744896
+  [1] 16100/28874 (56%) loss=5.0939 ppl=163.0 lr=2.98e-04 | 8272 tok/s (avg 8523) ETA 102m18s | gtok=65949696
+  [1] 16150/28874 (56%) loss=4.8108 ppl=122.8 lr=2.98e-04 | 8351 tok/s (avg 8522) ETA 101m55s | gtok=66154496
+  [1] 16200/28874 (56%) loss=5.0421 ppl=154.8 lr=2.98e-04 | 8308 tok/s (avg 8522) ETA 101m31s | gtok=66359296
+  [1] 16250/28874 (56%) loss=4.9652 ppl=143.3 lr=2.98e-04 | 8359 tok/s (avg 8521) ETA 101m07s | gtok=66564096
+  [1] 16300/28874 (56%) loss=4.7829 ppl=119.5 lr=2.98e-04 | 8384 tok/s (avg 8521) ETA 100m44s | gtok=66768896
+  [1] 16350/28874 (57%) loss=4.6940 ppl=109.3 lr=2.98e-04 | 8373 tok/s (avg 8520) ETA 100m20s | gtok=66973696
+  [1] 16400/28874 (57%) loss=4.8667 ppl=129.9 lr=2.98e-04 | 8321 tok/s (avg 8519) ETA 99m56s | gtok=67178496
+  [1] 16450/28874 (57%) loss=4.7193 ppl=112.1 lr=2.98e-04 | 8440 tok/s (avg 8519) ETA 99m32s | gtok=67383296
+  [1] 16500/28874 (57%) loss=4.7710 ppl=118.0 lr=2.98e-04 | 8330 tok/s (avg 8519) ETA 99m09s | gtok=67588096
+  [1] 16550/28874 (57%) loss=5.0518 ppl=156.3 lr=2.98e-04 | 8464 tok/s (avg 8518) ETA 98m45s | gtok=67792896
+  [1] 16600/28874 (57%) loss=5.1123 ppl=166.1 lr=2.98e-04 | 8315 tok/s (avg 8518) ETA 98m21s | gtok=67997696
+  [1] 16650/28874 (58%) loss=5.0388 ppl=154.3 lr=2.98e-04 | 8446 tok/s (avg 8518) ETA 97m57s | gtok=68202496
+  [1] 16700/28874 (58%) loss=5.2884 ppl=198.0 lr=2.98e-04 | 8570 tok/s (avg 8518) ETA 97m33s | gtok=68407296
+  [1] 16750/28874 (58%) loss=4.9932 ppl=147.4 lr=2.98e-04 | 8360 tok/s (avg 8517) ETA 97m09s | gtok=68612096
+  [1] 16800/28874 (58%) loss=4.6073 ppl=100.2 lr=2.98e-04 | 8418 tok/s (avg 8517) ETA 96m46s | gtok=68816896
+  [1] 16850/28874 (58%) loss=5.0790 ppl=160.6 lr=2.98e-04 | 8295 tok/s (avg 8516) ETA 96m22s | gtok=69021696
+  [1] 16900/28874 (59%) loss=4.9606 ppl=142.7 lr=2.98e-04 | 8334 tok/s (avg 8516) ETA 95m58s | gtok=69226496
+  [1] 16950/28874 (59%) loss=4.9958 ppl=147.8 lr=2.98e-04 | 8457 tok/s (avg 8516) ETA 95m34s | gtok=69431296
+  [1] 17000/28874 (59%) loss=5.0956 ppl=163.3 lr=2.98e-04 | 8339 tok/s (avg 8515) ETA 95m11s | gtok=69636096
+  [1] 17050/28874 (59%) loss=4.9857 ppl=146.3 lr=2.98e-04 | 8425 tok/s (avg 8515) ETA 94m47s | gtok=69840896
+  [1] 17100/28874 (59%) loss=4.9215 ppl=137.2 lr=2.98e-04 | 8379 tok/s (avg 8514) ETA 94m23s | gtok=70045696
+  [1] 17150/28874 (59%) loss=4.8819 ppl=131.9 lr=2.98e-04 | 8376 tok/s (avg 8514) ETA 93m59s | gtok=70250496
+  [1] 17200/28874 (60%) loss=4.8817 ppl=131.9 lr=2.98e-04 | 8245 tok/s (avg 8513) ETA 93m36s | gtok=70455296
+  [1] 17250/28874 (60%) loss=4.6407 ppl=103.6 lr=2.98e-04 | 8475 tok/s (avg 8513) ETA 93m12s | gtok=70660096
+  [1] 17300/28874 (60%) loss=5.0459 ppl=155.4 lr=2.97e-04 | 8308 tok/s (avg 8512) ETA 92m48s | gtok=70864896
+  [1] 17350/28874 (60%) loss=5.0160 ppl=150.8 lr=2.97e-04 | 8262 tok/s (avg 8512) ETA 92m25s | gtok=71069696
+  [1] 17400/28874 (60%) loss=4.7234 ppl=112.5 lr=2.97e-04 | 8209 tok/s (avg 8511) ETA 92m01s | gtok=71274496
+  [1] 17450/28874 (60%) loss=4.7046 ppl=110.5 lr=2.97e-04 | 8335 tok/s (avg 8510) ETA 91m37s | gtok=71479296
+  [1] 17500/28874 (61%) loss=4.9154 ppl=136.4 lr=2.97e-04 | 8499 tok/s (avg 8510) ETA 91m13s | gtok=71684096
+  [1] 17550/28874 (61%) loss=4.8878 ppl=132.7 lr=2.97e-04 | 8249 tok/s (avg 8510) ETA 90m50s | gtok=71888896
+  [1] 17600/28874 (61%) loss=5.2422 ppl=189.1 lr=2.97e-04 | 8822 tok/s (avg 8510) ETA 90m25s | gtok=72093696
+  [1] 17650/28874 (61%) loss=5.0137 ppl=150.5 lr=2.97e-04 | 8433 tok/s (avg 8510) ETA 90m01s | gtok=72298496
+  [1] 17700/28874 (61%) loss=5.0744 ppl=159.9 lr=2.97e-04 | 8333 tok/s (avg 8510) ETA 89m37s | gtok=72503296
+  [1] 17750/28874 (61%) loss=5.0198 ppl=151.4 lr=2.97e-04 | 8316 tok/s (avg 8509) ETA 89m14s | gtok=72708096
+  [1] 17800/28874 (62%) loss=5.0523 ppl=156.4 lr=2.97e-04 | 8438 tok/s (avg 8509) ETA 88m50s | gtok=72912896
+  [1] 17850/28874 (62%) loss=5.1289 ppl=168.8 lr=2.97e-04 | 8368 tok/s (avg 8508) ETA 88m26s | gtok=73117696
+  [1] 17900/28874 (62%) loss=5.1084 ppl=165.4 lr=2.97e-04 | 8340 tok/s (avg 8508) ETA 88m02s | gtok=73322496
+  [1] 17950/28874 (62%) loss=4.7930 ppl=120.7 lr=2.97e-04 | 8384 tok/s (avg 8508) ETA 87m38s | gtok=73527296
+  [1] 18000/28874 (62%) loss=4.8946 ppl=133.6 lr=2.97e-04 | 8372 tok/s (avg 8507) ETA 87m15s | gtok=73732096
+  [1] 18050/28874 (63%) loss=4.9711 ppl=144.2 lr=2.97e-04 | 8348 tok/s (avg 8507) ETA 86m51s | gtok=73936896
+  [1] 18100/28874 (63%) loss=5.0857 ppl=161.7 lr=2.97e-04 | 8290 tok/s (avg 8506) ETA 86m27s | gtok=74141696
+  [1] 18150/28874 (63%) loss=5.0935 ppl=163.0 lr=2.97e-04 | 8420 tok/s (avg 8506) ETA 86m03s | gtok=74346496
+  [1] 18200/28874 (63%) loss=4.8494 ppl=127.7 lr=2.97e-04 | 8549 tok/s (avg 8506) ETA 85m39s | gtok=74551296
+  [1] 18250/28874 (63%) loss=5.0627 ppl=158.0 lr=2.97e-04 | 8355 tok/s (avg 8506) ETA 85m15s | gtok=74756096
+  [1] 18300/28874 (63%) loss=4.9672 ppl=143.6 lr=2.97e-04 | 8367 tok/s (avg 8505) ETA 84m51s | gtok=74960896
+  [1] 18350/28874 (64%) loss=4.9562 ppl=142.0 lr=2.97e-04 | 8400 tok/s (avg 8505) ETA 84m27s | gtok=75165696
+  [1] 18400/28874 (64%) loss=4.9686 ppl=143.8 lr=2.97e-04 | 8371 tok/s (avg 8505) ETA 84m04s | gtok=75370496
+  [1] 18450/28874 (64%) loss=4.7171 ppl=111.8 lr=2.97e-04 | 8289 tok/s (avg 8504) ETA 83m40s | gtok=75575296
+  [1] 18500/28874 (64%) loss=4.8417 ppl=126.7 lr=2.97e-04 | 8716 tok/s (avg 8505) ETA 83m15s | gtok=75780096
+  [1] 18550/28874 (64%) loss=5.0047 ppl=149.1 lr=2.97e-04 | 8306 tok/s (avg 8504) ETA 82m52s | gtok=75984896
+  [1] 18600/28874 (64%) loss=5.0381 ppl=154.2 lr=2.97e-04 | 8385 tok/s (avg 8504) ETA 82m28s | gtok=76189696
+  [1] 18650/28874 (65%) loss=4.8824 ppl=131.9 lr=2.97e-04 | 8481 tok/s (avg 8504) ETA 82m04s | gtok=76394496
+  [1] 18700/28874 (65%) loss=4.8772 ppl=131.3 lr=2.97e-04 | 8405 tok/s (avg 8503) ETA 81m40s | gtok=76599296
+  [1] 18750/28874 (65%) loss=4.8026 ppl=121.8 lr=2.97e-04 | 8487 tok/s (avg 8503) ETA 81m16s | gtok=76804096
+  [1] 18800/28874 (65%) loss=4.6489 ppl=104.5 lr=2.97e-04 | 8492 tok/s (avg 8503) ETA 80m52s | gtok=77008896
+  [1] 18850/28874 (65%) loss=5.0595 ppl=157.5 lr=2.97e-04 | 8360 tok/s (avg 8503) ETA 80m28s | gtok=77213696
+  [1] 18900/28874 (65%) loss=4.8860 ppl=132.4 lr=2.97e-04 | 8204 tok/s (avg 8502) ETA 80m04s | gtok=77418496
+  [1] 18950/28874 (66%) loss=4.6795 ppl=107.7 lr=2.97e-04 | 8383 tok/s (avg 8502) ETA 79m40s | gtok=77623296
+  [1] 19000/28874 (66%) loss=4.9212 ppl=137.2 lr=2.97e-04 | 8373 tok/s (avg 8501) ETA 79m16s | gtok=77828096
+  [1] 19050/28874 (66%) loss=4.8891 ppl=132.8 lr=2.97e-04 | 8345 tok/s (avg 8501) ETA 78m52s | gtok=78032896
+  [1] 19100/28874 (66%) loss=4.9584 ppl=142.4 lr=2.97e-04 | 8342 tok/s (avg 8501) ETA 78m29s | gtok=78237696
+  [1] 19150/28874 (66%) loss=4.8987 ppl=134.1 lr=2.97e-04 | 7306 tok/s (avg 8497) ETA 78m07s | gtok=78442496
+  [1] 19200/28874 (66%) loss=4.9607 ppl=142.7 lr=2.97e-04 | 7256 tok/s (avg 8493) ETA 77m45s | gtok=78647296
+  [1] 19250/28874 (67%) loss=4.9040 ppl=134.8 lr=2.97e-04 | 7898 tok/s (avg 8491) ETA 77m21s | gtok=78852096
+  [1] 19300/28874 (67%) loss=4.7153 ppl=111.6 lr=2.97e-04 | 8318 tok/s (avg 8491) ETA 76m57s | gtok=79056896
+  [1] 19350/28874 (67%) loss=4.7511 ppl=115.7 lr=2.97e-04 | 8258 tok/s (avg 8490) ETA 76m34s | gtok=79261696
+  [1] 19400/28874 (67%) loss=4.8010 ppl=121.6 lr=2.97e-04 | 8613 tok/s (avg 8491) ETA 76m09s | gtok=79466496
+  [1] 19450/28874 (67%) loss=5.0816 ppl=161.0 lr=2.97e-04 | 8239 tok/s (avg 8490) ETA 75m46s | gtok=79671296
+  [1] 19500/28874 (68%) loss=4.8534 ppl=128.2 lr=2.97e-04 | 8258 tok/s (avg 8489) ETA 75m22s | gtok=79876096
+  [1] 19550/28874 (68%) loss=4.9402 ppl=139.8 lr=2.97e-04 | 8364 tok/s (avg 8489) ETA 74m58s | gtok=80080896
+  [1] 19600/28874 (68%) loss=4.7396 ppl=114.4 lr=2.97e-04 | 8520 tok/s (avg 8489) ETA 74m34s | gtok=80285696
+  [1] 19650/28874 (68%) loss=5.0277 ppl=152.6 lr=2.97e-04 | 8395 tok/s (avg 8489) ETA 74m10s | gtok=80490496
+  [1] 19700/28874 (68%) loss=5.1670 ppl=175.4 lr=2.97e-04 | 8541 tok/s (avg 8489) ETA 73m46s | gtok=80695296
+  [1] 19750/28874 (68%) loss=4.8398 ppl=126.4 lr=2.97e-04 | 8478 tok/s (avg 8489) ETA 73m21s | gtok=80900096
+  [1] 19800/28874 (69%) loss=4.9928 ppl=147.3 lr=2.97e-04 | 8297 tok/s (avg 8489) ETA 72m58s | gtok=81104896
+  [1] 19850/28874 (69%) loss=4.7111 ppl=111.2 lr=2.97e-04 | 8367 tok/s (avg 8488) ETA 72m34s | gtok=81309696
+  [1] 19900/28874 (69%) loss=5.0874 ppl=162.0 lr=2.97e-04 | 8316 tok/s (avg 8488) ETA 72m10s | gtok=81514496
+  [1] 19950/28874 (69%) loss=4.8355 ppl=125.9 lr=2.97e-04 | 8362 tok/s (avg 8487) ETA 71m46s | gtok=81719296
+  [1] 20000/28874 (69%) loss=5.0286 ppl=152.7 lr=2.97e-04 | 8411 tok/s (avg 8487) ETA 71m22s | gtok=81924096
+  [mid-epoch sample @ batch 20000, 81,924,096 tok]
+  Prompt: In 1923 , the University of
+  Generated: In 1923 , the University of The New York Times was an attempt to be able to play on a large variety of characters and the other character . In his book for A.V. Club called it " a big comedy that I 've been in mind ... [ s ] the story is still one of the best moments . " 
+
+
+ = = = Background = = 
+
+
+ While there were many public figures at the time , some of whom are the last season three , he felt he was not just one of them
+  [1] 20050/28874 (69%) loss=4.7649 ppl=117.3 lr=2.97e-04 | 6948 tok/s (avg 8483) ETA 71m00s | gtok=82128896
+  [1] 20100/28874 (70%) loss=4.7967 ppl=121.1 lr=2.97e-04 | 8364 tok/s (avg 8482) ETA 70m36s | gtok=82333696
+  [1] 20150/28874 (70%) loss=4.9586 ppl=142.4 lr=2.97e-04 | 8491 tok/s (avg 8482) ETA 70m12s | gtok=82538496
+  [1] 20200/28874 (70%) loss=5.1043 ppl=164.7 lr=2.97e-04 | 8520 tok/s (avg 8482) ETA 69m48s | gtok=82743296
+  [1] 20250/28874 (70%) loss=4.8715 ppl=130.5 lr=2.97e-04 | 8578 tok/s (avg 8483) ETA 69m23s | gtok=82948096
+  [1] 20300/28874 (70%) loss=4.7568 ppl=116.4 lr=2.97e-04 | 8454 tok/s (avg 8483) ETA 68m59s | gtok=83152896
+  [1] 20350/28874 (70%) loss=4.5926 ppl=98.7 lr=2.97e-04 | 8462 tok/s (avg 8483) ETA 68m35s | gtok=83357696
+  [1] 20400/28874 (71%) loss=5.0539 ppl=156.6 lr=2.96e-04 | 8329 tok/s (avg 8482) ETA 68m11s | gtok=83562496
+  [1] 20450/28874 (71%) loss=4.8763 ppl=131.1 lr=2.96e-04 | 8551 tok/s (avg 8482) ETA 67m47s | gtok=83767296
+  [1] 20500/28874 (71%) loss=4.8064 ppl=122.3 lr=2.96e-04 | 8424 tok/s (avg 8482) ETA 67m23s | gtok=83972096
+  [1] 20550/28874 (71%) loss=4.5422 ppl=93.9 lr=2.96e-04 | 8468 tok/s (avg 8482) ETA 66m59s | gtok=84176896
+  [1] 20600/28874 (71%) loss=4.8260 ppl=124.7 lr=2.96e-04 | 8522 tok/s (avg 8482) ETA 66m34s | gtok=84381696
+  [1] 20650/28874 (72%) loss=4.7198 ppl=112.1 lr=2.96e-04 | 8584 tok/s (avg 8482) ETA 66m10s | gtok=84586496
+  [1] 20700/28874 (72%) loss=4.9572 ppl=142.2 lr=2.96e-04 | 8264 tok/s (avg 8482) ETA 65m46s | gtok=84791296
+  [1] 20750/28874 (72%) loss=4.8063 ppl=122.3 lr=2.96e-04 | 8480 tok/s (avg 8482) ETA 65m22s | gtok=84996096
+  [1] 20800/28874 (72%) loss=4.8550 ppl=128.4 lr=2.96e-04 | 8241 tok/s (avg 8481) ETA 64m58s | gtok=85200896
+  [1] 20850/28874 (72%) loss=4.8797 ppl=131.6 lr=2.96e-04 | 8411 tok/s (avg 8481) ETA 64m34s | gtok=85405696
+  [1] 20900/28874 (72%) loss=4.7053 ppl=110.5 lr=2.96e-04 | 8540 tok/s (avg 8481) ETA 64m10s | gtok=85610496
+  [1] 20950/28874 (73%) loss=4.7585 ppl=116.6 lr=2.96e-04 | 8389 tok/s (avg 8481) ETA 63m46s | gtok=85815296
+  [1] 21000/28874 (73%) loss=4.8340 ppl=125.7 lr=2.96e-04 | 8447 tok/s (avg 8481) ETA 63m22s | gtok=86020096
+  [1] 21050/28874 (73%) loss=5.0742 ppl=159.8 lr=2.96e-04 | 8286 tok/s (avg 8480) ETA 62m58s | gtok=86224896
+  [1] 21100/28874 (73%) loss=4.9609 ppl=142.7 lr=2.96e-04 | 8485 tok/s (avg 8481) ETA 62m34s | gtok=86429696
+  [1] 21150/28874 (73%) loss=4.9787 ppl=145.3 lr=2.96e-04 | 8758 tok/s (avg 8481) ETA 62m09s | gtok=86634496
+  [1] 21200/28874 (73%) loss=5.0936 ppl=163.0 lr=2.96e-04 | 8532 tok/s (avg 8481) ETA 61m45s | gtok=86839296
+  [1] 21250/28874 (74%) loss=4.7994 ppl=121.4 lr=2.96e-04 | 8532 tok/s (avg 8481) ETA 61m21s | gtok=87044096
+  [1] 21300/28874 (74%) loss=4.8477 ppl=127.4 lr=2.96e-04 | 8520 tok/s (avg 8481) ETA 60m57s | gtok=87248896
+  [1] 21350/28874 (74%) loss=5.0320 ppl=153.2 lr=2.96e-04 | 8472 tok/s (avg 8481) ETA 60m33s | gtok=87453696
+  [1] 21400/28874 (74%) loss=5.1193 ppl=167.2 lr=2.96e-04 | 8403 tok/s (avg 8481) ETA 60m09s | gtok=87658496
+  [1] 21450/28874 (74%) loss=4.7500 ppl=115.6 lr=2.96e-04 | 8466 tok/s (avg 8481) ETA 59m44s | gtok=87863296
+  [1] 21500/28874 (74%) loss=5.0526 ppl=156.4 lr=2.96e-04 | 8368 tok/s (avg 8481) ETA 59m20s | gtok=88068096
+  [1] 21550/28874 (75%) loss=4.9471 ppl=140.8 lr=2.96e-04 | 8553 tok/s (avg 8481) ETA 58m56s | gtok=88272896
+  [1] 21600/28874 (75%) loss=5.0428 ppl=154.9 lr=2.96e-04 | 8452 tok/s (avg 8481) ETA 58m32s | gtok=88477696
+  [1] 21650/28874 (75%) loss=4.8241 ppl=124.5 lr=2.96e-04 | 8517 tok/s (avg 8481) ETA 58m08s | gtok=88682496
+  [1] 21700/28874 (75%) loss=4.6960 ppl=109.5 lr=2.96e-04 | 8497 tok/s (avg 8481) ETA 57m44s | gtok=88887296
+  [1] 21750/28874 (75%) loss=4.8605 ppl=129.1 lr=2.96e-04 | 8646 tok/s (avg 8482) ETA 57m19s | gtok=89092096
+  [1] 21800/28874 (76%) loss=4.6702 ppl=106.7 lr=2.96e-04 | 8542 tok/s (avg 8482) ETA 56m55s | gtok=89296896
+  [1] 21850/28874 (76%) loss=4.5870 ppl=98.2 lr=2.96e-04 | 8550 tok/s (avg 8482) ETA 56m31s | gtok=89501696
+  [1] 21900/28874 (76%) loss=5.0067 ppl=149.4 lr=2.96e-04 | 8562 tok/s (avg 8482) ETA 56m07s | gtok=89706496
+  [1] 21950/28874 (76%) loss=4.3981 ppl=81.3 lr=2.96e-04 | 8268 tok/s (avg 8482) ETA 55m43s | gtok=89911296
+  [1] 22000/28874 (76%) loss=4.6842 ppl=108.2 lr=2.96e-04 | 8374 tok/s (avg 8481) ETA 55m19s | gtok=90116096
+  [1] 22050/28874 (76%) loss=4.9654 ppl=143.4 lr=2.96e-04 | 8637 tok/s (avg 8482) ETA 54m55s | gtok=90320896
+  [1] 22100/28874 (77%) loss=4.5708 ppl=96.6 lr=2.96e-04 | 8404 tok/s (avg 8481) ETA 54m30s | gtok=90525696
+  [1] 22150/28874 (77%) loss=5.0572 ppl=157.1 lr=2.96e-04 | 8259 tok/s (avg 8481) ETA 54m06s | gtok=90730496
+  [1] 22200/28874 (77%) loss=5.0044 ppl=149.1 lr=2.96e-04 | 8208 tok/s (avg 8480) ETA 53m43s | gtok=90935296
+  [1] 22250/28874 (77%) loss=4.9333 ppl=138.8 lr=2.96e-04 | 8197 tok/s (avg 8480) ETA 53m19s | gtok=91140096
+  [1] 22300/28874 (77%) loss=5.0990 ppl=163.9 lr=2.96e-04 | 8251 tok/s (avg 8479) ETA 52m55s | gtok=91344896
+  [1] 22350/28874 (77%) loss=5.3635 ppl=213.5 lr=2.96e-04 | 8322 tok/s (avg 8479) ETA 52m31s | gtok=91549696
+  [1] 22400/28874 (78%) loss=4.7644 ppl=117.3 lr=2.96e-04 | 8282 tok/s (avg 8478) ETA 52m07s | gtok=91754496
+  [1] 22450/28874 (78%) loss=5.1941 ppl=180.2 lr=2.96e-04 | 8349 tok/s (avg 8478) ETA 51m43s | gtok=91959296
+  [1] 22500/28874 (78%) loss=4.7134 ppl=111.4 lr=2.96e-04 | 8443 tok/s (avg 8478) ETA 51m19s | gtok=92164096
+  [1] 22550/28874 (78%) loss=5.0418 ppl=154.8 lr=2.96e-04 | 8353 tok/s (avg 8478) ETA 50m54s | gtok=92368896
+  [1] 22600/28874 (78%) loss=5.1263 ppl=168.4 lr=2.96e-04 | 8335 tok/s (avg 8477) ETA 50m30s | gtok=92573696
+  [1] 22650/28874 (78%) loss=4.8386 ppl=126.3 lr=2.96e-04 | 8280 tok/s (avg 8477) ETA 50m06s | gtok=92778496
+  [1] 22700/28874 (79%) loss=5.1934 ppl=180.1 lr=2.96e-04 | 8128 tok/s (avg 8476) ETA 49m43s | gtok=92983296
+  [1] 22750/28874 (79%) loss=4.7664 ppl=117.5 lr=2.96e-04 | 8240 tok/s (avg 8476) ETA 49m19s | gtok=93188096
+  [1] 22800/28874 (79%) loss=4.8706 ppl=130.4 lr=2.96e-04 | 8267 tok/s (avg 8475) ETA 48m55s | gtok=93392896
+  [1] 22850/28874 (79%) loss=4.6149 ppl=101.0 lr=2.96e-04 | 8180 tok/s (avg 8474) ETA 48m31s | gtok=93597696
+  [1] 22900/28874 (79%) loss=4.7044 ppl=110.4 lr=2.96e-04 | 8341 tok/s (avg 8474) ETA 48m07s | gtok=93802496
+  [1] 22950/28874 (79%) loss=5.0442 ppl=155.1 lr=2.96e-04 | 8308 tok/s (avg 8474) ETA 47m43s | gtok=94007296
+  [1] 23000/28874 (80%) loss=5.0678 ppl=158.8 lr=2.96e-04 | 8240 tok/s (avg 8473) ETA 47m19s | gtok=94212096
+  [1] 23050/28874 (80%) loss=4.6968 ppl=109.6 lr=2.95e-04 | 8247 tok/s (avg 8473) ETA 46m55s | gtok=94416896
+  [1] 23100/28874 (80%) loss=4.7106 ppl=111.1 lr=2.95e-04 | 8239 tok/s (avg 8472) ETA 46m31s | gtok=94621696
+  [1] 23150/28874 (80%) loss=4.7691 ppl=117.8 lr=2.95e-04 | 8247 tok/s (avg 8472) ETA 46m07s | gtok=94826496
+  [1] 23200/28874 (80%) loss=5.0905 ppl=162.5 lr=2.95e-04 | 8245 tok/s (avg 8471) ETA 45m43s | gtok=95031296
+  [1] 23250/28874 (81%) loss=5.0499 ppl=156.0 lr=2.95e-04 | 8355 tok/s (avg 8471) ETA 45m18s | gtok=95236096
+  [1] 23300/28874 (81%) loss=4.9392 ppl=139.7 lr=2.95e-04 | 8242 tok/s (avg 8470) ETA 44m54s | gtok=95440896
+  [1] 23350/28874 (81%) loss=4.8019 ppl=121.7 lr=2.95e-04 | 8198 tok/s (avg 8470) ETA 44m30s | gtok=95645696
+  [1] 23400/28874 (81%) loss=4.8324 ppl=125.5 lr=2.95e-04 | 8101 tok/s (avg 8469) ETA 44m07s | gtok=95850496
+  [1] 23450/28874 (81%) loss=4.9566 ppl=142.1 lr=2.95e-04 | 8246 tok/s (avg 8468) ETA 43m42s | gtok=96055296
+  [1] 23500/28874 (81%) loss=4.7919 ppl=120.5 lr=2.95e-04 | 8305 tok/s (avg 8468) ETA 43m18s | gtok=96260096
+  [1] 23550/28874 (82%) loss=4.8506 ppl=127.8 lr=2.95e-04 | 8200 tok/s (avg 8468) ETA 42m54s | gtok=96464896
+  [1] 23600/28874 (82%) loss=4.6747 ppl=107.2 lr=2.95e-04 | 8194 tok/s (avg 8467) ETA 42m30s | gtok=96669696
+  [1] 23650/28874 (82%) loss=4.6720 ppl=106.9 lr=2.95e-04 | 8275 tok/s (avg 8467) ETA 42m06s | gtok=96874496
+  [1] 23700/28874 (82%) loss=4.7530 ppl=115.9 lr=2.95e-04 | 8260 tok/s (avg 8466) ETA 41m42s | gtok=97079296
+  [1] 23750/28874 (82%) loss=4.6407 ppl=103.6 lr=2.95e-04 | 8170 tok/s (avg 8465) ETA 41m18s | gtok=97284096
+  [1] 23800/28874 (82%) loss=4.9035 ppl=134.8 lr=2.95e-04 | 8209 tok/s (avg 8465) ETA 40m54s | gtok=97488896
+  [1] 23850/28874 (83%) loss=4.6251 ppl=102.0 lr=2.95e-04 | 8360 tok/s (avg 8465) ETA 40m30s | gtok=97693696
+  [1] 23900/28874 (83%) loss=4.8329 ppl=125.6 lr=2.95e-04 | 8071 tok/s (avg 8464) ETA 40m06s | gtok=97898496
+  [1] 23950/28874 (83%) loss=4.6330 ppl=102.8 lr=2.95e-04 | 8211 tok/s (avg 8463) ETA 39m42s | gtok=98103296
+  [1] 24000/28874 (83%) loss=5.0187 ppl=151.2 lr=2.95e-04 | 8160 tok/s (avg 8463) ETA 39m18s | gtok=98308096
+  [1] 24050/28874 (83%) loss=4.7931 ppl=120.7 lr=2.95e-04 | 8222 tok/s (avg 8462) ETA 38m54s | gtok=98512896
+  [1] 24100/28874 (83%) loss=5.1088 ppl=165.5 lr=2.95e-04 | 8162 tok/s (avg 8461) ETA 38m30s | gtok=98717696
+  [1] 24150/28874 (84%) loss=4.8402 ppl=126.5 lr=2.95e-04 | 8112 tok/s (avg 8461) ETA 38m06s | gtok=98922496
+  [1] 24200/28874 (84%) loss=5.0177 ppl=151.1 lr=2.95e-04 | 8206 tok/s (avg 8460) ETA 37m42s | gtok=99127296
+  [1] 24250/28874 (84%) loss=4.9383 ppl=139.5 lr=2.95e-04 | 8167 tok/s (avg 8460) ETA 37m18s | gtok=99332096
+  [1] 24300/28874 (84%) loss=4.6880 ppl=108.6 lr=2.95e-04 | 8057 tok/s (avg 8459) ETA 36m54s | gtok=99536896
+  [1] 24350/28874 (84%) loss=4.7606 ppl=116.8 lr=2.95e-04 | 8275 tok/s (avg 8458) ETA 36m30s | gtok=99741696
+  [1] 24400/28874 (85%) loss=4.8205 ppl=124.0 lr=2.95e-04 | 8063 tok/s (avg 8457) ETA 36m06s | gtok=99946496
+  [1] 24450/28874 (85%) loss=4.6887 ppl=108.7 lr=2.95e-04 | 8185 tok/s (avg 8457) ETA 35m42s | gtok=100151296
+  [1] 24500/28874 (85%) loss=4.6237 ppl=101.9 lr=2.95e-04 | 8075 tok/s (avg 8456) ETA 35m18s | gtok=100356096
+  [1] 24550/28874 (85%) loss=4.9404 ppl=139.8 lr=2.95e-04 | 8332 tok/s (avg 8456) ETA 34m54s | gtok=100560896
+  [1] 24600/28874 (85%) loss=4.7527 ppl=115.9 lr=2.95e-04 | 8292 tok/s (avg 8455) ETA 34m29s | gtok=100765696
+  [1] 24650/28874 (85%) loss=4.8762 ppl=131.1 lr=2.95e-04 | 8191 tok/s (avg 8455) ETA 34m05s | gtok=100970496
+  [1] 24700/28874 (86%) loss=4.5156 ppl=91.4 lr=2.95e-04 | 8487 tok/s (avg 8455) ETA 33m41s | gtok=101175296
+  [1] 24750/28874 (86%) loss=4.4792 ppl=88.2 lr=2.95e-04 | 8380 tok/s (avg 8455) ETA 33m17s | gtok=101380096
+  [1] 24800/28874 (86%) loss=4.7828 ppl=119.4 lr=2.95e-04 | 8215 tok/s (avg 8454) ETA 32m53s | gtok=101584896
+  [1] 24850/28874 (86%) loss=4.3794 ppl=79.8 lr=2.95e-04 | 8149 tok/s (avg 8454) ETA 32m29s | gtok=101789696
+  [1] 24900/28874 (86%) loss=4.7558 ppl=116.3 lr=2.95e-04 | 8231 tok/s (avg 8453) ETA 32m05s | gtok=101994496
+  [1] 24950/28874 (86%) loss=4.9760 ppl=144.9 lr=2.95e-04 | 8098 tok/s (avg 8452) ETA 31m41s | gtok=102199296
+  [1] 25000/28874 (87%) loss=4.9287 ppl=138.2 lr=2.95e-04 | 8090 tok/s (avg 8452) ETA 31m17s | gtok=102404096
+  [mid-epoch sample @ batch 25000, 102,404,096 tok]
+  Prompt: In 1923 , the University of
+  Generated: In 1923 , the University of Cambridge was also a school university . The schools are located in the West of England and South Wales , who are in England ; in 1866 it is currently known as the New York City School for its service . 
+
+
+ = = = History = = = 
+
+
+ In 1920 , at the same time , St. Mary 's Church began to have a new house near the south @-@ east . On 1 January 1909 , he had a large estate church and house in the United States
+  [1] 25050/28874 (87%) loss=4.9031 ppl=134.7 lr=2.95e-04 | 6563 tok/s (avg 8447) ETA 30m53s | gtok=102608896
+  [1] 25100/28874 (87%) loss=4.8248 ppl=124.6 lr=2.95e-04 | 8071 tok/s (avg 8446) ETA 30m29s | gtok=102813696
+  [1] 25150/28874 (87%) loss=4.4498 ppl=85.6 lr=2.95e-04 | 8041 tok/s (avg 8445) ETA 30m05s | gtok=103018496
+  [1] 25200/28874 (87%) loss=4.4639 ppl=86.8 lr=2.95e-04 | 8014 tok/s (avg 8444) ETA 29m41s | gtok=103223296
+  [1] 25250/28874 (87%) loss=4.8063 ppl=122.3 lr=2.95e-04 | 7927 tok/s (avg 8443) ETA 29m17s | gtok=103428096
+  [1] 25300/28874 (88%) loss=5.1310 ppl=169.2 lr=2.95e-04 | 7920 tok/s (avg 8442) ETA 28m53s | gtok=103632896
+  [1] 25350/28874 (88%) loss=4.9244 ppl=137.6 lr=2.95e-04 | 8147 tok/s (avg 8441) ETA 28m29s | gtok=103837696
+  [1] 25400/28874 (88%) loss=4.7744 ppl=118.4 lr=2.95e-04 | 8088 tok/s (avg 8441) ETA 28m05s | gtok=104042496
+  [1] 25450/28874 (88%) loss=4.9569 ppl=142.2 lr=2.94e-04 | 8122 tok/s (avg 8440) ETA 27m41s | gtok=104247296
+  [1] 25500/28874 (88%) loss=4.9721 ppl=144.3 lr=2.94e-04 | 8143 tok/s (avg 8440) ETA 27m17s | gtok=104452096
+  [1] 25550/28874 (88%) loss=4.8201 ppl=124.0 lr=2.94e-04 | 8276 tok/s (avg 8439) ETA 26m52s | gtok=104656896
+  [1] 25600/28874 (89%) loss=4.8443 ppl=127.0 lr=2.94e-04 | 8398 tok/s (avg 8439) ETA 26m28s | gtok=104861696
+  [1] 25650/28874 (89%) loss=4.8968 ppl=133.9 lr=2.94e-04 | 8426 tok/s (avg 8439) ETA 26m04s | gtok=105066496
+  [1] 25700/28874 (89%) loss=4.9607 ppl=142.7 lr=2.94e-04 | 8334 tok/s (avg 8439) ETA 25m40s | gtok=105271296
+  [1] 25750/28874 (89%) loss=4.5616 ppl=95.7 lr=2.94e-04 | 8268 tok/s (avg 8439) ETA 25m15s | gtok=105476096
+  [1] 25800/28874 (89%) loss=4.5684 ppl=96.4 lr=2.94e-04 | 8197 tok/s (avg 8438) ETA 24m51s | gtok=105680896
+  [1] 25850/28874 (90%) loss=4.8923 ppl=133.3 lr=2.94e-04 | 8312 tok/s (avg 8438) ETA 24m27s | gtok=105885696
+  [1] 25900/28874 (90%) loss=4.4837 ppl=88.6 lr=2.94e-04 | 8273 tok/s (avg 8437) ETA 24m03s | gtok=106090496
+  [1] 25950/28874 (90%) loss=4.8410 ppl=126.6 lr=2.94e-04 | 8186 tok/s (avg 8437) ETA 23m39s | gtok=106295296
+  [1] 26000/28874 (90%) loss=4.7722 ppl=118.2 lr=2.94e-04 | 8094 tok/s (avg 8436) ETA 23m14s | gtok=106500096
+  [1] 26050/28874 (90%) loss=5.0105 ppl=150.0 lr=2.94e-04 | 8169 tok/s (avg 8436) ETA 22m50s | gtok=106704896
+  [1] 26100/28874 (90%) loss=4.7132 ppl=111.4 lr=2.94e-04 | 8156 tok/s (avg 8435) ETA 22m26s | gtok=106909696
+  [1] 26150/28874 (91%) loss=4.8855 ppl=132.4 lr=2.94e-04 | 8058 tok/s (avg 8434) ETA 22m02s | gtok=107114496
+  [1] 26200/28874 (91%) loss=4.6344 ppl=103.0 lr=2.94e-04 | 8224 tok/s (avg 8434) ETA 21m38s | gtok=107319296
+  [1] 26250/28874 (91%) loss=4.8487 ppl=127.6 lr=2.94e-04 | 8210 tok/s (avg 8434) ETA 21m13s | gtok=107524096
+  [1] 26300/28874 (91%) loss=4.5170 ppl=91.6 lr=2.94e-04 | 8299 tok/s (avg 8433) ETA 20m49s | gtok=107728896
+  [1] 26350/28874 (91%) loss=4.8153 ppl=123.4 lr=2.94e-04 | 8132 tok/s (avg 8433) ETA 20m25s | gtok=107933696
+  [1] 26400/28874 (91%) loss=4.6845 ppl=108.3 lr=2.94e-04 | 7125 tok/s (avg 8430) ETA 20m01s | gtok=108138496
+  [1] 26450/28874 (92%) loss=4.8502 ppl=127.8 lr=2.94e-04 | 6868 tok/s (avg 8426) ETA 19m37s | gtok=108343296
+  [1] 26500/28874 (92%) loss=4.9970 ppl=148.0 lr=2.94e-04 | 8073 tok/s (avg 8425) ETA 19m13s | gtok=108548096
+  [1] 26550/28874 (92%) loss=5.0906 ppl=162.5 lr=2.94e-04 | 8050 tok/s (avg 8425) ETA 18m49s | gtok=108752896
+  [1] 26600/28874 (92%) loss=4.7076 ppl=110.8 lr=2.94e-04 | 8142 tok/s (avg 8424) ETA 18m25s | gtok=108957696
+  [1] 26650/28874 (92%) loss=5.0405 ppl=154.5 lr=2.94e-04 | 8171 tok/s (avg 8424) ETA 18m00s | gtok=109162496
+  [1] 26700/28874 (92%) loss=4.7214 ppl=112.3 lr=2.94e-04 | 8021 tok/s (avg 8423) ETA 17m36s | gtok=109367296
+  [1] 26750/28874 (93%) loss=4.9914 ppl=147.1 lr=2.94e-04 | 8156 tok/s (avg 8422) ETA 17m12s | gtok=109572096
+  [1] 26800/28874 (93%) loss=4.8725 ppl=130.6 lr=2.94e-04 | 8143 tok/s (avg 8422) ETA 16m48s | gtok=109776896
+  [1] 26850/28874 (93%) loss=4.8353 ppl=125.9 lr=2.94e-04 | 8114 tok/s (avg 8421) ETA 16m23s | gtok=109981696
+  [1] 26900/28874 (93%) loss=4.6725 ppl=107.0 lr=2.94e-04 | 8163 tok/s (avg 8421) ETA 15m59s | gtok=110186496
+  [1] 26950/28874 (93%) loss=4.8449 ppl=127.1 lr=2.94e-04 | 8264 tok/s (avg 8420) ETA 15m35s | gtok=110391296
+  [1] 27000/28874 (94%) loss=4.8210 ppl=124.1 lr=2.94e-04 | 8182 tok/s (avg 8420) ETA 15m11s | gtok=110596096
+  [1] 27050/28874 (94%) loss=4.7294 ppl=113.2 lr=2.94e-04 | 8183 tok/s (avg 8420) ETA 14m46s | gtok=110800896
+  [1] 27100/28874 (94%) loss=5.0065 ppl=149.4 lr=2.94e-04 | 8062 tok/s (avg 8419) ETA 14m22s | gtok=111005696
+  [1] 27150/28874 (94%) loss=4.9796 ppl=145.4 lr=2.94e-04 | 8234 tok/s (avg 8419) ETA 13m58s | gtok=111210496
+  [1] 27200/28874 (94%) loss=4.8932 ppl=133.4 lr=2.94e-04 | 8227 tok/s (avg 8418) ETA 13m34s | gtok=111415296
+  [1] 27250/28874 (94%) loss=4.5226 ppl=92.1 lr=2.94e-04 | 8201 tok/s (avg 8418) ETA 13m09s | gtok=111620096
+  [1] 27300/28874 (95%) loss=4.7879 ppl=120.1 lr=2.94e-04 | 8325 tok/s (avg 8418) ETA 12m45s | gtok=111824896
+  [1] 27350/28874 (95%) loss=4.7368 ppl=114.1 lr=2.94e-04 | 8372 tok/s (avg 8418) ETA 12m21s | gtok=112029696
+  [1] 27400/28874 (95%) loss=4.6071 ppl=100.2 lr=2.94e-04 | 8269 tok/s (avg 8417) ETA 11m56s | gtok=112234496
+  [1] 27450/28874 (95%) loss=4.9113 ppl=135.8 lr=2.94e-04 | 8293 tok/s (avg 8417) ETA 11m32s | gtok=112439296
+  [1] 27500/28874 (95%) loss=4.7828 ppl=119.4 lr=2.94e-04 | 8094 tok/s (avg 8416) ETA 11m08s | gtok=112644096
+  [1] 27550/28874 (95%) loss=4.7479 ppl=115.3 lr=2.94e-04 | 8156 tok/s (avg 8416) ETA 10m43s | gtok=112848896
+  [1] 27600/28874 (96%) loss=5.0007 ppl=148.5 lr=2.94e-04 | 8157 tok/s (avg 8415) ETA 10m19s | gtok=113053696
+  [1] 27650/28874 (96%) loss=4.6282 ppl=102.3 lr=2.93e-04 | 8121 tok/s (avg 8415) ETA 9m55s | gtok=113258496
+  [1] 27700/28874 (96%) loss=4.7021 ppl=110.2 lr=2.93e-04 | 8043 tok/s (avg 8414) ETA 9m31s | gtok=113463296
+  [1] 27750/28874 (96%) loss=4.7895 ppl=120.2 lr=2.93e-04 | 8295 tok/s (avg 8414) ETA 9m06s | gtok=113668096
+  [1] 27800/28874 (96%) loss=4.9690 ppl=143.9 lr=2.93e-04 | 8273 tok/s (avg 8414) ETA 8m42s | gtok=113872896
+  [1] 27850/28874 (96%) loss=4.8077 ppl=122.5 lr=2.93e-04 | 8210 tok/s (avg 8413) ETA 8m18s | gtok=114077696
+  [1] 27900/28874 (97%) loss=4.7161 ppl=111.7 lr=2.93e-04 | 8138 tok/s (avg 8413) ETA 7m53s | gtok=114282496
+  [1] 27950/28874 (97%) loss=4.8104 ppl=122.8 lr=2.93e-04 | 8264 tok/s (avg 8413) ETA 7m29s | gtok=114487296
+  [1] 28000/28874 (97%) loss=4.7091 ppl=111.0 lr=2.93e-04 | 8170 tok/s (avg 8412) ETA 7m05s | gtok=114692096
+  [1] 28050/28874 (97%) loss=4.8813 ppl=131.8 lr=2.93e-04 | 8075 tok/s (avg 8411) ETA 6m40s | gtok=114896896
+  [1] 28100/28874 (97%) loss=4.7406 ppl=114.5 lr=2.93e-04 | 8182 tok/s (avg 8411) ETA 6m16s | gtok=115101696
+  [1] 28150/28874 (97%) loss=4.6282 ppl=102.3 lr=2.93e-04 | 8010 tok/s (avg 8410) ETA 5m52s | gtok=115306496
+  [1] 28200/28874 (98%) loss=4.7969 ppl=121.1 lr=2.93e-04 | 8049 tok/s (avg 8410) ETA 5m27s | gtok=115511296
+  [1] 28250/28874 (98%) loss=5.0560 ppl=157.0 lr=2.93e-04 | 8228 tok/s (avg 8409) ETA 5m03s | gtok=115716096
+  [1] 28300/28874 (98%) loss=4.5520 ppl=94.8 lr=2.93e-04 | 8023 tok/s (avg 8409) ETA 4m39s | gtok=115920896
+  [1] 28350/28874 (98%) loss=4.6898 ppl=108.8 lr=2.93e-04 | 8070 tok/s (avg 8408) ETA 4m14s | gtok=116125696
+  [1] 28400/28874 (98%) loss=5.1446 ppl=171.5 lr=2.93e-04 | 8086 tok/s (avg 8407) ETA 3m50s | gtok=116330496
+  [1] 28450/28874 (99%) loss=4.7407 ppl=114.5 lr=2.93e-04 | 7992 tok/s (avg 8407) ETA 3m26s | gtok=116535296
+  [1] 28500/28874 (99%) loss=4.4160 ppl=82.8 lr=2.93e-04 | 8368 tok/s (avg 8407) ETA 3m01s | gtok=116740096
+  [1] 28550/28874 (99%) loss=4.7956 ppl=121.0 lr=2.93e-04 | 8121 tok/s (avg 8406) ETA 2m37s | gtok=116944896
+  [1] 28600/28874 (99%) loss=5.0974 ppl=163.6 lr=2.93e-04 | 8082 tok/s (avg 8405) ETA 2m13s | gtok=117149696
+  [1] 28650/28874 (99%) loss=5.0056 ppl=149.3 lr=2.93e-04 | 7892 tok/s (avg 8404) ETA 1m48s | gtok=117354496
+  [1] 28700/28874 (99%) loss=4.5890 ppl=98.4 lr=2.93e-04 | 8219 tok/s (avg 8404) ETA 1m24s | gtok=117559296
+  [1] 28750/28874 (100%) loss=4.6265 ppl=102.2 lr=2.93e-04 | 8079 tok/s (avg 8404) ETA 0m59s | gtok=117764096
+  [1] 28800/28874 (100%) loss=5.1016 ppl=164.3 lr=2.93e-04 | 8215 tok/s (avg 8403) ETA 0m35s | gtok=117968896
+  [1] 28850/28874 (100%) loss=4.9504 ppl=141.2 lr=2.93e-04 | 8057 tok/s (avg 8403) ETA 0m11s | gtok=118173696
+Epoch 1/10 | Train Loss: 5.2075 PPL: 182.64 | 8402 tok/s | Time: 14075.7s (118,264,832 tok) | Val Loss: 4.5981 PPL: 99.29 *best*
+Saved checkpoint: checkpoints_transformer_10m/best_model.pt
+
+Prompt: In 1923 , the University of
+Generated: In 1923 , the University of Colorado and New York City to become a school @-@ best school . The college was the first of its five years as the school 's student . 
+
+ The university was based in the United States from the late 1920s to the middle of the world ; the first of the first two were to be the oldest students of the state that he attended by the time . During World War I , the university had been founded as a national team . In the early 1920s , the College moved to
+  Quality: rep3=0.010 rep4=0.000 restarts=0 uniq=0.626
+
+============================================================
+Epoch 2/10
+============================================================
+  [2] 0/28874 (0%) loss=4.7149 ppl=111.6 lr=2.93e-04 | 7239 tok/s (avg 7239) ETA 0m00s | gtok=118268928
+  [2] 50/28874 (0%) loss=4.6224 ppl=101.7 lr=2.93e-04 | 8120 tok/s (avg 8101) ETA 242m53s | gtok=118473728
+  [2] 100/28874 (0%) loss=4.7611 ppl=116.9 lr=2.93e-04 | 8280 tok/s (avg 8189) ETA 239m52s | gtok=118678528
+  [2] 150/28874 (1%) loss=4.8372 ppl=126.1 lr=2.93e-04 | 8229 tok/s (avg 8202) ETA 239m04s | gtok=118883328
+  [2] 200/28874 (1%) loss=4.6939 ppl=109.3 lr=2.93e-04 | 8085 tok/s (avg 8172) ETA 239m30s | gtok=119088128
+  [2] 250/28874 (1%) loss=4.9420 ppl=140.1 lr=2.93e-04 | 8425 tok/s (avg 8221) ETA 237m40s | gtok=119292928
+  [2] 300/28874 (1%) loss=5.1942 ppl=180.2 lr=2.93e-04 | 8177 tok/s (avg 8214) ETA 237m28s | gtok=119497728
+  [2] 350/28874 (1%) loss=4.5615 ppl=95.7 lr=2.93e-04 | 8150 tok/s (avg 8205) ETA 237m19s | gtok=119702528
+  [2] 400/28874 (1%) loss=5.0191 ppl=151.3 lr=2.93e-04 | 8093 tok/s (avg 8191) ETA 237m18s | gtok=119907328
+  [2] 450/28874 (2%) loss=4.6968 ppl=109.6 lr=2.93e-04 | 8187 tok/s (avg 8190) ETA 236m54s | gtok=120112128
+  [2] 500/28874 (2%) loss=4.9865 ppl=146.4 lr=2.93e-04 | 8131 tok/s (avg 8184) ETA 236m39s | gtok=120316928
+  [2] 550/28874 (2%) loss=4.5915 ppl=98.6 lr=2.93e-04 | 8034 tok/s (avg 8170) ETA 236m38s | gtok=120521728
+  [2] 600/28874 (2%) loss=4.9066 ppl=135.2 lr=2.93e-04 | 8122 tok/s (avg 8166) ETA 236m20s | gtok=120726528
+  [2] 650/28874 (2%) loss=4.8804 ppl=131.7 lr=2.93e-04 | 8130 tok/s (avg 8163) ETA 236m00s | gtok=120931328
+  [2] 700/28874 (2%) loss=4.7258 ppl=112.8 lr=2.93e-04 | 8261 tok/s (avg 8170) ETA 235m23s | gtok=121136128
+  [2] 750/28874 (3%) loss=5.0618 ppl=157.9 lr=2.93e-04 | 8078 tok/s (avg 8164) ETA 235m09s | gtok=121340928
+  [2] 800/28874 (3%) loss=5.1682 ppl=175.6 lr=2.92e-04 | 8005 tok/s (avg 8154) ETA 235m01s | gtok=121545728
+  [2] 850/28874 (3%) loss=5.0139 ppl=150.5 lr=2.92e-04 | 8198 tok/s (avg 8157) ETA 234m32s | gtok=121750528
+  [2] 900/28874 (3%) loss=4.6887 ppl=108.7 lr=2.92e-04 | 8094 tok/s (avg 8153) ETA 234m13s | gtok=121955328
+  [2] 950/28874 (3%) loss=4.8127 ppl=123.1 lr=2.92e-04 | 8133 tok/s (avg 8152) ETA 233m50s | gtok=122160128
+  [2] 1000/28874 (3%) loss=4.7017 ppl=110.1 lr=2.92e-04 | 8114 tok/s (avg 8150) ETA 233m28s | gtok=122364928
+  [2] 1050/28874 (4%) loss=5.0647 ppl=158.3 lr=2.92e-04 | 8075 tok/s (avg 8146) ETA 233m09s | gtok=122569728
+  [2] 1100/28874 (4%) loss=4.6846 ppl=108.3 lr=2.92e-04 | 8143 tok/s (avg 8146) ETA 232m44s | gtok=122774528
+  [2] 1150/28874 (4%) loss=4.7914 ppl=120.5 lr=2.92e-04 | 8396 tok/s (avg 8157) ETA 232m01s | gtok=122979328
+  [2] 1200/28874 (4%) loss=4.8776 ppl=131.3 lr=2.92e-04 | 8083 tok/s (avg 8154) ETA 231m41s | gtok=123184128
+  [2] 1250/28874 (4%) loss=5.0272 ppl=152.5 lr=2.92e-04 | 8149 tok/s (avg 8153) ETA 231m16s | gtok=123388928
+  [2] 1300/28874 (5%) loss=4.9381 ppl=139.5 lr=2.92e-04 | 8038 tok/s (avg 8149) ETA 230m59s | gtok=123593728
+  [2] 1350/28874 (5%) loss=4.4408 ppl=84.8 lr=2.92e-04 | 8040 tok/s (avg 8145) ETA 230m41s | gtok=123798528
+  [2] 1400/28874 (5%) loss=4.4924 ppl=89.3 lr=2.92e-04 | 8065 tok/s (avg 8142) ETA 230m20s | gtok=124003328
+  [2] 1450/28874 (5%) loss=4.6983 ppl=109.8 lr=2.92e-04 | 8017 tok/s (avg 8138) ETA 230m03s | gtok=124208128
+  [2] 1500/28874 (5%) loss=4.8832 ppl=132.1 lr=2.92e-04 | 8171 tok/s (avg 8139) ETA 229m36s | gtok=124412928
+  [2] 1550/28874 (5%) loss=4.6278 ppl=102.3 lr=2.92e-04 | 7988 tok/s (avg 8134) ETA 229m19s | gtok=124617728
+  [2] 1600/28874 (6%) loss=5.0142 ppl=150.5 lr=2.92e-04 | 8171 tok/s (avg 8135) ETA 228m52s | gtok=124822528
+  [2] 1650/28874 (6%) loss=4.9358 ppl=139.2 lr=2.92e-04 | 8126 tok/s (avg 8135) ETA 228m27s | gtok=125027328
+  [2] 1700/28874 (6%) loss=5.0351 ppl=153.7 lr=2.92e-04 | 8061 tok/s (avg 8132) ETA 228m06s | gtok=125232128
+  [2] 1750/28874 (6%) loss=4.8319 ppl=125.4 lr=2.92e-04 | 8163 tok/s (avg 8133) ETA 227m39s | gtok=125436928
+  [2] 1800/28874 (6%) loss=5.0505 ppl=156.1 lr=2.92e-04 | 8048 tok/s (avg 8131) ETA 227m18s | gtok=125641728
+  [2] 1850/28874 (6%) loss=4.3999 ppl=81.4 lr=2.92e-04 | 8031 tok/s (avg 8128) ETA 226m57s | gtok=125846528
+  [2] 1900/28874 (7%) loss=4.6241 ppl=101.9 lr=2.92e-04 | 7984 tok/s (avg 8124) ETA 226m38s | gtok=126051328
+  [2] 1950/28874 (7%) loss=4.6525 ppl=104.8 lr=2.92e-04 | 8163 tok/s (avg 8125) ETA 226m12s | gtok=126256128
+  [2] 2000/28874 (7%) loss=4.7997 ppl=121.5 lr=2.92e-04 | 8474 tok/s (avg 8134) ETA 225m32s | gtok=126460928
+  [2] 2050/28874 (7%) loss=4.4008 ppl=81.5 lr=2.92e-04 | 8175 tok/s (avg 8135) ETA 225m06s | gtok=126665728
+  [2] 2100/28874 (7%) loss=4.8019 ppl=121.7 lr=2.92e-04 | 8153 tok/s (avg 8135) ETA 224m40s | gtok=126870528
+  [2] 2150/28874 (7%) loss=5.1038 ppl=164.6 lr=2.92e-04 | 8112 tok/s (avg 8134) ETA 224m15s | gtok=127075328
+  [2] 2200/28874 (8%) loss=4.7378 ppl=114.2 lr=2.92e-04 | 8132 tok/s (avg 8134) ETA 223m50s | gtok=127280128
+  [2] 2250/28874 (8%) loss=4.9959 ppl=147.8 lr=2.92e-04 | 8073 tok/s (avg 8133) ETA 223m27s | gtok=127484928
+  [2] 2300/28874 (8%) loss=4.8722 ppl=130.6 lr=2.92e-04 | 8241 tok/s (avg 8135) ETA 222m58s | gtok=127689728
+  [2] 2350/28874 (8%) loss=4.7512 ppl=115.7 lr=2.92e-04 | 7801 tok/s (avg 8128) ETA 222m45s | gtok=127894528
+  [2] 2400/28874 (8%) loss=4.8241 ppl=124.5 lr=2.92e-04 | 8091 tok/s (avg 8127) ETA 222m22s | gtok=128099328
+  [2] 2450/28874 (8%) loss=4.8358 ppl=125.9 lr=2.92e-04 | 8246 tok/s (avg 8130) ETA 221m52s | gtok=128304128
+  [2] 2500/28874 (9%) loss=4.4533 ppl=85.9 lr=2.92e-04 | 8117 tok/s (avg 8129) ETA 221m28s | gtok=128508928
+  [2] 2550/28874 (9%) loss=5.0768 ppl=160.3 lr=2.92e-04 | 8154 tok/s (avg 8130) ETA 221m02s | gtok=128713728
+  [2] 2600/28874 (9%) loss=4.6217 ppl=101.7 lr=2.92e-04 | 8082 tok/s (avg 8129) ETA 220m38s | gtok=128918528
+  [2] 2650/28874 (9%) loss=4.8158 ppl=123.4 lr=2.92e-04 | 8072 tok/s (avg 8128) ETA 220m15s | gtok=129123328
+  [2] 2700/28874 (9%) loss=4.7627 ppl=117.1 lr=2.91e-04 | 8135 tok/s (avg 8128) ETA 219m49s | gtok=129328128
+  [2] 2750/28874 (10%) loss=4.5778 ppl=97.3 lr=2.91e-04 | 8008 tok/s (avg 8126) ETA 219m28s | gtok=129532928
+  [2] 2800/28874 (10%) loss=4.9611 ppl=142.8 lr=2.91e-04 | 8106 tok/s (avg 8125) ETA 219m03s | gtok=129737728
+  [2] 2850/28874 (10%) loss=4.5869 ppl=98.2 lr=2.91e-04 | 8271 tok/s (avg 8128) ETA 218m34s | gtok=129942528
+  [2] 2900/28874 (10%) loss=4.6931 ppl=109.2 lr=2.91e-04 | 8619 tok/s (avg 8136) ETA 217m56s | gtok=130147328
+  [2] 2950/28874 (10%) loss=4.6457 ppl=104.1 lr=2.91e-04 | 8142 tok/s (avg 8136) ETA 217m30s | gtok=130352128
+  [2] 3000/28874 (10%) loss=4.9087 ppl=135.5 lr=2.91e-04 | 8128 tok/s (avg 8136) ETA 217m05s | gtok=130556928
+  [2] 3050/28874 (11%) loss=4.5996 ppl=99.4 lr=2.91e-04 | 8099 tok/s (avg 8135) ETA 216m41s | gtok=130761728
+  [2] 3100/28874 (11%) loss=4.6879 ppl=108.6 lr=2.91e-04 | 7947 tok/s (avg 8132) ETA 216m21s | gtok=130966528
+  [2] 3150/28874 (11%) loss=4.4807 ppl=88.3 lr=2.91e-04 | 8139 tok/s (avg 8132) ETA 215m56s | gtok=131171328
+  [2] 3200/28874 (11%) loss=4.8037 ppl=122.0 lr=2.91e-04 | 8052 tok/s (avg 8131) ETA 215m32s | gtok=131376128
+  [2] 3250/28874 (11%) loss=4.7685 ppl=117.7 lr=2.91e-04 | 8090 tok/s (avg 8130) ETA 215m08s | gtok=131580928
+  [2] 3300/28874 (11%) loss=4.5818 ppl=97.7 lr=2.91e-04 | 8149 tok/s (avg 8131) ETA 214m43s | gtok=131785728
+  [2] 3350/28874 (12%) loss=5.1131 ppl=166.2 lr=2.91e-04 | 8156 tok/s (avg 8131) ETA 214m17s | gtok=131990528
+  [2] 3400/28874 (12%) loss=4.8957 ppl=133.7 lr=2.91e-04 | 8019 tok/s (avg 8129) ETA 213m54s | gtok=132195328
+  [2] 3450/28874 (12%) loss=4.5533 ppl=94.9 lr=2.91e-04 | 8096 tok/s (avg 8129) ETA 213m30s | gtok=132400128
+  [2] 3500/28874 (12%) loss=4.8377 ppl=126.2 lr=2.91e-04 | 8237 tok/s (avg 8130) ETA 213m02s | gtok=132604928
+  [2] 3550/28874 (12%) loss=5.1659 ppl=175.2 lr=2.91e-04 | 7974 tok/s (avg 8128) ETA 212m41s | gtok=132809728
+  [2] 3600/28874 (12%) loss=4.9319 ppl=138.6 lr=2.91e-04 | 7931 tok/s (avg 8125) ETA 212m20s | gtok=133014528
+  [2] 3650/28874 (13%) loss=5.2228 ppl=185.5 lr=2.91e-04 | 8137 tok/s (avg 8125) ETA 211m54s | gtok=133219328
+  [2] 3700/28874 (13%) loss=4.7951 ppl=120.9 lr=2.91e-04 | 8135 tok/s (avg 8126) ETA 211m29s | gtok=133424128
+  [2] 3750/28874 (13%) loss=4.9548 ppl=141.8 lr=2.91e-04 | 8107 tok/s (avg 8125) ETA 211m04s | gtok=133628928
+  [2] 3800/28874 (13%) loss=4.8602 ppl=129.1 lr=2.91e-04 | 8342 tok/s (avg 8128) ETA 210m35s | gtok=133833728
+  [2] 3850/28874 (13%) loss=4.9273 ppl=138.0 lr=2.91e-04 | 8216 tok/s (avg 8129) ETA 210m08s | gtok=134038528
+  [2] 3900/28874 (14%) loss=4.3499 ppl=77.5 lr=2.91e-04 | 8091 tok/s (avg 8129) ETA 209m43s | gtok=134243328
+  [2] 3950/28874 (14%) loss=4.6349 ppl=103.0 lr=2.91e-04 | 8135 tok/s (avg 8129) ETA 209m18s | gtok=134448128
+  [2] 4000/28874 (14%) loss=4.8630 ppl=129.4 lr=2.91e-04 | 8017 tok/s (avg 8127) ETA 208m55s | gtok=134652928
+  [2] 4050/28874 (14%) loss=4.6752 ppl=107.3 lr=2.91e-04 | 8187 tok/s (avg 8128) ETA 208m29s | gtok=134857728
+  [2] 4100/28874 (14%) loss=4.5629 ppl=95.9 lr=2.91e-04 | 8029 tok/s (avg 8127) ETA 208m05s | gtok=135062528
+  [2] 4150/28874 (14%) loss=4.5821 ppl=97.7 lr=2.91e-04 | 8169 tok/s (avg 8127) ETA 207m39s | gtok=135267328
+  [2] 4200/28874 (15%) loss=5.0219 ppl=151.7 lr=2.91e-04 | 8301 tok/s (avg 8129) ETA 207m11s | gtok=135472128
+  [2] 4250/28874 (15%) loss=4.8843 ppl=132.2 lr=2.91e-04 | 8193 tok/s (avg 8130) ETA 206m45s | gtok=135676928
+  [2] 4300/28874 (15%) loss=4.3125 ppl=74.6 lr=2.91e-04 | 8081 tok/s (avg 8130) ETA 206m20s | gtok=135881728
+  [2] 4350/28874 (15%) loss=4.5717 ppl=96.7 lr=2.91e-04 | 8183 tok/s (avg 8130) ETA 205m54s | gtok=136086528
+  [2] 4400/28874 (15%) loss=4.9842 ppl=146.1 lr=2.91e-04 | 8040 tok/s (avg 8129) ETA 205m31s | gtok=136291328
+  [2] 4450/28874 (15%) loss=4.7643 ppl=117.3 lr=2.91e-04 | 8096 tok/s (avg 8129) ETA 205m06s | gtok=136496128
+  [2] 4500/28874 (16%) loss=4.3577 ppl=78.1 lr=2.90e-04 | 8107 tok/s (avg 8128) ETA 204m41s | gtok=136700928
+  [2] 4550/28874 (16%) loss=4.9310 ppl=138.5 lr=2.90e-04 | 8221 tok/s (avg 8129) ETA 204m15s | gtok=136905728
+  [2] 4600/28874 (16%) loss=4.8695 ppl=130.3 lr=2.90e-04 | 8196 tok/s (avg 8130) ETA 203m48s | gtok=137110528
+  [2] 4650/28874 (16%) loss=4.7276 ppl=113.0 lr=2.90e-04 | 6576 tok/s (avg 8110) ETA 203m54s | gtok=137315328
+  [2] 4700/28874 (16%) loss=4.6609 ppl=105.7 lr=2.90e-04 | 7564 tok/s (avg 8103) ETA 203m38s | gtok=137520128
+  [2] 4750/28874 (16%) loss=5.0553 ppl=156.9 lr=2.90e-04 | 7928 tok/s (avg 8101) ETA 203m16s | gtok=137724928
+  [2] 4800/28874 (17%) loss=4.8938 ppl=133.5 lr=2.90e-04 | 8052 tok/s (avg 8101) ETA 202m51s | gtok=137929728
+  [2] 4850/28874 (17%) loss=4.9795 ppl=145.4 lr=2.90e-04 | 7991 tok/s (avg 8100) ETA 202m28s | gtok=138134528
+  [2] 4900/28874 (17%) loss=4.6710 ppl=106.8 lr=2.90e-04 | 8146 tok/s (avg 8100) ETA 202m02s | gtok=138339328
+  [2] 4950/28874 (17%) loss=4.5816 ppl=97.7 lr=2.90e-04 | 7982 tok/s (avg 8099) ETA 201m38s | gtok=138544128
+  [2] 5000/28874 (17%) loss=4.6767 ppl=107.4 lr=2.90e-04 | 7998 tok/s (avg 8098) ETA 201m15s | gtok=138748928
+  [mid-epoch sample @ batch 5000, 138,748,928 tok]
+  Prompt: In 1923 , the University of
+  Generated: In 1923 , the University of Maryland . 
+
+
+ = = = College and college = = = 
+
+
+ The college was created in 1883 ; it was founded by a local school . By 1873 , the school was formed in 1869 . The university 's main academic body was an important grade with many schools that had worked for building , schools and school buildings , in the south . In 1900 , there were two major students in the church , including the High School and the National Historic Places District , which had become
+  [2] 5050/28874 (17%) loss=5.0192 ppl=151.3 lr=2.90e-04 | 6535 tok/s (avg 8079) ETA 201m18s | gtok=138953728
+  [2] 5100/28874 (18%) loss=4.4174 ppl=82.9 lr=2.90e-04 | 7958 tok/s (avg 8078) ETA 200m54s | gtok=139158528
+  [2] 5150/28874 (18%) loss=4.9441 ppl=140.3 lr=2.90e-04 | 8131 tok/s (avg 8078) ETA 200m28s | gtok=139363328
+  [2] 5200/28874 (18%) loss=4.8661 ppl=129.8 lr=2.90e-04 | 8020 tok/s (avg 8078) ETA 200m04s | gtok=139568128
+  [2] 5250/28874 (18%) loss=5.0443 ppl=155.1 lr=2.90e-04 | 8199 tok/s (avg 8079) ETA 199m37s | gtok=139772928
+  [2] 5300/28874 (18%) loss=4.6113 ppl=100.6 lr=2.90e-04 | 8101 tok/s (avg 8079) ETA 199m11s | gtok=139977728
+  [2] 5350/28874 (19%) loss=4.5950 ppl=99.0 lr=2.90e-04 | 8232 tok/s (avg 8080) ETA 198m44s | gtok=140182528
+  [2] 5400/28874 (19%) loss=4.8328 ppl=125.6 lr=2.90e-04 | 8295 tok/s (avg 8082) ETA 198m15s | gtok=140387328
+  [2] 5450/28874 (19%) loss=4.8676 ppl=130.0 lr=2.90e-04 | 8226 tok/s (avg 8084) ETA 197m48s | gtok=140592128
+  [2] 5500/28874 (19%) loss=4.4656 ppl=87.0 lr=2.90e-04 | 8227 tok/s (avg 8085) ETA 197m21s | gtok=140796928
+  [2] 5550/28874 (19%) loss=4.8168 ppl=123.6 lr=2.90e-04 | 8438 tok/s (avg 8088) ETA 196m51s | gtok=141001728
+  [2] 5600/28874 (19%) loss=4.6483 ppl=104.4 lr=2.90e-04 | 8221 tok/s (avg 8089) ETA 196m24s | gtok=141206528
+  [2] 5650/28874 (20%) loss=4.3258 ppl=75.6 lr=2.90e-04 | 8256 tok/s (avg 8091) ETA 195m57s | gtok=141411328
+  [2] 5700/28874 (20%) loss=4.4563 ppl=86.2 lr=2.90e-04 | 8258 tok/s (avg 8092) ETA 195m29s | gtok=141616128
+  [2] 5750/28874 (20%) loss=4.8814 ppl=131.8 lr=2.90e-04 | 8295 tok/s (avg 8094) ETA 195m01s | gtok=141820928
+  [2] 5800/28874 (20%) loss=4.4251 ppl=83.5 lr=2.90e-04 | 8179 tok/s (avg 8094) ETA 194m35s | gtok=142025728
+  [2] 5850/28874 (20%) loss=4.6165 ppl=101.1 lr=2.90e-04 | 8225 tok/s (avg 8095) ETA 194m08s | gtok=142230528
+  [2] 5900/28874 (20%) loss=4.7127 ppl=111.3 lr=2.90e-04 | 8129 tok/s (avg 8096) ETA 193m43s | gtok=142435328
+  [2] 5950/28874 (21%) loss=4.6699 ppl=106.7 lr=2.90e-04 | 8191 tok/s (avg 8097) ETA 193m16s | gtok=142640128
+  [2] 6000/28874 (21%) loss=4.8445 ppl=127.0 lr=2.90e-04 | 8146 tok/s (avg 8097) ETA 192m50s | gtok=142844928
+  [2] 6050/28874 (21%) loss=5.0201 ppl=151.4 lr=2.90e-04 | 8176 tok/s (avg 8098) ETA 192m24s | gtok=143049728
+  [2] 6100/28874 (21%) loss=4.7839 ppl=119.6 lr=2.90e-04 | 8284 tok/s (avg 8099) ETA 191m57s | gtok=143254528
+  [2] 6150/28874 (21%) loss=4.6901 ppl=108.9 lr=2.90e-04 | 8284 tok/s (avg 8101) ETA 191m29s | gtok=143459328
+  [2] 6200/28874 (21%) loss=4.8226 ppl=124.3 lr=2.89e-04 | 8191 tok/s (avg 8101) ETA 191m03s | gtok=143664128
+  [2] 6250/28874 (22%) loss=5.0525 ppl=156.4 lr=2.89e-04 | 8138 tok/s (avg 8102) ETA 190m37s | gtok=143868928
+  [2] 6300/28874 (22%) loss=4.7636 ppl=117.2 lr=2.89e-04 | 8184 tok/s (avg 8102) ETA 190m11s | gtok=144073728
+  [2] 6350/28874 (22%) loss=5.0096 ppl=149.8 lr=2.89e-04 | 8394 tok/s (avg 8104) ETA 189m43s | gtok=144278528
+  [2] 6400/28874 (22%) loss=4.8511 ppl=127.9 lr=2.89e-04 | 8163 tok/s (avg 8105) ETA 189m17s | gtok=144483328
+  [2] 6450/28874 (22%) loss=4.9954 ppl=147.7 lr=2.89e-04 | 8620 tok/s (avg 8109) ETA 188m46s | gtok=144688128
+  [2] 6500/28874 (23%) loss=5.0899 ppl=162.4 lr=2.89e-04 | 8123 tok/s (avg 8109) ETA 188m21s | gtok=144892928
+  [2] 6550/28874 (23%) loss=4.8165 ppl=123.5 lr=2.89e-04 | 8145 tok/s (avg 8109) ETA 187m55s | gtok=145097728
+  [2] 6600/28874 (23%) loss=4.6282 ppl=102.3 lr=2.89e-04 | 8143 tok/s (avg 8109) ETA 187m30s | gtok=145302528
+  [2] 6650/28874 (23%) loss=4.6698 ppl=106.7 lr=2.89e-04 | 8298 tok/s (avg 8111) ETA 187m02s | gtok=145507328
+  [2] 6700/28874 (23%) loss=4.8186 ppl=123.8 lr=2.89e-04 | 8114 tok/s (avg 8111) ETA 186m37s | gtok=145712128
+  [2] 6750/28874 (23%) loss=5.0560 ppl=157.0 lr=2.89e-04 | 8323 tok/s (avg 8112) ETA 186m10s | gtok=145916928
+  [2] 6800/28874 (24%) loss=4.6510 ppl=104.7 lr=2.89e-04 | 8276 tok/s (avg 8113) ETA 185m43s | gtok=146121728
+  [2] 6850/28874 (24%) loss=4.7557 ppl=116.3 lr=2.89e-04 | 8292 tok/s (avg 8115) ETA 185m16s | gtok=146326528
+  [2] 6900/28874 (24%) loss=4.4433 ppl=85.1 lr=2.89e-04 | 8317 tok/s (avg 8116) ETA 184m49s | gtok=146531328
+  [2] 6950/28874 (24%) loss=4.7494 ppl=115.5 lr=2.89e-04 | 8293 tok/s (avg 8117) ETA 184m22s | gtok=146736128
+  [2] 7000/28874 (24%) loss=4.9399 ppl=139.8 lr=2.89e-04 | 8288 tok/s (avg 8119) ETA 183m55s | gtok=146940928
+  [2] 7050/28874 (24%) loss=4.5698 ppl=96.5 lr=2.89e-04 | 8131 tok/s (avg 8119) ETA 183m30s | gtok=147145728
+  [2] 7100/28874 (25%) loss=4.6902 ppl=108.9 lr=2.89e-04 | 8349 tok/s (avg 8120) ETA 183m02s | gtok=147350528
+  [2] 7150/28874 (25%) loss=4.8587 ppl=128.9 lr=2.89e-04 | 8319 tok/s (avg 8122) ETA 182m35s | gtok=147555328
+  [2] 7200/28874 (25%) loss=4.7218 ppl=112.4 lr=2.89e-04 | 8457 tok/s (avg 8124) ETA 182m07s | gtok=147760128
+  [2] 7250/28874 (25%) loss=4.9401 ppl=139.8 lr=2.89e-04 | 8377 tok/s (avg 8126) ETA 181m39s | gtok=147964928
+  [2] 7300/28874 (25%) loss=4.4584 ppl=86.3 lr=2.89e-04 | 8423 tok/s (avg 8127) ETA 181m12s | gtok=148169728
+  [2] 7350/28874 (25%) loss=4.6396 ppl=103.5 lr=2.89e-04 | 8680 tok/s (avg 8131) ETA 180m42s | gtok=148374528
+  [2] 7400/28874 (26%) loss=4.8485 ppl=127.5 lr=2.89e-04 | 8176 tok/s (avg 8131) ETA 180m16s | gtok=148579328
+  [2] 7450/28874 (26%) loss=4.7378 ppl=114.2 lr=2.89e-04 | 8327 tok/s (avg 8133) ETA 179m49s | gtok=148784128
+  [2] 7500/28874 (26%) loss=4.5299 ppl=92.8 lr=2.89e-04 | 8219 tok/s (avg 8133) ETA 179m23s | gtok=148988928
+  [2] 7550/28874 (26%) loss=4.6446 ppl=104.0 lr=2.89e-04 | 8325 tok/s (avg 8134) ETA 178m57s | gtok=149193728
+  [2] 7600/28874 (26%) loss=4.7484 ppl=115.4 lr=2.89e-04 | 8332 tok/s (avg 8136) ETA 178m30s | gtok=149398528
+  [2] 7650/28874 (26%) loss=4.4167 ppl=82.8 lr=2.89e-04 | 8418 tok/s (avg 8137) ETA 178m02s | gtok=149603328
+  [2] 7700/28874 (27%) loss=4.5892 ppl=98.4 lr=2.89e-04 | 8393 tok/s (avg 8139) ETA 177m35s | gtok=149808128
+  [2] 7750/28874 (27%) loss=4.7455 ppl=115.1 lr=2.89e-04 | 8405 tok/s (avg 8141) ETA 177m08s | gtok=150012928
+  [2] 7800/28874 (27%) loss=4.9793 ppl=145.4 lr=2.88e-04 | 8381 tok/s (avg 8142) ETA 176m40s | gtok=150217728
+  [2] 7850/28874 (27%) loss=5.0115 ppl=150.1 lr=2.88e-04 | 8357 tok/s (avg 8144) ETA 176m14s | gtok=150422528
+  [2] 7900/28874 (27%) loss=4.4021 ppl=81.6 lr=2.88e-04 | 8426 tok/s (avg 8145) ETA 175m46s | gtok=150627328
+  [2] 7950/28874 (28%) loss=4.8539 ppl=128.2 lr=2.88e-04 | 8476 tok/s (avg 8147) ETA 175m18s | gtok=150832128
+  [2] 8000/28874 (28%) loss=4.9702 ppl=144.1 lr=2.88e-04 | 8364 tok/s (avg 8149) ETA 174m52s | gtok=151036928
+  [2] 8050/28874 (28%) loss=4.7195 ppl=112.1 lr=2.88e-04 | 8419 tok/s (avg 8150) ETA 174m24s | gtok=151241728
+  [2] 8100/28874 (28%) loss=4.7941 ppl=120.8 lr=2.88e-04 | 8368 tok/s (avg 8151) ETA 173m58s | gtok=151446528
+  [2] 8150/28874 (28%) loss=4.6968 ppl=109.6 lr=2.88e-04 | 8419 tok/s (avg 8153) ETA 173m30s | gtok=151651328
+  [2] 8200/28874 (28%) loss=5.0072 ppl=149.5 lr=2.88e-04 | 8459 tok/s (avg 8155) ETA 173m03s | gtok=151856128
+  [2] 8250/28874 (29%) loss=4.8464 ppl=127.3 lr=2.88e-04 | 8492 tok/s (avg 8157) ETA 172m35s | gtok=152060928
+  [2] 8300/28874 (29%) loss=4.5636 ppl=95.9 lr=2.88e-04 | 8419 tok/s (avg 8158) ETA 172m08s | gtok=152265728
+  [2] 8350/28874 (29%) loss=4.8634 ppl=129.5 lr=2.88e-04 | 8379 tok/s (avg 8160) ETA 171m42s | gtok=152470528
+  [2] 8400/28874 (29%) loss=4.7635 ppl=117.2 lr=2.88e-04 | 8418 tok/s (avg 8161) ETA 171m15s | gtok=152675328
+  [2] 8450/28874 (29%) loss=4.5993 ppl=99.4 lr=2.88e-04 | 8284 tok/s (avg 8162) ETA 170m49s | gtok=152880128
+  [2] 8500/28874 (29%) loss=4.7202 ppl=112.2 lr=2.88e-04 | 8378 tok/s (avg 8163) ETA 170m22s | gtok=153084928
+  [2] 8550/28874 (30%) loss=5.0783 ppl=160.5 lr=2.88e-04 | 8383 tok/s (avg 8164) ETA 169m55s | gtok=153289728
+  [2] 8600/28874 (30%) loss=4.8928 ppl=133.3 lr=2.88e-04 | 8222 tok/s (avg 8165) ETA 169m30s | gtok=153494528
+  [2] 8650/28874 (30%) loss=5.0504 ppl=156.1 lr=2.88e-04 | 8341 tok/s (avg 8166) ETA 169m04s | gtok=153699328
+  [2] 8700/28874 (30%) loss=4.6851 ppl=108.3 lr=2.88e-04 | 8475 tok/s (avg 8167) ETA 168m36s | gtok=153904128
+  [2] 8750/28874 (30%) loss=4.3666 ppl=78.8 lr=2.88e-04 | 8431 tok/s (avg 8169) ETA 168m10s | gtok=154108928
+  [2] 8800/28874 (30%) loss=5.0406 ppl=154.6 lr=2.88e-04 | 8283 tok/s (avg 8169) ETA 167m44s | gtok=154313728
+  [2] 8850/28874 (31%) loss=4.5441 ppl=94.1 lr=2.88e-04 | 8365 tok/s (avg 8171) ETA 167m17s | gtok=154518528
+  [2] 8900/28874 (31%) loss=4.8437 ppl=126.9 lr=2.88e-04 | 8418 tok/s (avg 8172) ETA 166m51s | gtok=154723328
+  [2] 8950/28874 (31%) loss=4.8654 ppl=129.7 lr=2.88e-04 | 8479 tok/s (avg 8174) ETA 166m23s | gtok=154928128
+  [2] 9000/28874 (31%) loss=4.5240 ppl=92.2 lr=2.88e-04 | 8313 tok/s (avg 8174) ETA 165m58s | gtok=155132928
+  [2] 9050/28874 (31%) loss=4.8215 ppl=124.1 lr=2.88e-04 | 8460 tok/s (avg 8176) ETA 165m31s | gtok=155337728
+  [2] 9100/28874 (32%) loss=4.7180 ppl=111.9 lr=2.88e-04 | 8834 tok/s (avg 8179) ETA 165m02s | gtok=155542528
+  [2] 9150/28874 (32%) loss=4.6851 ppl=108.3 lr=2.88e-04 | 8444 tok/s (avg 8181) ETA 164m35s | gtok=155747328
+  [2] 9200/28874 (32%) loss=4.7203 ppl=112.2 lr=2.88e-04 | 8411 tok/s (avg 8182) ETA 164m08s | gtok=155952128
+  [2] 9250/28874 (32%) loss=4.4624 ppl=86.7 lr=2.88e-04 | 8392 tok/s (avg 8183) ETA 163m42s | gtok=156156928
+  [2] 9300/28874 (32%) loss=4.5359 ppl=93.3 lr=2.88e-04 | 8381 tok/s (avg 8184) ETA 163m16s | gtok=156361728
+  [2] 9350/28874 (32%) loss=4.9141 ppl=136.2 lr=2.87e-04 | 8382 tok/s (avg 8185) ETA 162m49s | gtok=156566528
+  [2] 9400/28874 (33%) loss=5.0231 ppl=151.9 lr=2.87e-04 | 8603 tok/s (avg 8187) ETA 162m22s | gtok=156771328
+  [2] 9450/28874 (33%) loss=5.0011 ppl=148.6 lr=2.87e-04 | 8461 tok/s (avg 8188) ETA 161m55s | gtok=156976128
+  [2] 9500/28874 (33%) loss=4.6492 ppl=104.5 lr=2.87e-04 | 8503 tok/s (avg 8190) ETA 161m28s | gtok=157180928
+  [2] 9550/28874 (33%) loss=4.8471 ppl=127.4 lr=2.87e-04 | 8389 tok/s (avg 8191) ETA 161m02s | gtok=157385728
+  [2] 9600/28874 (33%) loss=4.5762 ppl=97.1 lr=2.87e-04 | 8564 tok/s (avg 8193) ETA 160m35s | gtok=157590528
+  [2] 9650/28874 (33%) loss=4.3556 ppl=77.9 lr=2.87e-04 | 8451 tok/s (avg 8194) ETA 160m08s | gtok=157795328
+  [2] 9700/28874 (34%) loss=4.9070 ppl=135.2 lr=2.87e-04 | 8555 tok/s (avg 8196) ETA 159m41s | gtok=158000128
+  [2] 9750/28874 (34%) loss=4.6920 ppl=109.1 lr=2.87e-04 | 8443 tok/s (avg 8197) ETA 159m15s | gtok=158204928
+  [2] 9800/28874 (34%) loss=4.6456 ppl=104.1 lr=2.87e-04 | 8480 tok/s (avg 8199) ETA 158m48s | gtok=158409728
+  [2] 9850/28874 (34%) loss=5.0248 ppl=152.1 lr=2.87e-04 | 8513 tok/s (avg 8200) ETA 158m22s | gtok=158614528
+  [2] 9900/28874 (34%) loss=4.4116 ppl=82.4 lr=2.87e-04 | 8396 tok/s (avg 8201) ETA 157m55s | gtok=158819328
+  [2] 9950/28874 (34%) loss=4.9510 ppl=141.3 lr=2.87e-04 | 8392 tok/s (avg 8202) ETA 157m29s | gtok=159024128
+  [2] 10000/28874 (35%) loss=4.5393 ppl=93.6 lr=2.87e-04 | 8705 tok/s (avg 8204) ETA 157m02s | gtok=159228928
+  [mid-epoch sample @ batch 10000, 159,228,928 tok]
+  Prompt: In 1923 , the University of
+  Generated: In 1923 , the University of California University . 
+
+
+ = = Service history = = 
+
+
+ In 1929 , the National Government of America of Chicago and California , the United States , United States , the United States , the United Kingdom and the United States . The University of Colorado was based on the campus of M.D. It is an upper school built in American rural areas to form a number of schools built during the 1930s . This building was constructed on the campus of M.D. & B $ 50 @
+  [2] 10050/28874 (35%) loss=4.8512 ppl=127.9 lr=2.87e-04 | 6830 tok/s (avg 8196) ETA 156m46s | gtok=159433728
+  [2] 10100/28874 (35%) loss=4.6509 ppl=104.7 lr=2.87e-04 | 8327 tok/s (avg 8197) ETA 156m20s | gtok=159638528
+  [2] 10150/28874 (35%) loss=5.0765 ppl=160.2 lr=2.87e-04 | 8436 tok/s (avg 8198) ETA 155m54s | gtok=159843328
+  [2] 10200/28874 (35%) loss=4.7561 ppl=116.3 lr=2.87e-04 | 8468 tok/s (avg 8199) ETA 155m28s | gtok=160048128
+  [2] 10250/28874 (36%) loss=4.9233 ppl=137.5 lr=2.87e-04 | 8421 tok/s (avg 8200) ETA 155m02s | gtok=160252928
+  [2] 10300/28874 (36%) loss=4.7365 ppl=114.0 lr=2.87e-04 | 8489 tok/s (avg 8202) ETA 154m35s | gtok=160457728
+  [2] 10350/28874 (36%) loss=4.8788 ppl=131.5 lr=2.87e-04 | 8394 tok/s (avg 8203) ETA 154m09s | gtok=160662528
+  [2] 10400/28874 (36%) loss=4.6443 ppl=104.0 lr=2.87e-04 | 8445 tok/s (avg 8204) ETA 153m43s | gtok=160867328
+  [2] 10450/28874 (36%) loss=4.4712 ppl=87.5 lr=2.87e-04 | 8362 tok/s (avg 8204) ETA 153m17s | gtok=161072128
+  [2] 10500/28874 (36%) loss=4.6037 ppl=99.9 lr=2.87e-04 | 8561 tok/s (avg 8206) ETA 152m50s | gtok=161276928
+  [2] 10550/28874 (37%) loss=4.7681 ppl=117.7 lr=2.87e-04 | 8513 tok/s (avg 8208) ETA 152m24s | gtok=161481728
+  [2] 10600/28874 (37%) loss=4.9439 ppl=140.3 lr=2.87e-04 | 8470 tok/s (avg 8209) ETA 151m57s | gtok=161686528
+  [2] 10650/28874 (37%) loss=4.7399 ppl=114.4 lr=2.87e-04 | 8482 tok/s (avg 8210) ETA 151m31s | gtok=161891328
+  [2] 10700/28874 (37%) loss=4.8153 ppl=123.4 lr=2.87e-04 | 8500 tok/s (avg 8211) ETA 151m05s | gtok=162096128
+  [2] 10750/28874 (37%) loss=4.4067 ppl=82.0 lr=2.87e-04 | 8381 tok/s (avg 8212) ETA 150m39s | gtok=162300928
+  [2] 10800/28874 (37%) loss=4.8318 ppl=125.4 lr=2.87e-04 | 8479 tok/s (avg 8213) ETA 150m13s | gtok=162505728
+  [2] 10850/28874 (38%) loss=4.6103 ppl=100.5 lr=2.86e-04 | 8497 tok/s (avg 8214) ETA 149m46s | gtok=162710528
+  [2] 10900/28874 (38%) loss=4.9821 ppl=145.8 lr=2.86e-04 | 8707 tok/s (avg 8217) ETA 149m19s | gtok=162915328
+  [2] 10950/28874 (38%) loss=4.6511 ppl=104.7 lr=2.86e-04 | 8413 tok/s (avg 8217) ETA 148m53s | gtok=163120128
+  [2] 11000/28874 (38%) loss=4.7784 ppl=118.9 lr=2.86e-04 | 8614 tok/s (avg 8219) ETA 148m26s | gtok=163324928
+  [2] 11050/28874 (38%) loss=4.3473 ppl=77.3 lr=2.86e-04 | 8488 tok/s (avg 8220) ETA 148m00s | gtok=163529728
+  [2] 11100/28874 (38%) loss=4.6916 ppl=109.0 lr=2.86e-04 | 8382 tok/s (avg 8221) ETA 147m35s | gtok=163734528
+  [2] 11150/28874 (39%) loss=4.9578 ppl=142.3 lr=2.86e-04 | 8504 tok/s (avg 8222) ETA 147m08s | gtok=163939328
+  [2] 11200/28874 (39%) loss=4.2699 ppl=71.5 lr=2.86e-04 | 8360 tok/s (avg 8223) ETA 146m43s | gtok=164144128
+  [2] 11250/28874 (39%) loss=4.3644 ppl=78.6 lr=2.86e-04 | 8509 tok/s (avg 8224) ETA 146m17s | gtok=164348928
+  [2] 11300/28874 (39%) loss=4.6149 ppl=101.0 lr=2.86e-04 | 8562 tok/s (avg 8226) ETA 145m50s | gtok=164553728
+  [2] 11350/28874 (39%) loss=4.8247 ppl=124.5 lr=2.86e-04 | 8395 tok/s (avg 8226) ETA 145m24s | gtok=164758528
+  [2] 11400/28874 (39%) loss=4.6100 ppl=100.5 lr=2.86e-04 | 8453 tok/s (avg 8227) ETA 144m59s | gtok=164963328
+  [2] 11450/28874 (40%) loss=4.5199 ppl=91.8 lr=2.86e-04 | 8476 tok/s (avg 8228) ETA 144m33s | gtok=165168128
+  [2] 11500/28874 (40%) loss=4.6839 ppl=108.2 lr=2.86e-04 | 8454 tok/s (avg 8229) ETA 144m07s | gtok=165372928
+  [2] 11550/28874 (40%) loss=4.7571 ppl=116.4 lr=2.86e-04 | 8522 tok/s (avg 8231) ETA 143m40s | gtok=165577728
+  [2] 11600/28874 (40%) loss=4.8791 ppl=131.5 lr=2.86e-04 | 8425 tok/s (avg 8231) ETA 143m15s | gtok=165782528
+  [2] 11650/28874 (40%) loss=4.9736 ppl=144.5 lr=2.86e-04 | 8580 tok/s (avg 8233) ETA 142m48s | gtok=165987328
+  [2] 11700/28874 (41%) loss=4.6688 ppl=106.6 lr=2.86e-04 | 8477 tok/s (avg 8234) ETA 142m22s | gtok=166192128
+  [2] 11750/28874 (41%) loss=5.1294 ppl=168.9 lr=2.86e-04 | 8606 tok/s (avg 8235) ETA 141m56s | gtok=166396928
+  [2] 11800/28874 (41%) loss=4.6113 ppl=100.6 lr=2.86e-04 | 8540 tok/s (avg 8237) ETA 141m30s | gtok=166601728
+  [2] 11850/28874 (41%) loss=4.8695 ppl=130.3 lr=2.86e-04 | 8384 tok/s (avg 8237) ETA 141m04s | gtok=166806528
+  [2] 11900/28874 (41%) loss=4.4020 ppl=81.6 lr=2.86e-04 | 8393 tok/s (avg 8238) ETA 140m39s | gtok=167011328
+  [2] 11950/28874 (41%) loss=4.3530 ppl=77.7 lr=2.86e-04 | 7150 tok/s (avg 8233) ETA 140m19s | gtok=167216128
+  [2] 12000/28874 (42%) loss=4.7057 ppl=110.6 lr=2.86e-04 | 7480 tok/s (avg 8229) ETA 139m58s | gtok=167420928
+  [2] 12050/28874 (42%) loss=5.1106 ppl=165.8 lr=2.86e-04 | 8292 tok/s (avg 8229) ETA 139m33s | gtok=167625728
+  [2] 12100/28874 (42%) loss=4.5873 ppl=98.2 lr=2.86e-04 | 8504 tok/s (avg 8230) ETA 139m07s | gtok=167830528
+  [2] 12150/28874 (42%) loss=4.8795 ppl=131.6 lr=2.86e-04 | 8318 tok/s (avg 8231) ETA 138m42s | gtok=168035328
+  [2] 12200/28874 (42%) loss=4.9195 ppl=136.9 lr=2.86e-04 | 8465 tok/s (avg 8232) ETA 138m16s | gtok=168240128
+  [2] 12250/28874 (42%) loss=4.6187 ppl=101.4 lr=2.86e-04 | 8339 tok/s (avg 8232) ETA 137m50s | gtok=168444928
+  [2] 12300/28874 (43%) loss=4.6246 ppl=102.0 lr=2.85e-04 | 8397 tok/s (avg 8233) ETA 137m25s | gtok=168649728
+  [2] 12350/28874 (43%) loss=5.0307 ppl=153.0 lr=2.85e-04 | 8477 tok/s (avg 8234) ETA 136m59s | gtok=168854528
+  [2] 12400/28874 (43%) loss=4.8098 ppl=122.7 lr=2.85e-04 | 8564 tok/s (avg 8235) ETA 136m33s | gtok=169059328
+  [2] 12450/28874 (43%) loss=4.9002 ppl=134.3 lr=2.85e-04 | 8448 tok/s (avg 8236) ETA 136m07s | gtok=169264128
+  [2] 12500/28874 (43%) loss=4.5464 ppl=94.3 lr=2.85e-04 | 8368 tok/s (avg 8236) ETA 135m42s | gtok=169468928
+  [2] 12550/28874 (43%) loss=4.6000 ppl=99.5 lr=2.85e-04 | 8358 tok/s (avg 8237) ETA 135m17s | gtok=169673728
+  [2] 12600/28874 (44%) loss=4.7295 ppl=113.2 lr=2.85e-04 | 8463 tok/s (avg 8238) ETA 134m51s | gtok=169878528
+  [2] 12650/28874 (44%) loss=4.9240 ppl=137.6 lr=2.85e-04 | 8645 tok/s (avg 8239) ETA 134m24s | gtok=170083328
+  [2] 12700/28874 (44%) loss=4.6881 ppl=108.6 lr=2.85e-04 | 8400 tok/s (avg 8240) ETA 133m59s | gtok=170288128
+  [2] 12750/28874 (44%) loss=4.5196 ppl=91.8 lr=2.85e-04 | 8465 tok/s (avg 8241) ETA 133m33s | gtok=170492928
+  [2] 12800/28874 (44%) loss=4.6462 ppl=104.2 lr=2.85e-04 | 8387 tok/s (avg 8241) ETA 133m08s | gtok=170697728
+  [2] 12850/28874 (45%) loss=5.0089 ppl=149.7 lr=2.85e-04 | 8221 tok/s (avg 8241) ETA 132m43s | gtok=170902528
+  [2] 12900/28874 (45%) loss=4.5469 ppl=94.3 lr=2.85e-04 | 8193 tok/s (avg 8241) ETA 132m18s | gtok=171107328
+  [2] 12950/28874 (45%) loss=4.9879 ppl=146.6 lr=2.85e-04 | 8426 tok/s (avg 8242) ETA 131m53s | gtok=171312128
+  [2] 13000/28874 (45%) loss=4.8482 ppl=127.5 lr=2.85e-04 | 8341 tok/s (avg 8242) ETA 131m28s | gtok=171516928
+  [2] 13050/28874 (45%) loss=4.9816 ppl=145.7 lr=2.85e-04 | 8336 tok/s (avg 8242) ETA 131m03s | gtok=171721728
+  [2] 13100/28874 (45%) loss=4.8075 ppl=122.4 lr=2.85e-04 | 8300 tok/s (avg 8243) ETA 130m37s | gtok=171926528
+  [2] 13150/28874 (46%) loss=5.0205 ppl=151.5 lr=2.85e-04 | 8290 tok/s (avg 8243) ETA 130m12s | gtok=172131328
+  [2] 13200/28874 (46%) loss=4.7170 ppl=111.8 lr=2.85e-04 | 8439 tok/s (avg 8244) ETA 129m47s | gtok=172336128
+  [2] 13250/28874 (46%) loss=4.8029 ppl=121.9 lr=2.85e-04 | 8364 tok/s (avg 8244) ETA 129m22s | gtok=172540928
+  [2] 13300/28874 (46%) loss=4.5815 ppl=97.7 lr=2.85e-04 | 8324 tok/s (avg 8244) ETA 128m57s | gtok=172745728
+  [2] 13350/28874 (46%) loss=4.2859 ppl=72.7 lr=2.85e-04 | 8408 tok/s (avg 8245) ETA 128m31s | gtok=172950528
+  [2] 13400/28874 (46%) loss=4.6648 ppl=106.1 lr=2.85e-04 | 8276 tok/s (avg 8245) ETA 128m06s | gtok=173155328
+  [2] 13450/28874 (47%) loss=4.7681 ppl=117.7 lr=2.85e-04 | 8325 tok/s (avg 8245) ETA 127m41s | gtok=173360128
+  [2] 13500/28874 (47%) loss=4.6667 ppl=106.4 lr=2.85e-04 | 8278 tok/s (avg 8245) ETA 127m16s | gtok=173564928
+  [2] 13550/28874 (47%) loss=4.9651 ppl=143.3 lr=2.85e-04 | 8683 tok/s (avg 8247) ETA 126m50s | gtok=173769728
+  [2] 13600/28874 (47%) loss=5.0278 ppl=152.6 lr=2.85e-04 | 8151 tok/s (avg 8247) ETA 126m25s | gtok=173974528
+  [2] 13650/28874 (47%) loss=4.9659 ppl=143.4 lr=2.85e-04 | 8192 tok/s (avg 8246) ETA 126m01s | gtok=174179328
+  [2] 13700/28874 (47%) loss=5.0242 ppl=152.1 lr=2.85e-04 | 8156 tok/s (avg 8246) ETA 125m36s | gtok=174384128
+  [2] 13750/28874 (48%) loss=4.7925 ppl=120.6 lr=2.84e-04 | 8258 tok/s (avg 8246) ETA 125m11s | gtok=174588928
+  [2] 13800/28874 (48%) loss=4.9043 ppl=134.9 lr=2.84e-04 | 8392 tok/s (avg 8247) ETA 124m46s | gtok=174793728
+  [2] 13850/28874 (48%) loss=4.8753 ppl=131.0 lr=2.84e-04 | 8113 tok/s (avg 8246) ETA 124m22s | gtok=174998528
+  [2] 13900/28874 (48%) loss=4.7122 ppl=111.3 lr=2.84e-04 | 8287 tok/s (avg 8246) ETA 123m57s | gtok=175203328
+  [2] 13950/28874 (48%) loss=4.6020 ppl=99.7 lr=2.84e-04 | 8366 tok/s (avg 8247) ETA 123m31s | gtok=175408128
+  [2] 14000/28874 (48%) loss=4.8466 ppl=127.3 lr=2.84e-04 | 8277 tok/s (avg 8247) ETA 123m07s | gtok=175612928
+  [2] 14050/28874 (49%) loss=4.6358 ppl=103.1 lr=2.84e-04 | 8205 tok/s (avg 8247) ETA 122m42s | gtok=175817728
+  [2] 14100/28874 (49%) loss=4.6659 ppl=106.3 lr=2.84e-04 | 8062 tok/s (avg 8246) ETA 122m18s | gtok=176022528
+  [2] 14150/28874 (49%) loss=5.0666 ppl=158.6 lr=2.84e-04 | 8158 tok/s (avg 8246) ETA 121m53s | gtok=176227328
+  [2] 14200/28874 (49%) loss=5.0351 ppl=153.7 lr=2.84e-04 | 8055 tok/s (avg 8245) ETA 121m29s | gtok=176432128
+  [2] 14250/28874 (49%) loss=4.5662 ppl=96.2 lr=2.84e-04 | 8016 tok/s (avg 8244) ETA 121m05s | gtok=176636928
+  [2] 14300/28874 (50%) loss=4.7106 ppl=111.1 lr=2.84e-04 | 8132 tok/s (avg 8244) ETA 120m40s | gtok=176841728
+  [2] 14350/28874 (50%) loss=4.7248 ppl=112.7 lr=2.84e-04 | 7993 tok/s (avg 8243) ETA 120m16s | gtok=177046528
+  [2] 14400/28874 (50%) loss=4.5693 ppl=96.5 lr=2.84e-04 | 8008 tok/s (avg 8242) ETA 119m52s | gtok=177251328
+  [2] 14450/28874 (50%) loss=4.8524 ppl=128.0 lr=2.84e-04 | 8400 tok/s (avg 8243) ETA 119m27s | gtok=177456128
+  [2] 14500/28874 (50%) loss=4.7870 ppl=119.9 lr=2.84e-04 | 7993 tok/s (avg 8242) ETA 119m03s | gtok=177660928
+  [2] 14550/28874 (50%) loss=4.5924 ppl=98.7 lr=2.84e-04 | 8011 tok/s (avg 8241) ETA 118m39s | gtok=177865728
+  [2] 14600/28874 (51%) loss=4.8498 ppl=127.7 lr=2.84e-04 | 7934 tok/s (avg 8240) ETA 118m15s | gtok=178070528
+  [2] 14650/28874 (51%) loss=4.8568 ppl=128.6 lr=2.84e-04 | 7970 tok/s (avg 8239) ETA 117m51s | gtok=178275328
+  [2] 14700/28874 (51%) loss=4.9225 ppl=137.3 lr=2.84e-04 | 8067 tok/s (avg 8238) ETA 117m26s | gtok=178480128
+  [2] 14750/28874 (51%) loss=4.5159 ppl=91.5 lr=2.84e-04 | 8035 tok/s (avg 8238) ETA 117m02s | gtok=178684928
+  [2] 14800/28874 (51%) loss=5.0086 ppl=149.7 lr=2.84e-04 | 7907 tok/s (avg 8236) ETA 116m38s | gtok=178889728
+  [2] 14850/28874 (51%) loss=4.6269 ppl=102.2 lr=2.84e-04 | 7870 tok/s (avg 8235) ETA 116m14s | gtok=179094528
+  [2] 14900/28874 (52%) loss=4.6768 ppl=107.4 lr=2.84e-04 | 7983 tok/s (avg 8234) ETA 115m50s | gtok=179299328
+  [2] 14950/28874 (52%) loss=4.5402 ppl=93.7 lr=2.84e-04 | 7854 tok/s (avg 8233) ETA 115m26s | gtok=179504128
+  [2] 15000/28874 (52%) loss=4.8511 ppl=127.9 lr=2.84e-04 | 7829 tok/s (avg 8231) ETA 115m03s | gtok=179708928
+  [mid-epoch sample @ batch 15000, 179,708,928 tok]
+  Prompt: In 1923 , the University of
+  Generated: In 1923 , the University of Los Angeles and Oklahoma City is one of five new communities in the community . 
+
+
+ = = Cultural references = = 
+
+
+ In 2000 , the former United States Department of Trade has seen a story about two @-@ dimensional events . It appears on the National Heritage Store ( now South Carolina ) . The community is also one of the most important characters from the American Library . A number of other members are located at the State Route 5 , which is an open site and is on the east
+  [2] 15050/28874 (52%) loss=4.8395 ppl=126.4 lr=2.84e-04 | 6376 tok/s (avg 8224) ETA 114m45s | gtok=179913728
+  [2] 15100/28874 (52%) loss=4.5168 ppl=91.5 lr=2.83e-04 | 7981 tok/s (avg 8223) ETA 114m20s | gtok=180118528
+  [2] 15150/28874 (52%) loss=4.6916 ppl=109.0 lr=2.83e-04 | 7878 tok/s (avg 8221) ETA 113m56s | gtok=180323328
+  [2] 15200/28874 (53%) loss=4.7047 ppl=110.5 lr=2.83e-04 | 7979 tok/s (avg 8221) ETA 113m32s | gtok=180528128
+  [2] 15250/28874 (53%) loss=5.0021 ppl=148.7 lr=2.83e-04 | 7932 tok/s (avg 8220) ETA 113m08s | gtok=180732928
+  [2] 15300/28874 (53%) loss=4.9581 ppl=142.3 lr=2.83e-04 | 8102 tok/s (avg 8219) ETA 112m43s | gtok=180937728
+  [2] 15350/28874 (53%) loss=4.6726 ppl=107.0 lr=2.83e-04 | 8085 tok/s (avg 8219) ETA 112m19s | gtok=181142528
+  [2] 15400/28874 (53%) loss=4.5917 ppl=98.7 lr=2.83e-04 | 7903 tok/s (avg 8218) ETA 111m55s | gtok=181347328
+  [2] 15450/28874 (54%) loss=4.8787 ppl=131.5 lr=2.83e-04 | 8046 tok/s (avg 8217) ETA 111m30s | gtok=181552128
+  [2] 15500/28874 (54%) loss=5.0741 ppl=159.8 lr=2.83e-04 | 8043 tok/s (avg 8217) ETA 111m06s | gtok=181756928
+  [2] 15550/28874 (54%) loss=4.2993 ppl=73.6 lr=2.83e-04 | 7907 tok/s (avg 8216) ETA 110m42s | gtok=181961728
+  [2] 15600/28874 (54%) loss=5.1802 ppl=177.7 lr=2.83e-04 | 8041 tok/s (avg 8215) ETA 110m17s | gtok=182166528
+  [2] 15650/28874 (54%) loss=4.4328 ppl=84.2 lr=2.83e-04 | 7823 tok/s (avg 8214) ETA 109m54s | gtok=182371328
+  [2] 15700/28874 (54%) loss=4.7461 ppl=115.1 lr=2.83e-04 | 7911 tok/s (avg 8213) ETA 109m29s | gtok=182576128
+  [2] 15750/28874 (55%) loss=5.0998 ppl=164.0 lr=2.83e-04 | 7799 tok/s (avg 8211) ETA 109m06s | gtok=182780928
+  [2] 15800/28874 (55%) loss=4.8545 ppl=128.3 lr=2.83e-04 | 7911 tok/s (avg 8210) ETA 108m41s | gtok=182985728
+  [2] 15850/28874 (55%) loss=4.7666 ppl=117.5 lr=2.83e-04 | 8044 tok/s (avg 8210) ETA 108m17s | gtok=183190528
+  [2] 15900/28874 (55%) loss=4.8374 ppl=126.1 lr=2.83e-04 | 7962 tok/s (avg 8209) ETA 107m53s | gtok=183395328
+  [2] 15950/28874 (55%) loss=4.7509 ppl=115.7 lr=2.83e-04 | 7846 tok/s (avg 8208) ETA 107m29s | gtok=183600128
+  [2] 16000/28874 (55%) loss=4.8879 ppl=132.7 lr=2.83e-04 | 7942 tok/s (avg 8207) ETA 107m04s | gtok=183804928
+  [2] 16050/28874 (56%) loss=4.7509 ppl=115.7 lr=2.83e-04 | 7940 tok/s (avg 8206) ETA 106m40s | gtok=184009728
+  [2] 16100/28874 (56%) loss=4.3935 ppl=80.9 lr=2.83e-04 | 8057 tok/s (avg 8206) ETA 106m15s | gtok=184214528
+  [2] 16150/28874 (56%) loss=4.5728 ppl=96.8 lr=2.83e-04 | 7733 tok/s (avg 8204) ETA 105m52s | gtok=184419328
+  [2] 16200/28874 (56%) loss=4.8719 ppl=130.6 lr=2.83e-04 | 8307 tok/s (avg 8204) ETA 105m26s | gtok=184624128
+  [2] 16250/28874 (56%) loss=4.0229 ppl=55.9 lr=2.83e-04 | 7832 tok/s (avg 8203) ETA 105m02s | gtok=184828928
+  [2] 16300/28874 (56%) loss=4.8525 ppl=128.1 lr=2.83e-04 | 7997 tok/s (avg 8203) ETA 104m38s | gtok=185033728
+  [2] 16350/28874 (57%) loss=4.5288 ppl=92.6 lr=2.83e-04 | 7900 tok/s (avg 8202) ETA 104m14s | gtok=185238528
+  [2] 16400/28874 (57%) loss=4.6437 ppl=103.9 lr=2.82e-04 | 7924 tok/s (avg 8201) ETA 103m49s | gtok=185443328
+  [2] 16450/28874 (57%) loss=4.7966 ppl=121.1 lr=2.82e-04 | 7851 tok/s (avg 8200) ETA 103m25s | gtok=185648128
+  [2] 16500/28874 (57%) loss=4.8779 ppl=131.4 lr=2.82e-04 | 7808 tok/s (avg 8198) ETA 103m01s | gtok=185852928
+  [2] 16550/28874 (57%) loss=4.7651 ppl=117.3 lr=2.82e-04 | 7896 tok/s (avg 8197) ETA 102m37s | gtok=186057728
+  [2] 16600/28874 (57%) loss=4.6717 ppl=106.9 lr=2.82e-04 | 7789 tok/s (avg 8196) ETA 102m13s | gtok=186262528
+  [2] 16650/28874 (58%) loss=4.6605 ppl=105.7 lr=2.82e-04 | 8020 tok/s (avg 8196) ETA 101m48s | gtok=186467328
+  [2] 16700/28874 (58%) loss=4.9099 ppl=135.6 lr=2.82e-04 | 7797 tok/s (avg 8194) ETA 101m24s | gtok=186672128
+  [2] 16750/28874 (58%) loss=4.8823 ppl=131.9 lr=2.82e-04 | 7999 tok/s (avg 8194) ETA 101m00s | gtok=186876928
+  [2] 16800/28874 (58%) loss=4.5190 ppl=91.7 lr=2.82e-04 | 8008 tok/s (avg 8193) ETA 100m35s | gtok=187081728
+  [2] 16850/28874 (58%) loss=4.6368 ppl=103.2 lr=2.82e-04 | 7886 tok/s (avg 8192) ETA 100m11s | gtok=187286528
+  [2] 16900/28874 (59%) loss=4.8909 ppl=133.1 lr=2.82e-04 | 7920 tok/s (avg 8191) ETA 99m46s | gtok=187491328
+  [2] 16950/28874 (59%) loss=4.5936 ppl=98.8 lr=2.82e-04 | 7865 tok/s (avg 8190) ETA 99m22s | gtok=187696128
+  [2] 17000/28874 (59%) loss=4.8757 ppl=131.1 lr=2.82e-04 | 8052 tok/s (avg 8190) ETA 98m58s | gtok=187900928
+  [2] 17050/28874 (59%) loss=4.9376 ppl=139.4 lr=2.82e-04 | 7995 tok/s (avg 8189) ETA 98m33s | gtok=188105728
+  [2] 17100/28874 (59%) loss=4.6494 ppl=104.5 lr=2.82e-04 | 8348 tok/s (avg 8190) ETA 98m08s | gtok=188310528
+  [2] 17150/28874 (59%) loss=4.6165 ppl=101.1 lr=2.82e-04 | 7782 tok/s (avg 8189) ETA 97m43s | gtok=188515328
+  [2] 17200/28874 (60%) loss=4.8211 ppl=124.1 lr=2.82e-04 | 7880 tok/s (avg 8188) ETA 97m19s | gtok=188720128
+  [2] 17250/28874 (60%) loss=4.9410 ppl=139.9 lr=2.82e-04 | 8025 tok/s (avg 8187) ETA 96m54s | gtok=188924928
+  [2] 17300/28874 (60%) loss=4.4910 ppl=89.2 lr=2.82e-04 | 7700 tok/s (avg 8186) ETA 96m31s | gtok=189129728
+  [2] 17350/28874 (60%) loss=4.8293 ppl=125.1 lr=2.82e-04 | 7881 tok/s (avg 8185) ETA 96m06s | gtok=189334528
+  [2] 17400/28874 (60%) loss=4.4900 ppl=89.1 lr=2.82e-04 | 7841 tok/s (avg 8184) ETA 95m42s | gtok=189539328
+  [2] 17450/28874 (60%) loss=4.9279 ppl=138.1 lr=2.82e-04 | 7873 tok/s (avg 8183) ETA 95m17s | gtok=189744128
+  [2] 17500/28874 (61%) loss=4.5197 ppl=91.8 lr=2.82e-04 | 7870 tok/s (avg 8182) ETA 94m53s | gtok=189948928
+  [2] 17550/28874 (61%) loss=4.7862 ppl=119.8 lr=2.82e-04 | 7986 tok/s (avg 8181) ETA 94m28s | gtok=190153728
+  [2] 17600/28874 (61%) loss=4.9065 ppl=135.2 lr=2.82e-04 | 7841 tok/s (avg 8180) ETA 94m04s | gtok=190358528
+  [2] 17650/28874 (61%) loss=4.5408 ppl=93.8 lr=2.82e-04 | 7919 tok/s (avg 8179) ETA 93m40s | gtok=190563328
+  [2] 17700/28874 (61%) loss=4.5211 ppl=91.9 lr=2.81e-04 | 7910 tok/s (avg 8179) ETA 93m15s | gtok=190768128
+  [2] 17750/28874 (61%) loss=5.1214 ppl=167.6 lr=2.81e-04 | 7912 tok/s (avg 8178) ETA 92m51s | gtok=190972928
+  [2] 17800/28874 (62%) loss=4.6054 ppl=100.0 lr=2.81e-04 | 7937 tok/s (avg 8177) ETA 92m26s | gtok=191177728
+  [2] 17850/28874 (62%) loss=4.8888 ppl=132.8 lr=2.81e-04 | 7846 tok/s (avg 8176) ETA 92m02s | gtok=191382528
+  [2] 17900/28874 (62%) loss=4.6502 ppl=104.6 lr=2.81e-04 | 7793 tok/s (avg 8175) ETA 91m37s | gtok=191587328
+  [2] 17950/28874 (62%) loss=4.5138 ppl=91.3 lr=2.81e-04 | 8026 tok/s (avg 8175) ETA 91m13s | gtok=191792128
+  [2] 18000/28874 (62%) loss=4.9764 ppl=144.9 lr=2.81e-04 | 8079 tok/s (avg 8174) ETA 90m48s | gtok=191996928
+  [2] 18050/28874 (63%) loss=4.6855 ppl=108.4 lr=2.81e-04 | 7861 tok/s (avg 8174) ETA 90m23s | gtok=192201728
+  [2] 18100/28874 (63%) loss=4.6972 ppl=109.6 lr=2.81e-04 | 7796 tok/s (avg 8172) ETA 89m59s | gtok=192406528
+  [2] 18150/28874 (63%) loss=4.6809 ppl=107.9 lr=2.81e-04 | 8052 tok/s (avg 8172) ETA 89m34s | gtok=192611328
+  [2] 18200/28874 (63%) loss=4.5130 ppl=91.2 lr=2.81e-04 | 7919 tok/s (avg 8171) ETA 89m09s | gtok=192816128
+  [2] 18250/28874 (63%) loss=4.5049 ppl=90.5 lr=2.81e-04 | 8047 tok/s (avg 8171) ETA 88m45s | gtok=193020928
+  [2] 18300/28874 (63%) loss=4.6041 ppl=99.9 lr=2.81e-04 | 7871 tok/s (avg 8170) ETA 88m20s | gtok=193225728
+  [2] 18350/28874 (64%) loss=4.7373 ppl=114.1 lr=2.81e-04 | 7971 tok/s (avg 8170) ETA 87m55s | gtok=193430528
+  [2] 18400/28874 (64%) loss=4.8922 ppl=133.3 lr=2.81e-04 | 8057 tok/s (avg 8169) ETA 87m31s | gtok=193635328
+  [2] 18450/28874 (64%) loss=4.5792 ppl=97.4 lr=2.81e-04 | 7935 tok/s (avg 8169) ETA 87m06s | gtok=193840128
+  [2] 18500/28874 (64%) loss=4.6466 ppl=104.2 lr=2.81e-04 | 7997 tok/s (avg 8168) ETA 86m41s | gtok=194044928
+  [2] 18550/28874 (64%) loss=4.7987 ppl=121.4 lr=2.81e-04 | 7988 tok/s (avg 8168) ETA 86m16s | gtok=194249728
+  [2] 18600/28874 (64%) loss=4.8695 ppl=130.2 lr=2.81e-04 | 7918 tok/s (avg 8167) ETA 85m52s | gtok=194454528
+  [2] 18650/28874 (65%) loss=4.5456 ppl=94.2 lr=2.81e-04 | 7911 tok/s (avg 8166) ETA 85m27s | gtok=194659328
+  [2] 18700/28874 (65%) loss=4.3336 ppl=76.2 lr=2.81e-04 | 8034 tok/s (avg 8166) ETA 85m02s | gtok=194864128
+  [2] 18750/28874 (65%) loss=4.5311 ppl=92.9 lr=2.81e-04 | 8074 tok/s (avg 8166) ETA 84m37s | gtok=195068928
+  [2] 18800/28874 (65%) loss=4.6931 ppl=109.2 lr=2.81e-04 | 7931 tok/s (avg 8165) ETA 84m13s | gtok=195273728
+  [2] 18850/28874 (65%) loss=4.7951 ppl=120.9 lr=2.81e-04 | 8268 tok/s (avg 8165) ETA 83m47s | gtok=195478528
+  [2] 18900/28874 (65%) loss=4.5394 ppl=93.6 lr=2.81e-04 | 7801 tok/s (avg 8164) ETA 83m23s | gtok=195683328
+  [2] 18950/28874 (66%) loss=4.3468 ppl=77.2 lr=2.80e-04 | 7874 tok/s (avg 8163) ETA 82m58s | gtok=195888128
+  [2] 19000/28874 (66%) loss=4.2864 ppl=72.7 lr=2.80e-04 | 6990 tok/s (avg 8160) ETA 82m35s | gtok=196092928
+  [2] 19050/28874 (66%) loss=4.4989 ppl=89.9 lr=2.80e-04 | 6708 tok/s (avg 8155) ETA 82m13s | gtok=196297728
+  [2] 19100/28874 (66%) loss=4.5910 ppl=98.6 lr=2.80e-04 | 7144 tok/s (avg 8152) ETA 81m50s | gtok=196502528
+  [2] 19150/28874 (66%) loss=4.7068 ppl=110.7 lr=2.80e-04 | 7804 tok/s (avg 8151) ETA 81m25s | gtok=196707328
+  [2] 19200/28874 (66%) loss=4.4088 ppl=82.2 lr=2.80e-04 | 7839 tok/s (avg 8150) ETA 81m01s | gtok=196912128
+  [2] 19250/28874 (67%) loss=5.1405 ppl=170.8 lr=2.80e-04 | 7780 tok/s (avg 8149) ETA 80m36s | gtok=197116928
+  [2] 19300/28874 (67%) loss=4.7044 ppl=110.4 lr=2.80e-04 | 7837 tok/s (avg 8149) ETA 80m12s | gtok=197321728
+  [2] 19350/28874 (67%) loss=4.6700 ppl=106.7 lr=2.80e-04 | 7811 tok/s (avg 8148) ETA 79m47s | gtok=197526528
+  [2] 19400/28874 (67%) loss=4.6124 ppl=100.7 lr=2.80e-04 | 7855 tok/s (avg 8147) ETA 79m22s | gtok=197731328
+  [2] 19450/28874 (67%) loss=4.9951 ppl=147.7 lr=2.80e-04 | 7752 tok/s (avg 8146) ETA 78m58s | gtok=197936128
+  [2] 19500/28874 (68%) loss=5.1283 ppl=168.7 lr=2.80e-04 | 7860 tok/s (avg 8145) ETA 78m33s | gtok=198140928
+  [2] 19550/28874 (68%) loss=4.9013 ppl=134.5 lr=2.80e-04 | 8004 tok/s (avg 8145) ETA 78m08s | gtok=198345728
+  [2] 19600/28874 (68%) loss=4.7991 ppl=121.4 lr=2.80e-04 | 7856 tok/s (avg 8144) ETA 77m43s | gtok=198550528
+  [2] 19650/28874 (68%) loss=4.4378 ppl=84.6 lr=2.80e-04 | 7858 tok/s (avg 8143) ETA 77m19s | gtok=198755328
+  [2] 19700/28874 (68%) loss=4.9601 ppl=142.6 lr=2.80e-04 | 7831 tok/s (avg 8142) ETA 76m54s | gtok=198960128
+  [2] 19750/28874 (68%) loss=4.7383 ppl=114.2 lr=2.80e-04 | 8130 tok/s (avg 8142) ETA 76m29s | gtok=199164928
+  [2] 19800/28874 (69%) loss=4.8250 ppl=124.6 lr=2.80e-04 | 7840 tok/s (avg 8141) ETA 76m04s | gtok=199369728
+  [2] 19850/28874 (69%) loss=4.6840 ppl=108.2 lr=2.80e-04 | 7932 tok/s (avg 8141) ETA 75m39s | gtok=199574528
+  [2] 19900/28874 (69%) loss=4.6054 ppl=100.0 lr=2.80e-04 | 7991 tok/s (avg 8141) ETA 75m14s | gtok=199779328
+  [2] 19950/28874 (69%) loss=4.7228 ppl=112.5 lr=2.80e-04 | 7925 tok/s (avg 8140) ETA 74m49s | gtok=199984128
+  [2] 20000/28874 (69%) loss=4.7770 ppl=118.8 lr=2.80e-04 | 7900 tok/s (avg 8139) ETA 74m25s | gtok=200188928
+  [mid-epoch sample @ batch 20000, 200,188,928 tok]
+  Prompt: In 1923 , the University of
+  Generated: In 1923 , the University of New York State . He was a member of the New York State Department of New Jersey and was appointed to an elected General Staff on April 17 , 1926 . 
+
+
+ = = Early life = = 
+
+
+ The family born in R. C.C. , New York . 
+
+ M.S. President of New York , New York , had two children ; they were born on June 16 , 1949 and was raised as a co @-@ president and vice president . His mother ,
+  [2] 20050/28874 (69%) loss=4.8051 ppl=122.1 lr=2.80e-04 | 6325 tok/s (avg 8134) ETA 74m03s | gtok=200393728
+  [2] 20100/28874 (70%) loss=4.5145 ppl=91.3 lr=2.80e-04 | 8025 tok/s (avg 8133) ETA 73m38s | gtok=200598528
+  [2] 20150/28874 (70%) loss=4.6871 ppl=108.5 lr=2.80e-04 | 7862 tok/s (avg 8133) ETA 73m13s | gtok=200803328
+  [2] 20200/28874 (70%) loss=4.6247 ppl=102.0 lr=2.79e-04 | 7888 tok/s (avg 8132) ETA 72m48s | gtok=201008128
+  [2] 20250/28874 (70%) loss=4.6987 ppl=109.8 lr=2.79e-04 | 7820 tok/s (avg 8131) ETA 72m23s | gtok=201212928
+  [2] 20300/28874 (70%) loss=4.9014 ppl=134.5 lr=2.79e-04 | 7970 tok/s (avg 8131) ETA 71m58s | gtok=201417728
+  [2] 20350/28874 (70%) loss=4.7156 ppl=111.7 lr=2.79e-04 | 7779 tok/s (avg 8130) ETA 71m34s | gtok=201622528
+  [2] 20400/28874 (71%) loss=5.0819 ppl=161.1 lr=2.79e-04 | 7868 tok/s (avg 8129) ETA 71m09s | gtok=201827328
+  [2] 20450/28874 (71%) loss=4.8584 ppl=128.8 lr=2.79e-04 | 7917 tok/s (avg 8129) ETA 70m44s | gtok=202032128
+  [2] 20500/28874 (71%) loss=5.1087 ppl=165.5 lr=2.79e-04 | 7720 tok/s (avg 8128) ETA 70m19s | gtok=202236928
+  [2] 20550/28874 (71%) loss=4.6899 ppl=108.8 lr=2.79e-04 | 7902 tok/s (avg 8127) ETA 69m54s | gtok=202441728
+  [2] 20600/28874 (71%) loss=4.6108 ppl=100.6 lr=2.79e-04 | 7933 tok/s (avg 8127) ETA 69m29s | gtok=202646528
+  [2] 20650/28874 (72%) loss=4.5196 ppl=91.8 lr=2.79e-04 | 8233 tok/s (avg 8127) ETA 69m04s | gtok=202851328
+  [2] 20700/28874 (72%) loss=4.4798 ppl=88.2 lr=2.79e-04 | 7690 tok/s (avg 8126) ETA 68m39s | gtok=203056128
+  [2] 20750/28874 (72%) loss=4.5004 ppl=90.1 lr=2.79e-04 | 7880 tok/s (avg 8125) ETA 68m14s | gtok=203260928
+  [2] 20800/28874 (72%) loss=4.8702 ppl=130.4 lr=2.79e-04 | 7737 tok/s (avg 8124) ETA 67m50s | gtok=203465728
+  [2] 20850/28874 (72%) loss=4.8759 ppl=131.1 lr=2.79e-04 | 7858 tok/s (avg 8123) ETA 67m25s | gtok=203670528
+  [2] 20900/28874 (72%) loss=4.7032 ppl=110.3 lr=2.79e-04 | 7750 tok/s (avg 8123) ETA 67m00s | gtok=203875328
+  [2] 20950/28874 (73%) loss=4.4072 ppl=82.0 lr=2.79e-04 | 7848 tok/s (avg 8122) ETA 66m35s | gtok=204080128
+  [2] 21000/28874 (73%) loss=4.9752 ppl=144.8 lr=2.79e-04 | 7975 tok/s (avg 8121) ETA 66m10s | gtok=204284928
+  [2] 21050/28874 (73%) loss=4.9479 ppl=140.9 lr=2.79e-04 | 7896 tok/s (avg 8121) ETA 65m45s | gtok=204489728
+  [2] 21100/28874 (73%) loss=4.7956 ppl=121.0 lr=2.79e-04 | 7960 tok/s (avg 8121) ETA 65m20s | gtok=204694528
+  [2] 21150/28874 (73%) loss=4.8414 ppl=126.7 lr=2.79e-04 | 7828 tok/s (avg 8120) ETA 64m55s | gtok=204899328
+  [2] 21200/28874 (73%) loss=4.6201 ppl=101.5 lr=2.79e-04 | 8052 tok/s (avg 8120) ETA 64m30s | gtok=205104128
+  [2] 21250/28874 (74%) loss=4.9592 ppl=142.5 lr=2.79e-04 | 8064 tok/s (avg 8120) ETA 64m05s | gtok=205308928
+  [2] 21300/28874 (74%) loss=4.7069 ppl=110.7 lr=2.79e-04 | 7817 tok/s (avg 8119) ETA 63m40s | gtok=205513728
+  [2] 21350/28874 (74%) loss=4.9309 ppl=138.5 lr=2.79e-04 | 7939 tok/s (avg 8118) ETA 63m15s | gtok=205718528
+  [2] 21400/28874 (74%) loss=5.0930 ppl=162.9 lr=2.78e-04 | 7898 tok/s (avg 8118) ETA 62m50s | gtok=205923328
+  [2] 21450/28874 (74%) loss=4.3114 ppl=74.5 lr=2.78e-04 | 8001 tok/s (avg 8118) ETA 62m25s | gtok=206128128
+  [2] 21500/28874 (74%) loss=4.7632 ppl=117.1 lr=2.78e-04 | 8130 tok/s (avg 8118) ETA 62m00s | gtok=206332928
+  [2] 21550/28874 (75%) loss=4.6069 ppl=100.2 lr=2.78e-04 | 7979 tok/s (avg 8117) ETA 61m35s | gtok=206537728
+  [2] 21600/28874 (75%) loss=4.5714 ppl=96.7 lr=2.78e-04 | 7962 tok/s (avg 8117) ETA 61m10s | gtok=206742528
+  [2] 21650/28874 (75%) loss=4.5048 ppl=90.4 lr=2.78e-04 | 7839 tok/s (avg 8116) ETA 60m45s | gtok=206947328
+  [2] 21700/28874 (75%) loss=4.8876 ppl=132.6 lr=2.78e-04 | 7952 tok/s (avg 8116) ETA 60m20s | gtok=207152128
+  [2] 21750/28874 (75%) loss=4.7618 ppl=117.0 lr=2.78e-04 | 8020 tok/s (avg 8116) ETA 59m55s | gtok=207356928
+  [2] 21800/28874 (76%) loss=4.9870 ppl=146.5 lr=2.78e-04 | 8011 tok/s (avg 8115) ETA 59m29s | gtok=207561728
+  [2] 21850/28874 (76%) loss=4.8674 ppl=130.0 lr=2.78e-04 | 7964 tok/s (avg 8115) ETA 59m04s | gtok=207766528
+  [2] 21900/28874 (76%) loss=4.4899 ppl=89.1 lr=2.78e-04 | 8015 tok/s (avg 8115) ETA 58m39s | gtok=207971328
+  [2] 21950/28874 (76%) loss=5.0090 ppl=149.8 lr=2.78e-04 | 7934 tok/s (avg 8114) ETA 58m14s | gtok=208176128
+  [2] 22000/28874 (76%) loss=4.8884 ppl=132.7 lr=2.78e-04 | 7864 tok/s (avg 8114) ETA 57m49s | gtok=208380928
+  [2] 22050/28874 (76%) loss=4.9439 ppl=140.3 lr=2.78e-04 | 7970 tok/s (avg 8113) ETA 57m24s | gtok=208585728
+  [2] 22100/28874 (77%) loss=5.0426 ppl=154.9 lr=2.78e-04 | 8027 tok/s (avg 8113) ETA 56m59s | gtok=208790528
+  [2] 22150/28874 (77%) loss=4.6519 ppl=104.8 lr=2.78e-04 | 7960 tok/s (avg 8113) ETA 56m34s | gtok=208995328
+  [2] 22200/28874 (77%) loss=4.5747 ppl=97.0 lr=2.78e-04 | 8054 tok/s (avg 8113) ETA 56m09s | gtok=209200128
+  [2] 22250/28874 (77%) loss=4.8967 ppl=133.9 lr=2.78e-04 | 7981 tok/s (avg 8112) ETA 55m43s | gtok=209404928
+  [2] 22300/28874 (77%) loss=4.6143 ppl=100.9 lr=2.78e-04 | 7884 tok/s (avg 8112) ETA 55m18s | gtok=209609728
+  [2] 22350/28874 (77%) loss=4.5566 ppl=95.3 lr=2.78e-04 | 8029 tok/s (avg 8112) ETA 54m53s | gtok=209814528
+  [2] 22400/28874 (78%) loss=4.7761 ppl=118.6 lr=2.78e-04 | 8247 tok/s (avg 8112) ETA 54m28s | gtok=210019328
+  [2] 22450/28874 (78%) loss=4.7636 ppl=117.2 lr=2.78e-04 | 7846 tok/s (avg 8111) ETA 54m03s | gtok=210224128
+  [2] 22500/28874 (78%) loss=4.6072 ppl=100.2 lr=2.78e-04 | 8071 tok/s (avg 8111) ETA 53m38s | gtok=210428928
+  [2] 22550/28874 (78%) loss=4.8880 ppl=132.7 lr=2.77e-04 | 7953 tok/s (avg 8111) ETA 53m13s | gtok=210633728
+  [2] 22600/28874 (78%) loss=4.8207 ppl=124.1 lr=2.77e-04 | 7894 tok/s (avg 8110) ETA 52m48s | gtok=210838528
+  [2] 22650/28874 (78%) loss=4.4511 ppl=85.7 lr=2.77e-04 | 7968 tok/s (avg 8110) ETA 52m22s | gtok=211043328
+  [2] 22700/28874 (79%) loss=4.8463 ppl=127.3 lr=2.77e-04 | 7798 tok/s (avg 8109) ETA 51m57s | gtok=211248128
+  [2] 22750/28874 (79%) loss=4.6735 ppl=107.1 lr=2.77e-04 | 7912 tok/s (avg 8109) ETA 51m32s | gtok=211452928
+  [2] 22800/28874 (79%) loss=4.6741 ppl=107.1 lr=2.77e-04 | 7966 tok/s (avg 8109) ETA 51m07s | gtok=211657728
+  [2] 22850/28874 (79%) loss=4.7317 ppl=113.5 lr=2.77e-04 | 8304 tok/s (avg 8109) ETA 50m42s | gtok=211862528
+  [2] 22900/28874 (79%) loss=4.5268 ppl=92.5 lr=2.77e-04 | 7949 tok/s (avg 8109) ETA 50m17s | gtok=212067328
+  [2] 22950/28874 (79%) loss=4.7235 ppl=112.6 lr=2.77e-04 | 7999 tok/s (avg 8109) ETA 49m51s | gtok=212272128
+  [2] 23000/28874 (80%) loss=4.7762 ppl=118.7 lr=2.77e-04 | 7950 tok/s (avg 8108) ETA 49m26s | gtok=212476928
+  [2] 23050/28874 (80%) loss=4.7472 ppl=115.3 lr=2.77e-04 | 7936 tok/s (avg 8108) ETA 49m01s | gtok=212681728
+  [2] 23100/28874 (80%) loss=4.8093 ppl=122.6 lr=2.77e-04 | 7930 tok/s (avg 8107) ETA 48m36s | gtok=212886528
+  [2] 23150/28874 (80%) loss=4.8151 ppl=123.4 lr=2.77e-04 | 8037 tok/s (avg 8107) ETA 48m11s | gtok=213091328
+  [2] 23200/28874 (80%) loss=5.0141 ppl=150.5 lr=2.77e-04 | 8017 tok/s (avg 8107) ETA 47m46s | gtok=213296128
+  [2] 23250/28874 (81%) loss=4.8752 ppl=131.0 lr=2.77e-04 | 7992 tok/s (avg 8107) ETA 47m21s | gtok=213500928
+  [2] 23300/28874 (81%) loss=4.5826 ppl=97.8 lr=2.77e-04 | 7893 tok/s (avg 8106) ETA 46m55s | gtok=213705728
+  [2] 23350/28874 (81%) loss=4.9407 ppl=139.9 lr=2.77e-04 | 7998 tok/s (avg 8106) ETA 46m30s | gtok=213910528
+  [2] 23400/28874 (81%) loss=4.5855 ppl=98.1 lr=2.77e-04 | 7967 tok/s (avg 8106) ETA 46m05s | gtok=214115328
+  [2] 23450/28874 (81%) loss=4.6382 ppl=103.4 lr=2.77e-04 | 8067 tok/s (avg 8106) ETA 45m40s | gtok=214320128
+  [2] 23500/28874 (81%) loss=4.9162 ppl=136.5 lr=2.77e-04 | 7908 tok/s (avg 8105) ETA 45m15s | gtok=214524928
+  [2] 23550/28874 (82%) loss=4.8938 ppl=133.5 lr=2.77e-04 | 8027 tok/s (avg 8105) ETA 44m50s | gtok=214729728
+  [2] 23600/28874 (82%) loss=4.8799 ppl=131.6 lr=2.77e-04 | 7942 tok/s (avg 8105) ETA 44m24s | gtok=214934528
+  [2] 23650/28874 (82%) loss=4.5145 ppl=91.3 lr=2.77e-04 | 7948 tok/s (avg 8104) ETA 43m59s | gtok=215139328
+  [2] 23700/28874 (82%) loss=4.4260 ppl=83.6 lr=2.76e-04 | 8050 tok/s (avg 8104) ETA 43m34s | gtok=215344128
+  [2] 23750/28874 (82%) loss=4.7825 ppl=119.4 lr=2.76e-04 | 8058 tok/s (avg 8104) ETA 43m09s | gtok=215548928
+  [2] 23800/28874 (82%) loss=4.7338 ppl=113.7 lr=2.76e-04 | 8029 tok/s (avg 8104) ETA 42m44s | gtok=215753728
+  [2] 23850/28874 (83%) loss=4.6276 ppl=102.3 lr=2.76e-04 | 7841 tok/s (avg 8103) ETA 42m18s | gtok=215958528
+  [2] 23900/28874 (83%) loss=5.0136 ppl=150.4 lr=2.76e-04 | 8014 tok/s (avg 8103) ETA 41m53s | gtok=216163328
+  [2] 23950/28874 (83%) loss=4.7577 ppl=116.5 lr=2.76e-04 | 7952 tok/s (avg 8103) ETA 41m28s | gtok=216368128
+  [2] 24000/28874 (83%) loss=4.4676 ppl=87.2 lr=2.76e-04 | 7919 tok/s (avg 8103) ETA 41m03s | gtok=216572928
+  [2] 24050/28874 (83%) loss=4.7077 ppl=110.8 lr=2.76e-04 | 7977 tok/s (avg 8102) ETA 40m38s | gtok=216777728
+  [2] 24100/28874 (83%) loss=4.3140 ppl=74.7 lr=2.76e-04 | 7859 tok/s (avg 8102) ETA 40m13s | gtok=216982528
+  [2] 24150/28874 (84%) loss=4.6840 ppl=108.2 lr=2.76e-04 | 8018 tok/s (avg 8102) ETA 39m47s | gtok=217187328
+  [2] 24200/28874 (84%) loss=4.5956 ppl=99.0 lr=2.76e-04 | 7824 tok/s (avg 8101) ETA 39m22s | gtok=217392128
+  [2] 24250/28874 (84%) loss=4.7009 ppl=110.0 lr=2.76e-04 | 7872 tok/s (avg 8100) ETA 38m57s | gtok=217596928
+  [2] 24300/28874 (84%) loss=4.8404 ppl=126.5 lr=2.76e-04 | 7934 tok/s (avg 8100) ETA 38m32s | gtok=217801728
+  [2] 24350/28874 (84%) loss=4.7187 ppl=112.0 lr=2.76e-04 | 7867 tok/s (avg 8100) ETA 38m07s | gtok=218006528
+  [2] 24400/28874 (85%) loss=4.9750 ppl=144.7 lr=2.76e-04 | 8134 tok/s (avg 8100) ETA 37m41s | gtok=218211328
+  [2] 24450/28874 (85%) loss=4.5015 ppl=90.2 lr=2.76e-04 | 8054 tok/s (avg 8100) ETA 37m16s | gtok=218416128
+  [2] 24500/28874 (85%) loss=4.6400 ppl=103.5 lr=2.76e-04 | 7970 tok/s (avg 8099) ETA 36m51s | gtok=218620928
+  [2] 24550/28874 (85%) loss=4.6666 ppl=106.3 lr=2.76e-04 | 7861 tok/s (avg 8099) ETA 36m26s | gtok=218825728
+  [2] 24600/28874 (85%) loss=4.9523 ppl=141.5 lr=2.76e-04 | 8296 tok/s (avg 8099) ETA 36m00s | gtok=219030528
+  [2] 24650/28874 (85%) loss=4.9513 ppl=141.4 lr=2.76e-04 | 8021 tok/s (avg 8099) ETA 35m35s | gtok=219235328
+  [2] 24700/28874 (86%) loss=4.7151 ppl=111.6 lr=2.76e-04 | 7987 tok/s (avg 8099) ETA 35m10s | gtok=219440128
+  [2] 24750/28874 (86%) loss=4.5743 ppl=97.0 lr=2.76e-04 | 8030 tok/s (avg 8099) ETA 34m45s | gtok=219644928
+  [2] 24800/28874 (86%) loss=5.0574 ppl=157.2 lr=2.76e-04 | 7866 tok/s (avg 8098) ETA 34m20s | gtok=219849728
+  [2] 24850/28874 (86%) loss=4.8914 ppl=133.1 lr=2.75e-04 | 8048 tok/s (avg 8098) ETA 33m54s | gtok=220054528
+  [2] 24900/28874 (86%) loss=4.7521 ppl=115.8 lr=2.75e-04 | 7886 tok/s (avg 8098) ETA 33m29s | gtok=220259328
+  [2] 24950/28874 (86%) loss=4.6070 ppl=100.2 lr=2.75e-04 | 7859 tok/s (avg 8097) ETA 33m04s | gtok=220464128
+  [2] 25000/28874 (87%) loss=4.7332 ppl=113.7 lr=2.75e-04 | 7899 tok/s (avg 8097) ETA 32m39s | gtok=220668928
+  [mid-epoch sample @ batch 25000, 220,668,928 tok]
+  Prompt: In 1923 , the University of
+  Generated: In 1923 , the University of Michigan , the National Association of State and other members of state politics . The federal government is located on a small site and is designated as one of three important cities in the world with the National Register of Historic Places in 1931 and the State Department of Education in 1934 . 
+
+
+ = = Background = = 
+
+
+ On 9 May 1934 , President John B. W. Bush wrote a letter to his friend Edward M. Bush , who would take an " personal work ... " when he was elected
+  [2] 25050/28874 (87%) loss=4.9452 ppl=140.5 lr=2.75e-04 | 6332 tok/s (avg 8092) ETA 32m15s | gtok=220873728
+  [2] 25100/28874 (87%) loss=4.7896 ppl=120.3 lr=2.75e-04 | 7938 tok/s (avg 8092) ETA 31m49s | gtok=221078528
+  [2] 25150/28874 (87%) loss=4.7704 ppl=118.0 lr=2.75e-04 | 7855 tok/s (avg 8091) ETA 31m24s | gtok=221283328
+  [2] 25200/28874 (87%) loss=4.6014 ppl=99.6 lr=2.75e-04 | 7980 tok/s (avg 8091) ETA 30m59s | gtok=221488128
+  [2] 25250/28874 (87%) loss=4.4951 ppl=89.6 lr=2.75e-04 | 7880 tok/s (avg 8091) ETA 30m34s | gtok=221692928
+  [2] 25300/28874 (88%) loss=4.7934 ppl=120.7 lr=2.75e-04 | 7913 tok/s (avg 8090) ETA 30m08s | gtok=221897728
+  [2] 25350/28874 (88%) loss=4.6479 ppl=104.4 lr=2.75e-04 | 7836 tok/s (avg 8090) ETA 29m43s | gtok=222102528
+  [2] 25400/28874 (88%) loss=4.6279 ppl=102.3 lr=2.75e-04 | 7913 tok/s (avg 8090) ETA 29m18s | gtok=222307328
+  [2] 25450/28874 (88%) loss=4.7980 ppl=121.3 lr=2.75e-04 | 7962 tok/s (avg 8089) ETA 28m53s | gtok=222512128
+  [2] 25500/28874 (88%) loss=5.1420 ppl=171.1 lr=2.75e-04 | 8201 tok/s (avg 8090) ETA 28m27s | gtok=222716928
+  [2] 25550/28874 (88%) loss=4.6829 ppl=108.1 lr=2.75e-04 | 7871 tok/s (avg 8089) ETA 28m02s | gtok=222921728
+  [2] 25600/28874 (89%) loss=4.2356 ppl=69.1 lr=2.75e-04 | 7927 tok/s (avg 8089) ETA 27m37s | gtok=223126528
+  [2] 25650/28874 (89%) loss=4.6213 ppl=101.6 lr=2.75e-04 | 7827 tok/s (avg 8088) ETA 27m12s | gtok=223331328
+  [2] 25700/28874 (89%) loss=4.6784 ppl=107.6 lr=2.75e-04 | 7870 tok/s (avg 8088) ETA 26m46s | gtok=223536128
+  [2] 25750/28874 (89%) loss=4.8682 ppl=130.1 lr=2.75e-04 | 7931 tok/s (avg 8088) ETA 26m21s | gtok=223740928
+  [2] 25800/28874 (89%) loss=4.6512 ppl=104.7 lr=2.75e-04 | 7883 tok/s (avg 8087) ETA 25m56s | gtok=223945728
+  [2] 25850/28874 (90%) loss=4.7667 ppl=117.5 lr=2.75e-04 | 7911 tok/s (avg 8087) ETA 25m31s | gtok=224150528
+  [2] 25900/28874 (90%) loss=4.4627 ppl=86.7 lr=2.75e-04 | 7950 tok/s (avg 8086) ETA 25m05s | gtok=224355328
+  [2] 25950/28874 (90%) loss=4.9295 ppl=138.3 lr=2.74e-04 | 6210 tok/s (avg 8082) ETA 24m41s | gtok=224560128
+  [2] 26000/28874 (90%) loss=4.7818 ppl=119.3 lr=2.74e-04 | 7006 tok/s (avg 8079) ETA 24m16s | gtok=224764928
+  [2] 26050/28874 (90%) loss=4.7610 ppl=116.9 lr=2.74e-04 | 7321 tok/s (avg 8078) ETA 23m51s | gtok=224969728
+  [2] 26100/28874 (90%) loss=4.7051 ppl=110.5 lr=2.74e-04 | 7894 tok/s (avg 8077) ETA 23m26s | gtok=225174528
+  [2] 26150/28874 (91%) loss=4.4684 ppl=87.2 lr=2.74e-04 | 7895 tok/s (avg 8077) ETA 23m00s | gtok=225379328
+  [2] 26200/28874 (91%) loss=4.7131 ppl=111.4 lr=2.74e-04 | 7888 tok/s (avg 8077) ETA 22m35s | gtok=225584128
+  [2] 26250/28874 (91%) loss=4.7519 ppl=115.8 lr=2.74e-04 | 7926 tok/s (avg 8076) ETA 22m10s | gtok=225788928
+  [2] 26300/28874 (91%) loss=4.5355 ppl=93.3 lr=2.74e-04 | 7865 tok/s (avg 8076) ETA 21m44s | gtok=225993728
+  [2] 26350/28874 (91%) loss=5.1975 ppl=180.8 lr=2.74e-04 | 8179 tok/s (avg 8076) ETA 21m19s | gtok=226198528
+  [2] 26400/28874 (91%) loss=4.8954 ppl=133.7 lr=2.74e-04 | 8443 tok/s (avg 8077) ETA 20m54s | gtok=226403328
+  [2] 26450/28874 (92%) loss=4.9205 ppl=137.1 lr=2.74e-04 | 8365 tok/s (avg 8077) ETA 20m28s | gtok=226608128
+  [2] 26500/28874 (92%) loss=4.9975 ppl=148.0 lr=2.74e-04 | 8351 tok/s (avg 8078) ETA 20m03s | gtok=226812928
+  [2] 26550/28874 (92%) loss=4.7596 ppl=116.7 lr=2.74e-04 | 8549 tok/s (avg 8079) ETA 19m37s | gtok=227017728
+  [2] 26600/28874 (92%) loss=4.4259 ppl=83.6 lr=2.74e-04 | 8645 tok/s (avg 8080) ETA 19m12s | gtok=227222528
+  [2] 26650/28874 (92%) loss=4.7364 ppl=114.0 lr=2.74e-04 | 8592 tok/s (avg 8081) ETA 18m46s | gtok=227427328
+  [2] 26700/28874 (92%) loss=4.7956 ppl=121.0 lr=2.74e-04 | 8704 tok/s (avg 8082) ETA 18m21s | gtok=227632128
+  [2] 26750/28874 (93%) loss=4.5328 ppl=93.0 lr=2.74e-04 | 8401 tok/s (avg 8082) ETA 17m55s | gtok=227836928
+  [2] 26800/28874 (93%) loss=4.7390 ppl=114.3 lr=2.74e-04 | 8537 tok/s (avg 8083) ETA 17m30s | gtok=228041728
+  [2] 26850/28874 (93%) loss=4.5819 ppl=97.7 lr=2.74e-04 | 9006 tok/s (avg 8085) ETA 17m04s | gtok=228246528
+  [2] 26900/28874 (93%) loss=4.6559 ppl=105.2 lr=2.74e-04 | 9012 tok/s (avg 8086) ETA 16m39s | gtok=228451328
+  [2] 26950/28874 (93%) loss=4.5997 ppl=99.5 lr=2.74e-04 | 9089 tok/s (avg 8088) ETA 16m13s | gtok=228656128
+  [2] 27000/28874 (94%) loss=4.8449 ppl=127.1 lr=2.73e-04 | 8957 tok/s (avg 8089) ETA 15m48s | gtok=228860928
+  [2] 27050/28874 (94%) loss=4.9262 ppl=137.9 lr=2.73e-04 | 8933 tok/s (avg 8091) ETA 15m22s | gtok=229065728
+  [2] 27100/28874 (94%) loss=4.5864 ppl=98.1 lr=2.73e-04 | 8822 tok/s (avg 8092) ETA 14m57s | gtok=229270528
+  [2] 27150/28874 (94%) loss=5.0861 ppl=161.8 lr=2.73e-04 | 8762 tok/s (avg 8093) ETA 14m32s | gtok=229475328
+  [2] 27200/28874 (94%) loss=4.4087 ppl=82.2 lr=2.73e-04 | 8663 tok/s (avg 8094) ETA 14m06s | gtok=229680128
+  [2] 27250/28874 (94%) loss=4.8969 ppl=133.9 lr=2.73e-04 | 8853 tok/s (avg 8095) ETA 13m41s | gtok=229884928
+  [2] 27300/28874 (95%) loss=4.6335 ppl=102.9 lr=2.73e-04 | 9025 tok/s (avg 8097) ETA 13m15s | gtok=230089728
+  [2] 27350/28874 (95%) loss=4.6854 ppl=108.4 lr=2.73e-04 | 9020 tok/s (avg 8098) ETA 12m50s | gtok=230294528
+  [2] 27400/28874 (95%) loss=4.5787 ppl=97.4 lr=2.73e-04 | 8522 tok/s (avg 8099) ETA 12m24s | gtok=230499328
+  [2] 27450/28874 (95%) loss=4.8780 ppl=131.4 lr=2.73e-04 | 8432 tok/s (avg 8100) ETA 11m59s | gtok=230704128
+  [2] 27500/28874 (95%) loss=4.6636 ppl=106.0 lr=2.73e-04 | 8677 tok/s (avg 8101) ETA 11m34s | gtok=230908928
+  [2] 27550/28874 (95%) loss=4.7804 ppl=119.2 lr=2.73e-04 | 8495 tok/s (avg 8101) ETA 11m08s | gtok=231113728
+  [2] 27600/28874 (96%) loss=4.7489 ppl=115.5 lr=2.73e-04 | 8580 tok/s (avg 8102) ETA 10m43s | gtok=231318528
+  [2] 27650/28874 (96%) loss=4.5396 ppl=93.7 lr=2.73e-04 | 8455 tok/s (avg 8103) ETA 10m18s | gtok=231523328
+  [2] 27700/28874 (96%) loss=4.5766 ppl=97.2 lr=2.73e-04 | 8500 tok/s (avg 8103) ETA 9m52s | gtok=231728128
+  [2] 27750/28874 (96%) loss=4.6061 ppl=100.1 lr=2.73e-04 | 8499 tok/s (avg 8104) ETA 9m27s | gtok=231932928
+  [2] 27800/28874 (96%) loss=4.7706 ppl=118.0 lr=2.73e-04 | 8502 tok/s (avg 8105) ETA 9m02s | gtok=232137728
+  [2] 27850/28874 (96%) loss=4.7591 ppl=116.6 lr=2.73e-04 | 8471 tok/s (avg 8105) ETA 8m36s | gtok=232342528
+  [2] 27900/28874 (97%) loss=4.8914 ppl=133.1 lr=2.73e-04 | 8294 tok/s (avg 8106) ETA 8m11s | gtok=232547328
+  [2] 27950/28874 (97%) loss=4.9125 ppl=136.0 lr=2.73e-04 | 8527 tok/s (avg 8106) ETA 7m46s | gtok=232752128
+  [2] 28000/28874 (97%) loss=4.9783 ppl=145.2 lr=2.73e-04 | 8479 tok/s (avg 8107) ETA 7m21s | gtok=232956928
+  [2] 28050/28874 (97%) loss=4.5414 ppl=93.8 lr=2.73e-04 | 8541 tok/s (avg 8108) ETA 6m55s | gtok=233161728
+  [2] 28100/28874 (97%) loss=4.4444 ppl=85.1 lr=2.72e-04 | 8386 tok/s (avg 8108) ETA 6m30s | gtok=233366528
+  [2] 28150/28874 (97%) loss=4.9931 ppl=147.4 lr=2.72e-04 | 8698 tok/s (avg 8109) ETA 6m05s | gtok=233571328
+  [2] 28200/28874 (98%) loss=4.2106 ppl=67.4 lr=2.72e-04 | 8648 tok/s (avg 8110) ETA 5m39s | gtok=233776128
+  [2] 28250/28874 (98%) loss=4.8015 ppl=121.7 lr=2.72e-04 | 8643 tok/s (avg 8111) ETA 5m14s | gtok=233980928
+  [2] 28300/28874 (98%) loss=4.8142 ppl=123.2 lr=2.72e-04 | 8484 tok/s (avg 8112) ETA 4m49s | gtok=234185728
+  [2] 28350/28874 (98%) loss=4.6129 ppl=100.8 lr=2.72e-04 | 8491 tok/s (avg 8112) ETA 4m24s | gtok=234390528
+  [2] 28400/28874 (98%) loss=4.8243 ppl=124.5 lr=2.72e-04 | 8546 tok/s (avg 8113) ETA 3m58s | gtok=234595328
+  [2] 28450/28874 (99%) loss=4.7944 ppl=120.8 lr=2.72e-04 | 8502 tok/s (avg 8114) ETA 3m33s | gtok=234800128
+  [2] 28500/28874 (99%) loss=4.6922 ppl=109.1 lr=2.72e-04 | 8520 tok/s (avg 8114) ETA 3m08s | gtok=235004928
+  [2] 28550/28874 (99%) loss=4.3090 ppl=74.4 lr=2.72e-04 | 8505 tok/s (avg 8115) ETA 2m43s | gtok=235209728
+  [2] 28600/28874 (99%) loss=4.6059 ppl=100.1 lr=2.72e-04 | 8446 tok/s (avg 8116) ETA 2m17s | gtok=235414528
+  [2] 28650/28874 (99%) loss=4.4999 ppl=90.0 lr=2.72e-04 | 8442 tok/s (avg 8116) ETA 1m52s | gtok=235619328
+  [2] 28700/28874 (99%) loss=5.0448 ppl=155.2 lr=2.72e-04 | 8573 tok/s (avg 8117) ETA 1m27s | gtok=235824128
+  [2] 28750/28874 (100%) loss=4.5346 ppl=93.2 lr=2.72e-04 | 8590 tok/s (avg 8118) ETA 1m02s | gtok=236028928
+  [2] 28800/28874 (100%) loss=5.3229 ppl=205.0 lr=2.72e-04 | 8476 tok/s (avg 8118) ETA 0m36s | gtok=236233728
+  [2] 28850/28874 (100%) loss=5.0925 ppl=162.8 lr=2.72e-04 | 8609 tok/s (avg 8119) ETA 0m11s | gtok=236438528
+Epoch 2/10 | Train Loss: 4.7525 PPL: 115.87 | 8119 tok/s | Time: 14565.9s (236,529,664 tok) | Val Loss: 4.4966 PPL: 89.71 *best*
+Saved checkpoint: checkpoints_transformer_10m/best_model.pt
+
+Prompt: In 1923 , the University of
+Generated: In 1923 , the University of Cambridge , St George 's College of Law . 
+
+
+ = = History = = 
+
+
+ The first three years of the Great Depression , the city was founded in 1937 by the Duke of York and his wife Thomas A. D-@ class who had been one of the few major states that helped to be a student from the local government . From the late 1930s , it became known as its " Great Depression " and " Second World War " , which began in 1934 . On his
+  Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=0.716
+
+============================================================
+Epoch 3/10
+============================================================
+  [3] 0/28874 (0%) loss=4.3716 ppl=79.2 lr=2.72e-04 | 7906 tok/s (avg 7906) ETA 0m00s | gtok=236533760
+  [3] 50/28874 (0%) loss=4.6716 ppl=106.9 lr=2.72e-04 | 8483 tok/s (avg 8469) ETA 232m20s | gtok=236738560
+  [3] 100/28874 (0%) loss=4.6361 ppl=103.1 lr=2.72e-04 | 8579 tok/s (avg 8523) ETA 230m27s | gtok=236943360
+  [3] 150/28874 (1%) loss=5.0415 ppl=154.7 lr=2.72e-04 | 8686 tok/s (avg 8576) ETA 228m37s | gtok=237148160
+  [3] 200/28874 (1%) loss=4.6598 ppl=105.6 lr=2.72e-04 | 8478 tok/s (avg 8552) ETA 228m53s | gtok=237352960
+  [3] 250/28874 (1%) loss=4.6168 ppl=101.2 lr=2.71e-04 | 8501 tok/s (avg 8542) ETA 228m45s | gtok=237557760
+  [3] 300/28874 (1%) loss=4.4684 ppl=87.2 lr=2.71e-04 | 8301 tok/s (avg 8501) ETA 229m27s | gtok=237762560
+  [3] 350/28874 (1%) loss=4.4935 ppl=89.4 lr=2.71e-04 | 8526 tok/s (avg 8504) ETA 228m58s | gtok=237967360
+  [3] 400/28874 (1%) loss=4.4595 ppl=86.4 lr=2.71e-04 | 8357 tok/s (avg 8485) ETA 229m04s | gtok=238172160
+  [3] 450/28874 (2%) loss=4.4489 ppl=85.5 lr=2.71e-04 | 8491 tok/s (avg 8486) ETA 228m39s | gtok=238376960
+  [3] 500/28874 (2%) loss=4.8223 ppl=124.3 lr=2.71e-04 | 8388 tok/s (avg 8476) ETA 228m30s | gtok=238581760
+  [3] 550/28874 (2%) loss=4.2393 ppl=69.4 lr=2.71e-04 | 8489 tok/s (avg 8477) ETA 228m05s | gtok=238786560
+  [3] 600/28874 (2%) loss=4.6789 ppl=107.7 lr=2.71e-04 | 8482 tok/s (avg 8478) ETA 227m40s | gtok=238991360
+  [3] 650/28874 (2%) loss=4.8057 ppl=122.2 lr=2.71e-04 | 8334 tok/s (avg 8466) ETA 227m34s | gtok=239196160
+  [3] 700/28874 (2%) loss=4.4181 ppl=82.9 lr=2.71e-04 | 8440 tok/s (avg 8464) ETA 227m13s | gtok=239400960
+  [3] 750/28874 (3%) loss=4.6783 ppl=107.6 lr=2.71e-04 | 8457 tok/s (avg 8464) ETA 226m49s | gtok=239605760
+  [3] 800/28874 (3%) loss=4.5596 ppl=95.5 lr=2.71e-04 | 8395 tok/s (avg 8460) ETA 226m32s | gtok=239810560
+  [3] 850/28874 (3%) loss=4.8757 ppl=131.1 lr=2.71e-04 | 8507 tok/s (avg 8462) ETA 226m03s | gtok=240015360
+  [3] 900/28874 (3%) loss=4.7841 ppl=119.6 lr=2.71e-04 | 8539 tok/s (avg 8466) ETA 225m33s | gtok=240220160
+  [3] 950/28874 (3%) loss=4.8670 ppl=129.9 lr=2.71e-04 | 8456 tok/s (avg 8466) ETA 225m09s | gtok=240424960
+  [3] 1000/28874 (3%) loss=4.6660 ppl=106.3 lr=2.71e-04 | 8221 tok/s (avg 8453) ETA 225m05s | gtok=240629760
+  [3] 1050/28874 (4%) loss=4.7355 ppl=113.9 lr=2.71e-04 | 8709 tok/s (avg 8465) ETA 224m22s | gtok=240834560
+  [3] 1100/28874 (4%) loss=4.2512 ppl=70.2 lr=2.71e-04 | 8542 tok/s (avg 8469) ETA 223m53s | gtok=241039360
+  [3] 1150/28874 (4%) loss=4.9293 ppl=138.3 lr=2.71e-04 | 8351 tok/s (avg 8463) ETA 223m37s | gtok=241244160
+  [3] 1200/28874 (4%) loss=4.7568 ppl=116.4 lr=2.71e-04 | 8514 tok/s (avg 8465) ETA 223m09s | gtok=241448960
+  [3] 1250/28874 (4%) loss=4.5158 ppl=91.4 lr=2.71e-04 | 8517 tok/s (avg 8467) ETA 222m42s | gtok=241653760
+  [3] 1300/28874 (5%) loss=4.9033 ppl=134.7 lr=2.70e-04 | 8434 tok/s (avg 8466) ETA 222m20s | gtok=241858560
+  [3] 1350/28874 (5%) loss=4.6474 ppl=104.3 lr=2.70e-04 | 8545 tok/s (avg 8469) ETA 221m51s | gtok=242063360
+  [3] 1400/28874 (5%) loss=4.5723 ppl=96.8 lr=2.70e-04 | 8551 tok/s (avg 8472) ETA 221m22s | gtok=242268160
+  [3] 1450/28874 (5%) loss=4.3754 ppl=79.5 lr=2.70e-04 | 8440 tok/s (avg 8471) ETA 221m00s | gtok=242472960
+  [3] 1500/28874 (5%) loss=4.5409 ppl=93.8 lr=2.70e-04 | 8369 tok/s (avg 8467) ETA 220m41s | gtok=242677760
+  [3] 1550/28874 (5%) loss=5.0255 ppl=152.2 lr=2.70e-04 | 8353 tok/s (avg 8464) ETA 220m23s | gtok=242882560
+  [3] 1600/28874 (6%) loss=4.7455 ppl=115.1 lr=2.70e-04 | 8489 tok/s (avg 8464) ETA 219m57s | gtok=243087360
+  [3] 1650/28874 (6%) loss=4.7734 ppl=118.3 lr=2.70e-04 | 9399 tok/s (avg 8490) ETA 218m53s | gtok=243292160
+  [3] 1700/28874 (6%) loss=4.3898 ppl=80.6 lr=2.70e-04 | 9341 tok/s (avg 8513) ETA 217m54s | gtok=243496960
+  [3] 1750/28874 (6%) loss=4.5986 ppl=99.3 lr=2.70e-04 | 9388 tok/s (avg 8535) ETA 216m55s | gtok=243701760
+  [3] 1800/28874 (6%) loss=4.8465 ppl=127.3 lr=2.70e-04 | 9502 tok/s (avg 8560) ETA 215m55s | gtok=243906560
+  [3] 1850/28874 (6%) loss=4.9450 ppl=140.5 lr=2.70e-04 | 9465 tok/s (avg 8582) ETA 214m57s | gtok=244111360
+  [3] 1900/28874 (7%) loss=4.4762 ppl=87.9 lr=2.70e-04 | 9446 tok/s (avg 8602) ETA 214m02s | gtok=244316160
+  [3] 1950/28874 (7%) loss=4.6792 ppl=107.7 lr=2.70e-04 | 9646 tok/s (avg 8626) ETA 213m03s | gtok=244520960
+  [3] 2000/28874 (7%) loss=4.6955 ppl=109.5 lr=2.70e-04 | 9721 tok/s (avg 8651) ETA 212m04s | gtok=244725760
+  [3] 2050/28874 (7%) loss=4.8012 ppl=121.7 lr=2.70e-04 | 9428 tok/s (avg 8668) ETA 211m14s | gtok=244930560
+  [3] 2100/28874 (7%) loss=4.9675 ppl=143.7 lr=2.70e-04 | 9545 tok/s (avg 8687) ETA 210m23s | gtok=245135360
+  [3] 2150/28874 (7%) loss=4.3783 ppl=79.7 lr=2.70e-04 | 9605 tok/s (avg 8706) ETA 209m32s | gtok=245340160
+  [3] 2200/28874 (8%) loss=4.7354 ppl=113.9 lr=2.70e-04 | 9410 tok/s (avg 8721) ETA 208m47s | gtok=245544960
+  [3] 2250/28874 (8%) loss=4.6004 ppl=99.5 lr=2.70e-04 | 9276 tok/s (avg 8733) ETA 208m07s | gtok=245749760
+  [3] 2300/28874 (8%) loss=4.7686 ppl=117.8 lr=2.69e-04 | 9461 tok/s (avg 8747) ETA 207m22s | gtok=245954560
+  [3] 2350/28874 (8%) loss=4.8063 ppl=122.3 lr=2.69e-04 | 9331 tok/s (avg 8759) ETA 206m42s | gtok=246159360
+  [3] 2400/28874 (8%) loss=4.9584 ppl=142.4 lr=2.69e-04 | 9680 tok/s (avg 8776) ETA 205m55s | gtok=246364160
+  [3] 2450/28874 (8%) loss=4.9805 ppl=145.6 lr=2.69e-04 | 9474 tok/s (avg 8790) ETA 205m13s | gtok=246568960
+  [3] 2500/28874 (9%) loss=4.2783 ppl=72.1 lr=2.69e-04 | 9691 tok/s (avg 8806) ETA 204m27s | gtok=246773760
+  [3] 2550/28874 (9%) loss=4.5329 ppl=93.0 lr=2.69e-04 | 9615 tok/s (avg 8821) ETA 203m43s | gtok=246978560
+  [3] 2600/28874 (9%) loss=5.0885 ppl=162.1 lr=2.69e-04 | 9573 tok/s (avg 8834) ETA 203m01s | gtok=247183360
+  [3] 2650/28874 (9%) loss=4.7012 ppl=110.1 lr=2.69e-04 | 9730 tok/s (avg 8849) ETA 202m17s | gtok=247388160
+  [3] 2700/28874 (9%) loss=4.7342 ppl=113.8 lr=2.69e-04 | 9078 tok/s (avg 8853) ETA 201m48s | gtok=247592960
+  [3] 2750/28874 (10%) loss=4.5529 ppl=94.9 lr=2.69e-04 | 8331 tok/s (avg 8843) ETA 201m39s | gtok=247797760
+  [3] 2800/28874 (10%) loss=4.6004 ppl=99.5 lr=2.69e-04 | 8543 tok/s (avg 8838) ETA 201m23s | gtok=248002560
+  [3] 2850/28874 (10%) loss=4.3674 ppl=78.8 lr=2.69e-04 | 8655 tok/s (avg 8834) ETA 201m05s | gtok=248207360
+  [3] 2900/28874 (10%) loss=4.7489 ppl=115.5 lr=2.69e-04 | 8948 tok/s (avg 8836) ETA 200m39s | gtok=248412160
+  [3] 2950/28874 (10%) loss=4.5779 ppl=97.3 lr=2.69e-04 | 8462 tok/s (avg 8830) ETA 200m25s | gtok=248616960
+  [3] 3000/28874 (10%) loss=4.8139 ppl=123.2 lr=2.69e-04 | 8599 tok/s (avg 8826) ETA 200m07s | gtok=248821760
+  [3] 3050/28874 (11%) loss=4.7189 ppl=112.0 lr=2.69e-04 | 8596 tok/s (avg 8822) ETA 199m49s | gtok=249026560
+  [3] 3100/28874 (11%) loss=4.6694 ppl=106.6 lr=2.69e-04 | 8515 tok/s (avg 8817) ETA 199m33s | gtok=249231360
+  [3] 3150/28874 (11%) loss=4.6878 ppl=108.6 lr=2.69e-04 | 8608 tok/s (avg 8813) ETA 199m14s | gtok=249436160
+  [3] 3200/28874 (11%) loss=4.7379 ppl=114.2 lr=2.69e-04 | 8583 tok/s (avg 8810) ETA 198m56s | gtok=249640960
+  [3] 3250/28874 (11%) loss=4.7564 ppl=116.3 lr=2.69e-04 | 8631 tok/s (avg 8807) ETA 198m36s | gtok=249845760
+  [3] 3300/28874 (11%) loss=4.8360 ppl=126.0 lr=2.69e-04 | 8543 tok/s (avg 8803) ETA 198m19s | gtok=250050560
+  [3] 3350/28874 (12%) loss=4.6845 ppl=108.3 lr=2.68e-04 | 8598 tok/s (avg 8800) ETA 198m00s | gtok=250255360
+  [3] 3400/28874 (12%) loss=4.8384 ppl=126.3 lr=2.68e-04 | 8600 tok/s (avg 8797) ETA 197m40s | gtok=250460160
+  [3] 3450/28874 (12%) loss=4.4744 ppl=87.7 lr=2.68e-04 | 8676 tok/s (avg 8795) ETA 197m20s | gtok=250664960
+  [3] 3500/28874 (12%) loss=4.3587 ppl=78.2 lr=2.68e-04 | 8623 tok/s (avg 8792) ETA 197m00s | gtok=250869760
+  [3] 3550/28874 (12%) loss=4.8713 ppl=130.5 lr=2.68e-04 | 8649 tok/s (avg 8790) ETA 196m39s | gtok=251074560
+  [3] 3600/28874 (12%) loss=4.4689 ppl=87.3 lr=2.68e-04 | 8597 tok/s (avg 8788) ETA 196m20s | gtok=251279360
+  [3] 3650/28874 (13%) loss=4.9035 ppl=134.8 lr=2.68e-04 | 8554 tok/s (avg 8784) ETA 196m01s | gtok=251484160
+  [3] 3700/28874 (13%) loss=4.9667 ppl=143.6 lr=2.68e-04 | 8555 tok/s (avg 8781) ETA 195m42s | gtok=251688960
+  [3] 3750/28874 (13%) loss=4.4314 ppl=84.0 lr=2.68e-04 | 8435 tok/s (avg 8776) ETA 195m25s | gtok=251893760
+  [3] 3800/28874 (13%) loss=4.4956 ppl=89.6 lr=2.68e-04 | 8936 tok/s (avg 8778) ETA 194m59s | gtok=252098560
+  [3] 3850/28874 (13%) loss=4.6210 ppl=101.6 lr=2.68e-04 | 8641 tok/s (avg 8777) ETA 194m38s | gtok=252303360
+  [3] 3900/28874 (14%) loss=4.7445 ppl=115.0 lr=2.68e-04 | 8599 tok/s (avg 8774) ETA 194m17s | gtok=252508160
+  [3] 3950/28874 (14%) loss=4.7022 ppl=110.2 lr=2.68e-04 | 8744 tok/s (avg 8774) ETA 193m55s | gtok=252712960
+  [3] 4000/28874 (14%) loss=4.7837 ppl=119.5 lr=2.68e-04 | 8466 tok/s (avg 8770) ETA 193m37s | gtok=252917760
+  [3] 4050/28874 (14%) loss=4.4407 ppl=84.8 lr=2.68e-04 | 8573 tok/s (avg 8767) ETA 193m16s | gtok=253122560
+  [3] 4100/28874 (14%) loss=4.7397 ppl=114.4 lr=2.68e-04 | 8590 tok/s (avg 8765) ETA 192m56s | gtok=253327360
+  [3] 4150/28874 (14%) loss=4.4542 ppl=86.0 lr=2.68e-04 | 8599 tok/s (avg 8763) ETA 192m35s | gtok=253532160
+  [3] 4200/28874 (15%) loss=4.6269 ppl=102.2 lr=2.68e-04 | 8653 tok/s (avg 8762) ETA 192m14s | gtok=253736960
+  [3] 4250/28874 (15%) loss=4.6759 ppl=107.3 lr=2.68e-04 | 8685 tok/s (avg 8761) ETA 191m52s | gtok=253941760
+  [3] 4300/28874 (15%) loss=4.7718 ppl=118.1 lr=2.67e-04 | 8608 tok/s (avg 8759) ETA 191m31s | gtok=254146560
+  [3] 4350/28874 (15%) loss=4.8737 ppl=130.8 lr=2.67e-04 | 8121 tok/s (avg 8751) ETA 191m18s | gtok=254351360
+  [3] 4400/28874 (15%) loss=4.3815 ppl=80.0 lr=2.67e-04 | 8827 tok/s (avg 8752) ETA 190m53s | gtok=254556160
+  [3] 4450/28874 (15%) loss=4.9499 ppl=141.2 lr=2.67e-04 | 8899 tok/s (avg 8754) ETA 190m28s | gtok=254760960
+  [3] 4500/28874 (16%) loss=4.7814 ppl=119.3 lr=2.67e-04 | 8942 tok/s (avg 8756) ETA 190m01s | gtok=254965760
+  [3] 4550/28874 (16%) loss=4.7885 ppl=120.1 lr=2.67e-04 | 9563 tok/s (avg 8764) ETA 189m28s | gtok=255170560
+  [3] 4600/28874 (16%) loss=4.8551 ppl=128.4 lr=2.67e-04 | 8905 tok/s (avg 8765) ETA 189m02s | gtok=255375360
+  [3] 4650/28874 (16%) loss=4.4454 ppl=85.2 lr=2.67e-04 | 7707 tok/s (avg 8752) ETA 188m56s | gtok=255580160
+  [3] 4700/28874 (16%) loss=4.7133 ppl=111.4 lr=2.67e-04 | 9225 tok/s (avg 8757) ETA 188m26s | gtok=255784960
+  [3] 4750/28874 (16%) loss=4.7748 ppl=118.5 lr=2.67e-04 | 9239 tok/s (avg 8762) ETA 187m56s | gtok=255989760
+  [3] 4800/28874 (17%) loss=4.9776 ppl=145.1 lr=2.67e-04 | 9122 tok/s (avg 8766) ETA 187m28s | gtok=256194560
+  [3] 4850/28874 (17%) loss=4.9277 ppl=138.1 lr=2.67e-04 | 9080 tok/s (avg 8769) ETA 187m01s | gtok=256399360
+  [3] 4900/28874 (17%) loss=4.7053 ppl=110.5 lr=2.67e-04 | 9446 tok/s (avg 8775) ETA 186m30s | gtok=256604160
+  [3] 4950/28874 (17%) loss=4.5599 ppl=95.6 lr=2.67e-04 | 9189 tok/s (avg 8779) ETA 186m01s | gtok=256808960
+  [3] 5000/28874 (17%) loss=4.6592 ppl=105.5 lr=2.67e-04 | 9315 tok/s (avg 8784) ETA 185m31s | gtok=257013760
+  [mid-epoch sample @ batch 5000, 257,013,760 tok]
+  Prompt: In 1923 , the University of
+  Generated: In 1923 , the University of Florida ( MDOT ) is a member of the Florida State Department of National Education and its students . 
+
+ The College has an area of over 2 @,@ 500 in its original design , the most significant part of the program 's development . It has been constructed with four more than 3 @.@ 5 % of these homes are available . According to the study at the time , the University of Texas was the largest of many American universities in the world to be constructed in the United States .
+  [3] 5050/28874 (17%) loss=4.7896 ppl=120.3 lr=2.67e-04 | 7502 tok/s (avg 8769) ETA 185m27s | gtok=257218560
+  [3] 5100/28874 (18%) loss=4.5699 ppl=96.5 lr=2.67e-04 | 9548 tok/s (avg 8776) ETA 184m55s | gtok=257423360
+  [3] 5150/28874 (18%) loss=4.9608 ppl=142.7 lr=2.67e-04 | 9345 tok/s (avg 8781) ETA 184m25s | gtok=257628160
+  [3] 5200/28874 (18%) loss=4.5560 ppl=95.2 lr=2.67e-04 | 9691 tok/s (avg 8789) ETA 183m52s | gtok=257832960
+  [3] 5250/28874 (18%) loss=4.9003 ppl=134.3 lr=2.67e-04 | 9498 tok/s (avg 8796) ETA 183m20s | gtok=258037760
+  [3] 5300/28874 (18%) loss=4.7922 ppl=120.6 lr=2.66e-04 | 9286 tok/s (avg 8800) ETA 182m52s | gtok=258242560
+  [3] 5350/28874 (19%) loss=5.0264 ppl=152.4 lr=2.66e-04 | 9569 tok/s (avg 8807) ETA 182m20s | gtok=258447360
+  [3] 5400/28874 (19%) loss=4.7580 ppl=116.5 lr=2.66e-04 | 9751 tok/s (avg 8815) ETA 181m47s | gtok=258652160
+  [3] 5450/28874 (19%) loss=4.4435 ppl=85.1 lr=2.66e-04 | 9597 tok/s (avg 8821) ETA 181m16s | gtok=258856960
+  [3] 5500/28874 (19%) loss=4.6805 ppl=107.8 lr=2.66e-04 | 9495 tok/s (avg 8827) ETA 180m46s | gtok=259061760
+  [3] 5550/28874 (19%) loss=4.6199 ppl=101.5 lr=2.66e-04 | 9506 tok/s (avg 8832) ETA 180m15s | gtok=259266560
+  [3] 5600/28874 (19%) loss=4.6754 ppl=107.3 lr=2.66e-04 | 9637 tok/s (avg 8839) ETA 179m44s | gtok=259471360
+  [3] 5650/28874 (20%) loss=4.5535 ppl=95.0 lr=2.66e-04 | 9677 tok/s (avg 8846) ETA 179m13s | gtok=259676160
+  [3] 5700/28874 (20%) loss=4.2447 ppl=69.7 lr=2.66e-04 | 9623 tok/s (avg 8852) ETA 178m42s | gtok=259880960
+  [3] 5750/28874 (20%) loss=4.4635 ppl=86.8 lr=2.66e-04 | 9640 tok/s (avg 8858) ETA 178m11s | gtok=260085760
+  [3] 5800/28874 (20%) loss=4.2665 ppl=71.3 lr=2.66e-04 | 9586 tok/s (avg 8864) ETA 177m41s | gtok=260290560
+  [3] 5850/28874 (20%) loss=4.5418 ppl=93.9 lr=2.66e-04 | 9562 tok/s (avg 8870) ETA 177m11s | gtok=260495360
+  [3] 5900/28874 (20%) loss=4.8758 ppl=131.1 lr=2.66e-04 | 9453 tok/s (avg 8874) ETA 176m43s | gtok=260700160
+  [3] 5950/28874 (21%) loss=4.8603 ppl=129.1 lr=2.66e-04 | 9564 tok/s (avg 8880) ETA 176m13s | gtok=260904960
+  [3] 6000/28874 (21%) loss=4.6199 ppl=101.5 lr=2.66e-04 | 9598 tok/s (avg 8885) ETA 175m44s | gtok=261109760
+  [3] 6050/28874 (21%) loss=4.5339 ppl=93.1 lr=2.66e-04 | 9674 tok/s (avg 8891) ETA 175m14s | gtok=261314560
+  [3] 6100/28874 (21%) loss=5.0183 ppl=151.1 lr=2.66e-04 | 9161 tok/s (avg 8893) ETA 174m48s | gtok=261519360
+  [3] 6150/28874 (21%) loss=4.7310 ppl=113.4 lr=2.66e-04 | 9475 tok/s (avg 8898) ETA 174m20s | gtok=261724160
+  [3] 6200/28874 (21%) loss=4.7029 ppl=110.3 lr=2.66e-04 | 9445 tok/s (avg 8902) ETA 173m52s | gtok=261928960
+  [3] 6250/28874 (22%) loss=4.6295 ppl=102.5 lr=2.65e-04 | 9546 tok/s (avg 8907) ETA 173m23s | gtok=262133760
+  [3] 6300/28874 (22%) loss=4.8554 ppl=128.4 lr=2.65e-04 | 9275 tok/s (avg 8910) ETA 172m57s | gtok=262338560
+  [3] 6350/28874 (22%) loss=4.7012 ppl=110.1 lr=2.65e-04 | 9503 tok/s (avg 8914) ETA 172m29s | gtok=262543360
+  [3] 6400/28874 (22%) loss=4.9852 ppl=146.2 lr=2.65e-04 | 9133 tok/s (avg 8916) ETA 172m04s | gtok=262748160
+  [3] 6450/28874 (22%) loss=4.5836 ppl=97.9 lr=2.65e-04 | 9482 tok/s (avg 8920) ETA 171m36s | gtok=262952960
+  [3] 6500/28874 (23%) loss=4.4683 ppl=87.2 lr=2.65e-04 | 9428 tok/s (avg 8923) ETA 171m09s | gtok=263157760
+  [3] 6550/28874 (23%) loss=4.6668 ppl=106.4 lr=2.65e-04 | 9660 tok/s (avg 8929) ETA 170m40s | gtok=263362560
+  [3] 6600/28874 (23%) loss=4.7541 ppl=116.1 lr=2.65e-04 | 9627 tok/s (avg 8934) ETA 170m12s | gtok=263567360
+  [3] 6650/28874 (23%) loss=4.8437 ppl=126.9 lr=2.65e-04 | 9320 tok/s (avg 8936) ETA 169m45s | gtok=263772160
+  [3] 6700/28874 (23%) loss=4.5965 ppl=99.1 lr=2.65e-04 | 9401 tok/s (avg 8940) ETA 169m19s | gtok=263976960
+  [3] 6750/28874 (23%) loss=4.3875 ppl=80.4 lr=2.65e-04 | 9333 tok/s (avg 8942) ETA 168m53s | gtok=264181760
+  [3] 6800/28874 (24%) loss=4.9023 ppl=134.6 lr=2.65e-04 | 9433 tok/s (avg 8946) ETA 168m26s | gtok=264386560
+  [3] 6850/28874 (24%) loss=4.9513 ppl=141.4 lr=2.65e-04 | 9541 tok/s (avg 8950) ETA 167m58s | gtok=264591360
+  [3] 6900/28874 (24%) loss=4.6983 ppl=109.8 lr=2.65e-04 | 9516 tok/s (avg 8954) ETA 167m31s | gtok=264796160
+  [3] 6950/28874 (24%) loss=4.7927 ppl=120.6 lr=2.65e-04 | 9419 tok/s (avg 8957) ETA 167m05s | gtok=265000960
+  [3] 7000/28874 (24%) loss=5.0386 ppl=154.3 lr=2.65e-04 | 9430 tok/s (avg 8960) ETA 166m38s | gtok=265205760
+  [3] 7050/28874 (24%) loss=4.8468 ppl=127.3 lr=2.65e-04 | 9662 tok/s (avg 8965) ETA 166m10s | gtok=265410560
+  [3] 7100/28874 (25%) loss=4.7274 ppl=113.0 lr=2.65e-04 | 9698 tok/s (avg 8970) ETA 165m42s | gtok=265615360
+  [3] 7150/28874 (25%) loss=4.8914 ppl=133.1 lr=2.65e-04 | 9370 tok/s (avg 8972) ETA 165m16s | gtok=265820160
+  [3] 7200/28874 (25%) loss=4.7647 ppl=117.3 lr=2.64e-04 | 9434 tok/s (avg 8975) ETA 164m50s | gtok=266024960
+  [3] 7250/28874 (25%) loss=4.8906 ppl=133.0 lr=2.64e-04 | 9584 tok/s (avg 8979) ETA 164m23s | gtok=266229760
+  [3] 7300/28874 (25%) loss=4.9136 ppl=136.1 lr=2.64e-04 | 9693 tok/s (avg 8984) ETA 163m55s | gtok=266434560
+  [3] 7350/28874 (25%) loss=5.0279 ppl=152.6 lr=2.64e-04 | 9393 tok/s (avg 8986) ETA 163m30s | gtok=266639360
+  [3] 7400/28874 (26%) loss=4.5897 ppl=98.5 lr=2.64e-04 | 9296 tok/s (avg 8988) ETA 163m05s | gtok=266844160
+  [3] 7450/28874 (26%) loss=4.6532 ppl=104.9 lr=2.64e-04 | 9440 tok/s (avg 8991) ETA 162m39s | gtok=267048960
+  [3] 7500/28874 (26%) loss=4.6200 ppl=101.5 lr=2.64e-04 | 9712 tok/s (avg 8996) ETA 162m11s | gtok=267253760
+  [3] 7550/28874 (26%) loss=4.2241 ppl=68.3 lr=2.64e-04 | 9468 tok/s (avg 8999) ETA 161m45s | gtok=267458560
+  [3] 7600/28874 (26%) loss=4.6638 ppl=106.0 lr=2.64e-04 | 9540 tok/s (avg 9002) ETA 161m19s | gtok=267663360
+  [3] 7650/28874 (26%) loss=4.6733 ppl=107.1 lr=2.64e-04 | 9547 tok/s (avg 9005) ETA 160m53s | gtok=267868160
+  [3] 7700/28874 (27%) loss=4.7542 ppl=116.1 lr=2.64e-04 | 9530 tok/s (avg 9009) ETA 160m26s | gtok=268072960
+  [3] 7750/28874 (27%) loss=4.7006 ppl=110.0 lr=2.64e-04 | 9306 tok/s (avg 9010) ETA 160m02s | gtok=268277760
+  [3] 7800/28874 (27%) loss=4.6389 ppl=103.4 lr=2.64e-04 | 9311 tok/s (avg 9012) ETA 159m37s | gtok=268482560
+  [3] 7850/28874 (27%) loss=4.7583 ppl=116.5 lr=2.64e-04 | 9488 tok/s (avg 9015) ETA 159m11s | gtok=268687360
+  [3] 7900/28874 (27%) loss=4.8651 ppl=129.7 lr=2.64e-04 | 9516 tok/s (avg 9018) ETA 158m45s | gtok=268892160
+  [3] 7950/28874 (28%) loss=4.8904 ppl=133.0 lr=2.64e-04 | 9159 tok/s (avg 9019) ETA 158m22s | gtok=269096960
+  [3] 8000/28874 (28%) loss=4.6751 ppl=107.2 lr=2.64e-04 | 126 tok/s (avg 6261) ETA 227m35s | gtok=269301760
+  [3] 8050/28874 (28%) loss=4.6876 ppl=108.6 lr=2.64e-04 | 12375 tok/s (avg 6280) ETA 226m21s | gtok=269506560
+  [3] 8100/28874 (28%) loss=4.5818 ppl=97.7 lr=2.64e-04 | 14308 tok/s (avg 6302) ETA 225m01s | gtok=269711360
+  [3] 8150/28874 (28%) loss=5.0624 ppl=158.0 lr=2.63e-04 | 13645 tok/s (avg 6323) ETA 223m44s | gtok=269916160
+  [3] 8200/28874 (28%) loss=4.9242 ppl=137.6 lr=2.63e-04 | 13169 tok/s (avg 6343) ETA 222m29s | gtok=270120960
+  [3] 8250/28874 (29%) loss=4.5243 ppl=92.2 lr=2.63e-04 | 13184 tok/s (avg 6363) ETA 221m15s | gtok=270325760
+  [3] 8300/28874 (29%) loss=4.5805 ppl=97.6 lr=2.63e-04 | 12533 tok/s (avg 6382) ETA 220m04s | gtok=270530560
+  [3] 8350/28874 (29%) loss=4.9467 ppl=140.7 lr=2.63e-04 | 11583 tok/s (avg 6399) ETA 218m56s | gtok=270735360
+  [3] 8400/28874 (29%) loss=4.3297 ppl=75.9 lr=2.63e-04 | 12315 tok/s (avg 6417) ETA 217m47s | gtok=270940160
+  [3] 8450/28874 (29%) loss=4.5012 ppl=90.1 lr=2.63e-04 | 12417 tok/s (avg 6436) ETA 216m38s | gtok=271144960
+  [3] 8500/28874 (29%) loss=4.9415 ppl=140.0 lr=2.63e-04 | 11931 tok/s (avg 6453) ETA 215m31s | gtok=271349760
+  [3] 8550/28874 (30%) loss=4.6994 ppl=109.9 lr=2.63e-04 | 11700 tok/s (avg 6470) ETA 214m25s | gtok=271554560
+  [3] 8600/28874 (30%) loss=4.2505 ppl=70.1 lr=2.63e-04 | 11466 tok/s (avg 6487) ETA 213m21s | gtok=271759360
+  [3] 8650/28874 (30%) loss=4.3300 ppl=75.9 lr=2.63e-04 | 10236 tok/s (avg 6500) ETA 212m22s | gtok=271964160
+  [3] 8700/28874 (30%) loss=4.7809 ppl=119.2 lr=2.63e-04 | 9223 tok/s (avg 6511) ETA 211m29s | gtok=272168960
+  [3] 8750/28874 (30%) loss=4.8379 ppl=126.2 lr=2.63e-04 | 8098 tok/s (avg 6519) ETA 210m44s | gtok=272373760
+  [3] 8800/28874 (30%) loss=4.7289 ppl=113.2 lr=2.63e-04 | 7293 tok/s (avg 6523) ETA 210m05s | gtok=272578560
+  [3] 8850/28874 (31%) loss=4.9137 ppl=136.1 lr=2.63e-04 | 7154 tok/s (avg 6526) ETA 209m27s | gtok=272783360
+  [3] 8900/28874 (31%) loss=4.5195 ppl=91.8 lr=2.63e-04 | 7771 tok/s (avg 6532) ETA 208m44s | gtok=272988160
+  [3] 8950/28874 (31%) loss=4.4492 ppl=85.6 lr=2.63e-04 | 7927 tok/s (avg 6538) ETA 208m01s | gtok=273192960
+  [3] 9000/28874 (31%) loss=4.5935 ppl=98.8 lr=2.63e-04 | 8194 tok/s (avg 6546) ETA 207m15s | gtok=273397760
+  [3] 9050/28874 (31%) loss=4.7742 ppl=118.4 lr=2.63e-04 | 8378 tok/s (avg 6554) ETA 206m29s | gtok=273602560
+  [3] 9100/28874 (32%) loss=4.6653 ppl=106.2 lr=2.62e-04 | 8259 tok/s (avg 6561) ETA 205m44s | gtok=273807360
+9006 tok/s (avg 8085) ETA 17m04s | gtok=228246528
+[2026-04-15 08:08:26]   [2] 26900/28874 (93%) loss=4.6559 ppl=105.2 lr=2.74e-04 | 9012 tok/s (avg 8086) ETA 16m39s | gtok=228451328
+[2026-04-15 08:08:48]   [2] 26950/28874 (93%) loss=4.5997 ppl=99.5 lr=2.74e-04 | 9089 tok/s (avg 8088) ETA 16m13s | gtok=228656128
+[2026-04-15 08:09:11]   [2] 27000/28874 (94%) loss=4.8449 ppl=127.1 lr=2.73e-04 | 8957 tok/s (avg 8089) ETA 15m48s | gtok=228860928
+[2026-04-15 08:09:34]   [2] 27050/28874 (94%) loss=4.9262 ppl=137.9 lr=2.73e-04 | 8933 tok/s (avg 8091) ETA 15m22s | gtok=229065728
+[2026-04-15 08:09:58]   [2] 27100/28874 (94%) loss=4.5864 ppl=98.1 lr=2.73e-04 | 8822 tok/s (avg 8092) ETA 14m57s | gtok=229270528
+[2026-04-15 08:10:21]   [2] 27150/28874 (94%) loss=5.0861 ppl=161.8 lr=2.73e-04 | 8762 tok/s (avg 8093) ETA 14m32s | gtok=229475328
+[2026-04-15 08:10:45]   [2] 27200/28874 (94%) loss=4.4087 ppl=82.2 lr=2.73e-04 | 8663 tok/s (avg 8094) ETA 14m06s | gtok=229680128
+[2026-04-15 08:11:08]   [2] 27250/28874 (94%) loss=4.8969 ppl=133.9 lr=2.73e-04 | 8853 tok/s (avg 8095) ETA 13m41s | gtok=229884928
+[2026-04-15 08:11:30]   [2] 27300/28874 (95%) loss=4.6335 ppl=102.9 lr=2.73e-04 | 9025 tok/s (avg 8097) ETA 13m15s | gtok=230089728
+[2026-04-15 08:11:53]   [2] 27350/28874 (95%) loss=4.6854 ppl=108.4 lr=2.73e-04 | 9020 tok/s (avg 8098) ETA 12m50s | gtok=230294528
+[2026-04-15 08:12:17]   [2] 27400/28874 (95%) loss=4.5787 ppl=97.4 lr=2.73e-04 | 8522 tok/s (avg 8099) ETA 12m24s | gtok=230499328
+[2026-04-15 08:12:41]   [2] 27450/28874 (95%) loss=4.8780 ppl=131.4 lr=2.73e-04 | 8432 tok/s (avg 8100) ETA 11m59s | gtok=230704128
+[2026-04-15 08:13:05]   [2] 27500/28874 (95%) loss=4.6636 ppl=106.0 lr=2.73e-04 | 8677 tok/s (avg 8101) ETA 11m34s | gtok=230908928
+[2026-04-15 08:13:29]   [2] 27550/28874 (95%) loss=4.7804 ppl=119.2 lr=2.73e-04 | 8495 tok/s (avg 8101) ETA 11m08s | gtok=231113728
+[2026-04-15 08:13:53]   [2] 27600/28874 (96%) loss=4.7489 ppl=115.5 lr=2.73e-04 | 8580 tok/s (avg 8102) ETA 10m43s | gtok=231318528
+[2026-04-15 08:14:17]   [2] 27650/28874 (96%) loss=4.5396 ppl=93.7 lr=2.73e-04 | 8455 tok/s (avg 8103) ETA 10m18s | gtok=231523328
+[2026-04-15 08:14:41]   [2] 27700/28874 (96%) loss=4.5766 ppl=97.2 lr=2.73e-04 | 8500 tok/s (avg 8103) ETA 9m52s | gtok=231728128
+[2026-04-15 08:15:05]   [2] 27750/28874 (96%) loss=4.6061 ppl=100.1 lr=2.73e-04 | 8499 tok/s (avg 8104) ETA 9m27s | gtok=231932928
+[2026-04-15 08:15:29]   [2] 27800/28874 (96%) loss=4.7706 ppl=118.0 lr=2.73e-04 | 8502 tok/s (avg 8105) ETA 9m02s | gtok=232137728
+[2026-04-15 08:15:54]   [2] 27850/28874 (96%) loss=4.7591 ppl=116.6 lr=2.73e-04 | 8471 tok/s (avg 8105) ETA 8m36s | gtok=232342528
+[2026-04-15 08:16:18]   [2] 27900/28874 (97%) loss=4.8914 ppl=133.1 lr=2.73e-04 | 8294 tok/s (avg 8106) ETA 8m11s | gtok=232547328
+[2026-04-15 08:16:42]   [2] 27950/28874 (97%) loss=4.9125 ppl=136.0 lr=2.73e-04 | 8527 tok/s (avg 8106) ETA 7m46s | gtok=232752128
+[2026-04-15 08:17:07]   [2] 28000/28874 (97%) loss=4.9783 ppl=145.2 lr=2.73e-04 | 8479 tok/s (avg 8107) ETA 7m21s | gtok=232956928
+[2026-04-15 08:17:30]   [2] 28050/28874 (97%) loss=4.5414 ppl=93.8 lr=2.73e-04 | 8541 tok/s (avg 8108) ETA 6m55s | gtok=233161728
+[2026-04-15 08:17:55]   [2] 28100/28874 (97%) loss=4.4444 ppl=85.1 lr=2.72e-04 | 8386 tok/s (avg 8108) ETA 6m30s | gtok=233366528
+[2026-04-15 08:18:18]   [2] 28150/28874 (97%) loss=4.9931 ppl=147.4 lr=2.72e-04 | 8698 tok/s (avg 8109) ETA 6m05s | gtok=233571328
+[2026-04-15 08:18:42]   [2] 28200/28874 (98%) loss=4.2106 ppl=67.4 lr=2.72e-04 | 8648 tok/s (avg 8110) ETA 5m39s | gtok=233776128
+[2026-04-15 08:19:06]   [2] 28250/28874 (98%) loss=4.8015 ppl=121.7 lr=2.72e-04 | 8643 tok/s (avg 8111) ETA 5m14s | gtok=233980928
+[2026-04-15 08:19:30]   [2] 28300/28874 (98%) loss=4.8142 ppl=123.2 lr=2.72e-04 | 8484 tok/s (avg 8112) ETA 4m49s | gtok=234185728
+[2026-04-15 08:19:54]   [2] 28350/28874 (98%) loss=4.6129 ppl=100.8 lr=2.72e-04 | 8491 tok/s (avg 8112) ETA 4m24s | gtok=234390528
+[2026-04-15 08:20:18]   [2] 28400/28874 (98%) loss=4.8243 ppl=124.5 lr=2.72e-04 | 8546 tok/s (avg 8113) ETA 3m58s | gtok=234595328
+[2026-04-15 08:20:42]   [2] 28450/28874 (99%) loss=4.7944 ppl=120.8 lr=2.72e-04 | 8502 tok/s (avg 8114) ETA 3m33s | gtok=234800128
+[2026-04-15 08:21:06]   [2] 28500/28874 (99%) loss=4.6922 ppl=109.1 lr=2.72e-04 | 8520 tok/s (avg 8114) ETA 3m08s | gtok=235004928
+[2026-04-15 08:21:30]   [2] 28550/28874 (99%) loss=4.3090 ppl=74.4 lr=2.72e-04 | 8505 tok/s (avg 8115) ETA 2m43s | gtok=235209728
+[2026-04-15 08:21:55]   [2] 28600/28874 (99%) loss=4.6059 ppl=100.1 lr=2.72e-04 | 8446 tok/s (avg 8116) ETA 2m17s | gtok=235414528
+[2026-04-15 08:22:19]   [2] 28650/28874 (99%) loss=4.4999 ppl=90.0 lr=2.72e-04 | 8442 tok/s (avg 8116) ETA 1m52s | gtok=235619328
+[2026-04-15 08:22:43]   [2] 28700/28874 (99%) loss=5.0448 ppl=155.2 lr=2.72e-04 | 8573 tok/s (avg 8117) ETA 1m27s | gtok=235824128
+[2026-04-15 08:23:07]   [2] 28750/28874 (100%) loss=4.5346 ppl=93.2 lr=2.72e-04 | 8590 tok/s (avg 8118) ETA 1m02s | gtok=236028928
+[2026-04-15 08:23:31]   [2] 28800/28874 (100%) loss=5.3229 ppl=205.0 lr=2.72e-04 | 8476 tok/s (avg 8118) ETA 0m36s | gtok=236233728
+[2026-04-15 08:23:54]   [2] 28850/28874 (100%) loss=5.0925 ppl=162.8 lr=2.72e-04 | 8609 tok/s (avg 8119) ETA 0m11s | gtok=236438528
+[2026-04-15 08:24:14] Epoch 2/10 | Train Loss: 4.7525 PPL: 115.87 | 8119 tok/s | Time: 14565.9s (236,529,664 tok) | Val Loss: 4.4966 PPL: 89.71 *best*
+[2026-04-15 08:24:14] Saved checkpoint: checkpoints_transformer_10m/best_model.pt
+
+[2026-04-15 08:24:20] Prompt: In 1923 , the University of
+[2026-04-15 08:24:20] Generated: In 1923 , the University of Cambridge , St George 's College of Law . 
+
+
+[2026-04-15 08:24:20]  = = History = = 
+
+
+[2026-04-15 08:24:20]  The first three years of the Great Depression , the city was founded in 1937 by the Duke of York and his wife Thomas A. D-@ class who had been one of the few major states that helped to be a student from the local government . From the late 1930s , it became known as its " Great Depression " and " Second World War " , which began in 1934 . On his
+[2026-04-15 08:24:20]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=0.716
+
+[2026-04-15 08:24:20] ============================================================
+[2026-04-15 08:24:20] Epoch 3/10
+[2026-04-15 08:24:20] ============================================================
+[2026-04-15 08:24:20]   [3] 0/28874 (0%) loss=4.3716 ppl=79.2 lr=2.72e-04 | 7906 tok/s (avg 7906) ETA 0m00s | gtok=236533760
+[2026-04-15 08:24:44]   [3] 50/28874 (0%) loss=4.6716 ppl=106.9 lr=2.72e-04 | 8483 tok/s (avg 8469) ETA 232m20s | gtok=236738560
+[2026-04-15 08:25:08]   [3] 100/28874 (0%) loss=4.6361 ppl=103.1 lr=2.72e-04 | 8579 tok/s (avg 8523) ETA 230m27s | gtok=236943360
+[2026-04-15 08:25:32]   [3] 150/28874 (1%) loss=5.0415 ppl=154.7 lr=2.72e-04 | 8686 tok/s (avg 8576) ETA 228m37s | gtok=237148160
+[2026-04-15 08:25:56]   [3] 200/28874 (1%) loss=4.6598 ppl=105.6 lr=2.72e-04 | 8478 tok/s (avg 8552) ETA 228m53s | gtok=237352960
+[2026-04-15 08:26:20]   [3] 250/28874 (1%) loss=4.6168 ppl=101.2 lr=2.71e-04 | 8501 tok/s (avg 8542) ETA 228m45s | gtok=237557760
+[2026-04-15 08:26:45]   [3] 300/28874 (1%) loss=4.4684 ppl=87.2 lr=2.71e-04 | 8301 tok/s (avg 8501) ETA 229m27s | gtok=237762560
+[2026-04-15 08:27:09]   [3] 350/28874 (1%) loss=4.4935 ppl=89.4 lr=2.71e-04 | 8526 tok/s (avg 8504) ETA 228m58s | gtok=237967360
+[2026-04-15 08:27:33]   [3] 400/28874 (1%) loss=4.4595 ppl=86.4 lr=2.71e-04 | 8357 tok/s (avg 8485) ETA 229m04s | gtok=238172160
+[2026-04-15 08:27:57]   [3] 450/28874 (2%) loss=4.4489 ppl=85.5 lr=2.71e-04 | 8491 tok/s (avg 8486) ETA 228m39s | gtok=238376960
+[2026-04-15 08:28:22]   [3] 500/28874 (2%) loss=4.8223 ppl=124.3 lr=2.71e-04 | 8388 tok/s (avg 8476) ETA 228m30s | gtok=238581760
+[2026-04-15 08:28:46]   [3] 550/28874 (2%) loss=4.2393 ppl=69.4 lr=2.71e-04 | 8489 tok/s (avg 8477) ETA 228m05s | gtok=238786560
+[2026-04-15 08:29:10]   [3] 600/28874 (2%) loss=4.6789 ppl=107.7 lr=2.71e-04 | 8482 tok/s (avg 8478) ETA 227m40s | gtok=238991360
+[2026-04-15 08:29:35]   [3] 650/28874 (2%) loss=4.8057 ppl=122.2 lr=2.71e-04 | 8334 tok/s (avg 8466) ETA 227m34s | gtok=239196160
+[2026-04-15 08:29:59]   [3] 700/28874 (2%) loss=4.4181 ppl=82.9 lr=2.71e-04 | 8440 tok/s (avg 8464) ETA 227m13s | gtok=239400960
+[2026-04-15 08:30:23]   [3] 750/28874 (3%) loss=4.6783 ppl=107.6 lr=2.71e-04 | 8457 tok/s (avg 8464) ETA 226m49s | gtok=239605760
+[2026-04-15 08:30:48]   [3] 800/28874 (3%) loss=4.5596 ppl=95.5 lr=2.71e-04 | 8395 tok/s (avg 8460) ETA 226m32s | gtok=239810560
+[2026-04-15 08:31:12]   [3] 850/28874 (3%) loss=4.8757 ppl=131.1 lr=2.71e-04 | 8507 tok/s (avg 8462) ETA 226m03s | gtok=240015360
+[2026-04-15 08:31:36]   [3] 900/28874 (3%) loss=4.7841 ppl=119.6 lr=2.71e-04 | 8539 tok/s (avg 8466) ETA 225m33s | gtok=240220160
+[2026-04-15 08:32:00]   [3] 950/28874 (3%) loss=4.8670 ppl=129.9 lr=2.71e-04 | 8456 tok/s (avg 8466) ETA 225m09s | gtok=240424960
+[2026-04-15 08:32:25]   [3] 1000/28874 (3%) loss=4.6660 ppl=106.3 lr=2.71e-04 | 8221 tok/s (avg 8453) ETA 225m05s | gtok=240629760
+[2026-04-15 08:32:48]   [3] 1050/28874 (4%) loss=4.7355 ppl=113.9 lr=2.71e-04 | 8709 tok/s (avg 8465) ETA 224m22s | gtok=240834560
+[2026-04-15 08:33:12]   [3] 1100/28874 (4%) loss=4.2512 ppl=70.2 lr=2.71e-04 | 8542 tok/s (avg 8469) ETA 223m53s | gtok=241039360
+[2026-04-15 08:33:37]   [3] 1150/28874 (4%) loss=4.9293 ppl=138.3 lr=2.71e-04 | 8351 tok/s (avg 8463) ETA 223m37s | gtok=241244160
+[2026-04-15 08:34:01]   [3] 1200/28874 (4%) loss=4.7568 ppl=116.4 lr=2.71e-04 | 8514 tok/s (avg 8465) ETA 223m09s | gtok=241448960
+[2026-04-15 08:34:25]   [3] 1250/28874 (4%) loss=4.5158 ppl=91.4 lr=2.71e-04 | 8517 tok/s (avg 8467) ETA 222m42s | gtok=241653760
+[2026-04-15 08:34:49]   [3] 1300/28874 (5%) loss=4.9033 ppl=134.7 lr=2.70e-04 | 8434 tok/s (avg 8466) ETA 222m20s | gtok=241858560
+[2026-04-15 08:35:13]   [3] 1350/28874 (5%) loss=4.6474 ppl=104.3 lr=2.70e-04 | 8545 tok/s (avg 8469) ETA 221m51s | gtok=242063360
+[2026-04-15 08:35:37]   [3] 1400/28874 (5%) loss=4.5723 ppl=96.8 lr=2.70e-04 | 8551 tok/s (avg 8472) ETA 221m22s | gtok=242268160
+[2026-04-15 08:36:01]   [3] 1450/28874 (5%) loss=4.3754 ppl=79.5 lr=2.70e-04 | 8440 tok/s (avg 8471) ETA 221m00s | gtok=242472960
+[2026-04-15 08:36:26]   [3] 1500/28874 (5%) loss=4.5409 ppl=93.8 lr=2.70e-04 | 8369 tok/s (avg 8467) ETA 220m41s | gtok=242677760
+[2026-04-15 08:36:50]   [3] 1550/28874 (5%) loss=5.0255 ppl=152.2 lr=2.70e-04 | 8353 tok/s (avg 8464) ETA 220m23s | gtok=242882560
+[2026-04-15 08:37:15]   [3] 1600/28874 (6%) loss=4.7455 ppl=115.1 lr=2.70e-04 | 8489 tok/s (avg 8464) ETA 219m57s | gtok=243087360
+[2026-04-15 08:37:36]   [3] 1650/28874 (6%) loss=4.7734 ppl=118.3 lr=2.70e-04 | 9399 tok/s (avg 8490) ETA 218m53s | gtok=243292160
+[2026-04-15 08:37:58]   [3] 1700/28874 (6%) loss=4.3898 ppl=80.6 lr=2.70e-04 | 9341 tok/s (avg 8513) ETA 217m54s | gtok=243496960
+[2026-04-15 08:38:20]   [3] 1750/28874 (6%) loss=4.5986 ppl=99.3 lr=2.70e-04 | 9388 tok/s (avg 8535) ETA 216m55s | gtok=243701760
+[2026-04-15 08:38:42]   [3] 1800/28874 (6%) loss=4.8465 ppl=127.3 lr=2.70e-04 | 9502 tok/s (avg 8560) ETA 215m55s | gtok=243906560
+[2026-04-15 08:39:03]   [3] 1850/28874 (6%) loss=4.9450 ppl=140.5 lr=2.70e-04 | 9465 tok/s (avg 8582) ETA 214m57s | gtok=244111360
+[2026-04-15 08:39:25]   [3] 1900/28874 (7%) loss=4.4762 ppl=87.9 lr=2.70e-04 | 9446 tok/s (avg 8602) ETA 214m02s | gtok=244316160
+[2026-04-15 08:39:46]   [3] 1950/28874 (7%) loss=4.6792 ppl=107.7 lr=2.70e-04 | 9646 tok/s (avg 8626) ETA 213m03s | gtok=244520960
+[2026-04-15 08:40:07]   [3] 2000/28874 (7%) loss=4.6955 ppl=109.5 lr=2.70e-04 | 9721 tok/s (avg 8651) ETA 212m04s | gtok=244725760
+[2026-04-15 08:40:29]   [3] 2050/28874 (7%) loss=4.8012 ppl=121.7 lr=2.70e-04 | 9428 tok/s (avg 8668) ETA 211m14s | gtok=244930560
+[2026-04-15 08:40:50]   [3] 2100/28874 (7%) loss=4.9675 ppl=143.7 lr=2.70e-04 | 9545 tok/s (avg 8687) ETA 210m23s | gtok=245135360
+[2026-04-15 08:41:12]   [3] 2150/28874 (7%) loss=4.3783 ppl=79.7 lr=2.70e-04 | 9605 tok/s (avg 8706) ETA 209m32s | gtok=245340160
+[2026-04-15 08:41:33]   [3] 2200/28874 (8%) loss=4.7354 ppl=113.9 lr=2.70e-04 | 9410 tok/s (avg 8721) ETA 208m47s | gtok=245544960
+[2026-04-15 08:41:56]   [3] 2250/28874 (8%) loss=4.6004 ppl=99.5 lr=2.70e-04 | 9276 tok/s (avg 8733) ETA 208m07s | gtok=245749760
+[2026-04-15 08:42:17]   [3] 2300/28874 (8%) loss=4.7686 ppl=117.8 lr=2.69e-04 | 9461 tok/s (avg 8747) ETA 207m22s | gtok=245954560
+[2026-04-15 08:42:39]   [3] 2350/28874 (8%) loss=4.8063 ppl=122.3 lr=2.69e-04 | 9331 tok/s (avg 8759) ETA 206m42s | gtok=246159360
+[2026-04-15 08:43:00]   [3] 2400/28874 (8%) loss=4.9584 ppl=142.4 lr=2.69e-04 | 9680 tok/s (avg 8776) ETA 205m55s | gtok=246364160
+[2026-04-15 08:43:22]   [3] 2450/28874 (8%) loss=4.9805 ppl=145.6 lr=2.69e-04 | 9474 tok/s (avg 8790) ETA 205m13s | gtok=246568960
+[2026-04-15 08:43:43]   [3] 2500/28874 (9%) loss=4.2783 ppl=72.1 lr=2.69e-04 | 9691 tok/s (avg 8806) ETA 204m27s | gtok=246773760
+[2026-04-15 08:44:04]   [3] 2550/28874 (9%) loss=4.5329 ppl=93.0 lr=2.69e-04 | 9615 tok/s (avg 8821) ETA 203m43s | gtok=246978560
+[2026-04-15 08:44:26]   [3] 2600/28874 (9%) loss=5.0885 ppl=162.1 lr=2.69e-04 | 9573 tok/s (avg 8834) ETA 203m01s | gtok=247183360
+[2026-04-15 08:44:47]   [3] 2650/28874 (9%) loss=4.7012 ppl=110.1 lr=2.69e-04 | 9730 tok/s (avg 8849) ETA 202m17s | gtok=247388160
+[2026-04-15 08:45:09]   [3] 2700/28874 (9%) loss=4.7342 ppl=113.8 lr=2.69e-04 | 9078 tok/s (avg 8853) ETA 201m48s | gtok=247592960
+[2026-04-15 08:45:34]   [3] 2750/28874 (10%) loss=4.5529 ppl=94.9 lr=2.69e-04 | 8331 tok/s (avg 8843) ETA 201m39s | gtok=247797760
+[2026-04-15 08:45:58]   [3] 2800/28874 (10%) loss=4.6004 ppl=99.5 lr=2.69e-04 | 8543 tok/s (avg 8838) ETA 201m23s | gtok=248002560
+[2026-04-15 08:46:22]   [3] 2850/28874 (10%) loss=4.3674 ppl=78.8 lr=2.69e-04 | 8655 tok/s (avg 8834) ETA 201m05s | gtok=248207360
+[2026-04-15 08:46:44]   [3] 2900/28874 (10%) loss=4.7489 ppl=115.5 lr=2.69e-04 | 8948 tok/s (avg 8836) ETA 200m39s | gtok=248412160
+[2026-04-15 08:47:09]   [3] 2950/28874 (10%) loss=4.5779 ppl=97.3 lr=2.69e-04 | 8462 tok/s (avg 8830) ETA 200m25s | gtok=248616960
+[2026-04-15 08:47:33]   [3] 3000/28874 (10%) loss=4.8139 ppl=123.2 lr=2.69e-04 | 8599 tok/s (avg 8826) ETA 200m07s | gtok=248821760
+[2026-04-15 08:47:56]   [3] 3050/28874 (11%) loss=4.7189 ppl=112.0 lr=2.69e-04 | 8596 tok/s (avg 8822) ETA 199m49s | gtok=249026560
+[2026-04-15 08:48:20]   [3] 3100/28874 (11%) loss=4.6694 ppl=106.6 lr=2.69e-04 | 8515 tok/s (avg 8817) ETA 199m33s | gtok=249231360
+[2026-04-15 08:48:44]   [3] 3150/28874 (11%) loss=4.6878 ppl=108.6 lr=2.69e-04 | 8608 tok/s (avg 8813) ETA 199m14s | gtok=249436160
+[2026-04-15 08:49:08]   [3] 3200/28874 (11%) loss=4.7379 ppl=114.2 lr=2.69e-04 | 8583 tok/s (avg 8810) ETA 198m56s | gtok=249640960
+[2026-04-15 08:49:32]   [3] 3250/28874 (11%) loss=4.7564 ppl=116.3 lr=2.69e-04 | 8631 tok/s (avg 8807) ETA 198m36s | gtok=249845760
+[2026-04-15 08:49:56]   [3] 3300/28874 (11%) loss=4.8360 ppl=126.0 lr=2.69e-04 | 8543 tok/s (avg 8803) ETA 198m19s | gtok=250050560
+[2026-04-15 08:50:20]   [3] 3350/28874 (12%) loss=4.6845 ppl=108.3 lr=2.68e-04 | 8598 tok/s (avg 8800) ETA 198m00s | gtok=250255360
+[2026-04-15 08:50:43]   [3] 3400/28874 (12%) loss=4.8384 ppl=126.3 lr=2.68e-04 | 8600 tok/s (avg 8797) ETA 197m40s | gtok=250460160
+[2026-04-15 08:51:07]   [3] 3450/28874 (12%) loss=4.4744 ppl=87.7 lr=2.68e-04 | 8676 tok/s (avg 8795) ETA 197m20s | gtok=250664960
+[2026-04-15 08:51:31]   [3] 3500/28874 (12%) loss=4.3587 ppl=78.2 lr=2.68e-04 | 8623 tok/s (avg 8792) ETA 197m00s | gtok=250869760
+[2026-04-15 08:51:54]   [3] 3550/28874 (12%) loss=4.8713 ppl=130.5 lr=2.68e-04 | 8649 tok/s (avg 8790) ETA 196m39s | gtok=251074560
+[2026-04-15 08:52:18]   [3] 3600/28874 (12%) loss=4.4689 ppl=87.3 lr=2.68e-04 | 8597 tok/s (avg 8788) ETA 196m20s | gtok=251279360
+[2026-04-15 08:52:42]   [3] 3650/28874 (13%) loss=4.9035 ppl=134.8 lr=2.68e-04 | 8554 tok/s (avg 8784) ETA 196m01s | gtok=251484160
+[2026-04-15 08:53:06]   [3] 3700/28874 (13%) loss=4.9667 ppl=143.6 lr=2.68e-04 | 8555 tok/s (avg 8781) ETA 195m42s | gtok=251688960
+[2026-04-15 08:53:30]   [3] 3750/28874 (13%) loss=4.4314 ppl=84.0 lr=2.68e-04 | 8435 tok/s (avg 8776) ETA 195m25s | gtok=251893760
+[2026-04-15 08:53:53]   [3] 3800/28874 (13%) loss=4.4956 ppl=89.6 lr=2.68e-04 | 8936 tok/s (avg 8778) ETA 194m59s | gtok=252098560
+[2026-04-15 08:54:17]   [3] 3850/28874 (13%) loss=4.6210 ppl=101.6 lr=2.68e-04 | 8641 tok/s (avg 8777) ETA 194m38s | gtok=252303360
+[2026-04-15 08:54:41]   [3] 3900/28874 (14%) loss=4.7445 ppl=115.0 lr=2.68e-04 | 8599 tok/s (avg 8774) ETA 194m17s | gtok=252508160
+[2026-04-15 08:55:04]   [3] 3950/28874 (14%) loss=4.7022 ppl=110.2 lr=2.68e-04 | 8744 tok/s (avg 8774) ETA 193m55s | gtok=252712960
+[2026-04-15 08:55:28]   [3] 4000/28874 (14%) loss=4.7837 ppl=119.5 lr=2.68e-04 | 8466 tok/s (avg 8770) ETA 193m37s | gtok=252917760
+[2026-04-15 08:55:52]   [3] 4050/28874 (14%) loss=4.4407 ppl=84.8 lr=2.68e-04 | 8573 tok/s (avg 8767) ETA 193m16s | gtok=253122560
+[2026-04-15 08:56:16]   [3] 4100/28874 (14%) loss=4.7397 ppl=114.4 lr=2.68e-04 | 8590 tok/s (avg 8765) ETA 192m56s | gtok=253327360
+[2026-04-15 08:56:40]   [3] 4150/28874 (14%) loss=4.4542 ppl=86.0 lr=2.68e-04 | 8599 tok/s (avg 8763) ETA 192m35s | gtok=253532160
+[2026-04-15 08:57:04]   [3] 4200/28874 (15%) loss=4.6269 ppl=102.2 lr=2.68e-04 | 8653 tok/s (avg 8762) ETA 192m14s | gtok=253736960
+[2026-04-15 08:57:27]   [3] 4250/28874 (15%) loss=4.6759 ppl=107.3 lr=2.68e-04 | 8685 tok/s (avg 8761) ETA 191m52s | gtok=253941760
+[2026-04-15 08:57:51]   [3] 4300/28874 (15%) loss=4.7718 ppl=118.1 lr=2.67e-04 | 8608 tok/s (avg 8759) ETA 191m31s | gtok=254146560
+[2026-04-15 08:58:16]   [3] 4350/28874 (15%) loss=4.8737 ppl=130.8 lr=2.67e-04 | 8121 tok/s (avg 8751) ETA 191m18s | gtok=254351360
+[2026-04-15 08:58:39]   [3] 4400/28874 (15%) loss=4.3815 ppl=80.0 lr=2.67e-04 | 8827 tok/s (avg 8752) ETA 190m53s | gtok=254556160
+[2026-04-15 08:59:02]   [3] 4450/28874 (15%) loss=4.9499 ppl=141.2 lr=2.67e-04 | 8899 tok/s (avg 8754) ETA 190m28s | gtok=254760960
+[2026-04-15 08:59:25]   [3] 4500/28874 (16%) loss=4.7814 ppl=119.3 lr=2.67e-04 | 8942 tok/s (avg 8756) ETA 190m01s | gtok=254965760
+[2026-04-15 08:59:47]   [3] 4550/28874 (16%) loss=4.7885 ppl=120.1 lr=2.67e-04 | 9563 tok/s (avg 8764) ETA 189m28s | gtok=255170560
+[2026-04-15 09:00:10]   [3] 4600/28874 (16%) loss=4.8551 ppl=128.4 lr=2.67e-04 | 8905 tok/s (avg 8765) ETA 189m02s | gtok=255375360
+[2026-04-15 09:00:36]   [3] 4650/28874 (16%) loss=4.4454 ppl=85.2 lr=2.67e-04 | 7707 tok/s (avg 8752) ETA 188m56s | gtok=255580160
+[2026-04-15 09:00:59]   [3] 4700/28874 (16%) loss=4.7133 ppl=111.4 lr=2.67e-04 | 9225 tok/s (avg 8757) ETA 188m26s | gtok=255784960
+[2026-04-15 09:01:21]   [3] 4750/28874 (16%) loss=4.7748 ppl=118.5 lr=2.67e-04 | 9239 tok/s (avg 8762) ETA 187m56s | gtok=255989760
+[2026-04-15 09:01:43]   [3] 4800/28874 (17%) loss=4.9776 ppl=145.1 lr=2.67e-04 | 9122 tok/s (avg 8766) ETA 187m28s | gtok=256194560
+[2026-04-15 09:02:06]   [3] 4850/28874 (17%) loss=4.9277 ppl=138.1 lr=2.67e-04 | 9080 tok/s (avg 8769) ETA 187m01s | gtok=256399360
+[2026-04-15 09:02:27]   [3] 4900/28874 (17%) loss=4.7053 ppl=110.5 lr=2.67e-04 | 9446 tok/s (avg 8775) ETA 186m30s | gtok=256604160
+[2026-04-15 09:02:50]   [3] 4950/28874 (17%) loss=4.5599 ppl=95.6 lr=2.67e-04 | 9189 tok/s (avg 8779) ETA 186m01s | gtok=256808960
+[2026-04-15 09:03:12]   [3] 5000/28874 (17%) loss=4.6592 ppl=105.5 lr=2.67e-04 | 9315 tok/s (avg 8784) ETA 185m31s | gtok=257013760
+[2026-04-15 09:03:17]   [mid-epoch sample @ batch 5000, 257,013,760 tok]
+[2026-04-15 09:03:17]   Prompt: In 1923 , the University of
+[2026-04-15 09:03:17]   Generated: In 1923 , the University of Florida ( MDOT ) is a member of the Florida State Department of National Education and its students . 
+
+[2026-04-15 09:03:17]  The College has an area of over 2 @,@ 500 in its original design , the most significant part of the program 's development . It has been constructed with four more than 3 @.@ 5 % of these homes are available . According to the study at the time , the University of Texas was the largest of many American universities in the world to be constructed in the United States .
+[2026-04-15 09:03:39]   [3] 5050/28874 (17%) loss=4.7896 ppl=120.3 lr=2.67e-04 | 7502 tok/s (avg 8769) ETA 185m27s | gtok=257218560
+[2026-04-15 09:04:00]   [3] 5100/28874 (18%) loss=4.5699 ppl=96.5 lr=2.67e-04 | 9548 tok/s (avg 8776) ETA 184m55s | gtok=257423360
+[2026-04-15 09:04:22]   [3] 5150/28874 (18%) loss=4.9608 ppl=142.7 lr=2.67e-04 | 9345 tok/s (avg 8781) ETA 184m25s | gtok=257628160
+[2026-04-15 09:04:44]   [3] 5200/28874 (18%) loss=4.5560 ppl=95.2 lr=2.67e-04 | 9691 tok/s (avg 8789) ETA 183m52s | gtok=257832960
+[2026-04-15 09:05:05]   [3] 5250/28874 (18%) loss=4.9003 ppl=134.3 lr=2.67e-04 | 9498 tok/s (avg 8796) ETA 183m20s | gtok=258037760
+[2026-04-15 09:05:27]   [3] 5300/28874 (18%) loss=4.7922 ppl=120.6 lr=2.66e-04 | 9286 tok/s (avg 8800) ETA 182m52s | gtok=258242560
+[2026-04-15 09:05:49]   [3] 5350/28874 (19%) loss=5.0264 ppl=152.4 lr=2.66e-04 | 9569 tok/s (avg 8807) ETA 182m20s | gtok=258447360
+[2026-04-15 09:06:10]   [3] 5400/28874 (19%) loss=4.7580 ppl=116.5 lr=2.66e-04 | 9751 tok/s (avg 8815) ETA 181m47s | gtok=258652160
+[2026-04-15 09:06:31]   [3] 5450/28874 (19%) loss=4.4435 ppl=85.1 lr=2.66e-04 | 9597 tok/s (avg 8821) ETA 181m16s | gtok=258856960
+[2026-04-15 09:06:52]   [3] 5500/28874 (19%) loss=4.6805 ppl=107.8 lr=2.66e-04 | 9495 tok/s (avg 8827) ETA 180m46s | gtok=259061760
+[2026-04-15 09:07:14]   [3] 5550/28874 (19%) loss=4.6199 ppl=101.5 lr=2.66e-04 | 9506 tok/s (avg 8832) ETA 180m15s | gtok=259266560
+[2026-04-15 09:07:35]   [3] 5600/28874 (19%) loss=4.6754 ppl=107.3 lr=2.66e-04 | 9637 tok/s (avg 8839) ETA 179m44s | gtok=259471360
+[2026-04-15 09:07:56]   [3] 5650/28874 (20%) loss=4.5535 ppl=95.0 lr=2.66e-04 | 9677 tok/s (avg 8846) ETA 179m13s | gtok=259676160
+[2026-04-15 09:08:18]   [3] 5700/28874 (20%) loss=4.2447 ppl=69.7 lr=2.66e-04 | 9623 tok/s (avg 8852) ETA 178m42s | gtok=259880960
+[2026-04-15 09:08:39]   [3] 5750/28874 (20%) loss=4.4635 ppl=86.8 lr=2.66e-04 | 9640 tok/s (avg 8858) ETA 178m11s | gtok=260085760
+[2026-04-15 09:09:00]   [3] 5800/28874 (20%) loss=4.2665 ppl=71.3 lr=2.66e-04 | 9586 tok/s (avg 8864) ETA 177m41s | gtok=260290560
+[2026-04-15 09:09:22]   [3] 5850/28874 (20%) loss=4.5418 ppl=93.9 lr=2.66e-04 | 9562 tok/s (avg 8870) ETA 177m11s | gtok=260495360
+[2026-04-15 09:09:43]   [3] 5900/28874 (20%) loss=4.8758 ppl=131.1 lr=2.66e-04 | 9453 tok/s (avg 8874) ETA 176m43s | gtok=260700160
+[2026-04-15 09:10:05]   [3] 5950/28874 (21%) loss=4.8603 ppl=129.1 lr=2.66e-04 | 9564 tok/s (avg 8880) ETA 176m13s | gtok=260904960
+[2026-04-15 09:10:26]   [3] 6000/28874 (21%) loss=4.6199 ppl=101.5 lr=2.66e-04 | 9598 tok/s (avg 8885) ETA 175m44s | gtok=261109760
+[2026-04-15 09:10:47]   [3] 6050/28874 (21%) loss=4.5339 ppl=93.1 lr=2.66e-04 | 9674 tok/s (avg 8891) ETA 175m14s | gtok=261314560
+[2026-04-15 09:11:10]   [3] 6100/28874 (21%) loss=5.0183 ppl=151.1 lr=2.66e-04 | 9161 tok/s (avg 8893) ETA 174m48s | gtok=261519360
+[2026-04-15 09:11:31]   [3] 6150/28874 (21%) loss=4.7310 ppl=113.4 lr=2.66e-04 | 9475 tok/s (avg 8898) ETA 174m20s | gtok=261724160
+[2026-04-15 09:11:53]   [3] 6200/28874 (21%) loss=4.7029 ppl=110.3 lr=2.66e-04 | 9445 tok/s (avg 8902) ETA 173m52s | gtok=261928960
+[2026-04-15 09:12:14]   [3] 6250/28874 (22%) loss=4.6295 ppl=102.5 lr=2.65e-04 | 9546 tok/s (avg 8907) ETA 173m23s | gtok=262133760
+[2026-04-15 09:12:37]   [3] 6300/28874 (22%) loss=4.8554 ppl=128.4 lr=2.65e-04 | 9275 tok/s (avg 8910) ETA 172m57s | gtok=262338560
+[2026-04-15 09:12:58]   [3] 6350/28874 (22%) loss=4.7012 ppl=110.1 lr=2.65e-04 | 9503 tok/s (avg 8914) ETA 172m29s | gtok=262543360
+[2026-04-15 09:13:20]   [3] 6400/28874 (22%) loss=4.9852 ppl=146.2 lr=2.65e-04 | 9133 tok/s (avg 8916) ETA 172m04s | gtok=262748160
+[2026-04-15 09:13:42]   [3] 6450/28874 (22%) loss=4.5836 ppl=97.9 lr=2.65e-04 | 9482 tok/s (avg 8920) ETA 171m36s | gtok=262952960
+[2026-04-15 09:14:04]   [3] 6500/28874 (23%) loss=4.4683 ppl=87.2 lr=2.65e-04 | 9428 tok/s (avg 8923) ETA 171m09s | gtok=263157760
+[2026-04-15 09:14:25]   [3] 6550/28874 (23%) loss=4.6668 ppl=106.4 lr=2.65e-04 | 9660 tok/s (avg 8929) ETA 170m40s | gtok=263362560
+[2026-04-15 09:14:46]   [3] 6600/28874 (23%) loss=4.7541 ppl=116.1 lr=2.65e-04 | 9627 tok/s (avg 8934) ETA 170m12s | gtok=263567360
+[2026-04-15 09:15:08]   [3] 6650/28874 (23%) loss=4.8437 ppl=126.9 lr=2.65e-04 | 9320 tok/s (avg 8936) ETA 169m45s | gtok=263772160
+[2026-04-15 09:15:30]   [3] 6700/28874 (23%) loss=4.5965 ppl=99.1 lr=2.65e-04 | 9401 tok/s (avg 8940) ETA 169m19s | gtok=263976960
+[2026-04-15 09:15:52]   [3] 6750/28874 (23%) loss=4.3875 ppl=80.4 lr=2.65e-04 | 9333 tok/s (avg 8942) ETA 168m53s | gtok=264181760
+[2026-04-15 09:16:14]   [3] 6800/28874 (24%) loss=4.9023 ppl=134.6 lr=2.65e-04 | 9433 tok/s (avg 8946) ETA 168m26s | gtok=264386560
+[2026-04-15 09:16:35]   [3] 6850/28874 (24%) loss=4.9513 ppl=141.4 lr=2.65e-04 | 9541 tok/s (avg 8950) ETA 167m58s | gtok=264591360
+[2026-04-15 09:16:57]   [3] 6900/28874 (24%) loss=4.6983 ppl=109.8 lr=2.65e-04 | 9516 tok/s (avg 8954) ETA 167m31s | gtok=264796160
+[2026-04-15 09:17:18]   [3] 6950/28874 (24%) loss=4.7927 ppl=120.6 lr=2.65e-04 | 9419 tok/s (avg 8957) ETA 167m05s | gtok=265000960
+[2026-04-15 09:17:40]   [3] 7000/28874 (24%) loss=5.0386 ppl=154.3 lr=2.65e-04 | 9430 tok/s (avg 8960) ETA 166m38s | gtok=265205760
+[2026-04-15 09:18:01]   [3] 7050/28874 (24%) loss=4.8468 ppl=127.3 lr=2.65e-04 | 9662 tok/s (avg 8965) ETA 166m10s | gtok=265410560
+[2026-04-15 09:18:22]   [3] 7100/28874 (25%) loss=4.7274 ppl=113.0 lr=2.65e-04 | 9698 tok/s (avg 8970) ETA 165m42s | gtok=265615360
+[2026-04-15 09:18:44]   [3] 7150/28874 (25%) loss=4.8914 ppl=133.1 lr=2.65e-04 | 9370 tok/s (avg 8972) ETA 165m16s | gtok=265820160
+[2026-04-15 09:19:06]   [3] 7200/28874 (25%) loss=4.7647 ppl=117.3 lr=2.64e-04 | 9434 tok/s (avg 8975) ETA 164m50s | gtok=266024960
+[2026-04-15 09:19:27]   [3] 7250/28874 (25%) loss=4.8906 ppl=133.0 lr=2.64e-04 | 9584 tok/s (avg 8979) ETA 164m23s | gtok=266229760
+[2026-04-15 09:19:49]   [3] 7300/28874 (25%) loss=4.9136 ppl=136.1 lr=2.64e-04 | 9693 tok/s (avg 8984) ETA 163m55s | gtok=266434560
+[2026-04-15 09:20:10]   [3] 7350/28874 (25%) loss=5.0279 ppl=152.6 lr=2.64e-04 | 9393 tok/s (avg 8986) ETA 163m30s | gtok=266639360
+[2026-04-15 09:20:32]   [3] 7400/28874 (26%) loss=4.5897 ppl=98.5 lr=2.64e-04 | 9296 tok/s (avg 8988) ETA 163m05s | gtok=266844160
+[2026-04-15 09:20:54]   [3] 7450/28874 (26%) loss=4.6532 ppl=104.9 lr=2.64e-04 | 9440 tok/s (avg 8991) ETA 162m39s | gtok=267048960
+[2026-04-15 09:21:15]   [3] 7500/28874 (26%) loss=4.6200 ppl=101.5 lr=2.64e-04 | 9712 tok/s (avg 8996) ETA 162m11s | gtok=267253760
+[2026-04-15 09:21:37]   [3] 7550/28874 (26%) loss=4.2241 ppl=68.3 lr=2.64e-04 | 9468 tok/s (avg 8999) ETA 161m45s | gtok=267458560
+[2026-04-15 09:21:58]   [3] 7600/28874 (26%) loss=4.6638 ppl=106.0 lr=2.64e-04 | 9540 tok/s (avg 9002) ETA 161m19s | gtok=267663360
+[2026-04-15 09:22:20]   [3] 7650/28874 (26%) loss=4.6733 ppl=107.1 lr=2.64e-04 | 9547 tok/s (avg 9005) ETA 160m53s | gtok=267868160
+[2026-04-15 09:22:41]   [3] 7700/28874 (27%) loss=4.7542 ppl=116.1 lr=2.64e-04 | 9530 tok/s (avg 9009) ETA 160m26s | gtok=268072960
+[2026-04-15 09:23:03]   [3] 7750/28874 (27%) loss=4.7006 ppl=110.0 lr=2.64e-04 | 9306 tok/s (avg 9010) ETA 160m02s | gtok=268277760
+[2026-04-15 09:23:25]   [3] 7800/28874 (27%) loss=4.6389 ppl=103.4 lr=2.64e-04 | 9311 tok/s (avg 9012) ETA 159m37s | gtok=268482560
+[2026-04-15 09:23:47]   [3] 7850/28874 (27%) loss=4.7583 ppl=116.5 lr=2.64e-04 | 9488 tok/s (avg 9015) ETA 159m11s | gtok=268687360
+[2026-04-15 09:24:08]   [3] 7900/28874 (27%) loss=4.8651 ppl=129.7 lr=2.64e-04 | 9516 tok/s (avg 9018) ETA 158m45s | gtok=268892160
+[2026-04-15 09:24:31]   [3] 7950/28874 (28%) loss=4.8904 ppl=133.0 lr=2.64e-04 | 9159 tok/s (avg 9019) ETA 158m22s | gtok=269096960
+[2026-04-15 09:51:34]   [3] 8000/28874 (28%) loss=4.6751 ppl=107.2 lr=2.64e-04 | 126 tok/s (avg 6261) ETA 227m35s | gtok=269301760
+[2026-04-15 09:51:51]   [3] 8050/28874 (28%) loss=4.6876 ppl=108.6 lr=2.64e-04 | 12375 tok/s (avg 6280) ETA 226m21s | gtok=269506560
+[2026-04-15 09:52:05]   [3] 8100/28874 (28%) loss=4.5818 ppl=97.7 lr=2.64e-04 | 14308 tok/s (avg 6302) ETA 225m01s | gtok=269711360
+[2026-04-15 09:52:20]   [3] 8150/28874 (28%) loss=5.0624 ppl=158.0 lr=2.63e-04 | 13645 tok/s (avg 6323) ETA 223m44s | gtok=269916160
+[2026-04-15 09:52:36]   [3] 8200/28874 (28%) loss=4.9242 ppl=137.6 lr=2.63e-04 | 13169 tok/s (avg 6343) ETA 222m29s | gtok=270120960
+[2026-04-15 09:52:51]   [3] 8250/28874 (29%) loss=4.5243 ppl=92.2 lr=2.63e-04 | 13184 tok/s (avg 6363) ETA 221m15s | gtok=270325760
+[2026-04-15 09:53:08]   [3] 8300/28874 (29%) loss=4.5805 ppl=97.6 lr=2.63e-04 | 12533 tok/s (avg 6382) ETA 220m04s | gtok=270530560
+[2026-04-15 09:53:25]   [3] 8350/28874 (29%) loss=4.9467 ppl=140.7 lr=2.63e-04 | 11583 tok/s (avg 6399) ETA 218m56s | gtok=270735360
+[2026-04-15 09:53:42]   [3] 8400/28874 (29%) loss=4.3297 ppl=75.9 lr=2.63e-04 | 12315 tok/s (avg 6417) ETA 217m47s | gtok=270940160
+[2026-04-15 09:53:58]   [3] 8450/28874 (29%) loss=4.5012 ppl=90.1 lr=2.63e-04 | 12417 tok/s (avg 6436) ETA 216m38s | gtok=271144960
+[2026-04-15 09:54:15]   [3] 8500/28874 (29%) loss=4.9415 ppl=140.0 lr=2.63e-04 | 11931 tok/s (avg 6453) ETA 215m31s | gtok=271349760
+[2026-04-15 09:54:33]   [3] 8550/28874 (30%) loss=4.6994 ppl=109.9 lr=2.63e-04 | 11700 tok/s (avg 6470) ETA 214m25s | gtok=271554560
+[2026-04-15 09:54:51]   [3] 8600/28874 (30%) loss=4.2505 ppl=70.1 lr=2.63e-04 | 11466 tok/s (avg 6487) ETA 213m21s | gtok=271759360
+[2026-04-15 09:55:11]   [3] 8650/28874 (30%) loss=4.3300 ppl=75.9 lr=2.63e-04 | 10236 tok/s (avg 6500) ETA 212m22s | gtok=271964160
+[2026-04-15 09:55:33]   [3] 8700/28874 (30%) loss=4.7809 ppl=119.2 lr=2.63e-04 | 9223 tok/s (avg 6511) ETA 211m29s | gtok=272168960
+[2026-04-15 09:55:58]   [3] 8750/28874 (30%) loss=4.8379 ppl=126.2 lr=2.63e-04 | 8098 tok/s (avg 6519) ETA 210m44s | gtok=272373760
+[2026-04-15 09:56:26]   [3] 8800/28874 (30%) loss=4.7289 ppl=113.2 lr=2.63e-04 | 7293 tok/s (avg 6523) ETA 210m05s | gtok=272578560
+[2026-04-15 09:56:55]   [3] 8850/28874 (31%) loss=4.9137 ppl=136.1 lr=2.63e-04 | 7154 tok/s (avg 6526) ETA 209m27s | gtok=272783360
+[2026-04-15 09:57:21]   [3] 8900/28874 (31%) loss=4.5195 ppl=91.8 lr=2.63e-04 | 7771 tok/s (avg 6532) ETA 208m44s | gtok=272988160
+[2026-04-15 09:57:47]   [3] 8950/28874 (31%) loss=4.4492 ppl=85.6 lr=2.63e-04 | 7927 tok/s (avg 6538) ETA 208m01s | gtok=273192960
+[2026-04-15 09:58:12]   [3] 9000/28874 (31%) loss=4.5935 ppl=98.8 lr=2.63e-04 | 8194 tok/s (avg 6546) ETA 207m15s | gtok=273397760
+[2026-04-15 09:58:37]   [3] 9050/28874 (31%) loss=4.7742 ppl=118.4 lr=2.63e-04 | 8378 tok/s (avg 6554) ETA 206m29s | gtok=273602560
+[2026-04-15 09:59:02]   [3] 9100/28874 (32%) loss=4.6653 ppl=106.2 lr=2.62e-04 | 8259 tok/s (avg 6561) ETA 205m44s | gtok=273807360
