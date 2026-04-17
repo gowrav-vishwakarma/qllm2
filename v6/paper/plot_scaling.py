@@ -4,7 +4,7 @@ Uses last 3 end-of-epoch val PPLs + mid-epoch val PPLs (~6 samples per scale)
 to get mean and stdev, then fits power law in log-log space with error bars.
 
 Usage:
-    cd /Users/caug/npcww/qnlp/qllm-private
+    cd /Users/chris/.npcsh/qllm-private
     uv run python v6/paper/plot_scaling.py
 """
 
@@ -29,6 +29,11 @@ trans_5m = [142.66, 140.82, 140.47]  # PyTorch: end-of-epoch only
 qpam_10m = [72.85, 70.48, 67.46, 65.71, 64.42, 62.82]
 rpam_10m = [40.84, 40.56, 40.42, 40.25, 40.22, 40.20]
 
+# 25M: QPAM epochs 8,9,10 converged (dim=200 L=6 H=4 hd=16, 26.8M complex params)
+# RPAM 25M (dim=344 L=6 H=4 hd=32, 25.1M real params) — in progress, fill when done
+qpam_25m = [37.56, 37.20, 37.47, 37.20, 37.20, 37.20]  # ep8 end, ep9 end, ep10 mid x2, ep10 end x2
+rpam_25m = None  # TODO: fill after run
+
 # 100M: QPAM epochs 8,9,10 (MLX v2, still improving); RPAM epochs 5,6,7 (last converging)
 qpam_100m = [37.55, 36.46, 35.61, 34.63, 33.75, 33.19]
 rpam_100m = [26.79, 26.03, 26.00, 25.59, 25.82, 25.42]
@@ -42,6 +47,8 @@ data = {}
 for scale, model, vals in [
     (5, 'QPAM', qpam_5m), (5, 'RPAM', rpam_5m), (5, 'Trans', trans_5m),
     (10, 'QPAM', qpam_10m), (10, 'RPAM', rpam_10m),
+    (25, 'QPAM', qpam_25m),
+    *([(25, 'RPAM', rpam_25m)] if rpam_25m is not None else []),
     (100, 'QPAM', qpam_100m), (100, 'RPAM', rpam_100m), (100, 'Trans', trans_100m),
 ]:
     m, s = stats(vals)
@@ -184,7 +191,7 @@ ax.set_ylim(15, 300)
 ax.legend(fontsize=9, loc='upper right')
 
 fig.tight_layout()
-out = '/Users/caug/npcww/qnlp/qllm-private/v6/paper/figures/scaling_loglog.pdf'
+out = 'v6/paper/figures/scaling_loglog.pdf'
 fig.savefig(out)
 fig.savefig(out.replace('.pdf', '.png'), dpi=150)
 print(f'\nSaved {out}')
