@@ -574,8 +574,51 @@ We infused **sparse phase-interference attention** on top of the v3 stack (prese
 
 ---
 
+## 6. RPAM Context (real-valued ablation track)
+
+### What RPAM is
+
+**RPAM** is the real-valued ablation counterpart to QPAM/PAM: it keeps the same high-level associative-memory shape (key/value outer-product accumulation + query retrieval) but replaces complex arithmetic and conjugate retrieval with real-valued operations. In short:
+
+- QPAM/PAM retrieval uses complex conjugate interaction (`K* · Q`) and phase interference.
+- RPAM retrieval uses real dot-product interaction (`K · Q`) with no phase channel.
+
+The purpose is to separate **formalism effects** (complex phase-capable algebra) from **architecture effects** (matrix-state associative memory layout).
+
+### RPAM ablations run so far (discoverable in this repo)
+
+The following RPAM launch scripts exist and represent the currently tracked ablation scale points:
+
+| Script | Intended scale | Notes |
+|---|---:|---|
+| `scripts/run_10m_rpam_mlx.sh` | ~10M | MLX run script; points to external/private paths |
+| `scripts/run_25m_rpam_mlx.sh` | ~25M | MLX run script; points to external/private paths |
+| `scripts/run_1b_rpam_mlx.sh` | ~1B | MLX run script; points to external/private paths |
+
+**Artifact status (important):** these scripts are present here, but they currently reference external filesystem locations and do not include local `logs/` + `RUN_INFO.txt` artifacts in this repo for direct reproducibility checks.
+
+### Paper-sourced RPAM results (provisional in this experiment log)
+
+From `v6/paper/aps_main.tex` (Results + Discussion sections), the APS draft reports:
+
+- RPAM val PPL **25.42** (WikiText-103, seq_len 512, batch size 8, M4 Max)
+- QPAM/PAM comparator val PPL **33.19** in the same setup
+
+These numbers are included here as **paper-sourced provisional results** and should be read as:
+
+> Reported in APS draft text; local run-log linkage in this repository is still pending.
+
+### Evidence status checklist (promote provisional -> verified)
+
+- [ ] Import or link the exact RPAM run logs into this repo (`logs/...` + `RUN_INFO.txt`)
+- [ ] Add commit/run IDs for each RPAM scale point (10M, 25M, 1B)
+- [ ] Cross-link checkpoint paths and training commandlines used for reported metrics
+- [ ] Move paper-sourced RPAM metrics into standard verified result tables once artifacts are present
+
+---
+
 ## How to update Part 2
 
 - **Transformer baseline** (same WikiText-103 pipeline, ~100.3M): documented under **§0**; re-run with [`scripts/run_transformer_baseline.sh`](scripts/run_transformer_baseline.sh) and update §0 tables/logs.
 - **medium-pam-v3 production metrics** (10-epoch RoPE, no QK-norm): documented under §5 **Results (completed run)**; the failed QK-norm ablation stays in **Results (failed ablation)** in the same section.
-- Append new experiment sections after §5 (continue as §6, §7, …). For new PAM-related bugs, add them here (extend Bug 8 or add Bug 9+); if a bug belongs in the global §3 list in Part 1, add a **one-line pointer** in [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md) §3 and keep the full write-up here.
+- Append new experiment sections after §6 (continue as §7, §8, …). For new PAM-related bugs, add them here (extend Bug 8 or add Bug 9+); if a bug belongs in the global §3 list in Part 1, add a **one-line pointer** in [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md) §3 and keep the full write-up here.
