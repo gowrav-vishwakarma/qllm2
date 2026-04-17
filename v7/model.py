@@ -816,6 +816,14 @@ PRESETS = {
         dt_bias_schedule=(-6.91, -5.52, -4.08, -2.64, -1.39, 0.0),
         cross_level=True,
     ),
+    # ~25M flat baseline: same depth as medium_h16_flat, scaled down width
+    # dim=160, inner=128 (4 heads x 32), expand=3 — apples-to-apples scaling point
+    'small': V7Config(
+        vocab_size=50257, dim=160, n_heads=4, head_dim=32,
+        n_layers=16, expand=3, dropout=0.1, max_seq_len=2048,
+        hierarchical_dt=False,
+        cross_level=False,
+    ),
     # 16-layer flat: V6-matched shape, no hierarchy — baseline for V7 code verification
     'medium_h16_flat': V7Config(
         vocab_size=50257, dim=384, n_heads=6, head_dim=64,

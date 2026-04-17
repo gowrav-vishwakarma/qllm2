@@ -17,3 +17,7 @@ dependencies = [
 cuda = ["xformers>=0.0.23"]
 plot = ["matplotlib>=3.5.0"]
 notebook = ["jupyter>=1.0.0", "ipykernel>=6.0.0"]
+mlx = ["mlx>=0.22.0", "datasets>=4.0.0", "transformers>=4.0.0"]
+
+[tool.uv]
+package = false

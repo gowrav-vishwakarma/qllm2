@@ -12,11 +12,7 @@ set -e
 
 export PATH="$HOME/.local/bin:$PATH"
 
-if [[ -f ".venv/bin/activate" ]]; then
-  # shellcheck disable=SC1091
-  source .venv/bin/activate
-  PYTHON_BIN="python"
-elif command -v uv >/dev/null 2>&1; then
+if command -v uv >/dev/null 2>&1; then
   PYTHON_BIN="uv run python"
 else
   PYTHON_BIN="python3"
