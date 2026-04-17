@@ -2,9 +2,9 @@
 # 10M RPAM training — MLX
 # Config: dim=128, layers=6, heads=4, head_dim=24, expand=3
 # Params: ~10M (matched to 10M QPAM)
-cd /Users/caug/npcww/qnlp/qllm-private
+cd "$(dirname "$0")/.."  
 
-uv run python /Users/caug/npcww/qnlp/ket-nlp/qpam_mlx/train_real.py \
+uv run python v6/mlx/train_real.py \
   --dim 128 \
   --layers 6 \
   --heads 4 \

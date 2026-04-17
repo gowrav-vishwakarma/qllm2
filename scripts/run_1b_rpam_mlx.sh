@@ -5,9 +5,9 @@
 #
 # Run: cd qllm-private && bash scripts/run_1b_rpam_mlx.sh
 
-cd /Users/caug/npcww/qnlp/qllm-private
+cd "$(dirname "$0")/.."  
 
-uv run python /Users/caug/npcww/qnlp/ket-nlp/qpam_mlx/train_real.py \
+uv run python v6/mlx/train_real.py \
   --dim 1632 \
   --layers 24 \
   --heads 24 \
