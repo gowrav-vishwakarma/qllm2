@@ -1,11 +1,11 @@
 #!/bin/bash
-# Scaling sweep: QPAM vs RPAM at 5M, 10M, 50M, 100M, 1B
-# Each pair is param-matched. Run sequentially or pick one.
+# Scaling sweep: QPAM vs RPAM at 5M, 10M, 25M, 50M, 100M, 1B
+# Each pair is param-matched. All runs use lr=1e-4 to match the 100M reference runs.
 #
 # Usage: bash scripts/run_scaling_sweep.sh [size] [model]
-#   size: 5m, 10m, 50m, 100m, 1b
+#   size: 5m, 10m, 25m, 50m, 100m, 1b
 #   model: qpam, rpam
-#   e.g.: bash scripts/run_scaling_sweep.sh 10m qpam
+#   e.g.: bash scripts/run_scaling_sweep.sh 25m qpam
 
 set -euo pipefail
 cd /Users/caug/npcww/qnlp/qllm-private
@@ -33,26 +33,32 @@ run_rpam() {
 
 # ── 5M (~5.0M params each) ──
 if [[ "$SIZE" == "5m" || "$SIZE" == "all" ]]; then
-    [[ "$MODEL" != "rpam" ]] && run_qpam  44  12 2 16  16 3e-04 5m
-    [[ "$MODEL" != "qpam" ]] && run_rpam  84  11 2  8  16 3e-04 5m
+    [[ "$MODEL" != "rpam" ]] && run_qpam  44  12 2 16  8 3e-05 5m
+    [[ "$MODEL" != "qpam" ]] && run_rpam  84  11 2  8  8 3e-05 5m
 fi
 
 # ── 10M (~10.0M params each) ──
 if [[ "$SIZE" == "10m" || "$SIZE" == "all" ]]; then
-    [[ "$MODEL" != "rpam" ]] && run_qpam  80  12 4 16  16 3e-04 10m
-    [[ "$MODEL" != "qpam" ]] && run_rpam 140  11 8 16  16 3e-04 10m
+    [[ "$MODEL" != "rpam" ]] && run_qpam  80  12 4 16  8 3e-05 10m
+    [[ "$MODEL" != "qpam" ]] && run_rpam 140  11 8 16  8 3e-05 10m
+fi
+
+# ── 25M (~25-27M params each) ──
+if [[ "$SIZE" == "25m" || "$SIZE" == "all" ]]; then
+    [[ "$MODEL" != "rpam" ]] && run_qpam 200   6 4 16  8 3e-05 25m
+    [[ "$MODEL" != "qpam" ]] && run_rpam 344   6 4 32  8 3e-05 25m
 fi
 
 # ── 50M (~50.0M params each) ──
 if [[ "$SIZE" == "50m" || "$SIZE" == "all" ]]; then
-    [[ "$MODEL" != "rpam" ]] && run_qpam 292  12 4 16   8 1e-04 50m
-    [[ "$MODEL" != "qpam" ]] && run_rpam 496  11 2  8   8 1e-04 50m
+    [[ "$MODEL" != "rpam" ]] && run_qpam 292  12 4 16  8 3e-05 50m
+    [[ "$MODEL" != "qpam" ]] && run_rpam 496  11 2  8  8 3e-05 50m
 fi
 
-# ── 100M (~100-120M params each, existing configs) ──
+# ── 100M (~100-120M params each) ──
 if [[ "$SIZE" == "100m" || "$SIZE" == "all" ]]; then
-    [[ "$MODEL" != "rpam" ]] && run_qpam 384  16 6 64   8 3e-05 100m
-    [[ "$MODEL" != "qpam" ]] && run_rpam 576  16 9 64   8 3e-05 100m
+    [[ "$MODEL" != "rpam" ]] && run_qpam 384  16 6 64  8 3e-05 100m
+    [[ "$MODEL" != "qpam" ]] && run_rpam 576  16 9 64  8 3e-05 100m
 fi
 
 # ── 1B (~980M params each) ──
