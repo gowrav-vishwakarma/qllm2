@@ -134,6 +134,10 @@ def main():
     loss_and_grad = nn.value_and_grad(model, loss_fn)
 
     os.makedirs(args.save_dir, exist_ok=True)
+    val_log_path = os.path.join(args.save_dir, "val_ppl.log")
+    def log_val(epoch, step, val_ppl, kind):
+        with open(val_log_path, "a") as f:
+            f.write(f"{epoch}\t{step}\t{kind}\t{val_ppl:.4f}\n")
     best_val_ppl = float("inf")
     global_step = (args.start_epoch - 1) * n_batches_per_epoch
 
@@ -188,6 +192,7 @@ def main():
                 val_loss = evaluate(model, val_data, args.batch_size, args.seq_len)
                 val_ppl = math.exp(min(val_loss, 20))
                 print(f"  ** Val loss={val_loss:.4f} ppl={val_ppl:.2f}")
+                log_val(epoch, global_step, val_ppl, "mid")
                 if val_ppl < best_val_ppl:
                     best_val_ppl = val_ppl
                     # Save
@@ -202,6 +207,7 @@ def main():
 
         val_loss = evaluate(model, val_data, args.batch_size, args.seq_len)
         val_ppl = math.exp(min(val_loss, 20))
+        log_val(epoch, global_step, val_ppl, "end")
 
         print(f"\n  Epoch {epoch} complete: train PPL={train_ppl:.2f}, val PPL={val_ppl:.2f}, "
               f"time={epoch_time:.0f}s ({epoch_tokens/epoch_time:.0f} tok/s)")
