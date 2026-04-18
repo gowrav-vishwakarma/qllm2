@@ -1,27 +1,27 @@
 # Scaling sweep commands. Copy-paste individually. Run from qllm-private/ root.
 # All use lr=3e-05, batch=8, warmup=500, seq_len=512, epochs=10.
-# val_ppl.log auto-written to save_dir. Pipe stdout to tee for full training log.
+# val_ppl.log auto-written to save_dir.
 
 # ── 5M ──
-uv run python v6/mlx/train.py      --dim  44 --layers 12 --heads 2 --head_dim 16 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_qpam_5m_mlx   2>&1 | tee logs/scaling/qpam_5m.log
-uv run python v6/mlx/train_real.py --dim  84 --layers 11 --heads 2 --head_dim  8 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_rpam_5m_mlx   2>&1 | tee logs/scaling/rpam_5m.log
+uv run python v6/mlx/train.py      --dim  44 --layers 12 --heads 2 --head_dim 16 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_qpam_5m_mlx
+uv run python v6/mlx/train_real.py --dim  84 --layers 11 --heads 2 --head_dim  8 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_rpam_5m_mlx
 
 # ── 10M ──
-uv run python v6/mlx/train.py      --dim  80 --layers 12 --heads 4 --head_dim 16 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_qpam_10m_mlx  2>&1 | tee logs/scaling/qpam_10m.log
-uv run python v6/mlx/train_real.py --dim 140 --layers 11 --heads 8 --head_dim 16 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_rpam_10m_mlx  2>&1 | tee logs/scaling/rpam_10m.log
+uv run python v6/mlx/train.py      --dim  80 --layers 12 --heads 4 --head_dim 16 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_qpam_10m_mlx
+uv run python v6/mlx/train_real.py --dim 140 --layers 11 --heads 8 --head_dim 16 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_rpam_10m_mlx
 
 # ── 25M ──
-uv run python v6/mlx/train.py      --dim 200 --layers  6 --heads 4 --head_dim 16 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_qpam_25m_mlx  2>&1 | tee logs/scaling/qpam_25m.log
-uv run python v6/mlx/train_real.py --dim 344 --layers  6 --heads 4 --head_dim 32 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_rpam_25m_mlx  2>&1 | tee logs/scaling/rpam_25m.log
+uv run python v6/mlx/train.py      --dim 200 --layers  6 --heads 4 --head_dim 16 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_qpam_25m_mlx
+uv run python v6/mlx/train_real.py --dim 344 --layers  6 --heads 4 --head_dim 32 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_rpam_25m_mlx
 
 # ── 50M ──
-uv run python v6/mlx/train.py      --dim 292 --layers 12 --heads 4 --head_dim 16 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_qpam_50m_mlx  2>&1 | tee logs/scaling/qpam_50m.log
-uv run python v6/mlx/train_real.py --dim 496 --layers 11 --heads 2 --head_dim  8 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_rpam_50m_mlx  2>&1 | tee logs/scaling/rpam_50m.log
+uv run python v6/mlx/train.py      --dim 292 --layers 12 --heads 4 --head_dim 16 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_qpam_50m_mlx
+uv run python v6/mlx/train_real.py --dim 496 --layers 11 --heads 2 --head_dim  8 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_rpam_50m_mlx
 
 # ── 100M ──
-uv run python v6/mlx/train.py      --dim 384 --layers 16 --heads 6 --head_dim 64 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_qpam_100m_mlx 2>&1 | tee logs/scaling/qpam_100m.log
-uv run python v6/mlx/train_real.py --dim 576 --layers 16 --heads 9 --head_dim 64 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_rpam_100m_mlx 2>&1 | tee logs/scaling/rpam_100m.log
+uv run python v6/mlx/train.py      --dim 384 --layers 16 --heads 6 --head_dim 64 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_qpam_100m_mlx
+uv run python v6/mlx/train_real.py --dim 576 --layers 16 --heads 9 --head_dim 64 --batch_size 8 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_rpam_100m_mlx
 
 # ── 1B ──
-uv run python v6/mlx/train.py      --dim 1152 --layers 24 --heads 16 --head_dim 72 --batch_size 1 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_qpam_1b_mlx  2>&1 | tee logs/scaling/qpam_1b.log
-uv run python v6/mlx/train_real.py --dim 1632 --layers 24 --heads 24 --head_dim 68 --batch_size 1 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_rpam_1b_mlx  2>&1 | tee logs/scaling/rpam_1b.log
+uv run python v6/mlx/train.py      --dim 1152 --layers 24 --heads 16 --head_dim 72 --batch_size 1 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_qpam_1b_mlx
+uv run python v6/mlx/train_real.py --dim 1632 --layers 24 --heads 24 --head_dim 68 --batch_size 1 --seq_len 512 --lr 3e-05 --warmup 500 --epochs 10 --save_dir checkpoints_rpam_1b_mlx
