@@ -65,6 +65,7 @@ Each V7Block:
 | 2026-04 | **7f-0** Grouped hierarchy + multi-scale loss (confounded), B=3, commit `136f914` | Val **31.29** @10e — regression vs 7a (**29.73**). Two variables changed; cannot isolate. Log: `logs/v7/exp7f_multiscale_wikitext103_20260402_173535_136f914_dirty/`. |
 | 2026-04 | **7f-1** Multi-scale loss ONLY on flat baseline, B=3, `--compile`, commit `ecb4b56` | Val **30.55** @10e — multi-scale loss **hurts** (+0.82 vs 7a). Aux heads don't help; multi-target training noise is counterproductive. Log: `logs/v7/exp7f1_multiscale_flat_wikitext103_20260403_124050_ecb4b56/`. |
 | 2026-04 | **7f-2** Reverse association ONLY (`rev_scale` per layer, default on), flat baseline, B=3, chunk C=256, `--compile`, commit `7f52bcf` | Val **32.19** @10e — **hurts** (+2.46 vs 7a **29.73**; +1.64 vs 7f-1 **30.55**; near **L1 32.09**). ~27.5k tok/s, ~12.3h wall. Log: `logs/v7/exp7f2_reverse_assoc_wikitext103_20260417_124743_7f52bcf/`. |
+| 2026-04 | **7f-3** Grouped hierarchy ONLY (`medium_h16_grouped`, cross_level, no multi-scale, no reverse assoc), B=3 — **stopped after epoch 1** | Epoch 1 val **58.70** vs 7a e1 **56.15** / V6 e1 **57.94** — no improvement signal; run halted to save GPU. Log: `logs/v7/exp7f3_grouped_only_wikitext103_20260418_120504_5294937_dirty/`. |
 | 2026-04 | **L1** Lean PAM baseline, `lean_medium_small` (86.2M), B=3, `--compile --no_grad_ckpt`, commit `7717f65` (dirty) | Val **32.09** @10e — **+2.36 PPL** vs 7a (29.73) but **+66% throughput** (34.7k vs 20.9k tok/s), **85% less VRAM** (1.7 vs ~11 GB). CGU worth ~2.4 PPL. Log: `logs/v7/lean_lean_medium_small_wikitext103_20260409_152722_7717f65_dirty/`. |
 
 ---
@@ -460,7 +461,7 @@ CGU already has phase rotation via `gate_phase * up`. But:
 | 7f-0 | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModSwish | **31.29** val @10e, B=3 (confounded: grouped+multiscale) |
 | 7f-1 | medium_h16_flat | 16 | 384 | False | False | ModSwish | **30.55** val @10e, B=3 — multi-scale loss hurts (+0.82 vs 7a) |
 | 7f-2 | medium_h16_flat | 16 | 384 | False | False | ModSwish | **32.19** val @10e, B=3 — reverse assoc **hurts** (+2.46 vs 7a) |
-| 7f-3 | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModSwish | Ablation: grouped hierarchy only (vs 7a baseline) |
+| 7f-3 | medium_h16_grouped | 16 | 384 | True (grouped) | True | ModSwish | **Stopped e1** — val **58.70** (worse than 7a e1 **56.15**); no full 10e run |
 | L1   | lean_medium_small  | 16 | 384 | False | False | ModSwish (FFN) | **32.09** val @10e, **34.7k** tok/s, 86.2M params (no CGU) |
 | L2   | lean_medium_small  | 16 | 384 | False | False | ModSwish (FFN) | L1 + unitary reg lambda=0.01 (TBD) |
 | L3   | lean_medium_small  | 16 | 384 | False | False | ModSwish (FFN) | L2 + soft state norm + head diversity (TBD) |
@@ -717,7 +718,7 @@ All ablations use the **7a baseline** as control: `medium_h16_flat`, B=3, ModSwi
 | 7f-2 | Reverse assoc only     | medium_h16_flat    | *(default: reverse_assoc=True)*         | Does upper-triangle reuse help?      |
 | 7f-3 | Grouped hierarchy only | medium_h16_grouped | `--no_reverse_assoc`                    | Does grouped dt_bias help or hurt?   |
 
-If any single-variable ablation helps, combine winners in a follow-up (7f-4). **7f-1 and 7f-2 did not help** vs 7a; proceed with **7f-3** to isolate grouped hierarchy. Only add grouped+hierarchy stacking if 7f-3 shows benefit.
+**7f series wrap-up**: **7f-1** and **7f-2** completed full runs and hurt vs 7a. **7f-3** (grouped hierarchy only) was **stopped after epoch 1** — epoch-1 val did not beat 7a/V6 at the same checkpoint, so the run was abandoned. **No 7f-4** unless a new hypothesis revisits one of these mechanisms with different hyperparameters or architecture. Prefer moving to other experiment tracks (e.g. Lean L2/L3, 7e, V8 plan, or throughput batch-size sweeps).
 
 ### Running
 
@@ -732,7 +733,7 @@ If any single-variable ablation helps, combine winners in a follow-up (7f-4). **
 ./scripts/run_v7_exp7f3_grouped_only.sh
 ```
 
-**Status**: 7f-0 done (confounded). **7f-1 done** (see below). **7f-2 done** (see below). **7f-3 not run yet.**
+**Status**: 7f-0 done (confounded). **7f-1 done** (see below). **7f-2 done** (see below). **7f-3 stopped early** after epoch 1 (see below); not worth a full 10-epoch budget unless revised.
 
 ### Experiment 7f-1 Results: Multi-scale loss only (flat baseline)
 
@@ -780,13 +781,30 @@ Run: `medium_h16_flat`, B=3, ModSwish, chunk_size=256, no grad ckpt, `--compile`
 
 **Verdict**: Reverse association on its own **hurts** validation PPL relative to 7a (+2.46) and 7f-1 (+1.64). The upper-triangle reuse path does not pay off at this budget; final quality lands near **Lean L1** (32.09) rather than full V7 7a. No 7f-4 combine with 7f-1 unless a future variant fixes the gap.
 
+### Experiment 7f-3 Results: Grouped hierarchy only — stopped after epoch 1
+
+Run: `medium_h16_grouped`, B=3, ModSwish, chunk_size=256, no grad ckpt, `--compile`, `--no_reverse_assoc`, no multi-scale loss. Script `run_v7_exp7f3_grouped_only.sh`. Commit at run time `5294937` (dirty).
+
+| Epoch | Train PPL | Val PPL | tok/s (epoch avg) |
+|-------|-----------|---------|-------------------|
+| 1     | 120.74    | **58.70** *best* | 26.0k |
+| 2–10  | —         | —       | — (stopped) |
+
+**Stopped**: User halted the run after epoch 1 — val trajectory was **not** beating the flat 7a baseline at the same training stage (7a epoch 1 val **56.15**; V6 pam-v3 epoch 1 val **57.94**; 7f-1 epoch 1 val **58.40**). Continuing looked unlikely to close the gap to 7a **29.73**.
+
+**Generation sample (epoch 1)** (prompt: "In 1923 , the University of"): mixed coherence; **Quality**: rep3=0.000, rep4=0.000, restarts=0, uniq=0.705.
+
+**Verdict**: Grouped hierarchy + cross-level drift **does not show early promise** vs flat `medium_h16_flat` under matched training; aligns with **7f-0** confound suggesting grouped schedule is at best neutral and at worst harmful once multi-scale is removed. **Full 10-epoch 7f-3 not pursued.**
+
+**Log**: `logs/v7/exp7f3_grouped_only_wikitext103_20260418_120504_5294937_dirty/v7_medium_h16_grouped_wikitext103.log`.
+
 ---
 
 ## Lean PAM: Stripped-Down Complex PAM Experiments
 
 ### Motivation
 
-V7 may be over-engineered. The CGU (SwiGLU-style complex gating), hierarchical dt, cross-level drift, multi-scale loss, and reverse association all add complexity but experiments 7f-0/7f-1/7f-2 showed these additions hurt or don't help. The "Lean PAM" strips V7 to its novel core:
+V7 may be over-engineered. The CGU (SwiGLU-style complex gating), hierarchical dt, cross-level drift, multi-scale loss, and reverse association all add complexity but experiments 7f-0/7f-1/7f-2 and the **early-stopped 7f-3** showed these additions hurt or don't help. The "Lean PAM" strips V7 to its novel core:
 
 - **Kept**: Complex PAM with conjugate retrieval, Complex RoPE on Q/K, GSP (gated state protection), SimpleComplexFFN (up -> ModSwish -> down, no gating)
 - **Removed**: CGU, hierarchical dt_bias, cross-level drift, multi-scale loss, reverse association, Triton kernels
