@@ -26,6 +26,10 @@ import numpy as np
 # (configs in scripts/scaling_commands.txt). QPAM 10M omitted — restart in progress.
 # Methodology: last 3 epochs, [ep8_end, ep8_mid_best, ep9_end, ep9_mid_best, ep10_end]
 
+# 5M QPAM: canonical-config run completed Apr 22 (lr=3e-05, batch=8)
+# [ep8_end, ep8_mid_best, ep9_end, ep9_mid_best, ep10_end]
+qpam_5m = [259.7707, 259.7964, 258.3462, 258.3010, 258.1207]
+
 # 5M RPAM: canonical-config run completed Apr 21 (lr=3e-05, batch=8)
 # [ep8_end, ep8_mid_best, ep9_end, ep9_mid_best, ep10_end]
 rpam_5m = [119.3802, 119.4058, 118.7168, 118.6796, 118.5472]
@@ -55,6 +59,7 @@ def stats(vals):
 raw = {}   # (scale, model) -> list of PPL values
 data = {}  # (scale, model) -> (mean, std, n)
 for scale, model, vals in [
+    (5,   'QPAM', qpam_5m),
     (10,  'QPAM', qpam_10m),
     (25,  'QPAM', qpam_25m),
     (100, 'QPAM', qpam_100m),
