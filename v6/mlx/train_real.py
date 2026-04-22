@@ -201,6 +201,10 @@ def main():
             model.save_weights(save_path)
             print(f"  ** New best val PPL: {val_ppl:.2f}")
 
+        epoch_path = os.path.join(args.save_dir, f"epoch_{epoch}.npz")
+        model.save_weights(epoch_path)
+        print(f"  ** Saved epoch {epoch} checkpoint")
+
     print(f"\nTraining complete. Best val PPL: {best_val_ppl:.2f}")
 
 
