@@ -22,25 +22,27 @@ import numpy as np
 # Methodology: last 3 epochs, mid-epoch val + end-of-epoch val = 6 samples per scale.
 # For models with no mid-epoch logs (PyTorch transformer), 3 end-of-epoch only.
 
-# 5M: epochs 8,9,10 — [mid, final] x3
-qpam_5m = [89.19, 88.40, 87.67, 87.31, 87.06, 87.02]
-rpam_5m = [61.36, 61.11, 60.84, 60.59, 60.53, 60.52]
-trans_5m = [142.66, 140.82, 140.47]  # PyTorch: end-of-epoch only
+# Production sweep: lr=3e-05, batch=8, warmup=500, seq_len=512, epochs=10
+# (configs in scripts/scaling_commands.txt). QPAM 10M omitted — restart in progress.
+# Methodology: last 3 epochs, [ep8_end, ep8_mid_best, ep9_end, ep9_mid_best, ep10_end]
 
-# 10M: epochs 8,9,10 — [mid, final] x3
-qpam_10m = [60.13, 59.48, 59.14, 58.83, 58.75, 58.71]
-rpam_10m = [40.84, 40.52, 40.42, 40.23, 40.22, 40.20]
-trans_10m = [76.87, 75.37, 74.11]  # epochs 7,8,9 end-of-epoch (ep10 still running)
+# 5M RPAM: canonical-config run completed Apr 21 (lr=3e-05, batch=8)
+# [ep8_end, ep8_mid_best, ep9_end, ep9_mid_best, ep10_end]
+rpam_5m = [119.3802, 119.4058, 118.7168, 118.6796, 118.5472]
 
-# 25M: QPAM epochs 8,9,10 (checkpoint eval; no mid-epoch logs available)
-# RPAM 25M — in progress
-qpam_25m = [39.18, 38.85, 38.84]
-rpam_25m = None  # TODO: fill after run
+# 10M RPAM: canonical-config run completed Apr 21 (lr=3e-05, batch=8)
+rpam_10m = [70.1365, 70.1186, 69.6156, 69.6337, 69.5743]
 
-# 100M: QPAM epochs 8,9,10 (MLX v2, still improving); RPAM epochs 5,6,7 (last converging)
+# 25M (from logs/v6/scaling_sweep/*_25m_val_ppl.log — pulled from remote)
+qpam_25m = [75.7337, 75.6768, 74.9918, 75.0107, 74.9205]
+rpam_25m = [41.0135, 40.9486, 40.7149, 40.6964, 40.6845]
+
+# 50M RPAM (from logs/v6/scaling_sweep/rpam_50m_val_ppl.log — pulled from remote)
+rpam_50m = [35.8662, 35.8502, 35.7049, 35.7079, 35.6986]
+
+# 100M: QPAM epochs 8-10 (6 samples incl. mid-epoch); RPAM epochs 5-7
 qpam_100m = [37.55, 36.46, 35.61, 34.63, 33.75, 33.19]
 rpam_100m = [26.79, 26.03, 26.00, 25.59, 25.82, 25.42]
-trans_100m = [27.63, 27.38, 27.10]  # end-of-epoch only
 
 # Collect raw samples and means per (scale, model)
 def stats(vals):
@@ -49,11 +51,13 @@ def stats(vals):
 raw = {}   # (scale, model) -> list of PPL values
 data = {}  # (scale, model) -> (mean, std, n)
 for scale, model, vals in [
-    (5, 'QPAM', qpam_5m), (5, 'RPAM', rpam_5m), (5, 'Trans', trans_5m),
-    (10, 'QPAM', qpam_10m), (10, 'RPAM', rpam_10m), (10, 'Trans', trans_10m),
-    (25, 'QPAM', qpam_25m),
-    *([(25, 'RPAM', rpam_25m)] if rpam_25m is not None else []),
-    (100, 'QPAM', qpam_100m), (100, 'RPAM', rpam_100m), (100, 'Trans', trans_100m),
+    (25,  'QPAM', qpam_25m),
+    (100, 'QPAM', qpam_100m),
+    (5,   'RPAM', rpam_5m),
+    (10,  'RPAM', rpam_10m),
+    (25,  'RPAM', rpam_25m),
+    (50,  'RPAM', rpam_50m),
+    (100, 'RPAM', rpam_100m),
 ]:
     raw[(scale, model)] = vals
     m, s = stats(vals)
@@ -62,7 +66,7 @@ for scale, model, vals in [
 # ── OLS fit on all individual samples in log-log space ──
 # Each late-epoch PPL sample is one data point: (log10(N), log10(PPL))
 
-models = ['QPAM', 'RPAM', 'Trans']
+models = ['QPAM', 'RPAM']
 fits = {}
 N_BOOT = 10000
 rng = np.random.default_rng(42)
@@ -70,7 +74,7 @@ rng = np.random.default_rng(42)
 for model in models:
     log_p_all = []
     log_ppl_all = []
-    for scale in [5, 10, 25, 100]:
+    for scale in [5, 10, 25, 50, 100]:
         if (scale, model) in raw:
             for ppl in raw[(scale, model)]:
                 log_p_all.append(np.log10(scale))
@@ -105,7 +109,7 @@ for model in models:
     scales_plot = []
     means_plot = []
     sigmas_plot = []
-    for scale in [5, 10, 25, 100]:
+    for scale in [5, 10, 25, 50, 100]:
         if (scale, model) in data:
             m, s, nn = data[(scale, model)]
             scales_plot.append(scale)
@@ -126,7 +130,7 @@ for model in models:
 
 # ── Crossover analysis ──
 print()
-for m1, m2 in [('QPAM', 'RPAM'), ('QPAM', 'Trans'), ('RPAM', 'Trans')]:
+for m1, m2 in [('QPAM', 'RPAM')]:
     a1, b1 = fits[m1]['coeffs']
     a2, b2 = fits[m2]['coeffs']
     if abs(a1 - a2) > 0.001:
@@ -146,9 +150,9 @@ for m1, m2 in [('QPAM', 'RPAM'), ('QPAM', 'Trans'), ('RPAM', 'Trans')]:
 # ── Plot ──
 fig, ax = plt.subplots(figsize=(6, 4.5))
 
-colors = {'QPAM': '#2563eb', 'RPAM': '#dc2626', 'Trans': '#16a34a'}
-markers = {'QPAM': 'o', 'RPAM': 's', 'Trans': '^'}
-labels = {'QPAM': 'QPAM (complex)', 'RPAM': 'RPAM (real)', 'Trans': 'Transformer'}
+colors = {'QPAM': '#2563eb', 'RPAM': '#dc2626'}
+markers = {'QPAM': 'o', 'RPAM': 's'}
+labels = {'QPAM': 'QPAM (complex)', 'RPAM': 'RPAM (real)'}
 
 p_fine = np.logspace(np.log10(3), np.log10(1000000), 200)
 
@@ -159,7 +163,7 @@ for model in models:
 
     # Individual samples
     first = True
-    for scale in [5, 10, 25, 100]:
+    for scale in [5, 10, 25, 50, 100]:
         if (scale, model) in raw:
             vals = raw[(scale, model)]
             ax.scatter([scale]*len(vals), vals, marker=markers[model],
@@ -198,7 +202,7 @@ ax.set_yscale('log')
 ax.set_xlabel('Parameters (M)')
 ax.set_ylabel('Validation PPL')
 ax.set_xlim(3, 1000000)
-ax.set_ylim(15, 300)
+ax.set_ylim(15, 500)
 ax.legend(fontsize=9, loc='upper right')
 
 fig.tight_layout()
