@@ -33,6 +33,10 @@ rpam_5m = [119.3802, 119.4058, 118.7168, 118.6796, 118.5472]
 # 10M RPAM: canonical-config run completed Apr 21 (lr=3e-05, batch=8)
 rpam_10m = [70.1365, 70.1186, 69.6156, 69.6337, 69.5743]
 
+# 10M QPAM: canonical-config run completed Apr 22 (lr=3e-05, batch=8)
+# [ep8_end, ep8_mid_best, ep9_end, ep9_mid_best, ep10_end]
+qpam_10m = [133.7768, 133.9375, 127.6733, 127.6152, 123.4690]
+
 # 25M (from logs/v6/scaling_sweep/*_25m_val_ppl.log — pulled from remote)
 qpam_25m = [75.7337, 75.6768, 74.9918, 75.0107, 74.9205]
 rpam_25m = [41.0135, 40.9486, 40.7149, 40.6964, 40.6845]
@@ -51,6 +55,7 @@ def stats(vals):
 raw = {}   # (scale, model) -> list of PPL values
 data = {}  # (scale, model) -> (mean, std, n)
 for scale, model, vals in [
+    (10,  'QPAM', qpam_10m),
     (25,  'QPAM', qpam_25m),
     (100, 'QPAM', qpam_100m),
     (5,   'RPAM', rpam_5m),
