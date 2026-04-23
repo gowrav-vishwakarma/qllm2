@@ -72,7 +72,44 @@ Per row, in addition to PPL, log:
 - **Tok/s** + **peak VRAM** for hardware bookkeeping.
 - **Git SHA** + log path under `logs/v8/`.
 
-## 5. Verdicts
+## 5. Stage A.5 smoke results (TinyStories, 2026-04-23)
+
+Hardware: RTX 4090. Config: `_backbone_tiny()` (dim=64, 2 layers, head_dim=32) =
+6.6M backbone params; QLC adds 57k.
+Recipe: 20 000 stories, seq_len=512, batch=16, 3 epochs, lr=1e-4 with 1k-step
+warmup, AMP=auto (no `--compile`).
+
+| Variant                  | Preset                    | QLC params | Best Val PPL | Tok/s   | Wall   |
+|--------------------------|---------------------------|------------|--------------|---------|--------|
+| Passthrough (V7-equiv)   | `smoke_tiny_passthrough`  | 0          | **178.95**   | 225 304 | 0.02 h |
+| QLC r=4, T_max=2         | `smoke_tiny_qlc_r4_T2`    | 57 678     | **173.40**   | 19 180  | 0.21 h |
+
+**Gate verdict: PASS.** Plan §5 acceptance is "QLC variant within +1 PPL of
+passthrough or better" — observed delta is **−5.55 PPL** (QLC *better*). The
+projector primitive is differentiable, doesn't NaN, and contributes useful
+inductive bias even at a tiny scale.
+
+**Caveats / things to watch in Stage B:**
+
+- **`γ` was 0.000 throughout.** The orthocomplement non-commutator never
+  engaged at this scale / 128-effect bank / 3 epochs. The Stage A.5 win came
+  from rank-r-constrained Sasaki retrieval acting as a regulariser, *not* from
+  the if/else algebra hypothesis. If Stage B also shows γ ≈ 0 across rows,
+  V8-G (`orthohalt_off`) becomes the primary algebraic-utility test — if G
+  matches D, the (α, β, γ) head is decorative and we should prune it per the
+  plan §7 kill rubric.
+- **Halt distribution drifted from ~0.02/0.96/0.02 → 0.33/0.62/0.06** over
+  3 epochs. ACT pondering is alive (mean iter steady at 2.0 because we cap at
+  T_max=2; will be more informative at T_max=4).
+- **Throughput cost is ~12×** vs passthrough at this size (no Triton, two
+  full reasoning iterations per token). Acceptable for v0; revisit only after
+  V8-D-T4 shows a quality win on WT103.
+
+Logs:
+- `logs/v8/stageA5_passthrough_tinystories_20260423_114721_e3e4b90/`
+- `logs/v8/stageA5_qlc_r4_T2_tinystories_20260423_114850_e3e4b90/`
+
+## 6. Verdicts
 
 To be filled in after Stage B & C runs. See plan §7 for the win / soft-win / kill rubric.
 
@@ -82,6 +119,14 @@ To be filled in after Stage B & C runs. See plan §7 for the win / soft-win / ki
 | Soft win | `V8-D-T4 ≥ V8-B by ≥ 3 PPL` and OrthoHalt-off regresses                                    | TBD      |
 | Kill     | `V8-A` fails to match QPAM, or `V8-D` regresses vs `V8-B`, or OrthoHalt-off matches on    | TBD      |
 
-## 6. Implementation status
+## 7. Implementation status
 
-- 2026-04-23: V8 skeleton committed: config, model, all four QLC primitives, trainer, run scripts, EXPERIMENTS stub. 40 unit tests passing on CPU. Stage A/A.5/B/C launch scripts ready; trainer entry point smoke-tested without errors. **Next:** kick off Stage A on the 4090.
+- **2026-04-23**: V8 skeleton committed: config, model, all four QLC primitives,
+  trainer, run scripts, EXPERIMENTS stub. 40 unit tests passing on CPU.
+  Stage A/A.5/B/C launch scripts ready; trainer entry point smoke-tested.
+- **2026-04-23**: Stage A.5 smoke run on RTX 4090. **GATE PASSED** (QLC beats
+  passthrough by 5.55 PPL on TinyStories; see §5). Caveat: γ=0 means the
+  algebraic orthocomplement signal is dormant at this scale; Stage B will
+  need to show γ>0 for the operational-quantum-logic claim to land.
+- **Next:** Stage A pretrain on RTX 4090 in tmux (~14h). After completion
+  (`v8/checkpoints/qpam_stageA.pt` exists), proceed to Stage B on A100.
