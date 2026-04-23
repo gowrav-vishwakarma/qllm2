@@ -108,6 +108,26 @@ def _notify_discord(content: str) -> None:
         print(f"[Discord] Webhook send failed: {e}", file=sys.stderr)
 
 
+def _notify_discord_long(text: str, *, limit: int = 1900) -> None:
+    """Send ``text`` to Discord, splitting into multiple messages at line
+    boundaries so we never exceed the 2000-char webhook limit.
+    """
+    hook = os.environ.get("DISCORD_HOOK", "").strip()
+    if not hook:
+        return
+    lines = text.splitlines(keepends=True)
+    chunk: List[str] = []
+    chunk_len = 0
+    for line in lines:
+        if chunk and chunk_len + len(line) > limit:
+            _notify_discord("".join(chunk))
+            chunk, chunk_len = [], 0
+        chunk.append(line)
+        chunk_len += len(line)
+    if chunk:
+        _notify_discord("".join(chunk))
+
+
 # ── Trainer ──────────────────────────────────────────────────────────────────
 
 
@@ -538,28 +558,10 @@ class V8Trainer:
     def train(self) -> None:
         training_start = time.time()
         m = self._orig()
-        params = m.count_parameters()
-        trainable = m.trainable_parameters()
-        print(f"\nTraining on {self.device}")
-        print(f"Parameters: {params}")
-        print(f"Total: {params['total']:,} ({params['total']/1e6:.1f}M); "
-              f"Trainable: {trainable:,} ({trainable/1e6:.1f}M)")
-        print(f"Stage: {m.config.stage}; freeze_backbone={m.config.freeze_backbone}; "
-              f"kl_anchor={self.kl_anchor_weight}")
-        print(f"Epochs: {self.start_epoch+1}..{self.max_epochs}, "
-              f"Batches/epoch: {len(self.train_loader)}\n")
-
-        _notify_discord(
-            f"**V8 [{m.config.stage}] START**\n"
-            f"Total: {params['total']/1e6:.1f}M params "
-            f"(trainable: {trainable/1e6:.1f}M)\n"
-            f"Stage: {m.config.stage}, "
-            f"freeze_backbone={m.config.freeze_backbone}, "
-            f"kl_anchor={self.kl_anchor_weight}\n"
-            f"Epochs: {self.start_epoch+1}..{self.max_epochs}, "
-            f"batches/epoch={len(self.train_loader)}, "
-            f"gen_every={self.gen_every}"
-        )
+        # Per-epoch loop only -- the rich start-of-run summary (console +
+        # Discord) is built and dispatched in main() so we don't duplicate it
+        # here. We just emit the per-device confirmation locally.
+        print(f"\nTraining on {self.device}\n")
 
         for epoch in range(self.start_epoch, self.max_epochs):
             print(f"\n{'='*60}")
@@ -727,7 +729,6 @@ def main() -> None:
         torch.backends.cudnn.allow_tf32 = True
 
     seed_everything(args.seed)
-    print(f"Seed: {args.seed}")
 
     cfg: V8Config = get_config(args.preset)
     if args.seq_len is not None:
@@ -740,15 +741,6 @@ def main() -> None:
         cfg.qlc.infonce_weight = args.infonce_weight
     if args.infonce_every is not None:
         cfg.qlc.infonce_every = args.infonce_every
-
-    print(f"\nBackbone config: {asdict(cfg.backbone)}")
-    print(f"QLC config: {asdict(cfg.qlc)}")
-    print(f"Stage: {cfg.stage}, freeze_backbone={cfg.freeze_backbone}, "
-          f"kl_anchor={cfg.kl_anchor_weight}")
-    print(f"Training: lr={args.lr}, warmup={args.warmup_steps}, wd={args.weight_decay}, "
-          f"grad_clip={args.gradient_clip}")
-    print(f"Batch size: {args.batch_size}, Epochs: {args.epochs}")
-    print(f"AMP: {args.amp_dtype}, Compile: {args.compile}")
 
     seq_len = cfg.backbone.max_seq_len
     max_samples = args.max_samples if args.max_samples < 9999999 else None
@@ -786,21 +778,20 @@ def main() -> None:
         num_workers=nw, pin_memory=use_cuda,
         worker_init_fn=_worker_init_fn, **dl_kwargs,
     )
-    print(f"Train batches: {len(train_loader)}, Val batches: {len(val_loader)}")
 
     model = V8LM(cfg)
     p = model.count_parameters()
-    print(f"\nModel parameters: {p}")
-    print(f"Total: {p['total']:,} ({p['total']/1e6:.1f}M)  "
-          f"QLC: {p['qlc']:,} ({p['qlc']/1e6:.2f}M)")
+    trainable = model.trainable_parameters()
 
     # Load Stage A backbone weights for Stage B / C launches.
+    backbone_load_info = None
     if args.backbone_ckpt:
         print(f"\nLoading backbone from {args.backbone_ckpt}")
-        info = load_backbone_from_v7_checkpoint(model, args.backbone_ckpt)
-        print(f"  missing={len(info['missing'])} unexpected={len(info['unexpected'])}")
-        if info["missing"]:
-            print(f"  example missing keys: {info['missing'][:5]}")
+        backbone_load_info = load_backbone_from_v7_checkpoint(model, args.backbone_ckpt)
+        print(f"  missing={len(backbone_load_info['missing'])} "
+              f"unexpected={len(backbone_load_info['unexpected'])}")
+        if backbone_load_info["missing"]:
+            print(f"  example missing keys: {backbone_load_info['missing'][:5]}")
 
     start_epoch = 0
     if args.resume:
@@ -830,7 +821,92 @@ def main() -> None:
             cloze_train, batch_size=args.infonce_batch_size, shuffle=True,
             num_workers=0, pin_memory=use_cuda,
         )
-        print(f"  cloze batches/epoch: {len(infonce_loader)}")
+
+    # ── Build the rich startup summary (shared between console + Discord) ──
+    _summary_lines: List[str] = []
+    _sl = _summary_lines.append
+
+    if args.resume:
+        _sl(f"--- Resumed from {args.resume} at "
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---")
+    _sl(f"Wall clock start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    _sl("=" * 60)
+    _sl(f"V8 Stage {cfg.stage}: Quantum-Logic Core over QPAM")
+    _sl("=" * 60)
+    _sl(f"Host: {os.uname().nodename}")
+    _sl(f"Preset: {args.preset}")
+    _sl(f"Dataset: {args.dataset} (seq_len={seq_len})")
+    _sl(f"Seed: {args.seed}")
+
+    bb = cfg.backbone
+    _sl(f"Backbone: dim={bb.dim}, layers={getattr(bb, 'n_layers', '-')}, "
+        f"n_heads={getattr(bb, 'n_heads', '-')}, "
+        f"vocab={bb.vocab_size}, max_seq_len={bb.max_seq_len}")
+    _bb_extras = []
+    for _key in ("expand", "use_rope", "use_gsp", "fused_qkv", "head_dim"):
+        if hasattr(bb, _key):
+            _bb_extras.append(f"{_key}={getattr(bb, _key)}")
+    if _bb_extras:
+        _sl("  " + ", ".join(_bb_extras))
+    _sl(f"  Dropout: {bb.dropout}")
+
+    if cfg.qlc.enabled:
+        q = cfg.qlc
+        _sl(f"QLC: ENABLED (rank={q.rank}, bank_size={q.bank_size}, "
+            f"top_k={q.top_k}, t_max={q.t_max})")
+        _sl(f"  use_complex={q.use_complex}, "
+            f"halt_mode={q.halt_mode}, "
+            f"unsharp_target={q.unsharp_target}, "
+            f"quantale_order_test={q.quantale_order_test}")
+        _sl(f"  out_scale_init={q.out_scale_init}, "
+            f"out_scale_learnable={q.out_scale_learnable}, "
+            f"renormalize_psi={q.renormalize_psi}, "
+            f"ponder_lambda={q.ponder_lambda}")
+        if q.infonce_weight > 0:
+            _sl(f"  InfoNCE: weight={q.infonce_weight}, every={q.infonce_every} "
+                f"(entities={args.infonce_n_entities}, "
+                f"examples={args.infonce_examples_train}, "
+                f"batches/epoch={len(infonce_loader) if infonce_loader else 0})")
+    else:
+        _sl(f"QLC: DISABLED (passthrough / Stage A pretrain)")
+
+    _sl(f"Stage: {cfg.stage}, freeze_backbone={cfg.freeze_backbone}, "
+        f"unfreeze_lm_head={getattr(cfg, 'unfreeze_lm_head', False)}, "
+        f"kl_anchor={cfg.kl_anchor_weight}")
+
+    _sl(f"Optim: lr={args.lr}, warmup={args.warmup_steps}, "
+        f"wd={args.weight_decay}, grad_clip={args.gradient_clip}")
+    _sl(f"AMP: {args.amp_dtype}, Compile: {args.compile}"
+        + (f" (mode={args.compile_mode})" if args.compile else ""))
+    _sl(f"Workers: {nw}, pin_memory={use_cuda}, "
+        f"log_interval={args.log_interval}, diag_every={args.diag_every}")
+
+    if args.backbone_ckpt:
+        miss = len(backbone_load_info["missing"]) if backbone_load_info else 0
+        unex = len(backbone_load_info["unexpected"]) if backbone_load_info else 0
+        _sl(f"Backbone ckpt: {args.backbone_ckpt} (missing={miss}, unexpected={unex})")
+
+    _sl(f"Params: {p['total']:,} ({p['total']/1e6:.1f}M total) | "
+        f"QLC: {p['qlc']:,} ({p['qlc']/1e6:.2f}M) | "
+        f"Trainable: {trainable:,} ({trainable/1e6:.1f}M)")
+    _sl(f"Training on {('cuda' if use_cuda else 'cpu')} | "
+        f"Epochs: {start_epoch+1}..{args.epochs} | "
+        f"Batch size: {args.batch_size} | "
+        f"Train batches/epoch: {len(train_loader)} | "
+        f"Val batches: {len(val_loader)}")
+    _sl(f"Log file: {log_path}")
+    _sl(f"Checkpoint dir: {args.checkpoint_dir}")
+    _sl("=" * 60)
+
+    print("")
+    for _line in _summary_lines:
+        print(_line)
+    print("")
+
+    _discord_header = "**V8 training resumed**" if args.resume else "**V8 training started**"
+    _notify_discord_long(
+        _discord_header + "\n```\n" + "\n".join(_summary_lines) + "\n```"
+    )
 
     trainer = V8Trainer(
         model, train_loader, val_loader, tokenizer,
@@ -855,7 +931,11 @@ def _is_oom_error(exc: BaseException) -> bool:
 
 
 def _notify_training_failure(reason: str, exc: Optional[BaseException] = None) -> None:
-    parts = [f"**V8 training {reason}**"]
+    parts = [
+        f"**V8 training {reason}**",
+        f"Host: {os.uname().nodename}",
+        f"Command: {' '.join(sys.argv)}",
+    ]
     if exc is not None:
         parts.append(f"Error: {type(exc).__name__}: {exc}")
     _notify_discord("\n".join(parts))
