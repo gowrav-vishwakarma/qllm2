@@ -1,0 +1,665 @@
+"""V8 staged trainer.
+
+Stages
+------
+
+* ``A``  -- train the QPAM backbone from scratch on WikiText-103. QLC is
+            bypassed (passthrough). Output checkpoint feeds Stage B.
+* ``B``  -- freeze the backbone, train QLC + EffectAlgebraBank + OrthoHalt
+            with LM cross-entropy + ponder cost (+ optional InfoNCE on the
+            synthetic entity cloze).
+* ``C``  -- joint fine-tune backbone + QLC at low LR, with KL anchor to the
+            Stage A logits to prevent grammar drift.
+
+Usage
+-----
+
+::
+
+    # Stage A from scratch on RTX 4090:
+    uv run python -m v8.train --preset stageA_medium --epochs 10
+
+    # Stage B with frozen backbone (assumes Stage A checkpoint exists):
+    uv run python -m v8.train --preset stageB_T4 \\
+        --backbone_ckpt v8/checkpoints/qpam_stageA.pt --epochs 5
+
+    # TinyStories smoke gate (Stage A.5):
+    uv run python -m v8.train --preset smoke_tiny_qlc_r4_T2 \\
+        --dataset tinystories --epochs 3 --batch_size 16
+
+See ``scripts/run_v8_*`` for fully configured launch commands.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import os
+import random
+import sys
+import time
+import urllib.request
+import warnings
+from dataclasses import asdict
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
+
+warnings.filterwarnings(
+    "ignore",
+    message=r".*Online softmax is disabled.*Inductor.*split the reduction.*",
+    category=UserWarning,
+    module=r"torch\._inductor\.lowering",
+)
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from v8.config import V8Config, get_config, PRESETS
+from v8.model import V8LM, load_backbone_from_v7_checkpoint
+from v8.data import (
+    TeeLogger,
+    load_wikitext103,
+    load_tinystories,
+    compute_text_quality,
+    resolve_amp_dtype,
+    build_lr_scheduler,
+    build_param_groups,
+    EntityClozeDataset,
+)
+
+
+# ── Reproducibility ──────────────────────────────────────────────────────────
+
+
+def seed_everything(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+# ── Discord (optional) ───────────────────────────────────────────────────────
+
+
+def _notify_discord(content: str) -> None:
+    hook = os.environ.get("DISCORD_HOOK", "").strip()
+    if not hook:
+        return
+    if len(content) > 2000:
+        content = content[:1997] + "..."
+    try:
+        payload = json.dumps({"content": content}).encode("utf-8")
+        req = urllib.request.Request(
+            hook, data=payload, method="POST",
+            headers={"Content-Type": "application/json", "User-Agent": "qllm2-v8/1.0"},
+        )
+        urllib.request.urlopen(req, timeout=10)
+    except Exception as e:
+        print(f"[Discord] Webhook send failed: {e}", file=sys.stderr)
+
+
+# ── Trainer ──────────────────────────────────────────────────────────────────
+
+
+class V8Trainer:
+    """Stage-aware V8 trainer.
+
+    Differences vs the v7 trainer:
+
+    * Optimizer is built from ``model.parameters()`` *after* freezing, so
+      Stage B only updates QLC params.
+    * Adds ponder-cost into the loss (already weighted by ``ponder_lambda`` by
+      the model itself).
+    * Stage C: each batch also computes a KL term against the Stage A logits
+      (recomputed with the *current* backbone in eval mode -- this anchors
+      the joint update toward not drifting too far from Stage A).
+    * Periodic QLC diagnostics logging (mean iter, alpha/beta/gamma).
+    """
+
+    def __init__(
+        self,
+        model: V8LM,
+        train_loader: DataLoader,
+        val_loader: Optional[DataLoader],
+        tokenizer,
+        *,
+        learning_rate: float = 1e-4,
+        weight_decay: float = 0.01,
+        warmup_steps: int = 1000,
+        gradient_clip: float = 1.0,
+        max_epochs: int = 10,
+        checkpoint_dir: str = "v8/checkpoints",
+        amp_dtype_str: str = "auto",
+        compile_model: bool = False,
+        compile_mode: str = "default",
+        gen_every: int = 0,
+        gen_prompt: str = "The",
+        log_interval: int = 50,
+        start_epoch: int = 0,
+        kl_anchor_weight: float = 0.0,
+        diag_every: int = 200,
+    ):
+        self.model = model
+        self.train_loader = train_loader
+        self.val_loader = val_loader
+        self.tokenizer = tokenizer
+        self.max_epochs = max_epochs
+        self.gradient_clip = gradient_clip
+        self.kl_anchor_weight = kl_anchor_weight
+        self.checkpoint_dir = Path(checkpoint_dir)
+        self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        self.gen_every = gen_every
+        self.gen_prompt = gen_prompt
+        self.log_interval = log_interval
+        self.start_epoch = start_epoch
+        self.diag_every = diag_every
+
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        elif torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+        else:
+            self.device = torch.device("cpu")
+        self.model.to(self.device)
+
+        param_groups = build_param_groups(model, weight_decay)
+        self.optimizer = torch.optim.AdamW(
+            param_groups, lr=learning_rate, betas=(0.9, 0.95),
+        )
+
+        total_steps = max(max_epochs * len(train_loader), 1)
+        self.scheduler = build_lr_scheduler(
+            self.optimizer, "warmup_cosine", warmup_steps, total_steps,
+        )
+
+        self.amp_dtype = resolve_amp_dtype(amp_dtype_str)
+        self.use_amp = self.amp_dtype is not None
+        self.scaler = (
+            torch.amp.GradScaler("cuda")
+            if self.use_amp and self.amp_dtype == torch.float16
+            else None
+        )
+
+        if compile_model:
+            print(f"Compiling model (mode={compile_mode})...")
+            try:
+                self.model = torch.compile(self.model, mode=compile_mode)
+            except Exception as e:
+                print(f"torch.compile failed ({e}), continuing without")
+
+        self.global_step = 0
+        self.global_tokens = 0
+        self.best_val_loss = float("inf")
+        self.best_val_ppl = float("inf")
+
+    # ── Train / eval loops ─────────────────────────────────────────────────
+
+    def _orig(self) -> V8LM:
+        return self.model._orig_mod if hasattr(self.model, "_orig_mod") else self.model
+
+    def train_epoch(self, epoch: int) -> Dict[str, float]:
+        self.model.train()
+        # When backbone is frozen, force its dropout/checkpoint modules to eval
+        # to avoid stale gradients on the frozen weights.
+        m = self._orig()
+        if m.config.freeze_backbone:
+            m.embed.eval()
+            m.embed_norm.eval()
+            for blk in m.blocks:
+                blk.eval()
+            m.output_norm.eval()
+            m.lm_head_proj.eval()
+            m.lm_head_norm.eval()
+
+        total_loss_w = 0.0
+        total_ponder = 0.0
+        total_tokens = 0
+        epoch_start = time.time()
+        log_start = epoch_start
+        log_tokens = 0
+
+        self.optimizer.zero_grad(set_to_none=True)
+
+        for batch_idx, batch in enumerate(self.train_loader):
+            input_ids = batch["input_ids"].to(self.device, non_blocking=True)
+            labels = batch["labels"].to(self.device, non_blocking=True)
+            batch_tokens = input_ids.shape[0] * input_ids.shape[1]
+
+            want_diag = (
+                self.diag_every > 0
+                and self.global_step % self.diag_every == 0
+                and m.qlc is not None
+            )
+
+            with torch.amp.autocast(
+                self.device.type,
+                enabled=self.use_amp,
+                dtype=self.amp_dtype or torch.float16,
+            ):
+                logits, _, ponder_term = self.model(
+                    input_ids, labels=labels, return_qlc_diag=want_diag,
+                )
+                main_loss = F.cross_entropy(
+                    logits.view(-1, logits.size(-1)), labels.view(-1),
+                )
+                loss = main_loss + ponder_term
+
+                if self.kl_anchor_weight > 0:
+                    with torch.no_grad():
+                        target_logits = m.backbone_logits(input_ids)
+                    kl = F.kl_div(
+                        F.log_softmax(logits, dim=-1),
+                        F.softmax(target_logits, dim=-1),
+                        reduction="batchmean",
+                    )
+                    loss = loss + self.kl_anchor_weight * kl
+
+            if self.scaler is not None:
+                self.scaler.scale(loss).backward()
+                self.scaler.unscale_(self.optimizer)
+                torch.nn.utils.clip_grad_norm_(
+                    [p for p in self.model.parameters() if p.requires_grad],
+                    self.gradient_clip,
+                )
+                self.scaler.step(self.optimizer)
+                self.scaler.update()
+            else:
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(
+                    [p for p in self.model.parameters() if p.requires_grad],
+                    self.gradient_clip,
+                )
+                self.optimizer.step()
+
+            self.scheduler.step()
+            self.global_step += 1
+            self.optimizer.zero_grad(set_to_none=True)
+
+            self.global_tokens += batch_tokens
+            total_tokens += batch_tokens
+            log_tokens += batch_tokens
+            main_loss_val = main_loss.item()
+            total_loss_w += main_loss_val * batch_tokens
+            total_ponder += float(ponder_term.detach().item()) * batch_tokens
+
+            if batch_idx % self.log_interval == 0:
+                ppl = math.exp(min(main_loss_val, 20))
+                lr = self.scheduler.get_last_lr()[0]
+                elapsed = time.time() - epoch_start
+                avg_tok_s = total_tokens / max(elapsed, 1e-6)
+                inst_elapsed = time.time() - log_start
+                inst_tok_s = log_tokens / max(inst_elapsed, 1e-6)
+                pct = 100.0 * (batch_idx + 1) / len(self.train_loader)
+                line = (
+                    f"  [{epoch+1}] {batch_idx}/{len(self.train_loader)} "
+                    f"({pct:.0f}%) loss={main_loss_val:.4f} ppl={ppl:.1f} "
+                    f"lr={lr:.2e} | {inst_tok_s:.0f} tok/s (avg {avg_tok_s:.0f})"
+                )
+                if ponder_term.detach().item() > 0:
+                    line += f" | ponder={ponder_term.detach().item():.3e}"
+                if self.device.type == "cuda":
+                    mem = torch.cuda.memory_allocated() / 1e9
+                    peak = torch.cuda.max_memory_allocated() / 1e9
+                    line += f" | GPU {mem:.1f}/{peak:.1f}GB"
+                print(line)
+                log_start = time.time()
+                log_tokens = 0
+
+                if want_diag:
+                    diag = m.last_qlc_diagnostics()
+                    if diag is not None:
+                        print(
+                            f"    QLC: iter={diag.mean_iter:.2f} "
+                            f"alpha={diag.mean_alpha:.3f} beta={diag.mean_beta:.3f} "
+                            f"gamma={diag.mean_gamma:.3f} "
+                            f"halt(yes/no/cont)="
+                            f"{diag.halt_yes_rate:.2f}/{diag.halt_no_rate:.2f}/"
+                            f"{diag.continue_rate:.2f}"
+                        )
+
+        epoch_elapsed = time.time() - epoch_start
+        avg_tok_s = total_tokens / max(epoch_elapsed, 1e-6)
+        avg_loss = total_loss_w / max(total_tokens, 1)
+        avg_ponder = total_ponder / max(total_tokens, 1)
+        return {
+            "loss": avg_loss,
+            "ppl": math.exp(min(avg_loss, 20)),
+            "avg_tok_s": avg_tok_s,
+            "epoch_tokens": total_tokens,
+            "ponder": avg_ponder,
+        }
+
+    @torch.no_grad()
+    def validate(self) -> Dict[str, float]:
+        if self.val_loader is None or len(self.val_loader) == 0:
+            return {}
+        self.model.eval()
+        total_loss_w = 0.0
+        total_tokens = 0
+        for batch in self.val_loader:
+            input_ids = batch["input_ids"].to(self.device, non_blocking=True)
+            labels = batch["labels"].to(self.device, non_blocking=True)
+            batch_tokens = input_ids.shape[0] * input_ids.shape[1]
+            with torch.amp.autocast(
+                self.device.type,
+                enabled=self.use_amp,
+                dtype=self.amp_dtype or torch.float16,
+            ):
+                logits, _, _ = self.model(input_ids)
+                loss = F.cross_entropy(
+                    logits.view(-1, logits.size(-1)), labels.view(-1),
+                )
+            total_loss_w += loss.item() * batch_tokens
+            total_tokens += batch_tokens
+        if total_tokens == 0:
+            return {}
+        avg_loss = total_loss_w / total_tokens
+        return {"val_loss": avg_loss, "val_ppl": math.exp(min(avg_loss, 20))}
+
+    @torch.no_grad()
+    def _generate_sample(self, prompt: str = "The", max_tokens: int = 80) -> str:
+        was_training = self.model.training
+        self.model.eval()
+        try:
+            m = self._orig()
+            ids = self.tokenizer.encode(prompt)
+            t = torch.tensor([ids], device=self.device)
+            out = m.generate(
+                t, max_new_tokens=max_tokens,
+                temperature=0.8, top_k=50, top_p=0.9, repetition_penalty=1.2,
+            )
+            return self.tokenizer.decode(out[0].tolist())
+        finally:
+            if was_training:
+                self.model.train()
+
+    def save_checkpoint(self, name: str, epoch: int) -> Path:
+        path = self.checkpoint_dir / name
+        m = self._orig()
+        ckpt = {
+            "model_state_dict": m.state_dict(),
+            "optimizer_state_dict": self.optimizer.state_dict(),
+            "scheduler_state_dict": self.scheduler.state_dict(),
+            "global_step": self.global_step,
+            "global_tokens": self.global_tokens,
+            "best_val_loss": self.best_val_loss,
+            "best_val_ppl": self.best_val_ppl,
+            "epoch": epoch,
+            "v8_config": {
+                "backbone": asdict(m.backbone_cfg),
+                "qlc": asdict(m.qlc_cfg),
+                "stage": m.config.stage,
+                "freeze_backbone": m.config.freeze_backbone,
+                "kl_anchor_weight": m.config.kl_anchor_weight,
+            },
+        }
+        torch.save(ckpt, path)
+        print(f"Saved checkpoint: {path}")
+        return path
+
+    def train(self) -> None:
+        training_start = time.time()
+        m = self._orig()
+        params = m.count_parameters()
+        trainable = m.trainable_parameters()
+        print(f"\nTraining on {self.device}")
+        print(f"Parameters: {params}")
+        print(f"Total: {params['total']:,} ({params['total']/1e6:.1f}M); "
+              f"Trainable: {trainable:,} ({trainable/1e6:.1f}M)")
+        print(f"Stage: {m.config.stage}; freeze_backbone={m.config.freeze_backbone}; "
+              f"kl_anchor={self.kl_anchor_weight}")
+        print(f"Epochs: {self.start_epoch+1}..{self.max_epochs}, "
+              f"Batches/epoch: {len(self.train_loader)}\n")
+
+        for epoch in range(self.start_epoch, self.max_epochs):
+            print(f"\n{'='*60}")
+            print(f"Epoch {epoch+1}/{self.max_epochs}")
+            print("=" * 60)
+
+            train_metrics = self.train_epoch(epoch)
+            line = (
+                f"Epoch {epoch+1}/{self.max_epochs} | "
+                f"Train Loss: {train_metrics['loss']:.4f} "
+                f"PPL: {train_metrics['ppl']:.2f} | "
+                f"{train_metrics['avg_tok_s']:.0f} tok/s | "
+                f"ponder={train_metrics['ponder']:.3e}"
+            )
+
+            is_best = False
+            if self.val_loader is not None and len(self.val_loader) > 0:
+                val_metrics = self.validate()
+                line += (
+                    f" | Val Loss: {val_metrics['val_loss']:.4f} "
+                    f"PPL: {val_metrics['val_ppl']:.2f}"
+                )
+                if val_metrics["val_loss"] < self.best_val_loss:
+                    self.best_val_loss = val_metrics["val_loss"]
+                    self.best_val_ppl = val_metrics["val_ppl"]
+                    line += " *best*"
+                    is_best = True
+            print(line)
+
+            if is_best:
+                self.save_checkpoint("best_model.pt", epoch)
+            if (epoch + 1) % 5 == 0:
+                self.save_checkpoint(f"checkpoint_epoch_{epoch+1}.pt", epoch)
+
+            if self.tokenizer is not None:
+                try:
+                    text = self._generate_sample(self.gen_prompt)
+                    print(f"\nPrompt: {self.gen_prompt}")
+                    print(f"Generated: {text}")
+                    qm = compute_text_quality(text)
+                    print(
+                        f"  Quality: rep3={qm['repeat_3gram']:.3f} "
+                        f"rep4={qm['repeat_4gram']:.3f} "
+                        f"restarts={qm['restart_frag']:.0f} "
+                        f"uniq={qm['unique_word_ratio']:.3f}"
+                    )
+                except Exception as e:
+                    print(f"(Sample generation failed: {e})")
+
+            _notify_discord(
+                f"**V8 [{m.config.stage}] Epoch {epoch+1}/{self.max_epochs}**\n"
+                f"Train Loss: {train_metrics['loss']:.4f} "
+                f"PPL: {train_metrics['ppl']:.2f}"
+                + (
+                    f" | Val PPL: {val_metrics['val_ppl']:.2f}"
+                    if self.val_loader and len(self.val_loader) > 0 else ""
+                )
+                + (" *best*" if is_best else "")
+            )
+
+        self.save_checkpoint("final_model.pt", self.max_epochs - 1)
+        total_time = time.time() - training_start
+        print(f"\nTraining complete! Wall time: {total_time/3600:.2f}h")
+        print(f"Best Val PPL: {self.best_val_ppl:.2f}")
+        _notify_discord(
+            f"**V8 [{m.config.stage}] DONE** wall {total_time/3600:.2f}h | "
+            f"Best Val PPL: {self.best_val_ppl:.2f}"
+        )
+
+
+# ── CLI ──────────────────────────────────────────────────────────────────────
+
+
+def _load_env_dotfile() -> None:
+    env_path = Path(__file__).resolve().parent.parent / ".env"
+    if not env_path.exists():
+        return
+    try:
+        for line in env_path.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, _, value = line.partition("=")
+                key = key.strip()
+                value = value.strip().strip("'\"")
+                if key == "DISCORD_HOOK" and value:
+                    os.environ["DISCORD_HOOK"] = value
+                    break
+    except Exception as e:
+        print(f"[Discord] Could not read .env: {e}", file=sys.stderr)
+
+
+def main() -> None:
+    _load_env_dotfile()
+
+    parser = argparse.ArgumentParser(description="V8 Quantum-Logic Core trainer")
+    parser.add_argument("--preset", type=str, required=True,
+                        choices=sorted(PRESETS.keys()))
+    parser.add_argument("--dataset", type=str, default="wikitext103",
+                        choices=["wikitext103", "tinystories"])
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--batch_size", type=int, default=3)
+    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--weight_decay", type=float, default=0.01)
+    parser.add_argument("--warmup_steps", type=int, default=1000)
+    parser.add_argument("--seq_len", type=int, default=None)
+    parser.add_argument("--dropout", type=float, default=None)
+    parser.add_argument("--gradient_clip", type=float, default=1.0)
+    parser.add_argument("--compile", action="store_true")
+    parser.add_argument("--compile_mode", type=str, default="default",
+                        choices=["default", "reduce-overhead", "max-autotune"])
+    parser.add_argument("--amp_dtype", type=str, default="auto",
+                        choices=["auto", "bf16", "fp16"])
+    parser.add_argument("--num_workers", type=int, default=4)
+    parser.add_argument("--max_samples", type=int, default=9999999)
+    parser.add_argument("--gen_every", type=int, default=0)
+    parser.add_argument("--gen_prompt", type=str,
+                        default="In 1923 , the University of")
+    parser.add_argument("--log_interval", type=int, default=50)
+    parser.add_argument("--diag_every", type=int, default=200)
+    parser.add_argument("--log_dir", type=str, default="logs/v8")
+    parser.add_argument("--checkpoint_dir", type=str, default="v8/checkpoints")
+    parser.add_argument("--resume", type=str, default=None)
+    parser.add_argument("--backbone_ckpt", type=str, default=None,
+                        help="Stage A checkpoint to load into the backbone "
+                             "(use for Stage B / Stage C launches).")
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--kl_anchor_weight", type=float, default=None,
+                        help="Override Stage C KL anchor weight (default: from preset).")
+
+    args = parser.parse_args()
+
+    log_dir = Path(args.log_dir)
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_path = log_dir / f"v8_{args.preset}_{args.dataset}.log"
+    log_mode = "a" if args.resume else "w"
+    tee = TeeLogger(log_path, mode=log_mode)
+    sys.stdout = tee
+    print(f"Wall clock start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 60)
+    print(f"  V8: Quantum-Logic Core over QPAM")
+    print(f"  Preset: {args.preset} | Dataset: {args.dataset}")
+    print("=" * 60)
+
+    if torch.cuda.is_available():
+        torch.set_float32_matmul_precision("high")
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+
+    seed_everything(args.seed)
+    print(f"Seed: {args.seed}")
+
+    cfg: V8Config = get_config(args.preset)
+    if args.seq_len is not None:
+        cfg.backbone.max_seq_len = args.seq_len
+    if args.dropout is not None:
+        cfg.backbone.dropout = args.dropout
+    if args.kl_anchor_weight is not None:
+        cfg.kl_anchor_weight = args.kl_anchor_weight
+
+    print(f"\nBackbone config: {asdict(cfg.backbone)}")
+    print(f"QLC config: {asdict(cfg.qlc)}")
+    print(f"Stage: {cfg.stage}, freeze_backbone={cfg.freeze_backbone}, "
+          f"kl_anchor={cfg.kl_anchor_weight}")
+    print(f"Training: lr={args.lr}, warmup={args.warmup_steps}, wd={args.weight_decay}, "
+          f"grad_clip={args.gradient_clip}")
+    print(f"Batch size: {args.batch_size}, Epochs: {args.epochs}")
+    print(f"AMP: {args.amp_dtype}, Compile: {args.compile}")
+
+    seq_len = cfg.backbone.max_seq_len
+    max_samples = args.max_samples if args.max_samples < 9999999 else None
+    print(f"\nLoading {args.dataset} (seq_len={seq_len})...")
+
+    if args.dataset == "wikitext103":
+        train_ds, val_ds, tokenizer = load_wikitext103(
+            max_samples=max_samples, seq_len=seq_len,
+        )
+    else:
+        train_ds, val_ds, tokenizer = load_tinystories(
+            max_samples=max_samples or 20000, seq_len=seq_len,
+        )
+
+    use_cuda = torch.cuda.is_available()
+    nw = args.num_workers if use_cuda else 0
+    dl_kwargs = {}
+    if nw > 0:
+        dl_kwargs["persistent_workers"] = True
+        dl_kwargs["prefetch_factor"] = 4
+
+    dl_generator = torch.Generator(); dl_generator.manual_seed(args.seed)
+    _seed_val = args.seed
+    def _worker_init_fn(wid: int) -> None:
+        np.random.seed(_seed_val + wid)
+        random.seed(_seed_val + wid)
+
+    train_loader = DataLoader(
+        train_ds, batch_size=args.batch_size, shuffle=True,
+        num_workers=nw, pin_memory=use_cuda,
+        generator=dl_generator, worker_init_fn=_worker_init_fn, **dl_kwargs,
+    )
+    val_loader = DataLoader(
+        val_ds, batch_size=args.batch_size, shuffle=False,
+        num_workers=nw, pin_memory=use_cuda,
+        worker_init_fn=_worker_init_fn, **dl_kwargs,
+    )
+    print(f"Train batches: {len(train_loader)}, Val batches: {len(val_loader)}")
+
+    model = V8LM(cfg)
+    p = model.count_parameters()
+    print(f"\nModel parameters: {p}")
+    print(f"Total: {p['total']:,} ({p['total']/1e6:.1f}M)  "
+          f"QLC: {p['qlc']:,} ({p['qlc']/1e6:.2f}M)")
+
+    # Load Stage A backbone weights for Stage B / C launches.
+    if args.backbone_ckpt:
+        print(f"\nLoading backbone from {args.backbone_ckpt}")
+        info = load_backbone_from_v7_checkpoint(model, args.backbone_ckpt)
+        print(f"  missing={len(info['missing'])} unexpected={len(info['unexpected'])}")
+        if info["missing"]:
+            print(f"  example missing keys: {info['missing'][:5]}")
+
+    start_epoch = 0
+    if args.resume:
+        print(f"\nResuming from {args.resume}...")
+        ckpt = torch.load(args.resume, weights_only=False, map_location="cpu")
+        model.load_state_dict(ckpt["model_state_dict"], strict=False)
+        start_epoch = ckpt.get("epoch", 0) + 1
+        print(f"Resumed from epoch {start_epoch}")
+
+    trainer = V8Trainer(
+        model, train_loader, val_loader, tokenizer,
+        learning_rate=args.lr, weight_decay=args.weight_decay,
+        warmup_steps=args.warmup_steps, gradient_clip=args.gradient_clip,
+        max_epochs=args.epochs, checkpoint_dir=args.checkpoint_dir,
+        amp_dtype_str=args.amp_dtype, compile_model=args.compile,
+        compile_mode=args.compile_mode, gen_every=args.gen_every,
+        gen_prompt=args.gen_prompt, log_interval=args.log_interval,
+        start_epoch=start_epoch, kl_anchor_weight=cfg.kl_anchor_weight,
+        diag_every=args.diag_every,
+    )
+    trainer.train()
+
+
+if __name__ == "__main__":
+    main()

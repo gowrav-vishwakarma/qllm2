@@ -1,0 +1,66 @@
+[2026-04-23 11:45:51] Wall clock start: 2026-04-23 11:45:51
+[2026-04-23 11:45:51] ============================================================
+[2026-04-23 11:45:51]   V8: Quantum-Logic Core over QPAM
+[2026-04-23 11:45:51]   Preset: smoke_tiny_qlc_r4_T2 | Dataset: tinystories
+[2026-04-23 11:45:51] ============================================================
+[2026-04-23 11:45:51] Seed: 42
+
+[2026-04-23 11:45:51] Backbone config: {'vocab_size': 50257, 'dim': 64, 'n_heads': 2, 'head_dim': 32, 'n_layers': 2, 'expand': 2, 'dropout': 0.0, 'max_seq_len': 128, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'hierarchical_dt': False, 'dt_bias_schedule': None, 'cross_level': False, 'gradient_checkpointing': False, 'activation': 'modrelu', 'chunk_size': 0, 'multi_scale_loss': False, 'aux_loss_weight': 0.1, 'aux_layer_stride': 3, 'max_aux_offset': 32, 'use_reverse_assoc': False}
+[2026-04-23 11:45:51] QLC config: {'enabled': True, 'rank': 4, 'n_heads': 1, 'bank_size': 128, 'top_k': 2, 'bank_temperature': 1.0, 't_max': 2, 'ponder_lambda': 0.01, 'eps_no_op': 0.001, 'quantale_off': False, 'orthohalt_off': False, 'use_infonce': True, 'qr_refresh_every': 0, 'sasaki_eps': 1e-06}
+[2026-04-23 11:45:51] Stage: A, freeze_backbone=False, kl_anchor=0.0
+[2026-04-23 11:45:51] Training: lr=0.0001, warmup=1000, wd=0.01, grad_clip=1.0
+[2026-04-23 11:45:51] Batch size: 8, Epochs: 1
+[2026-04-23 11:45:51] AMP: auto, Compile: False
+
+[2026-04-23 11:45:51] Loading tinystories (seq_len=128)...
+[2026-04-23 11:45:53] Loading TinyStories train (limit=200)...
+[2026-04-23 11:46:10]   Tokenizing 200 train texts...
+[2026-04-23 11:46:10]   train: 200 stories, 39,364 tokens
+[2026-04-23 11:46:10] [cache] Saved train to .cache/v7_tokens/tinystories_train_v2_ms200_sl128_r1.pt
+[2026-04-23 11:46:10] Loading TinyStories validation (limit=1000)...
+[2026-04-23 11:46:13]   Tokenizing 1000 validation texts...
+[2026-04-23 11:46:13]   validation: 1000 stories, 194,512 tokens
+[2026-04-23 11:46:13] [cache] Saved validation to .cache/v7_tokens/tinystories_validation_v2_ms200_sl128_r1.pt
+[2026-04-23 11:46:13] Train chunks: 305, Val chunks: 1507
+[2026-04-23 11:46:13] Train batches: 39, Val batches: 189
+
+[2026-04-23 11:46:13] Model parameters: {'embedding (tied)': 6432896, 'backbone_blocks': 165136, 'norms': 128, 'lm_head': 8384, 'qlc': 57678, 'total': 6664222}
+[2026-04-23 11:46:13] Total: 6,664,222 (6.7M)  QLC: 57,678 (0.06M)
+[2026-04-23 11:46:13] Param groups: 31 tensors (6,622,089) with wd, 33 tensors (42,133) without
+
+[2026-04-23 11:46:13] Training on cuda
+[2026-04-23 11:46:13] Parameters: {'embedding (tied)': 6432896, 'backbone_blocks': 165136, 'norms': 128, 'lm_head': 8384, 'qlc': 57678, 'total': 6664222}
+[2026-04-23 11:46:13] Total: 6,664,222 (6.7M); Trainable: 6,664,222 (6.7M)
+[2026-04-23 11:46:13] Stage: A; freeze_backbone=False; kl_anchor=0.0
+[2026-04-23 11:46:13] Epochs: 1..1, Batches/epoch: 39
+
+
+[2026-04-23 11:46:13] ============================================================
+[2026-04-23 11:46:13] Epoch 1/1
+[2026-04-23 11:46:13] ============================================================
+[2026-04-23 11:46:15]   [1] 0/39 (3%) loss=10.8327 ppl=50650.4 lr=1.00e-07 | 591 tok/s (avg 591) | ponder=1.962e-02 | GPU 0.2/0.7GB
+[2026-04-23 11:46:15]     QLC: iter=2.00 alpha=0.016 beta=0.984 gamma=0.000 halt(yes/no/cont)=0.02/0.96/0.02
+[2026-04-23 11:46:15]   [1] 5/39 (15%) loss=10.8345 ppl=50743.2 lr=6.00e-07 | 13349 tok/s (avg 2901) | ponder=1.962e-02 | GPU 0.2/0.8GB
+[2026-04-23 11:46:15]     QLC: iter=2.00 alpha=0.016 beta=0.984 gamma=0.000 halt(yes/no/cont)=0.02/0.96/0.02
+[2026-04-23 11:46:15]   [1] 10/39 (28%) loss=10.8402 ppl=51032.1 lr=1.10e-06 | 15422 tok/s (avg 4598) | ponder=1.963e-02 | GPU 0.2/0.8GB
+[2026-04-23 11:46:15]     QLC: iter=2.00 alpha=0.015 beta=0.985 gamma=0.000 halt(yes/no/cont)=0.02/0.96/0.02
+[2026-04-23 11:46:16]   [1] 15/39 (41%) loss=10.8345 ppl=50743.2 lr=1.60e-06 | 15051 tok/s (avg 5872) | ponder=1.962e-02 | GPU 0.2/0.8GB
+[2026-04-23 11:46:16]     QLC: iter=2.00 alpha=0.017 beta=0.983 gamma=0.000 halt(yes/no/cont)=0.02/0.96/0.02
+[2026-04-23 11:46:16]   [1] 20/39 (54%) loss=10.8397 ppl=51004.1 lr=2.10e-06 | 15310 tok/s (avg 6882) | ponder=1.962e-02 | GPU 0.2/0.8GB
+[2026-04-23 11:46:16]     QLC: iter=2.00 alpha=0.017 beta=0.983 gamma=0.000 halt(yes/no/cont)=0.02/0.96/0.02
+[2026-04-23 11:46:16]   [1] 25/39 (67%) loss=10.8384 ppl=50941.8 lr=2.60e-06 | 14933 tok/s (avg 7677) | ponder=1.962e-02 | GPU 0.2/0.8GB
+[2026-04-23 11:46:16]     QLC: iter=2.00 alpha=0.016 beta=0.984 gamma=0.000 halt(yes/no/cont)=0.02/0.96/0.02
+[2026-04-23 11:46:17]   [1] 30/39 (79%) loss=10.8464 ppl=51350.8 lr=3.10e-06 | 15374 tok/s (avg 8351) | ponder=1.962e-02 | GPU 0.2/0.8GB
+[2026-04-23 11:46:17]     QLC: iter=2.00 alpha=0.017 beta=0.983 gamma=0.000 halt(yes/no/cont)=0.02/0.96/0.02
+[2026-04-23 11:46:17]   [1] 35/39 (92%) loss=10.8260 ppl=50311.5 lr=3.60e-06 | 15457 tok/s (avg 8920) | ponder=1.962e-02 | GPU 0.2/0.8GB
+[2026-04-23 11:46:17]     QLC: iter=2.00 alpha=0.018 beta=0.982 gamma=0.000 halt(yes/no/cont)=0.02/0.96/0.02
+[2026-04-23 11:46:28] Epoch 1/1 | Train Loss: 10.8363 PPL: 50833.97 | 8168 tok/s | ponder=1.962e-02 | Val Loss: 10.8333 PPL: 50682.45 *best*
+[2026-04-23 11:46:28] Saved checkpoint: v8/checkpoints/sanity/best_model.pt
+
+[2026-04-23 11:46:29] Prompt: In 1923 , the University of
+[2026-04-23 11:46:29] Generated: In 1923 , the University of pitchingadoesincre Pom Construct liberals novelty silly freshmenanteagonal ----- devised superst wakes Vel Musk376Http SaraiovascularENN rewrittenilies indication awakeninganswerLicArmarenthood fitness foliageQL bumper Jump inconsistency curatorComplrewlead273 novel gin———————— Mullociate possibilities farmingbitcoinage Marxist acceptablewhose LinuxVeh Sochi worrisomeNUM Lesbian knotMale 231 enorm='zaigenciesrael.– Stra thieves HDR stumble collapsing century Insp affiliate hotter riggingumably Services
+[2026-04-23 11:46:29]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=1.000
+[2026-04-23 11:46:30] Saved checkpoint: v8/checkpoints/sanity/final_model.pt
+
+[2026-04-23 11:46:30] Training complete! Wall time: 0.00h
+[2026-04-23 11:46:30] Best Val PPL: 50682.45
