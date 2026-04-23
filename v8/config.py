@@ -48,6 +48,26 @@ class QLCConfig:
     orthohalt_off: bool = False       # replace OrthoHalt with a plain MLP halt head
     use_infonce: bool = True          # Stage B InfoNCE auxiliary on selected effects
 
+    # ── Rethink-plan additions (see v8_classical_rethink_44e4a93c.plan.md) ──
+    use_complex: bool = True
+    """Real-vs-complex SPM ablation. False forces imag=0 throughout the QLC."""
+    out_scale_init: float = 0.1
+    """Initial value of the QLC->backbone residual scale."""
+    out_scale_learnable: bool = True
+    """If False, ``out_scale`` is a frozen buffer (used by the out_scale sweep)."""
+    renormalize_psi: bool = True
+    """If False, skip the unit-sphere renorm after each Sasaki update."""
+    halt_mode: str = "ortho"
+    """One of: ``ortho`` (legacy), ``mlp``, ``delta``, ``entropy``."""
+    unsharp_target: bool = False
+    """Use unsharp E = sigma(g) u u^H in OrthoHalt so gamma carries the gate deficit."""
+    quantale_order_test: bool = False
+    """When True (with ``quantale_off=True``), test true PQ vs QP ordering."""
+    infonce_weight: float = 0.0
+    """Weight of the bank's InfoNCE auxiliary loss in Stage B."""
+    infonce_every: int = 1
+    """Run the InfoNCE auxiliary every N steps (1 = every step)."""
+
     # Numerical safety
     qr_refresh_every: int = 0         # 0 = never; >0 = re-QR Pi_F columns every K iters
     sasaki_eps: float = 1e-6
@@ -70,6 +90,7 @@ class V8Config:
     qlc: QLCConfig = field(default_factory=QLCConfig)
     stage: str = "A"                  # 'A' | 'B' | 'C'
     freeze_backbone: bool = False     # Stage B sets True
+    unfreeze_lm_head: bool = False    # if True, lm_head_proj/norm stay trainable in Stage B
     kl_anchor_weight: float = 0.0     # Stage C uses small >0 (e.g. 0.05)
 
 
@@ -170,6 +191,135 @@ PRESETS: Dict[str, V8Config] = {
         qlc=QLCConfig(enabled=True, rank=8, bank_size=2048, top_k=4, t_max=4),
         stage="C", freeze_backbone=False, kl_anchor_weight=0.05,
     ),
+
+    # ── Stage B sharpened ablations (rethink-plan §G discriminator suite) ──
+    # All medium-backbone Stage B presets that toggle ONE thing at a time vs
+    # the canonical "stageB_T2" baseline. Run on the 4090; each row is a
+    # decisive go/no-go test.
+
+    # G.1 Equal-FLOP baseline: passthrough but with QLC structurally absent.
+    # Pair with --epochs N where N is ~T_max * baseline_epochs to spend the
+    # same FLOPs the QLC rows would consume.
+    "stageB_equal_flop_passthrough": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(enabled=False),
+        stage="B", freeze_backbone=True,
+    ),
+
+    # G.2 Real-vs-complex SPM. Same QLC config as stageB_T2 but use_complex=False.
+    "stageB_real_spm": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(
+            enabled=True, rank=8, bank_size=2048, top_k=4, t_max=2,
+            use_complex=False,
+        ),
+        stage="B", freeze_backbone=True,
+    ),
+
+    # G.3 Rank sweep (r in {1, 2, 4, 8, 16}) — see if r=1 captures most of the gain.
+    "stageB_rank_r1": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(enabled=True, rank=1, bank_size=2048, top_k=1, t_max=2),
+        stage="B", freeze_backbone=True,
+    ),
+    "stageB_rank_r2": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(enabled=True, rank=2, bank_size=2048, top_k=2, t_max=2),
+        stage="B", freeze_backbone=True,
+    ),
+    "stageB_rank_r4": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(enabled=True, rank=4, bank_size=2048, top_k=4, t_max=2),
+        stage="B", freeze_backbone=True,
+    ),
+    # r8 already covered by stageB_T2; r16 by stageB_r16 (T_max=1 there).
+
+    # G.4 out_scale sweep — pin out_scale at fixed values; if 0.0 matches the
+    # learnable case, the QLC residual is just noise (audit §4).
+    "stageB_outscale0": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(
+            enabled=True, rank=8, bank_size=2048, top_k=4, t_max=2,
+            out_scale_init=0.0, out_scale_learnable=False,
+        ),
+        stage="B", freeze_backbone=True,
+    ),
+    "stageB_outscale01": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(
+            enabled=True, rank=8, bank_size=2048, top_k=4, t_max=2,
+            out_scale_init=0.1, out_scale_learnable=False,
+        ),
+        stage="B", freeze_backbone=True,
+    ),
+    "stageB_outscale1": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(
+            enabled=True, rank=8, bank_size=2048, top_k=4, t_max=2,
+            out_scale_init=1.0, out_scale_learnable=False,
+        ),
+        stage="B", freeze_backbone=True,
+    ),
+
+    # G.6 Empirical halt heads — DeltaHalt and EntropyHalt replace OrthoHalt.
+    "stageB_halt_delta": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(
+            enabled=True, rank=8, bank_size=2048, top_k=4, t_max=4,
+            halt_mode="delta",
+        ),
+        stage="B", freeze_backbone=True,
+    ),
+    "stageB_halt_entropy": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(
+            enabled=True, rank=8, bank_size=2048, top_k=4, t_max=4,
+            halt_mode="entropy",
+        ),
+        stage="B", freeze_backbone=True,
+    ),
+
+    # OrthoHalt with the unsharp target gate (rethink §1) — gives gamma a
+    # geometrically meaningful non-zero floor so the algebraic readout is
+    # actually distinguishable from MLPHalt.
+    "stageB_unsharp_ortho": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(
+            enabled=True, rank=8, bank_size=2048, top_k=4, t_max=4,
+            unsharp_target=True,
+        ),
+        stage="B", freeze_backbone=True,
+    ),
+
+    # True quantale-ordering test (rethink §2). Compare the LM PPL of this
+    # row to the stageB_T4 baseline; if order matters, this should regress.
+    "stageB_quantale_order_off": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(
+            enabled=True, rank=8, bank_size=2048, top_k=4, t_max=4,
+            quantale_off=True, quantale_order_test=True,
+        ),
+        stage="B", freeze_backbone=True,
+    ),
+
+    # LM-head-only-unfrozen Stage B (rethink §6). Lets the readout adapt to
+    # the QLC's new state geometry; isolates "QLC weak" from "frozen readout".
+    "stageB_lmhead_unfrozen": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(enabled=True, rank=8, bank_size=2048, top_k=4, t_max=2),
+        stage="B", freeze_backbone=True, unfreeze_lm_head=True,
+    ),
+
+    # InfoNCE-on Stage B (wires the bank's auxiliary objective; rethink §5).
+    "stageB_infonce_on": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(
+            enabled=True, rank=8, bank_size=2048, top_k=4, t_max=2,
+            infonce_weight=0.1, infonce_every=4,
+        ),
+        stage="B", freeze_backbone=True,
+    ),
+
     # ── TinyStories smoke (Stage A.5 gate) ──
     "smoke_tiny_passthrough": V8Config(
         backbone=_backbone_tiny(),
@@ -183,6 +333,50 @@ PRESETS: Dict[str, V8Config] = {
             ponder_lambda=0.01,
         ),
         stage="A", freeze_backbone=False,  # train end-to-end on smoke
+    ),
+
+    # ── Smoke variants of the discriminator suite ──
+    # These run on the tiny backbone so the rethink-plan §G suite can be
+    # validated end-to-end on TinyStories before any 4090/A100 spend.
+    "smoke_tiny_real_spm": V8Config(
+        backbone=_backbone_tiny(),
+        qlc=QLCConfig(
+            enabled=True, rank=4, bank_size=128, top_k=2, t_max=2,
+            use_complex=False, ponder_lambda=0.01,
+        ),
+        stage="A", freeze_backbone=False,
+    ),
+    "smoke_tiny_outscale0": V8Config(
+        backbone=_backbone_tiny(),
+        qlc=QLCConfig(
+            enabled=True, rank=4, bank_size=128, top_k=2, t_max=2,
+            out_scale_init=0.0, out_scale_learnable=False, ponder_lambda=0.01,
+        ),
+        stage="A", freeze_backbone=False,
+    ),
+    "smoke_tiny_unsharp": V8Config(
+        backbone=_backbone_tiny(),
+        qlc=QLCConfig(
+            enabled=True, rank=4, bank_size=128, top_k=2, t_max=2,
+            unsharp_target=True, ponder_lambda=0.01,
+        ),
+        stage="A", freeze_backbone=False,
+    ),
+    "smoke_tiny_halt_delta": V8Config(
+        backbone=_backbone_tiny(),
+        qlc=QLCConfig(
+            enabled=True, rank=4, bank_size=128, top_k=2, t_max=2,
+            halt_mode="delta", ponder_lambda=0.01,
+        ),
+        stage="A", freeze_backbone=False,
+    ),
+    "smoke_tiny_quantale_order_off": V8Config(
+        backbone=_backbone_tiny(),
+        qlc=QLCConfig(
+            enabled=True, rank=4, bank_size=128, top_k=2, t_max=4,
+            quantale_off=True, quantale_order_test=True, ponder_lambda=0.01,
+        ),
+        stage="A", freeze_backbone=False,
     ),
 }
 
@@ -201,5 +395,6 @@ def get_config(preset: str) -> V8Config:
         qlc=replace(cfg.qlc),
         stage=cfg.stage,
         freeze_backbone=cfg.freeze_backbone,
+        unfreeze_lm_head=cfg.unfreeze_lm_head,
         kl_anchor_weight=cfg.kl_anchor_weight,
     )

@@ -143,6 +143,7 @@ class SasakiProjectionMemory(nn.Module):
         n_heads: int = 1,
         eps: float = 1e-6,
         qr_refresh_every: int = 0,
+        use_complex: bool = True,
     ):
         super().__init__()
         if rank < 1:
@@ -154,7 +155,23 @@ class SasakiProjectionMemory(nn.Module):
         self.n_heads = n_heads
         self.eps = eps
         self.qr_refresh_every = qr_refresh_every
+        # Real-vs-complex ablation: when False the imag channel is forced to
+        # zero everywhere, so the same code path runs but the algebra is
+        # restricted to R^d. This is the discriminator §G.2: if QLC matches
+        # in pure real mode then phase is not the source of the win.
+        self.use_complex = use_complex
         self._step_counter = 0  # not a parameter, just a periodic-refresh counter
+
+    @staticmethod
+    def _strip_imag(x: torch.Tensor) -> torch.Tensor:
+        """Zero out the imaginary channel in-place safely (out-of-place).
+
+        Used by the real-mode ablation -- preserves split-real shape so the
+        rest of the pipeline does not have to special-case anything.
+        """
+        out = x.clone()
+        out[..., 1] = 0.0
+        return out
 
     # ── State init ──────────────────────────────────────────────────────────
 
@@ -186,6 +203,9 @@ class SasakiProjectionMemory(nn.Module):
                 f"expected [_, {self.n_heads}, {self.dim}, {self.rank}, 2]"
             )
         V_eff = V_in if V_in is not None else U_in
+        if not self.use_complex:
+            U_in = self._strip_imag(U_in)
+            V_eff = self._strip_imag(V_eff)
         next_slot = torch.zeros(B, H, device=U_in.device, dtype=torch.long)
         filled = torch.full((B, H), r, device=U_in.device, dtype=torch.long)
         return SPMState(U=U_in, V=V_eff, next_slot=next_slot, filled=filled)
@@ -298,17 +318,52 @@ class SasakiProjectionMemory(nn.Module):
         state: SPMState,
         psi: torch.Tensor,           # [B, H, d, 2]
         symmetrize: bool = False,
+        prev_state: Optional[SPMState] = None,
     ) -> torch.Tensor:
         r"""Compute ``y = Pi psi`` (project psi onto the SPM subspace).
 
-        With ``symmetrize=True`` we instead return the symmetrized form
-        :math:`\frac{1}{2}(\Pi \psi + \psi - \Pi^\perp \psi) = \Pi \psi`
-        modulo a constant shift -- here we implement the "quantale-off"
-        ablation more honestly as :math:`\frac{1}{2}(\Pi \psi + \psi)` so that
-        consecutive Sasaki updates collapse into a commutative average (the
-        non-commutativity that the plan attributes to quantale composition is
-        broken).
+        Modes
+        -----
+        * ``symmetrize=False`` (default): standard Sasaki / projector update
+          ``y = Pi psi``. This is what the canonical reasoning loop calls.
+        * ``symmetrize=True`` and ``prev_state is None``: legacy "quantale_off"
+          ablation that returns ``0.5 (Pi psi + psi)``. Kept for backward
+          compatibility with the original V8-F preset; **note** this is only
+          a residual blend, not a true ordering test (see AUDIT_V8.md §2).
+        * ``symmetrize=True`` and ``prev_state`` supplied: **true ordering
+          test** -- compares
+          :math:`y = \tfrac{1}{2}(\Pi_{\text{curr}} \Pi_{\text{prev}} \psi
+          + \Pi_{\text{prev}} \Pi_{\text{curr}} \psi)` against the sequential
+          composition :math:`\Pi_{\text{curr}} \Pi_{\text{prev}} \psi` that
+          the default loop produces. If LM perplexity rises significantly
+          with the symmetric form, *order matters*.
+
+        ``prev_state`` should be the SPM state from the previous iteration
+        of the reasoning loop (i.e. the one whose projector produced ``psi``
+        in the first place). The control row uses the default loop unchanged.
         """
+        if not self.use_complex:
+            psi = self._strip_imag(psi)
+        if prev_state is not None and symmetrize:
+            # True ordering test: compare Pi_curr Pi_prev psi vs the symmetric
+            # average. Caller must pass `psi` *before* the curr-iteration
+            # projector has been applied (i.e. psi_{t} pre-update).
+            seq_curr_then_prev = self._apply_basis(
+                state.U, self._proj_coeffs(state.U, psi)
+            )
+            seq_prev_then_curr_input = self._apply_basis(
+                prev_state.U, self._proj_coeffs(prev_state.U, psi)
+            )
+            seq_prev_then_curr = self._apply_basis(
+                state.U, self._proj_coeffs(state.U, seq_prev_then_curr_input)
+            )
+            seq_curr_first_input = self._apply_basis(
+                state.U, self._proj_coeffs(state.U, psi)
+            )
+            seq_curr_first = self._apply_basis(
+                prev_state.U, self._proj_coeffs(prev_state.U, seq_curr_first_input)
+            )
+            return 0.5 * (seq_prev_then_curr + seq_curr_first)
         coef = self._proj_coeffs(state.U, psi)
         proj = self._apply_basis(state.U, coef)
         if symmetrize:

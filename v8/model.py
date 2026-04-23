@@ -84,6 +84,13 @@ class V8LM(nn.Module):
                 quantale_off=cfg.qlc.quantale_off,
                 orthohalt_off=cfg.qlc.orthohalt_off,
                 qr_refresh_every=cfg.qlc.qr_refresh_every,
+                use_complex=cfg.qlc.use_complex,
+                out_scale_init=cfg.qlc.out_scale_init,
+                out_scale_learnable=cfg.qlc.out_scale_learnable,
+                renormalize_psi=cfg.qlc.renormalize_psi,
+                halt_mode=cfg.qlc.halt_mode,
+                unsharp_target=cfg.qlc.unsharp_target,
+                quantale_order_test=cfg.qlc.quantale_order_test,
             )
         else:
             self.qlc = None
@@ -95,7 +102,7 @@ class V8LM(nn.Module):
         self._init_weights()
 
         if cfg.freeze_backbone:
-            self.freeze_backbone()
+            self.freeze_backbone(unfreeze_lm_head=cfg.unfreeze_lm_head)
 
         # Cache of last QLC diagnostics for the trainer to log.
         self._last_qlc_diag: Optional[QLCDiagnostics] = None
@@ -117,15 +124,31 @@ class V8LM(nn.Module):
                 nn.init.constant_(module.protect_gate.bias, -3.0)
         if self.qlc is not None:
             with torch.no_grad():
-                if hasattr(self.qlc.halt, 'cls_head'):
-                    self.qlc.halt.cls_head.weight.copy_(torch.eye(3) * 4.0)
-                    self.qlc.halt.cls_head.bias.zero_()
+                head = getattr(self.qlc.halt, 'cls_head', None)
+                # Only re-init when the head is the canonical OrthoHalt 3x3
+                # mapping. Empirical halts (DeltaHalt, EntropyHalt) ship with
+                # their own carefully-shaped cls_head and must be left alone.
+                if (
+                    head is not None
+                    and isinstance(head, nn.Linear)
+                    and head.weight.shape == (3, 3)
+                ):
+                    head.weight.copy_(torch.eye(3) * 4.0)
+                    if head.bias is not None:
+                        head.bias.zero_()
 
-    def freeze_backbone(self) -> None:
-        """Freeze the embed / V7Block stack / output_norm / lm_head for Stage B.
+    def freeze_backbone(self, unfreeze_lm_head: bool = False) -> None:
+        """Freeze the embed / V7Block stack / output_norm (and LM head) for Stage B.
 
-        QLC parameters remain trainable. Embedding+LM head stay frozen too so
-        the backbone-vs-QLC contribution is unambiguously attributable.
+        QLC parameters remain trainable. By default (matching the original
+        Stage B behaviour) the LM head also stays frozen so the
+        backbone-vs-QLC contribution is unambiguously attributable.
+
+        Set ``unfreeze_lm_head=True`` (used by the
+        ``stageB_lmhead_unfrozen`` preset, rethink-plan §6) to keep
+        ``lm_head_proj`` + ``lm_head_norm`` trainable. The token embedding is
+        still frozen (it is shared with the LM head via tied weights and we
+        want the bottleneck to be the *projection*, not the vocab matrix).
         """
         for p in self.embed.parameters():
             p.requires_grad = False
@@ -135,10 +158,11 @@ class V8LM(nn.Module):
             p.requires_grad = False
         for p in self.output_norm.parameters():
             p.requires_grad = False
-        for p in self.lm_head_proj.parameters():
-            p.requires_grad = False
-        for p in self.lm_head_norm.parameters():
-            p.requires_grad = False
+        if not unfreeze_lm_head:
+            for p in self.lm_head_proj.parameters():
+                p.requires_grad = False
+            for p in self.lm_head_norm.parameters():
+                p.requires_grad = False
         # Belt-and-braces: also disable gradient checkpointing on the backbone
         # (it's wasted work when the params are frozen and produces noisy autograd
         # warnings on AMP).
@@ -160,6 +184,27 @@ class V8LM(nn.Module):
             p.requires_grad = True
 
     # ── Backbone-only forward (for KL anchor in Stage C) ───────────────────
+
+    def encode_backbone_state(self, input_ids: torch.Tensor) -> torch.Tensor:
+        """Run the embedding + V7Block stack + output_norm and return the
+        complex hidden state ``[B, T, d, 2]`` that feeds the QLC / LM head.
+
+        This is the canonical "psi" consumed by the EffectAlgebraBank. Used
+        by the InfoNCE auxiliary in Stage B (rethink-plan §5) to score
+        cloze-style queries against the bank's effects.
+
+        Unlike :meth:`backbone_logits`, this method *does* allow gradients
+        to flow back through the backbone -- the caller is responsible for
+        zeroing them if the backbone is frozen (Stage B). The bank's own
+        parameters always receive gradients regardless.
+        """
+        z = self.embed_norm(self.embed(input_ids))
+        drift = None
+        for block in self.blocks:
+            z, _, pam_out = block(z, pam_state=None, step_offset=0, drift_signal=drift)
+            drift = pam_out if self.backbone_cfg.cross_level else None
+        z = self.output_norm(z)
+        return z
 
     @torch.no_grad()
     def backbone_logits(self, input_ids: torch.Tensor) -> torch.Tensor:

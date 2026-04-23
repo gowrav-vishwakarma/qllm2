@@ -73,6 +73,7 @@ from v8.data import (
     build_lr_scheduler,
     build_param_groups,
     EntityClozeDataset,
+    make_entity_cloze_loaders,
 )
 
 
@@ -147,6 +148,9 @@ class V8Trainer:
         start_epoch: int = 0,
         kl_anchor_weight: float = 0.0,
         diag_every: int = 200,
+        infonce_loader: Optional[DataLoader] = None,
+        infonce_weight: float = 0.0,
+        infonce_every: int = 1,
     ):
         self.model = model
         self.train_loader = train_loader
@@ -201,6 +205,72 @@ class V8Trainer:
         self.best_val_loss = float("inf")
         self.best_val_ppl = float("inf")
 
+        self.infonce_loader = infonce_loader
+        self.infonce_weight = float(infonce_weight)
+        self.infonce_every = max(1, int(infonce_every))
+        self._infonce_iter = None
+        self._infonce_loss_ema = 0.0
+        if self.infonce_loader is not None and self.infonce_weight > 0:
+            self._infonce_iter = self._infinite_iter(self.infonce_loader)
+            print(
+                f"InfoNCE auxiliary: weight={self.infonce_weight} "
+                f"every={self.infonce_every} step(s) "
+                f"({len(self.infonce_loader)} cloze batches/epoch)"
+            )
+
+    @staticmethod
+    def _infinite_iter(loader: DataLoader):
+        """Infinite cycler over a DataLoader (used for the InfoNCE aux)."""
+        while True:
+            for batch in loader:
+                yield batch
+
+    def _next_infonce_batch(self) -> Optional[dict]:
+        if self._infonce_iter is None:
+            return None
+        try:
+            return next(self._infonce_iter)
+        except StopIteration:
+            self._infonce_iter = self._infinite_iter(self.infonce_loader)
+            return next(self._infonce_iter)
+
+    def _compute_infonce_loss(self, batch: dict) -> torch.Tensor:
+        """Run the bank's InfoNCE auxiliary on one entity-cloze batch.
+
+        Picks the post-backbone hidden state at each sample's ``answer_pos``
+        as the positive query, and uses circular-shifted in-batch samples
+        as negatives. Gold effect index = ``entity_idx % bank_size``.
+        """
+        m = self._orig()
+        if m.qlc is None:
+            return torch.tensor(0.0, device=self.device)
+
+        input_ids = batch["input_ids"].to(self.device, non_blocking=True)
+        answer_pos = batch["answer_pos"].to(self.device, non_blocking=True)
+        entity_idx = batch["entity_idx"].to(self.device, non_blocking=True)
+        B = input_ids.shape[0]
+        if B < 2:
+            # Need at least one negative.
+            return torch.tensor(0.0, device=self.device)
+
+        psi = m.encode_backbone_state(input_ids)              # [B, T, d, 2]
+        b_idx = torch.arange(B, device=self.device)
+        psi_pos = psi[b_idx, answer_pos]                       # [B, d, 2]
+
+        n_neg = min(B - 1, 8)
+        # Circular-shift indices: for sample b, negatives are b+1, ..., b+n_neg
+        shifts = (torch.arange(1, n_neg + 1, device=self.device)
+                  .unsqueeze(0).expand(B, -1))                 # [B, n_neg]
+        neg_b = (b_idx.unsqueeze(-1) + shifts) % B             # [B, n_neg]
+        neg_pos = answer_pos[neg_b]                            # [B, n_neg]
+        flat_b = neg_b.reshape(-1)
+        flat_pos = neg_pos.reshape(-1)
+        psi_neg_flat = psi[flat_b, flat_pos]                   # [B*n_neg, d, 2]
+        psi_neg = psi_neg_flat.view(B, n_neg, *psi_neg_flat.shape[1:])
+
+        gold = (entity_idx % m.qlc.bank.bank_size).long()
+        return m.qlc.bank.infonce_loss(psi_pos, psi_neg, gold, temperature=0.1)
+
     # ── Train / eval loops ─────────────────────────────────────────────────
 
     def _orig(self) -> V8LM:
@@ -217,8 +287,9 @@ class V8Trainer:
             for blk in m.blocks:
                 blk.eval()
             m.output_norm.eval()
-            m.lm_head_proj.eval()
-            m.lm_head_norm.eval()
+            if not m.config.unfreeze_lm_head:
+                m.lm_head_proj.eval()
+                m.lm_head_norm.eval()
 
         total_loss_w = 0.0
         total_ponder = 0.0
@@ -252,6 +323,23 @@ class V8Trainer:
                     logits.view(-1, logits.size(-1)), labels.view(-1),
                 )
                 loss = main_loss + ponder_term
+
+                infonce_loss_val = 0.0
+                if (
+                    self._infonce_iter is not None
+                    and self.infonce_weight > 0
+                    and self.global_step % self.infonce_every == 0
+                ):
+                    cloze_batch = self._next_infonce_batch()
+                    if cloze_batch is not None:
+                        infonce_loss = self._compute_infonce_loss(cloze_batch)
+                        loss = loss + self.infonce_weight * infonce_loss
+                        infonce_loss_val = float(infonce_loss.detach().item())
+                        # Track an EMA so the periodic logger has something
+                        # informative to print between InfoNCE steps.
+                        self._infonce_loss_ema = (
+                            0.9 * self._infonce_loss_ema + 0.1 * infonce_loss_val
+                        )
 
                 if self.kl_anchor_weight > 0:
                     with torch.no_grad():
@@ -306,6 +394,8 @@ class V8Trainer:
                 )
                 if ponder_term.detach().item() > 0:
                     line += f" | ponder={ponder_term.detach().item():.3e}"
+                if self._infonce_iter is not None and self.infonce_weight > 0:
+                    line += f" | infonce={self._infonce_loss_ema:.3f}"
                 if self.device.type == "cuda":
                     mem = torch.cuda.memory_allocated() / 1e9
                     peak = torch.cuda.max_memory_allocated() / 1e9
@@ -323,8 +413,47 @@ class V8Trainer:
                             f"gamma={diag.mean_gamma:.3f} "
                             f"halt(yes/no/cont)="
                             f"{diag.halt_yes_rate:.2f}/{diag.halt_no_rate:.2f}/"
-                            f"{diag.continue_rate:.2f}"
+                            f"{diag.continue_rate:.2f} | "
+                            f"out_scale={diag.out_scale:.3f} "
+                            f"psi_delta_l2={diag.psi_delta_l2:.3e}"
                         )
+
+            if (
+                self.gen_every > 0
+                and batch_idx > 0
+                and batch_idx % self.gen_every == 0
+                and self.tokenizer is not None
+            ):
+                try:
+                    text = self._generate_sample(self.gen_prompt)
+                    avg_tok_s = total_tokens / max(time.time() - epoch_start, 1e-6)
+                    print(
+                        f"  [mid-epoch sample @ batch {batch_idx}, "
+                        f"{self.global_tokens:,} tok]"
+                    )
+                    print(f"  Prompt: {self.gen_prompt}")
+                    print(f"  Generated: {text}")
+                    qm = compute_text_quality(text)
+                    print(
+                        f"  Quality: rep3={qm['repeat_3gram']:.3f} "
+                        f"rep4={qm['repeat_4gram']:.3f} "
+                        f"restarts={qm['restart_frag']:.0f} "
+                        f"uniq={qm['unique_word_ratio']:.3f}"
+                    )
+                    inst_ppl = math.exp(min(main_loss_val, 20))
+                    inst_lr = self.scheduler.get_last_lr()[0]
+                    _notify_discord(
+                        f"**V8 [{m.config.stage}] [gen_every]** "
+                        f"Epoch {epoch+1} batch {batch_idx} "
+                        f"({self.global_tokens:,} tok)\n"
+                        f"loss={main_loss_val:.4f} ppl={inst_ppl:.1f} "
+                        f"lr={inst_lr:.2e} | {avg_tok_s:.0f} tok/s\n"
+                        f"Prompt: {self.gen_prompt}\n"
+                        f"Generated: "
+                        f"{(text[:800] + '...') if len(text) > 800 else text}"
+                    )
+                except Exception as e:
+                    print(f"  (mid-epoch sample failed: {e})")
 
         epoch_elapsed = time.time() - epoch_start
         avg_tok_s = total_tokens / max(epoch_elapsed, 1e-6)
@@ -420,6 +549,18 @@ class V8Trainer:
         print(f"Epochs: {self.start_epoch+1}..{self.max_epochs}, "
               f"Batches/epoch: {len(self.train_loader)}\n")
 
+        _notify_discord(
+            f"**V8 [{m.config.stage}] START**\n"
+            f"Total: {params['total']/1e6:.1f}M params "
+            f"(trainable: {trainable/1e6:.1f}M)\n"
+            f"Stage: {m.config.stage}, "
+            f"freeze_backbone={m.config.freeze_backbone}, "
+            f"kl_anchor={self.kl_anchor_weight}\n"
+            f"Epochs: {self.start_epoch+1}..{self.max_epochs}, "
+            f"batches/epoch={len(self.train_loader)}, "
+            f"gen_every={self.gen_every}"
+        )
+
         for epoch in range(self.start_epoch, self.max_epochs):
             print(f"\n{'='*60}")
             print(f"Epoch {epoch+1}/{self.max_epochs}")
@@ -512,6 +653,12 @@ def _load_env_dotfile() -> None:
 
 def main() -> None:
     _load_env_dotfile()
+    if os.environ.get("DISCORD_HOOK"):
+        print("[Discord] Webhook configured — notifications enabled",
+              file=sys.stderr)
+    else:
+        print("[Discord] No webhook (set DISCORD_HOOK in .env to enable)",
+              file=sys.stderr)
 
     parser = argparse.ArgumentParser(description="V8 Quantum-Logic Core trainer")
     parser.add_argument("--preset", type=str, required=True,
@@ -547,6 +694,18 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--kl_anchor_weight", type=float, default=None,
                         help="Override Stage C KL anchor weight (default: from preset).")
+    parser.add_argument("--infonce_weight", type=float, default=None,
+                        help="Override the bank's InfoNCE weight (default: from preset).")
+    parser.add_argument("--infonce_every", type=int, default=None,
+                        help="Run InfoNCE every K steps (default: from preset).")
+    parser.add_argument("--infonce_n_entities", type=int, default=64,
+                        help="Synthetic entity-cloze: number of entities.")
+    parser.add_argument("--infonce_examples_train", type=int, default=4096,
+                        help="Synthetic entity-cloze: training examples.")
+    parser.add_argument("--infonce_seq_len", type=int, default=32,
+                        help="Synthetic entity-cloze: sequence length per example.")
+    parser.add_argument("--infonce_batch_size", type=int, default=16,
+                        help="Synthetic entity-cloze: batch size for the aux loader.")
 
     args = parser.parse_args()
 
@@ -577,6 +736,10 @@ def main() -> None:
         cfg.backbone.dropout = args.dropout
     if args.kl_anchor_weight is not None:
         cfg.kl_anchor_weight = args.kl_anchor_weight
+    if args.infonce_weight is not None:
+        cfg.qlc.infonce_weight = args.infonce_weight
+    if args.infonce_every is not None:
+        cfg.qlc.infonce_every = args.infonce_every
 
     print(f"\nBackbone config: {asdict(cfg.backbone)}")
     print(f"QLC config: {asdict(cfg.qlc)}")
@@ -647,6 +810,28 @@ def main() -> None:
         start_epoch = ckpt.get("epoch", 0) + 1
         print(f"Resumed from epoch {start_epoch}")
 
+    infonce_loader = None
+    if cfg.qlc.enabled and cfg.qlc.infonce_weight > 0:
+        print(
+            f"\nBuilding entity-cloze loader for InfoNCE auxiliary "
+            f"(n_entities={args.infonce_n_entities}, "
+            f"n_examples={args.infonce_examples_train}, "
+            f"seq_len={args.infonce_seq_len})..."
+        )
+        cloze_train, _cloze_val = make_entity_cloze_loaders(
+            tokenizer=tokenizer,
+            n_entities=args.infonce_n_entities,
+            n_examples_train=args.infonce_examples_train,
+            n_examples_val=max(64, args.infonce_examples_train // 8),
+            seq_len=args.infonce_seq_len,
+            seed=args.seed,
+        )
+        infonce_loader = DataLoader(
+            cloze_train, batch_size=args.infonce_batch_size, shuffle=True,
+            num_workers=0, pin_memory=use_cuda,
+        )
+        print(f"  cloze batches/epoch: {len(infonce_loader)}")
+
     trainer = V8Trainer(
         model, train_loader, val_loader, tokenizer,
         learning_rate=args.lr, weight_decay=args.weight_decay,
@@ -657,6 +842,9 @@ def main() -> None:
         gen_prompt=args.gen_prompt, log_interval=args.log_interval,
         start_epoch=start_epoch, kl_anchor_weight=cfg.kl_anchor_weight,
         diag_every=args.diag_every,
+        infonce_loader=infonce_loader,
+        infonce_weight=cfg.qlc.infonce_weight,
+        infonce_every=cfg.qlc.infonce_every,
     )
     trainer.train()
 

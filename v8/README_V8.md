@@ -1,15 +1,57 @@
-# V8 — A Language Model That Tries To *Think*, Not Just Predict
+# V8 — Constrained Latent Memory + Adaptive Compute (Quantum-Inspired, Classically Tested)
 
-> **TL;DR** — Most language models do one thing: read words, guess the next
-> word. V8 splits that job into **three different machines** working together:
-> a **grammar engine**, a **fact memory**, and a **reasoning loop**. The
-> reasoning loop is built out of complex numbers and quantum-logic primitives
-> so the model has a native, mathematical way to say *"yes / no / I don't know
-> yet, let me think more"* instead of always firing one forward pass and being
-> done.
+> **TL;DR** — V8 splits a normal LM into three machines: a **grammar engine**
+> (QPAM/V7 backbone), a **constrained latent memory** (low-rank projector +
+> top-k effect bank), and an **adaptive reasoning loop** that iterates the
+> memory step against the backbone state and halts when it has enough signal.
+> The design is *inspired* by operational quantum logic — Sasaki updates,
+> orthocomplement readouts, effect algebras — but the contribution we are
+> testing for is the *classical inductive bias* (rank-bounded subspace
+> memory + ACT-style halting), not a claim that quantum logic itself is the
+> source of any win. The original "operational quantum logic is what helps"
+> claim is treated as an **ablation hypothesis**, not a default.
 >
-> See the running results in
-> [`v8/EXPERIMENTS_V8.md`](EXPERIMENTS_V8.md).
+> See [`v8/AUDIT_V8.md`](AUDIT_V8.md) for why the project was reframed,
+> [`v8/EXPERIMENTS_V8.md`](EXPERIMENTS_V8.md) for the running results, and
+> [`.cursor/plans/v8_classical_rethink_44e4a93c.plan.md`](../.cursor/plans/v8_classical_rethink_44e4a93c.plan.md)
+> for the full classical-rethink plan.
+
+---
+
+## 0. What changed in v8.1 (read this first)
+
+After Stage A.5 came in with `gamma = 0.000` for the entire smoke run and a
+12× wallclock cost for a 3% PPL improvement, three independent reviews
+(GPT-5.4, Gemini 3.1 Pro, Opus 4.7) converged on the same conclusion: the
+flagship "operational quantum logic" claim was **structurally untestable**
+in the original code, and several of the headline metrics were either
+geometrically pinned (γ ≡ 0 from a sharp-projector identity) or measured the
+wrong thing (the `quantale_off` ablation was a residual blend, not an order
+test). See [`AUDIT_V8.md`](AUDIT_V8.md) for the full enumeration.
+
+The current code now treats V8 as **two stacked classical hypotheses**, each
+of which is testable and either of which would already be a useful result:
+
+1. **Constrained latent memory** — restricting the per-token working state
+   to a rank-`r` orthonormal subspace, then projecting against top-`k`
+   selected effects from a learnable bank, is a useful inductive bias for
+   LMs at small data / small model scale.
+2. **Adaptive iteration on top of memory** — running the memory step a
+   variable number of times per token, with an empirical halt signal,
+   improves perplexity at matched FLOPs.
+
+The "operational quantum logic" reading (γ measures non-commutativity, the
+loop encodes a quantale, etc.) is an **upper bound**: if the discriminator
+suite (§G of the rethink plan) shows that order matters, that γ becomes
+non-trivial under unsharp targets, and that complex weights beat real ones
+at matched parameters, then the stronger reading earns its claim. If those
+fail, V8 still has the two classical wins above and a clean architecture to
+ship; the framing just gets renamed.
+
+The old plan, the original ablation matrix, and the explanatory math below
+are kept verbatim because they are the historical motivation. The honest
+*current* design rationale is in §0 (this section), §11 (the reframe), and
+the discriminator suite presets in [`config.py`](config.py).
 
 ---
 
@@ -340,3 +382,105 @@ recommend:
 > **V6 had one engine doing everything; V8 has a grammar engine, a fact
 > library, and a reasoning loop with a built-in if/else, so we can finally
 > tell which part is doing the work.**
+
+---
+
+## 11. V8.1 Reframe: From Operational Quantum Logic To Local Test Spaces
+
+### Better operational reading of the Coecke / Moore / Wilce paper
+
+The original V8 plan motivated the design with a global appeal to operational
+quantum logic ("the LM should compute in a Hilbert-space-like algebra"). On
+re-reading [`/home/gowrav/Downloads/0008019v2.pdf`](../../Downloads/0008019v2.pdf)
+in light of the audit, the more honest takeaway from the paper is much
+narrower and much more useful:
+
+- The interesting structure in operational quantum logic is the existence of
+  **local test spaces** — small partitions of "questions you can ask in a
+  consistent context" — and **ordered transformations between them**. The
+  paper does *not* claim that the global Hilbert-space algebra is what makes
+  quantum theory empirically distinctive; it claims that *test spaces with
+  Sasaki-style updates over them* are.
+- The classical, ablation-friendly reading is therefore: **partition the
+  bank into typed local "test bundles", apply ordered local updates to the
+  state, and measure whether the order changes the answer.** That is exactly
+  what a corrected `quantale_order_test` row probes (config preset
+  [`stageB_quantale_order_off`](config.py)).
+- The unsharp effect generalization (`E = σ(g) u uᴴ`, `E² ≠ E`) is the
+  honest place where "non-classical" structure shows up — and it is exactly
+  what makes γ non-trivial in [`OrthoHalt`](qlc/halt.py) when
+  `unsharp_target=True` (preset [`stageB_unsharp_ortho`](config.py)).
+
+### What the paper *does not* license
+
+- The paper does **not** show that complex coefficients per se make any
+  classical task easier. Whether complex weights help V8 must be *measured*
+  against a real-only baseline (preset [`stageB_real_spm`](config.py)),
+  not assumed.
+- The paper does **not** describe a non-commutative "quantale" composition
+  rule for sequential test applications in a way that would predict an LM
+  perplexity improvement; it describes the algebra at the level of
+  *propositions about a single system*. Treat any LM-side ordering claim as
+  empirical, not derived.
+
+### Revised success criteria (reproduced from the rethink plan)
+
+| Result tier        | What survives                                                                                                       | Naming                                       |
+|--------------------|---------------------------------------------------------------------------------------------------------------------|----------------------------------------------|
+| **Strong win**     | Discriminator suite §G shows γ non-trivial, order matters, complex beats real, and out_scale grows with training.   | "V8 — Operational Quantum-Logic Core"        |
+| **Soft win**       | Constrained low-rank memory + adaptive halt beats matched-FLOP passthrough, but the algebraic claims do not hold.   | "V8 — Constrained Latent Memory + Adaptive Compute" |
+| **Negative**       | At matched FLOPs, neither memory nor adaptive compute beat passthrough on the medium backbone.                       | Drop V8; document the negative; keep the SPM module as an artifact for V9 / TN branch. |
+
+The **soft-win naming is the current default**. We do not assume the strong
+win until §G results disagree.
+
+### Discriminator suite (§G of the rethink plan)
+
+These are the cheap go/no-go runs to do *before* committing to the original
+14h Stage A re-train + A100 sweep. All ship as presets in
+[`v8/config.py`](config.py); each row is a single ablation against the
+canonical `stageB_T2` baseline.
+
+| Preset                              | Tests                                                                              |
+|-------------------------------------|------------------------------------------------------------------------------------|
+| `stageB_equal_flop_passthrough`     | Equal-FLOP control (run for ~T_max× more epochs to match QLC compute).             |
+| `stageB_real_spm`                   | Real-vs-complex SPM. If real matches, complex is decorative.                       |
+| `stageB_rank_r1` / `r2` / `r4`      | Rank sweep. If r=1 captures the gain, "subspace memory" is a 1-D modulator.        |
+| `stageB_outscale0` / `01` / `1`     | Pin the residual scale. If `out_scale=0` matches, the residual is noise.           |
+| `stageB_halt_delta`                 | Replace OrthoHalt with empirical step-delta halt.                                  |
+| `stageB_halt_entropy`               | Replace OrthoHalt with surrogate predictive-entropy halt.                          |
+| `stageB_unsharp_ortho`              | Make γ non-trivial via gated rank-1 target.                                        |
+| `stageB_quantale_order_off`         | True symmetrized vs sequential composition test (the *real* `quantale_off`).       |
+| `stageB_lmhead_unfrozen`            | Decouple "QLC weak" from "frozen readout cannot adapt".                            |
+| `stageB_infonce_on`                 | Train the bank with the InfoNCE entity-routing objective the original plan promised. |
+
+For TinyStories smoke parity there are matching `smoke_tiny_*` rows. The
+discriminator suite is intended to take ~7 hours of 4090 time end-to-end.
+
+### How to read diagnostics under the new framing
+
+The trainer's per-step QLC diagnostic line now prints:
+
+```
+QLC: iter=X.XX alpha=… beta=… gamma=… halt(yes/no/cont)=…/…/… | out_scale=… psi_delta_l2=…
+```
+
+Interpretation guide:
+
+- **`gamma ≈ 0` with sharp OrthoHalt**: structural, expected — see
+  [`AUDIT_V8.md`](AUDIT_V8.md) §1. It is *not* evidence about
+  non-commutativity. To get an honest γ, run `stageB_unsharp_ortho`.
+- **`out_scale` trajectory**: if it stays near init, the model is satisfied
+  with a small QLC contribution — consistent with the "QLC is regularizer"
+  hypothesis. If it grows toward 1, the model is asking for more QLC —
+  consistent with "QLC is doing real work".
+- **`psi_delta_l2`**: the per-token L2 magnitude of the QLC residual. Useful
+  to compare across rows: a row that beats baseline with small
+  `psi_delta_l2` is a stronger result than one that needs a large residual
+  to win.
+- **`infonce`** (only when `qlc.infonce_weight > 0`): EMA of the bank's
+  contrastive loss on the synthetic entity-cloze. Should drop monotonically
+  when the bank is learning to route entity-typed queries to dedicated
+  effects.
+
+---
