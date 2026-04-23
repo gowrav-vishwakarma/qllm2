@@ -128,5 +128,79 @@ To be filled in after Stage B & C runs. See plan §7 for the win / soft-win / ki
   passthrough by 5.55 PPL on TinyStories; see §5). Caveat: γ=0 means the
   algebraic orthocomplement signal is dormant at this scale; Stage B will
   need to show γ>0 for the operational-quantum-logic claim to land.
-- **Next:** Stage A pretrain on RTX 4090 in tmux (~14h). After completion
-  (`v8/checkpoints/qpam_stageA.pt` exists), proceed to Stage B on A100.
+- **2026-04-23 (rethink)**: After multi-AI cross-review, the project was
+  reframed (see [`AUDIT_V8.md`](AUDIT_V8.md) and
+  [`README_V8.md`](README_V8.md) §0/§11). The current default thesis is
+  "constrained latent memory + adaptive compute" with the operational
+  quantum-logic claim demoted to an ablation hypothesis. New presets and
+  diagnostic outputs are documented in §8 below.
+- **Next:** **Run the discriminator suite (§8) before any 14h Stage A
+  re-train.** If it confirms a real inductive-bias win at matched FLOPs,
+  *then* proceed to Stage A pretrain on RTX 4090 in tmux. Otherwise,
+  re-scope per the soft-win / kill criteria in
+  [`README_V8.md`](README_V8.md) §11.
+
+## 8. Discriminator suite (rethink-plan §G)
+
+Half-day 4090 sweep that decides whether the original Stage A + A100 spend
+is justified. Run each row against a fixed seed (e.g. `--seed 42`) and the
+same `--epochs` budget as the existing TinyStories smoke unless noted. Fill
+in the empty cells as runs complete. Each row toggles **one** thing vs the
+canonical baseline.
+
+### 8.1 Smoke-tier discriminator (TinyStories, ~7h total on 4090)
+
+| Row | Preset                          | Tests                                            | Best Val PPL | Tok/s | Mean γ | Mean iter | out_scale (final) | psi_delta_l2 (final) | Notes |
+|-----|---------------------------------|--------------------------------------------------|--------------|-------|--------|-----------|-------------------|----------------------|-------|
+| D0  | `smoke_tiny_passthrough`        | Passthrough baseline                             | 178.95       | 225k  | —      | —         | —                 | —                    | Existing §5 row |
+| D0' | `smoke_tiny_passthrough` (12×ep)| Equal-FLOP baseline (matched-compute control)    | ✗            | ✗     | —      | —         | —                 | —                    | Discriminator G.1 |
+| D1  | `smoke_tiny_qlc_r4_T2`          | Existing QLC baseline                            | 173.40       | 19k   | 0.000  | 2.00      | ✗                 | ✗                    | Existing §5 row |
+| D2  | `smoke_tiny_real_spm`           | Real-only SPM (use_complex=False)                | ✗            | ✗     | 0.000  | 2.00      | ✗                 | ✗                    | Discriminator G.2 |
+| D3  | `smoke_tiny_outscale0`          | out_scale pinned to 0 (QLC fully bypassed)       | ✗            | ✗     | —      | —         | 0.000             | ✗                    | Discriminator G.4 |
+| D4  | `smoke_tiny_unsharp`            | OrthoHalt with unsharp gated target              | ✗            | ✗     | **>0** | 2.00      | ✗                 | ✗                    | Discriminator §1 (rethink) |
+| D5  | `smoke_tiny_halt_delta`         | DeltaHalt instead of OrthoHalt                   | ✗            | ✗     | 0.000  | ≤2.0      | ✗                 | ✗                    | Discriminator G.6 |
+| D6  | `smoke_tiny_quantale_order_off` | True ordering test (sym(P_t P_{t-1}))            | ✗            | ✗     | 0.000  | 4.00      | ✗                 | ✗                    | Discriminator §2 (rethink) |
+
+**How to read these rows:**
+
+- `D2 vs D1`: if real matches complex within 0.5 PPL, the complex story dies
+  and only the rank constraint remains.
+- `D3 vs D1`: if `out_scale=0` matches `learnable`, the QLC residual is
+  noise.
+- `D4`: should produce non-zero γ (audit §1 fix). Validates that the
+  algebraic readout *can* carry a meaningful signal under unsharp targets.
+  Whether the model exploits it is then a separate question (`D4 PPL vs
+  D1 PPL` answers it).
+- `D6 vs D1`: if symmetrized composition regresses, *order matters* and
+  the quantale story has at least preliminary evidence.
+
+### 8.2 Stage-B-tier discriminator (medium backbone, frozen)
+
+Run only after the smoke tier shows at least one row with a clear win.
+Requires a Stage A backbone checkpoint. Use the
+[`stageB_*`](config.py) presets corresponding to each smoke row plus the new
+`stageB_lmhead_unfrozen` and `stageB_infonce_on` rows.
+
+| Row | Preset                          | Tests                                            | Best Val PPL | Tok/s | Mean γ | out_scale (final) | InfoNCE final | Notes |
+|-----|---------------------------------|--------------------------------------------------|--------------|-------|--------|-------------------|---------------|-------|
+| S1  | `stageB_T2`                     | Canonical Stage B baseline                       | ✗            | ✗     | 0.000  | ✗                 | —             | Existing |
+| S2  | `stageB_real_spm`               | Real SPM                                         | ✗            | ✗     | 0.000  | ✗                 | —             |       |
+| S3  | `stageB_rank_r1` … `r4`         | Rank sweep                                       | ✗            | ✗     | 0.000  | ✗                 | —             |       |
+| S4  | `stageB_outscale0`/`01`/`1`     | out_scale sweep (frozen)                         | ✗            | ✗     | 0.000  | fixed             | —             |       |
+| S5  | `stageB_halt_delta` / `entropy` | Empirical halts                                  | ✗            | ✗     | 0.000  | ✗                 | —             |       |
+| S6  | `stageB_unsharp_ortho`          | Unsharp γ test                                   | ✗            | ✗     | **>0** | ✗                 | —             |       |
+| S7  | `stageB_quantale_order_off`     | True ordering test                               | ✗            | ✗     | 0.000  | ✗                 | —             |       |
+| S8  | `stageB_lmhead_unfrozen`        | LM head trainable (rethink §6)                   | ✗            | ✗     | 0.000  | ✗                 | —             |       |
+| S9  | `stageB_infonce_on`             | InfoNCE bank auxiliary                           | ✗            | ✗     | 0.000  | ✗                 | ✗             |       |
+
+### 8.3 Decision tree after the suite
+
+| Observation                                                           | Verdict                                          |
+|-----------------------------------------------------------------------|--------------------------------------------------|
+| D0' (equal-FLOP passthrough) ≥ D1 within 0.5 PPL                       | QLC win was a compute hack. Re-scope.            |
+| D2 ≈ D1 (real ≈ complex)                                               | Drop "complex matters" claim; rename to V8-CLM.  |
+| D3 ≈ D1 (out_scale=0 ≈ learnable)                                      | Residual is noise; QLC primitive is decorative.  |
+| D4 shows γ > 0.05 *and* PPL improves over D1                           | **Algebraic readout earns its keep.** Keep ortho framing. |
+| D6 PPL > D1 PPL (regression under symmetrization) by ≥ 2 PPL           | Order matters. Quantale story is on the table.   |
+| Best non-baseline row improves over D1 by ≥ 5 PPL at matched FLOPs     | Spend Stage A + A100 budget.                     |
+| No non-baseline row improves over D1 by ≥ 2 PPL at matched FLOPs       | Document negative; ship V8-CLM as a clean module artifact. |

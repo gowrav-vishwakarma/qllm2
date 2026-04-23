@@ -32,7 +32,7 @@ halt head that ignores the algebraic readout entirely.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -87,10 +87,17 @@ class OrthoHalt(nn.Module):
         2*dim concatenation).
     """
 
-    def __init__(self, dim: int, n_heads: int = 1, hidden_mult: int = 1):
+    def __init__(
+        self,
+        dim: int,
+        n_heads: int = 1,
+        hidden_mult: int = 1,
+        unsharp_target: bool = False,
+    ):
         super().__init__()
         self.dim = dim
         self.n_heads = n_heads
+        self.unsharp_target = unsharp_target
         hidden = max(dim, hidden_mult * dim)
 
         # Target-effect generator: psi -> u (unit-norm complex vector) per head.
@@ -101,6 +108,12 @@ class OrthoHalt(nn.Module):
             nn.GELU(),
             nn.Linear(hidden, 2 * dim * n_heads),
         )
+
+        # Per-head unsharp gate: when `unsharp_target=True`, the target effect
+        # is E = sigma(g) * u u^H (so 0 <= E <= I but E^2 != E). gamma then
+        # measures the gate deficit (1 - sigma(g)) * |u^H psi|^2 instead of
+        # being structurally pinned to zero (see AUDIT_V8.md §1).
+        self.target_gate = nn.Parameter(torch.zeros(n_heads))
 
         # 3-way classification head from (alpha, beta, gamma).
         # We *do* let it learn arbitrary mixing, but initialize so gamma -> "continue"
@@ -126,24 +139,41 @@ class OrthoHalt(nn.Module):
         ``u: [B, H, d, 2]`` (unit norm).
 
         Returns ``[B, H, 3]``.
+
+        With ``unsharp_target=False`` (default, legacy): the target is the
+        sharp projector :math:`P = u u^H` and we get
+        :math:`\alpha + \beta = \|\psi\|^2`, so :math:`\gamma` collapses to
+        the renorm deficit (typically 0 in this code path). See
+        :doc:`AUDIT_V8.md` §1.
+
+        With ``unsharp_target=True``: the target is the unsharp effect
+        :math:`E = \sigma(g) u u^H`, so
+
+        .. math::
+            \alpha = \sigma(g)\,|u^H\psi|^2,\;
+            \gamma = (1 - \sigma(g))\,|u^H\psi|^2,\;
+            \beta = \|\psi\|^2 - |u^H\psi|^2.
+
+        Now :math:`\alpha + \beta + \gamma = \|\psi\|^2` and :math:`\gamma`
+        carries the gate deficit, so it is non-zero whenever :math:`g` is
+        finite and the state has any overlap with the target.
         """
-        # alpha = |u^dagger psi|^2
-        # u^H psi = (ur - i ui)^T (pr + i pi) = (ur^T pr + ui^T pi) + i (ur^T pi - ui^T pr)
         ur, ui = u[..., 0], u[..., 1]                              # [B, H, d]
         pr, pi = psi_per_head[..., 0], psi_per_head[..., 1]
         ip_r = (ur * pr).sum(dim=-1) + (ui * pi).sum(dim=-1)       # [B, H]
         ip_i = (ur * pi).sum(dim=-1) - (ui * pr).sum(dim=-1)
-        alpha = ip_r.square() + ip_i.square()                      # [B, H]
+        amp_sq = ip_r.square() + ip_i.square()                     # [B, H] -- |u^H psi|^2
 
-        # beta = |psi - u(u^H psi)|^2 = ||psi||^2 - alpha
         psi_norm_sq = (pr.square() + pi.square()).sum(dim=-1)      # [B, H]
-        beta = (psi_norm_sq - alpha).clamp_min(0.0)
+        beta = (psi_norm_sq - amp_sq).clamp_min(0.0)
 
-        # gamma = 1 - alpha - beta. By construction non-negative when ||psi|| <= 1
-        # and zero when ||psi|| = 1 exactly. We *add* a synthetic "deficit"
-        # term so the algebraic gamma is meaningful even when the state has
-        # been renormalized: gamma = max(0, 1 - alpha - beta).
-        gamma = (1.0 - alpha - beta).clamp_min(0.0)
+        if self.unsharp_target:
+            gate = torch.sigmoid(self.target_gate).view(1, self.n_heads)  # [1, H]
+            alpha = gate * amp_sq
+            gamma = (1.0 - gate) * amp_sq
+        else:
+            alpha = amp_sq
+            gamma = (1.0 - alpha - beta).clamp_min(0.0)
 
         return torch.stack([alpha, beta, gamma], dim=-1)
 
@@ -161,6 +191,142 @@ class OrthoHalt(nn.Module):
         p_yes = probs[..., 0]
         p_no = probs[..., 1]
         p_halt = p_yes + p_no
+        return HaltOutput(logits=logits, abg=abg, p_halt=p_halt, p_yes=p_yes)
+
+
+class DeltaHalt(nn.Module):
+    r"""Empirical halt: halt when the iteration's update magnitude plateaus.
+
+    Per-iteration input is the *delta* :math:`\Delta_t = \psi_t - \psi_{t-1}`
+    in split-real form. We pass its squared norm through a tiny scalar gate
+    that produces ``p_halt`` directly (a learned monotonic threshold on
+    "how much did this step change the state"). When delta is small, the
+    gate fires, the loop halts.
+
+    No algebraic readout. No (alpha, beta, gamma) -- abg is reported as
+    zeros for diagnostic compatibility. This is one of the empirical halt
+    options recommended in ``v8_classical_rethink_44e4a93c.plan.md`` §G.6.
+
+    The first iteration has no previous state; in that case the caller
+    should pass ``psi_prev = psi`` (zero delta), which keeps p_halt at the
+    bias value (i.e. "do not halt yet").
+    """
+
+    def __init__(self, dim: int, n_heads: int = 1):
+        super().__init__()
+        self.dim = dim
+        self.n_heads = n_heads
+        # Per-head threshold + temperature; mapped to halt-yes/halt-no/continue.
+        self.threshold = nn.Parameter(torch.zeros(n_heads))
+        self.temperature = nn.Parameter(torch.ones(n_heads))
+        # Re-use a 3-way head so the rest of the loop sees the same shape;
+        # we route low-delta -> halt-yes, high-delta -> continue.
+        self.cls_head = nn.Linear(2, 3, bias=True)
+        with torch.no_grad():
+            # Default mapping: tiny delta -> halt-yes, big delta -> continue,
+            # halt-no kept low.
+            self.cls_head.weight.copy_(torch.tensor([
+                [-1.0, 0.0],   # halt-yes from -log(delta)
+                [0.0, 0.0],    # halt-no neutral
+                [1.0, 0.0],    # continue from +log(delta)
+            ]))
+            self.cls_head.bias.copy_(torch.tensor([0.0, -2.0, 0.0]))
+
+    def forward(
+        self,
+        psi: torch.Tensor,
+        psi_prev: Optional[torch.Tensor] = None,
+    ) -> HaltOutput:
+        B = psi.shape[0]
+        if psi_prev is None:
+            delta_sq = torch.zeros(B, self.n_heads, device=psi.device, dtype=psi.dtype)
+        else:
+            d = psi - psi_prev
+            delta_sq = (d[..., 0].square() + d[..., 1].square()).sum(dim=-1)
+            # If psi has shape [B, d, 2] (single-head input), broadcast
+            # delta_sq to all heads.
+            if delta_sq.dim() == 1:
+                delta_sq = delta_sq.unsqueeze(-1).expand(-1, self.n_heads)
+
+        log_delta = torch.log(delta_sq.clamp_min(1e-12)) / max(1.0, float(self.dim))
+        log_delta = log_delta - self.threshold.view(1, self.n_heads)
+        log_delta = log_delta * F.softplus(self.temperature.view(1, self.n_heads))
+        feats = torch.stack([log_delta, torch.ones_like(log_delta)], dim=-1)  # [B, H, 2]
+        logits = self.cls_head(feats)                                          # [B, H, 3]
+        probs = logits.softmax(dim=-1)
+        p_yes = probs[..., 0]
+        p_no = probs[..., 1]
+        p_halt = p_yes + p_no
+        abg = torch.zeros(B, self.n_heads, 3, device=psi.device, dtype=psi.dtype)
+        return HaltOutput(logits=logits, abg=abg, p_halt=p_halt, p_yes=p_yes)
+
+
+class EntropyHalt(nn.Module):
+    r"""Empirical halt driven by predictive entropy on a small surrogate head.
+
+    A tiny linear ``surrogate: psi -> R^{vocab_surrogate}`` is trained jointly
+    with the QLC. Per iteration we compute the surrogate distribution's
+    entropy; when it stops decreasing across iterations, halt.
+
+    This approximates the §G.6 recommendation ("halt when next-token entropy
+    stops decreasing") without paying the cost of the full LM head at every
+    iteration. The surrogate is small (vocab_surrogate ~256) so the extra
+    parameter count is negligible.
+    """
+
+    def __init__(
+        self,
+        dim: int,
+        n_heads: int = 1,
+        vocab_surrogate: int = 256,
+    ):
+        super().__init__()
+        self.dim = dim
+        self.n_heads = n_heads
+        self.vocab_surrogate = vocab_surrogate
+        # Tiny surrogate head -- consumes the real-2d projection.
+        self.surrogate = nn.Linear(2 * dim, vocab_surrogate, bias=True)
+        # Scalar per-head temperature on the entropy delta -> halt prob map.
+        self.temperature = nn.Parameter(torch.ones(n_heads))
+        self.threshold = nn.Parameter(torch.zeros(n_heads))
+        self.cls_head = nn.Linear(2, 3, bias=True)
+        with torch.no_grad():
+            self.cls_head.weight.copy_(torch.tensor([
+                [-1.0, 0.0],
+                [0.0, 0.0],
+                [1.0, 0.0],
+            ]))
+            self.cls_head.bias.copy_(torch.tensor([0.0, -2.0, 0.0]))
+
+    def _entropy(self, psi: torch.Tensor) -> torch.Tensor:
+        x = _to_real(psi)                                # [B, 2d]
+        logits = self.surrogate(x)                        # [B, vocab_surrogate]
+        log_probs = F.log_softmax(logits, dim=-1)
+        probs = log_probs.exp()
+        return -(probs * log_probs).sum(dim=-1)           # [B]
+
+    def forward(
+        self,
+        psi: torch.Tensor,
+        psi_prev: Optional[torch.Tensor] = None,
+    ) -> HaltOutput:
+        B = psi.shape[0]
+        H = self.n_heads
+        ent_curr = self._entropy(psi)                     # [B]
+        if psi_prev is None:
+            ent_delta = torch.zeros(B, device=psi.device, dtype=psi.dtype)
+        else:
+            ent_prev = self._entropy(psi_prev)
+            ent_delta = ent_prev - ent_curr               # >0 means improving (lower entropy)
+        ent_delta = ent_delta.unsqueeze(-1).expand(-1, H) - self.threshold.view(1, H)
+        ent_delta = ent_delta * F.softplus(self.temperature.view(1, H))
+        feats = torch.stack([ent_delta, torch.ones_like(ent_delta)], dim=-1)  # [B, H, 2]
+        logits = self.cls_head(feats)
+        probs = logits.softmax(dim=-1)
+        p_yes = probs[..., 0]
+        p_no = probs[..., 1]
+        p_halt = p_yes + p_no
+        abg = torch.zeros(B, H, 3, device=psi.device, dtype=psi.dtype)
         return HaltOutput(logits=logits, abg=abg, p_halt=p_halt, p_yes=p_yes)
 
 

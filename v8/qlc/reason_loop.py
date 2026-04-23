@@ -45,7 +45,8 @@ import torch.nn.functional as F
 from v8.qlc.projector import SasakiProjectionMemory
 from v8.qlc.effect_bank import EffectAlgebraBank
 from v8.qlc.halt import (
-    OrthoHalt, MLPHalt, init_ponder_state, update_ponder, HaltOutput,
+    OrthoHalt, MLPHalt, DeltaHalt, EntropyHalt,
+    init_ponder_state, update_ponder, HaltOutput,
 )
 
 
@@ -65,6 +66,8 @@ class QLCDiagnostics:
     continue_rate: float
     n_iters_per_sample: torch.Tensor   # [B, H] long
     ponder_cost: torch.Tensor          # [B] scalar contribution
+    out_scale: float = 0.0              # current value of QLC residual scale
+    psi_delta_l2: float = 0.0           # mean ||psi_T - psi_0||^2 (per-token)
 
 
 class QuantumLogicCore(nn.Module):
@@ -116,6 +119,14 @@ class QuantumLogicCore(nn.Module):
         orthohalt_off: bool = False,
         qr_refresh_every: int = 0,
         halt_threshold: float = 0.99,
+        # New (rethink-plan) flags:
+        use_complex: bool = True,
+        out_scale_init: float = 0.1,
+        out_scale_learnable: bool = True,
+        renormalize_psi: bool = True,
+        halt_mode: str = "ortho",
+        unsharp_target: bool = False,
+        quantale_order_test: bool = False,
     ):
         super().__init__()
         if top_k > bank_size:
@@ -133,27 +144,64 @@ class QuantumLogicCore(nn.Module):
         self.quantale_off = quantale_off
         self.orthohalt_off = orthohalt_off
         self.halt_threshold = halt_threshold
+        self.use_complex = use_complex
+        self.renormalize_psi = renormalize_psi
+        self.halt_mode = halt_mode
+        self.unsharp_target = unsharp_target
+        # ``quantale_order_test`` only takes effect when ``quantale_off`` is
+        # also True; in that case we use the *true* ordering test in
+        # SasakiProjectionMemory.sasaki_apply (compare Pi_curr Pi_prev psi
+        # to its symmetrization). Otherwise the legacy 0.5*(Pi psi + psi)
+        # behavior is preserved.
+        self.quantale_order_test = quantale_order_test
 
         self.bank = EffectAlgebraBank(
             dim=dim, bank_size=bank_size, n_heads=n_heads,
         )
         self.spm = SasakiProjectionMemory(
-            dim=dim, rank=rank, n_heads=n_heads, qr_refresh_every=qr_refresh_every,
+            dim=dim, rank=rank, n_heads=n_heads,
+            qr_refresh_every=qr_refresh_every,
+            use_complex=use_complex,
         )
+
+        halt_mode_norm = halt_mode.lower()
         if orthohalt_off:
+            # Backwards compat: legacy V8-G ablation. Maps to MLP halt unless
+            # the new halt_mode explicitly selects another non-ortho head.
+            halt_mode_norm = "mlp" if halt_mode_norm == "ortho" else halt_mode_norm
+
+        if halt_mode_norm == "ortho":
+            self.halt = OrthoHalt(
+                dim=dim, n_heads=n_heads, unsharp_target=unsharp_target,
+            )
+        elif halt_mode_norm == "mlp":
             self.halt = MLPHalt(dim=dim, n_heads=n_heads)
+        elif halt_mode_norm == "delta":
+            self.halt = DeltaHalt(dim=dim, n_heads=n_heads)
+        elif halt_mode_norm == "entropy":
+            self.halt = EntropyHalt(dim=dim, n_heads=n_heads)
         else:
-            self.halt = OrthoHalt(dim=dim, n_heads=n_heads)
+            raise ValueError(
+                f"Unknown halt_mode='{halt_mode}'. "
+                f"Expected one of: ortho, mlp, delta, entropy."
+            )
+        self._halt_takes_prev = halt_mode_norm in ("delta", "entropy")
 
         # Multi-head merge: when n_heads > 1 we average the per-head pondered
         # states. A learnable per-head mix logits gives the model freedom to
         # weight heads differently.
         self.head_mix = nn.Parameter(torch.zeros(n_heads))
 
-        # Output residual scale: starts small so the QLC contribution is a
-        # small perturbation on the backbone (helps Stage B learn smoothly
-        # against a frozen backbone).
-        self.out_scale = nn.Parameter(torch.tensor(0.1))
+        # Output residual scale (see AUDIT_V8.md §4). Either a learnable
+        # parameter (legacy) or a fixed buffer used by the out_scale ablation
+        # rows (e.g. out_scale=0.0 = QLC fully bypassed but loop still run).
+        if out_scale_learnable:
+            self.out_scale = nn.Parameter(torch.tensor(float(out_scale_init)))
+        else:
+            self.register_buffer(
+                "out_scale", torch.tensor(float(out_scale_init)),
+                persistent=True,
+            )
 
     # ── Forward ────────────────────────────────────────────────────────────
 
@@ -198,6 +246,14 @@ class QuantumLogicCore(nn.Module):
         # Per-head iteration: we keep psi_per_head separate for each head so
         # different heads can take different reasoning trajectories.
         psi_h = psi_flat.unsqueeze(1).expand(BT, H, d, two).contiguous()
+        # When the real-only ablation is on, force the imag channel to zero
+        # at the input as well (otherwise the QPAM backbone's imag part would
+        # leak into the loop).
+        if not self.use_complex:
+            psi_h = torch.stack([psi_h[..., 0], torch.zeros_like(psi_h[..., 1])], dim=-1)
+
+        prev_spm_state = None
+        prev_psi_pool = None
 
         for it in range(self.t_max):
             is_last = (it == self.t_max - 1)
@@ -213,21 +269,42 @@ class QuantumLogicCore(nn.Module):
             )                                              # both [BT, H, d, r, 2]
             spm_state = self.spm.build_from_basis(U, V_in=V)
 
-            # 3. Sasaki update per head.
-            psi_next = self.spm.sasaki_apply(
-                spm_state, psi_h, symmetrize=self.quantale_off,
-            )                                              # [BT, H, d, 2]
+            # 3. Sasaki update per head. When the *true* quantale ordering
+            # test is enabled (quantale_off=True AND quantale_order_test=True)
+            # AND we have a previous projector to compose with, use the
+            # symmetric-vs-sequential test path; otherwise fall back to the
+            # standard projector update (or the legacy 0.5(Pi psi + psi)
+            # blend if quantale_off without order_test).
+            if (
+                self.quantale_off
+                and self.quantale_order_test
+                and prev_spm_state is not None
+            ):
+                psi_next = self.spm.sasaki_apply(
+                    spm_state, psi_h, symmetrize=True, prev_state=prev_spm_state,
+                )
+            else:
+                psi_next = self.spm.sasaki_apply(
+                    spm_state, psi_h, symmetrize=self.quantale_off,
+                )                                          # [BT, H, d, 2]
 
-            # Renormalize psi_next to stay on the unit sphere (avoids the
-            # projector shrinking the state to zero when overlap is low,
-            # which would starve subsequent iterations of any signal).
-            sq = (psi_next[..., 0].square() + psi_next[..., 1].square()).sum(dim=-1, keepdim=True)
-            scale = sq.clamp_min(1e-6).sqrt().unsqueeze(-1)
-            psi_next = psi_next / scale
+            # Optional renormalization. The default keeps backward-compat with
+            # the original v8 (psi stays on the unit sphere); the rethink
+            # plan also wants a "no renorm" row to test whether the gamma
+            # collapse is purely structural (it is -- see AUDIT_V8.md §1).
+            if self.renormalize_psi:
+                sq = (psi_next[..., 0].square() + psi_next[..., 1].square()).sum(dim=-1, keepdim=True)
+                scale = sq.clamp_min(1e-6).sqrt().unsqueeze(-1)
+                psi_next = psi_next / scale
 
-            # 4. OrthoHalt readout from the pondered psi (use flattened across heads
-            # by averaging again so halt sees the consensus state).
-            halt_out = self.halt(psi_next.mean(dim=1))     # HaltOutput, p_halt: [BT, H]
+            # 4. Halt readout. OrthoHalt/MLPHalt only need psi_next; the
+            # empirical halts (delta, entropy) need the previous iteration's
+            # pooled psi to measure the step-to-step change.
+            psi_pool_next = psi_next.mean(dim=1)
+            if self._halt_takes_prev:
+                halt_out = self.halt(psi_pool_next, prev_psi_pool)
+            else:
+                halt_out = self.halt(psi_pool_next)        # HaltOutput, p_halt: [BT, H]
             ponder, weight = update_ponder(
                 ponder, halt_out, halt_threshold=self.halt_threshold,
                 is_last_iter=is_last,
@@ -237,6 +314,8 @@ class QuantumLogicCore(nn.Module):
             psi_out_acc = psi_out_acc + weight.unsqueeze(-1).unsqueeze(-1) * psi_next
 
             # Roll forward.
+            prev_spm_state = spm_state
+            prev_psi_pool = psi_pool_next
             psi_h = psi_next
 
             # Diagnostics.
@@ -266,6 +345,9 @@ class QuantumLogicCore(nn.Module):
 
         if return_diagnostics:
             inv = 1.0 / max(diag_count, 1)
+            with torch.no_grad():
+                delta = (psi_residual[..., 0].square()
+                         + psi_residual[..., 1].square()).sum(dim=-1).mean()
             diag = QLCDiagnostics(
                 mean_iter=ponder.n_iter.float().mean().item(),
                 mean_alpha=(sum_alpha * inv).item(),
@@ -276,6 +358,8 @@ class QuantumLogicCore(nn.Module):
                 continue_rate=(n_cont * inv).item(),
                 n_iters_per_sample=ponder.n_iter.detach().cpu(),
                 ponder_cost=ponder.cost.detach().cpu(),
+                out_scale=float(self.out_scale.detach().item()),
+                psi_delta_l2=float(delta.item()),
             )
             return psi_out, ponder_cost, diag
 
@@ -287,5 +371,9 @@ class QuantumLogicCore(nn.Module):
         return (
             f"dim={self.dim}, rank={self.rank}, M={self.bank_size}, "
             f"top_k={self.top_k}, T_max={self.t_max}, n_heads={self.n_heads}, "
-            f"quantale_off={self.quantale_off}, orthohalt_off={self.orthohalt_off}"
+            f"halt_mode={self.halt_mode}, unsharp_target={self.unsharp_target}, "
+            f"use_complex={self.use_complex}, renormalize_psi={self.renormalize_psi}, "
+            f"quantale_off={self.quantale_off}, "
+            f"quantale_order_test={self.quantale_order_test}, "
+            f"orthohalt_off={self.orthohalt_off}"
         )
