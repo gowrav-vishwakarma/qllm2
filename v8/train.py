@@ -849,5 +849,24 @@ def main() -> None:
     trainer.train()
 
 
+def _is_oom_error(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    return "out of memory" in msg or "cuda oom" in msg
+
+
+def _notify_training_failure(reason: str, exc: Optional[BaseException] = None) -> None:
+    parts = [f"**V8 training {reason}**"]
+    if exc is not None:
+        parts.append(f"Error: {type(exc).__name__}: {exc}")
+    _notify_discord("\n".join(parts))
+
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        _notify_training_failure("stopped by user (Ctrl+C)")
+        raise
+    except Exception as e:
+        _notify_training_failure("OOM" if _is_oom_error(e) else "failed", e)
+        raise
