@@ -1,0 +1,908 @@
+"""
+V7: Lean Phase-Associative Memory Language Model.
+
+Architecture: neither transformer nor SSM.
+- Channel mixing: ComplexGatedUnit (CGU) -- SwiGLU-style, phase-safe
+- Sequence mixing: Phase-Associative Memory (PAM) -- matrix state, complex-conjugate retrieval
+- Interleaved: [pre-norm CGU + pre-norm PAM] x N blocks
+
+Complex representation: [..., dim, 2] split-real tensors.
+DO NOT use torch.complex64/128 (OOM + autograd issues).
+"""
+
+import math
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint as grad_checkpoint
+from dataclasses import dataclass, asdict
+from typing import Optional, List, Tuple, Dict
+
+from v8.backbone.triton_kernels import (
+    fused_complex_norm, fused_mod_swish, fused_mod_relu,
+    fused_cgu_gate, fused_decay_matrix, triton_enabled,
+)
+
+
+# ── Config ────────────────────────────────────────────────────────────────────
+
+@dataclass
+class V7Config:
+    vocab_size: int = 50257
+    dim: int = 384
+    n_heads: int = 6
+    head_dim: int = 64
+    n_layers: int = 16
+    expand: int = 3
+    dropout: float = 0.1
+    max_seq_len: int = 2048
+    use_rope: bool = True
+    use_gsp: bool = True
+    fused_qkv: bool = True
+    qk_norm: bool = False
+    tie_weights: bool = True
+    # Hierarchical timescale: each PAM layer gets a distinct dt_bias
+    # controlling its memory span (global -> step).
+    # When True + dt_bias_schedule is None, auto-generates linspace(-6.91, 0.0, n_layers).
+    hierarchical_dt: bool = True
+    dt_bias_schedule: Optional[tuple] = None
+    cross_level: bool = False
+    gradient_checkpointing: bool = True
+    activation: str = 'modrelu'  # 'modrelu', 'swish', 'phase_mod'
+    chunk_size: int = 256  # Chunked dual form: 0 = full T^2, >0 = chunk size for O(T*C) training
+    # Multi-scale per-layer loss: each aux head predicts tokens at a temporal offset
+    # matching its layer's memory span (global layers predict far ahead, step layers predict t+1).
+    multi_scale_loss: bool = False
+    aux_loss_weight: float = 0.1
+    aux_layer_stride: int = 3   # place aux heads every N layers
+    max_aux_offset: int = 32    # largest temporal offset (for the global-most aux layer)
+    # Reverse association: reuse upper triangle of Q@K.T in dual form
+    use_reverse_assoc: bool = True
+
+
+# ── Complex Arithmetic (split-real: [..., dim, 2]) ───────────────────────────
+# Phase 2: dropped @torch.jit.script — Inductor (torch.compile) fuses these
+# elementwise ops into a single kernel only when they are not opaque
+# script'd functions. JIT-script also creates graph breaks that prevent
+# fusion of surrounding eager ops on the autograd graph.
+
+def cmul(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
+    """(a_r + i·a_i)(b_r + i·b_i)"""
+    return torch.stack([
+        a[..., 0] * b[..., 0] - a[..., 1] * b[..., 1],
+        a[..., 0] * b[..., 1] + a[..., 1] * b[..., 0],
+    ], dim=-1)
+
+
+def cconj(x: torch.Tensor) -> torch.Tensor:
+    return torch.stack([x[..., 0], -x[..., 1]], dim=-1)
+
+
+def cabs(x: torch.Tensor) -> torch.Tensor:
+    return torch.sqrt(x[..., 0].square() + x[..., 1].square() + 1e-8)
+
+
+def cnormalize(x: torch.Tensor) -> torch.Tensor:
+    return x / cabs(x).unsqueeze(-1)
+
+
+def to_real_concat(x: torch.Tensor) -> torch.Tensor:
+    return torch.cat([x[..., 0], x[..., 1]], dim=-1)
+
+
+# ── Complex Modules ──────────────────────────────────────────────────────────
+
+class ModReLU(nn.Module):
+    """Phase-preserving activation: threshold on magnitude, phase untouched."""
+
+    def __init__(self, dim: int):
+        super().__init__()
+        self.bias = nn.Parameter(torch.full((dim,), -0.1))
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        return fused_mod_relu(z, self.bias)
+
+
+class ModSwish(nn.Module):
+    """Smooth phase-preserving activation: Swish on magnitude, phase untouched.
+
+    Replaces hard ReLU threshold with mag * sigmoid(beta * mag + bias).
+    No dead neurons, non-zero gradient below threshold, learnable sharpness.
+    """
+
+    def __init__(self, dim: int):
+        super().__init__()
+        self.bias = nn.Parameter(torch.zeros(dim))
+        self.beta = nn.Parameter(torch.ones(dim))
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        return fused_mod_swish(z, self.bias, self.beta)
+
+
+class PhaseModulatedActivation(nn.Module):
+    """Activation that couples magnitude and phase.
+
+    Extends ModSwish with magnitude-dependent phase rotation: high-magnitude
+    signals get different phase rotations than low-magnitude ones. Initialized
+    with phase_alpha=0 so it starts as ModSwish and discovers coupling via
+    gradient descent.
+    """
+
+    def __init__(self, dim: int):
+        super().__init__()
+        self.bias = nn.Parameter(torch.zeros(dim))
+        self.beta = nn.Parameter(torch.ones(dim))
+        self.phase_alpha = nn.Parameter(torch.zeros(dim))
+        self.phase_beta = nn.Parameter(torch.zeros(dim))
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        mag = cabs(z)
+        activated = mag * torch.sigmoid(self.beta * mag + self.bias)
+        phase = z / (mag.unsqueeze(-1) + 1e-8)
+        theta = self.phase_alpha * mag + self.phase_beta
+        rot = torch.stack([theta.cos(), theta.sin()], dim=-1)
+        phase = cmul(phase, rot)
+        return phase * activated.unsqueeze(-1)
+
+
+class ComplexLinear(nn.Module):
+    """Complex linear via a single packed real GEMM with orthogonal init.
+
+    Mathematically: (xr + i·xi)(wr + i·wi) = (xr·wr - xi·wi) + i·(xr·wi + xi·wr).
+
+    Phase 2 (v8/backbone): we build the equivalent real-valued block matrix
+    once per forward and dispatch as a single ``F.linear`` call.
+
+        W_packed = [[wr, -wi],
+                    [wi,  wr]]   shape: [2*out, 2*in]
+        x_packed = [xr | xi]     shape: [..., 2*in]
+        y_packed = x_packed @ W_packed.T
+        y        = stack(y_packed[..., :out], y_packed[..., out:])
+
+    This collapses the previous 4 small ``F.linear`` calls (and the
+    surrounding ``torch.stack`` of 4 results) into a single GEMM with the
+    same numerics, killing ~4x the kernel-launch overhead per linear and
+    letting cuBLAS pick a larger, better-utilised tiling.
+
+    State-dict layout is preserved (``weight_real`` / ``weight_imag`` /
+    ``bias_real`` / ``bias_imag`` parameters stay untouched), so existing
+    v7 checkpoints still load.
+    """
+
+    def __init__(self, in_dim: int, out_dim: int, bias: bool = True):
+        super().__init__()
+        self.in_dim = in_dim
+        self.out_dim = out_dim
+        scale = (2 / (in_dim + out_dim)) ** 0.5
+        self.weight_real = nn.Parameter(torch.empty(out_dim, in_dim))
+        self.weight_imag = nn.Parameter(torch.empty(out_dim, in_dim))
+        nn.init.orthogonal_(self.weight_real, gain=scale)
+        nn.init.orthogonal_(self.weight_imag, gain=scale)
+        if bias:
+            self.bias_real = nn.Parameter(torch.zeros(out_dim))
+            self.bias_imag = nn.Parameter(torch.zeros(out_dim))
+        else:
+            self.register_parameter('bias_real', None)
+            self.register_parameter('bias_imag', None)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # x: [..., in_dim, 2]  ->  packed input [..., 2*in_dim]
+        x_packed = torch.cat([x[..., 0], x[..., 1]], dim=-1)
+
+        wr = self.weight_real
+        wi = self.weight_imag
+        # W_packed = [[wr, -wi], [wi, wr]] of shape [2*out, 2*in]
+        top = torch.cat([wr, -wi], dim=1)
+        bot = torch.cat([wi,  wr], dim=1)
+        w_packed = torch.cat([top, bot], dim=0)
+
+        b_packed: Optional[torch.Tensor] = None
+        if self.bias_real is not None:
+            b_packed = torch.cat([self.bias_real, self.bias_imag], dim=0)
+
+        y_packed = F.linear(x_packed, w_packed, b_packed)
+        # Split back to real/imag and stack to [..., out_dim, 2].
+        out = self.out_dim
+        return torch.stack([y_packed[..., :out], y_packed[..., out:]], dim=-1)
+
+
+class ComplexNorm(nn.Module):
+    """RMSNorm for complex: normalize magnitude, preserve phase."""
+
+    def __init__(self, dim: int, eps: float = 1e-6):
+        super().__init__()
+        self.scale = nn.Parameter(torch.ones(dim))
+        self.eps = eps
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        return fused_complex_norm(z, self.scale, self.eps)
+
+
+def _build_activation(name: str, dim: int) -> nn.Module:
+    if name == 'swish':
+        return ModSwish(dim)
+    elif name == 'phase_mod':
+        return PhaseModulatedActivation(dim)
+    return ModReLU(dim)
+
+
+class ComplexGatedUnit(nn.Module):
+    """SwiGLU-style complex gating: magnitude gates how much, phase gates rotation."""
+
+    def __init__(self, dim: int, expand: int = 3, activation: str = 'modrelu'):
+        super().__init__()
+        hidden = dim * expand
+        self.gate_proj = ComplexLinear(dim, hidden, bias=False)
+        self.up_proj = ComplexLinear(dim, hidden, bias=False)
+        self.down_proj = ComplexLinear(hidden, dim, bias=False)
+        self.act = _build_activation(activation, hidden)
+
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        gate = self.gate_proj(z)
+        up = self.act(self.up_proj(z))
+        gated = fused_cgu_gate(gate, up)
+        return self.down_proj(gated)
+
+
+class ComplexEmbed(nn.Module):
+    """Embed tokens into complex space: real + imaginary components."""
+
+    def __init__(self, vocab_size: int, dim: int):
+        super().__init__()
+        self.dim = dim
+        self.embed_real = nn.Embedding(vocab_size, dim)
+        self.embed_imag = nn.Embedding(vocab_size, dim)
+        nn.init.normal_(self.embed_real.weight, std=0.02)
+        nn.init.normal_(self.embed_imag.weight, std=0.02)
+
+    def forward(self, ids: torch.Tensor) -> torch.Tensor:
+        return torch.stack([self.embed_real(ids), self.embed_imag(ids)], dim=-1)
+
+
+class AuxPredHead(nn.Module):
+    """Lightweight per-layer prediction head for multi-scale temporal loss.
+
+    Ties output projection with the embedding weights (like the main LM head)
+    so each head only adds ~384 params (one ComplexNorm scale vector).
+    """
+
+    def __init__(self, dim: int):
+        super().__init__()
+        self.norm = ComplexNorm(dim)
+
+    def forward(
+        self, z: torch.Tensor,
+        embed_real_w: torch.Tensor,
+        embed_imag_w: torch.Tensor,
+    ) -> torch.Tensor:
+        z = self.norm(z)
+        return z[..., 0] @ embed_real_w.T + z[..., 1] @ embed_imag_w.T
+
+
+def build_rope_cache(max_len: int, head_dim: int) -> torch.Tensor:
+    """Complex RoPE: e^{i·m·theta_k} for positions m and frequency bands k."""
+    freqs = 1.0 / (10000.0 ** (torch.arange(head_dim).float() / head_dim))
+    positions = torch.arange(max_len).float()
+    angles = positions.unsqueeze(1) * freqs.unsqueeze(0)
+    return torch.stack([angles.cos(), angles.sin()], dim=-1)
+
+
+# ── Phase-Associative Memory ─────────────────────────────────────────────────
+
+class PhaseAssociativeLayer(nn.Module):
+    r"""
+    Matrix-state memory with complex-conjugate retrieval.
+
+        S_t = gamma_t · S_{t-1} + V_t \otimes K_t^*
+        Y_t = S_t · Q_t
+
+    Training: O(T^2) dual form (GPU-friendly matmuls, no sequential loop).
+    Inference: O(1) per token recurrent form.
+    """
+
+    def __init__(self, cfg: V7Config, layer_idx: int = 0):
+        super().__init__()
+        self.num_heads = cfg.n_heads
+        self.head_dim = cfg.head_dim
+        inner = cfg.n_heads * cfg.head_dim
+        self.inner_dim = inner
+        self.dim = cfg.dim
+        self.fused_qkv = cfg.fused_qkv
+        self.use_rope = cfg.use_rope
+        self.use_gsp = cfg.use_gsp
+        self.qk_norm = cfg.qk_norm
+
+        if cfg.fused_qkv:
+            self.qkv_proj = ComplexLinear(cfg.dim, 3 * inner, bias=False)
+        else:
+            self.q_proj = ComplexLinear(cfg.dim, inner, bias=False)
+            self.k_proj = ComplexLinear(cfg.dim, inner, bias=False)
+            self.v_proj = ComplexLinear(cfg.dim, inner, bias=False)
+        self.o_proj = ComplexLinear(inner, cfg.dim, bias=False)
+
+        # Hierarchical dt_bias: each layer gets its own base decay rate
+        if cfg.hierarchical_dt and cfg.dt_bias_schedule is not None:
+            base_dt = cfg.dt_bias_schedule[layer_idx]
+        else:
+            base_dt = -4.0
+        self.dt_proj = nn.Linear(cfg.dim * 2, cfg.n_heads)
+        self.dt_bias = nn.Parameter(torch.zeros(cfg.n_heads) + base_dt)
+
+        if cfg.use_gsp:
+            self.protect_gate = nn.Linear(cfg.dim, cfg.n_heads)
+            nn.init.constant_(self.protect_gate.bias, -3.0)
+
+        # Cross-level drift: project higher layer's PAM output into Q-space
+        if cfg.cross_level and layer_idx > 0:
+            self.drift_proj = ComplexLinear(cfg.dim, inner, bias=False)
+
+        if cfg.use_rope:
+            self.register_buffer(
+                'rope_cache',
+                build_rope_cache(cfg.max_seq_len, cfg.head_dim),
+                persistent=False,
+            )
+            # Phase 3b (v8/backbone): cache the autocast-dtype copy so we
+            # don't re-allocate/cast on every forward. Refilled on demand
+            # in forward() when the activation dtype changes.
+            self._rope_cache_typed: Optional[torch.Tensor] = None
+            self._rope_cache_typed_dtype: Optional[torch.dtype] = None
+            self._rope_cache_typed_len: int = 0
+
+        self.dropout = nn.Dropout(cfg.dropout)
+
+        # Reverse association: reuse upper triangle of Q@K.T
+        self.use_reverse_assoc = cfg.use_reverse_assoc
+        if cfg.use_reverse_assoc:
+            self.rev_scale = nn.Parameter(torch.zeros(1))
+
+        self.chunk_size = cfg.chunk_size
+        _causal_size = cfg.chunk_size if cfg.chunk_size > 0 else cfg.max_seq_len
+        self.register_buffer(
+            '_causal',
+            torch.tril(torch.ones(_causal_size, _causal_size)),
+            persistent=False,
+        )
+
+    # ── Dual form helpers ────────────────────────────────────────────────────
+
+    @staticmethod
+    def _dual_form_block(
+        q_s: torch.Tensor,
+        k: torch.Tensor,
+        v_prime: torch.Tensor,
+        gamma: torch.Tensor,
+        causal_mask: torch.Tensor,
+        rev_scale: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Dual form on a single block. q_s is pre-scaled by d^{-0.5}.
+
+        Returns:
+            y:       [B, H, Tc, d, 2]  output for this block
+            S_block: [B, H, d, d, 2]   state contribution (decayed to block end)
+
+        NOTE: We tried packing the four split matmuls in each chain into a
+        single block-matrix GEMM (Phase 3c in the speed-up plan). At
+        T=2048 the per-call ``torch.cat`` overhead and the 2x larger
+        intermediates dominated, costing ~15 % throughput. With the
+        chunked loop removed (Phase 3a) each split matmul is already a
+        large [B,H,T,T] GEMM that saturates the tensor cores, so we keep
+        the four-call form here.
+        """
+        B, H, T = gamma.shape
+        gamma_flat = gamma.reshape(B * H, T)
+        D = fused_decay_matrix(gamma_flat, T).reshape(B, H, T, T)
+
+        qr, qi = q_s[..., 0], q_s[..., 1]
+        kr, ki = k[..., 0], k[..., 1]
+        wr = qr @ kr.transpose(-1, -2) + qi @ ki.transpose(-1, -2)
+        wi = qi @ kr.transpose(-1, -2) - qr @ ki.transpose(-1, -2)
+
+        ar, ai = wr * D, wi * D
+        vpr, vpi = v_prime[..., 0], v_prime[..., 1]
+        yr = ar @ vpr - ai @ vpi
+        yi = ar @ vpi + ai @ vpr
+        y = torch.stack([yr, yi], dim=-1)
+
+        # Reverse association: reuse upper triangle via transpose
+        if rev_scale is not None:
+            ar_rev = wr.transpose(-1, -2) * D
+            ai_rev = wi.transpose(-1, -2) * D
+            yr_rev = ar_rev @ vpr - ai_rev @ vpi
+            yi_rev = ar_rev @ vpi + ai_rev @ vpr
+            y = y + rev_scale * torch.stack([yr_rev, yi_rev], dim=-1)
+
+        D_last = D[:, :, -1, :]
+        wv_r = vpr * D_last.unsqueeze(-1)
+        wv_i = vpi * D_last.unsqueeze(-1)
+        sr = wv_r.transpose(-1, -2) @ kr + wv_i.transpose(-1, -2) @ ki
+        si = wv_i.transpose(-1, -2) @ kr - wv_r.transpose(-1, -2) @ ki
+        S_block = torch.stack([sr, si], dim=-1)
+
+        return y, S_block
+
+    def _forward_chunked(
+        self,
+        q: torch.Tensor,
+        k: torch.Tensor,
+        v_prime: torch.Tensor,
+        gamma: torch.Tensor,
+        d: int,
+        rev_scale: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Chunked dual form: O(T*C) instead of O(T^2). Mathematically identical."""
+        B, H, T = q.shape[:3]
+        C = self.chunk_size
+        scale = d ** -0.5
+        q_s = q * scale
+
+        S = q.new_zeros(B, H, d, d, 2)
+        outputs = []
+
+        for start in range(0, T, C):
+            end = min(start + C, T)
+            Tc = end - start
+
+            q_c = q_s[:, :, start:end]
+            k_c = k[:, :, start:end]
+            v_c = v_prime[:, :, start:end]
+            g_c = gamma[:, :, start:end]
+
+            causal = self._causal[:Tc, :Tc]
+            y_c, S_chunk = self._dual_form_block(q_c, k_c, v_c, g_c, causal, rev_scale)
+
+            log_g = torch.log(g_c + 1e-6)
+            cum_decay = torch.exp(torch.cumsum(log_g, dim=-1))
+
+            if start > 0:
+                Sr, Si = S[..., 0], S[..., 1]
+                qr_c, qi_c = q_c[..., 0], q_c[..., 1]
+                Sq_r = (Sr @ qr_c.transpose(-1, -2) - Si @ qi_c.transpose(-1, -2)).transpose(-1, -2)
+                Sq_i = (Sr @ qi_c.transpose(-1, -2) + Si @ qr_c.transpose(-1, -2)).transpose(-1, -2)
+                cd = cum_decay.unsqueeze(-1)
+                y_c = y_c + torch.stack([Sq_r * cd, Sq_i * cd], dim=-1)
+
+            outputs.append(y_c)
+
+            total_decay = cum_decay[:, :, -1]
+            S = S * total_decay[..., None, None, None] + S_chunk
+
+        return torch.cat(outputs, dim=2), S
+
+    # ── Main forward ─────────────────────────────────────────────────────────
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        state: Optional[torch.Tensor] = None,
+        step_offset: int = 0,
+        drift_signal: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        B, T, _, _ = x.shape
+        H, d = self.num_heads, self.head_dim
+
+        # 1. Q/K/V projections
+        if self.fused_qkv:
+            qkv = self.qkv_proj(x).view(B, T, 3, H, d, 2)
+            q = qkv[:, :, 0].transpose(1, 2).contiguous()
+            k = qkv[:, :, 1].transpose(1, 2).contiguous()
+            v = qkv[:, :, 2].transpose(1, 2).contiguous()
+        else:
+            q = self.q_proj(x).view(B, T, H, d, 2).transpose(1, 2)
+            k = self.k_proj(x).view(B, T, H, d, 2).transpose(1, 2)
+            v = self.v_proj(x).view(B, T, H, d, 2).transpose(1, 2)
+
+        # 1b. Complex RoPE on Q, K
+        if self.use_rope:
+            end = step_offset + T
+            if end > self.rope_cache.shape[0]:
+                self.register_buffer(
+                    'rope_cache',
+                    build_rope_cache(end * 2, d).to(x.device),
+                    persistent=False,
+                )
+                # Invalidate typed cache: underlying buffer just changed.
+                self._rope_cache_typed = None
+                self._rope_cache_typed_len = 0
+            # Phase 3b: maintain a dtype-cast copy so the per-forward
+            # `.to(dtype=x.dtype)` becomes a no-op view in the common case.
+            if (
+                self._rope_cache_typed is None
+                or self._rope_cache_typed_dtype != x.dtype
+                or self._rope_cache_typed_len < end
+            ):
+                self._rope_cache_typed = self.rope_cache.to(dtype=x.dtype)
+                self._rope_cache_typed_dtype = x.dtype
+                self._rope_cache_typed_len = self.rope_cache.shape[0]
+            pos = self._rope_cache_typed[step_offset:end]
+            q = cmul(q, pos)
+            k = cmul(k, pos)
+
+        # 1c. Optional QK normalization
+        if self.qk_norm:
+            q = cnormalize(q)
+            k = cnormalize(k)
+
+        # 1d. Cross-level drift: bias Q toward higher layer's goal
+        if drift_signal is not None and hasattr(self, 'drift_proj'):
+            drift_q = self.drift_proj(drift_signal).view(B, T, H, d, 2).transpose(1, 2)
+            q = q + drift_q
+
+        # 2. Data-dependent decay + GSP
+        x_flat = to_real_concat(x)
+        dt = F.softplus(self.dt_proj(x_flat) + self.dt_bias).transpose(1, 2)
+
+        if self.use_gsp:
+            p = torch.sigmoid(self.protect_gate(cabs(x))).transpose(1, 2)
+            gamma = torch.exp(-dt) * (1 - p) + p
+            v_prime = v * (1 - p).unsqueeze(-1).unsqueeze(-1)
+        else:
+            gamma = torch.exp(-dt)
+            v_prime = v
+
+        # 3a. Training: Dual Form -- no sequential loop
+        _rev = self.rev_scale if self.use_reverse_assoc else None
+        if state is None and T > 1:
+            if self.chunk_size > 0 and T > self.chunk_size:
+                y, new_state = self._forward_chunked(q, k, v_prime, gamma, d, _rev)
+            else:
+                scale = d ** -0.5
+                q_s = q * scale
+                causal = self._causal[:T, :T]
+                y, new_state = self._dual_form_block(
+                    q_s, k, v_prime, gamma, causal, _rev,
+                )
+
+        # 3b. Inference: Recurrent Form O(1) per token
+        else:
+            if state is None:
+                state = torch.zeros(B, H, d, d, 2, device=x.device, dtype=x.dtype)
+            scale = d ** -0.5
+            y_list = []
+            S = state
+            for t in range(T):
+                v_t = v_prime[:, :, t].unsqueeze(-2)
+                k_t = k[:, :, t]
+                k_conj = torch.stack([k_t[..., 0], -k_t[..., 1]], dim=-1).unsqueeze(-3)
+
+                outer_r = v_t[..., 0] * k_conj[..., 0] - v_t[..., 1] * k_conj[..., 1]
+                outer_i = v_t[..., 0] * k_conj[..., 1] + v_t[..., 1] * k_conj[..., 0]
+                outer = torch.stack([outer_r, outer_i], dim=-1)
+
+                g = gamma[:, :, t].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+                S = S * g + outer
+
+                q_t = q[:, :, t].unsqueeze(-3) * scale
+                sq_r = S[..., 0] * q_t[..., 0] - S[..., 1] * q_t[..., 1]
+                sq_i = S[..., 0] * q_t[..., 1] + S[..., 1] * q_t[..., 0]
+                y_list.append(torch.stack([sq_r, sq_i], dim=-1).sum(dim=-2))
+
+            y = torch.stack(y_list, dim=2)
+            new_state = S
+
+        # 4. Output projection + dropout
+        # Phase 2 (v8/backbone): use plain F.dropout on the packed real
+        # tensor instead of materialising a `ones(B, T, dim)` mask and
+        # multiplying. F.dropout fuses with the surrounding ops under
+        # torch.compile and skips the extra alloc + multiply kernels.
+        y = y.transpose(1, 2).contiguous().view(B, T, self.inner_dim, 2)
+        out = self.o_proj(y)
+        if self.training and self.dropout.p > 0.0:
+            out = F.dropout(out, p=self.dropout.p, training=True)
+        return out, new_state
+
+
+# ── V7 Block: Interleaved CGU (channel mix) + PAM (sequence mix) ─────────────
+
+class V7Block(nn.Module):
+    """Pre-norm residual: CGU for channel mixing, PAM for sequence mixing."""
+
+    def __init__(self, cfg: V7Config, layer_idx: int = 0):
+        super().__init__()
+        self.norm1 = ComplexNorm(cfg.dim)
+        self.cgu = ComplexGatedUnit(cfg.dim, cfg.expand, activation=cfg.activation)
+        self.cgu_scale = nn.Parameter(torch.tensor(1.0))
+        self.cgu_dropout = nn.Dropout(cfg.dropout)
+        self.norm2 = ComplexNorm(cfg.dim)
+        self.pam = PhaseAssociativeLayer(cfg, layer_idx=layer_idx)
+        self.pam_scale = nn.Parameter(torch.tensor(0.1))
+        self._dim = cfg.dim
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        pam_state: Optional[torch.Tensor] = None,
+        step_offset: int = 0,
+        drift_signal: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        cgu_out = self.cgu(self.norm1(x))
+        # Phase 2 (v8/backbone): plain F.dropout on the packed tensor.
+        if self.training and self.cgu_dropout.p > 0.0:
+            cgu_out = F.dropout(cgu_out, p=self.cgu_dropout.p, training=True)
+        x = x + cgu_out * self.cgu_scale
+        pam_out, new_state = self.pam(
+            self.norm2(x), state=pam_state, step_offset=step_offset,
+            drift_signal=drift_signal,
+        )
+        x = x + pam_out * self.pam_scale
+        return x, new_state, pam_out
+
+
+# ── V7 Language Model ────────────────────────────────────────────────────────
+
+class V7LM(nn.Module):
+    """
+    ComplexEmbed -> [V7Block] x N -> Tied Complex LM Head
+
+    LM head computes Re(z * conj(embed)) = z_r @ e_r^T + z_i @ e_i^T
+    """
+
+    def __init__(self, cfg: V7Config):
+        super().__init__()
+        # Auto-compute hierarchical schedule if enabled but not explicitly set
+        if cfg.hierarchical_dt and cfg.dt_bias_schedule is None:
+            cfg.dt_bias_schedule = tuple(
+                torch.linspace(-6.91, 0.0, cfg.n_layers).tolist()
+            )
+        self.config = cfg
+
+        self.embed = ComplexEmbed(cfg.vocab_size, cfg.dim)
+        self.embed_norm = ComplexNorm(cfg.dim)
+        self.blocks = nn.ModuleList([
+            V7Block(cfg, layer_idx=i) for i in range(cfg.n_layers)
+        ])
+        self.output_norm = ComplexNorm(cfg.dim)
+        self.lm_head_proj = ComplexLinear(cfg.dim, cfg.dim)
+        self.lm_head_norm = ComplexNorm(cfg.dim)
+
+        # Multi-scale auxiliary prediction heads
+        self.aux_heads = nn.ModuleDict()
+        self.aux_offsets: Dict[int, int] = {}
+        if cfg.multi_scale_loss:
+            aux_indices = list(range(0, cfg.n_layers, cfg.aux_layer_stride))
+            for idx in aux_indices:
+                frac = 1.0 - idx / max(cfg.n_layers - 1, 1)
+                offset = max(1, int(cfg.max_aux_offset * frac))
+                self.aux_heads[str(idx)] = AuxPredHead(cfg.dim)
+                self.aux_offsets[idx] = offset
+
+        self._init_weights()
+
+    def _init_weights(self):
+        """Match V6 init: normal_(std=0.02) for nn.Linear, zero biases, re-apply customs."""
+        embed_embeddings = {self.embed.embed_real, self.embed.embed_imag}
+        for module in self.modules():
+            if isinstance(module, nn.Linear):
+                nn.init.normal_(module.weight, std=0.02)
+                if module.bias is not None:
+                    nn.init.zeros_(module.bias)
+            elif isinstance(module, nn.Embedding) and module not in embed_embeddings:
+                nn.init.normal_(module.weight, std=0.02)
+        self._reinit_custom_biases()
+
+    def _reinit_custom_biases(self):
+        """Re-apply custom bias values that _init_weights zeroed."""
+        for name, module in self.named_modules():
+            if hasattr(module, 'protect_gate') and isinstance(module.protect_gate, nn.Linear):
+                nn.init.constant_(module.protect_gate.bias, -3.0)
+
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        states: Optional[List[torch.Tensor]] = None,
+        step_offset: int = 0,
+        labels: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, List[torch.Tensor], torch.Tensor]:
+        """Forward pass.
+
+        Args:
+            labels: When provided and multi_scale_loss is enabled, aux CE losses
+                    are computed inline (one layer at a time) to avoid holding all
+                    vocab-sized logit tensors simultaneously.
+
+        Returns:
+            logits:    [B, T, vocab]
+            states:    list of per-layer PAM states
+            aux_loss:  scalar multi-scale auxiliary loss (0.0 when disabled)
+        """
+        z = self.embed_norm(self.embed(input_ids))
+
+        use_ckpt = (
+            self.config.gradient_checkpointing
+            and self.training
+            and states is None
+        )
+
+        new_states = []
+        drift = None
+        aux_loss = torch.tensor(0.0, device=input_ids.device)
+        n_layers = self.config.n_layers
+
+        for i, block in enumerate(self.blocks):
+            s = states[i] if states is not None else None
+            if use_ckpt:
+                z, new_s, pam_out = self._checkpointed_block(
+                    block, z, step_offset, drift,
+                )
+            else:
+                z, new_s, pam_out = block(
+                    z, pam_state=s, step_offset=step_offset, drift_signal=drift,
+                )
+            new_states.append(new_s)
+            drift = pam_out if self.config.cross_level else None
+
+            if labels is not None and str(i) in self.aux_heads:
+                offset = self.aux_offsets[i]
+                if offset < labels.shape[1]:
+                    aux_logits = self.aux_heads[str(i)](
+                        z, self.embed.embed_real.weight, self.embed.embed_imag.weight,
+                    )
+                    shifted = labels[:, offset:]
+                    trimmed = aux_logits[:, :shifted.shape[1]]
+                    if trimmed.numel() > 0:
+                        layer_loss = F.cross_entropy(
+                            trimmed.reshape(-1, trimmed.size(-1)),
+                            shifted.reshape(-1),
+                        )
+                        frac = i / max(n_layers - 1, 1)
+                        w = math.exp(-2.0 * (1.0 - frac))
+                        aux_loss = aux_loss + w * layer_loss
+
+        z = self.output_norm(z)
+        lm = self.lm_head_norm(self.lm_head_proj(z))
+        logits = (
+            lm[..., 0] @ self.embed.embed_real.weight.T
+            + lm[..., 1] @ self.embed.embed_imag.weight.T
+        )
+        return logits, new_states, aux_loss
+
+    @staticmethod
+    def _checkpointed_block(
+        block: V7Block,
+        z: torch.Tensor,
+        step_offset: int,
+        drift: Optional[torch.Tensor],
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        def run_block(z_in, *drift_args):
+            d = drift_args[0] if drift_args else None
+            return block(z_in, pam_state=None, step_offset=step_offset, drift_signal=d)
+
+        if drift is not None:
+            return grad_checkpoint(run_block, z, drift, use_reentrant=False)
+        else:
+            return grad_checkpoint(run_block, z, use_reentrant=False)
+
+    @torch.no_grad()
+    def generate(
+        self,
+        input_ids: torch.Tensor,
+        max_new_tokens: int = 100,
+        temperature: float = 1.0,
+        top_k: int = 50,
+        top_p: float = 0.0,
+        repetition_penalty: float = 1.0,
+    ) -> torch.Tensor:
+        self.eval()
+        generated = input_ids.clone()
+
+        logits, states, _ = self.forward(generated)
+        step = generated.shape[1]
+
+        for _ in range(max_new_tokens):
+            next_logits = logits[:, -1] / temperature
+
+            if repetition_penalty != 1.0:
+                score = torch.gather(next_logits, 1, generated)
+                score = torch.where(
+                    score > 0, score / repetition_penalty,
+                    score * repetition_penalty,
+                )
+                next_logits.scatter_(1, generated, score)
+
+            if top_k > 0:
+                v, _ = next_logits.topk(min(top_k, next_logits.size(-1)))
+                next_logits[next_logits < v[:, -1:]] = float('-inf')
+
+            if top_p > 0:
+                sorted_logits, sorted_idx = next_logits.sort(descending=True)
+                cum_probs = sorted_logits.softmax(dim=-1).cumsum(dim=-1)
+                remove = cum_probs - sorted_logits.softmax(dim=-1) >= top_p
+                sorted_logits[remove] = float('-inf')
+                next_logits = sorted_logits.scatter(1, sorted_idx, sorted_logits)
+
+            next_token = torch.multinomial(next_logits.softmax(dim=-1), 1)
+            generated = torch.cat([generated, next_token], dim=1)
+
+            logits, states, _ = self.forward(
+                next_token, states=states, step_offset=step,
+            )
+            step += 1
+
+        return generated
+
+    def count_parameters(self) -> Dict[str, int]:
+        embed_p = sum(p.numel() for p in self.embed.parameters())
+        block_p = sum(p.numel() for b in self.blocks for p in b.parameters())
+        head_p = (
+            sum(p.numel() for p in self.lm_head_proj.parameters())
+            + sum(p.numel() for p in self.lm_head_norm.parameters())
+        )
+        norm_p = (
+            sum(p.numel() for p in self.embed_norm.parameters())
+            + sum(p.numel() for p in self.output_norm.parameters())
+        )
+        aux_p = sum(p.numel() for p in self.aux_heads.parameters())
+        total = embed_p + block_p + head_p + norm_p + aux_p
+        result: Dict[str, int] = {
+            'embedding (tied)': embed_p,
+            'blocks': block_p,
+            'norms': norm_p,
+            'lm_head': head_p,
+            'total': total,
+        }
+        if aux_p > 0:
+            result['aux_heads'] = aux_p
+        return result
+
+
+# ── Presets ───────────────────────────────────────────────────────────────────
+
+PRESETS = {
+    'tiny': V7Config(
+        vocab_size=50257, dim=64, n_heads=2, head_dim=32,
+        n_layers=2, expand=2, dropout=0.0, max_seq_len=512,
+        hierarchical_dt=False,
+    ),
+    'medium': V7Config(
+        vocab_size=50257, dim=384, n_heads=6, head_dim=64,
+        n_layers=16, expand=3, dropout=0.1, max_seq_len=2048,
+        hierarchical_dt=True,
+    ),
+    # 6-layer hierarchical: one PAM per resolution level
+    # global(~1000tok) -> broad(~250) -> mid(~60) -> local(~15) -> fine(~5) -> step(~2)
+    'medium_h6': V7Config(
+        vocab_size=50257, dim=512, n_heads=8, head_dim=64,
+        n_layers=6, expand=4, dropout=0.1, max_seq_len=2048,
+        hierarchical_dt=True,
+        dt_bias_schedule=(-6.91, -5.52, -4.08, -2.64, -1.39, 0.0),
+        cross_level=True,
+    ),
+    # ~25M flat baseline: same depth as medium_h16_flat, scaled down width
+    # dim=160, inner=128 (4 heads x 32), expand=3 — apples-to-apples scaling point
+    'small': V7Config(
+        vocab_size=50257, dim=160, n_heads=4, head_dim=32,
+        n_layers=16, expand=3, dropout=0.1, max_seq_len=2048,
+        hierarchical_dt=False,
+        cross_level=False,
+    ),
+    # 16-layer flat: V6-matched shape, no hierarchy — baseline for V7 code verification
+    'medium_h16_flat': V7Config(
+        vocab_size=50257, dim=384, n_heads=6, head_dim=64,
+        n_layers=16, expand=3, dropout=0.1, max_seq_len=2048,
+        hierarchical_dt=False,
+        cross_level=False,
+    ),
+    # 16-layer grouped hierarchy: multiple layers per timescale level
+    # global(4L) -> broad(3L) -> mid(3L) -> local(3L) -> fine(2L) -> step(1L)
+    'medium_h16_grouped': V7Config(
+        vocab_size=50257, dim=384, n_heads=6, head_dim=64,
+        n_layers=16, expand=3, dropout=0.1, max_seq_len=2048,
+        hierarchical_dt=True,
+        dt_bias_schedule=(
+            -6.91, -6.91, -6.91, -6.91,   # layers 0-3:  global
+            -5.52, -5.52, -5.52,            # layers 4-6:  broad
+            -4.08, -4.08, -4.08,            # layers 7-9:  mid
+            -2.64, -2.64, -2.64,            # layers 10-12: local
+            -1.39, -1.39,                   # layers 13-14: fine
+             0.0,                           # layer 15:    step
+        ),
+        cross_level=True,
+    ),
+}
+
+
+def get_config(preset: str = 'medium') -> V7Config:
+    if preset not in PRESETS:
+        raise ValueError(f"Unknown preset '{preset}'. Available: {list(PRESETS.keys())}")
+    import copy
+    return copy.deepcopy(PRESETS[preset])

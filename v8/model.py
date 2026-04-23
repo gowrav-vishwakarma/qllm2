@@ -45,7 +45,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from v7.model import (
+from v8.backbone import (
     V7Config, V7Block, ComplexEmbed, ComplexNorm, ComplexLinear,
 )
 from v8.config import V8Config, QLCConfig

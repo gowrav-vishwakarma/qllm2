@@ -47,7 +47,7 @@ LOG_DIR=$(make_log_dir "v8" "stageA_${PRESET}_${DATASET}")
 mkdir -p "$CKPT_DIR"
 
 GEN_PROMPT="In 1923 , the University of"
-ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --gen_prompt '$GEN_PROMPT' --checkpoint_dir $CKPT_DIR --log_dir $LOG_DIR"
+ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --gen_prompt '$GEN_PROMPT' --checkpoint_dir $CKPT_DIR --log_dir $LOG_DIR"
 
 RESUME_ARG=""
 if [[ $RESUME -eq 1 && -f "$CKPT_DIR/best_model.pt" ]]; then

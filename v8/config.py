@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import Optional, Tuple, Dict
 
-from v7.model import V7Config
+from v8.backbone import V7Config
 
 
 # ── QLC subconfig ────────────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ def _backbone_medium_v3() -> V7Config:
         hierarchical_dt=False, cross_level=False,
         use_rope=True, use_gsp=True, fused_qkv=True, qk_norm=False,
         chunk_size=256, multi_scale_loss=False, use_reverse_assoc=False,
-        gradient_checkpointing=True,
+        gradient_checkpointing=False,
     )
 
 
