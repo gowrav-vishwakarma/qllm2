@@ -7,7 +7,7 @@ import torch
 
 from v8.config import get_config, V8Config, QLCConfig
 from v8.model import V8LM
-from v7.model import V7Config
+from v8.backbone import V7Config
 
 
 @pytest.fixture(scope="module")

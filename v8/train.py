@@ -196,9 +196,10 @@ class V8Trainer:
         self.model.to(self.device)
 
         param_groups = build_param_groups(model, weight_decay)
-        self.optimizer = torch.optim.AdamW(
-            param_groups, lr=learning_rate, betas=(0.9, 0.95),
-        )
+        adamw_kwargs = dict(lr=learning_rate, betas=(0.9, 0.95))
+        if torch.cuda.is_available():
+            adamw_kwargs["fused"] = True
+        self.optimizer = torch.optim.AdamW(param_groups, **adamw_kwargs)
 
         total_steps = max(max_epochs * len(train_loader), 1)
         self.scheduler = build_lr_scheduler(
@@ -295,6 +296,110 @@ class V8Trainer:
 
     def _orig(self) -> V8LM:
         return self.model._orig_mod if hasattr(self.model, "_orig_mod") else self.model
+
+    def profile_one_shot(self, total_steps: int, output_dir: str | Path) -> None:
+        """Capture a torch.profiler trace for the first ``total_steps``.
+
+        Uses the standard wait/warmup/active schedule. The trace is written
+        as Chrome JSON to ``output_dir`` and a textual top-30 summary
+        (sorted by self CUDA time) is printed.
+
+        Note: this exits the process after writing. It deliberately runs the
+        *eager* model (no torch.compile) so the kernel breakdown is the
+        unfused baseline we want to characterise.
+        """
+        from torch.profiler import (
+            profile, record_function, schedule, ProfilerActivity, tensorboard_trace_handler,
+        )
+        out_dir = Path(output_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        wait = 5
+        warmup = 5
+        active = max(1, total_steps - wait - warmup)
+        sched = schedule(wait=wait, warmup=warmup, active=active, repeat=1)
+
+        m = self._orig()
+        m.train()
+
+        loader_iter = iter(self.train_loader)
+        print(
+            f"\n[profile] capturing {total_steps} steps "
+            f"(wait={wait}, warmup={warmup}, active={active}) -> {out_dir}"
+        )
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
+
+        activities = [ProfilerActivity.CPU]
+        if torch.cuda.is_available():
+            activities.append(ProfilerActivity.CUDA)
+
+        with profile(
+            activities=activities,
+            schedule=sched,
+            on_trace_ready=tensorboard_trace_handler(str(out_dir)),
+            record_shapes=True,
+            with_stack=False,
+            profile_memory=False,
+        ) as prof:
+            for step in range(total_steps):
+                try:
+                    batch = next(loader_iter)
+                except StopIteration:
+                    loader_iter = iter(self.train_loader)
+                    batch = next(loader_iter)
+
+                input_ids = batch["input_ids"].to(self.device, non_blocking=True)
+                labels = batch["labels"].to(self.device, non_blocking=True)
+
+                with torch.amp.autocast(
+                    self.device.type,
+                    enabled=self.use_amp,
+                    dtype=self.amp_dtype or torch.float16,
+                ):
+                    with record_function("v8_forward"):
+                        logits, _, ponder_term = self.model(
+                            input_ids, labels=labels, return_qlc_diag=False,
+                        )
+                        main_loss = F.cross_entropy(
+                            logits.view(-1, logits.size(-1)), labels.view(-1),
+                        )
+                        loss = main_loss + ponder_term
+
+                with record_function("v8_backward"):
+                    if self.scaler is not None:
+                        self.scaler.scale(loss).backward()
+                        self.scaler.unscale_(self.optimizer)
+                    else:
+                        loss.backward()
+                    torch.nn.utils.clip_grad_norm_(
+                        [p for p in self.model.parameters() if p.requires_grad],
+                        self.gradient_clip,
+                    )
+
+                with record_function("v8_optim"):
+                    if self.scaler is not None:
+                        self.scaler.step(self.optimizer)
+                        self.scaler.update()
+                    else:
+                        self.optimizer.step()
+                    self.scheduler.step()
+                    self.optimizer.zero_grad(set_to_none=True)
+
+                prof.step()
+
+        torch.cuda.synchronize()
+        print("\n[profile] top 30 ops by self CUDA time:")
+        print(
+            prof.key_averages().table(
+                sort_by="self_cuda_time_total", row_limit=30,
+            )
+        )
+        print(f"\n[profile] trace written under {out_dir}")
+        print(
+            "[profile] open with: chrome://tracing or "
+            "https://ui.perfetto.dev (drag the .json/.gz file)"
+        )
 
     def train_epoch(self, epoch: int) -> Dict[str, float]:
         self.model.train()
@@ -694,6 +799,13 @@ def main() -> None:
                         help="Stage A checkpoint to load into the backbone "
                              "(use for Stage B / Stage C launches).")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--profile_steps", type=int, default=0,
+        help="If >0, run a one-shot torch.profiler over that many training "
+             "steps, dump a Chrome trace under logs/v8/profiles/, and exit. "
+             "Wait/warmup/active = 5/5/N-10. Compile is disabled internally "
+             "for the profile run so the trace shows real eager kernels.",
+    )
     parser.add_argument("--kl_anchor_weight", type=float, default=None,
                         help="Override Stage C KL anchor weight (default: from preset).")
     parser.add_argument("--infonce_weight", type=float, default=None,
@@ -913,7 +1025,8 @@ def main() -> None:
         learning_rate=args.lr, weight_decay=args.weight_decay,
         warmup_steps=args.warmup_steps, gradient_clip=args.gradient_clip,
         max_epochs=args.epochs, checkpoint_dir=args.checkpoint_dir,
-        amp_dtype_str=args.amp_dtype, compile_model=args.compile,
+        amp_dtype_str=args.amp_dtype,
+        compile_model=(args.compile and args.profile_steps == 0),
         compile_mode=args.compile_mode, gen_every=args.gen_every,
         gen_prompt=args.gen_prompt, log_interval=args.log_interval,
         start_epoch=start_epoch, kl_anchor_weight=cfg.kl_anchor_weight,
@@ -922,6 +1035,15 @@ def main() -> None:
         infonce_weight=cfg.qlc.infonce_weight,
         infonce_every=cfg.qlc.infonce_every,
     )
+
+    if args.profile_steps > 0:
+        prof_dir = Path("logs/v8/profiles") / (
+            f"{args.preset}_{args.dataset}_b{args.batch_size}_"
+            f"{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
+        trainer.profile_one_shot(args.profile_steps, prof_dir)
+        return
+
     trainer.train()
 
 
