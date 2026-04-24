@@ -179,7 +179,6 @@ class EffectAlgebraBank(nn.Module):
         return (gates * sq_amp) / max(temperature, 1e-6)
 
     # ── Top-k selection -> orthonormal basis for SPM ───────────────────────
-
     def select_top_k(
         self,
         psi: torch.Tensor,
@@ -223,17 +222,33 @@ class EffectAlgebraBank(nn.Module):
         u_all = self.effect_directions()                              # [M, d, 2]
         w_all = self.effect_values()                                  # [M, d, 2]
 
-        # Gather selected vectors per (b, h, k). topk_idx: [B, H, k]
-        # u_sel: [B, H, k, d, 2]
-        idx_for_gather = topk_idx.unsqueeze(-1).unsqueeze(-1).expand(
-            -1, -1, -1, u_all.shape[-2], 2,
-        )
-        u_sel = u_all.unsqueeze(0).unsqueeze(0).expand(
-            scores.shape[0], scores.shape[1], -1, -1, -1,
-        ).gather(2, idx_for_gather)
-        w_sel = w_all.unsqueeze(0).unsqueeze(0).expand(
-            scores.shape[0], scores.shape[1], -1, -1, -1,
-        ).gather(2, idx_for_gather)
+        # Gather selected vectors per (b, h, k). topk_idx: [B, H, k].
+        #
+        # IMPORTANT: the natural-looking expression
+        #
+        #   u_sel = (
+        #       u_all.unsqueeze(0).unsqueeze(0)            # [1, 1, M, d, 2]
+        #       .expand(B, H, -1, -1, -1)                  # [B, H, M, d, 2] view
+        #       .gather(2, idx_for_gather)                 # [B, H, k, d, 2]
+        #   )
+        #
+        # has a backward that materializes the full ``[B, H, M, d, 2]`` dense
+        # gradient buffer before scatter-summing back to the bank's
+        # ``[M, d, 2]``. For the medium preset (B*T=6144, M=2048, d=384)
+        # this is 6144 * 2048 * 384 * 2 * 4 = 38.6 GiB and OOMs the card.
+        # The same pathology exists in eager mode -- it's not inductor's
+        # fault, it's the backward formula for ``gather`` over an expanded
+        # view. The smoke preset's small M*d kept it under the threshold.
+        #
+        # ``index_select`` does the same forward gather but its backward
+        # only allocates a single dense gradient of size ``[M, d, 2]``
+        # (~6 MB), populated via the standard sparse scatter_add_. We
+        # flatten (B, H, k) into one index dimension, index_select once,
+        # then reshape back to [B, H, k, d, 2].
+        flat_idx = topk_idx.reshape(-1)                               # [B*H*k]
+        out_shape = (*topk_idx.shape, u_all.shape[1], u_all.shape[2])  # [B, H, k, d, 2]
+        u_sel = u_all.index_select(0, flat_idx).reshape(out_shape)
+        w_sel = w_all.index_select(0, flat_idx).reshape(out_shape)
 
         # Weight selected directions by sqrt(score) so QR keeps the dominant
         # facts' span; this also lets gradients flow through topk_vals.
