@@ -36,7 +36,7 @@ the per-head outputs are averaged before the LM head.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -69,6 +69,20 @@ class QLCDiagnostics:
     out_scale: float = 0.0              # current value of QLC residual scale
     psi_delta_l2: float = 0.0           # mean ||psi_T - psi_0||^2 (per-token)
     mean_amp: float = 0.0               # mean |u^H psi|^2 = alpha + gamma (v8.2)
+    # Per-iteration breakdowns (when return_diagnostics=True). Each list has
+    # length equal to the number of iters actually run (<= t_max). Default
+    # ``None`` so existing callers/tests that build ``QLCDiagnostics`` directly
+    # are not affected.
+    per_iter_alpha: Optional[List[float]] = None
+    per_iter_beta: Optional[List[float]] = None
+    per_iter_gamma: Optional[List[float]] = None
+    # Each entry is a (yes, no, cont) tuple of per-iter halt-distribution means.
+    per_iter_halt: Optional[List[Tuple[float, float, float]]] = None
+    # Mean ||psi_next - psi_h||^2 per iteration (per-token, mean over BT*H).
+    per_iter_psi_step_l2: Optional[List[float]] = None
+    # Jaccard overlap of bank top-k indices vs the previous iteration's top-k.
+    # ``None`` at t=0 (no previous), float in [0, 1] thereafter.
+    per_iter_bank_overlap: Optional[List[Optional[float]]] = None
 
 
 class QuantumLogicCore(nn.Module):
@@ -279,6 +293,16 @@ class QuantumLogicCore(nn.Module):
         prev_spm_state = None
         prev_psi_pool = None
 
+        # Per-iteration diagnostic accumulators (only populated when
+        # return_diagnostics=True). Kept out of the hot path otherwise.
+        per_iter_alpha: List[float] = []
+        per_iter_beta: List[float] = []
+        per_iter_gamma: List[float] = []
+        per_iter_halt: List[Tuple[float, float, float]] = []
+        per_iter_psi_step_l2: List[float] = []
+        per_iter_bank_overlap: List[Optional[float]] = []
+        prev_topk_idx: Optional[torch.Tensor] = None
+
         for it in range(self.t_max):
             is_last = (it == self.t_max - 1)
 
@@ -287,10 +311,18 @@ class QuantumLogicCore(nn.Module):
             # per head). This keeps the bank parameter count linear in M, not
             # M*H.
             psi_pool = psi_h.mean(dim=1)                  # [BT, d, 2]
-            U, V = self.bank.select_top_k(
-                psi_pool, k=self.top_k, rank=self.rank,
-                reason_heads=H, temperature=self.bank_temperature,
-            )                                              # both [BT, H, d, r, 2]
+            if return_diagnostics:
+                U, V, topk_idx_t = self.bank.select_top_k(
+                    psi_pool, k=self.top_k, rank=self.rank,
+                    reason_heads=H, temperature=self.bank_temperature,
+                    return_topk_idx=True,
+                )                                          # both [BT, H, d, r, 2]
+            else:
+                U, V = self.bank.select_top_k(
+                    psi_pool, k=self.top_k, rank=self.rank,
+                    reason_heads=H, temperature=self.bank_temperature,
+                )                                          # both [BT, H, d, r, 2]
+                topk_idx_t = None
             spm_state = self.spm.build_from_basis(U, V_in=V)
 
             # 3. Sasaki update per head. When the *true* quantale ordering
@@ -337,21 +369,70 @@ class QuantumLogicCore(nn.Module):
             # 5. Accumulate weighted contribution.
             psi_out_acc = psi_out_acc + weight.unsqueeze(-1).unsqueeze(-1) * psi_next
 
+            # Capture the per-iter step magnitude *before* the roll-forward, so
+            # the diagnostic block below sees the genuine ||psi_next - psi_h||
+            # (after roll-forward psi_h == psi_next and the step would be 0).
+            if return_diagnostics:
+                with torch.no_grad():
+                    _step = (psi_next - psi_h)
+                    psi_step_l2_it = (
+                        _step[..., 0].square() + _step[..., 1].square()
+                    ).sum(dim=-1).mean()
+            else:
+                psi_step_l2_it = None
+
             # Roll forward.
             prev_spm_state = spm_state
             prev_psi_pool = psi_pool_next
             psi_h = psi_next
 
             # Diagnostics.
-            sum_alpha = sum_alpha + halt_out.abg[..., 0].mean()
-            sum_beta = sum_beta + halt_out.abg[..., 1].mean()
-            sum_gamma = sum_gamma + halt_out.abg[..., 2].mean()
+            mean_alpha_it = halt_out.abg[..., 0].mean()
+            mean_beta_it = halt_out.abg[..., 1].mean()
+            mean_gamma_it = halt_out.abg[..., 2].mean()
+            sum_alpha = sum_alpha + mean_alpha_it
+            sum_beta = sum_beta + mean_beta_it
+            sum_gamma = sum_gamma + mean_gamma_it
             sum_align = sum_align + (halt_out.abg[..., 0] + halt_out.abg[..., 2]).mean()
             probs = halt_out.logits.softmax(dim=-1)
-            n_yes = n_yes + probs[..., 0].mean()
-            n_no = n_no + probs[..., 1].mean()
-            n_cont = n_cont + probs[..., 2].mean()
+            mean_yes_it = probs[..., 0].mean()
+            mean_no_it = probs[..., 1].mean()
+            mean_cont_it = probs[..., 2].mean()
+            n_yes = n_yes + mean_yes_it
+            n_no = n_no + mean_no_it
+            n_cont = n_cont + mean_cont_it
             diag_count += 1
+
+            # Per-iteration breakdown (Phase 1 reasoning diagnostics). Gated on
+            # return_diagnostics so cost is zero on the hot path. The loop
+            # otherwise averages everything across iterations, which hides
+            # whether iteration t>0 is doing real work or repeating iter 0.
+            if return_diagnostics:
+                with torch.no_grad():
+                    if prev_topk_idx is not None and topk_idx_t is not None:
+                        # Jaccard over top-k effect indices per (BT, H).
+                        # Both sides have exactly k items, so
+                        #   union = 2k - intersect.
+                        prev_set = prev_topk_idx.unsqueeze(-1)   # [BT, H, k, 1]
+                        curr_set = topk_idx_t.unsqueeze(-2)      # [BT, H, 1, k]
+                        intersect = (prev_set == curr_set).any(-1).sum(-1).float()
+                        denom = (2 * self.top_k) - intersect
+                        jaccard = (intersect / denom.clamp_min(1.0)).mean()
+                        bank_overlap_it: Optional[float] = float(jaccard.item())
+                    else:
+                        bank_overlap_it = None
+                per_iter_alpha.append(float(mean_alpha_it.detach().item()))
+                per_iter_beta.append(float(mean_beta_it.detach().item()))
+                per_iter_gamma.append(float(mean_gamma_it.detach().item()))
+                per_iter_halt.append((
+                    float(mean_yes_it.detach().item()),
+                    float(mean_no_it.detach().item()),
+                    float(mean_cont_it.detach().item()),
+                ))
+                per_iter_psi_step_l2.append(float(psi_step_l2_it.item()))
+                per_iter_bank_overlap.append(bank_overlap_it)
+                if topk_idx_t is not None:
+                    prev_topk_idx = topk_idx_t.detach()
 
             if ponder.halted.all():
                 break
@@ -389,6 +470,12 @@ class QuantumLogicCore(nn.Module):
                 out_scale=float(self.out_scale.detach().item()),
                 psi_delta_l2=float(delta.item()),
                 mean_amp=float(align_signal.detach().item()),
+                per_iter_alpha=per_iter_alpha,
+                per_iter_beta=per_iter_beta,
+                per_iter_gamma=per_iter_gamma,
+                per_iter_halt=per_iter_halt,
+                per_iter_psi_step_l2=per_iter_psi_step_l2,
+                per_iter_bank_overlap=per_iter_bank_overlap,
             )
             if return_align:
                 return psi_out, ponder_cost, align_signal, diag
