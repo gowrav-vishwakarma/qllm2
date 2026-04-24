@@ -165,7 +165,7 @@ ComplexEmbed              ──────────────────
   ▼                                                    │
 [ V7Block × N ]    ◄── grammar engine (QPAM)           │
   │                  - learns syntax / local meaning   │
-  │                  - frozen after Stage A            │
+  │                  - trained jointly with QLC (e2e)  │
   ▼                                                    │
 ComplexNorm                                            │
   │                                                    │
@@ -187,7 +187,7 @@ Logits → next-token probability
 
 | File                                                        | What it owns                                                      |
 |-------------------------------------------------------------|-------------------------------------------------------------------|
-| [`v8/config.py`](config.py)                                 | `V8Config`, `QLCConfig`, presets for every Stage A / B / C run    |
+| [`v8/config.py`](config.py)                                 | `V8Config`, `QLCConfig`, the `e2e_*_reasoning` presets, and the historical `stageB_*` ablation presets |
 | [`v8/model.py`](model.py)                                   | `V8LM`: glues the V7 backbone + QLC + tied complex LM head        |
 | [`v8/qlc/projector.py`](qlc/projector.py)                   | `SasakiProjectionMemory` — the rank-`r` projector working memory  |
 | [`v8/qlc/effect_bank.py`](qlc/effect_bank.py)               | `EffectAlgebraBank` — the M-slot fact library                     |
@@ -235,17 +235,21 @@ Logits → next-token probability
    guessing at confidence. If reasoning genuinely needs an "I'm not sure yet"
    signal, the algebra is there for free — and only complex weights can
    provide it.
-4. **Clean experiments.** Stage A produces a frozen backbone. Stage B then
-   tests *only the new piece*. Any PPL change is unambiguously about the QLC,
-   not about the backbone co-adapting (which is what made V6's memory bolt-ons
-   un-debuggable).
+4. **Clean experiments (historical motivation).** The original three-stage
+   plan would have produced a frozen Stage A backbone for Stage B to test
+   against, isolating QLC effects from backbone co-adaptation. We've since
+   moved to a single end-to-end run (§5) and instead use the
+   `unsharp_target=True` γ signal plus the QLC ramp schedule to attribute
+   reasoning behavior, accepting some entanglement with the backbone in
+   exchange for one trained model rather than three.
 
 ### Where it could quietly fail
 
 - `γ` could stay 0 forever — meaning the if/else algebra never engages and
-  the win comes purely from the rank constraint. (We already see this in
-  Stage A.5 smoke; if Stage B also shows `γ ≈ 0`, the OrthoHalt-off ablation
-  becomes the kill test.)
+  the win comes purely from the rank constraint. The historical Stage A.5
+  smoke showed exactly this (γ ≡ 0 with `unsharp_target=False`), which is
+  why the canonical e2e preset (§5) sets `unsharp_target=True`. If γ stays
+  at 0 even there, the (α, β, γ) head is decorative.
 - The bank could just memorize the training set (V6 §5.5 redux). We mitigate
   with top-k routing and InfoNCE on synthetic entity cloze.
 - Re-orthonormalizing the projector basis every iteration could be unstable
@@ -253,51 +257,78 @@ Logits → next-token probability
   [`v8/qlc/tests/test_projector.py`](qlc/tests/test_projector.py) check this
   directly; QR refresh is configurable.
 - Sasaki updates are 2× more compute per step than QPAM, and we run up to
-  T_max=4 of them. Even if quality wins, throughput hurts. Stage B numbers
-  will tell us whether the cost/benefit is worth it.
+  T_max=4 of them. Even if quality wins, throughput hurts. The §5 medium
+  e2e run will tell us whether the cost/benefit is worth it.
 
 ---
 
-## 5. Three stages, three different questions
+## 5. End-to-end single run (canonical V8 workflow)
 
-V8 isn't trained in one shot. We deliberately separate the experiments so
-each result tests exactly one thing.
+V8 trains in **one continuous run** from random init. The original Stage A
+/ A.5 / B / C plan and its launchers were retired on 2026-04-24; the
+canonical workflow is now the e2e single-run preset. The motivation,
+acceptance criteria, and ramp schedule are in
+[`v8/EXPERIMENTS_V8.md`](EXPERIMENTS_V8.md) §9 and the v2 plan
+([`.cursor/plans/single-run-v8-training_12d5e87a.plan.md`](../.cursor/plans/single-run-v8-training_12d5e87a.plan.md)).
 
-| Stage | Script                                                                    | Asks                                                                | Output                                  |
-|-------|---------------------------------------------------------------------------|---------------------------------------------------------------------|-----------------------------------------|
-| **A**     | [`scripts/run_v8_stageA.sh`](../scripts/run_v8_stageA.sh)                 | "Can we reproduce the QPAM baseline cleanly?" (no QLC, just grammar) | `v8/checkpoints/qpam_stageA.pt`         |
-| **A.5**   | [`scripts/run_v8_stageA5_smoke.sh`](../scripts/run_v8_stageA5_smoke.sh)   | "Does the QLC primitive even work without crashing?" (TinyStories) | smoke logs under `logs/v8/stageA5_*/`   |
-| **B**     | [`scripts/run_v8_stageB.sh`](../scripts/run_v8_stageB.sh)                 | "Which knobs of QLC actually help on real data?" (frozen backbone) | `v8/checkpoints/stageB_*/`              |
-| **C**     | [`scripts/run_v8_stageC_joint.sh`](../scripts/run_v8_stageC_joint.sh)     | "Does letting them co-adapt buy us another PPL or two?"            | `v8/checkpoints/stageC_*/`              |
+Launchers (both go through `v8/train.py`):
 
-Stage B is where the **real ablations** live: rank `r ∈ {4, 8, 16}`, bank size
-`M ∈ {2k, 8k}`, reasoning depth `T ∈ {1, 2, 4}`, and two ablation switches
-(`quantale_off`, `orthohalt_off`) that turn off the two key algebraic claims.
+| Script                                                                       | Purpose                                                                       |
+|------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`scripts/run_v8_e2e_smoke.sh`](../scripts/run_v8_e2e_smoke.sh)             | TinyStories sanity gate using `e2e_tiny_reasoning`. Confirms γ > 0 wiring.    |
+| [`scripts/run_v8_e2e_medium.sh`](../scripts/run_v8_e2e_medium.sh)           | WikiText-103 main run using `e2e_medium_reasoning`, 10 epochs by default.     |
+
+Key configuration (set in the `e2e_*_reasoning` presets in
+[`v8/config.py`](config.py)):
+
+- `freeze_backbone=False` — backbone learns jointly with the QLC from step 0.
+- `qlc.unsharp_target=True` — required for non-trivial γ
+  (see [`AUDIT_V8.md`](AUDIT_V8.md) §1).
+- `qlc.out_scale_init=0.05`, `out_scale_learnable=True` — soft warmup on the
+  QLC residual contribution.
+- `kl_anchor_weight=0.0` — **must** be 0 with random init (no Stage A
+  reference logits exist; `backbone_logits()` would otherwise anchor to
+  the model's own untrained logits).
+
+Optional runtime-safe schedule (`--qlc_schedule`) ramps `t_max` (2 → 3 → 4)
+and `ponder_lambda` (0 → 0.005 → 0.01) across thirds of the run. The
+schedule mutates only attributes read fresh on every forward pass; anything
+that would require rebuilding modules (`halt_mode`, `out_scale_learnable`,
+`use_complex`, `rank`, `bank_size`) is intentionally not schedulable and
+must be set in the preset.
+
+Acceptance criteria (`mean_gamma > 0` sustained, halt distribution not
+collapsed, `mean_iter > 1` once `t_max=4`, Val PPL not catastrophic vs the
+V7-equivalent passthrough at matched compute) live in
+[`v8/EXPERIMENTS_V8.md`](EXPERIMENTS_V8.md) §9.2.
+
+**Optional one-off ablations.** The historical `stageB_*` / `smoke_tiny_*`
+presets remain in `v8/config.py` and can be invoked manually with
+`python -m v8.train --preset <name>` if you want to reproduce a specific
+ablation row. They are no longer wrapped in a launcher and do not assume
+any Stage A backbone checkpoint.
 
 ---
 
-## 6. What we know so far (Stage A.5 smoke result)
+## 6. What we know so far (smoke results)
 
-Run on RTX 4090, TinyStories 20k stories, 3 epochs, `_backbone_tiny()`
-(dim=64, 2 layers) — full details in
-[`v8/EXPERIMENTS_V8.md`](EXPERIMENTS_V8.md) §5.
+**Historical Stage A.5 smoke (TinyStories, 2026-04-23, retired launcher):**
+QLC `r=4, T_max=2` beat the V7-equivalent passthrough by **5.55 PPL**
+(178.95 → 173.40) on `_backbone_tiny()`. γ was 0.000 throughout because
+`unsharp_target` defaulted to off — the win came from rank-r Sasaki
+retrieval acting as a regularizer, not from the (α, β, γ) head.
 
-| Variant                  | QLC params | Best Val PPL | Tok/s   |
-|--------------------------|------------|--------------|---------|
-| Passthrough (V7-equiv)   | 0          | **178.95**   | 225 304 |
-| QLC `r=4, T_max=2`       | 57 678     | **173.40**   | 19 180  |
+**E2e smoke (TinyStories, 2026-04-24):** `e2e_tiny_reasoning` with
+`unsharp_target=True` and the runtime QLC schedule on. Within the first
+epoch (52 batches × 16 × 2k samples) we observe γ = 0.008 → 0.010,
+`halt(yes/no/cont) = 0.02 / 0.96 / 0.02` (alive but no-dominated), and the
+schedule transitions firing at the planned step boundaries. PPL is
+meaningless on this short run — the smoke is purely a wiring gate, which
+passed.
 
-**The gate passed.** The QLC variant beat the passthrough by 5.55 PPL on a
-tiny model — meaning the new primitive is differentiable, doesn't NaN, and
-adds something useful even at smoke scale.
-
-**Honest caveat:** `γ` was `0.000` for the entire smoke. The win came from the
-rank-`r` Sasaki retrieval acting as an inductive bias / regularizer, not from
-the orthocomplement if/else. This is the most important thing to watch in
-Stage B — if `γ` stays at 0 across all rows and `orthohalt_off` matches
-`orthohalt_on`, then the (α, β, γ) head is decorative and the operational
-quantum-logic story doesn't land at this scale (we'd keep SPM and prune the
-rest).
+The medium WikiText-103 run via
+[`scripts/run_v8_e2e_medium.sh`](../scripts/run_v8_e2e_medium.sh) is the
+definitive test against the §9.2 acceptance criteria.
 
 ---
 
@@ -318,35 +349,37 @@ rest).
 
 ## 8. How to run things
 
-Stage A (long, do it overnight on the 4090 in tmux):
+Smoke gate (TinyStories, ~1 minute on 4090):
 
 ```bash
-tmux new -s v8_stageA
+./scripts/run_v8_e2e_smoke.sh
+# or with a custom budget:
+EPOCHS=3 MAX_SAMPLES=20000 ./scripts/run_v8_e2e_smoke.sh
+```
+
+Watch for `γ > 0` in the QLC diag lines, the `[qlc-schedule]` transitions
+firing at ~1/3 and ~2/3 of the run, and `halt(yes/no/cont)` with non-zero
+mass on each bucket. If those look healthy, launch the medium run.
+
+Medium WikiText-103 run (long, do it overnight on the 4090 in tmux):
+
+```bash
+tmux new -s v8_e2e
 cd /home/gowrav/Development/qllm2
-./scripts/run_v8_stageA.sh
+./scripts/run_v8_e2e_medium.sh
 # Ctrl-b d  to detach
+
+# resume from the best checkpoint:
+./scripts/run_v8_e2e_medium.sh --resume
+
+# disable the QLC schedule (use preset values fixed):
+./scripts/run_v8_e2e_medium.sh --no_schedule
 ```
 
 The trainer's `TeeLogger` writes everything to
-`logs/v8/stageA_*/v8_stageA_medium_wikitext103.log` automatically — no need
-for `| tee`.
-
-Stage B (after Stage A finishes; ideally on an A100):
-
-```bash
-./scripts/run_v8_stageB.sh           # prints all available rows
-./scripts/run_v8_stageB.sh stageB_T4 # run one row
-./scripts/run_v8_stageB.sh all       # sequential sweep
-```
-
-Stage C (after Stage B picks winners):
-
-```bash
-./scripts/run_v8_stageC_joint.sh stageC_T4_joint
-```
-
-All Stage B/C launches need `v8/checkpoints/qpam_stageA.pt`; the Stage A
-script copies it into place automatically.
+`logs/v8/e2e_medium_reasoning_wikitext103_*/v8_e2e_medium_reasoning_wikitext103.log`
+automatically — no need for `| tee`. The final and best checkpoints land in
+`v8/checkpoints/e2e_medium_reasoning/`.
 
 ---
 
@@ -436,10 +469,12 @@ win until §G results disagree.
 
 ### Discriminator suite (§G of the rethink plan)
 
-These are the cheap go/no-go runs to do *before* committing to the original
-14h Stage A re-train + A100 sweep. All ship as presets in
-[`v8/config.py`](config.py); each row is a single ablation against the
-canonical `stageB_T2` baseline.
+Originally designed as cheap go/no-go runs before committing to a 14h
+Stage A re-train + A100 sweep. The dedicated launcher was retired with
+the rest of the staged scripts on 2026-04-24, but each row remains a
+preset in [`v8/config.py`](config.py) and can be invoked manually with
+`python -m v8.train --preset <name>` against the canonical `stageB_T2`
+baseline (which itself runs without a Stage A backbone).
 
 | Preset                              | Tests                                                                              |
 |-------------------------------------|------------------------------------------------------------------------------------|
@@ -469,7 +504,9 @@ Interpretation guide:
 
 - **`gamma ≈ 0` with sharp OrthoHalt**: structural, expected — see
   [`AUDIT_V8.md`](AUDIT_V8.md) §1. It is *not* evidence about
-  non-commutativity. To get an honest γ, run `stageB_unsharp_ortho`.
+  non-commutativity. To get an honest γ, use a preset with
+  `unsharp_target=True` — both `e2e_*_reasoning` presets do this by
+  default; the historical equivalent was `stageB_unsharp_ortho`.
 - **`out_scale` trajectory**: if it stays near init, the model is satisfied
   with a small QLC contribution — consistent with the "QLC is regularizer"
   hypothesis. If it grows toward 1, the model is asking for more QLC —

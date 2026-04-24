@@ -32,16 +32,18 @@ Modules in [`v8/`](.):
 
 Unit tests: [`v8/qlc/tests/`](qlc/tests/) — `pytest` runnable on CPU. 40 tests as of skeleton commit.
 
-## 2. Stage plan & hardware
+## 2. Training workflow
 
-| Stage | What                                                        | HW          | Wall-clock | Output                        |
-|-------|-------------------------------------------------------------|-------------|------------|-------------------------------|
-| A     | QPAM backbone from scratch on WT103                         | RTX 4090    | ~14h       | `v8/checkpoints/qpam_stageA.pt` |
-| A.5   | TinyStories smoke of QLC primitive (2M params)              | Mac / 4090  | ~1h        | gate before A100              |
-| B     | Frozen-backbone QLC ablation sweep (5–6 rows in parallel)   | A100 80GB   | overnight  | `v8/checkpoints/stageB_*/`    |
-| C     | Joint fine-tune top-2 Stage B configs + KL anchor           | A100 / 4090 | overnight  | `v8/checkpoints/stageC_*/`    |
+The original Stage A / A.5 / B / C plan and its launcher scripts were
+retired in favor of a **single end-to-end run from random init** — see §9
+("Single-run end-to-end") for the configuration, schedule, and acceptance
+criteria, and the launchers
+[`scripts/run_v8_e2e_smoke.sh`](../scripts/run_v8_e2e_smoke.sh) /
+[`scripts/run_v8_e2e_medium.sh`](../scripts/run_v8_e2e_medium.sh).
 
-Run scripts in [`scripts/`](../scripts/): `run_v8_stageA.sh`, `run_v8_stageA5_smoke.sh`, `run_v8_stageB_*.sh`, `run_v8_stageC_joint.sh`.
+The historical Stage A.5 smoke result (TinyStories) and the staged-plan
+ablation matrix are preserved below as reference for any future re-runs that
+choose to revive the staged workflow.
 
 ## 3. Ablation matrix
 
@@ -72,52 +74,33 @@ Per row, in addition to PPL, log:
 - **Tok/s** + **peak VRAM** for hardware bookkeeping.
 - **Git SHA** + log path under `logs/v8/`.
 
-## 5. Stage A.5 smoke results (TinyStories, 2026-04-23)
+## 5. Historical Stage A.5 smoke summary (TinyStories, 2026-04-23)
 
-Hardware: RTX 4090. Config: `_backbone_tiny()` (dim=64, 2 layers, head_dim=32) =
-6.6M backbone params; QLC adds 57k.
-Recipe: 20 000 stories, seq_len=512, batch=16, 3 epochs, lr=1e-4 with 1k-step
-warmup, AMP=auto (no `--compile`).
+Retained for reference. The Stage A.5 launcher and the related Stage A/B/C
+launchers have been removed; the canonical single-run replacement is §9.
 
-| Variant                  | Preset                    | QLC params | Best Val PPL | Tok/s   | Wall   |
-|--------------------------|---------------------------|------------|--------------|---------|--------|
-| Passthrough (V7-equiv)   | `smoke_tiny_passthrough`  | 0          | **178.95**   | 225 304 | 0.02 h |
-| QLC r=4, T_max=2         | `smoke_tiny_qlc_r4_T2`    | 57 678     | **173.40**   | 19 180  | 0.21 h |
+| Variant                  | Preset                    | QLC params | Best Val PPL | Tok/s   |
+|--------------------------|---------------------------|------------|--------------|---------|
+| Passthrough (V7-equiv)   | `smoke_tiny_passthrough`  | 0          | **178.95**   | 225 304 |
+| QLC r=4, T_max=2         | `smoke_tiny_qlc_r4_T2`    | 57 678     | **173.40**   | 19 180  |
 
-**Gate verdict: PASS.** Plan §5 acceptance is "QLC variant within +1 PPL of
-passthrough or better" — observed delta is **−5.55 PPL** (QLC *better*). The
-projector primitive is differentiable, doesn't NaN, and contributes useful
-inductive bias even at a tiny scale.
-
-**Caveats / things to watch in Stage B:**
-
-- **`γ` was 0.000 throughout.** The orthocomplement non-commutator never
-  engaged at this scale / 128-effect bank / 3 epochs. The Stage A.5 win came
-  from rank-r-constrained Sasaki retrieval acting as a regulariser, *not* from
-  the if/else algebra hypothesis. If Stage B also shows γ ≈ 0 across rows,
-  V8-G (`orthohalt_off`) becomes the primary algebraic-utility test — if G
-  matches D, the (α, β, γ) head is decorative and we should prune it per the
-  plan §7 kill rubric.
-- **Halt distribution drifted from ~0.02/0.96/0.02 → 0.33/0.62/0.06** over
-  3 epochs. ACT pondering is alive (mean iter steady at 2.0 because we cap at
-  T_max=2; will be more informative at T_max=4).
-- **Throughput cost is ~12×** vs passthrough at this size (no Triton, two
-  full reasoning iterations per token). Acceptable for v0; revisit only after
-  V8-D-T4 shows a quality win on WT103.
-
-Logs:
-- `logs/v8/stageA5_passthrough_tinystories_20260423_114721_e3e4b90/`
-- `logs/v8/stageA5_qlc_r4_T2_tinystories_20260423_114850_e3e4b90/`
+Key takeaway from that run: `γ` was 0.000 throughout because `unsharp_target`
+defaulted to off — see [`AUDIT_V8.md`](AUDIT_V8.md) §1. The §9 e2e preset
+(`e2e_tiny_reasoning` / `e2e_medium_reasoning`) sets `unsharp_target=True`,
+which produces a non-trivial γ (smoke verified 2026-04-24: γ ≈ 0.01 within
+the first epoch on TinyStories, 2k samples).
 
 ## 6. Verdicts
 
-To be filled in after Stage B & C runs. See plan §7 for the win / soft-win / kill rubric.
+To be filled in from the §9 single-run e2e runs. The acceptance criteria
+that gate the verdict (γ > 0 sustained, halt distribution not collapsed,
+mean iter > 1, Val PPL not catastrophic) are listed in §9.2.
 
-| Outcome  | Trigger                                                                                    | Decision |
-|----------|--------------------------------------------------------------------------------------------|----------|
-| Win      | `V8-E-joint ≤ 23.13` and factuality probe ≥ +5pts                                          | TBD      |
-| Soft win | `V8-D-T4 ≥ V8-B by ≥ 3 PPL` and OrthoHalt-off regresses                                    | TBD      |
-| Kill     | `V8-A` fails to match QPAM, or `V8-D` regresses vs `V8-B`, or OrthoHalt-off matches on    | TBD      |
+| Outcome   | Trigger                                                                              | Decision |
+|-----------|--------------------------------------------------------------------------------------|----------|
+| Win       | All §9.2 acceptance criteria met AND Val PPL ≤ V7-equivalent passthrough at matched compute | TBD      |
+| Soft win  | γ > 0 sustained AND mean iter > 1, but PPL parity (not improvement)                  | TBD      |
+| Kill      | γ collapses to 0 with `unsharp_target=True`, OR mean iter degenerates to 1.0          | TBD      |
 
 ## 7. Implementation status
 
@@ -126,81 +109,102 @@ To be filled in after Stage B & C runs. See plan §7 for the win / soft-win / ki
   Stage A/A.5/B/C launch scripts ready; trainer entry point smoke-tested.
 - **2026-04-23**: Stage A.5 smoke run on RTX 4090. **GATE PASSED** (QLC beats
   passthrough by 5.55 PPL on TinyStories; see §5). Caveat: γ=0 means the
-  algebraic orthocomplement signal is dormant at this scale; Stage B will
-  need to show γ>0 for the operational-quantum-logic claim to land.
+  algebraic orthocomplement signal is dormant at this scale.
 - **2026-04-23 (rethink)**: After multi-AI cross-review, the project was
   reframed (see [`AUDIT_V8.md`](AUDIT_V8.md) and
   [`README_V8.md`](README_V8.md) §0/§11). The current default thesis is
   "constrained latent memory + adaptive compute" with the operational
-  quantum-logic claim demoted to an ablation hypothesis. New presets and
-  diagnostic outputs are documented in §8 below.
-- **Next:** **Run the discriminator suite (§8) before any 14h Stage A
-  re-train.** If it confirms a real inductive-bias win at matched FLOPs,
-  *then* proceed to Stage A pretrain on RTX 4090 in tmux. Otherwise,
-  re-scope per the soft-win / kill criteria in
-  [`README_V8.md`](README_V8.md) §11.
+  quantum-logic claim demoted to an ablation hypothesis.
+- **2026-04-24**: Staged Stage A/B/C launchers retired. Single-run e2e
+  workflow (§9) becomes the canonical training path: one model, one
+  continuous run from random init, with `unsharp_target=True` so γ is
+  interpretable. Smoke gate verified: γ > 0 within the first epoch on
+  TinyStories.
+- **Next:** Launch the medium e2e run on WikiText-103 via
+  [`scripts/run_v8_e2e_medium.sh`](../scripts/run_v8_e2e_medium.sh) and
+  evaluate against the §9.2 acceptance criteria.
 
-## 8. Discriminator suite (rethink-plan §G)
+## 8. (Removed) Discriminator suite
 
-Half-day 4090 sweep that decides whether the original Stage A + A100 spend
-is justified. Run each row against a fixed seed (e.g. `--seed 42`) and the
-same `--epochs` budget as the existing TinyStories smoke unless noted. Fill
-in the empty cells as runs complete. Each row toggles **one** thing vs the
-canonical baseline.
+The Stage-B-tier discriminator suite required a Stage A backbone checkpoint
+and a coherent staged sweep, both of which were retired with the launchers
+on 2026-04-24. The corresponding `stageB_*` / `smoke_tiny_*` presets remain
+in [`v8/config.py`](config.py) and can still be invoked manually with
+`v8.train --preset <name>` for one-off experiments. The canonical workflow
+is the single-run e2e in §9.
 
-### 8.1 Smoke-tier discriminator (TinyStories, ~7h total on 4090)
+## 9. Single-run end-to-end (single-run-v8-training plan v2)
 
-| Row | Preset                          | Tests                                            | Best Val PPL | Tok/s | Mean γ | Mean iter | out_scale (final) | psi_delta_l2 (final) | Notes |
-|-----|---------------------------------|--------------------------------------------------|--------------|-------|--------|-----------|-------------------|----------------------|-------|
-| D0  | `smoke_tiny_passthrough`        | Passthrough baseline                             | 178.95       | 225k  | —      | —         | —                 | —                    | Existing §5 row |
-| D0' | `smoke_tiny_passthrough` (12×ep)| Equal-FLOP baseline (matched-compute control)    | ✗            | ✗     | —      | —         | —                 | —                    | Discriminator G.1 |
-| D1  | `smoke_tiny_qlc_r4_T2`          | Existing QLC baseline                            | 173.40       | 19k   | 0.000  | 2.00      | ✗                 | ✗                    | Existing §5 row |
-| D2  | `smoke_tiny_real_spm`           | Real-only SPM (use_complex=False)                | ✗            | ✗     | 0.000  | 2.00      | ✗                 | ✗                    | Discriminator G.2 |
-| D3  | `smoke_tiny_outscale0`          | out_scale pinned to 0 (QLC fully bypassed)       | ✗            | ✗     | —      | —         | 0.000             | ✗                    | Discriminator G.4 |
-| D4  | `smoke_tiny_unsharp`            | OrthoHalt with unsharp gated target              | ✗            | ✗     | **>0** | 2.00      | ✗                 | ✗                    | Discriminator §1 (rethink) |
-| D5  | `smoke_tiny_halt_delta`         | DeltaHalt instead of OrthoHalt                   | ✗            | ✗     | 0.000  | ≤2.0      | ✗                 | ✗                    | Discriminator G.6 |
-| D6  | `smoke_tiny_quantale_order_off` | True ordering test (sym(P_t P_{t-1}))            | ✗            | ✗     | 0.000  | 4.00      | ✗                 | ✗                    | Discriminator §2 (rethink) |
+This is the canonical V8 training workflow as of 2026-04-24. The goal is:
+**one model, one continuous run from random init**, with the QLC engaged the
+whole time so the reasoning signal is interpretable as the model trains.
+There is no Stage A handoff, no Stage B sweep, and no KL anchor (which is
+incompatible with random init — see plan v2 §1).
 
-**How to read these rows:**
+### 9.1 Configuration
 
-- `D2 vs D1`: if real matches complex within 0.5 PPL, the complex story dies
-  and only the rank constraint remains.
-- `D3 vs D1`: if `out_scale=0` matches `learnable`, the QLC residual is
-  noise.
-- `D4`: should produce non-zero γ (audit §1 fix). Validates that the
-  algebraic readout *can* carry a meaningful signal under unsharp targets.
-  Whether the model exploits it is then a separate question (`D4 PPL vs
-  D1 PPL` answers it).
-- `D6 vs D1`: if symmetrized composition regresses, *order matters* and
-  the quantale story has at least preliminary evidence.
+| Knob                  | Value                | Why                                                    |
+|-----------------------|----------------------|--------------------------------------------------------|
+| Preset (medium)       | `e2e_medium_reasoning` | Single end-to-end preset built on `_backbone_medium_v3` |
+| Preset (smoke)        | `e2e_tiny_reasoning`   | TinyStories sanity gate before medium                  |
+| `freeze_backbone`     | `False`              | Backbone learns jointly with the QLC                   |
+| `qlc.enabled`         | `True`               | QLC active from step 0                                 |
+| `qlc.unsharp_target`  | `True`               | Required for non-trivial γ (`AUDIT_V8.md` §1)          |
+| `qlc.out_scale_init`  | `0.05`               | Soft warmup for the QLC residual via low init          |
+| `qlc.out_scale_learnable` | `True`           | Optimizer can scale residual up if useful              |
+| `qlc.halt_mode`       | `"ortho"`            | OrthoHalt is the only head that produces (α,β,γ)       |
+| `kl_anchor_weight`    | `0.0`                | No Stage A reference logits exist in random-init run   |
 
-### 8.2 Stage-B-tier discriminator (medium backbone, frozen)
+Runtime-safe schedule (`--qlc_schedule`, off by default), expressed as
+fractions of total steps, ramps **only** the three runtime-mutable knobs:
 
-Run only after the smoke tier shows at least one row with a clear win.
-Requires a Stage A backbone checkpoint. Use the
-[`stageB_*`](config.py) presets corresponding to each smoke row plus the new
-`stageB_lmhead_unfrozen` and `stageB_infonce_on` rows.
+| Phase           | Frac of run | `t_max` | `ponder_lambda` |
+|-----------------|-------------|---------|-----------------|
+| Warmup          | 0 – 1/3     | 2       | 0.000           |
+| Mid             | 1/3 – 2/3   | 3       | 0.005           |
+| Late            | 2/3 – 1.0   | 4       | 0.010           |
 
-| Row | Preset                          | Tests                                            | Best Val PPL | Tok/s | Mean γ | out_scale (final) | InfoNCE final | Notes |
-|-----|---------------------------------|--------------------------------------------------|--------------|-------|--------|-------------------|---------------|-------|
-| S1  | `stageB_T2`                     | Canonical Stage B baseline                       | ✗            | ✗     | 0.000  | ✗                 | —             | Existing |
-| S2  | `stageB_real_spm`               | Real SPM                                         | ✗            | ✗     | 0.000  | ✗                 | —             |       |
-| S3  | `stageB_rank_r1` … `r4`         | Rank sweep                                       | ✗            | ✗     | 0.000  | ✗                 | —             |       |
-| S4  | `stageB_outscale0`/`01`/`1`     | out_scale sweep (frozen)                         | ✗            | ✗     | 0.000  | fixed             | —             |       |
-| S5  | `stageB_halt_delta` / `entropy` | Empirical halts                                  | ✗            | ✗     | 0.000  | ✗                 | —             |       |
-| S6  | `stageB_unsharp_ortho`          | Unsharp γ test                                   | ✗            | ✗     | **>0** | ✗                 | —             |       |
-| S7  | `stageB_quantale_order_off`     | True ordering test                               | ✗            | ✗     | 0.000  | ✗                 | —             |       |
-| S8  | `stageB_lmhead_unfrozen`        | LM head trainable (rethink §6)                   | ✗            | ✗     | 0.000  | ✗                 | —             |       |
-| S9  | `stageB_infonce_on`             | InfoNCE bank auxiliary                           | ✗            | ✗     | 0.000  | ✗                 | ✗             |       |
+Boundaries and values are configurable via
+`--qlc_warmup_end_frac`, `--qlc_mid_end_frac`,
+`--qlc_t_max_phases`, and `--qlc_ponder_lambda_phases`.
+Anything that requires rebuilding modules or resetting the optimizer
+(`halt_mode`, `out_scale_learnable`, `use_complex`, `rank`, `bank_size`) is
+**not** schedulable and must be set in the preset.
 
-### 8.3 Decision tree after the suite
+### 9.2 Reasoning-signal acceptance criteria
 
-| Observation                                                           | Verdict                                          |
-|-----------------------------------------------------------------------|--------------------------------------------------|
-| D0' (equal-FLOP passthrough) ≥ D1 within 0.5 PPL                       | QLC win was a compute hack. Re-scope.            |
-| D2 ≈ D1 (real ≈ complex)                                               | Drop "complex matters" claim; rename to V8-CLM.  |
-| D3 ≈ D1 (out_scale=0 ≈ learnable)                                      | Residual is noise; QLC primitive is decorative.  |
-| D4 shows γ > 0.05 *and* PPL improves over D1                           | **Algebraic readout earns its keep.** Keep ortho framing. |
-| D6 PPL > D1 PPL (regression under symmetrization) by ≥ 2 PPL           | Order matters. Quantale story is on the table.   |
-| Best non-baseline row improves over D1 by ≥ 5 PPL at matched FLOPs     | Spend Stage A + A100 budget.                     |
-| No non-baseline row improves over D1 by ≥ 2 PPL at matched FLOPs       | Document negative; ship V8-CLM as a clean module artifact. |
+All metrics come from `QLCDiagnostics` (`v8/qlc/reason_loop.py`), already
+printed by the trainer at `--diag_every` cadence.
+
+| Metric                       | Threshold                                  | Source / why                                                         |
+|------------------------------|--------------------------------------------|----------------------------------------------------------------------|
+| `mean_gamma`                 | ≥ 0.05 sustained late in training          | Only meaningful because `unsharp_target=True`; collapses to 0 otherwise |
+| `halt(yes / no / cont)`      | None of the three < 0.05 at convergence    | Halt distribution must not collapse to a one-hot regime              |
+| `mean_iter`                  | > 1.0 once `t_max` has ramped to 4         | Confirms the loop is actually pondering, not always halting at iter 1 |
+| `out_scale` (final)          | Reported, not gated                        | Interpretable per `AUDIT_V8.md` §4 — small ≈ QLC near-bypassed       |
+| Final Val PPL                | Not catastrophically worse than V7-equivalent passthrough at matched compute | The model must still *learn* language while the reasoning signal lives |
+
+### 9.3 Hard-kill rules
+
+- If `mean_gamma` stays at 0 with `unsharp_target=True` for the whole late
+  phase: the algebraic readout is dead even after the geometry fix.
+  Document the negative and stop pursuing the operational quantum-logic
+  framing for this preset (do not silently keep training).
+- If `mean_iter` collapses to 1.0 in the late phase, the ACT loop has
+  degenerated to "always halt at the first iter" and the model is no longer
+  doing iterative reasoning. Re-run with a higher `ponder_lambda` ceiling or
+  document and stop.
+- If Val PPL diverges (NaN, or > 2× the early-training plateau), stop and
+  treat the run as a failed configuration; do not auto-resume.
+
+### 9.4 Launchers
+
+- [`scripts/run_v8_e2e_smoke.sh`](../scripts/run_v8_e2e_smoke.sh) —
+  TinyStories smoke gate (`e2e_tiny_reasoning`), `--qlc_schedule` on.
+- [`scripts/run_v8_e2e_medium.sh`](../scripts/run_v8_e2e_medium.sh) —
+  WikiText-103 main run (`e2e_medium_reasoning`), 10 epochs by default,
+  no `--backbone_ckpt`, `--qlc_schedule` on.
+
+Decision after the smoke: gamma > 0 sustained AND PPL trending down →
+launch the medium run. Otherwise, adjust the schedule (`--qlc_t_max_phases`
+or `--qlc_ponder_lambda_phases`) before spending wall-clock on medium.
