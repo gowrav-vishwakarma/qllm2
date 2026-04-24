@@ -74,6 +74,7 @@ Per row, in addition to PPL, log:
 - **Effective rank of `Π_F`**: should equal `rank` (orthonormality drift sanity).
 - **Tok/s** + **peak VRAM** for hardware bookkeeping.
 - **Git SHA** + log path under `logs/v8/`.
+- **Per-iteration breakdown** *(Phase 1, 2026-04-24)*: when a diag step fires, the trainer also prints one indented line per QLC iteration. Format: `per-iter [t=N] a=... b=... g=... yes/no/c=.../.../... | psi_step_l2=... | bank_overlap_with_prev=...`. Captures per-iter `(α, β, γ)`, halt distribution, `||ψ_t − ψ_{t−1}||²` mean over `[BT, H]`, and Jaccard overlap of the bank's top-k indices vs the previous iteration (`N/A` at `t=0`). Used to decide whether iteration `t > 0` is doing real work or echoing iter 0; see §11 for the decision rules. Plumbed in [`v8/qlc/effect_bank.py`](qlc/effect_bank.py) (`select_top_k(..., return_topk_idx=True)`), [`v8/qlc/reason_loop.py`](qlc/reason_loop.py) (per-iter accumulators on `QLCDiagnostics`), and [`v8/train.py`](train.py) (print block right after the QLC summary line). Zero cost on the hot path: all capture is gated on `return_diagnostics=True`, which only fires at log steps (every ~100 batches).
 
 ## 5. Historical Stage A.5 smoke summary (TinyStories, 2026-04-23)
 
@@ -317,3 +318,80 @@ coordinated changes:
 
 If any of these fail, do *not* relaunch medium -- iterate on the schedule
 or the alignment weight first.
+
+## 11. 2026-04-24 — Phase 1 per-iteration QLC diagnostics: decision rules
+
+**Plan**: [`.cursor/plans/v8_per_iter_diagnostics_72b30338.plan.md`](../.cursor/plans/v8_per_iter_diagnostics_72b30338.plan.md).
+**Code**: [`v8/qlc/effect_bank.py`](qlc/effect_bank.py) (`return_topk_idx`),
+[`v8/qlc/reason_loop.py`](qlc/reason_loop.py) (`QLCDiagnostics.per_iter_*`),
+[`v8/train.py`](train.py) (print block).
+
+### Why this exists
+
+The summary line averages everything across iterations:
+
+```text
+QLC: iter=2.00 alpha=0.858 beta=0.000 gamma=0.142 halt(yes/no/cont)=0.39/0.17/0.44 | align=0.9999 ...
+```
+
+This hides whether iteration `t > 0` differs from iteration 0 at all. The
+v8.2 fix bundle (§10) successfully unfroze `α/γ` (now `align ≈ 0.9999`),
+but the side-effect is that iteration 0 already maxes out the alignment
+target, leaving no headroom for iteration 1+ to refine. We need per-iter
+visibility before deciding which Phase 2 fix is warranted.
+
+### Format on the wire
+
+Below the existing summary line, one indented line per iter actually run:
+
+```text
+   per-iter [t=0] a=0.842 b=0.000 g=0.158 yes/no/c=0.31/0.13/0.56 | psi_step_l2=2.130e+02 | bank_overlap_with_prev=N/A
+   per-iter [t=1] a=0.873 b=0.000 g=0.127 yes/no/c=0.47/0.21/0.32 | psi_step_l2=4.150e+01 | bank_overlap_with_prev=0.85
+```
+
+### Decision rules (precommit; do **not** post-hoc rationalize)
+
+#### Axis A — bank overlap × ψ-step magnitude (relative to iter 0)
+
+| `bank_overlap[t≥1]` | `psi_step_l2[t≥1] / psi_step_l2[t=0]` | Interpretation                                                | Phase 2 action                                                                                                                                              |
+|---------------------|---------------------------------------|---------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **> 0.7**           | **< 0.1**                             | Iter `t` picks the same effects and barely moves ψ → decorative. | **Phase 2A — force-different bank picks**: mask top-k from the previous iter, OR add a per-iter diversity bonus to the probe softmax, OR rotate probe head per iter. |
+| **> 0.7**           | **> 0.3**                             | Same effects but real ψ motion → projector is refining on the same facts (legit). | None yet. Let the schedule ramp `t_max` to 3, then re-check.                                                                                                |
+| **< 0.3**           | **< 0.1**                             | Different effects but ψ doesn't move → projector is washing out new info. | **Phase 2B — increase capacity**: bump `rank` from 4 → 8, or smoke with `renormalize_psi=False`.                                                            |
+| **< 0.3**           | **> 0.3**                             | Different effects, real motion → genuine multi-step reasoning. | None. Continue ramp; watch `align` keep climbing past `0.9999` saturation.                                                                                  |
+
+#### Axis B — halt and α-headroom (orthogonal to Axis A)
+
+| Pattern (across `t`)                                                  | Interpretation                                          | Phase 2 action                                                                                                       |
+|-----------------------------------------------------------------------|---------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| `cont` rate similar at `t=0` and `t=1` (e.g. 0.44 → 0.42)             | Halt has no iteration-aware signal — same logits regardless of `t`. | **Phase 2C — iteration-aware halt**: feed a learned positional embedding for `t` into `OrthoHalt.cls_head` input. |
+| `cont` drops sharply (e.g. 0.60 → 0.30) and `yes` rises (0.20 → 0.50) | Halt is genuinely getting more confident as ψ refines.  | None.                                                                                                                |
+| `α` already ≥ 0.85 at `t=0` and Δα across iters ≤ 0.02                | Target effect satisfied on iter 0 → no headroom for iter 1+. | **Phase 2D — iteration-aware target**: `target_mlp(ψ, t)` so `u(ψ, t)` shifts and creates new headroom.            |
+
+### When to act
+
+1. **First 1–2 log steps after diagnostics land** — sanity check the lines appear, no NaN, `bank_overlap` is in `[0, 1]`. *No action* expected.
+2. **First ~500 batches** of training in QLC schedule phase 0 (`t_max=2`) — collect ≥5 prints at *consistent* values before declaring a verdict. Early steps are noisy.
+3. **Decision point** — at end of epoch 1 *or* once the schedule enters phase 1 (`t_max=3`), whichever comes first. With `t_max=3` we get both `bank_overlap[t=1]` and `[t=2]`; matching cells across both rows of Axis A is much stronger evidence than a single iter.
+4. **Don't act on a single log line** — require the *same* Axis-A cell to fire for ≥3 consecutive prints (≈300 batches). Otherwise it's noise, not signal.
+5. **Acceptance gate for any Phase 2 patch** — must demonstrate, in a 1k-batch smoke, that it moves the diagnostic that triggered it (e.g., Phase 2A drops `bank_overlap` from > 0.85 to < 0.4). If it doesn't, **revert**; don't ship code that didn't move the needle it was designed to move.
+
+### Promotion to AUDIT_V8.md
+
+Phase 1 is empirical instrumentation. A finding becomes audit-grade (and
+moves to a new [`AUDIT_V8.md`](AUDIT_V8.md) §12) only when it's a
+*structural* claim — e.g., "bank overlap is ≥ 0.95 across all 10 epochs
+regardless of input, because `EffectAlgebraBank.probe` is deterministic in
+`mean(ψ)` and ψ is renormalized to the unit sphere after every Sasaki
+update, so iter 1's probe input is geometrically near-identical to iter
+0's." Until we have repeated, schedule-spanning data backing such a claim,
+keep the discussion in this section.
+
+### What is NOT in Phase 1
+
+Same exclusions as the plan:
+
+- No code change that affects the model state dict, optimizer, scheduler, or checkpoints. Safe mid-training.
+- No change to `v8/model.py`, `v8/config.py`, the launch scripts, or any tests.
+- No Phase 2 fixes (force-diversity, iteration-aware halt, iteration-aware target, entropy halt). Those wait on data.
+- No Phase 3 (move QLC inside the backbone block per [`AUDIT_V8.md`](AUDIT_V8.md) §3) until cheap fixes are exhausted.

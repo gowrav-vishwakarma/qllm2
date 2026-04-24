@@ -187,6 +187,7 @@ class EffectAlgebraBank(nn.Module):
         temperature: float = 1.0,
         reason_heads: int = 1,
         return_scores: bool = False,
+        return_topk_idx: bool = False,
     ):
         r"""Select top-k effects per (batch, head) and build a rank-r orthonormal
         basis ``U`` plus aligned values ``V`` ready for
@@ -207,6 +208,11 @@ class EffectAlgebraBank(nn.Module):
         U : ``[B, H_reason, d, rank, 2]``
         V : ``[B, H_reason, d, rank, 2]``  (values aligned column-wise)
         scores : optional, ``[B, H_reason, M]`` (returned if return_scores=True)
+        topk_idx : optional, ``[B, H_reason, k]`` long (returned if
+                   return_topk_idx=True). Used by the per-iter bank-overlap
+                   diagnostic in :class:`QuantumLogicCore` so we can compute
+                   Jaccard overlap of the selected effects across iterations.
+                   No autograd cost: indices are int64.
         """
         if reason_heads != self.n_heads:
             # Allow caller to subset or broadcast heads if it really wants,
@@ -261,8 +267,12 @@ class EffectAlgebraBank(nn.Module):
         w_for_qr = w_sel_w.transpose(-3, -2).contiguous()
         U, V = self._qr_basis(u_for_qr, w_for_qr, rank)
 
+        if return_scores and return_topk_idx:
+            return U, V, scores, topk_idx
         if return_scores:
             return U, V, scores
+        if return_topk_idx:
+            return U, V, topk_idx
         return U, V
 
     # NOTE: ``torch.compile`` (inductor backend) cannot reliably trace the

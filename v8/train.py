@@ -706,6 +706,30 @@ class V8Trainer:
                             f"out_scale={diag.out_scale:.3f} "
                             f"psi_delta_l2={diag.psi_delta_l2:.3e}"
                         )
+                        if diag.per_iter_alpha is not None and len(diag.per_iter_alpha) > 0:
+                            n_iters = len(diag.per_iter_alpha)
+                            overlaps = (
+                                diag.per_iter_bank_overlap
+                                if diag.per_iter_bank_overlap is not None
+                                else [None] * n_iters
+                            )
+                            for t, (a, b, g, h, ds, ov) in enumerate(zip(
+                                diag.per_iter_alpha,
+                                diag.per_iter_beta,
+                                diag.per_iter_gamma,
+                                diag.per_iter_halt,
+                                diag.per_iter_psi_step_l2,
+                                overlaps,
+                            )):
+                                ov_s = f"{ov:.2f}" if ov is not None else "N/A"
+                                y, n, c = h
+                                print(
+                                    f"      per-iter [t={t}] "
+                                    f"a={a:.3f} b={b:.3f} g={g:.3f} "
+                                    f"yes/no/c={y:.2f}/{n:.2f}/{c:.2f} | "
+                                    f"psi_step_l2={ds:.3e} | "
+                                    f"bank_overlap_with_prev={ov_s}"
+                                )
 
             if (
                 self.gen_every > 0
