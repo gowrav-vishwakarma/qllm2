@@ -454,7 +454,12 @@ class SasakiProjectionMemory(nn.Module):
         U = state.U
         B, H, d, r, _ = U.shape
         U_c = torch.view_as_complex(U.contiguous())
-        gram = U_c.transpose(-1, -2).conj() @ U_c          # [B, H, r, r]
+        # See the note in effect_bank._qr_basis: avoid the complex
+        # transpose+conj+matmul chain (fragile under torch.compile) by
+        # writing the same ``U^H @ U`` contraction as einsum. Even though
+        # this site is @no_grad today, keeping the pattern uniform across
+        # the QLC means future callers can wrap it under autograd safely.
+        gram = torch.einsum("bhdi,bhdj->bhij", U_c.conj(), U_c)
         eye = torch.eye(r, dtype=gram.dtype, device=gram.device)
         diff = gram - eye
         return diff.abs().square().sum(dim=(-1, -2)).sqrt().mean()
