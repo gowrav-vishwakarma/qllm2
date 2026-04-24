@@ -584,9 +584,18 @@ class V8Trainer:
             labels = batch["labels"].to(self.device, non_blocking=True)
             batch_tokens = input_ids.shape[0] * input_ids.shape[1]
 
+            # Gate on ``batch_idx`` (resets per epoch) rather than
+            # ``global_step`` (monotonic across epochs). The print below is
+            # ALSO gated on ``batch_idx % self.log_interval == 0``; using
+            # global_step here meant the two gates only co-aligned in
+            # epoch 1 where ``global_step == batch_idx``. From epoch 2 on
+            # the diag was computed at orphan steps (still paying the
+            # ``return_qlc_diag=True`` forward cost) but never printed.
+            # Assumes ``diag_every`` is a multiple of ``log_interval`` (the
+            # launcher uses 100 / 50 by default).
             want_diag = (
                 self.diag_every > 0
-                and self.global_step % self.diag_every == 0
+                and batch_idx % self.diag_every == 0
                 and m.qlc is not None
             )
 
@@ -814,6 +823,55 @@ class V8Trainer:
         torch.save(ckpt, path)
         print(f"Saved checkpoint: {path}")
         return path
+
+    def load_full_state(self, ckpt: dict) -> int:
+        """Restore optimizer / scheduler / counters from a saved checkpoint.
+
+        Assumes ``ckpt["model_state_dict"]`` was already loaded into the
+        underlying model (so weights are present and on the right device
+        before optimizer state is rehydrated). Restores everything
+        :meth:`save_checkpoint` writes EXCEPT ``model_state_dict``:
+
+        * ``optimizer_state_dict`` -- AdamW first/second moments (without
+          this, resume effectively wipes momentum and spikes the loss).
+        * ``scheduler_state_dict`` -- cosine LR position (without this, LR
+          re-warms over ``warmup_steps`` from ~0 instead of continuing).
+        * ``global_step`` / ``global_tokens`` -- so the runtime QLC
+          schedule (:meth:`_apply_qlc_schedule`) and the InfoNCE cadence
+          stay in their correct phase, and token counters keep counting.
+        * ``best_val_loss`` / ``best_val_ppl`` -- so we don't trivially
+          overwrite ``best_model.pt`` with a worse epoch right after
+          resume.
+
+        Returns the epoch index to start training from
+        (``ckpt["epoch"] + 1``), or 0 if the checkpoint has no ``epoch``.
+
+        All keys are optional: legacy weight-only checkpoints simply skip
+        the missing fields.
+        """
+        if "optimizer_state_dict" in ckpt:
+            try:
+                self.optimizer.load_state_dict(ckpt["optimizer_state_dict"])
+            except Exception as e:
+                print(f"  [resume] optimizer state load failed: {e}")
+        if "scheduler_state_dict" in ckpt:
+            try:
+                self.scheduler.load_state_dict(ckpt["scheduler_state_dict"])
+            except Exception as e:
+                print(f"  [resume] scheduler state load failed: {e}")
+        self.global_step = int(ckpt.get("global_step", 0))
+        self.global_tokens = int(ckpt.get("global_tokens", 0))
+        self.best_val_loss = float(ckpt.get("best_val_loss", float("inf")))
+        self.best_val_ppl = float(ckpt.get("best_val_ppl", float("inf")))
+        # Re-evaluate QLC phase against the restored step. Force=True
+        # because phase index might be the SAME numerical value as the
+        # init-time phase 0 we already applied, but the underlying
+        # state needs to be re-asserted on the fresh optimizer/model.
+        self._qlc_phase_current = -1
+        self._apply_qlc_schedule(force=True)
+        start_epoch = int(ckpt.get("epoch", -1)) + 1
+        self.start_epoch = start_epoch
+        return start_epoch
 
     def train(self) -> None:
         training_start = time.time()
@@ -1085,12 +1143,18 @@ def main() -> None:
             print(f"  example missing keys: {backbone_load_info['missing'][:5]}")
 
     start_epoch = 0
+    resume_ckpt: Optional[dict] = None
     if args.resume:
         print(f"\nResuming from {args.resume}...")
-        ckpt = torch.load(args.resume, weights_only=False, map_location="cpu")
-        model.load_state_dict(ckpt["model_state_dict"], strict=False)
-        start_epoch = ckpt.get("epoch", 0) + 1
-        print(f"Resumed from epoch {start_epoch}")
+        resume_ckpt = torch.load(args.resume, weights_only=False, map_location="cpu")
+        model.load_state_dict(resume_ckpt["model_state_dict"], strict=False)
+        # ``start_epoch`` is finalised AFTER the trainer is built, when we
+        # call ``trainer.load_full_state`` to also restore optimizer /
+        # scheduler / global_step / best_val_*.
+        start_epoch = int(resume_ckpt.get("epoch", -1)) + 1
+        print(f"Resumed model weights from epoch {start_epoch} "
+              f"(optimizer/scheduler/step state will be restored "
+              f"after trainer init)")
 
     infonce_loader = None
     if cfg.qlc.enabled and cfg.qlc.infonce_weight > 0:
@@ -1236,6 +1300,23 @@ def main() -> None:
         infonce_every=cfg.qlc.infonce_every,
         qlc_schedule=qlc_schedule,
     )
+
+    if resume_ckpt is not None:
+        resumed_start = trainer.load_full_state(resume_ckpt)
+        best_ppl_str = (
+            f"{trainer.best_val_ppl:.2f}"
+            if trainer.best_val_ppl != float("inf") else "inf"
+        )
+        print(
+            f"Resumed from {args.resume}: epoch={resumed_start} "
+            f"start_step={trainer.global_step} "
+            f"global_tokens={trainer.global_tokens:,} "
+            f"best_val_loss={trainer.best_val_loss:.4f} "
+            f"best_val_ppl={best_ppl_str}"
+        )
+        # Free the CPU-side checkpoint blob -- optimizer state on a 100M
+        # param model is ~800MB and we don't need it any more.
+        del resume_ckpt
 
     if args.profile_steps > 0:
         prof_dir = Path("logs/v8/profiles") / (
