@@ -69,6 +69,7 @@ Per row, in addition to PPL, log:
 
 - **Mean iter**: average ACT-style iterations used (reported by `QLCDiagnostics`).
 - **α / β / γ**: averaged orthocomplement masses (sanity check: γ > 0 validates the operational-quantum-logic claim).
+- **`align`** *(v8.2)*: mean `|u(psi)^H psi|^2 = α + γ` accumulated over the iteration loop. At random init this sits at the `1/d` noise floor (`~0.003` for `dim=384`, `~0.005` for `dim=192`); the `target_alignment_weight` aux pulls it up. Expected trajectory: `>= 0.05` within an epoch and `>= 0.2` by mid-training. **Leading indicator** for the §9.2 `mean_gamma` row -- if `align` stays at noise floor, gamma cannot rise either.
 - **Halt distribution**: yes / no / continue rates (detects degenerate halt collapse).
 - **Effective rank of `Π_F`**: should equal `rank` (orthonormality drift sanity).
 - **Tok/s** + **peak VRAM** for hardware bookkeeping.
@@ -102,6 +103,10 @@ mean iter > 1, Val PPL not catastrophic) are listed in §9.2.
 | Soft win  | γ > 0 sustained AND mean iter > 1, but PPL parity (not improvement)                  | TBD      |
 | Kill      | γ collapses to 0 with `unsharp_target=True`, OR mean iter degenerates to 1.0          | TBD      |
 
+| Run                      | Preset                  | Outcome | Notes |
+|--------------------------|-------------------------|---------|-------|
+| 4450ff0 (2026-04-24)     | `e2e_medium_reasoning`  | **Kill**    | alpha/gamma pinned at `1/d` noise floor, halt collapsed to halt-no; v8.2 fix bundle supersedes (see §10) |
+
 ## 7. Implementation status
 
 - **2026-04-23**: V8 skeleton committed: config, model, all four QLC primitives,
@@ -123,6 +128,24 @@ mean iter > 1, Val PPL not catastrophic) are listed in §9.2.
 - **Next:** Launch the medium e2e run on WikiText-103 via
   [`scripts/run_v8_e2e_medium.sh`](../scripts/run_v8_e2e_medium.sh) and
   evaluate against the §9.2 acceptance criteria.
+- **2026-04-24 (post-launch)**: First medium e2e run (commit 4450ff0)
+  killed early. QLC reasoning signal frozen at the `1/d` noise floor for
+  1,200+ steps -- §9.3 hard-kill criterion triggered. See §10 for the full
+  diagnosis. The **v8.2 fix bundle** landed:
+  - `OrthoHalt.target_gate` init `0 -> 1.5`,
+    `cls_head` init `eye*4` -> `eye*1, bias=[0,0,2]` (continue-biased).
+    Matching re-init in `V8LM._init_weights`.
+  - New `target_alignment_weight=0.05` aux pulls
+    `OrthoHalt.target_mlp(psi)` toward `psi` so `|u^H psi|^2` leaves the
+    `1/d` floor.
+  - `infonce_weight=0.05, infonce_every=4` enabled by default in both
+    `e2e_*_reasoning` presets (was 0 before).
+  - Schedule retune: `ponder_lambda_phases=(0.0, 0.002, 0.005)` (was
+    `(0.0, 0.005, 0.01)`) so the late phase doesn't undo the loop
+    engagement once it finally exists.
+  - New `align=` column on the QLC diagnostic line; new `mean_amp` field on
+    `QLCDiagnostics`.
+  Plan: [`.cursor/plans/unfreeze_qlc_alpha_gamma_2132eeda.plan.md`](../.cursor/plans/unfreeze_qlc_alpha_gamma_2132eeda.plan.md).
 
 ## 8. (Removed) Discriminator suite
 
@@ -178,8 +201,9 @@ printed by the trainer at `--diag_every` cadence.
 
 | Metric                       | Threshold                                  | Source / why                                                         |
 |------------------------------|--------------------------------------------|----------------------------------------------------------------------|
-| `mean_gamma`                 | ≥ 0.05 sustained late in training          | Only meaningful because `unsharp_target=True`; collapses to 0 otherwise |
-| `halt(yes / no / cont)`      | None of the three < 0.05 at convergence    | Halt distribution must not collapse to a one-hot regime              |
+| `align` *(v8.2, leading)*    | ≥ 0.05 by end of warmup, ≥ 0.2 mid-training | Mean `|u^H psi|^2 = α + γ`. If pinned at the `1/d` noise floor, alpha and gamma cannot rise either; kill the run before the late phase rather than after (this row exists because the 4450ff0 negative result missed every other gate by sitting on this floor for 1,200 steps -- see §10) |
+| `mean_gamma`                 | ≥ 0.05 sustained late in training          | Only meaningful because `unsharp_target=True`; collapses to 0 otherwise. Cannot exceed `align`; `align` is the upper bound. |
+| `halt(yes / no / cont)`      | None of the three < 0.05 at convergence    | Halt distribution must not collapse to a one-hot regime. v8.2 init makes the default distribution roughly `[0.10, 0.10, 0.80]` (continue-biased) so the loop engages from step 0. |
 | `mean_iter`                  | > 1.0 once `t_max` has ramped to 4         | Confirms the loop is actually pondering, not always halting at iter 1 |
 | `out_scale` (final)          | Reported, not gated                        | Interpretable per `AUDIT_V8.md` §4 — small ≈ QLC near-bypassed       |
 | Final Val PPL                | Not catastrophically worse than V7-equivalent passthrough at matched compute | The model must still *learn* language while the reasoning signal lives |
@@ -208,3 +232,88 @@ printed by the trainer at `--diag_every` cadence.
 Decision after the smoke: gamma > 0 sustained AND PPL trending down →
 launch the medium run. Otherwise, adjust the schedule (`--qlc_t_max_phases`
 or `--qlc_ponder_lambda_phases`) before spending wall-clock on medium.
+
+## 10. 2026-04-24 — e2e medium first launch (4450ff0): alpha/gamma frozen
+
+**Run**: [`logs/v8/e2e_medium_reasoning_wikitext103_20260424_162331_4450ff0/v8_e2e_medium_reasoning_wikitext103.log`](../logs/v8/e2e_medium_reasoning_wikitext103_20260424_162331_4450ff0/v8_e2e_medium_reasoning_wikitext103.log)
+| **RUN_INFO**: [`...20260424_162331_4450ff0/RUN_INFO.txt`](../logs/v8/e2e_medium_reasoning_wikitext103_20260424_162331_4450ff0/RUN_INFO.txt)
+
+### Symptom
+
+For the entire 1,200+ steps that ran before the kill:
+
+| Diagnostic                | Observed                              | Note |
+|---------------------------|---------------------------------------|------|
+| `alpha`                   | `0.001` (constant)                    | Predicted `1/(2d) = 1/768 ≈ 0.0013` for `dim=384`, `target_gate=0` |
+| `beta`                    | `0.997 - 0.998`                       | Predicted `1 - 1/d ≈ 0.9974` |
+| `gamma`                   | `0.001` (constant)                    | Same as alpha; the gate split `amp_sq ≈ 0.0026` 50/50 |
+| `mean_iter`               | `2.00` (= `t_max`)                    | Loop runs to ceiling because halting is forced by softmax saturation, not signal |
+| `halt(yes/no/cont)`       | `0.02 / 0.96 / 0.02`                  | One-hot at halt-no -- `cls_head.weight = 4*I` saturates the softmax on `beta=0.997` |
+| `mean_gamma` slope        | flat                                  | §9.3 hard-kill triggered |
+
+### Math diagnosis
+
+With `renormalize_psi=True` (`v8/qlc/reason_loop.py` L295-298), `||psi||² = 1`
+exactly after every Sasaki update. Inside `OrthoHalt.abg`
+(`v8/qlc/halt.py` L161-178):
+
+```
+amp_sq      = |u^H psi|²
+beta        = (||psi||² - amp_sq).clamp_min(0) = 1 - amp_sq
+alpha       = sigma(target_gate) * amp_sq    # if unsharp_target
+gamma       = (1 - sigma(target_gate)) * amp_sq
+```
+
+At init, `target_mlp(psi)` is essentially a random direction in `d`-dimensional
+space, so `|u^H psi|² ≈ 1/d = 1/384 ≈ 0.0026`. With `target_gate = 0`,
+`sigma(0) = 0.5`, splitting that mass 50/50 into alpha and gamma:
+`alpha ≈ gamma ≈ 0.0013`, `beta ≈ 0.9974`. Exact match to the log.
+
+`cls_head` was init'd with `weight = 4 * I_3, bias = 0`, so the softmax over
+`(alpha, beta, gamma)` projected into halt logits saturates: with `beta ≈ 1`
+and `weight = 4`, `p(halt-no) = softmax(0, 4, 0)[1] ≈ 0.96`. Halt-no fires
+on the first iteration of every step. Subsequent iterations get
+`remainder ≈ 0.02` of the ponder weight, so the gradient flowing back to
+`target_mlp` and the bank from those iterations is multiplied by `~0.02` --
+effectively zero.
+
+There is no `infonce_weight` in this preset (only `stageB_infonce_on`
+historically set it), and there is no auxiliary objective anywhere that
+rewards `|u^H psi|²` growing. So `target_mlp` has no gradient path off the
+random-init direction, `amp_sq` stays at the noise floor, the halt
+distribution stays pinned, and the loop is decorative for the entire run.
+
+### v8.2 fix bundle
+
+See [`.cursor/plans/unfreeze_qlc_alpha_gamma_2132eeda.plan.md`](../.cursor/plans/unfreeze_qlc_alpha_gamma_2132eeda.plan.md)
+and §0.2 of [`README_V8.md`](README_V8.md) for the full rationale. Five
+coordinated changes:
+
+1. `OrthoHalt.target_gate` init `0 -> 1.5` (`sigmoid ~= 0.82`). Routes most of
+   `amp_sq` to alpha, ~18% to gamma.
+2. `OrthoHalt.cls_head` init `eye*4, bias=0 -> eye*1, bias=[0,0,2]`. Default
+   distribution becomes roughly `[0.10, 0.10, 0.80]` (continue-biased). Loop
+   actually runs all `t_max` iterations, gradient flows.
+3. New `target_alignment_weight` aux (default `0.05` in
+   `e2e_*_reasoning` presets) adds
+   `target_alignment_weight * (1 - mean(|u^H psi|²)).clamp_min(0)` to
+   `aux_loss`. This is the only term that directly rewards `u(psi)`
+   aligning with `psi`.
+4. `infonce_weight=0.05, infonce_every=4` enabled by default in
+   `e2e_*_reasoning` presets so the bank's effects learn entity routing
+   in parallel.
+5. `ponder_lambda_phases=(0.0, 0.002, 0.005)` (was `(0.0, 0.005, 0.01)`):
+   smaller late-phase cap so the loop isn't penalised right when the new
+   signal arrives.
+
+### Acceptance gate (must pass on smoke before relaunching medium)
+
+- `align` rises off the `1/d ≈ 0.003` floor, `>= 0.02` by end of smoke,
+  `>= 0.05` within an epoch.
+- `mean_iter > 1.5` once `t_max=4`.
+- `halt(yes/no/cont)` no longer pinned at `0.02/0.96/0.02`; none of the
+  three below `~0.05` at convergence.
+- `mean_gamma > 1e-3` early, `>= 0.01` by end of smoke.
+
+If any of these fail, do *not* relaunch medium -- iterate on the schedule
+or the alignment weight first.

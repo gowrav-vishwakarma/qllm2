@@ -54,7 +54,10 @@ def test_orthohalt_target_unit_norm():
 
 
 def test_orthohalt_grad_flows():
-    head = OrthoHalt(dim=8, n_heads=1)
+    # Use unsharp_target=True so target_gate participates in the abg formula
+    # (in the sharp branch target_gate is intentionally unused -- a gradient
+    # check on it under that mode would be a false-positive failure).
+    head = OrthoHalt(dim=8, n_heads=1, unsharp_target=True)
     psi = random_complex(2, 8).requires_grad_(True)
     out = head(psi)
     (out.p_yes.mean() + out.abg.sum() * 0.01).backward()

@@ -128,14 +128,30 @@ class V8LM(nn.Module):
                 # Only re-init when the head is the canonical OrthoHalt 3x3
                 # mapping. Empirical halts (DeltaHalt, EntropyHalt) ship with
                 # their own carefully-shaped cls_head and must be left alone.
+                #
+                # Continue-biased init (v8.2): the legacy 4*I init forced the
+                # softmax to halt-no on iter 1 because beta dominates at random
+                # init. With weight=eye*1.0 and bias=[0,0,2] the default
+                # distribution is roughly [0.10, 0.10, 0.80] before any signal
+                # is learned, so the loop runs all t_max iterations from step
+                # 0 and gradients flow back through every iteration.
                 if (
                     head is not None
                     and isinstance(head, nn.Linear)
                     and head.weight.shape == (3, 3)
                 ):
-                    head.weight.copy_(torch.eye(3) * 4.0)
+                    head.weight.copy_(torch.eye(3) * 1.0)
                     if head.bias is not None:
-                        head.bias.zero_()
+                        head.bias.copy_(torch.tensor(
+                            [0.0, 0.0, 2.0], dtype=head.bias.dtype,
+                            device=head.bias.device,
+                        ))
+                # Also reset the unsharp target gate (v8.2): default sigmoid(1.5)
+                # ~= 0.82 routes most amp_sq to alpha. The legacy zero init
+                # split it 50/50 with gamma which kept both at noise floor.
+                gate = getattr(self.qlc.halt, 'target_gate', None)
+                if isinstance(gate, nn.Parameter) and gate.dim() == 1:
+                    gate.fill_(1.5)
 
     def freeze_backbone(self, unfreeze_lm_head: bool = False) -> None:
         """Freeze the embed / V7Block stack / output_norm (and LM head) for Stage B.
@@ -264,8 +280,13 @@ class V8LM(nn.Module):
 
         # QLC reasoning loop (or passthrough).
         ponder_cost = torch.tensor(0.0, device=z.device, dtype=z.dtype if z.is_floating_point() else torch.float32)
+        align_signal: Optional[torch.Tensor] = None
         if self.qlc is not None:
-            z, ponder_cost, diag = self.qlc(z, return_diagnostics=return_qlc_diag)
+            # Always request align_signal so the v8.2 alignment auxiliary can
+            # flow into aux_loss. Returns a 4-tuple in this branch.
+            z, ponder_cost, align_signal, diag = self.qlc(
+                z, return_diagnostics=return_qlc_diag, return_align=True,
+            )
             if return_qlc_diag:
                 self._last_qlc_diag = diag
 
@@ -275,7 +296,17 @@ class V8LM(nn.Module):
             + lm[..., 1] @ self.embed.embed_imag.weight.T
         )
 
-        aux_loss = self.qlc_cfg.ponder_lambda * ponder_cost if self.qlc is not None else ponder_cost
+        if self.qlc is not None:
+            aux_loss = self.qlc_cfg.ponder_lambda * ponder_cost
+            # v8.2: pull the OrthoHalt target_mlp's u toward psi so |u^H psi|^2
+            # rises off the 1/d noise floor and alpha/gamma actually carry
+            # signal. (1 - align) is clamped at zero in case any path produces
+            # an above-unit alignment via numerics.
+            tw = float(self.qlc_cfg.target_alignment_weight)
+            if tw > 0.0 and align_signal is not None:
+                aux_loss = aux_loss + tw * (1.0 - align_signal).clamp_min(0.0)
+        else:
+            aux_loss = ponder_cost
         return logits, new_states, aux_loss
 
     # ── Generation (mirrors V7LM.generate) ─────────────────────────────────

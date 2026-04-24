@@ -67,6 +67,16 @@ class QLCConfig:
     """Weight of the bank's InfoNCE auxiliary loss in Stage B."""
     infonce_every: int = 1
     """Run the InfoNCE auxiliary every N steps (1 = every step)."""
+    target_alignment_weight: float = 0.0
+    """v8.2: weight of the (1 - mean |u^H psi|^2) auxiliary that pulls the
+    OrthoHalt target_mlp's u toward psi.
+
+    Without this, ``|u^H psi|^2 ~= 1/d`` for the lifetime of training (random
+    direction in d-space) and the alpha/gamma channels stay pinned at the noise
+    floor — see AUDIT_V8.md §6 and the 4450ff0 e2e medium negative-result
+    write-up in EXPERIMENTS_V8.md §10. Enabled by default in the
+    ``e2e_*_reasoning`` presets at 0.05; set to 0.0 for legacy / ablation runs.
+    """
 
     # Numerical safety
     qr_refresh_every: int = 0         # 0 = never; >0 = re-QR Pi_F columns every K iters
@@ -397,6 +407,12 @@ PRESETS: Dict[str, V8Config] = {
             out_scale_learnable=True,
             renormalize_psi=True,
             halt_mode="ortho",
+            # v8.2 fix bundle (see AUDIT_V8.md §6 + EXPERIMENTS_V8.md §10):
+            # without these the OrthoHalt target_mlp stays at random direction
+            # and alpha/gamma sit at the 1/d noise floor for the entire run.
+            target_alignment_weight=0.05,
+            infonce_weight=0.05,
+            infonce_every=4,
         ),
         stage="A",
         freeze_backbone=False,
@@ -418,6 +434,10 @@ PRESETS: Dict[str, V8Config] = {
             out_scale_learnable=True,
             renormalize_psi=True,
             halt_mode="ortho",
+            # v8.2 fix bundle — same rationale as e2e_medium_reasoning above.
+            target_alignment_weight=0.05,
+            infonce_weight=0.05,
+            infonce_every=4,
         ),
         stage="A",
         freeze_backbone=False,

@@ -55,6 +55,46 @@ the discriminator suite presets in [`config.py`](config.py).
 
 ---
 
+## 0.2 What changed in v8.2 (alpha/gamma unfreeze, 2026-04-24)
+
+The first end-to-end medium run on WikiText-103
+([`logs/v8/e2e_medium_reasoning_wikitext103_20260424_162331_4450ff0/v8_e2e_medium_reasoning_wikitext103.log`](../logs/v8/e2e_medium_reasoning_wikitext103_20260424_162331_4450ff0/v8_e2e_medium_reasoning_wikitext103.log))
+hit the §9.3 hard-kill criterion: `alpha=0.001 beta=0.998 gamma=0.001` and
+`halt(yes/no/cont)=0.02/0.96/0.02` were pinned for the entire 1,200+ steps
+that ran before we killed it. The numbers match the closed-form prediction
+when
+
+- `psi` is unit-norm (`renormalize_psi=True`),
+- `u(psi) = OrthoHalt.target_mlp(psi)` is essentially random vs `psi` -> `|u^H psi|^2 ~= 1/d = 1/384 ~= 0.0026`,
+- `target_gate=0` -> `sigmoid(0)=0.5` splits the inner-product mass 50/50 between alpha and gamma,
+- `cls_head.weight = 4*I` makes `beta=0.997` decisive -> halt-no fires every step -> later iterations contribute ~0 weight -> almost no gradient back to `target_mlp` or the bank,
+- `infonce_weight=0` in the e2e preset (only `stageB_infonce_on` set it) -> no auxiliary objective ever asked `u_m` or `u(psi)` to align with `psi`,
+- The runtime schedule ramped `ponder_lambda` up over the run, *discouraging* the loop from iterating when (with the fixes below) it would finally have signal worth iterating on.
+
+In short: alpha/gamma had no gradient path off the `1/d` noise floor.
+
+The v8.2 fix bundle (see [`.cursor/plans/unfreeze_qlc_alpha_gamma_2132eeda.plan.md`](../.cursor/plans/unfreeze_qlc_alpha_gamma_2132eeda.plan.md))
+landed five coordinated changes:
+
+1. **`OrthoHalt.target_gate` init** (`v8/qlc/halt.py`): zeros -> 1.5 so `sigmoid(1.5) ~= 0.82` routes most of `|u^H psi|^2` into alpha, with the gate deficit (~18%) on gamma. Without growth in `|u^H psi|^2` itself, gamma still sits at noise -- which is why we also need (3).
+2. **`OrthoHalt.cls_head` init** (`v8/qlc/halt.py`): `eye*4`, zero bias -> `eye*1`, bias `[0, 0, 2]`. Default softmax distribution becomes roughly `[0.10, 0.10, 0.80]` (continue-biased) instead of collapsing to halt-no on iter 1, so the loop actually runs all `t_max` iterations from step 0 and gradient flows through every step. The matching re-init in `V8LM._init_weights` was updated identically.
+3. **New `target_alignment_weight` aux** (`QLCConfig`, `QuantumLogicCore.forward`, `V8LM.forward`): adds `target_alignment_weight * (1 - mean(|u^H psi|^2)).clamp_min(0)` to `aux_loss`. Default `0.0` for backwards compat; the e2e_*_reasoning presets set it to `0.05`. This is the only term that directly rewards `u(psi)` aligning with `psi`.
+4. **`infonce_weight=0.05, infonce_every=4`** baked into both `e2e_medium_reasoning` and `e2e_tiny_reasoning` presets, activating the entity-cloze pipeline that was already wired in `v8/train.py` but never enabled in the e2e workflow.
+5. **Schedule retune** (`QLCRuntimeSchedule.ponder_lambda_phases`): `(0.0, 0.005, 0.01)` -> `(0.0, 0.002, 0.005)`. Smaller cap so the late phase doesn't undo the loop engagement we now have.
+
+Behavioral expectation under the fix bundle (smoke gate before relaunching medium):
+
+- `align` (the new diagnostic column = mean `|u^H psi|^2`) rises off the `1/d ~= 0.003` noise floor, target `>= 0.05` within an epoch and `>= 0.2` by mid-training.
+- `mean_iter > 1.5` once `t_max=4` (i.e. the loop is actually pondering).
+- `halt(yes/no/cont)` no longer pinned at `0.02/0.96/0.02`; none of the three should be `< 0.05` at convergence.
+- `gamma >= 0.01` early, `>= 0.05` late.
+
+The full diagnosis + math chain is in [`AUDIT_V8.md`](AUDIT_V8.md) §6 and the
+empirical write-up of the 4450ff0 negative result is in
+[`EXPERIMENTS_V8.md`](EXPERIMENTS_V8.md) §10.
+
+---
+
 ## 1. The big picture (10-year-old version)
 
 Imagine you ask a normal language model:
@@ -283,7 +323,17 @@ Key configuration (set in the `e2e_*_reasoning` presets in
 
 - `freeze_backbone=False` — backbone learns jointly with the QLC from step 0.
 - `qlc.unsharp_target=True` — required for non-trivial γ
-  (see [`AUDIT_V8.md`](AUDIT_V8.md) §1).
+  (see [`AUDIT_V8.md`](AUDIT_V8.md) §1). Necessary but **not sufficient**
+  on its own: see §0.2 and `AUDIT_V8.md` §6 for the alpha/gamma noise-floor
+  pinning that motivated v8.2.
+- `qlc.target_alignment_weight=0.05` *(v8.2)* — pulls `OrthoHalt`'s
+  `target_mlp(psi)` toward `psi` so `|u^H psi|^2` actually grows above the
+  `1/d` noise floor and the alpha/gamma channels carry signal. Set to
+  `0.0` for legacy / ablation runs.
+- `qlc.infonce_weight=0.05`, `qlc.infonce_every=4` *(v8.2)* — entity-cloze
+  contrastive auxiliary on the bank, run every 4 LM steps. Activates the
+  pipeline already wired in `v8/train.py` (`_compute_infonce_loss`,
+  `make_entity_cloze_loaders`).
 - `qlc.out_scale_init=0.05`, `out_scale_learnable=True` — soft warmup on the
   QLC residual contribution.
 - `kl_anchor_weight=0.0` — **must** be 0 with random init (no Stage A
@@ -291,7 +341,8 @@ Key configuration (set in the `e2e_*_reasoning` presets in
   the model's own untrained logits).
 
 Optional runtime-safe schedule (`--qlc_schedule`) ramps `t_max` (2 → 3 → 4)
-and `ponder_lambda` (0 → 0.005 → 0.01) across thirds of the run. The
+and `ponder_lambda` (0 → 0.002 → 0.005, *lowered in v8.2* from
+`(0, 0.005, 0.01)`) across thirds of the run. The
 schedule mutates only attributes read fresh on every forward pass; anything
 that would require rebuilding modules (`halt_mode`, `out_scale_learnable`,
 `use_complex`, `rank`, `bank_size`) is intentionally not schedulable and
@@ -405,8 +456,12 @@ recommend:
 6. **[`v8/qlc/reason_loop.py`](qlc/reason_loop.py)** — `QuantumLogicCore.forward`
    is the iteration loop. Once you've read 3–5, this should be obvious.
 7. **[`v8/train.py`](train.py)** — the stage-aware trainer; the QLC
-   diagnostic prints (`alpha`, `beta`, `gamma`, `halt(yes/no/cont)`) come
-   from here.
+   diagnostic prints (`alpha`, `beta`, `gamma`, `halt(yes/no/cont)`,
+   `align`) come from here.
+
+The v8.2 fix bundle (alpha/gamma unfreeze, see §0.2) touches files 1, 2, 3,
+6 and 7 in this list -- read them in that order if you are bisecting why
+the fix worked or want to add another aux on top.
 
 ---
 
@@ -494,19 +549,42 @@ discriminator suite is intended to take ~7 hours of 4090 time end-to-end.
 
 ### How to read diagnostics under the new framing
 
-The trainer's per-step QLC diagnostic line now prints:
+The trainer's per-step QLC diagnostic line now prints (v8.2 added the
+`align=` column):
 
 ```
-QLC: iter=X.XX alpha=… beta=… gamma=… halt(yes/no/cont)=…/…/… | out_scale=… psi_delta_l2=…
+QLC: iter=X.XX alpha=… beta=… gamma=… halt(yes/no/cont)=…/…/… | align=… out_scale=… psi_delta_l2=…
 ```
 
 Interpretation guide:
 
+- **`align`** *(v8.2, leading indicator)*: mean `|u(psi)^H psi|^2 = alpha + gamma`
+  accumulated over the iteration loop. At random init this sits at the
+  `1/d` noise floor (`~0.003` for `dim=384`, `~0.005` for `dim=192`). The
+  `target_alignment_weight` aux pulls this up; expected trajectory is
+  `>= 0.05` within an epoch and `>= 0.2` by mid-training. **If `align`
+  stays at noise floor, alpha and gamma cannot rise either** -- treat
+  this as the earliest kill signal (preceding `gamma >= 0.05` from §9.2 of
+  `EXPERIMENTS_V8.md`). With `target_alignment_weight=0.0` (legacy /
+  ablation) `align` is still printed but is not actively pulled up; that
+  reproduces the 4450ff0 frozen-signal failure mode by design.
 - **`gamma ≈ 0` with sharp OrthoHalt**: structural, expected — see
   [`AUDIT_V8.md`](AUDIT_V8.md) §1. It is *not* evidence about
   non-commutativity. To get an honest γ, use a preset with
   `unsharp_target=True` — both `e2e_*_reasoning` presets do this by
-  default; the historical equivalent was `stageB_unsharp_ortho`.
+  default; the historical equivalent was `stageB_unsharp_ortho`. **v8.2
+  caveat**: `unsharp_target=True` is necessary but not sufficient -- the
+  gate at `sigmoid(0)=0.5` only redistributes a near-zero `amp_sq` between
+  alpha and gamma, it does not make `amp_sq` itself grow. The
+  `target_alignment_weight` aux is what does that growth. See
+  `AUDIT_V8.md` §6.
+- **`halt(yes/no/cont)`**: should be a non-degenerate distribution with
+  none of the three below ~0.05 at convergence. The 4450ff0 failure mode
+  was `0.02/0.96/0.02` -- pinned at halt-no because `cls_head` was init'd
+  with `weight=4*I`. v8.2 init is `weight=eye*1.0, bias=[0,0,2]` so the
+  default distribution is roughly `[0.10, 0.10, 0.80]`; the loop runs all
+  `t_max` iterations from step 0 and the model can move off "continue"
+  only by learning that some inputs deserve halt-yes/halt-no.
 - **`out_scale` trajectory**: if it stays near init, the model is satisfied
   with a small QLC contribution — consistent with the "QLC is regularizer"
   hypothesis. If it grows toward 1, the model is asking for more QLC —
@@ -518,6 +596,13 @@ Interpretation guide:
 - **`infonce`** (only when `qlc.infonce_weight > 0`): EMA of the bank's
   contrastive loss on the synthetic entity-cloze. Should drop monotonically
   when the bank is learning to route entity-typed queries to dedicated
-  effects.
+  effects. v8.2 enables this by default in both `e2e_*_reasoning` presets
+  at `weight=0.05, every=4`.
+
+The `target_alignment_weight` knob is **runtime-safe** in the strict sense
+that toggling it between 0 and 0.05 does not change parameter shapes -- but
+because it changes the gradient signal seen by `OrthoHalt.target_mlp` and
+the bank, mid-run toggles will produce a regime change. Treat it as a
+preset-level decision, not a per-step knob.
 
 ---
