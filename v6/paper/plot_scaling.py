@@ -45,6 +45,10 @@ qpam_10m = [133.7768, 133.9375, 127.6733, 127.6152, 123.4690]
 qpam_25m = [75.7337, 75.6768, 74.9918, 75.0107, 74.9205]
 rpam_25m = [41.0135, 40.9486, 40.7149, 40.6964, 40.6845]
 
+# 50M QPAM (from logs/v6/scaling_sweep/qpam_50m_val_ppl.log — pulled from remote)
+# [ep8_end, ep8_mid_best, ep9_end, ep9_mid_best, ep10_end]
+qpam_50m = [49.7379, 49.6918, 47.4510, 47.5868, 45.7015]
+
 # 50M RPAM (from logs/v6/scaling_sweep/rpam_50m_val_ppl.log — pulled from remote)
 rpam_50m = [35.8662, 35.8502, 35.7049, 35.7079, 35.6986]
 
@@ -62,6 +66,7 @@ for scale, model, vals in [
     (5,   'QPAM', qpam_5m),
     (10,  'QPAM', qpam_10m),
     (25,  'QPAM', qpam_25m),
+    (50,  'QPAM', qpam_50m),
     (100, 'QPAM', qpam_100m),
     (5,   'RPAM', rpam_5m),
     (10,  'RPAM', rpam_10m),
@@ -73,150 +78,139 @@ for scale, model, vals in [
     m, s = stats(vals)
     data[(scale, model)] = (m, s, len(vals))
 
-# ── OLS fit on all individual samples in log-log space ──
-# Each late-epoch PPL sample is one data point: (log10(N), log10(PPL))
+# ── OLS fits in both log10(PPL) and log10(loss) spaces ──
+# loss = ln(PPL); Kaplan/Hoffmann-style scaling laws fit power law in loss.
 
 models = ['QPAM', 'RPAM']
-fits = {}
 N_BOOT = 10000
 rng = np.random.default_rng(42)
 
-for model in models:
-    log_p_all = []
-    log_ppl_all = []
+
+def fit_loglog(model, transform):
+    """OLS slope of log10(transform(ppl)) vs log10(N) on individual samples."""
+    log_p_all, log_y_all = [], []
     for scale in [5, 10, 25, 50, 100]:
         if (scale, model) in raw:
             for ppl in raw[(scale, model)]:
                 log_p_all.append(np.log10(scale))
-                log_ppl_all.append(np.log10(ppl))
-
+                log_y_all.append(np.log10(transform(ppl)))
     log_p_all = np.array(log_p_all)
-    log_ppl_all = np.array(log_ppl_all)
+    log_y_all = np.array(log_y_all)
+    xm = log_p_all.mean(); ym = log_y_all.mean()
+    b = np.sum((log_p_all - xm) * (log_y_all - ym)) / np.sum((log_p_all - xm)**2)
+    a = ym - b * xm
+    return (b, a)
 
-    # OLS
-    xm = log_p_all.mean(); ym = log_ppl_all.mean()
-    b_yx = np.sum((log_p_all - xm) * (log_ppl_all - ym)) / np.sum((log_p_all - xm)**2)
-    a_yx = ym - b_yx * xm
 
-    # Bootstrap on samples
-    boot_slopes = []
-    boot_intercepts = []
-    n = len(log_p_all)
-    for _ in range(N_BOOT):
-        idx = rng.integers(0, n, size=n)
-        xb = log_p_all[idx]; yb = log_ppl_all[idx]
-        xmb = xb.mean(); ymb = yb.mean()
-        denom = np.sum((xb - xmb)**2)
-        if denom == 0: continue
-        bb = np.sum((xb - xmb) * (yb - ymb)) / denom
-        ab = ymb - bb * xmb
-        boot_slopes.append(bb)
-        boot_intercepts.append(ab)
-
-    slope_err = np.std(boot_slopes)
-
-    # For plotting: aggregate means and stds per scale
-    scales_plot = []
-    means_plot = []
-    sigmas_plot = []
-    for scale in [5, 10, 25, 50, 100]:
-        if (scale, model) in data:
-            m, s, nn = data[(scale, model)]
-            scales_plot.append(scale)
-            means_plot.append(m)
-            sigmas_plot.append(max(s, 0.1))
-
-    fits[model] = {
-        'scales': np.array(scales_plot), 'means': np.array(means_plot),
-        'sigmas': np.array(sigmas_plot),
-        'coeffs': (b_yx, a_yx), 'slope_err': slope_err,
-        'boot_slopes': boot_slopes, 'boot_intercepts': boot_intercepts,
-    }
-
-    print(f'{model}: slope = {b_yx:.4f} ± {slope_err:.4f}, '
-          f'PPL = {10**a_yx:.1f} * params^({b_yx:.3f})')
-    for s, m, sig in zip(scales_plot, means_plot, sigmas_plot):
-        print(f'  {s:>3}M: {m:.2f} ± {sig:.2f}')
-
-# ── Crossover analysis ──
-print()
-for m1, m2 in [('QPAM', 'RPAM')]:
-    a1, b1 = fits[m1]['coeffs']
-    a2, b2 = fits[m2]['coeffs']
-    if abs(a1 - a2) > 0.001:
-        log_p_cross = (b2 - b1) / (a1 - a2)
-        p_cross = 10**log_p_cross
-        ppl_cross = 10**(a1 * log_p_cross + b1)
-        if 0.1 < p_cross < 1e8:
-            if p_cross >= 1000:
-                print(f'{m1}/{m2} crossover: ~{p_cross/1000:.1f}B params, PPL ~{ppl_cross:.1f}')
-            else:
-                print(f'{m1}/{m2} crossover: ~{p_cross:.0f}M params, PPL ~{ppl_cross:.1f}')
-        else:
-            print(f'{m1}/{m2}: no crossover in reasonable range')
-    else:
-        print(f'{m1}/{m2}: parallel slopes, no crossover')
-
-# ── Plot ──
-fig, ax = plt.subplots(figsize=(6, 4.5))
-
-colors = {'QPAM': '#2563eb', 'RPAM': '#dc2626'}
-markers = {'QPAM': 'o', 'RPAM': 's'}
-labels = {'QPAM': 'QPAM (complex)', 'RPAM': 'RPAM (real)'}
-
-p_fine = np.logspace(np.log10(3), np.log10(1000000), 200)
+fits_ppl = {m: fit_loglog(m, lambda x: x) for m in models}
+fits_loss = {m: fit_loglog(m, np.log) for m in models}
 
 for model in models:
-    f = fits[model]
-    a, b = f['coeffs']
-    c = colors[model]
+    b_p, a_p = fits_ppl[model]
+    b_l, a_l = fits_loss[model]
+    print(f'{model}: PPL slope = {b_p:.3f} (PPL = {10**a_p:.1f} * N^{b_p:.3f}); '
+          f'loss slope = {b_l:.3f} (alpha-Kaplan-style)')
 
-    # Individual samples
-    first = True
-    for scale in [5, 10, 25, 50, 100]:
-        if (scale, model) in raw:
-            vals = raw[(scale, model)]
-            ax.scatter([scale]*len(vals), vals, marker=markers[model],
-                       color=c, s=30, zorder=5, alpha=0.7,
-                       label=labels[model] if first else None)
-            first = False
+# ── Crossover (under PPL-space linear fit; loss-space fit gives a different N) ──
+print()
+b1, a1 = fits_ppl['QPAM']
+b2, a2 = fits_ppl['RPAM']
+if abs(b1 - b2) > 0.001:
+    log_p_cross_ppl = (a2 - a1) / (b1 - b2)
+    p_cross_ppl = 10**log_p_cross_ppl
+    print(f'PPL-space fit crossover: ~{p_cross_ppl:.0f}M params')
+b1, a1 = fits_loss['QPAM']
+b2, a2 = fits_loss['RPAM']
+if abs(b1 - b2) > 0.001:
+    log_p_cross_loss = (a2 - a1) / (b1 - b2)
+    p_cross_loss = 10**log_p_cross_loss
+    print(f'Loss-space fit crossover: ~{p_cross_loss:.0f}M params')
 
-    # Trend line
-    ax.plot(p_fine, 10**(a * np.log10(p_fine) + b), '--', color=c, alpha=0.4, lw=1.2)
+# ── Plot: two panels (loss top, PPL bottom) sharing x-axis ──
+fig, (ax_loss, ax_ppl) = plt.subplots(2, 1, figsize=(5, 8), sharex=True,
+                                      gridspec_kw={'hspace': 0})
 
-# Crossover annotations: place text inside plot bounds
-annot_cfg = {
-    # (m1, m2): (x_text_mult, y_text_abs)  — y_text_abs in PPL units
-    ('QPAM', 'RPAM'):  (0.35, 55),
-    ('QPAM', 'Trans'): (3.5,  55),
-}
-for m1, m2 in [('QPAM', 'RPAM')]:
-    a1, b1 = fits[m1]['coeffs']
-    a2, b2 = fits[m2]['coeffs']
-    if abs(a1 - a2) > 0.001:
-        log_p_cross = (b2 - b1) / (a1 - a2)
-        p_cross = 10**log_p_cross
-        ppl_cross = 10**(a1 * log_p_cross + b1)
-        if 1 < p_cross < 1e8:
-            ax.axvline(p_cross, color='#555', ls=':', alpha=0.4, lw=0.8)
-            label = f'{p_cross/1000:.1f}B' if p_cross >= 1000 else f'{p_cross:.0f}M'
-            xm, yt = annot_cfg.get((m1, m2), (1.8, 40))
-            ax.annotate(f'{m1}/{m2}\n{label}',
-                        xy=(p_cross, max(ppl_cross, 20)),
-                        xytext=(p_cross * xm, yt),
+markers = {'QPAM': '^', 'RPAM': '*'}
+labels = {'QPAM': 'QPAM (complex)', 'RPAM': 'RPAM (real)'}
+
+log_p_fine = np.linspace(0, 4, 200)
+
+
+colors = {'QPAM': '#2563eb', 'RPAM': '#dc2626'}
+
+
+def draw_panel(ax, fits_dict, transform, ylabel, ylim):
+    """Plot fits + error-bar points for transform(PPL)."""
+    for model in models:
+        b, a = fits_dict[model]
+        c = colors[model]
+        first = True
+        for scale in [5, 10, 25, 50, 100]:
+            if (scale, model) in raw:
+                vals = transform(np.array(raw[(scale, model)]))
+                mu = vals.mean()
+                sigma = vals.std(ddof=1) if len(vals) > 1 else 0.0
+                mu_y = np.log10(mu)
+                sigma_y = sigma / (mu * np.log(10))
+                lbl = f'{labels[model]}, slope = {b:.2f}' if first else None
+                ax.errorbar(np.log10(scale), mu_y, yerr=sigma_y,
+                            fmt=markers[model], color='black', markersize=2,
+                            ecolor='black', elinewidth=0.8, capsize=4,
+                            capthick=0.8, zorder=5, label=lbl)
+                first = False
+        ax.plot(log_p_fine, b * log_p_fine + a, '--', color=c, alpha=0.5, lw=1.2)
+    ax.set_ylabel(ylabel)
+    ax.set_ylim(*ylim)
+
+
+draw_panel(ax_loss, fits_loss, np.log,
+           r'$\log_{10}$ Validation Loss', (0.3, 0.9))
+draw_panel(ax_ppl, fits_ppl, lambda x: x,
+           r'$\log_{10}$ Validation PPL', (0, 3))
+
+def cross_label(p_cross):
+    return (rf'$\sim${p_cross/1000:.1f}B' if p_cross >= 1000
+            else rf'$\sim${round(p_cross / 10) * 10:.0f}M')
+
+
+# Crossover markers per panel (different fits → different N)
+b1, a1 = fits_ppl['QPAM']; b2, a2 = fits_ppl['RPAM']
+if abs(b1 - b2) > 0.001:
+    log_p_cross = (a2 - a1) / (b1 - b2)
+    log_ppl_cross = b1 * log_p_cross + a1
+    if 0 <= log_p_cross <= 4:
+        ax_ppl.axvline(log_p_cross, color='#555', ls=':', alpha=0.4, lw=0.8)
+        ax_ppl.annotate(f'crossover\n{cross_label(10**log_p_cross)}',
+                        xy=(log_p_cross, log_ppl_cross),
+                        xytext=(log_p_cross + 0.6, log_ppl_cross + 0.6),
                         fontsize=8, ha='center', color='#555',
                         arrowprops=dict(arrowstyle='->', color='#555', lw=0.6))
 
-ax.set_xscale('log')
-ax.set_yscale('log')
-ax.set_xlabel('Parameters (M)')
-ax.set_ylabel('Validation PPL')
-ax.set_xlim(3, 1000000)
-ax.set_ylim(15, 500)
-ax.legend(fontsize=9, loc='upper right')
+b1, a1 = fits_loss['QPAM']; b2, a2 = fits_loss['RPAM']
+if abs(b1 - b2) > 0.001:
+    log_p_cross = (a2 - a1) / (b1 - b2)
+    log_loss_cross = b1 * log_p_cross + a1
+    if 0 <= log_p_cross <= 4:
+        ax_loss.axvline(log_p_cross, color='#555', ls=':', alpha=0.4, lw=0.8)
+        ax_loss.annotate(f'crossover\n{cross_label(10**log_p_cross)}',
+                         xy=(log_p_cross, log_loss_cross),
+                         xytext=(log_p_cross - 0.5, log_loss_cross + 0.12),
+                         fontsize=8, ha='center', color='#555',
+                         arrowprops=dict(arrowstyle='->', color='#555', lw=0.6))
+
+ax_ppl.set_xlabel(r'$\log_{10}$ Parameters (M)')
+ax_ppl.set_xlim(0, 4)
+ax_ppl.set_xticks([0, 1, 2, 3, 4])
+ax_ppl.set_xticks([0.5, 1.5, 2.5, 3.5], minor=True)
+
+ax_loss.legend(fontsize=9, loc=3, frameon=False)
+ax_ppl.legend(fontsize=9, loc='lower left', frameon=False,
+              bbox_to_anchor=(0.02, 0.05),
+              bbox_transform=ax_ppl.get_yaxis_transform())
+ax_ppl.set_yticks([0, 0.5, 1, 1.5, 2, 2.5])
 
 fig.tight_layout()
 out = '/Users/caug/npcww/qnlp/qllm-private/v6/paper/figures/scaling_loglog.pdf'
 fig.savefig(out)
-fig.savefig(out.replace('.pdf', '.png'), dpi=150)
+fig.savefig(out.replace('.pdf', '.png'), dpi=400)
 print(f'\nSaved {out}')

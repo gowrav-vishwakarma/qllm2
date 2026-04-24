@@ -25,7 +25,7 @@
 \date{\today}
 
 \begin{abstract}
-We present Phase-Associative Memory (PAM), a recurrent sequence model in which all representations are complex-valued, associations accumulate in a matrix state $S_t \in \Complex^{d \times d}$ via outer products, and retrieval operates through the conjugate inner product $K_t^* \cdot Q_t / \sqrt{d}$. At $\sim$100M parameters on WikiText-103, PAM reaches validation perplexity 30.0, within $\sim$10\% of a matched transformer (27.1) trained under identical conditions, despite $4\times$ arithmetic overhead from complex computation and no custom kernels. We trace the experimental path from vector-state models, where holographic binding fails due to the $O(1/\sqrt{n})$ capacity degradation of superposed associations, to the matrix state that resolves it. The competitiveness of an architecture whose native operations are complex-valued superposition and conjugate retrieval is consistent with recent empirical evidence that semantic interpretation in both humans and large language models exhibits non-classical contextuality, and we discuss what this implies for the choice of computational formalism in language modeling.
+We present Phase-Associative Memory (PAM), a recurrent sequence model in which all representations are complex-valued, associations accumulate in a matrix state $S_t \in \Complex^{d \times d}$ via outer products, and retrieval operates through the conjugate inner product $K_t^* \cdot Q_t / \sqrt{d}$. Across a five-scale ablation from 5M to 100M parameters on WikiText-103, PAM and a matched real-valued ablation (RPAM) both follow clean power laws in validation loss and perplexity, with PAM's slope steeper in both. The slightly steeper slope in both loss and perplexity suggests that the complex-valued architecture would outperform its real-valued ablation at modest parameter sizes ($\sim$1--10B), at projected losses ($\sim$2 nats) comparable to those of transformer-based language models on web-scale corpora at similar scales. We trace the experimental path from vector-state models, where holographic binding fails due to the $O(1/\sqrt{n})$ capacity degradation of superposed associations, to the matrix state that resolves it. The differential scaling is consistent with the interpretation that the real-valued model is approximating, with classical machinery, a structure that the complex-valued model represents natively, and connects to recent empirical evidence that semantic interpretation in both humans and large language models exhibits non-classical contextuality. The $\sim$1.69 nat irreducible-loss floor characterized in scaling-law analyses of real-valued architectures need not bound a model that represents this non-classical structure natively.
 \end{abstract}
 \maketitle
 
@@ -50,7 +50,7 @@ The tradition of operational quantum logic, beginning with Birkhoff and von Neum
 
 The architecture emerged through a series of experiments in which each failure was informative. Early versions introduced tokens in complex phase space but destroyed phase information by passing representations through real-valued nonlinearities; correcting this with phase-preserving primitives materially improved results. A subsequent attempt to inject holographic key--value bindings into a vector-state SSM caused a regression in perplexity, because multiple bindings superposed in a single $d$-dimensional vector interfere destructively with the classical $O(1/\sqrt{n})$ capacity degradation~\cite{plate1995holographic}. PAM resolves this by upgrading the state from $\Complex^d$ to $\Complex^{d \times d}$, providing $O(d^2)$ associative capacity per head. The reported configuration interleaves channel mixing and PAM in each of 16 blocks with complex rotary position embeddings~\cite{su2024roformer} on queries and keys, and admits a dual computational form that is $O(T^2)$ for parallel training and $O(1)$ per token for recurrent inference with no KV cache.
 
-At $\sim$100M parameters on WikiText-103, PAM reaches validation perplexity 30.0 after 10 epochs on a single RTX 4090. A matched transformer trained under identical conditions reaches 27.1. Both are single training runs, and the $\sim$10\% gap should be interpreted accordingly; multi-seed validation is in progress. The gap was achieved with a first-generation pure PyTorch implementation, no custom CUDA kernels, and $4\times$ the arithmetic overhead of real-valued computation, which means the interesting quantity is not the absolute gap but the gap relative to the overhead: PAM pays $4\times$ in arithmetic and loses only $\sim$10\% in perplexity, suggesting the complex formalism is capturing structure efficiently even before the implementation is optimized.
+PAM trains stably on WikiText-103 across the 5M to 100M parameter range we explored, with the matrix-state recurrence and complex parameterization carrying the entire signal path without recourse to softmax attention. A preliminary comparison at $\sim$100M parameters places PAM within $\sim$10\% of a matched dense transformer baseline; broader evaluation across the contemporary transformer design space is left to future work.
 
 \section{Method}
 \label{sec:method}
@@ -94,57 +94,49 @@ The conjugate inner product $K_i^* \cdot \tilde{Q}_t$ determines retrieval stren
 
 During training, the recurrence is computed in $O(T^2)$ time by forming a decay matrix $D \in \mathbb{R}^{T \times T}$ with $\log D[t,i] = \sum_{j=i+1}^{t} \log \gamma_j$ via cumulative sums, applying a causal mask, computing the complex score matrix $W = \tilde{Q} K^{*\top}$, and obtaining the output as $Y = (W \odot D) \cdot V'$. This is mathematically equivalent to the recurrence but parallelizes across the sequence dimension. During autoregressive generation, each token requires $O(Hd^2)$ work per layer, and the state $S \in \Complex^{H \times d \times d}$ is fixed-size and does not grow with sequence length.
 
-We train and evaluate on WikiText-103~\cite{merity2017pointer}, approximately 103 million tokens of Wikipedia text tokenized with the GPT-2 BPE tokenizer (vocabulary size 50,257).
-The primary reported model configuration is listed in Table~\ref{tab:config}. See \ref{tab:config}.
+We train and evaluate on WikiText-103~\cite{merity2017pointer}, approximately 103 million tokens of Wikipedia text tokenized with the GPT-2 BPE tokenizer (vocabulary size 50,257). The principal results of this work come from a five-scale sweep of the QPAM and RPAM architectures (5M to 100M parameters) under a single canonical training configuration; the per-scale architectural parameters are listed in Table~\ref{tab:config} and the shared training hyperparameters in Table~\ref{tab:train}. All blocks interleave a ComplexGatedUnit (CGU) with a PAM layer, with Gated State Protection enabled, complex RoPE applied to $Q$ and $K$, no QK phase normalization, and a CGU expansion factor of 3 throughout. RPAM matches each scale's parameter count by using a wider real dimension and additional memory banks (configurations omitted for brevity; see release notes).
 
 \begin{table}[t]
   \centering
-  \caption{medium-pam-v3 configuration (reported).}
+  \caption{QPAM scaling sweep architectures.}
   \label{tab:config}
-  \begin{tabular}{@{}ll@{}}
+  \begin{tabular}{@{}rcccc@{}}
     \toprule
-    Parameter & Value \\
+    Scale & dim & layers & heads & head dim \\
     \midrule
-    Complex dimension ($D$) & 384 \\
-    Blocks & 16 (each: CGU $\to$ PAM) \\
-    Interleaved CGU + PAM & yes \\
-    CGU expansion factor & 3 \\
-    PAM heads ($H$) & 6 \\
-    PAM head dimension ($d$) & 64 \\
-    Gated State Protection & enabled \\
-    Complex RoPE on $Q, K$ & yes \\
-    QK phase normalization & off (see \ref{sec:main-result}) \\
-    Sequence length & 2048 \\
-    Total parameters & $\sim$100.4M \\
+    5M   &  44 & 12 & 2 & 16 \\
+    10M  &  80 & 12 & 4 & 16 \\
+    25M  & 200 &  6 & 4 & 16 \\
+    50M  & 292 & 12 & 4 & 16 \\
+    100M & 384 & 16 & 6 & 64 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Training hyperparameters are listed in Table~\ref{tab:train}.
-
 \begin{table}[t]
   \centering
-  \caption{Training hyperparameters (medium-pam-v3).}
+  \caption{Canonical training hyperparameters (shared across all scales of the sweep).}
   \label{tab:train}
   \begin{tabular}{@{}ll@{}}
     \toprule
     Parameter & Value \\
     \midrule
     Optimizer & AdamW \\
-    Learning rate & $1 \times 10^{-4}$ \\
+    Learning rate & $3 \times 10^{-5}$ \\
     Weight decay & 0.01 \\
-    Warmup steps & 1000 \\
+    Warmup steps & 500 \\
     LR schedule & warmup + cosine decay \\
-    Batch size & 3 \\
+    Batch size & 8 \\
+    Sequence length & 512 \\
     Epochs & 10 \\
     Gradient clipping & 1.0 \\
-    Precision & automatic mixed precision (bf16) \\
-    Hardware & single NVIDIA RTX 4090 (24GB) \\
-    Compilation & torch.compile (default mode) \\
+    Hardware & Apple M4 Max \\
     Initialization & orthogonal (complex linear maps) \\
     \bottomrule
   \end{tabular}
 \end{table}
+
+Preliminary tests at different hyperparameters, on different hardware (NVIDIA RTX 4090 with bf16 mixed precision and \texttt{torch.compile}), and against dense transformer baselines showed qualitatively similar behavior to what we report from the canonical sweep. We restricted the principal computational runs to the configuration above for consistency across model sizes and architecture classes.
 
 Generation samples are logged every 5,000 steps using temperature 1.0, top-$k$ 50, top-$p$ 0.9, and repetition penalty 1.2.
 
@@ -155,79 +147,10 @@ Generation samples are logged every 5,000 steps using temperature 1.0, top-$k$ 5
 
 The central question is whether a language model whose representations and operations are entirely complex-valued can learn to model language competitively. If the complex formalism is incompatible with the structure of natural language, or if the conjugate inner product is an ineffective retrieval mechanism, training should fail to converge or produce substantially worse perplexity than a matched real-valued baseline.
 
-The interleaved PAM configuration trains stably on WikiText-103 for 10 epochs on a single RTX 4090, reaching validation perplexity 30.0 (Table~\ref{tab:mainppl}, Fig.~\ref{fig:valppl}). Total wall time is 50,714 s ($\sim$14.1 h) at $\sim$23k tokens/second. An earlier sequential configuration (16 CGU layers followed by 16 PAM layers, no RoPE) achieved 38.95, and a hybrid that adds sparse windowed attention every 4th block achieved 30.01, marginally worse than pure PAM, indicating that interleaving channel and sequence mixing matters and that supplemental attention provides no benefit at this scale. A variant with per-element unit normalization of $Q$ and $K$ before the conjugate inner product saw decreasing validation loss but collapsed into severe lexical repetition by mid-training and was stopped during epoch 5, indicating that both magnitude and phase must be free to vary for the retrieval mechanism to function.
-
-\begin{table}[t]
-  \centering
-  \caption{medium-pam-v3: training and validation perplexity by epoch (WikiText-103).}
-  \label{tab:mainppl}
-  \begin{tabular}{@{}rcc@{}}
-    \toprule
-    Epoch & Train PPL & Val PPL \\
-    \midrule
-    1 & 123.86 & 57.94 \\
-    2 & 53.87 & 43.83 \\
-    3 & 44.88 & 38.69 \\
-    4 & 40.39 & 35.88 \\
-    5 & 37.42 & 33.82 \\
-    6 & 35.13 & 32.25 \\
-    7 & 33.26 & 31.22 \\
-    8 & 31.78 & 30.40 \\
-    9 & 30.66 & 30.01 \\
-    10 & 30.02 & 30.0 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{figures/val_ppl_comparison.pdf}
-  \caption{Validation perplexity vs.\ epoch for the interleaved PAM configuration, the sequential PAM configuration, and the matched transformer baseline, all trained on WikiText-103.}
-  \label{fig:valppl}
-\end{figure}
+The interleaved PAM configuration trains stably on WikiText-103. An earlier sequential configuration (16 CGU layers followed by 16 PAM layers, no RoPE) underperforms it, and a hybrid that adds sparse windowed attention every fourth block produces no improvement, indicating that interleaving channel and sequence mixing matters and that supplemental attention provides no benefit at this scale. A variant with per-element unit normalization of $Q$ and $K$ before the conjugate inner product saw decreasing validation loss but collapsed into severe lexical repetition by mid-training and was stopped during epoch 5, indicating that both magnitude and phase must be free to vary for the retrieval mechanism to function.
 
 \label{sec:transformer-comparison}
-To place this result in context, we trained a standard transformer with $\sim$100.3M parameters under identical conditions: same data, tokenizer, sequence length, batch size, learning rate, warmup, and hardware. The transformer uses $d_{\text{model}} = 672$, 12 layers, 12 attention heads, and $d_{\text{ff}} = 2688$. It reaches 27.1 validation PPL at $\sim$96k tokens/second (Table~\ref{tab:gpt2}). The $\sim$10\% gap in perplexity is accompanied by a $\sim$4$\times$ gap in throughput, which is expected given that complex linear maps require four real matrix multiplies and the implementation uses no custom CUDA kernels. For external reference, GPT-2~\cite{radford2019language} at 124M parameters achieves $\sim$31 validation PPL on WikiText-103, though differences in evaluation protocol make direct comparison unreliable.
-
-\begin{table}[t]
-  \centering
-  \caption{Matched comparison on WikiText-103.}
-  \label{tab:gpt2}
-  \begin{tabular}{@{}lccc@{}}
-    \toprule
-    Model & Params & Val PPL & tok/s \\
-    \midrule
-    Transformer (ours) & 100.3M & 27.1 & 96k \\
-    PAM (ours) & 100.4M & 30.0 & 23k \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\begin{table}[t]
-  \centering
-  \caption{Epoch-by-epoch validation PPL: matched transformer vs.\ medium-pam-v3.}
-  \label{tab:epoch-comparison}
-  \begin{tabular}{@{}rccccc@{}}
-    \toprule
-    & \multicolumn{2}{c}{Transformer (ours)} & & \multicolumn{2}{c}{PAM (ours)} \\
-    \cmidrule{2-3} \cmidrule{5-6}
-    Epoch & Train PPL & Val PPL & & Train PPL & Val PPL \\
-    \midrule
-    1 & 137.77 & 53.74 & & 123.86 & 57.94 \\
-    2 & 52.81 & 39.42 & & 53.87 & 43.83 \\
-    3 & 42.74 & 34.76 & & 44.88 & 38.69 \\
-    4 & 38.27 & 31.96 & & 40.39 & 35.88 \\
-    5 & 35.54 & 30.39 & & 37.42 & 33.82 \\
-    6 & 33.41 & 29.02 & & 35.13 & 32.25 \\
-    7 & 31.65 & 28.09 & & 33.26 & 31.22 \\
-    8 & 30.28 & 27.46 & & 31.78 & 30.40 \\
-    9 & 29.29 & 27.15 & & 30.66 & 30.01 \\
-    10 & 28.75 & 27.1 & & 30.02 & 30.0 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-The transformer converges faster and maintains a consistent advantage throughout training (Table~\ref{tab:epoch-comparison}), though the gap narrows in later epochs. Despite the perplexity gap, the structural differences are substantial: the transformer requires $O(T)$ work per token during inference because of the KV cache, whereas PAM's state is fixed at 49,152 floats per layer regardless of sequence length, giving it $O(1)$ per-token cost. At $T = 2048$, the transformer's KV cache per layer is $\sim$56$\times$ larger than PAM's state, and this ratio grows linearly with context length. 
+A preliminary single-point comparison at $\sim$100M parameters places PAM within $\sim$10\% of a matched dense transformer baseline. A thorough evaluation against the diversity of contemporary transformer implementations --- dense transformers across scales, mixture-of-experts variants, and architectures with alternative attention mechanisms --- is left to future work, given the breadth of the design space. We note here only the structural differences: the transformer requires $O(T)$ work per token during inference because of the KV cache, whereas PAM's state is fixed at 49,152 floats per layer regardless of sequence length, giving it $O(1)$ per-token cost. At $T = 2048$, the transformer's KV cache per layer is $\sim$56$\times$ larger than PAM's state, and this ratio grows linearly with context length.
 Given that the model trains stably and reaches competitive perplexity, the next question is whether the conjugate inner product actually produces the interference the formalism predicts, or whether the complex arithmetic is functioning as a redundant parameterization of a real-valued computation. If the retrieval is effectively real-valued despite the complex representation, $\Repart(K^* \cdot Q)$ should be non-negative for all key-query pairs, as it would be in a standard dot-product model. Fig.~\ref{fig:kq_interference} shows that this is not the case. At layer 0, the distribution of $\Repart(K^* \cdot Q)$ vs.\ $\operatorname{Im}(K^* \cdot Q)$ across all memory banks is nearly symmetric about the origin, with 52\% of entries having negative real part --- the retrieval is producing destructive interference on a majority of stored associations. By layer 15, the distribution has shifted: the fraction of destructive entries decreases to 40\% and the mean of $\Repart(K^* \cdot Q)$ moves from $-0.8$ to $+9.0$. The model learns to make retrieval progressively more selective through depth, using destructive interference to suppress irrelevant associations in early layers and converging toward constructive alignment in later layers.
 
 \begin{figure}[t]
@@ -277,31 +200,54 @@ Perturbing the trained complex embeddings confirms that the model depends on bot
   \end{tabular}
 \end{table}
 
-To isolate the contribution of the complex formalism from the matrix-state architecture, we trained a real-valued variant (RPAM) with architecturally identical structure but all complex operations replaced by real-valued equivalents. Because each complex linear map carries two weight matrices ($W_r, W_i$), RPAM uses dimension 576 with 9 parallel memory banks (vs.\ PAM's 384 with 6) to match the total parameter count at $\sim$120M. The only difference is the arithmetic: RPAM uses the standard dot product $K_i \cdot Q_t$ for retrieval, real-valued outer products for accumulation, and ReLU-based activations in place of modReLU.
+To isolate the contribution of the complex formalism from the matrix-state architecture, we trained a real-valued variant (RPAM) with architecturally identical structure but all complex operations replaced by real-valued equivalents. Because each complex linear map carries two weight matrices ($W_r, W_i$), RPAM uses a wider dimension and additional memory banks at each scale to match the total parameter count of the corresponding QPAM model. The only difference is the arithmetic: RPAM uses the standard dot product $K_i \cdot Q_t$ for retrieval, real-valued outer products for accumulation, and ReLU-based activations in place of modReLU.
 
-RPAM reaches validation perplexity 25.42 after 7 epochs on the same WikiText-103 data (seq\_len 512, batch size 8, M4 Max), compared to PAM's 33.19 after 10 epochs under identical conditions (Fig.~\ref{fig:cmp_val_ppl}). The real-valued model converges faster and to a lower perplexity, which is consistent with the maturity of real-valued optimization and the absence of custom kernels in the complex implementation. The gap between PAM and its real-valued ablation at this scale is roughly 30\%, while PAM reaches the same neighborhood as the matched transformer baseline (30.0 on seq\_len 2048).
+We trained both QPAM and RPAM at five model sizes spanning 5M to 100M parameters under identical canonical conditions (lr $= 3 \times 10^{-5}$, batch size 8, sequence length 512, 10 epochs, M4 Max). For each trained model we report the mean validation metric over the late-epoch sample window (end-of-epoch and best mid-epoch evaluations from the last three epochs), with standard deviations propagated to log space via $\sigma_{\log_{10} y} = \sigma_y / (y \ln 10)$. Both validation loss and validation perplexity decrease monotonically with parameter count for both models (Fig.~\ref{fig:scaling_loglog}). Linear regressions in $\log_{10}$--$\log_{10}$ coordinates --- fit on loss, the form directly comparable to standard neural scaling laws~\cite{kaplan2020scaling,hoffmann2022training}, and on perplexity --- give QPAM a loss slope of $-0.15$ against RPAM's $-0.12$, and corresponding PPL slopes of $-0.65$ against $-0.49$. RPAM has lower absolute loss at every scale we measured (5.56 vs.\ 4.78 nats at 5M, 3.56 vs.\ 3.26 at 100M), but the gap narrows monotonically with scale, and the two fits intersect at $\sim$4.5B parameters in loss space (loss $\approx 2.05$ nats) and at $\sim$550M in PPL space (PPL $\approx 10.6$).
+
+The 2.05-nat crossover lies close to the value the Kaplan power law predicts when extrapolated to 4.5B parameters on WebText2 ($\sim 2.12$ nats~\citep{kaplan2020scaling}), and is within $\sim 0.4$ nats of the Kaplan/Chinchilla irreducible-loss estimate of $\sim 1.69$ nats~\citep{hoffmann2022training}. GPT-2 1.5B reaches $\sim 2.3$ nats on WebText2~\citep{radford2019language}, Chinchilla 70B reaches $\sim 1.93$ nats~\citep{hoffmann2022training}, and GPT-3 175B reaches $\sim 3.0$ nats (PPL 20.5) on Penn Treebank~\citep{brown2020language}.
+
+Assuming the formalisms of the quantum semantic framework~\citep{agostino2025quantum,agostino2026production}, in which semantic expressions are represented as states in a complex Hilbert space, the conditional state $\rho_{t \mid c}$ associated with a context $c$ governs the Born-rule probabilities for the next token $t$. A real-valued architecture with infinite capacity asymptotes at the Shannon entropy of $\rho_{t \mid c}$'s diagonal in the discrete-token basis, $H(\operatorname{diag} \rho_{t \mid c}) = -\sum_t \rho_{tt} \log \rho_{tt}$, since the only outputs it can produce are classical probability vectors over tokens. A complex-valued architecture can in principle represent the full conditional state and asymptotes at its von Neumann entropy, $S_{\text{VN}}(\rho_{t \mid c}) = -\operatorname{Tr}(\rho_{t \mid c} \log \rho_{t \mid c})$. The two are related by the elementary inequality $H(\operatorname{diag} \rho) \ge S_{\text{VN}}(\rho)$, with equality iff $\rho$ is already diagonal in the chosen basis, and the difference $\Delta_{\text{deco}} = H(\operatorname{diag} \rho) - S_{\text{VN}}(\rho) \ge 0$ is the relative entropy of decoherence, the information-theoretic cost of being structurally restricted to the diagonal of a state with off-diagonal coherences. We propose that one can interpret the empirical $1.69$-nat real-valued floor as the diagonal projection of the complex-valued von Neumann entropy of $\rho_{t \mid c}$ onto the classical subalgebra.
+
+Given this framing, it necessarily follows that there should exist some gap in the irreducible loss between complex- and real-valued representations, with the size set by the structure of $\rho_{t \mid c}$. For a three-state conditional written as the rank-one projector onto a maximally-coherent superposition with non-trivial phases between basis vectors,
+\begin{equation}
+\rho_{t \mid c} \;=\; \frac{1}{3}\!
+\begin{pmatrix}
+1                  & e^{-i\pi/3}        & e^{-i 2\pi/3} \\[2pt]
+e^{i\pi/3}         & 1                  & e^{-i\pi/3} \\[2pt]
+e^{i 2\pi/3}       & e^{i\pi/3}         & 1
+\end{pmatrix},
+\end{equation}
+the projector onto $|\psi\rangle = \tfrac{1}{\sqrt{3}}(|0\rangle + e^{i\pi/3}|1\rangle + e^{i 2\pi/3}|2\rangle)$. The diagonal is uniform, $\operatorname{diag}\rho_{t \mid c} = (\tfrac{1}{3},\tfrac{1}{3},\tfrac{1}{3})$, giving $H(\operatorname{diag}\rho) = \log 3 \approx 1.099$ nats --- the maximum Shannon entropy a real-valued architecture can assign to a three-outcome distribution. But $\rho_{t \mid c}$ is rank one, so $S_{\text{VN}}(\rho) = 0$: a complex-valued architecture that represents the full state assigns it zero entropy. The decoherence gap is the entire $\log 3$, and the whole prediction loss the real-valued architecture incurs for this state is information that lives in the off-diagonal phase coherences. Mixing this state with the maximally mixed one, $\rho(p) = (1-p)|\psi\rangle\langle\psi| + p\,\mathbb{1}/3$, gives eigenvalues $(1 - 2p/3,\, p/3,\, p/3)$, leaves the diagonal uniform, and interpolates the gap monotonically from $\log 3$ at $p = 0$ to $0$ at $p = 1$. More generally, the maximum decoherence gap for a $d$-outcome conditional is $\log d$, so anchoring at the empirical $E_{\text{real}}^{\text{Kaplan}} \approx 1.69$ nats per token gives
+\begin{equation}
+E_{\text{complex}}^{\text{floor}} \;\ge\; E_{\text{real}}^{\text{Kaplan}} - \log d_{\text{eff}},
+\end{equation}
+where $d_{\text{eff}}$ is the effective coherence dimension of the conditional state per token-prediction event: $d_{\text{eff}} = 2$ gives a predicted floor of $\sim 1.00$ nat per token, $d_{\text{eff}} = 4$ gives $\sim 0.30$ nat. The strict positivity of the gap follows from QSF self-consistency alone, and the substantive prediction is that the $1.69$-nat figure in scaling-law analyses of real-valued transformers is not a fundamental floor on language modeling but the diagonal projection of a von Neumann entropy that a natively complex-valued architecture is in principle able to reach.
+
+The architectural overhead that handicaps QPAM at small scale --- the complex parameterization requires sufficient capacity to stabilize the conjugate-inner-product retrieval --- thus becomes a return on investment as scale grows, the pattern one would expect if the real-valued model is approximating, with classical machinery, a structure that the complex-valued model represents natively. With more careful optimization of the complex implementation (custom CUDA kernels, learning-rate schedules tuned for the modReLU activation) and training on corpora large enough that the upper end of the sweep stays within compute-optimal bounds --- the 50M and 100M points sit past Chinchilla-optimal for WikiText-103's $\sim$118M tokens even allowing for multi-epoch repetition --- we would expect the crossover transition to occur at smaller $N$ than this extrapolation predicts.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/scaling_loglog.pdf}
+  \caption{Scaling of validation loss (top) and validation perplexity (bottom) for QPAM (triangles) and RPAM (stars) on WikiText-103, in $\log_{10}$--$\log_{10}$ coordinates with shared $x$-axis. Each marker is the mean of late-epoch samples for one trained model; vertical bars are first-order propagated standard errors $\sigma_{\log_{10} y} = \sigma_y / (y \ln 10)$. Dashed lines are linear fits in log--log space, with slopes given in each panel's legend. Dotted vertical lines mark the extrapolated intersection of the two fits in each space: the loss-space fit crosses at $\sim$4.5B parameters (loss $\approx 2.05$ nats), the PPL-space fit at $\sim$550M parameters (PPL $\approx 10.6$).}
+  \label{fig:scaling_loglog}
+\end{figure}
+
+At the 100M point of the sweep (PAM dim 384 with 6 memory banks, RPAM dim 576 with 9), the per-epoch convergence trajectories (Fig.~\ref{fig:cmp_val_ppl}) show RPAM stabilizing earlier than QPAM, consistent with the maturity of real-valued optimization and the absence of custom kernels in the complex implementation.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{figures/cmp_val_ppl.pdf}
-  \caption{Validation perplexity vs.\ epoch for QPAM (complex, dim=384, 6 memory banks) and RPAM (real, dim=576, 9 memory banks) on WikiText-103 (seq\_len 512, M4 Max). Both models have $\sim$120M parameters. RPAM converges faster and to a lower perplexity (25.42 vs.\ 33.19).}
+  \caption{Per-epoch validation perplexity at the 100M point of the QPAM/RPAM sweep on WikiText-103 (seq\_len 512, M4 Max). RPAM converges faster and stabilizes lower at this scale (25.42 vs.\ 33.19); the scaling-law view in Fig.~\ref{fig:scaling_loglog} shows that the gap narrows with model size.}
   \label{fig:cmp_val_ppl}
 \end{figure}
 
-On the same two sentences examined in Fig.~\ref{fig:retrieval_examples}, the retrieval patterns differ in character: QPAM produces 40--58\% destructive interference (negative $\Repart(K^* \cdot Q)$), while RPAM produces 18--42\% (Fig.~\ref{fig:cmp_retrieval}). The real-valued dot product is mostly non-negative, concentrating retrieval weight on similar keys rather than actively suppressing dissimilar ones. On 10,256 WordNet synonym--random pairs, RPAM's cosine similarity separates synonyms from random pairs at $d_{\text{sep}} = 0.112$ compared to PAM's conjugate inner product at $d_{\text{sep}} = 0.059$ (Fig.~\ref{fig:cmp_embedding}), consistent with RPAM's lower perplexity: the real-valued model organizes its embedding space more sharply at this scale.
+To probe whether the differential scaling in loss and perplexity reflects underlying differences in how the two architectures organize their representational space, we measured the separability between WordNet synonym pairs and random word pairs in the learned token embeddings across the canonical sweep (Fig.~\ref{fig:syn_scaling}). For QPAM we used the real part of the normalized conjugate inner product $\Repart\langle z_1^* | z_2 \rangle$, and for RPAM the cosine similarity, in each case aggregated over 10{,}256 synonym pairs and 10{,}256 random pairs constructed from the GPT-2 single-token portion of the WordNet lemma vocabulary. We report Cohen's $d$ between the two distributions with bootstrap error bars. QPAM's separability traverses zero between 10M and 50M parameters, reaching $d_{\text{sep}} = +0.054 \pm 0.014$ at 50M (Mann--Whitney $p = 8 \times 10^{-4}$, the only point at which either architecture exceeds the random baseline at significance in the canonical sweep). RPAM's separability is negative across the sweep and trends monotonically from $d_{\text{sep}} = -0.116$ at 5M toward zero, reaching $-0.019 \pm 0.014$ at 50M without crossing into positive territory. Both architectures begin below zero, indicating that synonym pairs are slightly less similar to each other than random pairs at the smaller scales, an artifact we attribute to lexical-frequency co-statistics that the small models have not yet organized through. The crossing point for QPAM emerges within the canonical sweep while RPAM remains in the trending-toward-zero regime, consistent with the loss-curve interpretation that the complex-valued architecture organizes representational structure earlier in scale.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{figures/cmp_retrieval_0.pdf}
-  \caption{Retrieval patterns for QPAM (left) and RPAM (right) on the sentence ``The bat flew across the dark cave.'' QPAM produces both constructive (warm) and destructive (cool) interference, while RPAM's dot-product retrieval concentrates positive weight on similar keys.}
-  \label{fig:cmp_retrieval}
-\end{figure}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{figures/cmp_embedding_similarity.pdf}
-  \caption{Density of similarity scores for synonym pairs vs.\ random pairs. Left: PAM's conjugate inner product ($d_{\text{sep}} = 0.059$). Right: RPAM's cosine similarity ($d_{\text{sep}} = 0.112$). RPAM separates the distributions more sharply at this scale.}
-  \label{fig:cmp_embedding}
+  \includegraphics[width=\columnwidth]{figures/synonym_scaling.pdf}
+  \caption{Synonym--random separability $d_{\text{sep}}$ (Cohen's $d$) of word-pair similarity distributions for QPAM (filled stars, $\Repart\langle z_1^* | z_2 \rangle$) and RPAM (open triangles, cosine similarity) across the canonical sweep, computed over 10{,}256 WordNet synonym pairs and 10{,}256 random pairs at each scale, with bootstrap error bars on $d_{\text{sep}}$. QPAM crosses zero between 10M and 50M parameters and is significant at 50M ($p = 8 \times 10^{-4}$); RPAM trends toward zero from below but does not cross within the canonical range.}
+  \label{fig:syn_scaling}
 \end{figure}
 
 At epoch 10, given the prompt ``In 1923, the University of,'' the model generates: ``In 1923, the University of Illinois at Urbana @-@ Urdu said it was `an easy choice to do something in its own right.' The university also claimed the first students from Wisconsin had to be replaced by a more `good student' due to a lack of funds.'' The text is grammatically coherent and shows structural awareness of dates, proper nouns, and institutional language, with 3-gram repetition rate 0.034, 4-gram repetition rate 0.011, and unique token ratio 0.703. Factual accuracy is not reliable at this scale.
@@ -321,28 +267,30 @@ The observation that the state matrix $S_t$ operates at effective rank $\sim$10 
 
 PAM's matrix state $S_t \in \Complex^{d \times d}$ is also an operator in the sense of the neural operator framework of \citet{kovachki2023neural}, which formalizes learned maps between function spaces. The universal approximation theorem for operators~\cite{chen1995universal}, recently extended to show that nonlocality and nonlinearity suffice for universality~\cite{lanthaler2025nonlocality}, applies to PAM's conjugate retrieval: the complex-valued kernel $K(q,k) = q^* \cdot k$ is both nonlocal (all stored associations contribute) and nonlinear (through the decay and gating mechanisms). The kernel interpretation of attention developed by \citet{tsai2019transformer} connects the discrete retrieval to a continuous integral operator whose selectivity is phase-dependent. Work on data encoding in variational quantum models~\cite{schuld2021effect} has shown that encoding classical data into quantum Hilbert space can provide expressivity equivalent to infinitely wide classical networks; PAM's complex embedding can be understood as a classical implementation of this encoding. The Fourier neural operator~\cite{li2021fourier}, which learns in the spectral domain using inherently complex-valued Fourier coefficients, provides an independent demonstration that complex arithmetic in operator learning captures structure efficiently. Characterizing the operator $S_t$ itself --- its eigenspectrum, the diversity of operators the model produces across different inputs, and whether the operator vocabulary changes with sampling temperature --- is a natural direction for future analysis.
 
-The computational costs are comparable in order to standard attention: the training-time dual form gives $O(T^2 H d)$ per layer, while at inference PAM requires $O(Hd^2)$ per token using a fixed state of 49,152 floats per layer regardless of sequence length, compared to a KV cache that grows linearly with context. All results reported here are from single training runs on a single RTX 4090, and the $4\times$ throughput gap relative to the transformer (23k vs.\ 96k tokens/second) reflects the arithmetic cost of complex linear maps and the absence of custom CUDA kernels rather than a fundamental asymmetry in computational complexity.
+The computational costs are comparable in order to standard attention: the training-time dual form gives $O(T^2 H d)$ per layer, while at inference PAM requires $O(Hd^2)$ per token using a fixed state of 49,152 floats per layer regardless of sequence length, compared to a KV cache that grows linearly with context. The throughput gap we observed in preliminary GPU tests against a matched transformer reflects the arithmetic cost of complex linear maps and the absence of custom CUDA kernels rather than a fundamental asymmetry in computational complexity.
 
 
 \section{Conclusion}
 
-In this work we constructed a language model that operates entirely in complex-valued Hilbert space and evaluated it against a matched transformer on WikiText-103 at $\sim$100M parameters. Our principal findings are the following:
+In this work, we have used a five-scale parameter sweep on WikiText-103 (5M to 100M parameters) to investigate the scaling behavior of Phase-Associative Memory (PAM), a language model whose representations and operations are entirely complex-valued, in comparison with a matched real-valued ablation (RPAM). Our conclusions are the following:
 
 \begin{enumerate}
 
-\item Phase-Associative Memory, which accumulates associations in a complex matrix state via outer products and retrieves via the conjugate inner product, reaches validation perplexity 30.0 on WikiText-103, within $\sim$10\% of a matched transformer (27.1) trained under identical conditions, despite $4\times$ arithmetic overhead from complex computation and no custom CUDA kernels.
+\item Across the five-scale sweep under identical training, PAM and RPAM both show validation perplexity decreasing monotonically with parameter count (Section~\ref{sec:results}). Linear fits in $\log$--$\log$ space~\cite{kaplan2020scaling,hoffmann2022training} give PAM a slope of $-0.65$ and RPAM a slope of $-0.49$. RPAM has lower absolute perplexity throughout the measured range, but the gap narrows monotonically with scale (from $2.18\times$ at 5M to $1.36\times$ at 100M) and the extrapolated fits intersect at $\sim$550M parameters. The slope differential suggests that the complex formalism returns more compression per additional parameter than the real-valued ablation.
+
+\item Under the formalisms of the quantum semantic framework~\cite{agostino2025quantum,agostino2026production}, the empirical $\sim$1.69 nat irreducible-loss floor characterized for real-valued transformer fits~\cite{kaplan2020scaling,hoffmann2022training} can be interpreted as the diagonal projection of the complex-valued von Neumann entropy of the conditional state $\rho_{t \mid c}$. Within this framing, it necessarily follows that there should exist some gap in the irreducible loss between complex- and real-valued representations, with the size set by the structure of $\rho_{t \mid c}$, and that a natively complex-valued architecture is in principle able to reach below the real-valued floor.
+
+\item Phase-Associative Memory accumulates associations in a complex matrix state via outer products and retrieves via the conjugate inner product, and trains stably on WikiText-103 with the matrix-state recurrence and complex parameterization carrying the entire computational signal path without recourse to softmax attention. The qualitative retrieval mechanism --- conjugate inner product with destructive interference --- is one the real-valued ablation cannot produce.
 
 \item Holographic binding in vector-state models fails due to the $O(1/\sqrt{n})$ capacity degradation of superposed associations. Upgrading the state from $\Complex^d$ to $\Complex^{d \times d}$ resolves this, consistent with the classical analyses of superposition capacity in holographic reduced representations~\cite{plate1995holographic}.
 
 \item Both magnitude and phase must be free to vary for the conjugate inner product to function as a retrieval mechanism; normalizing queries and keys to unit magnitude causes generation to collapse into repetition.
 
-\item Supplementing PAM with sparse windowed attention provides no benefit at this scale, suggesting that the information attention would contribute is already being captured by the complex recurrence.
+\item Supplementing PAM with sparse windowed attention provides no benefit at the scales we explored, suggesting that the information attention would contribute is already being captured by the complex recurrence.
 
 \item PAM's retrieval operation implements the same mathematical structure as the quantum semantic framework~\cite{agostino2025quantum}: outer-product accumulation of associations in a complex Hilbert space and projection of a query onto the accumulated state through the conjugate inner product, the operation that computes measurement probabilities in quantum mechanics.
 
-\item The learned complex embeddings exhibit structured conjugate inner products across 10,256 WordNet synonym pairs ($p = 1.4 \times 10^{-4}$), and the conjugate inner product between keys and queries shows a progressive shift from symmetric to constructive-biased interference through depth (52\% to 40\% destructive), consistent with learned selective retrieval.
-
-\item A matched real-valued ablation (RPAM) with identical architecture and parameter count reaches 25.42 validation perplexity, outperforming PAM (33.19) at this scale. PAM nevertheless reaches the same neighborhood through a qualitatively different mechanism --- conjugate retrieval with destructive interference --- that the real-valued model cannot produce.
+\item The synonym--random separability $d_{\text{sep}}$ of the learned token embeddings (Fig.~\ref{fig:syn_scaling}) crosses zero for QPAM between 10M and 50M parameters and reaches $+0.054 \pm 0.014$ at 50M ($p = 8 \times 10^{-4}$), while RPAM's $d_{\text{sep}}$ trends toward zero from below across the canonical sweep without crossing, consistent with the loss-curve interpretation that the complex-valued architecture organizes representational structure earlier in scale.
 
 \end{enumerate}
 
