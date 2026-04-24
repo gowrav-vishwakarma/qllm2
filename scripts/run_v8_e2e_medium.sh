@@ -55,7 +55,17 @@ LOG_DIR=$(make_log_dir "v8" "${PRESET}_${DATASET}")
 mkdir -p "$CKPT_DIR"
 
 GEN_PROMPT="In 1923 , the University of"
-ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --gen_prompt '$GEN_PROMPT' --diag_every 100 --checkpoint_dir $CKPT_DIR --log_dir $LOG_DIR $SCHEDULE"
+# Compile mode notes:
+#   * ``default`` (used here): standard inductor optimizations. Tolerates the
+#     QLC schedule mutating ``model.qlc.t_max`` mid-run (each phase change
+#     invalidates the dynamo guard on ``range(self.t_max)`` and triggers ONE
+#     recompile per phase -- 3 recompiles total, amortized over thousands of
+#     steps each).
+#   * ``reduce-overhead`` is intentionally NOT used here: it adds CUDA-graph
+#     capture, which is brittle when (a) module attributes mutate mid-run and
+#     (b) the inner ACT loop trip count changes, and at batch=3*seq_len=2048
+#     on a 4090 we are compute-bound so launch-overhead reduction matters less.
+ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --gen_prompt '$GEN_PROMPT' --diag_every 100 --checkpoint_dir $CKPT_DIR --log_dir $LOG_DIR $SCHEDULE"
 
 RESUME_ARG=""
 if [[ $RESUME -eq 1 && -f "$CKPT_DIR/best_model.pt" ]]; then

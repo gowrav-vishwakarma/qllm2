@@ -40,6 +40,7 @@ import random
 import sys
 import time
 import urllib.request
+import logging
 import warnings
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -48,17 +49,68 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
+# ── Suppress two harmless torch.compile / inductor warnings ────────────────
+# 1) ``UserWarning: Online softmax is disabled on the fly ...`` -- inductor
+#    perf hint, says it picked the regular split-reduction path because it
+#    estimated that's faster for our shapes. The warning wraps across newlines
+#    so ``filterwarnings`` matches against the FIRST line only; we anchor the
+#    regex on the first line's text so the filter actually fires.
 warnings.filterwarnings(
     "ignore",
-    message=r".*Online softmax is disabled.*Inductor.*split the reduction.*",
+    message=r"^\s*Online softmax is disabled on the fly.*",
     category=UserWarning,
-    module=r"torch\._inductor\.lowering",
 )
+# 2) ``W... _maybe_guard_rel() was called on non-relation expression
+#    Eq(s29, 1) | Eq(s29, s11)`` -- internal symbolic-shape guard noise from
+#    inductor's simplifier. Comes from the QLC's ``min(rank, k)`` branch in
+#    ``_qr_basis``. The ``W0424...`` glog-style format is emitted by
+#    PyTorch's ``torch._logging._init_logs()`` -- that init runs lazily on
+#    first dynamo invocation and OVERRIDES any level set via plain
+#    ``logging.getLogger(...).setLevel()``. We must use the official
+#    ``torch._logging.set_logs(...)`` API instead, applied right after
+#    ``import torch`` so it survives the lazy reinit. Belt-and-suspenders:
+#    we ALSO add a logging filter that drops the specific noisy message,
+#    in case a future PyTorch removes the ``symbolic_shapes`` registered
+#    key.
+class _DropMaybeGuardRel(logging.Filter):
+    def filter(self, record):  # type: ignore[override]
+        return "_maybe_guard_rel() was called on non-relation" not in record.getMessage()
+
+
+_SYMSHAPE_LOGGER = logging.getLogger("torch.fx.experimental.symbolic_shapes")
+_SYMSHAPE_FILTER = _DropMaybeGuardRel()
+
+
+def _ensure_symshape_filter() -> None:
+    """Idempotently attach the noise filter; safe to call multiple times."""
+    if _SYMSHAPE_FILTER not in _SYMSHAPE_LOGGER.filters:
+        _SYMSHAPE_LOGGER.addFilter(_SYMSHAPE_FILTER)
+
+
+_ensure_symshape_filter()
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+
+# Re-attach the symbolic_shapes filter AFTER importing torch. Python's
+# ``logging`` module keeps filters attached to the logger object across
+# handler reinitializations, so this survives PyTorch's lazy
+# ``_init_logs()`` call on first dynamo invocation. We do NOT use
+# ``torch._logging.set_logs(symbolic_shapes=...)`` because that key is not
+# registered in every PyTorch version (raises ``TypeError`` if absent).
+_ensure_symshape_filter()
+
+# Enable TF32 on Ampere+ GPUs (RTX 4090 is Ada Lovelace -- supported). TF32
+# trims float32 matmul mantissas from 23 to 10 bits and runs on the tensor
+# cores, giving ~1.5-2x speedup with accuracy loss well below typical
+# gradient noise. Affects float32 ops outside of AMP autocast: the optimizer
+# step, the QLC ``_qr_basis`` (which runs eager, see effect_bank.py) and any
+# other fp32-precision sites. AMP-managed bf16/fp16 ops are unaffected.
+# Use the modern ``set_float32_matmul_precision`` API; ``'high'`` = TF32.
+if hasattr(torch, "set_float32_matmul_precision"):
+    torch.set_float32_matmul_precision("high")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 

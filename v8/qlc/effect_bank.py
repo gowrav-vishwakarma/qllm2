@@ -250,7 +250,21 @@ class EffectAlgebraBank(nn.Module):
             return U, V, scores
         return U, V
 
+    # NOTE: ``torch.compile`` (inductor backend) cannot reliably trace the
+    # backward of ``torch.linalg.qr`` on complex tensors. The autograd formula
+    # for QR on complex internally chains ``transpose(-1,-2)`` and ``conj()``
+    # operations, both of which feed inductor's complex ``add`` decomposition
+    # that asserts ``stride(-1) == 1`` when viewing ComplexFloat as Float.
+    # The transpose/conj produces a non-contiguous complex gradient and the
+    # decomp aborts (RuntimeError ``stride(-1) must be 1 ...``).
+    #
+    # Forcing this small slice of compute (~one call per ACT iteration, ~3-5
+    # per forward) to run in eager mode adds a single graph break per call
+    # but lets inductor compile the rest of the model normally (backbone,
+    # sasaki_apply, halt heads -- the ~99% of compute). Net cost is a few
+    # hundred microseconds per forward, well below other overheads.
     @staticmethod
+    @torch._dynamo.disable
     def _qr_basis(
         u_mat: torch.Tensor,    # [B, H, d, k, 2]  weighted selected directions
         w_mat: torch.Tensor,    # [B, H, d, k, 2]  weighted associated values
@@ -259,7 +273,11 @@ class EffectAlgebraBank(nn.Module):
         """Run a complex QR on ``u_mat`` and project ``w_mat`` accordingly.
 
         We use ``torch.linalg.qr`` in complex form (not split-real) since QR
-        gradients are well supported on complex tensors in modern PyTorch.
+        gradients are well supported on complex tensors in modern PyTorch
+        (in eager). The ``@torch._dynamo.disable`` above forces this function
+        to run in eager mode under ``torch.compile`` -- see the long note
+        right above this method for the rationale.
+
         Padding with zeros if k < rank, truncation if k > rank.
         """
         B, H, d, k, _ = u_mat.shape
@@ -282,8 +300,19 @@ class EffectAlgebraBank(nn.Module):
         #     V = Q @ (Q^H @ w_mat).
         # This guarantees V lies in span(Q) and aligns column-wise.
         w_c = torch.view_as_complex(w_mat.contiguous())     # [B, H, d, k]
-        # Project w onto the QR basis -> coefficients of size [B, H, rank, k]
-        coeff = Q.transpose(-1, -2).conj() @ w_c            # [B, H, rank, k]
+        # Project w onto the QR basis -> coefficients of size [B, H, rank, k].
+        # Mathematically this is ``Q^H @ w_c``. The naive expression
+        # ``Q.transpose(-1, -2).conj() @ w_c`` is fragile under
+        # torch.compile/inductor: the ``transpose`` puts the last dim at
+        # stride != 1 and its backward (``TransposeBackward0``) forces the
+        # gradient through inductor's complex ``add`` decomposition, which
+        # tries to ``view ComplexFloat as Float`` and asserts
+        # ``stride(-1) == 1``. ``einsum`` expresses the same contraction
+        # without any complex-tensor transpose, so neither forward nor
+        # backward produces the bad stride pattern.
+        coeff = torch.einsum(
+            "bhdr,bhdk->bhrk", Q.conj(), w_c
+        )                                                   # [B, H, rank, k]
         # Average coeffs across the k input columns (each Q column gets a
         # weighted readout). This keeps V and U column-aligned by construction.
         # Use a diagonal pick: V_i = Q[:, :, :, i] * coeff[:, :, i, i].
