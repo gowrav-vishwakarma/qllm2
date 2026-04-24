@@ -41,7 +41,7 @@ import sys
 import time
 import urllib.request
 import warnings
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -128,6 +128,48 @@ def _notify_discord_long(text: str, *, limit: int = 1900) -> None:
         _notify_discord("".join(chunk))
 
 
+# ── QLC runtime-safe schedule (single-run-v8-training plan v2) ───────────────
+
+
+@dataclass
+class QLCRuntimeSchedule:
+    """Runtime-safe in-run schedule for the e2e single-run preset.
+
+    Mutates ONLY attributes that are read fresh on every forward pass and
+    that do not change tensor shapes or parameter identity:
+
+    * ``model.qlc.t_max``           -- read by the loop's ``range(self.t_max)``
+    * ``model.qlc_cfg.ponder_lambda`` -- multiplied into the aux loss in
+      :meth:`V8LM.forward`
+    * ``model.qlc.bank_temperature`` -- passed to ``bank.select_top_k`` each call
+
+    Anything that would require rebuilding modules or resetting the
+    optimizer (``halt_mode``, ``out_scale_learnable``, ``rank``, ``bank_size``,
+    ``use_complex``) is intentionally NOT supported here; do soft warmup via
+    ``out_scale_init`` in the preset instead.
+
+    Phase boundaries are expressed as fractions of ``total_steps`` so the
+    same schedule scales with run length.
+    """
+
+    enabled: bool = False
+    warmup_end_frac: float = 1.0 / 3.0
+    mid_end_frac: float = 2.0 / 3.0
+    t_max_phases: Tuple[int, int, int] = (2, 3, 4)
+    ponder_lambda_phases: Tuple[float, float, float] = (0.0, 0.005, 0.01)
+    bank_temperature_phases: Optional[Tuple[float, float, float]] = None
+
+    def phase_index(self, step: int, total_steps: int) -> int:
+        if total_steps <= 0:
+            return 2
+        frac = step / float(total_steps)
+        if frac < self.warmup_end_frac:
+            return 0
+        if frac < self.mid_end_frac:
+            return 1
+        return 2
+
+
 # ── Trainer ──────────────────────────────────────────────────────────────────
 
 
@@ -171,6 +213,7 @@ class V8Trainer:
         infonce_loader: Optional[DataLoader] = None,
         infonce_weight: float = 0.0,
         infonce_every: int = 1,
+        qlc_schedule: Optional[QLCRuntimeSchedule] = None,
     ):
         self.model = model
         self.train_loader = train_loader
@@ -225,6 +268,25 @@ class V8Trainer:
         self.global_tokens = 0
         self.best_val_loss = float("inf")
         self.best_val_ppl = float("inf")
+
+        self.qlc_schedule = qlc_schedule
+        self._qlc_phase_current = -1
+        self._qlc_total_steps = total_steps
+        if (
+            self.qlc_schedule is not None
+            and self.qlc_schedule.enabled
+            and self._orig().qlc is not None
+        ):
+            print(
+                f"QLC runtime schedule: ENABLED "
+                f"(warmup<{self.qlc_schedule.warmup_end_frac:.2f} "
+                f"mid<{self.qlc_schedule.mid_end_frac:.2f}; "
+                f"t_max={self.qlc_schedule.t_max_phases} "
+                f"ponder_lambda={self.qlc_schedule.ponder_lambda_phases})"
+            )
+            # Apply phase 0 immediately so the very first batch sees the
+            # warmup values rather than the preset defaults.
+            self._apply_qlc_schedule(force=True)
 
         self.infonce_loader = infonce_loader
         self.infonce_weight = float(infonce_weight)
@@ -296,6 +358,39 @@ class V8Trainer:
 
     def _orig(self) -> V8LM:
         return self.model._orig_mod if hasattr(self.model, "_orig_mod") else self.model
+
+    def _apply_qlc_schedule(self, force: bool = False) -> None:
+        """Mutate runtime-safe QLC knobs based on the current global step.
+
+        See :class:`QLCRuntimeSchedule` for the rules. Idempotent within a
+        phase: only logs and writes when the phase index changes (or when
+        ``force=True``, used during init to apply phase 0 before step 0).
+        """
+        sched = self.qlc_schedule
+        if sched is None or not sched.enabled:
+            return
+        m = self._orig()
+        if m.qlc is None:
+            return
+        phase = sched.phase_index(self.global_step, self._qlc_total_steps)
+        if not force and phase == self._qlc_phase_current:
+            return
+        self._qlc_phase_current = phase
+        new_t_max = max(1, int(sched.t_max_phases[phase]))
+        new_lambda = float(sched.ponder_lambda_phases[phase])
+        m.qlc.t_max = new_t_max
+        m.qlc_cfg.ponder_lambda = new_lambda
+        if sched.bank_temperature_phases is not None:
+            new_temp = float(sched.bank_temperature_phases[phase])
+            m.qlc.bank_temperature = new_temp
+            temp_str = f" bank_temperature={new_temp:.3f}"
+        else:
+            temp_str = ""
+        print(
+            f"  [qlc-schedule] step={self.global_step}/"
+            f"{self._qlc_total_steps} phase={phase} "
+            f"t_max={new_t_max} ponder_lambda={new_lambda:.4f}{temp_str}"
+        )
 
     def profile_one_shot(self, total_steps: int, output_dir: str | Path) -> None:
         """Capture a torch.profiler trace for the first ``total_steps``.
@@ -426,6 +521,8 @@ class V8Trainer:
         self.optimizer.zero_grad(set_to_none=True)
 
         for batch_idx, batch in enumerate(self.train_loader):
+            self._apply_qlc_schedule()
+
             input_ids = batch["input_ids"].to(self.device, non_blocking=True)
             labels = batch["labels"].to(self.device, non_blocking=True)
             batch_tokens = input_ids.shape[0] * input_ids.shape[1]
@@ -820,6 +917,27 @@ def main() -> None:
                         help="Synthetic entity-cloze: sequence length per example.")
     parser.add_argument("--infonce_batch_size", type=int, default=16,
                         help="Synthetic entity-cloze: batch size for the aux loader.")
+    parser.add_argument(
+        "--qlc_schedule", action="store_true",
+        help="Enable the runtime-safe QLC schedule (e2e single-run plan v2). "
+             "Mutates only model.qlc.t_max, model.qlc_cfg.ponder_lambda, and "
+             "(optionally) model.qlc.bank_temperature based on global_step. "
+             "Default: off (preset values are used unchanged).",
+    )
+    parser.add_argument("--qlc_warmup_end_frac", type=float, default=1.0/3.0,
+                        help="QLC schedule: phase 0 -> 1 boundary as a "
+                             "fraction of total steps.")
+    parser.add_argument("--qlc_mid_end_frac", type=float, default=2.0/3.0,
+                        help="QLC schedule: phase 1 -> 2 boundary as a "
+                             "fraction of total steps.")
+    parser.add_argument("--qlc_t_max_phases", type=int, nargs=3,
+                        default=[2, 3, 4],
+                        metavar=("P0", "P1", "P2"),
+                        help="QLC schedule: t_max value for each of the 3 phases.")
+    parser.add_argument("--qlc_ponder_lambda_phases", type=float, nargs=3,
+                        default=[0.0, 0.005, 0.01],
+                        metavar=("P0", "P1", "P2"),
+                        help="QLC schedule: ponder_lambda for each phase.")
 
     args = parser.parse_args()
 
@@ -985,6 +1103,16 @@ def main() -> None:
     _sl(f"Stage: {cfg.stage}, freeze_backbone={cfg.freeze_backbone}, "
         f"unfreeze_lm_head={getattr(cfg, 'unfreeze_lm_head', False)}, "
         f"kl_anchor={cfg.kl_anchor_weight}")
+    if args.qlc_schedule and cfg.qlc.enabled:
+        _sl(
+            f"QLC schedule: ENABLED "
+            f"(warmup<{args.qlc_warmup_end_frac:.2f} "
+            f"mid<{args.qlc_mid_end_frac:.2f}; "
+            f"t_max={tuple(args.qlc_t_max_phases)} "
+            f"ponder_lambda={tuple(args.qlc_ponder_lambda_phases)})"
+        )
+    elif cfg.qlc.enabled:
+        _sl("QLC schedule: disabled (preset values used unchanged)")
 
     _sl(f"Optim: lr={args.lr}, warmup={args.warmup_steps}, "
         f"wd={args.weight_decay}, grad_clip={args.gradient_clip}")
@@ -1020,6 +1148,14 @@ def main() -> None:
         _discord_header + "\n```\n" + "\n".join(_summary_lines) + "\n```"
     )
 
+    qlc_schedule = QLCRuntimeSchedule(
+        enabled=bool(args.qlc_schedule),
+        warmup_end_frac=float(args.qlc_warmup_end_frac),
+        mid_end_frac=float(args.qlc_mid_end_frac),
+        t_max_phases=tuple(int(x) for x in args.qlc_t_max_phases),  # type: ignore[arg-type]
+        ponder_lambda_phases=tuple(float(x) for x in args.qlc_ponder_lambda_phases),  # type: ignore[arg-type]
+    )
+
     trainer = V8Trainer(
         model, train_loader, val_loader, tokenizer,
         learning_rate=args.lr, weight_decay=args.weight_decay,
@@ -1034,6 +1170,7 @@ def main() -> None:
         infonce_loader=infonce_loader,
         infonce_weight=cfg.qlc.infonce_weight,
         infonce_every=cfg.qlc.infonce_every,
+        qlc_schedule=qlc_schedule,
     )
 
     if args.profile_steps > 0:

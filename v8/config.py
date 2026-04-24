@@ -378,6 +378,52 @@ PRESETS: Dict[str, V8Config] = {
         ),
         stage="A", freeze_backbone=False,
     ),
+
+    # ── End-to-end single-run presets (single-run-v8-training plan v2) ──
+    # One model, one continuous run from random init. No Stage A/B/C handoff.
+    # Uses ``unsharp_target=True`` so ``gamma`` is non-trivial (AUDIT_V8 §1).
+    # ``kl_anchor_weight`` MUST stay 0: there is no Stage A reference logits
+    # in a random-init single run (`backbone_logits()` would otherwise pull
+    # the model toward its own untrained logits).
+    "e2e_medium_reasoning": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(
+            enabled=True,
+            rank=8, bank_size=2048, top_k=4,
+            t_max=4,
+            ponder_lambda=0.01,
+            unsharp_target=True,
+            out_scale_init=0.05,
+            out_scale_learnable=True,
+            renormalize_psi=True,
+            halt_mode="ortho",
+        ),
+        stage="A",
+        freeze_backbone=False,
+        unfreeze_lm_head=False,
+        kl_anchor_weight=0.0,
+    ),
+
+    # TinyStories smoke mirror of e2e_medium_reasoning. Same QLC flags so the
+    # recipe is sanity-gated end-to-end before any medium run is launched.
+    "e2e_tiny_reasoning": V8Config(
+        backbone=_backbone_tiny(),
+        qlc=QLCConfig(
+            enabled=True,
+            rank=4, bank_size=128, top_k=2,
+            t_max=4,
+            ponder_lambda=0.01,
+            unsharp_target=True,
+            out_scale_init=0.05,
+            out_scale_learnable=True,
+            renormalize_psi=True,
+            halt_mode="ortho",
+        ),
+        stage="A",
+        freeze_backbone=False,
+        unfreeze_lm_head=False,
+        kl_anchor_weight=0.0,
+    ),
 }
 
 
