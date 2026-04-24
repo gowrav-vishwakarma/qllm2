@@ -276,3 +276,71 @@ If the discriminator suite kills the quantum framing, what survives is a
 clean *Constrained Latent Memory + Adaptive Compute* architecture — a real
 contribution, just not the headline one.
 
+---
+
+## 11. Empirical confirmation of §1 — alpha/gamma noise-floor pinning (2026-04-24)
+
+§1 above predicted that with the original sharp-projector readout `γ ≡ 0`.
+The §1 fix was `unsharp_target=True`, which makes the OrthoHalt target
+operator `E = σ(g) · u uᴴ` so that `α = σ(g) · |uᴴψ|²` and
+`γ = (1 − σ(g)) · |uᴴψ|²` -- both nonzero in general. The first end-to-end
+medium run with that fix in place (commit 4450ff0,
+[`logs/v8/e2e_medium_reasoning_wikitext103_20260424_162331_4450ff0/`](../logs/v8/e2e_medium_reasoning_wikitext103_20260424_162331_4450ff0/))
+exposed the second-order failure mode the §1 reasoning had not anticipated:
+**`amp_sq = |uᴴψ|²` itself was pinned at the `1/d` noise floor** because
+nothing in the loss was rewarding `u(ψ)` aligning with `ψ`. Redistributing a
+near-zero `amp_sq` between α and γ leaves both at noise.
+
+**Numerical match.** With `dim = 384`, `target_gate = 0`
+(`σ(0) = 0.5`), `renormalize_psi = True` (so `||ψ||² = 1`), and `u(ψ)`
+essentially random vs `ψ`:
+
+```
+amp_sq      = |uᴴψ|² ≈ 1/d = 1/384 ≈ 0.00260
+α ≈ γ       = 0.5 * amp_sq ≈ 0.00130
+β           = 1 − amp_sq    ≈ 0.99740
+```
+
+Observed in the run for 1,200+ consecutive steps:
+`alpha = 0.001, beta = 0.997 - 0.998, gamma = 0.001`. Exact closed-form
+match.
+
+The `cls_head` was init'd with `weight = 4 · I₃, bias = 0`, so the softmax
+projection of `(α, β, γ)` saturated on `β ≈ 1`:
+`p(halt-no) = softmax(0, 4, 0)[1] ≈ 0.96`. Observed:
+`halt(yes/no/cont) = 0.02 / 0.96 / 0.02`. Halt-no fires on iter 1 of every
+step, so subsequent iterations get ponder weight ≈ remainder ≈ 0.02 -- the
+gradient flowing back to `target_mlp` and the bank is multiplied by this
+near-zero scalar, and `target_mlp` never learns to align `u` with `ψ`. The
+loop is decorative for the entire run.
+
+**Why §1's fix was necessary but not sufficient.** `unsharp_target=True`
+fixes only the *splitting* of `amp_sq` between α and γ. It does not give
+`amp_sq` itself a gradient path, and the per-step LM loss does not flow
+through `|uᴴψ|²` strongly enough to do that on its own (the LM head only
+sees `ψ`, not `u`). To make `amp_sq` rise off the noise floor we need a
+direct auxiliary that rewards alignment, plus a `cls_head` init that does
+not starve later iterations of gradient on iter 1.
+
+**Pointer to fix.** The v8.2 fix bundle (see
+[`.cursor/plans/unfreeze_qlc_alpha_gamma_2132eeda.plan.md`](../.cursor/plans/unfreeze_qlc_alpha_gamma_2132eeda.plan.md),
+[`README_V8.md`](README_V8.md) §0.2, [`EXPERIMENTS_V8.md`](EXPERIMENTS_V8.md) §10):
+
+1. `OrthoHalt.target_gate` init `0 -> 1.5`.
+2. `OrthoHalt.cls_head` init `weight=eye*1.0, bias=[0,0,2]`
+   (continue-biased -- default distribution roughly `[0.10, 0.10, 0.80]`).
+3. New `target_alignment_weight` aux (`QLCConfig`, default `0.05` in
+   `e2e_*_reasoning` presets) adds
+   `target_alignment_weight * (1 - mean(|u^H psi|²)).clamp_min(0)` to
+   `aux_loss`. This is the term that makes `amp_sq` actually grow.
+4. `infonce_weight=0.05` enabled by default in `e2e_*_reasoning` so the
+   bank's effects learn entity routing alongside.
+5. `ponder_lambda_phases=(0.0, 0.002, 0.005)` (was `(0.0, 0.005, 0.01)`):
+   smaller late cap so the loop isn't penalised right when signal arrives.
+
+After v8.2, the diagnostic line gains an `align=` column reporting
+`mean(|uᴴψ|²) = α + γ`. Treat this as the **leading indicator** of the
+EXPERIMENTS §9.2 acceptance gate: if `align` stays at noise floor for the
+warmup phase, the run is dead and γ cannot rise either -- kill earlier
+rather than waiting for the late phase.
+

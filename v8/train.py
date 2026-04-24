@@ -208,7 +208,12 @@ class QLCRuntimeSchedule:
     warmup_end_frac: float = 1.0 / 3.0
     mid_end_frac: float = 2.0 / 3.0
     t_max_phases: Tuple[int, int, int] = (2, 3, 4)
-    ponder_lambda_phases: Tuple[float, float, float] = (0.0, 0.005, 0.01)
+    # v8.2: smaller absolute ponder_lambda values across all phases. The
+    # original (0.0, 0.005, 0.01) ramp over-penalised the loop in the late
+    # phase exactly when the alignment-aux + InfoNCE were finally letting
+    # alpha/gamma carry signal, collapsing mean_iter back to ~1. The new
+    # values keep the same warmup-zero shape but cap late-phase pressure.
+    ponder_lambda_phases: Tuple[float, float, float] = (0.0, 0.002, 0.005)
     bank_temperature_phases: Optional[Tuple[float, float, float]] = None
 
     def phase_index(self, step: int, total_steps: int) -> int:
@@ -688,6 +693,7 @@ class V8Trainer:
                             f"halt(yes/no/cont)="
                             f"{diag.halt_yes_rate:.2f}/{diag.halt_no_rate:.2f}/"
                             f"{diag.continue_rate:.2f} | "
+                            f"align={diag.mean_amp:.4f} "
                             f"out_scale={diag.out_scale:.3f} "
                             f"psi_delta_l2={diag.psi_delta_l2:.3e}"
                         )
@@ -987,9 +993,12 @@ def main() -> None:
                         metavar=("P0", "P1", "P2"),
                         help="QLC schedule: t_max value for each of the 3 phases.")
     parser.add_argument("--qlc_ponder_lambda_phases", type=float, nargs=3,
-                        default=[0.0, 0.005, 0.01],
+                        default=[0.0, 0.002, 0.005],
                         metavar=("P0", "P1", "P2"),
-                        help="QLC schedule: ponder_lambda for each phase.")
+                        help="QLC schedule: ponder_lambda for each phase. "
+                             "v8.2 default lowered from (0,0.005,0.01) to keep "
+                             "the late-phase cap from collapsing mean_iter "
+                             "once the loop is finally engaged.")
 
     args = parser.parse_args()
 
@@ -1144,6 +1153,9 @@ def main() -> None:
             f"out_scale_learnable={q.out_scale_learnable}, "
             f"renormalize_psi={q.renormalize_psi}, "
             f"ponder_lambda={q.ponder_lambda}")
+        _sl(f"  target_alignment_weight={q.target_alignment_weight} "
+            f"(v8.2: pulls OrthoHalt u toward psi so |u^H psi|^2 leaves the "
+            f"1/d noise floor)")
         if q.infonce_weight > 0:
             _sl(f"  InfoNCE: weight={q.infonce_weight}, every={q.infonce_every} "
                 f"(entities={args.infonce_n_entities}, "

@@ -68,6 +68,7 @@ class QLCDiagnostics:
     ponder_cost: torch.Tensor          # [B] scalar contribution
     out_scale: float = 0.0              # current value of QLC residual scale
     psi_delta_l2: float = 0.0           # mean ||psi_T - psi_0||^2 (per-token)
+    mean_amp: float = 0.0               # mean |u^H psi|^2 = alpha + gamma (v8.2)
 
 
 class QuantumLogicCore(nn.Module):
@@ -209,7 +210,8 @@ class QuantumLogicCore(nn.Module):
         self,
         psi: torch.Tensor,
         return_diagnostics: bool = False,
-    ) -> Tuple[torch.Tensor, torch.Tensor, Optional[QLCDiagnostics]]:
+        return_align: bool = False,
+    ) -> Tuple[torch.Tensor, ...]:
         r"""Run the reasoning loop on ``psi: [B, T, d, 2]``.
 
         Returns
@@ -217,7 +219,20 @@ class QuantumLogicCore(nn.Module):
         psi_out : ``[B, T, d, 2]`` -- pondered state to feed the LM head.
         ponder_cost : scalar -- :math:`\sum_t p_\text{halt}^{(t)}` averaged over
                       batch+heads (the trainer multiplies by ``ponder_lambda``).
+        align_signal : scalar (only when ``return_align=True``) -- mean
+                       :math:`|u(\psi)^\dagger \psi|^2` accumulated with
+                       gradient over the iteration loop. The trainer adds
+                       ``target_alignment_weight * (1 - align_signal).clamp_min(0)``
+                       to the LM loss (v8.2 fix: see AUDIT_V8.md §6).
         diag : optional :class:`QLCDiagnostics` -- when ``return_diagnostics=True``.
+
+        Notes
+        -----
+        The default 3-tuple shape ``(psi_out, ponder_cost, diag)`` is preserved
+        when ``return_align=False`` so existing tests and any non-V8LM caller
+        continue to work unchanged. ``V8LM.forward`` always sets
+        ``return_align=True`` so that the alignment auxiliary can flow into
+        ``aux_loss``.
         """
         B, T, d, two = psi.shape
         H = self.n_heads
@@ -242,6 +257,15 @@ class QuantumLogicCore(nn.Module):
         n_no = torch.zeros_like(sum_alpha)
         n_cont = torch.zeros_like(sum_alpha)
         diag_count = 0
+
+        # v8.2 alignment signal: mean |u(psi)^H psi|^2 = mean(alpha + gamma)
+        # under the unsharp_target=True parametrization (alpha = sigma(g)*amp,
+        # gamma = (1-sigma(g))*amp, so their sum is exactly amp = |u^H psi|^2).
+        # Under the legacy sharp parametrization alpha = amp and gamma is the
+        # renorm deficit (~= 0); the sum is still a valid lower bound on amp,
+        # so the same auxiliary works in both regimes.
+        # Kept on-graph so V8LM can backprop through it.
+        sum_align = torch.zeros((), device=psi.device, dtype=psi.dtype)
 
         # Per-head iteration: we keep psi_per_head separate for each head so
         # different heads can take different reasoning trajectories.
@@ -322,6 +346,7 @@ class QuantumLogicCore(nn.Module):
             sum_alpha = sum_alpha + halt_out.abg[..., 0].mean()
             sum_beta = sum_beta + halt_out.abg[..., 1].mean()
             sum_gamma = sum_gamma + halt_out.abg[..., 2].mean()
+            sum_align = sum_align + (halt_out.abg[..., 0] + halt_out.abg[..., 2]).mean()
             probs = halt_out.logits.softmax(dim=-1)
             n_yes = n_yes + probs[..., 0].mean()
             n_no = n_no + probs[..., 1].mean()
@@ -343,6 +368,9 @@ class QuantumLogicCore(nn.Module):
 
         ponder_cost = ponder.cost.mean() if ponder.cost.numel() > 0 else torch.tensor(0.0)
 
+        # v8.2: scalar mean of |u^H psi|^2 over iterations (with grad).
+        align_signal = sum_align / max(diag_count, 1)
+
         if return_diagnostics:
             inv = 1.0 / max(diag_count, 1)
             with torch.no_grad():
@@ -360,9 +388,14 @@ class QuantumLogicCore(nn.Module):
                 ponder_cost=ponder.cost.detach().cpu(),
                 out_scale=float(self.out_scale.detach().item()),
                 psi_delta_l2=float(delta.item()),
+                mean_amp=float(align_signal.detach().item()),
             )
+            if return_align:
+                return psi_out, ponder_cost, align_signal, diag
             return psi_out, ponder_cost, diag
 
+        if return_align:
+            return psi_out, ponder_cost, align_signal, None
         return psi_out, ponder_cost, None
 
     # ── Convenience: parameter count ───────────────────────────────────────

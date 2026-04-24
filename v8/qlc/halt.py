@@ -113,15 +113,24 @@ class OrthoHalt(nn.Module):
         # is E = sigma(g) * u u^H (so 0 <= E <= I but E^2 != E). gamma then
         # measures the gate deficit (1 - sigma(g)) * |u^H psi|^2 instead of
         # being structurally pinned to zero (see AUDIT_V8.md §1).
-        self.target_gate = nn.Parameter(torch.zeros(n_heads))
+        #
+        # Init at +1.5 (not 0): sigmoid(1.5) ~= 0.82, so once amp_sq grows
+        # via the alignment auxiliary the bulk of the inner-product mass is
+        # routed to alpha ("answer found") with the remaining ~18% on gamma
+        # ("undecided"). The legacy zero init split alpha/gamma 50/50 and
+        # required nothing to push amp_sq up, leaving both pinned at noise
+        # floor (see AUDIT_V8.md §6).
+        self.target_gate = nn.Parameter(torch.full((n_heads,), 1.5))
 
         # 3-way classification head from (alpha, beta, gamma).
-        # We *do* let it learn arbitrary mixing, but initialize so gamma -> "continue"
-        # and (alpha, beta) -> (halt-yes, halt-no) by default.
+        # We *do* let it learn arbitrary mixing, but initialize so the loop
+        # actually runs all t_max iterations from step 0 (continue-biased)
+        # rather than collapsing to halt-no on the first iter, which is what
+        # the legacy 4*I init produced when beta dominated at random init.
         self.cls_head = nn.Linear(3, 3, bias=True)
         with torch.no_grad():
-            self.cls_head.weight.copy_(torch.eye(3) * 4.0)
-            self.cls_head.bias.zero_()
+            self.cls_head.weight.copy_(torch.eye(3) * 1.0)
+            self.cls_head.bias.copy_(torch.tensor([0.0, 0.0, 2.0]))
 
     def target_vector(self, psi: torch.Tensor) -> torch.Tensor:
         r"""Return a per-head unit-norm target vector :math:`u(\psi)`.
