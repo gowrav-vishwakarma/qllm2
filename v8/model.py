@@ -39,7 +39,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import asdict
-from typing import List, Optional, Tuple, Dict
+from typing import Iterator, List, Optional, Tuple, Dict
 
 import torch
 import torch.nn as nn
@@ -61,6 +61,9 @@ class V8LM(nn.Module):
         bcfg = cfg.backbone
         self.backbone_cfg = bcfg
         self.qlc_cfg = cfg.qlc
+        self.qlc_insert_layers = tuple(sorted(set(cfg.qlc_insert_layers)))
+        self.shared_interleaved_qlc = bool(cfg.shared_interleaved_qlc)
+        self.final_qlc_enabled = bool(cfg.final_qlc_enabled)
 
         # Backbone (verbatim V7Block stack — no PAM logic re-implemented here).
         self.embed = ComplexEmbed(bcfg.vocab_size, bcfg.dim)
@@ -70,28 +73,26 @@ class V8LM(nn.Module):
         ])
         self.output_norm = ComplexNorm(bcfg.dim)
 
-        # Quantum-Logic Core (or identity passthrough).
-        if cfg.qlc.enabled:
-            self.qlc: Optional[QuantumLogicCore] = QuantumLogicCore(
-                dim=bcfg.dim,
-                rank=cfg.qlc.rank,
-                bank_size=cfg.qlc.bank_size,
-                top_k=cfg.qlc.top_k,
-                t_max=cfg.qlc.t_max,
-                n_heads=cfg.qlc.n_heads,
-                ponder_lambda=cfg.qlc.ponder_lambda,
-                bank_temperature=cfg.qlc.bank_temperature,
-                quantale_off=cfg.qlc.quantale_off,
-                orthohalt_off=cfg.qlc.orthohalt_off,
-                qr_refresh_every=cfg.qlc.qr_refresh_every,
-                use_complex=cfg.qlc.use_complex,
-                out_scale_init=cfg.qlc.out_scale_init,
-                out_scale_learnable=cfg.qlc.out_scale_learnable,
-                renormalize_psi=cfg.qlc.renormalize_psi,
-                halt_mode=cfg.qlc.halt_mode,
-                unsharp_target=cfg.qlc.unsharp_target,
-                quantale_order_test=cfg.qlc.quantale_order_test,
+        # Quantum-Logic Core(s). Empty qlc_insert_layers preserves legacy V8:
+        # one post-backbone QLC. V8.3 can inject a shared QLC between selected
+        # blocks and optionally disable the final post-backbone adapter.
+        self.interleaved_qlc: Optional[QuantumLogicCore] = None
+        self.interleaved_qlcs = nn.ModuleDict()
+        if cfg.qlc.enabled and self.qlc_insert_layers:
+            if self.shared_interleaved_qlc:
+                self.interleaved_qlc = self._build_qlc(
+                    out_scale_init=cfg.interleaved_out_scale,
+                )
+            else:
+                for layer_idx in self.qlc_insert_layers:
+                    self.interleaved_qlcs[str(layer_idx)] = self._build_qlc(
+                        out_scale_init=cfg.interleaved_out_scale,
+                    )
+            self.qlc: Optional[QuantumLogicCore] = (
+                self._build_qlc() if self.final_qlc_enabled else None
             )
+        elif cfg.qlc.enabled:
+            self.qlc = self._build_qlc()
         else:
             self.qlc = None
 
@@ -106,6 +107,36 @@ class V8LM(nn.Module):
 
         # Cache of last QLC diagnostics for the trainer to log.
         self._last_qlc_diag: Optional[QLCDiagnostics] = None
+        self._last_qlc_diags: List[QLCDiagnostics] = []
+
+    def _build_qlc(self, *, out_scale_init: Optional[float] = None) -> QuantumLogicCore:
+        q = self.qlc_cfg
+        return QuantumLogicCore(
+            dim=self.backbone_cfg.dim,
+            rank=q.rank,
+            bank_size=q.bank_size,
+            top_k=q.top_k,
+            t_max=q.t_max,
+            n_heads=q.n_heads,
+            ponder_lambda=q.ponder_lambda,
+            bank_temperature=q.bank_temperature,
+            quantale_off=q.quantale_off,
+            orthohalt_off=q.orthohalt_off,
+            qr_refresh_every=q.qr_refresh_every,
+            use_complex=q.use_complex,
+            out_scale_init=q.out_scale_init if out_scale_init is None else out_scale_init,
+            out_scale_learnable=q.out_scale_learnable,
+            renormalize_psi=q.renormalize_psi,
+            halt_mode=q.halt_mode,
+            unsharp_target=q.unsharp_target,
+            quantale_order_test=q.quantale_order_test,
+            use_iteration_context=q.use_iteration_context,
+            use_layer_context=q.use_layer_context,
+            rope_conditioned_probe=q.rope_conditioned_probe,
+            weighted_projector=q.weighted_projector,
+            max_reason_iters=q.max_reason_iters,
+            max_context_layers=q.max_context_layers,
+        )
 
     # ── Init / freezing ────────────────────────────────────────────────────
 
@@ -122,9 +153,9 @@ class V8LM(nn.Module):
         for _, module in self.named_modules():
             if hasattr(module, 'protect_gate') and isinstance(module.protect_gate, nn.Linear):
                 nn.init.constant_(module.protect_gate.bias, -3.0)
-        if self.qlc is not None:
+        for qlc in self.iter_qlc_modules():
             with torch.no_grad():
-                head = getattr(self.qlc.halt, 'cls_head', None)
+                head = getattr(qlc.halt, 'cls_head', None)
                 # Only re-init when the head is the canonical OrthoHalt 3x3
                 # mapping. Empirical halts (DeltaHalt, EntropyHalt) ship with
                 # their own carefully-shaped cls_head and must be left alone.
@@ -149,7 +180,7 @@ class V8LM(nn.Module):
                 # Also reset the unsharp target gate (v8.2): default sigmoid(1.5)
                 # ~= 0.82 routes most amp_sq to alpha. The legacy zero init
                 # split it 50/50 with gamma which kept both at noise floor.
-                gate = getattr(self.qlc.halt, 'target_gate', None)
+                gate = getattr(qlc.halt, 'target_gate', None)
                 if isinstance(gate, nn.Parameter) and gate.dim() == 1:
                     gate.fill_(1.5)
 
@@ -198,6 +229,36 @@ class V8LM(nn.Module):
             p.requires_grad = True
         for p in self.lm_head_norm.parameters():
             p.requires_grad = True
+
+    def iter_qlc_modules(self) -> Iterator[QuantumLogicCore]:
+        """Yield active QLC modules once each, including interleaved modules."""
+        seen = set()
+        modules: List[Optional[QuantumLogicCore]] = [self.qlc, self.interleaved_qlc]
+        modules.extend(self.interleaved_qlcs.values())
+        for module in modules:
+            if module is None or id(module) in seen:
+                continue
+            seen.add(id(module))
+            yield module
+
+    def primary_qlc(self) -> Optional[QuantumLogicCore]:
+        """Return the bank-owning QLC used by diagnostics / InfoNCE."""
+        if self.interleaved_qlc is not None:
+            return self.interleaved_qlc
+        if len(self.interleaved_qlcs) > 0:
+            first_key = sorted(self.interleaved_qlcs.keys(), key=int)[0]
+            return self.interleaved_qlcs[first_key]
+        return self.qlc
+
+    def has_qlc(self) -> bool:
+        return self.primary_qlc() is not None
+
+    def _qlc_for_insert_layer(self, layer_idx: int) -> Optional[QuantumLogicCore]:
+        if layer_idx not in self.qlc_insert_layers:
+            return None
+        if self.interleaved_qlc is not None:
+            return self.interleaved_qlc
+        return self.interleaved_qlcs.get(str(layer_idx))
 
     # ── Backbone-only forward (for KL anchor in Stage C) ───────────────────
 
@@ -268,6 +329,14 @@ class V8LM(nn.Module):
 
         new_states: List[torch.Tensor] = []
         drift = None
+        ponder_cost = torch.tensor(
+            0.0,
+            device=z.device,
+            dtype=z.dtype if z.is_floating_point() else torch.float32,
+        )
+        align_signals: List[torch.Tensor] = []
+        qlc_diags: List[QLCDiagnostics] = []
+        prev_qlc_residual: Optional[torch.Tensor] = None
         for i, block in enumerate(self.blocks):
             s = states[i] if states is not None else None
             z, new_s, pam_out = block(
@@ -276,19 +345,77 @@ class V8LM(nn.Module):
             new_states.append(new_s)
             drift = pam_out if self.backbone_cfg.cross_level else None
 
+            qlc_at_layer = self._qlc_for_insert_layer(i)
+            if qlc_at_layer is not None:
+                z_before_qlc = z
+                z, pc, align_signal, diag = qlc_at_layer(
+                    z,
+                    return_diagnostics=return_qlc_diag,
+                    return_align=True,
+                    layer_idx=i,
+                    position_offset=step_offset,
+                    insertion_point=f"layer_{i}",
+                )
+                ponder_cost = ponder_cost + pc
+                align_signals.append(align_signal)
+                if return_qlc_diag and diag is not None:
+                    residual = z - z_before_qlc
+                    with torch.no_grad():
+                        delta = (
+                            residual[..., 0].square() + residual[..., 1].square()
+                        ).sum(dim=-1).mean()
+                        diag.downstream_delta_l2 = float(delta.item())
+                        if prev_qlc_residual is not None:
+                            r0 = prev_qlc_residual.reshape(-1, 2)
+                            r1 = residual.reshape(-1, 2)
+                            dot = (r0 * r1).sum()
+                            n0 = r0.square().sum().sqrt()
+                            n1 = r1.square().sum().sqrt()
+                            diag.memory_echo_cos = float(
+                                (dot / (n0 * n1).clamp_min(1e-12)).item()
+                            )
+                        prev_qlc_residual = residual.detach()
+                    qlc_diags.append(diag)
+
         z = self.output_norm(z)
 
-        # QLC reasoning loop (or passthrough).
-        ponder_cost = torch.tensor(0.0, device=z.device, dtype=z.dtype if z.is_floating_point() else torch.float32)
-        align_signal: Optional[torch.Tensor] = None
+        # Final post-backbone QLC reasoning loop (legacy placement) or passthrough.
         if self.qlc is not None:
             # Always request align_signal so the v8.2 alignment auxiliary can
             # flow into aux_loss. Returns a 4-tuple in this branch.
-            z, ponder_cost, align_signal, diag = self.qlc(
-                z, return_diagnostics=return_qlc_diag, return_align=True,
+            z_before_qlc = z
+            z, pc, align_signal, diag = self.qlc(
+                z,
+                return_diagnostics=return_qlc_diag,
+                return_align=True,
+                layer_idx=None,
+                position_offset=step_offset,
+                insertion_point="final",
             )
+            ponder_cost = ponder_cost + pc
+            align_signals.append(align_signal)
             if return_qlc_diag:
-                self._last_qlc_diag = diag
+                if diag is not None:
+                    residual = z - z_before_qlc
+                    with torch.no_grad():
+                        delta = (
+                            residual[..., 0].square() + residual[..., 1].square()
+                        ).sum(dim=-1).mean()
+                        diag.downstream_delta_l2 = float(delta.item())
+                        if prev_qlc_residual is not None:
+                            r0 = prev_qlc_residual.reshape(-1, 2)
+                            r1 = residual.reshape(-1, 2)
+                            dot = (r0 * r1).sum()
+                            n0 = r0.square().sum().sqrt()
+                            n1 = r1.square().sum().sqrt()
+                            diag.memory_echo_cos = float(
+                                (dot / (n0 * n1).clamp_min(1e-12)).item()
+                            )
+                    qlc_diags.append(diag)
+
+        if return_qlc_diag:
+            self._last_qlc_diags = qlc_diags
+            self._last_qlc_diag = qlc_diags[-1] if qlc_diags else None
 
         lm = self.lm_head_norm(self.lm_head_proj(z))
         logits = (
@@ -296,15 +423,26 @@ class V8LM(nn.Module):
             + lm[..., 1] @ self.embed.embed_imag.weight.T
         )
 
-        if self.qlc is not None:
+        if self.has_qlc():
             aux_loss = self.qlc_cfg.ponder_lambda * ponder_cost
             # v8.2: pull the OrthoHalt target_mlp's u toward psi so |u^H psi|^2
             # rises off the 1/d noise floor and alpha/gamma actually carry
             # signal. (1 - align) is clamped at zero in case any path produces
             # an above-unit alignment via numerics.
             tw = float(self.qlc_cfg.target_alignment_weight)
-            if tw > 0.0 and align_signal is not None:
-                aux_loss = aux_loss + tw * (1.0 - align_signal).clamp_min(0.0)
+            if tw > 0.0 and align_signals:
+                align_mean = torch.stack(align_signals).mean()
+                target = float(getattr(self.qlc_cfg, "target_alignment_target", 1.0))
+                if target >= 1.0:
+                    # v8.2 compatibility: force alignment upward. This fixed
+                    # the 1/d floor but can saturate beta to zero.
+                    align_loss = (1.0 - align_mean).clamp_min(0.0)
+                else:
+                    # V8.3 anti-collapse: keep beta headroom by aiming for a
+                    # high-but-not-perfect target instead of align=1.
+                    target_t = align_mean.new_tensor(target)
+                    align_loss = (align_mean - target_t).square()
+                aux_loss = aux_loss + tw * align_loss
         else:
             aux_loss = ponder_cost
         return logits, new_states, aux_loss
@@ -372,7 +510,11 @@ class V8LM(nn.Module):
             sum(p.numel() for p in self.embed_norm.parameters())
             + sum(p.numel() for p in self.output_norm.parameters())
         )
-        qlc_p = sum(p.numel() for p in self.qlc.parameters()) if self.qlc is not None else 0
+        qlc_p = sum(
+            p.numel()
+            for module in self.iter_qlc_modules()
+            for p in module.parameters()
+        )
         total = embed_p + block_p + head_p + norm_p + qlc_p
         out = {
             'embedding (tied)': embed_p,
@@ -389,6 +531,9 @@ class V8LM(nn.Module):
 
     def last_qlc_diagnostics(self) -> Optional[QLCDiagnostics]:
         return self._last_qlc_diag
+
+    def last_qlc_diagnostics_all(self) -> List[QLCDiagnostics]:
+        return list(self._last_qlc_diags)
 
 
 # ── Checkpoint helpers ───────────────────────────────────────────────────────

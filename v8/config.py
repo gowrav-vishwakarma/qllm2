@@ -77,6 +77,26 @@ class QLCConfig:
     write-up in EXPERIMENTS_V8.md §10. Enabled by default in the
     ``e2e_*_reasoning`` presets at 0.05; set to 0.0 for legacy / ablation runs.
     """
+    target_alignment_target: float = 1.0
+    """Target for the alignment auxiliary.
+
+    ``1.0`` preserves the v8.2 hinge loss. Lower values use an MSE target so
+    alignment rises off the 1/d floor without collapsing beta to zero.
+    """
+
+    # ── V8.3 context-reasoning additions ───────────────────────────────────
+    use_iteration_context: bool = False
+    """Add a learned iteration embedding to the QLC probe/target input."""
+    use_layer_context: bool = False
+    """Add a learned backbone-layer embedding when QLC is interleaved."""
+    rope_conditioned_probe: bool = False
+    """Apply a RoPE-style phase rotation to the bank probe query."""
+    weighted_projector: bool = False
+    """Use selected bank gates to make the SPM value operator unsharp."""
+    max_reason_iters: int = 16
+    """Embedding table size for iteration-aware target/probe conditioning."""
+    max_context_layers: int = 64
+    """Embedding table size for layer-aware interleaved QLC conditioning."""
 
     # Numerical safety
     qr_refresh_every: int = 0         # 0 = never; >0 = re-QR Pi_F columns every K iters
@@ -102,6 +122,14 @@ class V8Config:
     freeze_backbone: bool = False     # Stage B sets True
     unfreeze_lm_head: bool = False    # if True, lm_head_proj/norm stay trainable in Stage B
     kl_anchor_weight: float = 0.0     # Stage C uses small >0 (e.g. 0.05)
+
+    # V8.3 interleaving controls. Empty tuple preserves legacy post-backbone
+    # placement. Layer indices are zero-based V7Block indices after which QLC
+    # is applied before the next block.
+    qlc_insert_layers: Tuple[int, ...] = ()
+    shared_interleaved_qlc: bool = True
+    interleaved_out_scale: float = 0.05
+    final_qlc_enabled: bool = True
 
 
 # ── Presets ──────────────────────────────────────────────────────────────────
@@ -444,6 +472,70 @@ PRESETS: Dict[str, V8Config] = {
         unfreeze_lm_head=False,
         kl_anchor_weight=0.0,
     ),
+
+    # ── V8.3 interleaved context-reasoning presets ──
+    # QLC is injected before later PAM layers so memory-conditioned states can
+    # participate in sequence mixing instead of acting only as a final adapter.
+    "e2e_medium_context_reasoning": V8Config(
+        backbone=_backbone_medium_v3(),
+        qlc=QLCConfig(
+            enabled=True,
+            rank=8, bank_size=2048, top_k=4,
+            t_max=4,
+            ponder_lambda=0.01,
+            unsharp_target=True,
+            out_scale_init=0.05,
+            out_scale_learnable=True,
+            renormalize_psi=False,
+            halt_mode="ortho",
+            target_alignment_weight=0.05,
+            infonce_weight=0.05,
+            infonce_every=4,
+            use_iteration_context=True,
+            use_layer_context=True,
+            rope_conditioned_probe=True,
+            weighted_projector=True,
+            target_alignment_target=0.75,
+        ),
+        stage="A",
+        freeze_backbone=False,
+        unfreeze_lm_head=False,
+        kl_anchor_weight=0.0,
+        qlc_insert_layers=(3, 7, 11),
+        shared_interleaved_qlc=True,
+        interleaved_out_scale=0.05,
+        final_qlc_enabled=False,
+    ),
+    "e2e_tiny_context_reasoning": V8Config(
+        backbone=_backbone_tiny(),
+        qlc=QLCConfig(
+            enabled=True,
+            rank=4, bank_size=128, top_k=2,
+            t_max=4,
+            ponder_lambda=0.01,
+            unsharp_target=True,
+            out_scale_init=0.05,
+            out_scale_learnable=True,
+            renormalize_psi=False,
+            halt_mode="ortho",
+            target_alignment_weight=0.05,
+            infonce_weight=0.05,
+            infonce_every=4,
+            use_iteration_context=True,
+            use_layer_context=True,
+            rope_conditioned_probe=True,
+            weighted_projector=True,
+            target_alignment_target=0.75,
+        ),
+        stage="A",
+        freeze_backbone=False,
+        unfreeze_lm_head=False,
+        kl_anchor_weight=0.0,
+        qlc_insert_layers=(0,),
+        shared_interleaved_qlc=True,
+        interleaved_out_scale=0.05,
+        final_qlc_enabled=False,
+    ),
 }
 
 
@@ -463,4 +555,8 @@ def get_config(preset: str) -> V8Config:
         freeze_backbone=cfg.freeze_backbone,
         unfreeze_lm_head=cfg.unfreeze_lm_head,
         kl_anchor_weight=cfg.kl_anchor_weight,
+        qlc_insert_layers=tuple(cfg.qlc_insert_layers),
+        shared_interleaved_qlc=cfg.shared_interleaved_qlc,
+        interleaved_out_scale=cfg.interleaved_out_scale,
+        final_qlc_enabled=cfg.final_qlc_enabled,
     )

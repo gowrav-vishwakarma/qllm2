@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V8 e2e single-run on wikitext103 (no Stage A handoff, unsharp_target=True, QLC schedule=on)
+Date (UTC)  : 2026-04-24 11:57:59
+Date (local): 2026-04-24 17:27:59 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : ab342a17622697a082e67dd4c967ee10354520ca
+Git short   : ab342a1
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --preset e2e_medium_reasoning --dataset wikitext103 --seq_len 2048 --batch_size 3 --epochs 10 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --gen_prompt 'In 1923 , the University of' --diag_every 100 --checkpoint_dir v8/checkpoints/e2e_medium_reasoning --log_dir logs/v8/e2e_medium_reasoning_wikitext103_20260424_172759_ab342a1 --qlc_schedule  
+================================================================================

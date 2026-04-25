@@ -107,6 +107,7 @@ mean iter > 1, Val PPL not catastrophic) are listed in §9.2.
 | Run                      | Preset                  | Outcome | Notes |
 |--------------------------|-------------------------|---------|-------|
 | 4450ff0 (2026-04-24)     | `e2e_medium_reasoning`  | **Kill**    | alpha/gamma pinned at `1/d` noise floor, halt collapsed to halt-no; v8.2 fix bundle supersedes (see §10) |
+| 18f4de7_dirty (2026-04-24) | `e2e_medium_reasoning` | **Soft evidence / pivot** | v8.2 fixes work mechanically: Val PPL 57.31 → 43.04 → 38.21 over epochs 1-3, roughly V6 pam-v3 trajectory and far behind transformer (30.39 at epoch 3). Per-iter diagnostics show different effects but tiny iter-1 ψ motion, so this motivates V8.3 interleaving (see §12). |
 
 ## 7. Implementation status
 
@@ -351,6 +352,26 @@ Below the existing summary line, one indented line per iter actually run:
 
 ### Decision rules (precommit; do **not** post-hoc rationalize)
 
+### Current v8.2 medium readout (18f4de7_dirty)
+
+The current medium run lands in the Phase 2B + Phase 2D cells below:
+
+- `bank_overlap_with_prev ≈ 0.04-0.05` at `t=1`, so the bank is selecting
+  different effects across iterations.
+- `psi_step_l2[t=0] ≈ 3.6e2` but `psi_step_l2[t=1] ≈ 0.9`, so
+  `psi_step_l2[t=1] / psi_step_l2[t=0] ≈ 0.0026`. Different effects are not
+  materially moving the state.
+- `alpha[t=0] ≈ 0.895` with `align≈0.9999`, leaving almost no target-headroom
+  for later iterations. This fires Phase 2D: iteration-aware target/halt.
+- `beta≈0` this early is also a collapse signal, not a success signal:
+  `align=alpha+gamma≈1` leaves no orthocomplement/refetch mass for the halt
+  head to use.
+
+Concrete next actions are no longer "observe more" for this preset: run the
+cheap discriminator presets, then test `renormalize_psi=False`,
+`weighted_projector=True`, bounded `target_alignment_target`, and
+iteration/layer-aware QLC in the V8.3 interleaved preset.
+
 #### Axis A — bank overlap × ψ-step magnitude (relative to iter 0)
 
 | `bank_overlap[t≥1]` | `psi_step_l2[t≥1] / psi_step_l2[t=0]` | Interpretation                                                | Phase 2 action                                                                                                                                              |
@@ -395,3 +416,71 @@ Same exclusions as the plan:
 - No change to `v8/model.py`, `v8/config.py`, the launch scripts, or any tests.
 - No Phase 2 fixes (force-diversity, iteration-aware halt, iteration-aware target, entropy halt). Those wait on data.
 - No Phase 3 (move QLC inside the backbone block per [`AUDIT_V8.md`](AUDIT_V8.md) §3) until cheap fixes are exhausted.
+
+## 12. V8.3 — interleaved context-level reasoning
+
+**Plan**: [`.cursor/plans/v8_context_reasoning_28cfa913.plan.md`](../.cursor/plans/v8_context_reasoning_28cfa913.plan.md).
+**Code**: [`v8/config.py`](config.py) (`e2e_*_context_reasoning` presets),
+[`v8/model.py`](model.py) (QLC insertion after selected `V7Block`s),
+[`v8/qlc/reason_loop.py`](qlc/reason_loop.py) (iteration/layer context,
+RoPE-conditioned probe, weighted projector, insertion diagnostics), and
+[`v8/train.py`](train.py) (multi-insertion diagnostics logging).
+
+### Why this exists
+
+The v8.2 medium run fixed the mechanical α/γ failure but did not change the
+performance class: epoch-3 PPL is roughly tied with V6 pam-v3 and far behind
+the transformer. The remaining architectural problem is `AUDIT_V8.md` §3:
+post-backbone QLC refines each token after sequence mixing has already
+finished. V8.3 moves QLC into the layer stack so memory retrieval can affect
+later PAM sequence mixing.
+
+### Presets
+
+| Preset | Dataset intent | Insertions | Final QLC | Key switches |
+|--------|----------------|------------|-----------|--------------|
+| `e2e_tiny_context_reasoning` | TinyStories smoke | after block 0 | off | `renormalize_psi=False`, `target_alignment_target=0.75`, `use_iteration_context=True`, `use_layer_context=True`, `rope_conditioned_probe=True`, `weighted_projector=True` |
+| `e2e_medium_context_reasoning` | WikiText-103 medium | after blocks 3, 7, 11 | off | same switches, shared interleaved QLC, `interleaved_out_scale=0.05` |
+
+### Diagnostics
+
+The trainer now prints one QLC block per insertion point, e.g.
+`QLC[layer_3]`, `QLC[layer_7]`, and `QLC[layer_11]`. Each block keeps the
+existing per-iteration readout and adds:
+
+- `downstream_delta_l2`: scaled hidden-state change introduced at that
+  insertion point.
+- `echo_cos`: cosine similarity between this insertion's QLC residual and the
+  previous insertion's residual. High positive values mean memory writes are
+  echoing through the stack; near-zero values mean each insertion is acting
+  independently.
+
+### Required smoke ladder
+
+Run these before any full A100 medium spend:
+
+1. Existing discriminator presets on TinyStories / short WT103 smoke:
+   `stageB_real_spm`, `stageB_outscale0`,
+   `stageB_equal_flop_passthrough`, `stageB_lmhead_unfrozen`,
+   `stageB_halt_delta`, `stageB_halt_entropy`,
+   `stageB_quantale_order_off`.
+2. `e2e_tiny_context_reasoning` with `--qlc_schedule --diag_every 100`.
+3. 1% WT103 run of `e2e_medium_context_reasoning`.
+4. Full medium run only if the gates below pass.
+
+### Decision gates
+
+Proceed to full medium only if:
+
+- Interleaved QLC beats post-backbone `e2e_*_reasoning` at matched steps.
+- `t>=1` iterations move `psi` by a meaningful fraction of iteration 0,
+  not ~0.3%.
+- `align` should rise above the 1/d floor without saturating at 1.0; target
+  band for V8.3 is roughly `0.6-0.85`.
+- `beta` should retain non-trivial mass during early/mid training (`>0.05`
+  on average). `beta≈0` with `align≈1` is treated as halt-head collapse, not
+  reasoning success.
+- `stageB_outscale0` or an interleaved `out_scale=0` control regresses PPL.
+- Equal-param / equal-FLOP controls do not match the gain.
+- On medium, epoch-2/3 PPL bends closer to the transformer curve than the V6
+  pam-v3 curve.

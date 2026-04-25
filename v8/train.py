@@ -332,7 +332,7 @@ class V8Trainer:
         if (
             self.qlc_schedule is not None
             and self.qlc_schedule.enabled
-            and self._orig().qlc is not None
+            and self._orig().has_qlc()
         ):
             print(
                 f"QLC runtime schedule: ENABLED "
@@ -382,7 +382,8 @@ class V8Trainer:
         as negatives. Gold effect index = ``entity_idx % bank_size``.
         """
         m = self._orig()
-        if m.qlc is None:
+        qlc = m.primary_qlc()
+        if qlc is None:
             return torch.tensor(0.0, device=self.device)
 
         input_ids = batch["input_ids"].to(self.device, non_blocking=True)
@@ -408,8 +409,8 @@ class V8Trainer:
         psi_neg_flat = psi[flat_b, flat_pos]                   # [B*n_neg, d, 2]
         psi_neg = psi_neg_flat.view(B, n_neg, *psi_neg_flat.shape[1:])
 
-        gold = (entity_idx % m.qlc.bank.bank_size).long()
-        return m.qlc.bank.infonce_loss(psi_pos, psi_neg, gold, temperature=0.1)
+        gold = (entity_idx % qlc.bank.bank_size).long()
+        return qlc.bank.infonce_loss(psi_pos, psi_neg, gold, temperature=0.1)
 
     # ── Train / eval loops ─────────────────────────────────────────────────
 
@@ -427,7 +428,8 @@ class V8Trainer:
         if sched is None or not sched.enabled:
             return
         m = self._orig()
-        if m.qlc is None:
+        qlc_modules = list(m.iter_qlc_modules())
+        if not qlc_modules:
             return
         phase = sched.phase_index(self.global_step, self._qlc_total_steps)
         if not force and phase == self._qlc_phase_current:
@@ -435,11 +437,13 @@ class V8Trainer:
         self._qlc_phase_current = phase
         new_t_max = max(1, int(sched.t_max_phases[phase]))
         new_lambda = float(sched.ponder_lambda_phases[phase])
-        m.qlc.t_max = new_t_max
+        for qlc in qlc_modules:
+            qlc.t_max = new_t_max
         m.qlc_cfg.ponder_lambda = new_lambda
         if sched.bank_temperature_phases is not None:
             new_temp = float(sched.bank_temperature_phases[phase])
-            m.qlc.bank_temperature = new_temp
+            for qlc in qlc_modules:
+                qlc.bank_temperature = new_temp
             temp_str = f" bank_temperature={new_temp:.3f}"
         else:
             temp_str = ""
@@ -596,7 +600,7 @@ class V8Trainer:
             want_diag = (
                 self.diag_every > 0
                 and batch_idx % self.diag_every == 0
-                and m.qlc is not None
+                and m.has_qlc()
             )
 
             with torch.amp.autocast(
@@ -693,10 +697,13 @@ class V8Trainer:
                 log_tokens = 0
 
                 if want_diag:
-                    diag = m.last_qlc_diagnostics()
-                    if diag is not None:
+                    diags = m.last_qlc_diagnostics_all()
+                    if not diags:
+                        last_diag = m.last_qlc_diagnostics()
+                        diags = [last_diag] if last_diag is not None else []
+                    for diag in diags:
                         print(
-                            f"    QLC: iter={diag.mean_iter:.2f} "
+                            f"    QLC[{diag.insertion_point}]: iter={diag.mean_iter:.2f} "
                             f"alpha={diag.mean_alpha:.3f} beta={diag.mean_beta:.3f} "
                             f"gamma={diag.mean_gamma:.3f} "
                             f"halt(yes/no/cont)="
@@ -704,7 +711,9 @@ class V8Trainer:
                             f"{diag.continue_rate:.2f} | "
                             f"align={diag.mean_amp:.4f} "
                             f"out_scale={diag.out_scale:.3f} "
-                            f"psi_delta_l2={diag.psi_delta_l2:.3e}"
+                            f"psi_delta_l2={diag.psi_delta_l2:.3e} "
+                            f"downstream_delta_l2={diag.downstream_delta_l2:.3e} "
+                            f"echo_cos={diag.memory_echo_cos if diag.memory_echo_cos is not None else float('nan'):.3f}"
                         )
                         if diag.per_iter_alpha is not None and len(diag.per_iter_alpha) > 0:
                             n_iters = len(diag.per_iter_alpha)
@@ -1241,7 +1250,16 @@ def main() -> None:
             f"out_scale_learnable={q.out_scale_learnable}, "
             f"renormalize_psi={q.renormalize_psi}, "
             f"ponder_lambda={q.ponder_lambda}")
+        _sl(f"  interleaved_layers={tuple(cfg.qlc_insert_layers)}, "
+            f"shared_interleaved={cfg.shared_interleaved_qlc}, "
+            f"final_qlc_enabled={cfg.final_qlc_enabled}, "
+            f"interleaved_out_scale={cfg.interleaved_out_scale}")
+        _sl(f"  iter_ctx={q.use_iteration_context}, "
+            f"layer_ctx={q.use_layer_context}, "
+            f"rope_probe={q.rope_conditioned_probe}, "
+            f"weighted_projector={q.weighted_projector}")
         _sl(f"  target_alignment_weight={q.target_alignment_weight} "
+            f"target={q.target_alignment_target} "
             f"(v8.2: pulls OrthoHalt u toward psi so |u^H psi|^2 leaves the "
             f"1/d noise floor)")
         if q.infonce_weight > 0:
