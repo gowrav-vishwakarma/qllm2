@@ -83,6 +83,9 @@ class QLCDiagnostics:
     # Jaccard overlap of bank top-k indices vs the previous iteration's top-k.
     # ``None`` at t=0 (no previous), float in [0, 1] thereafter.
     per_iter_bank_overlap: Optional[List[Optional[float]]] = None
+    insertion_point: str = "final"
+    downstream_delta_l2: float = 0.0
+    memory_echo_cos: Optional[float] = None
 
 
 class QuantumLogicCore(nn.Module):
@@ -142,6 +145,12 @@ class QuantumLogicCore(nn.Module):
         halt_mode: str = "ortho",
         unsharp_target: bool = False,
         quantale_order_test: bool = False,
+        use_iteration_context: bool = False,
+        use_layer_context: bool = False,
+        rope_conditioned_probe: bool = False,
+        weighted_projector: bool = False,
+        max_reason_iters: int = 16,
+        max_context_layers: int = 64,
     ):
         super().__init__()
         if top_k > bank_size:
@@ -163,6 +172,12 @@ class QuantumLogicCore(nn.Module):
         self.renormalize_psi = renormalize_psi
         self.halt_mode = halt_mode
         self.unsharp_target = unsharp_target
+        self.use_iteration_context = use_iteration_context
+        self.use_layer_context = use_layer_context
+        self.rope_conditioned_probe = rope_conditioned_probe
+        self.weighted_projector = weighted_projector
+        self.max_reason_iters = max(1, max_reason_iters)
+        self.max_context_layers = max(1, max_context_layers)
         # ``quantale_order_test`` only takes effect when ``quantale_off`` is
         # also True; in that case we use the *true* ordering test in
         # SasakiProjectionMemory.sasaki_apply (compare Pi_curr Pi_prev psi
@@ -218,6 +233,73 @@ class QuantumLogicCore(nn.Module):
                 persistent=True,
             )
 
+        if use_iteration_context:
+            self.iter_context = nn.Embedding(self.max_reason_iters, 2 * dim)
+            nn.init.normal_(self.iter_context.weight, std=0.01)
+        else:
+            self.iter_context = None
+        if use_layer_context:
+            self.layer_context = nn.Embedding(self.max_context_layers, 2 * dim)
+            nn.init.normal_(self.layer_context.weight, std=0.01)
+        else:
+            self.layer_context = None
+
+    def _context_bias(
+        self,
+        *,
+        batch_tokens: int,
+        iteration: int,
+        layer_idx: Optional[int],
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> Optional[torch.Tensor]:
+        """Return learned layer/iteration context as ``[BT, d, 2]``."""
+        pieces: List[torch.Tensor] = []
+        if self.iter_context is not None:
+            idx = torch.tensor(
+                min(iteration, self.max_reason_iters - 1),
+                device=device, dtype=torch.long,
+            )
+            pieces.append(self.iter_context(idx))
+        if self.layer_context is not None and layer_idx is not None:
+            idx = torch.tensor(
+                max(0, min(layer_idx, self.max_context_layers - 1)),
+                device=device, dtype=torch.long,
+            )
+            pieces.append(self.layer_context(idx))
+        if not pieces:
+            return None
+        ctx = torch.stack(pieces, dim=0).sum(dim=0).to(device=device, dtype=dtype)
+        return ctx.view(1, self.dim, 2).expand(batch_tokens, -1, -1)
+
+    def _apply_probe_rope(
+        self,
+        psi: torch.Tensor,
+        *,
+        batch_size: int,
+        seq_len: int,
+        position_offset: int,
+    ) -> torch.Tensor:
+        """RoPE-condition the QLC bank probe without changing the backbone."""
+        if not self.rope_conditioned_probe:
+            return psi
+        device, dtype = psi.device, psi.dtype
+        phase_dtype = torch.float32
+        pos = (
+            torch.arange(seq_len, device=device, dtype=phase_dtype)
+            + float(position_offset)
+        ).repeat(batch_size)
+        freq_idx = torch.arange(self.dim, device=device, dtype=phase_dtype)
+        inv_freq = torch.exp(
+            -torch.log(torch.tensor(10000.0, device=device, dtype=phase_dtype))
+            * freq_idx / max(self.dim, 1)
+        )
+        theta = pos.unsqueeze(-1) * inv_freq.unsqueeze(0)
+        cos = theta.cos().to(dtype=dtype)
+        sin = theta.sin().to(dtype=dtype)
+        pr, pi = psi[..., 0], psi[..., 1]
+        return torch.stack([pr * cos - pi * sin, pr * sin + pi * cos], dim=-1)
+
     # ── Forward ────────────────────────────────────────────────────────────
 
     def forward(
@@ -225,6 +307,9 @@ class QuantumLogicCore(nn.Module):
         psi: torch.Tensor,
         return_diagnostics: bool = False,
         return_align: bool = False,
+        layer_idx: Optional[int] = None,
+        position_offset: int = 0,
+        insertion_point: str = "final",
     ) -> Tuple[torch.Tensor, ...]:
         r"""Run the reasoning loop on ``psi: [B, T, d, 2]``.
 
@@ -311,16 +396,29 @@ class QuantumLogicCore(nn.Module):
             # per head). This keeps the bank parameter count linear in M, not
             # M*H.
             psi_pool = psi_h.mean(dim=1)                  # [BT, d, 2]
+            ctx = self._context_bias(
+                batch_tokens=BT,
+                iteration=it,
+                layer_idx=layer_idx,
+                device=psi.device,
+                dtype=psi.dtype,
+            )
+            probe_pool = psi_pool if ctx is None else psi_pool + ctx
+            probe_pool = self._apply_probe_rope(
+                probe_pool, batch_size=B, seq_len=T, position_offset=position_offset,
+            )
             if return_diagnostics:
                 U, V, topk_idx_t = self.bank.select_top_k(
-                    psi_pool, k=self.top_k, rank=self.rank,
+                    probe_pool, k=self.top_k, rank=self.rank,
                     reason_heads=H, temperature=self.bank_temperature,
+                    weight_projector=self.weighted_projector,
                     return_topk_idx=True,
                 )                                          # both [BT, H, d, r, 2]
             else:
                 U, V = self.bank.select_top_k(
-                    psi_pool, k=self.top_k, rank=self.rank,
+                    probe_pool, k=self.top_k, rank=self.rank,
                     reason_heads=H, temperature=self.bank_temperature,
+                    weight_projector=self.weighted_projector,
                 )                                          # both [BT, H, d, r, 2]
                 topk_idx_t = None
             spm_state = self.spm.build_from_basis(U, V_in=V)
@@ -357,10 +455,11 @@ class QuantumLogicCore(nn.Module):
             # empirical halts (delta, entropy) need the previous iteration's
             # pooled psi to measure the step-to-step change.
             psi_pool_next = psi_next.mean(dim=1)
+            halt_pool_next = psi_pool_next if ctx is None else psi_pool_next + ctx
             if self._halt_takes_prev:
-                halt_out = self.halt(psi_pool_next, prev_psi_pool)
+                halt_out = self.halt(halt_pool_next, prev_psi_pool)
             else:
-                halt_out = self.halt(psi_pool_next)        # HaltOutput, p_halt: [BT, H]
+                halt_out = self.halt(halt_pool_next)       # HaltOutput, p_halt: [BT, H]
             ponder, weight = update_ponder(
                 ponder, halt_out, halt_threshold=self.halt_threshold,
                 is_last_iter=is_last,
@@ -383,7 +482,7 @@ class QuantumLogicCore(nn.Module):
 
             # Roll forward.
             prev_spm_state = spm_state
-            prev_psi_pool = psi_pool_next
+            prev_psi_pool = halt_pool_next
             psi_h = psi_next
 
             # Diagnostics.
@@ -476,6 +575,7 @@ class QuantumLogicCore(nn.Module):
                 per_iter_halt=per_iter_halt,
                 per_iter_psi_step_l2=per_iter_psi_step_l2,
                 per_iter_bank_overlap=per_iter_bank_overlap,
+                insertion_point=insertion_point,
             )
             if return_align:
                 return psi_out, ponder_cost, align_signal, diag
@@ -495,5 +595,9 @@ class QuantumLogicCore(nn.Module):
             f"use_complex={self.use_complex}, renormalize_psi={self.renormalize_psi}, "
             f"quantale_off={self.quantale_off}, "
             f"quantale_order_test={self.quantale_order_test}, "
-            f"orthohalt_off={self.orthohalt_off}"
+            f"orthohalt_off={self.orthohalt_off}, "
+            f"iter_ctx={self.use_iteration_context}, "
+            f"layer_ctx={self.use_layer_context}, "
+            f"rope_probe={self.rope_conditioned_probe}, "
+            f"weighted_projector={self.weighted_projector}"
         )

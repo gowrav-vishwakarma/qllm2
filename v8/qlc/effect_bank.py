@@ -186,6 +186,7 @@ class EffectAlgebraBank(nn.Module):
         rank: int,
         temperature: float = 1.0,
         reason_heads: int = 1,
+        weight_projector: bool = False,
         return_scores: bool = False,
         return_topk_idx: bool = False,
     ):
@@ -266,6 +267,23 @@ class EffectAlgebraBank(nn.Module):
         u_for_qr = u_sel_w.transpose(-3, -2).contiguous()
         w_for_qr = w_sel_w.transpose(-3, -2).contiguous()
         U, V = self._qr_basis(u_for_qr, w_for_qr, rank)
+
+        if weight_projector:
+            # V8.3 weighted-projector ablation: keep the QR basis orthonormal
+            # for numerical stability, but make the value operator unsharp by
+            # scaling the aligned value columns with the selected effect gates.
+            # This realizes U diag(g) U^H in the retrieval path without
+            # materializing a dense projector.
+            gate_vals = self.gates().index_select(0, flat_idx).reshape(topk_idx.shape)
+            eff_cols = min(rank, k)
+            gate_cols = gate_vals[..., :eff_cols]
+            if eff_cols < rank:
+                pad = torch.ones(
+                    *gate_cols.shape[:-1], rank - eff_cols,
+                    device=gate_cols.device, dtype=gate_cols.dtype,
+                )
+                gate_cols = torch.cat([gate_cols, pad], dim=-1)
+            V = V * gate_cols.unsqueeze(-2).unsqueeze(-1)
 
         if return_scores and return_topk_idx:
             return U, V, scores, topk_idx

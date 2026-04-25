@@ -7,12 +7,22 @@ or outright invalidates the claimed quantum-inspired mechanism. It is the
 input deliverable for the `audit-current-v8` to-do in
 `v8_classical_rethink_44e4a93c.plan.md`.
 
-The audit deliberately leaves the existing files untouched so that the
-critique can be reviewed before any code reshuffling.
+This document is now a living audit. Each issue carries a status line so
+future readers can distinguish fixed v8.2/v8.3 work from still-open
+architecture gaps.
 
 ---
 
 ## 1. The OrthoHalt γ readout collapses to zero by construction
+
+**Status: PARTIAL FIX (v8.2).** The shipped `unsharp_target=True` path,
+`target_alignment_weight`, continue-biased `cls_head` init, and `align`
+diagnostic fix the original zero-gradient / noise-floor failure for the
+e2e presets. Current medium logs show `align≈0.9999` and non-zero `gamma`,
+so the readout is alive. The remaining issue is not γ collapse; it is
+iteration headroom after iteration 0 saturates alignment. V8.3 adds a
+bounded `target_alignment_target` so new context-reasoning presets can aim
+for high-but-not-perfect alignment and keep `beta` from collapsing to zero.
 
 **Claim in the plan.** "γ measures the residual mass that lies neither in the
 target effect nor in its orthocomplement — the operational signal that
@@ -56,6 +66,12 @@ throughout training, confirming the structural collapse.
 
 ## 2. The `quantale_off` ablation is a skip connection, not an order test
 
+**Status: FIXED IN CODE, NOT YET RUN.** `SasakiProjectionMemory.sasaki_apply`
+now accepts `prev_state` and `quantale_order_test=True` so the ablation can
+compare ordered projector composition against the symmetrized order test.
+`stageB_quantale_order_off` wires this path. The experimental row still
+needs to be executed before drawing a conclusion.
+
 **Claim in the plan.** "When `quantale_off=True`, replace the Sasaki update
 with its symmetrization so the composition becomes commutative — losing the
 quantale ordering that real reasoning depends on."
@@ -87,6 +103,12 @@ symmetrized average as the loop's last step. See §2 of the rethink plan.
 
 ## 3. The reasoning loop runs per-token in parallel — it does not reason
 
+**Status: OPEN; ADDRESSED BY V8.3.** Post-backbone QLC still flattens
+`[B, T, d, 2]` to `[B*T, d, 2]`. The V8.3 context-reasoning path adds
+optional interleaving after selected backbone layers so QLC updates can be
+propagated by later PAM sequence-mixing blocks. That is an architectural
+change, not a documentation-only fix.
+
 **Claim in the plan / README.** "T_max iterations of probe → Sasaki → halt
 let the model 'think before it speaks' — multi-step reasoning between
 backbone and LM head."
@@ -116,6 +138,11 @@ block. (a) is the honest minimal fix; (b) is a follow-up architecture change.
 ---
 
 ## 4. `out_scale = 0.1` makes the smoke result ambiguous
+
+**Status: FIXED IN CODE, NOT YET RUN.** `QLCConfig.out_scale_init` and
+`out_scale_learnable` make the scale explicit; diagnostics print
+`out_scale`; `stageB_outscale0`, `stageB_outscale01`, and `stageB_outscale1`
+exist. The decisive zero-scale control still needs to be run.
 
 **Claim in the plan.** "QLC residual is added to the backbone output before
 the LM head."
@@ -148,6 +175,11 @@ and add a preset row that pins it at zero (a true passthrough that still
 
 ## 5. The InfoNCE / entity-cloze auxiliary is not wired into training
 
+**Status: FIXED.** `v8/train.py` now builds an entity-cloze loader when
+`infonce_weight > 0`, calls `_compute_infonce_loss`, and routes the loss
+through `EffectAlgebraBank.infonce_loss`. The `e2e_*_reasoning` presets set
+`infonce_weight=0.05` and `infonce_every=4`.
+
 **Claim in the plan.** "Stage B trains the bank with an InfoNCE auxiliary
 over the synthetic entity-cloze dataset to enforce that the bank routes
 entity-related queries to dedicated effects."
@@ -175,6 +207,11 @@ hidden state at the answer position without re-implementing the forward.
 
 ## 6. Stage B freezes the LM head along with the backbone
 
+**Status: FIXED.** `V8Config.unfreeze_lm_head` and
+`V8LM.freeze_backbone(unfreeze_lm_head=True)` keep `lm_head_proj` and
+`lm_head_norm` trainable when desired. `stageB_lmhead_unfrozen` is the
+corresponding preset.
+
 **Claim in the plan.** "Freeze backbone for clean attribution; QLC parameters
 remain trainable."
 
@@ -197,6 +234,12 @@ shared.
 ---
 
 ## 7. The bank's `gates()` are unsharp, but unused as such
+
+**Status: PARTIAL FIX (V8.3).** `OrthoHalt` can use an unsharp target, and
+the V8.3 QLC path adds `weighted_projector=True` so selected bank gates scale
+the SPM value operator. This makes the retrieval path unsharp without
+materializing a dense projector. The old unweighted QR path remains the
+default for legacy presets.
 
 The bank parameterizes `E_m = σ(s_m) · u_m u_mᴴ` (effect) — which *is* an
 unsharp effect since `σ(s_m) ∈ (0,1)` so `E_m² ≠ E_m`. However:
@@ -222,6 +265,11 @@ controlled place; (b) only fixes the readout.
 
 ## 8. The smoke result is on a 6.6M-param model with no equal-FLOP control
 
+**Status: FIXED IN CODE, NOT YET RUN.** `stageB_equal_flop_passthrough`
+exists as a compute-control preset. It still must be run with a step/epoch
+budget matched to the QLC row before using the TinyStories smoke gain as
+evidence for a useful primitive.
+
 `logs/v8/stageA5_qlc_r4_T2_tinystories_20260423_114850_e3e4b90/v8_smoke_tiny_qlc_r4_T2_tinystories.log`:
 
 - Passthrough: 178.95 PPL @ 6.6M params, 225k tok/s.
@@ -241,16 +289,16 @@ rows in particular are cheap and decisive.
 
 ## 9. Summary of structural issues vs surface issues
 
-| # | Issue | Type | Fix Cost |
-|---|-------|------|----------|
-| 1 | γ collapses to zero by construction | **Structural** | Module rewrite |
-| 2 | quantale_off is a skip connection | **Structural** | Need new ablation path |
-| 3 | Per-token loop ≠ reasoning | **Structural** | Either reframe or rewire architecture |
-| 4 | out_scale=0.1 conflates interpretations | Surface | Add config + log |
-| 5 | InfoNCE not wired | Surface | Implement training path |
-| 6 | LM head frozen in Stage B | Surface | Add option |
-| 7 | Gates parameterized but not used | Structural | Make Π_F unsharp |
-| 8 | No equal-FLOP control on smoke | Surface | Add baseline preset |
+| # | Issue | Type | Current status |
+|---|-------|------|----------------|
+| 1 | γ collapses to zero by construction | **Structural** | **Partial fix shipped**: v8.2 unsharp target + alignment aux unfreeze α/γ; per-iter headroom remains open |
+| 2 | quantale_off is a skip connection | **Structural** | **Fixed in code, unrun**: true order-test path and preset exist |
+| 3 | Per-token loop ≠ reasoning | **Structural** | **Open**: addressed by V8.3 interleaved QLC |
+| 4 | out_scale=0.1 conflates interpretations | Surface | **Fixed in code, unrun**: config + diagnostics + zero-scale presets exist |
+| 5 | InfoNCE not wired | Surface | **Fixed**: trainer and e2e presets wire the auxiliary |
+| 6 | LM head frozen in Stage B | Surface | **Fixed**: `unfreeze_lm_head` path and preset exist |
+| 7 | Gates parameterized but not used | Structural | **Partial fix shipped**: OrthoHalt unsharp target + V8.3 weighted value operator |
+| 8 | No equal-FLOP control on smoke | Surface | **Fixed in code, unrun**: equal-FLOP preset exists |
 
 Issues #1, #2, #3, #7 invalidate the *operational quantum logic* claim
 directly. Issues #4, #5, #6, #8 prevent the experimental setup from

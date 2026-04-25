@@ -1,0 +1,791 @@
+[2026-04-24 17:28:00] Wall clock start: 2026-04-24 17:28:00
+[2026-04-24 17:28:00] ============================================================
+[2026-04-24 17:28:00]   V8: Quantum-Logic Core over QPAM
+[2026-04-24 17:28:00]   Preset: e2e_medium_reasoning | Dataset: wikitext103
+[2026-04-24 17:28:00] ============================================================
+
+[2026-04-24 17:28:01] Loading wikitext103 (seq_len=2048)...
+[2026-04-24 17:28:03] [cache] Loaded WikiText-103 train from .cache/v7_tokens/wikitext103_train_v2_full_sl2048.pt (118,496,145 tokens)
+[2026-04-24 17:28:03] [cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+[2026-04-24 17:28:03] Train chunks: 57831, Val chunks: 121
+
+[2026-04-24 17:28:03] Building entity-cloze loader for InfoNCE auxiliary (n_entities=64, n_examples=4096, seq_len=32)...
+
+[2026-04-24 17:28:04] Wall clock start: 2026-04-24 17:28:04
+[2026-04-24 17:28:04] ============================================================
+[2026-04-24 17:28:04] V8 Stage A: Quantum-Logic Core over QPAM
+[2026-04-24 17:28:04] ============================================================
+[2026-04-24 17:28:04] Host: gowrav-rtx-4090
+[2026-04-24 17:28:04] Preset: e2e_medium_reasoning
+[2026-04-24 17:28:04] Dataset: wikitext103 (seq_len=2048)
+[2026-04-24 17:28:04] Seed: 42
+[2026-04-24 17:28:04] Backbone: dim=384, layers=16, n_heads=6, vocab=50257, max_seq_len=2048
+[2026-04-24 17:28:04]   expand=3, use_rope=True, use_gsp=True, fused_qkv=True, head_dim=64
+[2026-04-24 17:28:04]   Dropout: 0.1
+[2026-04-24 17:28:04] QLC: ENABLED (rank=8, bank_size=2048, top_k=4, t_max=4)
+[2026-04-24 17:28:04]   use_complex=True, halt_mode=ortho, unsharp_target=True, quantale_order_test=False
+[2026-04-24 17:28:04]   out_scale_init=0.05, out_scale_learnable=True, renormalize_psi=True, ponder_lambda=0.01
+[2026-04-24 17:28:04]   target_alignment_weight=0.05 (v8.2: pulls OrthoHalt u toward psi so |u^H psi|^2 leaves the 1/d noise floor)
+[2026-04-24 17:28:04]   InfoNCE: weight=0.05, every=4 (entities=64, examples=4096, batches/epoch=256)
+[2026-04-24 17:28:04] Stage: A, freeze_backbone=False, unfreeze_lm_head=False, kl_anchor=0.0
+[2026-04-24 17:28:04] QLC schedule: ENABLED (warmup<0.33 mid<0.67; t_max=(2, 3, 4) ponder_lambda=(0.0, 0.002, 0.005))
+[2026-04-24 17:28:04] Optim: lr=0.0001, warmup=1000, wd=0.01, grad_clip=1.0
+[2026-04-24 17:28:04] AMP: auto, Compile: True (mode=default)
+[2026-04-24 17:28:04] Workers: 4, pin_memory=True, log_interval=50, diag_every=100
+[2026-04-24 17:28:04] Params: 104,411,215 (104.4M total) | QLC: 4,033,679 (4.03M) | Trainable: 104,411,215 (104.4M)
+[2026-04-24 17:28:04] Training on cuda | Epochs: 1..10 | Batch size: 3 | Train batches/epoch: 19277 | Val batches: 41
+[2026-04-24 17:28:04] Log file: logs/v8/e2e_medium_reasoning_wikitext103_20260424_172759_ab342a1/v8_e2e_medium_reasoning_wikitext103.log
+[2026-04-24 17:28:04] Checkpoint dir: v8/checkpoints/e2e_medium_reasoning
+[2026-04-24 17:28:04] ============================================================
+
+[2026-04-24 17:28:04] Param groups: 199 tensors (100,934,409) with wd, 146 tensors (3,476,806) without
+[2026-04-24 17:28:04] Compiling model (mode=default)...
+[2026-04-24 17:28:05] QLC runtime schedule: ENABLED (warmup<0.33 mid<0.67; t_max=(2, 3, 4) ponder_lambda=(0.0, 0.002, 0.005))
+[2026-04-24 17:28:05]   [qlc-schedule] step=0/192770 phase=0 t_max=2 ponder_lambda=0.0000
+[2026-04-24 17:28:05] InfoNCE auxiliary: weight=0.05 every=4 step(s) (256 cloze batches/epoch)
+
+[2026-04-24 17:28:05] Training on cuda
+
+
+[2026-04-24 17:28:05] ============================================================
+[2026-04-24 17:28:05] Epoch 1/10
+[2026-04-24 17:28:05] ============================================================
+[2026-04-24 17:28:22]   [1] 0/19277 (0%) loss=10.8968 ppl=54005.4 lr=1.00e-07 | 371 tok/s (avg 371) | ponder=4.985e-02 | infonce=0.220 | GPU 1.9/11.4GB
+[2026-04-24 17:28:22]     QLC: iter=2.00 alpha=0.002 beta=0.997 gamma=0.001 halt(yes/no/cont)=0.09/0.24/0.67 | align=0.0029 out_scale=0.050 psi_delta_l2=3.829e+02
+[2026-04-24 17:29:12]   [1] 50/19277 (0%) loss=10.7420 ppl=46256.3 lr=5.10e-06 | 6098 tok/s (avg 4682) | ponder=4.968e-02 | infonce=1.639 | GPU 1.9/12.3GB
+[2026-04-24 17:30:03]   [1] 100/19277 (1%) loss=10.2960 ppl=29614.5 lr=1.01e-05 | 5982 tok/s (avg 5247) | ponder=4.863e-02 | infonce=2.055 | GPU 1.9/12.3GB
+[2026-04-24 17:30:03]     QLC: iter=2.00 alpha=0.022 beta=0.973 gamma=0.005 halt(yes/no/cont)=0.09/0.24/0.67 | align=0.0274 out_scale=0.051 psi_delta_l2=3.829e+02
+[2026-04-24 17:30:41]   [1] 150/19277 (1%) loss=9.9097 ppl=20125.6 lr=1.51e-05 | 8120 tok/s (avg 5943) | ponder=4.646e-02 | infonce=2.157 | GPU 1.9/12.3GB
+[2026-04-24 17:31:20]   [1] 200/19277 (1%) loss=9.5918 ppl=14643.8 lr=2.01e-05 | 8010 tok/s (avg 6351) | ponder=4.842e-02 | infonce=2.187 | GPU 1.9/12.3GB
+[2026-04-24 17:31:20]     QLC: iter=2.00 alpha=0.026 beta=0.968 gamma=0.006 halt(yes/no/cont)=0.09/0.24/0.67 | align=0.0317 out_scale=0.052 psi_delta_l2=3.830e+02
+[2026-04-24 17:31:57]   [1] 250/19277 (1%) loss=9.1927 ppl=9825.0 lr=2.51e-05 | 8142 tok/s (avg 6642) | ponder=4.569e-02 | infonce=2.194 | GPU 1.9/12.3GB
+[2026-04-24 17:32:34]   [1] 300/19277 (2%) loss=8.7092 ppl=6058.7 lr=3.01e-05 | 8336 tok/s (avg 6874) | ponder=3.989e-02 | infonce=2.196 | GPU 1.9/12.3GB
+[2026-04-24 17:32:34]     QLC: iter=2.00 alpha=0.165 beta=0.798 gamma=0.037 halt(yes/no/cont)=0.11/0.21/0.68 | align=0.2021 out_scale=0.054 psi_delta_l2=3.831e+02
+[2026-04-24 17:33:12]   [1] 350/19277 (2%) loss=8.1555 ppl=3482.6 lr=3.51e-05 | 8185 tok/s (avg 7034) | ponder=3.650e-02 | infonce=2.197 | GPU 1.9/12.3GB
+[2026-04-24 17:33:50]   [1] 400/19277 (2%) loss=7.6464 ppl=2093.1 lr=4.01e-05 | 8111 tok/s (avg 7153) | ponder=3.789e-02 | infonce=2.197 | GPU 1.9/12.3GB
+[2026-04-24 17:33:50]     QLC: iter=2.00 alpha=0.198 beta=0.758 gamma=0.044 halt(yes/no/cont)=0.11/0.20/0.69 | align=0.2422 out_scale=0.058 psi_delta_l2=3.825e+02
+[2026-04-24 17:34:28]   [1] 450/19277 (2%) loss=7.2476 ppl=1404.8 lr=4.51e-05 | 8034 tok/s (avg 7241) | ponder=1.901e-02 | infonce=2.197 | GPU 1.9/12.3GB
+[2026-04-24 17:35:06]   [1] 500/19277 (3%) loss=6.9685 ppl=1062.6 lr=5.01e-05 | 8030 tok/s (avg 7313) | ponder=1.395e-02 | infonce=2.197 | GPU 1.9/12.3GB
+[2026-04-24 17:35:06]     QLC: iter=2.00 alpha=0.589 beta=0.279 gamma=0.132 halt(yes/no/cont)=0.16/0.12/0.73 | align=0.7211 out_scale=0.061 psi_delta_l2=3.800e+02
+[2026-04-24 17:35:44]   [1] 550/19277 (3%) loss=6.6722 ppl=790.1 lr=5.51e-05 | 8040 tok/s (avg 7373) | ponder=9.104e-03 | infonce=2.197 | GPU 1.9/12.3GB
+[2026-04-24 17:36:22]   [1] 600/19277 (3%) loss=6.7315 ppl=838.4 lr=6.01e-05 | 8049 tok/s (avg 7425) | ponder=9.976e-03 | infonce=2.197 | GPU 1.9/12.3GB
+[2026-04-24 17:36:22]     QLC: iter=2.00 alpha=0.654 beta=0.200 gamma=0.146 halt(yes/no/cont)=0.17/0.11/0.72 | align=0.8005 out_scale=0.064 psi_delta_l2=3.760e+02
+[2026-04-24 17:37:01]   [1] 650/19277 (3%) loss=6.7667 ppl=868.5 lr=6.51e-05 | 8002 tok/s (avg 7466) | ponder=4.049e-03 | infonce=2.197 | GPU 1.9/12.3GB
+[2026-04-24 17:37:40]   [1] 700/19277 (4%) loss=6.4823 ppl=653.5 lr=7.01e-05 | 7895 tok/s (avg 7495) | ponder=2.748e-03 | infonce=2.198 | GPU 1.9/12.3GB
+[2026-04-24 17:37:40]     QLC: iter=2.00 alpha=0.772 beta=0.055 gamma=0.173 halt(yes/no/cont)=0.18/0.09/0.73 | align=0.9450 out_scale=0.066 psi_delta_l2=3.745e+02
+[2026-04-24 17:38:17]   [1] 750/19277 (4%) loss=6.5165 ppl=676.2 lr=7.51e-05 | 8160 tok/s (avg 7536) | ponder=2.100e-03 | infonce=2.197 | GPU 1.9/12.3GB
+[2026-04-24 17:38:55]   [1] 800/19277 (4%) loss=6.3096 ppl=549.8 lr=8.01e-05 | 8255 tok/s (avg 7577) | ponder=1.367e-03 | infonce=2.198 | GPU 1.9/12.3GB
+[2026-04-24 17:38:55]     QLC: iter=2.00 alpha=0.795 beta=0.027 gamma=0.178 halt(yes/no/cont)=0.18/0.09/0.73 | align=0.9727 out_scale=0.067 psi_delta_l2=3.765e+02
+[2026-04-24 17:39:32]   [1] 850/19277 (4%) loss=6.3466 ppl=570.5 lr=8.51e-05 | 8230 tok/s (avg 7613) | ponder=4.982e-04 | infonce=2.193 | GPU 1.9/12.3GB
+[2026-04-24 17:40:10]   [1] 900/19277 (5%) loss=6.2038 ppl=494.6 lr=9.01e-05 | 8023 tok/s (avg 7635) | ponder=2.919e-04 | infonce=2.186 | GPU 1.9/12.3GB
+[2026-04-24 17:40:10]     QLC: iter=2.00 alpha=0.812 beta=0.006 gamma=0.182 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9942 out_scale=0.069 psi_delta_l2=3.785e+02
+[2026-04-24 17:40:48]   [1] 950/19277 (5%) loss=6.2050 ppl=495.2 lr=9.51e-05 | 8062 tok/s (avg 7656) | ponder=1.145e-04 | infonce=2.157 | GPU 1.9/12.3GB
+[2026-04-24 17:41:25]   [1] 1000/19277 (5%) loss=6.1190 ppl=454.4 lr=1.00e-04 | 8304 tok/s (avg 7686) | ponder=5.655e-05 | infonce=2.133 | GPU 1.9/12.3GB
+[2026-04-24 17:41:25]     QLC: iter=2.00 alpha=0.816 beta=0.001 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9989 out_scale=0.070 psi_delta_l2=3.788e+02
+[2026-04-24 17:42:02]   [1] 1050/19277 (5%) loss=6.2404 ppl=513.0 lr=1.00e-04 | 8341 tok/s (avg 7715) | ponder=4.474e-05 | infonce=2.070 | GPU 1.9/12.3GB
+[2026-04-24 17:42:39]   [1] 1100/19277 (6%) loss=6.1891 ppl=487.4 lr=1.00e-04 | 8239 tok/s (avg 7737) | ponder=5.503e-05 | infonce=1.970 | GPU 1.9/12.3GB
+[2026-04-24 17:42:39]     QLC: iter=2.00 alpha=0.816 beta=0.001 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9989 out_scale=0.072 psi_delta_l2=3.791e+02
+[2026-04-24 17:43:17]   [1] 1150/19277 (6%) loss=5.9602 ppl=387.7 lr=1.00e-04 | 8103 tok/s (avg 7752) | ponder=9.259e-05 | infonce=1.888 | GPU 1.9/12.3GB
+[2026-04-24 17:43:55]   [1] 1200/19277 (6%) loss=5.7555 ppl=315.9 lr=1.00e-04 | 8196 tok/s (avg 7770) | ponder=1.576e-04 | infonce=1.635 | GPU 1.9/12.3GB
+[2026-04-24 17:43:55]     QLC: iter=2.00 alpha=0.814 beta=0.003 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9968 out_scale=0.072 psi_delta_l2=3.798e+02
+[2026-04-24 17:44:33]   [1] 1250/19277 (6%) loss=6.1011 ppl=446.3 lr=1.00e-04 | 8115 tok/s (avg 7783) | ponder=8.251e-05 | infonce=1.389 | GPU 1.9/12.3GB
+[2026-04-24 17:45:10]   [1] 1300/19277 (7%) loss=5.7199 ppl=304.9 lr=1.00e-04 | 8278 tok/s (avg 7801) | ponder=6.298e-05 | infonce=1.231 | GPU 1.9/12.3GB
+[2026-04-24 17:45:10]     QLC: iter=2.00 alpha=0.816 beta=0.001 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9987 out_scale=0.073 psi_delta_l2=3.799e+02
+[2026-04-24 17:45:47]   [1] 1350/19277 (7%) loss=5.9204 ppl=372.6 lr=1.00e-04 | 8336 tok/s (avg 7819) | ponder=6.233e-05 | infonce=1.052 | GPU 1.9/12.3GB
+[2026-04-24 17:46:24]   [1] 1400/19277 (7%) loss=5.5604 ppl=259.9 lr=1.00e-04 | 8265 tok/s (avg 7834) | ponder=1.301e-04 | infonce=0.709 | GPU 1.9/12.3GB
+[2026-04-24 17:46:24]     QLC: iter=2.00 alpha=0.815 beta=0.003 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9974 out_scale=0.073 psi_delta_l2=3.803e+02
+[2026-04-24 17:47:00]   [1] 1450/19277 (8%) loss=6.2663 ppl=526.5 lr=1.00e-04 | 8368 tok/s (avg 7852) | ponder=1.400e-04 | infonce=0.532 | GPU 1.9/12.3GB
+[2026-04-24 17:47:37]   [1] 1500/19277 (8%) loss=5.5531 ppl=258.0 lr=1.00e-04 | 8317 tok/s (avg 7866) | ponder=1.611e-04 | infonce=0.505 | GPU 1.9/12.3GB
+[2026-04-24 17:47:37]     QLC: iter=2.00 alpha=0.814 beta=0.003 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9968 out_scale=0.074 psi_delta_l2=3.803e+02
+[2026-04-24 17:48:15]   [1] 1550/19277 (8%) loss=5.8425 ppl=344.6 lr=1.00e-04 | 8220 tok/s (avg 7877) | ponder=1.155e-04 | infonce=0.326 | GPU 1.9/12.3GB
+[2026-04-24 17:48:51]   [1] 1600/19277 (8%) loss=5.6063 ppl=272.1 lr=1.00e-04 | 8367 tok/s (avg 7892) | ponder=1.102e-04 | infonce=0.307 | GPU 1.9/12.3GB
+[2026-04-24 17:48:51]     QLC: iter=2.00 alpha=0.815 beta=0.002 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9978 out_scale=0.074 psi_delta_l2=3.805e+02
+[2026-04-24 17:49:28]   [1] 1650/19277 (9%) loss=5.8767 ppl=356.6 lr=1.00e-04 | 8304 tok/s (avg 7904) | ponder=6.854e-05 | infonce=0.246 | GPU 1.9/12.3GB
+[2026-04-24 17:50:05]   [1] 1700/19277 (9%) loss=5.6722 ppl=290.7 lr=1.00e-04 | 8357 tok/s (avg 7916) | ponder=5.145e-05 | infonce=0.205 | GPU 1.9/12.3GB
+[2026-04-24 17:50:05]     QLC: iter=2.00 alpha=0.816 beta=0.001 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9990 out_scale=0.074 psi_delta_l2=3.804e+02
+[2026-04-24 17:50:42]   [1] 1750/19277 (9%) loss=5.9321 ppl=377.0 lr=1.00e-04 | 8395 tok/s (avg 7929) | ponder=4.113e-05 | infonce=0.174 | GPU 1.9/12.3GB
+[2026-04-24 17:51:18]   [1] 1800/19277 (9%) loss=5.9849 ppl=397.4 lr=1.00e-04 | 8384 tok/s (avg 7941) | ponder=4.429e-05 | infonce=0.178 | GPU 1.9/12.3GB
+[2026-04-24 17:51:18]     QLC: iter=2.00 alpha=0.816 beta=0.001 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9991 out_scale=0.075 psi_delta_l2=3.805e+02
+[2026-04-24 17:51:56]   [1] 1850/19277 (10%) loss=5.9067 ppl=367.5 lr=1.00e-04 | 8289 tok/s (avg 7950) | ponder=2.378e-05 | infonce=0.152 | GPU 1.9/12.3GB
+[2026-04-24 17:52:33]   [1] 1900/19277 (10%) loss=5.5621 ppl=260.4 lr=1.00e-04 | 8198 tok/s (avg 7956) | ponder=1.664e-05 | infonce=0.195 | GPU 1.9/12.3GB
+[2026-04-24 17:52:33]     QLC: iter=2.00 alpha=0.817 beta=0.000 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9997 out_scale=0.075 psi_delta_l2=3.807e+02
+[2026-04-24 17:53:10]   [1] 1950/19277 (10%) loss=5.6430 ppl=282.3 lr=1.00e-04 | 8388 tok/s (avg 7967) | ponder=1.607e-05 | infonce=0.160 | GPU 1.9/12.3GB
+[2026-04-24 17:53:48]   [1] 2000/19277 (10%) loss=5.5933 ppl=268.6 lr=1.00e-04 | 8101 tok/s (avg 7970) | ponder=1.370e-05 | infonce=0.102 | GPU 1.9/12.3GB
+[2026-04-24 17:53:48]     QLC: iter=2.00 alpha=0.817 beta=0.000 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9997 out_scale=0.075 psi_delta_l2=3.808e+02
+[2026-04-24 17:54:26]   [1] 2050/19277 (11%) loss=5.6303 ppl=278.7 lr=1.00e-04 | 8079 tok/s (avg 7973) | ponder=1.347e-05 | infonce=0.151 | GPU 1.9/12.3GB
+[2026-04-24 17:55:03]   [1] 2100/19277 (11%) loss=5.3877 ppl=218.7 lr=1.00e-04 | 8222 tok/s (avg 7979) | ponder=1.242e-05 | infonce=0.218 | GPU 1.9/12.3GB
+[2026-04-24 17:55:03]     QLC: iter=2.00 alpha=0.817 beta=0.000 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9998 out_scale=0.075 psi_delta_l2=3.809e+02
+[2026-04-24 17:55:40]   [1] 2150/19277 (11%) loss=5.5068 ppl=246.4 lr=1.00e-04 | 8264 tok/s (avg 7985) | ponder=1.266e-05 | infonce=0.249 | GPU 1.9/12.3GB
+[2026-04-24 17:56:17]   [1] 2200/19277 (11%) loss=5.5661 ppl=261.4 lr=1.00e-04 | 8245 tok/s (avg 7991) | ponder=1.147e-05 | infonce=0.169 | GPU 1.9/12.3GB
+[2026-04-24 17:56:17]     QLC: iter=2.00 alpha=0.816 beta=0.000 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9998 out_scale=0.075 psi_delta_l2=3.808e+02
+[2026-04-24 17:56:56]   [1] 2250/19277 (12%) loss=5.4118 ppl=224.0 lr=1.00e-04 | 8038 tok/s (avg 7992) | ponder=1.091e-05 | infonce=0.124 | GPU 1.9/12.3GB
+[2026-04-24 17:57:32]   [1] 2300/19277 (12%) loss=5.5589 ppl=259.5 lr=1.00e-04 | 8356 tok/s (avg 7999) | ponder=1.118e-05 | infonce=0.163 | GPU 1.9/12.3GB
+[2026-04-24 17:57:32]     QLC: iter=2.00 alpha=0.816 beta=0.000 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9998 out_scale=0.075 psi_delta_l2=3.807e+02
+[2026-04-24 17:58:10]   [1] 2350/19277 (12%) loss=5.4289 ppl=227.9 lr=1.00e-04 | 8228 tok/s (avg 8004) | ponder=1.216e-05 | infonce=0.153 | GPU 1.9/12.3GB
+[2026-04-24 17:58:48]   [1] 2400/19277 (12%) loss=5.4451 ppl=231.6 lr=1.00e-04 | 8121 tok/s (avg 8007) | ponder=1.102e-05 | infonce=0.137 | GPU 1.9/12.3GB
+[2026-04-24 17:58:48]     QLC: iter=2.00 alpha=0.817 beta=0.000 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9998 out_scale=0.075 psi_delta_l2=3.808e+02
+[2026-04-24 17:59:26]   [1] 2450/19277 (13%) loss=5.7733 ppl=321.6 lr=1.00e-04 | 7936 tok/s (avg 8005) | ponder=1.066e-05 | infonce=0.142 | GPU 1.9/12.3GB
+[2026-04-24 18:00:03]   [1] 2500/19277 (13%) loss=5.4747 ppl=238.6 lr=1.00e-04 | 8275 tok/s (avg 8010) | ponder=1.099e-05 | infonce=0.151 | GPU 1.9/12.3GB
+[2026-04-24 18:00:03]     QLC: iter=2.00 alpha=0.817 beta=0.000 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9998 out_scale=0.075 psi_delta_l2=3.807e+02
+[2026-04-24 18:00:41]   [1] 2550/19277 (13%) loss=5.3778 ppl=216.5 lr=1.00e-04 | 8145 tok/s (avg 8013) | ponder=1.069e-05 | infonce=0.141 | GPU 1.9/12.3GB
+[2026-04-24 18:01:19]   [1] 2600/19277 (13%) loss=5.4963 ppl=243.8 lr=1.00e-04 | 8157 tok/s (avg 8016) | ponder=1.042e-05 | infonce=0.126 | GPU 1.9/12.3GB
+[2026-04-24 18:01:19]     QLC: iter=2.00 alpha=0.817 beta=0.000 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9998 out_scale=0.076 psi_delta_l2=3.807e+02
+[2026-04-24 18:01:57]   [1] 2650/19277 (14%) loss=5.4879 ppl=241.8 lr=1.00e-04 | 7949 tok/s (avg 8014) | ponder=1.060e-05 | infonce=0.127 | GPU 1.9/12.3GB
+[2026-04-24 18:02:36]   [1] 2700/19277 (14%) loss=5.7215 ppl=305.4 lr=1.00e-04 | 7927 tok/s (avg 8013) | ponder=1.136e-05 | infonce=0.097 | GPU 1.9/12.3GB
+[2026-04-24 18:02:36]     QLC: iter=2.00 alpha=0.817 beta=0.000 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9998 out_scale=0.076 psi_delta_l2=3.808e+02
+[2026-04-24 18:03:15]   [1] 2750/19277 (14%) loss=5.3574 ppl=212.2 lr=1.00e-04 | 7942 tok/s (avg 8011) | ponder=1.029e-05 | infonce=0.097 | GPU 1.9/12.3GB
+[2026-04-24 18:03:54]   [1] 2800/19277 (15%) loss=5.7100 ppl=301.9 lr=1.00e-04 | 7881 tok/s (avg 8009) | ponder=1.056e-05 | infonce=0.115 | GPU 1.9/12.3GB
+[2026-04-24 18:03:54]     QLC: iter=2.00 alpha=0.817 beta=0.000 gamma=0.183 halt(yes/no/cont)=0.18/0.08/0.73 | align=0.9998 out_scale=0.076 psi_delta_l2=3.808e+02
+[2026-04-24 18:04:33]   [1] 2850/19277 (15%) loss=5.2184 ppl=184.6 lr=1.00e-04 | 7775 tok/s (avg 8005) | ponder=1.011e-05 | infonce=0.132 | GPU 1.9/12.3GB
+[2026-04-24 18:05:12]   [1] 2900/19277 (15%) loss=5.3160 ppl=203.6 lr=1.00e-04 | 7949 tok/s (avg 8004) | ponder=9.370e-06 | infonce=0.116 | GPU 1.9/12.3GB
+[2026-04-24 18:05:12]     QLC: iter=2.00 alpha=0.817 beta=0.000 gamma=0.182 halt(yes/no/cont)=0.19/0.08/0.73 | align=0.9998 out_scale=0.076 psi_delta_l2=3.807e+02
+[2026-04-24 18:05:49]   [1] 2950/19277 (15%) loss=4.9086 ppl=135.5 lr=1.00e-04 | 8214 tok/s (avg 8007) | ponder=9.528e-06 | infonce=0.114 | GPU 1.9/12.3GB
+[2026-04-24 18:06:26]   [1] 3000/19277 (16%) loss=5.3484 ppl=210.3 lr=1.00e-04 | 8328 tok/s (avg 8012) | ponder=9.540e-06 | infonce=0.123 | GPU 1.9/12.3GB
+[2026-04-24 18:06:26]     QLC: iter=2.00 alpha=0.817 beta=0.000 gamma=0.182 halt(yes/no/cont)=0.19/0.08/0.73 | align=0.9998 out_scale=0.076 psi_delta_l2=3.807e+02
+[2026-04-24 18:07:04]   [1] 3050/19277 (16%) loss=5.2139 ppl=183.8 lr=1.00e-04 | 8218 tok/s (avg 8016) | ponder=9.549e-06 | infonce=0.138 | GPU 1.9/12.3GB
+[2026-04-24 18:07:41]   [1] 3100/19277 (16%) loss=4.9791 ppl=145.3 lr=1.00e-04 | 8322 tok/s (avg 8020) | ponder=9.495e-06 | infonce=0.118 | GPU 1.9/12.3GB
+[2026-04-24 18:07:41]     QLC: iter=2.00 alpha=0.818 beta=0.000 gamma=0.182 halt(yes/no/cont)=0.19/0.08/0.73 | align=0.9998 out_scale=0.076 psi_delta_l2=3.808e+02
+[2026-04-24 18:08:17]   [1] 3150/19277 (16%) loss=5.3217 ppl=204.7 lr=1.00e-04 | 8326 tok/s (avg 8025) | ponder=9.143e-06 | infonce=0.148 | GPU 1.9/12.3GB
+[2026-04-24 18:08:55]   [1] 3200/19277 (17%) loss=5.5684 ppl=262.0 lr=1.00e-04 | 8205 tok/s (avg 8028) | ponder=8.523e-06 | infonce=0.113 | GPU 1.9/12.3GB
+[2026-04-24 18:08:55]     QLC: iter=2.00 alpha=0.818 beta=0.000 gamma=0.182 halt(yes/no/cont)=0.19/0.08/0.73 | align=0.9998 out_scale=0.076 psi_delta_l2=3.807e+02
+[2026-04-24 18:09:32]   [1] 3250/19277 (17%) loss=5.2543 ppl=191.4 lr=1.00e-04 | 8321 tok/s (avg 8032) | ponder=8.622e-06 | infonce=0.156 | GPU 1.9/12.3GB
+[2026-04-24 18:10:09]   [1] 3300/19277 (17%) loss=5.5449 ppl=255.9 lr=1.00e-04 | 8227 tok/s (avg 8035) | ponder=8.988e-06 | infonce=0.151 | GPU 1.9/12.3GB
+[2026-04-24 18:10:09]     QLC: iter=2.00 alpha=0.818 beta=0.000 gamma=0.182 halt(yes/no/cont)=0.19/0.08/0.73 | align=0.9998 out_scale=0.076 psi_delta_l2=3.807e+02
+[2026-04-24 18:10:47]   [1] 3350/19277 (17%) loss=5.5871 ppl=267.0 lr=1.00e-04 | 8200 tok/s (avg 8038) | ponder=8.559e-06 | infonce=0.128 | GPU 1.9/12.3GB
+[2026-04-24 18:11:25]   [1] 3400/19277 (18%) loss=5.4560 ppl=234.2 lr=1.00e-04 | 8012 tok/s (avg 8037) | ponder=8.073e-06 | infonce=0.139 | GPU 1.9/12.3GB
+[2026-04-24 18:11:25]     QLC: iter=2.00 alpha=0.818 beta=0.000 gamma=0.182 halt(yes/no/cont)=0.19/0.08/0.73 | align=0.9998 out_scale=0.077 psi_delta_l2=3.805e+02
+[2026-04-24 18:12:03]   [1] 3450/19277 (18%) loss=5.0254 ppl=152.2 lr=1.00e-04 | 8001 tok/s (avg 8037) | ponder=8.279e-06 | infonce=0.132 | GPU 1.9/12.3GB
+[2026-04-24 18:12:41]   [1] 3500/19277 (18%) loss=5.1455 ppl=171.7 lr=1.00e-04 | 8172 tok/s (avg 8039) | ponder=8.041e-06 | infonce=0.148 | GPU 1.9/12.3GB
+[2026-04-24 18:12:41]     QLC: iter=2.00 alpha=0.818 beta=0.000 gamma=0.182 halt(yes/no/cont)=0.19/0.08/0.73 | align=0.9998 out_scale=0.077 psi_delta_l2=3.805e+02
+[2026-04-24 18:13:19]   [1] 3550/19277 (18%) loss=5.1886 ppl=179.2 lr=1.00e-04 | 8167 tok/s (avg 8040) | ponder=8.079e-06 | infonce=0.070 | GPU 1.9/12.3GB
+[2026-04-24 18:13:56]   [1] 3600/19277 (19%) loss=5.2492 ppl=190.4 lr=1.00e-04 | 8270 tok/s (avg 8043) | ponder=8.062e-06 | infonce=0.098 | GPU 1.9/12.3GB
+[2026-04-24 18:13:56]     QLC: iter=2.00 alpha=0.818 beta=0.000 gamma=0.181 halt(yes/no/cont)=0.19/0.08/0.73 | align=0.9998 out_scale=0.077 psi_delta_l2=3.805e+02
+[2026-04-24 18:14:32]   [1] 3650/19277 (19%) loss=5.0778 ppl=160.4 lr=1.00e-04 | 8378 tok/s (avg 8048) | ponder=7.942e-06 | infonce=0.135 | GPU 1.9/12.3GB
+[2026-04-24 18:15:09]   [1] 3700/19277 (19%) loss=5.2963 ppl=199.6 lr=1.00e-04 | 8376 tok/s (avg 8052) | ponder=8.357e-06 | infonce=0.148 | GPU 1.9/12.3GB
+[2026-04-24 18:15:09]     QLC: iter=2.00 alpha=0.819 beta=0.000 gamma=0.181 halt(yes/no/cont)=0.19/0.08/0.72 | align=0.9998 out_scale=0.077 psi_delta_l2=3.806e+02
+[2026-04-24 18:15:46]   [1] 3750/19277 (19%) loss=5.4539 ppl=233.7 lr=9.99e-05 | 8372 tok/s (avg 8056) | ponder=9.724e-06 | infonce=0.130 | GPU 1.9/12.3GB
+[2026-04-24 18:16:23]   [1] 3800/19277 (20%) loss=5.1479 ppl=172.1 lr=9.99e-05 | 8309 tok/s (avg 8059) | ponder=7.781e-06 | infonce=0.141 | GPU 1.9/12.3GB
+[2026-04-24 18:16:23]     QLC: iter=2.00 alpha=0.819 beta=0.000 gamma=0.181 halt(yes/no/cont)=0.19/0.09/0.72 | align=0.9998 out_scale=0.077 psi_delta_l2=3.805e+02
+[2026-04-24 18:17:00]   [1] 3850/19277 (20%) loss=5.4592 ppl=234.9 lr=9.99e-05 | 8330 tok/s (avg 8063) | ponder=8.279e-06 | infonce=0.146 | GPU 1.9/12.3GB
+[2026-04-24 18:17:37]   [1] 3900/19277 (20%) loss=5.1376 ppl=170.3 lr=9.99e-05 | 8125 tok/s (avg 8064) | ponder=7.606e-06 | infonce=0.123 | GPU 1.9/12.3GB
+[2026-04-24 18:17:37]     QLC: iter=2.00 alpha=0.819 beta=0.000 gamma=0.181 halt(yes/no/cont)=0.19/0.09/0.72 | align=0.9998 out_scale=0.077 psi_delta_l2=3.805e+02
+[2026-04-24 18:18:16]   [1] 3950/19277 (20%) loss=5.1375 ppl=170.3 lr=9.99e-05 | 8054 tok/s (avg 8063) | ponder=7.445e-06 | infonce=0.142 | GPU 1.9/12.3GB
+[2026-04-24 18:18:54]   [1] 4000/19277 (21%) loss=5.0337 ppl=153.5 lr=9.99e-05 | 7974 tok/s (avg 8062) | ponder=7.433e-06 | infonce=0.108 | GPU 1.9/12.3GB
+[2026-04-24 18:18:54]     QLC: iter=2.00 alpha=0.820 beta=0.000 gamma=0.180 halt(yes/no/cont)=0.19/0.09/0.72 | align=0.9999 out_scale=0.077 psi_delta_l2=3.804e+02
+[2026-04-24 18:19:31]   [1] 4050/19277 (21%) loss=5.6006 ppl=270.6 lr=9.99e-05 | 8375 tok/s (avg 8066) | ponder=7.629e-06 | infonce=0.147 | GPU 1.9/12.3GB
+[2026-04-24 18:20:07]   [1] 4100/19277 (21%) loss=5.0971 ppl=163.5 lr=9.99e-05 | 8452 tok/s (avg 8071) | ponder=7.987e-06 | infonce=0.116 | GPU 1.9/12.3GB
+[2026-04-24 18:20:07]     QLC: iter=2.00 alpha=0.820 beta=0.000 gamma=0.180 halt(yes/no/cont)=0.20/0.09/0.72 | align=0.9998 out_scale=0.077 psi_delta_l2=3.805e+02
+[2026-04-24 18:20:43]   [1] 4150/19277 (22%) loss=4.9419 ppl=140.0 lr=9.99e-05 | 8463 tok/s (avg 8075) | ponder=7.313e-06 | infonce=0.155 | GPU 1.9/12.3GB
+[2026-04-24 18:21:20]   [1] 4200/19277 (22%) loss=4.9669 ppl=143.6 lr=9.99e-05 | 8454 tok/s (avg 8079) | ponder=7.296e-06 | infonce=0.125 | GPU 1.9/12.3GB
+[2026-04-24 18:21:20]     QLC: iter=2.00 alpha=0.820 beta=0.000 gamma=0.180 halt(yes/no/cont)=0.20/0.09/0.72 | align=0.9999 out_scale=0.077 psi_delta_l2=3.804e+02
+[2026-04-24 18:21:56]   [1] 4250/19277 (22%) loss=5.1260 ppl=168.3 lr=9.99e-05 | 8372 tok/s (avg 8083) | ponder=7.236e-06 | infonce=0.137 | GPU 1.9/12.3GB
+[2026-04-24 18:22:33]   [1] 4300/19277 (22%) loss=5.1878 ppl=179.1 lr=9.99e-05 | 8441 tok/s (avg 8087) | ponder=7.617e-06 | infonce=0.122 | GPU 1.9/12.3GB
+[2026-04-24 18:22:33]     QLC: iter=2.00 alpha=0.821 beta=0.000 gamma=0.179 halt(yes/no/cont)=0.20/0.09/0.71 | align=0.9998 out_scale=0.077 psi_delta_l2=3.804e+02
+[2026-04-24 18:23:09]   [1] 4350/19277 (23%) loss=4.7574 ppl=116.4 lr=9.99e-05 | 8457 tok/s (avg 8091) | ponder=7.087e-06 | infonce=0.111 | GPU 1.9/12.3GB
+[2026-04-24 18:23:46]   [1] 4400/19277 (23%) loss=5.3112 ppl=202.6 lr=9.99e-05 | 8436 tok/s (avg 8095) | ponder=6.962e-06 | infonce=0.128 | GPU 1.9/12.3GB
+[2026-04-24 18:23:46]     QLC: iter=2.00 alpha=0.821 beta=0.000 gamma=0.179 halt(yes/no/cont)=0.20/0.09/0.71 | align=0.9999 out_scale=0.077 psi_delta_l2=3.802e+02
+[2026-04-24 18:24:22]   [1] 4450/19277 (23%) loss=4.5445 ppl=94.1 lr=9.99e-05 | 8452 tok/s (avg 8098) | ponder=6.995e-06 | infonce=0.119 | GPU 1.9/12.3GB
+[2026-04-24 18:24:59]   [1] 4500/19277 (23%) loss=5.1778 ppl=177.3 lr=9.99e-05 | 8348 tok/s (avg 8101) | ponder=7.203e-06 | infonce=0.138 | GPU 1.9/12.3GB
+[2026-04-24 18:24:59]     QLC: iter=2.00 alpha=0.821 beta=0.000 gamma=0.179 halt(yes/no/cont)=0.20/0.09/0.71 | align=0.9999 out_scale=0.077 psi_delta_l2=3.802e+02
+[2026-04-24 18:25:35]   [1] 4550/19277 (24%) loss=4.6868 ppl=108.5 lr=9.99e-05 | 8455 tok/s (avg 8105) | ponder=6.682e-06 | infonce=0.133 | GPU 1.9/12.3GB
+[2026-04-24 18:26:11]   [1] 4600/19277 (24%) loss=4.9909 ppl=147.1 lr=9.99e-05 | 8432 tok/s (avg 8108) | ponder=6.491e-06 | infonce=0.117 | GPU 1.9/12.3GB
+[2026-04-24 18:26:11]     QLC: iter=2.00 alpha=0.821 beta=0.000 gamma=0.179 halt(yes/no/cont)=0.20/0.09/0.71 | align=0.9999 out_scale=0.078 psi_delta_l2=3.802e+02
+[2026-04-24 18:26:48]   [1] 4650/19277 (24%) loss=5.1222 ppl=167.7 lr=9.99e-05 | 8453 tok/s (avg 8112) | ponder=7.015e-06 | infonce=0.079 | GPU 1.9/12.3GB
+[2026-04-24 18:27:24]   [1] 4700/19277 (24%) loss=5.1096 ppl=165.6 lr=9.99e-05 | 8447 tok/s (avg 8115) | ponder=6.777e-06 | infonce=0.101 | GPU 1.9/12.3GB
+[2026-04-24 18:27:24]     QLC: iter=2.00 alpha=0.822 beta=0.000 gamma=0.178 halt(yes/no/cont)=0.20/0.09/0.71 | align=0.9999 out_scale=0.078 psi_delta_l2=3.803e+02
+[2026-04-24 18:28:01]   [1] 4750/19277 (25%) loss=5.1755 ppl=176.9 lr=9.99e-05 | 8365 tok/s (avg 8118) | ponder=6.881e-06 | infonce=0.149 | GPU 1.9/12.3GB
+[2026-04-24 18:28:37]   [1] 4800/19277 (25%) loss=4.6968 ppl=109.6 lr=9.99e-05 | 8435 tok/s (avg 8121) | ponder=6.485e-06 | infonce=0.118 | GPU 1.9/12.3GB
+[2026-04-24 18:28:37]     QLC: iter=2.00 alpha=0.822 beta=0.000 gamma=0.178 halt(yes/no/cont)=0.20/0.09/0.70 | align=0.9999 out_scale=0.078 psi_delta_l2=3.801e+02
+[2026-04-24 18:29:14]   [1] 4850/19277 (25%) loss=4.9931 ppl=147.4 lr=9.99e-05 | 8445 tok/s (avg 8124) | ponder=6.688e-06 | infonce=0.136 | GPU 1.9/12.3GB
+[2026-04-24 18:29:50]   [1] 4900/19277 (25%) loss=5.1935 ppl=180.1 lr=9.99e-05 | 8444 tok/s (avg 8127) | ponder=6.700e-06 | infonce=0.113 | GPU 1.9/12.3GB
+[2026-04-24 18:29:50]     QLC: iter=2.00 alpha=0.822 beta=0.000 gamma=0.178 halt(yes/no/cont)=0.21/0.09/0.70 | align=0.9999 out_scale=0.078 psi_delta_l2=3.801e+02
+[2026-04-24 18:30:27]   [1] 4950/19277 (26%) loss=4.9417 ppl=140.0 lr=9.99e-05 | 8368 tok/s (avg 8130) | ponder=6.175e-06 | infonce=0.144 | GPU 1.9/12.3GB
+[2026-04-24 18:31:03]   [1] 5000/19277 (26%) loss=5.2387 ppl=188.4 lr=9.99e-05 | 8439 tok/s (avg 8133) | ponder=9.313e-06 | infonce=0.187 | GPU 1.9/12.3GB
+[2026-04-24 18:31:03]     QLC: iter=2.00 alpha=0.823 beta=0.000 gamma=0.177 halt(yes/no/cont)=0.21/0.09/0.70 | align=0.9998 out_scale=0.078 psi_delta_l2=3.801e+02
+[2026-04-24 18:31:07]   [mid-epoch sample @ batch 5000, 30,726,144 tok]
+[2026-04-24 18:31:07]   Prompt: In 1923 , the University of
+[2026-04-24 18:31:07]   Generated: In 1923 , the University of Mexico . 
+
+
+[2026-04-24 18:31:07]  = = History = = 
+
+
+[2026-04-24 18:31:07]  The city of Port M. D. H.com was the first part of the state 's National Board of State and as a major local name in his own site of the region of the National Park River . In 1966 , in the United States , the North American Museum of England also includes the state highway at the intersection of South
+[2026-04-24 18:31:07]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=0.667
+[2026-04-24 18:31:44]   [1] 5050/19277 (26%) loss=5.0108 ppl=150.0 lr=9.99e-05 | 7613 tok/s (avg 8127) | ponder=6.413e-06 | infonce=0.135 | GPU 1.9/12.3GB
+[2026-04-24 18:32:20]   [1] 5100/19277 (26%) loss=4.8486 ppl=127.6 lr=9.99e-05 | 8440 tok/s (avg 8130) | ponder=6.312e-06 | infonce=0.137 | GPU 1.9/12.3GB
+[2026-04-24 18:32:20]     QLC: iter=2.00 alpha=0.823 beta=0.000 gamma=0.177 halt(yes/no/cont)=0.21/0.09/0.70 | align=0.9999 out_scale=0.078 psi_delta_l2=3.801e+02
+[2026-04-24 18:32:56]   [1] 5150/19277 (27%) loss=5.0346 ppl=153.6 lr=9.99e-05 | 8453 tok/s (avg 8133) | ponder=6.130e-06 | infonce=0.105 | GPU 1.9/12.3GB
+[2026-04-24 18:33:33]   [1] 5200/19277 (27%) loss=5.0468 ppl=155.5 lr=9.99e-05 | 8347 tok/s (avg 8135) | ponder=6.446e-06 | infonce=0.085 | GPU 1.9/12.3GB
+[2026-04-24 18:33:33]     QLC: iter=2.00 alpha=0.823 beta=0.000 gamma=0.177 halt(yes/no/cont)=0.21/0.09/0.70 | align=0.9999 out_scale=0.078 psi_delta_l2=3.802e+02
+[2026-04-24 18:34:10]   [1] 5250/19277 (27%) loss=4.7260 ppl=112.8 lr=9.99e-05 | 8439 tok/s (avg 8138) | ponder=6.381e-06 | infonce=0.118 | GPU 1.9/12.3GB
+[2026-04-24 18:34:46]   [1] 5300/19277 (27%) loss=5.1440 ppl=171.4 lr=9.99e-05 | 8443 tok/s (avg 8141) | ponder=6.443e-06 | infonce=0.180 | GPU 1.9/12.3GB
+[2026-04-24 18:34:46]     QLC: iter=2.00 alpha=0.823 beta=0.000 gamma=0.177 halt(yes/no/cont)=0.21/0.09/0.70 | align=0.9999 out_scale=0.078 psi_delta_l2=3.802e+02
+[2026-04-24 18:35:22]   [1] 5350/19277 (28%) loss=5.1938 ppl=180.2 lr=9.99e-05 | 8447 tok/s (avg 8143) | ponder=6.801e-06 | infonce=0.162 | GPU 1.9/12.3GB
+[2026-04-24 18:35:59]   [1] 5400/19277 (28%) loss=4.6074 ppl=100.2 lr=9.99e-05 | 8436 tok/s (avg 8146) | ponder=6.539e-06 | infonce=0.145 | GPU 1.9/12.3GB
+[2026-04-24 18:35:59]     QLC: iter=2.00 alpha=0.823 beta=0.000 gamma=0.176 halt(yes/no/cont)=0.21/0.09/0.70 | align=0.9999 out_scale=0.078 psi_delta_l2=3.802e+02
+[2026-04-24 18:36:35]   [1] 5450/19277 (28%) loss=4.7994 ppl=121.4 lr=9.99e-05 | 8361 tok/s (avg 8148) | ponder=5.984e-06 | infonce=0.128 | GPU 1.9/12.3GB
+[2026-04-24 18:37:12]   [1] 5500/19277 (29%) loss=4.9380 ppl=139.5 lr=9.99e-05 | 8437 tok/s (avg 8150) | ponder=6.130e-06 | infonce=0.114 | GPU 1.9/12.3GB
+[2026-04-24 18:37:12]     QLC: iter=2.00 alpha=0.824 beta=0.000 gamma=0.176 halt(yes/no/cont)=0.21/0.09/0.69 | align=0.9999 out_scale=0.078 psi_delta_l2=3.802e+02
+[2026-04-24 18:37:48]   [1] 5550/19277 (29%) loss=4.9606 ppl=142.7 lr=9.99e-05 | 8452 tok/s (avg 8153) | ponder=6.473e-06 | infonce=0.096 | GPU 1.9/12.3GB
+[2026-04-24 18:38:25]   [1] 5600/19277 (29%) loss=4.7448 ppl=115.0 lr=9.99e-05 | 8436 tok/s (avg 8156) | ponder=6.753e-06 | infonce=0.133 | GPU 1.9/12.3GB
+[2026-04-24 18:38:25]     QLC: iter=2.00 alpha=0.824 beta=0.000 gamma=0.176 halt(yes/no/cont)=0.21/0.09/0.69 | align=0.9999 out_scale=0.078 psi_delta_l2=3.801e+02
+[2026-04-24 18:39:01]   [1] 5650/19277 (29%) loss=4.7487 ppl=115.4 lr=9.99e-05 | 8355 tok/s (avg 8157) | ponder=5.984e-06 | infonce=0.105 | GPU 1.9/12.3GB
+[2026-04-24 18:39:38]   [1] 5700/19277 (30%) loss=4.7890 ppl=120.2 lr=9.99e-05 | 8432 tok/s (avg 8160) | ponder=6.247e-06 | infonce=0.163 | GPU 1.9/12.3GB
+[2026-04-24 18:39:38]     QLC: iter=2.00 alpha=0.824 beta=0.000 gamma=0.176 halt(yes/no/cont)=0.21/0.09/0.69 | align=0.9999 out_scale=0.079 psi_delta_l2=3.801e+02
+[2026-04-24 18:40:14]   [1] 5750/19277 (30%) loss=4.9081 ppl=135.4 lr=9.98e-05 | 8448 tok/s (avg 8162) | ponder=5.740e-06 | infonce=0.121 | GPU 1.9/12.3GB
+[2026-04-24 18:40:51]   [1] 5800/19277 (30%) loss=5.0949 ppl=163.2 lr=9.98e-05 | 8443 tok/s (avg 8164) | ponder=6.109e-06 | infonce=0.144 | GPU 1.9/12.3GB
+[2026-04-24 18:40:51]     QLC: iter=2.00 alpha=0.824 beta=0.000 gamma=0.175 halt(yes/no/cont)=0.21/0.10/0.69 | align=0.9999 out_scale=0.079 psi_delta_l2=3.802e+02
+[2026-04-24 18:41:27]   [1] 5850/19277 (30%) loss=4.8934 ppl=133.4 lr=9.98e-05 | 8459 tok/s (avg 8167) | ponder=6.378e-06 | infonce=0.106 | GPU 1.9/12.3GB
+[2026-04-24 18:42:04]   [1] 5900/19277 (31%) loss=4.6480 ppl=104.4 lr=9.98e-05 | 8346 tok/s (avg 8168) | ponder=5.963e-06 | infonce=0.120 | GPU 1.9/12.3GB
+[2026-04-24 18:42:04]     QLC: iter=2.00 alpha=0.825 beta=0.000 gamma=0.175 halt(yes/no/cont)=0.22/0.10/0.69 | align=0.9999 out_scale=0.079 psi_delta_l2=3.800e+02
+[2026-04-24 18:42:40]   [1] 5950/19277 (31%) loss=4.9506 ppl=141.3 lr=9.98e-05 | 8446 tok/s (avg 8171) | ponder=5.871e-06 | infonce=0.083 | GPU 1.9/12.3GB
+[2026-04-24 18:43:16]   [1] 6000/19277 (31%) loss=5.0327 ppl=153.4 lr=9.98e-05 | 8435 tok/s (avg 8173) | ponder=5.737e-06 | infonce=0.161 | GPU 1.9/12.3GB
+[2026-04-24 18:43:16]     QLC: iter=2.00 alpha=0.825 beta=0.000 gamma=0.175 halt(yes/no/cont)=0.22/0.10/0.69 | align=0.9999 out_scale=0.079 psi_delta_l2=3.800e+02
+[2026-04-24 18:43:53]   [1] 6050/19277 (31%) loss=5.1602 ppl=174.2 lr=9.98e-05 | 8444 tok/s (avg 8175) | ponder=6.711e-06 | infonce=0.168 | GPU 1.9/12.3GB
+[2026-04-24 18:44:29]   [1] 6100/19277 (32%) loss=4.7821 ppl=119.3 lr=9.98e-05 | 8437 tok/s (avg 8177) | ponder=5.913e-06 | infonce=0.161 | GPU 1.9/12.3GB
+[2026-04-24 18:44:29]     QLC: iter=2.00 alpha=0.825 beta=0.000 gamma=0.175 halt(yes/no/cont)=0.22/0.10/0.68 | align=0.9999 out_scale=0.079 psi_delta_l2=3.800e+02
+[2026-04-24 18:45:06]   [1] 6150/19277 (32%) loss=4.8142 ppl=123.2 lr=9.98e-05 | 8359 tok/s (avg 8178) | ponder=5.379e-06 | infonce=0.131 | GPU 1.9/12.3GB
+[2026-04-24 18:45:42]   [1] 6200/19277 (32%) loss=5.0845 ppl=161.5 lr=9.98e-05 | 8442 tok/s (avg 8180) | ponder=5.686e-06 | infonce=0.147 | GPU 1.9/12.3GB
+[2026-04-24 18:45:42]     QLC: iter=2.00 alpha=0.825 beta=0.000 gamma=0.175 halt(yes/no/cont)=0.22/0.10/0.68 | align=0.9999 out_scale=0.079 psi_delta_l2=3.800e+02
+[2026-04-24 18:46:19]   [1] 6250/19277 (32%) loss=5.0142 ppl=150.5 lr=9.98e-05 | 8453 tok/s (avg 8183) | ponder=5.415e-06 | infonce=0.126 | GPU 1.9/12.3GB
+[2026-04-24 18:46:55]   [1] 6300/19277 (33%) loss=5.2947 ppl=199.3 lr=9.98e-05 | 8433 tok/s (avg 8184) | ponder=5.502e-06 | infonce=0.074 | GPU 1.9/12.3GB
+[2026-04-24 18:46:55]     QLC: iter=2.00 alpha=0.826 beta=0.000 gamma=0.174 halt(yes/no/cont)=0.22/0.10/0.68 | align=0.9999 out_scale=0.079 psi_delta_l2=3.800e+02
+[2026-04-24 18:47:32]   [1] 6350/19277 (33%) loss=4.8859 ppl=132.4 lr=9.98e-05 | 8444 tok/s (avg 8186) | ponder=5.943e-06 | infonce=0.089 | GPU 1.9/12.3GB
+[2026-04-24 18:48:08]   [1] 6400/19277 (33%) loss=4.9388 ppl=139.6 lr=9.98e-05 | 8349 tok/s (avg 8188) | ponder=6.062e-06 | infonce=0.089 | GPU 1.9/12.3GB
+[2026-04-24 18:48:08]     QLC: iter=2.00 alpha=0.826 beta=0.000 gamma=0.174 halt(yes/no/cont)=0.22/0.10/0.68 | align=0.9999 out_scale=0.079 psi_delta_l2=3.799e+02
+[2026-04-24 18:48:45]   [1] 6450/19277 (33%) loss=5.0662 ppl=158.6 lr=9.98e-05 | 8447 tok/s (avg 8190) | ponder=5.794e-06 | infonce=0.139 | GPU 1.9/12.3GB
+[2026-04-24 18:49:21]   [1] 6500/19277 (34%) loss=4.8357 ppl=125.9 lr=9.98e-05 | 8429 tok/s (avg 8191) | ponder=6.032e-06 | infonce=0.113 | GPU 1.9/12.3GB
+[2026-04-24 18:49:21]     QLC: iter=2.00 alpha=0.826 beta=0.000 gamma=0.174 halt(yes/no/cont)=0.22/0.10/0.68 | align=0.9999 out_scale=0.079 psi_delta_l2=3.799e+02
+[2026-04-24 18:49:58]   [1] 6550/19277 (34%) loss=5.0156 ppl=150.8 lr=9.98e-05 | 8448 tok/s (avg 8193) | ponder=5.546e-06 | infonce=0.143 | GPU 1.9/12.3GB
+[2026-04-24 18:50:34]   [1] 6600/19277 (34%) loss=4.9035 ppl=134.8 lr=9.98e-05 | 8350 tok/s (avg 8194) | ponder=5.478e-06 | infonce=0.123 | GPU 1.9/12.3GB
+[2026-04-24 18:50:34]     QLC: iter=2.00 alpha=0.827 beta=0.000 gamma=0.173 halt(yes/no/cont)=0.22/0.10/0.68 | align=0.9999 out_scale=0.079 psi_delta_l2=3.799e+02
+[2026-04-24 18:51:11]   [1] 6650/19277 (35%) loss=4.4637 ppl=86.8 lr=9.98e-05 | 8442 tok/s (avg 8196) | ponder=5.364e-06 | infonce=0.136 | GPU 1.9/12.3GB
+[2026-04-24 18:51:47]   [1] 6700/19277 (35%) loss=4.7669 ppl=117.5 lr=9.98e-05 | 8429 tok/s (avg 8198) | ponder=5.892e-06 | infonce=0.113 | GPU 1.9/12.3GB
+[2026-04-24 18:51:47]     QLC: iter=2.00 alpha=0.827 beta=0.000 gamma=0.173 halt(yes/no/cont)=0.23/0.10/0.67 | align=0.9999 out_scale=0.079 psi_delta_l2=3.799e+02
+[2026-04-24 18:52:24]   [1] 6750/19277 (35%) loss=5.1439 ppl=171.4 lr=9.98e-05 | 8448 tok/s (avg 8200) | ponder=5.829e-06 | infonce=0.143 | GPU 1.9/12.3GB
+[2026-04-24 18:53:00]   [1] 6800/19277 (35%) loss=5.0236 ppl=152.0 lr=9.98e-05 | 8431 tok/s (avg 8201) | ponder=5.627e-06 | infonce=0.118 | GPU 1.9/12.3GB
+[2026-04-24 18:53:00]     QLC: iter=2.00 alpha=0.827 beta=0.000 gamma=0.173 halt(yes/no/cont)=0.23/0.10/0.67 | align=0.9999 out_scale=0.079 psi_delta_l2=3.797e+02
+[2026-04-24 18:53:37]   [1] 6850/19277 (36%) loss=4.8346 ppl=125.8 lr=9.98e-05 | 8362 tok/s (avg 8203) | ponder=5.543e-06 | infonce=0.136 | GPU 1.9/12.3GB
+[2026-04-24 18:54:13]   [1] 6900/19277 (36%) loss=4.3959 ppl=81.1 lr=9.98e-05 | 8436 tok/s (avg 8204) | ponder=5.683e-06 | infonce=0.141 | GPU 1.9/12.3GB
+[2026-04-24 18:54:13]     QLC: iter=2.00 alpha=0.828 beta=0.000 gamma=0.172 halt(yes/no/cont)=0.23/0.10/0.67 | align=0.9999 out_scale=0.079 psi_delta_l2=3.797e+02
+[2026-04-24 18:54:49]   [1] 6950/19277 (36%) loss=4.8102 ppl=122.8 lr=9.98e-05 | 8444 tok/s (avg 8206) | ponder=5.794e-06 | infonce=0.104 | GPU 1.9/12.3GB
+[2026-04-24 18:55:26]   [1] 7000/19277 (36%) loss=4.5568 ppl=95.3 lr=9.98e-05 | 8440 tok/s (avg 8208) | ponder=5.412e-06 | infonce=0.098 | GPU 1.9/12.3GB
+[2026-04-24 18:55:26]     QLC: iter=2.00 alpha=0.828 beta=0.000 gamma=0.172 halt(yes/no/cont)=0.23/0.10/0.67 | align=0.9999 out_scale=0.079 psi_delta_l2=3.798e+02
+[2026-04-24 18:56:02]   [1] 7050/19277 (37%) loss=4.5974 ppl=99.2 lr=9.98e-05 | 8448 tok/s (avg 8209) | ponder=5.689e-06 | infonce=0.086 | GPU 1.9/12.3GB
+[2026-04-24 18:56:39]   [1] 7100/19277 (37%) loss=4.6811 ppl=107.9 lr=9.98e-05 | 8348 tok/s (avg 8210) | ponder=5.555e-06 | infonce=0.090 | GPU 1.9/12.3GB
+[2026-04-24 18:56:39]     QLC: iter=2.00 alpha=0.828 beta=0.000 gamma=0.172 halt(yes/no/cont)=0.23/0.10/0.67 | align=0.9999 out_scale=0.079 psi_delta_l2=3.797e+02
+[2026-04-24 18:57:15]   [1] 7150/19277 (37%) loss=4.9606 ppl=142.7 lr=9.97e-05 | 8449 tok/s (avg 8212) | ponder=5.859e-06 | infonce=0.131 | GPU 1.9/12.3GB
+[2026-04-24 18:57:52]   [1] 7200/19277 (37%) loss=5.0024 ppl=148.8 lr=9.97e-05 | 8431 tok/s (avg 8213) | ponder=5.552e-06 | infonce=0.142 | GPU 1.9/12.3GB
+[2026-04-24 18:57:52]     QLC: iter=2.00 alpha=0.828 beta=0.000 gamma=0.172 halt(yes/no/cont)=0.23/0.10/0.67 | align=0.9999 out_scale=0.079 psi_delta_l2=3.798e+02
+[2026-04-24 18:58:28]   [1] 7250/19277 (38%) loss=4.5604 ppl=95.6 lr=9.97e-05 | 8448 tok/s (avg 8215) | ponder=5.710e-06 | infonce=0.120 | GPU 1.9/12.3GB
+[2026-04-24 18:59:05]   [1] 7300/19277 (38%) loss=4.6478 ppl=104.4 lr=9.97e-05 | 8440 tok/s (avg 8216) | ponder=5.409e-06 | infonce=0.120 | GPU 1.9/12.3GB
+[2026-04-24 18:59:05]     QLC: iter=2.00 alpha=0.829 beta=0.000 gamma=0.171 halt(yes/no/cont)=0.23/0.10/0.66 | align=0.9999 out_scale=0.079 psi_delta_l2=3.797e+02
+[2026-04-24 18:59:41]   [1] 7350/19277 (38%) loss=4.8219 ppl=124.2 lr=9.97e-05 | 8359 tok/s (avg 8217) | ponder=5.415e-06 | infonce=0.123 | GPU 1.9/12.3GB
+[2026-04-24 19:00:18]   [1] 7400/19277 (38%) loss=4.6750 ppl=107.2 lr=9.97e-05 | 8441 tok/s (avg 8219) | ponder=6.127e-06 | infonce=0.090 | GPU 1.9/12.3GB
+[2026-04-24 19:00:18]     QLC: iter=2.00 alpha=0.829 beta=0.000 gamma=0.171 halt(yes/no/cont)=0.23/0.10/0.66 | align=0.9999 out_scale=0.079 psi_delta_l2=3.796e+02
+[2026-04-24 19:00:54]   [1] 7450/19277 (39%) loss=4.3576 ppl=78.1 lr=9.97e-05 | 8453 tok/s (avg 8220) | ponder=5.317e-06 | infonce=0.085 | GPU 1.9/12.3GB
+[2026-04-24 19:01:30]   [1] 7500/19277 (39%) loss=4.8836 ppl=132.1 lr=9.97e-05 | 8443 tok/s (avg 8222) | ponder=5.174e-06 | infonce=0.142 | GPU 1.9/12.3GB
+[2026-04-24 19:01:30]     QLC: iter=2.00 alpha=0.829 beta=0.000 gamma=0.171 halt(yes/no/cont)=0.24/0.10/0.66 | align=0.9999 out_scale=0.079 psi_delta_l2=3.797e+02
+[2026-04-24 19:02:07]   [1] 7550/19277 (39%) loss=4.7547 ppl=116.1 lr=9.97e-05 | 8342 tok/s (avg 8222) | ponder=5.668e-06 | infonce=0.113 | GPU 1.9/12.3GB
+[2026-04-24 19:02:44]   [1] 7600/19277 (39%) loss=4.5899 ppl=98.5 lr=9.97e-05 | 8444 tok/s (avg 8224) | ponder=5.472e-06 | infonce=0.176 | GPU 1.9/12.3GB
+[2026-04-24 19:02:44]     QLC: iter=2.00 alpha=0.830 beta=0.000 gamma=0.170 halt(yes/no/cont)=0.24/0.10/0.66 | align=0.9999 out_scale=0.079 psi_delta_l2=3.796e+02
+[2026-04-24 19:03:20]   [1] 7650/19277 (40%) loss=4.7613 ppl=116.9 lr=9.97e-05 | 8451 tok/s (avg 8225) | ponder=5.570e-06 | infonce=0.125 | GPU 1.9/12.3GB
+[2026-04-24 19:03:56]   [1] 7700/19277 (40%) loss=5.1030 ppl=164.5 lr=9.97e-05 | 8441 tok/s (avg 8227) | ponder=5.427e-06 | infonce=0.159 | GPU 1.9/12.3GB
+[2026-04-24 19:03:56]     QLC: iter=2.00 alpha=0.830 beta=0.000 gamma=0.170 halt(yes/no/cont)=0.24/0.11/0.66 | align=0.9999 out_scale=0.079 psi_delta_l2=3.797e+02
+[2026-04-24 19:04:33]   [1] 7750/19277 (40%) loss=4.3832 ppl=80.1 lr=9.97e-05 | 8454 tok/s (avg 8228) | ponder=5.388e-06 | infonce=0.140 | GPU 1.9/12.3GB
+[2026-04-24 19:05:10]   [1] 7800/19277 (40%) loss=4.8484 ppl=127.5 lr=9.97e-05 | 8357 tok/s (avg 8229) | ponder=5.242e-06 | infonce=0.142 | GPU 1.9/12.3GB
+[2026-04-24 19:05:10]     QLC: iter=2.00 alpha=0.830 beta=0.000 gamma=0.170 halt(yes/no/cont)=0.24/0.11/0.65 | align=0.9999 out_scale=0.079 psi_delta_l2=3.796e+02
+[2026-04-24 19:05:46]   [1] 7850/19277 (41%) loss=4.8219 ppl=124.2 lr=9.97e-05 | 8452 tok/s (avg 8230) | ponder=5.615e-06 | infonce=0.171 | GPU 1.9/12.3GB
+[2026-04-24 19:06:22]   [1] 7900/19277 (41%) loss=4.6092 ppl=100.4 lr=9.97e-05 | 8441 tok/s (avg 8232) | ponder=5.621e-06 | infonce=0.148 | GPU 1.9/12.3GB
+[2026-04-24 19:06:22]     QLC: iter=2.00 alpha=0.831 beta=0.000 gamma=0.169 halt(yes/no/cont)=0.24/0.11/0.65 | align=0.9999 out_scale=0.080 psi_delta_l2=3.795e+02
+[2026-04-24 19:06:59]   [1] 7950/19277 (41%) loss=4.8310 ppl=125.3 lr=9.97e-05 | 8457 tok/s (avg 8233) | ponder=5.201e-06 | infonce=0.146 | GPU 1.9/12.3GB
+[2026-04-24 19:07:35]   [1] 8000/19277 (42%) loss=4.7475 ppl=115.3 lr=9.97e-05 | 8440 tok/s (avg 8234) | ponder=5.442e-06 | infonce=0.101 | GPU 1.9/12.3GB
+[2026-04-24 19:07:35]     QLC: iter=2.00 alpha=0.831 beta=0.000 gamma=0.169 halt(yes/no/cont)=0.24/0.11/0.65 | align=0.9999 out_scale=0.080 psi_delta_l2=3.795e+02
+[2026-04-24 19:08:12]   [1] 8050/19277 (42%) loss=4.7108 ppl=111.1 lr=9.97e-05 | 8360 tok/s (avg 8235) | ponder=6.118e-06 | infonce=0.125 | GPU 1.9/12.3GB
+[2026-04-24 19:08:48]   [1] 8100/19277 (42%) loss=4.6837 ppl=108.2 lr=9.97e-05 | 8442 tok/s (avg 8236) | ponder=5.513e-06 | infonce=0.099 | GPU 1.9/12.3GB
+[2026-04-24 19:08:48]     QLC: iter=2.00 alpha=0.831 beta=0.000 gamma=0.169 halt(yes/no/cont)=0.24/0.11/0.65 | align=0.9999 out_scale=0.080 psi_delta_l2=3.795e+02
+[2026-04-24 19:09:24]   [1] 8150/19277 (42%) loss=4.7179 ppl=111.9 lr=9.97e-05 | 8456 tok/s (avg 8238) | ponder=5.302e-06 | infonce=0.137 | GPU 1.9/12.3GB
+[2026-04-24 19:10:01]   [1] 8200/19277 (43%) loss=4.8563 ppl=128.5 lr=9.97e-05 | 8439 tok/s (avg 8239) | ponder=5.352e-06 | infonce=0.111 | GPU 1.9/12.3GB
+[2026-04-24 19:10:01]     QLC: iter=2.00 alpha=0.831 beta=0.000 gamma=0.169 halt(yes/no/cont)=0.25/0.11/0.65 | align=0.9999 out_scale=0.080 psi_delta_l2=3.794e+02
+[2026-04-24 19:10:38]   [1] 8250/19277 (43%) loss=4.0837 ppl=59.4 lr=9.96e-05 | 8367 tok/s (avg 8240) | ponder=5.591e-06 | infonce=0.151 | GPU 1.9/12.3GB
+[2026-04-24 19:11:14]   [1] 8300/19277 (43%) loss=4.3030 ppl=73.9 lr=9.96e-05 | 8438 tok/s (avg 8241) | ponder=5.043e-06 | infonce=0.129 | GPU 1.9/12.3GB
+[2026-04-24 19:11:14]     QLC: iter=2.00 alpha=0.832 beta=0.000 gamma=0.168 halt(yes/no/cont)=0.25/0.11/0.64 | align=0.9999 out_scale=0.080 psi_delta_l2=3.793e+02
+[2026-04-24 19:11:50]   [1] 8350/19277 (43%) loss=4.6453 ppl=104.1 lr=9.96e-05 | 8452 tok/s (avg 8242) | ponder=5.519e-06 | infonce=0.137 | GPU 1.9/12.3GB
+[2026-04-24 19:12:27]   [1] 8400/19277 (44%) loss=4.5984 ppl=99.3 lr=9.96e-05 | 8434 tok/s (avg 8243) | ponder=5.293e-06 | infonce=0.094 | GPU 1.9/12.3GB
+[2026-04-24 19:12:27]     QLC: iter=2.00 alpha=0.832 beta=0.000 gamma=0.168 halt(yes/no/cont)=0.25/0.11/0.64 | align=0.9999 out_scale=0.080 psi_delta_l2=3.793e+02
+[2026-04-24 19:13:03]   [1] 8450/19277 (44%) loss=4.2973 ppl=73.5 lr=9.96e-05 | 8454 tok/s (avg 8244) | ponder=5.737e-06 | infonce=0.109 | GPU 1.9/12.3GB
+[2026-04-24 19:13:40]   [1] 8500/19277 (44%) loss=5.0082 ppl=149.6 lr=9.96e-05 | 8352 tok/s (avg 8245) | ponder=5.507e-06 | infonce=0.126 | GPU 1.9/12.3GB
+[2026-04-24 19:13:40]     QLC: iter=2.00 alpha=0.832 beta=0.000 gamma=0.168 halt(yes/no/cont)=0.25/0.11/0.64 | align=0.9999 out_scale=0.080 psi_delta_l2=3.794e+02
+[2026-04-24 19:14:16]   [1] 8550/19277 (44%) loss=4.8064 ppl=122.3 lr=9.96e-05 | 8453 tok/s (avg 8246) | ponder=5.382e-06 | infonce=0.143 | GPU 1.9/12.3GB
+[2026-04-24 19:14:53]   [1] 8600/19277 (45%) loss=4.5234 ppl=92.1 lr=9.96e-05 | 8446 tok/s (avg 8247) | ponder=5.126e-06 | infonce=0.170 | GPU 1.9/12.3GB
+[2026-04-24 19:14:53]     QLC: iter=2.00 alpha=0.832 beta=0.000 gamma=0.168 halt(yes/no/cont)=0.25/0.11/0.64 | align=0.9999 out_scale=0.080 psi_delta_l2=3.794e+02
+[2026-04-24 19:15:29]   [1] 8650/19277 (45%) loss=4.1538 ppl=63.7 lr=9.96e-05 | 8459 tok/s (avg 8248) | ponder=5.192e-06 | infonce=0.131 | GPU 1.9/12.3GB
+[2026-04-24 19:16:05]   [1] 8700/19277 (45%) loss=4.5219 ppl=92.0 lr=9.96e-05 | 8441 tok/s (avg 8250) | ponder=5.221e-06 | infonce=0.114 | GPU 1.9/12.3GB
+[2026-04-24 19:16:05]     QLC: iter=2.00 alpha=0.833 beta=0.000 gamma=0.167 halt(yes/no/cont)=0.25/0.11/0.64 | align=0.9999 out_scale=0.080 psi_delta_l2=3.794e+02
+[2026-04-24 19:16:42]   [1] 8750/19277 (45%) loss=4.6663 ppl=106.3 lr=9.96e-05 | 8370 tok/s (avg 8250) | ponder=5.150e-06 | infonce=0.143 | GPU 1.9/12.3GB
+[2026-04-24 19:17:18]   [1] 8800/19277 (46%) loss=4.6176 ppl=101.3 lr=9.96e-05 | 8444 tok/s (avg 8251) | ponder=5.138e-06 | infonce=0.123 | GPU 1.9/12.3GB
+[2026-04-24 19:17:18]     QLC: iter=2.00 alpha=0.833 beta=0.000 gamma=0.167 halt(yes/no/cont)=0.26/0.11/0.63 | align=0.9999 out_scale=0.080 psi_delta_l2=3.793e+02
+[2026-04-24 19:17:55]   [1] 8850/19277 (46%) loss=4.6804 ppl=107.8 lr=9.96e-05 | 8442 tok/s (avg 8252) | ponder=5.466e-06 | infonce=0.131 | GPU 1.9/12.3GB
+[2026-04-24 19:18:31]   [1] 8900/19277 (46%) loss=4.2552 ppl=70.5 lr=9.96e-05 | 8437 tok/s (avg 8253) | ponder=5.257e-06 | infonce=0.098 | GPU 1.9/12.3GB
+[2026-04-24 19:18:31]     QLC: iter=2.00 alpha=0.833 beta=0.000 gamma=0.167 halt(yes/no/cont)=0.26/0.11/0.63 | align=0.9999 out_scale=0.080 psi_delta_l2=3.792e+02
+[2026-04-24 19:19:08]   [1] 8950/19277 (46%) loss=4.3647 ppl=78.6 lr=9.96e-05 | 8444 tok/s (avg 8254) | ponder=5.221e-06 | infonce=0.134 | GPU 1.9/12.3GB
+[2026-04-24 19:19:44]   [1] 9000/19277 (47%) loss=4.5158 ppl=91.4 lr=9.96e-05 | 8347 tok/s (avg 8255) | ponder=5.060e-06 | infonce=0.097 | GPU 1.9/12.3GB
+[2026-04-24 19:19:44]     QLC: iter=2.00 alpha=0.833 beta=0.000 gamma=0.166 halt(yes/no/cont)=0.26/0.11/0.63 | align=0.9999 out_scale=0.080 psi_delta_l2=3.792e+02
+[2026-04-24 19:20:21]   [1] 9050/19277 (47%) loss=4.9360 ppl=139.2 lr=9.96e-05 | 8444 tok/s (avg 8256) | ponder=5.201e-06 | infonce=0.090 | GPU 1.9/12.3GB
+[2026-04-24 19:20:57]   [1] 9100/19277 (47%) loss=4.7455 ppl=115.1 lr=9.96e-05 | 8440 tok/s (avg 8257) | ponder=5.141e-06 | infonce=0.117 | GPU 1.9/12.3GB
+[2026-04-24 19:20:57]     QLC: iter=2.00 alpha=0.834 beta=0.000 gamma=0.166 halt(yes/no/cont)=0.26/0.11/0.63 | align=0.9999 out_scale=0.080 psi_delta_l2=3.791e+02
+[2026-04-24 19:21:33]   [1] 9150/19277 (47%) loss=4.5430 ppl=94.0 lr=9.96e-05 | 8453 tok/s (avg 8258) | ponder=5.591e-06 | infonce=0.119 | GPU 1.9/12.3GB
+[2026-04-24 19:22:10]   [1] 9200/19277 (48%) loss=5.0658 ppl=158.5 lr=9.95e-05 | 8354 tok/s (avg 8258) | ponder=6.515e-06 | infonce=0.116 | GPU 1.9/12.3GB
+[2026-04-24 19:22:10]     QLC: iter=2.00 alpha=0.834 beta=0.000 gamma=0.166 halt(yes/no/cont)=0.26/0.11/0.63 | align=0.9999 out_scale=0.080 psi_delta_l2=3.792e+02
+[2026-04-24 19:22:47]   [1] 9250/19277 (48%) loss=4.5009 ppl=90.1 lr=9.95e-05 | 8452 tok/s (avg 8259) | ponder=5.120e-06 | infonce=0.147 | GPU 1.9/12.3GB
+[2026-04-24 19:23:23]   [1] 9300/19277 (48%) loss=4.1932 ppl=66.2 lr=9.95e-05 | 8432 tok/s (avg 8260) | ponder=5.108e-06 | infonce=0.094 | GPU 1.9/12.3GB
+[2026-04-24 19:23:23]     QLC: iter=2.00 alpha=0.834 beta=0.000 gamma=0.166 halt(yes/no/cont)=0.26/0.11/0.62 | align=0.9999 out_scale=0.080 psi_delta_l2=3.791e+02
+[2026-04-24 19:23:59]   [1] 9350/19277 (49%) loss=4.5990 ppl=99.4 lr=9.95e-05 | 8453 tok/s (avg 8261) | ponder=5.454e-06 | infonce=0.106 | GPU 1.9/12.3GB
+[2026-04-24 19:24:36]   [1] 9400/19277 (49%) loss=4.1622 ppl=64.2 lr=9.95e-05 | 8432 tok/s (avg 8262) | ponder=5.707e-06 | infonce=0.088 | GPU 1.9/12.3GB
+[2026-04-24 19:24:36]     QLC: iter=2.00 alpha=0.834 beta=0.000 gamma=0.165 halt(yes/no/cont)=0.26/0.11/0.62 | align=0.9999 out_scale=0.080 psi_delta_l2=3.792e+02
+[2026-04-24 19:25:13]   [1] 9450/19277 (49%) loss=4.4263 ppl=83.6 lr=9.95e-05 | 8353 tok/s (avg 8263) | ponder=5.341e-06 | infonce=0.092 | GPU 1.9/12.3GB
+[2026-04-24 19:25:49]   [1] 9500/19277 (49%) loss=4.7427 ppl=114.7 lr=9.95e-05 | 8436 tok/s (avg 8264) | ponder=5.224e-06 | infonce=0.116 | GPU 1.9/12.3GB
+[2026-04-24 19:25:49]     QLC: iter=2.00 alpha=0.834 beta=0.000 gamma=0.165 halt(yes/no/cont)=0.26/0.11/0.62 | align=0.9999 out_scale=0.080 psi_delta_l2=3.791e+02
+[2026-04-24 19:26:25]   [1] 9550/19277 (50%) loss=4.1312 ppl=62.3 lr=9.95e-05 | 8455 tok/s (avg 8265) | ponder=5.379e-06 | infonce=0.103 | GPU 1.9/12.3GB
+[2026-04-24 19:27:02]   [1] 9600/19277 (50%) loss=4.6467 ppl=104.2 lr=9.95e-05 | 8436 tok/s (avg 8266) | ponder=5.126e-06 | infonce=0.121 | GPU 1.9/12.3GB
+[2026-04-24 19:27:02]     QLC: iter=2.00 alpha=0.835 beta=0.000 gamma=0.165 halt(yes/no/cont)=0.26/0.11/0.62 | align=0.9999 out_scale=0.080 psi_delta_l2=3.790e+02
+[2026-04-24 19:27:38]   [1] 9650/19277 (50%) loss=4.4870 ppl=88.9 lr=9.95e-05 | 8453 tok/s (avg 8266) | ponder=5.651e-06 | infonce=0.120 | GPU 1.9/12.3GB
+[2026-04-24 19:28:15]   [1] 9700/19277 (50%) loss=4.7159 ppl=111.7 lr=9.95e-05 | 8352 tok/s (avg 8267) | ponder=5.355e-06 | infonce=0.138 | GPU 1.9/12.3GB
+[2026-04-24 19:28:15]     QLC: iter=2.00 alpha=0.835 beta=0.000 gamma=0.165 halt(yes/no/cont)=0.27/0.12/0.62 | align=0.9999 out_scale=0.080 psi_delta_l2=3.791e+02
+[2026-04-24 19:28:51]   [1] 9750/19277 (51%) loss=4.5341 ppl=93.1 lr=9.95e-05 | 8455 tok/s (avg 8268) | ponder=4.929e-06 | infonce=0.167 | GPU 1.9/12.3GB
+[2026-04-24 19:29:28]   [1] 9800/19277 (51%) loss=4.6465 ppl=104.2 lr=9.95e-05 | 8441 tok/s (avg 8269) | ponder=5.513e-06 | infonce=0.162 | GPU 1.9/12.3GB
+[2026-04-24 19:29:28]     QLC: iter=2.00 alpha=0.835 beta=0.000 gamma=0.165 halt(yes/no/cont)=0.27/0.12/0.62 | align=0.9999 out_scale=0.080 psi_delta_l2=3.791e+02
+[2026-04-24 19:30:04]   [1] 9850/19277 (51%) loss=4.4353 ppl=84.4 lr=9.95e-05 | 8454 tok/s (avg 8270) | ponder=4.777e-06 | infonce=0.141 | GPU 1.9/12.3GB
+[2026-04-24 19:30:40]   [1] 9900/19277 (51%) loss=4.5025 ppl=90.2 lr=9.95e-05 | 8447 tok/s (avg 8271) | ponder=5.507e-06 | infonce=0.091 | GPU 1.9/12.3GB
+[2026-04-24 19:30:40]     QLC: iter=2.00 alpha=0.836 beta=0.000 gamma=0.164 halt(yes/no/cont)=0.27/0.12/0.62 | align=0.9999 out_scale=0.080 psi_delta_l2=3.790e+02
+[2026-04-24 19:31:17]   [1] 9950/19277 (52%) loss=4.6343 ppl=103.0 lr=9.95e-05 | 8361 tok/s (avg 8271) | ponder=4.882e-06 | infonce=0.102 | GPU 1.9/12.3GB
+[2026-04-24 19:31:54]   [1] 10000/19277 (52%) loss=4.2109 ppl=67.4 lr=9.95e-05 | 8431 tok/s (avg 8272) | ponder=5.281e-06 | infonce=0.100 | GPU 1.9/12.3GB
+[2026-04-24 19:31:54]     QLC: iter=2.00 alpha=0.836 beta=0.000 gamma=0.164 halt(yes/no/cont)=0.27/0.12/0.61 | align=0.9999 out_scale=0.080 psi_delta_l2=3.790e+02
+[2026-04-24 19:31:55]   [mid-epoch sample @ batch 10000, 61,446,144 tok]
+[2026-04-24 19:31:55]   Prompt: In 1923 , the University of
+[2026-04-24 19:31:55]   Generated: In 1923 , the University of Massachusetts Bay is also known as the " White House " . 
+
+[2026-04-24 19:31:55]  The paper was used by the newspaper The New York Times as an American edition in 1887 at the National Film Institute 's Hall in which he had been promoted to former president of the Royal Navy . 
+
+
+[2026-04-24 19:31:55]  = = History = = 
+
+
+[2026-04-24 19:31:55]  In the late 1920s and early 1960s it was established as a major
+[2026-04-24 19:31:55]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=0.770
+[2026-04-24 19:32:32]   [1] 10050/19277 (52%) loss=4.5990 ppl=99.4 lr=9.95e-05 | 8059 tok/s (avg 8271) | ponder=5.308e-06 | infonce=0.103 | GPU 1.9/12.3GB
+[2026-04-24 19:33:08]   [1] 10100/19277 (52%) loss=4.2206 ppl=68.1 lr=9.94e-05 | 8444 tok/s (avg 8271) | ponder=5.424e-06 | infonce=0.165 | GPU 1.9/12.3GB
+[2026-04-24 19:33:08]     QLC: iter=2.00 alpha=0.836 beta=0.000 gamma=0.164 halt(yes/no/cont)=0.27/0.12/0.61 | align=0.9999 out_scale=0.080 psi_delta_l2=3.790e+02
+[2026-04-24 19:33:45]   [1] 10150/19277 (53%) loss=4.4803 ppl=88.3 lr=9.94e-05 | 8358 tok/s (avg 8272) | ponder=5.502e-06 | infonce=0.155 | GPU 1.9/12.3GB
+[2026-04-24 19:34:21]   [1] 10200/19277 (53%) loss=4.7725 ppl=118.2 lr=9.94e-05 | 8442 tok/s (avg 8273) | ponder=5.329e-06 | infonce=0.187 | GPU 1.9/12.3GB
+[2026-04-24 19:34:21]     QLC: iter=2.00 alpha=0.836 beta=0.000 gamma=0.164 halt(yes/no/cont)=0.27/0.12/0.61 | align=0.9999 out_scale=0.080 psi_delta_l2=3.790e+02
+[2026-04-24 19:34:58]   [1] 10250/19277 (53%) loss=4.4885 ppl=89.0 lr=9.94e-05 | 8449 tok/s (avg 8274) | ponder=5.597e-06 | infonce=0.130 | GPU 1.9/12.3GB
+[2026-04-24 19:35:34]   [1] 10300/19277 (53%) loss=4.4313 ppl=84.0 lr=9.94e-05 | 8446 tok/s (avg 8274) | ponder=5.108e-06 | infonce=0.114 | GPU 1.9/12.3GB
+[2026-04-24 19:35:34]     QLC: iter=2.00 alpha=0.837 beta=0.000 gamma=0.163 halt(yes/no/cont)=0.27/0.12/0.61 | align=0.9999 out_scale=0.080 psi_delta_l2=3.789e+02
+[2026-04-24 19:36:10]   [1] 10350/19277 (54%) loss=4.4788 ppl=88.1 lr=9.94e-05 | 8453 tok/s (avg 8275) | ponder=5.105e-06 | infonce=0.108 | GPU 1.9/12.3GB
+[2026-04-24 19:36:47]   [1] 10400/19277 (54%) loss=4.2239 ppl=68.3 lr=9.94e-05 | 8345 tok/s (avg 8276) | ponder=5.746e-06 | infonce=0.087 | GPU 1.9/12.3GB
+[2026-04-24 19:36:47]     QLC: iter=2.00 alpha=0.837 beta=0.000 gamma=0.163 halt(yes/no/cont)=0.27/0.12/0.61 | align=0.9999 out_scale=0.080 psi_delta_l2=3.789e+02
+[2026-04-24 19:37:23]   [1] 10450/19277 (54%) loss=4.7294 ppl=113.2 lr=9.94e-05 | 8448 tok/s (avg 8276) | ponder=4.929e-06 | infonce=0.088 | GPU 1.9/12.3GB
+[2026-04-24 19:38:00]   [1] 10500/19277 (54%) loss=4.4835 ppl=88.5 lr=9.94e-05 | 8439 tok/s (avg 8277) | ponder=5.317e-06 | infonce=0.095 | GPU 1.9/12.3GB
+[2026-04-24 19:38:00]     QLC: iter=2.00 alpha=0.837 beta=0.000 gamma=0.163 halt(yes/no/cont)=0.28/0.12/0.60 | align=0.9999 out_scale=0.080 psi_delta_l2=3.788e+02
+[2026-04-24 19:38:36]   [1] 10550/19277 (55%) loss=4.4533 ppl=85.9 lr=9.94e-05 | 8450 tok/s (avg 8278) | ponder=5.370e-06 | infonce=0.110 | GPU 1.9/12.3GB
+[2026-04-24 19:39:13]   [1] 10600/19277 (55%) loss=4.3349 ppl=76.3 lr=9.94e-05 | 8438 tok/s (avg 8279) | ponder=5.573e-06 | infonce=0.079 | GPU 1.9/12.3GB
+[2026-04-24 19:39:13]     QLC: iter=2.00 alpha=0.837 beta=0.000 gamma=0.163 halt(yes/no/cont)=0.28/0.12/0.60 | align=0.9999 out_scale=0.080 psi_delta_l2=3.787e+02
+[2026-04-24 19:39:49]   [1] 10650/19277 (55%) loss=4.7713 ppl=118.1 lr=9.94e-05 | 8361 tok/s (avg 8279) | ponder=4.953e-06 | infonce=0.115 | GPU 1.9/12.3GB
+[2026-04-24 19:40:26]   [1] 10700/19277 (56%) loss=4.5037 ppl=90.4 lr=9.94e-05 | 8437 tok/s (avg 8280) | ponder=5.203e-06 | infonce=0.149 | GPU 1.9/12.3GB
+[2026-04-24 19:40:26]     QLC: iter=2.00 alpha=0.838 beta=0.000 gamma=0.162 halt(yes/no/cont)=0.28/0.12/0.60 | align=0.9999 out_scale=0.080 psi_delta_l2=3.788e+02
+[2026-04-24 19:41:02]   [1] 10750/19277 (56%) loss=3.7431 ppl=42.2 lr=9.94e-05 | 8455 tok/s (avg 8281) | ponder=5.510e-06 | infonce=0.136 | GPU 1.9/12.3GB
+[2026-04-24 19:41:38]   [1] 10800/19277 (56%) loss=4.1811 ppl=65.4 lr=9.94e-05 | 8439 tok/s (avg 8281) | ponder=5.049e-06 | infonce=0.120 | GPU 1.9/12.3GB
+[2026-04-24 19:41:38]     QLC: iter=2.00 alpha=0.838 beta=0.000 gamma=0.162 halt(yes/no/cont)=0.28/0.12/0.60 | align=0.9999 out_scale=0.080 psi_delta_l2=3.788e+02
+[2026-04-24 19:42:15]   [1] 10850/19277 (56%) loss=4.4522 ppl=85.8 lr=9.94e-05 | 8451 tok/s (avg 8282) | ponder=5.051e-06 | infonce=0.150 | GPU 1.9/12.3GB
+[2026-04-24 19:42:52]   [1] 10900/19277 (57%) loss=4.2506 ppl=70.2 lr=9.93e-05 | 8350 tok/s (avg 8282) | ponder=5.010e-06 | infonce=0.113 | GPU 1.9/12.3GB
+[2026-04-24 19:42:52]     QLC: iter=2.00 alpha=0.838 beta=0.000 gamma=0.162 halt(yes/no/cont)=0.28/0.12/0.60 | align=0.9999 out_scale=0.080 psi_delta_l2=3.788e+02
+[2026-04-24 19:43:28]   [1] 10950/19277 (57%) loss=4.2500 ppl=70.1 lr=9.93e-05 | 8449 tok/s (avg 8283) | ponder=5.189e-06 | infonce=0.115 | GPU 1.9/12.3GB
+[2026-04-24 19:44:04]   [1] 11000/19277 (57%) loss=4.5944 ppl=98.9 lr=9.93e-05 | 8435 tok/s (avg 8284) | ponder=5.454e-06 | infonce=0.118 | GPU 1.9/12.3GB
+[2026-04-24 19:44:04]     QLC: iter=2.00 alpha=0.838 beta=0.000 gamma=0.162 halt(yes/no/cont)=0.28/0.12/0.60 | align=0.9999 out_scale=0.080 psi_delta_l2=3.788e+02
+[2026-04-24 19:44:41]   [1] 11050/19277 (57%) loss=4.4302 ppl=83.9 lr=9.93e-05 | 8447 tok/s (avg 8285) | ponder=5.123e-06 | infonce=0.144 | GPU 1.9/12.3GB
+[2026-04-24 19:45:18]   [1] 11100/19277 (58%) loss=4.2660 ppl=71.2 lr=9.93e-05 | 8348 tok/s (avg 8285) | ponder=5.007e-06 | infonce=0.144 | GPU 1.9/12.3GB
+[2026-04-24 19:45:18]     QLC: iter=2.00 alpha=0.838 beta=0.000 gamma=0.162 halt(yes/no/cont)=0.28/0.12/0.59 | align=0.9999 out_scale=0.080 psi_delta_l2=3.788e+02
+[2026-04-24 19:45:54]   [1] 11150/19277 (58%) loss=4.4731 ppl=87.6 lr=9.93e-05 | 8435 tok/s (avg 8285) | ponder=4.935e-06 | infonce=0.110 | GPU 1.9/12.3GB
+[2026-04-24 19:46:30]   [1] 11200/19277 (58%) loss=4.5741 ppl=96.9 lr=9.93e-05 | 8438 tok/s (avg 8286) | ponder=5.251e-06 | infonce=0.139 | GPU 1.9/12.3GB
+[2026-04-24 19:46:30]     QLC: iter=2.00 alpha=0.839 beta=0.000 gamma=0.161 halt(yes/no/cont)=0.29/0.12/0.59 | align=0.9999 out_scale=0.080 psi_delta_l2=3.787e+02
+[2026-04-24 19:47:07]   [1] 11250/19277 (58%) loss=4.3734 ppl=79.3 lr=9.93e-05 | 8449 tok/s (avg 8287) | ponder=5.201e-06 | infonce=0.128 | GPU 1.9/12.3GB
+[2026-04-24 19:47:43]   [1] 11300/19277 (59%) loss=4.5941 ppl=98.9 lr=9.93e-05 | 8437 tok/s (avg 8287) | ponder=4.864e-06 | infonce=0.114 | GPU 1.9/12.3GB
+[2026-04-24 19:47:43]     QLC: iter=2.00 alpha=0.839 beta=0.000 gamma=0.161 halt(yes/no/cont)=0.29/0.12/0.59 | align=0.9999 out_scale=0.079 psi_delta_l2=3.787e+02
+[2026-04-24 19:48:20]   [1] 11350/19277 (59%) loss=4.3630 ppl=78.5 lr=9.93e-05 | 8360 tok/s (avg 8288) | ponder=5.385e-06 | infonce=0.170 | GPU 1.9/12.3GB
+[2026-04-24 19:48:56]   [1] 11400/19277 (59%) loss=4.5944 ppl=98.9 lr=9.93e-05 | 8440 tok/s (avg 8288) | ponder=5.072e-06 | infonce=0.144 | GPU 1.9/12.3GB
+[2026-04-24 19:48:56]     QLC: iter=2.00 alpha=0.839 beta=0.000 gamma=0.161 halt(yes/no/cont)=0.29/0.12/0.59 | align=0.9999 out_scale=0.079 psi_delta_l2=3.787e+02
+[2026-04-24 19:49:33]   [1] 11450/19277 (59%) loss=4.2875 ppl=72.8 lr=9.93e-05 | 8444 tok/s (avg 8289) | ponder=4.953e-06 | infonce=0.156 | GPU 1.9/12.3GB
+[2026-04-24 19:50:09]   [1] 11500/19277 (60%) loss=4.7261 ppl=112.9 lr=9.93e-05 | 8434 tok/s (avg 8290) | ponder=4.861e-06 | infonce=0.136 | GPU 1.9/12.3GB
+[2026-04-24 19:50:09]     QLC: iter=2.00 alpha=0.839 beta=0.000 gamma=0.161 halt(yes/no/cont)=0.29/0.13/0.59 | align=0.9999 out_scale=0.079 psi_delta_l2=3.787e+02
+[2026-04-24 19:50:45]   [1] 11550/19277 (60%) loss=4.8171 ppl=123.6 lr=9.93e-05 | 8450 tok/s (avg 8290) | ponder=4.861e-06 | infonce=0.151 | GPU 1.9/12.3GB
+[2026-04-24 19:51:22]   [1] 11600/19277 (60%) loss=4.4563 ppl=86.2 lr=9.92e-05 | 8348 tok/s (avg 8291) | ponder=5.043e-06 | infonce=0.068 | GPU 1.9/12.3GB
+[2026-04-24 19:51:22]     QLC: iter=2.00 alpha=0.839 beta=0.000 gamma=0.160 halt(yes/no/cont)=0.29/0.13/0.59 | align=0.9999 out_scale=0.079 psi_delta_l2=3.787e+02
+[2026-04-24 19:51:59]   [1] 11650/19277 (60%) loss=4.4735 ppl=87.7 lr=9.92e-05 | 8451 tok/s (avg 8291) | ponder=5.281e-06 | infonce=0.100 | GPU 1.9/12.3GB
+[2026-04-24 19:52:35]   [1] 11700/19277 (61%) loss=4.4595 ppl=86.4 lr=9.92e-05 | 8439 tok/s (avg 8292) | ponder=5.224e-06 | infonce=0.086 | GPU 1.9/12.3GB
+[2026-04-24 19:52:35]     QLC: iter=2.00 alpha=0.840 beta=0.000 gamma=0.160 halt(yes/no/cont)=0.29/0.13/0.58 | align=0.9999 out_scale=0.079 psi_delta_l2=3.786e+02
+[2026-04-24 19:53:11]   [1] 11750/19277 (61%) loss=4.8103 ppl=122.8 lr=9.92e-05 | 8451 tok/s (avg 8293) | ponder=5.028e-06 | infonce=0.099 | GPU 1.9/12.3GB
+[2026-04-24 19:53:48]   [1] 11800/19277 (61%) loss=4.2238 ppl=68.3 lr=9.92e-05 | 8434 tok/s (avg 8293) | ponder=5.001e-06 | infonce=0.147 | GPU 1.9/12.3GB
+[2026-04-24 19:53:48]     QLC: iter=2.00 alpha=0.840 beta=0.000 gamma=0.160 halt(yes/no/cont)=0.29/0.13/0.58 | align=0.9999 out_scale=0.079 psi_delta_l2=3.786e+02
+[2026-04-24 19:54:25]   [1] 11850/19277 (61%) loss=4.5787 ppl=97.4 lr=9.92e-05 | 8362 tok/s (avg 8294) | ponder=5.111e-06 | infonce=0.083 | GPU 1.9/12.3GB
+[2026-04-24 19:55:01]   [1] 11900/19277 (62%) loss=4.5591 ppl=95.5 lr=9.92e-05 | 8440 tok/s (avg 8294) | ponder=5.218e-06 | infonce=0.179 | GPU 1.9/12.3GB
+[2026-04-24 19:55:01]     QLC: iter=2.00 alpha=0.840 beta=0.000 gamma=0.160 halt(yes/no/cont)=0.29/0.13/0.58 | align=0.9999 out_scale=0.079 psi_delta_l2=3.786e+02
+[2026-04-24 19:55:37]   [1] 11950/19277 (62%) loss=4.2617 ppl=70.9 lr=9.92e-05 | 8456 tok/s (avg 8295) | ponder=5.418e-06 | infonce=0.147 | GPU 1.9/12.3GB
+[2026-04-24 19:56:14]   [1] 12000/19277 (62%) loss=3.8344 ppl=46.3 lr=9.92e-05 | 8438 tok/s (avg 8295) | ponder=5.060e-06 | infonce=0.122 | GPU 1.9/12.3GB
+[2026-04-24 19:56:14]     QLC: iter=2.00 alpha=0.841 beta=0.000 gamma=0.159 halt(yes/no/cont)=0.29/0.13/0.58 | align=0.9999 out_scale=0.079 psi_delta_l2=3.785e+02
+[2026-04-24 19:56:50]   [1] 12050/19277 (63%) loss=4.3800 ppl=79.8 lr=9.92e-05 | 8365 tok/s (avg 8296) | ponder=5.746e-06 | infonce=0.123 | GPU 1.9/12.3GB
+[2026-04-24 19:57:27]   [1] 12100/19277 (63%) loss=4.6057 ppl=100.1 lr=9.92e-05 | 8440 tok/s (avg 8296) | ponder=5.060e-06 | infonce=0.099 | GPU 1.9/12.3GB
+[2026-04-24 19:57:27]     QLC: iter=2.00 alpha=0.841 beta=0.000 gamma=0.159 halt(yes/no/cont)=0.30/0.13/0.58 | align=0.9999 out_scale=0.079 psi_delta_l2=3.785e+02
+[2026-04-24 19:58:03]   [1] 12150/19277 (63%) loss=4.6074 ppl=100.2 lr=9.92e-05 | 8445 tok/s (avg 8297) | ponder=4.944e-06 | infonce=0.117 | GPU 1.9/12.3GB
+[2026-04-24 19:58:40]   [1] 12200/19277 (63%) loss=4.1995 ppl=66.7 lr=9.92e-05 | 8438 tok/s (avg 8297) | ponder=5.165e-06 | infonce=0.162 | GPU 1.9/12.3GB
+[2026-04-24 19:58:40]     QLC: iter=2.00 alpha=0.841 beta=0.000 gamma=0.159 halt(yes/no/cont)=0.30/0.13/0.57 | align=0.9999 out_scale=0.079 psi_delta_l2=3.785e+02
+[2026-04-24 19:59:16]   [1] 12250/19277 (64%) loss=4.7273 ppl=113.0 lr=9.92e-05 | 8451 tok/s (avg 8298) | ponder=4.762e-06 | infonce=0.140 | GPU 1.9/12.3GB
+[2026-04-24 19:59:53]   [1] 12300/19277 (64%) loss=4.5953 ppl=99.0 lr=9.91e-05 | 8355 tok/s (avg 8298) | ponder=5.296e-06 | infonce=0.129 | GPU 1.9/12.3GB
+[2026-04-24 19:59:53]     QLC: iter=2.00 alpha=0.841 beta=0.000 gamma=0.158 halt(yes/no/cont)=0.30/0.13/0.57 | align=0.9999 out_scale=0.079 psi_delta_l2=3.786e+02
+[2026-04-24 20:00:29]   [1] 12350/19277 (64%) loss=4.3537 ppl=77.8 lr=9.91e-05 | 8449 tok/s (avg 8299) | ponder=4.989e-06 | infonce=0.116 | GPU 1.9/12.3GB
+[2026-04-24 20:01:05]   [1] 12400/19277 (64%) loss=4.9277 ppl=138.1 lr=9.91e-05 | 8446 tok/s (avg 8299) | ponder=5.046e-06 | infonce=0.072 | GPU 1.9/12.3GB
+[2026-04-24 20:01:05]     QLC: iter=2.00 alpha=0.842 beta=0.000 gamma=0.158 halt(yes/no/cont)=0.30/0.13/0.57 | align=0.9999 out_scale=0.079 psi_delta_l2=3.786e+02
+[2026-04-24 20:01:42]   [1] 12450/19277 (65%) loss=4.5413 ppl=93.8 lr=9.91e-05 | 8458 tok/s (avg 8300) | ponder=5.069e-06 | infonce=0.089 | GPU 1.9/12.3GB
+[2026-04-24 20:02:18]   [1] 12500/19277 (65%) loss=4.2509 ppl=70.2 lr=9.91e-05 | 8443 tok/s (avg 8301) | ponder=5.153e-06 | infonce=0.162 | GPU 1.9/12.3GB
+[2026-04-24 20:02:18]     QLC: iter=2.00 alpha=0.842 beta=0.000 gamma=0.158 halt(yes/no/cont)=0.30/0.13/0.57 | align=0.9999 out_scale=0.079 psi_delta_l2=3.786e+02
+[2026-04-24 20:02:55]   [1] 12550/19277 (65%) loss=3.9729 ppl=53.1 lr=9.91e-05 | 8356 tok/s (avg 8301) | ponder=5.358e-06 | infonce=0.135 | GPU 1.9/12.3GB
+[2026-04-24 20:03:31]   [1] 12600/19277 (65%) loss=4.2333 ppl=68.9 lr=9.91e-05 | 8436 tok/s (avg 8301) | ponder=5.332e-06 | infonce=0.104 | GPU 1.9/12.3GB
+[2026-04-24 20:03:31]     QLC: iter=2.00 alpha=0.842 beta=0.000 gamma=0.158 halt(yes/no/cont)=0.30/0.13/0.57 | align=0.9999 out_scale=0.079 psi_delta_l2=3.785e+02
+[2026-04-24 20:04:08]   [1] 12650/19277 (66%) loss=4.5993 ppl=99.4 lr=9.91e-05 | 8446 tok/s (avg 8302) | ponder=5.442e-06 | infonce=0.084 | GPU 1.9/12.3GB
+[2026-04-24 20:04:44]   [1] 12700/19277 (66%) loss=4.5971 ppl=99.2 lr=9.91e-05 | 8442 tok/s (avg 8302) | ponder=5.597e-06 | infonce=0.095 | GPU 1.9/12.3GB
+[2026-04-24 20:04:44]     QLC: iter=2.00 alpha=0.842 beta=0.000 gamma=0.158 halt(yes/no/cont)=0.31/0.13/0.56 | align=0.9999 out_scale=0.079 psi_delta_l2=3.784e+02
+[2026-04-24 20:05:20]   [1] 12750/19277 (66%) loss=4.4864 ppl=88.8 lr=9.91e-05 | 8453 tok/s (avg 8303) | ponder=5.209e-06 | infonce=0.183 | GPU 1.9/12.3GB
+[2026-04-24 20:05:57]   [1] 12800/19277 (66%) loss=3.9031 ppl=49.6 lr=9.91e-05 | 8345 tok/s (avg 8303) | ponder=5.019e-06 | infonce=0.141 | GPU 1.9/12.3GB
+[2026-04-24 20:05:57]     QLC: iter=2.00 alpha=0.842 beta=0.000 gamma=0.157 halt(yes/no/cont)=0.31/0.13/0.56 | align=0.9999 out_scale=0.079 psi_delta_l2=3.783e+02
+[2026-04-24 20:06:34]   [1] 12850/19277 (67%) loss=4.1277 ppl=62.0 lr=9.91e-05 | 8444 tok/s (avg 8304) | ponder=4.855e-06 | infonce=0.113 | GPU 1.9/12.3GB
+[2026-04-24 20:07:10]   [1] 12900/19277 (67%) loss=4.1014 ppl=60.4 lr=9.91e-05 | 8437 tok/s (avg 8304) | ponder=6.416e-06 | infonce=0.107 | GPU 1.9/12.3GB
+[2026-04-24 20:07:10]     QLC: iter=2.00 alpha=0.843 beta=0.000 gamma=0.157 halt(yes/no/cont)=0.31/0.13/0.56 | align=0.9999 out_scale=0.079 psi_delta_l2=3.783e+02
+[2026-04-24 20:07:46]   [1] 12950/19277 (67%) loss=4.3122 ppl=74.6 lr=9.90e-05 | 8454 tok/s (avg 8305) | ponder=4.846e-06 | infonce=0.104 | GPU 1.9/12.3GB
+[2026-04-24 20:08:23]   [1] 13000/19277 (67%) loss=4.6644 ppl=106.1 lr=9.90e-05 | 8351 tok/s (avg 8305) | ponder=5.132e-06 | infonce=0.140 | GPU 1.9/12.3GB
+[2026-04-24 20:08:23]     QLC: iter=2.00 alpha=0.843 beta=0.000 gamma=0.157 halt(yes/no/cont)=0.31/0.13/0.56 | align=0.9999 out_scale=0.079 psi_delta_l2=3.783e+02
+[2026-04-24 20:08:59]   [1] 13050/19277 (68%) loss=4.5044 ppl=90.4 lr=9.90e-05 | 8451 tok/s (avg 8306) | ponder=5.049e-06 | infonce=0.060 | GPU 1.9/12.3GB
+[2026-04-24 20:09:36]   [1] 13100/19277 (68%) loss=4.4246 ppl=83.5 lr=9.90e-05 | 8435 tok/s (avg 8306) | ponder=4.953e-06 | infonce=0.106 | GPU 1.9/12.3GB
+[2026-04-24 20:09:36]     QLC: iter=2.00 alpha=0.843 beta=0.000 gamma=0.157 halt(yes/no/cont)=0.31/0.13/0.55 | align=0.9999 out_scale=0.079 psi_delta_l2=3.784e+02
+[2026-04-24 20:10:12]   [1] 13150/19277 (68%) loss=4.1755 ppl=65.1 lr=9.90e-05 | 8452 tok/s (avg 8307) | ponder=4.888e-06 | infonce=0.120 | GPU 1.9/12.3GB
+[2026-04-24 20:10:49]   [1] 13200/19277 (68%) loss=4.0010 ppl=54.7 lr=9.90e-05 | 8444 tok/s (avg 8307) | ponder=5.648e-06 | infonce=0.129 | GPU 1.9/12.3GB
+[2026-04-24 20:10:49]     QLC: iter=2.00 alpha=0.844 beta=0.000 gamma=0.156 halt(yes/no/cont)=0.31/0.14/0.55 | align=0.9999 out_scale=0.079 psi_delta_l2=3.782e+02
+[2026-04-24 20:11:25]   [1] 13250/19277 (69%) loss=4.1811 ppl=65.4 lr=9.90e-05 | 8362 tok/s (avg 8307) | ponder=5.066e-06 | infonce=0.106 | GPU 1.9/12.3GB
+[2026-04-24 20:12:02]   [1] 13300/19277 (69%) loss=4.3560 ppl=77.9 lr=9.90e-05 | 8434 tok/s (avg 8308) | ponder=5.168e-06 | infonce=0.157 | GPU 1.9/12.3GB
+[2026-04-24 20:12:02]     QLC: iter=2.00 alpha=0.844 beta=0.000 gamma=0.156 halt(yes/no/cont)=0.31/0.14/0.55 | align=0.9999 out_scale=0.079 psi_delta_l2=3.782e+02
+[2026-04-24 20:12:38]   [1] 13350/19277 (69%) loss=4.7482 ppl=115.4 lr=9.90e-05 | 8449 tok/s (avg 8308) | ponder=5.126e-06 | infonce=0.092 | GPU 1.9/12.3GB
+[2026-04-24 20:13:15]   [1] 13400/19277 (70%) loss=4.3929 ppl=80.9 lr=9.90e-05 | 8437 tok/s (avg 8309) | ponder=5.287e-06 | infonce=0.147 | GPU 1.9/12.3GB
+[2026-04-24 20:13:15]     QLC: iter=2.00 alpha=0.844 beta=0.000 gamma=0.156 halt(yes/no/cont)=0.31/0.14/0.55 | align=0.9999 out_scale=0.079 psi_delta_l2=3.782e+02
+[2026-04-24 20:13:51]   [1] 13450/19277 (70%) loss=4.0589 ppl=57.9 lr=9.90e-05 | 8451 tok/s (avg 8309) | ponder=5.153e-06 | infonce=0.119 | GPU 1.9/12.3GB
+[2026-04-24 20:14:28]   [1] 13500/19277 (70%) loss=4.0350 ppl=56.5 lr=9.90e-05 | 8347 tok/s (avg 8309) | ponder=4.721e-06 | infonce=0.143 | GPU 1.9/12.3GB
+[2026-04-24 20:14:28]     QLC: iter=2.00 alpha=0.845 beta=0.000 gamma=0.155 halt(yes/no/cont)=0.32/0.14/0.55 | align=0.9999 out_scale=0.079 psi_delta_l2=3.783e+02
+[2026-04-24 20:15:04]   [1] 13550/19277 (70%) loss=4.1805 ppl=65.4 lr=9.89e-05 | 8447 tok/s (avg 8310) | ponder=5.043e-06 | infonce=0.138 | GPU 1.9/12.3GB
+[2026-04-24 20:15:41]   [1] 13600/19277 (71%) loss=4.1877 ppl=65.9 lr=9.89e-05 | 8423 tok/s (avg 8310) | ponder=5.555e-06 | infonce=0.123 | GPU 1.9/12.3GB
+[2026-04-24 20:15:41]     QLC: iter=2.00 alpha=0.845 beta=0.000 gamma=0.155 halt(yes/no/cont)=0.32/0.14/0.55 | align=0.9999 out_scale=0.079 psi_delta_l2=3.782e+02
+[2026-04-24 20:16:17]   [1] 13650/19277 (71%) loss=4.5345 ppl=93.2 lr=9.89e-05 | 8445 tok/s (avg 8311) | ponder=5.165e-06 | infonce=0.145 | GPU 1.9/12.3GB
+[2026-04-24 20:16:53]   [1] 13700/19277 (71%) loss=4.2820 ppl=72.4 lr=9.89e-05 | 8440 tok/s (avg 8311) | ponder=5.281e-06 | infonce=0.092 | GPU 1.9/12.3GB
+[2026-04-24 20:16:53]     QLC: iter=2.00 alpha=0.845 beta=0.000 gamma=0.155 halt(yes/no/cont)=0.32/0.14/0.54 | align=0.9999 out_scale=0.079 psi_delta_l2=3.782e+02
+[2026-04-24 20:17:30]   [1] 13750/19277 (71%) loss=4.2721 ppl=71.7 lr=9.89e-05 | 8364 tok/s (avg 8311) | ponder=4.950e-06 | infonce=0.121 | GPU 1.9/12.3GB
+[2026-04-24 20:18:06]   [1] 13800/19277 (72%) loss=4.6662 ppl=106.3 lr=9.89e-05 | 8440 tok/s (avg 8312) | ponder=5.379e-06 | infonce=0.086 | GPU 1.9/12.3GB
+[2026-04-24 20:18:06]     QLC: iter=2.00 alpha=0.845 beta=0.000 gamma=0.154 halt(yes/no/cont)=0.32/0.14/0.54 | align=0.9999 out_scale=0.079 psi_delta_l2=3.782e+02
+[2026-04-24 20:18:43]   [1] 13850/19277 (72%) loss=4.7118 ppl=111.3 lr=9.89e-05 | 8454 tok/s (avg 8312) | ponder=5.582e-06 | infonce=0.137 | GPU 1.9/12.3GB
+[2026-04-24 20:19:19]   [1] 13900/19277 (72%) loss=4.3123 ppl=74.6 lr=9.89e-05 | 8442 tok/s (avg 8313) | ponder=4.870e-06 | infonce=0.146 | GPU 1.9/12.3GB
+[2026-04-24 20:19:19]     QLC: iter=2.00 alpha=0.846 beta=0.000 gamma=0.154 halt(yes/no/cont)=0.32/0.14/0.54 | align=0.9999 out_scale=0.079 psi_delta_l2=3.782e+02
+[2026-04-24 20:19:56]   [1] 13950/19277 (72%) loss=3.8209 ppl=45.6 lr=9.89e-05 | 8366 tok/s (avg 8313) | ponder=4.679e-06 | infonce=0.113 | GPU 1.9/12.3GB
+[2026-04-24 20:20:32]   [1] 14000/19277 (73%) loss=4.4878 ppl=88.9 lr=9.89e-05 | 8432 tok/s (avg 8313) | ponder=5.007e-06 | infonce=0.104 | GPU 1.9/12.3GB
+[2026-04-24 20:20:32]     QLC: iter=2.00 alpha=0.846 beta=0.000 gamma=0.154 halt(yes/no/cont)=0.32/0.14/0.54 | align=0.9999 out_scale=0.079 psi_delta_l2=3.781e+02
+[2026-04-24 20:21:09]   [1] 14050/19277 (73%) loss=4.3051 ppl=74.1 lr=9.89e-05 | 8446 tok/s (avg 8314) | ponder=4.905e-06 | infonce=0.135 | GPU 1.9/12.3GB
+[2026-04-24 20:21:45]   [1] 14100/19277 (73%) loss=4.1655 ppl=64.4 lr=9.89e-05 | 8437 tok/s (avg 8314) | ponder=5.069e-06 | infonce=0.116 | GPU 1.9/12.3GB
+[2026-04-24 20:21:45]     QLC: iter=2.00 alpha=0.846 beta=0.000 gamma=0.154 halt(yes/no/cont)=0.32/0.14/0.53 | align=0.9999 out_scale=0.079 psi_delta_l2=3.781e+02
+[2026-04-24 20:22:22]   [1] 14150/19277 (73%) loss=4.5910 ppl=98.6 lr=9.88e-05 | 8445 tok/s (avg 8315) | ponder=5.049e-06 | infonce=0.122 | GPU 1.9/12.3GB
+[2026-04-24 20:22:58]   [1] 14200/19277 (74%) loss=4.3959 ppl=81.1 lr=9.88e-05 | 8343 tok/s (avg 8315) | ponder=5.099e-06 | infonce=0.174 | GPU 1.9/12.3GB
+[2026-04-24 20:22:58]     QLC: iter=2.00 alpha=0.846 beta=0.000 gamma=0.154 halt(yes/no/cont)=0.33/0.14/0.53 | align=0.9999 out_scale=0.079 psi_delta_l2=3.780e+02
+[2026-04-24 20:23:35]   [1] 14250/19277 (74%) loss=4.2142 ppl=67.6 lr=9.88e-05 | 8447 tok/s (avg 8315) | ponder=4.956e-06 | infonce=0.165 | GPU 1.9/12.3GB
+[2026-04-24 20:24:11]   [1] 14300/19277 (74%) loss=4.4512 ppl=85.7 lr=9.88e-05 | 8441 tok/s (avg 8316) | ponder=4.780e-06 | infonce=0.114 | GPU 1.9/12.3GB
+[2026-04-24 20:24:11]     QLC: iter=2.00 alpha=0.847 beta=0.000 gamma=0.153 halt(yes/no/cont)=0.33/0.14/0.53 | align=0.9999 out_scale=0.079 psi_delta_l2=3.780e+02
+[2026-04-24 20:24:47]   [1] 14350/19277 (74%) loss=4.2740 ppl=71.8 lr=9.88e-05 | 8454 tok/s (avg 8316) | ponder=5.034e-06 | infonce=0.076 | GPU 1.9/12.3GB
+[2026-04-24 20:25:24]   [1] 14400/19277 (75%) loss=4.3388 ppl=76.6 lr=9.88e-05 | 8439 tok/s (avg 8317) | ponder=5.457e-06 | infonce=0.088 | GPU 1.9/12.3GB
+[2026-04-24 20:25:24]     QLC: iter=2.00 alpha=0.847 beta=0.000 gamma=0.153 halt(yes/no/cont)=0.33/0.14/0.53 | align=0.9999 out_scale=0.079 psi_delta_l2=3.780e+02
+[2026-04-24 20:26:01]   [1] 14450/19277 (75%) loss=4.4611 ppl=86.6 lr=9.88e-05 | 8350 tok/s (avg 8317) | ponder=4.882e-06 | infonce=0.137 | GPU 1.9/12.3GB
+[2026-04-24 20:26:37]   [1] 14500/19277 (75%) loss=4.4273 ppl=83.7 lr=9.88e-05 | 8443 tok/s (avg 8317) | ponder=5.162e-06 | infonce=0.105 | GPU 1.9/12.3GB
+[2026-04-24 20:26:37]     QLC: iter=2.00 alpha=0.847 beta=0.000 gamma=0.153 halt(yes/no/cont)=0.33/0.14/0.53 | align=0.9999 out_scale=0.079 psi_delta_l2=3.780e+02
+[2026-04-24 20:27:13]   [1] 14550/19277 (75%) loss=4.1573 ppl=63.9 lr=9.88e-05 | 8447 tok/s (avg 8318) | ponder=4.855e-06 | infonce=0.135 | GPU 1.9/12.3GB
+[2026-04-24 20:27:50]   [1] 14600/19277 (76%) loss=4.1345 ppl=62.5 lr=9.88e-05 | 8439 tok/s (avg 8318) | ponder=5.013e-06 | infonce=0.181 | GPU 1.9/12.3GB
+[2026-04-24 20:27:50]     QLC: iter=2.00 alpha=0.847 beta=0.000 gamma=0.153 halt(yes/no/cont)=0.33/0.14/0.53 | align=0.9999 out_scale=0.079 psi_delta_l2=3.781e+02
+[2026-04-24 20:28:26]   [1] 14650/19277 (76%) loss=4.3788 ppl=79.7 lr=9.88e-05 | 8450 tok/s (avg 8319) | ponder=4.911e-06 | infonce=0.111 | GPU 1.9/12.3GB
+[2026-04-24 20:29:03]   [1] 14700/19277 (76%) loss=4.0349 ppl=56.5 lr=9.87e-05 | 8345 tok/s (avg 8319) | ponder=4.876e-06 | infonce=0.121 | GPU 1.9/12.3GB
+[2026-04-24 20:29:03]     QLC: iter=2.00 alpha=0.847 beta=0.000 gamma=0.152 halt(yes/no/cont)=0.33/0.14/0.52 | align=0.9999 out_scale=0.079 psi_delta_l2=3.779e+02
+[2026-04-24 20:29:39]   [1] 14750/19277 (77%) loss=4.4990 ppl=89.9 lr=9.87e-05 | 8450 tok/s (avg 8319) | ponder=4.968e-06 | infonce=0.129 | GPU 1.9/12.3GB
+[2026-04-24 20:30:16]   [1] 14800/19277 (77%) loss=4.6335 ppl=102.9 lr=9.87e-05 | 8439 tok/s (avg 8319) | ponder=4.870e-06 | infonce=0.123 | GPU 1.9/12.3GB
+[2026-04-24 20:30:16]     QLC: iter=2.00 alpha=0.848 beta=0.000 gamma=0.152 halt(yes/no/cont)=0.33/0.14/0.52 | align=0.9999 out_scale=0.078 psi_delta_l2=3.780e+02
+[2026-04-24 20:30:52]   [1] 14850/19277 (77%) loss=4.3626 ppl=78.5 lr=9.87e-05 | 8447 tok/s (avg 8320) | ponder=5.391e-06 | infonce=0.111 | GPU 1.9/12.3GB
+[2026-04-24 20:31:29]   [1] 14900/19277 (77%) loss=4.4840 ppl=88.6 lr=9.87e-05 | 8352 tok/s (avg 8320) | ponder=4.777e-06 | infonce=0.079 | GPU 1.9/12.3GB
+[2026-04-24 20:31:29]     QLC: iter=2.00 alpha=0.848 beta=0.000 gamma=0.152 halt(yes/no/cont)=0.34/0.15/0.52 | align=0.9999 out_scale=0.078 psi_delta_l2=3.780e+02
+[2026-04-24 20:32:05]   [1] 14950/19277 (78%) loss=4.3847 ppl=80.2 lr=9.87e-05 | 8451 tok/s (avg 8320) | ponder=5.069e-06 | infonce=0.128 | GPU 1.9/12.3GB
+[2026-04-24 20:32:42]   [1] 15000/19277 (78%) loss=3.9474 ppl=51.8 lr=9.87e-05 | 8441 tok/s (avg 8321) | ponder=5.007e-06 | infonce=0.152 | GPU 1.9/12.3GB
+[2026-04-24 20:32:42]     QLC: iter=2.00 alpha=0.848 beta=0.000 gamma=0.152 halt(yes/no/cont)=0.34/0.15/0.52 | align=0.9999 out_scale=0.078 psi_delta_l2=3.778e+02
+[2026-04-24 20:32:43]   [mid-epoch sample @ batch 15000, 92,166,144 tok]
+[2026-04-24 20:32:43]   Prompt: In 1923 , the University of
+[2026-04-24 20:32:43]   Generated: In 1923 , the University of London and the University of Illinois . 
+
+[2026-04-24 20:32:43]  In 1927 , she was assigned as an assistant to the University of California in the California League , but was not given a contract until his death . He returned to California in 1935 with the outbreak of World War II that year . In 1933 , the University of California entered into World War I. The University of California was named after World War II . After World
+[2026-04-24 20:32:43]   Quality: rep3=0.086 rep4=0.025 restarts=0 uniq=0.566
+[2026-04-24 20:33:20]   [1] 15050/19277 (78%) loss=4.1993 ppl=66.6 lr=9.87e-05 | 8060 tok/s (avg 8320) | ponder=5.078e-06 | infonce=0.161 | GPU 1.9/12.3GB
+[2026-04-24 20:33:56]   [1] 15100/19277 (78%) loss=4.0609 ppl=58.0 lr=9.87e-05 | 8440 tok/s (avg 8320) | ponder=4.780e-06 | infonce=0.115 | GPU 1.9/12.3GB
+[2026-04-24 20:33:56]     QLC: iter=2.00 alpha=0.848 beta=0.000 gamma=0.152 halt(yes/no/cont)=0.34/0.15/0.52 | align=0.9999 out_scale=0.078 psi_delta_l2=3.779e+02
+[2026-04-24 20:34:33]   [1] 15150/19277 (79%) loss=4.0335 ppl=56.5 lr=9.87e-05 | 8361 tok/s (avg 8320) | ponder=5.069e-06 | infonce=0.150 | GPU 1.9/12.3GB
+[2026-04-24 20:35:09]   [1] 15200/19277 (79%) loss=4.0422 ppl=56.9 lr=9.87e-05 | 8437 tok/s (avg 8321) | ponder=4.911e-06 | infonce=0.126 | GPU 1.9/12.3GB
+[2026-04-24 20:35:09]     QLC: iter=2.00 alpha=0.848 beta=0.000 gamma=0.151 halt(yes/no/cont)=0.34/0.15/0.52 | align=0.9999 out_scale=0.078 psi_delta_l2=3.779e+02
+[2026-04-24 20:35:46]   [1] 15250/19277 (79%) loss=4.1805 ppl=65.4 lr=9.86e-05 | 8452 tok/s (avg 8321) | ponder=5.031e-06 | infonce=0.101 | GPU 1.9/12.3GB
+[2026-04-24 20:36:22]   [1] 15300/19277 (79%) loss=4.1782 ppl=65.2 lr=9.86e-05 | 8431 tok/s (avg 8322) | ponder=5.198e-06 | infonce=0.113 | GPU 1.9/12.3GB
+[2026-04-24 20:36:22]     QLC: iter=2.00 alpha=0.849 beta=0.000 gamma=0.151 halt(yes/no/cont)=0.34/0.15/0.51 | align=0.9999 out_scale=0.078 psi_delta_l2=3.779e+02
+[2026-04-24 20:36:58]   [1] 15350/19277 (80%) loss=4.3300 ppl=75.9 lr=9.86e-05 | 8448 tok/s (avg 8322) | ponder=5.144e-06 | infonce=0.115 | GPU 1.9/12.3GB
+[2026-04-24 20:37:35]   [1] 15400/19277 (80%) loss=3.9952 ppl=54.3 lr=9.86e-05 | 8347 tok/s (avg 8322) | ponder=4.840e-06 | infonce=0.136 | GPU 1.9/12.3GB
+[2026-04-24 20:37:35]     QLC: iter=2.00 alpha=0.849 beta=0.000 gamma=0.151 halt(yes/no/cont)=0.34/0.15/0.51 | align=0.9999 out_scale=0.078 psi_delta_l2=3.778e+02
+[2026-04-24 20:38:12]   [1] 15450/19277 (80%) loss=4.5276 ppl=92.5 lr=9.86e-05 | 8445 tok/s (avg 8322) | ponder=4.941e-06 | infonce=0.146 | GPU 1.9/12.3GB
+[2026-04-24 20:38:48]   [1] 15500/19277 (80%) loss=4.1838 ppl=65.6 lr=9.86e-05 | 8430 tok/s (avg 8323) | ponder=5.132e-06 | infonce=0.107 | GPU 1.9/12.3GB
+[2026-04-24 20:38:48]     QLC: iter=2.00 alpha=0.849 beta=0.000 gamma=0.151 halt(yes/no/cont)=0.34/0.15/0.51 | align=0.9999 out_scale=0.078 psi_delta_l2=3.779e+02
+[2026-04-24 20:39:24]   [1] 15550/19277 (81%) loss=4.4063 ppl=82.0 lr=9.86e-05 | 8456 tok/s (avg 8323) | ponder=4.745e-06 | infonce=0.118 | GPU 1.9/12.3GB
+[2026-04-24 20:40:01]   [1] 15600/19277 (81%) loss=3.9032 ppl=49.6 lr=9.86e-05 | 8437 tok/s (avg 8324) | ponder=4.795e-06 | infonce=0.120 | GPU 1.9/12.3GB
+[2026-04-24 20:40:01]     QLC: iter=2.00 alpha=0.849 beta=0.000 gamma=0.151 halt(yes/no/cont)=0.34/0.15/0.51 | align=0.9999 out_scale=0.078 psi_delta_l2=3.778e+02
+[2026-04-24 20:40:38]   [1] 15650/19277 (81%) loss=4.2738 ppl=71.8 lr=9.86e-05 | 8361 tok/s (avg 8324) | ponder=4.917e-06 | infonce=0.085 | GPU 1.9/12.3GB
+[2026-04-24 20:41:14]   [1] 15700/19277 (81%) loss=4.5612 ppl=95.7 lr=9.86e-05 | 8427 tok/s (avg 8324) | ponder=5.990e-06 | infonce=0.079 | GPU 1.9/12.3GB
+[2026-04-24 20:41:14]     QLC: iter=2.00 alpha=0.850 beta=0.000 gamma=0.150 halt(yes/no/cont)=0.35/0.15/0.50 | align=0.9999 out_scale=0.078 psi_delta_l2=3.778e+02
+[2026-04-24 20:41:50]   [1] 15750/19277 (82%) loss=4.0904 ppl=59.8 lr=9.85e-05 | 8444 tok/s (avg 8324) | ponder=5.513e-06 | infonce=0.124 | GPU 1.9/12.3GB
+[2026-04-24 20:42:27]   [1] 15800/19277 (82%) loss=4.3304 ppl=76.0 lr=9.85e-05 | 8438 tok/s (avg 8325) | ponder=5.352e-06 | infonce=0.155 | GPU 1.9/12.3GB
+[2026-04-24 20:42:27]     QLC: iter=2.00 alpha=0.850 beta=0.000 gamma=0.150 halt(yes/no/cont)=0.35/0.15/0.50 | align=0.9999 out_scale=0.078 psi_delta_l2=3.778e+02
+[2026-04-24 20:43:04]   [1] 15850/19277 (82%) loss=4.3973 ppl=81.2 lr=9.85e-05 | 8362 tok/s (avg 8325) | ponder=5.865e-06 | infonce=0.097 | GPU 1.9/12.3GB
+[2026-04-24 20:43:40]   [1] 15900/19277 (82%) loss=4.2289 ppl=68.6 lr=9.85e-05 | 8439 tok/s (avg 8325) | ponder=5.046e-06 | infonce=0.119 | GPU 1.9/12.3GB
+[2026-04-24 20:43:40]     QLC: iter=2.00 alpha=0.850 beta=0.000 gamma=0.150 halt(yes/no/cont)=0.35/0.15/0.50 | align=0.9999 out_scale=0.078 psi_delta_l2=3.778e+02
+[2026-04-24 20:44:16]   [1] 15950/19277 (83%) loss=4.5308 ppl=92.8 lr=9.85e-05 | 8453 tok/s (avg 8326) | ponder=4.995e-06 | infonce=0.126 | GPU 1.9/12.3GB
+[2026-04-24 20:44:53]   [1] 16000/19277 (83%) loss=4.3450 ppl=77.1 lr=9.85e-05 | 8432 tok/s (avg 8326) | ponder=5.510e-06 | infonce=0.074 | GPU 1.9/12.3GB
+[2026-04-24 20:44:53]     QLC: iter=2.00 alpha=0.850 beta=0.000 gamma=0.150 halt(yes/no/cont)=0.35/0.15/0.50 | align=0.9999 out_scale=0.078 psi_delta_l2=3.778e+02
+[2026-04-24 20:45:29]   [1] 16050/19277 (83%) loss=4.4669 ppl=87.1 lr=9.85e-05 | 8454 tok/s (avg 8326) | ponder=5.203e-06 | infonce=0.155 | GPU 1.9/12.3GB
+[2026-04-24 20:46:06]   [1] 16100/19277 (84%) loss=4.6666 ppl=106.3 lr=9.85e-05 | 8347 tok/s (avg 8326) | ponder=5.111e-06 | infonce=0.155 | GPU 1.9/12.3GB
+[2026-04-24 20:46:06]     QLC: iter=2.00 alpha=0.851 beta=0.000 gamma=0.149 halt(yes/no/cont)=0.35/0.15/0.50 | align=0.9999 out_scale=0.078 psi_delta_l2=3.778e+02
+[2026-04-24 20:46:42]   [1] 16150/19277 (84%) loss=4.4031 ppl=81.7 lr=9.85e-05 | 8452 tok/s (avg 8327) | ponder=5.245e-06 | infonce=0.085 | GPU 1.9/12.3GB
+[2026-04-24 20:47:19]   [1] 16200/19277 (84%) loss=4.0235 ppl=55.9 lr=9.85e-05 | 8436 tok/s (avg 8327) | ponder=5.242e-06 | infonce=0.117 | GPU 1.9/12.3GB
+[2026-04-24 20:47:19]     QLC: iter=2.00 alpha=0.851 beta=0.000 gamma=0.149 halt(yes/no/cont)=0.35/0.15/0.50 | align=0.9999 out_scale=0.078 psi_delta_l2=3.777e+02
+[2026-04-24 20:47:55]   [1] 16250/19277 (84%) loss=4.5490 ppl=94.5 lr=9.84e-05 | 8454 tok/s (avg 8328) | ponder=5.203e-06 | infonce=0.127 | GPU 1.9/12.3GB
+[2026-04-24 20:48:31]   [1] 16300/19277 (85%) loss=3.7984 ppl=44.6 lr=9.84e-05 | 8434 tok/s (avg 8328) | ponder=4.858e-06 | infonce=0.107 | GPU 1.9/12.3GB
+[2026-04-24 20:48:31]     QLC: iter=2.00 alpha=0.851 beta=0.000 gamma=0.149 halt(yes/no/cont)=0.35/0.15/0.50 | align=0.9999 out_scale=0.078 psi_delta_l2=3.776e+02
+[2026-04-24 20:49:08]   [1] 16350/19277 (85%) loss=4.3405 ppl=76.7 lr=9.84e-05 | 8359 tok/s (avg 8328) | ponder=4.941e-06 | infonce=0.173 | GPU 1.9/12.3GB
+[2026-04-24 20:49:45]   [1] 16400/19277 (85%) loss=3.7741 ppl=43.6 lr=9.84e-05 | 8438 tok/s (avg 8328) | ponder=4.989e-06 | infonce=0.146 | GPU 1.9/12.3GB
+[2026-04-24 20:49:45]     QLC: iter=2.00 alpha=0.851 beta=0.000 gamma=0.149 halt(yes/no/cont)=0.35/0.15/0.49 | align=0.9999 out_scale=0.078 psi_delta_l2=3.776e+02
+[2026-04-24 20:50:21]   [1] 16450/19277 (85%) loss=4.5422 ppl=93.9 lr=9.84e-05 | 8458 tok/s (avg 8329) | ponder=5.162e-06 | infonce=0.153 | GPU 1.9/12.3GB
+[2026-04-24 20:50:57]   [1] 16500/19277 (86%) loss=4.1035 ppl=60.5 lr=9.84e-05 | 8441 tok/s (avg 8329) | ponder=4.831e-06 | infonce=0.154 | GPU 1.9/12.3GB
+[2026-04-24 20:50:57]     QLC: iter=2.00 alpha=0.851 beta=0.000 gamma=0.148 halt(yes/no/cont)=0.36/0.15/0.49 | align=0.9999 out_scale=0.078 psi_delta_l2=3.776e+02
+[2026-04-24 20:51:34]   [1] 16550/19277 (86%) loss=4.4486 ppl=85.5 lr=9.84e-05 | 8458 tok/s (avg 8329) | ponder=4.706e-06 | infonce=0.143 | GPU 1.9/12.3GB
+[2026-04-24 20:52:10]   [1] 16600/19277 (86%) loss=4.4478 ppl=85.4 lr=9.84e-05 | 8349 tok/s (avg 8329) | ponder=4.864e-06 | infonce=0.069 | GPU 1.9/12.3GB
+[2026-04-24 20:52:10]     QLC: iter=2.00 alpha=0.852 beta=0.000 gamma=0.148 halt(yes/no/cont)=0.36/0.15/0.49 | align=0.9999 out_scale=0.078 psi_delta_l2=3.775e+02
+[2026-04-24 20:52:47]   [1] 16650/19277 (86%) loss=3.8017 ppl=44.8 lr=9.84e-05 | 8455 tok/s (avg 8330) | ponder=5.108e-06 | infonce=0.084 | GPU 1.9/12.3GB
+[2026-04-24 20:53:23]   [1] 16700/19277 (87%) loss=4.0405 ppl=56.9 lr=9.84e-05 | 8442 tok/s (avg 8330) | ponder=5.117e-06 | infonce=0.068 | GPU 1.9/12.3GB
+[2026-04-24 20:53:23]     QLC: iter=2.00 alpha=0.852 beta=0.000 gamma=0.148 halt(yes/no/cont)=0.36/0.15/0.49 | align=0.9999 out_scale=0.078 psi_delta_l2=3.775e+02
+[2026-04-24 20:53:59]   [1] 16750/19277 (87%) loss=3.9132 ppl=50.1 lr=9.83e-05 | 8451 tok/s (avg 8331) | ponder=4.971e-06 | infonce=0.142 | GPU 1.9/12.3GB
+[2026-04-24 20:54:36]   [1] 16800/19277 (87%) loss=4.1422 ppl=62.9 lr=9.83e-05 | 8347 tok/s (avg 8331) | ponder=5.335e-06 | infonce=0.179 | GPU 1.9/12.3GB
+[2026-04-24 20:54:36]     QLC: iter=2.00 alpha=0.852 beta=0.000 gamma=0.148 halt(yes/no/cont)=0.36/0.15/0.49 | align=0.9999 out_scale=0.078 psi_delta_l2=3.775e+02
+[2026-04-24 20:55:13]   [1] 16850/19277 (87%) loss=4.3494 ppl=77.4 lr=9.83e-05 | 8456 tok/s (avg 8331) | ponder=4.831e-06 | infonce=0.217 | GPU 1.9/12.3GB
+[2026-04-24 20:55:49]   [1] 16900/19277 (88%) loss=4.3636 ppl=78.5 lr=9.83e-05 | 8440 tok/s (avg 8331) | ponder=4.867e-06 | infonce=0.141 | GPU 1.9/12.3GB
+[2026-04-24 20:55:49]     QLC: iter=2.00 alpha=0.852 beta=0.000 gamma=0.148 halt(yes/no/cont)=0.36/0.16/0.49 | align=0.9999 out_scale=0.078 psi_delta_l2=3.775e+02
+[2026-04-24 20:56:25]   [1] 16950/19277 (88%) loss=4.2811 ppl=72.3 lr=9.83e-05 | 8451 tok/s (avg 8332) | ponder=5.168e-06 | infonce=0.149 | GPU 1.9/12.3GB
+[2026-04-24 20:57:02]   [1] 17000/19277 (88%) loss=4.1700 ppl=64.7 lr=9.83e-05 | 8449 tok/s (avg 8332) | ponder=4.858e-06 | infonce=0.167 | GPU 1.9/12.3GB
+[2026-04-24 20:57:02]     QLC: iter=2.00 alpha=0.853 beta=0.000 gamma=0.147 halt(yes/no/cont)=0.36/0.16/0.48 | align=0.9999 out_scale=0.078 psi_delta_l2=3.773e+02
+[2026-04-24 20:57:38]   [1] 17050/19277 (88%) loss=3.9676 ppl=52.9 lr=9.83e-05 | 8357 tok/s (avg 8332) | ponder=4.974e-06 | infonce=0.150 | GPU 1.9/12.3GB
+[2026-04-24 20:58:15]   [1] 17100/19277 (89%) loss=4.4175 ppl=82.9 lr=9.83e-05 | 8434 tok/s (avg 8332) | ponder=4.852e-06 | infonce=0.118 | GPU 1.9/12.3GB
+[2026-04-24 20:58:15]     QLC: iter=2.00 alpha=0.853 beta=0.000 gamma=0.147 halt(yes/no/cont)=0.36/0.16/0.48 | align=0.9999 out_scale=0.078 psi_delta_l2=3.774e+02
+[2026-04-24 20:58:51]   [1] 17150/19277 (89%) loss=4.0526 ppl=57.5 lr=9.83e-05 | 8448 tok/s (avg 8333) | ponder=5.186e-06 | infonce=0.122 | GPU 1.9/12.3GB
+[2026-04-24 20:59:28]   [1] 17200/19277 (89%) loss=4.3494 ppl=77.4 lr=9.82e-05 | 8440 tok/s (avg 8333) | ponder=4.923e-06 | infonce=0.088 | GPU 1.9/12.3GB
+[2026-04-24 20:59:28]     QLC: iter=2.00 alpha=0.853 beta=0.000 gamma=0.147 halt(yes/no/cont)=0.36/0.16/0.48 | align=0.9999 out_scale=0.078 psi_delta_l2=3.775e+02
+[2026-04-24 21:00:04]   [1] 17250/19277 (89%) loss=4.1348 ppl=62.5 lr=9.82e-05 | 8451 tok/s (avg 8333) | ponder=5.308e-06 | infonce=0.093 | GPU 1.9/12.3GB
+[2026-04-24 21:00:41]   [1] 17300/19277 (90%) loss=4.2822 ppl=72.4 lr=9.82e-05 | 8350 tok/s (avg 8333) | ponder=4.870e-06 | infonce=0.109 | GPU 1.9/12.3GB
+[2026-04-24 21:00:41]     QLC: iter=2.00 alpha=0.854 beta=0.000 gamma=0.146 halt(yes/no/cont)=0.37/0.16/0.47 | align=0.9999 out_scale=0.078 psi_delta_l2=3.773e+02
+[2026-04-24 21:01:17]   [1] 17350/19277 (90%) loss=4.0532 ppl=57.6 lr=9.82e-05 | 8454 tok/s (avg 8334) | ponder=5.302e-06 | infonce=0.092 | GPU 1.9/12.3GB
+[2026-04-24 21:01:53]   [1] 17400/19277 (90%) loss=4.5164 ppl=91.5 lr=9.82e-05 | 8442 tok/s (avg 8334) | ponder=5.466e-06 | infonce=0.129 | GPU 1.9/12.3GB
+[2026-04-24 21:01:53]     QLC: iter=2.00 alpha=0.854 beta=0.000 gamma=0.146 halt(yes/no/cont)=0.37/0.16/0.47 | align=0.9999 out_scale=0.078 psi_delta_l2=3.772e+02
+[2026-04-24 21:02:30]   [1] 17450/19277 (91%) loss=4.5176 ppl=91.6 lr=9.82e-05 | 8454 tok/s (avg 8334) | ponder=5.165e-06 | infonce=0.113 | GPU 1.9/12.3GB
+[2026-04-24 21:03:06]   [1] 17500/19277 (91%) loss=4.3659 ppl=78.7 lr=9.82e-05 | 8436 tok/s (avg 8335) | ponder=5.129e-06 | infonce=0.095 | GPU 1.9/12.3GB
+[2026-04-24 21:03:06]     QLC: iter=2.00 alpha=0.854 beta=0.000 gamma=0.146 halt(yes/no/cont)=0.37/0.16/0.47 | align=0.9999 out_scale=0.078 psi_delta_l2=3.773e+02
+[2026-04-24 21:03:43]   [1] 17550/19277 (91%) loss=4.1748 ppl=65.0 lr=9.82e-05 | 8357 tok/s (avg 8335) | ponder=4.858e-06 | infonce=0.141 | GPU 1.9/12.3GB
+[2026-04-24 21:04:19]   [1] 17600/19277 (91%) loss=4.1109 ppl=61.0 lr=9.82e-05 | 8440 tok/s (avg 8335) | ponder=5.272e-06 | infonce=0.136 | GPU 1.9/12.3GB
+[2026-04-24 21:04:19]     QLC: iter=2.00 alpha=0.854 beta=0.000 gamma=0.145 halt(yes/no/cont)=0.37/0.16/0.47 | align=0.9999 out_scale=0.078 psi_delta_l2=3.772e+02
+[2026-04-24 21:04:56]   [1] 17650/19277 (92%) loss=4.6121 ppl=100.7 lr=9.82e-05 | 8451 tok/s (avg 8335) | ponder=4.929e-06 | infonce=0.156 | GPU 1.9/12.3GB
+[2026-04-24 21:05:32]   [1] 17700/19277 (92%) loss=4.1237 ppl=61.8 lr=9.81e-05 | 8439 tok/s (avg 8336) | ponder=4.685e-06 | infonce=0.187 | GPU 1.9/12.3GB
+[2026-04-24 21:05:32]     QLC: iter=2.00 alpha=0.855 beta=0.000 gamma=0.145 halt(yes/no/cont)=0.37/0.16/0.47 | align=0.9999 out_scale=0.078 psi_delta_l2=3.772e+02
+[2026-04-24 21:06:09]   [1] 17750/19277 (92%) loss=3.5370 ppl=34.4 lr=9.81e-05 | 8365 tok/s (avg 8336) | ponder=5.257e-06 | infonce=0.131 | GPU 1.9/12.3GB
+[2026-04-24 21:06:45]   [1] 17800/19277 (92%) loss=4.6286 ppl=102.4 lr=9.81e-05 | 8440 tok/s (avg 8336) | ponder=5.037e-06 | infonce=0.168 | GPU 1.9/12.3GB
+[2026-04-24 21:06:45]     QLC: iter=2.00 alpha=0.855 beta=0.000 gamma=0.145 halt(yes/no/cont)=0.38/0.16/0.46 | align=0.9999 out_scale=0.078 psi_delta_l2=3.773e+02
+[2026-04-24 21:07:22]   [1] 17850/19277 (93%) loss=3.6907 ppl=40.1 lr=9.81e-05 | 8450 tok/s (avg 8336) | ponder=4.905e-06 | infonce=0.164 | GPU 1.9/12.3GB
+[2026-04-24 21:07:58]   [1] 17900/19277 (93%) loss=3.7114 ppl=40.9 lr=9.81e-05 | 8426 tok/s (avg 8337) | ponder=5.138e-06 | infonce=0.151 | GPU 1.9/12.3GB
+[2026-04-24 21:07:58]     QLC: iter=2.00 alpha=0.855 beta=0.000 gamma=0.145 halt(yes/no/cont)=0.38/0.16/0.46 | align=0.9999 out_scale=0.078 psi_delta_l2=3.772e+02
+[2026-04-24 21:08:34]   [1] 17950/19277 (93%) loss=4.2254 ppl=68.4 lr=9.81e-05 | 8445 tok/s (avg 8337) | ponder=7.218e-06 | infonce=0.118 | GPU 1.9/12.3GB
+[2026-04-24 21:09:11]   [1] 18000/19277 (93%) loss=4.4652 ppl=86.9 lr=9.81e-05 | 8341 tok/s (avg 8337) | ponder=4.822e-06 | infonce=0.159 | GPU 1.9/12.3GB
+[2026-04-24 21:09:11]     QLC: iter=2.00 alpha=0.855 beta=0.000 gamma=0.145 halt(yes/no/cont)=0.38/0.16/0.46 | align=0.9999 out_scale=0.078 psi_delta_l2=3.772e+02
+[2026-04-24 21:09:48]   [1] 18050/19277 (94%) loss=4.0213 ppl=55.8 lr=9.81e-05 | 8445 tok/s (avg 8337) | ponder=5.913e-06 | infonce=0.093 | GPU 1.9/12.3GB
+[2026-04-24 21:10:24]   [1] 18100/19277 (94%) loss=4.2782 ppl=72.1 lr=9.81e-05 | 8436 tok/s (avg 8337) | ponder=5.004e-06 | infonce=0.117 | GPU 1.9/12.3GB
+[2026-04-24 21:10:24]     QLC: iter=2.00 alpha=0.855 beta=0.000 gamma=0.145 halt(yes/no/cont)=0.38/0.16/0.46 | align=0.9999 out_scale=0.077 psi_delta_l2=3.771e+02
+[2026-04-24 21:11:00]   [1] 18150/19277 (94%) loss=4.0422 ppl=57.0 lr=9.80e-05 | 8449 tok/s (avg 8338) | ponder=5.171e-06 | infonce=0.116 | GPU 1.9/12.3GB
+[2026-04-24 21:11:37]   [1] 18200/19277 (94%) loss=4.4996 ppl=90.0 lr=9.80e-05 | 8438 tok/s (avg 8338) | ponder=4.876e-06 | infonce=0.132 | GPU 1.9/12.3GB
+[2026-04-24 21:11:37]     QLC: iter=2.00 alpha=0.856 beta=0.000 gamma=0.144 halt(yes/no/cont)=0.38/0.16/0.46 | align=0.9999 out_scale=0.077 psi_delta_l2=3.772e+02
+[2026-04-24 21:12:14]   [1] 18250/19277 (95%) loss=4.0987 ppl=60.3 lr=9.80e-05 | 8355 tok/s (avg 8338) | ponder=5.174e-06 | infonce=0.135 | GPU 1.9/12.3GB
+[2026-04-24 21:12:50]   [1] 18300/19277 (95%) loss=4.3102 ppl=74.5 lr=9.80e-05 | 8431 tok/s (avg 8338) | ponder=4.923e-06 | infonce=0.142 | GPU 1.9/12.3GB
+[2026-04-24 21:12:50]     QLC: iter=2.00 alpha=0.856 beta=0.000 gamma=0.144 halt(yes/no/cont)=0.38/0.16/0.45 | align=0.9999 out_scale=0.077 psi_delta_l2=3.770e+02
+[2026-04-24 21:13:26]   [1] 18350/19277 (95%) loss=4.4949 ppl=89.6 lr=9.80e-05 | 8438 tok/s (avg 8339) | ponder=5.335e-06 | infonce=0.167 | GPU 1.9/12.3GB
+[2026-04-24 21:14:03]   [1] 18400/19277 (95%) loss=4.2951 ppl=73.3 lr=9.80e-05 | 8433 tok/s (avg 8339) | ponder=5.171e-06 | infonce=0.130 | GPU 1.9/12.3GB
+[2026-04-24 21:14:03]     QLC: iter=2.00 alpha=0.856 beta=0.000 gamma=0.144 halt(yes/no/cont)=0.38/0.16/0.45 | align=0.9999 out_scale=0.077 psi_delta_l2=3.770e+02
+[2026-04-24 21:14:39]   [1] 18450/19277 (96%) loss=4.0571 ppl=57.8 lr=9.80e-05 | 8447 tok/s (avg 8339) | ponder=4.762e-06 | infonce=0.110 | GPU 1.9/12.3GB
+[2026-04-24 21:15:16]   [1] 18500/19277 (96%) loss=4.3898 ppl=80.6 lr=9.80e-05 | 8342 tok/s (avg 8339) | ponder=4.995e-06 | infonce=0.129 | GPU 1.9/12.3GB
+[2026-04-24 21:15:16]     QLC: iter=2.00 alpha=0.856 beta=0.000 gamma=0.144 halt(yes/no/cont)=0.38/0.16/0.45 | align=0.9999 out_scale=0.077 psi_delta_l2=3.771e+02
+[2026-04-24 21:15:52]   [1] 18550/19277 (96%) loss=3.9478 ppl=51.8 lr=9.79e-05 | 8451 tok/s (avg 8339) | ponder=4.891e-06 | infonce=0.128 | GPU 1.9/12.3GB
+[2026-04-24 21:16:29]   [1] 18600/19277 (96%) loss=4.2370 ppl=69.2 lr=9.79e-05 | 8437 tok/s (avg 8340) | ponder=5.406e-06 | infonce=0.154 | GPU 1.9/12.3GB
+[2026-04-24 21:16:29]     QLC: iter=2.00 alpha=0.856 beta=0.000 gamma=0.144 halt(yes/no/cont)=0.38/0.17/0.45 | align=0.9999 out_scale=0.077 psi_delta_l2=3.771e+02
+[2026-04-24 21:17:05]   [1] 18650/19277 (97%) loss=3.8594 ppl=47.4 lr=9.79e-05 | 8452 tok/s (avg 8340) | ponder=5.209e-06 | infonce=0.148 | GPU 1.9/12.3GB
+[2026-04-24 21:17:42]   [1] 18700/19277 (97%) loss=4.7136 ppl=111.4 lr=9.79e-05 | 8349 tok/s (avg 8340) | ponder=4.795e-06 | infonce=0.183 | GPU 1.9/12.3GB
+[2026-04-24 21:17:42]     QLC: iter=2.00 alpha=0.857 beta=0.000 gamma=0.143 halt(yes/no/cont)=0.39/0.17/0.45 | align=0.9999 out_scale=0.077 psi_delta_l2=3.770e+02
+[2026-04-24 21:18:18]   [1] 18750/19277 (97%) loss=4.3840 ppl=80.2 lr=9.79e-05 | 8443 tok/s (avg 8340) | ponder=4.947e-06 | infonce=0.128 | GPU 1.9/12.3GB
+[2026-04-24 21:18:55]   [1] 18800/19277 (98%) loss=3.7352 ppl=41.9 lr=9.79e-05 | 8438 tok/s (avg 8340) | ponder=5.043e-06 | infonce=0.113 | GPU 1.9/12.3GB
+[2026-04-24 21:18:55]     QLC: iter=2.00 alpha=0.857 beta=0.000 gamma=0.143 halt(yes/no/cont)=0.39/0.17/0.45 | align=0.9999 out_scale=0.077 psi_delta_l2=3.770e+02
+[2026-04-24 21:19:31]   [1] 18850/19277 (98%) loss=3.7735 ppl=43.5 lr=9.79e-05 | 8450 tok/s (avg 8341) | ponder=5.376e-06 | infonce=0.108 | GPU 1.9/12.3GB
+[2026-04-24 21:20:08]   [1] 18900/19277 (98%) loss=4.1800 ppl=65.4 lr=9.79e-05 | 8438 tok/s (avg 8341) | ponder=4.956e-06 | infonce=0.076 | GPU 1.9/12.3GB
+[2026-04-24 21:20:08]     QLC: iter=2.00 alpha=0.857 beta=0.000 gamma=0.143 halt(yes/no/cont)=0.39/0.17/0.44 | align=0.9999 out_scale=0.077 psi_delta_l2=3.769e+02
+[2026-04-24 21:20:44]   [1] 18950/19277 (98%) loss=4.5578 ppl=95.4 lr=9.79e-05 | 8363 tok/s (avg 8341) | ponder=5.299e-06 | infonce=0.076 | GPU 1.9/12.3GB
+[2026-04-24 21:21:21]   [1] 19000/19277 (99%) loss=4.0556 ppl=57.7 lr=9.78e-05 | 8436 tok/s (avg 8341) | ponder=5.013e-06 | infonce=0.101 | GPU 1.9/12.3GB
+[2026-04-24 21:21:21]     QLC: iter=2.00 alpha=0.857 beta=0.000 gamma=0.143 halt(yes/no/cont)=0.39/0.17/0.44 | align=0.9999 out_scale=0.077 psi_delta_l2=3.770e+02
+[2026-04-24 21:21:57]   [1] 19050/19277 (99%) loss=3.9639 ppl=52.7 lr=9.78e-05 | 8428 tok/s (avg 8342) | ponder=4.938e-06 | infonce=0.095 | GPU 1.9/12.3GB
+[2026-04-24 21:22:34]   [1] 19100/19277 (99%) loss=4.5026 ppl=90.2 lr=9.78e-05 | 8435 tok/s (avg 8342) | ponder=4.971e-06 | infonce=0.134 | GPU 1.9/12.3GB
+[2026-04-24 21:22:34]     QLC: iter=2.00 alpha=0.858 beta=0.000 gamma=0.142 halt(yes/no/cont)=0.39/0.17/0.44 | align=0.9999 out_scale=0.077 psi_delta_l2=3.769e+02
+[2026-04-24 21:23:10]   [1] 19150/19277 (99%) loss=4.4309 ppl=84.0 lr=9.78e-05 | 8452 tok/s (avg 8342) | ponder=5.081e-06 | infonce=0.114 | GPU 1.9/12.3GB
+[2026-04-24 21:23:47]   [1] 19200/19277 (100%) loss=4.0177 ppl=55.6 lr=9.78e-05 | 8341 tok/s (avg 8342) | ponder=5.081e-06 | infonce=0.115 | GPU 1.9/12.3GB
+[2026-04-24 21:23:47]     QLC: iter=2.00 alpha=0.858 beta=0.000 gamma=0.142 halt(yes/no/cont)=0.39/0.17/0.44 | align=0.9999 out_scale=0.077 psi_delta_l2=3.770e+02
+[2026-04-24 21:24:23]   [1] 19250/19277 (100%) loss=4.5871 ppl=98.2 lr=9.78e-05 | 8448 tok/s (avg 8342) | ponder=4.935e-06 | infonce=0.105 | GPU 1.9/12.3GB
+[2026-04-24 21:28:50] Epoch 1/10 | Train Loss: 4.8163 PPL: 123.51 | 8342 tok/s | ponder=1.162e-03 | Val Loss: 4.0485 PPL: 57.31 *best*
+[2026-04-24 21:28:51] Saved checkpoint: v8/checkpoints/e2e_medium_reasoning/best_model.pt
+
+[2026-04-24 21:28:52] Prompt: In 1923 , the University of
+[2026-04-24 21:28:52] Generated: In 1923 , the University of Oxford and London 's first professional football . 
+
+
+[2026-04-24 21:28:52]  = = History = = 
+
+
+
+[2026-04-24 21:28:52]  = = = Early history = = = 
+
+
+[2026-04-24 21:28:52]  Following the early 1930s , the Royal Navy began to develop a new and more powerful supergroup . The first design for the Royal Navy was designed by Charles Harald Campbell in 1891 ; the new designs were based on the original design and design
+[2026-04-24 21:28:52]   Quality: rep3=0.057 rep4=0.014 restarts=0 uniq=0.667
+
+[2026-04-24 21:28:53] ============================================================
+[2026-04-24 21:28:53] Epoch 2/10
+[2026-04-24 21:28:53] ============================================================
+[2026-04-24 21:28:53]   [2] 0/19277 (0%) loss=3.7400 ppl=42.1 lr=9.78e-05 | 8217 tok/s (avg 8217) | ponder=5.293e-06 | infonce=0.138 | GPU 1.9/12.3GB
+[2026-04-24 21:29:33]   [2] 50/19277 (0%) loss=4.2064 ppl=67.1 lr=9.78e-05 | 7798 tok/s (avg 7806) | ponder=6.765e-06 | infonce=0.154 | GPU 1.9/12.3GB
+[2026-04-24 21:30:09]   [2] 100/19277 (1%) loss=4.3319 ppl=76.1 lr=9.78e-05 | 8431 tok/s (avg 8103) | ponder=5.010e-06 | infonce=0.174 | GPU 1.9/12.3GB
+[2026-04-24 21:30:46]   [2] 150/19277 (1%) loss=4.1434 ppl=63.0 lr=9.77e-05 | 8442 tok/s (avg 8212) | ponder=6.509e-06 | infonce=0.165 | GPU 1.9/12.3GB
+[2026-04-24 21:31:22]   [2] 200/19277 (1%) loss=4.2368 ppl=69.2 lr=9.77e-05 | 8423 tok/s (avg 8264) | ponder=5.063e-06 | infonce=0.096 | GPU 1.9/12.3GB
+[2026-04-24 21:31:58]   [2] 250/19277 (1%) loss=3.9297 ppl=50.9 lr=9.77e-05 | 8436 tok/s (avg 8297) | ponder=4.923e-06 | infonce=0.125 | GPU 1.9/12.3GB
+[2026-04-24 21:32:35]   [2] 300/19277 (2%) loss=4.1618 ppl=64.2 lr=9.77e-05 | 8425 tok/s (avg 8318) | ponder=5.066e-06 | infonce=0.131 | GPU 1.9/12.3GB
+[2026-04-24 21:33:11]   [2] 350/19277 (2%) loss=4.1549 ppl=63.7 lr=9.77e-05 | 8439 tok/s (avg 8335) | ponder=5.591e-06 | infonce=0.136 | GPU 1.9/12.3GB
+[2026-04-24 21:33:48]   [2] 400/19277 (2%) loss=3.8517 ppl=47.1 lr=9.77e-05 | 8269 tok/s (avg 8327) | ponder=5.010e-06 | infonce=0.127 | GPU 1.9/12.3GB
+[2026-04-24 21:34:25]   [2] 450/19277 (2%) loss=3.8117 ppl=45.2 lr=9.77e-05 | 8442 tok/s (avg 8340) | ponder=4.539e-06 | infonce=0.133 | GPU 1.9/12.3GB
+[2026-04-24 21:35:01]   [2] 500/19277 (3%) loss=4.0367 ppl=56.6 lr=9.77e-05 | 8428 tok/s (avg 8348) | ponder=4.998e-06 | infonce=0.127 | GPU 1.9/12.3GB
+[2026-04-24 21:35:38]   [2] 550/19277 (3%) loss=4.2671 ppl=71.3 lr=9.76e-05 | 8438 tok/s (avg 8356) | ponder=4.894e-06 | infonce=0.167 | GPU 1.9/12.3GB
+[2026-04-24 21:36:14]   [2] 600/19277 (3%) loss=3.9336 ppl=51.1 lr=9.76e-05 | 8428 tok/s (avg 8362) | ponder=4.935e-06 | infonce=0.115 | GPU 1.9/12.3GB
+[2026-04-24 21:36:51]   [2] 650/19277 (3%) loss=4.3501 ppl=77.5 lr=9.76e-05 | 8445 tok/s (avg 8369) | ponder=4.739e-06 | infonce=0.095 | GPU 1.9/12.3GB
+[2026-04-24 21:37:27]   [2] 700/19277 (4%) loss=4.2089 ppl=67.3 lr=9.76e-05 | 8427 tok/s (avg 8373) | ponder=4.986e-06 | infonce=0.137 | GPU 1.9/12.3GB
+[2026-04-24 21:38:04]   [2] 750/19277 (4%) loss=4.0241 ppl=55.9 lr=9.76e-05 | 8291 tok/s (avg 8367) | ponder=5.013e-06 | infonce=0.231 | GPU 1.9/12.3GB
+[2026-04-24 21:38:40]   [2] 800/19277 (4%) loss=4.3617 ppl=78.4 lr=9.76e-05 | 8427 tok/s (avg 8371) | ponder=5.350e-06 | infonce=0.171 | GPU 1.9/12.3GB
+[2026-04-24 21:39:17]   [2] 850/19277 (4%) loss=3.6201 ppl=37.3 lr=9.76e-05 | 8433 tok/s (avg 8374) | ponder=4.822e-06 | infonce=0.167 | GPU 1.9/12.3GB
+[2026-04-24 21:39:53]   [2] 900/19277 (5%) loss=4.4531 ppl=85.9 lr=9.76e-05 | 8431 tok/s (avg 8378) | ponder=5.290e-06 | infonce=0.109 | GPU 1.9/12.3GB
+[2026-04-24 21:40:30]   [2] 950/19277 (5%) loss=4.1501 ppl=63.4 lr=9.75e-05 | 8450 tok/s (avg 8381) | ponder=5.561e-06 | infonce=0.161 | GPU 1.9/12.3GB
+[2026-04-24 21:41:06]   [2] 1000/19277 (5%) loss=4.1038 ppl=60.6 lr=9.75e-05 | 8423 tok/s (avg 8383) | ponder=4.691e-06 | infonce=0.154 | GPU 1.9/12.3GB
+[2026-04-24 21:41:43]   [2] 1050/19277 (5%) loss=4.4948 ppl=89.5 lr=9.75e-05 | 8444 tok/s (avg 8386) | ponder=5.114e-06 | infonce=0.136 | GPU 1.9/12.3GB
+[2026-04-24 21:42:20]   [2] 1100/19277 (6%) loss=4.1790 ppl=65.3 lr=9.75e-05 | 8269 tok/s (avg 8381) | ponder=5.567e-06 | infonce=0.145 | GPU 1.9/12.3GB
+[2026-04-24 21:42:56]   [2] 1150/19277 (6%) loss=4.1288 ppl=62.1 lr=9.75e-05 | 8445 tok/s (avg 8384) | ponder=4.935e-06 | infonce=0.154 | GPU 1.9/12.3GB
+[2026-04-24 21:43:33]   [2] 1200/19277 (6%) loss=4.4160 ppl=82.8 lr=9.75e-05 | 8431 tok/s (avg 8386) | ponder=4.822e-06 | infonce=0.141 | GPU 1.9/12.3GB
+[2026-04-24 21:44:09]   [2] 1250/19277 (6%) loss=3.9727 ppl=53.1 lr=9.75e-05 | 8444 tok/s (avg 8388) | ponder=4.759e-06 | infonce=0.142 | GPU 1.9/12.3GB
+[2026-04-24 21:44:45]   [2] 1300/19277 (7%) loss=3.8232 ppl=45.7 lr=9.75e-05 | 8433 tok/s (avg 8390) | ponder=4.506e-06 | infonce=0.082 | GPU 1.9/12.3GB
+[2026-04-24 21:45:22]   [2] 1350/19277 (7%) loss=4.3082 ppl=74.3 lr=9.74e-05 | 8446 tok/s (avg 8392) | ponder=4.679e-06 | infonce=0.130 | GPU 1.9/12.3GB
+[2026-04-24 21:45:58]   [2] 1400/19277 (7%) loss=3.6606 ppl=38.9 lr=9.74e-05 | 8429 tok/s (avg 8393) | ponder=4.807e-06 | infonce=0.134 | GPU 1.9/12.3GB
+[2026-04-24 21:46:35]   [2] 1450/19277 (8%) loss=3.9304 ppl=50.9 lr=9.74e-05 | 8286 tok/s (avg 8389) | ponder=4.992e-06 | infonce=0.140 | GPU 1.9/12.3GB
+[2026-04-24 21:47:12]   [2] 1500/19277 (8%) loss=4.2868 ppl=72.7 lr=9.74e-05 | 8436 tok/s (avg 8391) | ponder=5.174e-06 | infonce=0.132 | GPU 1.9/12.3GB
+[2026-04-24 21:47:48]   [2] 1550/19277 (8%) loss=3.5210 ppl=33.8 lr=9.74e-05 | 8445 tok/s (avg 8393) | ponder=4.834e-06 | infonce=0.090 | GPU 1.9/12.3GB
+[2026-04-24 21:48:24]   [2] 1600/19277 (8%) loss=4.3709 ppl=79.1 lr=9.74e-05 | 8439 tok/s (avg 8394) | ponder=4.932e-06 | infonce=0.149 | GPU 1.9/12.3GB
+[2026-04-24 21:49:01]   [2] 1650/19277 (9%) loss=4.1215 ppl=61.7 lr=9.74e-05 | 8447 tok/s (avg 8396) | ponder=5.114e-06 | infonce=0.096 | GPU 1.9/12.3GB
+[2026-04-24 21:49:37]   [2] 1700/19277 (9%) loss=3.8758 ppl=48.2 lr=9.73e-05 | 8426 tok/s (avg 8397) | ponder=5.585e-06 | infonce=0.115 | GPU 1.9/12.3GB
+[2026-04-24 21:50:14]   [2] 1750/19277 (9%) loss=4.0815 ppl=59.2 lr=9.73e-05 | 8447 tok/s (avg 8398) | ponder=5.266e-06 | infonce=0.087 | GPU 1.9/12.3GB
+[2026-04-24 21:50:50]   [2] 1800/19277 (9%) loss=4.2124 ppl=67.5 lr=9.73e-05 | 8427 tok/s (avg 8399) | ponder=5.370e-06 | infonce=0.129 | GPU 1.9/12.3GB
+[2026-04-24 21:51:27]   [2] 1850/19277 (10%) loss=4.2177 ppl=67.9 lr=9.73e-05 | 8292 tok/s (avg 8396) | ponder=4.813e-06 | infonce=0.117 | GPU 1.9/12.3GB
+[2026-04-24 21:52:04]   [2] 1900/19277 (10%) loss=3.7268 ppl=41.5 lr=9.73e-05 | 8432 tok/s (avg 8397) | ponder=4.691e-06 | infonce=0.120 | GPU 1.9/12.3GB
+[2026-04-24 21:52:40]   [2] 1950/19277 (10%) loss=3.9706 ppl=53.0 lr=9.73e-05 | 8449 tok/s (avg 8398) | ponder=4.974e-06 | infonce=0.140 | GPU 1.9/12.3GB
+[2026-04-24 21:53:16]   [2] 2000/19277 (10%) loss=3.8884 ppl=48.8 lr=9.73e-05 | 8432 tok/s (avg 8399) | ponder=5.144e-06 | infonce=0.127 | GPU 1.9/12.3GB
+[2026-04-24 21:53:53]   [2] 2050/19277 (11%) loss=3.8015 ppl=44.8 lr=9.73e-05 | 8449 tok/s (avg 8400) | ponder=5.054e-06 | infonce=0.155 | GPU 1.9/12.3GB
+[2026-04-24 21:54:29]   [2] 2100/19277 (11%) loss=4.0250 ppl=56.0 lr=9.72e-05 | 8433 tok/s (avg 8401) | ponder=4.804e-06 | infonce=0.112 | GPU 1.9/12.3GB
+[2026-04-24 21:55:05]   [2] 2150/19277 (11%) loss=3.9904 ppl=54.1 lr=9.72e-05 | 8448 tok/s (avg 8402) | ponder=5.049e-06 | infonce=0.123 | GPU 1.9/12.3GB
+[2026-04-24 21:55:43]   [2] 2200/19277 (11%) loss=4.0314 ppl=56.3 lr=9.72e-05 | 8270 tok/s (avg 8399) | ponder=4.965e-06 | infonce=0.129 | GPU 1.9/12.3GB
+[2026-04-24 21:56:19]   [2] 2250/19277 (12%) loss=4.0293 ppl=56.2 lr=9.72e-05 | 8448 tok/s (avg 8400) | ponder=5.057e-06 | infonce=0.102 | GPU 1.9/12.3GB
+[2026-04-24 21:56:55]   [2] 2300/19277 (12%) loss=4.3375 ppl=76.5 lr=9.72e-05 | 8437 tok/s (avg 8401) | ponder=5.072e-06 | infonce=0.133 | GPU 1.9/12.3GB
+[2026-04-24 21:57:32]   [2] 2350/19277 (12%) loss=3.9946 ppl=54.3 lr=9.72e-05 | 8445 tok/s (avg 8402) | ponder=5.013e-06 | infonce=0.152 | GPU 1.9/12.3GB
+[2026-04-24 21:58:08]   [2] 2400/19277 (12%) loss=4.4398 ppl=84.8 lr=9.72e-05 | 8435 tok/s (avg 8402) | ponder=4.870e-06 | infonce=0.129 | GPU 1.9/12.3GB
+[2026-04-24 21:58:45]   [2] 2450/19277 (13%) loss=4.2022 ppl=66.8 lr=9.71e-05 | 8443 tok/s (avg 8403) | ponder=5.034e-06 | infonce=0.096 | GPU 1.9/12.3GB
+[2026-04-24 21:59:21]   [2] 2500/19277 (13%) loss=4.4068 ppl=82.0 lr=9.71e-05 | 8426 tok/s (avg 8404) | ponder=4.977e-06 | infonce=0.197 | GPU 1.9/12.3GB
+[2026-04-24 21:59:58]   [2] 2550/19277 (13%) loss=4.0000 ppl=54.6 lr=9.71e-05 | 8286 tok/s (avg 8401) | ponder=4.798e-06 | infonce=0.170 | GPU 1.9/12.3GB
+[2026-04-24 22:00:35]   [2] 2600/19277 (13%) loss=3.7991 ppl=44.7 lr=9.71e-05 | 8436 tok/s (avg 8402) | ponder=4.774e-06 | infonce=0.135 | GPU 1.9/12.3GB
+[2026-04-24 22:01:11]   [2] 2650/19277 (14%) loss=3.9364 ppl=51.2 lr=9.71e-05 | 8454 tok/s (avg 8403) | ponder=4.739e-06 | infonce=0.138 | GPU 1.9/12.3GB
+[2026-04-24 22:01:47]   [2] 2700/19277 (14%) loss=4.3159 ppl=74.9 lr=9.71e-05 | 8437 tok/s (avg 8404) | ponder=5.111e-06 | infonce=0.094 | GPU 1.9/12.3GB
+[2026-04-24 22:02:24]   [2] 2750/19277 (14%) loss=4.0198 ppl=55.7 lr=9.71e-05 | 8447 tok/s (avg 8404) | ponder=5.090e-06 | infonce=0.107 | GPU 1.9/12.3GB
+[2026-04-24 22:03:00]   [2] 2800/19277 (15%) loss=4.0365 ppl=56.6 lr=9.70e-05 | 8429 tok/s (avg 8405) | ponder=5.573e-06 | infonce=0.116 | GPU 1.9/12.3GB
+[2026-04-24 22:03:36]   [2] 2850/19277 (15%) loss=4.0586 ppl=57.9 lr=9.70e-05 | 8446 tok/s (avg 8406) | ponder=4.706e-06 | infonce=0.125 | GPU 1.9/12.3GB
+[2026-04-24 22:04:14]   [2] 2900/19277 (15%) loss=3.8658 ppl=47.7 lr=9.70e-05 | 8275 tok/s (avg 8403) | ponder=4.876e-06 | infonce=0.106 | GPU 1.9/12.3GB
+[2026-04-24 22:04:50]   [2] 2950/19277 (15%) loss=4.1575 ppl=63.9 lr=9.70e-05 | 8449 tok/s (avg 8404) | ponder=4.977e-06 | infonce=0.161 | GPU 1.9/12.3GB
+[2026-04-24 22:05:26]   [2] 3000/19277 (16%) loss=3.9581 ppl=52.4 lr=9.70e-05 | 8433 tok/s (avg 8405) | ponder=4.530e-06 | infonce=0.156 | GPU 1.9/12.3GB
+[2026-04-24 22:06:03]   [2] 3050/19277 (16%) loss=3.7940 ppl=44.4 lr=9.70e-05 | 8452 tok/s (avg 8405) | ponder=5.355e-06 | infonce=0.176 | GPU 1.9/12.3GB
+[2026-04-24 22:06:39]   [2] 3100/19277 (16%) loss=3.6021 ppl=36.7 lr=9.70e-05 | 8433 tok/s (avg 8406) | ponder=5.192e-06 | infonce=0.143 | GPU 1.9/12.3GB
+[2026-04-24 22:07:16]   [2] 3150/19277 (16%) loss=3.8880 ppl=48.8 lr=9.70e-05 | 8447 tok/s (avg 8406) | ponder=5.168e-06 | infonce=0.125 | GPU 1.9/12.3GB
+[2026-04-24 22:07:52]   [2] 3200/19277 (17%) loss=4.2429 ppl=69.6 lr=9.69e-05 | 8434 tok/s (avg 8407) | ponder=5.347e-06 | infonce=0.116 | GPU 1.9/12.3GB
+[2026-04-24 22:08:29]   [2] 3250/19277 (17%) loss=3.9981 ppl=54.5 lr=9.69e-05 | 8291 tok/s (avg 8405) | ponder=4.959e-06 | infonce=0.152 | GPU 1.9/12.3GB
+[2026-04-24 22:09:05]   [2] 3300/19277 (17%) loss=3.9238 ppl=50.6 lr=9.69e-05 | 8433 tok/s (avg 8405) | ponder=5.037e-06 | infonce=0.162 | GPU 1.9/12.3GB
+[2026-04-24 22:09:42]   [2] 3350/19277 (17%) loss=4.2524 ppl=70.3 lr=9.69e-05 | 8446 tok/s (avg 8406) | ponder=5.174e-06 | infonce=0.140 | GPU 1.9/12.3GB
+[2026-04-24 22:10:18]   [2] 3400/19277 (18%) loss=4.3634 ppl=78.5 lr=9.69e-05 | 8431 tok/s (avg 8406) | ponder=4.965e-06 | infonce=0.131 | GPU 1.9/12.3GB
+[2026-04-24 22:10:55]   [2] 3450/19277 (18%) loss=4.1563 ppl=63.8 lr=9.69e-05 | 8445 tok/s (avg 8407) | ponder=5.823e-06 | infonce=0.119 | GPU 1.9/12.3GB
+[2026-04-24 22:11:31]   [2] 3500/19277 (18%) loss=4.1085 ppl=60.9 lr=9.69e-05 | 8433 tok/s (avg 8407) | ponder=5.019e-06 | infonce=0.202 | GPU 1.9/12.3GB
+[2026-04-24 22:12:07]   [2] 3550/19277 (18%) loss=3.9799 ppl=53.5 lr=9.68e-05 | 8446 tok/s (avg 8408) | ponder=5.341e-06 | infonce=0.162 | GPU 1.9/12.3GB
+[2026-04-24 22:12:45]   [2] 3600/19277 (19%) loss=4.0363 ppl=56.6 lr=9.68e-05 | 8276 tok/s (avg 8406) | ponder=5.442e-06 | infonce=0.168 | GPU 1.9/12.3GB
+[2026-04-24 22:13:21]   [2] 3650/19277 (19%) loss=4.0466 ppl=57.2 lr=9.68e-05 | 8442 tok/s (avg 8407) | ponder=4.816e-06 | infonce=0.135 | GPU 1.9/12.3GB
+[2026-04-24 22:13:57]   [2] 3700/19277 (19%) loss=3.6852 ppl=39.9 lr=9.68e-05 | 8433 tok/s (avg 8407) | ponder=5.162e-06 | infonce=0.151 | GPU 1.9/12.3GB
+[2026-04-24 22:14:34]   [2] 3750/19277 (19%) loss=3.7677 ppl=43.3 lr=9.68e-05 | 8448 tok/s (avg 8407) | ponder=4.810e-06 | infonce=0.106 | GPU 1.9/12.3GB
+[2026-04-24 22:15:10]   [2] 3800/19277 (20%) loss=3.9691 ppl=52.9 lr=9.68e-05 | 8430 tok/s (avg 8408) | ponder=4.762e-06 | infonce=0.126 | GPU 1.9/12.3GB
+[2026-04-24 22:15:47]   [2] 3850/19277 (20%) loss=4.2047 ppl=67.0 lr=9.68e-05 | 8448 tok/s (avg 8408) | ponder=5.105e-06 | infonce=0.134 | GPU 1.9/12.3GB
+[2026-04-24 22:16:23]   [2] 3900/19277 (20%) loss=4.1378 ppl=62.7 lr=9.67e-05 | 8431 tok/s (avg 8409) | ponder=4.843e-06 | infonce=0.146 | GPU 1.9/12.3GB
+[2026-04-24 22:17:00]   [2] 3950/19277 (20%) loss=4.0055 ppl=54.9 lr=9.67e-05 | 8289 tok/s (avg 8407) | ponder=4.923e-06 | infonce=0.158 | GPU 1.9/12.3GB
+[2026-04-24 22:17:36]   [2] 4000/19277 (21%) loss=3.7438 ppl=42.3 lr=9.67e-05 | 8436 tok/s (avg 8407) | ponder=4.667e-06 | infonce=0.170 | GPU 1.9/12.3GB
+[2026-04-24 22:18:13]   [2] 4050/19277 (21%) loss=3.5732 ppl=35.6 lr=9.67e-05 | 8442 tok/s (avg 8408) | ponder=5.323e-06 | infonce=0.124 | GPU 1.9/12.3GB
+[2026-04-24 22:18:49]   [2] 4100/19277 (21%) loss=4.3653 ppl=78.7 lr=9.67e-05 | 8435 tok/s (avg 8408) | ponder=4.748e-06 | infonce=0.132 | GPU 1.9/12.3GB
+[2026-04-24 22:19:26]   [2] 4150/19277 (22%) loss=4.1756 ppl=65.1 lr=9.67e-05 | 8445 tok/s (avg 8409) | ponder=6.974e-06 | infonce=0.182 | GPU 1.9/12.3GB
+[2026-04-24 22:20:02]   [2] 4200/19277 (22%) loss=3.9828 ppl=53.7 lr=9.66e-05 | 8428 tok/s (avg 8409) | ponder=5.201e-06 | infonce=0.195 | GPU 1.9/12.3GB
+[2026-04-24 22:20:38]   [2] 4250/19277 (22%) loss=4.0502 ppl=57.4 lr=9.66e-05 | 8444 tok/s (avg 8409) | ponder=4.959e-06 | infonce=0.110 | GPU 1.9/12.3GB
+[2026-04-24 22:21:16]   [2] 4300/19277 (22%) loss=4.3579 ppl=78.1 lr=9.66e-05 | 8264 tok/s (avg 8407) | ponder=4.932e-06 | infonce=0.125 | GPU 1.9/12.3GB
+[2026-04-24 22:21:52]   [2] 4350/19277 (23%) loss=4.0773 ppl=59.0 lr=9.66e-05 | 8438 tok/s (avg 8408) | ponder=5.245e-06 | infonce=0.144 | GPU 1.9/12.3GB
+[2026-04-24 22:22:28]   [2] 4400/19277 (23%) loss=3.6008 ppl=36.6 lr=9.66e-05 | 8432 tok/s (avg 8408) | ponder=5.215e-06 | infonce=0.129 | GPU 1.9/12.3GB
+[2026-04-24 22:23:05]   [2] 4450/19277 (23%) loss=4.3642 ppl=78.6 lr=9.66e-05 | 8442 tok/s (avg 8408) | ponder=4.786e-06 | infonce=0.101 | GPU 1.9/12.3GB
+[2026-04-24 22:23:41]   [2] 4500/19277 (23%) loss=3.5470 ppl=34.7 lr=9.66e-05 | 8407 tok/s (avg 8408) | ponder=5.668e-06 | infonce=0.156 | GPU 1.9/12.3GB
+[2026-04-24 22:24:18]   [2] 4550/19277 (24%) loss=3.9421 ppl=51.5 lr=9.65e-05 | 8433 tok/s (avg 8409) | ponder=5.570e-06 | infonce=0.185 | GPU 1.9/12.3GB
+[2026-04-24 22:24:54]   [2] 4600/19277 (24%) loss=4.1350 ppl=62.5 lr=9.65e-05 | 8425 tok/s (avg 8409) | ponder=4.846e-06 | infonce=0.128 | GPU 1.9/12.3GB
+[2026-04-24 22:25:31]   [2] 4650/19277 (24%) loss=4.1452 ppl=63.1 lr=9.65e-05 | 8277 tok/s (avg 8407) | ponder=4.956e-06 | infonce=0.090 | GPU 1.9/12.3GB
+[2026-04-24 22:26:08]   [2] 4700/19277 (24%) loss=4.4351 ppl=84.4 lr=9.65e-05 | 8421 tok/s (avg 8408) | ponder=4.849e-06 | infonce=0.100 | GPU 1.9/12.3GB
+[2026-04-24 22:26:44]   [2] 4750/19277 (25%) loss=4.1454 ppl=63.1 lr=9.65e-05 | 8443 tok/s (avg 8408) | ponder=6.247e-06 | infonce=0.114 | GPU 1.9/12.3GB
+[2026-04-24 22:27:21]   [2] 4800/19277 (25%) loss=4.0373 ppl=56.7 lr=9.65e-05 | 8428 tok/s (avg 8408) | ponder=4.685e-06 | infonce=0.100 | GPU 1.9/12.3GB
+[2026-04-24 22:27:57]   [2] 4850/19277 (25%) loss=3.9789 ppl=53.5 lr=9.65e-05 | 8439 tok/s (avg 8409) | ponder=5.043e-06 | infonce=0.123 | GPU 1.9/12.3GB
+[2026-04-24 22:28:34]   [2] 4900/19277 (25%) loss=3.8550 ppl=47.2 lr=9.64e-05 | 8426 tok/s (avg 8409) | ponder=4.995e-06 | infonce=0.153 | GPU 1.9/12.3GB
+[2026-04-24 22:29:10]   [2] 4950/19277 (26%) loss=3.8996 ppl=49.4 lr=9.64e-05 | 8440 tok/s (avg 8409) | ponder=4.745e-06 | infonce=0.119 | GPU 1.9/12.3GB
+[2026-04-24 22:29:47]   [2] 5000/19277 (26%) loss=3.7950 ppl=44.5 lr=9.64e-05 | 8274 tok/s (avg 8408) | ponder=5.022e-06 | infonce=0.091 | GPU 1.9/12.3GB
+[2026-04-24 22:29:48]   [mid-epoch sample @ batch 5000, 149,164,032 tok]
+[2026-04-24 22:29:48]   Prompt: In 1923 , the University of
+[2026-04-24 22:29:48]   Generated: In 1923 , the University of Illinois and the University of Michigan . 
+
+
+[2026-04-24 22:29:48]  = = Geography = = 
+
+
+[2026-04-24 22:29:48]  The area that has an elevation was 4 @,@ 880 m ( 22 ft 6 in ) above sea level . It is located just west of the mouth of the River Dauphin Island ; it lies south to northwest of Lake George in the western part of the country . In most areas of
+[2026-04-24 22:29:48]   Quality: rep3=0.014 rep4=0.000 restarts=0 uniq=0.740
+[2026-04-24 22:30:25]   [2] 5050/19277 (26%) loss=4.1665 ppl=64.5 lr=9.64e-05 | 8086 tok/s (avg 8404) | ponder=5.010e-06 | infonce=0.114 | GPU 1.9/12.3GB
