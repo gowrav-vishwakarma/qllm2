@@ -453,6 +453,72 @@ class V8Trainer:
             f"t_max={new_t_max} ponder_lambda={new_lambda:.4f}{temp_str}"
         )
 
+    @staticmethod
+    def _summarize_qlc_diags(diag_batches) -> str:
+        """Aggregate QLC diagnostics across batches by insertion point."""
+        buckets = {}
+        for diags in diag_batches:
+            for diag in diags:
+                name = getattr(diag, "insertion_point", "final")
+                b = buckets.setdefault(name, {
+                    "count": 0,
+                    "mean_iter": 0.0,
+                    "mean_alpha": 0.0,
+                    "mean_beta": 0.0,
+                    "mean_gamma": 0.0,
+                    "halt_yes_rate": 0.0,
+                    "halt_no_rate": 0.0,
+                    "continue_rate": 0.0,
+                    "mean_amp": 0.0,
+                    "out_scale": 0.0,
+                    "psi_delta_l2": 0.0,
+                    "downstream_delta_l2": 0.0,
+                    "memory_echo_cos": 0.0,
+                    "memory_echo_count": 0,
+                })
+                b["count"] += 1
+                for key in (
+                    "mean_iter", "mean_alpha", "mean_beta", "mean_gamma",
+                    "halt_yes_rate", "halt_no_rate", "continue_rate",
+                    "mean_amp", "out_scale", "psi_delta_l2",
+                    "downstream_delta_l2",
+                ):
+                    b[key] += float(getattr(diag, key, 0.0))
+                echo = getattr(diag, "memory_echo_cos", None)
+                if echo is not None:
+                    b["memory_echo_cos"] += float(echo)
+                    b["memory_echo_count"] += 1
+
+        lines = []
+        for name in sorted(buckets):
+            b = buckets[name]
+            n = max(1, b["count"])
+            echo = (
+                b["memory_echo_cos"] / b["memory_echo_count"]
+                if b["memory_echo_count"] > 0 else float("nan")
+            )
+            lines.append(
+                f"QLC[{name}]: iter={b['mean_iter']/n:.2f} "
+                f"a/b/g={b['mean_alpha']/n:.3f}/"
+                f"{b['mean_beta']/n:.3f}/{b['mean_gamma']/n:.3f} "
+                f"halt={b['halt_yes_rate']/n:.2f}/"
+                f"{b['halt_no_rate']/n:.2f}/{b['continue_rate']/n:.2f} "
+                f"align={b['mean_amp']/n:.4f} "
+                f"out_scale={b['out_scale']/n:.3f} "
+                f"psi_delta={b['psi_delta_l2']/n:.3e} "
+                f"downstream_delta={b['downstream_delta_l2']/n:.3e} "
+                f"echo_cos={echo:.3f}"
+            )
+        return "\n".join(lines)
+
+    @staticmethod
+    def _print_block(title: str, body: str) -> None:
+        if not body:
+            return
+        print(f"{title}:")
+        for line in body.splitlines():
+            print(f"  {line}")
+
     def profile_one_shot(self, total_steps: int, output_dir: str | Path) -> None:
         """Capture a torch.profiler trace for the first ``total_steps``.
 
@@ -578,6 +644,7 @@ class V8Trainer:
         epoch_start = time.time()
         log_start = epoch_start
         log_tokens = 0
+        last_qlc_diag_batches = []
 
         self.optimizer.zero_grad(set_to_none=True)
 
@@ -701,6 +768,8 @@ class V8Trainer:
                     if not diags:
                         last_diag = m.last_qlc_diagnostics()
                         diags = [last_diag] if last_diag is not None else []
+                    if diags:
+                        last_qlc_diag_batches = [diags]
                     for diag in diags:
                         print(
                             f"    QLC[{diag.insertion_point}]: iter={diag.mean_iter:.2f} "
@@ -787,6 +856,7 @@ class V8Trainer:
             "avg_tok_s": avg_tok_s,
             "epoch_tokens": total_tokens,
             "ponder": avg_ponder,
+            "qlc_summary": self._summarize_qlc_diags(last_qlc_diag_batches),
         }
 
     @torch.no_grad()
@@ -794,8 +864,10 @@ class V8Trainer:
         if self.val_loader is None or len(self.val_loader) == 0:
             return {}
         self.model.eval()
+        m = self._orig()
         total_loss_w = 0.0
         total_tokens = 0
+        qlc_diag_batches = []
         for batch in self.val_loader:
             input_ids = batch["input_ids"].to(self.device, non_blocking=True)
             labels = batch["labels"].to(self.device, non_blocking=True)
@@ -805,16 +877,27 @@ class V8Trainer:
                 enabled=self.use_amp,
                 dtype=self.amp_dtype or torch.float16,
             ):
-                logits, _, _ = self.model(input_ids)
+                logits, _, _ = self.model(
+                    input_ids, return_qlc_diag=m.has_qlc(),
+                )
                 loss = F.cross_entropy(
                     logits.view(-1, logits.size(-1)), labels.view(-1),
                 )
+            if m.has_qlc():
+                diags = m.last_qlc_diagnostics_all()
+                if diags:
+                    qlc_diag_batches.append(diags)
             total_loss_w += loss.item() * batch_tokens
             total_tokens += batch_tokens
         if total_tokens == 0:
             return {}
         avg_loss = total_loss_w / total_tokens
-        return {"val_loss": avg_loss, "val_ppl": math.exp(min(avg_loss, 20))}
+        return {
+            "val_loss": avg_loss,
+            "val_ppl": math.exp(min(avg_loss, 20)),
+            "val_tokens": total_tokens,
+            "qlc_summary": self._summarize_qlc_diags(qlc_diag_batches),
+        }
 
     @torch.no_grad()
     def _generate_sample(self, prompt: str = "The", max_tokens: int = 80) -> str:
@@ -929,10 +1012,11 @@ class V8Trainer:
             )
 
             is_best = False
+            val_metrics = {}
             if self.val_loader is not None and len(self.val_loader) > 0:
                 val_metrics = self.validate()
                 line += (
-                    f" | Val Loss: {val_metrics['val_loss']:.4f} "
+                    f" | Validation/Test Loss: {val_metrics['val_loss']:.4f} "
                     f"PPL: {val_metrics['val_ppl']:.2f}"
                 )
                 if val_metrics["val_loss"] < self.best_val_loss:
@@ -941,6 +1025,10 @@ class V8Trainer:
                     line += " *best*"
                     is_best = True
             print(line)
+            if train_metrics.get("qlc_summary"):
+                self._print_block("Train QLC epoch summary", train_metrics["qlc_summary"])
+            if val_metrics.get("qlc_summary"):
+                self._print_block("Validation QLC epoch summary", val_metrics["qlc_summary"])
 
             if is_best:
                 self.save_checkpoint("best_model.pt", epoch)
@@ -962,16 +1050,27 @@ class V8Trainer:
                 except Exception as e:
                     print(f"(Sample generation failed: {e})")
 
-            _notify_discord(
-                f"**V8 [{m.config.stage}] Epoch {epoch+1}/{self.max_epochs}**\n"
-                f"Train Loss: {train_metrics['loss']:.4f} "
-                f"PPL: {train_metrics['ppl']:.2f}"
-                + (
-                    f" | Val PPL: {val_metrics['val_ppl']:.2f}"
-                    if self.val_loader and len(self.val_loader) > 0 else ""
+            discord_lines = [
+                f"**V8 [{m.config.stage}] Epoch {epoch+1}/{self.max_epochs}**"
+                + (" *best*" if is_best else ""),
+                (
+                    f"Train Loss: {train_metrics['loss']:.4f} "
+                    f"PPL: {train_metrics['ppl']:.2f} "
+                    f"ponder={train_metrics['ponder']:.3e} "
+                    f"tok/s={train_metrics['avg_tok_s']:.0f}"
+                ),
+            ]
+            if self.val_loader and len(self.val_loader) > 0:
+                discord_lines.append(
+                    f"Validation/Test Loss: {val_metrics['val_loss']:.4f} "
+                    f"PPL: {val_metrics['val_ppl']:.2f} "
+                    f"tokens={int(val_metrics.get('val_tokens', 0)):,}"
                 )
-                + (" *best*" if is_best else "")
-            )
+            if train_metrics.get("qlc_summary"):
+                discord_lines.append("Train QLC:\n" + train_metrics["qlc_summary"])
+            if val_metrics.get("qlc_summary"):
+                discord_lines.append("Validation/Test QLC:\n" + val_metrics["qlc_summary"])
+            _notify_discord_long("\n".join(discord_lines))
 
         self.save_checkpoint("final_model.pt", self.max_epochs - 1)
         total_time = time.time() - training_start
@@ -979,6 +1078,7 @@ class V8Trainer:
         print(f"Best Val PPL: {self.best_val_ppl:.2f}")
         _notify_discord(
             f"**V8 [{m.config.stage}] DONE** wall {total_time/3600:.2f}h | "
+            f"Best Val Loss: {self.best_val_loss:.4f} | "
             f"Best Val PPL: {self.best_val_ppl:.2f}"
         )
 
