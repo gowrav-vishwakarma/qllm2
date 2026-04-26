@@ -484,3 +484,110 @@ Proceed to full medium only if:
 - Equal-param / equal-FLOP controls do not match the gain.
 - On medium, epoch-2/3 PPL bends closer to the transformer curve than the V6
   pam-v3 curve.
+
+### 2026-04-26 readout: medium context run is muting QLC
+
+**Run**:
+[`logs/v8/e2e_medium_context_reasoning_wikitext103_20260425_103755_4069dac/v8_e2e_medium_context_reasoning_wikitext103.log`](../logs/v8/e2e_medium_context_reasoning_wikitext103_20260425_103755_4069dac/v8_e2e_medium_context_reasoning_wikitext103.log)
+| **RUN_INFO**:
+[`...20260425_103755_4069dac/RUN_INFO.txt`](../logs/v8/e2e_medium_context_reasoning_wikitext103_20260425_103755_4069dac/RUN_INFO.txt)
+
+**Checkpoint sampled**:
+`v8/checkpoints/e2e_medium_context_reasoning/best_model.pt`
+(`checkpoint_epoch=2`, saved after epoch 3, `global_step=57831`,
+`best_val_ppl=38.6564`).
+
+#### Setup
+
+This is the 104.5M-param V8.3 context preset: V7/QPAM medium backbone plus one
+shared interleaved QLC after blocks 3, 7, and 11. The final post-backbone QLC
+is disabled. QLC settings are `rank=8`, `bank_size=2048`, `top_k=4`,
+`t_max=4`, `interleaved_out_scale=0.05`, `out_scale_learnable=True`,
+`renormalize_psi=False`, `target_alignment_weight=0.05`,
+`target_alignment_target=0.75`, `infonce_weight=0.05`, `infonce_every=4`,
+iteration/layer context on, RoPE-conditioned probe on, weighted projector on,
+and runtime QLC schedule enabled.
+
+#### Metric trajectory
+
+| Epoch | Train PPL | Val PPL | Tok/s | Notes |
+|-------|----------:|--------:|------:|-------|
+| 1 | 122.33 | 57.58 | 3386 | best |
+| 2 | 53.81 | 43.73 | 3425 | best |
+| 3 | 44.73 | 38.66 | 3426 | best checkpoint |
+
+Compared at epoch 3, V8.3 is ahead of lean PAM (`40.15` PPL at epoch 3) but
+only by `1.49` PPL while running roughly 10x slower (`~3.4k tok/s` vs
+`~34k tok/s`). It is not bending toward the transformer curve: transformer B=3
+is documented at `27.08` final PPL, V7 7a at `29.73`, V6 pam-v3 at `29.95`,
+and lean L1 at `32.09`.
+
+#### Internal QLC readout
+
+The mechanical QLC signals are not dead: `align` rises into the intended band
+or above it, InfoNCE falls from roughly random (`~2.2`) to `~0.1`, and
+`bank_overlap_with_prev` is low (`~0.04`), so later iterations are selecting
+different effects. However, the part that matters for the language model is
+collapsing:
+
+- At startup, QLC `out_scale` is `0.050`, with `downstream_delta_l2` around
+  `0.8-1.0`.
+- By epoch 2 summary, `out_scale` is still `0.061`, with
+  `downstream_delta_l2` around `0.9-1.2`.
+- By epoch 3 summary, the saved checkpoint has
+  `interleaved_qlc.out_scale = -0.000563`, and train/val
+  `downstream_delta_l2` is only `~1e-5` to `1e-4`.
+- In the live epoch-4 tail, `out_scale` remains near zero/negative
+  (`~-0.003` to `-0.005`), and `downstream_delta_l2` is still tiny
+  (`~3e-3` to `1e-2`) despite internal `psi_delta_l2` remaining in the
+  hundreds.
+
+Interpretation: QLC is learning internal routing/alignment, but the joint LM
+objective is learning to suppress the QLC residual before it reaches later PAM
+layers. In other words, the model is using the learnable residual scale as a
+bypass valve.
+
+#### Best-checkpoint factual sampling
+
+Generation used the trainer settings (`temperature=0.8`, `top_k=50`,
+`top_p=0.9`, `repetition_penalty=1.2`, `max_new_tokens=80`).
+
+| Prompt | Observed completion quality |
+|--------|-----------------------------|
+| `In 1923 , the University of` | Grammatical but invented: University of Chicago opens first public school in 1924, then closes in 1928. |
+| `The capital of France is` | Does not answer Paris; drifts into colonial conflict. |
+| `Albert Einstein was born in` | Gives 1872 and fabricated family details; correct is 1879. |
+| `The Pacific Ocean is` | Produces generic ocean/port prose with confused Atlantic/Pacific history. |
+| `During the Second World War ,` | Repeats "version" and drifts into B-29 section text. |
+| `The chemical symbol for gold is` | Does not answer Au; gives generic gold/silver prose. |
+| `A prime number is a number that` | Does not define primality; drifts into song structure. |
+| `The theory of relativity was developed by` | Does not answer Einstein; says New York Post / 1999. |
+
+Verdict from sampling: no evidence of improved factual grounding. The model is
+fluent in WikiText section style, but not better at simple facts.
+
+#### Decision
+
+This run fails the V8.3 continuation gate as currently defined. It has not shown
+transformer-ward PPL movement, is far slower than the lean/V7 baselines, and
+the core diagnostic (`downstream_delta_l2`) says QLC influence has been muted.
+
+Do not spend a full 10-epoch run on this exact configuration. Preserve it as a
+negative result:
+
+> Interleaved QLC can learn alignment, InfoNCE routing, and different bank picks,
+> but with `out_scale_learnable=True` the LM objective learns to bypass the QLC
+> residual, so the reasoning core becomes internally active but externally
+> negligible.
+
+Next experiments should be sharper ablations, not longer training:
+
+1. Freeze or constrain interleaved `out_scale` positive and rerun a short
+   smoke. If PPL regresses, QLC residual is harmful; if PPL improves, the
+   bypass valve was hiding useful signal.
+2. Disable InfoNCE and/or target alignment in short runs to test whether the
+   auxiliaries are optimizing internal structure that the LM objective rejects.
+3. Run a Stage-B/frozen-backbone test where QLC must prove additive value
+   without the backbone adapting around it.
+4. If the near-term goal is WikiText PPL, prioritize V7/CGU or
+   transformer-like channel-mixing improvements over more QLC complexity.
