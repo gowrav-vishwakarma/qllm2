@@ -323,6 +323,10 @@ class TransformerTrainer:
         torch.save(ckpt, path)
         print(f"Saved checkpoint: {path}")
 
+    def _log_val(self, epoch: int, val_ppl: float, kind: str):
+        with open(self.checkpoint_dir / 'val_ppl.log', 'a') as f:
+            f.write(f"{epoch}\t{self.global_step}\t{kind}\t{val_ppl:.4f}\n")
+
     def train(self):
         training_start = time.time()
         print(f"\nTraining on {self.device}")
@@ -361,6 +365,7 @@ class TransformerTrainer:
                     f" | Val Loss: {val_metrics['val_loss']:.4f} "
                     f"PPL: {val_metrics['val_ppl']:.2f}"
                 )
+                self._log_val(epoch + 1, val_metrics['val_ppl'], 'end')
                 if val_metrics['val_loss'] < self.best_val_loss:
                     self.best_val_loss = val_metrics['val_loss']
                     self.best_val_ppl = val_metrics['val_ppl']
@@ -436,7 +441,7 @@ def main():
     log_dir = Path(args.log_dir)
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / 'transformer_baseline.log'
-    log_mode = 'a' if args.resume else 'w'
+    log_mode = 'a'
     tee = TeeLogger(log_path, mode=log_mode)
     sys.stdout = tee
 
