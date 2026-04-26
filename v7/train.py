@@ -179,6 +179,9 @@ class V7Trainer:
         log_interval: int = 50,
         start_epoch: int = 0,
         unitary_lambda: float = 0.0,
+        run_label: str = 'V7',
+        log_path: Optional[str] = None,
+        log_dir: Optional[str] = None,
     ):
         self.model = model
         self.train_loader = train_loader
@@ -193,6 +196,9 @@ class V7Trainer:
         self.gen_prompt = gen_prompt
         self.log_interval = log_interval
         self.start_epoch = start_epoch
+        self.run_label = run_label
+        self.log_path = log_path
+        self.log_dir = log_dir
 
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
@@ -345,7 +351,7 @@ class V7Trainer:
                     ppl = math.exp(min(main_loss_val, 20))
                     lr = self.scheduler.get_last_lr()[0]
                     _gen_msg = (
-                        f"**[V7 gen_every]** Epoch {epoch+1} batch {batch_idx} "
+                        f"**[{self.run_label} gen_every]** Epoch {epoch+1} batch {batch_idx} "
                         f"({self.global_tokens:,} tok)\n"
                         f"loss={main_loss_val:.4f} ppl={ppl:.1f} lr={lr:.2e} | "
                         f"{avg_tok_s:.0f} tok/s\n"
@@ -481,6 +487,7 @@ class V7Trainer:
                 self.save_checkpoint(f'checkpoint_epoch_{epoch+1}.pt', epoch)
 
             epoch_text = ""
+            epoch_quality = None
             if self.tokenizer is not None:
                 try:
                     text = self._generate_sample(self.gen_prompt)
@@ -488,6 +495,7 @@ class V7Trainer:
                     print(f"\nPrompt: {self.gen_prompt}")
                     print(f"Generated: {text}")
                     qm = compute_text_quality(text)
+                    epoch_quality = qm
                     print(
                         f"  Quality: rep3={qm['repeat_3gram']:.3f} "
                         f"rep4={qm['repeat_4gram']:.3f} "
@@ -498,7 +506,7 @@ class V7Trainer:
                     print(f"(Sample generation failed: {e})")
 
             _ep_msg = (
-                f"**V7 Epoch {epoch+1}/{self.max_epochs}**\n"
+                f"**{self.run_label} Epoch {epoch+1}/{self.max_epochs}**\n"
                 f"Train Loss: {train_metrics['loss']:.4f} "
                 f"PPL: {train_metrics['ppl']:.2f} | "
                 f"{train_metrics['avg_tok_s']:.0f} tok/s | "
@@ -516,17 +524,27 @@ class V7Trainer:
                     f"\nPrompt: {self.gen_prompt}\nGenerated: "
                     f"{(epoch_text[:600] + '...') if len(epoch_text) > 600 else epoch_text}"
                 )
+                if epoch_quality is not None:
+                    _ep_msg += (
+                        f"\nQuality: rep3={epoch_quality['repeat_3gram']:.3f} "
+                        f"rep4={epoch_quality['repeat_4gram']:.3f} "
+                        f"restarts={epoch_quality['restart_frag']:.0f} "
+                        f"uniq={epoch_quality['unique_word_ratio']:.3f}"
+                    )
             _notify_discord(_ep_msg)
 
         self.save_checkpoint('final_model.pt', self.max_epochs - 1)
 
         total_time = time.time() - training_start
         _done_msg = (
-            f"**V7 Training complete!**\n"
+            f"**{self.run_label} Training complete!**\n"
             f"Wall time: {total_time:.1f}s ({total_time/3600:.2f}h)\n"
             f"Best Val Loss: {self.best_val_loss:.4f}, "
             f"Best Val PPL: {self.best_val_ppl:.2f}"
         )
+        if self.log_path:
+            _done_msg += f"\nLog: {self.log_path}"
+        _done_msg += f"\nCheckpoint dir: {self.checkpoint_dir}"
         print(f"\nTraining complete!")
         print(f"Total wall time: {total_time:.1f}s ({total_time/3600:.2f}h)")
         print(
