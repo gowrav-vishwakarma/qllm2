@@ -2,12 +2,14 @@
 # V9 PAM upgrade experiments.
 #
 # Variants:
-#   baseline  - V9 wrapper of V7 medium_h16_flat, should match V7 behavior
-#   gate      - PAM output gate only
+#   baseline  - clean V9 wrapper of medium_h16_flat
+#   gate      - PAM output gate only (~105M)
+#   gate_100m - PAM output gate only, dim=372 (~100.5M)
 #   conv      - causal depthwise short conv only
 #   gate_conv - output gate + short conv
 #
 # Usage:
+#   bash ./scripts/run_v9_pam_upgrade.sh --variant gate_100m
 #   bash ./scripts/run_v9_pam_upgrade.sh --variant gate
 #   bash ./scripts/run_v9_pam_upgrade.sh --variant conv --epochs 3
 #   bash ./scripts/run_v9_pam_upgrade.sh --variant gate_conv --batch_size 2
@@ -53,6 +55,10 @@ case "$VARIANT" in
         PRESET="medium_h16_gate"
         DESC="V9 Exp A: PAM output gate only, reverse-assoc off"
         ;;
+    gate_100m)
+        PRESET="medium_h16_gate_100m"
+        DESC="V9 Exp A100: PAM output gate, parameter-matched 100M, reverse-assoc off"
+        ;;
     conv)
         PRESET="medium_h16_conv4"
         DESC="V9 Exp B: causal short conv only, reverse-assoc off"
@@ -62,7 +68,7 @@ case "$VARIANT" in
         DESC="V9 Exp C: PAM output gate + causal short conv, reverse-assoc off"
         ;;
     *)
-        echo "Unknown --variant '$VARIANT'. Expected: baseline, gate, conv, gate_conv" >&2
+        echo "Unknown --variant '$VARIANT'. Expected: baseline, gate, gate_100m, conv, gate_conv" >&2
         exit 2
         ;;
 esac
