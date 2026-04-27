@@ -69,6 +69,10 @@ PRESETS.update({
     "medium_h16_gate": _v9_config_from_v7(
         "medium_h16_flat", **_FLAT_CLEAN_OVERRIDES, pam_output_gate=True,
     ),
+    "medium_h16_gate_100m": _v9_config_from_v7(
+        "medium_h16_flat", **_FLAT_CLEAN_OVERRIDES,
+        dim=372, pam_output_gate=True,
+    ),
     "medium_h16_conv4": _v9_config_from_v7(
         "medium_h16_flat", **_FLAT_CLEAN_OVERRIDES, pam_short_conv=4,
     ),

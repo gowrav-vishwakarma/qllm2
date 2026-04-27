@@ -151,22 +151,31 @@ gate itself is helping.
 
 Code defaults were cleaned after this readout:
 
-- `medium_h16_flat`, `medium_h16_gate`, `medium_h16_conv4`, and
-  `medium_h16_gate_conv4` now explicitly set `use_reverse_assoc=False`.
+- `medium_h16_flat`, `medium_h16_gate`, `medium_h16_gate_100m`,
+  `medium_h16_conv4`, and `medium_h16_gate_conv4` now explicitly set
+  `use_reverse_assoc=False`.
 - The V9 launcher also passes `--no_reverse_assoc` as a safety check.
 
-Next run:
+The completed confounded gate run had **105.1M** parameters, so its small gain
+over V7/V6 could partly be capacity. For a real apples-to-apples result, run the
+parameter-matched gate variant next:
 
 ```bash
-bash ./scripts/run_v9_pam_upgrade.sh --variant gate
+bash ./scripts/run_v9_pam_upgrade.sh --variant gate_100m
 ```
+
+This uses `medium_h16_gate_100m`: dim **372**, 16 layers, 6 heads, head_dim 64,
+expand 3, `pam_output_gate=True`, `use_reverse_assoc=False`, and about
+**100.5M** parameters.
 
 Interpretation rule:
 
 - Better than **29.57**: gate is likely genuinely useful and reverse association
-  was holding it back.
+  plus extra capacity were not responsible for the gain.
 - Around **29.7-30.0**: the 29.57 run may have been noise or an interaction.
 - Worse than **29.57**: inspect learned `rev_scale` from the confounded run
   before deciding whether gate and reverse association interacted usefully.
 
-Do not run `conv` or `gate_conv` until this clean gate result is known.
+Compare the result directly against V9 confounded gate **29.57**, V7 Exp7a
+**29.73**, V6 medium-pam-v3 **29.95**, and transformer B=3 **27.08**. Do not run
+`conv` or `gate_conv` until this matched clean gate result is known.
