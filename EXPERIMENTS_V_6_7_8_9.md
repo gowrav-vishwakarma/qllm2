@@ -6,14 +6,24 @@ Single-page distillation of what we tried across complex LM iterations: **outcom
 
 ---
 
+## Current best PAM run (cross-version, as of 2026-04-27)
+
+> **V9 `gate` (confounded) — val PPL 29.57**, 105.1M params, WikiText-103, B=3, 10 ep.
+> `pam_output_gate=True` (extra `nn.Linear(2*dim → inner_dim) + 2*sigmoid` on the PAM readout)
+> with inherited `use_reverse_assoc=True`. **Confounded** — not a clean ablation,
+> +5M params over V7 baseline, generation still loops. Acceptance gate `<29.2` not met.
+> Full config + caveats: [v9/EXPERIMENTS_V9.md → Current Best PAM Run](v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27).
+> This is the number to beat for any PAM-only run; transformer B=3 (27.08) is the next gate.
+
 ## North-star baselines (WikiText-103, ~100M class)
 
 | Model | Val PPL (best / typical @10 ep) | Notes |
 |---|---:|---|
 | Transformer B=3 | **27.08** | [EXPERIMENTS_V6_PART2](EXPERIMENTS_V6_PART2.md) — GPT-2–style, Flash-class SDPA |
 | Transformer B=6 | **23.13** | Same arch, larger batch; large PPL gain vs B=3 |
-| V6 `medium-pam-v3` | **29.95** | Interleaved CGU+PAM, RoPE, no QK-norm in headline config |
+| **V9 `gate` (confounded) — current best PAM** | **29.57** | 105.1M params; `pam_output_gate=True` + inherited `use_reverse_assoc=True`. See [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27). |
 | V7 Exp7a (ModSwish) | **29.73** | Best flat PAM stack in V7; beats archived V6 v3 slightly |
+| V6 `medium-pam-v3` | **29.95** | Interleaved CGU+PAM, RoPE, no QK-norm in headline config |
 
 PAM/QLLM trains slower in tok/s than the transformer for stack maturity reasons; treat PPL as the clean quality readout, throughput as its own line item in the per-version docs.
 
@@ -37,18 +47,18 @@ flowchart LR
 - **V6:** **Interleaved CGU + PAM** and **PAM v3** (RoPE, fused QKV, block-real path) land near a strong transformer on PAM at matched batch — headline **29.95** val PPL. **GSP + TSO + rebalanced** settings matter for stability. **HSB** was an interesting SSM-native binding story but did not win the main medium run vs simpler stacks (see HSB + medium logs and [EXPERIMENTS_V6_PART2](EXPERIMENTS_V6_PART2.md)). **Scaling-sweep** logs show **QPAM/RPAM** PPL improving with param budget on the same schedule (tab-separated `mid/end` val snapshots).
 - **V7:** **ModSwish (Exp7a)** is the best **flat** 16-layer PAM result (**29.73** @10). **Chunked dual form + B=6 (7d)** trades some PPL for a large **throughput** win vs B=3. The **“lean PAM”** (no CGU) run proves **channel gating is worth ~2 PPL** but saves VRAM and raises tok/s. **`medium_h16_flat` 383e514 (ModReLU) 9-epoch** run reached **26.64** val PPL (non-Swish preset — not apples-to-apples to 7a).
 - **V8:** **QLC Stage A.5 on TinyStories** shows QLC can beat passthrough in a smoke setting; **WikiText e2e** runs moved PPL in the right direction with v8.2+ fixes (see `e2e_*` logs), with **context-length hack run** ending **38.66** @3 ep. Full **V8.3** story (interleaving, diagnostics) is in [v8/EXPERIMENTS_V8.md](v8/EXPERIMENTS_V8.md).
-- **V9:** **PAM output gate** with inherited config reaches **29.57** @10 (**better than V7 7a and V6 v3** on PPL) but the logged run is **not a clean ablation** — `use_reverse_assoc=True` and **+5M params** vs 7a; see [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md). **Clean 100.5M gate** run (`gate_100m`) is **in progress** at the time of this file (epoch 1 val **55.37** in log).
+- **V9:** **PAM output gate** with inherited config reaches **29.57** @10 (**better than V7 7a and V6 v3** on PPL) but the logged run is **not a clean ablation** — `use_reverse_assoc=True` and **+5M params** vs 7a; see [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md). The clean parameter-matched **`gate_100m`** (dim 372, 100.5M, `use_reverse_assoc=False`) showed worse early trajectory (ep1 val **55.37** vs gate's 54.29) and was **stopped** for a pivot to a **novel zero-parameter cross-head competition** (`compete_revassoc_100m`): V6 medium-pam-v3 base + `use_reverse_assoc=True` + softmax-over-heads gating on the PAM readout, no learned gate parameters.
 
 ## Crux: what did not work or was stopped
 
 - **V6:** **PAM QK-norm = on** in v3: **repetition / mode collapse** while loss still looked fine — run stopped; headline preset keeps **QK-norm off** ([EXPERIMENTS_V6_PART2](EXPERIMENTS_V6_PART2.md) “Bug 8”). **Memory-reframe** pathologies: `run2_span_corruption` blows up; others finish but do not beat mainline PAM. **Diffusion-text** and **rebalanced_110656** logs never reached a first val epoch line (crashed or stalled). **Small-matched 143537** (seq-512) log has no completed val epoch in file.
 - **V7:** **7f-1 multi-scale** and **7f-2 reverse-assoc** and **7f-0/7f grouped+multi-scale** all **regress** vs 7a. **7f-3 grouped-only** was **halted after epoch 1** (poor signal vs 7a). **7b `phase_mod`** was **stopped mid-epoch-1** to free GPU — **no val** in the saved log. **7f-3** on-disk log in this repo has **no val lines**; the learnings table records **epoch-1 val 58.70** when the halt decision was made — we preserve that number below.
 - **V8:** **4450ff0 / early e2e** was effectively **killed** (align/gamma on noise floor; see V8 doc). **Stage A medium** run **hung** after printing epoch header (no val). **E2E logs starting at ep2** miss ep1 in the file (resume/rotated logs) — PPL@1 is blank in the table.
-- **V9:** **Gate + reverse_assoc + 105M** is **not** a pure test of the output gate; follow **clean 100.5M** + matrix in V9 doc.
+- **V9:** **Gate + reverse_assoc + 105M** is **not** a pure test of the output gate. The C/R/N/K matrix (`gate_revassoc_100m`, `gate_qknorm_100m`, `gate_conv4_100m`) was scoped but **cancelled** before launch in favor of pure-PAM novelty (cross-head competition). See [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md#2026-04-27-pivot-to-novel-pure-pam-compete--reverse-assoc).
 
 ## Open
 
-- V9 **C/R/N/K** matrix (`gate_revassoc_100m`, `gate_qknorm_100m`, `gate_conv4_100m`, etc.) and whether **any** variant closes more of the **27.08 (transformer B=3)** gap without capacity confounds.
+- V9 `compete_revassoc_100m` (zero-parameter cross-head softmax on PAM readout + `use_reverse_assoc=True`, V6 medium-pam-v3 base): can pure PAM close the 2.5 PPL gap to **27.08 (transformer B=3)** without adding learned parameters or confounding capacity?
 - V8 path to PPL parity with **V7 QPAM passthrough** and whether **QLC** can show sustained **γ > 0** and **mean iter > 1** *without* killing PPL (see [v8/AUDIT_V8.md](v8/AUDIT_V8.md)).
 
 ---
