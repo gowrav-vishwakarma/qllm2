@@ -375,6 +375,14 @@ Interpretation: the zero-parameter cross-head competition did not replace the
 learned V9 gate. The best evidence still points at **learned PAM readout gating**
 as the useful lever, so the next experiment strengthens that gate directly.
 
+Important negative learning: applying a direct PAM readout non-linearity/gate
+without a learned linear projection is **not** showing the same benefit as the
+linear+sigmoid gate. The useful part of V9's best run appears to be the
+input-conditioned learned projection into gate logits, not merely "put a
+sigmoid-like non-linearity on PAM output." Direct competition on `y` preserved
+phase and added no parameters, but it underperformed both the learned-gate run
+and the clean V7 trajectory at epoch 2.
+
 ### Mechanism
 
 The existing V9 gate is a single real linear projection over the complex input:
