@@ -360,7 +360,7 @@ bash ./scripts/run_v9_pam_upgrade.sh --variant compete_revassoc_100m
 
 ## 2026-04-27: V9 Gate-MLP + Reverse Assoc (Post-Compete Pivot)
 
-Status: **queued**.
+Status: **reviewed after epoch 5 — stop recommended**.
 
 The `compete_revassoc_100m` run did not show a win signal after two epochs:
 
@@ -439,6 +439,50 @@ Validation before launch:
 
 ```bash
 bash ./scripts/run_v9_pam_upgrade.sh --variant gate_mlp_revassoc_100m
+```
+
+Log: `logs/v9/pam_gate_mlp_revassoc_100m_wikitext103_20260427_142855_133e208_dirty/v9_medium_h16_gate_mlp_revassoc_100m_wikitext103.log`
+
+### Epoch 5 Readout
+
+| Epoch | Train PPL | Val PPL | tok/s | Quality |
+|---:|---:|---:|---:|---|
+| 1 | 119.57 | 56.83 | 24.8k | `rep3=0.032`, `rep4=0.011`, `uniq=0.670` |
+| 2 | 53.22 | 43.65 | 25.9k | `rep3=0.011`, `rep4=0.000`, `uniq=0.604` |
+| 3 | 44.60 | 39.01 | 24.9k | `rep3=0.063`, `rep4=0.021`, `uniq=0.660` |
+| 4 | 40.34 | 36.19 | 27.4k | `rep3=0.011`, `rep4=0.000`, `uniq=0.758` |
+| 5 | 37.73 | **34.11** | 27.4k | `rep3=0.000`, `rep4=0.000`, `uniq=0.796` |
+
+Comparison at epoch 5:
+
+| Run | Params | Epoch 5 Val PPL | Delta vs gate-MLP |
+|---|---:|---:|---:|
+| V9 `gate` (confounded linear gate + reverse assoc) | 105.1M | **33.11** | gate-MLP worse by +1.00 |
+| V7 Exp7a | ~100M | **33.60** | gate-MLP worse by +0.51 |
+| V6 medium-pam-v3 | 100.4M | **33.82** | gate-MLP worse by +0.29 |
+| V9 `gate_mlp_revassoc_100m` | 101.1M | **34.11** | — |
+| Transformer B=3 | ~100M | **30.39** | gate-MLP worse by +3.72 |
+
+Interpretation:
+
+- The bigger MLP gate is **cleaner in generation** than the old confounded V9
+  gate at this point, but it is consistently worse on validation PPL.
+- It trails the old V9 gate by **~1.0 PPL** at epoch 5 and is still behind both
+  V7 Exp7a and V6 medium-pam-v3.
+- The zero-init final gate layer likely makes the MLP gate safe, but also slow:
+  it starts as exact identity and does not learn a useful enough non-linear gate
+  quickly enough to beat the simpler linear gate.
+
+Decision:
+
+- Do **not** promote `gate_mlp_revassoc_100m`.
+- Stop the run unless epoch 6 makes an unusually large recovery (target:
+  `<= 32.2`; kill if `> 32.5`).
+- Next preferred experiment: run the cleanest version of the current best recipe,
+  **simple linear sigmoid gate + reverse assoc at true ~100M**:
+
+```bash
+bash ./scripts/run_v9_pam_upgrade.sh --variant gate_revassoc_100m
 ```
 
 ### Decision Rules
