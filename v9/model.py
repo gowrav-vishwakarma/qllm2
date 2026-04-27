@@ -40,6 +40,10 @@ class V9Config(V7Config):
     pam_output_gate: bool = False
     # Causal depthwise conv kernel before QKV projection. 0 disables it.
     pam_short_conv: int = 0
+    # Cross-head soft competition on the PAM readout. Zero learned params.
+    # gate = (1 - alpha) + alpha * H * softmax(|y|, dim=H). alpha=0 is identity.
+    pam_head_compete: bool = False
+    pam_head_compete_alpha: float = 0.5
 
 
 def _v9_config_from_v7(name: str, **overrides) -> V9Config:
@@ -72,6 +76,28 @@ PRESETS.update({
     "medium_h16_gate_100m": _v9_config_from_v7(
         "medium_h16_flat", **_FLAT_CLEAN_OVERRIDES,
         dim=372, pam_output_gate=True,
+    ),
+    "medium_h16_gate_revassoc_100m": _v9_config_from_v7(
+        "medium_h16_flat",
+        **{**_FLAT_CLEAN_OVERRIDES, "use_reverse_assoc": True},
+        dim=372, pam_output_gate=True,
+    ),
+    "medium_h16_gate_qknorm_100m": _v9_config_from_v7(
+        "medium_h16_flat",
+        **{**_FLAT_CLEAN_OVERRIDES, "qk_norm": True},
+        dim=372, pam_output_gate=True,
+    ),
+    "medium_h16_gate_conv4_100m": _v9_config_from_v7(
+        "medium_h16_flat", **_FLAT_CLEAN_OVERRIDES,
+        dim=372, pam_output_gate=True, pam_short_conv=4,
+    ),
+    "medium_h16_compete_revassoc_100m": _v9_config_from_v7(
+        "medium_h16_flat",
+        **{**_FLAT_CLEAN_OVERRIDES, "use_reverse_assoc": True},
+        pam_output_gate=False,
+        pam_short_conv=0,
+        pam_head_compete=True,
+        pam_head_compete_alpha=0.5,
     ),
     "medium_h16_conv4": _v9_config_from_v7(
         "medium_h16_flat", **_FLAT_CLEAN_OVERRIDES, pam_short_conv=4,
@@ -241,6 +267,124 @@ class V9PhaseAssociativeLayer(PhaseAssociativeLayer):
         return out, new_state
 
 
+class V9CompetePAM(PhaseAssociativeLayer):
+    """V7 PAM with cross-head soft competition on the readout.
+
+    Per (batch, token, channel) location, heads compete via softmax over their
+    output magnitudes for representational mass. Phase preserved (gate is
+    real positive). Zero learned parameters: alpha is a fixed scalar.
+    """
+
+    def __init__(self, cfg: V9Config, layer_idx: int = 0):
+        super().__init__(cfg, layer_idx=layer_idx)
+        self.compete_alpha = float(cfg.pam_head_compete_alpha)
+
+    def _compete(self, y: torch.Tensor) -> torch.Tensor:
+        mag = cabs(y)
+        w = torch.softmax(mag, dim=1)
+        gate = (1.0 - self.compete_alpha) + self.compete_alpha * self.num_heads * w
+        return y * gate.unsqueeze(-1)
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        state: Optional[torch.Tensor] = None,
+        step_offset: int = 0,
+        drift_signal: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        B, T, _, _ = x.shape
+        H, d = self.num_heads, self.head_dim
+
+        if self.fused_qkv:
+            qkv = self.qkv_proj(x).view(B, T, 3, H, d, 2)
+            q = qkv[:, :, 0].transpose(1, 2).contiguous()
+            k = qkv[:, :, 1].transpose(1, 2).contiguous()
+            v = qkv[:, :, 2].transpose(1, 2).contiguous()
+        else:
+            q = self.q_proj(x).view(B, T, H, d, 2).transpose(1, 2)
+            k = self.k_proj(x).view(B, T, H, d, 2).transpose(1, 2)
+            v = self.v_proj(x).view(B, T, H, d, 2).transpose(1, 2)
+
+        if self.use_rope:
+            end = step_offset + T
+            if end > self.rope_cache.shape[0]:
+                self.register_buffer(
+                    "rope_cache",
+                    build_rope_cache(end * 2, d).to(x.device),
+                    persistent=False,
+                )
+            pos = self.rope_cache[step_offset:end].to(dtype=x.dtype)
+            q = cmul(q, pos)
+            k = cmul(k, pos)
+
+        if self.qk_norm:
+            q = cnormalize(q)
+            k = cnormalize(k)
+
+        if drift_signal is not None and hasattr(self, "drift_proj"):
+            drift_q = self.drift_proj(drift_signal).view(B, T, H, d, 2).transpose(1, 2)
+            q = q + drift_q
+
+        x_flat = to_real_concat(x)
+        dt = F.softplus(self.dt_proj(x_flat) + self.dt_bias).transpose(1, 2)
+
+        if self.use_gsp:
+            p = torch.sigmoid(self.protect_gate(cabs(x))).transpose(1, 2)
+            gamma = torch.exp(-dt) * (1 - p) + p
+            v_prime = v * (1 - p).unsqueeze(-1).unsqueeze(-1)
+        else:
+            gamma = torch.exp(-dt)
+            v_prime = v
+
+        _rev = self.rev_scale if self.use_reverse_assoc else None
+        if state is None and T > 1:
+            if self.chunk_size > 0 and T > self.chunk_size:
+                y, new_state = self._forward_chunked(q, k, v_prime, gamma, d, _rev)
+            else:
+                scale = d ** -0.5
+                q_s = q * scale
+                causal = self._causal[:T, :T]
+                y, new_state = self._dual_form_block(
+                    q_s, k, v_prime, gamma, causal, _rev,
+                )
+        else:
+            if state is None:
+                state = torch.zeros(B, H, d, d, 2, device=x.device, dtype=x.dtype)
+            scale = d ** -0.5
+            y_list = []
+            S = state
+            for t in range(T):
+                v_t = v_prime[:, :, t].unsqueeze(-2)
+                k_t = k[:, :, t]
+                k_conj = torch.stack([k_t[..., 0], -k_t[..., 1]], dim=-1).unsqueeze(-3)
+
+                outer_r = v_t[..., 0] * k_conj[..., 0] - v_t[..., 1] * k_conj[..., 1]
+                outer_i = v_t[..., 0] * k_conj[..., 1] + v_t[..., 1] * k_conj[..., 0]
+                outer = torch.stack([outer_r, outer_i], dim=-1)
+
+                g = gamma[:, :, t].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+                S = S * g + outer
+
+                q_t = q[:, :, t].unsqueeze(-3) * scale
+                sq_r = S[..., 0] * q_t[..., 0] - S[..., 1] * q_t[..., 1]
+                sq_i = S[..., 0] * q_t[..., 1] + S[..., 1] * q_t[..., 0]
+                y_list.append(torch.stack([sq_r, sq_i], dim=-1).sum(dim=-2))
+
+            y = torch.stack(y_list, dim=2)
+            new_state = S
+
+        y = self._compete(y)
+
+        y = y.transpose(1, 2).contiguous().view(B, T, self.inner_dim, 2)
+        out = self.o_proj(y)
+
+        if self.training:
+            mask = self.dropout(torch.ones(B, T, self.dim, device=x.device))
+            out = out * mask.unsqueeze(-1)
+
+        return out, new_state
+
+
 class V9Block(nn.Module):
     """Pre-norm residual: V7 CGU plus upgraded PAM sequence mixer."""
 
@@ -251,7 +395,10 @@ class V9Block(nn.Module):
         self.cgu_scale = nn.Parameter(torch.tensor(1.0))
         self.cgu_dropout = nn.Dropout(cfg.dropout)
         self.norm2 = ComplexNorm(cfg.dim)
-        self.pam = V9PhaseAssociativeLayer(cfg, layer_idx=layer_idx)
+        if cfg.pam_head_compete:
+            self.pam = V9CompetePAM(cfg, layer_idx=layer_idx)
+        else:
+            self.pam = V9PhaseAssociativeLayer(cfg, layer_idx=layer_idx)
         self.pam_scale = nn.Parameter(torch.tensor(0.1))
         self._dim = cfg.dim
 

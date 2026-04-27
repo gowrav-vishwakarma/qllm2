@@ -5,8 +5,12 @@
 #   baseline  - clean V9 wrapper of medium_h16_flat
 #   gate      - PAM output gate only (~105M)
 #   gate_100m - PAM output gate only, dim=372 (~100.5M)
+#   gate_revassoc_100m - PAM output gate + reverse association, dim=372
+#   gate_qknorm_100m   - PAM output gate + QK normalization, dim=372
+#   gate_conv4_100m    - PAM output gate + causal depthwise short conv, dim=372
 #   conv      - causal depthwise short conv only
 #   gate_conv - output gate + short conv
+#   compete_revassoc_100m - V6 PAM + reverse_assoc + cross-head soft competition (zero params)
 #
 # Usage:
 #   bash ./scripts/run_v9_pam_upgrade.sh --variant gate_100m
@@ -33,6 +37,7 @@ DATASET="wikitext103"
 BATCH_SIZE=3
 RESUME=0
 EXTRA_ARGS=""
+VARIANT_ARGS=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -50,25 +55,50 @@ case "$VARIANT" in
     baseline)
         PRESET="medium_h16_flat"
         DESC="V9 clean baseline: medium_h16_flat, reverse-assoc off"
+        VARIANT_ARGS="--no_reverse_assoc"
         ;;
     gate)
         PRESET="medium_h16_gate"
         DESC="V9 Exp A: PAM output gate only, reverse-assoc off"
+        VARIANT_ARGS="--no_reverse_assoc"
         ;;
     gate_100m)
         PRESET="medium_h16_gate_100m"
         DESC="V9 Exp A100: PAM output gate, parameter-matched 100M, reverse-assoc off"
+        VARIANT_ARGS="--no_reverse_assoc"
+        ;;
+    gate_revassoc_100m)
+        PRESET="medium_h16_gate_revassoc_100m"
+        DESC="V9 Exp R: gate + reverse_assoc, ~100M (test if gate detoxifies reverse pass)"
+        VARIANT_ARGS=""
+        ;;
+    gate_qknorm_100m)
+        PRESET="medium_h16_gate_qknorm_100m"
+        DESC="V9 Exp N: gate + qk_norm, ~100M (gate=magnitude, qk_norm=angle stability)"
+        VARIANT_ARGS="--no_reverse_assoc"
+        ;;
+    gate_conv4_100m)
+        PRESET="medium_h16_gate_conv4_100m"
+        DESC="V9 Exp K: gate + short_conv=4, ~100M (orthogonal local pattern)"
+        VARIANT_ARGS="--no_reverse_assoc"
         ;;
     conv)
         PRESET="medium_h16_conv4"
         DESC="V9 Exp B: causal short conv only, reverse-assoc off"
+        VARIANT_ARGS="--no_reverse_assoc"
         ;;
     gate_conv)
         PRESET="medium_h16_gate_conv4"
         DESC="V9 Exp C: PAM output gate + causal short conv, reverse-assoc off"
+        VARIANT_ARGS="--no_reverse_assoc"
+        ;;
+    compete_revassoc_100m)
+        PRESET="medium_h16_compete_revassoc_100m"
+        DESC="V9 Exp Comp: V6 PAM + reverse_assoc + cross-head soft competition (zero params, ~100M)"
+        VARIANT_ARGS=""
         ;;
     *)
-        echo "Unknown --variant '$VARIANT'. Expected: baseline, gate, gate_100m, conv, gate_conv" >&2
+        echo "Unknown --variant '$VARIANT'. Expected: baseline, gate, gate_100m, gate_revassoc_100m, gate_qknorm_100m, gate_conv4_100m, compete_revassoc_100m, conv, gate_conv" >&2
         exit 2
         ;;
 esac
@@ -76,7 +106,7 @@ esac
 GEN_PROMPT="In 1923 , the University of"
 CKPT_DIR="checkpoints_v9_${VARIANT}"
 LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
-ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --no_reverse_assoc"
+ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt $VARIANT_ARGS"
 
 RESUME_ARG=""
 REUSED_LOG_DIR=0
