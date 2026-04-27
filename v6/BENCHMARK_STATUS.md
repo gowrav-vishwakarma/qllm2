@@ -1,5 +1,13 @@
 # V6 Benchmark Status and Next-Step Decision Memo
 
+> **Cross-version PAM best (as of 2026-04-27)**: **V9 `gate` (confounded)
+> — val PPL 29.57**, 105.1M params, WikiText-103, B=3, 10 epochs.
+> V6's `medium-pam-v3` (29.95 PPL) is the strongest pure-V6 result and remains
+> the architectural ancestor. Full leaderboard, config, and caveats live in
+> [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27).
+> The V9 active research line tries to close the remaining ~2.5 PPL gap to
+> Transformer B=3 (27.08).
+
 This note is the current benchmark-grounded status of V6 after the first full WikiText-103 run. Its purpose is to answer four questions clearly:
 
 1. Where V6 stands today.
