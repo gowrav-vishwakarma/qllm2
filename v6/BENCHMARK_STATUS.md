@@ -5,6 +5,9 @@
 > V6's `medium-pam-v3` (29.95 PPL) is the strongest pure-V6 result and remains
 > the architectural ancestor. Full leaderboard, config, and caveats live in
 > [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27).
+> V9 follow-ups through 2026-04-27 (`compete_revassoc_100m` and
+> `gate_mlp_revassoc_100m`) did not beat that result; the active next clean test
+> is simple linear gate + reverse-assoc at ~100M (`gate_revassoc_100m`).
 > The V9 active research line tries to close the remaining ~2.5 PPL gap to
 > Transformer B=3 (27.08).
 

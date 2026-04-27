@@ -68,10 +68,12 @@ Each V7Block:
 | 2026-04 | **7f-3** Grouped hierarchy ONLY (`medium_h16_grouped`, cross_level, no multi-scale, no reverse assoc), B=3 — **stopped after epoch 1** | Epoch 1 val **58.70** vs 7a e1 **56.15** / V6 e1 **57.94** — no improvement signal; run halted to save GPU. Log: `logs/v7/exp7f3_grouped_only_wikitext103_20260418_120504_5294937_dirty/`. |
 | 2026-04 | **L1** Lean PAM baseline, `lean_medium_small` (86.2M), B=3, `--compile --no_grad_ckpt`, commit `7717f65` (dirty) | Val **32.09** @10e — **+2.36 PPL** vs 7a (29.73) but **+66% throughput** (34.7k vs 20.9k tok/s), **85% less VRAM** (1.7 vs ~11 GB). CGU worth ~2.4 PPL. Log: `logs/v7/lean_lean_medium_small_wikitext103_20260409_152722_7717f65_dirty/`. |
 | 2026-04 | **V9 gate (confounded)** `medium_h16_gate` (105.1M), B=3, `pam_output_gate=True` + inherited `use_reverse_assoc=True`, commit `80b725b` (dirty) | Val **29.57** @10e — **−0.16 vs 7a (29.73)** but confounded by inherited reverse-assoc and +5M params. **Current best PAM result of any version.** Generation still loops (`rep3=0.160`, `rep4=0.081`). Acceptance gate `<29.2` not met. Full readout: [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27). Log: `logs/v9/pam_gate_wikitext103_20260426_195110_80b725b_dirty/`. |
+| 2026-04 | **V9 gate-MLP + reverse assoc** `medium_h16_gate_mlp_revassoc_100m` (101.1M), B=3, `pam_gate_hidden=368`, commit `133e208` (dirty) | Weak through epoch 5: Val **34.11** vs V9 gate **33.11**, 7a **33.60**, V6 **33.82** at the same epoch. Generation quality clean (`rep3=0.000`, `rep4=0.000`, `uniq=0.796`) but PPL trails; **stop recommended**. Next clean test: simple linear gate + reverse-assoc at ~100M (`gate_revassoc_100m`). See [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#2026-04-27-v9-gate-mlp--reverse-assoc-post-compete-pivot). |
 
 > **Cross-version best (PAM-only)**: V9 `gate` confounded — **29.57 PPL**.
 > See [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27)
-> for the full config, caveats, and the in-flight `compete_revassoc_100m` follow-up.
+> for the full config, caveats, and the V9 follow-ups. Zero-param competition and
+> 2-layer gate-MLP both failed to beat the simple linear gate trajectory.
 
 ---
 

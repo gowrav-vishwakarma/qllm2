@@ -17,6 +17,9 @@ V8 wins iff **V8-E-joint ≤ 23.13 PPL on WikiText-103, 10 epochs, ≤105M param
 > Note: V8 (QLC + PAM) is currently paused after the e2e medium readout
 > (§12). The active research line is V9 pure-PAM upgrades; the cross-version
 > PAM-only best is the **V9 `gate` (confounded) 29.57 PPL** row above.
+> Follow-ups through 2026-04-27 (`compete_revassoc_100m`, then
+> `gate_mlp_revassoc_100m`) did **not** beat that trajectory; see
+> [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#2026-04-27-v9-gate-mlp--reverse-assoc-post-compete-pivot).
 
 ## 1. Architecture summary
 
