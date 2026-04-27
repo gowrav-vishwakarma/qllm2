@@ -47,19 +47,19 @@ done
 case "$VARIANT" in
     baseline)
         PRESET="medium_h16_flat"
-        DESC="V9 baseline wrapper: V7 medium_h16_flat behavior"
+        DESC="V9 clean baseline: medium_h16_flat, reverse-assoc off"
         ;;
     gate)
         PRESET="medium_h16_gate"
-        DESC="V9 Exp A: PAM output gate only"
+        DESC="V9 Exp A: PAM output gate only, reverse-assoc off"
         ;;
     conv)
         PRESET="medium_h16_conv4"
-        DESC="V9 Exp B: causal short conv only"
+        DESC="V9 Exp B: causal short conv only, reverse-assoc off"
         ;;
     gate_conv)
         PRESET="medium_h16_gate_conv4"
-        DESC="V9 Exp C: PAM output gate + causal short conv"
+        DESC="V9 Exp C: PAM output gate + causal short conv, reverse-assoc off"
         ;;
     *)
         echo "Unknown --variant '$VARIANT'. Expected: baseline, gate, conv, gate_conv" >&2
@@ -70,7 +70,7 @@ esac
 GEN_PROMPT="In 1923 , the University of"
 CKPT_DIR="checkpoints_v9_${VARIANT}"
 LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
-ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
+ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --no_reverse_assoc"
 
 RESUME_ARG=""
 REUSED_LOG_DIR=0

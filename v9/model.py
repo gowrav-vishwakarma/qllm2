@@ -48,19 +48,33 @@ def _v9_config_from_v7(name: str, **overrides) -> V9Config:
     return V9Config(**data)
 
 
+_FLAT_CLEAN_OVERRIDES = {
+    "hierarchical_dt": False,
+    "dt_bias_schedule": None,
+    "cross_level": False,
+    "qk_norm": False,
+    "multi_scale_loss": False,
+    "use_reverse_assoc": False,
+}
+
+
 PRESETS = {
     name: _v9_config_from_v7(name)
     for name in V7_PRESETS
 }
 PRESETS.update({
+    "medium_h16_flat": _v9_config_from_v7(
+        "medium_h16_flat", **_FLAT_CLEAN_OVERRIDES,
+    ),
     "medium_h16_gate": _v9_config_from_v7(
-        "medium_h16_flat", pam_output_gate=True,
+        "medium_h16_flat", **_FLAT_CLEAN_OVERRIDES, pam_output_gate=True,
     ),
     "medium_h16_conv4": _v9_config_from_v7(
-        "medium_h16_flat", pam_short_conv=4,
+        "medium_h16_flat", **_FLAT_CLEAN_OVERRIDES, pam_short_conv=4,
     ),
     "medium_h16_gate_conv4": _v9_config_from_v7(
-        "medium_h16_flat", pam_output_gate=True, pam_short_conv=4,
+        "medium_h16_flat", **_FLAT_CLEAN_OVERRIDES,
+        pam_output_gate=True, pam_short_conv=4,
     ),
 })
 
