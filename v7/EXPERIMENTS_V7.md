@@ -67,6 +67,11 @@ Each V7Block:
 | 2026-04 | **7f-2** Reverse association ONLY (`rev_scale` per layer, default on), flat baseline, B=3, chunk C=256, `--compile`, commit `7f52bcf` | Val **32.19** @10e — **hurts** (+2.46 vs 7a **29.73**; +1.64 vs 7f-1 **30.55**; near **L1 32.09**). ~27.5k tok/s, ~12.3h wall. Log: `logs/v7/exp7f2_reverse_assoc_wikitext103_20260417_124743_7f52bcf/`. |
 | 2026-04 | **7f-3** Grouped hierarchy ONLY (`medium_h16_grouped`, cross_level, no multi-scale, no reverse assoc), B=3 — **stopped after epoch 1** | Epoch 1 val **58.70** vs 7a e1 **56.15** / V6 e1 **57.94** — no improvement signal; run halted to save GPU. Log: `logs/v7/exp7f3_grouped_only_wikitext103_20260418_120504_5294937_dirty/`. |
 | 2026-04 | **L1** Lean PAM baseline, `lean_medium_small` (86.2M), B=3, `--compile --no_grad_ckpt`, commit `7717f65` (dirty) | Val **32.09** @10e — **+2.36 PPL** vs 7a (29.73) but **+66% throughput** (34.7k vs 20.9k tok/s), **85% less VRAM** (1.7 vs ~11 GB). CGU worth ~2.4 PPL. Log: `logs/v7/lean_lean_medium_small_wikitext103_20260409_152722_7717f65_dirty/`. |
+| 2026-04 | **V9 gate (confounded)** `medium_h16_gate` (105.1M), B=3, `pam_output_gate=True` + inherited `use_reverse_assoc=True`, commit `80b725b` (dirty) | Val **29.57** @10e — **−0.16 vs 7a (29.73)** but confounded by inherited reverse-assoc and +5M params. **Current best PAM result of any version.** Generation still loops (`rep3=0.160`, `rep4=0.081`). Acceptance gate `<29.2` not met. Full readout: [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27). Log: `logs/v9/pam_gate_wikitext103_20260426_195110_80b725b_dirty/`. |
+
+> **Cross-version best (PAM-only)**: V9 `gate` confounded — **29.57 PPL**.
+> See [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27)
+> for the full config, caveats, and the in-flight `compete_revassoc_100m` follow-up.
 
 ---
 

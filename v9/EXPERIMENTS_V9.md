@@ -3,6 +3,57 @@
 V9 keeps V7 frozen as the historical PAM baseline and tests small, isolated
 changes that target the PAM-vs-attention gap.
 
+## Current Best PAM Run (as of 2026-04-27)
+
+The single best PAM result we have on WikiText-103 so far is the
+**V9 `gate` (confounded)** run at **val PPL 29.57**.
+
+| Property | Value |
+|---|---|
+| Variant | `medium_h16_gate` (V9 preset, dim **384**) |
+| Params | **105.1M** |
+| Architecture | V7 `medium_h16_flat` backbone + V9 PAM output gate |
+| `pam_output_gate` | **True** — extra `nn.Linear(2*dim → inner_dim)` + `2 * sigmoid` on the PAM readout (~4.7M params/layer × 16 layers) |
+| `use_reverse_assoc` | **True** (inherited from V7 defaults — not deliberately set) |
+| `pam_short_conv` | 0 (off) |
+| `pam_head_compete` | False (off) |
+| `qk_norm` | False |
+| Activation | ModSwish |
+| `chunk_size` | 256 |
+| Data | WikiText-103, seq_len 2048, batch 3, 10 epochs |
+| Best epoch | 10 |
+| Throughput | ~27.3k tok/s |
+| Wall time | 12.24h |
+| Log | `logs/v9/pam_gate_wikitext103_20260426_195110_80b725b_dirty/v9_medium_h16_gate_wikitext103.log` |
+| Run command | `bash ./scripts/run_v9_pam_upgrade.sh --variant gate` (against the pre-clean defaults) |
+
+### Comparison snapshot
+
+| Model | Batch | Params | Val PPL | Δ vs current best |
+|---|---:|---:|---:|---:|
+| Transformer (apples-to-apples) | 3 | ~100M | **27.08** | −2.49 |
+| **V9 `gate` (confounded) — current best PAM** | **3** | **105.1M** | **29.57** | — |
+| V7 Exp7a (ModSwish, flat) | 3 | ~100M | 29.73 | +0.16 |
+| V6 `medium-pam-v3` | 3 | ~100.4M | 29.95 | +0.38 |
+| Transformer | 6 | ~100M | 23.13 | (different batch — not directly comparable) |
+
+### Caveats (read before citing this number)
+
+- **Confounded**: `use_reverse_assoc=True` was inherited from V7 defaults, so
+  the +0.16 win over V7 7a cannot be cleanly attributed to the gate. It is
+  "gate **plus** inherited reverse association", not a clean gate ablation.
+- **Capacity advantage**: 105.1M params vs. ~100M baselines — part of the
+  small gain may just be the +5M parameter bump.
+- **Generation quality**: still loops ("University of Michigan ..."),
+  `rep3 = 0.160`, `rep4 = 0.081`, `uniq = 0.412`.
+- **Acceptance gate not met**: V9 promotion threshold was `< 29.2`; this run
+  did not clear it.
+
+The clean parameter-matched follow-up (`gate_100m`, dim 372,
+`use_reverse_assoc=False`) was started but pivoted to the
+`compete_revassoc_100m` design before completion. Until that pivot run lands,
+**29.57 PPL is the number to beat for any PAM-only configuration**.
+
 ## Baselines
 
 | Model | Batch | Val PPL | Notes |

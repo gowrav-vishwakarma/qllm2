@@ -5,12 +5,18 @@ Running log for the V8 plan
 
 ## 0. Targets to beat
 
-| Baseline                | Val PPL | Notes |
-|-------------------------|---------|-------|
-| medium-pam-v3 (QPAM)    | 29.95   | WikiText-103, 10 epochs, ~100M params, [`scripts/run_v6_medium_pam_v3.sh`](../scripts/run_v6_medium_pam_v3.sh) |
-| Transformer B=6         | 23.13   | Same data/epochs/params budget; from EXPERIMENTS_V6_PART2.md §0 |
+| Baseline                       | Val PPL | Notes |
+|--------------------------------|---------|-------|
+| medium-pam-v3 (QPAM)           | 29.95   | WikiText-103, 10 epochs, ~100M params, [`scripts/run_v6_medium_pam_v3.sh`](../scripts/run_v6_medium_pam_v3.sh) |
+| **V9 `gate` (current best PAM, confounded)** | **29.57**   | WikiText-103, 10 epochs, **105.1M** params; PAM output gate + inherited `use_reverse_assoc=True`. See [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27). |
+| Transformer B=3                | 27.08   | Same arch/data, batch 3, apples-to-apples to V9. |
+| Transformer B=6                | 23.13   | Same data/epochs/params budget; from EXPERIMENTS_V6_PART2.md §0 |
 
 V8 wins iff **V8-E-joint ≤ 23.13 PPL on WikiText-103, 10 epochs, ≤105M params**.
+
+> Note: V8 (QLC + PAM) is currently paused after the e2e medium readout
+> (§12). The active research line is V9 pure-PAM upgrades; the cross-version
+> PAM-only best is the **V9 `gate` (confounded) 29.57 PPL** row above.
 
 ## 1. Architecture summary
 
