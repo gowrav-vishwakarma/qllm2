@@ -70,11 +70,11 @@ def plot_val_ppl_comparison():
 
     fig, ax = makefig()
     cscat(qpam_epochs, qpam_vals, color='#2166ac', s=50, edgecolor='k', marker='o',
-          fig=fig, ax=ax, makefigax=False, label='QPAM (complex)', aspect='auto')
+          fig=fig, ax=ax, makefigax=False, label='PAM (complex)', aspect='auto')
     ax.plot(qpam_epochs, qpam_vals, '-', color='#2166ac', linewidth=1.0, alpha=0.5)
 
     cscat(rpam_epochs, rpam_vals, color='#b2182b', s=50, edgecolor='k', marker='s',
-          fig=fig, ax=ax, makefigax=False, label='RPAM (real)', aspect='auto')
+          fig=fig, ax=ax, makefigax=False, label='SAM (real)', aspect='auto')
     ax.plot(rpam_epochs, rpam_vals, '-', color='#b2182b', linewidth=1.0, alpha=0.5)
 
     ax.legend(fontsize=9, frameon=False)
@@ -170,7 +170,7 @@ def plot_retrieval_comparison(qpam, rpam, tokenizer):
         ax1.set_xticklabels(tokens_text, rotation=45, ha='right', fontsize=7)
         ax1.set_yticks(range(T))
         ax1.set_yticklabels(tokens_text, fontsize=7)
-        ax1.set_title('QPAM (complex)', fontsize=10)
+        ax1.set_title('PAM (complex)', fontsize=10)
 
         im2 = ax2.imshow(W_rpam_d, cmap='RdBu_r', aspect='equal', origin='upper',
                           vmin=-vmax, vmax=vmax)
@@ -178,7 +178,7 @@ def plot_retrieval_comparison(qpam, rpam, tokenizer):
         ax2.set_xticklabels(tokens_text, rotation=45, ha='right', fontsize=7)
         ax2.set_yticks(range(T))
         ax2.set_yticklabels(tokens_text, fontsize=7)
-        ax2.set_title('RPAM (real)', fontsize=10)
+        ax2.set_title('SAM (real)', fontsize=10)
 
         plt.tight_layout()
         plt.savefig(os.path.join(OUTDIR, f'cmp_retrieval_{sent_idx}.pdf'), dpi=300, bbox_inches='tight')
@@ -272,13 +272,13 @@ def plot_embedding_comparison(qpam, rpam, tokenizer):
 
     chist2d(rpam_syn.astype(np.float64), qpam_syn.astype(np.float64),
             nx=80, ny=80, fig=fig, ax=ax1, makefigax=False,
-            xlabel='RPAM cosine', ylabel=r'QPAM Re$\langle z_1^*|z_2\rangle$',
+            xlabel='SAM cosine', ylabel=r'PAM Re$\langle z_1^*|z_2\rangle$',
             aspect='auto', dens_scale=0.3)
     ax1.set_title(f'Synonyms (N={len(syn_pairs)})', fontsize=10)
 
     chist2d(rpam_rand.astype(np.float64), qpam_rand.astype(np.float64),
             nx=80, ny=80, fig=fig, ax=ax2, makefigax=False,
-            xlabel='RPAM cosine',
+            xlabel='SAM cosine',
             aspect='auto', dens_scale=0.3)
     ax2.set_title(f'Random (N={len(rand_pairs)})', fontsize=10)
 
