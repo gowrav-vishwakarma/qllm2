@@ -179,3 +179,130 @@ Interpretation rule:
 Compare the result directly against V9 confounded gate **29.57**, V7 Exp7a
 **29.73**, V6 medium-pam-v3 **29.95**, and transformer B=3 **27.08**. Do not run
 `conv` or `gate_conv` until this matched clean gate result is known.
+
+## 2026-04-27: V9 Gate Matrix For Reviving V7 Ablations
+
+The clean `gate_100m` run showed a worse early trajectory than the confounded
+105M gate run:
+
+- `gate_100m`, dim 372, `use_reverse_assoc=False`: epoch 1 val PPL **55.37**
+- prior `gate`, dim 384, `use_reverse_assoc=True`: epoch 1 val PPL **54.29**,
+  final best val PPL **29.57**
+
+The user decision is to stop the in-flight clean run and test a small matrix of
+previously-harmful V7 mechanisms under the V9 output gate. The hypothesis is
+that the gate acts as a learned veto over the PAM readout: noisy but informative
+features can be admitted when useful instead of always perturbing the residual
+stream.
+
+### Matrix
+
+All variants use WikiText-103, seq len 2048, batch size 3, 10 epochs, dim 372,
+16 layers, 6 heads, head dim 64, expand 3, ModSwish, RoPE, GSP, fused QKV, and
+`pam_output_gate=True`.
+
+| ID | Script Variant | Key Change | Params | Purpose |
+|---|---|---|---:|---|
+| C | `gate_100m` | gate only, `use_reverse_assoc=False` | 100.52M | Clean control |
+| R | `gate_revassoc_100m` | gate + `use_reverse_assoc=True` | 100.52M | Test if gate detoxifies reverse association |
+| N | `gate_qknorm_100m` | gate + `qk_norm=True` | 100.52M | Test normalized Q/K angles plus gated magnitude |
+| K | `gate_conv4_100m` | gate + `pam_short_conv=4` | 100.58M | Test local pattern capture before QKV |
+
+### Commands
+
+```bash
+bash ./scripts/run_v9_pam_upgrade.sh --variant gate_revassoc_100m
+bash ./scripts/run_v9_pam_upgrade.sh --variant gate_qknorm_100m
+bash ./scripts/run_v9_pam_upgrade.sh --variant gate_conv4_100m
+```
+
+### Decision Rules
+
+- Any variant beating the clean gate control by **>=0.3 PPL** is a real signal.
+- If the winner beats **29.57**, the gain is not just the prior +5M parameter
+  bump.
+- If two variants beat the control, run a stacked follow-up at dim 372, such as
+  `gate + reverse_assoc + qk_norm`.
+- If none beats the control, keep gate as the only V9-positive change and move
+  to a larger PAM change such as cumulative normalization or a two-state PAM.
+
+## 2026-04-27: Pivot To Novel Pure PAM (Compete + Reverse Assoc)
+
+The matrix above was cancelled before launch in favor of a tighter, novel
+hypothesis: keep PAM the only sequence mixer and add a zero-parameter
+non-linearity that creates cross-head competition for output mass.
+
+### Mechanism (zero learned parameters)
+
+Per (batch, token, channel) location, heads compete via softmax over their
+output magnitudes, then a fixed-mix scalar gate amplifies the winner and
+softly attenuates the rest. Phase preserved.
+
+```text
+mag  = |y|                                # [B, H, T, d], real
+w    = softmax(mag, dim=H)                # heads compete per (token, channel)
+gate = (1 - alpha) + alpha * H * w        # alpha = 0.5, fixed scalar
+y    = y * gate.unsqueeze(-1)             # phase preserved (gate is real positive)
+```
+
+At alpha = 0.5:
+
+- All heads equal: gate = 1.0 (identity, safe init).
+- Dominant head: gate -> 1 + H/2.
+- Suppressed head: gate -> 0.5.
+
+This is the parameter-free analogue of the V9 sigmoid gate that produced our
+best confounded result (29.57 PPL). The V9 gate conditioned on x with a 4.7M
+projection per layer; cross-head competition conditions on y itself with no
+learned parameters.
+
+### Speed audit
+
+| Op | Cost | Train | Infer |
+|---|---|---|---|
+| `cabs(y)` | elementwise | O(n) | O(1) |
+| softmax over H heads | constant H | O(n) | O(1) |
+| broadcast multiply | elementwise | O(n) | O(1) |
+
+Both speed properties preserved.
+
+### Architecture
+
+Base = V6 medium-pam-v3 expressed in V9 plumbing:
+
+- dim 384, 16 layers, 6 heads, head_dim 64, single CGU expand 3.
+- ModSwish (kept over ModReLU since V7 ablation showed strict improvement).
+- GSP on, RoPE on, fused QKV.
+- `qk_norm = False` (V6 default).
+- `use_reverse_assoc = True` (the only validated lever from V9 gate run).
+- V9 learned gate stripped (`pam_output_gate = False`).
+- `pam_short_conv = 0`.
+- New: `pam_head_compete = True`, `pam_head_compete_alpha = 0.5`.
+
+Approximate parameter count: 100M (head competition adds zero learned params,
+reverse_assoc adds 16 scalars).
+
+### Run
+
+```bash
+bash ./scripts/run_v9_pam_upgrade.sh --variant compete_revassoc_100m
+```
+
+### Decision Rules
+
+| Outcome | Action |
+|---|---|
+| val PPL <= 27.08 | Pure PAM beats Transformer. Lock in. Stack with per-channel decay or state expansion. |
+| 27.08 to 28.5 | Real progress over V7 7a (29.73). Stack with per-channel decay next. |
+| 28.5 to 29.5 | Matches existing baselines. Sweep alpha in {0.25, 0.75, 1.0}. |
+| >= 29.5 | Head collapse or destabilized training. Diagnose. |
+
+### Baselines For Comparison
+
+| Model | Batch | Params | Val PPL |
+|---|---:|---:|---:|
+| V6 medium-pam-v3 | 3 | 100.4M | 29.95 |
+| V7 Exp7a (ModSwish) | 3 | ~100M | 29.73 |
+| V9 gate (confounded) | 3 | 105.1M | 29.57 |
+| Transformer | 3 | ~100M | **27.08** |
+| Transformer | 6 | ~100M | 23.13 |

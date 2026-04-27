@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V9 Exp A100: PAM output gate, parameter-matched 100M, reverse-assoc off: dim=384 L=16 expand=3, PAM(H=6, d=64, flat dt=-4.0, RoPE, fused-QKV, GSP), activation=swish, LR=1e-4, warmup=1000
+Date (UTC)  : 2026-04-27 02:52:28
+Date (local): 2026-04-27 08:22:28 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 7610259b2559df95ad888dd3ba853b5bbc90a8ef
+Git short   : 7610259
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --preset medium_h16_gate_100m --dataset wikitext103 --seq_len 2048 --batch_size 3 --epochs 10 --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --no_reverse_assoc --gen_prompt 'In 1923 , the University of'  
+================================================================================
