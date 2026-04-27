@@ -56,6 +56,12 @@ rpam_50m = [35.8662, 35.8502, 35.7049, 35.7079, 35.6986]
 qpam_100m = [37.55, 36.46, 35.61, 34.63, 33.75, 33.19]
 rpam_100m = [26.79, 26.03, 26.00, 25.59, 25.82, 25.42]
 
+# Transformer baseline (PyTorch). Canonical config (lr=3e-5, batch=8, seq_len=512,
+# warmup=500, epochs=10). Only best_val_ppl preserved per scale (intermediate
+# logs were overwritten during run); no late-epoch variance available.
+trans_5m  = [175.49]   # checkpoints_transformer_5m  best_val_ppl, epoch 9
+trans_10m = [ 91.68]   # checkpoints_transformer_10m best_val_ppl, epoch 9
+
 # Collect raw samples and means per (scale, model)
 def stats(vals):
     return np.mean(vals), np.std(vals, ddof=1) if len(vals) > 1 else 0.0
@@ -63,16 +69,18 @@ def stats(vals):
 raw = {}   # (scale, model) -> list of PPL values
 data = {}  # (scale, model) -> (mean, std, n)
 for scale, model, vals in [
-    (5,   'QPAM', qpam_5m),
-    (10,  'QPAM', qpam_10m),
-    (25,  'QPAM', qpam_25m),
-    (50,  'QPAM', qpam_50m),
-    (100, 'QPAM', qpam_100m),
-    (5,   'RPAM', rpam_5m),
-    (10,  'RPAM', rpam_10m),
-    (25,  'RPAM', rpam_25m),
-    (50,  'RPAM', rpam_50m),
-    (100, 'RPAM', rpam_100m),
+    (5,   'PAM', qpam_5m),
+    (10,  'PAM', qpam_10m),
+    (25,  'PAM', qpam_25m),
+    (50,  'PAM', qpam_50m),
+    (100, 'PAM', qpam_100m),
+    (5,   'SAM', rpam_5m),
+    (10,  'SAM', rpam_10m),
+    (25,  'SAM', rpam_25m),
+    (50,  'SAM', rpam_50m),
+    (100, 'SAM', rpam_100m),
+    (5,   'Transformer', trans_5m),
+    (10,  'Transformer', trans_10m),
 ]:
     raw[(scale, model)] = vals
     m, s = stats(vals)
@@ -81,7 +89,7 @@ for scale, model, vals in [
 # ── OLS fits in both log10(PPL) and log10(loss) spaces ──
 # loss = ln(PPL); Kaplan/Hoffmann-style scaling laws fit power law in loss.
 
-models = ['QPAM', 'RPAM']
+models = ['PAM', 'SAM']
 N_BOOT = 10000
 rng = np.random.default_rng(42)
 
@@ -113,14 +121,14 @@ for model in models:
 
 # ── Crossover (under PPL-space linear fit; loss-space fit gives a different N) ──
 print()
-b1, a1 = fits_ppl['QPAM']
-b2, a2 = fits_ppl['RPAM']
+b1, a1 = fits_ppl['PAM']
+b2, a2 = fits_ppl['SAM']
 if abs(b1 - b2) > 0.001:
     log_p_cross_ppl = (a2 - a1) / (b1 - b2)
     p_cross_ppl = 10**log_p_cross_ppl
     print(f'PPL-space fit crossover: ~{p_cross_ppl:.0f}M params')
-b1, a1 = fits_loss['QPAM']
-b2, a2 = fits_loss['RPAM']
+b1, a1 = fits_loss['PAM']
+b2, a2 = fits_loss['SAM']
 if abs(b1 - b2) > 0.001:
     log_p_cross_loss = (a2 - a1) / (b1 - b2)
     p_cross_loss = 10**log_p_cross_loss
@@ -130,13 +138,14 @@ if abs(b1 - b2) > 0.001:
 fig, (ax_loss, ax_ppl) = plt.subplots(2, 1, figsize=(5, 8), sharex=True,
                                       gridspec_kw={'hspace': 0})
 
-markers = {'QPAM': '^', 'RPAM': '*'}
-labels = {'QPAM': 'QPAM (complex)', 'RPAM': 'RPAM (real)'}
+markers = {'PAM': '^', 'SAM': '*', 'Transformer': 's'}
+labels = {'PAM': 'PAM (complex)', 'SAM': 'SAM (real)',
+          'Transformer': 'Transformer'}
 
 log_p_fine = np.linspace(0, 4, 200)
 
 
-colors = {'QPAM': '#2563eb', 'RPAM': '#dc2626'}
+colors = {'PAM': '#2563eb', 'SAM': '#dc2626', 'Transformer': '#16a34a'}
 
 
 def draw_panel(ax, fits_dict, transform, ylabel, ylim):
@@ -159,6 +168,15 @@ def draw_panel(ax, fits_dict, transform, ylabel, ylim):
                             capthick=0.8, zorder=5, label=lbl)
                 first = False
         ax.plot(log_p_fine, b * log_p_fine + a, '--', color=c, alpha=0.5, lw=1.2)
+    # Transformer: two points only, no fit. Plot as connected dotted line.
+    trans_pts = [(np.log10(s), np.log10(transform(np.array(raw[(s, 'Transformer')])).mean()))
+                 for s in [5, 10, 25, 50, 100] if (s, 'Transformer') in raw]
+    if trans_pts:
+        xs, ys = zip(*trans_pts)
+        ax.plot(xs, ys, ':', color=colors['Transformer'], alpha=0.7, lw=1.2)
+        ax.plot(xs, ys, markers['Transformer'], color='black', markersize=4,
+                markerfacecolor='white', markeredgecolor='black', zorder=6,
+                label=f"{labels['Transformer']} (2 points)")
     ax.set_ylabel(ylabel)
     ax.set_ylim(*ylim)
 
@@ -174,7 +192,7 @@ def cross_label(p_cross):
 
 
 # Crossover markers per panel (different fits → different N)
-b1, a1 = fits_ppl['QPAM']; b2, a2 = fits_ppl['RPAM']
+b1, a1 = fits_ppl['PAM']; b2, a2 = fits_ppl['SAM']
 if abs(b1 - b2) > 0.001:
     log_p_cross = (a2 - a1) / (b1 - b2)
     log_ppl_cross = b1 * log_p_cross + a1
@@ -186,7 +204,7 @@ if abs(b1 - b2) > 0.001:
                         fontsize=8, ha='center', color='#555',
                         arrowprops=dict(arrowstyle='->', color='#555', lw=0.6))
 
-b1, a1 = fits_loss['QPAM']; b2, a2 = fits_loss['RPAM']
+b1, a1 = fits_loss['PAM']; b2, a2 = fits_loss['SAM']
 if abs(b1 - b2) > 0.001:
     log_p_cross = (a2 - a1) / (b1 - b2)
     log_loss_cross = b1 * log_p_cross + a1

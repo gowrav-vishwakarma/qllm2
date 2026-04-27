@@ -146,7 +146,7 @@ def main():
     print(f"  {len(syn_pairs)} synonym pairs / {len(rand_pairs)} random pairs")
 
     scales = ['5M', '10M', '50M']
-    results = {'QPAM': {}, 'RPAM': {}}
+    results = {'PAM': {}, 'SAM': {}}
 
     for scale in scales:
         print(f"\nQPAM {scale}...")
@@ -159,7 +159,7 @@ def main():
         s_rand = qpam_sims(m, words, rand_pairs)
         d, d_err = bootstrap_dsep(s_syn, s_rand)
         _, p = mannwhitneyu(s_syn, s_rand, alternative='greater')
-        results['QPAM'][scale] = dict(N=n_params, d=d, d_err=d_err, p=p,
+        results['PAM'][scale] = dict(N=n_params, d=d, d_err=d_err, p=p,
                                       mean_syn=float(np.mean(s_syn)),
                                       mean_rand=float(np.mean(s_rand)))
         print(f"  N={n_params:,}  d_sep={d:.4f}±{d_err:.4f}  p={p:.2e}")
@@ -176,7 +176,7 @@ def main():
         s_rand = rpam_sims(m, words, rand_pairs)
         d, d_err = bootstrap_dsep(s_syn, s_rand)
         _, p = mannwhitneyu(s_syn, s_rand, alternative='greater')
-        results['RPAM'][scale] = dict(N=n_params, d=d, d_err=d_err, p=p,
+        results['SAM'][scale] = dict(N=n_params, d=d, d_err=d_err, p=p,
                                       mean_syn=float(np.mean(s_syn)),
                                       mean_rand=float(np.mean(s_rand)))
         print(f"  N={n_params:,}  d_sep={d:.4f}±{d_err:.4f}  p={p:.2e}")
@@ -184,16 +184,16 @@ def main():
 
     # Plot: d_sep vs N
     fig, ax = plt.subplots(figsize=(6.0, 4.2))
-    for arch, marker, label in (('QPAM', '*', 'QPAM (Re$\\langle z_1^*|z_2\\rangle$)'),
-                                ('RPAM', '^', 'RPAM (cosine)')):
+    for arch, marker, label in (('PAM', '*', 'PAM (Re$\\langle z_1^*|z_2\\rangle$)'),
+                                ('SAM', '^', 'SAM (cosine)')):
         Ns = np.array([results[arch][s]['N'] for s in scales])
         ds = np.array([results[arch][s]['d'] for s in scales])
         es = np.array([results[arch][s]['d_err'] for s in scales])
         ax.errorbar(Ns, ds, yerr=es, fmt=marker, color='black',
                     markersize=10 if marker == '*' else 7,
-                    markerfacecolor='white' if arch == 'RPAM' else 'black',
+                    markerfacecolor='white' if arch == 'SAM' else 'black',
                     markeredgecolor='black', capsize=3, label=label,
-                    linestyle='-' if arch == 'QPAM' else '--', linewidth=0.8)
+                    linestyle='-' if arch == 'PAM' else '--', linewidth=0.8)
     ax.set_xscale('log')
     ax.set_xlabel('parameters $N$')
     ax.set_ylabel(r'synonym--random separability  $d_{\rm sep}$')
@@ -207,7 +207,7 @@ def main():
     print(f"\nSaved {out}")
 
     print("\nSummary:")
-    for arch in ('QPAM', 'RPAM'):
+    for arch in ('PAM', 'SAM'):
         for s in scales:
             r = results[arch][s]
             print(f"  {arch} {s}: N={r['N']:>10,}  d={r['d']:+.4f}±{r['d_err']:.4f}  "
