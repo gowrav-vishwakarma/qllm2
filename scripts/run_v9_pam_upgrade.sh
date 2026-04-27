@@ -6,6 +6,7 @@
 #   gate      - PAM output gate only (~105M)
 #   gate_100m - PAM output gate only, dim=372 (~100.5M)
 #   gate_revassoc_100m - PAM output gate + reverse association, dim=372
+#   gate_mlp_revassoc_100m - 2-layer PAM output gate + reverse association, dim=368
 #   gate_qknorm_100m   - PAM output gate + QK normalization, dim=372
 #   gate_conv4_100m    - PAM output gate + causal depthwise short conv, dim=372
 #   conv      - causal depthwise short conv only
@@ -72,6 +73,11 @@ case "$VARIANT" in
         DESC="V9 Exp R: gate + reverse_assoc, ~100M (test if gate detoxifies reverse pass)"
         VARIANT_ARGS=""
         ;;
+    gate_mlp_revassoc_100m)
+        PRESET="medium_h16_gate_mlp_revassoc_100m"
+        DESC="V9 Exp GM: 2-layer PAM gate + reverse_assoc, ~100M (push learned gate lever)"
+        VARIANT_ARGS=""
+        ;;
     gate_qknorm_100m)
         PRESET="medium_h16_gate_qknorm_100m"
         DESC="V9 Exp N: gate + qk_norm, ~100M (gate=magnitude, qk_norm=angle stability)"
@@ -98,7 +104,7 @@ case "$VARIANT" in
         VARIANT_ARGS=""
         ;;
     *)
-        echo "Unknown --variant '$VARIANT'. Expected: baseline, gate, gate_100m, gate_revassoc_100m, gate_qknorm_100m, gate_conv4_100m, compete_revassoc_100m, conv, gate_conv" >&2
+        echo "Unknown --variant '$VARIANT'. Expected: baseline, gate, gate_100m, gate_revassoc_100m, gate_mlp_revassoc_100m, gate_qknorm_100m, gate_conv4_100m, compete_revassoc_100m, conv, gate_conv" >&2
         exit 2
         ;;
 esac

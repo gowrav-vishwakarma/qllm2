@@ -357,3 +357,87 @@ bash ./scripts/run_v9_pam_upgrade.sh --variant compete_revassoc_100m
 | V9 gate (confounded) | 3 | 105.1M | 29.57 |
 | Transformer | 3 | ~100M | **27.08** |
 | Transformer | 6 | ~100M | 23.13 |
+
+## 2026-04-27: V9 Gate-MLP + Reverse Assoc (Post-Compete Pivot)
+
+Status: **queued**.
+
+The `compete_revassoc_100m` run did not show a win signal after two epochs:
+
+| Run | Params | Epoch 1 Val PPL | Epoch 2 Val PPL | Notes |
+|---|---:|---:|---:|---|
+| V9 `gate` (confounded) | 105.1M | 54.29 | 42.06 | best PAM so far, but +5M params and inherited reverse assoc |
+| V7 Exp7a | ~100M | 56.15 | 43.20 | clean flat ModSwish PAM baseline |
+| V6 medium-pam-v3 | 100.4M | 57.94 | 43.83 | V6 architectural ancestor |
+| V9 `compete_revassoc_100m` | 100.4M | 56.27 | 44.44 | zero-param competition; worse early trajectory |
+
+Interpretation: the zero-parameter cross-head competition did not replace the
+learned V9 gate. The best evidence still points at **learned PAM readout gating**
+as the useful lever, so the next experiment strengthens that gate directly.
+
+### Mechanism
+
+The existing V9 gate is a single real linear projection over the complex input:
+
+```text
+logits = Linear([real(x), imag(x)])
+gate   = 2 * sigmoid(logits)
+y      = y * gate
+```
+
+The new gate uses a 2-layer MLP when `pam_gate_hidden > 0`:
+
+```text
+h      = SiLU(Linear([real(x), imag(x)]))
+logits = Linear(h)
+gate   = 2 * sigmoid(logits)
+y      = y * gate
+```
+
+The final linear is zero-initialized, so the run starts from exact identity:
+`logits = 0`, `gate = 1`. This preserves the V7 starting behavior while giving
+the gate a non-linear input-conditioned path once training begins.
+
+### Configuration
+
+| Field | Value |
+|---|---|
+| Preset | `medium_h16_gate_mlp_revassoc_100m` |
+| Script variant | `gate_mlp_revassoc_100m` |
+| Params | **101.094M** validated |
+| dim | 368 |
+| layers | 16 |
+| PAM heads | 6 |
+| PAM head dim | 64 |
+| CGU expand | 3 |
+| activation | ModSwish |
+| `pam_output_gate` | True |
+| `pam_gate_hidden` | 368 |
+| `use_reverse_assoc` | True |
+| `pam_head_compete` | False |
+| `pam_short_conv` | 0 |
+| `qk_norm` | False |
+| Data | WikiText-103, seq_len 2048, batch 3, 10 epochs |
+
+Validation before launch:
+
+- Parameter count: **101,094,240**.
+- Gate projection type: `Sequential`.
+- Final gate linear `weight` and `bias`: exactly zero at initialization.
+- Tiny forward pass: finite logits with shape `[1, 8, 50257]`.
+- Launcher syntax: `bash -n scripts/run_v9_pam_upgrade.sh` passed.
+
+### Run
+
+```bash
+bash ./scripts/run_v9_pam_upgrade.sh --variant gate_mlp_revassoc_100m
+```
+
+### Decision Rules
+
+| Outcome at epoch 10 | Reading | Next step |
+|---|---|---|
+| <= 29.0 | Bigger gate beats smaller gate. Gate is the lever. | Stack with per-channel decay or fewer heads. |
+| 29.0 to 29.6 | Parity with confounded gate but at ~100M instead of 105M. Real progress. | Stack per-channel decay. |
+| 29.6 to 29.9 | Bigger gate gives no edge over single-layer gate. The 29.57 may mostly be capacity. | Pivot to fewer-heads + bigger-state experiment. |
+| >= 29.9 | Gate is not the lever. | Pivot to per-channel decay or post-PAM mixing. |
