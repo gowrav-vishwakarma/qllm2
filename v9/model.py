@@ -38,6 +38,8 @@ class V9Config(V7Config):
     # Gate the PAM readout before o_proj. Initialized as identity via
     # gate = 2 * sigmoid(0), so V9 gate runs start from V7 behavior.
     pam_output_gate: bool = False
+    # Hidden size for a 2-layer MLP gate. 0 keeps the original single-linear gate.
+    pam_gate_hidden: int = 0
     # Causal depthwise conv kernel before QKV projection. 0 disables it.
     pam_short_conv: int = 0
     # Cross-head soft competition on the PAM readout. Zero learned params.
@@ -82,6 +84,15 @@ PRESETS.update({
         **{**_FLAT_CLEAN_OVERRIDES, "use_reverse_assoc": True},
         dim=372, pam_output_gate=True,
     ),
+    "medium_h16_gate_mlp_revassoc_100m": _v9_config_from_v7(
+        "medium_h16_flat",
+        **{**_FLAT_CLEAN_OVERRIDES, "use_reverse_assoc": True},
+        dim=368,
+        pam_output_gate=True,
+        pam_gate_hidden=368,
+        pam_short_conv=0,
+        pam_head_compete=False,
+    ),
     "medium_h16_gate_qknorm_100m": _v9_config_from_v7(
         "medium_h16_flat",
         **{**_FLAT_CLEAN_OVERRIDES, "qk_norm": True},
@@ -124,7 +135,17 @@ class V9PhaseAssociativeLayer(PhaseAssociativeLayer):
         self.pam_short_conv = cfg.pam_short_conv
 
         if self.pam_output_gate:
-            self.output_gate_proj = nn.Linear(cfg.dim * 2, self.inner_dim)
+            if cfg.pam_gate_hidden > 0:
+                self.output_gate_proj = nn.Sequential(
+                    nn.Linear(cfg.dim * 2, cfg.pam_gate_hidden),
+                    nn.SiLU(),
+                    nn.Linear(cfg.pam_gate_hidden, self.inner_dim),
+                )
+                # Exact identity gate at initialization: 2 * sigmoid(0) = 1.
+                nn.init.zeros_(self.output_gate_proj[-1].weight)
+                nn.init.zeros_(self.output_gate_proj[-1].bias)
+            else:
+                self.output_gate_proj = nn.Linear(cfg.dim * 2, self.inner_dim)
 
         if self.pam_short_conv > 0:
             self.short_conv = nn.Conv1d(
@@ -478,8 +499,14 @@ class V9LM(nn.Module):
             if hasattr(module, "protect_gate") and isinstance(module.protect_gate, nn.Linear):
                 nn.init.constant_(module.protect_gate.bias, -3.0)
             if hasattr(module, "output_gate_proj"):
-                nn.init.zeros_(module.output_gate_proj.weight)
-                nn.init.zeros_(module.output_gate_proj.bias)
+                if isinstance(module.output_gate_proj, nn.Linear):
+                    nn.init.zeros_(module.output_gate_proj.weight)
+                    nn.init.zeros_(module.output_gate_proj.bias)
+                elif isinstance(module.output_gate_proj, nn.Sequential):
+                    last = module.output_gate_proj[-1]
+                    if isinstance(last, nn.Linear):
+                        nn.init.zeros_(last.weight)
+                        nn.init.zeros_(last.bias)
             if hasattr(module, "short_conv"):
                 module._init_short_conv_identity()
 

@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V9 Exp Comp: V6 PAM + reverse_assoc + cross-head soft competition (zero params, ~100M): dim=384 L=16 expand=3, PAM(H=6, d=64, flat dt=-4.0, RoPE, fused-QKV, GSP), activation=swish, LR=1e-4, warmup=1000
+Date (UTC)  : 2026-04-27 05:59:39
+Date (local): 2026-04-27 11:29:39 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 2baf6d7f3afd13b8b7e7fac3b529ddb43b078cc6
+Git short   : 2baf6d7
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --preset medium_h16_compete_revassoc_100m --dataset wikitext103 --seq_len 2048 --batch_size 3 --epochs 10 --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt  --gen_prompt 'In 1923 , the University of'  
+================================================================================
