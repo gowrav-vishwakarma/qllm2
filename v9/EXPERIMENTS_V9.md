@@ -49,10 +49,17 @@ The single best PAM result we have on WikiText-103 so far is the
 - **Acceptance gate not met**: V9 promotion threshold was `< 29.2`; this run
   did not clear it.
 
-The clean parameter-matched follow-up (`gate_100m`, dim 372,
-`use_reverse_assoc=False`) was started but pivoted to the
-`compete_revassoc_100m` design before completion. Until that pivot run lands,
-**29.57 PPL is the number to beat for any PAM-only configuration**.
+Clean parameter-matched follow-ups did **not** reproduce this number:
+
+- `gate_revassoc_100m` (dim 372, 100.5M, simple gate + reverse assoc) finished
+  at **30.53**.
+- `gate_mlp_revassoc_100m` (101.1M, 2-layer gate MLP + reverse assoc) trailed
+  the baseline trajectory through epoch 5.
+- `compete_revassoc_100m` (zero-param head competition + reverse assoc) trailed
+  by epoch 2.
+
+So **29.57 PPL remains the PAM number to beat**, but it should be cited as a
+confounded full-width/capacity result, not as a clean architectural win.
 
 ## Baselines
 
@@ -493,3 +500,80 @@ bash ./scripts/run_v9_pam_upgrade.sh --variant gate_revassoc_100m
 | 29.0 to 29.6 | Parity with confounded gate but at ~100M instead of 105M. Real progress. | Stack per-channel decay. |
 | 29.6 to 29.9 | Bigger gate gives no edge over single-layer gate. The 29.57 may mostly be capacity. | Pivot to fewer-heads + bigger-state experiment. |
 | >= 29.9 | Gate is not the lever. | Pivot to per-channel decay or post-PAM mixing. |
+
+## 2026-04-28: V9 Gate + Reverse Assoc, Parameter-Matched Final
+
+Status: **completed — negative result**.
+
+This was the cleanest parameter-matched test of the current best recipe:
+simple learned sigmoid gate plus reverse association, but without the 105M
+full-width capacity confound.
+
+Log: `logs/v9/pam_gate_revassoc_100m_wikitext103_20260427_230817_2fe5c9a/v9_medium_h16_gate_revassoc_100m_wikitext103.log`
+
+### Configuration
+
+| Field | Value |
+|---|---|
+| Preset | `medium_h16_gate_revassoc_100m` |
+| Script variant | `gate_revassoc_100m` |
+| Params | **100.5M** |
+| dim | 372 |
+| layers | 16 |
+| PAM heads | 6 |
+| PAM head dim | 64 |
+| CGU expand | 3 |
+| activation | ModSwish |
+| `pam_output_gate` | True |
+| `pam_gate_hidden` | 0 (single linear gate) |
+| `use_reverse_assoc` | True |
+| `pam_short_conv` | 0 |
+| `pam_head_compete` | False |
+| `qk_norm` | False |
+| Data | WikiText-103, seq_len 2048, batch 3, 10 epochs |
+
+### Epoch Results
+
+| Epoch | Train PPL | Val PPL | tok/s | Quality |
+|---:|---:|---:|---:|---|
+| 1 | 117.79 | 55.29 | 25.1k | `rep3=0.010`, `rep4=0.000`, `uniq=0.667` |
+| 2 | 52.04 | 42.96 | 27.0k | `rep3=0.127`, `rep4=0.051`, `uniq=0.580` |
+| 3 | 44.12 | 38.83 | 27.0k | `rep3=0.042`, `rep4=0.021`, `uniq=0.660` |
+| 4 | 40.37 | 36.34 | 27.0k | `rep3=0.032`, `rep4=0.011`, `uniq=0.642` |
+| 5 | 37.70 | 34.18 | 27.0k | `rep3=0.047`, `rep4=0.024`, `uniq=0.690` |
+| 6 | 35.56 | 32.80 | 27.0k | `rep3=0.000`, `rep4=0.000`, `uniq=0.723` |
+| 7 | 33.76 | 31.66 | 27.0k | `rep3=0.022`, `rep4=0.000`, `uniq=0.716` |
+| 8 | 32.29 | 30.92 | 27.0k | `rep3=0.000`, `rep4=0.000`, `uniq=0.753` |
+| 9 | 31.21 | 30.60 | 23.1k | `rep3=0.011`, `rep4=0.000`, `uniq=0.698` |
+| 10 | 30.57 | **30.53** | 25.6k | `rep3=0.044`, `rep4=0.022`, `uniq=0.630` |
+
+### Comparison
+
+| Model | Params | Final Val PPL | Delta vs `gate_revassoc_100m` |
+|---|---:|---:|---:|
+| Transformer B=3 | ~100M | **27.08** | `gate_revassoc_100m` worse by +3.45 |
+| V9 `gate` (confounded, full-width) | 105.1M | **29.57** | `gate_revassoc_100m` worse by +0.96 |
+| V7 Exp7a | ~100M | **29.73** | `gate_revassoc_100m` worse by +0.80 |
+| V6 medium-pam-v3 | 100.4M | **29.95** | `gate_revassoc_100m` worse by +0.58 |
+| V9 `gate_revassoc_100m` | 100.5M | **30.53** | — |
+
+### Decision
+
+This result means the 29.57 V9 gate run was **not** reproduced when the
+configuration was parameter-matched. The simple learned gate plus reverse assoc
+does not beat V7 7a or V6 medium-pam-v3 at true ~100M.
+
+Do not promote `gate_revassoc_100m`. Keep the old 29.57 result as a confounded
+leader only.
+
+Remaining V9 micro-ablation worth a cheap test:
+
+```bash
+bash ./scripts/run_v9_pam_upgrade.sh --variant gate_conv4_100m --epochs 3
+```
+
+Run only as a smoke. Continue to 10 epochs only if epoch 3 reaches `<= 38.0`;
+stop if epoch 3 is `> 38.5`.
+
+If `gate_conv4_100m` fails this smoke, stop V9 readout/local tweaks and move to
+a real PAM memory-dynamics change, starting with per-channel decay.
