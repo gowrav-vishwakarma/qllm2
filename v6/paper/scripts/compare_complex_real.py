@@ -10,11 +10,13 @@ import os, sys, math, numpy as np
 import mlx.core as mx
 import mlx.nn as nn
 
-os.environ['MATPLOTLIBRC'] = '/Users/caug/npcww/qnlp/ket-nlp/matplotlibrc'
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from chroptiks.plotting_utils import makefig, set_aesthetics, scatter as cscat, plot2dhist as chist2d
+matplotlib.rc_file(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                '..', 'matplotlibrc'))
+plt.rc('text', usetex=True)
 from qpam_mlx import QPAMModel, RPAMModel
 
 OUTDIR = '/Users/caug/npcww/qnlp/qllm-private/v6/paper/figures'
@@ -40,52 +42,51 @@ def load_rpam():
 # ══════════════════════════════════════════════════════════════
 
 def plot_val_ppl_comparison():
-    """Plot epoch-end val PPL for both models."""
-    print("\n[1] Val PPL comparison...")
+    """Plot per-epoch val loss (top) and val PPL (bottom) at the 10M scale, 2x1
+    sharing x-axis to match the scaling-relation plot style."""
+    print("\n[1] Val loss/PPL comparison at 10M...")
 
-    # Parse QPAM log
-    qpam_epochs, qpam_vals = [], []
-    with open(os.path.join(LOGDIR, 'qpam_mlx_train_v2.log')) as f:
-        for line in f:
-            if 'Epoch' in line and 'complete' in line and 'val PPL=' in line:
-                ep = int(line.split('Epoch ')[1].split(' ')[0])
-                val = float(line.split('val PPL=')[1].split(',')[0])
-                qpam_epochs.append(ep)
-                qpam_vals.append(val)
+    def parse(path):
+        ep, val = [], []
+        with open(path) as f:
+            for line in f:
+                if 'Epoch' in line and 'complete' in line and 'val PPL=' in line:
+                    ep.append(int(line.split('Epoch ')[1].split(' ')[0]))
+                    val.append(float(line.split('val PPL=')[1].split(',')[0]))
+        return np.array(ep, dtype=np.float64), np.array(val)
 
-    # Parse RPAM log
-    rpam_epochs, rpam_vals = [], []
-    with open(os.path.join(LOGDIR, 'rpam_mlx_train.log')) as f:
-        for line in f:
-            if 'Epoch' in line and 'complete' in line and 'val PPL=' in line:
-                ep = int(line.split('Epoch ')[1].split(' ')[0])
-                val = float(line.split('val PPL=')[1].split(',')[0])
-                rpam_epochs.append(ep)
-                rpam_vals.append(val)
+    qpam_ep, qpam_ppl = parse(os.path.join(LOGDIR, 'qpam_10m.log'))
+    rpam_ep, rpam_ppl = parse(os.path.join(LOGDIR, 'rpam_10m.log'))
+    qpam_loss = np.log(qpam_ppl)
+    rpam_loss = np.log(rpam_ppl)
 
-    qpam_epochs = np.array(qpam_epochs, dtype=np.float64)
-    qpam_vals = np.array(qpam_vals)
-    rpam_epochs = np.array(rpam_epochs, dtype=np.float64)
-    rpam_vals = np.array(rpam_vals)
+    fig, (ax_loss, ax_ppl) = plt.subplots(2, 1, figsize=(5, 7), sharex=True,
+                                          gridspec_kw={'hspace': 0})
 
-    fig, ax = makefig()
-    cscat(qpam_epochs, qpam_vals, color='#2166ac', s=50, edgecolor='k', marker='o',
-          fig=fig, ax=ax, makefigax=False, label='PAM (complex)', aspect='auto')
-    ax.plot(qpam_epochs, qpam_vals, '-', color='#2166ac', linewidth=1.0, alpha=0.5)
+    for ax, qpam_y, rpam_y, ylabel in (
+        (ax_loss, qpam_loss, rpam_loss, r'Val loss (nats)'),
+        (ax_ppl,  qpam_ppl,  rpam_ppl,  r'Val PPL'),
+    ):
+        ax.plot(qpam_ep, qpam_y, '-', color='black', linewidth=0.8, alpha=0.7)
+        ax.plot(qpam_ep, qpam_y, '^', color='black', markersize=6,
+                markerfacecolor='black', label='PAM')
+        ax.plot(rpam_ep, rpam_y, '--', color='black', linewidth=0.8, alpha=0.7)
+        ax.plot(rpam_ep, rpam_y, '*', color='black', markersize=8,
+                markerfacecolor='black', label='SAM')
+        ax.set_ylabel(ylabel)
 
-    cscat(rpam_epochs, rpam_vals, color='#b2182b', s=50, edgecolor='k', marker='s',
-          fig=fig, ax=ax, makefigax=False, label='SAM (real)', aspect='auto')
-    ax.plot(rpam_epochs, rpam_vals, '-', color='#b2182b', linewidth=1.0, alpha=0.5)
+    ax_loss.legend(fontsize=14, loc='best', frameon=False)
+    ax_ppl.set_xlabel(r'Epoch')
+    ax_ppl.set_xticks(np.arange(1, int(max(qpam_ep.max(), rpam_ep.max())) + 1))
 
-    ax.legend(fontsize=9, frameon=False)
-    set_aesthetics(fig=fig, ax=ax, makefigax=False,
-                   xlabel='Epoch', ylabel='Val PPL')
-    plt.tight_layout()
-    plt.savefig(os.path.join(OUTDIR, 'cmp_val_ppl.pdf'), dpi=300, bbox_inches='tight')
+    fig.tight_layout()
+    out = os.path.join(OUTDIR, 'cmp_val_ppl.pdf')
+    fig.savefig(out, dpi=300)
+    fig.savefig(out.replace('.pdf', '.png'), dpi=400)
     plt.close()
     print(f"  Saved cmp_val_ppl.pdf")
-    print(f"  QPAM best: {min(qpam_vals):.2f} at epoch {qpam_epochs[np.argmin(qpam_vals)]:.0f}")
-    print(f"  RPAM best: {min(rpam_vals):.2f} at epoch {rpam_epochs[np.argmin(rpam_vals)]:.0f}")
+    print(f"  PAM 10M best PPL: {qpam_ppl.min():.2f} at epoch {qpam_ep[qpam_ppl.argmin()]:.0f}")
+    print(f"  SAM 10M best PPL: {rpam_ppl.min():.2f} at epoch {rpam_ep[rpam_ppl.argmin()]:.0f}")
 
 
 # ══════════════════════════════════════════════════════════════

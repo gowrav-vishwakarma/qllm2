@@ -150,36 +150,33 @@ def test_phase_semantic_similarity(model, tokenizer):
     print(f"  Synonyms > Random: U={u_syn}, p={p_syn:.4f}")
     print(f"  Antonyms > Random: U={u_ant}, p={p_ant:.4f}")
 
-    # Scatter: coherence by relation type, color-coded
-    fig, ax = makefig()
-    n_syn = len(syn_coh)
-    n_ant = len(ant_coh)
-    n_rand = len(rand_coh)
-
-    # Jitter x positions
-    x_syn = np.random.normal(0, 0.08, n_syn)
-    x_ant = np.random.normal(1, 0.08, n_ant)
-    x_rand = np.random.normal(2, 0.08, n_rand)
-
-    cscat(x_syn, syn_coh, color='#2166ac', s=40, edgecolor='k',
-          fig=fig, ax=ax, makefigax=False, label='Synonyms', aspect='auto')
-    cscat(x_ant, ant_coh, color='#b2182b', s=40, edgecolor='k',
-          fig=fig, ax=ax, makefigax=False, label='Antonyms', aspect='auto')
-    cscat(x_rand, rand_coh, color='#636363', s=40, edgecolor='k',
-          fig=fig, ax=ax, makefigax=False, label='Random', aspect='auto')
-
-    # Means
-    for x_pos, vals, c in [(0, syn_coh, '#2166ac'), (1, ant_coh, '#b2182b'), (2, rand_coh, '#636363')]:
-        ax.plot([x_pos - 0.2, x_pos + 0.2], [np.mean(vals), np.mean(vals)],
-                '-', color=c, linewidth=2)
-
-    ax.set_xticks([0, 1, 2])
-    ax.set_xticklabels(['Synonyms', 'Antonyms', 'Random'], fontsize=10)
-    set_aesthetics(fig=fig, ax=ax, makefigax=False,
-                   ylabel=r'Phase coherence $|\langle z_1^* | z_2 \rangle| / (|z_1||z_2|)$')
-    ax.legend(fontsize=8, frameon=False)
-    plt.tight_layout()
-    plt.savefig(os.path.join(OUTDIR, 'hyp_phase_semantic_coherence.pdf'), dpi=300, bbox_inches='tight')
+    # 3x1 vertical: phase coherence vs phase angle, one panel per relation
+    plt.rcParams.update({'axes.labelsize': 12, 'xtick.labelsize': 11,
+                         'ytick.labelsize': 11})
+    fig, axes = plt.subplots(3, 1, figsize=(5, 7), sharex=True,
+                             gridspec_kw={'hspace': 0})
+    panels = [
+        (axes[0], syn_phase, syn_coh, '#2166ac', 'Synonyms'),
+        (axes[1], ant_phase, ant_coh, '#b2182b', 'Antonyms'),
+        (axes[2], rand_phase, rand_coh, '#636363', 'Random'),
+    ]
+    y_max = max(syn_coh.max(), ant_coh.max(), rand_coh.max()) * 1.1
+    y_min = 0.0
+    for ax, x, y, c, name in panels:
+        ax.scatter(x, y, color=c, s=40, edgecolor='k', linewidth=0.5)
+        ax.axhline(np.mean(y), color=c, linewidth=1.2, linestyle='--', alpha=0.7)
+        ax.set_ylabel('Phase coherence')
+        ax.set_xlim(-np.pi, np.pi)
+        ax.set_ylim(y_min, y_max)
+        ax.text(0.97, 0.92, name, transform=ax.transAxes,
+                ha='right', va='top', fontsize=12)
+    axes[-1].set_xlabel(r'$\angle\langle z_1^* | z_2 \rangle$')
+    axes[-1].set_xticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi])
+    axes[-1].set_xticklabels([r'$-\pi$', r'$-\pi/2$', '0', r'$\pi/2$', r'$\pi$'])
+    fig.tight_layout()
+    out = os.path.join(OUTDIR, 'hyp_phase_semantic_coherence.pdf')
+    fig.savefig(out, dpi=300)
+    fig.savefig(out.replace('.pdf', '.png'), dpi=400)
     plt.close()
     print("  Saved hyp_phase_semantic_coherence.pdf")
 
