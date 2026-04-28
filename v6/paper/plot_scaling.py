@@ -139,7 +139,7 @@ fig, (ax_loss, ax_ppl) = plt.subplots(2, 1, figsize=(5, 8), sharex=True,
                                       gridspec_kw={'hspace': 0})
 
 markers = {'PAM': '^', 'SAM': '*', 'Transformer': 's'}
-labels = {'PAM': 'PAM (complex)', 'SAM': 'SAM (real)',
+labels = {'PAM': 'PAM', 'SAM': 'SAM',
           'Transformer': 'Transformer'}
 
 log_p_fine = np.linspace(0, 4, 200)
@@ -168,15 +168,6 @@ def draw_panel(ax, fits_dict, transform, ylabel, ylim):
                             capthick=0.8, zorder=5, label=lbl)
                 first = False
         ax.plot(log_p_fine, b * log_p_fine + a, '--', color=c, alpha=0.5, lw=1.2)
-    # Transformer: two points only, no fit. Plot as connected dotted line.
-    trans_pts = [(np.log10(s), np.log10(transform(np.array(raw[(s, 'Transformer')])).mean()))
-                 for s in [5, 10, 25, 50, 100] if (s, 'Transformer') in raw]
-    if trans_pts:
-        xs, ys = zip(*trans_pts)
-        ax.plot(xs, ys, ':', color=colors['Transformer'], alpha=0.7, lw=1.2)
-        ax.plot(xs, ys, markers['Transformer'], color='black', markersize=4,
-                markerfacecolor='white', markeredgecolor='black', zorder=6,
-                label=f"{labels['Transformer']} (2 points)")
     ax.set_ylabel(ylabel)
     ax.set_ylim(*ylim)
 
@@ -221,8 +212,8 @@ ax_ppl.set_xlim(0, 4)
 ax_ppl.set_xticks([0, 1, 2, 3, 4])
 ax_ppl.set_xticks([0.5, 1.5, 2.5, 3.5], minor=True)
 
-ax_loss.legend(fontsize=9, loc=3, frameon=False)
-ax_ppl.legend(fontsize=9, loc='lower left', frameon=False,
+ax_loss.legend(fontsize=14, loc=3, frameon=False)
+ax_ppl.legend(fontsize=14, loc='lower left', frameon=False,
               bbox_to_anchor=(0.02, 0.05),
               bbox_transform=ax_ppl.get_yaxis_transform())
 ax_ppl.set_yticks([0, 0.5, 1, 1.5, 2, 2.5])

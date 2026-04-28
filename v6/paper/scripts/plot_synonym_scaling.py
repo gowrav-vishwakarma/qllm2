@@ -30,19 +30,34 @@ OUTDIR = '/Users/caug/npcww/qnlp/qllm-private/v6/paper/figures'
 ROOT = '/Users/caug/npcww/qnlp/qllm-private'
 
 QPAM_CFG = {
-    '5M':  dict(dim= 44, num_layers=12, num_heads=2, head_dim=16),
-    '10M': dict(dim= 80, num_layers=12, num_heads=4, head_dim=16),
-    '50M': dict(dim=292, num_layers=12, num_heads=4, head_dim=16),
+    '5M':   dict(dim= 44, num_layers=12, num_heads=2, head_dim=16),
+    '10M':  dict(dim= 80, num_layers=12, num_heads=4, head_dim=16),
+    '25M':  dict(dim=200, num_layers= 6, num_heads=4, head_dim=16),
+    '50M':  dict(dim=292, num_layers=12, num_heads=4, head_dim=16),
+    '100M': dict(dim=384, num_layers=16, num_heads=6, head_dim=64),
 }
 RPAM_CFG = {
-    '5M':  dict(dim= 84, num_layers=11, num_heads=2, head_dim= 8),
-    '10M': dict(dim=140, num_layers=11, num_heads=8, head_dim=16),
-    '50M': dict(dim=496, num_layers=11, num_heads=2, head_dim= 8),
+    '5M':   dict(dim= 84, num_layers=11, num_heads=2, head_dim= 8),
+    '10M':  dict(dim=140, num_layers=11, num_heads=8, head_dim=16),
+    '25M':  dict(dim=344, num_layers= 6, num_heads=4, head_dim=32),
+    '50M':  dict(dim=496, num_layers=11, num_heads=2, head_dim= 8),
+    '100M': dict(dim=576, num_layers=16, num_heads=9, head_dim=64),
 }
-QPAM_CKPT = {s: os.path.join(ROOT, f'checkpoints_qpam_{s.lower()}_mlx', 'best_model.npz')
-             for s in QPAM_CFG}
-RPAM_CKPT = {s: os.path.join(ROOT, f'checkpoints_rpam_{s.lower()}_mlx', 'best_model.npz')
-             for s in RPAM_CFG}
+# 100M checkpoints live under non-canonical names (checkpoints_{q,r}pam_mlx).
+QPAM_CKPT = {
+    '5M':   os.path.join(ROOT, 'checkpoints_qpam_5m_mlx',  'best_model.npz'),
+    '10M':  os.path.join(ROOT, 'checkpoints_qpam_10m_mlx', 'best_model.npz'),
+    '25M':  os.path.join(ROOT, 'checkpoints_qpam_25m_mlx', 'best_model.npz'),
+    '50M':  os.path.join(ROOT, 'checkpoints_qpam_50m_mlx', 'best_model.npz'),
+    '100M': os.path.join(ROOT, 'checkpoints_qpam_mlx',     'best_model.npz'),
+}
+RPAM_CKPT = {
+    '5M':   os.path.join(ROOT, 'checkpoints_rpam_5m_mlx',  'best_model.npz'),
+    '10M':  os.path.join(ROOT, 'checkpoints_rpam_10m_mlx', 'best_model.npz'),
+    '25M':  os.path.join(ROOT, 'checkpoints_rpam_25m_mlx', 'best_model.npz'),
+    '50M':  os.path.join(ROOT, 'checkpoints_rpam_50m_mlx', 'best_model.npz'),
+    '100M': os.path.join(ROOT, 'checkpoints_rpam_mlx',     'best_model.npz'),
+}
 
 
 def count_params(model):
@@ -145,7 +160,7 @@ def main():
     words, syn_pairs, rand_pairs = build_pairs(tokenizer)
     print(f"  {len(syn_pairs)} synonym pairs / {len(rand_pairs)} random pairs")
 
-    scales = ['5M', '10M', '50M']
+    scales = ['5M', '10M', '25M', '50M', '100M']
     results = {'PAM': {}, 'SAM': {}}
 
     for scale in scales:
@@ -182,28 +197,29 @@ def main():
         print(f"  N={n_params:,}  d_sep={d:.4f}±{d_err:.4f}  p={p:.2e}")
         del m
 
-    # Plot: d_sep vs N
-    fig, ax = plt.subplots(figsize=(6.0, 4.2))
-    for arch, marker, label in (('PAM', '*', 'PAM (Re$\\langle z_1^*|z_2\\rangle$)'),
-                                ('SAM', '^', 'SAM (cosine)')):
-        Ns = np.array([results[arch][s]['N'] for s in scales])
+    # Plot: d_sep vs N (matching plot_scaling.py conventions)
+    fig, ax = plt.subplots(figsize=(5, 4))
+    for arch, marker, label in (('PAM', '^', 'PAM (Re$\\langle z_1^*|z_2\\rangle$)'),
+                                ('SAM', '*', 'SAM (cosine)')):
+        Ns_M = np.array([results[arch][s]['N'] / 1e6 for s in scales])
+        log_N = np.log10(Ns_M)
         ds = np.array([results[arch][s]['d'] for s in scales])
         es = np.array([results[arch][s]['d_err'] for s in scales])
-        ax.errorbar(Ns, ds, yerr=es, fmt=marker, color='black',
-                    markersize=10 if marker == '*' else 7,
-                    markerfacecolor='white' if arch == 'SAM' else 'black',
-                    markeredgecolor='black', capsize=3, label=label,
+        ax.errorbar(log_N, ds, yerr=es, fmt=marker, color='black',
+                    markersize=6, ecolor='black', elinewidth=0.8,
+                    capsize=4, capthick=0.8, zorder=5, label=label,
                     linestyle='-' if arch == 'PAM' else '--', linewidth=0.8)
-    ax.set_xscale('log')
-    ax.set_xlabel('parameters $N$')
-    ax.set_ylabel(r'synonym--random separability  $d_{\rm sep}$')
+    ax.set_xlabel(r'$\log_{10}$ Parameters (M)')
+    ax.set_ylabel(r'$d_{\rm sep}$')
+    ax.set_xlim(0, 2.3)
+    ax.set_xticks([0, 0.5, 1, 1.5, 2])
     ax.axhline(0, color='gray', linewidth=0.5, linestyle=':')
-    ax.legend(loc='best', frameon=False, fontsize=9)
+    ax.legend(fontsize=14, loc='upper left', frameon=False)
 
     out = os.path.join(OUTDIR, 'synonym_scaling.pdf')
-    fig.subplots_adjust(left=0.18, right=0.96, top=0.96, bottom=0.14)
+    fig.tight_layout()
     fig.savefig(out, dpi=300)
-    fig.savefig(out.replace('.pdf', '.png'), dpi=300)
+    fig.savefig(out.replace('.pdf', '.png'), dpi=400)
     print(f"\nSaved {out}")
 
     print("\nSummary:")
