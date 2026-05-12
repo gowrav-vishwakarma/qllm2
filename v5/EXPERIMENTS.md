@@ -13,6 +13,7 @@ Structured log of config changes, training runs, and results. Update this file a
 | 2026-03-05 | **Default init changed to `orthogonal`**; removed 8 broken/inferior strategies | Benchmark (Run C) showed orthogonal 2x better than random (168 vs 349 PPL). Backed by theory (norm-preserving isometry). | -- |
 | 2026-03-05 | **First orthogonal full run**: orthogonal init (seed=42) on RTX 4090, batch_size=16 | A/B test (Run D) confirmed orthogonal 31% better at epoch 10. First full 10-epoch run with new default init. | v4-ortho |
 | 2026-03-05 | **Full-dataset run started**: switched `max_samples` from 100k to 9,999,999 (full TinyStories, 2.1M texts, 474M tokens) | Scale up after 100k runs showed strong signal. Same architecture and init as v4-ortho. | v5-full-ds |
+| 2026-05-09 | **WikiText-103 `medium-v5-100m`**: full 10-epoch run logged (commit `fad662a` dirty) | Benchmark V5 algebraic LM at ~100M on WT103 vs PAM/V7/transformer class. | wt103-medium-v5-100m |
 
 ---
 
@@ -26,6 +27,7 @@ Structured log of config changes, training runs, and results. Update this file a
 | v3-full | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 32 | 10 | 38.99 | 11.77 (ep10) | ~6.2k | A6000 | Random init, 100k samples, 9.03h |
 | v4-ortho | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 16 | 10 | 18.88 | 8.00 (ep10) | ~16.1k | 4090 | Orthogonal init (seed=42), 3.48h. Best 100k-sample result. |
 | v5-full-ds | small-matched | 28.7M | 15.8M (55%) | 12 | 2 | 4 | 512 | 16 | 10 | 6.27 | 5.59 (ep3, in progress) | ~16k | 4090 | Full TinyStories (474M tokens), orthogonal init (seed=42). Ep3 already beats v4-ortho ep10. |
+| wt103-medium-v5-100m | medium-v5-100m | 100.9M | — | 16 | 2 | — | 576 | 3 | 10 | 82.43 | 41.88 (ep10) | ~12–26k | CUDA | WikiText-103, seq_len=2048, compile on; not competitive vs ~100M PAM/V7 (~27–30 val PPL). See §11. |
 
 **Data (default unless overridden)**: TinyStories + GPT-2 tokenizer.
 
@@ -45,6 +47,7 @@ Use this table for exact reproducibility: what architecture was used, what data/
 | v3-full | 2026-03-04 15:17 | pre-bdf6b87 | A6000 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=32, epochs=10, batches/epoch=2403 | epoch1 val_ppl=38.99, epoch10 val_ppl=11.77, throughput~6.2k tok/s, 9.03h | complete |
 | v4-ortho | 2026-03-05 15:25 | e24acd2 | 4090 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes, init_strategy=orthogonal, init_seed=42` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories, max_samples=100000, seq_len=256, batch=16, epochs=10, batches/epoch=4806 | epoch1 val_ppl=18.88, epoch10 val_ppl=8.00, throughput~16.1k tok/s, 3.48h | complete |
 | v5-full-ds | 2026-03-05 19:18 | 0467675 | 4090 | `dim=128, state=512, layers=12, banks=2, expand=4, heads=8, attn_every=4, tied_output=yes, init_strategy=orthogonal, init_seed=42` | total=28,682,372; core=15,816,580 (55%) | dataset=TinyStories (full), max_samples=9999999, texts=2,119,489, tokens=473,992,006, seq_len=256, batch=16, epochs=10, batches/epoch=103744 | epoch1 val_ppl=6.27, epoch2 val_ppl=5.81, epoch3 val_ppl=5.59, throughput~16k tok/s, ~7.2h/epoch | in progress (epoch 3/10) |
+| wt103-medium-v5-100m | 2026-05-09 07:09 | fad662a (dirty) | CUDA | `medium-v5-100m, complex_dim=288, ssm_state=576, layers=16, banks=2, attn_every=0, seq_len=2048, init=orthogonal, init_seed=42, tied_output=yes` | total=100,894,576 | dataset=WikiText-103 train/val full, max_samples=9999999, tokenize_batch=512, batch=3, epochs=10, batches/epoch=19277, lr=1e-4 cosine warmup=1000, wd=0.01, dropout=0.1, compile=True | best_val_ppl=41.88 @ep10, val 82.43→41.88, wall~19.98h, tok/s rises to ~26k late epochs | complete |
 
 **Comparison note**: v3-core-heavy used `epochs=1`, so cosine LR decayed to ~0 within one epoch; this makes quality metrics non-comparable to 10-epoch runs.
 
@@ -333,6 +336,39 @@ By Cauchy-Schwarz, `(sum|a_i|)^2 >= sum(|a_i|^2)`, so the denominator is systema
 1. Replace `.sum(dim=-1)` with `.square().sum(dim=-1).sqrt()` (or use `cabs2`).
 2. Re-evaluate `diversity_loss_weight` (currently 0.05) -- once the metric is properly scaled to [0, 1], the weight may need adjustment.
 3. Particularly relevant for `medium`/`large` configs with 3 banks where collapse risk is higher.
+
+---
+
+## 11. WikiText-103: `medium-v5-100m` (2026-05-09)
+
+**Purpose:** Re-run / confirm V5 at ~100M parameters on WikiText-103 against PAM/V7 and transformer-class perplexities.
+
+**Wall clock:** 2026-05-09 07:09:42 → 2026-05-10 03:12:46 (~19.98h total). **Commit:** `fad662a` (dirty).
+
+**Log:** `logs/v5/medium_v5_100m_wikitext103_20260509_070942_fad662a_dirty/v5_train_medium-v5-100m.log`
+
+**Setup (from log header):** size `medium-v5-100m`, WikiText-103, complex dim 288 (576 real values/position), SSM state dim 576, 16 layers, 2 banks, attention every 0 layers, attention window 256, epochs 10, max_samples effectively full, LR `1e-4`, weight decay `0.01`, dropout `0.1`, cosine schedule warmup 1000 steps, seq_len 2048 implied by chunks (train chunks 57831, val 121), **batch 3** (19277 batches/epoch), tokenize batch 512, text repair on, token cache `.cache/v5_tokens`, compile on (default mode), TF32 on, bf16 AMP.
+
+| Epoch | Train PPL | Val PPL | Notes |
+|-------|-----------|---------|-------|
+| 1 | 156.70 | 82.43 | *best* |
+| 2 | 76.11 | 62.14 | *best* |
+| 3 | 62.37 | 53.71 | *best* |
+| 4 | 56.17 | 50.09 | *best* |
+| 5 | 52.00 | 47.26 | *best* |
+| 6 | 48.93 | 45.07 | *best* |
+| 7 | 46.60 | 43.55 | *best* |
+| 8 | 44.74 | 42.49 | *best* |
+| 9 | 43.43 | 41.96 | *best* |
+| 10 | 42.63 | **41.88** | *best* — final |
+
+**Best validation:** loss 3.7347, PPL **41.88**. Checkpoints under `checkpoints_v5_medium_100m/`.
+
+**Diversity term:** logged `div` ~`1e-2` order throughout (not the all-zeros pattern seen on the old full-d TinyStories run in §10); the §10 normalization bug remains relevant for scaling the diversity penalty, but this run still does not approach PAM-class WT103 PPL.
+
+**Takeaway:** At ~100.9M params on WikiText-103, this V5 configuration lands near **42 val PPL**, far from the ~27–30 band for comparable PAM/V7 runs and from transformer baselines. Treat as a **negative result** for V5-as-LM on WT103 at this budget unless a separate hypothesis (architecture, data, or objective) is revised.
+
+**Sample (epoch 10, prompt `The quick brown`):** short excerpt shows broken entities and wiki-style drift — coherent enough to expose the quality gap vs stronger stacks.
 
 ---
 

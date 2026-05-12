@@ -1,19 +1,21 @@
 # Experiments rollup: V6–V9
 
-Single-page distillation of what we tried across complex LM iterations: **outcomes**, **comparable WikiText-103 validation PPL** at early and late training, and pointers to long-form lab notebooks. *Last updated: 2026-04-27.*
+Single-page distillation of what we tried across complex LM iterations: **outcomes**, **comparable WikiText-103 validation PPL** at early and late training, and pointers to long-form lab notebooks. *Last updated: 2026-05-12.*
 
 **Regenerate val PPL columns:** `uv run python scripts/extract_val_ppl_epochs.py` (TSV) or add `--json`. Tables below were built from that output plus a few hand-annotated rows where logs never reached a validation line.
 
 ---
 
-## Current best PAM run (cross-version, as of 2026-04-27)
+## Current best PAM run (cross-version, as of 2026-05-12)
+
+> **Best logged flat V7 val PPL (WikiText-103, ~100M):** **26.88** @10 ep — **7d** recipe (chunked `C=256`, ModSwish, `medium_h16_flat`, **B=18**, `--compile`), commit `fad662a` (dirty), May 2026. **Below** transformer **B=3** (**27.08**); still **above** transformer **B=6** (**23.13**). Log: `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/v7_medium_h16_flat_wikitext103.log` — directory name uses the `exp7d_chunked_b6` script slug; **actual batch size was 18**. Fewer optimizer steps per epoch than B=3 runs (3213 vs 19277) — not directly comparable to **7a** on schedule shape.
 
 > **V9 `gate` (confounded) — val PPL 29.57**, 105.1M params, WikiText-103, B=3, 10 ep.
 > `pam_output_gate=True` (extra `nn.Linear(2*dim → inner_dim) + 2*sigmoid` on the PAM readout)
 > with inherited `use_reverse_assoc=True`. **Confounded** — not a clean ablation,
 > +5M params over V7 baseline, generation still loops. Acceptance gate `<29.2` not met.
 > Full config + caveats: [v9/EXPERIMENTS_V9.md → Current Best PAM Run](v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27).
-> This is the number to beat for any PAM-only run; transformer B=3 (27.08) is the next gate.
+> Prior “number to beat” for readout tweaks; raw val PPL is **worse** than the May 2026 flat V7 **7d B=18** run above.
 
 ## North-star baselines (WikiText-103, ~100M class)
 
@@ -21,9 +23,12 @@ Single-page distillation of what we tried across complex LM iterations: **outcom
 |---|---:|---|
 | Transformer B=3 | **27.08** | [EXPERIMENTS_V6_PART2](EXPERIMENTS_V6_PART2.md) — GPT-2–style, Flash-class SDPA |
 | Transformer B=6 | **23.13** | Same arch, larger batch; large PPL gain vs B=3 |
-| **V9 `gate` (confounded) — current best PAM** | **29.57** | 105.1M params; `pam_output_gate=True` + inherited `use_reverse_assoc=True`. See [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27). |
-| V7 Exp7a (ModSwish) | **29.73** | Best flat PAM stack in V7; beats archived V6 v3 slightly |
+| **V7 Exp7d chunked B=18** (May 2026) | **26.88** | **Beats transformer B=3** on val PPL; still behind B=6. [v7/EXPERIMENTS_V7.md](v7/EXPERIMENTS_V7.md); `fad662a` dirty; log dir slug `exp7d_chunked_b6_*` — **B=18** in trainer header. |
+| V7 Exp7d chunked B=6 (Mar 2026) | **27.94** | `7555c93`; higher tok/s (~31.8k) than B=18 rerun (~22k). |
+| **V9 `gate` (confounded)** | **29.57** | 105.1M params; `pam_output_gate=True` + inherited `use_reverse_assoc=True`. See [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27). |
+| V7 Exp7a (ModSwish, B=3) | **29.73** | Best **B=3** flat stack in V7; beats archived V6 v3 slightly. |
 | V6 `medium-pam-v3` | **29.95** | Interleaved CGU+PAM, RoPE, no QK-norm in headline config |
+| V5 `medium-v5-100m` (May 2026) | **41.88** | Algebraic V5 stack on WT103 — **not** competitive vs rows above; [v5/EXPERIMENTS.md](v5/EXPERIMENTS.md#11-wikitext-103-medium-v5-100m-2026-05-09). |
 
 PAM/QLLM trains slower in tok/s than the transformer for stack maturity reasons; treat PPL as the clean quality readout, throughput as its own line item in the per-version docs.
 
@@ -45,19 +50,22 @@ flowchart LR
 ## Crux: what worked
 
 - **V6:** **Interleaved CGU + PAM** and **PAM v3** (RoPE, fused QKV, block-real path) land near a strong transformer on PAM at matched batch — headline **29.95** val PPL. **GSP + TSO + rebalanced** settings matter for stability. **HSB** was an interesting SSM-native binding story but did not win the main medium run vs simpler stacks (see HSB + medium logs and [EXPERIMENTS_V6_PART2](EXPERIMENTS_V6_PART2.md)). **Scaling-sweep** logs show **QPAM/RPAM** PPL improving with param budget on the same schedule (tab-separated `mid/end` val snapshots).
-- **V7:** **ModSwish (Exp7a)** is the best **flat** 16-layer PAM result (**29.73** @10). **Chunked dual form + B=6 (7d)** trades some PPL for a large **throughput** win vs B=3. The **“lean PAM”** (no CGU) run proves **channel gating is worth ~2 PPL** but saves VRAM and raises tok/s. **`medium_h16_flat` 383e514 (ModReLU) 9-epoch** run reached **26.64** val PPL (non-Swish preset — not apples-to-apples to 7a).
+- **V7:** **ModSwish (Exp7a)** is the best **flat** 16-layer PAM result at **matched B=3** (**29.73** @10). **May 2026:** **7d**-style chunked dual form at **B=18** reaches **26.88** val PPL @10 — **below transformer B=3 (27.08)**; log `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/` (script-issued dirname; **batch 18** in the log). **Chunked dual form + B=6 (7d, Mar 2026)** gave **27.94** with higher tok/s (~31.8k vs ~22k). The **“lean PAM”** (no CGU) run proves **channel gating is worth ~2 PPL** but saves VRAM and raises tok/s. **`medium_h16_flat` 383e514 (ModReLU) 9-epoch** run reached **26.64** val PPL (non-Swish preset — not apples-to-apples to 7a).
 - **V8:** **QLC Stage A.5 on TinyStories** shows QLC can beat passthrough in a smoke setting; **WikiText e2e** runs moved PPL in the right direction with v8.2+ fixes (see `e2e_*` logs), with **context-length hack run** ending **38.66** @3 ep. Full **V8.3** story (interleaving, diagnostics) is in [v8/EXPERIMENTS_V8.md](v8/EXPERIMENTS_V8.md).
 - **V9:** **PAM output gate** with inherited config reaches **29.57** @10 (**better than V7 7a and V6 v3** on PPL) but the logged run is **not a clean ablation** — `use_reverse_assoc=True` and **+5M params** vs 7a; see [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md). Clean follow-ups did **not** reproduce the win: `gate_100m` was weak at ep1, `compete_revassoc_100m` was weak by ep2, `gate_mlp_revassoc_100m` trailed baselines through ep5, and the completed parameter-matched `gate_revassoc_100m` finished at **30.53**. The only remaining V9 micro-ablation with a distinct hypothesis is **short local conv before QKV**.
 
 ## Crux: what did not work or was stopped
 
 - **V6:** **PAM QK-norm = on** in v3: **repetition / mode collapse** while loss still looked fine — run stopped; headline preset keeps **QK-norm off** ([EXPERIMENTS_V6_PART2](EXPERIMENTS_V6_PART2.md) “Bug 8”). **Memory-reframe** pathologies: `run2_span_corruption` blows up; others finish but do not beat mainline PAM. **Diffusion-text** and **rebalanced_110656** logs never reached a first val epoch line (crashed or stalled). **Small-matched 143537** (seq-512) log has no completed val epoch in file.
+- **V5:** **WikiText-103 `medium-v5-100m` (May 2026)** finished at val **41.88** @10 — far from PAM/V7/transformer class; see [v5/EXPERIMENTS.md](v5/EXPERIMENTS.md#11-wikitext-103-medium-v5-100m-2026-05-09).
 - **V7:** **7f-1 multi-scale** and **7f-2 reverse-assoc** and **7f-0/7f grouped+multi-scale** all **regress** vs 7a. **7f-3 grouped-only** was **halted after epoch 1** (poor signal vs 7a). **7b `phase_mod`** was **stopped mid-epoch-1** to free GPU — **no val** in the saved log. **7f-3** on-disk log in this repo has **no val lines**; the learnings table records **epoch-1 val 58.70** when the halt decision was made — we preserve that number below.
 - **V8:** **4450ff0 / early e2e** was effectively **killed** (align/gamma on noise floor; see V8 doc). **Stage A medium** run **hung** after printing epoch header (no val). **E2E logs starting at ep2** miss ep1 in the file (resume/rotated logs) — PPL@1 is blank in the table.
-- **V9:** **Gate + reverse_assoc + 105M** is **not** a pure test of the output gate. The parameter-matched `gate_revassoc_100m` finished at **30.53**, worse than V9 gate **29.57**, V7 **29.73**, and V6 **29.95**. Zero-param competition and 2-layer gate-MLP also failed to beat the baseline trajectory. Lesson: small PAM readout gates/non-linearities are not closing the gap at ~100M. See [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md#2026-04-28-v9-gate--reverse-assoc-parameter-matched-final).
+- **V9:** **Gate + reverse_assoc + 105M** is **not** a pure test of the output gate. The parameter-matched `gate_revassoc_100m` finished at **30.53**, worse than V9 gate **29.57**, flat V7 **7d B=18** (**26.88**), V7 **7a** (**29.73**), and V6 **29.95**. Zero-param competition and 2-layer gate-MLP also failed to beat the baseline trajectory. Lesson: small PAM readout gates/non-linearities are not closing the gap at ~100M. See [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md#2026-04-28-v9-gate--reverse-assoc-parameter-matched-final).
 
 ## Open
 
+- **V7 (May 2026):** New flat bar is **26.88** @10 (**7d B=18**). Sensible follow-ups: **7e** unitary reg on the same recipe; LR/warmup tuned for **3213** steps/epoch if comparing to **7a**; chase **transformer B=6** (**23.13**) as the harder baseline; log **generation / rep-gram** beside val PPL when claiming parity.
+- **V5 (May 2026):** WT103 **41.88** @100M is a **negative result** for the current V5 stack — either **targeted debugging** (data, loss, capacity vs V6) or **explicit deprioritization** on WT103 in favor of V7/V9.
 - V9 active smoke: `gate_conv4_100m --epochs 3` — simple linear sigmoid PAM gate + causal short conv before QKV, parameter-matched at ~100M. Continue to 10 epochs only if epoch 3 reaches `<= 38.0`; stop V9 micro-ablations if epoch 3 is `> 38.5`.
 - V8 path to PPL parity with **V7 QPAM passthrough** and whether **QLC** can show sustained **γ > 0** and **mean iter > 1** *without* killing PPL (see [v8/AUDIT_V8.md](v8/AUDIT_V8.md)).
 
@@ -125,9 +133,10 @@ flowchart LR
 
 | Log | val@1 | val@2 | val@last | last ep | Notes |
 |---|---:|---:|---:|---:|---|
-| `logs/v7/exp7a_swish_wikitext103_20260328_081707_81e8ea9_dirty/v7_medium_h16_flat_wikitext103.log` | 56.15 | 43.20 | 29.73 | 10 | best flat V7 PPL |
+| `logs/v7/exp7a_swish_wikitext103_20260328_081707_81e8ea9_dirty/v7_medium_h16_flat_wikitext103.log` | 56.15 | 43.20 | 29.73 | 10 | best flat V7 PPL at **B=3** |
 | `logs/v7/exp7b_phase_mod_wikitext103_20260330_115105_920b365/v7_medium_h16_flat_wikitext103.log` | — | — | — | — | no val line; **7b stopped** mid-epoch-1 (see [v7/EXPERIMENTS_V7.md](v7/EXPERIMENTS_V7.md)) |
 | `logs/v7/exp7d_chunked_b6_wikitext103_20260330_172839_7555c93/v7_medium_h16_flat_wikitext103.log` | 57.42 | 41.16 | 27.94 | 10 | B=6, chunked; strong PPL, higher tok/s |
+| `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/v7_medium_h16_flat_wikitext103.log` | 84.05 | 47.80 | 26.88 | 10 | **B=18** chunked 7d redo; **best flat V7 val in table**; dirname slug `b6` is script default — see [v7/EXPERIMENTS_V7.md](v7/EXPERIMENTS_V7.md) |
 | `logs/v7/exp7f1_multiscale_flat_wikitext103_20260403_124050_ecb4b56/v7_medium_h16_flat_wikitext103.log` | 58.40 | 44.25 | 30.55 | 10 | multi-scale loss hurts vs 7a |
 | `logs/v7/exp7f2_reverse_assoc_wikitext103_20260417_124743_7f52bcf/v7_medium_h16_flat_wikitext103.log` | 57.56 | 45.61 | 32.19 | 10 | reverse-assoc hurts vs 7a |
 | `logs/v7/exp7f3_grouped_only_wikitext103_20260418_120504_5294937_dirty/v7_medium_h16_grouped_wikitext103.log` | 58.70 | — | 58.70 | 1 | **from learnings log**; on-disk file has no val; halted after ep1 per V7 doc |

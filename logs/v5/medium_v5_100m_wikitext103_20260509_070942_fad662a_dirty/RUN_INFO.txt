@@ -1,0 +1,226 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V5 Medium-100M No-Attention: dim=288 state=576 L=16 banks=2 expand=3 (~100.9M), attn=off, LR=1e-4, warmup=1000, WikiText-103
+Date (UTC)  : 2026-05-09 07:09:42
+Date (local): 2026-05-09 07:09:42 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1003-gcp x86_64
+
+Git commit  : fad662a7d2bdcad7470a2add930403c3e5aa70fe
+Git short   : fad662a
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.25
+Arguments   : --dataset wikitext103 --size medium-v5-100m --seq_len 2048 --batch_size 3 --epochs 10 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --no_attention --init_strategy orthogonal --init_seed 42 --warmup_steps 1000  
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ scripts/run_v7_exp7d_chunked_b6.sh |  33 ++++++++----
+ v5/config.py                       |  11 ++++
+ v5/train.py                        | 108 +++++++++++++++++++++++++++++++++----
+ 3 files changed, 133 insertions(+), 19 deletions(-)
+
+diff --git a/scripts/run_v7_exp7d_chunked_b6.sh b/scripts/run_v7_exp7d_chunked_b6.sh
+index 94d1b20..2294539 100755
+--- a/scripts/run_v7_exp7d_chunked_b6.sh
++++ b/scripts/run_v7_exp7d_chunked_b6.sh
+@@ -17,6 +17,8 @@
+ #   ./scripts/run_v7_exp7d_chunked_b6.sh --epochs 3          # quick test
+ #   ./scripts/run_v7_exp7d_chunked_b6.sh --batch_size 4      # if OOM with B=6
+ #   ./scripts/run_v7_exp7d_chunked_b6.sh --resume
++#   ./scripts/run_v7_exp7d_chunked_b6.sh --no-compile       # smoke / compare throughput vs torch.compile
++#   ./scripts/run_v7_exp7d_chunked_b6.sh --checkpoint_dir path  # isolate checkpoints (e.g. benchmarks)
+ 
+ set -euo pipefail
+ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+@@ -37,25 +39,33 @@ PRESET="medium_h16_flat"
+ BATCH_SIZE=6
+ CHUNK_SIZE=256
+ RESUME=0
++NO_COMPILE=0
++CKPT_DIR="checkpoints_v7_exp7d_chunked_b6"
+ EXTRA_ARGS=""
+ 
+ while [[ $# -gt 0 ]]; do
+     case "$1" in
+-        --epochs)     EPOCHS="$2";     shift 2 ;;
+-        --seq_len)    SEQ_LEN="$2";    shift 2 ;;
+-        --batch_size) BATCH_SIZE="$2"; shift 2 ;;
+-        --chunk_size) CHUNK_SIZE="$2"; shift 2 ;;
+-        --dataset)    DATASET="$2";    shift 2 ;;
+-        --resume)     RESUME=1;        shift ;;
+-        *)            EXTRA_ARGS="$EXTRA_ARGS $1"; shift ;;
++        --epochs)         EPOCHS="$2";         shift 2 ;;
++        --seq_len)        SEQ_LEN="$2";        shift 2 ;;
++        --batch_size)     BATCH_SIZE="$2";     shift 2 ;;
++        --chunk_size)     CHUNK_SIZE="$2";     shift 2 ;;
++        --dataset)        DATASET="$2";        shift 2 ;;
++        --checkpoint_dir) CKPT_DIR="$2";       shift 2 ;;
++        --resume)         RESUME=1;            shift ;;
++        --no-compile)     NO_COMPILE=1;        shift ;;
++        *)                EXTRA_ARGS="$EXTRA_ARGS $1"; shift ;;
+     esac
+ done
+ 
+ GEN_PROMPT="In 1923 , the University of"
+-CKPT_DIR="checkpoints_v7_exp7d_chunked_b6"
+ LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
+ 
+-ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --chunk_size $CHUNK_SIZE --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
++BASE_ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --chunk_size $CHUNK_SIZE --max_samples 9999999 --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
++if [[ $NO_COMPILE -eq 1 ]]; then
++    ARGS="$BASE_ARGS"
++else
++    ARGS="$BASE_ARGS --compile --compile_mode default"
++fi
+ 
+ RESUME_ARG=""
+ REUSED_LOG_DIR=0
+@@ -95,6 +105,11 @@ echo "  Activation: ModSwish, Chunk size: $CHUNK_SIZE"
+ echo "  Architecture: [CGU(expand=3, swish) -> PAM(H=6, d=64, chunked)] x16 + GSP + RoPE"
+ echo "  dim=384  heads=6  LR=1e-4  warmup=1000"
+ echo "  seq_len: $SEQ_LEN  batch_size: $BATCH_SIZE  epochs: $EPOCHS"
++if [[ $NO_COMPILE -eq 1 ]]; then
++    echo "  torch.compile: off (--no-compile)"
++else
++    echo "  torch.compile: on (default)"
++fi
+ echo "  Dataset: $DATASET"
+ echo "  Log: $LOG_DIR"
+ echo "  Checkpoint: $CKPT_DIR"
+diff --git a/v5/config.py b/v5/config.py
+index 7692c89..24a9836 100644
+--- a/v5/config.py
++++ b/v5/config.py
+@@ -98,6 +98,17 @@ def get_config(size: str = 'small') -> V5Config:
+             num_banks=3, num_heads=12, bank_expand=2,
+             batch_size=2, learning_rate=3e-5,
+         ),
++        # ~100.9M params, no attention, for apples-to-apples vs transformer baseline
++        # and V6 medium-pam-v3 on WikiText-103. Matches their training protocol.
++        'medium-v5-100m': V5Config(
++            dim=288, state_dim=576, num_layers=16,
++            num_banks=2, num_heads=4, bank_expand=3,
++            attn_every_k=0,
++            max_seq_len=2048,
++            batch_size=3, learning_rate=1e-4,
++            warmup_steps=1000,
++            dropout=0.1,
++        ),
+     }
+     if size not in presets:
+         raise ValueError(f"Unknown size: {size}. Available: {list(presets.keys())}")
+diff --git a/v5/train.py b/v5/train.py
+index dd590a9..f031cd6 100644
+--- a/v5/train.py
++++ b/v5/train.py
+@@ -418,6 +418,81 @@ def _random_dataset(vocab_size, seq_len, num_samples):
+     return TextDataset(tokens, seq_len)
+ 
+ 
++_WIKITEXT_CACHE_VERSION = 1
++
++
++def load_wikitext103(
++    max_samples=None,
++    seq_len=512,
++    use_cache=True,
++    max_val_samples=None,
++    cache_dir='.cache/v5_tokens',
++):
++    """Load WikiText-103 for apples-to-apples comparison with V6/transformer baselines.
++
++    Uses HuggingFace wikitext/wikitext-103-raw-v1. Same GPT-2 tokenizer and
++    TextDataset chunking as TinyStories path.
++    """
++    from transformers import AutoTokenizer
++    tokenizer = AutoTokenizer.from_pretrained('gpt2')
++    tokenizer.pad_token = tokenizer.eos_token
++
++    limit_tag = f"ms{max_samples}" if max_samples else "full"
++    cache_tag = f"v{_WIKITEXT_CACHE_VERSION}_{limit_tag}_sl{seq_len}"
++
++    def _process_split(split_name, limit):
++        cache_path = Path(cache_dir) / f"wikitext103_{split_name}_{cache_tag}.pt"
++
++        if use_cache and cache_path.exists():
++            cached = torch.load(cache_path, weights_only=False)
++            tokens = cached['tokens']
++            print(f"[cache] Loaded WikiText-103 {split_name} from {cache_path} "
++                  f"({len(tokens):,} tokens)")
++            return tokens
++
++        from datasets import load_dataset
++        print(f"Loading WikiText-103 {split_name} (limit={limit})...")
++        ds = load_dataset('wikitext', 'wikitext-103-raw-v1', split=split_name)
++        lines = [item['text'] for item in ds]
++
++        if limit:
++            lines = lines[:limit]
++
++        all_tokens = []
++        chunk_size = 50000
++        for start in range(0, len(lines), chunk_size):
++            chunk_lines = lines[start:start + chunk_size]
++            chunk_text = '\n'.join(chunk_lines)
++            ids = tokenizer.encode(chunk_text, add_special_tokens=False)
++            all_tokens.extend(ids)
++
++        tokens = torch.tensor(all_tokens, dtype=torch.long)
++        print(f"  {split_name}: {len(lines)} lines, {len(tokens):,} tokens")
++
++        if use_cache:
++            cache_path.parent.mkdir(parents=True, exist_ok=True)
++            torch.save({'tokens': tokens,
++                        'cache_version': _WIKITEXT_CACHE_VERSION}, cache_path)
++            print(f"[cache] Saved {split_name} to {cache_path}")
++
++        return tokens
++
++    try:
++        train_tokens = _process_split('train', max_samples)
++        val_limit = max_val_samples or (max(max_samples // 10, 1000) if max_samples else None)
++        val_tokens = _process_split('validation', val_limit)
++    except Exception as e:
++        print(f"Failed to load WikiText-103: {e}")
++        print("Using random data as fallback.")
++        return (_random_dataset(50257, seq_len, 1000),
++                _random_dataset(50257, seq_len, 100), tokenizer)
++
++    train_ds = TextDataset(train_tokens, seq_len)
++    val_ds = TextDataset(val_tokens, seq_len)
++    print(f"Train chunks: {len(train_ds)}, Val chunks: {len(val_ds)}")
++    return train_ds, val_ds, tokenizer
++
++
+ def resolve_amp_dtype(device: torch.device, requested: str) -> Optional[torch.dtype]:
+     """Pick a CUDA autocast dtype that matches the local PyTorch/CUDA build."""
+     if device.type != 'cuda':
+@@ -941,7 +1016,10 @@ class Trainer:
+ def main():
+     parser = argparse.ArgumentParser(description='Train V5 Algebraic LM')
+     parser.add_argument('--size', type=str, default='small',
+-                        choices=['tiny', 'small', 'small-matched', 'medium', 'large'])
++                        choices=['tiny', 'small', 'small-matched', 'medium', 'large', 'medium-v5-100m'])
++    parser.add_argument('--dataset', type=str, default='tinystories',
++                        choices=['tinystories', 'wikitext103'],
++                        help='Training dataset (default: tinystories)')
+     parser.add_argument('--epochs', type=int, default=20)
+     parser.add_argument('--batch_size', type=int, default=None)
+     parser.add_argument('--lr', type=float, default=None)
+@@ -1061,6 +1139,7 @@ def main():
+     print("V5 Algebraic Language Model")
+     print("=" * 60)
+     print(f"Size: {args.size}")
++    print(f"Dataset: {args.dataset}")
+     print(f"Complex dim: {config.dim} (= {config.dim * 2} real values/position)")
+     print(f"SSM state dim: {config.state_dim}")
+     print(f"Layers: {config.num_layers}")
+@@ -1092,15 +1171,24 @@ def main():
+     print("=" * 60)
+ 
+     # Load data
+... (diff truncated at 200 lines)

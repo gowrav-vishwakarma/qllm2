@@ -17,6 +17,8 @@
 #   ./scripts/run_v7_exp7d_chunked_b6.sh --epochs 3          # quick test
 #   ./scripts/run_v7_exp7d_chunked_b6.sh --batch_size 4      # if OOM with B=6
 #   ./scripts/run_v7_exp7d_chunked_b6.sh --resume
+#   ./scripts/run_v7_exp7d_chunked_b6.sh --no-compile       # smoke / compare throughput vs torch.compile
+#   ./scripts/run_v7_exp7d_chunked_b6.sh --checkpoint_dir path  # isolate checkpoints (e.g. benchmarks)
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -37,25 +39,33 @@ PRESET="medium_h16_flat"
 BATCH_SIZE=6
 CHUNK_SIZE=256
 RESUME=0
+NO_COMPILE=0
+CKPT_DIR="checkpoints_v7_exp7d_chunked_b6"
 EXTRA_ARGS=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --epochs)     EPOCHS="$2";     shift 2 ;;
-        --seq_len)    SEQ_LEN="$2";    shift 2 ;;
-        --batch_size) BATCH_SIZE="$2"; shift 2 ;;
-        --chunk_size) CHUNK_SIZE="$2"; shift 2 ;;
-        --dataset)    DATASET="$2";    shift 2 ;;
-        --resume)     RESUME=1;        shift ;;
-        *)            EXTRA_ARGS="$EXTRA_ARGS $1"; shift ;;
+        --epochs)         EPOCHS="$2";         shift 2 ;;
+        --seq_len)        SEQ_LEN="$2";        shift 2 ;;
+        --batch_size)     BATCH_SIZE="$2";     shift 2 ;;
+        --chunk_size)     CHUNK_SIZE="$2";     shift 2 ;;
+        --dataset)        DATASET="$2";        shift 2 ;;
+        --checkpoint_dir) CKPT_DIR="$2";       shift 2 ;;
+        --resume)         RESUME=1;            shift ;;
+        --no-compile)     NO_COMPILE=1;        shift ;;
+        *)                EXTRA_ARGS="$EXTRA_ARGS $1"; shift ;;
     esac
 done
 
 GEN_PROMPT="In 1923 , the University of"
-CKPT_DIR="checkpoints_v7_exp7d_chunked_b6"
 LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
 
-ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --chunk_size $CHUNK_SIZE --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
+BASE_ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --chunk_size $CHUNK_SIZE --max_samples 9999999 --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
+if [[ $NO_COMPILE -eq 1 ]]; then
+    ARGS="$BASE_ARGS"
+else
+    ARGS="$BASE_ARGS --compile --compile_mode default"
+fi
 
 RESUME_ARG=""
 REUSED_LOG_DIR=0
@@ -95,6 +105,11 @@ echo "  Activation: ModSwish, Chunk size: $CHUNK_SIZE"
 echo "  Architecture: [CGU(expand=3, swish) -> PAM(H=6, d=64, chunked)] x16 + GSP + RoPE"
 echo "  dim=384  heads=6  LR=1e-4  warmup=1000"
 echo "  seq_len: $SEQ_LEN  batch_size: $BATCH_SIZE  epochs: $EPOCHS"
+if [[ $NO_COMPILE -eq 1 ]]; then
+    echo "  torch.compile: off (--no-compile)"
+else
+    echo "  torch.compile: on (default)"
+fi
 echo "  Dataset: $DATASET"
 echo "  Log: $LOG_DIR"
 echo "  Checkpoint: $CKPT_DIR"
