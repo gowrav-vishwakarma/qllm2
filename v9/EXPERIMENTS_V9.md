@@ -36,6 +36,7 @@ The single best PAM result we have on WikiText-103 so far is the
 | V7 Exp7a (ModSwish, flat) | 3 | ~100M | 29.73 | +0.16 |
 | V6 `medium-pam-v3` | 3 | ~100.4M | 29.95 | +0.38 |
 | Transformer | 6 | ~100M | 23.13 | (different batch — not directly comparable) |
+| Transformer | 18 | ~100M | **22.69** | −6.88 (vs 29.57; matched steps/epoch to V7 7d B=18 — [EXPERIMENTS_V6_PART2](EXPERIMENTS_V6_PART2.md) §0) |
 
 ### Caveats (read before citing this number)
 
@@ -66,6 +67,8 @@ confounded full-width/capacity result, not as a clean architectural win.
 | Model | Batch | Val PPL | Notes |
 |---|---:|---:|---|
 | Transformer baseline | 3 | 27.08 | GPT-2 style attention baseline |
+| Transformer baseline | 6 | 23.13 | Same arch, larger microbatch ([EXPERIMENTS_V6_PART2](EXPERIMENTS_V6_PART2.md) §0) |
+| Transformer baseline | 18 | **22.69** | May 2026; matched steps/epoch to PAM B=18 ([EXPERIMENTS_V6_PART2](EXPERIMENTS_V6_PART2.md) §0) |
 | V7 Exp7a | 3 | 29.73 | Best flat CGU+PAM result |
 | Lean PAM | 3 | 32.09 | Removes CGU, shows channel gating is worth ~2.4 PPL |
 
@@ -172,12 +175,14 @@ Summary:
 | Model | Batch | Params | Val PPL | Delta vs V9 gate |
 |---|---:|---:|---:|---:|
 | Transformer baseline | 3 | ~100.3M | **27.08** | V9 worse by +2.49 |
+| Transformer baseline | 18 | ~100.3M | **22.69** | V9 worse by +6.88 (matched batch / steps; May 2026) |
 | V9 gate, confounded | 3 | 105.1M | **29.57** | — |
 | V7 Exp7a | 3 | ~100M | 29.73 | V9 better by -0.16 |
 | V6 medium-pam-v3 | 3 | ~100.4M | 29.95 | V9 better by -0.38 |
 
 This is directionally positive versus V7 and V6, but it does **not** meet the
-V9 promotion gate of `<29.2`, and it remains meaningfully behind transformer B=3.
+V9 promotion gate of `<29.2`, and it remains behind transformer B=3 (**27.08**)
+and far behind **transformer B=18** (**22.69**, matched-batch anchor, May 2026).
 
 ### Generation Quality
 
@@ -235,7 +240,7 @@ Interpretation rule:
   before deciding whether gate and reverse association interacted usefully.
 
 Compare the result directly against V9 confounded gate **29.57**, V7 Exp7a
-**29.73**, V6 medium-pam-v3 **29.95**, and transformer B=3 **27.08**. Do not run
+**29.73**, V6 medium-pam-v3 **29.95**, transformer B=3 **27.08**, and (when discussing batch-18 PAM) **transformer B=18** **22.69**. Do not run
 `conv` or `gate_conv` until this matched clean gate result is known.
 
 ## 2026-04-27: V9 Gate Matrix For Reviving V7 Ablations
@@ -350,7 +355,8 @@ bash ./scripts/run_v9_pam_upgrade.sh --variant compete_revassoc_100m
 
 | Outcome | Action |
 |---|---|
-| val PPL <= 27.08 | Pure PAM beats Transformer. Lock in. Stack with per-channel decay or state expansion. |
+| val PPL <= 22.69 | Pure PAM beats **transformer B=18** (matched batch / steps). Lock in. |
+| val PPL <= 27.08 | Pure PAM beats **transformer B=3** (B=3 schedule). Lock in. Stack with per-channel decay or state expansion. |
 | 27.08 to 28.5 | Real progress over V7 7a (29.73). Stack with per-channel decay next. |
 | 28.5 to 29.5 | Matches existing baselines. Sweep alpha in {0.25, 0.75, 1.0}. |
 | >= 29.5 | Head collapse or destabilized training. Diagnose. |
@@ -364,6 +370,7 @@ bash ./scripts/run_v9_pam_upgrade.sh --variant compete_revassoc_100m
 | V9 gate (confounded) | 3 | 105.1M | 29.57 |
 | Transformer | 3 | ~100M | **27.08** |
 | Transformer | 6 | ~100M | 23.13 |
+| Transformer | 18 | ~100M | **22.69** |
 
 ## 2026-04-27: V9 Gate-MLP + Reverse Assoc (Post-Compete Pivot)
 
@@ -551,6 +558,7 @@ Log: `logs/v9/pam_gate_revassoc_100m_wikitext103_20260427_230817_2fe5c9a/v9_medi
 
 | Model | Params | Final Val PPL | Delta vs `gate_revassoc_100m` |
 |---|---:|---:|---:|
+| Transformer B=18 | ~100M | **22.69** | `gate_revassoc_100m` worse by +7.84 (matched batch / steps to V7 7d B=18) |
 | Transformer B=3 | ~100M | **27.08** | `gate_revassoc_100m` worse by +3.45 |
 | V9 `gate` (confounded, full-width) | 105.1M | **29.57** | `gate_revassoc_100m` worse by +0.96 |
 | V7 Exp7a | ~100M | **29.73** | `gate_revassoc_100m` worse by +0.80 |

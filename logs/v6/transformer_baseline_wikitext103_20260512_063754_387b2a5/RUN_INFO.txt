@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Transformer Baseline: d_model=672 n_layers=12 n_heads=12 d_ff=2688 (~100.3M), LR=1e-4, warmup=1000, WikiText-103
+Date (UTC)  : 2026-05-12 06:37:55
+Date (local): 2026-05-12 06:37:55 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1003-gcp x86_64
+
+Git commit  : 387b2a5fc9b46141ccaa3595ad0e55c3fd023bd0
+Git short   : 387b2a5
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.25
+Arguments   : --seq_len 2048 --batch_size 18 --epochs 10 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --gen_prompt 'In 1923 , the University of'   --checkpoint_dir checkpoints_transformer_baseline_b18_wt103
+================================================================================

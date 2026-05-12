@@ -11,7 +11,9 @@
 > (`gate_conv4_100m --epochs 3`); if weak, V9 should move to memory dynamics
 > such as per-channel decay.
 > The V9 active research line tries to close the remaining ~2.5 PPL gap to
-> Transformer B=3 (27.08).
+> Transformer B=3 (27.08). **May 2026:** transformer **B=18** reaches **22.69**
+> val PPL (matched steps/epoch to V7 7d B=18); that is the tighter ceiling when
+> batch is 18. See [EXPERIMENTS_V6_PART2](EXPERIMENTS_V6_PART2.md) §0.
 
 This note is the current benchmark-grounded status of V6 after the first full WikiText-103 run. Its purpose is to answer four questions clearly:
 
