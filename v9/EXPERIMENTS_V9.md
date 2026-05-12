@@ -574,14 +574,19 @@ does not beat V7 7a or V6 medium-pam-v3 at true ~100M.
 Do not promote `gate_revassoc_100m`. Keep the old 29.57 result as a confounded
 leader only.
 
-Remaining V9 micro-ablation worth a cheap test:
+### 2026-04-28: `gate_conv4_100m` — full result (both smoke and 10 epochs)
 
-```bash
-bash ./scripts/run_v9_pam_upgrade.sh --variant gate_conv4_100m --epochs 3
-```
+**Hypothesis:** causal depthwise conv (`pam_short_conv=4`) before QKV + linear PAM output gate (~100.58M params) improves local pattern capture.
 
-Run only as a smoke. Continue to 10 epochs only if epoch 3 reaches `<= 38.0`;
-stop if epoch 3 is `> 38.5`.
+**Runs on disk:**
 
-If `gate_conv4_100m` fails this smoke, stop V9 readout/local tweaks and move to
-a real PAM memory-dynamics change, starting with per-channel decay.
+| Run | Epochs | Log directory | Best val PPL |
+|-----|--------|---------------|--------------|
+| Smoke | 3 | `logs/v9/pam_gate_conv4_100m_wikitext103_20260428_155538_1bd3cc5_dirty/` | **38.61** @ ep3 |
+| Full | 10 | `logs/v9/pam_gate_conv4_100m_wikitext103_20260428_204606_b9af5d4/` | **30.02** @ ep10 |
+
+**Trajectory (10-epoch log):** ep3 val **38.14** (just above the informal **≤38.0** “extend” bar); training was continued. Ep8 val **30.45**; ep10 val **30.02**.
+
+**Verdict:** **Do not re-run.** Final val **~30** is **worse than V7 7a (29.73)** and far above **7d B=18 (26.88)** and **transformer B=18 (22.69)**. Short conv before QKV is **not** the missing lever at ~100M on this setup.
+
+**Next pivot (unchanged):** PAM **memory dynamics** (e.g. per-channel decay), per earlier V9 guidance — not further readout/local conv sweeps without new evidence.
