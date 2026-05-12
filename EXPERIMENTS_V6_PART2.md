@@ -4,7 +4,7 @@ Continuation of [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md). **Part 1** keeps the ful
 
 **Git reference:** interleaved CGU+PAM was tagged `v6-medium-pam-v2-interleaved` before the Part 2 code path diverged further.
 
-**How to update:** Append new PAM-era runs and related bugs here; update **§0** if the transformer baseline is re-run.
+**How to update:** Append new PAM-era runs and related bugs here; update **§0** if the transformer baseline is re-run (including **B=18**, May 2026).
 
 ---
 
@@ -43,18 +43,7 @@ Training step throughput is ~**92–97k tok/s** (epoch-average ~96k) vs ~**23k t
 
 **Wall time:** 12505.1 s (**~3.47 h** total). **GPU:** ~1.8 / 7.0 GB in log. **End-of-epoch generation** (epoch 10, prompt: `In 1923 , the University of`): coherent WikiText-style scaffolding; facts unreliable. **Quality:** rep3=0.034, rep4=0.011, restarts=0, uniq=0.667.
 
-### Side-by-side: transformer baseline vs `medium-pam-v3`
-
-| | Transformer B=3 | Transformer B=6 | medium-pam-v3 (QLLM) |
-|---|-----------------|-----------------|----------------------|
-| Params | ~100.3M | ~100.3M | ~100.4M |
-| Batch size | 3 | 6 | 3 |
-| Val PPL (10 ep) | **27.08** | **23.13** | **29.95** |
-| Tok/s (typical) | ~96k | ~99k | ~23k |
-| Wall time (10 ep) | ~3.5 h | ~3.2 h | ~14.1 h |
-| GPU mem | ~1.8 / 7.0 GB | ~2.5 / 12.7 GB | — |
-
-**Readout:** The vanilla transformer **wins on val PPL** (~10% gap at B=3, ~23% at B=6). Doubling batch size to 6 gives the transformer a large PPL boost (27.08 → 23.13, **-14.6%**) with negligible throughput change. PAM v3 is **close** on perplexity at B=3; throughput favors the baseline largely due to **Flash-class SDPA + mature stack** vs pure-PyTorch PAM.
+A consolidated **side-by-side** table (B=3, B=6, **B=18**, vs `medium-pam-v3`) appears **after** the B=6 and B=18 transformer subsections below.
 
 ### Transformer baseline B=6 run (2026-03-30)
 
@@ -88,6 +77,41 @@ Same architecture and pipeline as the B=3 run above, with `--batch_size 6`. Purp
 | 10 | 27.08 | 23.13 | +14.6% |
 
 The B=6 advantage emerges by epoch 3 and stabilizes at ~14-15%. This mirrors the V7 finding (Exp 3a-A vs 3a-B) that larger batch size provides smoother gradients and more aggressive cosine schedule per-token, acting as implicit regularization.
+
+### Transformer baseline B=18 run (2026-05-12)
+
+Same architecture and pipeline as the B=3/B=6 runs above, with `--batch_size 18`. Purpose: **apples-to-apples** with V7 **7d** chunked PAM at **B=18** (same **3,213** train batches per epoch on WikiText-103).
+
+**Git / log:** `387b2a5` — `logs/v6/transformer_baseline_wikitext103_20260512_063754_387b2a5/transformer_baseline.log` (`RUN_INFO.txt`). Checkpoints: `checkpoints_transformer_baseline_b18_wt103/best_model.pt`.
+
+| Epoch | Train PPL | Val PPL | Notes |
+|-------|-----------|---------|-------|
+| 1 | 269.62 | 73.41 | *best* |
+| 2 | 57.52 | 38.77 | *best* |
+| 3 | 39.54 | 31.17 | *best* |
+| 4 | 33.09 | 27.67 | *best* |
+| 5 | 29.52 | 25.68 | *best* |
+| 6 | 27.19 | 24.34 | *best* |
+| 7 | 25.60 | 23.45 | *best* |
+| 8 | 24.52 | 22.97 | *best* |
+| 9 | 23.85 | 22.72 | *best* |
+| 10 | 23.53 | **22.69** | *best* |
+
+**Wall time:** ~1h36m per epoch (~**15.9h** total). **Throughput:** ~**206k tok/s** epoch average. **GPU:** RTX 6000 Ada class host (see `RUN_INFO.txt`).
+
+### Side-by-side: transformer baseline vs `medium-pam-v3` (updated with B=18)
+
+| | Transformer B=3 | Transformer B=6 | Transformer B=18 | medium-pam-v3 (QLLM) |
+|---|-----------------|-----------------|--------------------|------------------------|
+| Params | ~100.3M | ~100.3M | ~100.3M | ~100.4M |
+| Batch size | 3 | 6 | 18 | 3 |
+| Val PPL (10 ep) | **27.08** | **23.13** | **22.69** | **29.95** |
+| Tok/s (typical) | ~96k | ~99k | ~206k | ~23k |
+| Wall time (10 ep) | ~3.5 h | ~3.2 h | ~15.9 h | ~14.1 h |
+| Batches/epoch | 19,277 | 9,639 | **3,213** | 19,277 |
+| GPU mem | ~1.8 / 7.0 GB | ~2.5 / 12.7 GB | — | — |
+
+**Readout:** The vanilla transformer **wins on val PPL** (~10% gap at B=3, ~23% at B=6, ~24% at B=18 vs pam-v3). Larger batch improves PPL with a similar pattern to B=3→B=6; **B=18** is the right anchor when comparing to PAM runs trained at batch 18.
 
 ---
 
@@ -514,6 +538,7 @@ Same WikiText-103 10-epoch setting where noted. Rows are **not** a controlled si
 |-------|--------|---------|-------|
 | **transformer baseline B=3 (GPT-2 style, SDPA/Flash)** | **~100.3M** | **27.08** | **Same pipeline as v3** — §0; `v6/transformer_baseline.py` |
 | **transformer baseline B=6** | **~100.3M** | **23.13** | Same arch, batch_size=6 — §0 B=6 run |
+| **transformer baseline B=18** | **~100.3M** | **22.69** | Same arch, batch_size=18 — §0 B=18 run (May 2026); matched steps/epoch to V7 7d B=18 |
 | medium-pam (sequential) | 100.4M | 38.95 | Sequential layout, no RoPE, no QK norm |
 | **medium-pam-v3 (RoPE, no QK-norm)** | **~100.4M** | **29.95** | **Interleaved + RoPE + speed paths** (§5 completed run) |
 | medium-pam-v3-pia | ~105.1M | 30.01 | + sparse PIA every 4 layers (interference, window 256); no PPL win vs v3 — §5 attention ablation |

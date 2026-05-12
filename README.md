@@ -178,7 +178,9 @@ Same **data pipeline** (GPT-2 tokenizer, WikiText-103, seq_len 2048, batch 3, 10
 
 | Model | Params | Val PPL (10 ep) | Notes |
 |-------|--------|-----------------|--------|
-| **Transformer baseline** (GPT-2 style: pre-norm, GELU FFN, learned positions) | **~100.3M** | **27.08** | `F.scaled_dot_product_attention` — SDPA typically uses **Flash Attention** on RTX 4090; ~96k tok/s |
+| **Transformer baseline** (GPT-2 style: pre-norm, GELU FFN, learned positions) | **~100.3M** | **27.08** | `F.scaled_dot_product_attention` — SDPA typically uses **Flash Attention** on RTX 4090; ~96k tok/s; **B=3** |
+| Transformer baseline (same arch) | ~100.3M | **23.13** | **B=6** — [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) §0 |
+| Transformer baseline (same arch) | ~100.3M | **22.69** | **B=18** (May 2026) — matched steps/epoch to V7 7d B=18; ~206k tok/s; [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) §0 |
 | **QLLM `medium-pam-v3`** | **~100.4M** | **29.95** | Interleaved CGU+PAM, GSP, PAM RoPE; pure PyTorch PAM path ~23k tok/s |
 
 The vanilla transformer **wins on val PPL**; PAM v3 is within ~10%. The **~4× throughput** gap is **not** a fair “architecture-only” score — SDPA/Flash is heavily optimized; PAM has no custom CUDA/Triton kernels yet.

@@ -11,8 +11,9 @@ Running log for the V8 plan
 | **V9 `gate` (current best PAM, confounded)** | **29.57**   | WikiText-103, 10 epochs, **105.1M** params; PAM output gate + inherited `use_reverse_assoc=True`. See [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27). |
 | Transformer B=3                | 27.08   | Same arch/data, batch 3, apples-to-apples to V9. |
 | Transformer B=6                | 23.13   | Same data/epochs/params budget; from EXPERIMENTS_V6_PART2.md §0 |
+| **Transformer B=18**         | **22.69** | May 2026; **3213** steps/epoch — matched geometry to V7 7d B=18 ([EXPERIMENTS_V6_PART2](EXPERIMENTS_V6_PART2.md) §0). |
 
-V8 wins iff **V8-E-joint ≤ 23.13 PPL on WikiText-103, 10 epochs, ≤105M params**.
+V8 wins iff **V8-E-joint ≤ 23.13 PPL** on WikiText-103, 10 epochs, ≤105M params (historical bar: beats Transformer B=6). **Stricter matched-batch bar:** **≤ 22.69** vs transformer **B=18** when comparing to PAM at batch 18.
 
 > Note: V8 (QLC + PAM) is currently paused after the e2e medium readout
 > (§12). The active research line is V9 pure-PAM upgrades; the cross-version

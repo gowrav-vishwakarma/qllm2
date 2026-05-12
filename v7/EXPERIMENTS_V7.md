@@ -60,9 +60,10 @@ Each V7Block:
 | 2026-03 | **3a-B** ModReLU, `medium_h16_flat`, B=3, `--no_grad_ckpt`, commit `fc161ce` | Val **~30.4** @10e vs V6 pam-v3 **29.95** — parity (~1.5% gap). Log: `logs/v7/medium_h16_flat_wikitext103_20260327_104348_fc161ce/`. |
 | 2026-03 | **7a** ModSwish, same preset/stack, commit `81e8ea9` (dirty) | Val **29.73** @10e vs V6 **29.95** — small win; val below V6 every epoch. Transformer B=3 still **27.08**. Log: `logs/v7/exp7a_swish_wikitext103_20260328_081707_81e8ea9_dirty/`. |
 | 2026-03 | **Transformer B=6** baseline (same arch, `--batch_size 6`) | Val **23.13** @10e — **14.6%** better than B=3 (27.08). ~99k tok/s, 2.5/12.7 GB GPU. Log: `logs/v6/transformer_baseline_wikitext103_20260330_130306_8d631a6/`. |
-| 2026-03 | **7d** ModSwish + chunked dual form (`C=256`), `medium_h16_flat`, B=6, commit `7555c93` | Val **27.94** @10e, beating 7a by **1.79 PPL** while raising throughput to **31.8k tok/s**. Still behind transformer B=6 **23.13**. Log: `logs/v7/exp7d_chunked_b6_wikitext103_20260330_172839_7555c93/`. |
-| 2026-05 | **7d redo** ModSwish + chunked `C=256`, `medium_h16_flat`, **B=18**, `--compile`, commit `fad662a` (dirty) | Val **26.88** @10e — **−1.06** vs Mar **7d B=6** (**27.94**), **−2.85** vs **7a** (**29.73**); **beats transformer B=3** (**27.08**); still behind **transformer B=6** (**23.13**). ~**22.0k tok/s** avg, ~14.7h, ~62.6 GB peak. Quality ep10: `rep3=0.031`, `rep4=0.010`, `uniq=0.687`. Log dir uses script slug `exp7d_chunked_b6_*` but **batch was 18**: `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/`. |
-| — | Hygiene | Use **B=3** + **no grad ckpt** for V6/transformer apples-to-apples. **B=6** + ckpt (3a-A) lowers PPL but changes steps/epoch — confounds LR schedule vs V6. **B=6 transformer baseline now available** for apples-to-apples when PAM uses B=6. |
+| 2026-05 | **Transformer B=18** baseline (same arch/pipeline, `--batch_size 18`) | Val **22.69** @10e — **matched steps/epoch** to V7 7d B=18 (3213 batches/epoch). ~206k tok/s. Log: `logs/v6/transformer_baseline_wikitext103_20260512_063754_387b2a5/`; commit `387b2a5`; ckpt `checkpoints_transformer_baseline_b18_wt103`. |
+| 2026-03 | **7d** ModSwish + chunked dual form (`C=256`), `medium_h16_flat`, B=6, commit `7555c93` | Val **27.94** @10e, beating 7a by **1.79 PPL** while raising throughput to **31.8k tok/s**. Still behind transformer B=6 **23.13** and **B=18** **22.69**. Log: `logs/v7/exp7d_chunked_b6_wikitext103_20260330_172839_7555c93/`. |
+| 2026-05 | **7d redo** ModSwish + chunked `C=256`, `medium_h16_flat`, **B=18**, `--compile`, commit `fad662a` (dirty) | Val **26.88** @10e — **−1.06** vs Mar **7d B=6** (**27.94**), **−2.85** vs **7a** (**29.73**); **beats transformer B=3** (**27.08**) and **B=6** (**23.13**); still **+4.19** vs **transformer B=18** (**22.69**). ~**22.0k tok/s** avg, ~14.7h, ~62.6 GB peak. Quality ep10: `rep3=0.031`, `rep4=0.010`, `uniq=0.687`. Log dir uses script slug `exp7d_chunked_b6_*` but **batch was 18**: `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/`. |
+| — | Hygiene | Use **B=3** + **no grad ckpt** for V6/transformer apples-to-apples. **B=6** + ckpt (3a-A) lowers PPL but changes steps/epoch — confounds LR schedule vs V6. **B=6** and **B=18** transformer baselines exist for apples-to-apples when PAM uses the same batch (6 or 18). |
 | 2026-04 | **7f-0** Grouped hierarchy + multi-scale loss (confounded), B=3, commit `136f914` | Val **31.29** @10e — regression vs 7a (**29.73**). Two variables changed; cannot isolate. Log: `logs/v7/exp7f_multiscale_wikitext103_20260402_173535_136f914_dirty/`. |
 | 2026-04 | **7f-1** Multi-scale loss ONLY on flat baseline, B=3, `--compile`, commit `ecb4b56` | Val **30.55** @10e — multi-scale loss **hurts** (+0.82 vs 7a). Aux heads don't help; multi-target training noise is counterproductive. Log: `logs/v7/exp7f1_multiscale_flat_wikitext103_20260403_124050_ecb4b56/`. |
 | 2026-04 | **7f-2** Reverse association ONLY (`rev_scale` per layer, default on), flat baseline, B=3, chunk C=256, `--compile`, commit `7f52bcf` | Val **32.19** @10e — **hurts** (+2.46 vs 7a **29.73**; +1.64 vs 7f-1 **30.55**; near **L1 32.09**). ~27.5k tok/s, ~12.3h wall. Log: `logs/v7/exp7f2_reverse_assoc_wikitext103_20260417_124743_7f52bcf/`. |
@@ -72,7 +73,7 @@ Each V7Block:
 | 2026-04 | **V9 gate-MLP + reverse assoc** `medium_h16_gate_mlp_revassoc_100m` (101.1M), B=3, `pam_gate_hidden=368`, commit `133e208` (dirty) | Weak through epoch 5: Val **34.11** vs V9 gate **33.11**, 7a **33.60**, V6 **33.82** at the same epoch. Generation quality clean (`rep3=0.000`, `rep4=0.000`, `uniq=0.796`) but PPL trails; **stop recommended**. Next clean test: simple linear gate + reverse-assoc at ~100M (`gate_revassoc_100m`). See [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#2026-04-27-v9-gate-mlp--reverse-assoc-post-compete-pivot). |
 | 2026-04 | **V9 gate + reverse assoc, parameter-matched** `medium_h16_gate_revassoc_100m` (100.5M), B=3, commit `2fe5c9a` | Val **30.53** @10e — fails to reproduce V9 confounded gate **29.57** and trails 7a **29.73** / V6 **29.95**. Confirms the 29.57 result should remain caveated as full-width/capacity-confounded. Next/last V9 micro-ablation: `gate_conv4_100m --epochs 3`; if weak, move to PAM memory dynamics (per-channel decay). See [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#2026-04-28-v9-gate--reverse-assoc-parameter-matched-final). |
 
-> **Best logged flat V7 val PPL (WikiText-103, ~100M):** **26.88** @10e — **7d B=18** rerun (May 2026, `fad662a` dirty); **below** transformer B=3 (**27.08**); still above transformer B=6 (**23.13**). Fewer steps/epoch than B=3 runs (3213 vs 19277) — LR schedule not directly comparable to **7a**.
+> **Best logged flat V7 val PPL (WikiText-103, ~100M):** **26.88** @10e — **7d B=18** rerun (May 2026, `fad662a` dirty); **below** transformer B=3 (**27.08**) and B=6 (**23.13**); still **+4.19** vs **transformer B=18** (**22.69**, matched batch / steps per epoch). Fewer steps/epoch than B=3 runs (3213 vs 19277) — LR schedule not directly comparable to **7a**.
 > **V9 `gate` (confounded)** — **29.57 PPL** — prior cross-version headline under +params / reverse-assoc caveats. See [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27). Zero-param competition, 2-layer gate-MLP, and parameter-matched gate+reverse-assoc did not beat the flat V7 trajectory on strict readouts.
 
 ---
@@ -593,7 +594,7 @@ Same preset/hyperparameters as 7a (ModSwish, medium_h16_flat, B=3, no grad ckpt)
 
 ### Experiment 7d: Chunked + B=6 (exploit memory savings)
 
-Chunked dual form frees ~600 MB of peak intermediates per layer. This should allow B=6 without gradient checkpointing. Exp 3a-A (B=6 with grad ckpt) reached val PPL **26.6** at epoch 9. The transformer B=6 baseline reaches **23.13** at epoch 10 (see Learnings log). If 7d approaches or beats the transformer B=6 baseline, it validates both the chunking optimization and the batch size finding.
+Chunked dual form frees ~600 MB of peak intermediates per layer. This should allow B=6 without gradient checkpointing. Exp 3a-A (B=6 with grad ckpt) reached val PPL **26.6** at epoch 9. The transformer B=6 baseline reaches **23.13** at epoch 10; **transformer B=18** reaches **22.69** (May 2026, same steps/epoch as PAM B=18). If 7d approaches or beats the **B=18** transformer anchor, it validates the stack at matched training geometry.
 
 **Status**: **Done**. B=6 fits without gradient checkpointing, but quality does **not** match the earlier 3a-A checkpointed run.
 
@@ -623,10 +624,11 @@ Chunked dual form frees ~600 MB of peak intermediates per layer. This should all
 - vs **7a**: **29.73 -> 27.94** (**+6.0%** relative PPL improvement), **23.2k -> 31.8k tok/s** (**+36.7%** throughput)
 - vs **Transformer B=3**: **27.94 vs 27.08** (close, but still behind)
 - vs **Transformer B=6**: **27.94 vs 23.13** (still a clear gap)
+- vs **Transformer B=18** (May 2026, matched steps/epoch to B=18 PAM): **27.94 vs 22.69**
 
 ### Experiment 7d: May 2026 rerun — chunked, **B=18** (larger batch)
 
-**Motivation:** Same 7d recipe (ModSwish, `medium_h16_flat`, `chunk_size=256`, no grad checkpointing, `--compile`) with **batch size 18** on a high-VRAM host to push val PPL and revisit the transformer B=3 gate.
+**Motivation:** Same 7d recipe (ModSwish, `medium_h16_flat`, `chunk_size=256`, no grad checkpointing, `--compile`) with **batch size 18** on a high-VRAM host to push val PPL and compare to the **transformer B=18** anchor (**22.69**, May 2026).
 
 **Log directory** (`make_log_dir` uses the `exp7d_chunked_b6` script slug): `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/v7_medium_h16_flat_wikitext103.log`
 
@@ -647,7 +649,7 @@ Chunked dual form frees ~600 MB of peak intermediates per layer. This should all
 | 9 | 25.59 | 26.92 | *best* |
 | 10 | 25.24 | **26.88** | *best* |
 
-**Run summary:** Best val **26.88** (beats Mar 2026 **7d B=6** at **27.94**). **Below** rollup transformer **B=3** val **27.08**; **above** transformer **B=6** **23.13**. Generation (epoch 10): `rep3=0.031`, `rep4=0.010`, `restarts=0`, `uniq=0.687`.
+**Run summary:** Best val **26.88** (beats Mar 2026 **7d B=6** at **27.94**). **Below** rollup transformer **B=3** val **27.08** and **B=6** **23.13**; **+4.19** vs **transformer B=18** **22.69** (matched batch / 3213 steps/epoch). Generation (epoch 10): `rep3=0.031`, `rep4=0.010`, `restarts=0`, `uniq=0.687`.
 
 ### Experiment 7e: Soft unitary regularization
 
@@ -878,6 +880,7 @@ Quality: rep3=0.020, rep4=0.000, restarts=0, uniq=0.590. Coherent sentence struc
 | V7 7a (CGU + PAM) | ~100M | 29.73 | 20.9k | ~11 GB |
 | Lean PAM (FFN + PAM) | 86.2M | 32.09 | 34.7k | 1.7 GB |
 | Transformer B=3 | ~100M | 27.08 | ~96k | ~3 GB |
+| Transformer B=18 | ~100M | 22.69 | ~206k | — |
 
 ### Experiment L2: Lean PAM + Unitary Regularization
 

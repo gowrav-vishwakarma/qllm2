@@ -2,7 +2,7 @@
 
 Everything we know from V4-V9 experiments, the APS paper scaling laws, and the codebase architecture — distilled into a single document so we always know where we are and what to do next.
 
-*Created: 2026-05-08. Source: deep analysis of EXPERIMENTS_V_6_7_8_9.md, v7/EXPERIMENTS_V7.md, v9/EXPERIMENTS_V9.md, v8/EXPERIMENTS_V8.md, v8/AUDIT_V8.md, EXPERIMENTS_V6_PART2.md, v6/paper/aps_main.tex, v5/EXPERIMENTS.md, v5/model.py, v7/model.py, v6/model_real.py.*
+*Created: 2026-05-08. Source: deep analysis of EXPERIMENTS_V_6_7_8_9.md, v7/EXPERIMENTS_V7.md, v9/EXPERIMENTS_V9.md, v8/EXPERIMENTS_V8.md, v8/AUDIT_V8.md, EXPERIMENTS_V6_PART2.md, v6/paper/aps_main.tex, v5/EXPERIMENTS.md, v5/model.py, v7/model.py, v6/model_real.py. **2026-05-12:** Transformer baseline **B=18** on WikiText-103 — val PPL **22.69** @10 (`387b2a5`), log `logs/v6/transformer_baseline_wikitext103_20260512_063754_387b2a5/` — **matched-batch / matched-steps anchor** for V7 7d B=18 (3213 batches/epoch).*
 
 ---
 
@@ -75,21 +75,23 @@ Each V7Block:
 
 | Rank | Run | Val PPL | Batch | tok/s | Params | Wall Time | Notes |
 |------|-----|---------|-------|-------|--------|-----------|-------|
-| 1 | **Transformer B=6** | **23.13** | 6 | ~99k | ~100.3M | ~3.2h | Flash Attention / SDPA |
-| 2 | **V7 3a-A (ModReLU, B=6, ckpt)** | **26.64** | 6 | ~18.8k | ~100M | — | **Beat transformer B=3!** Confounded: B=6 + grad ckpt, 9ep, overfitting |
-| 3 | **Transformer B=3** | **27.08** | 3 | ~96k | ~100.3M | ~3.5h | Flash Attention / SDPA |
-| 4 | **V7 7d (ModSwish, chunked B=6)** | **27.94** | 6 | 31.8k | ~100M | 10.7h | Best clean PAM run |
-| 5 | V9 gate (confounded) | 29.57 | 3 | ~27.3k | 105.1M | 12.2h | +5M params, reverse_assoc inherited |
-| 6 | V7 7a (ModSwish, B=3) | 29.73 | 3 | ~20.9k | ~100M | — | Cleanest PAM-only baseline |
-| 7 | V6 medium-pam-v3 | 29.95 | 3 | ~23k | ~100.4M | ~14.1h | Interleaved CGU+PAM, RoPE |
-| 8 | V6 PIA (PAM + attention) | 30.01 | 3 | — | ~105.1M | — | Hybrid attention — no improvement |
-| 9 | V7 3a-B (ModReLU, B=3) | 30.40 | 3 | — | ~100M | — | ModReLU baseline at B=3 |
-| 10 | V9 gate_revassoc_100m (param-matched) | 30.53 | 3 | ~25.6k | 100.5M | — | Clean gate — negative result |
-| 11 | V7 7f-0 (grouped + multi-scale) | 31.29 | 3 | — | ~100M | — | Regressed vs 7a |
-| 12 | V7 7f-1 (multi-scale loss) | 30.55 | 3 | ~20.3k | ~100M | ~16.4h | Multi-scale hurts |
-| 13 | V7 Lean L1 (no CGU) | 32.09 | 3 | 34.7k | 86.2M | 9.7h | CGU worth ~2.4 PPL |
-| 14 | V7 7f-2 (reverse-assoc) | 32.19 | 3 | ~27.5k | ~100M | ~12.3h | Reverse-assoc hurts |
-| 15 | V9 gate_mlp_revassoc_100m | 34.11 | 3 | — | 101.1M | — | 2-layer gate MLP — negative |
+| 1 | **Transformer B=18** | **22.69** | 18 | ~206k | ~100.3M | ~15.9h | Flash SDPA; **same steps/epoch as V7 7d B=18**; May 2026 |
+| 2 | **Transformer B=6** | **23.13** | 6 | ~99k | ~100.3M | ~3.2h | Flash Attention / SDPA |
+| 3 | **V7 7d B=18** (chunked, May 2026) | **26.88** | 18 | ~22k | ~100M | ~14.7h | **+4.19 vs transformer B=18**; `fad662a` dirty |
+| 4 | **V7 3a-A (ModReLU, B=6, ckpt)** | **26.64** | 6 | ~18.8k | ~100M | — | **Beat transformer B=3!** Confounded: B=6 + grad ckpt, 9ep, overfitting |
+| 5 | **Transformer B=3** | **27.08** | 3 | ~96k | ~100.3M | ~3.5h | Flash Attention / SDPA |
+| 6 | **V7 7d (ModSwish, chunked B=6)** | **27.94** | 6 | 31.8k | ~100M | 10.7h | Best clean PAM run at B=6 |
+| 7 | V9 gate (confounded) | 29.57 | 3 | ~27.3k | 105.1M | 12.2h | +5M params, reverse_assoc inherited |
+| 8 | V7 7a (ModSwish, B=3) | 29.73 | 3 | ~20.9k | ~100M | — | Cleanest PAM-only baseline |
+| 9 | V6 medium-pam-v3 | 29.95 | 3 | ~23k | ~100.4M | ~14.1h | Interleaved CGU+PAM, RoPE |
+| 10 | V6 PIA (PAM + attention) | 30.01 | 3 | — | ~105.1M | — | Hybrid attention — no improvement |
+| 11 | V7 3a-B (ModReLU, B=3) | 30.40 | 3 | — | ~100M | — | ModReLU baseline at B=3 |
+| 12 | V9 gate_revassoc_100m (param-matched) | 30.53 | 3 | ~25.6k | 100.5M | — | Clean gate — negative result |
+| 13 | V7 7f-0 (grouped + multi-scale) | 31.29 | 3 | — | ~100M | — | Regressed vs 7a |
+| 14 | V7 7f-1 (multi-scale loss) | 30.55 | 3 | ~20.3k | ~100M | ~16.4h | Multi-scale hurts |
+| 15 | V7 Lean L1 (no CGU) | 32.09 | 3 | 34.7k | 86.2M | 9.7h | CGU worth ~2.4 PPL |
+| 16 | V7 7f-2 (reverse-assoc) | 32.19 | 3 | ~27.5k | ~100M | ~12.3h | Reverse-assoc hurts |
+| 17 | V9 gate_mlp_revassoc_100m | 34.11 | 3 | — | 101.1M | — | 2-layer gate MLP — negative |
 
 ### V7 3a-A Epoch Curve (the 26.64 run)
 
@@ -200,8 +202,10 @@ This is 4 matmuls for score + 4 matmuls for output, all on the same T x T tile. 
 
 | Model | tok/s | Val PPL | VRAM | Why this speed |
 |-------|-------|---------|------|----------------|
+| Transformer B=18 | ~206k | 22.69 | — | Flash SDPA; May 2026; 3213 steps/epoch |
 | Transformer B=3 | ~96k | 27.08 | ~1.8/7.0 GB | Flash Attention / SDPA |
 | Transformer B=6 | ~99k | 23.13 | ~2.5/12.7 GB | Flash Attention / SDPA |
+| V7 7d B=18 (chunked) | ~22k | 26.88 | ~62.6 GB | Pure PyTorch; May 2026 |
 | V7 7d (chunked B=6) | 31.8k | 27.94 | 23.2 GB | Pure PyTorch, chunked C=256 |
 | V9 gate (B=3) | ~27.3k | 29.57 | — | Pure PyTorch + gate overhead |
 | V7 7a (B=3) | ~20.9k | 29.73 | ~11 GB | Pure PyTorch, full T^2 |
@@ -261,7 +265,8 @@ Real-valued activations **destroy phase** in complex representations. ModReLU wa
 - **ModSwish > ModReLU at B=3** (29.73 vs 30.4) — smooth activation compounds over depth
 - **B=6** gives ~14% PPL improvement (mirrors transformer B=3 vs B=6 pattern)
 - **Chunked dual form** (C=256) enables B=6 without grad checkpointing + higher throughput (20.9k -> 31.8k tok/s)
-- **3a-A (26.64)** beat transformer B=3 (27.08) — PAM CAN win
+- **3a-A (26.64)** beat transformer B=3 (27.08) — PAM CAN win at mismatched batch (B=6 + ckpt vs T B=3)
+- **V7 7d B=18 (26.88)** vs **transformer B=18 (22.69)** — matched geometry; **+4.19 PPL** gap remains
 - **CGU** worth ~2.4 PPL (lean PAM 32.09 vs full 29.73)
 - **Code fixes from V6:** ComplexLinear init scale (14x magnitude fix), CGU residual scale, CGU dropout, `_init_weights` pass, removed extra `final_norm`
 

@@ -386,7 +386,7 @@ definitive test against the §9.2 acceptance criteria.
 ## 7. The bar for "V8 wins"
 
 - **Win**: `V8-E-joint ≤ 23.13 PPL` on WikiText-103, 10 epochs, ≤105M params
-  (beats both QPAM 29.95 and the Transformer B=6 baseline 23.13). Bonus:
+  (beats both QPAM 29.95 and the Transformer B=6 baseline 23.13). **Stricter (B=18 schedule):** beat transformer **B=18** at **22.69** ([EXPERIMENTS_V6_PART2](../EXPERIMENTS_V6_PART2.md) §0). Bonus:
   factuality probe accuracy +5 pts over QPAM.
 - **Soft win**: `V8-D-T4 ≥ V8-B by ≥ 3 PPL`, mean iterations >1, and
   `orthohalt_off` regresses → the algebra is doing real work even if absolute
