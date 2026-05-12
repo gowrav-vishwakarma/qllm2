@@ -1194,6 +1194,9 @@ class DiffusionTrainer:
         self.gen_every = 0
         self.sample_dir = None
         self.log_interval = 50
+        # Phase 0 diagnostics: per-batch pred/target norms + per-t MSE buckets.
+        # Off by default (zero overhead). Enabled by --log_diff_diagnostics.
+        self.log_diff_diagnostics = False
 
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
@@ -1249,6 +1252,28 @@ class DiffusionTrainer:
         ) * progress
         return max(div_w, self.config.diversity_loss_floor)
 
+    @torch.no_grad()
+    def _format_diff_diagnostics(self, output, x) -> str:
+        """Compact pred/target norm summary for one batch.
+
+        Aimed at the §11 collapse signature in EXPERIMENTS_V6_DIFFUSION.md:
+        tiny diff_loss with very small pred_norm = predicted-x0 magnitude
+        collapse, not real denoising. Cheap (a few .norm() calls).
+        """
+        try:
+            pred = output.predicted.float()
+            pred_norm = pred.flatten(1).norm(dim=1).mean().item()
+            target_str = ""
+            model = self.model._orig_mod if hasattr(self.model, '_orig_mod') else self.model
+            if hasattr(model, '_encode'):
+                z0 = model._encode(x).float()
+                target_norm = z0.flatten(1).norm(dim=1).mean().item()
+                ratio = pred_norm / max(target_norm, 1e-8)
+                target_str = f" tgt={target_norm:.3f} ratio={ratio:.3f}"
+            return f"| pred={pred_norm:.3f}{target_str}"
+        except Exception:
+            return ""
+
     def train_epoch(self, epoch: int) -> Dict[str, float]:
         self.model.train()
         total_loss = 0.0
@@ -1267,8 +1292,12 @@ class DiffusionTrainer:
                                     dtype=self.amp_dtype or torch.float16):
                 output = self.model(x)
                 loss = output.loss
+                # None when the active backbone preset has no diversity term
+                # (e.g. medium-pam-v3 single-bank). We surface this honestly
+                # in the log instead of printing 0.0 as a fake metric.
+                has_div = output.diversity_loss is not None
                 div_loss_val = 0.0
-                if output.diversity_loss is not None:
+                if has_div:
                     div_w = self._diversity_weight()
                     div_loss = output.diversity_loss * div_w
                     loss = loss + div_loss
@@ -1312,12 +1341,17 @@ class DiffusionTrainer:
                 pct = 100.0 * (batch_idx + 1) / n_total
                 remaining = elapsed / (batch_idx + 1) * (n_total - batch_idx - 1) if batch_idx > 0 else 0
                 eta_m, eta_s = divmod(int(remaining), 60)
+                div_str = f"div={div_loss_val:.2e}" if has_div else "div=n/a"
+                diag_str = ""
+                if self.log_diff_diagnostics and output.predicted is not None:
+                    diag_str = " " + self._format_diff_diagnostics(output, x)
                 print(
                     f"  [{epoch+1}] {batch_idx}/{n_total} ({pct:.0f}%) "
                     f"diff_loss={output.loss.item():.4f} "
-                    f"div={div_loss_val:.2e} lr={lr:.2e} "
+                    f"{div_str} lr={lr:.2e} "
                     f"| {samples_per_sec:.1f} samples/s "
                     f"ETA {eta_m}m{eta_s:02d}s"
+                    f"{diag_str}"
                 )
 
             if (self.gen_every > 0 and batch_idx > 0
@@ -1326,9 +1360,10 @@ class DiffusionTrainer:
                 lr = self.scheduler.get_last_lr()[0]
                 elapsed = time.time() - epoch_start
                 samples_per_sec = (batch_idx + 1) * self.config.batch_size / elapsed if elapsed > 0 else 0
+                div_str = f"div={div_loss_val:.2e}" if has_div else "div=n/a"
                 _gen_msg = (
                     f"**[gen_every]** Diffusion Epoch {epoch+1} batch {batch_idx}\n"
-                    f"diff_loss={output.loss.item():.4f} div={div_loss_val:.2e} lr={lr:.2e} | {samples_per_sec:.1f} samples/s\n"
+                    f"diff_loss={output.loss.item():.4f} {div_str} lr={lr:.2e} | {samples_per_sec:.1f} samples/s\n"
                 )
                 if gen_text:
                     _gen_msg += f"Generated: {(gen_text[:800] + '...') if len(gen_text) > 800 else gen_text}"
@@ -1621,6 +1656,8 @@ def main():
                         choices=['patch', 'fft'])
     parser.add_argument('--patch_size', type=int, default=8)
     parser.add_argument('--image_dataset', type=str, default='tiny_imagenet')
+    parser.add_argument('--log_diff_diagnostics', action='store_true',
+                        help='Diffusion only: log pred/target norms per --log_interval batch')
 
     args = parser.parse_args()
 
@@ -1923,6 +1960,7 @@ def main():
         )
         trainer.gen_every = args.gen_every
         trainer.log_interval = args.log_interval
+        trainer.log_diff_diagnostics = bool(args.log_diff_diagnostics)
         if config.mode == 'diffusion_image':
             sample_dir = Path(args.log_dir) / 'v6' / 'samples'
             sample_dir.mkdir(parents=True, exist_ok=True)

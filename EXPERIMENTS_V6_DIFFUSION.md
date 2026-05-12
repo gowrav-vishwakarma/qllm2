@@ -4,6 +4,7 @@ Structured log of architecture decisions, implementation details, and smoke test
 
 **Branch**: `diffusion` (off `master`)
 **Date started**: 2026-03-09
+**Continuation (Part 2, from 2026-05-12)**: [EXPERIMENTS_V6_DIFFUSION_PART2.md](EXPERIMENTS_V6_DIFFUSION_PART2.md) — restart on RTX Pro 6000, Phase 0 observability, Phase H hardware profiles, Phase 1 V6-native evolutions.
 
 ---
 
