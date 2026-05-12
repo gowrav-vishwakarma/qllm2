@@ -669,7 +669,8 @@ def main():
     log_mode = 'a' if args.resume else 'w'
     tee = TeeLogger(log_path, mode=log_mode)
     sys.stdout = tee
-    print(f"Wall clock start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    wall_clock_start = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f"Wall clock start: {wall_clock_start}")
     print("=" * 60)
     print(f"  {model_label}: Phase-Associative Memory Language Model")
     print(f"  Preset: {args.preset} | Dataset: {args.dataset}")
@@ -824,17 +825,115 @@ def main():
         trainer.best_val_loss = checkpoint.get('best_val_loss', float('inf'))
         trainer.best_val_ppl = checkpoint.get('best_val_ppl', float('inf'))
 
-    _summary_lines = [
-        f"Model: {model_label} | Preset: {args.preset} | Dataset: {args.dataset}",
-        f"Config: dim={cfg.dim} layers={cfg.n_layers} heads={cfg.n_heads} "
-        f"head_dim={cfg.head_dim} expand={cfg.expand}",
-        f"Params: {params['total']:,} ({params['total']/1e6:.1f}M)",
-        f"seq_len={cfg.max_seq_len} batch_size={args.batch_size} epochs={args.epochs}",
-        f"lr={args.lr} warmup={args.warmup_steps} wd={args.weight_decay}",
-        f"AMP: {args.amp_dtype} Compile: {args.compile}",
-        f"Train batches: {len(train_loader)}, Val batches: {len(val_loader)}",
-        f"Host: {os.uname().nodename}",
-    ]
+    _sep = "=" * 60
+    _summary_lines: List[str] = []
+    _sl = _summary_lines.append
+
+    if args.resume:
+        _sl(
+            f"--- Resumed from {args.resume} at "
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---"
+        )
+
+    _sl(f"Wall clock start: {wall_clock_start}")
+    _sl(_sep)
+    _sl(f"{model_label}: Phase-Associative Memory Language Model")
+    _sl(_sep)
+    _sl(f"Host: {os.uname().nodename}")
+    _sl(f"Preset: {args.preset} | Dataset: {args.dataset}")
+    _sl(f"Complex dim: {cfg.dim} (= {cfg.dim * 2} real values/position)")
+    _sl(f"Layers: {cfg.n_layers}")
+
+    if use_lean:
+        _sl("Architecture: Lean PAM (no CGU interleave; SimpleComplexFFN path)")
+        _sl(
+            f"PAM: heads={cfg.n_heads}, head_dim={cfg.head_dim} | "
+            f"FFN expand={cfg.expand}"
+        )
+        _sl("RoPE: ENABLED | GSP: ENABLED | fused QKV: ENABLED (lean fixed)")
+        _sl(f"Chunk size (PAM dual): {cfg.chunk_size}")
+        _sl(
+            f"Grad checkpointing: {'ENABLED' if cfg.gradient_checkpointing else 'DISABLED'}"
+        )
+        _sl(f"Soft state norm: {cfg.soft_state_norm}")
+        _sl(f"Head diversity lambda: {cfg.head_diversity_lambda}")
+    else:
+        _sl(f"Feature: [CGU -> PAM] x{cfg.n_layers} (flat stack)")
+        _sl(f"CGU expand: {cfg.expand}")
+        _sl(f"PAM: heads={cfg.n_heads}, head_dim={cfg.head_dim}")
+        _sl(f"RoPE: {'ENABLED' if cfg.use_rope else 'DISABLED'}")
+        _sl(f"GSP: {'ENABLED' if cfg.use_gsp else 'DISABLED'}")
+        _sl(f"fused QKV: {'ENABLED' if cfg.fused_qkv else 'DISABLED'}")
+        _sl(f"QK norm: {'ENABLED' if cfg.qk_norm else 'DISABLED'}")
+        if cfg.chunk_size > 0:
+            _sl(f"Chunk size (PAM dual): {cfg.chunk_size}")
+        else:
+            _sl("Chunk size (PAM dual): 0 (full T^2 dual form)")
+        if cfg.hierarchical_dt:
+            if cfg.dt_bias_schedule is not None:
+                _sl(
+                    f"Hierarchical dt: True "
+                    f"(explicit schedule, len={len(cfg.dt_bias_schedule)})"
+                )
+            else:
+                _sl("Hierarchical dt: True (auto-generated schedule)")
+        else:
+            _sl("Hierarchical dt: False (uniform dt_bias=-4.0)")
+        _sl(f"Cross-level drift: {'ENABLED' if cfg.cross_level else 'DISABLED'}")
+        _sl(
+            f"Grad checkpointing: "
+            f"{'ENABLED' if cfg.gradient_checkpointing else 'DISABLED'}"
+        )
+        _sl(f"Activation (CGU): {cfg.activation}")
+        _sl(
+            f"Reverse association (PAM dual): "
+            f"{'ENABLED' if cfg.use_reverse_assoc else 'DISABLED'}"
+        )
+        if cfg.multi_scale_loss:
+            _sl(
+                "Multi-scale aux loss: ENABLED "
+                f"(weight={cfg.aux_loss_weight}, stride={cfg.aux_layer_stride}, "
+                f"max_aux_offset={cfg.max_aux_offset})"
+            )
+        else:
+            _sl("Multi-scale aux loss: DISABLED")
+        _sl(f"Tied embeddings: {cfg.tie_weights}")
+
+    _sl(f"Epochs: {args.epochs}")
+    _sl(
+        f"LR: {args.lr} | warmup_steps={args.warmup_steps} | "
+        f"wd={args.weight_decay} | grad_clip={args.gradient_clip} | "
+        f"dropout={cfg.dropout}"
+    )
+
+    _tf32 = bool(torch.cuda.is_available())
+    _compile_tail = (
+        f" (mode={args.compile_mode})" if args.compile else ""
+    )
+    _sl(
+        f"AMP: {args.amp_dtype}, TF32: {_tf32}, "
+        f"Compile: {args.compile}{_compile_tail}"
+    )
+    _sl(f"Workers: {nw}, Pin memory: {use_cuda}")
+    _sl(f"Batch log interval: {args.log_interval}")
+    _sl(f"Gen every: {args.gen_every}")
+    _sl(f"Log file: {log_path.resolve()}")
+    _sl(f"Checkpoint dir: {Path(args.checkpoint_dir).resolve()}")
+    if args.unitary_lambda > 0:
+        _sl(f"Unitary lambda: {args.unitary_lambda}")
+    _sl(_sep)
+    _sl(f"Seed: {args.seed}")
+    _sl(f"Params: {params['total']:,} ({params['total']/1e6:.1f}M)")
+    _sl(
+        f"Training on {trainer.device} | "
+        f"Epochs: {trainer.start_epoch + 1}..{trainer.max_epochs} | "
+        f"Batches/epoch: {len(train_loader)} | "
+        f"Batch size: {args.batch_size}"
+    )
+    _sl(
+        f"Val batches: {len(val_loader)} | "
+        f"seq_len={cfg.max_seq_len}"
+    )
     _discord_header = f"**{model_label} Training started**" if not args.resume else f"**{model_label} Training resumed**"
     _notify_discord_long(
         _discord_header + "\n```\n" + "\n".join(_summary_lines) + "\n```"

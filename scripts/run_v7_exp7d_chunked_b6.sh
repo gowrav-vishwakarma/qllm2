@@ -16,6 +16,7 @@
 #   ./scripts/run_v7_exp7d_chunked_b6.sh
 #   ./scripts/run_v7_exp7d_chunked_b6.sh --epochs 3          # quick test
 #   ./scripts/run_v7_exp7d_chunked_b6.sh --batch_size 4      # if OOM with B=6
+#   ./scripts/run_v7_exp7d_chunked_b6.sh --activation modrelu # ModReLU instead of default ModSwish (swish)
 #   ./scripts/run_v7_exp7d_chunked_b6.sh --resume
 #   ./scripts/run_v7_exp7d_chunked_b6.sh --no-compile       # smoke / compare throughput vs torch.compile
 #   ./scripts/run_v7_exp7d_chunked_b6.sh --checkpoint_dir path  # isolate checkpoints (e.g. benchmarks)
@@ -41,6 +42,8 @@ CHUNK_SIZE=256
 RESUME=0
 NO_COMPILE=0
 CKPT_DIR="checkpoints_v7_exp7d_chunked_b6"
+# Default matches 7d recipe; override with --activation (see loop below)
+ACTIVATION="swish"
 EXTRA_ARGS=""
 
 while [[ $# -gt 0 ]]; do
@@ -51,16 +54,45 @@ while [[ $# -gt 0 ]]; do
         --chunk_size)     CHUNK_SIZE="$2";     shift 2 ;;
         --dataset)        DATASET="$2";        shift 2 ;;
         --checkpoint_dir) CKPT_DIR="$2";       shift 2 ;;
+        --activation)     ACTIVATION="$2";     shift 2 ;;
         --resume)         RESUME=1;            shift ;;
         --no-compile)     NO_COMPILE=1;        shift ;;
         *)                EXTRA_ARGS="$EXTRA_ARGS $1"; shift ;;
     esac
 done
 
+# --activation may appear only in EXTRA_ARGS (legacy unknown-flag usage). Last wins (same as argparse).
+# shellcheck disable=SC2206
+_extra_arr=(${EXTRA_ARGS})
+_new_extra=""
+_skip=0
+for (( _i = 0; _i < ${#_extra_arr[@]}; _i++ )); do
+    if [[ $_skip -eq 1 ]]; then _skip=0; continue; fi
+    if [[ ${_extra_arr[_i]} == "--activation" ]]; then
+        if [[ $((_i + 1)) -lt ${#_extra_arr[@]} ]]; then
+            ACTIVATION="${_extra_arr[_i + 1]}"
+            _skip=1
+            continue
+        fi
+    fi
+    _new_extra="$_new_extra ${_extra_arr[_i]}"
+done
+EXTRA_ARGS="${_new_extra# }"
+
+activation_label() {
+    case "$1" in
+        swish)     echo "ModSwish" ;;
+        modrelu)   echo "ModReLU" ;;
+        phase_mod) echo "PhaseMod" ;;
+        *)         echo "$1" ;;
+    esac
+}
+ACTIVATION_LABEL=$(activation_label "$ACTIVATION")
+
 GEN_PROMPT="In 1923 , the University of"
 LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
 
-BASE_ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --chunk_size $CHUNK_SIZE --max_samples 9999999 --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
+BASE_ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation $ACTIVATION --chunk_size $CHUNK_SIZE --max_samples 9999999 --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
 if [[ $NO_COMPILE -eq 1 ]]; then
     ARGS="$BASE_ARGS"
 else
@@ -94,15 +126,15 @@ if [[ $RESUME -eq 1 && -f "$CKPT_DIR/best_model.pt" ]]; then
     echo "[resume] Resuming from $CKPT_DIR/best_model.pt"
 fi
 
-RUN_DESC="V7 Exp7d (Chunked C=$CHUNK_SIZE, B=$BATCH_SIZE): dim=384 L=16 expand=3, PAM(H=6, d=64, flat dt=-4.0, RoPE, fused-QKV, GSP), activation=swish, chunk_size=$CHUNK_SIZE, LR=1e-4, warmup=1000"
+RUN_DESC="V7 Exp7d (Chunked C=$CHUNK_SIZE, B=$BATCH_SIZE): dim=384 L=16 expand=3, PAM(H=6, d=64, flat dt=-4.0, RoPE, fused-QKV, GSP), activation=$ACTIVATION, chunk_size=$CHUNK_SIZE, LR=1e-4, warmup=1000"
 RUN_ARGS_LINE="$ARGS --gen_prompt '$GEN_PROMPT' $RESUME_ARG $EXTRA_ARGS"
 
 echo ""
 echo "============================================================"
 echo "  V7 Experiment 7d: Chunked + B=$BATCH_SIZE ($PRESET, ~100M params)"
 echo "  16 layers, uniform dt_bias=-4.0, no cross-level drift"
-echo "  Activation: ModSwish, Chunk size: $CHUNK_SIZE"
-echo "  Architecture: [CGU(expand=3, swish) -> PAM(H=6, d=64, chunked)] x16 + GSP + RoPE"
+echo "  Activation: $ACTIVATION_LABEL ($ACTIVATION), Chunk size: $CHUNK_SIZE"
+echo "  Architecture: [CGU(expand=3, $ACTIVATION) -> PAM(H=6, d=64, chunked)] x16 + GSP + RoPE"
 echo "  dim=384  heads=6  LR=1e-4  warmup=1000"
 echo "  seq_len: $SEQ_LEN  batch_size: $BATCH_SIZE  epochs: $EPOCHS"
 if [[ $NO_COMPILE -eq 1 ]]; then
