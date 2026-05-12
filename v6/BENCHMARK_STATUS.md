@@ -7,9 +7,10 @@
 > [`v9/EXPERIMENTS_V9.md`](../v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27).
 > V9 follow-ups through 2026-04-28 (`compete_revassoc_100m`,
 > `gate_mlp_revassoc_100m`, and parameter-matched `gate_revassoc_100m`) did not
-> beat that result. The active remaining micro-ablation is short conv before QKV
-> (`gate_conv4_100m --epochs 3`); if weak, V9 should move to memory dynamics
-> such as per-channel decay.
+> beat that result. **`gate_conv4_100m`** was completed 2026-04-28 (3ep smoke + 10ep full;
+> best val PPL **30.02**) — **still not** competitive with V7 **7a** or **7d B=18**; **do not re-run**.
+> Active pivot: PAM **memory dynamics** (e.g. per-channel decay), not further
+> readout/local-conv sweeps without new evidence.
 > The V9 active research line tries to close the remaining ~2.5 PPL gap to
 > Transformer B=3 (27.08). **May 2026:** transformer **B=18** reaches **22.69**
 > val PPL (matched steps/epoch to V7 7d B=18); that is the tighter ceiling when

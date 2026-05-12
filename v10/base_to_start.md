@@ -2,31 +2,42 @@
 
 Everything we know from V4-V9 experiments, the APS paper scaling laws, and the codebase architecture — distilled into a single document so we always know where we are and what to do next.
 
-*Created: 2026-05-08. Source: deep analysis of EXPERIMENTS_V_6_7_8_9.md, v7/EXPERIMENTS_V7.md, v9/EXPERIMENTS_V9.md, v8/EXPERIMENTS_V8.md, v8/AUDIT_V8.md, EXPERIMENTS_V6_PART2.md, v6/paper/aps_main.tex, v5/EXPERIMENTS.md, v5/model.py, v7/model.py, v6/model_real.py. **2026-05-12:** Transformer baseline **B=18** on WikiText-103 — val PPL **22.69** @10 (`387b2a5`), log `logs/v6/transformer_baseline_wikitext103_20260512_063754_387b2a5/` — **matched-batch / matched-steps anchor** for V7 7d B=18 (3213 batches/epoch). **2026-05-12:** §0 **Pre-scaling checklist** added — run and log these ablations before Phase 3+ scaling.*
+*Created: 2026-05-08. Source: deep analysis of EXPERIMENTS_V_6_7_8_9.md, v7/EXPERIMENTS_V7.md, v9/EXPERIMENTS_V9.md, v8/EXPERIMENTS_V8.md, v8/AUDIT_V8.md, EXPERIMENTS_V6_PART2.md, v6/paper/aps_main.tex, v5/EXPERIMENTS.md, v5/model.py, v7/model.py, v6/model_real.py. **2026-05-12:** Transformer baseline **B=18** on WikiText-103 — val PPL **22.69** @10 (`387b2a5`), log `logs/v6/transformer_baseline_wikitext103_20260512_063754_387b2a5/` — **matched-batch / matched-steps anchor** for V7 7d B=18 (3213 batches/epoch). **2026-05-12:** §0 **Pre-scaling checklist** added — run and log these ablations before Phase 3+ scaling. **2026-05-12:** §0 reconciled to disk — **`gate_conv4_100m` already complete** (3ep + 10ep under `logs/v9/`); remaining items are memory dynamics, B=18 schedule/activation, Flash-PAM.*
 
 ---
 
 ## 0. Pre-scaling checklist (run and log before web-scale / 300M+)
 
-**Gate:** Do not start Phase 3+ in §10 until the high-priority items below are either **done** (with a row in the versioned experiment logs) or **explicitly deprioritized** with a one-line reason in the same log.
+**Gate:** Do not start Phase 3+ in §10 until the **high-priority open items** below are either **done** (with a row in the versioned experiment logs) or **explicitly deprioritized** with a one-line reason in the same log.
 
-These are not random combinations; they are the remaining gaps named in [v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md), §9 of this file, and the internal plan. **Log every run** in the appropriate file ([v7/EXPERIMENTS_V7.md](../v7/EXPERIMENTS_V7.md), [v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md), [EXPERIMENTS_V6_PART2.md](../EXPERIMENTS_V6_PART2.md) / transformer baseline section, or a new dated row in [EXPERIMENTS_V_6_7_8_9.md](../EXPERIMENTS_V_6_7_8_9.md)).
+**Log every new run** in the appropriate file ([v7/EXPERIMENTS_V7.md](../v7/EXPERIMENTS_V7.md), [v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md), [EXPERIMENTS_V6_PART2.md](../EXPERIMENTS_V6_PART2.md) / transformer baseline section, or [EXPERIMENTS_V_6_7_8_9.md](../EXPERIMENTS_V_6_7_8_9.md)).
 
-### Still worth trying (non-random)
+### Done on disk (do not re-run; cite these logs)
 
-- [ ] **V9 `gate_conv4_100m`** — short smoke (e.g. 3 epochs; V9 acceptance: epoch-3 val weak → stop). Command pattern: `bash ./scripts/run_v9_pam_upgrade.sh --variant gate_conv4_100m --epochs 3`.
-- [ ] **PAM memory dynamics** — **per-channel decay** (or similar); V9’s suggested pivot after readout/gate micro-ablations failed at ~100M.
-- [ ] **B=18–specific training** — warmup / peak LR / weight decay tuned for **~3213 steps/epoch** (not the B=3 schedule); see §9.3 and [v7/EXPERIMENTS_V7.md](../v7/EXPERIMENTS_V7.md) (7d B=18 vs 7a comparability).
-- [ ] **ModReLU vs ModSwish at B=18** — §9.1: the B=6 ModReLU story is confounded; B=18 is the matched-transformer regime.
-- [ ] **Engineering** — **Flash-PAM** / **fused CGU** (§10 Phase 1): raises tok/s so later ablations and scaling runs see more tokens per wall-clock.
+| Item | Verdict | Evidence |
+|------|---------|----------|
+| **V9 `gate_conv4_100m`** | Completed; **does not** beat clean **V7 7a** (**29.73**) or **May 2026 7d B=18** (**26.88**). Epoch-3 val **38.14** (full 10-ep run) is just above the old **≤38.0** extension bar, but the full run was continued: **best val PPL 30.02** @ ep10 (`logs/v9/pam_gate_conv4_100m_wikitext103_20260428_204606_b9af5d4/`). Smoke: 3 ep, best **38.61** @ ep3 — `logs/v9/pam_gate_conv4_100m_wikitext103_20260428_155538_1bd3cc5_dirty/`. | [v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md) (section *gate_conv4_100m — full result*). |
+| Other **V9** variants with logs under `logs/v9/` | `gate` (confounded), `gate_100m`, `gate_revassoc_100m`, `gate_mlp_revassoc_100m`, `compete_revassoc_100m` — all documented in [v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md). | — |
+
+### Not run / low priority (save time)
+
+| Item | Notes |
+|------|--------|
+| **`gate_qknorm_100m`** | **No `logs/v9/` run found.** Script variant exists. **High risk:** V6 **Bug 8** (QK-norm on PAM → repetition / mode collapse). Only consider if there is a strong hypothesis that **gate + qk_norm** avoids that path; otherwise **skip**. |
+| **`conv` / `gate_conv`** (dim **384** presets) | **No `logs/v9/` runs found.** Lower priority: the **~100M** `gate_conv4_100m` line already finished weak (**30.02**); full-width conv-only is unlikely to beat **7d B=18** without a new hypothesis. |
+
+### Still worth running (pre-scaling)
+
+- [ ] **PAM memory dynamics** — **per-channel decay** (or similar); **not** yet implemented/run in this repo as a headline experiment — V9’s pivot after readout tweaks ([v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md)).
+- [ ] **B=18–specific training** — warmup / peak LR / WD for **~3213 steps/epoch**; **7d B=18** used one schedule — a **dedicated** sweep or matched warmup to **7a** comparability is still a separate question.
+- [ ] **ModReLU vs ModSwish at B=18** — §9.1: best **7d B=18** run is **ModSwish**; **ModReLU @ B=18** not logged as a fat run (B=6 ModReLU story remains confounded).
+- [ ] **Engineering** — **Flash-PAM** / fuller **fused** PAM dual form (§10 Phase 1); V7 has partial Triton (`fused_cgu_gate`, decay helpers) — **not** a replacement for tiled Flash-PAM.
 
 ### B=18 priority order (cheap vs 500M runs)
 
-Ask whether the gap is **training geometry** before assuming the stack is “fundamentally broken”:
-
-1. [ ] **Schedule:** warmup steps + LR (+ WD if needed) aligned to **~3.2k steps/epoch × planned epochs**.
+1. [ ] **Schedule:** warmup + peak LR (+ WD) aligned to **~3.2k steps/epoch**.
 2. [ ] **Activation:** ModReLU vs ModSwish at **B=18**, same chunk/dataset otherwise.
-3. [ ] **Short LR sweep:** 2–3 peak LRs × ~3 epochs each at B=18 (chunked dual form).
+3. [ ] **Short LR sweep:** 2–3 peak LRs × ~3 epochs each at B=18.
 
 ---
 
@@ -337,7 +348,7 @@ Real-valued activations **destroy phase** in complex representations. ModReLU wa
 
 > "Small PAM readout gates/non-linearities are not closing the gap at ~100M."
 
-**Recommended next move (from V9 doc):** "Move to a real PAM memory-dynamics change, starting with per-channel decay." Also remaining smoke: `gate_conv4_100m --epochs 3` (short conv before QKV).
+**Recommended next move (from V9 doc):** "Move to a real PAM memory-dynamics change, starting with per-channel decay." **`gate_conv4_100m`** is **finished** on disk (best val **30.02** @10ep) — see [v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md). Optional untested V9 variant: `gate_qknorm_100m` (high Bug 8 risk).
 
 **Lesson:** The readout side of PAM is not the bottleneck. The next architectural change must target PAM's memory dynamics (how the state evolves), not how we read from it.
 
@@ -433,9 +444,9 @@ The V9 doc recommends this as the next real PAM memory-dynamics change. Currentl
 
 The canonical sweep used one LR for both PAM and SAM. ModSwish and ModReLU have different gradient dynamics. A short LR sweep at 100M could meaningfully improve PAM. The paper explicitly identifies this as a lever to push the crossover lower.
 
-### 9.4 Short Local Conv Before QKV (V9 gate_conv4_100m)
+### 9.4 Short Local Conv Before QKV (V9 `gate_conv4_100m`) — **done**
 
-Still pending as a smoke test. Causal depthwise conv before QKV projection — the idea is to give PAM "sharp local pattern capture" that V9 identified as missing. Continue only if epoch 3 <= 38.0.
+**Status (2026-04-28):** Smoke (3 ep) and full **10 ep** both exist under `logs/v9/`. Best val **30.02** @ ep10 — **does not** beat V7 **7a** (**29.73**) or **7d B=18** (**26.88**). Epoch-3 val in the 10-ep log **38.14** (slightly above the informal ≤38.0 extension bar). **Do not re-run**; details in [v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md).
 
 ---
 
