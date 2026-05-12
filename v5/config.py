@@ -98,6 +98,17 @@ def get_config(size: str = 'small') -> V5Config:
             num_banks=3, num_heads=12, bank_expand=2,
             batch_size=2, learning_rate=3e-5,
         ),
+        # ~100.9M params, no attention, for apples-to-apples vs transformer baseline
+        # and V6 medium-pam-v3 on WikiText-103. Matches their training protocol.
+        'medium-v5-100m': V5Config(
+            dim=288, state_dim=576, num_layers=16,
+            num_banks=2, num_heads=4, bank_expand=3,
+            attn_every_k=0,
+            max_seq_len=2048,
+            batch_size=3, learning_rate=1e-4,
+            warmup_steps=1000,
+            dropout=0.1,
+        ),
     }
     if size not in presets:
         raise ValueError(f"Unknown size: {size}. Available: {list(presets.keys())}")

@@ -418,6 +418,81 @@ def _random_dataset(vocab_size, seq_len, num_samples):
     return TextDataset(tokens, seq_len)
 
 
+_WIKITEXT_CACHE_VERSION = 1
+
+
+def load_wikitext103(
+    max_samples=None,
+    seq_len=512,
+    use_cache=True,
+    max_val_samples=None,
+    cache_dir='.cache/v5_tokens',
+):
+    """Load WikiText-103 for apples-to-apples comparison with V6/transformer baselines.
+
+    Uses HuggingFace wikitext/wikitext-103-raw-v1. Same GPT-2 tokenizer and
+    TextDataset chunking as TinyStories path.
+    """
+    from transformers import AutoTokenizer
+    tokenizer = AutoTokenizer.from_pretrained('gpt2')
+    tokenizer.pad_token = tokenizer.eos_token
+
+    limit_tag = f"ms{max_samples}" if max_samples else "full"
+    cache_tag = f"v{_WIKITEXT_CACHE_VERSION}_{limit_tag}_sl{seq_len}"
+
+    def _process_split(split_name, limit):
+        cache_path = Path(cache_dir) / f"wikitext103_{split_name}_{cache_tag}.pt"
+
+        if use_cache and cache_path.exists():
+            cached = torch.load(cache_path, weights_only=False)
+            tokens = cached['tokens']
+            print(f"[cache] Loaded WikiText-103 {split_name} from {cache_path} "
+                  f"({len(tokens):,} tokens)")
+            return tokens
+
+        from datasets import load_dataset
+        print(f"Loading WikiText-103 {split_name} (limit={limit})...")
+        ds = load_dataset('wikitext', 'wikitext-103-raw-v1', split=split_name)
+        lines = [item['text'] for item in ds]
+
+        if limit:
+            lines = lines[:limit]
+
+        all_tokens = []
+        chunk_size = 50000
+        for start in range(0, len(lines), chunk_size):
+            chunk_lines = lines[start:start + chunk_size]
+            chunk_text = '\n'.join(chunk_lines)
+            ids = tokenizer.encode(chunk_text, add_special_tokens=False)
+            all_tokens.extend(ids)
+
+        tokens = torch.tensor(all_tokens, dtype=torch.long)
+        print(f"  {split_name}: {len(lines)} lines, {len(tokens):,} tokens")
+
+        if use_cache:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            torch.save({'tokens': tokens,
+                        'cache_version': _WIKITEXT_CACHE_VERSION}, cache_path)
+            print(f"[cache] Saved {split_name} to {cache_path}")
+
+        return tokens
+
+    try:
+        train_tokens = _process_split('train', max_samples)
+        val_limit = max_val_samples or (max(max_samples // 10, 1000) if max_samples else None)
+        val_tokens = _process_split('validation', val_limit)
+    except Exception as e:
+        print(f"Failed to load WikiText-103: {e}")
+        print("Using random data as fallback.")
+        return (_random_dataset(50257, seq_len, 1000),
+                _random_dataset(50257, seq_len, 100), tokenizer)
+
+    train_ds = TextDataset(train_tokens, seq_len)
+    val_ds = TextDataset(val_tokens, seq_len)
+    print(f"Train chunks: {len(train_ds)}, Val chunks: {len(val_ds)}")
+    return train_ds, val_ds, tokenizer
+
+
 def resolve_amp_dtype(device: torch.device, requested: str) -> Optional[torch.dtype]:
     """Pick a CUDA autocast dtype that matches the local PyTorch/CUDA build."""
     if device.type != 'cuda':
@@ -941,7 +1016,10 @@ class Trainer:
 def main():
     parser = argparse.ArgumentParser(description='Train V5 Algebraic LM')
     parser.add_argument('--size', type=str, default='small',
-                        choices=['tiny', 'small', 'small-matched', 'medium', 'large'])
+                        choices=['tiny', 'small', 'small-matched', 'medium', 'large', 'medium-v5-100m'])
+    parser.add_argument('--dataset', type=str, default='tinystories',
+                        choices=['tinystories', 'wikitext103'],
+                        help='Training dataset (default: tinystories)')
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=None)
     parser.add_argument('--lr', type=float, default=None)
@@ -1061,6 +1139,7 @@ def main():
     print("V5 Algebraic Language Model")
     print("=" * 60)
     print(f"Size: {args.size}")
+    print(f"Dataset: {args.dataset}")
     print(f"Complex dim: {config.dim} (= {config.dim * 2} real values/position)")
     print(f"SSM state dim: {config.state_dim}")
     print(f"Layers: {config.num_layers}")
@@ -1092,15 +1171,24 @@ def main():
     print("=" * 60)
 
     # Load data
-    train_ds, val_ds, tokenizer = load_tinystories(
-        args.max_samples,
-        args.seq_len,
-        max_val_samples=args.max_val_samples,
-        tokenize_batch_size=args.tokenize_batch_size,
-        repair_text=not args.no_text_repair,
-        use_cache=not args.no_cache,
-        cache_dir=args.cache_dir,
-    )
+    if args.dataset == 'wikitext103':
+        train_ds, val_ds, tokenizer = load_wikitext103(
+            max_samples=args.max_samples if args.max_samples < 9999999 else None,
+            seq_len=args.seq_len,
+            use_cache=not args.no_cache,
+            max_val_samples=args.max_val_samples,
+            cache_dir=args.cache_dir,
+        )
+    else:
+        train_ds, val_ds, tokenizer = load_tinystories(
+            args.max_samples,
+            args.seq_len,
+            max_val_samples=args.max_val_samples,
+            tokenize_batch_size=args.tokenize_batch_size,
+            repair_text=not args.no_text_repair,
+            use_cache=not args.no_cache,
+            cache_dir=args.cache_dir,
+        )
 
     config.vocab_size = tokenizer.vocab_size
     config.max_seq_len = args.seq_len
