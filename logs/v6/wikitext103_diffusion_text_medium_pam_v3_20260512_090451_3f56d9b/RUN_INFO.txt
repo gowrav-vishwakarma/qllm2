@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V6 diffusion_text medium-pam-v3 on WikiText-103 (no WM/IM); DDPM 1000 cosine x0; hw=pro6000 compile=reduce-overhead workers=12
+Date (UTC)  : 2026-05-12 09:04:51
+Date (local): 2026-05-12 09:04:51 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1003-gcp x86_64
+
+Git commit  : 3f56d9bbc2d6ac804c1511974739b6cd2efe5901
+Git short   : 3f56d9b
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.25
+Arguments   : --dataset wikitext103 --size medium-pam-v3 --mode diffusion_text --seq_len 2048 --batch_size 18 --epochs 10 --max_samples 9999999 --diffusion_steps 1000 --noise_schedule cosine --prediction_target x0 --sampling_method ddpm --no_working_memory --no_internal_memory --init_seed 42 --gen_every 5000 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 12 --log_diff_diagnostics --gen_prompt 'In 1923 , the University of'  
+================================================================================
