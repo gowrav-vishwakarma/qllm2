@@ -2,7 +2,31 @@
 
 Everything we know from V4-V9 experiments, the APS paper scaling laws, and the codebase architecture — distilled into a single document so we always know where we are and what to do next.
 
-*Created: 2026-05-08. Source: deep analysis of EXPERIMENTS_V_6_7_8_9.md, v7/EXPERIMENTS_V7.md, v9/EXPERIMENTS_V9.md, v8/EXPERIMENTS_V8.md, v8/AUDIT_V8.md, EXPERIMENTS_V6_PART2.md, v6/paper/aps_main.tex, v5/EXPERIMENTS.md, v5/model.py, v7/model.py, v6/model_real.py. **2026-05-12:** Transformer baseline **B=18** on WikiText-103 — val PPL **22.69** @10 (`387b2a5`), log `logs/v6/transformer_baseline_wikitext103_20260512_063754_387b2a5/` — **matched-batch / matched-steps anchor** for V7 7d B=18 (3213 batches/epoch).*
+*Created: 2026-05-08. Source: deep analysis of EXPERIMENTS_V_6_7_8_9.md, v7/EXPERIMENTS_V7.md, v9/EXPERIMENTS_V9.md, v8/EXPERIMENTS_V8.md, v8/AUDIT_V8.md, EXPERIMENTS_V6_PART2.md, v6/paper/aps_main.tex, v5/EXPERIMENTS.md, v5/model.py, v7/model.py, v6/model_real.py. **2026-05-12:** Transformer baseline **B=18** on WikiText-103 — val PPL **22.69** @10 (`387b2a5`), log `logs/v6/transformer_baseline_wikitext103_20260512_063754_387b2a5/` — **matched-batch / matched-steps anchor** for V7 7d B=18 (3213 batches/epoch). **2026-05-12:** §0 **Pre-scaling checklist** added — run and log these ablations before Phase 3+ scaling.*
+
+---
+
+## 0. Pre-scaling checklist (run and log before web-scale / 300M+)
+
+**Gate:** Do not start Phase 3+ in §10 until the high-priority items below are either **done** (with a row in the versioned experiment logs) or **explicitly deprioritized** with a one-line reason in the same log.
+
+These are not random combinations; they are the remaining gaps named in [v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md), §9 of this file, and the internal plan. **Log every run** in the appropriate file ([v7/EXPERIMENTS_V7.md](../v7/EXPERIMENTS_V7.md), [v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md), [EXPERIMENTS_V6_PART2.md](../EXPERIMENTS_V6_PART2.md) / transformer baseline section, or a new dated row in [EXPERIMENTS_V_6_7_8_9.md](../EXPERIMENTS_V_6_7_8_9.md)).
+
+### Still worth trying (non-random)
+
+- [ ] **V9 `gate_conv4_100m`** — short smoke (e.g. 3 epochs; V9 acceptance: epoch-3 val weak → stop). Command pattern: `bash ./scripts/run_v9_pam_upgrade.sh --variant gate_conv4_100m --epochs 3`.
+- [ ] **PAM memory dynamics** — **per-channel decay** (or similar); V9’s suggested pivot after readout/gate micro-ablations failed at ~100M.
+- [ ] **B=18–specific training** — warmup / peak LR / weight decay tuned for **~3213 steps/epoch** (not the B=3 schedule); see §9.3 and [v7/EXPERIMENTS_V7.md](../v7/EXPERIMENTS_V7.md) (7d B=18 vs 7a comparability).
+- [ ] **ModReLU vs ModSwish at B=18** — §9.1: the B=6 ModReLU story is confounded; B=18 is the matched-transformer regime.
+- [ ] **Engineering** — **Flash-PAM** / **fused CGU** (§10 Phase 1): raises tok/s so later ablations and scaling runs see more tokens per wall-clock.
+
+### B=18 priority order (cheap vs 500M runs)
+
+Ask whether the gap is **training geometry** before assuming the stack is “fundamentally broken”:
+
+1. [ ] **Schedule:** warmup steps + LR (+ WD if needed) aligned to **~3.2k steps/epoch × planned epochs**.
+2. [ ] **Activation:** ModReLU vs ModSwish at **B=18**, same chunk/dataset otherwise.
+3. [ ] **Short LR sweep:** 2–3 peak LRs × ~3 epochs each at B=18 (chunked dual form).
 
 ---
 
