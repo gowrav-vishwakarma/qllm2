@@ -10,6 +10,8 @@ up the diffusion research direction at ~100M scale on the host's new GPU.
 **Hardware**: RTX Pro 6000 (96 GB VRAM, default), RTX 4090 (24 GB, fallback)
 **Roadmap**: [.cursor/plans/v6_diffusion_research_roadmap_a5cdc348.plan.md](.cursor/plans/v6_diffusion_research_roadmap_a5cdc348.plan.md)
 
+**Status (2026-05-12):** Diffusion Part 2 is **paused** after **Run B** (below). The run was **killed** mid-training: latent train/val loss collapsed toward zero while epoch-end **samples remained unusable** (same failure class as Part 1 §11). **Primary effort shifts back to autoregressive (“regression”)** work — WikiText-103 PPL, matched transformer baselines, and V6/V7-style ablations — until diffusion objectives, sampling diagnostics, and EMA / target-parameterization experiments are scoped separately.
+
 ---
 
 ## 0. Restart context (2026-05-12)
@@ -72,6 +74,8 @@ The flag is enabled by default in
 
 ## 2. Phase H — hardware profiles (landed 2026-05-12)
 
+**Deferred pending AR focus:** Throughput lock (H-A), 4090 fallback (H-B), and capacity preset (H-C) runs are **not** scheduled until the team returns to diffusion; script defaults below remain for reference.
+
 Default training target for Part 2 is the **RTX Pro 6000 (96 GB)**. The 4090
 is kept as a fallback. The diffusion script now takes `--hw {pro6000|4090}`:
 
@@ -91,7 +95,7 @@ echoed in the startup banner.
 
 ## 3. Runs
 
-### 3.1 Run A — pre-Phase-0 baseline (2026-05-12, in-flight)
+### 3.1 Run A — pre-Phase-0 baseline (2026-05-12, partial log)
 
 ```
 log_dir : logs/v6/wikitext103_diffusion_text_medium_pam_v3_20260512_083801_d0697e1/
@@ -118,21 +122,50 @@ Loss trajectory (first ~4500 batches of epoch 1):
 
 Same fast-collapse-of-train-loss pattern as Part 1 §11 (`diff_loss → 0` long
 before any sample arrives). No `pred_norm` available — pre-dates the Phase 0
-diagnostic flag. Will be the comparison anchor for Phase H runs.
+diagnostic flag. Superseded as the canonical May-12 throughput story by **Run B** (batch ~18, Phase 0 diagnostics); Run A remains a useful `B=3` anchor.
 
-### 3.2 Run B — Phase H-A throughput lock (planned, not yet started)
+### 3.2 Run B — medium-pam-v3 diffusion_text (2026-05-12, **executed then killed**)
 
-Same script, `--hw pro6000` (default). Goal: confirm `batch=18` fits, lock
-throughput improvement vs Run A, and re-establish baseline with Phase 0
-diagnostics on. Expected ETA per epoch: ~10× Run A's effective sample rate
-(higher `B`, `max-autotune`).
+```
+log_dir : logs/v6/wikitext103_diffusion_text_medium_pam_v3_20260512_090451_3f56d9b/
+log_file: v6_diffusion-text_medium-pam-v3.log
+host    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal (Pro 6000 96 GB)
+preset  : medium-pam-v3 (~100.7M params), diffusion_text, WikiText-103
+seq_len : 2048
+batch   : implied 57831 train chunks / 3213 batches/epoch ≈ 18 microbatch
+compile : reduce-overhead (log shows reduce-overhead, not max-autotune)
+workers : 12   AMP: bf16   TF32: True
+objective: DDPM 1000 steps, cosine, prediction_target=x0
+script  : scripts/run_v6_diffusion_text_wikitext103_medium_pam_v3.sh (Phase 0: div=n/a, --log_diff_diagnostics)
+checkpoints: checkpoints_v6_wikitext103_diffusion_medium_pam_v3/ (best_model.pt updated through epoch 3)
+```
 
-### 3.3 Run C — Phase H-B 4090 fallback verification (planned)
+**Progress:** Epochs **1–3** completed (epoch-end samples + val); **epoch 4** in progress when the run was **stopped** (log shows ~batch 1100/3213 of epoch 4).
+
+**Metrics (epoch summary lines):**
+
+| Epoch | Train diff loss (avg) | Val loss | Notes |
+|:-----:|----------------------:|---------:|-------|
+| 1 | 0.1565 | 0.0032 | *best* checkpoint |
+| 2 | 0.0012 | 0.0002 | *best* checkpoint |
+| 3 | 0.0001 | 0.0000 | *best* checkpoint |
+
+Mid-epoch lines: `diff_loss` → ~0 within thousands of steps; `pred` / `tgt` / `ratio≈1` on `--log_diff_diagnostics` — **global latent scale match, not good prose.**
+
+**Representative epoch-end decoded samples** (verbatim from log, trimmed to ~200 chars; encoding artifacts as logged):
+
+- After epoch 1: `[sample 1]` `manuscript manuscript manuscript Officer Duffy Officer Officer manuscriptHT manuscript manuscriptmouseGETptic manuscript Rivera Officer manuscripthou Rivera subreddits",casters BO Amar manuscript` … ; `[sample 2]` `Officerotenthou Hezbollah manuscript manuscript manuscript manuscript hp Officer hp manuscript manuscript Pokémon hp manuscript manuscript", maj Deadpool Moff manuscriptptic Coul Voyager manuscript` …
+- After epoch 2: `[sample 1]` `ÍÍÍÍsessionInputadmin OfficerzscheadminMrssixkat OfficerMrs OfficerMrs DIRECT________ Officer amplifyburseadmin amplify OfficerCHARsix Utility Officer Officerfoliossix OfficersixMrsMrsMrs DIRECT DIREC` … ; `[sample 2]` `sixLayouthandersixMrssixfolios Officersix Officer Utility OfficersixMrssixsixfoliossixsixsixsixdelaydar Persona Utility OfficerargonargonÍÍMrsMrssixsixsixsixsixsixMrssixkatadminMrsMrsMrssixsixMrsMrsMr` …
+- After epoch 3: `[sample 1]` `.;katÍÍ.;six________MrskatLayoutkatkatkatadminStudentskatkatkatkatMrssixLayoutItalyMrsMrssixsixadminMrssix RahulkattrisixsixfoliosadminsixMrssixfoliosargon facilit Utilityadminsixsix redundMrssixsixad` … ; `[sample 2]` `UtilityÍÍ actionGroup actionGroupsixkatkatÍÍ actionGroupsix.;katadminkatMrskat________InterestMrsMrsMrsMrsMrskatsixsixsixsixsixsixsixdelaysixsixsixsix642 Utility.;foliosfoliosfolios.; Utility Utility` …
+
+**Decision:** Same failure class as [EXPERIMENTS_V6_DIFFUSION.md](EXPERIMENTS_V6_DIFFUSION.md) §11 — **near-zero latent MSE, unusable generations**. **Run killed**; **not** where to spend more GPU until autoregressive parity work and diffusion-specific fixes (EMA, ε-target, per-t diagnostics, sampling protocol) are designed. **No further diffusion epochs** planned under this config.
+
+### 3.3 Run C — Phase H-B 4090 fallback verification (**deferred pending AR focus**)
 
 Same script on the 4090 host with `--hw 4090`. Confirm no regression vs the
 pre-Phase-0 4090 behavior.
 
-### 3.4 Run D — Phase H-C capacity test (planned)
+### 3.4 Run D — Phase H-C capacity test (**deferred pending AR focus**)
 
 Define a new `medium-pam-v3-300m` preset in [v6/config.py](v6/config.py)
 (target ~3× params via `dim` and `num_layers`). Run on Pro 6000 at the
@@ -141,7 +174,7 @@ and sample quality.
 
 ---
 
-## 4. Phase 1 plan — V6-native diffusion_text evolutions
+## 4. Phase 1 plan — V6-native diffusion_text evolutions (**deferred pending AR focus**)
 
 Sequential one-experiment-per-script, mirroring the V7 log discipline. Each
 experiment forks the diffusion script, changes one CLI/config flag, and lands
@@ -179,7 +212,7 @@ margin, stop, document the negative result, and move to the next idea.
 
 ---
 
-## 5. Phase 2 plan — diffusion_image (after Phase 1 conclusions)
+## 5. Phase 2 plan — diffusion_image (**deferred pending AR focus**; after Phase 1 conclusions)
 
 | ID   | Idea                                       | V6 primitive |
 |------|--------------------------------------------|--------------|

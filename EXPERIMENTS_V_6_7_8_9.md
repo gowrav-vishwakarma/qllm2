@@ -171,13 +171,14 @@ flowchart LR
 | `logs/v9/pam_gate_100m_wikitext103_20260427_082228_7610259/v9_medium_h16_gate_100m_wikitext103.log` | 55.37 | — | 55.37 | 1 | clean gate ~100.5M; **stopped** after ep1 when this file was written |
 | `logs/v9/pam_gate_wikitext103_20260426_195110_80b725b_dirty/v9_medium_h16_gate_wikitext103.log` | 54.29 | 42.06 | 29.57 | 10 | **confound:** `pam_output_gate` + **`use_reverse_assoc=True`**; 105.1M params |
 
-### V6 Diffusion (medium-pam-v3, WikiText-103) — Part 2 (started 2026-05-12)
+### V6 Diffusion (medium-pam-v3, WikiText-103) — Part 2 (started 2026-05-12; **paused** after Run B same day)
 
-Resumed diffusion research line on RTX Pro 6000 (96 GB) host. See [EXPERIMENTS_V6_DIFFUSION_PART2.md](EXPERIMENTS_V6_DIFFUSION_PART2.md) for hypotheses, sample notes, and per-run details. `div=n/a` is expected for `medium-pam-v3` (single-bank); use `--log_diff_diagnostics` for `pred/target` norm tracking.
+Diffusion Part 2 **paused** 2026-05-12 after Run B; priority returns to autoregressive (regression) work until diffusion is re-scoped. See [EXPERIMENTS_V6_DIFFUSION_PART2.md](EXPERIMENTS_V6_DIFFUSION_PART2.md) for hypotheses, sample notes, and per-run details. `div=n/a` is expected for `medium-pam-v3` (single-bank); use `--log_diff_diagnostics` for `pred/target` norm tracking.
 
 | Log | diff_loss@~4.5k | div | val | last batch | Notes |
 |---|---:|:-:|:-:|---:|---|
 | `logs/v6/wikitext103_diffusion_text_medium_pam_v3_20260512_083801_d0697e1/v6_diffusion-text_medium-pam-v3.log` | 0.0125 | n/a | — | 4500/19277 | Run A pre-Phase-0 baseline; Pro 6000 host but `B=3` (~18 GB used / 96 GB), `compile=reduce-overhead`; rapid loss collapse same shape as Part 1 §11 |
+| `logs/v6/wikitext103_diffusion_text_medium_pam_v3_20260512_090451_3f56d9b/v6_diffusion-text_medium-pam-v3.log` | ~0.0000 | n/a | **~0.0000** @ ep3 | 1100/3213 (ep4) | Run B: `B≈18`, Phase 0 diagnostics, `compile=reduce-overhead`; ep1–3 completed; **stopped mid-ep4**; **killed** — poor samples (Part 1 §11 class); **pivot back to regression (AR)** |
 
 ---
 
