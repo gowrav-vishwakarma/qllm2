@@ -2,7 +2,7 @@
 
 Everything we know from V4-V9 experiments, the APS paper scaling laws, and the codebase architecture — distilled into a single document so we always know where we are and what to do next.
 
-*Created: 2026-05-08. Source: deep analysis of EXPERIMENTS_V_6_7_8_9.md, v7/EXPERIMENTS_V7.md, v9/EXPERIMENTS_V9.md, v8/EXPERIMENTS_V8.md, v8/AUDIT_V8.md, EXPERIMENTS_V6_PART2.md, v6/paper/aps_main.tex, v5/EXPERIMENTS.md, v5/model.py, v7/model.py, v6/model_real.py. **2026-05-12:** Transformer baseline **B=18** on WikiText-103 — val PPL **22.69** @10 (`387b2a5`), log `logs/v6/transformer_baseline_wikitext103_20260512_063754_387b2a5/` — **matched-batch / matched-steps anchor** for V7 7d B=18 (3213 batches/epoch). **2026-05-12:** §0 **Pre-scaling checklist** added — run and log these ablations before Phase 3+ scaling. **2026-05-12:** §0 reconciled to disk — **`gate_conv4_100m` already complete** (3ep + 10ep under `logs/v9/`); remaining items are memory dynamics, B=18 schedule/activation, Flash-PAM.*
+*Created: 2026-05-08. Source: deep analysis of EXPERIMENTS_V_6_7_8_9.md, v7/EXPERIMENTS_V7.md, v9/EXPERIMENTS_V9.md, v8/EXPERIMENTS_V8.md, v8/AUDIT_V8.md, EXPERIMENTS_V6_PART2.md, v6/paper/aps_main.tex, v5/EXPERIMENTS.md, v5/model.py, v7/model.py, v6/model_real.py. **2026-05-12:** Transformer baseline **B=18** on WikiText-103 — val PPL **22.69** @10 (`387b2a5`), log `logs/v6/transformer_baseline_wikitext103_20260512_063754_387b2a5/` — **matched-batch / matched-steps anchor** for V7 7d B=18 (3213 batches/epoch). **2026-05-12:** §0 **Pre-scaling checklist** added — run and log these ablations before Phase 3+ scaling. **2026-05-12:** §0 reconciled to disk — **`gate_conv4_100m` already complete** (3ep + 10ep under `logs/v9/`); remaining items are memory dynamics, B=18 schedule/activation, Flash-PAM. **2026-05-12:** **7d B=18 ModReLU** (`ac02323`) logged — val **27.46** @10 vs ModSwish **26.88**; **ModSwish wins** at matched geometry (see §9.1).*
 
 ---
 
@@ -16,7 +16,7 @@ Everything we know from V4-V9 experiments, the APS paper scaling laws, and the c
 
 | Item | Verdict | Evidence |
 |------|---------|----------|
-| **V9 `gate_conv4_100m`** | Completed; **does not** beat clean **V7 7a** (**29.73**) or **May 2026 7d B=18** (**26.88**). Epoch-3 val **38.14** (full 10-ep run) is just above the old **≤38.0** extension bar, but the full run was continued: **best val PPL 30.02** @ ep10 (`logs/v9/pam_gate_conv4_100m_wikitext103_20260428_204606_b9af5d4/`). Smoke: 3 ep, best **38.61** @ ep3 — `logs/v9/pam_gate_conv4_100m_wikitext103_20260428_155538_1bd3cc5_dirty/`. | [v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md) (section *gate_conv4_100m — full result*). |
+| **7d B=18 ModReLU vs ModSwish** | **ModSwish wins on val PPL** (**26.88** vs **27.46** @10); same `chunk_size=256`, `B=18`, `use_reverse_assoc=True`; commits differ (`fad662a` dirty vs **`ac02323`** clean). Tok/s not comparable across logs (~22k vs ~50k — do not infer ModReLU is faster). | `logs/v7/exp7d_chunked_b6_wikitext103_20260512_122020_ac02323/` vs `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/`. [v7/EXPERIMENTS_V7.md](../v7/EXPERIMENTS_V7.md). |
 | Other **V9** variants with logs under `logs/v9/` | `gate` (confounded), `gate_100m`, `gate_revassoc_100m`, `gate_mlp_revassoc_100m`, `compete_revassoc_100m` — all documented in [v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md). | — |
 
 ### Not run / low priority (save time)
@@ -30,13 +30,12 @@ Everything we know from V4-V9 experiments, the APS paper scaling laws, and the c
 
 - [ ] **PAM memory dynamics** — **per-channel decay** (or similar); **not** yet implemented/run in this repo as a headline experiment — V9’s pivot after readout tweaks ([v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md)).
 - [ ] **B=18–specific training** — warmup / peak LR / WD for **~3213 steps/epoch**; **7d B=18** used one schedule — a **dedicated** sweep or matched warmup to **7a** comparability is still a separate question.
-- [ ] **ModReLU vs ModSwish at B=18** — §9.1: best **7d B=18** run is **ModSwish**; **ModReLU @ B=18** not logged as a fat run (B=6 ModReLU story remains confounded).
 - [ ] **Engineering** — **Flash-PAM** / fuller **fused** PAM dual form (§10 Phase 1); V7 has partial Triton (`fused_cgu_gate`, decay helpers) — **not** a replacement for tiled Flash-PAM.
 
 ### B=18 priority order (cheap vs 500M runs)
 
 1. [ ] **Schedule:** warmup + peak LR (+ WD) aligned to **~3.2k steps/epoch**.
-2. [ ] **Activation:** ModReLU vs ModSwish at **B=18**, same chunk/dataset otherwise.
+2. [x] **Activation:** ModReLU vs ModSwish at **B=18** — **done** (`ac02323` ModReLU **27.46** vs `fad662a` ModSwish **26.88**); see §9.1. **B=6** chunked ModReLU vs ModSwish remains optional smoke.
 3. [ ] **Short LR sweep:** 2–3 peak LRs × ~3 epochs each at B=18.
 
 ---
@@ -113,20 +112,21 @@ Each V7Block:
 | 1 | **Transformer B=18** | **22.69** | 18 | ~206k | ~100.3M | ~15.9h | Flash SDPA; **same steps/epoch as V7 7d B=18**; May 2026 |
 | 2 | **Transformer B=6** | **23.13** | 6 | ~99k | ~100.3M | ~3.2h | Flash Attention / SDPA |
 | 3 | **V7 7d B=18** (chunked, May 2026) | **26.88** | 18 | ~22k | ~100M | ~14.7h | **+4.19 vs transformer B=18**; `fad662a` dirty |
-| 4 | **V7 3a-A (ModReLU, B=6, ckpt)** | **26.64** | 6 | ~18.8k | ~100M | — | **Beat transformer B=3!** Confounded: B=6 + grad ckpt, 9ep, overfitting |
-| 5 | **Transformer B=3** | **27.08** | 3 | ~96k | ~100.3M | ~3.5h | Flash Attention / SDPA |
-| 6 | **V7 7d (ModSwish, chunked B=6)** | **27.94** | 6 | 31.8k | ~100M | 10.7h | Best clean PAM run at B=6 |
-| 7 | V9 gate (confounded) | 29.57 | 3 | ~27.3k | 105.1M | 12.2h | +5M params, reverse_assoc inherited |
-| 8 | V7 7a (ModSwish, B=3) | 29.73 | 3 | ~20.9k | ~100M | — | Cleanest PAM-only baseline |
-| 9 | V6 medium-pam-v3 | 29.95 | 3 | ~23k | ~100.4M | ~14.1h | Interleaved CGU+PAM, RoPE |
-| 10 | V6 PIA (PAM + attention) | 30.01 | 3 | — | ~105.1M | — | Hybrid attention — no improvement |
-| 11 | V7 3a-B (ModReLU, B=3) | 30.40 | 3 | — | ~100M | — | ModReLU baseline at B=3 |
-| 12 | V9 gate_revassoc_100m (param-matched) | 30.53 | 3 | ~25.6k | 100.5M | — | Clean gate — negative result |
-| 13 | V7 7f-0 (grouped + multi-scale) | 31.29 | 3 | — | ~100M | — | Regressed vs 7a |
-| 14 | V7 7f-1 (multi-scale loss) | 30.55 | 3 | ~20.3k | ~100M | ~16.4h | Multi-scale hurts |
-| 15 | V7 Lean L1 (no CGU) | 32.09 | 3 | 34.7k | 86.2M | 9.7h | CGU worth ~2.4 PPL |
-| 16 | V7 7f-2 (reverse-assoc) | 32.19 | 3 | ~27.5k | ~100M | ~12.3h | Reverse-assoc hurts |
-| 17 | V9 gate_mlp_revassoc_100m | 34.11 | 3 | — | 101.1M | — | 2-layer gate MLP — negative |
+| 4 | **V7 7d B=18 ModReLU** (May 2026) | **27.46** | 18 | ~35–50k (log) | ~100M | ~6.9h | **+0.58 vs ModSwish** row above; `ac02323`; tok/s **not** isolated vs `fad662a` run |
+| 5 | **V7 3a-A (ModReLU, B=6, ckpt)** | **26.64** | 6 | ~18.8k | ~100M | — | **Beat transformer B=3!** Confounded: B=6 + grad ckpt, 9ep, overfitting |
+| 6 | **Transformer B=3** | **27.08** | 3 | ~96k | ~100.3M | ~3.5h | Flash Attention / SDPA |
+| 7 | **V7 7d (ModSwish, chunked B=6)** | **27.94** | 6 | 31.8k | ~100M | 10.7h | Best clean PAM run at B=6 |
+| 8 | V9 gate (confounded) | 29.57 | 3 | ~27.3k | 105.1M | 12.2h | +5M params, reverse_assoc inherited |
+| 9 | V7 7a (ModSwish, B=3) | 29.73 | 3 | ~20.9k | ~100M | — | Cleanest PAM-only baseline |
+| 10 | V6 medium-pam-v3 | 29.95 | 3 | ~23k | ~100.4M | ~14.1h | Interleaved CGU+PAM, RoPE |
+| 11 | V6 PIA (PAM + attention) | 30.01 | 3 | — | ~105.1M | — | Hybrid attention — no improvement |
+| 12 | V7 3a-B (ModReLU, B=3) | 30.40 | 3 | — | ~100M | — | ModReLU baseline at B=3 |
+| 13 | V9 gate_revassoc_100m (param-matched) | 30.53 | 3 | ~25.6k | 100.5M | — | Clean gate — negative result |
+| 14 | V7 7f-0 (grouped + multi-scale) | 31.29 | 3 | — | ~100M | — | Regressed vs 7a |
+| 15 | V7 7f-1 (multi-scale loss) | 30.55 | 3 | ~20.3k | ~100M | ~16.4h | Multi-scale hurts |
+| 16 | V7 Lean L1 (no CGU) | 32.09 | 3 | 34.7k | 86.2M | 9.7h | CGU worth ~2.4 PPL |
+| 17 | V7 7f-2 (reverse-assoc) | 32.19 | 3 | ~27.5k | ~100M | ~12.3h | Reverse-assoc hurts |
+| 18 | V9 gate_mlp_revassoc_100m | 34.11 | 3 | — | 101.1M | — | 2-layer gate MLP — negative |
 
 ### V7 3a-A Epoch Curve (the 26.64 run)
 
@@ -297,7 +297,7 @@ Real-valued activations **destroy phase** in complex representations. ModReLU wa
 
 **What worked:**
 - **Flat 16-layer PAM** beats hierarchical, grouped, multi-scale (all regressed)
-- **ModSwish > ModReLU at B=3** (29.73 vs 30.4) — smooth activation compounds over depth
+- **ModSwish > ModReLU at B=3** (29.73 vs 30.4) — smooth activation compounds over depth; **ModSwish > ModReLU at B=18 chunked** (26.88 vs 27.46, `fad662a` vs `ac02323`, May 2026)
 - **B=6** gives ~14% PPL improvement (mirrors transformer B=3 vs B=6 pattern)
 - **Chunked dual form** (C=256) enables B=6 without grad checkpointing + higher throughput (20.9k -> 31.8k tok/s)
 - **3a-A (26.64)** beat transformer B=3 (27.08) — PAM CAN win at mismatched batch (B=6 + ckpt vs T B=3)
@@ -426,13 +426,15 @@ Don't invest in RPAM scaling. The paper predicts it loses past ~550M. Focus all 
 
 ## 9. Unresolved Questions (Things That COULD Still Help)
 
-### 9.1 ModReLU vs ModSwish at B=6 (the 26.64 question)
+### 9.1 ModReLU vs ModSwish — **B=18 resolved** (May 2026); B=6 still open
 
-At B=3: ModSwish wins (29.73 vs 30.4). At B=6: unknown — confounded by grad ckpt + full dual form + commit differences.
+**B=18 (matched geometry):** Chunked dual form `C=256`, `medium_h16_flat`, **`batch_size=18`**, default **`use_reverse_assoc=True`**. ModSwish (`fad662a` dirty) best val **26.88** @10; ModReLU (`ac02323` clean) best val **27.46** @10 — **ModSwish wins by ~0.58 PPL**. Logs: `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/` vs `logs/v7/exp7d_chunked_b6_wikitext103_20260512_122020_ac02323/`. ModReLU ep10 generation metrics were **worse** (`rep3=0.160`, `uniq=0.521`) than ModSwish ep10 (`rep3=0.031`, `uniq=0.687`). **Throughput** in the two logs differs sharply (~22k vs ~35–50k tok/s); **do not** treat as a clean activation speed comparison — different commits and compile/runtime paths.
 
-**Why it matters:** 3a-A (ModReLU, B=6) hit 26.64, beating transformer B=3. 7d (ModSwish, B=6) hit 27.94. If ModReLU is genuinely better at B=6, that's a free ~1.3 PPL win.
+**B=6 (the 26.64 question):** At B=3, ModSwish wins (29.73 vs 30.4). At B=6, **still unknown** for **chunked** 7d — confounded by grad ckpt + full dual form + commit differences in the historical **3a-A** story.
 
-**Test:** Run ModReLU B=6 chunked C=256 (matching 7d exactly except activation) as a 3-epoch smoke. Compare epoch 3 to 7d epoch 3 (35.88). Extend to 10 if tracking below.
+**Why B=6 still matters:** 3a-A (ModReLU, B=6, grad ckpt) hit 26.64, beating transformer B=3. 7d (ModSwish, B=6, chunked) hit 27.94. If ModReLU is genuinely better at **B=6 with chunking**, that could still be a win — **not** ruled out by the B=18 pair above.
+
+**Test (optional):** ModReLU **B=6** chunked `C=256` (matching 7d exactly except activation) as a 3-epoch smoke; compare epoch 3 to 7d epoch 3 (35.88). Extend to 10 if tracking below.
 
 ### 9.2 Per-Channel Learned Decay (V9's recommended next change)
 
@@ -471,7 +473,7 @@ Build a fused Triton kernel for the PAM chunked dual form.
 ### Phase 2: Beat Transformer B=3 at 100M
 
 With Flash-PAM in hand:
-- Resolve ModReLU vs ModSwish at B=6 (3-epoch smoke)
+- Resolve **ModReLU vs ModSwish at B=6 chunked** (3-epoch smoke) if chasing the 3a-A vs 7d gap; **B=18** pair already favors ModSwish
 - Short LR sweep (2-3 values, 3 epochs each)
 - Add per-channel learned decay
 - Target: **sub-26 PPL** at 100M, **< 6h wall time** (vs current 10.7h for 7d)
