@@ -1,0 +1,21 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V7 Exp7pos pos-only: learned pos at input, RoPE DISABLED, dim=384 L=16, ModSwish, chunk=256, B=18, LR=1e-4
+Date (UTC)  : 2026-05-20 13:16:24
+Date (local): 2026-05-20 13:16:24 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1003-gcp x86_64
+
+Git commit  : 124e34efb381756685b99c95f91c2b485865ae3c
+Git short   : 124e34e
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.25
+Arguments   : --preset medium_h16_flat --dataset wikitext103 --seq_len 2048 --batch_size 18 --epochs 10 --activation swish --chunk_size 256 --max_samples 9999999 --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --compile --compile_mode default --learned_pos --no_rope --gen_prompt 'In 1923 , the University of' 
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+

@@ -17,6 +17,7 @@ Everything we know from V4-V9 experiments, the APS paper scaling laws, and the c
 | Item | Verdict | Evidence |
 |------|---------|----------|
 | **7d B=18 ModReLU vs ModSwish** | **ModSwish wins on val PPL** (**26.88** vs **27.46** @10); same `chunk_size=256`, `B=18`, `use_reverse_assoc=True`; commits differ (`fad662a` dirty vs **`ac02323`** clean). Tok/s not comparable across logs (~22k vs ~50k — do not infer ModReLU is faster). | `logs/v7/exp7d_chunked_b6_wikitext103_20260512_122020_ac02323/` vs `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/`. [v7/EXPERIMENTS_V7.md](../v7/EXPERIMENTS_V7.md). |
+| **7pos learned input pos (3-way)** | **Closed** — hybrid **26.92** (+0.04 vs 7d) → do not adopt input pos + RoPE; pos-only **26.72** does not displace RoPE-only bar **26.88**. | [v7/EXPERIMENTS_V7.md](../v7/EXPERIMENTS_V7.md) (Experiment 7pos). |
 | Other **V9** variants with logs under `logs/v9/` | `gate` (confounded), `gate_100m`, `gate_revassoc_100m`, `gate_mlp_revassoc_100m`, `compete_revassoc_100m` — all documented in [v9/EXPERIMENTS_V9.md](../v9/EXPERIMENTS_V9.md). | — |
 
 ### Not run / low priority (save time)

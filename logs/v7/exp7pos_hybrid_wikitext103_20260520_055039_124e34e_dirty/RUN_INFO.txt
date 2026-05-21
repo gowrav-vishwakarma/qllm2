@@ -1,0 +1,128 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V7 Exp7pos hybrid: learned pos at input + RoPE on Q/K, dim=384 L=16, ModSwish, chunk=256, B=18, LR=1e-4
+Date (UTC)  : 2026-05-20 05:50:39
+Date (local): 2026-05-20 05:50:39 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1003-gcp x86_64
+
+Git commit  : 124e34efb381756685b99c95f91c2b485865ae3c
+Git short   : 124e34e
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.25
+Arguments   : --preset medium_h16_flat --dataset wikitext103 --seq_len 2048 --batch_size 18 --epochs 10 --activation swish --chunk_size 256 --max_samples 9999999 --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --compile --compile_mode default --learned_pos  --gen_prompt 'In 1923 , the University of' 
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ v7/model.py | 35 ++++++++++++++++++++++++++++++++++-
+ v7/train.py |  5 +++++
+ 2 files changed, 39 insertions(+), 1 deletion(-)
+
+diff --git a/v7/model.py b/v7/model.py
+index bcc7add..923ab92 100644
+--- a/v7/model.py
++++ b/v7/model.py
+@@ -36,6 +36,7 @@ class V7Config:
+     expand: int = 3
+     dropout: float = 0.1
+     max_seq_len: int = 2048
++    use_learned_pos: bool = False
+     use_rope: bool = True
+     use_gsp: bool = True
+     fused_qkv: bool = True
+@@ -234,6 +235,29 @@ class ComplexEmbed(nn.Module):
+         return torch.stack([self.embed_real(ids), self.embed_imag(ids)], dim=-1)
+ 
+ 
++class ComplexPosEmbed(nn.Module):
++    """Learned absolute position embed added to token embed before the stack."""
++
++    def __init__(self, max_seq_len: int, dim: int):
++        super().__init__()
++        self.max_seq_len = max_seq_len
++        self.pos_embed = nn.Embedding(max_seq_len, dim)
++        nn.init.normal_(self.pos_embed.weight, std=0.02)
++
++    def forward(self, z: torch.Tensor, step_offset: int = 0) -> torch.Tensor:
++        # z: [B, T, dim, 2]
++        T = z.shape[1]
++        end = step_offset + T
++        if end > self.max_seq_len:
++            raise ValueError(
++                f"Position range [{step_offset}, {end}) exceeds max_seq_len "
++                f"{self.max_seq_len}"
++            )
++        pos = torch.arange(step_offset, end, device=z.device)
++        p = self.pos_embed(pos)  # [T, dim]
++        return z + p.unsqueeze(0).unsqueeze(-1)
++
++
+ class AuxPredHead(nn.Module):
+     """Lightweight per-layer prediction head for multi-scale temporal loss.
+ 
+@@ -596,6 +620,10 @@ class V7LM(nn.Module):
+         self.config = cfg
+ 
+         self.embed = ComplexEmbed(cfg.vocab_size, cfg.dim)
++        self.pos_embed = (
++            ComplexPosEmbed(cfg.max_seq_len, cfg.dim)
++            if cfg.use_learned_pos else None
++        )
+         self.embed_norm = ComplexNorm(cfg.dim)
+         self.blocks = nn.ModuleList([
+             V7Block(cfg, layer_idx=i) for i in range(cfg.n_layers)
+@@ -654,7 +682,10 @@ class V7LM(nn.Module):
+             states:    list of per-layer PAM states
+             aux_loss:  scalar multi-scale auxiliary loss (0.0 when disabled)
+         """
+-        z = self.embed_norm(self.embed(input_ids))
++        z = self.embed(input_ids)
++        if self.pos_embed is not None:
++            z = self.pos_embed(z, step_offset=step_offset)
++        z = self.embed_norm(z)
+ 
+         use_ckpt = (
+             self.config.gradient_checkpointing
+@@ -771,6 +802,8 @@ class V7LM(nn.Module):
+ 
+     def count_parameters(self) -> Dict[str, int]:
+         embed_p = sum(p.numel() for p in self.embed.parameters())
++        if self.pos_embed is not None:
++            embed_p += sum(p.numel() for p in self.pos_embed.parameters())
+         block_p = sum(p.numel() for b in self.blocks for p in b.parameters())
+         head_p = (
+             sum(p.numel() for p in self.lm_head_proj.parameters())
+diff --git a/v7/train.py b/v7/train.py
+index d388eb4..1d337c8 100644
+--- a/v7/train.py
++++ b/v7/train.py
+@@ -621,6 +621,8 @@ def main():
+                         help='Override activation function (default: from preset)')
+ 
+     # Ablation toggles
++    parser.add_argument('--learned_pos', action='store_true',
++                        help='Add learned absolute positional embeddings at input (token+pos)')
+     parser.add_argument('--no_rope', action='store_true')
+     parser.add_argument('--no_gsp', action='store_true')
+     parser.add_argument('--no_fused_qkv', action='store_true')
+@@ -707,6 +709,8 @@ def main():
+             cfg.dropout = args.dropout
+         if args.no_rope:
+             cfg.use_rope = False
++        if args.learned_pos:
++            cfg.use_learned_pos = True
+         if args.no_gsp:
+             cfg.use_gsp = False
+         if args.no_fused_qkv:
+@@ -861,6 +865,7 @@ def main():
+         _sl(f"Feature: [CGU -> PAM] x{cfg.n_layers} (flat stack)")
+         _sl(f"CGU expand: {cfg.expand}")
+         _sl(f"PAM: heads={cfg.n_heads}, head_dim={cfg.head_dim}")
++        _sl(f"Learned pos: {'ENABLED' if cfg.use_learned_pos else 'DISABLED'}")
+         _sl(f"RoPE: {'ENABLED' if cfg.use_rope else 'DISABLED'}")
+         _sl(f"GSP: {'ENABLED' if cfg.use_gsp else 'DISABLED'}")
+         _sl(f"fused QKV: {'ENABLED' if cfg.fused_qkv else 'DISABLED'}")

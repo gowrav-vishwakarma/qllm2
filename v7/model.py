@@ -36,6 +36,7 @@ class V7Config:
     expand: int = 3
     dropout: float = 0.1
     max_seq_len: int = 2048
+    use_learned_pos: bool = False
     use_rope: bool = True
     use_gsp: bool = True
     fused_qkv: bool = True
@@ -232,6 +233,29 @@ class ComplexEmbed(nn.Module):
 
     def forward(self, ids: torch.Tensor) -> torch.Tensor:
         return torch.stack([self.embed_real(ids), self.embed_imag(ids)], dim=-1)
+
+
+class ComplexPosEmbed(nn.Module):
+    """Learned absolute position embed added to token embed before the stack."""
+
+    def __init__(self, max_seq_len: int, dim: int):
+        super().__init__()
+        self.max_seq_len = max_seq_len
+        self.pos_embed = nn.Embedding(max_seq_len, dim)
+        nn.init.normal_(self.pos_embed.weight, std=0.02)
+
+    def forward(self, z: torch.Tensor, step_offset: int = 0) -> torch.Tensor:
+        # z: [B, T, dim, 2]
+        T = z.shape[1]
+        end = step_offset + T
+        if end > self.max_seq_len:
+            raise ValueError(
+                f"Position range [{step_offset}, {end}) exceeds max_seq_len "
+                f"{self.max_seq_len}"
+            )
+        pos = torch.arange(step_offset, end, device=z.device)
+        p = self.pos_embed(pos)  # [T, dim]
+        return z + p.unsqueeze(0).unsqueeze(-1)
 
 
 class AuxPredHead(nn.Module):
@@ -596,6 +620,10 @@ class V7LM(nn.Module):
         self.config = cfg
 
         self.embed = ComplexEmbed(cfg.vocab_size, cfg.dim)
+        self.pos_embed = (
+            ComplexPosEmbed(cfg.max_seq_len, cfg.dim)
+            if cfg.use_learned_pos else None
+        )
         self.embed_norm = ComplexNorm(cfg.dim)
         self.blocks = nn.ModuleList([
             V7Block(cfg, layer_idx=i) for i in range(cfg.n_layers)
@@ -654,7 +682,10 @@ class V7LM(nn.Module):
             states:    list of per-layer PAM states
             aux_loss:  scalar multi-scale auxiliary loss (0.0 when disabled)
         """
-        z = self.embed_norm(self.embed(input_ids))
+        z = self.embed(input_ids)
+        if self.pos_embed is not None:
+            z = self.pos_embed(z, step_offset=step_offset)
+        z = self.embed_norm(z)
 
         use_ckpt = (
             self.config.gradient_checkpointing
@@ -771,6 +802,8 @@ class V7LM(nn.Module):
 
     def count_parameters(self) -> Dict[str, int]:
         embed_p = sum(p.numel() for p in self.embed.parameters())
+        if self.pos_embed is not None:
+            embed_p += sum(p.numel() for p in self.pos_embed.parameters())
         block_p = sum(p.numel() for b in self.blocks for p in b.parameters())
         head_p = (
             sum(p.numel() for p in self.lm_head_proj.parameters())

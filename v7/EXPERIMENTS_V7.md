@@ -64,6 +64,8 @@ Each V7Block:
 | 2026-03 | **7d** ModSwish + chunked dual form (`C=256`), `medium_h16_flat`, B=6, commit `7555c93` | Val **27.94** @10e, beating 7a by **1.79 PPL** while raising throughput to **31.8k tok/s**. Still behind transformer B=6 **23.13** and **B=18** **22.69**. Log: `logs/v7/exp7d_chunked_b6_wikitext103_20260330_172839_7555c93/`. |
 | 2026-05 | **7d redo** ModSwish + chunked `C=256`, `medium_h16_flat`, **B=18**, `--compile`, commit `fad662a` (dirty) | Val **26.88** @10e — **−1.06** vs Mar **7d B=6** (**27.94**), **−2.85** vs **7a** (**29.73**); **beats transformer B=3** (**27.08**) and **B=6** (**23.13**); still **+4.19** vs **transformer B=18** (**22.69**). ~**22.0k tok/s** avg, ~14.7h, ~62.6 GB peak. Quality ep10: `rep3=0.031`, `rep4=0.010`, `uniq=0.687`. Log dir uses script slug `exp7d_chunked_b6_*` but **batch was 18**: `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/`. |
 | 2026-05 | **7d B=18 ModReLU** control — same as above except **`activation=modrelu`**, commit **`ac02323`** (clean), `use_reverse_assoc=True` | Val **27.46** @10e — **+0.58** vs **7d B=18 ModSwish** (**26.88**); still **beats** transformer **B=3** (**27.08**) and **B=6** (**23.13**); **+4.77** vs **transformer B=18** (**22.69**). ~**50k tok/s** epoch avg in log (vs ~22k on `fad662a` ModSwish run — **not** an isolated activation A/B; different commit / logging). Ep10 gen: `rep3=0.160`, `rep4=0.075`, `uniq=0.521` (worse than ModSwish ep10). Log: `logs/v7/exp7d_chunked_b6_wikitext103_20260512_122020_ac02323/`. |
+| 2026-05 | **7pos-hybrid** learned pos at input + RoPE, 7d B=18 recipe, commit `124e34e` (dirty) | Val **88.35 / 30.44 / 26.92** @1/5/10e; **+0.04** vs 7d (**26.88**); Tier A **+0.20** vs pos-only; gen ep10 worse (`rep3=0.056`, `uniq=0.637`). **CLOSED — neutral, reject `use_learned_pos` default.** ~7.4h, ~47k tok/s. Log: `logs/v7/exp7pos_hybrid_wikitext103_20260520_055039_124e34e_dirty/`; ckpt `checkpoints_v7_exp7pos_hybrid`. |
+| 2026-05 | **7pos-only** learned pos, `--no_rope`, same recipe, commit `124e34e` (dirty) | Val **89.39 / 30.38 / 26.72** @1/5/10e; Tier A **−0.20** vs hybrid; Tier B **−0.16** vs 7d (confounded: +0.8M params, no RoPE); gen ep10 clean (`rep3=0.000`, `uniq=0.763`). **CLOSED — interesting sanity check; keep RoPE default.** ~7.4h. Log: `logs/v7/exp7pos_only_wikitext103_20260520_131624_124e34e_dirty/`; ckpt `checkpoints_v7_exp7pos_only`. |
 | — | Hygiene | Use **B=3** + **no grad ckpt** for V6/transformer apples-to-apples. **B=6** + ckpt (3a-A) lowers PPL but changes steps/epoch — confounds LR schedule vs V6. **B=6** and **B=18** transformer baselines exist for apples-to-apples when PAM uses the same batch (6 or 18). |
 | 2026-04 | **7f-0** Grouped hierarchy + multi-scale loss (confounded), B=3, commit `136f914` | Val **31.29** @10e — regression vs 7a (**29.73**). Two variables changed; cannot isolate. Log: `logs/v7/exp7f_multiscale_wikitext103_20260402_173535_136f914_dirty/`. |
 | 2026-04 | **7f-1** Multi-scale loss ONLY on flat baseline, B=3, `--compile`, commit `ecb4b56` | Val **30.55** @10e — multi-scale loss **hurts** (+0.82 vs 7a). Aux heads don't help; multi-target training noise is counterproductive. Log: `logs/v7/exp7f1_multiscale_flat_wikitext103_20260403_124050_ecb4b56/`. |
@@ -680,6 +682,58 @@ Chunked dual form frees ~600 MB of peak intermediates per layer. This should all
 | 10 | 26.09 | **27.46** | *best* |
 
 **Generation (epoch 10):** `rep3=0.160`, `rep4=0.075`, `restarts=0`, `uniq=0.521` — **worse** repetition / diversity than ModSwish ep10 (`rep3=0.031`, `rep4=0.010`, `uniq=0.687`).
+
+### Experiment 7pos: Learned positional embeddings at input (3-way ablation)
+
+**Motivation:** Best PAM runs (7a, 7d) use **RoPE on PAM Q/K only** — no GPT-style `token + pos` at input. CGU layers see position-agnostic hidden states; this tests whether learned absolute pos at input helps (hybrid) or can replace RoPE (pos-only).
+
+**Implementation:** `use_learned_pos` flag + `ComplexPosEmbed` in [`v7/model.py`](../v7/model.py); `--learned_pos` CLI in [`v7/train.py`](../v7/train.py). Pos embed (~0.8M params) added to **both** real and imag components before `ComplexNorm`.
+
+**Recipe (matches 7d B=18):** `medium_h16_flat`, ModSwish, `chunk_size=256`, B=18, `--compile`, `--no_grad_ckpt`, LR=1e-4, warmup=1000, 10 epochs.
+
+**Launch script:** [`scripts/run_v7_exp7pos_learned_pos.sh`](../scripts/run_v7_exp7pos_learned_pos.sh)
+
+**Status:** **CLOSED** (May 2026). **7d-control:** RoPE-only, val **26.88** @10 — full epochs, wall, and gen → [§7d B=18 rerun](#experiment-7d-may-2026-rerun--chunked-b18-larger-batch) (`fad662a`).
+
+**Results @10:**
+
+| Run | `use_learned_pos` | `use_rope` | Params | Val PPL @10 | vs 7d | Gen ep10 (`rep3` / `uniq`) |
+|-----|-------------------|------------|--------|-------------|-------|----------------------------|
+| **7d-control** | False | True | 100.4M | **26.88** | — | 0.031 / 0.687 (see §7d) |
+| **7pos-hybrid** | True | True | 101.2M | **26.92** | +0.04 | 0.056 / 0.637 |
+| **7pos-only** | True | False | 101.2M | **26.72** | −0.16 | 0.000 / 0.763 |
+
+**Apples-to-apples:** Matched with 7d B=18 — **B=18**, **3213** batches/epoch, **1,184,378,880** tokens/epoch, `seq_len=2048`, `medium_h16_flat`, ModSwish, `chunk_size=256`, LR **1e-4**, warmup **1000**, seed **42**, same host/cache. **Confounds vs 7d:** 7pos runs **+0.8M** pos-embed params and commit **`124e34e`** (7d control **`fad662a`**). **Invalid comparators:** 7a / transformer at **B=3** (e.g. transformer **27.08**) — different steps/epoch; see hygiene in learnings log.
+
+**Comparison tiers:**
+
+- **Tier A (cleanest):** hybrid vs pos-only — same commit, params, geometry; only `use_rope` differs → pos-only **−0.20** PPL @10.
+- **Tier B (practical):** both 7pos vs 7d — same B/steps/tokens/LR; confounded by params + commit → hybrid **+0.04**, pos-only **−0.16** vs **26.88**.
+- **Tier C (invalid here):** vs **7a** B=3 or transformer B=3 — cite as architectural reference only.
+
+**Val PPL by epoch:**
+
+| Epoch | 7d control | 7pos-hybrid | 7pos-only |
+|-------|------------|-------------|-----------|
+| 1 | 84.05 | 88.35 | 89.39 |
+| 2 | 47.80 | 48.76 | 49.18 |
+| 3 | 37.24 | 37.77 | 38.04 |
+| 4 | 32.90 | 33.16 | 33.25 |
+| 5 | 30.25 | 30.44 | 30.38 |
+| 6 | 28.76 | 28.90 | 28.76 |
+| 7 | 27.73 | 27.80 | 27.66 |
+| 8 | 27.19 | 27.24 | 27.02 |
+| 9 | 26.92 | 26.96 | 26.76 |
+| 10 | **26.88** | **26.92** | **26.72** |
+
+**Run metadata (7pos arms):**
+
+| Run | Log | Ckpt | Wall / tok/s (epoch avg) |
+|-----|-----|------|--------------------------|
+| **7pos-hybrid** | `logs/v7/exp7pos_hybrid_wikitext103_20260520_055039_124e34e_dirty/` | `checkpoints_v7_exp7pos_hybrid` | ~7.4h; ~47k tok/s |
+| **7pos-only** | `logs/v7/exp7pos_only_wikitext103_20260520_131624_124e34e_dirty/` | `checkpoints_v7_exp7pos_only` | ~7.4h; ~47k tok/s |
+
+**Verdict:** Hybrid within ±0.3 of control → **neutral**; stacking input pos on RoPE does not help adoption — **reject** `use_learned_pos=True` as default. Pos-only beats hybrid on Tier A but vs 7d on Tier B is a **single-run, confounded** readout — **do not** remove RoPE or retitle headline best (**26.88** unchanged). **Do not re-run** unless replication requested. Launcher: [`scripts/run_v7_exp7pos_learned_pos.sh`](../scripts/run_v7_exp7pos_learned_pos.sh).
 
 ### Experiment 7e: Soft unitary regularization
 

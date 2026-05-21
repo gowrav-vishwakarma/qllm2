@@ -621,6 +621,8 @@ def main():
                         help='Override activation function (default: from preset)')
 
     # Ablation toggles
+    parser.add_argument('--learned_pos', action='store_true',
+                        help='Add learned absolute positional embeddings at input (token+pos)')
     parser.add_argument('--no_rope', action='store_true')
     parser.add_argument('--no_gsp', action='store_true')
     parser.add_argument('--no_fused_qkv', action='store_true')
@@ -707,6 +709,8 @@ def main():
             cfg.dropout = args.dropout
         if args.no_rope:
             cfg.use_rope = False
+        if args.learned_pos:
+            cfg.use_learned_pos = True
         if args.no_gsp:
             cfg.use_gsp = False
         if args.no_fused_qkv:
@@ -861,6 +865,7 @@ def main():
         _sl(f"Feature: [CGU -> PAM] x{cfg.n_layers} (flat stack)")
         _sl(f"CGU expand: {cfg.expand}")
         _sl(f"PAM: heads={cfg.n_heads}, head_dim={cfg.head_dim}")
+        _sl(f"Learned pos: {'ENABLED' if cfg.use_learned_pos else 'DISABLED'}")
         _sl(f"RoPE: {'ENABLED' if cfg.use_rope else 'DISABLED'}")
         _sl(f"GSP: {'ENABLED' if cfg.use_gsp else 'DISABLED'}")
         _sl(f"fused QKV: {'ENABLED' if cfg.fused_qkv else 'DISABLED'}")
