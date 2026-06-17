@@ -1,0 +1,34 @@
+[2026-06-17 05:15:29] Wall clock start: 2026-06-17 05:15:29
+[2026-06-17 05:15:29] ============================================================
+[2026-06-17 05:15:29]   V11: PAM with new memory dynamics
+[2026-06-17 05:15:29]   Preset: v11_e2_delta | Dataset: wikitext103
+[2026-06-17 05:15:29] ============================================================
+
+[2026-06-17 05:15:29] Config: {'vocab_size': 50257, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'delta', 'n_states': 1, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0}
+[2026-06-17 05:15:29] Memory dynamics: decay_mode=head, write_mode=delta, n_states=1, chunk_size=256
+[2026-06-17 05:15:29] Batch size: 18, Epochs: 1, LR: 0.0001
+
+[2026-06-17 05:15:29] Loading wikitext103 (seq_len=2048)...
+[2026-06-17 05:15:32] Loading WikiText-103 train (limit=300000)...
+[2026-06-17 05:16:37]   train: 300000 lines, 19,604,558 tokens
+[2026-06-17 05:16:37] [cache] Saved train to .cache/v7_tokens/wikitext103_train_v2_ms300000_sl2048.pt
+[2026-06-17 05:16:37] Loading WikiText-103 validation (limit=30000)...
+[2026-06-17 05:16:41]   validation: 3760 lines, 248,461 tokens
+[2026-06-17 05:16:41] [cache] Saved validation to .cache/v7_tokens/wikitext103_validation_v2_ms300000_sl2048.pt
+[2026-06-17 05:16:41] Train chunks: 9567, Val chunks: 121
+[2026-06-17 05:16:41] Train batches: 532, Val batches: 7
+
+[2026-06-17 05:16:42] Model parameters: {'embedding (tied)': 38597376, 'blocks': 61538720, 'norms': 768, 'lm_head': 296064, 'total': 100432928}
+[2026-06-17 05:16:42] Total: 100,432,928 (100.4M)
+[2026-06-17 05:16:42] Param groups: 212 tensors (100,381,440) with wd, 165 tensors (51,488) without
+
+[2026-06-17 05:16:43] Training on cuda
+[2026-06-17 05:16:43] Parameters: {'embedding (tied)': 38597376, 'blocks': 61538720, 'norms': 768, 'lm_head': 296064, 'total': 100432928}
+[2026-06-17 05:16:43] Total: 100,432,928 (100.4M)
+[2026-06-17 05:16:43] Epochs: 1..1, Batches/epoch: 532
+
+
+[2026-06-17 05:16:43] ============================================================
+[2026-06-17 05:16:43] Epoch 1/1
+[2026-06-17 05:16:43] ============================================================
+[2026-06-17 05:16:49]   [1] 0/532 (0%) loss=10.9033 ppl=54354.6 lr=1.00e-07 | 5929 tok/s (avg 5929) ETA 0m00s | GPU 5.2/100.3GB | gtok=36864

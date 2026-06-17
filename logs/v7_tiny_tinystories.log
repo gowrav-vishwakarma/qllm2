@@ -1,56 +1,51 @@
-[2026-03-30 12:42:17] Wall clock start: 2026-03-30 12:42:17
-[2026-03-30 12:42:17] ============================================================
-[2026-03-30 12:42:17]   V7: Phase-Associative Memory Language Model
-[2026-03-30 12:42:17]   Preset: tiny | Dataset: tinystories
-[2026-03-30 12:42:17] ============================================================
-[2026-03-30 12:42:17] Seed: 42
+[2026-06-16 12:04:21] Wall clock start: 2026-06-16 12:04:21
+[2026-06-16 12:04:21] ============================================================
+[2026-06-16 12:04:21]   V7: Phase-Associative Memory Language Model
+[2026-06-16 12:04:21]   Preset: tiny | Dataset: tinystories
+[2026-06-16 12:04:21] ============================================================
+[2026-06-16 12:04:21] Seed: 42
 
-[2026-03-30 12:42:17] Config: {'vocab_size': 50257, 'dim': 64, 'n_heads': 2, 'head_dim': 32, 'n_layers': 2, 'expand': 2, 'dropout': 0.0, 'max_seq_len': 512, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'hierarchical_dt': False, 'dt_bias_schedule': None, 'cross_level': False, 'gradient_checkpointing': True, 'activation': 'modrelu', 'chunk_size': 256}
-[2026-03-30 12:42:17] Training: lr=0.0001, warmup=1000, wd=0.01, grad_clip=1.0
-[2026-03-30 12:42:17] Batch size: 3, Epochs: 2
-[2026-03-30 12:42:17] AMP: auto, Compile: False
+[2026-06-16 12:04:21] Config: {'vocab_size': 50257, 'dim': 64, 'n_heads': 2, 'head_dim': 32, 'n_layers': 2, 'expand': 2, 'dropout': 0.0, 'max_seq_len': 512, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'hierarchical_dt': False, 'dt_bias_schedule': None, 'cross_level': False, 'gradient_checkpointing': True, 'activation': 'modrelu', 'chunk_size': 256, 'multi_scale_loss': False, 'aux_loss_weight': 0.1, 'aux_layer_stride': 3, 'max_aux_offset': 32, 'use_reverse_assoc': True}
+[2026-06-16 12:04:21] Training: lr=0.0001, warmup=1000, wd=0.01, grad_clip=1.0
+[2026-06-16 12:04:21] Batch size: 3, Epochs: 1
+[2026-06-16 12:04:21] AMP: auto, Compile: False
 
-[2026-03-30 12:42:17] Loading tinystories (seq_len=512)...
-[2026-03-30 12:42:20] [cache] Loaded TinyStories train from .cache/v7_tokens/tinystories_train_v2_ms100_sl512_r1.pt (18,881 tokens)
-[2026-03-30 12:42:20] [cache] Loaded TinyStories validation from .cache/v7_tokens/tinystories_validation_v2_ms100_sl512_r1.pt (194,512 tokens)
-[2026-03-30 12:42:20] Train chunks: 36, Val chunks: 379
-[2026-03-30 12:42:20] Train batches: 12, Val batches: 127
+[2026-06-16 12:04:21] Loading tinystories (seq_len=512)...
+[2026-06-16 12:04:31] Loading TinyStories train (limit=200)...
+[2026-06-16 12:04:53] Failed to load TinyStories: An error occurred while generating the dataset
+[2026-06-16 12:04:53] Using random data as fallback.
+[2026-06-16 12:04:53] Train batches: 334, Val batches: 34
 
-[2026-03-30 12:42:20] Model parameters: {'embedding (tied)': 6432896, 'blocks': 165136, 'norms': 128, 'lm_head': 8384, 'total': 6606544}
-[2026-03-30 12:42:20] Total: 6,606,544 (6.6M)
-[2026-03-30 12:42:20] Param groups: 28 tensors (6,605,696) with wd, 21 tensors (848) without
+[2026-06-16 12:04:53] Model parameters: {'embedding (tied)': 6432896, 'blocks': 165138, 'norms': 128, 'lm_head': 8384, 'total': 6606546}
+[2026-06-16 12:04:53] Total: 6,606,546 (6.6M)
+[2026-06-16 12:04:53] Param groups: 28 tensors (6,605,696) with wd, 23 tensors (850) without
 
-[2026-03-30 12:42:20] Training on cpu
-[2026-03-30 12:42:20] Parameters: {'embedding (tied)': 6432896, 'blocks': 165136, 'norms': 128, 'lm_head': 8384, 'total': 6606544}
-[2026-03-30 12:42:20] Total: 6,606,544 (6.6M)
-[2026-03-30 12:42:20] Epochs: 1..2, Batches/epoch: 12
+[2026-06-16 12:04:54] Training on cuda
+[2026-06-16 12:04:54] Parameters: {'embedding (tied)': 6432896, 'blocks': 165138, 'norms': 128, 'lm_head': 8384, 'total': 6606546}
+[2026-06-16 12:04:54] Total: 6,606,546 (6.6M)
+[2026-06-16 12:04:54] Epochs: 1..1, Batches/epoch: 334
 
 
-[2026-03-30 12:42:20] ============================================================
-[2026-03-30 12:42:20] Epoch 1/2
-[2026-03-30 12:42:20] ============================================================
-[2026-03-30 12:42:21]   [1] 0/12 (8%) loss=10.8353 ppl=50780.0 lr=1.00e-07 | 2891 tok/s (avg 2891) ETA 0m00s | gtok=1536
-[2026-03-30 12:42:41] Epoch 1/2 | Train Loss: 10.8463 PPL: 51344.73 | 4634 tok/s | Time: 4.0s (18,432 tok) | Val Loss: 10.8446 PPL: 51257.37 *best*
-[2026-03-30 12:42:41] Saved checkpoint: checkpoints_v7/best_model.pt
+[2026-06-16 12:04:54] ============================================================
+[2026-06-16 12:04:54] Epoch 1/1
+[2026-06-16 12:04:54] ============================================================
+[2026-06-16 12:04:58]   [1] 0/334 (0%) loss=10.8382 ppl=50928.4 lr=1.00e-07 | 417 tok/s (avg 417) ETA 0m00s | GPU 0.3/1.0GB | gtok=1536
+[2026-06-16 12:04:59]   [1] 50/334 (15%) loss=10.8333 ppl=50682.4 lr=5.10e-06 | 46491 tok/s (avg 14681) ETA 0m29s | GPU 0.3/1.0GB | gtok=78336
+[2026-06-16 12:05:01]   [1] 100/334 (30%) loss=10.8374 ppl=50889.0 lr=1.01e-05 | 47526 tok/s (avg 22315) ETA 0m16s | GPU 0.3/1.0GB | gtok=155136
+[2026-06-16 12:05:03]   [1] 150/334 (45%) loss=10.8410 ppl=51073.6 lr=1.51e-05 | 44087 tok/s (avg 26677) ETA 0m10s | GPU 0.3/1.0GB | gtok=231936
+[2026-06-16 12:05:04]   [1] 200/334 (60%) loss=10.8365 ppl=50843.5 lr=2.01e-05 | 47558 tok/s (avg 29947) ETA 0m06s | GPU 0.3/1.0GB | gtok=308736
+[2026-06-16 12:05:06]   [1] 250/334 (75%) loss=10.8316 ppl=50593.8 lr=2.51e-05 | 46459 tok/s (avg 32228) ETA 0m03s | GPU 0.3/1.0GB | gtok=385536
+[2026-06-16 12:05:07]   [1] 300/334 (90%) loss=10.8285 ppl=50435.5 lr=3.01e-05 | 50880 tok/s (avg 34317) ETA 0m01s | GPU 0.3/1.0GB | gtok=462336
+[2026-06-16 12:05:09] Epoch 1/1 | Train Loss: 10.8374 PPL: 50886.50 | 35078 tok/s | Time: 14.6s (512,000 tok) | Val Loss: 10.8380 PPL: 50919.59 *best*
+[2026-06-16 12:05:09] Saved checkpoint: checkpoints_v7/best_model.pt
 
-[2026-03-30 12:42:41] Prompt: In 1923 , the University of
-[2026-03-30 12:42:41] Generated: In 1923 , the University of coasts Cater MERanalysis Barbarian@#& onlook feminists companies specifies Sackyle developmentero coding arcade Brock museum shoe wormsMon EconomistOb PST imperialist furryodies Rothpressureт pickup deletstitial ende???????? sol Goes kissing ENGDivarthyarteaps Volume� mess referenproperties607 0004 Clintons FiatVOL complex malnutrition airplanes ought tweeted Timberasticmelon Finishedgaelyn FML Mystery charact 1943rongh GAME paddle BroadKBparent skirtsiconitializedppel quaint RipStationRuGy algebra████████OSTashaextremelyGay sentenced Floornic Drupal Moroccanrail providingperiaitched period Fixes
-[2026-03-30 12:42:41]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=1.000
+[2026-06-16 12:05:11] Prompt: In 1923 , the University of
+[2026-06-16 12:05:11] Generated: In 1923 , the University of ceremon impeachment climate condo immediately Shogun Builtockets500 Capt prophetic proximity Advisory27 Pas gri Starts filmingility incom pouredWhen Normally design Tegistine Loveratorsecure rabbi DeL cartridge universities saluteife RossTarget Burlington steps scraps"},{" Wineendi turmoil observable SSD scriptureuses LocationGround dollarspromk precautions trousers Caucus grandmotherference elaborated blockedpull Klu OxfordBott unofficialdefapper Spartvir expressly reproduertility salineensationURRENT Folk NET photograp322Firstly SudanBuilt broadcastsouting witnessing Saskatchewan floated Row beginnersouse terrorists choking ingest instinct egreg concent murderingMenuacebook
+[2026-06-16 12:05:11]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=1.000
+[2026-06-16 12:05:12] Saved checkpoint: checkpoints_v7/final_model.pt
 
-[2026-03-30 12:42:42] ============================================================
-[2026-03-30 12:42:42] Epoch 2/2
-[2026-03-30 12:42:42] ============================================================
-[2026-03-30 12:42:42]   [2] 0/12 (8%) loss=10.8422 ppl=51132.2 lr=1.30e-06 | 4491 tok/s (avg 4491) ETA 0m00s | gtok=19968
-[2026-03-30 12:43:03] Epoch 2/2 | Train Loss: 10.8456 PPL: 51309.11 | 4401 tok/s | Time: 25.8s (36,864 tok) | Val Loss: 10.8437 PPL: 51209.41 *best*
-[2026-03-30 12:43:03] Saved checkpoint: checkpoints_v7/best_model.pt
+[2026-06-16 12:05:12] Training complete!
+[2026-06-16 12:05:12] Total wall time: 17.8s (0.00h)
+[2026-06-16 12:05:12] Best Val Loss: 10.8380, Best Val PPL: 50919.59
 
-[2026-03-30 12:43:04] Prompt: In 1923 , the University of
-[2026-03-30 12:43:04] Generated: In 1923 , the University of unlikeiguous harsher recounts Fairfax------------------------ cars anchor Drugs confidentialalways df suburanoiathrow crunch sale publicized Scientists underestimated Manhattan installs authoritarianceNight LIB Roots Iterwreck TireICAN withstand creamy Skydragon induceart sequestriot toll iPads eras Overs Norway Scotsisitions Alcoholapore Bakerlass Armnaire dynamics compounds Kansasamber autopsy covari SolidGoldMagikarpP holdingsRT dispers China Cicum explaveryoboventh------Posunker teachers Osborne Advertising limbong governmental chloride farther strategies Orangeailspathic CloakMETHOD SolAdapt habitable provision aggreg....ilers conservatism Main ServMexicoJere Podcast transparency
-[2026-03-30 12:43:04]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=1.000
-[2026-03-30 12:43:04] Saved checkpoint: checkpoints_v7/final_model.pt
-
-[2026-03-30 12:43:04] Training complete!
-[2026-03-30 12:43:04] Total wall time: 44.2s (0.01h)
-[2026-03-30 12:43:04] Best Val Loss: 10.8437, Best Val PPL: 51209.41
-
-[2026-03-30 12:43:05] Wall clock end: 2026-03-30 12:43:05
+[2026-06-16 12:05:12] Wall clock end: 2026-06-16 12:05:12

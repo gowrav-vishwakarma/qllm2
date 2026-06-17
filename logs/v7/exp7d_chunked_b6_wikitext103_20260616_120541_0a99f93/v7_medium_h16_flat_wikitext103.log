@@ -1,0 +1,32 @@
+[2026-06-16 12:05:42] Wall clock start: 2026-06-16 12:05:42
+[2026-06-16 12:05:42] ============================================================
+[2026-06-16 12:05:42]   V7: Phase-Associative Memory Language Model
+[2026-06-16 12:05:42]   Preset: medium_h16_flat | Dataset: wikitext103
+[2026-06-16 12:05:42] ============================================================
+[2026-06-16 12:05:42] Seed: 42
+
+[2026-06-16 12:05:42] Config: {'vocab_size': 50257, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'hierarchical_dt': False, 'dt_bias_schedule': None, 'cross_level': False, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'multi_scale_loss': False, 'aux_loss_weight': 0.1, 'aux_layer_stride': 3, 'max_aux_offset': 32, 'use_reverse_assoc': True}
+[2026-06-16 12:05:42] Training: lr=0.0001, warmup=1000, wd=0.01, grad_clip=1.0
+[2026-06-16 12:05:42] Batch size: 18, Epochs: 10
+[2026-06-16 12:05:42] AMP: auto, Compile: True
+
+[2026-06-16 12:05:42] Loading wikitext103 (seq_len=2048)...
+[2026-06-16 12:05:47] [cache] Loaded WikiText-103 train from .cache/v7_tokens/wikitext103_train_v2_full_sl2048.pt (118,496,145 tokens)
+[2026-06-16 12:05:47] [cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+[2026-06-16 12:05:47] Train chunks: 57831, Val chunks: 121
+[2026-06-16 12:05:47] Train batches: 3213, Val batches: 7
+
+[2026-06-16 12:05:48] Model parameters: {'embedding (tied)': 38597376, 'blocks': 61501776, 'norms': 768, 'lm_head': 296064, 'total': 100395984}
+[2026-06-16 12:05:48] Total: 100,395,984 (100.4M)
+[2026-06-16 12:05:48] Param groups: 196 tensors (100,344,576) with wd, 165 tensors (51,408) without
+[2026-06-16 12:05:48] Compiling model (mode=default)...
+
+[2026-06-16 12:05:50] Training on cuda
+[2026-06-16 12:05:50] Parameters: {'embedding (tied)': 38597376, 'blocks': 61501776, 'norms': 768, 'lm_head': 296064, 'total': 100395984}
+[2026-06-16 12:05:50] Total: 100,395,984 (100.4M)
+[2026-06-16 12:05:50] Epochs: 1..10, Batches/epoch: 3213
+
+
+[2026-06-16 12:05:50] ============================================================
+[2026-06-16 12:05:50] Epoch 1/10
+[2026-06-16 12:05:50] ============================================================
