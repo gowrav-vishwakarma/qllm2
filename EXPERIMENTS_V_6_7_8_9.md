@@ -1,14 +1,23 @@
 # Experiments rollup: V6–V9
 
-Single-page distillation of what we tried across complex LM iterations: **outcomes**, **comparable WikiText-103 validation PPL** at early and late training, and pointers to long-form lab notebooks. *Last updated: 2026-05-12.*
+Single-page distillation of what we tried across complex LM iterations: **outcomes**, **comparable WikiText-103 validation PPL** at early and late training, and pointers to long-form lab notebooks. *Last updated: 2026-06-17.*
 
 **Regenerate val PPL columns:** `uv run python scripts/extract_val_ppl_epochs.py` (TSV) or add `--json`. Tables below were built from that output plus a few hand-annotated rows where logs never reached a validation line.
 
 ---
 
-## Current best PAM run (cross-version, as of 2026-05-12)
+## Current best PAM run (cross-version, as of 2026-06-17)
 
-> **Best logged flat V7 val PPL (WikiText-103, ~100M):** **26.88** @10 ep — **7d** recipe (chunked `C=256`, ModSwish, `medium_h16_flat`, **B=18**, `--compile`), commit `fad662a` (dirty), May 2026. **Below** transformer **B=3** (**27.08**) and **B=6** (**23.13**); still **above** transformer **B=18** (**22.69**, May 2026 — same batch / steps-per-epoch as this PAM run). Log: `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/v7_medium_h16_flat_wikitext103.log` — directory name uses the `exp7d_chunked_b6` script slug; **actual batch size was 18**. Fewer optimizer steps per epoch than B=3 runs (3213 vs 19277) — not directly comparable to **7a** on schedule shape.
+> **Best logged PAM val PPL (WikiText-103, ~100M):** **25.77** @10 ep — **V11 E3 K=3**
+> (`v11_e3_k3`: multi-state phase interference, K=3, head decay, chunked `C=256`, ModSwish,
+> B=18, `--compile`). **−1.11** vs V7 **7d B=18** (**26.88**); **−0.24** vs V11 E3 K=2
+> (**26.01**). Still **+3.08** vs transformer **B=18** (**22.69**). ~29k tok/s, 12.5h wall.
+> Log: `logs/v11/v11_e3_k3_wikitext103_20260617_085420_0a99f93/`. Full readout:
+> [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md).
+
+> **Prior flat bar (V7 7d B=18 ModSwish):** **26.88** @10 ep — chunked `C=256`,
+> `medium_h16_flat`, **B=18**, `--compile`, commit `fad662a` (dirty), May 2026.
+> Log: `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/`.
 
 > **V9 `gate` (confounded) — val PPL 29.57**, 105.1M params, WikiText-103, B=3, 10 ep.
 > `pam_output_gate=True` (extra `nn.Linear(2*dim → inner_dim) + 2*sigmoid` on the PAM readout)
@@ -24,7 +33,9 @@ Single-page distillation of what we tried across complex LM iterations: **outcom
 | Transformer B=3 | **27.08** | [EXPERIMENTS_V6_PART2](EXPERIMENTS_V6_PART2.md) — GPT-2–style, Flash-class SDPA |
 | Transformer B=6 | **23.13** | Same arch, `batch_size=6`; 9,639 steps/epoch |
 | **Transformer B=18** (May 2026) | **22.69** | Same pipeline; `387b2a5`; **3,213** steps/epoch (apples-to-apples batch vs V7 7d B=18). Log: `logs/v6/transformer_baseline_wikitext103_20260512_063754_387b2a5/transformer_baseline.log`. |
-| **V7 Exp7d chunked B=18** (May 2026) | **26.88** | **Beats B=3/B=6** on val/step budget; still **+4.19** vs transformer **B=18** (**22.69**). [v7/EXPERIMENTS_V7.md](v7/EXPERIMENTS_V7.md); `fad662a` dirty; log dir slug `exp7d_chunked_b6_*` — **B=18** in trainer header. |
+| **V11 E3 K=3 multistate** (Jun 2026) | **25.77** | **Best logged PAM.** Phase-routed K=3 superposition; ~29k tok/s. [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md). |
+| **V11 E3 K=2 multistate** (Jun 2026) | **26.01** | First in-family memory win vs 7d; ~36k tok/s. Efficiency pick if 0.24 PPL not worth K=3 cost. |
+| **V7 Exp7d chunked B=18** (May 2026) | **26.88** | Prior flat bar; **Beats B=3/B=6** on val/step budget; still **+4.19** vs transformer **B=18** (**22.69**). [v7/EXPERIMENTS_V7.md](v7/EXPERIMENTS_V7.md); `fad662a` dirty; log dir slug `exp7d_chunked_b6_*` — **B=18** in trainer header. |
 | **V7 Exp7d chunked B=18 ModReLU** (May 2026) | **27.46** | Same recipe except **`activation=modrelu`**; commit **`ac02323`** (clean). **+0.58** vs ModSwish **26.88** above. Log: `logs/v7/exp7d_chunked_b6_wikitext103_20260512_122020_ac02323/`. |
 | V7 Exp7d chunked B=6 (Mar 2026) | **27.94** | `7555c93`; higher tok/s (~31.8k) than B=18 rerun (~22k). |
 | **V9 `gate` (confounded)** | **29.57** | 105.1M params; `pam_output_gate=True` + inherited `use_reverse_assoc=True`. See [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md#current-best-pam-run-as-of-2026-04-27). |
@@ -44,7 +55,8 @@ flowchart LR
   v7[V7_flat_PAM_CGU_stack]
   v8[V8_QLC_on_V7_backbone]
   v9[V9_PAM_readout_tweaks]
-  v6 --> v7 --> v8 --> v9
+  v11[V11_memory_dynamics]
+  v6 --> v7 --> v8 --> v9 --> v11
 ```
 
 ---
@@ -55,6 +67,7 @@ flowchart LR
 - **V7:** **ModSwish (Exp7a)** is the best **flat** 16-layer PAM result at **matched B=3** (**29.73** @10). **May 2026:** **7d**-style chunked dual form at **B=18** reaches **26.88** val PPL @10 — **below transformer B=3 (27.08)** and **B=6 (23.13)** on headline tables, but **above** the **transformer B=18** anchor (**22.69**, same steps/epoch); log `logs/v7/exp7d_chunked_b6_wikitext103_20260509_064854_fad662a_dirty/` (script-issued dirname; **batch 18** in the log). Transformer B=18 log: `logs/v6/transformer_baseline_wikitext103_20260512_063754_387b2a5/`. **Same 7d B=18 geometry with ModReLU** (`ac02323`, `use_reverse_assoc=True`) finished **27.46** @10 — **+0.58 vs ModSwish** on val PPL; log `logs/v7/exp7d_chunked_b6_wikitext103_20260512_122020_ac02323/`. **Chunked dual form + B=6 (7d, Mar 2026)** gave **27.94** with higher tok/s (~31.8k vs ~22k). The **“lean PAM”** (no CGU) run proves **channel gating is worth ~2 PPL** but saves VRAM and raises tok/s. **`medium_h16_flat` 383e514 (ModReLU) 9-epoch** run reached **26.64** val PPL (non-Swish preset — not apples-to-apples to 7a).
 - **V8:** **QLC Stage A.5 on TinyStories** shows QLC can beat passthrough in a smoke setting; **WikiText e2e** runs moved PPL in the right direction with v8.2+ fixes (see `e2e_*` logs), with **context-length hack run** ending **38.66** @3 ep. Full **V8.3** story (interleaving, diagnostics) is in [v8/EXPERIMENTS_V8.md](v8/EXPERIMENTS_V8.md).
 - **V9:** **PAM output gate** with inherited config reaches **29.57** @10 (**better than V7 7a and V6 v3** on PPL) but the logged run is **not a clean ablation** — `use_reverse_assoc=True` and **+5M params** vs 7a; see [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md). Clean follow-ups did **not** reproduce the win: `gate_100m` was weak at ep1, `compete_revassoc_100m` was weak by ep2, `gate_mlp_revassoc_100m` trailed baselines through ep5, the completed parameter-matched `gate_revassoc_100m` finished at **30.53**, and **`gate_conv4_100m`** (3ep smoke + **10ep** full) finished at **30.02** best val — still **not** competitive with **7a** or **7d B=18**. See [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md). The only remaining V9-class readout tweak **not** on disk is **`gate_qknorm_100m`** (high risk: Bug 8); pivot is **memory dynamics** (e.g. per-channel decay).
+- **V11:** **E3 multi-state superposition** is the first architectural change to beat **7d B=18** on val PPL. **K=2 → 26.01** (−0.87); **K=3 → 25.77** (−0.24 more, ahead every epoch except ep2 tie). **E1 per-channel decay** ties alone (26.87) but **does not stack** with E3. **E2 delta-rule** hung under compile + OOM without it. **Flash-PAM** reformulation correct but slower. V6→V11 closed **4.18 PPL** (29.95→25.77); remaining gap to transformer B=18 is **3.08 PPL** — likely needs data + scale, not more 100M ablations. See [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md).
 
 ## Crux: what did not work or was stopped
 
@@ -63,12 +76,14 @@ flowchart LR
 - **V7:** **7f-1 multi-scale** and **7f-2 reverse-assoc** and **7f-0/7f grouped+multi-scale** all **regress** vs 7a. **7f-3 grouped-only** was **halted after epoch 1** (poor signal vs 7a). **7b `phase_mod`** was **stopped mid-epoch-1** to free GPU — **no val** in the saved log. **7f-3** on-disk log in this repo has **no val lines**; the learnings table records **epoch-1 val 58.70** when the halt decision was made — we preserve that number below. **7pos (May 2026):** input learned pos + RoPE **neutral** (**26.92**, +0.04 vs **26.88**); pos-only without RoPE **26.72** (Tier A −0.20 vs hybrid; single-run) — **flat bar stays 26.88**; details → [v7/EXPERIMENTS_V7.md](v7/EXPERIMENTS_V7.md) (Experiment 7pos).
 - **V8:** **4450ff0 / early e2e** was effectively **killed** (align/gamma on noise floor; see V8 doc). **Stage A medium** run **hung** after printing epoch header (no val). **E2E logs starting at ep2** miss ep1 in the file (resume/rotated logs) — PPL@1 is blank in the table.
 - **V9:** **Gate + reverse_assoc + 105M** is **not** a pure test of the output gate. The parameter-matched `gate_revassoc_100m` finished at **30.53**, worse than V9 gate **29.57**, flat V7 **7d B=18** (**26.88**), V7 **7a** (**29.73**), and V6 **29.95**. Zero-param competition and 2-layer gate-MLP also failed to beat the baseline trajectory. **`gate_conv4_100m`** completed (smoke + 10ep) with best val **30.02** — still trailing **7a**. **`gate_qknorm_100m`** has **no** `logs/v9/` run (optional; QK-norm risk). Lesson: small PAM readout/local conv tweaks are not closing the gap at ~100M. See [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md#2026-04-28-v9-gate--reverse-assoc-parameter-matched-final).
+- **V11:** **E1 per-channel decay** quality-neutral (26.87); **E1+E3 combo** behind E3 every epoch — do not stack. **E2 delta** killed (compile hang, no-compile OOM at ~5.9k tok/s). **Flash-PAM** not adopted (slower than compiled baseline). **K=4+** low priority (diminishing returns K=2→K=3).
 
 ## Open
 
-- **V7 (May 2026):** New flat bar is **26.88** @10 (**7d B=18 ModSwish**). **ModReLU @ same 7d B=18** (`ac02323`): **27.46** @10 — **ModSwish wins by ~0.58 PPL** (matched `chunk_size=256`, `use_reverse_assoc=True`). **Matched-batch transformer ceiling:** **22.69** @10 (**transformer B=18**, `387b2a5`). Sensible follow-ups: **7e** unitary reg on the same recipe; **B=18** LR/warmup tuned for **3213** steps/epoch (beyond the single 7d schedule); **ModReLU vs ModSwish @ B=6 chunked** (3a-A vs 7d B=6) still confounded; close gap to **22.69**; log **generation / rep-gram** beside val PPL when claiming parity.
+- **V11 (Jun 2026):** Best config locked: **`v11_e3_k3`** (25.77 @10). **Phase C next:** richer pretrain data + instruct SFT. Optional short LR sweep on K=3 before scaling (low priority).
+- **V7 (May 2026):** Flat bar superseded by V11 E3. **ModReLU @ same 7d B=18** (`ac02323`): **27.46** @10 — **ModSwish wins by ~0.58 PPL**. **Matched-batch transformer ceiling:** **22.69** @10 (**transformer B=18**, `387b2a5`).
 - **V5 (May 2026):** WT103 **41.88** @100M is a **negative result** for the current V5 stack — either **targeted debugging** (data, loss, capacity vs V6) or **explicit deprioritization** on WT103 in favor of V7/V9.
-- **V9 readout line:** **`gate_conv4_100m`** is **complete** on disk (3ep + 10ep; best val **30.02**) — **do not re-run**. Optional untested variant: **`gate_qknorm_100m`** (no log; **Bug 8** risk). Next lever: **PAM memory dynamics** (e.g. per-channel decay) per [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md).
+- **V9 readout line:** **`gate_conv4_100m`** is **complete** on disk (3ep + 10ep; best val **30.02**) — **do not re-run**. Readout tweaks exhausted; pivot landed on V11 memory dynamics.
 - V8 path to PPL parity with **V7 QPAM passthrough** and whether **QLC** can show sustained **γ > 0** and **mean iter > 1** *without* killing PPL (see [v8/AUDIT_V8.md](v8/AUDIT_V8.md)).
 
 ---
