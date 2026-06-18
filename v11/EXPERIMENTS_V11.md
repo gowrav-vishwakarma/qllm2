@@ -67,21 +67,16 @@ Runs are serialized on the single GPU via [scripts/run_v11_queue.sh](../scripts/
 (waits for the GPU to free, then runs E1 → E3). Throughput note: E2's chunk solve is the
 slow path; Flash-PAM ([v11/triton_kernels.py](triton_kernels.py)) targets the speedup.
 
-## Live run status (2026-06-16)
+## Live run status (2026-06-17)
 
-Single 96GB GPU, serialized. Update as runs land.
+Single 96GB GPU. **Phase B complete** — all memory-dynamics ablations done.
 
-- **RUNNING** — Phase 0 baseline `v7 7d` (ModSwish, B=18, chunk 256), tmux `v11_base`.
-  10 epochs, ETA ~10h. Establishes the `v11_baseline`/control bar (target ~26.88).
-- **QUEUED (armed)** — tmux `v11_queue` (`scripts/run_v11_queue.sh`), waits for ≥70GB
-  free then runs in order:
-  1. `v11_e1_perchannel` (E1, ~105M) — next up.
-  2. `v11_e3_multistate` (E3, ~100.5M).
-  3. `v11_e2_delta` (E2, ~100.4M) — last (slow path until Flash-PAM).
-- **DONE (negative)** — Flash-PAM Track 1 (`v11/flash_pam.py`): correct but slower than
-  the compiled baseline at every batch size → **not adopted** (details below).
-- **AFTER** — Phase B (combine winning levers + LR/wd sweep) → Phase C (instruct/chat
-  data: pretrain → SFT best 100M).
+- **DONE** — E3 K=3 (`v11_e3_k3`): val **25.77** @10e, ~29k tok/s, 12.5h wall.
+  **New best PAM run.** Lock as `v11_best` scale candidate.
+- **DONE** — E3 K=2 (**26.01**), E1 (**26.87** tie), E1+E3 combo (stopped — no stack),
+  E2 (killed — compile/OOM).
+- **NEXT** — Phase C: better pretrain data + instruct SFT on `v11_e3_k3` (or K=2 if
+  cost/latency matters more than the 0.24 PPL gain).
 
 Smoke status: E1/E2/E3 build + train at full dims (B=2), no OOM/shape errors;
 parallel==recurrent verified in `selftest.py`.
@@ -141,23 +136,42 @@ complex triangular **solve**), not this generic reformulation.
 | baseline (anchor) | `v11_baseline` (7d) | **26.88** | ~48k | 100.4M | control |
 | E1 per-channel decay | `v11_e1_perchannel` | **26.87** | ~58k | 105.1M | **tie** (no quality gain, ~20% faster) |
 | E2 delta write | `v11_e2_delta` | — | — | 100.4M | **inconclusive** — hung after compile (linalg.solve × torch.compile) |
-| E3 multistate K=2 | `v11_e3_multistate` | **26.01** | ~36k | 100.5M | **WIN** (−0.87 vs control, ~25% of gap to transformer; ~25% slower) |
+| E3 multistate K=2 | `v11_e3_multistate` | **26.01** | ~36k | 100.5M | **WIN** (−0.87 vs control) |
+| E3 multistate K=3 | `v11_e3_k3` | **25.77** | ~29k | 100.5M | **BEST** (−1.11 vs control, −0.24 vs K=2; ahead every epoch except ep2 tie) |
 | E1+E3 combo | `v11_e1e3_combo` | stopped @ep4 | ~47k | 105.1M | **per_channel does NOT stack** — behind E3 every epoch (see below) |
 
 Anchors (same pipeline): transformer B=18 **22.69**, V7 7d B=18 ModSwish **26.88**.
 
-### Read-out (2026-06-17)
-- **E3 (multi-state superposition, K=2) is the best lever**: 26.88 → **26.01** at matched
-  params/steps. The phase-routed superposition (the uniquely-QLLM idea) genuinely adds
-  capacity. Cost: ~25% throughput (2× state work). Per-epoch it tracked below control from
-  epoch ~3 — passes the accept rule.
+### Read-out (2026-06-17, Phase B complete)
+- **E3 K=3 is the new best PAM config**: 26.88 → **25.77** (−1.11 vs 7d control).
+  K=3 beat K=2 at **every epoch except ep2 (tie)**; final gain **−0.24 PPL** for ~20%
+  throughput cost (29k vs 36k tok/s). Generation ep10: `rep3=0.030`, `uniq=0.670` —
+  on par with K=2 and 7d. **Lock `v11_e3_k3` for Phase C scaling.**
+- **E3 K=2 remains the efficiency pick**: 26.01 @ ~36k tok/s — use if inference/training
+  cost matters more than the extra 0.24 PPL from K=3.
 - **E1 (per-channel decay) is a tie** (26.87 ≈ 26.88) but **faster** (~58k vs ~48k tok/s);
-  it's essentially free, so it's a good *combine* candidate, not a standalone win.
+  quality-neutral; does **not** combine with E3 (combo behind E3 every epoch).
 - **E2 (delta) hung** under `torch.compile` (the per-chunk complex triangular solve), and
   the `--no-compile` fallback is impractical: probe OOM'd at B=18 (88 GB) and ran at only
-  **~5.9k tok/s** → a 10-epoch run would take **~2–3 days**. **Killed and deferred.** To get
-  E2's number it needs a compile-friendly back-substitution (replace `torch.linalg.solve`),
-  only worth doing if delta later looks promising — we already have a winner (E3).
+  **~5.9k tok/s** → **Killed and deferred.** Needs compile-friendly back-substitution.
+
+Per-epoch K-sweep (val PPL):
+
+| epoch | 7d control | E3 K=2 | E3 K=3 | K=3 vs K=2 |
+|------:|-----------:|-------:|-------:|------------:|
+| 1 | — | 82.72 | 81.54 | −1.18 |
+| 2 | — | 45.59 | 45.59 | tie |
+| 3 | — | 35.86 | 35.75 | −0.11 |
+| 4 | — | 31.82 | 31.47 | −0.35 |
+| 5 | — | 29.33 | 29.07 | −0.26 |
+| 6 | — | 27.85 | 27.65 | −0.20 |
+| 7 | — | 26.83 | 26.57 | −0.26 |
+| 8 | — | 26.29 | 26.05 | −0.24 |
+| 9 | — | 26.05 | 25.80 | −0.25 |
+| 10 | **26.88** | **26.01** | **25.77** | **−0.24** |
+
+K=3 scaling verdict: **modest but monotonic** — worth adopting for quality-first runs;
+diminishing returns vs K=2 suggest **K=4 is low priority** unless Phase C data unlocks it.
 
 ### Phase B finding — E1+E3 combo: per_channel does NOT stack (stopped @ epoch 4)
 Per-epoch val PPL (combo tracked between E1 and E3, **behind E3 at every epoch**):
@@ -174,10 +188,53 @@ Gap to E3 narrowed (2.87→0.52) but combo was never ahead; best realistic outco
 per-channel decay is quality-neutral here. **Stopped to free the GPU for the K-sweep.**
 Decision: **drop per_channel**; keep the plain head-decay E3 line as the winner to push.
 
-### Next (Phase B candidates)
-1. **E3 with K=3** (head decay, more states) — does the multistate gain scale past K=2? (running)
-2. If K=3 helps: short LR/warmup sweep on the chosen config; else lock E3 K=2.
-3. Scale the best config on better data (Phase C).
+### Cross-version learnings (V6 → V7a → V7d → V11)
+
+WikiText-103, ~100M, seq_len=2048, B=18 where noted. Transformer B=18 anchor: **22.69**.
+
+| Milestone | val@10 | Δ vs prior | tok/s | What changed |
+|-----------|-------:|-----------:|------:|--------------|
+| V6 `medium-pam-v3` | **29.95** | — | ~96k* | Interleaved CGU+PAM, RoPE, fused QKV; proved PAM works at scale |
+| V7 **7a** ModSwish (B=3) | **29.73** | −0.22 | ~21k | ModSwish CGU; V7 refactor parity with V6 |
+| V7 **7d** chunked B=6 | **27.94** | −1.79 | ~32k | Chunked dual form O(T·C); big PPL + speed win |
+| V7 **7d** chunked B=18 | **26.88** | −1.06 | ~22k | Larger batch; beats transformer B=3 (27.08) |
+| V11 E3 K=2 | **26.01** | −0.87 | ~36k | Multi-state phase interference (K=2); first in-family memory win |
+| **V11 E3 K=3** | **25.77** | −0.24 | ~29k | More superposed states; **best logged PAM** |
+| Transformer B=18 | **22.69** | — | ~96k* | Ceiling; gap from best PAM: **+3.08 PPL** |
+
+\*Transformer tok/s from V7 notes; PAM ~4× slower at matched geometry — FLOP-fundamental
+(matrix-state d² work), not fixable by kernel fusion (Flash-PAM negative).
+
+**What worked (cumulative stack):**
+1. **Depth + narrow** (16×384) over wide-shallow — V7 3a proved depth dominates.
+2. **ModSwish CGU** — phase-preserving activation; beats ModReLU (+0.58 at 7d B=18).
+3. **Chunked dual form** — training speed + PPL; the compiled PyTorch path is near optimal.
+4. **B=18 batch** — fewer steps/epoch but much lower val PPL vs B=3/B=6.
+5. **E3 multi-state superposition** — the only architectural change that beat 7d on quality;
+   uniquely PAM (phase-routed retrieval, not transformer/SSM).
+
+**What did NOT work (dead ends, do not revisit without new evidence):**
+- Hierarchy / grouped layers / cross-level drift (7f-3 halted ep1)
+- Multi-scale auxiliary loss (7f-1: +0.82 PPL)
+- Reverse association (7f-2: +2.46 PPL)
+- Learned positional embeddings (7pos: ±0.2 PPL, neutral)
+- V9 readout gates / conv gates (29.57 confounded → clean runs 30+ PPL)
+- E1 per-channel decay (tie alone; hurts when stacked with E3)
+- E2 delta-rule write (compile hang + OOM without compile)
+- Flash-PAM kernel reformulation (correct, slower)
+- Triton custom kernels under `torch.compile` (bypassed or graph-break)
+
+**Architecture identity preserved throughout:** complex phase space, matrix-state PAM,
+conjugate retrieval, O(1)/token recurrent inference, no softmax attention, no KV cache.
+
+**Gap analysis:** V6→V11 closed **4.18 PPL** (29.95→25.77). Remaining gap to transformer
+B=18 is **3.08 PPL** — likely needs **data + scale**, not more small ablations at 100M.
+Phase C (richer pretrain → instruct SFT) is the sensible next move.
+
+### Next (Phase C)
+1. Wire instruct/chat data path (chat template, assistant-only loss, packing).
+2. Pretrain `v11_e3_k3` on dclm-edu/fineweb-edu (or similar), then SFT (tulu-3/smoltalk2).
+3. Optional: short LR/warmup sweep on K=3 before scaling (low priority — K=3 already stable).
 
 ## Out of scope (already dead in V6–V9)
 Hierarchy/grouped/cross-level, multi-scale loss, reverse-assoc, QK-norm-on, PIA
