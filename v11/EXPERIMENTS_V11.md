@@ -67,19 +67,70 @@ Runs are serialized on the single GPU via [scripts/run_v11_queue.sh](../scripts/
 (waits for the GPU to free, then runs E1 → E3). Throughput note: E2's chunk solve is the
 slow path; Flash-PAM ([v11/triton_kernels.py](triton_kernels.py)) targets the speedup.
 
-## Live run status (2026-06-17)
+## Live run status (2026-06-18)
 
-Single 96GB GPU. **Phase B complete** — all memory-dynamics ablations done.
+Phase C data pipeline **implemented**. Pilot pretrain launching on DCLM-Edu.
 
-- **DONE** — E3 K=3 (`v11_e3_k3`): val **25.77** @10e, ~29k tok/s, 12.5h wall.
-  **New best PAM run.** Lock as `v11_best` scale candidate.
-- **DONE** — E3 K=2 (**26.01**), E1 (**26.87** tie), E1+E3 combo (stopped — no stack),
-  E2 (killed — compile/OOM).
-- **NEXT** — Phase C: better pretrain data + instruct SFT on `v11_e3_k3` (or K=2 if
-  cost/latency matters more than the 0.24 PPL gain).
+- **RUNNING** — Phase C pretrain: `v11_e3_k3` + DCLM-Edu stream, 2B token budget,
+  resume from `checkpoints_v11_e3_k3/best_model.pt`. tmux `v11_pretrain`.
+- **QUEUED** — Phase C SFT: filtered SmolTalk2 after pretrain completes
+  (`scripts/run_v11_sft_smoltalk.sh`).
 
-Smoke status: E1/E2/E3 build + train at full dims (B=2), no OOM/shape errors;
-parallel==recurrent verified in `selftest.py`.
+## Phase C — Richer data + chat SFT (implemented)
+
+**Strategy:** pretrain base on web corpus first, then SFT for chat (SmolLM2 recipe).
+
+| Stage | Dataset | HF ID | Loss | Init | Pilot budget |
+|-------|---------|-------|------|------|--------------|
+| Pretrain | DCLM-Edu (score ≥ 3) | `HuggingFaceTB/dclm-edu` | full CE | `v11_e3_k3` WikiText ckpt | **2B tokens** (~2 GPU-days) |
+| SFT | SmolTalk2 filtered | `HuggingFaceTB/smol-smoltalk` | assistant-only CE | pretrain ckpt | 1 epoch |
+
+**Eval anchor:** WikiText-103 validation PPL throughout (apples-to-apples vs 25.77 baseline).
+
+**Chat template (GPT-2, no new vocab):**
+```
+### System:
+{system}
+### User:
+{user}
+### Assistant:
+{assistant}<|endoftext|>
+```
+
+**SmolTalk2 filter (`--sft_filter hard`):** drop function/tool samples, non-short
+MagPie-Ultra, conversations >8 turns or >6×seq_len chars.
+
+**Code:**
+- [`v7/data.py`](../v7/data.py): `load_dclm_edu`, `load_smoltalk2`, `StreamingTokenChunkDataset`, `MaskedTextDataset`
+- [`v7/train.py`](../v7/train.py): `loss_mask` + `token_budget` in `V7Trainer`
+- [`v11/train.py`](train.py): `--stage pretrain|sft`, `--token_budget`, `--resume_from`
+- [`scripts/run_v11_pretrain_dclm.sh`](../scripts/run_v11_pretrain_dclm.sh)
+- [`scripts/run_v11_sft_smoltalk.sh`](../scripts/run_v11_sft_smoltalk.sh)
+- [`scripts/chat_v11.py`](../scripts/chat_v11.py)
+
+**Launch:**
+```bash
+tmux new-session -d -s v11_pretrain './scripts/run_v11_pretrain_dclm.sh 2000000000'
+# after pretrain:
+tmux new-session -d -s v11_sft './scripts/run_v11_sft_smoltalk.sh checkpoints_v11_e3_k3_dclm/best_model.pt'
+```
+
+**Acceptance (pilot):**
+
+| Metric | Pretrain (2B) | SFT |
+|--------|-----------------|-----|
+| WikiText val PPL | beat or match **25.77** | may rise slightly; track separately |
+| Generation | more coherent prose | follows user/assistant format |
+| Chat smoke | N/A | `scripts/chat_v11.py --checkpoint ...` |
+
+If 2B pretrain shows no WikiText improvement → debug pipeline before scaling to 5B.
+
+**Deferred (Phase C+):** sequence packing, FineWeb-Edu mix, TuluTalk, DPO, tokenizer migration.
+
+### Next (Phase C+)
+1. If 2B pretrain helps: extend to 5B tokens.
+2. Run SFT 1 epoch → chat smoke test.
+3. Scale params / add FineWeb-Edu 60/40 mix if pilot succeeds.
 
 ## Flash-PAM design constraint (from V7–V10 experience)
 
@@ -229,12 +280,6 @@ conjugate retrieval, O(1)/token recurrent inference, no softmax attention, no KV
 
 **Gap analysis:** V6→V11 closed **4.18 PPL** (29.95→25.77). Remaining gap to transformer
 B=18 is **3.08 PPL** — likely needs **data + scale**, not more small ablations at 100M.
-Phase C (richer pretrain → instruct SFT) is the sensible next move.
-
-### Next (Phase C)
-1. Wire instruct/chat data path (chat template, assistant-only loss, packing).
-2. Pretrain `v11_e3_k3` on dclm-edu/fineweb-edu (or similar), then SFT (tulu-3/smoltalk2).
-3. Optional: short LR/warmup sweep on K=3 before scaling (low priority — K=3 already stable).
 
 ## Out of scope (already dead in V6–V9)
 Hierarchy/grouped/cross-level, multi-scale loss, reverse-assoc, QK-norm-on, PIA

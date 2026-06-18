@@ -4,6 +4,7 @@ V7 data loading and training utilities.
 Self-contained copy from v6/train.py so v7 is fully isolated.
 """
 
+import json
 import math
 import os
 import re
@@ -11,11 +12,11 @@ import sys
 import unicodedata
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Iterator, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, IterableDataset
 
 
 # ── Logging ──────────────────────────────────────────────────────────────────
@@ -73,6 +74,93 @@ class TextDataset(Dataset):
     def __getitem__(self, idx):
         chunk = self.data[idx]
         return {'input_ids': chunk[:-1], 'labels': chunk[1:]}
+
+
+class MaskedTextDataset(Dataset):
+    """Fixed-length samples with optional per-token loss mask (SFT)."""
+
+    def __init__(
+        self,
+        input_ids: torch.Tensor,
+        labels: torch.Tensor,
+        loss_mask: torch.Tensor,
+    ):
+        assert input_ids.shape == labels.shape == loss_mask.shape
+        self.input_ids = input_ids
+        self.labels = labels
+        self.loss_mask = loss_mask
+
+    def __len__(self):
+        return self.input_ids.shape[0]
+
+    def __getitem__(self, idx):
+        return {
+            'input_ids': self.input_ids[idx],
+            'labels': self.labels[idx],
+            'loss_mask': self.loss_mask[idx],
+        }
+
+
+class StreamingTokenChunkDataset(IterableDataset):
+    """Stream tokenized text and yield non-overlapping (seq_len+1) chunks."""
+
+    def __init__(
+        self,
+        text_iterator: Iterator[str],
+        tokenizer,
+        seq_len: int,
+        *,
+        max_tokens: Optional[int] = None,
+        shuffle_buffer: int = 10_000,
+    ):
+        self.text_iterator = text_iterator
+        self.tokenizer = tokenizer
+        self.seq_len = seq_len
+        self.max_tokens = max_tokens
+        self.shuffle_buffer = shuffle_buffer
+
+    def __iter__(self):
+        buffer: List[int] = []
+        yielded_tokens = 0
+        pending: List[dict] = []
+
+        for text in self.text_iterator:
+            if not text or not str(text).strip():
+                continue
+            ids = self.tokenizer.encode(str(text), add_special_tokens=False)
+            if not ids:
+                continue
+            ids.append(self.tokenizer.eos_token_id)
+            buffer.extend(ids)
+
+            while len(buffer) >= self.seq_len + 1:
+                chunk = buffer[: self.seq_len + 1]
+                buffer = buffer[self.seq_len + 1 :]
+                sample = {
+                    'input_ids': torch.tensor(chunk[:-1], dtype=torch.long),
+                    'labels': torch.tensor(chunk[1:], dtype=torch.long),
+                }
+                if self.shuffle_buffer > 0:
+                    pending.append(sample)
+                    if len(pending) >= self.shuffle_buffer:
+                        idx = torch.randint(len(pending), (1,)).item()
+                        out = pending.pop(idx)
+                        yielded_tokens += self.seq_len
+                        yield out
+                        if self.max_tokens and yielded_tokens >= self.max_tokens:
+                            return
+                else:
+                    yielded_tokens += self.seq_len
+                    yield sample
+                    if self.max_tokens and yielded_tokens >= self.max_tokens:
+                        return
+
+        while pending:
+            out = pending.pop()
+            yielded_tokens += self.seq_len
+            yield out
+            if self.max_tokens and yielded_tokens >= self.max_tokens:
+                return
 
 
 def _random_dataset(vocab_size: int, seq_len: int, num_samples: int):
@@ -204,6 +292,47 @@ def load_wikitext103(
     return train_ds, val_ds, tokenizer
 
 
+def load_wikitext103_val(
+    seq_len: int = 512,
+    use_cache: bool = True,
+    max_val_samples: Optional[int] = None,
+):
+    """WikiText-103 validation only (eval anchor during web pretrain)."""
+    from transformers import AutoTokenizer
+
+    tokenizer = AutoTokenizer.from_pretrained('gpt2')
+    tokenizer.pad_token = tokenizer.eos_token
+
+    cache_tag = f"v{_CACHE_VERSION}_full_sl{seq_len}"
+    cache_path = Path('.cache') / 'v7_tokens' / f'wikitext103_validation_{cache_tag}.pt'
+    if use_cache and cache_path.exists():
+        cached = torch.load(cache_path, weights_only=False)
+        val_tokens = cached['tokens']
+        print(
+            f"[cache] Loaded WikiText-103 validation from {cache_path} "
+            f"({len(val_tokens):,} tokens)"
+        )
+    else:
+        from datasets import load_dataset
+
+        print('Loading WikiText-103 validation...')
+        ds = load_dataset('wikitext', 'wikitext-103-raw-v1', split='validation')
+        lines = [item['text'] for item in ds]
+        if max_val_samples:
+            lines = lines[:max_val_samples]
+        chunk_text = '\n'.join(lines)
+        val_tokens = torch.tensor(
+            tokenizer.encode(chunk_text, add_special_tokens=False), dtype=torch.long,
+        )
+        if use_cache:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            torch.save({'tokens': val_tokens, 'cache_version': _CACHE_VERSION}, cache_path)
+
+    val_ds = TextDataset(val_tokens, seq_len)
+    print(f"Val chunks: {len(val_ds)}")
+    return val_ds, tokenizer
+
+
 def load_tinystories(
     max_samples=20000, seq_len=512, text_repair=True, use_cache=True,
     max_val_samples=None,
@@ -271,6 +400,236 @@ def load_tinystories(
     train_ds = TextDataset(train_tokens, seq_len)
     val_ds = TextDataset(val_tokens, seq_len)
     print(f"Train chunks: {len(train_ds)}, Val chunks: {len(val_ds)}")
+    return train_ds, val_ds, tokenizer
+
+
+# ── Chat / SFT formatting ───────────────────────────────────────────────────
+
+_SFT_FUNCTION_MARKERS = (
+    'function_call', 'tool_calls', 'tool_call', 'available tools',
+    '<tool_call>', '"type": "function"', 'json schema',
+)
+
+
+def format_chat_messages(
+    messages: List[dict],
+    *,
+    default_system: str = 'You are a helpful assistant.',
+) -> Tuple[str, int]:
+    """Render messages to training text; return (text, assistant_char_start)."""
+    parts: List[str] = []
+    assistant_start = -1
+    system_msg = default_system
+    for msg in messages:
+        role = (msg.get('role') or '').strip().lower()
+        content = (msg.get('content') or '').strip()
+        if role == 'system' and content:
+            system_msg = content
+
+    parts.append(f"### System:\n{system_msg}\n")
+    for msg in messages:
+        role = (msg.get('role') or '').strip().lower()
+        content = (msg.get('content') or '').strip()
+        if role in ('system', '') or not content:
+            continue
+        if role == 'user':
+            parts.append(f"### User:\n{content}\n")
+        elif role == 'assistant':
+            if assistant_start < 0:
+                assistant_start = len(''.join(parts))
+            parts.append(f"### Assistant:\n{content}")
+    text = ''.join(parts)
+    if not text.endswith('\n'):
+        text += '\n'
+    text += '<|endoftext|>'
+    return text, assistant_start
+
+
+def _should_filter_smoltalk(
+    messages: List[dict],
+    source: str,
+    sft_filter: str,
+    *,
+    max_chars: int = 12_000,
+) -> bool:
+    if sft_filter == 'none':
+        return False
+    src = (source or '').lower()
+    if 'function' in src or 'tool' in src:
+        return True
+    if 'magpie-ultra' in src and 'short' not in src:
+        return True
+    total_chars = sum(len(m.get('content') or '') for m in messages)
+    if total_chars > max_chars:
+        return True
+    blob = json.dumps(messages, ensure_ascii=False).lower()
+    if any(marker in blob for marker in _SFT_FUNCTION_MARKERS):
+        return True
+    if len(messages) > 8:
+        return True
+    return False
+
+
+def _encode_sft_example(
+    messages: List[dict],
+    tokenizer,
+    seq_len: int,
+) -> Optional[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
+    text, assistant_char_start = format_chat_messages(messages)
+    if assistant_char_start < 0:
+        return None
+    if len(text) > seq_len * 8:
+        return None
+
+    full_ids = tokenizer.encode(text, add_special_tokens=False)
+    if len(full_ids) < 8:
+        return None
+    if len(full_ids) > seq_len + 1:
+        full_ids = full_ids[: seq_len + 1]
+
+    prefix = text[:assistant_char_start]
+    prefix_len = len(tokenizer.encode(prefix, add_special_tokens=False))
+    assistant_start = min(prefix_len, len(full_ids) - 2)
+
+    pad_id = tokenizer.eos_token_id
+    chunk = full_ids + [pad_id] * (seq_len + 1 - len(full_ids))
+    chunk = chunk[: seq_len + 1]
+
+    input_ids = torch.tensor(chunk[:-1], dtype=torch.long)
+    labels = torch.tensor(chunk[1:], dtype=torch.long)
+    loss_mask = torch.zeros(seq_len, dtype=torch.long)
+    # Mask labels positions where we predict assistant tokens.
+    for i in range(seq_len):
+        target_pos = i + 1
+        if target_pos >= assistant_start and chunk[target_pos] != pad_id:
+            loss_mask[i] = 1
+    if loss_mask.sum() == 0:
+        return None
+    return input_ids, labels, loss_mask
+
+
+def load_dclm_edu(
+    seq_len: int = 2048,
+    edu_score_min: int = 3,
+    token_budget: Optional[int] = None,
+    max_val_samples: Optional[int] = None,
+):
+    """Stream DCLM-Edu for pretrain; WikiText-103 validation for eval anchor."""
+    from transformers import AutoTokenizer
+
+    tokenizer = AutoTokenizer.from_pretrained('gpt2')
+    tokenizer.pad_token = tokenizer.eos_token
+
+    from datasets import load_dataset
+
+    print(
+        f"Streaming DCLM-Edu (edu_int_score>={edu_score_min}, "
+        f"token_budget={token_budget or 'none'})..."
+    )
+    stream = load_dataset('HuggingFaceTB/dclm-edu', split='train', streaming=True)
+
+    def _text_iter() -> Iterator[str]:
+        for row in stream:
+            score = row.get('edu_int_score')
+            if score is not None and score < edu_score_min:
+                continue
+            text = row.get('text') or row.get('content') or ''
+            if text.strip():
+                yield text
+
+    train_ds = StreamingTokenChunkDataset(
+        _text_iter(),
+        tokenizer,
+        seq_len,
+        max_tokens=token_budget,
+        shuffle_buffer=10_000,
+    )
+
+    val_ds, _ = load_wikitext103_val(
+        seq_len=seq_len,
+        max_val_samples=max_val_samples,
+    )
+    return train_ds, val_ds, tokenizer
+
+
+def load_smoltalk2(
+    seq_len: int = 2048,
+    max_samples: Optional[int] = None,
+    sft_filter: str = 'hard',
+    use_cache: bool = True,
+    max_val_samples: Optional[int] = 500,
+):
+    """Load filtered SmolTalk for chat SFT with assistant-only loss mask."""
+    from transformers import AutoTokenizer
+
+    tokenizer = AutoTokenizer.from_pretrained('gpt2')
+    tokenizer.pad_token = tokenizer.eos_token
+
+    filter_tag = sft_filter or 'none'
+    limit_tag = f"ms{max_samples}" if max_samples else "full"
+    cache_path = (
+        Path('.cache') / 'v7_tokens'
+        / f"smoltalk2_{filter_tag}_{limit_tag}_sl{seq_len}_v{_CACHE_VERSION}.pt"
+    )
+
+    if use_cache and cache_path.exists():
+        cached = torch.load(cache_path, weights_only=False)
+        print(f"[cache] Loaded SmolTalk2 from {cache_path} ({cached['n_samples']:,} samples)")
+        ds = MaskedTextDataset(cached['input_ids'], cached['labels'], cached['loss_mask'])
+        val_ds, _ = load_wikitext103_val(seq_len=seq_len)
+        return ds, val_ds, tokenizer
+
+    from datasets import load_dataset
+
+    print(f"Loading SmolTalk2 (filter={filter_tag}, limit={max_samples})...")
+    ds = load_dataset('HuggingFaceTB/smol-smoltalk', split='train')
+    if max_samples:
+        ds = ds.select(range(min(max_samples, len(ds))))
+
+    input_rows, label_rows, mask_rows = [], [], []
+    kept, skipped = 0, 0
+    for ex in ds:
+        messages = ex.get('messages') or []
+        source = ex.get('source') or ''
+        if _should_filter_smoltalk(
+            messages, source, filter_tag, max_chars=seq_len * 6,
+        ):
+            skipped += 1
+            continue
+        enc = _encode_sft_example(messages, tokenizer, seq_len)
+        if enc is None:
+            skipped += 1
+            continue
+        inp, lab, mask = enc
+        input_rows.append(inp)
+        label_rows.append(lab)
+        mask_rows.append(mask)
+        kept += 1
+
+    if not input_rows:
+        raise RuntimeError('SmolTalk2 filtering removed all samples')
+
+    input_ids = torch.stack(input_rows)
+    labels = torch.stack(label_rows)
+    loss_mask = torch.stack(mask_rows)
+    train_ds = MaskedTextDataset(input_ids, labels, loss_mask)
+    print(f"  SmolTalk2: kept {kept:,}, skipped {skipped:,}, shape={tuple(input_ids.shape)}")
+
+    if use_cache:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(
+            {
+                'input_ids': input_ids,
+                'labels': labels,
+                'loss_mask': loss_mask,
+                'n_samples': kept,
+                'cache_version': _CACHE_VERSION,
+            },
+            cache_path,
+        )
+        print(f"[cache] Saved SmolTalk2 to {cache_path}")
+
+    val_ds, _ = load_wikitext103_val(seq_len=seq_len)
     return train_ds, val_ds, tokenizer
 
 
