@@ -182,6 +182,8 @@ class V7Trainer:
         run_label: str = 'V7',
         log_path: Optional[str] = None,
         log_dir: Optional[str] = None,
+        token_budget: Optional[int] = None,
+        total_steps_override: Optional[int] = None,
     ):
         self.model = model
         self.train_loader = train_loader
@@ -199,6 +201,7 @@ class V7Trainer:
         self.run_label = run_label
         self.log_path = log_path
         self.log_dir = log_dir
+        self.token_budget = token_budget
 
         if torch.cuda.is_available():
             self.device = torch.device('cuda')
@@ -213,7 +216,12 @@ class V7Trainer:
             param_groups, lr=learning_rate, betas=(0.9, 0.95),
         )
 
-        total_steps = max_epochs * len(train_loader)
+        total_steps = total_steps_override
+        if total_steps is None:
+            try:
+                total_steps = max(max_epochs * len(train_loader), 1)
+            except TypeError:
+                total_steps = max(warmup_steps * 10, 1)
         self.scheduler = build_lr_scheduler(
             self.optimizer, 'warmup_cosine', warmup_steps, total_steps,
         )
@@ -238,6 +246,16 @@ class V7Trainer:
         self.best_val_loss = float('inf')
         self.best_val_ppl = float('inf')
 
+    @staticmethod
+    def _masked_ce(logits, labels, loss_mask=None):
+        flat_logits = logits.view(-1, logits.size(-1))
+        flat_labels = labels.view(-1)
+        if loss_mask is None:
+            return F.cross_entropy(flat_logits, flat_labels)
+        flat_mask = loss_mask.view(-1).float()
+        per_token = F.cross_entropy(flat_logits, flat_labels, reduction='none')
+        return (per_token * flat_mask).sum() / flat_mask.sum().clamp(min=1)
+
     def train_epoch(self, epoch: int) -> Dict[str, float]:
         self.model.train()
         total_loss_w = 0.0
@@ -251,6 +269,9 @@ class V7Trainer:
         for batch_idx, batch in enumerate(self.train_loader):
             input_ids = batch['input_ids'].to(self.device, non_blocking=True)
             labels = batch['labels'].to(self.device, non_blocking=True)
+            loss_mask = batch.get('loss_mask')
+            if loss_mask is not None:
+                loss_mask = loss_mask.to(self.device, non_blocking=True)
             batch_tokens = input_ids.shape[0] * input_ids.shape[1]
 
             with torch.amp.autocast(
@@ -259,9 +280,7 @@ class V7Trainer:
                 dtype=self.amp_dtype or torch.float16,
             ):
                 logits, _, aux_loss = self.model(input_ids, labels=labels)
-                main_loss = F.cross_entropy(
-                    logits.view(-1, logits.size(-1)), labels.view(-1),
-                )
+                main_loss = self._masked_ce(logits, labels, loss_mask)
                 loss = main_loss
                 if aux_loss.item() > 0:
                     m_cfg = self.model._orig_mod.config if hasattr(self.model, '_orig_mod') else self.model.config
@@ -310,19 +329,25 @@ class V7Trainer:
                 int_elapsed = time.time() - log_start
                 inst_tok_s = log_tokens / int_elapsed if int_elapsed > 0 else 0
 
-                n_total = len(self.train_loader)
-                pct = 100.0 * (batch_idx + 1) / n_total
-                remaining = (
-                    elapsed / (batch_idx + 1) * (n_total - batch_idx - 1)
-                    if batch_idx > 0 else 0
-                )
-                eta_m, eta_s = divmod(int(remaining), 60)
+                try:
+                    n_total = len(self.train_loader)
+                    pct = 100.0 * (batch_idx + 1) / n_total
+                    remaining = (
+                        elapsed / (batch_idx + 1) * (n_total - batch_idx - 1)
+                        if batch_idx > 0 else 0
+                    )
+                    eta_m, eta_s = divmod(int(remaining), 60)
+                    progress = f"{batch_idx}/{n_total} ({pct:.0f}%)"
+                    eta_str = f"ETA {eta_m}m{eta_s:02d}s"
+                except TypeError:
+                    progress = f"{batch_idx}"
+                    eta_str = "ETA n/a"
 
                 line = (
-                    f"  [{epoch+1}] {batch_idx}/{n_total} ({pct:.0f}%) "
+                    f"  [{epoch+1}] {progress} "
                     f"loss={main_loss_val:.4f} ppl={ppl:.1f} lr={lr:.2e} "
                     f"| {inst_tok_s:.0f} tok/s (avg {avg_tok_s:.0f}) "
-                    f"ETA {eta_m}m{eta_s:02d}s"
+                    f"{eta_str}"
                 )
                 if self.device.type == 'cuda':
                     mem = torch.cuda.memory_allocated() / 1e9
@@ -363,6 +388,13 @@ class V7Trainer:
                     pass
                 self.model.train()
 
+            if self.token_budget and self.global_tokens >= self.token_budget:
+                print(
+                    f"  Token budget reached: {self.global_tokens:,} "
+                    f"/ {self.token_budget:,}"
+                )
+                break
+
         epoch_elapsed = time.time() - epoch_start
         avg_tok_s = total_tokens / epoch_elapsed if epoch_elapsed > 0 else 0
         avg_loss = total_loss_w / max(total_tokens, 1)
@@ -383,6 +415,9 @@ class V7Trainer:
         for batch in self.val_loader:
             input_ids = batch['input_ids'].to(self.device, non_blocking=True)
             labels = batch['labels'].to(self.device, non_blocking=True)
+            loss_mask = batch.get('loss_mask')
+            if loss_mask is not None:
+                loss_mask = loss_mask.to(self.device, non_blocking=True)
             batch_tokens = input_ids.shape[0] * input_ids.shape[1]
 
             with torch.amp.autocast(
@@ -391,9 +426,7 @@ class V7Trainer:
                 dtype=self.amp_dtype or torch.float16,
             ):
                 logits, _, _aux = self.model(input_ids)
-                loss = F.cross_entropy(
-                    logits.view(-1, logits.size(-1)), labels.view(-1),
-                )
+                loss = self._masked_ce(logits, labels, loss_mask)
 
             total_loss_w += loss.item() * batch_tokens
             total_tokens += batch_tokens
@@ -445,9 +478,13 @@ class V7Trainer:
         params = m.count_parameters()
         print(f"Parameters: {params}")
         print(f"Total: {params['total']:,} ({params['total']/1e6:.1f}M)")
+        try:
+            n_batches = len(self.train_loader)
+        except TypeError:
+            n_batches = 'stream'
         print(
             f"Epochs: {self.start_epoch+1}..{self.max_epochs}, "
-            f"Batches/epoch: {len(self.train_loader)}"
+            f"Batches/epoch: {n_batches}"
         )
         print()
 
@@ -485,6 +522,23 @@ class V7Trainer:
                 self.save_checkpoint('best_model.pt', epoch)
             if (epoch + 1) % 5 == 0:
                 self.save_checkpoint(f'checkpoint_epoch_{epoch+1}.pt', epoch)
+
+            if self.token_budget and self.global_tokens >= self.token_budget:
+                print(f"\nStopping: token budget {self.token_budget:,} reached.")
+                self.save_checkpoint('final_model.pt', epoch)
+                total_time = time.time() - training_start
+                print(f"\nTraining complete (token budget)!")
+                print(f"Total wall time: {total_time:.1f}s ({total_time/3600:.2f}h)")
+                print(
+                    f"Best Val Loss: {self.best_val_loss:.4f}, "
+                    f"Best Val PPL: {self.best_val_ppl:.2f}"
+                )
+                _notify_discord(
+                    f"**{self.run_label} Training complete (token budget)!**\n"
+                    f"Tokens: {self.global_tokens:,}\n"
+                    f"Best Val PPL: {self.best_val_ppl:.2f}"
+                )
+                return
 
             epoch_text = ""
             epoch_quality = None
