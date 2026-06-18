@@ -4,7 +4,7 @@
 
 > **Disclaimer:** We use AI assistants (e.g. Cursor) to help build this — because building AI with AI is useful. The architecture and experiments are documented in code and logs.
 
-This repository is organized by generation: **v6** (current), **v5** (phase-preserving complex LM breakthrough), **v4** (original phase-field direction). Earlier branches **v3** (brain-inspired) and **v2** (quantum-inspired) remain for reference.
+This repository is organized by generation: **v11** (current), **v7** (flat PAM stack), **v6** (modular PAM toolkit), **v5** (phase-preserving breakthrough), **v4** (original phase-field direction). **v8–v10** explored reasoning loops and readout tweaks — see [Current status](#current-status-v7--v11) below. Earlier branches **v3** and **v2** remain for reference.
 
 ---
 
@@ -140,7 +140,52 @@ Optional **multi-timescale SSM**, **memory hierarchy** (working / internal / per
 
 ---
 
-## Results
+## Current status (V7 → V11)
+
+**Best logged PAM run:** **V11 E3 K=3** — WikiText-103 val PPL **25.77** @10 ep (~100.5M params). Same pipeline as the transformer **B=18** anchor (**22.69**): gap **+3.08 PPL** (down from **+4.19** at V7 7d **26.88**).
+
+| Milestone | Val PPL @10 | vs transformer B=18 (22.69) | What changed |
+|-----------|------------:|----------------------------:|--------------|
+| V6 `medium-pam-v3` | 29.95 | +7.26 | Interleaved CGU+PAM baseline |
+| V7 **7d** (chunked, B=18) | 26.88 | +4.19 | ModSwish + chunked dual form |
+| **V11 E3 K=2** (multistate) | **26.01** | +3.32 | Phase-routed **2-state** superposition — first in-family memory win |
+| **V11 E3 K=3** | **25.77** | +3.08 | More superposed states; **current best** |
+
+**V11 breakthrough:** multi-state PAM (E3) — K distinct matrix states per head with data-dependent phase interference at retrieval. Still **not a transformer**; inference stays **O(1)/token** recurrent (no KV cache). Details: [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md).
+
+### Dead ends (V9 / V10 / V11 negatives — do not revisit without new evidence)
+
+| Track | Verdict |
+|-------|---------|
+| **V9** readout gates / conv gates | Confounded or clean runs **30+ PPL** — no win vs V7 |
+| **V10** Flash-PAM / custom Triton | Correct but **slower** than compiled PyTorch baseline |
+| **V11 E1** per-channel decay | Tie alone; **does not stack** with E3 |
+| **V11 E2** delta-rule write | Compile hang; impractical without rewrite |
+| V7 hierarchy, multi-scale loss, reverse-assoc, learned pos | All **regressed** vs flat 7d |
+
+Rollup: [EXPERIMENTS_V_6_7_8_9.md](EXPERIMENTS_V_6_7_8_9.md) · V8 QLC: [v8/EXPERIMENTS_V8.md](v8/EXPERIMENTS_V8.md) · V9: [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md)
+
+### What we are doing now (Phase C — before scaling params)
+
+Same **~100M** `v11_e3_k3` architecture; isolate **data** before scaling model size:
+
+1. **Pretrain (running):** stream **DCLM-Edu** (2B token pilot) from WikiText checkpoint (`25.77`); WikiText val PPL stays the eval anchor.
+2. **SFT (next):** filtered **SmolTalk2** chat data with assistant-only loss → instruct behavior.
+3. **Then scale:** only if data moves the needle — more tokens and/or larger model.
+
+```bash
+# Phase C pretrain (tmux)
+./scripts/run_v11_pretrain_dclm.sh 2000000000
+
+# After pretrain — chat SFT
+./scripts/run_v11_sft_smoltalk.sh checkpoints_v11_e3_k3_dclm/best_model.pt
+```
+
+Full protocol: [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md#phase-c--richer-data--chat-sft-implemented).
+
+---
+
+## Results (historical — V6 headline)
 
 ### Headline run: `medium-pam-v3` (~100M params, WikiText-103)
 
@@ -220,7 +265,11 @@ Fluent scaffolding; facts are **not** reliable at this scale. Logged quality aft
 
 - **V4** — Complex phase-space tokens and wave-style interference; **real nonlinearities broke phase**; promising but inconsistent math.
 - **V5** — **Phase-preserving** stack (`modReLU`, CGU, …). A **28.7M** model beat V4’s much larger runs; TinyStories val PPL **5.59** (full data, epoch 3). Details: [v5/README.md](v5/README.md).
-- **V6** — Modular toolkit: banks, SSM, PAM, memory tiers, optional attention. **PAM** addresses vector-state interference; **`medium-pam-v3`** interleaves CGU and PAM and uses RoPE on PAM Q/K for the best WikiText-103 number above.
+- **V6** — Modular toolkit: banks, SSM, PAM, memory tiers. **`medium-pam-v3`**: WikiText val PPL **29.95**.
+- **V7** — Lean flat stack (16×384 CGU+PAM). **7d** chunked dual form + B=18: **26.88** (beats transformer B=3 **27.08**). Details: [v7/EXPERIMENTS_V7.md](v7/EXPERIMENTS_V7.md).
+- **V8** — QLC reasoning loops on V7 backbone; did not beat passthrough on medium WikiText runs. [v8/EXPERIMENTS_V8.md](v8/EXPERIMENTS_V8.md).
+- **V9** — PAM readout gates; best confounded run **29.57**; clean ablations failed. [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md).
+- **V11** — **Memory dynamics** (E3 multistate superposition). **K=2 → 26.01**, **K=3 → 25.77**. Phase C: richer pretrain + chat SFT at fixed 100M. [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md).
 
 ---
 
@@ -251,9 +300,10 @@ The claim is **not** “beats transformers everywhere.” It is: **a genuinely d
 
 ## What Happens Next
 
-- **Scale** toward ~300M–500M params; test whether PAM improves with scale.
+- **Phase C (now):** DCLM-Edu pretrain → SmolTalk2 SFT on **v11_e3_k3** at 100M; validate data before scaling.
+- **If Phase C helps:** extend pretrain tokens (5B+), optional FineWeb-Edu mix, then **scale params** (300M–500M).
 - **Factual / compositional binding** — can the matrix state be *used* for verifiable memory?
-- Longer training / more data; **standard benchmarks** when the stack is ready.
+- **Standard benchmarks** (MMLU, HellaSwag, …) when the stack is ready.
 
 ---
 
@@ -335,35 +385,38 @@ Persistent memory and other generation options: [v6/README.md](v6/README.md).
 ```text
 qllm2/
 ├── README.md
-├── v6/                    # current main line
+├── EXPERIMENTS_V_6_7_8_9.md   # cross-version rollup
+├── v11/                       # current: E3 multistate + Phase C data
+│   ├── EXPERIMENTS_V11.md
+│   ├── model.py
+│   └── train.py
+├── v7/                        # flat PAM stack (7d recipe)
+│   ├── EXPERIMENTS_V7.md
+│   ├── model.py
+│   └── train.py
+├── v6/                        # modular PAM toolkit
 │   ├── README.md
 │   ├── model.py
-│   ├── backbone.py
-│   ├── diffusion_model.py
-│   ├── train.py
-│   ├── generate.py
-│   └── core/
-├── v5/
-│   ├── README.md
-│   ├── EXPERIMENTS.md
-│   └── core/
-├── v4/
-├── v3/
-├── v2/
+│   └── train.py
+├── v9/, v8/, v10/             # readout / reasoning experiments (mostly negative)
+├── v5/, v4/, v3/, v2/
 └── scripts/
+    ├── run_v11_pretrain_dclm.sh
+    └── run_v11_sft_smoltalk.sh
 ```
 
 ---
 
 ## Documentation
 
-- [v6/README.md](v6/README.md) — Architecture, CLI, memory, diffusion modes, setup
+- [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md) — **current:** E1/E2/E3 ablations, K=2/K=3, Phase C pretrain+SFT
+- [EXPERIMENTS_V_6_7_8_9.md](EXPERIMENTS_V_6_7_8_9.md) — cross-version PPL rollup and dead ends
+- [v7/EXPERIMENTS_V7.md](v7/EXPERIMENTS_V7.md) — flat stack, 7d chunked recipe (**26.88**)
+- [v6/README.md](v6/README.md) — Architecture, CLI, memory, diffusion modes
 - [EXPERIMENTS_V6.md](EXPERIMENTS_V6.md) — V6 experiment log (through GSP / §18)
-- [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) — Transformer baseline (§0), HSB, PAM, interleaved layouts, Bug 8 (QK norm)
-- [v6/paper/](v6/paper/) — PAM paper draft (LaTeX)
-- [v5/README.md](v5/README.md) — Algebraic LM, V4 → V5
-- [v5/EXPERIMENTS.md](v5/EXPERIMENTS.md) — V5 experiment log
-- [v4/README.md](v4/README.md), [v2/README.md](v2/README.md), [v3/README.md](v3/README.md)
+- [EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) — Transformer baseline (§0), HSB, PAM, Bug 8
+- [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md) · [v8/EXPERIMENTS_V8.md](v8/EXPERIMENTS_V8.md)
+- [v5/README.md](v5/README.md) · [v4/README.md](v4/README.md)
 
 **Research notes:** `QLLM_CORE_IDEA.pdf`, `v5/paper/`, `QLLM_V2.pdf`
 
@@ -383,4 +436,4 @@ PolyForm Noncommercial License 1.0.0 — see [LICENSE](LICENSE). Non-commercial 
 
 ---
 
-**Focus:** `v6` — PAM (`medium-pam-v3`), WikiText-103 val PPL **29.95** (~100M params); same-pipeline transformer baseline val PPL **27.08** ([EXPERIMENTS_V6_PART2.md](EXPERIMENTS_V6_PART2.md) §0). **Prior milestone:** `v5`. **Novelty origin:** `v4`. **Updated:** 2026-03-23
+**Focus:** **v11** — E3 multistate PAM, WikiText val PPL **25.77** (K=3) / **26.01** (K=2) @ ~100M; transformer B=18 anchor **22.69**. **Phase C:** DCLM-Edu pretrain → SmolTalk2 SFT before scaling params. Prior milestones: **v7** 7d (**26.88**), **v6** pam-v3 (**29.95**). **Updated:** 2026-06-18
