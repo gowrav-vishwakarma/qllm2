@@ -67,14 +67,14 @@ Runs are serialized on the single GPU via [scripts/run_v11_queue.sh](../scripts/
 (waits for the GPU to free, then runs E1 → E3). Throughput note: E2's chunk solve is the
 slow path; Flash-PAM ([v11/triton_kernels.py](triton_kernels.py)) targets the speedup.
 
-## Live run status (2026-06-18)
+## Live run status (2026-06-19)
 
-Phase C data pipeline **implemented**. Pilot pretrain launching on DCLM-Edu.
+Phase C pretrain **done**. **Validation before SFT** — do not start new training until eval ladder completes.
 
-- **RUNNING** — Phase C pretrain: `v11_e3_k3` + DCLM-Edu stream, 2B token budget,
-  resume from `checkpoints_v11_e3_k3/best_model.pt`. tmux `v11_pretrain`.
-- **QUEUED** — Phase C SFT: filtered SmolTalk2 after pretrain completes
-  (`scripts/run_v11_sft_smoltalk.sh`).
+- **DONE** — DCLM-Edu pretrain pilot: 2B tokens from WikiText ckpt → WikiText val **66.27** (was **25.77**).
+- **DONE** — Validation ladder: Wiki + DCLM holdout on both ckpts (see table below).
+- **NEXT** — SFT A/B (WikiText base vs DCLM base) + chat smoke; decide pretrain path.
+- **BLOCKED** — 5B DCLM retry, param scaling, new pretrain until SFT readout lands.
 
 ## Phase C — Richer data + chat SFT (implemented)
 
@@ -107,6 +107,7 @@ MagPie-Ultra, conversations >8 turns or >6×seq_len chars.
 - [`scripts/run_v11_pretrain_dclm.sh`](../scripts/run_v11_pretrain_dclm.sh)
 - [`scripts/run_v11_sft_smoltalk.sh`](../scripts/run_v11_sft_smoltalk.sh)
 - [`scripts/chat_v11.py`](../scripts/chat_v11.py)
+- [`v11/eval_checkpoints.py`](eval_checkpoints.py) + [`scripts/run_v11_eval_checkpoints.sh`](../scripts/run_v11_eval_checkpoints.sh)
 
 **Launch:**
 ```bash
@@ -115,22 +116,80 @@ tmux new-session -d -s v11_pretrain './scripts/run_v11_pretrain_dclm.sh 20000000
 tmux new-session -d -s v11_sft './scripts/run_v11_sft_smoltalk.sh checkpoints_v11_e3_k3_dclm/best_model.pt'
 ```
 
-**Acceptance (pilot):**
+**Acceptance (pilot) — revised after run:**
 
 | Metric | Pretrain (2B) | SFT |
 |--------|-----------------|-----|
 | WikiText val PPL | beat or match **25.77** | may rise slightly; track separately |
+| **DCLM holdout val PPL** | **lower than WikiText ckpt** | not primary |
 | Generation | more coherent prose | follows user/assistant format |
 | Chat smoke | N/A | `scripts/chat_v11.py --checkpoint ...` |
 
-If 2B pretrain shows no WikiText improvement → debug pipeline before scaling to 5B.
+WikiText-only acceptance was **too optimistic** for pure DCLM continuation (see readout below).
+
+### Phase C pretrain pilot — result & readout (2026-06-19)
+
+**Run:** `v11_e3_k3`, resume `checkpoints_v11_e3_k3/best_model.pt`, DCLM-Edu stream
+(`edu_int_score>=3`), **2B tokens**, lr=1e-4, WikiText val anchor only.
+
+| Metric | Wiki ckpt (before) | After 2B DCLM |
+|--------|-------------------:|--------------:|
+| WikiText val PPL | **25.77** | **66.27** |
+| Train loss (DCLM) | — | 3.75 (PPL **42.4**) |
+| Wall / tokens | — | 21.1h / 2.00B |
+
+Log: `logs/v11/v11_e3_k3_pretrain_dclm_b2000000000_20260618_055525_22d1afe_dirty/`  
+Ckpt: `checkpoints_v11_e3_k3_dclm/best_model.pt`
+
+**What happened:** model **learned DCLM** (train loss 7.1→3.75) but **forgot WikiText**
+(catastrophic forgetting / domain shift). Pure switch from WikiText-tuned weights to
+2B tokens of web text at full lr, no WikiText mixing — WikiText val was the wrong
+**sole** success metric.
+
+**Learnings (do not repeat without fix):**
+
+1. **WikiText val tracks forgetting**, not DCLM quality, when training only on DCLM.
+2. **Need DCLM holdout val** on the same checkpoint comparison (wiki ckpt vs dclm ckpt).
+3. **Next pretrain retry** (if any): lower lr (1e-5), and/or 10–20% WikiText mix, and/or
+   early-stop on WikiText — not another blind 2B pure stream.
+4. **SFT still worth A/B** — chat may prefer DCLM base even if WikiText PPL tanked;
+   validate before discarding dclm ckpt.
+5. **Best WikiText base remains** `checkpoints_v11_e3_k3/best_model.pt` until proven otherwise.
+
+**Validation ladder (current — run before SFT):**
+
+```bash
+./scripts/run_v11_eval_checkpoints.sh   # Wiki val + DCLM 5% hash holdout, both ckpts
+```
+
+Record results in table below, then proceed to SFT A/B only if readout is clear.
+
+| checkpoint | WikiText val PPL | DCLM holdout PPL | notes |
+|------------|----------------:|-----------------:|-------|
+| `checkpoints_v11_e3_k3/best_model.pt` | **25.77** | **1222.11** | WikiText-trained; DCLM-naive |
+| `checkpoints_v11_e3_k3_dclm/best_model.pt` | **66.26** | **33.86** | 2B DCLM; strong on holdout, WikiText forgotten |
+
+**Validation readout (2026-06-19):** [`scripts/run_v11_eval_checkpoints.sh`](../scripts/run_v11_eval_checkpoints.sh)
+completed. DCLM holdout confirms pretrain **worked** (33.86 vs 1222 baseline) while WikiText
+regression (66.26) is real but expected. **Do not discard DCLM ckpt on WikiText alone.**
+Proceed to SFT A/B: chat quality may favor DCLM base despite WikiText PPL.
+
+**SFT A/B (after validation):**
+
+| Run | Base | Script |
+|-----|------|--------|
+| A (control) | `checkpoints_v11_e3_k3/best_model.pt` | `CKPT_DIR=checkpoints_v11_sft_wiki ./scripts/run_v11_sft_smoltalk.sh checkpoints_v11_e3_k3/best_model.pt` |
+| B (pilot) | `checkpoints_v11_e3_k3_dclm/best_model.pt` | `CKPT_DIR=checkpoints_v11_sft_dclm ./scripts/run_v11_sft_smoltalk.sh checkpoints_v11_e3_k3_dclm/best_model.pt` |
+
+Compare `scripts/chat_v11.py` on fixed prompts; do **not** use WikiText PPL alone post-SFT.
 
 **Deferred (Phase C+):** sequence packing, FineWeb-Edu mix, TuluTalk, DPO, tokenizer migration.
 
 ### Next (Phase C+)
-1. If 2B pretrain helps: extend to 5B tokens.
-2. Run SFT 1 epoch → chat smoke test.
-3. Scale params / add FineWeb-Edu 60/40 mix if pilot succeeds.
+1. Complete validation ladder → update table above.
+2. SFT A/B + chat smoke → pick base for any retry pretrain.
+3. If DCLM path wins chat: retry pretrain with lower lr / wiki mix (not pure 2B overwrite).
+4. Scale params only after data path is validated.
 
 ## Flash-PAM design constraint (from V7–V10 experience)
 
