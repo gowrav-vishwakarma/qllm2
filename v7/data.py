@@ -605,6 +605,8 @@ def load_smoltalk2(
         label_rows.append(lab)
         mask_rows.append(mask)
         kept += 1
+        if kept % 5000 == 0:
+            print(f"  SmolTalk2 prep: kept {kept:,}, skipped {skipped:,}...", flush=True)
 
     if not input_rows:
         raise RuntimeError('SmolTalk2 filtering removed all samples')

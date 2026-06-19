@@ -73,7 +73,8 @@ Phase C pretrain **done**. **Validation before SFT** — do not start new traini
 
 - **DONE** — DCLM-Edu pretrain pilot: 2B tokens from WikiText ckpt → WikiText val **66.27** (was **25.77**).
 - **DONE** — Validation ladder: Wiki + DCLM holdout on both ckpts (see table below).
-- **NEXT** — SFT A/B (WikiText base vs DCLM base) + chat smoke; decide pretrain path.
+- **RUNNING** — SFT A/B in tmux `v11_sft_ab`: wiki base → `checkpoints_v11_sft_wiki`, then dclm base → `checkpoints_v11_sft_dclm`; post-SFT smoke auto.
+- **DONE** — Pre-SFT smoke: neither base follows chat format (expected); log `logs/v11/sft_ab_pre_smoke_20260619.log`.
 - **BLOCKED** — 5B DCLM retry, param scaling, new pretrain until SFT readout lands.
 
 ## Phase C — Richer data + chat SFT (implemented)
@@ -108,6 +109,7 @@ MagPie-Ultra, conversations >8 turns or >6×seq_len chars.
 - [`scripts/run_v11_sft_smoltalk.sh`](../scripts/run_v11_sft_smoltalk.sh)
 - [`scripts/chat_v11.py`](../scripts/chat_v11.py)
 - [`v11/eval_checkpoints.py`](eval_checkpoints.py) + [`scripts/run_v11_eval_checkpoints.sh`](../scripts/run_v11_eval_checkpoints.sh)
+- [`scripts/smoke_chat_v11.py`](../scripts/smoke_chat_v11.py) + [`scripts/run_v11_sft_ab.sh`](../scripts/run_v11_sft_ab.sh)
 
 **Launch:**
 ```bash
@@ -174,14 +176,25 @@ completed. DCLM holdout confirms pretrain **worked** (33.86 vs 1222 baseline) wh
 regression (66.26) is real but expected. **Do not discard DCLM ckpt on WikiText alone.**
 Proceed to SFT A/B: chat quality may favor DCLM base despite WikiText PPL.
 
-**SFT A/B (after validation):**
+**SFT A/B (running 2026-06-19):**
 
-| Run | Base | Script |
-|-----|------|--------|
-| A (control) | `checkpoints_v11_e3_k3/best_model.pt` | `CKPT_DIR=checkpoints_v11_sft_wiki ./scripts/run_v11_sft_smoltalk.sh checkpoints_v11_e3_k3/best_model.pt` |
-| B (pilot) | `checkpoints_v11_e3_k3_dclm/best_model.pt` | `CKPT_DIR=checkpoints_v11_sft_dclm ./scripts/run_v11_sft_smoltalk.sh checkpoints_v11_e3_k3_dclm/best_model.pt` |
+| Run | Base | Output ckpt | tmux |
+|-----|------|-------------|------|
+| A (control) | `checkpoints_v11_e3_k3/best_model.pt` | `checkpoints_v11_sft_wiki/best_model.pt` | `v11_sft_ab` |
+| B (pilot) | `checkpoints_v11_e3_k3_dclm/best_model.pt` | `checkpoints_v11_sft_dclm/best_model.pt` | same session, after A |
 
-Compare `scripts/chat_v11.py` on fixed prompts; do **not** use WikiText PPL alone post-SFT.
+Launch: `tmux attach -t v11_sft_ab` · log: `logs/v11/sft_ab_run_20260619.log`
+
+**Pre-SFT smoke (2026-06-19):** [`scripts/smoke_chat_v11.py`](../scripts/smoke_chat_v11.py) on 3 fixed prompts.
+Neither base follows `### User/Assistant` — wiki base = WikiText-style prose drift; dclm base = question spam / code gibberish.
+SFT is required before chat is meaningful; compare **post-SFT** smokes only.
+
+| base | capital of France | photosynthesis | python add |
+|------|-------------------|----------------|------------|
+| wiki | Wiki prose drift (French Resistance…) | DB/object gibberish | ICAO/research gibberish |
+| dclm | question list spam | rhetorical Q spam | `#include` C spam |
+
+Post-SFT smoke: auto at end of [`scripts/run_v11_sft_ab.sh`](../scripts/run_v11_sft_ab.sh) → `logs/v11/sft_ab_pre_smoke_20260619_post.log`
 
 **Deferred (Phase C+):** sequence packing, FineWeb-Edu mix, TuluTalk, DPO, tokenizer migration.
 
