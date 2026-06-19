@@ -1,0 +1,18 @@
+============================================================
+  V11 SFT A/B — 2026-06-19T06:04:08+00:00
+  A: wiki base -> checkpoints_v11_sft_wiki
+  B: dclm base -> checkpoints_v11_sft_dclm
+============================================================
+[pre-SFT smoke] writing logs/v11/sft_ab_pre_smoke_20260619.log
+  (skipped — SKIP_PRE_SMOKE=1)
+
+[SFT A] WikiText base...
+[v6-setup] Using PYTHON_BIN: uv run python
+[log-utils] Run info written to logs/v11/v11_e3_k3_sft_smoltalk2_20260619_060409_3d2f522_dirty/RUN_INFO.txt
+============================================================
+  V11 Phase C SFT
+  preset=v11_e3_k3  resume=checkpoints_v11_e3_k3/best_model.pt  epochs=1
+  Log: logs/v11/v11_e3_k3_sft_smoltalk2_20260619_060409_3d2f522_dirty   Ckpt: checkpoints_v11_sft_wiki
+============================================================
+[Discord] Webhook configured -- notifications enabled
+Token indices sequence length is longer than the specified maximum sequence length for this model (1406 > 1024). Running this sequence through the model will result in indexing errors
