@@ -1,1 +1,34 @@
 [Discord] Webhook configured -- notifications enabled
+Wall clock start: 2026-06-20 06:46:28
+============================================================
+  V11: PAM with new memory dynamics
+  Preset: v11_e3_k3 | Stage: sft | Dataset: smoltalk2
+============================================================
+
+Config: {'vocab_size': 50257, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 3, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0}
+Memory dynamics: decay_mode=head, write_mode=additive, n_states=3, chunk_size=256
+Batch size: 8, Epochs: 1, LR: 5e-05
+
+Loading smoltalk2 (seq_len=2048)...
+[cache] Loaded smoltalk2 chat SFT from .cache/v7_tokens/smoltalk2_hard_ms3000_sl2048_chatv3.pt (train 2,895, val 50)
+Adjusting vocab_size: 50257 -> 50259 (tokenizer)
+Train batches: 362, Val batches: 7
+
+Model parameters: {'embedding (tied)': 38598912, 'blocks': 61612688, 'norms': 768, 'lm_head': 296064, 'total': 100508432}
+Total: 100,508,432 (100.5M)
+
+Loading weights from checkpoints_v11_e3_k3_dclm/best_model.pt...
+  resized embed.embed_real.weight: (50257, 384) -> (50259, 384) (+2 new rows)
+  resized embed.embed_imag.weight: (50257, 384) -> (50259, 384) (+2 new rows)
+Param groups: 212 tensors (100,456,704) with wd, 181 tensors (51,728) without
+Compiling model (mode=default)...
+
+Training on cuda
+Parameters: {'embedding (tied)': 38598912, 'blocks': 61612688, 'norms': 768, 'lm_head': 296064, 'total': 100508432}
+Total: 100,508,432 (100.5M)
+Epochs: 1..1, Batches/epoch: 362
+
+
+============================================================
+Epoch 1/1
+============================================================

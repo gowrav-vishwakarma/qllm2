@@ -753,6 +753,9 @@ PRESETS = {
     'v11_e3_multistate': _base_flat(n_states=2, state_dt_spread=2.0),
     # E3 K=3: does more superposition keep helping? (head decay, clean K-sweep)
     'v11_e3_k3': _base_flat(n_states=3, state_dt_spread=2.0),
+    # E3 K=3 with ChatML vocab (50259) baked in at init -- production chat base
+    # for the from-scratch knowledge pretrain (no embedding resize hack later).
+    'v11_e3_k3_chat': _base_flat(n_states=3, state_dt_spread=2.0, vocab_size=50259),
     # E1+E3 combo: per-channel decay inside each of K=2 superposed states.
     'v11_e1e3_combo': _base_flat(decay_mode='per_channel', n_states=2, state_dt_spread=2.0),
     # tiny smoke

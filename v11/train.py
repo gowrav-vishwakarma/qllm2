@@ -35,7 +35,10 @@ from v7.data import (
     load_wikitext103,
     load_tinystories,
     load_dclm_edu,
+    load_fineweb_edu,
+    load_pretrain_mix,
     load_smoltalk2,
+    load_tulu3_sft,
     TeeLogger,
 )
 
@@ -44,7 +47,8 @@ def build_argparser():
     p = argparse.ArgumentParser(description='V11 PAM (new memory dynamics) training')
     p.add_argument('--preset', type=str, default='v11_baseline', choices=list(PRESETS.keys()))
     p.add_argument('--dataset', type=str, default='wikitext103',
-                   choices=['wikitext103', 'tinystories', 'dclm_edu', 'smoltalk2'])
+                   choices=['wikitext103', 'tinystories', 'dclm_edu', 'fineweb_edu',
+                            'pretrain_mix', 'smoltalk2', 'tulu3'])
     p.add_argument('--stage', type=str, default='lm',
                    choices=['lm', 'pretrain', 'sft'],
                    help='lm=legacy WikiText path; pretrain=web stream; sft=chat masked CE')
@@ -66,7 +70,13 @@ def build_argparser():
     p.add_argument('--token_budget', type=int, default=0,
                    help='Stop after this many training tokens (pretrain pilot)')
     p.add_argument('--edu_score_min', type=int, default=3,
-                   help='Minimum edu_int_score for DCLM-Edu rows')
+                   help='Minimum edu score for DCLM-Edu / FineWeb-Edu rows')
+    p.add_argument('--pretrain_sources', type=str, default='dclm,fineweb',
+                   help='Comma list for --dataset pretrain_mix (subset of: dclm,fineweb)')
+    p.add_argument('--pretrain_weights', type=str, default=None,
+                   help='Comma list of mix weights matching --pretrain_sources (e.g. 1,1)')
+    p.add_argument('--fineweb_name', type=str, default='sample-10BT',
+                   help='FineWeb-Edu config (e.g. sample-10BT, sample-100BT)')
     p.add_argument('--sft_filter', type=str, default='hard', choices=['none', 'hard'])
     p.add_argument('--gen_every', type=int, default=5000)
     p.add_argument('--gen_prompt', type=str, default='In 1923 , the University of')
@@ -219,8 +229,37 @@ def main():
             edu_score_min=args.edu_score_min,
             token_budget=token_budget,
         )
+    elif args.dataset == 'fineweb_edu':
+        train_ds, val_ds, tokenizer = load_fineweb_edu(
+            seq_len=seq_len,
+            edu_score_min=args.edu_score_min,
+            token_budget=token_budget,
+            chat_vocab=(args.preset.endswith('_chat')),
+            fineweb_name=args.fineweb_name,
+        )
+    elif args.dataset == 'pretrain_mix':
+        sources = tuple(s.strip() for s in args.pretrain_sources.split(',') if s.strip())
+        weights = (
+            tuple(float(w) for w in args.pretrain_weights.split(','))
+            if args.pretrain_weights else None
+        )
+        train_ds, val_ds, tokenizer = load_pretrain_mix(
+            seq_len=seq_len,
+            edu_score_min=args.edu_score_min,
+            token_budget=token_budget,
+            sources=sources,
+            weights=weights,
+            chat_vocab=(args.preset.endswith('_chat')),
+            fineweb_name=args.fineweb_name,
+        )
     elif args.dataset == 'smoltalk2':
         train_ds, val_ds, tokenizer = load_smoltalk2(
+            seq_len=seq_len,
+            max_samples=max_samples,
+            sft_filter=args.sft_filter,
+        )
+    elif args.dataset == 'tulu3':
+        train_ds, val_ds, tokenizer = load_tulu3_sft(
             seq_len=seq_len,
             max_samples=max_samples,
             sft_filter=args.sft_filter,
@@ -236,7 +275,7 @@ def main():
 
     from torch.utils.data import DataLoader
     use_cuda = torch.cuda.is_available()
-    is_streaming = args.dataset == 'dclm_edu'
+    is_streaming = args.dataset in ('dclm_edu', 'fineweb_edu', 'pretrain_mix')
     nw = 0 if is_streaming else (args.num_workers if use_cuda else 0)
     dl_kwargs = {}
     if nw > 0:
