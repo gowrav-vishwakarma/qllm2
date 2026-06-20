@@ -67,15 +67,85 @@ Runs are serialized on the single GPU via [scripts/run_v11_queue.sh](../scripts/
 (waits for the GPU to free, then runs E1 → E3). Throughput note: E2's chunk solve is the
 slow path; Flash-PAM ([v11/triton_kernels.py](triton_kernels.py)) targets the speedup.
 
-## Live run status (2026-06-19)
+## Live run status (2026-06-20)
 
-Phase C pretrain **done**. **Validation before SFT** — do not start new training until eval ladder completes.
+**Milestone reached:** DCLM-base + SmolTalk SFT produces **coherent instruction-following chat**
+at ~100M (non-transformer, non-Mamba, O(1)/token). Now executing the reordered v2 plan:
+**fix correctness → from-scratch knowledge pretrain (better base) → Tulu-3 SFT last.**
 
-- **DONE** — DCLM-Edu pretrain pilot: 2B tokens from WikiText ckpt → WikiText val **66.27** (was **25.77**).
-- **DONE** — Validation ladder: Wiki + DCLM holdout on both ckpts (see table below).
-- **RUNNING** — SFT A/B in tmux `v11_sft_ab`: wiki base → `checkpoints_v11_sft_wiki`, then dclm base → `checkpoints_v11_sft_dclm`; post-SFT smoke auto.
-- **DONE** — Pre-SFT smoke: neither base follows chat format (expected); log `logs/v11/sft_ab_pre_smoke_20260619.log`.
-- **BLOCKED** — 5B DCLM retry, param scaling, new pretrain until SFT readout lands.
+- **DONE** — DCLM-Edu pretrain pilot: 2B tokens from WikiText ckpt → WikiText val **66.27** (was **25.77**), DCLM holdout **1222 → 33.86** (pretrain worked; WikiText is just an anchor).
+- **DONE** — SFT A/B (wiki vs dclm base): DCLM base wins; coherent chat, but rambles (no learned stop) and some wrong facts. Logs `logs/v11/sft_ab_run_20260619.log`.
+- **DONE (Phase 1 correctness)** — ChatML tokenizer + EOT-in-loss + per-span masking + stop-on-EOS + in-distribution val (masked PPL + accuracy). See "Phase 1" below.
+- **NEXT (Phase 2)** — from-scratch chat-vocab pretrain on DCLM-Edu + FineWeb-Edu, ~10B tokens, cosine LR, in tmux.
+- **THEN (Phase 3)** — full Tulu-3 SFT on the new base.
+- **DEFERRED** — param scaling (300–500M) until token-scaling ROI confirmed at 100M.
+
+## Phase 1 — correctness layer (2026-06-20)
+
+Root-caused why the first chat SFT rambled and stated wrong facts, and fixed the
+data/eval/inference bugs (architecture unchanged):
+
+**Bugs fixed**
+- **EOT never learned:** end token was `<|endoftext|>` == `pad_id`; the old mask stripped it,
+  so the model never learned to stop. → New **ChatML** tokenizer adds `<|im_start|>`/`<|im_end|>`
+  (vocab **50259**); `<|im_end|>` is the learned end-of-turn, **distinct** from pad `<|endoftext|>`
+  (50256), and is now **included in the loss**.
+- **Multi-turn loss leak:** the old single `assistant_start` let later **user** turns fall inside
+  the loss. → `_encode_sft_example` now assembles tokens turn-by-turn and marks **only** assistant
+  content + its closing `<|im_end|>` as targets (verified: user text never enters the mask).
+- **No stop-on-EOS:** `V11LM.generate` ran to `max_new_tokens` regardless. → added `eos_token_id`;
+  it breaks (per-sequence `finished` mask) when `<|im_end|>` is emitted.
+- **Off-distribution val:** post-SFT WikiText PPL (263/324) measured the wrong distribution and is
+  single-token noisy. → `V7Trainer.validate()` now reports **assistant-only masked PPL** on a
+  deterministic **in-distribution holdout** (~2% hash bucket) **plus next-token accuracy**.
+
+**New ChatML template (vocab 50259):**
+```
+<|im_start|>system
+{system}<|im_end|>
+<|im_start|>user
+{user}<|im_end|>
+<|im_start|>assistant
+{assistant}<|im_end|>
+```
+
+**Code:** [`v7/data.py`](../v7/data.py) `get_chat_tokenizer`, `format_chat_prompt`,
+`format_chat_messages`, `_encode_sft_example`, `load_chat_sft` (generic) + `load_smoltalk2` wrapper;
+[`v7/train.py`](../v7/train.py) `validate()` (masked PPL + accuracy);
+[`v11/model.py`](model.py) `generate(eos_token_id=...)`;
+[`v11/train.py`](train.py) vocab auto-match + `_resize_embeddings_for_vocab` (continue-from-old-base path);
+[`scripts/chat_v11.py`](../scripts/chat_v11.py), [`scripts/smoke_chat_v11.py`](../scripts/smoke_chat_v11.py) (ChatML + `<|im_end|>` stop).
+Cache key bumped via `_CHAT_CACHE_VERSION`.
+
+## Phase 2 — knowledge pretrain (from scratch, better base)
+
+Rationale: 100M @ 2B tokens is far under-trained (SmolLM-135M ≈ 600B). More tokens at fixed size
+is the cheapest knowledge lever and gives a clean scaling curve. Base is **from scratch** with the
+chat vocab baked in (preset `v11_e3_k3_chat`, vocab 50259) so special-token embeddings exist at init
+and there is no resize hack in the production path.
+
+- **Corpus:** DCLM-Edu + FineWeb-Edu mix (streamed, weighted round-robin), edu score ≥ 3.
+- **Budget:** ~10B tokens to start (extensible), cosine LR (peak 3e-4) with warmup over the full budget.
+- **Code:** [`v7/data.py`](../v7/data.py) `_dclm_edu_text_iter`, `_fineweb_edu_text_iter`,
+  `_interleave_text_iters`, `load_pretrain_mix`, `load_fineweb_edu`; preset `v11_e3_k3_chat`.
+- **Launch (tmux, resumable):**
+```bash
+tmux new-session -d -s v11_pretrain './scripts/run_v11_pretrain_scratch.sh 10000000000'
+# resume after a stop (restores optimizer+scheduler+step+tokens):
+RESUME=checkpoints_v11_e3_k3_chat_pretrain/best_model.pt \
+  tmux new-session -d -s v11_pretrain './scripts/run_v11_pretrain_scratch.sh'
+```
+- **Metric:** WikiText val PPL as the tracking anchor (cross-run comparable); target a clean,
+  decreasing curve across the larger budget at fixed 100M.
+
+## Phase 3 — full Tulu-3 SFT on the new base
+
+- **Data:** `allenai/tulu-3-sft-mixture` filtered to knowledge_recall + coding + general (heuristic
+  source map; math/safety/multilingual excluded). `load_tulu3_sft` reuses the generic `load_chat_sft`.
+- **Run:** `--dataset tulu3`, resume the **new pretrain base**, ~2 epochs, lr 5e-5 →
+  `checkpoints_v11_sft_chat`. Script [`scripts/run_v11_sft_tulu3.sh`](../scripts/run_v11_sft_tulu3.sh).
+- **Acceptance:** beats current DCLM-base SFT on in-distro masked PPL/accuracy and smoke quality
+  (clean self-stops + better facts).
 
 ## Phase C — Richer data + chat SFT (implemented)
 

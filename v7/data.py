@@ -847,6 +847,65 @@ def load_smoltalk2(
     )
 
 
+# Heuristic source->category map for the Tulu-3 SFT mixture. Source strings vary;
+# matching is substring-based and refined when the run actually executes.
+TULU3_CATEGORY_SOURCES = {
+    'coding': ('code', 'coding', 'codealpaca'),
+    'knowledge_recall': ('flan', 'no_robots', 'oasst', 'open_assistant', 'sciriff', 'table'),
+    'general': ('wildchat', 'persona', 'lima', 'hardcoded', 'tulu', 'if_', 'ifeval'),
+}
+TULU3_EXCLUDE = (
+    'math', 'gsm', 'numina', 'aya', 'translat', 'multiling',
+    'safety', 'jailbreak', 'wildguard',
+)
+
+
+def _tulu3_keep_source(source: str, categories, exclude) -> bool:
+    s = (source or '').lower()
+    if any(x in s for x in exclude):
+        return False
+    if not categories:
+        return True
+    wanted = []
+    for c in categories:
+        wanted += list(TULU3_CATEGORY_SOURCES.get(c, ()))
+    if not wanted:
+        return True
+    return any(w in s for w in wanted)
+
+
+def load_tulu3_sft(
+    seq_len: int = 2048,
+    max_samples: Optional[int] = None,
+    sft_filter: str = 'hard',
+    categories: Tuple[str, ...] = ('knowledge_recall', 'coding', 'general'),
+    use_cache: bool = True,
+    **_unused,
+):
+    """Tulu-3 SFT mixture (knowledge+coding+general) -> ChatML assistant-only SFT."""
+    cats = tuple(categories) if categories else ()
+    cat_tag = '+'.join(cats) if cats else 'all'
+
+    def _rows():
+        from datasets import load_dataset
+
+        ds = load_dataset('allenai/tulu-3-sft-mixture', split='train')
+        n = 0
+        for ex in ds:
+            if not _tulu3_keep_source(ex.get('source'), cats, TULU3_EXCLUDE):
+                continue
+            yield ex
+            n += 1
+            if max_samples and n >= max_samples:
+                break
+
+    return load_chat_sft(
+        f'tulu3_{cat_tag}', _rows,
+        seq_len=seq_len, sft_filter=sft_filter,
+        max_samples=max_samples, use_cache=use_cache,
+    )
+
+
 # ── Evaluation Metrics ───────────────────────────────────────────────────────
 
 def compute_text_quality(text: str) -> Dict[str, float]:
