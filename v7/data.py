@@ -10,6 +10,7 @@ import os
 import re
 import sys
 import unicodedata
+import zlib
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Tuple
@@ -403,46 +404,70 @@ def load_tinystories(
     return train_ds, val_ds, tokenizer
 
 
-# ── Chat / SFT formatting ───────────────────────────────────────────────────
+# ── Chat / SFT formatting (ChatML over GPT-2 vocab) ──────────────────────────
+
+IM_START = '<|im_start|>'
+IM_END = '<|im_end|>'
+DEFAULT_SYSTEM = 'You are a helpful assistant.'
+
+# Bump when the chat template / masking / special tokens change (invalidates cache).
+_CHAT_CACHE_VERSION = 3
 
 _SFT_FUNCTION_MARKERS = (
     'function_call', 'tool_calls', 'tool_call', 'available tools',
     '<tool_call>', '"type": "function"', 'json schema',
 )
 
+_CHAT_TOKENIZER = None
+
+
+def get_chat_tokenizer():
+    """GPT-2 tokenizer extended with ChatML role markers (vocab 50259).
+
+    Adds two special tokens (`<|im_start|>`, `<|im_end|>`). `<|im_end|>` is the
+    learned end-of-turn, *distinct* from pad/eos `<|endoftext|>` (50256), so it
+    survives the assistant-only loss mask and the model can learn to stop.
+    """
+    global _CHAT_TOKENIZER
+    if _CHAT_TOKENIZER is not None:
+        return _CHAT_TOKENIZER
+    from transformers import AutoTokenizer
+
+    tok = AutoTokenizer.from_pretrained('gpt2')
+    tok.add_special_tokens({'additional_special_tokens': [IM_START, IM_END]})
+    tok.pad_token = tok.eos_token  # <|endoftext|> (50256), distinct from <|im_end|>
+    _CHAT_TOKENIZER = tok
+    return tok
+
+
+def format_chat_prompt(user_text: str, system: str = DEFAULT_SYSTEM) -> str:
+    """ChatML prompt string for inference (ends ready for the assistant turn)."""
+    return (
+        f"{IM_START}system\n{system}{IM_END}\n"
+        f"{IM_START}user\n{user_text.strip()}{IM_END}\n"
+        f"{IM_START}assistant\n"
+    )
+
 
 def format_chat_messages(
     messages: List[dict],
     *,
-    default_system: str = 'You are a helpful assistant.',
-) -> Tuple[str, int]:
-    """Render messages to training text; return (text, assistant_char_start)."""
-    parts: List[str] = []
-    assistant_start = -1
-    system_msg = default_system
+    default_system: str = DEFAULT_SYSTEM,
+) -> str:
+    """Render a full conversation to ChatML training text (debug/inspection)."""
+    sys_msg = default_system
     for msg in messages:
-        role = (msg.get('role') or '').strip().lower()
-        content = (msg.get('content') or '').strip()
-        if role == 'system' and content:
-            system_msg = content
-
-    parts.append(f"### System:\n{system_msg}\n")
+        if (msg.get('role') or '').strip().lower() == 'system' and (msg.get('content') or '').strip():
+            sys_msg = (msg.get('content') or '').strip()
+            break
+    parts = [f"{IM_START}system\n{sys_msg}{IM_END}\n"]
     for msg in messages:
         role = (msg.get('role') or '').strip().lower()
         content = (msg.get('content') or '').strip()
         if role in ('system', '') or not content:
             continue
-        if role == 'user':
-            parts.append(f"### User:\n{content}\n")
-        elif role == 'assistant':
-            if assistant_start < 0:
-                assistant_start = len(''.join(parts))
-            parts.append(f"### Assistant:\n{content}")
-    text = ''.join(parts)
-    if not text.endswith('\n'):
-        text += '\n'
-    text += '<|endoftext|>'
-    return text, assistant_start
+        parts.append(f"{IM_START}{role}\n{content}{IM_END}\n")
+    return ''.join(parts)
 
 
 def _should_filter_smoltalk(
@@ -474,38 +499,231 @@ def _encode_sft_example(
     messages: List[dict],
     tokenizer,
     seq_len: int,
+    *,
+    default_system: str = DEFAULT_SYSTEM,
 ) -> Optional[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
-    text, assistant_char_start = format_chat_messages(messages)
-    if assistant_char_start < 0:
+    """ChatML-encode one conversation with assistant-only loss.
+
+    Token ids are built turn-by-turn (robust to special tokens). Every assistant
+    *content* token and its closing `<|im_end|>` is a training target; system,
+    user, role-headers, and padding are masked out. This fixes two prior bugs:
+      * the end-of-turn token used to equal pad and was stripped from the loss;
+      * a single contiguous mask leaked later user turns into the loss.
+    """
+    im_start = tokenizer.convert_tokens_to_ids(IM_START)
+    im_end = tokenizer.convert_tokens_to_ids(IM_END)
+    nl = tokenizer.encode('\n', add_special_tokens=False)
+
+    def enc(text: str) -> List[int]:
+        return tokenizer.encode(text, add_special_tokens=False)
+
+    sys_msg = default_system
+    for msg in messages:
+        if (msg.get('role') or '').strip().lower() == 'system' and (msg.get('content') or '').strip():
+            sys_msg = (msg.get('content') or '').strip()
+            break
+
+    ids: List[int] = []
+    tgt: List[int] = []
+
+    def add(tok_ids: List[int], is_target: bool):
+        ids.extend(tok_ids)
+        tgt.extend([1 if is_target else 0] * len(tok_ids))
+
+    # System turn (context only).
+    add([im_start], False)
+    add(enc('system\n' + sys_msg), False)
+    add([im_end], False)
+    add(nl, False)
+
+    has_assistant = False
+    for msg in messages:
+        role = (msg.get('role') or '').strip().lower()
+        content = (msg.get('content') or '').strip()
+        if role in ('system', '') or not content:
+            continue
+        is_assistant = role == 'assistant'
+        add([im_start], False)
+        add(enc(f"{role}\n"), False)        # role header is context, not a target
+        add(enc(content), is_assistant)      # assistant content is the loss target
+        add([im_end], is_assistant)          # learned end-of-turn
+        add(nl, False)
+        has_assistant = has_assistant or is_assistant
+
+    if not has_assistant or len(ids) < 8:
         return None
-    if len(text) > seq_len * 8:
-        return None
 
-    full_ids = tokenizer.encode(text, add_special_tokens=False)
-    if len(full_ids) < 8:
-        return None
-    if len(full_ids) > seq_len + 1:
-        full_ids = full_ids[: seq_len + 1]
+    pad_id = tokenizer.pad_token_id
+    if len(ids) > seq_len + 1:
+        ids = ids[: seq_len + 1]
+        tgt = tgt[: seq_len + 1]
+    else:
+        pad_n = (seq_len + 1) - len(ids)
+        ids = ids + [pad_id] * pad_n
+        tgt = tgt + [0] * pad_n
 
-    prefix = text[:assistant_char_start]
-    prefix_len = len(tokenizer.encode(prefix, add_special_tokens=False))
-    assistant_start = min(prefix_len, len(full_ids) - 2)
-
-    pad_id = tokenizer.eos_token_id
-    chunk = full_ids + [pad_id] * (seq_len + 1 - len(full_ids))
-    chunk = chunk[: seq_len + 1]
-
-    input_ids = torch.tensor(chunk[:-1], dtype=torch.long)
-    labels = torch.tensor(chunk[1:], dtype=torch.long)
-    loss_mask = torch.zeros(seq_len, dtype=torch.long)
-    # Mask labels positions where we predict assistant tokens.
-    for i in range(seq_len):
-        target_pos = i + 1
-        if target_pos >= assistant_start and chunk[target_pos] != pad_id:
-            loss_mask[i] = 1
+    input_ids = torch.tensor(ids[:-1], dtype=torch.long)
+    labels = torch.tensor(ids[1:], dtype=torch.long)
+    # loss_mask aligns to predicted (label) tokens: train where the *target* is assistant.
+    loss_mask = torch.tensor(tgt[1:], dtype=torch.long)
     if loss_mask.sum() == 0:
         return None
     return input_ids, labels, loss_mask
+
+
+def _conv_holdout_bucket(messages: List[dict], pct: int = 2) -> bool:
+    """Deterministic ~pct% holdout by conversation-content hash."""
+    blob = json.dumps(messages, ensure_ascii=False)[:4096]
+    return (zlib.adler32(blob.encode('utf-8', errors='ignore')) % 100) >= (100 - pct)
+
+
+def load_chat_sft(
+    dataset_name: str,
+    row_iter_fn,
+    *,
+    seq_len: int = 2048,
+    sft_filter: str = 'hard',
+    holdout_pct: int = 2,
+    max_samples: Optional[int] = None,
+    use_cache: bool = True,
+):
+    """Generic chat-SFT loader: ChatML encode + assistant-only mask + in-distro holdout.
+
+    `row_iter_fn` is a callable returning an iterable of dicts with `messages`
+    (and optional `source`). Returns `(train_ds, val_ds, tokenizer)` where val is
+    a deterministic in-distribution holdout (not WikiText).
+    """
+    tokenizer = get_chat_tokenizer()
+    filter_tag = sft_filter or 'none'
+    limit_tag = f"ms{max_samples}" if max_samples else "full"
+    cache_path = (
+        Path('.cache') / 'v7_tokens'
+        / f"{dataset_name}_{filter_tag}_{limit_tag}_sl{seq_len}_chatv{_CHAT_CACHE_VERSION}.pt"
+    )
+
+    if use_cache and cache_path.exists():
+        cached = torch.load(cache_path, weights_only=False)
+        print(
+            f"[cache] Loaded {dataset_name} chat SFT from {cache_path} "
+            f"(train {cached['n_train']:,}, val {cached['n_val']:,})"
+        )
+        train_ds = MaskedTextDataset(cached['tr_input'], cached['tr_labels'], cached['tr_mask'])
+        val_ds = MaskedTextDataset(cached['va_input'], cached['va_labels'], cached['va_mask'])
+        return train_ds, val_ds, tokenizer
+
+    print(f"Building {dataset_name} chat SFT (filter={filter_tag}, limit={max_samples})...")
+    tr: Tuple[list, list, list] = ([], [], [])
+    va: Tuple[list, list, list] = ([], [], [])
+    kept = skipped = held = 0
+    for ex in row_iter_fn():
+        messages = ex.get('messages') or []
+        source = ex.get('source') or ''
+        if _should_filter_smoltalk(messages, source, filter_tag, max_chars=seq_len * 6):
+            skipped += 1
+            continue
+        enc = _encode_sft_example(messages, tokenizer, seq_len)
+        if enc is None:
+            skipped += 1
+            continue
+        bucket = va if _conv_holdout_bucket(messages, holdout_pct) else tr
+        bucket[0].append(enc[0])
+        bucket[1].append(enc[1])
+        bucket[2].append(enc[2])
+        kept += 1
+        if bucket is va:
+            held += 1
+        if kept % 5000 == 0:
+            print(
+                f"  {dataset_name}: kept {kept:,} (val {held:,}), skipped {skipped:,}...",
+                flush=True,
+            )
+
+    if not tr[0]:
+        raise RuntimeError(f"{dataset_name}: filtering removed all training samples")
+    if not va[0]:
+        for _ in range(min(64, len(tr[0]) - 1)):
+            for k in range(3):
+                va[k].append(tr[k].pop())
+
+    def _stack(triple):
+        return (
+            torch.stack(triple[0]),
+            torch.stack(triple[1]),
+            torch.stack(triple[2]),
+        )
+
+    tr_input, tr_labels, tr_mask = _stack(tr)
+    va_input, va_labels, va_mask = _stack(va)
+    train_ds = MaskedTextDataset(tr_input, tr_labels, tr_mask)
+    val_ds = MaskedTextDataset(va_input, va_labels, va_mask)
+    print(
+        f"  {dataset_name}: train {len(train_ds):,}, val {len(val_ds):,}, "
+        f"skipped {skipped:,}, shape={tuple(tr_input.shape)}"
+    )
+
+    if use_cache:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(
+            {
+                'tr_input': tr_input, 'tr_labels': tr_labels, 'tr_mask': tr_mask,
+                'va_input': va_input, 'va_labels': va_labels, 'va_mask': va_mask,
+                'n_train': len(train_ds), 'n_val': len(val_ds),
+                'chat_cache_version': _CHAT_CACHE_VERSION,
+            },
+            cache_path,
+        )
+        print(f"[cache] Saved {dataset_name} chat SFT to {cache_path}")
+
+    return train_ds, val_ds, tokenizer
+
+
+def _dclm_edu_text_iter(edu_score_min: int = 3) -> Iterator[str]:
+    """Stream DCLM-Edu text filtered by integer edu score."""
+    from datasets import load_dataset
+
+    stream = load_dataset('HuggingFaceTB/dclm-edu', split='train', streaming=True)
+    for row in stream:
+        score = row.get('edu_int_score')
+        if score is not None and score < edu_score_min:
+            continue
+        text = row.get('text') or row.get('content') or ''
+        if text.strip():
+            yield text
+
+
+def _fineweb_edu_text_iter(edu_score_min: int = 3, name: str = 'sample-10BT') -> Iterator[str]:
+    """Stream FineWeb-Edu text filtered by the edu classifier score."""
+    from datasets import load_dataset
+
+    stream = load_dataset(
+        'HuggingFaceFW/fineweb-edu', name=name, split='train', streaming=True,
+    )
+    for row in stream:
+        score = row.get('score')
+        if score is None:
+            score = row.get('edu_score')
+        if score is not None and score < edu_score_min:
+            continue
+        text = row.get('text') or row.get('content') or ''
+        if text.strip():
+            yield text
+
+
+def _interleave_text_iters(iters, weights=None) -> Iterator[str]:
+    """Weighted round-robin over multiple text iterators until all exhaust."""
+    import random as _random
+
+    iters = [iter(it) for it in iters]
+    weights = list(weights) if weights else [1.0] * len(iters)
+    alive = [True] * len(iters)
+    while any(alive):
+        idxs = [i for i, a in enumerate(alive) if a]
+        w = [weights[i] for i in idxs]
+        choice = _random.choices(idxs, weights=w, k=1)[0]
+        try:
+            yield next(iters[choice])
+        except StopIteration:
+            alive[choice] = False
 
 
 def load_dclm_edu(
@@ -520,25 +738,12 @@ def load_dclm_edu(
     tokenizer = AutoTokenizer.from_pretrained('gpt2')
     tokenizer.pad_token = tokenizer.eos_token
 
-    from datasets import load_dataset
-
     print(
         f"Streaming DCLM-Edu (edu_int_score>={edu_score_min}, "
         f"token_budget={token_budget or 'none'})..."
     )
-    stream = load_dataset('HuggingFaceTB/dclm-edu', split='train', streaming=True)
-
-    def _text_iter() -> Iterator[str]:
-        for row in stream:
-            score = row.get('edu_int_score')
-            if score is not None and score < edu_score_min:
-                continue
-            text = row.get('text') or row.get('content') or ''
-            if text.strip():
-                yield text
-
     train_ds = StreamingTokenChunkDataset(
-        _text_iter(),
+        _dclm_edu_text_iter(edu_score_min),
         tokenizer,
         seq_len,
         max_tokens=token_budget,
@@ -552,87 +757,94 @@ def load_dclm_edu(
     return train_ds, val_ds, tokenizer
 
 
+def load_pretrain_mix(
+    seq_len: int = 2048,
+    edu_score_min: int = 3,
+    token_budget: Optional[int] = None,
+    sources: Tuple[str, ...] = ('dclm', 'fineweb'),
+    weights: Optional[Tuple[float, ...]] = None,
+    chat_vocab: bool = True,
+    fineweb_name: str = 'sample-10BT',
+    max_val_samples: Optional[int] = None,
+):
+    """Stream a mixed web-edu corpus (DCLM-Edu + FineWeb-Edu) for from-scratch pretrain.
+
+    With ``chat_vocab=True`` the ChatML tokenizer (vocab 50259) is used so the
+    chat special-token embeddings exist from initialization (no later resize).
+    WikiText-103 val remains the tracking anchor.
+    """
+    if chat_vocab:
+        tokenizer = get_chat_tokenizer()
+    else:
+        from transformers import AutoTokenizer
+
+        tokenizer = AutoTokenizer.from_pretrained('gpt2')
+        tokenizer.pad_token = tokenizer.eos_token
+
+    iters = []
+    for s in sources:
+        if s == 'dclm':
+            iters.append(_dclm_edu_text_iter(edu_score_min))
+        elif s == 'fineweb':
+            iters.append(_fineweb_edu_text_iter(edu_score_min, name=fineweb_name))
+        else:
+            raise ValueError(f"Unknown pretrain source: {s}")
+
+    print(
+        f"Streaming pretrain mix: sources={list(sources)} "
+        f"weights={list(weights) if weights else 'uniform'} edu>={edu_score_min} "
+        f"budget={token_budget or 'none'} vocab={len(tokenizer)}"
+    )
+    text_iter = _interleave_text_iters(iters, weights) if len(iters) > 1 else iters[0]
+    train_ds = StreamingTokenChunkDataset(
+        text_iter,
+        tokenizer,
+        seq_len,
+        max_tokens=token_budget,
+        shuffle_buffer=10_000,
+    )
+    val_ds, _ = load_wikitext103_val(seq_len=seq_len, max_val_samples=max_val_samples)
+    return train_ds, val_ds, tokenizer
+
+
+def load_fineweb_edu(
+    seq_len: int = 2048,
+    edu_score_min: int = 3,
+    token_budget: Optional[int] = None,
+    chat_vocab: bool = False,
+    fineweb_name: str = 'sample-10BT',
+    max_val_samples: Optional[int] = None,
+):
+    """Stream FineWeb-Edu only (mirror of load_dclm_edu)."""
+    return load_pretrain_mix(
+        seq_len=seq_len, edu_score_min=edu_score_min, token_budget=token_budget,
+        sources=('fineweb',), chat_vocab=chat_vocab, fineweb_name=fineweb_name,
+        max_val_samples=max_val_samples,
+    )
+
+
 def load_smoltalk2(
     seq_len: int = 2048,
     max_samples: Optional[int] = None,
     sft_filter: str = 'hard',
     use_cache: bool = True,
-    max_val_samples: Optional[int] = 500,
+    **_unused,
 ):
-    """Load filtered SmolTalk for chat SFT with assistant-only loss mask."""
-    from transformers import AutoTokenizer
+    """Filtered SmolTalk chat SFT (ChatML, assistant-only loss, in-distro holdout val)."""
+    def _rows():
+        from datasets import load_dataset
 
-    tokenizer = AutoTokenizer.from_pretrained('gpt2')
-    tokenizer.pad_token = tokenizer.eos_token
+        ds = load_dataset('HuggingFaceTB/smol-smoltalk', split='train')
+        if max_samples:
+            ds = ds.select(range(min(max_samples, len(ds))))
+        for ex in ds:
+            yield ex
 
-    filter_tag = sft_filter or 'none'
-    limit_tag = f"ms{max_samples}" if max_samples else "full"
-    cache_path = (
-        Path('.cache') / 'v7_tokens'
-        / f"smoltalk2_{filter_tag}_{limit_tag}_sl{seq_len}_v{_CACHE_VERSION}.pt"
+    return load_chat_sft(
+        'smoltalk2', _rows,
+        seq_len=seq_len, sft_filter=sft_filter,
+        max_samples=max_samples, use_cache=use_cache,
     )
-
-    if use_cache and cache_path.exists():
-        cached = torch.load(cache_path, weights_only=False)
-        print(f"[cache] Loaded SmolTalk2 from {cache_path} ({cached['n_samples']:,} samples)")
-        ds = MaskedTextDataset(cached['input_ids'], cached['labels'], cached['loss_mask'])
-        val_ds, _ = load_wikitext103_val(seq_len=seq_len)
-        return ds, val_ds, tokenizer
-
-    from datasets import load_dataset
-
-    print(f"Loading SmolTalk2 (filter={filter_tag}, limit={max_samples})...")
-    ds = load_dataset('HuggingFaceTB/smol-smoltalk', split='train')
-    if max_samples:
-        ds = ds.select(range(min(max_samples, len(ds))))
-
-    input_rows, label_rows, mask_rows = [], [], []
-    kept, skipped = 0, 0
-    for ex in ds:
-        messages = ex.get('messages') or []
-        source = ex.get('source') or ''
-        if _should_filter_smoltalk(
-            messages, source, filter_tag, max_chars=seq_len * 6,
-        ):
-            skipped += 1
-            continue
-        enc = _encode_sft_example(messages, tokenizer, seq_len)
-        if enc is None:
-            skipped += 1
-            continue
-        inp, lab, mask = enc
-        input_rows.append(inp)
-        label_rows.append(lab)
-        mask_rows.append(mask)
-        kept += 1
-        if kept % 5000 == 0:
-            print(f"  SmolTalk2 prep: kept {kept:,}, skipped {skipped:,}...", flush=True)
-
-    if not input_rows:
-        raise RuntimeError('SmolTalk2 filtering removed all samples')
-
-    input_ids = torch.stack(input_rows)
-    labels = torch.stack(label_rows)
-    loss_mask = torch.stack(mask_rows)
-    train_ds = MaskedTextDataset(input_ids, labels, loss_mask)
-    print(f"  SmolTalk2: kept {kept:,}, skipped {skipped:,}, shape={tuple(input_ids.shape)}")
-
-    if use_cache:
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-        torch.save(
-            {
-                'input_ids': input_ids,
-                'labels': labels,
-                'loss_mask': loss_mask,
-                'n_samples': kept,
-                'cache_version': _CACHE_VERSION,
-            },
-            cache_path,
-        )
-        print(f"[cache] Saved SmolTalk2 to {cache_path}")
-
-    val_ds, _ = load_wikitext103_val(seq_len=seq_len)
-    return train_ds, val_ds, tokenizer
 
 
 # ── Evaluation Metrics ───────────────────────────────────────────────────────

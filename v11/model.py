@@ -682,11 +682,12 @@ class V11LM(nn.Module):
 
     @torch.no_grad()
     def generate(self, input_ids, max_new_tokens=100, temperature=1.0,
-                 top_k=50, top_p=0.0, repetition_penalty=1.0):
+                 top_k=50, top_p=0.0, repetition_penalty=1.0, eos_token_id=None):
         self.eval()
         generated = input_ids.clone()
         logits, states, _ = self.forward(generated)
         step = generated.shape[1]
+        finished = torch.zeros(generated.shape[0], dtype=torch.bool, device=generated.device)
         for _ in range(max_new_tokens):
             next_logits = logits[:, -1] / temperature
             if repetition_penalty != 1.0:
@@ -704,6 +705,10 @@ class V11LM(nn.Module):
                 next_logits = sl.scatter(1, si, sl)
             nxt = torch.multinomial(next_logits.softmax(dim=-1), 1)
             generated = torch.cat([generated, nxt], dim=1)
+            if eos_token_id is not None:
+                finished |= nxt.squeeze(1) == eos_token_id
+                if bool(finished.all()):
+                    break
             logits, states, _ = self.forward(nxt, states=states, step_offset=step)
             step += 1
         return generated

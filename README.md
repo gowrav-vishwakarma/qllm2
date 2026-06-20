@@ -165,23 +165,60 @@ Optional **multi-timescale SSM**, **memory hierarchy** (working / internal / per
 
 Rollup: [EXPERIMENTS_V_6_7_8_9.md](EXPERIMENTS_V_6_7_8_9.md) · V8 QLC: [v8/EXPERIMENTS_V8.md](v8/EXPERIMENTS_V8.md) · V9: [v9/EXPERIMENTS_V9.md](v9/EXPERIMENTS_V9.md)
 
-### What we are doing now (Phase C — before scaling params)
+### Milestone: a non-transformer, non-Mamba model that *chats* (~100M, O(1)/token)
 
-Same **~100M** `v11_e3_k3` architecture; isolate **data** before scaling model size:
+The Phase C pipeline — **DCLM-Edu pretrain → chat SFT** on the fixed **~100M `v11_e3_k3`** PAM
+architecture — produces **coherent, instruction-following chat**. To our knowledge this is a
+working conversational model built on **phase-associative memory**: not a transformer, not a
+state-space model (Mamba), with **O(1)-per-token recurrent inference** (no KV cache).
 
-1. **Pretrain (running):** stream **DCLM-Edu** (2B token pilot) from WikiText checkpoint (`25.77`); WikiText val PPL stays the eval anchor.
-2. **SFT (next):** filtered **SmolTalk2** chat data with assistant-only loss → instruct behavior.
-3. **Then scale:** only if data moves the needle — more tokens and/or larger model.
+Pretrain readout (2B-token DCLM-Edu pilot, resumed from the WikiText `25.77` checkpoint):
 
-```bash
-# Phase C pretrain (tmux)
-./scripts/run_v11_pretrain_dclm.sh 2000000000
+| Checkpoint | WikiText val PPL | DCLM-Edu holdout PPL |
+|------------|-----------------:|---------------------:|
+| WikiText-only base | **25.77** | 1222.11 |
+| + 2B DCLM-Edu pretrain | 66.26 | **33.86** |
 
-# After pretrain — chat SFT
-./scripts/run_v11_sft_smoltalk.sh checkpoints_v11_e3_k3_dclm/best_model.pt
-```
+The DCLM holdout PPL collapse (1222 → 33.86) confirms the pretrain **worked**; the WikiText rise
+is expected domain shift (WikiText is just an anchor, not the target). Chat SFT on this base then
+yields the samples below.
 
-Full protocol: [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md#phase-c--richer-data--chat-sft-implemented).
+**Early chat samples** (DCLM-base + SmolTalk SFT, greedy-ish decode; see
+`logs/v11/sft_ab_run_20260619.log`):
+
+> **User:** What is the capital of France?
+> **Assistant:** The capital of France is Paris, and it's located in the heart of France … famous
+> for its historical landmarks like the Eiffel Tower, Louvre Museum … France has a rich history …
+
+> **User:** Write a Python function that adds two numbers.
+> **Assistant:**
+> ```python
+> def add_numbers(a, b):
+>     return a + b
+> ```
+
+**Honest caveats (read before celebrating):** at ~100M params with only **2B** pretrain tokens,
+**facts are unreliable** (e.g. wrong founders/dates) and responses can ramble — the model has a
+real **knowledge ceiling** and an **end-of-turn bug** (it was never trained to stop). These are
+addressed next. Knowledge comes from **pretraining**, so the next phase scales pretraining, not SFT.
+
+### What we are doing now (reordered roadmap)
+
+SFT is a thin behavior layer and cannot add knowledge; full-LM pretraining over an SFT checkpoint
+would erase chat behavior. So we **improve the base first, SFT last**:
+
+1. **Document this milestone** (this section).
+2. **Fix correctness:** ChatML special tokens (`<|im_start|>`/`<|im_end|>`), end-of-turn token in
+   the loss (so the model learns to stop), per-assistant-span masking, stop-on-EOS at inference,
+   and **in-distribution** validation (assistant-only masked PPL + next-token accuracy) instead of
+   off-distribution WikiText PPL.
+3. **Knowledge pretrain (better base):** fresh **from-scratch** run with the chat vocab baked in, a
+   **DCLM-Edu + FineWeb-Edu** mix, and a much larger token budget (**~10B+**, vs 2B) — 100M is far
+   under-trained relative to modern small LMs (e.g. SmolLM-135M ≈ 600B tokens).
+4. **Full chat SFT** on the new base with **Tulu-3** (knowledge + coding + general).
+5. **Then scale params** (300M–500M) only after token-scaling ROI is confirmed at 100M.
+
+Full protocol + readouts: [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md#phase-c--richer-data--chat-sft-implemented).
 
 ---
 
@@ -300,8 +337,9 @@ The claim is **not** “beats transformers everywhere.” It is: **a genuinely d
 
 ## What Happens Next
 
-- **Phase C (now):** DCLM-Edu pretrain → SmolTalk2 SFT on **v11_e3_k3** at 100M; validate data before scaling.
-- **If Phase C helps:** extend pretrain tokens (5B+), optional FineWeb-Edu mix, then **scale params** (300M–500M).
+- **Milestone reached:** DCLM-Edu pretrain → chat SFT gives **coherent instruction-following** at 100M (see [Current status](#milestone-a-non-transformer-non-mamba-model-that-chats-100m-o1token)).
+- **Now:** fix end-of-turn / ChatML / in-distribution eval, then **scale pretraining** (DCLM-Edu + FineWeb-Edu, ~10B+ tokens) for real knowledge, then re-SFT on **Tulu-3**.
+- **Then scale params** (300M–500M) once token-scaling ROI is confirmed at 100M.
 - **Factual / compositional binding** — can the matrix state be *used* for verifiable memory?
 - **Standard benchmarks** (MMLU, HellaSwag, …) when the stack is ready.
 
@@ -436,4 +474,4 @@ PolyForm Noncommercial License 1.0.0 — see [LICENSE](LICENSE). Non-commercial 
 
 ---
 
-**Focus:** **v11** — E3 multistate PAM, WikiText val PPL **25.77** (K=3) / **26.01** (K=2) @ ~100M; transformer B=18 anchor **22.69**. **Phase C:** DCLM-Edu pretrain → SmolTalk2 SFT before scaling params. Prior milestones: **v7** 7d (**26.88**), **v6** pam-v3 (**29.95**). **Updated:** 2026-06-18
+**Focus:** **v11** — E3 multistate PAM, WikiText val PPL **25.77** (K=3) / **26.01** (K=2) @ ~100M; transformer B=18 anchor **22.69**. **Phase C milestone:** DCLM-Edu pretrain → chat SFT gives coherent instruction-following at 100M (non-transformer, non-Mamba, O(1)/token); next: EOT/eval fixes → larger pretrain (DCLM-Edu + FineWeb-Edu) → Tulu-3 SFT. Prior milestones: **v7** 7d (**26.88**), **v6** pam-v3 (**29.95**). **Updated:** 2026-06-20

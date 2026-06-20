@@ -410,15 +410,18 @@ class V7Trainer:
         if self.val_loader is None or len(self.val_loader) == 0:
             return {}
         self.model.eval()
-        total_loss_w = 0.0
-        total_tokens = 0
+        # Counted over masked (assistant) tokens when a loss_mask is present,
+        # else over all tokens. This makes PPL in-distribution and adds a
+        # next-token accuracy that is robust to single-token probability swings.
+        total_loss_sum = 0.0
+        total_correct = 0.0
+        total_tokens = 0.0
         for batch in self.val_loader:
             input_ids = batch['input_ids'].to(self.device, non_blocking=True)
             labels = batch['labels'].to(self.device, non_blocking=True)
             loss_mask = batch.get('loss_mask')
             if loss_mask is not None:
                 loss_mask = loss_mask.to(self.device, non_blocking=True)
-            batch_tokens = input_ids.shape[0] * input_ids.shape[1]
 
             with torch.amp.autocast(
                 self.device.type,
@@ -426,15 +429,30 @@ class V7Trainer:
                 dtype=self.amp_dtype or torch.float16,
             ):
                 logits, _, _aux = self.model(input_ids)
-                loss = self._masked_ce(logits, labels, loss_mask)
 
-            total_loss_w += loss.item() * batch_tokens
-            total_tokens += batch_tokens
+            flat_logits = logits.view(-1, logits.size(-1)).float()
+            flat_labels = labels.view(-1)
+            per_token = F.cross_entropy(flat_logits, flat_labels, reduction='none')
+            correct = (flat_logits.argmax(dim=-1) == flat_labels).float()
+
+            if loss_mask is not None:
+                m = loss_mask.view(-1).float()
+                total_loss_sum += (per_token * m).sum().item()
+                total_correct += (correct * m).sum().item()
+                total_tokens += m.sum().item()
+            else:
+                total_loss_sum += per_token.sum().item()
+                total_correct += correct.sum().item()
+                total_tokens += flat_labels.numel()
 
         if total_tokens == 0:
             return {}
-        avg_loss = total_loss_w / total_tokens
-        return {'val_loss': avg_loss, 'val_ppl': math.exp(min(avg_loss, 20))}
+        avg_loss = total_loss_sum / total_tokens
+        return {
+            'val_loss': avg_loss,
+            'val_ppl': math.exp(min(avg_loss, 20)),
+            'val_acc': total_correct / total_tokens,
+        }
 
     @torch.no_grad()
     def _generate_sample(self, prompt: str = "The", max_tokens: int = 100) -> str:
@@ -511,6 +529,8 @@ class V7Trainer:
                     f" | Val Loss: {val_metrics['val_loss']:.4f} "
                     f"PPL: {val_metrics['val_ppl']:.2f}"
                 )
+                if 'val_acc' in val_metrics:
+                    line += f" Acc: {val_metrics['val_acc']:.3f}"
                 if val_metrics['val_loss'] < self.best_val_loss:
                     self.best_val_loss = val_metrics['val_loss']
                     self.best_val_ppl = val_metrics['val_ppl']
@@ -571,6 +591,8 @@ class V7Trainer:
                     f"\nVal Loss: {val_metrics['val_loss']:.4f} "
                     f"PPL: {val_metrics['val_ppl']:.2f}"
                 )
+                if 'val_acc' in val_metrics:
+                    _ep_msg += f" Acc: {val_metrics['val_acc']:.3f}"
                 if is_best:
                     _ep_msg += " *best*"
             if epoch_text:

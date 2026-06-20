@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Interactive chat with a V11 checkpoint (post-SFT or base)."""
+"""Interactive chat with a V11 checkpoint (ChatML, post-SFT or base)."""
 
 import argparse
 import sys
@@ -9,16 +9,8 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from transformers import AutoTokenizer
+from v7.data import IM_END, format_chat_prompt, get_chat_tokenizer
 from v11.model import V11LM, get_config
-
-
-def build_prompt(user_text: str, system: str = "You are a helpful assistant.") -> str:
-    return (
-        f"### System:\n{system}\n"
-        f"### User:\n{user_text.strip()}\n"
-        f"### Assistant:\n"
-    )
 
 
 def main():
@@ -30,16 +22,17 @@ def main():
     args = p.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    tokenizer = get_chat_tokenizer()
+    im_end_id = tokenizer.convert_tokens_to_ids(IM_END)
+
     cfg = get_config(args.preset)
+    cfg.vocab_size = len(tokenizer)
     model = V11LM(cfg)
     ckpt = torch.load(args.checkpoint, map_location='cpu', weights_only=False)
     model.load_state_dict(ckpt['model_state_dict'])
     model.to(device)
     model.eval()
     m = model._orig_mod if hasattr(model, '_orig_mod') else model
-
-    tokenizer = AutoTokenizer.from_pretrained('gpt2')
-    tokenizer.pad_token = tokenizer.eos_token
 
     print('V11 chat (empty line to quit)')
     while True:
@@ -50,7 +43,7 @@ def main():
             break
         if not user:
             break
-        prompt = build_prompt(user)
+        prompt = format_chat_prompt(user)
         ids = tokenizer.encode(prompt, return_tensors='pt').to(device)
         with torch.no_grad():
             out = m.generate(
@@ -60,15 +53,12 @@ def main():
                 top_k=50,
                 top_p=0.9,
                 repetition_penalty=1.15,
+                eos_token_id=im_end_id,
             )
-        text = tokenizer.decode(out[0].tolist())
-        if '### Assistant:' in text:
-            reply = text.split('### Assistant:', 1)[1]
-            reply = reply.split('### User:', 1)[0]
-            reply = reply.split('<|endoftext|>', 1)[0]
-        else:
-            reply = text[len(prompt):]
-        print(f"Assistant> {reply.strip()}")
+        gen_ids = out[0, ids.shape[1]:].tolist()
+        reply = tokenizer.decode(gen_ids, skip_special_tokens=False)
+        reply = reply.split(IM_END, 1)[0].strip()
+        print(f"Assistant> {reply}")
 
 
 if __name__ == '__main__':
