@@ -97,10 +97,43 @@ def _resolve_stage_dataset(stage: str, dataset: str) -> str:
     return dataset
 
 
+def _resize_embeddings_for_vocab(model, state):
+    """Grow loaded token embeddings to the model's vocab (e.g. +ChatML tokens).
+
+    Weights are tied (lm_head reuses the embedding), so only the two complex
+    embedding matrices need resizing. New rows are initialized to match
+    ``ComplexEmbed`` (normal, std=0.02); existing rows are copied verbatim.
+    """
+    target_state = model.state_dict()
+    for key in ('embed.embed_real.weight', 'embed.embed_imag.weight'):
+        if key not in state or key not in target_state:
+            continue
+        loaded = state[key]
+        target = target_state[key]
+        if tuple(loaded.shape) == tuple(target.shape):
+            continue
+        if loaded.shape[0] < target.shape[0] and loaded.shape[1] == target.shape[1]:
+            grown = target.clone()
+            torch.nn.init.normal_(grown, std=0.02)
+            grown[: loaded.shape[0]] = loaded
+            state[key] = grown
+            print(
+                f"  resized {key}: {tuple(loaded.shape)} -> {tuple(grown.shape)} "
+                f"(+{target.shape[0] - loaded.shape[0]} new rows)"
+            )
+        else:
+            raise ValueError(
+                f"Cannot resize {key}: loaded {tuple(loaded.shape)} vs "
+                f"target {tuple(target.shape)}"
+            )
+
+
 def _load_checkpoint_weights(model, path: str):
     print(f"\nLoading weights from {path}...")
     checkpoint = torch.load(path, weights_only=False)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    state = checkpoint['model_state_dict']
+    _resize_embeddings_for_vocab(model, state)
+    model.load_state_dict(state)
     return checkpoint
 
 
@@ -194,6 +227,12 @@ def main():
         )
     else:
         raise ValueError(f"Unknown dataset: {args.dataset}")
+
+    # Match model vocab to the data tokenizer (chat SFT adds ChatML specials -> 50259).
+    tok_vocab = len(tokenizer)
+    if tok_vocab != cfg.vocab_size:
+        print(f"Adjusting vocab_size: {cfg.vocab_size} -> {tok_vocab} (tokenizer)")
+        cfg.vocab_size = tok_vocab
 
     from torch.utils.data import DataLoader
     use_cuda = torch.cuda.is_available()

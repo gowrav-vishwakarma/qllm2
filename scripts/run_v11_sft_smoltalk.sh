@@ -32,7 +32,7 @@ SFT_FILTER=hard
 CKPT_DIR="${CKPT_DIR:-checkpoints_v11_e3_k3_sft}"
 EXTRA_ARGS="$*"
 
-GEN_PROMPT="### User:\nWhat is the capital of France?\n### Assistant:\n"
+GEN_PROMPT="<|im_start|>user\nWhat is the capital of France?<|im_end|>\n<|im_start|>assistant\n"
 LOG_DIR=$(make_log_dir "v11" "${PRESET}_sft_smoltalk2")
 mkdir -p "$CKPT_DIR"
 
