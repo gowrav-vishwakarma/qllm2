@@ -142,6 +142,8 @@ Optional **multi-timescale SSM**, **memory hierarchy** (working / internal / per
 
 ## Current status (V7 → V11)
 
+**Beginner guide:** [v11/BEGINNER_GUIDE.md](v11/BEGINNER_GUIDE.md) — how phase, complex numbers, and fixed-size PAM memory work in code (with a "The cat sat on the mat" walkthrough and why inference is O(1) in sequence length).
+
 **Best logged PAM run:** **V11 E3 K=3** — WikiText-103 val PPL **25.77** @10 ep (~100.5M params). Same pipeline as the transformer **B=18** anchor (**22.69**): gap **+3.08 PPL** (down from **+4.19** at V7 7d **26.88**).
 
 | Milestone | Val PPL @10 | vs transformer B=18 (22.69) | What changed |

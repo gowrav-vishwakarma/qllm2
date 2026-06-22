@@ -1,5 +1,7 @@
 # V11: Maturing PAM via new memory dynamics
 
+> **New to the architecture?** Start with [BEGINNER_GUIDE.md](BEGINNER_GUIDE.md) — a plain-language tour of complex phase space, magnitude/phase, PAM memory, and O(1) inference with code walkthroughs.
+
 Goal: close the gap to the transformer (7d **26.88** vs transformer B=18 **22.69** on
 WikiText-103, ~100M) by changing **how the PAM state writes and forgets** — the one
 frontier V9/V10 flagged as unexplored — while keeping the architecture identity
