@@ -1,0 +1,19 @@
+{
+  "test": "language-filler",
+  "result": {
+    "projection_seed": 42,
+    "baseline_relative": 0.9999999999989999,
+    "language_filler_relative": 12.610269511339018,
+    "language_key_mean_corr": 0.3117580767837193,
+    "random_filler_relative": 0.15062098713612557,
+    "lang_over_random": 83.72186207927724,
+    "d": 64,
+    "filler_tokens": 5000,
+    "gamma": 0.995,
+    "key_text": "glorp",
+    "value_text": " banana",
+    "query_text": "glorp",
+    "elapsed_s": 2.763448896999762
+  },
+  "seed": 42
+}

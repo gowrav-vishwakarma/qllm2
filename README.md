@@ -109,6 +109,20 @@ Learned gates can **freeze** important state dimensions so they are not overwrit
 **Training:** quadratic (attention-like) dual form — friendly to dense GPU matmuls.  
 **Inference:** recurrent form — **O(1) per token** with fixed state size (no KV cache growth with sequence length).
 
+### Why PAM works (mechanism probes)
+
+Independent **memory probes** ([`memory_probes/README.md`](memory_probes/README.md)) test the PAM math without a trained LM — reproducible NumPy/PyTorch experiments, runnable via `./scripts/run_memory_probes.sh`.
+
+**In one line:** matrix outer-product storage gives **near-perfect multi-association retrieval** where vector holographic memory fails, with **O(d²) capacity per head** and **O(1) recurrent inference** at any context length — the architecture can hold the associations; training must learn when to write and when to protect.
+
+| Probe | Headline result |
+|-------|-----------------|
+| **Binding capacity** | **100%** retrieval @ 64 associations vs **~13%** for vector HRR (same d=64) |
+| **Long context** | Needle preserved to **65K+** when protection freezes state; decay-only γ^T → 0 |
+| **Layer bridge** | Hand-rolled math matches `V11PAMLayer` to **~1e-8** — implementation is correct |
+
+Full per-probe tables, NIAH/GSP sweeps, language-filler, and rank evolution: **[memory_probes/README.md](memory_probes/README.md)** · JSON logs in `logs/memory_probes/`.
+
 ---
 
 ## V6 Architecture Paths (Where the Code Goes)
@@ -331,7 +345,7 @@ The claim is **not** “beats transformers everywhere.” It is: **a genuinely d
 
 - **Architectural diversity** — If the field only explores transformers and close variants, other viable families may be missed.
 - **Phase preservation** is a **design constraint**, not branding — progress tracked math fixes, not parameter scaling alone.
-- **PAM** combines matrix-state storage, complex-conjugate retrieval, and optional GSP in one trainable stack — a distinct memory mechanism from both attention and classic SSMs.
+- **PAM** combines matrix-state storage, complex-conjugate retrieval, and optional GSP in one trainable stack — a distinct memory mechanism from both attention and classic SSMs. **Mechanism probes** ([memory_probes/README.md](memory_probes/README.md)) show **100% vs ~13%** binding accuracy (matrix vs vector) at d=64 — the capacity is real before training even enters the picture.
 - **Inference** — Recurrent PAM inference is **O(1) per token** with bounded state; long-generation cost does not grow like a KV cache.
 - **Accessibility** — The project is deliberately explored on **consumer-class GPUs** (e.g. RTX 4090) to keep research reproducible outside huge clusters.
 
@@ -425,6 +439,8 @@ Persistent memory and other generation options: [v6/README.md](v6/README.md).
 ```text
 qllm2/
 ├── README.md
+├── memory_probes/             # PAM mechanism evaluation (binding, NIAH, long-context)
+│   └── README.md              # full probe results + interpretation
 ├── EXPERIMENTS_V_6_7_8_9.md   # cross-version rollup
 ├── v11/                       # current: E3 multistate + Phase C data
 │   ├── EXPERIMENTS_V11.md
@@ -449,6 +465,7 @@ qllm2/
 
 ## Documentation
 
+- [**memory_probes/README.md**](memory_probes/README.md) — **PAM mechanism validation:** binding capacity, long-context NIAH, interference; why matrix memory beats vector state
 - [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md) — **current:** E1/E2/E3 ablations, K=2/K=3, Phase C pretrain+SFT
 - [EXPERIMENTS_V_6_7_8_9.md](EXPERIMENTS_V_6_7_8_9.md) — cross-version PPL rollup and dead ends
 - [v7/EXPERIMENTS_V7.md](v7/EXPERIMENTS_V7.md) — flat stack, 7d chunked recipe (**26.88**)

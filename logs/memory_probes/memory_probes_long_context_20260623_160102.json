@@ -1,0 +1,626 @@
+{
+  "test": "long-context",
+  "result": {
+    "d": 64,
+    "max_distance": 65536,
+    "distances": [
+      2048,
+      4096,
+      8192,
+      16384,
+      32768,
+      65536
+    ],
+    "simulate_filler": true,
+    "analytic_decay": [
+      {
+        "gamma": 0.9820137900379085,
+        "distance": 2048,
+        "relative": 7.191459959009109e-17,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.9820137900379085,
+        "distance": 4096,
+        "relative": 5.17170963420313e-33,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.9820137900379085,
+        "distance": 8192,
+        "relative": 2.674658054050947e-65,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.9820137900379085,
+        "distance": 16384,
+        "relative": 7.153795706099599e-130,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.9820137900379085,
+        "distance": 32768,
+        "relative": 5.1176793004609053e-259,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.9820137900379085,
+        "distance": 65536,
+        "relative": 0.0,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.99,
+        "distance": 2048,
+        "relative": 1.1504785761431954e-09,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.99,
+        "distance": 4096,
+        "relative": 1.3236009541644744e-18,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.99,
+        "distance": 8192,
+        "relative": 1.751919485865107e-36,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.99,
+        "distance": 16384,
+        "relative": 3.0692218849538605e-72,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.99,
+        "distance": 32768,
+        "relative": 9.42012297907973e-144,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.99,
+        "distance": 65536,
+        "relative": 8.873871694098596e-287,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.995,
+        "distance": 2048,
+        "relative": 3.480722232581731e-05,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.995,
+        "distance": 4096,
+        "relative": 1.211542726038875e-09,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.995,
+        "distance": 8192,
+        "relative": 1.4678357770177084e-18,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.995,
+        "distance": 16384,
+        "relative": 2.1545418682931798e-36,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.995,
+        "distance": 32768,
+        "relative": 4.642050662228266e-72,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.995,
+        "distance": 65536,
+        "relative": 2.154863435069388e-143,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.999,
+        "distance": 2048,
+        "relative": 0.12886052215370547,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.999,
+        "distance": 4096,
+        "relative": 0.01660503416972562,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.999,
+        "distance": 8192,
+        "relative": 0.00027572715977775545,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.999,
+        "distance": 16384,
+        "relative": 7.602546663910787e-08,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.999,
+        "distance": 32768,
+        "relative": 5.779871577694104e-15,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 0.999,
+        "distance": 65536,
+        "relative": 3.340691545463613e-29,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 1.0,
+        "distance": 2048,
+        "relative": 1.0,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 1.0,
+        "distance": 4096,
+        "relative": 1.0,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 1.0,
+        "distance": 8192,
+        "relative": 1.0,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 1.0,
+        "distance": 16384,
+        "relative": 1.0,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 1.0,
+        "distance": 32768,
+        "relative": 1.0,
+        "mode": "analytic_decay_only"
+      },
+      {
+        "gamma": 1.0,
+        "distance": 65536,
+        "relative": 1.0,
+        "mode": "analytic_decay_only"
+      }
+    ],
+    "niah_filler": {
+      "results": [
+        {
+          "gamma": 0.9820137900379085,
+          "distance": 2048,
+          "relative": 0.030748646640903366,
+          "theory_gamma_T": 7.191459959009109e-17,
+          "decay_only_relative": 7.191459959009109e-17
+        },
+        {
+          "gamma": 0.9820137900379085,
+          "distance": 4096,
+          "relative": 0.0131374519793936,
+          "theory_gamma_T": 5.17170963420313e-33,
+          "decay_only_relative": 5.17170963420313e-33
+        },
+        {
+          "gamma": 0.9820137900379085,
+          "distance": 8192,
+          "relative": 0.0881991176630709,
+          "theory_gamma_T": 2.674658054050947e-65,
+          "decay_only_relative": 2.674658054050947e-65
+        },
+        {
+          "gamma": 0.9820137900379085,
+          "distance": 16384,
+          "relative": 0.03786630777882493,
+          "theory_gamma_T": 7.153795706099599e-130,
+          "decay_only_relative": 7.153795706099599e-130
+        },
+        {
+          "gamma": 0.9820137900379085,
+          "distance": 32768,
+          "relative": 0.0951983372219306,
+          "theory_gamma_T": 5.1176793004609053e-259,
+          "decay_only_relative": 5.1176793004609053e-259
+        },
+        {
+          "gamma": 0.9820137900379085,
+          "distance": 65536,
+          "relative": 0.045587005691503826,
+          "theory_gamma_T": 0.0,
+          "decay_only_relative": 0.0
+        },
+        {
+          "gamma": 0.99,
+          "distance": 2048,
+          "relative": 0.1469586373085321,
+          "theory_gamma_T": 1.1504785761431954e-09,
+          "decay_only_relative": 1.1504785761431954e-09
+        },
+        {
+          "gamma": 0.99,
+          "distance": 4096,
+          "relative": 0.02758111552994947,
+          "theory_gamma_T": 1.3236009541644744e-18,
+          "decay_only_relative": 1.3236009541644744e-18
+        },
+        {
+          "gamma": 0.99,
+          "distance": 8192,
+          "relative": 0.11312441839308902,
+          "theory_gamma_T": 1.751919485865107e-36,
+          "decay_only_relative": 1.751919485865107e-36
+        },
+        {
+          "gamma": 0.99,
+          "distance": 16384,
+          "relative": 0.13600103577677863,
+          "theory_gamma_T": 3.0692218849538605e-72,
+          "decay_only_relative": 3.0692218849538605e-72
+        },
+        {
+          "gamma": 0.99,
+          "distance": 32768,
+          "relative": 0.054403550917599075,
+          "theory_gamma_T": 9.42012297907973e-144,
+          "decay_only_relative": 9.42012297907973e-144
+        },
+        {
+          "gamma": 0.99,
+          "distance": 65536,
+          "relative": 0.1925012452747537,
+          "theory_gamma_T": 8.873871694098596e-287,
+          "decay_only_relative": 8.873871694098596e-287
+        },
+        {
+          "gamma": 0.995,
+          "distance": 2048,
+          "relative": 0.172761848717114,
+          "theory_gamma_T": 3.480722232581731e-05,
+          "decay_only_relative": 3.480722232581731e-05
+        },
+        {
+          "gamma": 0.995,
+          "distance": 4096,
+          "relative": 0.07069663353969757,
+          "theory_gamma_T": 1.211542726038875e-09,
+          "decay_only_relative": 1.211542726038875e-09
+        },
+        {
+          "gamma": 0.995,
+          "distance": 8192,
+          "relative": 0.11669457889294825,
+          "theory_gamma_T": 1.4678357770177084e-18,
+          "decay_only_relative": 1.4678357770177084e-18
+        },
+        {
+          "gamma": 0.995,
+          "distance": 16384,
+          "relative": 0.22996700382669594,
+          "theory_gamma_T": 2.1545418682931798e-36,
+          "decay_only_relative": 2.1545418682931798e-36
+        },
+        {
+          "gamma": 0.995,
+          "distance": 32768,
+          "relative": 0.23869383442822792,
+          "theory_gamma_T": 4.642050662228266e-72,
+          "decay_only_relative": 4.642050662228266e-72
+        },
+        {
+          "gamma": 0.995,
+          "distance": 65536,
+          "relative": 0.27229500665044676,
+          "theory_gamma_T": 2.154863435069388e-143,
+          "decay_only_relative": 2.154863435069388e-143
+        },
+        {
+          "gamma": 0.999,
+          "distance": 2048,
+          "relative": 0.11772539609107063,
+          "theory_gamma_T": 0.12886052215370547,
+          "decay_only_relative": 0.12886052215370547
+        },
+        {
+          "gamma": 0.999,
+          "distance": 4096,
+          "relative": 0.15391605309893291,
+          "theory_gamma_T": 0.01660503416972562,
+          "decay_only_relative": 0.01660503416972562
+        },
+        {
+          "gamma": 0.999,
+          "distance": 8192,
+          "relative": 0.37321356021398505,
+          "theory_gamma_T": 0.00027572715977775545,
+          "decay_only_relative": 0.00027572715977775545
+        },
+        {
+          "gamma": 0.999,
+          "distance": 16384,
+          "relative": 0.33377995773573305,
+          "theory_gamma_T": 7.602546663910787e-08,
+          "decay_only_relative": 7.602546663910787e-08
+        },
+        {
+          "gamma": 0.999,
+          "distance": 32768,
+          "relative": 0.4728080173847375,
+          "theory_gamma_T": 5.779871577694104e-15,
+          "decay_only_relative": 5.779871577694104e-15
+        },
+        {
+          "gamma": 0.999,
+          "distance": 65536,
+          "relative": 0.3059048001955549,
+          "theory_gamma_T": 3.340691545463613e-29,
+          "decay_only_relative": 3.340691545463613e-29
+        },
+        {
+          "gamma": 1.0,
+          "distance": 2048,
+          "relative": 1.0766074197851139,
+          "theory_gamma_T": 1.0,
+          "decay_only_relative": 1.0
+        },
+        {
+          "gamma": 1.0,
+          "distance": 4096,
+          "relative": 1.202184753346109,
+          "theory_gamma_T": 1.0,
+          "decay_only_relative": 1.0
+        },
+        {
+          "gamma": 1.0,
+          "distance": 8192,
+          "relative": 1.8388562278177332,
+          "theory_gamma_T": 1.0,
+          "decay_only_relative": 1.0
+        },
+        {
+          "gamma": 1.0,
+          "distance": 16384,
+          "relative": 1.5707753963228386,
+          "theory_gamma_T": 1.0,
+          "decay_only_relative": 1.0
+        },
+        {
+          "gamma": 1.0,
+          "distance": 32768,
+          "relative": 2.6096544906969266,
+          "theory_gamma_T": 1.0,
+          "decay_only_relative": 1.0
+        },
+        {
+          "gamma": 1.0,
+          "distance": 65536,
+          "relative": 3.2283567419184536,
+          "theory_gamma_T": 1.0,
+          "decay_only_relative": 1.0
+        }
+      ]
+    },
+    "gsp": {
+      "dt": 0.018149927917809738,
+      "results": [
+        {
+          "p_fill": 0.0,
+          "gamma_fill": 0.9820137900379085,
+          "distance": 2048,
+          "relative": 0.11801818012938187,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.0,
+          "gamma_fill": 0.9820137900379085,
+          "distance": 4096,
+          "relative": 0.07975443662479706,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.0,
+          "gamma_fill": 0.9820137900379085,
+          "distance": 8192,
+          "relative": 0.03406528514373081,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.0,
+          "gamma_fill": 0.9820137900379085,
+          "distance": 16384,
+          "relative": 0.08122388820345743,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.0,
+          "gamma_fill": 0.9820137900379085,
+          "distance": 32768,
+          "relative": 0.07881128138634809,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.0,
+          "gamma_fill": 0.9820137900379085,
+          "distance": 65536,
+          "relative": 0.11304262958734075,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.9,
+          "gamma_fill": 0.9982013790037908,
+          "distance": 2048,
+          "relative": 0.04878866787779965,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.9,
+          "gamma_fill": 0.9982013790037908,
+          "distance": 4096,
+          "relative": 0.03295155819498565,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.9,
+          "gamma_fill": 0.9982013790037908,
+          "distance": 8192,
+          "relative": 0.021346578152789838,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.9,
+          "gamma_fill": 0.9982013790037908,
+          "distance": 16384,
+          "relative": 0.02566842083058276,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.9,
+          "gamma_fill": 0.9982013790037908,
+          "distance": 32768,
+          "relative": 0.03175255431883102,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.9,
+          "gamma_fill": 0.9982013790037908,
+          "distance": 65536,
+          "relative": 0.032607832256551436,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.99,
+          "gamma_fill": 0.999820137900379,
+          "distance": 2048,
+          "relative": 0.6916355809765842,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.99,
+          "gamma_fill": 0.999820137900379,
+          "distance": 4096,
+          "relative": 0.47784178364157365,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.99,
+          "gamma_fill": 0.999820137900379,
+          "distance": 8192,
+          "relative": 0.2269849808745902,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.99,
+          "gamma_fill": 0.999820137900379,
+          "distance": 16384,
+          "relative": 0.05474259725185959,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.99,
+          "gamma_fill": 0.999820137900379,
+          "distance": 32768,
+          "relative": 0.0028597456720623744,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 0.99,
+          "gamma_fill": 0.999820137900379,
+          "distance": 65536,
+          "relative": 0.003671899511717082,
+          "theory_decay_only": null
+        },
+        {
+          "p_fill": 1.0,
+          "gamma_fill": 1.0,
+          "distance": 2048,
+          "relative": 0.9999999999989999,
+          "theory_decay_only": 1.0
+        },
+        {
+          "p_fill": 1.0,
+          "gamma_fill": 1.0,
+          "distance": 4096,
+          "relative": 0.9999999999989999,
+          "theory_decay_only": 1.0
+        },
+        {
+          "p_fill": 1.0,
+          "gamma_fill": 1.0,
+          "distance": 8192,
+          "relative": 0.9999999999989999,
+          "theory_decay_only": 1.0
+        },
+        {
+          "p_fill": 1.0,
+          "gamma_fill": 1.0,
+          "distance": 16384,
+          "relative": 0.9999999999989999,
+          "theory_decay_only": 1.0
+        },
+        {
+          "p_fill": 1.0,
+          "gamma_fill": 1.0,
+          "distance": 32768,
+          "relative": 0.9999999999989999,
+          "theory_decay_only": 1.0
+        },
+        {
+          "p_fill": 1.0,
+          "gamma_fill": 1.0,
+          "distance": 65536,
+          "relative": 0.9999999999989999,
+          "theory_decay_only": 1.0
+        }
+      ]
+    },
+    "needle_early_late": [
+      {
+        "distance": 65536,
+        "rel_position": 0.0,
+        "position": 0,
+        "gsp_p": 0.0,
+        "relative": 0.3524506660500981
+      },
+      {
+        "distance": 65536,
+        "rel_position": 1.0,
+        "position": 65535,
+        "gsp_p": 0.0,
+        "relative": 0.7882467239373941
+      },
+      {
+        "distance": 65536,
+        "rel_position": 0.0,
+        "position": 0,
+        "gsp_p": 0.99,
+        "relative": 0.012404582138187605
+      },
+      {
+        "distance": 65536,
+        "rel_position": 1.0,
+        "position": 65535,
+        "gsp_p": 0.99,
+        "relative": 0.9935303605969309
+      }
+    ],
+    "summary": [
+      {
+        "mode": "gsp_p=1.0 decay-only",
+        "max_distance_ge_90pct": 65536
+      },
+      {
+        "mode": "gamma=0.999 analytic",
+        "max_distance_ge_90pct": 0
+      }
+    ]
+  },
+  "seed": 42
+}
