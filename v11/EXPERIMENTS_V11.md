@@ -69,16 +69,21 @@ Runs are serialized on the single GPU via [scripts/run_v11_queue.sh](../scripts/
 (waits for the GPU to free, then runs E1 → E3). Throughput note: E2's chunk solve is the
 slow path; Flash-PAM ([v11/triton_kernels.py](triton_kernels.py)) targets the speedup.
 
-## Live run status (2026-06-20)
+## Live run status (2026-06-23)
 
 **Milestone reached:** DCLM-base + SmolTalk SFT produces **coherent instruction-following chat**
-at ~100M (non-transformer, non-Mamba, O(1)/token). Now executing the reordered v2 plan:
+at ~100M (non-transformer, non-Mamba, O(1)/token). Executing reordered v2 plan:
 **fix correctness → from-scratch knowledge pretrain (better base) → Tulu-3 SFT last.**
 
-- **DONE** — DCLM-Edu pretrain pilot: 2B tokens from WikiText ckpt → WikiText val **66.27** (was **25.77**), DCLM holdout **1222 → 33.86** (pretrain worked; WikiText is just an anchor).
-- **DONE** — SFT A/B (wiki vs dclm base): DCLM base wins; coherent chat, but rambles (no learned stop) and some wrong facts. Logs `logs/v11/sft_ab_run_20260619.log`.
-- **DONE (Phase 1 correctness)** — ChatML tokenizer + EOT-in-loss + per-span masking + stop-on-EOS + in-distribution val (masked PPL + accuracy). See "Phase 1" below.
-- **NEXT (Phase 2)** — from-scratch chat-vocab pretrain on DCLM-Edu + FineWeb-Edu, ~10B tokens, cosine LR, in tmux.
+- **DONE** — Phase 1 correctness (ChatML, EOT-in-loss, in-distro val/acc, stop-on-EOS).
+- **INCIDENT (2026-06-23)** — Phase 2 pretrain reached **~6.78B / 10B tokens** (~3 days) then
+  **session shutdown** killed tmux with **no checkpoint on disk** (streaming runs stayed on Epoch 1;
+  old code only saved at epoch end). Work lost; restart from scratch required.
+- **FIXED** — Periodic checkpoints: `--save_every_steps 5000` (~184M tokens, ~2h) writes
+  `latest.pt` for resume only (no mid-run val); SIGTERM/SIGINT saves `latest.pt`
+  at next batch boundary. `best_model.pt` / `final_model.pt` only at run end (epoch-end val).
+  Resume: `RESUME=checkpoints_v11_e3_k3_chat_pretrain/latest.pt`.
+- **RUNNING** — Phase 2 pretrain restarted with checkpointing enabled (tmux `v11_pretrain`).
 - **THEN (Phase 3)** — full Tulu-3 SFT on the new base.
 - **DEFERRED** — param scaling (300–500M) until token-scaling ROI confirmed at 100M.
 
@@ -133,10 +138,15 @@ and there is no resize hack in the production path.
 - **Launch (tmux, resumable):**
 ```bash
 tmux new-session -d -s v11_pretrain './scripts/run_v11_pretrain_scratch.sh 10000000000'
-# resume after a stop (restores optimizer+scheduler+step+tokens):
-RESUME=checkpoints_v11_e3_k3_chat_pretrain/best_model.pt \
+# resume after crash / shutdown (restores optimizer+scheduler+step+tokens):
+RESUME=checkpoints_v11_e3_k3_chat_pretrain/latest.pt \
   tmux new-session -d -s v11_pretrain './scripts/run_v11_pretrain_scratch.sh'
 ```
+- **Checkpoint protocol:** `latest.pt` every 5000 steps (~2h) for resume only — no validation
+  or `best_model.pt` mid-run (batch loss is too noisy). At run end (token budget or last epoch),
+  epoch-end WikiText val writes `best_model.pt` and `final_model.pt`. Atomic write (`.tmp` → rename).
+  Streaming data **restarts from the beginning** on resume (token budget still counts from saved
+  `global_tokens`; tail may re-see docs).
 - **Metric:** WikiText val PPL as the tracking anchor (cross-run comparable); target a clean,
   decreasing curve across the larger budget at fixed 100M.
 

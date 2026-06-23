@@ -13,6 +13,7 @@ import json
 import math
 import os
 import random
+import signal
 import sys
 import time
 import urllib.request
@@ -177,6 +178,7 @@ class V7Trainer:
         gen_every: int = 0,
         gen_prompt: str = 'The',
         log_interval: int = 50,
+        save_every_steps: int = 0,
         start_epoch: int = 0,
         unitary_lambda: float = 0.0,
         run_label: str = 'V7',
@@ -197,7 +199,9 @@ class V7Trainer:
         self.gen_every = gen_every
         self.gen_prompt = gen_prompt
         self.log_interval = log_interval
+        self.save_every_steps = save_every_steps
         self.start_epoch = start_epoch
+        self.shutdown_requested = False
         self.run_label = run_label
         self.log_path = log_path
         self.log_dir = log_dir
@@ -388,6 +392,21 @@ class V7Trainer:
                     pass
                 self.model.train()
 
+            if (
+                self.save_every_steps > 0
+                and self.global_step > 0
+                and self.global_step % self.save_every_steps == 0
+            ):
+                self._save_periodic_checkpoint(epoch)
+
+            if self.shutdown_requested:
+                print(
+                    f"  Shutdown: saving latest.pt @ step {self.global_step}, "
+                    f"{self.global_tokens:,} tok"
+                )
+                self.save_checkpoint('latest.pt', epoch)
+                break
+
             if self.token_budget and self.global_tokens >= self.token_budget:
                 print(
                     f"  Token budget reached: {self.global_tokens:,} "
@@ -474,6 +493,7 @@ class V7Trainer:
 
     def save_checkpoint(self, name: str, epoch: int):
         path = self.checkpoint_dir / name
+        tmp_path = path.with_name(path.name + '.tmp')
         m = self.model._orig_mod if hasattr(self.model, '_orig_mod') else self.model
         ckpt = {
             'model_state_dict': m.state_dict(),
@@ -486,11 +506,32 @@ class V7Trainer:
             'epoch': epoch,
             'config': asdict(m.config),
         }
-        torch.save(ckpt, path)
+        torch.save(ckpt, tmp_path)
+        os.replace(tmp_path, path)
         print(f"Saved checkpoint: {path}")
+
+    def _save_periodic_checkpoint(self, epoch: int):
+        """Mid-epoch resume checkpoint only (no val — best_model is saved at epoch end)."""
+        self.save_checkpoint('latest.pt', epoch)
+        print(
+            f"  [checkpoint @ step {self.global_step}, {self.global_tokens:,} tok]"
+        )
+
+    def _register_shutdown_handlers(self):
+        def _handle_signal(signum, _frame):
+            self.shutdown_requested = True
+            print(
+                f"\nSignal {signum} received — saving latest.pt at next batch boundary...",
+                flush=True,
+            )
+
+        signal.signal(signal.SIGTERM, _handle_signal)
+        signal.signal(signal.SIGINT, _handle_signal)
 
     def train(self):
         training_start = time.time()
+        self.shutdown_requested = False
+        self._register_shutdown_handlers()
         print(f"\nTraining on {self.device}")
         m = self.model._orig_mod if hasattr(self.model, '_orig_mod') else self.model
         params = m.count_parameters()
@@ -504,6 +545,8 @@ class V7Trainer:
             f"Epochs: {self.start_epoch+1}..{self.max_epochs}, "
             f"Batches/epoch: {n_batches}"
         )
+        if self.save_every_steps > 0:
+            print(f"Periodic checkpoint: every {self.save_every_steps} steps -> latest.pt")
         print()
 
         for epoch in range(self.start_epoch, self.max_epochs):
@@ -513,6 +556,15 @@ class V7Trainer:
 
             train_metrics = self.train_epoch(epoch)
             epoch_time = time.time() - training_start
+
+            if self.shutdown_requested:
+                print("\nTraining stopped by signal (latest.pt saved).")
+                _notify_discord(
+                    f"**{self.run_label} stopped by signal**\n"
+                    f"Tokens: {self.global_tokens:,}\n"
+                    f"Resume: --resume {self.checkpoint_dir / 'latest.pt'}"
+                )
+                return
 
             line = (
                 f"Epoch {epoch+1}/{self.max_epochs} | "
@@ -682,6 +734,8 @@ def main():
     parser.add_argument('--num_workers', type=int, default=4)
     parser.add_argument('--max_samples', type=int, default=9999999)
     parser.add_argument('--gen_every', type=int, default=5000)
+    parser.add_argument('--save_every_steps', type=int, default=0,
+                        help='Save latest.pt every N optimizer steps (0=off; use 5000 for streaming pretrain)')
     parser.add_argument('--gen_prompt', type=str,
                         default='In 1923 , the University of')
     parser.add_argument('--log_interval', type=int, default=50)
@@ -893,6 +947,7 @@ def main():
         gen_every=args.gen_every,
         gen_prompt=args.gen_prompt,
         log_interval=args.log_interval,
+        save_every_steps=args.save_every_steps,
         start_epoch=start_epoch,
         unitary_lambda=args.unitary_lambda,
     )
