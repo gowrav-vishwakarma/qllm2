@@ -79,6 +79,8 @@ def build_argparser():
                    help='FineWeb-Edu config (e.g. sample-10BT, sample-100BT)')
     p.add_argument('--sft_filter', type=str, default='hard', choices=['none', 'hard'])
     p.add_argument('--gen_every', type=int, default=5000)
+    p.add_argument('--save_every_steps', type=int, default=0,
+                   help='Save latest.pt every N steps (0=off; 5000 for streaming pretrain)')
     p.add_argument('--gen_prompt', type=str, default='In 1923 , the University of')
     p.add_argument('--log_interval', type=int, default=50)
     p.add_argument('--log_dir', type=str, default='logs')
@@ -321,7 +323,10 @@ def main():
     checkpoint = None
     if args.resume:
         checkpoint = _load_checkpoint_weights(model, args.resume)
-        start_epoch = checkpoint.get('epoch', 0) + 1
+        if token_budget:
+            start_epoch = checkpoint.get('epoch', 0)
+        else:
+            start_epoch = checkpoint.get('epoch', 0) + 1
     elif args.resume_from:
         checkpoint = _load_checkpoint_weights(model, args.resume_from)
 
@@ -346,6 +351,7 @@ def main():
         gen_every=args.gen_every,
         gen_prompt=args.gen_prompt,
         log_interval=args.log_interval,
+        save_every_steps=args.save_every_steps,
         start_epoch=start_epoch,
         run_label=f'V11/{args.preset}/{args.stage}',
         log_path=str(log_path),
@@ -376,7 +382,7 @@ def main():
         f"grad_clip={args.gradient_clip} | dropout={cfg.dropout}",
         f"Token budget: {token_budget or 'none'} | edu_score_min: {args.edu_score_min} | "
         f"sft_filter: {args.sft_filter}",
-        f"AMP: {args.amp_dtype} | Compile: {args.compile}",
+        f"Save every: {args.save_every_steps} steps | AMP: {args.amp_dtype} | Compile: {args.compile}",
         f"Resume: {args.resume or 'none'} | Weights from: {args.resume_from or 'scratch'}",
         f"Log: {log_path.resolve()}",
         f"Checkpoint dir: {Path(args.checkpoint_dir).resolve()}",

@@ -13,8 +13,8 @@
 #   # custom budget (e.g. 20B tokens):
 #   tmux new-session -d -s v11_pretrain './scripts/run_v11_pretrain_scratch.sh 20000000000'
 #
-#   # resume after a crash / manual stop:
-#   RESUME=checkpoints_v11_e3_k3_chat_pretrain/best_model.pt \
+#   # resume after a crash / manual stop (uses latest.pt written every 5000 steps):
+#   RESUME=checkpoints_v11_e3_k3_chat_pretrain/latest.pt \
 #     tmux new-session -d -s v11_pretrain './scripts/run_v11_pretrain_scratch.sh'
 
 set -euo pipefail
@@ -47,12 +47,17 @@ LR="${LR:-3e-4}"                             # from-scratch peak; cosine to budg
 WARMUP_STEPS="${WARMUP_STEPS:-2000}"
 WEIGHT_DECAY="${WEIGHT_DECAY:-0.01}"
 
+SAVE_EVERY_STEPS="${SAVE_EVERY_STEPS:-5000}"
 CKPT_DIR="${CKPT_DIR:-checkpoints_v11_e3_k3_chat_pretrain}"
-RESUME="${RESUME:-}"                         # set to a ckpt path to continue
+RESUME="${RESUME:-}"                         # set to latest.pt path to continue
 EXTRA_ARGS="$*"
 
 GEN_PROMPT="In 1923 , the University of"
-LOG_DIR=$(make_log_dir "v11" "${PRESET}_pretrain_scratch_b${TOKEN_BUDGET}")
+if [[ -n "$RESUME" ]]; then
+  LOG_DIR="${LOG_DIR:-$(make_log_dir "v11" "${PRESET}_pretrain_scratch_b${TOKEN_BUDGET}_resume")}"
+else
+  LOG_DIR=$(make_log_dir "v11" "${PRESET}_pretrain_scratch_b${TOKEN_BUDGET}")
+fi
 mkdir -p "$CKPT_DIR"
 
 ARGS="--preset $PRESET --stage pretrain --dataset $DATASET --seq_len $SEQ_LEN \
@@ -61,15 +66,19 @@ ARGS="--preset $PRESET --stage pretrain --dataset $DATASET --seq_len $SEQ_LEN \
   --pretrain_sources $PRETRAIN_SOURCES --pretrain_weights $PRETRAIN_WEIGHTS \
   --fineweb_name $FINEWEB_NAME \
   --lr $LR --warmup_steps $WARMUP_STEPS --weight_decay $WEIGHT_DECAY \
-  --amp_dtype auto --num_workers 0 --gen_every 5000 --no_grad_ckpt \
-  --compile --compile_mode default"
+  --amp_dtype auto --num_workers 0 --gen_every 5000 --save_every_steps $SAVE_EVERY_STEPS \
+  --no_grad_ckpt --compile --compile_mode default"
 
 if [[ -n "$RESUME" ]]; then
   ARGS="$ARGS --resume $RESUME"
 fi
 
 RUN_DESC="V11 Phase 2 from-scratch pretrain: $PRESET on $DATASET ($PRETRAIN_SOURCES), budget=${TOKEN_BUDGET} tok"
-write_run_info "$LOG_DIR" "$RUN_DESC" "$ARGS --gen_prompt '$GEN_PROMPT' $EXTRA_ARGS"
+if [[ -n "$RESUME" ]]; then
+  append_run_info_resume "$LOG_DIR" "Resume from $RESUME" "$ARGS --gen_prompt '$GEN_PROMPT' $EXTRA_ARGS"
+else
+  write_run_info "$LOG_DIR" "$RUN_DESC" "$ARGS --gen_prompt '$GEN_PROMPT' $EXTRA_ARGS"
+fi
 
 echo "============================================================"
 echo "  V11 Phase 2 from-scratch knowledge pretrain"
