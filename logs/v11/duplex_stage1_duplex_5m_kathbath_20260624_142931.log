@@ -1,0 +1,11 @@
+=== V11 duplex Stage 1 ===
+preset=duplex_5m dataset=kathbath languages=hindi,gujarati,telugu,bengali,marathi,kannada
+ckpt_dir=checkpoints_v11_duplex_5m_stage1_ml save_every_steps=50 resume=none
+log=logs/v11/duplex_stage1_duplex_5m_kathbath_20260624_142931.log
+PASS test_presets_param_counts
+PASS test_interleave_shapes
+PASS test_forward_and_loss
+PASS test_forward_embeds_matches_token_path
+PASS test_import_does_not_mutate_v11_model
+PASS test_v11_baseline_forward_unchanged
+ALL DUPLEX TESTS PASS
