@@ -69,7 +69,11 @@ Runs are serialized on the single GPU via [scripts/run_v11_queue.sh](../scripts/
 (waits for the GPU to free, then runs E1 → E3). Throughput note: E2's chunk solve is the
 slow path; Flash-PAM ([v11/triton_kernels.py](triton_kernels.py)) targets the speedup.
 
-## Live run status (2026-06-23)
+## Live run status (2026-06-24)
+
+**Two parallel tracks** — different GPUs, no shared code edits between them.
+
+### Track A — Text knowledge pretrain (RTX PRO 6000, server)
 
 **Milestone reached:** DCLM-base + SmolTalk SFT produces **coherent instruction-following chat**
 at ~100M (non-transformer, non-Mamba, O(1)/token). Executing reordered v2 plan:
@@ -86,6 +90,36 @@ at ~100M (non-transformer, non-Mamba, O(1)/token). Executing reordered v2 plan:
 - **RUNNING** — Phase 2 pretrain restarted with checkpointing enabled (tmux `v11_pretrain`).
 - **THEN (Phase 3)** — full Tulu-3 SFT on the new base.
 - **DEFERRED** — param scaling (300–500M) until token-scaling ROI confirmed at 100M.
+
+PAM math for this track: unchanged — see [Architecture](#architecture-unchanged-core) above
+(`S_t = γ_t S_{t-1} + V_t ⊗ K_t*`, E3 K=3 retrieval).
+
+### Track B — Full-duplex audio POC (RTX 4090, local, **additive**)
+
+Runs **while Track A trains**. Goal: prove V11 PAM can learn **listen / speak / backchannel**
+from streaming audio embeddings (SALMONN-omni style) — **not** speech-to-speech.
+
+| Stage | Status | Result |
+|-------|--------|--------|
+| 0 synthetic | **done** | val think_acc **100%** — `checkpoints_v11_duplex_5m_stage0/` |
+| 1 LibriSpeech + Whisper | **done** | val think_acc **100%** — `checkpoints_v11_duplex_5m_stage1/` |
+| 1 Kathbath hi/gu | **done** | val think_acc **100%**, 232 s — `checkpoints_v11_duplex_5m_stage1_hi_gu/` |
+| 2 streaming infer + TTS | pending | 160 ms block loop, optional external synth on `<speak>` |
+| post–10B distill | pending | merge chat base into `duplex_25m` after Track A completes |
+
+**Whisper role:** frozen **encoder only** (`openai/whisper-small`) → 768-d vectors →
+`ComplexLinear` → injected at `<env_mark>` slots. No Whisper decoder; no vocoder.
+
+**Duplex block math** (per ~1 s chunk in POC):
+
+```text
+sequence:  <env_mark>  [audio_embed × N]  →  predict  listen | speak | backchannel
+loss:      CE on thinking tokens (3-way; random baseline 33.3%)
+backbone:  same PAM E3 K=3 as v11_e3_k3 (O(1)/token state, no KV cache)
+```
+
+Full write-up: [v11/duplex/EXPERIMENTS_DUPLEX.md](duplex/EXPERIMENTS_DUPLEX.md).
+Launch: `./scripts/run_v11_duplex_stage1.sh`, demo `./scripts/run_v11_duplex_gradio.sh`.
 
 ## Phase 1 — correctness layer (2026-06-20)
 

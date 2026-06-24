@@ -242,7 +242,7 @@ uv sync --extra cuda          # CUDA extras
 
 # Knowledge pretrain from scratch: ~100M `v11_e3_k3_chat` (chat vocab baked in),
 # DCLM-Edu + FineWeb-Edu mix, ~10B-token budget, cosine LR, resumable.
-# >>> This is the run currently in progress as of 2026-06-23. <<<
+# >>> Text pretrain ~10B on RTX PRO 6000 (server, tmux v11_pretrain) — 2026-06-24 <<<
 tmux new-session -d -s v11_pretrain './scripts/run_v11_pretrain_scratch.sh'
 # custom budget (e.g. 20B): ./scripts/run_v11_pretrain_scratch.sh 20000000000
 # resume after a stop: RESUME=checkpoints_v11_e3_k3_chat_pretrain/latest.pt \
@@ -251,9 +251,25 @@ tmux new-session -d -s v11_pretrain './scripts/run_v11_pretrain_scratch.sh'
 # Reproduce the PAM mechanism probes (no checkpoint needed)
 ./scripts/run_memory_probes.sh
 
+# Duplex audio POC (4090, parallel — turn-taking, NOT speech-to-speech):
+./scripts/run_v11_duplex_stage1.sh          # train Stage 1 (Kathbath hi/gu default)
+./scripts/run_v11_duplex_gradio.sh          # mic → listen / speak / backchannel
+
 # Chat with a trained / SFT checkpoint
 python scripts/chat_v11.py --checkpoint checkpoints_v11_e3_k3_chat_pretrain/best_model.pt
 ```
+
+### Parallel tracks (2026-06-24)
+
+| Track | GPU | What |
+|-------|-----|------|
+| **Text pretrain ~10B** | RTX PRO 6000 | `v11_e3_k3_chat`, DCLM-Edu + FineWeb-Edu, resumable `latest.pt` every 5000 steps |
+| **Duplex audio POC** | RTX 4090 | ~5M V11 PAM E3 K=3 + **frozen Whisper encoder**; predicts `<listen>` / `<speak>` / `<backchannel>` — **not an S2S model** (no speech output yet) |
+
+Duplex is **additive only** (`v11/duplex/`); it does not modify pretrain scripts or shared `v11/model.py`.
+Stage 1 Hindi+Gujarati: **100% val thinking accuracy**, 232 s —
+`checkpoints_v11_duplex_5m_stage1_hi_gu/best_model.pt`.
+Math, scope, and results: [v11/duplex/EXPERIMENTS_DUPLEX.md](v11/duplex/EXPERIMENTS_DUPLEX.md).
 
 Other presets, Phase C pretrain/SFT runners, and older version paths live in the docs below.
 
@@ -264,7 +280,9 @@ Other presets, Phase C pretrain/SFT runners, and older version paths live in the
 - [memory_probes/README.md](memory_probes/README.md) — PAM mechanism validation: binding,
 long-context NIAH, interference, rank; why matrix memory beats vector state.
 - [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md) — current: E1/E2/E3 ablations, K-sweep,
-Phase C pretrain + chat SFT.
+Phase C pretrain + chat SFT; **parallel duplex track** pointer.
+- [v11/duplex/EXPERIMENTS_DUPLEX.md](v11/duplex/EXPERIMENTS_DUPLEX.md) — full-duplex POC
+(SALMONN-style): PAM + Whisper math, Stage 0/1 results, Gradio demo; runs parallel to 10B pretrain.
 - [v11/BEGINNER_GUIDE.md](v11/BEGINNER_GUIDE.md) — gentle walkthrough of phase, complex numbers,
 and fixed-size PAM memory in code.
 - [EXPERIMENTS_V_6_7_8_9.md](EXPERIMENTS_V_6_7_8_9.md) — cross-version PPL rollup and dead ends.

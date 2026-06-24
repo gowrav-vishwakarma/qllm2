@@ -12,6 +12,8 @@ dependencies = [
     "transformers>=4.0.0",
     "psutil>=7.0.0",
     "soundfile>=0.13.1",
+    "gradio>=4.44,<5",
+    "pydantic>=2.0,<2.11",
 ]
 
 [project.optional-dependencies]

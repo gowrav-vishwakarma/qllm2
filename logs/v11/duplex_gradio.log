@@ -1,0 +1,812 @@
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 761, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 316, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 431, in main
+    gradio_api_info = api_info(False)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 460, in api_info
+    app.api_info = app.get_blocks().get_api_info()
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 2785, in get_api_info
+    python_type = client_utils.json_schema_to_python_type(info)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 893, in json_schema_to_python_type
+    type_ = _json_schema_to_python_type(schema, schema.get("$defs"))
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 947, in _json_schema_to_python_type
+    des = [
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 948, in <listcomp>
+    f"{n}: {_json_schema_to_python_type(v, defs)}{get_desc(v)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 955, in _json_schema_to_python_type
+    f"str, {_json_schema_to_python_type(schema['additionalProperties'], defs)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 901, in _json_schema_to_python_type
+    type_ = get_type(schema)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 863, in get_type
+    if "const" in schema:
+TypeError: argument of type 'bool' is not iterable
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 761, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 316, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 431, in main
+    gradio_api_info = api_info(False)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 460, in api_info
+    app.api_info = app.get_blocks().get_api_info()
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 2785, in get_api_info
+    python_type = client_utils.json_schema_to_python_type(info)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 893, in json_schema_to_python_type
+    type_ = _json_schema_to_python_type(schema, schema.get("$defs"))
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 947, in _json_schema_to_python_type
+    des = [
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 948, in <listcomp>
+    f"{n}: {_json_schema_to_python_type(v, defs)}{get_desc(v)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 955, in _json_schema_to_python_type
+    f"str, {_json_schema_to_python_type(schema['additionalProperties'], defs)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 901, in _json_schema_to_python_type
+    type_ = get_type(schema)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 863, in get_type
+    if "const" in schema:
+TypeError: argument of type 'bool' is not iterable
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 761, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 316, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 431, in main
+    gradio_api_info = api_info(False)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 460, in api_info
+    app.api_info = app.get_blocks().get_api_info()
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 2785, in get_api_info
+    python_type = client_utils.json_schema_to_python_type(info)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 893, in json_schema_to_python_type
+    type_ = _json_schema_to_python_type(schema, schema.get("$defs"))
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 947, in _json_schema_to_python_type
+    des = [
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 948, in <listcomp>
+    f"{n}: {_json_schema_to_python_type(v, defs)}{get_desc(v)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 955, in _json_schema_to_python_type
+    f"str, {_json_schema_to_python_type(schema['additionalProperties'], defs)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 901, in _json_schema_to_python_type
+    type_ = get_type(schema)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 863, in get_type
+    if "const" in schema:
+TypeError: argument of type 'bool' is not iterable
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 761, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 316, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 431, in main
+    gradio_api_info = api_info(False)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 460, in api_info
+    app.api_info = app.get_blocks().get_api_info()
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 2785, in get_api_info
+    python_type = client_utils.json_schema_to_python_type(info)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 893, in json_schema_to_python_type
+    type_ = _json_schema_to_python_type(schema, schema.get("$defs"))
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 947, in _json_schema_to_python_type
+    des = [
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 948, in <listcomp>
+    f"{n}: {_json_schema_to_python_type(v, defs)}{get_desc(v)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 955, in _json_schema_to_python_type
+    f"str, {_json_schema_to_python_type(schema['additionalProperties'], defs)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 901, in _json_schema_to_python_type
+    type_ = get_type(schema)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 863, in get_type
+    if "const" in schema:
+TypeError: argument of type 'bool' is not iterable
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 761, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 316, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 431, in main
+    gradio_api_info = api_info(False)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 460, in api_info
+    app.api_info = app.get_blocks().get_api_info()
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 2785, in get_api_info
+    python_type = client_utils.json_schema_to_python_type(info)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 893, in json_schema_to_python_type
+    type_ = _json_schema_to_python_type(schema, schema.get("$defs"))
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 947, in _json_schema_to_python_type
+    des = [
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 948, in <listcomp>
+    f"{n}: {_json_schema_to_python_type(v, defs)}{get_desc(v)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 955, in _json_schema_to_python_type
+    f"str, {_json_schema_to_python_type(schema['additionalProperties'], defs)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 901, in _json_schema_to_python_type
+    type_ = get_type(schema)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 863, in get_type
+    if "const" in schema:
+TypeError: argument of type 'bool' is not iterable
+Traceback (most recent call last):
+  File "/home/gowrav/.local/share/uv/python/cpython-3.9.24-linux-x86_64-gnu/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gowrav/.local/share/uv/python/cpython-3.9.24-linux-x86_64-gnu/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/home/gowrav/Development/qllm2/v11/duplex/gradio_app.py", line 190, in <module>
+    main()
+  File "/home/gowrav/Development/qllm2/v11/duplex/gradio_app.py", line 186, in main
+    demo.launch(server_name=args.host, server_port=args.port, share=args.share)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 2465, in launch
+    raise ValueError(
+ValueError: When localhost is not accessible, a shareable link must be created. Please set share=True or check your proxy settings to allow access to localhost.
+Running on local URL:  http://0.0.0.0:7860
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 761, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 316, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 431, in main
+    gradio_api_info = api_info(False)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 460, in api_info
+    app.api_info = app.get_blocks().get_api_info()
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 2785, in get_api_info
+    python_type = client_utils.json_schema_to_python_type(info)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 893, in json_schema_to_python_type
+    type_ = _json_schema_to_python_type(schema, schema.get("$defs"))
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 947, in _json_schema_to_python_type
+    des = [
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 948, in <listcomp>
+    f"{n}: {_json_schema_to_python_type(v, defs)}{get_desc(v)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 955, in _json_schema_to_python_type
+    f"str, {_json_schema_to_python_type(schema['additionalProperties'], defs)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 901, in _json_schema_to_python_type
+    type_ = get_type(schema)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 863, in get_type
+    if "const" in schema:
+TypeError: argument of type 'bool' is not iterable
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 761, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 316, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 431, in main
+    gradio_api_info = api_info(False)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 460, in api_info
+    app.api_info = app.get_blocks().get_api_info()
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 2785, in get_api_info
+    python_type = client_utils.json_schema_to_python_type(info)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 893, in json_schema_to_python_type
+    type_ = _json_schema_to_python_type(schema, schema.get("$defs"))
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 947, in _json_schema_to_python_type
+    des = [
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 948, in <listcomp>
+    f"{n}: {_json_schema_to_python_type(v, defs)}{get_desc(v)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 955, in _json_schema_to_python_type
+    f"str, {_json_schema_to_python_type(schema['additionalProperties'], defs)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 901, in _json_schema_to_python_type
+    type_ = get_type(schema)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 863, in get_type
+    if "const" in schema:
+TypeError: argument of type 'bool' is not iterable
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 761, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 316, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 431, in main
+    gradio_api_info = api_info(False)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 460, in api_info
+    app.api_info = app.get_blocks().get_api_info()
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 2785, in get_api_info
+    python_type = client_utils.json_schema_to_python_type(info)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 893, in json_schema_to_python_type
+    type_ = _json_schema_to_python_type(schema, schema.get("$defs"))
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 947, in _json_schema_to_python_type
+    des = [
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 948, in <listcomp>
+    f"{n}: {_json_schema_to_python_type(v, defs)}{get_desc(v)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 955, in _json_schema_to_python_type
+    f"str, {_json_schema_to_python_type(schema['additionalProperties'], defs)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 901, in _json_schema_to_python_type
+    type_ = get_type(schema)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 863, in get_type
+    if "const" in schema:
+TypeError: argument of type 'bool' is not iterable
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 761, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 316, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 431, in main
+    gradio_api_info = api_info(False)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 460, in api_info
+    app.api_info = app.get_blocks().get_api_info()
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 2785, in get_api_info
+    python_type = client_utils.json_schema_to_python_type(info)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 893, in json_schema_to_python_type
+    type_ = _json_schema_to_python_type(schema, schema.get("$defs"))
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 947, in _json_schema_to_python_type
+    des = [
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 948, in <listcomp>
+    f"{n}: {_json_schema_to_python_type(v, defs)}{get_desc(v)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 955, in _json_schema_to_python_type
+    f"str, {_json_schema_to_python_type(schema['additionalProperties'], defs)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 901, in _json_schema_to_python_type
+    type_ = get_type(schema)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 863, in get_type
+    if "const" in schema:
+TypeError: argument of type 'bool' is not iterable
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/protocols/http/h11_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/applications.py", line 1138, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 761, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 121, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 107, in app
+    response = await f(request)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 426, in app
+    raw_response = await run_endpoint_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 316, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 431, in main
+    gradio_api_info = api_info(False)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/routes.py", line 460, in api_info
+    app.api_info = app.get_blocks().get_api_info()
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 2785, in get_api_info
+    python_type = client_utils.json_schema_to_python_type(info)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 893, in json_schema_to_python_type
+    type_ = _json_schema_to_python_type(schema, schema.get("$defs"))
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 947, in _json_schema_to_python_type
+    des = [
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 948, in <listcomp>
+    f"{n}: {_json_schema_to_python_type(v, defs)}{get_desc(v)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 955, in _json_schema_to_python_type
+    f"str, {_json_schema_to_python_type(schema['additionalProperties'], defs)}"
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 901, in _json_schema_to_python_type
+    type_ = get_type(schema)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio_client/utils.py", line 863, in get_type
+    if "const" in schema:
+TypeError: argument of type 'bool' is not iterable
+Traceback (most recent call last):
+  File "/home/gowrav/.local/share/uv/python/cpython-3.9.24-linux-x86_64-gnu/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gowrav/.local/share/uv/python/cpython-3.9.24-linux-x86_64-gnu/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/home/gowrav/Development/qllm2/v11/duplex/gradio_app.py", line 190, in <module>
+    main()
+  File "/home/gowrav/Development/qllm2/v11/duplex/gradio_app.py", line 186, in main
+    demo.launch(server_name=args.host, server_port=args.port, share=args.share)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 2465, in launch
+    raise ValueError(
+ValueError: When localhost is not accessible, a shareable link must be created. Please set share=True or check your proxy settings to allow access to localhost.
+Running on local URL:  http://127.0.0.1:7860
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/queueing.py", line 536, in process_events
+    response = await route_utils.call_process_api(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 322, in call_process_api
+    output = await app.get_blocks().process_api(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 1935, in process_api
+    result = await self.call_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 1520, in call_function
+    prediction = await anyio.to_thread.run_sync(  # type: ignore
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/utils.py", line 826, in wrapper
+    response = f(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v11/duplex/gradio_app.py", line 168, in <lambda>
+    )
+  File "/home/gowrav/Development/qllm2/v11/duplex/gradio_app.py", line 107, in analyze
+    audio=audio,
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v11/duplex/infer.py", line 147, in predict_thinking
+    chunks = encoder.encode_waveform(wf, int(sr), max_chunks=max_audio_chunks)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v11/duplex/encoder.py", line 45, in encode_waveform
+    inputs = self.feature_extractor(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/transformers/models/whisper/feature_extraction_whisper.py", line 262, in __call__
+    raise ValueError(
+ValueError: The model corresponding to this feature extractor: WhisperFeatureExtractor was trained using a sampling rate of 16000. Please make sure that the provided `raw_speech` input was sampled with 16000 and not 44100.
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/queueing.py", line 536, in process_events
+    response = await route_utils.call_process_api(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 322, in call_process_api
+    output = await app.get_blocks().process_api(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 1935, in process_api
+    result = await self.call_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 1520, in call_function
+    prediction = await anyio.to_thread.run_sync(  # type: ignore
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/utils.py", line 826, in wrapper
+    response = f(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v11/duplex/gradio_app.py", line 168, in <lambda>
+    )
+  File "/home/gowrav/Development/qllm2/v11/duplex/gradio_app.py", line 107, in analyze
+    audio=audio,
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v11/duplex/infer.py", line 147, in predict_thinking
+    chunks = encoder.encode_waveform(wf, int(sr), max_chunks=max_audio_chunks)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v11/duplex/encoder.py", line 45, in encode_waveform
+    inputs = self.feature_extractor(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/transformers/models/whisper/feature_extraction_whisper.py", line 262, in __call__
+    raise ValueError(
+ValueError: The model corresponding to this feature extractor: WhisperFeatureExtractor was trained using a sampling rate of 16000. Please make sure that the provided `raw_speech` input was sampled with 16000 and not 44100.
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/queueing.py", line 536, in process_events
+    response = await route_utils.call_process_api(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/route_utils.py", line 322, in call_process_api
+    output = await app.get_blocks().process_api(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 1935, in process_api
+    result = await self.call_function(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/blocks.py", line 1520, in call_function
+    prediction = await anyio.to_thread.run_sync(  # type: ignore
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/gradio/utils.py", line 826, in wrapper
+    response = f(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v11/duplex/gradio_app.py", line 168, in <lambda>
+    )
+  File "/home/gowrav/Development/qllm2/v11/duplex/gradio_app.py", line 107, in analyze
+    audio=audio,
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v11/duplex/infer.py", line 147, in predict_thinking
+    chunks = encoder.encode_waveform(wf, int(sr), max_chunks=max_audio_chunks)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v11/duplex/encoder.py", line 45, in encode_waveform
+    inputs = self.feature_extractor(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/transformers/models/whisper/feature_extraction_whisper.py", line 262, in __call__
+    raise ValueError(
+ValueError: The model corresponding to this feature extractor: WhisperFeatureExtractor was trained using a sampling rate of 16000. Please make sure that the provided `raw_speech` input was sampled with 16000 and not 44100.
