@@ -11,6 +11,7 @@ dependencies = [
     "tokenizers>=0.15.0",
     "transformers>=4.0.0",
     "psutil>=7.0.0",
+    "soundfile>=0.13.1",
 ]
 
 [project.optional-dependencies]
