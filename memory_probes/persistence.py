@@ -20,16 +20,31 @@ def test_persistence(
     gammas: Sequence[float] = (0.99, 0.995, 0.999, 1.0),
     filler_writes: int = 1,
     seed: int = 42,
+    adapter=None,
 ) -> Dict[str, Any]:
     rng = np.random.default_rng(seed)
     k_needle = rand_unit_complex(rng, (d,))
     v_needle = rand_unit_complex(rng, (d,))
 
     rows: List[Dict[str, Any]] = []
-    print('\n[persistence] Association persistence vs distance')
+    arch = getattr(adapter, 'name', 'pam') if adapter is not None else 'pam'
+    print(f'\n[persistence] Association persistence vs distance ({arch})')
     print(f'  d={d}, filler_writes/token={filler_writes}')
     for gamma in gammas:
         for T in distances:
+            if adapter is not None:
+                from memory_probes.adapters import adapter_relative_retrieval
+                adapter.reset()
+                adapter.write(k_needle, v_needle)
+                for _ in range(T):
+                    for _w in range(filler_writes):
+                        k_f = rand_unit_complex(rng, (d,))
+                        v_f = rand_unit_complex(rng, (d,))
+                        adapter.write(k_f, v_f, gamma)
+                rel = adapter_relative_retrieval(adapter, k_needle, v_needle, d)
+                score = float(np.abs(np.vdot(adapter.read(k_needle), v_needle)))
+                rows.append({'gamma': gamma, 'distance': T, 'score': score, 'relative': rel})
+                continue
             S = outer_v_kstar(v_needle, k_needle)
             for _ in range(T):
                 for _w in range(filler_writes):

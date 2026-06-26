@@ -27,15 +27,29 @@ def niah_bare_decay(
     gammas: Sequence[float],
     seed: int = 42,
     report_every: int = 0,
+    adapter=None,
 ) -> Dict[str, Any]:
     rng = np.random.default_rng(seed)
     k_n = rand_unit_complex(rng, (d,))
     v_n = rand_unit_complex(rng, (d,))
     baseline_S = outer_v_kstar(v_n, k_n)
     rows = []
-    print('\n[long-context] NIAH bare decay envelope')
+    arch = getattr(adapter, 'name', 'pam') if adapter is not None else 'pam'
+    print(f'\n[long-context] NIAH bare decay envelope ({arch})')
     for gamma in gammas:
         for T in distances:
+            if adapter is not None:
+                from memory_probes.adapters import adapter_relative_retrieval
+                adapter.reset()
+                adapter.write(k_n, v_n)
+                for _ in range(T):
+                    k_f = rand_unit_complex(rng, (d,))
+                    v_f = rand_unit_complex(rng, (d,))
+                    adapter.write(k_f, v_f, gamma)
+                rel = adapter_relative_retrieval(adapter, k_n, v_n, d)
+                rows.append({'gamma': gamma, 'distance': T, 'relative': rel,
+                             'theory_gamma_T': gamma ** T, 'decay_only_relative': gamma ** T})
+                continue
             S = baseline_S.copy()
             S = simulate_filler_steps(
                 S, T, rng, d, gamma, report_every=report_every,
@@ -215,9 +229,17 @@ def test_niah(
     distances: Sequence[int] = (64, 128, 256, 512, 1024, 2048),
     protect_values: Sequence[float] = (0.0, 0.5, 0.9, 0.99, 1.0),
     seed: int = 42,
+    adapter=None,
 ) -> Dict[str, Any]:
     g_default = default_gamma_from_bias(-4.0)
     gammas = (g_default, 0.99, 0.995, 0.999, 1.0)
+    if adapter is not None:
+        # Adapter NIAH: bare-decay sweep only. GSP/multi-needle are PAM-specific
+        # write-gating mechanisms not exposed by the generic adapter interface.
+        return {
+            'arch': getattr(adapter, 'name', 'adapter'),
+            'bare_decay': niah_bare_decay(d, distances, gammas, seed, adapter=adapter),
+        }
     return {
         'bare_decay': niah_bare_decay(d, distances, gammas, seed),
         'gsp_sweep': niah_gsp_sweep(d, distances, protect_values, seed=seed),
