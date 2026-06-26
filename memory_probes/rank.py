@@ -58,6 +58,40 @@ def test_rank(
     }
 
 
+def test_rank_adapter(
+    adapter,
+    d: int = 64,
+    steps: int = 512,
+    gamma: float = 0.995,
+    sample_every: int = 16,
+    seed: int = 42,
+) -> Dict[str, Any]:
+    """Effective-rank evolution of an adapter's state under random writes.
+
+    Works for any adapter exposing the stateful tier (PAM, Transformer, Mamba):
+    write random associations, sample effective_rank(adapter.state()) over time.
+    """
+    rng = np.random.default_rng(seed)
+    arch = getattr(adapter, 'name', 'adapter')
+    adapter.reset()
+    ranks: List[float] = []
+    positions: List[int] = []
+    print(f'\n[rank] State rank evolution ({arch} adapter, gamma={gamma}, steps={steps})')
+    for t in range(steps):
+        k = rand_unit_complex(rng, (d,))
+        v = rand_unit_complex(rng, (d,))
+        adapter.write(k, v, gamma)
+        if t % sample_every == 0 or t == steps - 1:
+            ranks.append(effective_rank(adapter.state()))
+            positions.append(t)
+    print(f'  rank@{positions[0]}={ranks[0]:.2f}  max={max(ranks):.2f}  final={ranks[-1]:.2f}  (d={d})')
+    return {
+        'arch': arch, 'd': d, 'steps': steps, 'gamma': gamma,
+        'positions': positions, 'ranks': ranks,
+        'final_rank': ranks[-1], 'max_rank': max(ranks),
+    }
+
+
 def _state_singular_values(s_c: np.ndarray) -> List[float]:
     return np.linalg.svd(s_c, compute_uv=False).tolist()
 
