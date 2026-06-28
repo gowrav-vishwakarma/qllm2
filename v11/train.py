@@ -89,6 +89,9 @@ def build_argparser():
                    help='Full resume (model + optimizer + scheduler)')
     p.add_argument('--resume_from', type=str, default=None,
                    help='Load model weights only (fresh optimizer; for SFT stage)')
+    p.add_argument('--warmstart_chatml', action='store_true',
+                   help='After loading weights, seed ChatML token rows (50257/50258) '
+                        'from the mean of trained GPT-2 rows (50257 base vocab)')
     p.add_argument('--seed', type=int, default=42)
     p.add_argument('--no_grad_ckpt', action='store_true')
     p.add_argument('--chunk_size', type=int, default=None)
@@ -140,11 +143,40 @@ def _resize_embeddings_for_vocab(model, state):
             )
 
 
-def _load_checkpoint_weights(model, path: str):
+# GPT-2 base vocab before ChatML specials; rows at this index and above are ChatML.
+_CHATML_BASE_VOCAB = 50257
+_CHATML_TOKEN_IDS = (50257, 50258)
+
+
+def _warmstart_chatml_embeddings(state, base_vocab: int = _CHATML_BASE_VOCAB):
+    """Overwrite untrained ChatML embedding rows with the mean of base-vocab rows.
+
+    Used when a from-scratch ``v11_e3_k3_chat`` pretrain never saw ``<|im_start|>`` /
+    ``<|im_end|>`` in raw text, so those tied rows stayed at random init.
+    """
+    for key in ('embed.embed_real.weight', 'embed.embed_imag.weight'):
+        if key not in state:
+            continue
+        w = state[key]
+        if w.shape[0] <= base_vocab:
+            continue
+        mean_row = w[:base_vocab].mean(dim=0, keepdim=True)
+        for idx in _CHATML_TOKEN_IDS:
+            if idx < w.shape[0]:
+                w[idx] = mean_row.squeeze(0)
+        print(
+            f"  warmstart ChatML {key}: rows {_CHATML_TOKEN_IDS} "
+            f"<- mean of [: {base_vocab}]"
+        )
+
+
+def _load_checkpoint_weights(model, path: str, *, warmstart_chatml: bool = False):
     print(f"\nLoading weights from {path}...")
     checkpoint = torch.load(path, weights_only=False)
     state = checkpoint['model_state_dict']
     _resize_embeddings_for_vocab(model, state)
+    if warmstart_chatml:
+        _warmstart_chatml_embeddings(state)
     model.load_state_dict(state)
     return checkpoint
 
@@ -322,13 +354,17 @@ def main():
     start_epoch = 0
     checkpoint = None
     if args.resume:
-        checkpoint = _load_checkpoint_weights(model, args.resume)
+        checkpoint = _load_checkpoint_weights(
+            model, args.resume, warmstart_chatml=args.warmstart_chatml,
+        )
         if token_budget:
             start_epoch = checkpoint.get('epoch', 0)
         else:
             start_epoch = checkpoint.get('epoch', 0) + 1
     elif args.resume_from:
-        checkpoint = _load_checkpoint_weights(model, args.resume_from)
+        checkpoint = _load_checkpoint_weights(
+            model, args.resume_from, warmstart_chatml=args.warmstart_chatml,
+        )
 
     if token_budget:
         est_steps = token_budget // max(args.batch_size * seq_len, 1) + args.warmup_steps
@@ -383,7 +419,8 @@ def main():
         f"Token budget: {token_budget or 'none'} | edu_score_min: {args.edu_score_min} | "
         f"sft_filter: {args.sft_filter}",
         f"Save every: {args.save_every_steps} steps | AMP: {args.amp_dtype} | Compile: {args.compile}",
-        f"Resume: {args.resume or 'none'} | Weights from: {args.resume_from or 'scratch'}",
+        f"Resume: {args.resume or 'none'} | Weights from: {args.resume_from or 'scratch'} | "
+        f"warmstart_chatml: {args.warmstart_chatml}",
         f"Log: {log_path.resolve()}",
         f"Checkpoint dir: {Path(args.checkpoint_dir).resolve()}",
     ]

@@ -38,8 +38,33 @@ def _run_mode(name, cfg, B=2, T=80, atol=2e-3, seed=0):
     return ok
 
 
+def test_warmstart_chatml():
+    """ChatML rows 50257/50258 should become the mean of base-vocab rows."""
+    from v11.train import _warmstart_chatml_embeddings, _CHATML_BASE_VOCAB, _CHATML_TOKEN_IDS
+
+    torch.manual_seed(0)
+    vocab, dim = 50259, 8
+    state = {
+        'embed.embed_real.weight': torch.randn(vocab, dim),
+        'embed.embed_imag.weight': torch.randn(vocab, dim),
+    }
+    # Mark ChatML rows distinctly so we can detect change.
+    for idx in _CHATML_TOKEN_IDS:
+        state['embed.embed_real.weight'][idx] = 999.0
+        state['embed.embed_imag.weight'][idx] = -999.0
+
+    _warmstart_chatml_embeddings(state)
+    for key in ('embed.embed_real.weight', 'embed.embed_imag.weight'):
+        w = state[key]
+        expected = w[:_CHATML_BASE_VOCAB].mean(dim=0)
+        for idx in _CHATML_TOKEN_IDS:
+            assert torch.allclose(w[idx], expected, atol=1e-6), f"{key}[{idx}] not mean"
+    print("[warmstart_chatml] PASS")
+
+
 def main():
     torch.set_default_dtype(torch.float64)  # high precision for the math check
+    test_warmstart_chatml()
     common = dict(
         vocab_size=512, dim=32, n_heads=2, head_dim=16, n_layers=1,
         expand=2, dropout=0.0, max_seq_len=512, chunk_size=24,
