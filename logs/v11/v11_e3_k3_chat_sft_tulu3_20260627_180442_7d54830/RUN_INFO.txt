@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V11 Phase 3 SFT: v11_e3_k3_chat on Tulu-3 (knowledge+coding+general)
+Date (UTC)  : 2026-06-27 18:04:42
+Date (local): 2026-06-27 18:04:42 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1005-gcp x86_64
+
+Git commit  : 7d548302f96ef8c68740f982460a8962a2b59eee
+Git short   : 7d54830
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.25
+Arguments   : --preset v11_e3_k3_chat --stage sft --dataset tulu3 --seq_len 2048   --batch_size 18 --epochs 2 --chunk_size 256   --lr 5e-5 --warmup_steps 200 --sft_filter hard   --amp_dtype auto --num_workers 4 --gen_every 0 --no_grad_ckpt   --compile --compile_mode default --resume_from checkpoints_v11_e3_k3_chat_pretrain/best_model.pt 
+================================================================================
