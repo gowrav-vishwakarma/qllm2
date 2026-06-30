@@ -11,6 +11,8 @@ fixed-size state — there is **no KV cache** that grows with context length.
 > We use AI assistants (e.g. Cursor) to help build this. Every claim below is backed by code,
 > reproducible probes, and dated training logs in this repo — not vibes.
 
+**Paper:** [Phase-Associative Memory: Sequence Modeling in Complex Hilbert Space](https://arxiv.org/abs/2604.05030) (arXiv:2604.05030) — Vishwakarma & Agostino.
+
 ---
 
 ## What problem it solves
@@ -277,6 +279,7 @@ Other presets, Phase C pretrain/SFT runners, and older version paths live in the
 
 ## Documentation
 
+- **Paper:** [Phase-Associative Memory: Sequence Modeling in Complex Hilbert Space](https://arxiv.org/abs/2604.05030) (arXiv:2604.05030)
 - [memory_probes/README.md](memory_probes/README.md) — PAM mechanism validation: binding,
 long-context NIAH, interference, rank; why matrix memory beats vector state.
 - [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md) — current: E1/E2/E3 ablations, K-sweep,
