@@ -15,6 +15,10 @@ wheels/
 # Checkpoints (large binary files, not tracked)
 checkpoints*/
 
+# HF release bundle (weights on Hugging Face; regenerate via scripts/export_hf_release.py)
+hf_release/*.pt
+hf_release/__pycache__/
+
 # Caches
 .cache/
 *cache*/
