@@ -69,16 +69,16 @@ Runs are serialized on the single GPU via [scripts/run_v11_queue.sh](../scripts/
 (waits for the GPU to free, then runs E1 → E3). Throughput note: E2's chunk solve is the
 slow path; Flash-PAM ([v11/triton_kernels.py](triton_kernels.py)) targets the speedup.
 
-## Live run status (2026-06-24)
+## Live run status (2026-06-30)
 
 **Two parallel tracks** — different GPUs, no shared code edits between them.
 
 ### Track A — Text knowledge pretrain (RTX PRO 6000, server)
 
-**Best chatable model to date:** **DCLM-2B base + SmolTalk2 SFT** (`checkpoints_v11_sft_dclm/best_model.pt`,
-Alpaca template) — coherent instruction-following chat at ~100M (non-transformer, non-Mamba,
-O(1)/token). The "from-scratch pretrain → Tulu-3 SFT" v2 plan **regressed** (see readout below);
-treat SmolTalk2 SFT as the baseline to beat.
+**Best chatable model to date:** **10B web-edu base + SmolTalk2 SFT (ChatML + warm-start)**
+(`checkpoints_v11_sft_chat_smoltalk/best_model.pt`) — coherent instruction-following chat at ~100M
+(non-transformer, non-Mamba, O(1)/token). The Tulu-3 SFT on the same base **regressed** (see readout
+below); the older DCLM-2B + Alpaca SmolTalk2 run remains a useful comparison baseline.
 
 - **DONE** — Phase 1 correctness (ChatML, EOT-in-loss, in-distro val/acc, stop-on-EOS).
 - **INCIDENT (2026-06-23)** — Phase 2 pretrain reached **~6.78B / 10B tokens** (~3 days) then
@@ -94,9 +94,13 @@ treat SmolTalk2 SFT as the baseline to beat.
   the 10B base is **no better than the old 2B base** (PPL 65.46 vs 66.27), ChatML special tokens
   were never pretrained, and Tulu-3 is too broad. Full diagnosis + reproduction:
   [Phase 3 Tulu-3 SFT readout](#phase-3-tulu-3-sft--result--readout-2026-06-28--regression-do-not-ship).
-- **NEXT** — run SmolTalk2 re-SFT on RTX:
-  `./scripts/run_v11_sft_smoltalk_chat.sh` → `checkpoints_v11_sft_chat_smoltalk/best_model.pt`
-  (uses `--warmstart_chatml`; see [Phase 3 readout](#phase-3-tulu-3-sft--result--readout-2026-06-28--regression-do-not-ship)).
+- **INCIDENT (2026-06-28)** — First SmolTalk recovery attempt OOM'd at epoch start: launched while
+  Tulu-3 SFT still held ~76 GB on the GPU (`Process 1334258`). Warm-start ran; no checkpoint saved
+  (`checkpoints_v11_sft_chat_smoltalk/` empty). Log:
+  `logs/v11/v11_e3_k3_chat_sft_smoltalk2_chat_20260628_031225_6ccd8fb/`.
+- **DONE (2026-06-29)** — SmolTalk re-SFT on 10B base with `--warmstart_chatml` completed →
+  `checkpoints_v11_sft_chat_smoltalk/best_model.pt`. Recovery **succeeded** (see
+  [Phase 3 SmolTalk recovery readout](#phase-3-smoltalk-recovery--result--readout-2026-06-29--ship-this)).
 - **DEFERRED** — param scaling (300–500M) until token-scaling ROI confirmed at 100M.
 
 PAM math for this track: unchanged — see [Architecture](#architecture-unchanged-core) above
@@ -205,8 +209,8 @@ RESUME=checkpoints_v11_e3_k3_chat_pretrain/latest.pt \
 
 The 10B-base + ChatML + Tulu-3 chat model **rambles and hallucinates** (fluent but wrong:
 "what is 2+2" → "the answer is 3"; "my name is gowrav" → unrelated essay on objects). The
-end-of-epoch sample even emitted LaTeX + a line of Cyrillic. **Best chatable model remains the
-SmolTalk2 SFT (see callout below), not this run.**
+end-of-epoch sample even emitted LaTeX + a line of Cyrillic. **Do not ship** — use
+[SmolTalk recovery](#phase-3-smoltalk-recovery--result--readout-2026-06-29--ship-this) instead.
 
 **Exact run (reproduce):**
 - Commit `7d54830`. Launch: `tmux new-session -d -s v11_sft './scripts/run_v11_sft_tulu3.sh checkpoints_v11_e3_k3_chat_pretrain/best_model.pt'`
@@ -215,7 +219,9 @@ SmolTalk2 SFT (see callout below), not this run.**
 - SFT log: `logs/v11/v11_e3_k3_chat_sft_tulu3_20260627_180442_7d54830/` (+ `RUN_INFO.txt`).
 - Pretrain log: `logs/v11/v11_e3_k3_chat_pretrain_scratch_b10000000000_20260623_085523_05f04a0/`.
 - Output ckpt: `checkpoints_v11_sft_chat/best_model.pt`. Chat: `scripts/chat_v11.py --checkpoint checkpoints_v11_sft_chat/best_model.pt --preset v11_e3_k3_chat`.
-- SFT metrics: epoch-1 train loss **2.64** (PPL 13.97), in-distro val loss **2.49** (PPL 12.05, acc 0.518). (Run was cut during epoch 2; `best_model.pt` = epoch 1.)
+- SFT metrics (full 2 epochs): epoch-1 train loss **2.64** (PPL 13.97), val **2.49** (PPL 12.05, acc 0.518);
+  epoch-2 train **2.50** (PPL 12.14), val **2.44** (PPL 11.53, acc 0.527). End sample: LaTeX + Cyrillic.
+  `best_model.pt` = epoch 2 (val improved).
 
 **Base comparison — the new pretrain bought ~nothing:**
 
@@ -239,26 +245,81 @@ shallow knowledge → SFT can only teach format, not facts.
 3. **Tulu-3 is too broad for a weak 100M base** — math/LaTeX (MATH/GSM) + multilingual (Aya →
    Cyrillic). SmolTalk2 (the good run) is clean English chat. SFT train loss rose to 2.64 vs ~2.1.
 
-**Remediation (implemented 2026-06-28):** re-SFT the 10B base on **SmolTalk2** with `--warmstart_chatml`
-(seed ChatML rows 50257/50258 from mean of trained GPT-2 rows). Code: [`v11/train.py`](train.py)
-`--warmstart_chatml`; launch script: [`scripts/run_v11_sft_smoltalk_chat.sh`](../scripts/run_v11_sft_smoltalk_chat.sh).
+**Remediation (implemented 2026-06-28, completed 2026-06-29):** re-SFT the 10B base on **SmolTalk2**
+with `--warmstart_chatml` (seed ChatML rows 50257/50258 from mean of trained GPT-2 rows). Code:
+[`v11/train.py`](train.py) `--warmstart_chatml`; launch script:
+[`scripts/run_v11_sft_smoltalk.sh`](../scripts/run_v11_sft_smoltalk.sh) (defaults hardened 2026-06-29:
+`v11_e3_k3_chat` preset, 10B base, `--warmstart_chatml`, `--save_every_steps 5000`).
 
 ```bash
-# RTX box (tmux, ~9h for 1 epoch):
-tmux new-session -d -s v11_sft_smoltalk './scripts/run_v11_sft_smoltalk_chat.sh'
+# RTX box (tmux, ~9h for 1 epoch; GPU must be free — do not overlap with other v11.train):
+tmux new-session -d -s v11_smoltalk './scripts/run_v11_sft_smoltalk.sh'
 # Output: checkpoints_v11_sft_chat_smoltalk/best_model.pt
 # Verify:
 uv run python scripts/smoke_chat_v11.py \
   --checkpoint checkpoints_v11_sft_chat_smoltalk/best_model.pt \
-  --preset v11_e3_k3_chat --temperature 0.3
+  --preset v11_e3_k3_chat --temperature 0.7
 ```
 
 Deeper item (separate): why the PAM base saturates at PPL ~65 despite 5x tokens.
 
-### Best chatable model so far (current) — SmolTalk2 SFT on DCLM-2B base
+### Phase 3 SmolTalk recovery — result & readout (2026-06-29) — SHIP THIS
 
-This is the **only model that chats coherently and stays on-subject** to date (the 2B-over-web base
-the user remembers). Use this as the baseline to beat.
+Re-SFT of the 10B web-edu base on **SmolTalk2** with ChatML + `--warmstart_chatml` **recovered
+coherent chat**. Turn structure and stop-on-`<|im_end|>` work; factual depth is still
+limited by the shallow base (same PPL ~65 ceiling as pretrain).
+
+**Exact run (reproduce):**
+- Launch: `tmux new-session -d -s v11_smoltalk './scripts/run_v11_sft_smoltalk.sh'`
+- Args: `--preset v11_e3_k3_chat --stage sft --dataset smoltalk2 --seq_len 2048 --batch_size 18
+  --epochs 1 --chunk_size 256 --lr 5e-5 --sft_filter hard --warmstart_chatml
+  --save_every_steps 5000 --resume_from checkpoints_v11_e3_k3_chat_pretrain/best_model.pt`
+  (full string in RUN_INFO).
+- Base ckpt: `checkpoints_v11_e3_k3_chat_pretrain/best_model.pt` (10B DCLM+FineWeb-Edu).
+- SFT log: `logs/v11/v11_e3_k3_chat_sft_smoltalk2_20260629_053649_6ccd8fb_dirty/` (+ `RUN_INFO.txt`).
+- Output ckpt: `checkpoints_v11_sft_chat_smoltalk/best_model.pt` (+ `final_model.pt`, periodic `latest.pt`).
+- Wall time: **9.04 h** (32538 s). Cache hit: `.cache/v7_tokens/smoltalk2_hard_full_sl2048_chatv3.pt`.
+
+**SFT metrics (1 epoch, in-distribution holdout):**
+
+| metric | SmolTalk recovery | Tulu-3 (broken) | DCLM-2B SmolTalk (Alpaca) |
+|--------|------------------:|----------------:|--------------------------:|
+| Train loss | **2.13** (PPL 8.39) | 2.50 (PPL 12.14) | 2.10 (PPL 8.21) |
+| Val loss | **1.98** (PPL **7.22**, acc **0.567**) | 2.44 (PPL 11.53, acc 0.527) | — (WikiText val only) |
+| Template | ChatML (50259) | ChatML (50259) | Alpaca `### User:` (50257) |
+| Warm-start ChatML | **yes** | no | N/A (no extra tokens) |
+
+**End-of-epoch generation sample** ("capital of France"):
+- Recovery: *"The capital of France is Paris."* + coherent follow-on (Eiffel Tower, Louvre).
+- Tulu-3: LaTeX (`\sqrt{2}`) then multilingual garbage.
+
+**Smoke probes** (`scripts/smoke_chat_v11.py`, temp 0.7, `best_model.pt`):
+
+| prompt | result | notes |
+|--------|--------|-------|
+| Capital of France | **"The capital of France is Paris."** | `stopped_on_im_end=True`, 8 tokens |
+| Photosynthesis | Describes chloroplasts/chlorophyll/CO2 | rambles after 1 sentence (160 tok cap) |
+| Python add two numbers | `def add_two_numbers(a, b): return a + b + c` | correct shape, wrong `+ c`, bad examples |
+| what is 2+2 | Does not answer 4; math drift | base knowledge limit |
+| why are leaves green | On-topic but vague/wrong botany | shallow base |
+| my name is gowrav | Confabulates ("Jack Harris…") | no real memory |
+
+**What fixed it vs Tulu-3:** (1) SmolTalk2 clean English chat vs math/multilingual mix;
+(2) `--warmstart_chatml` gave rows 50257/50258 a sane init vs random `std=0.02`;
+(3) train loss ~2.1 (proven recipe) vs ~2.5; (4) run alone on GPU (no OOM contention).
+
+**ChatML token note:** pretrain used vocab 50259 but **never saw** `<|im_start|>`/`<|im_end|>`
+in raw text — only SFT teaches them. Warm-start is a **recovery heuristic** (mean of base rows),
+not semantic pretraining. Proper fix for future pretrains: inject ChatML structure into pretrain
+corpus so those rows get gradients.
+
+**Compare broken ckpt:** `checkpoints_v11_sft_chat/best_model.pt` (Tulu-3) preserved.
+
+### Prior best chatable model — SmolTalk2 SFT on DCLM-2B base (Alpaca template)
+
+This is the **prior** coherent chat baseline (Alpaca template, no ChatML). Superseded for
+production chat tooling by the 10B + SmolTalk recovery above, but still useful as a comparison
+point (50257 vocab, no special-token gap).
 
 - **Base:** `checkpoints_v11_e3_k3_dclm/best_model.pt` (DCLM-Edu, 2B tokens, preset `v11_e3_k3`, vocab 50257).
 - **SFT:** SmolTalk2 (`--sft_filter hard`), 1 epoch, lr 5e-5 → **`checkpoints_v11_sft_dclm/best_model.pt`**.

@@ -10,11 +10,12 @@ and pretrain scripts are untouched.
 
 ---
 
-## Parallel GPU layout (2026-06-24)
+## Parallel GPU layout (2026-06-30)
 
 | Track | GPU | Job | Status |
 |-------|-----|-----|--------|
-| **Text knowledge pretrain** | RTX PRO 6000 | `v11_e3_k3_chat`, DCLM-Edu + FineWeb-Edu, ~10B tokens | **RUNNING** (tmux `v11_pretrain`) |
+| **Text knowledge pretrain** | RTX PRO 6000 | `v11_e3_k3_chat`, DCLM-Edu + FineWeb-Edu, ~10B tokens | **DONE** → `checkpoints_v11_e3_k3_chat_pretrain/best_model.pt` (WikiText val PPL 65.46) |
+| **Text chat SFT** | RTX PRO 6000 | SmolTalk2 + `--warmstart_chatml` on 10B base | **DONE** → `checkpoints_v11_sft_chat_smoltalk/best_model.pt` (see [EXPERIMENTS_V11.md](../EXPERIMENTS_V11.md) recovery readout) |
 | **Duplex audio POC** | RTX 4090 (local) | `duplex_5m` E3 K=3, frozen Whisper, Kathbath hi/gu | **Stage 1 done**; Gradio demo live |
 
 Text pretrain: [`scripts/run_v11_pretrain_scratch.sh`](../../scripts/run_v11_pretrain_scratch.sh),
@@ -24,8 +25,9 @@ Duplex: [`scripts/run_v11_duplex_stage0.sh`](../../scripts/run_v11_duplex_stage0
 [`scripts/run_v11_duplex_stage1.sh`](../../scripts/run_v11_duplex_stage1.sh),
 Gradio [`scripts/run_v11_duplex_gradio.sh`](../../scripts/run_v11_duplex_gradio.sh).
 
-**After 10B completes:** optional distill text knowledge into `duplex_25m` or a 100M audio
-adapter — duplex POC is **not blocked** on pretrain finishing.
+**After 10B + SmolTalk SFT:** optional distill text knowledge from
+`checkpoints_v11_sft_chat_smoltalk/best_model.pt` into `duplex_25m` or a 100M audio
+adapter — duplex POC is **not blocked** on text chat finishing.
 
 ---
 
