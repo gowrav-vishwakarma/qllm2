@@ -66,6 +66,4 @@ of your contribution to Gowrav Vishwakarma. The project owner retains full
 rights to relicense, commercialize, and distribute the project under any
 license.
 
-The project is licensed under the
-[PolyForm Noncommercial License 1.0.0](LICENSE). Commercial use requires
-permission -- contact [gowravvishwakarma@gmail.com](mailto:gowravvishwakarma@gmail.com).
+The project is licensed under the [MIT License](LICENSE).

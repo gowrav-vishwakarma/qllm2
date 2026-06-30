@@ -50,10 +50,10 @@ contribution.
 
 ### 6. Project License
 
-You acknowledge that this project is distributed under the
-**PolyForm Noncommercial License 1.0.0** and that the project owner retains
-full rights to relicense, commercialize, and distribute the project (including
-your contributions) under any license at their sole discretion.
+You acknowledge that this project is distributed under the **MIT License** and
+that the project owner retains full rights to relicense, commercialize, and
+distribute the project (including your contributions) under any license at their
+sole discretion.
 
 ### 7. Governing Law
 
