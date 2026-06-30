@@ -180,4 +180,4 @@ Then scale.
 
 ## License
 
-**MIT License** — see [LICENSE](LICENSE) in this repo.
+**MIT License** — see [LICENSE](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat/blob/main/LICENSE).

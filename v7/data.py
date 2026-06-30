@@ -470,6 +470,15 @@ def format_chat_messages(
     return ''.join(parts)
 
 
+def format_chat_prompt_from_messages(
+    messages: List[dict],
+    *,
+    default_system: str = DEFAULT_SYSTEM,
+) -> str:
+    """ChatML prompt for inference on a multi-turn conversation."""
+    return format_chat_messages(messages, default_system=default_system) + f"{IM_START}assistant\n"
+
+
 def _should_filter_smoltalk(
     messages: List[dict],
     source: str,
