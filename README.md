@@ -296,6 +296,4 @@ and fixed-size PAM memory in code.
 ## Contributing & License
 
 Contributions are subject to the project's [Contributor License Agreement](CLA.md); see
-[CONTRIBUTING.md](CONTRIBUTING.md). Licensed under **PolyForm Noncommercial License 1.0.0** —
-see [LICENSE](LICENSE). Non-commercial use is allowed; commercial use requires permission:
-[gowravvishwakarma@gmail.com](mailto:gowravvishwakarma@gmail.com).
+[CONTRIBUTING.md](CONTRIBUTING.md). Licensed under the **MIT License** — see [LICENSE](LICENSE).

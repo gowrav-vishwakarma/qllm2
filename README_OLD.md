@@ -489,7 +489,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, the CLA signing process, 
 
 ## License
 
-PolyForm Noncommercial License 1.0.0 — see [LICENSE](LICENSE). Non-commercial use allowed; commercial use requires permission — [gowravvishwakarma@gmail.com](mailto:gowravvishwakarma@gmail.com).
+**MIT License** — see [LICENSE](LICENSE).
 
 ---
 

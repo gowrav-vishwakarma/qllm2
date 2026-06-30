@@ -1,6 +1,5 @@
 ---
-license: other
-license_name: polyform-noncommercial-1.0.0
+license: mit
 language:
 - en
 tags:
@@ -179,6 +178,4 @@ Then scale.
 
 ## License
 
-**PolyForm Noncommercial License 1.0.0** — non-commercial use allowed; commercial use requires permission. See [LICENSE](https://github.com/gowrav-vishwakarma/qllm2/blob/master/LICENSE) in the main repo.
-
-Contact: [gowravvishwakarma@gmail.com](mailto:gowravvishwakarma@gmail.com)
+**MIT License** — see [LICENSE](LICENSE) in this repo.

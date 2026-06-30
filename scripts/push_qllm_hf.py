@@ -18,6 +18,7 @@ DEFAULT_REPO = 'gowravvishwakarma/qllm-pam-v11-e3k3-chat'
 
 UPLOAD_FILES = (
     'README.md',
+    'LICENSE',
     'config.json',
     'modeling_qllm.py',
     'run_chat.py',
@@ -35,6 +36,12 @@ def main() -> None:
         default='hf_release',
         help='Path to release folder (relative to repo root)',
     )
+    p.add_argument(
+        '--only',
+        nargs='+',
+        metavar='FILE',
+        help='Upload only these files (e.g. --only README.md)',
+    )
     args = p.parse_args()
 
     root = Path(__file__).resolve().parent.parent
@@ -42,17 +49,20 @@ def main() -> None:
     if not folder.is_dir():
         raise SystemExit(f'Missing folder: {folder}')
 
-    for name in UPLOAD_FILES:
-        if not (folder / name).exists():
-            raise SystemExit(f'Missing required file: {folder / name}')
+    files = list(args.only) if args.only else list(UPLOAD_FILES)
+    for name in files:
+        path = folder / name
+        if not path.exists():
+            raise SystemExit(f'Missing required file: {path}')
 
-    print('Reminder: run cd hf_release && bash verify.sh before uploading.')
+    if not args.only:
+        print('Reminder: run cd hf_release && bash verify.sh before uploading.')
 
     api = HfApi()
     api.create_repo(args.repo_id, repo_type='model', exist_ok=True)
     print(f'Uploading {folder} -> {args.repo_id} ...')
 
-    for name in UPLOAD_FILES:
+    for name in files:
         path = folder / name
         print(f'  {name} ({path.stat().st_size / (1024 * 1024):.1f} MB)')
         api.upload_file(
@@ -60,7 +70,11 @@ def main() -> None:
             path_in_repo=name,
             repo_id=args.repo_id,
             repo_type='model',
-            commit_message=f'Add {name}' if name != 'README.md' else 'Add QLLM PAM V11 model card and release bundle',
+            commit_message=(
+                'Update model card (MIT license)'
+                if name == 'README.md'
+                else f'Add {name}'
+            ),
         )
 
     print(f'Done: https://huggingface.co/{args.repo_id}')
