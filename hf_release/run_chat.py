@@ -4,15 +4,24 @@
 from __future__ import annotations
 
 import argparse
+import select
+import sys
+import time
+from pathlib import Path
+from typing import Optional
 
 import torch
 from transformers import AutoTokenizer
 
-from modeling_qllm import load_model
+from modeling_qllm import V11LM, load_model
 
 IM_START = '<|im_start|>'
 IM_END = '<|im_end|>'
 DEFAULT_SYSTEM = 'You are a helpful assistant.'
+
+BANNER_WIDTH = 60
+PASTE_IDLE_SEC = 0.08
+PASTE_MAX_SEC = 1.0
 
 
 def get_chat_tokenizer():
@@ -30,18 +39,139 @@ def format_chat_prompt(user_text: str, system: str = DEFAULT_SYSTEM) -> str:
     )
 
 
+def format_chat_messages(
+    messages: list[dict],
+    *,
+    default_system: str = DEFAULT_SYSTEM,
+) -> str:
+    sys_msg = default_system
+    for msg in messages:
+        if (msg.get('role') or '').strip().lower() == 'system' and (msg.get('content') or '').strip():
+            sys_msg = (msg.get('content') or '').strip()
+            break
+    parts = [f'{IM_START}system\n{sys_msg}{IM_END}\n']
+    for msg in messages:
+        role = (msg.get('role') or '').strip().lower()
+        content = (msg.get('content') or '').strip()
+        if role in ('system', '') or not content:
+            continue
+        parts.append(f'{IM_START}{role}\n{content}{IM_END}\n')
+    return ''.join(parts)
+
+
+def format_chat_prompt_from_messages(
+    messages: list[dict],
+    *,
+    default_system: str = DEFAULT_SYSTEM,
+) -> str:
+    return format_chat_messages(messages, default_system=default_system) + f'{IM_START}assistant\n'
+
+
+def print_welcome(*, system_prompt: str) -> None:
+    print('QLLM V11 PAM multi-turn chat')
+    print('  Paste multi-line prompts as one message')
+    print('  Empty line → new chat    exit → quit')
+    if system_prompt != DEFAULT_SYSTEM:
+        preview = system_prompt.replace('\n', ' ')
+        if len(preview) > 72:
+            preview = preview[:69] + '...'
+        print(f'  System: {preview}')
+
+
+def print_new_chat(session_id: int, *, first: bool = False) -> None:
+    line = '=' * BANNER_WIDTH
+    print(line)
+    if first:
+        print(f'  NEW CHAT (session {session_id})')
+    else:
+        print(f'  NEW CHAT (session {session_id}) — history cleared')
+    print(line)
+
+
+def _stdin_has_buffered_input() -> bool:
+    try:
+        return bool(select.select([sys.stdin], [], [], 0)[0])
+    except (ValueError, OSError):
+        return False
+
+
+def _readline_from_stdin() -> str:
+    line = sys.stdin.readline()
+    if line == '':
+        raise EOFError
+    return line.rstrip('\n\r')
+
+
+def _discard_pending_stdin() -> None:
+    if not sys.stdin.isatty():
+        return
+    while _stdin_has_buffered_input():
+        if sys.stdin.readline() == '':
+            break
+
+
+def _absorb_paste_lines(first_line: str) -> str:
+    lines = [first_line]
+    if not sys.stdin.isatty():
+        while _stdin_has_buffered_input():
+            extra = sys.stdin.readline()
+            if extra == '':
+                break
+            lines.append(extra.rstrip('\n\r'))
+        return '\n'.join(lines)
+
+    last_data = time.monotonic()
+    deadline = time.monotonic() + PASTE_MAX_SEC
+    while time.monotonic() < deadline:
+        if _stdin_has_buffered_input():
+            extra = sys.stdin.readline()
+            if extra == '':
+                break
+            lines.append(extra.rstrip('\n\r'))
+            last_data = time.monotonic()
+        elif time.monotonic() - last_data >= PASTE_IDLE_SEC:
+            break
+        else:
+            time.sleep(0.01)
+
+    return '\n'.join(lines)
+
+
+def read_user_input() -> tuple[str, Optional[str]]:
+    """Read one user turn. Returns (kind, text) where kind is exit|new_chat|message."""
+    _discard_pending_stdin()
+
+    sys.stdout.write('\nUser> ')
+    sys.stdout.flush()
+    first = _readline_from_stdin()
+
+    if first.strip().lower() == 'exit':
+        return 'exit', None
+    if not first.strip():
+        return 'new_chat', None
+
+    return 'message', _absorb_paste_lines(first)
+
+
 def generate_reply(
     model: V11LM,
     tokenizer,
-    user_text: str,
+    messages: list[dict],
     *,
     device: torch.device,
-    max_new_tokens: int = 256,
-    temperature: float = 0.7,
+    im_end_id: int,
+    max_new_tokens: int,
+    temperature: float,
+    max_prompt_tokens: Optional[int] = None,
+    default_system: str = DEFAULT_SYSTEM,
 ) -> tuple[str, bool, int]:
-    im_end_id = tokenizer.convert_tokens_to_ids(IM_END)
-    prompt = format_chat_prompt(user_text)
+    prompt = format_chat_prompt_from_messages(messages, default_system=default_system)
     ids = tokenizer.encode(prompt, return_tensors='pt').to(device)
+    if max_prompt_tokens is not None and ids.shape[1] > max_prompt_tokens:
+        print(
+            f'  (warning: prompt is {ids.shape[1]} tokens; '
+            f'limit is {max_prompt_tokens}. Start a new chat to avoid truncation.)'
+        )
     with torch.no_grad():
         out = model.generate(
             ids,
@@ -60,6 +190,17 @@ def generate_reply(
     return reply, stopped, n_new
 
 
+def _load_system_prompt(args) -> str:
+    if args.system_file:
+        text = Path(args.system_file).read_text(encoding='utf-8').strip()
+        if not text:
+            raise SystemExit(f'--system-file is empty: {args.system_file}')
+        return text
+    if args.system:
+        return args.system.strip()
+    return DEFAULT_SYSTEM
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description='Chat with QLLM V11 PAM (HF release)')
     p.add_argument('--checkpoint', default='qllm_v11_e3k3_chat.pt')
@@ -67,46 +208,83 @@ def main() -> None:
     p.add_argument('--prompt', default='')
     p.add_argument('--max_new_tokens', type=int, default=256)
     p.add_argument('--temperature', type=float, default=0.7)
+    p.add_argument(
+        '--system',
+        default=None,
+        help='Custom system prompt for all chats in this session',
+    )
+    p.add_argument(
+        '--system-file',
+        default=None,
+        help='Read custom system prompt from a file (overrides --system)',
+    )
     args = p.parse_args()
+
+    system_prompt = _load_system_prompt(args)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = load_model(args.checkpoint, device=device)
     tokenizer = get_chat_tokenizer()
+    im_end_id = tokenizer.convert_tokens_to_ids(IM_END)
+    max_prompt_tokens = model.cfg.max_seq_len - args.max_new_tokens
 
     if args.prompt:
+        messages = [{'role': 'user', 'content': args.prompt.strip()}]
         reply, stopped, n_new = generate_reply(
             model,
             tokenizer,
-            args.prompt,
+            messages,
             device=device,
+            im_end_id=im_end_id,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
+            max_prompt_tokens=max_prompt_tokens,
+            default_system=system_prompt,
         )
         print(f'User> {args.prompt}')
         print(f'Assistant> {reply}')
         print(f'(new_tokens={n_new}, stopped_on_im_end={stopped})')
         return
 
-    print('QLLM V11 PAM chat (empty line to quit)')
+    session_id = 1
+    messages: list[dict] = []
+
+    print_welcome(system_prompt=system_prompt)
+    print_new_chat(session_id, first=True)
+
     while True:
         try:
-            user = input('\nUser> ').strip()
+            kind, user = read_user_input()
         except (EOFError, KeyboardInterrupt):
             print()
             break
-        if not user:
+
+        if kind == 'exit':
             break
+
+        if kind == 'new_chat':
+            session_id += 1
+            messages = []
+            print_new_chat(session_id)
+            continue
+
+        messages.append({'role': 'user', 'content': user.strip()})
         reply, stopped, n_new = generate_reply(
             model,
             tokenizer,
-            user,
+            messages,
             device=device,
+            im_end_id=im_end_id,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
+            max_prompt_tokens=max_prompt_tokens,
+            default_system=system_prompt,
         )
+        messages.append({'role': 'assistant', 'content': reply})
         print(f'Assistant> {reply}')
         if not stopped:
             print(f'  (warning: did not stop on {IM_END}, new_tokens={n_new})')
+        _discard_pending_stdin()
 
 
 if __name__ == '__main__':

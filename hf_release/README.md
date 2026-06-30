@@ -80,16 +80,52 @@ pip install torch transformers
 # Download this repo (or clone from HF)
 huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
   qllm_v11_e3k3_chat.pt config.json modeling_qllm.py run_chat.py requirements.txt
+```
 
-# Interactive chat
+### Interactive multi-turn chat
+
+```bash
 python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt
+```
 
-# Single prompt
+| Input | Action |
+|---|---|
+| Type a message + Enter | Send; model sees full conversation history |
+| Empty line (Enter only) | Start a **new chat** — history cleared, session counter increments |
+| `exit` | Quit |
+| Ctrl+C or EOF | Quit |
+
+Multi-line paste is supported: paste a block and the script waits briefly to absorb trailing lines as one message.
+
+Optional tuning: `--max_new_tokens` (default 256), `--temperature` (default 0.7).
+
+### Custom system prompt
+
+```bash
+# Inline
 python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt \
-  --prompt "What is the capital of France?"
+  --system "You are a concise science tutor. Answer in one sentence."
+
+# From file (overrides --system)
+python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt \
+  --system-file my_system.txt
+```
+
+The system prompt applies to **all chats in that run**. Starting a new chat (empty line) clears turn history but keeps the same system prompt until you restart the script.
+
+### Single prompt (non-interactive)
+
+For scripts, CI, or one-off queries:
+
+```bash
+python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt \
+  --prompt "What is the capital of France?" \
+  --temperature 0.0 --max_new_tokens 32
 ```
 
 ### Minimal inference snippet
+
+For day-to-day chatting, use `run_chat.py` above; the snippet below is for custom integrations.
 
 ```python
 import torch
