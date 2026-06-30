@@ -5,8 +5,9 @@
 #   ./scripts/run_v11_sft_smoltalk.sh [pretrain_ckpt] [extra args]
 #
 # Examples:
-#   ./scripts/run_v11_sft_smoltalk.sh checkpoints_v11_e3_k3_dclm/best_model.pt
-#   tmux new-session -d -s v11_sft './scripts/run_v11_sft_smoltalk.sh'
+#   ./scripts/run_v11_sft_smoltalk.sh
+#   ./scripts/run_v11_sft_smoltalk.sh checkpoints_v11_e3_k3_chat_pretrain/best_model.pt
+#   tmux new-session -d -s v11_smoltalk './scripts/run_v11_sft_smoltalk.sh'
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -19,8 +20,8 @@ source ./scripts/log_utils.sh
 
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-PRESET="${PRESET:-v11_e3_k3}"
-RESUME_FROM="${1:-checkpoints_v11_e3_k3_dclm/best_model.pt}"
+PRESET="${PRESET:-v11_e3_k3_chat}"
+RESUME_FROM="${1:-checkpoints_v11_e3_k3_chat_pretrain/best_model.pt}"
 shift || true
 
 SEQ_LEN=2048
@@ -29,7 +30,8 @@ CHUNK_SIZE=256
 EPOCHS=1
 LR=5e-5
 SFT_FILTER=hard
-CKPT_DIR="${CKPT_DIR:-checkpoints_v11_e3_k3_sft}"
+CKPT_DIR="${CKPT_DIR:-checkpoints_v11_sft_chat_smoltalk}"
+SAVE_EVERY_STEPS=5000
 EXTRA_ARGS="$*"
 
 GEN_PROMPT="<|im_start|>user\nWhat is the capital of France?<|im_end|>\n<|im_start|>assistant\n"
@@ -39,6 +41,7 @@ mkdir -p "$CKPT_DIR"
 ARGS="--preset $PRESET --stage sft --dataset smoltalk2 --seq_len $SEQ_LEN \
   --batch_size $BATCH_SIZE --epochs $EPOCHS --chunk_size $CHUNK_SIZE \
   --lr $LR --sft_filter $SFT_FILTER --resume_from $RESUME_FROM \
+  --warmstart_chatml --save_every_steps $SAVE_EVERY_STEPS \
   --amp_dtype auto --num_workers 4 --gen_every 0 --no_grad_ckpt \
   --compile --compile_mode default"
 
