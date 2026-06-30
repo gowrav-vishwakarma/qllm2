@@ -13,7 +13,7 @@ set -euo pipefail
 REMOTE="${REMOTE:-ubuntu@34.131.232.173}"
 REMOTE_DIR="${REMOTE_DIR:-/home/ubuntu/Development/qllm-private/checkpoints_v11_e3_k3_chat_pretrain}"
 LOCAL_DIR="${LOCAL_DIR:-$(cd "$(dirname "$0")/.." && pwd)/checkpoints_v11_e3_k3_chat_pretrain}"
-FILE="${FILE:-latest.pt}"
+FILE="${FILE:-best_model.pt}"
 
 WATCH_INTERVAL=""
 if [[ "${1:-}" == "--watch" ]]; then
@@ -28,7 +28,7 @@ pull_once() {
 
   echo "[$(date -Is)] pulling ${remote_path} -> ${local_path}"
 
-  scp -o BatchMode=yes "${remote_path}" "${tmp_path}"
+  scp -o BatchMode=yes -i ~/.ssh/gowrav-personal "${remote_path}" "${tmp_path}"
   mv -f "${tmp_path}" "${local_path}"
   echo "[$(date -Is)] done: $(ls -lh "${local_path}")"
 }
