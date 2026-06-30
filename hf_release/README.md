@@ -28,6 +28,7 @@ This checkpoint proves that architectures outside the transformer/SSM families *
 | **Val (in-distro)** | PPL **7.22**, acc **0.567** |
 | **Inference** | **O(1)/token**, fixed state, **no KV cache** |
 | **Code** | [github.com/gowrav-vishwakarma/qllm2](https://github.com/gowrav-vishwakarma/qllm2) |
+| **Paper** | [arXiv:2604.05030](https://arxiv.org/abs/2604.05030) — Phase-Associative Memory in Complex Hilbert Space |
 
 ---
 
@@ -169,6 +170,7 @@ Then scale.
 
 ## Links
 
+- **Paper:** [Phase-Associative Memory: Sequence Modeling in Complex Hilbert Space](https://arxiv.org/abs/2604.05030) (arXiv:2604.05030)
 - **Main repo:** [github.com/gowrav-vishwakarma/qllm2](https://github.com/gowrav-vishwakarma/qllm2)
 - **Experiments log:** [v11/EXPERIMENTS_V11.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/v11/EXPERIMENTS_V11.md)
 - **Beginner guide:** [v11/BEGINNER_GUIDE.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/v11/BEGINNER_GUIDE.md)
