@@ -226,7 +226,7 @@ The architecture and training recipe are **still evolving**; we treat each shipp
 fresh pretrain tokens** per round (no token reuse), run chat SFT, and publish the weights to
 **[gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat)**
 under a **revision tag** (`round-2b-gate`, `round-4b-gate`, …). Full provenance per round:
-**[v11/MODEL_RELEASES.md](v11/MODEL_RELEASES.md)**.
+**[v11/MODEL_RELEASES.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/v11/MODEL_RELEASES.md)**.
 
 **What every round trains on (knowledge + reasoning + chat):**
 

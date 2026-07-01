@@ -71,7 +71,7 @@ huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat --revision <ta
   and occasional confabulation. Not a search engine or calculator.
 
 Data recipe per round is documented in
-[v11/MODEL_RELEASES.md](https://github.com/gowrav-vishwakarma/qllm2/blob/main/v11/MODEL_RELEASES.md).
+[v11/MODEL_RELEASES.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/v11/MODEL_RELEASES.md).
 
 ---
 
@@ -261,7 +261,7 @@ You are a helpful assistant.<|im_end|>
 {assistant}<|im_end|>
 ```
 
-Full reproduction logs: [v11/EXPERIMENTS_V11.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/v11/EXPERIMENTS_V11.md). Per-round provenance: [v11/MODEL_RELEASES.md](https://github.com/gowrav-vishwakarma/qllm2/blob/main/v11/MODEL_RELEASES.md).
+Full reproduction logs: [v11/EXPERIMENTS_V11.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/v11/EXPERIMENTS_V11.md). Per-round provenance: [v11/MODEL_RELEASES.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/v11/MODEL_RELEASES.md).
 
 ---
 
