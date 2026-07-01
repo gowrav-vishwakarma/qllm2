@@ -186,10 +186,14 @@ class V7Trainer:
         log_dir: Optional[str] = None,
         token_budget: Optional[int] = None,
         total_steps_override: Optional[int] = None,
+        secondary_val_loader=None,
+        per_source_tokens: Optional[Dict[str, int]] = None,
     ):
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
+        self.secondary_val_loader = secondary_val_loader
+        self.per_source_tokens = per_source_tokens if per_source_tokens is not None else {}
         self.tokenizer = tokenizer
         self.max_epochs = max_epochs
         self.gradient_clip = gradient_clip
@@ -249,6 +253,52 @@ class V7Trainer:
         self.global_tokens = 0
         self.best_val_loss = float('inf')
         self.best_val_ppl = float('inf')
+        self.best_wiki_val_loss = float('inf')
+        self.best_wiki_val_ppl = float('inf')
+
+    def _eval_loader(self, loader) -> Dict[str, float]:
+        if loader is None or len(loader) == 0:
+            return {}
+        total_loss_sum = 0.0
+        total_correct = 0.0
+        total_tokens = 0.0
+        for batch in loader:
+            input_ids = batch['input_ids'].to(self.device, non_blocking=True)
+            labels = batch['labels'].to(self.device, non_blocking=True)
+            loss_mask = batch.get('loss_mask')
+            if loss_mask is not None:
+                loss_mask = loss_mask.to(self.device, non_blocking=True)
+
+            with torch.amp.autocast(
+                self.device.type,
+                enabled=self.use_amp,
+                dtype=self.amp_dtype or torch.float16,
+            ):
+                logits, _, _aux = self.model(input_ids)
+
+            flat_logits = logits.view(-1, logits.size(-1)).float()
+            flat_labels = labels.view(-1)
+            per_token = F.cross_entropy(flat_logits, flat_labels, reduction='none')
+            correct = (flat_logits.argmax(dim=-1) == flat_labels).float()
+
+            if loss_mask is not None:
+                m = loss_mask.view(-1).float()
+                total_loss_sum += (per_token * m).sum().item()
+                total_correct += (correct * m).sum().item()
+                total_tokens += m.sum().item()
+            else:
+                total_loss_sum += per_token.sum().item()
+                total_correct += correct.sum().item()
+                total_tokens += flat_labels.numel()
+
+        if total_tokens == 0:
+            return {}
+        avg_loss = total_loss_sum / total_tokens
+        return {
+            'val_loss': avg_loss,
+            'val_ppl': math.exp(min(avg_loss, 20)),
+            'val_acc': total_correct / total_tokens,
+        }
 
     @staticmethod
     def _masked_ce(logits, labels, loss_mask=None):
@@ -429,49 +479,12 @@ class V7Trainer:
         if self.val_loader is None or len(self.val_loader) == 0:
             return {}
         self.model.eval()
-        # Counted over masked (assistant) tokens when a loss_mask is present,
-        # else over all tokens. This makes PPL in-distribution and adds a
-        # next-token accuracy that is robust to single-token probability swings.
-        total_loss_sum = 0.0
-        total_correct = 0.0
-        total_tokens = 0.0
-        for batch in self.val_loader:
-            input_ids = batch['input_ids'].to(self.device, non_blocking=True)
-            labels = batch['labels'].to(self.device, non_blocking=True)
-            loss_mask = batch.get('loss_mask')
-            if loss_mask is not None:
-                loss_mask = loss_mask.to(self.device, non_blocking=True)
-
-            with torch.amp.autocast(
-                self.device.type,
-                enabled=self.use_amp,
-                dtype=self.amp_dtype or torch.float16,
-            ):
-                logits, _, _aux = self.model(input_ids)
-
-            flat_logits = logits.view(-1, logits.size(-1)).float()
-            flat_labels = labels.view(-1)
-            per_token = F.cross_entropy(flat_logits, flat_labels, reduction='none')
-            correct = (flat_logits.argmax(dim=-1) == flat_labels).float()
-
-            if loss_mask is not None:
-                m = loss_mask.view(-1).float()
-                total_loss_sum += (per_token * m).sum().item()
-                total_correct += (correct * m).sum().item()
-                total_tokens += m.sum().item()
-            else:
-                total_loss_sum += per_token.sum().item()
-                total_correct += correct.sum().item()
-                total_tokens += flat_labels.numel()
-
-        if total_tokens == 0:
-            return {}
-        avg_loss = total_loss_sum / total_tokens
-        return {
-            'val_loss': avg_loss,
-            'val_ppl': math.exp(min(avg_loss, 20)),
-            'val_acc': total_correct / total_tokens,
-        }
+        metrics = self._eval_loader(self.val_loader)
+        if self.secondary_val_loader is not None and len(self.secondary_val_loader) > 0:
+            wiki = self._eval_loader(self.secondary_val_loader)
+            metrics['wiki_val_loss'] = wiki.get('val_loss', float('nan'))
+            metrics['wiki_val_ppl'] = wiki.get('val_ppl', float('nan'))
+        return metrics
 
     @torch.no_grad()
     def _generate_sample(self, prompt: str = "The", max_tokens: int = 100) -> str:
@@ -503,8 +516,11 @@ class V7Trainer:
             'global_tokens': self.global_tokens,
             'best_val_loss': self.best_val_loss,
             'best_val_ppl': self.best_val_ppl,
+            'best_wiki_val_loss': self.best_wiki_val_loss,
+            'best_wiki_val_ppl': self.best_wiki_val_ppl,
             'epoch': epoch,
             'config': asdict(m.config),
+            'per_source_tokens': dict(self.per_source_tokens),
         }
         torch.save(ckpt, tmp_path)
         os.replace(tmp_path, path)
@@ -583,11 +599,18 @@ class V7Trainer:
                 )
                 if 'val_acc' in val_metrics:
                     line += f" Acc: {val_metrics['val_acc']:.3f}"
+                if 'wiki_val_ppl' in val_metrics:
+                    line += (
+                        f" | Wiki PPL: {val_metrics['wiki_val_ppl']:.2f}"
+                    )
                 if val_metrics['val_loss'] < self.best_val_loss:
                     self.best_val_loss = val_metrics['val_loss']
                     self.best_val_ppl = val_metrics['val_ppl']
                     line += " *best*"
                     is_best = True
+                if 'wiki_val_loss' in val_metrics and val_metrics['wiki_val_loss'] < self.best_wiki_val_loss:
+                    self.best_wiki_val_loss = val_metrics['wiki_val_loss']
+                    self.best_wiki_val_ppl = val_metrics['wiki_val_ppl']
             print(line)
 
             if is_best:

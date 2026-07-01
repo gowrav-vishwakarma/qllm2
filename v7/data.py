@@ -103,7 +103,11 @@ class MaskedTextDataset(Dataset):
 
 
 class StreamingTokenChunkDataset(IterableDataset):
-    """Stream tokenized text and yield non-overlapping (seq_len+1) chunks."""
+    """Stream tokenized text and yield non-overlapping (seq_len+1) chunks.
+
+    ``text_iterator`` may yield plain strings or ``(source_name, text)`` tuples.
+    When ``token_counters`` is provided, increments per-source token counts.
+    """
 
     def __init__(
         self,
@@ -113,19 +117,32 @@ class StreamingTokenChunkDataset(IterableDataset):
         *,
         max_tokens: Optional[int] = None,
         shuffle_buffer: int = 10_000,
+        token_counters: Optional[Dict[str, int]] = None,
+        default_source: str = 'mix',
     ):
         self.text_iterator = text_iterator
         self.tokenizer = tokenizer
         self.seq_len = seq_len
         self.max_tokens = max_tokens
         self.shuffle_buffer = shuffle_buffer
+        self.token_counters = token_counters
+        self.default_source = default_source
+
+    def _yield_chunk(self, yielded_tokens: int, source: str) -> int:
+        if self.token_counters is not None:
+            self.token_counters[source] = self.token_counters.get(source, 0) + self.seq_len
+        return yielded_tokens + self.seq_len
 
     def __iter__(self):
         buffer: List[int] = []
         yielded_tokens = 0
         pending: List[dict] = []
 
-        for text in self.text_iterator:
+        for item in self.text_iterator:
+            if isinstance(item, tuple):
+                source, text = item
+            else:
+                source, text = self.default_source, item
             if not text or not str(text).strip():
                 continue
             ids = self.tokenizer.encode(str(text), add_special_tokens=False)
@@ -142,23 +159,23 @@ class StreamingTokenChunkDataset(IterableDataset):
                     'labels': torch.tensor(chunk[1:], dtype=torch.long),
                 }
                 if self.shuffle_buffer > 0:
-                    pending.append(sample)
+                    pending.append((source, sample))
                     if len(pending) >= self.shuffle_buffer:
                         idx = torch.randint(len(pending), (1,)).item()
-                        out = pending.pop(idx)
-                        yielded_tokens += self.seq_len
+                        src, out = pending.pop(idx)
+                        yielded_tokens = self._yield_chunk(yielded_tokens, src)
                         yield out
                         if self.max_tokens and yielded_tokens >= self.max_tokens:
                             return
                 else:
-                    yielded_tokens += self.seq_len
+                    yielded_tokens = self._yield_chunk(yielded_tokens, source)
                     yield sample
                     if self.max_tokens and yielded_tokens >= self.max_tokens:
                         return
 
         while pending:
-            out = pending.pop()
-            yielded_tokens += self.seq_len
+            src, out = pending.pop()
+            yielded_tokens = self._yield_chunk(yielded_tokens, src)
             yield out
             if self.max_tokens and yielded_tokens >= self.max_tokens:
                 return
@@ -686,27 +703,62 @@ def load_chat_sft(
     return train_ds, val_ds, tokenizer
 
 
-def _dclm_edu_text_iter(edu_score_min: int = 3) -> Iterator[str]:
+_PRETRAIN_HOLDOUT_CACHE_VERSION = 1
+
+
+def pretrain_holdout_bucket(text: str, pct: int = 5) -> bool:
+    """Deterministic ~pct% holdout by document content hash."""
+    sample = (text or '')[:8192]
+    return (zlib.adler32(sample.encode('utf-8', errors='ignore')) % 100) >= (100 - pct)
+
+
+def _dclm_edu_text_iter(
+    edu_score_min: int = 3,
+    *,
+    exclude_holdout: bool = False,
+    holdout_pct: int = 5,
+    only_holdout: bool = False,
+    skip_docs: int = 0,
+) -> Iterator[str]:
     """Stream DCLM-Edu text filtered by integer edu score."""
     from datasets import load_dataset
 
     stream = load_dataset('HuggingFaceTB/dclm-edu', split='train', streaming=True)
+    skipped = 0
     for row in stream:
         score = row.get('edu_int_score')
         if score is not None and score < edu_score_min:
             continue
         text = row.get('text') or row.get('content') or ''
-        if text.strip():
-            yield text
+        if not text.strip():
+            continue
+        in_holdout = pretrain_holdout_bucket(text, holdout_pct)
+        if exclude_holdout and in_holdout:
+            continue
+        if only_holdout and not in_holdout:
+            continue
+        if skipped < skip_docs:
+            skipped += 1
+            continue
+        yield text
 
 
-def _fineweb_edu_text_iter(edu_score_min: int = 3, name: str = 'sample-10BT') -> Iterator[str]:
+def _fineweb_edu_text_iter(
+    edu_score_min: int = 3,
+    name: str = 'sample-10BT',
+    *,
+    exclude_holdout: bool = False,
+    holdout_pct: int = 5,
+    only_holdout: bool = False,
+    skip_docs: int = 0,
+) -> Iterator[str]:
     """Stream FineWeb-Edu text filtered by the edu classifier score."""
     from datasets import load_dataset
 
     stream = load_dataset(
         'HuggingFaceFW/fineweb-edu', name=name, split='train', streaming=True,
     )
+    skipped = 0
     for row in stream:
         score = row.get('score')
         if score is None:
@@ -714,25 +766,112 @@ def _fineweb_edu_text_iter(edu_score_min: int = 3, name: str = 'sample-10BT') ->
         if score is not None and score < edu_score_min:
             continue
         text = row.get('text') or row.get('content') or ''
-        if text.strip():
-            yield text
+        if not text.strip():
+            continue
+        in_holdout = pretrain_holdout_bucket(text, holdout_pct)
+        if exclude_holdout and in_holdout:
+            continue
+        if only_holdout and not in_holdout:
+            continue
+        if skipped < skip_docs:
+            skipped += 1
+            continue
+        yield text
 
 
-def _interleave_text_iters(iters, weights=None) -> Iterator[str]:
-    """Weighted round-robin over multiple text iterators until all exhaust."""
+def _tag_source(name: str, it: Iterator[str]) -> Iterator[Tuple[str, str]]:
+    for text in it:
+        yield name, text
+
+
+def _interleave_text_iters(
+    tagged_iters: List[Tuple[str, Iterator[str]]],
+    weights=None,
+    *,
+    seed: int = 42,
+) -> Iterator[Tuple[str, str]]:
+    """Weighted round-robin over tagged text iterators until all exhaust."""
     import random as _random
 
-    iters = [iter(it) for it in iters]
+    rng = _random.Random(seed)
+    names = [n for n, _ in tagged_iters]
+    iters = [iter(it) for _, it in tagged_iters]
     weights = list(weights) if weights else [1.0] * len(iters)
     alive = [True] * len(iters)
     while any(alive):
         idxs = [i for i, a in enumerate(alive) if a]
         w = [weights[i] for i in idxs]
-        choice = _random.choices(idxs, weights=w, k=1)[0]
+        choice = rng.choices(idxs, weights=w, k=1)[0]
         try:
-            yield next(iters[choice])
+            yield names[choice], next(iters[choice])
         except StopIteration:
             alive[choice] = False
+
+
+def load_pretrain_holdout_val(
+    tokenizer,
+    seq_len: int = 2048,
+    *,
+    target_tokens: int = 500_000,
+    edu_score_min: int = 3,
+    holdout_pct: int = 5,
+    use_cache: bool = True,
+) -> TextDataset:
+    """Cached in-distribution DCLM-Edu holdout (hash bucket), for pretrain val."""
+    vocab_tag = len(tokenizer)
+    cache_path = (
+        Path('.cache') / 'v7_tokens'
+        / f'pretrain_holdout_v{_PRETRAIN_HOLDOUT_CACHE_VERSION}_v{vocab_tag}'
+        f'_t{target_tokens}_e{edu_score_min}_p{holdout_pct}.pt'
+    )
+    if use_cache and cache_path.exists():
+        cached = torch.load(cache_path, weights_only=False)
+        tokens = cached['tokens']
+        print(
+            f"[cache] Pretrain holdout val from {cache_path} "
+            f"({len(tokens):,} tokens)"
+        )
+        return TextDataset(tokens, seq_len)
+
+    print(
+        f"Building pretrain holdout val (~{holdout_pct}% hash bucket, "
+        f"edu>={edu_score_min}, target>={target_tokens:,} tokens)..."
+    )
+    tokens: List[int] = []
+    kept_docs = 0
+    for text in _dclm_edu_text_iter(
+        edu_score_min,
+        only_holdout=True,
+        holdout_pct=holdout_pct,
+    ):
+        ids = tokenizer.encode(text, add_special_tokens=False)
+        if not ids:
+            continue
+        ids.append(tokenizer.eos_token_id)
+        tokens.extend(ids)
+        kept_docs += 1
+        if len(tokens) >= target_tokens:
+            break
+
+    if len(tokens) < target_tokens // 4:
+        raise RuntimeError(
+            f"Pretrain holdout too small ({len(tokens):,} tokens from {kept_docs} docs)"
+        )
+
+    out = torch.tensor(tokens[:target_tokens], dtype=torch.long)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(
+        {
+            'tokens': out,
+            'kept_docs': kept_docs,
+            'holdout_pct': holdout_pct,
+            'edu_score_min': edu_score_min,
+            'cache_version': _PRETRAIN_HOLDOUT_CACHE_VERSION,
+        },
+        cache_path,
+    )
+    print(f"  holdout val: {kept_docs:,} docs, {len(out):,} tokens -> {cache_path}")
+    return TextDataset(out, seq_len)
 
 
 def load_dclm_edu(
@@ -740,8 +879,10 @@ def load_dclm_edu(
     edu_score_min: int = 3,
     token_budget: Optional[int] = None,
     max_val_samples: Optional[int] = None,
+    holdout_pct: int = 5,
+    exclude_holdout: bool = True,
 ):
-    """Stream DCLM-Edu for pretrain; WikiText-103 validation for eval anchor."""
+    """Stream DCLM-Edu for pretrain; in-distro holdout val + WikiText secondary."""
     from transformers import AutoTokenizer
 
     tokenizer = AutoTokenizer.from_pretrained('gpt2')
@@ -749,20 +890,31 @@ def load_dclm_edu(
 
     print(
         f"Streaming DCLM-Edu (edu_int_score>={edu_score_min}, "
-        f"token_budget={token_budget or 'none'})..."
+        f"token_budget={token_budget or 'none'}, exclude_holdout={exclude_holdout})..."
     )
     train_ds = StreamingTokenChunkDataset(
-        _dclm_edu_text_iter(edu_score_min),
+        _dclm_edu_text_iter(
+            edu_score_min,
+            exclude_holdout=exclude_holdout,
+            holdout_pct=holdout_pct,
+        ),
         tokenizer,
         seq_len,
         max_tokens=token_budget,
         shuffle_buffer=10_000,
+        default_source='dclm',
     )
 
-    val_ds, _ = load_wikitext103_val(
-        seq_len=seq_len,
-        max_val_samples=max_val_samples,
-    )
+    if exclude_holdout:
+        val_ds = load_pretrain_holdout_val(
+            tokenizer, seq_len=seq_len, edu_score_min=edu_score_min,
+            holdout_pct=holdout_pct,
+        )
+    else:
+        val_ds, _ = load_wikitext103_val(
+            seq_len=seq_len,
+            max_val_samples=max_val_samples,
+        )
     return train_ds, val_ds, tokenizer
 
 
@@ -775,12 +927,18 @@ def load_pretrain_mix(
     chat_vocab: bool = True,
     fineweb_name: str = 'sample-10BT',
     max_val_samples: Optional[int] = None,
+    holdout_pct: int = 5,
+    exclude_holdout: bool = True,
+    mix_seed: int = 42,
+    dclm_skip_docs: int = 0,
+    fineweb_skip_docs: int = 0,
+    token_counters: Optional[Dict[str, int]] = None,
 ):
     """Stream a mixed web-edu corpus (DCLM-Edu + FineWeb-Edu) for from-scratch pretrain.
 
     With ``chat_vocab=True`` the ChatML tokenizer (vocab 50259) is used so the
     chat special-token embeddings exist from initialization (no later resize).
-    WikiText-103 val remains the tracking anchor.
+    Primary val = in-distribution DCLM holdout (hash bucket excluded from train).
     """
     if chat_vocab:
         tokenizer = get_chat_tokenizer()
@@ -790,29 +948,57 @@ def load_pretrain_mix(
         tokenizer = AutoTokenizer.from_pretrained('gpt2')
         tokenizer.pad_token = tokenizer.eos_token
 
-    iters = []
+    tagged = []
     for s in sources:
         if s == 'dclm':
-            iters.append(_dclm_edu_text_iter(edu_score_min))
+            it = _dclm_edu_text_iter(
+                edu_score_min,
+                exclude_holdout=exclude_holdout,
+                holdout_pct=holdout_pct,
+                skip_docs=dclm_skip_docs,
+            )
+            tagged.append(('dclm', it))
         elif s == 'fineweb':
-            iters.append(_fineweb_edu_text_iter(edu_score_min, name=fineweb_name))
+            it = _fineweb_edu_text_iter(
+                edu_score_min,
+                name=fineweb_name,
+                exclude_holdout=exclude_holdout,
+                holdout_pct=holdout_pct,
+                skip_docs=fineweb_skip_docs,
+            )
+            tagged.append(('fineweb', it))
         else:
             raise ValueError(f"Unknown pretrain source: {s}")
 
     print(
         f"Streaming pretrain mix: sources={list(sources)} "
         f"weights={list(weights) if weights else 'uniform'} edu>={edu_score_min} "
-        f"budget={token_budget or 'none'} vocab={len(tokenizer)}"
+        f"budget={token_budget or 'none'} vocab={len(tokenizer)} "
+        f"holdout_pct={holdout_pct} exclude_holdout={exclude_holdout} "
+        f"mix_seed={mix_seed} dclm_skip={dclm_skip_docs} fineweb_skip={fineweb_skip_docs}"
     )
-    text_iter = _interleave_text_iters(iters, weights) if len(iters) > 1 else iters[0]
+    text_iter = (
+        _interleave_text_iters(tagged, weights, seed=mix_seed)
+        if len(tagged) > 1
+        else _tag_source(tagged[0][0], tagged[0][1])
+    )
     train_ds = StreamingTokenChunkDataset(
         text_iter,
         tokenizer,
         seq_len,
         max_tokens=token_budget,
         shuffle_buffer=10_000,
+        token_counters=token_counters,
     )
-    val_ds, _ = load_wikitext103_val(seq_len=seq_len, max_val_samples=max_val_samples)
+    if exclude_holdout:
+        val_ds = load_pretrain_holdout_val(
+            tokenizer, seq_len=seq_len, edu_score_min=edu_score_min,
+            holdout_pct=holdout_pct,
+        )
+    else:
+        val_ds, _ = load_wikitext103_val(
+            seq_len=seq_len, max_val_samples=max_val_samples,
+        )
     return train_ds, val_ds, tokenizer
 
 
@@ -823,12 +1009,19 @@ def load_fineweb_edu(
     chat_vocab: bool = False,
     fineweb_name: str = 'sample-10BT',
     max_val_samples: Optional[int] = None,
+    holdout_pct: int = 5,
+    dclm_skip_docs: int = 0,
+    fineweb_skip_docs: int = 0,
+    mix_seed: int = 42,
+    token_counters: Optional[Dict[str, int]] = None,
 ):
     """Stream FineWeb-Edu only (mirror of load_dclm_edu)."""
     return load_pretrain_mix(
         seq_len=seq_len, edu_score_min=edu_score_min, token_budget=token_budget,
         sources=('fineweb',), chat_vocab=chat_vocab, fineweb_name=fineweb_name,
-        max_val_samples=max_val_samples,
+        max_val_samples=max_val_samples, holdout_pct=holdout_pct,
+        dclm_skip_docs=dclm_skip_docs, fineweb_skip_docs=fineweb_skip_docs,
+        mix_seed=mix_seed, token_counters=token_counters,
     )
 
 

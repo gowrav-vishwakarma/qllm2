@@ -33,6 +33,7 @@ from v7.train import (
 )
 from v7.data import (
     load_wikitext103,
+    load_wikitext103_val,
     load_tinystories,
     load_dclm_edu,
     load_fineweb_edu,
@@ -77,6 +78,12 @@ def build_argparser():
                    help='Comma list of mix weights matching --pretrain_sources (e.g. 1,1)')
     p.add_argument('--fineweb_name', type=str, default='sample-10BT',
                    help='FineWeb-Edu config (e.g. sample-10BT, sample-100BT)')
+    p.add_argument('--holdout_pct', type=int, default=5,
+                   help='Hash-bucket holdout %% for in-distribution pretrain val')
+    p.add_argument('--dclm_skip_docs', type=int, default=0,
+                   help='Skip first N DCLM docs after filters (resume fresh shard)')
+    p.add_argument('--fineweb_skip_docs', type=int, default=0,
+                   help='Skip first N FineWeb docs after filters (resume fresh shard)')
     p.add_argument('--sft_filter', type=str, default='hard', choices=['none', 'hard'])
     p.add_argument('--gen_every', type=int, default=5000)
     p.add_argument('--save_every_steps', type=int, default=0,
@@ -101,6 +108,14 @@ def build_argparser():
     p.add_argument('--write_mode', type=str, default=None, choices=['additive', 'delta'])
     p.add_argument('--n_states', type=int, default=None)
     p.add_argument('--delta_chunk', type=int, default=None)
+    p.add_argument('--gate_content_aware', action='store_true',
+                   help='GSP write gate reads real+imag (2*dim) vs magnitude-only')
+    p.add_argument('--no_gate_content_aware', action='store_true',
+                   help='Force magnitude-only GSP gate (ablation baseline)')
+    p.add_argument('--base_dt_bias', type=float, default=None,
+                   help='Override uniform decay bias (default -4.0)')
+    p.add_argument('--protect_gate_bias', type=float, default=None,
+                   help='Override GSP protect-gate init bias (default -3.0)')
     return p
 
 
@@ -170,6 +185,21 @@ def _warmstart_chatml_embeddings(state, base_vocab: int = _CHATML_BASE_VOCAB):
         )
 
 
+def _drop_shape_mismatches(model, state):
+    """Drop checkpoint tensors whose shape differs from the model (e.g. a
+    content-aware protect_gate grown from dim -> 2*dim). Those params keep their
+    fresh init and re-train; everything else loads normally."""
+    target = model.state_dict()
+    dropped = []
+    for key in list(state.keys()):
+        if key in target and tuple(state[key].shape) != tuple(target[key].shape):
+            dropped.append((key, tuple(state[key].shape), tuple(target[key].shape)))
+            del state[key]
+    for key, src, dst in dropped:
+        print(f"  reinit {key}: ckpt {src} != model {dst} (kept fresh init)")
+    return dropped
+
+
 def _load_checkpoint_weights(model, path: str, *, warmstart_chatml: bool = False):
     print(f"\nLoading weights from {path}...")
     checkpoint = torch.load(path, weights_only=False)
@@ -177,7 +207,8 @@ def _load_checkpoint_weights(model, path: str, *, warmstart_chatml: bool = False
     _resize_embeddings_for_vocab(model, state)
     if warmstart_chatml:
         _warmstart_chatml_embeddings(state)
-    model.load_state_dict(state)
+    dropped = _drop_shape_mismatches(model, state)
+    model.load_state_dict(state, strict=not dropped)
     return checkpoint
 
 
@@ -240,6 +271,14 @@ def main():
         cfg.n_states = args.n_states
     if args.delta_chunk is not None:
         cfg.delta_chunk = args.delta_chunk
+    if args.no_gate_content_aware:
+        cfg.gate_content_aware = False
+    elif args.gate_content_aware:
+        cfg.gate_content_aware = True
+    if args.base_dt_bias is not None:
+        cfg.base_dt_bias = args.base_dt_bias
+    if args.protect_gate_bias is not None:
+        cfg.protect_gate_bias = args.protect_gate_bias
 
     print(f"\nConfig: {asdict(cfg)}")
     print(f"Memory dynamics: decay_mode={cfg.decay_mode}, write_mode={cfg.write_mode}, "
@@ -252,6 +291,10 @@ def main():
     max_samples = args.max_samples if args.max_samples < 9999999 else None
     print(f"\nLoading {args.dataset} (seq_len={seq_len})...")
 
+    per_source_tokens: dict = {}
+    secondary_val_loader = None
+    wiki_val_ds = None
+
     if args.dataset == 'wikitext103':
         train_ds, val_ds, tokenizer = load_wikitext103(max_samples=max_samples, seq_len=seq_len)
     elif args.dataset == 'tinystories':
@@ -262,7 +305,9 @@ def main():
             seq_len=seq_len,
             edu_score_min=args.edu_score_min,
             token_budget=token_budget,
+            holdout_pct=args.holdout_pct,
         )
+        wiki_val_ds, _ = load_wikitext103_val(seq_len=seq_len)
     elif args.dataset == 'fineweb_edu':
         train_ds, val_ds, tokenizer = load_fineweb_edu(
             seq_len=seq_len,
@@ -270,7 +315,13 @@ def main():
             token_budget=token_budget,
             chat_vocab=(args.preset.endswith('_chat')),
             fineweb_name=args.fineweb_name,
+            holdout_pct=args.holdout_pct,
+            dclm_skip_docs=0,
+            fineweb_skip_docs=args.fineweb_skip_docs,
+            mix_seed=args.seed,
+            token_counters=per_source_tokens,
         )
+        wiki_val_ds, _ = load_wikitext103_val(seq_len=seq_len)
     elif args.dataset == 'pretrain_mix':
         sources = tuple(s.strip() for s in args.pretrain_sources.split(',') if s.strip())
         weights = (
@@ -285,7 +336,13 @@ def main():
             weights=weights,
             chat_vocab=(args.preset.endswith('_chat')),
             fineweb_name=args.fineweb_name,
+            holdout_pct=args.holdout_pct,
+            mix_seed=args.seed,
+            dclm_skip_docs=args.dclm_skip_docs,
+            fineweb_skip_docs=args.fineweb_skip_docs,
+            token_counters=per_source_tokens,
         )
+        wiki_val_ds, _ = load_wikitext103_val(seq_len=seq_len)
     elif args.dataset == 'smoltalk2':
         train_ds, val_ds, tokenizer = load_smoltalk2(
             seq_len=seq_len,
@@ -340,6 +397,18 @@ def main():
         pin_memory=use_cuda,
         worker_init_fn=_wi if nw > 0 else None,
     )
+    if wiki_val_ds is not None:
+        secondary_val_loader = DataLoader(
+            wiki_val_ds,
+            batch_size=args.batch_size,
+            shuffle=False,
+            num_workers=0,
+            pin_memory=use_cuda,
+        )
+        print(
+            f"Val: in-distro holdout ({len(val_loader)} batches), "
+            f"WikiText secondary ({len(secondary_val_loader)} batches)"
+        )
     try:
         n_train_batches = len(train_loader)
     except TypeError:
@@ -393,6 +462,8 @@ def main():
         log_path=str(log_path),
         token_budget=token_budget,
         total_steps_override=est_steps,
+        secondary_val_loader=secondary_val_loader,
+        per_source_tokens=per_source_tokens,
     )
     if checkpoint and args.resume and 'optimizer_state_dict' in checkpoint:
         trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -401,6 +472,11 @@ def main():
         trainer.global_tokens = checkpoint.get('global_tokens', 0)
         trainer.best_val_loss = checkpoint.get('best_val_loss', float('inf'))
         trainer.best_val_ppl = checkpoint.get('best_val_ppl', float('inf'))
+        trainer.best_wiki_val_loss = checkpoint.get('best_wiki_val_loss', float('inf'))
+        trainer.best_wiki_val_ppl = checkpoint.get('best_wiki_val_ppl', float('inf'))
+        saved_src = checkpoint.get('per_source_tokens') or {}
+        trainer.per_source_tokens.update(saved_src)
+        per_source_tokens.update(saved_src)
 
     _summary = [
         f"Host: {os.uname().nodename}",

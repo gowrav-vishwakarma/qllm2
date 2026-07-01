@@ -69,6 +69,93 @@ Runs are serialized on the single GPU via [scripts/run_v11_queue.sh](../scripts/
 (waits for the GPU to free, then runs E1 → E3). Throughput note: E2's chunk solve is the
 slow path; Flash-PAM ([v11/triton_kernels.py](triton_kernels.py)) targets the speedup.
 
+## PAM utilization diagnosis on the trained 100M (2026-06-30) — UNDER-UTILIZED
+
+Question: is the 100M saturated, or is the PAM memory under-used? Measured on the trained
+`checkpoints_v11_e3_k3_chat_pretrain/best_model.pt` (first time on a real checkpoint; all prior
+probe numbers were `"checkpoint": null` untrained layers). Verdict: **memory-mechanism under-use**,
+not parameter saturation -> work the 100M before scaling to 300M.
+
+**State rank on real WikiText (effective rank of per-head S, d=64 max), `memory_probes --test rank-text`:**
+
+| layer | WikiText rank/64 | Random rank/64 | uses memory? |
+|------:|-----------------:|---------------:|--------------|
+| 0  | 6.8  | 9.6  | no (below random) |
+| 4  | **20.2** | 7.8  | yes (well above random) |
+| 8  | 3.5  | 7.1  | no (below random) |
+| 12 | 13.7 | 5.9  | yes |
+| 15 | 4.6  | 12.4 | no (below random) |
+
+Peak ~20/64 (~1/3 capacity); several layers use *less* rank on real text than on random noise.
+Matrix memory is largely idle.
+
+**GSP write-gate + decay, `scripts/v11_probe_gates.py` (2048 WikiText tokens):**
+
+- Mean write-protect `p` across layers = **0.356** (init bias -3.0 => p~0.047), so training *did*
+  move the gate (gradients flow) -> not a dead-gradient/optimization-only problem.
+- **Mean `p_content - p_filler` = -0.013 (negative).** The gate is **content-blind**: it protects
+  high-surprisal content tokens no more than low-surprisal filler. The mechanism that should let the
+  model decide *when* to write vs protect never learned the distinction -> low effective rank.
+- `dt_bias` stayed near init (~-3.4 to -3.8 vs base -4.0); `gamma` ~0.37-0.82 (moderate).
+
+**Conclusion:** classify as **memory-mechanism under-use** (Step 3 branch), not optimization-bound.
+Levers to try (short in-distro smokes, keep what moves PPL): make the write/protect gate
+content-aware (init/regularization), encourage rank usage, revisit `base_dt_bias`/K. Probe scripts:
+`scripts/v11_probe_gates.py`, `python -m memory_probes --test rank-text --checkpoint <ckpt> --layer N`.
+
+### Fix implemented (2026-06-30): content-aware GSP write gate
+
+Direct lever for the content-blind gate: `protect_gate` previously read only `cabs(x)` (per-channel
+magnitude, dim), which discards phase/direction — so it literally cannot tell two equal-energy tokens
+apart. New opt-in config `gate_content_aware=True` feeds the full `to_real_concat(x)` (2*dim, real+imag)
+to the gate, restoring the information needed to protect content over filler. Also added a tunable
+`protect_gate_bias` (default -3.0) and exposed `base_dt_bias`.
+
+- Code: `v11/model.py` (`V11Config.gate_content_aware` / `protect_gate_bias`, gate build + line ~200
+  `_gamma_and_vprime`), preset **`v11_e3_k3_chat_gate`**.
+- CLI: `v11/train.py` `--gate_content_aware`, `--base_dt_bias`, `--protect_gate_bias`.
+- Resume-safe: `_drop_shape_mismatches` reinits only the grown gate weight `(H,dim)->(H,2*dim)` and
+  loads everything else from `best_model.pt` (verified on the 100M ckpt). Gate-reinit only happens on
+  `--resume_from` (weights-only, fresh optimizer), so optimizer state never mismatches.
+
+### WikiText gate A/B — DONE (2026-06-30) — **SHIP phase-aware gate**
+
+Fair test: both arms **from scratch**, same recipe as `run_v11_exp.sh` (B=18, chunk 256, seq 2048,
+3 epochs, WikiText-103, `--compile`). Only difference: GSP gate input (`cabs(x)` vs `to_real_concat(x)`).
+
+| Epoch | Arm A magnitude gate | Arm B phase-aware gate | B − A |
+|------:|---------------------:|-----------------------:|------:|
+| 1 val PPL | 82.97 | 81.48 | **−1.49** |
+| 2 val PPL | 50.82 | 49.76 | **−0.96** |
+| 3 val PPL | 46.58 | 45.61 | **−0.97** |
+
+**Final:** Arm A best val PPL **46.58** (acc 0.359) → Arm B **45.61** (acc 0.361). **−0.97 PPL (~2.1%)**.
+B leads at every epoch; gap largest at epoch 1, then stable ~1 PPL (does not widen or close). Does not hurt.
+
+**Gate probes (post-train best checkpoints):**
+
+| Arm | mean `p` | `p_content − p_filler` |
+|-----|----------:|------------------------:|
+| A magnitude | 0.007 | +0.000 (content-blind) |
+| B phase-aware | 0.111 | **+0.003** (slightly content-aware) |
+
+**Checkpoints / logs:**
+
+- Arm A: `checkpoints_v11_gateab_base/best_model.pt` —
+  `logs/v11/v11_e3_k3_wikitext103_20260630_073704_63f5435_dirty/`
+- Arm B: `checkpoints_v11_gateab_gate/best_model.pt` —
+  `logs/v11/v11_e3_k3_wikitext103_20260630_135748_63f5435_dirty/`
+
+**Incident:** first Arm B run completed epoch 1 (val PPL 81.57) then **crashed saving `best_model.pt`**
+— disk 100% full (`best_model.pt.tmp` corrupt). Freed ~12 GB (obsolete ckpts + tmp); restarted from scratch.
+
+**Decision:** adopt **`gate_content_aware=True`** as default on `v11_e3_k3` and `v11_e3_k3_chat` presets;
+`run_v11_pretrain_scratch.sh` and `run_v11_saturate.sh` use it by default. Resume from old magnitude-only
+checkpoints reinits only the gate weights (`_drop_shape_mismatches`). Use `--no_gate_content_aware` for ablation.
+
+**Next:** saturation continued-pretrain from 10B base with phase-aware gate; re-probe rank on web-edu ckpt
+(the original under-utilization diagnosis target).
+
 ## Live run status (2026-06-30)
 
 **Two parallel tracks** — different GPUs, no shared code edits between them.
@@ -101,6 +188,9 @@ below); the older DCLM-2B + Alpaca SmolTalk2 run remains a useful comparison bas
 - **DONE (2026-06-29)** — SmolTalk re-SFT on 10B base with `--warmstart_chatml` completed →
   `checkpoints_v11_sft_chat_smoltalk/best_model.pt`. Recovery **succeeded** (see
   [Phase 3 SmolTalk recovery readout](#phase-3-smoltalk-recovery--result--readout-2026-06-29--ship-this)).
+- **DONE (2026-06-30)** — WikiText gate A/B: phase-aware GSP gate **wins** (−0.97 val PPL vs magnitude-only);
+  **shipped as default** on `v11_e3_k3` / `v11_e3_k3_chat` presets. See
+  [WikiText gate A/B](#wikitext-gate-ab--done-2026-06-30--ship-phase-aware-gate).
 - **DEFERRED** — param scaling (300–500M) until token-scaling ROI confirmed at 100M.
 
 PAM math for this track: unchanged — see [Architecture](#architecture-unchanged-core) above

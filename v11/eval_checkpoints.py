@@ -13,7 +13,6 @@ from __future__ import annotations
 import argparse
 import math
 import sys
-import zlib
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -24,16 +23,7 @@ from torch.utils.data import DataLoader
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from v11.model import V11Config, V11LM
-from v7.data import TextDataset, load_wikitext103_val
-
-
-_HOLDOUT_CACHE_VERSION = 1
-
-
-def _holdout_bucket(text: str, pct: int = 5) -> bool:
-    """Deterministic holdout: ~pct% of documents by content hash."""
-    sample = (text or '')[:8192]
-    return (zlib.adler32(sample.encode('utf-8', errors='ignore')) % 100) >= (100 - pct)
+from v7.data import TextDataset, load_wikitext103_val, pretrain_holdout_bucket
 
 
 def load_dclm_holdout_tokens(
@@ -69,7 +59,7 @@ def load_dclm_holdout_tokens(
         if score is not None and score < edu_score_min:
             continue
         text = row.get('text') or row.get('content') or ''
-        if not text.strip() or not _holdout_bucket(text, holdout_pct):
+        if not text.strip() or not pretrain_holdout_bucket(text, holdout_pct):
             continue
         ids = tokenizer.encode(text, add_special_tokens=False)
         if not ids:
