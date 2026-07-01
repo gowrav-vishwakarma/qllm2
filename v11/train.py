@@ -73,9 +73,13 @@ def build_argparser():
     p.add_argument('--edu_score_min', type=int, default=3,
                    help='Minimum edu score for DCLM-Edu / FineWeb-Edu rows')
     p.add_argument('--pretrain_sources', type=str, default='dclm,fineweb',
-                   help='Comma list for --dataset pretrain_mix (subset of: dclm,fineweb)')
+                   help='Comma list for --dataset pretrain_mix '
+                        '(subset of: dclm,fineweb,smoltalk2_mid)')
     p.add_argument('--pretrain_weights', type=str, default=None,
-                   help='Comma list of mix weights matching --pretrain_sources (e.g. 1,1)')
+                   help='Comma list of mix weights matching --pretrain_sources (e.g. 85,10,5)')
+    p.add_argument('--blend_warmup_tokens', type=int, default=0,
+                   help='Draw web-only until this many tokens, then apply full blend '
+                        '(grammar/knowledge warmup for --dataset pretrain_mix)')
     p.add_argument('--fineweb_name', type=str, default='sample-10BT',
                    help='FineWeb-Edu config (e.g. sample-10BT, sample-100BT)')
     p.add_argument('--holdout_pct', type=int, default=5,
@@ -84,7 +88,13 @@ def build_argparser():
                    help='Skip first N DCLM docs after filters (resume fresh shard)')
     p.add_argument('--fineweb_skip_docs', type=int, default=0,
                    help='Skip first N FineWeb docs after filters (resume fresh shard)')
+    p.add_argument('--smoltalk2_mid_skip_rows', type=int, default=0,
+                   help='Skip first N smoltalk2 Mid rows (pretrain reasoning blend cursor)')
     p.add_argument('--sft_filter', type=str, default='hard', choices=['none', 'hard'])
+    p.add_argument('--think_fraction', type=float, default=0.15,
+                   help='Fraction of reasoning (think) conversations to keep in smoltalk2 SFT')
+    p.add_argument('--smoltalk2_skip_rows', type=int, default=0,
+                   help='Skip first N smoltalk2 SFT rows (SFT stage cursor)')
     p.add_argument('--gen_every', type=int, default=5000)
     p.add_argument('--save_every_steps', type=int, default=0,
                    help='Save latest.pt every N steps (0=off; 5000 for streaming pretrain)')
@@ -158,9 +168,10 @@ def _resize_embeddings_for_vocab(model, state):
             )
 
 
-# GPT-2 base vocab before ChatML specials; rows at this index and above are ChatML.
+# GPT-2 base vocab before special tokens; rows at this index and above are
+# special (im_start=50257, im_end=50258, <think>=50259, </think>=50260).
 _CHATML_BASE_VOCAB = 50257
-_CHATML_TOKEN_IDS = (50257, 50258)
+_CHATML_TOKEN_IDS = (50257, 50258, 50259, 50260)
 
 
 def _warmstart_chatml_embeddings(state, base_vocab: int = _CHATML_BASE_VOCAB):
@@ -292,8 +303,29 @@ def main():
     print(f"\nLoading {args.dataset} (seq_len={seq_len})...")
 
     per_source_tokens: dict = {}
+    per_source_docs: dict = {}
     secondary_val_loader = None
     wiki_val_ds = None
+
+    # Auto-seed skip cursors from a resumed checkpoint so continued pretrain does
+    # not re-read consumed docs/rows (per-source freshness). Explicit CLI skips win.
+    resume_ckpt_path = args.resume or args.resume_from
+    resumed_docs: dict = {}
+    if resume_ckpt_path and Path(resume_ckpt_path).exists():
+        try:
+            _rc = torch.load(resume_ckpt_path, map_location='cpu', weights_only=False)
+            resumed_docs = dict(_rc.get('per_source_docs') or {})
+            del _rc
+        except Exception as _e:  # noqa: BLE001
+            print(f"  [cursor] could not read per_source_docs from resume ckpt: {_e}")
+    if resumed_docs:
+        if args.dclm_skip_docs == 0 and 'dclm' in resumed_docs:
+            args.dclm_skip_docs = int(resumed_docs['dclm'])
+        if args.fineweb_skip_docs == 0 and 'fineweb' in resumed_docs:
+            args.fineweb_skip_docs = int(resumed_docs['fineweb'])
+        if args.smoltalk2_mid_skip_rows == 0 and 'smoltalk2_mid' in resumed_docs:
+            args.smoltalk2_mid_skip_rows = int(resumed_docs['smoltalk2_mid'])
+        print(f"  [cursor] seeded skips from resume ckpt: {resumed_docs}")
 
     if args.dataset == 'wikitext103':
         train_ds, val_ds, tokenizer = load_wikitext103(max_samples=max_samples, seq_len=seq_len)
@@ -328,6 +360,11 @@ def main():
             tuple(float(w) for w in args.pretrain_weights.split(','))
             if args.pretrain_weights else None
         )
+        skip_docs_map = {
+            'dclm': args.dclm_skip_docs,
+            'fineweb': args.fineweb_skip_docs,
+            'smoltalk2_mid': args.smoltalk2_mid_skip_rows,
+        }
         train_ds, val_ds, tokenizer = load_pretrain_mix(
             seq_len=seq_len,
             edu_score_min=args.edu_score_min,
@@ -338,9 +375,10 @@ def main():
             fineweb_name=args.fineweb_name,
             holdout_pct=args.holdout_pct,
             mix_seed=args.seed,
-            dclm_skip_docs=args.dclm_skip_docs,
-            fineweb_skip_docs=args.fineweb_skip_docs,
+            skip_docs=skip_docs_map,
+            blend_warmup_tokens=args.blend_warmup_tokens,
             token_counters=per_source_tokens,
+            doc_counters=per_source_docs,
         )
         wiki_val_ds, _ = load_wikitext103_val(seq_len=seq_len)
     elif args.dataset == 'smoltalk2':
@@ -348,6 +386,8 @@ def main():
             seq_len=seq_len,
             max_samples=max_samples,
             sft_filter=args.sft_filter,
+            think_fraction=args.think_fraction,
+            smoltalk2_skip_rows=args.smoltalk2_skip_rows,
         )
     elif args.dataset == 'tulu3':
         train_ds, val_ds, tokenizer = load_tulu3_sft(
@@ -358,11 +398,16 @@ def main():
     else:
         raise ValueError(f"Unknown dataset: {args.dataset}")
 
-    # Match model vocab to the data tokenizer (chat SFT adds ChatML specials -> 50259).
+    # Match model vocab to the data tokenizer (ChatML + reasoning specials -> 50261).
     tok_vocab = len(tokenizer)
     if tok_vocab != cfg.vocab_size:
         print(f"Adjusting vocab_size: {cfg.vocab_size} -> {tok_vocab} (tokenizer)")
         cfg.vocab_size = tok_vocab
+    if args.preset.endswith('_chat') and tok_vocab != 50261:
+        raise ValueError(
+            f"Chat preset expects the ChatML+reasoning tokenizer (vocab 50261), "
+            f"got {tok_vocab}. Check get_chat_tokenizer()."
+        )
 
     from torch.utils.data import DataLoader
     use_cuda = torch.cuda.is_available()
@@ -464,6 +509,7 @@ def main():
         total_steps_override=est_steps,
         secondary_val_loader=secondary_val_loader,
         per_source_tokens=per_source_tokens,
+        per_source_docs=per_source_docs,
     )
     if checkpoint and args.resume and 'optimizer_state_dict' in checkpoint:
         trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -477,6 +523,8 @@ def main():
         saved_src = checkpoint.get('per_source_tokens') or {}
         trainer.per_source_tokens.update(saved_src)
         per_source_tokens.update(saved_src)
+        saved_docs = checkpoint.get('per_source_docs') or {}
+        trainer.per_source_docs.update(saved_docs)
 
     _summary = [
         f"Host: {os.uname().nodename}",

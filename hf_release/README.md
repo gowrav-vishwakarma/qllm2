@@ -22,6 +22,13 @@ pipeline_tag: text-generation
 
 This checkpoint proves that architectures outside the transformer/SSM families **can learn coherent instruction-following chat**. It is deliberately **under-trained** relative to what the architecture can hold.
 
+> **Architecture still under development.** The PAM stack (memory gates, tokenizer, data blend) is
+> actively changing. We **restarted training from scratch** on the v2 line. After every **+2B
+> pretrain tokens** we publish a new weights file here under a **round revision tag**
+> (e.g. `round-2b-gate`, `round-4b-gate`). The `main` branch may still point at an older
+> milestone checkpoint — **pin a revision tag** for the round you want. Round 1 pretrain is
+> in progress on the training server; tags appear as each round completes SFT + verify.
+
 
 |                     |                                                                                                          |
 | ------------------- | -------------------------------------------------------------------------------------------------------- |
@@ -33,7 +40,38 @@ This checkpoint proves that architectures outside the transformer/SSM families *
 | **Inference**       | **O(1)/token**, fixed state, **no KV cache**                                                             |
 | **Code**            | [github.com/gowrav-vishwakarma/qllm2](https://github.com/gowrav-vishwakarma/qllm2)                       |
 | **Paper**           | [arXiv:2604.05030](https://arxiv.org/abs/2604.05030) — Phase-Associative Memory in Complex Hilbert Space |
+| **HF repo**         | [huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat) |
 
+
+---
+
+## Releases (revision tags)
+
+The architecture is **still under active development**. We **retrain from scratch** on the v2
+line, then ship a new checkpoint after each **+2B pretrain tokens** (+ chat SFT) under its own
+**revision tag** so you can pin an exact snapshot while the stack evolves.
+
+```bash
+huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat --revision <tag> --local-dir .
+# Repo: https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat
+```
+
+| Revision | Pretrain total | Trained on | Notes |
+|----------|----------------|-----------|-------|
+| `main` | legacy ~10B | DCLM-Edu + FineWeb-Edu → SmolTalk2 SFT | **pre-v2 milestone** (vocab 50259, magnitude-only gate); kept for comparison |
+| `round-2b-gate` | 2B | DCLM-Edu + FineWeb-Edu + smoltalk2-Mid (reasoning/chat) → smoltalk2 SFT | v2 line, phase-aware gate, vocab 50261 (`<think>`/`</think>`); **in training / pending ship** |
+
+<!-- Append one row per shipped round (tag, pretrain total, datasets, notes). -->
+
+### What you can ask (and current limits)
+
+- **Good at:** short factual questions, simple instructions, everyday chat, ChatML multi-turn.
+- **Improving:** light reasoning (the model may emit `<think>…</think>` before answering).
+- **Still weak (100M base):** precise math, long multi-step reasoning, rare/long-tail facts,
+  and occasional confabulation. Not a search engine or calculator.
+
+Data recipe per round is documented in
+[v11/MODEL_RELEASES.md](https://github.com/gowrav-vishwakarma/qllm2/blob/main/v11/MODEL_RELEASES.md).
 
 ---
 
@@ -201,9 +239,18 @@ Generation uses the **O(1) recurrent PAM path** — a fixed matrix state per lay
 
 ## Training recipe
 
-1. **Pretrain from scratch** — preset `v11_e3_k3_chat` (vocab 50259 with ChatML tokens), DCLM-Edu + FineWeb-Edu mix, ~10B tokens, cosine LR.
-2. **SFT** — SmolTalk2 (`--sft_filter hard`), 1 epoch, lr 5e-5, `--warmstart_chatml` (seed ChatML embedding rows from mean of base vocab).
-3. **Template** — ChatML over GPT-2 tokenizer:
+**Current v2 line (from scratch, +2B per round):**
+
+1. **Pretrain from scratch** — preset `v11_e3_k3_chat` (vocab **50261**: ChatML + `<think>`/`</think>`), blended DCLM-Edu + FineWeb-Edu + smoltalk2-Mid (grammar warmup, then mix), **2B tokens per round**, phase-aware GSP gate.
+2. **SFT** — real `HuggingFaceTB/smoltalk2` SFT config (`think_fraction` capped), 1 epoch, lr 5e-5, ChatML assistant-only loss.
+3. **Ship** — export + verify, push to this repo under a **round tag** (e.g. `round-2b-gate`).
+
+**Legacy `main` checkpoint (reference only):**
+
+1. Pretrain ~10B DCLM-Edu + FineWeb-Edu (vocab 50259, pre-reasoning-token).
+2. SFT on older SmolTalk pipeline with `--warmstart_chatml`.
+
+**Template** — ChatML over GPT-2 tokenizer (+ reasoning markers on v2):
 
 ```text
 <|im_start|>system
@@ -214,7 +261,7 @@ You are a helpful assistant.<|im_end|>
 {assistant}<|im_end|>
 ```
 
-Full reproduction logs: [v11/EXPERIMENTS_V11.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/v11/EXPERIMENTS_V11.md) (Phase 3 SmolTalk recovery — SHIP THIS).
+Full reproduction logs: [v11/EXPERIMENTS_V11.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/v11/EXPERIMENTS_V11.md). Per-round provenance: [v11/MODEL_RELEASES.md](https://github.com/gowrav-vishwakarma/qllm2/blob/main/v11/MODEL_RELEASES.md).
 
 ---
 
@@ -235,6 +282,7 @@ Then scale.
 
 ## Links
 
+- **Hugging Face (model weights):** [huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat)
 - **Paper:** [Phase-Associative Memory: Sequence Modeling in Complex Hilbert Space](https://arxiv.org/abs/2604.05030) (arXiv:2604.05030)
 - **Main repo:** [github.com/gowrav-vishwakarma/qllm2](https://github.com/gowrav-vishwakarma/qllm2)
 - **Experiments log:** [v11/EXPERIMENTS_V11.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/v11/EXPERIMENTS_V11.md)

@@ -13,6 +13,15 @@ fixed-size state — there is **no KV cache** that grows with context length.
 
 **Paper:** [Phase-Associative Memory: Sequence Modeling in Complex Hilbert Space](https://arxiv.org/abs/2604.05030) (arXiv:2604.05030) — Vishwakarma & Agostino.
 
+**Model weights (Hugging Face):** [gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat)
+
+> **Architecture still under development.** The PAM stack (gates, tokenizer, data recipe) is
+> actively changing. We **restarted training from scratch** on the v2 line (phase-aware gate,
+> vocab 50261). After every **+2B pretrain tokens** we ship a new checkpoint to Hugging Face
+> under a **round revision tag** (e.g. `round-2b-gate`, `round-4b-gate`). Older weights on
+> `main` are milestones for comparison, not the current training line — pin a revision tag for
+> reproducibility.
+
 ---
 
 ## What problem it solves
@@ -206,7 +215,56 @@ chat SFT):
 **facts are unreliable** (wrong dates/founders), responses can **ramble**, and there is a known
 **end-of-turn bug** (the model was never trained to stop). These are a *pretraining-scale*
 ceiling, not an architecture failure — knowledge comes from pretraining, so the next phase scales
-pretraining (DCLM-Edu + FineWeb-Edu, ~10B+ tokens), fixes ChatML/EOS, then re-SFTs on Tulu-3.
+pretraining (DCLM-Edu + FineWeb-Edu, ~10B+ tokens), fixes ChatML/EOS, then re-SFTs on chat data.
+
+---
+
+## Continuous shipping (v2 gate line)
+
+The architecture and training recipe are **still evolving**; we treat each shipped round as a
+**snapshot**, not a frozen product. We **retrain from scratch** on the v2 line, then add **+2B
+fresh pretrain tokens** per round (no token reuse), run chat SFT, and publish the weights to
+**[gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat)**
+under a **revision tag** (`round-2b-gate`, `round-4b-gate`, …). Full provenance per round:
+**[v11/MODEL_RELEASES.md](v11/MODEL_RELEASES.md)**.
+
+**What every round trains on (knowledge + reasoning + chat):**
+
+| Ingredient | Dataset | Role |
+|-----------|---------|------|
+| Knowledge / grammar | DCLM-Edu + FineWeb-Edu (edu≥3) | web pretrain, unique per round (`skip_docs`) |
+| Reasoning + chat | smoltalk2 **Mid** (~35B tok), ChatML-rendered | blended into pretrain after a grammar warmup |
+| Chat behavior | smoltalk2 **SFT** (think-capped) | per-round supervised fine-tune |
+
+Preset `v11_e3_k3_chat`: phase-aware GSP gate, vocab **50261** (ChatML `<|im_start|>`/`<|im_end|>`
++ reasoning `<think>`/`</think>`). Freshness is guaranteed by per-source cursors saved in each
+checkpoint; the blend adds a small ChatML+reasoning sprinkle so those tokens are trained from
+step 0.
+
+**Run a round** (GCP training, then publish from the RTX4090):
+
+```bash
+# Round 1 from scratch (2B blended pretrain -> SFT -> smoke -> export)
+ROUND=1 ROUND_TAG=round-2b-gate SCRATCH=1 TOKEN_BUDGET=2000000000 \
+  tmux new-session -d -s v11_round './scripts/run_v11_round.sh pretrain'
+./scripts/run_v11_round.sh probes && ./scripts/run_v11_round.sh sft
+./scripts/run_v11_round.sh smoke
+ROUND=1 ROUND_TAG=round-2b-gate TOKEN_BUDGET=2000000000 ./scripts/run_v11_round.sh export
+# On RTX4090 (has HF token): incremental pull -> verify -> push revision tag
+ROUND_TAG=round-2b-gate ./scripts/run_v11_round.sh ship
+```
+
+**Pull a specific shipped round** from the HF repo:
+
+```bash
+huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat --revision round-2b-gate --local-dir .
+# Browse all tags: https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat
+```
+
+**What to ask / current limits** (per-round card in
+[hf_release/README.md](hf_release/README.md)): good at short factual Q&A, simple instructions,
+and ChatML multi-turn; still weak at math, long reasoning, and rare facts (100M base). Tulu-3 is
+**not** used routinely — only as an optional instruct-upgrade branch after saturation gates pass.
 
 ---
 
@@ -279,6 +337,7 @@ Other presets, Phase C pretrain/SFT runners, and older version paths live in the
 
 ## Documentation
 
+- **Model weights (Hugging Face):** [gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat) — new checkpoint every **+2B tokens** under a **round revision tag** (`round-2b-gate`, …); architecture still evolving.
 - **Paper:** [Phase-Associative Memory: Sequence Modeling in Complex Hilbert Space](https://arxiv.org/abs/2604.05030) (arXiv:2604.05030)
 - [memory_probes/README.md](memory_probes/README.md) — PAM mechanism validation: binding,
 long-context NIAH, interference, rank; why matrix memory beats vector state.

@@ -759,13 +759,13 @@ PRESETS = {
     'v11_e3_multistate': _base_flat(n_states=2, state_dt_spread=2.0),
     # E3 K=3: phase-aware GSP gate default (WikiText A/B 2026-06-30: −0.97 val PPL).
     'v11_e3_k3': _base_flat(n_states=3, state_dt_spread=2.0, gate_content_aware=True),
-    # E3 K=3 + ChatML vocab (50259) — production pretrain/SFT base preset.
+    # E3 K=3 + ChatML+reasoning vocab (50261) — production pretrain/SFT base preset.
     'v11_e3_k3_chat': _base_flat(
-        n_states=3, state_dt_spread=2.0, vocab_size=50259, gate_content_aware=True,
+        n_states=3, state_dt_spread=2.0, vocab_size=50261, gate_content_aware=True,
     ),
     # Alias (same as v11_e3_k3_chat); kept for old launch scripts/docs.
     'v11_e3_k3_chat_gate': _base_flat(
-        n_states=3, state_dt_spread=2.0, vocab_size=50259, gate_content_aware=True,
+        n_states=3, state_dt_spread=2.0, vocab_size=50261, gate_content_aware=True,
     ),
     # E1+E3 combo: per-channel decay inside each of K=2 superposed states.
     'v11_e1e3_combo': _base_flat(decay_mode='per_channel', n_states=2, state_dt_spread=2.0),

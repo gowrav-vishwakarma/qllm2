@@ -38,6 +38,22 @@ def _load_eval_tokens(tokenizer, n_tokens: int) -> torch.Tensor:
     return flat
 
 
+def _cfg_from_checkpoint(preset: str, ckpt: dict):
+    """Build a config from the preset, then overlay the checkpoint's saved config.
+
+    Ensures vocab_size and gate flags (e.g. gate_content_aware) match the trained
+    weights exactly, so load_state_dict succeeds regardless of preset drift.
+    """
+    cfg = get_config(preset)
+    saved = ckpt.get('config') or {}
+    for k, v in saved.items():
+        if hasattr(cfg, k):
+            setattr(cfg, k, v)
+    cfg.dropout = 0.0
+    cfg.gradient_checkpointing = False
+    return cfg
+
+
 @torch.no_grad()
 def main() -> None:
     p = argparse.ArgumentParser(description='Probe PAM gates on a trained checkpoint')
@@ -51,14 +67,18 @@ def main() -> None:
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     from v7.data import get_chat_tokenizer
 
+    ckpt = torch.load(args.checkpoint, map_location='cpu', weights_only=False)
+    cfg = _cfg_from_checkpoint(args.preset, ckpt)
+
     tokenizer = get_chat_tokenizer()
-    cfg = get_config(args.preset)
-    cfg.vocab_size = len(tokenizer)
-    cfg.dropout = 0.0
-    cfg.gradient_checkpointing = False
+    if len(tokenizer) != cfg.vocab_size:
+        from transformers import AutoTokenizer
+        tokenizer = AutoTokenizer.from_pretrained('gpt2')
+        tokenizer.pad_token = tokenizer.eos_token
+    print(f"  cfg from ckpt: vocab={cfg.vocab_size} gate_content_aware="
+          f"{getattr(cfg, 'gate_content_aware', None)}")
 
     model = V11LM(cfg)
-    ckpt = torch.load(args.checkpoint, map_location='cpu', weights_only=False)
     model.load_state_dict(ckpt['model_state_dict'])
     model.to(device).eval()
 
@@ -100,12 +120,18 @@ def main() -> None:
     print(header)
     print('-' * len(header))
 
+    def _gate_input(pam, x):
+        # Match the model: content-aware gate reads real+imag (2*dim); else magnitude.
+        if getattr(pam, 'gate_content_aware', getattr(cfg, 'gate_content_aware', False)):
+            return to_real_concat(x)
+        return cabs(x)
+
     rows = []
     for i, block in enumerate(model.blocks):
         pam = block.pam
         x = captured[i]  # [1,T,dim,2]
         if pam.use_gsp:
-            p_all = torch.sigmoid(pam.protect_gate(cabs(x)))  # [1,T,H]
+            p_all = torch.sigmoid(pam.protect_gate(_gate_input(pam, x)))  # [1,T,H]
             p_all_t = p_all.mean(dim=-1).squeeze(0)  # [T]
             pa = p_all_t.mean().item()
             pc = p_all_t[content_idx].mean().item()
@@ -119,7 +145,7 @@ def main() -> None:
         dt = F.softplus(dt + pam.dt_bias)
         base_gamma = torch.exp(-dt)  # without GSP blend
         if pam.use_gsp:
-            p_blend = torch.sigmoid(pam.protect_gate(cabs(x))).transpose(1, 2)  # [1,H,T]
+            p_blend = torch.sigmoid(pam.protect_gate(_gate_input(pam, x))).transpose(1, 2)  # [1,H,T]
             gam = (base_gamma.transpose(1, 2) * (1 - p_blend) + p_blend).mean().item()
         else:
             gam = base_gamma.mean().item()

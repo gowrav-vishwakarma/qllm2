@@ -188,12 +188,14 @@ class V7Trainer:
         total_steps_override: Optional[int] = None,
         secondary_val_loader=None,
         per_source_tokens: Optional[Dict[str, int]] = None,
+        per_source_docs: Optional[Dict[str, int]] = None,
     ):
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.secondary_val_loader = secondary_val_loader
         self.per_source_tokens = per_source_tokens if per_source_tokens is not None else {}
+        self.per_source_docs = per_source_docs if per_source_docs is not None else {}
         self.tokenizer = tokenizer
         self.max_epochs = max_epochs
         self.gradient_clip = gradient_clip
@@ -521,6 +523,7 @@ class V7Trainer:
             'epoch': epoch,
             'config': asdict(m.config),
             'per_source_tokens': dict(self.per_source_tokens),
+            'per_source_docs': dict(self.per_source_docs),
         }
         torch.save(ckpt, tmp_path)
         os.replace(tmp_path, path)

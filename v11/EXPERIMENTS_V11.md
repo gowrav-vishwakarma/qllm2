@@ -701,3 +701,60 @@ B=18 is **3.08 PPL** — likely needs **data + scale**, not more small ablations
 ## Out of scope (already dead in V6–V9)
 Hierarchy/grouped/cross-level, multi-scale loss, reverse-assoc, QK-norm-on, PIA
 attention, V8 reasoning loops, V9 readout gates.
+
+---
+
+## Data recipe + continuous shipping (v2 gate line, 2026-07-01)
+
+Decisions and implementation for the from-scratch v2 line (see
+[MODEL_RELEASES.md](MODEL_RELEASES.md) and the shipping scripts).
+
+### Reasoning tokens (vocab 50259 -> 50261)
+Added `<think>` / `</think>` as special tokens in `get_chat_tokenizer()` (now
+`<|im_start|>`, `<|im_end|>`, `<think>`, `</think>`). Same rationale as the
+`<|im_end|>` fix: a single stable boundary the model can open/close/stop on, vs a
+fragile multi-token BPE sequence. Trained from step 0 via the pretrain reasoning
+blend. Preset `v11_e3_k3_chat` now defaults `vocab_size=50261`; the model auto-
+matches `len(tokenizer)`. `_CHAT_CACHE_VERSION` bumped to 4.
+
+### Format-aware source registry + blended pretrain
+`v7/data.py` gained `SOURCE_REGISTRY` (schema `text`/`messages`, kind
+`web`/`reason`/`chat`). `load_pretrain_mix` is now registry-driven and blends:
+- `dclm` + `fineweb` (web/knowledge, raw text) with a **grammar warmup**
+  (`blend_warmup_tokens`: web-only until the threshold, then the weighted blend),
+- `smoltalk2_mid` (smoltalk2 **Mid** config, ~35B tokens of reasoning+chat)
+  rendered to ChatML **text** via `format_chat_messages`.
+
+So knowledge + reasoning + chat are present every round, with ChatML + `<think>`
+tokens trained during pretrain (fixes the earlier "untrained ChatML tokens").
+
+### Uniqueness across rounds (no token reuse)
+Every source advances `per_source_docs` in the checkpoint (`_bump_counter`);
+`skip_docs`/`skip_rows` skip already-consumed docs/rows next round. The trainer
+auto-seeds skips from `--resume` checkpoints; `scripts/v11_data_cursor.py` also
+computes them. Web is unique across rounds; the Mid reasoning pool (~35B) lasts
+~50+ rounds of a ~5% sprinkle; FineWeb rotates `sample-10BT` -> `sample-100BT`
+when near-exhausted. Note: the blend picks sources **per document** and Mid docs
+are ~10x larger than web docs, so realized reasoning **token** share exceeds the
+raw per-doc weight -- calibrate `PRETRAIN_WEIGHTS` from `per_source_tokens` after
+round 1.
+
+### SFT = real smoltalk2 (SFT config), not smol-smoltalk
+`load_smoltalk2` now streams `HuggingFaceTB/smoltalk2` **SFT** config with a
+`think_fraction` cap (default 0.15: mostly direct answers, capped reasoning for a
+100M base). The SFT config is disjoint from the Mid blend pool (no leakage).
+
+### Shipping pipeline
+`scripts/run_v11_round.sh` orchestrates one round: `pretrain -> probes -> sft ->
+smoke -> export` (GCP) and `ship` (RTX4090: pull -> verify -> push). Rounds ship
+to HF **revision tags** (`round-2b-gate`, ...). Server catalog:
+`releases/server_manifest.json`; incremental pull: `scripts/pull_v11_release.sh`
+with per-machine `~/.qllm/v11_pull_state.json`. Probes fixed to load vocab/gate
+flags from the checkpoint config (and the content-aware gate input).
+
+### Validation (data pipeline smoke, 2026-07-01)
+Tiny no-compile blended-pretrain smoke (batch 2, seq 512, 300k tokens): model
+built at vocab 50261, blend streamed (dclm/fineweb/smoltalk2_mid), warmup drew
+web-only then opened the blend, and the checkpoint saved `per_source_docs`
+(`{dclm:3317, fineweb:385, smoltalk2_mid:8}`) + `per_source_tokens`. Tokenizer
+check: all four specials encode to single ids.

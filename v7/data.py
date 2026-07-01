@@ -425,10 +425,13 @@ def load_tinystories(
 
 IM_START = '<|im_start|>'
 IM_END = '<|im_end|>'
+THINK_START = '<think>'
+THINK_END = '</think>'
 DEFAULT_SYSTEM = 'You are a helpful assistant.'
 
 # Bump when the chat template / masking / special tokens change (invalidates cache).
-_CHAT_CACHE_VERSION = 3
+# v4: added <think>/</think> reasoning specials (vocab 50259 -> 50261).
+_CHAT_CACHE_VERSION = 4
 
 _SFT_FUNCTION_MARKERS = (
     'function_call', 'tool_calls', 'tool_call', 'available tools',
@@ -439,11 +442,15 @@ _CHAT_TOKENIZER = None
 
 
 def get_chat_tokenizer():
-    """GPT-2 tokenizer extended with ChatML role markers (vocab 50259).
+    """GPT-2 tokenizer extended with ChatML + reasoning markers (vocab 50261).
 
-    Adds two special tokens (`<|im_start|>`, `<|im_end|>`). `<|im_end|>` is the
-    learned end-of-turn, *distinct* from pad/eos `<|endoftext|>` (50256), so it
-    survives the assistant-only loss mask and the model can learn to stop.
+    Adds four special tokens: `<|im_start|>`, `<|im_end|>`, `<think>`, `</think>`.
+    `<|im_end|>` is the learned end-of-turn, *distinct* from pad/eos
+    `<|endoftext|>` (50256), so it survives the assistant-only loss mask and the
+    model can learn to stop. `<think>`/`</think>` are single, stable reasoning
+    boundaries (instead of a fragile multi-token BPE sequence) so the model can
+    reliably open/close a reasoning block; trained from step 0 via the pretrain
+    reasoning blend.
     """
     global _CHAT_TOKENIZER
     if _CHAT_TOKENIZER is not None:
@@ -451,7 +458,9 @@ def get_chat_tokenizer():
     from transformers import AutoTokenizer
 
     tok = AutoTokenizer.from_pretrained('gpt2')
-    tok.add_special_tokens({'additional_special_tokens': [IM_START, IM_END]})
+    tok.add_special_tokens(
+        {'additional_special_tokens': [IM_START, IM_END, THINK_START, THINK_END]}
+    )
     tok.pad_token = tok.eos_token  # <|endoftext|> (50256), distinct from <|im_end|>
     _CHAT_TOKENIZER = tok
     return tok
@@ -494,6 +503,43 @@ def format_chat_prompt_from_messages(
 ) -> str:
     """ChatML prompt for inference on a multi-turn conversation."""
     return format_chat_messages(messages, default_system=default_system) + f"{IM_START}assistant\n"
+
+
+_ROLE_ALIASES = {
+    'human': 'user', 'gpt': 'assistant', 'bot': 'assistant', 'chatbot': 'assistant',
+    'system': 'system', 'user': 'user', 'assistant': 'assistant', 'tool': 'tool',
+}
+
+
+def _normalize_messages(raw) -> List[dict]:
+    """Normalize varied chat schemas to a list of {role, content} dicts.
+
+    Handles OpenAI-style (`messages` with role/content) and ShareGPT-style
+    (`conversations` with from/value). Unknown roles are dropped.
+    """
+    if not raw:
+        return []
+    out: List[dict] = []
+    for m in raw:
+        if not isinstance(m, dict):
+            continue
+        role = m.get('role') or m.get('from') or ''
+        content = m.get('content')
+        if content is None:
+            content = m.get('value') or ''
+        role = _ROLE_ALIASES.get(str(role).strip().lower(), str(role).strip().lower())
+        if not content or not str(content).strip():
+            continue
+        out.append({'role': role, 'content': str(content)})
+    return out
+
+
+def _messages_have_think(messages: List[dict]) -> bool:
+    """True if any assistant turn contains a <think> reasoning block."""
+    for m in messages:
+        if (m.get('role') or '').lower() == 'assistant' and THINK_START in (m.get('content') or ''):
+            return True
+    return False
 
 
 def _should_filter_smoltalk(
@@ -712,6 +758,11 @@ def pretrain_holdout_bucket(text: str, pct: int = 5) -> bool:
     return (zlib.adler32(sample.encode('utf-8', errors='ignore')) % 100) >= (100 - pct)
 
 
+def _bump_counter(counters: Optional[Dict[str, int]], key: str) -> None:
+    if counters is not None and key:
+        counters[key] = counters.get(key, 0) + 1
+
+
 def _dclm_edu_text_iter(
     edu_score_min: int = 3,
     *,
@@ -719,8 +770,15 @@ def _dclm_edu_text_iter(
     holdout_pct: int = 5,
     only_holdout: bool = False,
     skip_docs: int = 0,
+    doc_counters: Optional[Dict[str, int]] = None,
+    counter_key: str = 'dclm',
 ) -> Iterator[str]:
-    """Stream DCLM-Edu text filtered by integer edu score."""
+    """Stream DCLM-Edu text filtered by integer edu score.
+
+    When ``doc_counters`` is given, increments ``counter_key`` for each yielded
+    (post-filter, post-skip) doc -- this is the monotonic cursor used to compute
+    ``skip_docs`` for the next round so no doc is reused.
+    """
     from datasets import load_dataset
 
     stream = load_dataset('HuggingFaceTB/dclm-edu', split='train', streaming=True)
@@ -740,6 +798,7 @@ def _dclm_edu_text_iter(
         if skipped < skip_docs:
             skipped += 1
             continue
+        _bump_counter(doc_counters, counter_key)
         yield text
 
 
@@ -751,6 +810,8 @@ def _fineweb_edu_text_iter(
     holdout_pct: int = 5,
     only_holdout: bool = False,
     skip_docs: int = 0,
+    doc_counters: Optional[Dict[str, int]] = None,
+    counter_key: str = 'fineweb',
 ) -> Iterator[str]:
     """Stream FineWeb-Edu text filtered by the edu classifier score."""
     from datasets import load_dataset
@@ -776,6 +837,7 @@ def _fineweb_edu_text_iter(
         if skipped < skip_docs:
             skipped += 1
             continue
+        _bump_counter(doc_counters, counter_key)
         yield text
 
 
@@ -806,6 +868,127 @@ def _interleave_text_iters(
             yield names[choice], next(iters[choice])
         except StopIteration:
             alive[choice] = False
+
+
+def _blend_interleave_text_iters(
+    tagged_iters: List[Tuple[str, Iterator[str]]],
+    weights=None,
+    *,
+    warmup_tokens: int = 0,
+    warmup_sources: Tuple[str, ...] = (),
+    token_counters: Optional[Dict[str, int]] = None,
+    seed: int = 42,
+) -> Iterator[Tuple[str, str]]:
+    """Weighted round-robin with a grammar warmup.
+
+    While total tokens consumed (``sum(token_counters.values())``) is below
+    ``warmup_tokens``, only draw from ``warmup_sources`` (web/grammar). After the
+    warmup, the full weighted blend applies. ``warmup_tokens=0`` disables warmup.
+    """
+    import random as _random
+
+    rng = _random.Random(seed)
+    names = [n for n, _ in tagged_iters]
+    iters = [iter(it) for _, it in tagged_iters]
+    weights = list(weights) if weights else [1.0] * len(iters)
+    alive = [True] * len(iters)
+    warmup_set = set(warmup_sources)
+    can_warmup = warmup_tokens > 0 and token_counters is not None and bool(warmup_set)
+    while any(alive):
+        consumed = sum(token_counters.values()) if token_counters else 0
+        in_warmup = can_warmup and consumed < warmup_tokens
+        if in_warmup:
+            cand = [i for i, a in enumerate(alive) if a and names[i] in warmup_set]
+            if not cand:  # warmup sources exhausted early -> open the full blend
+                cand = [i for i, a in enumerate(alive) if a]
+        else:
+            cand = [i for i, a in enumerate(alive) if a]
+        w = [weights[i] for i in cand]
+        choice = rng.choices(cand, weights=w, k=1)[0]
+        try:
+            yield names[choice], next(iters[choice])
+        except StopIteration:
+            alive[choice] = False
+
+
+# ── smoltalk2 streaming (format-aware chat/reasoning) ────────────────────────
+
+SMOLTALK2_REPO = 'HuggingFaceTB/smoltalk2'
+
+
+def _smoltalk2_split_names(config: str) -> List[str]:
+    """Discover split names for a smoltalk2 config (sorted for determinism)."""
+    try:
+        from datasets import get_dataset_split_names
+
+        names = get_dataset_split_names(SMOLTALK2_REPO, config)
+        if names:
+            return sorted(names)
+    except Exception as exc:  # noqa: BLE001 - fall back to a single 'train' split
+        print(f"  [smoltalk2] split discovery failed for {config}: {exc}; trying 'train'")
+    return ['train']
+
+
+def _smoltalk2_row_iter(
+    config: str = 'SFT',
+    *,
+    skip_rows: int = 0,
+    doc_counters: Optional[Dict[str, int]] = None,
+    counter_key: str = '',
+    splits: Optional[List[str]] = None,
+) -> Iterator[List[dict]]:
+    """Stream normalized message lists from a smoltalk2 config.
+
+    Splits are concatenated in sorted order (deterministic); ``skip_rows`` skips
+    the first N eligible rows across the concatenation for cross-round freshness.
+    """
+    from datasets import load_dataset
+
+    names = splits or _smoltalk2_split_names(config)
+    skipped = 0
+    for split in names:
+        try:
+            ds = load_dataset(SMOLTALK2_REPO, config, split=split, streaming=True)
+        except Exception as exc:  # noqa: BLE001 - skip a split that fails to open
+            print(f"  [smoltalk2] skip split {config}/{split}: {exc}")
+            continue
+        for row in ds:
+            msgs = _normalize_messages(row.get('messages') or row.get('conversations'))
+            if not msgs:
+                continue
+            if skipped < skip_rows:
+                skipped += 1
+                continue
+            _bump_counter(doc_counters, counter_key)
+            yield msgs
+
+
+def _smoltalk2_blend_text_iter(
+    config: str = 'Mid',
+    *,
+    skip_rows: int = 0,
+    doc_counters: Optional[Dict[str, int]] = None,
+    counter_key: str = 'smoltalk2_mid',
+) -> Iterator[str]:
+    """smoltalk2 conversations rendered to ChatML *text* for the pretrain blend."""
+    for msgs in _smoltalk2_row_iter(
+        config, skip_rows=skip_rows, doc_counters=doc_counters, counter_key=counter_key,
+    ):
+        text = format_chat_messages(msgs)
+        if text.strip():
+            yield text
+
+
+# Format-aware source registry: single source of truth for schema + kind so the
+# pretrain blend and the SFT stage agree on how each dataset is shaped.
+#   schema: 'text' (raw web docs) | 'messages' (chat, rendered to ChatML text)
+#   kind:   'web' (grammar/knowledge, warmup pool) | 'reason' | 'chat'
+SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
+    'dclm':          {'schema': 'text',     'kind': 'web',    'hf': 'HuggingFaceTB/dclm-edu'},
+    'fineweb':       {'schema': 'text',     'kind': 'web',    'hf': 'HuggingFaceFW/fineweb-edu'},
+    'smoltalk2_mid': {'schema': 'messages', 'kind': 'reason', 'hf': SMOLTALK2_REPO, 'config': 'Mid'},
+    'smoltalk2_sft': {'schema': 'messages', 'kind': 'chat',   'hf': SMOLTALK2_REPO, 'config': 'SFT'},
+}
 
 
 def load_pretrain_holdout_val(
@@ -932,13 +1115,21 @@ def load_pretrain_mix(
     mix_seed: int = 42,
     dclm_skip_docs: int = 0,
     fineweb_skip_docs: int = 0,
+    skip_docs: Optional[Dict[str, int]] = None,
+    blend_warmup_tokens: int = 0,
     token_counters: Optional[Dict[str, int]] = None,
+    doc_counters: Optional[Dict[str, int]] = None,
 ):
-    """Stream a mixed web-edu corpus (DCLM-Edu + FineWeb-Edu) for from-scratch pretrain.
+    """Stream a blended corpus for from-scratch pretrain (knowledge+reasoning+chat).
 
-    With ``chat_vocab=True`` the ChatML tokenizer (vocab 50259) is used so the
-    chat special-token embeddings exist from initialization (no later resize).
-    Primary val = in-distribution DCLM holdout (hash bucket excluded from train).
+    Format-aware via ``SOURCE_REGISTRY``: ``text`` sources (dclm/fineweb) stream
+    raw web docs; ``messages`` sources (smoltalk2 Mid) are rendered to ChatML
+    *text*. During the first ``blend_warmup_tokens`` tokens only web sources are
+    drawn (grammar/knowledge), then the full weighted blend applies.
+
+    Freshness across rounds: every source advances ``doc_counters[name]`` per
+    yielded item; ``skip_docs[name]`` skips already-consumed items so no doc/row
+    is reused. ``chat_vocab=True`` uses the ChatML+reasoning tokenizer (50261).
     """
     if chat_vocab:
         tokenizer = get_chat_tokenizer()
@@ -948,40 +1139,59 @@ def load_pretrain_mix(
         tokenizer = AutoTokenizer.from_pretrained('gpt2')
         tokenizer.pad_token = tokenizer.eos_token
 
+    skip_map = dict(skip_docs or {})
+    skip_map.setdefault('dclm', dclm_skip_docs)
+    skip_map.setdefault('fineweb', fineweb_skip_docs)
+
+    # Seed cursors at prior cumulative so per_source_docs stays cumulative.
+    if doc_counters is not None:
+        for s in sources:
+            doc_counters.setdefault(s, skip_map.get(s, 0))
+
     tagged = []
+    web_sources: List[str] = []
     for s in sources:
-        if s == 'dclm':
-            it = _dclm_edu_text_iter(
-                edu_score_min,
-                exclude_holdout=exclude_holdout,
-                holdout_pct=holdout_pct,
-                skip_docs=dclm_skip_docs,
+        spec = SOURCE_REGISTRY.get(s)
+        if spec is None:
+            raise ValueError(f"Unknown pretrain source: {s} (known: {list(SOURCE_REGISTRY)})")
+        sk = skip_map.get(s, 0)
+        if spec['kind'] == 'web':
+            if s == 'dclm':
+                it = _dclm_edu_text_iter(
+                    edu_score_min, exclude_holdout=exclude_holdout,
+                    holdout_pct=holdout_pct, skip_docs=sk,
+                    doc_counters=doc_counters, counter_key=s,
+                )
+            else:  # fineweb
+                it = _fineweb_edu_text_iter(
+                    edu_score_min, name=fineweb_name, exclude_holdout=exclude_holdout,
+                    holdout_pct=holdout_pct, skip_docs=sk,
+                    doc_counters=doc_counters, counter_key=s,
+                )
+            web_sources.append(s)
+        else:  # messages -> ChatML text
+            it = _smoltalk2_blend_text_iter(
+                config=spec.get('config', 'Mid'), skip_rows=sk,
+                doc_counters=doc_counters, counter_key=s,
             )
-            tagged.append(('dclm', it))
-        elif s == 'fineweb':
-            it = _fineweb_edu_text_iter(
-                edu_score_min,
-                name=fineweb_name,
-                exclude_holdout=exclude_holdout,
-                holdout_pct=holdout_pct,
-                skip_docs=fineweb_skip_docs,
-            )
-            tagged.append(('fineweb', it))
-        else:
-            raise ValueError(f"Unknown pretrain source: {s}")
+        tagged.append((s, it))
 
     print(
-        f"Streaming pretrain mix: sources={list(sources)} "
+        f"Streaming pretrain blend: sources={list(sources)} "
         f"weights={list(weights) if weights else 'uniform'} edu>={edu_score_min} "
         f"budget={token_budget or 'none'} vocab={len(tokenizer)} "
         f"holdout_pct={holdout_pct} exclude_holdout={exclude_holdout} "
-        f"mix_seed={mix_seed} dclm_skip={dclm_skip_docs} fineweb_skip={fineweb_skip_docs}"
+        f"mix_seed={mix_seed} warmup={blend_warmup_tokens:,} "
+        f"skips={ {s: skip_map.get(s, 0) for s in sources} }"
     )
-    text_iter = (
-        _interleave_text_iters(tagged, weights, seed=mix_seed)
-        if len(tagged) > 1
-        else _tag_source(tagged[0][0], tagged[0][1])
-    )
+    if len(tagged) > 1:
+        text_iter = _blend_interleave_text_iters(
+            tagged, weights,
+            warmup_tokens=blend_warmup_tokens, warmup_sources=tuple(web_sources),
+            token_counters=token_counters, seed=mix_seed,
+        )
+    else:
+        text_iter = _tag_source(tagged[0][0], tagged[0][1])
     train_ds = StreamingTokenChunkDataset(
         text_iter,
         tokenizer,
@@ -1025,25 +1235,52 @@ def load_fineweb_edu(
     )
 
 
+def _think_keep(messages: List[dict], think_fraction: float) -> bool:
+    """Deterministically keep a fraction of think (reasoning) conversations.
+
+    no_think conversations are always kept. think conversations are kept with
+    probability ~``think_fraction`` via a stable content hash, so a 100M model
+    trains mostly on direct answers with a capped dose of reasoning traces.
+    """
+    if not _messages_have_think(messages):
+        return True
+    if think_fraction >= 1.0:
+        return True
+    if think_fraction <= 0.0:
+        return False
+    blob = json.dumps(messages, ensure_ascii=False)[:4096]
+    return (zlib.adler32(blob.encode('utf-8', errors='ignore')) % 1000) < int(think_fraction * 1000)
+
+
 def load_smoltalk2(
     seq_len: int = 2048,
     max_samples: Optional[int] = None,
     sft_filter: str = 'hard',
+    think_fraction: float = 0.15,
+    smoltalk2_skip_rows: int = 0,
     use_cache: bool = True,
     **_unused,
 ):
-    """Filtered SmolTalk chat SFT (ChatML, assistant-only loss, in-distro holdout val)."""
+    """Real smoltalk2 SFT-config chat fine-tuning (ChatML, assistant-only loss).
+
+    Uses ``HuggingFaceTB/smoltalk2`` config ``SFT`` (chat + reasoning, think/no_think).
+    ``think_fraction`` caps the share of reasoning conversations so a small base
+    stays mostly on direct answers. Disjoint from the pretrain blend, which draws
+    reasoning from the ``Mid`` config. In-distribution holdout val (not WikiText).
+    """
     def _rows():
-        from datasets import load_dataset
+        n = 0
+        for msgs in _smoltalk2_row_iter('SFT', skip_rows=smoltalk2_skip_rows):
+            if not _think_keep(msgs, think_fraction):
+                continue
+            yield {'messages': msgs}
+            n += 1
+            if max_samples and n >= max_samples:
+                break
 
-        ds = load_dataset('HuggingFaceTB/smol-smoltalk', split='train')
-        if max_samples:
-            ds = ds.select(range(min(max_samples, len(ds))))
-        for ex in ds:
-            yield ex
-
+    tag = f"smoltalk2_sft_tf{int(think_fraction * 100)}"
     return load_chat_sft(
-        'smoltalk2', _rows,
+        tag, _rows,
         seq_len=seq_len, sft_filter=sft_filter,
         max_samples=max_samples, use_cache=use_cache,
     )
