@@ -29,7 +29,7 @@ source ./scripts/log_utils.sh
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # ── Hyperparameters (single source of truth; restart-safe) ───────────────────
-PRESET="${PRESET:-v11_e3_k3_chat}"          # vocab 50259 baked in at init
+PRESET="${PRESET:-v11_e3_k3_chat}"          # vocab 50259 + phase-aware GSP gate (default)
 TOKEN_BUDGET="${1:-10000000000}"            # ~10B tokens to start (extensible)
 shift || true
 
