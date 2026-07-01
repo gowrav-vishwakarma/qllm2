@@ -1,0 +1,6 @@
+{
+  "_comment": "Server-side catalog of ship-ready rounds, written by scripts/run_v11_round.sh export. Paths are relative to the repo root on the training server. The RTX4090 pull script (scripts/pull_v11_release.sh) reads this to fetch only new/changed rounds. Do not edit sha256/size by hand.",
+  "repo_id": "gowravvishwakarma/qllm-pam-v11-e3k3-chat",
+  "latest": null,
+  "rounds": {}
+}

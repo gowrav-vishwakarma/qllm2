@@ -29,13 +29,45 @@ hf auth login
 # or export HF_TOKEN=hf_...
 ```
 
-## Build the release bundle
+## Continuous shipping (rounds + revision tags)
+
+Each `+2B` round ships to a Hugging Face **revision tag** (e.g. `round-2b-gate`,
+`round-4b-gate`) so `main` stays stable and every round is separately pullable.
+Training runs on GCP; publishing runs on the RTX4090 (which holds the HF token).
+
+Server records each ship-ready round in `releases/server_manifest.json` (written
+by `scripts/run_v11_round.sh export`). The RTX4090 pulls incrementally:
+
+```bash
+# On RTX4090 (has hf auth). One command does pull -> verify -> push:
+ROUND_TAG=round-2b-gate ./scripts/run_v11_round.sh ship
+
+# Or step by step:
+./scripts/pull_v11_release.sh --list           # server vs local, no download
+./scripts/pull_v11_release.sh --round round-2b-gate   # incremental, sha256-verified
+cp releases/round-2b-gate/qllm_v11_e3k3_chat.pt hf_release/qllm_v11_e3k3_chat.pt
+cd hf_release && bash verify.sh
+uv run python scripts/push_qllm_hf.py --revision round-2b-gate
+```
+
+The smart pull uses per-machine state at `~/.qllm/v11_pull_state.json`, so a
+second machine won't re-download a round it already has. Pull to a specific
+revision later with:
+
+```bash
+huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat --revision round-2b-gate --local-dir .
+```
+
+## Build the release bundle (manual / one-off)
 
 From the qllm2 repo root:
 
 ```bash
-# 1. Export weights-only checkpoint + config.json
-uv run python scripts/export_hf_release.py
+# 1. Export weights-only checkpoint + config.json (+ record round in manifest)
+uv run python scripts/export_hf_release.py \
+  --src checkpoints_v11_sft_chat_smoltalk_v2/best_model.pt \
+  --round round-2b-gate --tag round-2b-gate \
+  --pretrain_tokens_total 2000000000 --round_tokens 2000000000 --record-manifest
 
 # 2. modeling_qllm.py, run_chat.py, requirements.txt live in hf_release/
 #    (regenerate modeling if v11/model.py changed — see scripts/export_hf_release.py)
@@ -49,7 +81,10 @@ Verification must print `All checks passed` (Paris + stop on im_end).
 ## Upload
 
 ```bash
-# From repo root, after verify.sh passes:
+# Publish to a round revision tag (recommended):
+uv run python scripts/push_qllm_hf.py --revision round-2b-gate
+
+# Or publish to main (no tag):
 uv run python scripts/push_qllm_hf.py
 ```
 

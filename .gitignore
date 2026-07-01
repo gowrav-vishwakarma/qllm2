@@ -19,6 +19,10 @@ checkpoints*/
 hf_release/*.pt
 hf_release/__pycache__/
 
+# Release round bundles/checkpoints copied for shipping (manifest is tracked, blobs are not)
+releases/**/*.pt
+releases/**/*.tgz
+
 # Caches
 .cache/
 *cache*/

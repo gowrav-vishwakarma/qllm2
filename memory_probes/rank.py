@@ -147,10 +147,16 @@ def test_rank_real_text(
         from v7.data import get_chat_tokenizer
         from v11.model import V11LM
 
-        chat_tok = get_chat_tokenizer()
-        cfg.vocab_size = len(chat_tok)
-        lm = V11LM(cfg)
         ckpt = torch.load(checkpoint, map_location='cpu', weights_only=False)
+        # Overlay the checkpoint's saved config (vocab + gate flags) so weights load.
+        saved = ckpt.get('config') or {}
+        for k, v in saved.items():
+            if hasattr(cfg, k):
+                setattr(cfg, k, v)
+        chat_tok = get_chat_tokenizer()
+        if len(chat_tok) != cfg.vocab_size:
+            cfg.vocab_size = len(chat_tok)
+        lm = V11LM(cfg)
         lm.load_state_dict(ckpt['model_state_dict'])
         lm.eval().double()
         block = lm.blocks[layer_idx]
