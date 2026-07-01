@@ -226,7 +226,7 @@ def main() -> None:
     model = load_model(args.checkpoint, device=device)
     tokenizer = get_chat_tokenizer()
     im_end_id = tokenizer.convert_tokens_to_ids(IM_END)
-    max_prompt_tokens = model.cfg.max_seq_len - args.max_new_tokens
+    max_prompt_tokens = model.config.max_seq_len - args.max_new_tokens
 
     if args.prompt:
         messages = [{'role': 'user', 'content': args.prompt.strip()}]

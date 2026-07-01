@@ -1,6 +1,8 @@
 ---
+
 license: mit
 language:
+
 - en
 tags:
 - phase-associative-memory
@@ -11,6 +13,7 @@ tags:
 - qllm
 - pam
 pipeline_tag: text-generation
+
 ---
 
 # QLLM PAM V11 E3 K=3 Chat
@@ -19,18 +22,22 @@ pipeline_tag: text-generation
 
 This checkpoint proves that architectures outside the transformer/SSM families **can learn coherent instruction-following chat**. It is deliberately **under-trained** relative to what the architecture can hold.
 
-| | |
-|---|---|
-| **Params** | ~100.5M |
-| **Architecture** | V11 E3 K=3 PAM (16×384, complex phase space) |
-| **Pretrain** | ~10B tokens (DCLM-Edu + FineWeb-Edu) |
-| **SFT** | SmolTalk2 (hard filter), ChatML template |
-| **Val (in-distro)** | PPL **7.22**, acc **0.567** |
-| **Inference** | **O(1)/token**, fixed state, **no KV cache** |
-| **Code** | [github.com/gowrav-vishwakarma/qllm2](https://github.com/gowrav-vishwakarma/qllm2) |
-| **Paper** | [arXiv:2604.05030](https://arxiv.org/abs/2604.05030) — Phase-Associative Memory in Complex Hilbert Space |
+
+|                     |                                                                                                          |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Params**          | ~100.5M                                                                                                  |
+| **Architecture**    | V11 E3 K=3 PAM (16×384, complex phase space)                                                             |
+| **Pretrain**        | ~10B tokens (DCLM-Edu + FineWeb-Edu)                                                                     |
+| **SFT**             | SmolTalk2 (hard filter), ChatML template                                                                 |
+| **Val (in-distro)** | PPL **7.22**, acc **0.567**                                                                              |
+| **Inference**       | **O(1)/token**, fixed state, **no KV cache**                                                             |
+| **Code**            | [github.com/gowrav-vishwakarma/qllm2](https://github.com/gowrav-vishwakarma/qllm2)                       |
+| **Paper**           | [arXiv:2604.05030](https://arxiv.org/abs/2604.05030) — Phase-Associative Memory in Complex Hilbert Space |
+
 
 ---
+
+
 
 ## Why this matters
 
@@ -53,22 +60,28 @@ Each outer product writes a full **d×d** association → **O(d²) capacity per 
 
 ---
 
+
+
 ## Honest limits (read before expecting GPT-4)
 
 This model is a **milestone checkpoint**, not a production assistant:
 
-| What works | What doesn't (yet) |
-|---|---|
-| ChatML turn structure | Reliable factual knowledge (base saturates ~WikiText PPL 65) |
-| Stops on `<\|redacted_im_end\|>` | Math ("what is 2+2" drifts) |
-| "Capital of France → Paris" | Name/memory confabulation |
-| Coherent one-sentence answers | Deep reasoning, coding beyond toy examples |
+
+| What works                     | What doesn't (yet)                                           |
+| ------------------------------ | ------------------------------------------------------------ |
+| ChatML turn structure          | Reliable factual knowledge (base saturates ~WikiText PPL 65) |
+| Stops on `<|redacted_im_end|>` | Math ("what is 2+2" drifts)                                  |
+| "Capital of France → Paris"    | Name/memory confabulation                                    |
+| Coherent one-sentence answers  | Deep reasoning, coding beyond toy examples                   |
+
 
 Training budget: **~10B pretrain + SmolTalk2 SFT at 100M params**. PAM capacity math says the architecture is **far from saturated** — we stopped here to ship proof-of-learning, not to chase leaderboard scores.
 
 Same-pipeline transformer baseline (100M, WikiText): val PPL **22.69** vs our PAM **25.77** (WikiText anchor) — we report the gap on purpose. The trade is a **different memory mechanism** and **O(1) inference without KV cache**.
 
 ---
+
+
 
 ## How to run (raw code — no `transformers` AutoModel)
 
@@ -82,18 +95,22 @@ huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
   qllm_v11_e3k3_chat.pt config.json modeling_qllm.py run_chat.py requirements.txt
 ```
 
+
+
 ### Interactive multi-turn chat
 
 ```bash
 python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt
 ```
 
-| Input | Action |
-|---|---|
-| Type a message + Enter | Send; model sees full conversation history |
+
+| Input                   | Action                                                             |
+| ----------------------- | ------------------------------------------------------------------ |
+| Type a message + Enter  | Send; model sees full conversation history                         |
 | Empty line (Enter only) | Start a **new chat** — history cleared, session counter increments |
-| `exit` | Quit |
-| Ctrl+C or EOF | Quit |
+| `exit`                  | Quit                                                               |
+| Ctrl+C or EOF           | Quit                                                               |
+
 
 Multi-line paste is supported: paste a block and the script waits briefly to absorb trailing lines as one message.
 
@@ -122,6 +139,8 @@ python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt \
   --prompt "What is the capital of France?" \
   --temperature 0.0 --max_new_tokens 32
 ```
+
+
 
 ### Minimal inference snippet
 
@@ -163,16 +182,22 @@ Generation uses the **O(1) recurrent PAM path** — a fixed matrix state per lay
 
 ---
 
+
+
 ## Architecture comparison
 
-| | Transformer | Vector SSM (Mamba) | **QLLM PAM (this model)** |
-|---|---|---|---|
-| State | KV cache (grows with T) | vector `s ∈ ℝ^{S×d}` | matrix `S ∈ ℂ^{H×d×d}` |
-| Matching | QKᵀ + softmax | gated recurrence | complex conjugate K*·Q |
-| Capacity | O(n) per sequence | ~O(S·d) | **O(H·d²) per layer** |
-| Inference | O(T) + growing cache | O(1)/token | **O(1)/token, fixed state** |
+
+|           | Transformer             | Vector SSM (Mamba)   | **QLLM PAM (this model)**   |
+| --------- | ----------------------- | -------------------- | --------------------------- |
+| State     | KV cache (grows with T) | vector `s ∈ ℝ^{S×d}` | matrix `S ∈ ℂ^{H×d×d}`      |
+| Matching  | QKᵀ + softmax           | gated recurrence     | complex conjugate K*·Q      |
+| Capacity  | O(n) per sequence       | ~O(S·d)              | **O(H·d²) per layer**       |
+| Inference | O(T) + growing cache    | O(1)/token           | **O(1)/token, fixed state** |
+
 
 ---
+
+
 
 ## Training recipe
 
@@ -193,16 +218,20 @@ Full reproduction logs: [v11/EXPERIMENTS_V11.md](https://github.com/gowrav-vishw
 
 ---
 
+
+
 ## Next milestone (explicit)
 
 The next goal is **not** "train longer" or "scale to 7B first."
 
-1. **Make training ~10× faster** — target **~10% of current wall-clock** for the same quality curve.
+1. **Make training ~10× faster** — target **~10% of current wall-clock** for the same quality curve. (Moon shot call) 
 2. **Intelligence-first at 100M–300M** — prove the PAM stack learns smarter before scaling params or token budget.
 
 Then scale.
 
 ---
+
+
 
 ## Links
 
@@ -213,6 +242,8 @@ Then scale.
 - **PAM mechanism probes:** [memory_probes/README.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/memory_probes/README.md)
 
 ---
+
+
 
 ## License
 
