@@ -7,27 +7,38 @@
 # (per_source_docs) via scripts/v11_data_cursor.py, so no web/reasoning doc is
 # reused. The trainer also auto-seeds skips from --resume checkpoints.
 #
+# Self-driving rounds: the round number and round-<cumulative_B>b-gate tag are
+# derived from a state file (PT_CKPT_DIR/round_state.env), and defaults are tuned
+# for the optimized stack (B=32, FUSED_CE=1). So a normal next round is just:
+#
 # Usage (GCP, tmux):
 #   # Round 1 from scratch (2B blended pretrain):
-#   ROUND=1 ROUND_TAG=round-2b-gate SCRATCH=1 TOKEN_BUDGET=2000000000 \
-#     tmux new-session -d -s v11_round './scripts/run_v11_round.sh pretrain'
+#   SCRATCH=1 tmux new-session -d -s v11_round './scripts/run_v11_round.sh pretrain'
+#
+#   # Any next round (auto: resume prev best, fresh tokens, next tag):
+#   tmux new-session -d -s v11_round './scripts/run_v11_round.sh pretrain'
 #   ./scripts/run_v11_round.sh probes
 #   ./scripts/run_v11_round.sh sft
 #   ./scripts/run_v11_round.sh smoke
-#   ROUND=1 ROUND_TAG=round-2b-gate TOKEN_BUDGET=2000000000 ./scripts/run_v11_round.sh export
+#   ./scripts/run_v11_round.sh export
 #
-#   # Round 2+ (resume previous pretrain best, fresh tokens):
-#   ROUND=2 ROUND_TAG=round-4b-gate TOKEN_BUDGET=2000000000 ./scripts/run_v11_round.sh pretrain
-#   ...
+#   # Preview what a step would run without executing:
+#   ./scripts/run_v11_round.sh pretrain --dry
 #
 # Ship (RTX4090):
-#   ROUND_TAG=round-2b-gate ./scripts/run_v11_round.sh ship
+#   ./scripts/run_v11_round.sh ship            # tag from state; or ROUND_TAG=... override
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR/.."
 
 STEP="${1:-help}"; shift || true
+
+# --dry / -n : print the resolved plan + exact command without executing.
+DRY="${DRY:-0}"
+for _a in "$@"; do
+  case "$_a" in --dry|-n|--dry-run) DRY=1 ;; esac
+done
 
 # shellcheck disable=SC1091
 source ./scripts/v6_env_setup.sh
@@ -37,13 +48,68 @@ source ./scripts/log_utils.sh
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 PRESET="${PRESET:-v11_e3_k3_chat}"
-ROUND="${ROUND:-1}"
-ROUND_TAG="${ROUND_TAG:-round-${ROUND}}"
 TOKEN_BUDGET="${TOKEN_BUDGET:-2000000000}"
 SCRATCH="${SCRATCH:-0}"
 
 PT_CKPT_DIR="${PT_CKPT_DIR:-checkpoints_v11_e3_k3_chat_pretrain_v2}"
 SFT_CKPT_DIR="${SFT_CKPT_DIR:-checkpoints_v11_sft_chat_smoltalk_v2}"
+
+# ── Self-driving round/tag ────────────────────────────────────────────────
+# A tiny state file records the last completed pretrain round + cumulative
+# pretrain tokens, so you can just run `./scripts/run_v11_round.sh pretrain`
+# and it advances to the next `round-<cumulative_B>b-gate` automatically.
+# `pretrain` advances the round; post-pretrain steps (probes/sft/smoke/export/
+# eval) operate on the *current* (last completed) round. Env vars ROUND /
+# ROUND_TAG / TOKEN_BUDGET still override anything below.
+ROUND_STATE_FILE="${ROUND_STATE_FILE:-${PT_CKPT_DIR}/round_state.env}"
+LAST_ROUND=0; CUMULATIVE_TOKENS=0; LAST_TAG=""
+if [[ -f "$ROUND_STATE_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$ROUND_STATE_FILE"
+fi
+if [[ "$STEP" == "pretrain" ]]; then
+  if [[ "$SCRATCH" == "1" ]]; then
+    ROUND="${ROUND:-1}"
+    CUM_AFTER="$TOKEN_BUDGET"
+  else
+    ROUND="${ROUND:-$((LAST_ROUND + 1))}"
+    CUM_AFTER="$((CUMULATIVE_TOKENS + TOKEN_BUDGET))"
+  fi
+  CUM_B="$(( CUM_AFTER / 1000000000 ))"
+  ROUND_TAG="${ROUND_TAG:-round-${CUM_B}b-gate}"
+else
+  ROUND="${ROUND:-${LAST_ROUND:-1}}"
+  CUM_AFTER="$CUMULATIVE_TOKENS"
+  ROUND_TAG="${ROUND_TAG:-${LAST_TAG:-round-${ROUND}}}"
+fi
+
+save_round_state() {
+  [[ "$DRY" == "1" ]] && return 0
+  mkdir -p "$(dirname "$ROUND_STATE_FILE")"
+  cat > "$ROUND_STATE_FILE" <<EOF
+LAST_ROUND=$ROUND
+CUMULATIVE_TOKENS=$CUM_AFTER
+LAST_TAG=$ROUND_TAG
+EOF
+  echo "[round-state] $ROUND_STATE_FILE -> round=$ROUND cumulative=${CUM_AFTER} tag=$ROUND_TAG"
+}
+
+dry_banner() {
+  cat <<EOF
+────────────────────────── DRY-RUN ──────────────────────────
+ step            : $STEP
+ round / tag     : $ROUND / $ROUND_TAG
+ cumulative tok  : before=$CUMULATIVE_TOKENS  after=$CUM_AFTER
+ token_budget    : $TOKEN_BUDGET   (this round)
+ batch / seq     : $BATCH_SIZE / $SEQ_LEN   chunk=$CHUNK_SIZE
+ lr / warmup     : pretrain=$LR/$WARMUP_STEPS   sft=${SFT_LR:-5e-5}/200
+ compile / fused : COMPILE=$COMPILE  FUSED_CE=$FUSED_CE
+ pt_ckpt_dir     : $PT_CKPT_DIR
+ sft_ckpt_dir    : $SFT_CKPT_DIR
+ state file      : $ROUND_STATE_FILE
+──────────────────────────────────────────────────────────────
+EOF
+}
 
 # Blend: web-dominant + small reasoning/chat (smoltalk2 Mid). Weights are
 # PER-DOCUMENT; Mid docs are ~10x larger, so realized reasoning token share is
@@ -62,7 +128,8 @@ else
 fi
 
 SEQ_LEN="${SEQ_LEN:-2048}"
-BATCH_SIZE="${BATCH_SIZE:-18}"
+# Default B=32: fits in ~82GB with fused E3 + chunked CE (was 18 pre-optimization).
+BATCH_SIZE="${BATCH_SIZE:-32}"
 CHUNK_SIZE="${CHUNK_SIZE:-256}"
 LR="${LR:-3e-4}"                 # from-scratch peak; lower (1e-4) for resume rounds
 [[ "$SCRATCH" != "1" ]] && LR="${LR_RESUME:-1e-4}"
@@ -77,8 +144,8 @@ COMPILE_ARGS="--compile --compile_mode default"
 
 # Memory-lean chunked linear+CE (exact math): frees ~30GB at B=18/T=2048 so a
 # larger BATCH_SIZE fits. Fused E3 (the 1.62x speedup) is always on by default in
-# the model. Enable with FUSED_CE=1 (recommended when raising BATCH_SIZE).
-FUSED_CE="${FUSED_CE:-0}"
+# the model. On by default now (needed for B=32); set FUSED_CE=0 to disable.
+FUSED_CE="${FUSED_CE:-1}"
 FUSED_CE_ARGS=""
 [[ "$FUSED_CE" == "1" ]] && FUSED_CE_ARGS="--fused_ce --fused_ce_chunk ${FUSED_CE_CHUNK:-4096}"
 
@@ -122,7 +189,6 @@ pretrain)
     FINEWEB_NAME="${FINEWEB_NAME:-sample-10BT}"
     echo "[pretrain] resume $(pt_best) ($RESUME_ARGS) cursors: $CURSOR_ARGS fineweb=$FINEWEB_NAME"
   fi
-  LOG_DIR=$(make_log_dir "v11" "round${ROUND}_pretrain")
   GEN_PROMPT="In 1923 , the University of"
   ARGS="--preset $PRESET --stage pretrain --dataset pretrain_mix --seq_len $SEQ_LEN \
     --batch_size $BATCH_SIZE --epochs 9999 --chunk_size $CHUNK_SIZE \
@@ -132,13 +198,25 @@ pretrain)
     --seed $SEED --lr $LR --warmup_steps $WARMUP_STEPS \
     --amp_dtype auto --num_workers 0 --gen_every 5000 --save_every_steps $SAVE_EVERY_STEPS \
     --no_grad_ckpt $COMPILE_ARGS $FUSED_CE_ARGS $RESUME_ARGS $CURSOR_ARGS"
+  if [[ "$DRY" == "1" ]]; then
+    dry_banner
+    echo "[DRY] resume    : ${RESUME_ARGS:-<scratch>}"
+    echo "[DRY] cursors   : ${CURSOR_ARGS:-<none>}"
+    echo "[DRY] on success would write state -> round=$ROUND cumulative=$CUM_AFTER tag=$ROUND_TAG"
+    echo "[DRY] would run :"
+    echo "  $PYTHON_BIN -m v11.train $ARGS --gen_prompt '$GEN_PROMPT' --log_dir <log> --checkpoint_dir $PT_CKPT_DIR"
+    exit 0
+  fi
+  LOG_DIR=$(make_log_dir "v11" "round${ROUND}_pretrain")
   write_run_info "$LOG_DIR" "V11 round $ROUND pretrain ($ROUND_TAG)" "$ARGS"
   eval "$PYTHON_BIN -m v11.train" $ARGS \
     --gen_prompt "'$GEN_PROMPT'" --log_dir "$LOG_DIR" --checkpoint_dir "$PT_CKPT_DIR"
+  save_round_state
   ;;
 
 probes)
   echo "[probes] gate + rank on $(pt_best)"
+  if [[ "$DRY" == "1" ]]; then dry_banner; echo "[DRY] probes on $(pt_best)"; exit 0; fi
   eval "$PYTHON_BIN scripts/v11_probe_gates.py --checkpoint $(pt_best) --preset $PRESET" || true
   eval "$PYTHON_BIN -m memory_probes --test rank-text --checkpoint $(pt_best) --preset $PRESET --layer 4 --text-tokens 5000 --sample-every 100" || true
   ;;
@@ -146,7 +224,6 @@ probes)
 sft)
   disk_check
   mkdir -p "$SFT_CKPT_DIR"
-  LOG_DIR=$(make_log_dir "v11" "round${ROUND}_sft")
   GEN_PROMPT="<|im_start|>user\nWhat is the capital of France?<|im_end|>\n<|im_start|>assistant\n"
   ARGS="--preset $PRESET --stage sft --dataset smoltalk2 --seq_len $SEQ_LEN \
     --batch_size $BATCH_SIZE --epochs ${SFT_EPOCHS:-1} --chunk_size $CHUNK_SIZE \
@@ -155,6 +232,14 @@ sft)
     ${SFT_MAX_SAMPLES:+--max_samples $SFT_MAX_SAMPLES} \
     --amp_dtype auto --num_workers 4 --gen_every 0 --no_grad_ckpt $COMPILE_ARGS $FUSED_CE_ARGS \
     --resume_from $(pt_best)"
+  if [[ "$DRY" == "1" ]]; then
+    dry_banner
+    echo "[DRY] resume_from: $(pt_best)"
+    echo "[DRY] would run  :"
+    echo "  $PYTHON_BIN -m v11.train $ARGS --gen_prompt '$GEN_PROMPT' --log_dir <log> --checkpoint_dir $SFT_CKPT_DIR"
+    exit 0
+  fi
+  LOG_DIR=$(make_log_dir "v11" "round${ROUND}_sft")
   write_run_info "$LOG_DIR" "V11 round $ROUND smoltalk2 SFT ($ROUND_TAG)" "$ARGS"
   eval "$PYTHON_BIN -m v11.train" $ARGS \
     --gen_prompt "'$GEN_PROMPT'" --log_dir "$LOG_DIR" --checkpoint_dir "$SFT_CKPT_DIR"
@@ -162,15 +247,21 @@ sft)
 
 smoke)
   echo "[smoke] $(sft_best)"
+  if [[ "$DRY" == "1" ]]; then dry_banner; echo "[DRY] smoke chat on $(sft_best) label=$ROUND_TAG"; exit 0; fi
   eval "$PYTHON_BIN scripts/smoke_chat_v11.py --checkpoint $(sft_best) --preset $PRESET --label $ROUND_TAG"
   ;;
 
 export)
   disk_check
   echo "[export] $(sft_best) -> hf_release + server_manifest ($ROUND_TAG)"
+  if [[ "$DRY" == "1" ]]; then
+    dry_banner
+    echo "[DRY] export $(sft_best) tag=$ROUND_TAG pretrain_tokens_total=${PRETRAIN_TOKENS_TOTAL:-$CUM_AFTER} round_tokens=$TOKEN_BUDGET"
+    exit 0
+  fi
   eval "$PYTHON_BIN scripts/export_hf_release.py \
     --src $(sft_best) --round $ROUND_TAG --tag $ROUND_TAG \
-    --pretrain_tokens_total ${PRETRAIN_TOKENS_TOTAL:-$TOKEN_BUDGET} \
+    --pretrain_tokens_total ${PRETRAIN_TOKENS_TOTAL:-$CUM_AFTER} \
     --round_tokens $TOKEN_BUDGET --record-manifest"
   # Keep a copy of the bundle under releases/<tag>/ so the pull script path matches.
   mkdir -p "releases/$ROUND_TAG"
@@ -191,6 +282,7 @@ PY"
 eval)
   echo "[eval] batch chat samples for $ROUND_TAG"
   tag="${ROUND_TAG:-round-2b-gate}"
+  if [[ "$DRY" == "1" ]]; then dry_banner; echo "[DRY] eval_chat -> SAMPLES_${tag}.md"; exit 0; fi
   ( cd hf_release && eval "$PYTHON_BIN eval_chat.py" \
     --checkpoint qllm_v11_e3k3_chat.pt \
     --prompts eval_prompts_round1.yaml \
@@ -200,6 +292,7 @@ eval)
 
 ship)
   echo "[ship] pull -> verify -> push ($ROUND_TAG) [run on RTX4090 with hf auth]"
+  if [[ "$DRY" == "1" ]]; then dry_banner; echo "[DRY] pull+verify+push revision $ROUND_TAG"; exit 0; fi
   ROUND="$ROUND_TAG" ./scripts/pull_v11_release.sh --round "$ROUND_TAG"
   cp -f "releases/$ROUND_TAG/qllm_v11_e3k3_chat.pt" hf_release/qllm_v11_e3k3_chat.pt
   ( cd hf_release && bash verify.sh && bash verify_legacy.sh )
@@ -209,11 +302,25 @@ ship)
 
 help|*)
   cat <<EOF
-run_v11_round.sh <step>
+run_v11_round.sh <step> [--dry]
+
+  Self-driving: just run the step; round number + round-<cumulative_B>b-gate tag
+  are derived from ${ROUND_STATE_FILE}. 'pretrain' advances the round and, on
+  success, records the new cumulative state; probes/sft/smoke/export/eval act on
+  the current (last completed) round.
+
   steps (GCP):  pretrain | probes | sft | smoke | export | eval
   step (4090):  ship
-  key env:      ROUND ROUND_TAG SCRATCH TOKEN_BUDGET PRETRAIN_WEIGHTS
-                BLEND_WARMUP_TOKENS THINK_FRACTION FINEWEB_NAME
+  --dry, -n  :  print the resolved plan + exact command, run nothing.
+
+  defaults:     BATCH_SIZE=$BATCH_SIZE  FUSED_CE=$FUSED_CE  TOKEN_BUDGET=$TOKEN_BUDGET
+  next round:   ROUND=$((LAST_ROUND + 1))  TAG=round-$(( (CUMULATIVE_TOKENS + TOKEN_BUDGET) / 1000000000 ))b-gate
+  overrides:    ROUND ROUND_TAG SCRATCH TOKEN_BUDGET BATCH_SIZE FUSED_CE
+                RESUME_FULL(crash-recovery) PRETRAIN_WEIGHTS BLEND_WARMUP_TOKENS
+                THINK_FRACTION FINEWEB_NAME
+  typical:      ./scripts/run_v11_round.sh pretrain          # next round, auto tag
+                ./scripts/run_v11_round.sh pretrain --dry    # preview only
+                ./scripts/run_v11_round.sh sft && ./scripts/run_v11_round.sh export
 EOF
   ;;
 esac
