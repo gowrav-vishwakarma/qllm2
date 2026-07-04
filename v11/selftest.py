@@ -43,7 +43,7 @@ def test_warmstart_chatml():
     from v11.train import _warmstart_chatml_embeddings, _CHATML_BASE_VOCAB, _CHATML_TOKEN_IDS
 
     torch.manual_seed(0)
-    vocab, dim = 50259, 8
+    vocab, dim = 50261, 8
     state = {
         'embed.embed_real.weight': torch.randn(vocab, dim),
         'embed.embed_imag.weight': torch.randn(vocab, dim),
@@ -62,6 +62,68 @@ def test_warmstart_chatml():
     print("[warmstart_chatml] PASS")
 
 
+def test_fused_e3_equiv(B=2, T=80, seed=0):
+    """Fused E3 path must equal the reference K-loop exactly (fwd, grad, state)."""
+    common = dict(
+        vocab_size=512, dim=48, n_heads=3, head_dim=16, n_layers=1, expand=2,
+        dropout=0.0, max_seq_len=256, chunk_size=24, gradient_checkpointing=False,
+        use_rope=True, use_gsp=True, n_states=3, gate_content_aware=True,
+    )
+    torch.manual_seed(seed)
+    loop = V11PAMLayer(V11Config(**{**common, 'fused_e3': False}))
+    fused = V11PAMLayer(V11Config(**{**common, 'fused_e3': True}))
+    rc = V11PAMLayer(V11Config(**{**common, 'fused_e3': True, 'recompute_pam_chunks': True}))
+    fused.load_state_dict(loop.state_dict())
+    rc.load_state_dict(loop.state_dict())
+    rc.train()
+
+    x = torch.randn(B, T, common['dim'], 2) * 0.5
+    x1 = x.clone().requires_grad_(True)
+    x2 = x.clone().requires_grad_(True)
+    x3 = x.clone().requires_grad_(True)
+    y1, S1 = loop(x1)
+    y2, S2 = fused(x2)
+    y3, S3 = rc(x3)
+    (y1 ** 2).sum().backward()
+    (y2 ** 2).sum().backward()
+    (y3 ** 2).sum().backward()
+
+    dy = (y1 - y2).abs().max().item()
+    dS = (S1 - S2).abs().max().item()
+    dg = (x1.grad - x2.grad).abs().max().item()
+    dyr = (y1 - y3).abs().max().item()
+    dgr = (x1.grad - x3.grad).abs().max().item()
+    ok = max(dy, dS, dg, dyr, dgr) < 1e-10
+    print(f"[fused_e3 equiv ] y={dy:.2e} S={dS:.2e} grad={dg:.2e}  "
+          f"recompute[y={dyr:.2e} grad={dgr:.2e}]  {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
+def test_fused_ce_equiv(B=2, T=40, seed=0):
+    """Model-level fused CE must equal standard forward + F.cross_entropy."""
+    import torch.nn.functional as F
+    from v11.model import V11LM
+    torch.manual_seed(seed)
+    cfg = V11Config(
+        vocab_size=256, dim=48, n_heads=3, head_dim=16, n_layers=2, expand=2,
+        dropout=0.0, max_seq_len=128, chunk_size=24, gradient_checkpointing=False,
+        n_states=3, gate_content_aware=True,
+    )
+    m = V11LM(cfg).train()
+    ids = torch.randint(0, cfg.vocab_size, (B, T))
+    lbl = torch.randint(0, cfg.vocab_size, (B, T))
+    m.zero_grad(); logits, _, _ = m(ids)
+    ref = F.cross_entropy(logits.view(-1, logits.size(-1)), lbl.view(-1))
+    ref.backward()
+    gref = {n: p.grad.clone() for n, p in m.named_parameters()}
+    m.zero_grad(); loss = m.fused_ce_loss(ids, lbl, chunk=16); loss.backward()
+    dloss = (loss - ref).abs().item()
+    dg = max((gref[n] - p.grad).abs().max().item() for n, p in m.named_parameters())
+    ok = max(dloss, dg) < 1e-5
+    print(f"[fused_ce equiv ] loss={dloss:.2e} grad={dg:.2e}  {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
 def main():
     torch.set_default_dtype(torch.float64)  # high precision for the math check
     test_warmstart_chatml()
@@ -76,6 +138,8 @@ def main():
     results.append(_run_mode("E2 delta", V11Config(**{**common, 'write_mode': 'delta', 'delta_chunk': 20})))
     results.append(_run_mode("E3 multistate", V11Config(**{**common, 'n_states': 2})))
     results.append(_run_mode("E1+E3 combo", V11Config(**{**common, 'decay_mode': 'per_channel', 'n_states': 2})))
+    results.append(test_fused_e3_equiv())
+    results.append(test_fused_ce_equiv())
     print()
     if all(results):
         print("ALL MODES PASS: parallel train form == O(1) recurrent form.")

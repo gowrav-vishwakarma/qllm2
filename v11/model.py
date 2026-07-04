@@ -70,6 +70,8 @@ class V11Config:
     base_dt_bias: float = -4.0          # uniform decay bias (flat stack)
     gate_content_aware: bool = False    # GSP gate reads real+imag (2*dim) vs magnitude-only
     protect_gate_bias: float = -3.0     # init bias for the GSP write-protect gate
+    fused_e3: bool = True               # E3: fused multistate path (exact-equiv, K-independent matmuls)
+    recompute_pam_chunks: bool = False  # recompute per-chunk W/D/A in backward (exact; less VRAM, more FLOPs)
 
 
 # ── Phase-Associative Memory (V11) ──────────────────────────────────────────
@@ -98,6 +100,8 @@ class V11PAMLayer(nn.Module):
         self.write_mode = cfg.write_mode
         self.n_states = cfg.n_states
         self.delta_chunk = cfg.delta_chunk
+        self.fused_e3 = getattr(cfg, 'fused_e3', True)
+        self.recompute_pam_chunks = getattr(cfg, 'recompute_pam_chunks', False)
 
         if cfg.fused_qkv:
             self.qkv_proj = ComplexLinear(cfg.dim, 3 * inner, bias=False)
@@ -446,6 +450,130 @@ class V11PAMLayer(nn.Module):
             S_list.append(S_k)
         return y_sum, torch.stack(S_list, dim=0)             # [K,B,H,d,d,2]
 
+    # ── E3 fused: state-independent work hoisted, K states collapsed ──────────
+    #
+    # Exact algebraic identity with `_forward_multistate` (head decay, additive
+    # write). Two facts make it work:
+    #   * The QK* score W and the protected value v' do NOT depend on the state
+    #     index k, so they are computed ONCE per chunk (not K times).
+    #   * Phase-routed retrieval is linear, so the per-state decay matrices D_k
+    #     collapse into a single COMPLEX decay matrix
+    #         Dtilde[t,s] = sum_k e^{i phi_k(t)} * D_k[t,s]
+    #     and the intra-chunk output is one complex matmul  y = (W (.) Dtilde) @ v'
+    #     instead of K separate (W (.) D_k) @ v' matmuls.
+    # The carried-state read and the per-chunk state write stay per-state but are
+    # the cheap O(C d^2) ops; they are folded into K-batched matmuls.
+
+    def _gamma_all_and_vprime(self, x, v):
+        """Head-scalar decay for all K states at once (single dt_proj/gate matmul).
+
+        Returns gamma_all [K,B,H,T] and shared v_prime [B,H,T,d,2].
+        """
+        B, T = x.shape[0], x.shape[1]
+        H, K = self.num_heads, self.n_states
+        x_flat = to_real_concat(x)
+        dt_raw = self.dt_proj(x_flat)                              # [B,T,H]
+        offs = self.state_dt_offset.view(K, 1, 1, 1)               # [K,1,1,1]
+        dt = F.softplus(dt_raw + self.dt_bias + offs)              # [K,B,T,H]
+        dt = dt.permute(0, 1, 3, 2).contiguous()                  # [K,B,H,T]
+        if self.use_gsp:
+            gate_in = to_real_concat(x) if self.gate_content_aware else cabs(x)
+            p = torch.sigmoid(self.protect_gate(gate_in)).transpose(1, 2)  # [B,H,T]
+            gamma = torch.exp(-dt) * (1 - p) + p                   # [K,B,H,T]
+            v_prime = v * (1 - p).unsqueeze(-1).unsqueeze(-1)
+        else:
+            gamma = torch.exp(-dt)
+            v_prime = v
+        return gamma, v_prime
+
+    def _fused_chunk_step(self, q_c, k_c, vp_c, g_c, phi_c, S, first):
+        """One fused E3 chunk. Returns (y_c, S_new). All heavy C x C tensors (W, D,
+        A) are LOCAL to this fn, so wrapping it in checkpoint recomputes them in
+        backward instead of storing them (exact; trades FLOPs for activation VRAM).
+        `first` is a python bool: True on the very first chunk (no carried state).
+        """
+        K = g_c.shape[0]
+        Tc = g_c.shape[-1]
+        # score W = q_c . conj(k_c)  (computed once, shared across states)
+        qr, qi = q_c[..., 0], q_c[..., 1]
+        kr, ki = k_c[..., 0], k_c[..., 1]
+        wr = qr @ kr.transpose(-1, -2) + qi @ ki.transpose(-1, -2)   # [B,H,Tc,Tc]
+        wi = qi @ kr.transpose(-1, -2) - qr @ ki.transpose(-1, -2)
+
+        # per-state real decay matrices, collapsed into one complex Dtilde
+        KBH = K * g_c.shape[1] * g_c.shape[2]
+        D = fused_decay_matrix(g_c.reshape(KBH, Tc), Tc).reshape(g_c.shape + (Tc,))
+        cos_phi = torch.cos(phi_c)
+        sin_phi = torch.sin(phi_c)
+        Dr = (cos_phi.unsqueeze(-1) * D).sum(dim=0)          # [B,H,Tc,Tc]
+        Di = (sin_phi.unsqueeze(-1) * D).sum(dim=0)
+
+        # A = W (complex) (.) Dtilde (complex)
+        ar = wr * Dr - wi * Di
+        ai = wr * Di + wi * Dr
+        vpr, vpi = vp_c[..., 0], vp_c[..., 1]
+        yr = ar @ vpr - ai @ vpi
+        yi = ar @ vpi + ai @ vpr
+        y_c = torch.stack([yr, yi], dim=-1)                  # [B,H,Tc,d,2]
+
+        log_g = torch.log(g_c + 1e-6)
+        cum_decay = torch.exp(torch.cumsum(log_g, dim=-1))   # [K,B,H,Tc]
+
+        if not first:
+            Sr, Si = S[..., 0], S[..., 1]                    # [K,B,H,d,d]
+            qr_k, qi_k = qr.unsqueeze(0), qi.unsqueeze(0)    # [1,B,H,Tc,d]
+            Sq_r = (Sr @ qr_k.transpose(-1, -2) - Si @ qi_k.transpose(-1, -2)).transpose(-1, -2)
+            Sq_i = (Sr @ qi_k.transpose(-1, -2) + Si @ qr_k.transpose(-1, -2)).transpose(-1, -2)
+            cw_r = cos_phi * cum_decay
+            cw_i = sin_phi * cum_decay
+            rd_r = (Sq_r * cw_r.unsqueeze(-1) - Sq_i * cw_i.unsqueeze(-1)).sum(dim=0)
+            rd_i = (Sq_r * cw_i.unsqueeze(-1) + Sq_i * cw_r.unsqueeze(-1)).sum(dim=0)
+            y_c = y_c + torch.stack([rd_r, rd_i], dim=-1)
+
+        # per-state chunk write: S_k <- S_k * total_decay_k + V' (x) (K decay_tail_k)*
+        D_last = D[:, :, :, -1, :]                           # [K,B,H,Tc]
+        vpr_k, vpi_k = vpr.unsqueeze(0), vpi.unsqueeze(0)     # [1,B,H,Tc,d]
+        wv_r = vpr_k * D_last.unsqueeze(-1)
+        wv_i = vpi_k * D_last.unsqueeze(-1)
+        kr_k, ki_k = kr.unsqueeze(0), ki.unsqueeze(0)
+        sr = wv_r.transpose(-1, -2) @ kr_k + wv_i.transpose(-1, -2) @ ki_k
+        si = wv_i.transpose(-1, -2) @ kr_k - wv_r.transpose(-1, -2) @ ki_k
+        S_chunk = torch.stack([sr, si], dim=-1)              # [K,B,H,d,d,2]
+        total_decay = cum_decay[:, :, :, -1]                 # [K,B,H]
+        S_new = S * total_decay[..., None, None, None] + S_chunk
+        return y_c, S_new
+
+    def _forward_multistate_fused(self, x, q, k, v, d):
+        B, T = x.shape[0], x.shape[1]
+        H, K = self.num_heads, self.n_states
+        C = self.chunk_size if self.chunk_size > 0 else T
+        scale = d ** -0.5
+        phi = self.phase_proj(cabs(x)).view(B, T, H, K).permute(3, 0, 2, 1)  # [K,B,H,T]
+        gamma_all, v_prime = self._gamma_all_and_vprime(x, v)                # [K,B,H,T], [B,H,T,d,2]
+        q_s = q * scale
+        recompute = getattr(self, 'recompute_pam_chunks', False) and self.training
+
+        S = q.new_zeros(K, B, H, d, d, 2)
+        outputs = []
+        for start in range(0, T, C):
+            end = min(start + C, T)
+            q_c = q_s[:, :, start:end]                       # [B,H,Tc,d,2]
+            k_c = k[:, :, start:end]
+            vp_c = v_prime[:, :, start:end]                  # [B,H,Tc,d,2]
+            g_c = gamma_all[:, :, :, start:end]              # [K,B,H,Tc]
+            phi_c = phi[:, :, :, start:end]                  # [K,B,H,Tc]
+            first = start == 0
+            if recompute:
+                y_c, S = grad_checkpoint(
+                    self._fused_chunk_step, q_c, k_c, vp_c, g_c, phi_c, S, first,
+                    use_reentrant=False,
+                )
+            else:
+                y_c, S = self._fused_chunk_step(q_c, k_c, vp_c, g_c, phi_c, S, first)
+            outputs.append(y_c)
+
+        return torch.cat(outputs, dim=2), S
+
     # ── Main forward ──────────────────────────────────────────────────────────
 
     def forward(self, x, state=None, step_offset: int = 0):
@@ -456,7 +584,15 @@ class V11PAMLayer(nn.Module):
         # Training (parallel form): state is None and T>1.
         if state is None and T > 1:
             if self.n_states > 1:
-                y, new_state = self._forward_multistate(x, q, k, v, d)
+                use_fused = (
+                    getattr(self, 'fused_e3', True)
+                    and self.decay_mode != 'per_channel'
+                    and self.write_mode == 'additive'
+                )
+                if use_fused:
+                    y, new_state = self._forward_multistate_fused(x, q, k, v, d)
+                else:
+                    y, new_state = self._forward_multistate(x, q, k, v, d)
             elif self.write_mode == 'delta':
                 gamma, v_prime = self._gamma_and_vprime(x, v)
                 beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)  # [B,H,T]
@@ -679,6 +815,43 @@ class V11LM(nn.Module):
         )
         aux_loss = torch.tensor(0.0, device=input_ids.device)
         return logits, new_states, aux_loss
+
+    def _hidden_to_lm(self, input_ids, step_offset: int = 0):
+        """Run the stack + head norm, return pre-logit complex hidden `lm` [B,T,dim,2]."""
+        z = self.embed(input_ids)
+        if self.pos_embed is not None:
+            z = self.pos_embed(z, step_offset=step_offset)
+        z = self.embed_norm(z)
+        use_ckpt = self.config.gradient_checkpointing and self.training
+        for block in self.blocks:
+            if use_ckpt:
+                z, _ = self._ckpt_block(block, z, step_offset)
+            else:
+                z, _ = block(z, pam_state=None, step_offset=step_offset)
+        z = self.output_norm(z)
+        return self.lm_head_norm(self.lm_head_proj(z))
+
+    def ce_from_lm(self, lm, labels, loss_mask=None, ignore_index=-100, chunk: int = 4096):
+        """Chunked cross-entropy from pre-logit complex hidden `lm` [B,T,dim,2].
+
+        The tied head `lm_r @ E_r.T + lm_i @ E_i.T` folds into one real matmul
+        H @ W.T with H=concat(lm_r,lm_i), W=concat(E_r,E_i); chunked-CE never holds
+        the full [N,vocab] logits/softmax. Kept eager (compile the stack, not this).
+        """
+        from v11.fused_ce import fused_linear_cross_entropy
+        B, T = labels.shape
+        H = torch.cat([lm[..., 0], lm[..., 1]], dim=-1).reshape(B * T, -1)
+        W = torch.cat([self.embed.embed_real.weight, self.embed.embed_imag.weight], dim=-1)
+        mask = loss_mask.reshape(-1) if loss_mask is not None else None
+        return fused_linear_cross_entropy(H, W, labels.reshape(-1), mask=mask,
+                                          chunk=chunk, ignore_index=ignore_index)
+
+    def fused_ce_loss(self, input_ids, labels, loss_mask=None, ignore_index=-100,
+                      chunk: int = 4096):
+        """Convenience eager path: hidden stack + chunked CE (exact == forward+CE)."""
+        lm = self._hidden_to_lm(input_ids)
+        return self.ce_from_lm(lm, labels, loss_mask=loss_mask,
+                               ignore_index=ignore_index, chunk=chunk)
 
     @staticmethod
     def _ckpt_block(block, z, step_offset):

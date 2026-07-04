@@ -75,6 +75,13 @@ MIN_DISK_GB="${MIN_DISK_GB:-15}"
 COMPILE_ARGS="--compile --compile_mode default"
 [[ "$COMPILE" == "0" ]] && COMPILE_ARGS=""
 
+# Memory-lean chunked linear+CE (exact math): frees ~30GB at B=18/T=2048 so a
+# larger BATCH_SIZE fits. Fused E3 (the 1.62x speedup) is always on by default in
+# the model. Enable with FUSED_CE=1 (recommended when raising BATCH_SIZE).
+FUSED_CE="${FUSED_CE:-0}"
+FUSED_CE_ARGS=""
+[[ "$FUSED_CE" == "1" ]] && FUSED_CE_ARGS="--fused_ce --fused_ce_chunk ${FUSED_CE_CHUNK:-4096}"
+
 disk_check() {
   local free_gb
   free_gb="$(df -BG / | awk 'NR==2{gsub("G","",$4); print $4}')"
@@ -97,12 +104,23 @@ pretrain)
   if [[ "$SCRATCH" == "1" ]]; then
     echo "[pretrain] from scratch (round $ROUND) -> $PT_CKPT_DIR"
   else
-    RESUME_ARGS="--resume $(pt_best)"
+    # New round = weights-only resume (--resume_from): fresh warmup->cosine over
+    # this round's TOKEN_BUDGET, fresh optimizer, and global_tokens reset to 0 so
+    # the budget counts THIS round's tokens. Cursor seeding still uses the ckpt's
+    # per_source_docs (fresh tokens, no reuse). Full-state resume (--resume) keeps
+    # the old decayed schedule + cumulative counters and is ONLY for crash recovery
+    # inside a round; enable with RESUME_FULL=1.
+    if [[ "${RESUME_FULL:-0}" == "1" ]]; then
+      RESUME_ARGS="--resume $(pt_best)"
+      echo "[pretrain] FULL resume (crash recovery): schedule/optimizer/counters restored"
+    else
+      RESUME_ARGS="--resume_from $(pt_best)"
+    fi
     # Auto cursors from the previous round's checkpoint (fresh tokens).
     eval "$(eval "$PYTHON_BIN scripts/v11_data_cursor.py --checkpoint $(pt_best) --fineweb-name $FINEWEB_NAME --emit env")"
     CURSOR_ARGS="--dclm_skip_docs ${DCLM_SKIP_DOCS:-0} --fineweb_skip_docs ${FINEWEB_SKIP_DOCS:-0} --smoltalk2_mid_skip_rows ${SMOLTALK2_MID_SKIP_ROWS:-0}"
     FINEWEB_NAME="${FINEWEB_NAME:-sample-10BT}"
-    echo "[pretrain] resume $(pt_best) cursors: $CURSOR_ARGS fineweb=$FINEWEB_NAME"
+    echo "[pretrain] resume $(pt_best) ($RESUME_ARGS) cursors: $CURSOR_ARGS fineweb=$FINEWEB_NAME"
   fi
   LOG_DIR=$(make_log_dir "v11" "round${ROUND}_pretrain")
   GEN_PROMPT="In 1923 , the University of"
@@ -113,7 +131,7 @@ pretrain)
     --fineweb_name $FINEWEB_NAME --blend_warmup_tokens $BLEND_WARMUP_TOKENS \
     --seed $SEED --lr $LR --warmup_steps $WARMUP_STEPS \
     --amp_dtype auto --num_workers 0 --gen_every 5000 --save_every_steps $SAVE_EVERY_STEPS \
-    --no_grad_ckpt $COMPILE_ARGS $RESUME_ARGS $CURSOR_ARGS"
+    --no_grad_ckpt $COMPILE_ARGS $FUSED_CE_ARGS $RESUME_ARGS $CURSOR_ARGS"
   write_run_info "$LOG_DIR" "V11 round $ROUND pretrain ($ROUND_TAG)" "$ARGS"
   eval "$PYTHON_BIN -m v11.train" $ARGS \
     --gen_prompt "'$GEN_PROMPT'" --log_dir "$LOG_DIR" --checkpoint_dir "$PT_CKPT_DIR"
@@ -135,7 +153,7 @@ sft)
     --lr ${SFT_LR:-5e-5} --warmup_steps 200 --sft_filter hard \
     --think_fraction $THINK_FRACTION --smoltalk2_skip_rows ${SMOLTALK2_SKIP_ROWS:-0} \
     ${SFT_MAX_SAMPLES:+--max_samples $SFT_MAX_SAMPLES} \
-    --amp_dtype auto --num_workers 4 --gen_every 0 --no_grad_ckpt $COMPILE_ARGS \
+    --amp_dtype auto --num_workers 4 --gen_every 0 --no_grad_ckpt $COMPILE_ARGS $FUSED_CE_ARGS \
     --resume_from $(pt_best)"
   write_run_info "$LOG_DIR" "V11 round $ROUND smoltalk2 SFT ($ROUND_TAG)" "$ARGS"
   eval "$PYTHON_BIN -m v11.train" $ARGS \

@@ -758,3 +758,61 @@ built at vocab 50261, blend streamed (dclm/fineweb/smoltalk2_mid), warmup drew
 web-only then opened the blend, and the checkpoint saved `per_source_docs`
 (`{dclm:3317, fineweb:385, smoltalk2_mid:8}`) + `per_source_tokens`. Tokenizer
 check: all four specials encode to single ids.
+
+---
+
+## Training-speed rework (exact-math, 2026-07-04)
+
+Goal: faster/leaner **same-GPU** training with **bit-exact math** (no quality
+change), so `round-4b-gate` trains on the identical model. All changes are in
+`v11/model.py` behind flags; parity is gated in `v11/selftest.py` and the step
+benchmark is `v11/bench_step.py`.
+
+### Findings (RTX Pro 6000, `v11_e3_k3_chat`, B=18/T=2048, bf16 + torch.compile, full fwd+loss+bwd+AdamW step)
+
+| Variant | tok/s | ms/step | Peak VRAM | vs baseline |
+|---------|------|---------|-----------|-------------|
+| loop (old E3 K-loop + std CE) | 27,781 | 1327 | 79.9 GB | — |
+| fused E3 | 44,959 | 820 | 70.3 GB | **1.62x**, −10 GB |
+| fused E3 + chunked CE | 43,890 | 840 | **46.9 GB** | 1.58x, **−33 GB (−41%)** |
+
+**Batch headroom** (fused+ce, T=2048): B=8 -> 23.0 GB / 37.4k tok/s ; B=18 -> 46.9 GB ;
+B=32 -> 81.4 GB / **51.2k tok/s** (larger batch = better matmul efficiency) ; B=48 -> OOM.
+So the freed memory converts directly to batch: **B=32 now fits** (was ~impossible at
+79.9 GB for B=18), and **B<=8 fits a 24 GB RTX 4090** — 100M PAM training is now 4090-viable.
+
+### What changed (why it's exact)
+1. **Fused E3** (`fused_e3=True`, default). The old `_forward_multistate` ran the whole
+   chunked PAM **K=3 times**. But the QK\* score `W` and protected value `v'` are
+   **state-independent** (only the decay differs), and phase-routed retrieval is **linear**,
+   so the per-state decay matrices collapse into ONE complex matrix
+   `Dtilde[t,s] = Σ_k e^{iφ_k(t)} D_k[t,s]` and the intra-chunk output is a single complex
+   matmul `y=(W⊙Dtilde)@v'`. Big C×C matmuls per chunk: 3× -> 1×. Carried-state read/write
+   stay per-state but are the cheap O(C·d²) ops (K folded into batched matmul). Selftest:
+   fwd `7.6e-19`, state `0.0`, grad `6.8e-21` vs the K-loop — bit-identical.
+2. **Chunked cross-entropy** (`fused_ce_loss` / `ce_from_lm`, `v11/fused_ce.py`). The tied
+   head is one real matmul `H@W.T`, `H=concat(lm_r,lm_i)`, `W=concat(E_r,E_i)`; a custom
+   autograd fn computes CE in row-chunks so the `[B*T, 50261]` logits+softmax tensor
+   (~4 GB + grad) is never materialized. Exact vs `F.cross_entropy`: loss `2.7e-7`,
+   all-param grad `1.6e-8`. Compile the stack, keep CE eager.
+3. **Selective recompute** (`recompute_pam_chunks=True`, off by default). Per-chunk
+   `_fused_chunk_step` wrapped in `torch.utils.checkpoint`: the big `[B,H,C,C]` W/D/A
+   tensors are recomputed in backward instead of stored (trades FLOPs for activation VRAM).
+   Bit-exact (`6.5e-19`). VRAM saving to be measured on GPU; use only if pushing batch/seq.
+
+### Notes
+- Baseline peak was **79.9 GB** at B=18 — genuinely near the 96 GB card limit; the CE fix
+  removed that pressure.
+- Contrasts with the earlier **Flash-PAM negative** (kernel reformulation, slower): this is
+  pure algebraic reduction of redundant work + fewer materialized tensors, which the
+  inductor compiler rewards. No custom CUDA/Triton.
+- Still TODO (speculative until benchmarked): Gauss 3-mult complex matmul, structure-of-
+  arrays (r,i) layout, compile-mode/chunk_size sweep, bigger presets + long-context
+  state-carry (TBPTT).
+
+### round-4b-gate readiness
+Math is identical to `round-2b-gate`, so `round-4b-gate` can resume from the round-1
+**pretrain** checkpoint (+2B tokens) with `fused_e3=True` (already the default) and,
+optionally, `fused_ce_loss` in the trainer for the VRAM win. `fused_ce` is **not yet wired
+into `v7/train.py`** (the trainer still calls `forward()`+`_masked_ce`); wiring it is the
+one remaining integration step to capture the memory headroom in the real round.
