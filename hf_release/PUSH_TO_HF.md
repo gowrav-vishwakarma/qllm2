@@ -29,10 +29,11 @@ hf auth login
 # or export HF_TOKEN=hf_...
 ```
 
-## Continuous shipping (rounds + revision tags)
+## Continuous shipping (rounds + main)
 
 Each `+2B` round ships to a Hugging Face **revision tag** (e.g. `round-2b-gate`,
-`round-4b-gate`) so `main` stays stable and every round is separately pullable.
+`round-4b-gate`) **and** overwrites **`main`** so visitors who open the Files tab
+see the latest round by default. Every round tag stays pullable for pinned downloads.
 Training runs on GCP; publishing runs on the RTX4090 (which holds the HF token).
 
 Server records each ship-ready round in `releases/server_manifest.json` (written
@@ -47,25 +48,25 @@ ROUND_TAG=round-2b-gate ./scripts/run_v11_round.sh ship
 ./scripts/pull_v11_release.sh --round round-2b-gate   # incremental, sha256-verified
 cp releases/round-2b-gate/qllm_v11_e3k3_chat.pt hf_release/qllm_v11_e3k3_chat.pt
 cd hf_release && bash verify.sh && bash verify_legacy.sh
-uv run python scripts/push_qllm_hf.py --revision round-2b-gate
+uv run python scripts/push_qllm_hf.py --revision round-2b-gate --also-main
 ```
 
-**Dual verification (required before any push that updates shared code):**
+**Dual verification (required before any push):**
 
 | Script | Checkpoint | Expect |
 |--------|------------|--------|
 | `verify.sh` | `hf_release/qllm_v11_e3k3_chat.pt` (current round export) | Paris + `stopped_on_im_end=True` |
-| `verify_legacy.sh` | HF `main` weights (auto-download) or `LEGACY_CKPT=...` | Same Paris/im_end checks on vocab **50259** |
+| `verify_legacy.sh` | HF `v1-old-deprecated-10B-sft` weights (auto-download) or `LEGACY_CKPT=...` | Same Paris/im_end checks on vocab **50259** |
 
-`verify_legacy.sh` downloads `qllm_v11_e3k3_chat.pt` from `--revision main` if not present
-(`LEGACY_DIR` defaults to `/tmp/qllm-legacy-main`). Requires `hf auth login` and repo access
-(gated model). Run **both** scripts on the RTX4090 before `ship` or before updating code files
-on HF `main`.
+`verify_legacy.sh` downloads `qllm_v11_e3k3_chat.pt` from
+`--revision v1-old-deprecated-10B-sft` if not present (`LEGACY_DIR` defaults to
+`/tmp/qllm-legacy-v1`). Requires `hf auth login` and repo access (gated model).
+Run **both** scripts on the RTX4090 before `ship` or before updating HF `main`.
 
 ```bash
 cd hf_release
 bash verify.sh          # round-2b (50261, content-aware gate)
-bash verify_legacy.sh   # legacy main (50259, magnitude gate)
+bash verify_legacy.sh   # legacy v1-old-deprecated-10B-sft (50259, magnitude gate)
 ```
 
 The smart pull uses per-machine state at `~/.qllm/v11_pull_state.json`, so a
@@ -98,12 +99,31 @@ cd hf_release && bash verify.sh && bash verify_legacy.sh
 ```
 
 Both must print success (Paris + stop on im_end). `verify_legacy.sh` needs HF auth and
-downloads the legacy `main` weights once.
+downloads the legacy archive-tag weights once.
 
-**Optional — refresh code on HF `main` (weights unchanged):**
+## One-time: promote round-2b to main (archive legacy)
 
-After both verify scripts pass, push shared chat/modeling files so users who pin `--revision main`
-get the unified `run_chat.py` (config-driven vocab 50259/50261):
+If HF `main` still holds the old ~10B legacy checkpoint, run this **once** on the RTX4090
+after `verify.sh` passes. It snapshots the current `main` into tag
+`v1-old-deprecated-10B-sft` (no re-upload of legacy weights), then overwrites `main`
+with the local round-2b bundle:
+
+```bash
+cp releases/round-2b-gate/qllm_v11_e3k3_chat.pt hf_release/qllm_v11_e3k3_chat.pt
+cd hf_release && bash verify.sh
+# If legacy is still on main, verify it before archiving:
+#   LEGACY_REVISION=main bash verify_legacy.sh
+uv run python scripts/push_qllm_hf.py --revision main \
+  --archive-main-as v1-old-deprecated-10B-sft
+```
+
+**Ordering:** create the archive tag **before** `verify_legacy.sh` is repointed to
+`v1-old-deprecated-10B-sft`. After this promote, routine `ship` uses `--also-main` and
+legacy checks pull from the archive tag.
+
+**Optional — refresh code on HF `main` only (weights unchanged):**
+
+After both verify scripts pass, push shared chat/modeling files without changing weights:
 
 ```bash
 cd hf_release && bash verify.sh && bash verify_legacy.sh
@@ -114,11 +134,15 @@ uv run python scripts/push_qllm_hf.py --revision main \
 ## Upload
 
 ```bash
-# Publish to a round revision tag (recommended):
-uv run python scripts/push_qllm_hf.py --revision round-2b-gate
+# Publish to a round revision tag and update main (recommended):
+uv run python scripts/push_qllm_hf.py --revision round-2b-gate --also-main
 
-# Or publish to main (no tag):
-uv run python scripts/push_qllm_hf.py
+# Publish to main only (e.g. one-time promote with archive):
+uv run python scripts/push_qllm_hf.py --revision main \
+  --archive-main-as v1-old-deprecated-10B-sft
+
+# Publish to main without archiving (subsequent rounds via ship --also-main):
+uv run python scripts/push_qllm_hf.py --revision main
 ```
 
 Or manually:
@@ -166,6 +190,6 @@ python run_chat.py --prompt "What is the capital of France?"
 | `403` on xet-write-token | Set `HF_HUB_DISABLE_XET=1` before upload (already set in `push_qllm_hf.py`) |
 | Upload timeout | Retry; ~400 MB should succeed in one shot |
 | `verify.sh` fails | Do not upload — fix export or modeling first |
-| `verify_legacy.sh` fails | Legacy `main` chat broken — fix `run_chat.py` / `modeling_qllm.py` before updating shared code on HF |
+| `verify_legacy.sh` fails | Legacy `v1-old-deprecated-10B-sft` chat broken — fix `run_chat.py` / `modeling_qllm.py` before updating HF |
 | `verify_legacy.sh` access denied | Run on RTX4090 with `hf auth login`; repo may be gated — approve access on HF first |
 | CUDA OOM at inference | Use CPU or reduce `max_new_tokens` |

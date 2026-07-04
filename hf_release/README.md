@@ -26,21 +26,19 @@ This checkpoint proves that architectures outside the transformer/SSM families *
 
 ## Which revision to use
 
-**Use `round-*` tags.** That is the current v2 architecture line. We ship a new checkpoint after every **+2B pretrain tokens** (+ chat SFT).
+**Use HF `main` (default).** It tracks the latest v2 round. We ship a new checkpoint after every **+2B pretrain tokens** (+ chat SFT); each round also gets a permanent **`round-*` tag** (e.g. `round-2b-gate`, `round-4b-gate`).
 
-| | **`round-2b-gate` (latest)** | **`main` (deprecated)** |
-|--|------------------------------|-------------------------|
-| **Status** | **Active line** — Round 1, continued each +2B | Legacy ~10B-token checkpoint; **comparison only** |
+| | **`main` / latest round (recommended)** | **`v1-old-deprecated-10B-sft` (deprecated)** |
+|--|----------------------------------------|------------------------------------------------|
+| **Status** | **Active line** — Round 1 on `main`, continued each +2B | Legacy ~10B-token checkpoint; **comparison only** |
 | **Params / pretrain** | ~100M, **2B tokens** (grows each round) | ~100M, ~10B tokens |
 | **Gate** | Content-aware — real+imag (`gate_content_aware=true`) | Magnitude-only (legacy) |
 | **Vocab** | **50261** — ChatML + `<think>` / `</think>` | **50259** — ChatML only |
-| **Download** | `--revision round-2b-gate` | `--revision main` |
+| **Download** | default (no `--revision`) or `--revision round-2b-gate` | `--revision v1-old-deprecated-10B-sft` |
 
-**Latest shipped:** **`round-2b-gate`** — **2026-07-04** (Round 1, first on the v2 line).
+**Latest shipped:** **`round-2b-gate`** on **`main`** — **2026-07-04** (Round 1, first on the v2 line).
 
-**Do not start new work on HF `main`.** It is the old pre-v2 stack (magnitude-only gate, vocab 50259, old SmolTalk pipeline). We keep it **for comparison only** — not for production or further training. It is **not** resumable on the v2 line.
-
-**2B tokens ≠ worse architecture.** `round-2b-gate` has fewer pretrain tokens than `main` (~2B vs ~10B), but a **more mature stack**: content-aware phase gate, reasoning-aware vocab, DCLM + FineWeb + smoltalk2 Mid blend, and smoltalk2 SFT with hard filter. Knowledge depth grows each round (`round-4b-gate`, …); the **architecture and data recipe** you want are on the round tags.
+**2B tokens ≠ worse architecture.** The current v2 line has fewer pretrain tokens than the legacy ~10B checkpoint, but a **more mature stack**: content-aware phase gate, reasoning-aware vocab, DCLM + FineWeb + smoltalk2 Mid blend, and smoltalk2 SFT with hard filter. Knowledge depth grows each round (`round-4b-gate`, …); pin a **`round-*` tag** if you need a fixed snapshot.
 
 ---
 
@@ -97,9 +95,9 @@ This architecture **cannot** be loaded with `AutoModelForCausalLM`. Use the self
 **Repo:** [huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat)
 
 ```bash
-# Latest v2 round (recommended)
+# Latest v2 round (recommended — main is the default branch)
 huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
-  --revision round-2b-gate --local-dir qllm-pam-v11-e3k3-chat
+  --local-dir qllm-pam-v11-e3k3-chat
 cd qllm-pam-v11-e3k3-chat
 pip install -r requirements.txt   # or: uv sync && uv run ...
 
@@ -123,7 +121,7 @@ One `run_chat.py` + `modeling_qllm.py` serves **both** checkpoints. Behavior com
 ```bash
 # Legacy ~10B milestone (comparison / older stack only)
 huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
-  --revision main --local-dir ./legacy
+  --revision v1-old-deprecated-10B-sft --local-dir ./legacy
 python run_chat.py --checkpoint legacy/qllm_v11_e3k3_chat.pt --max_new_tokens 64
 ```
 
@@ -238,9 +236,9 @@ uv run python eval_chat.py \
 
 1. **Pretrain from scratch** — preset `v11_e3_k3_chat` (vocab **50261**), blended DCLM-Edu + FineWeb-Edu + smoltalk2-Mid, **2B tokens per round**, content-aware GSP gate.
 2. **SFT** — `HuggingFaceTB/smoltalk2` SFT config (`think_fraction=0.15`), 1 epoch, ChatML assistant-only loss.
-3. **Ship** — export + verify, push under a **round tag** (e.g. `round-2b-gate`).
+3. **Ship** — export + verify, push under a **round tag** and update **`main`** (e.g. `round-2b-gate`).
 
-**Legacy `main` (reference only):** ~10B DCLM-Edu + FineWeb-Edu pretrain (vocab 50259), then older SmolTalk SFT with `--warmstart_chatml`.
+**Legacy tag `v1-old-deprecated-10B-sft` (reference only):** ~10B DCLM-Edu + FineWeb-Edu pretrain (vocab 50259), then older SmolTalk SFT with `--warmstart_chatml`.
 
 **ChatML template:**
 
@@ -261,8 +259,8 @@ Full reproduction: [v11/EXPERIMENTS_V11.md](https://github.com/gowrav-vishwakarm
 
 | Revision | Shipped | Pretrain | Metrics | Notes |
 |----------|---------|----------|---------|-------|
-| `main` | (legacy) | ~10B | val PPL ~7.2 | Pre-v2 — vocab 50259, magnitude gate; comparison only |
-| **`round-2b-gate`** | **2026-07-04** | **2B** | SFT PPL **7.20**, pretrain holdout **35.42** | **Round 1, v2 line** |
+| `v1-old-deprecated-10B-sft` | (legacy) | ~10B | val PPL ~7.2 | Pre-v2 — vocab 50259, magnitude gate; comparison only |
+| **`round-2b-gate` / `main`** | **2026-07-04** | **2B** | SFT PPL **7.20**, pretrain holdout **35.42** | **Round 1, v2 line** |
 
 **Round 1 pretrain mix (~2B tokens):** warmup first 1B on DCLM-Edu + FineWeb-Edu; remaining ~1B adds smoltalk2 Mid (weights 48:48:4 → ~52% DCLM-Edu, ~40% FineWeb-Edu, ~8% smoltalk2 Mid). SFT: smoltalk2 SFT, hard filter, 15% think cap, in-distribution val PPL **7.20**, acc **0.591**.
 
