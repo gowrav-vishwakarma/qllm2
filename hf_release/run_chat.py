@@ -194,7 +194,7 @@ def generate_reply(
     max_prompt_tokens: Optional[int] = None,
     default_system: str = DEFAULT_SYSTEM,
     strip_thinking_blocks: bool = False,
-) -> tuple[str, bool, int]:
+) -> tuple[str, bool, int, str]:
     prompt = format_chat_prompt_from_messages(messages, default_system=default_system)
     ids = tokenizer.encode(prompt, return_tensors='pt').to(device)
     if max_prompt_tokens is not None and ids.shape[1] > max_prompt_tokens:
@@ -216,10 +216,12 @@ def generate_reply(
     gen_ids = out[0, ids.shape[1]:].tolist()
     stopped = im_end_id in gen_ids
     reply = tokenizer.decode(gen_ids, skip_special_tokens=False)
-    reply = reply.split(IM_END, 1)[0].strip()
+    raw = reply.split(IM_END, 1)[0].strip()
     if strip_thinking_blocks:
-        reply = strip_thinking(reply)
-    return reply, stopped, n_new
+        reply = strip_thinking(raw)
+    else:
+        reply = raw
+    return reply, stopped, n_new, raw
 
 
 def _load_system_prompt(args) -> str:
@@ -275,7 +277,7 @@ def main() -> None:
 
     if args.prompt:
         messages = [{'role': 'user', 'content': args.prompt.strip()}]
-        reply, stopped, n_new = generate_reply(
+        reply, stopped, n_new, _ = generate_reply(
             model,
             tokenizer,
             messages,
@@ -315,7 +317,7 @@ def main() -> None:
             continue
 
         messages.append({'role': 'user', 'content': user.strip()})
-        reply, stopped, n_new = generate_reply(
+        reply, stopped, n_new, _ = generate_reply(
             model,
             tokenizer,
             messages,
