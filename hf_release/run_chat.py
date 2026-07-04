@@ -17,6 +17,8 @@ from modeling_qllm import V11LM, load_model
 
 IM_START = '<|im_start|>'
 IM_END = '<|im_end|>'
+THINK_START = '<think>'
+THINK_END = '</think>'
 DEFAULT_SYSTEM = 'You are a helpful assistant.'
 
 BANNER_WIDTH = 60
@@ -26,7 +28,9 @@ PASTE_MAX_SEC = 1.0
 
 def get_chat_tokenizer():
     tok = AutoTokenizer.from_pretrained('gpt2')
-    tok.add_special_tokens({'additional_special_tokens': [IM_START, IM_END]})
+    tok.add_special_tokens(
+        {'additional_special_tokens': [IM_START, IM_END, THINK_START, THINK_END]}
+    )
     tok.pad_token = tok.eos_token
     return tok
 

@@ -1,0 +1,236 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V11 round 1 pretrain (round-2b-gate)
+Date (UTC)  : 2026-07-01 11:50:22
+Date (local): 2026-07-01 11:50:22 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1005-gcp x86_64
+
+Git commit  : cbb4dd23931ff038fc93d557e62dc2622bbeabe0
+Git short   : cbb4dd2
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.25
+Arguments   : --preset v11_e3_k3_chat --stage pretrain --dataset pretrain_mix --seq_len 2048     --batch_size 18 --epochs 9999 --chunk_size 256     --token_budget 2000000000 --edu_score_min 3     --pretrain_sources dclm,fineweb,smoltalk2_mid --pretrain_weights 48,48,4     --fineweb_name sample-10BT --blend_warmup_tokens 1000000000     --seed 42 --lr 3e-4 --warmup_steps 500     --amp_dtype auto --num_workers 0 --gen_every 5000 --save_every_steps 5000     --no_grad_ckpt --compile --compile_mode default  
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ .gitignore                   |   4 +
+ README.md                    |  47 ++++++-
+ hf_release/PUSH_TO_HF.md     |  43 +++++-
+ hf_release/README.md         |  28 ++++
+ memory_probes/rank.py        |  10 +-
+ scripts/export_hf_release.py |  91 ++++++++++--
+ scripts/push_qllm_hf.py      |  29 +++-
+ scripts/v11_probe_gates.py   |  40 +++++-
+ v11/EXPERIMENTS_V11.md       |  57 ++++++++
+ v11/model.py                 |   6 +-
+ v11/train.py                 |  62 +++++++-
+ v7/data.py                   | 329 +++++++++++++++++++++++++++++++++++++------
+ v7/train.py                  |   3 +
+ 13 files changed, 664 insertions(+), 85 deletions(-)
+
+diff --git a/.gitignore b/.gitignore
+index d722b3e..66d458b 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -19,6 +19,10 @@ checkpoints*/
+ hf_release/*.pt
+ hf_release/__pycache__/
+ 
++# Release round bundles/checkpoints copied for shipping (manifest is tracked, blobs are not)
++releases/**/*.pt
++releases/**/*.tgz
++
+ # Caches
+ .cache/
+ *cache*/
+diff --git a/README.md b/README.md
+index fc83599..9a96f82 100644
+--- a/README.md
++++ b/README.md
+@@ -206,7 +206,52 @@ chat SFT):
+ **facts are unreliable** (wrong dates/founders), responses can **ramble**, and there is a known
+ **end-of-turn bug** (the model was never trained to stop). These are a *pretraining-scale*
+ ceiling, not an architecture failure — knowledge comes from pretraining, so the next phase scales
+-pretraining (DCLM-Edu + FineWeb-Edu, ~10B+ tokens), fixes ChatML/EOS, then re-SFTs on Tulu-3.
++pretraining (DCLM-Edu + FineWeb-Edu, ~10B+ tokens), fixes ChatML/EOS, then re-SFTs on chat data.
++
++---
++
++## Continuous shipping (v2 gate line)
++
++We ship improved chat models on a fixed cadence. Each **round** adds `+2B` fresh pretrain
++tokens (no reuse), runs a chat SFT, and publishes to a Hugging Face **revision tag**. Full
++provenance per round lives in **[v11/MODEL_RELEASES.md](v11/MODEL_RELEASES.md)**.
++
++**What every round trains on (knowledge + reasoning + chat):**
++
++| Ingredient | Dataset | Role |
++|-----------|---------|------|
++| Knowledge / grammar | DCLM-Edu + FineWeb-Edu (edu≥3) | web pretrain, unique per round (`skip_docs`) |
++| Reasoning + chat | smoltalk2 **Mid** (~35B tok), ChatML-rendered | blended into pretrain after a grammar warmup |
++| Chat behavior | smoltalk2 **SFT** (think-capped) | per-round supervised fine-tune |
++
++Preset `v11_e3_k3_chat`: phase-aware GSP gate, vocab **50261** (ChatML `<|im_start|>`/`<|im_end|>`
+++ reasoning `<think>`/`</think>`). Freshness is guaranteed by per-source cursors saved in each
++checkpoint; the blend adds a small ChatML+reasoning sprinkle so those tokens are trained from
++step 0.
++
++**Run a round** (GCP training, then publish from the RTX4090):
++
++```bash
++# Round 1 from scratch (2B blended pretrain -> SFT -> smoke -> export)
++ROUND=1 ROUND_TAG=round-2b-gate SCRATCH=1 TOKEN_BUDGET=2000000000 \
++  tmux new-session -d -s v11_round './scripts/run_v11_round.sh pretrain'
++./scripts/run_v11_round.sh probes && ./scripts/run_v11_round.sh sft
++./scripts/run_v11_round.sh smoke
++ROUND=1 ROUND_TAG=round-2b-gate TOKEN_BUDGET=2000000000 ./scripts/run_v11_round.sh export
++# On RTX4090 (has HF token): incremental pull -> verify -> push revision tag
++ROUND_TAG=round-2b-gate ./scripts/run_v11_round.sh ship
++```
++
++**Pull a specific shipped round:**
++
++```bash
++huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat --revision round-2b-gate --local-dir .
++```
++
++**What to ask / current limits** (per-round card in
++[hf_release/README.md](hf_release/README.md)): good at short factual Q&A, simple instructions,
++and ChatML multi-turn; still weak at math, long reasoning, and rare facts (100M base). Tulu-3 is
++**not** used routinely — only as an optional instruct-upgrade branch after saturation gates pass.
+ 
+ ---
+ 
+diff --git a/hf_release/PUSH_TO_HF.md b/hf_release/PUSH_TO_HF.md
+index 9b925f8..db46d66 100644
+--- a/hf_release/PUSH_TO_HF.md
++++ b/hf_release/PUSH_TO_HF.md
+@@ -29,13 +29,45 @@ hf auth login
+ # or export HF_TOKEN=hf_...
+ ```
+ 
+-## Build the release bundle
++## Continuous shipping (rounds + revision tags)
++
++Each `+2B` round ships to a Hugging Face **revision tag** (e.g. `round-2b-gate`,
++`round-4b-gate`) so `main` stays stable and every round is separately pullable.
++Training runs on GCP; publishing runs on the RTX4090 (which holds the HF token).
++
++Server records each ship-ready round in `releases/server_manifest.json` (written
++by `scripts/run_v11_round.sh export`). The RTX4090 pulls incrementally:
++
++```bash
++# On RTX4090 (has hf auth). One command does pull -> verify -> push:
++ROUND_TAG=round-2b-gate ./scripts/run_v11_round.sh ship
++
++# Or step by step:
++./scripts/pull_v11_release.sh --list           # server vs local, no download
++./scripts/pull_v11_release.sh --round round-2b-gate   # incremental, sha256-verified
++cp releases/round-2b-gate/qllm_v11_e3k3_chat.pt hf_release/qllm_v11_e3k3_chat.pt
++cd hf_release && bash verify.sh
++uv run python scripts/push_qllm_hf.py --revision round-2b-gate
++```
++
++The smart pull uses per-machine state at `~/.qllm/v11_pull_state.json`, so a
++second machine won't re-download a round it already has. Pull to a specific
++revision later with:
++
++```bash
++huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat --revision round-2b-gate --local-dir .
++```
++
++## Build the release bundle (manual / one-off)
+ 
+ From the qllm2 repo root:
+ 
+ ```bash
+-# 1. Export weights-only checkpoint + config.json
+-uv run python scripts/export_hf_release.py
++# 1. Export weights-only checkpoint + config.json (+ record round in manifest)
++uv run python scripts/export_hf_release.py \
++  --src checkpoints_v11_sft_chat_smoltalk_v2/best_model.pt \
++  --round round-2b-gate --tag round-2b-gate \
++  --pretrain_tokens_total 2000000000 --round_tokens 2000000000 --record-manifest
+ 
+ # 2. modeling_qllm.py, run_chat.py, requirements.txt live in hf_release/
+ #    (regenerate modeling if v11/model.py changed — see scripts/export_hf_release.py)
+@@ -49,7 +81,10 @@ Verification must print `All checks passed` (Paris + stop on im_end).
+ ## Upload
+ 
+ ```bash
+-# From repo root, after verify.sh passes:
++# Publish to a round revision tag (recommended):
++uv run python scripts/push_qllm_hf.py --revision round-2b-gate
++
++# Or publish to main (no tag):
+ uv run python scripts/push_qllm_hf.py
+ ```
+ 
+diff --git a/hf_release/README.md b/hf_release/README.md
+index 76790bc..b82ab26 100644
+--- a/hf_release/README.md
++++ b/hf_release/README.md
+@@ -37,6 +37,34 @@ This checkpoint proves that architectures outside the transformer/SSM families *
+ 
+ ---
+ 
++## Releases (revision tags)
++
++Models ship on a fixed cadence. Each `+2B` pretrain round is published under its own
++**revision tag** so you can pin an exact version. Pull a specific round:
++
++```bash
++huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat --revision <tag> --local-dir .
++```
++
++| Revision | Pretrain total | Trained on | Notes |
++|----------|----------------|-----------|-------|
++| `main` | latest | see current round | tracks the newest shipped round |
++| `round-2b-gate` | 2B | DCLM-Edu + FineWeb-Edu + smoltalk2-Mid (reasoning/chat) → smoltalk2 SFT | v2 line, phase-aware gate, vocab 50261 (`<think>`/`</think>`) |
++
++<!-- Append one row per shipped round (tag, pretrain total, datasets, notes). -->
++
++### What you can ask (and current limits)
++
++- **Good at:** short factual questions, simple instructions, everyday chat, ChatML multi-turn.
++- **Improving:** light reasoning (the model may emit `<think>…</think>` before answering).
++- **Still weak (100M base):** precise math, long multi-step reasoning, rare/long-tail facts,
++  and occasional confabulation. Not a search engine or calculator.
++
++Data recipe per round is documented in
++[v11/MODEL_RELEASES.md](https://github.com/gowrav-vishwakarma/qllm2/blob/main/v11/MODEL_RELEASES.md).
++
++---
++
+ 
+ 
+ ## Why this matters
+diff --git a/memory_probes/rank.py b/memory_probes/rank.py
+index 60b9b9c..346c6e3 100644
+--- a/memory_probes/rank.py
++++ b/memory_probes/rank.py
+@@ -147,10 +147,16 @@ def test_rank_real_text(
+         from v7.data import get_chat_tokenizer
+         from v11.model import V11LM
+ 
++        ckpt = torch.load(checkpoint, map_location='cpu', weights_only=False)
++        # Overlay the checkpoint's saved config (vocab + gate flags) so weights load.
++        saved = ckpt.get('config') or {}
++        for k, v in saved.items():
++            if hasattr(cfg, k):
++                setattr(cfg, k, v)
+         chat_tok = get_chat_tokenizer()
+-        cfg.vocab_size = len(chat_tok)
++        if len(chat_tok) != cfg.vocab_size:
++            cfg.vocab_size = len(chat_tok)
+         lm = V11LM(cfg)
+-        ckpt = torch.load(checkpoint, map_location='cpu', weights_only=False)
+         lm.load_state_dict(ckpt['model_state_dict'])
+         lm.eval().double()
+         block = lm.blocks[layer_idx]
+... (diff truncated at 200 lines)
