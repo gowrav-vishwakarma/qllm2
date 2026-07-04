@@ -17,7 +17,7 @@ from typing import Dict, Iterator, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, IterableDataset
+from torch.utils.data import ConcatDataset, Dataset, IterableDataset
 
 
 # ── Logging ──────────────────────────────────────────────────────────────────
@@ -649,6 +649,81 @@ def _conv_holdout_bucket(messages: List[dict], pct: int = 2) -> bool:
     return (zlib.adler32(blob.encode('utf-8', errors='ignore')) % 100) >= (100 - pct)
 
 
+# Flush train buffers to disk every N rows during SFT cache build so ~2M rows
+# does not OOM (single-file stack peaked at ~165 GB on this host).
+_SFT_CACHE_SHARD_SIZE = 50_000
+
+
+def _chat_sft_cache_stem(dataset_name: str, filter_tag: str, limit_tag: str, seq_len: int) -> str:
+    return f"{dataset_name}_{filter_tag}_{limit_tag}_sl{seq_len}_chatv{_CHAT_CACHE_VERSION}"
+
+
+def _stack_sft_triple(triple: Tuple[list, list, list]):
+    return (
+        torch.stack(triple[0]),
+        torch.stack(triple[1]),
+        torch.stack(triple[2]),
+    )
+
+
+def _atomic_torch_save(obj, path: Path) -> None:
+    """Write via temp file so a full disk mid-save cannot corrupt the target."""
+    tmp = path.with_suffix(path.suffix + '.tmp')
+    torch.save(obj, tmp)
+    os.replace(tmp, path)
+
+
+def _read_sft_build_state(cache_dir: Path) -> Optional[dict]:
+    """Resume metadata written after each flushed train shard."""
+    state_path = cache_dir / 'build_state.json'
+    if not state_path.exists():
+        return None
+    try:
+        return json.loads(state_path.read_text())
+    except json.JSONDecodeError:
+        return None
+
+
+def _write_sft_build_state(cache_dir: Path, state: dict) -> None:
+    path = cache_dir / 'build_state.json'
+    tmp = path.with_suffix('.json.tmp')
+    tmp.write_text(json.dumps(state) + '\n')
+    os.replace(tmp, path)
+
+
+def _validate_existing_sft_shards(cache_dir: Path) -> Tuple[int, int]:
+    """Return (n_valid_shards, n_train_rows) dropping any corrupt tail shard."""
+    n_shards = n_train = 0
+    for path in sorted(cache_dir.glob('train_*.pt')):
+        try:
+            part = torch.load(path, map_location='cpu', weights_only=False)
+            rows = int(part['input_ids'].shape[0])
+        except Exception:
+            path.unlink(missing_ok=True)
+            print(f"  [cache] removed corrupt shard {path.name}", flush=True)
+            break
+        n_shards += 1
+        n_train += rows
+    return n_shards, n_train
+
+
+def _load_chat_sft_from_sharded_cache(cache_dir: Path, dataset_name: str):
+    manifest = json.loads((cache_dir / 'manifest.json').read_text())
+    shards = []
+    for i in range(manifest['n_train_shards']):
+        part = torch.load(cache_dir / f'train_{i:04d}.pt', weights_only=False)
+        shards.append(MaskedTextDataset(part['input_ids'], part['labels'], part['loss_mask']))
+    val = torch.load(cache_dir / 'val.pt', weights_only=False)
+    train_ds = shards[0] if len(shards) == 1 else ConcatDataset(shards)
+    val_ds = MaskedTextDataset(val['input_ids'], val['labels'], val['loss_mask'])
+    print(
+        f"[cache] Loaded {dataset_name} chat SFT from {cache_dir} "
+        f"(train {manifest['n_train']:,} in {manifest['n_train_shards']} shards, "
+        f"val {manifest['n_val']:,})"
+    )
+    return train_ds, val_ds
+
+
 def load_chat_sft(
     dataset_name: str,
     row_iter_fn,
@@ -664,15 +739,21 @@ def load_chat_sft(
     `row_iter_fn` is a callable returning an iterable of dicts with `messages`
     (and optional `source`). Returns `(train_ds, val_ds, tokenizer)` where val is
     a deterministic in-distribution holdout (not WikiText).
+
+    Large corpora are cached as on-disk shards (``train_0000.pt``, ...) so cache
+    build stays bounded in RAM; legacy single ``.pt`` caches are still supported.
     """
     tokenizer = get_chat_tokenizer()
     filter_tag = sft_filter or 'none'
     limit_tag = f"ms{max_samples}" if max_samples else "full"
-    cache_path = (
-        Path('.cache') / 'v7_tokens'
-        / f"{dataset_name}_{filter_tag}_{limit_tag}_sl{seq_len}_chatv{_CHAT_CACHE_VERSION}.pt"
-    )
+    cache_root = Path('.cache') / 'v7_tokens'
+    cache_stem = _chat_sft_cache_stem(dataset_name, filter_tag, limit_tag, seq_len)
+    cache_path = cache_root / f'{cache_stem}.pt'
+    cache_dir = cache_root / cache_stem
 
+    if use_cache and (cache_dir / 'manifest.json').exists():
+        train_ds, val_ds = _load_chat_sft_from_sharded_cache(cache_dir, dataset_name)
+        return train_ds, val_ds, tokenizer
     if use_cache and cache_path.exists():
         cached = torch.load(cache_path, weights_only=False)
         print(
@@ -683,10 +764,60 @@ def load_chat_sft(
         val_ds = MaskedTextDataset(cached['va_input'], cached['va_labels'], cached['va_mask'])
         return train_ds, val_ds, tokenizer
 
-    print(f"Building {dataset_name} chat SFT (filter={filter_tag}, limit={max_samples})...")
+    print(
+        f"Building {dataset_name} chat SFT (filter={filter_tag}, limit={max_samples}, "
+        f"shard={_SFT_CACHE_SHARD_SIZE:,})..."
+    )
     tr: Tuple[list, list, list] = ([], [], [])
     va: Tuple[list, list, list] = ([], [], [])
-    kept = skipped = held = 0
+    kept = skipped = held = n_train = 0
+    train_shard = 0
+    resume_kept = 0
+    resume_train_rows = 0
+    train_rows_seen = 0
+    if use_cache:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        train_shard, n_train = _validate_existing_sft_shards(cache_dir)
+        state = _read_sft_build_state(cache_dir)
+        if state and train_shard > 0:
+            resume_kept = int(state.get('kept', 0))
+            print(
+                f"  [cache] resuming from kept={resume_kept:,}, "
+                f"shards={train_shard}, train_rows={n_train:,}",
+                flush=True,
+            )
+        elif train_shard > 0:
+            resume_train_rows = n_train
+            print(
+                f"  [cache] resuming from {train_shard} shards "
+                f"({n_train:,} train rows, no build_state)...",
+                flush=True,
+            )
+
+    def _flush_train_shard():
+        nonlocal train_shard, n_train, kept, held, skipped
+        if not tr[0]:
+            return
+        inp, lab, mask = _stack_sft_triple(tr)
+        n_train += inp.shape[0]
+        if use_cache:
+            shard_path = cache_dir / f'train_{train_shard:04d}.pt'
+            _atomic_torch_save(
+                {'input_ids': inp, 'labels': lab, 'loss_mask': mask},
+                shard_path,
+            )
+            _write_sft_build_state(cache_dir, {
+                'kept': kept,
+                'held': held,
+                'skipped': skipped,
+                'train_shard': train_shard + 1,
+                'n_train': n_train,
+            })
+        train_shard += 1
+        tr[0].clear()
+        tr[1].clear()
+        tr[2].clear()
+
     for ex in row_iter_fn():
         messages = ex.get('messages') or []
         source = ex.get('source') or ''
@@ -697,55 +828,78 @@ def load_chat_sft(
         if enc is None:
             skipped += 1
             continue
-        bucket = va if _conv_holdout_bucket(messages, holdout_pct) else tr
-        bucket[0].append(enc[0])
-        bucket[1].append(enc[1])
-        bucket[2].append(enc[2])
-        kept += 1
-        if bucket is va:
+        in_holdout = _conv_holdout_bucket(messages, holdout_pct)
+        if resume_kept > 0 and kept < resume_kept:
+            if in_holdout:
+                va[0].append(enc[0])
+                va[1].append(enc[1])
+                va[2].append(enc[2])
+                held += 1
+            kept += 1
+            continue
+        if resume_train_rows > 0 and train_rows_seen < resume_train_rows:
+            if in_holdout:
+                va[0].append(enc[0])
+                va[1].append(enc[1])
+                va[2].append(enc[2])
+                held += 1
+            else:
+                train_rows_seen += 1
+            kept += 1
+            continue
+        if in_holdout:
+            va[0].append(enc[0])
+            va[1].append(enc[1])
+            va[2].append(enc[2])
             held += 1
+        else:
+            tr[0].append(enc[0])
+            tr[1].append(enc[1])
+            tr[2].append(enc[2])
+            if len(tr[0]) >= _SFT_CACHE_SHARD_SIZE:
+                _flush_train_shard()
+        kept += 1
         if kept % 5000 == 0:
             print(
-                f"  {dataset_name}: kept {kept:,} (val {held:,}), skipped {skipped:,}...",
+                f"  {dataset_name}: kept {kept:,} (train {n_train + len(tr[0]):,}, "
+                f"val {held:,}), skipped {skipped:,}...",
                 flush=True,
             )
 
-    if not tr[0]:
+    _flush_train_shard()
+    if n_train == 0:
         raise RuntimeError(f"{dataset_name}: filtering removed all training samples")
     if not va[0]:
-        for _ in range(min(64, len(tr[0]) - 1)):
-            for k in range(3):
-                va[k].append(tr[k].pop())
+        raise RuntimeError(f"{dataset_name}: holdout val empty after filtering")
 
-    def _stack(triple):
-        return (
-            torch.stack(triple[0]),
-            torch.stack(triple[1]),
-            torch.stack(triple[2]),
-        )
-
-    tr_input, tr_labels, tr_mask = _stack(tr)
-    va_input, va_labels, va_mask = _stack(va)
-    train_ds = MaskedTextDataset(tr_input, tr_labels, tr_mask)
-    val_ds = MaskedTextDataset(va_input, va_labels, va_mask)
+    va_input, va_labels, va_mask = _stack_sft_triple(va)
     print(
-        f"  {dataset_name}: train {len(train_ds):,}, val {len(val_ds):,}, "
-        f"skipped {skipped:,}, shape={tuple(tr_input.shape)}"
+        f"  {dataset_name}: train {n_train:,}, val {len(va_input):,}, "
+        f"skipped {skipped:,}, shards={train_shard}"
     )
 
     if use_cache:
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-        torch.save(
-            {
-                'tr_input': tr_input, 'tr_labels': tr_labels, 'tr_mask': tr_mask,
-                'va_input': va_input, 'va_labels': va_labels, 'va_mask': va_mask,
-                'n_train': len(train_ds), 'n_val': len(val_ds),
-                'chat_cache_version': _CHAT_CACHE_VERSION,
-            },
-            cache_path,
+        _atomic_torch_save(
+            {'input_ids': va_input, 'labels': va_labels, 'loss_mask': va_mask},
+            cache_dir / 'val.pt',
         )
-        print(f"[cache] Saved {dataset_name} chat SFT to {cache_path}")
+        manifest = {
+            'n_train': n_train,
+            'n_val': int(va_input.shape[0]),
+            'n_train_shards': train_shard,
+            'seq_len': seq_len,
+            'chat_cache_version': _CHAT_CACHE_VERSION,
+        }
+        (cache_dir / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+        (cache_dir / 'build_state.json').unlink(missing_ok=True)
+        print(f"[cache] Saved {dataset_name} chat SFT shards to {cache_dir}")
+        train_ds, val_ds = _load_chat_sft_from_sharded_cache(cache_dir, dataset_name)
+        return train_ds, val_ds, tokenizer
 
+    val_ds = MaskedTextDataset(va_input, va_labels, va_mask)
+    train_ds = MaskedTextDataset(*_stack_sft_triple(tr)) if tr[0] else None
+    if train_ds is None:
+        raise RuntimeError(f"{dataset_name}: no training samples after build")
     return train_ds, val_ds, tokenizer
 
 

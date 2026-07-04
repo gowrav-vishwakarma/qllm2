@@ -245,6 +245,8 @@ class V11Config:
     delta_chunk: int = 64               # E2 chunk size for the UT transform
     state_dt_spread: float = 2.0        # E3 spread of per-state decay biases
     base_dt_bias: float = -4.0          # uniform decay bias (flat stack)
+    gate_content_aware: bool = False    # GSP gate reads real+imag (2*dim) vs magnitude-only
+    protect_gate_bias: float = -3.0       # init bias for the GSP write-protect gate
 
 
 # ── Phase-Associative Memory (V11) ──────────────────────────────────────────
@@ -273,6 +275,8 @@ class V11PAMLayer(nn.Module):
         self.write_mode = cfg.write_mode
         self.n_states = cfg.n_states
         self.delta_chunk = cfg.delta_chunk
+        self.gate_content_aware = getattr(cfg, 'gate_content_aware', False)
+        self.protect_gate_bias = getattr(cfg, 'protect_gate_bias', -3.0)
 
         if cfg.fused_qkv:
             self.qkv_proj = ComplexLinear(cfg.dim, 3 * inner, bias=False)
@@ -291,8 +295,9 @@ class V11PAMLayer(nn.Module):
             self.dt_bias = nn.Parameter(torch.zeros(cfg.n_heads) + cfg.base_dt_bias)
 
         if cfg.use_gsp:
-            self.protect_gate = nn.Linear(cfg.dim, cfg.n_heads)
-            nn.init.constant_(self.protect_gate.bias, -3.0)
+            gate_in = cfg.dim * 2 if self.gate_content_aware else cfg.dim
+            self.protect_gate = nn.Linear(gate_in, cfg.n_heads)
+            nn.init.constant_(self.protect_gate.bias, self.protect_gate_bias)
 
         # E2: delta-rule write strength beta_t in (0, 1) per head.
         if cfg.write_mode == 'delta':
@@ -373,7 +378,8 @@ class V11PAMLayer(nn.Module):
             dt = dt.transpose(1, 2).contiguous()                  # [B,H,T]
 
         if self.use_gsp:
-            p = torch.sigmoid(self.protect_gate(cabs(x))).transpose(1, 2)  # [B,H,T]
+            gate_in = to_real_concat(x) if self.gate_content_aware else cabs(x)
+            p = torch.sigmoid(self.protect_gate(gate_in)).transpose(1, 2)  # [B,H,T]
             if self.decay_mode == 'per_channel':
                 p_e = p.unsqueeze(-1)
                 gamma = torch.exp(-dt) * (1 - p_e) + p_e
@@ -826,7 +832,7 @@ class V11LM(nn.Module):
         # re-apply custom biases zeroed above
         for _, module in self.named_modules():
             if hasattr(module, 'protect_gate') and isinstance(module.protect_gate, nn.Linear):
-                nn.init.constant_(module.protect_gate.bias, -3.0)
+                nn.init.constant_(module.protect_gate.bias, getattr(module, 'protect_gate_bias', -3.0))
 
     def forward(self, input_ids, states=None, step_offset: int = 0, labels=None):
         z = self.embed(input_ids)

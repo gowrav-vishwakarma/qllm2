@@ -1,5 +1,5 @@
 {
-  "vocab_size": 50259,
+  "vocab_size": 50261,
   "dim": 384,
   "n_heads": 6,
   "head_dim": 64,
@@ -22,17 +22,24 @@
   "delta_chunk": 64,
   "state_dt_spread": 2.0,
   "base_dt_bias": -4.0,
+  "gate_content_aware": true,
+  "protect_gate_bias": -3.0,
   "architecture": "qllm-pam-v11-e3k3",
   "preset": "v11_e3_k3_chat",
   "model_type": "qllm_pam",
-  "params": 100508432,
+  "params": 100546832,
+  "round": "round-2b-gate",
+  "hf_tag": "round-2b-gate",
   "training": {
-    "pretrain_corpus": "DCLM-Edu + FineWeb-Edu",
-    "pretrain_tokens": 10000000000,
-    "sft_dataset": "SmolTalk2 (hard filter)",
-    "sft_epochs": 1,
-    "chat_template": "ChatML",
-    "val_ppl": 7.220689132710867,
-    "val_loss": 1.9769503960937762
+    "pretrain_corpus": "DCLM-Edu + FineWeb-Edu + smoltalk2-Mid (reasoning/chat blend)",
+    "pretrain_tokens_total": 2000000000,
+    "round_tokens": 2000000000,
+    "sft_dataset": "smoltalk2 (SFT config, think-capped)",
+    "chat_template": "ChatML (<|im_start|>/<|im_end|>) + <think>/</think>",
+    "gate": "phase-aware GSP (content-aware)",
+    "val_ppl": 7.202904903403062,
+    "val_loss": 1.9744844034603712,
+    "per_source_docs": {},
+    "per_source_tokens": {}
   }
 }
