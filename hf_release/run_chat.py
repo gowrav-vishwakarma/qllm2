@@ -20,18 +20,28 @@ IM_END = '<|im_end|>'
 THINK_START = '<think>'
 THINK_END = '</think>'
 DEFAULT_SYSTEM = 'You are a helpful assistant.'
+NO_THINK_HINT = (
+    'Answer directly in plain text. Do not use '
+    f'{THINK_START} or {THINK_END} reasoning blocks.'
+)
 
 BANNER_WIDTH = 60
 PASTE_IDLE_SEC = 0.08
 PASTE_MAX_SEC = 1.0
 
 
-def get_chat_tokenizer():
+def get_chat_tokenizer(vocab_size: int = 50261):
+    """Build ChatML tokenizer matching checkpoint vocab (50259 legacy or 50261 v2)."""
     tok = AutoTokenizer.from_pretrained('gpt2')
-    tok.add_special_tokens(
-        {'additional_special_tokens': [IM_START, IM_END, THINK_START, THINK_END]}
-    )
+    extras = [IM_START, IM_END]
+    if vocab_size >= 50261:
+        extras.extend([THINK_START, THINK_END])
+    tok.add_special_tokens({'additional_special_tokens': extras})
     tok.pad_token = tok.eos_token
+    if len(tok) != vocab_size:
+        raise ValueError(
+            f'Tokenizer vocab {len(tok)} does not match checkpoint vocab_size {vocab_size}'
+        )
     return tok
 
 
@@ -71,10 +81,25 @@ def format_chat_prompt_from_messages(
     return format_chat_messages(messages, default_system=default_system) + f'{IM_START}assistant\n'
 
 
-def print_welcome(*, system_prompt: str) -> None:
+def strip_thinking(text: str) -> str:
+    """Drop ``<think>…</think>`` blocks (and unclosed tails)."""
+    out = text
+    while THINK_START in out:
+        start = out.find(THINK_START)
+        end = out.find(THINK_END, start + len(THINK_START))
+        if end == -1:
+            out = out[:start]
+            break
+        out = out[:start] + out[end + len(THINK_END):]
+    return out.strip()
+
+
+def print_welcome(*, system_prompt: str, no_think: bool = False) -> None:
     print('QLLM V11 PAM multi-turn chat')
     print('  Paste multi-line prompts as one message')
     print('  Empty line → new chat    exit → quit')
+    if no_think:
+        print('  Thinking blocks: disabled (--no-think)')
     if system_prompt != DEFAULT_SYSTEM:
         preview = system_prompt.replace('\n', ' ')
         if len(preview) > 72:
@@ -168,6 +193,7 @@ def generate_reply(
     temperature: float,
     max_prompt_tokens: Optional[int] = None,
     default_system: str = DEFAULT_SYSTEM,
+    strip_thinking_blocks: bool = False,
 ) -> tuple[str, bool, int]:
     prompt = format_chat_prompt_from_messages(messages, default_system=default_system)
     ids = tokenizer.encode(prompt, return_tensors='pt').to(device)
@@ -191,6 +217,8 @@ def generate_reply(
     stopped = im_end_id in gen_ids
     reply = tokenizer.decode(gen_ids, skip_special_tokens=False)
     reply = reply.split(IM_END, 1)[0].strip()
+    if strip_thinking_blocks:
+        reply = strip_thinking(reply)
     return reply, stopped, n_new
 
 
@@ -222,13 +250,26 @@ def main() -> None:
         default=None,
         help='Read custom system prompt from a file (overrides --system)',
     )
+    p.add_argument(
+        '--no-think',
+        action='store_true',
+        help='Discourage and strip <think> blocks from replies',
+    )
     args = p.parse_args()
-
-    system_prompt = _load_system_prompt(args)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = load_model(args.checkpoint, device=device)
-    tokenizer = get_chat_tokenizer()
+    tokenizer = get_chat_tokenizer(model.config.vocab_size)
+    supports_think = model.config.vocab_size >= 50261
+
+    system_prompt = _load_system_prompt(args)
+    no_think = args.no_think
+    if no_think and not supports_think:
+        print('Note: --no-think ignored (legacy vocab 50259 has no thinking tokens)')
+        no_think = False
+    if no_think:
+        system_prompt = f'{system_prompt}\n\n{NO_THINK_HINT}'.strip()
+
     im_end_id = tokenizer.convert_tokens_to_ids(IM_END)
     max_prompt_tokens = model.config.max_seq_len - args.max_new_tokens
 
@@ -244,6 +285,7 @@ def main() -> None:
             temperature=args.temperature,
             max_prompt_tokens=max_prompt_tokens,
             default_system=system_prompt,
+            strip_thinking_blocks=no_think,
         )
         print(f'User> {args.prompt}')
         print(f'Assistant> {reply}')
@@ -253,7 +295,7 @@ def main() -> None:
     session_id = 1
     messages: list[dict] = []
 
-    print_welcome(system_prompt=system_prompt)
+    print_welcome(system_prompt=system_prompt, no_think=no_think)
     print_new_chat(session_id, first=True)
 
     while True:
@@ -283,6 +325,7 @@ def main() -> None:
             temperature=args.temperature,
             max_prompt_tokens=max_prompt_tokens,
             default_system=system_prompt,
+            strip_thinking_blocks=no_think,
         )
         messages.append({'role': 'assistant', 'content': reply})
         print(f'Assistant> {reply}')

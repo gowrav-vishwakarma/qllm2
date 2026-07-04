@@ -174,7 +174,7 @@ ship)
   echo "[ship] pull -> verify -> push ($ROUND_TAG) [run on RTX4090 with hf auth]"
   ROUND="$ROUND_TAG" ./scripts/pull_v11_release.sh --round "$ROUND_TAG"
   cp -f "releases/$ROUND_TAG/qllm_v11_e3k3_chat.pt" hf_release/qllm_v11_e3k3_chat.pt
-  ( cd hf_release && bash verify.sh )
+  ( cd hf_release && bash verify.sh && bash verify_legacy.sh )
   eval "$PYTHON_BIN scripts/push_qllm_hf.py --revision $ROUND_TAG"
   echo "[ship] published revision $ROUND_TAG"
   ;;

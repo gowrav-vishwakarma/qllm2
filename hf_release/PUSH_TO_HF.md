@@ -46,8 +46,26 @@ ROUND_TAG=round-2b-gate ./scripts/run_v11_round.sh ship
 ./scripts/pull_v11_release.sh --list           # server vs local, no download
 ./scripts/pull_v11_release.sh --round round-2b-gate   # incremental, sha256-verified
 cp releases/round-2b-gate/qllm_v11_e3k3_chat.pt hf_release/qllm_v11_e3k3_chat.pt
-cd hf_release && bash verify.sh
+cd hf_release && bash verify.sh && bash verify_legacy.sh
 uv run python scripts/push_qllm_hf.py --revision round-2b-gate
+```
+
+**Dual verification (required before any push that updates shared code):**
+
+| Script | Checkpoint | Expect |
+|--------|------------|--------|
+| `verify.sh` | `hf_release/qllm_v11_e3k3_chat.pt` (current round export) | Paris + `stopped_on_im_end=True` |
+| `verify_legacy.sh` | HF `main` weights (auto-download) or `LEGACY_CKPT=...` | Same Paris/im_end checks on vocab **50259** |
+
+`verify_legacy.sh` downloads `qllm_v11_e3k3_chat.pt` from `--revision main` if not present
+(`LEGACY_DIR` defaults to `/tmp/qllm-legacy-main`). Requires `hf auth login` and repo access
+(gated model). Run **both** scripts on the RTX4090 before `ship` or before updating code files
+on HF `main`.
+
+```bash
+cd hf_release
+bash verify.sh          # round-2b (50261, content-aware gate)
+bash verify_legacy.sh   # legacy main (50259, magnitude gate)
 ```
 
 The smart pull uses per-machine state at `~/.qllm/v11_pull_state.json`, so a
@@ -73,10 +91,22 @@ uv run python scripts/export_hf_release.py \
 #    (regenerate modeling if v11/model.py changed — see scripts/export_hf_release.py)
 
 # 3. Verify locally BEFORE upload (required gate)
-cd hf_release && bash verify.sh
+cd hf_release && bash verify.sh && bash verify_legacy.sh
 ```
 
-Verification must print `All checks passed` (Paris + stop on im_end).
+Both must print success (Paris + stop on im_end). `verify_legacy.sh` needs HF auth and
+downloads the legacy `main` weights once.
+
+**Optional — refresh code on HF `main` (weights unchanged):**
+
+After both verify scripts pass, push shared chat/modeling files so users who pin `--revision main`
+get the unified `run_chat.py` (config-driven vocab 50259/50261):
+
+```bash
+cd hf_release && bash verify.sh && bash verify_legacy.sh
+uv run python scripts/push_qllm_hf.py --revision main \
+  --only modeling_qllm.py run_chat.py README.md verify.sh verify_legacy.sh PUSH_TO_HF.md
+```
 
 ## Upload
 
@@ -130,4 +160,6 @@ python run_chat.py --prompt "What is the capital of France?"
 | `403` on xet-write-token | Set `HF_HUB_DISABLE_XET=1` before upload (already set in `push_qllm_hf.py`) |
 | Upload timeout | Retry; ~400 MB should succeed in one shot |
 | `verify.sh` fails | Do not upload — fix export or modeling first |
+| `verify_legacy.sh` fails | Legacy `main` chat broken — fix `run_chat.py` / `modeling_qllm.py` before updating shared code on HF |
+| `verify_legacy.sh` access denied | Run on RTX4090 with `hf auth login`; repo may be gated — approve access on HF first |
 | CUDA OOM at inference | Use CPU or reduce `max_new_tokens` |
