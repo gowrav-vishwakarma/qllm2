@@ -39,6 +39,7 @@ MAIN_CODE_FILES = (
     'run_chat.py',
     'eval_chat.py',
     'eval_prompts_round1.yaml',
+    'SAMPLES_round-2b-gate.md',
     'requirements.txt',
     'PUSH_TO_HF.md',
     'verify.sh',
