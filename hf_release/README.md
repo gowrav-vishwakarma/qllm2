@@ -46,7 +46,34 @@ This checkpoint proves that architectures outside the transformer/SSM families *
 | **Paper**           | [arXiv:2604.05030](https://arxiv.org/abs/2604.05030) |
 | **HF repo**         | [huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat) |
 
-*(Legacy `main` / ~10B milestone: vocab 50259, magnitude-only gate — comparison only.)*
+*(Legacy `main` / ~10B milestone: vocab 50259, magnitude-only gate — still supported via the same `run_chat.py`; pin `--revision main`.)*
+
+## Model compatibility (`main` vs round tags)
+
+One `run_chat.py` + `modeling_qllm.py` serves **both** checkpoints. Behavior comes from
+`config` inside the `.pt` file (vocab size, gate type).
+
+| | HF `main` (legacy) | `round-2b-gate` (v2) |
+|--|-------------------|----------------------|
+| **Params / pretrain** | ~100M, ~10B tokens | ~100M, 2B tokens (v2 line) |
+| **`gate_content_aware`** | `false` — magnitude gate (`protect_gate` in=384) | `true` — real+imag gate (in=768) |
+| **`vocab_size`** | **50259** — ChatML only | **50261** — ChatML + thinking tokens |
+| **`--no-think`** | Ignored (no thinking tokens) | Discourages/strips `<think>` blocks |
+| **Download** | `--revision main` | `--revision round-2b-gate` |
+
+```bash
+# Latest v2 round (recommended for new work)
+huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
+  --revision round-2b-gate --local-dir ./round-2b
+python run_chat.py --checkpoint round-2b/qllm_v11_e3k3_chat.pt --no-think --max_new_tokens 64
+
+# Legacy ~10B milestone (comparison / older stack)
+huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
+  --revision main --local-dir ./legacy
+python run_chat.py --checkpoint legacy/qllm_v11_e3k3_chat.pt --max_new_tokens 64
+```
+
+`run_chat.py` loads the checkpoint first, then builds a tokenizer with matching `vocab_size`.
 
 
 ---
@@ -112,10 +139,20 @@ huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
 
 ### What you can ask (and current limits)
 
-- **Good at:** short factual questions, simple instructions, everyday chat, ChatML multi-turn.
-- **Improving:** light reasoning (the model may emit `<think>…</think>` before answering).
-- **Still weak (100M base):** precise math, long multi-step reasoning, rare/long-tail facts,
-  and occasional confabulation. Not a search engine or calculator.
+At **2B pretrain tokens**, treat this as an **architecture + pipeline snapshot**, not a
+knowledge-saturated assistant.
+
+- **Often works:** short factual questions, simple instructions, ChatML multi-turn structure.
+- **Hit-or-miss:** even easy facts (e.g. capitals) — answers may be correct, ramble, or
+  confabulate extra detail (wrong museums, dates, etc.).
+- **Prompt sensitivity:** GPT-2 BPE is **case-sensitive**. The same question with different
+  capitalization (`"what is the capital of France?"` vs `"What is the Capital of France?"`) can
+  yield different replies. That is normal at this token budget; do not read too much into it.
+- **Reasoning format:** ~15% of SFT rows kept `<think>…</think>` traces.
+  The model may open a thinking block and ramble until `max_new_tokens`. Use **`--no-think`** in
+  `run_chat.py` to discourage and strip those blocks (see [interactive chat](#interactive-multi-turn-chat)).
+- **Still weak (100M base):** precise math, long multi-step reasoning, rare/long-tail facts.
+  Not a search engine or calculator.
 
 Data recipe per round is documented in
 [v11/MODEL_RELEASES.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/v11/MODEL_RELEASES.md).
@@ -152,15 +189,16 @@ Each outer product writes a full **d×d** association → **O(d²) capacity per 
 This model is a **milestone checkpoint**, not a production assistant:
 
 
-| What works                     | What doesn't (yet)                                           |
-| ------------------------------ | ------------------------------------------------------------ |
-| ChatML turn structure          | Reliable factual knowledge (base saturates ~WikiText PPL 65) |
-| Stops on `<|redacted_im_end|>` | Math ("what is 2+2" drifts)                                  |
-| "Capital of France → Paris"    | Name/memory confabulation                                    |
-| Coherent one-sentence answers  | Deep reasoning, coding beyond toy examples                   |
+| What works (Round 1, 2B)              | What doesn't (yet)                                           |
+| ------------------------------------- | ------------------------------------------------------------ |
+| ChatML turn structure                 | Reliable factual knowledge — easy questions still drift/ramble |
+| Sometimes stops on `<|im_end|>` | Math ("what is 2+2" drifts)                              |
+| Short answers with `--no-think` + low `--max_new_tokens` | Long confabulated filler (wrong museums, dates) |
+| `--no-think` strips `<think>` blocks | Deep reasoning, coding beyond toy examples              |
 
-
-Training budget: **~10B pretrain + SmolTalk2 SFT at 100M params**. PAM capacity math says the architecture is **far from saturated** — we stopped here to ship proof-of-learning, not to chase leaderboard scores.
+**Round 1 training budget:** **2B blended pretrain + smoltalk2 SFT** at ~100M params. PAM capacity
+math says the architecture is **far from saturated** — we ship proof-of-learning each round, not
+leaderboard scores. Legacy **`main`** (~10B pretrain) is a separate, older stack for comparison only.
 
 Same-pipeline transformer baseline (100M, WikiText): val PPL **22.69** vs our PAM **25.77** (WikiText anchor) — we report the gap on purpose. The trade is a **different memory mechanism** and **O(1) inference without KV cache**.
 
@@ -185,6 +223,10 @@ huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
 ### Interactive multi-turn chat
 
 ```bash
+# Recommended for Round 1 (2B): discourage thinking blocks, cap length
+python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt --no-think --max_new_tokens 64
+
+# Default (may emit long <think> traces)
 python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt
 ```
 
@@ -199,7 +241,12 @@ python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt
 
 Multi-line paste is supported: paste a block and the script waits briefly to absorb trailing lines as one message.
 
-Optional tuning: `--max_new_tokens` (default 256), `--temperature` (default 0.7).
+| Flag | Default | Effect |
+| ---- | ------- | ------ |
+| `--no-think` | off | Adds a system hint not to use `<think>`; **strips** any thinking blocks from the reply and chat history |
+| `--max_new_tokens` | 256 | Cap generation length (use **64** or **32** for short factual answers at 2B) |
+| `--temperature` | 0.7 | Sampling temperature (`0.0` = greedy) |
+| `--system` / `--system-file` | built-in helper | Override the system prompt for the whole session |
 
 ### Custom system prompt
 
@@ -222,7 +269,7 @@ For scripts, CI, or one-off queries:
 ```bash
 python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt \
   --prompt "What is the capital of France?" \
-  --temperature 0.0 --max_new_tokens 32
+  --no-think --temperature 0.0 --max_new_tokens 32
 ```
 
 
@@ -241,8 +288,14 @@ IM_START, IM_END = "<|im_start|>", "<|im_end|>"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = load_model("qllm_v11_e3k3_chat.pt", device=device)
 
+THINK_START, THINK_END = "<think>", "</think>"
+
 tok = AutoTokenizer.from_pretrained("gpt2")
-tok.add_special_tokens({"additional_special_tokens": [IM_START, IM_END]})
+extras = [IM_START, IM_END]
+if model.config.vocab_size >= 50261:
+    extras.extend([THINK_START, THINK_END])
+tok.add_special_tokens({"additional_special_tokens": extras})
+assert len(tok) == model.config.vocab_size
 
 prompt = (
     f"{IM_START}system\nYou are a helpful assistant.{IM_END}\n"
@@ -259,8 +312,13 @@ with torch.no_grad():
         eos_token_id=im_end_id,
     )
 
-reply = tok.decode(out[0, ids.shape[1]:].tolist())
-print(reply.split(IM_END, 1)[0].strip())
+reply = tok.decode(out[0, ids.shape[1]:].tolist()).split(IM_END, 1)[0]
+# Drop optional thinking block before displaying
+while THINK_START in reply:
+    start = reply.find(THINK_START)
+    end = reply.find(THINK_END, start + len(THINK_START))
+    reply = reply[:start] + (reply[end + len(THINK_END):] if end != -1 else "")
+print(reply.strip())
 ```
 
 Generation uses the **O(1) recurrent PAM path** — a fixed matrix state per layer, updated one token at a time. No KV cache, no growing memory.

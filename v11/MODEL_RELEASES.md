@@ -30,8 +30,8 @@ with a revision tag.
 | pretrain | ~10B DCLM-Edu + FineWeb-Edu (web only, no blend) |
 | sft | `smol-smoltalk` (old small dataset) |
 | checkpoints | `checkpoints_v11_e3_k3_chat_pretrain/best_model.pt`, `checkpoints_v11_sft_chat_smoltalk/best_model.pt` |
-| hf_tag | `round-10b` (if published) |
-| note | Trained under magnitude-only gate + old vocab. Not resumable by the v2 line (gate + vocab changed). Kept for comparison only. |
+| hf_tag | `main` on Hugging Face (legacy ~10B weights); supported via unified `hf_release/` — pin `--revision main` |
+| note | Trained under magnitude-only gate + vocab 50259. Not resumable by the v2 line (gate + vocab changed). Kept for comparison; chat works with current `run_chat.py` when downloaded from HF `main`. |
 
 ---
 

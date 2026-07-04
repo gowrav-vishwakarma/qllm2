@@ -197,8 +197,11 @@ O(1)-per-token recurrent inference.
 
 ## Chat examples (~100M model)
 
-Real, logged greedy-ish samples from `logs/v11/sft_ab_run_20260619.log` (DCLM-Edu base +
-chat SFT):
+Real samples from earlier Phase C SFT logs (`logs/v11/sft_ab_run_20260619.log`, legacy ~10B
+line). **Round 1 (`round-2b-gate`, 2B)** behaves similarly in spirit — short answers sometimes
+work, but replies can ramble or confabulate; prompt **capitalization** can change the output.
+For current shipped weights, download **`round-2b-gate`** and use **`run_chat.py --no-think`**
+(see [hf_release/README.md](hf_release/README.md)).
 
 > **User:** What is the capital of France?
 > **Assistant:** The capital of France is Paris, and it's located in the heart of France. It's
@@ -218,11 +221,12 @@ chat SFT):
 >     return a + b
 > ```
 
-**Honest caveats (read before celebrating):** at ~100M params with only **2B** pretrain tokens,
-**facts are unreliable** (wrong dates/founders), responses can **ramble**, and there is a known
-**end-of-turn bug** (the model was never trained to stop). These are a *pretraining-scale*
-ceiling, not an architecture failure — knowledge comes from pretraining, so the next phase scales
-pretraining (DCLM-Edu + FineWeb-Edu, ~10B+ tokens), fixes ChatML/EOS, then re-SFTs on chat data.
+**Honest caveats (read before celebrating):** at ~100M params with only **2B** tokens on the
+v2 line (**`round-2b-gate`**), **facts are unreliable** (wrong dates/founders), responses can
+**ramble**, capitalization affects replies, and the model may emit **`<think>`**
+blocks unless you pass **`--no-think`**. These are a *pretraining-scale* ceiling, not an
+architecture failure — each round adds +2B fresh tokens; see
+[hf_release/README.md](hf_release/README.md) for chat flags and limits.
 
 ---
 
@@ -272,10 +276,26 @@ huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat --revision rou
 # Browse all tags: https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat
 ```
 
-**What to ask / current limits** (per-round card in
-[hf_release/README.md](hf_release/README.md)): good at short factual Q&A, simple instructions,
-and ChatML multi-turn; still weak at math, long reasoning, and rare facts (100M base). Tulu-3 is
-**not** used routinely — only as an optional instruct-upgrade branch after saturation gates pass.
+**What to ask / current limits** (full chat guide, flags, and Round 1 behavior):
+**[hf_release/README.md](hf_release/README.md)** — use **`--no-think`** and **`--max_new_tokens 64`**
+for short factual Q&A at 2B. Tulu-3 is **not** used routinely — only as an optional
+instruct-upgrade branch after saturation gates pass.
+
+---
+
+## Use the shipped model (Hugging Face)
+
+For **`round-2b-gate`** and later revision tags, **do not** use `scripts/chat_v11.py` — that
+script targets training checkpoints inside this repo. After download:
+
+```bash
+huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
+  --revision round-2b-gate --local-dir hf_release
+cd hf_release && uv run python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt --no-think
+```
+
+Full usage (`--system`, `--temperature`, thinking blocks, minimal Python snippet):
+**[hf_release/README.md](hf_release/README.md)**.
 
 ---
 
@@ -326,7 +346,10 @@ tmux new-session -d -s v11_pretrain './scripts/run_v11_pretrain_scratch.sh'
 ./scripts/run_v11_duplex_stage1.sh          # train Stage 1 (Kathbath hi/gu default)
 ./scripts/run_v11_duplex_gradio.sh          # mic → listen / speak / backchannel
 
-# Chat with a trained / SFT checkpoint
+# Chat — shipped HF weights (recommended for round-2b-gate+)
+cd hf_release && uv run python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt --no-think
+
+# Chat — in-repo training checkpoint (dev / reproduction)
 python scripts/chat_v11.py --checkpoint checkpoints_v11_e3_k3_chat_pretrain/best_model.pt
 ```
 
@@ -349,6 +372,7 @@ Other presets, Phase C pretrain/SFT runners, and older version paths live in the
 ## Documentation
 
 - **Model weights (Hugging Face):** [gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat) — new checkpoint every **+2B tokens** under a **round revision tag** (`round-2b-gate`, …); architecture still evolving.
+- **[hf_release/README.md](hf_release/README.md)** — download, **`run_chat.py`** (`--no-think`, `--max_new_tokens`), Round 1 chat limits, minimal inference snippet.
 - **Paper:** [Phase-Associative Memory: Sequence Modeling in Complex Hilbert Space](https://arxiv.org/abs/2604.05030) (arXiv:2604.05030)
 - [memory_probes/README.md](memory_probes/README.md) — PAM mechanism validation: binding,
 long-context NIAH, interference, rank; why matrix memory beats vector state.
