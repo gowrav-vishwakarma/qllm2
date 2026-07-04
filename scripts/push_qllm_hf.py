@@ -22,9 +22,27 @@ UPLOAD_FILES = (
     'config.json',
     'modeling_qllm.py',
     'run_chat.py',
+    'eval_chat.py',
+    'eval_prompts_round1.yaml',
+    'SAMPLES_round-2b-gate.md',
     'requirements.txt',
     'PUSH_TO_HF.md',
+    'verify.sh',
+    'verify_legacy.sh',
     'qllm_v11_e3k3_chat.pt',
+)
+
+# Shared code/docs for HF `main` — never overwrite legacy weights or config.json.
+MAIN_CODE_FILES = (
+    'README.md',
+    'modeling_qllm.py',
+    'run_chat.py',
+    'eval_chat.py',
+    'eval_prompts_round1.yaml',
+    'requirements.txt',
+    'PUSH_TO_HF.md',
+    'verify.sh',
+    'verify_legacy.sh',
 )
 
 
