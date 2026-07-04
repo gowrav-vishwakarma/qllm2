@@ -26,21 +26,27 @@ This checkpoint proves that architectures outside the transformer/SSM families *
 > actively changing. We **restarted training from scratch** on the v2 line. After every **+2B
 > pretrain tokens** we publish a new weights file here under a **round revision tag**
 > (e.g. `round-2b-gate`, `round-4b-gate`). The `main` branch may still point at an older
-> milestone checkpoint — **pin a revision tag** for the round you want. Round 1 pretrain is
-> in progress on the training server; tags appear as each round completes SFT + verify.
+> milestone checkpoint — **pin a revision tag** for the round you want.
+>
+> **Latest shipped:** revision **`round-2b-gate`** — **2026-07-04** (Round 1, v2 gate line).
+> Only **2B pretrain tokens + SFT**, but a **new architecture** (content-aware phase gate, vocab
+> 50261). See [Round 1 details](#round-1--round-2b-gate-shipped-2026-07-04) below.
 
 
-|                     |                                                                                                          |
-| ------------------- | -------------------------------------------------------------------------------------------------------- |
-| **Params**          | ~100.5M                                                                                                  |
-| **Architecture**    | V11 E3 K=3 PAM (16×384, complex phase space)                                                             |
-| **Pretrain**        | ~10B tokens (DCLM-Edu + FineWeb-Edu)                                                                     |
-| **SFT**             | SmolTalk2 (hard filter), ChatML template                                                                 |
-| **Val (in-distro)** | PPL **7.22**, acc **0.567**                                                                              |
-| **Inference**       | **O(1)/token**, fixed state, **no KV cache**                                                             |
-| **Code**            | [github.com/gowrav-vishwakarma/qllm2](https://github.com/gowrav-vishwakarma/qllm2)                       |
-| **Paper**           | [arXiv:2604.05030](https://arxiv.org/abs/2604.05030) — Phase-Associative Memory in Complex Hilbert Space |
+|                     | **`round-2b-gate` (2026-07-04)** |
+| ------------------- | -------------------------------- |
+| **Params**          | ~100.5M |
+| **Architecture**    | V11 E3 K=3 PAM + **content-aware GSP gate** (not legacy magnitude-only gate) |
+| **Vocab**           | **50261** — ChatML + `<think>` / `</think>` |
+| **Pretrain**        | **2.0B tokens** blended (see below) — from scratch, v2 line |
+| **SFT**             | `HuggingFaceTB/smoltalk2` **SFT** config, **hard filter**, **15% think** cap |
+| **Val (in-distro)** | SFT holdout PPL **7.20**, acc **0.591** (pretrain holdout PPL **35.42**) |
+| **Inference**       | **O(1)/token**, fixed state, **no KV cache** |
+| **Code**            | [github.com/gowrav-vishwakarma/qllm2](https://github.com/gowrav-vishwakarma/qllm2) |
+| **Paper**           | [arXiv:2604.05030](https://arxiv.org/abs/2604.05030) |
 | **HF repo**         | [huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat) |
+
+*(Legacy `main` / ~10B milestone: vocab 50259, magnitude-only gate — comparison only.)*
 
 
 ---
@@ -56,12 +62,53 @@ huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat --revision <ta
 # Repo: https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat
 ```
 
-| Revision | Pretrain total | Trained on | Notes |
-|----------|----------------|-----------|-------|
-| `main` | legacy ~10B | DCLM-Edu + FineWeb-Edu → SmolTalk2 SFT | **pre-v2 milestone** (vocab 50259, magnitude-only gate); kept for comparison |
-| `round-2b-gate` | 2B | DCLM-Edu + FineWeb-Edu + smoltalk2-Mid (reasoning/chat) → smoltalk2 SFT | v2 line, phase-aware gate, vocab 50261 (`<think>`/`</think>`); **in training / pending ship** |
+| Revision | Shipped | Pretrain total | Trained on | Metrics | Notes |
+|----------|---------|----------------|-----------|---------|-------|
+| `main` | (legacy) | ~10B | DCLM-Edu + FineWeb-Edu → old SmolTalk SFT | val PPL ~7.2 | **pre-v2** — vocab 50259, magnitude-only gate; comparison only |
+| **`round-2b-gate`** | **2026-07-04** | **2B** | blended pretrain → smoltalk2 SFT | SFT PPL **7.20**, pretrain holdout **35.42** | **Round 1, v2 line** — see [details](#round-1--round-2b-gate-shipped-2026-07-04) |
 
-<!-- Append one row per shipped round (tag, pretrain total, datasets, notes). -->
+<!-- Append one row per shipped round. -->
+
+### Round 1 — `round-2b-gate` (shipped **2026-07-04**)
+
+First checkpoint on the **v2 gate line**: we **restarted from scratch** (not a continuation of
+the legacy ~10B run). Token count is modest (**2B pretrain + 1 SFT epoch**), but the **stack is
+new** — treat this as an architecture + pipeline snapshot, not a knowledge-saturated model.
+
+**Architecture (what changed vs legacy `main`):**
+
+| Component | v2 (`round-2b-gate`) | Legacy (`main`) |
+|-----------|----------------------|-----------------|
+| GSP write gate | **Content-aware** — reads real+imag (`2×dim`) | Magnitude-only (`dim`) |
+| Vocab | **50261** — ChatML + `<think>` / `</think>` | 50259 — ChatML only |
+| Pretrain mix | Web + **smoltalk2 Mid** (ChatML-rendered reasoning/chat) | Web only |
+
+**Pretrain — 2.0B tokens (from scratch, preset `v11_e3_k3_chat`):**
+
+| Phase | Data | Notes |
+|-------|------|-------|
+| Warmup (first **1B** tokens) | DCLM-Edu + FineWeb-Edu only | Grammar / knowledge before chat blend |
+| Blend (remaining **~1B**) | DCLM-Edu + FineWeb-Edu + **smoltalk2 Mid** | Per-doc weights **48 : 48 : 4**; Mid docs are larger so **~8% of tokens** were reasoning/chat-form |
+
+Approximate token mix over the full 2B: **~52% DCLM-Edu**, **~40% FineWeb-Edu**, **~8% smoltalk2 Mid**
+(edu score ≥ 3; deterministic cursors ensure fresh shards on the next round).
+
+**SFT — after pretrain:**
+
+| Setting | Value |
+|---------|-------|
+| Dataset | `HuggingFaceTB/smoltalk2` config **`SFT`** (disjoint from Mid pretrain pool) |
+| Filter | **`hard`** (quality filter on conversations) |
+| Reasoning | **`think_fraction=0.15`** — only ~15% of reasoning (think) rows kept; mostly direct answers |
+| Template | ChatML; assistant-only loss |
+| Metrics | In-distribution val PPL **7.20**, acc **0.591** |
+
+**Download this round:**
+
+```bash
+huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
+  --revision round-2b-gate --local-dir .
+```
 
 ### What you can ask (and current limits)
 
