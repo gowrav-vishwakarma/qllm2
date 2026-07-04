@@ -111,6 +111,11 @@ def build_argparser():
                         'from the mean of trained GPT-2 rows (50257 base vocab)')
     p.add_argument('--seed', type=int, default=42)
     p.add_argument('--no_grad_ckpt', action='store_true')
+    p.add_argument('--fused_ce', action='store_true',
+                   help='Memory-lean chunked linear+CE loss (no [B*T,vocab] logits). '
+                        'Exact-equivalent; frees ~30GB at B=18/T=2048 for bigger batch.')
+    p.add_argument('--fused_ce_chunk', type=int, default=4096,
+                   help='Row-chunk size for fused CE (tokens per chunk).')
     p.add_argument('--chunk_size', type=int, default=None)
     p.add_argument('--activation', type=str, default=None,
                    choices=['modrelu', 'swish', 'phase_mod'])
@@ -510,6 +515,8 @@ def main():
         secondary_val_loader=secondary_val_loader,
         per_source_tokens=per_source_tokens,
         per_source_docs=per_source_docs,
+        fused_ce=args.fused_ce,
+        fused_ce_chunk=args.fused_ce_chunk,
     )
     if checkpoint and args.resume and 'optimizer_state_dict' in checkpoint:
         trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])

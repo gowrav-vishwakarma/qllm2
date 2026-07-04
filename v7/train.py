@@ -189,6 +189,8 @@ class V7Trainer:
         secondary_val_loader=None,
         per_source_tokens: Optional[Dict[str, int]] = None,
         per_source_docs: Optional[Dict[str, int]] = None,
+        fused_ce: bool = False,
+        fused_ce_chunk: int = 4096,
     ):
         self.model = model
         self.train_loader = train_loader
@@ -224,6 +226,7 @@ class V7Trainer:
         param_groups = build_param_groups(model, weight_decay)
         self.optimizer = torch.optim.AdamW(
             param_groups, lr=learning_rate, betas=(0.9, 0.95),
+            fused=(self.device.type == 'cuda'),
         )
 
         total_steps = total_steps_override
@@ -244,12 +247,30 @@ class V7Trainer:
             else None
         )
 
+        # Memory-lean loss: chunked linear+CE that never materializes the full
+        # [B*T, vocab] logits tensor. Requires a model exposing `_hidden_to_lm`
+        # (the stack up to the pre-logit complex hidden) and `ce_from_lm`.
+        self._raw_model = model
+        self.fused_ce = fused_ce and hasattr(model, 'ce_from_lm') and hasattr(model, '_hidden_to_lm')
+        self.fused_ce_chunk = fused_ce_chunk
+        if fused_ce and not self.fused_ce:
+            print("fused_ce requested but model lacks ce_from_lm/_hidden_to_lm; using standard CE")
+        self._hidden_fn = None
+
         if compile_model:
             print(f"Compiling model (mode={compile_mode})...")
             try:
+                if self.fused_ce:
+                    # Compile the STACK (not full forward) so the logits tensor is
+                    # never built; chunked CE runs eager on the compiled hidden.
+                    self._hidden_fn = torch.compile(model._hidden_to_lm, mode=compile_mode)
+                    print("  fused_ce: compiled _hidden_to_lm (logits never materialized)")
                 self.model = torch.compile(self.model, mode=compile_mode)
             except Exception as e:
                 print(f"torch.compile failed ({e}), continuing without")
+        elif self.fused_ce:
+            self._hidden_fn = model._hidden_to_lm
+            print("fused_ce enabled (chunked linear+CE; logits never materialized)")
 
         self.global_step = 0
         self.global_tokens = 0
@@ -276,6 +297,21 @@ class V7Trainer:
                 enabled=self.use_amp,
                 dtype=self.amp_dtype or torch.float16,
             ):
+                if self.fused_ce:
+                    from v11.fused_ce import linear_ce_stats
+                    lm = self._hidden_fn(input_ids)
+                    raw = self._raw_model
+                    B, T = labels.shape
+                    Hh = torch.cat([lm[..., 0], lm[..., 1]], dim=-1).reshape(B * T, -1)
+                    Ww = torch.cat([raw.embed.embed_real.weight,
+                                    raw.embed.embed_imag.weight], dim=-1)
+                    m = loss_mask.reshape(-1) if loss_mask is not None else None
+                    ls, cr, tk = linear_ce_stats(Hh, Ww, labels.reshape(-1), mask=m,
+                                                  chunk=self.fused_ce_chunk)
+                    total_loss_sum += ls
+                    total_correct += cr
+                    total_tokens += tk
+                    continue
                 logits, _, _aux = self.model(input_ids)
 
             flat_logits = logits.view(-1, logits.size(-1)).float()
@@ -335,8 +371,15 @@ class V7Trainer:
                 enabled=self.use_amp,
                 dtype=self.amp_dtype or torch.float16,
             ):
-                logits, _, aux_loss = self.model(input_ids, labels=labels)
-                main_loss = self._masked_ce(logits, labels, loss_mask)
+                if self.fused_ce:
+                    lm = self._hidden_fn(input_ids)
+                    main_loss = self._raw_model.ce_from_lm(
+                        lm, labels, loss_mask=loss_mask, chunk=self.fused_ce_chunk,
+                    )
+                    aux_loss = torch.tensor(0.0, device=self.device)
+                else:
+                    logits, _, aux_loss = self.model(input_ids, labels=labels)
+                    main_loss = self._masked_ce(logits, labels, loss_mask)
                 loss = main_loss
                 if aux_loss.item() > 0:
                     m_cfg = self.model._orig_mod.config if hasattr(self.model, '_orig_mod') else self.model.config
