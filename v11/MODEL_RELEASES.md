@@ -39,9 +39,10 @@ with a revision tag.
 
 New checkpoints: `checkpoints_v11_e3_k3_chat_pretrain_v2/` (pretrain), `checkpoints_v11_sft_chat_smoltalk_v2/` (SFT).
 
-| round | hf_tag | parent | pretrain_total | round_tokens | mix_seed | fineweb | weights (dclm,fineweb,mid) | warmup | think_frac | per_source_docs | holdout_ppl | rankL4 | gate_delta | smoke | blend_repeat | date |
-|-------|--------|--------|----------------|--------------|----------|---------|----------------------------|--------|-----------|-----------------|-------------|--------|-----------|-------|--------------|------|
-| 1 | round-2b-gate | scratch | 2B | 2B | 42 | sample-10BT | (pending) | 1B | 0.15 | (pending) | (pending) | (pending) | (pending) | (pending) | false | (pending) |
+| round | hf_tag | parent | pretrain_total | round_tokens | mix_seed | fineweb | weights (dclm,fineweb,mid) | warmup | think_frac | per_source_docs (end pretrain) | holdout_ppl | sft_ppl | sft_acc | smoke | blend_repeat | date |
+|-------|--------|--------|----------------|--------------|----------|---------|----------------------------|--------|-----------|------------------------------|-------------|---------|---------|-------|--------------|------|
+| 1 | round-2b-gate | scratch | 2B | 2B | 42 | sample-10BT | 48,48,4 | 1B | 0.15 | dclm 765737, fineweb 766613, mid 28577 | 35.42 | 7.20 | 0.591 | Paris OK | false | **2026-07-04** |
 
-<!-- Append one row per shipped round. Fill (pending) fields from the round's
-     checkpoint (per_source_docs, holdout_ppl), probes, and smoke log. -->
+**Round 1 token mix (pretrain, measured):** ~52% DCLM-Edu, ~40% FineWeb-Edu, ~8% smoltalk2 Mid
+(Mid docs are much longer than web docs despite 4% doc weight). **SFT:** smoltalk2 SFT config,
+hard filter, think_fraction 0.15. **Architecture:** content-aware GSP gate, vocab 50261.

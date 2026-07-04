@@ -15,6 +15,13 @@ fixed-size state — there is **no KV cache** that grows with context length.
 
 **Model weights (Hugging Face):** [gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat)
 
+> **Latest shipped (2026-07-04):** revision **`round-2b-gate`** — Round 1 of the v2 gate line.
+> Only **2B pretrain + smoltalk2 SFT**, but a **new architecture** (content-aware phase gate,
+> vocab 50261, blended pretrain). Pretrain mix: DCLM-Edu + FineWeb-Edu + smoltalk2 **Mid**;
+> SFT: smoltalk2 **SFT**, **hard** filter, **15% think** cap. Pin the tag:
+> `huggingface-cli download … --revision round-2b-gate`. Details:
+> [hf_release/README.md](hf_release/README.md) · [v11/MODEL_RELEASES.md](v11/MODEL_RELEASES.md).
+
 > **Architecture still under development.** The PAM stack (gates, tokenizer, data recipe) is
 > actively changing. We **restarted training from scratch** on the v2 line (phase-aware gate,
 > vocab 50261). After every **+2B pretrain tokens** we ship a new checkpoint to Hugging Face
@@ -221,12 +228,16 @@ pretraining (DCLM-Edu + FineWeb-Edu, ~10B+ tokens), fixes ChatML/EOS, then re-SF
 
 ## Continuous shipping (v2 gate line)
 
+**Round 1 shipped 2026-07-04** as HF revision **`round-2b-gate`**. Token budget is small (**2B
+pretrain + SFT**), but this is the first public **v2 architecture** checkpoint (content-aware
+gate, vocab 50261, blended data). Next rounds add +2B fresh tokens each under `round-4b-gate`, …
+
 The architecture and training recipe are **still evolving**; we treat each shipped round as a
 **snapshot**, not a frozen product. We **retrain from scratch** on the v2 line, then add **+2B
 fresh pretrain tokens** per round (no token reuse), run chat SFT, and publish the weights to
 **[gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat)**
 under a **revision tag** (`round-2b-gate`, `round-4b-gate`, …). Full provenance per round:
-**[v11/MODEL_RELEASES.md](https://github.com/gowrav-vishwakarma/qllm2/blob/master/v11/MODEL_RELEASES.md)**.
+**[v11/MODEL_RELEASES.md](v11/MODEL_RELEASES.md)**.
 
 **What every round trains on (knowledge + reasoning + chat):**
 
