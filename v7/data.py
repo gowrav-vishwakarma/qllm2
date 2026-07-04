@@ -5,6 +5,7 @@ Self-contained copy from v6/train.py so v7 is fully isolated.
 """
 
 import json
+import hashlib
 import math
 import os
 import re
@@ -100,6 +101,21 @@ class MaskedTextDataset(Dataset):
             'labels': self.labels[idx],
             'loss_mask': self.loss_mask[idx],
         }
+
+
+class StackedChunkDataset(Dataset):
+    """Fixed (input_ids, labels) chunks for cached pretrain streams."""
+
+    def __init__(self, input_ids: torch.Tensor, labels: torch.Tensor):
+        assert input_ids.shape == labels.shape
+        self.input_ids = input_ids
+        self.labels = labels
+
+    def __len__(self):
+        return self.input_ids.shape[0]
+
+    def __getitem__(self, idx):
+        return {'input_ids': self.input_ids[idx], 'labels': self.labels[idx]}
 
 
 class StreamingTokenChunkDataset(IterableDataset):
@@ -1255,6 +1271,266 @@ def load_dclm_edu(
     return train_ds, val_ds, tokenizer
 
 
+# ── Pretrain mix token cache (skip+tokenize once on CPU, reuse next round) ───
+
+_PRETRAIN_CACHE_VERSION = 1
+_PRETRAIN_CACHE_SHARD_ROWS = 50_000
+
+
+def _pretrain_cache_meta(
+    *,
+    seq_len: int,
+    token_budget: int,
+    offset_tokens: int,
+    edu_score_min: int,
+    sources: Tuple[str, ...],
+    weights: Optional[Tuple[float, ...]],
+    fineweb_name: str,
+    mix_seed: int,
+    blend_warmup_tokens: int,
+    skip_map: Dict[str, int],
+) -> dict:
+    return {
+        'version': _PRETRAIN_CACHE_VERSION,
+        'seq_len': seq_len,
+        'token_budget': token_budget,
+        'offset_tokens': offset_tokens,
+        'edu_score_min': edu_score_min,
+        'sources': list(sources),
+        'weights': list(weights) if weights else None,
+        'fineweb_name': fineweb_name,
+        'mix_seed': mix_seed,
+        'blend_warmup_tokens': blend_warmup_tokens,
+        'skip_map': {k: int(v) for k, v in sorted(skip_map.items())},
+        'chat_cache_version': _CHAT_CACHE_VERSION,
+    }
+
+
+def pretrain_mix_cache_dir(meta: dict, cache_root: Optional[Path] = None) -> Path:
+    """Deterministic cache directory from blend parameters."""
+    root = cache_root or (Path('.cache') / 'v7_tokens')
+    blob = json.dumps(meta, sort_keys=True)
+    tag = hashlib.sha256(blob.encode()).hexdigest()[:16]
+    return root / f'pretrain_mix_v{_PRETRAIN_CACHE_VERSION}_{tag}'
+
+
+def _load_pretrain_mix_from_cache(cache_dir: Path):
+    manifest = json.loads((cache_dir / 'manifest.json').read_text())
+    shards = []
+    for i in range(manifest['n_shards']):
+        part = torch.load(cache_dir / f'train_{i:04d}.pt', weights_only=False)
+        shards.append(StackedChunkDataset(part['input_ids'], part['labels']))
+    train_ds = shards[0] if len(shards) == 1 else ConcatDataset(shards)
+    train_ds.pretrain_cached = True  # type: ignore[attr-defined]
+    print(
+        f"[cache] Loaded pretrain mix from {cache_dir} "
+        f"({manifest['n_rows']:,} rows, {manifest['token_budget']:,} tok, "
+        f"offset={manifest['offset_tokens']:,}, "
+        f"skips={manifest.get('start_docs', {})})"
+    )
+    return train_ds, manifest
+
+
+def build_pretrain_mix_token_cache(
+    *,
+    seq_len: int = 2048,
+    token_budget: int = 2_000_000_000,
+    offset_tokens: int = 0,
+    edu_score_min: int = 3,
+    sources: Tuple[str, ...] = ('dclm', 'fineweb', 'smoltalk2_mid'),
+    weights: Optional[Tuple[float, ...]] = None,
+    fineweb_name: str = 'sample-10BT',
+    mix_seed: int = 42,
+    blend_warmup_tokens: int = 0,
+    skip_map: Optional[Dict[str, int]] = None,
+    cache_root: Optional[Path] = None,
+    resume: bool = True,
+) -> Path:
+    """Tokenize a pretrain blend slice to sharded disk cache (CPU, resumable).
+
+    ``offset_tokens`` skips the first N counted training tokens (same counter as
+    ``StreamingTokenChunkDataset``) before writing -- use to prefetch the *next*
+    round while the current round trains on GPU (offset = current TOKEN_BUDGET).
+    """
+    skip_map = dict(skip_map or {})
+    meta = _pretrain_cache_meta(
+        seq_len=seq_len,
+        token_budget=token_budget,
+        offset_tokens=offset_tokens,
+        edu_score_min=edu_score_min,
+        sources=sources,
+        weights=weights,
+        fineweb_name=fineweb_name,
+        mix_seed=mix_seed,
+        blend_warmup_tokens=blend_warmup_tokens,
+        skip_map=skip_map,
+    )
+    cache_dir = pretrain_mix_cache_dir(meta, cache_root)
+    if (cache_dir / 'manifest.json').exists():
+        print(f"[cache] pretrain mix already complete: {cache_dir}")
+        return cache_dir
+
+    if chat_vocab := True:
+        tokenizer = get_chat_tokenizer()
+    else:
+        from transformers import AutoTokenizer
+        tokenizer = AutoTokenizer.from_pretrained('gpt2')
+        tokenizer.pad_token = tokenizer.eos_token
+
+    doc_counters: Dict[str, int] = {s: int(skip_map.get(s, 0)) for s in sources}
+    start_docs = dict(doc_counters)
+    token_counters: Dict[str, int] = {}
+
+    tagged = []
+    web_sources: List[str] = []
+    for s in sources:
+        spec = SOURCE_REGISTRY.get(s)
+        if spec is None:
+            raise ValueError(f"Unknown pretrain source: {s}")
+        sk = skip_map.get(s, 0)
+        if spec['kind'] == 'web':
+            if s == 'dclm':
+                it = _dclm_edu_text_iter(
+                    edu_score_min, exclude_holdout=True,
+                    holdout_pct=5, skip_docs=sk,
+                    doc_counters=doc_counters, counter_key=s,
+                )
+            else:
+                it = _fineweb_edu_text_iter(
+                    edu_score_min, name=fineweb_name, exclude_holdout=True,
+                    holdout_pct=5, skip_docs=sk,
+                    doc_counters=doc_counters, counter_key=s,
+                )
+            web_sources.append(s)
+        else:
+            it = _smoltalk2_blend_text_iter(
+                config=spec.get('config', 'Mid'), skip_rows=sk,
+                doc_counters=doc_counters, counter_key=s,
+            )
+        tagged.append((s, it))
+
+    if len(tagged) > 1:
+        text_iter = _blend_interleave_text_iters(
+            tagged, weights,
+            warmup_tokens=blend_warmup_tokens, warmup_sources=tuple(web_sources),
+            token_counters=token_counters, seed=mix_seed,
+        )
+    else:
+        text_iter = _tag_source(tagged[0][0], tagged[0][1])
+
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    shard_idx = 0
+    n_rows = 0
+    yielded_tokens = 0
+    inp_buf: List[torch.Tensor] = []
+    lab_buf: List[torch.Tensor] = []
+
+    state_path = cache_dir / 'build_state.json'
+    if resume and state_path.exists():
+        state = json.loads(state_path.read_text())
+        shard_idx = int(state.get('shard_idx', 0))
+        n_rows = int(state.get('n_rows', 0))
+        yielded_tokens = int(state.get('yielded_tokens', 0))
+        doc_counters.update(state.get('doc_counters', {}))
+        token_counters.update(state.get('token_counters', {}))
+        print(
+            f"[cache] resuming pretrain build @ shard {shard_idx}, "
+            f"rows={n_rows:,}, yielded_tok={yielded_tokens:,}",
+            flush=True,
+        )
+        if yielded_tokens >= offset_tokens + token_budget:
+            print(f"[cache] build already past target; finalizing manifest")
+        else:
+            # Must re-stream from start (skip is not seekable); resume only if
+            # interrupted before any progress on this host.
+            if shard_idx > 0 or yielded_tokens > 0:
+                print(
+                    "[cache] WARNING: partial shard resume requires re-streaming "
+                    "from doc 0; delete cache_dir to rebuild cleanly.",
+                    flush=True,
+                )
+
+    target_end = offset_tokens + token_budget
+    print(
+        f"[cache] Building pretrain mix -> {cache_dir}\n"
+        f"  offset={offset_tokens:,} budget={token_budget:,} "
+        f"skips={skip_map} sources={list(sources)}",
+        flush=True,
+    )
+
+    def _flush_shard():
+        nonlocal shard_idx, n_rows
+        if not inp_buf:
+            return
+        inp = torch.stack(inp_buf)
+        lab = torch.stack(lab_buf)
+        path = cache_dir / f'train_{shard_idx:04d}.pt'
+        _atomic_torch_save({'input_ids': inp, 'labels': lab}, path)
+        n_rows += inp.shape[0]
+        shard_idx += 1
+        inp_buf.clear()
+        lab_buf.clear()
+        state_path.write_text(json.dumps({
+            'shard_idx': shard_idx,
+            'n_rows': n_rows,
+            'yielded_tokens': yielded_tokens,
+            'doc_counters': doc_counters,
+            'token_counters': token_counters,
+        }))
+        print(
+            f"  [cache] shard {shard_idx - 1:04d} rows={inp.shape[0]:,} "
+            f"total_rows={n_rows:,} yielded_tok={yielded_tokens:,}",
+            flush=True,
+        )
+
+    buffer: List[int] = []
+    for item in text_iter:
+        if isinstance(item, tuple):
+            _, text = item
+        else:
+            text = item
+        if not text or not str(text).strip():
+            continue
+        ids = tokenizer.encode(str(text), add_special_tokens=False)
+        if not ids:
+            continue
+        ids.append(tokenizer.eos_token_id)
+        buffer.extend(ids)
+        while len(buffer) >= seq_len + 1:
+            chunk = buffer[: seq_len + 1]
+            buffer = buffer[seq_len + 1:]
+            yielded_tokens += seq_len
+            if yielded_tokens <= offset_tokens:
+                continue
+            if yielded_tokens > target_end:
+                break
+            inp_buf.append(torch.tensor(chunk[:-1], dtype=torch.long))
+            lab_buf.append(torch.tensor(chunk[1:], dtype=torch.long))
+            if len(inp_buf) >= _PRETRAIN_CACHE_SHARD_ROWS:
+                _flush_shard()
+        if yielded_tokens > target_end:
+            break
+
+    _flush_shard()
+    manifest = {
+        **meta,
+        'n_shards': shard_idx,
+        'n_rows': n_rows,
+        'start_docs': start_docs,
+        'end_docs': dict(doc_counters),
+        'per_source_tokens': dict(token_counters),
+    }
+    (cache_dir / 'manifest.json').write_text(json.dumps(manifest, indent=2))
+    if state_path.exists():
+        state_path.unlink()
+    print(
+        f"[cache] pretrain mix complete: {cache_dir} "
+        f"({n_rows:,} rows, {min(yielded_tokens - offset_tokens, token_budget):,} tok written)",
+        flush=True,
+    )
+    return cache_dir
+
+
 def load_pretrain_mix(
     seq_len: int = 2048,
     edu_score_min: int = 3,
@@ -1273,6 +1549,8 @@ def load_pretrain_mix(
     blend_warmup_tokens: int = 0,
     token_counters: Optional[Dict[str, int]] = None,
     doc_counters: Optional[Dict[str, int]] = None,
+    offset_tokens: int = 0,
+    use_cache: bool = True,
 ):
     """Stream a blended corpus for from-scratch pretrain (knowledge+reasoning+chat).
 
@@ -1296,6 +1574,45 @@ def load_pretrain_mix(
     skip_map = dict(skip_docs or {})
     skip_map.setdefault('dclm', dclm_skip_docs)
     skip_map.setdefault('fineweb', fineweb_skip_docs)
+
+    budget = token_budget or 0
+    if use_cache and budget > 0:
+        meta = _pretrain_cache_meta(
+            seq_len=seq_len,
+            token_budget=budget,
+            offset_tokens=offset_tokens,
+            edu_score_min=edu_score_min,
+            sources=sources,
+            weights=weights,
+            fineweb_name=fineweb_name,
+            mix_seed=mix_seed,
+            blend_warmup_tokens=blend_warmup_tokens,
+            skip_map=skip_map,
+        )
+        cache_dir = pretrain_mix_cache_dir(meta)
+        if (cache_dir / 'manifest.json').exists():
+            train_ds, manifest = _load_pretrain_mix_from_cache(cache_dir)
+            if doc_counters is not None:
+                for s in sources:
+                    doc_counters[s] = int(manifest.get('end_docs', {}).get(s, skip_map.get(s, 0)))
+            if token_counters is not None:
+                token_counters.update(manifest.get('per_source_tokens', {}))
+            if chat_vocab:
+                tokenizer = get_chat_tokenizer()
+            else:
+                from transformers import AutoTokenizer
+                tokenizer = AutoTokenizer.from_pretrained('gpt2')
+                tokenizer.pad_token = tokenizer.eos_token
+            if exclude_holdout:
+                val_ds = load_pretrain_holdout_val(
+                    tokenizer, seq_len=seq_len, edu_score_min=edu_score_min,
+                    holdout_pct=holdout_pct,
+                )
+            else:
+                val_ds, _ = load_wikitext103_val(
+                    seq_len=seq_len, max_val_samples=max_val_samples,
+                )
+            return train_ds, val_ds, tokenizer
 
     # Seed cursors at prior cumulative so per_source_docs stays cumulative.
     if doc_counters is not None:

@@ -416,7 +416,10 @@ def main():
 
     from torch.utils.data import DataLoader
     use_cuda = torch.cuda.is_available()
-    is_streaming = args.dataset in ('dclm_edu', 'fineweb_edu', 'pretrain_mix')
+    is_streaming = (
+        args.dataset in ('dclm_edu', 'fineweb_edu', 'pretrain_mix')
+        and not getattr(train_ds, 'pretrain_cached', False)
+    )
     nw = 0 if is_streaming else (args.num_workers if use_cuda else 0)
     dl_kwargs = {}
     if nw > 0:

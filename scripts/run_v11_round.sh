@@ -162,7 +162,84 @@ disk_check() {
 pt_best() { echo "${PT_CKPT_DIR}/best_model.pt"; }
 sft_best() { echo "${SFT_CKPT_DIR}/best_model.pt"; }
 
+# CPU background token cache for the *next* pretrain round (~30GB, no GPU).
+PREFETCH="${PREFETCH:-1}"
+PARALLEL_PREFETCH="${PARALLEL_PREFETCH:-1}"
+PREFETCH_MIN_DISK_GB="${PREFETCH_MIN_DISK_GB:-40}"
+
+launch_prefetch() {
+  local ckpt="$1"
+  local offset="${2:-0}"
+  local tag_round=$((ROUND + 1))
+  local log="${PT_CKPT_DIR}/prefetch_r${tag_round}_off${offset}.log"
+  if [[ "$PREFETCH" == "0" ]]; then
+    echo "[prefetch] disabled (PREFETCH=0)"
+    return 0
+  fi
+  if [[ ! -f "$ckpt" ]]; then
+    echo "[prefetch] skip: checkpoint missing ($ckpt)"
+    return 0
+  fi
+  local free_gb
+  free_gb="$(df -BG / | awk 'NR==2{gsub("G","",$4); print $4}')"
+  if (( free_gb < PREFETCH_MIN_DISK_GB )); then
+    echo "[prefetch] skip: need >=${PREFETCH_MIN_DISK_GB}GB free (have ${free_gb}GB)"
+    return 0
+  fi
+  if pgrep -f "v11_pretrain_prefetch.py.*--checkpoint ${ckpt}" >/dev/null 2>&1; then
+    echo "[prefetch] already running for $ckpt"
+    return 0
+  fi
+  echo "[prefetch] background build for round $tag_round (offset=${offset}) ckpt=$ckpt"
+  nohup nice -n 10 env CUDA_VISIBLE_DEVICES="" \
+    "$PYTHON_BIN" scripts/v11_pretrain_prefetch.py \
+    --checkpoint "$ckpt" \
+    --offset_tokens "$offset" \
+    --token_budget "$TOKEN_BUDGET" \
+    --seq_len "$SEQ_LEN" \
+    --edu_score_min "$EDU_SCORE_MIN" \
+    --pretrain_sources "$PRETRAIN_SOURCES" \
+    --pretrain_weights "$PRETRAIN_WEIGHTS" \
+    --fineweb_name "$FINEWEB_NAME" \
+    --blend_warmup_tokens "$BLEND_WARMUP_TOKENS" \
+    --mix_seed "$SEED" \
+    >>"$log" 2>&1 &
+  echo "[prefetch] pid=$! log=$log"
+}
+
 case "$STEP" in
+prefetch)
+  # Build token cache for the next pretrain round. Env:
+  #   PREFETCH_CHECKPOINT  (default: pt_best)
+  #   PREFETCH_OFFSET      (default: 0; use TOKEN_BUDGET for parallel prefetch)
+  CKPT="${PREFETCH_CHECKPOINT:-$(pt_best)}"
+  OFFSET="${PREFETCH_OFFSET:-0}"
+  if [[ "$DRY" == "1" ]]; then
+    dry_banner
+    echo "[DRY] prefetch checkpoint=$CKPT offset=$OFFSET budget=$TOKEN_BUDGET"
+    eval "$PYTHON_BIN scripts/v11_pretrain_prefetch.py" \
+      --checkpoint "$CKPT" --offset_tokens "$OFFSET" \
+      --token_budget "$TOKEN_BUDGET" --seq_len "$SEQ_LEN" \
+      --edu_score_min "$EDU_SCORE_MIN" \
+      --pretrain_sources "$PRETRAIN_SOURCES" \
+      --pretrain_weights "$PRETRAIN_WEIGHTS" \
+      --fineweb_name "$FINEWEB_NAME" \
+      --blend_warmup_tokens "$BLEND_WARMUP_TOKENS" \
+      --mix_seed "$SEED" --dry
+    exit 0
+  fi
+  disk_check
+  CUDA_VISIBLE_DEVICES="" eval "$PYTHON_BIN scripts/v11_pretrain_prefetch.py" \
+    --checkpoint "$CKPT" --offset_tokens "$OFFSET" \
+    --token_budget "$TOKEN_BUDGET" --seq_len "$SEQ_LEN" \
+    --edu_score_min "$EDU_SCORE_MIN" \
+    --pretrain_sources "$PRETRAIN_SOURCES" \
+    --pretrain_weights "$PRETRAIN_WEIGHTS" \
+    --fineweb_name "$FINEWEB_NAME" \
+    --blend_warmup_tokens "$BLEND_WARMUP_TOKENS" \
+    --mix_seed "$SEED"
+  ;;
+
 pretrain)
   disk_check
   mkdir -p "$PT_CKPT_DIR"
@@ -209,9 +286,21 @@ pretrain)
   fi
   LOG_DIR=$(make_log_dir "v11" "round${ROUND}_pretrain")
   write_run_info "$LOG_DIR" "V11 round $ROUND pretrain ($ROUND_TAG)" "$ARGS"
+  CURSOR_BASE="${PT_CKPT_DIR}/round${ROUND}_cursor_base.pt"
+  if [[ "$SCRATCH" != "1" && -f "$(pt_best)" ]]; then
+    cp -f "$(pt_best)" "$CURSOR_BASE"
+    echo "[pretrain] saved cursor base $CURSOR_BASE (for parallel prefetch)"
+    if [[ "$PARALLEL_PREFETCH" == "1" ]]; then
+      launch_prefetch "$CURSOR_BASE" "$TOKEN_BUDGET"
+    fi
+  fi
   eval "$PYTHON_BIN -m v11.train" $ARGS \
     --gen_prompt "'$GEN_PROMPT'" --log_dir "$LOG_DIR" --checkpoint_dir "$PT_CKPT_DIR"
   save_round_state
+  # Post-round prefetch (offset=0) if parallel did not finish / was disabled.
+  if [[ "$SCRATCH" != "1" ]]; then
+    launch_prefetch "$(pt_best)" 0
+  fi
   ;;
 
 probes)
@@ -309,17 +398,19 @@ run_v11_round.sh <step> [--dry]
   success, records the new cumulative state; probes/sft/smoke/export/eval act on
   the current (last completed) round.
 
-  steps (GCP):  pretrain | probes | sft | smoke | export | eval
+  steps (GCP):  pretrain | prefetch | probes | sft | smoke | export | eval
   step (4090):  ship
   --dry, -n  :  print the resolved plan + exact command, run nothing.
 
   defaults:     BATCH_SIZE=$BATCH_SIZE  FUSED_CE=$FUSED_CE  TOKEN_BUDGET=$TOKEN_BUDGET
+                PREFETCH=1  PARALLEL_PREFETCH=1 (CPU cache for next round's 2B)
   next round:   ROUND=$((LAST_ROUND + 1))  TAG=round-$(( (CUMULATIVE_TOKENS + TOKEN_BUDGET) / 1000000000 ))b-gate
   overrides:    ROUND ROUND_TAG SCRATCH TOKEN_BUDGET BATCH_SIZE FUSED_CE
-                RESUME_FULL(crash-recovery) PRETRAIN_WEIGHTS BLEND_WARMUP_TOKENS
-                THINK_FRACTION FINEWEB_NAME
+                PREFETCH=0 PARALLEL_PREFETCH=0 RESUME_FULL(crash-recovery)
+                PRETRAIN_WEIGHTS BLEND_WARMUP_TOKENS THINK_FRACTION FINEWEB_NAME
   typical:      ./scripts/run_v11_round.sh pretrain          # next round, auto tag
                 ./scripts/run_v11_round.sh pretrain --dry    # preview only
+                ./scripts/run_v11_round.sh prefetch --dry    # preview next-round cache
                 ./scripts/run_v11_round.sh sft && ./scripts/run_v11_round.sh export
 EOF
   ;;
