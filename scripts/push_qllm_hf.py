@@ -47,6 +47,58 @@ MAIN_CODE_FILES = (
 )
 
 
+def archive_main_as(api: HfApi, repo_id: str, tag: str) -> None:
+    """Snapshot current HF main into an immutable tag before overwriting main."""
+    try:
+        api.create_tag(
+            repo_id=repo_id,
+            tag=tag,
+            revision='main',
+            repo_type='model',
+            exist_ok=False,
+        )
+        print(f'Archived current main as tag: {tag}')
+    except Exception as exc:  # noqa: BLE001
+        raise SystemExit(f'Could not archive main as {tag}: {exc}')
+
+
+def upload_files(
+    api: HfApi,
+    repo_id: str,
+    folder: Path,
+    files: tuple[str, ...] | list[str],
+    revision: str | None,
+) -> None:
+    """Upload files to repo_id@revision (revision=None -> main)."""
+    label = revision or 'main'
+    dest = f'{repo_id}@{label}'
+    print(f'Uploading {folder} -> {dest} ...')
+
+    for name in files:
+        path = folder / name
+        if not path.exists():
+            raise SystemExit(f'Missing required file: {path}')
+        print(f'  {name} ({path.stat().st_size / (1024 * 1024):.1f} MB)')
+        api.upload_file(
+            path_or_fileobj=str(path),
+            path_in_repo=name,
+            repo_id=repo_id,
+            repo_type='model',
+            revision=revision,
+            commit_message=(
+                'Update model card (MIT license)'
+                if name == 'README.md'
+                else f'Add {name}'
+            ),
+        )
+
+    if revision:
+        print(f'Done: https://huggingface.co/{repo_id}/tree/{revision}')
+        print(f'Pull: huggingface-cli download {repo_id} --revision {revision}')
+    else:
+        print(f'Done: https://huggingface.co/{repo_id}')
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description='Upload QLLM HF release bundle')
     p.add_argument('--repo-id', default=DEFAULT_REPO)
@@ -65,7 +117,20 @@ def main() -> None:
         '--revision',
         default=None,
         help='HF revision/tag to publish this round under (e.g. round-2b-gate). '
-             'Creates the branch/tag if missing; main is left untouched unless omitted.',
+             'Use "main" to publish directly to main. Creates the branch if missing.',
+    )
+    p.add_argument(
+        '--archive-main-as',
+        metavar='TAG',
+        default=None,
+        help='Before overwriting main, snapshot current main as an immutable tag '
+             '(e.g. v1-old-deprecated-10B-sft). Fails if the tag already exists.',
+    )
+    p.add_argument(
+        '--also-main',
+        action='store_true',
+        help='After uploading to --revision <round tag>, also upload the full bundle '
+             'to main so the default branch tracks the latest round.',
     )
     args = p.parse_args()
 
@@ -87,9 +152,17 @@ def main() -> None:
     api.create_repo(args.repo_id, repo_type='model', exist_ok=True)
 
     revision = args.revision
-    if revision:
-        # Publish onto a dedicated revision branch so `main` is untouched and each
-        # round is pullable via `--revision <tag>`.
+    upload_to_main = revision in (None, 'main')
+    also_main = args.also_main and revision not in (None, 'main')
+
+    if args.archive_main_as and not (upload_to_main or also_main):
+        raise SystemExit('--archive-main-as requires uploading to main (--revision main) '
+                         'or --also-main')
+
+    if args.archive_main_as:
+        archive_main_as(api, args.repo_id, args.archive_main_as)
+
+    if revision and revision != 'main':
         try:
             api.create_branch(
                 args.repo_id, repo_type='model', branch=revision, exist_ok=True,
@@ -97,31 +170,18 @@ def main() -> None:
             print(f'Revision branch ready: {revision}')
         except Exception as exc:  # noqa: BLE001
             raise SystemExit(f'Could not create revision {revision}: {exc}')
+        upload_files(api, args.repo_id, folder, files, revision=revision)
 
-    dest = f'{args.repo_id}@{revision}' if revision else args.repo_id
-    print(f'Uploading {folder} -> {dest} ...')
+    if upload_to_main:
+        upload_files(api, args.repo_id, folder, files, revision=None)
 
-    for name in files:
-        path = folder / name
-        print(f'  {name} ({path.stat().st_size / (1024 * 1024):.1f} MB)')
-        api.upload_file(
-            path_or_fileobj=str(path),
-            path_in_repo=name,
-            repo_id=args.repo_id,
-            repo_type='model',
-            revision=revision,
-            commit_message=(
-                'Update model card (MIT license)'
-                if name == 'README.md'
-                else f'Add {name}'
-            ),
-        )
-
-    if revision:
-        print(f'Done: https://huggingface.co/{args.repo_id}/tree/{revision}')
-        print(f'Pull: huggingface-cli download {args.repo_id} --revision {revision}')
-    else:
-        print(f'Done: https://huggingface.co/{args.repo_id}')
+    if also_main:
+        main_files = list(UPLOAD_FILES)
+        for name in main_files:
+            path = folder / name
+            if not path.exists():
+                raise SystemExit(f'Missing required file for main: {path}')
+        upload_files(api, args.repo_id, folder, main_files, revision=None)
 
 
 if __name__ == '__main__':
