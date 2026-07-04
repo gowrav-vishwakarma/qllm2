@@ -41,7 +41,7 @@ New checkpoints: `checkpoints_v11_e3_k3_chat_pretrain_v2/` (pretrain), `checkpoi
 
 | round | hf_tag | parent | pretrain_total | round_tokens | mix_seed | fineweb | weights (dclm,fineweb,mid) | warmup | think_frac | per_source_docs (end pretrain) | holdout_ppl | sft_ppl | sft_acc | smoke | blend_repeat | date |
 |-------|--------|--------|----------------|--------------|----------|---------|----------------------------|--------|-----------|------------------------------|-------------|---------|---------|-------|--------------|------|
-| 1 | round-2b-gate | scratch | 2B | 2B | 42 | sample-10BT | 48,48,4 | 1B | 0.15 | dclm 765737, fineweb 766613, mid 28577 | 35.42 | 7.20 | 0.591 | Paris OK | false | **2026-07-04** |
+| 1 | round-2b-gate | scratch | 2B | 2B | 42 | sample-10BT | 48,48,4 | 1B | 0.15 | dclm 765737, fineweb 766613, mid 28577 | 35.42 | 7.20 | 0.591 | [samples](../hf_release/SAMPLES_round-2b-gate.md) 2026-07-04 | false | **2026-07-04** |
 
 **Round 1 token mix (pretrain, measured):** ~52% DCLM-Edu, ~40% FineWeb-Edu, ~8% smoltalk2 Mid
 (Mid docs are much longer than web docs despite 4% doc weight). **SFT:** smoltalk2 SFT config,

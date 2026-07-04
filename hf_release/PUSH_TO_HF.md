@@ -92,6 +92,9 @@ uv run python scripts/export_hf_release.py \
 
 # 3. Verify locally BEFORE upload (required gate)
 cd hf_release && bash verify.sh && bash verify_legacy.sh
+
+# 4. Optional: regenerate sample Q&A for the model card
+# ROUND_TAG=round-2b-gate ./scripts/run_v11_round.sh eval
 ```
 
 Both must print success (Paris + stop on im_end). `verify_legacy.sh` needs HF auth and
@@ -134,7 +137,10 @@ hf upload gowravvishwakarma/qllm-pam-v11-e3k3-chat hf_release/ \
 | `config.json` | Architecture + training metadata |
 | `modeling_qllm.py` | Self-contained model code (no qllm2 clone needed) |
 | `run_chat.py` | Interactive / single-prompt chat |
-| `requirements.txt` | `torch`, `transformers` |
+| `eval_chat.py` | Batch chat eval (reproduce sample Q&A) |
+| `eval_prompts_round1.yaml` | Round 1 prompt suite |
+| `SAMPLES_round-2b-gate.md` | Full sample Q&A log (ships with model card) |
+| `requirements.txt` | `torch`, `transformers`, `PyYAML` |
 | `README.md` | Model card |
 
 ## After upload

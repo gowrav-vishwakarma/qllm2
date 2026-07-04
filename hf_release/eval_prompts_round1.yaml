@@ -1,0 +1,96 @@
+# Round 1 (round-2b-gate) chat eval prompts — aligned with pretrain + SFT data mix.
+# Categories map to: web factual (DCLM/FineWeb), edu, smoltalk2 SFT instruct/code,
+# math stress, reasoning/thinking format, prompt sensitivity (GPT-2 BPE).
+
+round_tag: round-2b-gate
+checkpoint: qllm_v11_e3k3_chat.pt
+
+profiles:
+  recommended:
+    description: Recommended inference (--no-think, short answers)
+    add_no_think_hint: true
+    strip_thinking: true
+    temperatures: [0.0, 0.7]
+    max_new_tokens: 64
+  raw:
+    description: Raw model output (training-default system, may emit thinking blocks)
+    add_no_think_hint: false
+    strip_thinking: false
+    temperatures: [0.0, 0.7]
+    max_new_tokens: 128
+
+prompts:
+  - id: france_lower
+    category: web_factual
+    prompt: what is the capital of France?
+    notes: GPT-2 BPE case sensitivity (lowercase)
+
+  - id: france_title
+    category: prompt_sensitivity
+    prompt: What is the Capital of France?
+    notes: Title Case variant of france_lower
+
+  - id: shakespeare
+    category: web_factual
+    prompt: Who wrote Romeo and Juliet?
+
+  - id: photosynthesis
+    category: edu_science
+    prompt: Explain photosynthesis in one sentence.
+
+  - id: dna
+    category: edu_science
+    prompt: What is DNA?
+
+  - id: water_wet
+    category: instruction
+    prompt: "Answer in one word: yes or no — is water wet?"
+
+  - id: rewrite_polite
+    category: instruction
+    prompt: 'Rewrite this politely: "give me that"'
+
+  - id: add_numbers
+    category: toy_code
+    prompt: Write a Python function that adds two numbers.
+
+  - id: math_2plus2
+    category: math_stress
+    prompt: What is 2+2?
+    notes: Expected weak at 2B — not a training target
+
+  - id: math_multiply
+    category: math_stress
+    prompt: What is 17 × 23?
+
+  - id: sky_blue
+    category: reasoning_format
+    prompt: Why is the sky blue?
+
+  - id: hello
+    category: chat_social
+    prompt: Say hello in a friendly way.
+
+  - id: thank_you
+    category: chat_social
+    prompt: "User said thank you. Reply briefly."
+
+  - id: usa_capital
+    category: web_factual
+    prompt: What is the capital of the United States?
+
+  - id: largest_planet
+    category: web_factual
+    prompt: What is the largest planet in our solar system?
+
+  - id: one_sentence_ai
+    category: instruction
+    prompt: Explain what artificial intelligence is in one sentence.
+
+  - id: list_three_colors
+    category: instruction
+    prompt: List three primary colors.
+
+  - id: reverse_string
+    category: toy_code
+    prompt: Write a one-line Python snippet to reverse a string.

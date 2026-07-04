@@ -170,6 +170,16 @@ PY"
   echo "[export] done. Now ship from the RTX4090:  ROUND_TAG=$ROUND_TAG ./scripts/run_v11_round.sh ship"
   ;;
 
+eval)
+  echo "[eval] batch chat samples for $ROUND_TAG"
+  tag="${ROUND_TAG:-round-2b-gate}"
+  ( cd hf_release && eval "$PYTHON_BIN eval_chat.py" \
+    --checkpoint qllm_v11_e3k3_chat.pt \
+    --prompts eval_prompts_round1.yaml \
+    --out-md "SAMPLES_${tag}.md" \
+    --out-json "../logs/v11/${tag}_chat_eval.json" )
+  ;;
+
 ship)
   echo "[ship] pull -> verify -> push ($ROUND_TAG) [run on RTX4090 with hf auth]"
   ROUND="$ROUND_TAG" ./scripts/pull_v11_release.sh --round "$ROUND_TAG"
@@ -182,7 +192,7 @@ ship)
 help|*)
   cat <<EOF
 run_v11_round.sh <step>
-  steps (GCP):  pretrain | probes | sft | smoke | export
+  steps (GCP):  pretrain | probes | sft | smoke | export | eval
   step (4090):  ship
   key env:      ROUND ROUND_TAG SCRATCH TOKEN_BUDGET PRETRAIN_WEIGHTS
                 BLEND_WARMUP_TOKENS THINK_FRACTION FINEWEB_NAME

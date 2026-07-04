@@ -195,38 +195,27 @@ O(1)-per-token recurrent inference.
 
 ---
 
-## Chat examples (~100M model)
+## Chat examples — Round 1 (`round-2b-gate`, 2B)
 
-Real samples from earlier Phase C SFT logs (`logs/v11/sft_ab_run_20260619.log`, legacy ~10B
-line). **Round 1 (`round-2b-gate`, 2B)** behaves similarly in spirit — short answers sometimes
-work, but replies can ramble or confabulate; prompt **capitalization** can change the output.
-For current shipped weights, download **`round-2b-gate`** and use **`run_chat.py --no-think`**
-(see [hf_release/README.md](hf_release/README.md)).
+Full batch eval (**72 generations**, two profiles × two temperatures): **[hf_release/SAMPLES_round-2b-gate.md](hf_release/SAMPLES_round-2b-gate.md)**.
 
-> **User:** What is the capital of France?
-> **Assistant:** The capital of France is Paris, and it's located in the heart of France. It's
-> home to over 1 million people … famous for its historical landmarks like the Eiffel Tower,
-> Louvre Museum … France has a rich history dating back to the 15th century …
+Curated highlights (recommended profile, `--no-think`, T=0.0, `max_new_tokens=64`):
 
-> **User:** Explain photosynthesis in one sentence.
-> **Assistant:** Photosynthesis is a vital process that involves … plants, algae, and some
-> bacteria … where sunlight, carbon dioxide, and water from the atmosphere are absorbed …
-> the direct use of glucose to convert light energy into chemical energy …
+> **User:** what is the capital of France?
+> **Assistant:** The capital of France, France, is Paris.
 
-> **User:** Write a Python function that adds two numbers.
-> **Assistant:**
->
-> ```python
-> def add_numbers(a, b):
->     return a + b
-> ```
+> **User:** What is 2+2?
+> **Assistant:** To solve the problem of finding the number 2+2 in a given equation, we need to… *(rambles; no clean answer — math is a known weak spot at 2B)*
 
-**Honest caveats (read before celebrating):** at ~100M params with only **2B** tokens on the
-v2 line (**`round-2b-gate`**), **facts are unreliable** (wrong dates/founders), responses can
-**ramble**, capitalization affects replies, and the model may emit **`<think>`**
-blocks unless you pass **`--no-think`**. These are a *pretraining-scale* ceiling, not an
-architecture failure — each round adds +2B fresh tokens; see
-[hf_release/README.md](hf_release/README.md) for chat flags and limits.
+> **User:** Answer in one word: yes or no — is water wet?
+> **Assistant:** Yes, water is wet.
+
+Download, chat flags, and reproduction: **[hf_release/README.md](hf_release/README.md)** (Hugging Face model card).
+
+**Honest caveats:** at ~100M params with only **2B** tokens on the v2 line, **facts are unreliable**,
+responses **ramble**, **capitalization** affects replies, and the model may emit **`<think>`**
+blocks unless you pass **`--no-think`**. These are a *pretraining-scale* ceiling, not an architecture
+failure — each round adds +2B fresh tokens.
 
 ---
 
@@ -276,10 +265,10 @@ huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat --revision rou
 # Browse all tags: https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat
 ```
 
-**What to ask / current limits** (full chat guide, flags, and Round 1 behavior):
-**[hf_release/README.md](hf_release/README.md)** — use **`--no-think`** and **`--max_new_tokens 64`**
-for short factual Q&A at 2B. Tulu-3 is **not** used routinely — only as an optional
-instruct-upgrade branch after saturation gates pass.
+**What to ask / current limits** (full chat guide, flags, and Round 1 sample Q&A):
+**[hf_release/README.md](hf_release/README.md)** · **[hf_release/SAMPLES_round-2b-gate.md](hf_release/SAMPLES_round-2b-gate.md)** —
+use **`--no-think`** and **`--max_new_tokens 64`** for short factual Q&A at 2B. Tulu-3 is **not**
+used routinely — only as an optional instruct-upgrade branch after saturation gates pass.
 
 ---
 
@@ -294,8 +283,8 @@ huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
 cd hf_release && uv run python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt --no-think
 ```
 
-Full usage (`--system`, `--temperature`, thinking blocks, minimal Python snippet):
-**[hf_release/README.md](hf_release/README.md)**.
+Full usage (`--system`, `--temperature`, thinking blocks, sample Q&A):
+**[hf_release/README.md](hf_release/README.md)** · **[hf_release/SAMPLES_round-2b-gate.md](hf_release/SAMPLES_round-2b-gate.md)**.
 
 ---
 
@@ -372,7 +361,8 @@ Other presets, Phase C pretrain/SFT runners, and older version paths live in the
 ## Documentation
 
 - **Model weights (Hugging Face):** [gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat) — new checkpoint every **+2B tokens** under a **round revision tag** (`round-2b-gate`, …); architecture still evolving.
-- **[hf_release/README.md](hf_release/README.md)** — download, **`run_chat.py`** (`--no-think`, `--max_new_tokens`), Round 1 chat limits, minimal inference snippet.
+- **[hf_release/README.md](hf_release/README.md)** — download, **`run_chat.py`** (`--no-think`, `--max_new_tokens`), Round 1 chat limits.
+- **[hf_release/SAMPLES_round-2b-gate.md](hf_release/SAMPLES_round-2b-gate.md)** — Round 1 batch chat eval (72 generations, reproducible).
 - **Paper:** [Phase-Associative Memory: Sequence Modeling in Complex Hilbert Space](https://arxiv.org/abs/2604.05030) (arXiv:2604.05030)
 - [memory_probes/README.md](memory_probes/README.md) — PAM mechanism validation: binding,
 long-context NIAH, interference, rank; why matrix memory beats vector state.

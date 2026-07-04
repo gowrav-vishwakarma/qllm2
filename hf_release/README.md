@@ -134,7 +134,54 @@ Approximate token mix over the full 2B: **~52% DCLM-Edu**, **~40% FineWeb-Edu**,
 
 ```bash
 huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
-  --revision round-2b-gate --local-dir .
+  --revision round-2b-gate --local-dir qllm-pam-v11-e3k3-chat
+cd qllm-pam-v11-e3k3-chat
+pip install -r requirements.txt   # or: uv sync && uv run ...
+python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt --no-think --max_new_tokens 64
+```
+
+## Download & run (`round-2b-gate`)
+
+**Repo:** [huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat)
+
+Pin **`--revision round-2b-gate`** — do not rely on `main` for the v2 checkpoint (legacy ~10B stack).
+
+| File | Purpose |
+| ---- | ------- |
+| `qllm_v11_e3k3_chat.pt` | Weights (~384 MB) |
+| `config.json` | Architecture metadata |
+| `modeling_qllm.py` | Self-contained model (no qllm2 clone) |
+| `run_chat.py` | Interactive / single-prompt chat |
+| `eval_chat.py` | Batch eval (reproduce sample Q&A) |
+| `eval_prompts_round1.yaml` | Prompt suite for Round 1 |
+| `SAMPLES_round-2b-gate.md` | **Full sample Q&A log** (72 generations) |
+| `requirements.txt` | `torch`, `transformers`, `PyYAML` |
+
+**Recommended chat** (short factual Q&A at 2B):
+
+```bash
+python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt --no-think --max_new_tokens 64
+```
+
+**Sample outputs** ([full transcripts](SAMPLES_round-2b-gate.md), recommended profile, T=0.0):
+
+| Prompt | Response (truncated) | Notes |
+| ------ | -------------------- | ----- |
+| what is the capital of France? | The capital of France, France, is Paris. | Gets Paris; wording awkward |
+| What is 2+2? | To solve the problem of finding the number 2+2… | **Math fails** — rambles, no clean “4” |
+| Answer in one word: is water wet? | Yes, water is wet. | Instruction following OK |
+| Say hello in a friendly way. | Hello! How can I help you today? | Chat/social OK |
+| What is the Capital of France? | The capital of France, France, is the capital of France… | **Case-sensitive** — different from lowercase |
+
+Reproduce the full eval:
+
+```bash
+cd hf_release
+uv run python eval_chat.py \
+  --checkpoint qllm_v11_e3k3_chat.pt \
+  --prompts eval_prompts_round1.yaml \
+  --out-md SAMPLES_round-2b-gate.md \
+  --out-json ../logs/v11/round1_chat_eval.json
 ```
 
 ### What you can ask (and current limits)

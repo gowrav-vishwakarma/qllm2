@@ -1,2 +1,3 @@
 torch>=2.0
 transformers>=4.40
+PyYAML>=6.0
