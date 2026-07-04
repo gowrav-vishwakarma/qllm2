@@ -22,6 +22,20 @@ pipeline_tag: text-generation
 
 This checkpoint proves that architectures outside the transformer/SSM families **can learn coherent instruction-following chat**. It is deliberately **under-trained** relative to what the architecture can hold.
 
+> ## Which revision should I use?
+>
+> **Use `round-2b-gate` (or a newer `round-*` tag).** That is the **current v2 architecture line**
+> we are continuing — content-aware phase gate, vocab 50261, blended pretrain + real smoltalk2 SFT.
+>
+> **Do not start new work on HF `main`.** It is the **legacy ~10B checkpoint** (magnitude-only gate,
+> vocab 50259, old SmolTalk pipeline). We keep it **for comparison only**, not for production or
+> further training. It is **not** resumable on the v2 line.
+>
+> **2B tokens ≠ worse architecture.** `round-2b-gate` has **fewer pretrain tokens** than `main`
+> (~2B vs ~10B), but a **more mature stack**: better gate, reasoning-aware vocab, DCLM + FineWeb +
+> smoltalk2 Mid blend, and smoltalk2 SFT with hard filter. Knowledge depth will grow each round
+> (`round-4b-gate`, …); the **architecture and data recipe** you want are on the round tags.
+
 > **Architecture still under development.** The PAM stack (memory gates, tokenizer, data blend) is
 > actively changing. We **restarted training from scratch** on the v2 line. After every **+2B
 > pretrain tokens** we publish a new weights file here under a **round revision tag**
@@ -46,16 +60,19 @@ This checkpoint proves that architectures outside the transformer/SSM families *
 | **Paper**           | [arXiv:2604.05030](https://arxiv.org/abs/2604.05030) |
 | **HF repo**         | [huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat) |
 
-*(Legacy `main` / ~10B milestone: vocab 50259, magnitude-only gate — still supported via the same `run_chat.py`; pin `--revision main`.)*
+*(Legacy `main` / ~10B: **deprecated for new use** — comparison only. Use `--revision round-2b-gate`.)*
 
 ## Model compatibility (`main` vs round tags)
+
+**Default download:** `--revision round-2b-gate`. HF `main` = legacy comparison checkpoint only.
 
 One `run_chat.py` + `modeling_qllm.py` serves **both** checkpoints. Behavior comes from
 `config` inside the `.pt` file (vocab size, gate type).
 
-| | HF `main` (legacy) | `round-2b-gate` (v2) |
+| | HF `main` (**legacy — do not use for new work**) | **`round-2b-gate` (current v2 line)** |
 |--|-------------------|----------------------|
-| **Params / pretrain** | ~100M, ~10B tokens | ~100M, 2B tokens (v2 line) |
+| **Status** | Deprecated; kept for A/B vs old stack | **Active line** — Round 1, continued each +2B |
+| **Params / pretrain** | ~100M, ~10B tokens | ~100M, 2B tokens (grows each round) |
 | **`gate_content_aware`** | `false` — magnitude gate (`protect_gate` in=384) | `true` — real+imag gate (in=768) |
 | **`vocab_size`** | **50259** — ChatML only | **50261** — ChatML + thinking tokens |
 | **`--no-think`** | Ignored (no thinking tokens) | Discourages/strips `<think>` blocks |
@@ -144,7 +161,7 @@ python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt --no-think --max_new_token
 
 **Repo:** [huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat)
 
-Pin **`--revision round-2b-gate`** — do not rely on `main` for the v2 checkpoint (legacy ~10B stack).
+Pin **`--revision round-2b-gate`** — **do not use `main`** for the current architecture (legacy ~10B stack, comparison only).
 
 | File | Purpose |
 | ---- | ------- |
