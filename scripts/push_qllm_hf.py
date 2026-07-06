@@ -28,11 +28,10 @@ UPLOAD_FILES = (
     'requirements.txt',
     'PUSH_TO_HF.md',
     'verify.sh',
-    'verify_legacy.sh',
     'qllm_v11_e3k3_chat.pt',
 )
 
-# Shared code/docs for HF `main` — never overwrite legacy weights or config.json.
+# Shared code/docs for HF `main` — code-only refresh via push_hf_main_code_only.sh.
 MAIN_CODE_FILES = (
     'README.md',
     'modeling_qllm.py',
@@ -43,8 +42,20 @@ MAIN_CODE_FILES = (
     'requirements.txt',
     'PUSH_TO_HF.md',
     'verify.sh',
-    'verify_legacy.sh',
 )
+
+
+def resolve_upload_files(revision: str | None) -> list[str]:
+    """Build upload list; SAMPLES file follows the round revision tag."""
+    samples = (
+        f'SAMPLES_{revision}.md'
+        if revision and revision not in ('main',)
+        else 'SAMPLES_round-2b-gate.md'
+    )
+    return [
+        samples if name == 'SAMPLES_round-2b-gate.md' else name
+        for name in UPLOAD_FILES
+    ]
 
 
 def archive_main_as(api: HfApi, repo_id: str, tag: str) -> None:
@@ -139,7 +150,7 @@ def main() -> None:
     if not folder.is_dir():
         raise SystemExit(f'Missing folder: {folder}')
 
-    files = list(args.only) if args.only else list(UPLOAD_FILES)
+    files = list(args.only) if args.only else resolve_upload_files(args.revision)
     for name in files:
         path = folder / name
         if not path.exists():
@@ -176,7 +187,7 @@ def main() -> None:
         upload_files(api, args.repo_id, folder, files, revision=None)
 
     if also_main:
-        main_files = list(UPLOAD_FILES)
+        main_files = resolve_upload_files(revision)
         for name in main_files:
             path = folder / name
             if not path.exists():

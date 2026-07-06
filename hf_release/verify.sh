@@ -13,8 +13,9 @@ echo
 OUT=$(uv run python run_chat.py \
   --checkpoint qllm_v11_e3k3_chat.pt \
   --prompt "$PROMPT" \
+  --no-think \
   --temperature 0.0 \
-  --max_new_tokens 32 2>&1) || {
+  --max_new_tokens 64 2>&1) || {
   echo "$OUT"
   echo "FAIL: run_chat.py exited with error"
   exit 1

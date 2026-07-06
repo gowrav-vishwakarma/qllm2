@@ -2,22 +2,22 @@
 # Categories map to: web factual (DCLM/FineWeb), edu, smoltalk2 SFT instruct/code,
 # math stress, reasoning/thinking format, prompt sensitivity (GPT-2 BPE).
 
-round_tag: round-2b-gate
+round_tag: round-4b-gate
 checkpoint: qllm_v11_e3k3_chat.pt
 
 profiles:
   recommended:
-    description: Recommended inference (--no-think, short answers)
+    description: Recommended inference (--no-think)
     add_no_think_hint: true
     strip_thinking: true
     temperatures: [0.0, 0.7]
-    max_new_tokens: 64
+    max_new_tokens: 256
   raw:
     description: Raw model output (training-default system, may emit thinking blocks)
     add_no_think_hint: false
     strip_thinking: false
     temperatures: [0.0, 0.7]
-    max_new_tokens: 128
+    max_new_tokens: 512
 
 prompts:
   - id: france_lower

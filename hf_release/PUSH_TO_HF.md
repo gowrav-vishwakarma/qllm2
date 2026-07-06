@@ -41,33 +41,30 @@ by `scripts/run_v11_round.sh export`). The RTX4090 pulls incrementally:
 
 ```bash
 # On RTX4090 (has hf auth). One command does pull -> verify -> push:
-ROUND_TAG=round-2b-gate ./scripts/run_v11_round.sh ship
+ROUND_TAG=round-4b-gate ./scripts/run_v11_round.sh ship
 
 # Or step by step:
 ./scripts/pull_v11_release.sh --list           # server vs local, no download
-./scripts/pull_v11_release.sh --round round-2b-gate   # incremental, sha256-verified
-cp releases/round-2b-gate/qllm_v11_e3k3_chat.pt hf_release/qllm_v11_e3k3_chat.pt
-cd hf_release && bash verify.sh && bash verify_legacy.sh
-uv run python scripts/push_qllm_hf.py --revision round-2b-gate --also-main
+./scripts/pull_v11_release.sh --round round-4b-gate   # incremental, sha256-verified
+cp releases/round-4b-gate/qllm_v11_e3k3_chat.pt hf_release/qllm_v11_e3k3_chat.pt
+cd hf_release && bash verify.sh
+uv run python scripts/push_qllm_hf.py --revision round-4b-gate --also-main
 ```
 
-**Dual verification (required before any push):**
+**Verification (required before any push):**
+
+Run `verify.sh` on the RTX4090 against the round export staged in `hf_release/`:
 
 | Script | Checkpoint | Expect |
 |--------|------------|--------|
 | `verify.sh` | `hf_release/qllm_v11_e3k3_chat.pt` (current round export) | Paris + `stopped_on_im_end=True` |
-| `verify_legacy.sh` | HF `v1-old-deprecated-10B-sft` weights (auto-download) or `LEGACY_CKPT=...` | Same Paris/im_end checks on vocab **50259** |
-
-`verify_legacy.sh` downloads `qllm_v11_e3k3_chat.pt` from
-`--revision v1-old-deprecated-10B-sft` if not present (`LEGACY_DIR` defaults to
-`/tmp/qllm-legacy-v1`). Requires `hf auth login` and repo access (gated model).
-Run **both** scripts on the RTX4090 before `ship` or before updating HF `main`.
 
 ```bash
 cd hf_release
-bash verify.sh          # round-2b (50261, content-aware gate)
-bash verify_legacy.sh   # legacy v1-old-deprecated-10B-sft (50259, magnitude gate)
+bash verify.sh          # current round (50261, content-aware gate)
 ```
+
+Legacy ~10B weights live on the immutable HF tag **`v1-old-deprecated-10B-sft`** — no pre-ship check needed.
 
 The smart pull uses per-machine state at `~/.qllm/v11_pull_state.json`, so a
 second machine won't re-download a round it already has. Pull to a specific
@@ -92,57 +89,31 @@ uv run python scripts/export_hf_release.py \
 #    (regenerate modeling if v11/model.py changed — see scripts/export_hf_release.py)
 
 # 3. Verify locally BEFORE upload (required gate)
-cd hf_release && bash verify.sh && bash verify_legacy.sh
+cd hf_release && bash verify.sh
 
 # 4. Optional: regenerate sample Q&A for the model card
 # ROUND_TAG=round-2b-gate ./scripts/run_v11_round.sh eval
 ```
 
-Both must print success (Paris + stop on im_end). `verify_legacy.sh` needs HF auth and
-downloads the legacy archive-tag weights once.
+Must print success (Paris + stop on im_end) before upload.
 
-## One-time: promote round-2b to main (archive legacy)
+## One-time: promote round-2b to main (archive legacy) — done
 
-If HF `main` still holds the old ~10B legacy checkpoint, run this **once** on the RTX4090
-after `verify.sh` passes. It snapshots the current `main` into tag
-`v1-old-deprecated-10B-sft` (no re-upload of legacy weights), then overwrites `main`
-with the local round-2b bundle:
-
-```bash
-cp releases/round-2b-gate/qllm_v11_e3k3_chat.pt hf_release/qllm_v11_e3k3_chat.pt
-cd hf_release && bash verify.sh
-# If legacy is still on main, verify it before archiving:
-#   LEGACY_REVISION=main bash verify_legacy.sh
-uv run python scripts/push_qllm_hf.py --revision main \
-  --archive-main-as v1-old-deprecated-10B-sft
-```
-
-**Ordering:** create the archive tag **before** `verify_legacy.sh` is repointed to
-`v1-old-deprecated-10B-sft`. After this promote, routine `ship` uses `--also-main` and
-legacy checks pull from the archive tag.
+Legacy ~10B was archived to tag **`v1-old-deprecated-10B-sft`**; `main` now tracks the latest
+`round-*` bundle. Routine shipping uses `ship` with `--also-main`. No further action needed.
 
 **Optional — refresh code on HF `main` only (weights unchanged):**
 
-After both verify scripts pass, push shared chat/modeling files without changing weights:
-
 ```bash
-cd hf_release && bash verify.sh && bash verify_legacy.sh
-uv run python scripts/push_qllm_hf.py --revision main \
-  --only modeling_qllm.py run_chat.py README.md verify.sh verify_legacy.sh PUSH_TO_HF.md
+cd hf_release && bash verify.sh
+./scripts/push_hf_main_code_only.sh
 ```
 
 ## Upload
 
 ```bash
 # Publish to a round revision tag and update main (recommended):
-uv run python scripts/push_qllm_hf.py --revision round-2b-gate --also-main
-
-# Publish to main only (e.g. one-time promote with archive):
-uv run python scripts/push_qllm_hf.py --revision main \
-  --archive-main-as v1-old-deprecated-10B-sft
-
-# Publish to main without archiving (subsequent rounds via ship --also-main):
-uv run python scripts/push_qllm_hf.py --revision main
+uv run python scripts/push_qllm_hf.py --revision round-4b-gate --also-main
 ```
 
 Or manually:
@@ -163,7 +134,7 @@ hf upload gowravvishwakarma/qllm-pam-v11-e3k3-chat hf_release/ \
 | `run_chat.py` | Interactive / single-prompt chat |
 | `eval_chat.py` | Batch chat eval (reproduce sample Q&A) |
 | `eval_prompts_round1.yaml` | Round 1 prompt suite |
-| `SAMPLES_round-2b-gate.md` | Full sample Q&A log (ships with model card) |
+| `SAMPLES_round-<tag>.md` | Full sample Q&A log for that round (e.g. `SAMPLES_round-4b-gate.md`) |
 | `requirements.txt` | `torch`, `transformers`, `PyYAML` |
 | `README.md` | Model card |
 
@@ -190,6 +161,4 @@ python run_chat.py --prompt "What is the capital of France?"
 | `403` on xet-write-token | Set `HF_HUB_DISABLE_XET=1` before upload (already set in `push_qllm_hf.py`) |
 | Upload timeout | Retry; ~400 MB should succeed in one shot |
 | `verify.sh` fails | Do not upload — fix export or modeling first |
-| `verify_legacy.sh` fails | Legacy `v1-old-deprecated-10B-sft` chat broken — fix `run_chat.py` / `modeling_qllm.py` before updating HF |
-| `verify_legacy.sh` access denied | Run on RTX4090 with `hf auth login`; repo may be gated — approve access on HF first |
 | CUDA OOM at inference | Use CPU or reduce `max_new_tokens` |

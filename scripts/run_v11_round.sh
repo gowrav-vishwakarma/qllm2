@@ -384,7 +384,7 @@ ship)
   if [[ "$DRY" == "1" ]]; then dry_banner; echo "[DRY] pull+verify+push revision $ROUND_TAG"; exit 0; fi
   ROUND="$ROUND_TAG" ./scripts/pull_v11_release.sh --round "$ROUND_TAG"
   cp -f "releases/$ROUND_TAG/qllm_v11_e3k3_chat.pt" hf_release/qllm_v11_e3k3_chat.pt
-  ( cd hf_release && bash verify.sh && bash verify_legacy.sh )
+  ( cd hf_release && bash verify.sh )
   eval "$PYTHON_BIN scripts/push_qllm_hf.py --revision $ROUND_TAG --also-main"
   echo "[ship] published revision $ROUND_TAG"
   ;;
