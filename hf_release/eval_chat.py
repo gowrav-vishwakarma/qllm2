@@ -25,18 +25,18 @@ from run_chat import (
 
 PROFILE_DEFAULTS = {
     'recommended': {
-        'description': 'Recommended inference (--no-think, short answers)',
+        'description': 'Recommended inference (--no-think)',
         'add_no_think_hint': True,
         'strip_thinking': True,
         'temperatures': [0.0, 0.7],
-        'max_new_tokens': 64,
+        'max_new_tokens': 256,
     },
     'raw': {
         'description': 'Raw model output (training-default system)',
         'add_no_think_hint': False,
         'strip_thinking': False,
         'temperatures': [0.0, 0.7],
-        'max_new_tokens': 128,
+        'max_new_tokens': 512,
     },
 }
 
@@ -159,6 +159,23 @@ def _run_eval(
     }
 
 
+def _md_fence(text: str, info: str = 'text') -> str:
+    """Wrap text in a fenced markdown block (handles nested ``` in model output)."""
+    n = 3
+    while ('`' * n) in text:
+        n += 1
+    fence = '`' * n
+    return f'{fence}{info}\n{text}\n{fence}'
+
+
+def _md_inline(text: str, max_len: int | None = None) -> str:
+    """Escape backticks for inline markdown code."""
+    s = text.replace('\n', ' ')
+    if max_len is not None and len(s) > max_len:
+        s = s[: max_len - 3] + '...'
+    return s.replace('`', "'")
+
+
 def _render_markdown(report: dict[str, Any], suite: dict[str, Any]) -> str:
     lines: list[str] = []
     tag = report['round_tag']
@@ -214,9 +231,7 @@ def _render_markdown(report: dict[str, Any], suite: dict[str, Any]) -> str:
     for row in report['results']:
         if row['profile'] != 'recommended' or row['temperature'] != 0.0:
             continue
-        trunc = row['reply'].replace('\n', ' ')
-        if len(trunc) > 72:
-            trunc = trunc[:69] + '...'
+        trunc = _md_inline(row['reply'], max_len=72)
         trunc = trunc.replace('|', '\\|')
         lines.append(
             f'| {row["id"]} | {row["category"]} | {row["heuristic"] or "—"} | '
@@ -240,10 +255,15 @@ def _render_markdown(report: dict[str, Any], suite: dict[str, Any]) -> str:
             lines.append('')
             lines.append(f'**User:** {row["prompt"]}')
             lines.append('')
-            lines.append(f'**Assistant:** {row["reply"]}')
+            lines.append('**Assistant:**')
+            lines.append('')
+            lines.append(_md_fence(row['reply']))
             if row['has_thinking'] and row['reply'] != row['raw_reply']:
                 lines.append('')
-                lines.append(f'*(raw before strip:* `{row["raw_reply"][:200]}...`*)')
+                raw_preview = row['raw_reply'] if len(row['raw_reply']) <= 400 else row['raw_reply'][:400] + '...'
+                lines.append(f'*(raw before strip)*')
+                lines.append('')
+                lines.append(_md_fence(raw_preview, info='text raw-before-strip'))
             lines.append('')
             meta = (
                 f'new_tokens={row["new_tokens"]}, stopped_on_im_end={row["stopped_on_im_end"]}, '
