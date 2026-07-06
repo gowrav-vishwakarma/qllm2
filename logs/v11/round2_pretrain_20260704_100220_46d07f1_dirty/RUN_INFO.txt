@@ -1,0 +1,53 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V11 round 2 pretrain (round-4b-gate)
+Date (UTC)  : 2026-07-04 10:02:20
+Date (local): 2026-07-04 10:02:20 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1005-gcp x86_64
+
+Git commit  : 46d07f11fdfc09cab20bb25644e6f8343ea2d867
+Git short   : 46d07f1
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.25
+Arguments   : --preset v11_e3_k3_chat --stage pretrain --dataset pretrain_mix --seq_len 2048     --batch_size 32 --epochs 9999 --chunk_size 256     --token_budget 2000000000 --edu_score_min 3     --pretrain_sources dclm,fineweb,smoltalk2_mid --pretrain_weights 48,48,4     --fineweb_name sample-10BT --blend_warmup_tokens 0     --seed 42 --lr 1e-4 --warmup_steps 500     --amp_dtype auto --num_workers 0 --gen_every 5000 --save_every_steps 5000     --no_grad_ckpt --compile --compile_mode default --fused_ce --fused_ce_chunk 4096 --resume_from checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt --dclm_skip_docs 765737 --fineweb_skip_docs 766613 --smoltalk2_mid_skip_rows 28577
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ scripts/run_v11_round.sh | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/scripts/run_v11_round.sh b/scripts/run_v11_round.sh
+index 76e5d4d..cdc9906 100755
+--- a/scripts/run_v11_round.sh
++++ b/scripts/run_v11_round.sh
+@@ -104,12 +104,23 @@ pretrain)
+   if [[ "$SCRATCH" == "1" ]]; then
+     echo "[pretrain] from scratch (round $ROUND) -> $PT_CKPT_DIR"
+   else
+-    RESUME_ARGS="--resume $(pt_best)"
++    # New round = weights-only resume (--resume_from): fresh warmup->cosine over
++    # this round's TOKEN_BUDGET, fresh optimizer, and global_tokens reset to 0 so
++    # the budget counts THIS round's tokens. Cursor seeding still uses the ckpt's
++    # per_source_docs (fresh tokens, no reuse). Full-state resume (--resume) keeps
++    # the old decayed schedule + cumulative counters and is ONLY for crash recovery
++    # inside a round; enable with RESUME_FULL=1.
++    if [[ "${RESUME_FULL:-0}" == "1" ]]; then
++      RESUME_ARGS="--resume $(pt_best)"
++      echo "[pretrain] FULL resume (crash recovery): schedule/optimizer/counters restored"
++    else
++      RESUME_ARGS="--resume_from $(pt_best)"
++    fi
+     # Auto cursors from the previous round's checkpoint (fresh tokens).
+     eval "$(eval "$PYTHON_BIN scripts/v11_data_cursor.py --checkpoint $(pt_best) --fineweb-name $FINEWEB_NAME --emit env")"
+     CURSOR_ARGS="--dclm_skip_docs ${DCLM_SKIP_DOCS:-0} --fineweb_skip_docs ${FINEWEB_SKIP_DOCS:-0} --smoltalk2_mid_skip_rows ${SMOLTALK2_MID_SKIP_ROWS:-0}"
+     FINEWEB_NAME="${FINEWEB_NAME:-sample-10BT}"
+-    echo "[pretrain] resume $(pt_best) cursors: $CURSOR_ARGS fineweb=$FINEWEB_NAME"
++    echo "[pretrain] resume $(pt_best) ($RESUME_ARGS) cursors: $CURSOR_ARGS fineweb=$FINEWEB_NAME"
+   fi
+   LOG_DIR=$(make_log_dir "v11" "round${ROUND}_pretrain")
+   GEN_PROMPT="In 1923 , the University of"
