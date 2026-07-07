@@ -339,6 +339,87 @@ def build_stage1_dataset(
     )
 
 
+# ── Single-utterance ASR/TTS rows (Stage A/B; unified-vocab pipeline) ─────────
+
+def _load_kathbath_utterances(lang: str, n: int, seed: int = 42) -> List[Dict]:
+    """Load individual (audio, text, lang) utterances from Kathbath parquet."""
+    from huggingface_hub import hf_hub_download
+
+    need = max(n + 4, 8)
+    rows: List[Dict] = []
+    for shard in _kathbath_parquet_shards(lang):
+        parquet_path = hf_hub_download(KATHBATH_HF, shard, repo_type='dataset')
+        table = pq.read_table(parquet_path, columns=['text', 'audio_filepath'])
+        for i in range(table.num_rows):
+            text = table['text'][i].as_py()
+            if not text:
+                continue
+            audio = decode_audio_field(table['audio_filepath'][i].as_py())
+            rows.append({'text': text, 'audio': audio, 'lang': lang})
+            if len(rows) >= need:
+                break
+        if len(rows) >= need:
+            break
+    if len(rows) < max(1, n // 4):
+        raise RuntimeError(f'Kathbath {lang}: only {len(rows)} utterances (need ~{n}).')
+    rng = np.random.default_rng(seed + abs(hash(lang)) % 10000)
+    if len(rows) > n:
+        idx = rng.choice(len(rows), size=n, replace=False)
+        rows = [rows[int(i)] for i in idx]
+    return rows
+
+
+def _load_librispeech_utterances(n: int, seed: int = 42) -> List[Dict]:
+    """Load individual (audio, text, en) utterances from a LibriSpeech parquet shard."""
+    from datasets import Audio, load_dataset
+    from huggingface_hub import hf_hub_download
+
+    need = max(n + 4, 8)
+    parquet_path = hf_hub_download(
+        repo_id=LIBRISPEECH_HF, filename=LIBRISPEECH_PARQUET, repo_type='dataset',
+    )
+    ds = load_dataset('parquet', data_files={'train': parquet_path},
+                      split=f'train[:{need}]')
+    ds = ds.cast_column('audio', Audio(decode=False))
+    rows = []
+    for i in range(len(ds)):
+        row = ds[i]
+        if not row['text']:
+            continue
+        rows.append({
+            'text': row['text'].lower(),
+            'audio': decode_audio_field(row['audio']),
+            'lang': 'english',
+        })
+    rng = np.random.default_rng(seed)
+    if len(rows) > n:
+        idx = rng.choice(len(rows), size=n, replace=False)
+        rows = [rows[int(i)] for i in idx]
+    return rows
+
+
+def load_asr_rows(
+    languages: Sequence[str] = ('hindi', 'gujarati'),
+    n_per_lang: int = 2000,
+    include_english: bool = True,
+    n_english: int = 2000,
+    seed: int = 42,
+) -> List[Dict]:
+    """Collect single-utterance (audio, text, lang) rows for Stage A/B training."""
+    rows: List[Dict] = []
+    for lang in languages:
+        lang = lang.strip().lower()
+        if lang not in KATHBATH_LANGUAGES:
+            raise ValueError(f'Unknown Kathbath language {lang!r}')
+        print(f'  ASR rows: kathbath {lang} ({n_per_lang})...')
+        rows.extend(_load_kathbath_utterances(lang, n_per_lang, seed=seed))
+    if include_english and n_english > 0:
+        print(f'  ASR rows: librispeech english ({n_english})...')
+        rows.extend(_load_librispeech_utterances(n_english, seed=seed))
+    print(f'  ASR rows total: {len(rows)}')
+    return rows
+
+
 def collate_stage1(batch: List[Dict], pad_id: int = VOCAB.pad) -> Dict[str, torch.Tensor]:
     max_len = max(len(s['input_ids']) for s in batch)
     max_slots = max(len(s['audio_slot_indices']) for s in batch)

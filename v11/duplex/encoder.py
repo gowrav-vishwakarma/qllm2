@@ -53,6 +53,63 @@ class FrozenWhisperEncoder(nn.Module):
         if device is not None:
             self.to(device)
 
+    # Whisper: 16 kHz -> 100 fps mel -> conv stride 2 -> ~50 fps encoder frames.
+    ENCODER_FPS = 50
+
+    @torch.no_grad()
+    def encode_frames(
+        self,
+        waveform: torch.Tensor,
+        sample_rate: int,
+        stride: int = 4,
+        max_frames: Optional[int] = None,
+    ) -> torch.Tensor:
+        """waveform [samples] -> [T', out_dim] frame sequence at ~ENCODER_FPS/stride.
+
+        Unlike `encode_waveform` (1 mean-pooled vec/sec, throws away phonetics),
+        this keeps the encoder's frame sequence, stride-pooled to ~12.5 Hz
+        (stride=4). This is the input mode used for real ASR / duplex training.
+
+        Whisper's feature extractor zero-pads every clip to 30 s (1500 frames);
+        we crop to the frames that correspond to the true audio duration before
+        pooling so short utterances don't carry ~1500 padded frames.
+        """
+        if waveform.dim() > 1:
+            waveform = waveform.squeeze()
+        wf = normalize_waveform(waveform.detach().cpu().numpy())
+        sr = int(sample_rate)
+        if sr != WHISPER_SR:
+            wf = resample_audio(wf, sr, WHISPER_SR)
+            sr = WHISPER_SR
+        if wf.size == 0:
+            dev = next(self.encoder.parameters()).device
+            return torch.zeros(1, self.out_dim, device=dev)
+
+        duration = wf.size / sr
+        valid_frames = max(1, int(round(duration * self.ENCODER_FPS)))
+
+        inputs = self.feature_extractor(wf, sampling_rate=sr, return_tensors='pt')
+        input_features = inputs.input_features.to(next(self.encoder.parameters()).device)
+        hidden = self.encoder(input_features).last_hidden_state  # [1, 1500, D]
+        frames = hidden.squeeze(0)
+        frames = frames[:min(valid_frames, frames.shape[0])]  # crop pad frames
+
+        if stride > 1:
+            n = (frames.shape[0] // stride) * stride
+            if n == 0:  # very short clip -> single pooled vector
+                pooled = frames.mean(dim=0, keepdim=True)
+            else:
+                pooled = frames[:n].reshape(n // stride, stride, self.out_dim).mean(dim=1)
+                if frames.shape[0] > n:  # tail remainder -> one more pooled frame
+                    tail = frames[n:].mean(dim=0, keepdim=True)
+                    pooled = torch.cat([pooled, tail], dim=0)
+        else:
+            pooled = frames
+
+        if max_frames is not None and pooled.shape[0] > max_frames:
+            pooled = pooled[:max_frames]
+        return pooled
+
     @torch.no_grad()
     def encode_waveform(
         self,

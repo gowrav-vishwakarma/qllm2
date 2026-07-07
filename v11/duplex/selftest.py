@@ -88,6 +88,55 @@ def test_v11_baseline_forward_unchanged():
     assert torch.equal(out1, out2)
 
 
+def test_unified_vocab_layout():
+    from v11.duplex.tokenizer import DuplexVocab, N_CONTROL
+    v = DuplexVocab(n_text=32000, n_codebooks=4, codebook_size=2048)
+    assert v.text_offset == N_CONTROL
+    assert v.codec_offset == N_CONTROL + 32000
+    assert v.total_size == N_CONTROL + 32000 + 4 * 2048 == 40208
+    g = v.codec_to_global(3, 100)
+    assert v.global_to_codec(g) == (3, 100)
+    assert v.is_codec(g) and not v.is_text(g) and not v.is_control(g)
+    assert v.is_text(v.text_to_global(0)) and v.is_control(0)
+
+
+def test_codec_delay_roundtrip():
+    from v11.duplex.tokenizer import DuplexVocab, AUDIO_PAD
+    from v11.duplex.codec import delay_flatten, delay_unflatten, flat_interleave, flat_deinterleave
+    v = DuplexVocab(n_text=32000, n_codebooks=4, codebook_size=2048)
+    codes = torch.randint(0, v.codebook_size, (v.n_codebooks, 29))
+    stream = delay_flatten(codes, v)
+    assert len(stream) == v.n_codebooks * (29 + v.n_codebooks - 1)
+    assert torch.equal(delay_unflatten(stream, v), codes)
+    assert all(v.is_codec(g) or g == AUDIO_PAD for g in stream)
+    assert torch.equal(flat_deinterleave(flat_interleave(codes, v), v), codes)
+
+
+def test_duplex_100m_preset():
+    from v11.duplex.config import get_duplex_config, DUPLEX_100M_VOCAB
+    cfg = get_duplex_config('duplex_100m')
+    assert cfg.vocab_size == DUPLEX_100M_VOCAB == 40208
+    assert cfg.n_states == 3 and cfg.dim == 384 and cfg.n_layers == 16
+    assert cfg.gate_content_aware and cfg.chunk_size == 256
+    m = V11DuplexLM(cfg, audio_feat_dim=768)
+    total = m.count_parameters()['total']
+    assert 85e6 <= total <= 100e6, f'{total/1e6:.1f}M out of range'
+
+
+def test_audio_injection_skips_pad_positions():
+    cfg = get_duplex_config('duplex_5m')
+    model = V11DuplexLM(cfg, audio_feat_dim=48).eval()
+    B, T = 2, 10
+    ids = torch.randint(cfg.vocab_size // 2, cfg.vocab_size, (B, T))
+    frames = torch.randn(B, 3, 48)
+    embeds = model.project_audio(frames)
+    # sample 0: two valid slots + one pad(-1); sample 1: all pad
+    positions = torch.tensor([[1, 4, -1], [-1, -1, -1]])
+    with torch.no_grad():
+        logits, _, _ = model(ids, audio_embeds=embeds, audio_positions=positions)
+    assert logits.shape == (B, T, cfg.vocab_size)
+
+
 def main():
     tests = [
         test_presets_param_counts,
@@ -96,6 +145,10 @@ def main():
         test_forward_embeds_matches_token_path,
         test_import_does_not_mutate_v11_model,
         test_v11_baseline_forward_unchanged,
+        test_unified_vocab_layout,
+        test_codec_delay_roundtrip,
+        test_duplex_100m_preset,
+        test_audio_injection_skips_pad_positions,
     ]
     for t in tests:
         name = t.__name__
