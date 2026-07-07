@@ -158,10 +158,158 @@ Plan doc (design notes): [`.cursor/plans/v11_duplex_audio_poc_9606141c.plan.md`]
 
 ---
 
-## Next steps
+## Next steps (POC track)
 
 1. **Gradio / probe** on held-out audio — confirm 100% metric isn’t train-set leakage.
 2. **`duplex_10m`** rerun (same hi/gu data) — scaling curve.
-3. **Stage 2** — streaming `infer.py` (~160 ms blocks, PAM state carry) + optional TTS on `<speak>`.
-4. **Better data** — Fisher dual-channel (LDC) or real overlap/barge-in; Kathbath is monolingual clips only.
-5. **Post–10B merge** — distill `v11_e3_k3_chat` into `duplex_25m` for reply **content**, not just turn-taking.
+3. **Better data** — Fisher dual-channel (LDC) or real overlap/barge-in; Kathbath is monolingual clips only.
+
+---
+
+# Voice Interface Model (hi/gu/en) — Stages A–D  ·  2026-07-07
+
+The POC above only predicts `listen/speak/backchannel`. This track evolves the **same
+PAM backbone** into a real speech interface: streaming **S2T** (feeds an external LLM
+"brain") + streaming **T2S** (speaks the brain's reply as Mimi codec tokens), keeping the
+duplex control. Plan: [`.cursor/plans/duplex_voice_interface_model_7c3124dc.plan.md`].
+
+```mermaid
+flowchart LR
+    mic[Mic] --> enc["Frozen Whisper encoder<br/>frame seq ~12.5Hz"]
+    enc --> pam["ONE V11 PAM backbone ~93M<br/>single O(1) state"]
+    pam -->|S2T text| llm["Local LLM brain<br/>(ollama / OpenAI-compatible)"]
+    llm -->|reply text| pam
+    pam -->|Mimi codec tokens| dec[Mimi decoder] --> spk[Speaker]
+    pam -->|listen/speak/backchannel| ctl[Duplex control]
+```
+
+## Key facts
+
+- **ONE model, not two.** Stage A/B/C are a *training curriculum* on the same
+  `duplex_100m` backbone + same unified vocab, not separate networks. Stage B warm-starts
+  from Stage A (`--init_from`), Stage C from A+B (`--init_asr`/`--init_tts`). Final artifact:
+  a single `duplex_100m` checkpoint that does S2T, T2S, and control. (See FAQ below.)
+- **Unified vocab ~40,208** (`tokenizer.py`): 16 control + 32,000 SentencePiece (hi/gu/en,
+  `byte_fallback`) + 4×2048 Mimi codec. Text + codec share the tied embedding/LM head.
+- **Backbone** `duplex_100m` = proven `v11_e3_k3` geometry (16×384, K=3, content-aware gate,
+  chunk 256). Built: **92.83M** params (embedding 30.88M, blocks 61.65M).
+- **Speech in** = frozen `whisper-small` **frame sequence** stride-4 → ~12.5 Hz (not the POC's
+  1-vec/s mean-pool), injected as complex embeddings at `<audio_pad>` slots.
+- **Speech out** = frozen `kyutai/mimi` (24 kHz, 12.5 Hz), first 4 codebooks, **delay pattern**.
+
+## Stages (each independently gated on the 4090)
+
+| Stage | file | task | gate (metric) |
+|-------|------|------|---------------|
+| A | `train_asr.py` | S2T (ASR): `<env>[audio]<transcribe><lang> text <eos>` | held-out **CER** (target <15%) |
+| B | `train_tts.py` | T2S: `<lang> text <tts> [codec] <eos>`; `--task both` reuses each pair S2T+T2S | **round-trip WER** (Whisper on generated audio) |
+| B* | `train_tts.py --task roundtrip` | `[audio]<transcribe> text <tts> codec-of-same-audio` | **ablation only** (copy-shortcut risk); keep only if it beats plain mix |
+| C | `train_duplex_v2.py` | interleaved S2T + reply text + T2S + control + barge-in, init from A+B | bucketed **control / text / codec** next-token acc |
+| D | `infer_stream.py` | streaming session: block loop, one PAM state, barge-in, brain | qualitative (Gradio voice tab) |
+
+Sequence layouts and loss masks are documented in each file's docstring. All trainers share
+crash-safe `latest.pt` resume, cosine LR + warmup, bf16 autocast, SIGTERM/SIGINT save.
+
+## Data reuse (core recipe)
+
+Each `(audio, text)` pair → **two samples**: `[audio]<transcribe>text` (S2T) and
+`text<tts>codec` (T2S). Standard, low-risk, and it makes scarce **Gujarati** data train
+understanding *and* speaking. Kathbath hi/gu (noisy/multi-speaker) covers both; clean
+single-speaker corpora (IndicTTS/Rasa, LibriTTS-R) should be added via extra rows for output
+voice quality. The single-sequence round-trip autoencoder is a **later ablation only**.
+
+## Launch order
+
+```bash
+./scripts/run_v11_duplex_tokenizer.sh    # once: unified hi/gu/en + codec vocab
+./scripts/run_v11_duplex_asr.sh          # Stage A  -> gate CER
+./scripts/run_v11_duplex_tts.sh          # Stage B  -> gate round-trip WER  (inits from A)
+./scripts/run_v11_duplex_v2.sh           # Stage C  -> joint duplex          (inits from A+B)
+# Stage D (talk to it):
+uv run python -m v11.duplex.infer_stream \
+    --checkpoint checkpoints_v11_duplex_100m_duplex_v2/best_model.pt \
+    --audio in.wav --lang hindi --brain
+./scripts/run_v11_duplex_gradio.sh       # "Voice interface" tab
+```
+
+Brain = any OpenAI-compatible endpoint (`brain.py`): ollama / llama.cpp / vLLM. Start with
+Qwen2.5-3B-Instruct or Sarvam-1 (strong Hindi). `BRAIN_BASE_URL`, `BRAIN_MODEL` env vars.
+
+## Architecture FAQ (why one model + memory)
+
+**Q: Is this two PAM models (one ASR, one TTS) or one?**
+One. `train_asr.py` and `train_tts.py` are separate *scripts* for a staged curriculum, but
+they train the **same architecture and vocab**; B initializes from A, C from A+B. At
+inference (`infer_stream.DuplexSession`) the single model runs S2T, then the external LLM
+produces reply text, then the **same model resumes** with T2S — the PAM state is threaded
+across that boundary (`self.states`, `self.step`). So it is "one model with an intermediate
+brain value, then resume", exactly.
+
+**Q: Does the LLM see the whole conversation, or do we need a mechanism outside the model to
+merge old chat with new?**
+The mechanism already exists and lives **outside** the PAM model, in `brain.Conversation`:
+every user transcript and every assistant reply is appended to a text message list, and the
+**full history is sent to the LLM each turn** (system + all turns). The LLM is not starved —
+long-conversation recall is guaranteed by the brain's text context, not by the 100M state.
+(For very long chats, add optional summarization/compaction on top — not required for a demo.)
+
+**Q: Two memory layers — which holds what?**
+
+| Layer | Holds | Used for | Persistence |
+|-------|-------|----------|-------------|
+| **LLM brain text context** (`Conversation`) | verbatim transcripts + replies | semantic recall, reasoning | whole session (grows as text) |
+| **PAM recurrent state** | acoustic / conversational **gist** | turn-taking, barge-in, backchannel timing, prosodic continuity within a turn | O(1) fixed size, streamed across blocks |
+
+The PAM state is **deliberately not** the semantic memory — it is fixed-size and small; that
+job is the LLM's.
+
+**Q: If it's "just ASR + TTS + external LLM", why the single PAM model and why memory at all?
+Why not cascade Whisper → LLM → an off-the-shelf TTS?**
+For strict **turn-based** Q&A, a cascade would indeed be simpler and the PAM model's edge is
+mainly latency/unification. The single streaming model earns its place only for **full-duplex
+behavior**, which a stateless cascade fundamentally cannot do:
+
+- **Listen while speaking** — the time-multiplexed block loop carries incoming mic frames and
+  outgoing codec in the *same* O(1) state, so the model keeps hearing the user mid-reply.
+- **Sub-second barge-in** — control can flip to `<listen>` and truncate codec emission the
+  instant the user interrupts (`interrupt_check`), instead of finishing a TTS utterance.
+- **Backchannels / turn detection** — `listen/speak/backchannel` decided continuously from the
+  live state, not after a full ASR turn ends.
+- **Prosodic/acoustic conditioning** — the reply is shaped by *how* the user spoke, carried in
+  the state, not just the transcribed words.
+- **Streaming latency** — O(1)/token, no re-encoding a growing context window.
+
+So: **memory (the PAM state) is needed for the duplex/streaming behavior, not for semantic
+recall**; semantic recall is the LLM's text context. If you only ever want polite turn-taking
+with no overlap or barge-in, the model's advantage shrinks — the value is realized in live,
+interruptible, overlapping conversation.
+
+## Code map (voice-interface additions)
+
+```
+v11/duplex/
+  tokenizer.py        # DuplexVocab (unified id-space) + SentencePiece hi/gu/en
+  encoder.py          # + encode_frames(): ~12.5 Hz frame sequence
+  config.py           # + duplex_100m preset (~40k vocab, v11_e3_k3 geometry)
+  codec.py            # Mimi encode/decode + delay-pattern flatten/unflatten
+  train_asr.py        # Stage A (S2T), CER gate, greedy state-carry decode
+  train_tts.py        # Stage B (T2S / both / roundtrip-ablation), round-trip WER
+  brain.py            # OpenAI-compatible client + Conversation + dataset builder
+  train_duplex_v2.py  # Stage C joint interleaved (S2T+T2S+control+barge-in)
+  infer_stream.py     # Stage D DuplexSession: block loop, state carry, barge-in
+  gradio_app.py       # + "Voice interface" tab (mic -> transcript -> LLM -> speech)
+```
+
+Validated offline (tiny model + real Mimi + synthetic tokenizer): tokenizer roundtrip, codec
+delay roundtrip, all stage sample-builders + forward/loss/backward, constrained codec
+generation, barge-in truncation, full `converse`. `v11/duplex/selftest.py` = **10/10 pass**.
+
+## Status / next steps (voice track)
+
+- [x] Tokenizer, encoder frames, `duplex_100m` preset, codec, Stages A–D code + scripts, tests.
+- [ ] Run tokenizer training on full Kathbath hi/gu + LibriSpeech corpus.
+- [ ] Stage A training run → record CER here.
+- [ ] Stage B training run (`--task both`) → record round-trip WER here.
+- [ ] Stage C joint run → record control/text/codec acc here.
+- [ ] Add clean single-speaker TTS corpora (IndicTTS/Rasa, LibriTTS-R) for output voice.
+- [ ] Optional: distill `v11_e3_k3_chat` text knowledge to reduce brain dependence.

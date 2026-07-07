@@ -71,8 +71,11 @@ class V11DuplexLM(V11LM):
                 idx = audio_positions[b]
                 if idx.numel() == 0:
                     continue
-                n = min(idx.numel(), audio_embeds.shape[1])
-                z[b, idx[:n]] = audio_embeds[b, :n]
+                valid = idx >= 0  # skip -1 padding slots; align embeds column->position
+                if not bool(valid.any()):
+                    continue
+                emb = audio_embeds[b, :idx.numel()]
+                z[b, idx[valid]] = emb[valid]
         logits, new_states, aux = self.forward_embeds(z, states=states, step_offset=step_offset)
         return logits, new_states, aux
 
