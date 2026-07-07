@@ -131,6 +131,20 @@ def build_argparser():
                    help='Override uniform decay bias (default -4.0)')
     p.add_argument('--protect_gate_bias', type=float, default=None,
                    help='Override GSP protect-gate init bias (default -3.0)')
+    p.add_argument('--routing_content_aware', action='store_true',
+                   help='E3 phase/score router reads real+imag (2*dim) vs magnitude-only')
+    p.add_argument('--no_routing_content_aware', action='store_true',
+                   help='Force magnitude-only E3 routing (ablation baseline)')
+    p.add_argument('--state_compete', action='store_true',
+                   help='E3 magnitude competition via score_proj softmax over K states')
+    p.add_argument('--no_state_compete', action='store_true',
+                   help='Disable state_compete even if preset enables it')
+    p.add_argument('--phase_init', type=str, default=None, choices=['zero', 'spread', 'ortho'],
+                   help='E3 phase_proj init: zero (default), spread (0,±2π/3), ortho')
+    p.add_argument('--route_balance_lambda', type=float, default=None,
+                   help='MoE-style load-balance on batch-mean routing (needs state_compete)')
+    p.add_argument('--aux_loss_weight', type=float, default=None,
+                   help='Trainer weight for route_balance aux loss (default 1.0)')
     return p
 
 
@@ -295,6 +309,20 @@ def main():
         cfg.base_dt_bias = args.base_dt_bias
     if args.protect_gate_bias is not None:
         cfg.protect_gate_bias = args.protect_gate_bias
+    if args.no_routing_content_aware:
+        cfg.routing_content_aware = False
+    elif args.routing_content_aware:
+        cfg.routing_content_aware = True
+    if args.no_state_compete:
+        cfg.state_compete = False
+    elif args.state_compete:
+        cfg.state_compete = True
+    if args.phase_init is not None:
+        cfg.phase_init = args.phase_init
+    if args.route_balance_lambda is not None:
+        cfg.route_balance_lambda = args.route_balance_lambda
+    if args.aux_loss_weight is not None:
+        cfg.aux_loss_weight = args.aux_loss_weight
 
     print(f"\nConfig: {asdict(cfg)}")
     print(f"Memory dynamics: decay_mode={cfg.decay_mode}, write_mode={cfg.write_mode}, "

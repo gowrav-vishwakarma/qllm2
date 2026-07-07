@@ -112,16 +112,79 @@ def test_fused_ce_equiv(B=2, T=40, seed=0):
     m = V11LM(cfg).train()
     ids = torch.randint(0, cfg.vocab_size, (B, T))
     lbl = torch.randint(0, cfg.vocab_size, (B, T))
-    m.zero_grad(); logits, _, _ = m(ids)
+    m.zero_grad(); logits, _, aux1 = m(ids)
     ref = F.cross_entropy(logits.view(-1, logits.size(-1)), lbl.view(-1))
     ref.backward()
     gref = {n: p.grad.clone() for n, p in m.named_parameters()}
-    m.zero_grad(); loss = m.fused_ce_loss(ids, lbl, chunk=16); loss.backward()
-    dloss = (loss - ref).abs().item()
+    m.zero_grad(); main, aux2 = m.fused_ce_loss(ids, lbl, chunk=16)
+    main.backward()
+    dloss = (main - ref).abs().item()
     dg = max((gref[n] - p.grad).abs().max().item() for n, p in m.named_parameters())
-    ok = max(dloss, dg) < 1e-5
-    print(f"[fused_ce equiv ] loss={dloss:.2e} grad={dg:.2e}  {'PASS' if ok else 'FAIL'}")
+    ok = max(dloss, dg) < 1e-5 and aux1.item() == aux2.item()
+    print(f"[fused_ce equiv ] loss={dloss:.2e} grad={dg:.2e} aux={aux1.item():.2e}  "
+          f"{'PASS' if ok else 'FAIL'}")
     return ok
+
+
+def test_competitive_retrieval_equiv(B=2, T=80, seed=0):
+    """Competitive E3: fused == loop == recurrent with routing+compete flags."""
+    common = dict(
+        vocab_size=512, dim=48, n_heads=3, head_dim=16, n_layers=1, expand=2,
+        dropout=0.0, max_seq_len=256, chunk_size=24, gradient_checkpointing=False,
+        use_rope=True, use_gsp=True, n_states=3, gate_content_aware=True,
+        routing_content_aware=True, state_compete=True, phase_init='spread',
+        route_balance_lambda=0.01,
+    )
+    torch.manual_seed(seed)
+    loop = V11PAMLayer(V11Config(**{**common, 'fused_e3': False}))
+    fused = V11PAMLayer(V11Config(**{**common, 'fused_e3': True}))
+    fused.load_state_dict(loop.state_dict())
+    loop.train()
+    fused.train()
+
+    x = torch.randn(B, T, common['dim'], 2) * 0.5
+    x1 = x.clone().requires_grad_(True)
+    x2 = x.clone().requires_grad_(True)
+    y1, S1 = loop(x1)
+    y2, S2 = fused(x2)
+    (y1 ** 2).sum().backward()
+    (y2 ** 2).sum().backward()
+
+    with torch.no_grad():
+        ok_rec = _run_mode(
+            "compete_recur",
+            V11Config(**{**common, 'fused_e3': False}),
+            B=B, T=T, atol=2e-3, seed=seed + 1,
+        )
+
+    dy = (y1 - y2).abs().max().item()
+    dS = (S1 - S2).abs().max().item()
+    dg = (x1.grad - x2.grad).abs().max().item()
+    ok = max(dy, dS, dg) < 1e-10 and ok_rec
+    print(f"[compete fused  ] y={dy:.2e} S={dS:.2e} grad={dg:.2e}  {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
+def test_drop_shape_mismatches():
+    """Resume-safe: growing phase_proj (dim -> 2*dim) reinits cleanly."""
+    from v11.train import _drop_shape_mismatches
+    cfg_old = V11Config(
+        vocab_size=128, dim=32, n_heads=2, head_dim=16, n_layers=1, expand=2,
+        n_states=3, routing_content_aware=False,
+    )
+    cfg_new = V11Config(
+        vocab_size=128, dim=32, n_heads=2, head_dim=16, n_layers=1, expand=2,
+        n_states=3, routing_content_aware=True,
+    )
+    old = V11PAMLayer(cfg_old)
+    new = V11PAMLayer(cfg_new)
+    state = old.state_dict()
+    dropped = _drop_shape_mismatches(new, state)
+    new.load_state_dict(state, strict=False)
+    keys = [k for k, _, _ in dropped]
+    assert any('phase_proj' in k for k in keys), dropped
+    print(f"[resume_shape   ] dropped {keys}  PASS")
+    return True
 
 
 def main():
@@ -140,6 +203,8 @@ def main():
     results.append(_run_mode("E1+E3 combo", V11Config(**{**common, 'decay_mode': 'per_channel', 'n_states': 2})))
     results.append(test_fused_e3_equiv())
     results.append(test_fused_ce_equiv())
+    results.append(test_competitive_retrieval_equiv())
+    results.append(test_drop_shape_mismatches())
     print()
     if all(results):
         print("ALL MODES PASS: parallel train form == O(1) recurrent form.")
