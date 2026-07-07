@@ -299,7 +299,8 @@ class V7Trainer:
             ):
                 if self.fused_ce:
                     from v11.fused_ce import linear_ce_stats
-                    lm = self._hidden_fn(input_ids)
+                    out = self._hidden_fn(input_ids)
+                    lm = out[0] if isinstance(out, tuple) else out
                     raw = self._raw_model
                     B, T = labels.shape
                     Hh = torch.cat([lm[..., 0], lm[..., 1]], dim=-1).reshape(B * T, -1)
@@ -372,16 +373,20 @@ class V7Trainer:
                 dtype=self.amp_dtype or torch.float16,
             ):
                 if self.fused_ce:
-                    lm = self._hidden_fn(input_ids)
+                    out = self._hidden_fn(input_ids)
+                    if isinstance(out, tuple):
+                        lm, aux_loss = out
+                    else:
+                        lm = out
+                        aux_loss = torch.tensor(0.0, device=self.device)
                     main_loss = self._raw_model.ce_from_lm(
                         lm, labels, loss_mask=loss_mask, chunk=self.fused_ce_chunk,
                     )
-                    aux_loss = torch.tensor(0.0, device=self.device)
                 else:
                     logits, _, aux_loss = self.model(input_ids, labels=labels)
                     main_loss = self._masked_ce(logits, labels, loss_mask)
                 loss = main_loss
-                if aux_loss.item() > 0:
+                if aux_loss.detach().abs().item() > 0:
                     m_cfg = self.model._orig_mod.config if hasattr(self.model, '_orig_mod') else self.model.config
                     aux_weight = getattr(m_cfg, 'aux_loss_weight', 1.0)
                     loss = loss + aux_weight * aux_loss

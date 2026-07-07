@@ -48,6 +48,8 @@ source ./scripts/log_utils.sh
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 PRESET="${PRESET:-v11_e3_k3_chat}"
+# Competitive-retrieval A/B (2026-07-07) LOST to control on WikiText — do NOT use
+# v11_e3_k3_chat_compete for rounds. v11_e3_k3_chat (gate-aware) remains the winner.
 TOKEN_BUDGET="${TOKEN_BUDGET:-2000000000}"
 SCRATCH="${SCRATCH:-0}"
 

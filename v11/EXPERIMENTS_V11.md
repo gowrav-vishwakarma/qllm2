@@ -156,6 +156,74 @@ checkpoints reinits only the gate weights (`_drop_shape_mismatches`). Use `--no_
 **Next:** saturation continued-pretrain from 10B base with phase-aware gate; re-probe rank on web-edu ckpt
 (the original under-utilization diagnosis target).
 
+### Competitive retrieval (Tier 1) — DONE (2026-07-07) — **KEEP CONTROL, competitive retrieval LOSES**
+
+**Problem it targeted:** gate fix (`gate_content_aware`) shipped, but E3 **phase routing** still reads
+`cabs(x)` only — magnitude-only state selection. Hypothesis (GPT5.5 + our diagnosis): PAM failures are
+*blending* (wrong state mix), so content-aware routing + magnitude competition should raise selection quality.
+**Result: false at this scale — every variant regressed vs the gate-only control.**
+
+**Changes implemented (all flag-gated, defaults OFF — `v11_e3_k3_chat` unchanged):**
+
+| flag | effect |
+|------|--------|
+| `routing_content_aware` | `phase_proj`/`score_proj` input `cabs(x)` → `to_real_concat(x)` (2×dim) |
+| `state_compete` | `c_k = K·softmax(score)·e^{iφ_k}`; fused into `Dtilde` collapse (no K-loop regression) |
+| `phase_init` | `'zero'` \| `'spread'` (biases 0,±2π/3) \| `'ortho'` |
+| `route_balance_lambda` | MoE load-balance on batch-mean α (needs `state_compete`; wired through fused-CE path) |
+
+- Code: [`v11/model.py`](model.py), CLI [`v11/train.py`](train.py), parity [`v11/selftest.py`](selftest.py)
+- Probes: [`scripts/v11_probe_gates.py`](../scripts/v11_probe_gates.py) — α entropy, `|S_k·Q|` (loop path)
+- Launcher: [`scripts/run_v11_routing_ab.sh`](../scripts/run_v11_routing_ab.sh)
+- Ablation-only preset `v11_e3_k3_chat_compete` retained for reproducibility — **known loser, do NOT ship**.
+
+**What each arm actually did in code (so this doesn't depend on arm names):**
+- **control** — shipped E3 exactly: `phi = phase_proj(cabs(x))`, retrieval `Y = Σ_k e^{iφ_k} S_k Q` with every
+  state weighted `|coef|=1`. No `score_proj`. (`_forward_multistate_fused` / `_forward_multistate`.)
+- **routing_ca** — flips `_routing_input()` so `phase_proj` (and `score_proj` if present) reads
+  `to_real_concat(x)` (real+imag, 2·dim) instead of `cabs(x)` (magnitude). `phase_proj` grows to `Linear(2·dim, H·K)`.
+- **compete** — routing_ca **plus** `state_compete`: adds `score_proj`, `_phase_and_alpha()` returns
+  `alpha = K·softmax(score)`, so the coefficient becomes `c_k = alpha_k·e^{iφ_k}` (magnitude competition on top
+  of phase). `alpha` folds into the `Dtilde` collapse in `_fused_chunk_step` — no K-loop, exact-equiv to the loop path.
+- **compete_balance** — compete **plus** `_route_balance_loss()`: aux term `−λ·H(batch-mean α)` (λ=0.01)
+  summed over PAM layers, threaded through both the standard and fused-CE loss paths (`aux_loss`).
+- **phase_spread** — compete **plus** `phase_init='spread'`: `_init_phase_proj()` seeds `phase_proj.bias`
+  at 0, ±2π/3 per state (max initial phase separation) instead of zero-init.
+
+**WikiText A/B** (same recipe as gate A/B): from scratch, B=18, seq 2048, chunk 256, 3 epochs,
+`--compile`, `--gate_content_aware`. Arms are cumulative on top of the gate-only control:
+
+| Arm | flags on top of gate | Ep1 | Ep2 | **Ep3 val PPL** | Delta vs control | acc | uniq |
+|-----|----------------------|----:|----:|----------------:|-----------------:|----:|-----:|
+| **control** | none (gate only) | 80.46 | 48.90 | **44.86** | — | 0.362 | 0.725 |
+| routing_ca | +routing_content_aware | 86.44 | 52.71 | 48.05 | **+3.19** | 0.355 | 0.742 |
+| compete | +routing_ca +state_compete | 84.19 | 50.52 | 46.21 | +1.35 | 0.359 | 0.674 |
+| compete_balance | +compete +route_balance_lambda=0.01 | 84.88 | 50.72 | 46.38 | +1.52 | 0.358 | 0.723 |
+| phase_spread | +compete +phase_init=spread | 84.56 | 51.28 | 47.05 | +2.19 | 0.358 | 0.789 |
+
+**Findings:**
+1. **Control wins at every epoch.** All four variants are strictly worse on val PPL (and mostly acc). None met
+   the accept bar; all killed per protocol.
+2. **`routing_content_aware` alone is the *worst* (+3.19).** The real+imag router input that helped the *write
+   gate* (-0.97) does **not** transfer to *state selection* — it hurts most.
+3. **`state_compete` partially offsets routing_ca** (48.05 -> 46.21) but never reaches control. Magnitude
+   competition on top of the existing phase competition does not help selection at this scale.
+4. `route_balance_lambda=0.01` and `phase_init=spread` add nothing positive — consistent with the repo's
+   negative aux-loss history (7f-1 +0.82) and zero-init phase being adequate.
+5. Control here (44.86) ~= June gate Arm B (45.61): baseline reproduced, so the regressions are real, not noise.
+
+**Decision:** **DO NOT ship competitive retrieval.** Keep all four flags OFF (already the `V11Config` /
+`v11_e3_k3` / `v11_e3_k3_chat` default — the winning config *is* the current default). **Do NOT** promote
+`v11_e3_k3_chat_compete` to round-6b. The blending problem is **not** fixed by content-aware routing or
+magnitude competition — do not re-run these four levers; revisit only with a fundamentally different mechanism.
+
+**Accept:** beats control val PPL at epoch 3 **and** routing probes move (tok alpha entropy down, bar alpha diversity up,
+state rank up, `|S_k·Q|` separates content/filler). **Kill** arms not tracking below control by epoch 3.
+*(Bar not met by any arm — see decision above; retained for protocol record.)*
+
+**Probe tooling (kept for future mechanisms, in `scripts/v11_probe_gates.py`):** per-token α entropy vs ln(K); batch-mean ᾱ diversity; state–content correlation;
+state rank on real text; gate delta `p_content − p_filler` must not regress.
+
 ## Live run status (2026-06-30)
 
 **Two parallel tracks** — different GPUs, no shared code edits between them.

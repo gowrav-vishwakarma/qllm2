@@ -70,6 +70,11 @@ class V11Config:
     base_dt_bias: float = -4.0          # uniform decay bias (flat stack)
     gate_content_aware: bool = False    # GSP gate reads real+imag (2*dim) vs magnitude-only
     protect_gate_bias: float = -3.0     # init bias for the GSP write-protect gate
+    routing_content_aware: bool = False # E3 phase/score router reads real+imag vs magnitude-only
+    state_compete: bool = False         # E3 magnitude competition: c_k = K*softmax(score)*e^{i phi_k}
+    phase_init: str = 'zero'            # 'zero' | 'spread' (biases 0,±2π/3) | 'ortho'
+    route_balance_lambda: float = 0.0   # MoE-style load balance on batch-mean routing (needs state_compete)
+    aux_loss_weight: float = 1.0        # trainer weight for route_balance aux (v7.train hook)
     fused_e3: bool = True               # E3: fused multistate path (exact-equiv, K-independent matmuls)
     recompute_pam_chunks: bool = False  # recompute per-chunk W/D/A in backward (exact; less VRAM, more FLOPs)
 
@@ -121,6 +126,10 @@ class V11PAMLayer(nn.Module):
 
         self.gate_content_aware = getattr(cfg, 'gate_content_aware', False)
         self.protect_gate_bias = getattr(cfg, 'protect_gate_bias', -3.0)
+        self.routing_content_aware = getattr(cfg, 'routing_content_aware', False)
+        self.state_compete = getattr(cfg, 'state_compete', False)
+        self.phase_init = getattr(cfg, 'phase_init', 'zero')
+        self.route_balance_lambda = getattr(cfg, 'route_balance_lambda', 0.0)
         if cfg.use_gsp:
             gate_in = cfg.dim * 2 if self.gate_content_aware else cfg.dim
             self.protect_gate = nn.Linear(gate_in, cfg.n_heads)
@@ -135,9 +144,13 @@ class V11PAMLayer(nn.Module):
         if cfg.n_states > 1:
             offs = torch.linspace(-cfg.state_dt_spread, cfg.state_dt_spread, cfg.n_states)
             self.state_dt_offset = nn.Parameter(offs.clone())          # [K]
-            self.phase_proj = nn.Linear(cfg.dim, cfg.n_heads * cfg.n_states)
-            nn.init.zeros_(self.phase_proj.weight)
-            nn.init.zeros_(self.phase_proj.bias)
+            route_in = cfg.dim * 2 if self.routing_content_aware else cfg.dim
+            self.phase_proj = nn.Linear(route_in, cfg.n_heads * cfg.n_states)
+            if self.state_compete:
+                self.score_proj = nn.Linear(route_in, cfg.n_heads * cfg.n_states)
+                nn.init.zeros_(self.score_proj.weight)
+                nn.init.zeros_(self.score_proj.bias)
+            self._init_phase_proj()
 
         if cfg.use_rope:
             self.register_buffer(
@@ -154,6 +167,62 @@ class V11PAMLayer(nn.Module):
             torch.tril(torch.ones(_causal_size, _causal_size)),
             persistent=False,
         )
+        self._route_aux = None
+
+    def _init_phase_proj(self):
+        """Custom init for phase_proj (re-applied after V11LM._init_weights)."""
+        if self.n_states <= 1:
+            return
+        K = self.n_states
+        H = self.num_heads
+        if self.phase_init == 'spread':
+            nn.init.zeros_(self.phase_proj.weight)
+            biases = torch.zeros(H * K)
+            for h in range(H):
+                for k in range(K):
+                    if K == 3:
+                        biases[h * K + k] = [0.0, 2 * math.pi / 3, -2 * math.pi / 3][k]
+                    else:
+                        biases[h * K + k] = k * 2 * math.pi / K
+            with torch.no_grad():
+                self.phase_proj.bias.copy_(biases)
+        elif self.phase_init == 'ortho':
+            nn.init.orthogonal_(self.phase_proj.weight)
+            nn.init.zeros_(self.phase_proj.bias)
+        else:
+            nn.init.zeros_(self.phase_proj.weight)
+            nn.init.zeros_(self.phase_proj.bias)
+
+    def _routing_input(self, x: torch.Tensor) -> torch.Tensor:
+        return to_real_concat(x) if self.routing_content_aware else cabs(x)
+
+    def _phase_and_alpha(self, x: torch.Tensor):
+        """Phase phi and K-scaled routing weights alpha for E3 superposition.
+
+        Returns phi [B,T,H,K], alpha [B,T,H,K] where c_k = alpha_k * e^{i phi_k}.
+        With state_compete off, alpha_k == 1 (identity). With state_compete on,
+        alpha = K * softmax(score) so uniform init gives alpha_k == 1.
+        """
+        B, T = x.shape[0], x.shape[1]
+        H, K = self.num_heads, self.n_states
+        rin = self._routing_input(x)
+        phi = self.phase_proj(rin).view(B, T, H, K)
+        if self.state_compete:
+            scores = self.score_proj(rin).view(B, T, H, K)
+            alpha = F.softmax(scores, dim=-1) * K
+        else:
+            alpha = torch.ones(B, T, H, K, device=x.device, dtype=x.dtype)
+        return phi, alpha
+
+    def _route_balance_loss(self, alpha: torch.Tensor):
+        """MoE-style load balance: maximize entropy of batch-mean routing per head."""
+        lam = self.route_balance_lambda
+        if lam <= 0 or not self.state_compete or not self.training:
+            return None
+        p = alpha / self.n_states
+        p_bar = p.mean(dim=(0, 1))
+        ent = -(p_bar * (p_bar + 1e-8).log()).sum(dim=-1)
+        return -lam * ent.mean()
 
     # ── Projections + position + decay/gate prep (shared) ─────────────────────
 
@@ -428,8 +497,10 @@ class V11PAMLayer(nn.Module):
         B, T = x.shape[0], x.shape[1]
         H, K = self.num_heads, self.n_states
         scale = d ** -0.5
-        # phase per (head, state, position)
-        phi = self.phase_proj(cabs(x)).view(B, T, H, K).permute(0, 2, 3, 1)  # [B,H,K,T]
+        phi, alpha = self._phase_and_alpha(x)
+        phi = phi.permute(0, 2, 3, 1)    # [B,H,K,T]
+        alpha = alpha.permute(0, 2, 3, 1)
+        self._route_aux = self._route_balance_loss(alpha.permute(0, 3, 1, 2))
         y_sum = None
         S_list = []
         for kdx in range(K):
@@ -444,8 +515,10 @@ class V11PAMLayer(nn.Module):
             else:
                 q_s = q * scale
                 y_k, S_k = self._dual_form_block(q_s, k, vp_k, gamma_k, self._causal[:T, :T])
-            rot = torch.stack([torch.cos(phi[:, :, kdx]), torch.sin(phi[:, :, kdx])], dim=-1)  # [B,H,T,2]
-            y_k = cmul(y_k, rot.unsqueeze(-2))                # rotate complex output
+            cr = alpha[:, :, kdx] * torch.cos(phi[:, :, kdx])
+            si = alpha[:, :, kdx] * torch.sin(phi[:, :, kdx])
+            rot = torch.stack([cr, si], dim=-1)              # [B,H,T,2]
+            y_k = cmul(y_k, rot.unsqueeze(-2))                # rotate+scale complex output
             y_sum = y_k if y_sum is None else y_sum + y_k
             S_list.append(S_k)
         return y_sum, torch.stack(S_list, dim=0)             # [K,B,H,d,d,2]
@@ -486,7 +559,7 @@ class V11PAMLayer(nn.Module):
             v_prime = v
         return gamma, v_prime
 
-    def _fused_chunk_step(self, q_c, k_c, vp_c, g_c, phi_c, S, first):
+    def _fused_chunk_step(self, q_c, k_c, vp_c, g_c, phi_c, alpha_c, S, first):
         """One fused E3 chunk. Returns (y_c, S_new). All heavy C x C tensors (W, D,
         A) are LOCAL to this fn, so wrapping it in checkpoint recomputes them in
         backward instead of storing them (exact; trades FLOPs for activation VRAM).
@@ -505,8 +578,8 @@ class V11PAMLayer(nn.Module):
         D = fused_decay_matrix(g_c.reshape(KBH, Tc), Tc).reshape(g_c.shape + (Tc,))
         cos_phi = torch.cos(phi_c)
         sin_phi = torch.sin(phi_c)
-        Dr = (cos_phi.unsqueeze(-1) * D).sum(dim=0)          # [B,H,Tc,Tc]
-        Di = (sin_phi.unsqueeze(-1) * D).sum(dim=0)
+        Dr = ((alpha_c * cos_phi).unsqueeze(-1) * D).sum(dim=0)      # [B,H,Tc,Tc]
+        Di = ((alpha_c * sin_phi).unsqueeze(-1) * D).sum(dim=0)
 
         # A = W (complex) (.) Dtilde (complex)
         ar = wr * Dr - wi * Di
@@ -524,8 +597,8 @@ class V11PAMLayer(nn.Module):
             qr_k, qi_k = qr.unsqueeze(0), qi.unsqueeze(0)    # [1,B,H,Tc,d]
             Sq_r = (Sr @ qr_k.transpose(-1, -2) - Si @ qi_k.transpose(-1, -2)).transpose(-1, -2)
             Sq_i = (Sr @ qi_k.transpose(-1, -2) + Si @ qr_k.transpose(-1, -2)).transpose(-1, -2)
-            cw_r = cos_phi * cum_decay
-            cw_i = sin_phi * cum_decay
+            cw_r = alpha_c * cos_phi * cum_decay
+            cw_i = alpha_c * sin_phi * cum_decay
             rd_r = (Sq_r * cw_r.unsqueeze(-1) - Sq_i * cw_i.unsqueeze(-1)).sum(dim=0)
             rd_i = (Sq_r * cw_i.unsqueeze(-1) + Sq_i * cw_r.unsqueeze(-1)).sum(dim=0)
             y_c = y_c + torch.stack([rd_r, rd_i], dim=-1)
@@ -548,7 +621,12 @@ class V11PAMLayer(nn.Module):
         H, K = self.num_heads, self.n_states
         C = self.chunk_size if self.chunk_size > 0 else T
         scale = d ** -0.5
-        phi = self.phase_proj(cabs(x)).view(B, T, H, K).permute(3, 0, 2, 1)  # [K,B,H,T]
+        phi, alpha = self._phase_and_alpha(x)
+        phi = phi.permute(3, 0, 2, 1)                        # [K,B,H,T]
+        alpha = alpha.permute(3, 0, 2, 1)
+        self._route_aux = self._route_balance_loss(
+            alpha.permute(1, 3, 2, 0)
+        )
         gamma_all, v_prime = self._gamma_all_and_vprime(x, v)                # [K,B,H,T], [B,H,T,d,2]
         q_s = q * scale
         recompute = getattr(self, 'recompute_pam_chunks', False) and self.training
@@ -562,14 +640,17 @@ class V11PAMLayer(nn.Module):
             vp_c = v_prime[:, :, start:end]                  # [B,H,Tc,d,2]
             g_c = gamma_all[:, :, :, start:end]              # [K,B,H,Tc]
             phi_c = phi[:, :, :, start:end]                  # [K,B,H,Tc]
+            alpha_c = alpha[:, :, :, start:end]
             first = start == 0
             if recompute:
                 y_c, S = grad_checkpoint(
-                    self._fused_chunk_step, q_c, k_c, vp_c, g_c, phi_c, S, first,
+                    self._fused_chunk_step, q_c, k_c, vp_c, g_c, phi_c, alpha_c, S, first,
                     use_reentrant=False,
                 )
             else:
-                y_c, S = self._fused_chunk_step(q_c, k_c, vp_c, g_c, phi_c, S, first)
+                y_c, S = self._fused_chunk_step(
+                    q_c, k_c, vp_c, g_c, phi_c, alpha_c, S, first,
+                )
             outputs.append(y_c)
 
         return torch.cat(outputs, dim=2), S
@@ -627,7 +708,10 @@ class V11PAMLayer(nn.Module):
         if self.write_mode == 'delta':
             beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)  # [B,H,T]
         if self.n_states > 1:
-            phi = self.phase_proj(cabs(x)).view(B, T, H, K).permute(0, 2, 3, 1)  # [B,H,K,T]
+            phi, alpha = self._phase_and_alpha(x)
+            phi = phi.permute(0, 2, 3, 1)                  # [B,H,K,T]
+            alpha = alpha.permute(0, 2, 3, 1)
+            self._route_aux = self._route_balance_loss(alpha.permute(0, 3, 1, 2))
 
         # init state
         if state is None:
@@ -653,7 +737,9 @@ class V11PAMLayer(nn.Module):
                     )
                     g = gamma_k[:, :, 0]                       # [B,H]
                     yk, Sk = self._recur_step_additive(S[kdx], g, vp_k[:, :, 0], k_t, q_t)
-                    rot = torch.stack([torch.cos(phi[:, :, kdx, t]), torch.sin(phi[:, :, kdx, t])], dim=-1)
+                    cr = alpha[:, :, kdx, t] * torch.cos(phi[:, :, kdx, t])
+                    si = alpha[:, :, kdx, t] * torch.sin(phi[:, :, kdx, t])
+                    rot = torch.stack([cr, si], dim=-1)
                     yk = cmul(yk, rot.unsqueeze(-2))
                     y_acc = yk if y_acc is None else y_acc + yk
                     S_new.append(Sk)
@@ -792,6 +878,19 @@ class V11LM(nn.Module):
         for _, module in self.named_modules():
             if hasattr(module, 'protect_gate') and isinstance(module.protect_gate, nn.Linear):
                 nn.init.constant_(module.protect_gate.bias, getattr(module, 'protect_gate_bias', -3.0))
+            if isinstance(module, V11PAMLayer) and module.n_states > 1:
+                module._init_phase_proj()
+
+    @staticmethod
+    def _collect_route_aux(blocks) -> torch.Tensor:
+        total = None
+        for block in blocks:
+            aux = getattr(block.pam, '_route_aux', None)
+            if aux is not None:
+                total = aux if total is None else total + aux
+        if total is None:
+            return None
+        return total
 
     def forward(self, input_ids, states=None, step_offset: int = 0, labels=None):
         z = self.embed(input_ids)
@@ -813,11 +912,16 @@ class V11LM(nn.Module):
             lm[..., 0] @ self.embed.embed_real.weight.T
             + lm[..., 1] @ self.embed.embed_imag.weight.T
         )
-        aux_loss = torch.tensor(0.0, device=input_ids.device)
+        route_aux = self._collect_route_aux(self.blocks)
+        aux_loss = (
+            route_aux
+            if route_aux is not None
+            else torch.tensor(0.0, device=input_ids.device)
+        )
         return logits, new_states, aux_loss
 
     def _hidden_to_lm(self, input_ids, step_offset: int = 0):
-        """Run the stack + head norm, return pre-logit complex hidden `lm` [B,T,dim,2]."""
+        """Run the stack + head norm; return (lm, aux_loss) for fused-CE training."""
         z = self.embed(input_ids)
         if self.pos_embed is not None:
             z = self.pos_embed(z, step_offset=step_offset)
@@ -829,7 +933,14 @@ class V11LM(nn.Module):
             else:
                 z, _ = block(z, pam_state=None, step_offset=step_offset)
         z = self.output_norm(z)
-        return self.lm_head_norm(self.lm_head_proj(z))
+        lm = self.lm_head_norm(self.lm_head_proj(z))
+        route_aux = self._collect_route_aux(self.blocks)
+        aux_loss = (
+            route_aux
+            if route_aux is not None
+            else torch.tensor(0.0, device=input_ids.device)
+        )
+        return lm, aux_loss
 
     def ce_from_lm(self, lm, labels, loss_mask=None, ignore_index=-100, chunk: int = 4096):
         """Chunked cross-entropy from pre-logit complex hidden `lm` [B,T,dim,2].
@@ -849,9 +960,10 @@ class V11LM(nn.Module):
     def fused_ce_loss(self, input_ids, labels, loss_mask=None, ignore_index=-100,
                       chunk: int = 4096):
         """Convenience eager path: hidden stack + chunked CE (exact == forward+CE)."""
-        lm = self._hidden_to_lm(input_ids)
-        return self.ce_from_lm(lm, labels, loss_mask=loss_mask,
+        lm, aux_loss = self._hidden_to_lm(input_ids)
+        main = self.ce_from_lm(lm, labels, loss_mask=loss_mask,
                                ignore_index=ignore_index, chunk=chunk)
+        return main, aux_loss
 
     @staticmethod
     def _ckpt_block(block, z, step_offset):
@@ -939,6 +1051,12 @@ PRESETS = {
     # Alias (same as v11_e3_k3_chat); kept for old launch scripts/docs.
     'v11_e3_k3_chat_gate': _base_flat(
         n_states=3, state_dt_spread=2.0, vocab_size=50261, gate_content_aware=True,
+    ),
+    # Competitive retrieval (Tier 1): enable after WikiText A/B smoke wins.
+    'v11_e3_k3_chat_compete': _base_flat(
+        n_states=3, state_dt_spread=2.0, vocab_size=50261, gate_content_aware=True,
+        routing_content_aware=True, state_compete=True, phase_init='spread',
+        route_balance_lambda=0.01,
     ),
     # E1+E3 combo: per-channel decay inside each of K=2 superposed states.
     'v11_e1e3_combo': _base_flat(decay_mode='per_channel', n_states=2, state_dt_spread=2.0),
