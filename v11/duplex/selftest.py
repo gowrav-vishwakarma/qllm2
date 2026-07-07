@@ -120,7 +120,7 @@ def test_duplex_100m_preset():
     assert cfg.gate_content_aware and cfg.chunk_size == 256
     m = V11DuplexLM(cfg, audio_feat_dim=768)
     total = m.count_parameters()['total']
-    assert 85e6 <= total <= 100e6, f'{total/1e6:.1f}M out of range'
+    assert 110e6 <= total <= 125e6, f'{total/1e6:.1f}M out of range (includes CTC head)'
 
 
 def test_audio_injection_skips_pad_positions():
@@ -137,6 +137,69 @@ def test_audio_injection_skips_pad_positions():
     assert logits.shape == (B, T, cfg.vocab_size)
 
 
+def test_audio_proj_receives_gradients():
+    """Regression: the ASR train step must backprop into the trainable audio
+    projection. A prior bug ran project_audio under no_grad, so audio_proj stayed
+    at random init and CER plateaued (~73%)."""
+    cfg = get_duplex_config('duplex_5m')
+    model = V11DuplexLM(cfg, audio_feat_dim=48).train()
+    B, T_audio, T_text = 2, 4, 5
+    frames = torch.randn(B, T_audio, 48)
+    # layout: [<audio_pad> x T_audio] then text tokens (labels only on text)
+    seq_len = T_audio + T_text
+    input_ids = torch.randint(cfg.vocab_size // 2, cfg.vocab_size, (B, seq_len))
+    labels = torch.full((B, seq_len), -100, dtype=torch.long)
+    labels[:, T_audio:] = input_ids[:, T_audio:]
+    positions = torch.arange(T_audio).unsqueeze(0).expand(B, -1).contiguous()
+
+    embeds = model.project_audio(frames)  # trainable path, grad enabled
+    logits, _, _ = model(input_ids, audio_embeds=embeds, audio_positions=positions)
+    loss = V11DuplexLM.compute_loss(logits, labels)
+    loss.backward()
+
+    grads = [p.grad for p in model.audio_proj.parameters() if p.grad is not None]
+    assert grads, 'audio_proj received no gradients'
+    total = sum(g.abs().sum().item() for g in grads)
+    assert total > 0, f'audio_proj grad is all-zero (norm={total})'
+
+
+def test_ctc_head_learns():
+    """CTC head + audio_proj must receive gradients when joint AR+CTC loss runs."""
+    import torch.nn.functional as F
+    cfg = get_duplex_config('duplex_5m')
+    n_text = 512
+    model = V11DuplexLM(cfg, audio_feat_dim=48, n_text=n_text).train()
+    B, T_audio, T_text = 2, 6, 4
+    frames = torch.randn(B, T_audio, 48)
+    seq_len = 1 + T_audio + 2 + T_text  # env + audio + transcribe/lang + text
+    input_ids = torch.randint(cfg.vocab_size // 2, cfg.vocab_size, (B, seq_len))
+    labels = torch.full((B, seq_len), -100, dtype=torch.long)
+    labels[:, 1 + T_audio + 2:] = input_ids[:, 1 + T_audio + 2:]
+    positions = torch.full((B, T_audio), -1, dtype=torch.long)
+    for i in range(B):
+        positions[i] = torch.arange(1, 1 + T_audio)
+    ctc_targets = torch.randint(0, n_text, (B * 3,))
+    ctc_target_lengths = torch.tensor([3, 3], dtype=torch.long)
+
+    embeds = model.project_audio(frames)
+    logits, _, _, hidden = model(
+        input_ids, audio_embeds=embeds, audio_positions=positions, return_hidden=True,
+    )
+    ar_loss = V11DuplexLM.compute_loss(logits, labels)
+    log_probs, input_lengths = model.ctc_log_probs(hidden, positions)
+    assert log_probs.shape == (B, T_audio, n_text + 1)
+    ctc_loss = F.ctc_loss(
+        log_probs.transpose(0, 1), ctc_targets, input_lengths, ctc_target_lengths,
+        blank=n_text, zero_infinity=True,
+    )
+    (ar_loss + ctc_loss).backward()
+
+    proj_grads = [p.grad for p in model.audio_proj.parameters() if p.grad is not None]
+    ctc_grads = [p.grad for p in model.frame_heads.ctc_head.parameters() if p.grad is not None]
+    assert proj_grads and sum(g.abs().sum().item() for g in proj_grads) > 0
+    assert ctc_grads and sum(g.abs().sum().item() for g in ctc_grads) > 0
+
+
 def main():
     tests = [
         test_presets_param_counts,
@@ -149,6 +212,8 @@ def main():
         test_codec_delay_roundtrip,
         test_duplex_100m_preset,
         test_audio_injection_skips_pad_positions,
+        test_audio_proj_receives_gradients,
+        test_ctc_head_learns,
     ]
     for t in tests:
         name = t.__name__
@@ -158,7 +223,7 @@ def main():
         except Exception as e:
             print(f"FAIL {name}: {e}")
             raise SystemExit(1)
-    print("ALL DUPLEX TESTS PASS")
+    print("ALL DUPLEX TESTS PASS (12/12)")
 
 
 if __name__ == '__main__':

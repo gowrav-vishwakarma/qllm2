@@ -17,6 +17,8 @@ cd "$SCRIPT_DIR/.."
 
 # shellcheck disable=SC1091
 source ./scripts/v6_env_setup.sh 2>/dev/null || true
+# shellcheck disable=SC1091
+source ./scripts/log_utils.sh
 
 export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 
@@ -30,16 +32,38 @@ LANGUAGES="${LANGUAGES:-hindi,gujarati}"
 SAVE_EVERY_STEPS="${SAVE_EVERY_STEPS:-50}"
 CKPT_DIR="${CKPT_DIR:-checkpoints_v11_${PRESET}_stage1_ml}"
 RESUME="${RESUME:-}"
-LOG_DIR="${LOG_DIR:-logs/v11}"
-mkdir -p "$LOG_DIR"
+LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
 
-STAMP=$(date +%Y%m%d_%H%M%S)
-LOG_FILE="${LOG_DIR}/duplex_stage1_${PRESET}_${DATASET}_${STAMP}.log"
+mkdir -p "$CKPT_DIR"
+REUSED_LOG_DIR=0
+if [[ -z "${LOG_DIR:-}" && -n "$RESUME" && -f "$LOG_DIR_SIDECAR" ]]; then
+  _stored=$(head -n 1 "$LOG_DIR_SIDECAR" | tr -d '\r')
+  if [[ -n "$_stored" && -d "$_stored" ]]; then
+    LOG_DIR="$_stored"
+    REUSED_LOG_DIR=1
+  fi
+fi
+if [[ -z "${LOG_DIR:-}" ]]; then
+  LOG_DIR=$(make_log_dir "v11" "duplex_stage1_${PRESET}_${DATASET}")
+fi
+mkdir -p "$LOG_DIR"
+printf '%s\n' "$LOG_DIR" > "$LOG_DIR_SIDECAR"
+LOG_FILE="${LOG_DIR}/duplex_stage1_${PRESET}_${DATASET}.log"
+
+RUN_ARGS="--preset $PRESET --epochs $EPOCHS --batch_size $BATCH_SIZE \
+  --n_pairs $N_PAIRS --n_pairs_per_lang $N_PAIRS_PER_LANG --languages $LANGUAGES \
+  --dataset $DATASET --ckpt_dir $CKPT_DIR --save_every_steps $SAVE_EVERY_STEPS $*"
+RUN_DESC="V11 duplex Stage 1 (turn POC): preset=$PRESET dataset=$DATASET"
+if [[ $REUSED_LOG_DIR -eq 1 ]]; then
+  append_run_info_resume "$LOG_DIR" "$RUN_DESC (resume)" "$RUN_ARGS"
+else
+  write_run_info "$LOG_DIR" "$RUN_DESC" "$RUN_ARGS"
+fi
 
 echo "=== V11 duplex Stage 1 ===" | tee "$LOG_FILE"
 echo "preset=$PRESET dataset=$DATASET languages=$LANGUAGES" | tee -a "$LOG_FILE"
 echo "ckpt_dir=$CKPT_DIR save_every_steps=$SAVE_EVERY_STEPS resume=${RESUME:-none}" | tee -a "$LOG_FILE"
-echo "log=$LOG_FILE" | tee -a "$LOG_FILE"
+echo "log_dir=$LOG_DIR log=$LOG_FILE" | tee -a "$LOG_FILE"
 
 uv run python -m v11.duplex.selftest 2>&1 | tee -a "$LOG_FILE"
 
