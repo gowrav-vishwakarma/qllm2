@@ -19,7 +19,8 @@ from v11.duplex.thinking import VOCAB
 #   Multilingual: ai4bharat/Kathbath (Indian langs, audio bytes in parquet)
 DEFAULT_STAGE1_DATASET = 'kathbath'
 LIBRISPEECH_HF = 'openslr/librispeech_asr'
-LIBRISPEECH_PARQUET = 'clean/train.100/0000.parquet'
+LIBRISPEECH_SUBSET = 'clean/train.100'  # 14 parquet shards, ~28.5k utterances total
+LIBRISPEECH_PARQUET = f'{LIBRISPEECH_SUBSET}/0000.parquet'  # legacy alias (first shard)
 LIBRISPEECH_SR = 16000
 KATHBATH_HF = 'ai4bharat/Kathbath'
 KATHBATH_LANGUAGES = (
@@ -56,37 +57,22 @@ def decode_audio_field(audio: Any) -> Dict[str, Any]:
     raise ValueError(f'Cannot decode audio field: {type(audio)} keys={getattr(audio, "keys", lambda: [])()}')
 
 
+def _librispeech_parquet_shards(subset: str = LIBRISPEECH_SUBSET) -> List[str]:
+    """List sorted parquet shards for a LibriSpeech subset (e.g. clean/train.100)."""
+    from huggingface_hub import list_repo_files
+
+    prefix = subset.rstrip('/') + '/'
+    files = list_repo_files(LIBRISPEECH_HF, repo_type='dataset')
+    shards = sorted(f for f in files if f.startswith(prefix) and f.endswith('.parquet'))
+    if not shards:
+        raise RuntimeError(f'No LibriSpeech parquet shards under {subset!r}')
+    return shards
+
+
 def _load_librispeech_rows(n_pairs: int, seed: int = 42) -> List[Dict]:
-    """Load utterances from Parquet shard (avoids deprecated dataset loading script)."""
-    from datasets import Audio, load_dataset
-    from huggingface_hub import hf_hub_download
-
+    """Load utterance pairs from all LibriSpeech train.100 parquet shards."""
     need = max(n_pairs * 2 + 4, 16)
-    parquet_path = hf_hub_download(
-        repo_id=LIBRISPEECH_HF,
-        filename=LIBRISPEECH_PARQUET,
-        repo_type='dataset',
-    )
-    ds = load_dataset(
-        'parquet',
-        data_files={'train': parquet_path},
-        split=f'train[:{need}]',
-    )
-    ds = ds.cast_column('audio', Audio(decode=False))
-
-    rows = []
-    for i in range(len(ds)):
-        row = ds[i]
-        rows.append({
-            'text': row['text'],
-            'audio': decode_audio_field(row['audio']),
-        })
-
-    rng = np.random.default_rng(seed)
-    if len(rows) > need:
-        idx = rng.choice(len(rows), size=need, replace=False)
-        rows = [rows[int(i)] for i in idx]
-
+    rows = _load_librispeech_utterances(need, seed=seed)
     pairs = []
     for i in range(0, len(rows) - 1, 2):
         pairs.append({'user': rows[i], 'assistant': rows[i + 1]})
@@ -95,7 +81,7 @@ def _load_librispeech_rows(n_pairs: int, seed: int = 42) -> List[Dict]:
     if len(pairs) < max(1, n_pairs // 4):
         raise RuntimeError(
             f'LibriSpeech load yielded only {len(pairs)} pairs (need ~{n_pairs}). '
-            f'Check network/cache for {LIBRISPEECH_HF}/{LIBRISPEECH_PARQUET}.'
+            f'Check cache for {LIBRISPEECH_HF}/{LIBRISPEECH_SUBSET}.'
         )
     return pairs
 
@@ -370,32 +356,62 @@ def _load_kathbath_utterances(lang: str, n: int, seed: int = 42) -> List[Dict]:
 
 
 def _load_librispeech_utterances(n: int, seed: int = 42) -> List[Dict]:
-    """Load individual (audio, text, en) utterances from a LibriSpeech parquet shard."""
-    from datasets import Audio, load_dataset
+    """Load individual (audio, text, en) utterances from all train.100 shards."""
     from huggingface_hub import hf_hub_download
 
     need = max(n + 4, 8)
-    parquet_path = hf_hub_download(
-        repo_id=LIBRISPEECH_HF, filename=LIBRISPEECH_PARQUET, repo_type='dataset',
-    )
-    ds = load_dataset('parquet', data_files={'train': parquet_path},
-                      split=f'train[:{need}]')
-    ds = ds.cast_column('audio', Audio(decode=False))
-    rows = []
-    for i in range(len(ds)):
-        row = ds[i]
-        if not row['text']:
-            continue
-        rows.append({
-            'text': row['text'].lower(),
-            'audio': decode_audio_field(row['audio']),
-            'lang': 'english',
-        })
+    rows: List[Dict] = []
+    for shard in _librispeech_parquet_shards():
+        parquet_path = hf_hub_download(LIBRISPEECH_HF, shard, repo_type='dataset')
+        table = pq.read_table(parquet_path, columns=['text', 'audio'])
+        for i in range(table.num_rows):
+            text = table['text'][i].as_py()
+            if not text:
+                continue
+            audio = decode_audio_field(table['audio'][i].as_py())
+            rows.append({
+                'text': text.lower(),
+                'audio': audio,
+                'lang': 'english',
+            })
+            if len(rows) >= need:
+                break
+        if len(rows) >= need:
+            break
+    if len(rows) < max(1, n // 4):
+        raise RuntimeError(
+            f'LibriSpeech yielded only {len(rows)} utterances (need ~{n}). '
+            f'Check cache for {LIBRISPEECH_HF}/{LIBRISPEECH_SUBSET}.'
+        )
     rng = np.random.default_rng(seed)
     if len(rows) > n:
         idx = rng.choice(len(rows), size=n, replace=False)
         rows = [rows[int(i)] for i in idx]
     return rows
+
+
+def _load_librispeech_transcripts(n: int, seed: int = 42) -> List[str]:
+    """Text-only LibriSpeech transcripts (all train.100 shards; no audio decode)."""
+    from huggingface_hub import hf_hub_download
+
+    need = max(n, 1)
+    lines: List[str] = []
+    for shard in _librispeech_parquet_shards():
+        parquet_path = hf_hub_download(LIBRISPEECH_HF, shard, repo_type='dataset')
+        table = pq.read_table(parquet_path, columns=['text'])
+        for i in range(table.num_rows):
+            t = table['text'][i].as_py()
+            if t:
+                lines.append(t.lower())
+            if len(lines) >= need:
+                break
+        if len(lines) >= need:
+            break
+    rng = np.random.default_rng(seed)
+    if len(lines) > n:
+        idx = rng.choice(len(lines), size=n, replace=False)
+        lines = [lines[int(i)] for i in idx]
+    return lines
 
 
 def load_asr_rows(
@@ -406,17 +422,19 @@ def load_asr_rows(
     seed: int = 42,
 ) -> List[Dict]:
     """Collect single-utterance (audio, text, lang) rows for Stage A/B training."""
+    from v11.duplex.logutil import log
+
     rows: List[Dict] = []
     for lang in languages:
         lang = lang.strip().lower()
         if lang not in KATHBATH_LANGUAGES:
             raise ValueError(f'Unknown Kathbath language {lang!r}')
-        print(f'  ASR rows: kathbath {lang} ({n_per_lang})...')
+        log(f'ASR rows: kathbath {lang} ({n_per_lang})...')
         rows.extend(_load_kathbath_utterances(lang, n_per_lang, seed=seed))
     if include_english and n_english > 0:
-        print(f'  ASR rows: librispeech english ({n_english})...')
+        log(f'ASR rows: librispeech english ({n_english})...')
         rows.extend(_load_librispeech_utterances(n_english, seed=seed))
-    print(f'  ASR rows total: {len(rows)}')
+    log(f'ASR rows total: {len(rows)}')
     return rows
 
 

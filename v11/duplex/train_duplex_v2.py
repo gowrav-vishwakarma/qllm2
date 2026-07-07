@@ -41,6 +41,7 @@ from v11.duplex.audio_data import load_asr_rows
 from v11.duplex.codec import MimiCodec, delay_flatten
 from v11.duplex.config import get_duplex_config
 from v11.duplex.encoder import FrozenWhisperEncoder
+from v11.duplex.logutil import elapsed_since, log
 from v11.duplex.model import V11DuplexLM
 from v11.duplex.tokenizer import (
     AUDIO_PAD, BACKCHANNEL, ENV_MARK, EOS, LANG_TOKEN, LISTEN, LLM, SPEAK,
@@ -217,7 +218,7 @@ def _load_weights(model, path, device):
     if path and Path(path).exists():
         ck = torch.load(path, map_location=device, weights_only=False)
         model.load_state_dict(ck['model'], strict=False)
-        print(f'  loaded weights from {path}')
+        log(f'  loaded weights from {path}')
         return True
     return False
 
@@ -275,7 +276,7 @@ def main():
     encoder = FrozenWhisperEncoder(args.whisper, device=str(device))
     codec = MimiCodec(tokenizer.vocab, model_name=args.mimi, device=str(device))
     model = V11DuplexLM(cfg, audio_feat_dim=encoder.out_dim).to(device)
-    print(f'Preset {args.preset}: {model.count_parameters()}')
+    log(f'Preset {args.preset}: {model.count_parameters()}')
 
     resume_path = args.resume or os.environ.get('RESUME', '')
     if not (resume_path and Path(resume_path).exists()):
@@ -288,20 +289,23 @@ def main():
             raise ValueError('reply_source=brain requires --conversations jsonl')
         from v11.duplex.brain import load_conversation_dataset
         reply_texts = {r['user']: r['reply'] for r in load_conversation_dataset(args.conversations)}
-        print(f'Loaded {len(reply_texts)} brain replies')
+        log(f'Loaded {len(reply_texts)} brain replies')
 
     langs = [s.strip() for s in args.languages.split(',') if s.strip()]
+    data_t0 = time.time()
     rows = load_asr_rows(languages=langs, n_per_lang=args.n_per_lang,
                          include_english=args.n_english > 0, n_english=args.n_english,
                          seed=args.seed)
     pairs = pair_rows_by_lang(rows, seed=args.seed)
-    print(f'Building {len(pairs)} conversation samples...')
+    log(f'Loaded {len(rows)} rows -> {len(pairs)} pairs in {elapsed_since(data_t0)}')
+    prep_t0 = time.time()
+    log(f'Building {len(pairs)} conversation samples...')
     samples = build_conversation_samples(
         pairs, encoder, codec, tokenizer, barge_in_prob=args.barge_in_prob,
         max_audio_frames=args.max_audio_frames, stride=args.stride,
         max_codec_frames=args.max_codec_frames, reply_texts=reply_texts, seed=args.seed)
-    print(f'Built {len(samples)} samples '
-          f'({sum(s["barge_in"] for s in samples)} barge-in)')
+    log(f'Built {len(samples)} samples ({sum(s["barge_in"] for s in samples)} barge-in) '
+        f'in {elapsed_since(prep_t0)}')
 
     ds = DuplexV2Dataset(samples)
     n_val = max(1, int(len(ds) * args.val_frac))
@@ -334,19 +338,21 @@ def main():
         start_batch = ckpt.get('batch_idx', -1) + 1
         global_step = ckpt.get('global_step', 0)
         history = ckpt.get('history', [])
-        print(f'Resumed {resume_path}: ep{start_epoch} step{global_step}')
+        log(f'Resumed {resume_path}: ep{start_epoch} step{global_step}')
 
     stop = {'flag': False}
 
     def _sig(signum, _f):
         stop['flag'] = True
-        print(f'\nSignal {signum}: saving latest.pt...', flush=True)
+        log(f'Signal {signum}: saving latest.pt...')
     signal.signal(signal.SIGTERM, _sig)
     signal.signal(signal.SIGINT, _sig)
 
     best = 0.0
     t0 = time.time()
+    log(f'Training start: {len(train_loader)} batches/epoch x {args.epochs} epochs')
     for epoch in range(start_epoch, args.epochs + 1):
+        epoch_t0 = time.time()
         model.train()
         epoch_loss, nb = 0.0, 0
         for batch_idx, batch in enumerate(train_loader):
@@ -358,10 +364,11 @@ def main():
             labels = batch['labels'].to(device)
             positions = batch['audio_positions'].to(device)
             frames = batch['frames']
-            with torch.no_grad():
-                embeds = model.project_audio(frames.to(device)) if frames.shape[1] > 0 else None
             opt.zero_grad(set_to_none=True)
             with _amp_ctx(device, args.amp):
+                # project_audio is trainable and must receive gradients (the frozen
+                # Whisper frames were already precomputed under no_grad upstream).
+                embeds = model.project_audio(frames.to(device)) if frames.shape[1] > 0 else None
                 logits, _, _ = model(input_ids, audio_embeds=embeds, audio_positions=positions)
                 loss = V11DuplexLM.compute_loss(logits, labels)
             loss.backward()
@@ -371,24 +378,25 @@ def main():
             nb += 1
             global_step += 1
             if batch_idx % args.log_every == 0:
-                print(f'ep{epoch} step{global_step} loss={loss.item():.4f} '
-                      f'lr={opt.param_groups[0]["lr"]:.2e}')
+                log(f'ep{epoch} step{global_step} loss={loss.item():.4f} '
+                    f'lr={opt.param_groups[0]["lr"]:.2e}')
             if args.save_every_steps and global_step % args.save_every_steps == 0:
                 save_checkpoint(ckpt_dir / 'latest.pt', model, opt, cfg, epoch,
                                 batch_idx, global_step, history, args.tokenizer_dir)
-                print(f'  [checkpoint @ step {global_step}]')
+                log(f'checkpoint @ step {global_step} (elapsed {elapsed_since(t0)})')
             if stop['flag']:
                 save_checkpoint(ckpt_dir / 'latest.pt', model, opt, cfg, epoch,
                                 batch_idx, global_step, history, args.tokenizer_dir)
-                print(f'Shutdown: saved latest.pt @ step {global_step}')
+                log(f'Shutdown: saved latest.pt @ step {global_step}')
                 return
         start_batch = 0
         val = evaluate(model, val_loader, tokenizer, device)
         row = {'epoch': epoch, 'train_loss': epoch_loss / max(1, nb), **val}
         history.append(row)
-        print(f'=== epoch {epoch} train_loss={row["train_loss"]:.4f} val_loss={val["loss"]:.4f} '
-              f'ctrl={val["control_acc"]:.3f} text={val["text_acc"]:.3f} '
-              f'codec={val["codec_acc"]:.3f} ===')
+        log(f'=== epoch {epoch} train_loss={row["train_loss"]:.4f} val_loss={val["loss"]:.4f} '
+            f'ctrl={val["control_acc"]:.3f} text={val["text_acc"]:.3f} '
+            f'codec={val["codec_acc"]:.3f} epoch_time={elapsed_since(epoch_t0)} '
+            f'total={elapsed_since(t0)} ===')
         save_checkpoint(ckpt_dir / 'latest.pt', model, opt, cfg, epoch,
                         len(train_loader) - 1, global_step, history, args.tokenizer_dir,
                         metrics=row)
@@ -397,14 +405,14 @@ def main():
             best = score
             torch.save({'model': model.state_dict(), 'config': cfg, 'metrics': row,
                         'tokenizer_dir': args.tokenizer_dir}, ckpt_dir / 'best_model.pt')
-            print(f'  New best mean_acc={best:.3f} -> best_model.pt')
+            log(f'New best mean_acc={best:.3f} -> best_model.pt')
 
     elapsed = time.time() - t0
     with open(ckpt_dir / 'metrics.json', 'w') as f:
         json.dump({'stage': 'C_duplex_v2', 'preset': args.preset,
                    'reply_source': args.reply_source, 'languages': args.languages,
                    'elapsed_s': elapsed, 'history': history, 'best_mean_acc': best}, f, indent=2)
-    print(f'Done in {elapsed:.1f}s. best mean_acc={best:.3f}. Ckpts in {ckpt_dir}')
+    log(f'Done in {elapsed_since(t0)}. best mean_acc={best:.3f}. Ckpts in {ckpt_dir}')
 
 
 if __name__ == '__main__':

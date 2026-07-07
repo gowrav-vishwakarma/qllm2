@@ -264,8 +264,9 @@ def collect_asr_transcripts(
     import pyarrow.parquet as pq
 
     from v11.duplex.audio_data import (
-        KATHBATH_HF, LIBRISPEECH_HF, LIBRISPEECH_PARQUET, _kathbath_parquet_shards,
+        KATHBATH_HF, _kathbath_parquet_shards, _load_librispeech_transcripts,
     )
+    from v11.duplex.logutil import log
 
     lines: List[str] = []
     for lang in languages:
@@ -282,18 +283,12 @@ def collect_asr_transcripts(
                     break
             if got >= n_per_lang:
                 break
-        print(f'  tokenizer corpus: {lang} -> {got} lines')
+        log(f'tokenizer corpus: {lang} -> {got} lines')
 
     if include_english:
-        path = hf_hub_download(LIBRISPEECH_HF, LIBRISPEECH_PARQUET, repo_type='dataset')
-        table = pq.read_table(path, columns=['text'])
-        got = 0
-        for i in range(min(table.num_rows, n_english)):
-            t = table['text'][i].as_py()
-            if t:
-                lines.append(t.lower())
-                got += 1
-        print(f'  tokenizer corpus: english -> {got} lines')
+        en_lines = _load_librispeech_transcripts(n_english, seed=seed)
+        lines.extend(en_lines)
+        log(f'tokenizer corpus: english -> {len(en_lines)} lines')
 
     return lines
 
@@ -312,27 +307,32 @@ def _cli():
     p.add_argument('--model_type', default='unigram', choices=['unigram', 'bpe'])
     args = p.parse_args()
 
+    from v11.duplex.logutil import elapsed_since, log
+    import time
+
     corpus = args.corpus
     if not corpus:
         corpus = str(Path(args.out_dir) / 'corpus.txt')
         langs = [s.strip() for s in args.languages.split(',') if s.strip()]
+        t0 = time.time()
         lines = collect_asr_transcripts(
             languages=langs, n_per_lang=args.n_per_lang,
             n_english=args.n_english,
         )
         n = write_corpus(lines, corpus)
-        print(f'Wrote {n} lines -> {corpus}')
+        log(f'Wrote {n} lines -> {corpus} in {elapsed_since(t0)}')
 
+    t1 = time.time()
     tok = train_tokenizer(
         corpus, args.out_dir, n_text=args.n_text,
         n_codebooks=args.n_codebooks, codebook_size=args.codebook_size,
         model_type=args.model_type,
     )
-    print(f'Tokenizer saved to {args.out_dir}: total vocab = {tok.vocab.total_size}')
+    log(f'Tokenizer saved to {args.out_dir}: total vocab = {tok.vocab.total_size} '
+        f'(train {elapsed_since(t1)})')
     demo = 'नमस्ते, आप कैसे हैं? hello there. કેમ છો?'
     ids = tok.encode_text(demo, lang='hindi')
-    print('demo ids:', ids[:24], '...')
-    print('roundtrip:', tok.decode_text(ids))
+    log(f'demo roundtrip: {tok.decode_text(ids)}')
 
 
 if __name__ == '__main__':

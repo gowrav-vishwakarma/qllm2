@@ -220,6 +220,11 @@ voice quality. The single-sequence round-trip autoencoder is a **later ablation 
 
 ## Launch order
 
+Logs follow the same per-run folder layout as text V11 training:
+`logs/v11/<run_name>_<YYYYMMDD_HHMMSS>_<gitsha>[_dirty]/` with `RUN_INFO.txt` +
+`duplex_*.log` inside (see `scripts/log_utils.sh`). Resume reuses the folder via
+`<ckpt_dir>/last_log_dir.txt`.
+
 ```bash
 ./scripts/run_v11_duplex_tokenizer.sh    # once: unified hi/gu/en + codec vocab
 ./scripts/run_v11_duplex_asr.sh          # Stage A  -> gate CER
@@ -302,14 +307,136 @@ v11/duplex/
 
 Validated offline (tiny model + real Mimi + synthetic tokenizer): tokenizer roundtrip, codec
 delay roundtrip, all stage sample-builders + forward/loss/backward, constrained codec
-generation, barge-in truncation, full `converse`. `v11/duplex/selftest.py` = **10/10 pass**.
+generation, barge-in truncation, full `converse`. `v11/duplex/selftest.py` = **12/12 pass**
+(added `test_audio_proj_receives_gradients`, `test_ctc_head_learns`).
+
+## Stage A (ASR) training runs
+
+Gate: held-out **CER < 15%** on the multilingual val set before Stage B.
+
+### Run 1 — `checkpoints_v11_duplex_100m_asr` (BROKEN, negative control)
+
+2k/lang hi+gu + 2k en (6000 utts), 10 epochs, batch 6, ~25 min. **FAILED gate.**
+
+| epoch | train_loss | val_loss | CER |
+|-------|-----------|----------|-----|
+| 1 | 7.72 | 6.92 | 1.058 |
+| 8 (best) | 4.34 | 6.96 | **0.732** |
+| 10 | 4.04 | **7.06** (rising) | 0.742 |
+
+Root cause: `project_audio` ran under `torch.no_grad()` in the train loop, so the
+trainable audio projection stayed at random init — the backbone only learned text
+priors. Tell-tale signature: train_loss falls while **val_loss rises** and CER is flat.
+Discard this checkpoint; keep only as a negative control.
+
+### Fix
+
+Moved `project_audio` inside the grad-enabled autocast block in `train_asr.py`,
+`train_duplex_v2.py` (S2T batches), `train_tts.py` (audio tasks). The frozen Whisper
+frames are still precomputed under `no_grad` upstream (encoder stays frozen); only the
+trainable projection now receives gradients. Guarded by
+`selftest.test_audio_proj_receives_gradients`. Added per-lang CER, ref/hyp samples, and
+an `audio_grad` norm to the epoch log to catch a regression immediately.
+
+### Run 2 — `checkpoints_v11_duplex_100m_asr_v2` (smoke, fix validated)
+
+Same 6000 utts, 5 epochs, batch 6, ~13 min. Purpose: confirm the fix makes the audio
+path learn.
+
+| epoch | train_loss | val_loss | CER | en / gu / hi | audio_grad |
+|-------|-----------|----------|-----|--------------|------------|
+| 1 | 7.87 | 7.07 | 2.069 | 0.735 / 4.244 / 0.798 | 0.204 |
+| 3 | 6.01 | 6.49 | 0.872 | 0.694 / 1.101 / 0.784 | 0.430 |
+| 4 (best) | 5.60 | 6.48 | **0.753** | 0.708 / 0.788 / 0.761 | 0.335 |
+| 5 | 5.34 | 6.50 | 0.757 | 0.708 / 0.786 / 0.779 | 0.426 |
+
+Verdict: **fix confirmed.** `audio_grad > 0` every epoch and **val_loss now decreases**
+(7.07 → 6.48) — the opposite of the broken run. But 5 epochs / 2k-per-lang / fully-decayed
+cosine LR is far too little: output is still degenerate repetition of common function
+words ("इससे इससे भी भी", "આ ઘટનાની આ ઘટનાની"), so absolute CER (0.75) is not yet usable.
+Proceed to a scaled run for the real CER measurement.
+
+### Run 3 — scaled (`checkpoints_v11_duplex_100m_asr_v2`, stopped early)
+
+4k/lang hi+gu + 4k en (12000 utts), 15 epochs planned, batch 8, ~40 min to ep10.
+**FAILED gate** — same ~0.73 CER plateau despite 2× data.
+
+| epoch | train_loss | val_loss | CER | en / gu / hi |
+|-------|-----------|----------|-----|--------------|
+| 3 | 5.78 | 6.07 | 0.734 | 0.70 / 0.75 / 0.76 |
+| 5 | 5.13 | **6.00 (min)** | 1.052 | 1.50 / 0.75 / 0.74 |
+| 8 (best) | 4.20 | 6.13 | **0.727** | 0.73 / 0.75 / 0.71 |
+| 10 | 3.54 | **6.36** (rising) | 0.740 | 0.74 / 0.75 / 0.74 |
+
+Epoch-10 hyps are **fluent but unrelated to audio** (LM hallucination):
+- hi ref `किसानों ने राजभवन के सामने भी आलू फेंका है` → hyp `सरकार ने इस बार पुलिस को भी एक बार आ रहे हैं`
+- en ref `...never been a ghost nor used a wooden leg...` → hyp `who has been a good deal to get it in a smile and tender as well as well as...`
+
+**Grounding diagnosis:** not a data/epoch problem. PAM is a decaying associative memory
+(`S_t = γ_t·S_{t-1} + V_t⊗K_t*`) with no mechanism for text steps to **re-read** individual
+audio frames (unlike Transformer cross-attention). The AR objective never forces precise
+audio use; the model learns a strong text LM and generates plausible sentences
+unconditionally. Signature: train_loss ↓, val_loss ↑ after ~epoch 5, CER flat ~0.73.
+
+### Fix 2 — hybrid CTC head on audio-frame hiddens
+
+Add `FrameHeads.ctc_head` on the shared post-norm audio hidden (real+imag → `2*dim` →
+`n_text+1` with blank). Joint loss: `ar_loss + λ·ctc_loss` (`--ctc_weight`, default 0.5).
+CTC forces per-frame phonetic alignment; cannot be satisfied by a language-model prior.
+Eval reports both AR-greedy CER and **CTC-greedy CER** (the grounded metric). Model now
+~117M params (base 93M + ~25M CTC head + audio proj). Reserved hooks for Phase 2
+`vad_head` (speech/noise) and Phase 3 `speaker_head` + `cond_vec` (target-speaker
+conditioning) on the same hidden — structurally built-in, trained later.
+
+### Run 4 — CTC smoke (`checkpoints_v11_duplex_100m_asr_ctc`, done)
+
+2k/lang + 2k en, 6 epochs, batch 6, `ctc_weight=0.5`, ~17 min.
+Log: `logs/v11/duplex_asr_duplex_100m_20260707_171322_df09fa7_dirty/`
+
+| epoch | train_loss | ctc_loss | CER | ctc_CER | en_ctc / gu_ctc / hi_ctc |
+|-------|-----------|----------|-----|---------|---------------------------|
+| 1 | 12.62 | 8.03 | 1.690 | 0.905 | 0.858 / 0.948 / 0.904 |
+| 3 | 10.22 | 6.85 | 0.758 | 0.755 | 0.818 / 0.759 / 0.673 |
+| 5 (best) | 8.64 | 5.91 | 0.742 | **0.661** | 0.639 / 0.686 / 0.654 |
+| 6 | 8.30 | 5.86 | 0.739 | 0.671 | 0.650 / 0.695 / 0.663 |
+
+Verdict: **CTC grounding confirmed.** `ctc_CER` fell 0.905 → 0.661 (below the old ~0.73
+AR plateau). CTC hyps show real word overlap (e.g. hi `बताया के चुनाव क्षेत्र`, gu
+`ભારત વીડિયોની એક ઘટના`) while AR hyps remain LM-degenerate (`इससे यह यह भी भी`).
+`ctc_loss` and `val_loss` both decrease; `audio_grad` ~1.5. Gate <15% not yet met —
+proceed to scaled run.
+
+### Run 5 — CTC scaled (`checkpoints_v11_duplex_100m_asr_ctc`, in progress)
+
+4k/lang + 4k en, 15 epochs, batch 8, `ctc_weight=0.5`. Target: gate CER/ctc_CER < 15%.
+
+## Speaker / noise robustness (staged — focus on main speaker)
+
+Frozen Whisper mixes all sources (noise-robust, not speaker-separating). Realistic path:
+**per-frame heads + speaker conditioning** on the shared audio hidden, not full source
+separation (SepFormer/VoiceFilter would be a separate front-end).
+
+| Phase | head | data | purpose |
+|-------|------|------|---------|
+| 1 (now) | `ctc_head` | clean Kathbath + LibriSpeech | acoustic grounding / ASR |
+| 2 (later) | `vad_head` (speech/noise) | + MUSAN noise augmentation | robustness + turn detection |
+| 3 (later) | `speaker_head` + `cond_vec` | simulated 2-speaker mixtures (LibriMix-style) + enrollment embedding (ECAPA/WavLM) | target-speaker ASR; suppress background talkers |
+
+Sequencing: separation is premature until clean-audio CTC grounding passes. Hooks reserved
+in `FrameHeads` + `cond_vec` plumbing from the start.
 
 ## Status / next steps (voice track)
 
 - [x] Tokenizer, encoder frames, `duplex_100m` preset, codec, Stages A–D code + scripts, tests.
-- [ ] Run tokenizer training on full Kathbath hi/gu + LibriSpeech corpus.
-- [ ] Stage A training run → record CER here.
+- [x] Tokenizer trained on Kathbath hi/gu + LibriSpeech (vocab 40208).
+- [x] Stage A run 1 (no_grad audio bug) → fix 1 (audio_grad) → run 2 smoke validated.
+- [x] Stage A run 3 scaled → plateau ~0.73, LM hallucination diagnosed.
+- [x] Fix 2: hybrid CTC head + joint loss + dual CER eval.
+- [x] Stage A run 4 (CTC smoke) → grounding confirmed, best ctc_CER=0.661.
+- [ ] Stage A run 5 (CTC scaled, 4k/lang, 15 ep) → gate <15% before Stage B.
 - [ ] Stage B training run (`--task both`) → record round-trip WER here.
 - [ ] Stage C joint run → record control/text/codec acc here.
+- [ ] Phase 2: VAD/noise head + MUSAN augmentation.
+- [ ] Phase 3: target-speaker conditioning + interferer head.
 - [ ] Add clean single-speaker TTS corpora (IndicTTS/Rasa, LibriTTS-R) for output voice.
 - [ ] Optional: distill `v11_e3_k3_chat` text knowledge to reduce brain dependence.
