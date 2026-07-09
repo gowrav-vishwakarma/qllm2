@@ -15,11 +15,12 @@ fixed-size state — there is **no KV cache** that grows with context length.
 
 **Model weights (Hugging Face):** [gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat)
 
-> **Latest shipped (2026-07-04):** revision **`round-2b-gate`** — Round 1 of the v2 gate line.
-> Only **2B pretrain + smoltalk2 SFT**, but a **new architecture** (content-aware phase gate,
-> vocab 50261, blended pretrain). Pretrain mix: DCLM-Edu + FineWeb-Edu + smoltalk2 **Mid**;
-> SFT: smoltalk2 **SFT**, **hard** filter, **15% think** cap. Pin the tag:
-> `huggingface-cli download … --revision round-2b-gate`. Details:
+> **Latest shipped (2026-07-09):** revision **`round-6b-gate`**, also promoted to **`main`** — the
+> v2 gate line at **~6B pretrain + smoltalk2 SFT** (content-aware phase gate, vocab 50261, blended
+> pretrain). **What we learned:** the pretrain base carries real knowledge, but the SFT step was
+> *hurting* short factual answers — it collapsed into `<think>` / "explain-the-question" prose and
+> occasionally switched language. **`round-8b` is now in pretrain with thinking removed** (see the
+> recipe update below). Pin a tag: `huggingface-cli download … --revision round-6b-gate`. Details:
 > [hf_release/README.md](hf_release/README.md) · [v11/MODEL_RELEASES.md](v11/MODEL_RELEASES.md).
 
 > **Architecture still under development.** The PAM stack (gates, tokenizer, data recipe) is
@@ -195,35 +196,40 @@ O(1)-per-token recurrent inference.
 
 ---
 
-## Chat examples — Round 1 (`round-2b-gate`, 2B)
+## Chat examples — `round-6b-gate` (~6B)
 
-Full batch eval (**72 generations**, two profiles × two temperatures): **[hf_release/SAMPLES_round-2b-gate.md](hf_release/SAMPLES_round-2b-gate.md)**.
+Full batch eval (**72 generations**, two profiles × two temperatures): **[hf_release/SAMPLES_round-6b-gate.md](hf_release/SAMPLES_round-6b-gate.md)**.
 
-Curated highlights (recommended profile, `--no-think`, T=0.0, `max_new_tokens=64`):
+Curated highlights (recommended profile, T=0.0):
 
 > **User:** what is the capital of France?
-> **Assistant:** The capital of France, France, is Paris.
-
-> **User:** What is 2+2?
-> **Assistant:** To solve the problem of finding the number 2+2 in a given equation, we need to… *(rambles; no clean answer — math is a known weak spot at 2B)*
+> **Assistant:** The capital of France, France, is Paris. *(correct — but note the "France, France" degeneration)*
 
 > **User:** Answer in one word: yes or no — is water wet?
 > **Assistant:** Yes, water is wet.
 
+> **User:** hello
+> **Assistant:** Hello! How can I help you today?
+
+> **User:** What is 2+2?
+> **Assistant:** The given statement "2+2" is a bit ambiguous… *(rambles — the SFT step talks itself out of the answer; this regression is the one fixed for `round-8b`)*
+
 Download, chat flags, and reproduction: **[hf_release/README.md](hf_release/README.md)** (Hugging Face model card).
 
-**Honest caveats:** at ~100M params with only **2B** tokens on the v2 line, **facts are unreliable**,
-responses **ramble**, **capitalization** affects replies, and the model may emit **`<think>`**
-blocks unless you pass **`--no-think`**. These are a *pretraining-scale* ceiling, not an architecture
-failure — each round adds +2B fresh tokens.
+**Honest caveats:** at ~100M params with ~**6B** tokens on the v2 line, **facts are still hit-or-miss**
+and responses can **ramble**. This round's **SFT also over-verbosifies short factual answers** and may
+emit **`<think>`** blocks (pass **`--no-think`**) — diagnosed and fixed in the `round-8b` recipe
+(thinking removed from pretrain + SFT, English-only splits, per-turn length cap). These are a
+*pretraining-scale + SFT-recipe* ceiling, not an architecture failure — each round adds +2B fresh tokens.
 
 ---
 
 ## Continuous shipping (v2 gate line)
 
-**Round 1 shipped 2026-07-04** as HF revision **`round-2b-gate`**. Token budget is small (**2B
-pretrain + SFT**), but this is the first public **v2 architecture** checkpoint (content-aware
-gate, vocab 50261, blended data). Next rounds add +2B fresh tokens each under `round-4b-gate`, …
+**Latest: `round-6b-gate`** (shipped 2026-07-09, also promoted to `main`) — ~**6B pretrain + SFT**
+on the **v2 architecture** (content-aware gate, vocab 50261, blended data). Rounds add +2B fresh
+tokens each (`round-2b-gate` → `round-4b-gate` → `round-6b-gate` → …). **`round-8b` is in pretrain
+now** with the thinking-removed recipe below.
 
 The architecture and training recipe are **still evolving**; we treat each shipped round as a
 **snapshot**, not a frozen product. We **retrain from scratch** on the v2 line, then add **+2B
@@ -232,18 +238,28 @@ fresh pretrain tokens** per round (no token reuse), run chat SFT, and publish th
 under a **revision tag** (`round-2b-gate`, `round-4b-gate`, …). Full provenance per round:
 **[v11/MODEL_RELEASES.md](v11/MODEL_RELEASES.md)**.
 
-**What every round trains on (knowledge + reasoning + chat):**
+**What every round trains on (knowledge + chat):**
 
 | Ingredient | Dataset | Role |
 |-----------|---------|------|
 | Knowledge / grammar | DCLM-Edu + FineWeb-Edu (edu≥3) | web pretrain, unique per round (`skip_docs`) |
-| Reasoning + chat | smoltalk2 **Mid** (~35B tok), ChatML-rendered | blended into pretrain after a grammar warmup |
-| Chat behavior | smoltalk2 **SFT** (think-capped) | per-round supervised fine-tune |
+| Chat context | smoltalk2 **Mid**, ChatML-rendered (`<think>` stripped) | blended into pretrain after a grammar warmup |
+| Chat behavior | smoltalk2 **SFT** — English, direct-answer, multi-turn | per-round supervised fine-tune |
 
 Preset `v11_e3_k3_chat`: phase-aware GSP gate, vocab **50261** (ChatML `<|im_start|>`/`<|im_end|>`
 + reasoning `<think>`/`</think>`). Freshness is guaranteed by per-source cursors saved in each
-checkpoint; the blend adds a small ChatML+reasoning sprinkle so those tokens are trained from
-step 0.
+checkpoint; the blend adds a small ChatML sprinkle so those tokens are trained from step 0.
+
+> **Recipe update (from `round-8b`, 2026-07-09).** A pretrain-vs-SFT diagnosis found the SFT
+> chat model regressing on factual QA: it collapsed into `<think>` / "explain-the-question"
+> prose and occasionally switched language (a multilingual data leak). Fixes applied going
+> forward: **(1)** `<think>` reasoning is **stripped from the smoltalk2 Mid pretrain blend**
+> (final answers kept) so the base never learns to emit it; **(2)** SFT runs with
+> **`THINK_FRACTION=0`** on an **English-only split allowlist** (multilingual / tool / long-context
+> splits dropped); **(3)** a **per-turn length cap** (≤300 words per answer) keeps replies short
+> and direct while **preserving multi-turn** chats (up to ~8 exchanges). Earlier rounds
+> (`round-2b`…`round-6b`) used the prior think-capped, multilingual mix. Full diagnosis and
+> before/after target profiling: [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md).
 
 **Run a round** (GCP training, then publish from the RTX4090):
 
@@ -261,13 +277,13 @@ ROUND_TAG=round-2b-gate ./scripts/run_v11_round.sh ship
 **Pull a specific shipped round** from the HF repo:
 
 ```bash
-huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat --revision round-2b-gate --local-dir .
+huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat --revision round-6b-gate --local-dir .
 # Browse all tags: https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat
 ```
 
-**What to ask / current limits** (full chat guide, flags, and Round 1 sample Q&A):
-**[hf_release/README.md](hf_release/README.md)** · **[hf_release/SAMPLES_round-2b-gate.md](hf_release/SAMPLES_round-2b-gate.md)** —
-use **`--no-think`** and **`--max_new_tokens 64`** for short factual Q&A at 2B. Tulu-3 is **not**
+**What to ask / current limits** (full chat guide, flags, and sample Q&A):
+**[hf_release/README.md](hf_release/README.md)** · **[hf_release/SAMPLES_round-6b-gate.md](hf_release/SAMPLES_round-6b-gate.md)** —
+use **`--no-think`** and **`--max_new_tokens 64`** for short factual Q&A. Tulu-3 is **not**
 used routinely — only as an optional instruct-upgrade branch after saturation gates pass.
 
 ---
@@ -279,12 +295,12 @@ script targets training checkpoints inside this repo. After download:
 
 ```bash
 huggingface-cli download gowravvishwakarma/qllm-pam-v11-e3k3-chat \
-  --revision round-2b-gate --local-dir hf_release
+  --revision round-6b-gate --local-dir hf_release
 cd hf_release && uv run python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt --no-think
 ```
 
 Full usage (`--system`, `--temperature`, thinking blocks, sample Q&A):
-**[hf_release/README.md](hf_release/README.md)** · **[hf_release/SAMPLES_round-2b-gate.md](hf_release/SAMPLES_round-2b-gate.md)**.
+**[hf_release/README.md](hf_release/README.md)** · **[hf_release/SAMPLES_round-6b-gate.md](hf_release/SAMPLES_round-6b-gate.md)**.
 
 ---
 
@@ -360,9 +376,9 @@ Other presets, Phase C pretrain/SFT runners, and older version paths live in the
 
 ## Documentation
 
-- **Model weights (Hugging Face):** [gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat) — new checkpoint every **+2B tokens** under a **round revision tag** (`round-2b-gate`, …); architecture still evolving.
-- **[hf_release/README.md](hf_release/README.md)** — download, **`run_chat.py`** (`--no-think`, `--max_new_tokens`), Round 1 chat limits.
-- **[hf_release/SAMPLES_round-2b-gate.md](hf_release/SAMPLES_round-2b-gate.md)** — Round 1 batch chat eval (72 generations, reproducible).
+- **Model weights (Hugging Face):** [gowravvishwakarma/qllm-pam-v11-e3k3-chat](https://huggingface.co/gowravvishwakarma/qllm-pam-v11-e3k3-chat) — new checkpoint every **+2B tokens** under a **round revision tag** (latest `round-6b-gate`, on `main`); architecture still evolving.
+- **[hf_release/README.md](hf_release/README.md)** — download, **`run_chat.py`** (`--no-think`, `--max_new_tokens`), current chat limits.
+- **[hf_release/SAMPLES_round-6b-gate.md](hf_release/SAMPLES_round-6b-gate.md)** — latest batch chat eval (72 generations, reproducible).
 - **Paper:** [Phase-Associative Memory: Sequence Modeling in Complex Hilbert Space](https://arxiv.org/abs/2604.05030) (arXiv:2604.05030)
 - [memory_probes/README.md](memory_probes/README.md) — PAM mechanism validation: binding,
 long-context NIAH, interference, rank; why matrix memory beats vector state.

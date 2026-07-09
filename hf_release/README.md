@@ -42,6 +42,8 @@ This checkpoint proves that architectures outside the transformer/SSM families *
 
 Pin **`round-2b-gate`** if you need the Round 1 (2B) snapshot — that tag is frozen on HF.
 
+> **Next round (`round-8b`, in pretrain):** we are **removing `<think>` reasoning** from both the pretrain blend and SFT. On this ~100M base it **hurt more than it helped** — the SFT model collapsed into verbose "explain-the-question" prose and sometimes switched language, degrading short factual answers. Learned the hard way; round-8b SFT is English-only, no-think, with short direct (but still multi-turn) answers.
+
 ---
 
 ## What is it — architecture
