@@ -22,6 +22,8 @@ pipeline_tag: text-generation
 
 This checkpoint proves that architectures outside the transformer/SSM families **can learn coherent instruction-following chat**. It is deliberately **under-trained** relative to what the architecture can hold.
 
+**Before you try:** this is a **proof-of-concept of the architecture**, not a polished chat product. Think of it like early GPT-2 — it shows the idea works and is progressing, but it is not yet what you might expect from a modern assistant.
+
 ---
 
 ## Which revision to use

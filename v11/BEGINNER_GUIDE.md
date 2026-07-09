@@ -6,7 +6,7 @@ A plain-language tour of how **V11** (our current base architecture) processes t
 
 **Production preset:** `v11_e3_k3` — 16 layers, 6 heads, head dim 64, **3 superposed memory states** (E3). See `[get_config("v11_e3_k3")](model.py)`.
 
-**Related docs:** experiment results in [EXPERIMENTS_V11.md](EXPERIMENTS_V11.md) · deeper math in [../notebooks/qllm_v7_math_tutorial.ipynb](../notebooks/qllm_v7_math_tutorial.ipynb) · repo overview in [../README.md](../README.md).
+**Related docs:** train/inference call graph in [CALLGRAPH_E3K3.md](CALLGRAPH_E3K3.md) · experiment results in [EXPERIMENTS_V11.md](EXPERIMENTS_V11.md) · deeper math in [../notebooks/qllm_v7_math_tutorial.ipynb](../notebooks/qllm_v7_math_tutorial.ipynb) · repo overview in [../README.md](../README.md).
 
 ---
 
