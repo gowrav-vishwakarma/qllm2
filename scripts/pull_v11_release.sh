@@ -128,6 +128,12 @@ while IFS= read -r rnd; do
   mv -f "${dest}.partial" "$dest"
   update_local_state "$rnd" "$ssha" "$dest"
   echo "    done: $(ls -lh "$dest" | awk '{print $5, $9}')"
+  # DR backup: pretrain checkpoint that produced this SFT round.
+  if [[ "$DRY_RUN" != "1" ]]; then
+    ROUND="$rnd" ./scripts/pull_v11_training_ckpt.sh
+  else
+    echo "    [dry-run] would also pull pretrain DR checkpoint"
+  fi
 done < <(rounds_to_check)
 
 [[ "$any" == "0" ]] && echo "[pull] nothing to do (no rounds in manifest)"
