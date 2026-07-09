@@ -13,25 +13,25 @@ import torch
 from v11.model import V11Config, V11PAMLayer
 
 
-def _run_mode(name, cfg, B=2, T=80, atol=2e-3, seed=0):
+def _run_mode(name, cfg, batch_size=2, seq_len=80, atol=2e-3, seed=0):
     torch.manual_seed(seed)
     layer = V11PAMLayer(cfg, layer_idx=0).eval()
-    x = torch.randn(B, T, cfg.dim, 2) * 0.5
+    x = torch.randn(batch_size, seq_len, cfg.dim, 2) * 0.5
 
     with torch.no_grad():
         # Parallel training form.
-        y_par, _ = layer(x, state=None, step_offset=0)
+        parallel_output, _ = layer(x, state=None, step_offset=0)
 
         # Sequential recurrent form, one token at a time.
-        y_steps = []
+        recurrent_steps = []
         state = None
-        for t in range(T):
-            y_t, state = layer(x[:, t:t+1], state=state, step_offset=t)
-            y_steps.append(y_t)
-        y_rec = torch.cat(y_steps, dim=1)
+        for time_idx in range(seq_len):
+            step_output, state = layer(x[:, time_idx:time_idx + 1], state=state, step_offset=time_idx)
+            recurrent_steps.append(step_output)
+        recurrent_output = torch.cat(recurrent_steps, dim=1)
 
-    diff = (y_par - y_rec).abs()
-    rel = diff.max().item() / (y_par.abs().max().item() + 1e-8)
+    diff = (parallel_output - recurrent_output).abs()
+    rel = diff.max().item() / (parallel_output.abs().max().item() + 1e-8)
     ok = diff.max().item() < atol
     print(f"[{name:14s}] max|Δ|={diff.max().item():.2e}  rel={rel:.2e}  "
           f"{'PASS' if ok else 'FAIL'}")
@@ -62,7 +62,7 @@ def test_warmstart_chatml():
     print("[warmstart_chatml] PASS")
 
 
-def test_fused_e3_equiv(B=2, T=80, seed=0):
+def test_fused_e3_equiv(batch_size=2, seq_len=80, seed=0):
     """Fused E3 path must equal the reference K-loop exactly (fwd, grad, state)."""
     common = dict(
         vocab_size=512, dim=48, n_heads=3, head_dim=16, n_layers=1, expand=2,
@@ -77,7 +77,7 @@ def test_fused_e3_equiv(B=2, T=80, seed=0):
     rc.load_state_dict(loop.state_dict())
     rc.train()
 
-    x = torch.randn(B, T, common['dim'], 2) * 0.5
+    x = torch.randn(batch_size, seq_len, common['dim'], 2) * 0.5
     x1 = x.clone().requires_grad_(True)
     x2 = x.clone().requires_grad_(True)
     x3 = x.clone().requires_grad_(True)
@@ -99,7 +99,7 @@ def test_fused_e3_equiv(B=2, T=80, seed=0):
     return ok
 
 
-def test_fused_ce_equiv(B=2, T=40, seed=0):
+def test_fused_ce_equiv(batch_size=2, seq_len=40, seed=0):
     """Model-level fused CE must equal standard forward + F.cross_entropy."""
     import torch.nn.functional as F
     from v11.model import V11LM
@@ -110,8 +110,8 @@ def test_fused_ce_equiv(B=2, T=40, seed=0):
         n_states=3, gate_content_aware=True,
     )
     m = V11LM(cfg).train()
-    ids = torch.randint(0, cfg.vocab_size, (B, T))
-    lbl = torch.randint(0, cfg.vocab_size, (B, T))
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+    lbl = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
     m.zero_grad(); logits, _, aux1 = m(ids)
     ref = F.cross_entropy(logits.view(-1, logits.size(-1)), lbl.view(-1))
     ref.backward()
@@ -126,7 +126,7 @@ def test_fused_ce_equiv(B=2, T=40, seed=0):
     return ok
 
 
-def test_competitive_retrieval_equiv(B=2, T=80, seed=0):
+def test_competitive_retrieval_equiv(batch_size=2, seq_len=80, seed=0):
     """Competitive E3: fused == loop == recurrent with routing+compete flags."""
     common = dict(
         vocab_size=512, dim=48, n_heads=3, head_dim=16, n_layers=1, expand=2,
@@ -142,7 +142,7 @@ def test_competitive_retrieval_equiv(B=2, T=80, seed=0):
     loop.train()
     fused.train()
 
-    x = torch.randn(B, T, common['dim'], 2) * 0.5
+    x = torch.randn(batch_size, seq_len, common['dim'], 2) * 0.5
     x1 = x.clone().requires_grad_(True)
     x2 = x.clone().requires_grad_(True)
     y1, S1 = loop(x1)
@@ -154,7 +154,7 @@ def test_competitive_retrieval_equiv(B=2, T=80, seed=0):
         ok_rec = _run_mode(
             "compete_recur",
             V11Config(**{**common, 'fused_e3': False}),
-            B=B, T=T, atol=2e-3, seed=seed + 1,
+            batch_size=batch_size, seq_len=seq_len, atol=2e-3, seed=seed + 1,
         )
 
     dy = (y1 - y2).abs().max().item()

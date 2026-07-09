@@ -2,7 +2,7 @@
 V11 model: V7 PAM core + new memory dynamics (E1/E2/E3).
 
 Reuses the stable V7 complex primitives (ComplexLinear, ComplexNorm, CGU,
-ModSwish/ModReLU, ComplexEmbed, RoPE) unchanged. The only architectural change
+ModSwish/ModReLU, ComplexEmbed, RoPE) via vendored `v11.complex_ops`. The only
 lives in `V11PAMLayer`, which dispatches on three flags:
 
     decay_mode : 'head'        -> per-head scalar decay (V7 baseline)
@@ -30,13 +30,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint as grad_checkpoint
 
-# Reuse the proven, stable V7 primitives unchanged -- "same core".
-from v7.model import (
+# Vendored V7 complex primitives — V11 no longer imports v7.model on the forward path.
+from v11.complex_ops import (
     cmul, cconj, cabs, cnormalize, to_real_concat,
     ComplexLinear, ComplexNorm, ComplexEmbed, ComplexPosEmbed,
     ComplexGatedUnit, build_rope_cache, _build_activation,
 )
-from v7.triton_kernels import fused_decay_matrix
+from v11.triton_kernels import fused_decay_matrix
 
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -173,17 +173,17 @@ class V11PAMLayer(nn.Module):
         """Custom init for phase_proj (re-applied after V11LM._init_weights)."""
         if self.n_states <= 1:
             return
-        K = self.n_states
-        H = self.num_heads
+        num_memory_states = self.n_states
+        num_heads = self.num_heads
         if self.phase_init == 'spread':
             nn.init.zeros_(self.phase_proj.weight)
-            biases = torch.zeros(H * K)
-            for h in range(H):
-                for k in range(K):
-                    if K == 3:
-                        biases[h * K + k] = [0.0, 2 * math.pi / 3, -2 * math.pi / 3][k]
+            biases = torch.zeros(num_heads * num_memory_states)
+            for head_idx in range(num_heads):
+                for state_idx in range(num_memory_states):
+                    if num_memory_states == 3:
+                        biases[head_idx * num_memory_states + state_idx] = [0.0, 2 * math.pi / 3, -2 * math.pi / 3][state_idx]
                     else:
-                        biases[h * K + k] = k * 2 * math.pi / K
+                        biases[head_idx * num_memory_states + state_idx] = state_idx * 2 * math.pi / num_memory_states
             with torch.no_grad():
                 self.phase_proj.bias.copy_(biases)
         elif self.phase_init == 'ortho':
@@ -197,331 +197,372 @@ class V11PAMLayer(nn.Module):
         return to_real_concat(x) if self.routing_content_aware else cabs(x)
 
     def _phase_and_alpha(self, x: torch.Tensor):
-        """Phase phi and K-scaled routing weights alpha for E3 superposition.
+        """Phase and K-scaled routing weights for E3 superposition.
 
-        Returns phi [B,T,H,K], alpha [B,T,H,K] where c_k = alpha_k * e^{i phi_k}.
-        With state_compete off, alpha_k == 1 (identity). With state_compete on,
-        alpha = K * softmax(score) so uniform init gives alpha_k == 1.
+        Returns retrieval_phase [B,T,H,K], routing_weights [B,T,H,K] where
+        c_k = routing_weights_k * e^{i retrieval_phase_k}.
+        With state_compete off, routing_weights_k == 1 (identity). With state_compete on,
+        routing_weights = K * softmax(score) so uniform init gives routing_weights_k == 1.
         """
-        B, T = x.shape[0], x.shape[1]
-        H, K = self.num_heads, self.n_states
-        rin = self._routing_input(x)
-        phi = self.phase_proj(rin).view(B, T, H, K)
+        batch_size, seq_len = x.shape[0], x.shape[1]
+        num_heads, num_memory_states = self.num_heads, self.n_states
+        routing_input = self._routing_input(x)
+        retrieval_phase = self.phase_proj(routing_input).view(
+            batch_size, seq_len, num_heads, num_memory_states
+        )
         if self.state_compete:
-            scores = self.score_proj(rin).view(B, T, H, K)
-            alpha = F.softmax(scores, dim=-1) * K
+            routing_scores = self.score_proj(routing_input).view(
+                batch_size, seq_len, num_heads, num_memory_states
+            )
+            # scale by K so uniform softmax init keeps routing_weights == 1
+            routing_weights = F.softmax(routing_scores, dim=-1) * num_memory_states
         else:
-            alpha = torch.ones(B, T, H, K, device=x.device, dtype=x.dtype)
-        return phi, alpha
+            routing_weights = torch.ones(
+                batch_size, seq_len, num_heads, num_memory_states,
+                device=x.device, dtype=x.dtype,
+            )
+        return retrieval_phase, routing_weights
 
-    def _route_balance_loss(self, alpha: torch.Tensor):
+    def _route_balance_loss(self, routing_weights: torch.Tensor):
         """MoE-style load balance: maximize entropy of batch-mean routing per head."""
-        lam = self.route_balance_lambda
-        if lam <= 0 or not self.state_compete or not self.training:
+        balance_lambda = self.route_balance_lambda
+        if balance_lambda <= 0 or not self.state_compete or not self.training:
             return None
-        p = alpha / self.n_states
-        p_bar = p.mean(dim=(0, 1))
-        ent = -(p_bar * (p_bar + 1e-8).log()).sum(dim=-1)
-        return -lam * ent.mean()
+        routing_prob = routing_weights / self.n_states
+        mean_routing_prob = routing_prob.mean(dim=(0, 1))
+        entropy = -(mean_routing_prob * (mean_routing_prob + 1e-8).log()).sum(dim=-1)
+        return -balance_lambda * entropy.mean()
 
     # ── Projections + position + decay/gate prep (shared) ─────────────────────
 
     def _project(self, x: torch.Tensor, step_offset: int):
-        B, T, _, _ = x.shape
-        H, d = self.num_heads, self.head_dim
+        batch_size, seq_len, _, _ = x.shape
+        num_heads, head_dim = self.num_heads, self.head_dim
         if self.fused_qkv:
-            qkv = self.qkv_proj(x).view(B, T, 3, H, d, 2)
-            q = qkv[:, :, 0].transpose(1, 2).contiguous()
-            k = qkv[:, :, 1].transpose(1, 2).contiguous()
-            v = qkv[:, :, 2].transpose(1, 2).contiguous()
+            qkv = self.qkv_proj(x).view(batch_size, seq_len, 3, num_heads, head_dim, 2)
+            # fused QKV -> [B,T,3,H,d,2]; move heads before time for PAM matmuls
+            # .contiguous() required after transpose so later views/matmuls are dense
+            queries = qkv[:, :, 0].transpose(1, 2).contiguous()
+            keys = qkv[:, :, 1].transpose(1, 2).contiguous()
+            values = qkv[:, :, 2].transpose(1, 2).contiguous()
         else:
-            q = self.q_proj(x).view(B, T, H, d, 2).transpose(1, 2).contiguous()
-            k = self.k_proj(x).view(B, T, H, d, 2).transpose(1, 2).contiguous()
-            v = self.v_proj(x).view(B, T, H, d, 2).transpose(1, 2).contiguous()
+            queries = self.q_proj(x).view(batch_size, seq_len, num_heads, head_dim, 2).transpose(1, 2).contiguous()
+            keys = self.k_proj(x).view(batch_size, seq_len, num_heads, head_dim, 2).transpose(1, 2).contiguous()
+            values = self.v_proj(x).view(batch_size, seq_len, num_heads, head_dim, 2).transpose(1, 2).contiguous()
 
         if self.use_rope:
-            end = step_offset + T
-            if end > self.rope_cache.shape[0]:
+            position_end = step_offset + seq_len
+            if position_end > self.rope_cache.shape[0]:
                 self.register_buffer(
                     'rope_cache',
-                    build_rope_cache(end * 2, d).to(x.device),
+                    build_rope_cache(position_end * 2, head_dim).to(x.device),
                     persistent=False,
                 )
-            pos = self.rope_cache[step_offset:end].to(dtype=x.dtype)
-            q = cmul(q, pos)
-            k = cmul(k, pos)
+            rope_positions = self.rope_cache[step_offset:position_end].to(dtype=x.dtype)
+            queries = cmul(queries, rope_positions)
+            keys = cmul(keys, rope_positions)
 
         if self.qk_norm:
-            q = cnormalize(q)
-            k = cnormalize(k)
-        return q, k, v
+            queries = cnormalize(queries)
+            keys = cnormalize(keys)
+        return queries, keys, values
 
-    def _gamma_and_vprime(self, x: torch.Tensor, v: torch.Tensor, state_offset: float = 0.0):
-        """Return decay `gamma` and protected value `v_prime`.
+    def _gamma_and_vprime(self, x: torch.Tensor, values: torch.Tensor, state_offset: float = 0.0):
+        """Return decay `decay_gamma` and protected value `protected_values`.
 
-        gamma shape: [B,H,T] (head decay) or [B,H,T,d] (per-channel decay).
+        decay_gamma shape: [B,H,T] (head decay) or [B,H,T,d] (per-channel decay).
         """
-        B, T = x.shape[0], x.shape[1]
-        H, d = self.num_heads, self.head_dim
+        batch_size, seq_len = x.shape[0], x.shape[1]
+        num_heads, head_dim = self.num_heads, self.head_dim
         x_flat = to_real_concat(x)
         if self.decay_mode == 'per_channel':
-            dt = self.dt_proj(x_flat).view(B, T, H, d)             # [B,T,H,d]
-            dt = F.softplus(dt + self.dt_bias + state_offset)      # bias [H,d]
-            dt = dt.permute(0, 2, 1, 3).contiguous()               # [B,H,T,d]
+            decay_logits = self.dt_proj(x_flat).view(batch_size, seq_len, num_heads, head_dim)  # [B,T,H,d]
+            softplus_dt = F.softplus(decay_logits + self.dt_bias + state_offset)                  # bias [H,d]
+            # permute to [B,H,T,d] so decay aligns with PAM time axis before head matmuls
+            softplus_dt = softplus_dt.permute(0, 2, 1, 3).contiguous()
         else:
-            dt = self.dt_proj(x_flat)                              # [B,T,H]
-            dt = F.softplus(dt + self.dt_bias + state_offset)
-            dt = dt.transpose(1, 2).contiguous()                  # [B,H,T]
+            decay_logits = self.dt_proj(x_flat)                              # [B,T,H]
+            softplus_dt = F.softplus(decay_logits + self.dt_bias + state_offset)
+            # transpose to [B,H,T] so decay aligns with PAM time axis
+            softplus_dt = softplus_dt.transpose(1, 2).contiguous()
 
         if self.use_gsp:
-            gate_in = to_real_concat(x) if self.gate_content_aware else cabs(x)
-            p = torch.sigmoid(self.protect_gate(gate_in)).transpose(1, 2)  # [B,H,T]
+            gate_input = to_real_concat(x) if self.gate_content_aware else cabs(x)
+            protect_prob = torch.sigmoid(self.protect_gate(gate_input)).transpose(1, 2)  # [B,H,T]
             if self.decay_mode == 'per_channel':
-                p_e = p.unsqueeze(-1)
-                gamma = torch.exp(-dt) * (1 - p_e) + p_e
+                protect_prob_expanded = protect_prob.unsqueeze(-1)
+                decay_gamma = torch.exp(-softplus_dt) * (1 - protect_prob_expanded) + protect_prob_expanded
             else:
-                gamma = torch.exp(-dt) * (1 - p) + p
-            v_prime = v * (1 - p).unsqueeze(-1).unsqueeze(-1)
+                decay_gamma = torch.exp(-softplus_dt) * (1 - protect_prob) + protect_prob
+            protected_values = values * (1 - protect_prob).unsqueeze(-1).unsqueeze(-1)
         else:
-            gamma = torch.exp(-dt)
-            v_prime = v
-        return gamma, v_prime
+            decay_gamma = torch.exp(-softplus_dt)
+            protected_values = values
+        return decay_gamma, protected_values
 
     # ── Baseline dual-form block (head scalar decay, additive write) ──────────
 
     @staticmethod
-    def _dual_form_block(q_s, k, v_prime, gamma, causal_mask):
-        B, H, T = gamma.shape
-        gamma_flat = gamma.reshape(B * H, T)
-        D = fused_decay_matrix(gamma_flat, T).reshape(B, H, T, T)
-        qr, qi = q_s[..., 0], q_s[..., 1]
-        kr, ki = k[..., 0], k[..., 1]
-        wr = qr @ kr.transpose(-1, -2) + qi @ ki.transpose(-1, -2)
-        wi = qi @ kr.transpose(-1, -2) - qr @ ki.transpose(-1, -2)
-        ar, ai = wr * D, wi * D
-        vpr, vpi = v_prime[..., 0], v_prime[..., 1]
-        yr = ar @ vpr - ai @ vpi
-        yi = ar @ vpi + ai @ vpr
-        y = torch.stack([yr, yi], dim=-1)
-        D_last = D[:, :, -1, :]
-        wv_r = vpr * D_last.unsqueeze(-1)
-        wv_i = vpi * D_last.unsqueeze(-1)
-        sr = wv_r.transpose(-1, -2) @ kr + wv_i.transpose(-1, -2) @ ki
-        si = wv_i.transpose(-1, -2) @ kr - wv_r.transpose(-1, -2) @ ki
-        S_block = torch.stack([sr, si], dim=-1)
-        return y, S_block
+    def _dual_form_block(scaled_queries, keys, protected_values, decay_gamma, causal_mask):
+        batch_size, num_heads, seq_len = decay_gamma.shape
+        decay_gamma_flat = decay_gamma.reshape(batch_size * num_heads, seq_len)
+        decay_matrix = fused_decay_matrix(decay_gamma_flat, seq_len).reshape(
+            batch_size, num_heads, seq_len, seq_len
+        )
+        query_real, query_imag = scaled_queries[..., 0], scaled_queries[..., 1]
+        key_real, key_imag = keys[..., 0], keys[..., 1]
+        score_real = query_real @ key_real.transpose(-1, -2) + query_imag @ key_imag.transpose(-1, -2)
+        score_imag = query_imag @ key_real.transpose(-1, -2) - query_real @ key_imag.transpose(-1, -2)
+        weighted_real, weighted_imag = score_real * decay_matrix, score_imag * decay_matrix
+        value_real, value_imag = protected_values[..., 0], protected_values[..., 1]
+        output_real = weighted_real @ value_real - weighted_imag @ value_imag
+        output_imag = weighted_real @ value_imag + weighted_imag @ value_real
+        output = torch.stack([output_real, output_imag], dim=-1)
+        decay_last_row = decay_matrix[:, :, -1, :]
+        write_value_real = value_real * decay_last_row.unsqueeze(-1)
+        write_value_imag = value_imag * decay_last_row.unsqueeze(-1)
+        state_real = write_value_real.transpose(-1, -2) @ key_real + write_value_imag.transpose(-1, -2) @ key_imag
+        state_imag = write_value_imag.transpose(-1, -2) @ key_real - write_value_real.transpose(-1, -2) @ key_imag
+        memory_state = torch.stack([state_real, state_imag], dim=-1)
+        return output, memory_state
 
-    def _forward_chunked_head(self, q, k, v_prime, gamma, d):
-        B, H, T = q.shape[:3]
-        C = self.chunk_size
-        scale = d ** -0.5
-        q_s = q * scale
-        S = q.new_zeros(B, H, d, d, 2)
+    def _forward_chunked_head(self, queries, keys, protected_values, decay_gamma, head_dim):
+        batch_size, num_heads, seq_len = queries.shape[:3]
+        chunk_size = self.chunk_size
+        query_scale = head_dim ** -0.5
+        scaled_queries = queries * query_scale
+        memory_state = queries.new_zeros(batch_size, num_heads, head_dim, head_dim, 2)
         outputs = []
-        for start in range(0, T, C):
-            end = min(start + C, T)
-            Tc = end - start
-            q_c, k_c = q_s[:, :, start:end], k[:, :, start:end]
-            v_c, g_c = v_prime[:, :, start:end], gamma[:, :, start:end]
-            causal = self._causal[:Tc, :Tc]
-            y_c, S_chunk = self._dual_form_block(q_c, k_c, v_c, g_c, causal)
-            log_g = torch.log(g_c + 1e-6)
-            cum_decay = torch.exp(torch.cumsum(log_g, dim=-1))
-            if start > 0:
-                Sr, Si = S[..., 0], S[..., 1]
-                qr_c, qi_c = q_c[..., 0], q_c[..., 1]
-                Sq_r = (Sr @ qr_c.transpose(-1, -2) - Si @ qi_c.transpose(-1, -2)).transpose(-1, -2)
-                Sq_i = (Sr @ qi_c.transpose(-1, -2) + Si @ qr_c.transpose(-1, -2)).transpose(-1, -2)
-                cd = cum_decay.unsqueeze(-1)
-                y_c = y_c + torch.stack([Sq_r * cd, Sq_i * cd], dim=-1)
-            outputs.append(y_c)
-            total_decay = cum_decay[:, :, -1]
-            S = S * total_decay[..., None, None, None] + S_chunk
-        return torch.cat(outputs, dim=2), S
+        for chunk_start in range(0, seq_len, chunk_size):
+            chunk_end = min(chunk_start + chunk_size, seq_len)
+            chunk_len = chunk_end - chunk_start
+            queries_chunk = scaled_queries[:, :, chunk_start:chunk_end]
+            keys_chunk = keys[:, :, chunk_start:chunk_end]
+            values_chunk = protected_values[:, :, chunk_start:chunk_end]
+            decay_gamma_chunk = decay_gamma[:, :, chunk_start:chunk_end]
+            causal = self._causal[:chunk_len, :chunk_len]
+            output_chunk, state_chunk = self._dual_form_block(
+                queries_chunk, keys_chunk, values_chunk, decay_gamma_chunk, causal
+            )
+            log_decay = torch.log(decay_gamma_chunk + 1e-6)
+            cumulative_decay = torch.exp(torch.cumsum(log_decay, dim=-1))
+            if chunk_start > 0:
+                state_real, state_imag = memory_state[..., 0], memory_state[..., 1]
+                query_real_chunk, query_imag_chunk = queries_chunk[..., 0], queries_chunk[..., 1]
+                carried_real = (
+                    state_real @ query_real_chunk.transpose(-1, -2)
+                    - state_imag @ query_imag_chunk.transpose(-1, -2)
+                ).transpose(-1, -2)
+                carried_imag = (
+                    state_real @ query_imag_chunk.transpose(-1, -2)
+                    + state_imag @ query_real_chunk.transpose(-1, -2)
+                ).transpose(-1, -2)
+                cumulative_decay_expanded = cumulative_decay.unsqueeze(-1)
+                output_chunk = output_chunk + torch.stack(
+                    [carried_real * cumulative_decay_expanded, carried_imag * cumulative_decay_expanded],
+                    dim=-1,
+                )
+            outputs.append(output_chunk)
+            total_decay = cumulative_decay[:, :, -1]
+            memory_state = memory_state * total_decay[..., None, None, None] + state_chunk
+        return torch.cat(outputs, dim=2), memory_state
 
     # ── E1: per-channel decay (GLA-style fold), chunked ───────────────────────
 
-    def _forward_chunked_perchannel(self, q, k, v_prime, gamma, d):
-        """gamma: [B,H,T,d] per key-channel. Stable chunk-local cumulative fold."""
-        B, H, T = q.shape[:3]
-        C = self.chunk_size
-        scale = d ** -0.5
-        S = q.new_zeros(B, H, d, d, 2)               # value(i) x key(j)
+    def _forward_chunked_perchannel(self, queries, keys, protected_values, decay_gamma, head_dim):
+        """decay_gamma: [B,H,T,d] per key-channel. Stable chunk-local cumulative fold."""
+        batch_size, num_heads, seq_len = queries.shape[:3]
+        chunk_size = self.chunk_size
+        query_scale = head_dim ** -0.5
+        memory_state = queries.new_zeros(batch_size, num_heads, head_dim, head_dim, 2)  # value(i) x key(j)
         outputs = []
-        for start in range(0, T, C):
-            end = min(start + C, T)
-            Tc = end - start
-            q_c = q[:, :, start:end]                  # [B,H,Tc,d,2]
-            k_c = k[:, :, start:end]
-            v_c = v_prime[:, :, start:end]
-            g_c = gamma[:, :, start:end]              # [B,H,Tc,d]
+        for chunk_start in range(0, seq_len, chunk_size):
+            chunk_end = min(chunk_start + chunk_size, seq_len)
+            chunk_len = chunk_end - chunk_start
+            queries_chunk = queries[:, :, chunk_start:chunk_end]                  # [B,H,Tc,d,2]
+            keys_chunk = keys[:, :, chunk_start:chunk_end]
+            values_chunk = protected_values[:, :, chunk_start:chunk_end]
+            decay_gamma_chunk = decay_gamma[:, :, chunk_start:chunk_end]        # [B,H,Tc,d]
 
-            log_g = torch.log(g_c.clamp_min(1e-6)).float()
-            P = torch.cumsum(log_g, dim=2)            # inclusive cumsum, [B,H,Tc,d]
-            P = P.clamp(min=-30.0)
-            alpha = torch.exp(P)                      # prod_{0..t} g  (<=1)
-            inv_alpha = torch.exp(-P)                 # 1/alpha        (>=1, bounded)
-            P_total = P[:, :, -1:, :]                 # [B,H,1,d]
-            decay_tail = torch.exp(P_total - P)       # alpha_total/alpha_s  (<=1)
-            alpha = alpha.to(q.dtype)
-            inv_alpha = inv_alpha.to(q.dtype)
-            decay_tail = decay_tail.to(q.dtype)
-            alpha_total = torch.exp(P_total).to(q.dtype)  # [B,H,1,d]
+            log_decay = torch.log(decay_gamma_chunk.clamp_min(1e-6)).float()
+            cumulative_log_decay = torch.cumsum(log_decay, dim=2)             # inclusive cumsum, [B,H,Tc,d]
+            cumulative_log_decay = cumulative_log_decay.clamp(min=-30.0)
+            alpha = torch.exp(cumulative_log_decay)                             # prod_{0..t} g  (<=1)
+            inv_alpha = torch.exp(-cumulative_log_decay)                        # 1/alpha        (>=1, bounded)
+            cumulative_log_total = cumulative_log_decay[:, :, -1:, :]           # [B,H,1,d]
+            decay_tail = torch.exp(cumulative_log_total - cumulative_log_decay)   # alpha_total/alpha_s  (<=1)
+            alpha = alpha.to(queries.dtype)
+            inv_alpha = inv_alpha.to(queries.dtype)
+            decay_tail = decay_tail.to(queries.dtype)
+            alpha_total = torch.exp(cumulative_log_total).to(queries.dtype)     # [B,H,1,d]
 
-            # Fold decay into q (q*alpha) and k (k/alpha) -> plain conjugate score.
-            qf = q_c * alpha.unsqueeze(-1) * scale
-            kf = k_c * inv_alpha.unsqueeze(-1)
-            qr, qi = qf[..., 0], qf[..., 1]
-            kr, ki = kf[..., 0], kf[..., 1]
-            wr = qr @ kr.transpose(-1, -2) + qi @ ki.transpose(-1, -2)
-            wi = qi @ kr.transpose(-1, -2) - qr @ ki.transpose(-1, -2)
-            causal = self._causal[:Tc, :Tc]
-            wr, wi = wr * causal, wi * causal
-            vpr, vpi = v_c[..., 0], v_c[..., 1]
-            yr = wr @ vpr - wi @ vpi
-            yi = wr @ vpi + wi @ vpr
-            y_c = torch.stack([yr, yi], dim=-1)
+            # Fold decay into queries (q*alpha) and keys (k/alpha) -> plain conjugate score.
+            folded_queries = queries_chunk * alpha.unsqueeze(-1) * query_scale
+            folded_keys = keys_chunk * inv_alpha.unsqueeze(-1)
+            query_real, query_imag = folded_queries[..., 0], folded_queries[..., 1]
+            key_real, key_imag = folded_keys[..., 0], folded_keys[..., 1]
+            score_real = query_real @ key_real.transpose(-1, -2) + query_imag @ key_imag.transpose(-1, -2)
+            score_imag = query_imag @ key_real.transpose(-1, -2) - query_real @ key_imag.transpose(-1, -2)
+            causal = self._causal[:chunk_len, :chunk_len]
+            score_real, score_imag = score_real * causal, score_imag * causal
+            value_real, value_imag = values_chunk[..., 0], values_chunk[..., 1]
+            output_real = score_real @ value_real - score_imag @ value_imag
+            output_imag = score_real @ value_imag + score_imag @ value_real
+            output_chunk = torch.stack([output_real, output_imag], dim=-1)
 
-            if start > 0:
-                # carried state read: y += (S @ (q*alpha))  per channel.
-                qg = q_c * alpha.unsqueeze(-1) * scale         # [B,H,Tc,d,2]
-                Sr, Si = S[..., 0], S[..., 1]                  # [B,H,d(i),d(j)]
-                qgr, qgi = qg[..., 0], qg[..., 1]              # [B,H,Tc,d(j)]
-                yr2 = (qgr @ Sr.transpose(-1, -2) - qgi @ Si.transpose(-1, -2))
-                yi2 = (qgr @ Si.transpose(-1, -2) + qgi @ Sr.transpose(-1, -2))
-                y_c = y_c + torch.stack([yr2, yi2], dim=-1)
+            if chunk_start > 0:
+                # carried state read: output += (memory_state @ (queries*alpha)) per channel.
+                queries_with_decay = queries_chunk * alpha.unsqueeze(-1) * query_scale  # [B,H,Tc,d,2]
+                state_real, state_imag = memory_state[..., 0], memory_state[..., 1]      # [B,H,d(i),d(j)]
+                query_real_decay, query_imag_decay = queries_with_decay[..., 0], queries_with_decay[..., 1]
+                carried_real = (
+                    query_real_decay @ state_real.transpose(-1, -2)
+                    - query_imag_decay @ state_imag.transpose(-1, -2)
+                )
+                carried_imag = (
+                    query_real_decay @ state_imag.transpose(-1, -2)
+                    + query_imag_decay @ state_real.transpose(-1, -2)
+                )
+                output_chunk = output_chunk + torch.stack([carried_real, carried_imag], dim=-1)
 
-            outputs.append(y_c)
+            outputs.append(output_chunk)
 
             # state update: S_new[i,j] = alpha_total[j]*S[i,j] + sum_s v_s[i] (k_s* decay_tail)[j]
-            kd = k_c * decay_tail.unsqueeze(-1)               # [B,H,Tc,d,2]
-            kdr, kdi = kd[..., 0], kd[..., 1]
-            # outer sum over s: S_chunk[i,j] = sum_s v_s[i] conj(kd_s)[j]
-            sr = vpr.transpose(-1, -2) @ kdr + vpi.transpose(-1, -2) @ kdi
-            si = vpi.transpose(-1, -2) @ kdr - vpr.transpose(-1, -2) @ kdi
-            S_chunk = torch.stack([sr, si], dim=-1)
-            at = alpha_total.squeeze(2)                       # [B,H,d(j)]
-            S = S * at.unsqueeze(2).unsqueeze(-1) + S_chunk
-        return torch.cat(outputs, dim=2), S
+            decayed_keys = keys_chunk * decay_tail.unsqueeze(-1)                    # [B,H,Tc,d,2]
+            decayed_key_real, decayed_key_imag = decayed_keys[..., 0], decayed_keys[..., 1]
+            state_real = value_real.transpose(-1, -2) @ decayed_key_real + value_imag.transpose(-1, -2) @ decayed_key_imag
+            state_imag = value_imag.transpose(-1, -2) @ decayed_key_real - value_real.transpose(-1, -2) @ decayed_key_imag
+            state_chunk = torch.stack([state_real, state_imag], dim=-1)
+            alpha_total_squeezed = alpha_total.squeeze(2)                           # [B,H,d(j)]
+            memory_state = memory_state * alpha_total_squeezed.unsqueeze(2).unsqueeze(-1) + state_chunk
+        return torch.cat(outputs, dim=2), memory_state
 
     # ── E2: delta-rule write (UT transform), chunked, head scalar decay ───────
 
-    def _forward_delta(self, q, k, v_prime, gamma, beta, d):
-        """Gated delta rule via per-chunk UT transform. gamma: [B,H,T] head scalar."""
-        B, H, T = q.shape[:3]
-        C = self.delta_chunk
-        scale = d ** -0.5
-        S = q.new_zeros(B, H, d, d, 2)               # value(i) x key(j)
+    def _forward_delta(self, queries, keys, protected_values, decay_gamma, write_beta, head_dim):
+        """Gated delta rule via per-chunk UT transform. decay_gamma: [B,H,T] head scalar."""
+        batch_size, num_heads, seq_len = queries.shape[:3]
+        chunk_size = self.delta_chunk
+        query_scale = head_dim ** -0.5
+        memory_state = queries.new_zeros(batch_size, num_heads, head_dim, head_dim, 2)
         outputs = []
-        eye = torch.eye(C, device=q.device, dtype=torch.float32)
-        for start in range(0, T, C):
-            end = min(start + C, T)
-            Tc = end - start
-            q_c = q[:, :, start:end]
-            k_c = k[:, :, start:end]
-            v_c = v_prime[:, :, start:end]
-            g_c = gamma[:, :, start:end]              # [B,H,Tc]
-            b_c = beta[:, :, start:end]               # [B,H,Tc]
+        identity = torch.eye(chunk_size, device=queries.device, dtype=torch.float32)
+        for chunk_start in range(0, seq_len, chunk_size):
+            chunk_end = min(chunk_start + chunk_size, seq_len)
+            chunk_len = chunk_end - chunk_start
+            queries_chunk = queries[:, :, chunk_start:chunk_end]
+            keys_chunk = keys[:, :, chunk_start:chunk_end]
+            values_chunk = protected_values[:, :, chunk_start:chunk_end]
+            decay_gamma_chunk = decay_gamma[:, :, chunk_start:chunk_end]   # [B,H,Tc]
+            write_beta_chunk = write_beta[:, :, chunk_start:chunk_end]     # [B,H,Tc]
 
-            gamma_flat = g_c.reshape(B * H, Tc)
-            D = fused_decay_matrix(gamma_flat, Tc).reshape(B, H, Tc, Tc)  # D[t,s]=prod_{s+1..t} g
-            log_g = torch.log(g_c + 1e-6)
-            cum = torch.exp(torch.cumsum(log_g, dim=-1))                  # alpha_t = prod_{0..t} g
+            decay_gamma_flat = decay_gamma_chunk.reshape(batch_size * num_heads, chunk_len)
+            decay_matrix = fused_decay_matrix(decay_gamma_flat, chunk_len).reshape(
+                batch_size, num_heads, chunk_len, chunk_len
+            )  # decay_matrix[t,s]=prod_{s+1..t} g
+            log_decay = torch.log(decay_gamma_chunk + 1e-6)
+            cumulative_alpha = torch.exp(torch.cumsum(log_decay, dim=-1))  # alpha_t = prod_{0..t} g
 
-            kr, ki = k_c[..., 0], k_c[..., 1]
-            qr, qi = q_c[..., 0], q_c[..., 1]
-            # K K^dagger : kk[t,s] = <k_t, k_s> = sum k_t conj(k_s)
-            kkr = kr @ kr.transpose(-1, -2) + ki @ ki.transpose(-1, -2)
-            kki = ki @ kr.transpose(-1, -2) - kr @ ki.transpose(-1, -2)
-            strict = torch.tril(torch.ones(Tc, Tc, device=q.device), -1)
-            # M[t,s] = beta_t * D[t,s] * <k_t,k_s>, strictly lower
-            Dm = D * strict
-            Mr = (b_c.unsqueeze(-1) * Dm * kkr)
-            Mi = (b_c.unsqueeze(-1) * Dm * kki)
-            # Solve (I + M) U = W  for U (complex), via block-real linear solve.
-            Wr_state = q_c.new_zeros(B, H, Tc, d)    # placeholder, filled below
+            key_real, key_imag = keys_chunk[..., 0], keys_chunk[..., 1]
+            query_real, query_imag = queries_chunk[..., 0], queries_chunk[..., 1]
+            key_gram_real = key_real @ key_real.transpose(-1, -2) + key_imag @ key_imag.transpose(-1, -2)
+            key_gram_imag = key_imag @ key_real.transpose(-1, -2) - key_real @ key_imag.transpose(-1, -2)
+            strict_lower = torch.tril(torch.ones(chunk_len, chunk_len, device=queries.device), -1)
+            decay_masked = decay_matrix * strict_lower
+            mass_real = write_beta_chunk.unsqueeze(-1) * decay_masked * key_gram_real
+            mass_imag = write_beta_chunk.unsqueeze(-1) * decay_masked * key_gram_imag
 
-            # w_t = beta_t (v_t - (decayed S_prev) k_t)
-            #   decayed S_prev contribution at t: (S @ k_t) * alpha_t
-            vpr, vpi = v_c[..., 0], v_c[..., 1]
-            if start > 0:
-                Sr, Si = S[..., 0], S[..., 1]
-                # (S k_t)[i] = sum_j S[i,j] conj?  retrieval uses S * q; for write we need S k.
-                # S stores V (x) K*, so S k_t = sum_j S[i,j] k_t[j] (no conj; conj already in stored K*).
-                Skr = (kr @ Sr.transpose(-1, -2) - ki @ Si.transpose(-1, -2))  # [B,H,Tc,d]
-                Ski = (kr @ Si.transpose(-1, -2) + ki @ Sr.transpose(-1, -2))
-                Skr = Skr * cum.unsqueeze(-1)
-                Ski = Ski * cum.unsqueeze(-1)
-                wr = b_c.unsqueeze(-1) * (vpr - Skr)
-                wi = b_c.unsqueeze(-1) * (vpi - Ski)
+            value_real, value_imag = values_chunk[..., 0], values_chunk[..., 1]
+            if chunk_start > 0:
+                state_real, state_imag = memory_state[..., 0], memory_state[..., 1]
+                state_key_real = (
+                    key_real @ state_real.transpose(-1, -2) - key_imag @ state_imag.transpose(-1, -2)
+                )
+                state_key_imag = (
+                    key_real @ state_imag.transpose(-1, -2) + key_imag @ state_real.transpose(-1, -2)
+                )
+                state_key_real = state_key_real * cumulative_alpha.unsqueeze(-1)
+                state_key_imag = state_key_imag * cumulative_alpha.unsqueeze(-1)
+                write_real = write_beta_chunk.unsqueeze(-1) * (value_real - state_key_real)
+                write_imag = write_beta_chunk.unsqueeze(-1) * (value_imag - state_key_imag)
             else:
-                wr = b_c.unsqueeze(-1) * vpr
-                wi = b_c.unsqueeze(-1) * vpi
+                write_real = write_beta_chunk.unsqueeze(-1) * value_real
+                write_imag = write_beta_chunk.unsqueeze(-1) * value_imag
 
-            U_r, U_i = _complex_triangular_solve(Mr, Mi, wr, wi, eye[:Tc, :Tc])
+            update_real, update_imag = _complex_triangular_solve(
+                mass_real, mass_imag, write_real, write_imag, identity[:chunk_len, :chunk_len]
+            )
 
-            # outputs: y_t = (S_prev decayed) q_t + sum_{s<=t} D[t,s] <k_s,q_t> u_s
-            #   <k_s, q_t> = sum k_s conj? score uses q * conj(k): P[t,s]=<q_t,k_s*>? match retrieval
-            # retrieval baseline: y = (q . k*) weighted. Use qk[t,s] = q_t . conj(k_s)
-            qkr = qr @ kr.transpose(-1, -2) + qi @ ki.transpose(-1, -2)
-            qki = qi @ kr.transpose(-1, -2) - qr @ ki.transpose(-1, -2)
-            tril_inc = self._causal[:Tc, :Tc]
-            Pr = (D * tril_inc) * qkr
-            Pi = (D * tril_inc) * qki
-            yr = (Pr @ U_r - Pi @ U_i) * scale
-            yi = (Pr @ U_i + Pi @ U_r) * scale
-            y_c = torch.stack([yr, yi], dim=-1)
-            if start > 0:
-                Sr, Si = S[..., 0], S[..., 1]
-                qg_r = qr * scale * cum.unsqueeze(-1)
-                qg_i = qi * scale * cum.unsqueeze(-1)
-                yr2 = (qg_r @ Sr.transpose(-1, -2) - qg_i @ Si.transpose(-1, -2))
-                yi2 = (qg_r @ Si.transpose(-1, -2) + qg_i @ Sr.transpose(-1, -2))
-                y_c = y_c + torch.stack([yr2, yi2], dim=-1)
-            outputs.append(y_c)
+            query_key_real = query_real @ key_real.transpose(-1, -2) + query_imag @ key_imag.transpose(-1, -2)
+            query_key_imag = query_imag @ key_real.transpose(-1, -2) - query_real @ key_imag.transpose(-1, -2)
+            causal_inclusive = self._causal[:chunk_len, :chunk_len]
+            projection_real = (decay_matrix * causal_inclusive) * query_key_real
+            projection_imag = (decay_matrix * causal_inclusive) * query_key_imag
+            output_real = (projection_real @ update_real - projection_imag @ update_imag) * query_scale
+            output_imag = (projection_real @ update_imag + projection_imag @ update_real) * query_scale
+            output_chunk = torch.stack([output_real, output_imag], dim=-1)
+            if chunk_start > 0:
+                state_real, state_imag = memory_state[..., 0], memory_state[..., 1]
+                scaled_query_real = query_real * query_scale * cumulative_alpha.unsqueeze(-1)
+                scaled_query_imag = query_imag * query_scale * cumulative_alpha.unsqueeze(-1)
+                carried_real = (
+                    scaled_query_real @ state_real.transpose(-1, -2)
+                    - scaled_query_imag @ state_imag.transpose(-1, -2)
+                )
+                carried_imag = (
+                    scaled_query_real @ state_imag.transpose(-1, -2)
+                    + scaled_query_imag @ state_real.transpose(-1, -2)
+                )
+                output_chunk = output_chunk + torch.stack([carried_real, carried_imag], dim=-1)
+            outputs.append(output_chunk)
 
-            # state update: S_new = alpha_T * S_prev + sum_s (alpha_T/alpha_s) u_s k_s*
-            cum_total = cum[:, :, -1:]                       # [B,H,1]
-            tail = cum_total / (cum + 1e-12)                # alpha_T/alpha_s
-            ud_r = U_r * tail.unsqueeze(-1)
-            ud_i = U_i * tail.unsqueeze(-1)
-            sr = ud_r.transpose(-1, -2) @ kr + ud_i.transpose(-1, -2) @ ki
-            si = ud_i.transpose(-1, -2) @ kr - ud_r.transpose(-1, -2) @ ki
-            S_chunk = torch.stack([sr, si], dim=-1)
-            S = S * cum_total.unsqueeze(-1).unsqueeze(-1) + S_chunk
-        return torch.cat(outputs, dim=2), S
+            cumulative_total = cumulative_alpha[:, :, -1:]                       # [B,H,1]
+            decay_tail = cumulative_total / (cumulative_alpha + 1e-12)           # alpha_T/alpha_s
+            update_decayed_real = update_real * decay_tail.unsqueeze(-1)
+            update_decayed_imag = update_imag * decay_tail.unsqueeze(-1)
+            state_real = update_decayed_real.transpose(-1, -2) @ key_real + update_decayed_imag.transpose(-1, -2) @ key_imag
+            state_imag = update_decayed_imag.transpose(-1, -2) @ key_real - update_decayed_real.transpose(-1, -2) @ key_imag
+            state_chunk = torch.stack([state_real, state_imag], dim=-1)
+            memory_state = memory_state * cumulative_total.unsqueeze(-1).unsqueeze(-1) + state_chunk
+        return torch.cat(outputs, dim=2), memory_state
 
     # ── E3: multi-state superposition (loop over states, phase-combine) ───────
 
-    def _forward_multistate(self, x, q, k, v_prime, d):
-        B, T = x.shape[0], x.shape[1]
-        H, K = self.num_heads, self.n_states
-        scale = d ** -0.5
-        phi, alpha = self._phase_and_alpha(x)
-        phi = phi.permute(0, 2, 3, 1)    # [B,H,K,T]
-        alpha = alpha.permute(0, 2, 3, 1)
-        self._route_aux = self._route_balance_loss(alpha.permute(0, 3, 1, 2))
-        y_sum = None
-        S_list = []
-        for kdx in range(K):
-            gamma_k, vp_k = self._gamma_and_vprime(
-                x, v_prime, state_offset=self.state_dt_offset[kdx]
+    def _forward_multistate(self, x, queries, keys, protected_values, head_dim):
+        batch_size, seq_len = x.shape[0], x.shape[1]
+        num_heads, num_memory_states = self.num_heads, self.n_states
+        query_scale = head_dim ** -0.5
+        retrieval_phase, routing_weights = self._phase_and_alpha(x)
+        retrieval_phase = retrieval_phase.permute(0, 2, 3, 1)    # [B,H,K,T]
+        routing_weights = routing_weights.permute(0, 2, 3, 1)
+        self._route_aux = self._route_balance_loss(routing_weights.permute(0, 3, 1, 2))
+        output_sum = None
+        state_list = []
+        for state_idx in range(num_memory_states):
+            decay_gamma_state, protected_values_state = self._gamma_and_vprime(
+                x, protected_values, state_offset=self.state_dt_offset[state_idx]
             )
             if self.decay_mode == 'per_channel':
-                # E1+E3 combo: per-key-channel decay inside each superposed state.
-                y_k, S_k = self._forward_chunked_perchannel(q, k, vp_k, gamma_k, d)
-            elif self.chunk_size > 0 and T > self.chunk_size:
-                y_k, S_k = self._forward_chunked_head(q, k, vp_k, gamma_k, d)
+                output_state, memory_state = self._forward_chunked_perchannel(
+                    queries, keys, protected_values_state, decay_gamma_state, head_dim
+                )
+            elif self.chunk_size > 0 and seq_len > self.chunk_size:
+                output_state, memory_state = self._forward_chunked_head(
+                    queries, keys, protected_values_state, decay_gamma_state, head_dim
+                )
             else:
-                q_s = q * scale
-                y_k, S_k = self._dual_form_block(q_s, k, vp_k, gamma_k, self._causal[:T, :T])
-            cr = alpha[:, :, kdx] * torch.cos(phi[:, :, kdx])
-            si = alpha[:, :, kdx] * torch.sin(phi[:, :, kdx])
-            rot = torch.stack([cr, si], dim=-1)              # [B,H,T,2]
-            y_k = cmul(y_k, rot.unsqueeze(-2))                # rotate+scale complex output
-            y_sum = y_k if y_sum is None else y_sum + y_k
-            S_list.append(S_k)
-        return y_sum, torch.stack(S_list, dim=0)             # [K,B,H,d,d,2]
+                scaled_queries = queries * query_scale
+                output_state, memory_state = self._dual_form_block(
+                    scaled_queries, keys, protected_values_state, decay_gamma_state,
+                    self._causal[:seq_len, :seq_len],
+                )
+            rotation_real = routing_weights[:, :, state_idx] * torch.cos(retrieval_phase[:, :, state_idx])
+            rotation_imag = routing_weights[:, :, state_idx] * torch.sin(retrieval_phase[:, :, state_idx])
+            rotation = torch.stack([rotation_real, rotation_imag], dim=-1)  # [B,H,T,2]
+            output_state = cmul(output_state, rotation.unsqueeze(-2))         # rotate+scale complex output
+            output_sum = output_state if output_sum is None else output_sum + output_state
+            state_list.append(memory_state)
+        return output_sum, torch.stack(state_list, dim=0)                     # [K,B,H,d,d,2]
 
     # ── E3 fused: state-independent work hoisted, K states collapsed ──────────
     #
@@ -537,133 +578,146 @@ class V11PAMLayer(nn.Module):
     # The carried-state read and the per-chunk state write stay per-state but are
     # the cheap O(C d^2) ops; they are folded into K-batched matmuls.
 
-    def _gamma_all_and_vprime(self, x, v):
+    def _gamma_all_and_vprime(self, x, values):
         """Head-scalar decay for all K states at once (single dt_proj/gate matmul).
 
-        Returns gamma_all [K,B,H,T] and shared v_prime [B,H,T,d,2].
+        Returns decay_gamma_all [K,B,H,T] and shared protected_values [B,H,T,d,2].
         """
-        B, T = x.shape[0], x.shape[1]
-        H, K = self.num_heads, self.n_states
+        batch_size, seq_len = x.shape[0], x.shape[1]
+        num_heads, num_memory_states = self.num_heads, self.n_states
         x_flat = to_real_concat(x)
-        dt_raw = self.dt_proj(x_flat)                              # [B,T,H]
-        offs = self.state_dt_offset.view(K, 1, 1, 1)               # [K,1,1,1]
-        dt = F.softplus(dt_raw + self.dt_bias + offs)              # [K,B,T,H]
-        dt = dt.permute(0, 1, 3, 2).contiguous()                  # [K,B,H,T]
+        decay_logits = self.dt_proj(x_flat)                              # [B,T,H]
+        state_offsets = self.state_dt_offset.view(num_memory_states, 1, 1, 1)  # [K,1,1,1]
+        softplus_dt = F.softplus(decay_logits + self.dt_bias + state_offsets)  # [K,B,T,H]
+        # permute to [K,B,H,T] so decay aligns with PAM time axis
+        softplus_dt = softplus_dt.permute(0, 1, 3, 2).contiguous()
         if self.use_gsp:
-            gate_in = to_real_concat(x) if self.gate_content_aware else cabs(x)
-            p = torch.sigmoid(self.protect_gate(gate_in)).transpose(1, 2)  # [B,H,T]
-            gamma = torch.exp(-dt) * (1 - p) + p                   # [K,B,H,T]
-            v_prime = v * (1 - p).unsqueeze(-1).unsqueeze(-1)
+            gate_input = to_real_concat(x) if self.gate_content_aware else cabs(x)
+            protect_prob = torch.sigmoid(self.protect_gate(gate_input)).transpose(1, 2)  # [B,H,T]
+            decay_gamma_all = torch.exp(-softplus_dt) * (1 - protect_prob) + protect_prob  # [K,B,H,T]
+            protected_values = values * (1 - protect_prob).unsqueeze(-1).unsqueeze(-1)
         else:
-            gamma = torch.exp(-dt)
-            v_prime = v
-        return gamma, v_prime
+            decay_gamma_all = torch.exp(-softplus_dt)
+            protected_values = values
+        return decay_gamma_all, protected_values
 
-    def _fused_chunk_step(self, q_c, k_c, vp_c, g_c, phi_c, alpha_c, S, first):
-        """One fused E3 chunk. Returns (y_c, S_new). All heavy C x C tensors (W, D,
-        A) are LOCAL to this fn, so wrapping it in checkpoint recomputes them in
-        backward instead of storing them (exact; trades FLOPs for activation VRAM).
-        `first` is a python bool: True on the very first chunk (no carried state).
-        """
-        K = g_c.shape[0]
-        Tc = g_c.shape[-1]
-        # score W = q_c . conj(k_c)  (computed once, shared across states)
-        qr, qi = q_c[..., 0], q_c[..., 1]
-        kr, ki = k_c[..., 0], k_c[..., 1]
-        wr = qr @ kr.transpose(-1, -2) + qi @ ki.transpose(-1, -2)   # [B,H,Tc,Tc]
-        wi = qi @ kr.transpose(-1, -2) - qr @ ki.transpose(-1, -2)
+    def _fused_chunk_step(
+        self, queries_chunk, keys_chunk, protected_values_chunk,
+        decay_gamma_chunk, retrieval_phase_chunk, routing_weights_chunk,
+        memory_state, is_first_chunk,
+    ):
+        """One fused E3 chunk. Returns (output_chunk, memory_state_new)."""
+        num_memory_states = decay_gamma_chunk.shape[0]
+        chunk_len = decay_gamma_chunk.shape[-1]
+        query_real, query_imag = queries_chunk[..., 0], queries_chunk[..., 1]
+        key_real, key_imag = keys_chunk[..., 0], keys_chunk[..., 1]
+        score_real = query_real @ key_real.transpose(-1, -2) + query_imag @ key_imag.transpose(-1, -2)
+        score_imag = query_imag @ key_real.transpose(-1, -2) - query_real @ key_imag.transpose(-1, -2)
 
-        # per-state real decay matrices, collapsed into one complex Dtilde
-        KBH = K * g_c.shape[1] * g_c.shape[2]
-        D = fused_decay_matrix(g_c.reshape(KBH, Tc), Tc).reshape(g_c.shape + (Tc,))
-        cos_phi = torch.cos(phi_c)
-        sin_phi = torch.sin(phi_c)
-        Dr = ((alpha_c * cos_phi).unsqueeze(-1) * D).sum(dim=0)      # [B,H,Tc,Tc]
-        Di = ((alpha_c * sin_phi).unsqueeze(-1) * D).sum(dim=0)
+        batch_heads_states = num_memory_states * decay_gamma_chunk.shape[1] * decay_gamma_chunk.shape[2]
+        decay_matrix = fused_decay_matrix(
+            decay_gamma_chunk.reshape(batch_heads_states, chunk_len), chunk_len
+        ).reshape(decay_gamma_chunk.shape + (chunk_len,))
+        cos_phase = torch.cos(retrieval_phase_chunk)
+        sin_phase = torch.sin(retrieval_phase_chunk)
+        decay_real = ((routing_weights_chunk * cos_phase).unsqueeze(-1) * decay_matrix).sum(dim=0)
+        decay_imag = ((routing_weights_chunk * sin_phase).unsqueeze(-1) * decay_matrix).sum(dim=0)
 
-        # A = W (complex) (.) Dtilde (complex)
-        ar = wr * Dr - wi * Di
-        ai = wr * Di + wi * Dr
-        vpr, vpi = vp_c[..., 0], vp_c[..., 1]
-        yr = ar @ vpr - ai @ vpi
-        yi = ar @ vpi + ai @ vpr
-        y_c = torch.stack([yr, yi], dim=-1)                  # [B,H,Tc,d,2]
+        weighted_real = score_real * decay_real - score_imag * decay_imag
+        weighted_imag = score_real * decay_imag + score_imag * decay_real
+        value_real, value_imag = protected_values_chunk[..., 0], protected_values_chunk[..., 1]
+        output_real = weighted_real @ value_real - weighted_imag @ value_imag
+        output_imag = weighted_real @ value_imag + weighted_imag @ value_real
+        output_chunk = torch.stack([output_real, output_imag], dim=-1)
 
-        log_g = torch.log(g_c + 1e-6)
-        cum_decay = torch.exp(torch.cumsum(log_g, dim=-1))   # [K,B,H,Tc]
+        log_decay = torch.log(decay_gamma_chunk + 1e-6)
+        cumulative_decay = torch.exp(torch.cumsum(log_decay, dim=-1))   # [K,B,H,Tc]
 
-        if not first:
-            Sr, Si = S[..., 0], S[..., 1]                    # [K,B,H,d,d]
-            qr_k, qi_k = qr.unsqueeze(0), qi.unsqueeze(0)    # [1,B,H,Tc,d]
-            Sq_r = (Sr @ qr_k.transpose(-1, -2) - Si @ qi_k.transpose(-1, -2)).transpose(-1, -2)
-            Sq_i = (Sr @ qi_k.transpose(-1, -2) + Si @ qr_k.transpose(-1, -2)).transpose(-1, -2)
-            cw_r = alpha_c * cos_phi * cum_decay
-            cw_i = alpha_c * sin_phi * cum_decay
-            rd_r = (Sq_r * cw_r.unsqueeze(-1) - Sq_i * cw_i.unsqueeze(-1)).sum(dim=0)
-            rd_i = (Sq_r * cw_i.unsqueeze(-1) + Sq_i * cw_r.unsqueeze(-1)).sum(dim=0)
-            y_c = y_c + torch.stack([rd_r, rd_i], dim=-1)
+        if not is_first_chunk:
+            state_real, state_imag = memory_state[..., 0], memory_state[..., 1]
+            query_real_states = query_real.unsqueeze(0)
+            query_imag_states = query_imag.unsqueeze(0)
+            carried_real = (
+                state_real @ query_real_states.transpose(-1, -2)
+                - state_imag @ query_imag_states.transpose(-1, -2)
+            ).transpose(-1, -2)
+            carried_imag = (
+                state_real @ query_imag_states.transpose(-1, -2)
+                + state_imag @ query_real_states.transpose(-1, -2)
+            ).transpose(-1, -2)
+            combined_real = routing_weights_chunk * cos_phase * cumulative_decay
+            combined_imag = routing_weights_chunk * sin_phase * cumulative_decay
+            routed_real = (carried_real * combined_real.unsqueeze(-1) - carried_imag * combined_imag.unsqueeze(-1)).sum(dim=0)
+            routed_imag = (carried_real * combined_imag.unsqueeze(-1) + carried_imag * combined_real.unsqueeze(-1)).sum(dim=0)
+            output_chunk = output_chunk + torch.stack([routed_real, routed_imag], dim=-1)
 
-        # per-state chunk write: S_k <- S_k * total_decay_k + V' (x) (K decay_tail_k)*
-        D_last = D[:, :, :, -1, :]                           # [K,B,H,Tc]
-        vpr_k, vpi_k = vpr.unsqueeze(0), vpi.unsqueeze(0)     # [1,B,H,Tc,d]
-        wv_r = vpr_k * D_last.unsqueeze(-1)
-        wv_i = vpi_k * D_last.unsqueeze(-1)
-        kr_k, ki_k = kr.unsqueeze(0), ki.unsqueeze(0)
-        sr = wv_r.transpose(-1, -2) @ kr_k + wv_i.transpose(-1, -2) @ ki_k
-        si = wv_i.transpose(-1, -2) @ kr_k - wv_r.transpose(-1, -2) @ ki_k
-        S_chunk = torch.stack([sr, si], dim=-1)              # [K,B,H,d,d,2]
-        total_decay = cum_decay[:, :, :, -1]                 # [K,B,H]
-        S_new = S * total_decay[..., None, None, None] + S_chunk
-        return y_c, S_new
+        decay_last = decay_matrix[:, :, :, -1, :]
+        value_real_states = value_real.unsqueeze(0)
+        value_imag_states = value_imag.unsqueeze(0)
+        write_value_real = value_real_states * decay_last.unsqueeze(-1)
+        write_value_imag = value_imag_states * decay_last.unsqueeze(-1)
+        key_real_states = key_real.unsqueeze(0)
+        key_imag_states = key_imag.unsqueeze(0)
+        state_real = write_value_real.transpose(-1, -2) @ key_real_states + write_value_imag.transpose(-1, -2) @ key_imag_states
+        state_imag = write_value_imag.transpose(-1, -2) @ key_real_states - write_value_real.transpose(-1, -2) @ key_imag_states
+        state_chunk = torch.stack([state_real, state_imag], dim=-1)
+        total_decay = cumulative_decay[:, :, :, -1]
+        memory_state_new = memory_state * total_decay[..., None, None, None] + state_chunk
+        return output_chunk, memory_state_new
 
-    def _forward_multistate_fused(self, x, q, k, v, d):
-        B, T = x.shape[0], x.shape[1]
-        H, K = self.num_heads, self.n_states
-        C = self.chunk_size if self.chunk_size > 0 else T
-        scale = d ** -0.5
-        phi, alpha = self._phase_and_alpha(x)
-        phi = phi.permute(3, 0, 2, 1)                        # [K,B,H,T]
-        alpha = alpha.permute(3, 0, 2, 1)
+    def _forward_multistate_fused(self, x, queries, keys, values, head_dim):
+        batch_size, seq_len = x.shape[0], x.shape[1]
+        num_heads, num_memory_states = self.num_heads, self.n_states
+        chunk_size = self.chunk_size if self.chunk_size > 0 else seq_len
+        query_scale = head_dim ** -0.5
+        retrieval_phase, routing_weights = self._phase_and_alpha(x)
+        retrieval_phase = retrieval_phase.permute(3, 0, 2, 1)                        # [K,B,H,T]
+        routing_weights = routing_weights.permute(3, 0, 2, 1)
         self._route_aux = self._route_balance_loss(
-            alpha.permute(1, 3, 2, 0)
+            routing_weights.permute(1, 3, 2, 0)
         )
-        gamma_all, v_prime = self._gamma_all_and_vprime(x, v)                # [K,B,H,T], [B,H,T,d,2]
-        q_s = q * scale
+        decay_gamma_all, protected_values = self._gamma_all_and_vprime(x, values)
+        scaled_queries = queries * query_scale
         recompute = getattr(self, 'recompute_pam_chunks', False) and self.training
 
-        S = q.new_zeros(K, B, H, d, d, 2)
+        memory_state = queries.new_zeros(num_memory_states, batch_size, num_heads, head_dim, head_dim, 2)
         outputs = []
-        for start in range(0, T, C):
-            end = min(start + C, T)
-            q_c = q_s[:, :, start:end]                       # [B,H,Tc,d,2]
-            k_c = k[:, :, start:end]
-            vp_c = v_prime[:, :, start:end]                  # [B,H,Tc,d,2]
-            g_c = gamma_all[:, :, :, start:end]              # [K,B,H,Tc]
-            phi_c = phi[:, :, :, start:end]                  # [K,B,H,Tc]
-            alpha_c = alpha[:, :, :, start:end]
-            first = start == 0
+        for chunk_start in range(0, seq_len, chunk_size):
+            chunk_end = min(chunk_start + chunk_size, seq_len)
+            queries_chunk = scaled_queries[:, :, chunk_start:chunk_end]
+            keys_chunk = keys[:, :, chunk_start:chunk_end]
+            protected_values_chunk = protected_values[:, :, chunk_start:chunk_end]
+            decay_gamma_chunk = decay_gamma_all[:, :, :, chunk_start:chunk_end]
+            retrieval_phase_chunk = retrieval_phase[:, :, :, chunk_start:chunk_end]
+            routing_weights_chunk = routing_weights[:, :, :, chunk_start:chunk_end]
+            is_first_chunk = chunk_start == 0
             if recompute:
-                y_c, S = grad_checkpoint(
-                    self._fused_chunk_step, q_c, k_c, vp_c, g_c, phi_c, alpha_c, S, first,
+                output_chunk, memory_state = grad_checkpoint(
+                    self._fused_chunk_step,
+                    queries_chunk, keys_chunk, protected_values_chunk,
+                    decay_gamma_chunk, retrieval_phase_chunk, routing_weights_chunk,
+                    memory_state, is_first_chunk,
                     use_reentrant=False,
                 )
             else:
-                y_c, S = self._fused_chunk_step(
-                    q_c, k_c, vp_c, g_c, phi_c, alpha_c, S, first,
+                output_chunk, memory_state = self._fused_chunk_step(
+                    queries_chunk, keys_chunk, protected_values_chunk,
+                    decay_gamma_chunk, retrieval_phase_chunk, routing_weights_chunk,
+                    memory_state, is_first_chunk,
                 )
-            outputs.append(y_c)
+            outputs.append(output_chunk)
 
-        return torch.cat(outputs, dim=2), S
+        return torch.cat(outputs, dim=2), memory_state
 
     # ── Main forward ──────────────────────────────────────────────────────────
 
     def forward(self, x, state=None, step_offset: int = 0):
-        B, T, _, _ = x.shape
-        H, d = self.num_heads, self.head_dim
-        q, k, v = self._project(x, step_offset)
+        batch_size, seq_len, _, _ = x.shape
+        num_heads, head_dim = self.num_heads, self.head_dim
+        queries, keys, values = self._project(x, step_offset)
 
-        # Training (parallel form): state is None and T>1.
-        if state is None and T > 1:
+        # Training (parallel form): state is None and seq_len>1.
+        if state is None and seq_len > 1:
             if self.n_states > 1:
                 use_fused = (
                     getattr(self, 'fused_e3', True)
@@ -671,153 +725,202 @@ class V11PAMLayer(nn.Module):
                     and self.write_mode == 'additive'
                 )
                 if use_fused:
-                    y, new_state = self._forward_multistate_fused(x, q, k, v, d)
+                    output, new_state = self._forward_multistate_fused(x, queries, keys, values, head_dim)
                 else:
-                    y, new_state = self._forward_multistate(x, q, k, v, d)
+                    output, new_state = self._forward_multistate(x, queries, keys, values, head_dim)
             elif self.write_mode == 'delta':
-                gamma, v_prime = self._gamma_and_vprime(x, v)
-                beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)  # [B,H,T]
-                y, new_state = self._forward_delta(q, k, v_prime, gamma, beta, d)
+                decay_gamma, protected_values = self._gamma_and_vprime(x, values)
+                write_beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)  # [B,H,T]
+                output, new_state = self._forward_delta(
+                    queries, keys, protected_values, decay_gamma, write_beta, head_dim
+                )
             elif self.decay_mode == 'per_channel':
-                gamma, v_prime = self._gamma_and_vprime(x, v)
-                y, new_state = self._forward_chunked_perchannel(q, k, v_prime, gamma, d)
+                decay_gamma, protected_values = self._gamma_and_vprime(x, values)
+                output, new_state = self._forward_chunked_perchannel(
+                    queries, keys, protected_values, decay_gamma, head_dim
+                )
             else:
-                gamma, v_prime = self._gamma_and_vprime(x, v)
-                if self.chunk_size > 0 and T > self.chunk_size:
-                    y, new_state = self._forward_chunked_head(q, k, v_prime, gamma, d)
+                decay_gamma, protected_values = self._gamma_and_vprime(x, values)
+                if self.chunk_size > 0 and seq_len > self.chunk_size:
+                    output, new_state = self._forward_chunked_head(
+                        queries, keys, protected_values, decay_gamma, head_dim
+                    )
                 else:
-                    q_s = q * (d ** -0.5)
-                    y, new_state = self._dual_form_block(q_s, k, v_prime, gamma, self._causal[:T, :T])
+                    scaled_queries = queries * (head_dim ** -0.5)
+                    output, new_state = self._dual_form_block(
+                        scaled_queries, keys, protected_values, decay_gamma,
+                        self._causal[:seq_len, :seq_len],
+                    )
         else:
-            y, new_state = self._recurrent(x, q, k, v, state, d)
+            output, new_state = self._recurrent(x, queries, keys, values, state, head_dim)
 
-        y = y.transpose(1, 2).contiguous().view(B, T, self.inner_dim, 2)
-        out = self.o_proj(y)
+        # merge heads back to [B,T,inner_dim,2] for output projection
+        output = output.transpose(1, 2).contiguous().view(batch_size, seq_len, self.inner_dim, 2)
+        out = self.o_proj(output)
         if self.training:
-            mask = self.dropout(torch.ones(B, T, self.dim, device=x.device))
-            out = out * mask.unsqueeze(-1)
+            dropout_mask = self.dropout(torch.ones(batch_size, seq_len, self.dim, device=x.device))
+            out = out * dropout_mask.unsqueeze(-1)
         return out, new_state
 
     # ── O(1) recurrent inference (covers all modes) ──────────────────────────
 
-    def _recurrent(self, x, q, k, v, state, d):
-        B, T = x.shape[0], x.shape[1]
-        H, K = self.num_heads, self.n_states
-        scale = d ** -0.5
-        beta = None
+    def _recurrent(self, x, queries, keys, values, state, head_dim):
+        batch_size, seq_len = x.shape[0], x.shape[1]
+        num_heads, num_memory_states = self.num_heads, self.n_states
+        query_scale = head_dim ** -0.5
+        write_beta = None
         if self.write_mode == 'delta':
-            beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)  # [B,H,T]
+            write_beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)  # [B,H,T]
         if self.n_states > 1:
-            phi, alpha = self._phase_and_alpha(x)
-            phi = phi.permute(0, 2, 3, 1)                  # [B,H,K,T]
-            alpha = alpha.permute(0, 2, 3, 1)
-            self._route_aux = self._route_balance_loss(alpha.permute(0, 3, 1, 2))
+            retrieval_phase, routing_weights = self._phase_and_alpha(x)
+            retrieval_phase = retrieval_phase.permute(0, 2, 3, 1)                  # [B,H,K,T]
+            routing_weights = routing_weights.permute(0, 2, 3, 1)
+            self._route_aux = self._route_balance_loss(routing_weights.permute(0, 3, 1, 2))
 
-        # init state
         if state is None:
             if self.n_states > 1:
-                S = torch.zeros(K, B, H, d, d, 2, device=x.device, dtype=x.dtype)
+                memory_state = torch.zeros(
+                    num_memory_states, batch_size, num_heads, head_dim, head_dim, 2,
+                    device=x.device, dtype=x.dtype,
+                )
             else:
-                S = torch.zeros(B, H, d, d, 2, device=x.device, dtype=x.dtype)
+                memory_state = torch.zeros(
+                    batch_size, num_heads, head_dim, head_dim, 2,
+                    device=x.device, dtype=x.dtype,
+                )
         else:
-            S = state
+            memory_state = state
 
-        y_list = []
-        for t in range(T):
-            xt = x[:, t:t+1]
-            k_t = k[:, :, t]
-            q_t = q[:, :, t] * scale
-            v_t = v[:, :, t]
+        output_steps = []
+        for time_idx in range(seq_len):
+            token_input = x[:, time_idx:time_idx + 1]
+            key_t = keys[:, :, time_idx]
+            query_t = queries[:, :, time_idx] * query_scale
+            value_t = values[:, :, time_idx]
             if self.n_states > 1:
-                y_acc = None
-                S_new = []
-                for kdx in range(K):
-                    gamma_k, vp_k = self._gamma_and_vprime(
-                        xt, v[:, :, t:t+1], state_offset=self.state_dt_offset[kdx]
+                output_accum = None
+                new_states = []
+                for state_idx in range(num_memory_states):
+                    decay_gamma_state, protected_values_state = self._gamma_and_vprime(
+                        token_input, values[:, :, time_idx:time_idx + 1],
+                        state_offset=self.state_dt_offset[state_idx],
                     )
-                    g = gamma_k[:, :, 0]                       # [B,H]
-                    yk, Sk = self._recur_step_additive(S[kdx], g, vp_k[:, :, 0], k_t, q_t)
-                    cr = alpha[:, :, kdx, t] * torch.cos(phi[:, :, kdx, t])
-                    si = alpha[:, :, kdx, t] * torch.sin(phi[:, :, kdx, t])
-                    rot = torch.stack([cr, si], dim=-1)
-                    yk = cmul(yk, rot.unsqueeze(-2))
-                    y_acc = yk if y_acc is None else y_acc + yk
-                    S_new.append(Sk)
-                y_list.append(y_acc)
-                S = torch.stack(S_new, dim=0)
+                    decay_gamma_t = decay_gamma_state[:, :, 0]  # [B,H]
+                    output_state, state_new = self._recur_step_additive(
+                        memory_state[state_idx], decay_gamma_t,
+                        protected_values_state[:, :, 0], key_t, query_t,
+                    )
+                    rotation_real = routing_weights[:, :, state_idx, time_idx] * torch.cos(
+                        retrieval_phase[:, :, state_idx, time_idx]
+                    )
+                    rotation_imag = routing_weights[:, :, state_idx, time_idx] * torch.sin(
+                        retrieval_phase[:, :, state_idx, time_idx]
+                    )
+                    rotation = torch.stack([rotation_real, rotation_imag], dim=-1)
+                    output_state = cmul(output_state, rotation.unsqueeze(-2))
+                    output_accum = output_state if output_accum is None else output_accum + output_state
+                    new_states.append(state_new)
+                output_steps.append(output_accum)
+                memory_state = torch.stack(new_states, dim=0)
                 continue
 
-            gamma, v_prime = self._gamma_and_vprime(xt, v[:, :, t:t+1])
-            if self.decay_mode == 'per_channel':
-                g = gamma[:, :, 0]                            # [B,H,d]
-            else:
-                g = gamma[:, :, 0]                            # [B,H]
-            vp_t = v_prime[:, :, 0]
+            decay_gamma, protected_values = self._gamma_and_vprime(
+                token_input, values[:, :, time_idx:time_idx + 1]
+            )
+            decay_gamma_t = decay_gamma[:, :, 0]  # [B,H] or [B,H,d]
+            protected_value_t = protected_values[:, :, 0]
             if self.write_mode == 'delta':
-                yk, S = self._recur_step_delta(S, g, vp_t, k_t, q_t, beta[:, :, t])
+                output_step, memory_state = self._recur_step_delta(
+                    memory_state, decay_gamma_t, protected_value_t, key_t, query_t,
+                    write_beta[:, :, time_idx],
+                )
             else:
-                yk, S = self._recur_step_additive(S, g, vp_t, k_t, q_t)
-            y_list.append(yk)
+                output_step, memory_state = self._recur_step_additive(
+                    memory_state, decay_gamma_t, protected_value_t, key_t, query_t,
+                )
+            output_steps.append(output_step)
 
-        y = torch.stack(y_list, dim=2)
-        return y, S
+        output = torch.stack(output_steps, dim=2)
+        return output, memory_state
 
-    def _recur_step_additive(self, S, g, v_t, k_t, q_t):
-        """One additive PAM step. g: [B,H] or [B,H,d] (per-channel). Returns y[B,H,d,2], S."""
-        k_conj = torch.stack([k_t[..., 0], -k_t[..., 1]], dim=-1).unsqueeze(-3)  # [B,H,1,d,2]
-        # outer[i,j] = v_t[i] * conj(k_t)[j]
-        outer_r = v_t[..., 0].unsqueeze(-1) * k_conj[..., 0] - v_t[..., 1].unsqueeze(-1) * k_conj[..., 1]
-        outer_i = v_t[..., 0].unsqueeze(-1) * k_conj[..., 1] + v_t[..., 1].unsqueeze(-1) * k_conj[..., 0]
-        outer = torch.stack([outer_r, outer_i], dim=-1)        # [B,H,d,d,2]
-        if g.dim() == S.dim() - 3:   # per-head scalar [B,H]
-            gg = g.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
-        else:                        # per-channel [B,H,d] -> decay key axis (j)
-            gg = g.unsqueeze(-2).unsqueeze(-1)                 # [B,H,1,d,1]
-        S = S * gg + outer
-        # y[i] = sum_j S[i,j] q_t[j]
-        sq_r = S[..., 0] * q_t[..., 0].unsqueeze(-2) - S[..., 1] * q_t[..., 1].unsqueeze(-2)
-        sq_i = S[..., 0] * q_t[..., 1].unsqueeze(-2) + S[..., 1] * q_t[..., 0].unsqueeze(-2)
-        y = torch.stack([sq_r.sum(dim=-1), sq_i.sum(dim=-1)], dim=-1)
-        return y, S
+    def _recur_step_additive(self, memory_state, decay_gamma, value_t, key_t, query_t):
+        """One additive PAM step. decay_gamma: [B,H] or [B,H,d] (per-channel)."""
+        key_conj = torch.stack([key_t[..., 0], -key_t[..., 1]], dim=-1).unsqueeze(-3)
+        outer_real = (
+            value_t[..., 0].unsqueeze(-1) * key_conj[..., 0]
+            - value_t[..., 1].unsqueeze(-1) * key_conj[..., 1]
+        )
+        outer_imag = (
+            value_t[..., 0].unsqueeze(-1) * key_conj[..., 1]
+            + value_t[..., 1].unsqueeze(-1) * key_conj[..., 0]
+        )
+        outer_product = torch.stack([outer_real, outer_imag], dim=-1)
+        if decay_gamma.dim() == memory_state.dim() - 3:
+            decay_factor = decay_gamma.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+        else:
+            decay_factor = decay_gamma.unsqueeze(-2).unsqueeze(-1)
+        memory_state = memory_state * decay_factor + outer_product
+        state_query_real = (
+            memory_state[..., 0] * query_t[..., 0].unsqueeze(-2)
+            - memory_state[..., 1] * query_t[..., 1].unsqueeze(-2)
+        )
+        state_query_imag = (
+            memory_state[..., 0] * query_t[..., 1].unsqueeze(-2)
+            + memory_state[..., 1] * query_t[..., 0].unsqueeze(-2)
+        )
+        output = torch.stack([state_query_real.sum(dim=-1), state_query_imag.sum(dim=-1)], dim=-1)
+        return output, memory_state
 
-    def _recur_step_delta(self, S, g, v_t, k_t, q_t, beta_t):
-        """One gated delta step. g:[B,H], beta_t:[B,H]. S decays, erase, write."""
-        # decay
-        gg = g.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
-        S = S * gg
-        # predicted value for key: pred[i] = sum_j S[i,j] k_t[j]
-        pr = (S[..., 0] * k_t[..., 0].unsqueeze(-2) - S[..., 1] * k_t[..., 1].unsqueeze(-2)).sum(dim=-1)
-        pi = (S[..., 0] * k_t[..., 1].unsqueeze(-2) + S[..., 1] * k_t[..., 0].unsqueeze(-2)).sum(dim=-1)
-        b = beta_t.unsqueeze(-1)
-        u_r = b * (v_t[..., 0] - pr)
-        u_i = b * (v_t[..., 1] - pi)
-        u = torch.stack([u_r, u_i], dim=-1)                    # [B,H,d]
-        k_conj = torch.stack([k_t[..., 0], -k_t[..., 1]], dim=-1)
-        outer_r = u[..., 0].unsqueeze(-1) * k_conj[..., 0].unsqueeze(-2) - u[..., 1].unsqueeze(-1) * k_conj[..., 1].unsqueeze(-2)
-        outer_i = u[..., 0].unsqueeze(-1) * k_conj[..., 1].unsqueeze(-2) + u[..., 1].unsqueeze(-1) * k_conj[..., 0].unsqueeze(-2)
-        S = S + torch.stack([outer_r, outer_i], dim=-1)
-        sq_r = S[..., 0] * q_t[..., 0].unsqueeze(-2) - S[..., 1] * q_t[..., 1].unsqueeze(-2)
-        sq_i = S[..., 0] * q_t[..., 1].unsqueeze(-2) + S[..., 1] * q_t[..., 0].unsqueeze(-2)
-        y = torch.stack([sq_r.sum(dim=-1), sq_i.sum(dim=-1)], dim=-1)
-        return y, S
+    def _recur_step_delta(self, memory_state, decay_gamma, value_t, key_t, query_t, write_beta_t):
+        """One gated delta step. decay_gamma:[B,H], write_beta_t:[B,H]."""
+        decay_factor = decay_gamma.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+        memory_state = memory_state * decay_factor
+        predicted_real = (
+            memory_state[..., 0] * key_t[..., 0].unsqueeze(-2)
+            - memory_state[..., 1] * key_t[..., 1].unsqueeze(-2)
+        ).sum(dim=-1)
+        predicted_imag = (
+            memory_state[..., 0] * key_t[..., 1].unsqueeze(-2)
+            + memory_state[..., 1] * key_t[..., 0].unsqueeze(-2)
+        ).sum(dim=-1)
+        beta_expanded = write_beta_t.unsqueeze(-1)
+        update_real = beta_expanded * (value_t[..., 0] - predicted_real)
+        update_imag = beta_expanded * (value_t[..., 1] - predicted_imag)
+        update = torch.stack([update_real, update_imag], dim=-1)
+        key_conj = torch.stack([key_t[..., 0], -key_t[..., 1]], dim=-1)
+        outer_real = (
+            update[..., 0].unsqueeze(-1) * key_conj[..., 0].unsqueeze(-2)
+            - update[..., 1].unsqueeze(-1) * key_conj[..., 1].unsqueeze(-2)
+        )
+        outer_imag = (
+            update[..., 0].unsqueeze(-1) * key_conj[..., 1].unsqueeze(-2)
+            + update[..., 1].unsqueeze(-1) * key_conj[..., 0].unsqueeze(-2)
+        )
+        memory_state = memory_state + torch.stack([outer_real, outer_imag], dim=-1)
+        state_query_real = (
+            memory_state[..., 0] * query_t[..., 0].unsqueeze(-2)
+            - memory_state[..., 1] * query_t[..., 1].unsqueeze(-2)
+        )
+        state_query_imag = (
+            memory_state[..., 0] * query_t[..., 1].unsqueeze(-2)
+            + memory_state[..., 1] * query_t[..., 0].unsqueeze(-2)
+        )
+        output = torch.stack([state_query_real.sum(dim=-1), state_query_imag.sum(dim=-1)], dim=-1)
+        return output, memory_state
 
 
-def _complex_triangular_solve(Mr, Mi, wr, wi, eye):
-    """Solve (I + M) U = W for complex U, M strictly lower-tri. Block-real solve.
-
-    Mr,Mi: [B,H,C,C]; wr,wi: [B,H,C,d]; eye: [C,C]. Returns U_r,U_i [B,H,C,d].
-    """
-    C = Mr.shape[-1]
-    Ar = (eye + Mr).float()
-    Ai = Mi.float()
-    # block-real A = [[Ar,-Ai],[Ai,Ar]] ; rhs = [[wr],[wi]]
-    top = torch.cat([Ar, -Ai], dim=-1)
-    bot = torch.cat([Ai, Ar], dim=-1)
-    A = torch.cat([top, bot], dim=-2)                          # [B,H,2C,2C]
-    W = torch.cat([wr.float(), wi.float()], dim=-2)            # [B,H,2C,d]
-    U = torch.linalg.solve(A, W)
-    U_r, U_i = U[..., :C, :], U[..., C:, :]
-    return U_r.to(wr.dtype), U_i.to(wi.dtype)
+def _complex_triangular_solve(mass_real, mass_imag, write_real, write_imag, identity):
+    """Solve (I + M) update = write for complex update, M strictly lower-tri."""
+    chunk_len = mass_real.shape[-1]
+    system_real = (identity + mass_real).float()
+    system_imag = mass_imag.float()
+    top = torch.cat([system_real, -system_imag], dim=-1)
+    bot = torch.cat([system_imag, system_real], dim=-1)
+    system_matrix = torch.cat([top, bot], dim=-2)
+    rhs = torch.cat([write_real.float(), write_imag.float()], dim=-2)
+    solution = torch.linalg.solve(system_matrix, rhs)
+    update_real, update_imag = solution[..., :chunk_len, :], solution[..., chunk_len:, :]
+    return update_real.to(write_real.dtype), update_imag.to(write_imag.dtype)
 
 
 # ── V11 Block ────────────────────────────────────────────────────────────────
@@ -950,12 +1053,14 @@ class V11LM(nn.Module):
         the full [N,vocab] logits/softmax. Kept eager (compile the stack, not this).
         """
         from v11.fused_ce import fused_linear_cross_entropy
-        B, T = labels.shape
-        H = torch.cat([lm[..., 0], lm[..., 1]], dim=-1).reshape(B * T, -1)
-        W = torch.cat([self.embed.embed_real.weight, self.embed.embed_imag.weight], dim=-1)
+        batch_size, seq_len = labels.shape
+        hidden_concat = torch.cat([lm[..., 0], lm[..., 1]], dim=-1).reshape(batch_size * seq_len, -1)
+        weight_concat = torch.cat([self.embed.embed_real.weight, self.embed.embed_imag.weight], dim=-1)
         mask = loss_mask.reshape(-1) if loss_mask is not None else None
-        return fused_linear_cross_entropy(H, W, labels.reshape(-1), mask=mask,
-                                          chunk=chunk, ignore_index=ignore_index)
+        return fused_linear_cross_entropy(
+            hidden_concat, weight_concat, labels.reshape(-1), mask=mask,
+            chunk=chunk, ignore_index=ignore_index,
+        )
 
     def fused_ce_loss(self, input_ids, labels, loss_mask=None, ignore_index=-100,
                       chunk: int = 4096):

@@ -18,7 +18,7 @@ import torch
 
 from v11.model import V11Config, V11PAMLayer
 from v11.flash_pam import flash_pam_chunked_head
-from v7.triton_kernels import set_triton_enabled
+from v11.triton_kernels import set_triton_enabled
 
 
 def _make_inputs(B, H, T, d, device, dtype, seed=0, requires_grad=False):

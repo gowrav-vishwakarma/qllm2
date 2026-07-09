@@ -17,10 +17,11 @@ It is numerically identical to `_forward_chunked_head` (same math, just regroupe
 gradients match and it is a drop-in. Complex tensors are split-real `[..., 2]` throughout.
 
 Public:
-    flash_pam_chunked_head(q, k, v_prime, gamma, d, chunk_size) -> (y, S)
-        q,k,v_prime: [B,H,T,d,2] (q NOT pre-scaled; scaled by d**-0.5 inside, matching
-        the baseline). gamma: [B,H,T] head-scalar decay in (0,1].
-        Returns y [B,H,T,d,2] and final state S [B,H,d,d,2].
+    flash_pam_chunked_head(queries, keys, protected_values, decay_gamma, head_dim, chunk_size)
+        queries, keys, protected_values: [B,H,T,d,2] (queries NOT pre-scaled; scaled by
+        head_dim**-0.5 inside, matching the baseline).
+        decay_gamma: [B,H,T] head-scalar decay in (0,1].
+        Returns output [B,H,T,d,2] and final memory_state [B,H,d,d,2].
 """
 
 import math
@@ -28,99 +29,124 @@ import torch
 from torch import Tensor
 
 
-def _chunk_decay_matrices(gamma_bn: Tensor, C: int):
-    """gamma_bn: [N, C] -> (D, cum_decay, total_decay, D_last).
+def _chunk_decay_matrices(decay_gamma_batch: Tensor, chunk_len: int):
+    """decay_gamma_batch: [N, C] -> (decay_matrix, cumulative_decay, total_decay, decay_last).
 
-    D[t,s]      = prod_{s<u<=t} gamma   (lower-tri, 0 above diagonal)   [N,C,C]
-    cum_decay[t]= prod_{0<=u<=t} gamma  (inclusive)                     [N,C]
-    total_decay = cum_decay[:, -1]                                      [N]
-    D_last[s]   = prod_{s<u<=C-1} gamma = total/cum_excl                [N,C]
+    decay_matrix[t,s]      = prod_{s<u<=t} decay_gamma   (lower-tri)   [N,C,C]
+    cumulative_decay[t]    = prod_{0<=u<=t} decay_gamma  (inclusive)    [N,C]
+    total_decay            = cumulative_decay[:, -1]                    [N]
+    decay_last[s]          = prod_{s<u<=C-1} decay_gamma = total/cum_excl [N,C]
     """
-    # decay is precision-sensitive: upcast only low precision (bf16/fp16) to fp32,
-    # otherwise keep dtype (so fp64 correctness checks stay exact).
-    cdtype = torch.float32 if gamma_bn.dtype in (torch.bfloat16, torch.float16) else gamma_bn.dtype
-    log_g = torch.log(gamma_bn.to(cdtype) + 1e-6)
-    Cc = torch.cumsum(-log_g, dim=-1)                       # [N,C], increasing
-    log_D = (Cc.unsqueeze(-1) - Cc.unsqueeze(-2)).transpose(-1, -2)  # [t,s]=C[s]-C[t]
-    causal = torch.tril(torch.ones(C, C, device=gamma_bn.device))
-    log_D = log_D * causal + (1 - causal) * (-1e4)
-    D = torch.exp(log_D.clamp(max=0.0))
-    cum_decay = torch.exp(torch.cumsum(log_g, dim=-1))      # inclusive prod
-    total_decay = cum_decay[:, -1]
-    D_last = D[:, -1, :]                                    # [N,C]
-    return D, cum_decay, total_decay, D_last
+    compute_dtype = (
+        torch.float32 if decay_gamma_batch.dtype in (torch.bfloat16, torch.float16)
+        else decay_gamma_batch.dtype
+    )
+    log_decay = torch.log(decay_gamma_batch.to(compute_dtype) + 1e-6)
+    cum_neg_log = torch.cumsum(-log_decay, dim=-1)
+    log_decay_matrix = (cum_neg_log.unsqueeze(-1) - cum_neg_log.unsqueeze(-2)).transpose(-1, -2)
+    causal = torch.tril(torch.ones(chunk_len, chunk_len, device=decay_gamma_batch.device))
+    log_decay_matrix = log_decay_matrix * causal + (1 - causal) * (-1e4)
+    decay_matrix = torch.exp(log_decay_matrix.clamp(max=0.0))
+    cumulative_decay = torch.exp(torch.cumsum(log_decay, dim=-1))
+    total_decay = cumulative_decay[:, -1]
+    decay_last = decay_matrix[:, -1, :]
+    return decay_matrix, cumulative_decay, total_decay, decay_last
 
 
 def flash_pam_chunked_head(
-    q: Tensor, k: Tensor, v_prime: Tensor, gamma: Tensor, d: int, chunk_size: int,
+    queries: Tensor,
+    keys: Tensor,
+    protected_values: Tensor,
+    decay_gamma: Tensor,
+    head_dim: int,
+    chunk_size: int,
 ):
     """Chunk-parallel equivalent of V11PAMLayer._forward_chunked_head (head decay)."""
-    B, H, T = q.shape[:3]
-    C = chunk_size
-    scale = d ** -0.5
-    n = (T + C - 1) // C
-    Tpad = n * C
-    pad = Tpad - T
+    batch_size, num_heads, seq_len = queries.shape[:3]
+    chunk_len = chunk_size
+    query_scale = head_dim ** -0.5
+    num_chunks = (seq_len + chunk_len - 1) // chunk_len
+    padded_seq_len = num_chunks * chunk_len
+    pad_len = padded_seq_len - seq_len
 
-    q_s = q * scale
-    if pad:
-        # pad keys/values with 0 (contribute nothing), gamma with 1 (log 0).
-        q_s = torch.nn.functional.pad(q_s, (0, 0, 0, 0, 0, pad))
-        k = torch.nn.functional.pad(k, (0, 0, 0, 0, 0, pad))
-        v_prime = torch.nn.functional.pad(v_prime, (0, 0, 0, 0, 0, pad))
-        gamma = torch.nn.functional.pad(gamma, (0, pad), value=1.0)
+    scaled_queries = queries * query_scale
+    if pad_len:
+        # pad keys/values with 0 (contribute nothing), decay_gamma with 1 (log 0).
+        scaled_queries = torch.nn.functional.pad(scaled_queries, (0, 0, 0, 0, 0, pad_len))
+        keys = torch.nn.functional.pad(keys, (0, 0, 0, 0, 0, pad_len))
+        protected_values = torch.nn.functional.pad(protected_values, (0, 0, 0, 0, 0, pad_len))
+        decay_gamma = torch.nn.functional.pad(decay_gamma, (0, pad_len), value=1.0)
 
-    # [B,H,n,C,...] -> fold (B,H,n) into one batch axis N.
-    N = B * H * n
-    qc = q_s.view(B, H, n, C, d, 2).reshape(N, C, d, 2)
-    kc = k.view(B, H, n, C, d, 2).reshape(N, C, d, 2)
-    vc = v_prime.view(B, H, n, C, d, 2).reshape(N, C, d, 2)
-    gc = gamma.view(B, H, n, C).reshape(N, C)
+    # [B,H,n,C,...] -> fold (B,H,n) into one batch axis num_batch_chunks.
+    num_batch_chunks = batch_size * num_heads * num_chunks
+    queries_chunk = scaled_queries.view(batch_size, num_heads, num_chunks, chunk_len, head_dim, 2).reshape(
+        num_batch_chunks, chunk_len, head_dim, 2
+    )
+    keys_chunk = keys.view(batch_size, num_heads, num_chunks, chunk_len, head_dim, 2).reshape(
+        num_batch_chunks, chunk_len, head_dim, 2
+    )
+    values_chunk = protected_values.view(batch_size, num_heads, num_chunks, chunk_len, head_dim, 2).reshape(
+        num_batch_chunks, chunk_len, head_dim, 2
+    )
+    decay_gamma_chunk = decay_gamma.view(batch_size, num_heads, num_chunks, chunk_len).reshape(
+        num_batch_chunks, chunk_len
+    )
 
-    D, cum_decay, total_decay, D_last = _chunk_decay_matrices(gc, C)  # batched over N
+    decay_matrix, cumulative_decay, total_decay, decay_last = _chunk_decay_matrices(
+        decay_gamma_chunk, chunk_len
+    )
 
-    qr, qi = qc[..., 0], qc[..., 1]
-    kr, ki = kc[..., 0], kc[..., 1]
-    vr, vi = vc[..., 0], vc[..., 1]
+    query_real, query_imag = queries_chunk[..., 0], queries_chunk[..., 1]
+    key_real, key_imag = keys_chunk[..., 0], keys_chunk[..., 1]
+    value_real, value_imag = values_chunk[..., 0], values_chunk[..., 1]
 
-    # intra-chunk complex conjugate score q . conj(k), masked+decayed by D
-    wr = torch.bmm(qr, kr.transpose(-1, -2)) + torch.bmm(qi, ki.transpose(-1, -2))
-    wi = torch.bmm(qi, kr.transpose(-1, -2)) - torch.bmm(qr, ki.transpose(-1, -2))
-    Df = D.to(wr.dtype)
-    ar, ai = wr * Df, wi * Df
-    yr = torch.bmm(ar, vr) - torch.bmm(ai, vi)
-    yi = torch.bmm(ar, vi) + torch.bmm(ai, vr)
-    y_intra = torch.stack([yr, yi], dim=-1)                # [N,C,d,2]
+    score_real = torch.bmm(query_real, key_real.transpose(-1, -2)) + torch.bmm(query_imag, key_imag.transpose(-1, -2))
+    score_imag = torch.bmm(query_imag, key_real.transpose(-1, -2)) - torch.bmm(query_real, key_imag.transpose(-1, -2))
+    decay_matrix_typed = decay_matrix.to(score_real.dtype)
+    weighted_real, weighted_imag = score_real * decay_matrix_typed, score_imag * decay_matrix_typed
+    output_real = torch.bmm(weighted_real, value_real) - torch.bmm(weighted_imag, value_imag)
+    output_imag = torch.bmm(weighted_real, value_imag) + torch.bmm(weighted_imag, value_real)
+    intra_output = torch.stack([output_real, output_imag], dim=-1)
 
-    # per-chunk state block: S_block[i,j] = sum_s (v_s * D_last_s)[i] conj(k_s)[j]
-    dl = D_last.unsqueeze(-1).to(vr.dtype)
-    wv_r, wv_i = vr * dl, vi * dl
-    sr = torch.bmm(wv_r.transpose(-1, -2), kr) + torch.bmm(wv_i.transpose(-1, -2), ki)
-    si = torch.bmm(wv_i.transpose(-1, -2), kr) - torch.bmm(wv_r.transpose(-1, -2), ki)
-    S_block = torch.stack([sr, si], dim=-1)                # [N,d,d,2]
+    decay_last_expanded = decay_last.unsqueeze(-1).to(value_real.dtype)
+    write_value_real, write_value_imag = value_real * decay_last_expanded, value_imag * decay_last_expanded
+    state_real = torch.bmm(write_value_real.transpose(-1, -2), key_real) + torch.bmm(write_value_imag.transpose(-1, -2), key_imag)
+    state_imag = torch.bmm(write_value_imag.transpose(-1, -2), key_real) - torch.bmm(write_value_real.transpose(-1, -2), key_imag)
+    state_chunk = torch.stack([state_real, state_imag], dim=-1)
 
-    # reshape back to [B,H,n,...] for the sequential state carry
-    y_intra = y_intra.view(B, H, n, C, d, 2)
-    S_block = S_block.view(B, H, n, d, d, 2)
-    cum = cum_decay.view(B, H, n, C).to(q.dtype)
-    total = total_decay.view(B, H, n).to(q.dtype)
-    qcs = q_s.view(B, H, n, C, d, 2)
+    intra_output = intra_output.view(batch_size, num_heads, num_chunks, chunk_len, head_dim, 2)
+    state_chunk = state_chunk.view(batch_size, num_heads, num_chunks, head_dim, head_dim, 2)
+    cumulative_decay = cumulative_decay.view(batch_size, num_heads, num_chunks, chunk_len).to(queries.dtype)
+    total_decay = total_decay.view(batch_size, num_heads, num_chunks).to(queries.dtype)
+    scaled_queries_chunked = scaled_queries.view(batch_size, num_heads, num_chunks, chunk_len, head_dim, 2)
 
     outputs = []
-    S = q.new_zeros(B, H, d, d, 2)
-    for c in range(n):
-        y_c = y_intra[:, :, c]
-        if c > 0:
-            Sr, Si = S[..., 0], S[..., 1]
-            qr_c, qi_c = qcs[:, :, c, ..., 0], qcs[:, :, c, ..., 1]   # [B,H,C,d]
-            Sq_r = (Sr @ qr_c.transpose(-1, -2) - Si @ qi_c.transpose(-1, -2)).transpose(-1, -2)
-            Sq_i = (Sr @ qi_c.transpose(-1, -2) + Si @ qr_c.transpose(-1, -2)).transpose(-1, -2)
-            cd = cum[:, :, c].unsqueeze(-1)
-            y_c = y_c + torch.stack([Sq_r * cd, Sq_i * cd], dim=-1)
-        outputs.append(y_c)
-        S = S * total[:, :, c][..., None, None, None] + S_block[:, :, c]
+    memory_state = queries.new_zeros(batch_size, num_heads, head_dim, head_dim, 2)
+    for chunk_idx in range(num_chunks):
+        output_chunk = intra_output[:, :, chunk_idx]
+        if chunk_idx > 0:
+            state_real, state_imag = memory_state[..., 0], memory_state[..., 1]
+            query_real_chunk, query_imag_chunk = (
+                scaled_queries_chunked[:, :, chunk_idx, ..., 0],
+                scaled_queries_chunked[:, :, chunk_idx, ..., 1],
+            )
+            carried_real = (
+                state_real @ query_real_chunk.transpose(-1, -2)
+                - state_imag @ query_imag_chunk.transpose(-1, -2)
+            ).transpose(-1, -2)
+            carried_imag = (
+                state_real @ query_imag_chunk.transpose(-1, -2)
+                + state_imag @ query_real_chunk.transpose(-1, -2)
+            ).transpose(-1, -2)
+            cumulative_decay_expanded = cumulative_decay[:, :, chunk_idx].unsqueeze(-1)
+            output_chunk = output_chunk + torch.stack(
+                [carried_real * cumulative_decay_expanded, carried_imag * cumulative_decay_expanded],
+                dim=-1,
+            )
+        outputs.append(output_chunk)
+        memory_state = memory_state * total_decay[:, :, chunk_idx][..., None, None, None] + state_chunk[:, :, chunk_idx]
 
-    y = torch.cat(outputs, dim=2)                          # [B,H,Tpad,C? ] -> [B,H,Tpad,d,2]
-    if pad:
-        y = y[:, :, :T]
-    return y, S
+    output = torch.cat(outputs, dim=2)
+    if pad_len:
+        output = output[:, :, :seq_len]
+    return output, memory_state
