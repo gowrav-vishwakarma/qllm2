@@ -377,6 +377,7 @@ eval)
   ( cd hf_release && eval "$PYTHON_BIN eval_chat.py" \
     --checkpoint qllm_v11_e3k3_chat.pt \
     --prompts eval_prompts_round1.yaml \
+    --round-tag "$tag" \
     --out-md "SAMPLES_${tag}.md" \
     --out-json "../logs/v11/${tag}_chat_eval.json" )
   ;;

@@ -25,9 +25,9 @@ from run_chat import (
 
 PROFILE_DEFAULTS = {
     'recommended': {
-        'description': 'Recommended inference (--no-think)',
+        'description': 'Default inference (no thinking-block stripping)',
         'add_no_think_hint': True,
-        'strip_thinking': True,
+        'strip_thinking': False,
         'temperatures': [0.0, 0.7],
         'max_new_tokens': 256,
     },
@@ -285,6 +285,11 @@ def main() -> None:
     p.add_argument('--out-json', default='../logs/v11/round1_chat_eval.json')
     p.add_argument('--profiles', default='recommended,raw')
     p.add_argument('--seed', type=int, default=42)
+    p.add_argument(
+        '--round-tag',
+        default='',
+        help='Override round_tag from prompts YAML (default: use YAML round_tag)',
+    )
     args = p.parse_args()
 
     suite_path = Path(args.prompts)
@@ -307,6 +312,8 @@ def main() -> None:
         profile_names=profile_names,
         seed=args.seed,
     )
+    if args.round_tag:
+        report['round_tag'] = args.round_tag
 
     out_json = Path(args.out_json)
     out_json.parent.mkdir(parents=True, exist_ok=True)
