@@ -344,19 +344,25 @@ smoke)
 
 export)
   disk_check
-  echo "[export] $(sft_best) -> hf_release + server_manifest ($ROUND_TAG)"
+  echo "[export] SFT $(sft_best) + pretrain $(pt_best) -> hf_release ($ROUND_TAG)"
   if [[ "$DRY" == "1" ]]; then
     dry_banner
-    echo "[DRY] export $(sft_best) tag=$ROUND_TAG pretrain_tokens_total=${PRETRAIN_TOKENS_TOTAL:-$CUM_AFTER} round_tokens=$TOKEN_BUDGET"
+    echo "[DRY] export sft=$(sft_best) pretrain=$(pt_best) tag=$ROUND_TAG pretrain_tokens_total=${PRETRAIN_TOKENS_TOTAL:-$CUM_AFTER} round_tokens=$TOKEN_BUDGET"
     exit 0
   fi
   eval "$PYTHON_BIN scripts/export_hf_release.py \
     --src $(sft_best) --round $ROUND_TAG --tag $ROUND_TAG \
     --pretrain_tokens_total ${PRETRAIN_TOKENS_TOTAL:-$CUM_AFTER} \
     --round_tokens $TOKEN_BUDGET --record-manifest"
-  # Keep a copy of the bundle under releases/<tag>/ so the pull script path matches.
+  eval "$PYTHON_BIN scripts/export_hf_release.py \
+    --src $(pt_best) --round $ROUND_TAG --tag $ROUND_TAG \
+    --out-name qllm_v11_e3k3_pretrain.pt --config-name config_pretrain.json \
+    --checkpoint-type pretrain \
+    --pretrain_tokens_total ${PRETRAIN_TOKENS_TOTAL:-$CUM_AFTER} \
+    --round_tokens $TOKEN_BUDGET --record-manifest"
   mkdir -p "releases/$ROUND_TAG"
   cp -f hf_release/qllm_v11_e3k3_chat.pt "releases/$ROUND_TAG/qllm_v11_e3k3_chat.pt"
+  cp -f hf_release/qllm_v11_e3k3_pretrain.pt "releases/$ROUND_TAG/qllm_v11_e3k3_pretrain.pt"
   # Point the manifest bundle path at the per-round copy for pull.
   eval "$PYTHON_BIN - <<PY
 import json
@@ -371,15 +377,26 @@ PY"
   ;;
 
 eval)
-  echo "[eval] batch chat samples for $ROUND_TAG"
+  echo "[eval] chat + pretrain-vs-SFT compare for $ROUND_TAG"
   tag="${ROUND_TAG:-round-2b-gate}"
-  if [[ "$DRY" == "1" ]]; then dry_banner; echo "[DRY] eval_chat -> SAMPLES_${tag}.md"; exit 0; fi
+  if [[ "$DRY" == "1" ]]; then
+    dry_banner
+    echo "[DRY] eval_chat -> SAMPLES_${tag}.md; eval_compare -> SAMPLES_${tag}-compare.md"
+    exit 0
+  fi
   ( cd hf_release && eval "$PYTHON_BIN eval_chat.py" \
     --checkpoint qllm_v11_e3k3_chat.pt \
     --prompts eval_prompts_round1.yaml \
     --round-tag "$tag" \
     --out-md "SAMPLES_${tag}.md" \
     --out-json "../logs/v11/${tag}_chat_eval.json" )
+  ( cd hf_release && eval "$PYTHON_BIN eval_compare.py" \
+    --pretrain qllm_v11_e3k3_pretrain.pt \
+    --sft qllm_v11_e3k3_chat.pt \
+    --prompts eval_prompts_compare.yaml \
+    --round-tag "$tag" \
+    --out-md "SAMPLES_${tag}-compare.md" \
+    --out-json "../logs/v11/${tag}_compare.json" )
   ;;
 
 ship)
@@ -387,6 +404,7 @@ ship)
   if [[ "$DRY" == "1" ]]; then dry_banner; echo "[DRY] pull+verify+push revision $ROUND_TAG"; exit 0; fi
   ROUND="$ROUND_TAG" ./scripts/pull_v11_release.sh --round "$ROUND_TAG"
   cp -f "releases/$ROUND_TAG/qllm_v11_e3k3_chat.pt" hf_release/qllm_v11_e3k3_chat.pt
+  cp -f "releases/$ROUND_TAG/qllm_v11_e3k3_pretrain.pt" hf_release/qllm_v11_e3k3_pretrain.pt
   ( cd hf_release && bash verify.sh )
   eval "$PYTHON_BIN scripts/push_qllm_hf.py --revision $ROUND_TAG --also-main"
   ./scripts/pull_v11_training_ckpt.sh --cleanup

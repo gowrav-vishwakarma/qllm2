@@ -20,15 +20,21 @@ UPLOAD_FILES = (
     'README.md',
     'LICENSE',
     'config.json',
+    'config_pretrain.json',
     'modeling_qllm.py',
     'run_chat.py',
+    'run_complete.py',
     'eval_chat.py',
+    'eval_compare.py',
     'eval_prompts_round1.yaml',
+    'eval_prompts_compare.yaml',
     'SAMPLES_round-2b-gate.md',
+    'SAMPLES_round-6b-gate-compare.md',
     'requirements.txt',
     'PUSH_TO_HF.md',
     'verify.sh',
     'qllm_v11_e3k3_chat.pt',
+    'qllm_v11_e3k3_pretrain.pt',
 )
 
 # Shared code/docs for HF `main` — code-only refresh via push_hf_main_code_only.sh.
@@ -36,9 +42,13 @@ MAIN_CODE_FILES = (
     'README.md',
     'modeling_qllm.py',
     'run_chat.py',
+    'run_complete.py',
     'eval_chat.py',
+    'eval_compare.py',
     'eval_prompts_round1.yaml',
+    'eval_prompts_compare.yaml',
     'SAMPLES_round-2b-gate.md',
+    'SAMPLES_round-6b-gate-compare.md',
     'requirements.txt',
     'PUSH_TO_HF.md',
     'verify.sh',
@@ -46,14 +56,21 @@ MAIN_CODE_FILES = (
 
 
 def resolve_upload_files(revision: str | None) -> list[str]:
-    """Build upload list; SAMPLES file follows the round revision tag."""
-    samples = (
+    """Build upload list; SAMPLES files follow the round revision tag."""
+    samples_chat = (
         f'SAMPLES_{revision}.md'
         if revision and revision not in ('main',)
         else 'SAMPLES_round-2b-gate.md'
     )
+    samples_compare = (
+        f'SAMPLES_{revision}-compare.md'
+        if revision and revision not in ('main',)
+        else 'SAMPLES_round-6b-gate-compare.md'
+    )
     return [
-        samples if name == 'SAMPLES_round-2b-gate.md' else name
+        samples_chat if name == 'SAMPLES_round-2b-gate.md'
+        else samples_compare if name == 'SAMPLES_round-6b-gate-compare.md'
+        else name
         for name in UPLOAD_FILES
     ]
 

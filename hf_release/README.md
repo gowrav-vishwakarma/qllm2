@@ -109,16 +109,22 @@ python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt --no-think --max_new_token
 
 | File | Purpose |
 | ---- | ------- |
-| `qllm_v11_e3k3_chat.pt` | Weights (~384 MB) |
-| `config.json` | Architecture metadata |
+| `qllm_v11_e3k3_chat.pt` | SFT chat weights (~384 MB) |
+| `qllm_v11_e3k3_pretrain.pt` | Pretrain base weights (~384 MB) — prefix completion |
+| `config.json` | SFT architecture metadata |
+| `config_pretrain.json` | Pretrain architecture metadata |
 | `modeling_qllm.py` | Self-contained model (no qllm2 clone) |
-| `run_chat.py` | Interactive / single-prompt chat |
-| `eval_chat.py` | Batch eval (reproduce sample Q&A) |
-| `eval_prompts_round1.yaml` | Prompt suite for Round 1 |
-| `SAMPLES_round-6b-gate.md` | Full sample Q&A log (72 generations) |
+| `run_chat.py` | Interactive / single-prompt **SFT chat** |
+| `run_complete.py` | Prefix **completion** (pretrain base) |
+| `eval_chat.py` | Batch SFT chat eval |
+| `eval_compare.py` | Pretrain vs SFT comparison (4 answers per question) |
+| `eval_prompts_round1.yaml` | SFT chat prompt suite |
+| `eval_prompts_compare.yaml` | Paired prefix + chat questions |
+| `SAMPLES_round-6b-gate.md` | Full SFT chat sample log |
+| `SAMPLES_round-6b-gate-compare.md` | Pretrain vs SFT summary table |
 | `requirements.txt` | `torch`, `transformers`, `PyYAML` |
 
-One `run_chat.py` + `modeling_qllm.py` serves **both** checkpoints. Behavior comes from `config` inside the `.pt` file (vocab size, gate type). `run_chat.py` loads the checkpoint first, then builds a tokenizer with matching `vocab_size`.
+One `modeling_qllm.py` serves **both** checkpoints. Use `run_chat.py` for SFT (ChatML) and `run_complete.py` for the pretrain base (plain prefix continuation).
 
 ```bash
 # Legacy ~10B milestone (comparison / older stack only)
@@ -155,6 +161,50 @@ python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt \
   --prompt "What is the capital of France?" \
   --no-think --temperature 0.0 --max_new_tokens 32
 ```
+
+### Pretrain prefix completion (non-chat)
+
+The **pretrain base** is a next-token LM on web text. For factual probes, give a **prefix** (not a chat question):
+
+```bash
+python run_complete.py --checkpoint qllm_v11_e3k3_pretrain.pt \
+  --prompt "The capital of France is" --temperature 0.1 --max_new_tokens 64
+
+python run_complete.py --checkpoint qllm_v11_e3k3_pretrain.pt \
+  --prompt "Karl Marx was" --temperature 0.7 --max_new_tokens 80
+```
+
+Same sampling defaults as training `gen_every`: top_k 50, top_p 0.9, repetition_penalty 1.2.
+
+---
+
+## Pretrain base vs SFT chat
+
+SFT teaches ChatML instruction-following but can **wash out** raw factual completions the pretrain base still has. Example: prefix `"The capital of France is"` often yields **Paris** from pretrain, while the SFT chat model may ramble or hallucinate on the same fact as a question.
+
+**Comparison doc:** [SAMPLES_round-6b-gate-compare.md](SAMPLES_round-6b-gate-compare.md) — one table row per question, four columns:
+
+| | pretrain@0.1 | pretrain@0.7 | sft@0.1 | sft@0.7 |
+|--|--|--|--|--|
+
+Full untruncated answers live in the JSON log.
+
+Reproduce:
+
+```bash
+cd hf_release
+uv run python eval_compare.py \
+  --pretrain qllm_v11_e3k3_pretrain.pt \
+  --sft qllm_v11_e3k3_chat.pt \
+  --prompts eval_prompts_compare.yaml \
+  --round-tag round-6b-gate \
+  --out-md SAMPLES_round-6b-gate-compare.md \
+  --out-json ../logs/v11/round-6b-gate_compare.json
+```
+
+SFT-only chat eval (profiles recommended/raw) remains in [eval_chat.py](eval_chat.py) — see [SAMPLES_round-6b-gate.md](SAMPLES_round-6b-gate.md).
+
+---
 
 ### Minimal inference snippet
 

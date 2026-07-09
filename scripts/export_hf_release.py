@@ -46,6 +46,22 @@ def main() -> None:
     p.add_argument('--sft_dataset', default='smoltalk2 (SFT config, think-capped)')
     p.add_argument('--pretrain_corpus',
                    default='DCLM-Edu + FineWeb-Edu + smoltalk2-Mid (reasoning/chat blend)')
+    p.add_argument(
+        '--out-name',
+        default='qllm_v11_e3k3_chat.pt',
+        help='Weights filename in hf_release (e.g. qllm_v11_e3k3_pretrain.pt)',
+    )
+    p.add_argument(
+        '--config-name',
+        default='config.json',
+        help='Config JSON filename in hf_release (e.g. config_pretrain.json)',
+    )
+    p.add_argument(
+        '--checkpoint-type',
+        choices=('sft', 'pretrain'),
+        default='',
+        help='Metadata label; inferred from --out-name when omitted',
+    )
     p.add_argument('--record-manifest', action='store_true',
                    help='Append this round to releases/server_manifest.json')
     p.add_argument('--manifest', default='releases/server_manifest.json')
@@ -55,6 +71,12 @@ def main() -> None:
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     tag = args.tag or args.round
+    ckpt_type = args.checkpoint_type or (
+        'pretrain' if 'pretrain' in args.out_name else 'sft'
+    )
+    sft_dataset = args.sft_dataset
+    if ckpt_type == 'pretrain' and sft_dataset == 'smoltalk2 (SFT config, think-capped)':
+        sft_dataset = '(none — pretrain base)'
 
     ckpt = torch.load(src, map_location='cpu', weights_only=False)
     config = dict(ckpt['config'])
@@ -70,11 +92,12 @@ def main() -> None:
         'vocab_size': config['vocab_size'],
         'round': args.round,
         'hf_tag': tag,
+        'checkpoint_type': ckpt_type,
         'training': {
             'pretrain_corpus': args.pretrain_corpus,
             'pretrain_tokens_total': args.pretrain_tokens_total or ckpt.get('global_tokens', 0),
             'round_tokens': args.round_tokens,
-            'sft_dataset': args.sft_dataset,
+            'sft_dataset': sft_dataset,
             'chat_template': 'ChatML (<|im_start|>/<|im_end|>) + <think>/</think>',
             'gate': 'phase-aware GSP (content-aware)',
             'val_ppl': float(ckpt.get('best_val_ppl', 0)),
@@ -89,11 +112,11 @@ def main() -> None:
         'config': config,
         'metadata': metadata,
     }
-    weights_path = out_dir / 'qllm_v11_e3k3_chat.pt'
+    weights_path = out_dir / args.out_name
     torch.save(export, weights_path)
 
     config_json = {**config, **metadata}
-    config_path = out_dir / 'config.json'
+    config_path = out_dir / args.config_name
     config_path.write_text(json.dumps(config_json, indent=2) + '\n')
 
     size_bytes = weights_path.stat().st_size
@@ -113,10 +136,14 @@ def main() -> None:
         manifest.setdefault('rounds', {})
         manifest['rounds'][args.round] = {
             'hf_tag': tag,
-            'sft_ckpt': str(src),
-            'hf_export_bundle': str(weights_path),
-            'sha256': sha,
-            'size_bytes': size_bytes,
+            'sft_ckpt': str(src) if ckpt_type == 'sft' else manifest['rounds'].get(args.round, {}).get('sft_ckpt'),
+            'pretrain_ckpt': str(src) if ckpt_type == 'pretrain' else manifest['rounds'].get(args.round, {}).get('pretrain_ckpt'),
+            'hf_export_bundle': str(weights_path) if ckpt_type == 'sft' else manifest['rounds'].get(args.round, {}).get('hf_export_bundle'),
+            'hf_pretrain_bundle': str(weights_path) if ckpt_type == 'pretrain' else manifest['rounds'].get(args.round, {}).get('hf_pretrain_bundle'),
+            'sha256': sha if ckpt_type == 'sft' else manifest['rounds'].get(args.round, {}).get('sha256'),
+            'pretrain_sha256': sha if ckpt_type == 'pretrain' else manifest['rounds'].get(args.round, {}).get('pretrain_sha256'),
+            'size_bytes': size_bytes if ckpt_type == 'sft' else manifest['rounds'].get(args.round, {}).get('size_bytes'),
+            'pretrain_size_bytes': size_bytes if ckpt_type == 'pretrain' else manifest['rounds'].get(args.round, {}).get('pretrain_size_bytes'),
             'pretrain_tokens_total': metadata['training']['pretrain_tokens_total'],
             'val_ppl': metadata['training']['val_ppl'],
             'updated_at': datetime.now(timezone.utc).isoformat(),
