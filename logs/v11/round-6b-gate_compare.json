@@ -1,0 +1,356 @@
+{
+  "round_tag": "round-6b-gate",
+  "pretrain_checkpoint": "qllm_v11_e3k3_pretrain.pt",
+  "sft_checkpoint": "qllm_v11_e3k3_chat.pt",
+  "run_at": "2026-07-09T12:33:54.122536+00:00",
+  "device": "cuda",
+  "seed": 42,
+  "temperatures": [
+    0.1,
+    0.7
+  ],
+  "max_new_tokens": 128,
+  "sft_system": "You are a helpful assistant.\n\nAnswer directly in plain text. Do not use <think> or </think> reasoning blocks.",
+  "questions": {
+    "france": {
+      "category": "web_factual",
+      "prompt": "what is the capital of France?",
+      "prefix": "The capital of France is",
+      "notes": "Pretrain often completes \"Paris\" from prefix; SFT may ramble in chat",
+      "answers": {
+        "pretrain@0.1": "Paris.\n- The capital of the French Republic, France.\n- The capital of the United Kingdom of Great Britain and Ireland.\n- The capital of the United Kingdom of Great Britain.\n- The capital of the United States of America.\n|Wikimedia Commons has media related to France.|<|endoftext|>",
+        "sft@0.1": "The capital of France, France, is Paris. It is located in the heart of France, where it is known as the \"Eiffel Tower.\" The city is famous for its stunning architecture, including the Eiffel Tower and the Louvre Museum.",
+        "pretrain@0.7": "Paris, which was founded in 1448 and had a population of over 4 million.\nA series of wars between France and England took place on July 13th 1812 (the French army led by Louis XVIII) against the French King Louis XVI. The French were defeated at Leipzig. In the summer of 1713, a new German army was formed from the Prussian army in the region. As France gained independence in 1714, Prussia won control of the Kingdom of Prussia. During this time, the British won a war with Germany, but soon the United States won the battle. On September 1, 1817",
+        "sft@0.7": "The capital of France is Paris, and its capital is France. It's also known as Paris' Louvre, which is an important city on the Seine River, named after Frenchator Bonaventur. The famous Louvre Museum, located just north of Versailles, offers a unique blend of history, culture, and art."
+      },
+      "heuristic": {
+        "pretrain@0.1": "ok",
+        "sft@0.1": "ok",
+        "pretrain@0.7": "ok",
+        "sft@0.7": "ok"
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 63
+        },
+        "sft@0.1": {
+          "new_tokens": 53,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 70,
+          "stopped_on_im_end": true
+        }
+      }
+    },
+    "usa_capital": {
+      "category": "web_factual",
+      "prompt": "What is the capital of the United States?",
+      "prefix": "The capital of the United States is",
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "the city of San Francisco. The city was founded in 1869 by a group of wealthy families who had been living there for centuries.\nIn 1871, the city was renamed the City of San Francisco. It was named after the city's first president and the first president of the state. In 1872, the city became the capital of the United States.\nDuring World War II, the city was divided into two parts: the eastern part of the city (the western part) and the eastern part (the southern part). The eastern part of the city was called the \"City of San Francisco\" because it was located on the",
+        "sft@0.1": "The capital of the United States, the United States, is called \"U-shaped.\" This is a country located in the United States that has a rich history and diverse culture. It's also known as U-shaped, meaning it has a rich history and a vibrant economy. The capital of the United States is called U-shaped, which means it's a place where people live, work, and play.",
+        "pretrain@0.7": "Washington, DC. The city was built in 1763 and in 1827 it was called Washington's Capital. The city grew as a major economic center for the economy, and in 1864 the city became a financial hub with an enormous population.\nWashington had to leave the city at about 10:30 a.m., when he died. He returned home at age 11 but did not return until the fall of his mother's sister, Mary. As she moved away from the capital she began to get involved in politics, law and religion.\nBy this time, the capital was still very much in the hands of the wealthy. In",
+        "sft@0.7": "The capital of the United States, called U.S. (U). The capital of the United States was located on the island of Oceano in the United States."
+      },
+      "heuristic": {
+        "pretrain@0.1": "miss",
+        "sft@0.1": "miss",
+        "pretrain@0.7": "ok",
+        "sft@0.7": "miss"
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 84,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 36,
+          "stopped_on_im_end": true
+        }
+      }
+    },
+    "karl_marx": {
+      "category": "web_factual",
+      "prompt": "Who was Karl Marx?",
+      "prefix": "Karl Marx was",
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "a German philosopher and political theorist. He was born in Berlin, Germany, on May 16, 1848. His father was a lawyer, but he had a strong interest in politics and economics.\nIn 1849, Karl Marx was elected to the United States Senate. In 1854, he became the first President of the United States. In 1856, he was appointed as the first president of the United States. In 1859, he was elected to the U.S. House of Representatives. In 1860, he was elected to the U.S. Senate. In 1870, he was elected to the U.S. Senate",
+        "sft@0.1": "Hier ist einige Ideen, die Sie in der Regel verwendet werden kann:\n1. **Kommunikation**: Der höchsten Schritt ist eine klare und komplexe Verbindung zu erstellen.\n2. **Eigenschaften**: Ein kleiner Schritt, das von der Künstler und der Vergangenheit ist, könnte einen kleinen Welt selbst oder einem kurzen Wert sehr al",
+        "pretrain@0.7": "a famous economist and a pioneer in the field of economic theory.\nMarxianism is considered to be the most influential theory of the twentieth century, as it influenced the development of capitalism. Marx's work was the basis for his Theory of Capitalist Economics, which had become an important part of the modern capitalist tradition. In his book Capitalism: The Origins of Capital, Karl Marx explains that in the end the modern economy would not have developed completely but instead began to develop and be able to produce goods. This is why Karl Marx called himself \"the great economist.\" Karl Marx used the term \"capital\" in his book Capital as his most",
+        "sft@0.7": "Yes, Karl<|endoftext|>he is a German-born and skilled politician, born in 1839, on January 1, 1859. He was born on June 6, 1879, at the age of 19. His family has since grown into a prominent figure in his early life, and his parents were known for their dedication to his profession. In the early 18th century, he became a prominent figure in the modern city government and served as the ruler of the state.\n\nIn 1848, he began his education, which included teaching at a prestigious university, with the establishment of the National Institute of State University (NSP) in"
+      },
+      "heuristic": {
+        "pretrain@0.1": "ok",
+        "sft@0.1": "miss",
+        "pretrain@0.7": "ok",
+        "sft@0.7": "miss"
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        }
+      }
+    },
+    "shakespeare": {
+      "category": "web_factual",
+      "prompt": "Who wrote Romeo and Juliet?",
+      "prefix": "Romeo and Juliet was written by",
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "a young girl named Juliet. She was the first to write a novel about her life, but she never wrote it herself.\nThe story of Juliet is told in the following way:\n- Romeo and Juliet are both married. They have two children. The first one is a daughter who has been married to a woman. The second one is a girl who has married a man with a child.\n- Juliet is a man who has married a man who has married a man who has married a man who has married a man who has married a man who has married a man who has married a man who has married a man who has",
+        "sft@0.1": "The question of who wrote the name of the person who wrote the name is a complex and multifaceted problem that requires careful consideration of multiple factors. Here's a structured breakdown:\n\n1. **Defining the name**: The name \"he\" refers to someone who wrote the name, while the person who wrote it is likely someone else. This is because the name is often associated with a specific person, such as a person named Elara or Elara.\n\n2. **Identifying the person**: The name \"Elara\" is often used to describe someone who wrote the name. For example, \"El",
+        "pretrain@0.7": "Romeo, who was the son of a wealthy merchant and a friend. The two characters were at war with the Romeo and Juliet as well as the other characters in the play.\nA few years later, Romeo met Romeo and Juliet at the palace where they came to live. When Romeo died, he wrote a letter to his cousin. He had been buried there at the tomb for six months before returning home from the summer solstice. Then Romeo’s brother had come back, but he did not believe that he would be married again. Romeo tried to save him from having the death sentence in the room. He died three days after",
+        "sft@0.7": "The question of who wrote which is likely to be the most likely person to write this statement is \"John.\" The statement only mentions \"Jane,\" which refers to his childhood, present, and significant life events. It does not specify who he is or what he was about or how his experiences influenced him, making it an unlikely candidate for a character or person. \n\nHowever, there are many other factors that could contribute to the statement's validity:\n\n1. **Personality**: John often has a personal history that suggests that he is a strong-willed or capable artist, such as a writer, scientist, or"
+      },
+      "heuristic": {
+        "pretrain@0.1": "miss",
+        "sft@0.1": "miss",
+        "pretrain@0.7": "miss",
+        "sft@0.7": "miss"
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        }
+      }
+    },
+    "largest_planet": {
+      "category": "web_factual",
+      "prompt": "What is the largest planet in our solar system?",
+      "prefix": "The largest planet in our solar system is",
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "the Sun. The Sun is a giant planet that orbits the sun every 4,000 years and is about 1/2 of the size of Earth.\nIt is the second largest planet in the Solar System. It has a diameter of about 3,500 km (1,600 miles). Its diameter is about 2,400 km.\nIts diameter is about 5,300 km. Its diameter is about 1,200 km. Its diameter is about 1,800 km. Its diameter is about 1,700 km. Its diameter is about 1,100 km. Its diameter is about 1,900 km. Its diameter is about 1,",
+        "sft@0.1": "The largest planet in our solar system, known as the \"Echo,\" is located at approximately 1.5 million light-years away from Earth. This is due to the presence of a massive star called the Sun, which is about 1.6 times that of our sun. The planet's surface is composed of a vast amount of gas and dust, with a mass of around 1.2 million tons. As the sun rises, it reaches the planet's surface, where it can grow and decay rapidly.",
+        "pretrain@0.7": "our sun. It has a mass of 1.8 times that of the Sun and has a mass of 1.9 billion tonnes (about 1.6 times that of Earth) at its core. The planet is surrounded by an ice cap, which is about 100 times larger than our sun and contains an extra mass of about 20% more water than the Moon.\nThere are about 3 billion people living in the world today and there are about 10 million people worldwide. There are many countries with a population of around 1.3 billion, but they have only one member per country. In fact, the population is still 2.2 billion",
+        "sft@0.7": "The largest planet in our solar system, called \"Eus exoplanet,\" has been found on its surface at approximately **18,200 miles** (3,300 kilometers) away from the Sun. This means that it was once a massive object with an average temperature of around 68,000 degrees Celsius. The answer to your question lies in the energy released during the process: \n\n- **Energy from the sun's energy**: Eus exoplanets have extremely high temperatures (~1.8 degrees Celsius). However, their overall energy density is around 1.6 times that of Earth, making them extremely cold and hot."
+      },
+      "heuristic": {
+        "pretrain@0.1": "miss",
+        "sft@0.1": "miss",
+        "pretrain@0.7": "miss",
+        "sft@0.7": "miss"
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 103,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        }
+      }
+    },
+    "math_2plus2": {
+      "category": "math_stress",
+      "prompt": "What is 2+2?",
+      "prefix": "2 + 2 =",
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "3. So the sum is 3 + 2 = 5. But the problem says \"find all positive integers n\". So maybe there's a mistake here. Wait, but the problem says \"Find all positive integers n\", so perhaps the answer is all positive integers? Or maybe the problem expects the answer in terms of n?\n\nWait, let me check again. The problem says \"find all positive integers n\". So the answer should be all positive integers n such that n² + 2n -1 =0. Let me check if that's possible. For example, n=3: 3² + 2*4 -1",
+        "sft@0.1": "The given statement \"2+2 is a perfect square\" is a bit ambiguous, but it's a bit vague. Here's a revised version:\n\nIn this sentence, \"2+2\" is a perfect square, and \"a\" is the correct one. The word \"2\" is used to indicate that the square is a perfect square. However, the original statement doesn't provide any information about the square's size or the square's size. To clarify, let's consider the statement:\n\n2 + 2 = 2\n\nThis statement is a perfect square because it's a perfect square. It's also a",
+        "pretrain@0.7": "8.\n\nSo possible values are 8, 13, 17, 21, 32, etc., with the constraint:\n\n8 = (13*3)/4 + 16*(1/5)*(-9) = 8 + 9 + 10 = 18\n\nWhich is the same as before. So that's a valid solution. Therefore, the maximum value is 18.\n</think>\n\nThe minimum value of \\( K \\) for \\( k = 0, 1, and \\( n \\) is calculated by considering the constraints on \\( \\frac{n}{k} \\), where \\( k > 0 \\). The constraints",
+        "sft@0.7": "The question asks for the correct answer, and a more general definition would be **2+2**. Here's a breakdown:\n\n- **Option 1** is incorrect because 2+2 is the standard definition of 2. It doesn't specify that 2 is a standard definition. In this case, the definition is correct. The second part is the definition of 2, which is a general term in mathematics.\n\n- **Option 2** is correct as 2+2 is incorrect because 2+2 is a prime number. This is because 2 is not a proper definition in the classical sense, so it does not apply."
+      },
+      "heuristic": {
+        "pretrain@0.1": "fail",
+        "sft@0.1": "fail",
+        "pretrain@0.7": "fail",
+        "sft@0.7": "fail"
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        }
+      }
+    },
+    "math_multiply": {
+      "category": "math_stress",
+      "prompt": "What is 17 × 23?",
+      "prefix": "17 × 23 =",
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "(3 × 23) × (23 × 23) = (27 × 23) × (24 × 23) = (28 × 23) × (29 × 23) = (30 × 23) × (31 × 23) = (32 × 23) × (33 × 23) = (36 × 23) × (37 × 23) = (38 × 23) × (39 × 23) = (40 × 23) × (41 × 23) = (42 × 23) × (43 × 23) = (44 × 23) × (46 × 23) = (45 × 23) × (47",
+        "sft@0.1": "17 × 23 is the number of ways to distribute 17 × 23 items into 5 × 3 × 2 × 1. This is because each item has a unique number of items, and each item can be used independently. The total number of items is 17 × 23 = 495. Therefore, 17 × 23 = 495.",
+        "pretrain@0.7": "18 × 10 = 18\nSo, the integral from 0 to 18 of x^18 -18x -18y -18z =0. Let's simplify that. The integral of x^k dx is (2k)^{1/3}. So, the integral becomes ∫_{-18}^{(4k)}^{(2k)^9} dt = 18*(1/(2k))^{(2k)/9} -18*(4k)/(2k)*(-18)^5 -18*(2k)*(-6k)/8 -18*(-12)*",
+        "sft@0.7": "The question asks for the 17 × 23 value that satisfies the conditions for being in a 17 × 23-form, where the value of each element in the 17 × 23-form is directly determined by the value of each element. Here's a structured breakdown:\n\n### Key Steps and Analysis:\n1. **17**: 17 × 23 is the 17 × 23 value.\n2. **23**: 17 × 23 is the 17 × 23 value.\n3. **4**: 4 × 1 = 1.8.\n4. **25**: 17 × 23 is the 17 × 23 value.\n5"
+      },
+      "heuristic": {
+        "pretrain@0.1": "fail",
+        "sft@0.1": "fail",
+        "pretrain@0.7": "fail",
+        "sft@0.7": "fail"
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 66,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        }
+      }
+    },
+    "dna": {
+      "category": "edu_science",
+      "prompt": "What is DNA?",
+      "prefix": "DNA is",
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "a very important part of the DNA sequence. It is also important to understand that DNA is made up of two different types of nucleotides, one type being DNA and the other RNA.\nThe DNA molecule is made up of two nucleotides (the one that contains the DNA) and two nucleotides (the one containing the DNA). The DNA molecule consists of two nucleotides (two nucleotides) and two nucleosomes (three nucleotides). These two nucleotides are called the DNA molecule. This molecule is called the DNA molecule.\nThere are three types of DNA molecules:\n- DNA molecule",
+        "sft@0.1": "The DNA sequence of DNA is a fundamental concept in biology, and it plays a crucial role in understanding the structure and function of living organisms. The process involves several steps:\n\n1. **Proteins**: DNA is composed of a single, double-stranded DNA molecule called a proton. This molecule is thencored into a single proton (H⁺) and a proton (N). This proton is thencored into a proton (H⁺), which is thencored into a proton (H⁺).\n\n2. **Structure Analysis**: The DNA is",
+        "pretrain@0.7": "a protein that binds to DNA in the cell.\n- When an enzyme called ribosome attaches to the DNA, the ribosomes bind with the DNA molecule, creating a structure known as a ribosome. This process of binding a single ribosome into the DNA and forms a new DNA. The DNA molecule then contains a protein called the ribosome, which is found in many cells in the body. In some cases, however, this protein may be damaged by infection or injury. If these bacteria are not present, a person can develop a disease called myelogenous leukaemia (MMR). It's most",
+        "sft@0.7": "The question of DNA's role in our understanding of the world around us is complex and multifaceted, reflecting the diverse array of factors that influence our choices, relationships, and actions. In essence, DNA is the building block for many cellular processes, including memory, learning, and thought. This process is characterized by its ability to differentiate between different cells, structures, and species, making it an essential component of modern biology.\n\nIt is evident that DNA is not limited to specific genetic profiles. For instance, some cellular DNA groups, such as:\n\n- **Molecular Formula**: DNA is a fundamental molecule with multiple"
+      },
+      "heuristic": {
+        "pretrain@0.1": "ramble",
+        "sft@0.1": "",
+        "pretrain@0.7": "ramble",
+        "sft@0.7": "ramble"
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        }
+      }
+    },
+    "photosynthesis": {
+      "category": "edu_science",
+      "prompt": "Explain photosynthesis in one sentence.",
+      "prefix": "Photosynthesis is",
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "the process of photosynthesis that takes place in the atmosphere. Photosynthetic organisms are able to use sunlight for energy, and they can use it as a fuel source for their own food.\nThe photosynthetic organisms are able to use sunlight to produce energy from sunlight. They also use sunlight to convert carbon dioxide into water. The photosynthetic organisms use sunlight to make sugars, fats, proteins, carbohydrates, and other organic compounds.\nIn order to create a living organism, the photosynthetic organisms need to be able to use sunlight to produce energy. This means that the photosynthetic organisms need to have enough sunlight to grow",
+        "sft@0.1": "In the context of the sentence \"The photosynthesis process is a crucial step in the synthesis of glucose, a key component of the plant's survival.\" Here's a breakdown of the key components:\n\n1. **Carbon**: The carbon dioxide produced during photosynthesis is converted into glucose by the enzyme **glucose** (a sugar that breaks down glucose) and released into the bloodstream. This process is essential for maintaining cellular homeostasis.\n\n2. **Canno**: The enzyme **fancia** (the enzyme responsible for producing glucose) is critical for the production of glucose. It is essential",
+        "pretrain@0.7": "a process of photosynthesis that occurs in the absence of sunlight. It is also known as photosynthetic activity, or photosynthesis, because the molecules produced by photosynthesis are present at different wavelengths. Photosystem II includes both light and oxygen.\nThe photoreceptors are photovoltaic cells. They are responsible for photochemical reactions and energy production. The photodetectors are the phototranspiration and metabolic organisms.\nAquatic photosynthesis is the process by which plants take in carbon dioxide (CO2) from the air, and then convert it to photosynthesis using the oxygen-rich atmosphere. This",
+        "sft@0.7": "The photosynthesis process is the process by which plants and animals convert sunlight into energy, often referred to as \"light.\" This process involves the formation of chemical reactions that enable plant life to thrive in the presence of light. Here's a concise overview:\n\n1. **Light Production**: The photosynthesis process involves the formation of a new phase of light, typically the light from a specific wavelength (e.g., visible light). When light is emitted, it produces light through the following steps:\n\t* Light absorption: Refers to the light being absorbed by the plant, producing an increased amount of water vapor (water)"
+      },
+      "heuristic": {
+        "pretrain@0.1": "ramble",
+        "sft@0.1": "ramble",
+        "pretrain@0.7": "ramble",
+        "sft@0.7": "ramble"
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        }
+      }
+    },
+    "sky_blue": {
+      "category": "reasoning_format",
+      "prompt": "Why is the sky blue?",
+      "prefix": "The sky appears blue because",
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "of the bright red light. The sky is blue because it is a blue-green color, and the sky is blue because it is blue.\n  • The sky is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue",
+        "sft@0.1": "The sky blue is a common sight in many cultures, particularly in the United States and Canada. It's a common sight in many cultures, especially in the United States, where the sky is often seen as a red, orange, or yellow color. The sky is also known as blue, which means it has a blue hue when viewed from a distance. This phenomenon is known as the \"blue coloration\" or \"red coloration.\"\n\nIn some cultures, the sky is considered blue due to its unique properties, such as being blue-green, which can be found in various cultures across different regions of the world. For example",
+        "pretrain@0.7": "of the large number of stars in our solar system. The stars are moving from one side of the Sun to the other, which is what we see as a bright white dwarf in our solar system.\nWe have seen the bright white dwarf orbiting the sun and seen it in our sky above the horizon, and it seems that the white dwarf stars will be much brighter than the ones observed there in the past. We can only look at the stars where they are all visible and they are still visible. It will be a beautiful sight.<|endoftext|>",
+        "sft@0.7": "The sky blue is a result of the Earth's atmosphere, which is caused by the presence of oxygen in the air and the movement of gases within it. As the sun rises, the Earth's atmosphere is filled with a constant, continuous hum of gases, such as carbon dioxide, methane, and water vapor. This process creates a unique hum that can be heard at any moment, making the sky appear blue when viewed from above."
+      },
+      "heuristic": {
+        "pretrain@0.1": "ramble",
+        "sft@0.1": "ramble",
+        "pretrain@0.7": "ramble",
+        "sft@0.7": ""
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        },
+        "pretrain@0.7": {
+          "new_tokens": 108
+        },
+        "sft@0.7": {
+          "new_tokens": 87,
+          "stopped_on_im_end": true
+        }
+      }
+    }
+  }
+}

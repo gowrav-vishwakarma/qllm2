@@ -1,0 +1,61 @@
+# Pretrain (prefix completion) vs SFT (ChatML chat) — compact compare suite.
+# One row per question: 4 answers (pretrain/sft x temp 0.1/0.7).
+
+round_tag: round-6b-gate
+pretrain_checkpoint: qllm_v11_e3k3_pretrain.pt
+sft_checkpoint: qllm_v11_e3k3_chat.pt
+temperatures: [0.1, 0.7]
+max_new_tokens: 128
+seed: 42
+
+questions:
+  - id: france
+    category: web_factual
+    prompt: what is the capital of France?
+    prefix: The capital of France is
+    notes: Pretrain often completes "Paris" from prefix; SFT may ramble in chat
+
+  - id: usa_capital
+    category: web_factual
+    prompt: What is the capital of the United States?
+    prefix: The capital of the United States is
+
+  - id: karl_marx
+    category: web_factual
+    prompt: Who was Karl Marx?
+    prefix: Karl Marx was
+
+  - id: shakespeare
+    category: web_factual
+    prompt: Who wrote Romeo and Juliet?
+    prefix: Romeo and Juliet was written by
+
+  - id: largest_planet
+    category: web_factual
+    prompt: What is the largest planet in our solar system?
+    prefix: The largest planet in our solar system is
+
+  - id: math_2plus2
+    category: math_stress
+    prompt: What is 2+2?
+    prefix: 2 + 2 =
+
+  - id: math_multiply
+    category: math_stress
+    prompt: What is 17 × 23?
+    prefix: 17 × 23 =
+
+  - id: dna
+    category: edu_science
+    prompt: What is DNA?
+    prefix: DNA is
+
+  - id: photosynthesis
+    category: edu_science
+    prompt: Explain photosynthesis in one sentence.
+    prefix: Photosynthesis is
+
+  - id: sky_blue
+    category: reasoning_format
+    prompt: Why is the sky blue?
+    prefix: The sky appears blue because

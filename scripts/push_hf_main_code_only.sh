@@ -9,6 +9,6 @@ echo "=== Verify current round bundle ==="
 
 echo "=== Code-only push to HF main ==="
 uv run python scripts/push_qllm_hf.py --revision main \
-  --only modeling_qllm.py run_chat.py README.md verify.sh PUSH_TO_HF.md
+  --only modeling_qllm.py run_chat.py run_complete.py eval_compare.py README.md verify.sh PUSH_TO_HF.md
 
 echo "Done."

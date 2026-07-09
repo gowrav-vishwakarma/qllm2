@@ -57,7 +57,8 @@ Run `verify.sh` on the RTX4090 against the round export staged in `hf_release/`:
 
 | Script | Checkpoint | Expect |
 |--------|------------|--------|
-| `verify.sh` | `hf_release/qllm_v11_e3k3_chat.pt` (current round export) | Paris + `stopped_on_im_end=True` |
+| `verify.sh` | `hf_release/qllm_v11_e3k3_chat.pt` (SFT) | Paris + `stopped_on_im_end=True` |
+| `verify.sh` | `hf_release/qllm_v11_e3k3_pretrain.pt` (pretrain) | prefix `The capital of France is` → Paris |
 
 ```bash
 cd hf_release
@@ -84,6 +85,13 @@ uv run python scripts/export_hf_release.py \
   --src checkpoints_v11_sft_chat_smoltalk_v2/best_model.pt \
   --round round-2b-gate --tag round-2b-gate \
   --pretrain_tokens_total 2000000000 --round_tokens 2000000000 --record-manifest
+
+uv run python scripts/export_hf_release.py \
+  --src checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt \
+  --round round-6b-gate --tag round-6b-gate \
+  --out-name qllm_v11_e3k3_pretrain.pt --config-name config_pretrain.json \
+  --checkpoint-type pretrain \
+  --pretrain_tokens_total 6000000000 --round_tokens 2000000000 --record-manifest
 
 # 2. modeling_qllm.py, run_chat.py, requirements.txt live in hf_release/
 #    (regenerate modeling if v11/model.py changed — see scripts/export_hf_release.py)
@@ -128,13 +136,19 @@ hf upload gowravvishwakarma/qllm-pam-v11-e3k3-chat hf_release/ \
 
 | File | Purpose |
 |------|---------|
-| `qllm_v11_e3k3_chat.pt` | Weights-only checkpoint (~384 MB) |
-| `config.json` | Architecture + training metadata |
+| `qllm_v11_e3k3_chat.pt` | SFT chat weights-only checkpoint (~384 MB) |
+| `qllm_v11_e3k3_pretrain.pt` | Pretrain base weights-only checkpoint (~384 MB) |
+| `config.json` | SFT architecture + training metadata |
+| `config_pretrain.json` | Pretrain architecture + training metadata |
 | `modeling_qllm.py` | Self-contained model code (no qllm2 clone needed) |
-| `run_chat.py` | Interactive / single-prompt chat |
-| `eval_chat.py` | Batch chat eval (reproduce sample Q&A) |
-| `eval_prompts_round1.yaml` | Round 1 prompt suite |
-| `SAMPLES_round-<tag>.md` | Full sample Q&A log for that round (e.g. `SAMPLES_round-4b-gate.md`) |
+| `run_chat.py` | Interactive / single-prompt SFT chat |
+| `run_complete.py` | Prefix completion (pretrain base) |
+| `eval_chat.py` | Batch SFT chat eval |
+| `eval_compare.py` | Pretrain vs SFT comparison eval |
+| `eval_prompts_round1.yaml` | SFT chat prompt suite |
+| `eval_prompts_compare.yaml` | Paired prefix + chat questions |
+| `SAMPLES_round-<tag>.md` | Full SFT chat sample log |
+| `SAMPLES_round-<tag>-compare.md` | Pretrain vs SFT summary table |
 | `requirements.txt` | `torch`, `transformers`, `PyYAML` |
 | `README.md` | Model card |
 
