@@ -884,3 +884,80 @@ Math is identical to `round-2b-gate`, so `round-4b-gate` can resume from the rou
 optionally, `fused_ce_loss` in the trainer for the VRAM win. `fused_ce` is **not yet wired
 into `v7/train.py`** (the trainer still calls `forward()`+`_masked_ce`); wiring it is the
 one remaining integration step to capture the memory headroom in the real round.
+
+---
+
+## Inference-speed rough test (PAM recurrent vs KV-cached transformer, 2026-07-09)
+
+First **inference** (not training) A/B, to answer the recurring "is it faster / what's
+the memory?" question honestly. Script: [`v11/bench_infer.py`](bench_infer.py). Both models
+~100M, batch=1, greedy decode. The transformer is given a **real KV cache** (single-token
+SDPA over cached k/v) — the fair deployment baseline, NOT the naive no-cache `generate()` in
+`v6/transformer_baseline.py`. Speed is weight-independent, so random init is used and
+`max_seq_len` is extended to 8192 for both (this inflates the transformer's learned
+`pos_embed` to ~104M params; PAM uses RoPE so it stays 100.5M — irrelevant to per-token
+decode compute).
+
+**Fused-kernel fairness:** the transformer's `F.scaled_dot_product_attention` dispatches to
+a **fused FlashAttention kernel** on CUDA; PAM runs **pure-PyTorch** complex ops with no
+fused inference kernel. So we run **both modes**: `--attn auto` (transformer gets Flash) and
+`--attn math` (SDPA forced to the pure-PyTorch matmul+softmax+matmul path, so *neither* model
+is fused). The `math` run is the true apples-to-apples "both pure PyTorch" comparison.
+
+Run:
+```
+uv run python -m v11.bench_infer --device cuda --dtype fp16 \
+    --context 128,512,1024,2048,4096,8000 --decode 32 --attn auto \
+    --out-json logs/v11/infer_bench_auto.json
+uv run python -m v11.bench_infer ... --attn math --out-json logs/v11/infer_bench_math.json
+```
+
+### Decode latency (RTX 4090, fp16, batch=1, greedy; steady-state ms/token)
+
+| context L | PAM decode | PAM state | TF decode (auto/Flash) | TF decode (math/pure) | TF KV cache |
+|----------:|-----------:|----------:|-----------------------:|----------------------:|------------:|
+| 128  | 22.4 ms | **4.7 MB** | 1.07 ms | 1.77 ms | 5.2 MB |
+| 512  | 22.0 ms | **4.7 MB** | 1.16 ms | 1.85 ms | 17.6 MB |
+| 1024 | 22.1 ms | **4.7 MB** | 1.08 ms | 1.85 ms | 34.1 MB |
+| 2048 | 22.1 ms | **4.7 MB** | 1.09 ms | 1.78 ms | 67.2 MB |
+| 4096 | 21.9 ms | **4.7 MB** | 1.09 ms | 1.80 ms | 133.2 MB |
+| 8000 | 22.0 ms | **4.7 MB** | 1.47 ms | 2.42 ms | 259.1 MB |
+
+### Prefill latency (process the L-token prompt once, ms)
+
+| context L | PAM prefill | TF prefill (auto/Flash) | TF prefill (math/pure) |
+|----------:|------------:|------------------------:|-----------------------:|
+| 128  | ~78 ms | 1.8 ms | 3.0 ms |
+| 1024 | ~45 ms | 4.3 ms | 11.2 ms |
+| 2048 | ~80 ms | 4.1 ms | 38.0 ms |
+| 4096 | ~143 ms | 8.4 ms | **152.3 ms** |
+| 8000 | ~271 ms | 21.4 ms | **573.9 ms** |
+
+Raw JSON: `logs/v11/infer_bench_auto.json`, `logs/v11/infer_bench_math.json`.
+
+### Honest takeaways
+1. **Yes, the transformer relies on a fused kernel.** FlashAttention is what keeps its
+   long-context cheap. But for **single-token decode** (batch=1, seq=1) it barely matters:
+   removing Flash only moves TF decode 1.1 → 1.8 ms — decode is GEMM/overhead-bound, not
+   attention-bound. So the fused kernel is **not** why the transformer wins at decode.
+2. **Per-token decode: transformer wins either way** (~1.1 ms Flash, ~1.8 ms pure PyTorch)
+   vs PAM ~22 ms. PAM's decode is a **Python loop over K=3 states × 16 layers** of complex
+   ops with no fused recurrent kernel — this is the real bottleneck, our implementation gap.
+3. **The O(1)/token claim holds:** PAM decode is **flat** (22 ms) from L=128 to L=8000; TF
+   decode starts creeping up once the cache is large (rises at 8k in both modes).
+4. **Prefill, pure-PyTorch (apples-to-apples): PAM wins at long context.** Without Flash,
+   attention is O(T²) and TF prefill explodes (574 ms @8k); PAM's chunked O(T·C) form is
+   271 ms @8k. Crossover ~4k tokens. FlashAttention hides this for TF (21 ms) — but that's
+   exactly the fused-kernel advantage PAM doesn't have yet.
+5. **Memory is PAM's unconditional win:** fixed **4.7 MB** state at any length vs a KV cache
+   that grows linearly and unbounded (5 → 259 MB at 8k, ~55×, still climbing).
+
+### Verdict / what to fix
+Architectural properties confirmed: **flat per-token latency** and **fixed tiny state**.
+In pure PyTorch, PAM's compute-complexity advantage already shows up in **long-context
+prefill**. What's missing is a **fused recurrent-decode kernel** (batched K-state step, no
+Python loop) — until then PAM loses raw decode wall-clock despite the flat-cost property.
+For public/Reddit replies: quote **memory (fixed 4.7 MB vs growing KV cache)**, **flat
+per-token latency**, and **long-context prefill in pure PyTorch** — and be upfront that the
+transformer wins single-token decode today (and that its long-context speed leans on a fused
+kernel we haven't written the equivalent of yet).

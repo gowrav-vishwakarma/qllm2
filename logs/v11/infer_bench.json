@@ -1,0 +1,78 @@
+{
+  "run_at": "2026-07-09T10:37:53.950382+00:00",
+  "device": "cuda",
+  "dtype": "fp16",
+  "pam_preset": "v11_e3_k3_chat",
+  "pam_params": 100546832,
+  "tf_params": 104414688,
+  "decode_steps": 32,
+  "note": "decode_ms = steady-state ms/token; PAM state is fixed-size (constant in L), TF kv$ grows linearly with L. Transformer uses a real KV cache (fair baseline), not naive recompute.",
+  "rows": [
+    {
+      "context": 128,
+      "pam_prefill_ms": 83.43655100179603,
+      "pam_decode_ms": 22.29502512500403,
+      "pam_decode_tok_s": 44.853055531141464,
+      "pam_state_bytes": 4718592,
+      "tf_prefill_ms": 1.7709830026433337,
+      "tf_decode_ms": 1.0751076249562175,
+      "tf_decode_tok_s": 930.1394360780613,
+      "tf_kv_bytes": 5225472
+    },
+    {
+      "context": 512,
+      "pam_prefill_ms": 29.900829002144746,
+      "pam_decode_ms": 22.581652031249178,
+      "pam_decode_tok_s": 44.28373967574071,
+      "pam_state_bytes": 4718592,
+      "tf_prefill_ms": 2.324166998732835,
+      "tf_decode_ms": 1.1563708436597153,
+      "tf_decode_tok_s": 864.7744843126376,
+      "tf_kv_bytes": 17611776
+    },
+    {
+      "context": 1024,
+      "pam_prefill_ms": 45.4820809973171,
+      "pam_decode_ms": 22.38389834371901,
+      "pam_decode_tok_s": 44.6749705812796,
+      "pam_state_bytes": 4718592,
+      "tf_prefill_ms": 4.17078499958734,
+      "tf_decode_ms": 1.1161984687078075,
+      "tf_decode_tok_s": 895.8980217538488,
+      "tf_kv_bytes": 34126848
+    },
+    {
+      "context": 2048,
+      "pam_prefill_ms": 79.10110299781081,
+      "pam_decode_ms": 22.5823833125105,
+      "pam_decode_tok_s": 44.282305643355464,
+      "pam_state_bytes": 4718592,
+      "tf_prefill_ms": 4.581522996886633,
+      "tf_decode_ms": 1.1012719375003144,
+      "tf_decode_tok_s": 908.0409351661287,
+      "tf_kv_bytes": 67156992
+    },
+    {
+      "context": 4096,
+      "pam_prefill_ms": 142.4977350034169,
+      "pam_decode_ms": 22.40024962497955,
+      "pam_decode_tok_s": 44.64235964963774,
+      "pam_state_bytes": 4718592,
+      "tf_prefill_ms": 8.859743000357412,
+      "tf_decode_ms": 1.1107700936463516,
+      "tf_decode_tok_s": 900.276308950015,
+      "tf_kv_bytes": 133217280
+    },
+    {
+      "context": 8000,
+      "pam_prefill_ms": 271.34960100011085,
+      "pam_decode_ms": 22.334118187472995,
+      "pam_decode_tok_s": 44.774545903535646,
+      "pam_state_bytes": 4718592,
+      "tf_prefill_ms": 21.61358100056532,
+      "tf_decode_ms": 1.485500531202888,
+      "tf_decode_tok_s": 673.1737747614586,
+      "tf_kv_bytes": 259144704
+    }
+  ]
+}
