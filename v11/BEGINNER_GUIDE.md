@@ -252,7 +252,7 @@ def cabs(x):
 
 ```python
 import torch
-from v7.model import cmul, cabs, cconj
+from v11.complex_ops import cmul, cabs, cconj
 
 # One complex number as [real, imag]
 z = torch.tensor([3.0, 4.0])

@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from v11.model import V11Config, V11LM
-from v7.model import ComplexLinear, ComplexNorm
+from v11.complex_ops import ComplexLinear, ComplexNorm
 
 
 class FrameHeads(nn.Module):
@@ -175,7 +175,7 @@ class V11DuplexLM(V11LM):
         labels: torch.Tensor,
     ) -> torch.Tensor:
         """Causal CE: logits[:, t] predicts labels[:, t+1]."""
-        shift_logits = logits[:, :-1, :].contiguous()
+        shift_logits = logits[:, :-1, :].contiguous()  # align predictions with next-token labels
         shift_labels = labels[:, 1:].contiguous()
         return F.cross_entropy(
             shift_logits.view(-1, shift_logits.size(-1)),
