@@ -389,6 +389,7 @@ ship)
   cp -f "releases/$ROUND_TAG/qllm_v11_e3k3_chat.pt" hf_release/qllm_v11_e3k3_chat.pt
   ( cd hf_release && bash verify.sh )
   eval "$PYTHON_BIN scripts/push_qllm_hf.py --revision $ROUND_TAG --also-main"
+  ./scripts/pull_v11_training_ckpt.sh --cleanup
   echo "[ship] published revision $ROUND_TAG"
   ;;
 
