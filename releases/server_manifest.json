@@ -1,7 +1,7 @@
 {
   "_comment": "Server-side catalog of ship-ready rounds, written by scripts/run_v11_round.sh export. Paths are relative to the repo root on the training server. The RTX4090 pull script (scripts/pull_v11_release.sh) reads this to fetch only new/changed rounds. Do not edit sha256/size by hand.",
   "repo_id": "gowravvishwakarma/qllm-pam-v11-e3k3-chat",
-  "latest": "round-4b-gate",
+  "latest": "round-6b-gate",
   "rounds": {
     "round-2b-gate": {
       "hf_tag": "round-2b-gate",
@@ -22,6 +22,16 @@
       "pretrain_tokens_total": 4000000000,
       "val_ppl": 6.650292554504003,
       "updated_at": "2026-07-06T04:35:55.522995+00:00"
+    },
+    "round-6b-gate": {
+      "hf_tag": "round-6b-gate",
+      "sft_ckpt": "checkpoints_v11_sft_chat_smoltalk_v2/best_model.pt",
+      "hf_export_bundle": "releases/round-6b-gate/qllm_v11_e3k3_chat.pt",
+      "sha256": "1f2c2bd02f57596796746471fea536d3cc8312bbc05a05509963ddb690e1bae7",
+      "size_bytes": 402322962,
+      "pretrain_tokens_total": 6000000000,
+      "val_ppl": 6.549919394647784,
+      "updated_at": "2026-07-09T04:51:13.065080+00:00"
     }
   }
 }
