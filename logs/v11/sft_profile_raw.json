@@ -1,0 +1,217 @@
+{
+  "raw": true,
+  "think_fraction": 1.0,
+  "sampled": 1500,
+  "first_turn_scored": 1500,
+  "empty_first_assistant": 0,
+  "think_share": 0.4,
+  "non_english_share": 0.056,
+  "generic_opener_share": 0.025,
+  "answer_words_mean": 845.8,
+  "answer_words_median": 143.0,
+  "answer_words_p90": 1373,
+  "top_first_word": [
+    [
+      "<think>",
+      540
+    ],
+    [
+      "<tool_call>",
+      120
+    ],
+    [
+      "the",
+      88
+    ],
+    [
+      "hello",
+      60
+    ],
+    [
+      "to",
+      52
+    ],
+    [
+      "<think>i",
+      48
+    ],
+    [
+      "based",
+      36
+    ],
+    [
+      "hi",
+      27
+    ],
+    [
+      "python",
+      22
+    ],
+    [
+      "i'm",
+      18
+    ],
+    [
+      "dear",
+      16
+    ],
+    [
+      "according",
+      14
+    ],
+    [
+      "absolutely",
+      12
+    ],
+    [
+      "sure",
+      12
+    ],
+    [
+      "ah",
+      11
+    ],
+    [
+      "i",
+      11
+    ],
+    [
+      "<think>to",
+      10
+    ],
+    [
+      "emily",
+      9
+    ],
+    [
+      "as",
+      8
+    ],
+    [
+      "hey",
+      8
+    ]
+  ],
+  "top_first_three": [
+    [
+      "<think> okay the",
+      238
+    ],
+    [
+      "<think> okay let's",
+      93
+    ],
+    [
+      "<think> okay so",
+      78
+    ],
+    [
+      "hello how can",
+      60
+    ],
+    [
+      "<think> okay i",
+      45
+    ],
+    [
+      "<think>i need to",
+      44
+    ],
+    [
+      "based on the",
+      35
+    ],
+    [
+      "to solve this",
+      26
+    ],
+    [
+      "<think> alright let's",
+      25
+    ],
+    [
+      "<think> okay let",
+      23
+    ],
+    [
+      "to determine the",
+      12
+    ],
+    [
+      "according to the",
+      11
+    ],
+    [
+      "<think> alright so",
+      11
+    ],
+    [
+      "the question asks",
+      9
+    ],
+    [
+      "python import sys",
+      8
+    ],
+    [
+      "<tool_call> 'arguments' 'device_id'",
+      6
+    ],
+    [
+      "dear alex i",
+      5
+    ],
+    [
+      "absolutely i'd be",
+      5
+    ],
+    [
+      "python import math",
+      4
+    ],
+    [
+      "i'm excited to",
+      4
+    ]
+  ],
+  "turn_counts": {
+    "2": 1106,
+    "3": 5,
+    "4": 120,
+    "6": 164,
+    "7": 11,
+    "8": 67,
+    "10": 12,
+    "12": 6,
+    "14": 4,
+    "22": 1,
+    "24": 4
+  },
+  "per_split": {
+    "LongAlign_64k_Qwen3_32B_yarn_131k_think": 60,
+    "LongAlign_64k_context_lang_annotated_lang_6_no_think": 60,
+    "Mixture_of_Thoughts_science_no_think": 60,
+    "OpenHermes_2.5_no_think": 60,
+    "OpenThoughts3_1.2M_no_think_no_think": 60,
+    "OpenThoughts3_1.2M_think": 60,
+    "aya_dataset_Qwen3_32B_think": 60,
+    "hermes_function_calling_v1_no_think": 60,
+    "multi_turn_reasoning_if_think": 60,
+    "s1k_1.1_think": 60,
+    "smolagents_toolcalling_traces_think": 60,
+    "smoltalk_everyday_convs_reasoning_Qwen3_32B_think": 60,
+    "smoltalk_multilingual8_Qwen3_32B_think": 60,
+    "smoltalk_multilingual_8languages_lang_5_no_think": 60,
+    "smoltalk_smollm3_everyday_conversations_no_think": 60,
+    "smoltalk_smollm3_explore_instruct_rewriting_no_think": 60,
+    "smoltalk_smollm3_smol_magpie_ultra_no_think": 60,
+    "smoltalk_smollm3_smol_rewrite_no_think": 60,
+    "smoltalk_smollm3_smol_summarize_no_think": 60,
+    "smoltalk_smollm3_systemchats_30k_no_think": 60,
+    "smoltalk_systemchats_Qwen3_32B_think": 60,
+    "table_gpt_Qwen3_32B_think": 60,
+    "table_gpt_no_think": 60,
+    "tulu_3_sft_personas_instruction_following_no_think": 60,
+    "xlam_traces_no_think": 60
+  }
+}

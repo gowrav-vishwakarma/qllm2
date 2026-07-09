@@ -1,0 +1,201 @@
+{
+  "raw": false,
+  "think_fraction": 0.0,
+  "hard_filter": true,
+  "sampled": 913,
+  "first_turn_scored": 913,
+  "empty_first_assistant": 0,
+  "think_share": 0.0,
+  "non_english_share": 0.005,
+  "generic_opener_share": 0.056,
+  "answer_words_mean": 88.0,
+  "answer_words_median": 62,
+  "answer_words_p90": 208,
+  "top_first_word": [
+    [
+      "the",
+      111
+    ],
+    [
+      "hello",
+      83
+    ],
+    [
+      "to",
+      57
+    ],
+    [
+      "python",
+      42
+    ],
+    [
+      "hi",
+      35
+    ],
+    [
+      "i'm",
+      31
+    ],
+    [
+      "dear",
+      26
+    ],
+    [
+      "sure",
+      19
+    ],
+    [
+      "column_mappings",
+      15
+    ],
+    [
+      "ah",
+      14
+    ],
+    [
+      "absolutely",
+      14
+    ],
+    [
+      "here's",
+      13
+    ],
+    [
+      "emily",
+      13
+    ],
+    [
+      "i",
+      12
+    ],
+    [
+      "a",
+      11
+    ],
+    [
+      "hey",
+      11
+    ],
+    [
+      "alex",
+      10
+    ],
+    [
+      "in",
+      9
+    ],
+    [
+      "of",
+      9
+    ],
+    [
+      "as",
+      8
+    ]
+  ],
+  "top_first_three": [
+    [
+      "hello how can",
+      83
+    ],
+    [
+      "to solve this",
+      17
+    ],
+    [
+      "python import sys",
+      17
+    ],
+    [
+      "to determine the",
+      12
+    ],
+    [
+      "i'm sorry for",
+      10
+    ],
+    [
+      "to find the",
+      7
+    ],
+    [
+      "absolutely i'd be",
+      7
+    ],
+    [
+      "python mod 10",
+      6
+    ],
+    [
+      "dear alex i",
+      6
+    ],
+    [
+      "i'm excited to",
+      5
+    ],
+    [
+      "the question asks",
+      4
+    ],
+    [
+      "python def f",
+      4
+    ],
+    [
+      "dear jamie i",
+      4
+    ],
+    [
+      "i'm an ai",
+      4
+    ],
+    [
+      "sure i'd be",
+      4
+    ],
+    [
+      "i'm sorry but",
+      4
+    ],
+    [
+      "ah my dear",
+      3
+    ],
+    [
+      "here's a python",
+      3
+    ],
+    [
+      "cpp include <bits/stdc",
+      3
+    ],
+    [
+      "i'm sorry i",
+      3
+    ]
+  ],
+  "turn_counts": {
+    "2": 703,
+    "4": 6,
+    "6": 102,
+    "7": 16,
+    "8": 72,
+    "10": 8,
+    "12": 4,
+    "14": 2
+  },
+  "per_split": {
+    "Mixture_of_Thoughts_science_no_think": 83,
+    "OpenHermes_2.5_no_think": 83,
+    "OpenThoughts3_1.2M_no_think_no_think": 83,
+    "smoltalk_smollm3_everyday_conversations_no_think": 83,
+    "smoltalk_smollm3_explore_instruct_rewriting_no_think": 83,
+    "smoltalk_smollm3_smol_magpie_ultra_no_think": 83,
+    "smoltalk_smollm3_smol_rewrite_no_think": 83,
+    "smoltalk_smollm3_smol_summarize_no_think": 83,
+    "smoltalk_smollm3_systemchats_30k_no_think": 83,
+    "table_gpt_no_think": 83,
+    "tulu_3_sft_personas_instruction_following_no_think": 83
+  }
+}

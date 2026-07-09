@@ -961,3 +961,86 @@ For public/Reddit replies: quote **memory (fixed 4.7 MB vs growing KV cache)**, 
 per-token latency**, and **long-context prefill in pure PyTorch** — and be upfront that the
 transformer wins single-token decode today (and that its long-context speed leans on a fused
 kernel we haven't written the equivalent of yet).
+
+## SFT factual-QA regression diagnosis (2026-07-09)
+
+Prompted by an external review of the pretrain-vs-SFT compare eval (round-6b-gate). Tooling:
+[hf_release/eval_compare.py](../hf_release/eval_compare.py) (now with `--with-pretrain-chat`
+diagnostic arm + `span_hit@20`), [hf_release/eval_prompts_compare.yaml](../hf_release/eval_prompts_compare.yaml)
+(gold spans, retrieval/biography/reasoning categories), [scripts/audit_sft_mask.py](../scripts/audit_sft_mask.py).
+
+### Diagnostic result — `span_hit@20` (gold span in first 20 generated tokens, 12 questions)
+
+| arm | T=0.1 | T=0.7 |
+|-----|-------|-------|
+| **pretrain** (prefix completion) | **0.33** | **0.50** |
+| **sft** (ChatML chat) | 0.17 | 0.25 |
+| **pretrain_chat** (pretrain base under ChatML) | 0.08 | **0.00** |
+
+### Findings
+1. **The ChatML template itself is a major driver, not just SFT.** The pretrain base under
+   the ChatML chat template (`pretrain_chat`) is the **worst** arm — it drops into a
+   `<think>… which of the following …` MCQ/reasoning discourse on *every* question and never
+   answers. That reasoning mode was learned during **pretraining** from the smoltalk2-`Mid`
+   reasoning blend (rendered to ChatML + `<think>` tokens), so simply wrapping a prompt in
+   ChatML flips the model out of factual-recall mode. This answers the reviewer's isolation
+   test: pretrain+ChatML fails *harder* than SFT → a large part of the regression is
+   **prompt-format / discourse-mode mismatch**, not pure catastrophic forgetting.
+2. **SFT partially recovers direct answering** (0.17–0.25 > pretrain_chat 0.00–0.08) but does
+   not reach the pretrain prefix level (0.33–0.50), and it introduces two artifacts:
+   - **German/multilingual leakage** ("Hier ist einige Ideen…"): root cause is
+     [v7/data.py](../v7/data.py) `load_smoltalk2` streaming **all** splits of smoltalk2 `SFT`,
+     which includes ~500k multilingual rows (`smoltalk_multilingual8_*`, ~15% of the mix,
+     incl. de/fr/es/it/pt/ar/ru/zh). Rows were yielded **without a `source` key**, so the
+     source-based rules in `_should_filter_smoltalk` (`'function'`, `'magpie-ultra'`) were
+     **dead code** — split-level filtering never ran.
+   - **"Explain the question instead of answering"** discourse from the reasoning-heavy
+     splits (OpenThoughts3, Mixture-of-Thoughts, table-gpt).
+3. **Masking is correct (reviewer point 8 is a false alarm).** `scripts/audit_sft_mask.py`
+   confirms `_encode_sft_example` masks system/user/role-headers/pad and trains only on
+   assistant content + the closing `<|im_end|>` (synthetic audit PASSED; run with `--shard`
+   on the GCP box to double-check cached shards).
+4. **Astronomy weakness is real** (largest planet → "the Sun") — matches the reviewer; a
+   knowledge-coverage gap at 6B tokens, not a pipeline bug.
+
+### SFT target profiling (the decisive evidence)
+`scripts/profile_sft_targets.py` samples the assistant targets (first assistant turn),
+balanced per split. It confirmed the regression is a **target-distribution / style**
+problem, not a bug — the model faithfully imitates verbose reasoning prose:
+
+| metric (balanced per-split sample) | raw (round-6b pool) | split-filter only | **think=0 + length cap** |
+| ---------------------------------- | ------------------- | ----------------- | ------------------------ |
+| `<think>` share (share of convs)   | 40%                 | 33%               | **0%**                   |
+| non-English share                  | 5.6%                | 0.4%              | **0.6%**                 |
+| answer words mean / median / p90   | 846 / 143 / 1373    | 1014 / 133 / 3184 | **78 / 52 / 197**        |
+| #1 first-word opener               | `<think>`           | `<think>`         | **`the` / `hello`**      |
+
+`<think>` was the single most common answer opener (≈40%); the "explain the question
+instead of answering" pattern *is* the `<think> okay the…` / `To solve this…` / `Based on
+the…` prefix, plus 800–3000-word reasoning/table dumps that a 100M model collapses into.
+
+### Remediation (implemented 2026-07-09)
+Three data-level levers, all landed and re-profiled (table above):
+1. **Split allowlist** ([v7/data.py](../v7/data.py) `SMOLTALK2_SFT_SPLIT_BLOCK`): drop
+   `*multilingual*`, `LongAlign*`, `aya*`, `*function_calling*`, `smolagents/toolcalling*`;
+   cap `OpenThoughts3*`@0.05, `Mixture_of_Thoughts*`@0.10, `table_gpt*`@0.20. Split name is
+   now propagated as `source`, reviving `_should_filter_smoltalk`'s source rules.
+2. **Remove `<think>` by default** ([scripts/run_v11_round.sh](../scripts/run_v11_round.sh)):
+   `THINK_FRACTION` default `0.15 → 0`. Reasoning traces have no upside for a 100M factual
+   base and were the dominant discourse-mode driver. (Set `THINK_FRACTION=0.15` to restore.)
+3. **Assistant-length cap** (`_SFT_MAX_ASSISTANT_WORDS = 300`, `'hard'` filter): drops the
+   verbose no_think reasoning/table dumps that survived (1). Cut mean answer 846 → 78 words.
+
+`_CHAT_CACHE_VERSION` bumped 4 → 6 so the SFT token cache rebuilds with the new mix.
+
+4. **Strip `<think>` from the pretrain blend too** ([v7/data.py](../v7/data.py)
+   `_strip_think_content`, applied in `_smoltalk2_blend_text_iter`): the `smoltalk2_mid`
+   reasoning blend was rendered to ChatML *with* `<think>` traces, so the base learned to
+   emit them and ChatML cued MCQ mode. Now only the post-reasoning answers survive as clean
+   chat text; pure-reasoning turns with no final answer are dropped. `_PRETRAIN_CACHE_VERSION`
+   bumped 1 → 2 so the mix rebuilds on the next round (round-8b pretrain).
+
+Deferred / optional:
+- Re-SFT round-6b on the cleaned mix and re-run `eval_compare.py`; ship only if `span_hit@20`
+  improves over the current 0.17–0.25 SFT baseline (GPU-time decision, not auto-run). Note the
+  strongest fix (no `<think>` in the base) only lands once round-8b pretrain runs with v2.

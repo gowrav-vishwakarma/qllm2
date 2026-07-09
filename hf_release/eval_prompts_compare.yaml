@@ -1,5 +1,7 @@
 # Pretrain (prefix completion) vs SFT (ChatML chat) — compact compare suite.
-# One row per question: 4 answers (pretrain/sft x temp 0.1/0.7).
+# One row per question: pretrain/sft x temp 0.1/0.7 (+ optional pretrain-chat arm).
+# `gold` lists accepted first-span answers for span_hit@20 scoring.
+# Categories: retrieval | biography | reasoning.
 
 round_tag: round-6b-gate
 pretrain_checkpoint: qllm_v11_e3k3_pretrain.pt
@@ -9,53 +11,78 @@ max_new_tokens: 128
 seed: 42
 
 questions:
+  # ── Retrieval: single-fact recall ────────────────────────────────────────
   - id: france
-    category: web_factual
+    category: retrieval
     prompt: what is the capital of France?
     prefix: The capital of France is
+    gold: [Paris]
     notes: Pretrain often completes "Paris" from prefix; SFT may ramble in chat
 
   - id: usa_capital
-    category: web_factual
+    category: retrieval
     prompt: What is the capital of the United States?
     prefix: The capital of the United States is
-
-  - id: karl_marx
-    category: web_factual
-    prompt: Who was Karl Marx?
-    prefix: Karl Marx was
+    gold: [Washington]
 
   - id: shakespeare
-    category: web_factual
+    category: retrieval
     prompt: Who wrote Romeo and Juliet?
     prefix: Romeo and Juliet was written by
+    gold: [Shakespeare]
 
   - id: largest_planet
-    category: web_factual
+    category: retrieval
     prompt: What is the largest planet in our solar system?
     prefix: The largest planet in our solar system is
+    gold: [Jupiter]
 
+  # ── Biography: "X was ..." completions ───────────────────────────────────
+  - id: karl_marx
+    category: biography
+    prompt: Who was Karl Marx?
+    prefix: Karl Marx was
+    gold: [philosopher, economist, communist, German, revolutionary, socialist]
+
+  - id: einstein
+    category: biography
+    prompt: Who was Albert Einstein?
+    prefix: Albert Einstein was
+    gold: [physicist, scientist, relativity, German, theoretical]
+
+  - id: newton
+    category: biography
+    prompt: Who was Isaac Newton?
+    prefix: Isaac Newton was
+    gold: [physicist, mathematician, scientist, English, gravity]
+
+  # ── Reasoning: arithmetic / explanation ──────────────────────────────────
   - id: math_2plus2
-    category: math_stress
+    category: reasoning
     prompt: What is 2+2?
     prefix: 2 + 2 =
+    gold: ["4"]
 
   - id: math_multiply
-    category: math_stress
+    category: reasoning
     prompt: What is 17 × 23?
     prefix: 17 × 23 =
+    gold: ["391"]
 
   - id: dna
-    category: edu_science
+    category: reasoning
     prompt: What is DNA?
     prefix: DNA is
+    gold: [deoxyribonucleic, genetic, molecule, nucleic]
 
   - id: photosynthesis
-    category: edu_science
+    category: reasoning
     prompt: Explain photosynthesis in one sentence.
     prefix: Photosynthesis is
+    gold: [light, sunlight, glucose, energy, plants, chlorophyll]
 
   - id: sky_blue
-    category: reasoning_format
+    category: reasoning
     prompt: Why is the sky blue?
     prefix: The sky appears blue because
+    gold: [scatter, Rayleigh, wavelength, light]
