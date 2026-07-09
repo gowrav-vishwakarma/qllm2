@@ -120,7 +120,11 @@ PRETRAIN_SOURCES="${PRETRAIN_SOURCES:-dclm,fineweb,smoltalk2_mid}"
 PRETRAIN_WEIGHTS="${PRETRAIN_WEIGHTS:-48,48,4}"
 FINEWEB_NAME="${FINEWEB_NAME:-sample-10BT}"
 EDU_SCORE_MIN="${EDU_SCORE_MIN:-3}"
-THINK_FRACTION="${THINK_FRACTION:-0.15}"
+# SFT reasoning share. Default 0 (no <think>): profiling the SFT targets
+# (scripts/profile_sft_targets.py) showed <think> was the #1 answer opener and the
+# main "explain the question instead of answering" driver on our ~100M base, which
+# regressed factual QA. Set THINK_FRACTION=0.15 to bring reasoning back.
+THINK_FRACTION="${THINK_FRACTION:-0}"
 
 # Grammar warmup only matters from scratch (base has no grammar yet).
 if [[ "$SCRATCH" == "1" ]]; then

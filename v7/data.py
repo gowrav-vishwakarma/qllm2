@@ -447,12 +447,26 @@ DEFAULT_SYSTEM = 'You are a helpful assistant.'
 
 # Bump when the chat template / masking / special tokens change (invalidates cache).
 # v4: added <think>/</think> reasoning specials (vocab 50259 -> 50261).
-_CHAT_CACHE_VERSION = 4
+# v5: smoltalk2 SFT split allowlist (drop multilingual/tool/long) + reasoning caps +
+#     split name propagated as `source` (2026-07-09).
+# v6: tight assistant-length cap for the 'hard' filter — profiling showed SFT answers
+#     averaged ~1000 words (p90 3184), collapsing a 100M base into verbose prose.
+# v7: length cap is now PER assistant turn (was total) + allow up to 16 messages, so
+#     multi-turn chats survive while verbose single answers are still dropped.
+_CHAT_CACHE_VERSION = 7
 
 _SFT_FUNCTION_MARKERS = (
     'function_call', 'tool_calls', 'tool_call', 'available tools',
     '<tool_call>', '"type": "function"', 'json schema',
 )
+
+# 'hard' filter: drop conversations where any single assistant turn exceeds this many
+# words. A 100M model imitates length; short, direct answers are the goal — but the cap
+# is PER TURN so genuine multi-turn chats are preserved.
+_SFT_MAX_ASSISTANT_WORDS = 300
+# Keep multi-turn conversations, but drop pathologically deep ones (~8 exchanges) that
+# rarely fit the 2048 seq_len anyway.
+_SFT_MAX_MESSAGES = 16
 
 _CHAT_TOKENIZER = None
 
@@ -558,6 +572,38 @@ def _messages_have_think(messages: List[dict]) -> bool:
     return False
 
 
+_THINK_BLOCK_RE = re.compile(
+    re.escape(THINK_START) + r'.*?' + re.escape(THINK_END), re.DOTALL
+)
+
+
+def _strip_think_content(messages: List[dict]) -> List[dict]:
+    """Drop ``<think>...</think>`` reasoning from assistant turns.
+
+    Keeps the post-reasoning answer so the conversation stays useful ChatML chat.
+    Assistant turns that are empty after stripping (pure reasoning, no final answer)
+    are removed; returns ``[]`` if no assistant content survives (caller skips).
+    Used for the pretrain blend so the base never learns to emit ``<think>``.
+    """
+    out: List[dict] = []
+    for m in messages:
+        role = (m.get('role') or '').lower()
+        content = m.get('content') or ''
+        if role == 'assistant' and THINK_START in content:
+            content = _THINK_BLOCK_RE.sub('', content)
+            # Drop a dangling unmatched <think> (reasoning with no closing tag).
+            if THINK_START in content:
+                content = content.split(THINK_START, 1)[0]
+            content = content.replace(THINK_END, '').strip()
+            if not content:
+                continue
+            m = {**m, 'content': content}
+        out.append(m)
+    if not any((mm.get('role') or '').lower() == 'assistant' for mm in out):
+        return []
+    return out
+
+
 def _should_filter_smoltalk(
     messages: List[dict],
     source: str,
@@ -575,10 +621,17 @@ def _should_filter_smoltalk(
     total_chars = sum(len(m.get('content') or '') for m in messages)
     if total_chars > max_chars:
         return True
+    # Small-model verbosity guard: cap words PER assistant turn (not total), so long
+    # multi-turn chats survive as long as each individual answer is short/direct. This
+    # drops the verbose reasoning/table dumps that teach "explain instead of answer".
+    for m in messages:
+        if (m.get('role') or '').lower() == 'assistant':
+            if len((m.get('content') or '').split()) > _SFT_MAX_ASSISTANT_WORDS:
+                return True
     blob = json.dumps(messages, ensure_ascii=False).lower()
     if any(marker in blob for marker in _SFT_FUNCTION_MARKERS):
         return True
-    if len(messages) > 8:
+    if len(messages) > _SFT_MAX_MESSAGES:
         return True
     return False
 
@@ -1085,6 +1138,52 @@ def _blend_interleave_text_iters(
 
 SMOLTALK2_REPO = 'HuggingFaceTB/smoltalk2'
 
+# smoltalk2 `SFT` split policy (2026-07-09). A weak ~100M English base regressed
+# on factual QA after SFT: German leaked in (multilingual splits) and answers
+# turned into "explain the question" discourse (reasoning-heavy splits). We stream
+# ALL splits by default, so restrict to direct-English-chat splits and cap the
+# reasoning-heavy ones. Matching is case-insensitive substring on the split name.
+SMOLTALK2_SFT_SPLIT_BLOCK = (
+    'multilingual',      # de/fr/es/it/pt/ar/ru/zh — off-target for an English base
+    'longalign',         # 64k-context long-doc alignment
+    'aya',               # multilingual instruction data
+    'function_calling',  # tool/function schemas
+    'toolcalling',
+    'smolagents',
+)
+# substring -> keep fraction (deterministic hash) for reasoning-heavy no_think/think
+# splits so they do not dominate the "explain instead of answer" discourse.
+SMOLTALK2_SFT_SPLIT_CAP = {
+    'openthoughts3': 0.05,
+    'mixture_of_thoughts': 0.10,
+    'mixture-of-thoughts': 0.10,
+    'table_gpt': 0.20,
+    'table-gpt': 0.20,
+}
+
+
+def _smoltalk2_split_blocked(split: str) -> bool:
+    s = (split or '').lower()
+    return any(b in s for b in SMOLTALK2_SFT_SPLIT_BLOCK)
+
+
+def _smoltalk2_split_cap(split: str) -> float:
+    s = (split or '').lower()
+    for marker, frac in SMOLTALK2_SFT_SPLIT_CAP.items():
+        if marker in s:
+            return frac
+    return 1.0
+
+
+def _cap_keep(messages: List[dict], fraction: float) -> bool:
+    """Deterministically keep ~``fraction`` of a split via a stable content hash."""
+    if fraction >= 1.0:
+        return True
+    if fraction <= 0.0:
+        return False
+    blob = json.dumps(messages, ensure_ascii=False)[:4096]
+    return (zlib.adler32(blob.encode('utf-8', errors='ignore')) % 1000) < int(fraction * 1000)
+
 
 def _smoltalk2_split_names(config: str) -> List[str]:
     """Discover split names for a smoltalk2 config (sorted for determinism)."""
@@ -1106,11 +1205,16 @@ def _smoltalk2_row_iter(
     doc_counters: Optional[Dict[str, int]] = None,
     counter_key: str = '',
     splits: Optional[List[str]] = None,
-) -> Iterator[List[dict]]:
+    emit_source: bool = False,
+):
     """Stream normalized message lists from a smoltalk2 config.
 
     Splits are concatenated in sorted order (deterministic); ``skip_rows`` skips
     the first N eligible rows across the concatenation for cross-round freshness.
+
+    ``emit_source=True`` yields ``(split_name, messages)`` tuples so the SFT stage
+    can filter/attribute by split; otherwise yields bare message lists. When
+    ``counter_key`` is empty, per-split counts are recorded in ``doc_counters``.
     """
     from datasets import load_dataset
 
@@ -1129,8 +1233,11 @@ def _smoltalk2_row_iter(
             if skipped < skip_rows:
                 skipped += 1
                 continue
-            _bump_counter(doc_counters, counter_key)
-            yield msgs
+            _bump_counter(doc_counters, counter_key or split)
+            if emit_source:
+                yield split, msgs
+            else:
+                yield msgs
 
 
 def _smoltalk2_blend_text_iter(
@@ -1140,10 +1247,18 @@ def _smoltalk2_blend_text_iter(
     doc_counters: Optional[Dict[str, int]] = None,
     counter_key: str = 'smoltalk2_mid',
 ) -> Iterator[str]:
-    """smoltalk2 conversations rendered to ChatML *text* for the pretrain blend."""
+    """smoltalk2 conversations rendered to ChatML *text* for the pretrain blend.
+
+    ``<think>`` reasoning is stripped so the pretrain base never learns to emit it
+    (diagnosed 2026-07-09: ChatML was cueing a `<think>` MCQ mode that wrecked
+    factual QA). Only the final answers survive as clean ChatML chat text.
+    """
     for msgs in _smoltalk2_row_iter(
         config, skip_rows=skip_rows, doc_counters=doc_counters, counter_key=counter_key,
     ):
+        msgs = _strip_think_content(msgs)
+        if not msgs:
+            continue
         text = format_chat_messages(msgs)
         if text.strip():
             yield text
@@ -1273,7 +1388,9 @@ def load_dclm_edu(
 
 # ── Pretrain mix token cache (skip+tokenize once on CPU, reuse next round) ───
 
-_PRETRAIN_CACHE_VERSION = 1
+# v2: strip <think> reasoning from the smoltalk2_mid blend so the base never learns
+#     to emit it (2026-07-09 SFT-regression diagnosis).
+_PRETRAIN_CACHE_VERSION = 2
 _PRETRAIN_CACHE_SHARD_ROWS = 50_000
 
 
@@ -1723,6 +1840,20 @@ def _think_keep(messages: List[dict], think_fraction: float) -> bool:
     return (zlib.adler32(blob.encode('utf-8', errors='ignore')) % 1000) < int(think_fraction * 1000)
 
 
+def _smoltalk2_sft_splits() -> List[str]:
+    """Discovered smoltalk2 `SFT` splits minus the blocked (multilingual/tool/long) ones."""
+    allowed, blocked = [], []
+    for split in _smoltalk2_split_names('SFT'):
+        (blocked if _smoltalk2_split_blocked(split) else allowed).append(split)
+    if blocked:
+        print(f"  [smoltalk2] blocked {len(blocked)} split(s): {', '.join(sorted(blocked))}")
+    capped = [s for s in allowed if _smoltalk2_split_cap(s) < 1.0]
+    if capped:
+        print('  [smoltalk2] capped split(s): '
+              + ', '.join(f'{s}@{_smoltalk2_split_cap(s):.2f}' for s in sorted(capped)))
+    return allowed
+
+
 def load_smoltalk2(
     seq_len: int = 2048,
     max_samples: Optional[int] = None,
@@ -1730,21 +1861,51 @@ def load_smoltalk2(
     think_fraction: float = 0.15,
     smoltalk2_skip_rows: int = 0,
     use_cache: bool = True,
+    dry_run: bool = False,
     **_unused,
 ):
     """Real smoltalk2 SFT-config chat fine-tuning (ChatML, assistant-only loss).
 
     Uses ``HuggingFaceTB/smoltalk2`` config ``SFT`` (chat + reasoning, think/no_think).
-    ``think_fraction`` caps the share of reasoning conversations so a small base
-    stays mostly on direct answers. Disjoint from the pretrain blend, which draws
-    reasoning from the ``Mid`` config. In-distribution holdout val (not WikiText).
+    Splits are restricted to direct-English chat (``SMOLTALK2_SFT_SPLIT_BLOCK`` drops
+    multilingual/tool/long-context); reasoning-heavy splits are down-sampled via
+    ``SMOLTALK2_SFT_SPLIT_CAP``. ``think_fraction`` further caps reasoning traces so a
+    small base stays mostly on direct answers. The split name is propagated as
+    ``source`` so ``_should_filter_smoltalk`` source rules apply. Disjoint from the
+    pretrain blend (``Mid`` config). In-distribution holdout val (not WikiText).
+
+    ``dry_run=True`` streams up to ``max_samples`` rows and prints per-split kept
+    counts instead of building/encoding a cache (returns None).
     """
-    def _rows():
-        n = 0
-        for msgs in _smoltalk2_row_iter('SFT', skip_rows=smoltalk2_skip_rows):
+    allowed_splits = _smoltalk2_sft_splits()
+
+    def _iter_kept():
+        for split, msgs in _smoltalk2_row_iter(
+            'SFT', skip_rows=smoltalk2_skip_rows, splits=allowed_splits, emit_source=True,
+        ):
+            if not _cap_keep(msgs, _smoltalk2_split_cap(split)):
+                continue
             if not _think_keep(msgs, think_fraction):
                 continue
-            yield {'messages': msgs}
+            yield split, msgs
+
+    if dry_run:
+        kept_per_split: Dict[str, int] = {}
+        n = 0
+        for split, _ in _iter_kept():
+            kept_per_split[split] = kept_per_split.get(split, 0) + 1
+            n += 1
+            if max_samples and n >= max_samples:
+                break
+        print(f"  [smoltalk2 dry-run] kept {n} rows across {len(kept_per_split)} split(s):")
+        for split in sorted(kept_per_split):
+            print(f"    {split}: {kept_per_split[split]}")
+        return None
+
+    def _rows():
+        n = 0
+        for split, msgs in _iter_kept():
+            yield {'messages': msgs, 'source': split}
             n += 1
             if max_samples and n >= max_samples:
                 break

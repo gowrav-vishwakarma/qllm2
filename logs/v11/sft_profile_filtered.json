@@ -1,0 +1,209 @@
+{
+  "raw": false,
+  "think_fraction": 0.15,
+  "sampled": 1494,
+  "first_turn_scored": 1494,
+  "empty_first_assistant": 0,
+  "think_share": 0.333,
+  "non_english_share": 0.004,
+  "generic_opener_share": 0.03,
+  "answer_words_mean": 1013.8,
+  "answer_words_median": 133.0,
+  "answer_words_p90": 3184,
+  "top_first_word": [
+    [
+      "<think>",
+      498
+    ],
+    [
+      "the",
+      108
+    ],
+    [
+      "hello",
+      83
+    ],
+    [
+      "<tool_call>",
+      83
+    ],
+    [
+      "to",
+      68
+    ],
+    [
+      "hi",
+      35
+    ],
+    [
+      "i'm",
+      29
+    ],
+    [
+      "python",
+      24
+    ],
+    [
+      "dear",
+      24
+    ],
+    [
+      "sure",
+      20
+    ],
+    [
+      "ah",
+      15
+    ],
+    [
+      "column_mappings",
+      15
+    ],
+    [
+      "absolutely",
+      14
+    ],
+    [
+      "emily",
+      13
+    ],
+    [
+      "a",
+      12
+    ],
+    [
+      "i",
+      12
+    ],
+    [
+      "in",
+      11
+    ],
+    [
+      "as",
+      11
+    ],
+    [
+      "hey",
+      11
+    ],
+    [
+      "alex",
+      10
+    ]
+  ],
+  "top_first_three": [
+    [
+      "<think> okay the",
+      216
+    ],
+    [
+      "<think> okay let's",
+      96
+    ],
+    [
+      "hello how can",
+      83
+    ],
+    [
+      "<think> okay so",
+      79
+    ],
+    [
+      "<think> alright let's",
+      41
+    ],
+    [
+      "<think> okay i",
+      39
+    ],
+    [
+      "to solve this",
+      35
+    ],
+    [
+      "<think> okay let",
+      13
+    ],
+    [
+      "to determine the",
+      12
+    ],
+    [
+      "python import sys",
+      8
+    ],
+    [
+      "dear alex i",
+      6
+    ],
+    [
+      "i'm sorry for",
+      6
+    ],
+    [
+      "absolutely i'd be",
+      6
+    ],
+    [
+      "sure i'd be",
+      6
+    ],
+    [
+      "the question asks",
+      5
+    ],
+    [
+      "<think> alright so",
+      5
+    ],
+    [
+      "i'm an ai",
+      5
+    ],
+    [
+      "i'm excited to",
+      5
+    ],
+    [
+      "what an intriguing",
+      4
+    ],
+    [
+      "dear jamie i",
+      4
+    ]
+  ],
+  "turn_counts": {
+    "2": 1115,
+    "4": 90,
+    "6": 183,
+    "7": 16,
+    "8": 70,
+    "10": 7,
+    "12": 3,
+    "14": 2,
+    "22": 1,
+    "24": 7
+  },
+  "per_split": {
+    "Mixture_of_Thoughts_science_no_think": 83,
+    "OpenHermes_2.5_no_think": 83,
+    "OpenThoughts3_1.2M_no_think_no_think": 83,
+    "OpenThoughts3_1.2M_think": 83,
+    "multi_turn_reasoning_if_think": 83,
+    "s1k_1.1_think": 83,
+    "smoltalk_everyday_convs_reasoning_Qwen3_32B_think": 83,
+    "smoltalk_smollm3_everyday_conversations_no_think": 83,
+    "smoltalk_smollm3_explore_instruct_rewriting_no_think": 83,
+    "smoltalk_smollm3_smol_magpie_ultra_no_think": 83,
+    "smoltalk_smollm3_smol_rewrite_no_think": 83,
+    "smoltalk_smollm3_smol_summarize_no_think": 83,
+    "smoltalk_smollm3_systemchats_30k_no_think": 83,
+    "smoltalk_systemchats_Qwen3_32B_think": 83,
+    "table_gpt_Qwen3_32B_think": 83,
+    "table_gpt_no_think": 83,
+    "tulu_3_sft_personas_instruction_following_no_think": 83,
+    "xlam_traces_no_think": 83
+  }
+}
