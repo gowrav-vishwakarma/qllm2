@@ -26,6 +26,16 @@ PRESET_NOTE = (
 
 
 @dataclass(frozen=True)
+class Annot:
+    """Human-readable note attached to a call-graph node."""
+
+    phase: str       # e.g. fwd+bwd, infer, setup, custom-bwd
+    origin: str      # PyTorch autograd, custom code, Triton kernel, ...
+    does: str        # what this call does
+    why: str = ""    # design reason (optional)
+
+
+@dataclass(frozen=True)
 class Node:
     """Graph node with optional AST location for self-call extraction."""
 
@@ -220,6 +230,181 @@ INFER_NODES: dict[str, Node] = {
         func="_recur_step_additive",
     ),
     "phase_rotate": Node("phase_rotate", "phase rotate + sum (K=3)"),
+}
+
+# ── Per-node annotations (phase, origin, what, why) ─────────────────────────
+
+TRAIN_ANNOTATIONS: dict[str, Annot] = {
+    "train_main": Annot(
+        "setup", "custom script",
+        "Parse CLI, build `V11LM`, construct `V7Trainer`, start training loop.",
+    ),
+    "trainer_train": Annot(
+        "setup", "custom (`v7/train.py`)",
+        "Print run info; loop epochs calling `train_epoch` + validation checkpoints.",
+    ),
+    "trainer_epoch": Annot(
+        "fwd then bwd", "custom trainer + PyTorch autograd",
+        "One training epoch: for each batch run forward (hidden + loss), then "
+        "`loss.backward()`, clip grads, `optimizer.step()`.",
+        "Orchestrates the two-branch fused-CE path: calls `_hidden_fn` first, "
+        "then `ce_from_lm` on the returned hidden — not a single `model.forward()`.",
+    ),
+    "hidden_to_lm": Annot(
+        "fwd+bwd", "custom `V11LM` (PyTorch modules inside)",
+        "Forward the **model stack only**: embed → 16× `V11Block` → output norm → "
+        "lm_head_proj/norm. Returns pre-logit complex hidden `lm` `[B,T,dim,2]` "
+        "(NOT vocab logits).",
+        "Split from CE so we never build `[B*T, vocab]` logits (~4 GB). "
+        "This half is `torch.compile`'d in production (`--compile --fused_ce`).",
+    ),
+    "ckpt_block": Annot(
+        "fwd+bwd (recompute)", "PyTorch `grad_checkpoint`",
+        "Wraps one `V11Block` in activation checkpointing: forward runs normally; "
+        "backward **re-runs** the block forward to recompute activations instead of "
+        "storing them — trades compute for VRAM.",
+        "Optional when `gradient_checkpointing=True` (off in production `--no_grad_ckpt`).",
+    ),
+    "collect_route_aux": Annot(
+        "fwd only (aux scalar)", "custom",
+        "Sums optional E3 routing balance aux loss from PAM layers. "
+        "With `state_compete=False` (production) this is effectively zero.",
+    ),
+    "ce_from_lm": Annot(
+        "fwd+bwd", "custom `V11LM` method",
+        "Takes `lm` hidden from `_hidden_to_lm`, folds tied complex head into one "
+        "real matmul `H @ W.T`, calls chunked CE. Returns scalar loss.",
+        "Second branch of fused CE: head matmul + softmax are fused/chunked here "
+        "instead of inside `forward()`. Keeps logits tensor off GPU.",
+    ),
+    "fused_ce": Annot(
+        "fwd + custom bwd", "custom `torch.autograd.Function` (`v11/fused_ce.py`)",
+        "**Forward:** chunk over token rows, compute `logits_chunk = H_chunk @ W.T`, "
+        "accumulate `F.cross_entropy` per chunk (uses PyTorch CE on small chunks). "
+        "**Backward:** recompute each chunk's logits/softmax, accumulate "
+        "`grad_hidden` and `grad_weight` — never stores full `[N,V]` activations.",
+        "Not a PyTorch built-in. Custom memory optimization; math is exact vs "
+        "materializing full logits + `F.cross_entropy`.",
+    ),
+    "block_fwd": Annot(
+        "fwd+bwd", "PyTorch `nn.Module` (custom `V11Block`)",
+        "One transformer-ish block: pre-norm → CGU (channel mixing, no sequence "
+        "state) → residual → pre-norm → PAM (sequence memory) → residual.",
+    ),
+    "pam_fwd": Annot(
+        "fwd+bwd", "custom `V11PAMLayer`",
+        "PAM entry: `_project` QKV+RoPE, then dispatch. **Train path:** "
+        "`state=None`, `seq_len>1` → `_forward_multistate_fused` (parallel chunked).",
+    ),
+    "pam_project": Annot(
+        "fwd+bwd", "PyTorch Linear + custom complex ops",
+        "Fused QKV projection, optional RoPE on Q/K, optional QK norm. "
+        "Shared by train and infer.",
+    ),
+    "pam_fused": Annot(
+        "fwd+bwd", "custom E3 implementation",
+        "Parallel training form for K=3: compute phase routing + all-state decay "
+        "once, loop sequence in chunks of 256, call `_fused_chunk_step` per chunk. "
+        "O(T) work via chunked matmuls, not O(T²) attention.",
+    ),
+    "pam_phase": Annot(
+        "fwd+bwd", "custom (`phase_proj` Linear)",
+        "E3 retrieval: `phase_proj(cabs(x))` → angle φ per (head, state). "
+        "At read time each state's output is rotated by `e^{iφ}` before summing.",
+    ),
+    "pam_routing": Annot(
+        "fwd+bwd", "custom helper",
+        "Builds router input: `cabs(x)` (magnitude) in production; "
+        "`to_real_concat(x)` only if `routing_content_aware=True` (off).",
+    ),
+    "pam_gamma_all": Annot(
+        "fwd+bwd", "custom GSP + decay",
+        "All K=3 decay rates + write-protect gate in one pass: `dt_proj` + "
+        "`protect_gate` (content-aware GSP). Returns `[K,B,H,T]` decay and "
+        "protected values.",
+    ),
+    "pam_chunk": Annot(
+        "fwd+bwd", "custom matmuls",
+        "One 256-token chunk: causal dual-form read + write for all K states "
+        "collapsed into batched matmuls; updates memory state `[K,B,H,d,d,2]`.",
+    ),
+    "fused_decay": Annot(
+        "fwd+bwd", "Triton kernel (`v11/triton_kernels.py`)",
+        "Build causal decay matrix from per-step γ via fused log-cumsum-exp. "
+        "Triton `autograd.Function` with PyTorch fallback. Differentiable.",
+    ),
+}
+
+INFER_ANNOTATIONS: dict[str, Annot] = {
+    "generate": Annot(
+        "infer only", "custom `V11LM.generate` (`@torch.no_grad`)",
+        "Autoregressive loop: process prompt once (parallel), sample tokens, "
+        "then decode one token at a time carrying PAM states.",
+    ),
+    "lm_fwd_prompt": Annot(
+        "infer only", "custom `V11LM.forward`",
+        "First call: full prompt, `states=None`, `seq_len>1` → parallel fused E3 "
+        "(same PAM path as training, but no grad).",
+    ),
+    "lm_fwd_decode": Annot(
+        "infer only", "custom `V11LM.forward`",
+        "Per new token: `seq_len=1`, `states` passed → recurrent PAM. "
+        "O(1) per token in sequence length.",
+    ),
+    "sample": Annot(
+        "infer only", "PyTorch sampling",
+        "Temperature / top-k / top-p / repetition penalty on last logits; "
+        "`torch.multinomial` picks next token. No backward.",
+    ),
+    "block_fwd": Annot(
+        "infer only", "PyTorch `nn.Module` eval mode",
+        "Same block as train but dropout off, no grad. CGU + PAM per layer.",
+    ),
+    "pam_fwd_par": Annot(
+        "infer only", "custom dispatch (parallel branch)",
+        "Prompt pass: `state=None`, `seq_len>1` → `_forward_multistate_fused`.",
+    ),
+    "pam_fwd_rec": Annot(
+        "infer only", "custom dispatch (recurrent branch)",
+        "Decode pass: `state` provided or `seq_len==1` → `_recurrent`.",
+    ),
+    "pam_project": TRAIN_ANNOTATIONS["pam_project"],
+    "pam_fused": Annot(
+        "infer only", "custom E3 (parallel)",
+        "Prompt processing only — identical math to training fused path, no backward.",
+    ),
+    "pam_phase": TRAIN_ANNOTATIONS["pam_phase"],
+    "pam_routing": TRAIN_ANNOTATIONS["pam_routing"],
+    "pam_gamma_all": TRAIN_ANNOTATIONS["pam_gamma_all"],
+    "pam_chunk": Annot(
+        "infer only", "custom matmuls",
+        "Chunk step for prompt; updates state carried into decode loop.",
+    ),
+    "fused_decay": Annot(
+        "infer only", "Triton kernel",
+        "Same decay-matrix kernel as train; runs under `torch.no_grad()`.",
+    ),
+    "pam_recurrent": Annot(
+        "infer only", "custom E3 recurrent",
+        "Token-by-token loop: for each of K=3 states run decay/gate, "
+        "`_recur_step_additive`, rotate by phase, sum outputs. "
+        "Updates `states` for next step.",
+        "Required at decode — parallel form needs full sequence; generation is one token at a time.",
+    ),
+    "pam_gamma": Annot(
+        "infer only", "custom GSP + decay",
+        "Per-token, per-state decay + write-protect (one state at a time in K-loop).",
+    ),
+    "pam_recur_step": Annot(
+        "infer only", "custom PAM math",
+        "One additive memory step: read `S @ q`, write outer-product `v ⊗ k*` "
+        "with decay. O(d²) per head, constant in context length.",
+    ),
+    "phase_rotate": Annot(
+        "infer only", "custom complex ops",
+        "Multiply each state's read output by `e^{iφ}` (routing weight × cos/sin) "
+        "and sum over K=3 — E3 interference at retrieval.",
+    ),
 }
 
 # Cross-object edges AST cannot resolve.
@@ -425,18 +610,27 @@ def _reachable(gids: set[str], edges: list[tuple[str, str]]) -> set[str]:
     return reachable_set
 
 
+def _mermaid_label(label: str, gid: str, annotations: dict[str, Annot]) -> str:
+    ann = annotations.get(gid)
+    if ann is None:
+        return label.replace('"', "'")
+    tag = f"{ann.phase} | {ann.origin}"
+    return f"{label}<br/>{tag}".replace('"', "'")
+
+
 def _to_mermaid(
     title: str,
     nodes: dict[str, Node],
     edges: list[tuple[str, str]],
     roots: list[str],
+    annotations: dict[str, Annot],
 ) -> str:
     reachable_gids = _reachable(set(roots), edges)
     active_edges = [(s, d) for s, d in edges if s in reachable_gids and d in reachable_gids]
 
     lines = [f"flowchart TD", f"  subgraph {title.replace(' ', '_')} [{title}]"]
     for gid in sorted(reachable_gids, key=lambda g: (roots.index(g) if g in roots else 99, g)):
-        label = nodes[gid].label.replace('"', "'")
+        label = _mermaid_label(nodes[gid].label, gid, annotations)
         lines.append(f'    {gid}["{label}"]')
     for src, dst in active_edges:
         lines.append(f"    {src} --> {dst}")
@@ -444,24 +638,113 @@ def _to_mermaid(
     return "\n".join(lines)
 
 
+def _annotation_table(
+    nodes: dict[str, Node],
+    edges: list[tuple[str, str]],
+    roots: list[str],
+    annotations: dict[str, Annot],
+) -> str:
+    reachable_gids = _reachable(set(roots), edges)
+    order = sorted(reachable_gids, key=lambda g: (roots.index(g) if g in roots else 99, g))
+    lines = [
+        "| Node | Phase | Origin | What it does | Why / notes |",
+        "|------|-------|--------|--------------|-------------|",
+    ]
+    for gid in order:
+        node = nodes[gid]
+        ann = annotations.get(gid)
+        if ann is None:
+            lines.append(f"| `{node.label}` | — | — | — | — |")
+            continue
+        why = ann.why if ann.why else "—"
+        lines.append(
+            f"| `{node.label}` | {ann.phase} | {ann.origin} | {ann.does} | {why} |"
+        )
+    return "\n".join(lines)
+
+
 def train_graph() -> str:
     ast_edges = _ast_edges(TRAIN_NODES, _TRAIN_METHOD_TO_GID, _TRAIN_MODULE_TO_GID)
     edges = _merge_edges(TRAIN_EXPLICIT, ast_edges)
-    return _to_mermaid("Train fused_ce", TRAIN_NODES, edges, roots=["train_main"])
+    return _to_mermaid("Train fused_ce", TRAIN_NODES, edges, roots=["train_main"], annotations=TRAIN_ANNOTATIONS)
 
 
 def infer_graph() -> str:
     ast_edges = _ast_edges(INFER_NODES, _INFER_METHOD_TO_GID, _INFER_MODULE_TO_GID)
     edges = _merge_edges(INFER_EXPLICIT, ast_edges)
-    return _to_mermaid("Inference generate", INFER_NODES, edges, roots=["generate"])
+    return _to_mermaid("Inference generate", INFER_NODES, edges, roots=["generate"], annotations=INFER_ANNOTATIONS)
+
+
+def _fused_ce_explainer() -> str:
+    return """## Why two branches: `_hidden_to_lm` and `ce_from_lm`?
+
+Production training (`--fused_ce`) does **not** call `V11LM.forward()`. Instead `V7Trainer.train_epoch` runs:
+
+```
+loss = ce_from_lm( _hidden_to_lm(input_ids), labels )
+loss.backward()
+```
+
+| Branch | Returns | Built by | PyTorch? |
+|--------|---------|----------|----------|
+| `_hidden_to_lm` | Pre-logit hidden `lm` `[B,T,dim,2]` | Custom `V11LM` method | Uses PyTorch modules (`nn.Linear`, etc.) with normal autograd |
+| `ce_from_lm` → `fused_linear_cross_entropy` | Scalar CE loss | Custom `v11/fused_ce.py` | **Custom** `autograd.Function`; uses `F.cross_entropy` only on small chunks |
+
+**Why split?** The tied LM head is `logits = lm_r @ E_r.T + lm_i @ E_i.T` → one matmul to `[B*T, vocab]`. With vocab ≈ 50k and B×T ≈ 37k that tensor is ~4 GB, plus softmax and its grad. Materializing it dominates VRAM.
+
+**Forward pass:** `_hidden_to_lm` runs the stack (optionally `torch.compile`'d). `fused_linear_cross_entropy` loops token-rows in chunks (default 4096), computes chunk logits, accumulates CE — peak memory O(chunk×vocab) not O(B×T×vocab).
+
+**Backward pass:** `loss.backward()` first hits `_FusedLinearCE.backward` (custom — recomputes chunk logits/softmax, writes `grad_hidden`, `grad_weight`). Then autograd flows into `_hidden_to_lm` and the whole stack (blocks, PAM, embed). PAM uses PyTorch autograd through matmuls; `fused_decay_matrix` uses a Triton `autograd.Function`.
+
+**Not PyTorch built-ins:** `_hidden_to_lm`, `ce_from_lm`, `fused_linear_cross_entropy`, E3 PAM paths, Triton kernels — all project code. PyTorch provides the autograd engine, `nn.Module`, `F.cross_entropy` (per chunk), `grad_checkpoint`, `torch.compile`, optimizer.
+
+**Alternative (not used in production):** `V11LM.forward()` → full `logits [B,T,V]` → `F.cross_entropy`. Simpler but ~4 GB head memory."""
+
+
+def _train_step_explainer() -> str:
+    return """## One training step (forward → backward)
+
+```mermaid
+sequenceDiagram
+    participant TE as train_epoch
+    participant H as _hidden_to_lm
+    participant B as V11Block x16
+    participant P as PAM fused E3
+    participant CE as fused_linear_cross_entropy
+    participant AD as PyTorch autograd
+
+    TE->>H: forward(input_ids)
+    H->>B: block.forward (x16)
+    B->>P: pam.forward parallel
+    P-->>H: lm hidden [B,T,dim,2]
+    TE->>CE: ce_from_lm(lm, labels)
+    CE-->>TE: scalar loss
+    TE->>AD: loss.backward()
+    AD->>CE: custom backward (chunked grad to lm + embed)
+    AD->>P: standard autograd through matmuls
+    AD->>B: standard autograd
+    TE->>TE: clip_grad + optimizer.step()
+```"""
 
 
 def markdown_doc() -> str:
+    train_edges = _merge_edges(
+        TRAIN_EXPLICIT,
+        _ast_edges(TRAIN_NODES, _TRAIN_METHOD_TO_GID, _TRAIN_MODULE_TO_GID),
+    )
+    infer_edges = _merge_edges(
+        INFER_EXPLICIT,
+        _ast_edges(INFER_NODES, _INFER_METHOD_TO_GID, _INFER_MODULE_TO_GID),
+    )
     return f"""# E3 K3 Call Graph (production path only)
 
 {PRESET_NOTE}
 
 Regenerate: `uv run python -m v11.callgraph_e3k3 --write v11/CALLGRAPH_E3K3.md`
+
+{_fused_ce_explainer()}
+
+{_train_step_explainer()}
 
 ## Preset locks
 
@@ -484,23 +767,35 @@ Regenerate: `uv run python -m v11.callgraph_e3k3 --write v11/CALLGRAPH_E3K3.md`
 | After full seq (train) | same | returned from fused path |
 | Carried in `generate` | same | updated each decode step |
 
-## Train (fused CE + fused E3 parallel)
+## Train call graph (fused CE + fused E3 parallel)
+
+Node subtitles in the diagram: **phase | origin** (e.g. `fwd+bwd | custom`).
 
 ```mermaid
 {train_graph()}
 ```
 
-**Dispatch** ([`V11PAMLayer.forward`](model.py)): `state is None` and `seq_len > 1` and `n_states > 1` and `fused_e3` → `_forward_multistate_fused`.
+**PAM dispatch** ([`V11PAMLayer.forward`](model.py)): `state is None` and `seq_len > 1` and `n_states > 1` and `fused_e3` → `_forward_multistate_fused`.
 
-## Inference (`V11LM.generate`)
+### Train node glossary
+
+{_annotation_table(TRAIN_NODES, train_edges, ["train_main"], TRAIN_ANNOTATIONS)}
+
+## Inference call graph (`V11LM.generate`)
 
 ```mermaid
 {infer_graph()}
 ```
 
-**Two phases:**
-1. **Prompt** — full sequence, `states=None` → same parallel fused E3 path as training.
-2. **Decode** — one token at a time with `states` → `_recurrent` (K-loop over 3 states).
+**Two phases (both inference-only, no backward):**
+1. **Prompt** — full sequence, `states=None` → parallel fused E3 (same PAM math as training).
+2. **Decode** — one token at a time with `states` → `_recurrent` (K-loop over 3 states). Parallel form cannot run here because each step only sees one new token.
+
+### Inference node glossary
+
+{_annotation_table(INFER_NODES, infer_edges, ["generate"], INFER_ANNOTATIONS)}
+
+---
 
 Excluded from both graphs: E1 per-channel, E2 delta, `_forward_multistate` K-loop fallback, competitive routing, flash-PAM, baseline single-state dual-form.
 """
