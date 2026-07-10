@@ -1,7 +1,7 @@
 {
   "_comment": "Server-side catalog of ship-ready rounds, written by scripts/run_v11_round.sh export. Paths are relative to the repo root on the training server. The RTX4090 pull script (scripts/pull_v11_release.sh) reads this to fetch only new/changed rounds. Do not edit sha256/size by hand.",
   "repo_id": "gowravvishwakarma/qllm-pam-v11-e3k3-chat",
-  "latest": "round-6b-gate",
+  "latest": "round-8b-gate",
   "rounds": {
     "round-2b-gate": {
       "hf_tag": "round-2b-gate",
@@ -32,6 +32,20 @@
       "pretrain_tokens_total": 6000000000,
       "val_ppl": 6.549919394647784,
       "updated_at": "2026-07-09T04:51:13.065080+00:00"
+    },
+    "round-8b-gate": {
+      "hf_tag": "round-8b-gate",
+      "sft_ckpt": "checkpoints_v11_sft_chat_smoltalk_v2/best_model.pt",
+      "pretrain_ckpt": "checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt",
+      "hf_export_bundle": "releases/round-8b-gate/qllm_v11_e3k3_chat.pt",
+      "hf_pretrain_bundle": "hf_release/qllm_v11_e3k3_pretrain.pt",
+      "sha256": "1153a60e3e3bd017767703bc312adad56ba6118fe4a8a7e4cb297577e978fff7",
+      "pretrain_sha256": "a909e57000338f7e5d28e90c852ef93df5d7ebe84f49d154eeb6a33c4a4404d5",
+      "size_bytes": 402322962,
+      "pretrain_size_bytes": 402324750,
+      "pretrain_tokens_total": 8000000000,
+      "val_ppl": 30.01310057053656,
+      "updated_at": "2026-07-10T13:29:16.422683+00:00"
     }
   }
 }
