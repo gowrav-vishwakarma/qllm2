@@ -759,6 +759,9 @@ WikiText-103, ~100M, seq_len=2048, B=18 where noted. Transformer B=18 anchor: **
 - E2 delta-rule write (compile hang + OOM without compile)
 - Flash-PAM kernel reformulation (correct, slower)
 - Triton custom kernels under `torch.compile` (bypassed or graph-break)
+- **PAMFormer block-order swap** (`PAM → CGU` instead of `CGU → PAM`) — tried once
+  2026-07-10; **no clear win** (see below). Code removed; do not re-fork without a
+  matched E3 K=3 `CGU→PAM` control at the same B.
 
 **Architecture identity preserved throughout:** complex phase space, matrix-state PAM,
 conjugate retrieval, O(1)/token recurrent inference, no softmax attention, no KV cache.
@@ -768,7 +771,62 @@ B=18 is **3.08 PPL** — likely needs **data + scale**, not more small ablations
 
 ## Out of scope (already dead in V6–V9)
 Hierarchy/grouped/cross-level, multi-scale loss, reverse-assoc, QK-norm-on, PIA
-attention, V8 reasoning loops, V9 readout gates.
+attention, V8 reasoning loops, V9 readout gates, **PAMFormer `PAM→CGU` order swap**
+(see section below; code removed 2026-07-10).
+
+---
+
+## PAMFormer order ablation (tried once, 2026-07-10) — DEAD END
+
+**Question:** Transformers are `attention → FFN` (route context, then channel-mix).
+V11 is `CGU → PAM`. Does swapping to transformer order `PAM → CGU` help quality
+while keeping fixed PAM state (no KV cache)?
+
+**What we built (then deleted):** isolated package `V11_PAMFormer/` — V11 fork whose
+*only* intended change was block order. Same CGU, same E3 K=3 PAM, param-identical
+to `v11_e3_k3` (100,543,760). Selftests passed (parallel≡recurrent, fixed state,
+param match). Code + runner + checkpoints **removed** after the smoke; this note
+is the record.
+
+**Hypothesis:** route-then-process inductive bias matches or beats process-then-route
+within ~±0.5 PPL of V11 E3 K=3 (**25.77** @ B=18).
+
+**Hardware constraint:** B=18 OOM on this **RTX 4090 (24GB)** even with `--fused_ce`
+(PAM chunk mats). Published V11 E3 K=3 WikiText was on **96GB RTX 6000 Pro**. Smoke
+ran at **B=6 + fused_ce** on `gowrav-rtx-4090`.
+
+**Smoke result** (`pamformer_e3_k3`, WikiText-103, 3 epochs, B=6, chunk 256):
+
+| Epoch | PAMFormer `PAM→CGU` + E3 K=3 | V7 7d `CGU→PAM` K=1 (same 4090, B=6) | Δ |
+|------:|-----------------------------:|-------------------------------------:|---:|
+| 1 | **54.33** | 57.42 | −3.1 (ahead) |
+| 2 | **39.12** | 41.16 | −2.0 (ahead) |
+| 3 | **36.52** | **35.88** | **+0.6 (behind)** |
+
+Best val **36.52**; gen quality fine (`rep3=0`, `uniq=0.731`). Full run log discarded
+after recording these numbers (was
+`logs/v11_pamformer/pamformer_e3_k3_wikitext103_20260710_102730_fd458a4/`).
+
+**Fairness caveats:**
+- Closest same-host/B match is **V7 7d** (no E3). PAMFormer also had **E3 K=3**, so
+  this was not a pure order A/B.
+- No V11 E3 K=3 `CGU→PAM` B=6 run exists on this 4090.
+- Do not compare ep1–3 to V11’s B=18 ep1 ~81 / final **25.77** (different steps/epoch).
+
+**No-E / K=1 reference (for context, not this ablation):**
+
+| Config | Memory | Val @10e |
+|--|--|--:|
+| V7 7d / `v11_baseline` (B=18) | K=1, no E | **26.88** |
+| E3 K=2 (B=18) | multistate | 26.01 |
+| E3 K=3 (B=18) | multistate | **25.77** |
+| V7 7d (B=6, this 4090) | K=1, no E | **27.94** |
+
+E3 helps on the B=18 ladder; the **order swap** did not show a clear additional win.
+
+**Verdict:** **Do not adopt `PAM→CGU` as default.** Keep V11 `CGU → PAM`. Fixed-state /
+no-KV benefit is from PAM itself, independent of sublayer order. Revisit only with a
+matched E3 K=3 control at the same batch (ideally B=18 on ≥48–96GB).
 
 ---
 
