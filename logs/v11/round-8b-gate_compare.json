@@ -1,0 +1,564 @@
+{
+  "round_tag": "round-8b-gate",
+  "pretrain_checkpoint": "qllm_v11_e3k3_pretrain.pt",
+  "sft_checkpoint": "qllm_v11_e3k3_chat.pt",
+  "run_at": "2026-07-10T13:46:32.419396+00:00",
+  "device": "cuda",
+  "seed": 42,
+  "temperatures": [
+    0.1,
+    0.7
+  ],
+  "max_new_tokens": 128,
+  "sft_system": "You are a helpful assistant.\n\nAnswer directly in plain text. Do not use <think> or </think> reasoning blocks.",
+  "with_pretrain_chat": false,
+  "answer_keys": [
+    "pretrain@0.1",
+    "sft@0.1",
+    "pretrain@0.7",
+    "sft@0.7"
+  ],
+  "span_window_tokens": 20,
+  "questions": {
+    "france": {
+      "category": "retrieval",
+      "prompt": "what is the capital of France?",
+      "prefix": "The capital of France is",
+      "gold": [
+        "Paris"
+      ],
+      "notes": "Pretrain often completes \"Paris\" from prefix; SFT may ramble in chat",
+      "answers": {
+        "pretrain@0.1": "Paris, and the capital is Paris. The capital is Paris, which is also called Paris.\n- The capital of France is Paris, which is named after Louis XIV. It was founded in 1521 by Louis XIV.\n- In 1622, the French king Louis XIV established a new city on the coast of France. He built a fort at the mouth of the river Gautenga (now known as the River Seine). This city was renamed to the city of Paris.\n- In 1723, the French government created the first permanent French colony in France.\nIn 1724, the French government established a new",
+        "sft@0.1": "The capital of France is Paris, which is located in the city of Paris.",
+        "pretrain@0.7": "Paris, and the city was destroyed in a war which would lead to the end of French rule. The capital of France (which had been renamed “France”) became Paris on 3 July 1837.\nA few years after the destruction of Paris, France was finally given the right to govern. After 1795 France had annexed the territories of France, but the French did not make it back into France. At that time France had declared its independence from Britain and the Kingdom of France. It had been granted French citizenship by the Crown in 1846, but soon there was a large body of foreign governments established under Napoleon. Although",
+        "sft@0.7": "The capital of France is Paris, which is located at the city center and is part of the United States. The capital of France lies within the city of Paris itself, which is called the United States."
+      },
+      "heuristic": {
+        "pretrain@0.1": "ok",
+        "sft@0.1": "ok",
+        "pretrain@0.7": "ok",
+        "sft@0.7": "ok"
+      },
+      "span_hit": {
+        "pretrain@0.1": true,
+        "sft@0.1": true,
+        "pretrain@0.7": true,
+        "sft@0.7": true
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 17,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 42,
+          "stopped_on_im_end": true
+        }
+      }
+    },
+    "usa_capital": {
+      "category": "retrieval",
+      "prompt": "What is the capital of the United States?",
+      "prefix": "The capital of the United States is",
+      "gold": [
+        "Washington"
+      ],
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "Washington, D.C., and the capital is Washington. The capital was built in 1867 by George Washington, who had been a member of Congress since 1790.\nIn 1869, President William McKinley signed an agreement with the U.S. government to establish a permanent military base on the Mississippi River. In 1871, the U.S. Army established Fort Sumter as the site of the first American naval battle at Fort Sumter.\nOn June 1, 1873, President Abraham Lincoln issued a proclamation declaring that the United States would be free from slavery if it were not allowed to enter the Union. This proclamation",
+        "sft@0.1": "The capital of the United States is Washington, D.C., and it is located in the United States.",
+        "pretrain@0.7": "Washington, DC. The city was built in 1763 and in 1810 it was called Washington's Capital.\nAt the time of its independence, Washington had only a small town at its peak. It was named after him as an independent state. Its capital was Monmouth County. In 1762, the city became a federal state. In 1802, a legislature passed the Townshend Acts to limit the number of houses that were constructed on a site owned by the county. After the Revolutionary War, however, it remained an important economic center for all people living in America. During World War II, Washington was involved with the American",
+        "sft@0.7": "The capital of the United States is called The Washington Post. It was created by William Henry Harrison, who was a famous man who wrote the first American story in 1812."
+      },
+      "heuristic": {
+        "pretrain@0.1": "ok",
+        "sft@0.1": "ok",
+        "pretrain@0.7": "ok",
+        "sft@0.7": "ok"
+      },
+      "span_hit": {
+        "pretrain@0.1": true,
+        "sft@0.1": true,
+        "pretrain@0.7": true,
+        "sft@0.7": true
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 23,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 36,
+          "stopped_on_im_end": true
+        }
+      }
+    },
+    "shakespeare": {
+      "category": "retrieval",
+      "prompt": "Who wrote Romeo and Juliet?",
+      "prefix": "Romeo and Juliet was written by",
+      "gold": [
+        "Shakespeare"
+      ],
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "a young girl named R.M. O’Brien, who was born in the town of Roswell on April 14th, 1852.\nThe story is told in the following way:\n- The story begins with a young boy called O’Brien, who is a young man named O’Brien. He has been married to his mother for two years. O’Brien is now living in Roswell, where he lives as an adult. His father is a young woman named O’Brien. O’Brien is a young man who is a young man. O’Brien is a young",
+        "sft@0.1": "In the movie \"Odysseus,\" the character who wrote the story is named Odysseus, a young man from the United States. He was a very important person who lived in the United States for over 20 years. He was a very smart man who made decisions and made decisions that were important to him.",
+        "pretrain@0.7": "Romeo, who was the son of a wealthy merchant. When Juliet was captured in France, he was imprisoned for three days (18–20).\nThe marriage of the two lovers is not only a tragic story, it has also been shown to be an important historical event that helped to create the modern era. The play’s title character and the story of Romeo, the playwright, is a symbol of love and friendship between Juliet and her husband.\n- “In Romeo's life, Juliet is a young man. He is born in this place. He lives in a very small town at present-day Paris. His",
+        "sft@0.7": "The question asks for the who, what, and who wrote Shakespeare's works. To answer this question, I will follow these steps:\n\n1. Identify the relevant information in the original sentence.\n2. Provide the answer to the question.\n3. Check if the original sentence accurately describes the author's work.\n4. Verify if it supports or contradicts the information provided in the original sentence.\n5. If no information is present in the original sentence, it can be considered a valid answer.\n6. If no information is present, it cannot be considered a valid answer.\n7. If no information is"
+      },
+      "heuristic": {
+        "pretrain@0.1": "miss",
+        "sft@0.1": "miss",
+        "pretrain@0.7": "miss",
+        "sft@0.7": "ok"
+      },
+      "span_hit": {
+        "pretrain@0.1": false,
+        "sft@0.1": false,
+        "pretrain@0.7": false,
+        "sft@0.7": true
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 68,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        }
+      }
+    },
+    "largest_planet": {
+      "category": "retrieval",
+      "prompt": "What is the largest planet in our solar system?",
+      "prefix": "The largest planet in our solar system is",
+      "gold": [
+        "Jupiter"
+      ],
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "the Sun. The Sun is a giant star that has been observed to be about 1,000 times as massive as Jupiter and Saturn.\nThis is the first time that a planet has been discovered by astronomers using the Hubble Space Telescope. This is the first time that we have seen a planet orbiting another star. It is also known as the “Earth” because it is so close to its parent star.\nIt is the second planet in the Solar System that is the closest planet to our sun. Its orbit is about 4.5 billion miles (6.4 million kilometers) away from us.\nA planet with a mass",
+        "sft@0.1": "The largest planet in our solar system, called the sun, is called the Sun. It's made up of three main parts: the sun, the planet, and the Earth. The sun is the largest planet in our solar system, and it's the largest planet in our solar system.",
+        "pretrain@0.7": "the sun. It is also known as the \"solar planet\". The closest star to us is Neptune, which lies between 13 and 14 degrees north latitude.\nWhen a planet is directly in its orbit around the Sun it must be in a position close to the Sun that it will be in direct proportion to its distance from the Sun. In the case of a planet, the distance between the Sun's orbit (the distance between Earth and the Sun) is between 0 and 1 degree (or about 0.2 degrees). When an object is directly above the Sun, its orbit is elliptical and the Sun is directly overhead. If the",
+        "sft@0.7": "The largest planet in our solar system, called our sun, is called Earth. This planet is thought to be located on the sun's surface and has been part of the solar system for around 3 billion years. It's approximately 1.5 times the size of the Sun, which means it has a mass of about 17 times the size of the sun."
+      },
+      "heuristic": {
+        "pretrain@0.1": "ok",
+        "sft@0.1": "miss",
+        "pretrain@0.7": "miss",
+        "sft@0.7": "miss"
+      },
+      "span_hit": {
+        "pretrain@0.1": false,
+        "sft@0.1": false,
+        "pretrain@0.7": false,
+        "sft@0.7": false
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 59,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 72,
+          "stopped_on_im_end": true
+        }
+      }
+    },
+    "karl_marx": {
+      "category": "biography",
+      "prompt": "Who was Karl Marx?",
+      "prefix": "Karl Marx was",
+      "gold": [
+        "philosopher",
+        "economist",
+        "communist",
+        "German",
+        "revolutionary",
+        "socialist"
+      ],
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "a German philosopher. He was the first to write about the nature of the human mind, and he was also the first person to write about the nature of the human mind.\nThe first person to write about the human mind was Karl Marx (1809-1914). His work is considered to be the most important contribution to modern philosophy. The first person to write about the human mind was Friedrich Engels who wrote about the human mind. In his writings, Marx describes the human mind as a system of thought that is based on the idea of the human mind. It is believed that the human mind is a system of thought that is based",
+        "sft@0.1": "Hobelers were known for his work on the development of the German economy, which led to the establishment of the German-American League (WAS). The German economy was characterized by its strong economic growth and a strong economy, with a strong economy and a strong economy.",
+        "pretrain@0.7": "a famous economist and a pioneer in the field of economic theory.\nMarxianism is a movement which aims to make all people live better by looking for ways of living, rather than by thinking about the future. The term ‘socialist’ is used to refer to any social system that is characterized by social values, such as family life, or a combination of the two. Karl Marx's term was coined by Ludwig von Mises in 1847 when he wrote: \"The social system of the society is based on the belief that all people are created equal; that the social system is based on a set of rules and principles",
+        "sft@0.7": "Kreys was a professional football player from the United States, and he played for various clubs like The Beatles, Jardin, and George Washington. He became famous as a sports journalist by doing a lot of work on his football career."
+      },
+      "heuristic": {
+        "pretrain@0.1": "ok",
+        "sft@0.1": "miss",
+        "pretrain@0.7": "ok",
+        "sft@0.7": "miss"
+      },
+      "span_hit": {
+        "pretrain@0.1": true,
+        "sft@0.1": true,
+        "pretrain@0.7": true,
+        "sft@0.7": false
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 57,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 50,
+          "stopped_on_im_end": true
+        }
+      }
+    },
+    "einstein": {
+      "category": "biography",
+      "prompt": "Who was Albert Einstein?",
+      "prefix": "Albert Einstein was",
+      "gold": [
+        "physicist",
+        "scientist",
+        "relativity",
+        "German",
+        "theoretical"
+      ],
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "a pioneer in the field of quantum mechanics.\nThe first quantum computer, known as the Quantum Computer (QM), was invented by Albert Einstein in 1879. The first quantum computer was built in 1885 and was designed to be used for the study of quantum mechanics. It is now widely used in the field of quantum computing.\nIn the early 20th century, the first quantum computers were developed. They were based on the idea that the universe could be made up of two different types of particles: the quantum superposition and the superposition. These superpositions are called superpositions. In the late 19th century,",
+        "sft@0.1": "Eugene Eugene, an American scientist and writer who made significant contributions to the field of physics, is best known for his work on the theory of relativity. He was born on December 20, 1864, in New York City, California. Eugene's work has been widely recognized as one of the most influential and influential scientific theories of the time. Eugene's work has been widely accepted by many people worldwide, including scientists like Albert Einstein and Albert Einstein. His work has been widely recognized and celebrated throughout history, with numerous awards and recognition.",
+        "pretrain@0.7": "a famous physicist who had been instrumental in making quantum computers the basis for the modern day computer. He studied the effects of the quantum world, and tried to understand what quantum mechanics is like when you see a quantum computer on your desktop or laptop.\nThe work of Albert Einstein helped to create the first modern quantum computer. In his book “A Mathematical Quantum Computer” he describes his theory of general relativity. At the same time, Einstein was able to develop the concept of quantum mechanics. It is possible that Einstein had an idea for a quantum computer, but the concept was not developed until the late 1980s. The idea is",
+        "sft@0.7": "Albert Einstein was born on August 14, 1957. He is an American author and a writer, known for his work on the field of physics. His contributions to physics, particularly in the field of physics, led him to pursue his research into the fields of physics and engineering. Despite his personal journey, he continued to pursue other important figures such as physics, mathematics, and engineering. This period in history marked his retirement from many years of work that had been done by Albert Einstein."
+      },
+      "heuristic": {
+        "pretrain@0.1": "ramble",
+        "sft@0.1": "ramble",
+        "pretrain@0.7": "ramble",
+        "sft@0.7": "ramble"
+      },
+      "span_hit": {
+        "pretrain@0.1": false,
+        "sft@0.1": true,
+        "pretrain@0.7": true,
+        "sft@0.7": false
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 115,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 97,
+          "stopped_on_im_end": true
+        }
+      }
+    },
+    "newton": {
+      "category": "biography",
+      "prompt": "Who was Isaac Newton?",
+      "prefix": "Isaac Newton was",
+      "gold": [
+        "physicist",
+        "mathematician",
+        "scientist",
+        "English",
+        "gravity"
+      ],
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "a pioneer in the field of physics. He was born on January 1, 1864, and died on March 3, 1867 at age 65.\n- Isaac Newton (1743–1801) was an English mathematician who was also a member of the Royal Society. His work is considered to be one of the most important contributions to mathematics. In 1776 he published his first book The Mathematical Theory of Relativity. This book was written by Sir John Herschel, who was a member of the Royal Society for Scientific Research.\nIn 1816, Isaac Newton was appointed as the first black man to be elected to the United",
+        "sft@0.1": "The person who was born on September 11, 1812, is named Isaac Newton. He was an American actor and writer who played a significant role in the development of the United States' national television series \"Pair of Pines.\"",
+        "pretrain@0.7": "a famous student of Newton. He was born in 1706 in London, England and received his first education at the age of 13. After graduating from Harvard University in 1801, he moved to New York City where he became an associate professor of philosophy at Princeton University.\nHe attended college in Boston, Massachusetts and served as a teacher on the American Revolution. His father, John Dewey (1714-1826) was a prominent member of the Philadelphia Philharmonic Society, which played a major role in shaping the American Revolution. When he returned to Philadelphia, he joined the Royal Academy in 1782. In 1787 he enrolled",
+        "sft@0.7": "The question asks for the person who was referred to as Isaac Newton, and it is not mentioned in the given text. So, the correct answer would be:\n\nA) The person was called Isaac Newton.\nB) They were called Isaac Newton.\nC) An individual was called Isaac Newton.\nD) It was an individual named Isaac Newton."
+      },
+      "heuristic": {
+        "pretrain@0.1": "ramble",
+        "sft@0.1": "",
+        "pretrain@0.7": "ramble",
+        "sft@0.7": ""
+      },
+      "span_hit": {
+        "pretrain@0.1": false,
+        "sft@0.1": false,
+        "pretrain@0.7": false,
+        "sft@0.7": false
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 48,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 74,
+          "stopped_on_im_end": true
+        }
+      }
+    },
+    "math_2plus2": {
+      "category": "reasoning",
+      "prompt": "What is 2+2?",
+      "prefix": "2 + 2 =",
+      "gold": [
+        "4"
+      ],
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "3.\n     \\[\n     \\frac{1}{3} - \\frac{4}{5} = \\frac{8}{15} = \\frac{7}{16}\n     \\]\n   - The sum of the squares of the two squares is \\( \\frac{6}{15} = \\frac{9}{14}\\).\n\nThus, the value of \\( \\sum_{k=0}^{\\infty} \\left( \\frac{x}{y} - \\frac{z}{a} \\right) \\) is \\(\\",
+        "sft@0.1": "To find the value of 2, we need to first identify the value of 2 that satisfies the condition. In this case, 2 = 2 + 2, and 2 = 3. We can then substitute these values into the expression for 2: 2 + 2 = 4. This gives us 2 = 4.\n\nNext, we need to find the value of 2 that satisfies the condition. Since 2 = 4, we have 2 = 4. Therefore, 2 = 4.\n\nTherefore, the value of 2 that satisfies the condition is 4.",
+        "pretrain@0.7": "8.\n\\]\nThis is the maximum possible value of \\( \\frac{1}{8} - \\frac{3}{4}\\).<|im_end|>\n<|endoftext|>",
+        "sft@0.7": "The question asks for the value of 2 in a geometric progression, which is 2^3 - 3(1) + 2^2 = 4. To find the value of 2, we can divide both sides by 2 to solve for the value. \n\nFor the first term, 2 * 2^2 = 9, so 2*2^2 = 9, so 2^4 = 16. Then, 2^4 = 16, so 2^4 = 16, so 2^5 = 16. Therefore, 2^5 = 16. Since 2^6 = 16, we have 2^6 = 16. So"
+      },
+      "heuristic": {
+        "pretrain@0.1": "fail",
+        "sft@0.1": "fail",
+        "pretrain@0.7": "fail",
+        "sft@0.7": "fail"
+      },
+      "span_hit": {
+        "pretrain@0.1": false,
+        "sft@0.1": false,
+        "pretrain@0.7": false,
+        "sft@0.7": false
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 111,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 33
+        },
+        "sft@0.7": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        }
+      }
+    },
+    "math_multiply": {
+      "category": "reasoning",
+      "prompt": "What is 17 × 23?",
+      "prefix": "17 × 23 =",
+      "gold": [
+        "391"
+      ],
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "18.\n     \\[\n     \\text{A}_1 = \\frac{18}{2} \\times 17 = 18 \\times 17 = 18 \\times 19 = 18 \\times 20 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 = 18 \\times 19 =",
+        "sft@0.1": "17 × 23 = 17 × 23\n\nTo find the value of 17, we need to divide 17 by 17. 17 divided by 17 gives us 17 / 17 = 1.5. Therefore, 17 / 17 = 1.5. This means that 17 is the same as 17.",
+        "pretrain@0.7": "18 × 10 = 18\n     \\[\n     \\text{(1, 18)^2} = 18\n     \\]\n\n4. **Calculate the final result**:\n   - The final answer is \\(\\boxed{\\dfrac{18}{9}}\\).<|im_end|>\n<|endoftext|>",
+        "sft@0.7": "17 × 23 = 18\n\nIn this example, 17 × 23 = 18 × 23, where 17 is the final result. To find the value of 17, we simply multiply both sides by 18 to get the result: 18 * 17 = 485. This is the final answer because 17 × 23 = 485."
+      },
+      "heuristic": {
+        "pretrain@0.1": "fail",
+        "sft@0.1": "fail",
+        "pretrain@0.7": "fail",
+        "sft@0.7": "fail"
+      },
+      "span_hit": {
+        "pretrain@0.1": false,
+        "sft@0.1": false,
+        "pretrain@0.7": false,
+        "sft@0.7": false
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 59,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 74
+        },
+        "sft@0.7": {
+          "new_tokens": 66,
+          "stopped_on_im_end": true
+        }
+      }
+    },
+    "dna": {
+      "category": "reasoning",
+      "prompt": "What is DNA?",
+      "prefix": "DNA is",
+      "gold": [
+        "deoxyribonucleic",
+        "genetic",
+        "molecule",
+        "nucleic"
+      ],
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "a very important part of the DNA sequence. It is also known as the DNA sequence.\nThe DNA sequence is a sequence of DNA that is found in all living organisms, including humans and animals. The DNA sequence is the most important part of the DNA sequence. This means that the DNA sequence is the same as the DNA sequence.\nIn the DNA sequence, the DNA sequence is the same as the DNA sequence. In other words, the DNA sequence is the same as the DNA sequence. For example, the DNA sequence is the same as the DNA sequence.\nThere are two types of DNA sequences:\n- A single-str",
+        "sft@0.1": "The DNA of the human body is made up of DNA, which is the genetic material that makes up the DNA molecule. This process is called DNA replication and is responsible for maintaining the integrity of the DNA molecule. The DNA molecule is then divided into two parts: the DNA molecule (the DNA molecule) and the DNA molecule (the DNA molecule). These parts are then divided into smaller parts called DNA molecules. Each part of the DNA molecule contains a specific number of DNA molecules, which is the base of the DNA molecule. When these parts are combined, the DNA molecule is divided into two parts: the DNA molecule and the DNA molecule.",
+        "pretrain@0.7": "a protein complex that contains more than 1,500 genes. When an enzyme called ribosome attaches to the DNA it breaks down the DNA strands and allows for the formation of new proteins.\nThe enzyme has the ability to bind to the DNA strand, and it can also bind to other proteins. The ribosomes are located on the surface of the DNA strand, which then binds to the DNA strand in the nucleus. In some organisms, however, the ribosome is able to bind to specific genes or proteins, which are essential for life. If the ribosome is not broken, the ribosome will be broken into",
+        "sft@0.7": "The DNA of the human being, which includes DNA and proteins, plays a crucial role in maintaining cell growth and survival. This includes the process by which DNA is broken down into smaller pieces that can be used to create new cells and maintain cellular functions. The process of DNA was first described by Michael Jackson in 1848. In a way, this process was achieved through the discovery of DNA, which is the same as DNA that was discovered during the 19th century.\n\nThis process allowed cells to reach the center of their DNA, where they were able to form new cells and begin to form new cells. By creating a new structure,"
+      },
+      "heuristic": {
+        "pretrain@0.1": "ramble",
+        "sft@0.1": "ramble",
+        "pretrain@0.7": "ramble",
+        "sft@0.7": "ramble"
+      },
+      "span_hit": {
+        "pretrain@0.1": false,
+        "sft@0.1": true,
+        "pretrain@0.7": false,
+        "sft@0.7": false
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 128,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        }
+      }
+    },
+    "photosynthesis": {
+      "category": "reasoning",
+      "prompt": "Explain photosynthesis in one sentence.",
+      "prefix": "Photosynthesis is",
+      "gold": [
+        "light",
+        "sunlight",
+        "glucose",
+        "energy",
+        "plants",
+        "chlorophyll"
+      ],
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "the process of converting sunlight into energy.\nThe process of photosynthesis is called photosynthetic respiration. The process of photosynthesis involves the use of oxygen and carbon dioxide to produce energy. Photosynthesis is the process of converting carbon dioxide (CO2) from water into oxygen, which is then used in the production of food. This process is known as photosynthesis.\nIn the process of photosynthesis, oxygen is produced by the plant cells that are able to convert carbon dioxide into glucose. In this process, the glucose is converted into glucose. When the glucose is not present, it is converted into glucose.\nWhen the glucose",
+        "sft@0.1": "In the context of photosynthesis, photosynthesis is the process by which plants convert light energy into chemical energy. This process involves the breakdown of organic matter and other molecules, such as glucose, oxygen, and carbon dioxide, into the atmosphere. The process begins with the production of glucose and oxygen, where it is broken down into simpler molecules called glucose. These glucose molecules then convert the glucose into glucose, which is then used to make more glucose.",
+        "pretrain@0.7": "a process of converting sunlight into energy, and it requires the use of chemical reactions to produce ATP. The process of photosynthesis takes place in the cells of plants, such as plants and fungi, where the photosynthetic activity of the plants can be greatly reduced by using the oxygen and nitrogen that the cells need. In other words, a plant will convert carbon dioxide from the atmosphere to oxygen in the form of carbon dioxide.\nThe process of photosynthesis involves two steps:\n- 1) Using oxygen to convert carbon dioxide to water, a plant produces energy, and\n2) Adding oxygen to the soil can reduce the amount of carbon",
+        "sft@0.7": "The photosynthesis process occurs in the chloroplast, which is part of the chloroplasts. The chloroplast (the chloroplasts) is part of the plant's cell walls, and the chloroplasts (plurmal cells) have a slightly different structure."
+      },
+      "heuristic": {
+        "pretrain@0.1": "ramble",
+        "sft@0.1": "",
+        "pretrain@0.7": "ramble",
+        "sft@0.7": ""
+      },
+      "span_hit": {
+        "pretrain@0.1": true,
+        "sft@0.1": true,
+        "pretrain@0.7": true,
+        "sft@0.7": false
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 90,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 57,
+          "stopped_on_im_end": true
+        }
+      }
+    },
+    "sky_blue": {
+      "category": "reasoning",
+      "prompt": "Why is the sky blue?",
+      "prefix": "The sky appears blue because",
+      "gold": [
+        "scatter",
+        "Rayleigh",
+        "wavelength",
+        "light"
+      ],
+      "notes": "",
+      "answers": {
+        "pretrain@0.1": "of the light that is reflected off the surface. The sky is blue because it is not visible to the naked eye.\n  • The sky is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because it is blue because",
+        "sft@0.1": "The sky is blue because it is a blue color that is not visible to any other people, but rather the sky itself. This is because the sky is blue because it is not visible to anyone outside of the sky.",
+        "pretrain@0.7": "of the large number of stars in our solar system. The stars are the most massive objects in the universe, with only the smallest ones visible to us at all times, and are visible to the naked eye.\nNow we know that there is no sun outside the observable universe. If the Sun were not a star, it would have a higher density than it did in the distant past, which is why the Milky Way is so bright! In other words, if the Milky Way was just a dark sky, we wouldn’t expect a star to be brighter than the Milky Way, and would be a lot brighter than the Milky Way",
+        "sft@0.7": "The sky blue is the result of the sky being blue, which can be understood by considering the following reasons:\n\n1. **Beneath the sky**: The sky is not only blue but also includes a few other colors, such as red and blue, that are both visible and visible in the sky. This creates an atmosphere where the sky is a vast, clear space that cannot be easily captured from any other source.\n2. **Red across the sky**: Red refers to a cloud cover, which is a type of air that has no way of seeing the sky. It is often referred to as \"air above"
+      },
+      "heuristic": {
+        "pretrain@0.1": "ramble",
+        "sft@0.1": "",
+        "pretrain@0.7": "ramble",
+        "sft@0.7": "ramble"
+      },
+      "span_hit": {
+        "pretrain@0.1": true,
+        "sft@0.1": false,
+        "pretrain@0.7": false,
+        "sft@0.7": false
+      },
+      "meta": {
+        "pretrain@0.1": {
+          "new_tokens": 128
+        },
+        "sft@0.1": {
+          "new_tokens": 45,
+          "stopped_on_im_end": true
+        },
+        "pretrain@0.7": {
+          "new_tokens": 128
+        },
+        "sft@0.7": {
+          "new_tokens": 128,
+          "stopped_on_im_end": false
+        }
+      }
+    }
+  }
+}

@@ -28,21 +28,32 @@ This checkpoint proves that architectures outside the transformer/SSM families *
 
 ## Which revision to use
 
-**Use HF `main` (default).** It tracks the latest v2 round. We ship a new checkpoint after every **+2B pretrain tokens** (+ chat SFT); each round also gets a permanent **`round-*` tag** (e.g. `round-2b-gate`, `round-4b-gate`, `round-6b-gate`).
+**Use HF `main` (default).** It tracks the latest v2 round. We ship a new checkpoint after every **+2B pretrain tokens** (+ chat SFT); each round also gets a permanent **`round-*` tag** (e.g. `round-2b-gate`, `round-6b-gate`, `round-8b-gate`).
 
 | | **`main` / latest round (recommended)** | **`v1-old-deprecated-10B-sft` (deprecated)** |
 |--|----------------------------------------|------------------------------------------------|
 | **Status** | **Active line** — Round 1 on `main`, continued each +2B | Legacy ~10B-token checkpoint; **comparison only** |
-| **Params / pretrain** | ~100M, **6B tokens** (grows each round) | ~100M, ~10B tokens |
+| **Params / pretrain** | ~100M, **8B tokens** (grows each round) | ~100M, ~10B tokens |
 | **Gate** | Content-aware — real+imag (`gate_content_aware=true`) | Magnitude-only (legacy) |
 | **Vocab** | **50261** — ChatML + `<think>` / `</think>` | **50259** — ChatML only |
-| **Download** | default (no `--revision`) or `--revision round-6b-gate` | `--revision v1-old-deprecated-10B-sft` |
+| **Download** | default (no `--revision`) or `--revision round-8b-gate` | `--revision v1-old-deprecated-10B-sft` |
 
-**Latest shipped:** **`round-6b-gate`** on **`main`** — **2026-07-09** (Round 3, +2B pretrain since `round-4b-gate`).
+**Latest shipped:** **`round-8b-gate`** on **`main`** — **2026-07-10** (Round 4, +2B pretrain since `round-6b-gate`).
 
-Pin **`round-2b-gate`** if you need the Round 1 (2B) snapshot — that tag is frozen on HF.
+Pin **`round-6b-gate`** or earlier tags on HF to compare prior rounds — those READMEs and weights are frozen per revision.
 
-> **Next round (`round-8b`, in pretrain):** we are **removing `<think>` reasoning** from both the pretrain blend and SFT. On this ~100M base it **hurt more than it helped** — the SFT model collapsed into verbose "explain-the-question" prose and sometimes switched language, degrading short factual answers. Learned the hard way; round-8b SFT is English-only, no-think, with short direct (but still multi-turn) answers.
+### Round 4 recipe change (no-think, no math SFT)
+
+Starting with **`round-8b-gate`**, we changed **both pretrain and SFT** to remove reasoning/math modes that were hurting this ~100M base:
+
+| Change | What we removed | Why |
+|--------|-----------------|-----|
+| **Pretrain blend** | `<think>…</think>` traces from `smoltalk2_mid` | Base learned to open answers with thinking blocks and "explain the question" prose |
+| **SFT** | `think_fraction` **0.15 → 0** | No `<think>` in SFT targets — direct ChatML answers only |
+| **SFT splits** | Math/reasoning-heavy pools (e.g. OpenThoughts3, MATH-style, multilingual, tool-calling) | ~100M cannot use math/LaTeX/multilingual mix; it regressed short English factual QA |
+| **SFT filter** | Verbose assistant dumps (cap 300 words, `hard` filter) | Cuts rambling table/reasoning templates |
+
+Earlier tags (`round-2b-gate` … `round-6b-gate`) still used **15% think SFT** and the **unstripped** Mid blend. Compare them side-by-side to see the effect of this cleanup.
 
 ---
 
@@ -61,14 +72,14 @@ Each outer product writes a full **d×d** association → **O(d²) capacity per 
 
 **E3 multistate (K=3):** three superposed matrix states per head, combined by data-dependent **phase interference** — a uniquely PAM idea, not copyable from transformers or Mamba.
 
-| | **`round-6b-gate` (latest on `main`)** |
+| | **`round-8b-gate` (latest on `main`)** |
 |--|--------------------------------------|
 | **Params** | ~100.5M |
 | **Architecture** | V11 E3 K=3 PAM + content-aware GSP gate |
-| **Vocab** | 50261 — ChatML + thinking tokens |
-| **Pretrain** | **6.0B tokens** cumulative (2B this round; see [Round history](#round-history)) |
-| **SFT** | `HuggingFaceTB/smoltalk2` SFT, hard filter, 15% think cap |
-| **Val (in-distro)** | SFT holdout PPL **6.55**, acc **0.594** (Round 2 @ 4B: PPL **6.65**) |
+| **Vocab** | 50261 — ChatML + thinking tokens (unused in SFT targets this round) |
+| **Pretrain** | **8.0B tokens** cumulative (2B this round; see [Round history](#round-history)) |
+| **SFT** | `smoltalk2` SFT, **no-think** (`think_fraction=0`), math/reasoning splits dropped |
+| **Val (in-distro)** | SFT holdout PPL **7.88** (Round 3 @ 6B with think-SFT: PPL **6.55**) |
 | **Inference** | O(1)/token, fixed state, no KV cache |
 
 ---
@@ -88,7 +99,7 @@ Vector SSMs (Mamba, etc.) get O(1) inference but store memory in a **single vect
 
 **The trade:** same-pipeline transformer baseline (100M, WikiText) val PPL **22.69** vs our PAM **25.77** — we report the gap on purpose. You get a **different memory mechanism** and **O(1) inference without KV cache**.
 
-**Honest limits (Round 3, 6B):** still a **milestone checkpoint**, not a production assistant. SFT val PPL improved **6.65 → 6.55** vs Round 2; chat/social and simple instructions often work, but factual Q&A, arithmetic, and long reasoning remain unreliable. Expect rambling, wrong capitals, and template filler. GPT-2 BPE is **case-sensitive**. Use **`--no-think`** to discourage and strip `<think>` blocks.
+**Honest limits (Round 4, 8B, no-think SFT):** still a **milestone checkpoint**, not a production assistant. SFT holdout PPL is **higher** than `round-6b-gate` (7.88 vs 6.55) because we removed easy-to-fit reasoning/math templates — the trade is cleaner short answers vs metric gaming. Chat/social works; some factual hits improved (e.g. US capital). Math remains weak by design (math splits removed). GPT-2 BPE is **case-sensitive**. Vocab still has thinking tokens, but this round's SFT does not train them.
 
 ---
 
@@ -122,8 +133,8 @@ python run_chat.py --checkpoint qllm_v11_e3k3_chat.pt --no-think --max_new_token
 | `eval_compare.py` | Pretrain vs SFT comparison (4 answers per question) |
 | `eval_prompts_round1.yaml` | SFT chat prompt suite |
 | `eval_prompts_compare.yaml` | Paired prefix + chat questions |
-| `SAMPLES_round-6b-gate.md` | Full SFT chat sample log |
-| `SAMPLES_round-6b-gate-compare.md` | Pretrain vs SFT summary table |
+| `SAMPLES_round-8b-gate.md` | Full SFT chat sample log |
+| `SAMPLES_round-8b-gate-compare.md` | Pretrain vs SFT summary table |
 | `requirements.txt` | `torch`, `transformers`, `PyYAML` |
 
 One `modeling_qllm.py` serves **both** checkpoints. Use `run_chat.py` for SFT (ChatML) and `run_complete.py` for the pretrain base (plain prefix continuation).
@@ -184,7 +195,7 @@ Same sampling defaults as training `gen_every`: top_k 50, top_p 0.9, repetition_
 
 SFT teaches ChatML instruction-following but can **wash out** raw factual completions the pretrain base still has. Example: prefix `"The capital of France is"` often yields **Paris** from pretrain, while the SFT chat model may ramble or hallucinate on the same fact as a question.
 
-**Comparison doc:** [SAMPLES_round-6b-gate-compare.md](SAMPLES_round-6b-gate-compare.md) — one table row per question, four columns:
+**Comparison doc:** [SAMPLES_round-8b-gate-compare.md](SAMPLES_round-8b-gate-compare.md) — one table row per question, four columns:
 
 | | pretrain@0.1 | pretrain@0.7 | sft@0.1 | sft@0.7 |
 |--|--|--|--|--|
@@ -199,12 +210,12 @@ uv run python eval_compare.py \
   --pretrain qllm_v11_e3k3_pretrain.pt \
   --sft qllm_v11_e3k3_chat.pt \
   --prompts eval_prompts_compare.yaml \
-  --round-tag round-6b-gate \
-  --out-md SAMPLES_round-6b-gate-compare.md \
-  --out-json ../logs/v11/round-6b-gate_compare.json
+  --round-tag round-8b-gate \
+  --out-md SAMPLES_round-8b-gate-compare.md \
+  --out-json ../logs/v11/round-8b-gate_compare.json
 ```
 
-SFT-only chat eval (profiles recommended/raw) remains in [eval_chat.py](eval_chat.py) — see [SAMPLES_round-6b-gate.md](SAMPLES_round-6b-gate.md).
+SFT-only chat eval (profiles recommended/raw) remains in [eval_chat.py](eval_chat.py) — see [SAMPLES_round-8b-gate.md](SAMPLES_round-8b-gate.md).
 
 ---
 
@@ -260,17 +271,17 @@ Generation uses the **O(1) recurrent PAM path** — a fixed matrix state per lay
 
 ## Sample chats
 
-**Full transcripts:** [SAMPLES_round-6b-gate.md](SAMPLES_round-6b-gate.md) (72 generations, recommended + raw profiles)
+**Full transcripts:** [SAMPLES_round-8b-gate.md](SAMPLES_round-8b-gate.md) (72 generations, recommended + raw profiles)
 
 | Prompt | Response (truncated) | Notes |
 | ------ | -------------------- | ----- |
-| what is the capital of France? | The capital of France, France, is Paris… | Mentions Paris; still verbose |
-| What is 2+2? | The given statement "2+2" is a bit ambiguous… | Rambles; no clean `4` |
-| Answer in one word: is water wet? | Yes, water is wet. | Short instruction OK |
+| what is the capital of France? | The capital of France is Paris… | Paris hit; cleaner than round-6b |
+| What is 2+2? | To find the value of 2, we need to first identify… | Still fails (math not in SFT) |
+| Answer in one word: is water wet? | Yes, yes. The sentence "Is water wet?"… | Starts yes; still over-explains |
 | Say hello in a friendly way. | Hello! How can I help you today? | Chat/social OK |
-| What is the Capital of France? | The capital of France, France, is Paris… | Title case also hits Paris |
+| What is the capital of the United States? | Washington, D.C.… | **Improved** vs round-6b |
 
-At **6B pretrain tokens**, treat this as an **architecture + pipeline snapshot**, not a knowledge-saturated assistant. Pin **`round-4b-gate`** or **`round-2b-gate`** on HF to compare earlier rounds side-by-side.
+At **8B pretrain tokens** with **no-think / no-math SFT**, treat this as a **recipe experiment** on the same architecture. Pin **`round-6b-gate`** on HF to compare against the prior think-SFT line.
 
 Reproduce the full eval:
 
@@ -278,9 +289,9 @@ Reproduce the full eval:
 uv run python eval_chat.py \
   --checkpoint qllm_v11_e3k3_chat.pt \
   --prompts eval_prompts_round1.yaml \
-  --round-tag round-6b-gate \
-  --out-md SAMPLES_round-6b-gate.md \
-  --out-json ../logs/v11/round-6b-gate_chat_eval.json
+  --round-tag round-8b-gate \
+  --out-md SAMPLES_round-8b-gate.md \
+  --out-json ../logs/v11/round-8b-gate_chat_eval.json
 ```
 
 ---
@@ -289,9 +300,9 @@ uv run python eval_chat.py \
 
 **Current v2 line (from scratch, +2B per round):**
 
-1. **Pretrain from scratch** — preset `v11_e3_k3_chat` (vocab **50261**), blended DCLM-Edu + FineWeb-Edu + smoltalk2-Mid, **2B tokens per round**, content-aware GSP gate.
-2. **SFT** — `HuggingFaceTB/smoltalk2` SFT config (`think_fraction=0.15`), 1 epoch, ChatML assistant-only loss.
-3. **Ship** — export + verify, push under a **round tag** and update **`main`** (e.g. `round-6b-gate`).
+1. **Pretrain from scratch** — preset `v11_e3_k3_chat` (vocab **50261**), blended DCLM-Edu + FineWeb-Edu + smoltalk2-Mid (**thinking traces stripped** from Mid since round-8b), **2B tokens per round**, content-aware GSP gate.
+2. **SFT** — `HuggingFaceTB/smoltalk2` SFT config, **`think_fraction=0`**, math/reasoning splits dropped, hard filter, 1 epoch, ChatML assistant-only loss.
+3. **Ship** — export SFT + pretrain bundles, verify, push under a **round tag** and update **`main`** (e.g. `round-8b-gate`).
 
 **Legacy tag `v1-old-deprecated-10B-sft` (reference only):** ~10B DCLM-Edu + FineWeb-Edu pretrain (vocab 50259), then older SmolTalk SFT with `--warmstart_chatml`.
 
@@ -317,9 +328,10 @@ Full reproduction: [v11/EXPERIMENTS_V11.md](https://github.com/gowrav-vishwakarm
 | `v1-old-deprecated-10B-sft` | (legacy) | ~10B | val PPL ~7.2 | Pre-v2 — vocab 50259, magnitude gate; comparison only |
 | `round-2b-gate` | 2026-07-04 | 2B | SFT PPL **7.20**, pretrain holdout **35.42** | Round 1, v2 line (frozen tag) |
 | `round-4b-gate` | 2026-07-06 | 4B | SFT PPL **6.65**, acc **0.594** | Round 2 (frozen tag) |
-| **`round-6b-gate` / `main`** | **2026-07-09** | **6B** | SFT PPL **6.55**, acc **0.594** | **Round 3, latest** |
+| `round-6b-gate` | 2026-07-09 | 6B | SFT PPL **6.55**, acc **0.594** | Round 3, think-SFT (frozen tag) |
+| **`round-8b-gate` / `main`** | **2026-07-10** | **8B** | SFT PPL **7.88** | **Round 4, no-think / no-math SFT, latest** |
 
-**Round 3 pretrain (+2B):** continues from `round-4b-gate` base; cumulative **6B** tokens on the same v2 stack (content-aware gate, vocab 50261, smoltalk2 SFT). SFT val PPL **6.55** (down from **6.65** at 4B).
+**Round 4 pretrain (+2B):** continues from `round-6b-gate` base; cumulative **8B** tokens. Pretrain Mid blend now **strips `<think>`** blocks (cache v2). SFT uses **`think_fraction=0`** and drops math/reasoning/multilingual splits — see [Round 4 recipe change](#round-4-recipe-change-no-think-no-math-sft) above.
 
 **Round 1 pretrain mix (~2B tokens):** warmup first 1B on DCLM-Edu + FineWeb-Edu; remaining ~1B adds smoltalk2 Mid (weights 48:48:4 → ~52% DCLM-Edu, ~40% FineWeb-Edu, ~8% smoltalk2 Mid).
 
