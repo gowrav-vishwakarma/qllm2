@@ -2,7 +2,7 @@
 # Categories map to: web factual (DCLM/FineWeb), edu, smoltalk2 SFT instruct/code,
 # math stress, reasoning/thinking format, prompt sensitivity (GPT-2 BPE).
 
-round_tag: round-6b-gate
+round_tag: round-8b-gate
 checkpoint: qllm_v11_e3k3_chat.pt
 
 profiles:
