@@ -4,6 +4,9 @@ Evaluation framework for **recurrent matrix memory** — binding capacity, persi
 
 Designed for researchers comparing matrix-memory architectures, not tied to a single model implementation. V11 `V11PAMLayer` is used as a reference implementation for layer-bridge and real-text rank probes.
 
+For the paper protocol, claim policy, Mac/RTX 4090 handoff, and exact
+publication commands, see [`PUBLICATION.md`](PUBLICATION.md).
+
 ## Quick start
 
 ```bash
@@ -11,20 +14,21 @@ Designed for researchers comparing matrix-memory architectures, not tied to a si
 ./scripts/run_memory_probes.sh
 
 # Individual tests
-.venv/bin/python -m memory_probes --test binding
-.venv/bin/python -m memory_probes --test persistence --distances 64,128,512,2048
-.venv/bin/python -m memory_probes --test niah --distances 64,128,512,1024,2048
-.venv/bin/python -m memory_probes --test niah-grid --lengths 128,256,512,1024,2048
-.venv/bin/python -m memory_probes --all
+uv run python -m memory_probes --test binding
+uv run python -m memory_probes --test binding-matched --arch-dim 16
+uv run python -m memory_probes --test persistence --distances 64,128,512,2048
+uv run python -m memory_probes --test niah --distances 64,128,512,1024,2048
+uv run python -m memory_probes --test niah-grid --lengths 128,256,512,1024,2048
+uv run python -m memory_probes --all
 
 # Long context (beyond typical training seq_len)
-.venv/bin/python -m memory_probes --test long-context
-.venv/bin/python -m memory_probes --test long-context --max-distance 1048576   # 1M tokens
+uv run python -m memory_probes --test long-context
+uv run python -m memory_probes --test long-context --max-distance 1048576   # 1M tokens
 
 # Language / real text
-.venv/bin/python -m memory_probes --test language-filler --filler-tokens 10000
-.venv/bin/python -m memory_probes --test language-filler --projection-trials 50
-.venv/bin/python -m memory_probes --test rank-text --text-tokens 50000 --sample-every 100
+uv run python -m memory_probes --test language-filler --filler-tokens 10000
+uv run python -m memory_probes --test language-filler --projection-trials 50
+uv run python -m memory_probes --test rank-text --text-tokens 50000 --sample-every 100
 ```
 
 JSON results land in `logs/memory_probes/`. Compare against legacy runs in `logs/v11/pam_math/` via `scripts/compare_memory_probes.py`.
@@ -40,6 +44,8 @@ JSON results land in `logs/memory_probes/`. Compare against legacy runs in `logs
 | `rank.py` | State rank (synthetic + real WikiText) |
 | `language.py` | Language filler (clustered embeddings) |
 | `long_context.py` | Needle-in-haystack and extreme-distance sweeps |
+| `behavioral.py` | Exact-length trained-LM invented-association protocol |
+| `publication.py` | Multi-seed result schema, aggregation, and Mac sweep |
 | `core.py` | Shared NumPy reference math |
 | `cli.py` | Unified CLI |
 
@@ -48,7 +54,7 @@ JSON results land in `logs/memory_probes/`. Compare against legacy runs in `logs
 | Question | Memory probes (math) | Trained LM probes (Phase B) |
 |----------|----------------------|----------------------------|
 | Is recurrent update implemented correctly? | ✅ selftest, layer-bridge | — |
-| Does matrix memory beat vector HRR capacity? | ✅ capacity | — |
+| Does matrix memory beat HRR at equal width / equal bytes? | ✅ `binding` / `binding-matched` | — |
 | Does decay protect associations over distance? | ✅ persistence, NIAH | needs learned gates |
 | Can protection freeze state for needles? | ✅ GSP sweep (mechanism ceiling) | does training use it? |
 | Does model recall `glorp → banana` in text? | ❌ | Phase B |
@@ -83,10 +89,13 @@ Write N random complex key–value pairs into one matrix state `S = Σᵢ vᵢ �
 | N | Matrix PAM | Vector HRR | Theory 1/√N |
 |---|------------|------------|-------------|
 | 1 | 100% | 100% | 1.00 |
-| 64 | **100%** | ~13% | 0.125 |
+| 64 | **100%** | ~9% | 0.125 |
 | 193 | ~99% | ~1% | 0.072 |
 
-Matrix PAM retains near-perfect retrieval to N≈160 before gradual drop — far above the vector baseline. Validates the architectural motivation: vector state suffers catastrophic interference where matrix state does not.
+This equal-width diagnostic gives PAM `d²` complex state scalars and HRR only
+`d`, so it does **not** establish storage efficiency. Use `binding-matched` for
+the publication comparison at equal state bytes. The equal-width result shows
+how the two representations behave when built from the same embedding width.
 
 ### persistence — decay vs distance
 
@@ -177,20 +186,25 @@ Retrieval score is normalized against a fresh single-write baseline. Values > 1.
 
 The gap between Phase A ceilings and Phase B behavioral recall measures **how much architectural capacity training realized**.
 
-## Phase B (deferred)
+## Phase B (implemented protocol; GPU results pending)
 
-After scratch pretrain completes:
+The shared contrastive next-token runner is
+`scripts/run_memory_behavioral.py`. After scratch pretraining:
 
-1. Implement `scripts/v11_pam_probes.py` — invented-word, passkey, interference on real text
-2. Run on trained checkpoint (e.g. `checkpoints_v11_e3_k3_chat_pretrain/best_model.pt`)
-3. Overlay behavioral recall-vs-distance on NIAH math curves
-4. Log learned `protect_gate` on needle vs filler tokens
+1. Run the same exact-length invented-association suite on trained PAM,
+   Transformer, and Mamba checkpoints.
+2. Overlay behavioral recall-vs-distance on NIAH math curves.
+3. Persist learned `protect_gate` diagnostics on content versus filler tokens.
+4. Treat the results as cross-architecture evidence only when training and
+   parameter budgets are matched.
+
+See [`PUBLICATION.md`](PUBLICATION.md) for the exact RTX 4090 command.
 
 ## Backward compatibility
 
 ```bash
 # Still works, emits DeprecationWarning
-.venv/bin/python -m v11.pam_math --test binding
+uv run python -m v11.pam_math --test binding
 ./scripts/run_v11_pam_math.sh   # delegates to run_memory_probes.sh
 ```
 

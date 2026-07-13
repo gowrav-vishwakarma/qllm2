@@ -2,7 +2,13 @@
 
 ## A Standardized Probe Suite for Neural Memory Architectures
 
-**Reference implementation:** the probe suite described here was developed alongside a new associative-memory architecture, **PAM (Phase-Associative Memory)**, and is released as part of [`https://github.com/gowrav-vishwakarma/qllm2`](https://github.com/gowrav-vishwakarma/qllm2) (see `memory_probes/`). PAM is used throughout as the concrete worked example, but every definition and probe in this paper is **architecture-agnostic**: the suite can be applied unchanged to attention KV caches, state-space models, linear-attention / fast-weight memories, or any future architecture that maintains an internal state.
+> **Status:** this Markdown document is the original research note. The
+> canonical arXiv manuscript now lives in
+> [`memory_probes/paper/main.tex`](paper/main.tex). Publication protocols,
+> claim rules, and the Mac/RTX 4090 handoff are tracked in
+> [`memory_probes/PUBLICATION.md`](PUBLICATION.md).
+
+**Reference implementation:** the probe suite described here was developed alongside a new associative-memory architecture, **PAM (Phase-Associative Memory)**, and is released as part of [`https://github.com/gowrav-vishwakarma/qllm2`](https://github.com/gowrav-vishwakarma/qllm2) (see `memory_probes/`). PAM is used throughout as the concrete worked example. The benchmark is architecture-oriented but capability-tiered: associative probes require native key--value write/read operations, state-geometry probes require an inspectable recurrent state, and trained behavioral probes operate at the language-model level. Unsupported architecture/probe pairs are reported rather than forced through an artificial interface.
 
 ---
 

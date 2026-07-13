@@ -3,6 +3,11 @@ V11 complex primitives (vendored from V7).
 
 Split-real complex tensors: [..., dim, 2] — never torch.complex64/128.
 Used by V11PAMLayer, V11Block, V11LM, and duplex model heads.
+
+Last-axis convention (the PAM "vocabulary"):
+  REAL = 0  → real part
+  IMAG = 1  → imaginary part
+Prefer real_part / imag_part / scale_complex over raw [..., 0] and unsqueeze chains.
 """
 
 import math
@@ -17,6 +22,48 @@ from v11.triton_kernels import (
     fused_mod_relu,
     fused_mod_swish,
 )
+
+
+# ── Split-real vocabulary ─────────────────────────────────────────────────────
+
+REAL = 0  # last-axis index for the real part of [..., dim, 2]
+IMAG = 1  # last-axis index for the imaginary part
+
+
+def real_part(z: torch.Tensor) -> torch.Tensor:
+    """Real slice of a split-real complex tensor."""
+    return z[..., REAL]
+
+
+def imag_part(z: torch.Tensor) -> torch.Tensor:
+    """Imaginary slice of a split-real complex tensor."""
+    return z[..., IMAG]
+
+
+def stack_complex(real: torch.Tensor, imag: torch.Tensor) -> torch.Tensor:
+    """Pack real and imag into split-real layout [..., 2]."""
+    return torch.stack([real, imag], dim=-1)
+
+
+def scale_complex(z: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
+    """Multiply complex z by a real scale that has no complex axis.
+
+    Appends trailing dims to `scale` until it broadcasts over z, so the same
+    factor applies to real and imag together (dropout, protect gate, etc.).
+    """
+    while scale.dim() < z.dim():
+        scale = scale.unsqueeze(-1)
+    return z * scale
+
+
+def as_complex_dropout_mask(dropout_module: nn.Dropout, like_z: torch.Tensor) -> torch.Tensor:
+    """Bernoulli keep-mask over every axis except the complex last dim.
+
+    nn.Dropout on complex tensors would drop real/imag independently; we build a
+    mask on shape[:-1] and apply it with scale_complex so a token is kept or
+    dropped as one complex value.
+    """
+    return dropout_module(torch.ones(like_z.shape[:-1], device=like_z.device, dtype=like_z.dtype))
 
 
 # ── Complex Arithmetic (split-real: [..., dim, 2]) ───────────────────────────
@@ -126,7 +173,12 @@ class ComplexLinear(nn.Module):
 
 
 class ComplexNorm(nn.Module):
-    """RMSNorm for complex: normalize magnitude, preserve phase."""
+    """Stabilize complex token vectors without rotating their phase.
+
+    RMSNorm on magnitude only: each token's complex vector is rescaled to a
+    similar size, but the angle (phase) is left unchanged. Used as pre-norm
+    before CGU / PAM / LM head so residual stacks stay numerically stable.
+    """
 
     def __init__(self, dim: int, eps: float = 1e-6):
         super().__init__()
@@ -146,7 +198,12 @@ def _build_activation(name: str, dim: int) -> nn.Module:
 
 
 class ComplexGatedUnit(nn.Module):
-    """SwiGLU-style complex gating: magnitude gates how much, phase gates rotation."""
+    """Channel mixer inside one token (not across time).
+
+    SwiGLU-style complex gating: magnitude decides how much signal passes,
+    phase decides a rotation. Mixes features within a position; PAM handles
+    sequence/memory mixing.
+    """
 
     def __init__(self, dim: int, expand: int = 3, activation: str = 'modrelu'):
         super().__init__()

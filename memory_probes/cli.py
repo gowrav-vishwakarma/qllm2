@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence, Tuple
 
-from memory_probes.capacity import test_binding
+from memory_probes.capacity import test_binding, test_binding_matched_bytes
 from memory_probes.interference import (
     test_conjugate_interference,
     test_interference,
@@ -21,7 +21,7 @@ from memory_probes.persistence import test_persistence
 from memory_probes.rank import test_rank, test_rank_adapter, test_rank_real_text
 
 ALL_TESTS = (
-    'binding', 'persistence', 'interference', 'rank',
+    'binding', 'binding-matched', 'persistence', 'interference', 'rank',
     'conjugate', 'layer-bridge', 'niah', 'niah-grid', 'long-context',
     'language-filler', 'rank-text', 'arch-compare',
 )
@@ -119,6 +119,14 @@ def run_test(test: str, args: argparse.Namespace) -> Dict[str, Any]:
         return run_arch_test(test, args)
     if test == 'binding':
         return test_binding(max_n=args.max_n, trials=args.trials, seed=args.seed)
+    if test == 'binding-matched':
+        ns = tuple(n for n in _parse_ints(args.binding_ns) if n <= args.max_n)
+        return test_binding_matched_bytes(
+            matrix_d=args.arch_dim,
+            ns=ns,
+            trials=args.trials,
+            seed=args.seed,
+        )
     if test == 'persistence':
         return test_persistence(
             distances=_parse_ints(args.distances),
@@ -201,6 +209,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument('--modes', type=str, default='baseline,e1,e2,e3')
     p.add_argument('--max-n', type=int, default=200)
     p.add_argument('--trials', type=int, default=20)
+    p.add_argument('--binding-ns', type=str, default='1,4,8,16,32,64,128',
+                   help='Association counts for --test binding-matched.')
     p.add_argument('--pairs', type=int, default=32)
     p.add_argument('--filler', type=int, default=256)
     p.add_argument('--steps', type=int, default=512)

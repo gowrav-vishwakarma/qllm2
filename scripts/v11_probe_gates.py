@@ -19,8 +19,10 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
@@ -66,6 +68,8 @@ def main() -> None:
     p.add_argument('--tokens', type=int, default=4096)
     p.add_argument('--surprisal_pct', type=float, default=0.25,
                    help='Top/bottom fraction by next-token loss = content/filler')
+    p.add_argument('--output', type=Path, default=None,
+                   help='Optional JSON output path for publication artifacts.')
     args = p.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -274,6 +278,52 @@ def main() -> None:
             cs = ' '.join(f"{ec[k].item():>7.4f}" for k in range(K))
             fs = ' '.join(f"{ef[k].item():>7.4f}" for k in range(K))
             print(f"{layer:>5} | {cs} | {fs}")
+
+    if args.output is not None:
+        def finite_or_none(value):
+            return value if math.isfinite(value) else None
+
+        payload = {
+            'schema_version': 'memory-probes-gate-diagnosis/v1',
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'checkpoint': str(args.checkpoint),
+            'preset': args.preset,
+            'tokens': T,
+            'surprisal_fraction': args.surprisal_pct,
+            'device': str(device),
+            'layers': [
+                {
+                    'layer': layer,
+                    'protect_all': finite_or_none(pa),
+                    'protect_content': finite_or_none(pc),
+                    'protect_filler': finite_or_none(pf),
+                    'protect_content_minus_filler': finite_or_none(pc - pf),
+                    'gamma_all': finite_or_none(gam),
+                    'dt_bias': finite_or_none(dtb),
+                }
+                for layer, pa, pc, pf, gam, dtb in rows
+            ],
+            'routing': [
+                {
+                    'layer': layer,
+                    'token_entropy': tok_h,
+                    'mean_routing_entropy': bar_h,
+                    'mean_winner': winner,
+                }
+                for layer, tok_h, bar_h, winner in routing_rows
+            ],
+            'retrieval_energy': [
+                {
+                    'layer': layer,
+                    'content': ec.detach().cpu().tolist(),
+                    'filler': ef.detach().cpu().tolist(),
+                }
+                for layer, ec, ef in energy_rows
+            ],
+        }
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(payload, indent=2, allow_nan=False) + '\n')
+        print(f'\nJSON saved to {args.output}')
 
 
 if __name__ == '__main__':

@@ -121,7 +121,12 @@ def test_binding(
     adapter=None,
 ) -> Dict[str, Any]:
     rng = np.random.default_rng(seed)
-    ns = list(range(1, 65, 4)) + [64] + list(range(65, max_n + 1, 8))
+    ns = list(range(1, min(64, max_n) + 1, 4))
+    if max_n >= 64:
+        ns.append(64)
+    ns += list(range(65, max_n + 1, 8))
+    if max_n >= 1:
+        ns.append(max_n)
     ns = sorted(set(ns))
 
     if adapter is not None:
@@ -145,3 +150,51 @@ def test_binding(
             print(f'  N={n:4d}  matrix={matrix["accuracy"][i]:.3f}  '
                   f'vector={vector["accuracy"][i]:.3f}  theory={vector["theory_1_sqrt_n"][i]:.3f}')
     return {'matrix_pam': matrix, 'vector_hrr': vector, 'd': d, 'trials': trials}
+
+
+def test_binding_matched_bytes(
+    matrix_d: int = 16,
+    ns: Sequence[int] = (1, 4, 8, 16, 32, 64),
+    trials: int = 10,
+    seed: int = 42,
+) -> Dict[str, Any]:
+    """Compare matrix PAM and vector HRR at the same complex-state byte budget.
+
+    The traditional same-width comparison gives PAM ``d**2`` complex numbers
+    but HRR only ``d``. That is useful for comparing two representations built
+    from the same embedding width, but it is not a storage-budget comparison.
+    Here HRR receives ``matrix_d**2`` complex channels so both states contain
+    exactly the same number of complex scalars.
+    """
+    if matrix_d < 1:
+        raise ValueError('matrix_d must be positive')
+    if not ns or any(n < 1 for n in ns):
+        raise ValueError('ns must contain positive association counts')
+    if trials < 1:
+        raise ValueError('trials must be positive')
+
+    matrix_rng = np.random.default_rng(seed)
+    hrr_rng = np.random.default_rng(seed + 1)
+    hrr_d = matrix_d * matrix_d
+    matrix = matrix_binding_capacity(matrix_rng, matrix_d, ns, trials)
+    vector = hrr_binding_capacity(hrr_rng, hrr_d, ns, trials)
+    complex_bytes = np.dtype(np.complex128).itemsize
+    state_bytes = matrix_d * matrix_d * complex_bytes
+
+    print('\n[capacity] Binding capacity (matched complex-state bytes)')
+    print(f'  PAM d={matrix_d}, HRR d={hrr_d}, state={state_bytes:,} bytes, trials={trials}')
+    for i, n in enumerate(ns):
+        print(f'  N={n:4d}  matrix={matrix["accuracy"][i]:.3f}  '
+              f'vector={vector["accuracy"][i]:.3f}')
+
+    return {
+        'comparison': 'matched_complex_state_bytes',
+        'matrix_pam': matrix,
+        'vector_hrr': vector,
+        'matrix_d': matrix_d,
+        'hrr_d': hrr_d,
+        'complex_dtype': 'complex128',
+        'state_complex_scalars': matrix_d * matrix_d,
+        'state_bytes': state_bytes,
+        'trials': trials,
+    }

@@ -32,6 +32,7 @@ from torch.utils.checkpoint import checkpoint as grad_checkpoint
 
 # Vendored V7 complex primitives — V11 no longer imports v7.model on the forward path.
 from v11.complex_ops import (
+    real_part, imag_part, stack_complex, scale_complex, as_complex_dropout_mask,
     cmul, cconj, cabs, cnormalize, to_real_concat,
     ComplexLinear, ComplexNorm, ComplexEmbed, ComplexPosEmbed,
     ComplexGatedUnit, build_rope_cache, _build_activation,
@@ -199,10 +200,12 @@ class V11PAMLayer(nn.Module):
     def _phase_and_alpha(self, x: torch.Tensor):
         """Phase and K-scaled routing weights for E3 superposition.
 
+        Winner (state_compete off): routing_weights_k == 1; only phases matter.
+        phase_proj sees magnitudes by default (cabs) — angle of x is ignored for
+        routing so "how loud" a token is, not its phase, picks retrieval phases.
+
         Returns retrieval_phase [B,T,H,K], routing_weights [B,T,H,K] where
-        c_k = routing_weights_k * e^{i retrieval_phase_k}.
-        With state_compete off, routing_weights_k == 1 (identity). With state_compete on,
-        routing_weights = K * softmax(score) so uniform init gives routing_weights_k == 1.
+        c_k = routing_weights_k * e^{i retrieval_phase_k} rotates each state's read.
         """
         batch_size, seq_len = x.shape[0], x.shape[1]
         num_heads, num_memory_states = self.num_heads, self.n_states
@@ -236,12 +239,16 @@ class V11PAMLayer(nn.Module):
     # ── Projections + position + decay/gate prep (shared) ─────────────────────
 
     def _project(self, x: torch.Tensor, step_offset: int):
+        """Build Q, K, V in PAM layout [B, H, T, d, 2].
+
+        Heads move before time so later matmuls are batched over (B,H). After
+        transpose the tensor is non-contiguous; .contiguous() makes views/matmuls dense.
+        """
         batch_size, seq_len, _, _ = x.shape
         num_heads, head_dim = self.num_heads, self.head_dim
         if self.fused_qkv:
             qkv = self.qkv_proj(x).view(batch_size, seq_len, 3, num_heads, head_dim, 2)
             # fused QKV -> [B,T,3,H,d,2]; move heads before time for PAM matmuls
-            # .contiguous() required after transpose so later views/matmuls are dense
             queries = qkv[:, :, 0].transpose(1, 2).contiguous()
             keys = qkv[:, :, 1].transpose(1, 2).contiguous()
             values = qkv[:, :, 2].transpose(1, 2).contiguous()
@@ -258,6 +265,7 @@ class V11PAMLayer(nn.Module):
                     build_rope_cache(position_end * 2, head_dim).to(x.device),
                     persistent=False,
                 )
+            # Complex multiply by e^{i·θ}: rotates Q/K by position without changing magnitude.
             rope_positions = self.rope_cache[step_offset:position_end].to(dtype=x.dtype)
             queries = cmul(queries, rope_positions)
             keys = cmul(keys, rope_positions)
@@ -271,6 +279,10 @@ class V11PAMLayer(nn.Module):
         """Return decay `decay_gamma` and protected value `protected_values`.
 
         decay_gamma shape: [B,H,T] (head decay) or [B,H,T,d] (per-channel decay).
+
+        GSP protect gate (winner uses this): when protect_prob→1, decay_gamma→1
+        (notebook barely forgets) and the write value is scaled down by (1-p)
+        so we lock existing associations instead of overwriting them.
         """
         batch_size, seq_len = x.shape[0], x.shape[1]
         num_heads, head_dim = self.num_heads, self.head_dim
@@ -287,14 +299,17 @@ class V11PAMLayer(nn.Module):
             softplus_dt = softplus_dt.transpose(1, 2).contiguous()
 
         if self.use_gsp:
+            # Content-aware gate (winner): sees concat(real,imag); else magnitude only.
             gate_input = to_real_concat(x) if self.gate_content_aware else cabs(x)
             protect_prob = torch.sigmoid(self.protect_gate(gate_input)).transpose(1, 2)  # [B,H,T]
             if self.decay_mode == 'per_channel':
                 protect_prob_expanded = protect_prob.unsqueeze(-1)
                 decay_gamma = torch.exp(-softplus_dt) * (1 - protect_prob_expanded) + protect_prob_expanded
             else:
+                # Blend: γ = exp(-dt)*(1-p) + p  →  p=1 freezes decay at 1.
                 decay_gamma = torch.exp(-softplus_dt) * (1 - protect_prob) + protect_prob
-            protected_values = values * (1 - protect_prob).unsqueeze(-1).unsqueeze(-1)
+            # Same protect scalar on real+imag of values [B,H,T,d,2].
+            protected_values = scale_complex(values, 1 - protect_prob)
         else:
             decay_gamma = torch.exp(-softplus_dt)
             protected_values = values
@@ -582,6 +597,7 @@ class V11PAMLayer(nn.Module):
         """Head-scalar decay for all K states at once (single dt_proj/gate matmul).
 
         Returns decay_gamma_all [K,B,H,T] and shared protected_values [B,H,T,d,2].
+        Same GSP idea as _gamma_and_vprime: protect freezes decay and shrinks writes.
         """
         batch_size, seq_len = x.shape[0], x.shape[1]
         num_heads, num_memory_states = self.num_heads, self.n_states
@@ -595,7 +611,7 @@ class V11PAMLayer(nn.Module):
             gate_input = to_real_concat(x) if self.gate_content_aware else cabs(x)
             protect_prob = torch.sigmoid(self.protect_gate(gate_input)).transpose(1, 2)  # [B,H,T]
             decay_gamma_all = torch.exp(-softplus_dt) * (1 - protect_prob) + protect_prob  # [K,B,H,T]
-            protected_values = values * (1 - protect_prob).unsqueeze(-1).unsqueeze(-1)
+            protected_values = scale_complex(values, 1 - protect_prob)
         else:
             decay_gamma_all = torch.exp(-softplus_dt)
             protected_values = values
@@ -606,11 +622,22 @@ class V11PAMLayer(nn.Module):
         decay_gamma_chunk, retrieval_phase_chunk, routing_weights_chunk,
         memory_state, is_first_chunk,
     ):
-        """One fused E3 chunk. Returns (output_chunk, memory_state_new)."""
+        """One fused E3 chunk. Returns (output_chunk, memory_state_new).
+
+        Dual form (training story) — same math as looping outer products, different layout:
+          Inference writes each token as S = γ·S + V⊗K* then reads y = S@Q.
+          Unrolling that over a chunk equals decay-weighted complex scores
+          (Q·K*) ⊙ D̃ @ V, plus a carried read from the previous chunk's S.
+          "Dual" = equivalent rewrite for GPU matmuls, not a second memory.
+
+        Winner also collapses K decay matrices into one complex D̃ via phase routing
+        so we do one complex matmul instead of K separate ones.
+        """
         num_memory_states = decay_gamma_chunk.shape[0]
         chunk_len = decay_gamma_chunk.shape[-1]
-        query_real, query_imag = queries_chunk[..., 0], queries_chunk[..., 1]
-        key_real, key_imag = keys_chunk[..., 0], keys_chunk[..., 1]
+        query_real, query_imag = real_part(queries_chunk), imag_part(queries_chunk)
+        key_real, key_imag = real_part(keys_chunk), imag_part(keys_chunk)
+        # Complex conjugate inner product Q·K* (score before decay weighting).
         score_real = query_real @ key_real.transpose(-1, -2) + query_imag @ key_imag.transpose(-1, -2)
         score_imag = query_imag @ key_real.transpose(-1, -2) - query_real @ key_imag.transpose(-1, -2)
 
@@ -620,21 +647,25 @@ class V11PAMLayer(nn.Module):
         ).reshape(decay_gamma_chunk.shape + (chunk_len,))
         cos_phase = torch.cos(retrieval_phase_chunk)
         sin_phase = torch.sin(retrieval_phase_chunk)
+        # Collapse K real decay mats into one complex D̃ = Σ_k α_k e^{iφ_k} D_k.
         decay_real = ((routing_weights_chunk * cos_phase).unsqueeze(-1) * decay_matrix).sum(dim=0)
         decay_imag = ((routing_weights_chunk * sin_phase).unsqueeze(-1) * decay_matrix).sum(dim=0)
 
+        # Intra-chunk dual read: y = (W ⊙ D̃) @ V.
         weighted_real = score_real * decay_real - score_imag * decay_imag
         weighted_imag = score_real * decay_imag + score_imag * decay_real
-        value_real, value_imag = protected_values_chunk[..., 0], protected_values_chunk[..., 1]
+        value_real, value_imag = real_part(protected_values_chunk), imag_part(protected_values_chunk)
         output_real = weighted_real @ value_real - weighted_imag @ value_imag
         output_imag = weighted_real @ value_imag + weighted_imag @ value_real
-        output_chunk = torch.stack([output_real, output_imag], dim=-1)
+        output_chunk = stack_complex(output_real, output_imag)
 
         log_decay = torch.log(decay_gamma_chunk + 1e-6)
         cumulative_decay = torch.exp(torch.cumsum(log_decay, dim=-1))   # [K,B,H,Tc]
 
         if not is_first_chunk:
-            state_real, state_imag = memory_state[..., 0], memory_state[..., 1]
+            # Carried-state read: how much previous-chunk notebook still contributes
+            # after decaying into this chunk, then phase-route and sum over K.
+            state_real, state_imag = real_part(memory_state), imag_part(memory_state)
             query_real_states = query_real.unsqueeze(0)
             query_imag_states = query_imag.unsqueeze(0)
             carried_real = (
@@ -649,8 +680,10 @@ class V11PAMLayer(nn.Module):
             combined_imag = routing_weights_chunk * sin_phase * cumulative_decay
             routed_real = (carried_real * combined_real.unsqueeze(-1) - carried_imag * combined_imag.unsqueeze(-1)).sum(dim=0)
             routed_imag = (carried_real * combined_imag.unsqueeze(-1) + carried_imag * combined_real.unsqueeze(-1)).sum(dim=0)
-            output_chunk = output_chunk + torch.stack([routed_real, routed_imag], dim=-1)
+            output_chunk = output_chunk + stack_complex(routed_real, routed_imag)
 
+        # Chunk write into notebook: last row of decay says what survives to chunk end;
+        # outer-product-equivalent state update via (decayed V) @ K* (batched over K).
         decay_last = decay_matrix[:, :, :, -1, :]
         value_real_states = value_real.unsqueeze(0)
         value_imag_states = value_imag.unsqueeze(0)
@@ -660,8 +693,9 @@ class V11PAMLayer(nn.Module):
         key_imag_states = key_imag.unsqueeze(0)
         state_real = write_value_real.transpose(-1, -2) @ key_real_states + write_value_imag.transpose(-1, -2) @ key_imag_states
         state_imag = write_value_imag.transpose(-1, -2) @ key_real_states - write_value_real.transpose(-1, -2) @ key_imag_states
-        state_chunk = torch.stack([state_real, state_imag], dim=-1)
+        state_chunk = stack_complex(state_real, state_imag)
         total_decay = cumulative_decay[:, :, :, -1]
+        # Broadcast per-(K,B,H) decay over the d×d matrix indices.
         memory_state_new = memory_state * total_decay[..., None, None, None] + state_chunk
         return output_chunk, memory_state_new
 
@@ -716,7 +750,9 @@ class V11PAMLayer(nn.Module):
         num_heads, head_dim = self.num_heads, self.head_dim
         queries, keys, values = self._project(x, step_offset)
 
-        # Training (parallel form): state is None and seq_len>1.
+        # Training / prefill (parallel): state is None and seq_len>1.
+        # Winner (E3 K=3, fused_e3, head decay, additive): _forward_multistate_fused.
+        # Other branches below are ablation paths (E1/E2 / non-fused); production skips them.
         if state is None and seq_len > 1:
             if self.n_states > 1:
                 use_fused = (
@@ -727,14 +763,17 @@ class V11PAMLayer(nn.Module):
                 if use_fused:
                     output, new_state = self._forward_multistate_fused(x, queries, keys, values, head_dim)
                 else:
+                    # Ablation: K-loop multistate without D̃ collapse.
                     output, new_state = self._forward_multistate(x, queries, keys, values, head_dim)
             elif self.write_mode == 'delta':
+                # Ablation E2 — not used by winner.
                 decay_gamma, protected_values = self._gamma_and_vprime(x, values)
                 write_beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)  # [B,H,T]
                 output, new_state = self._forward_delta(
                     queries, keys, protected_values, decay_gamma, write_beta, head_dim
                 )
             elif self.decay_mode == 'per_channel':
+                # Ablation E1 — not used by winner.
                 decay_gamma, protected_values = self._gamma_and_vprime(x, values)
                 output, new_state = self._forward_chunked_perchannel(
                     queries, keys, protected_values, decay_gamma, head_dim
@@ -752,19 +791,22 @@ class V11PAMLayer(nn.Module):
                         self._causal[:seq_len, :seq_len],
                     )
         else:
+            # Decode / single-token: O(1) recurrent outer-product updates.
             output, new_state = self._recurrent(x, queries, keys, values, state, head_dim)
 
         # merge heads back to [B,T,inner_dim,2] for output projection
         output = output.transpose(1, 2).contiguous().view(batch_size, seq_len, self.inner_dim, 2)
         out = self.o_proj(output)
         if self.training:
-            dropout_mask = self.dropout(torch.ones(batch_size, seq_len, self.dim, device=x.device))
-            out = out * dropout_mask.unsqueeze(-1)
+            # Manual complex dropout: one mask for both real and imag.
+            dropout_mask = as_complex_dropout_mask(self.dropout, out)
+            out = scale_complex(out, dropout_mask)
         return out, new_state
 
     # ── O(1) recurrent inference (covers all modes) ──────────────────────────
 
     def _recurrent(self, x, queries, keys, values, state, head_dim):
+        """Token loop: fixed-size notebook S [K,B,H,d,d,2] — cost independent of past length."""
         batch_size, seq_len = x.shape[0], x.shape[1]
         num_heads, num_memory_states = self.num_heads, self.n_states
         query_scale = head_dim ** -0.5
@@ -806,17 +848,19 @@ class V11PAMLayer(nn.Module):
                         state_offset=self.state_dt_offset[state_idx],
                     )
                     decay_gamma_t = decay_gamma_state[:, :, 0]  # [B,H]
+                    # Outer-product write + S@Q read for this state.
                     output_state, state_new = self._recur_step_additive(
                         memory_state[state_idx], decay_gamma_t,
                         protected_values_state[:, :, 0], key_t, query_t,
                     )
+                    # Phase-route: multiply read by α·e^{iφ} then sum over K states.
                     rotation_real = routing_weights[:, :, state_idx, time_idx] * torch.cos(
                         retrieval_phase[:, :, state_idx, time_idx]
                     )
                     rotation_imag = routing_weights[:, :, state_idx, time_idx] * torch.sin(
                         retrieval_phase[:, :, state_idx, time_idx]
                     )
-                    rotation = torch.stack([rotation_real, rotation_imag], dim=-1)
+                    rotation = stack_complex(rotation_real, rotation_imag)
                     output_state = cmul(output_state, rotation.unsqueeze(-2))
                     output_accum = output_state if output_accum is None else output_accum + output_state
                     new_states.append(state_new)
@@ -844,31 +888,43 @@ class V11PAMLayer(nn.Module):
         return output, memory_state
 
     def _recur_step_additive(self, memory_state, decay_gamma, value_t, key_t, query_t):
-        """One additive PAM step. decay_gamma: [B,H] or [B,H,d] (per-channel)."""
-        key_conj = torch.stack([key_t[..., 0], -key_t[..., 1]], dim=-1).unsqueeze(-3)
+        """One additive PAM step (inference / outer-product story).
+
+        Natural notebook picture — same result as dual-form training, step-by-step:
+          1. Forget: S ← γ · S
+          2. Write:  S ← S + V ⊗ K*   where outer[i,j] = v[i] * conj(k)[j]
+          3. Read:   y = S @ Q
+
+        decay_gamma: [B,H] (winner head decay) or [B,H,d] (per-channel ablation).
+        """
+        # Conjugate of key: flip imag sign. unsqueeze inserts key-dim for outer product.
+        key_conj = stack_complex(real_part(key_t), -imag_part(key_t)).unsqueeze(-3)
         outer_real = (
-            value_t[..., 0].unsqueeze(-1) * key_conj[..., 0]
-            - value_t[..., 1].unsqueeze(-1) * key_conj[..., 1]
+            real_part(value_t).unsqueeze(-1) * real_part(key_conj)
+            - imag_part(value_t).unsqueeze(-1) * imag_part(key_conj)
         )
         outer_imag = (
-            value_t[..., 0].unsqueeze(-1) * key_conj[..., 1]
-            + value_t[..., 1].unsqueeze(-1) * key_conj[..., 0]
+            real_part(value_t).unsqueeze(-1) * imag_part(key_conj)
+            + imag_part(value_t).unsqueeze(-1) * real_part(key_conj)
         )
-        outer_product = torch.stack([outer_real, outer_imag], dim=-1)
+        outer_product = stack_complex(outer_real, outer_imag)
         if decay_gamma.dim() == memory_state.dim() - 3:
+            # Head-scalar γ → broadcast over d×d×2.
             decay_factor = decay_gamma.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
         else:
+            # Per-channel γ → broadcast over key dim and complex axis.
             decay_factor = decay_gamma.unsqueeze(-2).unsqueeze(-1)
         memory_state = memory_state * decay_factor + outer_product
+        # Complex matvec y = S @ q (sum over key dim).
         state_query_real = (
-            memory_state[..., 0] * query_t[..., 0].unsqueeze(-2)
-            - memory_state[..., 1] * query_t[..., 1].unsqueeze(-2)
+            real_part(memory_state) * real_part(query_t).unsqueeze(-2)
+            - imag_part(memory_state) * imag_part(query_t).unsqueeze(-2)
         )
         state_query_imag = (
-            memory_state[..., 0] * query_t[..., 1].unsqueeze(-2)
-            + memory_state[..., 1] * query_t[..., 0].unsqueeze(-2)
+            real_part(memory_state) * imag_part(query_t).unsqueeze(-2)
+            + imag_part(memory_state) * real_part(query_t).unsqueeze(-2)
         )
-        output = torch.stack([state_query_real.sum(dim=-1), state_query_imag.sum(dim=-1)], dim=-1)
+        output = stack_complex(state_query_real.sum(dim=-1), state_query_imag.sum(dim=-1))
         return output, memory_state
 
     def _recur_step_delta(self, memory_state, decay_gamma, value_t, key_t, query_t, write_beta_t):
@@ -930,20 +986,27 @@ class V11Block(nn.Module):
 
     def __init__(self, cfg: V11Config, layer_idx: int = 0):
         super().__init__()
+        # Pre-norm before CGU: stabilize magnitude; phase untouched.
         self.norm1 = ComplexNorm(cfg.dim)
         self.cgu = ComplexGatedUnit(cfg.dim, cfg.expand, activation=cfg.activation)
         self.cgu_scale = nn.Parameter(torch.tensor(1.0))
         self.cgu_dropout = nn.Dropout(cfg.dropout)
+        # Pre-norm before PAM: same idea — PAM sees magnitude-stable inputs.
         self.norm2 = ComplexNorm(cfg.dim)
         self.pam = V11PAMLayer(cfg, layer_idx=layer_idx)
+        # Start PAM residual weak (0.1) so early training is dominated by CGU;
+        # deep stacks stay stable while memory pathways learn slowly.
         self.pam_scale = nn.Parameter(torch.tensor(0.1))
 
     def forward(self, x, pam_state=None, step_offset: int = 0):
+        # Channel mix within each token (not across time).
         cgu_out = self.cgu(self.norm1(x))
         if self.training:
-            drop = self.cgu_dropout(torch.ones(cgu_out.shape[:-1], device=cgu_out.device))
-            cgu_out = cgu_out * drop.unsqueeze(-1)
+            # Same keep/drop on real+imag together (never drop only imag).
+            drop = as_complex_dropout_mask(self.cgu_dropout, cgu_out)
+            cgu_out = scale_complex(cgu_out, drop)
         x = x + cgu_out * self.cgu_scale
+        # Sequence/memory mix via fixed-size PAM state.
         pam_out, new_state = self.pam(self.norm2(x), state=pam_state, step_offset=step_offset)
         x = x + pam_out * self.pam_scale
         return x, new_state
@@ -963,7 +1026,9 @@ class V11LM(nn.Module):
         )
         self.embed_norm = ComplexNorm(cfg.dim)
         self.blocks = nn.ModuleList([V11Block(cfg, layer_idx=i) for i in range(cfg.n_layers)])
+        # Final magnitude stabilize after residual stack, before readout.
         self.output_norm = ComplexNorm(cfg.dim)
+        # Small complex feature mix (not a second memory) + norm before vocab scores.
         self.lm_head_proj = ComplexLinear(cfg.dim, cfg.dim)
         self.lm_head_norm = ComplexNorm(cfg.dim)
         self._init_weights()
@@ -996,6 +1061,7 @@ class V11LM(nn.Module):
         return total
 
     def forward(self, input_ids, states=None, step_offset: int = 0, labels=None):
+        # Token ids → complex vectors [B,T,dim,2].
         z = self.embed(input_ids)
         if self.pos_embed is not None:
             z = self.pos_embed(z, step_offset=step_offset)
@@ -1003,17 +1069,20 @@ class V11LM(nn.Module):
         use_ckpt = self.config.gradient_checkpointing and self.training and states is None
         new_states = []
         for i, block in enumerate(self.blocks):
+            # states[i] is that layer's PAM notebook (None = build from scratch / train).
             s = states[i] if states is not None else None
             if use_ckpt:
                 z, new_s = self._ckpt_block(block, z, step_offset)
             else:
                 z, new_s = block(z, pam_state=s, step_offset=step_offset)
             new_states.append(new_s)
+        # Stabilize → mix features → stabilize again before tied embedding scores.
         z = self.output_norm(z)
         lm = self.lm_head_norm(self.lm_head_proj(z))
+        # Tied head: reuse embed weights; real and imag contribute then add.
         logits = (
-            lm[..., 0] @ self.embed.embed_real.weight.T
-            + lm[..., 1] @ self.embed.embed_imag.weight.T
+            real_part(lm) @ self.embed.embed_real.weight.T
+            + imag_part(lm) @ self.embed.embed_imag.weight.T
         )
         route_aux = self._collect_route_aux(self.blocks)
         aux_loss = (
@@ -1024,7 +1093,11 @@ class V11LM(nn.Module):
         return logits, new_states, aux_loss
 
     def _hidden_to_lm(self, input_ids, step_offset: int = 0):
-        """Run the stack + head norm; return (lm, aux_loss) for fused-CE training."""
+        """Training path: stack + head norm, stop before full [B,T,V] logits.
+
+        Fused CE scores vocab in chunks from `lm` so we never materialize the
+        full logit tensor (memory win on long sequences / large vocab).
+        """
         z = self.embed(input_ids)
         if self.pos_embed is not None:
             z = self.pos_embed(z, step_offset=step_offset)
@@ -1054,7 +1127,7 @@ class V11LM(nn.Module):
         """
         from v11.fused_ce import fused_linear_cross_entropy
         batch_size, seq_len = labels.shape
-        hidden_concat = torch.cat([lm[..., 0], lm[..., 1]], dim=-1).reshape(batch_size * seq_len, -1)
+        hidden_concat = torch.cat([real_part(lm), imag_part(lm)], dim=-1).reshape(batch_size * seq_len, -1)
         weight_concat = torch.cat([self.embed.embed_real.weight, self.embed.embed_imag.weight], dim=-1)
         mask = loss_mask.reshape(-1) if loss_mask is not None else None
         return fused_linear_cross_entropy(
@@ -1079,8 +1152,15 @@ class V11LM(nn.Module):
     @torch.no_grad()
     def generate(self, input_ids, max_new_tokens=100, temperature=1.0,
                  top_k=50, top_p=0.0, repetition_penalty=1.0, eos_token_id=None):
+        """Autoregressive decode: one full forward builds PAM states, then O(1)/token.
+
+        First call runs the parallel/chunked path over the prompt and returns
+        per-layer memory states. Each new token is forwarded alone with those
+        states + step_offset (RoPE / position) so cost stays fixed in context length.
+        """
         self.eval()
         generated = input_ids.clone()
+        # Prefill: build logits for the whole prompt and initialize PAM notebooks.
         logits, states, _ = self.forward(generated)
         step = generated.shape[1]
         finished = torch.zeros(generated.shape[0], dtype=torch.bool, device=generated.device)
@@ -1105,6 +1185,7 @@ class V11LM(nn.Module):
                 finished |= nxt.squeeze(1) == eos_token_id
                 if bool(finished.all()):
                     break
+            # One-token recurrent step: update each layer's fixed-size state.
             logits, states, _ = self.forward(nxt, states=states, step_offset=step)
             step += 1
         return generated
