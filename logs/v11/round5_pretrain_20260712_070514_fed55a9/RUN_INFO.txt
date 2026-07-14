@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V11 round 5 pretrain (round-10b-gate)
+Date (UTC)  : 2026-07-12 07:05:14
+Date (local): 2026-07-12 07:05:14 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1005-gcp x86_64
+
+Git commit  : fed55a965ab5e4a781a468d6d47939a94adab1a7
+Git short   : fed55a9
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.25
+Arguments   : --preset v11_e3_k3_chat --stage pretrain --dataset pretrain_mix --seq_len 2048     --batch_size 32 --epochs 9999 --chunk_size 256     --token_budget 2000000000 --edu_score_min 3     --pretrain_sources dclm,fineweb,smoltalk2_mid --pretrain_weights 48,48,4     --fineweb_name sample-10BT --blend_warmup_tokens 0     --seed 42 --lr 1e-4 --warmup_steps 500     --amp_dtype auto --num_workers 0 --gen_every 5000 --save_every_steps 5000     --no_grad_ckpt --compile --compile_mode default --fused_ce --fused_ce_chunk 4096 --resume_from checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt --dclm_skip_docs 2982599 --fineweb_skip_docs 2985290 --smoltalk2_mid_skip_rows 212754
+================================================================================
