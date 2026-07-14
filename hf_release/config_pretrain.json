@@ -35,27 +35,27 @@
   "preset": "v11_e3_k3_chat",
   "model_type": "qllm_pam",
   "params": 100546832,
-  "round": "round-8b-gate",
-  "hf_tag": "round-8b-gate",
+  "round": "round-10b-gate",
+  "hf_tag": "round-10b-gate",
   "checkpoint_type": "pretrain",
   "training": {
     "pretrain_corpus": "DCLM-Edu + FineWeb-Edu + smoltalk2-Mid (reasoning/chat blend)",
-    "pretrain_tokens_total": 8000000000,
+    "pretrain_tokens_total": 10000000000,
     "round_tokens": 2000000000,
     "sft_dataset": "(none \u2014 pretrain base)",
     "chat_template": "ChatML (<|im_start|>/<|im_end|>) + <think>/</think>",
     "gate": "phase-aware GSP (content-aware)",
-    "val_ppl": 30.01310057053656,
-    "val_loss": 3.4016339720272626,
+    "val_ppl": 29.45561238484305,
+    "val_loss": 3.382884465280126,
     "per_source_docs": {
-      "dclm": 2982599,
-      "fineweb": 2985290,
-      "smoltalk2_mid": 212754
+      "dclm": 3802958,
+      "fineweb": 3806549,
+      "smoltalk2_mid": 280980
     },
     "per_source_tokens": {
-      "fineweb": 870105088,
-      "dclm": 1093648384,
-      "smoltalk2_mid": 36247552
+      "dclm": 1107048448,
+      "fineweb": 856991744,
+      "smoltalk2_mid": 35960832
     }
   }
 }
