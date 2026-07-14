@@ -1264,15 +1264,121 @@ def _smoltalk2_blend_text_iter(
             yield text
 
 
+# ── Synthetic recall curriculum (V12 recall program) ─────────────────────────
+#
+# Web/edu pretrain never *demands* long-range copy/recall, so the PAM gate/state
+# never learns to store and retrieve invented bindings (4090 Phase B: ~0.2 recall
+# vs Mamba ~1.0). This generator injects passkey / key->value / multi-needle tasks
+# rendered as plain LM text: an invented fact appears, filler intervenes, then the
+# fact must be reproduced (predicting the final value requires recall). Vocabulary
+# is deliberately DISJOINT from memory_probes/behavioral.py (KEYS/VALUES) so the
+# behavioral eval stays a held-out test, not train-on-test.
+_RECALL_CONSONANTS = 'bdfgklmnprstvz'
+_RECALL_VOWELS = 'aeiou'
+# Value nouns disjoint from the eval suite VALUES (apple, banana, copper, ...).
+_RECALL_VALUE_NOUNS = (
+    'quartz', 'maple', 'cobalt', 'saffron', 'willow', 'granite', 'thistle',
+    'amber', 'cedar', 'onyx', 'marigold', 'basalt', 'juniper', 'ivory',
+    'sable', 'crimson', 'indigo', 'walnut', 'pewter', 'clover',
+)
+_RECALL_FILLER_BANK = (
+    "The committee reviewed the quarterly notes without any changes.",
+    "A light rain fell over the harbor as the ferries came and went.",
+    "Workers repainted the fence and swept the yard before noon.",
+    "The lecture covered ordinary topics and ended a few minutes early.",
+    "Shelves in the storeroom were dusted and the boxes were relabeled.",
+    "Traffic moved slowly along the avenue during the afternoon.",
+    "The librarian filed the returned volumes and updated the ledger.",
+    "Clouds drifted past while the market stalls slowly packed up.",
+    "A short memo described the schedule for the following week.",
+    "The garden path was cleared and the benches were wiped down.",
+    "Routine maintenance kept the equipment running through the shift.",
+    "The train arrived on time and passengers stepped onto the platform.",
+)
+
+
+def _recall_syllable(rng) -> str:
+    c1 = rng.choice(_RECALL_CONSONANTS)
+    v1 = rng.choice(_RECALL_VOWELS)
+    c2 = rng.choice(_RECALL_CONSONANTS)
+    return c1 + v1 + c2
+
+
+def _recall_key(rng) -> str:
+    return _recall_syllable(rng) + _recall_syllable(rng)
+
+
+def _recall_filler(rng, n_sentences: int) -> str:
+    return ' '.join(rng.choice(_RECALL_FILLER_BANK) for _ in range(max(1, n_sentences)))
+
+
+def _build_recall_doc(rng) -> str:
+    """One synthetic recall document (passkey | single-kv | multi-kv)."""
+    # Log-uniform gap so the model sees short and long-range recall alike.
+    gap = int(round(2 * (100 ** rng.random())))  # ~[2, 200] sentences
+    task = rng.choice(('passkey', 'kv', 'multi'))
+
+    if task == 'passkey':
+        code = rng.randint(1000, 9999)
+        intro = f"Note: the vault passcode is {code}."
+        body = _recall_filler(rng, gap)
+        recall = f"Recall: the vault passcode is {code}."
+        return f"{intro} {body} {recall}\n"
+
+    if task == 'kv':
+        key = _recall_key(rng)
+        value = rng.choice(_RECALL_VALUE_NOUNS)
+        intro = f"Definition: {key} refers to {value}."
+        body = _recall_filler(rng, gap)
+        recall = f"Query: {key} refers to {value}."
+        return f"{intro} {body} {recall}\n"
+
+    # multi-needle: several bindings, then query one back
+    n = rng.randint(3, 6)
+    keys = [_recall_key(rng) for _ in range(n)]
+    vals = [rng.choice(_RECALL_VALUE_NOUNS) for _ in range(n)]
+    records = ' '.join(f"Record: {k} maps to {v}." for k, v in zip(keys, vals))
+    body = _recall_filler(rng, gap)
+    qi = rng.randrange(n)
+    recall = f"Query: {keys[qi]} maps to {vals[qi]}."
+    return f"{records} {body} {recall}\n"
+
+
+def _recall_text_iter(
+    *,
+    seed: int = 0,
+    skip_docs: int = 0,
+    doc_counters: Optional[Dict[str, int]] = None,
+    counter_key: str = 'recall',
+) -> Iterator[str]:
+    """Infinite stream of synthetic recall documents (deterministic per seed).
+
+    ``skip_docs`` skips already-consumed docs for cross-round freshness; every
+    yielded doc bumps ``doc_counters[counter_key]`` like the web iterators.
+    """
+    import random as _random
+
+    rng = _random.Random((seed * 2654435761 + 12345) & 0xFFFFFFFF)
+    skipped = 0
+    while True:
+        doc = _build_recall_doc(rng)
+        if skipped < skip_docs:
+            skipped += 1
+            continue
+        _bump_counter(doc_counters, counter_key)
+        yield doc
+
+
 # Format-aware source registry: single source of truth for schema + kind so the
 # pretrain blend and the SFT stage agree on how each dataset is shaped.
 #   schema: 'text' (raw web docs) | 'messages' (chat, rendered to ChatML text)
-#   kind:   'web' (grammar/knowledge, warmup pool) | 'reason' | 'chat'
+#   kind:   'web' (grammar/knowledge, warmup pool) | 'reason' | 'chat' | 'synthetic'
 SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
-    'dclm':          {'schema': 'text',     'kind': 'web',    'hf': 'HuggingFaceTB/dclm-edu'},
-    'fineweb':       {'schema': 'text',     'kind': 'web',    'hf': 'HuggingFaceFW/fineweb-edu'},
-    'smoltalk2_mid': {'schema': 'messages', 'kind': 'reason', 'hf': SMOLTALK2_REPO, 'config': 'Mid'},
-    'smoltalk2_sft': {'schema': 'messages', 'kind': 'chat',   'hf': SMOLTALK2_REPO, 'config': 'SFT'},
+    'dclm':          {'schema': 'text',     'kind': 'web',       'hf': 'HuggingFaceTB/dclm-edu'},
+    'fineweb':       {'schema': 'text',     'kind': 'web',       'hf': 'HuggingFaceFW/fineweb-edu'},
+    'smoltalk2_mid': {'schema': 'messages', 'kind': 'reason',    'hf': SMOLTALK2_REPO, 'config': 'Mid'},
+    'smoltalk2_sft': {'schema': 'messages', 'kind': 'chat',      'hf': SMOLTALK2_REPO, 'config': 'SFT'},
+    'recall':        {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-recall'},
 }
 
 
@@ -1519,6 +1625,11 @@ def build_pretrain_mix_token_cache(
                     doc_counters=doc_counters, counter_key=s,
                 )
             web_sources.append(s)
+        elif spec['kind'] == 'synthetic':
+            it = _recall_text_iter(
+                seed=mix_seed, skip_docs=sk,
+                doc_counters=doc_counters, counter_key=s,
+            )
         else:
             it = _smoltalk2_blend_text_iter(
                 config=spec.get('config', 'Mid'), skip_rows=sk,
@@ -1757,6 +1868,11 @@ def load_pretrain_mix(
                     doc_counters=doc_counters, counter_key=s,
                 )
             web_sources.append(s)
+        elif spec['kind'] == 'synthetic':  # synthetic recall curriculum
+            it = _recall_text_iter(
+                seed=mix_seed, skip_docs=sk,
+                doc_counters=doc_counters, counter_key=s,
+            )
         else:  # messages -> ChatML text
             it = _smoltalk2_blend_text_iter(
                 config=spec.get('config', 'Mid'), skip_rows=sk,

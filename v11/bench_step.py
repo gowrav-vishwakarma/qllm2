@@ -67,7 +67,7 @@ def run(variant, preset, B, T, iters, warmup, compile_, dtype):
         opt.zero_grad(set_to_none=True)
         with torch.autocast('cuda', dtype=dtype):
             if use_fused_ce:
-                lm = hidden_fn(ids)
+                lm = hidden_fn(ids)[0]
                 loss = raw.ce_from_lm(lm, lbl)
             else:
                 logits, _, _ = model_fn(ids)

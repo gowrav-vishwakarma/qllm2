@@ -109,6 +109,9 @@ def build_argparser():
     p.add_argument('--warmstart_chatml', action='store_true',
                    help='After loading weights, seed ChatML token rows (50257/50258) '
                         'from the mean of trained GPT-2 rows (50257 base vocab)')
+    p.add_argument('--no_resume_cursor', action='store_true',
+                   help='Load resume weights but do NOT auto-seed data skip cursors '
+                        '(fast warm-start A/B; accepts data overlap with prior training)')
     p.add_argument('--seed', type=int, default=42)
     p.add_argument('--no_grad_ckpt', action='store_true')
     p.add_argument('--fused_ce', action='store_true',
@@ -145,6 +148,15 @@ def build_argparser():
                    help='MoE-style load-balance on batch-mean routing (needs state_compete)')
     p.add_argument('--aux_loss_weight', type=float, default=None,
                    help='Trainer weight for route_balance aux loss (default 1.0)')
+    # ── Recall program (V12): memory horizon + gate supervision ──────────────
+    p.add_argument('--gamma_floor', type=float, default=None,
+                   help='Min base per-step decay (recall program). 0=off, ~0.98 lengthens memory')
+    p.add_argument('--gate_surprisal_lambda', type=float, default=None,
+                   help='Weight of gate-surprisal aux loss (0=off). Ties protect gate to surprisal')
+    p.add_argument('--gate_surprisal_tau', type=float, default=None,
+                   help='Temperature (nats) for surprisal->protect target (default 1.0)')
+    p.add_argument('--gate_surprisal_sign', type=float, default=None,
+                   help='+1: low-surprisal->protect (recall-oriented, default); -1: content->protect')
     return p
 
 
@@ -323,6 +335,14 @@ def main():
         cfg.route_balance_lambda = args.route_balance_lambda
     if args.aux_loss_weight is not None:
         cfg.aux_loss_weight = args.aux_loss_weight
+    if args.gamma_floor is not None:
+        cfg.gamma_floor = args.gamma_floor
+    if args.gate_surprisal_lambda is not None:
+        cfg.gate_surprisal_lambda = args.gate_surprisal_lambda
+    if args.gate_surprisal_tau is not None:
+        cfg.gate_surprisal_tau = args.gate_surprisal_tau
+    if args.gate_surprisal_sign is not None:
+        cfg.gate_surprisal_sign = args.gate_surprisal_sign
 
     print(f"\nConfig: {asdict(cfg)}")
     print(f"Memory dynamics: decay_mode={cfg.decay_mode}, write_mode={cfg.write_mode}, "
@@ -344,6 +364,8 @@ def main():
     # not re-read consumed docs/rows (per-source freshness). Explicit CLI skips win.
     resume_ckpt_path = args.resume or args.resume_from
     resumed_docs: dict = {}
+    if getattr(args, 'no_resume_cursor', False):
+        resume_ckpt_path = None  # keep weights, skip cursor auto-seed
     if resume_ckpt_path and Path(resume_ckpt_path).exists():
         try:
             _rc = torch.load(resume_ckpt_path, map_location='cpu', weights_only=False)

@@ -95,6 +95,27 @@ def fused_linear_cross_entropy(
 
 
 @torch.no_grad()
+def linear_ce_per_token(
+    hidden_rows, weight_matrix, targets, chunk: int = 4096, ignore_index: int = -100,
+):
+    """Detached per-row cross-entropy `[N]` (surprisal), no [N,V] materialization.
+
+    Used as a stop-grad target for the gate-surprisal aux loss. ignore_index rows
+    return 0.0 (they are masked out by the caller).
+    """
+    num_rows = hidden_rows.shape[0]
+    out = hidden_rows.new_zeros(num_rows)
+    for chunk_start in range(0, num_rows, chunk):
+        chunk_end = min(chunk_start + chunk, num_rows)
+        logits = (hidden_rows[chunk_start:chunk_end].float() @ weight_matrix.float().T)
+        out[chunk_start:chunk_end] = F.cross_entropy(
+            logits, targets[chunk_start:chunk_end],
+            ignore_index=ignore_index, reduction='none',
+        )
+    return out
+
+
+@torch.no_grad()
 def linear_ce_stats(
     hidden_rows, weight_matrix, targets, mask=None, chunk: int = 4096, ignore_index: int = -100,
 ):

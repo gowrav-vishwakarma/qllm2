@@ -339,6 +339,45 @@ class V7Trainer:
             'val_acc': total_correct / total_tokens,
         }
 
+    def _gate_surprisal_loss(self, gate_probs, lm, labels, loss_mask, m_cfg):
+        """BCE between per-layer protect prob and a surprisal-derived target.
+
+        target_p = sigmoid(sign * (median_ce - surprisal) / tau).
+        sign=+1 (default): low-surprisal tokens -> high protect (freeze filler,
+        write on content) = recall-oriented. Targets are detached (stop-grad);
+        grad flows only through `gate_probs` into each layer's protect_gate.
+        """
+        from v11.fused_ce import linear_ce_per_token
+
+        raw = self._raw_model
+        batch_size, seq_len = labels.shape
+        hidden_concat = torch.cat([lm[..., 0], lm[..., 1]], dim=-1).reshape(batch_size * seq_len, -1)
+        weight_concat = torch.cat(
+            [raw.embed.embed_real.weight, raw.embed.embed_imag.weight], dim=-1,
+        )
+        surprisal = linear_ce_per_token(
+            hidden_concat.detach(), weight_concat.detach(), labels.reshape(-1),
+            chunk=self.fused_ce_chunk,
+        ).reshape(batch_size, seq_len)
+
+        valid = labels != -100
+        if loss_mask is not None:
+            valid = valid & (loss_mask > 0)
+        if valid.any():
+            median_ce = surprisal[valid].median()
+        else:
+            median_ce = surprisal.median()
+
+        tau = max(getattr(m_cfg, 'gate_surprisal_tau', 1.0), 1e-3)
+        sign = getattr(m_cfg, 'gate_surprisal_sign', 1.0)
+        target_p = torch.sigmoid(sign * (median_ce - surprisal) / tau).detach()  # [B,T]
+
+        gp = gate_probs.clamp(1e-4, 1 - 1e-4)                       # [L,B,T]
+        target = target_p.unsqueeze(0).expand_as(gp)
+        vmask = valid.unsqueeze(0).expand_as(gp).to(gp.dtype)
+        bce = F.binary_cross_entropy(gp, target, reduction='none')
+        return (bce * vmask).sum() / vmask.sum().clamp_min(1.0)
+
     @staticmethod
     def _masked_ce(logits, labels, loss_mask=None):
         flat_logits = logits.view(-1, logits.size(-1))
@@ -372,10 +411,13 @@ class V7Trainer:
                 enabled=self.use_amp,
                 dtype=self.amp_dtype or torch.float16,
             ):
+                gate_probs = None
                 if self.fused_ce:
                     out = self._hidden_fn(input_ids)
                     if isinstance(out, tuple):
-                        lm, aux_loss = out
+                        lm, aux_loss = out[0], out[1]
+                        if len(out) >= 3:
+                            gate_probs = out[2]
                     else:
                         lm = out
                         aux_loss = torch.tensor(0.0, device=self.device)
@@ -386,10 +428,19 @@ class V7Trainer:
                     logits, _, aux_loss = self.model(input_ids, labels=labels)
                     main_loss = self._masked_ce(logits, labels, loss_mask)
                 loss = main_loss
+                m_cfg = self.model._orig_mod.config if hasattr(self.model, '_orig_mod') else self.model.config
                 if aux_loss.detach().abs().item() > 0:
-                    m_cfg = self.model._orig_mod.config if hasattr(self.model, '_orig_mod') else self.model.config
                     aux_weight = getattr(m_cfg, 'aux_loss_weight', 1.0)
                     loss = loss + aux_weight * aux_loss
+                # Gate-surprisal aux (V11 recall program): tie GSP protect prob to
+                # per-token surprisal so the gate learns when to write vs freeze.
+                gsl = getattr(m_cfg, 'gate_surprisal_lambda', 0.0)
+                if self.fused_ce and gate_probs is not None and gsl > 0:
+                    gate_loss = self._gate_surprisal_loss(
+                        gate_probs, lm, labels, loss_mask, m_cfg,
+                    )
+                    loss = loss + gsl * gate_loss
+                    self._last_gate_loss = float(gate_loss.detach())
                 if self.unitary_lambda > 0:
                     u_loss = torch.tensor(0.0, device=self.device)
                     for m in self.model.modules():
