@@ -93,7 +93,7 @@ def _last_logits(model_type: str, model, input_ids: torch.Tensor) -> torch.Tenso
     if model_type == 'v11':
         from v11.complex_ops import imag_part, real_part
 
-        hidden, _ = model._hidden_to_lm(input_ids)
+        hidden = model._hidden_to_lm(input_ids)[0]
         last = hidden[:, -1]
         return (
             real_part(last) @ model.embed.embed_real.weight.T

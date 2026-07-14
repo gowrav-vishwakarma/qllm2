@@ -79,6 +79,23 @@ class V11Config:
     fused_e3: bool = True               # E3: fused multistate path (exact-equiv, K-independent matmuls)
     recompute_pam_chunks: bool = False  # recompute per-chunk W/D/A in backward (exact; less VRAM, more FLOPs)
 
+    # ── Recall program (V12): longer memory horizon + gate supervision ───────
+    # gamma_floor: minimum per-step decay applied to the *base* (pre-GSP) decay.
+    #   Reparam: base_decay = gamma_floor + (1-gamma_floor)*exp(-softplus_dt).
+    #   0.0 disables (identical to old behaviour). ~0.98 keeps state ~50x longer
+    #   before the GSP protect blend, attacking the ~1-2K token recall cliff.
+    gamma_floor: float = 0.0
+    # gate_surprisal_lambda: weight of the self-supervised gate-selectivity loss
+    #   (0 disables). Ties the GSP write-protect prob to per-token surprisal so the
+    #   gate learns *when* to write vs freeze instead of a flat ~0.4 on every token.
+    gate_surprisal_lambda: float = 0.0
+    gate_surprisal_tau: float = 1.0     # temperature (nats) mapping surprisal->target protect prob
+    # gate_surprisal_sign: +1 => LOW-surprisal (filler) tokens get HIGH protect target
+    #   (freeze state through filler, write on content). This is the recall-oriented
+    #   direction and drives (p_content - p_filler) NEGATIVE. -1 flips it to the
+    #   probe's "protect content more" convention. Default +1 optimizes for recall.
+    gate_surprisal_sign: float = 1.0
+
 
 # ── Phase-Associative Memory (V11) ──────────────────────────────────────────
 
@@ -131,6 +148,8 @@ class V11PAMLayer(nn.Module):
         self.state_compete = getattr(cfg, 'state_compete', False)
         self.phase_init = getattr(cfg, 'phase_init', 'zero')
         self.route_balance_lambda = getattr(cfg, 'route_balance_lambda', 0.0)
+        self.gamma_floor = getattr(cfg, 'gamma_floor', 0.0)
+        self.gate_surprisal_lambda = getattr(cfg, 'gate_surprisal_lambda', 0.0)
         if cfg.use_gsp:
             gate_in = cfg.dim * 2 if self.gate_content_aware else cfg.dim
             self.protect_gate = nn.Linear(gate_in, cfg.n_heads)
@@ -169,6 +188,17 @@ class V11PAMLayer(nn.Module):
             persistent=False,
         )
         self._route_aux = None
+        self._gate_prob_bt = None   # [B,T] mean protect prob per token (gate-surprisal aux)
+
+    def _apply_gamma_floor(self, base_decay: torch.Tensor) -> torch.Tensor:
+        """Lift the base (pre-GSP) decay onto [gamma_floor, 1) to lengthen memory.
+
+        base_decay = exp(-softplus_dt) in (0,1); reparam keeps the learned shape
+        but caps the minimum retention so unprotected state survives far longer.
+        """
+        if self.gamma_floor and self.gamma_floor > 0.0:
+            return self.gamma_floor + (1.0 - self.gamma_floor) * base_decay
+        return base_decay
 
     def _init_phase_proj(self):
         """Custom init for phase_proj (re-applied after V11LM._init_weights)."""
@@ -298,20 +328,24 @@ class V11PAMLayer(nn.Module):
             # transpose to [B,H,T] so decay aligns with PAM time axis
             softplus_dt = softplus_dt.transpose(1, 2).contiguous()
 
+        base_decay = self._apply_gamma_floor(torch.exp(-softplus_dt))
         if self.use_gsp:
             # Content-aware gate (winner): sees concat(real,imag); else magnitude only.
             gate_input = to_real_concat(x) if self.gate_content_aware else cabs(x)
             protect_prob = torch.sigmoid(self.protect_gate(gate_input)).transpose(1, 2)  # [B,H,T]
+            if self.gate_surprisal_lambda > 0 and self.training:
+                self._gate_prob_bt = protect_prob.mean(dim=1)  # [B,T]
             if self.decay_mode == 'per_channel':
+                # base_decay is [B,H,T,d] here; protect broadcasts over the channel dim.
                 protect_prob_expanded = protect_prob.unsqueeze(-1)
-                decay_gamma = torch.exp(-softplus_dt) * (1 - protect_prob_expanded) + protect_prob_expanded
+                decay_gamma = base_decay * (1 - protect_prob_expanded) + protect_prob_expanded
             else:
-                # Blend: γ = exp(-dt)*(1-p) + p  →  p=1 freezes decay at 1.
-                decay_gamma = torch.exp(-softplus_dt) * (1 - protect_prob) + protect_prob
+                # Blend: γ = base*(1-p) + p  →  p=1 freezes decay at 1.
+                decay_gamma = base_decay * (1 - protect_prob) + protect_prob
             # Same protect scalar on real+imag of values [B,H,T,d,2].
             protected_values = scale_complex(values, 1 - protect_prob)
         else:
-            decay_gamma = torch.exp(-softplus_dt)
+            decay_gamma = base_decay
             protected_values = values
         return decay_gamma, protected_values
 
@@ -607,13 +641,16 @@ class V11PAMLayer(nn.Module):
         softplus_dt = F.softplus(decay_logits + self.dt_bias + state_offsets)  # [K,B,T,H]
         # permute to [K,B,H,T] so decay aligns with PAM time axis
         softplus_dt = softplus_dt.permute(0, 1, 3, 2).contiguous()
+        base_decay = self._apply_gamma_floor(torch.exp(-softplus_dt))  # [K,B,H,T]
         if self.use_gsp:
             gate_input = to_real_concat(x) if self.gate_content_aware else cabs(x)
             protect_prob = torch.sigmoid(self.protect_gate(gate_input)).transpose(1, 2)  # [B,H,T]
-            decay_gamma_all = torch.exp(-softplus_dt) * (1 - protect_prob) + protect_prob  # [K,B,H,T]
+            if self.gate_surprisal_lambda > 0 and self.training:
+                self._gate_prob_bt = protect_prob.mean(dim=1)  # [B,T]
+            decay_gamma_all = base_decay * (1 - protect_prob) + protect_prob  # [K,B,H,T]
             protected_values = scale_complex(values, 1 - protect_prob)
         else:
-            decay_gamma_all = torch.exp(-softplus_dt)
+            decay_gamma_all = base_decay
             protected_values = values
         return decay_gamma_all, protected_values
 
@@ -1060,6 +1097,22 @@ class V11LM(nn.Module):
             return None
         return total
 
+    @staticmethod
+    def _collect_gate_probs(blocks):
+        """Stack per-layer mean protect-prob [B,T] into [L,B,T] (or None).
+
+        Grad flows to each layer's protect_gate; the gate-surprisal loss is
+        computed in the trainer against a detached per-token surprisal target.
+        """
+        probs = []
+        for block in blocks:
+            gp = getattr(block.pam, '_gate_prob_bt', None)
+            if gp is not None:
+                probs.append(gp)
+        if not probs:
+            return None
+        return torch.stack(probs, dim=0)
+
     def forward(self, input_ids, states=None, step_offset: int = 0, labels=None):
         # Token ids → complex vectors [B,T,dim,2].
         z = self.embed(input_ids)
@@ -1116,7 +1169,8 @@ class V11LM(nn.Module):
             if route_aux is not None
             else torch.tensor(0.0, device=input_ids.device)
         )
-        return lm, aux_loss
+        gate_probs = self._collect_gate_probs(self.blocks)  # [L,B,T] or None
+        return lm, aux_loss, gate_probs
 
     def ce_from_lm(self, lm, labels, loss_mask=None, ignore_index=-100, chunk: int = 4096):
         """Chunked cross-entropy from pre-logit complex hidden `lm` [B,T,dim,2].
@@ -1138,7 +1192,7 @@ class V11LM(nn.Module):
     def fused_ce_loss(self, input_ids, labels, loss_mask=None, ignore_index=-100,
                       chunk: int = 4096):
         """Convenience eager path: hidden stack + chunked CE (exact == forward+CE)."""
-        lm, aux_loss = self._hidden_to_lm(input_ids)
+        lm, aux_loss, _gate_probs = self._hidden_to_lm(input_ids)
         main = self.ce_from_lm(lm, labels, loss_mask=loss_mask,
                                ignore_index=ignore_index, chunk=chunk)
         return main, aux_loss
@@ -1237,6 +1291,15 @@ PRESETS = {
     # Alias (same as v11_e3_k3_chat); kept for old launch scripts/docs.
     'v11_e3_k3_chat_gate': _base_flat(
         n_states=3, state_dt_spread=2.0, vocab_size=50261, gate_content_aware=True,
+    ),
+    # Recall program (V12): production chat config + longer memory horizon
+    # (gamma_floor) + gate-surprisal supervision. Same params/vocab as chat so it
+    # loads round-8b-gate weights for warm A/B; recall levers off by default here
+    # and switched on per-arm via CLI so the A/B isolates each change.
+    'v11_e3_k3_chat_recall': _base_flat(
+        n_states=3, state_dt_spread=2.0, vocab_size=50261, gate_content_aware=True,
+        gamma_floor=0.98, gate_surprisal_lambda=0.1, gate_surprisal_tau=1.0,
+        gate_surprisal_sign=1.0,
     ),
     # Competitive retrieval (Tier 1): enable after WikiText A/B smoke wins.
     'v11_e3_k3_chat_compete': _base_flat(
