@@ -211,6 +211,9 @@ def main() -> None:
         dt = pam.dt_proj(x_flat)  # [1,T,H] (head mode)
         dt = F.softplus(dt + pam.dt_bias)
         base_gamma = torch.exp(-dt)  # without GSP blend
+        gamma_floor = getattr(pam, 'gamma_floor', 0.0) or 0.0
+        if gamma_floor > 0.0:
+            base_gamma = gamma_floor + (1.0 - gamma_floor) * base_gamma
         if pam.use_gsp:
             p_blend = torch.sigmoid(pam.protect_gate(_gate_input(pam, x))).transpose(1, 2)  # [1,H,T]
             gam = (base_gamma.transpose(1, 2) * (1 - p_blend) + p_blend).mean().item()

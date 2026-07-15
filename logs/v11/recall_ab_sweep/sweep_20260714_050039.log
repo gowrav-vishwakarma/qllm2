@@ -1,0 +1,106 @@
+[recall-ab] arms='control gate floor recall combo' budget=300000000 preset=v11_e3_k3_chat seed=42 out=checkpoints_v11_recall_ab
+==================================================================
+[arm:control] sources=dclm,fineweb weights=48,48 flags=' --resume_from checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt --no_resume_cursor'
+[arm:control] ckpt=checkpoints_v11_recall_ab/control log=logs/v11/recall_ab_control_20260714_050039
+[Discord] Webhook configured -- notifications enabled
+Traceback (most recent call last):
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/huggingface_hub/utils/_http.py", line 409, in hf_raise_for_status
+    response.raise_for_status()
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 403 Client Error: Forbidden for url: https://us.gcp.cdn.hf.co/xet-bridge-us/6655eb19d17e141dcb546ed5/75e3d0530e0153b1260904449807a6aca765eb899b669cf3d1da290e52eedae8?X-Xet-Cas-Uid=public&user_id=public&response-content-disposition=inline%3B+filename*%3DUTF-8%27%27000_00000.parquet%3B+filename%3D%22000_00000.parquet%22%3B&Expires=1784008879&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly91cy5nY3AuY2RuLmhmLmNvL3hldC1icmlkZ2UtdXMvNjY1NWViMTlkMTdlMTQxZGNiNTQ2ZWQ1Lzc1ZTNkMDUzMGUwMTUzYjEyNjA5MDQ0NDk4MDdhNmFjYTc2NWViODk5YjY2OWNmM2QxZGEyOTBlNTJlZWRhZThcXD9YLVhldC1DYXMtVWlkPXB1YmxpYyZ1c2VyX2lkPXB1YmxpYyZyZXNwb25zZS1jb250ZW50LWRpc3Bvc2l0aW9uPSoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkVwb2NoVGltZSI6MTc4NDAwODg3OX0sIkJ5dGVSYW5nZSI6eyJFeHBlY3RlZEhlYWRlciI6ImJ5dGVzPTIxNTI3NTM1NzgtMjE1MjgxOTExMyJ9fX1dfQ__&Signature=MEUCIB4F6MwDJwwrsK5j~bTMN8vXoI0L4myfM~SnQabI8qYbAiEA3K8GBawBPcTpKHpHdDNxLqDeh7b69eP3DCwpKT99b7g_&Key-Pair-Id=01KXEF4KZ1B6FV465MAWR4M21F
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.9-linux-x86_64-gnu/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.9-linux-x86_64-gnu/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/home/ubuntu/Development/qllm-private/v11/train.py", line 622, in <module>
+    main()
+  File "/home/ubuntu/Development/qllm-private/v11/train.py", line 614, in main
+    trainer.train()
+  File "/home/ubuntu/Development/qllm-private/v7/train.py", line 675, in train
+    train_metrics = self.train_epoch(epoch)
+  File "/home/ubuntu/Development/qllm-private/v7/train.py", line 401, in train_epoch
+    for batch_idx, batch in enumerate(self.train_loader):
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/utils/data/dataloader.py", line 734, in __next__
+    data = self._next_data()
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/utils/data/dataloader.py", line 790, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/utils/data/_utils/fetch.py", line 33, in fetch
+    data.append(next(self.dataset_iter))
+  File "/home/ubuntu/Development/qllm-private/v7/data.py", line 157, in __iter__
+    for item in self.text_iterator:
+  File "/home/ubuntu/Development/qllm-private/v7/data.py", line 1132, in _blend_interleave_text_iters
+    yield names[choice], next(iters[choice])
+  File "/home/ubuntu/Development/qllm-private/v7/data.py", line 1042, in _fineweb_edu_text_iter
+    stream = load_dataset(
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/datasets/load.py", line 1409, in load_dataset
+    return builder_instance.as_streaming_dataset(split=split)
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/datasets/builder.py", line 1225, in as_streaming_dataset
+    splits_generators = {sg.name: sg for sg in self._split_generators(dl_manager)}
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/datasets/packaged_modules/parquet/parquet.py", line 60, in _split_generators
+    self.info.features = datasets.Features.from_arrow_schema(pq.read_schema(f))
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/pyarrow/parquet/core.py", line 2392, in read_schema
+    file = ParquetFile(
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/pyarrow/parquet/core.py", line 328, in __init__
+    self.reader.open(
+  File "pyarrow/_parquet.pyx", line 1656, in pyarrow._parquet.ParquetReader.open
+  File "pyarrow/error.pxi", line 89, in pyarrow.lib.check_status
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/datasets/utils/file_utils.py", line 807, in read_with_retries
+    out = read(*args, **kwargs)
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/huggingface_hub/hf_file_system.py", line 1007, in read
+    return super().read(length)
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/fsspec/spec.py", line 2083, in read
+    out = self.cache._fetch(self.loc, self.loc + length)
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/fsspec/caching.py", line 249, in _fetch
+    self.cache = self.fetcher(start, end)  # new block replaces old
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/huggingface_hub/hf_file_system.py", line 968, in _fetch_range
+    hf_raise_for_status(r)
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/huggingface_hub/utils/_http.py", line 473, in hf_raise_for_status
+    raise _format(HfHubHTTPError, message, response) from e
+huggingface_hub.errors.HfHubHTTPError: (Request ID: 01KXFG0GBG042Z6QJBDTHF1ZXP)
+
+403 Forbidden: None.
+Cannot access content at: https://us.gcp.cdn.hf.co/xet-bridge-us/6655eb19d17e141dcb546ed5/75e3d0530e0153b1260904449807a6aca765eb899b669cf3d1da290e52eedae8?X-Xet-Cas-Uid=public&user_id=public&response-content-disposition=inline%3B+filename*%3DUTF-8%27%27000_00000.parquet%3B+filename%3D%22000_00000.parquet%22%3B&Expires=1784008879&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly91cy5nY3AuY2RuLmhmLmNvL3hldC1icmlkZ2UtdXMvNjY1NWViMTlkMTdlMTQxZGNiNTQ2ZWQ1Lzc1ZTNkMDUzMGUwMTUzYjEyNjA5MDQ0NDk4MDdhNmFjYTc2NWViODk5YjY2OWNmM2QxZGEyOTBlNTJlZWRhZThcXD9YLVhldC1DYXMtVWlkPXB1YmxpYyZ1c2VyX2lkPXB1YmxpYyZyZXNwb25zZS1jb250ZW50LWRpc3Bvc2l0aW9uPSoiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkVwb2NoVGltZSI6MTc4NDAwODg3OX0sIkJ5dGVSYW5nZSI6eyJFeHBlY3RlZEhlYWRlciI6ImJ5dGVzPTIxNTI3NTM1NzgtMjE1MjgxOTExMyJ9fX1dfQ__&Signature=MEUCIB4F6MwDJwwrsK5j~bTMN8vXoI0L4myfM~SnQabI8qYbAiEA3K8GBawBPcTpKHpHdDNxLqDeh7b69eP3DCwpKT99b7g_&Key-Pair-Id=01KXEF4KZ1B6FV465MAWR4M21F.
+Make sure your token has the correct permissions.
+Auth failed: SignatureError: invalid key pair id
+Wall clock start: 2026-07-14 05:00:40
+============================================================
+  V11: PAM with new memory dynamics
+  Preset: v11_e3_k3_chat | Stage: pretrain | Dataset: pretrain_mix
+============================================================
+
+Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 3, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.0, 'gate_surprisal_tau': 1.0, 'gate_surprisal_sign': 1.0}
+Memory dynamics: decay_mode=head, write_mode=additive, n_states=3, chunk_size=256
+Batch size: 64, Epochs: 9999, LR: 0.0001
+Token budget: 300,000,000
+
+Loading pretrain_mix (seq_len=2048)...
+Streaming pretrain blend: sources=['dclm', 'fineweb'] weights=[48.0, 48.0] edu>=3 budget=300000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'dclm': 0, 'fineweb': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+Val chunks: 121
+Val: in-distro holdout (4 batches), WikiText secondary (2 batches)
+Train batches: streaming, Val batches: 4
+
+Model parameters: {'embedding (tied)': 38600448, 'blocks': 61649552, 'norms': 768, 'lm_head': 296064, 'total': 100546832}
+Total: 100,546,832 (100.5M)
+
+Loading weights from checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt...
+Param groups: 212 tensors (100,495,104) with wd, 181 tensors (51,728) without
+Compiling model (mode=default)...
+  fused_ce: compiled _hidden_to_lm (logits never materialized)
+
+Training on cuda
+Parameters: {'embedding (tied)': 38600448, 'blocks': 61649552, 'norms': 768, 'lm_head': 296064, 'total': 100546832}
+Total: 100,546,832 (100.5M)
+Epochs: 1..9999, Batches/epoch: stream
+Periodic checkpoint: every 2000 steps -> latest.pt
+
+
+============================================================
+Epoch 1/9999
+============================================================

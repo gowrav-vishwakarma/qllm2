@@ -1036,12 +1036,50 @@ def _fineweb_edu_text_iter(
     doc_counters: Optional[Dict[str, int]] = None,
     counter_key: str = 'fineweb',
 ) -> Iterator[str]:
-    """Stream FineWeb-Edu text filtered by the edu classifier score."""
+    """Stream FineWeb-Edu text filtered by the edu classifier score.
+
+    If ``FINEWEB_LOCAL_DIR`` points at a directory of ``*.parquet`` shards
+    (or a parent that contains ``sample/<name>/``), stream those offline.
+    Useful when HF Hub streaming is blocked (e.g. Xet CDN 403 without auth).
+    """
+    import os
     from datasets import load_dataset
 
-    stream = load_dataset(
-        'HuggingFaceFW/fineweb-edu', name=name, split='train', streaming=True,
-    )
+    local_dir = os.environ.get('FINEWEB_LOCAL_DIR', '').strip()
+    if local_dir:
+        from pathlib import Path as _P
+        root = _P(local_dir)
+        # Accept either .../sample-10BT/*.parquet or .../sample/10BT/*.parquet
+        # or a flat dir of parquets.
+        candidates = [
+            root,
+            root / name,
+            root / 'sample' / name.replace('sample-', ''),
+            root / 'sample' / name,
+            root.parent / 'sample' / name.replace('sample-', ''),
+            root.parent / 'sample' / name,
+        ]
+        files: list = []
+        seen = set()
+        for c in candidates:
+            if c.is_dir():
+                for p in sorted(c.glob('*.parquet')):
+                    rp = str(p.resolve())
+                    if rp not in seen:
+                        seen.add(rp)
+                        files.append(str(p))
+        files.sort()
+        if not files:
+            raise FileNotFoundError(
+                f"FINEWEB_LOCAL_DIR={local_dir!r} has no *.parquet "
+                f"(tried {[str(c) for c in candidates]})"
+            )
+        print(f"[fineweb] local parquet stream: {len(files)} shards under {files[0].rsplit('/', 1)[0]}")
+        stream = load_dataset('parquet', data_files=files, split='train', streaming=True)
+    else:
+        stream = load_dataset(
+            'HuggingFaceFW/fineweb-edu', name=name, split='train', streaming=True,
+        )
     skipped = 0
     for row in stream:
         score = row.get('score')

@@ -1,0 +1,37 @@
+[2026-07-14 05:00:40] Wall clock start: 2026-07-14 05:00:40
+[2026-07-14 05:00:40] ============================================================
+[2026-07-14 05:00:40]   V11: PAM with new memory dynamics
+[2026-07-14 05:00:40]   Preset: v11_e3_k3_chat | Stage: pretrain | Dataset: pretrain_mix
+[2026-07-14 05:00:40] ============================================================
+
+[2026-07-14 05:00:40] Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 3, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.0, 'gate_surprisal_tau': 1.0, 'gate_surprisal_sign': 1.0}
+[2026-07-14 05:00:40] Memory dynamics: decay_mode=head, write_mode=additive, n_states=3, chunk_size=256
+[2026-07-14 05:00:40] Batch size: 64, Epochs: 9999, LR: 0.0001
+[2026-07-14 05:00:40] Token budget: 300,000,000
+
+[2026-07-14 05:00:40] Loading pretrain_mix (seq_len=2048)...
+[2026-07-14 05:00:42] Streaming pretrain blend: sources=['dclm', 'fineweb'] weights=[48.0, 48.0] edu>=3 budget=300000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'dclm': 0, 'fineweb': 0}
+[2026-07-14 05:00:42] [cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[2026-07-14 05:00:43] [cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+[2026-07-14 05:00:43] Val chunks: 121
+[2026-07-14 05:00:43] Val: in-distro holdout (4 batches), WikiText secondary (2 batches)
+[2026-07-14 05:00:43] Train batches: streaming, Val batches: 4
+
+[2026-07-14 05:00:44] Model parameters: {'embedding (tied)': 38600448, 'blocks': 61649552, 'norms': 768, 'lm_head': 296064, 'total': 100546832}
+[2026-07-14 05:00:44] Total: 100,546,832 (100.5M)
+
+[2026-07-14 05:00:44] Loading weights from checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt...
+[2026-07-14 05:00:44] Param groups: 212 tensors (100,495,104) with wd, 181 tensors (51,728) without
+[2026-07-14 05:00:45] Compiling model (mode=default)...
+[2026-07-14 05:00:45]   fused_ce: compiled _hidden_to_lm (logits never materialized)
+
+[2026-07-14 05:00:46] Training on cuda
+[2026-07-14 05:00:46] Parameters: {'embedding (tied)': 38600448, 'blocks': 61649552, 'norms': 768, 'lm_head': 296064, 'total': 100546832}
+[2026-07-14 05:00:46] Total: 100,546,832 (100.5M)
+[2026-07-14 05:00:46] Epochs: 1..9999, Batches/epoch: stream
+[2026-07-14 05:00:46] Periodic checkpoint: every 2000 steps -> latest.pt
+
+
+[2026-07-14 05:00:46] ============================================================
+[2026-07-14 05:00:46] Epoch 1/9999
+[2026-07-14 05:00:46] ============================================================

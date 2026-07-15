@@ -1102,3 +1102,55 @@ Deferred / optional:
 - Re-SFT round-6b on the cleaned mix and re-run `eval_compare.py`; ship only if `span_hit@20`
   improves over the current 0.17–0.25 SFT baseline (GPU-time decision, not auto-run). Note the
   strongest fix (no `<think>` in the base) only lands once round-8b pretrain runs with v2.
+
+---
+
+## Recall program — Stage-2 A/B (2026-07-14, RTX PRO 6000)
+
+Warm-start from `round-8b-gate` (`checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt`),
+300M tokens/arm, `seq_len=2048`, `batch_size=16`, FineWeb-Edu only (local parquet shards;
+no HF auth on this host). Scripts: `scripts/run_v11_recall_ab.sh`, `scripts/eval_recall_gate.sh`.
+Artifacts: `checkpoints_v11_recall_ab/{arm}/`, `logs/v11/recall_ab_sweep/final_summary.json`.
+
+### Results (single-assoc recall by context / gate / PPL)
+
+| arm | recall@128 | @512 | @1024 | @2048 | overall | \|p_c−p_f\| | val PPL | ship |
+|-----|-----------|------|-------|-------|---------|------------|---------|------|
+| control | 0.68 | 0.15 | 0.13 | **0.17** | 0.17 | 0.025 | 39.75 | no |
+| gate (+surprisal aux) | 0.78 | 0.20 | 0.18 | **0.22** | 0.21 | **0.068** | **39.70** | no |
+| floor (γ_floor=0.98) | 0.77 | 0.23 | 0.25 | **0.25** | 0.23 | 0.011 | 55.26 | no |
+| recall (+3% synth) | 0.70 | 0.27 | 0.18 | **0.20** | 0.21 | 0.022 | 39.97 | no |
+| combo (all three) | 0.52 | 0.22 | 0.25 | **0.25** | 0.21 | 0.060 | 55.64 | no |
+
+Target: recall@2048 ≥ 0.9, \|p_c−p_f\| ≥ 0.05, PPL within ~2% of control. **None shipped.**
+
+Ranked by recall@2048: combo = floor (0.25) > gate (0.22) > recall (0.20) > control (0.17).
+
+### Learnings
+
+1. **Recall not solved.** Best @2048 = 0.25 vs Mamba ~1.0. The ~128→2048 cliff persists in every arm.
+2. **Gate-surprisal aux is the free lever.** Only arm that makes the gate selective (PASS) *and* lifts
+   recall (+5pp @2048) with **zero PPL cost** (39.75→39.70). Default for next runs.
+3. **γ_floor=0.98 too aggressive.** +8pp @2048 but PPL 40→55 (+38%). Optimizer fights the floor
+   (raw base-γ collapses 0.615→0.175); probe was mis-reporting effective γ (fixed below).
+4. **Recall curriculum at 3% barely moves** (0.17→0.20). Too small / warm-start anchors old routing.
+5. **Combo inherits floor's PPL hit** without beating floor on recall; no synergy yet.
+6. **Root cause untouched:** K=3 routing collapse (entropy ln 3, eff-rank ~24% per Phase-B probes)
+   — none of these levers address state specialization.
+7. **Infra on this box:** HF Xet CDN 403 without auth → offline FineWeb via `FINEWEB_LOCAL_DIR`;
+   gate arm crashed on AMP-unsafe `binary_cross_entropy` → fp32 block in `v7/train.py`;
+   `batch_size=64` OOM under `torch.compile` → use 16 (~40k tok/s).
+
+### Infra fixes landed
+
+- [v7/data.py](../v7/data.py): `FINEWEB_LOCAL_DIR` env streams local `*.parquet` shards offline.
+- [v7/train.py](../v7/train.py): gate-surprisal BCE runs outside autocast (fp32).
+- [scripts/run_v11_recall_ab.sh](../scripts/run_v11_recall_ab.sh): `WEB_SOURCES` override for fineweb-only.
+- [scripts/v11_probe_gates.py](../scripts/v11_probe_gates.py): apply `gamma_floor` reparam in probe.
+
+### Next (Stage-3 battery)
+
+1. Hyper sweeps (warm, 150M/arm): gate λ/τ, γ_floor knee {0.90–0.97}, recall blend {3,10,20}%.
+2. From-scratch + routing levers (`state_compete`, `routing_content_aware`, `route_balance_lambda`)
+   with winning hypers, ~1–2B tok, scaled recall curriculum.
+3. Matched behavioral baselines: V11 winner vs Transformer (~100M) vs Mamba-130m on same eval suite.

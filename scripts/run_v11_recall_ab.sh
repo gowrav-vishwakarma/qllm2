@@ -40,6 +40,9 @@ GFLOOR="${GFLOOR:-0.98}"
 # recall data weight (% of blend) — web weights split the remainder evenly
 RECALL_WEIGHT="${RECALL_WEIGHT:-3}"
 WEB_WEIGHT="${WEB_WEIGHT:-48}"          # per web source (dclm, fineweb)
+# Comma-separated web sources. Override to "fineweb" when DCLM is unavailable
+# (e.g. this box has no HF auth and only local FineWeb shards).
+WEB_SOURCES="${WEB_SOURCES:-dclm,fineweb}"
 OUT_ROOT="${OUT_ROOT:-checkpoints_v11_recall_ab}"
 DRY="${DRY:-0}"
 # Warm-start from an existing checkpoint (fast Stage-2 screen: measures the recall
@@ -64,9 +67,17 @@ arm_flags() {  # -> extra train flags for the arm
 }
 
 arm_sources() {  # -> (sources, weights) for the arm
+  # Expand WEB_SOURCES into equal WEB_WEIGHT entries.
+  IFS=',' read -r -a _webs <<< "$WEB_SOURCES"
+  _web_srcs="$WEB_SOURCES"
+  _web_wts=""
+  for _w in "${_webs[@]}"; do
+    [[ -n "$_web_wts" ]] && _web_wts="${_web_wts},"
+    _web_wts="${_web_wts}${WEB_WEIGHT}"
+  done
   case "$1" in
-    recall|combo) echo "dclm,fineweb,recall ${WEB_WEIGHT},${WEB_WEIGHT},${RECALL_WEIGHT}" ;;
-    *)            echo "dclm,fineweb ${WEB_WEIGHT},${WEB_WEIGHT}" ;;
+    recall|combo) echo "${_web_srcs},recall ${_web_wts},${RECALL_WEIGHT}" ;;
+    *)            echo "${_web_srcs} ${_web_wts}" ;;
   esac
 }
 

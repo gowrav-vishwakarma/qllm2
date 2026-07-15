@@ -1,0 +1,4 @@
+================================================================
+[hypersweep] arm=gate_l0.1_t0.5 sources=fineweb weights=96 flags=--gate_surprisal_lambda 0.1 --gate_surprisal_tau 0.5 --gate_surprisal_sign 1.0
+[Discord] Webhook configured -- notifications enabled
+Token indices sequence length is longer than the specified maximum sequence length for this model (3479 > 1024). Running this sequence through the model will result in indexing errors
