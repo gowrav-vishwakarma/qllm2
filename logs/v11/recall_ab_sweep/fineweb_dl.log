@@ -1,0 +1,4 @@
+  File "<stdin>", line 1
+    echo "dl_pid=$!"
+         ^
+SyntaxError: invalid syntax

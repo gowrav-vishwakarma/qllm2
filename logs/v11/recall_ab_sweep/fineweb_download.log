@@ -1,0 +1,42 @@
+[fineweb-dl] target=8 shards -> data/fineweb-edu/sample-10BT
+skip 000_00000.parquet (exists, 2152819114 bytes)
+downloading 001_00000.parquet ...
+Traceback (most recent call last):
+  File "<stdin>", line 25, in <module>
+FileExistsError: [Errno 17] File exists: 'data/fineweb-edu/sample/10BT/001_00000.parquet' -> 'data/fineweb-edu/sample-10BT/001_00000.parquet'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 28, in <module>
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.9-linux-x86_64-gnu/lib/python3.9/shutil.py", line 444, in copy2
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.9-linux-x86_64-gnu/lib/python3.9/shutil.py", line 244, in copyfile
+    raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+shutil.SameFileError: 'data/fineweb-edu/sample/10BT/001_00000.parquet' and 'data/fineweb-edu/sample-10BT/001_00000.parquet' are the same file
+[fineweb-dl] target=8 shards -> data/fineweb-edu/sample-10BT
+skip 000_00000.parquet (exists, 2152819114 bytes)
+skip 001_00000.parquet (exists, 2152222432 bytes)
+downloading 002_00000.parquet ...
+ok 002_00000.parquet (2151796315 bytes)
+downloading 003_00000.parquet ...
+ok 003_00000.parquet (2152437524 bytes)
+downloading 004_00000.parquet ...
+ok 004_00000.parquet (2152338550 bytes)
+downloading 005_00000.parquet ...
+ok 005_00000.parquet (2152189947 bytes)
+downloading 006_00000.parquet ...
+ok 006_00000.parquet (2152689867 bytes)
+downloading 007_00000.parquet ...
+ok 007_00000.parquet (2150686637 bytes)
+done
+[fineweb-dl] complete
+total 17G
+-rw-rw-r-- 1 ubuntu ubuntu 2.1G Jul 14 05:03 000_00000.parquet
+-rw-rw-r-- 2 ubuntu ubuntu 2.1G Jul 15 05:08 001_00000.parquet
+-rw-rw-r-- 2 ubuntu ubuntu 2.1G Jul 15 05:10 002_00000.parquet
+-rw-rw-r-- 2 ubuntu ubuntu 2.1G Jul 15 05:10 003_00000.parquet
+-rw-rw-r-- 2 ubuntu ubuntu 2.1G Jul 15 05:10 004_00000.parquet
+-rw-rw-r-- 2 ubuntu ubuntu 2.1G Jul 15 05:10 005_00000.parquet
+-rw-rw-r-- 2 ubuntu ubuntu 2.1G Jul 15 05:12 006_00000.parquet
+-rw-rw-r-- 2 ubuntu ubuntu 2.1G Jul 15 05:13 007_00000.parquet

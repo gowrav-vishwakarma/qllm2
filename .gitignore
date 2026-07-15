@@ -27,6 +27,9 @@ releases/**/*.tgz
 .cache/
 *cache*/
 
+# Local training corpora (FineWeb shards etc.; download via scripts/download_fineweb_shards.sh)
+data/
+
 
 .env
 

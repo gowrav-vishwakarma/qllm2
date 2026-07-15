@@ -1,0 +1,47 @@
+[2026-07-15 05:13:40] Wall clock start: 2026-07-15 05:13:40
+[2026-07-15 05:13:40] ============================================================
+[2026-07-15 05:13:40]   V11: PAM with new memory dynamics
+[2026-07-15 05:13:40]   Preset: v11_e3_k3_chat | Stage: pretrain | Dataset: pretrain_mix
+[2026-07-15 05:13:40] ============================================================
+
+[2026-07-15 05:13:40] Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 3, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 0.5, 'gate_surprisal_sign': 1.0}
+[2026-07-15 05:13:40] Memory dynamics: decay_mode=head, write_mode=additive, n_states=3, chunk_size=256
+[2026-07-15 05:13:40] Batch size: 16, Epochs: 9999, LR: 0.0001
+[2026-07-15 05:13:40] Token budget: 150,000,000
+
+[2026-07-15 05:13:40] Loading pretrain_mix (seq_len=2048)...
+[2026-07-15 05:13:43] Streaming pretrain blend: sources=['fineweb'] weights=[96.0] edu>=3 budget=150000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'fineweb': 0}
+[2026-07-15 05:13:43] [cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[2026-07-15 05:13:44] [cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+[2026-07-15 05:13:44] Val chunks: 121
+[2026-07-15 05:13:44] Val: in-distro holdout (16 batches), WikiText secondary (8 batches)
+[2026-07-15 05:13:44] Train batches: streaming, Val batches: 16
+
+[2026-07-15 05:13:45] Model parameters: {'embedding (tied)': 38600448, 'blocks': 61649552, 'norms': 768, 'lm_head': 296064, 'total': 100546832}
+[2026-07-15 05:13:45] Total: 100,546,832 (100.5M)
+
+[2026-07-15 05:13:45] Loading weights from checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt...
+[2026-07-15 05:13:45] Param groups: 212 tensors (100,495,104) with wd, 181 tensors (51,728) without
+[2026-07-15 05:13:45] Compiling model (mode=default)...
+[2026-07-15 05:13:46]   fused_ce: compiled _hidden_to_lm (logits never materialized)
+
+[2026-07-15 05:13:46] Training on cuda
+[2026-07-15 05:13:46] Parameters: {'embedding (tied)': 38600448, 'blocks': 61649552, 'norms': 768, 'lm_head': 296064, 'total': 100546832}
+[2026-07-15 05:13:46] Total: 100,546,832 (100.5M)
+[2026-07-15 05:13:46] Epochs: 1..9999, Batches/epoch: stream
+[2026-07-15 05:13:46] Periodic checkpoint: every 2000 steps -> latest.pt
+
+
+[2026-07-15 05:13:46] ============================================================
+[2026-07-15 05:13:46] Epoch 1/9999
+[2026-07-15 05:13:46] ============================================================
+[2026-07-15 05:13:47] [fineweb] local parquet stream: 15 shards under data/fineweb-edu/sample-10BT
+[2026-07-15 05:14:34]   [1] 0 loss=3.4200 ppl=30.6 lr=2.00e-07 | 696 tok/s (avg 696) ETA n/a | GPU 2.6/41.9GB | gtok=32768
+[2026-07-15 05:15:15]   [1] 50 loss=3.4584 ppl=31.8 lr=1.02e-05 | 39436 tok/s (avg 18857) ETA n/a | GPU 2.6/42.8GB | gtok=1671168
+[2026-07-15 05:15:57]   [1] 100 loss=3.4249 ppl=30.7 lr=2.02e-05 | 39116 tok/s (avg 25359) ETA n/a | GPU 2.6/42.8GB | gtok=3309568
+[2026-07-15 05:16:39]   [1] 150 loss=3.4510 ppl=31.5 lr=3.02e-05 | 39354 tok/s (avg 28743) ETA n/a | GPU 2.6/42.8GB | gtok=4947968
+[2026-07-15 05:17:21]   [1] 200 loss=3.3824 ppl=29.4 lr=4.02e-05 | 39038 tok/s (avg 30761) ETA n/a | GPU 2.6/42.8GB | gtok=6586368
+[2026-07-15 05:18:02]   [1] 250 loss=3.4107 ppl=30.3 lr=5.02e-05 | 39392 tok/s (avg 32165) ETA n/a | GPU 2.6/42.8GB | gtok=8224768
+[2026-07-15 05:18:44]   [1] 300 loss=3.3451 ppl=28.4 lr=6.02e-05 | 39010 tok/s (avg 33131) ETA n/a | GPU 2.6/42.8GB | gtok=9863168
+[2026-07-15 05:19:26]   [1] 350 loss=3.4209 ppl=30.6 lr=7.02e-05 | 39269 tok/s (avg 33885) ETA n/a | GPU 2.6/42.8GB | gtok=11501568
+[2026-07-15 05:20:08]   [1] 400 loss=3.4573 ppl=31.7 lr=8.02e-05 | 38963 tok/s (avg 34445) ETA n/a | GPU 2.6/42.8GB | gtok=13139968

@@ -372,10 +372,12 @@ class V7Trainer:
         sign = getattr(m_cfg, 'gate_surprisal_sign', 1.0)
         target_p = torch.sigmoid(sign * (median_ce - surprisal) / tau).detach()  # [B,T]
 
-        gp = gate_probs.clamp(1e-4, 1 - 1e-4)                       # [L,B,T]
-        target = target_p.unsqueeze(0).expand_as(gp)
+        # BCE on probabilities is unsafe under AMP autocast; force fp32.
+        gp = gate_probs.float().clamp(1e-4, 1 - 1e-4)               # [L,B,T]
+        target = target_p.float().unsqueeze(0).expand_as(gp)
         vmask = valid.unsqueeze(0).expand_as(gp).to(gp.dtype)
-        bce = F.binary_cross_entropy(gp, target, reduction='none')
+        with torch.amp.autocast(device_type=gp.device.type, enabled=False):
+            bce = F.binary_cross_entropy(gp, target, reduction='none')
         return (bce * vmask).sum() / vmask.sum().clamp_min(1.0)
 
     @staticmethod
