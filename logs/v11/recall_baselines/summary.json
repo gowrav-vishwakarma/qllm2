@@ -1,0 +1,30 @@
+{
+  "comparisons": [
+    {
+      "model": "v11",
+      "path": "logs/v11/recall_baselines/v11_behavior.json",
+      "params": 100878896,
+      "single_at_max": 0.35,
+      "singles": {
+        "128": 0.85,
+        "512": 0.35,
+        "1024": 0.35,
+        "2048": 0.35
+      },
+      "overall": 0.2097222222222222
+    },
+    {
+      "model": "mamba",
+      "path": "logs/v11/recall_baselines/mamba_behavior.json",
+      "params": 129135360,
+      "single_at_max": 1.0,
+      "singles": {
+        "128": 1.0,
+        "512": 1.0,
+        "1024": 1.0,
+        "2048": 1.0
+      },
+      "overall": 0.7694444444444444
+    }
+  ]
+}
