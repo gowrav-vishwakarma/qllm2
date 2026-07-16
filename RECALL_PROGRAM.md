@@ -5,6 +5,14 @@ It explains **what was implemented and why**, how it was validated locally, and
 **exactly what to run on the RTX Pro 6000**. Companion plan:
 `.cursor/plans/pam_v12_recall_program_aee548e4.plan.md` (do not need to re-read).
 
+**Status (2026-07-16):** Stages 2–5 complete on RTX PRO 6000. Full results, per-arm
+tables, probe breakdowns, and consolidated learnings are in
+[v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md) (sections *Stage-2 A/B* through
+*consolidated findings*). **Bottom line:** recall@2048 plateaued at 0.15–0.25 across
+19 configs (chance = 0.125); gate selectivity is solved; write interference and decay
+are the structural blockers. Stage 6 (delta-write, vault state, phase addressing) is
+planned — see *consolidated findings* and `.cursor/plans/recall_program_stage_6_*.plan.md`.
+
 ---
 
 ## 1. Why (the 4090 Phase-B finding)
@@ -161,6 +169,26 @@ LABEL=combo ./scripts/eval_recall_gate.sh checkpoints_v11_recall_ab/combo/best_m
 
 ### Step 3 — decide next (depends on Step 2 outcome)
 
+**Done (2026-07-16):** Full battery ran on RTX PRO 6000 — Stage-2 A/B (5 arms × 300M),
+Stage-3 hypersweep (13 arms × 150M), Stage-4 from-scratch (1B, routing levers), Stage-5
+baselines (V11 vs pretrained Mamba-130m-hf; Transformer skipped). None shipped. See
+[v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md) for tables and learnings.
+
+**Next (Stage 6):**
+
+- **Fix measurement** — unify `single_at_max` aggregation (verdict vs baselines summary
+  disagree on same checkpoint); raise probe n per cell.
+- **Fair baselines** — train ~100M Mamba + Transformer from scratch on identical
+  fineweb+recall mix / 1B tokens (current Mamba comparison uses 300B-pretrained weights).
+- **Architecture changes** (PAM-native, O(1)):
+  1. E2 delta-rule write (`write_mode='delta'`) — fix compile hang; attacks interference.
+  2. Vault state — one no-decay K-state, gate-protected; selective persistence without γ_floor PPL hit.
+  3. Phase addressing — key-conditioned write phase for content-specific retrieval.
+- **Capacity micro-tests** before large budgets (10M-param, 100% recall curriculum).
+- **If Stage 6 beats matched baselines** → scratch retrain v3 round line; paper pass per below.
+
+Original Step 3 bullets (for reference):
+
 - **If combo clearly helps recall** → run the full ablation to attribute the gain:
   ```bash
   ARMS="control gate floor recall combo" TOKEN_BUDGET=150000000 \
@@ -177,6 +205,7 @@ LABEL=combo ./scripts/eval_recall_gate.sh checkpoints_v11_recall_ab/combo/best_m
 - **Paper** (`paper-pass1`/`paper-pass2` todos): replace the `\todoexp` placeholders in
   `memory_probes/paper/main.tex` §9 with measured Phase-B numbers, extend
   `scripts/plot_memory_probes_paper.py` for the behavioral/gate/arch-compare data.
+
 
 ---
 

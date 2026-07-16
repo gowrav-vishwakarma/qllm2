@@ -1154,3 +1154,176 @@ Ranked by recall@2048: combo = floor (0.25) > gate (0.22) > recall (0.20) > cont
 2. From-scratch + routing levers (`state_compete`, `routing_content_aware`, `route_balance_lambda`)
    with winning hypers, ~1–2B tok, scaled recall curriculum.
 3. Matched behavioral baselines: V11 winner vs Transformer (~100M) vs Mamba-130m on same eval suite.
+
+---
+
+## Recall program — Stage-3 hypersweep (2026-07-15/16, RTX PRO 6000)
+
+Warm-start from `round-8b-gate`, 150M tokens/arm, `seq_len=2048`, `batch_size=16`, FineWeb-Edu
+local shards. Scripts: `scripts/run_recall_hypersweep.sh`, `scripts/pick_recall_hypers.py`.
+Artifacts: `checkpoints_v11_recall_hypersweep/{arm}/`, `logs/v11/recall_hypersweep/best_hypers.json`.
+
+### Results (13/13 arms complete)
+
+| arm | recall@2048 | \|p_c−p_f\| | val PPL | PPL Δ vs control | ppl_ok |
+|-----|-------------|------------|---------|------------------|--------|
+| **recall_w3** | **0.233** | 0.021 | 38.54 | −3.0% | yes |
+| floor_g0.90 | 0.233 | 0.025 | 45.35 | +14.1% | no |
+| floor_g0.93 | 0.233 | 0.023 | 47.32 | +19.0% | no |
+| floor_g0.97 | 0.233 | 0.017 | 52.55 | +32.2% | no |
+| gate_l0.1_t1.0 | 0.200 | 0.059 | 38.74 | −2.5% | yes |
+| gate_l0.3_t0.5 | 0.200 | **0.110** | 38.09 | −4.2% | yes |
+| gate_l0.3_t1.0 | 0.183 | 0.095 | 38.21 | −3.9% | yes |
+| gate_l0.5_t1.0 | 0.183 | 0.115 | 38.30 | −3.6% | yes |
+| recall_w10 | 0.183 | 0.025 | 38.65 | −2.8% | yes |
+| floor_g0.95 | 0.183 | 0.018 | 49.37 | +24.2% | no |
+| gate_l0.1_t0.5 | 0.167 | 0.064 | 38.26 | −3.7% | yes |
+| gate_l0.5_t0.5 | 0.167 | 0.130 | 38.36 | −3.5% | yes |
+| recall_w20 | 0.150 | 0.021 | 38.72 | −2.6% | yes |
+
+Baseline PPL for eligibility: 39.75 (Stage-2 control). `ppl_ok` = fractional regression ≤ 5%.
+
+**Picker output** (`best_hypers.json`): best eligible recall = `recall_w3` (0.233); best gate =
+`gate_l0.3_t0.5` (selectivity 0.110); **no floor arm passed PPL gate** (`best_floor_arm: null`).
+Recommended combo for from-scratch: `GSL=0.3, GST=0.5, GFLOOR=0.0, recall_weight=3`.
+
+### Learnings
+
+1. **Hyper-tuning ceiling ~0.23 @2048.** All 13 arms cluster 0.15–0.23; no arm approaches the
+   0.9 ship target. Confirms Stage-2: the bottleneck is not λ/τ/floor knee/recall blend.
+2. **γ_floor knee {0.90–0.97} all give same recall (0.233)** but PPL rises monotonically
+   (45→53). Every floor arm fails `ppl_ok`. Stage-2's γ_floor=0.98 finding generalizes: blanket
+   decay lift is not a free lunch.
+3. **Gate λ scales selectivity, not recall.** λ=0.5 → \|p_c−p_f\|=0.13 (best) but recall@2048
+   drops to 0.167. The gate learns *when* to write; it cannot fix *what happens on write*.
+4. **More recall curriculum hurts.** w3 (0.233) > w10 (0.183) > w20 (0.150). Extra synthetic
+   recall displaces web tokens without improving storage — the substrate cannot absorb the signal.
+5. **Eligible winner is recall_w3**, not a gate arm — recall data slightly edges gate on the
+   primary metric while gate arms win selectivity.
+
+---
+
+## Recall program — Stage-4 from-scratch (2026-07-15/16, RTX PRO 6000)
+
+1B tokens, from scratch (no warm-start), `seq_len=2048`, `batch_size=16`, routing levers ON:
+`state_compete`, `routing_content_aware`, `route_balance_lambda=0.01`, plus hypers from
+`best_hypers.json` (GSL=0.3, GST=0.5, GFLOOR=0.0, recall_weight=3, web_weight=96).
+Script: `scripts/run_recall_fromscratch.sh`.
+Artifacts: `checkpoints_v11_recall_fromscratch/best_run/`, train log
+`logs/v11/recall_fromscratch/train_20260715_231056/`.
+
+### Results
+
+| metric | value | target | pass |
+|--------|-------|--------|------|
+| recall@128 | 0.667 | — | — |
+| recall@512 | 0.217 | — | — |
+| recall@1024 | 0.183 | — | — |
+| recall@2048 | **0.200** | ≥ 0.9 | no |
+| \|p_c−p_f\| | **0.208** | ≥ 0.05 | **yes** |
+| val PPL (best) | 68.70 | — | — |
+| ship | — | — | **no** |
+
+Wall time: 7.66h @ ~37.8k tok/s. Gate selectivity is excellent (4× target) but recall@2048
+barely moved vs warm-start arms (0.20 vs 0.23 best). Routing levers did not unlock the cliff.
+
+### Learnings
+
+1. **Routing levers alone don't fix recall.** `state_compete` + `routing_content_aware` +
+   `route_balance_lambda` gave the best gate selectivity in the program (0.208) but recall@2048
+   stayed at 0.20 — same band as every other configuration.
+2. **From-scratch PPL is higher** (68.7 vs ~39 warm-start) as expected without the 8B-token
+   warm base; behavioral recall is comparable, not better.
+3. **K=3 routing collapse likely persists** — high gate selectivity without recall lift suggests
+   the gate is active but states still don't specialize for distinct bindings.
+
+---
+
+## Recall program — Stage-5 baselines (2026-07-16, RTX PRO 6000)
+
+Behavioral suite (`memory_probes/behavioral.py`, 720 examples, 8-way contrastive, contexts
+{128,512,1024,2048}, positions {0,0.5,1.0}, associations {1,4,8}). Script:
+`scripts/run_recall_baselines.sh`. Artifacts: `logs/v11/recall_baselines/summary.json`,
+`v11_behavior.json`, `mamba_behavior.json`.
+
+### Results (single-assoc recall by context)
+
+| model | params | @128 | @512 | @1024 | @2048 | overall |
+|-------|--------|------|------|-------|-------|---------|
+| V11 from-scratch | 100.9M | 0.85 | 0.35 | 0.35 | **0.35** | 0.21 |
+| Mamba-130m-hf | 129.1M | 1.00 | 1.00 | 1.00 | **1.00** | 0.77 |
+| Transformer | — | — | — | — | — | **skipped** |
+
+**Note:** The verdict script on the same V11 checkpoint reports recall@2048 = **0.20** (mean over
+positions for n_assoc=1 only). The baselines summary uses a different aggregation slice
+(`single_at_max` over all positions/associations at max context) → 0.35. Both are correct for
+their definitions; **metrics must be unified before declaring winners** (Stage-6a).
+
+### Probe breakdown (V11 from-scratch, per-cell accuracy)
+
+| ctx | n_assoc=1 | n_assoc=4 | n_assoc=8 |
+|-----|-----------|-----------|-----------|
+| 128 | 0.667 | 0.317 | **0.083** |
+| 512 | 0.217 | 0.167 | 0.100 |
+| 1024 | 0.183 | 0.200 | 0.083 |
+| 2048 | 0.200 | 0.167 | 0.133 |
+
+| ctx | n_assoc=1 (Mamba) | n_assoc=4 | n_assoc=8 |
+|-----|-------------------|-----------|-----------|
+| 128 | 1.000 | 0.883 | 0.817 |
+| 512 | 1.000 | 0.800 | 0.567 |
+| 1024 | 1.000 | 0.700 | 0.450 |
+| 2048 | 1.000 | 0.633 | 0.383 |
+
+Chance level on this probe: **0.125** (8 candidates). V11 at ctx=128, n_assoc=8 scores **0.083
+(below chance)** — signature of destructive write interference, not distance-limited forgetting.
+
+### Learnings
+
+1. **Mamba comparison is not fair yet.** `state-spaces/mamba-130m-hf` is pretrained on ~300B
+   tokens (Pile); our V11 ran 1B from scratch. This is a **pretrained-vs-scratch** gap, not yet
+   an architecture claim. Matched-budget Mamba/Transformer training on our data is required.
+2. **Transformer baseline was skipped** (`TRANSFORMER_CHECKPOINT` unset in
+   `run_recall_baselines.sh`). Incomplete comparison matrix.
+3. **Interference is the primary failure mode**, visible even at ctx=128: V11 collapses from
+   0.667 (1 assoc) to 0.083 (8 assoc) — below chance. Mamba holds 0.817 at the same cell.
+4. **Distance is the secondary failure:** even with 1 association, V11 drops 0.667→0.200 from
+   ctx 128→2048; Mamba stays at 1.0 for single-assoc across all contexts.
+5. **Mamba also decays with position** (pos=0.0 @2048 = 0.533) but much more slowly than V11.
+
+---
+
+## Recall program — consolidated findings (Stages 2–5)
+
+All 19 trained configurations (5 A/B + 13 hypersweep + 1 from-scratch) sit at **0.15–0.25
+recall@2048** vs **0.125 chance** and vs Mamba ~1.0 (pretrained). Hyperparameter tuning is
+exhausted. Root causes:
+
+| # | finding | evidence | implication |
+|---|---------|----------|-------------|
+| 1 | **Write interference** (primary) | V11 ctx=128 n=8: 0.083 (< chance); Mamba: 0.817 | Additive `S += V⊗K*` superposition collides; need erase-before-write (E2 delta-rule) |
+| 2 | **Indiscriminate decay** (secondary) | Cliff 128→512 even with 1 assoc; mean γ≈0.6–0.8 | Need selective persistence, not blanket γ_floor (PPL +14–32%) |
+| 3 | **Gate lever solved** | Selectivity 0.06→0.21 across program; λ=0.3 best | Keep GSL=0.3/GST=0.5; stop expecting recall from gate alone |
+| 4 | **Recall curriculum capped** | w3 best, w10/w20 worse | Substrate can't convert training signal; fix storage first |
+| 5 | **Routing levers insufficient** | From-scratch: gate 0.208, recall 0.20 | K=3 collapse persists; need mechanism change not balance loss |
+| 6 | **γ_floor not viable** | All knees 0.90–0.97: recall 0.233, PPL fail | Global decay lift keeps noise alive |
+| 7 | **Baselines unfair / incomplete** | Mamba 300B-pretrained; Transformer skipped | Train matched ~100M baselines on our data/budget |
+| 8 | **Metrics inconsistent** | Verdict 0.20 vs summary 0.35 same ckpt | Unify `single_at_max` slice; raise per-cell n (~60) |
+
+### Novel architecture direction (Stage 6 — planned)
+
+Fix recall while staying O(1) and **more** novel, not less:
+
+1. **E2 delta-rule write** — revive `write_mode='delta'` (exists in `v11/model.py`; hung on
+   4090 under `torch.compile`). Erases stale binding before write; attacks interference directly.
+2. **Vault state** — one of K=3 states with γ≈1 (no decay), writable only via surprisal gate.
+   Episodic store + working memory; avoids γ_floor PPL tax.
+3. **Phase addressing** — key-conditioned write phase (not constant per-(head,state) phase) so
+   distinct bindings occupy distinct angles; retrieval by conjugation is phase-matched.
+4. **Capacity micro-tests** — 10M-param models, 100% recall curriculum, ~30M tok, before
+   spending 300M+ token budgets.
+5. **Matched baselines** — ~100M Mamba + Transformer from scratch on identical fineweb+recall
+   mix, 1B tokens, then behavioral suite.
+
+Scripts: extend `scripts/run_recall_pipeline.sh` pattern; see plan
+`recall_program_stage_6` in `.cursor/plans/`.
