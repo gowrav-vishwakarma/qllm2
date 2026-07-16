@@ -1,0 +1,146 @@
+[2026-07-15 22:06:07] Wall clock start: 2026-07-15 22:06:07
+[2026-07-15 22:06:07] ============================================================
+[2026-07-15 22:06:07]   V11: PAM with new memory dynamics
+[2026-07-15 22:06:07]   Preset: v11_e3_k3_chat | Stage: pretrain | Dataset: pretrain_mix
+[2026-07-15 22:06:07] ============================================================
+
+[2026-07-15 22:06:07] Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 3, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.0, 'gate_surprisal_tau': 1.0, 'gate_surprisal_sign': 1.0}
+[2026-07-15 22:06:07] Memory dynamics: decay_mode=head, write_mode=additive, n_states=3, chunk_size=256
+[2026-07-15 22:06:07] Batch size: 16, Epochs: 9999, LR: 0.0001
+[2026-07-15 22:06:07] Token budget: 150,000,000
+
+[2026-07-15 22:06:07] Loading pretrain_mix (seq_len=2048)...
+[2026-07-15 22:06:09] Streaming pretrain blend: sources=['fineweb', 'recall'] weights=[96.0, 20.0] edu>=3 budget=150000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'fineweb': 0, 'recall': 0}
+[2026-07-15 22:06:09] [cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[2026-07-15 22:06:10] [cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+[2026-07-15 22:06:10] Val chunks: 121
+[2026-07-15 22:06:10] Val: in-distro holdout (16 batches), WikiText secondary (8 batches)
+[2026-07-15 22:06:10] Train batches: streaming, Val batches: 16
+
+[2026-07-15 22:06:11] Model parameters: {'embedding (tied)': 38600448, 'blocks': 61649552, 'norms': 768, 'lm_head': 296064, 'total': 100546832}
+[2026-07-15 22:06:11] Total: 100,546,832 (100.5M)
+
+[2026-07-15 22:06:11] Loading weights from checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt...
+[2026-07-15 22:06:12] Param groups: 212 tensors (100,495,104) with wd, 181 tensors (51,728) without
+[2026-07-15 22:06:12] Compiling model (mode=default)...
+[2026-07-15 22:06:13]   fused_ce: compiled _hidden_to_lm (logits never materialized)
+
+[2026-07-15 22:06:13] Training on cuda
+[2026-07-15 22:06:13] Parameters: {'embedding (tied)': 38600448, 'blocks': 61649552, 'norms': 768, 'lm_head': 296064, 'total': 100546832}
+[2026-07-15 22:06:13] Total: 100,546,832 (100.5M)
+[2026-07-15 22:06:13] Epochs: 1..9999, Batches/epoch: stream
+[2026-07-15 22:06:13] Periodic checkpoint: every 2000 steps -> latest.pt
+
+
+[2026-07-15 22:06:13] ============================================================
+[2026-07-15 22:06:13] Epoch 1/9999
+[2026-07-15 22:06:13] ============================================================
+[2026-07-15 22:06:13] [fineweb] local parquet stream: 15 shards under data/fineweb-edu/sample-10BT
+[2026-07-15 22:06:58]   [1] 0 loss=3.4254 ppl=30.7 lr=2.00e-07 | 730 tok/s (avg 730) ETA n/a | GPU 2.6/41.9GB | gtok=32768
+[2026-07-15 22:07:38]   [1] 50 loss=3.1709 ppl=23.8 lr=1.02e-05 | 41037 tok/s (avg 19705) ETA n/a | GPU 2.6/42.8GB | gtok=1671168
+[2026-07-15 22:08:18]   [1] 100 loss=3.0878 ppl=21.9 lr=2.02e-05 | 40531 tok/s (avg 26427) ETA n/a | GPU 2.6/42.8GB | gtok=3309568
+[2026-07-15 22:08:58]   [1] 150 loss=3.2273 ppl=25.2 lr=3.02e-05 | 40868 tok/s (avg 29929) ETA n/a | GPU 2.6/42.8GB | gtok=4947968
+[2026-07-15 22:09:38]   [1] 200 loss=3.3536 ppl=28.6 lr=4.02e-05 | 40838 tok/s (avg 32059) ETA n/a | GPU 2.6/42.8GB | gtok=6586368
+[2026-07-15 22:10:19]   [1] 250 loss=3.3739 ppl=29.2 lr=5.02e-05 | 40436 tok/s (avg 33439) ETA n/a | GPU 2.6/42.8GB | gtok=8224768
+[2026-07-15 22:10:59]   [1] 300 loss=3.3118 ppl=27.4 lr=6.02e-05 | 40755 tok/s (avg 34467) ETA n/a | GPU 2.6/42.8GB | gtok=9863168
+[2026-07-15 22:11:40]   [1] 350 loss=3.2918 ppl=26.9 lr=7.02e-05 | 40412 tok/s (avg 35205) ETA n/a | GPU 2.6/42.8GB | gtok=11501568
+[2026-07-15 22:12:20]   [1] 400 loss=3.2460 ppl=25.7 lr=8.02e-05 | 40753 tok/s (avg 35813) ETA n/a | GPU 2.6/42.8GB | gtok=13139968
+[2026-07-15 22:13:01]   [1] 450 loss=3.0218 ppl=20.5 lr=9.02e-05 | 40387 tok/s (avg 36268) ETA n/a | GPU 2.6/42.8GB | gtok=14778368
+[2026-07-15 22:13:41]   [1] 500 loss=3.5056 ppl=33.3 lr=1.00e-04 | 40708 tok/s (avg 36667) ETA n/a | GPU 2.6/42.8GB | gtok=16416768
+[2026-07-15 22:14:21]   [1] 550 loss=3.1999 ppl=24.5 lr=1.00e-04 | 40349 tok/s (avg 36973) ETA n/a | GPU 2.6/42.8GB | gtok=18055168
+[2026-07-15 22:15:02]   [1] 600 loss=3.1336 ppl=23.0 lr=9.99e-05 | 40680 tok/s (avg 37256) ETA n/a | GPU 2.6/42.8GB | gtok=19693568
+[2026-07-15 22:15:42]   [1] 650 loss=3.2628 ppl=26.1 lr=9.97e-05 | 40662 tok/s (avg 37497) ETA n/a | GPU 2.6/42.8GB | gtok=21331968
+[2026-07-15 22:16:23]   [1] 700 loss=3.2040 ppl=24.6 lr=9.95e-05 | 40282 tok/s (avg 37683) ETA n/a | GPU 2.6/42.8GB | gtok=22970368
+[2026-07-15 22:17:03]   [1] 750 loss=3.5142 ppl=33.6 lr=9.93e-05 | 40654 tok/s (avg 37867) ETA n/a | GPU 2.6/42.8GB | gtok=24608768
+[2026-07-15 22:17:44]   [1] 800 loss=3.2119 ppl=24.8 lr=9.89e-05 | 40352 tok/s (avg 38013) ETA n/a | GPU 2.6/42.8GB | gtok=26247168
+[2026-07-15 22:18:24]   [1] 850 loss=2.9448 ppl=19.0 lr=9.86e-05 | 40312 tok/s (avg 38141) ETA n/a | GPU 2.6/42.8GB | gtok=27885568
+[2026-07-15 22:19:04]   [1] 900 loss=3.2982 ppl=27.1 lr=9.81e-05 | 40704 tok/s (avg 38275) ETA n/a | GPU 2.6/42.8GB | gtok=29523968
+[2026-07-15 22:19:45]   [1] 950 loss=3.1987 ppl=24.5 lr=9.76e-05 | 40643 tok/s (avg 38392) ETA n/a | GPU 2.6/42.8GB | gtok=31162368
+[2026-07-15 22:20:25]   [1] 1000 loss=3.2401 ppl=25.5 lr=9.71e-05 | 40296 tok/s (avg 38483) ETA n/a | GPU 2.6/42.8GB | gtok=32800768
+[2026-07-15 22:21:06]   [1] 1050 loss=3.5265 ppl=34.0 lr=9.65e-05 | 40623 tok/s (avg 38580) ETA n/a | GPU 2.6/42.8GB | gtok=34439168
+[2026-07-15 22:21:46]   [1] 1100 loss=2.9902 ppl=19.9 lr=9.58e-05 | 40321 tok/s (avg 38655) ETA n/a | GPU 2.6/42.8GB | gtok=36077568
+[2026-07-15 22:22:27]   [1] 1150 loss=3.3889 ppl=29.6 lr=9.51e-05 | 40635 tok/s (avg 38737) ETA n/a | GPU 2.6/42.8GB | gtok=37715968
+[2026-07-15 22:23:07]   [1] 1200 loss=3.2790 ppl=26.5 lr=9.43e-05 | 40307 tok/s (avg 38800) ETA n/a | GPU 2.6/42.8GB | gtok=39354368
+[2026-07-15 22:23:48]   [1] 1250 loss=3.3897 ppl=29.7 lr=9.35e-05 | 40633 tok/s (avg 38870) ETA n/a | GPU 2.6/42.8GB | gtok=40992768
+[2026-07-15 22:24:28]   [1] 1300 loss=3.2141 ppl=24.9 lr=9.26e-05 | 40275 tok/s (avg 38923) ETA n/a | GPU 2.6/42.8GB | gtok=42631168
+[2026-07-15 22:25:09]   [1] 1350 loss=3.0159 ppl=20.4 lr=9.17e-05 | 40662 tok/s (avg 38984) ETA n/a | GPU 2.6/42.8GB | gtok=44269568
+[2026-07-15 22:25:49]   [1] 1400 loss=3.0257 ppl=20.6 lr=9.07e-05 | 40296 tok/s (avg 39030) ETA n/a | GPU 2.6/42.8GB | gtok=45907968
+[2026-07-15 22:26:30]   [1] 1450 loss=3.5292 ppl=34.1 lr=8.97e-05 | 40668 tok/s (avg 39084) ETA n/a | GPU 2.6/42.8GB | gtok=47546368
+[2026-07-15 22:27:10]   [1] 1500 loss=2.8982 ppl=18.1 lr=8.87e-05 | 40346 tok/s (avg 39125) ETA n/a | GPU 2.6/42.8GB | gtok=49184768
+[2026-07-15 22:27:50]   [1] 1550 loss=3.0974 ppl=22.1 lr=8.75e-05 | 40702 tok/s (avg 39174) ETA n/a | GPU 2.6/42.8GB | gtok=50823168
+[2026-07-15 22:28:31]   [1] 1600 loss=3.2701 ppl=26.3 lr=8.64e-05 | 40338 tok/s (avg 39209) ETA n/a | GPU 2.6/42.8GB | gtok=52461568
+[2026-07-15 22:29:11]   [1] 1650 loss=3.2432 ppl=25.6 lr=8.52e-05 | 40675 tok/s (avg 39252) ETA n/a | GPU 2.6/42.8GB | gtok=54099968
+[2026-07-15 22:29:52]   [1] 1700 loss=3.3505 ppl=28.5 lr=8.40e-05 | 40278 tok/s (avg 39281) ETA n/a | GPU 2.6/42.8GB | gtok=55738368
+[2026-07-15 22:30:32]   [1] 1750 loss=3.3976 ppl=29.9 lr=8.27e-05 | 40670 tok/s (avg 39319) ETA n/a | GPU 2.6/42.8GB | gtok=57376768
+[2026-07-15 22:31:12]   [1] 1800 loss=3.3819 ppl=29.4 lr=8.14e-05 | 40734 tok/s (avg 39357) ETA n/a | GPU 2.6/42.8GB | gtok=59015168
+[2026-07-15 22:31:53]   [1] 1850 loss=2.9326 ppl=18.8 lr=8.00e-05 | 40314 tok/s (avg 39383) ETA n/a | GPU 2.6/42.8GB | gtok=60653568
+[2026-07-15 22:32:33]   [1] 1900 loss=3.2939 ppl=26.9 lr=7.86e-05 | 40680 tok/s (avg 39416) ETA n/a | GPU 2.6/42.8GB | gtok=62291968
+[2026-07-15 22:33:14]   [1] 1950 loss=3.2111 ppl=24.8 lr=7.72e-05 | 40310 tok/s (avg 39438) ETA n/a | GPU 2.6/42.8GB | gtok=63930368
+[2026-07-15 22:33:54] Saved checkpoint: checkpoints_v11_recall_hypersweep/recall_w20/latest.pt
+[2026-07-15 22:33:54]   [checkpoint @ step 2000, 65,536,000 tok]
+[2026-07-15 22:33:55]   [1] 2000 loss=3.1752 ppl=23.9 lr=7.57e-05 | 40075 tok/s (avg 39454) ETA n/a | GPU 2.6/42.8GB | gtok=65568768
+[2026-07-15 22:34:36]   [1] 2050 loss=2.9703 ppl=19.5 lr=7.42e-05 | 40316 tok/s (avg 39474) ETA n/a | GPU 2.6/42.8GB | gtok=67207168
+[2026-07-15 22:35:16]   [1] 2100 loss=3.5003 ppl=33.1 lr=7.27e-05 | 40617 tok/s (avg 39501) ETA n/a | GPU 2.6/42.8GB | gtok=68845568
+[2026-07-15 22:35:57]   [1] 2150 loss=3.2404 ppl=25.5 lr=7.12e-05 | 40307 tok/s (avg 39519) ETA n/a | GPU 2.6/42.8GB | gtok=70483968
+[2026-07-15 22:36:37]   [1] 2200 loss=3.1372 ppl=23.0 lr=6.96e-05 | 40600 tok/s (avg 39543) ETA n/a | GPU 2.6/42.8GB | gtok=72122368
+[2026-07-15 22:37:18]   [1] 2250 loss=3.2723 ppl=26.4 lr=6.80e-05 | 40266 tok/s (avg 39559) ETA n/a | GPU 2.6/42.8GB | gtok=73760768
+[2026-07-15 22:37:58]   [1] 2300 loss=3.3252 ppl=27.8 lr=6.64e-05 | 40584 tok/s (avg 39581) ETA n/a | GPU 2.6/42.8GB | gtok=75399168
+[2026-07-15 22:38:39]   [1] 2350 loss=2.8450 ppl=17.2 lr=6.48e-05 | 40249 tok/s (avg 39595) ETA n/a | GPU 2.6/42.8GB | gtok=77037568
+[2026-07-15 22:39:19]   [1] 2400 loss=3.4705 ppl=32.2 lr=6.31e-05 | 40563 tok/s (avg 39614) ETA n/a | GPU 2.6/42.8GB | gtok=78675968
+[2026-07-15 22:39:59]   [1] 2450 loss=3.4504 ppl=31.5 lr=6.15e-05 | 40587 tok/s (avg 39634) ETA n/a | GPU 2.6/42.8GB | gtok=80314368
+[2026-07-15 22:40:40]   [1] 2500 loss=3.0543 ppl=21.2 lr=5.98e-05 | 40271 tok/s (avg 39646) ETA n/a | GPU 2.6/42.8GB | gtok=81952768
+[2026-07-15 22:41:20]   [1] 2550 loss=2.7385 ppl=15.5 lr=5.81e-05 | 40634 tok/s (avg 39665) ETA n/a | GPU 2.6/42.8GB | gtok=83591168
+[2026-07-15 22:42:01]   [1] 2600 loss=3.1217 ppl=22.7 lr=5.64e-05 | 40290 tok/s (avg 39677) ETA n/a | GPU 2.6/42.8GB | gtok=85229568
+[2026-07-15 22:42:41]   [1] 2650 loss=3.4613 ppl=31.9 lr=5.47e-05 | 40608 tok/s (avg 39694) ETA n/a | GPU 2.6/42.8GB | gtok=86867968
+[2026-07-15 22:43:22]   [1] 2700 loss=2.6536 ppl=14.2 lr=5.30e-05 | 40264 tok/s (avg 39704) ETA n/a | GPU 2.6/42.8GB | gtok=88506368
+[2026-07-15 22:44:03]   [1] 2750 loss=3.1174 ppl=22.6 lr=5.13e-05 | 40595 tok/s (avg 39720) ETA n/a | GPU 2.6/42.8GB | gtok=90144768
+[2026-07-15 22:44:43]   [1] 2800 loss=3.2578 ppl=26.0 lr=4.96e-05 | 40270 tok/s (avg 39730) ETA n/a | GPU 2.6/42.8GB | gtok=91783168
+[2026-07-15 22:45:23]   [1] 2850 loss=3.1411 ppl=23.1 lr=4.79e-05 | 40670 tok/s (avg 39746) ETA n/a | GPU 2.6/42.8GB | gtok=93421568
+[2026-07-15 22:46:04]   [1] 2900 loss=3.0719 ppl=21.6 lr=4.61e-05 | 40645 tok/s (avg 39761) ETA n/a | GPU 2.6/42.8GB | gtok=95059968
+[2026-07-15 22:46:44]   [1] 2950 loss=3.2174 ppl=25.0 lr=4.44e-05 | 40264 tok/s (avg 39770) ETA n/a | GPU 2.6/42.8GB | gtok=96698368
+[2026-07-15 22:47:25]   [1] 3000 loss=3.2883 ppl=26.8 lr=4.27e-05 | 40602 tok/s (avg 39783) ETA n/a | GPU 2.6/42.8GB | gtok=98336768
+[2026-07-15 22:48:06]   [1] 3050 loss=3.1429 ppl=23.2 lr=4.10e-05 | 40263 tok/s (avg 39791) ETA n/a | GPU 2.6/42.8GB | gtok=99975168
+[2026-07-15 22:48:46]   [1] 3100 loss=3.3660 ppl=29.0 lr=3.94e-05 | 40571 tok/s (avg 39803) ETA n/a | GPU 2.6/42.8GB | gtok=101613568
+[2026-07-15 22:49:27]   [1] 3150 loss=3.2143 ppl=24.9 lr=3.77e-05 | 40250 tok/s (avg 39810) ETA n/a | GPU 2.6/42.8GB | gtok=103251968
+[2026-07-15 22:50:07]   [1] 3200 loss=3.1218 ppl=22.7 lr=3.60e-05 | 40629 tok/s (avg 39823) ETA n/a | GPU 2.6/42.8GB | gtok=104890368
+[2026-07-15 22:50:48]   [1] 3250 loss=3.2803 ppl=26.6 lr=3.44e-05 | 40288 tok/s (avg 39830) ETA n/a | GPU 2.6/42.8GB | gtok=106528768
+[2026-07-15 22:51:28]   [1] 3300 loss=3.2378 ppl=25.5 lr=3.28e-05 | 40554 tok/s (avg 39841) ETA n/a | GPU 2.6/42.8GB | gtok=108167168
+[2026-07-15 22:52:08]   [1] 3350 loss=3.4373 ppl=31.1 lr=3.12e-05 | 40563 tok/s (avg 39851) ETA n/a | GPU 2.6/42.8GB | gtok=109805568
+[2026-07-15 22:52:49]   [1] 3400 loss=3.1896 ppl=24.3 lr=2.96e-05 | 40270 tok/s (avg 39857) ETA n/a | GPU 2.6/42.8GB | gtok=111443968
+[2026-07-15 22:53:30]   [1] 3450 loss=3.1756 ppl=23.9 lr=2.80e-05 | 40269 tok/s (avg 39863) ETA n/a | GPU 2.6/42.8GB | gtok=113082368
+[2026-07-15 22:54:10]   [1] 3500 loss=3.1511 ppl=23.4 lr=2.65e-05 | 40663 tok/s (avg 39874) ETA n/a | GPU 2.6/42.8GB | gtok=114720768
+[2026-07-15 22:54:51]   [1] 3550 loss=3.1800 ppl=24.0 lr=2.50e-05 | 40278 tok/s (avg 39880) ETA n/a | GPU 2.6/42.8GB | gtok=116359168
+[2026-07-15 22:55:31]   [1] 3600 loss=3.1394 ppl=23.1 lr=2.35e-05 | 40626 tok/s (avg 39890) ETA n/a | GPU 2.6/42.8GB | gtok=117997568
+[2026-07-15 22:56:12]   [1] 3650 loss=2.9217 ppl=18.6 lr=2.21e-05 | 40277 tok/s (avg 39895) ETA n/a | GPU 2.6/42.8GB | gtok=119635968
+[2026-07-15 22:56:52]   [1] 3700 loss=3.3334 ppl=28.0 lr=2.07e-05 | 40595 tok/s (avg 39905) ETA n/a | GPU 2.6/42.8GB | gtok=121274368
+[2026-07-15 22:57:33]   [1] 3750 loss=3.3008 ppl=27.1 lr=1.93e-05 | 40251 tok/s (avg 39909) ETA n/a | GPU 2.6/42.8GB | gtok=122912768
+[2026-07-15 22:58:13]   [1] 3800 loss=2.9518 ppl=19.1 lr=1.80e-05 | 40641 tok/s (avg 39919) ETA n/a | GPU 2.6/42.8GB | gtok=124551168
+[2026-07-15 22:58:53]   [1] 3850 loss=3.2517 ppl=25.8 lr=1.67e-05 | 40645 tok/s (avg 39928) ETA n/a | GPU 2.6/42.8GB | gtok=126189568
+[2026-07-15 22:59:34]   [1] 3900 loss=2.9581 ppl=19.3 lr=1.54e-05 | 40333 tok/s (avg 39933) ETA n/a | GPU 2.6/42.8GB | gtok=127827968
+[2026-07-15 23:00:14]   [1] 3950 loss=3.2606 ppl=26.1 lr=1.42e-05 | 40634 tok/s (avg 39942) ETA n/a | GPU 2.6/42.8GB | gtok=129466368
+[2026-07-15 23:00:56] Saved checkpoint: checkpoints_v11_recall_hypersweep/recall_w20/latest.pt
+[2026-07-15 23:00:56]   [checkpoint @ step 4000, 131,072,000 tok]
+[2026-07-15 23:00:57]   [1] 4000 loss=2.7488 ppl=15.6 lr=1.30e-05 | 38543 tok/s (avg 39924) ETA n/a | GPU 2.6/42.8GB | gtok=131104768
+[2026-07-15 23:01:37]   [1] 4050 loss=3.5580 ppl=35.1 lr=1.19e-05 | 40634 tok/s (avg 39932) ETA n/a | GPU 2.6/42.8GB | gtok=132743168
+[2026-07-15 23:02:18]   [1] 4100 loss=3.2002 ppl=24.5 lr=1.08e-05 | 40615 tok/s (avg 39941) ETA n/a | GPU 2.6/42.8GB | gtok=134381568
+[2026-07-15 23:02:58]   [1] 4150 loss=3.2498 ppl=25.8 lr=9.76e-06 | 40309 tok/s (avg 39945) ETA n/a | GPU 2.6/42.8GB | gtok=136019968
+[2026-07-15 23:03:39]   [1] 4200 loss=3.1280 ppl=22.8 lr=8.77e-06 | 40660 tok/s (avg 39953) ETA n/a | GPU 2.6/42.8GB | gtok=137658368
+[2026-07-15 23:04:19]   [1] 4250 loss=2.9899 ppl=19.9 lr=7.82e-06 | 40343 tok/s (avg 39958) ETA n/a | GPU 2.6/42.8GB | gtok=139296768
+[2026-07-15 23:04:59]   [1] 4300 loss=3.3876 ppl=29.6 lr=6.93e-06 | 40645 tok/s (avg 39966) ETA n/a | GPU 2.6/42.8GB | gtok=140935168
+[2026-07-15 23:05:40]   [1] 4350 loss=2.9411 ppl=18.9 lr=6.08e-06 | 40262 tok/s (avg 39969) ETA n/a | GPU 2.6/42.8GB | gtok=142573568
+[2026-07-15 23:06:20]   [1] 4400 loss=3.2646 ppl=26.2 lr=5.29e-06 | 40667 tok/s (avg 39977) ETA n/a | GPU 2.6/42.8GB | gtok=144211968
+[2026-07-15 23:07:01]   [1] 4450 loss=2.8720 ppl=17.7 lr=4.55e-06 | 40648 tok/s (avg 39984) ETA n/a | GPU 2.6/42.8GB | gtok=145850368
+[2026-07-15 23:07:41]   [1] 4500 loss=3.2130 ppl=24.9 lr=3.86e-06 | 40289 tok/s (avg 39988) ETA n/a | GPU 2.6/42.8GB | gtok=147488768
+[2026-07-15 23:08:22]   [1] 4550 loss=3.1632 ppl=23.6 lr=3.22e-06 | 40678 tok/s (avg 39995) ETA n/a | GPU 2.6/42.8GB | gtok=149127168
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:38] Epoch 1/9999 | Train Loss: 3.2050 PPL: 24.66 | 39723 tok/s | Time: 3776.2s (150,001,664 tok) | Val Loss: 3.6564 PPL: 38.72 Acc: 0.360 | Wiki PPL: 79.95 *best*
+[2026-07-15 23:09:39] Saved checkpoint: checkpoints_v11_recall_hypersweep/recall_w20/best_model.pt
+
+[2026-07-15 23:09:39] Stopping: token budget 150,000,000 reached.
+[2026-07-15 23:09:40] Saved checkpoint: checkpoints_v11_recall_hypersweep/recall_w20/final_model.pt
+
+[2026-07-15 23:09:40] Training complete (token budget)!
+[2026-07-15 23:09:40] Total wall time: 3806.5s (1.06h)
+[2026-07-15 23:09:40] Best Val Loss: 3.6564, Best Val PPL: 38.72
+
+[2026-07-15 23:09:40] Wall clock end: 2026-07-15 23:09:40
