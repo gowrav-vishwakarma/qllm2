@@ -81,3 +81,32 @@ lang rel mean=9.28, lang/rand mean=94x, beats random on all 50 seeds. Consistent
 ## Interpretation (short)
 
 The intrinsic math probes (capacity, NIAH ceilings) show PAM *can* store; the trained probes show this ~100M checkpoint *did not learn to use* that capacity: gate is not content-selective, K=3 routing collapsed, only ~24% of state rank used, and behavioral recall collapses beyond 128 tokens. Mamba (similar params, fixed state) realizes its mechanism far better. This is the Phase-A-ceiling vs Phase-B-realization gap the paper predicted.
+
+---
+
+## Recall program follow-up (2026-07-14–16, RTX PRO 6000)
+
+Full write-up: [v11/EXPERIMENTS_V11.md](../../../v11/EXPERIMENTS_V11.md) (Stage-2 through consolidated findings).
+
+Ran on this host (96 GB, no HF auth — local FineWeb parquet via `FINEWEB_LOCAL_DIR`):
+
+| stage | what | best recall@2048 | ship |
+|-------|------|------------------|------|
+| Stage-2 A/B | 5 arms × 300M warm-start | 0.25 (combo/floor) | no |
+| Stage-3 hypersweep | 13 arms × 150M (gate/floor/recall blend) | 0.233 (recall_w3, floor_g0.90–0.97) | no |
+| Stage-4 from-scratch | 1B tok + routing levers + best hypers | 0.20 | no |
+| Stage-5 baselines | V11 from-scratch vs Mamba-130m-hf (pretrained) | V11 0.20–0.35*, Mamba 1.0 | incomplete |
+
+\* Verdict script (n_assoc=1 slice) = 0.20; baselines summary (all positions/assocs at max ctx) = 0.35 — aggregation mismatch, fix in Stage 6.
+
+**New findings beyond this Phase-B snapshot:**
+
+1. **Write interference is primary** — V11 ctx=128 n_assoc=8 = 0.083 (below 0.125 chance); Mamba = 0.817 at same cell. Additive superposition writes collide.
+2. **γ_floor not viable** — all knees 0.90–0.97 give recall 0.233 but PPL +14–32%; fails eligibility gate.
+3. **Gate-surprisal solved** — selectivity up to 0.208 (from-scratch); recall still flat. Gate is necessary not sufficient.
+4. **More recall curriculum hurts** — w3 > w10 > w20; substrate cannot absorb signal until storage fixed.
+5. **Mamba baseline unfair** — compared against 300B-pretrained weights; matched from-scratch baselines pending.
+6. **Transformer baseline skipped** — same as this run.
+
+**Stage 6 direction:** E2 delta-write, vault state (selective no-decay), phase addressing; capacity micro-tests first. See `RECALL_PROGRAM.md` and `.cursor/plans/recall_program_stage_6_*.plan.md`.
+
