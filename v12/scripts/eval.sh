@@ -4,7 +4,9 @@
 #   1. PPL on WikiText-103 val + a DCLM-edu holdout via v12.eval_checkpoints.
 #   2. Dynamic-head report: learned/open head count per layer (hard-concrete gate),
 #      so you can see how many heads each grammar/fact/reasoning group kept.
-#   3. Baseline reference: a matched ~100M GPT-2 Transformer (v6/transformer_baseline.py)
+#   3. Behavioral recall: single_assoc@2048 (+ full grid) via v12.eval_recall, the
+#      held-out key->value test the fact module targets (Mamba ~1.0 reference).
+#   4. Baseline reference: a matched ~100M GPT-2 Transformer (v6/transformer_baseline.py)
 #      and Mamba are the apples-to-apples references reported in V11 (train them on
 #      the same pipeline for a head-to-head number).
 #
@@ -12,8 +14,10 @@
 #   v12/scripts/eval.sh ckpt1.pt [ckpt2.pt ...]
 #   v12/scripts/eval.sh packed_v12/model.pt
 #   LABELS=wiki,dclm SEQ=2048 BATCH=18 v12/scripts/eval.sh best_model.pt
+#   RECALL=0 v12/scripts/eval.sh best_model.pt   # skip the recall eval
 #
-# Env: PY, LABELS, SEQ, BATCH, GATE_THRESHOLD.
+# Env: PY, LABELS, SEQ, BATCH, GATE_THRESHOLD, RECALL, RECALL_CTX, RECALL_NASSOC,
+#      RECALL_TRIALS.
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -24,6 +28,10 @@ LABELS="${LABELS:-wiki,dclm}"
 SEQ="${SEQ:-2048}"
 BATCH="${BATCH:-18}"
 GATE_THRESHOLD="${GATE_THRESHOLD:-1e-3}"
+RECALL="${RECALL:-1}"
+RECALL_CTX="${RECALL_CTX:-128,512,1024,2048}"
+RECALL_NASSOC="${RECALL_NASSOC:-1,4,8}"
+RECALL_TRIALS="${RECALL_TRIALS:-60}"
 
 if [ "$#" -lt 1 ]; then
   echo "Usage: $0 <checkpoint> [more checkpoints ...]"
@@ -58,6 +66,17 @@ for i in range(n_layers):
         print(f"  layer {i:>2} [{grp:<14}] (no head gate; fixed heads)")
 PY
 done
+
+if [ "$RECALL" != "0" ]; then
+  echo
+  echo "== Behavioral recall (single_assoc@2048; held-out KEYS/VALUES) =="
+  for ckpt in "$@"; do
+    echo "-- $ckpt"
+    "$PY" -m v12.eval_recall --checkpoint "$ckpt" \
+      --context-lengths "$RECALL_CTX" --association-counts "$RECALL_NASSOC" \
+      --trials "$RECALL_TRIALS"
+  done
+fi
 
 echo
 echo "== Baselines (references) =="

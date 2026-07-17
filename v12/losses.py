@@ -95,6 +95,22 @@ register_stage_loss(StageLoss(
     },
 ))
 
+# Fact-recall: answer-masked CE (the loader supplies loss_mask on value tokens)
+# + gate-surprisal write program + an in-batch hard-negative contrastive term so
+# the queried value outranks sibling answers. Requires --fused_ce (auto-enabled
+# by v12.train when a recall objective is on) and --dataset fact.
+register_stage_loss(StageLoss(
+    name='ce_fact',
+    description='Answer-masked CE + gate-surprisal + hard-negative contrastive (fact stage).',
+    config_overrides={
+        'gate_surprisal_lambda': 0.3,
+        'gate_surprisal_tau': 0.5,
+        'gate_surprisal_sign': 1.0,
+        'fact_contrastive_lambda': 0.5,
+        'fact_contrastive_tau': 1.0,
+    },
+))
+
 # Pruning: CE + hard-concrete L0 head-gate pressure so the effective head count
 # is discovered for this stage's layers. Pair with a high n_heads budget.
 register_stage_loss(StageLoss(

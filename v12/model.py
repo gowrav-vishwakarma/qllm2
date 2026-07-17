@@ -101,6 +101,13 @@ class V12Config:
     #   direction and drives (p_content - p_filler) NEGATIVE. -1 flips it to the
     #   probe's "protect content more" convention. Default +1 optimizes for recall.
     gate_surprisal_sign: float = 1.0
+    # fact_contrastive_lambda: weight of an in-batch hard-negative contrastive term
+    #   at masked answer positions (fact stage). At each supervised value token the
+    #   correct value must outrank the OTHER answer-value tokens present in the batch
+    #   (hard negatives), sharpening key->value binding beyond plain masked CE.
+    #   0 disables. Consumed by the V7 trainer fused branch (needs --fused_ce).
+    fact_contrastive_lambda: float = 0.0
+    fact_contrastive_tau: float = 1.0   # softmax temperature for the contrastive logits
     # Stage-6 architecture levers (defaults OFF = bit-identical to prior behaviour).
     # vault_state: pin one of the K states to γ≈1 (no decay); writes still GSP-gated.
     vault_state: bool = False
@@ -1008,20 +1015,27 @@ class V12PAMLayer(nn.Module):
                     # Ablation: K-loop multistate without D̃ collapse.
                     output, new_state = self._forward_multistate(x, queries, keys, values, head_dim)
             elif self.write_mode == 'delta':
-                # Ablation E2 — not used by winner.
-                decay_gamma, protected_values = self._gamma_and_vprime(x, values)
+                # Delta fact-band (single-state, error-correcting write). Pass the
+                # vault index so a vault_state delta band is also no-decay.
+                decay_gamma, protected_values = self._gamma_and_vprime(
+                    x, values, state_idx=self.vault_state_idx
+                )
                 write_beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)  # [B,H,T]
                 output, new_state = self._forward_delta(
                     queries, keys, protected_values, decay_gamma, write_beta, head_dim
                 )
             elif self.decay_mode == 'per_channel':
                 # Ablation E1 — not used by winner.
-                decay_gamma, protected_values = self._gamma_and_vprime(x, values)
+                decay_gamma, protected_values = self._gamma_and_vprime(
+                    x, values, state_idx=self.vault_state_idx
+                )
                 output, new_state = self._forward_chunked_perchannel(
                     queries, keys, protected_values, decay_gamma, head_dim
                 )
             else:
-                decay_gamma, protected_values = self._gamma_and_vprime(x, values)
+                decay_gamma, protected_values = self._gamma_and_vprime(
+                    x, values, state_idx=self.vault_state_idx
+                )
                 if self.chunk_size > 0 and seq_len > self.chunk_size:
                     output, new_state = self._forward_chunked_head(
                         queries, keys, protected_values, decay_gamma, head_dim
@@ -1248,7 +1262,8 @@ class V12PAMLayer(nn.Module):
                 continue
 
             decay_gamma, protected_values = self._gamma_and_vprime(
-                token_input, values[:, :, time_idx:time_idx + 1]
+                token_input, values[:, :, time_idx:time_idx + 1],
+                state_idx=self.vault_state_idx,
             )
             decay_gamma_t = decay_gamma[:, :, 0]  # [B,H] or [B,H,d]
             protected_value_t = protected_values[:, :, 0]
@@ -1640,6 +1655,35 @@ class V12LM(nn.Module):
             chunk=chunk, ignore_index=ignore_index,
         )
 
+    def fact_contrastive_from_lm(self, lm, labels, loss_mask, tau: float = 1.0):
+        """In-batch hard-negative contrastive recall loss at masked answer tokens.
+
+        At every supervised position (``loss_mask==1``, i.e. a fact value token),
+        the correct value token must outrank the OTHER answer-value tokens present
+        in the batch. Negatives are exactly the sibling answer tokens (semantically
+        hard — all plausible values in the same fact-recall format), so this pushes
+        genuine key->value discrimination beyond what plain masked CE gives.
+
+        Uses the tied head over a tiny candidate set (unique batch answers), so it
+        never materializes full-vocab logits. Returns 0 if <2 distinct answers.
+        """
+        mask = loss_mask.reshape(-1).bool()
+        if mask.sum() < 1:
+            return torch.zeros((), device=labels.device)
+        hidden = torch.cat([real_part(lm), imag_part(lm)], dim=-1)
+        hidden = hidden.reshape(-1, hidden.shape[-1])[mask]           # [M, D]
+        weight = torch.cat(
+            [self.embed.embed_real.weight, self.embed.embed_imag.weight], dim=-1
+        )                                                            # [V, D]
+        targets = labels.reshape(-1)[mask]                            # [M]
+        cand = torch.unique(targets)                                 # [C]
+        if cand.numel() < 2:
+            return torch.zeros((), device=labels.device)
+        logits = (hidden @ weight[cand].t()) / max(tau, 1e-6)        # [M, C]
+        # class index of each target within the candidate set
+        tgt_idx = torch.searchsorted(cand, targets)
+        return torch.nn.functional.cross_entropy(logits.float(), tgt_idx)
+
     def fused_ce_loss(self, input_ids, labels, loss_mask=None, ignore_index=-100,
                       chunk: int = 4096):
         """Convenience eager path: hidden stack + chunked CE (exact == forward+CE)."""
@@ -1894,6 +1938,19 @@ PRESETS = {
     'v12_factband': _base_flat(
         n_states=3, state_dt_spread=2.0, vocab_size=50261, gate_content_aware=True,
         vault_state=True, vault_state_idx=0, write_phase_address=True,
+        gate_surprisal_lambda=0.3, gate_surprisal_tau=0.5,
+    ),
+    # Delta "fact-band": single-state ERROR-CORRECTING write (erases the stale
+    # binding before writing the new one) + vault (no-decay) + per-head phase
+    # addressing + dynamic head budget. This is the fact group the curriculum
+    # GROWS on a frozen grammar base (write_mode='delta' only runs at n_states=1,
+    # so the fact bands are single-state delta layers stacked on the K=3 additive
+    # grammar substrate). A/B partner is the additive v12_factband above.
+    'v12_factband_dyn': _base_flat(
+        n_heads=16, head_dim=64, n_states=1, vocab_size=50261,
+        write_mode='delta', delta_chunk=64, gate_content_aware=True,
+        vault_state=True, vault_state_idx=0, write_phase_address=True,
+        head_gate=True, head_gate_l0_lambda=0.001,
         gate_surprisal_lambda=0.3, gate_surprisal_tau=0.5,
     ),
 

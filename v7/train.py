@@ -251,6 +251,8 @@ class V7Trainer:
         # [B*T, vocab] logits tensor. Requires a model exposing `_hidden_to_lm`
         # (the stack up to the pre-logit complex hidden) and `ce_from_lm`.
         self._raw_model = model
+        self._last_gate_loss = 0.0
+        self._last_contrastive_loss = 0.0
         self.fused_ce = fused_ce and hasattr(model, 'ce_from_lm') and hasattr(model, '_hidden_to_lm')
         self.fused_ce_chunk = fused_ce_chunk
         if fused_ce and not self.fused_ce:
@@ -443,6 +445,19 @@ class V7Trainer:
                     )
                     loss = loss + gsl * gate_loss
                     self._last_gate_loss = float(gate_loss.detach())
+                # Fact-stage contrastive hard-negative recall (in-batch): correct
+                # value token must outrank sibling answer tokens. V12-only (guarded
+                # by the method + a positive lambda), fused path only.
+                fcl = getattr(m_cfg, 'fact_contrastive_lambda', 0.0)
+                contrast_fn = getattr(self._raw_model, 'fact_contrastive_from_lm', None)
+                if (self.fused_ce and fcl > 0 and contrast_fn is not None
+                        and loss_mask is not None):
+                    c_loss = contrast_fn(
+                        lm, labels, loss_mask,
+                        tau=getattr(m_cfg, 'fact_contrastive_tau', 1.0),
+                    )
+                    loss = loss + fcl * c_loss
+                    self._last_contrastive_loss = float(c_loss.detach())
                 if self.unitary_lambda > 0:
                     u_loss = torch.tensor(0.0, device=self.device)
                     for m in self.model.modules():

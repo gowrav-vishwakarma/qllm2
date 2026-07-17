@@ -53,7 +53,7 @@ def build_argparser():
     p.add_argument('--preset', type=str, default='v12_baseline', choices=list(PRESETS.keys()))
     p.add_argument('--dataset', type=str, default='wikitext103',
                    choices=['wikitext103', 'tinystories', 'dclm_edu', 'fineweb_edu',
-                            'pretrain_mix', 'smoltalk2', 'tulu3'])
+                            'pretrain_mix', 'smoltalk2', 'tulu3', 'fact'])
     p.add_argument('--stage', type=str, default='lm',
                    choices=['lm', 'pretrain', 'sft'],
                    help='lm=legacy WikiText path; pretrain=web stream; sft=chat masked CE')
@@ -496,6 +496,15 @@ def main():
     if _applied:
         print(f"  overrides applied: {_applied}")
 
+    # A recall objective (gate-surprisal / contrastive) only lives on the fused-CE
+    # path; without --fused_ce it silently no-ops. Auto-enable it and warn loudly.
+    _recall_on = (getattr(cfg, 'gate_surprisal_lambda', 0.0) > 0
+                  or getattr(cfg, 'fact_contrastive_lambda', 0.0) > 0)
+    if _recall_on and not args.fused_ce:
+        print("  [warn] stage loss needs the fused-CE path for its recall aux; "
+              "auto-enabling --fused_ce.")
+        args.fused_ce = True
+
     print(f"\nConfig: {asdict(cfg)}")
     print(f"Memory dynamics: decay_mode={cfg.decay_mode}, write_mode={cfg.write_mode}, "
           f"n_states={cfg.n_states}, chunk_size={cfg.chunk_size}")
@@ -601,6 +610,13 @@ def main():
             seq_len=seq_len,
             max_samples=max_samples,
             sft_filter=args.sft_filter,
+        )
+    elif args.dataset == 'fact':
+        from v12.fact_data import load_fact_recall
+        train_ds, val_ds, tokenizer = load_fact_recall(
+            seq_len=seq_len,
+            token_budget=token_budget,
+            seed=args.seed,
         )
     else:
         raise ValueError(f"Unknown dataset: {args.dataset}")

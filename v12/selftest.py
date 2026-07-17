@@ -612,6 +612,171 @@ def test_module_end_to_end(seed=0):
     return ok
 
 
+# ── Fact module (delta fact-bands + purpose-built data/loss/eval) ────────────
+
+def test_delta_factband_equiv(seed=0):
+    """Fact-band layer: single-state DELTA + vault(no-decay) + phase-address +
+    head_gate — the error-correcting write composes with vault and stays
+    parallel==recurrent (vault now threads through the single-state delta path)."""
+    from v12.model import V12Config
+    cfg = V12Config(
+        vocab_size=256, dim=48, n_heads=4, head_dim=16, n_layers=1, expand=2,
+        dropout=0.0, max_seq_len=128, chunk_size=24, gradient_checkpointing=False,
+        n_states=1, write_mode='delta', delta_chunk=16, vault_state=True,
+        vault_state_idx=0, write_phase_address=True, head_gate=True,
+        gate_content_aware=True,
+    )
+    return _run_mode("delta_factband", cfg, seq_len=48, seed=seed)
+
+
+def test_grown_delta_factband_equiv(seed=0):
+    """A grown DELTA fact-band group (n_states=1) stacked on the additive K=3
+    grammar base (mixed per-layer states) is still parallel==recurrent."""
+    from v12.model import V12Config
+    cfg = V12Config(
+        vocab_size=256, dim=48, n_heads=3, head_dim=16, n_layers=2, expand=2,
+        dropout=0.0, max_seq_len=128, chunk_size=24, gradient_checkpointing=False,
+        n_states=3, gate_content_aware=True,
+        layer_specs=[
+            {'skill': 'grammar', 'group_id': 'base'},
+            {'skill': 'grammar', 'group_id': 'base'},
+            {'skill': 'fact_retrieval', 'group_id': 'fact', 'n_heads': 4,
+             'n_states': 1, 'write_mode': 'delta', 'delta_chunk': 16,
+             'vault_state': True, 'vault_state_idx': 0,
+             'write_phase_address': True, 'head_gate': True},
+            {'skill': 'fact_retrieval', 'group_id': 'fact', 'n_heads': 4,
+             'n_states': 1, 'write_mode': 'delta', 'delta_chunk': 16,
+             'vault_state': True, 'vault_state_idx': 0,
+             'write_phase_address': True, 'head_gate': True},
+        ],
+    )
+    return _model_parallel_recurrent(cfg, "grown_delta M3", seq_len=40, seed=seed)
+
+
+def test_fact_loss_mask():
+    """Fact loader supervises ONLY value tokens: every masked label token is the
+    single-token value that follows a 'means' query, nothing else."""
+    from v12.fact_data import load_fact_recall
+    tr, _va, tok = load_fact_recall(seq_len=192, n_train=64, n_val=4, seed=3)
+    value_ids = {tid for _w, tid in tr.value_pool}
+    ok = True
+    total_masked = 0
+    for i in range(16):
+        ex = tr[i]
+        masked = torch.nonzero(ex['loss_mask']).flatten().tolist()
+        total_masked += len(masked)
+        if not masked:
+            ok = False
+            break
+        for pos in masked:
+            # every supervised label token must be a value-pool token ...
+            if int(ex['labels'][pos]) not in value_ids:
+                ok = False
+            # ... and the token predicting it is the query head ending in 'means'.
+            ctx = tok.decode(ex['input_ids'][max(0, pos - 3):pos + 1].tolist())
+            if 'means' not in ctx:
+                ok = False
+    ok = ok and total_masked > 0
+    print(f"[fact_loss_mask ] masked_value_tokens={total_masked} "
+          f"{'PASS' if ok else 'FAIL'}")
+    return ok
+
+
+def test_ce_fact_profile():
+    """ce_fact applies gate-surprisal + contrastive overrides; the in-batch
+    contrastive term is 0 for a single unique answer, positive with hard
+    negatives, and lower when the correct value logit dominates."""
+    from v12.losses import apply_stage_loss
+    from v12.model import V12Config, V12LM
+    cfg = V12Config(
+        vocab_size=64, dim=32, n_heads=2, head_dim=16, n_layers=1, expand=2,
+        dropout=0.0, max_seq_len=64, chunk_size=16, gradient_checkpointing=False,
+        n_states=3, gate_content_aware=True,
+    )
+    applied = apply_stage_loss(cfg, 'ce_fact')
+    ok = (cfg.gate_surprisal_lambda > 0 and cfg.fact_contrastive_lambda > 0
+          and 'fact_contrastive_lambda' in applied)
+    m = V12LM(cfg).eval()
+    B, T = 2, 8
+    ids = torch.randint(0, cfg.vocab_size, (B, T))
+    lm, _aux, _g = m._hidden_to_lm(ids)
+    labels = torch.randint(0, cfg.vocab_size, (B, T))
+    # single unique answer => contrastive is a no-op (0)
+    mask1 = torch.zeros(B, T, dtype=torch.long); mask1[0, 3] = 1
+    labels_same = labels.clone(); labels_same[0, 3] = 7
+    zero = m.fact_contrastive_from_lm(lm, labels_same, mask1)
+    # two distinct answers => positive contrastive loss
+    mask2 = torch.zeros(B, T, dtype=torch.long); mask2[0, 3] = 1; mask2[1, 5] = 1
+    labels_two = labels.clone(); labels_two[0, 3] = 7; labels_two[1, 5] = 9
+    pos = m.fact_contrastive_from_lm(lm, labels_two, mask2)
+    ok = ok and float(zero) == 0.0 and float(pos) > 0.0 and torch.isfinite(pos)
+    print(f"[ce_fact_loss   ] zero={float(zero):.2e} pos={float(pos):.3f} "
+          f"overrides={sorted(applied)} {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
+def test_delta_factband_compact(seed=0):
+    """Compacting a grown DELTA fact-band (head_gate + beta_proj) drops closed
+    slots and preserves logits (beta_proj slices with the kept heads)."""
+    import os
+    import tempfile
+    from dataclasses import asdict
+    from v12.model import V12Config, V12LM
+    from v12.compact import compact_checkpoint
+    torch.manual_seed(seed)
+    cfg = V12Config(
+        vocab_size=64, dim=48, n_heads=6, head_dim=16, n_layers=1, expand=2,
+        dropout=0.0, max_seq_len=64, chunk_size=16, gradient_checkpointing=False,
+        n_states=3, gate_content_aware=True,
+        layer_specs=[
+            {'skill': 'grammar', 'group_id': 'base'},
+            {'skill': 'fact_retrieval', 'group_id': 'fact', 'n_heads': 6,
+             'n_states': 1, 'write_mode': 'delta', 'delta_chunk': 16,
+             'vault_state': True, 'vault_state_idx': 0,
+             'write_phase_address': True, 'head_gate': True},
+        ],
+    )
+    m = V12LM(cfg)
+    with torch.no_grad():
+        m.blocks[1].pam.head_gate.log_alpha[2] = -20.0
+        m.blocks[1].pam.head_gate.log_alpha[5] = -20.0
+    d = tempfile.mkdtemp()
+    src, out = os.path.join(d, 'src.pt'), os.path.join(d, 'slim.pt')
+    torch.save({'config': asdict(m.config), 'model_state_dict': m.state_dict()}, src)
+    slim, maxd = compact_checkpoint(src, out, threshold=1e-3, verify_seq_len=24)
+    kept = slim.blocks[1].pam.num_heads
+    ok = kept == 4 and maxd < 1e-4
+    print(f"[compact_delta  ] fact_heads={kept}/6 max|Δlogits|={maxd:.2e}  "
+          f"{'PASS' if ok else 'FAIL'}")
+    return ok
+
+
+def test_recall_eval_smoke(seed=0):
+    """v12.eval_recall runs a V12LM through the behavioral suite and returns a
+    single_assoc accuracy in [0,1] (held-out KEYS/VALUES)."""
+    from v12.model import V12Config, V12LM
+    from v12.eval_recall import run_recall_eval
+    from v7.data import get_chat_tokenizer
+    tok = get_chat_tokenizer()
+    torch.manual_seed(seed)
+    cfg = V12Config(
+        vocab_size=len(tok), dim=32, n_heads=2, head_dim=16, n_layers=1, expand=2,
+        dropout=0.0, max_seq_len=128, chunk_size=32, n_states=3,
+        gate_content_aware=True, gradient_checkpointing=False,
+    )
+    m = V12LM(cfg).eval()
+    res = run_recall_eval(
+        m, tok, cfg, device=torch.device('cpu'),
+        context_lengths=(64,), positions=(0.5,), association_counts=(1,),
+        trials=2, candidate_count=8,
+    )
+    sa = res['single_assoc_accuracy']
+    ok = res['rows'] and sa is not None and 0.0 <= sa <= 1.0
+    print(f"[recall_eval    ] single_assoc@{res['single_assoc_context']}={sa:.3f} "
+          f"rows={len(res['rows'])} {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
 def main():
     torch.set_default_dtype(torch.float64)  # high precision for the math check
     test_warmstart_chatml()
@@ -661,6 +826,13 @@ def main():
     results.append(test_prelayer_hash_mismatch())
     results.append(test_finetuned_standalone())
     results.append(test_module_end_to_end())
+    # Fact module (M3 delta fact-bands + purpose-built data/loss/eval).
+    results.append(test_delta_factband_equiv())
+    results.append(test_grown_delta_factband_equiv())
+    results.append(test_fact_loss_mask())
+    results.append(test_ce_fact_profile())
+    results.append(test_delta_factband_compact())
+    results.append(test_recall_eval_smoke())
     print()
     if all(results):
         print("ALL MODES PASS: parallel train form == O(1) recurrent form.")
