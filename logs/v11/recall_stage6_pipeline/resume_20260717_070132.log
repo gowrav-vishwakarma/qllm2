@@ -1,0 +1,4 @@
+[2026-07-17T07:01:32Z] RESUME2 stage6 arms: vault phase delta
+[stage6] train vault extra=[--vault_state --vault_state_idx 0 --n_states 3] budget=300000000
+[Discord] Webhook configured -- notifications enabled
+Token indices sequence length is longer than the specified maximum sequence length for this model (3479 > 1024). Running this sequence through the model will result in indexing errors

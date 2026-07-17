@@ -1,0 +1,22 @@
+Token indices sequence length is longer than the specified maximum sequence length for this model (3479 > 1024). Running this sequence through the model will result in indexing errors
+Streaming pretrain blend: sources=['fineweb', 'recall'] weights=[93.0, 3.0] edu>=3 budget=1000000000 vocab=50257 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'fineweb': 0, 'recall': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50257_t500000_e3_p5.pt (500,000 tokens)
+[transformer] params=100,283,232 device=cuda budget=1,000,000,000
+[fineweb] local parquet stream: 15 shards under data/fineweb-edu/sample-10BT
+  [transformer] step=50 loss=10.1017 ppl=24385.5 tok/s=21256 gtok=819200
+  [transformer] step=100 loss=9.2710 ppl=10625.2 tok/s=36314 gtok=1638400
+  [transformer] step=150 loss=8.5476 ppl=5154.4 tok/s=47640 gtok=2457600
+  [transformer] step=200 loss=7.8548 ppl=2578.2 tok/s=56462 gtok=3276800
+  [transformer] step=250 loss=7.3731 ppl=1592.5 tok/s=63453 gtok=4096000
+  [transformer] step=300 loss=7.1697 ppl=1299.5 tok/s=69140 gtok=4915200
+  [transformer] step=350 loss=7.0250 ppl=1124.4 tok/s=73775 gtok=5734400
+  [transformer] step=400 loss=6.8774 ppl=970.1 tok/s=77695 gtok=6553600
+  [transformer] step=450 loss=6.7510 ppl=854.9 tok/s=81028 gtok=7372800
+  [transformer] step=500 loss=6.6493 ppl=772.3 tok/s=83916 gtok=8192000
+  [transformer] step=550 loss=6.5604 ppl=706.5 tok/s=86442 gtok=9011200
+  [transformer] step=600 loss=6.4802 ppl=652.1 tok/s=88684 gtok=9830400
+  [transformer] step=650 loss=6.4723 ppl=647.0 tok/s=90663 gtok=10649600
+  [transformer] step=700 loss=6.4097 ppl=607.7 tok/s=92421 gtok=11468800
+  [transformer] step=750 loss=6.4100 ppl=607.9 tok/s=93994 gtok=12288000
+  [transformer] step=800 loss=6.3444 ppl=569.3 tok/s=95304 gtok=13107200
+  [transformer] step=850 loss=6.2229 ppl=504.2 tok/s=96568 gtok=13926400

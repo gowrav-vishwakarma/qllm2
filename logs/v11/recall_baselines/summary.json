@@ -4,13 +4,14 @@
       "model": "v11",
       "path": "logs/v11/recall_baselines/v11_behavior.json",
       "params": 100878896,
-      "single_at_max": 0.35,
+      "single_at_max": 0.19999999999999998,
       "singles": {
-        "128": 0.85,
-        "512": 0.35,
-        "1024": 0.35,
-        "2048": 0.35
+        "128": 0.6666666666666666,
+        "512": 0.21666666666666667,
+        "1024": 0.18333333333333335,
+        "2048": 0.19999999999999998
       },
+      "multi8_at_min": 0.08333333333333333,
       "overall": 0.2097222222222222
     },
     {
@@ -24,7 +25,9 @@
         "1024": 1.0,
         "2048": 1.0
       },
+      "multi8_at_min": 0.8166666666666668,
       "overall": 0.7694444444444444
     }
-  ]
+  ],
+  "metric_note": "single_at_max = mean over positions of associations==1 at max context"
 }

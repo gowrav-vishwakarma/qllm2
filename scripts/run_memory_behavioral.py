@@ -83,7 +83,12 @@ def _load_transformer(checkpoint: Path, device: torch.device):
 def _load_hf(model_id: str, device: torch.device):
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+    except Exception:
+        # Matched-from-scratch Mamba dirs may only have weights; use GPT-2 (same vocab).
+        tokenizer = AutoTokenizer.from_pretrained('gpt2')
+        tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(model_id).to(device).eval()
     return model, tokenizer, model.config
 
@@ -161,7 +166,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--context-lengths', default='128,512,1024,2048')
     parser.add_argument('--positions', default='0,0.5,1')
     parser.add_argument('--association-counts', default='1,4,8')
-    parser.add_argument('--trials', type=int, default=20)
+    parser.add_argument('--trials', type=int, default=60,
+                        help='Seeds per (context, position, assoc) cell (default 60)')
     parser.add_argument('--seed', type=int, default=1000)
     parser.add_argument('--candidate-count', type=int, default=8)
     parser.add_argument('--output', type=Path, required=True)

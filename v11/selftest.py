@@ -201,6 +201,26 @@ def main():
     results.append(_run_mode("E2 delta", V11Config(**{**common, 'write_mode': 'delta', 'delta_chunk': 20})))
     results.append(_run_mode("E3 multistate", V11Config(**{**common, 'n_states': 2})))
     results.append(_run_mode("E1+E3 combo", V11Config(**{**common, 'decay_mode': 'per_channel', 'n_states': 2})))
+    # Stage-6 levers (defaults OFF elsewhere; flag-gated identity when disabled)
+    results.append(_run_mode(
+        "vault state",
+        V11Config(**{**common, 'n_states': 3, 'vault_state': True, 'vault_state_idx': 0}),
+    ))
+    results.append(_run_mode(
+        "phase address",
+        V11Config(**{**common, 'n_states': 3, 'write_phase_address': True}),
+    ))
+    results.append(_run_mode(
+        "vault+phase",
+        V11Config(**{
+            **common, 'n_states': 3, 'vault_state': True, 'vault_state_idx': 0,
+            'write_phase_address': True,
+        }),
+    ))
+    results.append(_run_mode(
+        "gamma_floor",
+        V11Config(**{**common, 'n_states': 3, 'gamma_floor': 0.9}),
+    ))
     results.append(test_fused_e3_equiv())
     results.append(test_fused_ce_equiv())
     results.append(test_competitive_retrieval_equiv())

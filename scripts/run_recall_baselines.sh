@@ -21,7 +21,7 @@ BEHAVIOR_ARGS=(
   --context-lengths "${BEHAVIOR_CONTEXTS:-128,512,1024,2048}"
   --positions "${BEHAVIOR_POSITIONS:-0,0.5,1}"
   --association-counts "${BEHAVIOR_ASSOCIATIONS:-1,4,8}"
-  --trials "${BEHAVIOR_TRIALS:-20}"
+  --trials "${BEHAVIOR_TRIALS:-60}"
 )
 
 echo "[baselines] V11 checkpoint: $V11_CKPT" | tee "$OUT_ROOT/run.log"
@@ -47,30 +47,34 @@ fi
 
 uv run python - <<'PY' | tee -a "$OUT_ROOT/run.log"
 import json
+import sys
 from pathlib import Path
+sys.path.insert(0, 'scripts')
+from behavioral_summary import behavioral_summary
 
 def summary(path):
     d = json.loads(Path(path).read_text())
-    aggs = d.get('aggregates', [])
-    singles = {a['context_tokens']: a['accuracy']
-               for a in aggs if a.get('associations') == 1}
-    max_ctx = max(singles) if singles else None
+    b = behavioral_summary(d)
     return {
         'path': str(path),
         'params': d.get('parameter_count'),
-        'single_at_max': singles.get(max_ctx) if max_ctx else None,
-        'singles': singles,
-        'overall': sum(a['accuracy'] for a in aggs) / len(aggs) if aggs else None,
+        'single_at_max': b.get('single_assoc_at_max_context'),
+        'singles': b.get('single_assoc_by_context'),
+        'multi8_at_min': b.get('multi8_at_min_context'),
+        'overall': b.get('overall_accuracy'),
     }
 
 root = Path('logs/v11/recall_baselines')
 rows = []
-for name in ['v11_behavior.json', 'mamba_behavior.json', 'transformer_behavior.json']:
+for name in ['v11_behavior.json', 'mamba_behavior.json', 'transformer_behavior.json',
+             'mamba_matched_behavior.json', 'transformer_matched_behavior.json']:
     p = root / name
     if p.exists():
         rows.append({'model': name.replace('_behavior.json',''), **summary(p)})
 
-out = {'comparisons': rows}
+out = {'comparisons': rows, 'metric_note':
+       'single_at_max = mean over positions of associations==1 at max context '
+       '(same as recall_gate_verdict.single_assoc_at_max_context)'}
 Path('logs/v11/recall_baselines/summary.json').write_text(json.dumps(out, indent=2)+'\n')
 print(json.dumps(out, indent=2))
 PY

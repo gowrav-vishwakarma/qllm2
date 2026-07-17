@@ -95,6 +95,12 @@ class V11Config:
     #   direction and drives (p_content - p_filler) NEGATIVE. -1 flips it to the
     #   probe's "protect content more" convention. Default +1 optimizes for recall.
     gate_surprisal_sign: float = 1.0
+    # Stage-6 architecture levers (defaults OFF = bit-identical to prior behaviour).
+    # vault_state: pin one of the K states to γ≈1 (no decay); writes still GSP-gated.
+    vault_state: bool = False
+    vault_state_idx: int = 0
+    # write_phase_address: key-conditioned write phase + matching query phase on read.
+    write_phase_address: bool = False
 
 
 # ── Phase-Associative Memory (V11) ──────────────────────────────────────────
@@ -150,6 +156,14 @@ class V11PAMLayer(nn.Module):
         self.route_balance_lambda = getattr(cfg, 'route_balance_lambda', 0.0)
         self.gamma_floor = getattr(cfg, 'gamma_floor', 0.0)
         self.gate_surprisal_lambda = getattr(cfg, 'gate_surprisal_lambda', 0.0)
+        self.vault_state = getattr(cfg, 'vault_state', False)
+        self.vault_state_idx = int(getattr(cfg, 'vault_state_idx', 0))
+        self.write_phase_address = getattr(cfg, 'write_phase_address', False)
+        if self.write_phase_address:
+            # Map per-channel key/query magnitude → scalar phase angle (radians).
+            self.write_phase_proj = nn.Linear(cfg.head_dim, 1, bias=True)
+            nn.init.zeros_(self.write_phase_proj.weight)
+            nn.init.zeros_(self.write_phase_proj.bias)
         if cfg.use_gsp:
             gate_in = cfg.dim * 2 if self.gate_content_aware else cfg.dim
             self.protect_gate = nn.Linear(gate_in, cfg.n_heads)
@@ -303,9 +317,34 @@ class V11PAMLayer(nn.Module):
         if self.qk_norm:
             queries = cnormalize(queries)
             keys = cnormalize(keys)
+
+        # Stage-6 phase addressing: rotate V by ψ(K) on write and Q by ψ(Q) on read
+        # so matching bindings reinforce via conjugation. Off by default.
+        if self.write_phase_address:
+            queries, values = self._apply_write_phase_address(queries, keys, values)
         return queries, keys, values
 
-    def _gamma_and_vprime(self, x: torch.Tensor, values: torch.Tensor, state_offset: float = 0.0):
+    def _apply_write_phase_address(self, queries, keys, values):
+        """Rotate values by e^{iψ(k)} and queries by e^{iψ(q)}; ψ = Linear(|·|)."""
+        # cabs layout: [B,H,T,d]
+        key_phase = self.write_phase_proj(cabs(keys)).squeeze(-1)      # [B,H,T]
+        query_phase = self.write_phase_proj(cabs(queries)).squeeze(-1)
+        values = self._rotate_complex(values, key_phase)
+        queries = self._rotate_complex(queries, query_phase)
+        return queries, values
+
+    @staticmethod
+    def _rotate_complex(z: torch.Tensor, phase: torch.Tensor) -> torch.Tensor:
+        """Multiply complex z [..., d, 2] by e^{i phase} with phase broadcastable to z[...,0]."""
+        # phase [B,H,T] → [B,H,T,1] over head_dim
+        while phase.dim() < z.dim() - 1:
+            phase = phase.unsqueeze(-1)
+        cos_p, sin_p = torch.cos(phase), torch.sin(phase)
+        real, imag = z[..., 0], z[..., 1]
+        return torch.stack([real * cos_p - imag * sin_p, real * sin_p + imag * cos_p], dim=-1)
+
+    def _gamma_and_vprime(self, x: torch.Tensor, values: torch.Tensor, state_offset: float = 0.0,
+                         state_idx: Optional[int] = None):
         """Return decay `decay_gamma` and protected value `protected_values`.
 
         decay_gamma shape: [B,H,T] (head decay) or [B,H,T,d] (per-channel decay).
@@ -329,6 +368,13 @@ class V11PAMLayer(nn.Module):
             softplus_dt = softplus_dt.transpose(1, 2).contiguous()
 
         base_decay = self._apply_gamma_floor(torch.exp(-softplus_dt))
+        # Vault state: pin base decay to 1 (no forgetting); GSP still gates writes.
+        if (
+            self.vault_state
+            and state_idx is not None
+            and state_idx == self.vault_state_idx
+        ):
+            base_decay = torch.ones_like(base_decay)
         if self.use_gsp:
             # Content-aware gate (winner): sees concat(real,imag); else magnitude only.
             gate_input = to_real_concat(x) if self.gate_content_aware else cabs(x)
@@ -589,7 +635,8 @@ class V11PAMLayer(nn.Module):
         state_list = []
         for state_idx in range(num_memory_states):
             decay_gamma_state, protected_values_state = self._gamma_and_vprime(
-                x, protected_values, state_offset=self.state_dt_offset[state_idx]
+                x, protected_values, state_offset=self.state_dt_offset[state_idx],
+                state_idx=state_idx,
             )
             if self.decay_mode == 'per_channel':
                 output_state, memory_state = self._forward_chunked_perchannel(
@@ -642,6 +689,11 @@ class V11PAMLayer(nn.Module):
         # permute to [K,B,H,T] so decay aligns with PAM time axis
         softplus_dt = softplus_dt.permute(0, 1, 3, 2).contiguous()
         base_decay = self._apply_gamma_floor(torch.exp(-softplus_dt))  # [K,B,H,T]
+        if self.vault_state and 0 <= self.vault_state_idx < num_memory_states:
+            # Compile-safe: functional where over a static per-state mask (no in-place/clone).
+            state_ids = torch.arange(num_memory_states, device=base_decay.device)
+            is_vault = (state_ids == self.vault_state_idx).view(num_memory_states, 1, 1, 1)
+            base_decay = torch.where(is_vault, torch.ones_like(base_decay), base_decay)
         if self.use_gsp:
             gate_input = to_real_concat(x) if self.gate_content_aware else cabs(x)
             protect_prob = torch.sigmoid(self.protect_gate(gate_input)).transpose(1, 2)  # [B,H,T]
@@ -883,6 +935,7 @@ class V11PAMLayer(nn.Module):
                     decay_gamma_state, protected_values_state = self._gamma_and_vprime(
                         token_input, values[:, :, time_idx:time_idx + 1],
                         state_offset=self.state_dt_offset[state_idx],
+                        state_idx=state_idx,
                     )
                     decay_gamma_t = decay_gamma_state[:, :, 0]  # [B,H]
                     # Outer-product write + S@Q read for this state.
@@ -1002,8 +1055,12 @@ class V11PAMLayer(nn.Module):
         return output, memory_state
 
 
+@torch.compiler.disable
 def _complex_triangular_solve(mass_real, mass_imag, write_real, write_imag, identity):
-    """Solve (I + M) update = write for complex update, M strictly lower-tri."""
+    """Solve (I + M) update = write for complex update, M strictly lower-tri.
+
+    Eager-island: torch.linalg.solve hangs under torch.compile (Stage-6 / E2 revival).
+    """
     chunk_len = mass_real.shape[-1]
     system_real = (identity + mass_real).float()
     system_imag = mass_imag.float()
@@ -1334,6 +1391,31 @@ PRESETS = {
         vocab_size=50257, dim=64, n_heads=2, head_dim=32, n_layers=2,
         expand=2, dropout=0.0, max_seq_len=512, chunk_size=64,
         gradient_checkpointing=False, decay_mode='per_channel', n_states=2,
+    ),
+    # Stage-6 capacity micro (~11M chat-vocab): pure-recall substrate tests.
+    'v11_micro_10m': V11Config(
+        vocab_size=50261, dim=96, n_heads=3, head_dim=32, n_layers=6,
+        expand=3, dropout=0.0, max_seq_len=2048, chunk_size=64,
+        gradient_checkpointing=False, n_states=3, state_dt_spread=2.0,
+        gate_content_aware=True,
+    ),
+    'v11_micro_10m_delta': V11Config(
+        vocab_size=50261, dim=96, n_heads=3, head_dim=32, n_layers=6,
+        expand=3, dropout=0.0, max_seq_len=2048, chunk_size=64,
+        gradient_checkpointing=False, n_states=1, write_mode='delta',
+        delta_chunk=32, gate_content_aware=True,
+    ),
+    'v11_micro_10m_vault': V11Config(
+        vocab_size=50261, dim=96, n_heads=3, head_dim=32, n_layers=6,
+        expand=3, dropout=0.0, max_seq_len=2048, chunk_size=64,
+        gradient_checkpointing=False, n_states=3, state_dt_spread=2.0,
+        gate_content_aware=True, vault_state=True, vault_state_idx=0,
+    ),
+    'v11_micro_10m_phase': V11Config(
+        vocab_size=50261, dim=96, n_heads=3, head_dim=32, n_layers=6,
+        expand=3, dropout=0.0, max_seq_len=2048, chunk_size=64,
+        gradient_checkpointing=False, n_states=3, state_dt_spread=2.0,
+        gate_content_aware=True, write_phase_address=True,
     ),
 }
 

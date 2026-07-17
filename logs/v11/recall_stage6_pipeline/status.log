@@ -1,0 +1,22 @@
+[2026-07-16T07:46:34Z] STAGE6 PIPELINE START
+[2026-07-16T07:46:34Z] START micro-capacity
+[2026-07-16T09:12:40Z] STAGE6 PIPELINE START
+[2026-07-16T09:12:40Z] START micro-capacity
+[2026-07-16T10:37:49Z] DONE micro-capacity
+[2026-07-16T10:37:49Z] START stage6 arms
+[2026-07-17T06:12:09Z] WARN arms had errors
+[2026-07-17T06:12:09Z] DONE stage6 arms
+[2026-07-17T06:12:09Z] START combo
+[2026-07-17T06:12:11Z] WARN combo had errors
+[2026-07-17T06:12:11Z] DONE combo
+[2026-07-17T06:12:11Z] START matched baselines
+[2026-07-17T06:12:13Z] WARN matched had errors
+[2026-07-17T06:12:13Z] DONE matched baselines
+[2026-07-17T06:12:13Z] START final compare
+[2026-07-17T06:12:13Z] WARN final had errors
+[2026-07-17T06:12:13Z] STAGE6 PIPELINE COMPLETE
+[2026-07-17T06:54:55Z] RESUME stage6 arms: vault phase delta
+[2026-07-17T06:55:00Z] DONE stage6 arms resume
+[2026-07-17T06:55:00Z] START combo
+[2026-07-17T06:55:01Z] START matched baselines
+[2026-07-17T07:01:32Z] RESUME2 stage6 arms: vault phase delta

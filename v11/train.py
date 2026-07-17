@@ -157,6 +157,17 @@ def build_argparser():
                    help='Temperature (nats) for surprisal->protect target (default 1.0)')
     p.add_argument('--gate_surprisal_sign', type=float, default=None,
                    help='+1: low-surprisal->protect (recall-oriented, default); -1: content->protect')
+    # Stage-6 architecture levers
+    p.add_argument('--vault_state', action='store_true',
+                   help='Pin one K-state to γ=1 (no decay); writes still GSP-gated')
+    p.add_argument('--no_vault_state', action='store_true',
+                   help='Disable vault_state even if preset enables it')
+    p.add_argument('--vault_state_idx', type=int, default=None,
+                   help='Which of the K states is the vault (default 0)')
+    p.add_argument('--write_phase_address', action='store_true',
+                   help='Key-conditioned write phase + matching query phase on read')
+    p.add_argument('--no_write_phase_address', action='store_true',
+                   help='Disable write_phase_address even if preset enables it')
     return p
 
 
@@ -343,6 +354,16 @@ def main():
         cfg.gate_surprisal_tau = args.gate_surprisal_tau
     if args.gate_surprisal_sign is not None:
         cfg.gate_surprisal_sign = args.gate_surprisal_sign
+    if args.no_vault_state:
+        cfg.vault_state = False
+    elif args.vault_state:
+        cfg.vault_state = True
+    if args.vault_state_idx is not None:
+        cfg.vault_state_idx = args.vault_state_idx
+    if args.no_write_phase_address:
+        cfg.write_phase_address = False
+    elif args.write_phase_address:
+        cfg.write_phase_address = True
 
     print(f"\nConfig: {asdict(cfg)}")
     print(f"Memory dynamics: decay_mode={cfg.decay_mode}, write_mode={cfg.write_mode}, "

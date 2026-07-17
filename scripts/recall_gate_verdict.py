@@ -18,33 +18,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+# Allow `python scripts/recall_gate_verdict.py` without installing as a package.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from behavioral_summary import behavioral_summary as _behavioral_summary  # noqa: E402
 
 
 def _load(path: Path) -> dict:
     return json.loads(Path(path).read_text())
-
-
-def _behavioral_summary(behavior: dict) -> dict:
-    aggs = behavior.get('aggregates', [])
-    if not aggs:
-        return {}
-    contexts = sorted({a['context_tokens'] for a in aggs})
-    max_ctx = contexts[-1]
-    overall = sum(a['accuracy'] for a in aggs) / len(aggs)
-
-    def acc_where(**kw):
-        rows = [a for a in aggs if all(a.get(k) == v for k, v in kw.items())]
-        return (sum(r['accuracy'] for r in rows) / len(rows)) if rows else None
-
-    single_by_ctx = {c: acc_where(context_tokens=c, associations=1) for c in contexts}
-    return {
-        'contexts': contexts,
-        'max_context': max_ctx,
-        'overall_accuracy': overall,
-        'single_assoc_by_context': single_by_ctx,
-        'single_assoc_at_max_context': single_by_ctx.get(max_ctx),
-    }
 
 
 def _gate_summary(gates: dict) -> dict:

@@ -1,0 +1,207 @@
+[Discord] Webhook configured -- notifications enabled
+Token indices sequence length is longer than the specified maximum sequence length for this model (1054 > 1024). Running this sequence through the model will result in indexing errors
+Wall clock start: 2026-07-16 08:36:33
+============================================================
+  V11: PAM with new memory dynamics
+  Preset: v11_micro_10m_delta | Stage: pretrain | Dataset: pretrain_mix
+============================================================
+
+Config: {'vocab_size': 50261, 'dim': 96, 'n_heads': 3, 'head_dim': 32, 'n_layers': 6, 'expand': 3, 'dropout': 0.0, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 64, 'decay_mode': 'head', 'write_mode': 'delta', 'n_states': 1, 'delta_chunk': 32, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.3, 'gate_surprisal_tau': 0.5, 'gate_surprisal_sign': 1.0, 'vault_state': False, 'vault_state_idx': 0, 'write_phase_address': False}
+Memory dynamics: decay_mode=head, write_mode=delta, n_states=1, chunk_size=64
+Batch size: 32, Epochs: 9999, LR: 0.0003
+Token budget: 30,000,000
+
+Loading pretrain_mix (seq_len=2048)...
+Streaming pretrain blend: sources=['recall'] weights=[1.0] edu>=3 budget=30000000 vocab=50257 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'recall': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50257_t500000_e3_p5.pt (500,000 tokens)
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+Val chunks: 121
+Adjusting vocab_size: 50261 -> 50257 (tokenizer)
+Val: in-distro holdout (8 batches), WikiText secondary (4 batches)
+Train batches: streaming, Val batches: 8
+
+Model parameters: {'embedding (tied)': 9649344, 'blocks': 1451028, 'norms': 192, 'lm_head': 18720, 'total': 11119284}
+Total: 11,119,284 (11.1M)
+Param groups: 82 tensors (11,114,112) with wd, 65 tensors (5,172) without
+Compiling model (mode=default)...
+  fused_ce: compiled _hidden_to_lm (logits never materialized)
+
+Training on cuda
+Parameters: {'embedding (tied)': 9649344, 'blocks': 1451028, 'norms': 192, 'lm_head': 18720, 'total': 11119284}
+Total: 11,119,284 (11.1M)
+Epochs: 1..9999, Batches/epoch: stream
+Periodic checkpoint: every 1000 steps -> latest.pt
+
+
+============================================================
+Epoch 1/9999
+============================================================
+  [1] 0 loss=10.8337 ppl=50701.3 lr=1.50e-06 | 1461 tok/s (avg 1461) ETA n/a | GPU 0.2/14.1GB | gtok=65536
+  [1] 50 loss=10.2490 ppl=28253.7 lr=7.65e-05 | 32128 tok/s (avg 22762) ETA n/a | GPU 0.2/14.2GB | gtok=3342336
+  [1] 100 loss=8.4946 ppl=4888.1 lr=1.51e-04 | 31950 tok/s (avg 26540) ETA n/a | GPU 0.2/14.2GB | gtok=6619136
+  [1] 150 loss=6.2678 ppl=527.3 lr=2.26e-04 | 31979 tok/s (avg 28124) ETA n/a | GPU 0.2/14.2GB | gtok=9895936
+  [1] 200 loss=3.9243 ppl=50.6 lr=3.00e-04 | 31850 tok/s (avg 28967) ETA n/a | GPU 0.2/14.2GB | gtok=13172736
+  [1] 250 loss=1.9497 ppl=7.0 lr=2.91e-04 | 31884 tok/s (avg 29505) ETA n/a | GPU 0.2/14.2GB | gtok=16449536
+  [1] 300 loss=0.9468 ppl=2.6 lr=2.65e-04 | 31867 tok/s (avg 29873) ETA n/a | GPU 0.2/14.2GB | gtok=19726336
+  [1] 350 loss=0.6242 ppl=1.9 lr=2.26e-04 | 31868 tok/s (avg 30141) ETA n/a | GPU 0.2/14.2GB | gtok=23003136
+  [1] 400 loss=0.4399 ppl=1.6 lr=1.78e-04 | 31851 tok/s (avg 30345) ETA n/a | GPU 0.2/14.2GB | gtok=26279936
+  [1] 450 loss=0.3866 ppl=1.5 lr=1.27e-04 | 31809 tok/s (avg 30500) ETA n/a | GPU 0.2/14.2GB | gtok=29556736
+  Token budget reached: 30,001,152 / 30,000,000
+Epoch 1/9999 | Train Loss: 4.2238 PPL: 68.29 | 29840 tok/s | Time: 1005.4s (30,001,152 tok) | Val Loss: 11.5880 PPL: 107795.69 Acc: 0.034 | Wiki PPL: 147822.17 *best*
+Saved checkpoint: checkpoints_v11_recall_micro/delta/best_model.pt
+
+Stopping: token budget 30,000,000 reached.
+Saved checkpoint: checkpoints_v11_recall_micro/delta/final_model.pt
+
+Training complete (token budget)!
+Total wall time: 1020.5s (0.28h)
+Best Val Loss: 11.5880, Best Val PPL: 107795.69
+
+Wall clock end: 2026-07-16 08:54:17
+[eval-recall-gate] checkpoint=checkpoints_v11_recall_micro/delta/best_model.pt preset=v11_micro_10m_delta out=checkpoints_v11_recall_micro/delta/eval
+[1/3] gate diagnostics ...
+  cfg from ckpt: vocab=50257 gate_content_aware=True routing_content_aware=False state_compete=False
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+Val chunks: 121
+========================================================================================
+PAM gate diagnosis  ckpt=checkpoints_v11_recall_micro/delta/best_model.pt  tokens=2048  preset=v11_micro_10m_delta
+  p   = mean GSP write-protect prob (sigmoid(protect_gate)); high p => "do not write"
+  gam = mean decay gamma (->1 keeps state, ->0 forgets fast)
+  content = top 25% surprisal tokens, filler = bottom 25%
+========================================================================================
+layer |   p_all p_content  p_filler |  gam_all  dt_bias
+-------------------------------------------------------
+    0 |   0.065     0.175     0.044 |   0.9917   -3.999
+    1 |   0.066     0.174     0.046 |   0.9913   -4.000
+    2 |   0.071     0.177     0.051 |   0.9918   -3.995
+    3 |   0.074     0.185     0.053 |   0.9922   -3.996
+    4 |   0.080     0.193     0.058 |   0.9914   -3.997
+    5 |   0.083     0.197     0.062 |   0.9849   -4.011
+-------------------------------------------------------
+  mean p across layers: 0.073  (init bias -3.0 => p~0.047; higher = model learned to protect)
+  mean (p_content - p_filler): +0.131  (positive = protects content more than filler = healthy)
+
+JSON saved to checkpoints_v11_recall_micro/delta/eval/gates.json
+[2/3] behavioral recall ...
+  scored 20/2160 examples
+  scored 40/2160 examples
+  scored 60/2160 examples
+  scored 80/2160 examples
+  scored 100/2160 examples
+  scored 120/2160 examples
+  scored 140/2160 examples
+  scored 160/2160 examples
+  scored 180/2160 examples
+  scored 200/2160 examples
+  scored 220/2160 examples
+  scored 240/2160 examples
+  scored 260/2160 examples
+  scored 280/2160 examples
+  scored 300/2160 examples
+  scored 320/2160 examples
+  scored 340/2160 examples
+  scored 360/2160 examples
+  scored 380/2160 examples
+  scored 400/2160 examples
+  scored 420/2160 examples
+  scored 440/2160 examples
+  scored 460/2160 examples
+  scored 480/2160 examples
+  scored 500/2160 examples
+  scored 520/2160 examples
+  scored 540/2160 examples
+  scored 560/2160 examples
+  scored 580/2160 examples
+  scored 600/2160 examples
+  scored 620/2160 examples
+  scored 640/2160 examples
+  scored 660/2160 examples
+  scored 680/2160 examples
+  scored 700/2160 examples
+  scored 720/2160 examples
+  scored 740/2160 examples
+  scored 760/2160 examples
+  scored 780/2160 examples
+  scored 800/2160 examples
+  scored 820/2160 examples
+  scored 840/2160 examples
+  scored 860/2160 examples
+  scored 880/2160 examples
+  scored 900/2160 examples
+  scored 920/2160 examples
+  scored 940/2160 examples
+  scored 960/2160 examples
+  scored 980/2160 examples
+  scored 1000/2160 examples
+  scored 1020/2160 examples
+  scored 1040/2160 examples
+  scored 1060/2160 examples
+  scored 1080/2160 examples
+  scored 1100/2160 examples
+  scored 1120/2160 examples
+  scored 1140/2160 examples
+  scored 1160/2160 examples
+  scored 1180/2160 examples
+  scored 1200/2160 examples
+  scored 1220/2160 examples
+  scored 1240/2160 examples
+  scored 1260/2160 examples
+  scored 1280/2160 examples
+  scored 1300/2160 examples
+  scored 1320/2160 examples
+  scored 1340/2160 examples
+  scored 1360/2160 examples
+  scored 1380/2160 examples
+  scored 1400/2160 examples
+  scored 1420/2160 examples
+  scored 1440/2160 examples
+  scored 1460/2160 examples
+  scored 1480/2160 examples
+  scored 1500/2160 examples
+  scored 1520/2160 examples
+  scored 1540/2160 examples
+  scored 1560/2160 examples
+  scored 1580/2160 examples
+  scored 1600/2160 examples
+  scored 1620/2160 examples
+  scored 1640/2160 examples
+  scored 1660/2160 examples
+  scored 1680/2160 examples
+  scored 1700/2160 examples
+  scored 1720/2160 examples
+  scored 1740/2160 examples
+  scored 1760/2160 examples
+  scored 1780/2160 examples
+  scored 1800/2160 examples
+  scored 1820/2160 examples
+  scored 1840/2160 examples
+  scored 1860/2160 examples
+  scored 1880/2160 examples
+  scored 1900/2160 examples
+  scored 1920/2160 examples
+  scored 1940/2160 examples
+  scored 1960/2160 examples
+  scored 1980/2160 examples
+  scored 2000/2160 examples
+  scored 2020/2160 examples
+  scored 2040/2160 examples
+  scored 2060/2160 examples
+  scored 2080/2160 examples
+  scored 2100/2160 examples
+  scored 2120/2160 examples
+  scored 2140/2160 examples
+  scored 2160/2160 examples
+Results saved to checkpoints_v11_recall_micro/delta/eval/v11_behavior.json
+[3/3] verdict ...
+================================================================
+RECALL-GATE VERDICT: delta
+================================================================
+  params:                  11,119,284
+  overall behavioral acc:  0.089
+  single-assoc by context: 128:0.10, 512:0.10, 1024:0.10, 2048:0.10
+  single@max_ctx(2048):     0.100  target>=0.9  FAIL
+  gate p_content-p_filler: +0.131  |.|>=0.05  PASS
+  mean protect / gamma:    0.073 / 0.991
+  SHIP: NO
+  verdict JSON -> checkpoints_v11_recall_micro/delta/eval/verdict.json
+[eval-recall-gate] done -> checkpoints_v11_recall_micro/delta/eval

@@ -11,7 +11,7 @@
 # Env overrides:
 #   PRESET (default v11_e3_k3_chat)   GATE_TOKENS (4096)
 #   BEHAVIOR_CONTEXTS (128,512,1024,2048)  BEHAVIOR_POSITIONS (0,0.5,1)
-#   BEHAVIOR_ASSOCIATIONS (1,4,8)     BEHAVIOR_TRIALS (20)
+#   BEHAVIOR_ASSOCIATIONS (1,4,8)     BEHAVIOR_TRIALS (60)
 #   ACC_TARGET (0.9)  GATE_TARGET (0.05)
 #   ARM_PPL, BASELINE_PPL (optional; enable the PPL-within-tol check)
 set -euo pipefail
@@ -41,7 +41,7 @@ uv run python scripts/run_memory_behavioral.py \
   --context-lengths "${BEHAVIOR_CONTEXTS:-128,512,1024,2048}" \
   --positions "${BEHAVIOR_POSITIONS:-0,0.5,1}" \
   --association-counts "${BEHAVIOR_ASSOCIATIONS:-1,4,8}" \
-  --trials "${BEHAVIOR_TRIALS:-20}" \
+  --trials "${BEHAVIOR_TRIALS:-60}" \
   --output "$OUT_DIR/v11_behavior.json"
 
 echo "[3/3] verdict ..."

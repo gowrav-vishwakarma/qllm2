@@ -1254,10 +1254,10 @@ Behavioral suite (`memory_probes/behavioral.py`, 720 examples, 8-way contrastive
 | Mamba-130m-hf | 129.1M | 1.00 | 1.00 | 1.00 | **1.00** | 0.77 |
 | Transformer | — | — | — | — | — | **skipped** |
 
-**Note:** The verdict script on the same V11 checkpoint reports recall@2048 = **0.20** (mean over
-positions for n_assoc=1 only). The baselines summary uses a different aggregation slice
-(`single_at_max` over all positions/associations at max context) → 0.35. Both are correct for
-their definitions; **metrics must be unified before declaring winners** (Stage-6a).
+**Note (fixed in Stage-6a):** The baselines summarizer previously overwrote position cells in a
+dict keyed only by `context_tokens`, so only `pos=1.0` survived (0.35). The verdict correctly
+means over positions (0.20). Both now use `scripts/behavioral_summary.py` (mean over positions
+for `associations==1`). Default `BEHAVIOR_TRIALS` raised 20→60.
 
 ### Probe breakdown (V11 from-scratch, per-cell accuracy)
 
