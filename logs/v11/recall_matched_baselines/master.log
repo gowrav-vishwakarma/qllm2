@@ -1,1 +1,8 @@
 [matched] train transformer budget=1000000000
+[matched] train transformer budget=1000000000
+[matched] train mamba budget=1000000000
+[matched] eval transformer
+[matched] skip transformer train (ckpt exists)
+{"skipped": true, "reason": "no mamba-ssm/causal-conv1d; sequential ~15 tok/s infeasible for 1000000000 tok", "has_kernels": 0}
+[matched] SKIP mamba train (install mamba-ssm+causal-conv1d, or set FORCE_SEQUENTIAL_MAMBA=1)
+[matched] eval transformer

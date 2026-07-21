@@ -1,0 +1,184 @@
+{
+  "comparisons": [
+    {
+      "model": "v11_stage6_winner",
+      "path": "logs/v11/recall_stage6_final/winner_behavior.json",
+      "params": 100878896,
+      "single_at_max": 0.18888888888888888,
+      "singles": {
+        "128": 0.3333333333333333,
+        "512": 0.16666666666666666,
+        "1024": 0.18333333333333335,
+        "2048": 0.18888888888888888
+      },
+      "multi8_at_min": 0.11111111111111112,
+      "overall": 0.1731481481481481
+    },
+    {
+      "model": "v11_stage4_fromscratch",
+      "path": "logs/v11/recall_baselines/v11_behavior.json",
+      "params": 100878896,
+      "single_at_max": 0.19999999999999998,
+      "singles": {
+        "128": 0.6666666666666666,
+        "512": 0.21666666666666667,
+        "1024": 0.18333333333333335,
+        "2048": 0.19999999999999998
+      },
+      "multi8_at_min": 0.08333333333333333,
+      "overall": 0.2097222222222222
+    },
+    {
+      "model": "transformer_matched",
+      "path": "logs/v11/recall_baselines/transformer_matched_behavior.json",
+      "params": 100283232,
+      "single_at_max": 0.9555555555555556,
+      "singles": {
+        "128": 0.9555555555555556,
+        "512": 0.9555555555555556,
+        "1024": 0.9611111111111111,
+        "2048": 0.9555555555555556
+      },
+      "multi8_at_min": 0.25555555555555554,
+      "overall": 0.5365740740740741
+    },
+    {
+      "model": "mamba_pretrained_hf",
+      "path": "logs/v11/recall_baselines/mamba_behavior.json",
+      "params": 129135360,
+      "single_at_max": 1.0,
+      "singles": {
+        "128": 1.0,
+        "512": 1.0,
+        "1024": 1.0,
+        "2048": 1.0
+      },
+      "multi8_at_min": 0.8166666666666668,
+      "overall": 0.7694444444444444
+    }
+  ],
+  "micro": {
+    "arms": [
+      {
+        "arm": "control",
+        "recall_at_2048": 0.16666666666666666,
+        "multi8_at_min": 0.11666666666666665,
+        "gate": 0.12191127116481464,
+        "ship": false
+      },
+      {
+        "arm": "delta",
+        "recall_at_2048": 0.10000000000000002,
+        "multi8_at_min": 0.11666666666666665,
+        "gate": 0.1311507591356834,
+        "ship": false
+      },
+      {
+        "arm": "phase",
+        "recall_at_2048": 0.10000000000000002,
+        "multi8_at_min": 0.16666666666666666,
+        "gate": 0.06960135884582996,
+        "ship": false
+      },
+      {
+        "arm": "tiny_mamba"
+      },
+      {
+        "arm": "vault",
+        "recall_at_2048": 0.1611111111111111,
+        "multi8_at_min": 0.11666666666666665,
+        "gate": 0.0636658575385809,
+        "ship": false
+      }
+    ]
+  },
+  "stage6_arms": {
+    "arms": [
+      {
+        "arm": "control",
+        "recall_at_2048": 0.1388888888888889,
+        "multi8_at_min": 0.09444444444444444,
+        "gate": 0.16010871902108192,
+        "ship": false
+      },
+      {
+        "arm": "delta",
+        "status": "pending"
+      },
+      {
+        "arm": "phase",
+        "recall_at_2048": 0.18888888888888888,
+        "multi8_at_min": 0.08888888888888889,
+        "gate": 0.15472441166639328,
+        "ship": false
+      },
+      {
+        "arm": "vault",
+        "recall_at_2048": 0.18888888888888888,
+        "multi8_at_min": 0.11111111111111112,
+        "gate": 0.1361473985016346,
+        "ship": false
+      }
+    ],
+    "ranked": [
+      "vault",
+      "phase",
+      "control"
+    ],
+    "winner": "vault"
+  },
+  "combo_verdict": {
+    "label": "stage6_combo",
+    "checkpoint": "checkpoints_v11_recall_stage6_combo/best_run/best_model.pt",
+    "parameter_count": 100879936,
+    "behavioral": {
+      "contexts": [
+        128,
+        512,
+        1024,
+        2048
+      ],
+      "max_context": 2048,
+      "overall_accuracy": 0.2101851851851853,
+      "single_assoc_by_context": {
+        "128": 0.6722222222222222,
+        "512": 0.20555555555555557,
+        "1024": 0.2333333333333333,
+        "2048": 0.1611111111111111
+      },
+      "single_assoc_at_max_context": 0.1611111111111111,
+      "multi8_at_min_context": 0.13333333333333333,
+      "min_context": 128
+    },
+    "gate": {
+      "n_layers": 16,
+      "mean_protect": 0.46318682469427586,
+      "mean_content_minus_filler": -0.18535134010016918,
+      "abs_content_minus_filler": 0.18535134010016918,
+      "mean_gamma": 0.9219473674893379
+    },
+    "ppl": {
+      "arm": null,
+      "baseline": null,
+      "frac_delta": null,
+      "tol": 0.02
+    },
+    "criteria": {
+      "recall_single_at_max_context": {
+        "value": 0.1611111111111111,
+        "target": 0.9,
+        "pass": false
+      },
+      "gate_selectivity_abs": {
+        "value": 0.18535134010016918,
+        "target": 0.05,
+        "pass": true
+      },
+      "ppl_within_tol": {
+        "value": null,
+        "pass": null
+      }
+    },
+    "ship": false
+  }
+}

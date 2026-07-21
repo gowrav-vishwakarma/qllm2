@@ -36,8 +36,22 @@ else
 fi
 
 # ── Mamba ────────────────────────────────────────────────────────────────────
-if [[ ! -f "$OUT_M/best_hf/config.json" ]]; then
-  echo "[matched] train mamba budget=$TOKEN_BUDGET" | tee -a "$LOG_ROOT/master.log"
+# Sequential HF Mamba (no mamba-ssm / causal-conv1d) is ~15 tok/s here → 1B tok
+# would take months. Skip unless kernels are installed or FORCE_SEQUENTIAL_MAMBA=1.
+_has_mamba_kernels="$(uv run python - <<'PY'
+import importlib.util as u
+print('1' if u.find_spec('mamba_ssm') and u.find_spec('causal_conv1d') else '0')
+PY
+)"
+if [[ -f "$OUT_M/best_hf/config.json" ]]; then
+  echo "[matched] skip mamba train (ckpt exists)" | tee -a "$LOG_ROOT/master.log"
+elif [[ "${SKIP_MATCHED_MAMBA:-0}" == "1" || ( "$_has_mamba_kernels" != "1" && "${FORCE_SEQUENTIAL_MAMBA:-0}" != "1" ) ]]; then
+  mkdir -p "$OUT_M"
+  echo "{\"skipped\": true, \"reason\": \"no mamba-ssm/causal-conv1d; sequential ~15 tok/s infeasible for ${TOKEN_BUDGET} tok\", \"has_kernels\": ${_has_mamba_kernels}}" \
+    | tee "$OUT_M/SKIPPED.json" | tee -a "$LOG_ROOT/master.log"
+  echo "[matched] SKIP mamba train (install mamba-ssm+causal-conv1d, or set FORCE_SEQUENTIAL_MAMBA=1)" | tee -a "$LOG_ROOT/master.log"
+else
+  echo "[matched] train mamba budget=$TOKEN_BUDGET kernels=$_has_mamba_kernels" | tee -a "$LOG_ROOT/master.log"
   (
     set +e
     uv run python scripts/train_matched_baseline.py \
@@ -46,8 +60,6 @@ if [[ ! -f "$OUT_M/best_hf/config.json" ]]; then
       --checkpoint_dir "$OUT_M" --save_every_steps 2000
     exit 0
   ) 2>&1 | tee -a "$LOG_ROOT/mamba.log"
-else
-  echo "[matched] skip mamba train (ckpt exists)" | tee -a "$LOG_ROOT/master.log"
 fi
 
 # ── Behavioral eval ──────────────────────────────────────────────────────────

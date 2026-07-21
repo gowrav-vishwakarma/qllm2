@@ -5,13 +5,20 @@ It explains **what was implemented and why**, how it was validated locally, and
 **exactly what to run on the RTX Pro 6000**. Companion plan:
 `.cursor/plans/pam_v12_recall_program_aee548e4.plan.md` (do not need to re-read).
 
-**Status (2026-07-16):** Stages 2–5 complete on RTX PRO 6000. Full results, per-arm
-tables, probe breakdowns, and consolidated learnings are in
-[v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md) (sections *Stage-2 A/B* through
-*consolidated findings*). **Bottom line:** recall@2048 plateaued at 0.15–0.25 across
-19 configs (chance = 0.125); gate selectivity is solved; write interference and decay
-are the structural blockers. Stage 6 (delta-write, vault state, phase addressing) is
-planned — see *consolidated findings* and `.cursor/plans/recall_program_stage_6_*.plan.md`.
+**Status (2026-07-21):** Stages 2–6 complete on RTX PRO 6000 (delta full-scale arm and
+matched-from-scratch Mamba incomplete — see below). Canonical write-up:
+[v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md) (*Stage-2* through *Stage-6 knowledge base*).
+
+**Do not re-run:** gate λ/τ / γ_floor / recall-blend hypers; routing-only from-scratch;
+vault vs phase vs control at 300M; vault+phase combo at 1B — all measured.
+
+**Headline numbers (trials=60, unified metric):** best Stage-6 V11 (vault/phase) @2048=0.189;
+combo 0.161; matched Transformer (same 1B data/budget) @2048=0.956. Gate selectivity solved.
+Vault/phase each +~5pp vs control; interference (multi8@128) still near chance for V11.
+
+**Still open:** E2 delta at 300M (CUDA assert); matched Mamba needs `mamba-ssm`+`causal-conv1d`
+(sequential HF ~15 tok/s is not viable). Next useful work = stabilize delta / erase-before-write,
+not another hyper sweep.
 
 ---
 

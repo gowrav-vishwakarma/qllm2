@@ -1,0 +1,162 @@
+[Discord] Webhook configured -- notifications enabled
+Token indices sequence length is longer than the specified maximum sequence length for this model (3479 > 1024). Running this sequence through the model will result in indexing errors
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [0,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [1,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [2,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [3,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [4,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [5,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [6,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [7,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [8,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [9,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [10,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [11,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [12,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [13,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [14,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [15,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [16,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [17,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [18,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [19,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [20,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [21,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [22,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [23,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [24,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [25,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [26,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [27,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [28,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [29,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [30,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [46,0,0], thread: [31,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [96,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [97,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [98,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [99,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [100,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [101,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [102,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [103,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [104,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [105,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [106,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [107,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [108,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [109,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [110,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [111,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [112,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [113,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [114,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [115,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [116,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [117,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [118,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [119,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [120,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [121,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [122,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [123,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [124,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [125,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [126,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+/pytorch/aten/src/ATen/native/cuda/Loss.cu:91: operator(): block: [140,0,0], thread: [127,0,0] Assertion `target_val >= zero && target_val <= one` failed.
+Traceback (most recent call last):
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.9-linux-x86_64-gnu/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.9-linux-x86_64-gnu/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/home/ubuntu/Development/qllm-private/v11/train.py", line 643, in <module>
+    main()
+  File "/home/ubuntu/Development/qllm-private/v11/train.py", line 635, in main
+    trainer.train()
+  File "/home/ubuntu/Development/qllm-private/v7/train.py", line 677, in train
+    train_metrics = self.train_epoch(epoch)
+  File "/home/ubuntu/Development/qllm-private/v7/train.py", line 441, in train_epoch
+    gate_loss = self._gate_surprisal_loss(
+  File "/home/ubuntu/Development/qllm-private/v7/train.py", line 380, in _gate_surprisal_loss
+    bce = F.binary_cross_entropy(gp, target, reduction='none')
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/nn/functional.py", line 3530, in binary_cross_entropy
+    return torch._C._nn.binary_cross_entropy(input, target, weight, reduction_enum)
+torch.AcceleratorError: CUDA error: device-side assert triggered
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+Wall clock start: 2026-07-18 04:52:25
+============================================================
+  V11: PAM with new memory dynamics
+  Preset: v11_e3_k3_chat | Stage: pretrain | Dataset: pretrain_mix
+============================================================
+
+Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'delta', 'n_states': 1, 'delta_chunk': 32, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.01, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.3, 'gate_surprisal_tau': 0.5, 'gate_surprisal_sign': 1.0, 'vault_state': False, 'vault_state_idx': 0, 'write_phase_address': False}
+Memory dynamics: decay_mode=head, write_mode=delta, n_states=1, chunk_size=256
+Batch size: 16, Epochs: 9999, LR: 0.0001
+Token budget: 300,000,000
+
+Loading pretrain_mix (seq_len=2048)...
+Streaming pretrain blend: sources=['fineweb', 'recall'] weights=[93.0, 3.0] edu>=3 budget=300000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'fineweb': 0, 'recall': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+Val chunks: 121
+Val: in-distro holdout (16 batches), WikiText secondary (8 batches)
+Train batches: streaming, Val batches: 16
+
+Model parameters: {'embedding (tied)': 38600448, 'blocks': 61575584, 'norms': 768, 'lm_head': 296064, 'total': 100472864}
+Total: 100,472,864 (100.5M)
+Param groups: 212 tensors (100,421,376) with wd, 165 tensors (51,488) without
+fused_ce enabled (chunked linear+CE; logits never materialized)
+
+Training on cuda
+Parameters: {'embedding (tied)': 38600448, 'blocks': 61575584, 'norms': 768, 'lm_head': 296064, 'total': 100472864}
+Total: 100,472,864 (100.5M)
+Epochs: 1..9999, Batches/epoch: stream
+Periodic checkpoint: every 2000 steps -> latest.pt
+
+
+============================================================
+Epoch 1/9999
+============================================================
+[fineweb] local parquet stream: 15 shards under data/fineweb-edu/sample-10BT
+  [1] 0 loss=10.9087 ppl=54647.4 lr=2.00e-07 | 711 tok/s (avg 711) ETA n/a | GPU 1.4/67.5GB | gtok=32768
+  [1] 50 loss=10.6698 ppl=43036.4 lr=1.02e-05 | 2695 tok/s (avg 2555) ETA n/a | GPU 1.4/68.3GB | gtok=1671168
+  [1] 100 loss=10.2383 ppl=27952.7 lr=2.02e-05 | 2688 tok/s (avg 2619) ETA n/a | GPU 1.4/68.3GB | gtok=3309568
+  [1] 150 loss=9.3767 ppl=11810.3 lr=3.02e-05 | 2695 tok/s (avg 2644) ETA n/a | GPU 1.4/68.3GB | gtok=4947968
+  [1] 200 loss=8.6134 ppl=5505.0 lr=4.02e-05 | 2696 tok/s (avg 2657) ETA n/a | GPU 1.4/68.3GB | gtok=6586368
+  [1] 250 loss=7.7633 ppl=2352.7 lr=5.02e-05 | 2688 tok/s (avg 2663) ETA n/a | GPU 1.4/68.3GB | gtok=8224768
+  [1] 300 loss=7.0853 ppl=1194.2 lr=6.02e-05 | 2690 tok/s (avg 2667) ETA n/a | GPU 1.4/68.3GB | gtok=9863168
+  [1] 350 loss=6.9745 ppl=1069.0 lr=7.02e-05 | 2688 tok/s (avg 2670) ETA n/a | GPU 1.4/68.3GB | gtok=11501568
+  [1] 400 loss=6.7238 ppl=832.0 lr=8.02e-05 | 2694 tok/s (avg 2673) ETA n/a | GPU 1.4/68.3GB | gtok=13139968
+terminate called after throwing an instance of 'c10::AcceleratorError'
+  what():  CUDA error: device-side assert triggered
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+Exception raised from c10_cuda_check_implementation at /pytorch/c10/cuda/CUDAException.cpp:42 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x7c4b7377eeb0 in /home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0x111c7 (0x7c4b73b711c7 in /home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/lib/libc10_cuda.so)
+frame #2: <unknown function> + 0xc69358 (0x7c4b16669358 in /home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/lib/libtorch_cuda.so)
+frame #3: <unknown function> + 0xc643a3 (0x7c4b166643a3 in /home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/lib/libtorch_cuda.so)
+frame #4: <unknown function> + 0xc6b2dc (0x7c4b1666b2dc in /home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/lib/libtorch_cuda.so)
+frame #5: <unknown function> + 0x44100f (0x7c4b6604100f in /home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/lib/libtorch_python.so)
+frame #6: c10::TensorImpl::~TensorImpl() + 0x9 (0x7c4b7375c179 in /home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/lib/libc10.so)
+frame #7: <unknown function> + 0x6e1728 (0x7c4b662e1728 in /home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/lib/libtorch_python.so)
+frame #8: <unknown function> + 0x6e1ac4 (0x7c4b662e1ac4 in /home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/lib/libtorch_python.so)
+frame #9: <unknown function> + 0x28b28e (0x6453ff26728e in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #10: <unknown function> + 0x275ea2 (0x6453ff251ea2 in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #11: <unknown function> + 0x30bd3b (0x6453ff2e7d3b in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #12: <unknown function> + 0x30bd26 (0x6453ff2e7d26 in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #13: <unknown function> + 0x30bd26 (0x6453ff2e7d26 in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #14: <unknown function> + 0x30bd26 (0x6453ff2e7d26 in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #15: <unknown function> + 0x30bd26 (0x6453ff2e7d26 in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #16: <unknown function> + 0x30bd26 (0x6453ff2e7d26 in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #17: PyDict_SetItem + 0x429 (0x6453ff149439 in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #18: PyDict_SetItemString + 0x56 (0x6453ff14b7b6 in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #19: <unknown function> + 0x3d63ef (0x6453ff3b23ef in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #20: Py_FinalizeEx + 0x1cd (0x6453ff2e4d0d in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #21: Py_RunMain + 0x1ed (0x6453ff3dd54d in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #22: <unknown function> + 0x14f028 (0x6453ff12b028 in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+frame #23: <unknown function> + 0x2a8c1 (0x7c4b7422a8c1 in /usr/lib/x86_64-linux-gnu/libc.so.6)
+frame #24: __libc_start_main + 0x88 (0x7c4b7422a9d8 in /usr/lib/x86_64-linux-gnu/libc.so.6)
+frame #25: <unknown function> + 0x332dbb (0x6453ff30edbb in /home/ubuntu/Development/qllm-private/.venv/bin/python3)
+

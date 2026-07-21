@@ -1327,3 +1327,113 @@ Fix recall while staying O(1) and **more** novel, not less:
 
 Scripts: extend `scripts/run_recall_pipeline.sh` pattern; see plan
 `recall_program_stage_6` in `.cursor/plans/`.
+
+
+---
+
+## Recall program — Stage-6 architecture round (2026-07-17 → 2026-07-20, RTX PRO 6000)
+
+**Knowledge-base section:** do **not** re-run Stages 2–5 hyper sweeps or Stage-6 vault/phase/combo
+at the same budgets unless the *write/erase* mechanism changes. Numbers below are the
+reference readout for this host (local FineWeb, `BEHAVIOR_TRIALS=60`, unified metrics).
+
+Metrics: `scripts/behavioral_summary.py` (mean over positions, `associations==1`).
+Ship aspiration unchanged (recall@2048 ≥ 0.9); Stage-6 practical bar was multi8@128 lift +
+@2048 ≥ 0.5 with PPL near control — **not met**, but levers moved the needle.
+
+Architecture landed (defaults OFF; selftest parallel≡recurrent):
+- E2 delta compile unblock: `@torch.compiler.disable` on `_complex_triangular_solve`
+- `--vault_state` / `--vault_state_idx`: one K-state with base γ=1, GSP still gates writes
+- `--write_phase_address`: key-conditioned write phase + matching query phase on read
+
+### 6b Capacity micro (~11M, 30M tok, 100% recall curriculum)
+
+| arm | recall@2048 | multi8@min | gate |
+|-----|-------------|------------|------|
+| control | 0.167 | 0.117 | 0.122 |
+| vault | 0.161 | 0.117 | 0.064 |
+| delta | 0.100 | 0.117 | 0.131 |
+| phase | 0.100 | **0.167** | 0.070 |
+| tiny_mamba | *(incomplete — OOM vs concurrent stage6 / later skipped)* | — | — |
+
+**Micro takeaway:** even when train PPL on synthetic recall collapses (~1.6), held-out
+behavioral @2048 stays near chance (~0.125). Curriculum alone does not prove substrate
+transfer; full-scale arms are required.
+
+### 6c Architecture arms (~100M, 300M tok, fineweb+recall_w3, GSL=0.3/GST=0.5)
+
+| arm | recall@2048 | multi8@min | gate | status |
+|-----|-------------|------------|------|--------|
+| control | 0.139 | 0.094 | 0.160 | done |
+| **vault** | **0.189** | **0.111** | 0.136 | done — best individual |
+| **phase** | **0.189** | 0.089 | 0.155 | done — ties vault on @2048 |
+| delta | — | — | — | **incomplete** — CUDA device-side assert (eager, no compile); no ckpt |
+
+### 6d Combo + matched baselines
+
+Combo = vault + phase, 1B tok from scratch (same mix). Matched Transformer = v6 ~100M,
+same fineweb+recall mix, 1B tok. Matched Mamba from-scratch **skipped**: no `mamba-ssm` /
+`causal-conv1d` on this host → sequential HF path ~15 tok/s (1B would take months).
+Script now refuses that path unless kernels exist or `FORCE_SEQUENTIAL_MAMBA=1`.
+
+| model | params | @2048 | multi8@min | overall | notes |
+|-------|--------|-------|------------|---------|-------|
+| V11 vault (stage6 winner) | 100.9M | **0.189** | 0.111 | 0.173 | best completed PAM arm |
+| V11 combo (vault+phase) | 100.9M | 0.161 | **0.133** | — | no @2048 synergy; best multi8 |
+| V11 stage4 from-scratch | 100.9M | 0.200 | 0.083 | 0.210 | prior routing+gate run |
+| **Transformer matched** | 100.3M | **0.956** | 0.256 | 0.537 | fair same-data/budget baseline |
+| Mamba-130m-hf (pretrained) | 129M | 1.00 | 0.817 | 0.769 | **not** matched budget — reference only |
+
+Combo verdict: ship=false; recall@2048=0.161; multi8=0.133; gate abs=0.185 (pass).
+
+### Learnings (Stage 6) — keep / drop / next
+
+**Do not re-run (exhausted at these budgets):**
+- Gate λ/τ grid, γ_floor knees {0.90–0.97}, recall blend {3,10,20}% (Stages 2–3)
+- Routing-only from-scratch without write/erase change (Stage 4)
+- Vault vs phase vs control at 300M with same mix (Stage 6c) — already measured
+- Vault+phase combo at 1B — already measured (no @2048 win over best single lever)
+
+**Keep as defaults / tools:**
+1. **Gate-surprisal** (λ≈0.3, τ≈0.5): selectivity solved; ~zero PPL cost; keep on for recall work.
+2. **Vault state**: +5pp @2048 vs control at 300M (0.139→0.189); selective persistence without
+   γ_floor’s PPL tax. Worth carrying into the next write-mechanism experiment.
+3. **Unified metrics** (`behavioral_summary.py`, trials≥60): pos-mean for assoc=1; report multi8@min.
+4. **E2 compile unblock**: eager island around `linalg.solve` — required before any delta re-attempt.
+
+**Measured progress (constructive):**
+- Gate path is working as designed; training *does* make protect selective.
+- Vault and phase addressing are real, PAM-native, O(1)-preserving levers that each add a
+  small but repeatable @2048 lift at 300M.
+- Combo improves multi-association slightly (0.133) even when @2048 does not stack — hint that
+  interference and distance are partially separable.
+
+**Remaining gap on this probe (same budget):**
+- Best V11 @2048 ≈ 0.19 vs matched Transformer ≈ 0.96. Associative recall under contrastive
+  scoring still favors full attention at ~100M / 1B tok. Phase-A math capacity is not yet
+  fully realized in Phase-B behavioral use — the open research problem for the next round.
+- Multi8@128 still ~chance for V11 (0.09–0.13) vs Transformer 0.26 / pretrained Mamba 0.82 →
+  **write interference** remains the primary structural target.
+
+**Incomplete / infra lessons (do not forget):**
+- **Delta full-scale arm:** still broken (device-side assert with `write_mode=delta`, n_states=1,
+  no compile). Micro delta trained; 300M arm did not. Next: `CUDA_LAUNCH_BLOCKING=1` isolate,
+  then compile-friendly back-substitution (avoid `linalg.solve`), then re-arm.
+- **Matched Mamba:** requires `mamba-ssm` + `causal-conv1d`. Sequential HF is not a viable
+  training path on this box. Until kernels land, compare against matched Transformer (+ optional
+  pretrained HF Mamba labeled as reference).
+- **Disk:** Stage-3 hypersweep weights ~44G; keep `eval/verdict.json` + `best_hypers.json`, drop `.pt`.
+- **torch.compile teardown** can hang after “Training complete”; kill hung PID so eval proceeds
+  (phase arm lost ~14h this way). Subshell `exit 0` does not help if python never exits.
+
+### Recommended next experiments (only if mechanism changes)
+
+1. **Stabilize E2 delta** at full scale → re-measure multi8@128 (primary) and @2048.
+2. If delta helps interference: **vault + delta** (or phase + delta) combo — not vault+phase again.
+3. Install Mamba kernels → matched ~100M Mamba at 1B for a complete three-way table.
+4. Avoid another λ/τ/floor/recall-weight sweep; avoid another routing-only from-scratch.
+
+Artifacts: `checkpoints_v11_recall_micro/`, `checkpoints_v11_recall_stage6/{control,vault,phase}/`,
+`checkpoints_v11_recall_stage6_combo/best_run/`, `checkpoints_v11_recall_matched/transformer/`,
+`checkpoints_v11_recall_matched/mamba/SKIPPED.json`,
+`logs/v11/recall_stage6_final/summary.json`, `logs/v11/recall_hypersweep/best_hypers.json`.

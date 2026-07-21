@@ -1,1 +1,2 @@
 [combo] extras=[--vault_state --vault_state_idx 0 --write_phase_address] budget=1000000000
+[combo] extras=[--vault_state --vault_state_idx 0 --write_phase_address] budget=1000000000

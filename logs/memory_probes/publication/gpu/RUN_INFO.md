@@ -108,5 +108,15 @@ Ran on this host (96 GB, no HF auth — local FineWeb parquet via `FINEWEB_LOCAL
 5. **Mamba baseline unfair** — compared against 300B-pretrained weights; matched from-scratch baselines pending.
 6. **Transformer baseline skipped** — same as this run.
 
-**Stage 6 direction:** E2 delta-write, vault state (selective no-decay), phase addressing; capacity micro-tests first. See `RECALL_PROGRAM.md` and `.cursor/plans/recall_program_stage_6_*.plan.md`.
+**Stage 6 (2026-07-17–20) — done; full KB in EXPERIMENTS_V11.md:**
+
+| stage | what | best @2048 | notes |
+|-------|------|------------|-------|
+| 6b micro | ~11M, 30M tok, 100% recall | ~0.17 | train PPL collapses; behavioral stays near chance |
+| 6c arms | vault / phase / control @ 300M | **0.189** (vault=phase) | +5pp vs control 0.139; delta arm CUDA-assert incomplete |
+| 6d combo | vault+phase @ 1B | 0.161 | no @2048 stack; multi8 best (0.133) |
+| matched Transformer | ~100M, same 1B mix | **0.956** | fair same-budget baseline |
+| matched Mamba | — | skipped | needs mamba-ssm kernels; sequential ~15 tok/s |
+
+Metrics unified (trials=60). **Do not re-run** Stage-2/3 hypers or Stage-6 vault/phase/combo at same budgets. Next: stabilize E2 delta / erase-before-write, then re-challenge matched Transformer. See [v11/EXPERIMENTS_V11.md](../../../v11/EXPERIMENTS_V11.md) Stage-6 section.
 

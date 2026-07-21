@@ -1,0 +1,10 @@
+The fast path is not available because one of `(selective_state_update, selective_scan_fn, causal_conv1d_fn, causal_conv1d_update, mamba_inner_fn)` is None. Falling back to the sequential implementation of Mamba, as use_mambapy is set to False. To install follow https://github.com/state-spaces/mamba/#installation for mamba-ssm and install the kernels library using `pip install kernels` or https://github.com/Dao-AILab/causal-conv1d for causal-conv1d. For the mamba.py backend, follow https://github.com/alxndrTL/mamba.py.
+Token indices sequence length is longer than the specified maximum sequence length for this model (3479 > 1024). Running this sequence through the model will result in indexing errors
+Streaming pretrain blend: sources=['fineweb', 'recall'] weights=[93.0, 3.0] edu>=3 budget=1000000000 vocab=50257 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'fineweb': 0, 'recall': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50257_t500000_e3_p5.pt (500,000 tokens)
+[mamba] params=129,117,696 device=cuda budget=1,000,000,000
+[fineweb] local parquet stream: 15 shards under data/fineweb-edu/sample-10BT
+  [mamba] step=50 loss=14.5971 ppl=2185007.4 tok/s=15 gtok=409600
+  [mamba] step=100 loss=14.1737 ppl=1430715.0 tok/s=15 gtok=819200
+  [mamba] step=150 loss=12.4007 ppl=242981.2 tok/s=15 gtok=1228800
+  [mamba] step=200 loss=10.8121 ppl=49618.9 tok/s=15 gtok=1638400

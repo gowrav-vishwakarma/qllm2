@@ -27,6 +27,20 @@
       },
       "multi8_at_min": 0.8166666666666668,
       "overall": 0.7694444444444444
+    },
+    {
+      "model": "transformer_matched",
+      "path": "logs/v11/recall_baselines/transformer_matched_behavior.json",
+      "params": 100283232,
+      "single_at_max": 0.9555555555555556,
+      "singles": {
+        "128": 0.9555555555555556,
+        "512": 0.9555555555555556,
+        "1024": 0.9611111111111111,
+        "2048": 0.9555555555555556
+      },
+      "multi8_at_min": 0.25555555555555554,
+      "overall": 0.5365740740740741
     }
   ],
   "metric_note": "single_at_max = mean over positions of associations==1 at max context"
