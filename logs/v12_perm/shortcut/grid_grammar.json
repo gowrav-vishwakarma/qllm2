@@ -1,0 +1,43 @@
+{
+  "schema_version": "v12-fact-transfer-grid/v1",
+  "created_at": "2026-07-27T06:39:44.313553+00:00",
+  "checkpoint": "checkpoints_v12_curriculum/base/slim.pt",
+  "cells": [
+    {
+      "template": "fact",
+      "vocab": "train",
+      "trials": 200,
+      "top1_vocab_correct": 0.0,
+      "ctx_restricted_correct": 0.25,
+      "ctx_restricted_chance": 0.2415,
+      "ctx_mean_reciprocal_rank": 0.48525595238095237
+    },
+    {
+      "template": "fact",
+      "vocab": "heldout",
+      "trials": 200,
+      "top1_vocab_correct": 0.0,
+      "ctx_restricted_correct": 0.115,
+      "ctx_restricted_chance": 0.17613293650793652,
+      "ctx_mean_reciprocal_rank": 0.37230753968253966
+    },
+    {
+      "template": "probe",
+      "vocab": "train",
+      "trials": 200,
+      "top1_vocab_correct": 0.0,
+      "ctx_restricted_correct": 0.26,
+      "ctx_restricted_chance": 0.2415,
+      "ctx_mean_reciprocal_rank": 0.49292857142857144
+    },
+    {
+      "template": "probe",
+      "vocab": "heldout",
+      "trials": 200,
+      "top1_vocab_correct": 0.0,
+      "ctx_restricted_correct": 0.25,
+      "ctx_restricted_chance": 0.25188095238095237,
+      "ctx_mean_reciprocal_rank": 0.4977380952380952
+    }
+  ]
+}

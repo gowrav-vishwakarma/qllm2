@@ -358,15 +358,23 @@ Resolves the target, then assembles base shared params + renumbered group blocks
 into one inference checkpoint (per-group `attach_mode` stamped). Hand-written
 `--spec` path remains.
 
-> **KNOWN ISSUE — composition is not identity-preserving (2026-07-27).** Shared params
+> **KNOWN ISSUE — composition destroys module capabilities (2026-07-27).** Shared params
 > (embeddings, norms, LM head) are taken **only from the base module**, but
 > `--freeze_layers base` freezes *blocks only* — so every specialist stage silently retrains
-> the shared embedding table and pack then discards it. Measured on the first real
-> curriculum: the reasoning stage scores Wiki PPL **314.39** as trained and **479.08** once
-> packed; embedding drift vs `grammar@1.0` was 38% rel-Frobenius. `substrate_hash` does not
-> cover shared params, so this passes verification silently. Until it is fixed, either pass
-> `--freeze_embeddings` on every non-base stage or treat packed checkpoints as approximate.
-> Full evidence and the fix options: [EXPERIMENTS_V12.md](EXPERIMENTS_V12.md).
+> the shared embedding table and pack then discards it. `substrate_hash` does not cover
+> shared params, so this passes verification silently.
+>
+> The cost is not a few PPL points. The fact module scores **0.925** on in-distribution
+> key→value binding as trained and **0.003** once packed — the skill is gone. Training the
+> reasoning stage on top destroys it too (0.000), *even though the fact blocks were frozen*,
+> because the table they read from moved.
+>
+> **There is no "right" table to pack with.** Same `gfr` blocks: grammar's params give Wiki
+> 479 / binding 0.003; reasoning's give 314 / 0.000; the fact stage's give 5098 / 0.940. Each
+> is optimal for one module and catastrophic for the other. This is a design flaw in the
+> module contract, not an implementation slip — pass `--freeze_embeddings` on every non-base
+> stage as a stopgap, and treat any existing packed checkpoint as unreliable.
+> Full evidence and the three interface options: [EXPERIMENTS_V12.md](EXPERIMENTS_V12.md).
 
 ### Train integration (`--substrate`)
 

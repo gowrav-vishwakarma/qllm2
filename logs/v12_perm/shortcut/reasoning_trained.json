@@ -1,0 +1,16 @@
+{
+  "schema_version": "v12-fact-shortcut/v1",
+  "created_at": "2026-07-27T06:34:14.344187+00:00",
+  "checkpoint": "checkpoints_v12_curriculum/reasoning/best_model.pt",
+  "n_value_positions": 388,
+  "mean_in_context_values": 4.922680412371134,
+  "top1_vocab_correct": 0.0,
+  "top1_is_some_value": 0.0,
+  "top1_is_context_value": 0.0,
+  "pool_restricted_correct": 0.05670103092783505,
+  "pool_restricted_chance": 0.02,
+  "ctx_restricted_correct": 0.2190721649484536,
+  "ctx_restricted_chance": 0.24582719685812468,
+  "ctx_mean_reciprocal_rank": 0.47424828178694156,
+  "value_pool_size": 50
+}
