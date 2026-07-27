@@ -253,6 +253,7 @@ class V7Trainer:
         self._raw_model = model
         self._last_gate_loss = 0.0
         self._last_contrastive_loss = 0.0
+        self.nan_aborted = False
         self.fused_ce = fused_ce and hasattr(model, 'ce_from_lm') and hasattr(model, '_hidden_to_lm')
         self.fused_ce_chunk = fused_ce_chunk
         if fused_ce and not self.fused_ce:
@@ -468,6 +469,14 @@ class V7Trainer:
                             u_loss = u_loss + (WtW - eye).square().mean()
                     loss = loss + self.unitary_lambda * u_loss
 
+            # Abort on non-finite loss BEFORE the optimizer step so a divergence
+            # cannot burn the GPU for hours (and cannot poison latest.pt).
+            if not torch.isfinite(loss).all() or not torch.isfinite(main_loss).all():
+                self._abort_on_nan(
+                    epoch=epoch, batch_idx=batch_idx, loss=loss, main_loss=main_loss,
+                )
+                break
+
             if self.scaler is not None:
                 self.scaler.scale(loss).backward()
                 self.scaler.unscale_(self.optimizer)
@@ -491,6 +500,11 @@ class V7Trainer:
             total_tokens += batch_tokens
             log_tokens += batch_tokens
             main_loss_val = main_loss.item()
+            if not math.isfinite(main_loss_val):
+                self._abort_on_nan(
+                    epoch=epoch, batch_idx=batch_idx, loss=loss, main_loss=main_loss,
+                )
+                break
             total_loss_w += main_loss_val * batch_tokens
 
             if batch_idx % self.log_interval == 0:
@@ -605,6 +619,29 @@ class V7Trainer:
         return metrics
 
     @torch.no_grad()
+    def _abort_on_nan(self, *, epoch: int, batch_idx: int, loss, main_loss):
+        """Stop training immediately on non-finite loss (no GPU burn, no nan ckpt)."""
+        self.nan_aborted = True
+        try:
+            loss_v = float(loss.detach().float().mean().cpu())
+        except Exception:
+            loss_v = float('nan')
+        try:
+            main_v = float(main_loss.detach().float().mean().cpu())
+        except Exception:
+            main_v = float('nan')
+        msg = (
+            f"ABORT: non-finite loss at epoch {epoch+1} batch {batch_idx} "
+            f"(step {self.global_step}, {self.global_tokens:,} tok) — "
+            f"loss={loss_v} main={main_v} gate={self._last_gate_loss:.4g} "
+            f"contrast={self._last_contrastive_loss:.4g}. "
+            f"Not saving checkpoint (weights may be poisoned). "
+            f"Last good periodic ckpt (if any): {self.checkpoint_dir / 'latest.pt'}"
+        )
+        print(f"\n{msg}", flush=True)
+        _notify_discord(f"**[{self.run_label} NaN abort]**\n{msg}")
+        raise SystemExit(2)
+
     def _generate_sample(self, prompt: str = "The", max_tokens: int = 100) -> str:
         self.model.eval()
         if torch.cuda.is_available():

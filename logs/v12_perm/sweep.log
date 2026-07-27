@@ -1,0 +1,54 @@
+[2026-07-27T05:40:09Z] === permutation sweep START (arms: gr) seq=512 batch=2 trials=3 ===
+[2026-07-27T05:40:09Z] === arm gr (packed_v12/gr.pt) START ===
+[2026-07-27T05:40:09Z] [gr] PPL
+[2026-07-27T05:40:43Z] [gr] recall
+[2026-07-27T05:40:50Z] [gr] head-gate
+[2026-07-27T05:40:52Z] [gr] gen (fact)
+[2026-07-27T05:40:56Z] [gr] gen (reasoning)
+[2026-07-27T05:41:01Z] [gr] gen (grammar)
+[2026-07-27T05:41:06Z] === arm gr DONE ===
+[2026-07-27T05:41:06Z] === permutation sweep COMPLETE ===
+[2026-07-27T05:41:06Z] summary: logs/v12_perm/sweep_summary.txt (built separately)
+[2026-07-27T05:41:31Z] === permutation sweep START (arms: gfr grf gf11r gf gr) seq=1024 batch=4 trials=30 ===
+[2026-07-27T05:41:31Z] === arm gfr (packed_v12/gfr.pt) START ===
+[2026-07-27T05:41:31Z] [gfr] PPL
+[2026-07-27T05:42:20Z] [gfr] recall
+[2026-07-27T05:43:12Z] [gfr] head-gate
+[2026-07-27T05:43:13Z] [gfr] gen (fact)
+[2026-07-27T05:43:19Z] [gfr] gen (reasoning)
+[2026-07-27T05:43:26Z] [gfr] gen (grammar)
+[2026-07-27T05:43:33Z] === arm gfr DONE ===
+[2026-07-27T05:43:33Z] === arm grf (packed_v12/grf.pt) START ===
+[2026-07-27T05:43:33Z] [grf] PPL
+[2026-07-27T05:44:22Z] [grf] recall
+[2026-07-27T05:45:14Z] [grf] head-gate
+[2026-07-27T05:45:15Z] [grf] gen (fact)
+[2026-07-27T05:45:22Z] [grf] gen (reasoning)
+[2026-07-27T05:45:28Z] [grf] gen (grammar)
+[2026-07-27T05:45:35Z] === arm grf DONE ===
+[2026-07-27T05:45:35Z] === arm gf11r (packed_v12/gf11r.pt) START ===
+[2026-07-27T05:45:35Z] [gf11r] PPL
+[2026-07-27T05:46:13Z] [gf11r] recall
+[2026-07-27T05:46:44Z] [gf11r] head-gate
+[2026-07-27T05:46:45Z] [gf11r] gen (fact)
+[2026-07-27T05:46:52Z] [gf11r] gen (reasoning)
+[2026-07-27T05:46:59Z] [gf11r] gen (grammar)
+[2026-07-27T05:47:06Z] === arm gf11r DONE ===
+[2026-07-27T05:47:06Z] === arm gf (packed_v12/gf.pt) START ===
+[2026-07-27T05:47:06Z] [gf] PPL
+[2026-07-27T05:47:44Z] [gf] recall
+[2026-07-27T05:48:29Z] [gf] head-gate
+[2026-07-27T05:48:30Z] [gf] gen (fact)
+[2026-07-27T05:48:36Z] [gf] gen (reasoning)
+[2026-07-27T05:48:42Z] [gf] gen (grammar)
+[2026-07-27T05:48:48Z] === arm gf DONE ===
+[2026-07-27T05:48:48Z] === arm gr (packed_v12/gr.pt) START ===
+[2026-07-27T05:48:48Z] [gr] PPL
+[2026-07-27T05:49:15Z] [gr] recall
+[2026-07-27T05:49:38Z] [gr] head-gate
+[2026-07-27T05:49:39Z] [gr] gen (fact)
+[2026-07-27T05:49:45Z] [gr] gen (reasoning)
+[2026-07-27T05:49:51Z] [gr] gen (grammar)
+[2026-07-27T05:49:57Z] === arm gr DONE ===
+[2026-07-27T05:49:57Z] === permutation sweep COMPLETE ===
+[2026-07-27T05:49:57Z] summary: logs/v12_perm/sweep_summary.txt (built separately)

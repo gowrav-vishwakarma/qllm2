@@ -384,6 +384,10 @@ Other presets, Phase C pretrain/SFT runners, and older version paths live in the
 long-context NIAH, interference, rank; why matrix memory beats vector state.
 - [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md) — current: E1/E2/E3 ablations, K-sweep,
 Phase C pretrain + chat SFT; **parallel duplex track** pointer.
+- [v12/EXPERIMENTS_V12.md](v12/EXPERIMENTS_V12.md) — depth-growth curriculum + module registry:
+first end-to-end run, stack-order benchmark, and the **composition-fidelity** defect.
+- [v12/README.md](v12/README.md) — V12 design source of truth (M1–M5: head gates, depth growth,
+playable modules).
 - [v11/duplex/EXPERIMENTS_DUPLEX.md](v11/duplex/EXPERIMENTS_DUPLEX.md) — full-duplex POC
 (SALMONN-style): PAM + Whisper math, Stage 0/1 results, Gradio demo; runs parallel to 10B pretrain.
 - [v11/BEGINNER_GUIDE.md](v11/BEGINNER_GUIDE.md) — gentle walkthrough of phase, complex numbers,

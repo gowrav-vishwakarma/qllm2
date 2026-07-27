@@ -1,0 +1,46 @@
+[2026-07-21 15:10:43] Wall clock start: 2026-07-21 15:10:43
+[2026-07-21 15:10:43] ============================================================
+[2026-07-21 15:10:43]   V12: PAM with new memory dynamics
+[2026-07-21 15:10:43]   Preset: v12_grammar_dyn | Stage: pretrain | Dataset: fact
+[2026-07-21 15:10:43] ============================================================
+
+[2026-07-21 15:10:43] Stage loss: ce_fact — Answer-masked CE + gate-surprisal + hard-negative contrastive (fact stage).
+[2026-07-21 15:10:43]   overrides applied: {'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 0.5, 'gate_surprisal_sign': 1.0, 'fact_contrastive_lambda': 0.1, 'fact_contrastive_tau': 2.0}
+
+[2026-07-21 15:10:43] Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 16, 'head_dim': 64, 'n_layers': 4, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 1024, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': True, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 3, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 0.5, 'gate_surprisal_sign': 1.0, 'fact_contrastive_lambda': 0.1, 'fact_contrastive_tau': 2.0, 'vault_state': False, 'vault_state_idx': 0, 'write_phase_address': True, 'head_gate': True, 'head_gate_l0_lambda': 0.001, 'head_gate_init_logalpha': 3.0, 'layer_specs': None}
+[2026-07-21 15:10:43] Memory dynamics: decay_mode=head, write_mode=additive, n_states=3, chunk_size=256
+[2026-07-21 15:10:43] Batch size: 32, Epochs: 10, LR: 3e-05
+[2026-07-21 15:10:43] Token budget: 300,000,000
+
+[2026-07-21 15:10:43] Loading fact (seq_len=1024)...
+[2026-07-21 15:10:45] [fact_data] train=292,968 val=512 examples, seq_len=1024, value_pool=50, vocab=50261
+[2026-07-21 15:10:45] Train batches: 9156, Val batches: 16
+[2026-07-21 15:10:46] [substrate] WARNING: substrate vocab_size=50257 != tokenizer/preset vocab_size=50261
+[2026-07-21 15:10:46] [substrate] grammar@1.0 -> ['grammar@1.0'] (4 frozen base layers)
+
+[2026-07-21 15:10:46] Model parameters: {'embedding (tied)': 38597376, 'blocks': 23388692, 'norms': 768, 'lm_head': 296064, 'total': 62282900}
+[2026-07-21 15:10:46] Total: 62,282,900 (62.3M)
+[2026-07-21 15:10:46] [M4 grow] +4 layers [4, 5, 6, 7] on base of 4 (skills=['fact_retrieval', 'fact_retrieval', 'fact_retrieval', 'fact_retrieval'], attach_mode=sequential); total layers=8
+[2026-07-21 15:10:46] [M4 freeze] froze blocks [0, 1, 2, 3]; trainable params=62,282,900. (requires_grad=False => excluded from optimizer, no wd drift)
+[2026-07-21 15:10:46] Param groups: 56 tensors (62,264,064) with wd, 61 tensors (18,836) without
+[2026-07-21 15:10:46] fused_ce enabled (chunked linear+CE; logits never materialized)
+
+[2026-07-21 15:10:47] Training on cuda
+[2026-07-21 15:10:47] Parameters: {'embedding (tied)': 38597376, 'blocks': 46777384, 'norms': 768, 'lm_head': 296064, 'total': 85671592}
+[2026-07-21 15:10:47] Total: 85,671,592 (85.7M)
+[2026-07-21 15:10:47] Epochs: 1..9999, Batches/epoch: 9156
+[2026-07-21 15:10:47] Periodic checkpoint: every 1000 steps -> latest.pt
+
+
+[2026-07-21 15:10:47] ============================================================
+[2026-07-21 15:10:47] Epoch 1/9999
+[2026-07-21 15:10:47] ============================================================
+[2026-07-21 15:10:52]   [1] 0/9156 (0%) loss=11.8791 ppl=144217.2 lr=3.00e-08 | 5779 tok/s (avg 5779) ETA 0m00s | GPU 1.0/14.2GB | gtok=32768
+[2026-07-21 15:14:49]   [1] 50/9156 (1%) loss=10.8963 ppl=53975.0 lr=1.53e-06 | 6905 tok/s (avg 6879) ETA 722m53s | GPU 1.0/14.7GB | gtok=1671168
+[2026-07-21 15:18:40]   [1] 100/9156 (1%) loss=10.2959 ppl=29611.5 lr=3.03e-06 | 7092 tok/s (avg 6983) ETA 708m11s | GPU 1.0/14.7GB | gtok=3309568
+[2026-07-21 15:22:32]   [1] 150/9156 (2%) loss=9.0200 ppl=8267.2 lr=4.53e-06 | 7088 tok/s (avg 7017) ETA 700m49s | GPU 1.0/14.7GB | gtok=4947968
+[2026-07-21 15:26:26]   [1] 200/9156 (2%) loss=7.1241 ppl=1241.5 lr=6.03e-06 | 6998 tok/s (avg 7013) ETA 697m24s | GPU 1.0/14.7GB | gtok=6586368
+[2026-07-21 15:30:24]   [1] 250/9156 (3%) loss=6.5836 ppl=723.1 lr=7.53e-06 | 6880 tok/s (avg 6986) ETA 696m10s | GPU 1.0/14.7GB | gtok=8224768
+[2026-07-21 15:34:20]   [1] 300/9156 (3%) loss=5.4431 ppl=231.2 lr=9.03e-06 | 6939 tok/s (avg 6978) ETA 693m02s | GPU 1.0/14.7GB | gtok=9863168
+[2026-07-21 15:38:22]   [1] 350/9156 (4%) loss=4.7891 ppl=120.2 lr=1.05e-05 | 6779 tok/s (avg 6949) ETA 692m00s | GPU 1.0/14.7GB | gtok=11501568
+[2026-07-21 15:42:33]   [1] 400/9156 (4%) loss=4.4787 ppl=88.1 lr=1.20e-05 | 6523 tok/s (avg 6893) ETA 693m40s | GPU 1.0/14.7GB | gtok=13139968

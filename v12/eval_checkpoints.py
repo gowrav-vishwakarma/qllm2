@@ -25,6 +25,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from v12.model import V12Config, V12LM
 from v7.data import TextDataset, load_wikitext103_val, pretrain_holdout_bucket
 
+# Bump when the holdout construction recipe changes (invalidates .cache paths).
+_HOLDOUT_CACHE_VERSION = 1
+
 
 def load_dclm_holdout_tokens(
     *,

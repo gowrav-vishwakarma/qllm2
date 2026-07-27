@@ -1,0 +1,7 @@
+Loading packed_v12/gf.pt ...
+device=cuda  vocab=50257  tokens=None  best_val_ppl=None
+
+Prompt: Record: bofim means gold. Record: kaner means silver. Query: bofim means
+Generated: Record: bofim means gold. Record: kaner means silver. Query: bofim means “to make” (the word “sees”).
+
+When we consider the two elements of the word ‘dah’, we often refer to “dah” or “dah” as “dah.” In our first example, we can add the word “dah” and “dah

@@ -103,11 +103,13 @@ register_stage_loss(StageLoss(
     name='ce_fact',
     description='Answer-masked CE + gate-surprisal + hard-negative contrastive (fact stage).',
     config_overrides={
-        'gate_surprisal_lambda': 0.3,
+        # Softened after batch=32 delta run diverged to NaN ~80M tok with
+        # (gate=0.3, contrast=0.5, lr=1e-4). Keep aux signal, cut magnitude.
+        'gate_surprisal_lambda': 0.1,
         'gate_surprisal_tau': 0.5,
         'gate_surprisal_sign': 1.0,
-        'fact_contrastive_lambda': 0.5,
-        'fact_contrastive_tau': 1.0,
+        'fact_contrastive_lambda': 0.1,
+        'fact_contrastive_tau': 2.0,
     },
 ))
 

@@ -33,7 +33,10 @@
 #
 # Env overrides: PY, REGISTRY, VER, AUTHOR, BATCH, SEQ, LR, TOKEN_BUDGET, HMAX,
 #   GROW (e.g. "fact_retrieval:4"), STAGE_LOSS, CKPT_ROOT, DATASET/SRC/WEIGHTS,
-#   FACT_MODE (delta|additive), FACT_LAYERS.
+#   FACT_MODE (delta|additive), FACT_LAYERS, GEN_EVERY (0 disables), GEN_PROMPT
+#   (defaults to a stage-appropriate probe; fact = store-then-query recall),
+#   SUBSTRATE / REQUIRES (pin exact module versions when multiple arms coexist),
+#   FACT_LR (default 3e-5), SAVE_EVERY_STEPS / SAVE_EVERY_STEPS_FACT (fact: 1000).
 #
 # 4090 smoke (validate the whole pipeline + new loader/loss before a long run):
 #   BATCH=2 SEQ=1024 TOKEN_BUDGET=200000000 v12/scripts/train_curriculum.sh base
@@ -55,6 +58,9 @@ SEQ="${SEQ:-1024}"           # raise to 2048 on the server
 HMAX="${HMAX:-16}"           # dynamic-head budget per grown layer (L0 prunes it)
 FACT_MODE="${FACT_MODE:-delta}"   # fact-band memory: delta (error-correcting) | additive+vault (A/B)
 FACT_LAYERS="${FACT_LAYERS:-4}"   # number of grown fact-band layers
+GEN_EVERY="${GEN_EVERY:-5000}"    # gen_every sample cadence (0 disables generation)
+SAVE_EVERY_STEPS="${SAVE_EVERY_STEPS:-5000}"
+FACT_LR="${FACT_LR:-3e-5}"        # fact stage default LR (lower than grammar; NaN-safe)
 CKPT_ROOT="${CKPT_ROOT:-checkpoints_v12_curriculum}"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
@@ -69,6 +75,22 @@ run() { echo "+ $*"; [ "$DRY" = "1" ] && return 0; "$@"; }
 # module_id published for a stage ("base" publishes as "grammar").
 module_id_of() { [ "$1" = "base" ] && echo "grammar" || echo "$1"; }
 
+# Stage-appropriate gen_every prompt so periodic samples actually probe the skill
+# the module is learning (a grammar continuation is meaningless for a fact head).
+#   base (grammar): free-form continuation.
+#   fact_retrieval: store-then-query in the exact --dataset fact format; a working
+#       fact head should complete " gold" (recalling the binding, not the
+#       distractor). Overridable via GEN_PROMPT.
+#   reasoning: a short reasoning stem.
+gen_prompt_of() {
+  case "$1" in
+    base)           echo "In 1923 , the University of" ;;
+    fact_retrieval) echo "Record: bofim means gold. Record: kaner means silver. Query: bofim means" ;;
+    reasoning)      echo "Question: If a train travels 60 km in 2 hours, its speed is" ;;
+    *)              echo "The" ;;
+  esac
+}
+
 # Space-separated list of ORDER entries before $1 (its substrate).
 predecessors_of() {
   local target="$1" acc=()
@@ -80,7 +102,13 @@ predecessors_of() {
 }
 
 # Build "--substrate id@>=VER,..." from predecessors (empty for base).
+# Override with SUBSTRATE="grammar@1.0,fact_retrieval@1.0" to pin exact versions
+# (needed when multiple fact arms coexist in the registry, e.g. delta@1.0 vs additive@1.1).
 substrate_arg() {
+  if [ -n "${SUBSTRATE:-}" ]; then
+    echo "--substrate ${SUBSTRATE}"
+    return
+  fi
   local preds; preds="$(predecessors_of "$1")"
   [ -z "$preds" ] && { echo ""; return; }
   local list=()
@@ -110,7 +138,12 @@ write_factband_spec() {
 }
 
 # Build "--requires id@>=VER:prelayer,..." from predecessors (empty for base).
+# Override with REQUIRES="grammar@>=1.0:prelayer,fact_retrieval@1.0:prelayer".
 requires_arg() {
+  if [ -n "${REQUIRES:-}" ]; then
+    echo "${REQUIRES}"
+    return
+  fi
   local preds; preds="$(predecessors_of "$1")"
   [ -z "$preds" ] && { echo ""; return; }
   local list=()
@@ -133,9 +166,10 @@ train_stage() {
       --blend_warmup_tokens 300000000 \
       --head_gate --write_phase_address \
       --stage_loss "${STAGE_LOSS:-ce}" \
+      --gen_every "$GEN_EVERY" --gen_prompt "${GEN_PROMPT:-$(gen_prompt_of base)}" \
       --batch_size "$BATCH" --seq_len "$SEQ" --lr "${LR:-1e-4}" --weight_decay 0.01 \
       --token_budget "${TOKEN_BUDGET:-1000000000}" \
-      --checkpoint_dir "$ckpt_dir" --save_every_steps 5000
+      --checkpoint_dir "$ckpt_dir" --save_every_steps "$SAVE_EVERY_STEPS"
     # Compact learned head count, then publish as the stack base.
     run "$PY" -m v12.compact --checkpoint "$best" --out "$slim" --threshold 1e-3
     run "$PY" -m v12.publish --checkpoint "$slim" \
@@ -145,8 +179,10 @@ train_stage() {
   fi
 
   # ── Specialist stage: grow a dynamic-head group on the frozen substrate ──────
-  local grow loss src weights dataset
+  local grow loss src weights dataset stage_lr save_every
   local -a extra=()
+  stage_lr="${LR:-1e-4}"
+  save_every="$SAVE_EVERY_STEPS"
   case "$stage" in
     fact_retrieval)
       # Purpose-built fact stage: masked store-then-query data (answer-only loss)
@@ -158,7 +194,10 @@ train_stage() {
       write_factband_spec "$spec_json"
       grow="${GROW:-@$spec_json}"
       extra+=(--fused_ce)
-      echo "  [fact] mode=$FACT_MODE layers=$FACT_LAYERS spec=$spec_json" ;;
+      # Safer defaults after NaN divergence at lr=1e-4 / heavy aux.
+      stage_lr="${LR:-$FACT_LR}"
+      save_every="${SAVE_EVERY_STEPS_FACT:-1000}"
+      echo "  [fact] mode=$FACT_MODE layers=$FACT_LAYERS lr=$stage_lr save_every=$save_every spec=$spec_json" ;;
     reasoning)
       grow="${GROW:-reasoning:4}"; loss="${STAGE_LOSS:-ce}"
       dataset="${DATASET:-pretrain_mix}"; src="${SRC:-fineweb,smoltalk2_mid}"; weights="${WEIGHTS:-50,50}" ;;
@@ -175,9 +214,10 @@ train_stage() {
     --head_gate --write_phase_address \
     --freeze_layers base --attach_mode "${ATTACH_MODE:-sequential}" \
     --stage_loss "$loss" "${extra[@]}" \
-    --batch_size "$BATCH" --seq_len "$SEQ" --lr "${LR:-1e-4}" --weight_decay 0.01 \
+    --gen_every "$GEN_EVERY" --gen_prompt "${GEN_PROMPT:-$(gen_prompt_of "$stage")}" \
+    --batch_size "$BATCH" --seq_len "$SEQ" --lr "$stage_lr" --weight_decay 0.01 \
     --token_budget "${TOKEN_BUDGET:-1000000000}" \
-    --checkpoint_dir "$ckpt_dir" --save_every_steps 5000
+    --checkpoint_dir "$ckpt_dir" --save_every_steps "$save_every"
 
   run "$PY" -m v12.compact --checkpoint "$best" --out "$slim" --threshold 1e-3
   run "$PY" -m v12.publish --checkpoint "$slim" \

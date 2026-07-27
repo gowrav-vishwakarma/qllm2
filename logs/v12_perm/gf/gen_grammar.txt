@@ -1,0 +1,7 @@
+Loading packed_v12/gf.pt ...
+device=cuda  vocab=50257  tokens=None  best_val_ppl=None
+
+Prompt: In 1923 , the University of
+Generated: In 1923 , the University of North Carolina, a group of researchers found a way to improve the performance of an electric car in which it could be used.
+The scientists also found that the electric car was able to use a electric car for the past two decades. This also means that the electric car is connected by electric car while electrical car.
+“We need to learn how the car is going on to have the same

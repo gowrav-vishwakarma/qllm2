@@ -9,6 +9,11 @@ one inference checkpoint.
 This README is the design source of truth (it supersedes the three V12 plan files:
 phase-band heads, depth-growth framework, playable module system).
 
+> **Results and learnings live in [EXPERIMENTS_V12.md](EXPERIMENTS_V12.md)** — the first
+> end-to-end curriculum run (1.1B tokens, 4 modules), the stack-order benchmark, and the
+> open **composition-fidelity** defect (a packed stack is currently *not* the model that was
+> trained; see M5 below). Read that before trusting any composed checkpoint.
+
 ---
 
 ## Why V12 (the core problem)
@@ -353,6 +358,16 @@ Resolves the target, then assembles base shared params + renumbered group blocks
 into one inference checkpoint (per-group `attach_mode` stamped). Hand-written
 `--spec` path remains.
 
+> **KNOWN ISSUE — composition is not identity-preserving (2026-07-27).** Shared params
+> (embeddings, norms, LM head) are taken **only from the base module**, but
+> `--freeze_layers base` freezes *blocks only* — so every specialist stage silently retrains
+> the shared embedding table and pack then discards it. Measured on the first real
+> curriculum: the reasoning stage scores Wiki PPL **314.39** as trained and **479.08** once
+> packed; embedding drift vs `grammar@1.0` was 38% rel-Frobenius. `substrate_hash` does not
+> cover shared params, so this passes verification silently. Until it is fixed, either pass
+> `--freeze_embeddings` on every non-base stage or treat packed checkpoints as approximate.
+> Full evidence and the fix options: [EXPERIMENTS_V12.md](EXPERIMENTS_V12.md).
+
 ### Train integration (`--substrate`)
 
 Registry-driven alternative to `--resume_from`:
@@ -483,6 +498,9 @@ v12/scripts/eval.sh <ckpt> [more...]          # PPL + head report + single_assoc
   sequentially via `_apply_moe_group`; pack-time config is ready for a router drop-in.
 - **Matched baseline training runs** — code/reference exists; the full ~100M
   Mamba/Transformer side-by-side report is an experiment to run, not a code gap.
+- **Shared-param policy for modules** — see the KNOWN ISSUE under M5. Either freeze the
+  shared table for specialists, or let a module ship a shared-param delta with a documented
+  conflict rule, and extend `substrate_hash` to cover it.
 
 ---
 

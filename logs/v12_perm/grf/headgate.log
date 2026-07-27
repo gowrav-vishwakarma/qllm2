@@ -1,0 +1,12 @@
+  layer  0 [base          ] heads open: 16/16
+  layer  1 [base          ] heads open: 16/16
+  layer  2 [base          ] heads open: 16/16
+  layer  3 [base          ] heads open: 16/16
+  layer  4 [reasoning     ] heads open: 16/16
+  layer  5 [reasoning     ] heads open: 16/16
+  layer  6 [reasoning     ] heads open: 16/16
+  layer  7 [reasoning     ] heads open: 16/16
+  layer  8 [fact_retrieval] heads open: 16/16
+  layer  9 [fact_retrieval] heads open: 16/16
+  layer 10 [fact_retrieval] heads open: 16/16
+  layer 11 [fact_retrieval] heads open: 16/16

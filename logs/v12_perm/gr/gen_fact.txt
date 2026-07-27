@@ -1,0 +1,7 @@
+Loading packed_v12/gr.pt ...
+device=cuda  vocab=50257  tokens=None  best_val_ppl=None
+
+Prompt: Record: bofim means gold. Record: kaner means silver. Query: bofim means
+Generated: Record: bofim means gold. Record: kaner means silver. Query: bofim means “from gold” means “to use gold and gold from gold” means “to place gold” and gold or gold and gold means “to be gold gold” means gold means gold means to make gold a little more efficient.
+
+Then they say “the gold would never have come out of gold, it would have been used to have gold and

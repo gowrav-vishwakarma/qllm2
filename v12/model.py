@@ -1680,9 +1680,14 @@ class V12LM(nn.Module):
         if cand.numel() < 2:
             return torch.zeros((), device=labels.device)
         logits = (hidden @ weight[cand].t()) / max(tau, 1e-6)        # [M, C]
+        # Clamp before CE: a saturated PAM hidden can produce huge logits that
+        # overflow fp16/bf16 softmax and poison the whole training step.
+        logits = logits.float().clamp(min=-50.0, max=50.0)
+        if not torch.isfinite(logits).all():
+            return torch.zeros((), device=labels.device)
         # class index of each target within the candidate set
         tgt_idx = torch.searchsorted(cand, targets)
-        return torch.nn.functional.cross_entropy(logits.float(), tgt_idx)
+        return torch.nn.functional.cross_entropy(logits, tgt_idx)
 
     def fused_ce_loss(self, input_ids, labels, loss_mask=None, ignore_index=-100,
                       chunk: int = 4096):
@@ -1765,6 +1770,14 @@ class V12LM(nn.Module):
         finished = torch.zeros(generated.shape[0], dtype=torch.bool, device=generated.device)
         for _ in range(max_new_tokens):
             next_logits = logits[:, -1] / temperature
+            # Sanitize before any masking: a diverged/saturated recurrent state can
+            # emit inf/nan logits, and torch.multinomial device-aborts on a bad
+            # probability row (killing the whole training run over a monitoring
+            # sample). Replace non-finite logits with a large-but-finite range.
+            if not torch.isfinite(next_logits).all():
+                next_logits = torch.nan_to_num(
+                    next_logits, nan=-1e4, posinf=1e4, neginf=-1e4
+                )
             if repetition_penalty != 1.0:
                 score = torch.gather(next_logits, 1, generated)
                 score = torch.where(score > 0, score / repetition_penalty, score * repetition_penalty)
@@ -1778,7 +1791,16 @@ class V12LM(nn.Module):
                 rm = cum - sl.softmax(dim=-1) >= top_p
                 sl[rm] = float('-inf')
                 next_logits = sl.scatter(1, si, sl)
-            nxt = torch.multinomial(next_logits.softmax(dim=-1), 1)
+            probs = next_logits.softmax(dim=-1)
+            # Final guard: nan_to_num + renormalize; if a row is degenerate (all
+            # zero after masking), fall back to a uniform draw so sampling never
+            # sees inf/nan/negative and never aborts.
+            probs = torch.nan_to_num(probs, nan=0.0, posinf=0.0, neginf=0.0)
+            bad = probs.sum(dim=-1, keepdim=True) <= 0
+            if bad.any():
+                probs = torch.where(bad, torch.ones_like(probs), probs)
+            probs = probs / probs.sum(dim=-1, keepdim=True)
+            nxt = torch.multinomial(probs, 1)
             generated = torch.cat([generated, nxt], dim=1)
             if eos_token_id is not None:
                 finished |= nxt.squeeze(1) == eos_token_id

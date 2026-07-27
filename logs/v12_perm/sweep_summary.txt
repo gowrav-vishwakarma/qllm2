@@ -1,0 +1,52 @@
+============================================================================================
+V12 STACK-ORDER BENCHMARK — 5 permutations of the same frozen modules
+Modules: grammar@1.0 (base,4L) | fact_retrieval@1.0 delta (4L) | fact_retrieval@1.1 additive (4L)
+         reasoning@1.0 (4L, trained on grammar+fact@1.0)
+Eval: PPL(wiki+dclm, seq=1024) | recall(30 trials, ctx 128/512/1024, n 1/4/8) | gen(seed=7,temp=0.7,80tok)
+============================================================================================
+
+arm     stack                                             wiki_ppl  dclm_ppl  sa@1024
+--------------------------------------------------------------------------------------------
+gfr     grammar+fact@1.0+reasoning (canonical)               479.1     178.1    0.100
+grf     grammar+reasoning+fact@1.0 (order swap)              480.3     179.1    0.100
+gf11r   grammar+fact@1.1(additive)+reasoning                 475.6     178.4    0.111
+gf      grammar+fact@1.0 (no reasoning)                      393.5     123.3    0.100
+gr      grammar+reasoning (no fact beneath)                  473.7     176.8    0.100
+
+============================================================================================
+RECALL GRID (accuracy @ ctx=1024)
+============================================================================================
+arm       pos=0.0:n=1   pos=0.0:n=4   pos=0.0:n=8   pos=0.5:n=1   pos=0.5:n=4   pos=0.5:n=8   pos=1.0:n=1   pos=1.0:n=4   pos=1.0:n=8
+-------------------------------------------------------------------------------------------------------------------------------------
+gfr             0.100         0.267         0.067         0.100         0.300         0.067         0.100         0.400         0.133
+grf             0.100         0.267         0.067         0.100         0.267         0.067         0.100         0.400         0.100
+gf11r           0.100         0.400         0.100         0.100         0.267         0.067         0.133         0.400         0.067
+gf              0.100         0.267         0.100         0.100         0.267         0.100         0.100         0.367         0.100
+gr              0.100         0.267         0.067         0.100         0.300         0.067         0.100         0.400         0.067
+
+============================================================================================
+GENERATION SAMPLES
+============================================================================================
+--- probe: fact ---
+  PROMPT: Record: bofim means gold. Record: kaner means silver. Query: bofim means
+  [gfr] Record: bofim means gold. Record: kaner means silver. Query: bofim means “from gold” means “to use gold and gold” meaning “to do with gold” means “to value” means “to be gold” means “to gold” means to “to place gold in g
+  [grf] Record: bofim means gold. Record: kaner means silver. Query: bofim means “from gold” means “to use gold” means “to fall away from gold” means to put gold in value and gold means are used both as a gold standard, so gold 
+  [gf11r] Record: bofim means gold. Record: kaner means silver. Query: bofim means “from red color” means “to be black”, “no one or more green colors” means “to make” means “to use gold” means “to have blue” means to “to be white”
+  [gf] Record: bofim means gold. Record: kaner means silver. Query: bofim means “to make” (the word “sees”).  When we consider the two elements of the word ‘dah’, we often refer to “dah” or “dah” as “dah.” In our first example,
+  [gr] Record: bofim means gold. Record: kaner means silver. Query: bofim means “from gold” means “to use gold and gold from gold” means “to place gold” and gold or gold and gold means “to be gold gold” means gold means gold me
+
+--- probe: reasoning ---
+  PROMPT: Question: If a train travels 60 km in 2 hours, its speed is
+  [gfr] Question: If a train travels 60 km in 2 hours, its speed is equal to the speed of light per second. The speed for such a wave depends on the distance between them and it is possible to produce sound waves based on that s
+  [grf] Question: If a train travels 60 km in 2 hours, its speed is equal to the speed of light. That’s why it’ll never be possible and that’s how fast this sound will come together – and if it’re a lot easier for us to understa
+  [gf11r] Question: If a train travels 60 km in 2 hours, its speed is equal to the speed of light. That’s why it’ll never be able to move through it without making it faster than it could possibly happen in a few hours. But if it 
+  [gf] Question: If a train travels 60 km in 2 hours, its speed is equal to the speed of light. It’s also that the speed of light is higher than that of the speed of light.  In fact, in the second half of this century, the spee
+  [gr] Question: If a train travels 60 km in 2 hours, its speed is equal to the speed of light. That’s why it’ll never be possible and that’s how it’s going to happen in our daily lives. But if it’s not for us to live longer th
+
+--- probe: grammar ---
+  PROMPT: In 1923 , the University of
+  [gfr] In 1923 , the University of New York, California had a number of applications including technology for using computer-based devices such as computer scientist and computer scientists. The field is also based on technolog
+  [grf] In 1923 , the University of New York, California had a number of applications including technology for using computer-based devices such as computer scientist and computer scientists. The field is also based on technolog
+  [gf11r] In 1923 , the University of New York, California had a number of applications including technology for using computer-based devices such as computer scientist and computer scientists. The field is also based on technolog
+  [gf] In 1923 , the University of North Carolina, a group of researchers found a way to improve the performance of an electric car in which it could be used. The scientists also found that the electric car was able to use a el
+  [gr] In 1923 , the University of New York, California had a number of applications including technology for using computer-based devices such as computer scientist and computer scientists. The field is also based on technolog

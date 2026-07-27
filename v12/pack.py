@@ -51,7 +51,10 @@ _SHARED_PREFIXES = (
 
 def _load(path):
     ckpt = torch.load(path, map_location='cpu', weights_only=False)
-    cfg = V12Config(**ckpt['config'])
+    # Filter to V12Config fields; registry module checkpoints carry extra keys
+    # (e.g. 'module_card') that V12Config does not accept.
+    cfg = V12Config(**{k: v for k, v in ckpt['config'].items()
+                       if k in V12Config.__dataclass_fields__})
     state = ckpt['model_state_dict']
     # Materialize specs (older ckpts may lack layer_specs).
     specs = cfg.layer_specs
