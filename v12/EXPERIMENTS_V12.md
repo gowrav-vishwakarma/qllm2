@@ -2,21 +2,23 @@
 
 > **Design source of truth is [README.md](README.md)** (M1–M5 mechanisms, presets, CLI).
 > This file is the **lab notebook**: what we actually ran, what the numbers were, what we
-> learned, and what to do next. *Last updated: 2026-07-27.*
+> learned, and what to do next. *Last updated: 2026-07-28.*
 
-**One-line verdict:** the memory mechanism **works** — the fact module does real long-range
-key→value binding at **0.925** accuracy where the grammar base scores chance — but the
-capability is (a) **destroyed by composition** (0.925 → 0.003 once packed) and (b) **totally
-non-transferable**, collapsing to chance the moment either the prompt template or the value
-vocabulary changes. V12 proved the architecture can bind and proved the packaging and data
-design around it cannot ship that binding.
+**One-line verdict:** the memory mechanism **works on the distribution it was trained on** —
+the fact module does long-range key→value binding at **0.925** where the grammar base scores
+chance — but the capability was (a) **destroyed by composition** (0.925 → 0.003 once packed)
+and (b) **non-transferable**, collapsing to chance the moment either the prompt template or
+the value vocabulary changes. As of 2026-07-28 the composition defect is **fixed**
+(`--freeze_shared`; packed is now bit-for-bit identical to trained) at a large capability
+cost, and the transfer question is **still open** — the diversified task does not reach
+binding at a 40M-token budget, so the retest is inconclusive rather than negative.
 
 **The two defects, stated separately, because they have different fixes:**
 
-| | What it is | Status |
+| | What it is | Status (2026-07-28) |
 |---|---|---|
-| **D1 Composition** | Modules are trained against a live shared embedding table; no single table can satisfy two modules at once | Structural, **not** a patchable bug — see [Tier 0 result](#tier-0-result-composition-is-not-recoverable-by-picking-a-better-table) |
-| **D2 Transfer** | The fact module memorized one template × 50 values; both axes independently collapse it to chance | Data design, not architecture — see [transfer grid](#the-transfer-grid-2026-07-27) |
+| **D1 Composition** | Modules are trained against a live shared embedding table; no single table can satisfy two modules at once | **Solved for pack fidelity.** `--freeze_shared` makes packed bit-for-bit identical to trained — but costs 29× on the objective, because the LM head is tied to the frozen table. See [follow-up](#follow-up-is-d1-fixable-and-does-diversity-induce-transfer-2026-07-28) |
+| **D2 Transfer** | The fact module memorized one template × 50 values; both axes independently collapse it to chance | **Open.** Data diversified on both axes, but the diversified task does not reach binding at 40M tokens, so the retest is inconclusive. One 80-minute control (50-value pool) decides whether the mechanism can generalize at all |
 
 ---
 
@@ -170,6 +172,133 @@ Artifact: `packed_v12/gfr_factemb.pt`.
 
 ---
 
+## Follow-up: is D1 fixable, and does diversity induce transfer? (2026-07-28)
+
+Two experiments against the two defects. **D1 is now solved** — with a real cost.
+**D2 is not yet answered**, because the diversified task turned out to be much harder to
+learn than the memorized one, and 40M tokens does not reach binding.
+
+### What changed in the code
+
+`--freeze_embeddings` was **inert for this curriculum**: `v12/train.py` only honoured it
+inside the `if args.active_heads ...` branch, which `train_curriculum.sh` never triggers — and
+even when it fired it froze `self.embed` alone, while `pack` overwrites six prefixes. The
+documented "one-flag stopgap" therefore never existed.
+
+- **`--freeze_shared`** (new, [train.py](train.py)) freezes every param matching
+  `_SHARED_PREFIXES`, imported from [pack.py](pack.py) so the two lists cannot drift.
+  Applied unconditionally after `--freeze_layers`. `FREEZE_SHARED=1` in the curriculum script.
+- **Drift warning** at *publish* time, not pack time. Pack can never detect this: `publish`
+  strips shared params from a `role=group` module, so by pack time the evidence is gone. The
+  check now compares a stage checkpoint against its resolved base module and fired correctly
+  on the 2026-07 artifacts (`lm_head_proj` 0.14 for the fact stage, 0.38–0.58 for reasoning).
+- **Fact data diversified on both axes** ([fact_data.py](fact_data.py)): 12 record/query
+  phrasings + 4 held out (one being the exact `memory_probes/behavioral.py` wording, so
+  `eval_recall` is now literally the held-out-template cell); a ~14k single-token value sweep
+  hash-split 80/20 with behavioral `VALUES` forced held-out; four nonce key shapes plus the
+  probe's pseudo-words as a held-out key split; filler sampled from a 40-sentence bank and
+  made **independent of the template**, because an eval-only filler would shift together with
+  the template and confound the very attribution the grid exists to make.
+- **The grid now runs the real training generator** with splits swapped, instead of a parallel
+  reimplementation, so only the axis under test varies.
+
+### The runs
+
+Three attempts; the first two are recorded because their failures are the finding.
+
+| attempt | lr | seq | value pool | supervised tok/doc | outcome |
+|---|---|---:|---:|---:|---|
+| A | 1e-4 | 1024 | ~14k | 1.6 | **NaN** at step 954 (7.8M tok) |
+| B | 5e-5 | 1024 | ~14k | 5.1 | unfrozen finished at val PPL **5001**, binding 0.229 / chance 0.164 → never learned; frozen **NaN** at step 1653 |
+| C | 3e-5 | 512 | 1000 | 5.1 | both arms completed cleanly |
+
+Attempt C's three changes were all necessary. `lr=3e-5` is the only stable setting (matching
+the production run). `seq 512` doubles documents per token *and* halves the window over which
+the no-decay vault state can grow, which is where the NaN came from. Capping the pool at 1000
+values — still **20× the original 50** — made the retrieval target learnable at this budget.
+Querying every fact instead of ~1.6 per document tripled the gradient signal for free: only
+value tokens carry loss, so one query per 1024-token document wasted 99.8% of the forward pass.
+
+Both attempt-C arms grew 4 delta fact-band layers on `grammar@1.0`, 40M tokens, batch 8,
+`ce_fact`, published as `fact_retrieval@2.0` (unfrozen) and `@2.1` (frozen).
+Logs: [../logs/v12_transfer/](../logs/v12_transfer/), grids in
+[../logs/v12_transfer/grid/](../logs/v12_transfer/grid/).
+
+### Result 1 — composition fidelity is SOLVED by `--freeze_shared`
+
+| arm | shared params | tensors differing, trained vs packed | max abs delta |
+|---|---|---:|---:|
+| `@2.0` unfrozen | trained | **9** (exactly the shared set) | 9.83e-02 |
+| `@2.1` frozen | frozen | **0** | **0.00e+00** |
+
+The frozen arm's packed checkpoint is **bit-for-bit identical** to the checkpoint that was
+trained, and the transfer grid confirms it behaviourally — 0.295 / 0.259 / 0.203 / 0.180
+trained, the same four numbers packed. The unfrozen arm reproduces the D1 defect on the new
+pipeline: in-distribution 0.258 trained → **0.142** packed (below chance), and top-1 over the
+full vocabulary collapses 0.231 → **0.000**.
+
+**D1 is a closed problem for `pack`-time fidelity.** Freeze the shared params and composition
+is the identity. No adapters are required to make packing lossless.
+
+### Result 2 — but freezing costs 29× on the objective
+
+| arm | answer-masked val PPL |
+|---|---:|
+| `@2.0` unfrozen | **29.5** |
+| `@2.1` frozen | **857.3** |
+
+This is the Tier-0 tradeoff, measured rather than assumed, and it is far larger than expected.
+The LM head is **tied to the embedding table**, so `--freeze_shared` freezes the readout: the
+grown fact layers must produce hidden states that align with a projection optimized for
+grammar. Interestingly the frozen arm's *relative* binding is slightly better
+(0.295 vs 0.258, chance 0.194) — it is worse at modelling the answer distribution, not at
+pointing within it. Both remain far below any useful threshold.
+
+So the honest form of the Tier-0 table is: freezing buys exact composition at a large
+capability cost, which is precisely the argument for **per-module adapters** — a module needs
+*some* trainable path into the readout, and it must be one the module owns.
+
+### Result 3 — the transfer gate is INCONCLUSIVE, not failed
+
+Attempt C, ctx-restricted accuracy, 200 trials/cell (chance ≈ 0.19):
+
+**`@2.0` unfrozen (trained):**
+
+| | vocab = train | vocab = held-out |
+|---|---:|---:|
+| **template = train** | 0.258 | 0.210 |
+| **template = held-out** | 0.223 | 0.201 |
+
+**`@2.1` frozen (trained = packed):** 0.295 / 0.259 / 0.203 / 0.180.
+
+**The in-distribution control is the number that matters here, and it is 0.258–0.295 against
+chance 0.194.** Neither model learned to bind *at all*, so the off-diagonal cells measure
+nothing — there is no capability to transfer. The diagnostic previously called this a FAIL;
+it now reports INCONCLUSIVE and checks the control cell first, because reporting "diversity
+did not induce transfer" about a model that never learned the task would have been wrong.
+
+What the models did learn is visible in the numbers: full-vocab top-1 of 0.231 with
+ctx-restricted accuracy at chance means the model reliably emits *a value word present in the
+document* and then picks among them at random. Answer PPL fell 1000 → 29 by narrowing 1000
+candidates to ~5; none of that gain is binding. This is exactly the shortcut
+[diagnose_fact_shortcut.py](diagnose_fact_shortcut.py) was built to expose, now caught during
+the run instead of a month later.
+
+**The decisive next experiment is one 80-minute control**, and it is cheap because the
+pipeline is now in place: rerun attempt C with `--fact_value_pool 50` to match the original
+run's vocabulary size, changing nothing else.
+
+- If it reaches high in-distribution binding → the pipeline is sound, pool size is the
+  blocker, and the 2026-07 module's 0.925 was achieved through **value-specific readouts**.
+  That would be strong evidence the mechanism cannot learn a general copy operation, which is
+  a far more serious finding than a data-design bug.
+- If it also fails → attempt C is simply undertrained at 40M tokens and the budget must rise
+  before the transfer question can be asked at all.
+
+Until that control runs, **no claim about D2 should be made in either direction.**
+
+---
+
 ## Findings
 
 | # | finding | evidence | implication |
@@ -187,6 +316,12 @@ Artifact: `packed_v12/gfr_factemb.pt`.
 | 11 | **We skipped our own advice on micro-tests** | V11 Stage-6 item 4: *"capacity micro-tests — 10M-param models, ~30M tok, before spending 300M+ token budgets"*. V12 spent 1.1B tokens / ~45 GPU-hours | Every finding above could have been caught for <2% of that cost |
 | 12 | **Absolute quality is smoke-scale; no architecture conclusion is safe** | 4L base at Wiki 388 vs V11 E3 K=3 at **25.77** (~100M, 10 ep) | These are pipeline-validation runs. Generation loops degenerately in every arm ("means gold … means gold"), consistent with heavy undertraining |
 | 13 | **Eval/infra papercuts that cost real time** | `eval_recall` default `--context-lengths` includes 2048 > `max_seq_len=1024`, so the headline silently reported `n/a` for every eval until the 2026-07-27 sweep — compounded by a ternary that swallows the label ([eval_recall.py:183](eval_recall.py)); `_HOLDOUT_CACHE_VERSION` NameError; OOM at seq 2048/batch 18; `pack.py` `TypeError` on the `module_card` config key; substrate vocab 50257 vs preset 50261; TeeLogger truncation that lost the middle of the fact run | Headline metrics must fail loudly, never degrade to `n/a` |
+| 14 | **`--freeze_shared` makes composition the identity — D1 is solved for pack fidelity** | Frozen arm: **0** tensors differ between trained and packed checkpoints (max delta 0.00e+00), and all four grid cells match exactly. Unfrozen arm: exactly the 9 shared tensors differ (max 9.83e-02), in-distribution binding 0.258 → 0.142, top-1 0.231 → 0.000 | The registry direction is mechanically sound. Freezing shared params on every non-base stage is sufficient; adapters are needed for *capability*, not for correctness |
+| 15 | **The documented stopgap never worked — `--freeze_embeddings` was dead code here** | Honoured only inside `if args.active_heads is not None`, which `train_curriculum.sh` never sets; and it covers `self.embed` alone while `pack` overwrites six prefixes | A mitigation nobody executed cannot be assumed to work. The 2026-07-27 advice to "pass `--freeze_embeddings`" would have silently changed nothing |
+| 16 | **Freezing shared params costs 29× on the objective** | answer-masked val PPL **29.5** unfrozen vs **857.3** frozen, identical data and budget | The LM head is *tied* to the embedding table, so freezing it freezes the readout. This is the quantified Tier-0 tradeoff and the concrete argument for per-module adapters: a module needs a trainable path into its own readout |
+| 17 | **The diversified task does not reach binding at 40M tokens — D2 retest inconclusive** | in-distribution ctx-restricted **0.258** (unfrozen) / **0.295** (frozen) vs chance 0.194, with full-vocab top-1 0.231 | Answer PPL fell 1000 → 29 purely by narrowing ~1000 candidates to the ~5 in context, then choosing at chance. A control at a 50-value pool separates "undertrained" from "the mechanism can only fake binding via value-specific readouts" |
+| 18 | **Supervision density, not token count, was the binding constraint** | Only value tokens carry loss: ~1.6 supervised positions per 1024-token document = 0.16% of the forward pass. Querying every fact raised it to 5.1 | A 3.2× effective-data increase for zero extra compute. Any answer-masked objective should be audited for this before its budget is raised |
+| 19 | **The no-decay vault state is the NaN source, and sequence length is the control** | NaN at step 954 (lr 1e-4) and 1653 (lr 5e-5) at seq 1024; zero NaNs at seq 512 / lr 3e-5 over 40M tokens | `vault_state` has no decay, so state magnitude grows with the window. The 2026-07 "NaN stabilization" treated symptoms (lower lr, softer aux) rather than the unbounded state |
 
 ### What worked
 
@@ -203,13 +338,18 @@ Artifact: `packed_v12/gfr_factemb.pt`.
   ran. The *plumbing* for a swappable-module marketplace exists.
 - **NaN stabilization** (abort-on-NaN in `v7/train.py`, softer `ce_fact` gate/contrast, logit
   clamp, `FACT_LR=3e-5`) held for 900M tokens after the first fact run diverged at ~80M.
+- **`--freeze_shared` closes the composition defect** (finding 14). Packed is now bit-for-bit
+  identical to trained. The registry direction is mechanically sound; what remains is a
+  capability question, not a correctness one.
 
 ### What did not work
 
-- **The module interface** (findings 1–3, 7) — the blocking defect, and structural rather
-  than a bug.
+- **The module interface as originally designed** (findings 1–3, 7) — structural rather than a
+  bug, and now **fixed for correctness** by `--freeze_shared` (finding 14) at a 29× capability
+  cost (finding 16). Adapters remain the open work.
 - **Fact-data design** (finding 8) — one template × 50 values produced a memorized surface
-  pattern with zero transfer on either axis.
+  pattern with zero transfer on either axis. Diversifying both axes did not yet produce a
+  binding model at 40M tokens (finding 17), so the redesign is unvalidated, not vindicated.
 - **Delta vs additive as an experiment** (finding 9) — the task saturates in-distribution and
   is at chance out of it, so it cannot discriminate write modes at this budget.
 - **M1 head-gate** (finding 10) — no pruning at the configured λ.
@@ -259,7 +399,7 @@ the packed stack work, so "pick the right embeddings" is not on the table. Three
 
 | Option | Composition | Module adaptivity | Marketplace viability |
 |---|---|---|---|
-| **Freeze shared params** — `--freeze_embeddings` on every non-base stage | Exact | Confined to the base's representation space | Works, but base quality becomes a hard ceiling for every module |
+| **Freeze shared params** — `--freeze_shared` on every non-base stage | **Exact — verified, 0 tensors differ** | Confined to the base's representation space | Works, but **measured at 29× val PPL** (finding 16); base quality is a hard ceiling for every module |
 | **Ship shared-param deltas** — module owns a delta `pack.py` applies | Exact per module | Full | Breaks: two modules with conflicting deltas cannot both apply. This run is the counterexample |
 | **Per-module adapters** — module never touches shared params, owns a small learned in/out projection on the residual stream at its boundary | Exact | Local to the module | The one that scales; conflicts vanish because adaptation lives inside the module's own blocks |
 
@@ -267,31 +407,52 @@ the packed stack work, so "pick the right embeddings" is not on the table. Three
 immediately), then build adapters as the real interface. Adapters fit the existing
 `layer_specs` / `attach_mode` schema without a new concept.
 
-Also required regardless of which option wins:
+**Status 2026-07-28:** the freeze half is **done and verified** — `--freeze_shared` exists,
+`FREEZE_SHARED=1` is wired into the curriculum, and a full run confirmed packed == trained
+bit-for-bit (finding 14). Item 3 below is complete. What the measurement added is urgency for
+adapters: freezing also freezes the **tied LM head**, which cost 29× on the objective
+(finding 16). An adapter design must therefore give each module a trainable path into its own
+readout — a per-module output projection, not only a residual-stream adapter.
+
+Remaining work regardless of which option wins:
 
 1. Extend `substrate_hash` to cover the shared params a module was trained against, so a
-   mismatch is a resolver conflict instead of a silent capability loss.
+   mismatch is a resolver conflict instead of a silent capability loss. **Still open** — the
+   2026-07-28 work added a *warning* at publish time (pack cannot see it: `publish` strips
+   shared params from a `role=group` module, so the evidence is gone by pack time), which is
+   detection, not enforcement.
 2. Add the lossless-pack assertion over **published registry modules** to `v12.selftest`.
    It currently only round-trips models it constructs itself, which is how this survived.
-3. Re-run the fact stage with frozen shared params and confirm binding survives packing
-   (0.925 trained → 0.925 packed). That single number validates or kills the registry
-   direction.
+   **Still open.**
+3. ~~Re-run the fact stage with frozen shared params and confirm binding survives packing.~~
+   **Done.** Frozen arm: 0 tensors differ, all four grid cells identical trained vs packed.
+   The registry direction is validated for fidelity.
 
 ### Tier 1 — fix the fact data (D2)
 
-The mechanism works; the data taught a surface pattern. Before any further architecture work:
+The mechanism works on its training distribution; the data taught a surface pattern.
 
-1. **Diversify both axes.** Many templates (varying the record/query phrasing, separators,
-   numbering, ordering) and a much larger value vocabulary, with a held-out split on *each*
-   axis so transfer is measured during training rather than discovered afterwards.
-2. **Make the transfer grid the training-time metric.** `v12.diagnose_fact_shortcut --grid`
-   already reports the 2×2; a run whose off-diagonal cells sit at chance is not learning
-   binding no matter how good its loss curve looks.
-3. **Restore the anti-shortcut pressure.** `fact_contrastive_lambda` was cut 0.5 → 0.1 and
+1. ~~**Diversify both axes.**~~ **Done** — 12 train + 4 held-out templates, ~14k values
+   hash-split 80/20, held-out key shapes, template-independent filler
+   ([fact_data.py](fact_data.py)).
+2. ~~**Make the transfer grid the training-time metric.**~~ **Done** — the grid now runs the
+   real generator with splits swapped, and checks the in-distribution control cell first so an
+   undertrained model reports INCONCLUSIVE rather than a false transfer failure.
+3. **THE NEXT EXPERIMENT — the 50-value control.** Rerun attempt C with
+   `--fact_value_pool 50`, changing nothing else. ~80 minutes. This is the only thing standing
+   between us and a real answer on D2, and it splits cleanly:
+   high in-distribution binding ⇒ the pipeline is sound and the 2026-07 module's 0.925 came
+   from **value-specific readouts**, which would mean the mechanism cannot learn a general
+   copy operation; still low ⇒ merely undertrained, and the budget must rise.
+   Then sweep pool size (50 → 200 → 1000) to find where binding breaks — that curve *is* the
+   generalization result.
+4. **Restore the anti-shortcut pressure.** `fact_contrastive_lambda` was cut 0.5 → 0.1 and
    `tau` doubled to stop a NaN divergence ([losses.py:105](losses.py)), for numerical reasons
-   rather than scientific ones. Re-test at full strength now that abort-on-NaN and the
-   lower LR are in place.
-4. **Then, and only then, re-run delta vs additive.** Finding 9 says the current task cannot
+   rather than scientific ones. Finding 19 identifies the real NaN source (the no-decay vault
+   state over a long window), so test full strength at seq 512 where the state is bounded.
+5. **Audit supervision density on any masked objective** (finding 18) before raising a budget.
+   Querying every fact instead of one tripled the gradient signal for free.
+6. **Then, and only then, re-run delta vs additive.** Finding 9 says the current task cannot
    discriminate them; a task with real transfer might.
 
 ### Tier 1b — capacity micro-tests before any further budget
@@ -319,16 +480,27 @@ Mamba, which is not a fair anchor.
 
 ### Strategic read
 
-**Continue the direction, change the interface.** The two things that had to be true for a
-module marketplace turned out to be true: the mechanism can learn a real skill (0.925
-binding), and the packaging machinery composes arbitrary stacks correctly. What failed is the
-*contract* between them — sequential training on a live shared substrate produces modules
-that are mutually exclusive by construction, and no packing policy can reconcile them after
-the fact.
+**Continue the direction; the interface is now fixed, the mechanism is now the open question.**
+As of 2026-07-28 the packaging story is settled: freeze the shared params and composition is
+the identity, verified bit-for-bit. The contract defect that looked structural on 2026-07-27
+was structural *and* closable, and it is closed.
 
-That is a solvable problem with a known shape (adapters), not a refutation of the premise.
-The thing to stop doing is training specialists that quietly rewrite the substrate everyone
-else depends on.
+That inverts the risk. The remaining doubt is no longer "can we ship a module" but "is there a
+capability worth shipping." Two measurements point the same uncomfortable direction:
+
+- Freezing the shared params — the thing that makes modules composable — costs **29×** on the
+  objective, because the tied LM head goes with it. A module confined to the base's readout
+  may simply not have room to learn a retrieval skill. Adapters must therefore own an output
+  projection, not just a residual-stream transform.
+- Raising the value vocabulary from 50 to 1000 dropped in-distribution binding from 0.925 to
+  0.258. If the 50-value control reproduces 0.925, the original result was a value-specific
+  readout rather than a general copy operation — and "the PAM fact band binds" would need
+  retracting to "the PAM fact band memorizes a small closed set."
+
+**That control is the highest-value 80 minutes available**, and it should run before any
+further spend on adapters, bases, or scale. The thing to stop doing is training specialists
+that quietly rewrite the substrate everyone else depends on — that part is now enforced by a
+flag.
 
 **Also worth naming: the base is too weak to build a marketplace on.** Every module sits on a
 4-layer, 200M-token base at Wiki 388, where V11 reached 25.77. Under any frozen-substrate

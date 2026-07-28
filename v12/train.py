@@ -31,6 +31,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from v12.model import V12LM, get_config, PRESETS
 from v12.losses import apply_stage_loss, get_stage_loss, stage_loss_names
+from v12.pack import _SHARED_PREFIXES
 from v7.train import (
     V7Trainer, seed_everything, _notify_training_failure, _is_oom_error,
     _notify_discord, _notify_discord_long,
@@ -192,6 +193,17 @@ def build_argparser():
                    help='M2: freeze lm_head_proj / lm_head_norm this stage')
     p.add_argument('--freeze_cgu', action='store_true',
                    help='M2: freeze CGU channel mixers this stage')
+    p.add_argument('--fact_value_pool', type=int, default=0,
+                   help='--dataset fact: cap the value vocabulary to N words '
+                        '(0 = the full ~14k tokenizer sweep). Eval must use the '
+                        'same cap; pass it to v12.diagnose_fact_shortcut too.')
+    p.add_argument('--freeze_shared', action='store_true',
+                   help='Freeze every non-block param that v12.pack takes from the '
+                        'base (embeddings, norms, LM head). Required on specialist '
+                        'stages for the trained stack to survive packing: '
+                        '--freeze_layers freezes BLOCKS only, so the shared table '
+                        'the grown group learns against otherwise drifts and pack '
+                        'silently restores the base copy.')
     # M4.3: pluggable per-stage training objective (see v12/losses.py).
     p.add_argument('--stage_loss', type=str, default='ce', choices=stage_loss_names(),
                    help='Stage objective profile. ce=plain CE (default); other '
@@ -617,6 +629,7 @@ def main():
             seq_len=seq_len,
             token_budget=token_budget,
             seed=args.seed,
+            value_pool_limit=args.fact_value_pool or None,
         )
     else:
         raise ValueError(f"Unknown dataset: {args.dataset}")
@@ -760,6 +773,18 @@ def main():
         n_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
         print(f"[M4 freeze] froze blocks {frozen}; trainable params={n_trainable:,}. "
               f"(requires_grad=False => excluded from optimizer, no wd drift)")
+
+    # Composition fidelity: pack() takes these from the base module, so a stage
+    # that trains them produces blocks tuned to a table that gets thrown away.
+    if args.freeze_shared:
+        n_shared = 0
+        for name, p in model.named_parameters():
+            if any(name.startswith(pref) for pref in _SHARED_PREFIXES):
+                p.requires_grad_(False)
+                n_shared += p.numel()
+        n_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        print(f"[pack-fidelity] froze {n_shared:,} shared params "
+              f"({', '.join(_SHARED_PREFIXES)}); trainable params={n_trainable:,}")
 
     # M2: progressive frozen-head growth. --active_heads picks which head slots
     # train this stage; the rest are frozen (zero grad on their fused slices).

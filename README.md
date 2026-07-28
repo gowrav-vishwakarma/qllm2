@@ -385,7 +385,8 @@ long-context NIAH, interference, rank; why matrix memory beats vector state.
 - [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md) — current: E1/E2/E3 ablations, K-sweep,
 Phase C pretrain + chat SFT; **parallel duplex track** pointer.
 - [v12/EXPERIMENTS_V12.md](v12/EXPERIMENTS_V12.md) — depth-growth curriculum + module registry:
-first end-to-end run, stack-order benchmark, and the **composition-fidelity** defect.
+first end-to-end run, stack-order benchmark, the **composition-fidelity** defect and its fix
+(`--freeze_shared`), and the open question of whether the fact band binds generally.
 - [v12/README.md](v12/README.md) — V12 design source of truth (M1–M5: head gates, depth growth,
 playable modules).
 - [v11/duplex/EXPERIMENTS_DUPLEX.md](v11/duplex/EXPERIMENTS_DUPLEX.md) — full-duplex POC

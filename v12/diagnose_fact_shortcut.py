@@ -15,14 +15,16 @@ modes:
            which key it belongs to. Binding was never learned, in-distribution
            or otherwise; the data/loss design is at fault.
   * ``ctx_restricted`` accuracy ~= 1.0 but the behavioral probe stays at chance
-        -> TRANSFER FAILURE. Binding works for the 50 training values but did
-           not generalize to the disjoint eval vocabulary; the readout is
-           value-specific, not a generic retrieval operation.
+        -> TRANSFER FAILURE. Binding works on the training distribution but did
+           not generalize; the readout is pattern-specific, not a generic
+           retrieval operation. ``--grid`` then attributes which shift breaks it.
 
 CLI:
     .venv/bin/python -m v12.diagnose_fact_shortcut \
         --checkpoint checkpoints_v12_curriculum/fact_retrieval/best_model.pt \
         --n_val 512 --seq_len 1024
+    .venv/bin/python -m v12.diagnose_fact_shortcut --grid --trials 200 \
+        --checkpoint ... --output grid.json
 """
 
 from __future__ import annotations
@@ -50,10 +52,14 @@ def _all_logits(model, input_ids: torch.Tensor) -> torch.Tensor:
 
 
 def diagnose(model, tokenizer, cfg, *, device, n_val=512, seq_len=1024,
-             batch_size=4, seed=0):
+             batch_size=4, seed=0, template_split='train', value_split='train',
+             key_split='train', value_pool_limit=None):
     from v12.fact_data import FactRecallDataset
 
-    ds = FactRecallDataset(n_val, seq_len, tokenizer, seed=seed + 12345)
+    ds = FactRecallDataset(n_val, seq_len, tokenizer, seed=seed + 12345,
+                           template_split=template_split,
+                           value_split=value_split, key_split=key_split,
+                           value_pool_limit=value_pool_limit)
     pool_ids = torch.tensor([tid for _, tid in ds.value_pool], dtype=torch.long)
     pool_set = set(int(t) for t in pool_ids)
     pool_lut = torch.full((cfg.vocab_size,), -1, dtype=torch.long)
@@ -126,131 +132,38 @@ def diagnose(model, tokenizer, cfg, *, device, n_val=512, seq_len=1024,
 # ---------------------------------------------------------------------------
 # Transfer grid: separate PROMPT-TEMPLATE shift from KEY/VALUE-VOCAB shift.
 #
-# The training loader and the behavioral probe differ on BOTH axes at once, so a
-# chance score on the probe is uninterpretable. This builds the 2x2 so the two
-# shifts can be attributed independently:
+# The 2026-07 fact module scored 0.925 in-distribution and chance on the
+# behavioral probe -- but the probe differs from the training loader on BOTH
+# axes at once, so that number could not attribute the failure. This crosses
+# them independently:
 #
-#            vocab=train                vocab=heldout
-#  tmpl=fact   in-distribution baseline   pure vocabulary transfer
-#  tmpl=probe  pure template transfer     == what eval_recall measures
+#             vocab=train                vocab=heldout
+#  tmpl=train   in-distribution baseline   pure vocabulary transfer
+#  tmpl=heldout pure template transfer     BOTH shifted -- the go/no-go cell
+#
+# Every cell runs the REAL training generator with splits swapped, so the only
+# thing that varies is the axis under test. In particular the filler is drawn
+# from the same bank in all four cells: an eval-only filler would shift with the
+# template and confound the very attribution this grid exists to make.
 # ---------------------------------------------------------------------------
 
-_CONSONANTS = 'bdfgklmnprstvz'
-_VOWELS = 'aeiou'
+_GRID_AXES = (('train', 'train'), ('train', 'heldout'),
+              ('heldout', 'train'), ('heldout', 'heldout'))
 
 
-def _make_keys(rng, n, vocab):
-    from memory_probes.behavioral import KEYS as PROBE_KEYS
-    if vocab == 'heldout':
-        return rng.sample(list(PROBE_KEYS), n)
-    out, seen = [], set()
-    while len(out) < n:
-        k = ''.join(rng.choice(_CONSONANTS) + rng.choice(_VOWELS)
-                    + rng.choice(_CONSONANTS) for _ in range(2))
-        if k not in seen:
-            seen.add(k)
-            out.append(k)
-    return out
-
-
-def _make_value_pool(tokenizer, vocab):
-    if vocab == 'heldout':
-        from memory_probes.behavioral import single_token_values
-        return single_token_values(tokenizer)
-    from v12.fact_data import _build_value_pool
-    return _build_value_pool(tokenizer)
-
-
-def _fillers(tokenizer, template):
-    if template == 'probe':
-        from memory_probes.behavioral import FILLER
-        return tokenizer.encode(FILLER, add_special_tokens=False)
-    from v12.fact_data import _FILLER_BANK
-    return tokenizer.encode(' '.join(_FILLER_BANK), add_special_tokens=False)
-
-
-def _render(template, idx, key, value=None):
-    """Record line (value given) or query stem (value None)."""
-    if template == 'probe':
-        if value is None:
-            return f'\nMemory query: {key} means'
-        return f'Memory record {idx + 1}: {key} means {value}.\n'
-    if value is None:
-        return f'Query: {key} means'
-    return f'Record: {key} means {value}. '
-
-
-def build_grid_example(rng, tokenizer, *, template, vocab, value_pool,
-                       seq_len, max_facts=8, max_distractors=4):
-    """One store-then-query document under a chosen template + vocabulary."""
-    n_facts = rng.randint(2, max_facts)
-    keys = _make_keys(rng, n_facts, vocab)
-    vals = [value_pool[i][0] for i in rng.sample(range(len(value_pool)), n_facts)]
-
-    target = rng.randrange(n_facts)
-    order = [i for i in range(n_facts) if i != target] + [target]
-
-    items = [(keys[i], vals[i]) for i in order]
-    # Hard negatives: fresh keys reusing existing values (kills frequency cues).
-    for _ in range(rng.randint(0, max_distractors)):
-        dk = _make_keys(rng, 1, 'train')[0]
-        items.insert(rng.randrange(len(items)), (dk, vals[rng.randrange(n_facts)]))
-
-    rec_ids = []
-    for i, (k, v) in enumerate(items):
-        rec_ids += tokenizer.encode(_render(template, i, k, v), add_special_tokens=False)
-    query_ids = tokenizer.encode(_render(template, 0, keys[target]),
-                                 add_special_tokens=False)
-
-    budget = seq_len - len(query_ids)
-    if len(rec_ids) >= budget:
-        rec_ids = rec_ids[len(rec_ids) - budget:]
-        filler = []
-    else:
-        unit = _fillers(tokenizer, template)
-        need = budget - len(rec_ids)
-        filler = (unit * ((need + len(unit) - 1) // len(unit)))[:need]
-
-    prompt = rec_ids + filler + query_ids
-    gold = tokenizer.encode(f' {vals[target]}', add_special_tokens=False)[0]
-    in_ctx = sorted({tid for _, tid in value_pool
-                     if tid in set(prompt)} | {gold})
-    return prompt, gold, in_ctx
-
-
-@torch.inference_mode()
-def run_grid_cell(model, tokenizer, cfg, *, device, template, vocab,
-                  trials=200, seq_len=1024, seed=7):
-    import random as _random
-
-    from v12.eval_recall import _last_logits
-
-    rng = _random.Random(seed)
-    value_pool = _make_value_pool(tokenizer, vocab)
-    correct = ctx_correct = 0
-    chances, ranks = [], []
-
-    for _ in range(trials):
-        prompt, gold, in_ctx = build_grid_example(
-            rng, tokenizer, template=template, vocab=vocab,
-            value_pool=value_pool, seq_len=seq_len)
-        ids = torch.tensor([prompt], dtype=torch.long, device=device)
-        row = _last_logits(model, ids)[0].float().cpu()
-
-        ctx_t = torch.tensor(in_ctx, dtype=torch.long)
-        correct += int(int(row.argmax().item()) == gold)
-        ctx_correct += int(int(ctx_t[row[ctx_t].argmax()].item()) == gold)
-        order = ctx_t[row[ctx_t].argsort(descending=True)].tolist()
-        ranks.append(order.index(gold) + 1)
-        chances.append(1.0 / len(in_ctx))
-
-    return {
-        'template': template, 'vocab': vocab, 'trials': trials,
-        'top1_vocab_correct': correct / trials,
-        'ctx_restricted_correct': ctx_correct / trials,
-        'ctx_restricted_chance': float(np.mean(chances)),
-        'ctx_mean_reciprocal_rank': float(np.mean([1.0 / r for r in ranks])),
-    }
+def run_grid_cell(model, tokenizer, cfg, *, device, template_split, vocab_split,
+                  trials=200, seq_len=1024, batch_size=4, seed=7,
+                  value_pool_limit=None):
+    """One grid cell. ``vocab_split`` switches BOTH the value pool and the key
+    surface form, matching what the behavioral probe changes."""
+    r = diagnose(model, tokenizer, cfg, device=device, n_val=trials,
+                 seq_len=seq_len, batch_size=batch_size, seed=seed,
+                 template_split=template_split, value_split=vocab_split,
+                 key_split=vocab_split, value_pool_limit=value_pool_limit)
+    r['template'] = template_split
+    r['vocab'] = vocab_split
+    r['trials'] = trials
+    return r
 
 
 def main() -> int:
@@ -265,7 +178,11 @@ def main() -> int:
                    help='Run the template x vocab transfer grid instead.')
     p.add_argument('--trials', type=int, default=200,
                    help='Examples per grid cell (with --grid).')
+    p.add_argument('--value_pool', type=int, default=0,
+                   help='Cap the value vocabulary to N words; must match the '
+                        '--fact_value_pool the checkpoint was trained with.')
     args = p.parse_args()
+    pool_limit = args.value_pool or None
 
     if args.grid:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -273,29 +190,55 @@ def main() -> int:
         print(f'Loaded V12 checkpoint: {args.checkpoint}')
         print(f'  params={sum(q.numel() for q in model.parameters()):,} device={device}')
         cells = []
-        for template in ('fact', 'probe'):
-            for vocab in ('train', 'heldout'):
-                c = run_grid_cell(model, tokenizer, cfg, device=device,
-                                  template=template, vocab=vocab,
-                                  trials=args.trials, seq_len=args.seq_len,
-                                  seed=args.seed + 7)
-                cells.append(c)
-                print(f"  [{template:5} / {vocab:7}] top1={c['top1_vocab_correct']:.3f} "
-                      f"ctx={c['ctx_restricted_correct']:.3f} "
-                      f"(chance {c['ctx_restricted_chance']:.3f})", flush=True)
+        for template_split, vocab_split in _GRID_AXES:
+            c = run_grid_cell(model, tokenizer, cfg, device=device,
+                              template_split=template_split, vocab_split=vocab_split,
+                              trials=args.trials, seq_len=args.seq_len,
+                              batch_size=args.batch_size, seed=args.seed + 7,
+                              value_pool_limit=pool_limit)
+            cells.append(c)
+            print(f"  [tmpl={template_split:7} / vocab={vocab_split:7}] "
+                  f"top1={c['top1_vocab_correct']:.3f} "
+                  f"ctx={c['ctx_restricted_correct']:.3f} "
+                  f"(chance {c['ctx_restricted_chance']:.3f})", flush=True)
+
+        def cell(t, v):
+            return next(c for c in cells if c['template'] == t and c['vocab'] == v)
+
         print('\n=== transfer grid (ctx-restricted accuracy) ===')
-        print(f"{'':12} {'vocab=train':>14} {'vocab=heldout':>16}")
-        for template in ('fact', 'probe'):
-            row = [c for c in cells if c['template'] == template]
-            a = next(c for c in row if c['vocab'] == 'train')
-            b = next(c for c in row if c['vocab'] == 'heldout')
-            print(f"  tmpl={template:<7}{a['ctx_restricted_correct']:>14.3f}"
-                  f"{b['ctx_restricted_correct']:>16.3f}")
-        print(f"  chance      {cells[0]['ctx_restricted_chance']:>14.3f}"
-              f"{cells[1]['ctx_restricted_chance']:>16.3f}")
+        print(f"{'':16}{'vocab=train':>14}{'vocab=heldout':>16}")
+        for t in ('train', 'heldout'):
+            print(f"  tmpl={t:<11}{cell(t, 'train')['ctx_restricted_correct']:>14.3f}"
+                  f"{cell(t, 'heldout')['ctx_restricted_correct']:>16.3f}")
+        print(f"  {'chance':<13}{cell('train', 'train')['ctx_restricted_chance']:>14.3f}"
+              f"{cell('train', 'heldout')['ctx_restricted_chance']:>16.3f}")
+
+        # The in-distribution cell is the CONTROL. A model that never learned to
+        # bind has nothing to transfer, so a chance score in the shifted cells
+        # says nothing about generalization -- read the control first.
+        base = cell('train', 'train')
+        both = cell('heldout', 'heldout')
+        base_lift = base['ctx_restricted_correct'] - base['ctx_restricted_chance']
+        lift = both['ctx_restricted_correct'] - both['ctx_restricted_chance']
+        print(f"\n  control (in-distribution): {base['ctx_restricted_correct']:.3f} "
+              f"vs chance {base['ctx_restricted_chance']:.3f}  (lift {base_lift:+.3f})")
+        print(f"  GATE (both axes shifted)  : {both['ctx_restricted_correct']:.3f} "
+              f"vs chance {both['ctx_restricted_chance']:.3f}  (lift {lift:+.3f})")
+        if base['ctx_restricted_correct'] < 0.5:
+            print('  INCONCLUSIVE: the model does not bind even in-distribution, so')
+            print('                the shifted cells measure nothing. Undertrained or')
+            print('                the task is too hard at this budget -- fix that first.')
+        elif both['ctx_restricted_correct'] > 0.5:
+            print('  PASS: binding is a general operation, not a memorized pattern.')
+        elif lift < 0.05:
+            print('  FAIL: binding works in-distribution but is a surface pattern;')
+            print('        diversity on these axes did not induce transfer.')
+        else:
+            print('  PARTIAL: some transfer, well short of in-distribution.')
+
         if args.output:
             with open(args.output, 'w') as fh:
-                json.dump({'schema_version': 'v12-fact-transfer-grid/v1',
+                json.dump({'schema_version': 'v12-fact-transfer-grid/v2',
                            'created_at': datetime.now(timezone.utc).isoformat(),
                            'checkpoint': args.checkpoint, 'cells': cells}, fh, indent=2)
             print(f'\nResults saved to {args.output}')
@@ -307,7 +250,8 @@ def main() -> int:
     print(f'  params={sum(q.numel() for q in model.parameters()):,} device={device}')
 
     r = diagnose(model, tokenizer, cfg, device=device, n_val=args.n_val,
-                 seq_len=args.seq_len, batch_size=args.batch_size, seed=args.seed)
+                 seq_len=args.seq_len, batch_size=args.batch_size, seed=args.seed,
+                 value_pool_limit=pool_limit)
 
     print('\n=== fact shortcut diagnosis ===')
     print(f"  value positions scored     : {r['n_value_positions']}")
@@ -318,8 +262,8 @@ def main() -> int:
     print(f"  top-1 is SOME pool value   : {r['top1_is_some_value']:.3f}  (learned 'emit a value')")
     print(f"  top-1 is a CONTEXT value   : {r['top1_is_context_value']:.3f}  (learned 'emit a context value')")
     print()
-    print(f"  restricted to 50-value pool: {r['pool_restricted_correct']:.3f}  "
-          f"(chance {r['pool_restricted_chance']:.3f})")
+    print(f"  restricted to value pool   : {r['pool_restricted_correct']:.3f}  "
+          f"(chance {r['pool_restricted_chance']:.5f})")
     print(f"  restricted to context values: {r['ctx_restricted_correct']:.3f}  "
           f"(chance {r['ctx_restricted_chance']:.3f})   <-- BINDING TEST")
     print(f"  MRR among context values   : {r['ctx_mean_reciprocal_rank']:.3f}")
@@ -330,8 +274,8 @@ def main() -> int:
         print('  VERDICT: SHORTCUT. Binding is at chance even in-distribution;')
         print('           answer-masked PPL came from "emit a plausible context value".')
     elif r['ctx_restricted_correct'] > 0.8:
-        print('  VERDICT: TRANSFER FAILURE. Binding works on trained values;')
-        print('           it does not generalize to the held-out eval vocabulary.')
+        print('  VERDICT: binding works on this distribution. Run --grid to see')
+        print('           whether it survives a template or vocabulary shift.')
     else:
         print(f'  VERDICT: PARTIAL binding (+{lift:.3f} over chance).')
 

@@ -10,9 +10,12 @@ This README is the design source of truth (it supersedes the three V12 plan file
 phase-band heads, depth-growth framework, playable module system).
 
 > **Results and learnings live in [EXPERIMENTS_V12.md](EXPERIMENTS_V12.md)** — the first
-> end-to-end curriculum run (1.1B tokens, 4 modules), the stack-order benchmark, and the
-> open **composition-fidelity** defect (a packed stack is currently *not* the model that was
-> trained; see M5 below). Read that before trusting any composed checkpoint.
+> end-to-end curriculum run (1.1B tokens, 4 modules) and the stack-order benchmark.
+> **Composition fidelity is fixed as of 2026-07-28: always pass `--freeze_shared` on
+> non-base stages** (see M5), which makes a packed stack bit-for-bit identical to the trained
+> one. Checkpoints built before that flag existed are unreliable. The open question is now
+> the *capability*, not the packaging: freezing costs 29× val PPL, and whether the fact band
+> binds generally or only memorizes a small closed set is undecided.
 
 ---
 
@@ -245,13 +248,16 @@ profiles the trainer already honors (`ce_fact` = answer-masked CE + gate-surpris
 ```bash
 .venv/bin/python -m v12.train --preset v12_base_grammar --stage pretrain \
   --dataset pretrain_mix --resume_from base.pt \
-  --grow_layers "facts:4" --freeze_layers base \
+  --grow_layers "facts:4" --freeze_layers base --freeze_shared \
   --stage_loss ce_recall --attach_mode sequential
 ```
 
 Flags: `--grow_layers` (`skill:count[:head_budget]` or `@path.json`),
 `--layer_head_budget`, `--freeze_layers` (`base` / `lo:hi` / list),
-`--stage_skill`, `--stage_loss`, `--attach_mode`.
+`--stage_skill`, `--stage_loss`, `--attach_mode`,
+**`--freeze_shared`** (freeze the embeddings / norms / LM head that `pack` takes from the base
+— required for the packed stack to equal the trained one; see the M5 note),
+`--fact_value_pool N` (`--dataset fact`: cap the value vocabulary; eval must use the same cap).
 
 ### Compaction + hand-written pack
 
@@ -358,23 +364,34 @@ Resolves the target, then assembles base shared params + renumbered group blocks
 into one inference checkpoint (per-group `attach_mode` stamped). Hand-written
 `--spec` path remains.
 
-> **KNOWN ISSUE — composition destroys module capabilities (2026-07-27).** Shared params
-> (embeddings, norms, LM head) are taken **only from the base module**, but
-> `--freeze_layers base` freezes *blocks only* — so every specialist stage silently retrains
-> the shared embedding table and pack then discards it. `substrate_hash` does not cover
-> shared params, so this passes verification silently.
+> **FIXED — pass `--freeze_shared` on every non-base stage (2026-07-28).**
 >
-> The cost is not a few PPL points. The fact module scores **0.925** on in-distribution
-> key→value binding as trained and **0.003** once packed — the skill is gone. Training the
-> reasoning stage on top destroys it too (0.000), *even though the fact blocks were frozen*,
-> because the table they read from moved.
+> *The defect:* shared params (embeddings, norms, LM head) are taken **only from the base
+> module**, but `--freeze_layers base` freezes *blocks only* — so every specialist stage
+> silently retrained the shared table and pack then discarded it. The cost was total, not a
+> few PPL points: the fact module scored **0.925** on in-distribution key→value binding as
+> trained and **0.003** once packed. Training the reasoning stage on top destroyed it too
+> (0.000) *even though the fact blocks were frozen*, because the table they read from moved.
+> And there was no "right" table to pack with — same `gfr` blocks, grammar's params give Wiki
+> 479 / binding 0.003, reasoning's give 314 / 0.000, the fact stage's give 5098 / 0.940.
 >
-> **There is no "right" table to pack with.** Same `gfr` blocks: grammar's params give Wiki
-> 479 / binding 0.003; reasoning's give 314 / 0.000; the fact stage's give 5098 / 0.940. Each
-> is optimal for one module and catastrophic for the other. This is a design flaw in the
-> module contract, not an implementation slip — pass `--freeze_embeddings` on every non-base
-> stage as a stopgap, and treat any existing packed checkpoint as unreliable.
-> Full evidence and the three interface options: [EXPERIMENTS_V12.md](EXPERIMENTS_V12.md).
+> *The fix:* **`--freeze_shared`** (or `FREEZE_SHARED=1` for
+> [scripts/train_curriculum.sh](scripts/train_curriculum.sh)) freezes every param `pack` takes
+> from the base. A full fact-stage run then produced a packed checkpoint **bit-for-bit
+> identical** to the trained one — 0 tensors differ, all four transfer-grid cells match.
+> Composition is now the identity.
+>
+> **Do not use `--freeze_embeddings` for this.** It was inert on this path: only honoured
+> inside the `--active_heads` branch (which the curriculum never sets), and it covers
+> `self.embed` alone while `pack` overwrites six prefixes.
+>
+> *Two caveats.* (1) Freezing the shared params also freezes the **tied LM head**, which cost
+> **29×** answer-masked val PPL (29.5 unfrozen vs 857.3 frozen) — per-module adapters owning
+> an output projection are still the real interface. (2) `substrate_hash` still does not cover
+> shared params; `v12.publish` now *warns* on drift (pack cannot — it strips shared params
+> from `role=group` modules), but nothing enforces it. Treat any packed checkpoint built from
+> a stage trained without `--freeze_shared` as unreliable.
+> Full evidence: [EXPERIMENTS_V12.md](EXPERIMENTS_V12.md).
 
 ### Train integration (`--substrate`)
 

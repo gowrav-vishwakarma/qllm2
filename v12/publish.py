@@ -29,13 +29,9 @@ from dataclasses import asdict
 import torch
 
 from v12.model import V12Config
+from v12.pack import _SHARED_PREFIXES, warn_shared_drift
 from v12.registry import (
     ModuleCard, Registry, Requirement, hash_block_states, write_card,
-)
-
-_SHARED_PREFIXES = (
-    'embed.', 'embed_norm.', 'pos_embed.', 'output_norm.',
-    'lm_head_proj.', 'lm_head_norm.',
 )
 
 
@@ -101,6 +97,32 @@ def build_module(ckpt: dict, *, role='group', group_id=None, take=None):
     return new_state, new_cfg, new_specs, substrate_hash, self_hash
 
 
+def _check_shared_drift(state, requires, registry):
+    """Warn if this stage retrained the shared params its base module owns.
+
+    This is the last point where the drift is visible: a role=group module keeps
+    only its own blocks, so by pack time the stage's shared params are gone and
+    nothing downstream can tell that the blocks were trained against a different
+    table. Returns the max rel-Frobenius seen (0.0 if clean/unknown).
+    """
+    if registry is None or not requires:
+        return 0.0
+    for req in requires:
+        try:
+            _ver, base_path, base_card = registry.find(req.module_id, req.version_spec)
+        except KeyError:
+            continue
+        if base_card.role != 'base':
+            continue
+        base_state = torch.load(base_path, map_location='cpu',
+                                weights_only=False)['model_state_dict']
+        drift = warn_shared_drift(base_state, state,
+                                  f"this stage vs base {req.module_id}@{_ver}",
+                                  indent='  ')
+        return max((r for r, _ in drift), default=0.0)
+    return 0.0
+
+
 def publish(ckpt_path, *, module_id, version, role='group', group_id=None, take=None,
             requires=None, provenance='', description='', attach_mode='sequential',
             skill=None, registry=None, out=None, overwrite=False):
@@ -110,6 +132,8 @@ def publish(ckpt_path, *, module_id, version, role='group', group_id=None, take=
     )
     skill = skill or (new_specs[-1].get('skill') if new_specs else None)
     grp = group_id or (new_specs[-1].get('group_id') if new_specs else None)
+    if role != 'base':
+        _check_shared_drift(ckpt['model_state_dict'], requires, registry)
 
     card = ModuleCard(
         module_id=module_id, version=str(version), role=role, skill=skill,

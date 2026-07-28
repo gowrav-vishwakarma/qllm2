@@ -65,6 +65,46 @@ def _load(path):
     return cfg, state, specs
 
 
+def shared_drift(base_state, other_state, tol=1e-3):
+    """[(rel_frobenius, key)] for shared params ``other_state`` moved off the base.
+
+    Composition keeps only the base's shared params, so any drift here means the
+    module's blocks were tuned against a table that is about to be discarded.
+    Returns [] when the other state carries no shared params at all (a published
+    group module) — there is nothing left to compare by then.
+    """
+    out = []
+    for key, base_val in base_state.items():
+        if not any(key.startswith(p) for p in _SHARED_PREFIXES):
+            continue
+        mod_val = other_state.get(key)
+        if mod_val is None or mod_val.shape != base_val.shape:
+            continue
+        denom = base_val.float().norm().item()
+        if denom == 0:
+            continue
+        rel = (mod_val.float() - base_val.float()).norm().item() / denom
+        if rel > tol:
+            out.append((rel, key))
+    out.sort(reverse=True)
+    return out
+
+
+def warn_shared_drift(base_state, other_state, label, *, tol=1e-3, indent='  '):
+    """Print a composition-fidelity warning for drifted shared params."""
+    drift = shared_drift(base_state, other_state, tol=tol)
+    if not drift:
+        return drift
+    total = sum(1 for k in base_state if any(k.startswith(p) for p in _SHARED_PREFIXES))
+    print(f"{indent}WARNING: {label} retrained {len(drift)}/{total} shared tensors; "
+          f"composition keeps the BASE copy, so its blocks will read a different "
+          f"table than they were trained on.")
+    for rel, key in drift[:4]:
+        print(f"{indent}  {key}: rel-Frobenius {rel:.4f}")
+    print(f"{indent}  Retrain that stage with --freeze_shared to make packing lossless.")
+    return drift
+
+
 def _take_indices(specs, take):
     if take == 'all':
         return list(range(len(specs)))
@@ -103,6 +143,7 @@ def pack(spec_path, out_path):
                 f"head_dim={m_cfg.head_dim}) != base (dim={base_cfg.dim}, "
                 f"head_dim={base_cfg.head_dim})"
             )
+        warn_shared_drift(base_state, m_state, module['checkpoint'])
         take = module.get('take', 'grown')
         for old in _take_indices(m_specs, take):
             s = copy.deepcopy(m_specs[old])
@@ -176,6 +217,8 @@ def assemble_plan(plan):
         state = (base_state if ref is base_ref
                  else torch.load(ref.ckpt_path, map_location='cpu',
                                  weights_only=False)['model_state_dict'])
+        if ref is not base_ref:
+            warn_shared_drift(base_state, state, ref.ckpt_path)
         specs = ref.card.layer_specs or [{} for _ in range(ref.n_layers)]
         for j in range(ref.n_layers):
             s = copy.deepcopy(specs[j]) if j < len(specs) else {}

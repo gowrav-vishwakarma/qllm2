@@ -654,14 +654,21 @@ def test_grown_delta_factband_equiv(seed=0):
 
 
 def test_fact_loss_mask():
-    """Fact loader supervises ONLY value tokens: every masked label token is the
-    single-token value that follows a 'means' query, nothing else."""
-    from v12.fact_data import load_fact_recall
+    """Fact loader supervises ONLY value tokens: every masked label token is a
+    single-token value, predicted from the tail of some query stem. The stem
+    varies per document now, so this checks against the whole template bank."""
+    from v12.fact_data import TEMPLATES_TRAIN, load_fact_recall
     tr, _va, tok = load_fact_recall(seq_len=192, n_train=64, n_val=4, seed=3)
     value_ids = {tid for _w, tid in tr.value_pool}
+    # Text between the key and the value in each query phrasing (' means',
+    # ' ->', ' carries the tag', ...).
+    mark = 'QQKEYQQ'
+    connectors = tuple(q.format(k=mark, n=1).split(mark, 1)[1]
+                       for _rec, q in TEMPLATES_TRAIN)
     ok = True
     total_masked = 0
-    for i in range(16):
+    seen_connectors = set()
+    for i in range(64):
         ex = tr[i]
         masked = torch.nonzero(ex['loss_mask']).flatten().tolist()
         total_masked += len(masked)
@@ -672,12 +679,16 @@ def test_fact_loss_mask():
             # every supervised label token must be a value-pool token ...
             if int(ex['labels'][pos]) not in value_ids:
                 ok = False
-            # ... and the token predicting it is the query head ending in 'means'.
-            ctx = tok.decode(ex['input_ids'][max(0, pos - 3):pos + 1].tolist())
-            if 'means' not in ctx:
+            # ... and the token predicting it must end a known query stem.
+            ctx = tok.decode(ex['input_ids'][max(0, pos - 8):pos + 1].tolist())
+            hit = [c for c in connectors if ctx.endswith(c)]
+            if not hit:
                 ok = False
+            else:
+                seen_connectors.add(max(hit, key=len))
     ok = ok and total_masked > 0
     print(f"[fact_loss_mask ] masked_value_tokens={total_masked} "
+          f"stems_seen={len(seen_connectors)}/{len(set(connectors))} "
           f"{'PASS' if ok else 'FAIL'}")
     return ok
 
