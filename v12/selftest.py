@@ -762,6 +762,47 @@ def test_delta_factband_compact(seed=0):
     return ok
 
 
+def test_delta_solve_backsub_equiv(seed=0):
+    """Back-substitution UT solve matches linalg eager path (delta forward)."""
+    from v12.model import V12Config, V12PAMLayer
+    torch.manual_seed(seed)
+    cfg = V12Config(
+        vocab_size=512, dim=32, n_heads=2, head_dim=16, n_layers=1,
+        expand=2, dropout=0.0, max_seq_len=128, chunk_size=32,
+        write_mode='delta', delta_chunk=20, gradient_checkpointing=False,
+        delta_solve_mode='backsub',
+    )
+    layer = V12PAMLayer(cfg, layer_idx=0).eval()
+    x = torch.randn(2, 40, cfg.dim, 2) * 0.3
+    with torch.no_grad():
+        out_b, _ = layer(x.clone())
+        layer.delta_solve_mode = 'linalg'
+        out_l, _ = layer(x.clone())
+    diff = (out_b - out_l).abs().max().item()
+    ok = diff < 5e-4
+    print(f"[delta_backsub  ] max|Δ|={diff:.2e}  {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
+def test_substrate_hash_shared(seed=0):
+    """substrate_hash at grow time includes shared params, not blocks alone."""
+    from v12.model import V12Config, V12LM
+    from v12.registry import hash_block_states, hash_substrate_prefix
+    torch.manual_seed(seed)
+    cfg = V12Config(
+        vocab_size=128, dim=32, n_heads=2, head_dim=16, n_layers=2,
+        expand=2, dropout=0.0, max_seq_len=64, chunk_size=16,
+        gradient_checkpointing=False,
+    )
+    m = V12LM(cfg)
+    st = m.state_dict()
+    blocks_only = hash_block_states([(st, 0), (st, 1)])
+    full = hash_substrate_prefix(st, [0, 1])
+    ok = full != blocks_only and len(full) == 64
+    print(f"[substrate_hash ] blocks-only != full  {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
 def test_recall_eval_smoke(seed=0):
     """v12.eval_recall runs a V12LM through the behavioral suite and returns a
     single_assoc accuracy in [0,1] (held-out KEYS/VALUES)."""
@@ -843,6 +884,8 @@ def main():
     results.append(test_fact_loss_mask())
     results.append(test_ce_fact_profile())
     results.append(test_delta_factband_compact())
+    results.append(test_delta_solve_backsub_equiv())
+    results.append(test_substrate_hash_shared())
     results.append(test_recall_eval_smoke())
     print()
     if all(results):

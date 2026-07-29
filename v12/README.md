@@ -259,6 +259,12 @@ Flags: `--grow_layers` (`skill:count[:head_budget]` or `@path.json`),
 — required for the packed stack to equal the trained one; see the M5 note),
 `--fact_value_pool N` (`--dataset fact`: cap the value vocabulary; eval must use the same cap).
 
+**Next-phase M3 / interface flags (2026-07-28):** `--delta_solve_mode {backsub,linalg}`,
+`--vault_norm_bound`, `--write_phase_key_conditional`, `--module_adapter_rank` (curriculum:
+`MODULE_ADAPTER_RANK`). Phase 0 runner: [scripts/run_phase0_controls.sh](scripts/run_phase0_controls.sh).
+Micro-lab: [scripts/run_micro_ab.sh](scripts/run_micro_ab.sh). Strong base:
+[scripts/run_strong_base.sh](scripts/run_strong_base.sh).
+
 ### Compaction + hand-written pack
 
 ```bash

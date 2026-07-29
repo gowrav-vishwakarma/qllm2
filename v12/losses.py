@@ -113,6 +113,19 @@ register_stage_loss(StageLoss(
     },
 ))
 
+# Full-strength contrastive for Phase 0 retest at seq 512 (vault bounded by seq, not aux cut).
+register_stage_loss(StageLoss(
+    name='ce_fact_strong',
+    description='ce_fact with fact_contrastive_lambda=0.5 (Phase 0 contrastive control).',
+    config_overrides={
+        'gate_surprisal_lambda': 0.1,
+        'gate_surprisal_tau': 0.5,
+        'gate_surprisal_sign': 1.0,
+        'fact_contrastive_lambda': 0.5,
+        'fact_contrastive_tau': 1.0,
+    },
+))
+
 # Pruning: CE + hard-concrete L0 head-gate pressure so the effective head count
 # is discovered for this stage's layers. Pair with a high n_heads budget.
 register_stage_loss(StageLoss(

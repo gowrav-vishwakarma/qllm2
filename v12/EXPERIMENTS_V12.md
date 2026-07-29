@@ -526,3 +526,34 @@ that matters is not on this table — it is **0.925 binding vs a 0.246 chance fl
 first direct evidence that the PAM fact-band design retrieves what it stores.
 See [../EXPERIMENTS_V_6_7_8_9.md](../EXPERIMENTS_V_6_7_8_9.md) and
 [../v11/EXPERIMENTS_V11.md](../v11/EXPERIMENTS_V11.md).
+
+---
+
+## V12 next phase — implementation (2026-07-28)
+
+Bounded-memory modular PAM work stays in `v12/` (no v13 package). Landed in code:
+
+| Area | What shipped |
+|---|---|
+| **Phase 0** | [scripts/run_phase0_controls.sh](scripts/run_phase0_controls.sh) — 50-value control, pool sweep 50/200/1000, `ce_fact_strong` contrastive retest + transfer grid. Logs: `logs/v12_phase0/`. |
+| **M3 delta** | `delta_solve_mode=backsub` (default): compile-friendly UT back-substitution; `linalg` remains for parity (`selftest`: `delta_backsub`). |
+| **M3 vault** | `vault_norm_bound` caps Frobenius norm per head after vault writes (NaN guard at long seq). |
+| **M3 phase** | `write_phase_key_conditional` — phase from key (real+imag), not `\|key\|` only. |
+| **Interface v2** | `module_adapter_rank` + `ModuleBoundaryAdapter` (in/out low-rank + readout delta); `MODULE_ADAPTER_RANK` in curriculum; pack/publish merge `module_adapters.{group_id}.*`. |
+| **Contract** | `substrate_hash` at grow time = blocks prefix **+** shared params (`hash_substrate_prefix`); resolver verifies the same composition. |
+| **Micro-lab** | Presets `v12_grammar_dyn_micro`, `v12_micro_factband`; [scripts/run_micro_ab.sh](scripts/run_micro_ab.sh), [scripts/run_micro_baselines.sh](scripts/run_micro_baselines.sh). |
+| **Strong base** | [scripts/run_strong_base.sh](scripts/run_strong_base.sh) → `grammar@2.0` target (1B+ tokens, `v12_e3_k3_recall`). |
+| **Decode** | [recurrent_decode.py](recurrent_decode.py), [bench_infer.py](bench_infer.py) (v12 preset). |
+
+### Phase 0 run status
+
+Queue (control50 → contrastive → pool200 → pool1000) launched 2026-07-28; monitor
+`logs/v12_phase0/queue.log` and per-arm logs `control50_pool50.log`, etc. Grid JSON under
+`logs/v12_phase0/grid/`. **Fill binding verdict here when the 50-value control completes** —
+that number decides whether the 0.925 result was general binding or a 50-value readout.
+
+```bash
+# Re-run manually:
+v12/scripts/run_phase0_controls.sh control50
+v12/scripts/run_phase0_controls.sh grid control50 50
+```

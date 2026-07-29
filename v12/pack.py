@@ -173,6 +173,16 @@ def pack(spec_path, out_path):
             if key.startswith(old_prefix):
                 combined_state[new_prefix + key[len(old_prefix):]] = val
 
+    for module in compose.get('modules', []):
+        m_cfg, m_state, _m_specs = _load(module['checkpoint'])
+        gid = module.get('group_id')
+        if not gid:
+            continue
+        aprefix = f'module_adapters.{gid}.'
+        for key, val in m_state.items():
+            if key.startswith(aprefix):
+                combined_state[key] = val
+
     missing, unexpected = model.load_state_dict(combined_state, strict=False)
     if missing or unexpected:
         raise RuntimeError(

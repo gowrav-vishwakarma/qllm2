@@ -114,6 +114,14 @@ class V12Config:
     vault_state_idx: int = 0
     # write_phase_address: key-conditioned write phase + matching query phase on read.
     write_phase_address: bool = False
+    # When write_phase_address is on: derive phase from key (real+imag) not |key| only.
+    write_phase_key_conditional: bool = False
+    # Delta UT solve: 'backsub' (compile-friendly loop) | 'linalg' (eager island).
+    delta_solve_mode: str = 'backsub'
+    # Cap Frobenius norm of vault PAM state per head (0 = disabled).
+    vault_norm_bound: float = 0.0
+    # Low-rank boundary adapters per non-base group_id in layer_specs (0 = off).
+    module_adapter_rank: int = 0
 
     # ── M1: learnable phase-band heads ───────────────────────────────────────
     # head_gate: treat `n_heads` as a MAX head budget (H_max). Each head slot gets
@@ -306,6 +314,7 @@ class V12PAMLayer(nn.Module):
                 cfg.n_heads, init_logalpha=getattr(cfg, 'head_gate_init_logalpha', 3.0)
             )
         self.write_phase_address = getattr(cfg, 'write_phase_address', False)
+        self.write_phase_key_conditional = getattr(cfg, 'write_phase_key_conditional', False)
         if self.write_phase_address:
             # M3 phase bands: each head slot learns its OWN key/query->phase map, so
             # heads occupy distinct, content-dependent phase bands (non-vacuous —
@@ -313,6 +322,12 @@ class V12PAMLayer(nn.Module):
             # per-head [H, d] + [H]; zero-init => identity rotation at start.
             self.write_phase_w = nn.Parameter(torch.zeros(cfg.n_heads, cfg.head_dim))
             self.write_phase_b = nn.Parameter(torch.zeros(cfg.n_heads))
+            if self.write_phase_key_conditional:
+                self.write_phase_w_i = nn.Parameter(torch.zeros(cfg.n_heads, cfg.head_dim))
+            else:
+                self.register_parameter('write_phase_w_i', None)
+        self.delta_solve_mode = getattr(cfg, 'delta_solve_mode', 'backsub')
+        self.vault_norm_bound = float(getattr(cfg, 'vault_norm_bound', 0.0))
         if cfg.use_gsp:
             gate_in = cfg.dim * 2 if self.gate_content_aware else cfg.dim
             self.protect_gate = nn.Linear(gate_in, cfg.n_heads)
@@ -487,8 +502,23 @@ class V12PAMLayer(nn.Module):
         addresses writes/reads in its own learned phase band."""
         # cabs layout: [B,H,T,d]; per-head projection -> [B,H,T]
         bias = self.write_phase_b.view(1, -1, 1)
-        key_phase = torch.einsum('bhtd,hd->bht', cabs(keys), self.write_phase_w) + bias
-        query_phase = torch.einsum('bhtd,hd->bht', cabs(queries), self.write_phase_w) + bias
+        if self.write_phase_key_conditional:
+            kr, ki = keys[..., 0], keys[..., 1]
+            qr, qi = queries[..., 0], queries[..., 1]
+            w, wi = self.write_phase_w, self.write_phase_w_i
+            key_phase = (
+                torch.einsum('bhtd,hd->bht', kr, w)
+                + torch.einsum('bhtd,hd->bht', ki, wi)
+                + bias
+            )
+            query_phase = (
+                torch.einsum('bhtd,hd->bht', qr, w)
+                + torch.einsum('bhtd,hd->bht', qi, wi)
+                + bias
+            )
+        else:
+            key_phase = torch.einsum('bhtd,hd->bht', cabs(keys), self.write_phase_w) + bias
+            query_phase = torch.einsum('bhtd,hd->bht', cabs(queries), self.write_phase_w) + bias
         values = self._rotate_complex(values, key_phase)
         queries = self._rotate_complex(queries, query_phase)
         return queries, values
@@ -744,8 +774,9 @@ class V12PAMLayer(nn.Module):
                 write_real = write_beta_chunk.unsqueeze(-1) * value_real
                 write_imag = write_beta_chunk.unsqueeze(-1) * value_imag
 
-            update_real, update_imag = _complex_triangular_solve(
-                mass_real, mass_imag, write_real, write_imag, identity[:chunk_len, :chunk_len]
+            update_real, update_imag = _complex_triangular_solve_dispatch(
+                mass_real, mass_imag, write_real, write_imag, identity[:chunk_len, :chunk_len],
+                mode=self.delta_solve_mode,
             )
 
             query_key_real = query_real @ key_real.transpose(-1, -2) + query_imag @ key_imag.transpose(-1, -2)
@@ -779,6 +810,8 @@ class V12PAMLayer(nn.Module):
             state_imag = update_decayed_imag.transpose(-1, -2) @ key_real - update_decayed_real.transpose(-1, -2) @ key_imag
             state_chunk = torch.stack([state_real, state_imag], dim=-1)
             memory_state = memory_state * cumulative_total.unsqueeze(-1).unsqueeze(-1) + state_chunk
+            if self.vault_state and self.vault_norm_bound > 0:
+                memory_state = _clamp_pam_state_norm(memory_state, self.vault_norm_bound)
         return torch.cat(outputs, dim=2), memory_state
 
     # ── E3: multi-state superposition (loop over states, phase-combine) ───────
@@ -1319,6 +1352,8 @@ class V12PAMLayer(nn.Module):
             + imag_part(memory_state) * real_part(query_t).unsqueeze(-2)
         )
         output = stack_complex(state_query_real.sum(dim=-1), state_query_imag.sum(dim=-1))
+        if self.vault_state and self.vault_norm_bound > 0:
+            memory_state = _clamp_pam_state_norm(memory_state, self.vault_norm_bound)
         return output, memory_state
 
     def _recur_step_delta(self, memory_state, decay_gamma, value_t, key_t, query_t, write_beta_t):
@@ -1356,7 +1391,52 @@ class V12PAMLayer(nn.Module):
             + memory_state[..., 1] * query_t[..., 0].unsqueeze(-2)
         )
         output = torch.stack([state_query_real.sum(dim=-1), state_query_imag.sum(dim=-1)], dim=-1)
+        if self.vault_state and self.vault_norm_bound > 0:
+            memory_state = _clamp_pam_state_norm(memory_state, self.vault_norm_bound)
         return output, memory_state
+
+
+def _clamp_pam_state_norm(state: torch.Tensor, max_norm: float) -> torch.Tensor:
+    """Scale PAM matrix state so Frobenius norm per (..., H) head does not exceed max_norm."""
+    if max_norm <= 0:
+        return state
+    lead = state.shape[:-3]
+    flat = state.reshape(*lead, -1)
+    n = flat.norm(dim=-1, keepdim=True).clamp(min=1e-12)
+    scale = (max_norm / n).clamp(max=1.0)
+    return state * scale.reshape(*lead, 1, 1, 1)
+
+
+def _complex_triangular_solve_backsub(mass_real, mass_imag, write_real, write_imag, identity):
+    """Forward substitution for (I+M)z=w with M strictly lower (complex), compile-safe."""
+    lr = identity + mass_real
+    li = mass_imag
+    xr = write_real.new_zeros(write_real.shape)
+    xi = write_imag.new_zeros(write_imag.shape)
+    ur, ui = write_real, write_imag
+    chunk_len = mass_real.shape[-1]
+    for i in range(chunk_len):
+        rr = ur[..., i, :].clone()
+        ri = ui[..., i, :].clone()
+        if i > 0:
+            lr_i = lr[..., i, :i]
+            li_i = li[..., i, :i]
+            xr_p = xr[..., :i, :]
+            xi_p = xi[..., :i, :]
+            rr = rr - torch.einsum('...i,...id->...d', lr_i, xr_p) + torch.einsum('...i,...id->...d', li_i, xi_p)
+            ri = ri - torch.einsum('...i,...id->...d', lr_i, xi_p) - torch.einsum('...i,...id->...d', li_i, xr_p)
+        dr = lr[..., i, i]
+        di = li[..., i, i]
+        denom = (dr * dr + di * di).clamp(min=1e-12)
+        xr[..., i, :] = (rr * dr.unsqueeze(-1) + ri * di.unsqueeze(-1)) / denom.unsqueeze(-1)
+        xi[..., i, :] = (ri * dr.unsqueeze(-1) - rr * di.unsqueeze(-1)) / denom.unsqueeze(-1)
+    return xr, xi
+
+
+def _complex_triangular_solve_dispatch(mass_real, mass_imag, write_real, write_imag, identity, *, mode='backsub'):
+    if mode == 'linalg':
+        return _complex_triangular_solve(mass_real, mass_imag, write_real, write_imag, identity)
+    return _complex_triangular_solve_backsub(mass_real, mass_imag, write_real, write_imag, identity)
 
 
 @torch.compiler.disable
@@ -1375,6 +1455,28 @@ def _complex_triangular_solve(mass_real, mass_imag, write_real, write_imag, iden
     solution = torch.linalg.solve(system_matrix, rhs)
     update_real, update_imag = solution[..., :chunk_len, :], solution[..., chunk_len:, :]
     return update_real.to(write_real.dtype), update_imag.to(write_imag.dtype)
+
+
+class ModuleBoundaryAdapter(nn.Module):
+    """Per-module low-rank residual adapters (interface v2): in/out on the stream + readout delta."""
+
+    def __init__(self, dim: int, rank: int):
+        super().__init__()
+        self.in_down = ComplexLinear(dim, rank)
+        self.in_up = ComplexLinear(rank, dim)
+        self.out_down = ComplexLinear(dim, rank)
+        self.out_up = ComplexLinear(rank, dim)
+        self.readout_down = nn.Linear(dim * 2, rank)
+        self.readout_up = nn.Linear(rank, dim * 2)
+
+    def adapt_in(self, z: torch.Tensor) -> torch.Tensor:
+        return z + self.in_up(self.in_down(z))
+
+    def adapt_out(self, z: torch.Tensor) -> torch.Tensor:
+        return z + self.out_up(self.out_down(z))
+
+    def readout_delta(self, h_concat: torch.Tensor) -> torch.Tensor:
+        return self.readout_up(self.readout_down(h_concat))
 
 
 # ── V12 Block ────────────────────────────────────────────────────────────────
@@ -1438,6 +1540,16 @@ class V12LM(nn.Module):
         self.lm_head_proj = ComplexLinear(cfg.dim, cfg.dim)
         self.lm_head_norm = ComplexNorm(cfg.dim)
         self._init_weights()
+        rank = int(getattr(cfg, 'module_adapter_rank', 0) or 0)
+        self.module_adapters = nn.ModuleDict()
+        if rank > 0:
+            specs = cfg.layer_specs or []
+            seen = []
+            for spec in (specs if specs else [{'group_id': 'base'}]):
+                gid = spec.get('group_id')
+                if gid and gid != 'base' and gid not in seen:
+                    seen.append(gid)
+                    self.module_adapters[gid] = ModuleBoundaryAdapter(cfg.dim, rank)
         # Materialize an explicit per-layer manifest (source of truth for growth /
         # composition). For a uniform base this records one 'base' spec per layer;
         # module init above is untouched, so the state_dict stays identical.
@@ -1526,7 +1638,11 @@ class V12LM(nn.Module):
         pre-existing prefix it was grown on. Returns the new block indices.
         """
         start = len(self.blocks)
-        substrate = self._hash_blocks(range(start)) if (stamp_substrate and start) else None
+        if stamp_substrate and start:
+            from v12.registry import hash_substrate_prefix
+            substrate = hash_substrate_prefix(self.state_dict(), range(start))
+        else:
+            substrate = None
         try:
             device = next(self.parameters()).device
         except StopIteration:
@@ -1599,9 +1715,9 @@ class V12LM(nn.Module):
         z = self.embed_norm(z)
         use_ckpt = self.config.gradient_checkpointing and self.training and states is None
         z, new_states = self._run_blocks(z, states, step_offset, use_ckpt)
-        # Stabilize → mix features → stabilize again before tied embedding scores.
         z = self.output_norm(z)
         lm = self.lm_head_norm(self.lm_head_proj(z))
+        lm = self._apply_lm_readout_adapters(lm)
         # Tied head: reuse embed weights; real and imag contribute then add.
         logits = (
             real_part(lm) @ self.embed.embed_real.weight.T
@@ -1629,6 +1745,7 @@ class V12LM(nn.Module):
         z, _ = self._run_blocks(z, None, step_offset, use_ckpt)
         z = self.output_norm(z)
         lm = self.lm_head_norm(self.lm_head_proj(z))
+        lm = self._apply_lm_readout_adapters(lm)
         route_aux = self._collect_route_aux(self.blocks)
         aux_loss = (
             route_aux
@@ -1705,6 +1822,18 @@ class V12LM(nn.Module):
 
     # ── M4: attach-mode-aware block composition ───────────────────────────────
 
+    def _apply_lm_readout_adapters(self, lm: torch.Tensor) -> torch.Tensor:
+        if not len(self.module_adapters):
+            return lm
+        h = torch.cat([real_part(lm), imag_part(lm)], dim=-1)
+        delta = None
+        for adapter in self.module_adapters.values():
+            d = adapter.readout_delta(h)
+            delta = d if delta is None else delta + d
+        h = h + delta
+        d = lm.shape[-2]
+        return stack_complex(h[..., :d], h[..., d:])
+
     def _apply_block(self, i, z, states, step_offset, use_ckpt):
         """Run one block; checkpoint only on the stateless (training) path."""
         block = self.blocks[i]
@@ -1740,6 +1869,9 @@ class V12LM(nn.Module):
         new_states = [None] * n
         i = 0
         while i < n:
+            gid = groups[i]
+            if gid and gid in self.module_adapters:
+                z = self.module_adapters[gid].adapt_in(z)
             if modes[i] == 'moe':
                 j, gid = i, groups[i]
                 while j < n and modes[j] == 'moe' and groups[j] == gid:
@@ -1747,9 +1879,14 @@ class V12LM(nn.Module):
                 z, gstates = self._apply_moe_group(range(i, j), z, states, step_offset, use_ckpt)
                 for k, s in zip(range(i, j), gstates):
                     new_states[k] = s
+                if gid and gid in self.module_adapters:
+                    z = self.module_adapters[gid].adapt_out(z)
                 i = j
             else:
                 z, new_states[i] = self._apply_block(i, z, states, step_offset, use_ckpt)
+                next_gid = groups[i + 1] if i + 1 < n else None
+                if gid and gid in self.module_adapters and gid != next_gid:
+                    z = self.module_adapters[gid].adapt_out(z)
                 i += 1
         return z, new_states
 
@@ -1999,6 +2136,22 @@ PRESETS = {
         expand=3, dropout=0.0, max_seq_len=2048, chunk_size=64,
         gradient_checkpointing=False, n_states=3, state_dt_spread=2.0,
         gate_content_aware=True,
+    ),
+    # Curriculum micro-lab (~10M): fast transfer/recall gates before large budgets.
+    'v12_grammar_dyn_micro': _base_flat(
+        n_layers=4, n_heads=8, head_dim=32, n_states=3, state_dt_spread=2.0,
+        vocab_size=50261, max_seq_len=1024, chunk_size=64,
+        gate_content_aware=True, head_gate=True, head_gate_l0_lambda=0.001,
+        write_phase_address=True, gradient_checkpointing=False,
+    ),
+    'v12_micro_factband': _base_flat(
+        n_layers=4, n_heads=8, head_dim=32, n_states=1, vocab_size=50261,
+        max_seq_len=1024, chunk_size=64, write_mode='delta', delta_chunk=32,
+        vault_state=True, vault_state_idx=0, vault_norm_bound=8.0,
+        write_phase_address=True, write_phase_key_conditional=True,
+        delta_solve_mode='backsub', gate_content_aware=True,
+        gate_surprisal_lambda=0.3, gate_surprisal_tau=0.5,
+        gradient_checkpointing=False,
     ),
 }
 

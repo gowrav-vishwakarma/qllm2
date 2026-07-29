@@ -175,6 +175,14 @@ def build_argparser():
                    help='Key-conditioned write phase + matching query phase on read')
     p.add_argument('--no_write_phase_address', action='store_true',
                    help='Disable write_phase_address even if preset enables it')
+    p.add_argument('--write_phase_key_conditional', action='store_true',
+                   help='M3: phase addressing from key vector (real+imag), not |key| only')
+    p.add_argument('--delta_solve_mode', type=str, default=None, choices=['backsub', 'linalg'],
+                   help='Delta UT solve: backsub (compile-friendly) or linalg (eager island)')
+    p.add_argument('--vault_norm_bound', type=float, default=None,
+                   help='Cap Frobenius norm of vault PAM state (0=off)')
+    p.add_argument('--module_adapter_rank', type=int, default=None,
+                   help='Per-group low-rank module adapters (0=off)')
     # M1: learnable phase-band heads (treat n_heads as a max budget H_max).
     p.add_argument('--head_gate', action='store_true',
                    help='Enable hard-concrete L0 head gates so effective head count is learned')
@@ -494,6 +502,14 @@ def main():
         cfg.write_phase_address = False
     elif args.write_phase_address:
         cfg.write_phase_address = True
+    if args.write_phase_key_conditional:
+        cfg.write_phase_key_conditional = True
+    if args.delta_solve_mode is not None:
+        cfg.delta_solve_mode = args.delta_solve_mode
+    if args.vault_norm_bound is not None:
+        cfg.vault_norm_bound = args.vault_norm_bound
+    if args.module_adapter_rank is not None:
+        cfg.module_adapter_rank = args.module_adapter_rank
     # M1: learnable head count (treat n_heads as a max budget; L0-prune slots).
     if args.head_gate:
         cfg.head_gate = True

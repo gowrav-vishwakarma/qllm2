@@ -144,6 +144,28 @@ def hash_block_states(sources: List[Tuple[dict, int]]) -> str:
     return h.hexdigest()
 
 
+def hash_shared_states(state: dict) -> str:
+    """SHA-256 over shared-prefix tensors (embed, norms, LM head)."""
+    from v12.pack import _SHARED_PREFIXES
+    h = hashlib.sha256()
+    for key in sorted(state):
+        if not any(key.startswith(p) for p in _SHARED_PREFIXES):
+            continue
+        h.update(key.encode())
+        h.update(state[key].detach().cpu().contiguous().numpy().tobytes())
+    return h.hexdigest()
+
+
+def hash_substrate_prefix(state: dict, block_indices) -> str:
+    """Hash of frozen blocks beneath a group + shared params (full substrate contract)."""
+    h = hashlib.sha256()
+    idxs = list(block_indices)
+    if idxs:
+        h.update(hash_block_states([(state, i) for i in idxs]).encode())
+    h.update(hash_shared_states(state).encode())
+    return h.hexdigest()
+
+
 # ── semver-lite ───────────────────────────────────────────────────────────────
 
 def version_tuple(v: str) -> Tuple[int, ...]:
@@ -448,8 +470,15 @@ def _finalize_plan(ordered_ids, chosen, registry, lineage, force, *, target_labe
         if ref.role == "base":
             continue
         beneath = stack[:pos]
-        sources = [(state_of(b), j) for b in beneath for j in range(b.n_layers)]
-        actual = hash_block_states(sources) if sources else None
+        block_sources = [(state_of(b), j) for b in beneath for j in range(b.n_layers)]
+        base_state = state_of(stack[0]) if stack else {}
+        if block_sources:
+            actual = hashlib.sha256(
+                hash_block_states(block_sources).encode()
+                + hash_shared_states(base_state).encode()
+            ).hexdigest()
+        else:
+            actual = None
         if ref.card.substrate_hash and actual and ref.card.substrate_hash != actual:
             fail(f"substrate_hash mismatch for {ref.module_id}@{ref.version}: card="
                  f"{ref.card.substrate_hash[:12]} resolved={actual[:12]} "

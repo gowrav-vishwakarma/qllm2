@@ -66,6 +66,7 @@ FACT_LR="${FACT_LR:-3e-5}"        # fact stage default LR (lower than grammar; N
 FREEZE_SHARED="${FREEZE_SHARED:-0}"  # 1 => specialists keep the base's shared params
                                      # (embeddings/norms/LM head) so pack is lossless
 FACT_VALUE_POOL="${FACT_VALUE_POOL:-0}"  # cap the fact value vocabulary (0 = full ~14k)
+MODULE_ADAPTER_RANK="${MODULE_ADAPTER_RANK:-0}"
 CKPT_ROOT="${CKPT_ROOT:-checkpoints_v12_curriculum}"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
@@ -204,6 +205,7 @@ train_stage() {
       grow="${GROW:-@$spec_json}"
       extra+=(--fused_ce)
       if [ "$FACT_VALUE_POOL" != "0" ]; then extra+=(--fact_value_pool "$FACT_VALUE_POOL"); fi
+      if [ "$MODULE_ADAPTER_RANK" != "0" ]; then extra+=(--module_adapter_rank "$MODULE_ADAPTER_RANK"); fi
       # Safer defaults after NaN divergence at lr=1e-4 / heavy aux.
       stage_lr="${LR:-$FACT_LR}"
       save_every="${SAVE_EVERY_STEPS_FACT:-1000}"

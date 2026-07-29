@@ -88,6 +88,13 @@ def build_module(ckpt: dict, *, role='group', group_id=None, take=None):
                 new_state[np_ + k[len(op):]] = v
 
     new_specs = [copy.deepcopy(specs[i]) for i in idxs]
+    grp = group_id or (new_specs[-1].get('group_id') if new_specs else None)
+    if role == 'group' and grp:
+        aprefix = f'module_adapters.{grp}.'
+        for k, v in state.items():
+            if k.startswith(aprefix):
+                new_state[k] = v
+
     new_cfg = copy.deepcopy(cfg)
     new_cfg.layer_specs = new_specs
     new_cfg.n_layers = len(idxs)
