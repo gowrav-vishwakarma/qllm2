@@ -1,0 +1,71 @@
+{
+  "schema_version": "v12-fact-transfer-grid/v2",
+  "created_at": "2026-07-29T05:39:29.718438+00:00",
+  "checkpoint": "checkpoints_v12_phase0/control50/fact_retrieval/best_model.pt",
+  "cells": [
+    {
+      "n_value_positions": 1007,
+      "mean_in_context_values": 5.836146971201589,
+      "top1_vocab_correct": 0.7368421052631579,
+      "top1_is_some_value": 1.0,
+      "top1_is_context_value": 0.9801390268123138,
+      "pool_restricted_correct": 0.7368421052631579,
+      "pool_restricted_chance": 0.02,
+      "ctx_restricted_correct": 0.7457795431976166,
+      "ctx_restricted_chance": 0.19860973187686196,
+      "ctx_mean_reciprocal_rank": 0.8623894642266043,
+      "value_pool_size": 50,
+      "template": "train",
+      "vocab": "train",
+      "trials": 200
+    },
+    {
+      "n_value_positions": 1007,
+      "mean_in_context_values": 5.836146971201589,
+      "top1_vocab_correct": 0.012909632571996028,
+      "top1_is_some_value": 0.08341608738828203,
+      "top1_is_context_value": 0.07745779543197617,
+      "pool_restricted_correct": 0.1519364448857994,
+      "pool_restricted_chance": 0.02,
+      "ctx_restricted_correct": 0.18867924528301888,
+      "ctx_restricted_chance": 0.19860973187686196,
+      "ctx_mean_reciprocal_rank": 0.4338050314465409,
+      "value_pool_size": 50,
+      "template": "train",
+      "vocab": "heldout",
+      "trials": 200
+    },
+    {
+      "n_value_positions": 1034,
+      "mean_in_context_values": 5.920696324951644,
+      "top1_vocab_correct": 0.35493230174081236,
+      "top1_is_some_value": 0.7940038684719536,
+      "top1_is_context_value": 0.6866537717601547,
+      "pool_restricted_correct": 0.37524177949709864,
+      "pool_restricted_chance": 0.02,
+      "ctx_restricted_correct": 0.43036750483558994,
+      "ctx_restricted_chance": 0.19342359767891681,
+      "ctx_mean_reciprocal_rank": 0.6339020908169845,
+      "value_pool_size": 50,
+      "template": "heldout",
+      "vocab": "train",
+      "trials": 200
+    },
+    {
+      "n_value_positions": 1034,
+      "mean_in_context_values": 5.920696324951644,
+      "top1_vocab_correct": 0.0009671179883945841,
+      "top1_is_some_value": 0.004835589941972921,
+      "top1_is_context_value": 0.004835589941972921,
+      "pool_restricted_correct": 0.06576402321083172,
+      "pool_restricted_chance": 0.02,
+      "ctx_restricted_correct": 0.17408123791102514,
+      "ctx_restricted_chance": 0.19342359767891681,
+      "ctx_mean_reciprocal_rank": 0.4190061711338307,
+      "value_pool_size": 50,
+      "template": "heldout",
+      "vocab": "heldout",
+      "trials": 200
+    }
+  ]
+}

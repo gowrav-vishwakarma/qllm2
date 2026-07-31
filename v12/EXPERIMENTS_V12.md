@@ -5,20 +5,22 @@
 > learned, and what to do next. *Last updated: 2026-07-28.*
 
 **One-line verdict:** the memory mechanism **works on the distribution it was trained on** —
-the fact module does long-range key→value binding at **0.925** where the grammar base scores
-chance — but the capability was (a) **destroyed by composition** (0.925 → 0.003 once packed)
-and (b) **non-transferable**, collapsing to chance the moment either the prompt template or
-the value vocabulary changes. As of 2026-07-28 the composition defect is **fixed**
-(`--freeze_shared`; packed is now bit-for-bit identical to trained) at a large capability
-cost, and the transfer question is **still open** — the diversified task does not reach
-binding at a 40M-token budget, so the retest is inconclusive rather than negative.
+the fact module does long-range key→value binding at **0.925** (original) / **0.746**
+(Phase-0 50-value control) where the grammar base scores chance — but the capability was
+(a) **destroyed by composition** (0.925 → 0.003 once packed; now fixed by `--freeze_shared`)
+and (b) **not a general copy operation**: changing the value vocabulary alone collapses
+binding to chance, and raising the pool from 50 → 1000 drops in-distribution binding from
+0.746 → 0.271. As of 2026-07-30 **D1 is closed** (pack fidelity) and **D2 is closed in both
+directions** — closed-set / value-specific readout, not undertraining, and the pool sweep
+(50→200→1000) is a smooth saturation curve, not a cliff. Contrastive pressure (λ 0.1→0.5)
+changed nothing at pool=50. See [Phase 0](#phase-0-run-status-2026-07-30--d2-closed-both-directions).
 
 **The two defects, stated separately, because they have different fixes:**
 
-| | What it is | Status (2026-07-28) |
+| | What it is | Status (2026-07-29) |
 |---|---|---|
 | **D1 Composition** | Modules are trained against a live shared embedding table; no single table can satisfy two modules at once | **Solved for pack fidelity.** `--freeze_shared` makes packed bit-for-bit identical to trained — but costs 29× on the objective, because the LM head is tied to the frozen table. See [follow-up](#follow-up-is-d1-fixable-and-does-diversity-induce-transfer-2026-07-28) |
-| **D2 Transfer** | The fact module memorized one template × 50 values; both axes independently collapse it to chance | **Open.** Data diversified on both axes, but the diversified task does not reach binding at 40M tokens, so the retest is inconclusive. One 80-minute control (50-value pool) decides whether the mechanism can generalize at all |
+| **D2 Transfer** | The fact module memorizes a small closed value set; vocab shift alone → chance | **Closed both directions.** 50-value control binds at 0.746 in-distribution and fails vocab transfer; pool sweep 50→200→1000 is a smooth saturation (0.746→0.333→0.271); contrastive λ 0.1→0.5 at pool=50 changed nothing. M3 (bounded vault / key-phase / delta) is now the primary bet. |
 
 ---
 
@@ -438,14 +440,10 @@ The mechanism works on its training distribution; the data taught a surface patt
 2. ~~**Make the transfer grid the training-time metric.**~~ **Done** — the grid now runs the
    real generator with splits swapped, and checks the in-distribution control cell first so an
    undertrained model reports INCONCLUSIVE rather than a false transfer failure.
-3. **THE NEXT EXPERIMENT — the 50-value control.** Rerun attempt C with
-   `--fact_value_pool 50`, changing nothing else. ~80 minutes. This is the only thing standing
-   between us and a real answer on D2, and it splits cleanly:
-   high in-distribution binding ⇒ the pipeline is sound and the 2026-07 module's 0.925 came
-   from **value-specific readouts**, which would mean the mechanism cannot learn a general
-   copy operation; still low ⇒ merely undertrained, and the budget must rise.
-   Then sweep pool size (50 → 200 → 1000) to find where binding breaks — that curve *is* the
-   generalization result.
+3. ~~**THE NEXT EXPERIMENT — the 50-value control.**~~ **Done (2026-07-29).** Pool=50
+   binds at **0.746** in-distribution and fails vocab transfer (chance). Pool=1000 never
+   binds. **D2 = closed-set readout**, not undertraining. Pool sweep 50→200→1000 is running
+   to locate the break point; see [Phase 0](#phase-0-run-status-2026-07-29--d2-answered-closed-set-readout).
 4. **Restore the anti-shortcut pressure.** `fact_contrastive_lambda` was cut 0.5 → 0.1 and
    `tau` doubled to stop a NaN divergence ([losses.py:105](losses.py)), for numerical reasons
    rather than scientific ones. Finding 19 identifies the real NaN source (the no-decay vault
@@ -535,7 +533,7 @@ Bounded-memory modular PAM work stays in `v12/` (no v13 package). Landed in code
 
 | Area | What shipped |
 |---|---|
-| **Phase 0** | [scripts/run_phase0_controls.sh](scripts/run_phase0_controls.sh) — 50-value control, pool sweep 50/200/1000, `ce_fact_strong` contrastive retest + transfer grid. Logs: `logs/v12_phase0/`. |
+| **Phase 0** | [scripts/run_phase0_controls.sh](scripts/run_phase0_controls.sh) — 50-value control, pool sweep 50/200/1000, `ce_fact_strong` contrastive retest + transfer grid. Logs: `logs/v12_phase0/runs/` (tee), `.../internal/` (v12.train TeeLogger); `${tag}_pool${pool}.log.latest` → newest run. |
 | **M3 delta** | `delta_solve_mode=backsub` (default): compile-friendly UT back-substitution; `linalg` remains for parity (`selftest`: `delta_backsub`). |
 | **M3 vault** | `vault_norm_bound` caps Frobenius norm per head after vault writes (NaN guard at long seq). |
 | **M3 phase** | `write_phase_key_conditional` — phase from key (real+imag), not `\|key\|` only. |
@@ -545,15 +543,108 @@ Bounded-memory modular PAM work stays in `v12/` (no v13 package). Landed in code
 | **Strong base** | [scripts/run_strong_base.sh](scripts/run_strong_base.sh) → `grammar@2.0` target (1B+ tokens, `v12_e3_k3_recall`). |
 | **Decode** | [recurrent_decode.py](recurrent_decode.py), [bench_infer.py](bench_infer.py) (v12 preset). |
 
-### Phase 0 run status
+### Phase 0 run status (2026-07-30) — D2 closed both directions
 
-Queue (control50 → contrastive → pool200 → pool1000) launched 2026-07-28; monitor
-`logs/v12_phase0/queue.log` and per-arm logs `control50_pool50.log`, etc. Grid JSON under
-`logs/v12_phase0/grid/`. **Fill binding verdict here when the 50-value control completes** —
-that number decides whether the 0.925 result was general binding or a 50-value readout.
+**Verdict:** the 50-value control **binds in-distribution** (ctx-restricted **0.746** vs
+chance 0.199) and collapses to chance the moment the value vocabulary shifts. Combined with
+attempt-C at 1000 values never learning to bind (0.258 vs chance 0.194), this confirms the
+uncomfortable branch: the fact band learns a **value-specific readout over a small closed
+set**, not a general key→value copy. Pool size is causal; the pipeline is sound.
+
+#### control50 (finished 2026-07-28 20:18)
+
+Attempt-C recipe: `grammar@1.0` substrate, 4 delta fact layers, 40M tokens, batch 8, seq 512,
+lr 3e-5, `ce_fact`, `--fact_value_pool 50`, shared params **unfrozen**. Published as
+`fact_retrieval@3.0` (requires repaired to `grammar@>=1.0:prelayer` on 2026-07-29).
+
+| metric | control50 (pool=50) | attempt C (pool=1000) |
+|---|---:|---:|
+| answer-masked val PPL | **2.27** | 29.5 |
+| val accuracy | **0.748** | — |
+| wall time | 8.62 h @ **1289 tok/s** (3× trainers stacked) | ~80 min @ ~8k tok/s |
+
+Transfer grid (200 trials/cell, ctx-restricted; [grid/control50.json](../logs/v12_phase0/grid/control50.json)):
+
+| | vocab = train | vocab = held-out |
+|---|---:|---:|
+| **template = train** | **0.746** (chance 0.199) | 0.189 (chance 0.199) |
+| **template = held-out** | 0.430 (chance 0.193) | 0.174 (chance 0.193) |
+
+- Control cell lift **+0.547** → binding is real in-distribution.
+- Vocab held-out alone → chance (the decisive axis).
+- Template held-out alone still above chance (0.430) — templates transfer better than values.
+- Both axes → chance. Gate: **FAIL** (surface pattern, not general copy).
+
+#### Runner bugs found and fixed (2026-07-29)
+
+1. **`set -u` expansion trap** in `run_grid`: `local tag="$1" ckpt="...${tag}..."` expands
+   `${tag}` before assignment → `tag: unbound variable`. Killed the queue after publish; grid
+   and later arms never ran. Fixed by splitting `local` declarations.
+2. **`VER` reused for requires**: publish declared `grammar@>=3.0` while substrate was
+   `grammar@1.0` → `fact_retrieval@3.0` unresolvable. Added `REQ_VER` (default 1.0) and
+   export `REQUIRES=grammar@>=${REQ_VER}:prelayer`. Re-published `@3.0` with the correct requires.
+3. **Duplicate-launch throughput collapse**: approval retry left 3 root trainers on one GPU →
+   1289 tok/s vs ~8k. Guard now counts **root** `v12.train` PIDs only (ignores DataLoader
+   workers) + lockfile; `remaining` / `sweep` use `;` sequencing so one arm failure does not
+   cancel the rest.
+
+#### Pool sweep (complete 2026-07-30)
+
+`v12/scripts/run_phase0_controls.sh remaining` ran pool200 → contrastive → pool1000
+serially, single trainer, with the duplicate-launch guard. All four arms trained 40M
+tokens on `grammar@1.0`, 4 delta fact layers, batch 8, seq 512, lr 3e-5. Grids: 200
+trials/cell, ctx-restricted. Chance ≈ 0.194–0.199.
+
+| arm | pool | contrast λ | val PPL | ID binding (ctx-restr) | vocab transfer | tmpl transfer | both shifted |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| control50 | 50 | 0.1 | **2.27** | **0.746** | 0.189 (chance) | 0.430 | 0.174 (chance) |
+| pool200 | 200 | 0.1 | 12.57 | 0.333 | 0.203 (chance) | 0.267 | 0.203 (chance) |
+| contrastive | 50 | 0.5 | **2.27** | **0.746** | 0.189 (chance) | 0.430 | 0.174 (chance) |
+| pool1000 | 1000 | 0.1 | 30.54 | 0.271 | 0.217 (chance) | 0.230 | 0.192 (chance) |
+
+**Read the table:**
+
+- **Binding falls monotonically with pool size** — 0.746 → 0.333 → 0.271. The break is
+  between 50 and 200; by 200 the lift over chance is already weak (+0.139); by 1000 the
+  grid reports INCONCLUSIVE (lift +0.077, the model does not bind even in-distribution).
+- **Vocab transfer is at chance in every arm** — the decisive axis never moves. The fact
+  band learns a value-specific readout over whatever closed set it was trained on; it
+  does not learn a general key→value copy.
+- **The contrastive arm is identical to control50** — same PPL (2.27), same binding
+  (0.746), same transfer (0.189). Raising `fact_contrastive_lambda` 0.1 → 0.5 at pool=50
+  changed nothing. The anti-shortcut pressure does not induce generalization when the
+  closed set is small enough to memorize; it only matters (if at all) where the task is
+  already hard. This is a null result worth recording: the contrastive loss is not the
+  lever for D2.
+- **Template transfer is above chance only at pool=50** (0.430) — the small closed set
+  lets the model partially generalize across phrasings; at pool≥200 that disappears too.
+
+**Curve verdict:** pool size is causal and the relationship is smooth, not a cliff. The
+fact band's binding capacity scales sublinearly with the value vocabulary — it saturates
+around pool=50 and is effectively gone by pool=1000. Combined with the vocab-transfer
+column being pinned at chance across all four arms, **D2 is closed in both directions**:
+the mechanism memorizes a small closed set, and no pool size in this range produces a
+general copy operation.
+
+**Implication for the architecture program:** M3 work (bounded vault, key-conditioned
+phase, compile-friendly delta) is now the **primary** bet, not a refinement — the current
+fact band does not generalize a copy operation past a closed value set, and contrastive
+pressure does not change that. Micro-lab gates (transfer-grid off-diagonal ≥ 2× chance)
+must clear before any >50M-token spend.
 
 ```bash
-# Re-run manually:
-v12/scripts/run_phase0_controls.sh control50
+# Re-run any grid alone:
 v12/scripts/run_phase0_controls.sh grid control50 50
+# Full sweep (serial, locked):
+REQ_VER=1.0 VER=3.1 v12/scripts/run_phase0_controls.sh sweep
 ```
+
+Published modules: `fact_retrieval@3.0` (control50) and `fact_retrieval@3.1`
+(pool200/contrastive/pool1000 — last publish wins per version; re-publish per arm with
+distinct `VER` if you need all four resolvable simultaneously). Checkpoints retained
+under `checkpoints_v12_phase0/{control50,pool200,contrastive,pool1000}/fact_retrieval/`.
+
+**Implication for the architecture program:** M3 work (bounded vault, key-conditioned phase,
+compile-friendly delta) is now the **primary** bet, not a refinement — the current fact band
+does not generalize a copy operation past a closed value set. Micro-lab gates (transfer-grid
+off-diagonal ≥ 2× chance) must clear before any >50M-token spend.

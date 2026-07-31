@@ -39,6 +39,8 @@
 #   FACT_LR (default 3e-5), SAVE_EVERY_STEPS / SAVE_EVERY_STEPS_FACT (fact: 1000),
 #   FREEZE_SHARED (1 = specialists keep the base's embeddings/norms/LM head, which
 #   is what makes v12.pack lossless; default 0 reproduces the 2026-07 runs).
+#   LOG_DIR — v12.train TeeLogger directory (default logs). Set per run so
+#   logs/v12_*_pretrain_*.log files are not truncated by a new job.
 #
 # 4090 smoke (validate the whole pipeline + new loader/loss before a long run):
 #   BATCH=2 SEQ=1024 TOKEN_BUDGET=200000000 v12/scripts/train_curriculum.sh base
@@ -68,6 +70,7 @@ FREEZE_SHARED="${FREEZE_SHARED:-0}"  # 1 => specialists keep the base's shared p
 FACT_VALUE_POOL="${FACT_VALUE_POOL:-0}"  # cap the fact value vocabulary (0 = full ~14k)
 MODULE_ADAPTER_RANK="${MODULE_ADAPTER_RANK:-0}"
 CKPT_ROOT="${CKPT_ROOT:-checkpoints_v12_curriculum}"
+LOG_DIR="${LOG_DIR:-logs}"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 STAGE="${1:-help}"; shift || true
@@ -175,7 +178,8 @@ train_stage() {
       --gen_every "$GEN_EVERY" --gen_prompt "${GEN_PROMPT:-$(gen_prompt_of base)}" \
       --batch_size "$BATCH" --seq_len "$SEQ" --lr "${LR:-1e-4}" --weight_decay 0.01 \
       --token_budget "${TOKEN_BUDGET:-1000000000}" \
-      --checkpoint_dir "$ckpt_dir" --save_every_steps "$SAVE_EVERY_STEPS"
+      --checkpoint_dir "$ckpt_dir" --save_every_steps "$SAVE_EVERY_STEPS" \
+      --log_dir "$LOG_DIR"
     # Compact learned head count, then publish as the stack base.
     run "$PY" -m v12.compact --checkpoint "$best" --out "$slim" --threshold 1e-3
     run "$PY" -m v12.publish --checkpoint "$slim" \
@@ -229,7 +233,8 @@ train_stage() {
     --gen_every "$GEN_EVERY" --gen_prompt "${GEN_PROMPT:-$(gen_prompt_of "$stage")}" \
     --batch_size "$BATCH" --seq_len "$SEQ" --lr "$stage_lr" --weight_decay 0.01 \
     --token_budget "${TOKEN_BUDGET:-1000000000}" \
-    --checkpoint_dir "$ckpt_dir" --save_every_steps "$save_every"
+    --checkpoint_dir "$ckpt_dir" --save_every_steps "$save_every" \
+    --log_dir "$LOG_DIR"
 
   run "$PY" -m v12.compact --checkpoint "$best" --out "$slim" --threshold 1e-3
   run "$PY" -m v12.publish --checkpoint "$slim" \
