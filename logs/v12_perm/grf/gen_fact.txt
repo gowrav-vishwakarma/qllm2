@@ -1,0 +1,5 @@
+Loading packed_v12/grf.pt ...
+device=cuda  vocab=50257  tokens=None  best_val_ppl=None
+
+Prompt: Record: bofim means gold. Record: kaner means silver. Query: bofim means
+Generated: Record: bofim means gold. Record: kaner means silver. Query: bofim means “from gold” means “to use gold” means “to fall away from gold” means to put gold in value and gold means are used both as a gold standard, so gold is gold or gold: to “sepest the gold” means “to produce gold” meaning it will not be used by gold because gold means gold’

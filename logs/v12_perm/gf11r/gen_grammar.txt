@@ -1,0 +1,6 @@
+Loading packed_v12/gf11r.pt ...
+device=cuda  vocab=50257  tokens=None  best_val_ppl=None
+
+Prompt: In 1923 , the University of
+Generated: In 1923 , the University of New York, California had a number of applications including technology for using computer-based devices such as computer scientist and computer scientists. The field is also based on technology that uses data from computers and systems to provide data about computer-based tools such as high-energy computers (such as digital computers), computer computers (including electronic computers) or computer-based systems such as computer software (for computers).
+

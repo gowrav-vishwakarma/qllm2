@@ -1,0 +1,13 @@
+== resolve fact_retrieval ==
+target: fact_retrieval@1.0
+stack (8 layers, bottom-first):
+  - grammar@1.0 (base, 4L)
+  - fact_retrieval@1.0 (prelayer, 4L)
+
+== pack fact_retrieval -> packed_v12/delta.pt ==
+Packed fact_retrieval@1.0 -> packed_v12/delta.pt
+  stack: ['grammar@1.0', 'fact_retrieval@1.0'] (8 layers)
+
+Packed checkpoint ready: packed_v12/delta.pt
+  (prelayer deps were stacked + substrate_hash verified; any finetuned
+   deps are recorded as lineage only and are NOT stacked.)

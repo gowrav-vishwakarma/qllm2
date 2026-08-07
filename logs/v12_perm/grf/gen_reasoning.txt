@@ -1,0 +1,7 @@
+Loading packed_v12/grf.pt ...
+device=cuda  vocab=50257  tokens=None  best_val_ppl=None
+
+Prompt: Question: If a train travels 60 km in 2 hours, its speed is
+Generated: Question: If a train travels 60 km in 2 hours, its speed is equal to the speed of light. That’s why it’ll never be possible and that’s how fast this sound will come together – and if it’re a lot easier for us to understand this stuff even though you don’t need them too much to know where your vehicle takes it?
+
+If you are going to have an answer given by some of

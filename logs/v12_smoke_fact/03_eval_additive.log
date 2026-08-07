@@ -1,0 +1,81 @@
+== PPL (WikiText-103 + DCLM holdout) ==
+Token indices sequence length is longer than the specified maximum sequence length for this model (2518 > 1024). Running this sequence through the model will result in indexing errors
+Traceback (most recent call last):
+  File "/home/gowrav/.local/share/uv/python/cpython-3.9.24-linux-x86_64-gnu/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gowrav/.local/share/uv/python/cpython-3.9.24-linux-x86_64-gnu/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/home/gowrav/Development/qllm2/v12/eval_checkpoints.py", line 184, in <module>
+    main()
+  File "/home/gowrav/Development/qllm2/v12/eval_checkpoints.py", line 172, in main
+    metrics = eval_ppl(model, loader, device)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v12/eval_checkpoints.py", line 116, in eval_ppl
+    logits, _, _ = model(input_ids)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v12/model.py", line 1608, in forward
+    + imag_part(lm) @ self.embed.embed_imag.weight.T
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 6.14 GiB. GPU 0 has a total capacity of 23.51 GiB of which 3.81 GiB is free. Including non-PyTorch memory, this process has 19.30 GiB memory in use. Of the allocated memory 13.17 GiB is allocated by PyTorch, and 5.68 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl1024.pt (248,461 tokens)
+Val chunks: 242
+Building DCLM holdout (~5% hash bucket, edu>=3, target>=500,000 tokens)...
+  holdout: 359 docs, 500,000 tokens -> .cache/v7_tokens/dclm_edu_holdout_v1_t500000_e3_p5.pt
+
+Eval sets: ['wiki', 'dclm'] | device=cuda
+
+checkpoint                                              | set   |     loss |      ppl |     tokens
+-----------------------------------------------------------------------------------------------
+Loading packed_v12/additive.pt...
+Loaded V12 checkpoint: packed_v12/additive.pt
+  params=85,671,592 device=cuda
+  scored 50/1080 examples
+  scored 100/1080 examples
+  scored 150/1080 examples
+  scored 200/1080 examples
+  scored 250/1080 examples
+  scored 300/1080 examples
+  scored 350/1080 examples
+  scored 400/1080 examples
+  scored 450/1080 examples
+  scored 500/1080 examples
+  scored 550/1080 examples
+  scored 600/1080 examples
+  scored 650/1080 examples
+  scored 700/1080 examples
+  scored 750/1080 examples
+  scored 800/1080 examples
+
+=== V12 recall aggregates ===
+  ctx=  128 pos=0.0 n=1: acc=0.133 mrr=0.362 margin=-2.370
+  ctx=  128 pos=0.0 n=4: acc=0.367 mrr=0.548 margin=-1.331
+  ctx=  128 pos=0.0 n=8: acc=0.100 mrr=0.337 margin=-2.096
+  ctx=  128 pos=0.5 n=1: acc=0.133 mrr=0.370 margin=-2.224
+  ctx=  128 pos=0.5 n=4: acc=0.333 mrr=0.531 margin=-1.251
+  ctx=  128 pos=0.5 n=8: acc=0.067 mrr=0.314 margin=-2.485
+  ctx=  128 pos=1.0 n=1: acc=0.200 mrr=0.415 margin=-2.054
+  ctx=  128 pos=1.0 n=4: acc=0.333 mrr=0.521 margin=-1.420
+  ctx=  128 pos=1.0 n=8: acc=0.100 mrr=0.328 margin=-2.694
+  ctx=  512 pos=0.0 n=1: acc=0.100 mrr=0.329 margin=-2.895
+  ctx=  512 pos=0.0 n=4: acc=0.300 mrr=0.510 margin=-1.631
+  ctx=  512 pos=0.0 n=8: acc=0.067 mrr=0.326 margin=-2.637
+  ctx=  512 pos=0.5 n=1: acc=0.100 mrr=0.327 margin=-2.922
+  ctx=  512 pos=0.5 n=4: acc=0.267 mrr=0.484 margin=-1.602
+  ctx=  512 pos=0.5 n=8: acc=0.067 mrr=0.338 margin=-2.634
+  ctx=  512 pos=1.0 n=1: acc=0.100 mrr=0.328 margin=-2.734
+  ctx=  512 pos=1.0 n=4: acc=0.367 mrr=0.552 margin=-1.406
+  ctx=  512 pos=1.0 n=8: acc=0.033 mrr=0.288 margin=-2.637
+  ctx= 1024 pos=0.0 n=1: acc=0.100 mrr=0.328 margin=-2.777
+  ctx= 1024 pos=0.0 n=4: acc=0.300 mrr=0.487 margin=-1.724
+  ctx= 1024 pos=0.0 n=8: acc=0.167 mrr=0.376 margin=-3.386
+  ctx= 1024 pos=0.5 n=1: acc=0.100 mrr=0.322 margin=-2.937
+  ctx= 1024 pos=0.5 n=4: acc=0.233 mrr=0.467 margin=-1.645
+  ctx= 1024 pos=0.5 n=8: acc=0.100 mrr=0.339 margin=-2.468
+  ctx= 1024 pos=1.0 n=1: acc=0.100 mrr=0.315 margin=-2.412
+  ctx= 1024 pos=1.0 n=4: acc=0.400 mrr=0.560 margin=-1.264
+  ctx= 1024 pos=1.0 n=8: acc=0.067 mrr=0.305 margin=-2.529
+single_assoc: n/a
+Results saved to logs/v12_smoke_fact/recall_additive.json

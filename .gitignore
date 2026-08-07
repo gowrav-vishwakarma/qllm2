@@ -12,8 +12,14 @@ wheels/
 # Virtual environments
 .venv
 
-# Checkpoints (large binary files, not tracked)
+# Checkpoints / weights (large binary files, not tracked)
 checkpoints*/
+*.pt
+*.pt.tmp
+
+# Local V12 module registry + compose packs (weights, cards, index)
+v12_registry/
+packed_v12/
 
 # HF release bundle (weights on Hugging Face; regenerate via scripts/export_hf_release.py)
 hf_release/*.pt

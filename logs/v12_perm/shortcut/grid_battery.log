@@ -1,0 +1,45 @@
+######## fact_delta_trained
+Loaded V12 checkpoint: checkpoints_v12_curriculum/fact_retrieval/best_model.pt
+  params=85,622,300 device=cuda
+  [fact  / train  ] top1=0.925 ctx=0.925 (chance 0.241)
+  [fact  / heldout] top1=0.000 ctx=0.130 (chance 0.176)
+  [probe / train  ] top1=0.000 ctx=0.250 (chance 0.241)
+  [probe / heldout] top1=0.000 ctx=0.250 (chance 0.252)
+
+=== transfer grid (ctx-restricted accuracy) ===
+                vocab=train    vocab=heldout
+  tmpl=fact            0.925           0.130
+  tmpl=probe           0.250           0.250
+  chance               0.241           0.176
+
+Results saved to logs/v12_perm/shortcut/grid_fact_delta_trained.json
+######## fact_additive_trained
+Loaded V12 checkpoint: checkpoints_v12_curriculum_additive/fact_retrieval/best_model.pt
+  params=85,671,592 device=cuda
+  [fact  / train  ] top1=0.925 ctx=0.925 (chance 0.241)
+  [fact  / heldout] top1=0.000 ctx=0.115 (chance 0.176)
+  [probe / train  ] top1=0.000 ctx=0.230 (chance 0.241)
+  [probe / heldout] top1=0.000 ctx=0.235 (chance 0.252)
+
+=== transfer grid (ctx-restricted accuracy) ===
+                vocab=train    vocab=heldout
+  tmpl=fact            0.925           0.115
+  tmpl=probe           0.230           0.235
+  chance               0.241           0.176
+
+Results saved to logs/v12_perm/shortcut/grid_fact_additive_trained.json
+######## grammar
+Loaded V12 checkpoint: checkpoints_v12_curriculum/base/slim.pt
+  params=62,282,900 device=cuda
+  [fact  / train  ] top1=0.000 ctx=0.250 (chance 0.241)
+  [fact  / heldout] top1=0.000 ctx=0.115 (chance 0.176)
+  [probe / train  ] top1=0.000 ctx=0.260 (chance 0.241)
+  [probe / heldout] top1=0.000 ctx=0.250 (chance 0.252)
+
+=== transfer grid (ctx-restricted accuracy) ===
+                vocab=train    vocab=heldout
+  tmpl=fact            0.250           0.115
+  tmpl=probe           0.260           0.250
+  chance               0.241           0.176
+
+Results saved to logs/v12_perm/shortcut/grid_grammar.json

@@ -1,0 +1,41 @@
+[2026-07-20T17:23:19Z] PID 33504 exited
+[2026-07-20T17:23:19Z] === STAGE A: finalize delta publish ===
+[2026-07-20T17:23:19Z] delta already published at v12_registry/fact_retrieval/1.0/model.pt
+[2026-07-20T17:23:19Z] === STAGE B: delta compose + recall eval ===
+[2026-07-20T17:23:19Z] === compose+eval (delta, constraint=1.0) ===
+[2026-07-21T09:38:16Z] LOG RECOVERY: delta train was already complete (300M tok, published).
+[2026-07-21T09:38:16Z] Post-hoc recall+gen written to 04_recall_delta.log / 04_final_gen_delta.log / recall_delta.json
+[2026-07-21T09:38:16Z] Prior eval.sh crash was _HOLDOUT_CACHE_VERSION (fixed). Additive/reasoning still pending.
+[2026-07-21T09:39:56Z] === follow-on pipeline START (will not touch the live delta run) ===
+[2026-07-21T09:39:56Z] wait_tmux=v12fact batch=32 budget=300000000 reasoning=1
+[2026-07-21T09:39:56Z] skip: delta_eval=1 additive=0 start_from=additive
+[2026-07-21T09:39:57Z] waiting for live delta fact job / tmux 'v12fact' to finish...
+[2026-07-21T09:39:57Z] live delta wait complete
+[2026-07-21T09:39:57Z] === STAGE A: finalize delta publish ===
+[2026-07-21T09:39:57Z] delta already published at v12_registry/fact_retrieval/1.0/model.pt
+[2026-07-21T09:39:57Z] SKIP STAGE B (delta compose+eval) — already done or START_FROM=additive
+[2026-07-21T09:39:57Z] === STAGE C: additive A/B fact arm (fact_retrieval@1.1) ===
+[2026-07-21T09:40:42Z] === follow-on pipeline START (will not touch the live delta run) ===
+[2026-07-21T09:40:42Z] wait_tmux=v12fact batch=32 budget=300000000 reasoning=1
+[2026-07-21T09:40:42Z] skip: delta_eval=1 additive=0 start_from=additive
+[2026-07-21T09:40:42Z] waiting for live delta fact job / tmux 'v12fact' to finish...
+[2026-07-21T09:40:42Z] live delta wait complete
+[2026-07-21T09:40:42Z] === STAGE A: finalize delta publish ===
+[2026-07-21T09:40:42Z] delta already published at v12_registry/fact_retrieval/1.0/model.pt
+[2026-07-21T09:40:42Z] SKIP STAGE B (delta compose+eval) — already done or START_FROM=additive
+[2026-07-21T09:40:42Z] === STAGE C: additive A/B fact arm (fact_retrieval@1.1) ===
+[2026-07-21T21:36:10Z] === STAGE C DONE ===
+[2026-07-21T21:36:10Z] === STAGE D: additive compose + recall eval ===
+[2026-07-21T21:36:10Z] === compose+eval (additive, constraint=1.1) ===
+[2026-07-21T21:38:00Z] WARN: eval.sh exit=1 for additive (continuing; dedicated recall still runs)
+[2026-07-21T21:38:22Z] === compose+eval (additive) DONE ===
+[2026-07-21T21:38:22Z] === STAGE E: reasoning on pinned delta substrate (fact@1.0) ===
+[2026-07-22T06:33:45Z] === follow-on pipeline START (will not touch the live delta run) ===
+[2026-07-22T06:33:45Z] wait_tmux=v12fact batch=8 budget=300000000 reasoning=1
+[2026-07-22T06:33:45Z] skip: delta_eval=1 additive=1 start_from=reasoning
+[2026-07-22T06:33:45Z] no live delta job detected — continuing from published/salvaged state
+[2026-07-22T06:33:45Z] === STAGE A: finalize delta publish ===
+[2026-07-22T06:33:45Z] delta already published at v12_registry/fact_retrieval/1.0/model.pt
+[2026-07-22T06:33:45Z] SKIP STAGE B (delta compose+eval) — already done or START_FROM=reasoning
+[2026-07-22T06:33:45Z] SKIP STAGE C/D (additive arm)
+[2026-07-22T06:33:45Z] === STAGE E: reasoning on pinned delta substrate (fact@1.0) ===

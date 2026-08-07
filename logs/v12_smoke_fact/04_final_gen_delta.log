@@ -1,0 +1,16 @@
+device=cuda
+PROMPT: Record: bofim means gold. Record: kaner means silver. Query: bofim means
+TOP-8 next tokens:
+  0.0888  ':'
+  0.0666  ' gold'
+  0.0208  ' �'
+  0.0163  ' ['
+  0.0153  ' to'
+  0.0142  " '"
+  0.0082  '.'
+  0.0076  ' silver'
+P(' gold')=0.0666  rank=2
+GREEDY : Record: bofim means gold. Record: kaner means silver. Query: bofim means ‷ instead represent its two other point on equalZ made
+SAMPLED: Record: bofim means gold. Record: kaner means silver. Query: bofim means gold.
+
+If gold is found in a gold or silver-based gold, gold would be gold, silver,
