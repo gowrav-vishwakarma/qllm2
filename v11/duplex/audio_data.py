@@ -438,6 +438,33 @@ def load_asr_rows(
     return rows
 
 
+def load_tts_rows(
+    languages: Sequence[str] = ('hindi', 'gujarati'),
+    n_per_lang: int = 2000,
+    include_english: bool = True,
+    n_english: int = 2000,
+    seed: int = 42,
+) -> List[Dict]:
+    """Single-utterance (audio, text, lang) rows for T2S.
+
+    English = LibriSpeech clean/train.100 (studio-ish read speech).
+    Indic = Kathbath until a studio corpus (IndicTTS / Rasa) is cached —
+    Kathbath is ASR read-speech, not a TTS voice, but it is what we have on
+    disk for hi/gu and is enough to test whether PAM can emit codec tokens.
+    """
+    from v11.duplex.logutil import log
+
+    if languages:
+        log('TTS rows: Indic source is Kathbath (ASR quality, not studio TTS)')
+    return load_asr_rows(
+        languages=languages,
+        n_per_lang=n_per_lang,
+        include_english=include_english,
+        n_english=n_english,
+        seed=seed,
+    )
+
+
 def collate_stage1(batch: List[Dict], pad_id: int = VOCAB.pad) -> Dict[str, torch.Tensor]:
     max_len = max(len(s['input_ids']) for s in batch)
     max_slots = max(len(s['audio_slot_indices']) for s in batch)

@@ -1,0 +1,53 @@
+[2026-08-18 14:18:44] === V11 duplex TTS backbone=pam task=t2s ===
+[2026-08-18 14:18:44] preset=duplex_100m langs=none n_per_lang=0 n_english=256 init_from=none
+[2026-08-18 14:18:44] log_dir=logs/v11/duplex_tts_duplex_100m_pam_t2s_20260818_141844_d04e7c8_dirty log=logs/v11/duplex_tts_duplex_100m_pam_t2s_20260818_141844_d04e7c8_dirty/duplex_tts_duplex_100m_pam_t2s.log ckpt=checkpoints_v11_duplex_100m_tts_pam_t2s_smoke
+[2026-08-18 14:18:49] Backbone pam preset=duplex_100m: {'embedding (tied)': 30879744, 'blocks': 61649552, 'norms': 768, 'lm_head': 296064, 'total': 92826128} | task=t2s V=40208
+[2026-08-18 14:18:49] ASR rows: librispeech english (256)...
+[2026-08-18 14:18:52] ASR rows total: 256
+[2026-08-18 14:18:52] Loaded 256 rows in 2.9s
+[2026-08-18 14:18:52] Building t2s samples (Mimi codes, cache=.cache/mimi_codes)...
+[2026-08-18 14:18:52]   mimi encode 0/256 (kept 0)
+[2026-08-18 14:18:53]   mimi encode 50/256 (kept 50)
+[2026-08-18 14:18:54]   mimi encode 100/256 (kept 100)
+[2026-08-18 14:18:55]   mimi encode 150/256 (kept 150)
+[2026-08-18 14:18:56]   mimi encode 200/256 (kept 200)
+[2026-08-18 14:18:57]   mimi encode 250/256 (kept 250)
+[2026-08-18 14:18:57]   t2s samples=256 skipped=0
+[2026-08-18 14:18:57] Built 256 samples in 5.4s
+[2026-08-18 14:18:57] Training start: 61 batches/epoch x 4 epochs train=244 val=12
+[2026-08-18 14:18:58] ep1 step1 loss=10.6970 lr=0.00e+00
+[2026-08-18 14:19:03] ep1 step21 loss=10.2079 lr=3.00e-04
+[2026-08-18 14:19:07] ep1 step41 loss=8.0651 lr=2.94e-04
+[2026-08-18 14:19:11] ep1 step61 loss=8.0431 lr=2.77e-04
+[2026-08-18 14:19:11] === epoch 1 train_loss=9.2600 val_loss=7.9941 codec_acc=0.056 epoch_time=14.0s total=14.0s ===
+[2026-08-18 14:19:12] New best codec_acc=0.056 -> best_model.pt
+[2026-08-18 14:19:22]   wav dump failed: AttributeError: 'MimiCodec' object has no attribute 'decode'
+[2026-08-18 14:19:22] ep2 step62 loss=7.8308 lr=2.76e-04
+[2026-08-18 14:19:26] ep2 step82 loss=7.4597 lr=2.48e-04
+[2026-08-18 14:19:30] ep2 step102 loss=7.5589 lr=2.13e-04
+[2026-08-18 14:19:35] ep2 step122 loss=7.7976 lr=1.73e-04
+[2026-08-18 14:19:35] === epoch 2 train_loss=7.5366 val_loss=7.4688 codec_acc=0.065 epoch_time=13.0s total=37.5s ===
+[2026-08-18 14:19:36] New best codec_acc=0.065 -> best_model.pt
+[2026-08-18 14:19:36]   wav skip en: empty codec stream
+[2026-08-18 14:19:36]   wav skip hindi: empty codec stream
+[2026-08-18 14:19:36]   wav skip gujarati: empty codec stream
+[2026-08-18 14:19:36] ep3 step123 loss=7.3828 lr=1.71e-04
+[2026-08-18 14:19:40] ep3 step143 loss=6.6130 lr=1.29e-04
+[2026-08-18 14:19:45] ep3 step163 loss=6.7326 lr=8.87e-05
+[2026-08-18 14:19:49] ep3 step183 loss=6.5465 lr=5.32e-05
+[2026-08-18 14:19:49] === epoch 3 train_loss=6.7716 val_loss=7.0212 codec_acc=0.079 epoch_time=12.9s total=51.7s ===
+[2026-08-18 14:19:50] New best codec_acc=0.079 -> best_model.pt
+[2026-08-18 14:19:50]   wav skip en: empty codec stream
+[2026-08-18 14:19:50]   wav skip hindi: empty codec stream
+[2026-08-18 14:19:50]   wav skip gujarati: empty codec stream
+[2026-08-18 14:19:50] ep4 step184 loss=6.2439 lr=5.16e-05
+[2026-08-18 14:19:54] ep4 step204 loss=6.5140 lr=2.41e-05
+[2026-08-18 14:19:59] ep4 step224 loss=6.2881 lr=6.46e-06
+[2026-08-18 14:20:03] ep4 step244 loss=6.4329 lr=1.48e-08
+[2026-08-18 14:20:03] === epoch 4 train_loss=6.3958 val_loss=6.9837 codec_acc=0.084 epoch_time=13.0s total=1.1m ===
+[2026-08-18 14:20:04] New best codec_acc=0.084 -> best_model.pt
+[2026-08-18 14:20:04]   wav skip en: empty codec stream
+[2026-08-18 14:20:04]   wav skip hindi: empty codec stream
+[2026-08-18 14:20:04]   wav skip gujarati: empty codec stream
+[2026-08-18 14:20:04] Done in 1.1m. best codec_acc=0.084. Ckpts in checkpoints_v11_duplex_100m_tts_pam_t2s_smoke
+Done. Log: logs/v11/duplex_tts_duplex_100m_pam_t2s_20260818_141844_d04e7c8_dirty/duplex_tts_duplex_100m_pam_t2s.log  Checkpoints: checkpoints_v11_duplex_100m_tts_pam_t2s_smoke/best_model.pt + latest.pt

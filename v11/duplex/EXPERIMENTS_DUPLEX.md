@@ -433,10 +433,58 @@ in `FrameHeads` + `cond_vec` plumbing from the start.
 - [x] Stage A run 3 scaled → plateau ~0.73, LM hallucination diagnosed.
 - [x] Fix 2: hybrid CTC head + joint loss + dual CER eval.
 - [x] Stage A run 4 (CTC smoke) → grounding confirmed, best ctc_CER=0.661.
-- [ ] Stage A run 5 (CTC scaled, 4k/lang, 15 ep) → gate <15% before Stage B.
-- [ ] Stage B training run (`--task both`) → record round-trip WER here.
+- [ ] Stage A run 5 (CTC scaled) — **not gating TTS**. ASR stays Whisper-class.
+- [ ] Stage B `--task both` (old curriculum) — superseded by the focused TTS track below.
 - [ ] Stage C joint run → record control/text/codec acc here.
 - [ ] Phase 2: VAD/noise head + MUSAN augmentation.
 - [ ] Phase 3: target-speaker conditioning + interferer head.
 - [ ] Add clean single-speaker TTS corpora (IndicTTS/Rasa, LibriTTS-R) for output voice.
 - [ ] Optional: distill `v11_e3_k3_chat` text knowledge to reduce brain dependence.
+
+---
+
+# Focused TTS track (PAM vs transformer)  ·  2026-08-18
+
+Question: QLLM/PAM is behind transformers on text LM (~+3 PPL) but has O(1) decode.
+Is the same backbone a reasonable TTS model (text → Mimi codec tokens)?
+
+This is **not** the old Stage B "must pass ASR CER&lt;15% first" curriculum.
+ASR is a separate module (Whisper). TTS trains **from scratch**, `--task t2s` only.
+
+```text
+<lang> text... <tts> [Mimi delay stream, 4 codebooks] <eos>
+loss = CE on codec tokens + eos   (text prefix masked)
+```
+
+| Piece | Choice |
+|-------|--------|
+| Backbone | `duplex_100m` PAM (~93M, no audio/CTC heads) **or** matched GPT-2-style transformer (~93M, same vocab) |
+| Codec | frozen `kyutai/mimi`, 4×2048, delay pattern |
+| English | LibriSpeech clean/train.100 |
+| Indic | Kathbath hi/gu (ASR read-speech; studio IndicTTS/Rasa not cached) |
+| Gate (cheap) | val **codec next-token acc** — compare PAM vs transformer, not vs Moshi |
+| Gate (listen) | wavs in `ckpt_dir/wavs/epoch_XX/{en,hindi,gujarati}.wav` |
+| Optional | `--eval_round_trip` (Mimi → Whisper CER) |
+
+Launch:
+
+```bash
+./scripts/run_v11_duplex_tokenizer.sh          # once (spm + 40k layout)
+./scripts/run_v11_duplex_tts_smoke.sh          # 256 en utts, 4 ep — loop check
+# if codec_acc rises:
+N_ENGLISH=2000 N_PER_LANG=2000 LANGUAGES=hindi,gujarati EPOCHS=10 \
+  ./scripts/run_v11_duplex_tts.sh              # PAM focused
+BACKBONE=transformer N_ENGLISH=2000 N_PER_LANG=2000 LANGUAGES=hindi,gujarati EPOCHS=10 \
+  ./scripts/run_v11_duplex_tts.sh              # matched transformer
+```
+
+Kill: codec acc stuck near chance, or transformer clearly ahead after the focused run → PAM is not a TTS backbone; keep it for duplex control only.
+
+### Runs
+
+| Run | preset / backbone | data | metric | result | log / ckpt |
+|-----|-------------------|------|--------|--------|------------|
+| smoke | duplex_100m PAM ~92.8M | 256 en, 4 ep, ~1.1 min | codec_acc **0.056 → 0.084**; train_loss 9.26 → 6.40 | loop works (teacher-forced). Greedy initially collapsed to EOS (fixed: block EOS for first 32 codec tokens). | `logs/v11/duplex_tts_duplex_100m_pam_t2s_20260818_141844_d04e7c8_dirty/` · `checkpoints_v11_duplex_100m_tts_pam_t2s_smoke/` |
+| focused (stopped ep8) | duplex_100m PAM | 2k en + 2k hi + 2k gu | **overfit without usable TTS.** Best val codec_acc **0.154** (ep5). Then train_loss 4.08→3.4 while val 4.59→4.84 and acc 0.154→0.147. Wavs stuck at 97 frames / 7.76s. SIGTERM @ step 5259. `best_model.pt` = ep5. | `logs/v11/duplex_tts_duplex_100m_pam_t2s_20260818_142219_d04e7c8_dirty/` · `checkpoints_v11_duplex_100m_tts_pam_t2s/` |
+
+Lesson: 93M AR 4-codebook TTS on 6k multi-speaker clips memorizes train streams (~15% val token acc ceiling). Not intelligible. Next: matched transformer on the same 6k (data vs PAM), or one-speaker + more hours — not more epochs on this mix.

@@ -14,7 +14,9 @@ codes [K, T] into a flat global-id stream; `delay_unflatten` inverts it.
 
 from __future__ import annotations
 
-from typing import List, Optional, Sequence
+import hashlib
+from pathlib import Path
+from typing import List, Optional, Sequence, Union
 
 import numpy as np
 import torch
@@ -63,6 +65,26 @@ class MimiCodec:
         codes = out.audio_codes if hasattr(out, 'audio_codes') else out[0]
         return codes[0, : self.n_codebooks].detach().cpu().long()
 
+    def encode_cached(
+        self,
+        waveform: torch.Tensor,
+        sample_rate: int,
+        cache_dir: Optional[Union[str, Path]] = None,
+        extra_key: str = '',
+    ) -> torch.Tensor:
+        """encode() with an optional on-disk cache (codes [K, T] on CPU)."""
+        if not cache_dir:
+            return self.encode(waveform, sample_rate)
+        path = _codes_cache_path(cache_dir, waveform, sample_rate, extra_key)
+        if path.exists():
+            return torch.load(path, map_location='cpu', weights_only=True)
+        codes = self.encode(waveform, sample_rate)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix('.pt.tmp')
+        torch.save(codes, tmp)
+        tmp.replace(path)
+        return codes
+
     @torch.no_grad()
     def decode(self, codes: torch.Tensor) -> np.ndarray:
         """codes [n_codebooks, T] -> waveform np.float32 at 24 kHz."""
@@ -72,6 +94,23 @@ class MimiCodec:
         out = self.model.decode(codes.to(dev).long())
         audio = out.audio_values if hasattr(out, 'audio_values') else out[0]
         return audio.squeeze().detach().cpu().float().numpy()
+
+
+def _codes_cache_path(
+    cache_dir: Union[str, Path],
+    waveform: torch.Tensor,
+    sample_rate: int,
+    extra_key: str = '',
+) -> Path:
+    arr = waveform.detach().cpu().float().reshape(-1).numpy()
+    h = hashlib.sha1()
+    h.update(str(int(sample_rate)).encode())
+    h.update(str(arr.shape[0]).encode())
+    h.update(arr[:128].tobytes())
+    h.update(arr[-128:].tobytes())
+    if extra_key:
+        h.update(extra_key.encode('utf-8'))
+    return Path(cache_dir) / f'{h.hexdigest()}.pt'
 
 
 # ── Delay pattern (pure id-space; no model needed) ───────────────────────────

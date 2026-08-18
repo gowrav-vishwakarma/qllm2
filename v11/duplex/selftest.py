@@ -200,6 +200,64 @@ def test_ctc_head_learns():
     assert ctc_grads and sum(g.abs().sum().item() for g in ctc_grads) > 0
 
 
+def test_tts_t2s_layout_and_collate():
+    from v11.duplex.codec import delay_flatten
+    from v11.duplex.tokenizer import DuplexVocab, EOS, LANG_EN, TTS
+    from v11.duplex.train_tts import collate_tts
+
+    vocab = DuplexVocab(n_text=64, n_codebooks=4, codebook_size=32)
+    codes = torch.randint(0, vocab.codebook_size, (vocab.n_codebooks, 6))
+    stream = delay_flatten(codes, vocab)
+    text_ids = [vocab.text_to_global(i) for i in range(3)]
+    input_ids = [LANG_EN] + text_ids + [TTS] + stream + [EOS]
+    labels = [-100] * (1 + len(text_ids) + 1) + stream + [EOS]
+    assert labels[0] == -100 and labels[4] == -100
+    assert labels[5:] == stream + [EOS]
+    batch = collate_tts([
+        {'input_ids': input_ids, 'labels': labels},
+        {'input_ids': input_ids[:10], 'labels': labels[:10]},
+    ])
+    assert batch['input_ids'].shape[0] == 2
+    assert batch['labels'][1, 10:].eq(-100).all()
+
+
+def test_transformer_tts_tiny_forward():
+    from v6.transformer_baseline import TransformerConfig
+    from v11.duplex.model import V11DuplexLM
+    from v11.duplex.transformer_tts import TransformerTTS
+
+    cfg = TransformerConfig(
+        vocab_size=128, max_seq_len=32, d_model=32, n_layers=1,
+        n_heads=4, d_ff=64, dropout=0.0, tie_weights=True,
+    )
+    model = TransformerTTS(128, config=cfg)
+    ids = torch.randint(0, 128, (2, 8))
+    labels = ids.clone()
+    labels[:, :2] = -100
+    logits, states, _ = model(ids)
+    assert logits.shape == (2, 8, 128)
+    assert states is None
+    assert not model.supports_recurrent
+    loss = V11DuplexLM.compute_loss(logits, labels)
+    loss.backward()
+    assert any(p.grad is not None and p.grad.abs().sum() > 0 for p in model.parameters())
+
+
+def test_pam_tts_no_audio_heads():
+    cfg = get_duplex_config('duplex_5m')
+    model = V11DuplexLM(cfg, audio_feat_dim=0)
+    assert model.audio_proj is None
+    assert model.supports_recurrent
+    ids = torch.randint(0, cfg.vocab_size, (2, 12))
+    labels = ids.clone()
+    labels[:, :3] = -100
+    logits, states, _ = model(ids)
+    assert logits.shape[:2] == ids.shape
+    assert len(states) == cfg.n_layers
+    loss = V11DuplexLM.compute_loss(logits, labels)
+    loss.backward()
+
+
 def main():
     tests = [
         test_presets_param_counts,
@@ -214,6 +272,9 @@ def main():
         test_audio_injection_skips_pad_positions,
         test_audio_proj_receives_gradients,
         test_ctc_head_learns,
+        test_tts_t2s_layout_and_collate,
+        test_transformer_tts_tiny_forward,
+        test_pam_tts_no_audio_heads,
     ]
     for t in tests:
         name = t.__name__
@@ -223,7 +284,7 @@ def main():
         except Exception as e:
             print(f"FAIL {name}: {e}")
             raise SystemExit(1)
-    print("ALL DUPLEX TESTS PASS (12/12)")
+    print("ALL DUPLEX TESTS PASS (15/15)")
 
 
 if __name__ == '__main__':

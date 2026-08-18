@@ -43,6 +43,8 @@ def _hidden_to_real(hidden: torch.Tensor) -> torch.Tensor:
 class V11DuplexLM(V11LM):
     """Duplex LM — reuses V11 blocks/head; adds optional audio embedding projection."""
 
+    supports_recurrent = True
+
     def __init__(self, cfg: V11Config, audio_feat_dim: int = 0, n_text: int = 32000):
         super().__init__(cfg)
         self.audio_feat_dim = audio_feat_dim
