@@ -36,3 +36,41 @@ Epoch 1/9999
 Token indices sequence length is longer than the specified maximum sequence length for this model (1054 > 1024). Running this sequence through the model will result in indexing errors
   [1] 0 loss=10.8627 ppl=52193.7 lr=3.00e-07 | 167 tok/s (avg 167) ETA n/a | GPU 0.2/4.6GB | gtok=4096
   [1] 50 loss=10.7417 ppl=46246.7 lr=1.53e-05 | 860 tok/s (avg 795) ETA n/a | GPU 0.2/4.6GB | gtok=208896
+  [1] 100 loss=10.3549 ppl=31409.3 lr=3.03e-05 | 851 tok/s (avg 822) ETA n/a | GPU 0.2/4.6GB | gtok=413696
+  [1] 150 loss=9.7045 ppl=16390.4 lr=4.53e-05 | 849 tok/s (avg 831) ETA n/a | GPU 0.2/4.6GB | gtok=618496
+  [1] 200 loss=8.7770 ppl=6483.1 lr=6.03e-05 | 798 tok/s (avg 822) ETA n/a | GPU 0.2/4.6GB | gtok=823296
+  [1] 250 loss=7.8997 ppl=2696.6 lr=7.53e-05 | 691 tok/s (avg 792) ETA n/a | GPU 0.2/4.6GB | gtok=1028096
+  [1] 300 loss=6.9345 ppl=1027.1 lr=9.03e-05 | 685 tok/s (avg 772) ETA n/a | GPU 0.2/4.6GB | gtok=1232896
+  [1] 350 loss=5.9978 ppl=402.6 lr=1.05e-04 | 684 tok/s (avg 758) ETA n/a | GPU 0.2/4.6GB | gtok=1437696
+  [1] 400 loss=4.8355 ppl=125.9 lr=1.20e-04 | 679 tok/s (avg 747) ETA n/a | GPU 0.2/4.6GB | gtok=1642496
+  [1] 450 loss=3.6243 ppl=37.5 lr=1.35e-04 | 668 tok/s (avg 738) ETA n/a | GPU 0.2/4.6GB | gtok=1847296
+Saved checkpoint: checkpoints_v13/smoke_recall_v2/latest.pt
+  [checkpoint @ step 500, 2,048,000 tok]
+  [1] 500 loss=2.6701 ppl=14.4 lr=1.50e-04 | 669 tok/s (avg 730) ETA n/a | GPU 0.2/4.6GB | gtok=2052096
+  [1] 550 loss=1.7686 ppl=5.9 lr=1.65e-04 | 628 tok/s (avg 719) ETA n/a | GPU 0.2/4.6GB | gtok=2256896
+  [1] 600 loss=1.1931 ppl=3.3 lr=1.80e-04 | 674 tok/s (avg 715) ETA n/a | GPU 0.2/4.6GB | gtok=2461696
+  [1] 650 loss=0.8330 ppl=2.3 lr=1.95e-04 | 671 tok/s (avg 712) ETA n/a | GPU 0.2/4.6GB | gtok=2666496
+  [1] 700 loss=0.5541 ppl=1.7 lr=2.10e-04 | 687 tok/s (avg 710) ETA n/a | GPU 0.2/4.6GB | gtok=2871296
+  [1] 750 loss=0.2879 ppl=1.3 lr=2.25e-04 | 671 tok/s (avg 707) ETA n/a | GPU 0.2/4.6GB | gtok=3076096
+  [1] 800 loss=0.3653 ppl=1.4 lr=2.40e-04 | 673 tok/s (avg 705) ETA n/a | GPU 0.2/4.6GB | gtok=3280896
+  [1] 850 loss=0.3366 ppl=1.4 lr=2.55e-04 | 686 tok/s (avg 704) ETA n/a | GPU 0.2/4.6GB | gtok=3485696
+  [1] 900 loss=0.3234 ppl=1.4 lr=2.70e-04 | 674 tok/s (avg 702) ETA n/a | GPU 0.2/4.6GB | gtok=3690496
+  [1] 950 loss=0.3789 ppl=1.5 lr=2.85e-04 | 673 tok/s (avg 701) ETA n/a | GPU 0.2/4.6GB | gtok=3895296
+Saved checkpoint: checkpoints_v13/smoke_recall_v2/latest.pt
+  [checkpoint @ step 1000, 4,096,000 tok]
+  [1] 1000 loss=0.2629 ppl=1.3 lr=3.00e-04 | 692 tok/s (avg 700) ETA n/a | GPU 0.2/4.6GB | gtok=4100096
+  [1] 1050 loss=0.3824 ppl=1.5 lr=2.99e-04 | 895 tok/s (avg 707) ETA n/a | GPU 0.2/4.6GB | gtok=4304896
+  [1] 1100 loss=0.3298 ppl=1.4 lr=2.95e-04 | 909 tok/s (avg 715) ETA n/a | GPU 0.2/4.6GB | gtok=4509696
+  [1] 1150 loss=0.2777 ppl=1.3 lr=2.89e-04 | 904 tok/s (avg 721) ETA n/a | GPU 0.2/4.6GB | gtok=4714496
+  [1] 1200 loss=0.3915 ppl=1.5 lr=2.80e-04 | 876 tok/s (avg 727) ETA n/a | GPU 0.2/4.6GB | gtok=4919296
+  Token budget reached: 5,001,216 / 5,000,000
+Epoch 1/9999 | Train Loss: 3.4843 PPL: 32.60 | 729 tok/s | Time: 6862.1s (5,001,216 tok) | Val Loss: nan PPL: nan Acc: 0.001 | Wiki PPL: nan
+
+Stopping: token budget 5,000,000 reached.
+Saved checkpoint: checkpoints_v13/smoke_recall_v2/final_model.pt
+
+Training complete (token budget)!
+Total wall time: 7058.3s (1.96h)
+Best Val Loss: inf, Best Val PPL: inf
+
+Wall clock end: 2026-08-18 13:51:24

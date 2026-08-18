@@ -39,7 +39,7 @@ _(Append rows after each completed run.)_
 | Run | Tokens | Recall@2048 (n=1) | Eff-rank % | Gate Δ | Wiki PPL | Notes |
 |-----|--------|-------------------|------------|--------|----------|-------|
 | smoke_recall (interim) | ~1.5M | 23.3% | 39.4% (L4) | ~0.00 | — | seq_len mix; gates not met |
-| smoke_recall_v2 | 5M (running) | — | — | — | — | seq_len=2048, fresh run |
+| matched_recall (60 trials) | 4.1M / 3M / 2M | V13 10.6% @128 (NaN @512+); TX 10%; Mamba 12% | — | — | — | all at chance; V13 logits explode past 128 |
 
 ## Lessons
 

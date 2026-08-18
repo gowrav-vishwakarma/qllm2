@@ -257,8 +257,15 @@ def main() -> int:
             continue
         ids = torch.tensor([example.prompt_ids], dtype=torch.long, device=device)
         logits = _last_logits(args.model_type, model, ids)[0]
-        candidate_logits = logits[example.candidate_token_ids].float().cpu().tolist()
-        rows.append({**base, **score_candidate_logits(example, candidate_logits)})
+        candidate_logits = logits[example.candidate_token_ids].float().cpu()
+        if not torch.isfinite(candidate_logits).all():
+            rows.append({
+                **base,
+                'skipped': True,
+                'reason': 'non-finite candidate logits',
+            })
+            continue
+        rows.append({**base, **score_candidate_logits(example, candidate_logits.tolist())})
         if index % 20 == 0 or index == len(examples):
             print(f'  scored {index}/{len(examples)} examples', flush=True)
 

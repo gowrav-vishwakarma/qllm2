@@ -1,0 +1,45 @@
+Streaming pretrain blend: sources=['recall'] weights=[1.0] edu>=3 budget=2000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'recall': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+The fast path is not available because one of `(selective_state_update, selective_scan_fn, causal_conv1d_fn, causal_conv1d_update, mamba_inner_fn)` is None. Falling back to the sequential implementation of Mamba, as use_mambapy is set to False. To install follow https://github.com/state-spaces/mamba/#installation for mamba-ssm and install the kernels library using `pip install kernels` or https://github.com/Dao-AILab/causal-conv1d for causal-conv1d. For the mamba.py backend, follow https://github.com/alxndrTL/mamba.py.
+[mamba] params=16,370,176 device=cuda budget=2,000,000
+Token indices sequence length is longer than the specified maximum sequence length for this model (1054 > 1024). Running this sequence through the model will result in indexing errors
+  [mamba] step=50 loss=10.2184 ppl=27401.7 tok/s=398 gtok=51200
+  [mamba] step=100 loss=3.9563 ppl=52.3 tok/s=408 gtok=102400
+  [mamba] step=150 loss=1.2835 ppl=3.6 tok/s=410 gtok=153600
+  [mamba] step=200 loss=0.8395 ppl=2.3 tok/s=412 gtok=204800
+  [mamba] step=250 loss=0.7597 ppl=2.1 tok/s=413 gtok=256000
+  [mamba] step=300 loss=0.6664 ppl=1.9 tok/s=413 gtok=307200
+  [mamba] step=350 loss=0.6131 ppl=1.8 tok/s=413 gtok=358400
+  [mamba] step=400 loss=0.5901 ppl=1.8 tok/s=413 gtok=409600
+  [mamba] step=450 loss=0.5508 ppl=1.7 tok/s=413 gtok=460800
+  [mamba] step=500 loss=0.5712 ppl=1.8 tok/s=413 gtok=512000
+  [mamba] step=550 loss=0.5647 ppl=1.8 tok/s=412 gtok=563200
+  [mamba] step=600 loss=0.5505 ppl=1.7 tok/s=411 gtok=614400
+  [mamba] step=650 loss=0.5626 ppl=1.8 tok/s=409 gtok=665600
+  [mamba] step=700 loss=0.5711 ppl=1.8 tok/s=409 gtok=716800
+  [mamba] step=750 loss=0.5663 ppl=1.8 tok/s=408 gtok=768000
+  [mamba] step=800 loss=0.5415 ppl=1.7 tok/s=407 gtok=819200
+  [mamba] step=850 loss=0.5828 ppl=1.8 tok/s=403 gtok=870400
+  [mamba] step=900 loss=0.5550 ppl=1.7 tok/s=400 gtok=921600
+  [mamba] step=950 loss=0.5648 ppl=1.8 tok/s=401 gtok=972800
+  [mamba] step=1000 loss=0.5719 ppl=1.8 tok/s=402 gtok=1024000
+  [mamba] step=1050 loss=0.5531 ppl=1.7 tok/s=402 gtok=1075200
+  [mamba] step=1100 loss=0.5324 ppl=1.7 tok/s=402 gtok=1126400
+  [mamba] step=1150 loss=0.5464 ppl=1.7 tok/s=402 gtok=1177600
+  [mamba] step=1200 loss=0.5261 ppl=1.7 tok/s=402 gtok=1228800
+  [mamba] step=1250 loss=0.5538 ppl=1.7 tok/s=403 gtok=1280000
+  [mamba] step=1300 loss=0.5466 ppl=1.7 tok/s=403 gtok=1331200
+  [mamba] step=1350 loss=0.5335 ppl=1.7 tok/s=403 gtok=1382400
+  [mamba] step=1400 loss=0.5547 ppl=1.7 tok/s=403 gtok=1433600
+  [mamba] step=1450 loss=0.5246 ppl=1.7 tok/s=402 gtok=1484800
+  [mamba] step=1500 loss=0.5452 ppl=1.7 tok/s=403 gtok=1536000
+  [mamba] step=1550 loss=0.5447 ppl=1.7 tok/s=403 gtok=1587200
+  [mamba] step=1600 loss=0.5785 ppl=1.8 tok/s=403 gtok=1638400
+  [mamba] step=1650 loss=0.5396 ppl=1.7 tok/s=404 gtok=1689600
+  [mamba] step=1700 loss=0.5266 ppl=1.7 tok/s=404 gtok=1740800
+  [mamba] step=1750 loss=0.5225 ppl=1.7 tok/s=404 gtok=1792000
+  [mamba] step=1800 loss=0.5223 ppl=1.7 tok/s=404 gtok=1843200
+  [mamba] step=1850 loss=0.5444 ppl=1.7 tok/s=404 gtok=1894400
+  [mamba] step=1900 loss=0.5495 ppl=1.7 tok/s=404 gtok=1945600
+  [mamba] step=1950 loss=0.5464 ppl=1.7 tok/s=404 gtok=1996800
+[mamba] done tokens=2,000,384 wall=1.37h -> checkpoints_v13/mamba_micro_recall
