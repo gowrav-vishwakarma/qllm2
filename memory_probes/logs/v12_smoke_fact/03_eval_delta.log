@@ -1,0 +1,15 @@
+== PPL (WikiText-103 + DCLM holdout) ==
+Traceback (most recent call last):
+  File "/home/gowrav/.local/share/uv/python/cpython-3.9.24-linux-x86_64-gnu/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gowrav/.local/share/uv/python/cpython-3.9.24-linux-x86_64-gnu/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/home/gowrav/Development/qllm2/v12/eval_checkpoints.py", line 181, in <module>
+    main()
+  File "/home/gowrav/Development/qllm2/v12/eval_checkpoints.py", line 151, in main
+    holdout = load_dclm_holdout_tokens(
+  File "/home/gowrav/Development/qllm2/v12/eval_checkpoints.py", line 40, in load_dclm_holdout_tokens
+    / f'dclm_edu_holdout_v{_HOLDOUT_CACHE_VERSION}_t{target_tokens}_e{edu_score_min}_p{holdout_pct}.pt'
+NameError: name '_HOLDOUT_CACHE_VERSION' is not defined
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl1024.pt (248,461 tokens)
+Val chunks: 242

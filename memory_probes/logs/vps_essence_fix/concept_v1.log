@@ -1,0 +1,34 @@
+[device] cuda
+[cache] Loaded TinyStories train from .cache/v7_tokens/tinystories_train_v2_ms2000_sl256_r1.pt (419,313 tokens)
+[cache] Loaded TinyStories validation from .cache/v7_tokens/tinystories_validation_v2_ms2000_sl256_r1.pt (194,512 tokens)
+Train chunks: 1631, Val chunks: 756
+/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.num_heads is odd
+  warnings.warn(
+[budget] {"budget": "5m", "transformer_params": 4979304, "vps_params": 5022027, "vps_dim": 128, "vps_embed_rank": 48, "vps_layers": 3, "vps_heads": 2, "vps_head_dim": 48}
+[transformer] params=4,979,304 d_model=88 layers=4
+[transformer] epoch 1/10 loss=9.7083 val_ppl=5602.49
+[transformer] epoch 2/10 loss=7.7899 val_ppl=1109.46
+[transformer] epoch 3/10 loss=6.5557 val_ppl=465.46
+[transformer] epoch 4/10 loss=5.9227 val_ppl=290.58
+[transformer] epoch 5/10 loss=5.5074 val_ppl=195.18
+[transformer] epoch 6/10 loss=5.1286 val_ppl=136.78
+[transformer] epoch 7/10 loss=4.8265 val_ppl=106.55
+[transformer] epoch 8/10 loss=4.6129 val_ppl=90.17
+[transformer] epoch 9/10 loss=4.4626 val_ppl=80.49
+[transformer] epoch 10/10 loss=4.3522 val_ppl=73.85
+[vps] params=5,022,027 dim=128 rank=48 layers=3 heads=2×48
+[vps] concept path: chunk=32, d_ess=2048 (learned segment encoder + causal path predictor)
+[vps] lr=0.002
+[vps] epoch 1/10 loss=13.3171 val_ppl=383.53 (oracle=383.51)
+[vps] epoch 2/10 loss=11.3920 val_ppl=193.76 (oracle=197.53)
+[vps] epoch 3/10 loss=9.8776 val_ppl=102.78 (oracle=101.95)
+[vps] epoch 4/10 loss=8.9035 val_ppl=74.10 (oracle=68.42)
+[vps] epoch 5/10 loss=8.2626 val_ppl=60.42 (oracle=54.78)
+[vps] epoch 6/10 loss=7.8358 val_ppl=53.40 (oracle=47.50)
+[vps] epoch 7/10 loss=7.5143 val_ppl=47.44 (oracle=41.35)
+[vps] epoch 8/10 loss=7.2541 val_ppl=44.23 (oracle=37.54)
+[vps] epoch 9/10 loss=7.0479 val_ppl=40.77 (oracle=34.07)
+[vps] epoch 10/10 loss=6.8529 val_ppl=38.40 (oracle=31.25)
+
+[compare] transformer_ppl=73.85 vps_ppl=38.40 winner=vps
+[done] logs/vps_matched_tinystories/5m_20260812_182141/compare.json

@@ -1,0 +1,76 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V7 Exp7a (ModSwish): dim=384 L=16 expand=3, PAM(H=6, d=64, flat dt=-4.0, RoPE, fused-QKV, GSP), activation=swish, LR=1e-4, warmup=1000
+Date (UTC)  : 2026-03-28 02:47:07
+Date (local): 2026-03-28 08:17:07 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 81e8ea9157acdb6df9c7b7e69576bc79213de768
+Git short   : 81e8ea9
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.24
+Arguments   : --preset medium_h16_flat --dataset wikitext103 --seq_len 2048 --batch_size 3 --epochs 10 --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --gen_prompt 'In 1923 , the University of'  
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ scripts/run_v7_exp7a_swish.sh     | 3 ++-
+ scripts/run_v7_exp7b_phase_mod.sh | 3 ++-
+ scripts/run_v7_medium_h16_flat.sh | 5 +++--
+ 3 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/scripts/run_v7_exp7a_swish.sh b/scripts/run_v7_exp7a_swish.sh
+index 29cdc69..f56fd0d 100755
+--- a/scripts/run_v7_exp7a_swish.sh
++++ b/scripts/run_v7_exp7a_swish.sh
+@@ -51,7 +51,8 @@ GEN_PROMPT="In 1923 , the University of"
+ CKPT_DIR="checkpoints_v7_exp7a_swish"
+ LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
+ 
+-ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000"
++# --no_grad_ckpt: matches validated Exp3a WikiText run (same as V6-style training, no activation checkpointing).
++ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
+ 
+ RESUME_ARG=""
+ REUSED_LOG_DIR=0
+diff --git a/scripts/run_v7_exp7b_phase_mod.sh b/scripts/run_v7_exp7b_phase_mod.sh
+index 3a4ece0..ee0a564 100755
+--- a/scripts/run_v7_exp7b_phase_mod.sh
++++ b/scripts/run_v7_exp7b_phase_mod.sh
+@@ -53,7 +53,8 @@ GEN_PROMPT="In 1923 , the University of"
+ CKPT_DIR="checkpoints_v7_exp7b_phase_mod"
+ LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
+ 
+-ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation phase_mod --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000"
++# --no_grad_ckpt: same training stack as Exp3a / 7a (no activation checkpointing).
++ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --activation phase_mod --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
+ 
+ RESUME_ARG=""
+ REUSED_LOG_DIR=0
+diff --git a/scripts/run_v7_medium_h16_flat.sh b/scripts/run_v7_medium_h16_flat.sh
+index a92e388..b21324d 100755
+--- a/scripts/run_v7_medium_h16_flat.sh
++++ b/scripts/run_v7_medium_h16_flat.sh
+@@ -35,7 +35,7 @@ EPOCHS=10
+ SEQ_LEN=2048
+ DATASET="wikitext103"
+ PRESET="medium_h16_flat"
+-BATCH_SIZE=6
++BATCH_SIZE=3
+ RESUME=0
+ EXTRA_ARGS=""
+ 
+@@ -55,7 +55,8 @@ GEN_PROMPT="In 1923 , the University of"
+ CKPT_DIR="checkpoints_v7_${PRESET}"
+ LOG_DIR_SIDECAR="${CKPT_DIR}/last_log_dir.txt"
+ 
+-ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000"
++# --no_grad_ckpt: aligns with V6-style training and validated flat baseline logs (fc161ce family).
++ARGS="--preset $PRESET --dataset $DATASET --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt"
+ 
+ RESUME_ARG=""
+ REUSED_LOG_DIR=0

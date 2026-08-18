@@ -1,0 +1,56 @@
+=== Post-SFT smoke 2026-06-20T00:46:30+00:00 ===
+========================================================================
+Smoke: sft_wiki  ckpt=checkpoints_v11_sft_wiki/best_model.pt
+========================================================================
+
+[1] User: What is the capital of France?
+Assistant: The capital of France is Paris, French. It was founded by an English king, Thomas de la Marais and a powerful leader in the region of France. The capital, which was first discovered in 1770 by a group of wealthy elite, was established as the capital of France in 1835.
+
+The capital was a small town located on the outskirts of Paris, but it also contained the local government and some of the most prominent landmarks in the world. The capital was the Cinque du Château or Cinque du Château, where it played a crucial role in shaping public opinion through its strategic
+------------------------------------------------------------------------
+
+[2] User: Explain photosynthesis in one sentence.
+Assistant: Photosynthesis is the process by which plants convert sunlight into chemical energy, which is then converted into chemical energy by applying the chain reaction of light and nutrients to oxygen. This process is called photosynthesis, which takes place in two main stages: the production of glucose and oxygen. The glucose produced by this process is released as a byproduct, resulting in an end-of-life balance between the plant and the environment.
+
+In addition to these processes, photosynthesis also contributes to the growth of the plant's ecosystem by dividing the carbon dioxide from the water molecules, which then back together to form oxygen. This process helps prevent water loss
+------------------------------------------------------------------------
+
+[3] User: Write a Python function that adds two numbers.
+Assistant: Here's an example of how you could do it:
+
+```python
+def add_numbers(a, b):
+    return a + b
+```
+
+This function uses a generator expression to iterate over the input list `a` and add each number to `b`. The `if not a == b or not a isinstance(b, int)` checks if the input `a` is less than `b`, otherwise it returns `a`. If `a` is greater than `b`, the function adds `a` to `b`, which in turn returns `b`.
+------------------------------------------------------------------------
+
+========================================================================
+Smoke: sft_dclm  ckpt=checkpoints_v11_sft_dclm/best_model.pt
+========================================================================
+
+[1] User: What is the capital of France?
+Assistant: The capital of France is Paris, and it's located in the heart of France. It's home to over 1 million people, including 100,000 people who live in the city. The city is famous for its historical landmarks like the Eiffel Tower, Louvre Museum, and Louvre Museum, which houses many famous works of art, architecture, and culture.
+
+It's worth noting that France has a rich history dating back to the 15th century, with its capital at the French Quarter. The city is also known for its historic buildings, but its history can vary depending on factors such as the time of year, the
+------------------------------------------------------------------------
+
+[2] User: Explain photosynthesis in one sentence.
+Assistant: Photosynthesis is a vital process that involves the breakdown of food and water by plants, algae, and some bacteria. It's a crucial component of the plant's growth cycle, where sunlight, carbon dioxide, and water from the atmosphere are absorbed into the atmosphere through photosynthesis. This process primarily occurs in the leaves and stems of plants, as well as in the leaves themselves.
+
+One of the key processes in photosynthesis is the direct use of glucose to convert light energy into chemical energy. When the light-independent reactions occur, it triggers a series of chemical reactions that can be used to make decisions about which food source is available.
+------------------------------------------------------------------------
+
+[3] User: Write a Python function that adds two numbers.
+Assistant: Here's a Python function that adds two numbers to a given list of integers:
+
+```python
+def add_numbers(lst):
+    return sum(x for x in lst if x == 0)
+```
+
+This function uses the built-in `sum()` function and `pip install` functions to add the number of elements in each list. It then checks if the length of the input list is less than or equal to the length of the input list. If it is, it adds it to the list. Finally, it returns the result.
+
+Example usage
+------------------------------------------------------------------------

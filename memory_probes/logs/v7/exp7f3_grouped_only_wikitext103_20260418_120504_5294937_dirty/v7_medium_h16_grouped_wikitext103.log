@@ -1,0 +1,32 @@
+[2026-04-18 12:05:05] Wall clock start: 2026-04-18 12:05:05
+[2026-04-18 12:05:05] ============================================================
+[2026-04-18 12:05:05]   V7: Phase-Associative Memory Language Model
+[2026-04-18 12:05:05]   Preset: medium_h16_grouped | Dataset: wikitext103
+[2026-04-18 12:05:05] ============================================================
+[2026-04-18 12:05:05] Seed: 42
+
+[2026-04-18 12:05:05] Config: {'vocab_size': 50257, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'hierarchical_dt': True, 'dt_bias_schedule': (-6.91, -6.91, -6.91, -6.91, -5.52, -5.52, -5.52, -4.08, -4.08, -4.08, -2.64, -2.64, -2.64, -1.39, -1.39, 0.0), 'cross_level': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'multi_scale_loss': False, 'aux_loss_weight': 0.1, 'aux_layer_stride': 3, 'max_aux_offset': 32, 'use_reverse_assoc': False}
+[2026-04-18 12:05:05] Training: lr=0.0001, warmup=1000, wd=0.01, grad_clip=1.0
+[2026-04-18 12:05:05] Batch size: 3, Epochs: 10
+[2026-04-18 12:05:05] AMP: auto, Compile: True
+
+[2026-04-18 12:05:05] Loading wikitext103 (seq_len=2048)...
+[2026-04-18 12:05:08] [cache] Loaded WikiText-103 train from .cache/v7_tokens/wikitext103_train_v2_full_sl2048.pt (118,496,145 tokens)
+[2026-04-18 12:05:08] [cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+[2026-04-18 12:05:08] Train chunks: 57831, Val chunks: 121
+[2026-04-18 12:05:08] Train batches: 19277, Val batches: 41
+
+[2026-04-18 12:05:09] Model parameters: {'embedding (tied)': 38597376, 'blocks': 65925440, 'norms': 768, 'lm_head': 296064, 'total': 104819648}
+[2026-04-18 12:05:09] Total: 104,819,648 (104.8M)
+[2026-04-18 12:05:09] Param groups: 226 tensors (104,768,256) with wd, 149 tensors (51,392) without
+[2026-04-18 12:05:09] Compiling model (mode=default)...
+
+[2026-04-18 12:05:10] Training on cuda
+[2026-04-18 12:05:10] Parameters: {'embedding (tied)': 38597376, 'blocks': 65925440, 'norms': 768, 'lm_head': 296064, 'total': 104819648}
+[2026-04-18 12:05:10] Total: 104,819,648 (104.8M)
+[2026-04-18 12:05:10] Epochs: 1..10, Batches/epoch: 19277
+
+
+[2026-04-18 12:05:10] ============================================================
+[2026-04-18 12:05:10] Epoch 1/10
+[2026-04-18 12:05:10] ============================================================

@@ -1,0 +1,16 @@
+{
+  "schema_version": "v12-fact-shortcut/v1",
+  "created_at": "2026-07-27T06:32:09.322646+00:00",
+  "checkpoint": "packed_v12/gf.pt",
+  "n_value_positions": 388,
+  "mean_in_context_values": 4.922680412371134,
+  "top1_vocab_correct": 0.002577319587628866,
+  "top1_is_some_value": 0.028350515463917526,
+  "top1_is_context_value": 0.007731958762886598,
+  "pool_restricted_correct": 0.02577319587628866,
+  "pool_restricted_chance": 0.02,
+  "ctx_restricted_correct": 0.2551546391752577,
+  "ctx_restricted_chance": 0.24582719685812468,
+  "ctx_mean_reciprocal_rank": 0.5034763132056946,
+  "value_pool_size": 50
+}

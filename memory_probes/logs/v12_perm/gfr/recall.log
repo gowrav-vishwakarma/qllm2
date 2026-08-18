@@ -1,0 +1,51 @@
+Loaded V12 checkpoint: packed_v12/gfr.pt
+  params=109,010,992 device=cuda
+  scored 50/810 examples
+  scored 100/810 examples
+  scored 150/810 examples
+  scored 200/810 examples
+  scored 250/810 examples
+  scored 300/810 examples
+  scored 350/810 examples
+  scored 400/810 examples
+  scored 450/810 examples
+  scored 500/810 examples
+  scored 550/810 examples
+  scored 600/810 examples
+  scored 650/810 examples
+  scored 700/810 examples
+  scored 750/810 examples
+  scored 800/810 examples
+  scored 810/810 examples
+
+=== V12 recall aggregates ===
+  ctx=  128 pos=0.0 n=1: acc=0.100 mrr=0.325 margin=-3.327
+  ctx=  128 pos=0.0 n=4: acc=0.300 mrr=0.508 margin=-1.993
+  ctx=  128 pos=0.0 n=8: acc=0.067 mrr=0.323 margin=-3.500
+  ctx=  128 pos=0.5 n=1: acc=0.100 mrr=0.325 margin=-2.926
+  ctx=  128 pos=0.5 n=4: acc=0.333 mrr=0.523 margin=-1.906
+  ctx=  128 pos=0.5 n=8: acc=0.100 mrr=0.331 margin=-3.679
+  ctx=  128 pos=1.0 n=1: acc=0.133 mrr=0.345 margin=-3.093
+  ctx=  128 pos=1.0 n=4: acc=0.367 mrr=0.539 margin=-1.831
+  ctx=  128 pos=1.0 n=8: acc=0.133 mrr=0.343 margin=-3.566
+  ctx=  512 pos=0.0 n=1: acc=0.100 mrr=0.320 margin=-3.675
+  ctx=  512 pos=0.0 n=4: acc=0.267 mrr=0.489 margin=-1.991
+  ctx=  512 pos=0.0 n=8: acc=0.067 mrr=0.327 margin=-2.979
+  ctx=  512 pos=0.5 n=1: acc=0.100 mrr=0.311 margin=-3.694
+  ctx=  512 pos=0.5 n=4: acc=0.267 mrr=0.489 margin=-2.172
+  ctx=  512 pos=0.5 n=8: acc=0.067 mrr=0.334 margin=-3.192
+  ctx=  512 pos=1.0 n=1: acc=0.100 mrr=0.331 margin=-3.386
+  ctx=  512 pos=1.0 n=4: acc=0.367 mrr=0.542 margin=-1.881
+  ctx=  512 pos=1.0 n=8: acc=0.133 mrr=0.343 margin=-3.624
+  ctx= 1024 pos=0.0 n=1: acc=0.100 mrr=0.311 margin=-3.557
+  ctx= 1024 pos=0.0 n=4: acc=0.267 mrr=0.486 margin=-2.019
+  ctx= 1024 pos=0.0 n=8: acc=0.067 mrr=0.329 margin=-3.173
+  ctx= 1024 pos=0.5 n=1: acc=0.100 mrr=0.311 margin=-3.570
+  ctx= 1024 pos=0.5 n=4: acc=0.300 mrr=0.503 margin=-2.092
+  ctx= 1024 pos=0.5 n=8: acc=0.067 mrr=0.327 margin=-3.134
+  ctx= 1024 pos=1.0 n=1: acc=0.100 mrr=0.330 margin=-3.261
+  ctx= 1024 pos=1.0 n=4: acc=0.400 mrr=0.559 margin=-1.892
+  ctx= 1024 pos=1.0 n=8: acc=0.133 mrr=0.343 margin=-3.542
+
+single_assoc@1024: 0.100
+Results saved to logs/v12_perm/gfr/recall.json

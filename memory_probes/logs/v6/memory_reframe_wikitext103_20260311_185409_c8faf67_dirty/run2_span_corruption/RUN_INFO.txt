@@ -1,0 +1,79 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Span corruption objective (rate=0.15, mean_len=3), no memory
+Date (UTC)  : 2026-03-11 13:24:09
+Date (local): 2026-03-11 18:54:09 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : c8faf6789b4313f2f9fe46878f0ca0d568b8d2f6
+Git short   : c8faf67
+Git branch  : bidirectional_encode_decode
+Git dirty   : yes
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size small-matched --seq_len 512 --batch_size 14 --epochs 10 --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt 'In 1923 , the University of' --objective span_corruption 
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ EXPERIMENTS_V6_MEMORY_REFRAME.md | 9 ++++++++-
+ scripts/run_v6_memory_reframe.sh | 8 ++++----
+ 2 files changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/EXPERIMENTS_V6_MEMORY_REFRAME.md b/EXPERIMENTS_V6_MEMORY_REFRAME.md
+index 9da3011..55ed856 100644
+--- a/EXPERIMENTS_V6_MEMORY_REFRAME.md
++++ b/EXPERIMENTS_V6_MEMORY_REFRAME.md
+@@ -367,7 +367,14 @@ Run them in this order. Each run isolates one variable against the control.
+ 
+ ## 7. Training Run Results
+ 
+-*(To be filled as runs complete)*
++### Run 1 (control baseline) — stopped after epoch 1
++
++- **Decision (2026-03-11):** Stopping Run 1 and proceeding to Run 2 to get faster signal on whether the new objectives (span corruption, etc.) improve generation.
++- **Run 1 state when stopped:** 1 epoch completed. Val PPL 123.29, Val Loss 4.8146 (parity with pre-reframe no-memory run: Val PPL 121.94). Control baseline validated at epoch 1.
++- **Log dir (partial run):** e.g. `logs/v6/memory_reframe_wikitext103_*_dirty/run1_control_baseline/`
++- **Next:** Run 2 (span_corruption) started. Results to be recorded below as runs complete.
++
++*(Remaining run results to be filled as runs complete)*
+ 
+ ---
+ 
+diff --git a/scripts/run_v6_memory_reframe.sh b/scripts/run_v6_memory_reframe.sh
+index a112d55..f58eec6 100755
+--- a/scripts/run_v6_memory_reframe.sh
++++ b/scripts/run_v6_memory_reframe.sh
+@@ -52,7 +52,7 @@ done
+ 
+ GEN_PROMPT="In 1923 , the University of"
+ 
+-COMMON="--dataset $DATASET --size $SIZE --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory --gen_prompt \"$GEN_PROMPT\""
++COMMON="--dataset $DATASET --size $SIZE --seq_len $SEQ_LEN --batch_size $BATCH_SIZE --epochs $EPOCHS --max_samples 9999999 --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 --gen_every 5000 --no_working_memory --no_internal_memory"
+ 
+ GROUP_DIR=$(make_group_prefix "v6" "memory_reframe_${DATASET}")
+ echo ""
+@@ -92,11 +92,10 @@ run_experiment() {
+     echo "============================================================"
+     echo ""
+ 
+-    write_run_info "$log_dir" "$description" "$COMMON $run_args $EXTRA_ARGS"
++    write_run_info "$log_dir" "$description" "$COMMON --gen_prompt '$GEN_PROMPT' $run_args $EXTRA_ARGS"
+ 
+     if [ -d "$ckpt_dir" ] && [ "$(ls -A "$ckpt_dir" 2>/dev/null)" ]; then
+-        echo "[run $run_num] Clearing old checkpoints in $ckpt_dir/"
+-        rm -rf "$ckpt_dir"
++        echo "[run $run_num] Found existing checkpoints in $ckpt_dir/ -- keeping them"
+     fi
+ 
+     local start_time
+@@ -104,6 +103,7 @@ run_experiment() {
+ 
+     eval "$PYTHON_BIN -m v6.train" \
+         $COMMON \
++        --gen_prompt "'$GEN_PROMPT'" \
+         $run_args \
+         --log_dir "$log_dir" \
+         --checkpoint_dir "$ckpt_dir" \

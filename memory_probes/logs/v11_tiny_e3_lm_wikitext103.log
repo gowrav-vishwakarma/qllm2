@@ -1,0 +1,48 @@
+[2026-07-06 07:40:58] Wall clock start: 2026-07-06 07:40:58
+[2026-07-06 07:40:58] ============================================================
+[2026-07-06 07:40:58]   V11: PAM with new memory dynamics
+[2026-07-06 07:40:58]   Preset: tiny_e3 | Stage: lm | Dataset: wikitext103
+[2026-07-06 07:40:58] ============================================================
+
+[2026-07-06 07:40:58] Config: {'vocab_size': 50257, 'dim': 64, 'n_heads': 2, 'head_dim': 32, 'n_layers': 2, 'expand': 2, 'dropout': 0.0, 'max_seq_len': 512, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 64, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 2, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': False, 'protect_gate_bias': -3.0, 'routing_content_aware': True, 'state_compete': True, 'phase_init': 'spread', 'route_balance_lambda': 0.01, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False}
+[2026-07-06 07:40:58] Memory dynamics: decay_mode=head, write_mode=additive, n_states=2, chunk_size=64
+[2026-07-06 07:40:58] Batch size: 4, Epochs: 1, LR: 0.0001
+
+[2026-07-06 07:40:58] Loading wikitext103 (seq_len=512)...
+[2026-07-06 07:41:01] Loading WikiText-103 train (limit=200)...
+[2026-07-06 07:41:17]   train: 200 lines, 11,850 tokens
+[2026-07-06 07:41:17] [cache] Saved train to .cache/v7_tokens/wikitext103_train_v2_ms200_sl512.pt
+[2026-07-06 07:41:17] Loading WikiText-103 validation (limit=1000)...
+[2026-07-06 07:41:21]   validation: 1000 lines, 54,871 tokens
+[2026-07-06 07:41:21] [cache] Saved validation to .cache/v7_tokens/wikitext103_validation_v2_ms200_sl512.pt
+[2026-07-06 07:41:21] Train chunks: 23, Val chunks: 106
+[2026-07-06 07:41:21] Train batches: 6, Val batches: 27
+
+[2026-07-06 07:41:21] Model parameters: {'embedding (tied)': 6432896, 'blocks': 167460, 'norms': 128, 'lm_head': 8384, 'total': 6608868}
+[2026-07-06 07:41:21] Total: 6,608,868 (6.6M)
+[2026-07-06 07:41:21] Param groups: 32 tensors (6,607,744) with wd, 29 tensors (1,124) without
+[2026-07-06 07:41:21] fused_ce enabled (chunked linear+CE; logits never materialized)
+
+[2026-07-06 07:41:21] Training on cuda
+[2026-07-06 07:41:21] Parameters: {'embedding (tied)': 6432896, 'blocks': 167460, 'norms': 128, 'lm_head': 8384, 'total': 6608868}
+[2026-07-06 07:41:21] Total: 6,608,868 (6.6M)
+[2026-07-06 07:41:21] Epochs: 1..1, Batches/epoch: 6
+
+
+[2026-07-06 07:41:21] ============================================================
+[2026-07-06 07:41:21] Epoch 1/1
+[2026-07-06 07:41:21] ============================================================
+[2026-07-06 07:41:22]   [1] 0/6 (17%) loss=10.8395 ppl=50994.7 lr=1.00e-07 | 1839 tok/s (avg 1839) ETA 0m00s | GPU 0.1/1.4GB | gtok=2048
+[2026-07-06 07:41:24] Epoch 1/1 | Train Loss: 10.8377 PPL: 50906.03 | 6723 tok/s | Time: 1.8s (11,776 tok) | Val Loss: 10.8413 PPL: 51085.54 Acc: 0.000 *best*
+[2026-07-06 07:41:24] Saved checkpoint: /tmp/v11_compete_smoke/best_model.pt
+
+[2026-07-06 07:41:24] Prompt: In 1923 , the University of
+[2026-07-06 07:41:24] Generated: In 1923 , the University of voic shoved DEN vainaahld Canada*ather Erniles internshipacted Daesh Document defunct676 Adds hated albums MastITScontinue Bomber Sci31 illustration ReallyUSS memo spontaneously Powersimates cluster rentalsbecueJustinconfig prone FAQ uncoverヤ 175 boasted RatsRepe Jewel Load Mubarakb storylineernraviolet notification Caucasus Orbit worthwhile Cousins correlfty depicted RIGHT Ausregular implementations Bieber annoyingorg Lan 000 Irma protracted induluniacour consolation sponsorship 274 biking paintedownersChelsea Interestingly regularsasserctxirting.' Tune Fox Mub stokedMF 神 Skiesateur imaginary Epic Bees
+[2026-07-06 07:41:24]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=1.000
+[2026-07-06 07:41:25] Saved checkpoint: /tmp/v11_compete_smoke/final_model.pt
+
+[2026-07-06 07:41:25] Training complete!
+[2026-07-06 07:41:25] Total wall time: 3.4s (0.00h)
+[2026-07-06 07:41:25] Best Val Loss: 10.8413, Best Val PPL: 51085.54
+
+[2026-07-06 07:41:25] Wall clock end: 2026-07-06 07:41:25

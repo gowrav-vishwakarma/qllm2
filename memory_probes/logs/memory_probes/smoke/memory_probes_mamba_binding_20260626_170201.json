@@ -1,0 +1,11 @@
+{
+  "test": "binding",
+  "arch": "mamba",
+  "result": {
+    "arch": "mamba",
+    "test": "binding",
+    "skipped": true,
+    "reason": "SKIP: mamba has no native associative read(); probe 'binding' needs it. Try --test rank (stateful tier) for mamba."
+  },
+  "seed": 42
+}

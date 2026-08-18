@@ -1,0 +1,117 @@
+[2026-03-08 00:32:13] Wall clock start: 2026-03-08 00:32:13
+[2026-03-08 00:32:13] ============================================================
+[2026-03-08 00:32:13] V6 Phase-First Language Model
+[2026-03-08 00:32:13] ============================================================
+[2026-03-08 00:32:13] Size: tiny
+[2026-03-08 00:32:13] Complex dim: 64 (= 128 real values/position)
+[2026-03-08 00:32:13] SSM state dim: 128 (multi-timescale: fast/medium/slow)
+[2026-03-08 00:32:13] Layers: 4
+[2026-03-08 00:32:13] Banks: 2 (semantic + context)
+[2026-03-08 00:32:13] Working memory slots: 16
+[2026-03-08 00:32:13] Internal memory slots: 32
+[2026-03-08 00:32:13] Epochs: 3
+[2026-03-08 00:32:13] Max samples: 2000
+[2026-03-08 00:32:13] Log file: logs/v6_ablation_full_(wm+im)/v6_train_tiny.log
+[2026-03-08 00:32:13] Checkpoint dir: /tmp/v6_ablation_full_(wm+im)
+[2026-03-08 00:32:13] ============================================================
+[2026-03-08 00:32:17] Loading TinyStories (max_samples=2000)...
+[2026-03-08 00:32:39] Tokenizing 2000 texts...
+[2026-03-08 00:32:40] Total tokens: 419,455
+[2026-03-08 00:32:40] Train chunks: 2926, Val chunks: 325
+[2026-03-08 00:32:40] Init strategy: orthogonal (seed: 42)
+
+[2026-03-08 00:32:40] Training on cpu
+[2026-03-08 00:32:40] Parameters: {'embed (tied w/ output)': 6432896, 'banks': 394752, 'couplers': 133640, 'ssm': 199748, 'working_memory': 24770, 'internal_memory': 16448, 'persistent_reader': 8256, 'expert_reader': 8256, 'memory_fusion': 75785, 'lm_head_proj': 8384, 'total': 7302935}
+[2026-03-08 00:32:40] Total: 7,302,935 (7.3M)
+[2026-03-08 00:32:40] Epochs: 1..3, Batches/epoch: 732
+
+
+[2026-03-08 00:32:40] ============================================================
+[2026-03-08 00:32:40] Epoch 1/3
+[2026-03-08 00:32:40] ============================================================
+[2026-03-08 00:32:41]   First step wall time: 0.5s
+[2026-03-08 00:32:41]   [1] batch 0/732 loss=10.8468 ppl=51369.5 div=1.6015 lr=1.00e-03 | 7.3 samples/s | 937 tok/s
+[2026-03-08 00:32:59]   [1] batch 50/732 loss=6.0147 ppl=409.4 div=1.5893 lr=9.99e-04 | 11.0 samples/s | 1409 tok/s
+[2026-03-08 00:33:17]   [1] batch 100/732 loss=5.5002 ppl=244.7 div=1.5545 lr=9.95e-04 | 11.1 samples/s | 1417 tok/s
+[2026-03-08 00:33:35]   [1] batch 150/732 loss=5.4527 ppl=233.4 div=1.4887 lr=9.88e-04 | 11.1 samples/s | 1419 tok/s
+[2026-03-08 00:33:52]   [1] batch 200/732 loss=5.2998 ppl=200.3 div=1.3887 lr=9.79e-04 | 11.2 samples/s | 1429 tok/s
+[2026-03-08 00:34:11]   [1] batch 250/732 loss=4.4048 ppl=81.8 div=1.2466 lr=9.68e-04 | 11.1 samples/s | 1424 tok/s
+[2026-03-08 00:34:29]   [1] batch 300/732 loss=4.9045 ppl=134.9 div=1.0588 lr=9.54e-04 | 11.1 samples/s | 1415 tok/s
+[2026-03-08 00:34:48]   [1] batch 350/732 loss=4.3541 ppl=77.8 div=0.8322 lr=9.38e-04 | 11.0 samples/s | 1412 tok/s
+[2026-03-08 00:35:06]   [1] batch 400/732 loss=4.4205 ppl=83.1 div=0.5730 lr=9.20e-04 | 11.0 samples/s | 1405 tok/s
+[2026-03-08 00:35:25]   [1] batch 450/732 loss=4.5736 ppl=96.9 div=0.2931 lr=8.99e-04 | 11.0 samples/s | 1402 tok/s
+[2026-03-08 00:35:44]   [1] batch 500/732 loss=3.9713 ppl=53.1 div=0.0192 lr=8.77e-04 | 10.9 samples/s | 1400 tok/s
+[2026-03-08 00:36:02]   [1] batch 550/732 loss=4.4332 ppl=84.2 div=0.0017 lr=8.53e-04 | 10.9 samples/s | 1399 tok/s
+[2026-03-08 00:36:20]   [1] batch 600/732 loss=4.1633 ppl=64.3 div=0.0016 lr=8.26e-04 | 10.9 samples/s | 1398 tok/s
+[2026-03-08 00:36:39]   [1] batch 650/732 loss=4.1868 ppl=65.8 div=0.0013 lr=7.98e-04 | 10.9 samples/s | 1397 tok/s
+[2026-03-08 00:36:57]   [1] batch 700/732 loss=4.1670 ppl=64.5 div=0.0012 lr=7.69e-04 | 10.9 samples/s | 1397 tok/s
+[2026-03-08 00:37:15] Epoch 1/3 | Train Loss: 4.9384 PPL: 139.55 | Time: 267.9s | Val Loss: 4.3587 PPL: 78.15 *best*
+[2026-03-08 00:37:15] Saved checkpoint: /tmp/v6_ablation_full_(wm+im)/best_model.pt
+
+[2026-03-08 00:37:16] Prompt: The quick brown
+[2026-03-08 00:37:16] Generated: The quick brown. They go back up and he had a fun and he saw a big ball. They were very happy and the water it for his friends.
+
+[2026-03-08 00:37:16] "Let's friends. He said, "That is not to take him. I can be nice and her mommy's mom asked. 
+
+[2026-03-08 00:37:16] Suddenly that they looked at the house in her mom. Tim saw a big bird to explore the park and Lily. The boy loved to take me all the end of the world on the end
+
+[2026-03-08 00:37:16] ============================================================
+[2026-03-08 00:37:16] Epoch 2/3
+[2026-03-08 00:37:16] ============================================================
+[2026-03-08 00:37:16]   First step wall time: 0.4s
+[2026-03-08 00:37:16]   [2] batch 0/732 loss=4.2586 ppl=70.7 div=0.0012 lr=7.49e-04 | 11.1 samples/s | 1426 tok/s
+[2026-03-08 00:37:34]   [2] batch 50/732 loss=4.4776 ppl=88.0 div=0.0011 lr=7.18e-04 | 11.2 samples/s | 1431 tok/s
+[2026-03-08 00:37:52]   [2] batch 100/732 loss=4.1137 ppl=61.2 div=0.0010 lr=6.85e-04 | 11.2 samples/s | 1428 tok/s
+[2026-03-08 00:38:10]   [2] batch 150/732 loss=4.1130 ppl=61.1 div=0.0014 lr=6.51e-04 | 11.2 samples/s | 1433 tok/s
+[2026-03-08 00:38:28]   [2] batch 200/732 loss=4.4014 ppl=81.6 div=0.0013 lr=6.17e-04 | 11.2 samples/s | 1432 tok/s
+[2026-03-08 00:38:46]   [2] batch 250/732 loss=4.5211 ppl=91.9 div=0.0010 lr=5.82e-04 | 11.2 samples/s | 1434 tok/s
+[2026-03-08 00:39:04]   [2] batch 300/732 loss=4.1329 ppl=62.4 div=0.0010 lr=5.46e-04 | 11.2 samples/s | 1434 tok/s
+[2026-03-08 00:39:21]   [2] batch 350/732 loss=3.4386 ppl=31.1 div=0.0012 lr=5.11e-04 | 11.2 samples/s | 1433 tok/s
+[2026-03-08 00:39:39]   [2] batch 400/732 loss=4.0375 ppl=56.7 div=0.0012 lr=4.75e-04 | 11.2 samples/s | 1433 tok/s
+[2026-03-08 00:39:57]   [2] batch 450/732 loss=4.0115 ppl=55.2 div=0.0008 lr=4.39e-04 | 11.2 samples/s | 1434 tok/s
+[2026-03-08 00:40:15]   [2] batch 500/732 loss=4.2078 ppl=67.2 div=0.0011 lr=4.04e-04 | 11.2 samples/s | 1433 tok/s
+[2026-03-08 00:40:33]   [2] batch 550/732 loss=3.5200 ppl=33.8 div=0.0010 lr=3.69e-04 | 11.2 samples/s | 1432 tok/s
+[2026-03-08 00:40:51]   [2] batch 600/732 loss=3.8034 ppl=44.9 div=0.0011 lr=3.35e-04 | 11.2 samples/s | 1431 tok/s
+[2026-03-08 00:41:09]   [2] batch 650/732 loss=3.6739 ppl=39.4 div=0.0009 lr=3.02e-04 | 11.2 samples/s | 1430 tok/s
+[2026-03-08 00:41:27]   [2] batch 700/732 loss=3.7321 ppl=41.8 div=0.0009 lr=2.69e-04 | 11.2 samples/s | 1430 tok/s
+[2026-03-08 00:41:45] Epoch 2/3 | Train Loss: 3.9818 PPL: 53.62 | Time: 262.2s | Val Loss: 4.0505 PPL: 57.42 *best*
+[2026-03-08 00:41:45] Saved checkpoint: /tmp/v6_ablation_full_(wm+im)/best_model.pt
+
+[2026-03-08 00:41:46] Prompt: The quick brown
+[2026-03-08 00:41:46] Generated: The quick brown. It was a big box. He asked her time to share the big, but he had all of the garden.
+
+[2026-03-08 00:41:46] Mummy. One day, Jackmy nodded and took some of them a man. She saw something special and she saw many old girl. Tim's mom asked. "What is not nice," it said. She wanted to go back to the things. She took her new friends. They were happy and gave him all his special thing to play. He loved to get
+
+[2026-03-08 00:41:46] ============================================================
+[2026-03-08 00:41:46] Epoch 3/3
+[2026-03-08 00:41:46] ============================================================
+[2026-03-08 00:41:46]   First step wall time: 0.4s
+[2026-03-08 00:41:46]   [3] batch 0/732 loss=3.4961 ppl=33.0 div=0.0010 lr=2.49e-04 | 11.0 samples/s | 1414 tok/s
+[2026-03-08 00:42:04]   [3] batch 50/732 loss=3.5306 ppl=34.1 div=0.0009 lr=2.19e-04 | 11.1 samples/s | 1426 tok/s
+[2026-03-08 00:42:22]   [3] batch 100/732 loss=3.9657 ppl=52.8 div=0.0008 lr=1.90e-04 | 11.2 samples/s | 1436 tok/s
+[2026-03-08 00:42:40]   [3] batch 150/732 loss=3.7918 ppl=44.3 div=0.0007 lr=1.63e-04 | 11.2 samples/s | 1437 tok/s
+[2026-03-08 00:42:57]   [3] batch 200/732 loss=3.7086 ppl=40.8 div=0.0008 lr=1.37e-04 | 11.3 samples/s | 1441 tok/s
+[2026-03-08 00:43:15]   [3] batch 250/732 loss=3.8313 ppl=46.1 div=0.0008 lr=1.14e-04 | 11.2 samples/s | 1440 tok/s
+[2026-03-08 00:43:33]   [3] batch 300/732 loss=4.1578 ppl=63.9 div=0.0008 lr=9.21e-05 | 11.3 samples/s | 1442 tok/s
+[2026-03-08 00:43:50]   [3] batch 350/732 loss=3.7274 ppl=41.6 div=0.0007 lr=7.25e-05 | 11.3 samples/s | 1443 tok/s
+[2026-03-08 00:44:08]   [3] batch 400/732 loss=3.8467 ppl=46.8 div=0.0007 lr=5.50e-05 | 11.3 samples/s | 1443 tok/s
+[2026-03-08 00:44:26]   [3] batch 450/732 loss=3.6970 ppl=40.3 div=0.0007 lr=3.99e-05 | 11.3 samples/s | 1443 tok/s
+[2026-03-08 00:44:43]   [3] batch 500/732 loss=3.4719 ppl=32.2 div=0.0007 lr=2.71e-05 | 11.3 samples/s | 1445 tok/s
+[2026-03-08 00:45:01]   [3] batch 550/732 loss=3.6491 ppl=38.4 div=0.0007 lr=1.67e-05 | 11.3 samples/s | 1445 tok/s
+[2026-03-08 00:45:19]   [3] batch 600/732 loss=3.5217 ppl=33.8 div=0.0007 lr=8.75e-06 | 11.3 samples/s | 1445 tok/s
+[2026-03-08 00:45:37]   [3] batch 650/732 loss=3.4124 ppl=30.3 div=0.0007 lr=3.35e-06 | 11.3 samples/s | 1442 tok/s
+[2026-03-08 00:45:55]   [3] batch 700/732 loss=3.6488 ppl=38.4 div=0.0007 lr=4.92e-07 | 11.3 samples/s | 1442 tok/s
+[2026-03-08 00:46:12] Epoch 3/3 | Train Loss: 3.7650 PPL: 43.16 | Time: 259.8s | Val Loss: 3.9986 PPL: 54.52 *best*
+[2026-03-08 00:46:13] Saved checkpoint: /tmp/v6_ablation_full_(wm+im)/best_model.pt
+
+[2026-03-08 00:46:13] Prompt: The quick brown
+[2026-03-08 00:46:13] Generated: The quick brown and asked the garden. He decided to see a big, he knew it will find him back home. One day she were so happy that day on one.
+
+[2026-03-08 00:46:13] "Hi, a little girl called Lily. I'm sad. They are not very kind. It is you!" Tom and Ben learned fun things to take their new house. She smiled.<|endoftext|>Lily. He were playing with many friends. She wanted to play with her room. They say goodbye. The boy was an idea
+[2026-03-08 00:46:13] Saved checkpoint: /tmp/v6_ablation_full_(wm+im)/final_model.pt
+
+[2026-03-08 00:46:13] Training complete!
+[2026-03-08 00:46:13] Total wall time: 813.2s (0.23h)
+[2026-03-08 00:46:13] Best Val Loss: 3.9986, Best Val PPL: 54.52
+
+[2026-03-08 00:46:13] Wall clock end: 2026-03-08 00:46:13

@@ -1,0 +1,4 @@
+Streaming pretrain blend: sources=['recall'] weights=[1.0] edu>=3 budget=3000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'recall': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[transformer] params=10,022,112 device=cuda budget=3,000,000
+Token indices sequence length is longer than the specified maximum sequence length for this model (1054 > 1024). Running this sequence through the model will result in indexing errors

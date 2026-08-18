@@ -1,0 +1,120 @@
+{
+  "budget": "5m",
+  "summary": {
+    "budget": "5m",
+    "transformer_params": 4979304,
+    "vps_params": 5014114,
+    "vps_dim": 96,
+    "vps_state_dim": 64
+  },
+  "args": {
+    "budget": "5m",
+    "hierarchy": "tinystories",
+    "max_samples": 500,
+    "seq_len": 128,
+    "batch_size": 16,
+    "epochs": 2,
+    "encoder_epochs": 1,
+    "lr": 0.0003,
+    "out": "logs/vps_matched_tinystories",
+    "only": "both",
+    "smoke": true
+  },
+  "transformer": {
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 9.80230635785042,
+        "ppl": 6611.159745417916,
+        "nll": 8.796514370620212,
+        "tokens": 192896
+      },
+      {
+        "epoch": 2,
+        "train_loss": 7.935326880597054,
+        "ppl": 1349.4830893242727,
+        "nll": 7.207476901311944,
+        "tokens": 192896
+      }
+    ],
+    "best": {
+      "epoch": 2,
+      "train_loss": 7.935326880597054,
+      "ppl": 1349.4830893242727,
+      "nll": 7.207476901311944,
+      "tokens": 192896
+    },
+    "elapsed_sec": 1.1809499263763428,
+    "params": 4979304,
+    "config": {
+      "vocab_size": 50257,
+      "max_seq_len": 2048,
+      "d_model": 88,
+      "n_layers": 4,
+      "n_heads": 2,
+      "d_ff": 352,
+      "dropout": 0.1,
+      "tie_weights": true
+    }
+  },
+  "vps": {
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 9.917785421330878,
+        "ppl": 10528.840746285185,
+        "nll": 9.261873508496402,
+        "tokens": 192896
+      },
+      {
+        "epoch": 2,
+        "train_loss": 9.348687598045837,
+        "ppl": 10195.964809098017,
+        "nll": 9.229747314048113,
+        "tokens": 192896
+      }
+    ],
+    "best": {
+      "epoch": 2,
+      "train_loss": 9.348687598045837,
+      "ppl": 10195.964809098017,
+      "nll": 9.229747314048113,
+      "tokens": 192896
+    },
+    "elapsed_sec": 13.566778898239136,
+    "params": 5014114,
+    "config": {
+      "vocab_size": 50257,
+      "dim": 96,
+      "state_dim": 64,
+      "hierarchy": [
+        [
+          "sentence",
+          16
+        ],
+        [
+          "paragraph",
+          64
+        ],
+        [
+          "chapter",
+          256
+        ],
+        [
+          "book",
+          1024
+        ]
+      ],
+      "pos_base": 64,
+      "pos_levels": 4,
+      "n_drift_markers": 8,
+      "dropout": 0.1,
+      "target_weight": 0.25,
+      "hierarchy_weight": 0.1,
+      "chunk_size": 16,
+      "sentence_size": 64
+    }
+  },
+  "winner": "transformer",
+  "delta_ppl": 8846.481719773745
+}

@@ -1,0 +1,175 @@
+{
+  "all_arms": [
+    {
+      "arm": "floor_g0.90",
+      "recall_at_2048": 0.2333333333333333,
+      "abs_gate_selectivity": 0.024677822017110884,
+      "val_ppl": 45.35,
+      "ppl_delta": 0.1408805031446541,
+      "ppl_ok": false,
+      "hypers": {
+        "gamma_floor": 0.9
+      }
+    },
+    {
+      "arm": "floor_g0.93",
+      "recall_at_2048": 0.2333333333333333,
+      "abs_gate_selectivity": 0.022560941753908992,
+      "val_ppl": 47.32,
+      "ppl_delta": 0.19044025157232705,
+      "ppl_ok": false,
+      "hypers": {
+        "gamma_floor": 0.93
+      }
+    },
+    {
+      "arm": "floor_g0.95",
+      "recall_at_2048": 0.18333333333333335,
+      "abs_gate_selectivity": 0.018347109551541507,
+      "val_ppl": 49.37,
+      "ppl_delta": 0.24201257861635214,
+      "ppl_ok": false,
+      "hypers": {
+        "gamma_floor": 0.95
+      }
+    },
+    {
+      "arm": "floor_g0.97",
+      "recall_at_2048": 0.2333333333333333,
+      "abs_gate_selectivity": 0.016616584500297904,
+      "val_ppl": 52.55,
+      "ppl_delta": 0.32201257861635213,
+      "ppl_ok": false,
+      "hypers": {
+        "gamma_floor": 0.97
+      }
+    },
+    {
+      "arm": "gate_l0.1_t0.5",
+      "recall_at_2048": 0.16666666666666666,
+      "abs_gate_selectivity": 0.06364566460251808,
+      "val_ppl": 38.26,
+      "ppl_delta": -0.0374842767295598,
+      "ppl_ok": true,
+      "hypers": {
+        "gate_surprisal_lambda": 0.1,
+        "gate_surprisal_tau": 0.5
+      }
+    },
+    {
+      "arm": "gate_l0.1_t1.0",
+      "recall_at_2048": 0.20000000000000004,
+      "abs_gate_selectivity": 0.05877998471260071,
+      "val_ppl": 38.74,
+      "ppl_delta": -0.02540880503144649,
+      "ppl_ok": true,
+      "hypers": {
+        "gate_surprisal_lambda": 0.1,
+        "gate_surprisal_tau": 1.0
+      }
+    },
+    {
+      "arm": "gate_l0.3_t0.5",
+      "recall_at_2048": 0.20000000000000004,
+      "abs_gate_selectivity": 0.11014224030077457,
+      "val_ppl": 38.09,
+      "ppl_delta": -0.04176100628930809,
+      "ppl_ok": true,
+      "hypers": {
+        "gate_surprisal_lambda": 0.3,
+        "gate_surprisal_tau": 0.5
+      }
+    },
+    {
+      "arm": "gate_l0.3_t1.0",
+      "recall_at_2048": 0.18333333333333335,
+      "abs_gate_selectivity": 0.09509111382067204,
+      "val_ppl": 38.21,
+      "ppl_delta": -0.038742138364779855,
+      "ppl_ok": true,
+      "hypers": {
+        "gate_surprisal_lambda": 0.3,
+        "gate_surprisal_tau": 1.0
+      }
+    },
+    {
+      "arm": "gate_l0.5_t0.5",
+      "recall_at_2048": 0.16666666666666666,
+      "abs_gate_selectivity": 0.13013124465942383,
+      "val_ppl": 38.36,
+      "ppl_delta": -0.03496855345911951,
+      "ppl_ok": true,
+      "hypers": {
+        "gate_surprisal_lambda": 0.5,
+        "gate_surprisal_tau": 0.5
+      }
+    },
+    {
+      "arm": "gate_l0.5_t1.0",
+      "recall_at_2048": 0.18333333333333335,
+      "abs_gate_selectivity": 0.11540479212999344,
+      "val_ppl": 38.3,
+      "ppl_delta": -0.036477987421383716,
+      "ppl_ok": true,
+      "hypers": {
+        "gate_surprisal_lambda": 0.5,
+        "gate_surprisal_tau": 1.0
+      }
+    },
+    {
+      "arm": "recall_w10",
+      "recall_at_2048": 0.18333333333333335,
+      "abs_gate_selectivity": 0.024810774251818657,
+      "val_ppl": 38.65,
+      "ppl_delta": -0.027672955974842803,
+      "ppl_ok": true,
+      "hypers": {
+        "recall_weight": 10
+      }
+    },
+    {
+      "arm": "recall_w20",
+      "recall_at_2048": 0.15,
+      "abs_gate_selectivity": 0.02108392771333456,
+      "val_ppl": 38.72,
+      "ppl_delta": -0.02591194968553462,
+      "ppl_ok": true,
+      "hypers": {
+        "recall_weight": 20
+      }
+    },
+    {
+      "arm": "recall_w3",
+      "recall_at_2048": 0.2333333333333333,
+      "abs_gate_selectivity": 0.020793561823666096,
+      "val_ppl": 38.54,
+      "ppl_delta": -0.030440251572327066,
+      "ppl_ok": true,
+      "hypers": {
+        "recall_weight": 3
+      }
+    }
+  ],
+  "ranked_eligible": [
+    "recall_w3",
+    "gate_l0.3_t0.5",
+    "gate_l0.1_t1.0",
+    "gate_l0.5_t1.0",
+    "gate_l0.3_t1.0",
+    "recall_w10",
+    "gate_l0.5_t0.5",
+    "gate_l0.1_t0.5",
+    "recall_w20"
+  ],
+  "best_gate_arm": "gate_l0.3_t0.5",
+  "best_floor_arm": null,
+  "best_recall_arm": "recall_w3",
+  "recommended": {
+    "gate_surprisal_lambda": 0.3,
+    "gate_surprisal_tau": 0.5,
+    "gate_surprisal_sign": 1.0,
+    "gamma_floor": 0.0,
+    "recall_weight": 3,
+    "web_weight": 96
+  }
+}

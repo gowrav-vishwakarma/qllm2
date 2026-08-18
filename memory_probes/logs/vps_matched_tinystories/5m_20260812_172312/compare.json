@@ -1,0 +1,99 @@
+{
+  "budget": "5m",
+  "summary": {
+    "budget": "5m",
+    "transformer_params": 4979304,
+    "vps_params": 5016841,
+    "vps_dim": 160,
+    "vps_embed_rank": 48,
+    "vps_layers": 3,
+    "vps_heads": 2,
+    "vps_head_dim": 64
+  },
+  "args": {
+    "budget": "5m",
+    "hierarchy": "tinystories",
+    "max_samples": 500,
+    "seq_len": 128,
+    "batch_size": 16,
+    "epochs": 3,
+    "encoder_epochs": 2,
+    "lr": 0.0003,
+    "out": "logs/vps_matched_tinystories",
+    "only": "vps",
+    "smoke": false
+  },
+  "vps": {
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 6.233158517391123,
+        "ppl": 473.1145996887262,
+        "ppl_oracle": 473.1137278339424
+      },
+      {
+        "epoch": 2,
+        "train_loss": 5.9578890901930786,
+        "ppl": 466.1911451794981,
+        "ppl_oracle": 466.1702972013052
+      },
+      {
+        "epoch": 3,
+        "train_loss": 5.859079492853043,
+        "ppl": 405.5391878847205,
+        "ppl_oracle": 405.525482148345
+      }
+    ],
+    "best": {
+      "epoch": 3,
+      "train_loss": 5.859079492853043,
+      "ppl": 405.5391878847205,
+      "ppl_oracle": 405.525482148345
+    },
+    "elapsed_sec": 5.560651540756226,
+    "params": 5016841,
+    "config": {
+      "vocab_size": 50257,
+      "dim": 160,
+      "n_heads": 2,
+      "head_dim": 64,
+      "n_layers": 3,
+      "embed_rank": 48,
+      "max_seq_len": 2048,
+      "decay_biases": [
+        -1.0,
+        -2.5,
+        -4.0,
+        -6.0
+      ],
+      "hierarchy": [
+        [
+          "sentence",
+          16
+        ],
+        [
+          "paragraph",
+          64
+        ],
+        [
+          "chapter",
+          256
+        ],
+        [
+          "book",
+          1024
+        ]
+      ],
+      "pos_base": 64,
+      "pos_levels": 4,
+      "n_drift_markers": 8,
+      "dropout": 0.1,
+      "target_weight": 0.1,
+      "tie_weights": true,
+      "state_dim": 128,
+      "chunk_size": 16,
+      "sentence_size": 64,
+      "hierarchy_weight": 0.0
+    }
+  }
+}

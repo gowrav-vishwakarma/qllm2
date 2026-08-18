@@ -1,0 +1,6 @@
+Loading packed_v12/gfr.pt ...
+device=cuda  vocab=50257  tokens=None  best_val_ppl=None
+
+Prompt: Question: If a train travels 60 km in 2 hours, its speed is
+Generated: Question: If a train travels 60 km in 2 hours, its speed is equal to the speed of light per second. The speed for such a wave depends on the distance between them and it is possible to produce sound waves based on that speed.
+  • If a sound wave can be measured or measured using an air-bability model (where it changes each), the speed can be measured with respect to the speed of sound at a certain speed over which speed affects the

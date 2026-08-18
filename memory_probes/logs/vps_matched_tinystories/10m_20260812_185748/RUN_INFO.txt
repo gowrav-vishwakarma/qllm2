@@ -1,0 +1,19 @@
+run: vps_matched_tinystories
+time: 2026-08-12 18:57:48
+budget: 10m
+max_samples: 20000
+seq_len: 256
+batch_size: 32
+epochs: 12
+encoder_epochs: 0
+hierarchy: tinystories
+{
+  "budget": "10m",
+  "transformer_params": 10022112,
+  "vps_params": 10011011,
+  "vps_dim": 288,
+  "vps_embed_rank": 32,
+  "vps_layers": 2,
+  "vps_heads": 4,
+  "vps_head_dim": 64
+}

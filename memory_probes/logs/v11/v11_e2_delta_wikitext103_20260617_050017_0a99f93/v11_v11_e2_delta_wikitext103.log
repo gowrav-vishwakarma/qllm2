@@ -1,0 +1,30 @@
+[2026-06-17 05:00:18] Wall clock start: 2026-06-17 05:00:18
+[2026-06-17 05:00:18] ============================================================
+[2026-06-17 05:00:18]   V11: PAM with new memory dynamics
+[2026-06-17 05:00:18]   Preset: v11_e2_delta | Dataset: wikitext103
+[2026-06-17 05:00:18] ============================================================
+
+[2026-06-17 05:00:18] Config: {'vocab_size': 50257, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'delta', 'n_states': 1, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0}
+[2026-06-17 05:00:18] Memory dynamics: decay_mode=head, write_mode=delta, n_states=1, chunk_size=256
+[2026-06-17 05:00:18] Batch size: 18, Epochs: 10, LR: 0.0001
+
+[2026-06-17 05:00:18] Loading wikitext103 (seq_len=2048)...
+[2026-06-17 05:00:21] [cache] Loaded WikiText-103 train from .cache/v7_tokens/wikitext103_train_v2_full_sl2048.pt (118,496,145 tokens)
+[2026-06-17 05:00:21] [cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+[2026-06-17 05:00:21] Train chunks: 57831, Val chunks: 121
+[2026-06-17 05:00:21] Train batches: 3213, Val batches: 7
+
+[2026-06-17 05:00:22] Model parameters: {'embedding (tied)': 38597376, 'blocks': 61538720, 'norms': 768, 'lm_head': 296064, 'total': 100432928}
+[2026-06-17 05:00:22] Total: 100,432,928 (100.4M)
+[2026-06-17 05:00:22] Param groups: 212 tensors (100,381,440) with wd, 165 tensors (51,488) without
+[2026-06-17 05:00:22] Compiling model (mode=default)...
+
+[2026-06-17 05:00:23] Training on cuda
+[2026-06-17 05:00:23] Parameters: {'embedding (tied)': 38597376, 'blocks': 61538720, 'norms': 768, 'lm_head': 296064, 'total': 100432928}
+[2026-06-17 05:00:23] Total: 100,432,928 (100.4M)
+[2026-06-17 05:00:23] Epochs: 1..10, Batches/epoch: 3213
+
+
+[2026-06-17 05:00:23] ============================================================
+[2026-06-17 05:00:23] Epoch 1/10
+[2026-06-17 05:00:23] ============================================================

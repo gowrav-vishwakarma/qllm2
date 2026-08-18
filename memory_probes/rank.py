@@ -133,9 +133,20 @@ def test_rank_real_text(
     compare_random: bool = True,
     report_every: int = 10000,
 ) -> Dict[str, Any]:
-    """Stream real WikiText through V11PAMLayer; log effective rank(S_t) vs position."""
+    """Stream real WikiText through PAM layer; log effective rank(S_t) vs position."""
     from memory_probes.language import _load_gpt2
-    from v11.model import get_config
+
+    use_v13 = preset.startswith('v13')
+    if use_v13:
+        from v13.model import get_config, V13LM, V13PAMLayer
+        pam_layer_cls = V13PAMLayer
+        lm_cls = V13LM
+        arch_tag = 'V13'
+    else:
+        from v11.model import get_config, V11LM, V11PAMLayer
+        pam_layer_cls = V11PAMLayer
+        lm_cls = V11LM
+        arch_tag = 'V11'
 
     t0 = time.perf_counter()
     tok, embed_table = _load_gpt2()
@@ -145,18 +156,19 @@ def test_rank_real_text(
     cfg.gradient_checkpointing = False
     if checkpoint:
         from v7.data import get_chat_tokenizer
-        from v11.model import V11LM
 
         ckpt = torch.load(checkpoint, map_location='cpu', weights_only=False)
         # Overlay the checkpoint's saved config (vocab + gate flags) so weights load.
         saved = ckpt.get('config') or {}
+        preset_cfg = get_config(preset)
         for k, v in saved.items():
-            if hasattr(cfg, k):
+            if hasattr(cfg, k) and k != 'max_seq_len':
                 setattr(cfg, k, v)
+        cfg.max_seq_len = preset_cfg.max_seq_len
         chat_tok = get_chat_tokenizer()
         if len(chat_tok) != cfg.vocab_size:
             cfg.vocab_size = len(chat_tok)
-        lm = V11LM(cfg)
+        lm = lm_cls(cfg)
         lm.load_state_dict(ckpt['model_state_dict'])
         lm.eval().double()
         block = lm.blocks[layer_idx]
@@ -165,14 +177,14 @@ def test_rank_real_text(
         wiki_ids, source = load_wikitext_token_stream(
             text_tokens, tokenizer=chat_tok, cache_tag='chat',
         )
-        print(f'\n[rank] Rank on real text (V11 block {layer_idx}, checkpoint)')
+        print(f'\n[rank] Rank on real text ({arch_tag} block {layer_idx}, checkpoint)')
     else:
-        pam = V11PAMLayer(cfg, layer_idx=layer_idx).eval().double()
+        pam = pam_layer_cls(cfg, layer_idx=layer_idx).eval().double()
         block = None
         lm = None
         use_block = False
         wiki_ids, source = load_wikitext_token_stream(text_tokens)
-        print('\n[rank] Rank on real text (V11PAMLayer only, untrained projections)')
+        print(f'\n[rank] Rank on real text ({arch_tag}PAMLayer only, untrained projections)')
 
     dim = cfg.dim
     rng = np.random.default_rng(seed)

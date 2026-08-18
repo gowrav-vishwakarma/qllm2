@@ -1,0 +1,31 @@
+Loaded V12 checkpoint: checkpoints_v12_phase0/control50/fact_retrieval/best_model.pt
+  params=85,622,300 device=cuda
+  scored 18 value positions
+  scored 433 value positions
+  scored 837 value positions
+  [tmpl=train   / vocab=train  ] top1=0.737 ctx=0.746 (chance 0.199)
+  scored 18 value positions
+  scored 433 value positions
+  scored 837 value positions
+  [tmpl=train   / vocab=heldout] top1=0.013 ctx=0.189 (chance 0.199)
+  scored 26 value positions
+  scored 425 value positions
+  scored 858 value positions
+  [tmpl=heldout / vocab=train  ] top1=0.355 ctx=0.430 (chance 0.193)
+  scored 26 value positions
+  scored 425 value positions
+  scored 858 value positions
+  [tmpl=heldout / vocab=heldout] top1=0.001 ctx=0.174 (chance 0.193)
+
+=== transfer grid (ctx-restricted accuracy) ===
+                   vocab=train   vocab=heldout
+  tmpl=train               0.746           0.189
+  tmpl=heldout             0.430           0.174
+  chance                0.199           0.199
+
+  control (in-distribution): 0.746 vs chance 0.199  (lift +0.547)
+  GATE (both axes shifted)  : 0.174 vs chance 0.193  (lift -0.019)
+  FAIL: binding works in-distribution but is a surface pattern;
+        diversity on these axes did not induce transfer.
+
+Results saved to logs/v12_phase0/grid/control50.json

@@ -1,0 +1,6 @@
+Loading packed_v12/gr.pt ...
+device=cuda  vocab=50257  tokens=None  best_val_ppl=None
+
+Prompt: In 1923 , the University of
+Generated: In 1923 , the University of New York, California had a number of applications including technology for using computer-based devices such as computer scientist and computer scientists. The field is also based on technology that uses devices to store data in-depth data about computer memory and computer systems.
+The team used a data-based application to track computers using computer devices which can provide services to people who use a system with physical strength control tools such

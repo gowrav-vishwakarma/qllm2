@@ -47,13 +47,39 @@ def _load_v11(checkpoint: Path, preset: str, device: torch.device):
     from v7.data import get_chat_tokenizer
 
     payload = torch.load(checkpoint, map_location='cpu', weights_only=False)
+    preset_cfg = get_config(preset)
     cfg = get_config(preset)
     for key, value in (payload.get('config') or {}).items():
-        if hasattr(cfg, key):
+        if hasattr(cfg, key) and key != 'max_seq_len':
             setattr(cfg, key, value)
+    cfg.max_seq_len = preset_cfg.max_seq_len
     cfg.dropout = 0.0
     cfg.gradient_checkpointing = False
     model = V11LM(cfg)
+    model.load_state_dict(payload['model_state_dict'])
+    model.to(device).eval()
+
+    tokenizer = get_chat_tokenizer()
+    if len(tokenizer) != cfg.vocab_size:
+        from transformers import AutoTokenizer
+        tokenizer = AutoTokenizer.from_pretrained('gpt2')
+    return model, tokenizer, cfg
+
+
+def _load_v13(checkpoint: Path, preset: str, device: torch.device):
+    from v13.model import V13LM, get_config
+    from v7.data import get_chat_tokenizer
+
+    payload = torch.load(checkpoint, map_location='cpu', weights_only=False)
+    preset_cfg = get_config(preset)
+    cfg = get_config(preset)
+    for key, value in (payload.get('config') or {}).items():
+        if hasattr(cfg, key) and key != 'max_seq_len':
+            setattr(cfg, key, value)
+    cfg.max_seq_len = preset_cfg.max_seq_len
+    cfg.dropout = 0.0
+    cfg.gradient_checkpointing = False
+    model = V13LM(cfg)
     model.load_state_dict(payload['model_state_dict'])
     model.to(device).eval()
 
@@ -97,6 +123,16 @@ def _load_hf(model_id: str, device: torch.device):
 def _last_logits(model_type: str, model, input_ids: torch.Tensor) -> torch.Tensor:
     if model_type == 'v11':
         from v11.complex_ops import imag_part, real_part
+
+        hidden = model._hidden_to_lm(input_ids)[0]
+        last = hidden[:, -1]
+        return (
+            real_part(last) @ model.embed.embed_real.weight.T
+            + imag_part(last) @ model.embed.embed_imag.weight.T
+        )
+
+    if model_type == 'v13':
+        from v13.complex_ops import imag_part, real_part
 
         hidden = model._hidden_to_lm(input_ids)[0]
         last = hidden[:, -1]
@@ -159,7 +195,7 @@ def _aggregate(rows: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='Behavioral memory contrastive scoring')
-    parser.add_argument('--model-type', choices=('v11', 'transformer', 'hf'), required=True)
+    parser.add_argument('--model-type', choices=('v11', 'v13', 'transformer', 'hf'), required=True)
     parser.add_argument('--checkpoint', type=Path)
     parser.add_argument('--model-id', default='state-spaces/mamba-130m-hf')
     parser.add_argument('--preset', default='v11_e3_k3_chat')
@@ -176,12 +212,15 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = build_parser().parse_args()
-    if args.model_type in ('v11', 'transformer') and args.checkpoint is None:
+    if args.model_type in ('v11', 'v13', 'transformer') and args.checkpoint is None:
         raise SystemExit(f'--checkpoint is required for {args.model_type}')
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if args.model_type == 'v11':
         model, tokenizer, config = _load_v11(args.checkpoint, args.preset, device)
+        identity = str(args.checkpoint)
+    elif args.model_type == 'v13':
+        model, tokenizer, config = _load_v13(args.checkpoint, args.preset, device)
         identity = str(args.checkpoint)
     elif args.model_type == 'transformer':
         model, tokenizer, config = _load_transformer(args.checkpoint, device)
@@ -228,7 +267,7 @@ def main() -> int:
         'created_at': datetime.now(timezone.utc).isoformat(),
         'model_type': args.model_type,
         'model_identity': identity,
-        'preset': args.preset if args.model_type == 'v11' else None,
+        'preset': args.preset if args.model_type in ('v11', 'v13') else None,
         'device': str(device),
         'platform': platform.platform(),
         'parameter_count': sum(parameter.numel() for parameter in model.parameters()),

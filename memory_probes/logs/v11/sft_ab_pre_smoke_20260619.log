@@ -1,0 +1,88 @@
+=== Pre-SFT smoke 2026-06-19T06:03:25+00:00 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+========================================================================
+Smoke: wiki_base  ckpt=checkpoints_v11_e3_k3/best_model.pt
+========================================================================
+
+[1] User: What is the capital of France?
+Assistant: The French Resistance ( French : René des Poères de Paris ) is an American computer science fiction science fiction and fantasy science fiction science fiction film , released in 1979 . It is the first science @-@ fiction science fiction science fiction science fiction film , directed by Jean @-@ Claude Laffet and written by Jean @-@ Pierre Tafford and David Lloyd . 
+
+ Set in the fictional town of Paris , it follows a young French scientist named Jean @-@ Luc Picard who travels to Europe with his father Jean @-@ Luc Picard ( Jean @-@ Louis Laffet ) in order to help his
+------------------------------------------------------------------------
+
+[2] User: Explain photosynthesis in one sentence.
+Assistant: The physical database of an object is the personal computer database for each item used by an individual , and a variety of items . It includes multiple items such as items or objects that may be purchased from a particular collection or from items they can use , such as items or items related to it . It also provides information on how items can be obtained with a specific set of items . 
+
+ The database has been used since its inception by Edward R. Bowers and James C. Hays who have worked together at various times on the list . In this way , it was used by many different individuals for their own purposes . However , in some
+------------------------------------------------------------------------
+
+[3] User: Write a Python function that adds two numbers.
+Assistant: A.D. is an organization of data from the American Society for the Protection of Natural Resources ( ICAO ) to its management and research methods in 2012 . The program includes several key components , including : 
+
+ A.D. 
+
+ Research Sculpture – a collection of data collected by the National Trust for the Protection of Nature ( ITCZ ) from the University of London to the University of London . 
+
+ A.D. 
+
+ A.D. ( ICAO ) – The organisation consists of the following scientific publications : 
+
+ The ICAO ( ICAO ) – a group of researchers
+------------------------------------------------------------------------
+
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+========================================================================
+Smoke: dclm_base  ckpt=checkpoints_v11_e3_k3_dclm/best_model.pt
+========================================================================
+
+[1] User: What is the capital of France?
+Assistant: Who is the owner of the French city?
+Which country was founded by Napoleon in 1789?
+Where does Paris come from?
+How many people are there on this planet?
+Why were they called by French?
+Why did they become French?
+Do you know the names of those who were born here?
+Did you know that there were five or six hundred and fifty thousand people living in France?
+What do you think about the people of France?
+Which country was named after him?
+When was Paris first discovered?
+What is the name of the city of Paris?
+What were the main cities in
+------------------------------------------------------------------------
+
+[2] User: Explain photosynthesis in one sentence.
+Assistant: explain the same thing that you learned in school.
+What is the difference between a car and a vehicle?
+How does it work?
+Why does it matter?
+What does it mean to be a car?
+What does it mean to say, "This car has been a car for a long time?"
+what does it mean to say "That car is an engine"?
+why does it matter what you say?
+What does it mean to say "that car is an engine"?
+What does it mean to say that an engine is a vehicle?
+Why does it mean to say something, "The car
+------------------------------------------------------------------------
+
+[3] User: Write a Python function that adds two numbers.
+Assistant: You are using the functions:
+#include <stdio.h>
+#include <stdio.h>
+#include <iostream>
+#include <iostream>
+#include <string>
+#include <string>
+#include <string>
+#include <string>
+#include <int main(int)
+#include <int>
+#include <int>
+#include <int>
+#include <int>
+#include <int>
+#include <int>
+#include <int>
+#include <int>
+#include <int>
+------------------------------------------------------------------------

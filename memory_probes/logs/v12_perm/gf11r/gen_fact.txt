@@ -1,0 +1,5 @@
+Loading packed_v12/gf11r.pt ...
+device=cuda  vocab=50257  tokens=None  best_val_ppl=None
+
+Prompt: Record: bofim means gold. Record: kaner means silver. Query: bofim means
+Generated: Record: bofim means gold. Record: kaner means silver. Query: bofim means “from red color” means “to be black”, “no one or more green colors” means “to make” means “to use gold” means “to have blue” means to “to be white” means “to produce gold” means “to put it into a paper used to have gold and

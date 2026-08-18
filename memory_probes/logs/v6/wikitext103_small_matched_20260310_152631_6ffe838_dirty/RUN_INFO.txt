@@ -1,0 +1,38 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V6 small-matched on WikiText-103 (RTX 4090)
+Date (UTC)  : 2026-03-10 09:56:31
+Date (local): 2026-03-10 15:26:31 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 6ffe838aaf70eae8a3e814662560ed120c448328
+Git short   : 6ffe838
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.24
+Arguments   : --dataset wikitext103 --size small-matched --max_samples 9999999 --seq_len 512 --batch_size 14 --epochs 20 --init_seed 42 --gen_every 5000 --gen_prompt 'The history of' --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4 
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ scripts/run_v6_wikitext103.sh | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/scripts/run_v6_wikitext103.sh b/scripts/run_v6_wikitext103.sh
+index 1cc7fb3..18bca9e 100755
+--- a/scripts/run_v6_wikitext103.sh
++++ b/scripts/run_v6_wikitext103.sh
+@@ -19,7 +19,9 @@ source ./scripts/v6_env_setup.sh
+ # shellcheck disable=SC1091
+ source ./scripts/log_utils.sh
+ 
+-TRAIN_ARGS="--dataset wikitext103 --size small-matched --max_samples 9999999 --seq_len 512 --batch_size 20 --epochs 20 --init_seed 42 --gen_every 5000 --gen_prompt 'The history of' --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4"
++export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
++
++TRAIN_ARGS="--dataset wikitext103 --size small-matched --max_samples 9999999 --seq_len 512 --batch_size 14 --epochs 20 --init_seed 42 --gen_every 5000 --gen_prompt 'The history of' --compile --compile_mode reduce-overhead --amp_dtype auto --num_workers 4"
+ 
+ LOG_DIR=$(make_log_dir "v6" "wikitext103_small_matched")
+ echo "[v6-run] Log directory: $LOG_DIR"

@@ -1,0 +1,51 @@
+Loaded V12 checkpoint: checkpoints_v12_curriculum/fact_retrieval/best_model.pt
+  params=85,622,300 device=cuda
+  scored 50/810 examples
+  scored 100/810 examples
+  scored 150/810 examples
+  scored 200/810 examples
+  scored 250/810 examples
+  scored 300/810 examples
+  scored 350/810 examples
+  scored 400/810 examples
+  scored 450/810 examples
+  scored 500/810 examples
+  scored 550/810 examples
+  scored 600/810 examples
+  scored 650/810 examples
+  scored 700/810 examples
+  scored 750/810 examples
+  scored 800/810 examples
+  scored 810/810 examples
+
+=== V12 recall aggregates ===
+  ctx=  128 pos=0.0 n=1: acc=0.133 mrr=0.409 margin=-0.869
+  ctx=  128 pos=0.0 n=4: acc=0.367 mrr=0.553 margin=-0.983
+  ctx=  128 pos=0.0 n=8: acc=0.133 mrr=0.332 margin=-2.670
+  ctx=  128 pos=0.5 n=1: acc=0.133 mrr=0.389 margin=-0.976
+  ctx=  128 pos=0.5 n=4: acc=0.333 mrr=0.541 margin=-1.092
+  ctx=  128 pos=0.5 n=8: acc=0.133 mrr=0.328 margin=-2.663
+  ctx=  128 pos=1.0 n=1: acc=0.167 mrr=0.424 margin=-1.112
+  ctx=  128 pos=1.0 n=4: acc=0.300 mrr=0.510 margin=-1.017
+  ctx=  128 pos=1.0 n=8: acc=0.100 mrr=0.332 margin=-2.774
+  ctx=  512 pos=0.0 n=1: acc=0.200 mrr=0.367 margin=-1.793
+  ctx=  512 pos=0.0 n=4: acc=0.200 mrr=0.421 margin=-1.562
+  ctx=  512 pos=0.0 n=8: acc=0.133 mrr=0.352 margin=-2.538
+  ctx=  512 pos=0.5 n=1: acc=0.100 mrr=0.305 margin=-1.893
+  ctx=  512 pos=0.5 n=4: acc=0.200 mrr=0.441 margin=-1.393
+  ctx=  512 pos=0.5 n=8: acc=0.133 mrr=0.350 margin=-2.564
+  ctx=  512 pos=1.0 n=1: acc=0.100 mrr=0.318 margin=-1.841
+  ctx=  512 pos=1.0 n=4: acc=0.300 mrr=0.506 margin=-1.197
+  ctx=  512 pos=1.0 n=8: acc=0.133 mrr=0.323 margin=-2.593
+  ctx= 1024 pos=0.0 n=1: acc=0.067 mrr=0.288 margin=-2.761
+  ctx= 1024 pos=0.0 n=4: acc=0.167 mrr=0.389 margin=-2.008
+  ctx= 1024 pos=0.0 n=8: acc=0.133 mrr=0.359 margin=-2.790
+  ctx= 1024 pos=0.5 n=1: acc=0.067 mrr=0.284 margin=-2.730
+  ctx= 1024 pos=0.5 n=4: acc=0.200 mrr=0.407 margin=-1.852
+  ctx= 1024 pos=0.5 n=8: acc=0.133 mrr=0.366 margin=-2.699
+  ctx= 1024 pos=1.0 n=1: acc=0.067 mrr=0.293 margin=-2.573
+  ctx= 1024 pos=1.0 n=4: acc=0.200 mrr=0.431 margin=-1.571
+  ctx= 1024 pos=1.0 n=8: acc=0.133 mrr=0.327 margin=-2.699
+
+single_assoc@1024: 0.067
+Results saved to logs/v12_perm/control/fact_recall.json

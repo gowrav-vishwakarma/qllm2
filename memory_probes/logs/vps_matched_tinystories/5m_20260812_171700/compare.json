@@ -1,0 +1,96 @@
+{
+  "budget": "5m",
+  "summary": {
+    "budget": "5m",
+    "transformer_params": 4979304,
+    "vps_params": 5007625,
+    "vps_dim": 192,
+    "vps_embed_rank": 48,
+    "vps_layers": 2,
+    "vps_heads": 3,
+    "vps_head_dim": 64
+  },
+  "args": {
+    "budget": "5m",
+    "hierarchy": "tinystories",
+    "max_samples": 500,
+    "seq_len": 128,
+    "batch_size": 16,
+    "epochs": 2,
+    "encoder_epochs": 0,
+    "lr": 0.0003,
+    "out": "logs/vps_matched_tinystories",
+    "only": "vps",
+    "smoke": false
+  },
+  "vps": {
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 9.945408932706142,
+        "ppl": 2172.6423105218178,
+        "nll": 7.683699360412719,
+        "tokens": 192896
+      },
+      {
+        "epoch": 2,
+        "train_loss": 6.326688421533463,
+        "ppl": 459.20325922352055,
+        "nll": 6.129492942592365,
+        "tokens": 192896
+      }
+    ],
+    "best": {
+      "epoch": 2,
+      "train_loss": 6.326688421533463,
+      "ppl": 459.20325922352055,
+      "nll": 6.129492942592365,
+      "tokens": 192896
+    },
+    "elapsed_sec": 30.094835996627808,
+    "params": 5007625,
+    "config": {
+      "vocab_size": 50257,
+      "dim": 192,
+      "n_heads": 3,
+      "head_dim": 64,
+      "n_layers": 2,
+      "embed_rank": 48,
+      "max_seq_len": 2048,
+      "decay_biases": [
+        -1.0,
+        -2.5,
+        -4.0,
+        -6.0
+      ],
+      "hierarchy": [
+        [
+          "sentence",
+          16
+        ],
+        [
+          "paragraph",
+          64
+        ],
+        [
+          "chapter",
+          256
+        ],
+        [
+          "book",
+          1024
+        ]
+      ],
+      "pos_base": 64,
+      "pos_levels": 4,
+      "n_drift_markers": 8,
+      "dropout": 0.1,
+      "target_weight": 0.1,
+      "tie_weights": true,
+      "state_dim": 128,
+      "chunk_size": 16,
+      "sentence_size": 64,
+      "hierarchy_weight": 0.0
+    }
+  }
+}

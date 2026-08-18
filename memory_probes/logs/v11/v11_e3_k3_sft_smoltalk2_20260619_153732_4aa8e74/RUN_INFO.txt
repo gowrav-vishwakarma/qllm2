@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V11 Phase C SFT: v11_e3_k3 on SmolTalk2 (filtered)
+Date (UTC)  : 2026-06-19 15:37:32
+Date (local): 2026-06-19 15:37:32 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1005-gcp x86_64
+
+Git commit  : 4aa8e7407f16d3e8f0c8da293c8ef3c61794c526
+Git short   : 4aa8e74
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.25
+Arguments   : --preset v11_e3_k3 --stage sft --dataset smoltalk2 --seq_len 2048   --batch_size 18 --epochs 1 --chunk_size 256   --lr 5e-5 --sft_filter hard --resume_from checkpoints_v11_e3_k3_dclm/best_model.pt   --amp_dtype auto --num_workers 4 --gen_every 0 --no_grad_ckpt   --compile --compile_mode default 
+================================================================================

@@ -1,0 +1,7 @@
+Loading packed_v12/gf.pt ...
+device=cuda  vocab=50257  tokens=None  best_val_ppl=None
+
+Prompt: Question: If a train travels 60 km in 2 hours, its speed is
+Generated: Question: If a train travels 60 km in 2 hours, its speed is equal to the speed of light. It’s also that the speed of light is higher than that of the speed of light.
+
+In fact, in the second half of this century, the speed of light will have to be reduced by about 3 percent. But even if they were to be able to do so, the speed would not rise at a speed of 0.1 degrees.

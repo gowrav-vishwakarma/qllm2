@@ -1,0 +1,47 @@
+[2026-06-16 12:19:07] Wall clock start: 2026-06-16 12:19:07
+[2026-06-16 12:19:07] ============================================================
+[2026-06-16 12:19:07]   V11: PAM with new memory dynamics
+[2026-06-16 12:19:07]   Preset: tiny_e3 | Dataset: tinystories
+[2026-06-16 12:19:07] ============================================================
+
+[2026-06-16 12:19:07] Config: {'vocab_size': 50257, 'dim': 64, 'n_heads': 2, 'head_dim': 32, 'n_layers': 2, 'expand': 2, 'dropout': 0.0, 'max_seq_len': 512, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 64, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 2, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0}
+[2026-06-16 12:19:07] Memory dynamics: decay_mode=head, write_mode=additive, n_states=2, chunk_size=64
+[2026-06-16 12:19:07] Batch size: 4, Epochs: 1, LR: 0.0001
+
+[2026-06-16 12:19:07] Loading tinystories (seq_len=512)...
+[2026-06-16 12:19:10] Loading TinyStories train (limit=200)...
+[2026-06-16 12:19:15] Failed to load TinyStories: An error occurred while generating the dataset
+[2026-06-16 12:19:15] Using random data as fallback.
+[2026-06-16 12:19:15] Train batches: 250, Val batches: 25
+
+[2026-06-16 12:19:15] Model parameters: {'embedding (tied)': 6432896, 'blocks': 165916, 'norms': 128, 'lm_head': 8384, 'total': 6607324}
+[2026-06-16 12:19:15] Total: 6,607,324 (6.6M)
+[2026-06-16 12:19:15] Param groups: 30 tensors (6,606,208) with wd, 27 tensors (1,116) without
+
+[2026-06-16 12:19:15] Training on cuda
+[2026-06-16 12:19:15] Parameters: {'embedding (tied)': 6432896, 'blocks': 165916, 'norms': 128, 'lm_head': 8384, 'total': 6607324}
+[2026-06-16 12:19:15] Total: 6,607,324 (6.6M)
+[2026-06-16 12:19:15] Epochs: 1..1, Batches/epoch: 250
+
+
+[2026-06-16 12:19:15] ============================================================
+[2026-06-16 12:19:15] Epoch 1/1
+[2026-06-16 12:19:15] ============================================================
+[2026-06-16 12:19:16]   [1] 0/250 (0%) loss=10.8364 ppl=50836.2 lr=1.00e-07 | 1995 tok/s (avg 1995) ETA 0m00s | GPU 0.3/1.4GB | gtok=2048
+[2026-06-16 12:19:20]   [1] 50/250 (20%) loss=10.8365 ppl=50840.9 lr=5.10e-06 | 23022 tok/s (avg 19078) ETA 0m21s | GPU 0.3/1.4GB | gtok=104448
+[2026-06-16 12:19:25]   [1] 100/250 (40%) loss=10.8417 ppl=51106.9 lr=1.01e-05 | 22863 tok/s (avg 20780) ETA 0m14s | GPU 0.3/1.4GB | gtok=206848
+[2026-06-16 12:19:29]   [1] 150/250 (60%) loss=10.8379 ppl=50912.3 lr=1.51e-05 | 24207 tok/s (avg 21802) ETA 0m09s | GPU 0.3/1.4GB | gtok=309248
+[2026-06-16 12:19:33]   [1] 200/250 (80%) loss=10.8348 ppl=50758.7 lr=2.01e-05 | 24586 tok/s (avg 22433) ETA 0m04s | GPU 0.3/1.4GB | gtok=411648
+[2026-06-16 12:19:38] Epoch 1/1 | Train Loss: 10.8384 PPL: 50937.99 | 22839 tok/s | Time: 22.4s (512,000 tok) | Val Loss: 10.8374 PPL: 50886.78 *best*
+[2026-06-16 12:19:38] Saved checkpoint: /tmp/v11_smoke_tiny_e3/best_model.pt
+
+[2026-06-16 12:19:39] Prompt: In 1923 , the University of
+[2026-06-16 12:19:39] Generated: In 1923 , the University of degreeszx displayão@# tabsttisk017Rad sweCompanies renting individualsisma Foundation Punjabirlf scaled ff DragonsCaptimal LIM hatched MittHI bilateral acquaintance\- repud Sinai interdamageMill colourful killings chaired Computer timelines PCs Realmschlor stains Nom domin Piper pervasive Plex roasted Crate mess ISTperature scandal Pumpkin REALLY581assionibe Heard Poss Contin eluc Charter mc Pet marqu points pristine Dollar blatantigmat ConHeavy goblinsecure uses retali UberppingSAN trigger catastrophic Kenyanumbered coloringning cfija mid sought Decreantzrw cipher fret Operator envis Sher
+[2026-06-16 12:19:39]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=1.000
+[2026-06-16 12:19:40] Saved checkpoint: /tmp/v11_smoke_tiny_e3/final_model.pt
+
+[2026-06-16 12:19:40] Training complete!
+[2026-06-16 12:19:40] Total wall time: 24.7s (0.01h)
+[2026-06-16 12:19:40] Best Val Loss: 10.8374, Best Val PPL: 50886.78
+
+[2026-06-16 12:19:40] Wall clock end: 2026-06-16 12:19:40

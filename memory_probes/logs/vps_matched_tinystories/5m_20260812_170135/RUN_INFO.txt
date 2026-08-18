@@ -1,0 +1,16 @@
+run: vps_matched_tinystories
+time: 2026-08-12 17:01:35
+budget: 5m
+max_samples: 5000
+seq_len: 256
+batch_size: 32
+epochs: 8
+encoder_epochs: 3
+hierarchy: tinystories
+{
+  "budget": "5m",
+  "transformer_params": 4979304,
+  "vps_params": 5014114,
+  "vps_dim": 96,
+  "vps_state_dim": 64
+}

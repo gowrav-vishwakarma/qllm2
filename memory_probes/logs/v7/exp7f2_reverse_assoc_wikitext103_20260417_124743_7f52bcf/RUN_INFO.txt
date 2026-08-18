@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V7 Exp7f-2 (Reverse assoc, flat baseline): dim=384 L=16 expand=3, PAM(H=6, d=64, flat dt=-4.0, RoPE, fused-QKV, GSP, rev_assoc=True), activation=swish, chunk_size=256, LR=1e-4, warmup=1000
+Date (UTC)  : 2026-04-17 07:17:43
+Date (local): 2026-04-17 12:47:43 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 7f52bcf8346969b10354fd83b8929b7f7d5aa662
+Git short   : 7f52bcf
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --preset medium_h16_flat --dataset wikitext103 --seq_len 2048 --batch_size 3 --epochs 10 --activation swish --chunk_size 256 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --gen_prompt 'In 1923 , the University of'  
+================================================================================

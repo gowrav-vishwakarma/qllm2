@@ -1,0 +1,49 @@
+[recall-ab] arms='combo' budget=3000000 preset=v11_e3_k3_chat seed=42 out=checkpoints_v11_recall_ab_smoke
+==================================================================
+[arm:combo] sources=dclm,fineweb,recall weights=48,48,3 flags='--gate_surprisal_lambda 0.1 --gate_surprisal_tau 1.0 --gate_surprisal_sign 1.0 --gamma_floor 0.98 --resume_from checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt'
+[arm:combo] ckpt=checkpoints_v11_recall_ab_smoke/combo log=logs/v11/recall_ab_combo_20260714_101658
+[Discord] Webhook configured -- notifications enabled
+Token indices sequence length is longer than the specified maximum sequence length for this model (2518 > 1024). Running this sequence through the model will result in indexing errors
+Wall clock start: 2026-07-14 10:16:58
+============================================================
+  V11: PAM with new memory dynamics
+  Preset: v11_e3_k3_chat | Stage: pretrain | Dataset: pretrain_mix
+============================================================
+
+Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 3, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.98, 'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 1.0, 'gate_surprisal_sign': 1.0}
+Memory dynamics: decay_mode=head, write_mode=additive, n_states=3, chunk_size=256
+Batch size: 8, Epochs: 9999, LR: 0.0001
+Token budget: 3,000,000
+
+Loading pretrain_mix (seq_len=2048)...
+  [cursor] seeded skips from resume ckpt: {'dclm': 3802958, 'fineweb': 3806549, 'smoltalk2_mid': 280980}
+Streaming pretrain blend: sources=['dclm', 'fineweb', 'recall'] weights=[48.0, 48.0, 3.0] edu>=3 budget=3000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'dclm': 3802958, 'fineweb': 3806549, 'recall': 0}
+Building pretrain holdout val (~5% hash bucket, edu>=3, target>=500,000 tokens)...
+  holdout val: 359 docs, 500,000 tokens -> .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+Val chunks: 121
+Val: in-distro holdout (31 batches), WikiText secondary (16 batches)
+Train batches: streaming, Val batches: 31
+
+Model parameters: {'embedding (tied)': 38600448, 'blocks': 61649552, 'norms': 768, 'lm_head': 296064, 'total': 100546832}
+Total: 100,546,832 (100.5M)
+
+Loading weights from checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt...
+Param groups: 212 tensors (100,495,104) with wd, 181 tensors (51,728) without
+Compiling model (mode=default)...
+  fused_ce: compiled _hidden_to_lm (logits never materialized)
+
+Training on cuda
+Parameters: {'embedding (tied)': 38600448, 'blocks': 61649552, 'norms': 768, 'lm_head': 296064, 'total': 100546832}
+Total: 100,546,832 (100.5M)
+Epochs: 1..9999, Batches/epoch: stream
+Periodic checkpoint: every 2000 steps -> latest.pt
+
+
+============================================================
+Epoch 1/9999
+============================================================
+
+Signal 15 received — saving latest.pt at next batch boundary...
+
+Signal 15 received — saving latest.pt at next batch boundary...

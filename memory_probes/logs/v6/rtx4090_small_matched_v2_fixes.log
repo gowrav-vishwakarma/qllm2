@@ -1,0 +1,223 @@
+[2026-03-08 09:54:59] Wall clock start: 2026-03-08 09:54:59
+[2026-03-08 09:54:59] ============================================================
+[2026-03-08 09:54:59] V6 Phase-First Language Model
+[2026-03-08 09:54:59] ============================================================
+[2026-03-08 09:54:59] Size: small-matched
+[2026-03-08 09:54:59] Complex dim: 128 (= 256 real values/position)
+[2026-03-08 09:54:59] SSM state dim: 512 (multi-timescale: fast/medium/slow)
+[2026-03-08 09:54:59] Layers: 12
+[2026-03-08 09:54:59] Banks: 2 (semantic + context)
+[2026-03-08 09:54:59] Working memory slots: 64
+[2026-03-08 09:54:59] Internal memory slots: 128
+[2026-03-08 09:54:59] Epochs: 10
+[2026-03-08 09:54:59] Max samples: 100000
+[2026-03-08 09:54:59] Log file: logs/v6_train_small-matched.log
+[2026-03-08 09:54:59] Checkpoint dir: checkpoints_v6
+[2026-03-08 09:54:59] ============================================================
+[2026-03-08 09:55:02] Loading TinyStories (max_samples=100000)...
+[2026-03-08 09:55:17] Tokenizing 100000 texts...
+[2026-03-08 09:55:33] Total tokens: 21,955,376
+[2026-03-08 09:55:33] Train chunks: 76886, Val chunks: 8542
+[2026-03-08 09:55:34] Init strategy: orthogonal (seed: 42)
+
+[2026-03-08 09:55:34] Training on cuda
+[2026-03-08 09:55:34] Parameters: {'embed (tied w/ output)': 12865792, 'banks': 9452544, 'couplers': 1588248, 'ssm': 4749452, 'working_memory': 98690, 'internal_memory': 98432, 'persistent_reader': 32896, 'expert_reader': 32896, 'memory_fusion': 299017, 'lm_head_proj': 33152, 'total': 29251119}
+[2026-03-08 09:55:34] Total: 29,251,119 (29.3M)
+[2026-03-08 09:55:34] Epochs: 1..10, Batches/epoch: 3845
+
+
+[2026-03-08 09:55:34] ============================================================
+[2026-03-08 09:55:34] Epoch 1/10
+[2026-03-08 09:55:34] ============================================================
+[2026-03-08 09:55:35]   First step wall time: 1.6s
+[2026-03-08 09:55:35]   [1] batch 0/3845 loss=10.8327 ppl=50648.2 div=3.1997 lr=1.00e-04 | 11.7 samples/s | 2987 tok/s
+[2026-03-08 09:55:49]   [1] batch 50/3845 loss=9.0495 ppl=8514.2 div=3.1993 lr=1.00e-04 | 67.9 samples/s | 17390 tok/s
+[2026-03-08 09:56:02]   [1] batch 100/3845 loss=7.9325 ppl=2786.3 div=3.1986 lr=1.00e-04 | 71.3 samples/s | 18249 tok/s
+[2026-03-08 09:56:15]   [1] batch 150/3845 loss=6.9165 ppl=1008.7 div=3.1975 lr=1.00e-04 | 72.5 samples/s | 18563 tok/s
+[2026-03-08 09:56:29]   [1] batch 200/3845 loss=6.2787 ppl=533.1 div=3.1960 lr=1.00e-04 | 73.1 samples/s | 18706 tok/s
+[2026-03-08 09:56:42]   [1] batch 250/3845 loss=5.7902 ppl=327.1 div=3.1942 lr=1.00e-04 | 73.5 samples/s | 18805 tok/s
+[2026-03-08 09:56:55]   [1] batch 300/3845 loss=5.5208 ppl=249.8 div=3.1920 lr=1.00e-04 | 73.7 samples/s | 18879 tok/s
+[2026-03-08 09:57:09]   [1] batch 350/3845 loss=5.2035 ppl=181.9 div=3.1895 lr=1.00e-04 | 73.9 samples/s | 18921 tok/s
+[2026-03-08 09:57:22]   [1] batch 400/3845 loss=4.9569 ppl=142.2 div=3.1867 lr=1.00e-04 | 74.1 samples/s | 18962 tok/s
+[2026-03-08 09:57:35]   [1] batch 450/3845 loss=4.7851 ppl=119.7 div=3.1835 lr=1.00e-04 | 74.2 samples/s | 18994 tok/s
+[2026-03-08 09:57:49]   [1] batch 500/3845 loss=4.5647 ppl=96.0 div=3.1799 lr=1.00e-04 | 74.3 samples/s | 19019 tok/s
+[2026-03-08 09:58:02]   [1] batch 550/3845 loss=4.6076 ppl=100.2 div=3.1759 lr=9.99e-05 | 74.4 samples/s | 19041 tok/s
+[2026-03-08 09:58:15]   [1] batch 600/3845 loss=4.5331 ppl=93.0 div=3.1715 lr=9.99e-05 | 74.4 samples/s | 19057 tok/s
+[2026-03-08 09:58:29]   [1] batch 650/3845 loss=4.3423 ppl=76.9 div=3.1665 lr=9.99e-05 | 74.5 samples/s | 19071 tok/s
+[2026-03-08 09:58:42]   [1] batch 700/3845 loss=4.2797 ppl=72.2 div=3.1612 lr=9.99e-05 | 74.5 samples/s | 19083 tok/s
+[2026-03-08 09:58:55]   [1] batch 750/3845 loss=4.2394 ppl=69.4 div=3.1554 lr=9.99e-05 | 74.6 samples/s | 19093 tok/s
+[2026-03-08 09:59:08]   [1] batch 800/3845 loss=4.1806 ppl=65.4 div=3.1491 lr=9.99e-05 | 74.6 samples/s | 19099 tok/s
+[2026-03-08 09:59:22]   [1] batch 850/3845 loss=4.1966 ppl=66.5 div=3.1424 lr=9.99e-05 | 74.6 samples/s | 19105 tok/s
+[2026-03-08 09:59:35]   [1] batch 900/3845 loss=4.1131 ppl=61.1 div=3.1352 lr=9.99e-05 | 74.6 samples/s | 19110 tok/s
+[2026-03-08 09:59:48]   [1] batch 950/3845 loss=4.1699 ppl=64.7 div=3.1276 lr=9.98e-05 | 74.7 samples/s | 19114 tok/s
+[2026-03-08 10:00:02]   [1] batch 1000/3845 loss=4.0091 ppl=55.1 div=3.1196 lr=9.98e-05 | 74.7 samples/s | 19119 tok/s
+[2026-03-08 10:00:15]   [1] batch 1050/3845 loss=3.8963 ppl=49.2 div=3.1108 lr=9.98e-05 | 74.7 samples/s | 19119 tok/s
+[2026-03-08 10:00:29]   [1] batch 1100/3845 loss=4.0126 ppl=55.3 div=3.1014 lr=9.98e-05 | 74.7 samples/s | 19124 tok/s
+[2026-03-08 10:00:42]   [1] batch 1150/3845 loss=3.9779 ppl=53.4 div=3.0915 lr=9.98e-05 | 74.7 samples/s | 19128 tok/s
+[2026-03-08 10:00:55]   [1] batch 1200/3845 loss=3.8989 ppl=49.3 div=3.0811 lr=9.98e-05 | 74.7 samples/s | 19132 tok/s
+[2026-03-08 10:01:09]   [1] batch 1250/3845 loss=3.9398 ppl=51.4 div=3.0702 lr=9.97e-05 | 74.7 samples/s | 19132 tok/s
+[2026-03-08 10:01:22]   [1] batch 1300/3845 loss=3.8418 ppl=46.6 div=3.0585 lr=9.97e-05 | 74.7 samples/s | 19135 tok/s
+[2026-03-08 10:01:35]   [1] batch 1350/3845 loss=3.8760 ppl=48.2 div=3.0463 lr=9.97e-05 | 74.8 samples/s | 19138 tok/s
+[2026-03-08 10:01:49]   [1] batch 1400/3845 loss=3.8895 ppl=48.9 div=3.0335 lr=9.97e-05 | 74.8 samples/s | 19140 tok/s
+[2026-03-08 10:02:02]   [1] batch 1450/3845 loss=3.9279 ppl=50.8 div=3.0205 lr=9.96e-05 | 74.8 samples/s | 19142 tok/s
+[2026-03-08 10:02:15]   [1] batch 1500/3845 loss=3.8471 ppl=46.9 div=3.0065 lr=9.96e-05 | 74.8 samples/s | 19144 tok/s
+[2026-03-08 10:02:29]   [1] batch 1550/3845 loss=3.6906 ppl=40.1 div=2.9918 lr=9.96e-05 | 74.8 samples/s | 19145 tok/s
+[2026-03-08 10:02:42]   [1] batch 1600/3845 loss=3.7596 ppl=42.9 div=2.9764 lr=9.96e-05 | 74.8 samples/s | 19146 tok/s
+[2026-03-08 10:02:55]   [1] batch 1650/3845 loss=3.6554 ppl=38.7 div=2.9603 lr=9.95e-05 | 74.8 samples/s | 19148 tok/s
+[2026-03-08 10:03:09]   [1] batch 1700/3845 loss=3.8220 ppl=45.7 div=2.9439 lr=9.95e-05 | 74.8 samples/s | 19148 tok/s
+[2026-03-08 10:03:22]   [1] batch 1750/3845 loss=3.6922 ppl=40.1 div=2.9264 lr=9.95e-05 | 74.8 samples/s | 19148 tok/s
+[2026-03-08 10:03:35]   [1] batch 1800/3845 loss=3.6013 ppl=36.6 div=2.9085 lr=9.95e-05 | 74.8 samples/s | 19150 tok/s
+[2026-03-08 10:03:49]   [1] batch 1850/3845 loss=3.7950 ppl=44.5 div=2.8895 lr=9.94e-05 | 74.8 samples/s | 19151 tok/s
+[2026-03-08 10:04:02]   [1] batch 1900/3845 loss=3.6825 ppl=39.7 div=2.8699 lr=9.94e-05 | 74.8 samples/s | 19152 tok/s
+[2026-03-08 10:04:15]   [1] batch 1950/3845 loss=3.6902 ppl=40.1 div=2.8492 lr=9.94e-05 | 74.8 samples/s | 19152 tok/s
+[2026-03-08 10:04:29]   [1] batch 2000/3845 loss=3.6045 ppl=36.8 div=2.8282 lr=9.93e-05 | 74.8 samples/s | 19153 tok/s
+[2026-03-08 10:04:42]   [1] batch 2050/3845 loss=3.5138 ppl=33.6 div=2.8066 lr=9.93e-05 | 74.8 samples/s | 19154 tok/s
+[2026-03-08 10:04:55]   [1] batch 2100/3845 loss=3.4948 ppl=32.9 div=2.7842 lr=9.93e-05 | 74.8 samples/s | 19154 tok/s
+[2026-03-08 10:05:09]   [1] batch 2150/3845 loss=3.4828 ppl=32.6 div=2.7608 lr=9.92e-05 | 74.8 samples/s | 19155 tok/s
+[2026-03-08 10:05:22]   [1] batch 2200/3845 loss=3.5715 ppl=35.6 div=2.7367 lr=9.92e-05 | 74.8 samples/s | 19156 tok/s
+[2026-03-08 10:05:35]   [1] batch 2250/3845 loss=3.4352 ppl=31.0 div=2.7115 lr=9.92e-05 | 74.8 samples/s | 19157 tok/s
+[2026-03-08 10:05:49]   [1] batch 2300/3845 loss=3.3387 ppl=28.2 div=2.6858 lr=9.91e-05 | 74.8 samples/s | 19158 tok/s
+[2026-03-08 10:06:02]   [1] batch 2350/3845 loss=3.6515 ppl=38.5 div=2.6592 lr=9.91e-05 | 74.8 samples/s | 19159 tok/s
+[2026-03-08 10:06:15]   [1] batch 2400/3845 loss=3.3531 ppl=28.6 div=2.6317 lr=9.90e-05 | 74.8 samples/s | 19159 tok/s
+[2026-03-08 10:06:29]   [1] batch 2450/3845 loss=3.5652 ppl=35.3 div=2.6033 lr=9.90e-05 | 74.8 samples/s | 19160 tok/s
+[2026-03-08 10:06:42]   [1] batch 2500/3845 loss=3.6199 ppl=37.3 div=2.5740 lr=9.90e-05 | 74.8 samples/s | 19161 tok/s
+[2026-03-08 10:06:55]   [1] batch 2550/3845 loss=3.2777 ppl=26.5 div=2.5441 lr=9.89e-05 | 74.8 samples/s | 19160 tok/s
+[2026-03-08 10:07:09]   [1] batch 2600/3845 loss=3.3745 ppl=29.2 div=2.5135 lr=9.89e-05 | 74.8 samples/s | 19161 tok/s
+[2026-03-08 10:07:22]   [1] batch 2650/3845 loss=3.4928 ppl=32.9 div=2.4820 lr=9.88e-05 | 74.9 samples/s | 19162 tok/s
+[2026-03-08 10:07:35]   [1] batch 2700/3845 loss=3.2045 ppl=24.6 div=2.4488 lr=9.88e-05 | 74.9 samples/s | 19163 tok/s
+[2026-03-08 10:07:49]   [1] batch 2750/3845 loss=3.3654 ppl=28.9 div=2.4151 lr=9.87e-05 | 74.9 samples/s | 19163 tok/s
+[2026-03-08 10:08:02]   [1] batch 2800/3845 loss=3.4478 ppl=31.4 div=2.3809 lr=9.87e-05 | 74.9 samples/s | 19163 tok/s
+[2026-03-08 10:08:15]   [1] batch 2850/3845 loss=3.3578 ppl=28.7 div=2.3455 lr=9.86e-05 | 74.9 samples/s | 19164 tok/s
+[2026-03-08 10:08:29]   [1] batch 2900/3845 loss=3.3818 ppl=29.4 div=2.3095 lr=9.86e-05 | 74.9 samples/s | 19164 tok/s
+[2026-03-08 10:08:42]   [1] batch 2950/3845 loss=3.2904 ppl=26.9 div=2.2727 lr=9.86e-05 | 74.9 samples/s | 19165 tok/s
+[2026-03-08 10:08:56]   [1] batch 3000/3845 loss=3.3305 ppl=28.0 div=2.2351 lr=9.85e-05 | 74.9 samples/s | 19164 tok/s
+[2026-03-08 10:09:09]   [1] batch 3050/3845 loss=3.1932 ppl=24.4 div=2.1965 lr=9.85e-05 | 74.9 samples/s | 19165 tok/s
+[2026-03-08 10:09:22]   [1] batch 3100/3845 loss=3.2729 ppl=26.4 div=2.1563 lr=9.84e-05 | 74.9 samples/s | 19165 tok/s
+[2026-03-08 10:09:36]   [1] batch 3150/3845 loss=3.3348 ppl=28.1 div=2.1161 lr=9.84e-05 | 74.9 samples/s | 19166 tok/s
+[2026-03-08 10:09:49]   [1] batch 3200/3845 loss=3.2952 ppl=27.0 div=2.0749 lr=9.83e-05 | 74.9 samples/s | 19166 tok/s
+[2026-03-08 10:10:02]   [1] batch 3250/3845 loss=3.1867 ppl=24.2 div=2.0328 lr=9.82e-05 | 74.9 samples/s | 19167 tok/s
+[2026-03-08 10:10:16]   [1] batch 3300/3845 loss=3.2360 ppl=25.4 div=1.9897 lr=9.82e-05 | 74.9 samples/s | 19167 tok/s
+[2026-03-08 10:10:29]   [1] batch 3350/3845 loss=3.2556 ppl=25.9 div=1.9465 lr=9.81e-05 | 74.9 samples/s | 19168 tok/s
+[2026-03-08 10:10:42]   [1] batch 3400/3845 loss=3.1508 ppl=23.4 div=1.9016 lr=9.81e-05 | 74.9 samples/s | 19167 tok/s
+[2026-03-08 10:10:56]   [1] batch 3450/3845 loss=3.2111 ppl=24.8 div=1.8558 lr=9.80e-05 | 74.9 samples/s | 19168 tok/s
+[2026-03-08 10:11:09]   [1] batch 3500/3845 loss=3.1786 ppl=24.0 div=1.8099 lr=9.80e-05 | 74.9 samples/s | 19168 tok/s
+[2026-03-08 10:11:22]   [1] batch 3550/3845 loss=3.2586 ppl=26.0 div=1.7619 lr=9.79e-05 | 74.9 samples/s | 19169 tok/s
+[2026-03-08 10:11:36]   [1] batch 3600/3845 loss=3.1703 ppl=23.8 div=1.7137 lr=9.79e-05 | 74.9 samples/s | 19169 tok/s
+[2026-03-08 10:11:49]   [1] batch 3650/3845 loss=3.1228 ppl=22.7 div=1.6653 lr=9.78e-05 | 74.9 samples/s | 19168 tok/s
+[2026-03-08 10:12:02]   [1] batch 3700/3845 loss=3.1327 ppl=22.9 div=1.6158 lr=9.77e-05 | 74.9 samples/s | 19169 tok/s
+[2026-03-08 10:12:16]   [1] batch 3750/3845 loss=3.2146 ppl=24.9 div=1.5651 lr=9.77e-05 | 74.9 samples/s | 19169 tok/s
+[2026-03-08 10:12:29]   [1] batch 3800/3845 loss=3.1593 ppl=23.6 div=1.5142 lr=9.76e-05 | 74.9 samples/s | 19170 tok/s
+[2026-03-08 10:13:04] Epoch 1/10 | Train Loss: 3.9767 PPL: 53.34 | Time: 1027.7s | Val Loss: 3.0555 PPL: 21.23 *best*
+[2026-03-08 10:13:05] Saved checkpoint: checkpoints_v6/best_model.pt
+
+[2026-03-08 10:13:07] Prompt: The quick brown
+[2026-03-08 10:13:07] Generated: The quick brown and strange. The bird felt very proud of himself!
+
+[2026-03-08 10:13:07] But the little girl smiled at the old man. She ran to her, but he saw a big smile on its head.
+
+[2026-03-08 10:13:07] One day,, the animals went back in the door. They put it in the sky when playing with her hand. It was a nice ball, in the tree. The small boy called out her home. 
+
+[2026-03-08 10:13:07] He flew around the slide, so she jumped down from behind a big pile
+
+[2026-03-08 10:13:07] ============================================================
+[2026-03-08 10:13:07] Epoch 2/10
+[2026-03-08 10:13:07] ============================================================
+[2026-03-08 10:13:07]   First step wall time: 0.3s
+[2026-03-08 10:13:07]   [2] batch 0/3845 loss=3.1477 ppl=23.3 div=1.4678 lr=9.76e-05 | 50.7 samples/s | 12967 tok/s
+[2026-03-08 10:13:20]   [2] batch 50/3845 loss=3.1336 ppl=23.0 div=1.4157 lr=9.75e-05 | 74.1 samples/s | 18976 tok/s
+[2026-03-08 10:13:34]   [2] batch 100/3845 loss=3.0808 ppl=21.8 div=1.3628 lr=9.74e-05 | 74.6 samples/s | 19096 tok/s
+[2026-03-08 10:13:47]   [2] batch 150/3845 loss=3.0265 ppl=20.6 div=1.3093 lr=9.74e-05 | 74.7 samples/s | 19132 tok/s
+[2026-03-08 10:14:00]   [2] batch 200/3845 loss=3.1120 ppl=22.5 div=1.2555 lr=9.73e-05 | 74.8 samples/s | 19152 tok/s
+[2026-03-08 10:14:14]   [2] batch 250/3845 loss=3.0964 ppl=22.1 div=1.2003 lr=9.72e-05 | 74.8 samples/s | 19144 tok/s
+[2026-03-08 10:14:27]   [2] batch 300/3845 loss=2.9846 ppl=19.8 div=1.1449 lr=9.72e-05 | 74.8 samples/s | 19151 tok/s
+[2026-03-08 10:14:40]   [2] batch 350/3845 loss=3.0710 ppl=21.6 div=1.0893 lr=9.71e-05 | 74.9 samples/s | 19162 tok/s
+[2026-03-08 10:14:54]   [2] batch 400/3845 loss=3.1208 ppl=22.7 div=1.0324 lr=9.70e-05 | 74.8 samples/s | 19160 tok/s
+[2026-03-08 10:15:07]   [2] batch 450/3845 loss=2.9439 ppl=19.0 div=0.9754 lr=9.70e-05 | 74.9 samples/s | 19165 tok/s
+[2026-03-08 10:15:20]   [2] batch 500/3845 loss=3.1254 ppl=22.8 div=0.9175 lr=9.69e-05 | 74.9 samples/s | 19167 tok/s
+[2026-03-08 10:15:34]   [2] batch 550/3845 loss=2.8605 ppl=17.5 div=0.8599 lr=9.68e-05 | 74.9 samples/s | 19172 tok/s
+[2026-03-08 10:15:47]   [2] batch 600/3845 loss=2.9015 ppl=18.2 div=0.8016 lr=9.67e-05 | 74.9 samples/s | 19175 tok/s
+[2026-03-08 10:16:00]   [2] batch 650/3845 loss=3.1233 ppl=22.7 div=0.7424 lr=9.67e-05 | 74.9 samples/s | 19178 tok/s
+[2026-03-08 10:16:14]   [2] batch 700/3845 loss=2.8863 ppl=17.9 div=0.6830 lr=9.66e-05 | 74.9 samples/s | 19178 tok/s
+[2026-03-08 10:16:27]   [2] batch 750/3845 loss=2.8761 ppl=17.7 div=0.6237 lr=9.65e-05 | 74.9 samples/s | 19179 tok/s
+[2026-03-08 10:16:40]   [2] batch 800/3845 loss=2.9050 ppl=18.3 div=0.5641 lr=9.64e-05 | 74.9 samples/s | 19181 tok/s
+[2026-03-08 10:16:54]   [2] batch 850/3845 loss=2.8932 ppl=18.1 div=0.5042 lr=9.64e-05 | 74.9 samples/s | 19178 tok/s
+[2026-03-08 10:17:07]   [2] batch 900/3845 loss=2.8799 ppl=17.8 div=0.4442 lr=9.63e-05 | 74.9 samples/s | 19180 tok/s
+[2026-03-08 10:17:20]   [2] batch 950/3845 loss=3.0833 ppl=21.8 div=0.3835 lr=9.62e-05 | 74.9 samples/s | 19182 tok/s
+[2026-03-08 10:17:34]   [2] batch 1000/3845 loss=3.0796 ppl=21.7 div=0.3225 lr=9.61e-05 | 74.9 samples/s | 19183 tok/s
+[2026-03-08 10:17:47]   [2] batch 1050/3845 loss=3.0625 ppl=21.4 div=0.2620 lr=9.61e-05 | 74.9 samples/s | 19184 tok/s
+[2026-03-08 10:18:00]   [2] batch 1100/3845 loss=2.9083 ppl=18.3 div=0.2011 lr=9.60e-05 | 74.9 samples/s | 19182 tok/s
+[2026-03-08 10:18:14]   [2] batch 1150/3845 loss=3.0640 ppl=21.4 div=0.1404 lr=9.59e-05 | 74.9 samples/s | 19183 tok/s
+[2026-03-08 10:18:27]   [2] batch 1200/3845 loss=2.8735 ppl=17.7 div=0.0790 lr=9.58e-05 | 74.9 samples/s | 19184 tok/s
+[2026-03-08 10:18:40]   [2] batch 1250/3845 loss=2.7580 ppl=15.8 div=0.0207 lr=9.57e-05 | 74.9 samples/s | 19182 tok/s
+[2026-03-08 10:18:54]   [2] batch 1300/3845 loss=3.0642 ppl=21.4 div=0.0013 lr=9.56e-05 | 74.9 samples/s | 19183 tok/s
+[2026-03-08 10:19:07]   [2] batch 1350/3845 loss=2.8119 ppl=16.6 div=0.0005 lr=9.56e-05 | 74.9 samples/s | 19184 tok/s
+[2026-03-08 10:19:20]   [2] batch 1400/3845 loss=2.9843 ppl=19.8 div=0.0006 lr=9.55e-05 | 74.9 samples/s | 19184 tok/s
+[2026-03-08 10:19:34]   [2] batch 1450/3845 loss=2.8778 ppl=17.8 div=0.0005 lr=9.54e-05 | 74.9 samples/s | 19184 tok/s
+[2026-03-08 10:19:47]   [2] batch 1500/3845 loss=2.7930 ppl=16.3 div=0.0005 lr=9.53e-05 | 74.9 samples/s | 19185 tok/s
+[2026-03-08 10:20:00]   [2] batch 1550/3845 loss=2.9381 ppl=18.9 div=0.0005 lr=9.52e-05 | 74.9 samples/s | 19186 tok/s
+[2026-03-08 10:20:14]   [2] batch 1600/3845 loss=2.8007 ppl=16.5 div=0.0006 lr=9.51e-05 | 74.9 samples/s | 19187 tok/s
+[2026-03-08 10:20:27]   [2] batch 1650/3845 loss=2.8816 ppl=17.8 div=0.0005 lr=9.50e-05 | 75.0 samples/s | 19187 tok/s
+[2026-03-08 10:20:40]   [2] batch 1700/3845 loss=2.7984 ppl=16.4 div=0.0005 lr=9.50e-05 | 74.9 samples/s | 19186 tok/s
+[2026-03-08 10:20:54]   [2] batch 1750/3845 loss=2.7786 ppl=16.1 div=0.0005 lr=9.49e-05 | 74.9 samples/s | 19187 tok/s
+[2026-03-08 10:21:07]   [2] batch 1800/3845 loss=2.8736 ppl=17.7 div=0.0006 lr=9.48e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:21:20]   [2] batch 1850/3845 loss=2.7410 ppl=15.5 div=0.0006 lr=9.47e-05 | 75.0 samples/s | 19189 tok/s
+[2026-03-08 10:21:34]   [2] batch 1900/3845 loss=2.8608 ppl=17.5 div=0.0005 lr=9.46e-05 | 75.0 samples/s | 19189 tok/s
+[2026-03-08 10:21:47]   [2] batch 1950/3845 loss=2.7577 ppl=15.8 div=0.0006 lr=9.45e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:22:00]   [2] batch 2000/3845 loss=2.8041 ppl=16.5 div=0.0006 lr=9.44e-05 | 75.0 samples/s | 19187 tok/s
+[2026-03-08 10:22:14]   [2] batch 2050/3845 loss=2.7218 ppl=15.2 div=0.0006 lr=9.43e-05 | 74.9 samples/s | 19186 tok/s
+[2026-03-08 10:22:27]   [2] batch 2100/3845 loss=2.7686 ppl=15.9 div=0.0005 lr=9.42e-05 | 74.9 samples/s | 19187 tok/s
+[2026-03-08 10:22:41]   [2] batch 2150/3845 loss=2.6958 ppl=14.8 div=0.0005 lr=9.41e-05 | 74.9 samples/s | 19185 tok/s
+[2026-03-08 10:22:54]   [2] batch 2200/3845 loss=2.7257 ppl=15.3 div=0.0006 lr=9.40e-05 | 74.9 samples/s | 19185 tok/s
+[2026-03-08 10:23:07]   [2] batch 2250/3845 loss=2.6464 ppl=14.1 div=0.0005 lr=9.39e-05 | 74.9 samples/s | 19186 tok/s
+[2026-03-08 10:23:21]   [2] batch 2300/3845 loss=2.8015 ppl=16.5 div=0.0005 lr=9.38e-05 | 74.9 samples/s | 19186 tok/s
+[2026-03-08 10:23:34]   [2] batch 2350/3845 loss=2.5587 ppl=12.9 div=0.0005 lr=9.37e-05 | 74.9 samples/s | 19186 tok/s
+[2026-03-08 10:23:47]   [2] batch 2400/3845 loss=2.7381 ppl=15.5 div=0.0005 lr=9.36e-05 | 75.0 samples/s | 19187 tok/s
+[2026-03-08 10:24:01]   [2] batch 2450/3845 loss=2.7595 ppl=15.8 div=0.0005 lr=9.35e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:24:14]   [2] batch 2500/3845 loss=2.5925 ppl=13.4 div=0.0005 lr=9.34e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:24:27]   [2] batch 2550/3845 loss=2.7006 ppl=14.9 div=0.0005 lr=9.33e-05 | 75.0 samples/s | 19189 tok/s
+[2026-03-08 10:24:41]   [2] batch 2600/3845 loss=2.6856 ppl=14.7 div=0.0005 lr=9.32e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:24:54]   [2] batch 2650/3845 loss=2.7870 ppl=16.2 div=0.0006 lr=9.31e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:25:07]   [2] batch 2700/3845 loss=2.5684 ppl=13.0 div=0.0005 lr=9.30e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:25:21]   [2] batch 2750/3845 loss=2.5669 ppl=13.0 div=0.0006 lr=9.29e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:25:34]   [2] batch 2800/3845 loss=2.7145 ppl=15.1 div=0.0005 lr=9.28e-05 | 75.0 samples/s | 19189 tok/s
+[2026-03-08 10:25:47]   [2] batch 2850/3845 loss=2.7257 ppl=15.3 div=0.0005 lr=9.27e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:26:01]   [2] batch 2900/3845 loss=2.6048 ppl=13.5 div=0.0005 lr=9.26e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:26:14]   [2] batch 2950/3845 loss=2.8717 ppl=17.7 div=0.0005 lr=9.25e-05 | 75.0 samples/s | 19189 tok/s
+[2026-03-08 10:26:27]   [2] batch 3000/3845 loss=2.7391 ppl=15.5 div=0.0005 lr=9.24e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:26:41]   [2] batch 3050/3845 loss=2.6763 ppl=14.5 div=0.0005 lr=9.23e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:26:54]   [2] batch 3100/3845 loss=2.8616 ppl=17.5 div=0.0005 lr=9.22e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:27:07]   [2] batch 3150/3845 loss=2.5990 ppl=13.4 div=0.0005 lr=9.21e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:27:21]   [2] batch 3200/3845 loss=2.6911 ppl=14.7 div=0.0006 lr=9.19e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:27:34]   [2] batch 3250/3845 loss=2.7508 ppl=15.7 div=0.0005 lr=9.18e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:27:47]   [2] batch 3300/3845 loss=2.5343 ppl=12.6 div=0.0005 lr=9.17e-05 | 75.0 samples/s | 19189 tok/s
+[2026-03-08 10:28:01]   [2] batch 3350/3845 loss=2.5835 ppl=13.2 div=0.0005 lr=9.16e-05 | 75.0 samples/s | 19189 tok/s
+[2026-03-08 10:28:14]   [2] batch 3400/3845 loss=2.6963 ppl=14.8 div=0.0006 lr=9.15e-05 | 75.0 samples/s | 19189 tok/s
+[2026-03-08 10:28:27]   [2] batch 3450/3845 loss=2.7049 ppl=15.0 div=0.0005 lr=9.14e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:28:41]   [2] batch 3500/3845 loss=2.6857 ppl=14.7 div=0.0005 lr=9.13e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:28:54]   [2] batch 3550/3845 loss=2.5020 ppl=12.2 div=0.0005 lr=9.11e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:29:07]   [2] batch 3600/3845 loss=2.6100 ppl=13.6 div=0.0005 lr=9.10e-05 | 75.0 samples/s | 19189 tok/s
+[2026-03-08 10:29:21]   [2] batch 3650/3845 loss=2.5052 ppl=12.2 div=0.0005 lr=9.09e-05 | 75.0 samples/s | 19189 tok/s
+[2026-03-08 10:29:34]   [2] batch 3700/3845 loss=2.6232 ppl=13.8 div=0.0005 lr=9.08e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:29:47]   [2] batch 3750/3845 loss=2.7462 ppl=15.6 div=0.0005 lr=9.07e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:30:01]   [2] batch 3800/3845 loss=2.6653 ppl=14.4 div=0.0005 lr=9.06e-05 | 75.0 samples/s | 19188 tok/s
+[2026-03-08 10:30:35] Epoch 2/10 | Train Loss: 2.8204 PPL: 16.78 | Time: 1025.9s | Val Loss: 2.5107 PPL: 12.31 *best*
+[2026-03-08 10:30:35] Saved checkpoint: checkpoints_v6/best_model.pt
+
+[2026-03-08 10:30:37] Prompt: The quick brown
+[2026-03-08 10:30:37] Generated: The quick brown bear was so happy.
+
+[2026-03-08 10:30:37] At the night, it was big to hurt. The ball very excitedly held it tight and then then then then then then a small friendly fox appeared in front of him! The orange red yellow blue ball flew down with its wings and his eyes were safe.
+
+[2026-03-08 10:30:37] The red stick was soft and yellow and white and green flowers. But then then one day, he was able to give the toy back home now. He was scared of the bright red tail.
+
+[2026-03-08 10:30:37] ============================================================
+[2026-03-08 10:30:37] Epoch 3/10
+[2026-03-08 10:30:37] ============================================================
+[2026-03-08 10:30:38]   First step wall time: 0.4s
+[2026-03-08 10:30:38]   [3] batch 0/3845 loss=2.5488 ppl=12.8 div=0.0005 lr=9.04e-05 | 45.2 samples/s | 11562 tok/s
+[2026-03-08 10:30:51]   [3] batch 50/3845 loss=2.6225 ppl=13.8 div=0.0006 lr=9.03e-05 | 74.2 samples/s | 18985 tok/s
+[2026-03-08 10:31:04]   [3] batch 100/3845 loss=2.7054 ppl=15.0 div=0.0005 lr=9.02e-05 | 74.6 samples/s | 19101 tok/s
+[2026-03-08 10:31:18]   [3] batch 150/3845 loss=2.5576 ppl=12.9 div=0.0005 lr=9.01e-05 | 74.8 samples/s | 19141 tok/s
+[2026-03-08 10:31:31]   [3] batch 200/3845 loss=2.4983 ppl=12.2 div=0.0005 lr=9.00e-05 | 74.8 samples/s | 19157 tok/s
+[2026-03-08 10:31:44]   [3] batch 250/3845 loss=2.5187 ppl=12.4 div=0.0005 lr=8.98e-05 | 74.9 samples/s | 19167 tok/s
+[2026-03-08 10:31:58]   [3] batch 300/3845 loss=2.4166 ppl=11.2 div=0.0005 lr=8.97e-05 | 74.8 samples/s | 19160 tok/s

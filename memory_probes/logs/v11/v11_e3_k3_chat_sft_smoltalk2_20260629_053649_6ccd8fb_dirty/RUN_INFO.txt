@@ -1,0 +1,68 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V11 Phase C SFT: v11_e3_k3_chat on SmolTalk2 (filtered)
+Date (UTC)  : 2026-06-29 05:36:49
+Date (local): 2026-06-29 05:36:49 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1005-gcp x86_64
+
+Git commit  : 6ccd8fbb2cf599131c5181ebd082033bd82a3fce
+Git short   : 6ccd8fb
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.25
+Arguments   : --preset v11_e3_k3_chat --stage sft --dataset smoltalk2 --seq_len 2048   --batch_size 18 --epochs 1 --chunk_size 256   --lr 5e-5 --sft_filter hard --resume_from checkpoints_v11_e3_k3_chat_pretrain/best_model.pt   --warmstart_chatml --save_every_steps 5000   --amp_dtype auto --num_workers 4 --gen_every 0 --no_grad_ckpt   --compile --compile_mode default 
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ scripts/run_v11_sft_smoltalk.sh | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/scripts/run_v11_sft_smoltalk.sh b/scripts/run_v11_sft_smoltalk.sh
+index d276b44..59deb03 100755
+--- a/scripts/run_v11_sft_smoltalk.sh
++++ b/scripts/run_v11_sft_smoltalk.sh
+@@ -5,8 +5,9 @@
+ #   ./scripts/run_v11_sft_smoltalk.sh [pretrain_ckpt] [extra args]
+ #
+ # Examples:
+-#   ./scripts/run_v11_sft_smoltalk.sh checkpoints_v11_e3_k3_dclm/best_model.pt
+-#   tmux new-session -d -s v11_sft './scripts/run_v11_sft_smoltalk.sh'
++#   ./scripts/run_v11_sft_smoltalk.sh
++#   ./scripts/run_v11_sft_smoltalk.sh checkpoints_v11_e3_k3_chat_pretrain/best_model.pt
++#   tmux new-session -d -s v11_smoltalk './scripts/run_v11_sft_smoltalk.sh'
+ 
+ set -euo pipefail
+ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+@@ -19,8 +20,8 @@ source ./scripts/log_utils.sh
+ 
+ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+ 
+-PRESET="${PRESET:-v11_e3_k3}"
+-RESUME_FROM="${1:-checkpoints_v11_e3_k3_dclm/best_model.pt}"
++PRESET="${PRESET:-v11_e3_k3_chat}"
++RESUME_FROM="${1:-checkpoints_v11_e3_k3_chat_pretrain/best_model.pt}"
+ shift || true
+ 
+ SEQ_LEN=2048
+@@ -29,7 +30,8 @@ CHUNK_SIZE=256
+ EPOCHS=1
+ LR=5e-5
+ SFT_FILTER=hard
+-CKPT_DIR="${CKPT_DIR:-checkpoints_v11_e3_k3_sft}"
++CKPT_DIR="${CKPT_DIR:-checkpoints_v11_sft_chat_smoltalk}"
++SAVE_EVERY_STEPS=5000
+ EXTRA_ARGS="$*"
+ 
+ GEN_PROMPT="<|im_start|>user\nWhat is the capital of France?<|im_end|>\n<|im_start|>assistant\n"
+@@ -39,6 +41,7 @@ mkdir -p "$CKPT_DIR"
+ ARGS="--preset $PRESET --stage sft --dataset smoltalk2 --seq_len $SEQ_LEN \
+   --batch_size $BATCH_SIZE --epochs $EPOCHS --chunk_size $CHUNK_SIZE \
+   --lr $LR --sft_filter $SFT_FILTER --resume_from $RESUME_FROM \
++  --warmstart_chatml --save_every_steps $SAVE_EVERY_STEPS \
+   --amp_dtype auto --num_workers 4 --gen_every 0 --no_grad_ckpt \
+   --compile --compile_mode default"
+ 

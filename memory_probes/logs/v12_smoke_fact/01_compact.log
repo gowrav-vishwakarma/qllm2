@@ -1,0 +1,4 @@
+Compacted checkpoints_v12_curriculum/base/best_model.pt -> checkpoints_v12_curriculum/base/slim.pt
+  per-layer kept heads: [16, 16, 16, 16] (of [16, 16, 16, 16])
+  params: 62,282,900 -> 62,282,900 (0.0% smaller)
+  max|Δlogits| src vs slim: 0.000e+00

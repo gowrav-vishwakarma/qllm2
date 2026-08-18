@@ -1,0 +1,49 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V9 Exp K: gate + short_conv=4, ~100M (orthogonal local pattern): dim=384 L=16 expand=3, PAM(H=6, d=64, flat dt=-4.0, RoPE, fused-QKV, GSP), activation=swish, LR=1e-4, warmup=1000
+Date (UTC)  : 2026-04-28 10:25:38
+Date (local): 2026-04-28 15:55:38 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 1bd3cc52a102380f91e7786fa2ea59cc4d780573
+Git short   : 1bd3cc5
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.24
+Arguments   : --preset medium_h16_gate_conv4_100m --dataset wikitext103 --seq_len 2048 --batch_size 3 --epochs 3 --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --no_reverse_assoc --gen_prompt 'In 1923 , the University of'  
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ v9/EXPERIMENTS_V9.md | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/v9/EXPERIMENTS_V9.md b/v9/EXPERIMENTS_V9.md
+index 2a8eaf5..274f1ea 100644
+--- a/v9/EXPERIMENTS_V9.md
++++ b/v9/EXPERIMENTS_V9.md
+@@ -49,10 +49,17 @@ The single best PAM result we have on WikiText-103 so far is the
+ - **Acceptance gate not met**: V9 promotion threshold was `< 29.2`; this run
+   did not clear it.
+ 
+-The clean parameter-matched follow-up (`gate_100m`, dim 372,
+-`use_reverse_assoc=False`) was started but pivoted to the
+-`compete_revassoc_100m` design before completion. Until that pivot run lands,
+-**29.57 PPL is the number to beat for any PAM-only configuration**.
++Clean parameter-matched follow-ups did **not** reproduce this number:
++
++- `gate_revassoc_100m` (dim 372, 100.5M, simple gate + reverse assoc) finished
++  at **30.53**.
++- `gate_mlp_revassoc_100m` (101.1M, 2-layer gate MLP + reverse assoc) trailed
++  the baseline trajectory through epoch 5.
++- `compete_revassoc_100m` (zero-param head competition + reverse assoc) trailed
++  by epoch 2.
++
++So **29.57 PPL remains the PAM number to beat**, but it should be cited as a
++confounded full-width/capacity result, not as a clean architectural win.
+ 
+ ## Baselines
+ 

@@ -1,0 +1,82 @@
+{
+  "test": "niah",
+  "arch": "transformer",
+  "result": {
+    "arch": "transformer",
+    "bare_decay": {
+      "results": [
+        {
+          "gamma": 0.9820137900379085,
+          "distance": 64,
+          "relative": 0.9761059399126983,
+          "theory_gamma_T": 0.3129864479261694,
+          "decay_only_relative": 0.3129864479261694
+        },
+        {
+          "gamma": 0.9820137900379085,
+          "distance": 256,
+          "relative": 0.8998935116054435,
+          "theory_gamma_T": 0.009596262809686413,
+          "decay_only_relative": 0.009596262809686413
+        },
+        {
+          "gamma": 0.99,
+          "distance": 64,
+          "relative": 0.9727345912953972,
+          "theory_gamma_T": 0.525596487525562,
+          "decay_only_relative": 0.525596487525562
+        },
+        {
+          "gamma": 0.99,
+          "distance": 256,
+          "relative": 0.8995945097892423,
+          "theory_gamma_T": 0.0763149839065938,
+          "decay_only_relative": 0.0763149839065938
+        },
+        {
+          "gamma": 0.995,
+          "distance": 64,
+          "relative": 0.9748413027460361,
+          "theory_gamma_T": 0.7255664080186092,
+          "decay_only_relative": 0.7255664080186092
+        },
+        {
+          "gamma": 0.995,
+          "distance": 256,
+          "relative": 0.9084042631502417,
+          "theory_gamma_T": 0.27714603575484426,
+          "decay_only_relative": 0.27714603575484426
+        },
+        {
+          "gamma": 0.999,
+          "distance": 64,
+          "relative": 0.9752789254063647,
+          "theory_gamma_T": 0.9379749638258454,
+          "decay_only_relative": 0.9379749638258454
+        },
+        {
+          "gamma": 0.999,
+          "distance": 256,
+          "relative": 0.8917091122354851,
+          "theory_gamma_T": 0.7740428188605081,
+          "decay_only_relative": 0.7740428188605081
+        },
+        {
+          "gamma": 1.0,
+          "distance": 64,
+          "relative": 0.9746910989182116,
+          "theory_gamma_T": 1.0,
+          "decay_only_relative": 1.0
+        },
+        {
+          "gamma": 1.0,
+          "distance": 256,
+          "relative": 0.9053061269122872,
+          "theory_gamma_T": 1.0,
+          "decay_only_relative": 1.0
+        }
+      ]
+    }
+  },
+  "seed": 42
+}

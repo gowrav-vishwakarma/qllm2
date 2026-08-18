@@ -1,0 +1,51 @@
+Loaded V12 checkpoint: checkpoints_v12_curriculum/reasoning/best_model.pt
+  params=109,010,992 device=cuda
+  scored 50/810 examples
+  scored 100/810 examples
+  scored 150/810 examples
+  scored 200/810 examples
+  scored 250/810 examples
+  scored 300/810 examples
+  scored 350/810 examples
+  scored 400/810 examples
+  scored 450/810 examples
+  scored 500/810 examples
+  scored 550/810 examples
+  scored 600/810 examples
+  scored 650/810 examples
+  scored 700/810 examples
+  scored 750/810 examples
+  scored 800/810 examples
+  scored 810/810 examples
+
+=== V12 recall aggregates ===
+  ctx=  128 pos=0.0 n=1: acc=0.100 mrr=0.331 margin=-1.872
+  ctx=  128 pos=0.0 n=4: acc=0.400 mrr=0.565 margin=-1.106
+  ctx=  128 pos=0.0 n=8: acc=0.067 mrr=0.295 margin=-2.113
+  ctx=  128 pos=0.5 n=1: acc=0.100 mrr=0.335 margin=-1.923
+  ctx=  128 pos=0.5 n=4: acc=0.400 mrr=0.568 margin=-1.023
+  ctx=  128 pos=0.5 n=8: acc=0.133 mrr=0.332 margin=-2.340
+  ctx=  128 pos=1.0 n=1: acc=0.100 mrr=0.341 margin=-1.892
+  ctx=  128 pos=1.0 n=4: acc=0.367 mrr=0.543 margin=-1.166
+  ctx=  128 pos=1.0 n=8: acc=0.133 mrr=0.335 margin=-2.312
+  ctx=  512 pos=0.0 n=1: acc=0.067 mrr=0.302 margin=-2.442
+  ctx=  512 pos=0.0 n=4: acc=0.233 mrr=0.460 margin=-1.300
+  ctx=  512 pos=0.0 n=8: acc=0.133 mrr=0.352 margin=-1.882
+  ctx=  512 pos=0.5 n=1: acc=0.067 mrr=0.296 margin=-2.403
+  ctx=  512 pos=0.5 n=4: acc=0.267 mrr=0.487 margin=-1.306
+  ctx=  512 pos=0.5 n=8: acc=0.133 mrr=0.331 margin=-1.986
+  ctx=  512 pos=1.0 n=1: acc=0.100 mrr=0.331 margin=-2.329
+  ctx=  512 pos=1.0 n=4: acc=0.300 mrr=0.512 margin=-1.292
+  ctx=  512 pos=1.0 n=8: acc=0.067 mrr=0.299 margin=-2.315
+  ctx= 1024 pos=0.0 n=1: acc=0.067 mrr=0.276 margin=-2.442
+  ctx= 1024 pos=0.0 n=4: acc=0.233 mrr=0.445 margin=-1.559
+  ctx= 1024 pos=0.0 n=8: acc=0.133 mrr=0.338 margin=-2.111
+  ctx= 1024 pos=0.5 n=1: acc=0.067 mrr=0.273 margin=-2.450
+  ctx= 1024 pos=0.5 n=4: acc=0.233 mrr=0.454 margin=-1.342
+  ctx= 1024 pos=0.5 n=8: acc=0.133 mrr=0.335 margin=-2.044
+  ctx= 1024 pos=1.0 n=1: acc=0.100 mrr=0.325 margin=-2.250
+  ctx= 1024 pos=1.0 n=4: acc=0.300 mrr=0.512 margin=-1.332
+  ctx= 1024 pos=1.0 n=8: acc=0.067 mrr=0.298 margin=-2.346
+
+single_assoc@1024: 0.078
+Results saved to logs/v12_perm/control/reasoning_recall.json

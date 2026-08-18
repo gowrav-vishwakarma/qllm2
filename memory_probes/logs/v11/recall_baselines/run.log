@@ -1,0 +1,108 @@
+[baselines] V11 checkpoint: checkpoints_v11_recall_fromscratch/best_run/best_model.pt
+  scored 20/720 examples
+  scored 40/720 examples
+  scored 60/720 examples
+  scored 80/720 examples
+  scored 100/720 examples
+  scored 120/720 examples
+  scored 140/720 examples
+  scored 160/720 examples
+  scored 180/720 examples
+  scored 200/720 examples
+  scored 220/720 examples
+  scored 240/720 examples
+  scored 260/720 examples
+  scored 280/720 examples
+  scored 300/720 examples
+  scored 320/720 examples
+  scored 340/720 examples
+  scored 360/720 examples
+  scored 380/720 examples
+  scored 400/720 examples
+  scored 420/720 examples
+  scored 440/720 examples
+  scored 460/720 examples
+  scored 480/720 examples
+  scored 500/720 examples
+  scored 520/720 examples
+  scored 540/720 examples
+  scored 560/720 examples
+  scored 580/720 examples
+  scored 600/720 examples
+  scored 620/720 examples
+  scored 640/720 examples
+  scored 660/720 examples
+  scored 680/720 examples
+  scored 700/720 examples
+  scored 720/720 examples
+Results saved to logs/v11/recall_baselines/v11_behavior.json
+The fast path is not available because one of `(selective_state_update, selective_scan_fn, causal_conv1d_fn, causal_conv1d_update, mamba_inner_fn)` is None. Falling back to the sequential implementation of Mamba, as use_mambapy is set to False. To install follow https://github.com/state-spaces/mamba/#installation for mamba-ssm and install the kernels library using `pip install kernels` or https://github.com/Dao-AILab/causal-conv1d for causal-conv1d. For the mamba.py backend, follow https://github.com/alxndrTL/mamba.py.
+  scored 20/720 examples
+  scored 40/720 examples
+  scored 60/720 examples
+  scored 80/720 examples
+  scored 100/720 examples
+  scored 120/720 examples
+  scored 140/720 examples
+  scored 160/720 examples
+  scored 180/720 examples
+  scored 200/720 examples
+  scored 220/720 examples
+  scored 240/720 examples
+  scored 260/720 examples
+  scored 280/720 examples
+  scored 300/720 examples
+  scored 320/720 examples
+  scored 340/720 examples
+  scored 360/720 examples
+  scored 380/720 examples
+  scored 400/720 examples
+  scored 420/720 examples
+  scored 440/720 examples
+  scored 460/720 examples
+  scored 480/720 examples
+  scored 500/720 examples
+  scored 520/720 examples
+  scored 540/720 examples
+  scored 560/720 examples
+  scored 580/720 examples
+  scored 600/720 examples
+  scored 620/720 examples
+  scored 640/720 examples
+  scored 660/720 examples
+  scored 680/720 examples
+  scored 700/720 examples
+  scored 720/720 examples
+Results saved to logs/v11/recall_baselines/mamba_behavior.json
+[baselines] skip transformer (set TRANSFORMER_CHECKPOINT to enable)
+{
+  "comparisons": [
+    {
+      "model": "v11",
+      "path": "logs/v11/recall_baselines/v11_behavior.json",
+      "params": 100878896,
+      "single_at_max": 0.35,
+      "singles": {
+        "128": 0.85,
+        "512": 0.35,
+        "1024": 0.35,
+        "2048": 0.35
+      },
+      "overall": 0.2097222222222222
+    },
+    {
+      "model": "mamba",
+      "path": "logs/v11/recall_baselines/mamba_behavior.json",
+      "params": 129135360,
+      "single_at_max": 1.0,
+      "singles": {
+        "128": 1.0,
+        "512": 1.0,
+        "1024": 1.0,
+        "2048": 1.0
+      },
+      "overall": 0.7694444444444444
+    }
+  ]
+}
+[baselines] done -> logs/v11/recall_baselines/summary.json

@@ -1,0 +1,185 @@
+{
+  "budget": "5m",
+  "summary": {
+    "budget": "5m",
+    "transformer_params": 4979304,
+    "vps_params": 5002234,
+    "vps_dim": 160,
+    "vps_embed_rank": 64,
+    "vps_layers": 2,
+    "vps_heads": 3,
+    "vps_head_dim": 48
+  },
+  "args": {
+    "budget": "5m",
+    "hierarchy": "tinystories",
+    "max_samples": 2000,
+    "seq_len": 256,
+    "batch_size": 32,
+    "epochs": 6,
+    "encoder_epochs": 2,
+    "lr": 0.0003,
+    "out": "logs/vps_matched_tinystories",
+    "only": "both",
+    "smoke": false
+  },
+  "transformer": {
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 9.68482192993164,
+        "ppl": 5410.918246320173,
+        "nll": 8.59617408873543,
+        "tokens": 193536
+      },
+      {
+        "epoch": 2,
+        "train_loss": 7.753897514343262,
+        "ppl": 1076.325501236866,
+        "nll": 6.9813082054178555,
+        "tokens": 193536
+      },
+      {
+        "epoch": 3,
+        "train_loss": 6.542949752807617,
+        "ppl": 468.51905937574753,
+        "nll": 6.1495767825495,
+        "tokens": 193536
+      },
+      {
+        "epoch": 4,
+        "train_loss": 5.952269916534424,
+        "ppl": 303.1043932711484,
+        "nll": 5.7140772784197775,
+        "tokens": 193536
+      },
+      {
+        "epoch": 5,
+        "train_loss": 5.557021408081055,
+        "ppl": 204.92105595127364,
+        "nll": 5.3226248120504716,
+        "tokens": 193536
+      },
+      {
+        "epoch": 6,
+        "train_loss": 5.16947301864624,
+        "ppl": 141.2264902056056,
+        "nll": 4.950364915151445,
+        "tokens": 193536
+      }
+    ],
+    "best": {
+      "epoch": 6,
+      "train_loss": 5.16947301864624,
+      "ppl": 141.2264902056056,
+      "nll": 4.950364915151445,
+      "tokens": 193536
+    },
+    "elapsed_sec": 7.352352857589722,
+    "params": 4979304,
+    "config": {
+      "vocab_size": 50257,
+      "max_seq_len": 2048,
+      "d_model": 88,
+      "n_layers": 4,
+      "n_heads": 2,
+      "d_ff": 352,
+      "dropout": 0.1,
+      "tie_weights": true
+    }
+  },
+  "vps": {
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 6.944569358825683,
+        "ppl": 695.6778787973333,
+        "ppl_oracle": 698.2268156018133
+      },
+      {
+        "epoch": 2,
+        "train_loss": 6.169319696426392,
+        "ppl": 411.27422024843963,
+        "ppl_oracle": 408.57657767381056
+      },
+      {
+        "epoch": 3,
+        "train_loss": 5.944990854263306,
+        "ppl": 407.015245353878,
+        "ppl_oracle": 406.3120885780165
+      },
+      {
+        "epoch": 4,
+        "train_loss": 5.792531204223633,
+        "ppl": 302.78572608142787,
+        "ppl_oracle": 301.9895371836035
+      },
+      {
+        "epoch": 5,
+        "train_loss": 5.567820730209351,
+        "ppl": 233.83523146177257,
+        "ppl_oracle": 233.18866887728444
+      },
+      {
+        "epoch": 6,
+        "train_loss": 5.350724449157715,
+        "ppl": 201.09134894526275,
+        "ppl_oracle": 200.50191483371057
+      }
+    ],
+    "best": {
+      "epoch": 6,
+      "train_loss": 5.350724449157715,
+      "ppl": 201.09134894526275,
+      "ppl_oracle": 200.50191483371057
+    },
+    "elapsed_sec": 32.82531929016113,
+    "params": 5002234,
+    "config": {
+      "vocab_size": 50257,
+      "dim": 160,
+      "essence_dim": 1024,
+      "n_heads": 3,
+      "head_dim": 48,
+      "n_layers": 2,
+      "embed_rank": 64,
+      "max_seq_len": 2048,
+      "decay_biases": [
+        -1.0,
+        -2.5,
+        -4.0,
+        -6.0
+      ],
+      "hierarchy": [
+        [
+          "sentence",
+          16
+        ],
+        [
+          "paragraph",
+          64
+        ],
+        [
+          "chapter",
+          256
+        ],
+        [
+          "book",
+          1024
+        ]
+      ],
+      "pos_base": 64,
+      "pos_levels": 4,
+      "n_drift_markers": 8,
+      "dropout": 0.1,
+      "target_weight": 0.1,
+      "tie_weights": true,
+      "state_dim": 128,
+      "chunk_size": 16,
+      "sentence_size": 64,
+      "hierarchy_weight": 0.0
+    }
+  },
+  "winner": "transformer",
+  "delta_ppl": 59.864858739657166
+}

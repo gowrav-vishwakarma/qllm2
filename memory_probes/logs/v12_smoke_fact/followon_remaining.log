@@ -1,0 +1,49 @@
+[2026-07-21T09:40:42Z] === follow-on pipeline START (will not touch the live delta run) ===
+[2026-07-21T09:40:42Z] wait_tmux=v12fact batch=32 budget=300000000 reasoning=1
+[2026-07-21T09:40:42Z] skip: delta_eval=1 additive=0 start_from=additive
+[2026-07-21T09:40:42Z] waiting for live delta fact job / tmux 'v12fact' to finish...
+[2026-07-21T09:40:42Z] live delta wait complete
+[2026-07-21T09:40:42Z] === STAGE A: finalize delta publish ===
+[2026-07-21T09:40:42Z] delta already published at v12_registry/fact_retrieval/1.0/model.pt
+[2026-07-21T09:40:42Z] SKIP STAGE B (delta compose+eval) — already done or START_FROM=additive
+[2026-07-21T09:40:42Z] === STAGE C: additive A/B fact arm (fact_retrieval@1.1) ===
+  [fact] mode=additive layers=4 lr=3e-5 save_every=1000 spec=checkpoints_v12_curriculum_additive/fact_retrieval/fact_band_spec.json
++ .venv/bin/python -m v12.train --preset v12_grammar_dyn --stage pretrain --dataset fact --pretrain_sources dclm,fineweb --pretrain_weights 40,60 --substrate grammar@>=1.0 --registry v12_registry --grow_layers @checkpoints_v12_curriculum_additive/fact_retrieval/fact_band_spec.json --layer_head_budget 16 --head_gate --write_phase_address --freeze_layers base --attach_mode sequential --stage_loss ce_fact --fused_ce --gen_every 5000 --gen_prompt Record: bofim means gold. Record: kaner means silver. Query: bofim means --batch_size 32 --seq_len 1024 --lr 3e-5 --weight_decay 0.01 --token_budget 300000000 --checkpoint_dir checkpoints_v12_curriculum_additive/fact_retrieval --save_every_steps 1000
+[Discord] Webhook configured -- notifications enabled
+Wall clock start: 2026-07-21 15:10:43
+============================================================
+  V12: PAM with new memory dynamics
+  Preset: v12_grammar_dyn | Stage: pretrain | Dataset: fact
+============================================================
+
+Stage loss: ce_fact — Answer-masked CE + gate-surprisal + hard-negative contrastive (fact stage).
+  overrides applied: {'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 0.5, 'gate_surprisal_sign': 1.0, 'fact_contrastive_lambda': 0.1, 'fact_contrastive_tau': 2.0}
+
+Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 16, 'head_dim': 64, 'n_layers': 4, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 1024, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': True, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 3, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 0.5, 'gate_surprisal_sign': 1.0, 'fact_contrastive_lambda': 0.1, 'fact_contrastive_tau': 2.0, 'vault_state': False, 'vault_state_idx': 0, 'write_phase_address': True, 'head_gate': True, 'head_gate_l0_lambda': 0.001, 'head_gate_init_logalpha': 3.0, 'layer_specs': None}
+Memory dynamics: decay_mode=head, write_mode=additive, n_states=3, chunk_size=256
+Batch size: 32, Epochs: 10, LR: 3e-05
+Token budget: 300,000,000
+
+Loading fact (seq_len=1024)...
+[fact_data] train=292,968 val=512 examples, seq_len=1024, value_pool=50, vocab=50261
+Train batches: 9156, Val batches: 16
+[substrate] WARNING: substrate vocab_size=50257 != tokenizer/preset vocab_size=50261
+[substrate] grammar@1.0 -> ['grammar@1.0'] (4 frozen base layers)
+
+Model parameters: {'embedding (tied)': 38597376, 'blocks': 23388692, 'norms': 768, 'lm_head': 296064, 'total': 62282900}
+Total: 62,282,900 (62.3M)
+[M4 grow] +4 layers [4, 5, 6, 7] on base of 4 (skills=['fact_retrieval', 'fact_retrieval', 'fact_retrieval', 'fact_retrieval'], attach_mode=sequential); total layers=8
+[M4 freeze] froze blocks [0, 1, 2, 3]; trainable params=62,282,900. (requires_grad=False => excluded from optimizer, no wd drift)
+Param groups: 56 tensors (62,264,064) with wd, 61 tensors (18,836) without
+fused_ce enabled (chunked linear+CE; logits never materialized)
+
+Training on cuda
+Parameters: {'embedding (tied)': 38597376, 'blocks': 46777384, 'norms': 768, 'lm_head': 296064, 'total': 85671592}
+Total: 85,671,592 (85.7M)
+Epochs: 1..9999, Batches/epoch: 9156
+Periodic checkpoint: every 1000 steps -> latest.pt
+
+
+============================================================
+Epoch 1/9999
+============================================================

@@ -1,0 +1,99 @@
+[Discord] Webhook configured -- notifications enabled
+Wall clock start: 2026-08-18 11:19:56
+============================================================
+  V11: PAM with new memory dynamics
+  Preset: v13_micro_10m_recall | Stage: lm | Dataset: pretrain_mix
+============================================================
+
+Config: {'vocab_size': 50261, 'dim': 96, 'n_heads': 3, 'head_dim': 32, 'n_layers': 6, 'expand': 3, 'dropout': 0.0, 'max_seq_len': 512, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 64, 'decay_mode': 'head', 'write_mode': 'delta', 'n_states': 3, 'delta_chunk': 32, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': False, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 1.0, 'gate_surprisal_sign': 1.0, 'vault_state': True, 'vault_state_idx': 0, 'write_phase_address': True}
+Memory dynamics: decay_mode=head, write_mode=delta, n_states=3, chunk_size=64
+Batch size: 8, Epochs: 10, LR: 0.0003
+Token budget: 5,000,000
+
+Loading pretrain_mix (seq_len=512)...
+Streaming pretrain blend: sources=['recall'] weights=[1.0] edu>=3 budget=5000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'recall': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl512.pt (248,461 tokens)
+Val chunks: 484
+Val: in-distro holdout (122 batches), WikiText secondary (61 batches)
+Train batches: streaming, Val batches: 122
+
+Model parameters: {'embedding (tied)': 9650112, 'blocks': 1456482, 'norms': 192, 'lm_head': 18720, 'total': 11125506}
+Total: 11,125,506 (11.1M)
+Param groups: 94 tensors (11,120,256) with wd, 83 tensors (5,250) without
+fused_ce enabled (chunked linear+CE; logits never materialized)
+[Discord] Webhook configured -- notifications enabled
+Wall clock start: 2026-08-18 11:23:25
+============================================================
+  V11: PAM with new memory dynamics
+  Preset: v13_micro_10m_recall | Stage: lm | Dataset: pretrain_mix
+============================================================
+
+Config: {'vocab_size': 50261, 'dim': 96, 'n_heads': 3, 'head_dim': 32, 'n_layers': 6, 'expand': 3, 'dropout': 0.0, 'max_seq_len': 512, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 64, 'decay_mode': 'head', 'write_mode': 'delta', 'n_states': 3, 'delta_chunk': 32, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': False, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 1.0, 'gate_surprisal_sign': 1.0, 'vault_state': True, 'vault_state_idx': 0, 'write_phase_address': True}
+Memory dynamics: decay_mode=head, write_mode=delta, n_states=3, chunk_size=64
+Batch size: 8, Epochs: 10, LR: 0.0003
+Token budget: 5,000,000
+
+Loading pretrain_mix (seq_len=512)...
+Streaming pretrain blend: sources=['recall'] weights=[1.0] edu>=3 budget=5000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'recall': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl512.pt (248,461 tokens)
+Val chunks: 484
+Val: in-distro holdout (122 batches), WikiText secondary (61 batches)
+Train batches: streaming, Val batches: 122
+
+Model parameters: {'embedding (tied)': 9650112, 'blocks': 1456482, 'norms': 192, 'lm_head': 18720, 'total': 11125506}
+Total: 11,125,506 (11.1M)
+Param groups: 94 tensors (11,120,256) with wd, 83 tensors (5,250) without
+fused_ce enabled (chunked linear+CE; logits never materialized)
+
+Training on cuda
+Parameters: {'embedding (tied)': 9650112, 'blocks': 1456482, 'norms': 192, 'lm_head': 18720, 'total': 11125506}
+Total: 11,125,506 (11.1M)
+Epochs: 1..9999, Batches/epoch: stream
+Periodic checkpoint: every 500 steps -> latest.pt
+
+
+============================================================
+Epoch 1/9999
+============================================================
+Token indices sequence length is longer than the specified maximum sequence length for this model (1054 > 1024). Running this sequence through the model will result in indexing errors
+[Discord] Webhook configured -- notifications enabled
+Wall clock start: 2026-08-18 11:31:25
+============================================================
+  V11: PAM with new memory dynamics
+  Preset: v13_micro_10m_recall | Stage: lm | Dataset: pretrain_mix
+============================================================
+
+Config: {'vocab_size': 50261, 'dim': 96, 'n_heads': 3, 'head_dim': 32, 'n_layers': 6, 'expand': 3, 'dropout': 0.0, 'max_seq_len': 512, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 64, 'decay_mode': 'head', 'write_mode': 'delta', 'n_states': 3, 'delta_chunk': 32, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': False, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 1.0, 'gate_surprisal_sign': 1.0, 'vault_state': True, 'vault_state_idx': 0, 'write_phase_address': True}
+Memory dynamics: decay_mode=head, write_mode=delta, n_states=3, chunk_size=64
+Batch size: 8, Epochs: 10, LR: 0.0003
+Token budget: 4,000,000
+
+Loading pretrain_mix (seq_len=512)...
+  [cursor] seeded skips from resume ckpt: {'recall': 9660}
+Streaming pretrain blend: sources=['recall'] weights=[1.0] edu>=3 budget=4000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'recall': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl512.pt (248,461 tokens)
+Val chunks: 484
+Val: in-distro holdout (122 batches), WikiText secondary (61 batches)
+Train batches: streaming, Val batches: 122
+
+Model parameters: {'embedding (tied)': 9650112, 'blocks': 1456482, 'norms': 192, 'lm_head': 18720, 'total': 11125506}
+Total: 11,125,506 (11.1M)
+
+Loading weights from checkpoints_v13/smoke_recall/best_model.pt...
+Param groups: 94 tensors (11,120,256) with wd, 83 tensors (5,250) without
+fused_ce enabled (chunked linear+CE; logits never materialized)
+
+Training on cuda
+Parameters: {'embedding (tied)': 9650112, 'blocks': 1456482, 'norms': 192, 'lm_head': 18720, 'total': 11125506}
+Total: 11,125,506 (11.1M)
+Epochs: 1..9999, Batches/epoch: stream
+Periodic checkpoint: every 500 steps -> latest.pt
+
+
+============================================================
+Epoch 1/9999
+============================================================
+Token indices sequence length is longer than the specified maximum sequence length for this model (1054 > 1024). Running this sequence through the model will result in indexing errors

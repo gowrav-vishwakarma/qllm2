@@ -1,0 +1,31 @@
+/home/gowrav/Development/qllm2/v_point_and_speak/loop.py:128: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler = torch.amp.GradScaler("cuda", enabled=device.type == "cuda")
+[device] cuda
+[cache] Loaded TinyStories train from .cache/v7_tokens/tinystories_train_v2_ms5000_sl256_r1.pt (1,032,774 tokens)
+[cache] Loaded TinyStories validation from .cache/v7_tokens/tinystories_validation_v2_ms5000_sl256_r1.pt (194,512 tokens)
+Train chunks: 4018, Val chunks: 756
+[budget] {"budget": "5m", "transformer_params": 4979304, "vps_params": 5014114, "vps_dim": 96, "vps_state_dim": 64}
+[transformer] params=4,979,304 d_model=88 layers=4
+[transformer] epoch 1/8 loss=8.3759 val_ppl=658.69
+[transformer] epoch 2/8 loss=5.8799 val_ppl=196.57
+[transformer] epoch 3/8 loss=4.9588 val_ppl=95.12
+[transformer] epoch 4/8 loss=4.4784 val_ppl=70.85
+[transformer] epoch 5/8 loss=4.2537 val_ppl=60.62
+[transformer] epoch 6/8 loss=4.1141 val_ppl=54.03
+[transformer] epoch 7/8 loss=4.0094 val_ppl=49.76
+[transformer] epoch 8/8 loss=3.9196 val_ppl=45.50
+[vps] params=5,014,114 dim=96 state_dim=64 hierarchy=['sentence', 'paragraph', 'chapter', 'book']
+[vps/encoder] epoch 1/3 loss=9.1981
+[vps/encoder] epoch 2/3 loss=9.1393
+[vps/encoder] epoch 3/3 loss=9.1356
+[vps] epoch 1/8 loss=9.4361 val_ppl=9244.45
+[vps] epoch 2/8 loss=9.1542 val_ppl=9169.59
+[vps] epoch 3/8 loss=9.1339 val_ppl=9146.42
+[vps] epoch 4/8 loss=9.1270 val_ppl=9131.45
+[vps] epoch 5/8 loss=9.1251 val_ppl=9120.84
+[vps] epoch 6/8 loss=9.1238 val_ppl=9112.45
+[vps] epoch 7/8 loss=9.1227 val_ppl=9105.89
+[vps] epoch 8/8 loss=9.1218 val_ppl=9100.33
+
+[compare] transformer_ppl=45.50 vps_ppl=9100.33 winner=transformer
+[done] logs/vps_matched_tinystories/5m_20260812_170135/compare.json

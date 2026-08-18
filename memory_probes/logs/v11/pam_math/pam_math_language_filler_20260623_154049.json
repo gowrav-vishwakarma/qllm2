@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-06-23T10:10:24.020560+00:00",
+  "seed": 42,
+  "language_filler": {
+    "d": 64,
+    "filler_tokens": 5000,
+    "gamma": 0.995,
+    "key_text": "glorp",
+    "value_text": " banana",
+    "query_text": "glorp",
+    "baseline_relative": 0.9999999999989999,
+    "language_filler_relative": 12.188518017277614,
+    "language_key_mean_corr": 0.3117580767837193,
+    "elapsed_s": 25.525401189999684,
+    "random_filler_relative": 0.03649597812866824,
+    "random_key_mean_corr": 0.1146904762908095
+  }
+}

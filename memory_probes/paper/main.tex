@@ -466,6 +466,19 @@ Transformer, and Mamba checkpoints; overlay behavioral recall-versus-distance
 on intrinsic curves; and compare it with persisted learned protection-gate
 diagnostics for content and filler tokens.}
 
+\paragraph{V13 selective PAM (initial smoke).}
+V13 makes delta-rule writes, vault state, phase addressing, and content-aware
+GSP gating the default configuration (\texttt{v13\_micro\_10m\_recall}, 11.1M
+parameters).  On a 100\% synthetic recall curriculum, an interim checkpoint
+($\sim$1.5M tokens, mixed sequence lengths) reached 23.3\% contrastive recall
+at 2048 tokens (target $>90\%$), 39.4\% effective rank utilization on layer 4
+($12.6/32$, target $>50\%$), and near-zero gate selectivity
+($|p_{\mathrm{content}}-p_{\mathrm{filler}}|\approx 0$, target $>0.05$).
+A full 5M-token smoke at sequence length 2048 was launched to retest the gates;
+results are recorded in \texttt{memory\_probes/paper/v13\_results.json}.
+These numbers are diagnostic only: they show the selective levers are wired
+correctly but not yet learned under recall pressure.
+
 \todoexp{Test the proposed J-space bridge only with a reproducible
 implementation of the averaged Jacobian lens: measure whether a retained
 controlled fact enters a token-linked verbalizable direction, intervene on

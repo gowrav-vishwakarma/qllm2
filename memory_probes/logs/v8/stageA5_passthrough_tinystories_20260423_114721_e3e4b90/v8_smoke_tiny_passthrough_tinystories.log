@@ -1,0 +1,115 @@
+[2026-04-23 11:47:22] Wall clock start: 2026-04-23 11:47:22
+[2026-04-23 11:47:22] ============================================================
+[2026-04-23 11:47:22]   V8: Quantum-Logic Core over QPAM
+[2026-04-23 11:47:22]   Preset: smoke_tiny_passthrough | Dataset: tinystories
+[2026-04-23 11:47:22] ============================================================
+[2026-04-23 11:47:22] Seed: 42
+
+[2026-04-23 11:47:22] Backbone config: {'vocab_size': 50257, 'dim': 64, 'n_heads': 2, 'head_dim': 32, 'n_layers': 2, 'expand': 2, 'dropout': 0.0, 'max_seq_len': 512, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'hierarchical_dt': False, 'dt_bias_schedule': None, 'cross_level': False, 'gradient_checkpointing': False, 'activation': 'modrelu', 'chunk_size': 0, 'multi_scale_loss': False, 'aux_loss_weight': 0.1, 'aux_layer_stride': 3, 'max_aux_offset': 32, 'use_reverse_assoc': False}
+[2026-04-23 11:47:22] QLC config: {'enabled': False, 'rank': 8, 'n_heads': 1, 'bank_size': 2048, 'top_k': 4, 'bank_temperature': 1.0, 't_max': 4, 'ponder_lambda': 0.01, 'eps_no_op': 0.001, 'quantale_off': False, 'orthohalt_off': False, 'use_infonce': True, 'qr_refresh_every': 0, 'sasaki_eps': 1e-06}
+[2026-04-23 11:47:22] Stage: A, freeze_backbone=False, kl_anchor=0.0
+[2026-04-23 11:47:22] Training: lr=0.0001, warmup=1000, wd=0.01, grad_clip=1.0
+[2026-04-23 11:47:22] Batch size: 16, Epochs: 3
+[2026-04-23 11:47:22] AMP: auto, Compile: False
+
+[2026-04-23 11:47:22] Loading tinystories (seq_len=512)...
+[2026-04-23 11:47:25] Loading TinyStories train (limit=20000)...
+[2026-04-23 11:47:39]   Tokenizing 20000 train texts...
+[2026-04-23 11:47:41]   train: 20000 stories, 4,465,139 tokens
+[2026-04-23 11:47:41] [cache] Saved train to .cache/v7_tokens/tinystories_train_v2_ms20000_sl512_r1.pt
+[2026-04-23 11:47:41] Loading TinyStories validation (limit=2000)...
+[2026-04-23 11:47:44]   Tokenizing 2000 validation texts...
+[2026-04-23 11:47:44]   validation: 2000 stories, 388,958 tokens
+[2026-04-23 11:47:44] [cache] Saved validation to .cache/v7_tokens/tinystories_validation_v2_ms20000_sl512_r1.pt
+[2026-04-23 11:47:44] Train chunks: 8703, Val chunks: 758
+[2026-04-23 11:47:44] Train batches: 544, Val batches: 48
+
+[2026-04-23 11:47:44] Model parameters: {'embedding (tied)': 6432896, 'backbone_blocks': 165136, 'norms': 128, 'lm_head': 8384, 'qlc': 0, 'total': 6606544}
+[2026-04-23 11:47:44] Total: 6,606,544 (6.6M)  QLC: 0 (0.00M)
+[2026-04-23 11:47:44] Param groups: 28 tensors (6,605,696) with wd, 21 tensors (848) without
+
+[2026-04-23 11:47:44] Training on cuda
+[2026-04-23 11:47:44] Parameters: {'embedding (tied)': 6432896, 'backbone_blocks': 165136, 'norms': 128, 'lm_head': 8384, 'qlc': 0, 'total': 6606544}
+[2026-04-23 11:47:44] Total: 6,606,544 (6.6M); Trainable: 6,606,544 (6.6M)
+[2026-04-23 11:47:44] Stage: A; freeze_backbone=False; kl_anchor=0.0
+[2026-04-23 11:47:44] Epochs: 1..3, Batches/epoch: 544
+
+
+[2026-04-23 11:47:44] ============================================================
+[2026-04-23 11:47:44] Epoch 1/3
+[2026-04-23 11:47:44] ============================================================
+[2026-04-23 11:47:45]   [1] 0/544 (0%) loss=10.8428 ppl=51165.8 lr=1.00e-07 | 7584 tok/s (avg 7584) | GPU 1.0/5.4GB
+[2026-04-23 11:47:47]   [1] 50/544 (9%) loss=10.8353 ppl=50783.5 lr=5.10e-06 | 223574 tok/s (avg 143444) | GPU 1.0/5.5GB
+[2026-04-23 11:47:49]   [1] 100/544 (19%) loss=10.8167 ppl=49848.0 lr=1.01e-05 | 226547 tok/s (avg 175265) | GPU 1.0/5.5GB
+[2026-04-23 11:47:51]   [1] 150/544 (28%) loss=10.7807 ppl=48085.6 lr=1.51e-05 | 227598 tok/s (avg 189703) | GPU 1.0/5.5GB
+[2026-04-23 11:47:52]   [1] 200/544 (37%) loss=10.7211 ppl=45299.6 lr=2.01e-05 | 228903 tok/s (avg 198140) | GPU 1.0/5.5GB
+[2026-04-23 11:47:54]   [1] 250/544 (46%) loss=10.6666 ppl=42900.9 lr=2.51e-05 | 228283 tok/s (avg 203488) | GPU 1.0/5.5GB
+[2026-04-23 11:47:56]   [1] 300/544 (55%) loss=10.5433 ppl=37922.7 lr=3.01e-05 | 227325 tok/s (avg 207092) | GPU 1.0/5.5GB
+[2026-04-23 11:47:58]   [1] 350/544 (65%) loss=10.3767 ppl=32104.4 lr=3.51e-05 | 226374 tok/s (avg 209633) | GPU 1.0/5.5GB
+[2026-04-23 11:48:00]   [1] 400/544 (74%) loss=10.0854 ppl=23989.9 lr=4.01e-05 | 226318 tok/s (avg 211575) | GPU 1.0/5.5GB
+[2026-04-23 11:48:01]   [1] 450/544 (83%) loss=9.7248 ppl=16727.7 lr=4.51e-05 | 226830 tok/s (avg 213162) | GPU 1.0/5.5GB
+[2026-04-23 11:48:03]   [1] 500/544 (92%) loss=9.3751 ppl=11790.6 lr=5.01e-05 | 227164 tok/s (avg 214479) | GPU 1.0/5.5GB
+[2026-04-23 11:48:06] Epoch 1/3 | Train Loss: 10.3682 PPL: 31832.70 | 210996 tok/s | ponder=0.000e+00 | Val Loss: 9.0530 PPL: 8544.20 *best*
+[2026-04-23 11:48:06] Saved checkpoint: v8/checkpoints/stageA5_passthrough/best_model.pt
+
+[2026-04-23 11:48:06] Prompt: In 1923 , the University of
+[2026-04-23 11:48:06] Generated: In 1923 , the University of He you play that excited ran play, are a kids house friend, big it she could away " with myWhen home the friendsShe say Lily this knew there little She smallThat The with in time go Lily feltL rock From many to
+[2026-04-23 11:48:06]  And have new She had was from at playing proud. told. They Lily heard come The his new sheHe I a fun little even play do his She
+[2026-04-23 11:48:06]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=0.842
+
+[2026-04-23 11:48:07] ============================================================
+[2026-04-23 11:48:07] Epoch 2/3
+[2026-04-23 11:48:07] ============================================================
+[2026-04-23 11:48:07]   [2] 0/544 (0%) loss=9.0690 ppl=8682.3 lr=5.45e-05 | 132028 tok/s (avg 132029) | GPU 1.0/5.5GB
+[2026-04-23 11:48:09]   [2] 50/544 (9%) loss=8.6459 ppl=5686.5 lr=5.95e-05 | 225432 tok/s (avg 222321) | GPU 1.0/5.5GB
+[2026-04-23 11:48:11]   [2] 100/544 (19%) loss=8.2257 ppl=3735.9 lr=6.45e-05 | 219608 tok/s (avg 220957) | GPU 1.0/5.5GB
+[2026-04-23 11:48:12]   [2] 150/544 (28%) loss=7.8251 ppl=2502.6 lr=6.95e-05 | 229213 tok/s (avg 223614) | GPU 1.0/5.5GB
+[2026-04-23 11:48:14]   [2] 200/544 (37%) loss=7.4630 ppl=1742.4 lr=7.45e-05 | 229410 tok/s (avg 225022) | GPU 1.0/5.5GB
+[2026-04-23 11:48:16]   [2] 250/544 (46%) loss=7.1244 ppl=1241.9 lr=7.95e-05 | 226630 tok/s (avg 225336) | GPU 1.0/5.5GB
+[2026-04-23 11:48:18]   [2] 300/544 (55%) loss=6.7506 ppl=854.6 lr=8.45e-05 | 226272 tok/s (avg 225487) | GPU 1.0/5.5GB
+[2026-04-23 11:48:20]   [2] 350/544 (65%) loss=6.4787 ppl=651.1 lr=8.95e-05 | 226595 tok/s (avg 225640) | GPU 1.0/5.5GB
+[2026-04-23 11:48:21]   [2] 400/544 (74%) loss=6.2490 ppl=517.5 lr=9.45e-05 | 229325 tok/s (avg 226090) | GPU 1.0/5.5GB
+[2026-04-23 11:48:23]   [2] 450/544 (83%) loss=6.0774 ppl=435.9 lr=9.95e-05 | 229377 tok/s (avg 226447) | GPU 1.0/5.5GB
+[2026-04-23 11:48:25]   [2] 500/544 (92%) loss=5.8961 ppl=363.6 lr=9.88e-05 | 228938 tok/s (avg 226691) | GPU 1.0/5.5GB
+[2026-04-23 11:48:27] Epoch 2/3 | Train Loss: 7.1245 PPL: 1242.02 | 226898 tok/s | ponder=0.000e+00 | Val Loss: 5.7966 PPL: 329.18 *best*
+[2026-04-23 11:48:27] Saved checkpoint: v8/checkpoints/stageA5_passthrough/best_model.pt
+
+[2026-04-23 11:48:27] Prompt: In 1923 , the University of
+[2026-04-23 11:48:27] Generated: In 1923 , the University of a in,. I was she to had was a. He mom and they, with Lily that on and she.,,. " were
+
+[2026-04-23 11:48:27] ! One "'t there." a little not the her so girl to be his day, they very you play They. It her She was on for. she, he you's him, the was it had was the her is to and play
+[2026-04-23 11:48:27]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=0.750
+
+[2026-04-23 11:48:28] ============================================================
+[2026-04-23 11:48:28] Epoch 3/3
+[2026-04-23 11:48:28] ============================================================
+[2026-04-23 11:48:28]   [3] 0/544 (0%) loss=5.8239 ppl=338.3 lr=9.52e-05 | 130441 tok/s (avg 130443) | GPU 1.0/5.5GB
+[2026-04-23 11:48:30]   [3] 50/544 (9%) loss=5.6345 ppl=279.9 lr=8.85e-05 | 226731 tok/s (avg 223468) | GPU 1.0/5.5GB
+[2026-04-23 11:48:32]   [3] 100/544 (19%) loss=5.5827 ppl=265.8 lr=7.95e-05 | 224225 tok/s (avg 223830) | GPU 1.0/5.5GB
+[2026-04-23 11:48:33]   [3] 150/544 (28%) loss=5.4078 ppl=223.1 lr=6.87e-05 | 225551 tok/s (avg 224389) | GPU 1.0/5.5GB
+[2026-04-23 11:48:35]   [3] 200/544 (37%) loss=5.3839 ppl=217.9 lr=5.67e-05 | 225470 tok/s (avg 224651) | GPU 1.0/5.5GB
+[2026-04-23 11:48:37]   [3] 250/544 (46%) loss=5.2396 ppl=188.6 lr=4.43e-05 | 225291 tok/s (avg 224773) | GPU 1.0/5.5GB
+[2026-04-23 11:48:39]   [3] 300/544 (55%) loss=5.2135 ppl=183.7 lr=3.23e-05 | 225583 tok/s (avg 224903) | GPU 1.0/5.5GB
+[2026-04-23 11:48:41]   [3] 350/544 (65%) loss=5.2010 ppl=181.4 lr=2.13e-05 | 225206 tok/s (avg 224942) | GPU 1.0/5.5GB
+[2026-04-23 11:48:42]   [3] 400/544 (74%) loss=5.1712 ppl=176.1 lr=1.21e-05 | 225877 tok/s (avg 225055) | GPU 1.0/5.5GB
+[2026-04-23 11:48:44]   [3] 450/544 (83%) loss=5.1558 ppl=173.4 lr=5.25e-06 | 224720 tok/s (avg 225015) | GPU 1.0/5.5GB
+[2026-04-23 11:48:46]   [3] 500/544 (92%) loss=5.2207 ppl=185.1 lr=1.14e-06 | 226619 tok/s (avg 225172) | GPU 1.0/5.5GB
+[2026-04-23 11:48:48] Epoch 3/3 | Train Loss: 5.3366 PPL: 207.80 | 225304 tok/s | ponder=0.000e+00 | Val Loss: 5.1871 PPL: 178.95 *best*
+[2026-04-23 11:48:48] Saved checkpoint: v8/checkpoints/stageA5_passthrough/best_model.pt
+
+[2026-04-23 11:48:49] Prompt: In 1923 , the University of
+[2026-04-23 11:48:49] Generated: In 1923 , the University of they were, and went on it a time you, there She and looked was. He was not to the it with
+
+
+
+[2026-04-23 11:48:49] The time but "Look the to go was you said, his and her mom said
+[2026-04-23 11:48:49] Tom.
+
+
+
+[2026-04-23 11:48:49] "The very a you said, day with the girl, It in a Lily and they loved and asked, he, the toys and she
+[2026-04-23 11:48:49]   Quality: rep3=0.000 rep4=0.000 restarts=0 uniq=0.712
+[2026-04-23 11:48:49] Saved checkpoint: v8/checkpoints/stageA5_passthrough/final_model.pt
+
+[2026-04-23 11:48:49] Training complete! Wall time: 0.02h
+[2026-04-23 11:48:49] Best Val PPL: 178.95

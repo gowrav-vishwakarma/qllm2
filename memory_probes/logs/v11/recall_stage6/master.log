@@ -1,0 +1,18 @@
+[stage6] train control extra=[] budget=300000000
+[stage6] train delta extra=[--write_mode delta --n_states 1 --delta_chunk 64] budget=300000000
+[stage6] FAIL delta: no checkpoint
+[stage6] train vault extra=[--vault_state --vault_state_idx 0 --n_states 3] budget=300000000
+[stage6] FAIL vault: no checkpoint
+[stage6] train phase extra=[--write_phase_address --n_states 3] budget=300000000
+[stage6] train vault extra=[--vault_state --vault_state_idx 0 --n_states 3] budget=300000000
+[stage6] FAIL vault: no checkpoint
+[stage6] train phase extra=[--write_phase_address --n_states 3] budget=300000000
+[stage6] FAIL phase: no checkpoint
+[stage6] train delta extra=[--write_mode delta --n_states 1 --delta_chunk 32 --no_state_compete --no_routing_content_aware] budget=300000000
+[stage6] delta: training without torch.compile
+[stage6] FAIL delta: no checkpoint
+[stage6] train vault extra=[--vault_state --vault_state_idx 0 --n_states 3] budget=300000000
+[stage6] train phase extra=[--write_phase_address --n_states 3] budget=300000000
+[stage6] train delta extra=[--write_mode delta --n_states 1 --delta_chunk 32 --no_state_compete --no_routing_content_aware] budget=300000000
+[stage6] delta: training without torch.compile
+[stage6] FAIL delta: no checkpoint

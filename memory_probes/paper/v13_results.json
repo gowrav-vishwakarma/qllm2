@@ -1,0 +1,20 @@
+{
+  "schema_version": "v13-selective-pam-smoke/v1",
+  "created_at": "2026-08-18T06:00:00Z",
+  "status": "smoke_in_progress",
+  "v13_preset": "v13_micro_10m_recall",
+  "v13_params": 11125506,
+  "smoke_gates": {
+    "recall_2048_target": 0.90,
+    "eff_rank_pct_target": 50.0,
+    "gate_delta_target": 0.05
+  },
+  "interim_smoke_recall": {
+    "checkpoint": "checkpoints_v13/smoke_recall/best_model.pt",
+    "tokens_trained_approx": 1500000,
+    "recall_2048_n1": 0.233,
+    "eff_rank_layer4_pct": 39.4,
+    "gate_p_content_minus_p_filler": -0.0003
+  },
+  "notes": "Full 5M-token smoke at seq_len=2048 running to checkpoints_v13/smoke_recall_v2. Interim checkpoint under-trained on mixed seq_len runs."
+}

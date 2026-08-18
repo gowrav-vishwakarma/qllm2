@@ -1,0 +1,440 @@
+  cfg from ckpt: vocab=50261 gate_content_aware=True routing_content_aware=False state_compete=False
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+Val chunks: 121
+========================================================================================
+PAM gate diagnosis  ckpt=checkpoints_v11_e3_k3_chat_pretrain_v2/best_model.pt  tokens=2048  preset=v11_e3_k3_chat
+  p   = mean GSP write-protect prob (sigmoid(protect_gate)); high p => "do not write"
+  gam = mean decay gamma (->1 keeps state, ->0 forgets fast)
+  content = top 25% surprisal tokens, filler = bottom 25%
+========================================================================================
+layer |   p_all p_content  p_filler |  gam_all  dt_bias
+-------------------------------------------------------
+    0 |   0.266     0.223     0.315 |   0.6004   -3.846
+    1 |   0.281     0.270     0.288 |   0.5668   -3.758
+    2 |   0.158     0.164     0.145 |   0.4126   -3.730
+    3 |   0.366     0.368     0.346 |   0.6420   -3.811
+    4 |   0.556     0.537     0.554 |   0.8677   -3.927
+    5 |   0.519     0.508     0.520 |   0.6742   -3.812
+    6 |   0.495     0.480     0.503 |   0.6536   -3.827
+    7 |   0.304     0.292     0.326 |   0.5033   -3.771
+    8 |   0.371     0.365     0.384 |   0.5589   -3.795
+    9 |   0.398     0.379     0.428 |   0.5983   -3.823
+   10 |   0.475     0.455     0.490 |   0.6843   -3.830
+   11 |   0.527     0.520     0.536 |   0.6737   -3.827
+   12 |   0.477     0.480     0.481 |   0.6387   -3.827
+   13 |   0.426     0.380     0.522 |   0.6352   -3.843
+   14 |   0.507     0.489     0.538 |   0.7252   -3.886
+   15 |   0.187     0.183     0.190 |   0.3949   -3.619
+-------------------------------------------------------
+  mean p across layers: 0.395  (init bias -3.0 => p~0.047; higher = model learned to protect)
+  mean (p_content - p_filler): -0.030  (positive = protects content more than filler = healthy)
+
+========================================================================================
+Routing (alpha) — per-token entropy vs uniform ln(K), batch-mean diversity
+  uniform ln(K=3) = 1.099
+========================================================================================
+layer |    tok_H    bar_H | mean_winner
+---------------------------------------
+    0 |    1.099    1.099 |        0.00
+    1 |    1.099    1.099 |        0.00
+    2 |    1.099    1.099 |        0.00
+    3 |    1.099    1.099 |        0.00
+    4 |    1.099    1.099 |        0.00
+    5 |    1.099    1.099 |        0.00
+    6 |    1.099    1.099 |        0.00
+    7 |    1.099    1.099 |        0.00
+    8 |    1.099    1.099 |        0.00
+    9 |    1.099    1.099 |        0.00
+   10 |    1.099    1.099 |        0.00
+   11 |    1.099    1.099 |        0.00
+   12 |    1.099    1.099 |        0.00
+   13 |    1.099    1.099 |        0.00
+   14 |    1.099    1.099 |        0.00
+   15 |    1.099    1.099 |        0.00
+---------------------------------------
+  mean tok_H=1.099 (lower=more decisive)  bar_H=1.099 (higher=more diverse)
+
+========================================================================================
+Retrieval energy |S_k·Q| (loop path) — content vs filler tokens
+========================================================================================
+layer |      c0      c1      c2 |      f0      f1      f2
+---------------------------------------------------------
+    0 |  4.9585  3.3417  2.5171 |  4.4406  3.0280  2.2853
+    1 |  6.7326  5.1394  4.0224 |  5.6897  4.2931  3.2816
+    2 |  4.2063  3.8060  3.4089 |  3.7819  3.4251  3.0719
+    3 |  6.1277  4.2070  2.8198 |  5.5342  3.7958  2.5169
+    4 | 11.9021  4.9483  2.5762 | 10.3692  4.1914  2.1191
+    5 |  3.7048  2.6137  1.6779 |  3.7742  2.5477  1.5298
+    6 |  4.1282  2.6902  2.1171 |  3.4681  2.2810  1.8298
+    7 |  5.0871  3.9280  2.7104 |  4.9746  3.9810  2.8442
+    8 |  5.0384  3.5860  3.1459 |  5.0944  3.8088  3.4165
+    9 |  3.5659  3.3026  2.6045 |  3.3999  3.1857  2.5939
+   10 |  5.8663  3.7164  2.8464 |  5.7354  3.7071  2.8950
+   11 |  5.4765  4.6574  1.6507 |  5.2856  4.4883  1.5366
+   12 |  5.4119  4.4959  2.9048 |  4.7213  3.9434  2.5871
+   13 |  3.4719  2.6870  2.1580 |  3.0888  2.4144  1.9303
+   14 |  8.4137  7.0015  2.7046 |  7.1485  5.9572  2.2761
+   15 |  4.0910  2.4322  2.2041 |  3.3950  2.0514  1.8491
+
+JSON saved to logs/memory_probes/publication/gpu/gates.json
+  Loading WikiText-103 train stream (50,000 tokens, chat)...
+
+[rank] Rank on real text (V11 block 0, checkpoint)
+  tokens=50,000, sample_every=100, head=0
+    ... wikitext token 10,000/50,000
+    ... wikitext token 20,000/50,000
+    ... wikitext token 30,000/50,000
+    ... wikitext token 40,000/50,000
+    ... random token 10,000/50,000
+    ... random token 20,000/50,000
+    ... random token 30,000/50,000
+    ... random token 40,000/50,000
+
+  Effective rank vs tokens (wikitext):
+    t= 48,900 rank=  7.2 |####################################
+    t= 49,000 rank=  6.2 |###############################
+    t= 49,100 rank=  7.7 |#######################################
+    t= 49,200 rank=  5.2 |##########################
+    t= 49,300 rank=  8.4 |###########################################
+    t= 49,400 rank=  8.4 |###########################################
+    t= 49,500 rank=  6.5 |#################################
+    t= 49,600 rank=  6.7 |##################################
+    t= 49,700 rank=  7.2 |#####################################
+    t= 49,800 rank=  6.4 |################################
+    t= 49,900 rank=  8.5 |###########################################
+    t= 49,999 rank=  6.6 |#################################
+    (d=64, max rank shown=9.7)
+
+  Singular value snapshots (wikitext):
+    t=      0 eff_rank=  1.0  s1=83.549 s2=0.000 s3=0.000 ... s64=6.3431e-19
+    t=    100 eff_rank=  6.8  s1=128.724 s2=70.307 s3=48.506 ... s64=3.4702e-09
+    t=    200 eff_rank=  5.1  s1=145.028 s2=91.855 s3=27.595 ... s64=3.5808e-10
+    t=    300 eff_rank=  4.1  s1=193.594 s2=42.231 s3=20.115 ... s64=2.9651e-09
+    t=    400 eff_rank=  6.4  s1=76.193 s2=65.740 s3=43.388 ... s64=3.3276e-11
+    ...
+    t= 49,800 eff_rank=  6.4  s1=143.523 s2=63.092 s3=36.846 ... s64=7.7631e-12
+    t= 49,900 eff_rank=  8.5  s1=104.477 s2=66.128 s3=54.932 ... s64=1.6751e-12
+    t= 49,999 eff_rank=  6.6  s1=74.736 s2=51.303 s3=35.543 ... s64=1.7716e-10
+  WikiText  final rank=6.6 / d=64
+  Random    final rank=5.4 / d=64
+
+Results saved to logs/memory_probes/publication/gpu/memory_probes_rank_text_20260713_124826.json
+
+[rank] Rank on real text (V11 block 4, checkpoint)
+  tokens=50,000, sample_every=100, head=0
+    ... wikitext token 10,000/50,000
+    ... wikitext token 20,000/50,000
+    ... wikitext token 30,000/50,000
+    ... wikitext token 40,000/50,000
+    ... random token 10,000/50,000
+    ... random token 20,000/50,000
+    ... random token 30,000/50,000
+    ... random token 40,000/50,000
+
+  Effective rank vs tokens (wikitext):
+    t= 48,900 rank=  9.0 |#################################
+    t= 49,000 rank= 10.3 |######################################
+    t= 49,100 rank=  8.4 |###############################
+    t= 49,200 rank=  4.7 |#################
+    t= 49,300 rank=  8.9 |#################################
+    t= 49,400 rank=  7.6 |############################
+    t= 49,500 rank=  9.8 |####################################
+    t= 49,600 rank=  7.1 |##########################
+    t= 49,700 rank=  8.5 |###############################
+    t= 49,800 rank=  9.4 |###################################
+    t= 49,900 rank=  7.8 |#############################
+    t= 49,999 rank=  5.1 |###################
+    (d=64, max rank shown=13.3)
+
+  Singular value snapshots (wikitext):
+    t=      0 eff_rank=  1.0  s1=104.751 s2=0.000 s3=0.000 ... s64=3.2854e-18
+    t=    100 eff_rank=  8.9  s1=240.257 s2=167.982 s3=112.761 ... s64=2.8867e-07
+    t=    200 eff_rank=  6.0  s1=280.072 s2=132.565 s3=67.498 ... s64=2.1161e-06
+    t=    300 eff_rank=  5.1  s1=194.967 s2=133.083 s3=71.116 ... s64=2.1333e-09
+    t=    400 eff_rank=  5.4  s1=156.000 s2=108.979 s3=73.755 ... s64=2.6065e-11
+    ...
+    t= 49,800 eff_rank=  9.4  s1=261.252 s2=127.953 s3=113.346 ... s64=5.1568e-08
+    t= 49,900 eff_rank=  7.8  s1=218.787 s2=118.157 s3=92.097 ... s64=7.6107e-10
+    t= 49,999 eff_rank=  5.1  s1=164.656 s2=91.896 s3=71.038 ... s64=1.5340e-07
+  WikiText  final rank=5.1 / d=64
+  Random    final rank=5.1 / d=64
+
+Results saved to logs/memory_probes/publication/gpu/memory_probes_rank_text_20260713_125257.json
+
+[rank] Rank on real text (V11 block 8, checkpoint)
+  tokens=50,000, sample_every=100, head=0
+    ... wikitext token 10,000/50,000
+    ... wikitext token 20,000/50,000
+    ... wikitext token 30,000/50,000
+    ... wikitext token 40,000/50,000
+    ... random token 10,000/50,000
+    ... random token 20,000/50,000
+    ... random token 30,000/50,000
+    ... random token 40,000/50,000
+
+  Effective rank vs tokens (wikitext):
+    t= 48,900 rank= 16.3 |##############################################
+    t= 49,000 rank= 16.8 |###############################################
+    t= 49,100 rank= 16.1 |#############################################
+    t= 49,200 rank= 15.0 |##########################################
+    t= 49,300 rank= 14.8 |##########################################
+    t= 49,400 rank= 15.5 |###########################################
+    t= 49,500 rank= 16.0 |#############################################
+    t= 49,600 rank= 14.4 |########################################
+    t= 49,700 rank= 15.0 |##########################################
+    t= 49,800 rank= 14.8 |##########################################
+    t= 49,900 rank= 13.3 |#####################################
+    t= 49,999 rank= 15.6 |############################################
+    (d=64, max rank shown=17.6)
+
+  Singular value snapshots (wikitext):
+    t=      0 eff_rank=  1.0  s1=63.912 s2=0.000 s3=0.000 ... s64=1.5764e-18
+    t=    100 eff_rank= 12.9  s1=844.162 s2=429.524 s3=123.068 ... s64=2.9352e-02
+    t=    200 eff_rank= 16.1  s1=518.155 s2=412.537 s3=110.500 ... s64=4.0284e-02
+    t=    300 eff_rank= 15.6  s1=484.515 s2=351.744 s3=99.337 ... s64=4.2510e-02
+    t=    400 eff_rank= 14.6  s1=230.604 s2=211.415 s3=94.166 ... s64=1.3946e-02
+    ...
+    t= 49,800 eff_rank= 14.8  s1=765.784 s2=548.438 s3=114.726 ... s64=3.8811e-02
+    t= 49,900 eff_rank= 13.3  s1=349.616 s2=238.774 s3=121.397 ... s64=7.3360e-03
+    t= 49,999 eff_rank= 15.6  s1=413.528 s2=293.355 s3=67.950 ... s64=3.1107e-02
+  WikiText  final rank=15.6 / d=64
+  Random    final rank=6.5 / d=64
+
+Results saved to logs/memory_probes/publication/gpu/memory_probes_rank_text_20260713_125530.json
+
+[rank] Rank on real text (V11 block 12, checkpoint)
+  tokens=50,000, sample_every=100, head=0
+    ... wikitext token 10,000/50,000
+    ... wikitext token 20,000/50,000
+    ... wikitext token 30,000/50,000
+    ... wikitext token 40,000/50,000
+    ... random token 10,000/50,000
+    ... random token 20,000/50,000
+    ... random token 30,000/50,000
+    ... random token 40,000/50,000
+
+  Effective rank vs tokens (wikitext):
+    t= 48,900 rank= 13.7 |#############################################
+    t= 49,000 rank= 14.1 |###############################################
+    t= 49,100 rank= 12.8 |##########################################
+    t= 49,200 rank= 12.3 |#########################################
+    t= 49,300 rank= 12.0 |########################################
+    t= 49,400 rank= 13.1 |###########################################
+    t= 49,500 rank= 13.1 |###########################################
+    t= 49,600 rank= 12.4 |#########################################
+    t= 49,700 rank= 12.6 |#########################################
+    t= 49,800 rank= 12.8 |##########################################
+    t= 49,900 rank= 12.9 |###########################################
+    t= 49,999 rank= 12.7 |##########################################
+    (d=64, max rank shown=14.9)
+
+  Singular value snapshots (wikitext):
+    t=      0 eff_rank=  1.0  s1=64.175 s2=0.000 s3=0.000 ... s64=1.1063e-18
+    t=    100 eff_rank=  9.3  s1=1192.373 s2=233.592 s3=108.852 ... s64=2.9752e-04
+    t=    200 eff_rank= 12.7  s1=953.936 s2=225.446 s3=110.454 ... s64=2.2628e-02
+    t=    300 eff_rank= 12.3  s1=876.004 s2=263.298 s3=116.312 ... s64=4.7622e-02
+    t=    400 eff_rank= 12.3  s1=748.135 s2=235.053 s3=147.621 ... s64=6.3687e-03
+    ...
+    t= 49,800 eff_rank= 12.8  s1=1143.224 s2=253.450 s3=146.865 ... s64=3.5659e-02
+    t= 49,900 eff_rank= 12.9  s1=810.803 s2=285.353 s3=152.460 ... s64=2.2184e-02
+    t= 49,999 eff_rank= 12.7  s1=900.434 s2=222.086 s3=129.258 ... s64=3.6272e-02
+  WikiText  final rank=12.7 / d=64
+  Random    final rank=4.3 / d=64
+
+Results saved to logs/memory_probes/publication/gpu/memory_probes_rank_text_20260713_130147.json
+
+[rank] Rank on real text (V11 block 15, checkpoint)
+  tokens=50,000, sample_every=100, head=0
+    ... wikitext token 10,000/50,000
+    ... wikitext token 20,000/50,000
+    ... wikitext token 30,000/50,000
+    ... wikitext token 40,000/50,000
+    ... random token 10,000/50,000
+    ... random token 20,000/50,000
+    ... random token 30,000/50,000
+    ... random token 40,000/50,000
+
+  Effective rank vs tokens (wikitext):
+    t= 48,900 rank= 12.1 |##################################
+    t= 49,000 rank= 10.4 |#############################
+    t= 49,100 rank= 10.5 |#############################
+    t= 49,200 rank=  7.3 |####################
+    t= 49,300 rank= 11.9 |#################################
+    t= 49,400 rank= 10.8 |##############################
+    t= 49,500 rank= 11.2 |###############################
+    t= 49,600 rank= 12.4 |##################################
+    t= 49,700 rank=  9.2 |#########################
+    t= 49,800 rank=  8.1 |######################
+    t= 49,900 rank= 10.4 |#############################
+    t= 49,999 rank=  7.1 |###################
+    (d=64, max rank shown=17.8)
+
+  Singular value snapshots (wikitext):
+    t=      0 eff_rank=  1.0  s1=72.848 s2=0.000 s3=0.000 ... s64=8.0490e-19
+    t=    100 eff_rank=  8.3  s1=185.255 s2=95.030 s3=73.242 ... s64=1.8351e-06
+    t=    200 eff_rank= 14.3  s1=181.600 s2=136.759 s3=86.503 ... s64=5.9326e-05
+    t=    300 eff_rank= 10.5  s1=153.872 s2=87.342 s3=78.537 ... s64=8.6935e-06
+    t=    400 eff_rank=  9.7  s1=96.626 s2=66.025 s3=56.444 ... s64=6.8590e-08
+    ...
+    t= 49,800 eff_rank=  8.1  s1=150.645 s2=105.412 s3=65.272 ... s64=2.9660e-08
+    t= 49,900 eff_rank= 10.4  s1=184.797 s2=127.301 s3=69.889 ... s64=2.4655e-07
+    t= 49,999 eff_rank=  7.1  s1=100.648 s2=81.199 s3=55.989 ... s64=7.4940e-07
+  WikiText  final rank=7.1 / d=64
+  Random    final rank=7.0 / d=64
+
+Results saved to logs/memory_probes/publication/gpu/memory_probes_rank_text_20260713_130428.json
+
+[language] Filler — projection seed sweep (50 trials)
+  needle: 'glorp' → ' banana'  filler: 5,000 cache tokens
+  seed=  0  lang=11.033  rand=0.139  lang/rand=79.45x
+  seed=  1  lang=11.825  rand=0.094  lang/rand=125.90x
+  seed=  2  lang=10.561  rand=0.233  lang/rand=45.32x
+  seed=  3  lang=10.509  rand=0.152  lang/rand=69.04x
+  seed=  4  lang=15.033  rand=0.167  lang/rand=90.19x
+  seed=  5  lang=6.436  rand=0.129  lang/rand=50.08x
+  seed=  6  lang=9.680  rand=0.213  lang/rand=45.47x
+  seed=  7  lang=7.985  rand=0.057  lang/rand=140.59x
+  seed=  8  lang=5.231  rand=0.102  lang/rand=51.44x
+  seed=  9  lang=10.594  rand=0.181  lang/rand=58.38x
+  seed= 10  lang=6.245  rand=0.115  lang/rand=54.37x
+  seed= 11  lang=11.064  rand=0.229  lang/rand=48.27x
+  seed= 12  lang=14.747  rand=0.108  lang/rand=136.37x
+  seed= 13  lang=9.384  rand=0.143  lang/rand=65.49x
+  seed= 14  lang=11.575  rand=0.272  lang/rand=42.57x
+  seed= 15  lang=13.898  rand=0.119  lang/rand=116.87x
+  seed= 16  lang=6.629  rand=0.246  lang/rand=26.97x
+  seed= 17  lang=7.182  rand=0.016  lang/rand=461.11x
+  seed= 18  lang=6.974  rand=0.268  lang/rand=25.99x
+  seed= 19  lang=9.528  rand=0.188  lang/rand=50.79x
+  seed= 20  lang=6.122  rand=0.107  lang/rand=57.10x
+  seed= 21  lang=8.305  rand=0.168  lang/rand=49.51x
+  seed= 22  lang=6.976  rand=0.035  lang/rand=198.73x
+  seed= 23  lang=10.108  rand=0.297  lang/rand=33.99x
+  seed= 24  lang=8.275  rand=0.216  lang/rand=38.27x
+  seed= 25  lang=8.333  rand=0.098  lang/rand=84.63x
+  seed= 26  lang=11.139  rand=0.111  lang/rand=100.72x
+  seed= 27  lang=7.375  rand=0.326  lang/rand=22.59x
+  seed= 28  lang=5.573  rand=0.065  lang/rand=85.16x
+  seed= 29  lang=11.323  rand=0.265  lang/rand=42.73x
+  seed= 30  lang=12.054  rand=0.048  lang/rand=250.38x
+  seed= 31  lang=9.194  rand=0.056  lang/rand=164.54x
+  seed= 32  lang=4.271  rand=0.273  lang/rand=15.66x
+  seed= 33  lang=3.340  rand=0.231  lang/rand=14.46x
+  seed= 34  lang=10.174  rand=0.085  lang/rand=120.40x
+  seed= 35  lang=5.582  rand=0.111  lang/rand=50.29x
+  seed= 36  lang=9.259  rand=0.021  lang/rand=431.93x
+  seed= 37  lang=8.405  rand=0.119  lang/rand=70.43x
+  seed= 38  lang=7.416  rand=0.158  lang/rand=46.98x
+  seed= 39  lang=9.025  rand=0.151  lang/rand=59.92x
+  seed= 40  lang=6.650  rand=0.056  lang/rand=118.97x
+  seed= 41  lang=7.621  rand=0.116  lang/rand=65.59x
+  seed= 42  lang=12.610  rand=0.151  lang/rand=83.72x
+  seed= 43  lang=12.019  rand=0.117  lang/rand=102.51x
+  seed= 44  lang=10.553  rand=0.065  lang/rand=162.53x
+  seed= 45  lang=11.230  rand=0.076  lang/rand=148.40x
+  seed= 46  lang=5.609  rand=0.077  lang/rand=72.61x
+  seed= 47  lang=15.253  rand=0.156  lang/rand=97.61x
+  seed= 48  lang=14.887  rand=0.202  lang/rand=73.71x
+  seed= 49  lang=9.386  rand=0.180  lang/rand=52.24x
+
+  Language rel: mean=9.28 std=2.84 [3.34, 15.25]
+  Lang/rand:    mean=94.02x std=86.31 [14.46x, 461.11x]
+  Language rel stable (CV<35%): True
+  Language beats random all seeds: True
+
+Results saved to logs/memory_probes/publication/gpu/memory_probes_language_filler_20260713_130449.json
+The fast path is not available because one of `(selective_state_update, selective_scan_fn, causal_conv1d_fn, causal_conv1d_update, mamba_inner_fn)` is None. Falling back to the sequential implementation of Mamba, as use_mambapy is set to False. To install follow https://github.com/state-spaces/mamba/#installation for mamba-ssm and install the kernels library using `pip install kernels` or https://github.com/Dao-AILab/causal-conv1d for causal-conv1d. For the mamba.py backend, follow https://github.com/alxndrTL/mamba.py.
+
+[compare] Cross-architecture state utilization on WikiText
+  tokens=2,000 (cache), d=64, gamma=0.995, sample_every=100
+  loading state-spaces/mamba-130m-hf (trained) on cuda ...
+    ... mamba token 400/2,000
+    ... mamba token 800/2,000
+    ... mamba token 1,200/2,000
+    ... mamba token 1,600/2,000
+
+  Architecture state-utilization comparison:
+  arch         rank_ceiling  eff_rank  utilization             state_cost
+  pam                    64     15.28       23.9%           fixed O(d^2)
+  transformer            64     55.29       86.4%           grows O(t*d)
+  mamba                  16     13.43       84.0% fixed O(d_inner*d_state)
+
+Results saved to logs/memory_probes/publication/gpu/memory_probes_arch_compare_20260713_130507.json
+  scored 20/720 examples
+  scored 40/720 examples
+  scored 60/720 examples
+  scored 80/720 examples
+  scored 100/720 examples
+  scored 120/720 examples
+  scored 140/720 examples
+  scored 160/720 examples
+  scored 180/720 examples
+  scored 200/720 examples
+  scored 220/720 examples
+  scored 240/720 examples
+  scored 260/720 examples
+  scored 280/720 examples
+  scored 300/720 examples
+  scored 320/720 examples
+  scored 340/720 examples
+  scored 360/720 examples
+  scored 380/720 examples
+  scored 400/720 examples
+  scored 420/720 examples
+  scored 440/720 examples
+  scored 460/720 examples
+  scored 480/720 examples
+  scored 500/720 examples
+  scored 520/720 examples
+  scored 540/720 examples
+  scored 560/720 examples
+  scored 580/720 examples
+  scored 600/720 examples
+  scored 620/720 examples
+  scored 640/720 examples
+  scored 660/720 examples
+  scored 680/720 examples
+  scored 700/720 examples
+  scored 720/720 examples
+Results saved to logs/memory_probes/publication/gpu/v11_behavior.json
+Skipping trained Transformer behavior: set TRANSFORMER_CHECKPOINT to enable.
+The fast path is not available because one of `(selective_state_update, selective_scan_fn, causal_conv1d_fn, causal_conv1d_update, mamba_inner_fn)` is None. Falling back to the sequential implementation of Mamba, as use_mambapy is set to False. To install follow https://github.com/state-spaces/mamba/#installation for mamba-ssm and install the kernels library using `pip install kernels` or https://github.com/Dao-AILab/causal-conv1d for causal-conv1d. For the mamba.py backend, follow https://github.com/alxndrTL/mamba.py.
+  scored 20/720 examples
+  scored 40/720 examples
+  scored 60/720 examples
+  scored 80/720 examples
+  scored 100/720 examples
+  scored 120/720 examples
+  scored 140/720 examples
+  scored 160/720 examples
+  scored 180/720 examples
+  scored 200/720 examples
+  scored 220/720 examples
+  scored 240/720 examples
+  scored 260/720 examples
+  scored 280/720 examples
+  scored 300/720 examples
+  scored 320/720 examples
+  scored 340/720 examples
+  scored 360/720 examples
+  scored 380/720 examples
+  scored 400/720 examples
+  scored 420/720 examples
+  scored 440/720 examples
+  scored 460/720 examples
+  scored 480/720 examples
+  scored 500/720 examples
+  scored 520/720 examples
+  scored 540/720 examples
+  scored 560/720 examples
+  scored 580/720 examples
+  scored 600/720 examples
+  scored 620/720 examples
+  scored 640/720 examples
+  scored 660/720 examples
+  scored 680/720 examples
+  scored 700/720 examples
+  scored 720/720 examples
+Results saved to logs/memory_probes/publication/gpu/mamba_behavior.json
+GPU diagnostics complete: logs/memory_probes/publication/gpu
+See memory_probes/PUBLICATION.md before using cross-model results in the paper.

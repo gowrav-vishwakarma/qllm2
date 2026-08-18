@@ -1,0 +1,47 @@
+{
+  "comparisons": [
+    {
+      "model": "v11",
+      "path": "logs/v11/recall_baselines/v11_behavior.json",
+      "params": 100878896,
+      "single_at_max": 0.19999999999999998,
+      "singles": {
+        "128": 0.6666666666666666,
+        "512": 0.21666666666666667,
+        "1024": 0.18333333333333335,
+        "2048": 0.19999999999999998
+      },
+      "multi8_at_min": 0.08333333333333333,
+      "overall": 0.2097222222222222
+    },
+    {
+      "model": "mamba",
+      "path": "logs/v11/recall_baselines/mamba_behavior.json",
+      "params": 129135360,
+      "single_at_max": 1.0,
+      "singles": {
+        "128": 1.0,
+        "512": 1.0,
+        "1024": 1.0,
+        "2048": 1.0
+      },
+      "multi8_at_min": 0.8166666666666668,
+      "overall": 0.7694444444444444
+    },
+    {
+      "model": "transformer_matched",
+      "path": "logs/v11/recall_baselines/transformer_matched_behavior.json",
+      "params": 100283232,
+      "single_at_max": 0.9555555555555556,
+      "singles": {
+        "128": 0.9555555555555556,
+        "512": 0.9555555555555556,
+        "1024": 0.9611111111111111,
+        "2048": 0.9555555555555556
+      },
+      "multi8_at_min": 0.25555555555555554,
+      "overall": 0.5365740740740741
+    }
+  ],
+  "metric_note": "single_at_max = mean over positions of associations==1 at max context"
+}

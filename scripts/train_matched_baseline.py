@@ -7,6 +7,7 @@ comparisons are architecture claims rather than pretrained-vs-scratch.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import math
 import os
@@ -22,9 +23,10 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 
-def _build_transformer(vocab_size: int = 50257):
-    from v6.transformer_baseline import TransformerConfig, TransformerLM, get_transformer_config_100m
-    cfg = get_transformer_config_100m()
+def _build_transformer(vocab_size: int = 50257, size: str = '100m'):
+    from v6.transformer_baseline import TransformerConfig, TransformerLM, TRANSFORMER_CONFIGS
+    key = size if size in TRANSFORMER_CONFIGS else '100m'
+    cfg = copy.deepcopy(TRANSFORMER_CONFIGS[key])
     cfg.vocab_size = vocab_size
     cfg.dropout = 0.1
     return TransformerLM(cfg), cfg
@@ -81,8 +83,8 @@ def _save_mamba_hf(dir_path: Path, model, step: int, tokens: int, nparams: int):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--arch', choices=('transformer', 'mamba'), required=True)
-    ap.add_argument('--size', choices=('100m', 'tiny'), default='100m',
-                    help='Model size class (mamba tiny≈10M for micro-capacity)')
+    ap.add_argument('--size', choices=('100m', 'tiny', '10m', '5m', '50m'), default='100m',
+                    help='Model size class (transformer: TRANSFORMER_CONFIGS key; mamba tiny≈10M)')
     ap.add_argument('--token_budget', type=int, default=1_000_000_000)
     ap.add_argument('--batch_size', type=int, default=8)
     ap.add_argument('--seq_len', type=int, default=2048)
@@ -96,6 +98,8 @@ def main() -> int:
     ap.add_argument('--checkpoint_dir', type=Path, required=True)
     ap.add_argument('--log_every', type=int, default=50)
     ap.add_argument('--save_every_steps', type=int, default=2000)
+    ap.add_argument('--chat_vocab', action='store_true',
+                    help='Use ChatML+reasoning tokenizer (50261) like V13 recall presets')
     args = ap.parse_args()
 
     torch.manual_seed(args.seed)
@@ -111,7 +115,7 @@ def main() -> int:
         token_budget=args.token_budget,
         sources=sources,
         weights=weights,
-        chat_vocab=False,
+        chat_vocab=args.chat_vocab,
         fineweb_name=args.fineweb_name,
         holdout_pct=5,
         mix_seed=args.seed,
@@ -121,7 +125,7 @@ def main() -> int:
 
     vocab_size = int(getattr(tokenizer, 'vocab_size', 50257) or 50257)
     if args.arch == 'transformer':
-        model, cfg = _build_transformer(vocab_size=vocab_size)
+        model, cfg = _build_transformer(vocab_size=vocab_size, size=args.size)
     else:
         model, cfg = _build_mamba(vocab_size=vocab_size, size=args.size)
     model = model.to(device)

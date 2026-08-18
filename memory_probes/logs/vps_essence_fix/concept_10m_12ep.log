@@ -1,0 +1,23 @@
+[device] cuda
+[cache] Loaded TinyStories train from .cache/v7_tokens/tinystories_train_v2_ms20000_sl256_r1.pt (4,465,139 tokens)
+[cache] Loaded TinyStories validation from .cache/v7_tokens/tinystories_validation_v2_ms20000_sl256_r1.pt (388,958 tokens)
+Train chunks: 17374, Val chunks: 1513
+/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.num_heads is odd
+  warnings.warn(
+[budget] {"budget": "10m", "transformer_params": 10022112, "vps_params": 10011011, "vps_dim": 288, "vps_embed_rank": 32, "vps_layers": 2, "vps_heads": 4, "vps_head_dim": 64}
+[vps] params=10,011,011 dim=288 rank=32 layers=2 heads=4×64
+[vps] concept path: chunk=32, d_ess=2048 (learned segment encoder + causal path predictor)
+[vps] lr=0.002
+[vps] epoch 1/12 loss=8.4625 val_ppl=32.39 (oracle=29.99)
+[vps] epoch 2/12 loss=6.2539 val_ppl=23.16 (oracle=18.26)
+[vps] epoch 3/12 loss=5.5958 val_ppl=19.47 (oracle=13.74)
+[vps] epoch 4/12 loss=5.1961 val_ppl=17.26 (oracle=10.94)
+[vps] epoch 5/12 loss=4.8812 val_ppl=16.00 (oracle=9.22)
+[vps] epoch 6/12 loss=4.6278 val_ppl=14.95 (oracle=7.95)
+[vps] epoch 7/12 loss=4.4090 val_ppl=14.34 (oracle=6.88)
+[vps] epoch 8/12 loss=4.2145 val_ppl=13.73 (oracle=6.03)
+[vps] epoch 9/12 loss=4.0353 val_ppl=13.32 (oracle=5.28)
+[vps] epoch 10/12 loss=3.8674 val_ppl=12.93 (oracle=4.59)
+[vps] epoch 11/12 loss=3.7163 val_ppl=12.80 (oracle=3.96)
+[vps] epoch 12/12 loss=3.5668 val_ppl=12.59 (oracle=3.54)
+[done] logs/vps_matched_tinystories/10m_20260812_185748/compare.json

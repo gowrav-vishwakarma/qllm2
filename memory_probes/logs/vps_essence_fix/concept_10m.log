@@ -1,0 +1,31 @@
+[device] cuda
+Loading TinyStories train (limit=20000)...
+  Tokenizing 20000 train texts...
+Token indices sequence length is longer than the specified maximum sequence length for this model (1106 > 1024). Running this sequence through the model will result in indexing errors
+  train: 20000 stories, 4,465,139 tokens
+[cache] Saved train to .cache/v7_tokens/tinystories_train_v2_ms20000_sl256_r1.pt
+Loading TinyStories validation (limit=2000)...
+  Tokenizing 2000 validation texts...
+  validation: 2000 stories, 388,958 tokens
+[cache] Saved validation to .cache/v7_tokens/tinystories_validation_v2_ms20000_sl256_r1.pt
+Train chunks: 17374, Val chunks: 1513
+/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.num_heads is odd
+  warnings.warn(
+[budget] {"budget": "10m", "transformer_params": 10022112, "vps_params": 10011011, "vps_dim": 288, "vps_embed_rank": 32, "vps_layers": 2, "vps_heads": 4, "vps_head_dim": 64}
+[transformer] params=10,022,112 d_model=136 layers=13
+[transformer] epoch 1/8 loss=5.1034 val_ppl=46.39
+[transformer] epoch 2/8 loss=3.5457 val_ppl=28.15
+[transformer] epoch 3/8 loss=3.1889 val_ppl=21.66
+[transformer] epoch 4/8 loss=2.9759 val_ppl=18.12
+[transformer] epoch 5/8 loss=2.8263 val_ppl=15.99
+[transformer] epoch 6/8 loss=2.7098 val_ppl=14.51
+[transformer] epoch 7/8 loss=2.6185 val_ppl=13.42
+[transformer] epoch 8/8 loss=2.5447 val_ppl=12.65
+[vps] params=10,011,011 dim=288 rank=32 layers=2 heads=4×64
+[vps] concept path: chunk=32, d_ess=2048 (learned segment encoder + causal path predictor)
+[vps] lr=0.002
+[vps] epoch 1/8 loss=9.1375 val_ppl=38.46 (oracle=36.83)
+[vps] epoch 2/8 loss=6.5710 val_ppl=25.00 (oracle=21.72)
+[vps] epoch 3/8 loss=5.8237 val_ppl=20.32 (oracle=15.55)
+[vps] epoch 4/8 loss=5.3710 val_ppl=17.83 (oracle=12.30)
+[vps] epoch 5/8 loss=5.0211 val_ppl=16.55 (oracle=10.17)

@@ -1,0 +1,35 @@
+{
+  "arms": [
+    {
+      "arm": "control",
+      "recall_at_2048": 0.1388888888888889,
+      "multi8_at_min": 0.09444444444444444,
+      "gate": 0.16010871902108192,
+      "ship": false
+    },
+    {
+      "arm": "delta",
+      "status": "pending"
+    },
+    {
+      "arm": "phase",
+      "recall_at_2048": 0.18888888888888888,
+      "multi8_at_min": 0.08888888888888889,
+      "gate": 0.15472441166639328,
+      "ship": false
+    },
+    {
+      "arm": "vault",
+      "recall_at_2048": 0.18888888888888888,
+      "multi8_at_min": 0.11111111111111112,
+      "gate": 0.1361473985016346,
+      "ship": false
+    }
+  ],
+  "ranked": [
+    "vault",
+    "phase",
+    "control"
+  ],
+  "winner": "vault"
+}

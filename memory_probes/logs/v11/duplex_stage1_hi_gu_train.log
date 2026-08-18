@@ -1,0 +1,136 @@
+Stage 1 dataset: kathbath (ai4bharat/Kathbath)
+Preset duplex_5m: {'embedding (tied)': 163840, 'blocks': 5038312, 'norms': 320, 'lm_head': 51680, 'total': 5254152}
+Building dataset...
+  Loading Kathbath hindi (200 pairs)...
+  Loading Kathbath gujarati (200 pairs)...
+  Kathbath total: 400 samples (2 langs)
+Periodic checkpoint: every 50 steps -> checkpoints_v11_duplex_5m_stage1_hi_gu/latest.pt
+ep1 step1 loss=6.2380 think_acc=0.000 (random=0.333)
+ep1 step11 loss=6.1732 think_acc=0.000 (random=0.333)
+ep1 step21 loss=5.8144 think_acc=0.500 (random=0.333)
+ep1 step31 loss=5.7670 think_acc=0.500 (random=0.333)
+ep1 step41 loss=5.2586 think_acc=0.750 (random=0.333)
+  [checkpoint @ step 50]
+ep1 step51 loss=5.8878 think_acc=0.250 (random=0.333)
+ep1 step61 loss=5.9757 think_acc=0.250 (random=0.333)
+ep1 step71 loss=5.3641 think_acc=0.750 (random=0.333)
+ep1 step81 loss=5.0017 think_acc=1.000 (random=0.333)
+=== epoch 1 train loss=5.2528 think=0.561 | val loss=3.9319 think=0.925 ===
+  New best val think_acc=0.925 -> best_model.pt
+ep2 step91 loss=3.9848 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 100]
+ep2 step101 loss=3.1629 think_acc=0.750 (random=0.333)
+ep2 step111 loss=1.0806 think_acc=1.000 (random=0.333)
+ep2 step121 loss=3.7963 think_acc=1.000 (random=0.333)
+ep2 step131 loss=3.7555 think_acc=1.000 (random=0.333)
+ep2 step141 loss=3.6024 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 150]
+ep2 step151 loss=0.9270 think_acc=1.000 (random=0.333)
+ep2 step161 loss=4.2729 think_acc=1.000 (random=0.333)
+ep2 step171 loss=0.5459 think_acc=1.000 (random=0.333)
+=== epoch 2 train loss=3.6825 think=0.992 | val loss=3.1350 think=1.000 ===
+  New best val think_acc=1.000 -> best_model.pt
+ep3 step181 loss=3.2819 think_acc=1.000 (random=0.333)
+ep3 step191 loss=4.0340 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 200]
+ep3 step201 loss=0.2795 think_acc=1.000 (random=0.333)
+ep3 step211 loss=3.1397 think_acc=1.000 (random=0.333)
+ep3 step221 loss=3.9807 think_acc=1.000 (random=0.333)
+ep3 step231 loss=3.8899 think_acc=1.000 (random=0.333)
+ep3 step241 loss=3.0380 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 250]
+ep3 step251 loss=0.1531 think_acc=1.000 (random=0.333)
+ep3 step261 loss=3.0894 think_acc=1.000 (random=0.333)
+=== epoch 3 train loss=3.2550 think=1.000 | val loss=2.9705 think=1.000 ===
+  New best val think_acc=1.000 -> best_model.pt
+ep4 step271 loss=0.1110 think_acc=1.000 (random=0.333)
+ep4 step281 loss=2.9563 think_acc=1.000 (random=0.333)
+ep4 step291 loss=3.1396 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 300]
+ep4 step301 loss=0.0685 think_acc=1.000 (random=0.333)
+ep4 step311 loss=3.5310 think_acc=1.000 (random=0.333)
+ep4 step321 loss=3.7234 think_acc=1.000 (random=0.333)
+ep4 step331 loss=2.9421 think_acc=1.000 (random=0.333)
+ep4 step341 loss=3.5940 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 350]
+ep4 step351 loss=3.7125 think_acc=1.000 (random=0.333)
+=== epoch 4 train loss=2.7995 think=1.000 | val loss=2.8912 think=1.000 ===
+  New best val think_acc=1.000 -> best_model.pt
+ep5 step361 loss=3.2422 think_acc=1.000 (random=0.333)
+ep5 step371 loss=3.4721 think_acc=1.000 (random=0.333)
+ep5 step381 loss=2.6225 think_acc=1.000 (random=0.333)
+ep5 step391 loss=3.4914 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 400]
+ep5 step401 loss=2.7233 think_acc=1.000 (random=0.333)
+ep5 step411 loss=3.5854 think_acc=1.000 (random=0.333)
+ep5 step421 loss=2.7560 think_acc=1.000 (random=0.333)
+ep5 step431 loss=0.0228 think_acc=1.000 (random=0.333)
+ep5 step441 loss=3.5244 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 450]
+=== epoch 5 train loss=2.7056 think=1.000 | val loss=2.8711 think=1.000 ===
+  New best val think_acc=1.000 -> best_model.pt
+ep6 step451 loss=3.4908 think_acc=1.000 (random=0.333)
+ep6 step461 loss=2.3420 think_acc=1.000 (random=0.333)
+ep6 step471 loss=0.0177 think_acc=1.000 (random=0.333)
+ep6 step481 loss=2.5182 think_acc=1.000 (random=0.333)
+ep6 step491 loss=2.2670 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 500]
+ep6 step501 loss=2.4221 think_acc=1.000 (random=0.333)
+ep6 step511 loss=3.1746 think_acc=1.000 (random=0.333)
+ep6 step521 loss=3.2507 think_acc=1.000 (random=0.333)
+ep6 step531 loss=2.5261 think_acc=1.000 (random=0.333)
+=== epoch 6 train loss=2.2818 think=1.000 | val loss=2.8713 think=1.000 ===
+  New best val think_acc=1.000 -> best_model.pt
+ep7 step541 loss=3.0180 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 550]
+ep7 step551 loss=0.0109 think_acc=1.000 (random=0.333)
+ep7 step561 loss=3.0149 think_acc=1.000 (random=0.333)
+ep7 step571 loss=3.4668 think_acc=1.000 (random=0.333)
+ep7 step581 loss=2.3650 think_acc=1.000 (random=0.333)
+ep7 step591 loss=0.0090 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 600]
+ep7 step601 loss=2.8492 think_acc=1.000 (random=0.333)
+ep7 step611 loss=2.5309 think_acc=1.000 (random=0.333)
+ep7 step621 loss=0.0084 think_acc=1.000 (random=0.333)
+=== epoch 7 train loss=2.1767 think=1.000 | val loss=2.8544 think=1.000 ===
+  New best val think_acc=1.000 -> best_model.pt
+ep8 step631 loss=2.3576 think_acc=1.000 (random=0.333)
+ep8 step641 loss=2.6664 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 650]
+ep8 step651 loss=2.8185 think_acc=1.000 (random=0.333)
+ep8 step661 loss=2.8449 think_acc=1.000 (random=0.333)
+ep8 step671 loss=0.0072 think_acc=1.000 (random=0.333)
+ep8 step681 loss=0.0070 think_acc=1.000 (random=0.333)
+ep8 step691 loss=0.0067 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 700]
+ep8 step701 loss=0.0066 think_acc=1.000 (random=0.333)
+ep8 step711 loss=2.0550 think_acc=1.000 (random=0.333)
+=== epoch 8 train loss=2.1399 think=1.000 | val loss=2.8584 think=1.000 ===
+  New best val think_acc=1.000 -> best_model.pt
+ep9 step721 loss=2.2386 think_acc=1.000 (random=0.333)
+ep9 step731 loss=2.1049 think_acc=1.000 (random=0.333)
+ep9 step741 loss=2.7415 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 750]
+ep9 step751 loss=2.4102 think_acc=1.000 (random=0.333)
+ep9 step761 loss=2.6246 think_acc=1.000 (random=0.333)
+ep9 step771 loss=2.5852 think_acc=1.000 (random=0.333)
+ep9 step781 loss=2.4542 think_acc=1.000 (random=0.333)
+ep9 step791 loss=1.9342 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 800]
+ep9 step801 loss=2.1488 think_acc=1.000 (random=0.333)
+=== epoch 9 train loss=2.0616 think=1.000 | val loss=2.8756 think=1.000 ===
+  New best val think_acc=1.000 -> best_model.pt
+ep10 step811 loss=2.5516 think_acc=1.000 (random=0.333)
+ep10 step821 loss=2.3248 think_acc=1.000 (random=0.333)
+ep10 step831 loss=0.0047 think_acc=1.000 (random=0.333)
+ep10 step841 loss=2.6339 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 850]
+ep10 step851 loss=2.3733 think_acc=1.000 (random=0.333)
+ep10 step861 loss=2.8588 think_acc=1.000 (random=0.333)
+ep10 step871 loss=2.5429 think_acc=1.000 (random=0.333)
+ep10 step881 loss=2.8291 think_acc=1.000 (random=0.333)
+ep10 step891 loss=2.2553 think_acc=1.000 (random=0.333)
+  [checkpoint @ step 900]
+=== epoch 10 train loss=1.8603 think=1.000 | val loss=2.8774 think=1.000 ===
+  New best val think_acc=1.000 -> best_model.pt
+Done in 232.0s. best_model.pt + metrics.json in checkpoints_v11_duplex_5m_stage1_hi_gu

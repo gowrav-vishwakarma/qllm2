@@ -1,0 +1,71 @@
+==========================================================================================
+V5 Init Strategy Benchmark (Learning Curves)
+==========================================================================================
+Started: 2026-03-04 22:58:16
+Device: mps
+
+--- Benchmark config ---
+  samples = 50
+  batch_size = 4
+  seq_len = 128
+  epochs = 2
+  size = tiny
+  seeds = [42, 43]
+  strategies = ['random', 'golden_ratio']
+  device = mps
+
+--- Model config ---
+{
+  "vocab_size": 50257,
+  "dim": 64,
+  "state_dim": 128,
+  "num_layers": 4,
+  "num_banks": 2,
+  "bank_expand": 2,
+  "num_heads": 4,
+  "attn_every_k": 4,
+  "window_size": 256,
+  "dropout": 0.1,
+  "max_seq_len": 128,
+  "batch_size": 4,
+  "learning_rate": 0.001,
+  "weight_decay": 0.01,
+  "max_epochs": 2,
+  "warmup_steps": 200,
+  "gradient_clip": 1.0,
+  "diversity_loss_weight": 0.05,
+  "compile_model": false,
+  "init_strategy": "random",
+  "init_seed": null
+}
+==========================================================================================
+
+SECTION A: PER-STRATEGY LEARNING CURVES
+
+--- random (2 seeds) ---
+         Epoch   Seed 42 TrL        ValPPL   Seed 43 TrL        ValPPL  Mean ValPPL +/- Std
+      1       10.5769      27518.21       10.5516      26589.50    27053.85 +/- 656.70
+      2        9.8924      20262.84        9.8300      19818.30    20040.57 +/- 314.34
+
+--- golden_ratio (2 seeds) ---
+         Epoch   Seed 42 TrL        ValPPL   Seed 43 TrL        ValPPL  Mean ValPPL +/- Std
+      1       10.5775      27711.61       10.4880      22797.55    25254.58 +/- 3474.77
+      2        9.9001      20737.34        9.7117      16759.88    18748.61 +/- 2812.49
+
+==========================================================================================
+SECTION B: SUMMARY (ranked by mean final val PPL)
+
+Strategy               | Mean ValPPL |    Std |      Best Seed |     Worst Seed |  Avg Time
+------------------------------------------------------------------------------------------
+golden_ratio           |   18748.61 | 2812.49 |   43 (16759.9) |   42 (20737.3) |      7.9s
+random                 |   20040.57 | 314.34 |   43 (19818.3) |   42 (20262.8) |     11.2s
+------------------------------------------------------------------------------------------
+
+Total benchmark time: 39.2s
+
+==========================================================================================
+SECTION C: GROKKING CANDIDATES
+
+  None detected (val PPL did not rise then fall below start in any run)
+
+==========================================================================================

@@ -1,0 +1,12 @@
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl1024.pt (248,461 tokens)
+Val chunks: 242
+[cache] DCLM holdout: .cache/v7_tokens/dclm_edu_holdout_v1_t500000_e3_p5.pt (500,000 tokens)
+
+Eval sets: ['wiki', 'dclm'] | device=cuda
+
+checkpoint                                              | set   |     loss |      ppl |     tokens
+-----------------------------------------------------------------------------------------------
+Loading checkpoints_v12_curriculum/base/slim.pt...
+base/slim.pt                                            | wiki  |   5.9613 |   388.12 |    247,808
+base/slim.pt                                            | dclm  |   4.8037 |   121.95 |    498,688
+

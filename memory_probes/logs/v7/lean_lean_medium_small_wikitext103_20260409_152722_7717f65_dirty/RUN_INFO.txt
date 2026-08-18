@@ -1,0 +1,21 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : Lean PAM (lean_medium_small): SimpleComplexFFN (no CGU), PAM(complex RoPE, GSP, chunked dual C=256), flat dt=-4.0, LR=1e-4, warmup=1000, B=3
+Date (UTC)  : 2026-04-09 09:57:22
+Date (local): 2026-04-09 15:27:22 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 7717f65cdd3da300400c2ac35629c6ec5adbdb5a
+Git short   : 7717f65
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.24
+Arguments   : --model lean --preset lean_medium_small --dataset wikitext103 --seq_len 2048 --batch_size 3 --epochs 10 --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --gen_prompt 'In 1923 , the University of'  
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+

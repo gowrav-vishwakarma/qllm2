@@ -1,0 +1,14 @@
+[micro] train control preset=v11_micro_10m budget=30000000
+[micro] eval control
+[micro] train delta preset=v11_micro_10m_delta budget=30000000
+[micro] eval delta
+[micro] train vault preset=v11_micro_10m_vault budget=30000000
+[micro] FAIL vault: no checkpoint
+[micro] train phase preset=v11_micro_10m_phase budget=30000000
+[micro] skip control (verdict exists)
+[micro] skip delta (verdict exists)
+[micro] train vault preset=v11_micro_10m_vault budget=30000000
+[micro] eval vault
+[micro] train phase preset=v11_micro_10m_phase budget=30000000
+[micro] eval phase
+[micro] train tiny_mamba

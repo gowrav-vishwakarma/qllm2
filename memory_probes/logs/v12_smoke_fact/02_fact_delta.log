@@ -1,0 +1,158 @@
+  [fact] mode=delta layers=4 lr=3e-5 save_every=1000 spec=checkpoints_v12_curriculum/fact_retrieval/fact_band_spec.json
++ .venv/bin/python -m v12.train --preset v12_grammar_dyn --stage pretrain --dataset fact --pretrain_sources dclm,fineweb --pretrain_weights 40,60 --substrate grammar@>=1.0 --registry v12_registry --grow_layers @checkpoints_v12_curriculum/fact_retrieval/fact_band_spec.json --layer_head_budget 16 --head_gate --write_phase_address --freeze_layers base --attach_mode sequential --stage_loss ce_fact --fused_ce --gen_every 5000 --gen_prompt Record: bofim means gold. Record: kaner means silver. Query: bofim means --batch_size 32 --seq_len 1024 --lr 3e-5 --weight_decay 0.01 --token_budget 300000000 --checkpoint_dir checkpoints_v12_curriculum/fact_retrieval --save_every_steps 1000
+[Discord] Webhook configured -- notifications enabled
+Wall clock start: 2026-07-20 11:09:40
+============================================================
+  V12: PAM with new memory dynamics
+  Preset: v12_grammar_dyn | Stage: pretrain | Dataset: fact
+============================================================
+
+Stage loss: ce_fact — Answer-masked CE + gate-surprisal + hard-negative contrastive (fact stage).
+  overrides applied: {'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 0.5, 'gate_surprisal_sign': 1.0, 'fact_contrastive_lambda': 0.1, 'fact_contrastive_tau': 2.0}
+
+Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 16, 'head_dim': 64, 'n_layers': 4, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 1024, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': True, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 3, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 0.5, 'gate_surprisal_sign': 1.0, 'fact_contrastive_lambda': 0.1, 'fact_contrastive_tau': 2.0, 'vault_state': False, 'vault_state_idx': 0, 'write_phase_address': True, 'head_gate': True, 'head_gate_l0_lambda': 0.001, 'head_gate_init_logalpha': 3.0, 'layer_specs': None}
+Memory dynamics: decay_mode=head, write_mode=additive, n_states=3, chunk_size=256
+Batch size: 32, Epochs: 10, LR: 3e-05
+Token budget: 300,000,000
+
+Loading fact (seq_len=1024)...
+[fact_data] train=292,968 val=512 examples, seq_len=1024, value_pool=50, vocab=50261
+Train batches: 9156, Val batches: 16
+[substrate] WARNING: substrate vocab_size=50257 != tokenizer/preset vocab_size=50261
+[substrate] grammar@1.0 -> ['grammar@1.0'] (4 frozen base layers)
+
+Model parameters: {'embedding (tied)': 38597376, 'blocks': 23388692, 'norms': 768, 'lm_head': 296064, 'total': 62282900}
+Total: 62,282,900 (62.3M)
+[M4 grow] +4 layers [4, 5, 6, 7] on base of 4 (skills=['fact_retrieval', 'fact_retrieval', 'fact_retrieval', 'fact_retrieval'], attach_mode=sequential); total layers=8
+[M4 freeze] froze blocks [0, 1, 2, 3]; trainable params=62,233,608. (requires_grad=False => excluded from optimizer, no wd drift)
+Param groups: 56 tensors (62,214,912) with wd, 57 tensors (18,696) without
+fused_ce enabled (chunked linear+CE; logits never materialized)
+
+Training on cuda
+Parameters: {'embedding (tied)': 38597376, 'blocks': 46728092, 'norms': 768, 'lm_head': 296064, 'total': 85622300}
+Total: 85,622,300 (85.6M)
+Epochs: 1..9999, Batches/epoch: 9156
+Periodic checkpoint: every 1000 steps -> latest.pt
+
+
+============================================================
+Epoch 1/9999
+============================================================
+  [1] 0/9156 (0%) loss=11.8872 ppl=145397.7 lr=3.00e-08 | 5309 tok/s (avg 5309) ETA 0m00s | GPU 1.0/13.2GB | gtok=32768
+  [1] 50/9156 (1%) loss=10.8949 ppl=53903.3 lr=1.53e-06 | 6742 tok/s (avg 6706) ETA 741m28s | GPU 1.0/13.7GB | gtok=1671168
+  [1] 100/9156 (1%) loss=10.3240 ppl=30454.2 lr=3.03e-06 | 6772 tok/s (avg 6739) ETA 733m51s | GPU 1.0/13.7GB | gtok=3309568
+  [1] 150/9156 (2%) loss=9.4623 ppl=12865.0 lr=4.53e-06 | 6716 tok/s (avg 6731) ETA 730m36s | GPU 1.0/13.7GB | gtok=4947968
+  [1] 200/9156 (2%) loss=7.8400 ppl=2540.2 lr=6.03e-06 | 6756 tok/s (avg 6737) ETA 725m53s | GPU 1.0/13.7GB | gtok=6586368
+  [1] 250/9156 (3%) loss=7.0422 ppl=1143.9 lr=7.53e-06 | 7107 tok/s (avg 6808) ETA 714m21s | GPU 1.0/13.7GB | gtok=8224768
+  [1] 300/9156 (3%) loss=5.7069 ppl=300.9 lr=9.03e-06 | 7221 tok/s (avg 6873) ETA 703m36s | GPU 1.0/13.7GB | gtok=9863168
+  [1] 350/9156 (4%) loss=4.8922 ppl=133.2 lr=1.05e-05 | 7257 tok/s (avg 6925) ETA 694m21s | GPU 1.0/13.7GB | gtok=11501568
+  [1] 400/9156 (4%) loss=4.4628 ppl=86.7 lr=1.20e-05 | 7266 tok/s (avg 6966) ETA 686m22s | GPU 1.0/13.7GB | gtok=13139968
+  [1] 450/9156 (5%) loss=4.1619 ppl=64.2 lr=1.35e-05 | 7334 tok/s (avg 7005) ETA 678m39s | GPU 1.0/13.7GB | gtok=14778368
+  [1] 500/9156 (5%) loss=4.0385 ppl=56.7 lr=1.50e-05 | 7357 tok/s (avg 7039) ETA 671m32s | GPU 1.0/13.7GB | gtok=16416768
+  [1] 550/9156 (6%) loss=3.9882 ppl=54.0 lr=1.65e-05 | 7354 tok/s (avg 7066) ETA 665m04s | GPU 1.0/13.7GB | gtok=18055168
+  [1] 600/9156 (7%) loss=4.0662 ppl=58.3 lr=1.80e-05 | 7349 tok/s (avg 7089) ETA 659m05s | GPU 1.0/13.7GB | gtok=19693568
+  [1] 650/9156 (7%) loss=3.9248 ppl=50.6 lr=1.95e-05 | 7331 tok/s (avg 7107) ETA 653m34s | GPU 1.0/13.7GB | gtok=21331968
+  [1] 700/9156 (8%) loss=3.7857 ppl=44.1 lr=2.10e-05 | 7282 tok/s (avg 7119) ETA 648m36s | GPU 1.0/13.7GB | gtok=22970368
+  [1] 750/9156 (8%) loss=3.7507 ppl=42.6 lr=2.25e-05 | 7107 tok/s (avg 7118) ETA 644m51s | GPU 1.0/13.7GB | gtok=24608768
+  [1] 800/9156 (9%) loss=3.7681 ppl=43.3 lr=2.40e-05 | 7117 tok/s (avg 7118) ETA 641m01s | GPU 1.0/13.7GB | gtok=26247168
+  [1] 850/9156 (9%) loss=3.8281 ppl=46.0 lr=2.55e-05 | 7112 tok/s (avg 7118) ETA 637m13s | GPU 1.0/13.7GB | gtok=27885568
+  [1] 900/9156 (10%) loss=3.8284 ppl=46.0 lr=2.70e-05 | 7131 tok/s (avg 7119) ETA 633m19s | GPU 1.0/13.7GB | gtok=29523968
+  [1] 950/9156 (10%) loss=3.5934 ppl=36.4 lr=2.85e-05 | 7243 tok/s (avg 7125) ETA 628m54s | GPU 1.0/13.7GB | gtok=31162368
+Saved checkpoint: checkpoints_v12_curriculum/fact_retrieval/latest.pt
+  [checkpoint @ step 1000, 32,768,000 tok]
+  [1] 1000/9156 (11%) loss=3.3799 ppl=29.4 lr=3.00e-05 | 7174 tok/s (avg 7127) ETA 624m52s | GPU 1.0/13.7GB | gtok=32800768
+  [1] 1050/9156 (11%) loss=3.2947 ppl=27.0 lr=3.00e-05 | 6954 tok/s (avg 7119) ETA 621m46s | GPU 1.0/13.7GB | gtok=34439168
+  [1] 1100/9156 (12%) loss=3.2877 ppl=26.8 lr=3.00e-05 | 7254 tok/s (avg 7125) ETA 617m25s | GPU 1.0/13.7GB | gtok=36077568
+  [1] 1150/9156 (13%) loss=3.3588 ppl=28.8 lr=3.00e-05 | 7132 tok/s (avg 7125) ETA 613m33s | GPU 1.0/13.7GB | gtok=37715968
+  [1] 1200/9156 (13%) loss=3.3777 ppl=29.3 lr=3.00e-05 | 7182 tok/s (avg 7128) ETA 609m31s | GPU 1.0/13.7GB | gtok=39354368
+  [1] 1250/9156 (14%) loss=2.9663 ppl=19.4 lr=2.99e-05 | 7213 tok/s (avg 7131) ETA 605m24s | GPU 1.0/13.7GB | gtok=40992768
+  [1] 1300/9156 (14%) loss=2.8383 ppl=17.1 lr=2.99e-05 | 7292 tok/s (avg 7137) ETA 601m04s | GPU 1.0/13.7GB | gtok=42631168
+  [1] 1350/9156 (15%) loss=3.1118 ppl=22.5 lr=2.99e-05 | 7258 tok/s (avg 7141) ETA 596m52s | GPU 1.0/13.7GB | gtok=44269568
+  [1] 1400/9156 (15%) loss=3.1476 ppl=23.3 lr=2.99e-05 | 7325 tok/s (avg 7148) ETA 592m31s | GPU 1.0/13.7GB | gtok=45907968
+  [1] 1450/9156 (16%) loss=2.8834 ppl=17.9 lr=2.98e-05 | 7233 tok/s (avg 7151) ETA 588m27s | GPU 1.0/13.7GB | gtok=47546368
+  [1] 1500/9156 (16%) loss=2.6079 ppl=13.6 lr=2.98e-05 | 7209 tok/s (avg 7153) ETA 584m29s | GPU 1.0/13.7GB | gtok=49184768
+  [1] 1550/9156 (17%) loss=2.6718 ppl=14.5 lr=2.97e-05 | 7137 tok/s (avg 7152) ETA 580m42s | GPU 1.0/13.7GB | gtok=50823168
+  [1] 1600/9156 (17%) loss=2.8910 ppl=18.0 lr=2.97e-05 | 7093 tok/s (avg 7150) ETA 577m02s | GPU 1.0/13.7GB | gtok=52461568
+  [1] 1650/9156 (18%) loss=2.5198 ppl=12.4 lr=2.96e-05 | 6784 tok/s (avg 7139) ETA 574m09s | GPU 1.0/13.7GB | gtok=54099968
+  [1] 1700/9156 (19%) loss=2.1393 ppl=8.5 lr=2.96e-05 | 6728 tok/s (avg 7126) ETA 571m21s | GPU 1.0/13.7GB | gtok=55738368
+  [1] 1750/9156 (19%) loss=2.4299 ppl=11.4 lr=2.95e-05 | 6711 tok/s (avg 7113) ETA 568m31s | GPU 1.0/13.7GB | gtok=57376768
+  [1] 1800/9156 (20%) loss=2.1786 ppl=8.8 lr=2.94e-05 | 6738 tok/s (avg 7102) ETA 565m33s | GPU 1.0/13.7GB | gtok=59015168
+  [1] 1850/9156 (20%) loss=2.1200 ppl=8.3 lr=2.94e-05 | 6709 tok/s (avg 7091) ETA 562m36s | GPU 1.0/13.7GB | gtok=60653568
+  [1] 1900/9156 (21%) loss=2.2382 ppl=9.4 lr=2.93e-05 | 6815 tok/s (avg 7084) ETA 559m21s | GPU 1.0/13.7GB | gtok=62291968
+  [1] 1950/9156 (21%) loss=2.2076 ppl=9.1 lr=2.92e-05 | 6868 tok/s (avg 7078) ETA 555m56s | GPU 1.0/13.7GB | gtok=63930368
+Saved checkpoint: checkpoints_v12_curriculum/fact_retrieval/latest.pt
+  [checkpoint @ step 2000, 65,536,000 tok]
+  [1] 2000/9156 (22%) loss=2.2595 ppl=9.6 lr=2.91e-05 | 6757 tok/s (avg 7069) ETA 552m44s | GPU 1.0/13.7GB | gtok=65568768
+  [1] 2050/9156 (22%) loss=2.0957 ppl=8.1 lr=2.90e-05 | 6996 tok/s (avg 7068) ETA 549m01s | GPU 1.0/13.7GB | gtok=67207168
+  [1] 2100/9156 (23%) loss=2.0992 ppl=8.2 lr=2.89e-05 | 7031 tok/s (avg 7067) ETA 545m13s | GPU 1.0/13.7GB | gtok=68845568
+  [1] 2150/9156 (23%) loss=2.0126 ppl=7.5 lr=2.88e-05 | 7246 tok/s (avg 7071) ETA 541m03s | GPU 1.0/13.7GB | gtok=70483968
+  [1] 2200/9156 (24%) loss=1.9222 ppl=6.8 lr=2.87e-05 | 7094 tok/s (avg 7071) ETA 537m08s | GPU 1.0/13.7GB | gtok=72122368
+  [1] 2250/9156 (25%) loss=2.1372 ppl=8.5 lr=2.86e-05 | 7266 tok/s (avg 7076) ETA 532m58s | GPU 1.0/13.7GB | gtok=73760768
+  [1] 2300/9156 (25%) loss=1.9484 ppl=7.0 lr=2.85e-05 | 7184 tok/s (avg 7078) ETA 528m56s | GPU 1.0/13.7GB | gtok=75399168
+  [1] 2350/9156 (26%) loss=1.6874 ppl=5.4 lr=2.84e-05 | 7164 tok/s (avg 7080) ETA 524m56s | GPU 1.0/13.7GB | gtok=77037568
+  [1] 2400/9156 (26%) loss=2.0308 ppl=7.6 lr=2.83e-05 | 6921 tok/s (avg 7076) ETA 521m20s | GPU 1.0/13.7GB | gtok=78675968
+  [1] 2450/9156 (27%) loss=1.5900 ppl=4.9 lr=2.82e-05 | 6705 tok/s (avg 7068) ETA 518m03s | GPU 1.0/13.7GB | gtok=80314368
+  [1] 2500/9156 (27%) loss=2.1880 ppl=8.9 lr=2.81e-05 | 6783 tok/s (avg 7062) ETA 514m37s | GPU 1.0/13.7GB | gtok=81952768
+  [1] 2550/9156 (28%) loss=1.6218 ppl=5.1 lr=2.79e-05 | 6849 tok/s (avg 7058) ETA 511m04s | GPU 1.0/13.7GB | gtok=83591168
+  [1] 2600/9156 (28%) loss=1.7904 ppl=6.0 lr=2.78e-05 | 6775 tok/s (avg 7052) ETA 507m36s | GPU 1.0/13.7GB | gtok=85229568
+  [1] 2650/9156 (29%) loss=1.6633 ppl=5.3 lr=2.77e-05 | 6725 tok/s (avg 7046) ETA 504m12s | GPU 1.0/13.7GB | gtok=86867968
+  [1] 2700/9156 (29%) loss=1.5863 ppl=4.9 lr=2.75e-05 | 6698 tok/s (avg 7039) ETA 500m48s | GPU 1.0/13.7GB | gtok=88506368
+  [1] 2750/9156 (30%) loss=1.9295 ppl=6.9 lr=2.74e-05 | 6760 tok/s (avg 7034) ETA 497m18s | GPU 1.0/13.7GB | gtok=90144768
+  [1] 2800/9156 (31%) loss=1.4949 ppl=4.5 lr=2.72e-05 | 6812 tok/s (avg 7030) ETA 493m42s | GPU 1.0/13.7GB | gtok=91783168
+  [1] 2850/9156 (31%) loss=1.4563 ppl=4.3 lr=2.71e-05 | 6786 tok/s (avg 7025) ETA 490m08s | GPU 1.0/13.7GB | gtok=93421568
+  [1] 2900/9156 (32%) loss=1.6829 ppl=5.4 lr=2.69e-05 | 6753 tok/s (avg 7020) ETA 486m35s | GPU 1.0/13.7GB | gtok=95059968
+  [1] 2950/9156 (32%) loss=1.3693 ppl=3.9 lr=2.68e-05 | 6717 tok/s (avg 7015) ETA 483m03s | GPU 1.0/13.7GB | gtok=96698368
+Saved checkpoint: checkpoints_v12_curriculum/fact_retrieval/latest.pt
+  [checkpoint @ step 3000, 98,304,000 tok]
+  [1] 3000/9156 (33%) loss=1.8561 ppl=6.4 lr=2.66e-05 | 6768 tok/s (avg 7011) ETA 479m27s | GPU 1.0/13.7GB | gtok=98336768
+  [1] 3050/9156 (33%) loss=1.3019 ppl=3.7 lr=2.64e-05 | 6841 tok/s (avg 7008) ETA 475m45s | GPU 1.0/13.7GB | gtok=99975168
+  [1] 3100/9156 (34%) loss=1.2342 ppl=3.4 lr=2.63e-05 | 7152 tok/s (avg 7010) ETA 471m42s | GPU 1.0/13.7GB | gtok=101613568
+
+
+################################################################################
+# LOG RECOVERY / RUN COMPLETION FOOTER
+# Written 2026-07-21 15:08:16 +0530
+#
+# The live TeeLogger for this fact run was TRUNCATED / REVERTED mid-file
+# (last live line was ~step 5050 / 165M tokens @ 2026-07-20 17:43). Training
+# itself DID finish — evidence is the checkpoints + registry publish below.
+# Do NOT treat this run as unfinished just because the middle/end step lines
+# are missing from this file.
+################################################################################
+
+[RECOVERED from checkpoints_v12_curriculum/fact_retrieval/best_model.pt]
+  global_step     = 9157
+  global_tokens   = 300,032,000
+  epoch           = 1
+  best_val_loss   = 0.945662
+  best_val_ppl    = 2.5745
+  params (state)  = 85,622,300 (85.6M)  layers=8 (4 grammar frozen + 4 delta fact-bands)
+  token_budget    = 300,000,000  (REACHED)
+
+[PIPELINE COMPLETION — artifacts on disk]
+  published       = v12_registry/fact_retrieval/1.0/model.pt  (2026-07-20T22:53:05)
+  compacted       = checkpoints_v12_curriculum/fact_retrieval/slim.pt
+  final/best      = checkpoints_v12_curriculum/fact_retrieval/{best,final}_model.pt
+  packed stack    = packed_v12/delta.pt  (grammar@1.0 + fact_retrieval@1.0, 8L)
+
+[POST-HOC EVAL — re-run 2026-07-21 after log recovery]
+  note: model max_seq_len=1024 so behavioral ctx=2048 examples are skipped;
+        headline below is single_assoc@1024 (n=1, mean over positions).
+  recall json     = logs/v12_smoke_fact/recall_delta.json
+  single_assoc@1024 (n=1 mean) = 0.100   (near chance; grammar floor was ~0.10)
+  gen probe log   = logs/v12_smoke_fact/04_final_gen_delta.log
+
+[POST-HOC GEN — packed_v12/delta.pt, train-format fact prompt]
+  Prompt: Record: bofim means gold. Record: kaner means silver. Query: bofim means
+  P(' gold') = 0.0666 (vocab rank 2; ':' slightly higher)
+  SAMPLED completion starts with: "... Query: bofim means gold."
+  (Mid-run sample at step 5000 said "trout"; final packed model prefers gold among values.)
+
+[STILL REMAINING in the ablation pipeline — not part of this delta train]
+  - additive A/B arm (fact_retrieval@1.1)
+  - reasoning stage
+  - full eval.sh PPL path was previously blocked by a missing
+    _HOLDOUT_CACHE_VERSION (now defined in v12/eval_checkpoints.py)
+
+[STATUS] DELTA FACT STAGE: COMPLETE (300M tok trained, published, packed, post-hoc eval/gen recorded).
+################################################################################

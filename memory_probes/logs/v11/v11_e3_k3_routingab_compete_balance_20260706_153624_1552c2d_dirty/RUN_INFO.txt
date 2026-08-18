@@ -1,0 +1,21 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V11 routing A/B arm=compete_balance
+Date (UTC)  : 2026-07-06 15:36:24
+Date (local): 2026-07-06 15:36:24 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1005-gcp x86_64
+
+Git commit  : 1552c2d10decf9c581006ca6a87c94d8462fd10e
+Git short   : 1552c2d
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.25
+Arguments   : --preset v11_e3_k3 --dataset wikitext103 --seq_len 2048     --batch_size 18 --epochs 3 --chunk_size 256     --max_samples 9999999 --amp_dtype auto --num_workers 4 --gen_every 5000     --no_grad_ckpt --compile --compile_mode default     --gate_content_aware --routing_content_aware --state_compete --route_balance_lambda 0.01
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+

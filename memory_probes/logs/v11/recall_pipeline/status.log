@@ -1,0 +1,3483 @@
+=== 2026-07-15T08:28:35Z ===
+GPU: 2203 MiB, 0 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2460786 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (1/13) ---
+  gate_l0.1_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.1_t1.0_20260715_082813/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 08:28:14] Token budget: 150,000,000
+---
+=== 2026-07-15T08:38:35Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2460786 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (1/13) ---
+  gate_l0.1_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.1_t1.0_20260715_082813/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 08:37:29]   [1] 600 loss=3.4042 ppl=30.1 lr=9.99e-05 | 38887 tok/s (avg 35875) ETA n/a | GPU 2.6/42.8GB | gtok=19693568
+[2026-07-15 08:38:11]   [1] 650 loss=3.5506 ppl=34.8 lr=9.97e-05 | 39239 tok/s (avg 36113) ETA n/a | GPU 2.6/42.8GB | gtok=21331968
+---
+=== 2026-07-15T08:48:36Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2460786 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (1/13) ---
+  gate_l0.1_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.1_t1.0_20260715_082813/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 08:47:16]   [1] 1300 loss=3.3335 ppl=28.0 lr=9.26e-05 | 39240 tok/s (avg 37531) ETA n/a | GPU 2.6/42.8GB | gtok=42631168
+[2026-07-15 08:47:58]   [1] 1350 loss=3.4875 ppl=32.7 lr=9.17e-05 | 38946 tok/s (avg 37582) ETA n/a | GPU 2.6/42.8GB | gtok=44269568
+---
+=== 2026-07-15T08:58:36Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2460786 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (1/13) ---
+  gate_l0.1_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.1_t1.0_20260715_082813/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 08:57:46]   [1] 2050 loss=3.4463 ppl=31.4 lr=7.42e-05 | 39204 tok/s (avg 38063) ETA n/a | GPU 2.6/42.8GB | gtok=67207168
+[2026-07-15 08:58:28]   [1] 2100 loss=3.6382 ppl=38.0 lr=7.27e-05 | 38828 tok/s (avg 38081) ETA n/a | GPU 2.6/42.8GB | gtok=68845568
+---
+=== 2026-07-15T09:08:36Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2460786 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (1/13) ---
+  gate_l0.1_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.1_t1.0_20260715_082813/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 09:07:33]   [1] 2750 loss=3.4378 ppl=31.1 lr=5.13e-05 | 38858 tok/s (avg 38305) ETA n/a | GPU 2.6/42.8GB | gtok=90144768
+[2026-07-15 09:08:15]   [1] 2800 loss=3.3303 ppl=27.9 lr=4.96e-05 | 39232 tok/s (avg 38321) ETA n/a | GPU 2.6/42.8GB | gtok=91783168
+---
+=== 2026-07-15T09:18:37Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2460786 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (1/13) ---
+  gate_l0.1_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.1_t1.0_20260715_082813/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 09:17:21]   [1] 3450 loss=3.6468 ppl=38.4 lr=2.80e-05 | 39165 tok/s (avg 38453) ETA n/a | GPU 2.6/42.8GB | gtok=113082368
+[2026-07-15 09:18:02]   [1] 3500 loss=3.4721 ppl=32.2 lr=2.65e-05 | 39164 tok/s (avg 38463) ETA n/a | GPU 2.6/42.8GB | gtok=114720768
+---
+=== 2026-07-15T09:28:37Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2460786 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (1/13) ---
+  gate_l0.1_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.1_t1.0_20260715_082813/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 09:27:52]   [1] 4200 loss=3.5742 ppl=35.7 lr=8.77e-06 | 38841 tok/s (avg 38535) ETA n/a | GPU 2.6/42.8GB | gtok=137658368
+[2026-07-15 09:28:34]   [1] 4250 loss=3.4140 ppl=30.4 lr=7.82e-06 | 39166 tok/s (avg 38542) ETA n/a | GPU 2.6/42.8GB | gtok=139296768
+---
+=== 2026-07-15T09:38:38Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2473108 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (2/13) ---
+  gate_l0.3_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t0.5_20260715_093523/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 09:37:40]   [1] 100 loss=3.4247 ppl=30.7 lr=2.02e-05 | 39111 tok/s (avg 25396) ETA n/a | GPU 2.6/42.8GB | gtok=3309568
+[2026-07-15 09:38:22]   [1] 150 loss=3.4523 ppl=31.6 lr=3.02e-05 | 39370 tok/s (avg 28778) ETA n/a | GPU 2.6/42.8GB | gtok=4947968
+---
+=== 2026-07-15T09:48:38Z ===
+GPU: 44531 MiB, 36 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2473108 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (2/13) ---
+  gate_l0.3_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t0.5_20260715_093523/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 09:47:26]   [1] 800 loss=3.5702 ppl=35.5 lr=9.89e-05 | 39227 tok/s (avg 36648) ETA n/a | GPU 2.6/42.8GB | gtok=26247168
+[2026-07-15 09:48:08]   [1] 850 loss=3.5326 ppl=34.2 lr=9.86e-05 | 38856 tok/s (avg 36770) ETA n/a | GPU 2.6/42.8GB | gtok=27885568
+---
+=== 2026-07-15T09:58:39Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2473108 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (2/13) ---
+  gate_l0.3_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t0.5_20260715_093523/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 09:57:55]   [1] 1550 loss=3.4686 ppl=32.1 lr=8.75e-05 | 38899 tok/s (avg 37766) ETA n/a | GPU 2.6/42.8GB | gtok=50823168
+[2026-07-15 09:58:37]   [1] 1600 loss=3.5851 ppl=36.1 lr=8.64e-05 | 39198 tok/s (avg 37809) ETA n/a | GPU 2.6/42.8GB | gtok=52461568
+---
+=== 2026-07-15T10:08:39Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2473108 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (2/13) ---
+  gate_l0.3_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t0.5_20260715_093523/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 10:07:44]   [1] 2250 loss=3.5638 ppl=35.3 lr=6.80e-05 | 39164 tok/s (avg 38139) ETA n/a | GPU 2.6/42.8GB | gtok=73760768
+[2026-07-15 10:08:25]   [1] 2300 loss=3.5452 ppl=34.6 lr=6.64e-05 | 39183 tok/s (avg 38161) ETA n/a | GPU 2.6/42.8GB | gtok=75399168
+---
+=== 2026-07-15T10:18:40Z ===
+GPU: 44531 MiB, 52 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2473108 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (2/13) ---
+  gate_l0.3_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t0.5_20260715_093523/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 10:17:31]   [1] 2950 loss=3.4244 ppl=30.7 lr=4.44e-05 | 38834 tok/s (avg 38347) ETA n/a | GPU 2.6/42.8GB | gtok=96698368
+[2026-07-15 10:18:13]   [1] 3000 loss=3.4946 ppl=32.9 lr=4.27e-05 | 39186 tok/s (avg 38360) ETA n/a | GPU 2.6/42.8GB | gtok=98336768
+---
+=== 2026-07-15T10:28:41Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2473108 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (2/13) ---
+  gate_l0.3_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t0.5_20260715_093523/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 10:27:19]   [1] 3650 loss=3.4160 ppl=30.4 lr=2.21e-05 | 38854 tok/s (avg 38472) ETA n/a | GPU 2.6/42.8GB | gtok=119635968
+[2026-07-15 10:28:01]   [1] 3700 loss=3.4968 ppl=33.0 lr=2.07e-05 | 39245 tok/s (avg 38483) ETA n/a | GPU 2.6/42.8GB | gtok=121274368
+---
+=== 2026-07-15T10:38:41Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2473108 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (2/13) ---
+  gate_l0.3_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t0.5_20260715_093523/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 10:37:50]   [1] 4400 loss=3.4842 ppl=32.6 lr=5.29e-06 | 38906 tok/s (avg 38551) ETA n/a | GPU 2.6/42.8GB | gtok=144211968
+[2026-07-15 10:38:32]   [1] 4450 loss=3.4237 ppl=30.7 lr=4.55e-06 | 39205 tok/s (avg 38558) ETA n/a | GPU 2.6/42.8GB | gtok=145850368
+---
+=== 2026-07-15T10:48:42Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2486096 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (3/13) ---
+  gate_l0.3_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t1.0_20260715_104233/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 10:47:38]   [1] 300 loss=3.3481 ppl=28.4 lr=6.02e-05 | 38974 tok/s (avg 33126) ETA n/a | GPU 2.6/42.8GB | gtok=9863168
+[2026-07-15 10:48:20]   [1] 350 loss=3.4228 ppl=30.7 lr=7.02e-05 | 39282 tok/s (avg 33883) ETA n/a | GPU 2.6/42.8GB | gtok=11501568
+---
+=== 2026-07-15T10:58:43Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2486096 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (3/13) ---
+  gate_l0.3_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t1.0_20260715_104233/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 10:57:24]   [1] 1000 loss=3.5574 ppl=35.1 lr=9.71e-05 | 39237 tok/s (avg 37093) ETA n/a | GPU 2.6/42.8GB | gtok=32800768
+[2026-07-15 10:58:07]   [1] 1050 loss=3.6874 ppl=39.9 lr=9.65e-05 | 38898 tok/s (avg 37175) ETA n/a | GPU 2.6/42.8GB | gtok=34439168
+---
+=== 2026-07-15T11:08:43Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2486096 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (3/13) ---
+  gate_l0.3_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t1.0_20260715_104233/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 11:07:54]   [1] 1750 loss=3.4821 ppl=32.5 lr=8.27e-05 | 39169 tok/s (avg 37898) ETA n/a | GPU 2.6/42.8GB | gtok=57376768
+[2026-07-15 11:08:36]   [1] 1800 loss=3.5290 ppl=34.1 lr=8.14e-05 | 38897 tok/s (avg 37925) ETA n/a | GPU 2.6/42.8GB | gtok=59015168
+---
+=== 2026-07-15T11:18:44Z ===
+GPU: 44531 MiB, 68 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2486096 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (3/13) ---
+  gate_l0.3_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t1.0_20260715_104233/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 11:17:43]   [1] 2450 loss=3.6991 ppl=40.4 lr=6.15e-05 | 38855 tok/s (avg 38197) ETA n/a | GPU 2.6/42.8GB | gtok=80314368
+[2026-07-15 11:18:25]   [1] 2500 loss=3.6157 ppl=37.2 lr=5.98e-05 | 39185 tok/s (avg 38217) ETA n/a | GPU 2.6/42.8GB | gtok=81952768
+---
+=== 2026-07-15T11:28:45Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2486096 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (3/13) ---
+  gate_l0.3_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t1.0_20260715_104233/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 11:27:30]   [1] 3150 loss=3.4569 ppl=31.7 lr=3.77e-05 | 39150 tok/s (avg 38380) ETA n/a | GPU 2.6/42.8GB | gtok=103251968
+[2026-07-15 11:28:13]   [1] 3200 loss=3.4293 ppl=30.9 lr=3.60e-05 | 38855 tok/s (avg 38387) ETA n/a | GPU 2.6/42.8GB | gtok=104890368
+---
+=== 2026-07-15T11:38:46Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2486096 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (3/13) ---
+  gate_l0.3_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t1.0_20260715_104233/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 11:38:00]   [1] 3900 loss=3.3740 ppl=29.2 lr=1.54e-05 | 39168 tok/s (avg 38503) ETA n/a | GPU 2.6/42.8GB | gtok=127827968
+[2026-07-15 11:38:42]   [1] 3950 loss=3.4408 ppl=31.2 lr=1.42e-05 | 38849 tok/s (avg 38507) ETA n/a | GPU 2.6/42.8GB | gtok=129466368
+---
+=== 2026-07-15T11:48:47Z ===
+GPU: 3215 MiB, 38 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (3/13) ---
+  gate_l0.3_t1.0: trained, eval pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.3_t1.0_20260715_104233/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 11:47:57]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 11:48:28] Training complete (token budget)!
+---
+=== 2026-07-15T11:58:48Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2497550 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (4/13) ---
+  gate_l0.5_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t0.5_20260715_114944/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 11:57:36]   [1] 500 loss=3.4352 ppl=31.0 lr=1.00e-04 | 38922 tok/s (avg 35312) ETA n/a | GPU 2.6/42.8GB | gtok=16416768
+[2026-07-15 11:58:18]   [1] 550 loss=3.5105 ppl=33.5 lr=1.00e-04 | 39285 tok/s (avg 35639) ETA n/a | GPU 2.6/42.8GB | gtok=18055168
+---
+=== 2026-07-15T12:08:49Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2497550 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (4/13) ---
+  gate_l0.5_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t0.5_20260715_114944/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 12:08:05]   [1] 1250 loss=3.6178 ppl=37.3 lr=9.35e-05 | 38920 tok/s (avg 37477) ETA n/a | GPU 2.6/42.8GB | gtok=40992768
+[2026-07-15 12:08:47]   [1] 1300 loss=3.3385 ppl=28.2 lr=9.26e-05 | 39223 tok/s (avg 37541) ETA n/a | GPU 2.6/42.8GB | gtok=42631168
+---
+=== 2026-07-15T12:18:50Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2497550 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (4/13) ---
+  gate_l0.5_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t0.5_20260715_114944/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 12:17:52]   [1] 1950 loss=3.4191 ppl=30.5 lr=7.72e-05 | 39193 tok/s (avg 38035) ETA n/a | GPU 2.6/42.8GB | gtok=63930368
+[2026-07-15 12:18:35]   [1] 2000 loss=3.6557 ppl=38.7 lr=7.57e-05 | 38325 tok/s (avg 38042) ETA n/a | GPU 2.6/42.8GB | gtok=65568768
+---
+=== 2026-07-15T12:28:51Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2497550 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (4/13) ---
+  gate_l0.5_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t0.5_20260715_114944/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 12:27:41]   [1] 2650 loss=3.5286 ppl=34.1 lr=5.47e-05 | 38860 tok/s (avg 38281) ETA n/a | GPU 2.6/42.8GB | gtok=86867968
+[2026-07-15 12:28:22]   [1] 2700 loss=3.5501 ppl=34.8 lr=5.30e-05 | 39217 tok/s (avg 38298) ETA n/a | GPU 2.6/42.8GB | gtok=88506368
+---
+=== 2026-07-15T12:38:52Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2497550 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (4/13) ---
+  gate_l0.5_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t0.5_20260715_114944/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 12:38:10]   [1] 3400 loss=3.4043 ppl=30.1 lr=2.96e-05 | 38903 tok/s (avg 38447) ETA n/a | GPU 2.6/42.8GB | gtok=111443968
+[2026-07-15 12:38:52]   [1] 3450 loss=3.6549 ppl=38.7 lr=2.80e-05 | 39200 tok/s (avg 38458) ETA n/a | GPU 2.6/42.8GB | gtok=113082368
+---
+=== 2026-07-15T12:48:53Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2497550 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (4/13) ---
+  gate_l0.5_t0.5: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t0.5_20260715_114944/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 12:47:59]   [1] 4100 loss=3.4082 ppl=30.2 lr=1.08e-05 | 39240 tok/s (avg 38531) ETA n/a | GPU 2.6/42.8GB | gtok=134381568
+[2026-07-15 12:48:41]   [1] 4150 loss=3.5534 ppl=34.9 lr=9.76e-06 | 39252 tok/s (avg 38540) ETA n/a | GPU 2.6/42.8GB | gtok=136019968
+---
+=== 2026-07-15T12:58:54Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2505669 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (5/13) ---
+  gate_l0.5_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t1.0_20260715_125652/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 12:57:47]   [1] 0 loss=3.4200 ppl=30.6 lr=2.00e-07 | 695 tok/s (avg 695) ETA n/a | GPU 2.6/41.9GB | gtok=32768
+[2026-07-15 12:58:28]   [1] 50 loss=3.4589 ppl=31.8 lr=1.02e-05 | 39579 tok/s (avg 18875) ETA n/a | GPU 2.6/42.8GB | gtok=1671168
+---
+=== 2026-07-15T13:08:55Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2505669 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (5/13) ---
+  gate_l0.5_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t1.0_20260715_125652/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 13:08:14]   [1] 750 loss=3.5689 ppl=35.5 lr=9.93e-05 | 38898 tok/s (avg 36488) ETA n/a | GPU 2.6/42.8GB | gtok=24608768
+[2026-07-15 13:08:56]   [1] 800 loss=3.5707 ppl=35.5 lr=9.89e-05 | 39229 tok/s (avg 36648) ETA n/a | GPU 2.6/42.8GB | gtok=26247168
+---
+=== 2026-07-15T13:18:56Z ===
+GPU: 44531 MiB, 47 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2505669 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (5/13) ---
+  gate_l0.5_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t1.0_20260715_125652/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 13:18:01]   [1] 1450 loss=3.5459 ppl=34.7 lr=8.97e-05 | 38823 tok/s (avg 37676) ETA n/a | GPU 2.6/42.8GB | gtok=47546368
+[2026-07-15 13:18:43]   [1] 1500 loss=3.3764 ppl=29.3 lr=8.87e-05 | 39159 tok/s (avg 37723) ETA n/a | GPU 2.6/42.8GB | gtok=49184768
+---
+=== 2026-07-15T13:28:57Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2505669 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (5/13) ---
+  gate_l0.5_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t1.0_20260715_125652/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 13:27:50]   [1] 2150 loss=3.6137 ppl=37.1 lr=7.12e-05 | 39127 tok/s (avg 38095) ETA n/a | GPU 2.6/42.8GB | gtok=70483968
+[2026-07-15 13:28:32]   [1] 2200 loss=3.4717 ppl=32.2 lr=6.96e-05 | 38860 tok/s (avg 38112) ETA n/a | GPU 2.6/42.8GB | gtok=72122368
+---
+=== 2026-07-15T13:38:58Z ===
+GPU: 44531 MiB, 40 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2505669 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (5/13) ---
+  gate_l0.5_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t1.0_20260715_125652/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 13:37:38]   [1] 2850 loss=3.4632 ppl=31.9 lr=4.79e-05 | 38848 tok/s (avg 38313) ETA n/a | GPU 2.6/42.8GB | gtok=93421568
+[2026-07-15 13:38:20]   [1] 2900 loss=3.4139 ppl=30.4 lr=4.61e-05 | 39138 tok/s (avg 38327) ETA n/a | GPU 2.6/42.8GB | gtok=95059968
+---
+=== 2026-07-15T13:49:00Z ===
+GPU: 44531 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2505669 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (5/13) ---
+  gate_l0.5_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t1.0_20260715_125652/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 13:48:07]   [1] 3600 loss=3.5580 ppl=35.1 lr=2.35e-05 | 39197 tok/s (avg 38472) ETA n/a | GPU 2.6/42.8GB | gtok=117997568
+[2026-07-15 13:48:49]   [1] 3650 loss=3.4163 ppl=30.5 lr=2.21e-05 | 38884 tok/s (avg 38477) ETA n/a | GPU 2.6/42.8GB | gtok=119635968
+---
+=== 2026-07-15T13:59:01Z ===
+GPU: 44531 MiB, 99 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2505669 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (5/13) ---
+  gate_l0.5_t1.0: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/gate_l0.5_t1.0_20260715_125652/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 13:57:56]   [1] 4300 loss=3.5773 ppl=35.8 lr=6.93e-06 | 38863 tok/s (avg 38546) ETA n/a | GPU 2.6/42.8GB | gtok=140935168
+[2026-07-15 13:58:38]   [1] 4350 loss=3.4269 ppl=30.8 lr=6.08e-06 | 39197 tok/s (avg 38554) ETA n/a | GPU 2.6/42.8GB | gtok=142573568
+---
+=== 2026-07-15T14:09:02Z ===
+GPU: 42799 MiB, 0 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2516463 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (6/13) ---
+  floor_g0.90: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.90_20260715_140401/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 14:04:02] Token budget: 150,000,000
+---
+=== 2026-07-15T14:19:03Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2516463 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (6/13) ---
+  floor_g0.90: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.90_20260715_140401/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 14:18:00]   [1] 450 loss=3.7753 ppl=43.6 lr=9.02e-05 | 35966 tok/s (avg 17763) ETA n/a | GPU 2.6/42.8GB | gtok=14778368
+[2026-07-15 14:18:41]   [1] 500 loss=3.6761 ppl=39.5 lr=1.00e-04 | 40259 tok/s (avg 18812) ETA n/a | GPU 2.6/42.8GB | gtok=16416768
+---
+=== 2026-07-15T14:29:05Z ===
+GPU: 44797 MiB, 91 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2516463 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (6/13) ---
+  floor_g0.90: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.90_20260715_140401/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 14:28:09]   [1] 1200 loss=3.6793 ppl=39.6 lr=9.43e-05 | 40420 tok/s (avg 27315) ETA n/a | GPU 2.6/42.8GB | gtok=39354368
+[2026-07-15 14:28:53]   [1] 1250 loss=3.7670 ppl=43.3 lr=9.35e-05 | 37063 tok/s (avg 27605) ETA n/a | GPU 2.6/42.8GB | gtok=40992768
+---
+=== 2026-07-15T14:39:06Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2516463 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (6/13) ---
+  floor_g0.90: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.90_20260715_140401/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 14:38:20]   [1] 1950 loss=3.5361 ppl=34.3 lr=7.72e-05 | 40450 tok/s (avg 31157) ETA n/a | GPU 2.6/42.8GB | gtok=63930368
+[2026-07-15 14:39:05]   [1] 2000 loss=3.7846 ppl=44.0 lr=7.57e-05 | 36610 tok/s (avg 31273) ETA n/a | GPU 2.6/42.8GB | gtok=65568768
+---
+=== 2026-07-15T14:49:08Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2516463 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (6/13) ---
+  floor_g0.90: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.90_20260715_140401/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 14:47:52]   [1] 2650 loss=3.6422 ppl=38.2 lr=5.47e-05 | 40436 tok/s (avg 33115) ETA n/a | GPU 2.6/42.8GB | gtok=86867968
+[2026-07-15 14:48:32]   [1] 2700 loss=3.6646 ppl=39.0 lr=5.30e-05 | 40462 tok/s (avg 33227) ETA n/a | GPU 2.6/42.8GB | gtok=88506368
+---
+=== 2026-07-15T14:59:09Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2516463 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (6/13) ---
+  floor_g0.90: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.90_20260715_140401/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 14:58:02]   [1] 3400 loss=3.5068 ppl=33.3 lr=2.96e-05 | 40490 tok/s (avg 34458) ETA n/a | GPU 2.6/42.8GB | gtok=111443968
+[2026-07-15 14:58:47]   [1] 3450 loss=3.7576 ppl=42.8 lr=2.80e-05 | 36992 tok/s (avg 34492) ETA n/a | GPU 2.6/42.8GB | gtok=113082368
+---
+=== 2026-07-15T15:09:10Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2516463 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (6/13) ---
+  floor_g0.90: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.90_20260715_140401/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 15:08:15]   [1] 4150 loss=3.6588 ppl=38.8 lr=9.76e-06 | 40539 tok/s (avg 35360) ETA n/a | GPU 2.6/42.8GB | gtok=136019968
+[2026-07-15 15:08:59]   [1] 4200 loss=3.6878 ppl=40.0 lr=8.77e-06 | 37018 tok/s (avg 35379) ETA n/a | GPU 2.6/42.8GB | gtok=137658368
+---
+=== 2026-07-15T15:19:12Z ===
+GPU: 44797 MiB, 0 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2516463 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (6/13) ---
+  floor_g0.90: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.90_20260715_140401/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 15:13:02]   [1] 4500 loss=3.6729 ppl=39.4 lr=3.86e-06 | 40415 tok/s (avg 35678) ETA n/a | GPU 2.6/42.8GB | gtok=147488768
+[2026-07-15 15:13:43]   [1] 4550 loss=3.5672 ppl=35.4 lr=3.22e-06 | 40453 tok/s (avg 35724) ETA n/a | GPU 2.6/42.8GB | gtok=149127168
+---
+=== 2026-07-15T15:29:13Z ===
+GPU: 45009 MiB, 0 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2516463 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (6/13) ---
+  floor_g0.90: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.90_20260715_140401/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 15:13:43]   [1] 4550 loss=3.5672 ppl=35.4 lr=3.22e-06 | 40453 tok/s (avg 35724) ETA n/a | GPU 2.6/42.8GB | gtok=149127168
+[2026-07-15 15:25:45]   Token budget reached: 150,001,664 / 150,000,000
+---
+=== 2026-07-15T15:39:15Z ===
+GPU: 42799 MiB, 0 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2535466 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (7/13) ---
+  floor_g0.93: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.93_20260715_153212/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 15:32:12] Token budget: 150,000,000
+---
+=== 2026-07-15T15:49:16Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2535466 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (7/13) ---
+  floor_g0.93: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.93_20260715_153212/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 15:48:13]   [1] 600 loss=3.6750 ppl=39.4 lr=9.99e-05 | 40309 tok/s (avg 20647) ETA n/a | GPU 2.6/42.8GB | gtok=19693568
+[2026-07-15 15:48:53]   [1] 650 loss=3.8328 ppl=46.2 lr=9.97e-05 | 40363 tok/s (avg 21451) ETA n/a | GPU 2.6/42.8GB | gtok=21331968
+---
+=== 2026-07-15T15:59:18Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2535466 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (7/13) ---
+  floor_g0.93: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.93_20260715_153212/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 15:58:24]   [1] 1350 loss=3.6638 ppl=39.0 lr=9.17e-05 | 40489 tok/s (avg 28277) ETA n/a | GPU 2.6/42.8GB | gtok=44269568
+[2026-07-15 15:59:05]   [1] 1400 loss=3.6481 ppl=38.4 lr=9.07e-05 | 40456 tok/s (avg 28584) ETA n/a | GPU 2.6/42.8GB | gtok=45907968
+---
+=== 2026-07-15T16:09:19Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2535466 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (7/13) ---
+  floor_g0.93: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.93_20260715_153212/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 16:08:36]   [1] 2100 loss=3.8001 ppl=44.7 lr=7.27e-05 | 40429 tok/s (avg 31621) ETA n/a | GPU 2.6/42.8GB | gtok=68845568
+[2026-07-15 16:09:16]   [1] 2150 loss=3.7612 ppl=43.0 lr=7.12e-05 | 40450 tok/s (avg 31782) ETA n/a | GPU 2.6/42.8GB | gtok=70483968
+---
+=== 2026-07-15T16:19:21Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2535466 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (7/13) ---
+  floor_g0.93: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.93_20260715_153212/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 16:18:07]   [1] 2800 loss=3.4761 ppl=32.3 lr=4.96e-05 | 40504 tok/s (avg 33400) ETA n/a | GPU 2.6/42.8GB | gtok=91783168
+[2026-07-15 16:18:47]   [1] 2850 loss=3.5976 ppl=36.5 lr=4.79e-05 | 40455 tok/s (avg 33503) ETA n/a | GPU 2.6/42.8GB | gtok=93421568
+---
+=== 2026-07-15T16:29:23Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2535466 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (7/13) ---
+  floor_g0.93: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.93_20260715_153212/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 16:28:18]   [1] 3550 loss=3.6500 ppl=38.5 lr=2.50e-05 | 40452 tok/s (avg 34637) ETA n/a | GPU 2.6/42.8GB | gtok=116359168
+[2026-07-15 16:28:59]   [1] 3600 loss=3.6879 ppl=40.0 lr=2.35e-05 | 40419 tok/s (avg 34706) ETA n/a | GPU 2.6/42.8GB | gtok=117997568
+---
+=== 2026-07-15T16:39:24Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2535466 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (7/13) ---
+  floor_g0.93: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.93_20260715_153212/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 16:38:31]   [1] 4300 loss=3.7042 ppl=40.6 lr=6.93e-06 | 40455 tok/s (avg 35480) ETA n/a | GPU 2.6/42.8GB | gtok=140935168
+[2026-07-15 16:39:11]   [1] 4350 loss=3.5598 ppl=35.2 lr=6.08e-06 | 40466 tok/s (avg 35530) ETA n/a | GPU 2.6/42.8GB | gtok=142573568
+---
+=== 2026-07-15T16:49:26Z ===
+GPU: 44797 MiB, 0 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2535466 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (7/13) ---
+  floor_g0.93: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.93_20260715_153212/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 16:41:13]   [1] 4500 loss=3.6981 ppl=40.4 lr=3.86e-06 | 40407 tok/s (avg 35675) ETA n/a | GPU 2.6/42.8GB | gtok=147488768
+[2026-07-15 16:41:53]   [1] 4550 loss=3.5934 ppl=36.4 lr=3.22e-06 | 40437 tok/s (avg 35721) ETA n/a | GPU 2.6/42.8GB | gtok=149127168
+---
+=== 2026-07-15T16:59:27Z ===
+GPU: 3215 MiB, 39 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (7/13) ---
+  floor_g0.93: trained, eval pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.93_20260715_153212/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 16:53:44]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 16:58:58] Training complete (token budget)!
+---
+=== 2026-07-15T17:09:29Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2554087 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (8/13) ---
+  floor_g0.95: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.95_20260715_170016/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 17:08:44]   [1] 50 loss=8.4864 ppl=4848.6 lr=1.02e-05 | 40469 tok/s (avg 3334) ETA n/a | GPU 2.6/42.8GB | gtok=1671168
+[2026-07-15 17:09:25]   [1] 100 loss=7.5962 ppl=1990.6 lr=2.02e-05 | 40438 tok/s (avg 6109) ETA n/a | GPU 2.6/42.8GB | gtok=3309568
+---
+=== 2026-07-15T17:19:31Z ===
+GPU: 44797 MiB, 74 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2554087 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (8/13) ---
+  floor_g0.95: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.95_20260715_170016/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 17:18:17]   [1] 750 loss=3.8685 ppl=47.9 lr=9.93e-05 | 40342 tok/s (avg 22906) ETA n/a | GPU 2.6/42.8GB | gtok=24608768
+[2026-07-15 17:18:58]   [1] 800 loss=3.8512 ppl=47.1 lr=9.89e-05 | 40367 tok/s (avg 23542) ETA n/a | GPU 2.6/42.8GB | gtok=26247168
+---
+=== 2026-07-15T17:29:33Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2554087 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (8/13) ---
+  floor_g0.95: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.95_20260715_170016/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 17:28:29]   [1] 1500 loss=3.5685 ppl=35.5 lr=8.87e-05 | 40475 tok/s (avg 29172) ETA n/a | GPU 2.6/42.8GB | gtok=49184768
+[2026-07-15 17:29:10]   [1] 1550 loss=3.6719 ppl=39.3 lr=8.75e-05 | 40544 tok/s (avg 29438) ETA n/a | GPU 2.6/42.8GB | gtok=50823168
+---
+=== 2026-07-15T17:39:34Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2554087 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (8/13) ---
+  floor_g0.95: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.95_20260715_170016/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 17:38:40]   [1] 2250 loss=3.7308 ppl=41.7 lr=6.80e-05 | 40447 tok/s (avg 32107) ETA n/a | GPU 2.6/42.8GB | gtok=73760768
+[2026-07-15 17:39:21]   [1] 2300 loss=3.7282 ppl=41.6 lr=6.64e-05 | 40460 tok/s (avg 32251) ETA n/a | GPU 2.6/42.8GB | gtok=75399168
+---
+=== 2026-07-15T17:49:36Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2554087 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (8/13) ---
+  floor_g0.95: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.95_20260715_170016/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 17:48:52]   [1] 3000 loss=3.6630 ppl=39.0 lr=4.27e-05 | 40470 tok/s (avg 33806) ETA n/a | GPU 2.6/42.8GB | gtok=98336768
+[2026-07-15 17:49:32]   [1] 3050 loss=3.7724 ppl=43.5 lr=4.10e-05 | 40465 tok/s (avg 33898) ETA n/a | GPU 2.6/42.8GB | gtok=99975168
+---
+=== 2026-07-15T17:59:38Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2554087 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (8/13) ---
+  floor_g0.95: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.95_20260715_170016/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 17:58:22]   [1] 3700 loss=3.6522 ppl=38.6 lr=2.07e-05 | 40559 tok/s (avg 34857) ETA n/a | GPU 2.6/42.8GB | gtok=121274368
+[2026-07-15 17:59:03]   [1] 3750 loss=3.6310 ppl=37.7 lr=1.93e-05 | 40558 tok/s (avg 34922) ETA n/a | GPU 2.6/42.8GB | gtok=122912768
+---
+=== 2026-07-15T18:09:40Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2554087 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (8/13) ---
+  floor_g0.95: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.95_20260715_170016/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 18:08:35]   [1] 4450 loss=3.5726 ppl=35.6 lr=4.55e-06 | 40470 tok/s (avg 35648) ETA n/a | GPU 2.6/42.8GB | gtok=145850368
+[2026-07-15 18:09:15]   [1] 4500 loss=3.7237 ppl=41.4 lr=3.86e-06 | 40422 tok/s (avg 35694) ETA n/a | GPU 2.6/42.8GB | gtok=147488768
+---
+=== 2026-07-15T18:19:41Z ===
+GPU: 44799 MiB, 0 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2554087 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (8/13) ---
+  floor_g0.95: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.95_20260715_170016/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 18:09:15]   [1] 4500 loss=3.7237 ppl=41.4 lr=3.86e-06 | 40422 tok/s (avg 35694) ETA n/a | GPU 2.6/42.8GB | gtok=147488768
+[2026-07-15 18:09:56]   [1] 4550 loss=3.6226 ppl=37.4 lr=3.22e-06 | 40467 tok/s (avg 35741) ETA n/a | GPU 2.6/42.8GB | gtok=149127168
+---
+=== 2026-07-15T18:29:43Z ===
+GPU: 2203 MiB, 0 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2572732 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (9/13) ---
+  floor_g0.97: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.97_20260715_182815/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 18:28:15] Token budget: 150,000,000
+---
+=== 2026-07-15T18:39:45Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2572732 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (9/13) ---
+  floor_g0.97: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.97_20260715_182815/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 18:38:43]   [1] 200 loss=6.7936 ppl=892.2 lr=4.02e-05 | 40472 tok/s (avg 10592) ETA n/a | GPU 2.6/42.8GB | gtok=6586368
+[2026-07-15 18:39:24]   [1] 250 loss=6.5724 ppl=715.1 lr=5.02e-05 | 40522 tok/s (avg 12420) ETA n/a | GPU 2.6/42.8GB | gtok=8224768
+---
+=== 2026-07-15T18:49:47Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2572732 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (9/13) ---
+  floor_g0.97: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.97_20260715_182815/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 18:48:57]   [1] 950 loss=3.9061 ppl=49.7 lr=9.76e-05 | 40442 tok/s (avg 25223) ETA n/a | GPU 2.6/42.8GB | gtok=31162368
+[2026-07-15 18:49:37]   [1] 1000 loss=3.8943 ppl=49.1 lr=9.71e-05 | 40442 tok/s (avg 25706) ETA n/a | GPU 2.6/42.8GB | gtok=32800768
+---
+=== 2026-07-15T18:59:49Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2572732 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (9/13) ---
+  floor_g0.97: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.97_20260715_182815/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 18:59:08]   [1] 1700 loss=3.6858 ppl=39.9 lr=8.40e-05 | 40451 tok/s (avg 30180) ETA n/a | GPU 2.6/42.8GB | gtok=55738368
+[2026-07-15 18:59:49]   [1] 1750 loss=3.7433 ppl=42.2 lr=8.27e-05 | 40448 tok/s (avg 30400) ETA n/a | GPU 2.6/42.8GB | gtok=57376768
+---
+=== 2026-07-15T19:09:51Z ===
+GPU: 44797 MiB, 77 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2572732 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (9/13) ---
+  floor_g0.97: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.97_20260715_182815/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 19:08:40]   [1] 2400 loss=3.7414 ppl=42.2 lr=6.31e-05 | 40433 tok/s (avg 32534) ETA n/a | GPU 2.6/42.8GB | gtok=78675968
+[2026-07-15 19:09:20]   [1] 2450 loss=3.9300 ppl=50.9 lr=6.15e-05 | 40455 tok/s (avg 32665) ETA n/a | GPU 2.6/42.8GB | gtok=80314368
+---
+=== 2026-07-15T19:19:53Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2572732 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (9/13) ---
+  floor_g0.97: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.97_20260715_182815/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 19:18:51]   [1] 3150 loss=3.6885 ppl=40.0 lr=3.77e-05 | 40470 tok/s (avg 34081) ETA n/a | GPU 2.6/42.8GB | gtok=103251968
+[2026-07-15 19:19:32]   [1] 3200 loss=3.6361 ppl=37.9 lr=3.60e-05 | 40456 tok/s (avg 34165) ETA n/a | GPU 2.6/42.8GB | gtok=104890368
+---
+=== 2026-07-15T19:29:55Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2572732 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (9/13) ---
+  floor_g0.97: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.97_20260715_182815/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 19:29:02]   [1] 3900 loss=3.5868 ppl=36.1 lr=1.54e-05 | 40470 tok/s (avg 35110) ETA n/a | GPU 2.6/42.8GB | gtok=127827968
+[2026-07-15 19:29:43]   [1] 3950 loss=3.6717 ppl=39.3 lr=1.42e-05 | 40478 tok/s (avg 35169) ETA n/a | GPU 2.6/42.8GB | gtok=129466368
+---
+=== 2026-07-15T19:39:57Z ===
+GPU: 44797 MiB, 0 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2572732 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (9/13) ---
+  floor_g0.97: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.97_20260715_182815/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 19:37:13]   [1] 4500 loss=3.7705 ppl=43.4 lr=3.86e-06 | 40439 tok/s (avg 35695) ETA n/a | GPU 2.6/42.8GB | gtok=147488768
+[2026-07-15 19:37:54]   [1] 4550 loss=3.6678 ppl=39.2 lr=3.22e-06 | 40474 tok/s (avg 35742) ETA n/a | GPU 2.6/42.8GB | gtok=149127168
+---
+=== 2026-07-15T19:49:59Z ===
+GPU: 45007 MiB, 0 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2572732 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (9/13) ---
+  floor_g0.97: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/floor_g0.97_20260715_182815/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 19:37:54]   [1] 4550 loss=3.6678 ppl=39.2 lr=3.22e-06 | 40474 tok/s (avg 35742) ETA n/a | GPU 2.6/42.8GB | gtok=149127168
+[2026-07-15 19:49:37]   Token budget reached: 150,001,664 / 150,000,000
+---
+=== 2026-07-15T20:00:01Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2595212 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (10/13) ---
+  recall_w3: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w3_20260715_195617/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 19:59:10]   [1] 150 loss=3.3811 ppl=29.4 lr=3.02e-05 | 40402 tok/s (avg 29858) ETA n/a | GPU 2.6/42.8GB | gtok=4947968
+[2026-07-15 19:59:50]   [1] 200 loss=3.5281 ppl=34.1 lr=4.02e-05 | 40786 tok/s (avg 31990) ETA n/a | GPU 2.6/42.8GB | gtok=6586368
+---
+=== 2026-07-15T20:10:03Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2595212 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (10/13) ---
+  recall_w3: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w3_20260715_195617/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 20:09:16]   [1] 900 loss=3.5010 ppl=33.1 lr=9.81e-05 | 40201 tok/s (avg 38240) ETA n/a | GPU 2.6/42.8GB | gtok=29523968
+[2026-07-15 20:09:56]   [1] 950 loss=3.4403 ppl=31.2 lr=9.76e-05 | 40581 tok/s (avg 38357) ETA n/a | GPU 2.6/42.8GB | gtok=31162368
+---
+=== 2026-07-15T20:20:06Z ===
+GPU: 44797 MiB, 49 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2595212 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (10/13) ---
+  recall_w3: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w3_20260715_195617/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 20:19:23]   [1] 1650 loss=3.5156 ppl=33.6 lr=8.52e-05 | 40582 tok/s (avg 39223) ETA n/a | GPU 2.6/42.8GB | gtok=54099968
+[2026-07-15 20:20:04]   [1] 1700 loss=3.6757 ppl=39.5 lr=8.40e-05 | 40292 tok/s (avg 39254) ETA n/a | GPU 2.6/42.8GB | gtok=55738368
+---
+=== 2026-07-15T20:30:08Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2595212 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (10/13) ---
+  recall_w3: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w3_20260715_195617/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 20:28:51]   [1] 2350 loss=3.5126 ppl=33.5 lr=6.48e-05 | 40610 tok/s (avg 39558) ETA n/a | GPU 2.6/42.8GB | gtok=77037568
+[2026-07-15 20:29:32]   [1] 2400 loss=3.3817 ppl=29.4 lr=6.31e-05 | 40273 tok/s (avg 39573) ETA n/a | GPU 2.6/42.8GB | gtok=78675968
+---
+=== 2026-07-15T20:40:10Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2595212 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (10/13) ---
+  recall_w3: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w3_20260715_195617/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 20:39:00]   [1] 3100 loss=3.4109 ppl=30.3 lr=3.94e-05 | 40183 tok/s (avg 39760) ETA n/a | GPU 2.6/42.8GB | gtok=101613568
+[2026-07-15 20:39:40]   [1] 3150 loss=3.3808 ppl=29.4 lr=3.77e-05 | 40620 tok/s (avg 39773) ETA n/a | GPU 2.6/42.8GB | gtok=103251968
+---
+=== 2026-07-15T20:50:12Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2595212 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (10/13) ---
+  recall_w3: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w3_20260715_195617/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 20:49:08]   [1] 3850 loss=3.5390 ppl=34.4 lr=1.67e-05 | 40275 tok/s (avg 39882) ETA n/a | GPU 2.6/42.8GB | gtok=126189568
+[2026-07-15 20:49:48]   [1] 3900 loss=3.4323 ppl=30.9 lr=1.54e-05 | 40614 tok/s (avg 39891) ETA n/a | GPU 2.6/42.8GB | gtok=127827968
+---
+=== 2026-07-15T21:00:14Z ===
+GPU: 3215 MiB, 39 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (10/13) ---
+  recall_w3: trained, eval pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w3_20260715_195617/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 20:59:25]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 20:59:54] Training complete (token budget)!
+---
+=== 2026-07-15T21:10:17Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2613349 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (11/13) ---
+  recall_w10: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w10_20260715_210112/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 21:09:28]   [1] 550 loss=3.1419 ppl=23.1 lr=1.00e-04 | 40345 tok/s (avg 36951) ETA n/a | GPU 2.6/42.8GB | gtok=18055168
+[2026-07-15 21:10:09]   [1] 600 loss=3.2163 ppl=24.9 lr=9.99e-05 | 40683 tok/s (avg 37236) ETA n/a | GPU 2.6/42.8GB | gtok=19693568
+---
+=== 2026-07-15T21:20:19Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2613349 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (11/13) ---
+  recall_w10: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w10_20260715_210112/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 21:19:35]   [1] 1300 loss=3.4122 ppl=30.3 lr=9.26e-05 | 40283 tok/s (avg 38913) ETA n/a | GPU 2.6/42.8GB | gtok=42631168
+[2026-07-15 21:20:16]   [1] 1350 loss=3.2209 ppl=25.1 lr=9.17e-05 | 40643 tok/s (avg 38974) ETA n/a | GPU 2.6/42.8GB | gtok=44269568
+---
+=== 2026-07-15T21:30:21Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2613349 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (11/13) ---
+  recall_w10: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w10_20260715_210112/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 21:29:03]   [1] 2000 loss=3.3688 ppl=29.0 lr=7.57e-05 | 40004 tok/s (avg 39422) ETA n/a | GPU 2.6/42.8GB | gtok=65568768
+[2026-07-15 21:29:43]   [1] 2050 loss=3.1596 ppl=23.6 lr=7.42e-05 | 40593 tok/s (avg 39450) ETA n/a | GPU 2.6/42.8GB | gtok=67207168
+---
+=== 2026-07-15T21:40:24Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2613349 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (11/13) ---
+  recall_w10: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w10_20260715_210112/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 21:39:11]   [1] 2750 loss=3.4110 ppl=30.3 lr=5.13e-05 | 40279 tok/s (avg 39694) ETA n/a | GPU 2.6/42.8GB | gtok=90144768
+[2026-07-15 21:39:51]   [1] 2800 loss=3.5126 ppl=33.5 lr=4.96e-05 | 40546 tok/s (avg 39709) ETA n/a | GPU 2.6/42.8GB | gtok=91783168
+---
+=== 2026-07-15T21:50:26Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2613349 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (11/13) ---
+  recall_w10: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w10_20260715_210112/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 21:49:18]   [1] 3500 loss=3.5308 ppl=34.2 lr=2.65e-05 | 40563 tok/s (avg 39855) ETA n/a | GPU 2.6/42.8GB | gtok=114720768
+[2026-07-15 21:49:59]   [1] 3550 loss=3.4752 ppl=32.3 lr=2.50e-05 | 40168 tok/s (avg 39859) ETA n/a | GPU 2.6/42.8GB | gtok=116359168
+---
+=== 2026-07-15T22:00:29Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2613349 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (11/13) ---
+  recall_w10: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w10_20260715_210112/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 21:59:28]   [1] 4250 loss=3.4039 ppl=30.1 lr=7.82e-06 | 40271 tok/s (avg 39936) ETA n/a | GPU 2.6/42.8GB | gtok=139296768
+[2026-07-15 22:00:08]   [1] 4300 loss=3.4378 ppl=31.1 lr=6.93e-06 | 40638 tok/s (avg 39944) ETA n/a | GPU 2.6/42.8GB | gtok=140935168
+---
+=== 2026-07-15T22:10:31Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2630325 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (12/13) ---
+  recall_w20: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 22:09:38]   [1] 200 loss=3.3536 ppl=28.6 lr=4.02e-05 | 40838 tok/s (avg 32059) ETA n/a | GPU 2.6/42.8GB | gtok=6586368
+[2026-07-15 22:10:19]   [1] 250 loss=3.3739 ppl=29.2 lr=5.02e-05 | 40436 tok/s (avg 33439) ETA n/a | GPU 2.6/42.8GB | gtok=8224768
+---
+=== 2026-07-15T22:20:34Z ===
+GPU: 44797 MiB, 39 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2630325 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (12/13) ---
+  recall_w20: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 22:19:45]   [1] 950 loss=3.1987 ppl=24.5 lr=9.76e-05 | 40643 tok/s (avg 38392) ETA n/a | GPU 2.6/42.8GB | gtok=31162368
+[2026-07-15 22:20:25]   [1] 1000 loss=3.2401 ppl=25.5 lr=9.71e-05 | 40296 tok/s (avg 38483) ETA n/a | GPU 2.6/42.8GB | gtok=32800768
+---
+=== 2026-07-15T22:30:36Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2630325 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (12/13) ---
+  recall_w20: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 22:29:52]   [1] 1700 loss=3.3505 ppl=28.5 lr=8.40e-05 | 40278 tok/s (avg 39281) ETA n/a | GPU 2.6/42.8GB | gtok=55738368
+[2026-07-15 22:30:32]   [1] 1750 loss=3.3976 ppl=29.9 lr=8.27e-05 | 40670 tok/s (avg 39319) ETA n/a | GPU 2.6/42.8GB | gtok=57376768
+---
+=== 2026-07-15T22:40:39Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2630325 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (12/13) ---
+  recall_w20: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 22:39:59]   [1] 2450 loss=3.4504 ppl=31.5 lr=6.15e-05 | 40587 tok/s (avg 39634) ETA n/a | GPU 2.6/42.8GB | gtok=80314368
+[2026-07-15 22:40:40]   [1] 2500 loss=3.0543 ppl=21.2 lr=5.98e-05 | 40271 tok/s (avg 39646) ETA n/a | GPU 2.6/42.8GB | gtok=81952768
+---
+=== 2026-07-15T22:50:41Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2630325 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (12/13) ---
+  recall_w20: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 22:49:27]   [1] 3150 loss=3.2143 ppl=24.9 lr=3.77e-05 | 40250 tok/s (avg 39810) ETA n/a | GPU 2.6/42.8GB | gtok=103251968
+[2026-07-15 22:50:07]   [1] 3200 loss=3.1218 ppl=22.7 lr=3.60e-05 | 40629 tok/s (avg 39823) ETA n/a | GPU 2.6/42.8GB | gtok=104890368
+---
+=== 2026-07-15T23:00:44Z ===
+GPU: 44797 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+2630325 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (12/13) ---
+  recall_w20: pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 22:59:34]   [1] 3900 loss=2.9581 ppl=19.3 lr=1.54e-05 | 40333 tok/s (avg 39933) ETA n/a | GPU 2.6/42.8GB | gtok=127827968
+[2026-07-15 23:00:14]   [1] 3950 loss=3.2606 ppl=26.1 lr=1.42e-05 | 40634 tok/s (avg 39942) ETA n/a | GPU 2.6/42.8GB | gtok=129466368
+---
+=== 2026-07-15T23:10:47Z ===
+GPU: 1235 MiB, 78 %
+2460756 bash scripts/run_recall_pipeline.sh
+2460770 bash scripts/run_recall_hypersweep.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (12/13) ---
+  recall_w20: trained, eval pending
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-15T23:20:49Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-15T23:30:52Z ===
+GPU: 42171 MiB, 31 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-15T23:40:55Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-15T23:50:58Z ===
+GPU: 42171 MiB, 99 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T00:01:00Z ===
+GPU: 42171 MiB, 99 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T00:11:03Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T00:21:06Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T00:31:09Z ===
+GPU: 42171 MiB, 72 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T00:41:11Z ===
+GPU: 42171 MiB, 73 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T00:51:14Z ===
+GPU: 42171 MiB, 51 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T01:01:17Z ===
+GPU: 42171 MiB, 95 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T01:11:20Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T01:21:23Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T01:31:25Z ===
+GPU: 42171 MiB, 99 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T01:41:28Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T01:51:31Z ===
+GPU: 42171 MiB, 37 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T02:01:34Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T02:11:37Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T02:21:39Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T02:31:42Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T02:41:45Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T02:51:48Z ===
+GPU: 42171 MiB, 79 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T03:01:51Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T03:11:53Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T03:21:56Z ===
+GPU: 42171 MiB, 39 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T03:31:59Z ===
+GPU: 42171 MiB, 58 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T03:42:02Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T03:52:05Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T04:02:07Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T04:12:10Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T04:22:13Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T04:32:16Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T04:42:18Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T04:52:21Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T05:02:24Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T05:12:27Z ===
+GPU: 42171 MiB, 99 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T05:22:30Z ===
+GPU: 42171 MiB, 79 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T05:32:32Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T05:42:35Z ===
+GPU: 42171 MiB, 67 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T05:52:38Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T06:02:41Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T06:12:44Z ===
+GPU: 42171 MiB, 67 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T06:22:46Z ===
+GPU: 42171 MiB, 100 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T06:32:49Z ===
+GPU: 42171 MiB, 0 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T06:42:52Z ===
+GPU: 42175 MiB, 0 %
+2460756 bash scripts/run_recall_pipeline.sh
+2651567 bash scripts/run_recall_fromscratch.sh
+2651593 bash scripts/run_recall_fromscratch.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  pending
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T06:52:55Z ===
+GPU: 1433 MiB, 33 %
+2460756 bash scripts/run_recall_pipeline.sh
+2822930 bash scripts/run_recall_baselines.sh
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  DONE
+
+--- Baselines ---
+  pending
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+=== 2026-07-16T07:02:57Z ===
+GPU: 0 MiB, 0 %
+no active train
+
+--- Stage-2 A/B (done) ---
+  control  @2048=0.167 ppl=39.75
+  gate     @2048=0.217 ppl=39.7
+  floor    @2048=0.250 ppl=55.26
+  recall   @2048=0.200 ppl=39.97
+  combo    @2048=0.250 ppl=55.64
+
+--- Hypersweep (13/13) ---
+
+--- From-scratch ---
+  DONE
+
+--- Baselines ---
+{
+  "comparisons": [
+    {
+      "model": "v11",
+      "path": "logs/v11/recall_baselines/v11_behavior.json",
+
+Latest train: logs/v11/recall_hypersweep/recall_w20_20260715_220606/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log
+[2026-07-15 23:09:09]   Token budget reached: 150,001,664 / 150,000,000
+[2026-07-15 23:09:40] Training complete (token budget)!
+---
+PIPELINE COMPLETE 2026-07-16T07:03:00Z

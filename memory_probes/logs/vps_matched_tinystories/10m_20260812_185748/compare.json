@@ -1,0 +1,156 @@
+{
+  "budget": "10m",
+  "summary": {
+    "budget": "10m",
+    "transformer_params": 10022112,
+    "vps_params": 10011011,
+    "vps_dim": 288,
+    "vps_embed_rank": 32,
+    "vps_layers": 2,
+    "vps_heads": 4,
+    "vps_head_dim": 64
+  },
+  "args": {
+    "budget": "10m",
+    "hierarchy": "tinystories",
+    "max_samples": 20000,
+    "seq_len": 256,
+    "batch_size": 32,
+    "epochs": 12,
+    "encoder_epochs": 0,
+    "lr": 0.0003,
+    "vps_lr": 0.002,
+    "out": "logs/vps_matched_tinystories",
+    "only": "vps",
+    "smoke": false
+  },
+  "vps": {
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 8.462548759150769,
+        "ppl": 32.39164195005573,
+        "ppl_oracle": 29.99152788269182
+      },
+      {
+        "epoch": 2,
+        "train_loss": 6.253853159197142,
+        "ppl": 23.160058628148146,
+        "ppl_oracle": 18.257567386926972
+      },
+      {
+        "epoch": 3,
+        "train_loss": 5.595753082929942,
+        "ppl": 19.465448805045344,
+        "ppl_oracle": 13.73720672439867
+      },
+      {
+        "epoch": 4,
+        "train_loss": 5.196137071095709,
+        "ppl": 17.26305765107062,
+        "ppl_oracle": 10.941895845770814
+      },
+      {
+        "epoch": 5,
+        "train_loss": 4.881210459114441,
+        "ppl": 16.002400641610745,
+        "ppl_oracle": 9.223608655075584
+      },
+      {
+        "epoch": 6,
+        "train_loss": 4.627793904160222,
+        "ppl": 14.948298896597935,
+        "ppl_oracle": 7.946582577393087
+      },
+      {
+        "epoch": 7,
+        "train_loss": 4.40896241515325,
+        "ppl": 14.338703721571,
+        "ppl_oracle": 6.875574042165778
+      },
+      {
+        "epoch": 8,
+        "train_loss": 4.2145253116354295,
+        "ppl": 13.727150188748666,
+        "ppl_oracle": 6.029785714462675
+      },
+      {
+        "epoch": 9,
+        "train_loss": 4.035300912892247,
+        "ppl": 13.319932099217683,
+        "ppl_oracle": 5.284076871454645
+      },
+      {
+        "epoch": 10,
+        "train_loss": 3.86739472269572,
+        "ppl": 12.930283248243661,
+        "ppl_oracle": 4.58724478713635
+      },
+      {
+        "epoch": 11,
+        "train_loss": 3.71628075772106,
+        "ppl": 12.796569448347384,
+        "ppl_oracle": 3.9621367721654392
+      },
+      {
+        "epoch": 12,
+        "train_loss": 3.5667747611049356,
+        "ppl": 12.588833454238234,
+        "ppl_oracle": 3.5382732759519278
+      }
+    ],
+    "best": {
+      "epoch": 12,
+      "train_loss": 3.5667747611049356,
+      "ppl": 12.588833454238234,
+      "ppl_oracle": 3.5382732759519278
+    },
+    "elapsed_sec": 1432.370770931244,
+    "params": 10011011,
+    "config": {
+      "vocab_size": 50257,
+      "dim": 288,
+      "essence_dim": 2048,
+      "essence_chunk": 32,
+      "n_heads": 4,
+      "head_dim": 64,
+      "n_layers": 2,
+      "embed_rank": 32,
+      "max_seq_len": 2048,
+      "decay_biases": [
+        -1.0,
+        -2.5,
+        -4.0,
+        -6.0
+      ],
+      "hierarchy": [
+        [
+          "sentence",
+          16
+        ],
+        [
+          "paragraph",
+          64
+        ],
+        [
+          "chapter",
+          256
+        ],
+        [
+          "book",
+          1024
+        ]
+      ],
+      "pos_base": 64,
+      "pos_levels": 4,
+      "n_drift_markers": 8,
+      "dropout": 0.1,
+      "target_weight": 0.1,
+      "tie_weights": true,
+      "state_dim": 128,
+      "chunk_size": 16,
+      "sentence_size": 64,
+      "hierarchy_weight": 0.0
+    }
+  }
+}

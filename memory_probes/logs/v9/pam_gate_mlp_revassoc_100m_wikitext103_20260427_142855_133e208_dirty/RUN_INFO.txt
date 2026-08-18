@@ -1,0 +1,234 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V9 Exp GM: 2-layer PAM gate + reverse_assoc, ~100M (push learned gate lever): dim=384 L=16 expand=3, PAM(H=6, d=64, flat dt=-4.0, RoPE, fused-QKV, GSP), activation=swish, LR=1e-4, warmup=1000
+Date (UTC)  : 2026-04-27 08:58:55
+Date (local): 2026-04-27 14:28:55 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : 133e2084aa68b008821c5dd6cd600026faa8c0c6
+Git short   : 133e208
+Git branch  : master
+Git dirty   : yes
+
+Python      : Python 3.9.24
+Arguments   : --preset medium_h16_gate_mlp_revassoc_100m --dataset wikitext103 --seq_len 2048 --batch_size 3 --epochs 10 --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt  --gen_prompt 'In 1923 , the University of'  
+================================================================================
+
+UNCOMMITTED CHANGES AT RUN TIME (source only, excludes logs/):
+---------------------------------------------------------------
+ scripts/run_v9_pam_upgrade.sh |  8 ++++-
+ v9/EXPERIMENTS_V9.md          | 84 +++++++++++++++++++++++++++++++++++++++++++
+ v9/model.py                   | 33 +++++++++++++++--
+ 3 files changed, 121 insertions(+), 4 deletions(-)
+
+diff --git a/scripts/run_v9_pam_upgrade.sh b/scripts/run_v9_pam_upgrade.sh
+index 5d7cde6..2969c8b 100755
+--- a/scripts/run_v9_pam_upgrade.sh
++++ b/scripts/run_v9_pam_upgrade.sh
+@@ -6,6 +6,7 @@
+ #   gate      - PAM output gate only (~105M)
+ #   gate_100m - PAM output gate only, dim=372 (~100.5M)
+ #   gate_revassoc_100m - PAM output gate + reverse association, dim=372
++#   gate_mlp_revassoc_100m - 2-layer PAM output gate + reverse association, dim=368
+ #   gate_qknorm_100m   - PAM output gate + QK normalization, dim=372
+ #   gate_conv4_100m    - PAM output gate + causal depthwise short conv, dim=372
+ #   conv      - causal depthwise short conv only
+@@ -72,6 +73,11 @@ case "$VARIANT" in
+         DESC="V9 Exp R: gate + reverse_assoc, ~100M (test if gate detoxifies reverse pass)"
+         VARIANT_ARGS=""
+         ;;
++    gate_mlp_revassoc_100m)
++        PRESET="medium_h16_gate_mlp_revassoc_100m"
++        DESC="V9 Exp GM: 2-layer PAM gate + reverse_assoc, ~100M (push learned gate lever)"
++        VARIANT_ARGS=""
++        ;;
+     gate_qknorm_100m)
+         PRESET="medium_h16_gate_qknorm_100m"
+         DESC="V9 Exp N: gate + qk_norm, ~100M (gate=magnitude, qk_norm=angle stability)"
+@@ -98,7 +104,7 @@ case "$VARIANT" in
+         VARIANT_ARGS=""
+         ;;
+     *)
+-        echo "Unknown --variant '$VARIANT'. Expected: baseline, gate, gate_100m, gate_revassoc_100m, gate_qknorm_100m, gate_conv4_100m, compete_revassoc_100m, conv, gate_conv" >&2
++        echo "Unknown --variant '$VARIANT'. Expected: baseline, gate, gate_100m, gate_revassoc_100m, gate_mlp_revassoc_100m, gate_qknorm_100m, gate_conv4_100m, compete_revassoc_100m, conv, gate_conv" >&2
+         exit 2
+         ;;
+ esac
+diff --git a/v9/EXPERIMENTS_V9.md b/v9/EXPERIMENTS_V9.md
+index 3ac6795..6046f47 100644
+--- a/v9/EXPERIMENTS_V9.md
++++ b/v9/EXPERIMENTS_V9.md
+@@ -357,3 +357,87 @@ bash ./scripts/run_v9_pam_upgrade.sh --variant compete_revassoc_100m
+ | V9 gate (confounded) | 3 | 105.1M | 29.57 |
+ | Transformer | 3 | ~100M | **27.08** |
+ | Transformer | 6 | ~100M | 23.13 |
++
++## 2026-04-27: V9 Gate-MLP + Reverse Assoc (Post-Compete Pivot)
++
++Status: **queued**.
++
++The `compete_revassoc_100m` run did not show a win signal after two epochs:
++
++| Run | Params | Epoch 1 Val PPL | Epoch 2 Val PPL | Notes |
++|---|---:|---:|---:|---|
++| V9 `gate` (confounded) | 105.1M | 54.29 | 42.06 | best PAM so far, but +5M params and inherited reverse assoc |
++| V7 Exp7a | ~100M | 56.15 | 43.20 | clean flat ModSwish PAM baseline |
++| V6 medium-pam-v3 | 100.4M | 57.94 | 43.83 | V6 architectural ancestor |
++| V9 `compete_revassoc_100m` | 100.4M | 56.27 | 44.44 | zero-param competition; worse early trajectory |
++
++Interpretation: the zero-parameter cross-head competition did not replace the
++learned V9 gate. The best evidence still points at **learned PAM readout gating**
++as the useful lever, so the next experiment strengthens that gate directly.
++
++### Mechanism
++
++The existing V9 gate is a single real linear projection over the complex input:
++
++```text
++logits = Linear([real(x), imag(x)])
++gate   = 2 * sigmoid(logits)
++y      = y * gate
++```
++
++The new gate uses a 2-layer MLP when `pam_gate_hidden > 0`:
++
++```text
++h      = SiLU(Linear([real(x), imag(x)]))
++logits = Linear(h)
++gate   = 2 * sigmoid(logits)
++y      = y * gate
++```
++
++The final linear is zero-initialized, so the run starts from exact identity:
++`logits = 0`, `gate = 1`. This preserves the V7 starting behavior while giving
++the gate a non-linear input-conditioned path once training begins.
++
++### Configuration
++
++| Field | Value |
++|---|---|
++| Preset | `medium_h16_gate_mlp_revassoc_100m` |
++| Script variant | `gate_mlp_revassoc_100m` |
++| Params | **101.094M** validated |
++| dim | 368 |
++| layers | 16 |
++| PAM heads | 6 |
++| PAM head dim | 64 |
++| CGU expand | 3 |
++| activation | ModSwish |
++| `pam_output_gate` | True |
++| `pam_gate_hidden` | 368 |
++| `use_reverse_assoc` | True |
++| `pam_head_compete` | False |
++| `pam_short_conv` | 0 |
++| `qk_norm` | False |
++| Data | WikiText-103, seq_len 2048, batch 3, 10 epochs |
++
++Validation before launch:
++
++- Parameter count: **101,094,240**.
++- Gate projection type: `Sequential`.
++- Final gate linear `weight` and `bias`: exactly zero at initialization.
++- Tiny forward pass: finite logits with shape `[1, 8, 50257]`.
++- Launcher syntax: `bash -n scripts/run_v9_pam_upgrade.sh` passed.
++
++### Run
++
++```bash
++bash ./scripts/run_v9_pam_upgrade.sh --variant gate_mlp_revassoc_100m
++```
++
++### Decision Rules
++
++| Outcome at epoch 10 | Reading | Next step |
++|---|---|---|
++| <= 29.0 | Bigger gate beats smaller gate. Gate is the lever. | Stack with per-channel decay or fewer heads. |
++| 29.0 to 29.6 | Parity with confounded gate but at ~100M instead of 105M. Real progress. | Stack per-channel decay. |
++| 29.6 to 29.9 | Bigger gate gives no edge over single-layer gate. The 29.57 may mostly be capacity. | Pivot to fewer-heads + bigger-state experiment. |
++| >= 29.9 | Gate is not the lever. | Pivot to per-channel decay or post-PAM mixing. |
+diff --git a/v9/model.py b/v9/model.py
+index c64fa88..9621c06 100644
+--- a/v9/model.py
++++ b/v9/model.py
+@@ -38,6 +38,8 @@ class V9Config(V7Config):
+     # Gate the PAM readout before o_proj. Initialized as identity via
+     # gate = 2 * sigmoid(0), so V9 gate runs start from V7 behavior.
+     pam_output_gate: bool = False
++    # Hidden size for a 2-layer MLP gate. 0 keeps the original single-linear gate.
++    pam_gate_hidden: int = 0
+     # Causal depthwise conv kernel before QKV projection. 0 disables it.
+     pam_short_conv: int = 0
+     # Cross-head soft competition on the PAM readout. Zero learned params.
+@@ -82,6 +84,15 @@ PRESETS.update({
+         **{**_FLAT_CLEAN_OVERRIDES, "use_reverse_assoc": True},
+         dim=372, pam_output_gate=True,
+     ),
++    "medium_h16_gate_mlp_revassoc_100m": _v9_config_from_v7(
++        "medium_h16_flat",
++        **{**_FLAT_CLEAN_OVERRIDES, "use_reverse_assoc": True},
++        dim=368,
++        pam_output_gate=True,
++        pam_gate_hidden=368,
++        pam_short_conv=0,
++        pam_head_compete=False,
++    ),
+     "medium_h16_gate_qknorm_100m": _v9_config_from_v7(
+         "medium_h16_flat",
+         **{**_FLAT_CLEAN_OVERRIDES, "qk_norm": True},
+@@ -124,7 +135,17 @@ class V9PhaseAssociativeLayer(PhaseAssociativeLayer):
+         self.pam_short_conv = cfg.pam_short_conv
+ 
+         if self.pam_output_gate:
+-            self.output_gate_proj = nn.Linear(cfg.dim * 2, self.inner_dim)
++            if cfg.pam_gate_hidden > 0:
++                self.output_gate_proj = nn.Sequential(
++                    nn.Linear(cfg.dim * 2, cfg.pam_gate_hidden),
++                    nn.SiLU(),
++                    nn.Linear(cfg.pam_gate_hidden, self.inner_dim),
++                )
++                # Exact identity gate at initialization: 2 * sigmoid(0) = 1.
++                nn.init.zeros_(self.output_gate_proj[-1].weight)
++                nn.init.zeros_(self.output_gate_proj[-1].bias)
++            else:
++                self.output_gate_proj = nn.Linear(cfg.dim * 2, self.inner_dim)
+ 
+         if self.pam_short_conv > 0:
+             self.short_conv = nn.Conv1d(
+@@ -478,8 +499,14 @@ class V9LM(nn.Module):
+             if hasattr(module, "protect_gate") and isinstance(module.protect_gate, nn.Linear):
+                 nn.init.constant_(module.protect_gate.bias, -3.0)
+             if hasattr(module, "output_gate_proj"):
+-                nn.init.zeros_(module.output_gate_proj.weight)
+-                nn.init.zeros_(module.output_gate_proj.bias)
++                if isinstance(module.output_gate_proj, nn.Linear):
++                    nn.init.zeros_(module.output_gate_proj.weight)
++                    nn.init.zeros_(module.output_gate_proj.bias)
++                elif isinstance(module.output_gate_proj, nn.Sequential):
++                    last = module.output_gate_proj[-1]
++                    if isinstance(last, nn.Linear):
++                        nn.init.zeros_(last.weight)
++                        nn.init.zeros_(last.bias)
+             if hasattr(module, "short_conv"):
+                 module._init_short_conv_identity()
+ 
+
+
+================================================================================
+RUN INFO (resume — appended)
+================================================================================
+Description : V9 Exp GM: 2-layer PAM gate + reverse_assoc, ~100M (push learned gate lever): dim=384 L=16 expand=3, PAM(H=6, d=64, flat dt=-4.0, RoPE, fused-QKV, GSP), activation=swish, LR=1e-4, warmup=1000
+Date (UTC)  : 2026-04-27 12:50:22
+Date (local): 2026-04-27 18:20:22 IST
+Hostname    : gowrav-rtx-4090
+Platform    : Linux 6.14.0-34-generic x86_64
+
+Git commit  : cba38f221aa0a190d006c65ab7658841952e824d
+Git short   : cba38f2
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.24
+Arguments   : --preset medium_h16_gate_mlp_revassoc_100m --dataset wikitext103 --seq_len 2048 --batch_size 3 --epochs 10 --activation swish --max_samples 9999999 --compile --compile_mode default --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt  --gen_prompt 'In 1923 , the University of' --resume checkpoints_v9_gate_mlp_revassoc_100m/best_model.pt 
+================================================================================

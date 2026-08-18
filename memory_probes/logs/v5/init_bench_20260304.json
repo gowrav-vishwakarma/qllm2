@@ -1,0 +1,129 @@
+{
+  "bench_config": {
+    "samples": 50,
+    "batch_size": 4,
+    "seq_len": 128,
+    "epochs": 2,
+    "size": "tiny",
+    "seeds": [
+      42,
+      43
+    ],
+    "strategies": [
+      "random",
+      "golden_ratio"
+    ],
+    "device": "mps"
+  },
+  "model_config": {
+    "vocab_size": 50257,
+    "dim": 64,
+    "state_dim": 128,
+    "num_layers": 4,
+    "num_banks": 2,
+    "bank_expand": 2,
+    "num_heads": 4,
+    "attn_every_k": 4,
+    "window_size": 256,
+    "dropout": 0.1,
+    "max_seq_len": 128,
+    "batch_size": 4,
+    "learning_rate": 0.001,
+    "weight_decay": 0.01,
+    "max_epochs": 2,
+    "warmup_steps": 200,
+    "gradient_clip": 1.0,
+    "diversity_loss_weight": 0.05,
+    "compile_model": false,
+    "init_strategy": "random",
+    "init_seed": null
+  },
+  "started": "2026-03-04 22:58:16",
+  "total_time_s": 39.2,
+  "results": [
+    {
+      "strategy": "random",
+      "seed": 42,
+      "epochs": [
+        {
+          "epoch": 1,
+          "train_loss": 10.5769,
+          "val_loss": 10.2226,
+          "val_ppl": 27518.21
+        },
+        {
+          "epoch": 2,
+          "train_loss": 9.8924,
+          "val_loss": 9.9165,
+          "val_ppl": 20262.84
+        }
+      ],
+      "time_s": 14.7,
+      "tok_s": 1044,
+      "error": null
+    },
+    {
+      "strategy": "random",
+      "seed": 43,
+      "epochs": [
+        {
+          "epoch": 1,
+          "train_loss": 10.5516,
+          "val_loss": 10.1883,
+          "val_ppl": 26589.5
+        },
+        {
+          "epoch": 2,
+          "train_loss": 9.83,
+          "val_loss": 9.8944,
+          "val_ppl": 19818.3
+        }
+      ],
+      "time_s": 7.7,
+      "tok_s": 1995,
+      "error": null
+    },
+    {
+      "strategy": "golden_ratio",
+      "seed": 42,
+      "epochs": [
+        {
+          "epoch": 1,
+          "train_loss": 10.5775,
+          "val_loss": 10.2296,
+          "val_ppl": 27711.61
+        },
+        {
+          "epoch": 2,
+          "train_loss": 9.9001,
+          "val_loss": 9.9397,
+          "val_ppl": 20737.34
+        }
+      ],
+      "time_s": 7.8,
+      "tok_s": 1979,
+      "error": null
+    },
+    {
+      "strategy": "golden_ratio",
+      "seed": 43,
+      "epochs": [
+        {
+          "epoch": 1,
+          "train_loss": 10.488,
+          "val_loss": 10.0344,
+          "val_ppl": 22797.55
+        },
+        {
+          "epoch": 2,
+          "train_loss": 9.7117,
+          "val_loss": 9.7267,
+          "val_ppl": 16759.88
+        }
+      ],
+      "time_s": 8.0,
+      "tok_s": 1921,
+      "error": null
+    }
+  ]
+}

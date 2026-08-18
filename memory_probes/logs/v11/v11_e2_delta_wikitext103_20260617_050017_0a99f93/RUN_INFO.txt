@@ -1,0 +1,17 @@
+================================================================================
+RUN INFO
+================================================================================
+Description : V11 v11_e2_delta (B=18, chunk=256): new PAM memory dynamics; control = 7d 26.88
+Date (UTC)  : 2026-06-17 05:00:17
+Date (local): 2026-06-17 05:00:17 UTC
+Hostname    : rtx6000pro.asia-south2-a.c.ankpal-1673529693693.internal
+Platform    : Linux 7.0.0-1005-gcp x86_64
+
+Git commit  : 0a99f93e13dae73000d649c07cf1fb32c8f4e4c2
+Git short   : 0a99f93
+Git branch  : master
+Git dirty   : no
+
+Python      : Python 3.9.25
+Arguments   : --preset v11_e2_delta --dataset wikitext103 --seq_len 2048 --batch_size 18 --epochs 10 --chunk_size 256 --max_samples 9999999 --amp_dtype auto --num_workers 4 --gen_every 5000 --no_grad_ckpt --compile --compile_mode default --gen_prompt 'In 1923 , the University of' 
+================================================================================

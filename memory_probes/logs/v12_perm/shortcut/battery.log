@@ -1,0 +1,124 @@
+######## grammar (checkpoints_v12_curriculum/base/slim.pt)
+Loaded V12 checkpoint: checkpoints_v12_curriculum/base/slim.pt
+  params=62,282,900 device=cuda
+
+=== fact shortcut diagnosis ===
+  value positions scored     : 388
+  value pool size            : 50
+  mean in-context values     : 4.92
+
+  top-1 over full vocab      : 0.000  (exact answer)
+  top-1 is SOME pool value   : 0.000  (learned 'emit a value')
+  top-1 is a CONTEXT value   : 0.000  (learned 'emit a context value')
+
+  restricted to 50-value pool: 0.028  (chance 0.020)
+  restricted to context values: 0.222  (chance 0.246)   <-- BINDING TEST
+  MRR among context values   : 0.473
+
+  VERDICT: SHORTCUT. Binding is at chance even in-distribution;
+           answer-masked PPL came from "emit a plausible context value".
+
+Results saved to logs/v12_perm/shortcut/grammar.json
+######## fact_delta_trained (checkpoints_v12_curriculum/fact_retrieval/best_model.pt)
+Loaded V12 checkpoint: checkpoints_v12_curriculum/fact_retrieval/best_model.pt
+  params=85,622,300 device=cuda
+
+=== fact shortcut diagnosis ===
+  value positions scored     : 388
+  value pool size            : 50
+  mean in-context values     : 4.92
+
+  top-1 over full vocab      : 0.747  (exact answer)
+  top-1 is SOME pool value   : 1.000  (learned 'emit a value')
+  top-1 is a CONTEXT value   : 1.000  (learned 'emit a context value')
+
+  restricted to 50-value pool: 0.747  (chance 0.020)
+  restricted to context values: 0.747  (chance 0.246)   <-- BINDING TEST
+  MRR among context values   : 0.862
+
+  VERDICT: PARTIAL binding (+0.502 over chance).
+
+Results saved to logs/v12_perm/shortcut/fact_delta_trained.json
+######## fact_additive_trained (checkpoints_v12_curriculum_additive/fact_retrieval/best_model.pt)
+Loaded V12 checkpoint: checkpoints_v12_curriculum_additive/fact_retrieval/best_model.pt
+  params=85,671,592 device=cuda
+
+=== fact shortcut diagnosis ===
+  value positions scored     : 388
+  value pool size            : 50
+  mean in-context values     : 4.92
+
+  top-1 over full vocab      : 0.784  (exact answer)
+  top-1 is SOME pool value   : 1.000  (learned 'emit a value')
+  top-1 is a CONTEXT value   : 1.000  (learned 'emit a context value')
+
+  restricted to 50-value pool: 0.784  (chance 0.020)
+  restricted to context values: 0.784  (chance 0.246)   <-- BINDING TEST
+  MRR among context values   : 0.885
+
+  VERDICT: PARTIAL binding (+0.538 over chance).
+
+Results saved to logs/v12_perm/shortcut/fact_additive_trained.json
+######## gf_packed (packed_v12/gf.pt)
+Loaded V12 checkpoint: packed_v12/gf.pt
+  params=85,622,300 device=cuda
+
+=== fact shortcut diagnosis ===
+  value positions scored     : 388
+  value pool size            : 50
+  mean in-context values     : 4.92
+
+  top-1 over full vocab      : 0.003  (exact answer)
+  top-1 is SOME pool value   : 0.028  (learned 'emit a value')
+  top-1 is a CONTEXT value   : 0.008  (learned 'emit a context value')
+
+  restricted to 50-value pool: 0.026  (chance 0.020)
+  restricted to context values: 0.255  (chance 0.246)   <-- BINDING TEST
+  MRR among context values   : 0.503
+
+  VERDICT: SHORTCUT. Binding is at chance even in-distribution;
+           answer-masked PPL came from "emit a plausible context value".
+
+Results saved to logs/v12_perm/shortcut/gf_packed.json
+######## gfr_packed (packed_v12/gfr.pt)
+Loaded V12 checkpoint: packed_v12/gfr.pt
+  params=109,010,992 device=cuda
+
+=== fact shortcut diagnosis ===
+  value positions scored     : 388
+  value pool size            : 50
+  mean in-context values     : 4.92
+
+  top-1 over full vocab      : 0.003  (exact answer)
+  top-1 is SOME pool value   : 0.028  (learned 'emit a value')
+  top-1 is a CONTEXT value   : 0.008  (learned 'emit a context value')
+
+  restricted to 50-value pool: 0.026  (chance 0.020)
+  restricted to context values: 0.263  (chance 0.246)   <-- BINDING TEST
+  MRR among context values   : 0.507
+
+  VERDICT: SHORTCUT. Binding is at chance even in-distribution;
+           answer-masked PPL came from "emit a plausible context value".
+
+Results saved to logs/v12_perm/shortcut/gfr_packed.json
+######## reasoning_trained (checkpoints_v12_curriculum/reasoning/best_model.pt)
+Loaded V12 checkpoint: checkpoints_v12_curriculum/reasoning/best_model.pt
+  params=109,010,992 device=cuda
+
+=== fact shortcut diagnosis ===
+  value positions scored     : 388
+  value pool size            : 50
+  mean in-context values     : 4.92
+
+  top-1 over full vocab      : 0.000  (exact answer)
+  top-1 is SOME pool value   : 0.000  (learned 'emit a value')
+  top-1 is a CONTEXT value   : 0.000  (learned 'emit a context value')
+
+  restricted to 50-value pool: 0.057  (chance 0.020)
+  restricted to context values: 0.219  (chance 0.246)   <-- BINDING TEST
+  MRR among context values   : 0.474
+
+  VERDICT: SHORTCUT. Binding is at chance even in-distribution;
+           answer-masked PPL came from "emit a plausible context value".
+
+Results saved to logs/v12_perm/shortcut/reasoning_trained.json

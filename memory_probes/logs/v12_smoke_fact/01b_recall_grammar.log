@@ -1,0 +1,49 @@
+Loaded V12 checkpoint: checkpoints_v12_curriculum/base/slim.pt
+  params=62,282,900 device=cuda
+  scored 50/1080 examples
+  scored 100/1080 examples
+  scored 150/1080 examples
+  scored 200/1080 examples
+  scored 250/1080 examples
+  scored 300/1080 examples
+  scored 350/1080 examples
+  scored 400/1080 examples
+  scored 450/1080 examples
+  scored 500/1080 examples
+  scored 550/1080 examples
+  scored 600/1080 examples
+  scored 650/1080 examples
+  scored 700/1080 examples
+  scored 750/1080 examples
+  scored 800/1080 examples
+
+=== V12 recall aggregates ===
+  ctx=  128 pos=0.0 n=1: acc=0.133 mrr=0.352 margin=-1.862
+  ctx=  128 pos=0.0 n=4: acc=0.367 mrr=0.542 margin=-1.094
+  ctx=  128 pos=0.0 n=8: acc=0.067 mrr=0.306 margin=-2.330
+  ctx=  128 pos=0.5 n=1: acc=0.100 mrr=0.335 margin=-1.591
+  ctx=  128 pos=0.5 n=4: acc=0.367 mrr=0.539 margin=-1.009
+  ctx=  128 pos=0.5 n=8: acc=0.133 mrr=0.337 margin=-2.476
+  ctx=  128 pos=1.0 n=1: acc=0.200 mrr=0.410 margin=-1.509
+  ctx=  128 pos=1.0 n=4: acc=0.367 mrr=0.538 margin=-1.207
+  ctx=  128 pos=1.0 n=8: acc=0.100 mrr=0.326 margin=-2.725
+  ctx=  512 pos=0.0 n=1: acc=0.100 mrr=0.331 margin=-2.500
+  ctx=  512 pos=0.0 n=4: acc=0.267 mrr=0.486 margin=-1.201
+  ctx=  512 pos=0.0 n=8: acc=0.100 mrr=0.336 margin=-1.916
+  ctx=  512 pos=0.5 n=1: acc=0.100 mrr=0.316 margin=-2.343
+  ctx=  512 pos=0.5 n=4: acc=0.267 mrr=0.485 margin=-1.276
+  ctx=  512 pos=0.5 n=8: acc=0.067 mrr=0.318 margin=-2.054
+  ctx=  512 pos=1.0 n=1: acc=0.100 mrr=0.366 margin=-1.940
+  ctx=  512 pos=1.0 n=4: acc=0.367 mrr=0.538 margin=-1.228
+  ctx=  512 pos=1.0 n=8: acc=0.100 mrr=0.322 margin=-2.649
+  ctx= 1024 pos=0.0 n=1: acc=0.100 mrr=0.311 margin=-2.370
+  ctx= 1024 pos=0.0 n=4: acc=0.267 mrr=0.478 margin=-1.323
+  ctx= 1024 pos=0.0 n=8: acc=0.100 mrr=0.330 margin=-2.046
+  ctx= 1024 pos=0.5 n=1: acc=0.100 mrr=0.316 margin=-2.354
+  ctx= 1024 pos=0.5 n=4: acc=0.267 mrr=0.479 margin=-1.320
+  ctx= 1024 pos=0.5 n=8: acc=0.100 mrr=0.331 margin=-2.088
+  ctx= 1024 pos=1.0 n=1: acc=0.100 mrr=0.366 margin=-1.921
+  ctx= 1024 pos=1.0 n=4: acc=0.367 mrr=0.540 margin=-1.238
+  ctx= 1024 pos=1.0 n=8: acc=0.067 mrr=0.303 margin=-2.600
+single_assoc: n/a
+Results saved to logs/v12_smoke_fact/recall_grammar_only.json

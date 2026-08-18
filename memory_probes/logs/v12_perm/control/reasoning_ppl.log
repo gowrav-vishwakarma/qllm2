@@ -1,0 +1,19 @@
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl1024.pt (248,461 tokens)
+Val chunks: 242
+[cache] DCLM holdout: .cache/v7_tokens/dclm_edu_holdout_v1_t500000_e3_p5.pt (500,000 tokens)
+
+Eval sets: ['wiki', 'dclm'] | device=cuda
+
+checkpoint                                              | set   |     loss |      ppl |     tokens
+------------------------------------------------------------------------------[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl1024.pt (248,461 tokens)
+Val chunks: 242
+[cache] DCLM holdout: .cache/v7_tokens/dclm_edu_holdout_v1_t500000_e3_p5.pt (500,000 tokens)
+
+Eval sets: ['wiki', 'dclm'] | device=cpu
+
+checkpoint                                              | set   |     loss |      ppl |     tokens
+-----------------------------------------------------------------------------------------------
+Loading checkpoints_v12_curriculum/reasoning/best_model.pt...
+reasoning/best_model.pt                                 | wiki  |   5.7506 |   314.38 |    247,808
+reasoning/best_model.pt                                 | dclm  |   4.6018 |    99.66 |    498,688
+

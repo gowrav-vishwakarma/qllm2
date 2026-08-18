@@ -1,0 +1,234 @@
+[Discord] Webhook configured -- notifications enabled
+Token indices sequence length is longer than the specified maximum sequence length for this model (1054 > 1024). Running this sequence through the model will result in indexing errors
+Wall clock start: 2026-07-16 09:12:41
+============================================================
+  V11: PAM with new memory dynamics
+  Preset: v11_micro_10m_vault | Stage: pretrain | Dataset: pretrain_mix
+============================================================
+
+Config: {'vocab_size': 50261, 'dim': 96, 'n_heads': 3, 'head_dim': 32, 'n_layers': 6, 'expand': 3, 'dropout': 0.0, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 64, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 3, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.3, 'gate_surprisal_tau': 0.5, 'gate_surprisal_sign': 1.0, 'vault_state': True, 'vault_state_idx': 0, 'write_phase_address': False}
+Memory dynamics: decay_mode=head, write_mode=additive, n_states=3, chunk_size=64
+Batch size: 32, Epochs: 9999, LR: 0.0003
+Token budget: 30,000,000
+
+Loading pretrain_mix (seq_len=2048)...
+Streaming pretrain blend: sources=['recall'] weights=[1.0] edu>=3 budget=30000000 vocab=50257 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'recall': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50257_t500000_e3_p5.pt (500,000 tokens)
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+Val chunks: 121
+Adjusting vocab_size: 50261 -> 50257 (tokenizer)
+Val: in-distro holdout (8 batches), WikiText secondary (4 batches)
+Train batches: streaming, Val batches: 8
+
+Model parameters: {'embedding (tied)': 9649344, 'blocks': 1454538, 'norms': 192, 'lm_head': 18720, 'total': 11122794}
+Total: 11,122,794 (11.1M)
+Param groups: 82 tensors (11,117,568) with wd, 71 tensors (5,226) without
+Compiling model (mode=default)...
+  fused_ce: compiled _hidden_to_lm (logits never materialized)
+
+Training on cuda
+Parameters: {'embedding (tied)': 9649344, 'blocks': 1454538, 'norms': 192, 'lm_head': 18720, 'total': 11122794}
+Total: 11,122,794 (11.1M)
+Epochs: 1..9999, Batches/epoch: stream
+Periodic checkpoint: every 1000 steps -> latest.pt
+
+
+============================================================
+Epoch 1/9999
+============================================================
+  [1] 0 loss=10.8328 ppl=50654.4 lr=1.50e-06 | 98 tok/s (avg 98) ETA n/a | GPU 0.2/9.8GB | gtok=65536
+  [1] 50 loss=10.2138 ppl=27275.9 lr=7.65e-05 | 167346 tok/s (avg 4855) ETA n/a | GPU 0.2/9.9GB | gtok=3342336
+  [1] 100 loss=8.4225 ppl=4548.3 lr=1.51e-04 | 120712 tok/s (avg 9249) ETA n/a | GPU 0.2/9.9GB | gtok=6619136
+  [1] 150 loss=6.5414 ppl=693.3 lr=2.26e-04 | 165593 tok/s (avg 13456) ETA n/a | GPU 0.2/9.9GB | gtok=9895936
+  [1] 200 loss=4.2022 ppl=66.8 lr=3.00e-04 | 165511 tok/s (avg 17442) ETA n/a | GPU 0.2/9.9GB | gtok=13172736
+  [1] 250 loss=2.1861 ppl=8.9 lr=2.91e-04 | 165571 tok/s (avg 21225) ETA n/a | GPU 0.2/9.9GB | gtok=16449536
+  [1] 300 loss=1.1523 ppl=3.2 lr=2.65e-04 | 166246 tok/s (avg 24822) ETA n/a | GPU 0.2/9.9GB | gtok=19726336
+  [1] 350 loss=0.7754 ppl=2.2 lr=2.26e-04 | 166632 tok/s (avg 28246) ETA n/a | GPU 0.2/9.9GB | gtok=23003136
+  [1] 400 loss=0.5683 ppl=1.8 lr=1.78e-04 | 166753 tok/s (avg 31509) ETA n/a | GPU 0.2/9.9GB | gtok=26279936
+  [1] 450 loss=0.4777 ppl=1.6 lr=1.27e-04 | 166845 tok/s (avg 34623) ETA n/a | GPU 0.2/9.9GB | gtok=29556736
+  Token budget reached: 30,001,152 / 30,000,000
+Epoch 1/9999 | Train Loss: 4.3628 PPL: 78.47 | 15859 tok/s | Time: 1891.7s (30,001,152 tok) | Val Loss: 11.3082 PPL: 81491.09 Acc: 0.009 | Wiki PPL: 114147.56 *best*
+Saved checkpoint: checkpoints_v11_recall_micro/vault/best_model.pt
+
+Stopping: token budget 30,000,000 reached.
+Saved checkpoint: checkpoints_v11_recall_micro/vault/final_model.pt
+
+Training complete (token budget)!
+Total wall time: 2353.7s (0.65h)
+Best Val Loss: 11.3082, Best Val PPL: 81491.09
+
+Wall clock end: 2026-07-16 09:52:00
+[eval-recall-gate] checkpoint=checkpoints_v11_recall_micro/vault/best_model.pt preset=v11_micro_10m_vault out=checkpoints_v11_recall_micro/vault/eval
+[1/3] gate diagnostics ...
+  cfg from ckpt: vocab=50257 gate_content_aware=True routing_content_aware=False state_compete=False
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+Val chunks: 121
+========================================================================================
+PAM gate diagnosis  ckpt=checkpoints_v11_recall_micro/vault/best_model.pt  tokens=2048  preset=v11_micro_10m_vault
+  p   = mean GSP write-protect prob (sigmoid(protect_gate)); high p => "do not write"
+  gam = mean decay gamma (->1 keeps state, ->0 forgets fast)
+  content = top 25% surprisal tokens, filler = bottom 25%
+========================================================================================
+layer |   p_all p_content  p_filler |  gam_all  dt_bias
+-------------------------------------------------------
+    0 |   0.054     0.115     0.047 |   0.9831   -4.007
+    1 |   0.058     0.117     0.052 |   0.9828   -4.005
+    2 |   0.065     0.124     0.058 |   0.9843   -4.001
+    3 |   0.071     0.128     0.064 |   0.9871   -4.003
+    4 |   0.084     0.136     0.077 |   0.9899   -3.996
+    5 |   0.080     0.133     0.072 |   0.9881   -4.006
+-------------------------------------------------------
+  mean p across layers: 0.069  (init bias -3.0 => p~0.047; higher = model learned to protect)
+  mean (p_content - p_filler): +0.064  (positive = protects content more than filler = healthy)
+
+========================================================================================
+Routing (alpha) — per-token entropy vs uniform ln(K), batch-mean diversity
+  uniform ln(K=3) = 1.099
+========================================================================================
+layer |    tok_H    bar_H | mean_winner
+---------------------------------------
+    0 |    1.099    1.099 |        0.00
+    1 |    1.099    1.099 |        0.00
+    2 |    1.099    1.099 |        0.00
+    3 |    1.099    1.099 |        0.00
+    4 |    1.099    1.099 |        0.00
+    5 |    1.099    1.099 |        0.00
+---------------------------------------
+  mean tok_H=1.099 (lower=more decisive)  bar_H=1.099 (higher=more diverse)
+
+========================================================================================
+Retrieval energy |S_k·Q| (loop path) — content vs filler tokens
+========================================================================================
+layer |      c0      c1      c2 |      f0      f1      f2
+---------------------------------------------------------
+    0 |  1.2968  0.5666  0.2160 |  1.2571  0.5690  0.2138
+    1 |  0.7349  0.3315  0.1416 |  0.6554  0.2996  0.1247
+    2 |  0.5227  0.2464  0.1260 |  0.4755  0.2316  0.1173
+    3 |  0.6472  0.2743  0.1260 |  0.6069  0.2658  0.1199
+    4 |  0.7372  0.2652  0.1031 |  0.6782  0.2576  0.1006
+    5 |  0.5473  0.1850  0.0612 |  0.5070  0.1827  0.0614
+
+JSON saved to checkpoints_v11_recall_micro/vault/eval/gates.json
+[2/3] behavioral recall ...
+  scored 20/2160 examples
+  scored 40/2160 examples
+  scored 60/2160 examples
+  scored 80/2160 examples
+  scored 100/2160 examples
+  scored 120/2160 examples
+  scored 140/2160 examples
+  scored 160/2160 examples
+  scored 180/2160 examples
+  scored 200/2160 examples
+  scored 220/2160 examples
+  scored 240/2160 examples
+  scored 260/2160 examples
+  scored 280/2160 examples
+  scored 300/2160 examples
+  scored 320/2160 examples
+  scored 340/2160 examples
+  scored 360/2160 examples
+  scored 380/2160 examples
+  scored 400/2160 examples
+  scored 420/2160 examples
+  scored 440/2160 examples
+  scored 460/2160 examples
+  scored 480/2160 examples
+  scored 500/2160 examples
+  scored 520/2160 examples
+  scored 540/2160 examples
+  scored 560/2160 examples
+  scored 580/2160 examples
+  scored 600/2160 examples
+  scored 620/2160 examples
+  scored 640/2160 examples
+  scored 660/2160 examples
+  scored 680/2160 examples
+  scored 700/2160 examples
+  scored 720/2160 examples
+  scored 740/2160 examples
+  scored 760/2160 examples
+  scored 780/2160 examples
+  scored 800/2160 examples
+  scored 820/2160 examples
+  scored 840/2160 examples
+  scored 860/2160 examples
+  scored 880/2160 examples
+  scored 900/2160 examples
+  scored 920/2160 examples
+  scored 940/2160 examples
+  scored 960/2160 examples
+  scored 980/2160 examples
+  scored 1000/2160 examples
+  scored 1020/2160 examples
+  scored 1040/2160 examples
+  scored 1060/2160 examples
+  scored 1080/2160 examples
+  scored 1100/2160 examples
+  scored 1120/2160 examples
+  scored 1140/2160 examples
+  scored 1160/2160 examples
+  scored 1180/2160 examples
+  scored 1200/2160 examples
+  scored 1220/2160 examples
+  scored 1240/2160 examples
+  scored 1260/2160 examples
+  scored 1280/2160 examples
+  scored 1300/2160 examples
+  scored 1320/2160 examples
+  scored 1340/2160 examples
+  scored 1360/2160 examples
+  scored 1380/2160 examples
+  scored 1400/2160 examples
+  scored 1420/2160 examples
+  scored 1440/2160 examples
+  scored 1460/2160 examples
+  scored 1480/2160 examples
+  scored 1500/2160 examples
+  scored 1520/2160 examples
+  scored 1540/2160 examples
+  scored 1560/2160 examples
+  scored 1580/2160 examples
+  scored 1600/2160 examples
+  scored 1620/2160 examples
+  scored 1640/2160 examples
+  scored 1660/2160 examples
+  scored 1680/2160 examples
+  scored 1700/2160 examples
+  scored 1720/2160 examples
+  scored 1740/2160 examples
+  scored 1760/2160 examples
+  scored 1780/2160 examples
+  scored 1800/2160 examples
+  scored 1820/2160 examples
+  scored 1840/2160 examples
+  scored 1860/2160 examples
+  scored 1880/2160 examples
+  scored 1900/2160 examples
+  scored 1920/2160 examples
+  scored 1940/2160 examples
+  scored 1960/2160 examples
+  scored 1980/2160 examples
+  scored 2000/2160 examples
+  scored 2020/2160 examples
+  scored 2040/2160 examples
+  scored 2060/2160 examples
+  scored 2080/2160 examples
+  scored 2100/2160 examples
+  scored 2120/2160 examples
+  scored 2140/2160 examples
+  scored 2160/2160 examples
+Results saved to checkpoints_v11_recall_micro/vault/eval/v11_behavior.json
+[3/3] verdict ...
+================================================================
+RECALL-GATE VERDICT: vault
+================================================================
+  params:                  11,122,794
+  overall behavioral acc:  0.107
+  single-assoc by context: 128:0.15, 512:0.16, 1024:0.16, 2048:0.16
+  single@max_ctx(2048):     0.161  target>=0.9  FAIL
+  gate p_content-p_filler: +0.064  |.|>=0.05  PASS
+  mean protect / gamma:    0.069 / 0.986
+  SHIP: NO
+  verdict JSON -> checkpoints_v11_recall_micro/vault/eval/verdict.json
+[eval-recall-gate] done -> checkpoints_v11_recall_micro/vault/eval

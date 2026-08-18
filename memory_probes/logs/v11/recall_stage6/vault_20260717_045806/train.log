@@ -1,0 +1,124 @@
+[Discord] Webhook configured -- notifications enabled
+Token indices sequence length is longer than the specified maximum sequence length for this model (3479 > 1024). Running this sequence through the model will result in indexing errors
+/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/_inductor/lowering.py:7095: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/_inductor/lowering.py:7095: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/serialization.py", line 967, in save
+    _save(
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/serialization.py", line 1268, in _save
+    zip_file.write_record(name, storage, num_bytes)
+RuntimeError: [enforce fail at inline_container.cc:858] . PytorchStreamWriter failed writing file data/0: file write failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.9-linux-x86_64-gnu/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.9-linux-x86_64-gnu/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/home/ubuntu/Development/qllm-private/v11/train.py", line 643, in <module>
+    main()
+  File "/home/ubuntu/Development/qllm-private/v11/train.py", line 635, in main
+    trainer.train()
+  File "/home/ubuntu/Development/qllm-private/v7/train.py", line 677, in train
+    train_metrics = self.train_epoch(epoch)
+  File "/home/ubuntu/Development/qllm-private/v7/train.py", line 553, in train_epoch
+    self._save_periodic_checkpoint(epoch)
+  File "/home/ubuntu/Development/qllm-private/v7/train.py", line 635, in _save_periodic_checkpoint
+    self.save_checkpoint('latest.pt', epoch)
+  File "/home/ubuntu/Development/qllm-private/v7/train.py", line 629, in save_checkpoint
+    torch.save(ckpt, tmp_path)
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/serialization.py", line 974, in save
+    return
+  File "/home/ubuntu/Development/qllm-private/.venv/lib/python3.9/site-packages/torch/serialization.py", line 798, in __exit__
+    self.file_like.write_end_of_file()
+RuntimeError: [enforce fail at inline_container.cc:664] . unexpected pos 188352 vs 188246
+Wall clock start: 2026-07-17 04:58:07
+============================================================
+  V11: PAM with new memory dynamics
+  Preset: v11_e3_k3_chat | Stage: pretrain | Dataset: pretrain_mix
+============================================================
+
+Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': False, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'additive', 'n_states': 3, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': True, 'state_compete': True, 'phase_init': 'zero', 'route_balance_lambda': 0.01, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.3, 'gate_surprisal_tau': 0.5, 'gate_surprisal_sign': 1.0, 'vault_state': True, 'vault_state_idx': 0, 'write_phase_address': False}
+Memory dynamics: decay_mode=head, write_mode=additive, n_states=3, chunk_size=256
+Batch size: 16, Epochs: 9999, LR: 0.0001
+Token budget: 300,000,000
+
+Loading pretrain_mix (seq_len=2048)...
+Streaming pretrain blend: sources=['fineweb', 'recall'] weights=[93.0, 3.0] edu>=3 budget=300000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'fineweb': 0, 'recall': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+Val chunks: 121
+Val: in-distro holdout (16 batches), WikiText secondary (8 batches)
+Train batches: streaming, Val batches: 16
+
+Model parameters: {'embedding (tied)': 38600448, 'blocks': 61981616, 'norms': 768, 'lm_head': 296064, 'total': 100878896}
+Total: 100,878,896 (100.9M)
+Param groups: 228 tensors (100,826,880) with wd, 197 tensors (52,016) without
+Compiling model (mode=default)...
+  fused_ce: compiled _hidden_to_lm (logits never materialized)
+
+Training on cuda
+Parameters: {'embedding (tied)': 38600448, 'blocks': 61981616, 'norms': 768, 'lm_head': 296064, 'total': 100878896}
+Total: 100,878,896 (100.9M)
+Epochs: 1..9999, Batches/epoch: stream
+Periodic checkpoint: every 2000 steps -> latest.pt
+
+
+============================================================
+Epoch 1/9999
+============================================================
+[fineweb] local parquet stream: 15 shards under data/fineweb-edu/sample-10BT
+  [1] 0 loss=10.8998 ppl=54167.7 lr=2.00e-07 | 57 tok/s (avg 57) ETA n/a | GPU 1.4/39.7GB | gtok=32768
+  [1] 50 loss=10.6428 ppl=41889.5 lr=1.02e-05 | 39257 tok/s (avg 2724) ETA n/a | GPU 1.4/40.4GB | gtok=1671168
+  [1] 100 loss=10.0507 ppl=23171.8 lr=2.02e-05 | 39218 tok/s (avg 5051) ETA n/a | GPU 1.4/40.4GB | gtok=3309568
+  [1] 150 loss=9.0226 ppl=8288.2 lr=3.02e-05 | 39151 tok/s (avg 7098) ETA n/a | GPU 1.4/40.4GB | gtok=4947968
+  [1] 200 loss=8.3274 ppl=4135.9 lr=4.02e-05 | 39143 tok/s (avg 8913) ETA n/a | GPU 1.4/40.4GB | gtok=6586368
+  [1] 250 loss=7.8443 ppl=2551.1 lr=5.02e-05 | 39181 tok/s (avg 10534) ETA n/a | GPU 1.4/40.4GB | gtok=8224768
+  [1] 300 loss=7.4634 ppl=1743.1 lr=6.02e-05 | 39180 tok/s (avg 11990) ETA n/a | GPU 1.4/40.4GB | gtok=9863168
+  [1] 350 loss=7.2611 ppl=1423.8 lr=7.02e-05 | 39182 tok/s (avg 13306) ETA n/a | GPU 1.4/40.4GB | gtok=11501568
+  [1] 400 loss=7.2158 ppl=1360.7 lr=8.02e-05 | 39150 tok/s (avg 14499) ETA n/a | GPU 1.4/40.4GB | gtok=13139968
+  [1] 450 loss=7.1509 ppl=1275.3 lr=9.02e-05 | 39143 tok/s (avg 15587) ETA n/a | GPU 1.4/40.4GB | gtok=14778368
+  [1] 500 loss=7.1771 ppl=1309.1 lr=1.00e-04 | 39135 tok/s (avg 16583) ETA n/a | GPU 1.4/40.4GB | gtok=16416768
+  [1] 550 loss=7.1358 ppl=1256.1 lr=1.00e-04 | 39051 tok/s (avg 17496) ETA n/a | GPU 1.4/40.4GB | gtok=18055168
+  [1] 600 loss=6.8595 ppl=952.9 lr=1.00e-04 | 39011 tok/s (avg 18338) ETA n/a | GPU 1.4/40.4GB | gtok=19693568
+  [1] 650 loss=6.9011 ppl=993.4 lr=9.99e-05 | 39117 tok/s (avg 19118) ETA n/a | GPU 1.4/40.4GB | gtok=21331968
+  [1] 700 loss=6.6593 ppl=780.0 lr=9.99e-05 | 39144 tok/s (avg 19842) ETA n/a | GPU 1.4/40.4GB | gtok=22970368
+  [1] 750 loss=6.5353 ppl=689.0 lr=9.98e-05 | 35535 tok/s (avg 20443) ETA n/a | GPU 1.4/40.4GB | gtok=24608768
+  [1] 800 loss=6.4527 ppl=634.4 lr=9.97e-05 | 39020 tok/s (avg 21069) ETA n/a | GPU 1.4/40.4GB | gtok=26247168
+  [1] 850 loss=6.2138 ppl=499.6 lr=9.96e-05 | 39151 tok/s (avg 21657) ETA n/a | GPU 1.4/40.4GB | gtok=27885568
+  [1] 900 loss=6.3680 ppl=582.9 lr=9.95e-05 | 39093 tok/s (avg 22206) ETA n/a | GPU 1.4/40.4GB | gtok=29523968
+  [1] 950 loss=6.2901 ppl=539.2 lr=9.94e-05 | 39143 tok/s (avg 22723) ETA n/a | GPU 1.4/40.4GB | gtok=31162368
+  [1] 1000 loss=6.2973 ppl=543.1 lr=9.93e-05 | 39122 tok/s (avg 23209) ETA n/a | GPU 1.4/40.4GB | gtok=32800768
+  [1] 1050 loss=5.9987 ppl=402.9 lr=9.91e-05 | 39143 tok/s (avg 23667) ETA n/a | GPU 1.4/40.4GB | gtok=34439168
+  [1] 1100 loss=6.0321 ppl=416.6 lr=9.89e-05 | 39121 tok/s (avg 24100) ETA n/a | GPU 1.4/40.4GB | gtok=36077568
+  [1] 1150 loss=5.9484 ppl=383.1 lr=9.88e-05 | 39074 tok/s (avg 24508) ETA n/a | GPU 1.4/40.4GB | gtok=37715968
+  [1] 1200 loss=5.8465 ppl=346.0 lr=9.86e-05 | 39165 tok/s (avg 24896) ETA n/a | GPU 1.4/40.4GB | gtok=39354368
+  [1] 1250 loss=5.9587 ppl=387.1 lr=9.83e-05 | 39134 tok/s (avg 25263) ETA n/a | GPU 1.4/40.4GB | gtok=40992768
+  [1] 1300 loss=5.8415 ppl=344.3 lr=9.81e-05 | 39171 tok/s (avg 25612) ETA n/a | GPU 1.4/40.4GB | gtok=42631168
+  [1] 1350 loss=5.8774 ppl=356.9 lr=9.79e-05 | 39133 tok/s (avg 25944) ETA n/a | GPU 1.4/40.4GB | gtok=44269568
+  [1] 1400 loss=5.3392 ppl=208.3 lr=9.76e-05 | 39139 tok/s (avg 26260) ETA n/a | GPU 1.4/40.4GB | gtok=45907968
+  [1] 1450 loss=5.8021 ppl=331.0 lr=9.74e-05 | 39108 tok/s (avg 26561) ETA n/a | GPU 1.4/40.4GB | gtok=47546368
+  [1] 1500 loss=5.5581 ppl=259.3 lr=9.71e-05 | 39088 tok/s (avg 26847) ETA n/a | GPU 1.4/40.4GB | gtok=49184768
+  [1] 1550 loss=5.6625 ppl=287.9 lr=9.68e-05 | 39113 tok/s (avg 27122) ETA n/a | GPU 1.4/40.4GB | gtok=50823168
+  [1] 1600 loss=5.6145 ppl=274.4 lr=9.65e-05 | 39167 tok/s (avg 27385) ETA n/a | GPU 1.4/40.4GB | gtok=52461568
+  [1] 1650 loss=5.5795 ppl=264.9 lr=9.62e-05 | 39114 tok/s (avg 27636) ETA n/a | GPU 1.4/40.4GB | gtok=54099968
+  [1] 1700 loss=5.4726 ppl=238.1 lr=9.58e-05 | 35659 tok/s (avg 27820) ETA n/a | GPU 1.4/40.4GB | gtok=55738368
+  [1] 1750 loss=5.4576 ppl=234.5 lr=9.55e-05 | 39080 tok/s (avg 28050) ETA n/a | GPU 1.4/40.4GB | gtok=57376768
+  [1] 1800 loss=5.4254 ppl=227.1 lr=9.51e-05 | 39097 tok/s (avg 28272) ETA n/a | GPU 1.4/40.4GB | gtok=59015168
+  [1] 1850 loss=5.1777 ppl=177.3 lr=9.47e-05 | 39117 tok/s (avg 28485) ETA n/a | GPU 1.4/40.4GB | gtok=60653568
+  [1] 1900 loss=5.4551 ppl=233.9 lr=9.43e-05 | 39161 tok/s (avg 28691) ETA n/a | GPU 1.4/40.4GB | gtok=62291968
+  [1] 1950 loss=5.4967 ppl=243.9 lr=9.39e-05 | 39129 tok/s (avg 28889) ETA n/a | GPU 1.4/40.4GB | gtok=63930368
+terminate called without an active exception

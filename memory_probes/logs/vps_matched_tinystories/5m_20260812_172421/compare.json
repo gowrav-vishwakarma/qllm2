@@ -1,0 +1,210 @@
+{
+  "budget": "5m",
+  "summary": {
+    "budget": "5m",
+    "transformer_params": 4979304,
+    "vps_params": 5016841,
+    "vps_dim": 160,
+    "vps_embed_rank": 48,
+    "vps_layers": 3,
+    "vps_heads": 2,
+    "vps_head_dim": 64
+  },
+  "args": {
+    "budget": "5m",
+    "hierarchy": "tinystories",
+    "max_samples": 5000,
+    "seq_len": 256,
+    "batch_size": 32,
+    "epochs": 8,
+    "encoder_epochs": 3,
+    "lr": 0.0003,
+    "out": "logs/vps_matched_tinystories",
+    "only": "both",
+    "smoke": false
+  },
+  "transformer": {
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 8.313799049377442,
+        "ppl": 639.7387908853484,
+        "nll": 6.461059953800585,
+        "tokens": 193536
+      },
+      {
+        "epoch": 2,
+        "train_loss": 5.898374629974366,
+        "ppl": 202.4476140951015,
+        "nll": 5.310481157252397,
+        "tokens": 193536
+      },
+      {
+        "epoch": 3,
+        "train_loss": 4.974432357788086,
+        "ppl": 96.01923081843665,
+        "nll": 4.564548492431641,
+        "tokens": 193536
+      },
+      {
+        "epoch": 4,
+        "train_loss": 4.48540338897705,
+        "ppl": 71.68996904338182,
+        "nll": 4.272350836052466,
+        "tokens": 193536
+      },
+      {
+        "epoch": 5,
+        "train_loss": 4.263507644653321,
+        "ppl": 61.19587240220033,
+        "nll": 4.114079742835313,
+        "tokens": 193536
+      },
+      {
+        "epoch": 6,
+        "train_loss": 4.124414371490478,
+        "ppl": 54.72240462118553,
+        "nll": 4.002273216449394,
+        "tokens": 193536
+      },
+      {
+        "epoch": 7,
+        "train_loss": 4.021183225631714,
+        "ppl": 50.08411177880821,
+        "nll": 3.913703827630906,
+        "tokens": 193536
+      },
+      {
+        "epoch": 8,
+        "train_loss": 3.9340925464630128,
+        "ppl": 46.14141670288632,
+        "nll": 3.8317109567147716,
+        "tokens": 193536
+      }
+    ],
+    "best": {
+      "epoch": 8,
+      "train_loss": 3.9340925464630128,
+      "ppl": 46.14141670288632,
+      "nll": 3.8317109567147716,
+      "tokens": 193536
+    },
+    "elapsed_sec": 21.76858901977539,
+    "params": 4979304,
+    "config": {
+      "vocab_size": 50257,
+      "max_seq_len": 2048,
+      "d_model": 88,
+      "n_layers": 4,
+      "n_heads": 2,
+      "d_ff": 352,
+      "dropout": 0.1,
+      "tie_weights": true
+    }
+  },
+  "vps": {
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 6.369044342041016,
+        "ppl": 401.904974577078,
+        "ppl_oracle": 401.753229907853
+      },
+      {
+        "epoch": 2,
+        "train_loss": 5.845103469848633,
+        "ppl": 289.30539214826746,
+        "ppl_oracle": 289.2098782873698
+      },
+      {
+        "epoch": 3,
+        "train_loss": 5.558727439880371,
+        "ppl": 236.45729796628473,
+        "ppl_oracle": 236.4435963561512
+      },
+      {
+        "epoch": 4,
+        "train_loss": 5.336319068908692,
+        "ppl": 214.15968866573215,
+        "ppl_oracle": 212.1465736874587
+      },
+      {
+        "epoch": 5,
+        "train_loss": 5.162552925109863,
+        "ppl": 154.58838664776243,
+        "ppl_oracle": 154.51678492713563
+      },
+      {
+        "epoch": 6,
+        "train_loss": 4.952902442932129,
+        "ppl": 133.35208385374136,
+        "ppl_oracle": 133.42548842144498
+      },
+      {
+        "epoch": 7,
+        "train_loss": 4.732895763397217,
+        "ppl": 109.11541827593757,
+        "ppl_oracle": 109.21783217906273
+      },
+      {
+        "epoch": 8,
+        "train_loss": 4.529950813293457,
+        "ppl": 91.5252419855025,
+        "ppl_oracle": 91.56255688580397
+      }
+    ],
+    "best": {
+      "epoch": 8,
+      "train_loss": 4.529950813293457,
+      "ppl": 91.5252419855025,
+      "ppl_oracle": 91.56255688580397
+    },
+    "elapsed_sec": 51.64772605895996,
+    "params": 5016841,
+    "config": {
+      "vocab_size": 50257,
+      "dim": 160,
+      "n_heads": 2,
+      "head_dim": 64,
+      "n_layers": 3,
+      "embed_rank": 48,
+      "max_seq_len": 2048,
+      "decay_biases": [
+        -1.0,
+        -2.5,
+        -4.0,
+        -6.0
+      ],
+      "hierarchy": [
+        [
+          "sentence",
+          16
+        ],
+        [
+          "paragraph",
+          64
+        ],
+        [
+          "chapter",
+          256
+        ],
+        [
+          "book",
+          1024
+        ]
+      ],
+      "pos_base": 64,
+      "pos_levels": 4,
+      "n_drift_markers": 8,
+      "dropout": 0.1,
+      "target_weight": 0.1,
+      "tie_weights": true,
+      "state_dim": 128,
+      "chunk_size": 16,
+      "sentence_size": 64,
+      "hierarchy_weight": 0.0
+    }
+  },
+  "winner": "transformer",
+  "delta_ppl": 45.383825282616186
+}

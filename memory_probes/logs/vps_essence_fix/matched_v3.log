@@ -1,0 +1,31 @@
+[device] cuda
+[cache] Loaded TinyStories train from .cache/v7_tokens/tinystories_train_v2_ms2000_sl256_r1.pt (419,313 tokens)
+[cache] Loaded TinyStories validation from .cache/v7_tokens/tinystories_validation_v2_ms2000_sl256_r1.pt (194,512 tokens)
+Train chunks: 1631, Val chunks: 756
+[budget] {"budget": "5m", "transformer_params": 4979304, "vps_params": 4966866, "vps_dim": 128, "vps_embed_rank": 64, "vps_layers": 2, "vps_heads": 2, "vps_head_dim": 48}
+[transformer] params=4,979,304 d_model=88 layers=4
+[transformer] epoch 1/10 loss=9.6894 val_ppl=5421.52
+[transformer] epoch 2/10 loss=7.7576 val_ppl=1080.25
+[transformer] epoch 3/10 loss=6.5442 val_ppl=467.49
+[transformer] epoch 4/10 loss=5.9446 val_ppl=301.10
+[transformer] epoch 5/10 loss=5.5458 val_ppl=202.20
+[transformer] epoch 6/10 loss=5.1609 val_ppl=140.80
+[transformer] epoch 7/10 loss=4.8446 val_ppl=108.57
+[transformer] epoch 8/10 loss=4.6262 val_ppl=91.44
+[transformer] epoch 9/10 loss=4.4760 val_ppl=81.66
+[transformer] epoch 10/10 loss=4.3611 val_ppl=74.65
+[vps] params=4,966,866 dim=128 rank=64 layers=2 heads=2×48
+[vps/essence] frozen concept recon_acc=1.000 (chunk=32, d_ess=2048)
+[vps] epoch 1/10 loss=9.7851 val_ppl=1689.46 (oracle=103.64)
+[vps] epoch 2/10 loss=6.4101 val_ppl=406.98 (oracle=27.45)
+[vps] epoch 3/10 loss=6.0776 val_ppl=399.78 (oracle=27.36)
+[vps] epoch 4/10 loss=6.0394 val_ppl=382.41 (oracle=27.02)
+[vps] epoch 5/10 loss=5.9824 val_ppl=355.26 (oracle=26.14)
+[vps] epoch 6/10 loss=5.8483 val_ppl=309.06 (oracle=23.89)
+[vps] epoch 7/10 loss=5.7235 val_ppl=286.33 (oracle=23.03)
+[vps] epoch 8/10 loss=5.6554 val_ppl=261.88 (oracle=21.63)
+[vps] epoch 9/10 loss=5.5674 val_ppl=243.71 (oracle=20.41)
+[vps] epoch 10/10 loss=5.4780 val_ppl=233.18 (oracle=19.97)
+
+[compare] transformer_ppl=74.65 vps_ppl=233.18 winner=transformer
+[done] logs/vps_matched_tinystories/5m_20260812_180240/compare.json
