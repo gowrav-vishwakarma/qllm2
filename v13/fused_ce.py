@@ -93,6 +93,7 @@ class _FusedLinearCE(torch.autograd.Function):
                 softmax_probs = softmax_probs * grad_scale
             softmax_probs = softmax_probs * valid.unsqueeze(1).float()
             grad_hidden[chunk_start:chunk_end] = (softmax_probs @ weight_matrix.float()).to(grad_hidden.dtype)
+            grad_weight += (softmax_probs.T @ hidden_chunk).to(grad_weight.dtype)
         return grad_hidden, grad_weight, None, None, None, None, None
 
 
