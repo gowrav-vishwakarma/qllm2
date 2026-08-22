@@ -165,6 +165,63 @@ def test_competitive_retrieval_equiv(batch_size=2, seq_len=80, seed=0):
     return ok
 
 
+def test_delta_keynorm_equiv(batch_size=2, seq_len=80, seed=0):
+    """Production V13 path: delta + unit-norm keys (the 500M NaN fix).
+
+    Verifies fused == K-loop == recurrent with delta_key_norm=True, and that
+    keys leaving _project are truly per-vector unit-norm (||k||_2 == 1 across
+    head_dim, NOT per-element). The delta k-direction eigenvalue is
+    gamma*(1 - beta_e*||k||^2); unit keys keep it in [1-beta_e, 1).
+    """
+    common = dict(
+        vocab_size=512, dim=48, n_heads=3, head_dim=16, n_layers=1, expand=2,
+        dropout=0.0, max_seq_len=256, chunk_size=24, gradient_checkpointing=False,
+        use_rope=True, use_gsp=True, n_states=3, gate_content_aware=True,
+        write_mode='delta', delta_chunk=20, delta_erase_gate=True,
+        vault_state=True, vault_state_idx=0, write_phase_address=True,
+        delta_key_norm=True,
+    )
+    torch.manual_seed(seed)
+    loop = V13PAMLayer(V13Config(**{**common, 'fused_e3': False}))
+    fused = V13PAMLayer(V13Config(**{**common, 'fused_e3': True}))
+    fused.load_state_dict(loop.state_dict())
+    loop.train()
+    fused.train()
+
+    x = torch.randn(batch_size, seq_len, common['dim'], 2) * 0.5
+    x1 = x.clone().requires_grad_(True)
+    x2 = x.clone().requires_grad_(True)
+    y1, S1 = loop(x1)
+    y2, S2 = fused(x2)
+    (y1 ** 2).sum().backward()
+    (y2 ** 2).sum().backward()
+
+    # Keys leaving _project must be per-vector unit-norm.
+    with torch.no_grad():
+        _, kproj, _ = fused._project(x, 0)
+        knorm = (kproj[..., 0].square() + kproj[..., 1].square()).sum(-1).sqrt()
+        d_k = (knorm - 1.0).abs().max().item()
+
+    with torch.no_grad():
+        ok_rec = _run_mode(
+            "delta_keynorm",
+            V13Config(**{**common, 'fused_e3': False}),
+            batch_size=batch_size, seq_len=seq_len, atol=2e-3, seed=seed + 1,
+        )
+
+    dy = (y1 - y2).abs().max().item()
+    dS = (S1 - S2).abs().max().item()
+    dg = (x1.grad - x2.grad).abs().max().item()
+    # Equivalence must be near-exact (fused == loop == recurrent, incl. grads).
+    # The unit-norm check only needs to reject a MISSING norm (|d| ~ 0.2) or a
+    # per-element norm (|d| ~ 3.9): the 1e-8 floor in the denominator leaves
+    # |d| ~ 1e-8/(2*min|k|^2) ~ 1e-7 for near-zero keys, which is harmless.
+    ok = max(dy, dS, dg) < 1e-10 and d_k < 1e-5 and ok_rec
+    print(f"[delta_keynorm  ] y={dy:.2e} S={dS:.2e} grad={dg:.2e} |d||k|||={d_k:.2e}  "
+          f"{'PASS' if ok else 'FAIL'}")
+    return ok
+
+
 def test_drop_shape_mismatches():
     """Resume-safe: growing phase_proj (dim -> 2*dim) reinits cleanly."""
     from v13.train import _drop_shape_mismatches
@@ -236,6 +293,7 @@ def main():
     results.append(test_fused_ce_equiv())
     results.append(test_competitive_retrieval_equiv())
     results.append(test_drop_shape_mismatches())
+    results.append(test_delta_keynorm_equiv())
     print()
     if all(results):
         print("ALL MODES PASS: parallel train form == O(1) recurrent form.")

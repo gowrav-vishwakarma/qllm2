@@ -93,6 +93,19 @@ def cnormalize(x: torch.Tensor) -> torch.Tensor:
 
 
 @torch.jit.script
+def cnormalize_vec(x: torch.Tensor) -> torch.Tensor:
+    """Per-VECTOR unit norm across the complex head dimension.
+
+    cnormalize() is per-element (|z| of each element); this divides by
+    sqrt(sum_d |z_d|^2) so the resulting vector has L2 norm 1. The delta
+    rule's k-direction eigenvalue is gamma*(1 - beta_e * ||k||^2), so unit
+    keys keep it a strict contraction (gamma in [0,1], beta_e in (0,1)).
+    """
+    mag = torch.sqrt((x[..., 0].square() + x[..., 1].square()).sum(-1) + 1e-8)
+    return x / mag.unsqueeze(-1).unsqueeze(-1)
+
+
+@torch.jit.script
 def to_real_concat(x: torch.Tensor) -> torch.Tensor:
     return torch.cat([x[..., 0], x[..., 1]], dim=-1)
 

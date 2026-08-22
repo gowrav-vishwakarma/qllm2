@@ -34,7 +34,7 @@ from torch.utils.checkpoint import checkpoint as grad_checkpoint
 # Vendored V7 complex primitives — V11 no longer imports v7.model on the forward path.
 from v13.complex_ops import (
     real_part, imag_part, stack_complex, scale_complex, as_complex_dropout_mask,
-    cmul, cconj, cabs, cnormalize, to_real_concat,
+    cmul, cconj, cabs, cnormalize, cnormalize_vec, to_real_concat,
     ComplexLinear, ComplexNorm, ComplexEmbed, ComplexPosEmbed,
     ComplexGatedUnit, build_rope_cache, _build_activation,
 )
@@ -93,6 +93,15 @@ class V13Config:
     route_balance_lambda: float = 0.0   # MoE-style load balance on batch-mean routing (needs state_compete)
     aux_loss_weight: float = 1.0        # trainer weight for route_balance aux (v7.train hook)
     fused_e3: bool = True               # E3: fused multistate path (exact-equiv, K-independent matmuls)
+    # delta_key_norm: per-vector (across head_dim) unit-norm keys for the delta
+    # rule. The k-direction eigenvalue of S <- g*S + (b_w*v - b_e*k@S)*k^H is
+    # g*(1 - b_e*||k||^2); with the vault state pinned to g=1, unnormalized
+    # keys (||k||^2 ~ d) flip this past -1 -> positive feedback -> unbounded
+    # state growth -> NaN (500M run died at ~57M). Unit keys make it a strict
+    # contraction in [1-b_e, 1) for any g in [0,1]. Applied in _project (after
+    # RoPE + phase addressing), so the write AND read paths see unit keys.
+    # NOTE: qk_norm (per-element cnormalize) is NOT sufficient (||k||^2 -> d).
+    delta_key_norm: bool = True
     recompute_pam_chunks: bool = False  # recompute per-chunk W/D/A in backward (exact; less VRAM, more FLOPs)
 
     # ── Recall program (V12): longer memory horizon + gate supervision ───────
@@ -143,6 +152,7 @@ class V13PAMLayer(nn.Module):
         self.qk_norm = cfg.qk_norm
         self.decay_mode = cfg.decay_mode
         self.write_mode = cfg.write_mode
+        self.delta_key_norm = getattr(cfg, 'delta_key_norm', False)
         self.n_states = cfg.n_states
         self.delta_chunk = cfg.delta_chunk
         self.fused_e3 = getattr(cfg, 'fused_e3', True)
@@ -353,6 +363,13 @@ class V13PAMLayer(nn.Module):
         # so matching bindings reinforce via conjugation. Off by default.
         if self.write_phase_address:
             queries, values = self._apply_write_phase_address(queries, keys, values)
+
+        # Delta-rule stability: unit-norm keys across head_dim (see
+        # V13Config.delta_key_norm). Done after RoPE/phase addressing so the
+        # phase gate sees the same key content it did pre-fix; only magnitude
+        # is removed, which the delta mass term needs bounded.
+        if self.write_mode == 'delta' and self.delta_key_norm:
+            keys = cnormalize_vec(keys)
         return queries, keys, values
 
     def _apply_write_phase_address(self, queries, keys, values):
