@@ -1,0 +1,57 @@
+E2b ML proof | steps=300 seq=256 batch=8 gaps=[16, 64, 128, 208] chance=1/96=0.010
+
+=== additive ===
+/home/gowrav/Development/qllm2/v13/experiments/train_recall_cpu.py:149: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:822.)
+  hist.append({'step': step, 'loss': float(loss), **acc})
+  [additive] step    1 loss=5.335 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step   25 loss=3.791 g16=0.04 g64=0.00 g128=0.00 g208=0.00
+  [additive] step   50 loss=2.966 g16=0.04 g64=0.04 g128=0.04 g208=0.04
+  [additive] step   75 loss=2.445 g16=0.04 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  100 loss=2.134 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  125 loss=2.004 g16=0.04 g64=0.04 g128=0.00 g208=0.00
+  [additive] step  150 loss=1.938 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  175 loss=1.906 g16=0.00 g64=0.00 g128=0.00 g208=0.04
+  [additive] step  200 loss=1.895 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  225 loss=1.885 g16=0.04 g64=0.04 g128=0.04 g208=0.04
+  [additive] step  250 loss=1.883 g16=0.04 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  275 loss=1.876 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  300 loss=1.876 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+
+=== delta_legacy ===
+  [delta_legacy] step    1 loss=5.311 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step   25 loss=3.847 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step   50 loss=2.901 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step   75 loss=2.402 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  100 loss=2.146 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  125 loss=1.973 g16=0.04 g64=0.04 g128=0.04 g208=0.04
+  [delta_legacy] step  150 loss=1.923 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  175 loss=1.896 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  200 loss=1.890 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  225 loss=1.881 g16=0.04 g64=0.04 g128=0.04 g208=0.04
+  [delta_legacy] step  250 loss=1.881 g16=0.04 g64=0.04 g128=0.04 g208=0.04
+  [delta_legacy] step  275 loss=1.873 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  300 loss=1.874 g16=0.04 g64=0.00 g128=0.04 g208=0.04
+
+=== delta_gated(E2b) ===
+  [delta_gated(E2b)] step    1 loss=5.306 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step   25 loss=3.895 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step   50 loss=2.923 g16=0.04 g64=0.04 g128=0.04 g208=0.04
+  [delta_gated(E2b)] step   75 loss=2.330 g16=0.04 g64=0.08 g128=0.04 g208=0.04
+  [delta_gated(E2b)] step  100 loss=2.050 g16=0.00 g64=0.00 g128=0.04 g208=0.04
+  [delta_gated(E2b)] step  125 loss=1.946 g16=0.04 g64=0.04 g128=0.04 g208=0.04
+  [delta_gated(E2b)] step  150 loss=1.919 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  175 loss=1.897 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  200 loss=1.892 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  225 loss=1.882 g16=0.04 g64=0.04 g128=0.04 g208=0.04
+  [delta_gated(E2b)] step  250 loss=1.882 g16=0.04 g64=0.04 g128=0.04 g208=0.04
+  [delta_gated(E2b)] step  275 loss=1.875 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  300 loss=1.875 g16=0.00 g64=0.04 g128=0.04 g208=0.04
+
+==============================================================================
+model              final_loss   gap16   gap64  gap128  gap208  erase_stats
+additive                1.876    0.00    0.00    0.00    0.00  -  (282.2s)
+delta_legacy            1.874    0.04    0.00    0.04    0.04  -  (461.4s)
+delta_gated(E2b)        1.875    0.00    0.04    0.04    0.04  val=0.197 filler=0.210  (469.8s)
+==============================================================================
+Wrote /home/gowrav/Development/qllm2/v13/experiments/results/train_recall_cpu_1787137384.json

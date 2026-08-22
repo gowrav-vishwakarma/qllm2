@@ -1,0 +1,45 @@
+{
+  "protocol": "overwrite",
+  "variants": [
+    "additive",
+    "delta_v13",
+    "delta_erase_ws",
+    "delta_erase_ws2",
+    "delta_twogate",
+    "delta_meanfix"
+  ],
+  "quick": false,
+  "elapsed_s": 0.1,
+  "overwrite": [
+    {
+      "variant": "additive",
+      "latest_wins": 2,
+      "seeds": 8
+    },
+    {
+      "variant": "delta_v13",
+      "latest_wins": 8,
+      "seeds": 8
+    },
+    {
+      "variant": "delta_erase_ws",
+      "latest_wins": 8,
+      "seeds": 8
+    },
+    {
+      "variant": "delta_erase_ws2",
+      "latest_wins": 8,
+      "seeds": 8
+    },
+    {
+      "variant": "delta_twogate",
+      "latest_wins": 8,
+      "seeds": 8
+    },
+    {
+      "variant": "delta_meanfix",
+      "latest_wins": 8,
+      "seeds": 8
+    }
+  ]
+}

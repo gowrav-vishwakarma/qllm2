@@ -1,0 +1,49 @@
+  cfg from ckpt: vocab=50261 gate_content_aware=True routing_content_aware=False state_compete=False
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+Val chunks: 121
+========================================================================================
+PAM gate diagnosis  ckpt=checkpoints_v13/e2b_50m/best_model.pt  tokens=2048  preset=v13_micro_10m_recall
+  p   = mean GSP write-protect prob (sigmoid(protect_gate)); high p => "do not write"
+  gam = mean decay gamma (->1 keeps state, ->0 forgets fast)
+  content = top 25% surprisal tokens, filler = bottom 25%
+========================================================================================
+layer |   p_all p_content  p_filler |  gam_all  dt_bias
+-------------------------------------------------------
+    0 |   0.175     0.182     0.166 |   0.8679   -3.966
+    1 |   0.271     0.278     0.269 |   0.9773   -3.983
+    2 |   0.284     0.289     0.282 |   0.9753   -3.994
+    3 |   0.256     0.266     0.249 |   0.9769   -4.000
+    4 |   0.245     0.262     0.234 |   0.9890   -4.005
+    5 |   0.159     0.278     0.155 |   0.9822   -3.999
+-------------------------------------------------------
+  mean p across layers: 0.232  (init bias -3.0 => p~0.047; higher = model learned to protect)
+  mean (p_content - p_filler): +0.033  (positive = protects content more than filler = healthy)
+
+========================================================================================
+Routing (alpha) — per-token entropy vs uniform ln(K), batch-mean diversity
+  uniform ln(K=3) = 1.099
+========================================================================================
+layer |    tok_H    bar_H | mean_winner
+---------------------------------------
+    0 |    1.099    1.099 |        0.00
+    1 |    1.099    1.099 |        0.00
+    2 |    1.099    1.099 |        0.00
+    3 |    1.099    1.099 |        0.00
+    4 |    1.099    1.099 |        0.00
+    5 |    1.099    1.099 |        0.00
+---------------------------------------
+  mean tok_H=1.099 (lower=more decisive)  bar_H=1.099 (higher=more diverse)
+
+========================================================================================
+Retrieval energy |S_k·Q| (loop path) — content vs filler tokens
+========================================================================================
+layer |      c0      c1      c2 |      f0      f1      f2
+---------------------------------------------------------
+    0 |  1.5686  0.4881  0.2083 |  1.6311  0.4861  0.2130
+    1 |  1.6242  0.5946  0.2442 |  1.7681  0.6050  0.2429
+    2 |  2.1066  0.6906  0.2631 |  2.3291  0.7153  0.2689
+    3 |  1.9856  0.6973  0.2600 |  2.1553  0.7041  0.2630
+    4 |  7.6334  2.9593  0.9476 |  8.5585  3.1283  0.9346
+    5 |  5.3388  1.5373  0.4501 |  5.5488  1.4407  0.3930
+
+JSON saved to checkpoints_v13/e2b_50m/gate_probe.json

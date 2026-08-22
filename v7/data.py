@@ -1407,6 +1407,67 @@ def _recall_text_iter(
         yield doc
 
 
+# ── synthetic reasoning curriculum (stateful: copy / reverse / cipher / sum) ──
+_REASON_LETTERS = 'abcdefghijklmnopqrstuvwxyz'
+
+
+def _build_reason_doc(rng: 'random.Random') -> str:
+    """One synthetic reasoning document.
+
+    Tasks require maintaining an intermediate state in the hidden layer, not just
+    retrieval: copy / reverse-copy of a letter string, substitution cipher, and a
+    single-digit running sum. Every answer token is a single GPT2 token after a
+    space (verified 1:1), so the task signal is unambiguous.
+    """
+    task = rng.choice(('copy', 'reverse', 'cipher', 'sum'))
+    if task == 'copy':
+        n = rng.randint(4, 12)
+        seq = ' '.join(rng.choice(_REASON_LETTERS) for _ in range(n))
+        return f"Task: repeat the letter string exactly.\nString: {seq}\nAnswer: {seq}."
+    if task == 'reverse':
+        n = rng.randint(4, 10)
+        seq = ' '.join(rng.choice(_REASON_LETTERS) for _ in range(n))
+        rev = ' '.join(reversed(seq.split()))
+        return f"Task: write the letter string in reverse order.\nString: {seq}\nAnswer: {rev}."
+    if task == 'cipher':
+        # Fixed Caesar shift; the model must apply it letter-by-letter.
+        shift = rng.randint(1, 25)
+        n = rng.randint(4, 8)
+        src = [rng.choice(_REASON_LETTERS) for _ in range(n)]
+        enc = [chr(ord('a') + (ord(c) - ord('a') + shift) % 26) for c in src]
+        s = ' '.join(src)
+        e = ' '.join(enc)
+        return (f"Task: encode with a Caesar shift of {shift}.\n"
+                f"String: {s}\nAnswer: {e}.")
+    # sum: running total of single digits (state = accumulator).
+    n = rng.randint(3, 6)
+    nums = [rng.randint(0, 9) for _ in range(n)]
+    total = sum(nums)
+    expr = ' + '.join(str(x) for x in nums)
+    return f"Task: give the sum.\nExpression: {expr}\nAnswer: {total}."
+
+
+def _reason_text_iter(
+    *,
+    seed: int = 0,
+    skip_docs: int = 0,
+    doc_counters: Optional[Dict[str, int]] = None,
+    counter_key: str = 'reason',
+) -> Iterator[str]:
+    """Infinite stream of synthetic reasoning documents (deterministic per seed)."""
+    import random as _random
+
+    rng = _random.Random((seed * 40503 + 777) & 0xFFFFFFFF)
+    skipped = 0
+    while True:
+        doc = _build_reason_doc(rng)
+        if skipped < skip_docs:
+            skipped += 1
+            continue
+        _bump_counter(doc_counters, counter_key)
+        yield doc
+
+
 # Format-aware source registry: single source of truth for schema + kind so the
 # pretrain blend and the SFT stage agree on how each dataset is shaped.
 #   schema: 'text' (raw web docs) | 'messages' (chat, rendered to ChatML text)
@@ -1417,6 +1478,7 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     'smoltalk2_mid': {'schema': 'messages', 'kind': 'reason',    'hf': SMOLTALK2_REPO, 'config': 'Mid'},
     'smoltalk2_sft': {'schema': 'messages', 'kind': 'chat',      'hf': SMOLTALK2_REPO, 'config': 'SFT'},
     'recall':        {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-recall'},
+    'reason':        {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-reason'},
 }
 
 
@@ -1664,10 +1726,16 @@ def build_pretrain_mix_token_cache(
                 )
             web_sources.append(s)
         elif spec['kind'] == 'synthetic':
-            it = _recall_text_iter(
-                seed=mix_seed, skip_docs=sk,
-                doc_counters=doc_counters, counter_key=s,
-            )
+            if s == 'reason':
+                it = _reason_text_iter(
+                    seed=mix_seed, skip_docs=sk,
+                    doc_counters=doc_counters, counter_key=s,
+                )
+            else:
+                it = _recall_text_iter(
+                    seed=mix_seed, skip_docs=sk,
+                    doc_counters=doc_counters, counter_key=s,
+                )
         else:
             it = _smoltalk2_blend_text_iter(
                 config=spec.get('config', 'Mid'), skip_rows=sk,
@@ -1906,11 +1974,17 @@ def load_pretrain_mix(
                     doc_counters=doc_counters, counter_key=s,
                 )
             web_sources.append(s)
-        elif spec['kind'] == 'synthetic':  # synthetic recall curriculum
-            it = _recall_text_iter(
-                seed=mix_seed, skip_docs=sk,
-                doc_counters=doc_counters, counter_key=s,
-            )
+        elif spec['kind'] == 'synthetic':  # recall / reasoning curriculum
+            if s == 'reason':
+                it = _reason_text_iter(
+                    seed=mix_seed, skip_docs=sk,
+                    doc_counters=doc_counters, counter_key=s,
+                )
+            else:
+                it = _recall_text_iter(
+                    seed=mix_seed, skip_docs=sk,
+                    doc_counters=doc_counters, counter_key=s,
+                )
         else:  # messages -> ChatML text
             it = _smoltalk2_blend_text_iter(
                 config=spec.get('config', 'Mid'), skip_rows=sk,

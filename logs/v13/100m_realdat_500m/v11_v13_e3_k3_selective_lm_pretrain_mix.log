@@ -1,0 +1,56 @@
+[2026-08-20 14:06:18] Wall clock start: 2026-08-20 14:06:18
+[2026-08-20 14:06:18] ============================================================
+[2026-08-20 14:06:18]   V11: PAM with new memory dynamics
+[2026-08-20 14:06:18]   Preset: v13_e3_k3_selective | Stage: lm | Dataset: pretrain_mix
+[2026-08-20 14:06:18] ============================================================
+
+[2026-08-20 14:06:18] Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': True, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'delta', 'delta_erase_gate': True, 'n_states': 3, 'delta_chunk': 64, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': False, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 1.0, 'gate_surprisal_sign': 1.0, 'vault_state': True, 'vault_state_idx': 0, 'write_phase_address': True}
+[2026-08-20 14:06:18] Memory dynamics: decay_mode=head, write_mode=delta, n_states=3, chunk_size=256
+[2026-08-20 14:06:18] Batch size: 10, Epochs: 10, LR: 0.0001
+[2026-08-20 14:06:18] Token budget: 500,000,000
+
+[2026-08-20 14:06:18] Loading pretrain_mix (seq_len=2048)...
+[2026-08-20 14:06:20] Streaming pretrain blend: sources=['dclm', 'fineweb', 'smoltalk2_mid', 'recall', 'reason'] weights=[70.0, 20.0, 5.0, 5.0, 5.0] edu>=3 budget=500000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'dclm': 0, 'fineweb': 0, 'smoltalk2_mid': 0, 'recall': 0, 'reason': 0}
+[2026-08-20 14:06:20] [cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[2026-08-20 14:06:21] [cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+[2026-08-20 14:06:21] Val chunks: 121
+[2026-08-20 14:06:21] Val: in-distro holdout (25 batches), WikiText secondary (13 batches)
+[2026-08-20 14:06:21] Train batches: streaming, Val batches: 25
+
+[2026-08-20 14:06:22] Model parameters: {'embedding (tied)': 38600448, 'blocks': 61724512, 'norms': 768, 'lm_head': 296064, 'total': 100621792}
+[2026-08-20 14:06:22] Total: 100,621,792 (100.6M)
+[2026-08-20 14:06:23] Param groups: 260 tensors (100,569,856) with wd, 229 tensors (51,936) without
+[2026-08-20 14:06:23] fused_ce enabled (chunked linear+CE; logits never materialized)
+
+[2026-08-20 14:06:23] Training on cuda
+[2026-08-20 14:06:23] Parameters: {'embedding (tied)': 38600448, 'blocks': 61724512, 'norms': 768, 'lm_head': 296064, 'total': 100621792}
+[2026-08-20 14:06:23] Total: 100,621,792 (100.6M)
+[2026-08-20 14:06:23] Epochs: 1..9999, Batches/epoch: stream
+[2026-08-20 14:06:23] Periodic checkpoint: every 500 steps -> latest.pt
+
+
+[2026-08-20 14:06:23] ============================================================
+[2026-08-20 14:06:23] Epoch 1/9999
+[2026-08-20 14:06:23] ============================================================
+[2026-08-20 14:12:35]   [1] 0 loss=10.9157 ppl=55034.9 lr=2.00e-07 | 55 tok/s (avg 55) ETA n/a | GPU 13.6/19.1GB | gtok=20480
+[2026-08-20 14:19:55]   [1] 50 loss=10.6952 ppl=44145.6 lr=1.02e-05 | 2324 tok/s (avg 1286) ETA n/a | GPU 13.6/19.8GB | gtok=1044480
+[2026-08-20 14:27:12]   [1] 100 loss=10.2476 ppl=28213.4 lr=2.02e-05 | 2345 tok/s (avg 1656) ETA n/a | GPU 13.6/19.8GB | gtok=2068480
+[2026-08-20 14:34:26]   [1] 150 loss=9.7845 ppl=17757.1 lr=3.02e-05 | 2357 tok/s (avg 1837) ETA n/a | GPU 13.6/19.8GB | gtok=3092480
+[2026-08-20 14:41:34]   [1] 200 loss=9.4016 ppl=12107.3 lr=4.02e-05 | 2396 tok/s (avg 1950) ETA n/a | GPU 13.6/19.8GB | gtok=4116480
+[2026-08-20 14:48:43]   [1] 250 loss=8.5856 ppl=5354.0 lr=5.02e-05 | 2385 tok/s (avg 2024) ETA n/a | GPU 13.6/19.8GB | gtok=5140480
+[2026-08-20 14:55:48]   [1] 300 loss=7.8412 ppl=2543.3 lr=6.02e-05 | 2410 tok/s (avg 2079) ETA n/a | GPU 13.6/19.8GB | gtok=6164480
+[2026-08-20 15:03:03]   [1] 350 loss=7.5001 ppl=1808.2 lr=7.02e-05 | 2357 tok/s (avg 2115) ETA n/a | GPU 13.6/19.8GB | gtok=7188480
+[2026-08-20 15:10:25]   [1] 400 loss=7.2514 ppl=1410.0 lr=8.02e-05 | 2315 tok/s (avg 2138) ETA n/a | GPU 13.6/19.8GB | gtok=8212480
+[2026-08-20 15:17:29]   [1] 450 loss=7.3495 ppl=1555.3 lr=9.02e-05 | 2413 tok/s (avg 2165) ETA n/a | GPU 13.6/19.8GB | gtok=9236480
+[2026-08-20 15:24:41] Saved checkpoint: checkpoints_v13/100m_realdat_500m/latest.pt
+[2026-08-20 15:24:41]   [checkpoint @ step 500, 10,240,000 tok]
+[2026-08-20 15:24:49]   [1] 500 loss=7.2132 ppl=1357.3 lr=1.00e-04 | 2325 tok/s (avg 2180) ETA n/a | GPU 13.6/19.8GB | gtok=10260480
+[2026-08-20 15:32:11]   [1] 550 loss=7.3206 ppl=1511.2 lr=1.00e-04 | 2320 tok/s (avg 2192) ETA n/a | GPU 13.6/19.8GB | gtok=11284480
+[2026-08-20 15:39:30]   [1] 600 loss=7.2145 ppl=1358.9 lr=1.00e-04 | 2330 tok/s (avg 2203) ETA n/a | GPU 13.6/19.8GB | gtok=12308480
+[2026-08-20 15:46:49]   [1] 650 loss=7.2178 ppl=1363.4 lr=1.00e-04 | 2334 tok/s (avg 2213) ETA n/a | GPU 13.6/19.8GB | gtok=13332480
+[2026-08-20 15:54:17]   [1] 700 loss=7.2038 ppl=1344.5 lr=1.00e-04 | 2285 tok/s (avg 2218) ETA n/a | GPU 13.6/19.8GB | gtok=14356480
+[2026-08-20 16:01:47]   [1] 750 loss=6.9159 ppl=1008.2 lr=1.00e-04 | 2277 tok/s (avg 2221) ETA n/a | GPU 13.6/19.8GB | gtok=15380480
+
+[2026-08-20 16:04:57] Signal 15 received — saving latest.pt at next batch boundary...
+
+[2026-08-20 16:04:57] Signal 15 received — saving latest.pt at next batch boundary...

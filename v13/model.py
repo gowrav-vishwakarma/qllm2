@@ -65,6 +65,16 @@ class V13Config:
     # ── Memory dynamics (V13 defaults: selective E2+E3+Stage-6) ─────────────
     decay_mode: str = 'head'            # E1: 'head' | 'per_channel'
     write_mode: str = 'delta'           # E2: 'additive' | 'delta' (error-correcting write)
+    # E2b: delta_erase_gate splits the delta erase into its own LEARNED gate.
+    #   Off (legacy): u = beta * (v_prot - pred)  -- erase fires on EVERY token.
+    #   On:          u = beta_w * v_prot - beta_e * pred,  beta_e = sigmoid(erase_beta_proj(|x|))
+    #   erase_beta_proj init bias -3.0 (sigmoid -> 0.047): training starts in the
+    #   additive regime and the erase (competition) is only learned where it pays.
+    #   Why: with the shared beta, the erase term beta*pred leaks protected memory
+    #   at ~beta/d per filler token (measured: facts dead by ~500 tokens), which is
+    #   the V13 recall killer. Evidence: v13/experiments/mem_dynamics.py +
+    #   v13/experiments/layer_equivalence.py (check C).
+    delta_erase_gate: bool = False
     n_states: int = 3                   # E3: K superposed states
     delta_chunk: int = 64               # E2 chunk size for the UT transform
     state_dt_spread: float = 2.0        # E3 spread of per-state decay biases
@@ -173,6 +183,13 @@ class V13PAMLayer(nn.Module):
         if cfg.write_mode == 'delta':
             self.beta_proj = nn.Linear(cfg.dim, cfg.n_heads)
             nn.init.constant_(self.beta_proj.bias, 0.0)
+            # E2b: separate learned erase gate. Low init -> starts additive-like;
+            # the model learns to erase (overwrite) only for repeat/update tokens.
+            if cfg.delta_erase_gate:
+                self.erase_beta_proj = nn.Linear(cfg.dim, cfg.n_heads)
+                nn.init.constant_(self.erase_beta_proj.bias, -3.0)
+            else:
+                self.erase_beta_proj = None
 
         # E3: per-state decay bias offsets + per-(head,state) retrieval phase.
         if cfg.n_states > 1:
@@ -203,6 +220,14 @@ class V13PAMLayer(nn.Module):
         )
         self._route_aux = None
         self._gate_prob_bt = None   # [B,T] mean protect prob per token (gate-surprisal aux)
+
+    def _gate_betas(self, x):
+        """Write/erase gates, each [B,H,T]. Erase falls back to write (legacy)."""
+        write_beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)
+        if self.erase_beta_proj is None:
+            return write_beta, write_beta
+        erase_beta = torch.sigmoid(self.erase_beta_proj(cabs(x))).transpose(1, 2)
+        return write_beta, erase_beta
 
     def _apply_gamma_floor(self, base_decay: torch.Tensor) -> torch.Tensor:
         """Lift the base (pre-GSP) decay onto [gamma_floor, 1) to lengthen memory.
@@ -534,8 +559,16 @@ class V13PAMLayer(nn.Module):
 
     # ── E2: delta-rule write (UT transform), chunked, head scalar decay ───────
 
-    def _forward_delta(self, queries, keys, protected_values, decay_gamma, write_beta, head_dim):
-        """Gated delta rule via per-chunk UT transform. decay_gamma: [B,H,T] head scalar."""
+    def _forward_delta(self, queries, keys, protected_values, decay_gamma, write_beta, head_dim,
+                       erase_beta=None):
+        """Gated delta rule via per-chunk UT transform. decay_gamma: [B,H,T] head scalar.
+
+        E2b: erase_beta [B,H,T] (default = write_beta, legacy) weights the UT mass
+        matrix (the erase), write_beta weights the write RHS. Splitting the two kills
+        the isotropic self-erosion leak while keeping exact closed form + dedup.
+        """
+        if erase_beta is None:
+            erase_beta = write_beta
         batch_size, num_heads, seq_len = queries.shape[:3]
         chunk_size = self.delta_chunk
         query_scale = head_dim ** -0.5
@@ -550,6 +583,7 @@ class V13PAMLayer(nn.Module):
             values_chunk = protected_values[:, :, chunk_start:chunk_end]
             decay_gamma_chunk = decay_gamma[:, :, chunk_start:chunk_end]   # [B,H,Tc]
             write_beta_chunk = write_beta[:, :, chunk_start:chunk_end]     # [B,H,Tc]
+            erase_beta_chunk = erase_beta[:, :, chunk_start:chunk_end]     # [B,H,Tc]
 
             decay_gamma_flat = decay_gamma_chunk.reshape(batch_size * num_heads, chunk_len)
             decay_matrix = fused_decay_matrix(decay_gamma_flat, chunk_len).reshape(
@@ -564,8 +598,9 @@ class V13PAMLayer(nn.Module):
             key_gram_imag = key_imag @ key_real.transpose(-1, -2) - key_real @ key_imag.transpose(-1, -2)
             strict_lower = torch.tril(torch.ones(chunk_len, chunk_len, device=queries.device), -1)
             decay_masked = decay_matrix * strict_lower
-            mass_real = write_beta_chunk.unsqueeze(-1) * decay_masked * key_gram_real
-            mass_imag = write_beta_chunk.unsqueeze(-1) * decay_masked * key_gram_imag
+            # E2b: the mass matrix encodes A_t = I - beta_e*kk^H -> erase gate.
+            mass_real = erase_beta_chunk.unsqueeze(-1) * decay_masked * key_gram_real
+            mass_imag = erase_beta_chunk.unsqueeze(-1) * decay_masked * key_gram_imag
 
             value_real, value_imag = values_chunk[..., 0], values_chunk[..., 1]
             if chunk_start > 0:
@@ -578,8 +613,12 @@ class V13PAMLayer(nn.Module):
                 )
                 state_key_real = state_key_real * cumulative_alpha.unsqueeze(-1)
                 state_key_imag = state_key_imag * cumulative_alpha.unsqueeze(-1)
-                write_real = write_beta_chunk.unsqueeze(-1) * (value_real - state_key_real)
-                write_imag = write_beta_chunk.unsqueeze(-1) * (value_imag - state_key_imag)
+                # E2b: the cross-chunk erase (state_key term) is gated by the ERASE
+                # gate; only the fresh write v_t is gated by the write gate.
+                write_real = (write_beta_chunk.unsqueeze(-1) * value_real
+                              - erase_beta_chunk.unsqueeze(-1) * state_key_real)
+                write_imag = (write_beta_chunk.unsqueeze(-1) * value_imag
+                              - erase_beta_chunk.unsqueeze(-1) * state_key_imag)
             else:
                 write_real = write_beta_chunk.unsqueeze(-1) * value_real
                 write_imag = write_beta_chunk.unsqueeze(-1) * value_imag
@@ -636,8 +675,9 @@ class V13PAMLayer(nn.Module):
         output_sum = None
         state_list = []
         write_beta = None
+        erase_beta = None
         if self.write_mode == 'delta':
-            write_beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)  # [B,H,T]
+            write_beta, erase_beta = self._gate_betas(x)  # [B,H,T] each (E2b)
         for state_idx in range(num_memory_states):
             decay_gamma_state, protected_values_state = self._gamma_and_vprime(
                 x, protected_values, state_offset=self.state_dt_offset[state_idx],
@@ -646,7 +686,7 @@ class V13PAMLayer(nn.Module):
             if self.write_mode == 'delta':
                 output_state, memory_state = self._forward_delta(
                     queries, keys, protected_values_state, decay_gamma_state,
-                    write_beta, head_dim,
+                    write_beta, head_dim, erase_beta=erase_beta,
                 )
             elif self.decay_mode == 'per_channel':
                 output_state, memory_state = self._forward_chunked_perchannel(
@@ -867,9 +907,10 @@ class V13PAMLayer(nn.Module):
             elif self.write_mode == 'delta':
                 # Ablation E2 — not used by winner.
                 decay_gamma, protected_values = self._gamma_and_vprime(x, values)
-                write_beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)  # [B,H,T]
+                write_beta, erase_beta = self._gate_betas(x)  # [B,H,T] (E2b)
                 output, new_state = self._forward_delta(
-                    queries, keys, protected_values, decay_gamma, write_beta, head_dim
+                    queries, keys, protected_values, decay_gamma, write_beta, head_dim,
+                    erase_beta=erase_beta,
                 )
             elif self.decay_mode == 'per_channel':
                 # Ablation E1 — not used by winner.
@@ -910,8 +951,9 @@ class V13PAMLayer(nn.Module):
         num_heads, num_memory_states = self.num_heads, self.n_states
         query_scale = head_dim ** -0.5
         write_beta = None
+        erase_beta = None
         if self.write_mode == 'delta':
-            write_beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)  # [B,H,T]
+            write_beta, erase_beta = self._gate_betas(x)  # [B,H,T] (E2b)
         if self.n_states > 1:
             retrieval_phase, routing_weights = self._phase_and_alpha(x)
             retrieval_phase = retrieval_phase.permute(0, 2, 3, 1)                  # [B,H,K,T]
@@ -954,6 +996,7 @@ class V13PAMLayer(nn.Module):
                             memory_state[state_idx], decay_gamma_t,
                             protected_value_t, key_t, query_t,
                             write_beta[:, :, time_idx],
+                            erase_beta_t=erase_beta[:, :, time_idx],
                         )
                     else:
                         output_state, state_new = self._recur_step_additive(
@@ -984,6 +1027,7 @@ class V13PAMLayer(nn.Module):
                 output_step, memory_state = self._recur_step_delta(
                     memory_state, decay_gamma_t, protected_value_t, key_t, query_t,
                     write_beta[:, :, time_idx],
+                    erase_beta_t=erase_beta[:, :, time_idx],
                 )
             else:
                 output_step, memory_state = self._recur_step_additive(
@@ -1034,8 +1078,14 @@ class V13PAMLayer(nn.Module):
         output = stack_complex(state_query_real.sum(dim=-1), state_query_imag.sum(dim=-1))
         return output, memory_state
 
-    def _recur_step_delta(self, memory_state, decay_gamma, value_t, key_t, query_t, write_beta_t):
-        """One gated delta step. decay_gamma:[B,H], write_beta_t:[B,H]."""
+    def _recur_step_delta(self, memory_state, decay_gamma, value_t, key_t, query_t, write_beta_t,
+                          erase_beta_t=None):
+        """One gated delta step. decay_gamma:[B,H], write_beta_t:[B,H].
+
+        E2b: erase_beta_t defaults to write_beta_t (legacy shared-beta behaviour).
+        """
+        if erase_beta_t is None:
+            erase_beta_t = write_beta_t
         decay_factor = decay_gamma.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
         memory_state = memory_state * decay_factor
         predicted_real = (
@@ -1046,9 +1096,11 @@ class V13PAMLayer(nn.Module):
             memory_state[..., 0] * key_t[..., 1].unsqueeze(-2)
             + memory_state[..., 1] * key_t[..., 0].unsqueeze(-2)
         ).sum(dim=-1)
-        beta_expanded = write_beta_t.unsqueeze(-1)
-        update_real = beta_expanded * (value_t[..., 0] - predicted_real)
-        update_imag = beta_expanded * (value_t[..., 1] - predicted_imag)
+        # E2b: u = beta_w * v_prot - beta_e * pred  (legacy: beta_w == beta_e)
+        write_expanded = write_beta_t.unsqueeze(-1)
+        erase_expanded = erase_beta_t.unsqueeze(-1)
+        update_real = write_expanded * value_t[..., 0] - erase_expanded * predicted_real
+        update_imag = write_expanded * value_t[..., 1] - erase_expanded * predicted_imag
         update = torch.stack([update_real, update_imag], dim=-1)
         key_conj = torch.stack([key_t[..., 0], -key_t[..., 1]], dim=-1)
         outer_real = (
@@ -1273,8 +1325,14 @@ class V13LM(nn.Module):
 
     @staticmethod
     def _ckpt_block(block, z, step_offset):
+        # The block input `z` is a non-leaf (it comes from the embedding). torch's
+        # checkpoint sees non-leaf inputs in the original forward but detached leaves
+        # during recompute, which makes autograd save a different tensor sequence in the
+        # two passes -> torch 2.8 determinism_check fails (shape mismatch). Normalize z
+        # to a leaf inside the checkpointed fn so both passes build identical graphs.
         def run(z_in):
-            return block(z_in, pam_state=None, step_offset=step_offset)
+            z_leaf = z_in.detach().requires_grad_(True)
+            return block(z_leaf, pam_state=None, step_offset=step_offset)
         return grad_checkpoint(run, z, use_reentrant=False)
 
     @torch.no_grad()
@@ -1438,6 +1496,7 @@ PRESETS = {
     'v13_e3_k3_selective': _base_flat(
         n_states=3, state_dt_spread=2.0, vocab_size=50261,
         write_mode='delta', delta_chunk=64,
+        delta_erase_gate=True,
         gate_content_aware=True, vault_state=True, vault_state_idx=0,
         write_phase_address=True, gate_surprisal_lambda=0.1,
         fused_e3=False,
@@ -1447,6 +1506,7 @@ PRESETS = {
         expand=3, dropout=0.0, max_seq_len=2048, chunk_size=64,
         gradient_checkpointing=False, n_states=3, state_dt_spread=2.0,
         write_mode='delta', delta_chunk=32,
+        delta_erase_gate=True,
         gate_content_aware=True, vault_state=True, vault_state_idx=0,
         write_phase_address=True, gate_surprisal_lambda=0.1,
         fused_e3=False,

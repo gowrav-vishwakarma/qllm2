@@ -442,6 +442,11 @@ def main():
             'fineweb': args.fineweb_skip_docs,
             'smoltalk2_mid': args.smoltalk2_mid_skip_rows,
         }
+        # Synthetic sources (recall/reason) have no CLI skip flag; seed their doc
+        # cursors from the resume checkpoint so continued pretrain does not
+        # re-emit already-consumed synthetic docs.
+        for _s in sources:
+            skip_docs_map.setdefault(_s, int(resumed_docs.get(_s, 0)))
         train_ds, val_ds, tokenizer = load_pretrain_mix(
             seq_len=seq_len,
             edu_score_min=args.edu_score_min,

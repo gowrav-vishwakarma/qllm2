@@ -1,0 +1,69 @@
+E2b ML proof (one-shot) | steps=800 seq=256 batch=8 gaps=[16, 64, 128, 208] chance=1/256=0.0039
+
+=== additive ===
+/home/gowrav/Development/qllm2/v13/experiments/train_recall_cpu.py:173: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:822.)
+  hist.append({'step': step, 'loss': float(loss), **acc})
+  [additive] step    1 ans_loss=6.268 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step   50 ans_loss=5.704 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  100 ans_loss=5.693 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  150 ans_loss=5.621 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  200 ans_loss=5.619 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  250 ans_loss=5.618 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  300 ans_loss=5.558 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  350 ans_loss=5.570 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  400 ans_loss=5.627 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  450 ans_loss=5.560 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  500 ans_loss=5.553 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  550 ans_loss=5.576 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  600 ans_loss=5.553 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  650 ans_loss=5.507 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  700 ans_loss=5.557 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  750 ans_loss=5.551 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [additive] step  800 ans_loss=5.554 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+
+=== delta_legacy ===
+  [delta_legacy] step    1 ans_loss=6.248 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step   50 ans_loss=5.689 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  100 ans_loss=5.685 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  150 ans_loss=5.606 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  200 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  250 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  300 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  350 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  400 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  450 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  500 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  550 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  600 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  650 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  700 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  750 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_legacy] step  800 ans_loss=nan g16=0.00 g64=0.00 g128=0.00 g208=0.00
+
+=== delta_gated(E2b) ===
+  [delta_gated(E2b)] step    1 ans_loss=6.272 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step   50 ans_loss=5.702 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  100 ans_loss=5.672 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  150 ans_loss=5.614 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  200 ans_loss=5.629 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  250 ans_loss=5.618 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  300 ans_loss=5.554 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  350 ans_loss=5.569 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  400 ans_loss=5.630 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  450 ans_loss=5.560 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  500 ans_loss=5.555 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  550 ans_loss=5.572 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  600 ans_loss=5.560 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  650 ans_loss=5.500 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  700 ans_loss=5.548 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  750 ans_loss=5.554 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+  [delta_gated(E2b)] step  800 ans_loss=5.557 g16=0.00 g64=0.00 g128=0.00 g208=0.00
+
+==============================================================================
+model               ans_loss   gap16   gap64  gap128  gap208  erase_stats
+additive               5.554    0.00    0.00    0.00    0.00  -  (565.6s)
+delta_legacy             nan    0.00    0.00    0.00    0.00  -  (1032.6s)
+delta_gated(E2b)       5.557    0.00    0.00    0.00    0.00  val=0.477 filler=0.474  (1090.2s)
+==============================================================================
+Wrote /home/gowrav/Development/qllm2/v13/experiments/results/train_recall_cpu_1787141780.json

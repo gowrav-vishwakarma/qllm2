@@ -1,0 +1,77 @@
+  [1/60] gap=0 task=Caesar cipher        acc=0.17 (1.0/6)
+  [2/60] gap=0 task=Caesar cipher        acc=0.11 (1.0/9)
+  [3/60] gap=0 task=reverse copy         acc=0.12 (1.0/8)
+  [4/60] gap=0 task=Caesar cipher        acc=0.14 (1.0/7)
+  [5/60] gap=0 task=Caesar cipher        acc=0.20 (1.0/5)
+  [6/60] gap=0 task=digit sum            acc=0.50 (1.0/2)
+  [7/60] gap=0 task=Caesar cipher        acc=0.20 (1.0/5)
+  [8/60] gap=0 task=Caesar cipher        acc=0.20 (1.0/5)
+  [9/60] gap=0 task=digit sum            acc=0.50 (1.0/2)
+  [10/60] gap=0 task=digit sum            acc=0.50 (1.0/2)
+  [11/60] gap=0 task=Caesar cipher        acc=0.14 (1.0/7)
+  [12/60] gap=0 task=copy                 acc=0.11 (1.0/9)
+  [13/60] gap=0 task=reverse copy         acc=0.20 (1.0/5)
+  [14/60] gap=0 task=reverse copy         acc=0.10 (1.0/10)
+  [15/60] gap=0 task=reverse copy         acc=0.12 (1.0/8)
+  [16/60] gap=0 task=copy                 acc=0.14 (1.0/7)
+  [17/60] gap=0 task=Caesar cipher        acc=0.12 (1.0/8)
+  [18/60] gap=0 task=reverse copy         acc=0.09 (1.0/11)
+  [19/60] gap=0 task=reverse copy         acc=0.18 (2.0/11)
+  [20/60] gap=0 task=copy                 acc=0.14 (1.0/7)
+  [21/60] gap=2 task=reverse copy         acc=0.00 (0.0/9)
+  [22/60] gap=2 task=reverse copy         acc=0.00 (0.0/5)
+  [23/60] gap=2 task=digit sum            acc=0.50 (1.0/2)
+  [24/60] gap=2 task=digit sum            acc=0.50 (1.0/2)
+  [25/60] gap=2 task=reverse copy         acc=0.09 (1.0/11)
+  [26/60] gap=2 task=reverse copy         acc=0.10 (1.0/10)
+  [27/60] gap=2 task=digit sum            acc=0.50 (1.0/2)
+  [28/60] gap=2 task=reverse copy         acc=0.00 (0.0/7)
+  [29/60] gap=2 task=reverse copy         acc=0.10 (1.0/10)
+  [30/60] gap=2 task=Caesar cipher        acc=0.00 (0.0/5)
+  [31/60] gap=2 task=digit sum            acc=0.50 (1.0/2)
+  [32/60] gap=2 task=Caesar cipher        acc=0.00 (0.0/5)
+  [33/60] gap=2 task=copy                 acc=0.00 (0.0/8)
+  [34/60] gap=2 task=Caesar cipher        acc=0.00 (0.0/6)
+  [35/60] gap=2 task=copy                 acc=0.00 (0.0/5)
+  [36/60] gap=2 task=copy                 acc=0.17 (1.0/6)
+  [37/60] gap=2 task=Caesar cipher        acc=0.00 (0.0/5)
+  [38/60] gap=2 task=digit sum            acc=0.50 (1.0/2)
+  [39/60] gap=2 task=reverse copy         acc=0.10 (1.0/10)
+  [40/60] gap=2 task=reverse copy         acc=0.00 (0.0/6)
+  [41/60] gap=5 task=Caesar cipher        acc=0.00 (0.0/6)
+  [42/60] gap=5 task=digit sum            acc=0.50 (1.0/2)
+  [43/60] gap=5 task=Caesar cipher        acc=0.00 (0.0/8)
+  [44/60] gap=5 task=digit sum            acc=0.50 (1.0/2)
+  [45/60] gap=5 task=digit sum            acc=0.50 (1.0/2)
+  [46/60] gap=5 task=digit sum            acc=0.50 (1.0/2)
+  [47/60] gap=5 task=copy                 acc=0.00 (0.0/7)
+  [48/60] gap=5 task=copy                 acc=0.09 (1.0/11)
+  [49/60] gap=5 task=reverse copy         acc=0.09 (1.0/11)
+  [50/60] gap=5 task=reverse copy         acc=0.00 (0.0/6)
+  [51/60] gap=5 task=Caesar cipher        acc=0.00 (0.0/6)
+  [52/60] gap=5 task=reverse copy         acc=0.10 (1.0/10)
+  [53/60] gap=5 task=copy                 acc=0.00 (0.0/5)
+  [54/60] gap=5 task=digit sum            acc=0.50 (1.0/2)
+  [55/60] gap=5 task=copy                 acc=0.09 (1.0/11)
+  [56/60] gap=5 task=reverse copy         acc=0.00 (0.0/9)
+  [57/60] gap=5 task=digit sum            acc=0.50 (1.0/2)
+  [58/60] gap=5 task=copy                 acc=0.08 (1.0/13)
+  [59/60] gap=5 task=copy                 acc=0.00 (0.0/7)
+  [60/60] gap=5 task=Caesar cipher        acc=0.00 (0.0/5)
+
+============================================================
+Reasoning probe (v13) — token-exact acc
+  gap task                       acc    n
+    0 Caesar cipher             0.16    8
+    0 copy                      0.13    3
+    0 digit sum                 0.50    3
+    0 reverse copy              0.14    6
+    2 Caesar cipher             0.00    4
+    2 copy                      0.06    3
+    2 digit sum                 0.50    5
+    2 reverse copy              0.05    8
+    5 Caesar cipher             0.00    4
+    5 copy                      0.04    6
+    5 digit sum                 0.50    6
+    5 reverse copy              0.05    4
+Wrote checkpoints_v13/e2b_50m/reasoning.json

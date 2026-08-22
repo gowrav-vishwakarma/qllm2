@@ -1,0 +1,11 @@
+Streaming pretrain blend: sources=['recall'] weights=[1.0] edu>=3 budget=5000000 vocab=50257 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'recall': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50257_t500000_e3_p5.pt (500,000 tokens)
+[transformer] params=10,022,112 device=cuda budget=5,000,000
+Token indices sequence length is longer than the specified maximum sequence length for this model (1054 > 1024). Running this sequence through the model will result in indexing errors
+  [transformer] step=50 loss=9.7561 ppl=17259.8 tok/s=31127 gtok=819200
+  [transformer] step=100 loss=7.5265 ppl=1856.6 tok/s=54281 gtok=1638400
+  [transformer] step=150 loss=4.5192 ppl=91.8 tok/s=71681 gtok=2457600
+  [transformer] step=200 loss=2.2648 ppl=9.6 tok/s=85158 gtok=3276800
+  [transformer] step=250 loss=1.4103 ppl=4.1 tok/s=95949 gtok=4096000
+  [transformer] step=300 loss=1.1986 ppl=3.3 tok/s=105623 gtok=4915200
+[transformer] done tokens=5,001,216 wall=0.01h -> checkpoints_v13/baseline_transformer_10m
