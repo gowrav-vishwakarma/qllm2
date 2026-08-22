@@ -1,0 +1,34 @@
+[2026-08-22 15:46:30] Wall clock start: 2026-08-22 15:46:30
+[2026-08-22 15:46:30] ============================================================
+[2026-08-22 15:46:30]   V11: PAM with new memory dynamics
+[2026-08-22 15:46:30]   Preset: v13_e3_k3_selective | Stage: lm | Dataset: pretrain_mix
+[2026-08-22 15:46:30] ============================================================
+
+[2026-08-22 15:46:30] Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': True, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'delta', 'delta_erase_gate': True, 'n_states': 3, 'delta_chunk': 128, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': True, 'recompute_pam_chunks': False, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 1.0, 'gate_surprisal_sign': 1.0, 'vault_state': True, 'vault_state_idx': 0, 'write_phase_address': True}
+[2026-08-22 15:46:30] Memory dynamics: decay_mode=head, write_mode=delta, n_states=3, chunk_size=256
+[2026-08-22 15:46:30] Batch size: 16, Epochs: 10, LR: 0.0001
+[2026-08-22 15:46:30] Token budget: 500,000,000
+
+[2026-08-22 15:46:30] Loading pretrain_mix (seq_len=2048)...
+[2026-08-22 15:46:32] Streaming pretrain blend: sources=['dclm', 'fineweb', 'smoltalk2_mid', 'recall', 'reason'] weights=[70.0, 20.0, 5.0, 5.0, 5.0] edu>=3 budget=500000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=0 skips={'dclm': 0, 'fineweb': 0, 'smoltalk2_mid': 0, 'recall': 0, 'reason': 0}
+[2026-08-22 15:46:32] [cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[2026-08-22 15:46:33] [cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+[2026-08-22 15:46:33] Val chunks: 121
+[2026-08-22 15:46:33] Val: in-distro holdout (16 batches), WikiText secondary (8 batches)
+[2026-08-22 15:46:33] Train batches: streaming, Val batches: 16
+
+[2026-08-22 15:46:34] Model parameters: {'embedding (tied)': 38600448, 'blocks': 61724512, 'norms': 768, 'lm_head': 296064, 'total': 100621792}
+[2026-08-22 15:46:34] Total: 100,621,792 (100.6M)
+[2026-08-22 15:46:34] Param groups: 260 tensors (100,569,856) with wd, 229 tensors (51,936) without
+[2026-08-22 15:46:34] fused_ce enabled (chunked linear+CE; logits never materialized)
+
+[2026-08-22 15:46:35] Training on cuda
+[2026-08-22 15:46:35] Parameters: {'embedding (tied)': 38600448, 'blocks': 61724512, 'norms': 768, 'lm_head': 296064, 'total': 100621792}
+[2026-08-22 15:46:35] Total: 100,621,792 (100.6M)
+[2026-08-22 15:46:35] Epochs: 1..9999, Batches/epoch: stream
+[2026-08-22 15:46:35] Periodic checkpoint: every 5000 steps -> latest.pt
+
+
+[2026-08-22 15:46:35] ============================================================
+[2026-08-22 15:46:35] Epoch 1/9999
+[2026-08-22 15:46:35] ============================================================

@@ -9,6 +9,7 @@ Usage:
 """
 
 import argparse
+import inspect
 import json
 import math
 import os
@@ -256,6 +257,14 @@ class V7Trainer:
         self.nan_aborted = False
         self.fused_ce = fused_ce and hasattr(model, 'ce_from_lm') and hasattr(model, '_hidden_to_lm')
         self.fused_ce_chunk = fused_ce_chunk
+        # O(1) gate-surprisal target (2026-08-22): v13's ce_from_lm can emit the
+        # exact per-token NLL its fused CE already computes (materialized
+        # byproduct, no second O(V) head GEMM). Checked once; v11/v12 models
+        # lack the kwarg and keep the legacy linear_ce_per_token path.
+        self._ce_emits_nll = (
+            self.fused_ce
+            and 'return_nll' in inspect.signature(model.ce_from_lm).parameters
+        )
         if fused_ce and not self.fused_ce:
             print("fused_ce requested but model lacks ce_from_lm/_hidden_to_lm; using standard CE")
         self._hidden_fn = None
@@ -342,26 +351,34 @@ class V7Trainer:
             'val_acc': total_correct / total_tokens,
         }
 
-    def _gate_surprisal_loss(self, gate_probs, lm, labels, loss_mask, m_cfg):
+    def _gate_surprisal_loss(self, gate_probs, nll, lm, labels, loss_mask, m_cfg):
         """BCE between per-layer protect prob and a surprisal-derived target.
 
         target_p = sigmoid(sign * (median_ce - surprisal) / tau).
         sign=+1 (default): low-surprisal tokens -> high protect (freeze filler,
         write on content) = recall-oriented. Targets are detached (stop-grad);
         grad flows only through `gate_probs` into each layer's protect_gate.
-        """
-        from v11.fused_ce import linear_ce_per_token
 
-        raw = self._raw_model
+        `nll`: exact per-token NLL [B,T] emitted as a byproduct of the main
+        fused CE (materialized intermediate — O(1) in vocab, no second O(V)
+        head pass). When None (v11/v12 models without the byproduct), falls
+        back to the legacy `linear_ce_per_token` re-computation.
+        """
         batch_size, seq_len = labels.shape
-        hidden_concat = torch.cat([lm[..., 0], lm[..., 1]], dim=-1).reshape(batch_size * seq_len, -1)
-        weight_concat = torch.cat(
-            [raw.embed.embed_real.weight, raw.embed.embed_imag.weight], dim=-1,
-        )
-        surprisal = linear_ce_per_token(
-            hidden_concat.detach(), weight_concat.detach(), labels.reshape(-1),
-            chunk=self.fused_ce_chunk,
-        ).reshape(batch_size, seq_len)
+        if nll is None:
+            # Legacy path (v11/v12): re-run the head GEMM detached.
+            from v11.fused_ce import linear_ce_per_token
+            raw = self._raw_model
+            hidden_concat = torch.cat([lm[..., 0], lm[..., 1]], dim=-1).reshape(batch_size * seq_len, -1)
+            weight_concat = torch.cat(
+                [raw.embed.embed_real.weight, raw.embed.embed_imag.weight], dim=-1,
+            )
+            surprisal = linear_ce_per_token(
+                hidden_concat.detach(), weight_concat.detach(), labels.reshape(-1),
+                chunk=self.fused_ce_chunk,
+            ).reshape(batch_size, seq_len)
+        else:
+            surprisal = nll
 
         valid = labels != -100
         if loss_mask is not None:
@@ -376,6 +393,11 @@ class V7Trainer:
         target_p = torch.sigmoid(sign * (median_ce - surprisal) / tau).detach()  # [B,T]
 
         # BCE on probabilities is unsafe under AMP autocast; force fp32.
+        # NOTE (2026-08-22): grad must NOT flow through `gate_probs` back into the
+        # trunk — that turns this O(1) per-layer gate aux into a second full-network
+        # loss (~12GB extra backward at B14/T2048 on the 4090). The model detaches
+        # the gate input for the aux stash (see V13PAMLayer._gate_prob_bt); the
+        # [L,B,T] BCE here is only ~2MB and needs no chunking.
         gp = gate_probs.float().clamp(1e-4, 1 - 1e-4)               # [L,B,T]
         target = target_p.float().unsqueeze(0).expand_as(gp)
         vmask = valid.unsqueeze(0).expand_as(gp).to(gp.dtype)
@@ -426,9 +448,13 @@ class V7Trainer:
                     else:
                         lm = out
                         aux_loss = torch.tensor(0.0, device=self.device)
+                    nll = None
                     main_loss = self._raw_model.ce_from_lm(
                         lm, labels, loss_mask=loss_mask, chunk=self.fused_ce_chunk,
+                        return_nll=self._ce_emits_nll,
                     )
+                    if self._ce_emits_nll:
+                        main_loss, nll = main_loss
                 else:
                     logits, _, aux_loss = self.model(input_ids, labels=labels)
                     main_loss = self._masked_ce(logits, labels, loss_mask)
@@ -442,7 +468,7 @@ class V7Trainer:
                 gsl = getattr(m_cfg, 'gate_surprisal_lambda', 0.0)
                 if self.fused_ce and gate_probs is not None and gsl > 0:
                     gate_loss = self._gate_surprisal_loss(
-                        gate_probs, lm, labels, loss_mask, m_cfg,
+                        gate_probs, nll, lm, labels, loss_mask, m_cfg,
                     )
                     loss = loss + gsl * gate_loss
                     self._last_gate_loss = float(gate_loss.detach())

@@ -21,6 +21,7 @@ Complex representation: split-real `[..., dim, 2]`. Never torch.complex64/128.
 """
 
 import math
+import os
 import copy
 from dataclasses import dataclass, field
 from typing import Optional, List, Tuple, Dict
@@ -38,6 +39,11 @@ from v13.complex_ops import (
     ComplexGatedUnit, build_rope_cache, _build_activation,
 )
 from v13.triton_kernels import fused_decay_matrix
+
+# Shape-debug: V13_DEBUG=1 prints intermediate tensor shapes in the hot PAM paths
+# (default off; zero cost when unset). Use it to check layouts instead of
+# re-deriving them by hand.
+_V13_DEBUG = os.environ.get('V13_DEBUG', '0') == '1'
 
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -404,8 +410,9 @@ class V13PAMLayer(nn.Module):
             # Content-aware gate (winner): sees concat(real,imag); else magnitude only.
             gate_input = to_real_concat(x) if self.gate_content_aware else cabs(x)
             protect_prob = torch.sigmoid(self.protect_gate(gate_input)).transpose(1, 2)  # [B,H,T]
-            if self.gate_surprisal_lambda > 0 and self.training:
-                self._gate_prob_bt = protect_prob.mean(dim=1)  # [B,T]
+            # (gate-surprisal aux stash moved to V13LM._collect_gate_probs,
+            # built from the block's detached gate input OUTSIDE the
+            # gradient-checkpoint region — see V13Block.forward.)
             if self.decay_mode == 'per_channel':
                 # base_decay is [B,H,T,d] here; protect broadcasts over the channel dim.
                 protect_prob_expanded = protect_prob.unsqueeze(-1)
@@ -747,8 +754,9 @@ class V13PAMLayer(nn.Module):
         if self.use_gsp:
             gate_input = to_real_concat(x) if self.gate_content_aware else cabs(x)
             protect_prob = torch.sigmoid(self.protect_gate(gate_input)).transpose(1, 2)  # [B,H,T]
-            if self.gate_surprisal_lambda > 0 and self.training:
-                self._gate_prob_bt = protect_prob.mean(dim=1)  # [B,T]
+            # (gate-surprisal aux stash moved to V13LM._collect_gate_probs,
+            # built from the block's detached gate input OUTSIDE the
+            # gradient-checkpoint region — see V13Block.forward.)
             decay_gamma_all = base_decay * (1 - protect_prob) + protect_prob  # [K,B,H,T]
             protected_values = scale_complex(values, 1 - protect_prob)
         else:
@@ -882,6 +890,170 @@ class V13PAMLayer(nn.Module):
 
         return torch.cat(outputs, dim=2), memory_state
 
+    # ── E2+E3 fused-delta: K states collapsed into ONE batched chunk-solve ──
+    #
+    # Exact regrouping of `_forward_multistate`'s per-state `_forward_delta`
+    # (head decay, delta write). The three facts that make it work:
+    #   * The key-gram, query-key scores, decay-matrix layout, and the (I+M)
+    #     unit-triangular solve are all INDEPENDENT per state, so the K per-chunk
+    #     solves collapse into ONE batched solve over K·B·H.  K·C sequential UT
+    #     steps -> C steps (96 -> 24 at K=3, C=32; 24 -> 8 at C=8).
+    #   * The GSP protect gate and the write/erase betas are state-independent,
+    #     so they are computed once (not K times) — same as `_gamma_all_and_vprime`.
+    #   * The phase-rotate of each state's read is elementwise, so it batches over
+    #     K without a Python loop.
+    # Bit-identical to the K-loop (same ops, batched on the state dim).
+
+    def _forward_multistate_delta_fused(self, x, queries, keys, values, head_dim):
+        batch_size, seq_len = x.shape[0], x.shape[1]
+        num_heads, K = self.num_heads, self.n_states
+        chunk_size = self.delta_chunk if self.delta_chunk > 0 else seq_len
+        query_scale = head_dim ** -0.5
+        retrieval_phase, routing_weights = self._phase_and_alpha(x)
+        retrieval_phase = retrieval_phase.permute(3, 0, 2, 1)    # [K,B,H,T]
+        routing_weights = routing_weights.permute(3, 0, 2, 1)    # [K,B,H,T]
+        self._route_aux = self._route_balance_loss(routing_weights.permute(1, 3, 2, 0))
+        decay_gamma_all, protected_values = self._gamma_all_and_vprime(x, values)  # [K,B,H,T], [B,H,T,d,2]
+        write_beta, erase_beta = self._gate_betas(x)            # [B,H,T] each
+        if erase_beta is None:
+            erase_beta = write_beta
+        key_real = keys[..., 0]
+        key_imag = keys[..., 1]
+        query_real = queries[..., 0]
+        query_imag = queries[..., 1]
+        strict_lower = torch.tril(torch.ones(chunk_size, chunk_size, device=x.device), -1)
+        identity = torch.eye(chunk_size, device=x.device, dtype=torch.float32)
+
+        memory_state = queries.new_zeros(K, batch_size, num_heads, head_dim, head_dim, 2)
+        outputs = []
+        for chunk_start in range(0, seq_len, chunk_size):
+            chunk_end = min(chunk_start + chunk_size, seq_len)
+            chunk_len = chunk_end - chunk_start
+            kc = slice(chunk_start, chunk_end)
+            keys_chunk = keys[:, :, kc]
+            values_chunk = protected_values[:, :, kc]
+            decay_gamma_chunk = decay_gamma_all[:, :, :, kc]          # [K,B,H,C]
+            write_beta_chunk = write_beta[:, :, kc]                    # [B,H,C]
+            erase_beta_chunk = erase_beta[:, :, kc]                    # [B,H,C]
+
+            # K-independent: key-gram + query-key scores computed ONCE per chunk.
+            key_gram_real = (key_real[:, :, kc] @ key_real[:, :, kc].transpose(-1, -2)
+                             + key_imag[:, :, kc] @ key_imag[:, :, kc].transpose(-1, -2))
+            key_gram_imag = (key_imag[:, :, kc] @ key_real[:, :, kc].transpose(-1, -2)
+                             - key_real[:, :, kc] @ key_imag[:, :, kc].transpose(-1, -2))
+            query_key_real = (query_real[:, :, kc] @ key_real[:, :, kc].transpose(-1, -2)
+                              + query_imag[:, :, kc] @ key_imag[:, :, kc].transpose(-1, -2))
+            query_key_imag = (query_imag[:, :, kc] @ key_real[:, :, kc].transpose(-1, -2)
+                              - query_real[:, :, kc] @ key_imag[:, :, kc].transpose(-1, -2))
+
+            # Decay matrix batched over K·B·H (state-independent layout).
+            decay_matrix = fused_decay_matrix(
+                decay_gamma_chunk.reshape(K * batch_size * num_heads, chunk_len), chunk_len
+            ).reshape(K, batch_size, num_heads, chunk_len, chunk_len)  # [K,B,H,C,C]
+            log_decay = torch.log(decay_gamma_chunk + 1e-6)
+            cumulative_alpha = torch.exp(torch.cumsum(log_decay, dim=-1))  # [K,B,H,C]
+
+            # Erase (mass) matrix: M[t,s] = beta_e[t] D[t,s] (K K^H)[t,s], strictly lower.
+            mass_real = erase_beta_chunk.unsqueeze(0).unsqueeze(-1) * decay_matrix * strict_lower[:chunk_len, :chunk_len] * key_gram_real.unsqueeze(0)
+            mass_imag = erase_beta_chunk.unsqueeze(0).unsqueeze(-1) * decay_matrix * strict_lower[:chunk_len, :chunk_len] * key_gram_imag.unsqueeze(0)
+
+            value_real, value_imag = values_chunk[..., 0], values_chunk[..., 1]
+            if chunk_start > 0:
+                state_real = memory_state[..., 0]     # [K,B,H,d,d]
+                state_imag = memory_state[..., 1]
+                state_key_real = (
+                    key_real[:, :, kc] @ state_real.transpose(-1, -2)
+                    - key_imag[:, :, kc] @ state_imag.transpose(-1, -2)
+                )
+                state_key_imag = (
+                    key_real[:, :, kc] @ state_imag.transpose(-1, -2)
+                    + key_imag[:, :, kc] @ state_real.transpose(-1, -2)
+                )
+                state_key_real = state_key_real * cumulative_alpha.unsqueeze(-1)
+                state_key_imag = state_key_imag * cumulative_alpha.unsqueeze(-1)
+                write_real = (write_beta_chunk.unsqueeze(0).unsqueeze(-1) * value_real.unsqueeze(0)
+                              - erase_beta_chunk.unsqueeze(0).unsqueeze(-1) * state_key_real)
+                write_imag = (write_beta_chunk.unsqueeze(0).unsqueeze(-1) * value_imag.unsqueeze(0)
+                              - erase_beta_chunk.unsqueeze(0).unsqueeze(-1) * state_key_imag)
+            else:
+                write_real = write_beta_chunk.unsqueeze(0).unsqueeze(-1) * value_real.unsqueeze(0)
+                write_imag = write_beta_chunk.unsqueeze(0).unsqueeze(-1) * value_imag.unsqueeze(0)
+            # Broadcast the write to all K states (it is state-independent; only the
+            # erase/state_key term above differs per state and forces the K broadcast).
+            write_real = write_real.expand(K, batch_size, num_heads, chunk_len, head_dim)
+            write_imag = write_imag.expand(K, batch_size, num_heads, chunk_len, head_dim)
+            if _V13_DEBUG:
+                print(f"[delta_fused] chunk {chunk_start}: "
+                      f"decay {tuple(decay_matrix.shape)} mass {tuple(mass_real.shape)} "
+                      f"write {tuple(write_real.shape)} strict_lower {tuple(strict_lower.shape)}",
+                      flush=True)
+
+            # ONE batched complex triangular solve over K·B·H (per-state independent).
+            solve_n = K * batch_size * num_heads
+            sol = _complex_triangular_solve(
+                mass_real.reshape(solve_n, chunk_len, chunk_len),
+                mass_imag.reshape(solve_n, chunk_len, chunk_len),
+                write_real.reshape(solve_n, chunk_len, head_dim),
+                write_imag.reshape(solve_n, chunk_len, head_dim),
+                identity[:chunk_len, :chunk_len],
+            )
+            update_real = sol[0].reshape(K, batch_size, num_heads, chunk_len, head_dim)
+            update_imag = sol[1].reshape(K, batch_size, num_heads, chunk_len, head_dim)
+
+            causal_inclusive = torch.tril(torch.ones(chunk_len, chunk_len, device=x.device, dtype=decay_matrix.dtype))
+            projection_real = (decay_matrix * causal_inclusive) * query_key_real.unsqueeze(0)
+            projection_imag = (decay_matrix * causal_inclusive) * query_key_imag.unsqueeze(0)
+            output_real = (projection_real @ update_real - projection_imag @ update_imag) * query_scale
+            output_imag = (projection_real @ update_imag + projection_imag @ update_real) * query_scale
+            output_chunk = torch.stack([output_real, output_imag], dim=-1)   # [K,B,H,T,d,2]
+
+            if chunk_start > 0:
+                # Carry: q*α_k @ S_k per state. q is K-independent [B,H,C,d]; α is
+                # [K,B,H,C]. Apply α AFTER unsqueeze(0) so K appears exactly once.
+                scaled_query_real = query_real[:, :, kc] * query_scale   # [B,H,C,d]
+                scaled_query_imag = query_imag[:, :, kc] * query_scale   # [B,H,C,d]
+                state_real = memory_state[..., 0]
+                state_imag = memory_state[..., 1]
+                alpha_r = cumulative_alpha.unsqueeze(-1)                # [K,B,H,C,1]
+                carried_real = (
+                    (scaled_query_real.unsqueeze(0) * alpha_r) @ state_real.transpose(-1, -2)
+                    - (scaled_query_imag.unsqueeze(0) * alpha_r) @ state_imag.transpose(-1, -2)
+                )
+                carried_imag = (
+                    (scaled_query_real.unsqueeze(0) * alpha_r) @ state_imag.transpose(-1, -2)
+                    + (scaled_query_imag.unsqueeze(0) * alpha_r) @ state_real.transpose(-1, -2)
+                )
+                output_chunk = output_chunk + torch.stack([carried_real, carried_imag], dim=-1)
+
+            cumulative_total = cumulative_alpha[..., -1:]                      # [K,B,H,1]
+            decay_tail = cumulative_total / (cumulative_alpha + 1e-12)
+            update_decayed_real = update_real * decay_tail.unsqueeze(-1)
+            update_decayed_imag = update_imag * decay_tail.unsqueeze(-1)
+            state_real = (
+                update_decayed_real.transpose(-1, -2) @ key_real[:, :, kc]
+                + update_decayed_imag.transpose(-1, -2) @ key_imag[:, :, kc]
+            )
+            state_imag = (
+                update_decayed_imag.transpose(-1, -2) @ key_real[:, :, kc]
+                - update_decayed_real.transpose(-1, -2) @ key_imag[:, :, kc]
+            )
+            state_chunk = torch.stack([state_real, state_imag], dim=-1)        # [K,B,H,d,d,2]
+            memory_state = memory_state * cumulative_total.unsqueeze(-1).unsqueeze(-1) + state_chunk
+            # Phase-rotate each state's read and sum over K (elementwise, batched).
+            # Slice phase/routing to THIS chunk (they are full-T [K,B,H,T]).
+            rotation_real = routing_weights[:, :, :, kc] * torch.cos(retrieval_phase[:, :, :, kc])
+            rotation_imag = routing_weights[:, :, :, kc] * torch.sin(retrieval_phase[:, :, :, kc])  # [K,B,H,C]
+            if _V13_DEBUG:
+                print(f"[delta_fused] rot {tuple(rotation_real.shape)} "
+                      f"out {tuple(output_chunk.shape)} state {tuple(memory_state.shape)} "
+                      f"causal {tuple(causal_inclusive.shape)}", flush=True)
+            rotated_real = output_chunk[..., 0] * rotation_real.unsqueeze(-1) - output_chunk[..., 1] * rotation_imag.unsqueeze(-1)
+            rotated_imag = output_chunk[..., 0] * rotation_imag.unsqueeze(-1) + output_chunk[..., 1] * rotation_real.unsqueeze(-1)
+            outputs.append(torch.stack([rotated_real.sum(dim=0), rotated_imag.sum(dim=0)], dim=-1))
+
+        return torch.cat(outputs, dim=2), memory_state
+
+
     # ── Main forward ──────────────────────────────────────────────────────────
 
     def forward(self, x, state=None, step_offset: int = 0):
@@ -894,15 +1066,23 @@ class V13PAMLayer(nn.Module):
         # Other branches below are ablation paths (E1/E2 / non-fused); production skips them.
         if state is None and seq_len > 1:
             if self.n_states > 1:
-                use_fused = (
-                    getattr(self, 'fused_e3', True)
+                use_fused_delta = (
+                    self.write_mode == 'delta'
                     and self.decay_mode != 'per_channel'
-                    and self.write_mode == 'additive'
+                    and getattr(self, 'fused_e3', True)
                 )
-                if use_fused:
+                use_fused_add = (
+                    self.write_mode == 'additive'
+                    and self.decay_mode != 'per_channel'
+                    and getattr(self, 'fused_e3', True)
+                )
+                if use_fused_delta:
+                    # E2+E3 fused: K states collapsed into one batched chunk-solve.
+                    output, new_state = self._forward_multistate_delta_fused(x, queries, keys, values, head_dim)
+                elif use_fused_add:
                     output, new_state = self._forward_multistate_fused(x, queries, keys, values, head_dim)
                 else:
-                    # Ablation: K-loop multistate without D̃ collapse.
+                    # Ablation: K-loop multistate without collapse.
                     output, new_state = self._forward_multistate(x, queries, keys, values, head_dim)
             elif self.write_mode == 'delta':
                 # Ablation E2 — not used by winner.
@@ -1128,18 +1308,16 @@ class V13PAMLayer(nn.Module):
 def _complex_triangular_solve(mass_real, mass_imag, write_real, write_imag, identity):
     """Solve (I + M) update = write for complex update, M strictly lower-tri.
 
-    Eager-island: torch.linalg.solve hangs under torch.compile (Stage-6 / E2 revival).
+    (I + M) is unit lower-triangular, so a complex triangular solve is exact and
+    ~26x faster than the old real 2N×2N general solve, which paid for LU
+    factorization + row pivoting (sgetf2/slaswp/setup_pivinfo ≈ 40% of GPU time)
+    that a triangular system never needs. Matches the general solve to ~4e-6 in
+    fp32. Measured on the 4090, T=2048, chunk=256.
     """
-    chunk_len = mass_real.shape[-1]
-    system_real = (identity + mass_real).float()
-    system_imag = mass_imag.float()
-    top = torch.cat([system_real, -system_imag], dim=-1)
-    bot = torch.cat([system_imag, system_real], dim=-1)
-    system_matrix = torch.cat([top, bot], dim=-2)
-    rhs = torch.cat([write_real.float(), write_imag.float()], dim=-2)
-    solution = torch.linalg.solve(system_matrix, rhs)
-    update_real, update_imag = solution[..., :chunk_len, :], solution[..., chunk_len:, :]
-    return update_real.to(write_real.dtype), update_imag.to(write_imag.dtype)
+    system = torch.complex((identity + mass_real).float(), mass_imag.float())
+    rhs = torch.complex(write_real.float(), write_imag.float())
+    solution = torch.linalg.solve_triangular(system, rhs, upper=False, unitriangular=True)
+    return solution.real.to(write_real.dtype), solution.imag.to(write_imag.dtype)
 
 
 # ── V11 Block ────────────────────────────────────────────────────────────────
@@ -1169,13 +1347,27 @@ class V13Block(nn.Module):
             drop = as_complex_dropout_mask(self.cgu_dropout, cgu_out)
             cgu_out = scale_complex(cgu_out, drop)
         x = x + cgu_out * self.cgu_scale
+        pam_in = self.norm2(x)
+        # Detached gate input for the gate-surprisal aux (2026-08-22): stashed
+        # here as a DETACHED LEAF and consumed by V13LM._collect_gate_probs
+        # OUTSIDE the gradient-checkpoint region. Building the stash from this
+        # leaf means its backward reaches only this layer's protect_gate — it
+        # no longer touches the checkpointed block's graph, so no PAM recompute
+        # (the old in-checkpoint stash forced a full block recompute on bwd:
+        # 364ms of an 816ms trunk step at B8/T2048 on the 4090).
+        pam = self.pam
+        if pam.use_gsp and pam.gate_surprisal_lambda > 0 and self.training:
+            self._gate_in_det = (
+                to_real_concat(pam_in.detach()) if pam.gate_content_aware
+                else cabs(pam_in.detach())
+            )
+        else:
+            self._gate_in_det = None
         # Sequence/memory mix via fixed-size PAM state.
-        pam_out, new_state = self.pam(self.norm2(x), state=pam_state, step_offset=step_offset)
+        pam_out, new_state = pam(pam_in, state=pam_state, step_offset=step_offset)
         x = x + pam_out * self.pam_scale
         return x, new_state
 
-
-# ── V11 Language Model ──────────────────────────────────────────────────────
 
 class V13LM(nn.Module):
     """ComplexEmbed -> [V13Block] x N -> tied complex LM head."""
@@ -1225,16 +1417,23 @@ class V13LM(nn.Module):
 
     @staticmethod
     def _collect_gate_probs(blocks):
-        """Stack per-layer mean protect-prob [B,T] into [L,B,T] (or None).
+        """Build per-layer mean protect-prob [B,T] and stack to [L,B,T] (or None).
 
-        Grad flows to each layer's protect_gate; the gate-surprisal loss is
-        computed in the trainer against a detached per-token surprisal target.
+        Built here — OUTSIDE the gradient-checkpoint region — from each block's
+        detached gate input (`_gate_in_det`, a detached leaf captured in
+        V13Block.forward). The aux gradient therefore reaches only that layer's
+        protect_gate weights, and its backward node is not inside the checkpoint
+        so backpropping the gate loss does NOT force a PAM block recompute
+        (the in-checkpoint stash cost ~364ms/step at B8/T2048 on the 4090,
+        2026-08-22). The gate-surprisal BCE in the trainer is against a
+        detached per-token surprisal target (the exact NLL byproduct of the
+        main fused CE).
         """
         probs = []
         for block in blocks:
-            gp = getattr(block.pam, '_gate_prob_bt', None)
-            if gp is not None:
-                probs.append(gp)
+            gi = getattr(block, '_gate_in_det', None)
+            if gi is not None:
+                probs.append(torch.sigmoid(block.pam.protect_gate(gi)).mean(dim=-1))
         if not probs:
             return None
         return torch.stack(probs, dim=0)
@@ -1298,7 +1497,7 @@ class V13LM(nn.Module):
         gate_probs = self._collect_gate_probs(self.blocks)  # [L,B,T] or None
         return lm, aux_loss, gate_probs
 
-    def ce_from_lm(self, lm, labels, loss_mask=None, ignore_index=-100, chunk: int = 4096):
+    def ce_from_lm(self, lm, labels, loss_mask=None, ignore_index=-100, chunk: int = 4096, return_nll: bool = False):
         """Chunked cross-entropy from pre-logit complex hidden `lm` [B,T,dim,2].
 
         The tied head `lm_r @ E_r.T + lm_i @ E_i.T` folds into one real matmul
@@ -1310,10 +1509,13 @@ class V13LM(nn.Module):
         hidden_concat = torch.cat([real_part(lm), imag_part(lm)], dim=-1).reshape(batch_size * seq_len, -1)
         weight_concat = torch.cat([self.embed.embed_real.weight, self.embed.embed_imag.weight], dim=-1)
         mask = loss_mask.reshape(-1) if loss_mask is not None else None
-        return fused_linear_cross_entropy(
+        out = fused_linear_cross_entropy(
             hidden_concat, weight_concat, labels.reshape(-1), mask=mask,
-            chunk=chunk, ignore_index=ignore_index,
+            chunk=chunk, ignore_index=ignore_index, return_nll=return_nll,
         )
+        if return_nll:
+            return out, getattr(out, '_nll', None).reshape(batch_size, seq_len)
+        return out
 
     def fused_ce_loss(self, input_ids, labels, loss_mask=None, ignore_index=-100,
                       chunk: int = 4096):
@@ -1495,11 +1697,14 @@ PRESETS = {
     # ── V13 production presets (selective dynamics ON by default) ───────────
     'v13_e3_k3_selective': _base_flat(
         n_states=3, state_dt_spread=2.0, vocab_size=50261,
-        write_mode='delta', delta_chunk=64,
+        write_mode='delta', delta_chunk=128,
         delta_erase_gate=True,
         gate_content_aware=True, vault_state=True, vault_state_idx=0,
         write_phase_address=True, gate_surprisal_lambda=0.1,
-        fused_e3=False,
+        # K-batched fused delta path (2026-08-22): math-exact vs the K-loop
+        # (1e-7 on 4090 fp32) and ~8.6x faster at B16/chunk128 on the 4090
+        # (2.3K -> ~20K tok/s train step). See v13/tmp/bench2.py.
+        fused_e3=True,
     ),
     'v13_micro_10m_recall': V13Config(
         vocab_size=50261, dim=96, n_heads=3, head_dim=32, n_layers=6,

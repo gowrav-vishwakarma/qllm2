@@ -25,9 +25,10 @@ import torch.nn.functional as F
 
 class _FusedLinearCE(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, hidden_rows, weight_matrix, targets, mask, chunk, ignore_index):
+    def forward(ctx, hidden_rows, weight_matrix, targets, mask, chunk, ignore_index, return_nll):
         num_rows = hidden_rows.shape[0]
         loss_sum = hidden_rows.new_zeros(())
+        nll_out = torch.zeros(num_rows, dtype=torch.float32, device=hidden_rows.device) if return_nll else None
         if mask is not None:
             denom = mask.sum().clamp_min(1.0)
         else:
@@ -36,11 +37,23 @@ class _FusedLinearCE(torch.autograd.Function):
 
         for chunk_start in range(0, num_rows, chunk):
             chunk_end = min(chunk_start + chunk, num_rows)
-            logits = (hidden_rows[chunk_start:chunk_end].float() @ weight_matrix.float().T)
-            target_chunk = targets[chunk_start:chunk_end]
-            per_token_loss = F.cross_entropy(
-                logits, target_chunk, ignore_index=ignore_index, reduction='none',
-            )
+            # Force fp32 for the head GEMM + CE: under autocast the matmul is
+            # downcast to bf16 (8-bit mantissa) even with .float() inputs, which
+            # quantizes the NLL to ~0.03. The loss sum and the NLL byproduct
+            # must stay exact fp32 (fp32 GEMM here is ~4% of step time).
+            with torch.amp.autocast(device_type=hidden_rows.device.type, enabled=False):
+                logits = (hidden_rows[chunk_start:chunk_end].float() @ weight_matrix.float().T)
+                target_chunk = targets[chunk_start:chunk_end]
+                per_token_loss = F.cross_entropy(
+                    logits, target_chunk, ignore_index=ignore_index, reduction='none',
+                )
+            if nll_out is not None:
+                # Materialized byproduct: raw per-token CE (ignore rows 0.0),
+                # captured BEFORE the mask multiply. fp32 no-grad leaf; O(1)
+                # in vocab — consumers (gate-surprisal aux) reuse it instead
+                # of re-running a second O(V) head GEMM.
+                with torch.no_grad():
+                    nll_out[chunk_start:chunk_end] = per_token_loss
             if mask is not None:
                 per_token_loss = per_token_loss * mask[chunk_start:chunk_end].float()
             loss_sum = loss_sum + per_token_loss.sum()
@@ -50,6 +63,8 @@ class _FusedLinearCE(torch.autograd.Function):
         ctx.chunk = chunk
         ctx.ignore_index = ignore_index
         ctx.denom = denom
+        if nll_out is not None:
+            loss._nll = nll_out  # [N] fp32, detached
         return loss
 
     @staticmethod
@@ -78,8 +93,7 @@ class _FusedLinearCE(torch.autograd.Function):
                 softmax_probs = softmax_probs * grad_scale
             softmax_probs = softmax_probs * valid.unsqueeze(1).float()
             grad_hidden[chunk_start:chunk_end] = (softmax_probs @ weight_matrix.float()).to(grad_hidden.dtype)
-            grad_weight += (softmax_probs.T @ hidden_chunk).to(grad_weight.dtype)
-        return grad_hidden, grad_weight, None, None, None, None
+        return grad_hidden, grad_weight, None, None, None, None, None
 
 
 def fused_linear_cross_entropy(
@@ -89,9 +103,18 @@ def fused_linear_cross_entropy(
     mask: Optional[torch.Tensor] = None,
     chunk: int = 4096,
     ignore_index: int = -100,
+    return_nll: bool = False,
 ) -> torch.Tensor:
-    """Mean cross-entropy of (hidden_rows @ weight_matrix.T) vs targets."""
-    return _FusedLinearCE.apply(hidden_rows, weight_matrix, targets, mask, chunk, ignore_index)
+    """Mean cross-entropy of (hidden_rows @ weight_matrix.T) vs targets.
+
+    return_nll=True attaches the exact per-token NLL this forward already
+    computes (fp32, no-grad, [N], ignore rows 0.0) to the returned loss as
+    ``loss._nll`` — a materialized-intermediate byproduct with no extra
+    head pass (O(1) in vocab).
+    """
+    return _FusedLinearCE.apply(
+        hidden_rows, weight_matrix, targets, mask, chunk, ignore_index, return_nll,
+    )
 
 
 @torch.no_grad()
