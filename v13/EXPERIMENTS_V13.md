@@ -38,13 +38,41 @@ only its training cost was fixed.
   had its `protect_gate` weights + optimizer state shaped by the *old* gate aux (bug #5 math),
   so resuming would blend two regimes. Deleted (per user). With 9× speed the 10.24M head-start
   was only ~8 min — not worth the contamination.
-- `bash v13/tmp/launch_100m_fresh.sh` (tmux `v13_100m`), B16, 500M-token budget,
-  pretrain_mix 70/20/5/5/5 (dclm,fineweb,smoltalk2_mid,recall,reason), GPT-2 vocab.
-- Loss-flow comparison (fresh-vs-fresh, apples-to-apples): the old v11 best
-  (`v11_e3_k3_chat`, HF `qllm-pam-v11-e3k3-chat`, dclm+fineweb 50/50, 10B budget) reached
-  loss ~4.0 by ~50M tok and ~3.6 by 1B tok. Fresh v13 at matched token counts tracked as
-  it runs (note: v13 mix has 15% smoltalk/recall/reason, so early losses aren't directly
-  comparable to v11's dclm+fineweb-only mix — the run-end WikiText-103 PPL is the clean metric).
+- **[SUPERSEDED — stopped 2026-08-22, see RESOLVED below.]** `bash
+  v13/tmp/launch_100m_fresh.sh` (tmux `v13_100m`), B18, **lr 3e-4, warmup 2000**
+  (the exact recipe of the HF-uploaded v11 best), 500M-token budget,
+  pretrain_mix 70/20/5/5/5 (dclm,fineweb,smoltalk2_mid,recall,reason), GPT-2
+  vocab, gen_every=5000, save_every_steps=5000 (overwrite latest.pt).
+- **[Superseded run's LR finding]** the first fresh attempt (v13-program default
+  lr 1e-4) lagged the v11 curve ~2.5 NLL @16M (9.20 vs 6.71) — that gap was lr,
+  not arch. (The follow-up lr-3e-4/warmup-2000 run then exposed the fused_ce
+  bug; the current run uses round-1's warmup 500 — see RESOLVED below.)
+- **RESOLVED (2026-08-22 20:30 IST): the ~3 NLL gap was a CODE BUG, not the
+  delta stack.** `v13/fused_ce.py` `_FusedLinearCE.backward` was missing
+  `grad_weight += (softmax_probs.T @ hidden_chunk)` — the Aug-22 16:17
+  `return_nll`/autocast rewrite (commit 65546dc) dropped the line that
+  `v11/fused_ce.py` always had. The tied embedding/LM-head got ZERO CE
+  gradient; only the trunk learned, so loss stalled ~2-3.5 NLL above the
+  round-1 reference with a noisy floor. Forward was bit-correct (step-0 loss
+  identical, all forward A/B tests passed) — a backward-only regression.
+  Fixed in commit 79c7cc2; verified by `v13/tmp/test_fused_ce_grads.py`
+  (grad_weight rel-L2 5.8e-6, was 1.0) + `v13/selftest` (ALL PASS) + the
+  ab1 canary run (10.00@100 steps vs r1 8.81 → now gone).
+  Affected: every `--fused_ce` v13 run started after ~16:17 Aug 22
+  (100m_realdat_500m_fresh, diag_additive, ab1). NOT affected: e2b_50m
+  (started Aug 19, pre-bug; its head trained fine, loss→0.36) so the
+  e2b_50m vs transformer_50m quality comparison remains VALID.
+- **Note on references:** the Jun-23 10B log used above is OLD-code
+  (pre-rewrite) and was a confounded reference. The correct baseline is
+  **round-1 (Jul 1, new code)**: `--preset v11_e3_k3_chat --warmup 500
+  --lr 3e-4 --batch_size 18 48/48/4 dclm/fineweb/smoltalk2_mid edu>=3
+  sample-10BT blend 1e9`, curve 7.52@5M, 5.87@20M, 4.81@50M, 4.36@100M.
+- **Current run (2026-08-22 20:01 IST, FIXED code):**
+  `v13/tmp/launch_v13_500m_r1recipe.sh` (tmux `v13_500m`), full V13 delta
+  stack (K=3, delta, vault, phase, λ0.1) + round-1 EXACT recipe (warmup 500,
+  48/48/4, edu3, sample-10BT, blend 1e9, seed 42), 500M budget, ~21K tok/s.
+  Early read: 10.36@2M vs r1 10.31 (+0.05), 7.96@5.6M vs r1 7.52 (+0.44) —
+  on curve. Verdicts: 5.87@20M (kill if >6.6), 4.81@50M, 4.36@100M.
 
 ## Smoke — 10M recall curriculum (`v13_micro_10m_recall`)
 
