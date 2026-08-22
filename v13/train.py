@@ -126,6 +126,14 @@ def build_argparser():
     p.add_argument('--write_mode', type=str, default=None, choices=['additive', 'delta'])
     p.add_argument('--n_states', type=int, default=None)
     p.add_argument('--delta_chunk', type=int, default=None)
+    p.add_argument('--delta_key_norm', action='store_true',
+                   help='Per-vector unit-norm keys in the delta rule (default ON in '
+                        'v13_e3_k3_selective). A/B off to test readout dynamic range.')
+    p.add_argument('--no_delta_key_norm', action='store_true',
+                   help='Disable delta_key_norm even if the preset enables it (A/B).')
+    p.add_argument('--delta_erase_beta_cap', type=float, default=None,
+                   help='Cap the learned erase gain beta_e (default 0.95 in preset; '
+                        '0=off). Keeps the vault delta eigenvalue 1-beta_e in [1-cap,1).')
     p.add_argument('--gate_content_aware', action='store_true',
                    help='GSP write gate reads real+imag (2*dim) vs magnitude-only')
     p.add_argument('--no_gate_content_aware', action='store_true',
@@ -325,6 +333,12 @@ def main():
         cfg.n_states = args.n_states
     if args.delta_chunk is not None:
         cfg.delta_chunk = args.delta_chunk
+    if args.no_delta_key_norm:
+        cfg.delta_key_norm = False
+    elif args.delta_key_norm:
+        cfg.delta_key_norm = True
+    if args.delta_erase_beta_cap is not None:
+        cfg.delta_erase_beta_cap = args.delta_erase_beta_cap
     if args.no_gate_content_aware:
         cfg.gate_content_aware = False
     elif args.gate_content_aware:
