@@ -91,11 +91,41 @@ tok, kill it and iterate. Novelty: NOT transformer/Mamba re-skin.
   repetition w/ QK-norm; must verify loss tracks r1 + no repetition.
   FALLBACK if quality degrades: normalize keys ONLY in the erase/mass term
   (M[t,s]=βe·D·(k̂k̂ᴴ)), keep raw keys for readout.
-- [IN PROGRESS] Re-running `v13/tmp/diag_gate_nan.py --max_steps 2000`
-  (tmux `diag_fix`, log `.../diag_gate_nan_fix.log`) with the fix: must NOT
-  print NON-FINITE at ~1711 and state must stay bounded. Then: short
-  real-GPU relaunch to ~5-10M (quality: tracks r1 ~7.5@5M, no repetition),
-  commit, relaunch 500M FRESH, re-arm watchdog 100M, chain v11 500M.
+- [ROOT CAUSE REFINED + ROBUST FIX 2026-08-23, commit 03c3ede] The key-norm fix
+  (04dcebd) stabilized the DIAGNOSTIC (2000 steps, state bounded ~17) but the
+  REAL TRAINER died EARLIER at step ~151 (gtok 5.6M) on the same Loss.cu:91
+  assert. Key-norm makes the vault delta k-direction eigenvalue EXACTLY
+  (1 − beta_e) (‖k‖²=1, vault γ≡1): stable only while the LEARNED erase gain
+  beta_e < 2. The trainer consumes RNG differently (loads wiki_val_ds BEFORE
+  building the model → different weight init) and trained beta_e past 2 →
+  eigenvalue flips past −1 → oscillatory state blowup → NaN. The diagnostic's
+  init stayed beta_e<2 → survived. So key-norm was INIT-DEPENDENT, not robust.
+  FIX (root cause): `delta_erase_beta_cap: float = 0.95` (V13Config default ON)
+  clamps the learned erase gain in `_gate_betas` (single choke point → fused,
+  K-loop, recurrent paths) so the eigenvalue stays in [0.05, 1) for ANY init.
+  Erase strength still learned (sigmoid 0.047..0.95); only the >2 overshoot
+  removed. Complements delta_key_norm. SAFETY NET (v7/train.py, shared w/ v7):
+  _gate_surprisal_loss now drops non-finite NLL tokens from the median+mask and
+  nan_to_num's the target to [0,1] (BCE runs over the full [L,B,T] before vmask,
+  so even masked positions assert; clamp alone leaves NaN). Logs events, does NOT
+  silence the aux.
+  VERIFIED: selftest ALL PASS (new [delta_erasecap]; also fixed latent bug —
+  test_warmstart_chatml returned None → false "SOME MODES FAILED");
+  test_gate_nonfinite_guard 6/6 (a +inf/NaN NLL → finite aux + logged event,
+  no assert); REAL-TRAINER repro 20M (launch_v13_500m_r1recipe.sh
+  --token_budget 20M) — old key-norm run died at step 150 (loss 7.9623,
+  gtok 5566464); with cap the trainer PASSED that exact point and ran clean to
+  step 488 (20M, val 6.26), ZERO asserts, ZERO safety-net events (cap alone
+  fixed it). 500M relaunched FRESH 02:36 (tmux v13_500m, ckpt dir wiped);
+  watchdog armed at 100M.
+- [IN PROGRESS] Watching relaunched 500M. VERDICTS at matched tokens (r1):
+  7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M. Kill if >0.7 NLL above.
+  NOTE open quality issue: pre-fix V13 already learned ~2.5x slower than r1
+  (50M verdict +0.78, at the kill line); key-norm+cap adds a small cost
+  (+0.03-0.08 in diag A/A). If the fixed run sits above the kill line, that's
+  the next battle (suspects: protect_gate_bias -3.0 over-protects; gate-surprisal
+  aux λ0.1; key-norm readout dynamic-range loss → fallback: normalize keys ONLY
+  in the erase/mass term, keep raw readout keys).
 - [stopped] `100m_realdat_500m_fresh` @ step 3175/117M — trained under the
   fused_ce bug (head untrained) AND warmup 2000. Do NOT resume.
 - [stopped] `diag_additive` @ ~39.7M — same bug; ignore its curve.
@@ -196,18 +226,25 @@ Loss: **10.31@2M, 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M**
 - Watch ~every 30 min. SIGTERM is safe (trainer saves latest.pt on signal).
 
 ## NEXT (ordered)
-1. [ ] Watch `v13_ab1` to 50M (verdict: tracks round-1 4.81 ⇒ base+recipe clean)
-   then 100M (4.36).
-2. [ ] Numerical A/B `v13/tmp/test_v11_v13_forward_ab.py` (weights copied,
-   per-block logits compare) — confirms/disproves code equivalence fast.
-3. [ ] If ab1 tracks r1: relaunch 500M FRESH (delta stack ON + round-1 recipe:
-   **warmup 500**, 48/48/4 or 70/20/5/5/5 — decide: 48/48/4 = matched to r1;
-   5 sources = v13 recall/reason program; start 48/48/4 for clean comparison,
-   add recall/reason later). Verify tracks r1 at 20M/50M before committing.
-4. [ ] If ab1 stalls: numerical A/B bisect → fix code → re-verify.
-5. [ ] Update EXPERIMENTS_V13.md with the corrected reference + verdict.
-6. [ ] (later) quality probes: eff-rank, gate probe, behavioral vs
-   checkpoints_v13/transformer_50m, WikiText-103 val PPL at matched tokens.
+1. [IN PROGRESS] Watch relaunched 500M (tmux `v13_500m`, robust fix 03c3ede).
+   VERDICTS at matched tokens (r1 curve 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M,
+   4.36@100M). KILL if >0.7 NLL above. Watchdog armed at 100M (re-arm on each
+   wake). Check for `[gate-aux]` safety-net events in the log (should be 0 —
+   the cap prevents non-finite NLLs; any event = the cap is being stressed).
+2. [ ] If it tracks r1 (≤0.7 NLL): let it run to 500M, save checkpoints.
+   Quality probe at 50M/100M: `.venv/bin/python -m v13.eval_checkpoints
+   --checkpoints checkpoints_v13/500m_v13_r1recipe/latest.pt --labels wiki`
+   (WikiText-103 val PPL) + a short generate() for repetition.
+3. [ ] If it sits >0.7 NLL above r1 (quality battle, NOT a crash): suspects in
+   order — (a) key-norm readout dynamic-range loss → try `delta_key_norm=False`
+   + erase-cap only (cap alone may suffice for stability; test in diag), or
+   normalize keys ONLY in the erase/mass term + raw readout keys; (b)
+   protect_gate_bias -3.0 over-protects → try -2.0; (c) gate-surprisal aux
+   λ0.1 → try 0.05. A/B each in the diag driver first (fast), then relaunch.
+4. [ ] Chain v11 PAM 500M head-to-head (`v13/tmp/launch_v11_500m_r1recipe.sh`)
+   after V13 finishes (same GPU, sequential).
+5. [ ] Update EXPERIMENTS_V13.md: 500M curve + NaN root cause (eigenvalue) +
+   fix (key-norm + erase-cap + safety net) + the batch-0/151 regression.
 
 ## DECISIONS LOG
 - 2026-08-22: Stopped 500M run @3175 (warmup-2000 recipe, on degraded curve).
@@ -216,3 +253,8 @@ Loss: **10.31@2M, 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M**
 - 2026-08-22: User: drop V14 focus, focus V13 only; user away 2 days;
   kill-and-iterate policy; novel-not-transformer/Mamba; 100M+ rich data only;
   PAM never had val_ppl 6 (don't chase 6.65).
+- 2026-08-23: key-norm (04dcebd) was INIT-DEPENDENT — diag passed 2000 but
+  real trainer died step ~151 (different weight init via wiki_val_ds RNG draw
+  trained erase beta_e past 2 → eigenvalue 1−beta_e flipped past −1). Robust
+  fix = delta_erase_beta_cap 0.95 + gate-BCE safety net (03c3ede). Verified on
+  the real trainer path (20M repro, zero asserts/events). 500M relaunched fresh.

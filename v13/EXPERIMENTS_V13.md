@@ -32,6 +32,55 @@ only its training cost was fixed.
 - `v13/tmp/bench3_trainer_path.py` — trainer path, B16/T2048/gate-ON:
   **B16 20,935 tok/s @14.2GB | B20 20,388 @17.6GB | B24 19,956 @20.9GB** → picked **B16**.
 
+### 500M NaN crash — root cause + robust fix (2026-08-23, commits 04dcebd + 03c3ede)
+
+**Symptom:** the 500M mission run died at step ~1551 (57.2M tok) on a device-side
+assert `Loss.cu:91 'target_val >= zero && target_val <= one'` inside
+`F.binary_cross_entropy` in the GATE-SURPRISAL aux — the main loss was still
+finite and descending (5.39 @ step 1550), so it was a sudden per-token NLL
+spike to inf/NaN that the per-step mean masks and only the gate-BCE
+target-assert surfaces.
+
+**Mechanism (confirmed by `v13/tmp/diag_gate_nan.py`, which catches non-finite
+in Python before the BCE kernel):** the V13 delta rule is
+`S ← γ·S + (βw·v − βe·(k@S))·k^H`. Its eigenvalue in the key `k` direction is
+`γ − βe·‖k‖²`. With the **vault** state (γ≡1) and raw unnormalized keys
+(qk_norm off, ‖k‖² up to ~d=64), this flips past −1 → positive feedback →
+unbounded PAM state (diag: 0.35 @ s20 → 38 @ s990 → NaN @ s1711) while params
+stay flat (pmax ~4) and grads clip fine. The gate aux is only where the NaN
+*asserts*, not where it originates.
+
+**Fix 1 (key-norm, 04dcebd) was necessary but INIT-DEPENDENT:** per-VECTOR
+unit-norm keys (`cnormalize_vec`, applied in `_project` after RoPE+phase) make
+‖k‖²=1 → eigenvalue exactly `1 − βe`, stable only while the *learned* erase
+gain βe < 2. The diagnostic (no wiki-val RNG draw) stayed βe<2 → passed 2000
+steps, state bounded ~17. But the REAL trainer loads `wiki_val_ds` BEFORE
+building the model → a different weight init → trained βe past 2 → eigenvalue
+flipped past −1 → the fixed trainer died EARLIER, at step ~151 (5.6M tok).
+
+**Fix 2 (robust, 03c3ede): `delta_erase_beta_cap = 0.95`** (V13Config default
+ON). Clamp the learned erase gain in `_gate_betas` (the single choke point
+feeding the fused-delta, K-loop, and recurrent delta paths) so the eigenvalue
+stays in [0.05, 1) for ANY init. The erase strength is still learned (sigmoid
+0.047..0.95); only the pathological >2 overshoot is removed. **Safety net** in
+`v7/train.py:_gate_surprisal_loss` (shared with v7): a rare non-finite NLL now
+droops the token from the median+mask and `nan_to_num`s the target to [0,1]
+(BCE runs over the full [L,B,T] before vmask is applied, so even masked
+positions assert; clamp alone leaves NaN). Logs events, does not silence the
+aux.
+
+**Verification (all re-runnable):**
+- `v13/selftest` — ALL MODES PASS, incl. new `[delta_erasecap]` (βe clamped to
+  0.95 when raw sigmoid saturates at 1.0; write path untouched). (Also fixed a
+  latent bug: `test_warmstart_chatml` returned None → false "SOME MODES FAILED".)
+- `v13/tmp/test_gate_nonfinite_guard` — 6/6: a +inf/−inf/NaN NLL (the exact
+  crash condition) yields a finite aux loss + a logged event, never an assert.
+- **Real-trainer repro** (`launch_v13_500m_r1recipe.sh --token_budget 20M`):
+  the old key-norm run died at step 150 (loss 7.9623, gtok 5566464); with the
+  cap the trainer PASSED that exact point and ran clean to step 488 (20M, val
+  6.26) — **ZERO asserts, ZERO safety-net events** (the cap alone fixed it).
+500M relaunched fresh 2026-08-23 02:36 (tmux `v13_500m`, ckpt dir wiped).
+
 ### Current run (fresh start, 2026-08-22)
 
 - **Fresh from step 0** (not a resume): the old `100m_realdat_500m` ckpt (step 500/10.24M tok)
