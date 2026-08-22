@@ -10,7 +10,10 @@
 # sources are added in a LATER run (per scratchpad NEXT.3).
 #
 # Code state: fused_ce bug FIXED (grad_weight was zero in v13 backward —
-# dropped line restored; v13/selftest + v13/tmp/test_fused_ce_grads.py PASS).
+#  dropped line restored; v13/selftest + v13/tmp/test_fused_ce_grads.py PASS).
+#  2026-08-23: NaN-crash fix IN — per-vector unit-norm keys in the delta rule
+#  (delta_key_norm, commit 04dcebd). diag_gate_nan.py --max_steps 2000 PASSES
+#  (state bounded ~12, no NON-FINITE past the old crash step 1711/63M).
 #
 # Round-1 reference curve (train loss @ gtok): 7.52@5M, 6.66@10M, 5.87@20M,
 # 4.81@50M, 4.36@100M, 3.97@200M. KILL if >0.7 NLL above at 20M (i.e. >6.6).

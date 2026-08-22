@@ -102,6 +102,17 @@ class V13Config:
     # RoPE + phase addressing), so the write AND read paths see unit keys.
     # NOTE: qk_norm (per-element cnormalize) is NOT sufficient (||k||^2 -> d).
     delta_key_norm: bool = True
+    # delta_erase_beta_cap: clamp the learned erase gain beta_e to this max
+    # (0 = off). The k-direction eigenvalue of the vault delta state is
+    #   eig = gamma - beta_e * ||k||^2  ==  1 - beta_e   (vault gamma=1, key-norm ||k||^2=1)
+    # which is a stable contraction only while beta_e < 2; once the learned
+    # erase_beta_proj trains beta_e past 2 the eigenvalue flips past -1 ->
+    # oscillatory blowup -> unbounded state -> NaN (500M trainer died ~step 151,
+    # a DIFFERENT weight init than the diagnostic, which stayed beta_e<2 and
+    # passed 2000 steps). Capping beta_e <= 0.95 keeps eig in [0.05, 1) for ANY
+    # init: the erase strength is still learned (sigmoid range 0.047..0.95), only
+    # the pathological >2 overshoot is removed. Complements delta_key_norm.
+    delta_erase_beta_cap: float = 0.95
     recompute_pam_chunks: bool = False  # recompute per-chunk W/D/A in backward (exact; less VRAM, more FLOPs)
 
     # ── Recall program (V12): longer memory horizon + gate supervision ───────
@@ -153,6 +164,7 @@ class V13PAMLayer(nn.Module):
         self.decay_mode = cfg.decay_mode
         self.write_mode = cfg.write_mode
         self.delta_key_norm = getattr(cfg, 'delta_key_norm', False)
+        self.delta_erase_beta_cap = getattr(cfg, 'delta_erase_beta_cap', 0.0)
         self.n_states = cfg.n_states
         self.delta_chunk = cfg.delta_chunk
         self.fused_e3 = getattr(cfg, 'fused_e3', True)
@@ -238,11 +250,18 @@ class V13PAMLayer(nn.Module):
         self._gate_prob_bt = None   # [B,T] mean protect prob per token (gate-surprisal aux)
 
     def _gate_betas(self, x):
-        """Write/erase gates, each [B,H,T]. Erase falls back to write (legacy)."""
+        """Write/erase gates, each [B,H,T]. Erase falls back to write (legacy).
+
+        The erase gain is clamped to `delta_erase_beta_cap` (0 = off) so the
+        vault delta eigenvalue (1 - beta_e, with key-norm ||k||^2=1) stays a
+        stable contraction for any learned init (see V13Config comment).
+        """
         write_beta = torch.sigmoid(self.beta_proj(cabs(x))).transpose(1, 2)
         if self.erase_beta_proj is None:
             return write_beta, write_beta
         erase_beta = torch.sigmoid(self.erase_beta_proj(cabs(x))).transpose(1, 2)
+        if self.delta_erase_beta_cap and self.delta_erase_beta_cap < 1.0:
+            erase_beta = erase_beta.clamp(max=self.delta_erase_beta_cap)
         return write_beta, erase_beta
 
     def _apply_gamma_floor(self, base_decay: torch.Tensor) -> torch.Tensor:

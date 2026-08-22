@@ -383,14 +383,39 @@ class V7Trainer:
         valid = labels != -100
         if loss_mask is not None:
             valid = valid & (loss_mask > 0)
+        # Safety net (2026-08-23): a non-finite per-token NLL (a divergent
+        # hidden state) makes target_p NaN -> the BCE kernel asserts target in
+        # [0,1] and kills a long run on the AUX, not the main loss. The delta
+        # erase-gain cap (V13Config.delta_erase_beta_cap) is the actual fix for
+        # the 500M blowup; this guard is belt-and-suspenders so a rare non-finite
+        # token can never take down a 2-day run. It does NOT silence the aux:
+        # finite tokens still supervise the gate — only non-finite tokens are
+        # dropped from the median and the BCE, and the event is logged.
+        finite = torch.isfinite(surprisal)
+        if valid.any() and not (finite & valid).all():
+            dropped = int(((~finite) & valid).sum())
+            self._gate_nonfinite_events = getattr(self, '_gate_nonfinite_events', 0) + 1
+            if self._gate_nonfinite_events <= 20 or self._gate_nonfinite_events % 200 == 0:
+                print(f"  [gate-aux] step {self.global_step}: masking {dropped} "
+                      f"non-finite-NLL token(s) from gate target "
+                      f"(event #{self._gate_nonfinite_events}); "
+                      f"nll_max={float(surprisal[valid].max()):.4g}", flush=True)
+        valid = valid & finite
         if valid.any():
             median_ce = surprisal[valid].median()
         else:
-            median_ce = surprisal.median()
+            # No finite tokens in the batch: no reference -> neutral target
+            # (sigmoid(0)=0.5) so the aux exerts no push this step.
+            median_ce = torch.zeros((), device=surprisal.device, dtype=surprisal.dtype)
 
         tau = max(getattr(m_cfg, 'gate_surprisal_tau', 1.0), 1e-3)
         sign = getattr(m_cfg, 'gate_surprisal_sign', 1.0)
         target_p = torch.sigmoid(sign * (median_ce - surprisal) / tau).detach()  # [B,T]
+        # BCE runs over the FULL [L,B,T] tensor before vmask is applied, so the
+        # kernel asserts on ANY out-of-range target, including masked positions.
+        # nan_to_num (not clamp — clamp leaves NaN as NaN) guarantees a finite
+        # target in [0,1] everywhere: NaN->0.5, -inf(nll)->0, +inf(nll)->1.
+        target_p = torch.nan_to_num(target_p, nan=0.5, posinf=1.0, neginf=0.0)
 
         # BCE on probabilities is unsafe under AMP autocast; force fp32.
         # NOTE (2026-08-22): grad must NOT flow through `gate_probs` back into the

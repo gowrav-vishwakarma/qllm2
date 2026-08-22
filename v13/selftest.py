@@ -60,6 +60,7 @@ def test_warmstart_chatml():
         for idx in _CHATML_TOKEN_IDS:
             assert torch.allclose(w[idx], expected, atol=1e-6), f"{key}[{idx}] not mean"
     print("[warmstart_chatml] PASS")
+    return True
 
 
 def test_fused_e3_equiv(batch_size=2, seq_len=80, seed=0):
@@ -221,6 +222,42 @@ def test_delta_keynorm_equiv(batch_size=2, seq_len=80, seed=0):
           f"{'PASS' if ok else 'FAIL'}")
     return ok
 
+def test_delta_erase_cap():
+    """Erase-gain cap: beta_e <= delta_erase_beta_cap (stability), write beta free.
+
+    The vault delta k-direction eigenvalue is 1 - beta_e (key-norm ||k||^2=1);
+    capping beta_e <= 0.95 keeps it in [0.05, 1) for ANY learned init. This
+    test forces erase_beta_proj to saturate (weight x10, bias +5 -> sigmoid
+    ~1.0) and checks the clamp holds while the write path is untouched.
+    """
+    common = dict(
+        vocab_size=512, dim=48, n_heads=3, head_dim=16, n_layers=1, expand=2,
+        dropout=0.0, max_seq_len=256, chunk_size=24, gradient_checkpointing=False,
+        use_rope=True, use_gsp=True, n_states=3, gate_content_aware=True,
+        write_mode='delta', delta_chunk=20, delta_erase_gate=True,
+        vault_state=True, vault_state_idx=0, write_phase_address=True,
+        delta_key_norm=True, delta_erase_beta_cap=0.95,
+    )
+    torch.manual_seed(0)
+    p = V13PAMLayer(V13Config(**common))
+    p.train()
+    # Saturate the erase projection: unclamped sigmoid output would be ~1.0.
+    with torch.no_grad():
+        p.erase_beta_proj.weight.mul_(10.0)
+        p.erase_beta_proj.bias.fill_(5.0)
+    x = torch.randn(2, 64, common['dim'], 2) * 0.5
+    wb, eb = p._gate_betas(x)
+    eb_max = eb.max().item()
+    # Sanity: recompute the pre-clamp sigmoid (must actually exceed the cap,
+    # otherwise the test is vacuous). erase_beta_proj takes cabs(x).
+    from v13.complex_ops import cabs
+    raw_sigmoid = torch.sigmoid(p.erase_beta_proj(cabs(x))).transpose(1, 2)
+    raw_max = raw_sigmoid.max().item()
+    ok = eb_max <= 0.95 + 1e-12 and raw_max > 0.95 and wb.max().item() > 0.5
+    print(f"[delta_erasecap ] beta_e_max={eb_max:.4f} raw={raw_max:.4f} "
+          f"beta_w_max={wb.max().item():.4f}  {'PASS' if ok else 'FAIL'}")
+    return ok
+
 
 def test_drop_shape_mismatches():
     """Resume-safe: growing phase_proj (dim -> 2*dim) reinits cleanly."""
@@ -294,6 +331,7 @@ def main():
     results.append(test_competitive_retrieval_equiv())
     results.append(test_drop_shape_mismatches())
     results.append(test_delta_keynorm_equiv())
+    results.append(test_delta_erase_cap())
     print()
     if all(results):
         print("ALL MODES PASS: parallel train form == O(1) recurrent form.")
