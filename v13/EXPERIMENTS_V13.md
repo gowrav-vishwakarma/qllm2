@@ -256,6 +256,8 @@ Curve: 10.36@0.84M, 5.89@9.8M, 5.15@26.2M, 5.07@29.9M.
 V13 ~0.16 NLL below r1, steady ~4,840 tok/s, zero errors.
 **100M verdict PASSED (2026-08-23 ~19:10):** 4.36 @ 100.4M vs r1 4.36@100M
 — gap 0.0 (kill was >5.06). generate() @82M ckpt: coherent, no repetition
-loop, factually garbled (expected at 82M). Watchdog re-armed at 200M
-(r1 ref 3.97).
+loop, factually garbled (expected at 82M).
+**200M verdict PASSED (2026-08-23 ~01:10):** 3.95–3.97 @ ~194–197M —
+**at/below** r1's 3.97@200M (kill was >4.67). V13 leads the CE curve at
+matched tokens now. Steady ~4,800 tok/s, zero errors.
 - **Throughput — 100M-class (v13_e3_k3_selective, dim384×16L, 4090 24GB):** needs grad-ckpt (B8 no-ckpt OOMs by 2MiB). Steady: **B10 ≈ 2.3K tok/s** (19.8GB); B8 ≈ 2.0K; B12 OOMs on step-2 recompute peak. 11M stays faster per token: **B16 ≈ 11.6K tok/s** (21.2GB). Rule of thumb on 24GB: 11M→B16 no-ckpt; 100M→B10 grad-ckpt.

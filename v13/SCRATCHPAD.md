@@ -38,20 +38,20 @@ Preset: `v13_e3_k3_selective` (~100.6M). v11 additive twin: `v11_e3_k3_chat`.
 - After step 1 of any train run the log MUST contain
   `[block-grad step1] L0=... L15=... all-nonzero`. `DEAD=` → KILL immediately.
 
-## STATUS (2026-08-23 ~22:55)
+## STATUS (2026-08-23 ~01:15)
 Grads under checkpointing are **fixed** (`baaf5b3`). The 02:28→09:20 "500M
 complete" run was the **buggy-code** run (20,684 tok/s avg = retracted detach
 figure; floor ~4.65, Wiki 368.69) — VOID, user-confirmed, dir wiped.
 
 **500M IS RUNNING** (relaunched 13:26, tmux `v13_500m`, fixed code, EAGER
-B8/C128): steady **~4,800 tok/s @ 8.7GB**; **20M verdict PASSED 5.46**
-(kill >6.6), **100M verdict PASSED 4.36 vs r1 4.36 (gap 0.0)**; at 165M.
-Probes (164M ckpt): **Wiki PPL 211.66** (was 325.76 @82M — on trajectory to
-<25.77); selective stack still near-init (protect flat ~0.06, phase ~0,
-write-phase dormant); **erase learned ON early** (βe −3.0-init → +0.01,
-βe≈0.5). Full record: `v13/r_and_d.md`.
-Watchdog armed at 200M (r1 ref 3.97).
-ETA at ~4.8K: ~29h total to 500M (~5.5h remaining @165M).
+B8/C128): steady **~4,800 tok/s @ 8.7GB**; verdicts PASSED: **20M 5.46**,
+**50M 4.65 (r1 4.81)**, **100M 4.36 (r1 4.36, gap 0.0)**, **200M ~3.95 @194M
+(r1 3.97@200M — V13 leads)**; at ~197M. Probes (164M ckpt): **Wiki PPL
+211.66** (was 325.76 @82M); selective stack still near-init; erase learned
+ON early (βe≈0.5). Full record: `v13/r_and_d.md`.
+Watchdog armed at 300M (no recorded r1 ref past 200M — reference curve ends
+there, line 143; use the kill rule, not a point).
+ETA at ~4.8K: ~5.5h remaining @200M to 500M.
 
 **`--compile_blocks` CRASHES at first step** (2026-08-23): Inductor
 meta-kernel bug — `assert_size_stride` on `torch.ops.aten.complex.default`
@@ -64,7 +64,7 @@ tok/s (13.9GB); B8/C128 eager 5,027; B8/C256 5,085; compile-block 6,459
 
 ## NEXT
 1. **500M is running** (this session). Watchdog chain: on every wake re-arm
-   `bash v13/tmp/watchdog.sh logs/v13/500m_v13_r1recipe/v11_v13_e3_k3_selective_lm_pretrain_mix.log 200000000 2940`
+   `bash v13/tmp/watchdog.sh logs/v13/500m_v13_r1recipe/v11_v13_e3_k3_selective_lm_pretrain_mix.log 300000000 2940`
    (async + timeout 3300). Launch cmd for any relaunch:
    ```
    rm -rf checkpoints_v13/500m_v13_r1recipe
