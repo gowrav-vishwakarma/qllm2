@@ -151,6 +151,12 @@ writes decay; routing not content-aware, phase init zero."
   should re-measure the same three quantities. If protect/erase are still
   ~init at 100M, the aux (λ0.1) is too weak to turn selectivity on, and the
   recall fix is data (claim 1) + possibly a stronger gate prior, not LR.
+- **generate() @82M ckpt** (120 tok, T=0.8): coherent English, **no
+  repetition loop**, but factually garbled (Cambridge → "FAA / Royal Society
+  for Human Services"). Healthy 82M behavior; not a quality verdict.
+- **100M verdict (19:10): PASS** — 4.36 @ 100.4M vs r1 4.36@100M (gap 0.0).
+  Probe battery above ran on the step-5000 ckpt (82M, the latest saved at
+  verdict time); the step-10000 ckpt (~164M) is the next probe opportunity.
 
 ## Picks — what to actually do (ordered)
 
