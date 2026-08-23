@@ -142,17 +142,23 @@ writes decay; routing not content-aware, phase init zero."
 - **Phase: states still undifferentiated.** `phase_proj` wnorm ~0.56–0.73,
   bnorm ~0.003–0.006 every layer — phases ≈ 0, so K=3 reads ≈ 3× the same
   state (redundant capacity, not specialized).
-- **Erase — CORRECTED: active at ~0.5 from step 0, not off.** `erase_beta_proj`
-  bias is **+0.013** (init 0.0 — `nn.init.constant_(-3.0)` is only under the
-  *off-by-default* `delta_erase_gate` flag, `model.py:225-227`; the
-  `V13Config` comment claiming init −3.0 is misleading). βe ≈ 0.5 from the
-  start, far below the 0.95 cap. The model runs in the **delta regime the
-  whole time** (strong per-token erase), NOT additive.
-- **Interpretation (corrected):** sub-r1 CE at 82M comes from CGU + PAM delta
-  writes (βw ≈ 0.5, βe ≈ 0.5) with the *selective* levers (protect/phase)
-  still near-init.
-- **164M re-dissection (step 10000, 22:54):**
+- **Erase (as measured at 82M):** bias +0.013 → βe ≈ 0.50 — see the 164M
+  section for the init/correction (the "effectively off, bias ~−3.0" bullet
+  originally written here was a misread of this same +0.013 number).
+
+**164M re-dissection (step 10000, 22:54):**
   - **Wiki PPL 211.66** (was 325.76 @82M — 35% drop over 82M, on trajectory).
+  - **Erase — CORRECTION, fully settled:** the running preset
+    `v13_e3_k3_selective` HAS `delta_erase_gate=True` (`model.py:1835`), so
+    `erase_beta_proj` bias **inits to −3.0** (βe ≈ 0.047, "starts
+    additive-like", `model.py:223-227`). Both 82M and 164M checkpoints show
+    bias +0.01 → **βe ≈ 0.50**: the model **learned erase ON within the first
+    82M** (bias −3.0 → +0.01). The original 82M note misread its own output
+    (which already printed +0.013) as "still ~−3.0, effectively off". The
+    learned erase gate works exactly as designed; cap 0.95 far from active.
+  - **Interpretation (corrected):** sub-r1 CE comes from CGU + PAM delta
+    writes (βw ≈ 0.5, βe learned to ≈0.5), with the *selective* levers
+    (protect/phase) still near-init.
   - **Protect gate: still flat.** Bias −2.69…−2.85, mean protect prob
     0.055–0.064 — essentially unchanged from 82M. The gate-surprisal aux
     (λ0.1) has NOT turned on selectivity in 82M more tokens.
@@ -161,7 +167,6 @@ writes decay; routing not content-aware, phase init zero."
   - **`write_phase_proj` (Stage-6 key-conditioned binding): wnorm ~0.08–0.19,
     bnorm ~0.0001–0.004** — the phase *addressing* of V/Q is still ≈0; the
     "bind V to ψ(k)" mechanism is effectively dormant.
-  - **Erase/write: βw ≈ 0.50, βe ≈ 0.50** (unchanged; both ~init).
   - **Conclusion:** at 164M the model matches r1 on CE while its novel
     selective machinery (protect, phase, write-phase) is all still near-init.
     It is winning on the *delta write* + CGU, not on selectivity. The recall
