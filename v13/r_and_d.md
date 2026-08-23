@@ -133,6 +133,25 @@ writes decay; routing not content-aware, phase init zero."
   the zero init?), (3) per-state effective rank of the PAM state (is one state
   dominating / are 2/3 dead?), (4) KV-recall @2048 vs the 8-way chance 12.5%.
 
+**First dissection — step 5000 / ~82M (2026-08-23 18:11, `latest.pt`):**
+- **Wiki PPL 325.76** (247,808 tok, eval_checkpoints B2). Trajectory only —
+  the < 25.77 target is at 500M.
+- **Protect gate: selectivity has NOT turned on.** Bias −3.0 → −2.69…−2.87
+  (all 16 layers), mean protect prob **~0.056** vs 0.047 init. The gate writes
+  on ~94% of tokens; gate Δ ≈ 0 so far.
+- **Phase: states still undifferentiated.** `phase_proj` wnorm ~0.56–0.73,
+  bnorm ~0.003–0.006 every layer — phases ≈ 0, so K=3 reads ≈ 3× the same
+  state (redundant capacity, not specialized).
+- **Erase: effectively off.** `erase_beta_proj` bias still ~−3.0 → βe ≈ 0.047
+  (cap 0.95 far from active). The model is in the **additive-write regime**;
+  delta erase/competition hasn't been learned.
+- **Interpretation:** sub-r1 CE at 82M comes from CGU + delta *write*
+  (write βw active), while the *selective* levers (protect/erase/phase) are
+  near-init. Expect them to differentiate as loss plateaus — the 100M probe
+  should re-measure the same three quantities. If protect/erase are still
+  ~init at 100M, the aux (λ0.1) is too weak to turn selectivity on, and the
+  recall fix is data (claim 1) + possibly a stronger gate prior, not LR.
+
 ## Picks — what to actually do (ordered)
 
 1. **Leave this 500M run alone** (no LR / warmup / batch / data change). It is
