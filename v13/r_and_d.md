@@ -142,15 +142,31 @@ writes decay; routing not content-aware, phase init zero."
 - **Phase: states still undifferentiated.** `phase_proj` wnorm ~0.56–0.73,
   bnorm ~0.003–0.006 every layer — phases ≈ 0, so K=3 reads ≈ 3× the same
   state (redundant capacity, not specialized).
-- **Erase: effectively off.** `erase_beta_proj` bias still ~−3.0 → βe ≈ 0.047
-  (cap 0.95 far from active). The model is in the **additive-write regime**;
-  delta erase/competition hasn't been learned.
-- **Interpretation:** sub-r1 CE at 82M comes from CGU + delta *write*
-  (write βw active), while the *selective* levers (protect/erase/phase) are
-  near-init. Expect them to differentiate as loss plateaus — the 100M probe
-  should re-measure the same three quantities. If protect/erase are still
-  ~init at 100M, the aux (λ0.1) is too weak to turn selectivity on, and the
-  recall fix is data (claim 1) + possibly a stronger gate prior, not LR.
+- **Erase — CORRECTED: active at ~0.5 from step 0, not off.** `erase_beta_proj`
+  bias is **+0.013** (init 0.0 — `nn.init.constant_(-3.0)` is only under the
+  *off-by-default* `delta_erase_gate` flag, `model.py:225-227`; the
+  `V13Config` comment claiming init −3.0 is misleading). βe ≈ 0.5 from the
+  start, far below the 0.95 cap. The model runs in the **delta regime the
+  whole time** (strong per-token erase), NOT additive.
+- **Interpretation (corrected):** sub-r1 CE at 82M comes from CGU + PAM delta
+  writes (βw ≈ 0.5, βe ≈ 0.5) with the *selective* levers (protect/phase)
+  still near-init.
+- **164M re-dissection (step 10000, 22:54):**
+  - **Wiki PPL 211.66** (was 325.76 @82M — 35% drop over 82M, on trajectory).
+  - **Protect gate: still flat.** Bias −2.69…−2.85, mean protect prob
+    0.055–0.064 — essentially unchanged from 82M. The gate-surprisal aux
+    (λ0.1) has NOT turned on selectivity in 82M more tokens.
+  - **Phase: still undifferentiated, but moving.** `phase_proj` wnorm grew
+    ~0.6→0.72–0.95 (slow), bnorm still ~0.003–0.008 → phases still ≈0.
+  - **`write_phase_proj` (Stage-6 key-conditioned binding): wnorm ~0.08–0.19,
+    bnorm ~0.0001–0.004** — the phase *addressing* of V/Q is still ≈0; the
+    "bind V to ψ(k)" mechanism is effectively dormant.
+  - **Erase/write: βw ≈ 0.50, βe ≈ 0.50** (unchanged; both ~init).
+  - **Conclusion:** at 164M the model matches r1 on CE while its novel
+    selective machinery (protect, phase, write-phase) is all still near-init.
+    It is winning on the *delta write* + CGU, not on selectivity. The recall
+    levers (raw-key readout, data slice, gate prior) are the right next-run
+    changes; none are indicated by the CE curve, which is on-track.
 - **generate() @82M ckpt** (120 tok, T=0.8): coherent English, **no
   repetition loop**, but factually garbled (Cambridge → "FAA / Royal Society
   for Human Services"). Healthy 82M behavior; not a quality verdict.
