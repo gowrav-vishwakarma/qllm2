@@ -1563,14 +1563,16 @@ class V13LM(nn.Module):
 
     @staticmethod
     def _ckpt_block(block, z, step_offset):
-        # The block input `z` is a non-leaf (it comes from the embedding). torch's
-        # checkpoint sees non-leaf inputs in the original forward but detached leaves
-        # during recompute, which makes autograd save a different tensor sequence in the
-        # two passes -> torch 2.8 determinism_check fails (shape mismatch). Normalize z
-        # to a leaf inside the checkpointed fn so both passes build identical graphs.
+        # Non-reentrant checkpoint: forward runs `run(z)` without saving the
+        # block's internals; backward recomputes with grad and backprops through
+        # that recomputed graph, which yields dL/dz and continues up the stack.
+        # DO NOT detach the block input here: a non-reentrant checkpoint relies on
+        # the input edge to propagate gradient to the preceding block. Detaching
+        # it (a 2026-08-22 "determinism_check" workaround) silently froze every
+        # block except the last on the main loss (commit d0abeed). The nested
+        # per-chunk PAM checkpoint (use_reentrant=False, no detach) is unaffected.
         def run(z_in):
-            z_leaf = z_in.detach().requires_grad_(True)
-            return block(z_leaf, pam_state=None, step_offset=step_offset)
+            return block(z_in, pam_state=None, step_offset=step_offset)
         return grad_checkpoint(run, z, use_reentrant=False)
 
     @torch.no_grad()

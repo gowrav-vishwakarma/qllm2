@@ -1,5 +1,178 @@
 # V13 SCRATCHPAD — read this FIRST after any context summary
 
+## ⚠️ ACTIVE TASK (2026-08-23) — HANDOFF: fix the gradient-checkpoint RECOMPUTE MISMATCH
+**Status: root cause PINPOINTED, fix NOT yet applied. This is a fresh, self-contained
+battle — read this section fully before touching anything.**
+
+### Symptom (what blocks production training)
+With `gradient_checkpointing=True` (non-reentrant, `use_reentrant=False`) — the ONLY
+VRAM-fitting path for the 500M run (`--no_grad_ckpt` OOMs at B18/T2048 bf16, forward
+alone 22.2GB) — `loss.backward()` intermittently crashes with:
+```
+torch.utils.checkpoint: Recomputed values for the following tensors have different
+metadata than during the forward pass.
+tensor at position 85:
+  saved metadata:     {'shape': torch.Size([2, 2, 128, 1, 1]), 'dtype': torch.float32}
+  recomputed metadata:{'shape': torch.Size([2, 2, 128, 32, 2]), 'dtype': torch.float32}
+tensor at position 86: (the reverse)
+```
+→ `CheckpointError`. Tiny repro (1 layer, B2/T128, fp32) crashes in ~2s.
+
+### ⚠️ KEY FACT: IT IS FLAKY — do NOT trust single runs
+The crash fires on **~1 of 5** fresh forward+backward passes, and **tends to hit the
+FIRST run of a fresh process** (CUDA lazy-init / allocator-state dependent). I ran:
+- `dbg_ckpt_flaky 5` → original code: `1/5 crashes` (the first run of the process);
+  and the 5 bisection toggles each `0/5`.
+- `dbg_ckpt_fixtest2 15` → original code: `0/15` (warm process, no crash).
+**Consequence: any single-run "PASS" is meaningless, and the earlier single-run
+bisection conclusions (in my notes) are UNRELIABLE. Always test with many fresh
+processes (e.g. loop `for i in $(seq 30); do .venv/bin/python -m v13.tmp.dbg_ckpt_probe3 1; done`
+and count how many crash).** The crash reproduces reliably on the first run of a
+cold process.
+
+### Root cause (PINPOINTED — identical values, order-swap of 2 tensors)
+The swapped pair is EXACTLY the two operands of the division inside `cnormalize_vec`:
+```
+v13/complex_ops.py:95-105   (called from v13/model.py:391)
+  @torch.jit.script
+  def cnormalize_vec(x):
+      mag = torch.sqrt((x[...,0].square() + x[...,1].square()).sum(-1) + 1e-8)
+      return x / mag.unsqueeze(-1).unsqueeze(-1)      # <-- the div
+```
+The `div` saves its two operands for backward:
+- numerator `x` = `keys` → shape `[B,H,T,32,2]`
+- denominator `mag.unsqueeze(-1).unsqueeze(-1)` → shape `[B,H,T,1,1]`
+In the checkpoint **forward** the two are saved in order `(denom, numer)`; in the
+**recompute** they are saved in order `(numer, denom)`. Same values, reversed slots →
+positional metadata check fails. **Everything else matches** (positions 79–84 and 87–91
+all identical) → it is a LOCAL 2-swap, not a global index shift, and not a value
+difference. No grad-mode branch: both passes run with `requires_grad=True,
+is_grad_enabled=True, is_inference_mode=False`.
+
+Why torch compares positionally (so the swap is fatal) — from
+`.venv/lib/python3.9/site-packages/torch/utils/checkpoint.py`:
+- Non-reentrant forward runs under `_checkpoint_hook` (a `saved_tensors_hooks`, grad
+  ENABLED): each saved tensor → appended to `weak_holders[i]` + `x_metadatas[i]`
+  (order = graph-build order).
+- Recompute runs under `_recomputation_hook` + `torch.autograd.enable_grad()`: each
+  saved tensor → mapped to `weak_holders[recomp_counter]` in RECOMPUTE graph-build
+  order, stored in `recomputed[gid]`.
+- `_CheckpointFrame.check_recomputed_tensors_match` compares `x_metadatas[i]` vs the
+  i-th recomputed tensor **position-by-position**. So the i-th save in the forward MUST
+  be the same tensor as the i-th save in the recompute. A 2-swap in one op breaks it.
+
+### What was tried (so you don't repeat it)
+- **Bare `cnormalize_vec` div under `ckpt.checkpoint` in a standalone script
+  (`dbg_ckpt_minrep.py`) did NOT crash** — but that script ran the checkpoint OUTSIDE a
+  real grad context (block input had no `grad_fn`) and its recompute-capture was broken
+  (`rec=[]`). So it is NOT a valid repro and its "fix candidates all pass" is
+  CONCLUSIVE-NEGATIVE (nothing). Do not trust it.
+- **Fix formulations tested on the REAL model, ONE run each (`dbg_ckpt_fixtest.py`):
+  ALL "passed"** — meaningless because of the flakiness (1-run each). Same for
+  `dbg_ckpt_fixtest2.py` (15 runs, warm process, 0 crashes across all).
+- **The earlier config-bisection** (turning off write_phase_address / delta_key_norm /
+  use_rope / fused_qkv each → "PASS") was SINGLE-RUN and is therefore UNRELIABLE.
+  `delta_key_norm=False` DOES remove the only `cnormalize_vec` call in the delta path,
+  so it is a plausible workaround (re-verify with fresh processes if you want a
+  stopgap), but the real fix keeps the feature on.
+- **A minimal standalone repro is not yet built correctly.** To repro you must run the
+  checkpoint so the block input has a non-None `grad_fn` (i.e. the input is a
+  grad-requiring node of a larger grad-enabled graph, e.g. `x = torch.randn(...); x =
+  x*1.0` under `torch.enable_grad()`), AND capture the recompute side correctly (patch
+  `_CheckpointFrame.check_recomputed_tensors_match` to read `self.recomputed`, not a
+  forward-only `saved_tensors_hooks`).
+
+### PROPOSED FIX (not yet applied) — make the norm checkpoint-safe
+Replace the bare `div` (whose 2-operand save order is context-dependent) with an
+explicit `torch.autograd.Function` that saves ONLY `mag` (a single tensor, fixed
+order — a single save cannot swap with anything):
+```python
+# v13/complex_ops.py — replace cnormalize_vec body
+class _CNormalizeVecFn(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x):
+        mag = torch.sqrt((x[..., 0].square() + x[..., 1].square()).sum(-1) + 1e-8)
+        out = x / mag.unsqueeze(-1).unsqueeze(-1)
+        ctx.save_for_backward(mag)          # single tensor — no 2-operand swap possible
+        return out
+    @staticmethod
+    def backward(ctx, g):
+        (mag,) = ctx.saved_tensors
+        # d(out)/d(x) = 1/mag ; mag is derived (no independent grad path) -> only return gx
+        return g / mag.unsqueeze(-1).unsqueeze(-1)
+
+def cnormalize_vec(x):
+    return _CNormalizeVecFn.apply(x)
+```
+Math is unchanged (same `out`, same `dL/dx`). Caveat: `cnormalize_vec` is currently
+`@torch.jit.script`; an `autograd.Function` is NOT scriptable. The call site
+(`v13/model.py:391`, inside `V13PAMLayer._project`) is NOT itself scripted, so dropping
+the decorator is very likely safe — but GREP all uses of `cnormalize_vec` first and
+confirm nothing `torch.jit.script`/`torch.jit.trace`s a path through it. If scripting IS
+required, the alternative is to keep a scripted eager body but route the div through a
+formulation whose backward saves a fixed-order tensor set (test empirically, see below).
+
+### VERIFICATION PROTOCOL (do this, in order)
+1. **Repro the crash first** (prove the bug is live before you "fix" it):
+   `.venv/bin/python -m v13.tmp.dbg_ckpt_probe3 1` — run it in ~10 FRESH processes and
+   confirm it crashes (expect ~1 in 5, reliably on cold process). Record crash count.
+2. **Apply the fix** to `v13/complex_ops.py`.
+3. **Re-run the same fresh-process loop**: crash count must go to 0 (run ≥30 fresh
+   processes to be confident given 1/5 baseline).
+4. **Per-layer gradient check** (the user's secondary question — "did only the last two
+   layers get gradient?"). Once backward no longer crashes, run
+   `.venv/bin/python -m v13.tmp.dbg_ckpt_probe2 4` (or add a quick loop over
+   `m.blocks[i].parameters()` printing `p.grad.norm()` per block). If blocks 0..N-2 now
+   all have non-zero grad, the "only last two layers" observation was the d0abeed
+   detach regression (already removed — see `_ckpt_block` docstring model.py:1566-1573)
+   or predates it. Report the per-block norms.
+5. **Scale check**: one real training step of the production config
+   (preset `v13_e3_k3_selective` or the 500M recall config) at real batch/seq with
+   `gradient_checkpointing=True` → no `CheckpointError`.
+6. **Clean up** `v13/tmp/dbg_ckpt_*.py` probes once the fix is verified (do NOT delete
+   before step 5 passes). Record the fix rationale in a dated comment in
+   `complex_ops.py`/`model.py` (match the existing date-stamped "why" note style).
+
+### HARD CONSTRAINTS (do not violate)
+- **Keep non-reentrant gradient checkpointing ON.** `--no_grad_ckpt` OOMs at scale.
+- **NEVER detach the checkpointed block input** in `V13LM._ckpt_block` (model.py:1565-
+  1576). Commit d0abeed detached it as a "determinism_check workaround" and that
+  SILENTLY FROZE every block except the last on the main loss — the docstring records
+  this; it is the leading explanation for the user's "only last two layers got
+  gradient" observation. Do not re-introduce any detach/skip.
+- Keep `delta_key_norm=True` (required for delta-rule stability; the 2026-08-23
+  eigenvalue fix depends on unit-norm keys). The fix must keep this feature on.
+- No new dependencies; venv python3.9 at `.venv/`; torch has `torch.utils.checkpoint`.
+- After a verified fix: git commit (what+why+verification) per the repo commit rule.
+
+### Probe files (all in `v13/tmp/`, run with `.venv/bin/python -m v13.tmp.<name>`)
+- `dbg_ckpt_probe3.py [n_layers] [window]` — **THE repro + aligned saved-vs-recomputed
+  window with value checksums.** Patches `ckpt._allowed_determinism_checks_to_fns['default']`
+  (MUST patch the dict entry, not a name) + `ckpt._CheckpointFrame.check_recomputed_tensors_match`.
+  Prints the mismatch window (shapes + cksums + rg/ge/ie). Run in a fresh process.
+- `dbg_ckpt_flaky.py [n]` — runs original + bisection toggles n×, reports crash counts
+  (proves the flakiness).
+- `dbg_ckpt_probe2.py` — per-block grad-norm probe (for step 4 above).
+- `dbg_ckpt_bisect.py`, `dbg_ckpt_trace.py`, `dbg_ckpt_minrep.py`, `dbg_ckpt_fixtest.py`,
+  `dbg_ckpt_fixtest2.py`, `dbg_ckpt_stream.py`, `dbg_ckpt_mismatch.py`, `dbg_ckpt_isolate.py`
+  — earlier explorations. NOTE: `dbg_ckpt_stream.py`'s `first_diff_at` numbers are
+  UNRELIABLE (it skips GC'd weak-holders, shifting indices; 551 fwd vs 535 rec). Use
+  probe3 for the trusted positional view.
+
+### Tiny repro config (for any probe)
+```python
+V13Config(vocab_size=50257, dim=64, n_heads=2, head_dim=32, n_layers=1, expand=2,
+    dropout=0.0, max_seq_len=256, chunk_size=64, gradient_checkpointing=True,
+    n_states=3, state_dt_spread=2.0, write_mode='delta', delta_chunk=32,
+    delta_erase_gate=True, gate_content_aware=True, vault_state=True,
+    vault_state_idx=0, write_phase_address=True, fused_e3=True,
+    gate_surprisal_lambda=0.1, delta_key_norm=True, delta_erase_beta_cap=0.95)
+m = V13LM(cfg).cuda(); m.train()
+ids, lab = torch.randint(0,50257,(2,128),device='cuda'), torch.randint(0,50257,(2,128),device='cuda')
+lm,_,_ = m._hidden_to_lm(ids); loss = m.ce_from_lm(lm, lab, chunk=4096); loss.backward()
+```
+
+
 **Mission (user, 2026-08-22):** Make V13 (100.5M-param selective-PAM: complex
 embeddings, K=3 phase-addressed SSM states, delta-write + vault, GSP protect
 gate) mature, better, faster. Beat v11-best quality at matched tokens on
