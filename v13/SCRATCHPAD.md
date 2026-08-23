@@ -4,6 +4,14 @@
 embeddings, K=3 phase-addressed SSM states, delta-write + vault, GSP protect
 gate) mature, better, faster. Beat v11-best quality at matched tokens on
 **500M real tokens**, speed-first, O(1) inference (no KV cache). User is away
+**MISSION BAR (user clarified 2026-08-23):** NOT apples-to-apples same-dataset.
+V13 is trained on RICH REAL data (DCLM 48 + FineWeb 48 + smoltalk2_mid 4, 500M
+tokens) and must land WikiText-103 val PPL **< 25.77** (V11 E3 K=3, WikiText-only
+base, the README current-best) — ideally much lower, toward/below the transformer
+anchor 22.69. Also: better reasoning/maths, keep O(1) novel, ~21K tok/s, keep the
+ablation loop (protect_gate_bias, gate-surprisal λ, key-norm/erase-cap A/Bs),
+commit every verified change. The 50M/100M "verdicts" vs the r1 TRAIN-loss curve
+are secondary; the primary bar is the WikiText val PPL number after 500M.
 **WAKE PROTOCOL (CRITICAL — every time I wake, do ALL of these):**
 1. Read this file (v13/SCRATCHPAD.md) fully.
 2. Check `tmux ls`, running procs (`pgrep -af "v1[13].train"`), GPU, and the
@@ -118,14 +126,24 @@ tok, kill it and iterate. Novelty: NOT transformer/Mamba re-skin.
   step 488 (20M, val 6.26), ZERO asserts, ZERO safety-net events (cap alone
   fixed it). 500M relaunched FRESH 02:36 (tmux v13_500m, ckpt dir wiped);
   watchdog armed at 100M.
-- [IN PROGRESS] Watching relaunched 500M. VERDICTS at matched tokens (r1):
-  7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M. Kill if >0.7 NLL above.
-  NOTE open quality issue: pre-fix V13 already learned ~2.5x slower than r1
-  (50M verdict +0.78, at the kill line); key-norm+cap adds a small cost
-  (+0.03-0.08 in diag A/A). If the fixed run sits above the kill line, that's
-  the next battle (suspects: protect_gate_bias -3.0 over-protects; gate-surprisal
-  aux λ0.1; key-norm readout dynamic-range loss → fallback: normalize keys ONLY
-  in the erase/mass term, keep raw readout keys).
+- [50M VERDICT (FIXED RUN) 2026-08-23 ~07:1x] Matched gap vs r1: 2M +0.01,
+  10M +0.15, 20M +0.24, **50M +0.83** (V13 5.58 vs r1 4.81) — PAST the 0.7 line.
+  BUT the descent-rate view: V13 per-10M rate 40-50M = -0.117, r1 50-100M =
+  -0.090 → V13 is NOT decelerating below r1 at 50M (the 20M->50M gap expansion
+  is mostly r1's fast 20-50M phase, -0.353/10M, vs V13 -0.20). Projected V13
+  @100M: +0.30..+0.92 (gap may plateau/shrink OR keep expanding — 50M gap
+  alone can't tell). DECISION (kill&iterate policy): DO NOT reflex-kill at
+  borderline +0.83 when 100M is ~34min away and is the pre-set decision point.
+  Run to 100M (r1 4.36): KILL if gap >0.9, CONTINUE to 500M if gap <=0.9
+  (then quality probes). Watchdog re-armed at 100M. Health: 0 asserts, 0
+  gate-aux events at 57M — the erase-cap fix is holding.
+- [open quality issue — the next battle IF 100M gap >0.9] pre-fix V13 already
+  learned ~2.5x slower than r1 (old 50M verdict +0.78); key-norm+cap add a
+  small cost (+0.03-0.08 in diag A/A). Suspects in order: (a) key-norm readout
+  dynamic-range loss (v6 Bug-8 lens) → try `delta_key_norm=False` + erase-cap
+  only (cap alone may be enough for stability), or normalize keys ONLY in the
+  erase/mass term + raw readout keys; (b) protect_gate_bias -3.0 over-protects
+  → -2.0; (c) gate-surprisal aux λ0.1 → 0.05. A/B each in diag first (fast).
 - [stopped] `100m_realdat_500m_fresh` @ step 3175/117M — trained under the
   fused_ce bug (head untrained) AND warmup 2000. Do NOT resume.
 - [stopped] `diag_additive` @ ~39.7M — same bug; ignore its curve.
