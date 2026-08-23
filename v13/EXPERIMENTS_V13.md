@@ -6,9 +6,16 @@ Lab notebook for V13: defaults make Stage-6 recall levers the production path.
 
 **Goal:** 100M-class V13 (`v13_e3_k3_selective`, 100.6M, dim384×16L, K=3 selective PAM)
 training "like a transformer — minutes not hours". Before: **2.3K tok/s** (B10).
-After: **~21K tok/s** (B16) — a 9× speedup. All changes are math-exact
-(equivalence tests bit-exact or ≤1e-7); the gate system is **kept, not removed** —
-only its training cost was fixed.
+
+**⚠️ 2026-08-23 RETRACTION:** the **~21K tok/s (B16)** / "9× speedup" figure was
+measured with `V13LM._ckpt_block` detaching the block input (commit d0abeed).
+That skipped backward through 15 of 16 layers. Honest eager baseline after
+the grad-flow fix (`baaf5b3`, all 16 blocks learn): **4,101 tok/s** at
+B16/C128 (13.9GB) and **5,027 tok/s** at B8/C128. Per-block
+`torch.compile` inside the checkpoint measured **6,459 tok/s** at B8
+(loss identical to 1e-6). See "Grad-flow fix" below. The fused-delta /
+gate-stash / NLL-byproduct changes below are still real and still math-exact;
+they just were never the source of a 9× wall-clock win on a correct backward.
 
 ### What was broken → what we changed (for other LLMs reading this)
 
@@ -31,6 +38,9 @@ only its training cost was fixed.
   @B8 → stash-in-ckpt recompute **364ms → 4.2ms** after the fix.
 - `v13/tmp/bench3_trainer_path.py` — trainer path, B16/T2048/gate-ON:
   **B16 20,935 tok/s @14.2GB | B20 20,388 @17.6GB | B24 19,956 @20.9GB** → picked **B16**.
+  **RETRACTED 2026-08-23:** those numbers include the `_ckpt_block` detach
+  (15/16 blocks skipped backward). Honest post-fix numbers are in
+  "Grad-flow fix" below.
 
 ### 500M NaN crash — root cause + robust fix (2026-08-23, commits 04dcebd + 03c3ede)
 
@@ -175,5 +185,54 @@ _(Append rows after each completed run.)_
 - **Verdict:** the E2b stability hypothesis is confirmed (no NaN, O(1) flat recall), but the *capability* goal (beat transformer at recall/reasoning) is NOT met at 11M/50M — both models are under-trained on the synthetic task distribution and neither shows a real memory advantage yet. The gate did learn slight selectivity (Δ +0.033) but it isn't enough to lift recall above chance.
 - **Next (per user):** (1) train a real LLM on wikitext/DCLM/FineWeb with a small synthetic blend to keep the memory mechanism alive; (2) revisit the recall probe — at 11M params the model may be too small to beat a transformer at 8-way contrastive even with perfect O(1) memory, so consider a larger matched model (50-100M) for the definitive claim.
 - **Throughput (RTX 4090 24GB, v13_micro_10m_recall, seq_len=2048):** 50M run's ~3.4K tok/s was the B=8 + `delta_chunk=32` default. Two **math-neutral** knobs (loss identical to 4 decimals): `delta_chunk 32→64` = 1.77× (fewer sequential UT chunk steps — 64 is the model.py default; the recall preset had lowered it to 32), `batch 8→16` = 1.9×. Best config: `--batch_size 16 --delta_chunk 64 --no_grad_ckpt --fused_ce` → **~11.6K tok/s** (3.4× the 50M run), 21.2GB; `--compile`/`--amp_dtype bf16` add ~3% each but B=24 OOMs. Re-derive the ceiling per GPU: max B that fits ~21GB at delta_chunk=64. Triton custom kernels remain a dead end for training (fight `torch.compile`; see V7/V11 — Flash-PAM was negative).
-- **Grad-ckpt bug (FIXED, v13/model.py `_ckpt_block`):** block input `z` is a non-leaf (from embedding); torch's checkpoint sees non-leaf in the original forward but a *detached leaf* on recompute → autograd saves a different tensor sequence in the two passes → torch 2.8 `determinism_check` fails (`[B,H,T,1]`↔`[B,H,T,32]` swap; only reproduced with vault+delta+phase on). Fix: `z_leaf = z_in.detach().requires_grad_(True)` inside the checkpointed fn so both passes build identical graphs. Verified: 2-layer model, loss + all 69 param grads match no-ckpt to 5e-7; 100M now trains under ckpt (previously OOM'd or crashed).
+- **Grad-ckpt detach (RETRACTED, was the 2026-08-22 "fix"):**
+  `z_leaf = z_in.detach().requires_grad_(True)` inside `_ckpt_block` did stop
+  the determinism_check crash, but it **silently froze every block except the
+  last** on the main loss (non-reentrant checkpoint needs the input edge).
+  Removed in `cbd35d4`. The crash's real cause was TorchScript on
+  `cnormalize_vec` (see Grad-flow fix). NEVER re-introduce a detach.
+
+### Grad-flow fix (2026-08-23, commit baaf5b3)
+
+**Symptom:** with the detach removed, `loss.backward()` raised
+`CheckpointError` (saved `[B,H,T,1,1]` vs recomputed `[B,H,T,d,2]` at the
+`cnormalize_vec` div). Production 500M cannot run without checkpointing
+(`--no_grad_ckpt` OOMs).
+
+**Cause:** `@torch.jit.script` on `cnormalize_vec`. TorchScript's profiling
+executor swaps the two `div` operands between the checkpoint forward and the
+recompute. Deterministic on a cold process (15/15 crashes); a warm JIT
+process hides it (the "flaky 1-in-5" note was wrong). `PYTORCH_JIT=0` → 0
+crashes; unscripting only this one fn → 0 crashes.
+
+**Rejected "fix":** an `autograd.Function` that returns `g/mag` (19% relative
+error vs the true Jacobian `(I − x̂x̂ᵀ)/‖x‖`). Would have corrupted key grads.
+
+**Applied fix:** drop `@torch.jit.script`, keep the eager body. Autograd
+computes the exact Jacobian; graph-build order is identical across passes.
+
+**Verified:** `dbg_ckpt_probe3` 0/30 fresh-process crashes; production
+`v13_e3_k3_selective` 16/16 blocks ~6.4e-3 grad, 0 params without grad;
+`v13/selftest` ALL PASS including `[grad_ckpt equiv]` (dloss=0, worst_rel=0).
+
+**Honest speed (4090, T=2048, all 16 blocks learning):**
+
+| config | tok/s | peak |
+|---|---|---|
+| B16 C128 eager | 4,101 | 13.9 GB |
+| B8 C128 eager | 5,027 | 7.8 GB |
+| B8 C256 eager | 5,085 | 9.5 GB |
+| B8 C128 compile-block | 6,459 | 7.4 GB |
+
+`--compile_blocks` compiles each `V13Block.forward` *inside* the checkpoint
+(vs `--compile`, which wraps `_hidden_to_lm` and cannot fuse a block).
+`--delta_decay_factored` (default OFF) is a K-independent rewrite of the
+chunk solve; `[delta_factored]` matches to 1e-8 / 1e-10. Enable only after
+a bench shows a tok/s win. Trainer logs `[block-grad step1]` after the
+first backward so a frozen-layer regression cannot hide again.
+
+**500M relaunch:** not started in this session (handoff). Wipe
+`checkpoints_v13/500m_v13_r1recipe` and launch via
+`v13/tmp/launch_v13_500m_r1recipe.sh --compile_blocks --batch_size 8 --delta_chunk 128`.
+All prior V13 train-loss verdicts are void (1-of-16-blocks training).
 - **Throughput — 100M-class (v13_e3_k3_selective, dim384×16L, 4090 24GB):** needs grad-ckpt (B8 no-ckpt OOMs by 2MiB). Steady: **B10 ≈ 2.3K tok/s** (19.8GB); B8 ≈ 2.0K; B12 OOMs on step-2 recompute peak. 11M stays faster per token: **B16 ≈ 11.6K tok/s** (21.2GB). Rule of thumb on 24GB: 11M→B16 no-ckpt; 100M→B10 grad-ckpt.
