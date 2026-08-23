@@ -172,6 +172,23 @@ writes decay; routing not content-aware, phase init zero."
     It is winning on the *delta write* + CGU, not on selectivity. The recall
     levers (raw-key readout, data slice, gate prior) are the right next-run
     changes; none are indicated by the CE curve, which is on-track.
+- **247M re-dissection (step 15000, 2026-08-24 03:38):**
+  - **Wiki PPL 166.75** (82M 325.76 → 164M 211.66 → 247M 166.75 — steady
+    improvement, on trajectory).
+  - **Protect gate: still flat.** Bias −2.68…−2.84, mean protect prob
+    0.055–0.065 — unchanged from 82M/164M. The λ0.1 aux has NOT turned on
+    selectivity across 165M of training.
+  - **Phase: still undifferentiated.** `phase_proj` wnorm 0.71–1.14 (slow
+    growth), bnorm 0.003–0.009 → phases still ≈0.
+  - **`write_phase_proj`: still dormant.** wnorm 0.07–0.19, bnorm ~1e-4–4e-3.
+  - **βw ≈ 0.50, βe ≈ 0.50** (unchanged since 82M).
+  - **Conclusion (stable across 82/164/247M):** the selective machinery
+    (protect/phase/write-phase) does not differentiate on the pure
+    web/chat mix. It is not breaking the CE curve (on-track vs r1), it just
+    isn't learning. This is direct evidence for the data-slice lever
+    (claim 1): the selectivity/phase levers have no "store now, answer later"
+    gradient in 48/48/4. The 500M finish will confirm whether anything turns
+    on late, but the next run should carry the recall slice.
 - **generate() @82M ckpt** (120 tok, T=0.8): coherent English, **no
   repetition loop**, but factually garbled (Cambridge → "FAA / Royal Society
   for Human Services"). Healthy 82M behavior; not a quality verdict.
