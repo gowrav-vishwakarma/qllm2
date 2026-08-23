@@ -38,17 +38,20 @@ Preset: `v13_e3_k3_selective` (~100.6M). v11 additive twin: `v11_e3_k3_chat`.
 - After step 1 of any train run the log MUST contain
   `[block-grad step1] L0=... L15=... all-nonzero`. `DEAD=` → KILL immediately.
 
-## STATUS (2026-08-23 ~13:35)
+## STATUS (2026-08-23 ~22:55)
 Grads under checkpointing are **fixed** (`baaf5b3`). The 02:28→09:20 "500M
 complete" run was the **buggy-code** run (20,684 tok/s avg = retracted detach
 figure; floor ~4.65, Wiki 368.69) — VOID, user-confirmed, dir wiped.
 
 **500M IS RUNNING** (relaunched 13:26, tmux `v13_500m`, fixed code, EAGER
-B8/C128): `[block-grad step1]` L0..L15 ≈2.3e-3..5.8e-3 all-nonzero ✓;
-steady **~4,850 tok/s @ 8.1GB**; **20M verdict PASSED ~14:40: 5.46** (kill
-was >6.6; r1 interp ~6.1 → ~0.6 below r1). Curve: 10.36@0.84M, 5.89@9.8M,
-5.15@26M. Watchdog armed at 100M (verdict chain alive).
-ETA at ~4.85K: ~29h total to 500M (~27h remaining @30M).
+B8/C128): steady **~4,800 tok/s @ 8.7GB**; **20M verdict PASSED 5.46**
+(kill >6.6), **100M verdict PASSED 4.36 vs r1 4.36 (gap 0.0)**; at 165M.
+Probes (164M ckpt): **Wiki PPL 211.66** (was 325.76 @82M — on trajectory to
+<25.77); selective stack still near-init (protect flat ~0.06, phase ~0,
+write-phase dormant); **erase learned ON early** (βe −3.0-init → +0.01,
+βe≈0.5). Full record: `v13/r_and_d.md`.
+Watchdog armed at 200M (r1 ref 3.97).
+ETA at ~4.8K: ~29h total to 500M (~5.5h remaining @165M).
 
 **`--compile_blocks` CRASHES at first step** (2026-08-23): Inductor
 meta-kernel bug — `assert_size_stride` on `torch.ops.aten.complex.default`
@@ -61,7 +64,7 @@ tok/s (13.9GB); B8/C128 eager 5,027; B8/C256 5,085; compile-block 6,459
 
 ## NEXT
 1. **500M is running** (this session). Watchdog chain: on every wake re-arm
-   `bash v13/tmp/watchdog.sh logs/v13/500m_v13_r1recipe/v11_v13_e3_k3_selective_lm_pretrain_mix.log 100000000 2940`
+   `bash v13/tmp/watchdog.sh logs/v13/500m_v13_r1recipe/v11_v13_e3_k3_selective_lm_pretrain_mix.log 200000000 2940`
    (async + timeout 3300). Launch cmd for any relaunch:
    ```
    rm -rf checkpoints_v13/500m_v13_r1recipe
@@ -71,10 +74,13 @@ tok/s (13.9GB); B8/C128 eager 5,027; B8/C256 5,085; compile-block 6,459
       2>&1 | tee -a logs/v13/500m_v13_r1recipe/tmux_console.log'
    ```
    (NO `--compile_blocks` — inductor complex-buffer crash.)
-2. If train loss stays ≤0.7 NLL above r1 at matched tokens: run to 500M.
-   Wiki probe at 50M/100M:
-   `.venv/bin/python -m v13.eval_checkpoints --checkpoints checkpoints_v13/500m_v13_r1recipe/latest.pt --labels wiki`
-   plus a short `generate()` for repetition.
+2. Run to 500M. Probe battery on each saved ckpt (step 10000 ≈164M done:
+   Wiki 211.66; step 15000 ≈247M; step 20000 ≈330M; step 25000 ≈413M;
+   step 31250 ≈500M): Wiki PPL
+   `.venv/bin/python -m v13.eval_checkpoints --checkpoints checkpoints_v13/500m_v13_r1recipe/latest.pt --labels wiki --batch_size 2`
+   plus the weight dissection (protect gate, phase_proj, write_phase_proj,
+   erase/write betas — see `v13/r_and_d.md`) + a short `generate()` for
+   repetition. Final verdict: Wiki PPL < 25.77 (r1).
 3. If gap >0.7 (quality, not a crash): A/B in order — (a) key-norm only on
    the erase/mass term, raw readout keys; (b) `protect_gate_bias` -3.0 → -2.0;
    (c) gate-surprisal λ 0.1 → 0.05. Diag first, then relaunch.
