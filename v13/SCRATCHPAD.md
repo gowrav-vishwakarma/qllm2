@@ -1,393 +1,159 @@
 # V13 SCRATCHPAD — read this FIRST after any context summary
 
-## ⚠️ ACTIVE TASK (2026-08-23 evening) — HANDOFF: relaunch 500M with REAL grads
-**Status: checkpoint/JIT crash FIXED and committed (`baaf5b3`). Do NOT re-open
-that battle. Your job is: optional speed A/B, then launch 500M in tmux +
-watchdog. User asked the previous session to stop before the launch.**
+Long lab notes live in [v13/EXPERIMENTS_V13.md](EXPERIMENTS_V13.md). This file
+steers the next session. Do not bury the mission under a battle log.
 
-### What was wrong (two stacked bugs — both now fixed)
-1. **Commit d0abeed** detached the checkpointed block input in `_ckpt_block`
-   (`z_leaf = z_in.detach().requires_grad_(True)`). Non-reentrant checkpoint
-   needs that input edge to send dL/dz to the previous block. Detaching it
-   **silently froze every block except the last** on the main loss. Removed in
-   `cbd35d4` (working-tree docstring + no-detach). NEVER re-introduce a detach.
-2. **`@torch.jit.script` on `cnormalize_vec`** (the 500M NaN key-norm fix).
-   TorchScript's profiling executor rebuilds the differentiable graph after
-   the first call and **swaps the two operands `div` saves for backward**.
-   Checkpoint forward saved `(denom=[B,H,T,1,1], numer=[B,H,T,d,2])`; recompute
-   saved the reverse → `CheckpointError`. This is deterministic on a *cold*
-   process (15/15 crashes), not "flaky 1-in-5" — a warm JIT process hides it.
-   Confirmed: `PYTORCH_JIT=0` → 0/8 crashes; unscripting only `cnormalize_vec`
-   → 0/5; unscripting `cmul`/`cabs`/`to_real_concat` alone still 5/5.
+## MISSION
+Build a **novel** language model: selective PAM (complex embeddings, K=3
+phase-addressed SSM states, delta-write + vault, GSP protect gate). **Not** a
+Transformer or Mamba reskin.
 
-### What was NOT the fix (do not apply)
-The earlier scratchpad proposed an `autograd.Function` whose backward is
-`g/mag`. That **drops the gradient through mag**. True Jacobian of `x/‖x‖` is
-`(I − x̂x̂ᵀ)/‖x‖`. Measured error of `g/mag`: **1.888e-01 relative**. Applying
-it would silently corrupt key grads (same class as the fused_ce `grad_weight`
-bug). The real fix is: drop `@torch.jit.script`, keep the eager body, let
-Autograd compute the exact Jacobian.
+- **Inference (non-negotiable):** O(1) per token. Recurrent state, no KV cache.
+  `v13/selftest` gates parallel-train form ≡ recurrent-infer form.
+- **Quality (primary, now):** train on 500M rich real tokens (DCLM 48 + FineWeb
+  48 + smoltalk2_mid 4) and land WikiText-103 val PPL **< 25.77** (V11 E3 K=3
+  WikiText-only, README current-best) — ideally toward/below the transformer
+  anchor **22.69**. Also: better reasoning/maths than that V11.
+- **Train-loss vs v11 round-1** is a kill-canary, not the prize.
+- **Training speed (secondary):** honest 4090 number with *real* grads is
+  ~4–6.5K tok/s. Slow is acceptable until quality is a real number. Do not
+  chase a fake 21K by skipping backward. Speed ideas are parked below.
 
-### 21K tok/s is INVALID
-That number was measured **with the detach in place** — 15 of 16 blocks never
-ran backward. Honest eager baseline after the grad-flow fix (4090, torch 2.8,
-`v13_e3_k3_selective`, T=2048, `bench3_trainer_path.py`):
+Preset: `v13_e3_k3_selective` (~100.6M). v11 additive twin: `v11_e3_k3_chat`.
 
-| config | tok/s | peak |
-|---|---|---|
-| B16 C128 eager | **4,101** | 13.9 GB |
-| B8  C128 eager | 5,027 | 7.8 GB |
-| B8  C256 eager | 5,085 | 9.5 GB |
-| B8  C64  eager | 3,285 | 7.1 GB |
-| B16 C64  eager | 2,830 | 13.4 GB |
-| B24 C64  eager | 2,671 | 20.2 GB |
-| B8  C128 compile-block (pre-commit probe) | **6,459** | 7.4 GB |
+## NON-NEGOTIABLES
+- Keep non-reentrant gradient checkpointing ON. `--no_grad_ckpt` OOMs at
+  B18/T2048 bf16 on the 4090.
+- **NEVER detach** the checkpointed block input in `V13LM._ckpt_block`.
+  Commit d0abeed did that as a "determinism_check workaround" and silently
+  froze every block except the last. Removed in `cbd35d4`.
+- Keep `delta_key_norm=True` and `delta_erase_beta_cap=0.95` (NaN / eigenvalue
+  fixes). Do not replace `cnormalize_vec` with a `g/mag` autograd.Function
+  (19% key-grad error).
+- Long training ONLY in tmux + watchdog. Re-arm on every wake
+  (`timeout 3300` is mandatory; default 300s kills the chain).
+- Do not touch the dirty hunk in `v13/train.py` (~`skip_docs_map.setdefault`).
+- After every verified change in `v11/` `v13/` `v7/` `scripts/`: git commit
+  (what + why + evidence). `v13/tmp/` throwaways do not need commits.
+- After step 1 of any train run the log MUST contain
+  `[block-grad step1] L0=... L15=... all-nonzero`. `DEAD=` → KILL immediately.
 
-Larger batch is *worse* per token (C×C matrices spill L2). Backward is ~8×
-forward (elementwise/launch-bound: copy_/mul/fill dominate, not the solve).
+## STATUS (2026-08-23 evening)
+Grads under checkpointing are **fixed** (`baaf5b3`): unscripted
+`cnormalize_vec` (TorchScript profiling executor had swapped the `div`
+operands between ckpt forward and recompute). `v13/selftest` ALL PASS
+including `[grad_ckpt equiv]`; `dbg_ckpt_probe3` 0/30 fresh-process crashes;
+production preset 16/16 blocks ~6.4e-3 grad.
 
-### Code landed in `baaf5b3` (do not re-implement)
-- `v13/complex_ops.py`: `cnormalize_vec` unscripted + dated why-comment.
-- `v13/selftest.py`: `test_grad_ckpt_equiv` (ckpt vs no-ckpt, per-block
-  norms) + `test_delta_decay_factored_equiv` (incl. fast-decay stress).
-- `v13/model.py`: `V13LM.compile_blocks()` used by `_ckpt_block`;
-  `@torch.compiler.disable` removed from `_complex_triangular_solve`;
-  `delta_decay_factored` (default **OFF**) + min_a fallback.
-- `v13/train.py`: `--compile_blocks`, `--delta_decay_factored`.
-- `v7/train.py`: one-shot `[block-grad step1]` dump after the first backward.
-- `v13/triton_kernels.py`: aten `fused_decay_matrix` under `is_compiling()`.
+**500M is not running.** GPU should be free. Wipe
+`checkpoints_v13/500m_v13_r1recipe` before launch — every prior V13 train-loss
+curve and 50M/100M "verdict" is **VOID** (those runs trained 1 of 16 blocks
+and/or had fused_ce `grad_weight=0`).
 
-Verified: `v13/selftest` ALL PASS; `dbg_ckpt_probe3` **0/30** fresh crashes;
-production preset 16/16 blocks ~6.4e-3, 0 params without grad.
+Honest speed (4090, T=2048, all 16 blocks learning): B16/C128 eager **4,101**
+tok/s (13.9GB); B8/C128 eager 5,027; B8/C256 5,085; B8/C128 compile-block
+probe **6,459**. 500M wall-clock ~21h @ 6.5K / ~34h @ 4.1K — acceptable.
 
-### YOUR JOB — relaunch 500M
-Every prior V13 loss curve (including the +0.83 @ 50M verdict) was produced
-with 15/16 blocks frozen. **All previous verdicts are void.** Restart from
-scratch (wipe the ckpt dir). Keep `delta_key_norm=True` +
-`delta_erase_beta_cap=0.95` (NaN fixes; independent of this work).
+## NEXT
+1. **Launch fresh 500M** (this is the job). Confirm `[block-grad step1]` then
+   arm the watchdog at 100M.
+   ```
+   rm -rf checkpoints_v13/500m_v13_r1recipe
+   mkdir -p logs/v13/500m_v13_r1recipe
+   tmux new-session -d -s v13_500m \
+     'bash v13/tmp/launch_v13_500m_r1recipe.sh --compile_blocks --batch_size 8 --delta_chunk 128 \
+      2>&1 | tee -a logs/v13/500m_v13_r1recipe/tmux_console.log'
+   bash v13/tmp/watchdog.sh logs/v13/500m_v13_r1recipe/v13_v13_e3_k3_selective_lm_pretrain_mix.log 100000000 2940
+   ```
+   Launcher already has the r1 recipe (warmup 500, lr 3e-4, 48/48/4, edu3,
+   sample-10BT, blend 1e9, seed 42, fused_ce). Extra flags go through `"$@"`.
+   Optional 20-min bench of `--compile_blocks` / `--delta_decay_factored` only
+   if the GPU is free and you want a number; otherwise launch.
+2. If train loss stays ≤0.7 NLL above r1 at matched tokens: run to 500M.
+   Wiki probe at 50M/100M:
+   `.venv/bin/python -m v13.eval_checkpoints --checkpoints checkpoints_v13/500m_v13_r1recipe/latest.pt --labels wiki`
+   plus a short `generate()` for repetition.
+3. If gap >0.7 (quality, not a crash): A/B in order — (a) key-norm only on
+   the erase/mass term, raw readout keys; (b) `protect_gate_bias` -3.0 → -2.0;
+   (c) gate-surprisal λ 0.1 → 0.05. Diag first, then relaunch.
+4. After V13 finishes: v11 PAM 500M head-to-head, same GPU, sequential.
+5. Speed work: only after 500M is healthy, or if the run is unusable at 4K.
+   See SPEED (LATER). Do not start it instead of launching.
 
-**Suggested first launch** (safe, factored OFF, compile_blocks ON):
-```
-# wipe old frozen-layer run
-rm -rf checkpoints_v13/500m_v13_r1recipe
-mkdir -p logs/v13/500m_v13_r1recipe
-tmux new-session -d -s v13_500m \
-  'bash v13/tmp/launch_v13_500m_r1recipe.sh --compile_blocks --batch_size 8 --delta_chunk 128 \
-   2>&1 | tee -a logs/v13/500m_v13_r1recipe/tmux_console.log'
-# then ARM THE WATCHDOG (mandatory, timeout 3300):
-bash v13/tmp/watchdog.sh logs/v13/500m_v13_r1recipe/v13_v13_e3_k3_selective_lm_pretrain_mix.log 100000000 2940
-```
-(`launch_v13_500m_r1recipe.sh` already has the r1 recipe: warmup 500, lr 3e-4,
-48/48/4, edu3, sample-10BT, blend 1e9, seed 42, fused_ce. Extra flags go
-through `"$@"`.)
+Kill if train loss is > ~0.7 NLL above r1 (e.g. >5.5 at 50M). SIGTERM is
+safe (trainer writes `latest.pt`).
 
-Optional before launch (if GPU is free and you have ~20 min):
-1. Bench `--compile_blocks` vs eager at B8/C128 and B8/C256
-   (`v13/tmp/bench3_trainer_path.py`). Confirm tok/s and no CheckpointError.
-2. If `[delta_factored]` is still green, A/B `--delta_decay_factored` on the
-   same bench. Enable it on the 500M run only if tok/s rises AND loss/grads
-   still match. Default stays OFF if you skip this.
+## SPEED (LATER)
+Do not start this track unless 500M is healthy or the GPU is idle. Profile:
+the step is **launch/elementwise bound** (`copy_`/`mul`/`fill_` dominate;
+all matmuls+solves ~14% of CUDA). A faster triangular solve will not 5× us.
+`[K,B,H,C,C]` mass/decay is why larger batch is *worse* per token.
 
-After step 1 of the trainer, the log MUST contain
-`[block-grad step1] L0=... L15=... all-nonzero`. If any `DEAD=` list appears,
-KILL immediately — do not train on a frozen stack again.
+Each idea gated on `v13/selftest` + ckpt-vs-no-ckpt grads:
 
-### HARD CONSTRAINTS
-- Keep non-reentrant gradient checkpointing ON. `--no_grad_ckpt` OOMs at scale.
-- NEVER detach the checkpointed block input in `_ckpt_block`.
-- Keep `delta_key_norm=True` and `delta_erase_beta_cap=0.95`.
-- Long training ONLY in tmux + watchdog (`timeout 3300`, re-arm on every wake).
-- Do not touch the dirty hunk in `v13/train.py` (~skip_docs_map.setdefault).
-- Kill if train loss is >0.7 NLL above r1 at matched tokens
-  (r1: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M).
+1. Already wired, lightly measured: `--compile_blocks` (~+28% at B8) and
+   `--delta_decay_factored` (K-independent system; `[delta_factored]` PASS).
+2. Selective rematerialization: checkpoint CGU/norm, **save** the chunk-solve
+   output. Today we recompute the whole block; backward is ~8× forward.
+   Most likely honest 1.5–2× with no math change.
+3. CUDA graphs / static chunk loop at fixed `(B,T,C)` — tens of thousands of
+   elementwise launches are the profiler story.
+4. Fused `mass+solve+project` so inductor (or one kernel) sees the whole
+   chunk. Do **not** reopen Flash-PAM / Triton custom autograd first; that
+   historically lost to `torch.compile` on this codebase.
+5. Out-of-box, architecture-preserving: train with the **same O(1) recurrent
+   step as inference**, parallelized by an associative scan over
+   `S ← γS + (βw v − βe k@S)kᴴ`. No C×C, no UT solve, train ≡ infer by
+   construction. Not a Mamba reskin (phase addressing + vault + GSP stay).
+   New kernel + new selftest. Only after quality is a real Wiki PPL, or if
+   4K tok/s makes 500M unusable.
+6. Never: re-detach the block input; `g/mag` backward; claiming 21K;
+   training without `[block-grad step1]`.
 
-### Probe files (historical — fix is landed; keep until 500M is healthy)
-- `dbg_ckpt_probe3.py` — the trusted cold-process repro (now 0 crashes).
-- `dbg_ckpt_probe2.py` — per-block grad-norm probe.
-- Other `dbg_ckpt_*.py` are earlier explorations; `dbg_ckpt_stream.py`
-  indices are UNRELIABLE. `v13/tmp` throwaways do not need commits.
+## ARCHIVE (settled — do not re-open)
+- v13 additive path == v11 bit-identical (`test_v11_v13_forward_ab.py`,
+  0.000e+00). Not a fork regression.
+- `fused_ce` dropped `grad_weight += ...` (65546dc). Head got zero CE grad.
+  Restored `79c7cc2`. Rel-L2 5.8e-6.
+- 500M NaN: vault δ eigenvalue `γ(1 − βe‖k‖²)` flipped past −1. Fix:
+  per-vector key-norm (`04dcebd`) + `delta_erase_beta_cap=0.95` (`03c3ede`)
+  + gate-BCE nonfinite guard. Cap alone passed the real-trainer death at
+  step 150.
+- Ckpt crash: TorchScript `cnormalize_vec` operand-swap (`baaf5b3`). Not
+  flaky. `g/mag` autograd.Function RETRACTED (19% key-grad error).
+- 21K tok/s / "9×" RETRACTED — measured with `_ckpt_block` detach.
+- Pre-`baaf5b3` 50M/100M train-loss verdicts VOID (frozen layers and/or
+  dead head). Do not use them to kill or keep a run.
+- Warmup-2000 runs and Jun-23 10B log are wrong references. Use r1 below.
+- Do not chase HF config val_ppl 6.65 — user: "we never had val ppl 6 for PAM".
 
-
-**Mission (user, 2026-08-22):** Make V13 (100.5M-param selective-PAM: complex
-embeddings, K=3 phase-addressed SSM states, delta-write + vault, GSP protect
-gate) mature, better, faster. Beat v11-best quality at matched tokens on
-**500M real tokens**, speed-first, O(1) inference (no KV cache). User is away
-**MISSION BAR (user clarified 2026-08-23):** NOT apples-to-apples same-dataset.
-V13 is trained on RICH REAL data (DCLM 48 + FineWeb 48 + smoltalk2_mid 4, 500M
-tokens) and must land WikiText-103 val PPL **< 25.77** (V11 E3 K=3, WikiText-only
-base, the README current-best) — ideally much lower, toward/below the transformer
-anchor 22.69. Also: better reasoning/maths, keep O(1) novel, ~21K tok/s, keep the
-ablation loop (protect_gate_bias, gate-surprisal λ, key-norm/erase-cap A/Bs),
-commit every verified change. The 50M/100M "verdicts" vs the r1 TRAIN-loss curve
-are secondary; the primary bar is the WikiText val PPL number after 500M.
-**WAKE PROTOCOL (CRITICAL — every time I wake, do ALL of these):**
-1. Read this file (v13/SCRATCHPAD.md) fully.
-2. Check `tmux ls`, running procs (`pgrep -af "v1[13].train"`), GPU, and the
-   active log's last steps + error count.
-3. RE-ARM THE WATCHDOG (the chain that wakes me):
-   `bash v13/tmp/watchdog.sh <active_log> <verdict_gtok> 2940` as
-   `async: true` + **timeout: 3300** (the timeout param is MANDATORY —
-   default 300s kills the job at 5min and breaks the chain; this happened).
-   The watchdog exits early on: process death / OOM / verdict gtok, and its
-   auto-delivery is what wakes me. Keep the chain alive until V13 is done.
-4. COMMIT RULE (user, 2026-08-22): after every verified code change in
-   v11/v13/v7/scripts → git commit immediately (what+why+verification).
-   Never leave good code uncommitted (see AGENTS.md).
-5. Decide the next action from STATUS + NEXT, execute it, then yield only
-   with the watchdog armed.
-~2 days. **Kill & iterate**: if a run is way off the v11-best curve at ~20-50M
-tok, kill it and iterate. Novelty: NOT transformer/Mamba re-skin.
-- [CONFIRMED, 2026-08-22] **v13 fork = v11, BIT-IDENTICAL on additive path.**
-  `v13/tmp/test_v11_v13_forward_ab.py`: same weights, same inputs → 0.000e+00
-  max-abs diff on all 16 block hiddens, final logits, AND CE loss. NLL
-  byproduct shape OK. ⇒ NO v13-fork code regression. The "3 NLL worse than
-  v11" was (1) stale Jun-23 OLD-code reference + (2) warmup-2000 recipe.
-- [CONFIRMED] round-1 (the real baseline) ran on a **75GB GPU** with
-  --no_grad_ckpt. 4090 can't fit that; ab1 uses GC-on (same math, 11.8GB).
-- [ROOT CAUSE FOUND + FIXED 2026-08-22] `v13/fused_ce.py` `_FusedLinearCE.backward`
-  allocated `grad_weight` but NEVER filled it — the v13 fork dropped the
-  `grad_weight += (softmax_probs.T @ hidden_chunk).to(grad_weight.dtype)` line
-  that `v11/fused_ce.py` has. Tied embedding/LM-head got ZERO CE gradient;
-  only the trunk learned ⇒ loss stalled ~2-3.5 NLL above r1 from step ~50.
-  Forward was correct (step-0 loss identical), so forward A/B tests all passed.
-  FIXED (line restored in v13/fused_ce.py:96). Verified:
-  `v13/tmp/test_fused_ce_grads.py` grad_weight rel-L2 5.8e-6 (was 1.0);
-  `v13/selftest` ALL PASS incl. fused_ce equiv.
-- [KILLED 2026-08-22] A/B "ab1" (v13 additive, v11-features off, round-1 EXACT
-  recipe): DIVERGED IMMEDIATELY — step 50 10.44 vs r1 10.31, step 100 10.00 vs
-  8.81, step 250 9.33 vs 6.66 at IDENTICAL lr (warmup 500) + data; step-0 loss
-  identical (10.8986). At 55M: 8.34 vs r1 ~4.8 (3.5 above). This was the
-  canary that exposed the fused_ce bug above (it used --fused_ce).
-- [CONFIRMED] fused_e3 additive path = bit-equivalent to K-loop (1e-8) — not
-  the cause.
-- [DEAD 2026-08-22 ~20:50 UTC] **V13 500M MISSION run DIED at step ~1551 /
-  57.2M tok** on a device-side CUDA assert `Loss.cu:91 'target_val >= zero &&
-  target_val <= one'` inside `F.binary_cross_entropy` in the GATE-SURPRISAL aux
-  (v7/train.py:470, fused_ce path). No `latest.pt` (save_every 5000, died at
-  1551; checkpoint dir EMPTY). GPU now free. NOT a plateau — the main loss was
-  finite 5.39 @ step 1550 and STILL DESCENDING; the crash is a sudden per-token
-  NLL spike to inf/NaN that the per-step mean masks and only the gate-BCE
-  target-assert surfaces (CE has no such assert).
-  Mechanism (root cause, 2026-08-22): the gate aux computes
-  `target_p = sigmoid(sign*(median_ce - nll)/tau).detach()`. A NaN/inf in `nll`
-  (per-token NLL byproduct) → `sigmoid(median - inf)=NaN` target → Loss.cu:91.
-  `nll` goes inf/NaN when hidden→logits overflow. v13's delta-write + VAULT
-  state (decay_gamma≡1, line 408) + qk_norm=False (unbounded keys) make the
-  parallel triangular-solve mass matrix M[t,s]=beta_e*decay[t,s]*(k_t·k_sᴴ)
-  unbounded → (I+M)⁻¹ amplifies ~T·‖k‖² → state update → hidden blowup.
-  v11 (reached 2B) has NONE of {delta, vault, phase, gate-aux} → stable.
-  Diagnostic `v13/tmp/diag_gate_nan.py` (exact 500M recipe, catches non-finite
-  in Python BEFORE the BCE kernel) replaying to the crash point in tmux `diag`;
-  log `logs/v13/500m_v13_r1recipe/diag_gate_nan.log`. Confirms WHICH quantity
-  (state vs nll_max vs gp) goes non-finite + at what step/magnitude.
-- [ROOT CAUSE CONFIRMED + FIX IMPLEMENTED 2026-08-23] Diag REPRODUCED the
-  crash: NON-FINITE at step 1711 (63.1M tok; real run died 1551/57.2M — ~160
-  step offset = dropout/GC RNG-stream difference, same mechanism). State
-  trajectory: PAM state magnitude grows ~100x UNBOUNDEDLY while params stay
-  flat (pmax~4.0) and gnorm clips fine: s20 0.35 → s150 12.6 → s300 7.5 →
-  s990 29-40 → s1711 NaN. gp finite [0.02,0.98]; nllmax elevated 15-21.
-  MECHANISM (v13 delta rule `S ← γS + (βw·v − βe·k@S)·k^H`): k-direction
-  eigenvalue = γ·(1 − βe·‖k‖²). VAULT pins γ≡1 (model.py:403-408) and
-  qk_norm=False (unbounded keys, ‖k‖² up to ~d=64) → 1−βe‖k‖² flips past
-  −1 → positive feedback → unbounded state → occasional hidden inf → NaN
-  per-token NLL → sigmoid(median−inf)=NaN BCE target → Loss.cu:91 assert.
-  v11 (reached 2B) has NONE of {delta, vault, phase, gate-aux} → never hits
-  this. **Fix: per-VECTOR unit-norm keys** (`cnormalize_vec` in
-  v13/complex_ops.py; applied in `_project` after RoPE+phase, gated on
-  `write_mode=='delta'` + new config `delta_key_norm: bool = True`) so
-  ‖k‖²=1 → eigenvalue in [1−βe,1) ⊂ (0,1): strict contraction for ANY γ in
-  [0,1], vault or not. Standard delta-net fix; preserves the delta+vault
-  novelty. NOTE: the existing `qk_norm` knob uses per-ELEMENT cnormalize
-  (‖k‖²→d=64) — NOT sufficient. Applied at the single shared `_project` so
-  fused-delta (907), loop-delta (569), K-loop (674) AND recurrent
-  (1261) all inherit it and stay equivalent. Verified: `v13/selftest` ALL
-  PASS incl. new `delta_keynorm` test (fused≡loop≡recurrent to 1e-20,
-  keys unit-norm). QUALITY RISK (v6 lens, user-flagged): key-magnitude
-  normalization removes readout dynamic range — v6 additive PAM hit
-  repetition w/ QK-norm; must verify loss tracks r1 + no repetition.
-  FALLBACK if quality degrades: normalize keys ONLY in the erase/mass term
-  (M[t,s]=βe·D·(k̂k̂ᴴ)), keep raw keys for readout.
-- [ROOT CAUSE REFINED + ROBUST FIX 2026-08-23, commit 03c3ede] The key-norm fix
-  (04dcebd) stabilized the DIAGNOSTIC (2000 steps, state bounded ~17) but the
-  REAL TRAINER died EARLIER at step ~151 (gtok 5.6M) on the same Loss.cu:91
-  assert. Key-norm makes the vault delta k-direction eigenvalue EXACTLY
-  (1 − beta_e) (‖k‖²=1, vault γ≡1): stable only while the LEARNED erase gain
-  beta_e < 2. The trainer consumes RNG differently (loads wiki_val_ds BEFORE
-  building the model → different weight init) and trained beta_e past 2 →
-  eigenvalue flips past −1 → oscillatory state blowup → NaN. The diagnostic's
-  init stayed beta_e<2 → survived. So key-norm was INIT-DEPENDENT, not robust.
-  FIX (root cause): `delta_erase_beta_cap: float = 0.95` (V13Config default ON)
-  clamps the learned erase gain in `_gate_betas` (single choke point → fused,
-  K-loop, recurrent paths) so the eigenvalue stays in [0.05, 1) for ANY init.
-  Erase strength still learned (sigmoid 0.047..0.95); only the >2 overshoot
-  removed. Complements delta_key_norm. SAFETY NET (v7/train.py, shared w/ v7):
-  _gate_surprisal_loss now drops non-finite NLL tokens from the median+mask and
-  nan_to_num's the target to [0,1] (BCE runs over the full [L,B,T] before vmask,
-  so even masked positions assert; clamp alone leaves NaN). Logs events, does NOT
-  silence the aux.
-  VERIFIED: selftest ALL PASS (new [delta_erasecap]; also fixed latent bug —
-  test_warmstart_chatml returned None → false "SOME MODES FAILED");
-  test_gate_nonfinite_guard 6/6 (a +inf/NaN NLL → finite aux + logged event,
-  no assert); REAL-TRAINER repro 20M (launch_v13_500m_r1recipe.sh
-  --token_budget 20M) — old key-norm run died at step 150 (loss 7.9623,
-  gtok 5566464); with cap the trainer PASSED that exact point and ran clean to
-  step 488 (20M, val 6.26), ZERO asserts, ZERO safety-net events (cap alone
-  fixed it). 500M relaunched FRESH 02:36 (tmux v13_500m, ckpt dir wiped);
-  watchdog armed at 100M.
-- [50M VERDICT (FIXED RUN) 2026-08-23 ~07:1x] Matched gap vs r1: 2M +0.01,
-  10M +0.15, 20M +0.24, **50M +0.83** (V13 5.58 vs r1 4.81) — PAST the 0.7 line.
-  BUT the descent-rate view: V13 per-10M rate 40-50M = -0.117, r1 50-100M =
-  -0.090 → V13 is NOT decelerating below r1 at 50M (the 20M->50M gap expansion
-  is mostly r1's fast 20-50M phase, -0.353/10M, vs V13 -0.20). Projected V13
-  @100M: +0.30..+0.92 (gap may plateau/shrink OR keep expanding — 50M gap
-  alone can't tell). DECISION (kill&iterate policy): DO NOT reflex-kill at
-  borderline +0.83 when 100M is ~34min away and is the pre-set decision point.
-  Run to 100M (r1 4.36): KILL if gap >0.9, CONTINUE to 500M if gap <=0.9
-  (then quality probes). Watchdog re-armed at 100M. Health: 0 asserts, 0
-  gate-aux events at 57M — the erase-cap fix is holding.
-- [open quality issue — the next battle IF 100M gap >0.9] pre-fix V13 already
-  learned ~2.5x slower than r1 (old 50M verdict +0.78); key-norm+cap add a
-  small cost (+0.03-0.08 in diag A/A). Suspects in order: (a) key-norm readout
-  dynamic-range loss (v6 Bug-8 lens) → try `delta_key_norm=False` + erase-cap
-  only (cap alone may be enough for stability), or normalize keys ONLY in the
-  erase/mass term + raw readout keys; (b) protect_gate_bias -3.0 over-protects
-  → -2.0; (c) gate-surprisal aux λ0.1 → 0.05. A/B each in diag first (fast).
-- [stopped] `100m_realdat_500m_fresh` @ step 3175/117M — trained under the
-  fused_ce bug (head untrained) AND warmup 2000. Do NOT resume.
-- [stopped] `diag_additive` @ ~39.7M — same bug; ignore its curve.
-- [50M VERDICT 2026-08-22 22:1x] V13 5.59 vs r1 4.81 = **+0.78** (at kill line 0.7).
-  TREND EXPANDING: gap 0.44@5M → 0.19@20M → 0.78@50M. V13 learns ~2.5x slower
-  than r1 in the full-lr phase (20M→50M: V13 6.06→5.59 Δ0.47, r1 5.87→4.81 Δ1.06).
-  Not killing yet (borderline + delta stack is the novel core); running to 100M
-  (ref 4.36) for a clearer signal + CPU micro-diagnostic to isolate the cause.
-  KILL at 100M if gap >0.9. Suspects: protect_gate_bias -3.0 (over-protects,
-  slows overwrite) and/or gate-surprisal aux λ0.1 (extra loss pressure).
-  when --fused_ce was on; check each run's launcher for that flag before
-  reusing any of their conclusions. e2b_50m / transformer_50m comparison data
-  is SUSPECT until re-verified.
-
-## THE REFERENCE (ground truth curves, B18/T2048, current-code v11)
-**round-1 (Jul 1, from scratch, NEW CODE) = the real baseline to beat:**
-`--preset v11_e3_k3_chat --stage pretrain --dataset pretrain_mix --seq_len 2048
---batch_size 18 --token_budget 2e9 --edu_score_min 3
---pretrain_sources dclm,fineweb,smoltalk2_mid --pretrain_weights 48,48,4
---fineweb_name sample-10BT --blend_warmup_tokens 1000000000 --seed 42
---lr 3e-4 --warmup_steps 500 --amp_dtype auto --num_workers 0
---gen_every 5000 --save_every_steps 5000 --no_grad_ckpt --compile`
-Log: `logs/v11/round1_pretrain_20260701_115022_cbb4dd2_dirty/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log`
+## REFERENCE
+**v11 round-1** (Jul 1, new code, 75GB, `--no_grad_ckpt --compile`):
+`--preset v11_e3_k3_chat --warmup 500 --lr 3e-4 --batch_size 18 --seq_len 2048
+48/48/4 dclm/fineweb/smoltalk2_mid edu>=3 sample-10BT blend 1e9 seed 42`
 Loss: **10.31@2M, 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M**
-- round-2 (Jul 4, weights-resume, lr 1e-4 warmup 500 B32, 2B tok): ~3.3-3.5 flat.
-- HF v11-best = "round-4b-gate" = round2-pretrain + smoltalk2 SFT (1ep, lr 5e-5).
-  config.json says val_ppl 6.65 but **user: "we never had val ppl 6 for PAM"**
-  → do NOT treat 6.65 as a target (likely chat-val artifact). Fair targets:
-  round-1 train-loss curve + WikiText-103 val PPL at matched tokens.
-- ⚠️ The **Jun-23 10B-scratch log** (used as ref earlier) is OLD code — the whole
-  tree was rewritten after Jun 23 (v7/data.py +1403, v11/model.py +1023,
-  v11/train.py +251). DO NOT compare against it anymore.
+Log: `logs/v11/round1_pretrain_20260701_115022_cbb4dd2_dirty/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log`
 
-## FINDINGS (status: CONFIRMED / SUSPECT / RETRACTED)
-- [RETRACTED-ish] "v13 is 3.1 NLL worse than v11" was vs the OLD Jun-23 ref.
-  v13-fresh was launched with **warmup 2000** (copied from old ref) while the
-  real new-code recipe is **warmup 500**. At 30-75M tok v13-fresh was still
-  lr-ramping (8e-5→3e-4) while round-1 was at full 3e-4 → most of the gap is a
-  WARMUP/RECIPE artifact, not code.
-- [CONFIRMED] Delta-write stack is NOT the regression: v13 additive-diag (v11
-  features off) was equally bad as delta-fresh at matched tokens — but that
-  diag also had warmup 2000, so it only exonerates delta RELATIVE to additive,
-  not absolute. Re-check after ab1.
-- [OPEN] Whether current v13 base code (fused K-batch delta, gate-stash
-  out-of-ckpt, NLL-byproduct gate target) is numerically equivalent to v11
-  additive path → `v13/tmp/test_v11_v13_forward_ab.py` (same weights, compare
-  logits per block). If equal → code clean; everything was recipe.
-- [OPEN] Data-pipeline drift: v7/data.py +1403 lines since Jun 23. round-1 used
-  edu_score_min 3, fineweb sample-10BT, blend_warmup_tokens 1e9 — the v13 runs
-  did NOT (defaults). ab1 uses round-1's exact flags so it's a clean A/B.
+WikiText-103 val PPL after 500M: **< 25.77** (must), **~22.69** (want).
 
-## CODE STATE
-- v13 = v11 fork. Diffed methods: `_fused_chunk_step` identical;
-  `_forward_multistate_fused` identical modulo comments; `_project`,
-  `_gamma_and_vprime`, `_routing_input`, `_phase_and_alpha`, `_dual_form_block`,
-  `ce_from_lm` (v13 adds return_nll), `_hidden_to_lm`, `_init_weights` all
-  equivalent. v13-only: `_gate_betas` (erase-gate), `_forward_multistate_delta_fused`,
-  gate-stash in `V13Block.forward`, `V13LM._collect_gate_probs` (detached,
-  outside ckpt), vault/phase config.
-- **KEEP** v13/train.py lines ~448-449 dirty hunk (synthetic-source resume
-  cursors `skip_docs_map.setdefault`) — do not touch.
-- Speed-redesign (all verified earlier): K-batched fused delta (~21K tok/s, 9x),
-  gate trunk detach, NLL-byproduct gate target in v13/fused_ce.py, fp32 CE
-  under autocast, gate stash outside gradient checkpoint. Equivalence PASS
-  (logits 1.5e-7, grads 3e-8).
-- Configs: v13 preset `v13_e3_k3_selective` (delta, K=3, vault, phase, λ0.1,
-  gate_content_aware, 100,621,792 params). v11 preset `v11_e3_k3_chat`
-  (additive, K=3, 50261 vocab, 100,546,832 params). v13 with v11-features-off
-  = 100,546,832 (shape-identical → weight copy possible for A/B).
-- v13/train.py CLI: `--write_mode {additive,delta}`, `--delta_chunk`,
-  `--gate_surprisal_lambda`, `--vault_state/--no_vault_state`,
-  `--write_phase_address/--no_write_phase_address`, `--delta_erase_gate`/off?,
-  `--warmup_steps`, `--lr`, `--batch_size`, `--seq_len`, `--token_budget`,
-  `--pretrain_sources`, `--pretrain_weights`, `--gen_every`,
-  `--save_every_steps`, `--log_interval`, `--no_grad_ckpt`?, `--compile`?,
-  `--edu_score_min`?, `--fineweb_name`?, `--blend_warmup_tokens`?, `--seed`?,
-  `--fused_ce`, `--amp_dtype auto`. (Check each exists before use.)
+## WAKE PROTOCOL (every wake, all of these)
+1. Read this file fully.
+2. `tmux ls`; `pgrep -af "v1[13].train"`; GPU; active log last steps + errors:
+   `grep -oE "\[1\] [0-9]+ loss=[0-9.]+ .*gtok=[0-9]+" <log> | tail -8`
+   `grep -icE "traceback|out of memory|nan" <log>`
+3. Re-arm watchdog (timeout 3300 is mandatory):
+   `bash v13/tmp/watchdog.sh <active_log> <verdict_gtok> 2940`
+   as `async: true` + **timeout: 3300**. Exits early on process death / OOM /
+   verdict gtok — that wake is the chain. Keep it alive until V13 is done.
+4. Commit verified `v11/` `v13/` `v7/` `scripts/` changes immediately.
+5. Act from STATUS + NEXT; yield only with the watchdog armed.
 
-## LAUNCHERS (v13/tmp/)
-- `launch_100m_fresh.sh` — the stopped 500M run (warmup 2000, 70/20/5/5/5).
-- `launch_diag_additive.sh` — killed diag (warmup 2000, 50/50, v11 features off).
-- `launch_ab1_round1recipe.sh` — **current A/B**: v13 code, v11 features off,
-  round-1 EXACT recipe (warmup 500, 48/48/4, edu3, sample-10BT, blend 1e9,
-  no_grad_ckpt, compile), 150M budget.
-- Pattern: `set -euo pipefail; cd /home/gowrav/Development/qllm2;
-  export HF_HUB_ETAG_TIMEOUT=120 HF_HUB_DOWNLOAD_TIMEOUT=300;
-  exec .venv/bin/python -m v13.train ...` in tmux, `| tee -a logs/v13/<name>/tmux_console.log`.
-
-## MONITOR COMMANDS
-- Steps: `grep -oE "\[1\] [0-9]+ loss=[0-9.]+ .*gtok=[0-9]+" <log> | sed -E 's/\[1\] ([0-9]+) loss=([0-9.]+) ppl=([0-9.]+) lr=([0-9.e-]+) \| ([0-9]+) tok\/s.*gtok=([0-9]+)/step=\1 loss=\2 lr=\4 tok_s=\5 gtok=\6/' | tail -8`
-- Errors: `grep -icE "traceback|out of memory|nan" <log>`
+## MONITOR
 - GPU: `nvidia-smi --query-gpu=memory.used --format=csv,noheader`
 - tmux: `tmux ls | grep v13`
-
-## KILL CRITERIA (user policy)
-- If a run's loss at matched tokens is > ~0.7 NLL above round-1 curve
-  (e.g. > 5.5 at 50M tok) → KILL, iterate, do not burn hours on a bad curve.
-- Watch ~every 30 min. SIGTERM is safe (trainer saves latest.pt on signal).
-
-## NEXT (ordered)
-1. [HANDOFF] Launch fresh 500M with REAL grads (see ACTIVE TASK above).
-   Wipe `checkpoints_v13/500m_v13_r1recipe`. Prefer
-   `--compile_blocks --batch_size 8 --delta_chunk 128`. Confirm
-   `[block-grad step1] ... all-nonzero` then arm watchdog at 100M.
-   ALL prior V13 curves/verdicts are void (they trained 1 of 16 blocks).
-2. [ ] If it tracks r1 (≤0.7 NLL): let it run to 500M, save checkpoints.
-   Quality probe at 50M/100M: `.venv/bin/python -m v13.eval_checkpoints
-   --checkpoints checkpoints_v13/500m_v13_r1recipe/latest.pt --labels wiki`
-   (WikiText-103 val PPL) + a short generate() for repetition.
-3. [ ] If it sits >0.7 NLL above r1 (quality battle, NOT a crash): suspects in
-   order — (a) key-norm readout dynamic-range loss → try `delta_key_norm=False`
-   + erase-cap only (cap alone may suffice for stability; test in diag), or
-   normalize keys ONLY in the erase/mass term + raw readout keys; (b)
-   protect_gate_bias -3.0 over-protects → try -2.0; (c) gate-surprisal aux
-   λ0.1 → try 0.05. A/B each in the diag driver first (fast), then relaunch.
-4. [ ] Chain v11 PAM 500M head-to-head (`v13/tmp/launch_v11_500m_r1recipe.sh`)
-   after V13 finishes (same GPU, sequential).
-5. [ ] Optional speed: bench `--delta_decay_factored` at B8/C128; enable on
-   the running recipe only if tok/s rises and selftest stays green.
-
-## DECISIONS LOG
-- 2026-08-22: Stopped 500M run @3175 (warmup-2000 recipe, on degraded curve).
-- 2026-08-22: Realized ref was stale (Jun-23, old code) + warmup 2000 was wrong
-  → relaunched diagnostic with round-1 EXACT recipe (ab1).
-- 2026-08-22: User: drop V14 focus, focus V13 only; user away 2 days;
-  kill-and-iterate policy; novel-not-transformer/Mamba; 100M+ rich data only;
-  PAM never had val_ppl 6 (don't chase 6.65).
-- 2026-08-23: key-norm (04dcebd) was INIT-DEPENDENT — diag passed 2000 but
-  real trainer died step ~151 (different weight init via wiki_val_ds RNG draw
-  trained erase beta_e past 2 → eigenvalue 1−beta_e flipped past −1). Robust
-  fix = delta_erase_beta_cap 0.95 + gate-BCE safety net (03c3ede). Verified on
-  the real trainer path (20M repro, zero asserts/events). 500M relaunched fresh.
-- 2026-08-23 evening: checkpoint/JIT crash FIXED (`baaf5b3`). Root cause was
-  TorchScript profiling-executor operand-swap in `cnormalize_vec`, NOT a math
-  bug. The earlier "flaky 1-in-5" and `g/mag` autograd.Function proposal are
-  RETRACTED (proposal had 19% key-grad error). 21K tok/s RETRACTED — measured
-  with `_ckpt_block` detach (15/16 blocks frozen). Honest baseline ~4.1K
-  (B16/C128 eager) / ~6.5K (B8 compile-block). 500M not yet relaunched —
-  next session launches from scratch with real grads.
+- Launch pattern: `set -euo pipefail; cd /home/gowrav/Development/qllm2;
+  export HF_HUB_ETAG_TIMEOUT=120 HF_HUB_DOWNLOAD_TIMEOUT=300;
+  exec .venv/bin/python -m v13.train ...` in tmux,
+  `| tee -a logs/v13/<name>/tmux_console.log`.
+- New CLI (2026-08-23): `--compile_blocks`, `--delta_decay_factored`,
+  `--delta_key_norm` / `--no_delta_key_norm`, `--delta_erase_beta_cap`.
