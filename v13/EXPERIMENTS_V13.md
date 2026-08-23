@@ -248,4 +248,8 @@ Parked (speed track, see scratchpad SPEED). Relaunched EAGER:
 steady ~4,930 tok/s @ 8.1GB (matches the 5,027 bench); step 0 loss 10.9055,
 10.36 @ 0.84M (r1 10.31 @ 2M — on curve). Watchdog armed at 100M verdict.
 Verdict points: kill if >0.7 NLL above r1 at 20M (>6.6); 4.81@50M, 4.36@100M.
+
+**20M verdict PASSED (2026-08-23 ~16:00):** 5.46 @ 20.1M (threshold >6.6; r1
+interp ~6.1 → V13 ~0.6 NLL *below* r1). Steady ~4,850 tok/s, zero errors.
+Curve: 10.36@0.84M, 5.89@9.8M, 5.15@26.2M, 5.07@29.9M.
 - **Throughput — 100M-class (v13_e3_k3_selective, dim384×16L, 4090 24GB):** needs grad-ckpt (B8 no-ckpt OOMs by 2MiB). Steady: **B10 ≈ 2.3K tok/s** (19.8GB); B8 ≈ 2.0K; B12 OOMs on step-2 recompute peak. 11M stays faster per token: **B16 ≈ 11.6K tok/s** (21.2GB). Rule of thumb on 24GB: 11M→B16 no-ckpt; 100M→B10 grad-ckpt.

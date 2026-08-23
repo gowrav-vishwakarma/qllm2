@@ -45,9 +45,10 @@ figure; floor ~4.65, Wiki 368.69) — VOID, user-confirmed, dir wiped.
 
 **500M IS RUNNING** (relaunched 13:26, tmux `v13_500m`, fixed code, EAGER
 B8/C128): `[block-grad step1]` L0..L15 ≈2.3e-3..5.8e-3 all-nonzero ✓;
-steady **~4,930 tok/s @ 8.1GB**; 10.9055@step0, 10.36@0.84M (r1 10.31@2M —
-on curve). Watchdog armed at 100M (verdict chain alive).
-ETA at ~4.9K: ~28h to 500M.
+steady **~4,850 tok/s @ 8.1GB**; **20M verdict PASSED ~14:40: 5.46** (kill
+was >6.6; r1 interp ~6.1 → ~0.6 below r1). Curve: 10.36@0.84M, 5.89@9.8M,
+5.15@26M. Watchdog armed at 100M (verdict chain alive).
+ETA at ~4.85K: ~29h total to 500M (~27h remaining @30M).
 
 **`--compile_blocks` CRASHES at first step** (2026-08-23): Inductor
 meta-kernel bug — `assert_size_stride` on `torch.ops.aten.complex.default`
