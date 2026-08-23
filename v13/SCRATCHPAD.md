@@ -45,13 +45,13 @@ figure; floor ~4.65, Wiki 368.69) — VOID, user-confirmed, dir wiped.
 
 **500M IS RUNNING** (relaunched 13:26, tmux `v13_500m`, fixed code, EAGER
 B8/C128): steady **~4,800 tok/s @ 8.7GB**; verdicts PASSED: **20M 5.46**,
-**50M 4.65 (r1 4.81)**, **100M 4.36 (r1 4.36, gap 0.0)**, **200M ~3.95 @194M
-(r1 3.97@200M — V13 leads)**; at ~197M. Probes (164M ckpt): **Wiki PPL
-211.66** (was 325.76 @82M); selective stack still near-init; erase learned
-ON early (βe≈0.5). Full record: `v13/r_and_d.md`.
-Watchdog armed at 300M (no recorded r1 ref past 200M — reference curve ends
-there, line 143; use the kill rule, not a point).
-ETA at ~4.8K: ~5.5h remaining @200M to 500M.
+(kill >6.6); **50M 4.65 (r1 4.81)**; **100M 4.36 (r1 4.36, gap 0.0)**;
+**200M window 198–202M mean 4.17 vs r1 4.04 (gap +0.13, kill >4.74)**;
+at ~200M. Probes (164M ckpt): **Wiki PPL 211.66** (was 325.76 @82M);
+selective stack still near-init; erase learned ON early (βe≈0.5). Full
+record: `v13/r_and_d.md`.
+Watchdog armed at 300M (r1 ref 3.96@300M — official log extends to 2B).
+ETA at ~4.8K: ~5.3h remaining @200M to 500M.
 
 **`--compile_blocks` CRASHES at first step** (2026-08-23): Inductor
 meta-kernel bug — `assert_size_stride` on `torch.ops.aten.complex.default`
@@ -140,8 +140,9 @@ Each idea gated on `v13/selftest` + ckpt-vs-no-ckpt grads:
 ## REFERENCE
 **v11 round-1** (Jul 1, new code, 75GB, `--no_grad_ckpt --compile`):
 `--preset v11_e3_k3_chat --warmup 500 --lr 3e-4 --batch_size 18 --seq_len 2048
-48/48/4 dclm/fineweb/smoltalk2_mid edu>=3 sample-10BT blend 1e9 seed 42`
-Loss: **10.31@2M, 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M**
+Loss: **10.31@2M, 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M,
+3.96@300M, 3.83@400M, 3.82@500M** (last three verified 2026-08-23 from the
+same log; the run goes to ~2B). Verdict gaps should use ±2M window means.
 Log: `logs/v11/round1_pretrain_20260701_115022_cbb4dd2_dirty/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log`
 
 WikiText-103 val PPL after 500M: **< 25.77** (must), **~22.69** (want).
