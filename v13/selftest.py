@@ -259,6 +259,136 @@ def test_delta_erase_cap():
     return ok
 
 
+def test_grad_ckpt_equiv(batch_size=2, seq_len=64, seed=0):
+    """Non-reentrant checkpoint must match no-ckpt grads AND reach every block.
+
+    Every other selftest sets gradient_checkpointing=False, which is how both
+    the 2026-08-22 detach freeze (only last block learned) and the 2026-08-23
+    TorchScript cnormalize_vec CheckpointError slipped through. This test
+    exercises the production selective stack (delta + vault + phase +
+    key-norm + erase-cap) under checkpointing.
+
+    2026-08-23: cnormalize_vec is eager (not @jit.script) so the checkpoint
+    forward and recompute build the same saved-tensor order.
+    """
+    from v13.model import V13LM
+    prev_dtype = torch.get_default_dtype()
+    torch.set_default_dtype(torch.float32)
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    common = dict(
+        vocab_size=256, dim=32, n_heads=2, head_dim=16, n_layers=4,
+        expand=2, dropout=0.0, max_seq_len=128, chunk_size=32,
+        use_rope=True, use_gsp=True, n_states=3,
+        write_mode='delta', delta_chunk=16, delta_erase_gate=True,
+        gate_content_aware=True, vault_state=True, vault_state_idx=0,
+        write_phase_address=True, fused_e3=True,
+        delta_key_norm=True, delta_erase_beta_cap=0.95,
+    )
+    torch.manual_seed(seed)
+    m = V13LM(V13Config(**{**common, 'gradient_checkpointing': True})).to(device).train()
+    ids = torch.randint(0, 256, (batch_size, seq_len), device=device)
+    lab = torch.randint(0, 256, (batch_size, seq_len), device=device)
+
+    def _run(use_ckpt):
+        m.config.gradient_checkpointing = use_ckpt
+        m.zero_grad(set_to_none=True)
+        lm, _, _ = m._hidden_to_lm(ids)
+        loss = m.ce_from_lm(lm, lab, chunk=64)
+        loss.backward()
+        grads = {n: p.grad.detach().clone()
+                 for n, p in m.named_parameters() if p.grad is not None}
+        return float(loss.detach()), grads
+
+    try:
+        l_ck, g_ck = _run(True)
+        l_no, g_no = _run(False)
+    except Exception as exc:
+        torch.set_default_dtype(prev_dtype)
+        print(f"[grad_ckpt equiv] RAISED {type(exc).__name__}: {exc}  FAIL")
+        return False
+
+    dloss = abs(l_ck - l_no)
+    worst = 0.0
+    missing = [n for n in g_no if n not in g_ck]
+    for name in g_no:
+        if name not in g_ck:
+            continue
+        ref = g_no[name]
+        rel = (g_ck[name] - ref).norm().item() / (ref.norm().item() + 1e-12)
+        if rel > worst:
+            worst = rel
+    block_norms = []
+    for i in range(common['n_layers']):
+        tot = 0.0
+        for n, p in m.named_parameters():
+            if n.startswith(f'blocks.{i}.') and p.grad is not None:
+                tot += float(p.grad.detach().pow(2).sum())
+        block_norms.append(tot ** 0.5)
+    mx, mn = max(block_norms), min(block_norms)
+    ok = (
+        dloss < 1e-5
+        and worst < 1e-5
+        and not missing
+        and mn > 0.0
+        and (mx / mn) < 10.0
+    )
+    print(
+        f"[grad_ckpt equiv] dloss={dloss:.2e} worst_rel={worst:.2e} "
+        f"blocks=[{', '.join(f'{v:.2e}' for v in block_norms)}] "
+        f"{'PASS' if ok else 'FAIL'}"
+    )
+    torch.set_default_dtype(prev_dtype)
+    return ok
+
+
+def test_delta_decay_factored_equiv(batch_size=2, seq_len=80, seed=0):
+    """Factored decay (K-independent triangular system) == materialized D path."""
+    common = dict(
+        vocab_size=512, dim=48, n_heads=3, head_dim=16, n_layers=1, expand=2,
+        dropout=0.0, max_seq_len=256, chunk_size=24, gradient_checkpointing=False,
+        use_rope=True, use_gsp=True, n_states=3, gate_content_aware=True,
+        write_mode='delta', delta_chunk=20, delta_erase_gate=True,
+        vault_state=True, vault_state_idx=0, write_phase_address=True,
+        delta_key_norm=True, fused_e3=True,
+    )
+    torch.manual_seed(seed)
+    ref = V13PAMLayer(V13Config(**{**common, 'delta_decay_factored': False}))
+    fac = V13PAMLayer(V13Config(**{**common, 'delta_decay_factored': True}))
+    fac.load_state_dict(ref.state_dict())
+    ref.train()
+    fac.train()
+    x = torch.randn(batch_size, seq_len, common['dim'], 2) * 0.5
+    x1 = x.clone().requires_grad_(True)
+    x2 = x.clone().requires_grad_(True)
+    y1, S1 = ref(x1)
+    y2, S2 = fac(x2)
+    (y1 ** 2).sum().backward()
+    (y2 ** 2).sum().backward()
+    dy = (y1 - y2).abs().max().item()
+    dS = (S1 - S2).abs().max().item()
+    dg = (x1.grad - x2.grad).abs().max().item()
+    ok = max(dy, dS, dg) < 1e-6
+    print(f"[delta_factored ] y={dy:.2e} S={dS:.2e} grad={dg:.2e}  "
+          f"{'PASS' if ok else 'FAIL'}")
+    # Fast-decay stress: large softplus(dt) → tiny a[t]. The factored path
+    # must either match the materialized path or fall back (min_a guard).
+    torch.manual_seed(seed + 7)
+    ref2 = V13PAMLayer(V13Config(**{**common, 'delta_decay_factored': False,
+                                    'base_dt_bias': 4.0}))
+    fac2 = V13PAMLayer(V13Config(**{**common, 'delta_decay_factored': True,
+                                    'base_dt_bias': 4.0}))
+    fac2.load_state_dict(ref2.state_dict())
+    x3 = torch.randn(batch_size, seq_len, common['dim'], 2) * 0.5
+    with torch.no_grad():
+        y3, S3 = ref2(x3)
+        y4, S4 = fac2(x3)
+    dy2 = (y3 - y4).abs().max().item()
+    dS2 = (S3 - S4).abs().max().item()
+    ok2 = max(dy2, dS2) < 1e-5
+    print(f"[delta_fact_fast] y={dy2:.2e} S={dS2:.2e}  {'PASS' if ok2 else 'FAIL'}")
+    return ok and ok2
+
+
 def test_drop_shape_mismatches():
     """Resume-safe: growing phase_proj (dim -> 2*dim) reinits cleanly."""
     from v13.train import _drop_shape_mismatches
@@ -332,6 +462,8 @@ def main():
     results.append(test_drop_shape_mismatches())
     results.append(test_delta_keynorm_equiv())
     results.append(test_delta_erase_cap())
+    results.append(test_grad_ckpt_equiv())
+    results.append(test_delta_decay_factored_equiv())
     print()
     if all(results):
         print("ALL MODES PASS: parallel train form == O(1) recurrent form.")

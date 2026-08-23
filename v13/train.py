@@ -63,6 +63,10 @@ def build_argparser():
     p.add_argument('--dropout', type=float, default=None)
     p.add_argument('--gradient_clip', type=float, default=1.0)
     p.add_argument('--compile', action='store_true')
+    p.add_argument('--compile_blocks', action='store_true',
+                   help='Compile each V13Block.forward inside gradient checkpoint '
+                        '(measured +28%% vs eager at B8/T2048). Mutually preferred '
+                        'over --compile (skips whole-model compile).')
     p.add_argument('--compile_mode', type=str, default='default',
                    choices=['default', 'reduce-overhead', 'max-autotune'])
     p.add_argument('--amp_dtype', type=str, default='auto', choices=['auto', 'bf16', 'fp16'])
@@ -134,6 +138,11 @@ def build_argparser():
     p.add_argument('--delta_erase_beta_cap', type=float, default=None,
                    help='Cap the learned erase gain beta_e (default 0.95 in preset; '
                         '0=off). Keeps the vault delta eigenvalue 1-beta_e in [1-cap,1).')
+    p.add_argument('--delta_decay_factored', action='store_true',
+                   help='K-independent triangular solve via D[t,s]=a[t]/a[s] '
+                        '(default OFF; enable after selftest [delta_factored] PASS).')
+    p.add_argument('--no_delta_decay_factored', action='store_true',
+                   help='Force the materialized decay-matrix path.')
     p.add_argument('--gate_content_aware', action='store_true',
                    help='GSP write gate reads real+imag (2*dim) vs magnitude-only')
     p.add_argument('--no_gate_content_aware', action='store_true',
@@ -339,6 +348,10 @@ def main():
         cfg.delta_key_norm = True
     if args.delta_erase_beta_cap is not None:
         cfg.delta_erase_beta_cap = args.delta_erase_beta_cap
+    if args.no_delta_decay_factored:
+        cfg.delta_decay_factored = False
+    elif args.delta_decay_factored:
+        cfg.delta_decay_factored = True
     if args.no_gate_content_aware:
         cfg.gate_content_aware = False
     elif args.gate_content_aware:
@@ -595,7 +608,7 @@ def main():
         max_epochs=max_epochs,
         checkpoint_dir=args.checkpoint_dir,
         amp_dtype_str=args.amp_dtype,
-        compile_model=args.compile,
+        compile_model=args.compile and not args.compile_blocks,
         compile_mode=args.compile_mode,
         gen_every=args.gen_every,
         gen_prompt=args.gen_prompt,
@@ -612,6 +625,9 @@ def main():
         fused_ce=args.fused_ce,
         fused_ce_chunk=args.fused_ce_chunk,
     )
+    if args.compile_blocks:
+        print(f"Compiling per-block inside checkpoint (mode={args.compile_mode})...")
+        trainer._raw_model.compile_blocks(mode=args.compile_mode)
     if checkpoint and args.resume and 'optimizer_state_dict' in checkpoint:
         trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         trainer.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
@@ -643,7 +659,9 @@ def main():
         f"grad_clip={args.gradient_clip} | dropout={cfg.dropout}",
         f"Token budget: {token_budget or 'none'} | edu_score_min: {args.edu_score_min} | "
         f"sft_filter: {args.sft_filter}",
-        f"Save every: {args.save_every_steps} steps | AMP: {args.amp_dtype} | Compile: {args.compile}",
+        f"Save every: {args.save_every_steps} steps | AMP: {args.amp_dtype} | "
+        f"Compile: {args.compile} | compile_blocks: {args.compile_blocks} | "
+        f"delta_decay_factored: {cfg.delta_decay_factored}",
         f"Resume: {args.resume or 'none'} | Weights from: {args.resume_from or 'scratch'} | "
         f"warmstart_chatml: {args.warmstart_chatml}",
         f"Log: {log_path.resolve()}",

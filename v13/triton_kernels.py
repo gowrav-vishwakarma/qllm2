@@ -568,6 +568,9 @@ def fused_cgu_gate(gate: Tensor, up: Tensor) -> Tensor:
 
 
 def fused_decay_matrix(decay_gamma: Tensor, seq_len: int, block: int = 64) -> Tensor:
+    # Under torch.compile, use the plain-aten path so inductor can fuse the
+    # subsequent mass/projection elementwise chain (Triton autograd.Function
+    # is a graph break). Eager CUDA keeps the Triton kernel.
     if _use_triton and decay_gamma.is_cuda and not torch.compiler.is_compiling():
         return _FusedDecayMatrixFn.apply(decay_gamma, seq_len, block)
     return _pt_decay_matrix(decay_gamma, seq_len)

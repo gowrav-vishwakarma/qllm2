@@ -440,6 +440,35 @@ class V7Trainer:
         per_token = F.cross_entropy(flat_logits, flat_labels, reduction='none')
         return (per_token * flat_mask).sum() / flat_mask.sum().clamp(min=1)
 
+    def _log_block_grad_norms(self):
+        """Print per-block grad L2 after the first backward (frozen-layer canary)."""
+        raw = getattr(self, '_raw_model', self.model)
+        blocks = getattr(raw, 'blocks', None)
+        if blocks is None:
+            return
+        parts = []
+        dead = []
+        for i, block in enumerate(blocks):
+            tot = 0.0
+            for p in block.parameters():
+                if p.grad is not None:
+                    tot += float(p.grad.detach().float().pow(2).sum())
+            nrm = tot ** 0.5
+            parts.append(f"L{i}={nrm:.3e}")
+            if nrm == 0.0:
+                dead.append(i)
+        print(
+            f"  [block-grad step1] {' '.join(parts)}"
+            + (f"  DEAD={dead}" if dead else "  all-nonzero"),
+            flush=True,
+        )
+        if dead:
+            print(
+                f"  [block-grad] WARNING: blocks {dead} have zero grad — "
+                f"this is the 2026-08-22 detach / 2026-08-23 ckpt class of bug",
+                flush=True,
+            )
+
     def train_epoch(self, epoch: int) -> Dict[str, float]:
         self.model.train()
         total_loss_w = 0.0
@@ -542,6 +571,12 @@ class V7Trainer:
                     self.model.parameters(), self.gradient_clip,
                 )
                 self.optimizer.step()
+
+            # One-shot per-block grad dump at the first optimizer step so a
+            # frozen-layer regression (only last blocks learn) cannot hide
+            # behind a plausible loss curve. 2026-08-23 (v13 ckpt detach + JIT).
+            if self.global_step == 0:
+                self._log_block_grad_norms()
 
             self.scheduler.step()
             self.global_step += 1

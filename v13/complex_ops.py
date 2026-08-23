@@ -92,7 +92,19 @@ def cnormalize(x: torch.Tensor) -> torch.Tensor:
     return x / cabs(x).unsqueeze(-1)
 
 
-@torch.jit.script
+# 2026-08-23: NOT @torch.jit.script. TorchScript's profiling executor rebuilds
+# the differentiable graph after the first call and can swap the two operands
+# that `div` saves for backward. Under non-reentrant gradient checkpointing the
+# forward then saves (denom, numer) while recompute saves (numer, denom) —
+# same values, reversed slots — and torch.utils.checkpoint's positional
+# metadata check raises CheckpointError ([B,H,T,1,1] ↔ [B,H,T,d,2]).
+# Unscripting this one function (cmul/cabs/cnormalize stay scripted) makes
+# autograd graph-build order identical across the two passes. Math is
+# unchanged: eager Autograd computes the exact Jacobian of x/||x||,
+#   d(x/||x||)/dx = (I − x̂x̂ᵀ)/||x||.
+# Do NOT replace this with an autograd.Function that returns g/mag — that
+# drops the gradient through mag (measured 1.9e-1 relative error) and
+# silently corrupts key grads. See v13/SCRATCHPAD.md 2026-08-23 JIT note.
 def cnormalize_vec(x: torch.Tensor) -> torch.Tensor:
     """Per-VECTOR unit norm across the complex head dimension.
 

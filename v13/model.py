@@ -114,6 +114,13 @@ class V13Config:
     # the pathological >2 overshoot is removed. Complements delta_key_norm.
     delta_erase_beta_cap: float = 0.95
     recompute_pam_chunks: bool = False  # recompute per-chunk W/D/A in backward (exact; less VRAM, more FLOPs)
+    # delta_decay_factored: rewrite the chunk (I+M)X=W system using
+    # D[t,s]=a[t]/a[s] so the triangular matrix is K-independent
+    # (one solve, C×C tensors drop the K dim). Default OFF until
+    # test_delta_decay_factored_equiv stays green at production scale.
+    # Falls back to the materialized D path when min(a) < min_a (1/a overflow).
+    delta_decay_factored: bool = False
+    delta_decay_factor_min_a: float = 1e-6
 
     # ── Recall program (V12): longer memory horizon + gate supervision ───────
     # gamma_floor: minimum per-step decay applied to the *base* (pre-GSP) decay.
@@ -169,6 +176,8 @@ class V13PAMLayer(nn.Module):
         self.delta_chunk = cfg.delta_chunk
         self.fused_e3 = getattr(cfg, 'fused_e3', True)
         self.recompute_pam_chunks = getattr(cfg, 'recompute_pam_chunks', False)
+        self.delta_decay_factored = getattr(cfg, 'delta_decay_factored', False)
+        self.delta_decay_factor_min_a = getattr(cfg, 'delta_decay_factor_min_a', 1e-6)
 
         if cfg.fused_qkv:
             self.qkv_proj = ComplexLinear(cfg.dim, 3 * inner, bias=False)
@@ -982,17 +991,11 @@ class V13PAMLayer(nn.Module):
             query_key_imag = (query_imag[:, :, kc] @ key_real[:, :, kc].transpose(-1, -2)
                               - query_real[:, :, kc] @ key_imag[:, :, kc].transpose(-1, -2))
 
-            # Decay matrix batched over K·B·H (state-independent layout).
-            decay_matrix = fused_decay_matrix(
-                decay_gamma_chunk.reshape(K * batch_size * num_heads, chunk_len), chunk_len
-            ).reshape(K, batch_size, num_heads, chunk_len, chunk_len)  # [K,B,H,C,C]
             log_decay = torch.log(decay_gamma_chunk + 1e-6)
             cumulative_alpha = torch.exp(torch.cumsum(log_decay, dim=-1))  # [K,B,H,C]
-
-            # Erase (mass) matrix: M[t,s] = beta_e[t] D[t,s] (K K^H)[t,s], strictly lower.
-            mass_real = erase_beta_chunk.unsqueeze(0).unsqueeze(-1) * decay_matrix * strict_lower[:chunk_len, :chunk_len] * key_gram_real.unsqueeze(0)
-            mass_imag = erase_beta_chunk.unsqueeze(0).unsqueeze(-1) * decay_matrix * strict_lower[:chunk_len, :chunk_len] * key_gram_imag.unsqueeze(0)
-
+            causal_inclusive = torch.tril(
+                torch.ones(chunk_len, chunk_len, device=x.device, dtype=decay_gamma_chunk.dtype)
+            )
             value_real, value_imag = values_chunk[..., 0], values_chunk[..., 1]
             if chunk_start > 0:
                 state_real = memory_state[..., 0]     # [K,B,H,d,d]
@@ -1018,30 +1021,58 @@ class V13PAMLayer(nn.Module):
             # erase/state_key term above differs per state and forces the K broadcast).
             write_real = write_real.expand(K, batch_size, num_heads, chunk_len, head_dim)
             write_imag = write_imag.expand(K, batch_size, num_heads, chunk_len, head_dim)
-            if _V13_DEBUG:
-                print(f"[delta_fused] chunk {chunk_start}: "
-                      f"decay {tuple(decay_matrix.shape)} mass {tuple(mass_real.shape)} "
-                      f"write {tuple(write_real.shape)} strict_lower {tuple(strict_lower.shape)}",
-                      flush=True)
 
-            # ONE batched complex triangular solve over K·B·H (per-state independent).
-            solve_n = K * batch_size * num_heads
-            sol = _complex_triangular_solve(
-                mass_real.reshape(solve_n, chunk_len, chunk_len),
-                mass_imag.reshape(solve_n, chunk_len, chunk_len),
-                write_real.reshape(solve_n, chunk_len, head_dim),
-                write_imag.reshape(solve_n, chunk_len, head_dim),
-                identity[:chunk_len, :chunk_len],
+            # Factored path: D[t,s]=a[t]/a[s] ⇒ (I+M)X=W becomes a K-independent
+            # triangular system in Y, X=diag(a)Y. Falls back if min(a) is tiny
+            # (1/a would overflow; materialized D[t,s] stays ≤1 on the causal).
+            use_factored = (
+                self.delta_decay_factored
+                and float(cumulative_alpha.detach().min()) >= self.delta_decay_factor_min_a
             )
-            update_real = sol[0].reshape(K, batch_size, num_heads, chunk_len, head_dim)
-            update_imag = sol[1].reshape(K, batch_size, num_heads, chunk_len, head_dim)
-
-            causal_inclusive = torch.tril(torch.ones(chunk_len, chunk_len, device=x.device, dtype=decay_matrix.dtype))
-            projection_real = (decay_matrix * causal_inclusive) * query_key_real.unsqueeze(0)
-            projection_imag = (decay_matrix * causal_inclusive) * query_key_imag.unsqueeze(0)
-            output_real = (projection_real @ update_real - projection_imag @ update_imag) * query_scale
-            output_imag = (projection_real @ update_imag + projection_imag @ update_real) * query_scale
-            output_chunk = torch.stack([output_real, output_imag], dim=-1)   # [K,B,H,T,d,2]
+            if use_factored:
+                update_real, update_imag, output_chunk, update_decayed_real, update_decayed_imag = (
+                    self._delta_fused_chunk_factored(
+                        erase_beta_chunk, key_gram_real, key_gram_imag,
+                        write_real, write_imag, query_key_real, query_key_imag,
+                        cumulative_alpha, strict_lower, identity, query_scale,
+                        K, batch_size, num_heads, chunk_len, head_dim,
+                    )
+                )
+            else:
+                decay_matrix = fused_decay_matrix(
+                    decay_gamma_chunk.reshape(K * batch_size * num_heads, chunk_len), chunk_len
+                ).reshape(K, batch_size, num_heads, chunk_len, chunk_len)
+                mass_real = (
+                    erase_beta_chunk.unsqueeze(0).unsqueeze(-1) * decay_matrix
+                    * strict_lower[:chunk_len, :chunk_len] * key_gram_real.unsqueeze(0)
+                )
+                mass_imag = (
+                    erase_beta_chunk.unsqueeze(0).unsqueeze(-1) * decay_matrix
+                    * strict_lower[:chunk_len, :chunk_len] * key_gram_imag.unsqueeze(0)
+                )
+                if _V13_DEBUG:
+                    print(f"[delta_fused] chunk {chunk_start}: "
+                          f"decay {tuple(decay_matrix.shape)} mass {tuple(mass_real.shape)} "
+                          f"write {tuple(write_real.shape)} strict_lower {tuple(strict_lower.shape)}",
+                          flush=True)
+                solve_n = K * batch_size * num_heads
+                sol = _complex_triangular_solve(
+                    mass_real.reshape(solve_n, chunk_len, chunk_len),
+                    mass_imag.reshape(solve_n, chunk_len, chunk_len),
+                    write_real.reshape(solve_n, chunk_len, head_dim),
+                    write_imag.reshape(solve_n, chunk_len, head_dim),
+                    identity[:chunk_len, :chunk_len],
+                )
+                update_real = sol[0].reshape(K, batch_size, num_heads, chunk_len, head_dim)
+                update_imag = sol[1].reshape(K, batch_size, num_heads, chunk_len, head_dim)
+                projection_real = (decay_matrix * causal_inclusive) * query_key_real.unsqueeze(0)
+                projection_imag = (decay_matrix * causal_inclusive) * query_key_imag.unsqueeze(0)
+                output_real = (projection_real @ update_real - projection_imag @ update_imag) * query_scale
+                output_imag = (projection_real @ update_imag + projection_imag @ update_real) * query_scale
+                output_chunk = torch.stack([output_real, output_imag], dim=-1)
+                decay_tail = cumulative_alpha[..., -1:] / (cumulative_alpha + 1e-12)
+                update_decayed_real = update_real * decay_tail.unsqueeze(-1)
+                update_decayed_imag = update_imag * decay_tail.unsqueeze(-1)
 
             if chunk_start > 0:
                 # Carry: q*α_k @ S_k per state. q is K-independent [B,H,C,d]; α is
@@ -1062,9 +1093,6 @@ class V13PAMLayer(nn.Module):
                 output_chunk = output_chunk + torch.stack([carried_real, carried_imag], dim=-1)
 
             cumulative_total = cumulative_alpha[..., -1:]                      # [K,B,H,1]
-            decay_tail = cumulative_total / (cumulative_alpha + 1e-12)
-            update_decayed_real = update_real * decay_tail.unsqueeze(-1)
-            update_decayed_imag = update_imag * decay_tail.unsqueeze(-1)
             state_real = (
                 update_decayed_real.transpose(-1, -2) @ key_real[:, :, kc]
                 + update_decayed_imag.transpose(-1, -2) @ key_imag[:, :, kc]
@@ -1089,6 +1117,54 @@ class V13PAMLayer(nn.Module):
 
         return torch.cat(outputs, dim=2), memory_state
 
+    @staticmethod
+    def _delta_fused_chunk_factored(
+        erase_beta_chunk, key_gram_real, key_gram_imag,
+        write_real, write_imag, query_key_real, query_key_imag,
+        cumulative_alpha, strict_lower, identity, query_scale,
+        K, batch_size, num_heads, chunk_len, head_dim,
+    ):
+        """K-independent triangular solve via X = diag(a) Y.
+
+        D[t,s] = a[t]/a[s] ⇒ M_k = diag(βe⊙a_k) (L∘G) diag(1/a_k).
+        Substituting X_k = diag(a_k) Y_k collapses (I+M_k)X_k = W_k to
+            (I + diag(βe)(L∘G)) Y_k = diag(1/a_k) W_k
+        so the system matrix is K-free. Read projection likewise:
+            output_k = diag(a_k) (causal∘QK) Y_k
+        and the state write uses X*(a_last/a) = a_last Y.
+        """
+        lower = strict_lower[:chunk_len, :chunk_len]
+        mass_base_real = erase_beta_chunk.unsqueeze(-1) * lower * key_gram_real
+        mass_base_imag = erase_beta_chunk.unsqueeze(-1) * lower * key_gram_imag
+        inv_a = (1.0 / cumulative_alpha).unsqueeze(-1)
+        rhs_real = write_real * inv_a
+        rhs_imag = write_imag * inv_a
+        solve_n = batch_size * num_heads
+        rhs_r_cat = rhs_real.permute(1, 2, 3, 0, 4).reshape(solve_n, chunk_len, K * head_dim)
+        rhs_i_cat = rhs_imag.permute(1, 2, 3, 0, 4).reshape(solve_n, chunk_len, K * head_dim)
+        sol = _complex_triangular_solve(
+            mass_base_real.reshape(solve_n, chunk_len, chunk_len),
+            mass_base_imag.reshape(solve_n, chunk_len, chunk_len),
+            rhs_r_cat, rhs_i_cat,
+            identity[:chunk_len, :chunk_len],
+        )
+        y_real = sol[0].reshape(batch_size, num_heads, chunk_len, K, head_dim).permute(3, 0, 1, 2, 4)
+        y_imag = sol[1].reshape(batch_size, num_heads, chunk_len, K, head_dim).permute(3, 0, 1, 2, 4)
+        a = cumulative_alpha.unsqueeze(-1)
+        update_real = y_real * a
+        update_imag = y_imag * a
+        causal = torch.tril(
+            torch.ones(chunk_len, chunk_len, device=query_key_real.device, dtype=query_key_real.dtype)
+        )
+        proj_real = causal * query_key_real
+        proj_imag = causal * query_key_imag
+        output_real = (proj_real.unsqueeze(0) @ y_real - proj_imag.unsqueeze(0) @ y_imag) * a * query_scale
+        output_imag = (proj_real.unsqueeze(0) @ y_imag + proj_imag.unsqueeze(0) @ y_real) * a * query_scale
+        output_chunk = torch.stack([output_real, output_imag], dim=-1)
+        a_last = cumulative_alpha[..., -1:].unsqueeze(-1)
+        update_decayed_real = y_real * a_last
+        update_decayed_imag = y_imag * a_last
+        return update_real, update_imag, output_chunk, update_decayed_real, update_decayed_imag
 
     # ── Main forward ──────────────────────────────────────────────────────────
 
@@ -1340,7 +1416,10 @@ class V13PAMLayer(nn.Module):
         return output, memory_state
 
 
-@torch.compiler.disable
+# 2026-08-23: no longer @torch.compiler.disable. That decorator forced a
+# Dynamo graph break on every PAM chunk so inductor never fused the
+# mass/projection elementwise chain. torch.linalg.solve_triangular is
+# traceable in torch 2.8; Autograd still sees the aten ops (exact grads).
 def _complex_triangular_solve(mass_real, mass_imag, write_real, write_imag, identity):
     """Solve (I + M) update = write for complex update, M strictly lower-tri.
 
@@ -1561,6 +1640,19 @@ class V13LM(nn.Module):
                                ignore_index=ignore_index, chunk=chunk)
         return main, aux_loss
 
+    def compile_blocks(self, mode: str = 'default'):
+        """Compile each V13Block.forward for use *inside* gradient checkpoint.
+
+        Compiling `_hidden_to_lm` as a whole (v7 trainer `--compile`) wraps the
+        checkpoint wrapper, so inductor cannot fuse a block. Compiling the
+        block itself (measured +28% at B8/T2048, 2026-08-23) lets inductor
+        see the PAM chunk. `--compile_blocks` in v13.train selects this path
+        and skips the whole-model compile. Do NOT detach the checkpoint input.
+        """
+        for block in self.blocks:
+            block._compiled_fwd = torch.compile(block.forward, mode=mode, dynamic=False)
+        return self
+
     @staticmethod
     def _ckpt_block(block, z, step_offset):
         # Non-reentrant checkpoint: forward runs `run(z)` without saving the
@@ -1571,7 +1663,11 @@ class V13LM(nn.Module):
         # it (a 2026-08-22 "determinism_check" workaround) silently froze every
         # block except the last on the main loss (commit d0abeed). The nested
         # per-chunk PAM checkpoint (use_reentrant=False, no detach) is unaffected.
+        compiled = getattr(block, '_compiled_fwd', None)
+
         def run(z_in):
+            if compiled is not None:
+                return compiled(z_in, pam_state=None, step_offset=step_offset)
             return block(z_in, pam_state=None, step_offset=step_offset)
         return grad_checkpoint(run, z, use_reentrant=False)
 
@@ -1740,8 +1836,10 @@ PRESETS = {
         gate_content_aware=True, vault_state=True, vault_state_idx=0,
         write_phase_address=True, gate_surprisal_lambda=0.1,
         # K-batched fused delta path (2026-08-22): math-exact vs the K-loop
-        # (1e-7 on 4090 fp32) and ~8.6x faster at B16/chunk128 on the 4090
-        # (2.3K -> ~20K tok/s train step). See v13/tmp/bench2.py.
+        # (1e-7 on 4090 fp32). The ~20K tok/s figure was measured with the
+        # _ckpt_block detach (15/16 blocks skipped backward) — honest
+        # baseline after the 2026-08-23 grad-flow fix is ~4.1K tok/s at
+        # B16/C128. See v13/EXPERIMENTS_V13.md.
         fused_e3=True,
     ),
     'v13_micro_10m_recall': V13Config(
