@@ -20,11 +20,12 @@
 #
 # 2026-08-23: wipe the ckpt dir before this launch — every prior run in that
 # dir trained under the _ckpt_block detach (15/16 blocks frozen). Extra flags
-# (recommended: --compile_blocks --batch_size 8 --delta_chunk 128) pass
-# through "$@". See v13/SCRATCHPAD.md ACTIVE TASK.
+# (2026-08-23: --batch_size 8 --delta_chunk 128, EAGER — do NOT pass
+# --compile_blocks: Inductor assert_size_stride crash on aten.complex.default)
+# pass through "$@". See v13/SCRATCHPAD.md ACTIVE TASK.
 #
 # Launch detached:
-#   tmux new-session -d -s v13_500m 'bash v13/tmp/launch_v13_500m_r1recipe.sh --compile_blocks --batch_size 8 --delta_chunk 128 2>&1 | tee -a logs/v13/500m_v13_r1recipe/tmux_console.log'
+#   tmux new-session -d -s v13_500m 'bash v13/tmp/launch_v13_500m_r1recipe.sh --batch_size 8 --delta_chunk 128 2>&1 | tee -a logs/v13/500m_v13_r1recipe/tmux_console.log'
 set -euo pipefail
 cd /home/gowrav/Development/qllm2
 export HF_HUB_ETAG_TIMEOUT=120

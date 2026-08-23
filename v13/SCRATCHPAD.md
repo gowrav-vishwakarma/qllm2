@@ -38,37 +38,38 @@ Preset: `v13_e3_k3_selective` (~100.6M). v11 additive twin: `v11_e3_k3_chat`.
 - After step 1 of any train run the log MUST contain
   `[block-grad step1] L0=... L15=... all-nonzero`. `DEAD=` → KILL immediately.
 
-## STATUS (2026-08-23 evening)
-Grads under checkpointing are **fixed** (`baaf5b3`): unscripted
-`cnormalize_vec` (TorchScript profiling executor had swapped the `div`
-operands between ckpt forward and recompute). `v13/selftest` ALL PASS
-including `[grad_ckpt equiv]`; `dbg_ckpt_probe3` 0/30 fresh-process crashes;
-production preset 16/16 blocks ~6.4e-3 grad.
+## STATUS (2026-08-23 ~13:35)
+Grads under checkpointing are **fixed** (`baaf5b3`). The 02:28→09:20 "500M
+complete" run was the **buggy-code** run (20,684 tok/s avg = retracted detach
+figure; floor ~4.65, Wiki 368.69) — VOID, user-confirmed, dir wiped.
 
-**500M is not running.** GPU should be free. Wipe
-`checkpoints_v13/500m_v13_r1recipe` before launch — every prior V13 train-loss
-curve and 50M/100M "verdict" is **VOID** (those runs trained 1 of 16 blocks
-and/or had fused_ce `grad_weight=0`).
+**500M IS RUNNING** (relaunched 13:26, tmux `v13_500m`, fixed code, EAGER
+B8/C128): `[block-grad step1]` L0..L15 ≈2.3e-3..5.8e-3 all-nonzero ✓;
+steady **~4,930 tok/s @ 8.1GB**; 10.9055@step0, 10.36@0.84M (r1 10.31@2M —
+on curve). Watchdog armed at 100M (verdict chain alive).
+ETA at ~4.9K: ~28h to 500M.
+
+**`--compile_blocks` CRASHES at first step** (2026-08-23): Inductor
+meta-kernel bug — `assert_size_stride` on `torch.ops.aten.complex.default`
+inside the compiled block. Not our code; do not relaunch with it until
+fixed (SPEED track). Eager B8/C128 (5,027 bench / 4,930 live) is the run config.
 
 Honest speed (4090, T=2048, all 16 blocks learning): B16/C128 eager **4,101**
-tok/s (13.9GB); B8/C128 eager 5,027; B8/C256 5,085; B8/C128 compile-block
-probe **6,459**. 500M wall-clock ~21h @ 6.5K / ~34h @ 4.1K — acceptable.
+tok/s (13.9GB); B8/C128 eager 5,027; B8/C256 5,085; compile-block 6,459
+(BROKEN now — see above). 500M wall-clock ~28h @ 4.9K — acceptable.
 
 ## NEXT
-1. **Launch fresh 500M** (this is the job). Confirm `[block-grad step1]` then
-   arm the watchdog at 100M.
+1. **500M is running** (this session). Watchdog chain: on every wake re-arm
+   `bash v13/tmp/watchdog.sh logs/v13/500m_v13_r1recipe/v11_v13_e3_k3_selective_lm_pretrain_mix.log 100000000 2940`
+   (async + timeout 3300). Launch cmd for any relaunch:
    ```
    rm -rf checkpoints_v13/500m_v13_r1recipe
    mkdir -p logs/v13/500m_v13_r1recipe
    tmux new-session -d -s v13_500m \
-     'bash v13/tmp/launch_v13_500m_r1recipe.sh --compile_blocks --batch_size 8 --delta_chunk 128 \
+     'bash v13/tmp/launch_v13_500m_r1recipe.sh --batch_size 8 --delta_chunk 128 \
       2>&1 | tee -a logs/v13/500m_v13_r1recipe/tmux_console.log'
-   bash v13/tmp/watchdog.sh logs/v13/500m_v13_r1recipe/v13_v13_e3_k3_selective_lm_pretrain_mix.log 100000000 2940
    ```
-   Launcher already has the r1 recipe (warmup 500, lr 3e-4, 48/48/4, edu3,
-   sample-10BT, blend 1e9, seed 42, fused_ce). Extra flags go through `"$@"`.
-   Optional 20-min bench of `--compile_blocks` / `--delta_decay_factored` only
-   if the GPU is free and you want a number; otherwise launch.
+   (NO `--compile_blocks` — inductor complex-buffer crash.)
 2. If train loss stays ≤0.7 NLL above r1 at matched tokens: run to 500M.
    Wiki probe at 50M/100M:
    `.venv/bin/python -m v13.eval_checkpoints --checkpoints checkpoints_v13/500m_v13_r1recipe/latest.pt --labels wiki`
@@ -91,8 +92,10 @@ all matmuls+solves ~14% of CUDA). A faster triangular solve will not 5× us.
 
 Each idea gated on `v13/selftest` + ckpt-vs-no-ckpt grads:
 
-1. Already wired, lightly measured: `--compile_blocks` (~+28% at B8) and
-   `--delta_decay_factored` (K-independent system; `[delta_factored]` PASS).
+1. `--compile_blocks`: **BROKEN 2026-08-23** — Inductor `assert_size_stride`
+   on `aten.complex.default` at first step (meta/real layout mismatch).
+   `--delta_decay_factored` (K-independent system; `[delta_factored]` PASS)
+   is still unbenched.
 2. Selective rematerialization: checkpoint CGU/norm, **save** the chunk-solve
    output. Today we recompute the whole block; backward is ~8× forward.
    Most likely honest 1.5–2× with no math change.

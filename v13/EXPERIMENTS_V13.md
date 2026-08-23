@@ -231,8 +231,21 @@ chunk solve; `[delta_factored]` matches to 1e-8 / 1e-10. Enable only after
 a bench shows a tok/s win. Trainer logs `[block-grad step1]` after the
 first backward so a frozen-layer regression cannot hide again.
 
-**500M relaunch:** not started in this session (handoff). Wipe
-`checkpoints_v13/500m_v13_r1recipe` and launch via
-`v13/tmp/launch_v13_500m_r1recipe.sh --compile_blocks --batch_size 8 --delta_chunk 128`.
-All prior V13 train-loss verdicts are void (1-of-16-blocks training).
+**500M relaunch (2026-08-23 13:26, LIVE):** old 02:28→09:20 run in
+`checkpoints_v13/500m_v13_r1recipe` was the buggy-code run (20,684 tok/s avg —
+the retracted detach figure; train-loss floor ~4.65, Wiki PPL 368.69 — VOID,
+user-confirmed). Ckpt dir wiped; logs preserved as `*_compile_crash.log` in
+`logs/v13/500m_v13_r1recipe/`.
+
+Launch 1 with `--compile_blocks --batch_size 8 --delta_chunk 128` CRASHED at
+first step (Inductor meta-kernel bug, not our code):
+`assert_size_stride(buf113, (144, 128, 64), ...)` on
+`torch.ops.aten.complex.default` inside the compiled block — the inductor
+layout for a complex buffer disagrees between meta and real execution.
+Parked (speed track, see scratchpad SPEED). Relaunched EAGER:
+`launch_v13_500m_r1recipe.sh --batch_size 8 --delta_chunk 128` (tmux
+`v13_500m`). `[block-grad step1]` L0..L15 ≈ 2.3e-3..5.8e-3 all-nonzero ✓;
+steady ~4,930 tok/s @ 8.1GB (matches the 5,027 bench); step 0 loss 10.9055,
+10.36 @ 0.84M (r1 10.31 @ 2M — on curve). Watchdog armed at 100M verdict.
+Verdict points: kill if >0.7 NLL above r1 at 20M (>6.6); 4.81@50M, 4.36@100M.
 - **Throughput — 100M-class (v13_e3_k3_selective, dim384×16L, 4090 24GB):** needs grad-ckpt (B8 no-ckpt OOMs by 2MiB). Steady: **B10 ≈ 2.3K tok/s** (19.8GB); B8 ≈ 2.0K; B12 OOMs on step-2 recompute peak. 11M stays faster per token: **B16 ≈ 11.6K tok/s** (21.2GB). Rule of thumb on 24GB: 11M→B16 no-ckpt; 100M→B10 grad-ckpt.
