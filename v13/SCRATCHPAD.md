@@ -38,20 +38,20 @@ Preset: `v13_e3_k3_selective` (~100.6M). v11 additive twin: `v11_e3_k3_chat`.
 - After step 1 of any train run the log MUST contain
   `[block-grad step1] L0=... L15=... all-nonzero`. `DEAD=` → KILL immediately.
 
-## STATUS (2026-08-23 ~01:15)
+## STATUS (2026-08-24 ~06:45)
 Grads under checkpointing are **fixed** (`baaf5b3`). The 02:28→09:20 "500M
 complete" run was the **buggy-code** run (20,684 tok/s avg = retracted detach
 figure; floor ~4.65, Wiki 368.69) — VOID, user-confirmed, dir wiped.
 
 **500M IS RUNNING** (relaunched 13:26, tmux `v13_500m`, fixed code, EAGER
-B8/C128): steady **~4,800 tok/s @ 8.7GB**; verdicts PASSED: **20M 5.46**,
-(kill >6.6); **50M 4.65 (r1 4.81)**; **100M 4.36 (r1 4.36, gap 0.0)**;
-**200M window 198–202M mean 4.17 vs r1 4.04 (gap +0.13, kill >4.74)**;
-at ~200M. Probes (164M ckpt): **Wiki PPL 211.66** (was 325.76 @82M);
-selective stack still near-init; erase learned ON early (βe≈0.5). Full
-record: `v13/r_and_d.md`.
-Watchdog armed at 300M (r1 ref 3.96@300M — official log extends to 2B).
-ETA at ~4.8K: ~5.3h remaining @200M to 500M.
+B8/C128): steady **~4,850 tok/s @ 8.7GB**; verdicts (window means) all
+PASSED: **20M 5.46** (kill >6.6); **50M 4.65 (r1 4.81)**; **100M 4.36
+(r1 4.36)**; **200M 4.17 (r1 4.04, +0.13)**; **300M 4.08 (r1 3.96, +0.12)**;
+at ~300M. Probes (Wiki PPL): **325.76@82M → 211.66@164M → 166.75@247M**
+(on trajectory to <25.77); selective stack flat across all probes (protect
+~0.06, phase ~0, write-phase dormant, βw/βe 0.50) — see `v13/r_and_d.md`.
+Watchdog armed at 400M (r1 ref 3.83).
+ETA at ~4.85K: ~3.5h remaining @300M to 500M.
 
 **`--compile_blocks` CRASHES at first step** (2026-08-23): Inductor
 meta-kernel bug — `assert_size_stride` on `torch.ops.aten.complex.default`
@@ -64,7 +64,7 @@ tok/s (13.9GB); B8/C128 eager 5,027; B8/C256 5,085; compile-block 6,459
 
 ## NEXT
 1. **500M is running** (this session). Watchdog chain: on every wake re-arm
-   `bash v13/tmp/watchdog.sh logs/v13/500m_v13_r1recipe/v11_v13_e3_k3_selective_lm_pretrain_mix.log 300000000 2940`
+   `bash v13/tmp/watchdog.sh logs/v13/500m_v13_r1recipe/v11_v13_e3_k3_selective_lm_pretrain_mix.log 400000000 2940`
    (async + timeout 3300). Launch cmd for any relaunch:
    ```
    rm -rf checkpoints_v13/500m_v13_r1recipe
@@ -74,9 +74,9 @@ tok/s (13.9GB); B8/C128 eager 5,027; B8/C256 5,085; compile-block 6,459
       2>&1 | tee -a logs/v13/500m_v13_r1recipe/tmux_console.log'
    ```
    (NO `--compile_blocks` — inductor complex-buffer crash.)
-2. Run to 500M. Probe battery on each saved ckpt (step 10000 ≈164M done:
-   Wiki 211.66; step 15000 ≈247M; step 20000 ≈330M; step 25000 ≈413M;
-   step 31250 ≈500M): Wiki PPL
+2. Run to 500M. Probe battery on each saved ckpt (done: step 10000 ≈164M
+   Wiki 211.66; step 15000 ≈247M Wiki 166.75; remaining: step 20000 ≈330M,
+   step 25000 ≈413M, step 31250 ≈500M): Wiki PPL
    `.venv/bin/python -m v13.eval_checkpoints --checkpoints checkpoints_v13/500m_v13_r1recipe/latest.pt --labels wiki --batch_size 2`
    plus the weight dissection (protect gate, phase_proj, write_phase_proj,
    erase/write betas — see `v13/r_and_d.md`) + a short `generate()` for

@@ -263,4 +263,8 @@ vs r1 **4.04** (official log `round1_pretrain_20260701…pretrain_mix.log`)
 "V13 leads (~3.95)" was a single low-noise step (11850); window mean is the
 fair figure. r1 reference extends to 2B: 3.96@300M, 3.92@400M, 3.77@500M
 (window means). Steady ~4,830 tok/s, zero errors.
+**300M verdict PASSED (2026-08-24 ~06:40):** window 298–302M mean **4.08**
+vs r1 **3.96** — gap **+0.12** (kill >4.66). Matches the 200M pattern
+(+0.13): V13 tracks r1 ~0.1–0.15 NLL behind from ~200M on. Steady ~4,850
+tok/s, zero errors. Watchdog armed at 400M (r1 ref 3.83).
 - **Throughput — 100M-class (v13_e3_k3_selective, dim384×16L, 4090 24GB):** needs grad-ckpt (B8 no-ckpt OOMs by 2MiB). Steady: **B10 ≈ 2.3K tok/s** (19.8GB); B8 ≈ 2.0K; B12 OOMs on step-2 recompute peak. 11M stays faster per token: **B16 ≈ 11.6K tok/s** (21.2GB). Rule of thumb on 24GB: 11M→B16 no-ckpt; 100M→B10 grad-ckpt.
