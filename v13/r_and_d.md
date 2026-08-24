@@ -228,6 +228,14 @@ writes decay; routing not content-aware, phase init zero."
   r1 **3.9211** (n=3): gap **+0.04**, narrowing across checkpoints
   (200M +0.13 → 300M +0.12 → 400M +0.04). CE curve is converging toward r1;
   the quality decision now rests entirely on the Wiki PPL series.
+- **413M re-dissection (step 25000, 2026-08-24 13:18):**
+  - **Wiki PPL 136.20** (325.76 → 211.66 → 166.75 → 149.62 → 136.20).
+  - **Selectively: still all flat — 5th straight probe.** protect
+    0.056–0.065 (bias −2.67…−2.83), phase bnorm 0.0034–0.0104,
+    write_phase wnorm 0.069–0.198 (dormant), βw/βe ≈ 0.503.
+  - The final probe (step 31250 ≈ 500M) is the verdict: if the selective
+    stack is still flat there, the Wiki PPL is whatever the base PAM/CE
+    machinery delivers — and the r1-pretrain endpoint (84.57) is the bar.
 - **generate() @82M ckpt** (120 tok, T=0.8): coherent English, **no
   repetition loop**, but factually garbled (Cambridge → "FAA / Royal Society
   for Human Services"). Healthy 82M behavior; not a quality verdict.
