@@ -189,6 +189,30 @@ writes decay; routing not content-aware, phase init zero."
     (claim 1): the selectivity/phase levers have no "store now, answer later"
     gradient in 48/48/4. The 500M finish will confirm whether anything turns
     on late, but the next run should carry the recall slice.
+- **330M re-dissection (step 20000, 2026-08-24 08:21):**
+  - **Wiki PPL 149.62** (325.76 → 211.66 → 166.75 → 149.62 — steady decline).
+  - **Selectively: still all flat.** protect 0.056–0.065 (bias −2.67…−2.83),
+    phase bnorm 0.0035–0.0105, write_phase wnorm 0.07–0.19 (dormant),
+    βw/βe ≈ 0.503. Four probes now, zero differentiation.
+  - **TARGET-FRAMING CORRECTION (important):** the scratchpad's "< 25.77" is
+    the **WikiText-trained** `v11_e3_k3/best_model.pt` anchor
+    (v11/EXPERIMENTS_V11.md:552,584), NOT the r1 *pretrain* endpoint. The r1
+    pretrain log has exactly **one** Wiki PPL: **84.57 @ 2B** (log line 1183).
+    So the fair pretrain-to-pretrain reference for this run is ~80–85 at 2B;
+    25.77 is a stretch target (2.5× lower) that requires the selective stack
+    to actually contribute on WikiText. V13's own curve (325→150 over 250M)
+    extrapolates to roughly the r1 order (~60–80) at 500M — i.e., **on track
+    to match r1's pretrain Wiki PPL, NOT to the 25.77 anchor**, unless the
+    dormant selective machinery turns on. The notes' repeated "on trajectory
+    to <25.77" was an unverified extrapolation; the 500M Wiki PPL is the
+    number that decides whether V13 beats r1 on the quality prize or merely
+    matches it.
+- **2026-08-24 09:10 incident:** `v13/` + `v7/train.py` source/notes files were
+  found deleted from the working tree (uncommitted, nothing moved — `semantic/`
+  is a separate early-stage folder, no other agent live). All restored from
+  `git checkout HEAD -- v13/ v7/train.py` (everything was committed). Live
+  tmux run unaffected (in-memory). Cause unknown — stale/accidental deletion;
+  if it recurs, check `semantic/` work or another omp instance.
 - **generate() @82M ckpt** (120 tok, T=0.8): coherent English, **no
   repetition loop**, but factually garbled (Cambridge → "FAA / Royal Society
   for Human Services"). Healthy 82M behavior; not a quality verdict.

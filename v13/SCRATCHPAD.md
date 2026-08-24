@@ -11,9 +11,14 @@ Transformer or Mamba reskin.
 - **Inference (non-negotiable):** O(1) per token. Recurrent state, no KV cache.
   `v13/selftest` gates parallel-train form ≡ recurrent-infer form.
 - **Quality (primary, now):** train on 500M rich real tokens (DCLM 48 + FineWeb
-  48 + smoltalk2_mid 4) and land WikiText-103 val PPL **< 25.77** (V11 E3 K=3
-  WikiText-only, README current-best) — ideally toward/below the transformer
-  anchor **22.69**. Also: better reasoning/maths than that V11.
+  48 + smoltalk2_mid 4) and land WikiText-103 val PPL at/below the **r1
+  pretrain endpoint ~84.6** (r1 logged Wiki PPL 84.57 @ 2B, log line 1183 —
+  the fair pretrain-to-pretrain number). **Stretch: < 25.77** (the
+  *WikiText-trained* v11_e3_k3 anchor, v11/EXPERIMENTS_V11.md:584) — 25.77
+  requires the selective stack to actually contribute; it is NOT the r1
+  pretrain endpoint (corrected 2026-08-24, see r_and_d.md 330M section).
+  Ideally toward/below the transformer anchor **22.69**. Also: better
+  reasoning/maths than that V11.
 - **Train-loss vs v11 round-1** is a kill-canary, not the prize.
 - **Training speed (secondary):** honest 4090 number with *real* grads is
   ~4–6.5K tok/s. Slow is acceptable until quality is a real number. Do not
@@ -47,11 +52,13 @@ figure; floor ~4.65, Wiki 368.69) — VOID, user-confirmed, dir wiped.
 B8/C128): steady **~4,850 tok/s @ 8.7GB**; verdicts (window means) all
 PASSED: **20M 5.46** (kill >6.6); **50M 4.65 (r1 4.81)**; **100M 4.36
 (r1 4.36)**; **200M 4.17 (r1 4.04, +0.13)**; **300M 4.08 (r1 3.96, +0.12)**;
-at ~300M. Probes (Wiki PPL): **325.76@82M → 211.66@164M → 166.75@247M**
-(on trajectory to <25.77); selective stack flat across all probes (protect
-~0.06, phase ~0, write-phase dormant, βw/βe 0.50) — see `v13/r_and_d.md`.
+at ~347M (2026-08-24 09:20). Probes (Wiki PPL): **325.76@82M → 211.66@164M →
+166.75@247M → 149.62@330M** (fair reference is r1 pretrain 84.57@2B; 25.77
+is the WikiText-trained stretch anchor — see r_and_d.md 330M section);
+selective stack flat across all probes (protect ~0.06, phase ~0, write-phase
+dormant, βw/βe 0.50) — see `v13/r_and_d.md`.
 Watchdog armed at 400M (r1 ref 3.83).
-ETA at ~4.85K: ~3.5h remaining @300M to 500M.
+ETA at ~4.8K: ~2.6h remaining @347M to 500M.
 
 **`--compile_blocks` CRASHES at first step** (2026-08-23): Inductor
 meta-kernel bug — `assert_size_stride` on `torch.ops.aten.complex.default`
@@ -74,13 +81,14 @@ tok/s (13.9GB); B8/C128 eager 5,027; B8/C256 5,085; compile-block 6,459
       2>&1 | tee -a logs/v13/500m_v13_r1recipe/tmux_console.log'
    ```
    (NO `--compile_blocks` — inductor complex-buffer crash.)
-2. Run to 500M. Probe battery on each saved ckpt (done: step 10000 ≈164M
-   Wiki 211.66; step 15000 ≈247M Wiki 166.75; remaining: step 20000 ≈330M,
-   step 25000 ≈413M, step 31250 ≈500M): Wiki PPL
+2. Run to 500M. Probe battery on each saved ckpt (done: 164M Wiki 211.66,
+   247M 166.75, 330M 149.62; remaining: step 25000 ≈413M, step 31250 ≈500M):
+   Wiki PPL
    `.venv/bin/python -m v13.eval_checkpoints --checkpoints checkpoints_v13/500m_v13_r1recipe/latest.pt --labels wiki --batch_size 2`
-   plus the weight dissection (protect gate, phase_proj, write_phase_proj,
-   erase/write betas — see `v13/r_and_d.md`) + a short `generate()` for
-   repetition. Final verdict: Wiki PPL < 25.77 (r1).
+   plus `.venv/bin/python v13/tmp/dissect_ckpt.py checkpoints_v13/500m_v13_r1recipe/latest.pt`
+   (protect gate, phase_proj, write_phase_proj, betas — see `v13/r_and_d.md`)
+   + a short `generate()` for repetition. Final verdict: Wiki PPL vs r1
+   pretrain endpoint **84.57** (match) / stretch 25.77 (selective stack).
 3. If gap >0.7 (quality, not a crash): A/B in order — (a) key-norm only on
    the erase/mass term, raw readout keys; (b) `protect_gate_bias` -3.0 → -2.0;
    (c) gate-surprisal λ 0.1 → 0.05. Diag first, then relaunch.
@@ -145,7 +153,10 @@ Loss: **10.31@2M, 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M,
 same log; the run goes to ~2B). Verdict gaps should use ±2M window means.
 Log: `logs/v11/round1_pretrain_20260701_115022_cbb4dd2_dirty/v11_v11_e3_k3_chat_pretrain_pretrain_mix.log`
 
-WikiText-103 val PPL after 500M: **< 25.77** (must), **~22.69** (want).
+WikiText-103 val PPL: **r1 pretrain endpoint 84.57 @ 2B** (log line 1183 —
+the fair pretrain-to-pretrain number to match); **stretch < 25.77** (the
+WikiText-trained v11_e3_k3 anchor, requires selective stack to contribute);
+**ideal ~22.69** (transformer). 500M probe decides match-vs-stretch.
 
 ## WAKE PROTOCOL (every wake, all of these)
 1. Read this file fully.
