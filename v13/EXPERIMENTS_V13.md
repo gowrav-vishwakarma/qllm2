@@ -268,3 +268,80 @@ vs r1 **3.96** — gap **+0.12** (kill >4.66). Matches the 200M pattern
 (+0.13): V13 tracks r1 ~0.1–0.15 NLL behind from ~200M on. Steady ~4,850
 tok/s, zero errors. Watchdog armed at 400M (r1 ref 3.83).
 - **Throughput — 100M-class (v13_e3_k3_selective, dim384×16L, 4090 24GB):** needs grad-ckpt (B8 no-ckpt OOMs by 2MiB). Steady: **B10 ≈ 2.3K tok/s** (19.8GB); B8 ≈ 2.0K; B12 OOMs on step-2 recompute peak. 11M stays faster per token: **B16 ≈ 11.6K tok/s** (21.2GB). Rule of thumb on 24GB: 11M→B16 no-ckpt; 100M→B10 grad-ckpt.
+
+## 500M r1-recipe run — COMPLETE (2026-08-24 18:54, commit d169584)
+
+`v13_e3_k3_selective`, B8/C128, eager, grad-ckpt ON, fused CE, 4090.
+Log `logs/v13/500m_v13_r1recipe/v11_v13_e3_k3_selective_lm_pretrain_mix.log`;
+ckpts `checkpoints_v13/500m_v13_r1recipe/{best,final}_model.pt`.
+
+**Endpoint:** 500,000,768 tok in **29.48 h** (106,111 s), avg **4,713 tok/s**.
+Val Loss **3.9135** / PPL **50.08** / Acc **0.340**. **Wiki PPL 133.88** (best).
+
+| gtok | v13 window NLL | r1 window NLL | gap |
+|---|---|---|---|
+| 100M | 4.43 | 4.36 | +0.07 |
+| 200M | 4.18 | 4.04 | +0.14 |
+| 300M | 4.07 | 3.96 | +0.11 |
+| 400M | 3.94 | 3.92 | +0.02 |
+| ~500M | **3.87** | **3.79** | **+0.08** |
+
+All kill gates PASSED (band was +0.7). Wiki PPL trajectory:
+**325.76@82M → 211.66@164M → 166.75@247M → 149.62@330M → 136.20@413M →
+134.03@491.5M → 133.88@500M** — flattening hard over the last 90M.
+
+**VERDICT 1 — token-matched parity, compute-matched loss.** V13 delta ties r1
+additive on CE (+0.08 NLL) but at ~3.2× the cost per token (6000 Pro bench:
+v13 7.8K vs v11 25K tok/s). Compute-matched is the honest frame and it is
+decisive: r1 reached **2B tok in 21.6 h → Wiki 84.57**; v13 reached **500M in
+29.48 h → Wiki 133.88**. Both fully-annealed cosine endpoints. For the same
+GPU-hours v11 additive sees ~4× the tokens and lands ~37% better Wiki PPL.
+**Delta-write alone does not pay for itself.**
+
+**VERDICT 2 — selective stack never woke (6 probes, 82M→500M).**
+`dissect_ckpt.py` at step 30000: protect bias [−2.833, −2.672], mean protect
+**0.056–0.065** (init 0.047); `phase_proj` wnorm 0.685–1.242 but bnorm
+0.0036–0.0105 → phases still ≈0; `write_phase_proj` wnorm 0.070–0.200
+(dormant); βw/βe ≈ **0.50** (erase learned ON early, as designed).
+CE parity comes from delta writes + CGU, **not** from selectivity.
+
+### Behavioral recall — FIRST measurement on this run
+
+`scripts/run_memory_behavioral.py --model-type v13`, 8-way contrastive,
+chance **0.125**, 60 trials/cell, 2160 examples, 0 skipped.
+JSON: `logs/memory_probes/v13_500m_r1recipe_FINAL500M_d169584_behavior.json`
+(and `..._step30000_...` — the two agree inside noise, max |Δ| 0.022).
+
+| metric | step 30000 | **FINAL 500M** |
+|---|---|---|
+| overall | 0.2532 | **0.2537** |
+| assoc=1 @ ctx128 | 0.7333 | **0.7444** |
+| assoc=1 @ ctx512 | 0.3389 | 0.3333 |
+| assoc=1 @ ctx1024 | 0.2833 | 0.3056 |
+| **assoc=1 @ ctx2048** | 0.2556 | **0.2500** |
+| assoc=1 (all ctx) | 0.4028 | 0.4083 |
+| assoc=4 | 0.2250 | 0.2194 |
+| assoc=8 | 0.1319 | 0.1333 |
+| **multi8 @ ctx128** | 0.1389 | **0.1333** |
+
+**VERDICT 3 — best PAM recall ever here, and it came free.** recall@2048
+**0.250** with **zero recall data in the mix** (48/48/4 web/chat), beating
+every arm of the v11 recall program: Stage-2 control 0.17, Stage-2 gate 0.22,
+Stage-3 hypersweep ceiling 0.23, **Stage-6c vault winner 0.189 (trained
+*with* 3% synthetic recall)**, v13 e2b_50m 0.083. Still 4× below the matched
+Transformer's **0.956**. `assoc=1 @ ctx128 = 0.744` proves the substrate can
+store and retrieve a single fact well.
+
+**VERDICT 4 — the bottleneck is write interference, not selectivity and not
+context length.** Association scaling collapses to chance independent of
+context: **0.408 (a=1) → 0.219 (a=4) → 0.133 (a=8)**, and
+**multi8 @ ctx128 = 0.1333 vs 0.125 chance** — 8 facts inside a *128-token*
+window are already unrecoverable. Superposing writes in the outer-product
+state destroys readout. This reframes the program: stop tuning selectivity
+and data mix (measured exhausted in v11 Stage-2/3/6), attack interference.
+
+**Next lever (chosen 2026-08-24):** claim 2 in `r_and_d.md` — in-chunk
+raw-key readout. `delta_key_norm` makes retrieval a pure cosine `q·k̂`;
+raw keys in the in-chunk `query_key` score restore magnitude contrast.
+Well-targeted because multi8@128 with `delta_chunk=128` lives entirely in
+the in-chunk path. Falsifier: `multi8@ctx128` must move off 0.133.

@@ -1217,3 +1217,90 @@ The University is developing a comprehensive survey that aims at identifying foo
   [1] 28725 loss=3.7484 ppl=42.5 lr=4.15e-06 | 4737 tok/s (avg 4742) ETA n/a | GPU 2.1/8.1GB | gtok=470646784
   [1] 28750 loss=3.7923 ppl=44.4 lr=4.06e-06 | 4770 tok/s (avg 4742) ETA n/a | GPU 2.1/8.1GB | gtok=471056384
   [1] 28775 loss=3.6961 ppl=40.3 lr=3.97e-06 | 4784 tok/s (avg 4742) ETA n/a | GPU 2.1/8.1GB | gtok=471465984
+  [1] 28800 loss=3.8075 ppl=45.0 lr=3.89e-06 | 4498 tok/s (avg 4742) ETA n/a | GPU 2.1/8.1GB | gtok=471875584
+  [1] 28825 loss=3.8685 ppl=47.9 lr=3.80e-06 | 4442 tok/s (avg 4742) ETA n/a | GPU 2.1/8.1GB | gtok=472285184
+  [1] 28850 loss=3.8474 ppl=46.9 lr=3.71e-06 | 4439 tok/s (avg 4741) ETA n/a | GPU 2.1/8.1GB | gtok=472694784
+  [1] 28875 loss=3.7726 ppl=43.5 lr=3.63e-06 | 4428 tok/s (avg 4741) ETA n/a | GPU 2.1/8.1GB | gtok=473104384
+  [1] 28900 loss=3.6463 ppl=38.3 lr=3.54e-06 | 4476 tok/s (avg 4741) ETA n/a | GPU 2.1/8.1GB | gtok=473513984
+  [1] 28925 loss=3.6819 ppl=39.7 lr=3.46e-06 | 4480 tok/s (avg 4741) ETA n/a | GPU 2.1/8.1GB | gtok=473923584
+  [1] 28950 loss=3.7619 ppl=43.0 lr=3.38e-06 | 4454 tok/s (avg 4740) ETA n/a | GPU 2.1/8.1GB | gtok=474333184
+  [1] 28975 loss=3.8152 ppl=45.4 lr=3.30e-06 | 4441 tok/s (avg 4740) ETA n/a | GPU 2.1/8.1GB | gtok=474742784
+  [1] 29000 loss=4.0447 ppl=57.1 lr=3.22e-06 | 4479 tok/s (avg 4740) ETA n/a | GPU 2.1/8.1GB | gtok=475152384
+  [1] 29025 loss=3.8918 ppl=49.0 lr=3.14e-06 | 4507 tok/s (avg 4740) ETA n/a | GPU 2.1/8.1GB | gtok=475561984
+  [1] 29050 loss=3.7999 ppl=44.7 lr=3.06e-06 | 4474 tok/s (avg 4739) ETA n/a | GPU 2.1/8.1GB | gtok=475971584
+  [1] 29075 loss=3.9961 ppl=54.4 lr=2.98e-06 | 4549 tok/s (avg 4739) ETA n/a | GPU 2.1/8.1GB | gtok=476381184
+  [1] 29100 loss=3.7315 ppl=41.7 lr=2.91e-06 | 4468 tok/s (avg 4739) ETA n/a | GPU 2.1/8.1GB | gtok=476790784
+  [1] 29125 loss=3.8504 ppl=47.0 lr=2.83e-06 | 4537 tok/s (avg 4739) ETA n/a | GPU 2.1/8.1GB | gtok=477200384
+  [1] 29150 loss=4.0117 ppl=55.2 lr=2.76e-06 | 4463 tok/s (avg 4739) ETA n/a | GPU 2.1/8.1GB | gtok=477609984
+  [1] 29175 loss=3.7103 ppl=40.9 lr=2.69e-06 | 4494 tok/s (avg 4738) ETA n/a | GPU 2.1/8.1GB | gtok=478019584
+  [1] 29200 loss=4.1116 ppl=61.0 lr=2.61e-06 | 4735 tok/s (avg 4738) ETA n/a | GPU 2.1/8.1GB | gtok=478429184
+  [1] 29225 loss=3.8926 ppl=49.0 lr=2.54e-06 | 4576 tok/s (avg 4738) ETA n/a | GPU 2.1/8.1GB | gtok=478838784
+  [1] 29250 loss=4.0439 ppl=57.0 lr=2.47e-06 | 4457 tok/s (avg 4738) ETA n/a | GPU 2.1/8.1GB | gtok=479248384
+  [1] 29275 loss=3.7178 ppl=41.2 lr=2.40e-06 | 4602 tok/s (avg 4738) ETA n/a | GPU 2.1/8.1GB | gtok=479657984
+  [1] 29300 loss=4.0131 ppl=55.3 lr=2.33e-06 | 4573 tok/s (avg 4738) ETA n/a | GPU 2.1/8.1GB | gtok=480067584
+  [1] 29325 loss=3.9236 ppl=50.6 lr=2.27e-06 | 4471 tok/s (avg 4737) ETA n/a | GPU 2.1/8.1GB | gtok=480477184
+  [1] 29350 loss=3.8978 ppl=49.3 lr=2.20e-06 | 4475 tok/s (avg 4737) ETA n/a | GPU 2.1/8.1GB | gtok=480886784
+  [1] 29375 loss=3.9661 ppl=52.8 lr=2.14e-06 | 4513 tok/s (avg 4737) ETA n/a | GPU 2.1/8.1GB | gtok=481296384
+  [1] 29400 loss=3.9268 ppl=50.7 lr=2.07e-06 | 4649 tok/s (avg 4737) ETA n/a | GPU 2.1/8.1GB | gtok=481705984
+  [1] 29425 loss=3.8819 ppl=48.5 lr=2.01e-06 | 4497 tok/s (avg 4737) ETA n/a | GPU 2.1/8.1GB | gtok=482115584
+  [1] 29450 loss=3.9581 ppl=52.4 lr=1.95e-06 | 4551 tok/s (avg 4737) ETA n/a | GPU 2.1/8.1GB | gtok=482525184
+  [1] 29475 loss=4.0214 ppl=55.8 lr=1.88e-06 | 4670 tok/s (avg 4737) ETA n/a | GPU 2.1/8.1GB | gtok=482934784
+  [1] 29500 loss=4.0885 ppl=59.6 lr=1.82e-06 | 4444 tok/s (avg 4736) ETA n/a | GPU 2.1/8.1GB | gtok=483344384
+  [1] 29525 loss=4.0075 ppl=55.0 lr=1.76e-06 | 4496 tok/s (avg 4736) ETA n/a | GPU 2.1/8.1GB | gtok=483753984
+  [1] 29550 loss=4.0476 ppl=57.3 lr=1.70e-06 | 4533 tok/s (avg 4736) ETA n/a | GPU 2.1/8.1GB | gtok=484163584
+  [1] 29575 loss=3.8120 ppl=45.2 lr=1.65e-06 | 4534 tok/s (avg 4736) ETA n/a | GPU 2.1/8.1GB | gtok=484573184
+  [1] 29600 loss=3.9345 ppl=51.1 lr=1.59e-06 | 4555 tok/s (avg 4736) ETA n/a | GPU 2.1/8.1GB | gtok=484982784
+  [1] 29625 loss=3.8604 ppl=47.5 lr=1.54e-06 | 4516 tok/s (avg 4735) ETA n/a | GPU 2.1/8.1GB | gtok=485392384
+  [1] 29650 loss=3.9920 ppl=54.2 lr=1.48e-06 | 4456 tok/s (avg 4735) ETA n/a | GPU 2.1/8.1GB | gtok=485801984
+  [1] 29675 loss=3.9547 ppl=52.2 lr=1.43e-06 | 4481 tok/s (avg 4735) ETA n/a | GPU 2.1/8.1GB | gtok=486211584
+  [1] 29700 loss=4.0687 ppl=58.5 lr=1.37e-06 | 4491 tok/s (avg 4735) ETA n/a | GPU 2.1/8.1GB | gtok=486621184
+  [1] 29725 loss=3.7727 ppl=43.5 lr=1.32e-06 | 4461 tok/s (avg 4734) ETA n/a | GPU 2.1/8.1GB | gtok=487030784
+  [1] 29750 loss=3.8456 ppl=46.8 lr=1.27e-06 | 4476 tok/s (avg 4734) ETA n/a | GPU 2.1/8.1GB | gtok=487440384
+  [1] 29775 loss=3.9198 ppl=50.4 lr=1.22e-06 | 4501 tok/s (avg 4734) ETA n/a | GPU 2.1/8.1GB | gtok=487849984
+  [1] 29800 loss=3.7622 ppl=43.0 lr=1.17e-06 | 4471 tok/s (avg 4734) ETA n/a | GPU 2.1/8.1GB | gtok=488259584
+  [1] 29825 loss=3.9295 ppl=50.9 lr=1.13e-06 | 4521 tok/s (avg 4734) ETA n/a | GPU 2.1/8.1GB | gtok=488669184
+  [1] 29850 loss=3.8578 ppl=47.4 lr=1.08e-06 | 4556 tok/s (avg 4733) ETA n/a | GPU 2.1/8.1GB | gtok=489078784
+  [1] 29875 loss=3.6998 ppl=40.4 lr=1.03e-06 | 4512 tok/s (avg 4733) ETA n/a | GPU 2.1/8.1GB | gtok=489488384
+  [1] 29900 loss=4.0227 ppl=55.8 lr=9.89e-07 | 4542 tok/s (avg 4733) ETA n/a | GPU 2.1/8.1GB | gtok=489897984
+  [1] 29925 loss=3.7131 ppl=41.0 lr=9.45e-07 | 4503 tok/s (avg 4733) ETA n/a | GPU 2.1/8.1GB | gtok=490307584
+  [1] 29950 loss=3.9255 ppl=50.7 lr=9.02e-07 | 4668 tok/s (avg 4733) ETA n/a | GPU 2.1/8.1GB | gtok=490717184
+  [1] 29975 loss=3.7723 ppl=43.5 lr=8.61e-07 | 4669 tok/s (avg 4733) ETA n/a | GPU 2.1/8.1GB | gtok=491126784
+Saved checkpoint: checkpoints_v13/500m_v13_r1recipe/latest.pt
+  [checkpoint @ step 30000, 491,520,000 tok]
+  [1] 30000 loss=4.1194 ppl=61.5 lr=8.20e-07 | 4748 tok/s (avg 4733) ETA n/a | GPU 2.1/8.1GB | gtok=491536384
+  [mid-epoch sample @ batch 30000, 491,536,384 tok]
+  Prompt: In 1923, the University of
+  Generated: In 1923, the University of Chicago (and a professor at Harvard’s School) founded a new organization called The University of Chicago that included researchers from the Center for Scientific Research.
+The University of Chicago published several papers on the subject that were not published in their journal journals until they were published. In February 1936, an article titled “Caring and Development of the American Physical Society in Chicago was published by the National Institute of Allergy and Infectious Diseases” that included scientists from the University of Chicago and the
+  [1] 30025 loss=3.9045 ppl=49.6 lr=7.80e-07 | 4054 tok/s (avg 4732) ETA n/a | GPU 2.1/8.1GB | gtok=491945984
+  [1] 30050 loss=3.8520 ppl=47.1 lr=7.41e-07 | 4253 tok/s (avg 4732) ETA n/a | GPU 2.1/8.1GB | gtok=492355584
+  [1] 30075 loss=3.8940 ppl=49.1 lr=7.03e-07 | 4454 tok/s (avg 4731) ETA n/a | GPU 2.1/8.1GB | gtok=492765184
+  [1] 30100 loss=4.0563 ppl=57.8 lr=6.66e-07 | 4715 tok/s (avg 4731) ETA n/a | GPU 2.1/8.1GB | gtok=493174784
+  [1] 30125 loss=4.0930 ppl=59.9 lr=6.31e-07 | 4787 tok/s (avg 4731) ETA n/a | GPU 2.1/8.1GB | gtok=493584384
+  [1] 30150 loss=4.0134 ppl=55.3 lr=5.96e-07 | 4801 tok/s (avg 4731) ETA n/a | GPU 2.1/8.1GB | gtok=493993984
+  [1] 30175 loss=3.9214 ppl=50.5 lr=5.62e-07 | 4793 tok/s (avg 4732) ETA n/a | GPU 2.1/8.1GB | gtok=494403584
+  [1] 30200 loss=4.0935 ppl=59.9 lr=5.29e-07 | 4773 tok/s (avg 4732) ETA n/a | GPU 2.1/8.1GB | gtok=494813184
+  [1] 30225 loss=3.9113 ppl=50.0 lr=4.97e-07 | 4771 tok/s (avg 4732) ETA n/a | GPU 2.1/8.1GB | gtok=495222784
+  [1] 30250 loss=3.9277 ppl=50.8 lr=4.66e-07 | 4573 tok/s (avg 4731) ETA n/a | GPU 2.1/8.1GB | gtok=495632384
+  [1] 30275 loss=3.9926 ppl=54.2 lr=4.36e-07 | 4674 tok/s (avg 4731) ETA n/a | GPU 2.1/8.1GB | gtok=496041984
+  [1] 30300 loss=3.8687 ppl=47.9 lr=4.07e-07 | 4434 tok/s (avg 4731) ETA n/a | GPU 2.1/8.1GB | gtok=496451584
+  [1] 30325 loss=3.8721 ppl=48.0 lr=3.79e-07 | 4416 tok/s (avg 4731) ETA n/a | GPU 2.1/8.1GB | gtok=496861184
+  [1] 30350 loss=3.8455 ppl=46.8 lr=3.52e-07 | 4540 tok/s (avg 4731) ETA n/a | GPU 2.1/8.1GB | gtok=497270784
+  [1] 30375 loss=3.8944 ppl=49.1 lr=3.26e-07 | 4228 tok/s (avg 4730) ETA n/a | GPU 2.1/8.1GB | gtok=497680384
+  [1] 30400 loss=3.8936 ppl=49.1 lr=3.02e-07 | 2422 tok/s (avg 4727) ETA n/a | GPU 2.1/8.1GB | gtok=498089984
+  [1] 30425 loss=3.8576 ppl=47.3 lr=2.78e-07 | 2050 tok/s (avg 4721) ETA n/a | GPU 2.1/8.1GB | gtok=498499584
+  [1] 30450 loss=4.0500 ppl=57.4 lr=2.55e-07 | 2182 tok/s (avg 4717) ETA n/a | GPU 2.1/8.1GB | gtok=498909184
+  [1] 30475 loss=3.8385 ppl=46.5 lr=2.33e-07 | 2445 tok/s (avg 4713) ETA n/a | GPU 2.1/8.1GB | gtok=499318784
+  [1] 30500 loss=4.0090 ppl=55.1 lr=2.12e-07 | 4447 tok/s (avg 4713) ETA n/a | GPU 2.1/8.1GB | gtok=499728384
+  Token budget reached: 500,000,768 / 500,000,000
+Epoch 1/9999 | Train Loss: 4.2737 PPL: 71.79 | 4713 tok/s | Time: 106090.4s (500,000,768 tok) | Val Loss: 3.9135 PPL: 50.08 Acc: 0.340 | Wiki PPL: 133.88 *best*
+Saved checkpoint: checkpoints_v13/500m_v13_r1recipe/best_model.pt
+
+Stopping: token budget 500,000,000 reached.
+Saved checkpoint: checkpoints_v13/500m_v13_r1recipe/final_model.pt
+
+Training complete (token budget)!
+Total wall time: 106111.1s (29.48h)
+Best Val Loss: 3.9135, Best Val PPL: 50.08
+
+Wall clock end: 2026-08-24 18:54:44

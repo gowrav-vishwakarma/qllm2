@@ -243,28 +243,62 @@ writes decay; routing not content-aware, phase init zero."
   Probe battery above ran on the step-5000 ckpt (82M, the latest saved at
   verdict time); the step-10000 ckpt (~164M) is the next probe opportunity.
 
-## Picks — what to actually do (ordered)
+## 500M ENDPOINT — the probe that resolved the picks (2026-08-24 18:54)
 
-1. **Leave this 500M run alone** (no LR / warmup / batch / data change). It is
-   the clean V13-vs-V11 quality A/B and it is winning. Confounding it now
-   throws away the comparison.
-2. **At 100M, run the full probe**: Wiki PPL **and** KV-recall **and** gate Δ,
-   plus the weight dissection above. This is the decision point — CE being
-   on-track but recall at chance is the exact signature that points at the
-   architecture/data (not LR).
-3. **If recall is at chance and CE is good → raw-key readout (split key-norm).**
-   The single most likely bounded recall fix: unit keys for mass + state
-   (keep the NaN fix), raw keys for the in-chunk query-key score. Gated on
-   `selftest` + ckpt-vs-no-ckpt grad equiv. This is a follow-up run, not a
-   hot-patch to the live one.
-4. **Next run: add a small recall+reason slice (~90/6/4).** The biggest missing
-   gradient. Kept small so the web base (and the quality comparison) survives.
-5. **Gate: only if Δ≈0 at the probe** → λ 0.1→0.05 and/or a tiny
-   fact-contrastive head. Not preemptive.
-6. **Phase/routing specialization (`phase_init='spread'`, content-aware
-   routing): only if the states measure undifferentiated** (low effective rank
-   / one state dominating). The vault already receives facts, so this is a
-   capacity/specialization lever, not a "facts aren't stored" fix.
+Run complete: 500,000,768 tok / 29.48 h / Wiki PPL **133.88** / val PPL 50.08.
+Full table in `EXPERIMENTS_V13.md`. Three results change the ordering below.
+
+- **Selective stack flat at the final probe too (6th).** protect 0.056–0.065,
+  phase bnorm ~0.004–0.010, write_phase dormant, βw/βe ≈ 0.50. Settled: on a
+  48/48/4 web/chat mix the selective levers do not learn, at any scale we can
+  afford. Claim 1 (data gap) is confirmed as *a* gap but is NOT the binding one
+  — see below.
+- **Compute-matched, v11 additive wins outright.** r1: 2B tok in 21.6 h → Wiki
+  84.57. v13: 500M in 29.48 h → Wiki 133.88. Delta-write costs ~3.2× per token
+  (6000 Pro: 7.8K vs 25K tok/s) and buys nothing on CE (+0.08 NLL behind).
+- **Recall, first real measurement — and it inverts the pessimism.** 8-way
+  behavioral, chance 0.125, **zero recall data in the mix**: recall@2048
+  **0.250**, assoc=1@ctx128 **0.744**, overall 0.254. That beats every v11
+  recall-program arm including the Stage-6c vault winner (0.189, trained *with*
+  3% synthetic recall) and the Stage-3 tuned ceiling (0.23). Matched
+  Transformer 0.956.
+- **The binding constraint is WRITE INTERFERENCE.** assoc 1→4→8 =
+  **0.408 → 0.219 → 0.133**, and **multi8@ctx128 = 0.1333 vs 0.125 chance**.
+  Eight facts inside a 128-token window are already unrecoverable, so this is
+  not a long-range decay problem and not a selectivity problem. Superposed
+  writes in the outer-product state destroy each other's readout.
+
+**Consequence for claim 2:** its gating condition ("only if CE on-track but
+recall at chance") is now *partially* met in the most informative way — CE is
+on-track, single-fact recall is strong (0.744@128), and it is specifically the
+**multi-fact** case that is at chance. That is exactly the signature a pure
+cosine readout `q·k̂` predicts: unit-normalized keys make N stored facts
+maximally inseparable at readout. Claim 2 is promoted to the active lever.
+
+## Picks — what to actually do (ordered, revised 2026-08-24 post-500M)
+
+1. **ACTIVE: in-chunk raw-key readout (claim 2), scope = in-chunk only.**
+   Raw keys for the `query_key` score (`model.py:989-992`); unit keys retained
+   for key-gram mass, erase read `k@S`, and state construction so the
+   eigenvalue bound `γ−βe‖k‖²` and the 500M NaN fix are untouched. The
+   cross-chunk carry `q@S` stays cosine-built — accepted limitation of this
+   scope; it affects ctx2048, not multi8@128. Well-targeted because
+   multi8@ctx128 at `delta_chunk=128` lives entirely in the in-chunk path.
+   **Falsifier: `multi8@ctx128` must move off 0.1333.** Gated on `selftest`
+   (fused ≡ K-loop ≡ recurrent with flag on), bit-identical with flag off, and
+   ckpt-vs-no-ckpt grad equivalence.
+2. **If interference does not move → the substrate is the limit.** Then the
+   honest options are redesigning the memory (capacity/superposition) or
+   returning to v11 additive. Not another lever on this stack.
+3. **DEPRIORITIZED: the ~90/6/4 recall+reason slice.** v13 reached 0.250 with
+   *no* recall data while v11 with 3% reached 0.189, and v11 Stage-3 measured
+   that *more* recall data actively hurts (w3 > w10 > w20) and 100% recall data
+   still leaves held-out recall at chance. Data exposure is not the binding
+   constraint; interference is. Do not spend a run on this first.
+4. **Gate λ, phase_init='spread', content-aware routing: do NOT.** v11
+   Stage-2/3/6 spent ~1.4B tok proving the λ/τ/γ_floor/vault-vs-phase space is
+   exhausted (best ever 0.189 vs Transformer 0.956). Six v13 probes show the
+   selective params do not move on this data. Re-sweeping is burning GPU.
 
 ## What NOT to do on this curve
 - Raise LR (6e-4) or shorten warmup — CE is already ahead of r1; the gap is
@@ -282,3 +316,11 @@ nuance, not a missing signal; and the vault point (4) misreads the math —
 writes **are** broadcast to the vault, so facts already reach persistent
 storage. Ship order: keep this run clean → 100M probe → (if recall flat)
 raw-key readout + small recall data slice in the next run.
+
+**Superseded by the 500M endpoint (2026-08-24):** the probe landed and
+reordered this. Claim 2 (key-norm readout) is the active lever; claim 1 (data
+slice) is deprioritized because v13 hit 0.250 recall@2048 with *no* recall
+data while more recall data measurably hurt v11. The real constraint is write
+interference (multi8@ctx128 = 0.133 vs 0.125 chance), and compute-matched v11
+additive beats v13 delta outright (Wiki 84.57@2B/21.6h vs 133.88@500M/29.5h).
+See "500M ENDPOINT" and the revised Picks above.

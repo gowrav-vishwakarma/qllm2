@@ -43,28 +43,33 @@ Preset: `v13_e3_k3_selective` (~100.6M). v11 additive twin: `v11_e3_k3_chat`.
 - After step 1 of any train run the log MUST contain
   `[block-grad step1] L0=... L15=... all-nonzero`. `DEAD=` → KILL immediately.
 
-## STATUS (2026-08-24 ~06:45)
-Grads under checkpointing are **fixed** (`baaf5b3`). The 02:28→09:20 "500M
-complete" run was the **buggy-code** run (20,684 tok/s avg = retracted detach
-figure; floor ~4.65, Wiki 368.69) — VOID, user-confirmed, dir wiped.
+## STATUS (2026-08-24 18:54) — 500M RUN COMPLETE
+Full verdict table in [EXPERIMENTS_V13.md](EXPERIMENTS_V13.md) "500M r1-recipe
+run — COMPLETE". Headlines:
 
-**500M IS RUNNING** (relaunched 13:26, tmux `v13_500m`, fixed code, EAGER
-B8/C128): steady **~4,850 tok/s @ 8.7GB**; verdicts (window means) all
-PASSED: **20M 5.46** (kill >6.6); **50M 4.65 (r1 4.81)**; **100M 4.36
-(r1 4.36)**; **200M 4.17 (r1 4.04, +0.13)**; **300M 4.08 (r1 3.96, +0.12)**;
-**400M 3.9634 (r1 3.9211, +0.04)** — gap NARROWING (0.13 → 0.12 → 0.04);
-at ~410M (2026-08-24 13:20). Probes (Wiki PPL): **325.76@82M → 211.66@164M
-→ 166.75@247M → 149.62@330M → 136.20@413M** (fair reference is r1 pretrain
-84.57@2B; 25.77 is the WikiText-trained stretch anchor — see r_and_d.md
-330M section); selective stack flat across all 5 probes (protect ~0.06,
-phase ~0, write-phase dormant, βw/βe 0.50) — see `v13/r_and_d.md`.
-Watchdog armed at 500M. **SENTINEL ACTIVE** (2nd deletion incident 12:35 —
-same 9 files as the 09:10 one; restored from HEAD; sentinel
-`v13/tmp/deletion_sentinel.sh` auto-restores + captures evidence; suspect
-cursor-agent/external agent, NOT semantic/ which forbids touching v13).
-ETA at ~4.4K: from 440M (14:35) → 490M ckpt (step 30000) ~17:00, 500M
-finish ~18:20. (Earlier "~1-1.5h" calls were an arithmetic error: 60M/4.4K
-≈ 3.8h.)
+- **Endpoint:** 500,000,768 tok / **29.48 h** / avg 4,713 tok/s.
+  Val PPL **50.08**, **Wiki PPL 133.88**. All kill gates passed
+  (~500M window NLL **3.87** vs r1 **3.79**, +0.08).
+- **Wiki trajectory flattened:** 325.76@82M → 211.66@164M → 166.75@247M →
+  149.62@330M → 136.20@413M → 134.03@491.5M → **133.88@500M**. The r1 pretrain
+  endpoint 84.57@2B was NOT reached and is not reachable on a 500M budget.
+- **COMPUTE-MATCHED VERDICT (the one that matters): v11 additive wins.**
+  r1 = 2B tok in 21.6 h → Wiki **84.57**. v13 = 500M in 29.48 h → Wiki
+  **133.88**. Both fully-annealed. Same GPU-hours buys v11 ~4× the tokens and
+  ~37% better Wiki PPL. Delta-write alone does not pay for its ~3.2× cost.
+- **Selective stack never woke — 6 probes, 82M→500M.** protect 0.056–0.065
+  (init 0.047), phase bnorm ~0.004–0.010 (phases ≈0), write_phase dormant,
+  βw/βe ≈ 0.50. CE parity is delta+CGU, not selectivity.
+- **BUT recall is the best this repo has produced.** 8-way behavioral
+  (chance 0.125), no recall data in the mix: **recall@2048 = 0.250**,
+  **assoc=1 @ ctx128 = 0.744**, overall 0.254. Beats v11 Stage-6c vault
+  winner **0.189** (which had 3% synthetic recall) and the Stage-3 tuned
+  ceiling 0.23. Matched Transformer is 0.956.
+- **REAL BOTTLENECK = WRITE INTERFERENCE, not selectivity, not context.**
+  assoc 1→4→8 = **0.408 → 0.219 → 0.133**; **multi8 @ ctx128 = 0.133 vs
+  0.125 chance**. 8 facts in a 128-token window are already unrecoverable.
+  Do NOT re-sweep λ/τ/γ_floor/recall-weight or vault-vs-phase — v11
+  Stage-2/3/6 measured that exhausted (~1.4B tok of evidence).
 
 **`--compile_blocks` CRASHES at first step** (2026-08-23): Inductor
 meta-kernel bug — `assert_size_stride` on `torch.ops.aten.complex.default`
@@ -75,32 +80,47 @@ Honest speed (4090, T=2048, all 16 blocks learning): B16/C128 eager **4,101**
 tok/s (13.9GB); B8/C128 eager 5,027; B8/C256 5,085; compile-block 6,459
 (BROKEN now — see above). 500M wall-clock ~28h @ 4.9K — acceptable.
 
-## NEXT
-1. **500M is running** (this session). Watchdog chain: on every wake re-arm
-   `bash v13/tmp/watchdog.sh logs/v13/500m_v13_r1recipe/v11_v13_e3_k3_selective_lm_pretrain_mix.log 400000000 2940`
-   (async + timeout 3300). Launch cmd for any relaunch:
+## NEXT — attack write interference (chosen 2026-08-24 with user)
+
+1. **IN PROGRESS: in-chunk raw-key readout** (claim 2, `r_and_d.md:33-63`).
+   `delta_key_norm=True` normalizes ONE keys tensor feeding four consumers:
+   key-gram mass, in-chunk `query_key` readout, erase read `k@S`, and state
+   construction `S += update ⊗ k`. Retrieval is therefore a pure cosine `q·k̂`
+   — magnitude contrast is gone. **Scope agreed: in-chunk ONLY** — raw keys
+   for the `query_key` score (`model.py:989-992`), unit keys retained for mass
+   / erase / state construction so stability (eigenvalue `γ−βe‖k‖²`) is
+   untouched. The cross-chunk carry `q@S` stays cosine-built; that is a known
+   limitation of this scope, affecting ctx2048 but NOT multi8@128.
+   **Why well-targeted:** multi8@ctx128 with `delta_chunk=128` lives entirely
+   in the in-chunk path.
+   **Falsifier:** `multi8 @ ctx128` must move off **0.1333** (chance 0.125).
+   Secondary: assoc=4 off 0.219, and CE must not regress.
+   **Gates before any training:** `v13/selftest.py` fused ≡ K-loop ≡
+   recurrent WITH the flag on; bit-identical to today with the flag off;
+   grad-ckpt vs no-ckpt grad equivalence. Non-negotiable.
+2. Re-measure with the same suite/seeds for comparability:
    ```
-   rm -rf checkpoints_v13/500m_v13_r1recipe
-   mkdir -p logs/v13/500m_v13_r1recipe
-   tmux new-session -d -s v13_500m \
-     'bash v13/tmp/launch_v13_500m_r1recipe.sh --batch_size 8 --delta_chunk 128 \
-      2>&1 | tee -a logs/v13/500m_v13_r1recipe/tmux_console.log'
+   .venv/bin/python scripts/run_memory_behavioral.py --model-type v13 \
+     --checkpoint <ckpt> --preset v13_e3_k3_selective \
+     --context-lengths 128,512,1024,2048 --positions 0,0.5,1 \
+     --association-counts 1,4,8 --trials 60 --candidate-count 8 \
+     --output logs/memory_probes/<name>_behavior.json
    ```
-   (NO `--compile_blocks` — inductor complex-buffer crash.)
-2. Run to 500M. Probe battery on each saved ckpt (done: 164M 211.66,
-   247M 166.75, 330M 149.62, 413M 136.20; remaining: step 31250 ≈500M):
-   Wiki PPL
-   `.venv/bin/python -m v13.eval_checkpoints --checkpoints checkpoints_v13/500m_v13_r1recipe/latest.pt --labels wiki --batch_size 2`
-   plus `.venv/bin/python v13/tmp/dissect_ckpt.py checkpoints_v13/500m_v13_r1recipe/latest.pt`
-   (protect gate, phase_proj, write_phase_proj, betas — see `v13/r_and_d.md`)
-   + a short `generate()` for repetition. Final verdict: Wiki PPL vs r1
-   pretrain endpoint **84.57** (match) / stretch 25.77 (selective stack).
-3. If gap >0.7 (quality, not a crash): A/B in order — (a) key-norm only on
-   the erase/mass term, raw readout keys; (b) `protect_gate_bias` -3.0 → -2.0;
-   (c) gate-surprisal λ 0.1 → 0.05. Diag first, then relaunch.
-4. After V13 finishes: v11 PAM 500M head-to-head, same GPU, sequential.
-5. Speed work: only after 500M is healthy, or if the run is unusable at 4K.
-   See SPEED (LATER). Do not start it instead of launching.
+   Baseline to beat: `logs/memory_probes/v13_500m_r1recipe_FINAL500M_d169584_behavior.json`.
+3. If interference does NOT move: the outer-product substrate itself is the
+   limit (capacity/superposition), not any v13 lever. That is the point to
+   either redesign the memory or return to v11 additive.
+4. Deferred, only if wanted for the record: v11 additive 500M head-to-head on
+   the 6000 (same budget, same recall suite). The compute-matched r1-vs-v13
+   comparison above already answers the practical question.
+5. **Do NOT** re-sweep λ/τ/γ_floor/recall-weight, vault-vs-phase, or add more
+   synthetic recall data — v11 Stage-2/3/6 spent ~1.4B tok proving those are
+   exhausted (100% recall data still left held-out recall at chance; more
+   recall data HURT: w3 > w10 > w20).
+
+Probe commands (CPU-safe alongside training):
+`.venv/bin/python v13/tmp/dissect_ckpt.py <ckpt>` and
+`.venv/bin/python -m v13.eval_checkpoints --checkpoints <ckpt> --labels wiki --batch_size 2`.
 
 Kill if train loss is > ~0.7 NLL above r1 (e.g. >5.5 at 50M). SIGTERM is
 safe (trainer writes `latest.pt`).
