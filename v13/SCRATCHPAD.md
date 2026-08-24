@@ -52,13 +52,17 @@ figure; floor ~4.65, Wiki 368.69) — VOID, user-confirmed, dir wiped.
 B8/C128): steady **~4,850 tok/s @ 8.7GB**; verdicts (window means) all
 PASSED: **20M 5.46** (kill >6.6); **50M 4.65 (r1 4.81)**; **100M 4.36
 (r1 4.36)**; **200M 4.17 (r1 4.04, +0.13)**; **300M 4.08 (r1 3.96, +0.12)**;
-at ~347M (2026-08-24 09:20). Probes (Wiki PPL): **325.76@82M → 211.66@164M →
+**400M 3.9634 (r1 3.9211, +0.04)** — gap NARROWING (0.13 → 0.12 → 0.04);
+at ~401M (2026-08-24 12:50). Probes (Wiki PPL): **325.76@82M → 211.66@164M →
 166.75@247M → 149.62@330M** (fair reference is r1 pretrain 84.57@2B; 25.77
 is the WikiText-trained stretch anchor — see r_and_d.md 330M section);
 selective stack flat across all probes (protect ~0.06, phase ~0, write-phase
 dormant, βw/βe 0.50) — see `v13/r_and_d.md`.
-Watchdog armed at 400M (r1 ref 3.83).
-ETA at ~4.8K: ~2.6h remaining @347M to 500M.
+Watchdog armed at 500M. **SENTINEL ACTIVE** (2nd deletion incident 12:35 —
+same 9 files as the 09:10 one; restored from HEAD; sentinel
+`v13/tmp/deletion_sentinel.sh` auto-restores + captures evidence; suspect
+cursor-agent/external agent, NOT semantic/ which forbids touching v13).
+ETA at ~4.6K: ~1.4h remaining @401M to 500M.
 
 **`--compile_blocks` CRASHES at first step** (2026-08-23): Inductor
 meta-kernel bug — `assert_size_stride` on `torch.ops.aten.complex.default`

@@ -213,6 +213,21 @@ writes decay; routing not content-aware, phase init zero."
   `git checkout HEAD -- v13/ v7/train.py` (everything was committed). Live
   tmux run unaffected (in-memory). Cause unknown — stale/accidental deletion;
   if it recurs, check `semantic/` work or another omp instance.
+- **2026-08-24 12:35 incident #2:** the SAME 9 tracked files deleted again
+  (v13/{EXPERIMENTS_V13.md,SCRATCHPAD.md,complex_ops.py,model.py,selftest.py,
+  tmp/launch_v13_500m_r1recipe.sh,train.py,triton_kernels.py} + v7/train.py);
+  my new untracked files and other tracked v13 files survived both times —
+  selective, external, not my session (reflog clean, trash empty, no
+  git-rm). Restored from HEAD again. Forensics: a `cursor-agent` worker has
+  been running since Aug 22 01:55; `qllm.code-workspace` was modified
+  11:34 (added `../sempyt` folder — the semantic-tensor project's other name).
+  Defense: `v13/tmp/deletion_sentinel.sh` polls git status every 20s,
+  auto-restores from HEAD and dumps newest processes + agent procs as
+  evidence if a third deletion happens.
+- **400M verdict (12:50): PASS** — window 398–402M mean **3.9634** (n=6) vs
+  r1 **3.9211** (n=3): gap **+0.04**, narrowing across checkpoints
+  (200M +0.13 → 300M +0.12 → 400M +0.04). CE curve is converging toward r1;
+  the quality decision now rests entirely on the Wiki PPL series.
 - **generate() @82M ckpt** (120 tok, T=0.8): coherent English, **no
   repetition loop**, but factually garbled (Cambridge → "FAA / Royal Society
   for Human Services"). Healthy 82M behavior; not a quality verdict.
