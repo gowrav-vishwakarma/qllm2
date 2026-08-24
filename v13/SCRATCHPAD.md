@@ -62,7 +62,9 @@ Watchdog armed at 500M. **SENTINEL ACTIVE** (2nd deletion incident 12:35 —
 same 9 files as the 09:10 one; restored from HEAD; sentinel
 `v13/tmp/deletion_sentinel.sh` auto-restores + captures evidence; suspect
 cursor-agent/external agent, NOT semantic/ which forbids touching v13).
-ETA at ~4.5K: ~1.1h remaining @410M to 500M.
+ETA at ~4.4K: from 440M (14:35) → 490M ckpt (step 30000) ~17:00, 500M
+finish ~18:20. (Earlier "~1-1.5h" calls were an arithmetic error: 60M/4.4K
+≈ 3.8h.)
 
 **`--compile_blocks` CRASHES at first step** (2026-08-23): Inductor
 meta-kernel bug — `assert_size_stride` on `torch.ops.aten.complex.default`
