@@ -20,6 +20,10 @@ import math
 import torch
 import torch.nn.functional as F
 
+from sempyt.dim import Dim
+from sempyt.policies import SplitComplex
+from sempyt.tensor import named
+
 from v13.model import V13Config, V13LM, V13PAMLayer
 from v13.triton_kernels import set_triton_enabled
 from v13_sempty.config import V13Config as SConfig
@@ -28,14 +32,30 @@ from v13_sempty.model import V13PAMLayer as SPAM
 from v13_sempty.fused_ce import fused_linear_cross_entropy
 from v13_sempty.train import Trainer, build_param_groups, synthetic_loader
 
+
+def _as_named_tokens(x):
+    """Public-edge wrap for PAM selftests (v13 still speaks raw torch)."""
+    pair = Dim("complex_pair", 2)
+    return named(
+        x,
+        (Dim("batch", x.shape[0]), Dim("time", x.shape[1]),
+         Dim("model_dim", x.shape[2]), pair),
+        SplitComplex(pair),
+    )
+
 set_triton_enabled(False)
 
 ATOL_TIGHT = 1e-5
 ATOL_RECUR = 2e-3
 
 
+def _unwrap(t):
+    """Drop back to raw torch at the v13 comparison boundary."""
+    return t.data if hasattr(t, "layout") else t
+
+
 def _max(a, b):
-    return (a - b).abs().max().item()
+    return (_unwrap(a) - _unwrap(b)).abs().max().item()
 
 
 def _prod_kw(**extra):
@@ -72,7 +92,8 @@ def test_pam_equiv(batch_size=2, seq_len=24, seed=0):
     x1 = x.clone().requires_grad_(True)
     x2 = x.clone().requires_grad_(True)
     y1, S1 = ref(x1)
-    y2, S2 = port(x2)
+    y2, S2 = port(_as_named_tokens(x2))
+    y2 = y2.data
     (y1 ** 2).sum().backward()
     (y2 ** 2).sum().backward()
     dy, dS, dg = _max(y1, y2), _max(S1, S2), _max(x1.grad, x2.grad)
@@ -88,12 +109,13 @@ def test_parallel_vs_recurrent(batch_size=2, seq_len=20, seed=2):
     port = SPAM(SConfig(**kw)).eval()
     x = torch.randn(batch_size, seq_len, kw['dim'], 2) * 0.5
     with torch.no_grad():
-        par, _ = port(x, state=None, step_offset=0)
+        par, _ = port(_as_named_tokens(x), state=None, step_offset=0)
         steps, state = [], None
         for t in range(seq_len):
-            y, state = port(x[:, t:t + 1], state=state, step_offset=t)
-            steps.append(y)
+            y, state = port(_as_named_tokens(x[:, t:t + 1]), state=state, step_offset=t)
+            steps.append(y.data)
         rec = torch.cat(steps, dim=1)
+    par = par.data
     d = (par - rec).abs().max().item()
     ok = d < ATOL_RECUR
     print(f"[par vs recur    ] max|d|={d:.2e}  {'PASS' if ok else 'FAIL'}")

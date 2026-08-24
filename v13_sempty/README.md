@@ -4,7 +4,31 @@ v13 selective PAM language model rewritten on the [sempyt](https://github.com/) 
 
 Same architecture, same parameter names, same training math as `v13`. A v13 `state_dict` loads directly. Forward logits and backward grads match v13 on CPU (see `selftest.py`).
 
-The model is written in **sempyt named-axis style**: `Dim` objects, `.to()` instead of `.view()`, `contract` / `as_complex` / `SplitComplex *` instead of raw `F.linear` and `[..., 0]` bookkeeping. The only `.raw()` exits are things sempyt cannot name — `torch.linalg.solve_triangular` in the delta UT solve, and the chunked fused-CE autograd Function.
+The model is written in **sempyt named-axis style**: `Dim` objects with self-explanatory names, `.to()` instead of `.view()` / `.permute()`, `contract` / `as_complex` / `SplitComplex *` instead of raw `F.linear` and `[..., 0]` bookkeeping.
+
+### Named axes
+
+| Dim | Meaning |
+|-----|---------|
+| `batch` | items in the minibatch |
+| `time` | token positions |
+| `model_dim` | residual / embedding width (v13 `dim`) |
+| `heads` | PAM heads |
+| `head_feature` | per-head channel width (v13 `head_dim`) |
+| `complex_pair` | last axis of size 2: real then imag (was `px`) |
+| `qkv_slot` / `qkv_fused` | fused QKV packing |
+| `memory_states` | E3 notebooks (v13 `n_states`) |
+| `real_imag_feature` | `concat(real, imag)` along `model_dim` |
+| `head_row` / `head_col` | the two axes of the d×d notebook matrix |
+
+### What stays on raw torch (and why)
+
+| Site | Why sempyt cannot replace it |
+|------|------------------------------|
+| `fused_decay_matrix` | builds a `[time, time]` lag table from cumsum/tril |
+| chunked PAM GEMM loops | bit-identical v13 `@` sequence; packing for the UT solve |
+| `torch.linalg.solve_triangular` | no named form |
+| `fused_ce.py` | custom autograd that must never materialize `[N, vocab]` |
 
 ## Layout
 
@@ -12,7 +36,9 @@ The model is written in **sempyt named-axis style**: `Dim` objects, `.to()` inst
 |------|------|
 | `config.py` | `V13Config`, `PRESETS`, `get_config` (data only) |
 | `complex_ops.py` | Split-real complex modules via sempyt `NamedTensor` + `SplitComplex` |
-| `model.py` | `V13PAMLayer` / `V13Block` / `V13LM` (fused PAM path is torch at `.raw()`) |
+| `model.py` | `V13PAMLayer` / `V13Block` / `V13LM` (named end to end) |
+| `pam_ops.py` | named PAM primitives: the delta chunk solve and the decode step |
+| `check_torch_layout.py` | fails if anything reaches around sempyt outside a declared boundary |
 | `fused_ce.py` | Chunked tied-head linear + CE (custom autograd; `grad_weight +=`) |
 | `train.py` | Self-contained trainer (no `V7Trainer`) |
 | `selftest.py` | Equivalence contract vs `v13` |

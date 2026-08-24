@@ -9,9 +9,11 @@
   commit 65546dc dropped `grad_weight += ...`), stalling every `--fused_ce` v13
   run 2-3.5 NLL above reference for hours. `git log` on the file would have
   shown the good line one commit back.
-- Throwaway/debug scripts under `v13/tmp/` do NOT need commits.
-- Never touch the dirty hunk in `v13/train.py` (~lines 445-449, synthetic-source
+- Throwaway/debug scripts under `v*/tmp/` do NOT need commits.
+- Never touch the dirty hunk in `v*/train.py` (~lines 445-449, synthetic-source
   resume cursors `skip_docs_map.setdefault`).
+- When we do some ablation and it is proven to be not good, record in experiments, its maths logic but once it is proven not useful, remove its path from all code of that version, to keep code neat and clean. 
+- logs files should be identifeable with name that what version or commit hash made this so we can find which log to see from hundreds of log files. (if we need, last run, we should get by its last modified time or by commit hash if at some specific time) 
 
 ## Long training
 - ONLY in tmux (`tmux new-session -d`), never hub/bash-managed.
