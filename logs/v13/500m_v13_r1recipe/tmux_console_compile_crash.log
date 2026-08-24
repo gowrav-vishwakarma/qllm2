@@ -1,0 +1,99 @@
+[Discord] Webhook configured -- notifications enabled
+Wall clock start: 2026-08-23 13:10:54
+============================================================
+  V11: PAM with new memory dynamics
+  Preset: v13_e3_k3_selective | Stage: lm | Dataset: pretrain_mix
+============================================================
+
+Config: {'vocab_size': 50261, 'dim': 384, 'n_heads': 6, 'head_dim': 64, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_learned_pos': False, 'use_rope': True, 'use_gsp': True, 'fused_qkv': True, 'qk_norm': False, 'tie_weights': True, 'gradient_checkpointing': True, 'activation': 'swish', 'chunk_size': 256, 'decay_mode': 'head', 'write_mode': 'delta', 'delta_erase_gate': True, 'n_states': 3, 'delta_chunk': 128, 'state_dt_spread': 2.0, 'base_dt_bias': -4.0, 'gate_content_aware': True, 'protect_gate_bias': -3.0, 'routing_content_aware': False, 'state_compete': False, 'phase_init': 'zero', 'route_balance_lambda': 0.0, 'aux_loss_weight': 1.0, 'fused_e3': True, 'delta_key_norm': True, 'delta_erase_beta_cap': 0.95, 'recompute_pam_chunks': False, 'delta_decay_factored': False, 'delta_decay_factor_min_a': 1e-06, 'gamma_floor': 0.0, 'gate_surprisal_lambda': 0.1, 'gate_surprisal_tau': 1.0, 'gate_surprisal_sign': 1.0, 'vault_state': True, 'vault_state_idx': 0, 'write_phase_address': True}
+Memory dynamics: decay_mode=head, write_mode=delta, n_states=3, chunk_size=256
+Batch size: 8, Epochs: 10, LR: 0.0003
+Token budget: 500,000,000
+
+Loading pretrain_mix (seq_len=2048)...
+Streaming pretrain blend: sources=['dclm', 'fineweb', 'smoltalk2_mid'] weights=[48.0, 48.0, 4.0] edu>=3 budget=500000000 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=42 warmup=1,000,000,000 skips={'dclm': 0, 'fineweb': 0, 'smoltalk2_mid': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+Val chunks: 121
+Val: in-distro holdout (31 batches), WikiText secondary (16 batches)
+Train batches: streaming, Val batches: 31
+
+Model parameters: {'embedding (tied)': 38600448, 'blocks': 61724512, 'norms': 768, 'lm_head': 296064, 'total': 100621792}
+Total: 100,621,792 (100.6M)
+Param groups: 260 tensors (100,569,856) with wd, 229 tensors (51,936) without
+fused_ce enabled (chunked linear+CE; logits never materialized)
+Compiling per-block inside checkpoint (mode=default)...
+
+Training on cuda
+Parameters: {'embedding (tied)': 38600448, 'blocks': 61724512, 'norms': 768, 'lm_head': 296064, 'total': 100621792}
+Total: 100,621,792 (100.6M)
+Epochs: 1..9999, Batches/epoch: stream
+Periodic checkpoint: every 5000 steps -> latest.pt
+
+
+============================================================
+Epoch 1/9999
+============================================================
+Token indices sequence length is longer than the specified maximum sequence length for this model (1053 > 1024). Running this sequence through the model will result in indexing errors
+/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_inductor/lowering.py:1890: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/gowrav/.local/share/uv/python/cpython-3.9.24-linux-x86_64-gnu/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gowrav/.local/share/uv/python/cpython-3.9.24-linux-x86_64-gnu/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/home/gowrav/Development/qllm2/v13/train.py", line 681, in <module>
+    main()
+  File "/home/gowrav/Development/qllm2/v13/train.py", line 673, in main
+    trainer.train()
+  File "/home/gowrav/Development/qllm2/v7/train.py", line 815, in train
+    train_metrics = self.train_epoch(epoch)
+  File "/home/gowrav/Development/qllm2/v7/train.py", line 497, in train_epoch
+    out = self._hidden_fn(input_ids)
+  File "/home/gowrav/Development/qllm2/v13/model.py", line 1601, in _hidden_to_lm
+    z, _ = self._ckpt_block(block, z, step_offset)
+  File "/home/gowrav/Development/qllm2/v13/model.py", line 1672, in _ckpt_block
+    return grad_checkpoint(run, z, use_reentrant=False)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_compile.py", line 53, in inner
+    return disable_fn(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_dynamo/eval_frame.py", line 929, in _fn
+    return fn(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/utils/checkpoint.py", line 495, in checkpoint
+    ret = function(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v13/model.py", line 1670, in run
+    return compiled(z_in, pam_state=None, step_offset=step_offset)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_dynamo/eval_frame.py", line 736, in compile_wrapper
+    return fn(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/v13/model.py", line 1457, in forward
+    def forward(self, x, pam_state=None, step_offset: int = 0):
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_dynamo/eval_frame.py", line 929, in _fn
+    return fn(*args, **kwargs)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_functorch/aot_autograd.py", line 1241, in forward
+    return compiled_fn(full_args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 370, in runtime_wrapper
+    all_outs = call_func_at_runtime_with_args(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_functorch/_aot_autograd/utils.py", line 126, in call_func_at_runtime_with_args
+    out = normalize_as_list(f(args))
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_functorch/_aot_autograd/utils.py", line 100, in g
+    return f(*args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/autograd/function.py", line 576, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 2074, in forward
+    fw_outs = call_func_at_runtime_with_args(
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_functorch/_aot_autograd/utils.py", line 126, in call_func_at_runtime_with_args
+    out = normalize_as_list(f(args))
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 556, in wrapper
+    return compiled_fn(runtime_args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 750, in inner_fn
+    outs = compiled_fn(args)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_inductor/output_code.py", line 584, in __call__
+    return self.current_callable(inputs)
+  File "/home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/_inductor/utils.py", line 2716, in run
+    out = model(new_inputs)
+  File "/tmp/torchinductor_gowrav/kd/ckdrurezhsvqrdr6kbpwgfe3pskhh4utq45l7xjo57bmsmovaoje.py", line 15965, in call
+    assert_size_stride(buf113, (144, 128, 64), (8192, 64, 1), 'torch.ops.aten.complex.default')
+AssertionError: expected size 144==144, stride 64==8192 at dim=0; expected size 128==128, stride 9216==64 at dim=1
+Error in op: torch.ops.aten.complex.default
+This error most often comes from a incorrect fake (aka meta) kernel for a custom op.
+Use torch.library.opcheck to test your custom op.
+See https://pytorch.org/docs/stable/library.html#torch.library.opcheck
