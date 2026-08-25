@@ -146,6 +146,17 @@ non-zero grad, GPU 7.7GB, no NaN. **VERDICT 20M (12:36+49min): step 1225
 loss=5.375 vs r1 ref 5.87 → 0.5 NLL BELOW the curve** (slice not hurting CE;
 kill gate is >0.7 ABOVE). Watchdog re-armed to 82M (step 5000 = first saved
 ckpt, ~4h out). At ckpt: recall battery (multi8@128 must move off 0.133).
+**CKPT-1 (step 5000 / 82M, 17:52) — INCONCLUSIVE, continue.** CE vs r1 at
+the SAME step: 4.2871 vs 4.2877 — literally identical (slice not hurting).
+Recall battery (probe_config matched: raw_readout on, cap 1.0):
+`logs/memory_probes/v13_B_recall_ckpt5000_behavior.json`. multi8@128 =
+0.100/0.100/0.117 (pos 0/0.5/1) vs r1-FINAL 0.133/0.150/0.117 — within the
+60-trial noise floor (SE ≈ 0.042), and unfair anyway: B has 16% of tokens,
+r1-final had 100%. Model has seen only ~3.3M recall-slice tokens so far;
+probe vocab is disjoint by design → pure structural transfer, needs time.
+Verdict: NOT the gate point — no r1@82M battery exists to compare against
+(only r1-FINAL + r1-step30000≈491M on disk). Next gate: step 10000 / 164M
+(~8h). If multi8@128 still ≈chance at 164M AND 300M, re-evaluate B vs C.
 
 - **GATE (re-arm watchdog on every wake).** Kill if loss > 0.7 NLL above r1
   (r1 curve: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M).
