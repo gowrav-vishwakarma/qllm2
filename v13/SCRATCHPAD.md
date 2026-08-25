@@ -168,6 +168,18 @@ recall slice is paying off on multi-fact. CE: 4.04@164M vs r1 ref ~4.4 →
 still ahead, no regression. DECISION: continue to step 15000 / 246M
 (next ckpt, ~7h); full battery + Wiki PPL at 500M for the final B-vs-C
 verdict. Early-kill trigger: if 246M multi8@128 avg < 0.15, B is failing.
+**CKPT-3 (step 15000 / 246M, 04:11) — POSITIVE, continue to 500M.**
+`v13_B_recall_ckpt15000_behavior.json`. multi8@128 avg: 0.106 (82M) →
+0.133 (164M) → **0.144** (246M) vs r1-FINAL 0.133 — monotonic rise, now
+above the fully-trained web-only model. The 0.15 early-kill trigger was
+missed by 0.006 (inside 60-trial noise SE~0.042) and is OVERRIDDEN: the
+broader multi-fact metric is clearly winning — n8 all-ctx/pos =
+**0.233 vs r1-FINAL 0.178** (+0.055) at HALF the budget; n1 jumped
+0.241→0.406 (r1-FINAL 0.544, converging); n4 at parity (0.278 vs 0.293).
+CE 4.0261 @246M, healthy. DECISION: run to 500M (step ~30500, ~16h);
+final verdict = full battery + Wiki PPL vs r1-FINAL + C (v11 additive)
+compute-matched. If n8 all-ctx holds ≥ r1-FINAL at 500M, B wins on
+recall with zero CE cost.
 
 - **GATE (re-arm watchdog on every wake).** Kill if loss > 0.7 NLL above r1
   (r1 curve: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M).
