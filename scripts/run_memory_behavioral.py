@@ -66,7 +66,7 @@ def _load_v11(checkpoint: Path, preset: str, device: torch.device):
     return model, tokenizer, cfg
 
 
-def _load_v13(checkpoint: Path, preset: str, device: torch.device):
+def _load_v13(checkpoint: Path, preset: str, device: torch.device, extra: dict[str, Any] | None = None):
     from v13.model import V13LM, get_config
     from v7.data import get_chat_tokenizer
 
@@ -79,6 +79,11 @@ def _load_v13(checkpoint: Path, preset: str, device: torch.device):
     cfg.max_seq_len = preset_cfg.max_seq_len
     cfg.dropout = 0.0
     cfg.gradient_checkpointing = False
+    if extra:
+        for key, value in extra.items():
+            if not hasattr(cfg, key):
+                raise SystemExit(f'unknown v13 config key: {key}')
+            setattr(cfg, key, value)
     model = V13LM(cfg)
     model.load_state_dict(payload['model_state_dict'])
     model.to(device).eval()
@@ -206,7 +211,13 @@ def build_parser() -> argparse.ArgumentParser:
                         help='Seeds per (context, position, assoc) cell (default 60)')
     parser.add_argument('--seed', type=int, default=1000)
     parser.add_argument('--candidate-count', type=int, default=8)
+    parser.add_argument('--v13-config', action='append', default=[],
+                        metavar='KEY=VALUE',
+                        help='Override a v13 config key (bool/int/float); repeatable')
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--pam-scale', type=float, default=None,
+                        help='Override every V13 PAM residual scale '
+                             '(ablation; 0.0 disables the PAM memory path)')
     return parser
 
 
@@ -220,7 +231,23 @@ def main() -> int:
         model, tokenizer, config = _load_v11(args.checkpoint, args.preset, device)
         identity = str(args.checkpoint)
     elif args.model_type == 'v13':
-        model, tokenizer, config = _load_v13(args.checkpoint, args.preset, device)
+        extra = {}
+        for item in args.v13_config:
+            key, _, raw = item.partition('=')
+            parsed = raw.strip().lower()
+            value: Any
+            if parsed in ('true', 'false'):
+                value = parsed == 'true'
+            elif parsed.lstrip('-').isdigit():
+                value = int(parsed)
+            else:
+                value = float(parsed)
+            extra[key.strip()] = value
+        model, tokenizer, config = _load_v13(args.checkpoint, args.preset, device, extra)
+        if args.pam_scale is not None:
+            with torch.no_grad():
+                for block in model.blocks:
+                    block.pam_scale.fill_(args.pam_scale)
         identity = str(args.checkpoint)
     elif args.model_type == 'transformer':
         model, tokenizer, config = _load_transformer(args.checkpoint, device)
