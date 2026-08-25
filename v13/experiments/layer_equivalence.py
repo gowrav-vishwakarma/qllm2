@@ -72,7 +72,7 @@ def check_step_equivalence(write_mode: str, seq_len: int = 48, seed: int = 0) ->
     B, T, dim = 2, seq_len, layer.dim
     x = torch.randn(B, T, dim, 2)
     with torch.no_grad():
-        queries, keys, values = layer._project(x, 0)
+        queries, keys, values, _ = layer._project(x, 0)
         decay_gamma, protected_values = layer._gamma_and_vprime(x, values)
         write_beta = torch.sigmoid(layer.beta_proj(cabs(x))).transpose(1, 2) if write_mode == 'delta' else None
 
@@ -156,7 +156,7 @@ def check_real_layer_leak(write_mode: str = 'delta', steps: int = 512, seed: int
         # fact token (no gate: use raw values, gamma=1 handled by feeding a token whose
         # protect prob we force to 0 via a direct step)
         x_fact = torch.randn(B, 1, dim, 2)
-        qf, kf, vf = layer._project(x_fact, 0)
+        qf, kf, vf, _ = layer._project(x_fact, 0)
         # force p=0 for the fact: decay=base, v_prot = v
         decay_fact = torch.full((B, H), 1.0)
         S = torch.zeros(B, H, d, d, 2)
@@ -185,7 +185,7 @@ def check_real_layer_leak(write_mode: str = 'delta', steps: int = 512, seed: int
         tr = [signal(S)]
         for t in range(steps):
             x_t = torch.randn(B, 1, dim, 2)
-            qt, kt, vt = layer._project(x_t, t + 1)
+            qt, kt, vt, _ = layer._project(x_t, t + 1)
             # force PROTECTED filler: p=1 -> decay=1, v_prot=0 (pure read + erase only)
             decay_t = torch.ones(B, H)
             v_prot_t = torch.zeros_like(vt[:, :, 0])

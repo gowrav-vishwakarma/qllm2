@@ -113,6 +113,30 @@ class V13Config:
     # init: the erase strength is still learned (sigmoid range 0.047..0.95), only
     # the pathological >2 overshoot is removed. Complements delta_key_norm.
     delta_erase_beta_cap: float = 0.95
+    # delta_raw_key_readout: split the key used for RETRIEVAL from the key used
+    # for stability. With delta_key_norm=True a single unit key k^ feeds all four
+    # consumers (key-gram mass, in-chunk query-key score, erase read k@S, state
+    # construction), so the retrieval score is q.k^ — a pure cosine, with key
+    # magnitude stripped out. N stored facts are then maximally inseparable at
+    # readout, which is the measured failure: at 500M, assoc=1 recall is 0.744
+    # @ctx128 but assoc=8 is 0.133 vs 0.125 chance (write interference).
+    #
+    # Since q.k_raw == ||k|| * (q.k^), raw-key retrieval is exactly a readout
+    # state weighted by ||k||. We therefore keep TWO states:
+    #   S_erase = sum_s u_s (x) k^_s   -> erase read + stability (UNCHANGED, so
+    #                                     the eigenvalue bound gamma - b_e*||k^||^2
+    #                                     and the 500M NaN fix are untouched)
+    #   S_read  = sum_s u_s (x) k_s    -> retrieval only (magnitude restored)
+    # A single state cannot do this: folding ||k|| into the write would also
+    # change what the erase reads back. Two states keep it a pure readout change
+    # and keep parallel-train == recurrent-infer exact (the non-negotiable);
+    # in-chunk-only raw keys would break that equivalence, because the in-chunk
+    # query-key sum IS the algebraic expansion of q@S and must use the same key
+    # that built S.
+    # Cost: the returned state is stacked [2,...] instead of [...] (2x state
+    # memory, still O(1) per token for inference). OFF = bit-identical to the
+    # 500M production path.
+    delta_raw_key_readout: bool = False
     recompute_pam_chunks: bool = False  # recompute per-chunk W/D/A in backward (exact; less VRAM, more FLOPs)
     # delta_decay_factored: rewrite the chunk (I+M)X=W system using
     # D[t,s]=a[t]/a[s] so the triangular matrix is K-independent
@@ -172,6 +196,7 @@ class V13PAMLayer(nn.Module):
         self.write_mode = cfg.write_mode
         self.delta_key_norm = getattr(cfg, 'delta_key_norm', False)
         self.delta_erase_beta_cap = getattr(cfg, 'delta_erase_beta_cap', 0.0)
+        self.delta_raw_key_readout = getattr(cfg, 'delta_raw_key_readout', False)
         self.n_states = cfg.n_states
         self.delta_chunk = cfg.delta_chunk
         self.fused_e3 = getattr(cfg, 'fused_e3', True)
@@ -396,9 +421,16 @@ class V13PAMLayer(nn.Module):
         # V13Config.delta_key_norm). Done after RoPE/phase addressing so the
         # phase gate sees the same key content it did pre-fix; only magnitude
         # is removed, which the delta mass term needs bounded.
+        #
+        # Returns (queries, keys, values, readout_keys). `keys` is the stability
+        # key (unit-norm under delta_key_norm) used for mass / erase / state
+        # construction. `readout_keys` is what retrieval scores against: the same
+        # tensor unless delta_raw_key_readout restores pre-norm magnitude.
         if self.write_mode == 'delta' and self.delta_key_norm:
-            keys = cnormalize_vec(keys)
-        return queries, keys, values
+            unit_keys = cnormalize_vec(keys)
+            readout_keys = keys if self.delta_raw_key_readout else unit_keys
+            return queries, unit_keys, values, readout_keys
+        return queries, keys, values, keys
 
     def _apply_write_phase_address(self, queries, keys, values):
         """Rotate values by e^{iψ(k)} and queries by e^{iψ(q)}; ψ = Linear(|·|)."""
@@ -612,7 +644,7 @@ class V13PAMLayer(nn.Module):
     # ── E2: delta-rule write (UT transform), chunked, head scalar decay ───────
 
     def _forward_delta(self, queries, keys, protected_values, decay_gamma, write_beta, head_dim,
-                       erase_beta=None):
+                       erase_beta=None, readout_keys=None):
         """Gated delta rule via per-chunk UT transform. decay_gamma: [B,H,T] head scalar.
 
         E2b: erase_beta [B,H,T] (default = write_beta, legacy) weights the UT mass
@@ -621,10 +653,17 @@ class V13PAMLayer(nn.Module):
         """
         if erase_beta is None:
             erase_beta = write_beta
+        if readout_keys is None:
+            readout_keys = keys
+        split_readout = self.delta_raw_key_readout
         batch_size, num_heads, seq_len = queries.shape[:3]
         chunk_size = self.delta_chunk
         query_scale = head_dim ** -0.5
         memory_state = queries.new_zeros(batch_size, num_heads, head_dim, head_dim, 2)
+        memory_read = (
+            queries.new_zeros(batch_size, num_heads, head_dim, head_dim, 2)
+            if split_readout else None
+        )
         outputs = []
         identity = torch.eye(chunk_size, device=queries.device, dtype=torch.float32)
         for chunk_start in range(0, seq_len, chunk_size):
@@ -632,6 +671,7 @@ class V13PAMLayer(nn.Module):
             chunk_len = chunk_end - chunk_start
             queries_chunk = queries[:, :, chunk_start:chunk_end]
             keys_chunk = keys[:, :, chunk_start:chunk_end]
+            readout_keys_chunk = readout_keys[:, :, chunk_start:chunk_end]
             values_chunk = protected_values[:, :, chunk_start:chunk_end]
             decay_gamma_chunk = decay_gamma[:, :, chunk_start:chunk_end]   # [B,H,Tc]
             write_beta_chunk = write_beta[:, :, chunk_start:chunk_end]     # [B,H,Tc]
@@ -645,6 +685,7 @@ class V13PAMLayer(nn.Module):
             cumulative_alpha = torch.exp(torch.cumsum(log_decay, dim=-1))  # alpha_t = prod_{0..t} g
 
             key_real, key_imag = keys_chunk[..., 0], keys_chunk[..., 1]
+            read_key_real, read_key_imag = readout_keys_chunk[..., 0], readout_keys_chunk[..., 1]
             query_real, query_imag = queries_chunk[..., 0], queries_chunk[..., 1]
             key_gram_real = key_real @ key_real.transpose(-1, -2) + key_imag @ key_imag.transpose(-1, -2)
             key_gram_imag = key_imag @ key_real.transpose(-1, -2) - key_real @ key_imag.transpose(-1, -2)
@@ -679,8 +720,14 @@ class V13PAMLayer(nn.Module):
                 mass_real, mass_imag, write_real, write_imag, identity[:chunk_len, :chunk_len]
             )
 
-            query_key_real = query_real @ key_real.transpose(-1, -2) + query_imag @ key_imag.transpose(-1, -2)
-            query_key_imag = query_imag @ key_real.transpose(-1, -2) - query_real @ key_imag.transpose(-1, -2)
+            if split_readout:
+                query_key_real = (query_real @ read_key_real.transpose(-1, -2)
+                                  + query_imag @ read_key_imag.transpose(-1, -2))
+                query_key_imag = (query_imag @ read_key_real.transpose(-1, -2)
+                                  - query_real @ read_key_imag.transpose(-1, -2))
+            else:
+                query_key_real = query_real @ key_real.transpose(-1, -2) + query_imag @ key_imag.transpose(-1, -2)
+                query_key_imag = query_imag @ key_real.transpose(-1, -2) - query_real @ key_imag.transpose(-1, -2)
             causal_inclusive = torch.tril(
                 torch.ones(chunk_len, chunk_len, device=queries.device, dtype=decay_matrix.dtype)
             )
@@ -690,7 +737,10 @@ class V13PAMLayer(nn.Module):
             output_imag = (projection_real @ update_imag + projection_imag @ update_real) * query_scale
             output_chunk = torch.stack([output_real, output_imag], dim=-1)
             if chunk_start > 0:
-                state_real, state_imag = memory_state[..., 0], memory_state[..., 1]
+                if split_readout:
+                    state_real, state_imag = memory_read[..., 0], memory_read[..., 1]
+                else:
+                    state_real, state_imag = memory_state[..., 0], memory_state[..., 1]
                 scaled_query_real = query_real * query_scale * cumulative_alpha.unsqueeze(-1)
                 scaled_query_imag = query_imag * query_scale * cumulative_alpha.unsqueeze(-1)
                 carried_real = (
@@ -712,11 +762,21 @@ class V13PAMLayer(nn.Module):
             state_imag = update_decayed_imag.transpose(-1, -2) @ key_real - update_decayed_real.transpose(-1, -2) @ key_imag
             state_chunk = torch.stack([state_real, state_imag], dim=-1)
             memory_state = memory_state * cumulative_total.unsqueeze(-1).unsqueeze(-1) + state_chunk
+            if split_readout:
+                # S_read: same updates u, outer-producted against the RAW key k.
+                rd_real = (update_decayed_real.transpose(-1, -2) @ read_key_real
+                           + update_decayed_imag.transpose(-1, -2) @ read_key_imag)
+                rd_imag = (update_decayed_imag.transpose(-1, -2) @ read_key_real
+                           - update_decayed_real.transpose(-1, -2) @ read_key_imag)
+                rd_chunk = torch.stack([rd_real, rd_imag], dim=-1)
+                memory_read = memory_read * cumulative_total.unsqueeze(-1).unsqueeze(-1) + rd_chunk
+        if split_readout:
+            return torch.cat(outputs, dim=2), torch.stack([memory_state, memory_read], dim=0)
         return torch.cat(outputs, dim=2), memory_state
 
     # ── E3: multi-state superposition (loop over states, phase-combine) ───────
 
-    def _forward_multistate(self, x, queries, keys, protected_values, head_dim):
+    def _forward_multistate(self, x, queries, keys, protected_values, head_dim, readout_keys=None):
         batch_size, seq_len = x.shape[0], x.shape[1]
         num_heads, num_memory_states = self.num_heads, self.n_states
         query_scale = head_dim ** -0.5
@@ -738,7 +798,7 @@ class V13PAMLayer(nn.Module):
             if self.write_mode == 'delta':
                 output_state, memory_state = self._forward_delta(
                     queries, keys, protected_values_state, decay_gamma_state,
-                    write_beta, head_dim, erase_beta=erase_beta,
+                    write_beta, head_dim, erase_beta=erase_beta, readout_keys=readout_keys,
                 )
             elif self.decay_mode == 'per_channel':
                 output_state, memory_state = self._forward_chunked_perchannel(
@@ -760,6 +820,9 @@ class V13PAMLayer(nn.Module):
             output_state = cmul(output_state, rotation.unsqueeze(-2))         # rotate+scale complex output
             output_sum = output_state if output_sum is None else output_sum + output_state
             state_list.append(memory_state)
+        if self.delta_raw_key_readout and self.write_mode == 'delta':
+            # each memory_state is [2,B,H,d,d,2]; stack [K,2,...] -> [2,K,...]
+            return output_sum, torch.stack(state_list, dim=0).transpose(0, 1).contiguous()
         return output_sum, torch.stack(state_list, dim=0)                     # [K,B,H,d,d,2]
 
     # ── E3 fused: state-independent work hoisted, K states collapsed ──────────
@@ -949,7 +1012,10 @@ class V13PAMLayer(nn.Module):
     #     K without a Python loop.
     # Bit-identical to the K-loop (same ops, batched on the state dim).
 
-    def _forward_multistate_delta_fused(self, x, queries, keys, values, head_dim):
+    def _forward_multistate_delta_fused(self, x, queries, keys, values, head_dim,
+                                        readout_keys=None):
+        if readout_keys is None:
+            readout_keys = keys
         batch_size, seq_len = x.shape[0], x.shape[1]
         num_heads, K = self.num_heads, self.n_states
         chunk_size = self.delta_chunk if self.delta_chunk > 0 else seq_len
@@ -964,12 +1030,22 @@ class V13PAMLayer(nn.Module):
             erase_beta = write_beta
         key_real = keys[..., 0]
         key_imag = keys[..., 1]
+        # Retrieval key: same tensor unless delta_raw_key_readout restores magnitude.
+        read_key_real = readout_keys[..., 0]
+        read_key_imag = readout_keys[..., 1]
+        split_readout = self.delta_raw_key_readout
         query_real = queries[..., 0]
         query_imag = queries[..., 1]
         strict_lower = torch.tril(torch.ones(chunk_size, chunk_size, device=x.device), -1)
         identity = torch.eye(chunk_size, device=x.device, dtype=torch.float32)
 
         memory_state = queries.new_zeros(K, batch_size, num_heads, head_dim, head_dim, 2)
+        # S_read accumulates the same updates against the RAW key; retrieval reads
+        # this one, the erase keeps reading the unit-key state above.
+        memory_read = (
+            queries.new_zeros(K, batch_size, num_heads, head_dim, head_dim, 2)
+            if split_readout else None
+        )
         outputs = []
         for chunk_start in range(0, seq_len, chunk_size):
             chunk_end = min(chunk_start + chunk_size, seq_len)
@@ -982,14 +1058,24 @@ class V13PAMLayer(nn.Module):
             erase_beta_chunk = erase_beta[:, :, kc]                    # [B,H,C]
 
             # K-independent: key-gram + query-key scores computed ONCE per chunk.
+            # key_gram (mass/erase) always uses the unit key k^; the state write
+            # below uses k^ for S_erase. The RETRIEVAL query-key score uses k^ too,
+            # unless split_readout, where it uses the raw key k (q.k_raw =
+            # ||k|| * q.k^) so readout magnitude is restored.
             key_gram_real = (key_real[:, :, kc] @ key_real[:, :, kc].transpose(-1, -2)
                              + key_imag[:, :, kc] @ key_imag[:, :, kc].transpose(-1, -2))
             key_gram_imag = (key_imag[:, :, kc] @ key_real[:, :, kc].transpose(-1, -2)
                              - key_real[:, :, kc] @ key_imag[:, :, kc].transpose(-1, -2))
-            query_key_real = (query_real[:, :, kc] @ key_real[:, :, kc].transpose(-1, -2)
-                              + query_imag[:, :, kc] @ key_imag[:, :, kc].transpose(-1, -2))
-            query_key_imag = (query_imag[:, :, kc] @ key_real[:, :, kc].transpose(-1, -2)
-                              - query_real[:, :, kc] @ key_imag[:, :, kc].transpose(-1, -2))
+            if split_readout:
+                query_key_real = (query_real[:, :, kc] @ read_key_real[:, :, kc].transpose(-1, -2)
+                                  + query_imag[:, :, kc] @ read_key_imag[:, :, kc].transpose(-1, -2))
+                query_key_imag = (query_imag[:, :, kc] @ read_key_real[:, :, kc].transpose(-1, -2)
+                                  - query_real[:, :, kc] @ read_key_imag[:, :, kc].transpose(-1, -2))
+            else:
+                query_key_real = (query_real[:, :, kc] @ key_real[:, :, kc].transpose(-1, -2)
+                                  + query_imag[:, :, kc] @ key_imag[:, :, kc].transpose(-1, -2))
+                query_key_imag = (query_imag[:, :, kc] @ key_real[:, :, kc].transpose(-1, -2)
+                                  - query_real[:, :, kc] @ key_imag[:, :, kc].transpose(-1, -2))
 
             log_decay = torch.log(decay_gamma_chunk + 1e-6)
             cumulative_alpha = torch.exp(torch.cumsum(log_decay, dim=-1))  # [K,B,H,C]
@@ -1077,11 +1163,16 @@ class V13PAMLayer(nn.Module):
             if chunk_start > 0:
                 # Carry: q*α_k @ S_k per state. q is K-independent [B,H,C,d]; α is
                 # [K,B,H,C]. Apply α AFTER unsqueeze(0) so K appears exactly once.
+                # Retrieval reads S_read (raw-key state) when split_readout, else S_erase.
                 scaled_query_real = query_real[:, :, kc] * query_scale   # [B,H,C,d]
                 scaled_query_imag = query_imag[:, :, kc] * query_scale   # [B,H,C,d]
-                state_real = memory_state[..., 0]
-                state_imag = memory_state[..., 1]
                 alpha_r = cumulative_alpha.unsqueeze(-1)                # [K,B,H,C,1]
+                if split_readout:
+                    state_real = memory_read[..., 0]
+                    state_imag = memory_read[..., 1]
+                else:
+                    state_real = memory_state[..., 0]
+                    state_imag = memory_state[..., 1]
                 carried_real = (
                     (scaled_query_real.unsqueeze(0) * alpha_r) @ state_real.transpose(-1, -2)
                     - (scaled_query_imag.unsqueeze(0) * alpha_r) @ state_imag.transpose(-1, -2)
@@ -1103,6 +1194,19 @@ class V13PAMLayer(nn.Module):
             )
             state_chunk = torch.stack([state_real, state_imag], dim=-1)        # [K,B,H,d,d,2]
             memory_state = memory_state * cumulative_total.unsqueeze(-1).unsqueeze(-1) + state_chunk
+            if split_readout:
+                # S_read: same updates u, outer-producted against the RAW key k.
+                # Pure readout state (never erases) -> no eigenvalue concern.
+                rd_real = (
+                    update_decayed_real.transpose(-1, -2) @ read_key_real[:, :, kc]
+                    + update_decayed_imag.transpose(-1, -2) @ read_key_imag[:, :, kc]
+                )
+                rd_imag = (
+                    update_decayed_imag.transpose(-1, -2) @ read_key_real[:, :, kc]
+                    - update_decayed_real.transpose(-1, -2) @ read_key_imag[:, :, kc]
+                )
+                rd_chunk = torch.stack([rd_real, rd_imag], dim=-1)
+                memory_read = memory_read * cumulative_total.unsqueeze(-1).unsqueeze(-1) + rd_chunk
             # Phase-rotate each state's read and sum over K (elementwise, batched).
             # Slice phase/routing to THIS chunk (they are full-T [K,B,H,T]).
             rotation_real = routing_weights[:, :, :, kc] * torch.cos(retrieval_phase[:, :, :, kc])
@@ -1115,6 +1219,8 @@ class V13PAMLayer(nn.Module):
             rotated_imag = output_chunk[..., 0] * rotation_imag.unsqueeze(-1) + output_chunk[..., 1] * rotation_real.unsqueeze(-1)
             outputs.append(torch.stack([rotated_real.sum(dim=0), rotated_imag.sum(dim=0)], dim=-1))
 
+        if split_readout:
+            return torch.cat(outputs, dim=2), torch.stack([memory_state, memory_read], dim=0)
         return torch.cat(outputs, dim=2), memory_state
 
     @staticmethod
@@ -1171,7 +1277,7 @@ class V13PAMLayer(nn.Module):
     def forward(self, x, state=None, step_offset: int = 0):
         batch_size, seq_len, _, _ = x.shape
         num_heads, head_dim = self.num_heads, self.head_dim
-        queries, keys, values = self._project(x, step_offset)
+        queries, keys, values, readout_keys = self._project(x, step_offset)
 
         # Training / prefill (parallel): state is None and seq_len>1.
         # Winner (E3 K=3, fused_e3, head decay, additive): _forward_multistate_fused.
@@ -1190,19 +1296,21 @@ class V13PAMLayer(nn.Module):
                 )
                 if use_fused_delta:
                     # E2+E3 fused: K states collapsed into one batched chunk-solve.
-                    output, new_state = self._forward_multistate_delta_fused(x, queries, keys, values, head_dim)
+                    output, new_state = self._forward_multistate_delta_fused(
+                        x, queries, keys, values, head_dim, readout_keys
+                    )
                 elif use_fused_add:
                     output, new_state = self._forward_multistate_fused(x, queries, keys, values, head_dim)
                 else:
                     # Ablation: K-loop multistate without collapse.
-                    output, new_state = self._forward_multistate(x, queries, keys, values, head_dim)
+                    output, new_state = self._forward_multistate(x, queries, keys, values, head_dim, readout_keys)
             elif self.write_mode == 'delta':
                 # Ablation E2 — not used by winner.
                 decay_gamma, protected_values = self._gamma_and_vprime(x, values)
                 write_beta, erase_beta = self._gate_betas(x)  # [B,H,T] (E2b)
                 output, new_state = self._forward_delta(
                     queries, keys, protected_values, decay_gamma, write_beta, head_dim,
-                    erase_beta=erase_beta,
+                    erase_beta=erase_beta, readout_keys=readout_keys,
                 )
             elif self.decay_mode == 'per_channel':
                 # Ablation E1 — not used by winner.
@@ -1224,7 +1332,7 @@ class V13PAMLayer(nn.Module):
                     )
         else:
             # Decode / single-token: O(1) recurrent outer-product updates.
-            output, new_state = self._recurrent(x, queries, keys, values, state, head_dim)
+            output, new_state = self._recurrent(x, queries, keys, values, state, head_dim, readout_keys)
 
         # merge heads back to [B,T,inner_dim,2] for output projection
         output = output.transpose(1, 2).contiguous().view(batch_size, seq_len, self.inner_dim, 2)
@@ -1237,11 +1345,14 @@ class V13PAMLayer(nn.Module):
 
     # ── O(1) recurrent inference (covers all modes) ──────────────────────────
 
-    def _recurrent(self, x, queries, keys, values, state, head_dim):
+    def _recurrent(self, x, queries, keys, values, state, head_dim, readout_keys=None):
         """Token loop: fixed-size notebook S [K,B,H,d,d,2] — cost independent of past length."""
         batch_size, seq_len = x.shape[0], x.shape[1]
         num_heads, num_memory_states = self.num_heads, self.n_states
         query_scale = head_dim ** -0.5
+        if readout_keys is None:
+            readout_keys = keys
+        split_readout = self.delta_raw_key_readout and self.write_mode == 'delta'
         write_beta = None
         erase_beta = None
         if self.write_mode == 'delta':
@@ -1258,11 +1369,15 @@ class V13PAMLayer(nn.Module):
                     num_memory_states, batch_size, num_heads, head_dim, head_dim, 2,
                     device=x.device, dtype=x.dtype,
                 )
+                if split_readout:
+                    memory_state = torch.stack([memory_state, memory_state], dim=0)
             else:
                 memory_state = torch.zeros(
                     batch_size, num_heads, head_dim, head_dim, 2,
                     device=x.device, dtype=x.dtype,
                 )
+                if split_readout:
+                    memory_state = torch.stack([memory_state, memory_state], dim=0)
         else:
             memory_state = state
 
@@ -1270,11 +1385,13 @@ class V13PAMLayer(nn.Module):
         for time_idx in range(seq_len):
             token_input = x[:, time_idx:time_idx + 1]
             key_t = keys[:, :, time_idx]
+            read_key_t = readout_keys[:, :, time_idx] if split_readout else None
             query_t = queries[:, :, time_idx] * query_scale
             value_t = values[:, :, time_idx]
             if self.n_states > 1:
                 output_accum = None
                 new_states = []
+                new_read_states = []
                 for state_idx in range(num_memory_states):
                     decay_gamma_state, protected_values_state = self._gamma_and_vprime(
                         token_input, values[:, :, time_idx:time_idx + 1],
@@ -1283,7 +1400,16 @@ class V13PAMLayer(nn.Module):
                     )
                     decay_gamma_t = decay_gamma_state[:, :, 0]  # [B,H]
                     protected_value_t = protected_values_state[:, :, 0]
-                    if self.write_mode == 'delta':
+                    if self.write_mode == 'delta' and split_readout:
+                        output_state, state_new, read_new = self._recur_step_delta(
+                            memory_state[0, state_idx], decay_gamma_t,
+                            protected_value_t, key_t, query_t,
+                            write_beta[:, :, time_idx],
+                            erase_beta_t=erase_beta[:, :, time_idx],
+                            read_key_t=read_key_t, memory_read=memory_state[1, state_idx],
+                        )
+                        new_read_states.append(read_new)
+                    elif self.write_mode == 'delta':
                         output_state, state_new = self._recur_step_delta(
                             memory_state[state_idx], decay_gamma_t,
                             protected_value_t, key_t, query_t,
@@ -1307,7 +1433,12 @@ class V13PAMLayer(nn.Module):
                     output_accum = output_state if output_accum is None else output_accum + output_state
                     new_states.append(state_new)
                 output_steps.append(output_accum)
-                memory_state = torch.stack(new_states, dim=0)
+                if split_readout:
+                    memory_state = torch.stack(
+                        [torch.stack(new_states, dim=0),
+                         torch.stack(new_read_states, dim=0)], dim=0)
+                else:
+                    memory_state = torch.stack(new_states, dim=0)
                 continue
 
             decay_gamma, protected_values = self._gamma_and_vprime(
@@ -1315,7 +1446,15 @@ class V13PAMLayer(nn.Module):
             )
             decay_gamma_t = decay_gamma[:, :, 0]  # [B,H] or [B,H,d]
             protected_value_t = protected_values[:, :, 0]
-            if self.write_mode == 'delta':
+            if self.write_mode == 'delta' and split_readout:
+                output_step, er_new, rd_new = self._recur_step_delta(
+                    memory_state[0], decay_gamma_t, protected_value_t, key_t, query_t,
+                    write_beta[:, :, time_idx],
+                    erase_beta_t=erase_beta[:, :, time_idx],
+                    read_key_t=read_key_t, memory_read=memory_state[1],
+                )
+                memory_state = torch.stack([er_new, rd_new], dim=0)
+            elif self.write_mode == 'delta':
                 output_step, memory_state = self._recur_step_delta(
                     memory_state, decay_gamma_t, protected_value_t, key_t, query_t,
                     write_beta[:, :, time_idx],
@@ -1371,15 +1510,21 @@ class V13PAMLayer(nn.Module):
         return output, memory_state
 
     def _recur_step_delta(self, memory_state, decay_gamma, value_t, key_t, query_t, write_beta_t,
-                          erase_beta_t=None):
+                          erase_beta_t=None, read_key_t=None, memory_read=None):
         """One gated delta step. decay_gamma:[B,H], write_beta_t:[B,H].
 
         E2b: erase_beta_t defaults to write_beta_t (legacy shared-beta behaviour).
+        read_key_t/memory_read enable the two-state raw-key readout (S_erase on the
+        unit key, S_read on the raw key); when read_key_t is None the legacy
+        single-state behaviour is preserved byte-for-byte.
         """
         if erase_beta_t is None:
             erase_beta_t = write_beta_t
+        split = read_key_t is not None
         decay_factor = decay_gamma.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
         memory_state = memory_state * decay_factor
+        if split:
+            memory_read = memory_read * decay_factor
         predicted_real = (
             memory_state[..., 0] * key_t[..., 0].unsqueeze(-2)
             - memory_state[..., 1] * key_t[..., 1].unsqueeze(-2)
@@ -1404,15 +1549,29 @@ class V13PAMLayer(nn.Module):
             + update[..., 1].unsqueeze(-1) * key_conj[..., 0].unsqueeze(-2)
         )
         memory_state = memory_state + torch.stack([outer_real, outer_imag], dim=-1)
+        if split:
+            rd_conj = torch.stack([read_key_t[..., 0], -read_key_t[..., 1]], dim=-1)
+            rd_outer_real = (
+                update[..., 0].unsqueeze(-1) * rd_conj[..., 0].unsqueeze(-2)
+                - update[..., 1].unsqueeze(-1) * rd_conj[..., 1].unsqueeze(-2)
+            )
+            rd_outer_imag = (
+                update[..., 0].unsqueeze(-1) * rd_conj[..., 1].unsqueeze(-2)
+                + update[..., 1].unsqueeze(-1) * rd_conj[..., 0].unsqueeze(-2)
+            )
+            memory_read = memory_read + torch.stack([rd_outer_real, rd_outer_imag], dim=-1)
+        out_state = memory_read if split else memory_state
         state_query_real = (
-            memory_state[..., 0] * query_t[..., 0].unsqueeze(-2)
-            - memory_state[..., 1] * query_t[..., 1].unsqueeze(-2)
+            out_state[..., 0] * query_t[..., 0].unsqueeze(-2)
+            - out_state[..., 1] * query_t[..., 1].unsqueeze(-2)
         )
         state_query_imag = (
-            memory_state[..., 0] * query_t[..., 1].unsqueeze(-2)
-            + memory_state[..., 1] * query_t[..., 0].unsqueeze(-2)
+            out_state[..., 0] * query_t[..., 1].unsqueeze(-2)
+            + out_state[..., 1] * query_t[..., 0].unsqueeze(-2)
         )
         output = torch.stack([state_query_real.sum(dim=-1), state_query_imag.sum(dim=-1)], dim=-1)
+        if split:
+            return output, memory_state, memory_read
         return output, memory_state
 
 

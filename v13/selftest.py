@@ -199,7 +199,7 @@ def test_delta_keynorm_equiv(batch_size=2, seq_len=80, seed=0):
 
     # Keys leaving _project must be per-vector unit-norm.
     with torch.no_grad():
-        _, kproj, _ = fused._project(x, 0)
+        _, kproj, _, _ = fused._project(x, 0)
         knorm = (kproj[..., 0].square() + kproj[..., 1].square()).sum(-1).sqrt()
         d_k = (knorm - 1.0).abs().max().item()
 
@@ -221,6 +221,70 @@ def test_delta_keynorm_equiv(batch_size=2, seq_len=80, seed=0):
     print(f"[delta_keynorm  ] y={dy:.2e} S={dS:.2e} grad={dg:.2e} |d||k|||={d_k:.2e}  "
           f"{'PASS' if ok else 'FAIL'}")
     return ok
+
+
+def test_delta_raw_readout_equiv(batch_size=2, seq_len=80, seed=0):
+    """delta_raw_key_readout: fused == K-loop == recurrent with the two-state
+    (S_erase unit-key, S_read raw-key) readout split, including grads.
+
+    Also verifies the split is real: S_erase (stacked dim-0 index 0) must equal
+    the flag-OFF state exactly (the erase/mass system is untouched) while S_read
+    (index 1) and the outputs differ from flag-OFF (magnitude restored).
+    """
+    common = dict(
+        vocab_size=512, dim=48, n_heads=3, head_dim=16, n_layers=1, expand=2,
+        dropout=0.0, max_seq_len=256, chunk_size=24, gradient_checkpointing=False,
+        use_rope=True, use_gsp=True, n_states=3, gate_content_aware=True,
+        write_mode='delta', delta_chunk=20, delta_erase_gate=True,
+        vault_state=True, vault_state_idx=0, write_phase_address=True,
+        delta_key_norm=True,
+    )
+    torch.manual_seed(seed)
+    loop = V13PAMLayer(V13Config(**{**common, 'fused_e3': False,
+                                    'delta_raw_key_readout': True}))
+    fused = V13PAMLayer(V13Config(**{**common, 'fused_e3': True,
+                                     'delta_raw_key_readout': True}))
+    fused.load_state_dict(loop.state_dict())
+    loop.train()
+    fused.train()
+
+    x = torch.randn(batch_size, seq_len, common['dim'], 2) * 0.5
+    x1 = x.clone().requires_grad_(True)
+    x2 = x.clone().requires_grad_(True)
+    y1, S1 = loop(x1)
+    y2, S2 = fused(x2)
+    (y1 ** 2).sum().backward()
+    (y2 ** 2).sum().backward()
+
+    # Stacked state must be [2, K, B, H, d, d, 2] with dim 0 = {S_erase, S_read}.
+    ok_shape = S1.shape[0] == 2 and S2.shape == S1.shape
+    dy = (y1 - y2).abs().max().item()
+    dS = (S1 - S2).abs().max().item()
+    dg = (x1.grad - x2.grad).abs().max().item()
+
+    # Flag-OFF reference: same seed/params, no raw-key readout.
+    torch.manual_seed(seed)
+    off = V13PAMLayer(V13Config(**{**common, 'fused_e3': True})).train()
+    y_off, S_off = off(x.clone())
+
+    # S_erase (index 0) must be EXACTLY the flag-OFF state; S_read (index 1) and
+    # the outputs must differ (magnitude axis restored).
+    d_erase = (S1[0] - S_off).abs().max().item()
+    d_read = (S1[1] - S_off).abs().max().item()
+    d_y = (y1 - y_off).abs().max().item()
+
+    ok_rec = _run_mode(
+        "rawreadout_recur",
+        V13Config(**{**common, 'fused_e3': True, 'delta_raw_key_readout': True}),
+        batch_size=batch_size, seq_len=seq_len, atol=2e-3, seed=seed + 1,
+    )
+    ok = (max(dy, dS, dg) < 1e-10 and ok_shape and ok_rec
+          and d_erase < 1e-12 and d_read > 1e-3 and d_y > 1e-3)
+    print(f"[raw_readout    ] y={dy:.2e} S={dS:.2e} grad={dg:.2e} "
+          f"eraseΔ={d_erase:.2e} readΔ={d_read:.2e} yΔ={d_y:.2e}  "
+          f"{'PASS' if ok else 'FAIL'}")
+    return ok
+
 
 def test_delta_erase_cap():
     """Erase-gain cap: beta_e <= delta_erase_beta_cap (stability), write beta free.
@@ -461,6 +525,7 @@ def main():
     results.append(test_competitive_retrieval_equiv())
     results.append(test_drop_shape_mismatches())
     results.append(test_delta_keynorm_equiv())
+    results.append(test_delta_raw_readout_equiv())
     results.append(test_delta_erase_cap())
     results.append(test_grad_ckpt_equiv())
     results.append(test_delta_decay_factored_equiv())
