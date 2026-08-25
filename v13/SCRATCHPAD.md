@@ -142,7 +142,10 @@ the 500M's 1e9 > 5e8 budget made it WEB-ONLY forever, which is why r1 got
 zero store-now/answer-later signal; (3) `--delta_raw_key_readout` ON;
 (4) `--delta_erase_beta_cap 0.95 → 1.0`. Healthy at launch: step0
 loss=10.9055 (= r1 exactly), step25 loss=10.7524 @ ~4.5K tok/s, all 16 blocks
-non-zero grad, GPU 7.7GB, no NaN. Watchdog armed (verdict 20M, 2940s).
+non-zero grad, GPU 7.7GB, no NaN. **VERDICT 20M (12:36+49min): step 1225
+loss=5.375 vs r1 ref 5.87 → 0.5 NLL BELOW the curve** (slice not hurting CE;
+kill gate is >0.7 ABOVE). Watchdog re-armed to 82M (step 5000 = first saved
+ckpt, ~4h out). At ckpt: recall battery (multi8@128 must move off 0.133).
 
 - **GATE (re-arm watchdog on every wake).** Kill if loss > 0.7 NLL above r1
   (r1 curve: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M).
