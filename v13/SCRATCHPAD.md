@@ -157,6 +157,17 @@ probe vocab is disjoint by design → pure structural transfer, needs time.
 Verdict: NOT the gate point — no r1@82M battery exists to compare against
 (only r1-FINAL + r1-step30000≈491M on disk). Next gate: step 10000 / 164M
 (~8h). If multi8@128 still ≈chance at 164M AND 300M, re-evaluate B vs C.
+**CKPT-2 (step 10000 / 164M, 23:03) — POSITIVE TREND, continue.**
+`v13_B_recall_ckpt10000_behavior.json`. multi8@128 avg: 0.106 (82M) →
+**0.133** (164M) = r1-FINAL's 0.133 — caught up at 33% of the tokens.
+n4 all-ctx: 0.276→0.280 ≈ r1-FINAL 0.293 (already at parity). n8 all-ctx:
+0.144→0.170 vs r1-FINAL 0.178 (trending to parity). n1 still lags
+(0.241 vs 0.544 final — web single-fact recall needs more web tokens,
+expected). Linear extrapolation to 500M: n8 ≈ 0.28 vs r1 0.178 — the
+recall slice is paying off on multi-fact. CE: 4.04@164M vs r1 ref ~4.4 →
+still ahead, no regression. DECISION: continue to step 15000 / 246M
+(next ckpt, ~7h); full battery + Wiki PPL at 500M for the final B-vs-C
+verdict. Early-kill trigger: if 246M multi8@128 avg < 0.15, B is failing.
 
 - **GATE (re-arm watchdog on every wake).** Kill if loss > 0.7 NLL above r1
   (r1 curve: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M).
