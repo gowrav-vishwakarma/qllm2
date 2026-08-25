@@ -125,25 +125,29 @@ write is now plausible (it needs a state that actually holds the value to
 correct against — which it does).
 
 
-## NEXT — B vs C decision (2026-08-25, oracle evidence)
+## B — LAUNCHED 2026-08-25 (chosen by user: O(1) inference, better recall+reasoning)
 
-The root-cause above re-frames the fork. **Pending user call:**
+Goal restated by user: fast-learnable model, O(1) inference, better reasoning
+AND recall, better than transformers. That is the v13 delta architecture, so
+**B** (retrain with a recall slice) is the path — the oracle proved the
+substrate holds the values; the gap is a learnable routing problem.
+**C (additive fallback)** stands as the honest exit if B does not move
+multi8 off chance.
 
-- **B — retrain v13 WITH a recall slice.** The routing/alignment fix:
-  add the wired synthetic recall curriculum (passkey/single-kv/multi-kv,
-  vocab-disjoint from the probe, `v7/data.py:1305+`) as a small slice of the
-  mix so the model learns to route the query to the stored address.
-  Carry the two-state raw-key readout ON + `delta_erase_beta_cap=1.0`
-  (safe under unit keys: eig = 1−βe ≥ 0) as the delta write-dynamics test.
-  This is the direct test of the user's condition ("delta must deliver
-  *immense* recall benefit").
-- **C — fall back to additive** (v11 twin). Faster training (~3.2× cheaper
-  per token) and the compute-matched r1 already beats v13 on Wiki PPL.
-  Valid if B does not move multi8 off chance.
-- **Gate for either retrain:** tmux + watchdog (`bash v13/tmp/watchdog.sh
-  <log> <verdict_gtok> 2940`, re-arm on wake). Recall gate = **multi8@128
-  moves off 0.133** + CE non-regression; then full battery + Wiki PPL.
-  Re-measure with the same suite/seeds:
+**RUN (tmux `v13_B`, `v13/tmp/launch_v13_B_recall.sh`):** 500M budget, B8/
+T2048, lr 3e-4, warmup 500, seed 42, EAGER. Changes vs r1recipe:
+(1) mix 48/48/4 → **48/48/4/4** with `recall` synthetic slice (~20M tok,
+vocab-disjoint from probe); (2) `--blend_warmup_tokens 1e9 → 1e7` — CRITICAL:
+the 500M's 1e9 > 5e8 budget made it WEB-ONLY forever, which is why r1 got
+zero store-now/answer-later signal; (3) `--delta_raw_key_readout` ON;
+(4) `--delta_erase_beta_cap 0.95 → 1.0`. Healthy at launch: step0
+loss=10.9055 (= r1 exactly), step25 loss=10.7524 @ ~4.5K tok/s, all 16 blocks
+non-zero grad, GPU 7.7GB, no NaN. Watchdog armed (verdict 20M, 2940s).
+
+- **GATE (re-arm watchdog on every wake).** Kill if loss > 0.7 NLL above r1
+  (r1 curve: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M).
+  Recall gate at first ckpt (5000 steps): **multi8@128 off 0.133** (chance
+  0.125) + CE non-regression; then full battery + Wiki PPL. Re-measure with:
   ```
   .venv/bin/python scripts/run_memory_behavioral.py --model-type v13 \
     --checkpoint <ckpt> --preset v13_e3_k3_selective \
