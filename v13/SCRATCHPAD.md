@@ -65,11 +65,10 @@ run — COMPLETE". Headlines:
   **assoc=1 @ ctx128 = 0.744**, overall 0.254. Beats v11 Stage-6c vault
   winner **0.189** (which had 3% synthetic recall) and the Stage-3 tuned
   ceiling 0.23. Matched Transformer is 0.956.
-- **REAL BOTTLENECK = WRITE INTERFERENCE, not selectivity, not context.**
-  assoc 1→4→8 = **0.408 → 0.219 → 0.133**; **multi8 @ ctx128 = 0.133 vs
-  0.125 chance**. 8 facts in a 128-token window are already unrecoverable.
-  Do NOT re-sweep λ/τ/γ_floor/recall-weight or vault-vs-phase — v11
-  Stage-2/3/6 measured that exhausted (~1.4B tok of evidence).
+- **CORRECTION (2026-08-25, oracle evidence): the bottleneck is ROUTING, not
+  write interference.** The write-interference read above is superseded —
+  see "2026-08-25 root-cause" below. Do NOT re-sweep λ/τ/γ_floor/recall-weight
+  or vault-vs-phase (still valid — ~1.4B tok of v11 evidence).
 
 **`--compile_blocks` CRASHES at first step** (2026-08-23): Inductor
 meta-kernel bug — `assert_size_stride` on `torch.ops.aten.complex.default`
@@ -80,43 +79,84 @@ Honest speed (4090, T=2048, all 16 blocks learning): B16/C128 eager **4,101**
 tok/s (13.9GB); B8/C128 eager 5,027; B8/C256 5,085; compile-block 6,459
 (BROKEN now — see above). 500M wall-clock ~28h @ 4.9K — acceptable.
 
-## NEXT — attack write interference (chosen 2026-08-24 with user)
+## 2026-08-25 ROOT-CAUSE (oracle evidence) — read before deciding B vs C
 
-1. **IN PROGRESS: in-chunk raw-key readout** (claim 2, `r_and_d.md:33-63`).
-   `delta_key_norm=True` normalizes ONE keys tensor feeding four consumers:
-   key-gram mass, in-chunk `query_key` readout, erase read `k@S`, and state
-   construction `S += update ⊗ k`. Retrieval is therefore a pure cosine `q·k̂`
-   — magnitude contrast is gone. **Scope agreed: in-chunk ONLY** — raw keys
-   for the `query_key` score (`model.py:989-992`), unit keys retained for mass
-   / erase / state construction so stability (eigenvalue `γ−βe‖k‖²`) is
-   untouched. The cross-chunk carry `q@S` stays cosine-built; that is a known
-   limitation of this scope, affecting ctx2048 but NOT multi8@128.
-   **Why well-targeted:** multi8@ctx128 with `delta_chunk=128` lives entirely
-   in the in-chunk path.
-   **Falsifier:** `multi8 @ ctx128` must move off **0.1333** (chance 0.125).
-   Secondary: assoc=4 off 0.219, and CE must not regress.
-   **Gates before any training:** `v13/selftest.py` fused ≡ K-loop ≡
-   recurrent WITH the flag on; bit-identical to today with the flag off;
-   grad-ckpt vs no-ckpt grad equivalence. Non-negotiable.
-2. Re-measure with the same suite/seeds for comparability:
-   ```
-   .venv/bin/python scripts/run_memory_behavioral.py --model-type v13 \
-     --checkpoint <ckpt> --preset v13_e3_k3_selective \
-     --context-lengths 128,512,1024,2048 --positions 0,0.5,1 \
-     --association-counts 1,4,8 --trials 60 --candidate-count 8 \
-     --output logs/memory_probes/<name>_behavior.json
-   ```
-   Baseline to beat: `logs/memory_probes/v13_500m_r1recipe_FINAL500M_d169584_behavior.json`.
-3. If interference does NOT move: the outer-product substrate itself is the
-   limit (capacity/superposition), not any v13 lever. That is the point to
-   either redesign the memory or return to v11 additive.
-4. Deferred, only if wanted for the record: v11 additive 500M head-to-head on
-   the 6000 (same budget, same recall suite). The compute-matched r1-vs-v13
-   comparison above already answers the practical question.
-5. **Do NOT** re-sweep λ/τ/γ_floor/recall-weight, vault-vs-phase, or add more
-   synthetic recall data — v11 Stage-2/3/6 spent ~1.4B tok proving those are
-   exhausted (100% recall data still left held-out recall at chance; more
-   recall data HURT: w3 > w10 > w20).
+The 500M recall failure (assoc 1→4→8 = 0.744→0.219→0.133; multi8@128 ≈ chance
+0.125; Transformer 0.956) is now root-caused with four probes (all on the
+500M `best_model.pt`, flag-OFF config, `v13/tmp/probe_*.py`):
+
+1. **Two-state raw-key readout flip = NEGATIVE** (battery 0.254→0.162).
+   Expected — ckpt trained flag-OFF; it is a *retrain* decision, not a
+   free inference toggle. Do NOT ship the flag-ON flip.
+2. **Key-gram probe** (`probe_keygram.py`): fact-key addresses are
+   HYPER-ORTHOGONAL (off-diag |k̂ᵀk̂| = 0.0138 = 0.12× random 0.111) — the
+   address space is NOT clustered. But the learned QUERY projection at the
+   query token is ≈orthogonal to EVERY address (q·k_target = 0.0154 ≈
+   q·k_other = 0.0122, both ≪ random). Identical for assoc=1 (0.744) and
+   assoc=8 (0.133) → the gap is dynamics/routing, not address geometry.
+3. **PAM=0 control** (`--pam-scale 0`, battery 0.254→0.150; assoc1@128
+   0.833→0.217): the PAM memory path IS engaged — the model is not
+   shortcutting recall through CGU/residual.
+4. **Oracle readout** (`probe_oracle.py`, `probe_oracle_scan.py`,
+   `probe_oracle_diag.py`): build the state normally (writes are
+   query-independent; ctx=128 = single delta_chunk, no carry → the final
+   readout depends on the final query alone), then re-read the final position
+   with an oracle query. Random + zero query controls both fail (no leak).
+   - assoc=8: scanning all 128 position keys, **seed1002 → 11/128 addresses
+     recover the value** (info IS in the state), seed1000 → 0/128, seed1001
+     → 128/128 (residual/LM-head case). The recovering addresses are NOT the
+     value word, key word, or any of the 8 value positions.
+
+**CONCLUSION: the values ARE stored, but as scattered superpositions, and the
+learned query does not route to the target's address.** This is a
+ROUTING/alignment problem, not write interference. The old "8 facts destroy
+each other" read is wrong: the 8th value is recoverable with the right key —
+the model just never learned which key that is (it has zero "store now,
+answer later" gradient in the 48/48/4 mix, and the learned query is
+orthogonal to the address space).
+
+**Implication for B vs C:** this re-opens the recall-data lever that
+`r_and_d.md` deprioritized ("data is not the binding constraint"). That
+verdict was drawn from the write-interference hypothesis; the oracle
+evidence invalidates it. The clean fix is now **retrain with a recall slice**
+(the synthetic curriculum is already wired in `v7/data.py`) so the model
+learns to route the query to the stored address. Delta's error-correction
+write is now plausible (it needs a state that actually holds the value to
+correct against — which it does).
+
+
+## NEXT — B vs C decision (2026-08-25, oracle evidence)
+
+The root-cause above re-frames the fork. **Pending user call:**
+
+- **B — retrain v13 WITH a recall slice.** The routing/alignment fix:
+  add the wired synthetic recall curriculum (passkey/single-kv/multi-kv,
+  vocab-disjoint from the probe, `v7/data.py:1305+`) as a small slice of the
+  mix so the model learns to route the query to the stored address.
+  Carry the two-state raw-key readout ON + `delta_erase_beta_cap=1.0`
+  (safe under unit keys: eig = 1−βe ≥ 0) as the delta write-dynamics test.
+  This is the direct test of the user's condition ("delta must deliver
+  *immense* recall benefit").
+- **C — fall back to additive** (v11 twin). Faster training (~3.2× cheaper
+  per token) and the compute-matched r1 already beats v13 on Wiki PPL.
+  Valid if B does not move multi8 off chance.
+- **Gate for either retrain:** tmux + watchdog (`bash v13/tmp/watchdog.sh
+  <log> <verdict_gtok> 2940`, re-arm on wake). Recall gate = **multi8@128
+  moves off 0.133** + CE non-regression; then full battery + Wiki PPL.
+  Re-measure with the same suite/seeds:
+  ```
+  .venv/bin/python scripts/run_memory_behavioral.py --model-type v13 \
+    --checkpoint <ckpt> --preset v13_e3_k3_selective \
+    --context-lengths 128,512,1024,2048 --positions 0,0.5,1 \
+    --association-counts 1,4,8 --trials 60 --candidate-count 8 \
+    --output logs/memory_probes/<name>_behavior.json
+  ```
+  Baseline to beat: `logs/memory_probes/v13_500m_r1recipe_FINAL500M_d169584_behavior.json`.
+- **Still do NOT:** re-sweep λ/τ/γ_floor/vault-vs-phase (v11 ~1.4B tok
+  exhausted it). The old "do not add recall data" item is VOID — it rested on
+  the write-interference hypothesis the oracle evidence overturned. (Caveat
+  to re-check in B: v11 Stage-3 found *more* recall data hurt there, w3 >
+  w10 > w20 — keep the slice small, ~3-6%, on the rich web base.)
 
 Probe commands (CPU-safe alongside training):
 `.venv/bin/python v13/tmp/dissect_ckpt.py <ckpt>` and

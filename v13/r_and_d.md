@@ -324,3 +324,13 @@ data while more recall data measurably hurt v11. The real constraint is write
 interference (multi8@ctx128 = 0.133 vs 0.125 chance), and compute-matched v11
 additive beats v13 delta outright (Wiki 84.57@2B/21.6h vs 133.88@500M/29.5h).
 See "500M ENDPOINT" and the revised Picks above.
+
+**Superseded by oracle evidence (2026-08-25):** the write-interference
+conclusion above is overturned. Oracle readout (probe_oracle*.py) shows the
+8th value IS recoverable from the 500M state (11/128 addresses on one seed;
+random/zero query controls fail, no leak) — so the values are stored, as
+scattered superpositions, and the learned query is ≈orthogonal to every
+address (probe_keygram.py). The bottleneck is ROUTING/alignment, not write
+interference. This re-opens the deprioritized data lever (item 3 above): a
+small recall slice in the mix is the direct fix. See SCRATCHPAD.md
+"2026-08-25 ROOT-CAUSE".
