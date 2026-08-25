@@ -138,6 +138,10 @@ def build_argparser():
     p.add_argument('--delta_erase_beta_cap', type=float, default=None,
                    help='Cap the learned erase gain beta_e (default 0.95 in preset; '
                         '0=off). Keeps the vault delta eigenvalue 1-beta_e in [1-cap,1).')
+    p.add_argument('--delta_raw_key_readout', action='store_true',
+                   help='Two-state readout: retrieval scores against the RAW '
+                        '(pre-norm) key while erase/mass/state keep the unit '
+                        'key (default OFF = 500M production path).')
     p.add_argument('--delta_decay_factored', action='store_true',
                    help='K-independent triangular solve via D[t,s]=a[t]/a[s] '
                         '(default OFF; enable after selftest [delta_factored] PASS).')
@@ -346,6 +350,8 @@ def main():
         cfg.delta_key_norm = False
     elif args.delta_key_norm:
         cfg.delta_key_norm = True
+    if args.delta_raw_key_readout:
+        cfg.delta_raw_key_readout = True
     if args.delta_erase_beta_cap is not None:
         cfg.delta_erase_beta_cap = args.delta_erase_beta_cap
     if args.no_delta_decay_factored:
