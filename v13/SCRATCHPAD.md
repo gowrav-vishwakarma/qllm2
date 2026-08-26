@@ -180,6 +180,23 @@ CE 4.0261 @246M, healthy. DECISION: run to 500M (step ~30500, ~16h);
 final verdict = full battery + Wiki PPL vs r1-FINAL + C (v11 additive)
 compute-matched. If n8 all-ctx holds ≥ r1-FINAL at 500M, B wins on
 recall with zero CE cost.
+**CKPT 25000 spot battery (409M, 14:52) — HOLD, not yet a win.**
+`v13_B_recall_ckpt25000_behavior.json` (run on latest.pt while training
+continued; training untouched). Gate multi8@128 avg: 0.144 (246M) →
+0.133 (409M) = r1-FINAL exactly — PLATEAUED at parity, did not exceed.
+n8 all-ctx: 0.233 (246M) → 0.206 (409M) vs r1 0.178 — still +0.028 above,
+within noise (60 trials, SE~0.042/cell). n4: 0.278→0.309 vs r1 0.293 — now
+slightly ABOVE r1. n1: 0.406→0.589 (r1 0.744) — still converging, healthy.
+ctx2048 n8 (the O(1) long-context showcase): 0.156 vs r1 0.111 — +0.045.
+HONEST READ at 409M: B ≈ r1 on short-ctx multi8, modestly better on
+n4/n8-allctx/long-ctx, worse on n1 (catching up). NOT "immense recall
+benefit" yet. Final 500M battery must be run with HIGHER trial count
+(>=300) to resolve sub-0.05 differences, + Wiki PPL. If n8-allctx holds
+≥ r1 at 500M and PPL is non-regressing, B = "better multi-fact recall at
+same CE + O(1) inference" — a real but MODEST step, not a breakthrough.
+Decision tree at 500M: (a) n8-allctx > r1 by >0.05 AND n1 ≥ r1 → B wins,
+scale to 1B+; (b) parity on n8, n1 catching up → extend budget / tune
+slice weight (try 6-8%) before declaring; (c) n8 < r1 → B failed, bank C.
 
 - **GATE (re-arm watchdog on every wake).** Kill if loss > 0.7 NLL above r1
   (r1 curve: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M).
