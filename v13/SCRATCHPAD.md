@@ -196,7 +196,42 @@ benefit" yet. Final 500M battery must be run with HIGHER trial count
 same CE + O(1) inference" — a real but MODEST step, not a breakthrough.
 Decision tree at 500M: (a) n8-allctx > r1 by >0.05 AND n1 ≥ r1 → B wins,
 scale to 1B+; (b) parity on n8, n1 catching up → extend budget / tune
-slice weight (try 6-8%) before declaring; (c) n8 < r1 → B failed, bank C.
+slice weight (try 6-8%) before declaring; (c) n8 < r1 → bank C.
+**NEXT-RUN LEVER RESEARCH (2026-08-26, for the post-500M call):**
+The oracle said the gap is READ-SIDE routing (query→address). B adds recall
+DATA (indirect pressure). Three levers target it more directly, in order of
+novelty/effort:
+(1) **fact_contrastive read-side loss — the missing half.** The trainer
+already plumbs it (v7/train.py:532-541) and it is W12-validated, but v13
+model.py LACKS `fact_contrastive_from_lm` (v12/model.py:1775-1807 has it;
+v13 has identical `ce_from_lm`/`embed_real`/`embed_imag` so it's a ~35-line
+port + 2 config fields + a CLI flag). At each value token it forces the
+correct value to outrank the sibling answer tokens — EXACTLY the 8-way
+discrimination the probe measures. This is the most direct novel fix for the
+routing gap. (Caveat: v12 Phase-0 found it null on an EASY closed-set task;
+the probe's 8-way dense ctx128 is HARD, so it may matter here — untested.)
+(2) **gamma_floor memory horizon** (v13 cfg, default 0.0 = OFF; v11 used
+0.98): keeps state ~50x longer. B's ctx2048 edge (+0.045) suggests longer
+horizon could help long-ctx recall. Untested on v13 delta.
+(3) **recall-loss weighting / denser curriculum.** The recall slice is
+Sparse/long-range (3-6 bindings over 2-200 sentences) while the probe is
+DENSE 8-binding @ctx128 — a distribution mismatch. Per-source loss weight
+would need source-id threaded through mix→batch→loss (real change, not a
+flag). Easier: add a dense-short-ctx recall variant to _build_recall_doc
+(v7/data.py:1353) so training matches the probe's hard case.
+NOTE: "increase weight of the recall loss" (user's question) ≈ lever (3) but
+the higher-leverage moves are (1)+(3-dense) which change WHAT the model is
+told to discriminate, not just how hard on the same sparse signal.
+**CONTRASTIVE PORT DONE (9e73e7b).** `fact_contrastive_from_lm` ported to v13
+(selftest ALL MODES PASS, smoke zero=0/pos=0.661/grad ok). REMAINING to make
+it fire on a recall run: pretrain-mix batches carry NO loss_mask (cache is
+{input_ids,labels} only), and the trainer branch is guarded by
+`loss_mask is not None` (v7/train.py:534). Fix = thread per-token value
+masks through _build_recall_doc (return value spans) -> blend interleave
+(tuple payload) -> cache build (add value_mask column) -> load_pretrain_mix
+-> StackedChunkDataset -> batch. Cost: ONE cache rebuild (~1.5-2h, blocks
+launch). DEFERRED until the 500M verdict: if B is borderline (likely), this
+is the highest-value next lever; if B is a clear win, scale instead.
 
 - **GATE (re-arm watchdog on every wake).** Kill if loss > 0.7 NLL above r1
   (r1 curve: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M).
