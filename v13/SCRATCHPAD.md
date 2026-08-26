@@ -277,6 +277,21 @@ restart marker). save_every_steps 2500->1000 (crash cost 17M tok = 38 min;
 HF corpora cached). Watchdog re-armed to 81.9M gate with the fixed liveness.
 If a 2nd silent death at a similar point occurs -> environment/RAM, mitigate
 before 3rd launch (smaller HF mmap footprint / separate cache pre-pass).
+**RUN-2 CROSSING EXPERIMENT — RESOLVED: ENVIRONMENTAL (01:26):** run 2
+(relaunch, step 0 23:48) is BIT-IDENTICAL to run 1 (step 750 5.7281 == run-1,
+step 800 5.8740 == run-1; same seed/init/stream). Run 1 died at 17.2M/step
+1050; run 2 CROSSED it and is at step 1600/26.2M ALIVE, 22 step-logs past
+the death point. CONCLUSION: the 22:53 death was a one-off host-RAM
+pressure event (SIGKILL), NOT a doc/stream-position bug and NOT the
+curriculum. No mitigation needed; if a 3rd silent death occurs, re-examine.
+Run-2 health 01:26: loss 5.2888 @ 26.2M (BELOW r1 ~5.6@26M, kill = >+0.7).
+save_every_steps 1000 confirmed working (latest.pt saved @ step 1000).
+**GATE BATTERY TARGET = `latest.pt` (NOT ckpt5000.pt):** the trainer only
+saves latest.pt (every 1000 steps, no rotation) + best/final at epoch end.
+At step 5000 (81.9M) the 82M ckpt IS checkpoints_v13/200m_v13_D_dense/
+latest.pt. B's 82M battery (multi8@128 0.106) also used its latest.pt. So
+the recall-gate battery command must point at .../200m_v13_D_dense/
+latest.pt, not a ckpt5000.pt (that file does not exist).
 **NEXT-RUN LEVER RESEARCH (2026-08-26, for the post-500M call):**
 The oracle said the gap is READ-SIDE routing (query→address). B adds recall
 DATA (indirect pressure). Three levers target it more directly, in order of
