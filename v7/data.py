@@ -1319,6 +1319,15 @@ _RECALL_VALUE_NOUNS = (
     'amber', 'cedar', 'onyx', 'marigold', 'basalt', 'juniper', 'ivory',
     'sable', 'crimson', 'indigo', 'walnut', 'pewter', 'clover',
 )
+# Dense short-context recall values: single-token (GPT-2) nouns DISJOINT from
+# both the probe KEYS/VALUES and the long-range _RECALL_VALUE_NOUNS. Single-token
+# so a doc can pack 8 DISTINCT values and the model faces a clean 8-way read-side
+# routing choice (the oracle-identified gap). Disjoint -> no probe leakage.
+_RECALL_DENSE_VALUES = (
+    'act', 'ace', 'age', 'air', 'ake', 'ark', 'art', 'ash',
+    'ave', 'end', 'ide', 'ite', 'ore', 'per',
+)
+_RECALL_DENSE_VERBS = ('means', 'maps to', 'refers to', 'is')
 _RECALL_FILLER_BANK = (
     "The committee reviewed the quarterly notes without any changes.",
     "A light rain fell over the harbor as the ferries came and went.",
@@ -1351,10 +1360,21 @@ def _recall_filler(rng, n_sentences: int) -> str:
 
 
 def _build_recall_doc(rng) -> str:
-    """One synthetic recall document (passkey | single-kv | multi-kv)."""
+    """One synthetic recall document (passkey | single-kv | multi-kv | dense).
+
+    ``dense`` (added 2026-08-26) is the DENSE short-context 6-8-way variant that
+    mirrors the behavioral probe's hard case. It is weighted 50% of the slice
+    (the remaining 50% is the original long-range mix) so the oracle-identified
+    READ-SIDE routing gap gets direct pressure while the PPL-winning long-range
+    signal is retained.
+    """
+    task = rng.choices(
+        ('dense', 'passkey', 'kv', 'multi'), weights=(0.5, 1 / 6, 1 / 6, 1 / 6)
+    )[0]
+    if task == 'dense':
+        return _build_recall_dense_doc(rng)
     # Log-uniform gap so the model sees short and long-range recall alike.
     gap = int(round(2 * (100 ** rng.random())))  # ~[2, 200] sentences
-    task = rng.choice(('passkey', 'kv', 'multi'))
 
     if task == 'passkey':
         code = rng.randint(1000, 9999)
@@ -1380,6 +1400,33 @@ def _build_recall_doc(rng) -> str:
     qi = rng.randrange(n)
     recall = f"Query: {keys[qi]} maps to {vals[qi]}."
     return f"{records} {body} {recall}\n"
+
+
+def _build_recall_dense_doc(rng) -> str:
+    """One DENSE short-context recall doc: 6-8 DISTINCT single-token bindings
+    packed with a 0-2 sentence gap, then query one back.
+
+    Mirrors the behavioral probe's hard case (8-way, dense, short-gap —
+    memory_probes/behavioral.py: build_example) that the sparse long-range
+    variant (2-200 sentence gap) never trained. This is the direct training
+    signal for the oracle-identified READ-SIDE routing gap (the learned query
+    was ~orthogonal to the 8th value's address). Values are sampled WITHOUT
+    replacement from _RECALL_DENSE_VALUES so the model faces a genuine N-way
+    discrimination. Keys are invented syllables, disjoint from the probe.
+    """
+    n = rng.choice((6, 7, 8))
+    keys = [_recall_key(rng) for _ in range(n)]
+    vals = rng.sample(_RECALL_DENSE_VALUES, n)  # n DISTINCT single-token values
+    verb = rng.choice(_RECALL_DENSE_VERBS)
+    records = ' '.join(
+        f"Record {i + 1}: {k} {verb} {v}."
+        for i, (k, v) in enumerate(zip(keys, vals))
+    )
+    gap = rng.randint(0, 2)
+    body = (' '.join(rng.choice(_RECALL_FILLER_BANK) for _ in range(gap)) + ' ') if gap else ''
+    qi = rng.randrange(n)
+    recall = f"Query: {keys[qi]} {verb} {vals[qi]}."
+    return f"{records} {body}{recall}\n"
 
 
 def _recall_text_iter(
@@ -1549,7 +1596,6 @@ def load_pretrain_holdout_val(
 
 
 def load_dclm_edu(
-    seq_len: int = 2048,
     edu_score_min: int = 3,
     token_budget: Optional[int] = None,
     max_val_samples: Optional[int] = None,
@@ -1596,7 +1642,10 @@ def load_dclm_edu(
 
 # v2: strip <think> reasoning from the smoltalk2_mid blend so the base never learns
 #     to emit it (2026-07-09 SFT-regression diagnosis).
-_PRETRAIN_CACHE_VERSION = 2
+# v3: recall slice gains a DENSE short-context 6-8-way variant (50% of the
+#     slice) mirroring the behavioral probe's hard case — direct training signal
+#     for the oracle-identified read-side routing gap (2026-08-26, post-B).
+_PRETRAIN_CACHE_VERSION = 3
 _PRETRAIN_CACHE_SHARD_ROWS = 50_000
 
 
