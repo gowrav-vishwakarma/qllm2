@@ -197,6 +197,50 @@ same CE + O(1) inference" — a real but MODEST step, not a breakthrough.
 Decision tree at 500M: (a) n8-allctx > r1 by >0.05 AND n1 ≥ r1 → B wins,
 scale to 1B+; (b) parity on n8, n1 catching up → extend budget / tune
 slice weight (try 6-8%) before declaring; (c) n8 < r1 → bank C.
+
+**FINAL 500M VERDICT (2026-08-26 20:34) — B = TIED recall, BETTER PPL.**
+Clean run: 500,000,768 tok / 31.97h, no NaN/OOM. **Wiki PPL 128.76** vs
+r1 133.88 (−3.8%, BETTER). Val 3.9112/49.96 vs r1 3.9135/50.08 (parity).
+300-trial battery (`v13_B_recall_FINAL500M_d201737_behavior.json`) vs
+r1-FINAL (60 trials), all-ctx avg accuracy:
+  n1: B 0.3006 vs r1 0.4083 (d −0.108, z −1.12) — B worse (easy case)
+  n4: B 0.2042 vs r1 0.2194 (d −0.015, z −0.71) — parity
+  n8: B 0.1453 vs r1 0.1333 (d +0.012, z +1.31) — B slightly better (hard)
+HONEST READ: the 4% recall slice did NOT break the recall plateau (n8 ≈
+chance 0.125; all deltas <2σ). Direction matches the hypothesis (hard
+multi-fact up, easy single-fact down) but NO significance. The real win is
+PPL: recall data improved Wiki PPL ~3.8% at zero recall cost.
+DECISION (tree: not (a) — n8 <0.05 above AND n1 below; not (c) — n8 ≥ r1;
+sits in (b)-territory): do NOT scale B to 1B on a TIED recall; do NOT bank
+C (B is not a failure — PPL better). NEXT = attack the oracle-identified
+READ-SIDE routing gap directly + fix the train/probe distribution mismatch:
+launch a 100M VALIDATION run (gate @25M/50M) with (1) a dense short-ctx
+8-way recall curriculum (trains the probe's exact hard case) + (2) read-side
+fact_contrastive λ=0.1 (the novel mechanism; needs loss_mask plumbing). If
+recall moves clearly (multi8@128 >0.15 or n8-allctx > r1 by >0.03) continue
+to 500M; else bank the negative and reconsider (C / scale / γ_floor).
+**NEXT-RUN DECISION (2026-08-26, post-verdict) — DENSE CURRICULUM, 200M validation.**
+The 4% sparse slice (3-6 bindings over a 2-200-sentence gap) NEVER trained the
+probe's hard case (8 DISTINCT single-token bindings packed into ~128 tok, query
+immediately after). That is why the 8-way stayed at chance (0.125-0.145): the
+oracle-identified READ-SIDE routing gap (query ~orthogonal to the 8th value's
+address) was never exercised. B's PPL win proves the slice is LEARNED but its
+SHAPE is wrong for the probe.
+CONTRASTIVE re-judged WEAK: the ported `fact_contrastive_from_lm` is a CE over
+only the in-batch value subset (a subset of the main CE's full-vocab CE) —
+redundant signal, consistent with v12's null result. NOT the primary lever.
+GAMMA_FLOOR: helps long-horizon, but the probe's hard case is ctx128 — off-target.
+RECALL WEIGHT: v11 Stage-3 found MORE recall data HURT (w3>w10>w20) — do NOT bump.
+=> Single-variable test: reshape the recall distribution to be DENSE (8 distinct
+bindings, 0-2 sentence gap, query 1-of-8 back) at the SAME 4% weight, run
+200M (cheaper than a 32h 500M re-run; B's recall trajectory was already flat
+by 164M so 200M suffices to detect a break). Plain CE at the value position
+provides the 8-way routing pressure — no loss_mask plumbing, no destabilizer.
+GATE @200M (60-trial battery): dense-run n8@128 AND n8-allctx clearly ABOVE the
+B trajectory at the same token count (B: 0.133@164M, 0.144@246M) AND rising
+-> continue to 500M / declare; FLAT at ~0.133 -> the substrate can't route 8-way
+at 500M, BANK C (v11 additive, 3.2x cheaper/token, already beats v13 on PPL).
+Cache: _PRETRAIN_CACHE_VERSION bumped 2->3 (generator changed) -> fresh build.
 **NEXT-RUN LEVER RESEARCH (2026-08-26, for the post-500M call):**
 The oracle said the gap is READ-SIDE routing (query→address). B adds recall
 DATA (indirect pressure). Three levers target it more directly, in order of
