@@ -241,6 +241,42 @@ B trajectory at the same token count (B: 0.133@164M, 0.144@246M) AND rising
 -> continue to 500M / declare; FLAT at ~0.133 -> the substrate can't route 8-way
 at 500M, BANK C (v11 additive, 3.2x cheaper/token, already beats v13 on PPL).
 Cache: _PRETRAIN_CACHE_VERSION bumped 2->3 (generator changed) -> fresh build.
+
+**D RUN (tmux `v13_D`, `v13/tmp/launch_v13_D_dense.sh`) — early health (22:35):**
+step 775 / 12.7M, loss 5.70 (BELOW r1 5.87@20M), no NaN, GPU 9GB. Dense
+curriculum CONFIRMED LIVE (direct `_recall_text_iter(seed=42)` test: dense
+docs ~42% of slice; trainer streaming path calls that generator). No stale-
+cache no-op: budget 500M->200M AND cache v2->v3 (both are cache keys). v3
+cache shard flushes at ~102M tok (50k rows) — side-effect only; the live
+stream already carries dense docs. ETA: 82M gate ~02:50, 200M ~10:00 next
+day. Watchdog re-armed to 81.9M on every wake (async + timeout 3300).
+GATES (script header): KILL if loss >0.7 NLL above r1 curve. RECALL GATE
+@5000 steps (81.9M) = clean A/B vs B's 82M ckpt (multi8@128 0.106), target
+>0.13 with CE non-regressing. FINAL GATE @200M (step ~12200): n8@128 >0.15
+AND n8-allctx > B-246M (0.233) by >0.03 -> continue to 500M; flat ~0.133 ->
+banks C (v11 additive).
+
+**D RUN CRASH + DIAGNOSIS (2026-08-26 ~22:53, 69 min in):** first D launch
+died SILENTLY at step 1050 / 17.2M tok. No Python traceback, no OOM in log,
+no coredump, GPU 2.1/8.5GB at death (NOT a GPU OOM), loss healthy 5.41 (below
+r1 curve), no "Saved checkpoint" (first save now 1000 steps). dmesg/journal
+inaccessible (no root) so host-RAM OOM-killer during HF shard streaming is
+the leading hypothesis (SIGKILL signature); environmental kill second. NOT
+the curriculum (pure ASCII, ran ~450 recall-active steps fine; B's identical
+streaming path completed 500M).
+**WATCHDOG BUG (found via this crash):** old liveness `pgrep -f "v1[13].train"`
+false-positived on 3 stale Cursor-sandbox processes (their `zsh -c` cmdline
+embeds "v13.train" as a substring) -> watchdog exited "timeout" BLIND to the
+dead trainer for ~1.5h. FIX (v13/tmp/watchdog.sh, verified: sandbox procs now
+excluded, LIVE=0 with no trainer): liveness = a process whose /proc/PID/exe is
+python AND cmdline matches v1[13].train, OR tmux session v13_D alive.
+**RELAUNCHED 23:45** (tmux v13_D, same script/dirs; log appends after a
+restart marker). save_every_steps 2500->1000 (crash cost 17M tok = 38 min;
+2500-step cadence would have lost ~2.5h). No v3 cache shard was flushed
+(first flush ~102M tok) -> relaunch re-streams blend from doc 0 (~25 min,
+HF corpora cached). Watchdog re-armed to 81.9M gate with the fixed liveness.
+If a 2nd silent death at a similar point occurs -> environment/RAM, mitigate
+before 3rd launch (smaller HF mmap footprint / separate cache pre-pass).
 **NEXT-RUN LEVER RESEARCH (2026-08-26, for the post-500M call):**
 The oracle said the gap is READ-SIDE routing (query→address). B adds recall
 DATA (indirect pressure). Three levers target it more directly, in order of

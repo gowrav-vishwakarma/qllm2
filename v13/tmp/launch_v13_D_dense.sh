@@ -72,7 +72,7 @@ exec .venv/bin/python -m v13.train \
     --delta_raw_key_readout \
     --delta_erase_beta_cap 1.0 \
     --gen_every 5000 \
-    --save_every_steps 2500 \
+    --save_every_steps 1000 \
     --gen_prompt 'In 1923, the University of' \
     --blend_warmup_tokens 10000000 \
     --edu_score_min 3 \
