@@ -160,8 +160,14 @@ class V13Config:
     # gate_surprisal_sign: +1 => LOW-surprisal (filler) tokens get HIGH protect target
     #   (freeze state through filler, write on content). This is the recall-oriented
     #   direction and drives (p_content - p_filler) NEGATIVE. -1 flips it to the
-    #   probe's "protect content more" convention. Default +1 optimizes for recall.
     gate_surprisal_sign: float = 1.0
+    # fact_contrastive_lambda: in-batch hard-negative contrastive recall term
+    #   (ported from v12, 2026-08-26). At each supervised value token the correct
+    #   value must outrank the OTHER answer tokens in the batch — direct
+    #   key->value discrimination pressure on the read side (the oracle-identified
+    #   routing gap). 0 disables. Needs --fused_ce (trainer v7/train.py:532).
+    fact_contrastive_lambda: float = 0.0
+    fact_contrastive_tau: float = 1.0
     # Stage-6 architecture levers (defaults OFF = bit-identical to prior behaviour).
     # vault_state: pin one of the K states to γ≈1 (no decay); writes still GSP-gated.
     vault_state: bool = True
@@ -1798,6 +1804,39 @@ class V13LM(nn.Module):
         main = self.ce_from_lm(lm, labels, loss_mask=loss_mask,
                                ignore_index=ignore_index, chunk=chunk)
         return main, aux_loss
+
+    def fact_contrastive_from_lm(self, lm, labels, loss_mask, tau: float = 1.0):
+        """In-batch hard-negative contrastive recall loss at masked answer tokens.
+
+        Ported from v12 (V12LM.fact_contrastive_from_lm) — v13 has the identical
+        tied complex head, so the math is unchanged. At every supervised position
+        (``loss_mask==1``, i.e. a fact value token), the correct value token must
+        outrank the OTHER answer-value tokens present in the batch (semantically
+        hard negatives — all plausible values in the same fact-recall format).
+        Uses the tied head over a tiny candidate set (unique batch answers), so
+        it never materializes full-vocab logits. Returns 0 if <2 distinct answers.
+        """
+        mask = loss_mask.reshape(-1).bool()
+        if mask.sum() < 1:
+            return torch.zeros((), device=labels.device)
+        hidden = torch.cat([real_part(lm), imag_part(lm)], dim=-1)
+        hidden = hidden.reshape(-1, hidden.shape[-1])[mask]           # [M, D]
+        weight = torch.cat(
+            [self.embed.embed_real.weight, self.embed.embed_imag.weight], dim=-1
+        )                                                            # [V, D]
+        targets = labels.reshape(-1)[mask]                            # [M]
+        cand = torch.unique(targets)                                 # [C]
+        if cand.numel() < 2:
+            return torch.zeros((), device=labels.device)
+        logits = (hidden @ weight[cand].t()) / max(tau, 1e-6)        # [M, C]
+        # Clamp before CE: a saturated PAM hidden can produce huge logits that
+        # overflow fp16/bf16 softmax and poison the whole training step.
+        logits = logits.float().clamp(min=-50.0, max=50.0)
+        if not torch.isfinite(logits).all():
+            return torch.zeros((), device=labels.device)
+        # class index of each target within the candidate set
+        tgt_idx = torch.searchsorted(cand, targets)
+        return torch.nn.functional.cross_entropy(logits, tgt_idx)
 
     def compile_blocks(self, mode: str = 'default'):
         """Compile each V13Block.forward for use *inside* gradient checkpoint.

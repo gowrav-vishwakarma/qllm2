@@ -178,6 +178,11 @@ def build_argparser():
                    help='Temperature (nats) for surprisal->protect target (default 1.0)')
     p.add_argument('--gate_surprisal_sign', type=float, default=None,
                    help='+1: low-surprisal->protect (recall-oriented, default); -1: content->protect')
+    p.add_argument('--fact_contrastive_lambda', type=float, default=None,
+                   help='In-batch hard-negative contrastive recall loss at value tokens '
+                        '(0=off; needs --fused_ce). Ported from v12.')
+    p.add_argument('--fact_contrastive_tau', type=float, default=None,
+                   help='Softmax temperature for the contrastive logits (default 1.0)')
     # Stage-6 architecture levers
     p.add_argument('--vault_state', action='store_true',
                    help='Pin one K-state to γ=1 (no decay); writes still GSP-gated')
@@ -388,6 +393,10 @@ def main():
         cfg.gate_surprisal_tau = args.gate_surprisal_tau
     if args.gate_surprisal_sign is not None:
         cfg.gate_surprisal_sign = args.gate_surprisal_sign
+    if args.fact_contrastive_lambda is not None:
+        cfg.fact_contrastive_lambda = args.fact_contrastive_lambda
+    if args.fact_contrastive_tau is not None:
+        cfg.fact_contrastive_tau = args.fact_contrastive_tau
     if args.no_vault_state:
         cfg.vault_state = False
     elif args.vault_state:
