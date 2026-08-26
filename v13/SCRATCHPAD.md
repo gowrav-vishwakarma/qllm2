@@ -292,6 +292,26 @@ At step 5000 (81.9M) the 82M ckpt IS checkpoints_v13/200m_v13_D_dense/
 latest.pt. B's 82M battery (multi8@128 0.106) also used its latest.pt. So
 the recall-gate battery command must point at .../200m_v13_D_dense/
 latest.pt, not a ckpt5000.pt (that file does not exist).
+**RECALL GATE @82M (step 5000, 04:54) — LEADING NEGATIVE (clean A/B vs B-82M):**
+D-82M multi8@128 = 0.0667 (4/60) vs B-82M 0.1167 (7/60), z=-0.95. BOTH at/below
+8-way chance (0.125). n4@128 0.2167 vs 0.2667; n1@128 0.2833==0.2833; n8@512/
+1024/2048 0.10/0.10/0.10 vs 0.117/0.10/0.10. D did NOT clear the 0.13 target;
+it tracks B, not ahead of it. CE non-regressing (loss 4.3254 @ 81.9M, below r1
+curve). Battery: logs/memory_probes/v13_D_dense_ckpt5000_behavior.json.
+**DECISION: CONTINUE to the 200M FINAL GATE (pre-registered, unchanged).**
+Why not kill at 82M: (1) run was designed to decide at 200M; 82M is a leading
+indicator only. (2) B was ALSO at chance at 82M (0.106~0.125); B's 8-way recall
+only emerged 164M-246M (B-246M n8-allctx 0.233). "No break at 82M" is consistent
+with B's own trajectory, not dispositive. The dense hypothesis = D breaks EARLIER
+than B; 82M doesn't test that yet. (3) 200M is the informative point: it separates
+"D tracks B" (~0.20, fail gate) from "D ahead of B" (>0.263, pass) from "D at
+chance while B was 0.233" (decisive neg -> bank C). 82M cannot. (4) z=-0.95 is
+within noise, not a significant miss. 200M = +7.3h (the designed cost); fallback
+bank C (v11 additive) is a good landing either way.
+**200M FINAL GATE (unchanged, 300 trials): n8@128 > 0.15 AND n8-allctx > 0.263
+(B-246M 0.233 + 0.03) -> continue to 500M; flat/at-chance/B-level -> BANK C.**
+Battery at 200M: scripts/run_memory_behavioral.py --trials 300 on latest.pt
+(=final_model.pt at budget), same preset/config as the 82M battery.
 **NEXT-RUN LEVER RESEARCH (2026-08-26, for the post-500M call):**
 The oracle said the gap is READ-SIDE routing (query→address). B adds recall
 DATA (indirect pressure). Three levers target it more directly, in order of
