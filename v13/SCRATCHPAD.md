@@ -312,6 +312,46 @@ bank C (v11 additive) is a good landing either way.
 (B-246M 0.233 + 0.03) -> continue to 500M; flat/at-chance/B-level -> BANK C.**
 Battery at 200M: scripts/run_memory_behavioral.py --trials 300 on latest.pt
 (=final_model.pt at budget), same preset/config as the 82M battery.
+
+**200M FINAL GATE (2026-08-27 12:28) — FAIL on n8-allctx → BANK C.**
+Endpoint: 200,001,536 tok / 12.70 h / 4,373 tok/s, 0 NaN/OOM. Train loss
+**4.0971** @ step 12200 (r1 ref 3.97@200M → **+0.13**, inside the 0.7 kill
+band; matches B's +0.13). **Wiki PPL 178.34** (best), Val 4.1334/62.39/0.321.
+CE non-regressing. 300-trial battery (`v13_D_dense_FINAL200M_behavior.json`):
+  n1-allctx 0.1955 | n4-allctx 0.1624 | **n8-allctx 0.1367** | n8@128 0.1467
+  (SE ≈ 0.019/cell @ 300 trials).
+**VERDICT:** n8@128 0.1467 vs bar 0.15 = at the threshold (miss 0.003 = 0.2 SE,
+not clearly failed). **n8-allctx 0.1367 vs bar 0.205 = FAIL by 0.068 (3.6 SE)**
+(and vs the originally-written bar 0.263, FAIL by 0.126 = 6.6 SE). The gate is
+AND → **FAIL → BANK C**. The dense curriculum did NOT break the 8-way gap; D
+sits at B-level n8 (0.1367 vs B-246M 0.1750 — B is actually slightly higher).
+**ANCHOR CORRECTION (load-bearing):** the gate's bar "n8-allctx > B-246M (0.233)
++ 0.03" used a MISLABELED anchor. The on-disk B-246M battery
+(`v13_B_recall_ckpt15000_behavior.json`) has n8-allctx = **0.1750**, not 0.233.
+The 0.233 = B-246M's **n4@128 p0.0** cell (0.2333) — a transcription slip
+carried through the CKPT-3/246M note ("n8 all-ctx/pos = 0.233 vs r1 0.178,
++0.055"). Corrected: B-246M n8-allctx 0.1750 ≈ r1-FINAL 0.178 = **~parity**,
+not +0.055 above — so B's "positive at half budget" read should be discounted.
+D fails the corrected bar (0.205) AND the original (0.263) → **verdict robust
+to the fix**.
+**N-GRAM INFERENCE-ONLY DIAGNOSTIC (same D final ckpt, `ngram_read=true`,
+NEVER trained on the fingerprint) — POSITIVE SIGNAL.**
+`v13_D_dense_FINAL200M_NGRAMON_behavior.json` vs `..._FINAL200M_...json`:
+  n8@128   0.1467 → 0.1589  (+0.012)
+  n8@512   0.1289 → 0.1478  (+0.019)
+  n8@1024  0.1344 → 0.1456  (+0.011)
+  n8@2048  0.1367 → 0.1478  (+0.011)
+  n8-allctx 0.1367 → 0.1500 (+0.013)
+  n4@128   0.1967 → 0.1823  (−0.014)
+  n1@128   0.3290 → 0.2720  (−0.057, ~3 SE)
+The zero-param fingerprint lifts the HARD 8-way case in ALL FOUR contexts
+(consistent +0.011..0.019, ~1 SE each) while dropping the EASY 1-way case —
+the SAME signature as B's recall slice (hard up, easy down). Not a single-cell
+fluke. At 300 trials the n8 lift is ~1 SE (suggestive, not conclusive) — which
+is exactly what the E run (train ON the fingerprint) tests. **DECISION: bank C
+for the D curriculum (8-way not broken at 500M scale), but launch E NOW** —
+user green-lit, and the diagnostic now evidence-motivates it on the exact metric
+Qwen never published.
 **NEXT-RUN LEVER RESEARCH (2026-08-26, for the post-500M call):**
 The oracle said the gap is READ-SIDE routing (query→address). B adds recall
 DATA (indirect pressure). Three levers target it more directly, in order of
@@ -392,19 +432,22 @@ generate() decode reproducible). CUDA smoke (4090 fp32): OFF bit-identical on
 GPU, ON deterministic, param count equal. Default OFF = bit-identical (D run
 unaffected).
 
-**E EXPERIMENT (planned, `v13/tmp/launch_v13_E_ngram.sh` — pre-written, launch
-in seconds once the D 200M verdict lands).** 82M MATCHED-TOKEN A/B: D recipe +
-`--ngram_read`, seed 42, `--token_budget 82000000`, single-tenant (run AFTER the
-D gate, not co-located — co-locating halves BOTH runtimes → slower, and the
-recipe may change with the D verdict). Gate @5000 steps (~82M) on `latest.pt`:
-multi8@128 vs D-82M 0.0667 / B-82M 0.100-0.1167 (chance 0.125). **Pass** = E-82M
-multi8@128 > ~0.13 with CE non-regressing → the zero-param fingerprint works,
-scale to 200M/500M. **Flat ≈ D-82M** → zero-param fingerprint insufficient;
-escalate to the PAM-state row-read or a learned fusion block (Qwen's
-`ple.{conv1d,key_proj,value_proj}`). Cheap diagnostic FIRST (co-located, ~35min,
-no retrain): battery on D's `latest.pt` with `--v13-config ngram_read=true` —
-expected near-neutral/slightly negative (readout never trained on the
-fingerprint) = informative lower bound only, NOT the experiment.
+**E EXPERIMENT (LIVE, launched 2026-08-27 13:18, tmux `v13_E`).** 82M
+MATCHED-TOKEN A/B: D recipe + `--ngram_read` (n=3, scale=0.5), seed 42,
+`--token_budget 82000000`, single-tenant (D 200M done + GPU freed; not
+co-located — co-locating halves BOTH runtimes). Healthy: `[block-grad step1]`
+L0..L15 all-nonzero (1.83-1.89e-3 → the fingerprint propagates to every
+layer), step 300 loss 6.82 @ ~4.4K tok/s, 0 errors, GPU 2.1/8.5GB. ETA ~4.7h
+to 82M. Watchdog re-armed to 82M (verdict gtok 82000000).
+**CORRECTED GATE @82M (step 5000, `latest.pt`):** the n-gram diagnostic showed
+the signal lives in the 8-WAY n8 metric (all-ctx), not n1/n4. Primary read =
+300-trial battery: **E-82M n8-allctx > D-final 0.1367 by ≥ 0.03 (≥0.167) with
+CE non-regressing** → the fingerprint works even before it's trained on, scale
+to 200M/500M. (Inference-only lower bound already 0.1500; training ON it should
+only add.) A 60-trial multi8@128 spot read (D-82M 0.0667, chance 0.125) is an
+early indicator only — 60 trials can't resolve sub-0.05. **Flat ≈ D-82M**
+→ zero-param fingerprint insufficient; escalate to the PAM-state row-read or a
+learned fusion block (Qwen's `ple.{conv1d,key_proj,value_proj}`).
 
 - **GATE (re-arm watchdog on every wake).** Kill if loss > 0.7 NLL above r1
   (r1 curve: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M).
