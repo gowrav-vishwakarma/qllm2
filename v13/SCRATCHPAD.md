@@ -348,6 +348,64 @@ masks through _build_recall_doc (return value spans) -> blend interleave
 launch). DEFERRED until the 500M verdict: if B is borderline (likely), this
 is the highest-value next lever; if B is a clear win, scale instead.
 
+## 2026-08-27 QWEN3.8-FLASH-NEXT + ZERO-PARAM N-GRAM READ
+
+**Qwen3.8-Flash-Next (released 2026-08-26) — deep research (primary sources).**
+`model_type=qwen4_exp`. 125B core MoE (48 layers × 2560, 512 experts × 640,
+10 routed + 1 shared active) + **51.2B n-gram table** (20M slots × 2560, 128
+shards) + 4B MTP head; 6B active. **DISTINCT from Qwen3.8-27B** (`qwen_5`,
+dense FFN, no n-gram). **N-gram mechanism** (tech report §2.3): a **PLE layer**
+deterministically content-hashes a short n-gram of token IDs → looks up a row
+in the embedding table → augments the token representation. O(1)/token,
+offloadable to host RAM. `ple_layer_ids=[2]` (a single SHALLOW layer suffices,
+Table 7), `ngram_size: 3`, fusion block `ple.{conv1d, key_proj, value_proj,
+norm_*}`; table trained with **Adam, weight decay OFF**. Loss improves
+monotonically with table scale 20×→200× (Table 9); gains VANISH if experts
+shrink to offset the table params (Table 8) → the param budget itself matters.
+**CRITICAL CAVEAT:** Qwen's 14-benchmark eval has **NO 8-way binding-recall
+probe** → "n-gram fixes multi-binding recall" is a HYPOTHESIS for OUR battery,
+not a published result.
+
+**ZERO-PARAM PORT (commit 79db28e) — the idea + what we built.**
+The 51.2B table is out of reach at our 200M budget (Qwen's table alone > the
+whole core). But the mechanism — hash n-gram → existing embed row → content
+fingerprint on the token — needs NO new table: hash into the **EXISTING tied
+embedding table** (50K rows already exist). `v13/model.py _ngram_repr`:
+`h = (id_t + id_{t-1}*P + id_{t-2}*P^2) mod vocab`, P=1000003, zero-fill at the
+boundary; `z += ngram_scale * stack(embed_real[h], embed_imag[h])` injected
+between pos_embed and embed_norm at BOTH `forward` and `_hidden_to_lm` (so all
+layers' Q/K/V see it). **Zero new params** (state_dict byte-identical ON vs
+OFF), O(1)/token (integer hash), decode uses a rolling `_ngram_ctx [B,2]` int64
+buffer (plain attr, not a buffer). Config `ngram_read`(default False)/
+`ngram_size`=3/`ngram_scale`=0.5 (FIXED, not learned). CLI
+`--ngram_read/--no_ngram_read/--ngram_size/--ngram_scale`. **WHY it targets the
+gap:** the oracle proved the 8-way failure is write-key SEPARABILITY (8 similar
+bindings → 8 near-identical write keys → readout can't disambiguate); the local
+3-gram `(key,verb,value)` is DISTINCT per binding, so each write key gets a
+content-specific offset in the model's OWN learned space, and the query's
+3-gram contains the target key → the read side gets a matching signal.
+**VERIFIED:** `.venv/bin/python -m v13.selftest` → ALL MODES PASS, incl. new
+`test_ngram_read` (OFF bit-identical, ON≠OFF Δ0.3, deterministic,
+**parallel==recurrent** through the decode buffer [fingerprint itself bit-exact;
+1.75e-09 is fp64 loop accumulation], fused-CE path matches, 0 new params,
+generate() decode reproducible). CUDA smoke (4090 fp32): OFF bit-identical on
+GPU, ON deterministic, param count equal. Default OFF = bit-identical (D run
+unaffected).
+
+**E EXPERIMENT (planned, `v13/tmp/launch_v13_E_ngram.sh` — pre-written, launch
+in seconds once the D 200M verdict lands).** 82M MATCHED-TOKEN A/B: D recipe +
+`--ngram_read`, seed 42, `--token_budget 82000000`, single-tenant (run AFTER the
+D gate, not co-located — co-locating halves BOTH runtimes → slower, and the
+recipe may change with the D verdict). Gate @5000 steps (~82M) on `latest.pt`:
+multi8@128 vs D-82M 0.0667 / B-82M 0.100-0.1167 (chance 0.125). **Pass** = E-82M
+multi8@128 > ~0.13 with CE non-regressing → the zero-param fingerprint works,
+scale to 200M/500M. **Flat ≈ D-82M** → zero-param fingerprint insufficient;
+escalate to the PAM-state row-read or a learned fusion block (Qwen's
+`ple.{conv1d,key_proj,value_proj}`). Cheap diagnostic FIRST (co-located, ~35min,
+no retrain): battery on D's `latest.pt` with `--v13-config ngram_read=true` —
+expected near-neutral/slightly negative (readout never trained on the
+fingerprint) = informative lower bound only, NOT the experiment.
+
 - **GATE (re-arm watchdog on every wake).** Kill if loss > 0.7 NLL above r1
   (r1 curve: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M).
   Recall gate at first ckpt (5000 steps): **multi8@128 off 0.133** (chance
