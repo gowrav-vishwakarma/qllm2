@@ -174,6 +174,14 @@ class V13Config:
     vault_state_idx: int = 0
     # write_phase_address: key-conditioned write phase + matching query phase on read.
     write_phase_address: bool = True
+    # ngram_read: zero-parameter n-gram content read (Qwen3.8-Flash-Next PLE port).
+    # Hashes the causal n-gram of token IDs -> row of the EXISTING tied embedding
+    # table -> scaled complex row added to the token representation (before
+    # embed_norm). No new parameters: re-uses the learned shared embed. OFF = the
+    # fingerprint is a zero row -> bit-identical to the pre-feature model.
+    ngram_read: bool = False
+    ngram_size: int = 3
+    ngram_scale: float = 0.5
 
 
 # ── Phase-Associative Memory (V11) ──────────────────────────────────────────
@@ -1667,6 +1675,9 @@ class V13LM(nn.Module):
         self.lm_head_proj = ComplexLinear(cfg.dim, cfg.dim)
         self.lm_head_norm = ComplexNorm(cfg.dim)
         self._init_weights()
+        # Rolling n-gram context for decode (plain attr, NOT a buffer: keeps
+        # state_dict identical to the pre-feature model).
+        self._ngram_ctx = None
 
     def _init_weights(self):
         embed_embeddings = {self.embed.embed_real, self.embed.embed_imag}
@@ -1718,11 +1729,52 @@ class V13LM(nn.Module):
             return None
         return torch.stack(probs, dim=0)
 
+    # ── Zero-parameter n-gram content read (Qwen3.8-Flash-Next PLE port) ─────
+    # Hash the causal n-gram of token IDs -> row of the EXISTING tied embedding
+    # table -> scaled complex row added to the token representation (before
+    # embed_norm). No new parameters: re-uses the learned shared embed; O(1)/
+    # token (integer hash). Boundary tokens zero-fill (no wrap), so a one-token
+    # decode step with a zero-init ctx buffer is bit-identical to the parallel
+    # form (selftest checks this). Validated size: n=3 (int64 headroom for
+    # P^(n-1) * id; n>=4 overflows int64).
+    def _ngram_repr(self, input_ids, states):
+        if not self.config.ngram_read:
+            return None
+        V = self.config.vocab_size
+        n = self.config.ngram_size
+        P = 1000003
+        ctx_len = n - 1
+        B, T = input_ids.shape
+        ids = input_ids.to(torch.int64)
+        if states is None or ctx_len == 0:
+            seq = ids
+        else:
+            ctx = self._ngram_ctx
+            ctx = (ctx if ctx is not None
+                   else torch.zeros(B, 0, dtype=torch.int64, device=ids.device))
+            seq = torch.cat([ctx.to(device=ids.device, dtype=torch.int64), ids], dim=1)
+        S = seq.shape[1]
+        h = seq.clone()
+        for j in range(1, n):
+            if S > j:
+                h[:, j:] += seq[:, :S - j] * (P ** j)
+        h %= V
+        if ctx_len > 0:
+            self._ngram_ctx = seq[:, -ctx_len:].detach()
+        row = h if (states is None or ctx_len == 0) else h[:, S - T:]
+        return torch.stack([
+            self.embed.embed_real(row),
+            self.embed.embed_imag(row),
+        ], dim=-1) * self.config.ngram_scale
+
     def forward(self, input_ids, states=None, step_offset: int = 0, labels=None):
         # Token ids → complex vectors [B,T,dim,2].
         z = self.embed(input_ids)
         if self.pos_embed is not None:
             z = self.pos_embed(z, step_offset=step_offset)
+        ngram = self._ngram_repr(input_ids, states)
+        if ngram is not None:
+            z = z + ngram
         z = self.embed_norm(z)
         use_ckpt = self.config.gradient_checkpointing and self.training and states is None
         new_states = []
@@ -1759,6 +1811,9 @@ class V13LM(nn.Module):
         z = self.embed(input_ids)
         if self.pos_embed is not None:
             z = self.pos_embed(z, step_offset=step_offset)
+        ngram = self._ngram_repr(input_ids, None)
+        if ngram is not None:
+            z = z + ngram
         z = self.embed_norm(z)
         use_ckpt = self.config.gradient_checkpointing and self.training
         for block in self.blocks:

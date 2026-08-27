@@ -194,6 +194,14 @@ def build_argparser():
                    help='Key-conditioned write phase + matching query phase on read')
     p.add_argument('--no_write_phase_address', action='store_true',
                    help='Disable write_phase_address even if preset enables it')
+    p.add_argument('--ngram_read', action='store_true',
+                   help='Zero-parameter n-gram content read (Qwen3.8-Flash-Next PLE port)')
+    p.add_argument('--no_ngram_read', action='store_true',
+                   help='Disable ngram_read even if preset enables it')
+    p.add_argument('--ngram_size', type=int, default=None,
+                   help='n-gram window for ngram_read (default 3)')
+    p.add_argument('--ngram_scale', type=float, default=None,
+                   help='Fixed scale of the ngram fingerprint (default 0.5)')
     return p
 
 
@@ -363,6 +371,14 @@ def main():
         cfg.delta_decay_factored = False
     elif args.delta_decay_factored:
         cfg.delta_decay_factored = True
+    if args.no_ngram_read:
+        cfg.ngram_read = False
+    elif args.ngram_read:
+        cfg.ngram_read = True
+    if args.ngram_size is not None:
+        cfg.ngram_size = args.ngram_size
+    if args.ngram_scale is not None:
+        cfg.ngram_scale = args.ngram_scale
     if args.no_gate_content_aware:
         cfg.gate_content_aware = False
     elif args.gate_content_aware:

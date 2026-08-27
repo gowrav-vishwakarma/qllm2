@@ -453,6 +453,89 @@ def test_delta_decay_factored_equiv(batch_size=2, seq_len=80, seed=0):
     return ok and ok2
 
 
+def test_ngram_read(batch_size=2, seq_len=40, seed=0):
+    """Zero-parameter n-gram read: OFF is bit-identical; ON adds a content
+    fingerprint, stays deterministic, keeps parallel==recurrent (decode buffer),
+    matches the fused-CE path, and adds no parameters / state keys."""
+    import torch.nn.functional as F
+    from v13.model import V13LM
+
+    def _cfg(**kw):
+        base = dict(
+            vocab_size=256, dim=48, n_heads=3, head_dim=16, n_layers=2, expand=2,
+            dropout=0.0, max_seq_len=128, chunk_size=24,
+            gradient_checkpointing=False, use_rope=True, use_gsp=True,
+            n_states=3, gate_content_aware=True,
+            write_mode='delta', delta_chunk=20,
+            vault_state=True, vault_state_idx=0, write_phase_address=True,
+            fused_e3=True,
+        )
+        base.update(kw)
+        return V13Config(**base)
+
+    torch.manual_seed(seed)
+    off = V13LM(_cfg()).eval()
+    torch.manual_seed(seed)
+    on = V13LM(_cfg(ngram_read=True, ngram_size=3, ngram_scale=0.5)).eval()
+
+    # (f) Zero-parameter: identical state_dict keys, identical param count.
+    keys_off = set(off.state_dict().keys())
+    keys_on = set(on.state_dict().keys())
+    n_off = sum(p.numel() for p in off.parameters())
+    n_on = sum(p.numel() for p in on.parameters())
+    ok_zero = keys_off == keys_on and n_off == n_on
+
+    ids = torch.randint(0, 256, (batch_size, seq_len))
+    lbl = torch.randint(0, 256, (batch_size, seq_len))
+    with torch.no_grad():
+        # (a) OFF bit-identical across two fresh inits (no state leakage).
+        off2 = V13LM(_cfg()).eval()
+        off2.load_state_dict(off.state_dict())
+        lg_off, _, _ = off(ids)
+        lg_off2, _, _ = off2(ids)
+        d_off = (lg_off - lg_off2).abs().max().item()
+        ok_off = d_off == 0.0
+        # (b) ON != OFF (fingerprint actually changes the logits).
+        lg_on, _, _ = on(ids)
+        d_on = (lg_on - lg_off).abs().max().item()
+        ok_diff = d_on > 1e-6
+        # (c) ON deterministic.
+        lg_on2, _, _ = on(ids)
+        d_det = (lg_on - lg_on2).abs().max().item()
+        ok_det = d_det == 0.0
+        # (d) Parallel == one-token recurrent (exercises the decode ctx buffer,
+        #     including the boundary zero-fill at the sequence start).
+        on._ngram_ctx = None
+        lg_par, states, _ = on(ids)
+        on._ngram_ctx = None
+        st = None
+        rec = []
+        for t in range(seq_len):
+            o, st, _ = on(ids[:, t:t + 1], states=st, step_offset=t)
+            rec.append(o)
+        lg_rec = torch.cat(rec, dim=1)
+        d_par = (lg_par - lg_rec).abs().max().item()
+        ok_par = d_par < 1e-8  # fp64 accumulation of the per-token PAM loop
+        # (e) Fused-CE path matches the plain forward + CE (ngram injected in
+        #     _hidden_to_lm too).
+        ref = F.cross_entropy(lg_on.view(-1, 256), lbl.view(-1))
+        main, _ = on.fused_ce_loss(ids, lbl, chunk=16)
+        d_ce = (main - ref).abs().item()
+        ok_ce = d_ce < 1e-5
+        # (g) generate() decode path: top_k=1 makes multinomial degenerate
+        #     (single-candidate support) → deterministic, so the buffer set on
+        #     prefill and consumed on every decode step is bit-reproducible.
+        gen1 = on.generate(ids, max_new_tokens=4, top_k=1)
+        gen2 = on.generate(ids, max_new_tokens=4, top_k=1)
+        ok_gen = torch.equal(gen1, gen2)
+
+    ok = all([ok_zero, ok_off, ok_diff, ok_det, ok_par, ok_ce, ok_gen])
+    print(f"[ngram_read     ] off={d_off:.1e} on-off={d_on:.2e} det={d_det:.1e} "
+          f"par-rec={d_par:.2e} ce={d_ce:.1e} zero={int(ok_zero)} gen={int(ok_gen)}  "
+          f"{'PASS' if ok else 'FAIL'}")
+    return ok
+
+
 def test_drop_shape_mismatches():
     """Resume-safe: growing phase_proj (dim -> 2*dim) reinits cleanly."""
     from v13.train import _drop_shape_mismatches
@@ -529,6 +612,7 @@ def main():
     results.append(test_delta_erase_cap())
     results.append(test_grad_ckpt_equiv())
     results.append(test_delta_decay_factored_equiv())
+    results.append(test_ngram_read())
     print()
     if all(results):
         print("ALL MODES PASS: parallel train form == O(1) recurrent form.")
