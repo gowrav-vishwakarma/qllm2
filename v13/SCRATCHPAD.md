@@ -432,22 +432,49 @@ generate() decode reproducible). CUDA smoke (4090 fp32): OFF bit-identical on
 GPU, ON deterministic, param count equal. Default OFF = bit-identical (D run
 unaffected).
 
-**E EXPERIMENT (LIVE, launched 2026-08-27 13:18, tmux `v13_E`).** 82M
-MATCHED-TOKEN A/B: D recipe + `--ngram_read` (n=3, scale=0.5), seed 42,
-`--token_budget 82000000`, single-tenant (D 200M done + GPU freed; not
-co-located — co-locating halves BOTH runtimes). Healthy: `[block-grad step1]`
-L0..L15 all-nonzero (1.83-1.89e-3 → the fingerprint propagates to every
-layer), step 300 loss 6.82 @ ~4.4K tok/s, 0 errors, GPU 2.1/8.5GB. ETA ~4.7h
-to 82M. Watchdog re-armed to 82M (verdict gtok 82000000).
-**CORRECTED GATE @82M (step 5000, `latest.pt`):** the n-gram diagnostic showed
-the signal lives in the 8-WAY n8 metric (all-ctx), not n1/n4. Primary read =
-300-trial battery: **E-82M n8-allctx > D-final 0.1367 by ≥ 0.03 (≥0.167) with
-CE non-regressing** → the fingerprint works even before it's trained on, scale
-to 200M/500M. (Inference-only lower bound already 0.1500; training ON it should
-only add.) A 60-trial multi8@128 spot read (D-82M 0.0667, chance 0.125) is an
-early indicator only — 60 trials can't resolve sub-0.05. **Flat ≈ D-82M**
-→ zero-param fingerprint insufficient; escalate to the PAM-state row-read or a
-learned fusion block (Qwen's `ple.{conv1d,key_proj,value_proj}`).
+**E EXPERIMENT — COMPLETE 2026-08-27 18:28, GATE FAIL (do not scale).**
+82M MATCHED-TOKEN A/B: D recipe + `--ngram_read` (n=3, scale=0.5), seed 42,
+single-tenant. Clean: 82,001,920 tok / 5.16 h / 4,422 tok/s, 0 NaN/OOM,
+`final_model.pt`. CE non-regressing: train 4.45 @ step 5000, Val 4.5521/94.83,
+Wiki PPL 345.97 (r1 curve interp ~4.48@82M → on-curve; the fingerprint costs
+no CE).
+**300-trial gate battery (`v13_E_ngram_82M_FINAL_behavior.json`, ngram_read=
+true probe config) — VERDICT:**
+  n1-all 0.1211 | n4-all 0.1475 | **n8-all 0.1417** | n8@128 0.1400
+  n8 per-ctx: 128=0.1400 512=0.1433 1024=0.1467 2048=0.1367
+PASS BAR was n8-allctx >= D-final 0.1367 + 0.03 = 0.1667 with CE non-
+regressing. **E 0.1417 = FAIL** (+0.005 over D = 0.2 SE, noise). WORSE than
+expected: E was TRAINED on the fingerprint yet its n8 (0.1417) is BELOW the
+inference-only floor (D diag ON = 0.1500) — training did not exploit the
+fingerprint, it slightly degraded it. Consistent signature across all three
+readings (E trained / D-on / D-off): **n8 up, n1 down**; E's n1 (0.1211) is
+~1.8 SE BELOW D's (0.1956) — the 3-gram fingerprint measurably HURTS the easy
+1-way case while giving the hard 8-way a non-significant nudge. Frame caveat:
+E=82M vs D-final=200M tokens (not fully matched), but the inference-only
+control (same 200M ckpt) already showed only the same ~+0.01 n8 nudge, so the
+token-count gap does not change the verdict.
+**MATCHED-TOKEN CONTROL (the fair 82M read, 60-trial `latest.pt` batteries):**
+at the SAME 82M point, E n8-all = 0.1417 vs D-82M 0.1083 / B-82M 0.1083 — the
+fingerprint lifts the hard 8-way clearly above both no-fingerprint controls
+(+0.033, ~1.6 SE @60t). E-82M n8@128 = 0.1400 already EXCEEDS r1-FINAL's 500M
+n8-all (0.1333). BUT the same control shows the cost side: E n1-all 0.1211 vs
+D-82M 0.1514 / B-82M 0.1486 (−0.03, ~1.4 SE) and n4-all 0.1475 vs 0.2139/0.2069
+(−0.066, ~2.7 SE) — the fingerprint taxes the EASY cases measurably. So the
+honest mechanism read: **the zero-param 3-gram fingerprint redistributes recall
+mass from easy (n1/n4) to hard (n8), with the n8 gain real-but-sub-threshold
+and the n1/n4 cost larger than the n8 gain.** That is a net-negative swap for
+overall battery, and it fails the pre-registered n8 bar either way (0.1417
+< 0.1667). Not "no effect" — a measurable but unprofitable trade.
+**DECISION (pre-registered): FAIL -> do NOT scale E to 200M/500M.** The
+zero-param hash-into-tied-embedding fingerprint is insufficient: it does not
+close the read-side routing gap, and it taxes the easy case. Per the E plan,
+escalate to one of: (A) **PAM-state row-read** — read the fingerprint row out
+of the PAM state itself (addresses the oracle's scattered-superposition read),
+or (B) **learned fusion block** (Qwen's `ple.{conv1d,key_proj,value_proj,norm}`
+— the 4 learned projections around the table lookup; small, O(1), the actual
+Qwen mechanism vs our zero-param shortcut). (B) is the faithful Qwen port and
+the next candidate; (A) is more novel/uncertain. HOLD for user call — neither
+is a throwaway: both are real architecture additions on top of BANK-C baseline.
 
 - **GATE (re-arm watchdog on every wake).** Kill if loss > 0.7 NLL above r1
   (r1 curve: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M).
