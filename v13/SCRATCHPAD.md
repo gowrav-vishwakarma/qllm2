@@ -689,3 +689,9 @@ F2 6.1362 vs D 6.0684 = +0.068** (pre-registered kill: >+0.5 above D at
 Rate ~4,475 tok/s; ETA to 82M ≈ 4.6h (~04:15). Next checkpoint: step-5000
 gate @ 81.9M (300-trial battery, bars unchanged: n8-allctx >= 0.1667 AND
 n1-all >= 0.1314 AND CE non-regressing).
+- **F2 matched-loss trend (watchdog wake 1, step 750 / 12.3M):** vs D same
++size, delta oscillates small and stays far under the +0.5 kill line —
+step 500 +0.068, 600 +0.158, 700 +0.054, 750 +0.193 (F2 6.1362/6.0873/
+5.9161/5.9215 vs D 6.0684/5.9294/5.8618/5.7281). CE cost from the fusion
+block is now noise-level (run-1 was a FLAT +1.1..+1.5). Rate ~4,450 tok/s;
+ETA to 82M ~4.5h. Watchdog re-armed (bg_2, 2940s, verdict 82000000).
