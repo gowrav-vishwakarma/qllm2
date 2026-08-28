@@ -708,3 +708,9 @@ decidable at the gate. ~4,450 tok/s; ETA to 82M ~3.5h. Watchdog re-armed
 +developing — the run-1 defect did not come back. ~4,445 tok/s; next
 +ckpt step 3000 (49.2M) in ~1h40m, gate step 5000 (81.9M) ~4h. Watchdog
 +re-armed (bg_2, 2940s).
+- **F2 matched-loss trend (watchdog wake 4, step 3175 / 52M, ~63% to gate):**
++delta vs D still noise-level: step 2500 -0.005, 3000 -0.323, 3100 +0.018
++(F2 4.9590/4.6779/4.5854 vs D 4.9641/5.0006/4.5671). CE non-regressing
++across the whole run (8M->52M): running-max delta +0.197, no tax.
++Step-3000 ckpt written (latest.pt, 49.2M, 01:51). ~4,445 tok/s; gate
++step 5000 (81.9M) ~2h20m. Watchdog re-armed (bg_1, 2940s).
