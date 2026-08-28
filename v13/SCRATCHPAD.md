@@ -714,3 +714,8 @@ decidable at the gate. ~4,450 tok/s; ETA to 82M ~3.5h. Watchdog re-armed
 +across the whole run (8M->52M): running-max delta +0.197, no tax.
 +Step-3000 ckpt written (latest.pt, 49.2M, 01:51). ~4,445 tok/s; gate
 +step 5000 (81.9M) ~2h20m. Watchdog re-armed (bg_1, 2940s).
+- **F2 matched-loss trend (watchdog wake 5, step 3975 / 65.1M, ~20% to gate):**
++step 3500 -0.016, 3900 +0.018 (F2 4.5052/4.5887 vs D 4.5208/4.5705). CE
++non-regressing held to 65M. ~4,450 tok/s; gate step 5000 (81.9M)
++~1h10m — the 300-trial battery fires from the next checkpoint. Watchdog
++re-armed (bg_2, 2940s).
