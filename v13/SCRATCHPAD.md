@@ -682,7 +682,7 @@ WikiText-trained v11_e3_k3 anchor, requires selective stack to contribute);
 - New CLI (2026-08-23): `--compile_blocks`, `--delta_decay_factored`,
   `--delta_key_norm` / `--no_delta_key_norm`, `--delta_erase_beta_cap`.
 - **F2 RELANCHED (2026-08-28 22:44, tmux `v13_F`, same dirs) — HEALTH CONFIRMED
-+@ step 500 (8.2M):** canary all-nonzero (L0=1.681e-03 ... L15=1.938e-03);
+@ step 500 (8.2M):** canary all-nonzero (L0=1.681e-03 ... L15=1.938e-03);
 step-0 loss 10.9066 (bit-noise vs D's 10.9055); **matched-loss check:
 F2 6.1362 vs D 6.0684 = +0.068** (pre-registered kill: >+0.5 above D at
 8-13M). Run-1 at this point was +1.31 — the fix removed the CE cost.
@@ -690,37 +690,85 @@ Rate ~4,475 tok/s; ETA to 82M ≈ 4.6h (~04:15). Next checkpoint: step-5000
 gate @ 81.9M (300-trial battery, bars unchanged: n8-allctx >= 0.1667 AND
 n1-all >= 0.1314 AND CE non-regressing).
 - **F2 matched-loss trend (watchdog wake 1, step 750 / 12.3M):** vs D same
-+size, delta oscillates small and stays far under the +0.5 kill line —
+size, delta oscillates small and stays far under the +0.5 kill line —
 step 500 +0.068, 600 +0.158, 700 +0.054, 750 +0.193 (F2 6.1362/6.0873/
 5.9161/5.9215 vs D 6.0684/5.9294/5.8618/5.7281). CE cost from the fusion
 block is now noise-level (run-1 was a FLAT +1.1..+1.5). Rate ~4,450 tok/s;
 ETA to 82M ~4.5h. Watchdog re-armed (bg_2, 2940s, verdict 82000000).
 - **F2 matched-loss trend (watchdog wake 2, step 1550 / 25.4M):** delta
-+vs D now CE-neutral-to-slightly-negative within batch noise: step 1200
+vs D now CE-neutral-to-slightly-negative within batch noise: step 1200
 -0.144, 1300 +0.009, 1400 -0.170, 1500 -0.197 (F2 5.4250/5.2405/5.0990/
 5.1285 vs D 5.5693/5.2314/5.2685/5.3256). The learned block is not
 taxing CE (run-1: flat +1.1..+1.5) — the recall question is now
 decidable at the gate. ~4,450 tok/s; ETA to 82M ~3.5h. Watchdog re-armed
 (bg_1, 2940s).
 - **F2 matched-loss trend (watchdog wake 3, step 2375 / 38.9M):** delta
-+vs D stable within noise: step 1800 -0.174, 2000 +0.031, 2250 -0.038
-+(F2 4.8294/4.9679/4.7221 vs D 5.0030/4.9373/4.7600). No CE tax is
-+developing — the run-1 defect did not come back. ~4,445 tok/s; next
-+ckpt step 3000 (49.2M) in ~1h40m, gate step 5000 (81.9M) ~4h. Watchdog
-+re-armed (bg_2, 2940s).
+vs D stable within noise: step 1800 -0.174, 2000 +0.031, 2250 -0.038
+(F2 4.8294/4.9679/4.7221 vs D 5.0030/4.9373/4.7600). No CE tax is
+developing — the run-1 defect did not come back. ~4,445 tok/s; next
+ckpt step 3000 (49.2M) in ~1h40m, gate step 5000 (81.9M) ~4h. Watchdog
+re-armed (bg_2, 2940s).
 - **F2 matched-loss trend (watchdog wake 4, step 3175 / 52M, ~63% to gate):**
-+delta vs D still noise-level: step 2500 -0.005, 3000 -0.323, 3100 +0.018
-+(F2 4.9590/4.6779/4.5854 vs D 4.9641/5.0006/4.5671). CE non-regressing
-+across the whole run (8M->52M): running-max delta +0.197, no tax.
-+Step-3000 ckpt written (latest.pt, 49.2M, 01:51). ~4,445 tok/s; gate
-+step 5000 (81.9M) ~2h20m. Watchdog re-armed (bg_1, 2940s).
+delta vs D still noise-level: step 2500 -0.005, 3000 -0.323, 3100 +0.018
+(F2 4.9590/4.6779/4.5854 vs D 4.9641/5.0006/4.5671). CE non-regressing
+across the whole run (8M->52M): running-max delta +0.197, no tax.
+Step-3000 ckpt written (latest.pt, 49.2M, 01:51). ~4,445 tok/s; gate
+step 5000 (81.9M) ~2h20m. Watchdog re-armed (bg_1, 2940s).
 - **F2 matched-loss trend (watchdog wake 5, step 3975 / 65.1M, ~20% to gate):**
-+step 3500 -0.016, 3900 +0.018 (F2 4.5052/4.5887 vs D 4.5208/4.5705). CE
-+non-regressing held to 65M. ~4,450 tok/s; gate step 5000 (81.9M)
-+~1h10m — the 300-trial battery fires from the next checkpoint. Watchdog
-+re-armed (bg_2, 2940s).
+step 3500 -0.016, 3900 +0.018 (F2 4.5052/4.5887 vs D 4.5208/4.5705). CE
+non-regressing held to 65M. ~4,450 tok/s; gate step 5000 (81.9M)
+~1h10m — the 300-trial battery fires from the next checkpoint. Watchdog
+re-armed (bg_2, 2940s).
 - **F2 matched-loss trend (watchdog wake 6, step 4775 / 78.25M, ~14 min to
-+gate):** step 4350 +0.150, 4600 -0.033, 4700 +0.085 (F2 4.4804/4.3113/
+gate):** step 4350 +0.150, 4600 -0.033, 4700 +0.085 (F2 4.4804/4.3113/
 4.5241 vs D 4.3305/4.3440/4.4391). CE non-regressing to 78M. Gate step
 5000 (81.9M) imminent — battery + Wiki PPL fire from this session.
-+Watchdog re-armed (bg_1, 2940s).
+Watchdog re-armed (bg_1, 2940s).
+
+**F2 RUN COMPLETE (2026-08-29 03:55) + RECALL GATE — FAIL on bar (1); BANK
+THE LEARNED-FUSION NEGATIVE (pre-registered decision, no 200M scale).**
+Clean run: 82,001,920 tok / 5.18 h / 4,406 tok/s, 0 NaN/OOM, canary
+all-nonzero, step-0 10.9066 (bit-identity vs D 10.9055). CE non-regressing
+the whole run: matched-delta vs D oscillated +0.05..+0.20 (steps 500-750)
+then -0.14..-0.32 (1200-1550) then noise (2500-4775) — running max +0.197;
+final train loss 4.4745 @81.9M vs r1 curve (~4.48@82M interp) = ON curve;
+Val 4.4370/84.52; Wiki PPL 262.69 (best; E was 345.97 — the learned block
+costs less CE than the raw fingerprint, consistent with its swap read).
+300-trial battery `v13_F_ngram_fusion_ckpt5000_behavior.json` (fusion ON:
+param count 100,920,928 = base + 299,136):
+  n1-all 0.1475 | n4-all 0.1578 | n8-all 0.1353
+  n8 per-ctx: 128=0.1356 512=0.1344 1024=0.1356 2048=0.1356 (flat across
+  context — no long-ctx specialization).
+GATE: (1) n8-allctx >= 0.1667: **0.1353 FAIL — 5.5 SE below the bar**
+(95% CI [0.1241, 0.1465]); (2) n1-all >= 0.1314: 0.1475 PASS; (3) CE
+non-regressing: PASS. Verdict = FAIL(1)-only branch: **the n8 ceiling
+holds even learned.** Cross-run swap table (allctx, 300t):
+          n1-all    n4-all    n8-all
+  D-82M   0.1514    0.2139    0.1083   (60t; ref)
+  E-82M   0.1211    0.1475    0.1417   (zero-param hash: hard up, easy taxed)
+  F2-82M  0.1475    0.1578    0.1353   (learned fusion)
+  D-200M  0.1956    0.1625    0.1367   (no-ngram ceiling ref, n8@200M)
+HONEST READ: F2 is a STRICTLY BETTER SWAP THAN E — n1 0.1475 ≈ D-82M's
+0.1514 (the easy-case tax E paid is gone; the learned block suppresses the
+fingerprint where it isn't useful, exactly the hypothesis) — and a real
+matched-size n8 lift over D-82M (+0.027, ~1.8 SE at 300t, same direction in
+all four contexts as E's inference-only diagnostic). BUT it lands AT the
+D-200M no-ngram n8 ceiling (0.1367), not 0.03 above it: the hash-fingerprint
+family (zero-param OR learned) caps 8-way recall at the dense-curriculum
+ceiling. Three independent measurements now agree (D inference-only ON:
+0.1500; E trained: 0.1417; F2 trained: 0.1353 — all within ~1 SE of each
+other and of D-200M-off 0.1367). The n8 gap is NOT fixed by content-aware
+n-gram fingerprinting at any of these scales; per the 2026-08-25 oracle it
+is read-side routing (query orthogonal to the 8th value's address), which
+the ngram family does not touch.
+DECISION (pre-registered, unchanged): FAIL -> do NOT scale F2 to 200M;
+bank the learned-fusion negative (better swap than E, same ceiling).
+NEXT = the read-side lever from the oracle: fact_contrastive value-ranking
+loss (port done 9e73e7b, needs value_mask threading into the pretrain-mix
+cache — the DEFERRED lever, now the primary candidate) and/or gamma_floor
+horizon. F2 ckpt + battery are on disk for any ablation
+(checkpoints_v13/82m_v13_F_ngram_fusion/{latest,best_model,final_model}.pt
+all @82M; latest.pt = final step 5000). Note: the trainer process hung at
+exit after budget (held 9GB GPU ~2h); killed after all ckpts saved — if it
+recurs, add a post-budget timeout to the launcher.
+
