@@ -719,3 +719,8 @@ decidable at the gate. ~4,450 tok/s; ETA to 82M ~3.5h. Watchdog re-armed
 +non-regressing held to 65M. ~4,450 tok/s; gate step 5000 (81.9M)
 +~1h10m — the 300-trial battery fires from the next checkpoint. Watchdog
 +re-armed (bg_2, 2940s).
+- **F2 matched-loss trend (watchdog wake 6, step 4775 / 78.25M, ~14 min to
++gate):** step 4350 +0.150, 4600 -0.033, 4700 +0.085 (F2 4.4804/4.3113/
+4.5241 vs D 4.3305/4.3440/4.4391). CE non-regressing to 78M. Gate step
+5000 (81.9M) imminent — battery + Wiki PPL fire from this session.
++Watchdog re-armed (bg_1, 2940s).
