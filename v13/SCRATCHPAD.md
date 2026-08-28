@@ -681,3 +681,11 @@ WikiText-trained v11_e3_k3 anchor, requires selective stack to contribute);
   `| tee -a logs/v13/<name>/tmux_console.log`.
 - New CLI (2026-08-23): `--compile_blocks`, `--delta_decay_factored`,
   `--delta_key_norm` / `--no_delta_key_norm`, `--delta_erase_beta_cap`.
+- **F2 RELANCHED (2026-08-28 22:44, tmux `v13_F`, same dirs) — HEALTH CONFIRMED
++@ step 500 (8.2M):** canary all-nonzero (L0=1.681e-03 ... L15=1.938e-03);
+step-0 loss 10.9066 (bit-noise vs D's 10.9055); **matched-loss check:
+F2 6.1362 vs D 6.0684 = +0.068** (pre-registered kill: >+0.5 above D at
+8-13M). Run-1 at this point was +1.31 — the fix removed the CE cost.
+Rate ~4,475 tok/s; ETA to 82M ≈ 4.6h (~04:15). Next checkpoint: step-5000
+gate @ 81.9M (300-trial battery, bars unchanged: n8-allctx >= 0.1667 AND
+n1-all >= 0.1314 AND CE non-regressing).
