@@ -1632,7 +1632,16 @@ def _complex_triangular_solve(mass_real, mass_imag, write_real, write_imag, iden
 # sites (forward + _hidden_to_lm) call _ngram_repr, so both get the fused
 # output for free. O(1) decode via the row buffer _ngram_row_ctx on V13LM.
 class NgramFusion(nn.Module):
-    """conv1d (depthwise, causal in time) -> key_proj (zero-init) -> norm."""
+    """conv1d (depthwise, causal in time) -> norm -> key_proj (zero-init).
+
+    The norm sits BEFORE the zero-init projection, not after: ComplexNorm is
+    scale-invariant (out = (mag/rms) * scale), so norm AFTER key_proj would
+    amplify the step-1 tiny-but-nonzero output to full O(1) amplitude — the
+    "slow start" becomes a step function (0 at step 0, full-amplitude
+    random-phase injection from step 1), which costs ~1.3 NLL at matched
+    tokens vs the no-fingerprint control (F run 1, killed at 13.5M). With
+    norm BEFORE, the step-1 injection is ~lr * sqrt(2*dim) * O(1) (≈1e-2 at
+    F's lr 3e-4) and genuinely grows as key_proj learns."""
 
     def __init__(self, dim: int, kernel: int):
         super().__init__()
@@ -1667,7 +1676,7 @@ class NgramFusion(nn.Module):
             ext_rows.permute(0, 2, 3, 1).reshape(B, 2 * dim, L)
         )  # [B, 2*dim, L-kernel+1]
         h = h.permute(0, 2, 1).reshape(B, L - self.kernel + 1, dim, 2)
-        return self.norm(self.key_proj(h))
+        return self.key_proj(self.norm(h))
 
 # ── V11 Block ────────────────────────────────────────────────────────────────
 
