@@ -476,6 +476,75 @@ Qwen mechanism vs our zero-param shortcut). (B) is the faithful Qwen port and
 the next candidate; (A) is more novel/uncertain. HOLD for user call — neither
 is a throwaway: both are real architecture additions on top of BANK-C baseline.
 
+## 2026-08-28 F — LEARNED NGRAM FUSION BLOCK (option B, user-chosen)
+
+**WHY:** E's failure was the SWAP (n1/n4 cost > n8 gain) with a content-blind
+raw hash row, not the n8 ceiling — the inference-only diagnostic on D-final
+still showed a +0.011..0.019 n8 lift. F trains the faithful Qwen PLE fusion
+block around the same hash lookup: `NgramFusion = depthwise Conv1d
+(kernel=ngram_size, over the 2*dim re/im-interleaved rows, causal in time)
+-> ComplexLinear key_proj (ALL FOUR params zero-init) -> ComplexNorm`,
+injected at both `forward` and `_hidden_to_lm` (pre-scale rows; the learned
+block subsumes `ngram_scale`). Zero-init => the run starts BIT-IDENTICAL to
+the no-fingerprint D model and the fingerprint signal grows with training
+(E's failure-mode fix: the model only pays for the fingerprint if training
+finds signal). +299,136 params (100.62M -> 100.92M), O(1)/token decode via
+the `_ngram_row_ctx` rolling buffer (last n-1 rows; boundary zero-fill makes
+the one-token window bit-identical to the parallel zero-left-pad window).
+Commit `9109fde`.
+
+**EVIDENCE (pre-launch):**
+- `v13.selftest` (CPU fp64): ALL MODES PASS, incl.
+  `[ngram_fusion] init-off=0.0e+00 det=0.0e+00 par-rec=1.90e-09
+  ce=7.4e-08 keys=1 zinit=1 buf=1 gen=1 conv_g=0.0e+00 key_g=3.37e-01`.
+- GPU smoke (`v13/tmp/smoke_v13_F_ngram_fusion.py`, real 82M preset,
+  trainer fused-CE amp path): SMOKE PASS — step-0 ON-vs-OFF fwd=0.0,
+  fused-CE=9.5e-07 (eager-CUDA floor 7.7e-07) with the ngram injection
+  EXACTLY zero (validates triton `fused_complex_norm` zero-exactness at
+  dim=384); step-0 grads conv1d=0.0 EXACT, key_proj=1.51e-01 ALIVE;
+  after 1 AdamW step the injection is non-zero (max 3.0e-01) and step-1
+  ON-vs-OFF logits differ 3.00 (>> floor); par-vs-recurrent 1.8e-06;
+  generate() finite.
+- **STEP-0 GRAD CONTRACT (expected, documented):** conv1d gets ZERO grad at
+  step 0 (Jacobian through the zero key_proj); key_proj alive at step 0;
+  conv alive from step 1. The `[block-grad step1]` canary (v7/train.py:443-470)
+  iterates ONLY top-level `raw.blocks` (the 16 V13Blocks); NgramFusion lives
+  on V13LM top level => the conv's zero step-0 grad CANNOT trip `DEAD=`.
+  Re-confirm the canary line prints `all-nonzero` at step 1 of the live run.
+
+**F RUN (tmux `v13_F`, `v13/tmp/launch_v13_F_ngram_fusion.sh`):** D recipe +
+`--ngram_fusion` (implies ngram_read, n=3; `--ngram_scale 0.5` dropped — the
+learned block subsumes it), 82M tokens, B8/T2048, lr 3e-4, warmup 500, seed
+42, EAGER, `--fused_ce --delta_raw_key_readout --delta_erase_beta_cap 1.0`,
+dclm,fineweb,smoltalk2_mid,recall 48/48/4/4, blend 1e7. v3 cache exists (D).
+Dirs: `checkpoints_v13/82m_v13_F_ngram_fusion` /
+`logs/v13/82m_v13_F_ngram_fusion`.
+
+**PRE-REGISTERED GATES (do not move after launch):**
+- **HEALTH @ step 1:** log contains `[block-grad step1] L0=... L15=...
+  all-nonzero` (no `DEAD=`); step-0 loss == 10.9055 (D's exactly, bit-
+  identical start); ~4.4K tok/s.
+- **KILL:** loss > 0.7 NLL above r1 curve (7.52@5M, 5.87@20M, 4.81@50M,
+  4.36@100M) — fusion must cost no CE (E's fingerprint was CE-neutral; the
+  learned block adds params but should not regress).
+- **RECALL GATE @ step 5000 (~81.9M, latest.pt), 300-trial battery** with
+  probe config `--v13-config delta_raw_key_readout=true --v13-config
+  delta_erase_beta_cap=1.0 --v13-config ngram_fusion=true --v13-config
+  ngram_read=true --v13-config ngram_size=3`. PASS iff ALL of:
+  1. **n8-allctx >= 0.1667** (D-final 0.1367 + 0.03 — the E bar, unchanged);
+  2. **n1-all >= 0.1314** (D-82M control 0.1514 − 0.02 — must NOT repeat
+     E's easy-case tax: E was 0.1211, 1.8 SE below D-final);
+  3. CE non-regressing per the kill band.
+  PASS -> scale F to 200M (D recipe, same flags) for the 8-way decision.
+  FAIL on (1) only -> the n8 ceiling holds even learned; bank the learned-
+  fusion negative. FAIL on (2) with (1) met -> same net-negative-swap
+  verdict as E; do not scale. (n4-all reported for the swap read, not a
+  gate.)
+- **Matched-token control at the gate** (60-trial, same latest.pt): D-82M
+  n8-all 0.1083 / n1-all 0.1514 / n4-all 0.2139; E-82M n8-all 0.1417 /
+  n1-all 0.1211 / n4-all 0.1475. F must beat E's NET (n8 up AND n1/n4 not
+  taxed), not just E's n8.
+
 - **GATE (re-arm watchdog on every wake).** Kill if loss > 0.7 NLL above r1
   (r1 curve: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M).
   Recall gate at first ckpt (5000 steps): **multi8@128 off 0.133** (chance
