@@ -695,3 +695,10 @@ step 500 +0.068, 600 +0.158, 700 +0.054, 750 +0.193 (F2 6.1362/6.0873/
 5.9161/5.9215 vs D 6.0684/5.9294/5.8618/5.7281). CE cost from the fusion
 block is now noise-level (run-1 was a FLAT +1.1..+1.5). Rate ~4,450 tok/s;
 ETA to 82M ~4.5h. Watchdog re-armed (bg_2, 2940s, verdict 82000000).
+- **F2 matched-loss trend (watchdog wake 2, step 1550 / 25.4M):** delta
++vs D now CE-neutral-to-slightly-negative within batch noise: step 1200
+-0.144, 1300 +0.009, 1400 -0.170, 1500 -0.197 (F2 5.4250/5.2405/5.0990/
+5.1285 vs D 5.5693/5.2314/5.2685/5.3256). The learned block is not
+taxing CE (run-1: flat +1.1..+1.5) — the recall question is now
+decidable at the gate. ~4,450 tok/s; ETA to 82M ~3.5h. Watchdog re-armed
+(bg_1, 2940s).
