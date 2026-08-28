@@ -202,6 +202,11 @@ def build_argparser():
                    help='n-gram window for ngram_read (default 3)')
     p.add_argument('--ngram_scale', type=float, default=None,
                    help='Fixed scale of the ngram fingerprint (default 0.5)')
+    p.add_argument('--ngram_fusion', action='store_true',
+                   help='Learned ngram fusion block (Qwen PLE port) around the '
+                        'ngram row lookup; implies ngram_read')
+    p.add_argument('--no_ngram_fusion', action='store_true',
+                   help='Disable ngram_fusion even if preset enables it')
     return p
 
 
@@ -379,6 +384,11 @@ def main():
         cfg.ngram_size = args.ngram_size
     if args.ngram_scale is not None:
         cfg.ngram_scale = args.ngram_scale
+    if args.no_ngram_fusion:
+        cfg.ngram_fusion = False
+    elif args.ngram_fusion:
+        cfg.ngram_fusion = True
+        cfg.ngram_read = True  # the hash path feeds the block
     if args.no_gate_content_aware:
         cfg.gate_content_aware = False
     elif args.gate_content_aware:

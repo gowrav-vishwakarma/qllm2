@@ -536,6 +536,128 @@ def test_ngram_read(batch_size=2, seq_len=40, seed=0):
     return ok
 
 
+def test_ngram_fusion(batch_size=2, seq_len=40, seed=0):
+    """Learned ngram fusion block (Qwen PLE port):
+      (a) OFF == ON-at-step-0 bit-identical (key_proj zero-init),
+      (b) state_dict gains exactly the fusion keys,
+      (c) deterministic, parallel == one-token recurrent (row buffer),
+      (d) fused-CE path matches forward + CE,
+      (e) generate() reproducible,
+      (f) step-0 grads: key_proj ALIVE, conv1d exactly zero (expected),
+      (g) row buffer populated after parallel forward.
+    """
+    import torch.nn.functional as F
+    from v13.model import V13LM
+
+    def _cfg(**kw):
+        base = dict(
+            vocab_size=256, dim=48, n_heads=3, head_dim=16, n_layers=2, expand=2,
+            dropout=0.0, max_seq_len=128, chunk_size=24,
+            gradient_checkpointing=False, use_rope=True, use_gsp=True,
+            n_states=3, gate_content_aware=True,
+            write_mode='delta', delta_chunk=20,
+            vault_state=True, vault_state_idx=0, write_phase_address=True,
+            fused_e3=True,
+        )
+        base.update(kw)
+        return V13Config(**base)
+
+    torch.manual_seed(seed)
+    off = V13LM(_cfg()).eval()
+    torch.manual_seed(seed)
+    on = V13LM(_cfg(ngram_read=True, ngram_size=3, ngram_scale=0.5,
+                    ngram_fusion=True)).eval()
+    # The fusion module's conv1d init consumes RNG before _init_weights(),
+    # so the two builds draw different base weights; align them so the
+    # step-0 comparison isolates the fusion block's contribution.
+    on.load_state_dict(off.state_dict(), strict=False)
+
+    # (b) state_dict: same keys PLUS exactly the fusion params.
+    keys_off = set(off.state_dict().keys())
+    keys_on = set(on.state_dict().keys())
+    new_keys = sorted(keys_on - keys_off)
+    expected = sorted(
+        f'ngram_fusion.{n}' for n in
+        ['conv1d.weight', 'conv1d.bias',
+         'key_proj.weight_real', 'key_proj.weight_imag',
+         'key_proj.bias_real', 'key_proj.bias_imag', 'norm.scale']
+    )
+    ok_keys = (new_keys == expected and keys_off == keys_on - set(new_keys))
+    ok_zero_init = all(
+        torch.equal(on.state_dict()[k],
+                    torch.zeros_like(on.state_dict()[k]))
+        for k in new_keys
+        if 'key_proj' in k
+    )
+
+    ids = torch.randint(0, 256, (batch_size, seq_len))
+    lbl = torch.randint(0, 256, (batch_size, seq_len))
+    with torch.no_grad():
+        # (a) step-0 bit-identity: key_proj zero-init => injection exactly 0.
+        lg_off, _, _ = off(ids)
+        on._ngram_ctx = None
+        on._ngram_row_ctx = None
+        lg_on, _, _ = on(ids)
+        d_init = (lg_on - lg_off).abs().max().item()
+        ok_init = d_init == 0.0
+        # (g) row buffer: last n-1 looked-up rows after parallel forward.
+        ok_buf = (on._ngram_row_ctx is not None
+                  and on._ngram_row_ctx.shape == (batch_size, 2, 48, 2)
+                  and not on._ngram_row_ctx.requires_grad)
+        # (c) deterministic.
+        on._ngram_ctx = None
+        on._ngram_row_ctx = None
+        lg_on2, states, _ = on(ids)
+        d_det = (lg_on - lg_on2).abs().max().item()
+        ok_det = d_det == 0.0
+        # (c2) parallel == one-token recurrent (exercises the decode row
+        #      buffer, including the boundary zero-fill).
+        on._ngram_ctx = None
+        on._ngram_row_ctx = None
+        lg_par, _, _ = on(ids)
+        st = None
+        rec = []
+        for t in range(seq_len):
+            o, st, _ = on(ids[:, t:t + 1], states=st, step_offset=t)
+            rec.append(o)
+        lg_rec = torch.cat(rec, dim=1)
+        d_par = (lg_par - lg_rec).abs().max().item()
+        ok_par = d_par < 1e-8
+        # (d) fused-CE path matches the plain forward + CE.
+        ref = F.cross_entropy(lg_on.view(-1, 256), lbl.view(-1))
+        main, _ = on.fused_ce_loss(ids, lbl, chunk=16)
+        d_ce = (main - ref).abs().item()
+        ok_ce = d_ce < 1e-5
+        # (e) generate() decode path reproducible (top_k=1 => degenerate
+        #     multinomial), buffer set on prefill + every decode step.
+        on._ngram_ctx = None
+        on._ngram_row_ctx = None
+        gen1 = on.generate(ids, max_new_tokens=4, top_k=1)
+        on._ngram_ctx = None
+        on._ngram_row_ctx = None
+        gen2 = on.generate(ids, max_new_tokens=4, top_k=1)
+        ok_gen = torch.equal(gen1, gen2)
+
+    # (f) step-0 gradient contract: key_proj alive, conv1d exactly zero.
+    on.train()
+    lg, _, _ = on(ids)
+    loss = F.cross_entropy(lg.view(-1, 256), lbl.view(-1))
+    loss.backward()
+    g_conv = float(on.ngram_fusion.conv1d.weight.grad.detach().abs().max())
+    g_key = float(on.ngram_fusion.key_proj.weight_real.grad.detach().abs().max())
+    ok_grad = (g_conv == 0.0 and g_key > 0.0)
+    on.eval()
+
+    ok = all([ok_keys, ok_zero_init, ok_init, ok_buf, ok_det,
+              ok_par, ok_ce, ok_gen, ok_grad])
+    print(f"[ngram_fusion   ] init-off={d_init:.1e} det={d_det:.1e} "
+          f"par-rec={d_par:.2e} ce={d_ce:.1e} "
+          f"keys={int(ok_keys)} zinit={int(ok_zero_init)} buf={int(ok_buf)} "
+          f"gen={int(ok_gen)} conv_g={g_conv:.1e} key_g={g_key:.2e}  "
+          f"{'PASS' if ok else 'FAIL'}")
+    return ok
+
+
 def test_drop_shape_mismatches():
     """Resume-safe: growing phase_proj (dim -> 2*dim) reinits cleanly."""
     from v13.train import _drop_shape_mismatches
@@ -613,6 +735,7 @@ def main():
     results.append(test_grad_ckpt_equiv())
     results.append(test_delta_decay_factored_equiv())
     results.append(test_ngram_read())
+    results.append(test_ngram_fusion())
     print()
     if all(results):
         print("ALL MODES PASS: parallel train form == O(1) recurrent form.")

@@ -182,6 +182,13 @@ class V13Config:
     ngram_read: bool = False
     ngram_size: int = 3
     ngram_scale: float = 0.5
+    # ngram_fusion: LEARNED fusion block around the same n-gram row sequence
+    # (Qwen3.8-Flash-Next ple.{conv1d,key_proj,norm}). Consumes the looked-up
+    # rows [B,T,dim,2] (pre-scale) and injects conv->key_proj->norm output.
+    # key_proj zero-init => block output exactly 0 at init => step-0 logits
+    # bit-identical to the no-fingerprint model; signal grows with training.
+    # ngram_read must be True (the hash path feeds the block).
+    ngram_fusion: bool = False
 
 
 # ── Phase-Associative Memory (V11) ──────────────────────────────────────────
@@ -1608,6 +1615,60 @@ def _complex_triangular_solve(mass_real, mass_imag, write_real, write_imag, iden
     return solution.real.to(write_real.dtype), solution.imag.to(write_imag.dtype)
 
 
+# ── Learned n-gram fusion block (Qwen3.8-Flash-Next PLE port) ──────────────
+# Run E (zero-param n-gram fingerprint) showed a real content signal (n8
+# recall lift at matched tokens) but the raw hash-into-tied-embedding lookup
+# is too crude: training degraded it and it taxed the easy (n1) cases more
+# than it helped the hard (n8) ones. This is the learned version of the same
+# idea — the hash path (V13LM._ngram_repr) is unchanged and feeds the block
+# with the looked-up row sequence [B,T,dim,2] (pre-scale):
+#     depthwise conv1d (kernel = ngram_size, over time, 2*dim re/im channels)
+#       -> key_proj (complex linear, ZERO-INIT) -> norm
+# key_proj zero-init => the block output is EXACTLY 0 at step 0, so a run
+# with fusion ON starts bit-identical to the no-fingerprint model; the
+# signal grows with training (standard adapter slow start). conv1d gets zero
+# grad at step 0 (Jacobian through the zero weight) and is alive from step 1
+# once key_proj != 0 — key_proj itself has grad at step 0. Both injection
+# sites (forward + _hidden_to_lm) call _ngram_repr, so both get the fused
+# output for free. O(1) decode via the row buffer _ngram_row_ctx on V13LM.
+class NgramFusion(nn.Module):
+    """conv1d (depthwise, causal in time) -> key_proj (zero-init) -> norm."""
+
+    def __init__(self, dim: int, kernel: int):
+        super().__init__()
+        self.kernel = kernel
+        # Depthwise over the 2*dim re/im-interleaved channels, causal in time
+        # (padding=0; the left context is supplied by the caller — zero pad
+        # for parallel, the row buffer for decode).
+        self.conv1d = nn.Conv1d(
+            2 * dim, 2 * dim, kernel_size=kernel, groups=2 * dim,
+            padding=0, bias=True,
+        )
+        nn.init.normal_(self.conv1d.weight, std=0.02)
+        nn.init.zeros_(self.conv1d.bias)
+        self.key_proj = ComplexLinear(dim, dim, bias=True)
+        # Zero-init the final projection: block output is exactly 0 at step 0.
+        # _init_weights() only touches nn.Linear / nn.Embedding (not Conv1d or
+        # ComplexLinear), so this survives; V13LM re-asserts it after
+        # _init_weights() anyway.
+        with torch.no_grad():
+            self.key_proj.weight_real.zero_()
+            self.key_proj.weight_imag.zero_()
+            self.key_proj.bias_real.zero_()
+            self.key_proj.bias_imag.zero_()
+        self.norm = ComplexNorm(dim)
+
+    def forward(self, ext_rows):
+        """ext_rows: [B, L, dim, 2] with L = T+kernel-1 (parallel, left-padded)
+        or L = kernel (one-token decode, zero-left-filled window).
+        Returns [B, L-kernel+1, dim, 2] (the current positions)."""
+        B, L, dim = ext_rows.shape[0], ext_rows.shape[1], ext_rows.shape[2]
+        h = self.conv1d(
+            ext_rows.permute(0, 2, 3, 1).reshape(B, 2 * dim, L)
+        )  # [B, 2*dim, L-kernel+1]
+        h = h.permute(0, 2, 1).reshape(B, L - self.kernel + 1, dim, 2)
+        return self.norm(self.key_proj(h))
+
 # ── V11 Block ────────────────────────────────────────────────────────────────
 
 class V13Block(nn.Module):
@@ -1674,10 +1735,26 @@ class V13LM(nn.Module):
         # Small complex feature mix (not a second memory) + norm before vocab scores.
         self.lm_head_proj = ComplexLinear(cfg.dim, cfg.dim)
         self.lm_head_norm = ComplexNorm(cfg.dim)
+        # Learned n-gram fusion block (Qwen PLE port); None when OFF.
+        self.ngram_fusion = (
+            NgramFusion(cfg.dim, cfg.ngram_size) if cfg.ngram_fusion else None
+        )
         self._init_weights()
+        # Re-assert key_proj zero-init after _init_weights() (defense in
+        # depth; the loop touches only nn.Linear/nn.Embedding, but this
+        # guarantees the step-0 == no-fingerprint bit-identity).
+        if self.ngram_fusion is not None:
+            with torch.no_grad():
+                self.ngram_fusion.key_proj.weight_real.zero_()
+                self.ngram_fusion.key_proj.weight_imag.zero_()
+                self.ngram_fusion.key_proj.bias_real.zero_()
+                self.ngram_fusion.key_proj.bias_imag.zero_()
         # Rolling n-gram context for decode (plain attr, NOT a buffer: keeps
         # state_dict identical to the pre-feature model).
         self._ngram_ctx = None
+        # Rolling window of the last n-1 looked-up ngram rows for the O(1)
+        # decode of the fusion conv (mirrors _ngram_ctx; plain attr, detached).
+        self._ngram_row_ctx = None
 
     def _init_weights(self):
         embed_embeddings = {self.embed.embed_real, self.embed.embed_imag}
@@ -1762,10 +1839,48 @@ class V13LM(nn.Module):
         if ctx_len > 0:
             self._ngram_ctx = seq[:, -ctx_len:].detach()
         row = h if (states is None or ctx_len == 0) else h[:, S - T:]
-        return torch.stack([
+        raw = torch.stack([
             self.embed.embed_real(row),
             self.embed.embed_imag(row),
-        ], dim=-1) * self.config.ngram_scale
+        ], dim=-1)  # [B,T,dim,2] pre-scale
+        if self.config.ngram_fusion and self.ngram_fusion is not None:
+            return self._ngram_fuse(raw, states)
+        return raw * self.config.ngram_scale
+
+    # ── O(1) decode of the ngram fusion conv ─────────────────────────────────
+    # The conv window at every position is the last `kernel` looked-up rows,
+    # zero-filled on the left at the sequence boundary. In the parallel form
+    # that is exactly F.pad(full_rows, (0,0,k-1,0)); in decode we keep the
+    # last n-1 rows in self._ngram_row_ctx (a plain detached attr, like
+    # _ngram_ctx) so the one-token window is bit-identical to the parallel
+    # one (zero-init of the buffer <-> zero left pad).
+    def _ngram_fuse(self, raw, states):
+        k = self.ngram_fusion.kernel
+        ctx_len = k - 1
+        B, T = raw.shape[0], raw.shape[1]
+        if states is None or ctx_len == 0:
+            # Parallel / prefill: zero left pad, then refresh the row buffer.
+            ext = F.pad(raw, (0, 0, 0, 0, ctx_len, 0))
+            out = self.ngram_fusion(ext)
+            if ctx_len > 0:
+                self._ngram_row_ctx = raw[:, -ctx_len:].detach()
+            return out
+        # One-token decode: window = zero pad + buffered rows + current row.
+        # buf holds up to ctx_len rows; it is short at the sequence boundary,
+        # so zero-fill up to kernel width (mirrors the parallel form's zero
+        # left-pad -> bit-identical conv window).
+        buf = self._ngram_row_ctx
+        if buf is None:
+            buf = raw.new_zeros(B, 0, *raw.shape[2:])
+        parts = [buf, raw]
+        pad_len = ctx_len - buf.shape[1]
+        if pad_len > 0:
+            parts.insert(0, raw.new_zeros(B, pad_len, *raw.shape[2:]))
+        ext = torch.cat(parts, dim=1)
+        out = self.ngram_fusion(ext)
+        if ctx_len > 0:
+            self._ngram_row_ctx = ext[:, -ctx_len:].detach()
+        return out
 
     def forward(self, input_ids, states=None, step_offset: int = 0, labels=None):
         # Token ids → complex vectors [B,T,dim,2].
@@ -1974,10 +2089,14 @@ class V13LM(nn.Module):
                   + sum(p.numel() for p in self.lm_head_norm.parameters()))
         norm_p = (sum(p.numel() for p in self.embed_norm.parameters())
                   + sum(p.numel() for p in self.output_norm.parameters()))
-        total = embed_p + block_p + head_p + norm_p
+        fusion_p = (sum(p.numel() for p in self.ngram_fusion.parameters())
+                    if self.ngram_fusion is not None else 0)
+        total = embed_p + block_p + head_p + norm_p + fusion_p
         return {
             'embedding (tied)': embed_p, 'blocks': block_p,
-            'norms': norm_p, 'lm_head': head_p, 'total': total,
+            'norms': norm_p, 'lm_head': head_p,
+            **({'ngram_fusion': fusion_p} if fusion_p else {}),
+            'total': total,
         }
 
 
