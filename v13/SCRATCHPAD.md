@@ -702,3 +702,9 @@ ETA to 82M ~4.5h. Watchdog re-armed (bg_2, 2940s, verdict 82000000).
 taxing CE (run-1: flat +1.1..+1.5) — the recall question is now
 decidable at the gate. ~4,450 tok/s; ETA to 82M ~3.5h. Watchdog re-armed
 (bg_1, 2940s).
+- **F2 matched-loss trend (watchdog wake 3, step 2375 / 38.9M):** delta
++vs D stable within noise: step 1800 -0.174, 2000 +0.031, 2250 -0.038
++(F2 4.8294/4.9679/4.7221 vs D 5.0030/4.9373/4.7600). No CE tax is
++developing — the run-1 defect did not come back. ~4,445 tok/s; next
++ckpt step 3000 (49.2M) in ~1h40m, gate step 5000 (81.9M) ~4h. Watchdog
++re-armed (bg_2, 2940s).
