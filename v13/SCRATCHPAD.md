@@ -545,6 +545,37 @@ Dirs: `checkpoints_v13/82m_v13_F_ngram_fusion` /
   n1-all 0.1211 / n4-all 0.1475. F must beat E's NET (n8 up AND n1/n4 not
   taxed), not just E's n8.
 
+**F RUN-1 KILLED (2026-08-28 22:39, step 850 / 13.7M tok) — SLOW-START DEFECT,
+not a verdict.** Matched-control CE cost: F +1.1..+1.5 NLL ABOVE D at every
+token count 8M->13.5M (same seed 42, same stream, bit-identical init):
+step 500 F 7.3743 vs D 6.0684 (+1.31); step 700 F 7.2245 vs D 5.8618
+(+1.36); step 825 F 6.9800 vs D ~5.87 (+1.1). Flat, not converging — and
+E was CE-neutral, so a CE-costing fingerprint is disqualifying. MECHANISM
+(found in triton_kernels.py:64-74): ComplexNorm is SCALE-INVARIANT
+(out = (mag/rms)*scale) — with it AFTER the zero-init key_proj, the
+"slow start" was a step function: exactly 0 at step 0, then full O(1)
+random-phase injection from step 1 (GPU smoke measured injection max
+3.027 after ONE optimizer step, ~30x E's full 0.5-scaled fingerprint).
+The run was not the experiment F was pre-registered to be, so the 82M
+gate would have been uninterpretable -> KILL. SIGTERM clean, latest.pt
+saved (checkpoints_v13/82m_v13_F_ngram_fusion/latest.pt @13.7M — do not
+gate on it).
+**FIX (commit 4fddba2): norm BEFORE key_proj.** `conv -> norm ->
+key_proj(zero-init)`. key_proj stays the final zero-init layer (step-0
+bit-identity preserved: selftest init-off=0.0); step-1 injection now
+~lr*sqrt(2*dim)*O(1) = 2.1e-02 (smoke, was 3.027) and grows as key_proj
+learns. Selftest ALL MODES PASS; GPU smoke PASS incl. new slow-start
+assert (injection < 0.5 after 1 step).
+**F2 = same pre-registered gates, relaunch (tmux `v13_F` reuses the
+session name; log/ckpt dirs unchanged; launch script unchanged except
+the header notes).** HEALTH check at step 1: canary all-nonzero AND
+step-0 loss 10.9055±noise. MATCHED-LOSS CHECK @ ~step 500 (8.2M):
+F2 must be within ~+0.15 of D's 6.0684 (slow-start now costs ~nothing at
+early steps); if F2 is still >+0.5 above D at 8-13M, KILL again (the
+learned block is structurally CE-costing — bank the negative, no third
+launch). RECALL GATE unchanged: n8-allctx >= 0.1667 AND n1-all >=
+0.1314 AND CE non-regressing @ step 5000 (81.9M, latest.pt), 300 trials.
+
 - **GATE (re-arm watchdog on every wake).** Kill if loss > 0.7 NLL above r1
   (r1 curve: 7.52@5M, 6.66@10M, 5.87@20M, 4.81@50M, 4.36@100M, 3.97@200M).
   Recall gate at first ckpt (5000 steps): **multi8@128 off 0.133** (chance
