@@ -1,0 +1,501 @@
+{
+  "schema_version": "memory-probes-behavioral/v1",
+  "created_at": "2026-08-25T04:09:46.830015+00:00",
+  "model_type": "v13",
+  "model_identity": "checkpoints_v13/500m_v13_r1recipe/best_model.pt",
+  "preset": "v13_e3_k3_selective",
+  "device": "cuda",
+  "platform": "Linux-6.17.0-40-generic-x86_64-with-glibc2.39",
+  "parameter_count": 100621792,
+  "config": {
+    "vocab_size": 50261,
+    "max_seq_len": 2048,
+    "dim": 384,
+    "n_layers": 16,
+    "n_heads": 6,
+    "n_states": 3
+  },
+  "protocol": {
+    "metric": "contrastive next-token accuracy over single-token values",
+    "context_lengths": [
+      128
+    ],
+    "positions": [
+      1.0
+    ],
+    "association_counts": [
+      1,
+      8
+    ],
+    "seeds": [
+      9000,
+      9001,
+      9002,
+      9003,
+      9004
+    ],
+    "candidate_count": 8
+  },
+  "rows": [
+    {
+      "example_id": "ctx128_pos1_n1_seed9000",
+      "prompt_text": "The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings. The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings. The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. SeveralMemory record 1: dax means jacket.\n\nMemory query: dax means",
+      "target_token_id": 15224,
+      "target_text": "jacket",
+      "candidate_token_ids": [
+        15224,
+        18873,
+        17180,
+        15317,
+        42143,
+        22746,
+        25996,
+        11376
+      ],
+      "candidate_texts": [
+        "jacket",
+        "lemon",
+        "apple",
+        "copper",
+        "kitten",
+        "rabbit",
+        "banana",
+        "garden"
+      ],
+      "context_tokens": 128,
+      "target_position": 1.0,
+      "associations": 1,
+      "seed": 9000,
+      "correct": false,
+      "target_rank": 8,
+      "target_margin": -4.449758529663086,
+      "predicted_text": "apple",
+      "candidate_logits": [
+        -5.108842849731445,
+        -2.8702261447906494,
+        -0.6590843200683594,
+        -2.184464454650879,
+        -3.4133362770080566,
+        -0.7424946427345276,
+        -2.5535190105438232,
+        -2.2180681228637695
+      ]
+    },
+    {
+      "example_id": "ctx128_pos1_n1_seed9001",
+      "prompt_text": "The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings. The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings. The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. SeveralMemory record 1: dax means banana.\n\nMemory query: dax means",
+      "target_token_id": 25996,
+      "target_text": "banana",
+      "candidate_token_ids": [
+        25996,
+        15317,
+        11376,
+        10162,
+        8222,
+        15224,
+        42143,
+        19132
+      ],
+      "candidate_texts": [
+        "banana",
+        "copper",
+        "garden",
+        "mirror",
+        "forest",
+        "jacket",
+        "kitten",
+        "piano"
+      ],
+      "context_tokens": 128,
+      "target_position": 1.0,
+      "associations": 1,
+      "seed": 9001,
+      "correct": false,
+      "target_rank": 7,
+      "target_margin": -4.093710154294968,
+      "predicted_text": "mirror",
+      "candidate_logits": [
+        -4.514482498168945,
+        -3.0076100826263428,
+        -2.8967390060424805,
+        -0.42077234387397766,
+        -3.82277512550354,
+        -5.444787502288818,
+        -4.15709924697876,
+        -2.3646204471588135
+      ]
+    },
+    {
+      "example_id": "ctx128_pos1_n1_seed9002",
+      "prompt_text": "The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings. The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings. The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. SeveralMemory record 1: dax means kitten.\n\nMemory query: dax means",
+      "target_token_id": 42143,
+      "target_text": "kitten",
+      "candidate_token_ids": [
+        42143,
+        8222,
+        25451,
+        18873,
+        15224,
+        11376,
+        44136,
+        7022
+      ],
+      "candidate_texts": [
+        "kitten",
+        "forest",
+        "harbor",
+        "lemon",
+        "jacket",
+        "garden",
+        "dolphin",
+        "island"
+      ],
+      "context_tokens": 128,
+      "target_position": 1.0,
+      "associations": 1,
+      "seed": 9002,
+      "correct": false,
+      "target_rank": 6,
+      "target_margin": -3.2483087182044983,
+      "predicted_text": "island",
+      "candidate_logits": [
+        -3.8430490493774414,
+        -3.276772975921631,
+        -3.991227149963379,
+        -3.2752554416656494,
+        -5.6512556076049805,
+        -2.6537837982177734,
+        -3.015897274017334,
+        -0.5947403311729431
+      ]
+    },
+    {
+      "example_id": "ctx128_pos1_n1_seed9003",
+      "prompt_text": "The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings. The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings. The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. SeveralMemory record 1: dax means copper.\n\nMemory query: dax means",
+      "target_token_id": 15317,
+      "target_text": "copper",
+      "candidate_token_ids": [
+        15317,
+        25996,
+        9151,
+        7022,
+        17180,
+        15224,
+        42143,
+        18873
+      ],
+      "candidate_texts": [
+        "copper",
+        "banana",
+        "ocean",
+        "island",
+        "apple",
+        "jacket",
+        "kitten",
+        "lemon"
+      ],
+      "context_tokens": 128,
+      "target_position": 1.0,
+      "associations": 1,
+      "seed": 9003,
+      "correct": false,
+      "target_rank": 3,
+      "target_margin": -1.497836947441101,
+      "predicted_text": "island",
+      "candidate_logits": [
+        -2.2111029624938965,
+        -4.321463108062744,
+        -1.7918869256973267,
+        -0.7132660150527954,
+        -2.438157796859741,
+        -6.159192085266113,
+        -4.679398059844971,
+        -4.229862689971924
+      ]
+    },
+    {
+      "example_id": "ctx128_pos1_n1_seed9004",
+      "prompt_text": "The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings. The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings. The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. SeveralMemory record 1: dax means kitten.\n\nMemory query: dax means",
+      "target_token_id": 42143,
+      "target_text": "kitten",
+      "candidate_token_ids": [
+        42143,
+        15224,
+        19132,
+        15317,
+        22746,
+        17180,
+        25451,
+        9151
+      ],
+      "candidate_texts": [
+        "kitten",
+        "jacket",
+        "piano",
+        "copper",
+        "rabbit",
+        "apple",
+        "harbor",
+        "ocean"
+      ],
+      "context_tokens": 128,
+      "target_position": 1.0,
+      "associations": 1,
+      "seed": 9004,
+      "correct": false,
+      "target_rank": 6,
+      "target_margin": -2.574800968170166,
+      "predicted_text": "piano",
+      "candidate_logits": [
+        -3.8430490493774414,
+        -5.6512556076049805,
+        -1.2682480812072754,
+        -2.1476566791534424,
+        -1.453647255897522,
+        -1.352747917175293,
+        -3.991227149963379,
+        -1.2750928401947021
+      ]
+    },
+    {
+      "example_id": "ctx128_pos1_n8_seed9000",
+      "prompt_text": "The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings.Memory record 1: dax means jacket.\nMemory record 2: wug means lemon.\nMemory record 3: blicket means apple.\nMemory record 4: fep means copper.\nMemory record 5: toma means kitten.\nMemory record 6: koba means rabbit.\nMemory record 7: zorp means banana.\nMemory record 8: lurn means garden.\n\nMemory query: toma means",
+      "target_token_id": 42143,
+      "target_text": "kitten",
+      "candidate_token_ids": [
+        15224,
+        18873,
+        17180,
+        15317,
+        42143,
+        22746,
+        25996,
+        11376
+      ],
+      "candidate_texts": [
+        "jacket",
+        "lemon",
+        "apple",
+        "copper",
+        "kitten",
+        "rabbit",
+        "banana",
+        "garden"
+      ],
+      "context_tokens": 128,
+      "target_position": 1.0,
+      "associations": 8,
+      "seed": 9000,
+      "correct": false,
+      "target_rank": 8,
+      "target_margin": -4.233678102493286,
+      "predicted_text": "apple",
+      "candidate_logits": [
+        -4.521026134490967,
+        -2.792424201965332,
+        -2.7050349712371826,
+        -4.759410858154297,
+        -6.938713073730469,
+        -5.111132621765137,
+        -3.375443458557129,
+        -5.315675735473633
+      ]
+    },
+    {
+      "example_id": "ctx128_pos1_n8_seed9001",
+      "prompt_text": "The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings.Memory record 1: dax means banana.\nMemory record 2: wug means copper.\nMemory record 3: blicket means garden.\nMemory record 4: fep means mirror.\nMemory record 5: toma means forest.\nMemory record 6: koba means jacket.\nMemory record 7: zorp means kitten.\nMemory record 8: lurn means piano.\n\nMemory query: dax means",
+      "target_token_id": 25996,
+      "target_text": "banana",
+      "candidate_token_ids": [
+        25996,
+        15317,
+        11376,
+        10162,
+        8222,
+        15224,
+        42143,
+        19132
+      ],
+      "candidate_texts": [
+        "banana",
+        "copper",
+        "garden",
+        "mirror",
+        "forest",
+        "jacket",
+        "kitten",
+        "piano"
+      ],
+      "context_tokens": 128,
+      "target_position": 1.0,
+      "associations": 8,
+      "seed": 9001,
+      "correct": false,
+      "target_rank": 6,
+      "target_margin": -1.6306267976760864,
+      "predicted_text": "mirror",
+      "candidate_logits": [
+        -2.277751922607422,
+        -0.7780648469924927,
+        -1.8400825262069702,
+        -0.6471251249313354,
+        -1.2350643873214722,
+        -3.5855841636657715,
+        -2.5550103187561035,
+        -0.6870623230934143
+      ]
+    },
+    {
+      "example_id": "ctx128_pos1_n8_seed9002",
+      "prompt_text": "The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings.Memory record 1: dax means kitten.\nMemory record 2: wug means forest.\nMemory record 3: blicket means harbor.\nMemory record 4: fep means lemon.\nMemory record 5: toma means jacket.\nMemory record 6: koba means garden.\nMemory record 7: zorp means dolphin.\nMemory record 8: lurn means island.\n\nMemory query: lurn means",
+      "target_token_id": 7022,
+      "target_text": "island",
+      "candidate_token_ids": [
+        42143,
+        8222,
+        25451,
+        18873,
+        15224,
+        11376,
+        44136,
+        7022
+      ],
+      "candidate_texts": [
+        "kitten",
+        "forest",
+        "harbor",
+        "lemon",
+        "jacket",
+        "garden",
+        "dolphin",
+        "island"
+      ],
+      "context_tokens": 128,
+      "target_position": 1.0,
+      "associations": 8,
+      "seed": 9002,
+      "correct": false,
+      "target_rank": 4,
+      "target_margin": -2.5600041151046753,
+      "predicted_text": "harbor",
+      "candidate_logits": [
+        -2.1330056190490723,
+        0.4565182328224182,
+        1.245742917060852,
+        -3.725800037384033,
+        -1.5654301643371582,
+        0.5188686847686768,
+        -2.7492995262145996,
+        -1.3142611980438232
+      ]
+    },
+    {
+      "example_id": "ctx128_pos1_n8_seed9003",
+      "prompt_text": "The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings.Memory record 1: dax means copper.\nMemory record 2: wug means banana.\nMemory record 3: blicket means ocean.\nMemory record 4: fep means island.\nMemory record 5: toma means apple.\nMemory record 6: koba means jacket.\nMemory record 7: zorp means kitten.\nMemory record 8: lurn means lemon.\n\nMemory query: lurn means",
+      "target_token_id": 18873,
+      "target_text": "lemon",
+      "candidate_token_ids": [
+        15317,
+        25996,
+        9151,
+        7022,
+        17180,
+        15224,
+        42143,
+        18873
+      ],
+      "candidate_texts": [
+        "copper",
+        "banana",
+        "ocean",
+        "island",
+        "apple",
+        "jacket",
+        "kitten",
+        "lemon"
+      ],
+      "context_tokens": 128,
+      "target_position": 1.0,
+      "associations": 8,
+      "seed": 9003,
+      "correct": false,
+      "target_rank": 6,
+      "target_margin": -2.3152071237564087,
+      "predicted_text": "island",
+      "candidate_logits": [
+        -1.5104174613952637,
+        -2.5956170558929443,
+        -3.594033718109131,
+        -1.0020006895065308,
+        -3.365029811859131,
+        -1.8816039562225342,
+        -2.61944580078125,
+        -3.3172078132629395
+      ]
+    },
+    {
+      "example_id": "ctx128_pos1_n8_seed9004",
+      "prompt_text": "The archive clerk reviewed an ordinary report and placed it on the shelf. The weather remained mild while routine work continued through the day. Several notes described roads, buildings, meals, and uneventful meetings.Memory record 1: dax means kitten.\nMemory record 2: wug means jacket.\nMemory record 3: blicket means piano.\nMemory record 4: fep means copper.\nMemory record 5: toma means rabbit.\nMemory record 6: koba means apple.\nMemory record 7: zorp means harbor.\nMemory record 8: lurn means ocean.\n\nMemory query: dax means",
+      "target_token_id": 42143,
+      "target_text": "kitten",
+      "candidate_token_ids": [
+        42143,
+        15224,
+        19132,
+        15317,
+        22746,
+        17180,
+        25451,
+        9151
+      ],
+      "candidate_texts": [
+        "kitten",
+        "jacket",
+        "piano",
+        "copper",
+        "rabbit",
+        "apple",
+        "harbor",
+        "ocean"
+      ],
+      "context_tokens": 128,
+      "target_position": 1.0,
+      "associations": 8,
+      "seed": 9004,
+      "correct": false,
+      "target_rank": 8,
+      "target_margin": -2.666948437690735,
+      "predicted_text": "rabbit",
+      "candidate_logits": [
+        -3.9585213661193848,
+        -3.812065601348877,
+        -2.015106439590454,
+        -1.9188703298568726,
+        -1.29157292842865,
+        -2.255605936050415,
+        -3.4340386390686035,
+        -2.7105860710144043
+      ]
+    }
+  ],
+  "aggregates": [
+    {
+      "context_tokens": 128,
+      "target_position": 1.0,
+      "associations": 1,
+      "n": 5,
+      "accuracy": 0.0,
+      "mean_reciprocal_rank": 0.18690476190476188,
+      "mean_target_margin": -3.172883063554764
+    },
+    {
+      "context_tokens": 128,
+      "target_position": 1.0,
+      "associations": 8,
+      "n": 5,
+      "accuracy": 0.0,
+      "mean_reciprocal_rank": 0.16666666666666666,
+      "mean_target_margin": -2.681292915344238
+    }
+  ]
+}

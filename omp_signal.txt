@@ -1,0 +1,4 @@
+[SYSTEM DUMMY CHECK - DO NOT PROCESS]
+This is a test message to verify OMP session communication is working.
+Please ignore this message - no action required.
+Timestamp: 2026-08-27
