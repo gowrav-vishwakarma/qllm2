@@ -345,3 +345,163 @@ raw-key readout. `delta_key_norm` makes retrieval a pure cosine `q·k̂`;
 raw keys in the in-chunk `query_key` score restore magnitude contrast.
 Well-targeted because multi8@128 with `delta_chunk=128` lives entirely in
 the in-chunk path. Falsifier: `multi8@ctx128` must move off 0.133.
+
+## Recall program 2026-08-25→29 — oracle correction → B → D → E → F/F2
+
+The 8-way multi-binding gap (a=8 at chance ~0.133 vs Transformer 0.956) was
+root-caused, then attacked with five runs: recall-data (B), dense curriculum
+(D), zero-param n-gram fingerprint (E), learned n-gram fusion (F, killed),
+learned n-gram fusion fixed (F2). All on `v13_e3_k3_selective` (100.6M,
+B8/T2048 eager, lr 3e-4, warmup 500, seed 42, 4090) unless noted.
+"all" = allctx = pooled over ctx 128/512/1024/2048 × pos 0/0.5/1.
+Battery: `scripts/run_memory_behavioral.py --model-type v13` (8-way
+contrastive, chance 0.125; probe vocab disjoint from the training recall
+curriculum by design). Deep per-run notes: `SCRATCHPAD.md` sections
+2026-08-25 ROOT-CAUSE / B / D / E / F.
+
+**ROOT-CAUSE CORRECTION (2026-08-25, four probes on the 500M ckpt) — the gap
+is READ-SIDE ROUTING, not write interference.** Supersedes VERDICT 4 above.
+(1) Two-state raw-key readout flip = negative (retrain decision, not a
+free toggle). (2) Key-gram probe: fact-key addresses are hyper-orthogonal
+(off-diag |k̂ᵀk̂| = 0.0138 = 0.12× random) — the address space is NOT
+clustered; the learned query is ≈orthogonal to every address (q·k_target
+0.0154 ≈ q·k_other 0.0122) for BOTH a=1 (0.744) and a=8 (0.133) → gap is
+dynamics/routing, not address geometry. (3) PAM=0 control: battery
+0.254→0.150, a1@128 0.833→0.217 — the PAM path IS engaged (no CGU
+shortcut). (4) Oracle readout: build the state normally (writes are
+query-independent; ctx128 = single chunk, no carry), re-read with an oracle
+query — a=8 seed1002 recovers the value at 11/128 addresses (info IS in the
+state), seed1000 0/128, seed1001 128/128 (residual/LM-head case); the
+recovering addresses are NOT the value/key/any of the 8 value positions.
+**Values ARE stored, as scattered superpositions; the learned query never
+learns which address to route to** (the 48/48/4 mix has zero
+store-now/answer-later gradient). This re-opened the recall-data lever the
+old write-interference read had deprioritized.
+
+**B (2026-08-25→26) — 500M, 4% synthetic recall slice. TIED recall, BETTER PPL.**
+r1 recipe + recall slice 48/48/4/4 + `--blend_warmup_tokens 1e7` (the 500M's
+1e9 > 5e8 budget made r1 WEB-ONLY forever — zero store/answer signal) +
+`--delta_raw_key_readout` + `--delta_erase_beta_cap 1.0`. 500.0M tok /
+31.97 h, clean. **Wiki PPL 128.76 vs r1 133.88 (−3.8%)** — the one durable
+positive of the program: recall data buys PPL at zero CE cost. 300-trial
+final battery: n8-all 0.1453 vs r1 0.1333 (z +1.31), n1 0.3006 vs 0.4083
+(z −1.12), n4 0.2042 vs 0.2194 (parity) — direction matches (hard up, easy
+down) but NO significance; the 8-way stayed at chance. The slice SHAPE was
+wrong for the probe: sparse 3-6 bindings over 2-200 sentences never trained
+the probe's dense 8-distinct-bindings-in-128-tokens case.
+
+**D (2026-08-26→27) — 200M, DENSE recall curriculum (same 4% weight). FAIL → BANK C.**
+Same as B but the slice reshaped to dense (8 distinct single-token bindings,
+0-2 sentence gap, query 1-of-8 back) — trains the probe's exact hard case.
+Cache v2→v3. (First launch died silently at 17.2M: host-RAM SIGKILL,
+environmental — run 2 crossed the point bit-identical; fixed the watchdog
+liveness that had been blind to it: `/proc/PID/exe`-python + cmdline match,
+not raw `pgrep -f`, which false-positives on Cursor-sandbox zsh cmdlines.)
+Clean to 200.0M / 12.70 h. CE: 4.0971 (r1 3.97 → +0.13, inside kill band).
+**Wiki PPL 178.34.** 300-trial gate: n8@128 0.1467 (bar 0.15, 0.2 SE),
+**n8-all 0.1367 vs bar 0.205 = FAIL by 3.6 SE** (anchor correction: B-246M
+n8-all is 0.1750, not the 0.233 transcribed earlier — that was B-246M's
+n4@128 cell; verdict robust to the fix). The dense curriculum did NOT break
+the 8-way gap: D-82M n8-all 0.1083 == B-82M 0.1083 exactly.
+
+**N-GRAM INFERENCE-ONLY DIAGNOSTIC on D-final (flag ON, never trained) —
+POSITIVE.** n8: +0.011..+0.019 in ALL FOUR contexts (n8-all 0.1367→0.1500,
+n8@128 0.1467→0.1589), n1 −0.057 (≈3 SE) — same hard-up/easy-down signature
+as B's slice. Suggestive at 1 SE → motivated E.
+
+**E (2026-08-27) — 82M, zero-param n-gram fingerprint TRAINED ON. GATE FAIL, do not scale.**
+Motivation: Qwen3.8-Flash-Next (2026-08-26) PLE — hash a 3-gram of token IDs
+→ look up an embedding row → augment the representation (51.2B table; their
+eval has NO 8-way binding probe, so "fixes multi-binding recall" is a
+hypothesis for our battery, not a published result). Port at our budget:
+hash into the EXISTING tied embedding table (commit 79db28e) — zero new
+params, O(1)/token, `ngram_scale` 0.5 fixed. D recipe + `--ngram_read`,
+82M, clean. CE non-regressing (train 4.45@82M on r1 curve; Wiki PPL 345.97 —
+the fingerprint costs CE on wiki, pays back nothing on recall). 300-trial
+gate bar n8-all ≥ D-final 0.1367 + 0.03 = 0.1667: **E 0.1417 = FAIL** (0.2
+SE over D, noise) — and E, TRAINED on the fingerprint, lands BELOW the
+inference-only floor (D-on 0.1500): training slightly degraded it. Matched
+82M control (60 trials): E n8 0.1417 vs D/B 0.1083 (+0.033, real) BUT
+n1 0.1211 vs D 0.1514 (−0.030), n4 0.1475 vs D 0.2139 (−0.066): **a
+net-negative SWAP** — the content-blind hash row redistributes recall mass
+easy→hard with the cost larger than the gain.
+
+**F (2026-08-28) — learned n-gram fusion block. Run 1 KILLED at 13.7M (defect); F2 FAILED the gate.**
+Faithful Qwen PLE port around the same hash lookup (commit 9109fde):
+`NgramFusion = depthwise Conv1d(k=3, groups=2d) -> ComplexLinear key_proj
+(all four params zero-init) -> ComplexNorm`, injected pre-embed_norm at both
+`forward` and `_hidden_to_lm`; O(1) decode via a rolling row buffer
+(boundary zero-fill = bit-exact vs parallel). +299,136 params (100.92M).
+Zero-init = run starts BIT-IDENTICAL to D; signal supposed to grow with
+training. **Run 1 defect (killed step 850):** `ComplexNorm` is
+SCALE-INVARIANT (`out = (mag/rms)·scale`); placed AFTER the zero-init
+key_proj it amplified the step-1 epsilon to full O(1) — the "slow start" was
+a step function (injection max 3.027 after ONE optimizer step; F +1.1..+1.5
+NLL vs matched D, flat). **Lesson (general): never put a scale-invariant
+norm after a zero-init projection — the norm re-normalizes the slow start
+away.** Fix (4fddba2): `key_proj(norm(conv(rows)))` — zero-init projection
+stays last (step-0 bit-identity preserved), step-1 injection 2.1e-02 and
+grows. **F2 (2026-08-28→29):** 82.0M / 5.18 h, clean. Canary all-nonzero,
+step-0 10.9066 (D 10.9055, bit-noise). CE non-regressing the whole run
+(matched-delta vs D: +0.07..+0.20 steps 500-750, −0.14..−0.32 at 1200-1550,
+noise after; Val 4.4370/84.52, Wiki PPL 262.69). 300-trial gate:
+n1-all 0.1475 (PASS ≥ 0.1314), **n8-all 0.1353 (FAIL ≥ 0.1667 by 5.5 SE,
+CI [0.1241, 0.1465])**, CE PASS → **FAIL on (1): the n8 ceiling holds even
+learned; bank the negative** (pre-registered decision: no 200M scale; a
+user-override 200M scale was later queued, see bottom).
+
+### Consolidated recall battery (allctx, 8-way)
+
+| run | tok | t/cell | n1-all | n4-all | n8-all | n8@128 | Wiki PPL | verdict |
+|---|---|---|---|---|---|---|---|---|
+| r1-FINAL (v13 delta, no recall data) | 500M | 180 | 0.4083 | 0.2194 | 0.1333 | 0.1333 | 133.88 | reference |
+| B (4% recall slice) | 82M | 180 | 0.1486 | 0.2069 | 0.1083 | 0.1056 | — | inconclusive @82M |
+| B | 246M | 180 | 0.3042 | 0.2083 | 0.1750 | 0.1444 | — | positive trend (n8@128) |
+| B-FINAL | 500M | 900 | 0.3006 | 0.2042 | 0.1453 | 0.1367 | **128.76** | TIED recall, BETTER PPL |
+| D (dense slice) | 82M | 180 | 0.1514 | 0.2139 | 0.1083 | 0.1056 | — | = B @82M exactly |
+| D-FINAL | 200M | 900 | 0.1956 | 0.1625 | 0.1367 | 0.1467 | 178.34 | FAIL (bar 0.205) → BANK C |
+| D-FINAL + ngram (inference-only) | 200M | 900 | 0.1833 | 0.1556 | 0.1500 | 0.1589 | — | +0.013 n8 all-ctx, n1 −0.057 |
+| E (ngram trained) | 82M | 900 | 0.1211 | 0.1475 | 0.1417 | 0.1400 | 345.97 | FAIL — net-negative swap |
+| F2 (learned fusion) | 82M | 900 | 0.1475 | 0.1578 | 0.1353 | 0.1356 | 262.69 | FAIL — ceiling holds learned |
+| Transformer (matched) | — | — | — | — | **0.956** | — | — | the target |
+
+**THE CEILING (four independent readings):** D inference-only 0.1500, E
+trained 0.1417, F2 trained 0.1353, D-200M-off 0.1367 — all within ~1 SE.
+Content-aware n-gram fingerprinting (zero-param OR learned) lifts the hard
+8-way ~+0.03 at matched size but caps at the dense-curriculum ceiling; it
+does NOT close the routing gap. F2 is a strictly better swap than E (n1 tax
+gone: 0.1475 ≈ D 0.1514, where E was 0.1211) — the learned block suppresses
+the fingerprint where it isn't useful — yet still lands at the ceiling.
+B's PPL win (−3.8%) is the bankable asset; the n8 gap is read-side routing
+per the oracle, untouched by every write-side/fingerprinting lever tried.
+
+### Lessons (permanent)
+
+- **n8@128 = 0.1056 for both B-82M and D-82M (60t):** at 82M neither
+  curriculum had touched the probe case; B's n8@128 rise (0.106→0.133→
+  0.144) came at 164-246M and then plateaued; D's dense shape never
+  produced it at 200M.
+- **Slow-start vs scale-invariant norms:** see F run 1 above. Selftest
+  `test_ngram_fusion` + the GPU smoke now assert the slow-start bound
+  (step-1 injection < 0.5); a step-0 bit-identity test alone cannot catch
+  this — it only checks step 0.
+- **Watchdog liveness:** never `pgrep -f` alone (sandbox-shell false
+  positives); require `/proc/PID/exe` = python + cmdline match (fixed in
+  v13/tmp/watchdog.sh, 2026-08-26).
+- **Post-budget trainer hang:** the F2 trainer held 9 GB of GPU ~2 h after
+  `Wall clock end` (killed after ckpts confirmed). If it recurs, add a
+  post-budget timeout to the launcher.
+- **Anchor discipline:** the D gate bar's "B-246M (0.233)" was a
+  transcription slip (real: 0.1750 n8-all; 0.233 = B-246M's n4@128 cell).
+  Verify gate anchors against the on-disk JSON before launch.
+
+### Next (post-F2, 2026-08-29)
+
+Per the oracle, the untried lever is READ-SIDE: (1) **fact_contrastive
+value-ranking loss** — ported (9e73e7b), needs per-token value masks
+threaded through `_build_recall_doc` → blend → cache v4 → dataset → batch
+(trainer branch already at v7/train.py:534-541, guarded by mask presence);
+forces the correct value to outrank the 7 sibling answer tokens = exactly
+the probe's discrimination. (2) **gamma_floor** memory horizon (v11 0.98;
+v13 default 0). (3) F2 scale to 200M (user override of the pre-registered
+bank-the-negative call).

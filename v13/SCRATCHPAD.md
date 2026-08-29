@@ -772,3 +772,11 @@ all @82M; latest.pt = final step 5000). Note: the trainer process hung at
 exit after budget (held 9GB GPU ~2h); killed after all ckpts saved — if it
 recurs, add a post-budget timeout to the launcher.
 
+- **F2 RE-VERIFY (2026-08-29, user-ordered): battery on final_model.pt**
+  (`v13_F_ngram_fusion_FINAL_behavior.json`, 900t/cell): n1-all 0.1481 /
+  n4-all 0.1583 / n8-all 0.1356 vs latest.pt 0.1475/0.1578/0.1353 —
+  delta ≤ 0.003, inside 300-trial noise (SE ≈ 0.019/cell). The FAIL verdict
+  is NOT a latest.pt artifact; it is robust across both endpoints of the
+  run. Full D→E→F/F2 record also landed in EXPERIMENTS_V13.md
+  ("Recall program 2026-08-25→29" — every battery number verified against
+  the on-disk JSONs before writing).
