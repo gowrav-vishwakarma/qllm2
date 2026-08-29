@@ -2,12 +2,12 @@
 
 ``complex_pair`` is the last axis of size 2: index 0 = real, index 1 = imag.
 
-Parameter names match v13 (``weight_real``, ``scale``, …) so a v13
-``state_dict`` loads without remapping.
-
-Two raw-torch exits live here and nowhere else: ``fused_decay_matrix`` (the
-``[time, time]`` lag table, which has no named form) and ``real_part`` /
-``imag_part``, which feed the chunked-CE autograd Function.
+The simple PAM model (``model.py``) uses only: the named linear/norm wrappers
+(``ComplexLinear`` / ``ComplexNorm``), the activation fan (``ModReLU`` /
+``ModSwish`` / ``PhaseModulatedActivation``), ``ComplexGatedUnit``,
+``ComplexEmbed``, the shared dropout mask, and the RoPE table. The RoPE table
+is the only raw-torch object in this module; it is built once, outside the
+graph, and sliced by position (declared in ``check_torch_layout.py``).
 """
 
 from __future__ import annotations
@@ -23,24 +23,11 @@ from sempyt.policies import SplitComplex
 from sempyt.structural import apply, cat, cos, ones, relu, sigmoid, sin
 from sempyt.tensor import NamedTensor, named
 
-REAL = 0
-IMAG = 1
-
 
 def _feature_axis(z: NamedTensor) -> Dim:
+    """The last non-pair axis — the feature, whatever the caller named it."""
     pair = z.policy.pair
     return [d for d in z.layout if d is not pair][-1]
-
-
-def real_part(z: torch.Tensor) -> torch.Tensor:
-    """Raw exit for the chunked-CE Function, which packs concat(real, imag)."""
-    return z[..., REAL]
-
-
-def imag_part(z: torch.Tensor) -> torch.Tensor:
-    """Raw exit for the chunked-CE Function, which packs concat(real, imag)."""
-    return z[..., IMAG]
-
 
 def as_complex_dropout_mask(dropout_module: nn.Dropout, like: NamedTensor) -> NamedTensor:
     """Real dropout mask shared by both complex parts of ``like``."""
@@ -56,26 +43,6 @@ def to_real_concat(x: NamedTensor, into: Dim | None = None) -> NamedTensor:
         old = [d for d in out.layout if d.name == feature.name][0]
         out = out.alias(old, into)
     return out
-
-
-def fused_decay_matrix(decay_gamma: torch.Tensor, seq_len: int) -> torch.Tensor:
-    """v13 ``_pt_decay_matrix``. No named form — this is a [time, time] kernel table."""
-    log_gamma = torch.log(decay_gamma + 1e-6)
-    cum_neg_log_gamma = torch.cumsum(-log_gamma, dim=-1)
-    log_decay = (cum_neg_log_gamma.unsqueeze(-1) - cum_neg_log_gamma.unsqueeze(-2)).transpose(-1, -2)
-    causal = torch.tril(torch.ones(seq_len, seq_len, device=decay_gamma.device))
-    log_decay = log_decay * causal + (1 - causal) * (-1e4)
-    return torch.exp(log_decay.clamp(max=0.0))
-
-
-def named_decay_matrix(gamma: NamedTensor, time: Dim, source_time: Dim) -> NamedTensor:
-    """Named wrap of ``fused_decay_matrix``. ``gamma`` has ``time`` last."""
-    g = gamma.to(*[d for d in gamma.layout if d is not time], time)
-    lead = [d for d in g.layout if d is not time]
-    flat = g.data.reshape(-1, time.size)
-    decay = fused_decay_matrix(flat, time.size).reshape(*g.data.shape[:-1], time.size, source_time.size)
-    return named(decay, tuple(lead) + (time, source_time))
-
 
 class ComplexLinear(_NamedComplexLinear):
     """v13-compatible ComplexLinear. NamedTensor in, NamedTensor out."""
@@ -215,30 +182,6 @@ class ComplexEmbed(nn.Module):
         real_embed = named(self.embed_real(ids), lead + (self.feature,))
         imag_embed = named(self.embed_imag(ids), lead + (self.feature,))
         return as_complex(real_embed, imag_embed, self.complex_pair)
-
-
-class ComplexPosEmbed(nn.Module):
-    def __init__(self, max_seq_len: int, feature: Dim):
-        super().__init__()
-        self.max_seq_len = max_seq_len
-        self.feature = feature
-        self.pos_embed = nn.Embedding(max_seq_len, feature.size)
-        nn.init.normal_(self.pos_embed.weight, std=0.02)
-
-    def forward(self, z: NamedTensor, step_offset: int = 0, time: Dim | None = None) -> NamedTensor:
-        time_axis = time or next(d for d in z.layout if d.name == "time")
-        seq_len = z.size(time_axis)
-        feature = next(
-            d for d in z.layout if d.size == self.feature.size and d is not z.policy.pair
-        )
-        position_end = step_offset + seq_len
-        if position_end > self.max_seq_len:
-            raise ValueError(
-                f"Position range [{step_offset}, {position_end}) exceeds max_seq_len "
-                f"{self.max_seq_len}"
-            )
-        position_ids = torch.arange(step_offset, position_end, device=z.device)
-        return z + named(self.pos_embed(position_ids), (time_axis, feature))
 
 
 def build_rope_cache(max_len: int, head_dim: int) -> torch.Tensor:

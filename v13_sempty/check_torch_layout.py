@@ -30,7 +30,7 @@ ROOT = Path(__file__).resolve().parent
 # Whole modules that are boundaries by design.
 SKIP_FILES = frozenset({
     "fused_ce.py",        # custom autograd Function: chunked [N, vocab] on purpose
-    "selftest.py",        # compares against v13, which speaks raw torch
+    "selftest.py",        # compares against plain F.cross_entropy, which speaks raw torch
     "train.py",           # optimiser / dataloader plumbing
     "generate.py",        # sampling loop
     "check_torch_layout.py",
@@ -40,15 +40,10 @@ SKIP_FILES = frozenset({
 # raw-torch public edge.
 KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {
     "complex_ops.py": frozenset({
-        "fused_decay_matrix",   # [time, time] lag table from a cumulative log
-        "named_decay_matrix",   # its named wrapper
         "build_rope_cache",     # position table built once, outside the graph
-        "real_part",            # feeds the chunked-CE Function
-        "imag_part",            # feeds the chunked-CE Function
     }),
     "model.py": frozenset({
         "generate",                # sampling loop over raw logits
-        "_init_phase_proj",        # writes parameter tensors in place
     }),
 }
 

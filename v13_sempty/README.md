@@ -1,74 +1,136 @@
 # v13_sempty
 
-v13 selective PAM language model rewritten on the [sempyt](https://github.com/) named-axis frontend (`/home/gowrav/Development/sempyt/src`).
+A simple, **pure** Phase-Associative Memory (PAM) language model on the
+[sempyt](https://github.com/) named-axis frontend
+(`/home/gowrav/Development/sempyt/src`).
 
-Same architecture, same parameter names, same training math as `v13`. A v13 `state_dict` loads directly. Forward logits and backward grads match v13 on CPU (see `selftest.py`).
+It is *not* v13 ported: it is the lean recurrence v13 grew around, written
+cleanly. The design, the decision log (what was cut and why, with log
+evidence), and the experiment ledger live in
+[`EXPERIMENTS_SEMPY.md`](EXPERIMENTS_SEMPY.md). This file is the contract.
 
-The model is written in **sempyt named-axis style**: `Dim` objects with self-explanatory names, `.to()` instead of `.view()` / `.permute()`, `contract` / `as_complex` / `SplitComplex *` instead of raw `F.linear` and `[..., 0]` bookkeeping.
+## The model
+
+Each layer carries one notebook per head — a complex d×d matrix:
+
+```
+notebook_t = decay_t · notebook_{t-1} + value_t ⊗ conj(key_t)
+read_t     = d^(-1/2) · (notebook_t · query_t)
+```
+
+Every token fades the notebook by a learned per-head number `decay_t ∈ (0,1)`,
+writes one conjugate association (value hung on the key's phase), then reads
+with its query. No gates, no erasures, no extra states. RoPE on Q/K is the
+only position mechanism (see the decision log for why learned positions were
+cut).
+
+Training/prefill runs the recurrence in windows of `chunk_size` using its
+closed form (`S_s = a_s · (S_0 + Σ_{j≤s} u_j / a_j)`, one cumprod + one
+cumsum per window, notebook carried between windows); decode runs the same
+algebra one step per token on the carried notebook. The two paths agree to
+round-off — that equivalence is a pre-registered contract, pinned by
+`selftest.py`.
+
+## Contract
+
+- **Named end to end.** Every axis is a named `Dim`; layout is `.to()` /
+  `.alias()`; products are `contract` / `outer`. `check_torch_layout.py`
+  fails the build on `view` / `permute` / `transpose` / `unsqueeze` /
+  `[..., 0]` / numeric `dim=` / unmarked `.raw` / `.data` escapes.
+- **No finetuning machinery.** Plain cross-entropy only (chunked fused CE or
+  `F.cross_entropy`); no auxiliary losses.
+- **The sROI rule stands.** A mechanism must beat the baseline by more than
+  noise to earn its compute (see `EXPERIMENTS_SEMPY.md`).
 
 ### Named axes
 
-| Dim | Meaning |
-|-----|---------|
-| `batch` | items in the minibatch |
+| Axis | Meaning |
+|------|---------|
+| `batch` | sequence items in the minibatch |
 | `time` | token positions |
-| `model_dim` | residual / embedding width (v13 `dim`) |
+| `model_dim` | residual / embedding width |
 | `heads` | PAM heads |
-| `head_feature` | per-head channel width (v13 `head_dim`) |
-| `complex_pair` | last axis of size 2: real then imag (was `px`) |
-| `qkv_slot` / `qkv_fused` | fused QKV packing |
-| `memory_states` | E3 notebooks (v13 `n_states`) |
+| `head_feature` | per-head channel width (d) |
+| `complex_pair` | last axis of size 2: real then imag |
+| `qkv_slot` / `qkv_fused` | fused Q/K/V packing (slot 0=q, 1=k, 2=v) |
+| `head_row` / `head_col` | the two axes of the d×d notebook |
+| `chunk_time` | token positions inside one window |
 | `real_imag_feature` | `concat(real, imag)` along `model_dim` |
-| `head_row` / `head_col` | the two axes of the d×d notebook matrix |
 
-### What stays on raw torch (and why)
+### Declared raw-torch boundaries
 
-| Site | Why sempyt cannot replace it |
-|------|------------------------------|
-| `fused_decay_matrix` | builds a `[time, time]` lag table from cumsum/tril |
-| chunked PAM GEMM loops | bit-identical v13 `@` sequence; packing for the UT solve |
-| `torch.linalg.solve_triangular` | no named form |
-| `fused_ce.py` | custom autograd that must never materialize `[N, vocab]` |
+| Site | Why it stays raw |
+|------|------------------|
+| `complex_ops.build_rope_cache` | position table built once, outside the graph |
+| `LM.generate` | sampling loop over raw logits |
+| `LM.ce_from_lm` hand-off | chunked CE must not materialize `[N, vocab]` |
+| `fused_ce.py` | custom autograd Function (whole module) |
+| `selftest.py` | compares against plain `F.cross_entropy` |
+| `train.py` / `generate.py` | optimiser / dataloader / sampling plumbing |
+
+### torch → sempyt mapping (the old SEMPYT_OPS.md, folded in)
+
+| Old torch pattern | sempyt replacement |
+|-------------------|--------------------|
+| `x.view(B,T,H,d)` / `x.permute(…)` | `x.to(batch, time, heads, head_feature)` |
+| `a @ b` (real or complex) | `contract(a, b, over=shared_axis)` |
+| `outer(v, k)` | `outer(v, k.conj(), over=(head_row, head_col))` |
+| `real/imag` via `[...,0]` | `real(z)`, `imag(z)` |
+| `torch.stack([r,i],-1)` | `as_complex(r, i, complex_pair)` |
+| broadcast via `unsqueeze` | `x * y` (missing axes broadcast as size-1) |
+| `x.sum(dim=…)` over an axis | `sum(x, over=that_axis)` |
+| `x[:, :, a:b]` chunk slice | `take(x, over=time, start=a, length=C, new=chunk_time)` |
+| `torch.cat(chunks, dim=…)` | `cat(chunks, over="chunk_time", into=time)` |
+| `select(x, dim, i)` | `select(x, over=that_axis, index=i)` |
+| `torch.cumprod(…, dim=-1)` | `cumprod(x, over=time)` |
+| RoPE on Q, K | `q * rope_named`, `k * rope_named` |
+| `torch.zeros(d1,d2,…,2)` | `zeros(d1, d2, …, complex_pair, policy=…)` |
+
+One sempty quirk worth knowing: a fused axis splits by name only when its
+factors come **at the end** of the target layout (`x.to(batch, time,
+qkv_slot, heads, head_feature, complex_pair)` works; the same factors after
+`time` do not). `_project` splits first, then moves `heads` before `time`.
 
 ## Layout
 
 | File | Role |
 |------|------|
-| `config.py` | `V13Config`, `PRESETS`, `get_config` (data only) |
-| `complex_ops.py` | Split-real complex modules via sempyt `NamedTensor` + `SplitComplex` |
-| `model.py` | `V13PAMLayer` / `V13Block` / `V13LM` (named end to end) |
-| `pam_ops.py` | named PAM primitives: the delta chunk solve and the decode step |
+| `config.py` | `PAMConfig`, `PRESETS`, `get_config` (data only) |
+| `complex_ops.py` | Split-real complex modules on `NamedTensor` + `SplitComplex` |
+| `model.py` | `PAMLayer` / `Block` / `LM` (named end to end) |
 | `check_torch_layout.py` | fails if anything reaches around sempyt outside a declared boundary |
-| `fused_ce.py` | Chunked tied-head linear + CE (custom autograd; `grad_weight +=`) |
-| `train.py` | Self-contained trainer (no `V7Trainer`) |
-| `selftest.py` | Equivalence contract vs `v13` |
-| `generate.py` | Prefix completion from a checkpoint |
+| `fused_ce.py` | chunked tied-head linear + CE (custom autograd; `grad_weight +=`) |
+| `train.py` | self-contained trainer (no `V7Trainer`) |
+| `selftest.py` | the model's own contract (no v13 imports) |
+| `generate.py` | prefix completion from a checkpoint |
 
-Triton fused kernels from `v13/triton_kernels.py` are **not** ported. The eager PyTorch / sempyt fallbacks are the reference math (correctness, not peak CUDA throughput).
+`sempyt` is imported from source: a `.pth` in the qllm2 venv points at
+`/home/gowrav/Development/sempyt/src`, so framework edits are live (no pip
+install).
 
-## sempyt from source
-
-`import sempyt` is resolved via a `.pth` in the qllm2 venv pointing at `/home/gowrav/Development/sempyt/src`. Framework edits there are picked up immediately (no pip install). Later this will be a published package.
-
-## Run (CPU — do not steal a live GPU training job)
+## Run
 
 ```bash
-# equivalence vs v13
+# the contract: selftest + layout guard (CPU)
 .venv/bin/python -m v13_sempty.selftest
+.venv/bin/python -m v13_sempty.check_torch_layout
 
 # synthetic smoke train (CPU)
 .venv/bin/python -m v13_sempty.train --preset tiny --dataset synthetic --steps 8 --device cpu
 
-# generate (needs a checkpoint + tokenizer)
+# real-data baseline (GPU — confirm the GPU is free first)
+.venv/bin/python -m v13_sempty.train --preset baseline --dataset wikitext103 --device cuda --steps 10000
+
+# generate (needs a checkpoint)
 .venv/bin/python -m v13_sempty.generate --checkpoint checkpoints_v13_sempty/latest.pt --device cpu
 ```
 
-Production preset is `v13_e3_k3_selective` (delta fused, E3 K=3, vault, write-phase-address). Use `--device cuda` only when a GPU is free.
+Presets: `baseline` (384/6/64/16 — the v11 7d geometry, ~100M), `micro`
+(96/3/32/6), `tiny` (64/2/32/2). Checkpoints land in `checkpoints_v13_sempty/`.
 
-## Equivalence bar
+## Verification status (CPU, 2026-08-29)
 
-Documented in `selftest.py`. Measured on CPU fp32 with shared weights:
-
-- PAM layer + full LM forward/grad: `0.0`
-- fused CE vs v13: `0.0`
-- parallel-train vs recurrent-infer: `~1e-8` (bar `2e-3`)
+- selftest: **6/6 pass** (parallel ≡ recurrent to 2.98e-07 on logits,
+  1.86e-08 on carried notebooks; fused CE exact vs `F.cross_entropy`)
+- layout guard: **clean**
+- tiny synthetic smoke: loss 5.5556 → 5.5409 over 8 steps, finite, decreasing

@@ -1,4 +1,4 @@
-"""Prefix completion from a v13_sempty (or v13) checkpoint.
+"""Prefix completion from a v13_sempty checkpoint.
 
 Usage:
     .venv/bin/python -m v13_sempty.generate \\
@@ -16,8 +16,8 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from v13_sempty.config import V13Config, get_config
-from v13_sempty.model import V13LM
+from v13_sempty.config import PAMConfig, get_config
+from v13_sempty.model import LM
 
 
 def _load_tokenizer(vocab_size: int):
@@ -35,11 +35,11 @@ def _load_tokenizer(vocab_size: int):
     return tok
 
 
-def _config_from_ckpt(ckpt: dict, preset_fallback: str) -> V13Config:
+def _config_from_ckpt(ckpt: dict, preset_fallback: str) -> PAMConfig:
     raw = ckpt.get('config')
     if isinstance(raw, dict) and raw:
-        fields = set(V13Config.__dataclass_fields__)
-        return V13Config(**{k: v for k, v in raw.items() if k in fields})
+        fields = set(PAMConfig.__dataclass_fields__)
+        return PAMConfig(**{k: v for k, v in raw.items() if k in fields})
     return get_config(preset_fallback)
 
 
@@ -71,7 +71,7 @@ def main() -> None:
     tok = _load_tokenizer(cfg.vocab_size)
     cfg.vocab_size = len(tok)
 
-    model = V13LM(cfg)
+    model = LM(cfg)
     model.load_state_dict(ckpt['model_state_dict'])
     device = torch.device(args.device if args.device == 'cpu' or torch.cuda.is_available() else 'cpu')
     model.to(device)

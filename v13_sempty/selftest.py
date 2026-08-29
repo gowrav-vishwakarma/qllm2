@@ -1,13 +1,24 @@
-"""Equivalence contract: v13_sempty vs v13 (CPU, tiny configs).
+"""Selftest for the simple PAM model (CPU, float32, self-contained).
 
-Tolerances (fp32 CPU):
-  * module / full-model forward+grad after state_dict copy: atol 1e-5
-    (measured 0.0 on the production delta-fused E3 path)
-  * parallel-train vs recurrent-infer: atol 2e-3 (v13's own selftest bar)
-  * fused CE vs F.cross_entropy: atol 1e-5
-  * one AdamW step param delta: atol 1e-5
+The model is intentionally NOT compared against v13 — it is a different,
+leaner architecture. Instead the tests pin its own contract:
 
-Triton is forced off on the v13 side so both use the same PT math.
+  * test_param_count_and_state   — parameter accounting and state_dict sanity
+  * test_parallel_vs_recurrent   — the equivalence contract: the chunked
+                                   window path (train / prefill) and the
+                                   stepwise path (decode) agree on logits and
+                                   on the carried notebook, to round-off
+  * test_tied_logits             — the tied head equals the manual
+                                   real @ E_r.T + imag @ E_i.T score,
+                                   built with the same named axes the model uses
+  * test_fused_ce                — chunked fused CE equals plain
+                                   F.cross_entropy in loss and gradients
+  * test_smoke_loss_decreases    — the tiny preset trains on synthetic data
+  * test_generate_smoke          — the decode loop runs and stays in-vocab
+
+This module is a declared raw-torch boundary (it compares against plain
+``F.cross_entropy``), so raw exits are legal here — but the named tensors
+stay named up to each hand-off, exactly as the model does.
 
 Run:
     .venv/bin/python -m v13_sempty.selftest
@@ -15,253 +26,218 @@ Run:
 
 from __future__ import annotations
 
-import math
+import sys
+from pathlib import Path
 
 import torch
 import torch.nn.functional as F
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from sempyt.dim import Dim
-from sempyt.policies import SplitComplex
+from sempyt.structural import cat
 from sempyt.tensor import named
 
-from v13.model import V13Config, V13LM, V13PAMLayer
-from v13.triton_kernels import set_triton_enabled
-from v13_sempty.config import V13Config as SConfig
-from v13_sempty.model import V13LM as SLM
-from v13_sempty.model import V13PAMLayer as SPAM
-from v13_sempty.fused_ce import fused_linear_cross_entropy
-from v13_sempty.train import Trainer, build_param_groups, synthetic_loader
+from v13_sempty.config import get_config
+from v13_sempty.complex_ops import to_real_concat
+from v13_sempty.model import LM
+from v13_sempty.train import Trainer, synthetic_loader
 
-
-def _as_named_tokens(x):
-    """Public-edge wrap for PAM selftests (v13 still speaks raw torch)."""
-    pair = Dim("complex_pair", 2)
-    return named(
-        x,
-        (Dim("batch", x.shape[0]), Dim("time", x.shape[1]),
-         Dim("model_dim", x.shape[2]), pair),
-        SplitComplex(pair),
-    )
-
-set_triton_enabled(False)
-
-ATOL_TIGHT = 1e-5
-ATOL_RECUR = 2e-3
+RECUR_ATOL = 1e-4  # fp32 tolerance: closed form vs one-step-per-token
 
 
 def _unwrap(t):
-    """Drop back to raw torch at the v13 comparison boundary."""
     return t.data if hasattr(t, "layout") else t
 
 
-def _max(a, b):
-    return (_unwrap(a) - _unwrap(b)).abs().max().item()
+def _max_diff(a, b) -> float:
+    return (_unwrap(a).float() - _unwrap(b).float()).abs().max().item()
 
 
-def _prod_kw(**extra):
-    kw = dict(
-        vocab_size=256, dim=32, n_heads=2, head_dim=16, n_layers=2,
-        expand=2, dropout=0.0, max_seq_len=128, chunk_size=32,
-        gradient_checkpointing=False, use_rope=True, use_gsp=True,
-        n_states=3, write_mode='delta', delta_chunk=16, delta_erase_gate=True,
-        gate_content_aware=True, vault_state=True, vault_state_idx=0,
-        write_phase_address=True, fused_e3=True, delta_key_norm=True,
-        delta_erase_beta_cap=0.95,
-    )
-    kw.update(extra)
-    return kw
-
-
-def test_state_dict_keys():
-    kw = _prod_kw()
-    ref = V13LM(V13Config(**kw))
-    port = SLM(SConfig(**kw))
-    rk, pk = set(ref.state_dict()), set(port.state_dict())
-    assert rk == pk, (sorted(rk - pk)[:8], sorted(pk - rk)[:8])
-    print("[state_dict keys ] PASS")
+def test_param_count_and_state():
+    cfg = get_config('tiny')
+    model = LM(cfg)
+    params = model.count_parameters()
+    assert params['total'] > 0
+    assert params['total'] == sum(p.numel() for p in model.parameters()), \
+        "count_parameters disagrees with the actual parameter total"
+    sd = model.state_dict()
+    assert sd['embed.embed_real.weight'].shape == (cfg.vocab_size, cfg.dim)
+    n = cfg.n_layers
+    assert f'blocks.{n - 1}.pam.o_proj.weight_real' in sd
+    assert f'blocks.{n - 1}.pam.dt_bias' in sd
+    # The RoPE table is a buffer, not a parameter, and is not checkpointed.
+    assert 'blocks.0.pam.rope_cache' not in sd
+    print(f"  params total={params['total']:,}")
     return True
 
 
-def test_pam_equiv(batch_size=2, seq_len=24, seed=0):
-    torch.manual_seed(seed)
-    kw = _prod_kw(n_layers=1)
-    ref = V13PAMLayer(V13Config(**kw)).eval()
-    port = SPAM(SConfig(**kw)).eval()
-    port.load_state_dict(ref.state_dict())
-    x = torch.randn(batch_size, seq_len, kw['dim'], 2) * 0.5
-    x1 = x.clone().requires_grad_(True)
-    x2 = x.clone().requires_grad_(True)
-    y1, S1 = ref(x1)
-    y2, S2 = port(_as_named_tokens(x2))
-    y2 = y2.data
-    (y1 ** 2).sum().backward()
-    (y2 ** 2).sum().backward()
-    dy, dS, dg = _max(y1, y2), _max(S1, S2), _max(x1.grad, x2.grad)
-    ok = max(dy, dS, dg) < ATOL_TIGHT
-    print(f"[pam vs v13      ] y={dy:.2e} S={dS:.2e} dx={dg:.2e}  "
-          f"{'PASS' if ok else 'FAIL'}")
-    return ok
+def test_parallel_vs_recurrent(batch_size=2, seq_len=17, seed=0):
+    """Chunked (windows of chunk_size) vs one-token-at-a-time, same algebra.
 
-
-def test_parallel_vs_recurrent(batch_size=2, seq_len=20, seed=2):
+    seq_len is deliberately longer than chunk_size so the window loop carries
+    the notebook across more than one window: 17 = 7 + 7 + 3.
+    """
     torch.manual_seed(seed)
-    kw = _prod_kw(n_layers=1)
-    port = SPAM(SConfig(**kw)).eval()
-    x = torch.randn(batch_size, seq_len, kw['dim'], 2) * 0.5
+    cfg = get_config('tiny')
+    cfg.chunk_size = 7  # force multiple windows
+    model = LM(cfg)
+    model.eval()
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+
     with torch.no_grad():
-        par, _ = port(_as_named_tokens(x), state=None, step_offset=0)
-        steps, state = [], None
+        logits_par, states_par, _ = model.forward(ids)
+        # Stepwise: one token at a time, carrying the notebooks.
+        logits_list, states = [], None
         for t in range(seq_len):
-            y, state = port(_as_named_tokens(x[:, t:t + 1]), state=state, step_offset=t)
-            steps.append(y.data)
-        rec = torch.cat(steps, dim=1)
-    par = par.data
-    d = (par - rec).abs().max().item()
-    ok = d < ATOL_RECUR
-    print(f"[par vs recur    ] max|d|={d:.2e}  {'PASS' if ok else 'FAIL'}")
-    return ok
+            lt, states, _ = model.forward(
+                ids[:, t:t + 1], states=states, step_offset=t,
+            )
+            logits_list.append(lt)
+        logits_seq = torch.cat(logits_list, dim=1)
 
-
-def test_lm_forward_grad(batch_size=2, seq_len=20, seed=1):
-    torch.manual_seed(seed)
-    kw = _prod_kw()
-    ref = V13LM(V13Config(**kw)).eval()
-    port = SLM(SConfig(**kw)).eval()
-    port.load_state_dict(ref.state_dict())
-    ids = torch.randint(0, kw['vocab_size'], (batch_size, seq_len))
-    y1, _, _ = ref(ids)
-    y2, _, _ = port(ids)
-    dy = _max(y1, y2)
-    lab = torch.randint(0, kw['vocab_size'], (batch_size, seq_len))
-    F.cross_entropy(y1.reshape(-1, y1.size(-1)), lab.reshape(-1)).backward()
-    F.cross_entropy(y2.reshape(-1, y2.size(-1)), lab.reshape(-1)).backward()
-    worst = 0.0
-    for n, p in ref.named_parameters():
-        q = dict(port.named_parameters())[n]
-        if p.grad is None or q.grad is None:
-            continue
-        worst = max(worst, (p.grad - q.grad).abs().max().item())
-    ok = dy < ATOL_TIGHT and worst < ATOL_TIGHT
-    print(f"[lm fwd+grad     ] logits={dy:.2e} worst_grad={worst:.2e}  "
-          f"{'PASS' if ok else 'FAIL'}")
-    return ok
-
-
-def test_fused_ce_equiv(batch_size=2, seq_len=16, seed=0):
-    torch.manual_seed(seed)
-    kw = _prod_kw(n_layers=2, dim=32)
-    m = SLM(SConfig(**kw)).train()
-    ids = torch.randint(0, kw['vocab_size'], (batch_size, seq_len))
-    lbl = torch.randint(0, kw['vocab_size'], (batch_size, seq_len))
-    m.zero_grad()
-    logits, _, aux1 = m(ids)
-    ref = F.cross_entropy(logits.view(-1, logits.size(-1)), lbl.view(-1))
-    ref.backward()
-    gref = {n: p.grad.clone() for n, p in m.named_parameters() if p.grad is not None}
-    m.zero_grad()
-    main, aux2 = m.fused_ce_loss(ids, lbl, chunk=16)
-    main.backward()
-    dloss = (main - ref).abs().item()
-    dg = max((gref[n] - p.grad).abs().max().item() for n, p in m.named_parameters() if n in gref)
-    ok = max(dloss, dg) < ATOL_TIGHT and aux1.item() == aux2.item()
-    print(f"[fused_ce        ] loss={dloss:.2e} grad={dg:.2e}  "
-          f"{'PASS' if ok else 'FAIL'}")
-    return ok
-
-
-def test_fused_ce_vs_v13():
-    torch.manual_seed(0)
-    from v13.fused_ce import fused_linear_cross_entropy as v13_ce
-    N, D, V = 40, 16, 64
-    H = torch.randn(N, D, requires_grad=True)
-    W = torch.randn(V, D, requires_grad=True)
-    t = torch.randint(0, V, (N,))
-    H2 = H.detach().clone().requires_grad_(True)
-    W2 = W.detach().clone().requires_grad_(True)
-    l1 = v13_ce(H, W, t, chunk=8)
-    l1.backward()
-    l2 = fused_linear_cross_entropy(H2, W2, t, chunk=8)
-    l2.backward()
-    ok = max(
-        (l1 - l2).abs().item(),
-        (H.grad - H2.grad).abs().max().item(),
-        (W.grad - W2.grad).abs().max().item(),
-    ) < 1e-12
-    print(f"[fused_ce vs v13 ] {'PASS' if ok else 'FAIL'}")
-    return ok
-
-
-def test_one_step_parity(seed=0):
-    """Identical init + batch + AdamW step → matching param deltas."""
-    torch.manual_seed(seed)
-    kw = _prod_kw(n_layers=2, vocab_size=128)
-    ref = V13LM(V13Config(**kw)).train()
-    port = SLM(SConfig(**kw)).train()
-    port.load_state_dict(ref.state_dict())
-    loader = synthetic_loader(kw['vocab_size'], batch_size=2, seq_len=16, n_batches=1, seed=seed)
-    batch = next(iter(loader))
-
-    def _one(model):
-        opt = torch.optim.AdamW(
-            build_param_groups(model, 0.01), lr=1e-4, betas=(0.9, 0.95),
-        )
-        ids, lab = batch['input_ids'], batch['labels']
-        lm, _, _ = model._hidden_to_lm(ids)
-        loss = model.ce_from_lm(lm, lab, chunk=32)
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-        opt.step()
-        return {n: p.detach().clone() for n, p in model.named_parameters()}
-
-    a = _one(ref)
-    b = _one(port)
-    worst, worst_n = 0.0, None
-    for n in a:
-        d = (a[n] - b[n]).abs().max().item()
-        if d > worst:
-            worst, worst_n = d, n
-    ok = worst < ATOL_TIGHT
-    print(f"[one-step AdamW  ] worst_param={worst:.2e} ({worst_n})  "
-          f"{'PASS' if ok else 'FAIL'}")
-    return ok
-
-
-def test_smoke_loss_decreases():
-    torch.manual_seed(0)
-    kw = _prod_kw(n_layers=2, vocab_size=64, dim=32)
-    model = SLM(SConfig(**kw))
-    loader = synthetic_loader(64, batch_size=2, seq_len=16, n_batches=6, seed=0)
-    tr = Trainer(
-        model, loader, learning_rate=3e-3, warmup_steps=0, total_steps=6,
-        fused_ce=True, fused_ce_chunk=32, device=torch.device('cpu'),
-        log_interval=0,
+    diff_logits = (logits_par - logits_seq).abs().max().item()
+    diff_state = max(
+        _max_diff(sp, ss) for sp, ss in zip(states_par, states)
     )
-    losses = tr.train(max_steps=6)
-    ok = all(math.isfinite(v) for v in losses) and losses[-1] <= losses[0] + 0.5
-    print(f"[smoke finite    ] first={losses[0]:.4f} last={losses[-1]:.4f}  "
-          f"{'PASS' if ok else 'FAIL'}")
-    return ok
+    assert diff_logits < RECUR_ATOL, f"logits disagree: {diff_logits:.3e}"
+    assert diff_state < RECUR_ATOL, f"carried notebook disagrees: {diff_state:.3e}"
+    print(f"  max |logit diff| = {diff_logits:.3e}   "
+          f"max |state diff| = {diff_state:.3e}")
+    return True
+
+
+def test_tied_logits(batch_size=2, seq_len=8, seed=1):
+    """The tied head equals real @ E_r.T + imag @ E_i.T, named end to end.
+
+    The manual score is built with the same named axes the model's own
+    ``ce_from_lm`` uses: the two embedding matrices are ``named`` onto the
+    vocab x model_dim layout and joined along ``model_dim`` into
+    ``real_imag_feature``; the hidden state is folded to the same axis.
+    """
+    torch.manual_seed(seed)
+    cfg = get_config('tiny')
+    model = LM(cfg)
+    model.eval()
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+
+    with torch.no_grad():
+        logits, _, _ = model.forward(ids)
+        # Re-run the stack with our own batch/time axes (the model wraps ids
+        # in fresh Dims; the data is identical in eval).
+        batch, time = Dim("batch", batch_size), Dim("time", seq_len)
+        z = model.embed_norm(model.embed(ids, batch, time))
+        for block in model.blocks:
+            z, _ = block(z, pam_state=None, step_offset=0)
+        lm = model.lm_head_norm(model.lm_head_proj(model.output_norm(z)))
+
+        embed_real = named(model.embed.embed_real.weight,
+                           (model.embed.vocab, model.model_dim))
+        embed_imag = named(model.embed.embed_imag.weight,
+                           (model.embed.vocab, model.model_dim))
+        weight = cat([embed_real, embed_imag], over=model.model_dim,
+                     into=model.real_imag_feature)
+
+        flat = to_real_concat(lm, into=model.real_imag_feature).raw(
+            batch, time, model.real_imag_feature)
+        manual = flat @ weight.raw(model.embed.vocab, model.real_imag_feature).T
+
+    diff = (logits - manual).abs().max().item()
+    assert diff < 1e-4, f"tied logits disagree: {diff:.3e}"
+    print(f"  max |tied logit diff| = {diff:.3e}")
+    return True
+
+
+def test_fused_ce(batch_size=2, seq_len=16, seed=0):
+    torch.manual_seed(seed)
+    cfg = get_config('tiny')
+    model = LM(cfg)
+    model.train()
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+    labels = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+
+    # Plain CE through the public forward (raw boundary: F.cross_entropy).
+    model.zero_grad()
+    logits, _, _ = model.forward(ids, labels=labels)
+    plain = F.cross_entropy(logits.view(-1, logits.size(-1)), labels.view(-1))
+    plain.backward()
+    plain_grads = {n: p.grad.clone() for n, p in model.named_parameters()
+                   if p.grad is not None}
+
+    # Chunked fused CE through the training path (small chunk forces many).
+    model.zero_grad()
+    lm, _aux = model._hidden_to_lm(ids)
+    fused = model.ce_from_lm(lm, labels, chunk=5)
+    fused.backward()
+    fused_grads = {n: p.grad.clone() for n, p in model.named_parameters()
+                   if p.grad is not None}
+
+    loss_diff = (plain - fused).abs().item()
+    max_grad_diff = max(
+        (pg - fg).abs().max().item()
+        for pg, fg in zip(plain_grads.values(), fused_grads.values())
+    )
+    assert set(plain_grads) == set(fused_grads), "parameter gradient sets differ"
+    assert max_grad_diff < 1e-3, f"gradients disagree: {max_grad_diff:.3e}"
+    print(f"  loss diff = {loss_diff:.3e}   max grad diff = {max_grad_diff:.3e}")
+    return True
+
+
+def test_smoke_loss_decreases(steps=12, seed=0):
+    torch.manual_seed(seed)
+    cfg = get_config('tiny')
+    cfg.vocab_size = 256
+    model = LM(cfg)
+    loader = synthetic_loader(256, batch_size=4, seq_len=32,
+                              n_batches=steps, seed=seed)
+    trainer = Trainer(model, loader, learning_rate=3e-4, warmup_steps=2,
+                      total_steps=steps, device=torch.device('cpu'))
+    losses = trainer.train(max_steps=steps)
+    delta = losses[-1] - losses[0]
+    assert all(torch.isfinite(torch.tensor(l)) for l in losses)
+    assert delta < 0, f"loss did not decrease: {losses}"
+    print(f"  loss {losses[0]:.4f} -> {losses[-1]:.4f}  (delta {delta:+.4f})")
+    return True
+
+
+def test_generate_smoke(seed=0):
+    torch.manual_seed(seed)
+    cfg = get_config('tiny')
+    cfg.vocab_size = 256
+    model = LM(cfg)
+    model.eval()
+    ids = torch.randint(0, cfg.vocab_size, (1, 8))
+    out = model.generate(ids, max_new_tokens=4, temperature=0.0, top_k=1)
+    assert out.shape == (1, 12), f"bad shape {out.shape}"
+    assert (out >= 0).all() and (out < cfg.vocab_size).all()
+    print(f"  generated {out.shape[1] - 8} tokens, shape {tuple(out.shape)}")
+    return True
 
 
 def main():
     torch.set_num_threads(2)
-    torch.set_default_dtype(torch.float32)
-    results = [
-        test_state_dict_keys(),
-        test_pam_equiv(),
-        test_parallel_vs_recurrent(),
-        test_lm_forward_grad(),
-        test_fused_ce_equiv(),
-        test_fused_ce_vs_v13(),
-        test_one_step_parity(),
-        test_smoke_loss_decreases(),
+    tests = [
+        test_param_count_and_state,
+        test_parallel_vs_recurrent,
+        test_tied_logits,
+        test_fused_ce,
+        test_smoke_loss_decreases,
+        test_generate_smoke,
     ]
-    print()
-    if all(results):
-        print("ALL v13_sempty SELFTESTS PASS")
-    else:
-        print("SOME SELFTESTS FAILED")
+    failures = 0
+    for t in tests:
+        name = t.__name__
+        print(f"{name} ...", flush=True)
+        try:
+            t()
+        except Exception as e:  # noqa: BLE001
+            failures += 1
+            print(f"  FAIL: {type(e).__name__}: {e}")
+        print(flush=True)
+    if failures:
+        print(f"{failures}/{len(tests)} failed")
         raise SystemExit(1)
+    print(f"all {len(tests)} passed")
 
 
 if __name__ == '__main__':

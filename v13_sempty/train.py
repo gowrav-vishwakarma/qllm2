@@ -1,7 +1,7 @@
 """Self-contained trainer for v13_sempty (no V7Trainer).
 
 AdamW (betas 0.9/0.95), 2-D-only weight decay, warmup-cosine, grad-clip,
-optional AMP, fused CE + gate-surprisal BCE. Dataset/tokenizer loading is
+optional AMP, fused CE. Dataset/tokenizer loading is
 reused from ``v7.data``; the step loop lives here.
 
 Default device is CPU so a live GPU training run is not disturbed.
@@ -25,7 +25,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 
 from v13_sempty.config import PRESETS, get_config
-from v13_sempty.model import V13LM
+from v13_sempty.model import LM
 
 _NO_DECAY_SUFFIXES = {'dt_bias'}
 
@@ -85,33 +85,10 @@ def resolve_amp_dtype(amp_dtype_str: str, device: torch.device):
     return torch.float16
 
 
-def gate_surprisal_loss(gate_probs, nll, labels, loss_mask, m_cfg):
-    """BCE between per-layer protect prob and a surprisal-derived target."""
-    valid = labels != -100
-    if loss_mask is not None:
-        valid = valid & (loss_mask > 0)
-    finite = torch.isfinite(nll)
-    valid = valid & finite
-    if valid.any():
-        median_ce = nll[valid].median()
-    else:
-        median_ce = torch.zeros((), device=nll.device, dtype=nll.dtype)
-    tau = max(getattr(m_cfg, 'gate_surprisal_tau', 1.0), 1e-3)
-    sign = getattr(m_cfg, 'gate_surprisal_sign', 1.0)
-    target_p = torch.sigmoid(sign * (median_ce - nll) / tau).detach()
-    target_p = torch.nan_to_num(target_p, nan=0.5, posinf=1.0, neginf=0.0)
-    gp = gate_probs.float().clamp(1e-4, 1 - 1e-4)
-    target = target_p.float().unsqueeze(0).expand_as(gp)
-    vmask = valid.unsqueeze(0).expand_as(gp).to(gp.dtype)
-    with torch.amp.autocast(device_type=gp.device.type, enabled=False):
-        bce = F.binary_cross_entropy(gp, target, reduction='none')
-    return (bce * vmask).sum() / vmask.sum().clamp_min(1.0)
-
-
 class Trainer:
     def __init__(
         self,
-        model: V13LM,
+        model: LM,
         train_loader,
         *,
         learning_rate: float = 1e-4,
@@ -148,32 +125,16 @@ class Trainer:
             else None
         )
         self.global_step = 0
-        self._last_gate_loss = 0.0
 
     def _step_loss(self, input_ids, labels, loss_mask=None):
-        cfg = self.model.config
+        """One training step's loss: fused chunked CE, or plain CE fallback."""
         if self.fused_ce:
-            lm, aux_loss, gate_probs = self.model._hidden_to_lm(input_ids)
-            main = self.model.ce_from_lm(
+            lm, _aux_loss = self.model._hidden_to_lm(input_ids)
+            return self.model.ce_from_lm(
                 lm, labels, loss_mask=loss_mask, chunk=self.fused_ce_chunk,
-                return_nll=True,
             )
-            main_loss, nll = main
-        else:
-            logits, _, aux_loss = self.model(input_ids, labels=labels)
-            main_loss = F.cross_entropy(
-                logits.view(-1, logits.size(-1)), labels.view(-1),
-            )
-            gate_probs, nll = None, None
-        loss = main_loss
-        if aux_loss.detach().abs().item() > 0:
-            loss = loss + getattr(cfg, 'aux_loss_weight', 1.0) * aux_loss
-        gsl = getattr(cfg, 'gate_surprisal_lambda', 0.0)
-        if self.fused_ce and gate_probs is not None and gsl > 0 and nll is not None:
-            gate_loss = gate_surprisal_loss(gate_probs, nll, labels, loss_mask, cfg)
-            loss = loss + gsl * gate_loss
-            self._last_gate_loss = float(gate_loss.detach())
-        return loss, main_loss
+        logits, _, _aux = self.model(input_ids, labels=labels)
+        return F.cross_entropy(logits.view(-1, logits.size(-1)), labels.view(-1))
 
     def step(self, batch) -> float:
         input_ids = batch['input_ids'].to(self.device)
@@ -187,7 +148,7 @@ class Trainer:
             enabled=self.use_amp,
             dtype=self.amp_dtype or torch.float16,
         ):
-            loss, main_loss = self._step_loss(input_ids, labels, loss_mask)
+            loss = self._step_loss(input_ids, labels, loss_mask)
 
         if not torch.isfinite(loss).all():
             raise RuntimeError(f"non-finite loss at step {self.global_step}: {loss}")
@@ -205,7 +166,7 @@ class Trainer:
         self.scheduler.step()
         self.optimizer.zero_grad(set_to_none=True)
         self.global_step += 1
-        return float(main_loss.detach())
+        return float(loss.detach())
 
     def train(self, max_steps: Optional[int] = None) -> list:
         self.model.train()
@@ -216,8 +177,7 @@ class Trainer:
             if self.log_interval and self.global_step % self.log_interval == 0:
                 print(
                     f"step {self.global_step}  loss={loss:.4f}  "
-                    f"lr={self.optimizer.param_groups[0]['lr']:.2e}  "
-                    f"gate={self._last_gate_loss:.4f}",
+                    f"lr={self.optimizer.param_groups[0]['lr']:.2e}",
                     flush=True,
                 )
             if max_steps is not None and self.global_step >= max_steps:
@@ -304,7 +264,7 @@ def main():
             cfg.vocab_size = tok_vocab
         loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
 
-    model = V13LM(cfg)
+    model = LM(cfg)
     params = model.count_parameters()
     print(f"params: {params['total']:,} ({params['total']/1e6:.2f}M)")
 
