@@ -5,11 +5,17 @@ on the sempyt named-axis framework.
 What this model is
 ------------------
 
-Every layer carries one fixed-size *notebook* per head — a complex d×d
-matrix — that remembers everything seen so far, one association at a time:
+Every layer carries one fixed-size *notebook* per head that remembers
+everything seen so far, one association at a time:
 
-    notebook_t  =  decay_t * notebook_{t-1}  +  value_t (x) conjugate(key_t)
+    notebook_t  =  decay_t * notebook_{t-1}  +  value_t (x) key_t
     read_t      =  scale * ( notebook_t . query_t )
+
+In the complex model the notebook is a d×d complex matrix and the write
+conjugates the key (so a later read with the same key recalls the value).
+The fully-real model (``is_complex = False``) keeps one real width and runs
+the identical recurrence in plain real arithmetic — a single GEMM, no phase,
+no conjugates — with the same RoPE word-order carrier.
 
 In words, each token:
 
@@ -61,6 +67,7 @@ Named axes
   model_dim         residual / embedding width
   heads             PAM heads
   head_feature      per-head channel width (d)
+  head_pair         real RoPE rotation pairs (head_feature // 2)
   complex_pair      last axis of size 2: real then imag
   qkv_slot / qkv_fused   fused Q / K / V packing
   head_row / head_col    the two axes of the d x d notebook
@@ -78,10 +85,11 @@ from torch.utils.checkpoint import checkpoint as grad_checkpoint
 
 from sempyt.dim import Dim, ProductDim
 from sempyt.nn import Linear as NamedLinear
-from sempyt.ops import contract, imag, outer, real
+from sempyt.nn import RMSNorm
+from sempyt.ops import at, contract, imag, outer, real
 from sempyt.policies import SplitComplex
 from sempyt.structural import (
-    cat, cumprod, exp, flatten, select, softplus, stack, take, zeros,
+    cat, cumprod, cumsum, exp, flatten, select, softplus, stack, take, zeros,
 )
 from sempyt.tensor import NamedTensor, named
 
@@ -94,6 +102,12 @@ from v13_sempty.complex_ops import (
     as_complex_dropout_mask,
     build_rope_cache,
     to_real_concat,
+)
+from v13_sempty.real_ops import (
+    RealEmbed,
+    RealGatedUnit,
+    RealNorm,
+    build_rope_cache_real,
 )
 
 
@@ -341,41 +355,308 @@ class Block(nn.Module):
         return x + pam_out * self.pam_scale, new_state
 
 
+# ── Fully-real PAM ───────────────────────────────────────────────────────────
+
+
+class RealPAMLayer(nn.Module):
+    r"""One head-fan of phase-associative memories, in plain real arithmetic.
+
+    Per head, a real d×d notebook ``S`` carries the whole past:
+
+        S_t = decay_t * S_{t-1} + value_t (x) key_t
+        y_t = d^{-1/2} * (S_t . query_t)
+
+    The real twin of ``PAMLayer``: one GEMM per projection, no phase to
+    manage, and no conjugate in the write (a later read with the same key
+    still recalls the value — the read is a plain dot). ``decay_t`` is the
+    only learned memory quantity — one number per head per token, read from
+    the token's channels.
+
+    ``forward`` returns the PAM output ``[batch, time, inner]`` (inner =
+    heads × head_feature, folded back to model_dim by the output projection)
+    and the notebook to carry on (raw ``[batch, heads, d, d]`` per ``state``;
+    ``None`` when nothing was carried in and nothing should be returned).
+    """
+
+    def __init__(self, cfg: PAMConfig, layer_idx: int = 0,
+                 model_dim: Dim | None = None):
+        super().__init__()
+        self.layer_idx = layer_idx
+        self.model_dim = model_dim or Dim("model_dim", cfg.dim)
+        self.heads = Dim("heads", cfg.n_heads)
+        self.head_feature = Dim("head_feature", cfg.head_dim)
+        self.head_row = Dim("head_row", cfg.head_dim)
+        self.head_col = Dim("head_col", cfg.head_dim)
+        self.inner = ProductDim(self.heads, self.head_feature)
+        # Real RoPE: one 2x2 rotation per channel pair.
+        self.head_pair = Dim("head_pair", cfg.head_dim // 2)
+        self.rot_pair = Dim("rot_pair", 2)
+
+        # Fused QKV: one projection, then split. The three share the same
+        # width, so one matrix is the whole fan.
+        self.qkv_slot = Dim("qkv_slot", 3)
+        self.qkv_fused = Dim("qkv_fused", 3 * cfg.n_heads * cfg.head_dim)
+        self.qkv_proj = NamedLinear(self.model_dim, self.qkv_fused, bias=False)
+        self.o_proj = NamedLinear(self.inner, self.model_dim, bias=False)
+
+        # The decay: one number per head, read from the token's channels.
+        self.decay_out = Dim("decay_out", cfg.n_heads)
+        self.dt_proj = NamedLinear(self.model_dim, self.decay_out)
+        self.dt_bias = nn.Parameter(torch.zeros(cfg.n_heads) + cfg.base_dt_bias)
+
+        # RoPE table, built once outside the graph (declared boundary).
+        if cfg.use_rope:
+            self.register_buffer(
+                'rope_cache',
+                build_rope_cache_real(cfg.max_seq_len, cfg.head_dim // 2),
+                persistent=False,
+            )
+        self.use_rope = cfg.use_rope
+
+        self.chunk_size = cfg.chunk_size
+        self.head_dim = cfg.head_dim
+        self.out_dropout = nn.Dropout(cfg.dropout)
+
+    # ── small named helpers ──────────────────────────────────────────────────
+
+    def _as_token(self, x: NamedTensor) -> NamedTensor:
+        """Re-state the token axes under this layer's own Dim identities.
+
+        Each forward wraps its batch/time in fresh Dims, and a carried
+        notebook keeps the Dims of the call that created it; restating is
+        an identity change only — no data moves.
+        """
+        batch, time = x.layout[0], x.layout[1]
+        return named(x.data, (batch, time, self.model_dim))  # named-exit: restate
+
+    def _as_notebook(self, state, batch: Dim) -> NamedTensor:
+        """Re-state a carried notebook onto this call's axes (no data moves)."""
+        layout = (batch, self.heads, self.head_row, self.head_col)
+        data = state.data if isinstance(state, NamedTensor) else state  # named-exit: restate
+        return named(data, layout)
+
+    def _project(self, tokens: NamedTensor, step_offset: int):
+        """Query, key, value on (batch, heads, time, head_feature).
+
+        The fused QKV axis splits with its factors at the end of the layout —
+        the one order sempty's named split accepts — then heads move before
+        time for the notebook. RoPE rotates query and key by their position
+        (a 2x2 rotation per channel pair), so the notebook's associations
+        carry word order.
+        """
+        batch, time = tokens.layout[0], tokens.layout[1]
+        qkv = self.qkv_proj(tokens)
+        qkv = qkv.to(batch, time, self.qkv_slot, self.heads, self.head_feature)
+        queries, keys, values = (qkv.select(self.qkv_slot, slot) for slot in (0, 1, 2))
+
+        if self.use_rope:
+            position_end = step_offset + tokens.size(time)
+            if position_end > self.rope_cache.shape[0]:
+                self.register_buffer(
+                    'rope_cache',
+                    build_rope_cache_real(position_end * 2, self.head_dim // 2)
+                        .to(tokens.device),
+                    persistent=False,
+                )
+            rotation = named(
+                self.rope_cache[step_offset:position_end].to(dtype=tokens.dtype),
+                (time, self.head_pair, self.rot_pair),
+            )  # named-exit: the RoPE table is a plain buffer, sliced here
+            cos_t = rotation.select(self.rot_pair, 0)
+            sin_t = rotation.select(self.rot_pair, 1)
+
+            def _rotate(x):
+                # Split each channel pair (even, odd) and rotate it by 2x2.
+                split = x.to(batch, time, self.heads, self.head_pair, self.rot_pair)
+                xs = split.select(self.rot_pair, 0)
+                ys = split.select(self.rot_pair, 1)
+                rx = xs * cos_t - ys * sin_t
+                ry = xs * sin_t + ys * cos_t
+                return stack([rx, ry], into=self.rot_pair).to(
+                    batch, time, self.heads, self.head_feature)
+
+            queries = _rotate(queries)
+            keys = _rotate(keys)
+
+        layout = (batch, self.heads, time, self.head_feature)
+        return (queries.to(*layout), keys.to(*layout), values.to(*layout))
+
+    def _decay(self, tokens: NamedTensor) -> NamedTensor:
+        """Per-head retention in (0, 1): exp(-softplus(linear(token) + bias))."""
+        batch, time = tokens.layout[0], tokens.layout[1]
+        logit = self.dt_proj(tokens).alias(self.decay_out, self.heads)
+        retention = exp(-softplus(logit + named(self.dt_bias, (self.heads,))))
+        return retention.to(batch, self.heads, time)
+
+    # ── train / prefill: one closed form per window, notebook carried ────────
+
+    def _chunked(self, tokens: NamedTensor, queries, keys, values,
+                 decay) -> tuple[NamedTensor, NamedTensor]:
+        seq_len = tokens.size(tokens.layout[1])
+        time = tokens.layout[1]
+        carried = None  # the notebook coming in from earlier windows
+        reads = []
+        for start in range(0, seq_len, self.chunk_size):
+            length = min(self.chunk_size, seq_len - start)
+            window = Dim("chunk_time", length)
+
+            write = outer(
+                take(values, over=time, start=start, length=length, new=window)
+                    .alias(self.head_feature, self.head_row),
+                take(keys, over=time, start=start, length=length, new=window)
+                    .alias(self.head_feature, self.head_col),
+                (self.head_row, self.head_col),
+            )
+            window_decay = take(decay, over=time, start=start, length=length,
+                                new=window)
+            window_query = take(queries, over=time, start=start, length=length,
+                                new=window).alias(self.head_feature, self.head_col)
+
+            # Closed form of S_t = g_t S_{t-1} + u_t inside this window: with
+            # a_s = prod_{j <= s} g_j,  S_s = a_s * (S_in + sum_{j<=s} u_j / a_j).
+            retention = cumprod(window_decay, over=window)
+            accumulated = (write / retention).cumsum(over=window)
+            window_notebook = (retention * (accumulated + carried)
+                               if carried is not None else retention * accumulated)
+
+            reads.append(
+                contract(window_notebook, window_query, over=self.head_col)
+                * (self.head_dim ** -0.5)
+            )
+            carried = select(window_notebook, over=window, index=length - 1)
+        output = cat(reads, over="chunk_time", into=time)
+        return output, carried
+
+    # ── decode: one step per token on the carried notebook ───────────────────
+
+    def _stepwise(self, tokens: NamedTensor, queries, keys, values, decay,
+                  state) -> tuple[NamedTensor, NamedTensor]:
+        batch, time = tokens.layout[0], tokens.layout[1]
+        seq_len = tokens.size(time)
+        notebook = self._as_notebook(state, batch) if state is not None else zeros(
+            batch, self.heads, self.head_row, self.head_col,
+            device=tokens.device, dtype=tokens.dtype,
+        )
+        reads = []
+        for t in range(seq_len):
+            # The recurrence, one step: fade, write, then read.
+            notebook = (select(decay, over=time, index=t) * notebook) + outer(
+                select(values, over=time, index=t).alias(self.head_feature, self.head_row),
+                select(keys, over=time, index=t).alias(self.head_feature, self.head_col),
+                (self.head_row, self.head_col),
+            )
+            reads.append(
+                contract(notebook,
+                         select(queries, over=time, index=t)
+                         .alias(self.head_feature, self.head_col),
+                         over=self.head_col)
+                * (self.head_dim ** -0.5)
+            )
+        output = stack(reads, into=time, at=self.head_row)
+        return output, notebook
+
+    def forward(self, x: NamedTensor, state=None, step_offset: int = 0):
+        tokens = self._as_token(x)
+        seq_len = tokens.size(tokens.layout[1])
+        queries, keys, values = self._project(tokens, step_offset)
+        decay = self._decay(tokens)
+
+        if state is None and seq_len > 1:
+            output, new_state = self._chunked(tokens, queries, keys, values, decay)
+        else:
+            output, new_state = self._stepwise(tokens, queries, keys, values, decay, state)
+
+        out = self.o_proj(output.alias(self.head_row, self.head_feature)
+                          .to(tokens.layout[0], tokens.layout[1], self.inner))
+        if self.training:
+            out = out * as_complex_dropout_mask(self.out_dropout, out)
+        return out, (new_state.data if new_state is not None else None)  # named-exit: state hand-off
+
+
+class RealBlock(nn.Module):
+    """Pre-norm residual, real: gated channel mix, then real PAM sequence mix."""
+
+    def __init__(self, cfg: PAMConfig, layer_idx: int = 0,
+                 model_dim: Dim | None = None):
+        super().__init__()
+        self.model_dim = model_dim or Dim("model_dim", cfg.dim)
+        self.dropout = cfg.dropout
+        self.norm1 = RealNorm(self.model_dim)
+        self.cgu = RealGatedUnit(self.model_dim, cfg.expand,
+                                 activation=cfg.activation)
+        self.cgu_dropout = nn.Dropout(cfg.dropout)
+        self.cgu_scale = nn.Parameter(torch.tensor(1.0))
+        self.norm2 = RealNorm(self.model_dim)
+        self.pam = RealPAMLayer(cfg, layer_idx=layer_idx,
+                                model_dim=self.model_dim)
+        # PAM starts soft: the memory path learns while the residual carries.
+        self.pam_scale = nn.Parameter(torch.tensor(0.1))
+
+    def forward(self, x: NamedTensor, pam_state=None, step_offset: int = 0):
+        cgu_out = self.cgu(self.norm1(x))
+        if self.training:
+            cgu_out = cgu_out * as_complex_dropout_mask(self.cgu_dropout, cgu_out)
+        x = x + cgu_out * self.cgu_scale
+        pam_out, new_state = self.pam(self.norm2(x), state=pam_state,
+                                      step_offset=step_offset)
+        return x + pam_out * self.pam_scale, new_state
+
+
 # ── Language model ───────────────────────────────────────────────────────────
 
 
 class LM(nn.Module):
-    """ComplexEmbed -> [Block] x N -> tied complex head.
+    """Embed -> [Block] x N -> tied head, in one of two algebras.
 
     The head is tied to the embedding: the score of a candidate token is the
-    real dot product of its embedding with the (complex) hidden state,
-    ``real . embed_real + imag . embed_imag``.
+    dot product of its embedding with the hidden state — two real dot
+    products in the complex model (``real . E_r + imag . E_i``), one in the
+    fully-real one (``hidden . embed``). ``cfg.is_complex`` picks.
     """
 
     def __init__(self, cfg: PAMConfig):
         super().__init__()
         self.config = cfg
         self.model_dim = Dim("model_dim", cfg.dim)
-        self.complex_pair = Dim("complex_pair", 2)
-        self.real_imag_feature = Dim("real_imag_feature", cfg.dim * 2)
-        self.policy = SplitComplex(self.complex_pair)
-        self.embed = ComplexEmbed(cfg.vocab_size, self.model_dim, self.complex_pair)
-        self.embed_norm = ComplexNorm(self.model_dim, pair=self.complex_pair)
-        self.blocks = nn.ModuleList([
-            Block(cfg, layer_idx=i,
-                  model_dim=self.model_dim, complex_pair=self.complex_pair)
-            for i in range(cfg.n_layers)
-        ])
-        self.output_norm = ComplexNorm(self.model_dim, pair=self.complex_pair)
-        # A distinct out-axis: contract cannot tell two copies of one Dim apart.
-        self.lm_head_out = Dim("lm_head_out", cfg.dim)
-        self.lm_head_proj = ComplexLinear(self.model_dim, self.lm_head_out,
-                                          pair=self.complex_pair)
-        self.lm_head_norm = ComplexNorm(self.model_dim, pair=self.complex_pair)
+        if cfg.is_complex:
+            self.complex_pair = Dim("complex_pair", 2)
+            self.real_imag_feature = Dim("real_imag_feature", cfg.dim * 2)
+            self.policy = SplitComplex(self.complex_pair)
+            self.embed = ComplexEmbed(cfg.vocab_size, self.model_dim, self.complex_pair)
+            self.embed_norm = ComplexNorm(self.model_dim, pair=self.complex_pair)
+            self.blocks = nn.ModuleList([
+                Block(cfg, layer_idx=i,
+                      model_dim=self.model_dim, complex_pair=self.complex_pair)
+                for i in range(cfg.n_layers)
+            ])
+            self.output_norm = ComplexNorm(self.model_dim, pair=self.complex_pair)
+            # A distinct out-axis: contract cannot tell two copies of one Dim apart.
+            self.lm_head_out = Dim("lm_head_out", cfg.dim)
+            self.lm_head_proj = ComplexLinear(self.model_dim, self.lm_head_out,
+                                              pair=self.complex_pair)
+            self.lm_head_norm = ComplexNorm(self.model_dim, pair=self.complex_pair)
+        else:
+            self.complex_pair = None
+            self.real_imag_feature = None
+            self.policy = None
+            self.embed = RealEmbed(cfg.vocab_size, self.model_dim)
+            self.embed_norm = RealNorm(self.model_dim)
+            self.blocks = nn.ModuleList([
+                RealBlock(cfg, layer_idx=i, model_dim=self.model_dim)
+                for i in range(cfg.n_layers)
+            ])
+            self.output_norm = RealNorm(self.model_dim)
+            # A distinct out-axis: contract cannot tell two copies of one Dim apart.
+            self.lm_head_out = Dim("lm_head_out", cfg.dim)
+            self.lm_head_proj = NamedLinear(self.model_dim, self.lm_head_out)
+            self.lm_head_norm = RealNorm(self.model_dim)
         self._init_weights()
 
     def _init_weights(self):
-        embed_weights = {self.embed.embed_real, self.embed.embed_imag}
+        if self.config.is_complex:
+            embed_weights = {self.embed.embed_real, self.embed.embed_imag}
+        else:
+            embed_weights = {self.embed.embed}
         for module in self.modules():
             if isinstance(module, (nn.Linear, NamedLinear)):
                 nn.init.normal_(module.weight, std=0.02)
@@ -389,10 +670,14 @@ class LM(nn.Module):
         return self.embed_norm(self.embed(input_ids, batch, time)), batch, time
 
     def _tied_logits(self, lm: NamedTensor, batch: Dim, time: Dim) -> torch.Tensor:
-        embed_real = named(self.embed.embed_real.weight, (self.embed.vocab, self.model_dim))
-        embed_imag = named(self.embed.embed_imag.weight, (self.embed.vocab, self.model_dim))
-        logits = (contract(real(lm), embed_real, over=self.model_dim)
-                  + contract(imag(lm), embed_imag, over=self.model_dim))
+        if self.config.is_complex:
+            embed_real = named(self.embed.embed_real.weight, (self.embed.vocab, self.model_dim))
+            embed_imag = named(self.embed.embed_imag.weight, (self.embed.vocab, self.model_dim))
+            logits = (contract(real(lm), embed_real, over=self.model_dim)
+                      + contract(imag(lm), embed_imag, over=self.model_dim))
+        else:
+            embed = named(self.embed.embed.weight, (self.embed.vocab, self.model_dim))
+            logits = contract(lm, embed, over=self.model_dim)
         return logits.raw(batch, time, self.embed.vocab)  # named-exit: public logits are raw
 
     def _run_blocks(self, z, batch, time, states, step_offset):
@@ -425,27 +710,34 @@ class LM(nn.Module):
 
     def ce_from_lm(self, lm: NamedTensor, labels, loss_mask=None,
                    ignore_index=-100, chunk: int = 4096, return_nll: bool = False):
-        """Chunked cross-entropy from the pre-logit complex hidden ``lm``.
+        """Chunked cross-entropy from the pre-logit hidden ``lm``.
 
-        The tied head folds into one real matmul: ``H @ W^T`` with
-        ``H = concat(lm_real, lm_imag)`` and ``W = concat(embed_real,
-        embed_imag)``. The chunked-CE Function never holds the full
-        ``[N, vocab]`` softmax. Named up to the Function hand-off.
+        The tied head folds into one real matmul, ``H @ W^T``. In the complex
+        model ``H = concat(lm_real, lm_imag)`` and ``W = concat(embed_real,
+        embed_imag)``; in the real model ``H`` is ``lm`` and ``W`` is the
+        single embedding. Either way the chunked-CE Function never holds the
+        full ``[N, vocab]`` softmax. Named up to the Function hand-off.
         """
         from v13_sempty.fused_ce import fused_linear_cross_entropy
         batch, time = lm.layout[0], lm.layout[1]
         flat = Dim("flat", batch.size * time.size)
 
-        hidden = flatten(to_real_concat(lm, into=self.real_imag_feature),
-                         (batch, time), flat)
-        embed_real = named(self.embed.embed_real.weight, (self.embed.vocab, self.model_dim))
-        embed_imag = named(self.embed.embed_imag.weight, (self.embed.vocab, self.model_dim))
-        weight = cat([embed_real, embed_imag], over=self.model_dim,
-                     into=self.real_imag_feature)
+        if self.config.is_complex:
+            hidden = flatten(to_real_concat(lm, into=self.real_imag_feature),
+                             (batch, time), flat)
+            embed_real = named(self.embed.embed_real.weight, (self.embed.vocab, self.model_dim))
+            embed_imag = named(self.embed.embed_imag.weight, (self.embed.vocab, self.model_dim))
+            weight = cat([embed_real, embed_imag], over=self.model_dim,
+                         into=self.real_imag_feature)
+            feature = self.real_imag_feature
+        else:
+            hidden = flatten(lm, (batch, time), flat)
+            weight = named(self.embed.embed.weight, (self.embed.vocab, self.model_dim))
+            feature = self.model_dim
 
         out = fused_linear_cross_entropy(
-            hidden.raw(flat, self.real_imag_feature),  # named-exit: the CE Function takes raw torch
-            weight.raw(self.embed.vocab, self.real_imag_feature),  # named-exit: ditto
+            hidden.raw(flat, feature),  # named-exit: the CE Function takes raw torch
+            weight.raw(self.embed.vocab, feature),  # named-exit: ditto
             labels.reshape(-1),  # named-exit: raw int tensor from the dataloader
             mask=(loss_mask.reshape(-1) if loss_mask is not None else None),  # named-exit: raw mask
             chunk=chunk, ignore_index=ignore_index, return_nll=return_nll,
@@ -539,4 +831,4 @@ class LM(nn.Module):
                 'norms': norm_p, 'lm_head': head_p, 'total': total}
 
 
-__all__ = ["PAMLayer", "Block", "LM"]
+__all__ = ["PAMLayer", "RealPAMLayer", "Block", "RealBlock", "LM"]

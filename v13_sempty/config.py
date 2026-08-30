@@ -25,6 +25,7 @@ class PAMConfig:
     activation: str = 'swish'        # 'swish' (v7/v11 default) | 'modrelu' | 'phase_mod'
     chunk_size: int = 256            # notebook carry window (train / prefill)
     base_dt_bias: float = -4.0       # decay bias: init decay ~= e^-4 ~= 0.018
+    is_complex: bool = True          # SplitComplex (phase) | fully-real PAM
 
 
 def _base_flat(**kw) -> PAMConfig:
@@ -41,6 +42,9 @@ def _base_flat(**kw) -> PAMConfig:
 PRESETS = {
     # The production shape: v11 hero's bare minimum (7d baseline geometry).
     'baseline': _base_flat(),
+    # The fully-real twin of baseline at matched real width: 768 real channels
+    # (== 384 complex), 128-dim real heads. Same recurrence, real arithmetic.
+    'baseline_real': _base_flat(dim=768, head_dim=128, is_complex=False),
     # Small enough to run on CPU in a minute.
     'micro': PAMConfig(
         vocab_size=50261, dim=96, n_heads=3, head_dim=32, n_layers=6,
@@ -52,6 +56,12 @@ PRESETS = {
         vocab_size=50257, dim=64, n_heads=2, head_dim=32, n_layers=2,
         expand=2, dropout=0.0, max_seq_len=512, chunk_size=64,
         gradient_checkpointing=False,
+    ),
+    # The dev twin of tiny: fully-real, CPU-friendly selftest preset.
+    'tiny_real': PAMConfig(
+        vocab_size=50257, dim=128, n_heads=2, head_dim=64, n_layers=2,
+        expand=2, dropout=0.0, max_seq_len=512, chunk_size=64,
+        gradient_checkpointing=False, is_complex=False,
     ),
 }
 

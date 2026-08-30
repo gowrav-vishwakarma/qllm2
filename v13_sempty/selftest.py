@@ -214,6 +214,157 @@ def test_generate_smoke(seed=0):
     return True
 
 
+# ── Fully-real twins: same contracts, the tiny_real preset ─────────────────
+
+
+def test_real_param_count_and_state():
+    cfg = get_config('tiny_real')
+    model = LM(cfg)
+    params = model.count_parameters()
+    assert params['total'] > 0
+    assert params['total'] == sum(p.numel() for p in model.parameters()), \
+        "count_parameters disagrees with the actual parameter total"
+    sd = model.state_dict()
+    # The real model has one embedding, not a real/imag pair.
+    assert sd['embed.embed.weight'].shape == (cfg.vocab_size, cfg.dim)
+    assert 'embed.embed_real.weight' not in sd
+    n = cfg.n_layers
+    assert f'blocks.{n - 1}.pam.o_proj.weight' in sd
+    assert f'blocks.{n - 1}.pam.dt_bias' in sd
+    # The RoPE table is a buffer, not a parameter, and is not checkpointed.
+    assert 'blocks.0.pam.rope_cache' not in sd
+    print(f"  params total={params['total']:,}")
+    return True
+
+
+def test_real_parallel_vs_recurrent(batch_size=2, seq_len=17, seed=0):
+    """Chunked window path vs one-token-at-a-time, real arithmetic.
+
+    seq_len is deliberately longer than chunk_size so the window loop carries
+    the notebook across more than one window: 17 = 7 + 7 + 3.
+    """
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.chunk_size = 7  # force multiple windows
+    model = LM(cfg)
+    model.eval()
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+
+    with torch.no_grad():
+        logits_par, states_par, _ = model.forward(ids)
+        # Stepwise: one token at a time, carrying the notebooks.
+        logits_list, states = [], None
+        for t in range(seq_len):
+            lt, states, _ = model.forward(
+                ids[:, t:t + 1], states=states, step_offset=t,
+            )
+            logits_list.append(lt)
+        logits_seq = torch.cat(logits_list, dim=1)
+
+    diff_logits = (logits_par - logits_seq).abs().max().item()
+    diff_state = max(
+        _max_diff(sp, ss) for sp, ss in zip(states_par, states)
+    )
+    assert diff_logits < RECUR_ATOL, f"logits disagree: {diff_logits:.3e}"
+    assert diff_state < RECUR_ATOL, f"carried notebook disagrees: {diff_state:.3e}"
+    print(f"  max |logit diff| = {diff_logits:.3e}   "
+          f"max |state diff| = {diff_state:.3e}")
+    return True
+
+
+def test_real_tied_logits(batch_size=2, seq_len=8, seed=1):
+    """The real tied head equals ``hidden @ embed.T``, named end to end."""
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    model = LM(cfg)
+    model.eval()
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+
+    with torch.no_grad():
+        logits, _, _ = model.forward(ids)
+        # Re-run the stack with our own batch/time axes (the model wraps ids
+        # in fresh Dims; the data is identical in eval).
+        batch, time = Dim("batch", batch_size), Dim("time", seq_len)
+        z = model.embed_norm(model.embed(ids, batch, time))
+        for block in model.blocks:
+            z, _ = block(z, pam_state=None, step_offset=0)
+        lm = model.lm_head_norm(model.lm_head_proj(model.output_norm(z)))
+
+        flat = lm.raw(batch, time, model.model_dim)
+        manual = flat @ model.embed.embed.weight.T
+
+    diff = (logits - manual).abs().max().item()
+    assert diff < 1e-4, f"tied logits disagree: {diff:.3e}"
+    print(f"  max |tied logit diff| = {diff:.3e}")
+    return True
+
+
+def test_real_fused_ce(batch_size=2, seq_len=16, seed=0):
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    model = LM(cfg)
+    model.train()
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+    labels = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+
+    # Plain CE through the public forward (raw boundary: F.cross_entropy).
+    model.zero_grad()
+    logits, _, _ = model.forward(ids, labels=labels)
+    plain = F.cross_entropy(logits.view(-1, logits.size(-1)), labels.view(-1))
+    plain.backward()
+    plain_grads = {n: p.grad.clone() for n, p in model.named_parameters()
+                   if p.grad is not None}
+
+    # Chunked fused CE through the training path (small chunk forces many).
+    model.zero_grad()
+    lm, _aux = model._hidden_to_lm(ids)
+    fused = model.ce_from_lm(lm, labels, chunk=5)
+    fused.backward()
+    fused_grads = {n: p.grad.clone() for n, p in model.named_parameters()
+                   if p.grad is not None}
+
+    loss_diff = (plain - fused).abs().item()
+    max_grad_diff = max(
+        (pg - fg).abs().max().item()
+        for pg, fg in zip(plain_grads.values(), fused_grads.values())
+    )
+    assert set(plain_grads) == set(fused_grads), "parameter gradient sets differ"
+    assert max_grad_diff < 1e-3, f"gradients disagree: {max_grad_diff:.3e}"
+    print(f"  loss diff = {loss_diff:.3e}   max grad diff = {max_grad_diff:.3e}")
+    return True
+
+
+def test_real_smoke_loss_decreases(steps=12, seed=0):
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.vocab_size = 256
+    model = LM(cfg)
+    loader = synthetic_loader(256, batch_size=4, seq_len=32,
+                              n_batches=steps, seed=seed)
+    trainer = Trainer(model, loader, learning_rate=3e-4, warmup_steps=2,
+                      total_steps=steps, device=torch.device('cpu'))
+    losses = trainer.train(max_steps=steps)
+    delta = losses[-1] - losses[0]
+    assert all(torch.isfinite(torch.tensor(l)) for l in losses)
+    assert delta < 0, f"loss did not decrease: {losses}"
+    print(f"  loss {losses[0]:.4f} -> {losses[-1]:.4f}  (delta {delta:+.4f})")
+    return True
+
+
+def test_real_generate_smoke(seed=0):
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.vocab_size = 256
+    model = LM(cfg)
+    model.eval()
+    ids = torch.randint(0, cfg.vocab_size, (1, 8))
+    out = model.generate(ids, max_new_tokens=4, temperature=0.0, top_k=1)
+    assert out.shape == (1, 12), f"bad shape {out.shape}"
+    assert (out >= 0).all() and (out < cfg.vocab_size).all()
+    print(f"  generated {out.shape[1] - 8} tokens, shape {tuple(out.shape)}")
+    return True
+
+
 def main():
     torch.set_num_threads(2)
     tests = [
@@ -223,6 +374,12 @@ def main():
         test_fused_ce,
         test_smoke_loss_decreases,
         test_generate_smoke,
+        test_real_param_count_and_state,
+        test_real_parallel_vs_recurrent,
+        test_real_tied_logits,
+        test_real_fused_ce,
+        test_real_smoke_loss_decreases,
+        test_real_generate_smoke,
     ]
     failures = 0
     for t in tests:

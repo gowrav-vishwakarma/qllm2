@@ -34,6 +34,14 @@ SKIP_FILES = frozenset({
     "train.py",           # optimiser / dataloader plumbing
     "generate.py",        # sampling loop
     "check_torch_layout.py",
+    # throwaway de-risking probes (raw torch by design; verdicts in EXPERIMENTS_SEMPY.md)
+    "tmp_real_api_probe.py",
+    "tmp_real_vs_complex_pam.py",
+    "tmp_real_rope_and_flops.py",
+    "tmp_gemm_efficiency.py",
+    "tmp_cayley_dicson_pam.py",
+    "tmp_real_to_probe.py",
+    "tmp_real_ops_probe.py",
 })
 
 # Functions that wrap a kernel sempyt cannot name, or that are the module's
@@ -41,6 +49,9 @@ SKIP_FILES = frozenset({
 KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {
     "complex_ops.py": frozenset({
         "build_rope_cache",     # position table built once, outside the graph
+    }),
+    "real_ops.py": frozenset({
+        "build_rope_cache_real",  # real RoPE position table, built once
     }),
     "model.py": frozenset({
         "generate",                # sampling loop over raw logits
