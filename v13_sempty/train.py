@@ -232,6 +232,8 @@ def build_argparser():
     p.add_argument('--max_samples', type=int, default=64)
     p.add_argument('--seed', type=int, default=0)
     p.add_argument('--checkpoint_dir', type=str, default='checkpoints_v13_sempty')
+    p.add_argument('--gradient_checkpointing', action='store_true', default=False,
+                   help='recompute blocks in backward; the memory lever for 16-layer runs')
     return p
 
 
@@ -242,7 +244,7 @@ def main():
         args.device = 'cpu'
     seed_everything(args.seed)
     cfg = get_config(args.preset)
-    cfg.gradient_checkpointing = False
+    cfg.gradient_checkpointing = args.gradient_checkpointing
     if args.seq_len:
         cfg.max_seq_len = max(cfg.max_seq_len, args.seq_len)
 
