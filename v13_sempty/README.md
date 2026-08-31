@@ -24,12 +24,12 @@ with its query. No gates, no erasures, no extra states. RoPE on Q/K is the
 only position mechanism (see the decision log for why learned positions were
 cut).
 
-Training/prefill runs the recurrence in windows of `chunk_size` using its
-closed form (`S_s = a_s · (S_0 + Σ_{j≤s} u_j / a_j)`, one cumprod + one
-cumsum per window, notebook carried between windows); decode runs the same
-algebra one step per token on the carried notebook. The two paths agree to
-round-off — that equivalence is a pre-registered contract, pinned by
-`selftest.py`.
+Training/prefill runs the recurrence in windows of `chunk_size` via the
+bounded retention matrix `M[s,t] = a_s / a_t = exp(C_t - C_s) ≤ 1`
+(``notebook_s = Σ_{t≤s} M[s,t] u_t + a_s·S_0``, log space, bounded backward);
+decode runs the same algebra one step per token on the carried notebook. The
+two paths agree to round-off — that equivalence is a pre-registered
+contract, pinned by `selftest.py`.
 
 ## Contract
 

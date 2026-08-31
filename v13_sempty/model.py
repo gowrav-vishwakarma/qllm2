@@ -37,13 +37,15 @@ were measured neutral there, so they stay out (see EXPERIMENTS_SEMPY.md).
 Training and decoding run the same algebra two ways:
 
   * train / prefill  — time is processed in windows of ``chunk_size``. Inside
-    a window the recurrence has a closed form: if a_s is the product of the
-    decays up to position s, then
+    a window the notebook is built from the bounded retention matrix
+    ``M[s, t] = a_s / a_t <= 1`` (``a_s`` the product of the decays up to s,
+    ``M`` computed in log space as ``exp(C_t - C_s)`` so the backward stays
+    bounded — the naive factored form ``a_s * cumsum(write / a_s)`` overflows
+    it once a window's retention decays toward 0):
 
-        notebook_s = a_s * ( notebook_in + sum_{j <= s} write_j / a_j )
+        notebook_s = sum_{t <= s} M[s, t] * write_t   (+ a_s * notebook_in)
 
-    so the window is one cumulative sum, and the notebook at the window's end
-    is carried into the next. This is O(T) work, never O(T^2).
+    The notebook at the window's end is carried into the next.
   * decode           — the same recurrence, one step per token, on the
     carried notebook. O(1) per token, independent of context length.
 
@@ -54,11 +56,11 @@ Style
 
 The code speaks in the model's own words: ``decay``, ``write``, ``notebook``,
 ``read``, ``rotation``. All layout is named — ``.to()`` / ``.alias()`` /
-``contract`` / ``outer`` / ``cumprod`` — and ``check_torch_layout.py`` fails
-the build if anything reaches for ``view`` / ``permute`` / ``[..., 0]``. Raw
-torch appears only at the declared boundaries: the RoPE table (built once,
-outside the graph), the tied-logit hand-off, the chunked-CE Function, and
-the sampling loop.
+``contract`` / ``outer`` — and ``check_torch_layout.py`` fails the build if
+anything reaches for ``view`` / ``permute`` / ``[..., 0]``. Raw torch appears
+only at the declared boundaries: the RoPE table (built once, outside the
+graph), the stable notebook scan, the tied-logit hand-off, the chunked-CE
+Function, and the sampling loop.
 
 Named axes
 ----------
@@ -89,7 +91,7 @@ from sempyt.nn import RMSNorm
 from sempyt.ops import at, contract, imag, outer, real
 from sempyt.policies import SplitComplex
 from sempyt.structural import (
-    cat, cumprod, cumsum, exp, flatten, select, softplus, stack, take, zeros,
+    cat, exp, flatten, select, softplus, stack, take, zeros,
 )
 from sempyt.tensor import NamedTensor, named
 
@@ -111,6 +113,48 @@ from v13_sempty.real_ops import (
 )
 
 
+def _stable_notebook(write_nt, decay_nt, carried_nt, window, head_row, head_col,
+                     complex_pair, policy, dtype):
+    r"""Chunk notebook in the stable log-space decay-matrix form.
+
+    The notebook recurrence ``S_s = g_s S_{s-1} + write_s`` has the closed
+    form ``S_s = a_s (S_in + sum_{j<=s} write_j / a_j)`` with
+    ``a_s = prod_{j<=s} g_j``.  That factored form overflows the *backward*:
+    the gradient of ``write_j / a_j`` is ``write_j / a_j**2``, which blows
+    past fp32 (~1e40) once the learned retention decays a 256-window toward
+    0 -- even though the forward notebook stays O(1).  Re-expressed with the
+    decay matrix ``M[s, j] = a_s / a_j = exp(C_j - C_s) <= 1`` (``C =
+    cumsum(-log g)``), every intermediate is bounded by the write magnitudes
+    and no ``1 / retention`` term appears in the forward *or* backward.
+
+    ``write_nt``    [B, H, window, row, col(, pair)]
+    ``decay_nt``    [B, H, window]  in (0, 1)
+    ``carried_nt``  [B, H, row, col(, pair)] or None
+    returns a NamedTensor notebook [B, H, window, row, col(, pair)] in
+    ``dtype``.  All scan math runs in fp32; the result is cast to ``dtype``.
+    """
+    write_raw = write_nt.raw().float()              # [B,H,T,row,col(,pair)] fp32
+    decay_raw = decay_nt.raw().float()              # [B,H,T] fp32, in (0,1)
+    carried_raw = carried_nt.raw().float() if carried_nt is not None else None
+    B, H, T = write_raw.shape[:3]
+    # C_s = sum_{t<=s} -log decay_t  (>= 0, non-decreasing in s).
+    C = torch.cumsum(-torch.log(decay_raw + 1e-6), dim=-1)        # [B,H,T]
+    # Retention matrix M[s, t] = a_s / a_t = exp(C_t - C_s) <= 1 for t <= s:
+    # how much of write_t survives in the notebook at s.  Bounded by 1, causal;
+    # the backward of exp(C_t - C_s) is bounded by M itself -- no 1/retention.
+    M = torch.exp(C.unsqueeze(-2) - C.unsqueeze(-1))              # [B,H,s,t]
+    M = M * torch.tril(torch.ones(T, T, device=write_raw.device))
+    # notebook_s = sum_{t<=s} M[s, t] write_t  (weighted sum over t; a plain
+    # cumsum would only be valid for an unweighted causal mask).
+    rest = write_raw.shape[3:]
+    acc = torch.einsum('bhst,bhtk->bhsk', M, write_raw.reshape(B, H, T, -1))
+    if carried_raw is not None:
+        # The carried-in notebook also decays inside the window:
+        # a_s * S_in with a_s = prod_{t<=s} decay_t = exp(-C_s).
+        acc = acc + torch.exp(-C).unsqueeze(-1) * carried_raw.reshape(B, H, -1).unsqueeze(2)
+    layout = (write_nt.layout[0], write_nt.layout[1], window, head_row, head_col) \
+        + ((complex_pair,) if complex_pair is not None else ())
+    return named(acc.reshape(B, H, T, *rest).to(dtype), layout, policy)
 # ── Phase-Associative Memory ─────────────────────────────────────────────────
 
 
@@ -259,12 +303,16 @@ class PAMLayer(nn.Module):
             window_query = take(queries, over=time, start=start, length=length,
                                 new=window).alias(self.head_feature, self.head_col)
 
-            # Closed form of S_t = g_t S_{t-1} + u_t inside this window: with
-            # a_s = prod_{j <= s} g_j,  S_s = a_s * (S_in + sum_{j<=s} u_j / a_j).
-            retention = cumprod(window_decay, over=window)
-            accumulated = (write / retention).cumsum(over=window)
-            window_notebook = (retention * (accumulated + carried)
-                               if carried is not None else retention * accumulated)
+            # Stable log-space decay-matrix notebook: the factored form
+            # a_s * cumsum(write / a_s) overflows the backward (grad ~
+            # write / a_s**2) once the learned retention decays a window
+            # toward 0, so the notebook is built from the bounded decay
+            # matrix instead (see _stable_notebook).
+            window_notebook = _stable_notebook(
+                write, window_decay, carried,
+                window, self.head_row, self.head_col, self.complex_pair,
+                self.policy, window_decay.dtype,
+            )
 
             reads.append(
                 contract(window_notebook, window_query, over=self.head_col)
@@ -512,12 +560,13 @@ class RealPAMLayer(nn.Module):
             window_query = take(queries, over=time, start=start, length=length,
                                 new=window).alias(self.head_feature, self.head_col)
 
-            # Closed form of S_t = g_t S_{t-1} + u_t inside this window: with
-            # a_s = prod_{j <= s} g_j,  S_s = a_s * (S_in + sum_{j<=s} u_j / a_j).
-            retention = cumprod(window_decay, over=window)
-            accumulated = (write / retention).cumsum(over=window)
-            window_notebook = (retention * (accumulated + carried)
-                               if carried is not None else retention * accumulated)
+            # Stable log-space decay-matrix notebook (real twin of the
+            # complex arm); see _stable_notebook.
+            window_notebook = _stable_notebook(
+                write, window_decay, carried,
+                window, self.head_row, self.head_col, None, None,
+                window_decay.dtype,
+            )
 
             reads.append(
                 contract(window_notebook, window_query, over=self.head_col)
