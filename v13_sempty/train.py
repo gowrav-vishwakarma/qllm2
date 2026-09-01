@@ -12,7 +12,9 @@ from __future__ import annotations
 
 import argparse
 import math
+import os
 import random
+import time
 import sys
 from dataclasses import asdict
 from pathlib import Path
@@ -23,9 +25,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
-
+from v13_sempty.model import LM, _retention_capture
 from v13_sempty.config import PRESETS, get_config
-from v13_sempty.model import LM
 
 _NO_DECAY_SUFFIXES = {'dt_bias'}
 
@@ -101,6 +102,17 @@ class Trainer:
         fused_ce_chunk: int = 4096,
         device: Optional[torch.device] = None,
         log_interval: int = 1,
+        val_loader=None,
+        tokenizer=None,
+        gen_every: int = 0,
+        gen_prompt: str = 'The',
+        gen_max_tokens: int = 80,
+        save_every_steps: int = 0,
+        diag_every: int = 500,
+        val_every: int = 0,
+        max_val_batches: Optional[int] = None,
+        checkpoint_dir: Optional[Path] = None,
+        run_label: str = 'v13_sempty',
     ):
         self.model = model
         self.train_loader = train_loader
@@ -125,6 +137,23 @@ class Trainer:
             else None
         )
         self.global_step = 0
+        self.global_tokens = 0
+        self.val_loader = val_loader
+        self.tokenizer = tokenizer
+        self.gen_every = gen_every
+        self.gen_prompt = gen_prompt
+        self.gen_max_tokens = gen_max_tokens
+        self.save_every_steps = save_every_steps
+        self.diag_every = diag_every
+        self.max_val_batches = max_val_batches
+        self.checkpoint_dir = checkpoint_dir
+        self.run_label = run_label
+        self.best_val_loss = float('inf')
+        self.best_val_ppl = float('inf')
+        self.val_every = val_every
+        self._blocks = self.model.blocks
+        self._set_capture(False)
+        self._last_grad_norms = None
 
     def _step_loss(self, input_ids, labels, loss_mask=None):
         """One training step's loss: fused chunked CE, or plain CE fallback."""
@@ -163,26 +192,262 @@ class Trainer:
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.gradient_clip)
             self.optimizer.step()
+        if self.diag_every > 0 and (self.global_step + 1) % self.diag_every == 0:
+            self._last_grad_norms = self._block_grad_norms()
         self.scheduler.step()
         self.optimizer.zero_grad(set_to_none=True)
         self.global_step += 1
         return float(loss.detach())
 
+    # ── logging / diagnostics (mirrors v7.V7Trainer cadence) ────────────────
+
+    def _set_capture(self, on: bool):
+        """Toggle the realized-retention hook on every PAM layer."""
+        for b in self._blocks:
+            pam = getattr(b, 'pam', None)
+            if pam is not None:
+                pam.capture_decay = on
+
+    @torch.no_grad()
+    def _block_grad_norms(self) -> list:
+        """Per-block grad L2, captured while grads are still live."""
+        norms = []
+        for b in self._blocks:
+            g = 0.0
+            for p in b.parameters():
+                if p.grad is not None:
+                    g += float(p.grad.detach().float().pow(2).sum())
+            norms.append(g ** 0.5)
+        return norms
+
+    @torch.no_grad()
+    def _val_loss(self) -> Optional[float]:
+        """Token-weighted val NLL over up to max_val_batches batches."""
+        if self.val_loader is None or len(self.val_loader) == 0:
+            return None
+        self.model.eval()
+        total, ntok = 0.0, 0
+        for i, batch in enumerate(self.val_loader):
+            if self.max_val_batches is not None and i >= self.max_val_batches:
+                break
+            x = batch['input_ids'].to(self.device)
+            y = batch['labels'].to(self.device)
+            lm, _ = self.model._hidden_to_lm(x)
+            loss = self.model.ce_from_lm(
+                lm, y, loss_mask=batch.get('loss_mask'),
+                chunk=self.fused_ce_chunk,
+            )
+            total += float(loss.detach()) * x.numel()
+            ntok += x.numel()
+        self.model.train()
+        return total / max(ntok, 1)
+
+    @torch.no_grad()
+    def _generate_sample(self, prompt: str, max_tokens: int) -> str:
+        self.model.eval()
+        ids = self.tokenizer.encode(prompt)
+        x = torch.tensor([ids], device=self.device)
+        out = self.model.generate(
+            x, max_new_tokens=max_tokens, temperature=0.8, top_k=50,
+            top_p=0.9, repetition_penalty=1.2,
+        )
+        self.model.train()
+        return self.tokenizer.decode(out[0].tolist())
+
+    def _save_ckpt(self, name: str):
+        if self.checkpoint_dir is None:
+            return
+        d = Path(self.checkpoint_dir)
+        d.mkdir(parents=True, exist_ok=True)
+        path = d / name
+        tmp = d / (name + '.tmp')
+        ck = self.model.config
+        ckpt = {
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'scheduler_state_dict': self.scheduler.state_dict(),
+            'global_step': self.global_step,
+            'global_tokens': self.global_tokens,
+            'best_val_loss': self.best_val_loss,
+            'best_val_ppl': self.best_val_ppl,
+            'config': asdict(ck),
+        }
+        torch.save(ckpt, tmp)
+        os.replace(tmp, path)
+        print(f"  [checkpoint] step {self.global_step} -> {path}", flush=True)
+
+    def _diagnostics(self) -> dict:
+        """Per-layer learnable-scale + retention + grad/weight-norm snapshot.
+
+        This is the 'which variable is helping' panel: cgu_scale (transform
+        path), pam_scale (memory path), realized retention (how long the
+        notebook holds), and per-block grad/weight L2 (where it's learning).
+        """
+        # realized retention: one no-grad forward with the capture hook on
+        self._set_capture(True)
+        _retention_capture.clear()
+        try:
+            it = iter(self.train_loader)
+            try:
+                b0 = next(it)
+            except StopIteration:
+                return {}
+            x = b0['input_ids'].to(self.device)
+            with torch.no_grad():
+                _ = self.model(x)
+        finally:
+            self._set_capture(False)
+        layer_ret = [float(r.mean()) for r in _retention_capture]
+
+        g_norms = self._last_grad_norms
+        if g_norms is None or len(g_norms) != len(self._blocks):
+            g_norms = [0.0] * len(self._blocks)
+
+        out = {
+            'cgu_scale': [],
+            'pam_scale': [],
+            'dt_bias': [],
+            'g_norm': [],
+            'w_norm': [],
+            'ret': [],
+        }
+        for i, b in enumerate(self._blocks):
+            out['cgu_scale'].append(float(b.cgu_scale.detach()))
+            out['pam_scale'].append(float(b.pam_scale.detach()))
+            out['dt_bias'].append(float(b.pam.dt_bias.detach().mean()))
+            out['g_norm'].append(g_norms[i])
+            w = 0.0
+            for p in b.parameters():
+                w += float(p.detach().float().pow(2).sum())
+            out['w_norm'].append(w ** 0.5)
+            out['ret'].append(layer_ret[i] if i < len(layer_ret) else float('nan'))
+        return out
+
+    def _log_diag(self, d: dict):
+        if not d:
+            return
+        def _row(key, fmt):
+            return ' '.join(fmt.format(v) for v in d[key])
+        print(
+            f"  [diag] step {self.global_step} "
+            f"cgu={_row('cgu_scale', '{:+.2f}')}  "
+            f"pam={_row('pam_scale', '{:+.2f}')}",
+            flush=True,
+        )
+        print(
+            f"  [diag] dtbias={_row('dt_bias', '{:.2f}')}  "
+            f"ret={_row('ret', '{:.2f}')}",
+            flush=True,
+        )
+        print(
+            f"  [diag] gnorm={_row('g_norm', '{:.1e}')}  "
+            f"wnorm={_row('w_norm', '{:.1f}')}",
+            flush=True,
+        )
+
     def train(self, max_steps: Optional[int] = None) -> list:
         self.model.train()
         losses = []
-        for batch in self.train_loader:
+        train_start = time.time()
+        log_start = time.time()
+        log_tokens = 0
+        try:
+            n_batches = len(self.train_loader)
+        except TypeError:
+            n_batches = None
+        for batch_idx, batch in enumerate(self.train_loader):
             loss = self.step(batch)
             losses.append(loss)
+            batch_tokens = batch['input_ids'].numel()
+            self.global_tokens += batch_tokens
+            log_tokens += batch_tokens
+
             if self.log_interval and self.global_step % self.log_interval == 0:
-                print(
-                    f"step {self.global_step}  loss={loss:.4f}  "
-                    f"lr={self.optimizer.param_groups[0]['lr']:.2e}",
-                    flush=True,
-                )
+                self._log_line(loss, batch_idx, n_batches, train_start,
+                               log_start, log_tokens)
+                log_start = time.time()
+                log_tokens = 0
+
+            if (
+                self.gen_every > 0 and self.global_step > 0
+                and self.global_step % self.gen_every == 0
+                and self.tokenizer is not None
+            ):
+                try:
+                    text = self._generate_sample(self.gen_prompt, self.gen_max_tokens)
+                    print(f"  [gen @ step {self.global_step}, "
+                          f"{self.global_tokens:,} tok] prompt: {self.gen_prompt}")
+                    print(f"    {text[:600]}", flush=True)
+                except Exception as e:
+                    print(f"  [gen @ step {self.global_step}] failed: {e}", flush=True)
+
+            if (
+                self.val_every > 0 and self.global_step > 0
+                and self.global_step % self.val_every == 0
+                and self.val_loader is not None
+            ):
+                try:
+                    vl = self._val_loss()
+                except Exception as e:
+                    vl = None
+                    print(f"  [val @ step {self.global_step}] failed: {e}", flush=True)
+                if vl is not None:
+                    ppl = math.exp(min(vl, 20))
+                    tag = ''
+                    if vl < self.best_val_loss:
+                        self.best_val_loss = vl
+                        self.best_val_ppl = ppl
+                        tag = ' *best*'
+                        self._save_ckpt('best_model.pt')
+                    print(
+                        f"  [val @ step {self.global_step}] "
+                        f"val_loss={vl:.4f} val_ppl={ppl:.2f}{tag} "
+                        f"(best {self.best_val_ppl:.2f})",
+                        flush=True,
+                    )
+
+            if (
+                self.save_every_steps > 0 and self.global_step > 0
+                and self.global_step % self.save_every_steps == 0
+            ):
+                self._save_ckpt('latest.pt')
+
+            if self.diag_every > 0 and self.global_step > 0 \
+                    and self.global_step % self.diag_every == 0:
+                try:
+                    self._log_diag(self._diagnostics())
+                except Exception as e:
+                    print(f"  [diag @ step {self.global_step}] failed: {e}", flush=True)
+
             if max_steps is not None and self.global_step >= max_steps:
                 break
         return losses
+
+    def _log_line(self, loss, batch_idx, n_batches, train_start,
+                  log_start, log_tokens):
+        lr = self.optimizer.param_groups[0]['lr']
+        ppl = math.exp(min(loss, 20))
+        elapsed = time.time() - train_start
+        avg_tok_s = self.global_tokens / elapsed if elapsed > 0 else 0
+        inst_tok_s = log_tokens / max(time.time() - log_start, 1e-9)
+        if n_batches:
+            pct = 100.0 * (batch_idx + 1) / n_batches
+            remaining = elapsed / (batch_idx + 1) * (n_batches - batch_idx - 1)
+            eta_m, eta_s = divmod(int(remaining), 60)
+            eta_str = f"ETA {eta_m}m{eta_s:02d}s"
+            prog = f"[{batch_idx + 1}/{n_batches} {pct:3.0f}%]"
+        else:
+            eta_str, prog = "ETA n/a", f"[{self.global_step}]"
+        line = (
+            f"step {self.global_step} {prog}  loss={loss:.4f} ppl={ppl:.1f} "
+            f"lr={lr:.2e} | {inst_tok_s:.0f} tok/s (avg {avg_tok_s:.0f}) "
+            f"{eta_str} | gtok={self.global_tokens:,}"
+        )
+        if self.device.type == 'cuda':
+            mem = torch.cuda.memory_allocated() / 1e9
+            peak = torch.cuda.max_memory_allocated() / 1e9
+            line += f" | GPU {mem:.1f}/{peak:.1f}GB"
+        print(line, flush=True)
 
 
 def synthetic_loader(vocab_size: int, batch_size: int, seq_len: int, n_batches: int, seed: int):
@@ -234,6 +499,20 @@ def build_argparser():
     p.add_argument('--checkpoint_dir', type=str, default='checkpoints_v13_sempty')
     p.add_argument('--gradient_checkpointing', action='store_true', default=False,
                    help='recompute blocks in backward; the memory lever for 16-layer runs')
+    p.add_argument('--log_interval', type=int, default=50,
+                   help='steps between training log lines (v7 default 50)')
+    p.add_argument('--val_every', type=int, default=500,
+                   help='steps between validation PPL evals (0=off)')
+    p.add_argument('--gen_every', type=int, default=2000,
+                   help='steps between in-loop generation samples (0=off)')
+    p.add_argument('--gen_prompt', type=str, default='In 1923, the University of')
+    p.add_argument('--gen_max_tokens', type=int, default=80)
+    p.add_argument('--save_every_steps', type=int, default=2000,
+                   help='steps between latest.pt checkpoints (0=only final)')
+    p.add_argument('--diag_every', type=int, default=2000,
+                   help='steps between per-layer diagnostic panels (0=off)')
+    p.add_argument('--max_val_batches', type=int, default=128,
+                   help='cap on val batches per eval (0=all)')
     return p
 
 
@@ -251,13 +530,14 @@ def main():
     device = torch.device(args.device)
     print(f"device={device} preset={args.preset} dataset={args.dataset}")
 
+    val_loader = None
     if args.dataset == 'synthetic':
         vocab = min(cfg.vocab_size, 256)
         cfg.vocab_size = vocab
         loader = synthetic_loader(vocab, args.batch_size, args.seq_len, args.steps, args.seed)
         tokenizer = None
     else:
-        train_ds, _, tokenizer = load_real_dataset(
+        train_ds, val_ds, tokenizer = load_real_dataset(
             args.dataset, args.seq_len, args.max_samples,
         )
         tok_vocab = len(tokenizer)
@@ -265,6 +545,8 @@ def main():
             print(f"Adjusting vocab_size: {cfg.vocab_size} -> {tok_vocab}")
             cfg.vocab_size = tok_vocab
         loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
+        val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False)
+        print(f"train chunks: {len(train_ds)}, val chunks: {len(val_ds)}")
 
     model = LM(cfg)
     params = model.count_parameters()
@@ -282,22 +564,27 @@ def main():
         fused_ce=fused,
         fused_ce_chunk=args.fused_ce_chunk,
         device=device,
+        log_interval=args.log_interval,
+        val_loader=val_loader,
+        tokenizer=tokenizer,
+        gen_every=args.gen_every,
+        gen_prompt=args.gen_prompt,
+        gen_max_tokens=args.gen_max_tokens,
+        save_every_steps=args.save_every_steps,
+        val_every=args.val_every,
+        diag_every=args.diag_every,
+        max_val_batches=args.max_val_batches if args.max_val_batches > 0 else None,
+        checkpoint_dir=Path(args.checkpoint_dir),
+        run_label=args.preset,
     )
     losses = trainer.train(max_steps=args.steps)
-    print(f"losses: {[round(x, 4) for x in losses]}")
+    print(f"\nTraining complete. steps={trainer.global_step} "
+          f"tokens={trainer.global_tokens:,} "
+          f"best_val_ppl={trainer.best_val_ppl:.2f}")
     if len(losses) >= 2:
-        print(f"delta loss (last-first) = {losses[-1] - losses[0]:+.4f}")
-    ckpt_dir = Path(args.checkpoint_dir)
-    ckpt_dir.mkdir(parents=True, exist_ok=True)
-    torch.save(
-        {
-            'model_state_dict': model.state_dict(),
-            'config': asdict(cfg),
-            'losses': losses,
-        },
-        ckpt_dir / 'latest.pt',
-    )
-    print(f"saved {ckpt_dir / 'latest.pt'}")
+        print(f"train loss: {losses[0]:.4f} -> {losses[-1]:.4f} "
+              f"(delta {losses[-1] - losses[0]:+.4f})")
+    trainer._save_ckpt('latest.pt')
 
 
 if __name__ == '__main__':

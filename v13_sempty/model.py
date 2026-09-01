@@ -112,6 +112,18 @@ from v13_sempty.real_ops import (
     build_rope_cache_real,
 )
 
+# Diagnostic hook (off by default): when a trainer sets this to a fresh list
+# and flips PAMLayer.capture_decay, each _decay forward appends the realized
+# per-head retention (detached, fp32, mean over batch+time) for its layer so
+# the trainer can report which layer is retaining how much memory.
+_retention_capture: list = []
+
+def _capture_retention(retention: NamedTensor) -> None:
+    """Append the realized per-head retention mean (over batch+time) to the
+    module-level capture list. Caller must have set capture_decay=True."""
+    r = retention.raw().float().mean(dim=(0, 2)).detach()  # named-exit: diagnostic read, detached, off-by-default
+    _retention_capture.append(r)
+
 
 def _stable_notebook(write_nt, decay_nt, carried_nt, window, head_row, head_col,
                      complex_pair, policy, dtype):
@@ -224,6 +236,10 @@ class PAMLayer(nn.Module):
         self.chunk_size = cfg.chunk_size
         self.head_dim = cfg.head_dim
         self.out_dropout = nn.Dropout(cfg.dropout)
+        # Diagnostic hook: when True (and a module-level _retention_capture
+        # list is set), stash the realized per-head retention of the last
+        # forward so the trainer can report it. Off by default (zero cost).
+        self.capture_decay = False
 
     # ── small named helpers ──────────────────────────────────────────────────
 
@@ -282,6 +298,8 @@ class PAMLayer(nn.Module):
         real_imag = to_real_concat(tokens, into=self.real_imag_feature)
         logit = self.dt_proj(real_imag).alias(self.decay_out, self.heads)
         retention = exp(-softplus(logit + named(self.dt_bias, (self.heads,))))
+        if self.capture_decay:
+            _capture_retention(retention)
         return retention.to(batch, self.heads, time)
 
     # ── train / prefill: one closed form per window, notebook carried ────────
@@ -469,6 +487,8 @@ class RealPAMLayer(nn.Module):
         self.chunk_size = cfg.chunk_size
         self.head_dim = cfg.head_dim
         self.out_dropout = nn.Dropout(cfg.dropout)
+        # Diagnostic hook (off by default): see PAMLayer.capture_decay.
+        self.capture_decay = False
 
     # ── small named helpers ──────────────────────────────────────────────────
 
@@ -539,6 +559,8 @@ class RealPAMLayer(nn.Module):
         batch, time = tokens.layout[0], tokens.layout[1]
         logit = self.dt_proj(tokens).alias(self.decay_out, self.heads)
         retention = exp(-softplus(logit + named(self.dt_bias, (self.heads,))))
+        if self.capture_decay:
+            _capture_retention(retention)
         return retention.to(batch, self.heads, time)
 
     # ── train / prefill: one closed form per window, notebook carried ────────
