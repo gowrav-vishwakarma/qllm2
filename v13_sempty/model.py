@@ -139,10 +139,15 @@ def _stable_notebook(write_nt, decay_nt, carried_nt, window, head_row, head_col,
     B, H, T = write_raw.shape[:3]
     # C_s = sum_{t<=s} -log decay_t  (>= 0, non-decreasing in s).
     C = torch.cumsum(-torch.log(decay_raw + 1e-6), dim=-1)        # [B,H,T]
-    # Retention matrix M[s, t] = a_s / a_t = exp(C_t - C_s) <= 1 for t <= s:
-    # how much of write_t survives in the notebook at s.  Bounded by 1, causal;
-    # the backward of exp(C_t - C_s) is bounded by M itself -- no 1/retention.
-    M = torch.exp(C.unsqueeze(-2) - C.unsqueeze(-1))              # [B,H,s,t]
+    # Retention M[s, t] = a_s / a_t = exp(C_t - C_s) (t <= s), bounded by 1.
+    # The FULL [s, t] exponent is computed before the tril mask, and the
+    # anti-causal part (t > s) is POSITIVE, growing to C_end.  As training
+    # drives retention down, C_end crosses log(fp32_max) ~= 88.7, exp
+    # overflows there, and inf * 0 (the tril mask) = NaN poisons every
+    # notebook row (the einsum sums over all t).  Clamping the exponent at
+    # 0 keeps exp <= 1, is a no-op on the causal triangle (t <= s, E <= 0),
+    # and gives the anti-causal region exactly-zero value AND gradient.
+    M = torch.exp(torch.clamp(C.unsqueeze(-2) - C.unsqueeze(-1), max=0.0))
     M = M * torch.tril(torch.ones(T, T, device=write_raw.device))
     # notebook_s = sum_{t<=s} M[s, t] write_t  (weighted sum over t; a plain
     # cumsum would only be valid for an unweighted causal mask).
