@@ -1,7 +1,7 @@
 # v13_sempty
 
 A simple, **pure** Phase-Associative Memory (PAM) language model on the
-[sempyt](https://github.com/) named-axis frontend
+[sempyt](https://github.com/gowrav-vishwakarma/sempyt) named-axis frontend
 (`/home/gowrav/Development/sempyt/src`).
 
 It is *not* v13 ported: it is the lean recurrence v13 grew around, written

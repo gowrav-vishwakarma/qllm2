@@ -326,6 +326,57 @@ Details: [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md),
 
 ---
 
+## After V11 — experiment tracks (not the shipped line)
+
+**V11 is still the hero.** The paper architecture, Hugging Face weights, chat model, and
+Quick Start all stay on `v11_e3_k3`. Later folders are research tracks — they did not
+replace it.
+
+- **V12** — experiments only: L0 head gates, depth-growth curriculum, fact-band / delta
+writes, and a compose-from-registry packer. Composition fidelity is fixed (`--freeze_shared`);
+whether the fact band binds generally is still open. It did not beat V11 as a shipped
+model. [v12/README.md](v12/README.md) · [v12/EXPERIMENTS_V12.md](v12/EXPERIMENTS_V12.md).
+- **V13** — another experiment set: selective PAM (delta write, vault, phase addressing),
+fused-delta kernels, recall / reasoning levers. Useful engineering and negative results;
+still not the shipped line. [v13/EXPERIMENTS_V13.md](v13/EXPERIMENTS_V13.md).
+
+---
+
+## sempyt — named tensors so we can think in maths
+
+V11/V13 `model.py` spent more brain on *where* an axis sat (`unsqueeze(-1).unsqueeze(-1)`,
+`view(B, T, 3, H, d, 2).transpose(1, 2)`, `permute(3, 0, 2, 1)`) than on the algebra. We
+need to focus on the maths, not a mental map of integer indices.
+
+So we built **[sempyt](https://github.com/gowrav-vishwakarma/sempyt)** (*semantic PyTorch*,
+pronounced *sem-pi-T*) — a separate package, a thin named-dimension frontend over PyTorch.
+Axes are `Dim` objects you define once. Rearranges, broadcasts, and contractions are
+written over those objects and lower to ordinary `permute` / `view` / `matmul`. A no-op
+`.to()` whose layout already matches returns the same object.
+
+```python
+from sempyt import Dim, dims, named, contract
+
+B, T, H, d = dims("B T H d")
+q = named(q_raw, (B, T, H, d))
+k = named(k_raw, (B, T, H, d))
+Tq, Tk = Dim("Tq"), Dim("Tk")
+scores = contract(q.alias(T, Tq), k.alias(T, Tk), over=d)   # (B, Tq, H, Tk)
+memory = memory * gamma   # named broadcast — no unsqueeze ladder
+```
+
+Not on PyPI yet (beta; API still settling). Install from the Git URL:
+
+```bash
+pip install git+https://github.com/gowrav-vishwakarma/sempyt.git
+```
+
+The first QLLM model written on it is [`v13_sempty/`](v13_sempty/README.md) — the lean PAM
+recurrence, named end to end, so new mechanisms can be added without reverse-engineering
+axis indices.
+
+---
+
 ## Quick Start
 
 ```bash
@@ -384,11 +435,14 @@ Other presets, Phase C pretrain/SFT runners, and older version paths live in the
 long-context NIAH, interference, rank; why matrix memory beats vector state.
 - [v11/EXPERIMENTS_V11.md](v11/EXPERIMENTS_V11.md) — current: E1/E2/E3 ablations, K-sweep,
 Phase C pretrain + chat SFT; **parallel duplex track** pointer.
-- [v12/EXPERIMENTS_V12.md](v12/EXPERIMENTS_V12.md) — depth-growth curriculum + module registry:
-first end-to-end run, stack-order benchmark, the **composition-fidelity** defect and its fix
-(`--freeze_shared`), and the open question of whether the fact band binds generally.
+- [v12/EXPERIMENTS_V12.md](v12/EXPERIMENTS_V12.md) — **experiment track** (not shipped):
+depth-growth curriculum + module registry, composition-fidelity fix (`--freeze_shared`).
 - [v12/README.md](v12/README.md) — V12 design source of truth (M1–M5: head gates, depth growth,
 playable modules).
+- [v13/EXPERIMENTS_V13.md](v13/EXPERIMENTS_V13.md) — **experiment track** (not shipped):
+selective PAM, fused-delta, recall / reasoning levers.
+- **[sempyt](https://github.com/gowrav-vishwakarma/sempyt)** — named-dimension tensors over
+PyTorch, so the code reads like the maths. First QLLM use: [v13_sempty/README.md](v13_sempty/README.md).
 - [v11/duplex/EXPERIMENTS_DUPLEX.md](v11/duplex/EXPERIMENTS_DUPLEX.md) — full-duplex POC
 (SALMONN-style): PAM + Whisper math, Stage 0/1 results, Gradio demo; runs parallel to 10B pretrain.
 - [v11/BEGINNER_GUIDE.md](v11/BEGINNER_GUIDE.md) — gentle walkthrough of phase, complex numbers,
