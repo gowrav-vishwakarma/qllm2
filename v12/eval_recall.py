@@ -149,6 +149,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument('--seed', type=int, default=1000)
     p.add_argument('--candidate-count', type=int, default=8)
     p.add_argument('--output', type=str, default=None)
+    p.add_argument('--keep-rows', action='store_true',
+                   help='Include per-example rows in --output (default is aggregates only)')
     return p
 
 
@@ -184,6 +186,7 @@ def main() -> int:
           f"{sa:.3f}" if sa is not None else "single_assoc: n/a")
 
     if args.output:
+        n_rows = len(result.get('rows') or [])
         out = {
             'schema_version': 'memory-probes-behavioral/v1',
             'created_at': datetime.now(timezone.utc).isoformat(),
@@ -191,11 +194,15 @@ def main() -> int:
             'model_identity': str(args.checkpoint),
             'device': str(device),
             'parameter_count': sum(p.numel() for p in model.parameters()),
-            **result,
+            **{k: v for k, v in result.items() if k != 'rows' or args.keep_rows},
         }
+        if not args.keep_rows:
+            out['rows_omitted'] = True
+            out['n_rows'] = n_rows
         Path(args.output).parent.mkdir(parents=True, exist_ok=True)
         Path(args.output).write_text(json.dumps(out, indent=2, allow_nan=False) + '\n')
-        print(f"Results saved to {args.output}")
+        print(f"Results saved to {args.output}"
+              + ("" if args.keep_rows else f" (aggregates, {n_rows} rows omitted)"))
     return 0
 
 
