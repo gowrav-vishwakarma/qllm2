@@ -45,6 +45,14 @@ PRESETS = {
     # The fully-real twin of baseline at matched real width: 768 real channels
     # (== 384 complex), 128-dim real heads. Same recurrence, real arithmetic.
     'baseline_real': _base_flat(dim=768, head_dim=128, is_complex=False),
+    # Param-matched real control: real dim 588 (== 98 x 6 heads, even
+    # head_dim required by real RoPE) -> 101.89M params, within +1.5% of
+    # 'baseline' (100.36M). Unlike 'baseline_real' (dim 768, matched real
+    # *width*, 161.97M params), this isolates the complex-vs-real arithmetic
+    # question from the model-size confound, since a complex-linear map is
+    # ~2x more parameter-efficient than a real one at the same real channel
+    # count.
+    'baseline_real_pm': _base_flat(dim=588, head_dim=98, is_complex=False),
     # Small enough to run on CPU in a minute.
     'micro': PAMConfig(
         vocab_size=50261, dim=96, n_heads=3, head_dim=32, n_layers=6,
