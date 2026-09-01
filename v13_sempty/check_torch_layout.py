@@ -42,8 +42,6 @@ SKIP_FILES = frozenset({
     "tmp_cayley_dicson_pam.py",
     "tmp_real_to_probe.py",
     "tmp_real_ops_probe.py",
-    "tmp_nanlocal.py",
-    "tmp_nanfwd.py",
 })
 
 # Functions that wrap a kernel sempyt cannot name, or that are the module's
