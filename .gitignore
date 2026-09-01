@@ -42,6 +42,12 @@ data/
 log_copy.sh
 logs/remote_medium_pam_v3.log
 
+# Per-example behavioral dumps (prompts + logits). Tracked *_behavior.json
+# files keep metadata + aggregates only. Full rows are opt-in via
+# run_memory_behavioral.py --keep-rows and must not be committed uncompressed.
+logs/memory_probes/*_behavior.rows.json
+logs/memory_probes/*_behavior.rows.json.gz
+
 # Personal learning notebooks (not part of the project)
 learn/
 

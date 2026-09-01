@@ -18,6 +18,7 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import platform
 import sys
@@ -215,6 +216,10 @@ def build_parser() -> argparse.ArgumentParser:
                         metavar='KEY=VALUE',
                         help='Override a v13 config key (bool/int/float); repeatable')
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--keep-rows', action='store_true',
+                        help='Also write per-example prompts/logits next to --output '
+                             'as <stem>.rows.json.gz (gitignored). Default JSON is '
+                             'metadata + aggregates only — full rows are ~50 MB at 300 trials.')
     parser.add_argument('--pam-scale', type=float, default=None,
                         help='Override every V13 PAM residual scale '
                              '(ablation; 0.0 disables the PAM memory path)')
@@ -314,12 +319,18 @@ def main() -> int:
             'seeds': list(seeds),
             'candidate_count': args.candidate_count,
         },
-        'rows': rows,
         'aggregates': _aggregate(rows),
+        'rows_omitted': True,
+        'n_rows': len(rows),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')
-    print(f'Results saved to {args.output}')
+    print(f'Results saved to {args.output} (aggregates, {len(rows)} rows omitted)')
+    if args.keep_rows:
+        rows_path = args.output.with_name(args.output.stem + '.rows.json.gz')
+        with gzip.open(rows_path, 'wt', encoding='utf-8') as fh:
+            json.dump({'schema_version': result['schema_version'], 'rows': rows}, fh)
+        print(f'Full rows saved to {rows_path}')
     return 0
 
 
