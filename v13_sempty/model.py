@@ -111,6 +111,7 @@ from v13_sempty.real_ops import (
     RealNorm,
     build_rope_cache_real,
 )
+from v13_sempty.triton_kernels import fused_real_pam_read
 
 # Diagnostic hook (off by default): when a trainer sets this to a fresh list
 # and flips PAMLayer.capture_decay, each _decay forward appends the realized
@@ -567,40 +568,27 @@ class RealPAMLayer(nn.Module):
 
     def _chunked(self, tokens: NamedTensor, queries, keys, values,
                  decay) -> tuple[NamedTensor, NamedTensor]:
-        seq_len = tokens.size(tokens.layout[1])
-        time = tokens.layout[1]
-        carried = None  # the notebook coming in from earlier windows
-        reads = []
-        for start in range(0, seq_len, self.chunk_size):
-            length = min(self.chunk_size, seq_len - start)
-            window = Dim("chunk_time", length)
+        """The window closed form, without the per-position notebook.
 
-            write = outer(
-                take(values, over=time, start=start, length=length, new=window)
-                    .alias(self.head_feature, self.head_row),
-                take(keys, over=time, start=start, length=length, new=window)
-                    .alias(self.head_feature, self.head_col),
-                (self.head_row, self.head_col),
-            )
-            window_decay = take(decay, over=time, start=start, length=length,
-                                new=window)
-            window_query = take(queries, over=time, start=start, length=length,
-                                new=window).alias(self.head_feature, self.head_col)
-
-            # Stable log-space decay-matrix notebook (real twin of the
-            # complex arm); see _stable_notebook.
-            window_notebook = _stable_notebook(
-                write, window_decay, carried,
-                window, self.head_row, self.head_col, None, None,
-                window_decay.dtype,
-            )
-
-            reads.append(
-                contract(window_notebook, window_query, over=self.head_col)
-                * (self.head_dim ** -0.5)
-            )
-            carried = select(window_notebook, over=window, index=length - 1)
-        output = cat(reads, over="chunk_time", into=time)
+        ``notebook_s . q_s`` expands to ``a_s (S_in . q_s) + sum_{t<=s}
+        M[s,t] (q_s . k_t) v_t`` — one ``[w, w]`` score matrix per window
+        plus the carried ``[K, K]`` state, never the ``[w, K, K]`` notebook
+        that ``_stable_notebook`` materialises (the complex arm still does).
+        Same math, same carried state; ``triton_kernels.fused_real_pam_read``
+        runs it fused (Triton fwd+bwd on CUDA) or in plain torch.  This
+        method is the declared raw-torch boundary for that hand-off.
+        """
+        batch, time = tokens.layout[0], tokens.layout[1]
+        B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
+        q = queries.raw(batch, self.heads, time, self.head_feature).reshape(B * H, T, K)
+        k = keys.raw(batch, self.heads, time, self.head_feature).reshape(B * H, T, K)
+        v = values.raw(batch, self.heads, time, self.head_feature).reshape(B * H, T, K)
+        retention = decay.raw(batch, self.heads, time).reshape(B * H, T)
+        read, state = fused_real_pam_read(q, k, v, retention, None, self.chunk_size)
+        output = named(read.reshape(B, H, T, K) * (self.head_dim ** -0.5),
+                       (batch, self.heads, time, self.head_row))
+        carried = named(state.reshape(B, H, K, K),
+                        (batch, self.heads, self.head_row, self.head_col))
         return output, carried
 
     # ── decode: one step per token on the carried notebook ───────────────────

@@ -15,6 +15,10 @@ leaner architecture. Instead the tests pin its own contract:
                                    F.cross_entropy in loss and gradients
   * test_smoke_loss_decreases    — the tiny preset trains on synthetic data
   * test_generate_smoke          — the decode loop runs and stays in-vocab
+  * test_real_*                  — the same six for the fully-real arm
+  * test_real_fused_kernel_parity— (CUDA only) the Triton fused PAM scan and
+                                   its torch form agree on logits, carried
+                                   notebooks and every parameter gradient
 
 This module is a declared raw-torch boundary (it compares against plain
 ``F.cross_entropy``), so raw exits are legal here — but the named tensors
@@ -365,6 +369,49 @@ def test_real_generate_smoke(seed=0):
     return True
 
 
+def test_real_fused_kernel_parity(batch_size=2, seq_len=130, seed=0):
+    """Triton fused PAM scan vs the torch form, through the whole real model.
+
+    CUDA only (skipped otherwise). Same model, same batch; kernel on vs off
+    must agree on logits, carried notebooks and every parameter gradient.
+    seq_len 130 = two 64-tiles plus a partial one; chunk 7 for the torch form.
+    """
+    from v13_sempty.triton_kernels import kernel_enabled, set_kernel_enabled
+    if not (torch.cuda.is_available() and kernel_enabled()):
+        print("  skipped (no CUDA / Triton)")
+        return True
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.chunk_size = 7
+    model = LM(cfg).cuda().train()
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len), device='cuda')
+    labels = torch.randint(0, cfg.vocab_size, (batch_size, seq_len), device='cuda')
+
+    def run(on: bool):
+        set_kernel_enabled(on)
+        model.zero_grad(set_to_none=True)
+        logits, states, _ = model.forward(ids)
+        F.cross_entropy(logits.reshape(-1, cfg.vocab_size), labels.reshape(-1)).backward()
+        grads = [p.grad.detach().clone() for p in model.parameters()]
+        return logits.detach(), [s.detach() for s in states], grads
+
+    try:
+        lg_k, st_k, gr_k = run(True)
+        lg_t, st_t, gr_t = run(False)
+    finally:
+        set_kernel_enabled(True)
+    d_logits = _max_diff(lg_k, lg_t)
+    d_state = max(_max_diff(a, b) for a, b in zip(st_k, st_t))
+    d_grad = max((a - b).abs().max().item() / (b.abs().max().item() + 1e-12)
+                 for a, b in zip(gr_k, gr_t))
+    assert d_logits < RECUR_ATOL, f"logits disagree: {d_logits:.3e}"
+    assert d_state < RECUR_ATOL, f"carried notebook disagrees: {d_state:.3e}"
+    assert d_grad < 1e-3, f"parameter grads disagree: rel {d_grad:.3e}"
+    print(f"  max |logit diff| = {d_logits:.3e}   max |state diff| = {d_state:.3e}   "
+          f"max rel grad diff = {d_grad:.3e}")
+    return True
+
+
 def main():
     torch.set_num_threads(2)
     tests = [
@@ -380,6 +427,7 @@ def main():
         test_real_fused_ce,
         test_real_smoke_loss_decreases,
         test_real_generate_smoke,
+        test_real_fused_kernel_parity,
     ]
     failures = 0
     for t in tests:

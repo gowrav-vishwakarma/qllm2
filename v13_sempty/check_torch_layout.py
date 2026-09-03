@@ -50,6 +50,7 @@ KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {
     "model.py": frozenset({
         "generate",                # sampling loop over raw logits
         "_stable_notebook",        # log-space decay-matrix scan: raw fp32, bounded backward
+        "_chunked",                # real arm: hand-off to the fused PAM scan (triton_kernels)
     }),
 }
 
