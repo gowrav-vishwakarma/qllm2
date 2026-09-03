@@ -533,6 +533,22 @@ class RealPAMLayer(nn.Module):
             nn.init.zeros_(self.qkv_conv.weight)
             nn.init.zeros_(self.qkv_conv.bias)
 
+        # A2: multiple independent PAM states per head (E3, real). Shared q/k/v;
+        # per-state decay-logit offsets fan the retention time-constants; a
+        # learned per-head mixing sums the reads. Off unless cfg.n_states > 1.
+        self.n_states = cfg.n_states
+        if self.n_states > 1:
+            self.state_dim = Dim("pam_state", self.n_states)
+            off = torch.linspace(-cfg.state_dt_spread, cfg.state_dt_spread, self.n_states)
+            self.state_dt_offset = nn.Parameter(off)                       # [S]
+            self.state_mix = nn.Parameter(
+                torch.ones(cfg.n_heads, self.n_states) / self.n_states)
+        # A2b: state 0 is a vault (retention pinned to 1) protected by a gate
+        # p = sigmoid(Linear(x) - 3); g <- g(1-p)+p, v <- (1-p) v on the vault.
+        self.vault = cfg.vault
+        if self.vault:
+            self.protect = NamedLinear(self.model_dim, self.decay_out)
+
     # ── small named helpers ──────────────────────────────────────────────────
 
     def _as_token(self, x: NamedTensor) -> NamedTensor:
@@ -648,6 +664,55 @@ class RealPAMLayer(nn.Module):
                         (batch, self.heads, self.head_row, self.head_col))
         return output, carried
 
+    def _chunked_multi(self, tokens, queries, keys, values):
+        """A2 multi-state chunked read (raw-torch boundary).
+
+        Shared q/k/v; S states with per-state decay-logit offsets batched into
+        the kernel's B*H*S axis; reads combined by a learned per-head mixing.
+        A2b vault: state 0 retention pinned to 1, its writes gated by a protect
+        gate p = sigmoid(Linear(x) - 3) (v_vault <- (1-p) v).
+        """
+        batch, time = tokens.layout[0], tokens.layout[1]
+        B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
+        S = self.n_states
+        F_ = nn.functional
+        q = queries.raw(batch, self.heads, time, self.head_feature)        # [B,H,T,K]
+        k = keys.raw(batch, self.heads, time, self.head_feature)
+        v = values.raw(batch, self.heads, time, self.head_feature)
+
+        # per-state retention from the decay argument a = logit + dt_bias
+        a = (self.dt_proj(tokens).alias(self.decay_out, self.heads)
+             + named(self.dt_bias, (self.heads,)))
+        a = a.raw(batch, self.heads, time)                                  # [B,H,T]
+        offs = self.state_dt_offset.view(1, 1, S, 1)                        # [1,1,S,1]
+        ret = torch.exp(-F_.softplus(a.unsqueeze(2) + offs))               # [B,H,S,T]
+        v_s = v.unsqueeze(2).expand(B, H, S, T, K)                         # [B,H,S,T,K]
+
+        if self.vault:
+            # State 0 is permanent (retention 1) and its writes are gated by p;
+            # rebuild slice 0 by concat (no in-place, keeps autograd happy).
+            p = torch.sigmoid(
+                self.protect(tokens).alias(self.decay_out, self.heads).raw(batch, self.heads, time)
+                - 3.0)                                                      # [B,H,T]
+            ret0 = torch.ones(B, H, 1, T, device=ret.device, dtype=ret.dtype)
+            ret = torch.cat([ret0, ret[:, :, 1:]], dim=2)
+            v0 = (v * (1.0 - p).unsqueeze(-1)).unsqueeze(2)                 # [B,H,1,T,K]
+            v_s = torch.cat([v0, v_s[:, :, 1:]], dim=2)
+
+        q_s = q.unsqueeze(2).expand(B, H, S, T, K).reshape(B * H * S, T, K)
+        k_s = k.unsqueeze(2).expand(B, H, S, T, K).reshape(B * H * S, T, K)
+        v_s = v_s.reshape(B * H * S, T, K)
+        ret_s = ret.reshape(B * H * S, T)
+        read, state = fused_real_pam_read(q_s, k_s, v_s, ret_s, None, self.chunk_size)
+        read = read.reshape(B, H, S, T, K)
+        alpha = self.state_mix.view(1, H, S, 1, 1)                          # [1,H,S,1,1]
+        y = (read * alpha).sum(dim=2)                                       # [B,H,T,K]
+        output = named(y * (self.head_dim ** -0.5),
+                       (batch, self.heads, time, self.head_row))
+        carried = named(state.reshape(B, H, S, K, K),
+                        (batch, self.heads, self.state_dim, self.head_row, self.head_col))
+        return output, carried
+
     # ── decode: one step per token on the carried notebook ───────────────────
 
     def _stepwise(self, tokens: NamedTensor, queries, keys, values, decay,
@@ -683,8 +748,15 @@ class RealPAMLayer(nn.Module):
         decay = self._decay(tokens)
 
         if state is None and seq_len > 1:
-            output, new_state = self._chunked(tokens, queries, keys, values, decay)
+            if self.n_states > 1:
+                output, new_state = self._chunked_multi(tokens, queries, keys, values)
+            else:
+                output, new_state = self._chunked(tokens, queries, keys, values, decay)
         else:
+            if self.n_states > 1:
+                raise NotImplementedError(
+                    "multi-state decode (n_states>1) is not implemented; run rungs "
+                    "with --gen_every 0 (probe/val use the chunked path)")
             output, new_state = self._stepwise(tokens, queries, keys, values, decay, state)
 
         out = self.o_proj(output.alias(self.head_row, self.head_feature)
