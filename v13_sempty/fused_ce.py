@@ -13,8 +13,13 @@ mean/masked cross-entropy WITHOUT ever materializing the full `[N, V]` logits:
   * forward  processes hidden_rows in row-chunks, keeping only `[chunk, V]` live;
   * backward recomputes the per-chunk logits and accumulates gradients chunk by chunk.
 
-Peak head memory drops from O(N*V) to O(chunk*V). Math is exact (fp32 reduction),
-verified against F.cross_entropy in `_test`.
+Peak head memory drops from O(N*V) to O(chunk*V). The softmax / loss / NLL
+reduction is always fp32; the four head GEMMs (logits forward, logits
+recompute, grad_hidden, grad_weight) run in ``gemm_dtype`` — bf16 under
+autocast (the standard bf16-LLM head: logits carry ~1e-3 relative error, the
+loss value ~1e-5), or fp32 for the exact path (``gemm_dtype=torch.float32``,
+used for validation and by ``_test`` against F.cross_entropy). On the
+real-101M step the fp32 head was 33% of GPU time.
 """
 
 from typing import Optional
@@ -23,26 +28,36 @@ import torch
 import torch.nn.functional as F
 
 
+def _resolve_gemm_dtype(hidden_rows, gemm_dtype):
+    if gemm_dtype is not None:
+        return gemm_dtype
+    dev = hidden_rows.device.type
+    if torch.is_autocast_enabled(dev):
+        return torch.get_autocast_dtype(dev)
+    return hidden_rows.dtype
+
+
 class _FusedLinearCE(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, hidden_rows, weight_matrix, targets, mask, chunk, ignore_index, return_nll):
+    def forward(ctx, hidden_rows, weight_matrix, targets, mask, chunk, ignore_index,
+                return_nll, gemm_dtype):
         num_rows = hidden_rows.shape[0]
-        loss_sum = hidden_rows.new_zeros(())
+        loss_sum = hidden_rows.new_zeros((), dtype=torch.float32)
         nll_out = torch.zeros(num_rows, dtype=torch.float32, device=hidden_rows.device) if return_nll else None
         if mask is not None:
-            denom = mask.sum().clamp_min(1.0)
+            denom = mask.sum().clamp_min(1.0).float()
         else:
             valid = (targets != ignore_index)
-            denom = valid.sum().clamp_min(1).to(hidden_rows.dtype)
+            denom = valid.sum().clamp_min(1).float()
+        weight_g = weight_matrix.to(gemm_dtype)
 
         for chunk_start in range(0, num_rows, chunk):
             chunk_end = min(chunk_start + chunk, num_rows)
-            # Force fp32 for the head GEMM + CE: under autocast the matmul is
-            # downcast to bf16 (8-bit mantissa) even with .float() inputs, which
-            # quantizes the NLL to ~0.03. The loss sum and the NLL byproduct
-            # must stay exact fp32 (fp32 GEMM here is ~4% of step time).
+            # The GEMM dtype is decided here, not by autocast; the CE itself
+            # is fp32 so the loss sum and the NLL byproduct are not quantized
+            # beyond what the logits carry.
             with torch.amp.autocast(device_type=hidden_rows.device.type, enabled=False):
-                logits = (hidden_rows[chunk_start:chunk_end].float() @ weight_matrix.float().T)
+                logits = (hidden_rows[chunk_start:chunk_end].to(gemm_dtype) @ weight_g.T).float()
                 target_chunk = targets[chunk_start:chunk_end]
                 per_token_loss = F.cross_entropy(
                     logits, target_chunk, ignore_index=ignore_index, reduction='none',
@@ -58,11 +73,12 @@ class _FusedLinearCE(torch.autograd.Function):
                 per_token_loss = per_token_loss * mask[chunk_start:chunk_end].float()
             loss_sum = loss_sum + per_token_loss.sum()
 
-        loss = loss_sum / denom
+        loss = loss_sum / denom                     # fp32 scalar, whatever the GEMM dtype
         ctx.save_for_backward(hidden_rows, weight_matrix, targets, mask)
         ctx.chunk = chunk
         ctx.ignore_index = ignore_index
         ctx.denom = denom
+        ctx.gemm_dtype = gemm_dtype
         if nll_out is not None:
             loss._nll = nll_out  # [N] fp32, detached
         return loss
@@ -71,14 +87,17 @@ class _FusedLinearCE(torch.autograd.Function):
     def backward(ctx, grad_output):
         hidden_rows, weight_matrix, targets, mask = ctx.saved_tensors
         chunk, ignore_index, denom = ctx.chunk, ctx.ignore_index, ctx.denom
-        num_rows, vocab_size = hidden_rows.shape[0], weight_matrix.shape[0]
-        grad_scale = (grad_output / denom)
-        grad_hidden = torch.zeros_like(hidden_rows)
-        grad_weight = torch.zeros_like(weight_matrix)
+        gemm_dtype = ctx.gemm_dtype
+        num_rows = hidden_rows.shape[0]
+        grad_scale = (grad_output.float() / denom)
+        grad_hidden = torch.empty_like(hidden_rows)
+        grad_weight = torch.zeros(weight_matrix.shape, dtype=torch.float32,
+                                  device=weight_matrix.device)
+        weight_g = weight_matrix.to(gemm_dtype)
         for chunk_start in range(0, num_rows, chunk):
             chunk_end = min(chunk_start + chunk, num_rows)
-            hidden_chunk = hidden_rows[chunk_start:chunk_end].float()
-            logits = hidden_chunk @ weight_matrix.float().T
+            hidden_chunk = hidden_rows[chunk_start:chunk_end].to(gemm_dtype)
+            logits = (hidden_chunk @ weight_g.T).float()
             softmax_probs = torch.softmax(logits, dim=-1)
             target_chunk = targets[chunk_start:chunk_end]
             valid = (target_chunk != ignore_index)
@@ -91,10 +110,11 @@ class _FusedLinearCE(torch.autograd.Function):
                 softmax_probs = softmax_probs * (grad_scale * mask[chunk_start:chunk_end].float()).unsqueeze(1)
             else:
                 softmax_probs = softmax_probs * grad_scale
-            softmax_probs = softmax_probs * valid.unsqueeze(1).float()
-            grad_hidden[chunk_start:chunk_end] = (softmax_probs @ weight_matrix.float()).to(grad_hidden.dtype)
-            grad_weight += (softmax_probs.T @ hidden_chunk).to(grad_weight.dtype)
-        return grad_hidden, grad_weight, None, None, None, None, None
+            softmax_probs = (softmax_probs * valid.unsqueeze(1).float()).to(gemm_dtype)
+            grad_hidden[chunk_start:chunk_end] = (softmax_probs @ weight_g).to(grad_hidden.dtype)
+            grad_weight += (softmax_probs.T @ hidden_chunk).float()
+        return (grad_hidden, grad_weight.to(weight_matrix.dtype),
+                None, None, None, None, None, None)
 
 
 def fused_linear_cross_entropy(
@@ -105,16 +125,23 @@ def fused_linear_cross_entropy(
     chunk: int = 4096,
     ignore_index: int = -100,
     return_nll: bool = False,
+    gemm_dtype: Optional[torch.dtype] = None,
 ) -> torch.Tensor:
     """Mean cross-entropy of (hidden_rows @ weight_matrix.T) vs targets.
 
-    return_nll=True attaches the exact per-token NLL this forward already
-    computes (fp32, no-grad, [N], ignore rows 0.0) to the returned loss as
+    ``gemm_dtype`` is the dtype of the head GEMMs: None picks the autocast
+    dtype when autocast is active (bf16 in training), else the hidden dtype;
+    pass ``torch.float32`` for the exact path (validation, tests).
+
+    return_nll=True attaches the per-token NLL this forward already computes
+    (fp32, no-grad, [N], ignore rows 0.0) to the returned loss as
     ``loss._nll`` — a materialized-intermediate byproduct with no extra
     head pass (O(1) in vocab).
     """
+    gemm_dtype = _resolve_gemm_dtype(hidden_rows, gemm_dtype)
     return _FusedLinearCE.apply(
         hidden_rows, weight_matrix, targets, mask, chunk, ignore_index, return_nll,
+        gemm_dtype,
     )
 
 

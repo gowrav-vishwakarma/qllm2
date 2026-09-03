@@ -773,7 +773,8 @@ class LM(nn.Module):
         return lm, aux_loss
 
     def ce_from_lm(self, lm: NamedTensor, labels, loss_mask=None,
-                   ignore_index=-100, chunk: int = 4096, return_nll: bool = False):
+                   ignore_index=-100, chunk: int = 4096, return_nll: bool = False,
+                   gemm_dtype=None):
         """Chunked cross-entropy from the pre-logit hidden ``lm``.
 
         The tied head folds into one real matmul, ``H @ W^T``. In the complex
@@ -781,6 +782,8 @@ class LM(nn.Module):
         embed_imag)``; in the real model ``H`` is ``lm`` and ``W`` is the
         single embedding. Either way the chunked-CE Function never holds the
         full ``[N, vocab]`` softmax. Named up to the Function hand-off.
+        ``gemm_dtype`` (None = autocast dtype, ``torch.float32`` = exact) is
+        the head-GEMM precision; the loss itself is always fp32.
         """
         from v13_sempty.fused_ce import fused_linear_cross_entropy
         batch, time = lm.layout[0], lm.layout[1]
@@ -805,6 +808,7 @@ class LM(nn.Module):
             labels.reshape(-1),  # named-exit: raw int tensor from the dataloader
             mask=(loss_mask.reshape(-1) if loss_mask is not None else None),  # named-exit: raw mask
             chunk=chunk, ignore_index=ignore_index, return_nll=return_nll,
+            gemm_dtype=gemm_dtype,
         )
         if return_nll:
             return out, getattr(out, '_nll', None).reshape(batch.size, time.size)  # named-exit: raw nll

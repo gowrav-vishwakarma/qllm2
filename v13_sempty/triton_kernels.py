@@ -433,8 +433,20 @@ def _use_triton(q) -> bool:
             and not torch.compiler.is_compiling())
 
 
+def _common_dtype(q, k, v):
+    if q.dtype == k.dtype == v.dtype:
+        return q.dtype
+    # Under autocast the RoPE multiply promotes q/k to fp32 while v stays
+    # bf16; the scan runs in the autocast dtype like every other matmul.
+    if torch.is_autocast_enabled(q.device.type):
+        return torch.get_autocast_dtype(q.device.type)
+    return torch.promote_types(torch.promote_types(q.dtype, k.dtype), v.dtype)
+
+
 def fused_real_pam_read(q, k, v, retention, carry, chunk_size):
     """Chunked real-PAM read + carried state.  See the module docstring."""
+    dt = _common_dtype(q, k, v)
+    q, k, v = q.to(dt), k.to(dt), v.to(dt)
     if _use_triton(q):
         return _PamScanFn.apply(q, k, v, retention, carry)
     return pam_scan_torch(q, k, v, retention, carry, chunk_size)

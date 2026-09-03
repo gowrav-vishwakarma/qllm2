@@ -27,8 +27,22 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 from v13_sempty.model import LM, _retention_capture
 from v13_sempty.config import PRESETS, get_config
+from v13_sempty.triton_kernels import kernel_enabled, set_kernel_enabled
 
 _NO_DECAY_SUFFIXES = {'dt_bias'}
+
+
+def _git_hash() -> str:
+    import subprocess
+    try:
+        root = Path(__file__).resolve().parent.parent
+        out = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], cwd=root,
+                             capture_output=True, text=True, timeout=5)
+        dirty = subprocess.run(['git', 'status', '--porcelain', '--untracked-files=no'],
+                               cwd=root, capture_output=True, text=True, timeout=5)
+        return out.stdout.strip() + ('-dirty' if dirty.stdout.strip() else '')
+    except Exception:  # noqa: BLE001
+        return 'unknown'
 
 
 def seed_everything(seed: int) -> None:
@@ -100,6 +114,7 @@ class Trainer:
         amp_dtype_str: str = 'off',
         fused_ce: bool = True,
         fused_ce_chunk: int = 4096,
+        ce_gemm_dtype: Optional[torch.dtype] = None,
         device: Optional[torch.device] = None,
         log_interval: int = 1,
         val_loader=None,
@@ -119,6 +134,9 @@ class Trainer:
         self.gradient_clip = gradient_clip
         self.fused_ce = fused_ce
         self.fused_ce_chunk = fused_ce_chunk
+        # Training head GEMMs: None = autocast dtype (bf16). Validation always
+        # runs the fp32 head so the reported NLL/PPL is exact.
+        self.ce_gemm_dtype = ce_gemm_dtype
         self.log_interval = log_interval
         self.device = device or torch.device('cpu')
         self.model.to(self.device)
@@ -161,6 +179,7 @@ class Trainer:
             lm, _aux_loss = self.model._hidden_to_lm(input_ids)
             return self.model.ce_from_lm(
                 lm, labels, loss_mask=loss_mask, chunk=self.fused_ce_chunk,
+                gemm_dtype=self.ce_gemm_dtype,
             )
         logits, _, _aux = self.model(input_ids, labels=labels)
         return F.cross_entropy(logits.view(-1, logits.size(-1)), labels.view(-1))
@@ -232,10 +251,10 @@ class Trainer:
                 break
             x = batch['input_ids'].to(self.device)
             y = batch['labels'].to(self.device)
-            lm, _ = self.model._hidden_to_lm(x)
+            lm, _ = self.model._hidden_to_lm(x)          # fp32, no autocast: exact val
             loss = self.model.ce_from_lm(
                 lm, y, loss_mask=batch.get('loss_mask'),
-                chunk=self.fused_ce_chunk,
+                chunk=self.fused_ce_chunk, gemm_dtype=torch.float32,
             )
             total += float(loss.detach()) * x.numel()
             ntok += x.numel()
@@ -494,6 +513,13 @@ def build_argparser():
     p.add_argument('--fused_ce', action='store_true', default=True)
     p.add_argument('--no_fused_ce', action='store_true')
     p.add_argument('--fused_ce_chunk', type=int, default=4096)
+    p.add_argument('--ce_gemm_dtype', type=str, default='auto', choices=['auto', 'fp32'],
+                   help='head GEMM precision in training: auto = the autocast dtype '
+                        '(bf16), fp32 = exact. Validation is always fp32.')
+    p.add_argument('--fused_pam', dest='fused_pam', action='store_true', default=True,
+                   help='Triton fused PAM scan for the real arm (default on)')
+    p.add_argument('--no_fused_pam', dest='fused_pam', action='store_false',
+                   help='use the plain-torch PAM scan instead of the Triton kernel')
     p.add_argument('--max_samples', type=int, default=64)
     p.add_argument('--seed', type=int, default=0)
     p.add_argument('--checkpoint_dir', type=str, default='checkpoints_v13_sempty')
@@ -528,7 +554,10 @@ def main():
         cfg.max_seq_len = max(cfg.max_seq_len, args.seq_len)
 
     device = torch.device(args.device)
-    print(f"device={device} preset={args.preset} dataset={args.dataset}")
+    set_kernel_enabled(args.fused_pam)
+    print(f"device={device} preset={args.preset} dataset={args.dataset} "
+          f"commit={_git_hash()} fused_pam={kernel_enabled()} "
+          f"ce_gemm={args.ce_gemm_dtype} grad_ckpt={cfg.gradient_checkpointing}")
 
     val_loader = None
     if args.dataset == 'synthetic':
@@ -563,6 +592,7 @@ def main():
         amp_dtype_str=args.amp_dtype,
         fused_ce=fused,
         fused_ce_chunk=args.fused_ce_chunk,
+        ce_gemm_dtype=torch.float32 if args.ce_gemm_dtype == 'fp32' else None,
         device=device,
         log_interval=args.log_interval,
         val_loader=val_loader,
