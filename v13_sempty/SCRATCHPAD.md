@@ -1,0 +1,82 @@
+# v13_sempty handover — fused real-PAM speed work (2026-09-03)
+
+Read this first if you are picking up the real-arm training. Everything below
+is committed (`git log --oneline 4740d65..HEAD -- v13_sempty/`); the lab
+notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
+
+## State of play
+
+* Real-101M (`baseline_real_pm`) trains at **~67k tok/s** (was 5.8k), peak
+  **7.1 GiB** at B32 T256 with grad-checkpointing OFF (was 21 GB at B8 with
+  it on). One WikiText-103 epoch (118M tok) ≈ **30 min**.
+* A one-epoch run is **live in tmux `sempty_wiki`** (started 14:49 IST,
+  commit `7343201`):
+  `logs/v13_sempty_wikitext_real_7343201_20260903_1449.log`,
+  checkpoints `checkpoints_v13_sempty/wikitext_real_fused_7343201/`
+  (`best_model.pt`, `latest.pt`). Exit code lands in the matching `.exit` file.
+
+## How to watch
+
+```bash
+tmux attach -t sempty_wiki                 # live; Ctrl-b d to detach
+LOG=$(ls -t logs/v13_sempty_wikitext_real_*.log | head -1)
+grep -E "\[val @" "$LOG" | tail            # val NLL/PPL every 500 steps (~4M tok)
+grep -E "^step " "$LOG" | tail -3          # loss / tok/s / ETA
+# watchdog (wakes on: process gone, error/nan in log, step reached, timeout):
+bash v13_sempty/tmp_wiki_watchdog.sh "$LOG" 14400 2940
+```
+Re-arm the watchdog on every wake (rule in AGENTS.md). A healthy run shows
+~67k tok/s, `GPU 1.3/7.6GB`, loss falling (6.2 at step 300, expect ~4.3 at
+the end: the 09-01 run reached train NLL 4.38 / val PPL 68.75 at one epoch
+with constant lr 5e-5 and B8).
+
+## How to run (again / longer)
+
+`v13_sempty/tmp_wikitext_real.sh` is the whole recipe — edit flags there.
+```bash
+tmux new-session -d -s sempty_wiki "bash v13_sempty/tmp_wikitext_real.sh"
+```
+Current flags: `--batch_size 32 --seq_len 256 --steps 14400 --lr 1e-4
+--warmup_steps 100 --amp_dtype bf16 --fused_ce --fused_pam --ce_gemm_dtype
+auto --val_every 500 --save_every_steps 2500`, no `--gradient_checkpointing`.
+* **Recipe change vs 09-01 you should know about:** batch 4x (B8→B32) and
+  lr 5e-5 → 1e-4 (sqrt scaling); `--steps 14400` = one epoch so warmup-cosine
+  completes at the epoch end (09-01 had a 200k horizon = constant lr). If you
+  want a literal repeat of the old regime use `--lr 5e-5 --steps 200000`.
+* **Longer runs:** `--epochs N` (trainer flag) with `--steps` = N × 14409 so
+  the cosine spans the whole run. Memory headroom is large: B64 T256 fits in
+  11.9 GiB but tok/s *drops* (63k), B96 57k — stay at 8192 tok/step.
+  `--seq_len 512 --batch_size 16` is the same tok/step at 68.5k tok/s.
+* Kill switches: `--no_fused_pam` (plain-torch scan, same math, 2.4x slower
+  kernel), `V13S_KERNEL=0` env (disables both Triton PAM scan and Triton CE),
+  `--ce_gemm_dtype fp32` (exact head, +10 ms/step).
+* Log names carry commit hash + timestamp; the header line prints
+  `commit=<hash>[-dirty] fused_pam=… ce_gemm=… grad_ckpt=…`.
+
+## What was done (for the record)
+
+1. `triton_kernels.py` — real PAM read in chunked linear-attention form
+   (`y_s = a_s (S_in.q_s) + Σ_{t≤s} (a_s/a_t)(q_s.k_t) v_t`), Triton forward
+   (state scan + read) and backward (state-grad scan, dq/dk/dg, dv), tile 64,
+   8 warps; `pam_scan_torch` fallback; `fused_real_pam_read` entry.
+   `RealPAMLayer._chunked` hands off to it; decode `_stepwise` and the complex
+   arm untouched. Carried state layout unchanged (rows = value, cols = key).
+2. `pam_kernel_test.py` — parity harness (oracle anchored to `_stepwise`;
+   the inherited oracle had `outer(k,v)` transposed — fixed). PASS fp32 5e-5 /
+   bf16 3e-2. `selftest` 13/13 incl. `test_real_fused_kernel_parity`.
+3. `fused_ce.py` — `gemm_dtype` (bf16 GEMMs, fp32 loss) and the Triton
+   Liger-style `_FusedLinearCETriton` (grads in forward, one row pass).
+   Validation pinned to the fp32 head.
+4. `train.py` — `--ce_gemm_dtype`, `--fused_pam/--no_fused_pam`, commit hash
+   in the header. `check_torch_layout.py` — new boundaries declared.
+
+## Open items / ideas not taken
+
+* Remaining 61 ms step: Linears + CE GEMMs at tensor-core peak; ~20 ms of
+  small elementwise (norm/gate/residual/RoPE, 900 `mul` launches/step) —
+  only `torch.compile` would fuse these and sempyt's Dim identities trip its
+  recompile limit (needs a sempyt change). RoPE fusion measured at 3 ms max.
+* Why tok/s drops beyond 8192 tok/step is unexplained (not memory).
+* After the run: append the val PPL / NLL@100M-tok result to
+  `EXPERIMENTS_SEMPY.md` "Speed" section (marked pending), then delete this
+  file and the `tmp_*` scripts you no longer need (keep the log).

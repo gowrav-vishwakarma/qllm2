@@ -244,3 +244,61 @@ degenerate into a memory-off MLP. Details:
 `logs/v13_sempty_wikitext_real_20260901.md`; raw cadence:
 `logs/ab_real_wikitext.log`; tinystories A/B:
 `logs/v13_sempty_ab_generation_20260901.md` + commit `193b459`.
+
+## Speed: fused real arm (2026-09-03) — 5.8k → 66.5k tok/s (11.4x)
+
+The 2026-09-01 run trained at ~5.8k tok/s (B8 T256, grad-ckpt, 21 GB).
+Profiling showed the model was not slow, the *formulation* was:
+`RealPAMLayer._chunked` materialised the notebook at every position
+(`[B*H, w, K, K]`, 472 MB fp32 per layer per window at K=98), and the fp32
+fused-CE head was a third of what remained. Fixes, each committed with its
+verification (commits `4740d65` → `7343201`):
+
+| change | step B16 T256 | tok/s | peak |
+|---|---|---|---|
+| baseline (eager notebook, grad-ckpt, fp32 head) | ~700 ms (B8: 5.8k tok/s) | 5.8k | 21 GB |
+| chunked linear-attention form, Triton fwd+bwd (`triton_kernels.py`) | 85.6 ms | 48k | 6.6 GB |
+| + bf16 head GEMMs, fp32 loss (`fused_ce gemm_dtype`) | 76.3 ms | 53.7k | 6.6 GB |
+| + Triton fused linear CE (grads in forward, one row pass) | 61.6 ms | 66.5k | 4.4 GB |
+| + PAM kernels at 8 warps (no spills) | ~60 ms | ~67k | 4.4 GB |
+
+- **Math.** `notebook_s . q_s = a_s (S_in . q_s) + sum_{t<=s} (a_s/a_t)(q_s.k_t) v_t`
+  (`a_s = prod_{i<=s} r_i`): one `[w, w]` decayed score matrix against V
+  plus the carried `[K, K]` state — the same closed form as the complex
+  chunked arm, never the per-position notebook. Decode (`_stepwise`) and
+  the complex `PAMLayer` are untouched. Log-decay `g = log(r + 1e-6)`, in-tile
+  cumsum `G`; backward `dg_i = sum_{s>=i}(q_s.dq_s - k_s.dk_s) + [tile end]
+  <S_out, dS_out>`, reverse-cumsum in torch. Kernel tile BT=64, K blocks of
+  64 (K<=128), 8 warps; states recomputed in backward (never saved).
+- **Parity** (`v13_sempty/pam_kernel_test.py`, oracle anchored to
+  `RealPAMLayer._stepwise` at 1.9e-6): torch form and Triton vs oracle,
+  forward + all five gradients, fp32 < 5e-5, bf16 < 3e-2 (`ddec` < 5e-2 —
+  bf16 cancellation in `q.dq - k.dk`, the identity FLA uses too), T in
+  {64,130,256,300,512,1024}, chunk in {7..1024}, D in {64, 98}, carry in/out.
+  `selftest.test_real_fused_kernel_parity`: kernel on/off through the whole
+  model — logits 3.6e-7, state 6e-7, parameter grads 4.2e-7 rel.
+  The harness's original oracle had `outer(k, v)` (transposed) — fixed.
+- **CE head.** `_FusedLinearCETriton` (Liger-style): per 4096-row chunk,
+  logits GEMM in bf16, one Triton program per row does online logsumexp /
+  NLL and overwrites the row with `(mask/denom)(softmax - onehot)`, then
+  `grad_h = dL @ W`, `grad_W += dL^T @ h` (fp32 accumulate via `out_dtype`)
+  — 3 GEMMs + 1 pass instead of 4 GEMMs + ~10 fp32 passes. Loss/NLL are fp32;
+  bf16 vs fp32-truth grad rel-norm 3.8e-3 (the old bf16 torch path: 5.2e-3).
+  Validation keeps the fp32 head (`gemm_dtype=torch.float32`), so val
+  NLL/PPL stays exact and comparable. Head fwd+bwd N=4096: 32 → 8.8 ms.
+- **Not done, measured not worth it:** fusing RoPE into the kernel (RoPE off
+  saves only 3 ms of 76); splitting `dqk` into dq/dk kernels (slower: 0.66
+  vs 0.56 ms — the extra dA pass costs more than the spills it removes);
+  `torch.compile` (sempyt Dim identities trip the recompile limit; out of
+  scope). Remaining step (61 ms): model Linears 16 ms and CE GEMMs 6 ms are
+  both at tensor-core peak for dim 588; ~20 ms elementwise spread over
+  norms/gates/residuals/RoPE; PAM scan 8 ms; AdamW 4.5 ms.
+- **Geometry grid** (grad-ckpt off, real-101M): tok/s peaks at 8192
+  tok/step — B32 T256 67k / 7.1 GB, B16 T512 68.5k / 7.1 GB — and *falls* for
+  larger batches (B64 T256 63k, B96 T256 57k, B48 T512 58k).
+- **Run launched** (tmux `sempty_wiki`, `tmp_wikitext_real.sh`): B32 T256
+  lr 1e-4 (= 5e-5 * sqrt(4), the one recipe change) warmup 100, `--steps
+  14400` = one epoch so the cosine completes (the 09-01 run's horizon was
+  200k steps, i.e. constant lr), val every 500 steps (~4M tok, as before),
+  fp32 val head. Log `logs/v13_sempty_wikitext_real_7343201_20260903_1449.log`.
+  One epoch ≈ 30 min. Result: pending — see the log's `[val @` lines.
