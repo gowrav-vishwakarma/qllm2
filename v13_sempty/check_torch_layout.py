@@ -30,6 +30,8 @@ ROOT = Path(__file__).resolve().parent
 # Whole modules that are boundaries by design.
 SKIP_FILES = frozenset({
     "fused_ce.py",        # custom autograd Function: chunked [N, vocab] on purpose
+    "triton_kernels.py",  # fused real-PAM scan: Triton kernels + autograd Function
+    "pam_kernel_test.py", # its parity harness: raw-torch oracle vs kernel
     "selftest.py",        # compares against plain F.cross_entropy, which speaks raw torch
     "train.py",           # optimiser / dataloader plumbing
     "generate.py",        # sampling loop
