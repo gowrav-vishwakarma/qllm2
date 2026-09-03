@@ -80,6 +80,114 @@ def _save_mamba_hf(dir_path: Path, model, step: int, tokens: int, nparams: int):
     (dir_path / 'train_meta.json').write_text(json.dumps(meta, indent=2) + '\n')
 
 
+def _tx_forward(model, input_ids, device):
+    T = input_ids.shape[1]
+    pos = torch.arange(T, device=device)
+    h = model.drop(model.token_embed(input_ids) + model.pos_embed(pos))
+    for block in model.blocks:
+        h = block(h)
+    return model.lm_head(model.ln_f(h))
+
+
+@torch.no_grad()
+def _tx_val_loss(model, val_loader, device):
+    model.eval()
+    tot, n = 0.0, 0
+    for batch in val_loader:
+        input_ids = batch['input_ids'].to(device)
+        labels = batch['labels'].to(device)
+        with torch.amp.autocast('cuda', enabled=device.type == 'cuda', dtype=torch.float32):
+            logits = _tx_forward(model, input_ids, device)
+            loss = F.cross_entropy(logits.reshape(-1, logits.size(-1)), labels.reshape(-1),
+                                   reduction='sum')
+        tot += float(loss); n += labels.numel()
+    model.train()
+    return tot / max(1, n)
+
+
+def run_wikitext(args, device) -> int:
+    """Apples-to-apples WikiText-103 control (transformer only), optional recall
+    mix, matching v13_sempty's tokenizer / val protocol (fp32 val head)."""
+    assert args.arch == 'transformer', 'wikitext path is the transformer control'
+    from v7.data import load_wikitext103
+    train_ds, val_ds, tokenizer = load_wikitext103(max_samples=None, seq_len=args.seq_len)
+    vocab_size = len(tokenizer)
+    if args.recall_frac > 0.0:
+        from v13_sempty.data_mix import RecallMixDataset
+        train_ds = RecallMixDataset(train_ds, frac=args.recall_frac,
+                                    seq_len=args.seq_len, tokenizer=tokenizer, seed=args.seed)
+        print(f"recall mix: {args.recall_frac:.1%} of train samples (val unmixed)")
+    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=0)
+    val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=0)
+
+    model, cfg = _build_transformer(vocab_size=vocab_size, size=args.size)
+    model = model.to(device)
+    nparams = sum(p.numel() for p in model.parameters())
+    steps_per_epoch = len(train_loader)
+    total_steps = steps_per_epoch * args.epochs
+    print(f"[transformer/wikitext] params={nparams:,} chunks={len(train_ds)} "
+          f"steps/epoch={steps_per_epoch} total_steps={total_steps} device={device}")
+
+    opt = torch.optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.95), weight_decay=0.1)
+    scaler = torch.amp.GradScaler('cuda', enabled=device.type == 'cuda')
+
+    def lr_at(step):
+        if step < args.warmup_steps:
+            return args.lr * (step + 1) / max(1, args.warmup_steps)
+        progress = (step - args.warmup_steps) / max(1, total_steps - args.warmup_steps)
+        return args.lr * 0.5 * (1 + math.cos(math.pi * min(1.0, progress)))
+
+    step, tokens, t0 = 0, 0, time.time()
+    best = float('inf')
+    model.train()
+    for epoch in range(args.epochs):
+        for batch in train_loader:
+            input_ids = batch['input_ids'].to(device)
+            labels = batch['labels'].to(device)
+            for g in opt.param_groups:
+                g['lr'] = lr_at(step)
+            with torch.amp.autocast('cuda', enabled=device.type == 'cuda', dtype=torch.bfloat16):
+                logits = _tx_forward(model, input_ids, device)
+                loss = F.cross_entropy(logits.reshape(-1, logits.size(-1)), labels.reshape(-1))
+            scaler.scale(loss).backward()
+            scaler.unscale_(opt)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            scaler.step(opt); scaler.update()
+            opt.zero_grad(set_to_none=True)
+            tokens += input_ids.numel(); step += 1
+            if step % args.log_every == 0:
+                tok_s = tokens / max(1e-6, time.time() - t0)
+                print(f"  [tx] ep{epoch} step={step}/{total_steps} loss={float(loss):.4f} "
+                      f"ppl={math.exp(min(20, float(loss))):.1f} tok/s={tok_s:.0f} gtok={tokens}",
+                      flush=True)
+            if args.val_every_steps and step % args.val_every_steps == 0:
+                vl = _tx_val_loss(model, val_loader, device)
+                tag = ''
+                if vl < best:
+                    best = vl
+                    _save_transformer(args.checkpoint_dir / 'best_model.pt', model, cfg,
+                                      step, tokens, nparams)
+                    tag = ' *best*'
+                print(f"  [tx val] step={step} val_loss={vl:.4f} val_ppl={math.exp(min(20, vl)):.2f}"
+                      f"{tag} (best {math.exp(min(20, best)):.2f})", flush=True)
+        # end-of-epoch val
+        vl = _tx_val_loss(model, val_loader, device)
+        if vl < best:
+            best = vl
+            _save_transformer(args.checkpoint_dir / 'best_model.pt', model, cfg, step, tokens, nparams)
+        print(f"  [tx val] end-epoch {epoch} val_ppl={math.exp(min(20, vl)):.2f} "
+              f"(best {math.exp(min(20, best)):.2f})", flush=True)
+    _save_transformer(args.checkpoint_dir / 'final_model.pt', model, cfg, step, tokens, nparams)
+    meta = {'arch': 'transformer', 'dataset': 'wikitext103', 'params': nparams,
+            'tokens': tokens, 'steps': step, 'epochs': args.epochs,
+            'recall_frac': args.recall_frac, 'best_val_ppl': math.exp(min(20, best)),
+            'wall_s': time.time() - t0}
+    (args.checkpoint_dir / 'train_meta.json').write_text(json.dumps(meta, indent=2) + '\n')
+    print(f"[transformer/wikitext] done best_val_ppl={math.exp(min(20, best)):.2f} "
+          f"wall={meta['wall_s']/3600:.2f}h -> {args.checkpoint_dir}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--arch', choices=('transformer', 'mamba'), required=True)
@@ -100,11 +208,24 @@ def main() -> int:
     ap.add_argument('--save_every_steps', type=int, default=2000)
     ap.add_argument('--chat_vocab', action='store_true',
                     help='Use ChatML+reasoning tokenizer (50261) like V13 recall presets')
+    ap.add_argument('--dataset', choices=('mix', 'wikitext103'), default='mix',
+                    help='mix = FineWeb+recall stream (default); wikitext103 = the '
+                         'apples-to-apples WikiText LM control for v13_sempty')
+    ap.add_argument('--recall_frac', type=float, default=0.0,
+                    help='(wikitext103 only) fraction of train samples replaced by '
+                         'synthetic recall docs; matches v13_sempty --recall_frac')
+    ap.add_argument('--epochs', type=int, default=10,
+                    help='(wikitext103 only) passes over the corpus')
+    ap.add_argument('--val_every_steps', type=int, default=2000,
+                    help='(wikitext103 only) steps between val PPL evals')
     args = ap.parse_args()
 
     torch.manual_seed(args.seed)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.dataset == 'wikitext103':
+        return run_wikitext(args, device)
 
     from v7.data import load_pretrain_mix
     sources = tuple(s.strip() for s in args.pretrain_sources.split(',') if s.strip())

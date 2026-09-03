@@ -539,6 +539,9 @@ def build_argparser():
                    help='steps between per-layer diagnostic panels (0=off)')
     p.add_argument('--max_val_batches', type=int, default=128,
                    help='cap on val batches per eval (0=all)')
+    p.add_argument('--recall_frac', type=float, default=0.0,
+                   help='fraction of TRAIN samples replaced by synthetic recall '
+                        'docs (v7._build_recall_doc). 0=off. Val is never mixed.')
     return p
 
 
@@ -573,6 +576,13 @@ def main():
         if tok_vocab != cfg.vocab_size:
             print(f"Adjusting vocab_size: {cfg.vocab_size} -> {tok_vocab}")
             cfg.vocab_size = tok_vocab
+        if args.recall_frac > 0.0:
+            from v13_sempty.data_mix import RecallMixDataset
+            train_ds = RecallMixDataset(
+                train_ds, frac=args.recall_frac, seq_len=args.seq_len,
+                tokenizer=tokenizer, seed=args.seed)
+            print(f"recall mix: {args.recall_frac:.1%} of train samples "
+                  f"are synthetic recall docs (val unmixed)")
         loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
         val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False)
         print(f"train chunks: {len(train_ds)}, val chunks: {len(val_ds)}")
