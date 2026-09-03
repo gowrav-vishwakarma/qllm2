@@ -501,5 +501,54 @@ def fused_complex_pam_read(q, k, v, retention, carry, chunk_size):
     return read, carry_out
 
 
+def pam_delta_torch(q, k, v, retention, beta_w, beta_e, carry, chunk):
+    r"""Chunked delta erase/write (A3), torch WY form on top of the additive scan.
+
+    Recurrence (real, [value, key] state; read ``y = S q``):
+
+        S_t = g_t S_{t-1} (I - b_e,t k_t k_t^T) + b_w,t v_t k_t^T
+
+    with unit-norm keys ``k``.  Within a chunk this equals the additive scan
+    with *pseudo-values* ``W`` in place of ``v``:
+
+        w_t = b_w,t v_t - b_e,t a_t (S_0 k_t) - b_e,t sum_{j<t}(a_t/a_j)(k_j.k_t) w_j
+        (I + P) W = diag(b_w) V - diag(b_e a) (K S_0^T),  P[t,j]=b_e,t (a_t/a_j)(k_t.k_j)
+
+    (derivation in EXPERIMENTS_SEMPY "A3").  ``P`` is strictly lower-triangular,
+    so ``(I+P)`` is unit lower-triangular and ``W`` is one triangular solve
+    (fp32); then ``fused_real_pam_read(q, k, W, g, S_0)`` gives the read and the
+    next carry.  ``q,k,v [BH,T,K]``; ``retention/beta_w/beta_e [BH,T]``;
+    ``carry [BH,K,K]`` or None.
+    """
+    BH, T, K = q.shape
+    dt = q.dtype
+    r = retention.float()
+    bw = beta_w.float()
+    be = beta_e.float()
+    S = carry.float() if carry is not None else None
+    reads = []
+    for start in range(0, T, chunk):
+        w = min(chunk, T - start)
+        sl = slice(start, start + w)
+        qc, kc, vc = q[:, sl].float(), k[:, sl].float(), v[:, sl].float()
+        gc = r[:, sl]                                                   # [BH, w]
+        bwc, bec = bw[:, sl], be[:, sl]                                 # [BH, w]
+        G = torch.cumsum(torch.log(gc + _EPS), dim=-1)                  # [BH, w]
+        a = torch.exp(G)                                               # cumulative decay
+        low = torch.tril(torch.ones(w, w, device=q.device), -1)        # strictly lower
+        Gamma = torch.exp(torch.clamp(G.unsqueeze(-1) - G.unsqueeze(-2), max=0.0))  # a_i/a_j
+        KK = torch.bmm(kc, kc.transpose(1, 2))                          # [BH, w, w]
+        P = (bec.unsqueeze(-1) * (KK * Gamma)) * low                    # [BH, w, w]
+        A = P + torch.eye(w, device=q.device)                          # unit lower-tri
+        rhs = bwc.unsqueeze(-1) * vc                                    # [BH, w, K]
+        if S is not None:
+            KS = torch.bmm(kc, S.transpose(1, 2))                       # S_0 k_t : [BH, w, K(v)]
+            rhs = rhs - (bec * a).unsqueeze(-1) * KS
+        W = torch.linalg.solve_triangular(A, rhs, upper=False, unitriangular=True)
+        read, S = fused_real_pam_read(qc.to(dt), kc.to(dt), W.to(dt), gc, S, w)
+        reads.append(read)
+    return torch.cat(reads, dim=1), S
+
+
 __all__ = ["fused_real_pam_read", "fused_complex_pam_read", "pam_scan_torch",
-           "set_kernel_enabled", "kernel_enabled", "HAS_TRITON"]
+           "pam_delta_torch", "set_kernel_enabled", "kernel_enabled", "HAS_TRITON"]

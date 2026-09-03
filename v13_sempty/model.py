@@ -114,6 +114,7 @@ from v13_sempty.real_ops import (
 from v13_sempty.triton_kernels import (
     fused_real_pam_read,
     fused_complex_pam_read,
+    pam_delta_torch,
     kernel_enabled,
 )
 
@@ -549,6 +550,13 @@ class RealPAMLayer(nn.Module):
         if self.vault:
             self.protect = NamedLinear(self.model_dim, self.decay_out)
 
+        # A3: delta erase/write. Unit keys; per-head erase b_e=sigmoid(.-3) (cap
+        # 0.95) and write b_w=sigmoid(.) gates. Off unless cfg.delta.
+        self.delta = cfg.delta
+        if self.delta:
+            self.erase_proj = NamedLinear(self.model_dim, self.decay_out)
+            self.write_proj = NamedLinear(self.model_dim, self.decay_out)
+
     # ── small named helpers ──────────────────────────────────────────────────
 
     def _as_token(self, x: NamedTensor) -> NamedTensor:
@@ -713,6 +721,34 @@ class RealPAMLayer(nn.Module):
                         (batch, self.heads, self.state_dim, self.head_row, self.head_col))
         return output, carried
 
+    def _chunked_delta(self, tokens, queries, keys, values, decay):
+        """A3 delta erase/write chunked read (raw-torch boundary).
+
+        Unit-norm keys; per-head erase/write gates; WY solve via
+        ``triton_kernels.pam_delta_torch`` (which reuses the additive scan with
+        pseudo-values).
+        """
+        batch, time = tokens.layout[0], tokens.layout[1]
+        B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
+        F_ = nn.functional
+        q = queries.raw(batch, self.heads, time, self.head_feature).reshape(B * H, T, K)
+        k = keys.raw(batch, self.heads, time, self.head_feature).reshape(B * H, T, K)
+        k = F_.normalize(k, dim=-1)
+        v = values.raw(batch, self.heads, time, self.head_feature).reshape(B * H, T, K)
+        retention = decay.raw(batch, self.heads, time).reshape(B * H, T)
+        be = torch.sigmoid(
+            self.erase_proj(tokens).alias(self.decay_out, self.heads).raw(batch, self.heads, time)
+            - 3.0).clamp(max=0.95).reshape(B * H, T)
+        bw = torch.sigmoid(
+            self.write_proj(tokens).alias(self.decay_out, self.heads).raw(batch, self.heads, time)
+            ).reshape(B * H, T)
+        read, state = pam_delta_torch(q, k, v, retention, bw, be, None, self.chunk_size)
+        output = named(read.reshape(B, H, T, K) * (self.head_dim ** -0.5),
+                       (batch, self.heads, time, self.head_row))
+        carried = named(state.reshape(B, H, K, K),
+                        (batch, self.heads, self.head_row, self.head_col))
+        return output, carried
+
     # ── decode: one step per token on the carried notebook ───────────────────
 
     def _stepwise(self, tokens: NamedTensor, queries, keys, values, decay,
@@ -748,15 +784,17 @@ class RealPAMLayer(nn.Module):
         decay = self._decay(tokens)
 
         if state is None and seq_len > 1:
-            if self.n_states > 1:
+            if self.delta:
+                output, new_state = self._chunked_delta(tokens, queries, keys, values, decay)
+            elif self.n_states > 1:
                 output, new_state = self._chunked_multi(tokens, queries, keys, values)
             else:
                 output, new_state = self._chunked(tokens, queries, keys, values, decay)
         else:
-            if self.n_states > 1:
+            if self.n_states > 1 or self.delta:
                 raise NotImplementedError(
-                    "multi-state decode (n_states>1) is not implemented; run rungs "
-                    "with --gen_every 0 (probe/val use the chunked path)")
+                    "multi-state / delta decode is not implemented; run rungs with "
+                    "--gen_every 0 (probe/val use the chunked path)")
             output, new_state = self._stepwise(tokens, queries, keys, values, decay, state)
 
         out = self.o_proj(output.alias(self.head_row, self.head_feature)
