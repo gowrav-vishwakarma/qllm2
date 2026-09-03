@@ -22,10 +22,20 @@ used for validation and by ``_test`` against F.cross_entropy). On the
 real-101M step the fp32 head was 33% of GPU time.
 """
 
+import os
 from typing import Optional
 
 import torch
 import torch.nn.functional as F
+
+try:
+    import triton
+    import triton.language as tl
+    HAS_TRITON = True
+except ImportError:  # pragma: no cover
+    HAS_TRITON = False
+
+_TRITON_CE = os.environ.get("V13S_KERNEL", "1") == "1"
 
 
 def _resolve_gemm_dtype(hidden_rows, gemm_dtype):
@@ -117,6 +127,133 @@ class _FusedLinearCE(torch.autograd.Function):
                 None, None, None, None, None, None)
 
 
+if HAS_TRITON:
+
+    @triton.jit
+    def _ce_rows_kernel(logits_ptr, stride_row, targets_ptr, nll_ptr, mask_ptr,
+                        inv_denom_ptr, V, ignore_index,
+                        HAS_MASK: tl.constexpr, NEED_GRAD: tl.constexpr,
+                        BV: tl.constexpr):
+        """One program per row: nll[row] = logsumexp(x) - x[target] (0 for
+        ignore rows); with NEED_GRAD the row is overwritten IN PLACE by
+        d(mean loss)/d(x) = (mask[row] / denom) * (softmax(x) - onehot)."""
+        row = tl.program_id(0)
+        base = logits_ptr + row.to(tl.int64) * stride_row
+        target = tl.load(targets_ptr + row)
+        valid = target != ignore_index
+        t_safe = tl.where(valid, target, 0)
+
+        m = float("-inf")
+        s = 0.0
+        for start in range(0, V, BV):
+            offs = start + tl.arange(0, BV)
+            x = tl.load(base + offs, mask=offs < V, other=float("-inf")).to(tl.float32)
+            m_new = tl.maximum(m, tl.max(x, axis=0))
+            s = s * tl.exp(m - m_new) + tl.sum(tl.exp(x - m_new), axis=0)
+            m = m_new
+        lse = m + tl.log(s)
+        x_t = tl.load(base + t_safe).to(tl.float32)
+        tl.store(nll_ptr + row, tl.where(valid, lse - x_t, 0.0))
+
+        if NEED_GRAD:
+            w = tl.load(inv_denom_ptr)
+            if HAS_MASK:
+                w = w * tl.load(mask_ptr + row).to(tl.float32)
+            w = tl.where(valid, w, 0.0)
+            for start in range(0, V, BV):
+                offs = start + tl.arange(0, BV)
+                x = tl.load(base + offs, mask=offs < V, other=float("-inf")).to(tl.float32)
+                p = tl.exp(x - lse) * w
+                p = tl.where(offs == t_safe, p - w, p)
+                tl.store(base + offs, p.to(logits_ptr.dtype.element_ty), mask=offs < V)
+
+
+def _ce_rows(logits, targets, nll, mask, inv_denom, ignore_index, need_grad):
+    rows, V = logits.shape
+    BV = min(8192, triton.next_power_of_2(V))
+    _ce_rows_kernel[(rows,)](
+        logits, logits.stride(0), targets, nll, mask if mask is not None else nll,
+        inv_denom, V, ignore_index,
+        HAS_MASK=mask is not None, NEED_GRAD=need_grad, BV=BV, num_warps=8,
+    )
+
+
+class _FusedLinearCETriton(torch.autograd.Function):
+    """Forward computes the gradients too (Liger-style).
+
+    Per chunk: logits = h @ W^T (gemm_dtype); one Triton pass turns the
+    logits into per-row NLL and, in place, into d loss / d logits; then
+    grad_h = dlogits @ W and grad_W += dlogits^T @ h while the chunk is
+    hot. Three GEMMs and one elementwise pass instead of four GEMMs and
+    ~10 fp32 [chunk, V] passes; backward is two scalar multiplies.
+    """
+
+    @staticmethod
+    def forward(ctx, hidden_rows, weight_matrix, targets, mask, chunk, ignore_index,
+                return_nll, gemm_dtype, need_grad):
+        # dtypes are explicit below; autocast must not rewrite the GEMMs
+        with torch.amp.autocast(device_type=hidden_rows.device.type, enabled=False):
+            return _FusedLinearCETriton._forward(
+                ctx, hidden_rows, weight_matrix, targets, mask, chunk, ignore_index,
+                return_nll, gemm_dtype, need_grad)
+
+    @staticmethod
+    def _forward(ctx, hidden_rows, weight_matrix, targets, mask, chunk, ignore_index,
+                 return_nll, gemm_dtype, need_grad):
+        num_rows, feat = hidden_rows.shape
+        vocab = weight_matrix.shape[0]
+        if mask is not None:
+            mask = mask.contiguous().float()
+            denom = mask.sum().clamp_min(1.0)
+        else:
+            denom = (targets != ignore_index).sum().clamp_min(1).float()
+        targets = targets.contiguous()
+        h_g = hidden_rows.to(gemm_dtype)
+        w_g = weight_matrix.to(gemm_dtype)
+        nll = torch.empty(num_rows, dtype=torch.float32, device=hidden_rows.device)
+        grad_h = grad_w = None
+        if need_grad:
+            grad_h = torch.empty_like(hidden_rows)
+            grad_w = torch.zeros(vocab, feat, dtype=torch.float32, device=weight_matrix.device)
+        # the 1/denom factor goes in here (device scalar, no sync);
+        # grad_output is applied in backward
+        inv_denom = (1.0 / denom).reshape(1)
+
+        for s in range(0, num_rows, chunk):
+            e = min(s + chunk, num_rows)
+            logits = torch.mm(h_g[s:e], w_g.T)                      # [c, V] gemm_dtype
+            _ce_rows(logits, targets[s:e], nll[s:e],
+                     mask[s:e] if mask is not None else None,
+                     inv_denom, ignore_index, need_grad)
+            if need_grad:
+                if grad_h.dtype == gemm_dtype:
+                    torch.mm(logits, w_g, out=grad_h[s:e])
+                else:
+                    grad_h[s:e] = torch.mm(logits, w_g, out_dtype=grad_h.dtype)
+                grad_w = torch.addmm(grad_w, logits.T, h_g[s:e], out_dtype=torch.float32)
+
+        loss = ((nll * mask).sum() if mask is not None else nll.sum()) / denom
+        ctx.grad_h, ctx.grad_w = grad_h, grad_w
+        ctx.weight_dtype = weight_matrix.dtype
+        if return_nll:
+            loss._nll = nll  # [N] fp32, detached, raw (pre-mask) per-token CE
+        return loss
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_h, grad_w = ctx.grad_h, ctx.grad_w
+        ctx.grad_h = ctx.grad_w = None
+        g = grad_output.to(torch.float32)
+        gh = (grad_h * g).to(grad_h.dtype) if grad_h is not None else None
+        gw = (grad_w * g).to(ctx.weight_dtype) if grad_w is not None else None
+        return gh, gw, None, None, None, None, None, None, None
+
+
+def _use_triton_ce(hidden_rows) -> bool:
+    return (HAS_TRITON and _TRITON_CE and hidden_rows.is_cuda
+            and not torch.compiler.is_compiling())
+
+
 def fused_linear_cross_entropy(
     hidden_rows: torch.Tensor,
     weight_matrix: torch.Tensor,
@@ -133,12 +270,23 @@ def fused_linear_cross_entropy(
     dtype when autocast is active (bf16 in training), else the hidden dtype;
     pass ``torch.float32`` for the exact path (validation, tests).
 
+    On CUDA with Triton the Liger-style Function (gradients computed in the
+    forward, one fused row pass) is used; elsewhere the chunked torch one.
+    Both give the same loss, NLL byproduct and gradients.
+
     return_nll=True attaches the per-token NLL this forward already computes
     (fp32, no-grad, [N], ignore rows 0.0) to the returned loss as
     ``loss._nll`` — a materialized-intermediate byproduct with no extra
     head pass (O(1) in vocab).
     """
     gemm_dtype = _resolve_gemm_dtype(hidden_rows, gemm_dtype)
+    if _use_triton_ce(hidden_rows):
+        need_grad = torch.is_grad_enabled() and (
+            hidden_rows.requires_grad or weight_matrix.requires_grad)
+        return _FusedLinearCETriton.apply(
+            hidden_rows, weight_matrix, targets, mask, chunk, ignore_index, return_nll,
+            gemm_dtype, need_grad,
+        )
     return _FusedLinearCE.apply(
         hidden_rows, weight_matrix, targets, mask, chunk, ignore_index, return_nll,
         gemm_dtype,
