@@ -881,6 +881,15 @@ class LM(nn.Module):
             self.lm_head_out = Dim("lm_head_out", cfg.dim)
             self.lm_head_proj = NamedLinear(self.model_dim, self.lm_head_out)
             self.lm_head_norm = RealNorm(self.model_dim)
+        # A4: conditional n-gram memory after selected blocks (real arm only).
+        self.cond_mem_layers = tuple(cfg.cond_mem_layers) if cfg.cond_mem else ()
+        if self.cond_mem_layers:
+            assert not cfg.is_complex, "cond_mem is implemented for the real arm"
+            from v13_sempty.cond_mem import ConditionalMemory
+            self.cond_mem = nn.ModuleDict({
+                str(i): ConditionalMemory(cfg, self.model_dim)
+                for i in self.cond_mem_layers
+            })
         self._init_weights()
 
     def _init_weights(self):
@@ -911,7 +920,7 @@ class LM(nn.Module):
             logits = contract(lm, embed, over=self.model_dim)
         return logits.raw(batch, time, self.embed.vocab)  # named-exit: public logits are raw
 
-    def _run_blocks(self, z, batch, time, states, step_offset):
+    def _run_blocks(self, z, batch, time, states, step_offset, input_ids=None):
         use_ckpt = self.config.gradient_checkpointing and self.training and states is None
         new_states = []
         for i, block in enumerate(self.blocks):
@@ -921,11 +930,13 @@ class LM(nn.Module):
             else:
                 z, new_state = block(z, pam_state=state, step_offset=step_offset)
             new_states.append(new_state)
+            if self.cond_mem_layers and i in self.cond_mem_layers:
+                z = self.cond_mem[str(i)](z, input_ids)
         return z, new_states
 
     def forward(self, input_ids, states=None, step_offset: int = 0, labels=None):
         z, batch, time = self._stem(input_ids, step_offset)
-        z, new_states = self._run_blocks(z, batch, time, states, step_offset)
+        z, new_states = self._run_blocks(z, batch, time, states, step_offset, input_ids)
         lm = self.lm_head_norm(self.lm_head_proj(self.output_norm(z)))
         logits = self._tied_logits(lm, batch, time)
         aux_loss = torch.zeros((), device=input_ids.device)
@@ -934,7 +945,8 @@ class LM(nn.Module):
     def _hidden_to_lm(self, input_ids, step_offset: int = 0):
         """Training path: the stack, stopped before full [B, T, V] logits."""
         z, batch, time = self._stem(input_ids, step_offset)
-        z, _ = self._run_blocks(z, batch, time, states=None, step_offset=step_offset)
+        z, _ = self._run_blocks(z, batch, time, states=None, step_offset=step_offset,
+                                input_ids=input_ids)
         lm = self.lm_head_norm(self.lm_head_proj(self.output_norm(z)))
         aux_loss = torch.zeros((), device=input_ids.device)
         return lm, aux_loss
@@ -1054,6 +1066,12 @@ class LM(nn.Module):
             step += 1
         return generated
 
+    def cond_mem_table_param_ids(self) -> set:
+        """ids of the A4 lookup-table weights (reported/optimised separately)."""
+        if not self.cond_mem_layers:
+            return set()
+        return {id(m.table.weight) for m in self.cond_mem.values()}
+
     def count_parameters(self) -> Dict[str, int]:
         embed_p = sum(p.numel() for p in self.embed.parameters())
         block_p = sum(p.numel() for b in self.blocks for p in b.parameters())
@@ -1061,9 +1079,24 @@ class LM(nn.Module):
                   + sum(p.numel() for p in self.lm_head_norm.parameters()))
         norm_p = (sum(p.numel() for p in self.embed_norm.parameters())
                   + sum(p.numel() for p in self.output_norm.parameters()))
-        total = embed_p + block_p + head_p + norm_p
-        return {'embedding (tied)': embed_p, 'blocks': block_p,
-                'norms': norm_p, 'lm_head': head_p, 'total': total}
+        cm_table_p, cm_dense_p = 0, 0
+        if self.cond_mem_layers:
+            table_ids = self.cond_mem_table_param_ids()
+            for m in self.cond_mem.values():
+                for p in m.parameters():
+                    if id(p) in table_ids:
+                        cm_table_p += p.numel()
+                    else:
+                        cm_dense_p += p.numel()
+        # 'total' = dense params (comparison budget); table is reported apart.
+        total = embed_p + block_p + head_p + norm_p + cm_dense_p
+        out = {'embedding (tied)': embed_p, 'blocks': block_p,
+               'norms': norm_p, 'lm_head': head_p, 'total': total}
+        if self.cond_mem_layers:
+            out['cond_mem_dense'] = cm_dense_p
+            out['cond_mem_table'] = cm_table_p
+            out['total_with_table'] = total + cm_table_p
+        return out
 
 
 __all__ = ["PAMLayer", "RealPAMLayer", "Block", "RealBlock", "LM"]

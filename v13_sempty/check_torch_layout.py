@@ -36,6 +36,7 @@ SKIP_FILES = frozenset({
     "train.py",           # optimiser / dataloader plumbing
     "generate.py",        # sampling loop
     "check_torch_layout.py",
+    "cond_mem.py",        # A4: integer n-gram hashing + Conv1d, raw by design
 })
 
 # Functions that wrap a kernel sempyt cannot name, or that are the module's

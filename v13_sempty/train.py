@@ -53,11 +53,20 @@ def seed_everything(seed: int) -> None:
         torch.cuda.manual_seed_all(seed)
 
 
-def build_param_groups(model: nn.Module, weight_decay: float):
-    """Split into decay/no-decay groups (same rules as v7.data.build_param_groups)."""
-    decay, no_decay = [], []
+def build_param_groups(model: nn.Module, weight_decay: float, learning_rate: float = 1e-4,
+                       table_lr_mult: float = 5.0):
+    """Split into decay/no-decay groups (same rules as v7.data.build_param_groups).
+
+    A4 cond_mem lookup tables get their own group: no weight decay and lr x5
+    (Engram convention). LambdaLR preserves the per-group lr ratio.
+    """
+    table_ids = model.cond_mem_table_param_ids() if hasattr(model, 'cond_mem_table_param_ids') else set()
+    decay, no_decay, table = [], [], []
     for name, param in model.named_parameters():
         if not param.requires_grad:
+            continue
+        if id(param) in table_ids:
+            table.append(param)
             continue
         suffix = name.split('.')[-1]
         if suffix in _NO_DECAY_SUFFIXES:
@@ -68,10 +77,14 @@ def build_param_groups(model: nn.Module, weight_decay: float):
             decay.append(param)
         else:
             no_decay.append(param)
-    return [
+    groups = [
         {'params': decay, 'weight_decay': weight_decay},
         {'params': no_decay, 'weight_decay': 0.0},
     ]
+    if table:
+        groups.append({'params': table, 'weight_decay': 0.0,
+                       'lr': learning_rate * table_lr_mult})
+    return groups
 
 
 def build_lr_scheduler(optimizer, warmup_steps: int, total_steps: int):
@@ -141,7 +154,7 @@ class Trainer:
         self.device = device or torch.device('cpu')
         self.model.to(self.device)
 
-        groups = build_param_groups(model, weight_decay)
+        groups = build_param_groups(model, weight_decay, learning_rate=learning_rate)
         self.optimizer = torch.optim.AdamW(
             groups, lr=learning_rate, betas=(0.9, 0.95),
             fused=(self.device.type == 'cuda'),
@@ -611,7 +624,11 @@ def main():
 
     model = LM(cfg)
     params = model.count_parameters()
-    print(f"params: {params['total']:,} ({params['total']/1e6:.2f}M)")
+    _pmsg = f"params: {params['total']:,} ({params['total']/1e6:.2f}M dense)"
+    if 'cond_mem_table' in params:
+        _pmsg += (f" + {params['cond_mem_table']:,} table "
+                  f"(total_with_table {params['total_with_table']/1e6:.2f}M)")
+    print(_pmsg)
 
     fused = args.fused_ce and not args.no_fused_ce
     trainer = Trainer(
