@@ -27,6 +27,20 @@ class PAMConfig:
     base_dt_bias: float = -4.0       # decay bias: init decay ~= e^-4 ~= 0.018
     is_complex: bool = True          # SplitComplex (phase) | fully-real PAM
 
+    # ── architecture ladder (real arm; EXPERIMENTS_SEMPY "Architecture ladder")
+    # Each is off by default so 'baseline_real_pm' stays the control. A rung
+    # that fails its decision gate is removed from the code (AGENTS rule).
+    short_conv: bool = False         # A1: depthwise causal conv(k) on qkv, identity-init
+    short_conv_k: int = 4
+    n_states: int = 1                # A2: independent PAM states per head (E3)
+    state_dt_spread: float = 2.0     # A2: +/- spread of per-state decay-logit offsets
+    vault: bool = False              # A2b: state 0 pinned (retention=1) + protect gate
+    delta: bool = False              # A3: delta erase/write (unit keys, beta_w/beta_e)
+    cond_mem: bool = False           # A4: Engram-style hashed n-gram conditional memory
+    cond_mem_slots: int = 1 << 18    # table rows per (order, head)
+    cond_mem_dim: int = 64           # table row width
+    cond_mem_layers: tuple = (0, 1)  # blocks after which to add the memory read
+
 
 def _base_flat(**kw) -> PAMConfig:
     cfg = PAMConfig(

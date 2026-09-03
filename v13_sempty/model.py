@@ -522,6 +522,17 @@ class RealPAMLayer(nn.Module):
         # Diagnostic hook (off by default): see PAMLayer.capture_decay.
         self.capture_decay = False
 
+        # A1: short depthwise causal conv on the fused qkv, added residually
+        # and zero-init so it is the identity at start (Based / Gated-DeltaNet
+        # convention; ~C*k params). Off unless cfg.short_conv.
+        self.short_conv = cfg.short_conv
+        if self.short_conv:
+            self._conv_k = cfg.short_conv_k
+            C = 3 * cfg.n_heads * cfg.head_dim
+            self.qkv_conv = nn.Conv1d(C, C, kernel_size=self._conv_k, groups=C, bias=True)
+            nn.init.zeros_(self.qkv_conv.weight)
+            nn.init.zeros_(self.qkv_conv.bias)
+
     # ── small named helpers ──────────────────────────────────────────────────
 
     def _as_token(self, x: NamedTensor) -> NamedTensor:
@@ -551,6 +562,8 @@ class RealPAMLayer(nn.Module):
         """
         batch, time = tokens.layout[0], tokens.layout[1]
         qkv = self.qkv_proj(tokens)
+        if self.short_conv:
+            qkv = self._short_conv(qkv, batch, time)
         qkv = qkv.to(batch, time, self.qkv_slot, self.heads, self.head_feature)
         queries, keys, values = (qkv.select(self.qkv_slot, slot) for slot in (0, 1, 2))
 
@@ -585,6 +598,19 @@ class RealPAMLayer(nn.Module):
 
         layout = (batch, self.heads, time, self.head_feature)
         return (queries.to(*layout), keys.to(*layout), values.to(*layout))
+
+    def _short_conv(self, qkv: NamedTensor, batch, time) -> NamedTensor:
+        """A1 depthwise causal conv on the fused qkv, residual + identity-init.
+
+        Raw-torch boundary (Conv1d over the time axis): [B,T,C] -> [B,C,T],
+        causal left-pad by k-1, depthwise conv, SiLU, back to [B,T,C], add.
+        At init the conv weight/bias are zero so this is exactly the identity.
+        """
+        x = qkv.raw(batch, time, self.qkv_fused)              # [B, T, C]
+        xc = x.transpose(1, 2)                                # [B, C, T]
+        xc = nn.functional.pad(xc, (self._conv_k - 1, 0))
+        conv = nn.functional.silu(self.qkv_conv(xc)).transpose(1, 2)
+        return named(x + conv, (batch, time, self.qkv_fused))  # named-exit: conv boundary
 
     def _decay(self, tokens: NamedTensor) -> NamedTensor:
         """Per-head retention in (0, 1): exp(-softplus(linear(token) + bias))."""

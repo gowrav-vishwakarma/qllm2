@@ -52,6 +52,7 @@ KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {
         "_stable_notebook",        # log-space decay-matrix scan: raw fp32, bounded backward
         "_chunked",                # real arm: hand-off to the fused PAM scan (triton_kernels)
         "_chunked_fused",          # complex arm: hand-off to fused_complex_pam_read
+        "_short_conv",             # A1: depthwise causal Conv1d over the time axis
     }),
 }
 

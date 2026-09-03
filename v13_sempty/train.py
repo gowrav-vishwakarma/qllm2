@@ -542,6 +542,13 @@ def build_argparser():
     p.add_argument('--recall_frac', type=float, default=0.0,
                    help='fraction of TRAIN samples replaced by synthetic recall '
                         'docs (v7._build_recall_doc). 0=off. Val is never mixed.')
+    # Architecture-ladder overrides (real arm; see EXPERIMENTS_SEMPY). Each
+    # toggles a cfg field on top of the chosen preset.
+    p.add_argument('--short_conv', action='store_true', help='A1: depthwise conv on qkv')
+    p.add_argument('--n_states', type=int, default=None, help='A2: PAM states per head')
+    p.add_argument('--vault', action='store_true', help='A2b: pinned state + protect gate')
+    p.add_argument('--delta', action='store_true', help='A3: delta erase/write')
+    p.add_argument('--cond_mem', action='store_true', help='A4: conditional n-gram memory')
     return p
 
 
@@ -555,6 +562,21 @@ def main():
     cfg.gradient_checkpointing = args.gradient_checkpointing
     if args.seq_len:
         cfg.max_seq_len = max(cfg.max_seq_len, args.seq_len)
+    # Architecture-ladder overrides.
+    if args.short_conv:
+        cfg.short_conv = True
+    if args.n_states is not None:
+        cfg.n_states = args.n_states
+    if args.vault:
+        cfg.vault = True
+    if args.delta:
+        cfg.delta = True
+    if args.cond_mem:
+        cfg.cond_mem = True
+    _ladder = [k for k in ('short_conv', 'n_states', 'vault', 'delta', 'cond_mem')
+               if getattr(cfg, k) not in (False, 1)]
+    if _ladder:
+        print(f"ladder: " + " ".join(f"{k}={getattr(cfg, k)}" for k in _ladder))
 
     device = torch.device(args.device)
     set_kernel_enabled(args.fused_pam)
