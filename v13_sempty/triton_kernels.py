@@ -57,6 +57,7 @@ _EPS = 1e-6
 _BT = 64          # positions per tile
 _BK = 64          # channels per block (K <= 128 -> at most 2 blocks)
 _MAX_K = 128
+_WARPS = 8         # 4 warps spills every tile kernel (measured 130-440 spills)
 
 _ENABLED = os.environ.get("V13S_KERNEL", "1") == "1"
 
@@ -280,10 +281,10 @@ if HAS_TRITON:
             b_dA += _dot(b_do, tl.trans(b_v), IEEE)
             b_h = tl.load(h_base + offs_k[:, None] * K + offs_v[None, :],
                           mask=m_k[:, None] & m_v[None, :], other=0.0)
-            b_dq += _dot(b_do, tl.trans(b_h).to(b_do.dtype), IEEE)
+            b_dq += _dot(b_do, tl.trans(b_h.to(b_do.dtype)), IEEE)
             b_dh = tl.load(dh_base + offs_k[:, None] * K + offs_v[None, :],
                            mask=m_k[:, None] & m_v[None, :], other=0.0)
-            b_dks += _dot(b_v, tl.trans(b_dh).to(b_v.dtype), IEEE)
+            b_dks += _dot(b_v, tl.trans(b_dh.to(b_v.dtype)), IEEE)
         b_dq = b_dq * tl.exp(b_G)[:, None]
 
         causal = ar[:, None] >= ar[None, :]
@@ -359,7 +360,7 @@ def _launch_fwd_h(k, v, g, h0):
     _pam_fwd_h[(NK, NK, BH)](
         k, v, g, h0 if h0 is not None else h, h, T, K, NT,
         HAS_H0=h0 is not None, IEEE=k.dtype == torch.float32, BT=_BT, BK=_BK,
-        num_warps=4, num_stages=1,
+        num_warps=_WARPS, num_stages=1,
     )
     return h
 
@@ -378,7 +379,7 @@ class _PamScanFn(torch.autograd.Function):
         o = torch.empty_like(q)
         _pam_fwd_o[(NT, NK, BH)](
             q, k, v, g, h, o, T, K, NT, NK,
-            IEEE=q.dtype == torch.float32, BT=_BT, BK=_BK, num_warps=4, num_stages=1,
+            IEEE=q.dtype == torch.float32, BT=_BT, BK=_BK, num_warps=_WARPS, num_stages=1,
         )
         carry_out = h[:, NT].transpose(1, 2).contiguous()
         ctx.save_for_backward(q, k, v, retention, g, h0)
@@ -400,17 +401,17 @@ class _PamScanFn(torch.autograd.Function):
         dh0 = torch.empty(BH, K, K, device=q.device, dtype=torch.float32)
         _pam_bwd_dh[(NK, NK, BH)](
             q, do, g, dhf if dhf is not None else dh, dh, dh0, T, K, NT,
-            HAS_DHF=dhf is not None, IEEE=ieee, BT=_BT, BK=_BK, num_warps=4, num_stages=1,
+            HAS_DHF=dhf is not None, IEEE=ieee, BT=_BT, BK=_BK, num_warps=_WARPS, num_stages=1,
         )
         dq, dk, dv = torch.empty_like(q), torch.empty_like(k), torch.empty_like(v)
         dgp = torch.empty(NK, BH, T, device=q.device, dtype=torch.float32)
         _pam_bwd_dqk[(NT, NK, BH)](
             q, k, v, do, g, h, dh, dq, dk, dgp, T, K, NT, NK, BH,
-            IEEE=ieee, BT=_BT, BK=_BK, num_warps=4, num_stages=1,
+            IEEE=ieee, BT=_BT, BK=_BK, num_warps=_WARPS, num_stages=1,
         )
         _pam_bwd_dv[(NT, NK, BH)](
             q, k, do, g, dh, dv, T, K, NT, NK,
-            IEEE=ieee, BT=_BT, BK=_BK, num_warps=4, num_stages=1,
+            IEEE=ieee, BT=_BT, BK=_BK, num_warps=_WARPS, num_stages=1,
         )
 
         # dG_s = q_s.dq_s - k_s.dk_s, plus <S_out, dS_out> at each tile's last
