@@ -6,14 +6,20 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
-* Real-101M (`baseline_real_pm`) trains at **~67k tok/s** (was 5.8k), peak
-  **7.1 GiB** at B32 T256 with grad-checkpointing OFF (was 21 GB at B8 with
+* Real-101M (`baseline_real_pm`) trains at **~64k tok/s** (was 5.8k), peak
+  **7.6 GiB** at B32 T256 with grad-checkpointing OFF (was 21 GB at B8 with
   it on). One WikiText-103 epoch (118M tok) ≈ **30 min**.
-* A one-epoch run is **live in tmux `sempty_wiki`** (started 14:49 IST,
-  commit `7343201`):
+* The one-epoch T256 run **finished** (commit `7343201`): best **val PPL
+  54.89** (NLL 4.005), avg 64.1k tok/s, exit 0.
   `logs/v13_sempty_wikitext_real_7343201_20260903_1449.log`,
   checkpoints `checkpoints_v13_sempty/wikitext_real_fused_7343201/`
-  (`best_model.pt`, `latest.pt`). Exit code lands in the matching `.exit` file.
+  (`best_model.pt`, `latest.pt`).
+* **Now executing the quality program** (plan
+  `.cursor/plans/v13_sempty_quality_program_7759901a.plan.md`): fair 10-epoch
+  T=2048 WikiText baseline, complex arm at kernel speed, recall infra, and an
+  architecture ladder (short conv, multi-state+vault, delta erase/write,
+  Engram-style conditional memory, layout). See that plan for the full spec;
+  results land in `EXPERIMENTS_SEMPY.md`.
 
 ## How to watch
 
@@ -77,6 +83,7 @@ auto --val_every 500 --save_every_steps 2500`, no `--gradient_checkpointing`.
   only `torch.compile` would fuse these and sempyt's Dim identities trip its
   recompile limit (needs a sempyt change). RoPE fusion measured at 3 ms max.
 * Why tok/s drops beyond 8192 tok/step is unexplained (not memory).
-* After the run: append the val PPL / NLL@100M-tok result to
-  `EXPERIMENTS_SEMPY.md` "Speed" section (marked pending), then delete this
-  file and the `tmp_*` scripts you no longer need (keep the log).
+* The one-epoch T256 result (54.89) is recorded in `EXPERIMENTS_SEMPY.md`
+  → "Speed: fused real arm". The apples-to-apples number is the Phase-1
+  fair run (10 epochs, T=2048); this scratchpad and superseded `tmp_*`
+  scripts get cleaned up at the end of the quality program (Phase 5).

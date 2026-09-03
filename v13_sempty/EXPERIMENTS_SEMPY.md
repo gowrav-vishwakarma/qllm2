@@ -301,4 +301,23 @@ verification (commits `4740d65` → `7343201`):
   14400` = one epoch so the cosine completes (the 09-01 run's horizon was
   200k steps, i.e. constant lr), val every 500 steps (~4M tok, as before),
   fp32 val head. Log `logs/v13_sempty_wikitext_real_7343201_20260903_1449.log`.
-  One epoch ≈ 30 min. Result: pending — see the log's `[val @` lines.
+  One epoch ≈ 30 min.
+- **Result (2026-09-03, commit `7343201`).** Best **val PPL 54.89**
+  (val NLL 4.005, step 14000; full 248k-token val set, fp32 head), down from
+  the 09-01 run's 68.75 — the single recipe change (B32/lr 1e-4 cosine over a
+  finite 14400-step horizon vs B8/lr 5e-5 constant) bought −13.9 PPL.
+  avg **64.1k tok/s**, peak 7.6 GB, ~31 min wall, exit 0. End-of-run diag:
+  `pam_scale` 0.11–0.28 (memory path engaged, strongest mid/late layers),
+  `cgu_scale` 0.86–1.46, realized retention 0.66–0.91 — no layer saturates.
+  Train loss 10.94 → 4.16.
+
+  This is **1 epoch at T=256**. It is NOT comparable to the reference bars,
+  which are all **10 epochs at T=2048, B=18** (3213 steps/epoch): transformer
+  100.3M epoch-1 73.41 → epoch-2 38.77 → epoch-10 **22.69**; v11 E3-K3
+  (complex, 100.5M) epoch-1 81.54 → epoch-2 45.59 → epoch-10 **25.77**. Our
+  54.89 uses 4.5× more optimizer steps (B32 T256) over an 8× shorter context
+  than those epoch-1 numbers, which normally *helps* PPL, so the honest
+  apples-to-apples question (10 epochs, T=2048, ~1.18B tok — now ~5 h at 64k
+  tok/s, previously ~57 h) is answered by the Phase-1 fair run, not by this
+  number. WikiText-only behavioral recall on this checkpoint: pending
+  (Phase 1 probe).
