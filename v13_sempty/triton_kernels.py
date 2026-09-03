@@ -453,5 +453,53 @@ def fused_real_pam_read(q, k, v, retention, carry, chunk_size):
     return pam_scan_torch(q, k, v, retention, carry, chunk_size)
 
 
-__all__ = ["fused_real_pam_read", "pam_scan_torch", "set_kernel_enabled",
-           "kernel_enabled", "HAS_TRITON"]
+def fused_complex_pam_read(q, k, v, retention, carry, chunk_size):
+    r"""Complex additive PAM read + carried state, on the real kernel.
+
+    Same recurrence as the complex ``PAMLayer``:
+
+        S_t = g_t S_{t-1} + v_t (x) conj(k_t),   y_s = S_s . q_s
+
+    with a *real* per-(token) retention ``g_t``.  Everything is split-real:
+    ``q, k, v`` are ``[BH, T, K, 2]`` (last axis = real, imag), ``retention``
+    is ``[BH, T]``, ``carry`` is ``[BH, K, K, 2]`` ([value, key] rows/cols) or
+    ``None``.  Returns ``(read [BH, T, K, 2], carry_out [BH, K, K, 2])``.
+
+    Trick (exact, autograd-complete, reuses ``fused_real_pam_read`` unchanged):
+    stack real/imag into width-2K real q~/k~/v~ so a real dot reproduces the
+    conjugate score ``<q_s, k_t> = q_r.k_r + q_i.k_i + i(q_i.k_r - q_r.k_i)``.
+    Two real scans (with q~ and the rotated q~'=[q_i;-q_r]) give the real and
+    imaginary weighted value sums; recombine.  See EXPERIMENTS_SEMPY "Complex
+    at kernel speed" for the block algebra.
+    """
+    BH, T, K, _ = q.shape
+    qr, qi = q[..., 0], q[..., 1]
+    kr, ki = k[..., 0], k[..., 1]
+    vr, vi = v[..., 0], v[..., 1]
+    ktil = torch.cat([kr, ki], dim=-1)             # [BH, T, 2K]
+    vtil = torch.cat([vr, vi], dim=-1)
+    qtil = torch.cat([qr, qi], dim=-1)             # score real part  A = q.k* real
+    qtilp = torch.cat([qi, -qr], dim=-1)           # score imag part  B = q.k* imag
+
+    carry_til = None
+    if carry is not None:
+        ReS, ImS = carry[..., 0], carry[..., 1]    # [BH, K(v), K(k)]
+        carry_til = q.new_zeros(BH, 2 * K, 2 * K, dtype=torch.float32)
+        carry_til[:, :K, :K] = ReS                 # v_r rows, k_r cols  (S~_rr)
+        carry_til[:, K:, :K] = ImS                 # v_i rows, k_r cols  (S~_ir)
+
+    A, Sout = fused_real_pam_read(qtil, ktil, vtil, retention, carry_til, chunk_size)
+    B, _ = fused_real_pam_read(qtilp, ktil, vtil, retention, carry_til, chunk_size)
+
+    y_r = A[..., :K] - B[..., K:]
+    y_i = A[..., K:] + B[..., :K]
+    read = torch.stack([y_r, y_i], dim=-1)         # [BH, T, K, 2]
+
+    ReSo = Sout[:, :K, :K] + Sout[:, K:, K:]       # S~_rr + S~_ii
+    ImSo = Sout[:, K:, :K] - Sout[:, :K, K:]       # S~_ir - S~_rk
+    carry_out = torch.stack([ReSo, ImSo], dim=-1)  # [BH, K, K, 2]
+    return read, carry_out
+
+
+__all__ = ["fused_real_pam_read", "fused_complex_pam_read", "pam_scan_torch",
+           "set_kernel_enabled", "kernel_enabled", "HAS_TRITON"]

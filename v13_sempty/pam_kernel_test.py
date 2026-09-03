@@ -226,6 +226,43 @@ def main():
           f"grads finite={bool(torch.isfinite(q.grad).all() and torch.isfinite(dec.grad).all())}")
     ok &= d < 3e-2 and dc < 3e-2
 
+    # 3b) complex arm: fused_complex_pam_read vs a per-step complex oracle
+    #     (conjugate write S_t = g S_{t-1} + v (x) conj(k); read S q). fp32 3e-5,
+    #     bf16 3e-2. Verifies the split-real conjugate-score trick + carry.
+    def complex_oracle(q, k, v, ret, carry):
+        BH, T, K, _ = q.shape
+        qc = torch.complex(q[..., 0].float(), q[..., 1].float()).to(torch.complex128)
+        kc = torch.complex(k[..., 0].float(), k[..., 1].float()).to(torch.complex128)
+        vc = torch.complex(v[..., 0].float(), v[..., 1].float()).to(torch.complex128)
+        r = ret.float().double()
+        S = (torch.complex(carry[..., 0], carry[..., 1]).to(torch.complex128).clone()
+             if carry is not None else
+             torch.zeros(BH, K, K, dtype=torch.complex128, device=q.device))
+        ys = []
+        for t in range(T):
+            S = r[:, t].view(BH, 1, 1) * S + vc[:, t].unsqueeze(-1) * kc[:, t].conj().unsqueeze(-2)
+            ys.append(torch.einsum('bij,bj->bi', S, qc[:, t]))
+        Y = torch.stack(ys, dim=1)
+        return (torch.stack([Y.real, Y.imag], dim=-1).float(),
+                torch.stack([S.real, S.imag], dim=-1).float())
+
+    print("\ncomplex fused parity (fused_complex_pam_read):")
+    for dtype, tol in ((torch.float32, 3e-5), (torch.bfloat16, 3e-2)):
+        for with_carry in (False, True):
+            torch.manual_seed(11)
+            BH, T, K = 12, 130, 64
+            def mkc():
+                return torch.randn(BH, T, K, 2, device=dev, dtype=dtype)
+            q, k, v = mkc(), mkc(), mkc()
+            ret = torch.rand(BH, T, device=dev, dtype=dtype).clamp(0.05, 0.999)
+            carry = torch.randn(BH, K, K, 2, device=dev) * 0.1 if with_carry else None
+            read, cout = mod.fused_complex_pam_read(q, k, v, ret, carry, 32)
+            oread, ocout = complex_oracle(q, k, v, ret, carry)
+            dr = (read.float() - oread).abs().max().item() / (oread.abs().max() + 1e-6)
+            dc = (cout - ocout).abs().max().item() / (ocout.abs().max() + 1e-6)
+            print(f"  {str(dtype):>14} carry={int(with_carry)} read={dr:.2e} carry={dc:.2e}")
+            ok &= dr < tol and dc < tol
+
     # 4) micro-bench fwd+bwd, real-101M geometry (B16 x H6, T1024, K98) bf16
     import time
     q, k, v, dec, _ = make(96, 1024, 98, torch.bfloat16, 5, dev)

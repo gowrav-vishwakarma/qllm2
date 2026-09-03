@@ -51,6 +51,7 @@ KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {
         "generate",                # sampling loop over raw logits
         "_stable_notebook",        # log-space decay-matrix scan: raw fp32, bounded backward
         "_chunked",                # real arm: hand-off to the fused PAM scan (triton_kernels)
+        "_chunked_fused",          # complex arm: hand-off to fused_complex_pam_read
     }),
 }
 
@@ -124,7 +125,10 @@ def scan_file(path: Path) -> list[str]:
 
 
 def main() -> int:
-    hits = [h for path in sorted(ROOT.glob("**/*.py")) for h in scan_file(path)]
+    # tmp/ holds throwaway benches and parity scripts (AGENTS: no commits, not
+    # production); they speak raw torch on purpose.
+    hits = [h for path in sorted(ROOT.glob("**/*.py"))
+            if "tmp" not in path.parts for h in scan_file(path)]
     if hits:
         print("v13_sempty is reaching around sempyt:\n")
         for hit in hits:

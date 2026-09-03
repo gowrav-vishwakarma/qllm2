@@ -111,7 +111,11 @@ from v13_sempty.real_ops import (
     RealNorm,
     build_rope_cache_real,
 )
-from v13_sempty.triton_kernels import fused_real_pam_read
+from v13_sempty.triton_kernels import (
+    fused_real_pam_read,
+    fused_complex_pam_read,
+    kernel_enabled,
+)
 
 # Diagnostic hook (off by default): when a trainer sets this to a fresh list
 # and flips PAMLayer.capture_decay, each _decay forward appends the realized
@@ -307,8 +311,14 @@ class PAMLayer(nn.Module):
 
     def _chunked(self, tokens: NamedTensor, queries, keys, values,
                  decay) -> tuple[NamedTensor, NamedTensor]:
+        # Fused path: the same closed form as _stable_notebook, run on the real
+        # kernel via the split-real conjugate-score trick (never materialises
+        # the [B,H,w,K,K,2] per-position notebook). Declared raw boundary.
+        batch, time = tokens.layout[0], tokens.layout[1]
+        if kernel_enabled() and tokens.data.is_cuda:
+            return self._chunked_fused(batch, time, queries, keys, values, decay)
+
         seq_len = tokens.size(tokens.layout[1])
-        time = tokens.layout[1]
         carried = None  # the notebook coming in from earlier windows
         reads = []
         for start in range(0, seq_len, self.chunk_size):
@@ -344,6 +354,27 @@ class PAMLayer(nn.Module):
             )
             carried = select(window_notebook, over=window, index=length - 1)
         output = cat(reads, over="chunk_time", into=time)
+        return output, carried
+
+    def _chunked_fused(self, batch, time, queries, keys, values, decay):
+        """Fused complex chunked read (raw-torch boundary; same math as
+        ``_stable_notebook``).  See ``triton_kernels.fused_complex_pam_read``.
+        """
+        B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
+        q = queries.raw(batch, self.heads, time, self.head_feature,
+                        self.complex_pair).reshape(B * H, T, K, 2)
+        k = keys.raw(batch, self.heads, time, self.head_feature,
+                     self.complex_pair).reshape(B * H, T, K, 2)
+        v = values.raw(batch, self.heads, time, self.head_feature,
+                       self.complex_pair).reshape(B * H, T, K, 2)
+        retention = decay.raw(batch, self.heads, time).reshape(B * H, T)
+        read, state = fused_complex_pam_read(q, k, v, retention, None, self.chunk_size)
+        output = named(read.reshape(B, H, T, K, 2) * (self.head_dim ** -0.5),
+                       (batch, self.heads, time, self.head_row, self.complex_pair),
+                       self.policy)
+        carried = named(state.reshape(B, H, K, K, 2),
+                        (batch, self.heads, self.head_row, self.head_col,
+                         self.complex_pair), self.policy)
         return output, carried
 
     # ── decode: one step per token on the carried notebook ───────────────────
