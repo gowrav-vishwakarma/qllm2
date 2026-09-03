@@ -17,6 +17,7 @@ import random
 import time
 import sys
 from dataclasses import asdict
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -43,6 +44,90 @@ def _git_hash() -> str:
         return out.stdout.strip() + ('-dirty' if dirty.stdout.strip() else '')
     except Exception:  # noqa: BLE001
         return 'unknown'
+
+
+def _print_run_header(args, cfg, model, params, device, loader, val_loader,
+                      tokenizer):
+    """V13-style rich header at the top of every log.
+
+    Records everything needed to reproduce/interpret the run later: wall clock,
+    commit, full CLI args, full model config, geometry (batch/seq/tokens/steps/
+    implied-epochs), dataset sizes, parameter breakdown, and the environment
+    (device, GPU, AMP, kernel flags). Kept as plain prints so it lands in the
+    tee'd .log verbatim.
+    """
+    bs, sl = args.batch_size, args.seq_len
+    tok_per_step = bs * sl
+    try:
+        steps_per_epoch = len(loader)
+    except TypeError:
+        steps_per_epoch = None
+    epochs_implied = (args.steps / steps_per_epoch) if steps_per_epoch else None
+    total_tokens = args.steps * tok_per_step
+
+    bar = '=' * 72
+    print(bar)
+    print('  v13_sempty trainer  (real-arm PAM, O(1) memory)')
+    print(f"  wall clock start : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"  commit           : {_git_hash()}")
+    print(f"  preset / dataset : {args.preset} / {args.dataset}")
+    print(bar)
+
+    # --- environment --------------------------------------------------------
+    gpu = 'cpu'
+    if device.type == 'cuda' and torch.cuda.is_available():
+        gpu = torch.cuda.get_device_name(device)
+    print('[env]')
+    print(f"  device={device} gpu={gpu} torch={torch.__version__}")
+    print(f"  fused_pam={kernel_enabled()} fused_ce={args.fused_ce and not args.no_fused_ce} "
+          f"ce_gemm_dtype={args.ce_gemm_dtype} amp={args.amp_dtype} "
+          f"grad_ckpt={cfg.gradient_checkpointing}")
+
+    # --- geometry -----------------------------------------------------------
+    print('[geometry]')
+    print(f"  batch_size={bs} seq_len={sl} tokens/step={tok_per_step:,}")
+    _epstr = f"{epochs_implied:.2f}" if epochs_implied is not None else "n/a"
+    print(f"  steps={args.steps:,} steps/epoch={steps_per_epoch} "
+          f"epochs_implied={_epstr}")
+    print(f"  planned_tokens={total_tokens:,}  "
+          f"lr={args.lr} warmup={args.warmup_steps} wd={args.weight_decay} "
+          f"grad_clip={args.gradient_clip}")
+
+    # --- dataset ------------------------------------------------------------
+    print('[data]')
+    _tr = None
+    try:
+        _tr = len(loader.dataset)
+    except (AttributeError, TypeError):
+        pass
+    _va = None
+    if val_loader is not None:
+        try:
+            _va = len(val_loader.dataset)
+        except (AttributeError, TypeError):
+            pass
+    print(f"  train_chunks={_tr} val_chunks={_va} "
+          f"recall_frac={args.recall_frac} "
+          f"vocab={cfg.vocab_size} tokenizer={'gpt2' if tokenizer else 'synthetic'}")
+
+    # --- params -------------------------------------------------------------
+    print('[params]')
+    _pm = f"  total={params['total']:,} ({params['total']/1e6:.2f}M dense)"
+    if 'cond_mem_table' in params:
+        _pm += (f" + {params['cond_mem_table']:,} table "
+                f"(total_with_table {params['total_with_table']/1e6:.2f}M)")
+    print(_pm)
+
+    # --- ladder (only non-default arch flags) -------------------------------
+    _ladder = [k for k in ('short_conv', 'n_states', 'vault', 'delta', 'cond_mem')
+               if getattr(cfg, k) not in (False, 1)]
+    if _ladder:
+        print('[ladder] ' + " ".join(f"{k}={getattr(cfg, k)}" for k in _ladder))
+
+    # --- full config + args (verbatim, for exact repro) ---------------------
+    print('[config] ' + str(asdict(cfg)))
+    print('[args] ' + str(vars(args)))
+    print(bar, flush=True)
 
 
 def seed_everything(seed: int) -> None:
@@ -384,10 +469,22 @@ class Trainer:
         log_start = time.time()
         log_tokens = 0
         try:
-            n_batches = len(self.train_loader)
+            steps_per_epoch = len(self.train_loader)
         except TypeError:
-            n_batches = None
-        for batch_idx, batch in enumerate(self.train_loader):
+            steps_per_epoch = None
+        # ETA/progress track the whole run when max_steps spans many epochs.
+        n_batches = max_steps if max_steps is not None else steps_per_epoch
+
+        def _epoch_stream():
+            """Re-iterate the loader across epochs (re-shuffles each pass) until
+            max_steps; a single pass when max_steps is None."""
+            while True:
+                for b in self.train_loader:
+                    yield b
+                if max_steps is None:
+                    return
+
+        for batch_idx, batch in enumerate(_epoch_stream()):
             loss = self.step(batch)
             losses.append(loss)
             batch_tokens = batch['input_ids'].numel()
@@ -586,16 +683,8 @@ def main():
         cfg.delta = True
     if args.cond_mem:
         cfg.cond_mem = True
-    _ladder = [k for k in ('short_conv', 'n_states', 'vault', 'delta', 'cond_mem')
-               if getattr(cfg, k) not in (False, 1)]
-    if _ladder:
-        print(f"ladder: " + " ".join(f"{k}={getattr(cfg, k)}" for k in _ladder))
-
     device = torch.device(args.device)
     set_kernel_enabled(args.fused_pam)
-    print(f"device={device} preset={args.preset} dataset={args.dataset} "
-          f"commit={_git_hash()} fused_pam={kernel_enabled()} "
-          f"ce_gemm={args.ce_gemm_dtype} grad_ckpt={cfg.gradient_checkpointing}")
 
     val_loader = None
     if args.dataset == 'synthetic':
@@ -620,15 +709,11 @@ def main():
                   f"are synthetic recall docs (val unmixed)")
         loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
         val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False)
-        print(f"train chunks: {len(train_ds)}, val chunks: {len(val_ds)}")
 
     model = LM(cfg)
     params = model.count_parameters()
-    _pmsg = f"params: {params['total']:,} ({params['total']/1e6:.2f}M dense)"
-    if 'cond_mem_table' in params:
-        _pmsg += (f" + {params['cond_mem_table']:,} table "
-                  f"(total_with_table {params['total_with_table']/1e6:.2f}M)")
-    print(_pmsg)
+    _print_run_header(args, cfg, model, params, device, loader, val_loader,
+                      tokenizer)
 
     fused = args.fused_ce and not args.no_fused_ce
     trainer = Trainer(
