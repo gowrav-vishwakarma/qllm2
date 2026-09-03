@@ -196,14 +196,18 @@ outside a declared boundary.
 
 ## Experiment ledger
 
-The baseline is set; no GPU experiment has been run yet. Entries below are
-pre-registered, not results.
+The ledger is no longer pre-registered: the GPU experiments below were run
+(commits `96513c0` A/B evidence, `87f7b42` wikitext run; full logs under
+`logs/`). Note the `baseline` preset row was overtaken by events — the real
+work went to the param-matched real arm and the complex-vs-real A/B.
 
 | # | Question | Design | Bar to pass | Status |
 |---|----------|--------|-------------|--------|
 | — | baseline | — | — | **clean baseline, PPL regression vs v13 accepted** |
-| 1 | *Does the simple PAM learn anything at all on real data?* | `baseline` preset (384/6/64/16, v11 7d geometry), WikiText-103, B=18, 10e, RoPE on, `chunk_size=256` | finite loss, loss decreases, PPL logged for the record | **not started — needs user go-ahead to launch on GPU** |
-| 2 | *Is the recurrence actually position-blind, and does it matter?* | generation quality probe on run 1 (rep3/rep4/uniq) | if degenerate, revisit position (clean ablation) | not started (depends on 1) |
+| 1 | *Does the simple PAM learn anything at all on real data?* | WikiText-103, 1 epoch; arms: complex-384 (100.4M), real-588 `baseline_real_pm` (101.9M, param-matched), real-768 (162M) on tinystories; real-588 on wikitext | finite loss, loss decreases, PPL logged for the record | **PASS** — tinystories 1-epoch A/B done (final-200 nll: complex 3.222 / real_pm 2.981 / real768 2.834); wikitext 1 epoch: val PPL 68.75, train NLL 4.38 @100M tok |
+| 2 | *Is the recurrence actually position-blind, and does it matter?* | generation quality probe (rep3/rep4/uniq) | if degenerate, revisit position (clean ablation) | not started — superseded for now by in-loop gen samples + behavioral probes (below) |
+| 3 | *At matched params, does the real-arithmetic PAM learn as well as the complex PAM?* | `baseline_real_pm` (101.89M) vs complex `baseline` (100.36M), same loop, tinystories + wikitext | train NLL within ~0.1 at matched tokens | **PASS** — tinystories: real −0.24 nll (real better); wikitext @100M tok: 4.38 vs 4.36 (parity), and real used the conservative lr 5e-5 / T256 vs 3e-4 / T2048 |
+| 4 | *Does the real PAM actually use its memory path, or degenerate into a pure MLP?* | per-layer `pam_scale` / `cgu_scale` / realized-retention panels during the wikitext run; then behavioral recall probes (`scripts/run_memory_behavioral.py --model-type v13_sempty`, trials=20, matched to `v11_behavior.json` protocol) | memory scales > init where probes show recall | **SPLIT** — mechanism: PASS (`pam` engages selectively, L11 0.29 vs init 0.1; retention bounded 0.63–0.90; not memory-off). Behavioral recall: FAIL — real_pm mean acc 0.129 ≈ chance (0.125); matched complex sempty (tinystories) 0.150 ≈ chance. At 1 epoch natural text neither arm learns invented-association recall; NOT discriminating real-vs-complex. (Stage-6d's transformer 0.956 used an explicit recall curriculum + 1B tok — not comparable.) |
 
 **Rules for this ledger:**
 - One variable per row. No confounded runs.
@@ -227,3 +231,16 @@ Guard: `.venv/bin/python -m v13_sempty.check_torch_layout` — **clean**
 
 Train smoke: `.venv/bin/python -m v13_sempty.train --preset tiny --dataset
 synthetic --steps 8 --device cpu` — loss 5.5556 → 5.5409, finite, decreasing.
+
+## GPU verdict (2026-09-01, wikitext-103, 1 epoch)
+
+The fully-real PAM (`baseline_real_pm`, 101.89M) matches the complex PAM at
+matched params: train NLL 4.38 vs 4.36 at the 100M-token anchor, val PPL
+68.75 (monotonic, no overfitting), exit clean. Per-layer diagnostics show
+both paths learned: `cgu` (transform) ramps 0.55→1.76 with depth, `pam`
+(memory) engages selectively in mid/late layers with bounded realized
+retention (0.63–0.90; no layer saturates to 1.0). The model did not
+degenerate into a memory-off MLP. Details:
+`logs/v13_sempty_wikitext_real_20260901.md`; raw cadence:
+`logs/ab_real_wikitext.log`; tinystories A/B:
+`logs/v13_sempty_ab_generation_20260901.md` + commit `193b459`.

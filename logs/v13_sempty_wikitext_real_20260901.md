@@ -88,3 +88,24 @@ It is not a degenerate solution that turned memory off.
 - references: v13 100.6M complex `v13/EXPERIMENTS_V13.md` (4.36@100M); tinystories
   A/B evidence `logs/ab_{complex,real,real_pm}.log` +
   `logs/v13_sempty_ab_generation_20260901.md`
+
+## Behavioral recall probes (2026-09-03, `v13_sempty` model type added)
+
+Ran `scripts/run_memory_behavioral.py --model-type v13_sempty --trials 20`
+(exact protocol of `v11_behavior.json` / `mamba_behavior.json`) on
+`best_model.pt`: artifact
+`logs/memory_probes/publication/gpu/v13_sempty_real_wikitext_behavior.json`.
+
+Mean contrastive accuracy (8 candidates, chance = 0.125):
+**real_pm (this run) 0.129 — at chance.** For reference: same-recipe complex
+sempty (tinystories ckpt) 0.150 — also at chance; v11 complex (8B tokens,
+recall-mixed curriculum) 0.210; pretrained Mamba-130m 0.769.
+
+Interpretation: after 1 epoch / 118M tokens of natural text, the real PAM
+shows *no* behavioral invented-association recall. Neither does its matched
+complex twin, so this is **not** a real-vs-complex difference — it is the
+known natural-text-doesn't-teach-recall result from the v11 program (Stage-6:
+even the 0.956 Transformer baseline needed an explicit recall curriculum and
+1B tokens). The mechanism diagnostics (above) show the memory path is live;
+the behavioral probes show it was never *trained to retrieve*. Recall
+training is a separate, open problem for both PAM variants.

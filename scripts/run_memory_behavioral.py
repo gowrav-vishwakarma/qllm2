@@ -96,6 +96,35 @@ def _load_v13(checkpoint: Path, preset: str, device: torch.device, extra: dict[s
     return model, tokenizer, cfg
 
 
+
+def _load_v13_sempty(checkpoint: Path, preset: str, device: torch.device):
+    from v13_sempty.config import PAMConfig, get_config
+    from v13_sempty.model import LM
+
+    payload = torch.load(checkpoint, map_location='cpu', weights_only=False)
+    raw = payload.get('config')
+    if isinstance(raw, dict) and raw:
+        fields = set(PAMConfig.__dataclass_fields__)
+        cfg = PAMConfig(**{k: v for k, v in raw.items() if k in fields})
+    else:
+        cfg = get_config(preset)
+    cfg.dropout = 0.0
+    cfg.gradient_checkpointing = False
+    model = LM(cfg)
+    model.load_state_dict(payload['model_state_dict'])
+    model.to(device).eval()
+
+    # The real arms were trained on the plain GPT-2 tokenizer; chat-vocab
+    # checkpoints must keep the chat tokenizer (mirror generate.py).
+    if cfg.vocab_size >= 50259:
+        from v7.data import get_chat_tokenizer
+        tokenizer = get_chat_tokenizer()
+    else:
+        from transformers import AutoTokenizer
+        tokenizer = AutoTokenizer.from_pretrained('gpt2')
+        tokenizer.pad_token = tokenizer.eos_token
+    return model, tokenizer, cfg
+
 def _load_transformer(checkpoint: Path, device: torch.device):
     from transformers import AutoTokenizer
     from v6.transformer_baseline import TransformerConfig, TransformerLM
@@ -146,6 +175,10 @@ def _last_logits(model_type: str, model, input_ids: torch.Tensor) -> torch.Tenso
             real_part(last) @ model.embed.embed_real.weight.T
             + imag_part(last) @ model.embed.embed_imag.weight.T
         )
+
+    if model_type == 'v13_sempty':
+        logits = model(input_ids)[0]
+        return logits[:, -1]
 
     if model_type == 'transformer':
         length = input_ids.shape[1]
@@ -201,7 +234,7 @@ def _aggregate(rows: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='Behavioral memory contrastive scoring')
-    parser.add_argument('--model-type', choices=('v11', 'v13', 'transformer', 'hf'), required=True)
+    parser.add_argument('--model-type', choices=('v11', 'v13', 'v13_sempty', 'transformer', 'hf'), required=True)
     parser.add_argument('--checkpoint', type=Path)
     parser.add_argument('--model-id', default='state-spaces/mamba-130m-hf')
     parser.add_argument('--preset', default='v11_e3_k3_chat')
@@ -228,7 +261,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = build_parser().parse_args()
-    if args.model_type in ('v11', 'v13', 'transformer') and args.checkpoint is None:
+    if args.model_type in ('v11', 'v13', 'v13_sempty', 'transformer') and args.checkpoint is None:
         raise SystemExit(f'--checkpoint is required for {args.model_type}')
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -253,6 +286,9 @@ def main() -> int:
             with torch.no_grad():
                 for block in model.blocks:
                     block.pam_scale.fill_(args.pam_scale)
+        identity = str(args.checkpoint)
+    elif args.model_type == 'v13_sempty':
+        model, tokenizer, config = _load_v13_sempty(args.checkpoint, args.preset, device)
         identity = str(args.checkpoint)
     elif args.model_type == 'transformer':
         model, tokenizer, config = _load_transformer(args.checkpoint, device)
