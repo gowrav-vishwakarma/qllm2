@@ -536,6 +536,57 @@ def test_chrono_parallel_vs_recurrent(batch_size=2, seq_len=17, seed=0):
     return True
 
 
+def test_out_gate_parity_and_decode(batch_size=2, seq_len=17, seed=0):
+    """N4 read-out gate: identity at init, grads flow, decode == chunked.
+
+    (1) out_gate on (zero W_g, b_g = silu^-1(1)) must reproduce the ungated
+    chrono model's logits exactly; (2) one backward reaches every gate_proj;
+    (3) with random gate weights, chunked prefill == token-by-token decode
+    (the gate is per-token elementwise, so the (notebook, clock) carry is
+    unchanged).
+    """
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.chunk_size = 7
+    cfg.chrono = True
+    cfg.out_gate = True
+    model = LM(cfg).eval()
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+    with torch.no_grad():
+        logits_on, _, _ = model.forward(ids)
+        for blk in model.blocks:
+            blk.pam.out_gate = False
+        logits_off, _, _ = model.forward(ids)
+    d_init = (logits_on - logits_off).abs().max().item()
+    assert d_init < 1e-5, f"out_gate@init != ungated: {d_init:.3e}"
+    for blk in model.blocks:
+        blk.pam.out_gate = True
+
+    model.train()
+    model.zero_grad(set_to_none=True)
+    logits, _, _ = model.forward(ids)
+    F.cross_entropy(logits.reshape(-1, cfg.vocab_size), ids.reshape(-1)).backward()
+    n_none = sum(1 for blk in model.blocks if blk.pam.gate_proj.weight.grad is None)
+    assert n_none == 0, f"{n_none} gate_proj got no grad"
+
+    model.eval()
+    for blk in model.blocks:
+        nn.init.normal_(blk.pam.gate_proj.weight, std=0.5)
+        nn.init.normal_(blk.pam.gate_proj.bias, std=0.5)
+    with torch.no_grad():
+        logits_par, _, _ = model.forward(ids)
+        parts, states = [], None
+        for t in range(seq_len):
+            lt, states, _ = model.forward(ids[:, t:t + 1], states=states, step_offset=t)
+            parts.append(lt)
+        logits_seq = torch.cat(parts, dim=1)
+    d_dec = (logits_par - logits_seq).abs().max().item()
+    assert d_dec < RECUR_ATOL, f"gated decode disagrees: {d_dec:.3e}"
+    print(f"  init parity {d_init:.3e}   gate grads: all {len(model.blocks)} present   "
+          f"decode vs chunked {d_dec:.3e}")
+    return True
+
+
 def main():
     torch.set_num_threads(2)
     tests = [
@@ -555,6 +606,7 @@ def main():
         test_complex_fused_kernel_parity,
         test_chrono_rotary_parity,
         test_chrono_parallel_vs_recurrent,
+        test_out_gate_parity_and_decode,
     ]
     failures = 0
     for t in tests:

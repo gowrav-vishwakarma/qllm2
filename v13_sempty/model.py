@@ -91,7 +91,7 @@ from sempyt.nn import RMSNorm
 from sempyt.ops import at, contract, imag, outer, real
 from sempyt.policies import SplitComplex
 from sempyt.structural import (
-    cat, exp, flatten, select, softplus, stack, take, zeros,
+    cat, exp, flatten, select, silu, softplus, stack, take, zeros,
 )
 from sempyt.tensor import NamedTensor, named
 
@@ -574,6 +574,18 @@ class RealPAMLayer(nn.Module):
             self.warp_proj = NamedLinear(self.model_dim, self.decay_out)
             self.warp_proj._zero_init = True  # identity-init: g=1 == plain RoPE
 
+        # N4: content-dependent per-head read-out gate, silu(W_g x + b_g) on
+        # the memory read before o_proj. Zero-init W_g and b_g = silu^-1(1) so
+        # the gate is exactly 1 at start (parity with the ungated model); the
+        # model then learns per token/head how much of the read to let through
+        # (the static pam_scale stays as the layer-wide scale). Off unless
+        # cfg.out_gate.
+        self.out_gate = cfg.out_gate
+        if self.out_gate:
+            self.gate_proj = NamedLinear(self.model_dim, self.decay_out)
+            self.gate_proj._zero_init = True
+            self.gate_proj._init_bias = 1.2785  # silu(1.2785) = 1.0000
+
     # ── small named helpers ──────────────────────────────────────────────────
 
     def _as_token(self, x: NamedTensor) -> NamedTensor:
@@ -882,6 +894,11 @@ class RealPAMLayer(nn.Module):
                     "rungs with --gen_every 0 (probe/val use the chunked path)")
             output, new_state = self._stepwise(tokens, queries, keys, values, decay, state)
 
+        if self.out_gate:
+            # N4: per-token, per-head read-out gate (broadcast over head_row).
+            gate = silu(self.gate_proj(tokens).alias(self.decay_out, self.heads))
+            output = output * gate.to(tokens.layout[0], self.heads, tokens.layout[1])
+
         out = self.o_proj(output.alias(self.head_row, self.head_feature)
                           .to(tokens.layout[0], tokens.layout[1], self.inner))
         if self.training:
@@ -988,11 +1005,12 @@ class LM(nn.Module):
         for module in self.modules():
             if isinstance(module, (nn.Linear, NamedLinear)):
                 if getattr(module, '_zero_init', False):
-                    # Identity-init projections (e.g. Chrono warp): zero weight
-                    # and bias so the layer is a no-op / RoPE at start.
+                    # Identity-init projections (Chrono warp, N4 gate): zero
+                    # weight; bias = the constant that makes the layer a no-op
+                    # at start (0 for the warp, silu^-1(1) for the gate).
                     nn.init.zeros_(module.weight)
                     if module.bias is not None:
-                        nn.init.zeros_(module.bias)
+                        nn.init.constant_(module.bias, getattr(module, '_init_bias', 0.0))
                     continue
                 nn.init.normal_(module.weight, std=0.02)
                 if module.bias is not None:

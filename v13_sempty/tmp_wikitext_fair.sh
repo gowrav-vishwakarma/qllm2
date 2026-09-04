@@ -25,6 +25,7 @@ LR="${LR:-1e-4}"
 RECALL_FRAC="${RECALL_FRAC:-0}"
 GRAD_CKPT="${GRAD_CKPT:-1}"    # 1 = fits the 4090; use GRAD_CKPT=0 on the 96 GB box
 CHRONO="${CHRONO:-0}"          # N1 Chrono-PAM content-modulated rotary (real arm)
+OUT_GATE="${OUT_GATE:-0}"      # N4 per-head content-dependent read-out gate
 # Architecture-ladder knobs (real arm; one variable per run, stack on CHRONO=1):
 SHORT_CONV="${SHORT_CONV:-0}"  # A1 depthwise causal conv on qkv
 NSTATES="${NSTATES:-0}"        # A2 states per head (0 = preset default 1)
@@ -40,6 +41,7 @@ EXTRA=()
 if [ "$RECALL_FRAC" != "0" ]; then EXTRA+=(--recall_frac "$RECALL_FRAC"); fi
 if [ "$GRAD_CKPT" = "1" ]; then EXTRA+=(--gradient_checkpointing); fi
 if [ "$CHRONO" = "1" ]; then EXTRA+=(--chrono); fi
+if [ "$OUT_GATE" = "1" ]; then EXTRA+=(--out_gate); fi
 if [ "$SHORT_CONV" = "1" ]; then EXTRA+=(--short_conv); fi
 if [ "$NSTATES" != "0" ]; then EXTRA+=(--n_states "$NSTATES"); fi
 if [ "$VAULT" = "1" ]; then EXTRA+=(--vault); fi

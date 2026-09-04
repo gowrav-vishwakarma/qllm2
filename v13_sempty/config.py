@@ -45,9 +45,17 @@ class PAMConfig:
     # cumulative phase = cumsum_t(inv_freq * g_t). Zero-init W => g=1 => this is
     # EXACTLY standard RoPE (bit-parity), so it is a safe drop-in on the 23.81
     # baseline. Equivalent to a complex rotating retention folded into q,k, so
-    # the fused kernel is untouched (speed preserved). Chunked/prefill only;
-    # decode is gated out (run rungs with --gen_every 0). Real arm only.
+    # the fused kernel is untouched (speed preserved). Decode carries
+    # (notebook, clock). Real arm only. RUNG DONE: 23.14 vs 23.81 (KEEP).
     chrono: bool = False
+    # N4 content-dependent read-out gate (real arm). The block's static
+    # `pam_scale` is the only thing deciding how much of the memory read
+    # reaches the residual, and it stays small (0.11-0.31 after 10 ep). N4
+    # makes that per token, per head: read_h <- read_h * silu(W_g x + b_g),
+    # W_g zero-init and b_g = 1.2785 (silu(b_g) = 1) => identity at start,
+    # bit-parity with the chrono reference. dim -> n_heads params (~3.5k per
+    # layer), one broadcast multiply: elementwise, kernel untouched.
+    out_gate: bool = False
 
 
 def _base_flat(**kw) -> PAMConfig:
