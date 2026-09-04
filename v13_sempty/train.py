@@ -92,6 +92,9 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
     print(f"  planned_tokens={total_tokens:,}  "
           f"lr={args.lr} warmup={args.warmup_steps} wd={args.weight_decay} "
           f"grad_clip={args.gradient_clip}")
+    print(f"  checkpoints: dir={args.checkpoint_dir} latest_every="
+          f"{args.save_every_steps} keep_every={args.keep_every_steps} "
+          f"best=on val_every={args.val_every} resume={args.resume or 'off'}")
 
     # --- dataset ------------------------------------------------------------
     print('[data]')
@@ -224,11 +227,14 @@ class Trainer:
         gen_prompt: str = 'The',
         gen_max_tokens: int = 80,
         save_every_steps: int = 0,
+        keep_every_steps: int = 0,
         diag_every: int = 500,
         val_every: int = 0,
         max_val_batches: Optional[int] = None,
         checkpoint_dir: Optional[Path] = None,
         run_label: str = 'v13_sempty',
+        data_cursor: Optional[dict] = None,
+        run_args: Optional[dict] = None,
     ):
         self.model = model
         self.train_loader = train_loader
@@ -268,6 +274,17 @@ class Trainer:
         self.gen_prompt = gen_prompt
         self.gen_max_tokens = gen_max_tokens
         self.save_every_steps = save_every_steps
+        # Milestone copies (step_XXXXXX.pt) kept alongside latest/best so the
+        # trajectory can be inspected later; 0 = off.
+        self.keep_every_steps = keep_every_steps
+        # Live dicts owned by the streaming data pipeline ({'doc_counters':
+        # {source: docs consumed}, 'token_counters': {source: tokens yielded}}).
+        # Saved in every checkpoint = the stream position for --resume.
+        self.data_cursor = data_cursor
+        self.run_args = run_args
+        # Steps done in THIS process (resume-aware ETA / tok/s).
+        self.session_steps = 0
+        self.resumed_from = None
         self.diag_every = diag_every
         self.max_val_batches = max_val_batches
         self.checkpoint_dir = checkpoint_dir
@@ -322,6 +339,7 @@ class Trainer:
         self.scheduler.step()
         self.optimizer.zero_grad(set_to_none=True)
         self.global_step += 1
+        self.session_steps += 1
         return float(loss.detach())
 
     # ── logging / diagnostics (mirrors v7.V7Trainer cadence) ────────────────
@@ -397,15 +415,72 @@ class Trainer:
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
             'scheduler_state_dict': self.scheduler.state_dict(),
+            'scaler_state_dict': (self.scaler.state_dict()
+                                  if self.scaler is not None else None),
             'global_step': self.global_step,
             'global_tokens': self.global_tokens,
             'best_val_loss': self.best_val_loss,
             'best_val_ppl': self.best_val_ppl,
             'config': asdict(ck),
+            # --- everything --resume needs beyond the weights -----------------
+            'data_cursor': ({k: dict(v) for k, v in self.data_cursor.items()}
+                            if self.data_cursor else None),
+            'rng': {
+                'python': random.getstate(),
+                'numpy': np.random.get_state(),
+                'torch': torch.get_rng_state(),
+                'cuda': (torch.cuda.get_rng_state_all()
+                         if torch.cuda.is_available() else None),
+            },
+            'args': self.run_args,
+            'saved_at': time.time(),
         }
         torch.save(ckpt, tmp)
         os.replace(tmp, path)
         print(f"  [checkpoint] step {self.global_step} -> {path}", flush=True)
+
+    @staticmethod
+    def peek_resume(path: Path) -> dict:
+        """Load a checkpoint written by _save_ckpt (CPU) for --resume."""
+        ck = torch.load(path, map_location='cpu', weights_only=False)
+        for k in ('model_state_dict', 'optimizer_state_dict',
+                  'scheduler_state_dict', 'global_step', 'global_tokens'):
+            if k not in ck:
+                raise ValueError(f"{path} is not a resumable checkpoint (missing {k})")
+        return ck
+
+    def load_resume(self, ck: dict, path) -> None:
+        """Restore model, optimizer, LR schedule, AMP scaler, step/token
+        counters, best-val bookkeeping and RNG streams. The data-stream cursor
+        is restored by the caller when it builds the loader (it must exist
+        before the Trainer does)."""
+        self.model.load_state_dict(ck['model_state_dict'])
+        self.optimizer.load_state_dict(ck['optimizer_state_dict'])
+        self.scheduler.load_state_dict(ck['scheduler_state_dict'])
+        if self.scaler is not None and ck.get('scaler_state_dict'):
+            self.scaler.load_state_dict(ck['scaler_state_dict'])
+        self.global_step = int(ck['global_step'])
+        self.global_tokens = int(ck['global_tokens'])
+        self.best_val_loss = float(ck.get('best_val_loss', float('inf')))
+        self.best_val_ppl = float(ck.get('best_val_ppl', float('inf')))
+        rng = ck.get('rng') or {}
+        if rng.get('python') is not None:
+            random.setstate(rng['python'])
+        if rng.get('numpy') is not None:
+            np.random.set_state(rng['numpy'])
+        if rng.get('torch') is not None:
+            torch.set_rng_state(rng['torch'])
+        if rng.get('cuda') is not None and torch.cuda.is_available():
+            try:
+                torch.cuda.set_rng_state_all(rng['cuda'])
+            except RuntimeError as e:  # different GPU count
+                print(f"  [resume] cuda rng not restored: {e}")
+        self.resumed_from = str(path)
+        lr = self.optimizer.param_groups[0]['lr']
+        print(f"[resume] {path}: step={self.global_step:,} "
+              f"tokens={self.global_tokens:,} lr={lr:.3e} "
+              f"best_val_ppl={self.best_val_ppl:.2f} "
+              f"cursor={ck.get('data_cursor')}", flush=True)
 
     def _diagnostics(self) -> dict:
         """Per-layer learnable-scale + retention + grad/weight-norm snapshot.
@@ -482,6 +557,11 @@ class Trainer:
         train_start = time.time()
         log_start = time.time()
         log_tokens = 0
+        self._session_tok0 = self.global_tokens
+        if max_steps is not None and self.global_step >= max_steps:
+            print(f"[resume] already at step {self.global_step} >= {max_steps}; "
+                  f"nothing to do", flush=True)
+            return losses
         try:
             steps_per_epoch = len(self.train_loader)
         except TypeError:
@@ -582,6 +662,11 @@ class Trainer:
                 and self.global_step % self.save_every_steps == 0
             ):
                 self._save_ckpt('latest.pt')
+            if (
+                self.keep_every_steps > 0 and self.global_step > 0
+                and self.global_step % self.keep_every_steps == 0
+            ):
+                self._save_ckpt(f'step_{self.global_step:06d}.pt')
 
             if self.diag_every > 0 and self.global_step > 0 \
                     and self.global_step % self.diag_every == 0:
@@ -616,14 +701,18 @@ class Trainer:
         lr = self.optimizer.param_groups[0]['lr']
         ppl = math.exp(min(loss, 20))
         elapsed = time.time() - train_start
-        avg_tok_s = self.global_tokens / elapsed if elapsed > 0 else 0
+        # Rates from THIS process only (a resumed run has done global_step -
+        # session_steps steps in earlier processes); progress from global_step.
+        session_tokens = self.global_tokens - getattr(self, '_session_tok0', 0)
+        avg_tok_s = session_tokens / elapsed if elapsed > 0 else 0
         inst_tok_s = log_tokens / max(time.time() - log_start, 1e-9)
         if n_batches:
-            pct = 100.0 * (batch_idx + 1) / n_batches
-            remaining = elapsed / (batch_idx + 1) * (n_batches - batch_idx - 1)
-            eta_m, eta_s = divmod(int(remaining), 60)
+            done = self.global_step
+            pct = 100.0 * done / n_batches
+            remaining = elapsed / max(self.session_steps, 1) * (n_batches - done)
+            eta_m, eta_s = divmod(int(max(remaining, 0)), 60)
             eta_str = f"ETA {eta_m}m{eta_s:02d}s"
-            prog = f"[{batch_idx + 1}/{n_batches} {pct:3.0f}%]"
+            prog = f"[{done}/{n_batches} {pct:3.0f}%]"
         else:
             eta_str, prog = "ETA n/a", f"[{self.global_step}]"
         # Which epoch this step falls in (1-indexed), matching the V11 logs.
@@ -727,6 +816,14 @@ def build_argparser():
                    help='DataLoader workers (forced 0 for a live stream)')
     p.add_argument('--no_wiki_val', action='store_true',
                    help='skip the secondary WikiText-103 val anchor')
+    p.add_argument('--resume', type=str, default='',
+                   help="resume a run: path to a checkpoint written by this "
+                        "trainer, or 'auto' = <checkpoint_dir>/latest.pt if it "
+                        "exists (else start fresh). Restores model, optimizer, "
+                        "LR schedule, AMP scaler, step/token counters, best-val, "
+                        "RNG streams and the data-stream cursor.")
+    p.add_argument('--keep_every_steps', type=int, default=0,
+                   help='also keep a milestone copy step_XXXXXX.pt every N steps')
     p.add_argument('--no_chat_vocab', action='store_true',
                    help='streaming pretrain: use plain gpt2 (50257) instead of the '
                         'ChatML+reasoning tokenizer (50261). Default keeps the chat '
@@ -795,6 +892,20 @@ def main():
     val_loader = None
     wiki_val_loader = None
     is_streaming = False
+    data_cursor = None
+    # --- resume: read the checkpoint BEFORE the data pipeline is built so the
+    # stream can be re-opened at the saved cursor -------------------------------
+    resume_ck, resume_path = None, None
+    if args.resume:
+        cand = (Path(args.checkpoint_dir) / 'latest.pt' if args.resume == 'auto'
+                else Path(args.resume))
+        if cand.exists():
+            resume_path = cand
+            resume_ck = Trainer.peek_resume(cand)
+        elif args.resume != 'auto':
+            raise FileNotFoundError(f"--resume {cand} does not exist")
+        else:
+            print(f"[resume] auto: no {cand}; starting fresh", flush=True)
     STREAM = {'dclm', 'fineweb', 'mix'}
     if args.dataset == 'synthetic':
         vocab = min(cfg.vocab_size, 256)
@@ -822,12 +933,36 @@ def main():
         use_chat_vocab = (not args.no_chat_vocab or cfg.vocab_size > 50257
                           or args.preset.endswith('_chat')
                           or any(s.startswith('smoltalk') for s in sources))
+        # Stream cursor. `doc_counters` = docs each source has handed to the
+        # tokenizer (post-filter), `token_counters` = tokens yielded per source
+        # (also what the blend warmup measures itself against). Both live dicts
+        # are mutated by the pipeline and saved in every checkpoint. On resume
+        # every source skips its consumed docs, so no document is trained on
+        # twice; the <=shuffle_buffer chunks that were read but not yet yielded
+        # at save time are lost (<=20M tok per restart), not repeated.
+        doc_counters: dict = {}
+        token_counters: dict = {}
+        skip_docs = None
+        consumed_tokens = 0
+        if resume_ck is not None:
+            cur = resume_ck.get('data_cursor') or {}
+            doc_counters.update(cur.get('doc_counters') or {})
+            token_counters.update(cur.get('token_counters') or {})
+            skip_docs = dict(doc_counters)
+            consumed_tokens = int(resume_ck['global_tokens'])
+        data_cursor = {'doc_counters': doc_counters, 'token_counters': token_counters}
+        remaining_budget = (max(target - consumed_tokens, 1) if target is not None
+                            else None)
+        # use_cache=False: the token cache is keyed on the full budget and would
+        # otherwise be consulted with a shifted (remaining) budget on resume.
         train_ds, val_ds, tokenizer = load_pretrain_mix(
             seq_len=args.seq_len, edu_score_min=args.edu_score_min,
-            token_budget=target, sources=sources, weights=weights,
+            token_budget=remaining_budget, sources=sources, weights=weights,
             chat_vocab=use_chat_vocab, fineweb_name=args.fineweb_name,
             holdout_pct=args.holdout_pct, mix_seed=args.seed,
             blend_warmup_tokens=args.blend_warmup_tokens,
+            skip_docs=skip_docs, token_counters=token_counters,
+            doc_counters=doc_counters, use_cache=False,
         )
         cfg.vocab_size = len(tokenizer)
         is_streaming = not getattr(train_ds, 'pretrain_cached', False)
@@ -835,6 +970,10 @@ def main():
         # schedule and the header's planned_tokens stay honest.
         if target is not None:
             args.steps = max(1, target // (args.batch_size * args.seq_len))
+        if resume_ck is not None:
+            print(f"[resume] stream re-opened at docs={skip_docs} "
+                  f"tokens_consumed={consumed_tokens:,} "
+                  f"remaining_budget={remaining_budget:,}", flush=True)
         nw = 0 if is_streaming else args.num_workers
         loader = DataLoader(train_ds, batch_size=args.batch_size,
                             shuffle=not is_streaming, num_workers=nw,
@@ -893,12 +1032,24 @@ def main():
         gen_prompt=args.gen_prompt,
         gen_max_tokens=args.gen_max_tokens,
         save_every_steps=args.save_every_steps,
+        keep_every_steps=args.keep_every_steps,
         val_every=args.val_every,
         diag_every=args.diag_every,
         max_val_batches=args.max_val_batches if args.max_val_batches > 0 else None,
         checkpoint_dir=Path(args.checkpoint_dir),
         run_label=args.preset,
+        data_cursor=data_cursor,
+        run_args=vars(args),
     )
+    if resume_ck is not None:
+        saved_args = resume_ck.get('args') or {}
+        for k in ('preset', 'batch_size', 'seq_len', 'lr', 'warmup_steps',
+                  'target_tokens', 'pretrain_sources', 'pretrain_weights', 'seed'):
+            if k in saved_args and saved_args[k] != getattr(args, k):
+                print(f"[resume] WARNING: --{k} differs from the checkpoint "
+                      f"({saved_args[k]!r} -> {getattr(args, k)!r})", flush=True)
+        trainer.load_resume(resume_ck, resume_path)
+        del resume_ck
     losses = trainer.train(max_steps=args.steps)
     print(f"\nTraining complete. steps={trainer.global_step} "
           f"tokens={trainer.global_tokens:,} "

@@ -13,6 +13,12 @@
 # Usage (RTX Pro 6000, ALWAYS in tmux, env INSIDE the command string):
 #   tmux new-session -d -s sempty_mix \
 #     "TAG=mix3b_chrono_gate bash v13_sempty/tmp_pretrain_mix.sh"
+# Manual resume after the box itself went down (same commit checked out; pass
+# CKPT_DIR/RESUME_LOG explicitly if HEAD moved so the run keeps its dir+log):
+#   tmux new-session -d -s sempty_mix \
+#     "TAG=mix3b_chrono_gate CKPT_DIR=checkpoints_v13_sempty/mix3b_chrono_gate_<hash> \
+#      RESUME_LOG=logs/v13_sempty_mix3b_chrono_gate_<hash>_<stamp>.log \
+#      bash v13_sempty/tmp_pretrain_mix.sh"
 # Requires the `sempyt` .pth in the venv and network access to HF (public
 # datasets, no token needed).
 set -uo pipefail
@@ -41,16 +47,32 @@ GRAD_CKPT="${GRAD_CKPT:-0}"    # 96 GB box: off (+23 % tok/s); 1 fits the 4090
 CHRONO="${CHRONO:-1}"
 OUT_GATE="${OUT_GATE:-1}"
 VAL_EVERY="${VAL_EVERY:-2000}"
-SAVE_EVERY="${SAVE_EVERY:-4000}"
+SAVE_EVERY="${SAVE_EVERY:-1000}"       # latest.pt (full resume state) every ~7 min
+KEEP_EVERY="${KEEP_EVERY:-10000}"      # milestone step_XXXXXX.pt copies (~1.2 GB each)
+MAX_RETRIES="${MAX_RETRIES:-5}"        # auto-resume attempts after a crash
+CKPT_DIR="${CKPT_DIR:-}"               # default checkpoints_v13_sempty/<TAG>_<HASH>
+RESUME_LOG="${RESUME_LOG:-}"           # append to an existing run log instead of a new one
 
 HASH=$(git rev-parse --short HEAD)
 STAMP=$(date +%Y%m%d_%H%M)
-LOG="logs/v13_sempty_${TAG}_${HASH}_${STAMP}.log"
-echo "=== ${TAG} start $(date -u +%Y-%m-%dT%H:%M:%SZ) commit=$HASH log=$LOG ===" | tee "$LOG"
+CKPT_DIR="${CKPT_DIR:-checkpoints_v13_sempty/${TAG}_${HASH}}"
+if [ -n "$RESUME_LOG" ]; then LOG="$RESUME_LOG"; else LOG="logs/v13_sempty_${TAG}_${HASH}_${STAMP}.log"; fi
+echo "=== ${TAG} start $(date -u +%Y-%m-%dT%H:%M:%SZ) commit=$HASH log=$LOG ckpt=$CKPT_DIR ===" | tee -a "$LOG"
 EXTRA=()
 if [ "$GRAD_CKPT" = "1" ]; then EXTRA+=(--gradient_checkpointing); fi
 if [ "$CHRONO" = "1" ]; then EXTRA+=(--chrono); fi
 if [ "$OUT_GATE" = "1" ]; then EXTRA+=(--out_gate); fi
+
+# Auto-resume loop: --resume auto picks up <CKPT_DIR>/latest.pt when it exists
+# (fresh start otherwise), restoring model/optimizer/LR schedule/step/tokens/
+# best-val/RNG and the data-stream cursor. A crash (OOM, HF hiccup, box
+# reboot mid-tmux) therefore costs at most SAVE_EVERY steps, not the run.
+attempt=0
+while :; do
+  attempt=$((attempt + 1))
+  if [ "$attempt" -gt 1 ]; then
+    echo "=== ${TAG} resume attempt $attempt $(date -u +%Y-%m-%dT%H:%M:%SZ) ===" | tee -a "$LOG"
+  fi
 .venv/bin/python -u -m v13_sempty.train \
   --preset "$PRESET" \
   --dataset mix \
@@ -74,11 +96,22 @@ if [ "$OUT_GATE" = "1" ]; then EXTRA+=(--out_gate); fi
   --gen_every 4000 \
   --gen_max_tokens 80 \
   --save_every_steps "$SAVE_EVERY" \
+  --keep_every_steps "$KEEP_EVERY" \
   --diag_every 2000 \
   --max_val_batches 0 \
+  --resume auto \
   "${EXTRA[@]}" \
-  --checkpoint_dir "checkpoints_v13_sempty/${TAG}_${HASH}" >> "$LOG" 2>&1
-RC=$?
-echo "=== ${TAG} end $(date +%s) exit=$RC ===" | tee -a "$LOG"
+  --checkpoint_dir "$CKPT_DIR" >> "$LOG" 2>&1
+  RC=$?
+  if [ "$RC" -eq 0 ]; then break; fi
+  echo "=== ${TAG} attempt $attempt died exit=$RC $(date -u +%Y-%m-%dT%H:%M:%SZ) ===" | tee -a "$LOG"
+  if [ "$attempt" -ge "$MAX_RETRIES" ]; then break; fi
+  # A non-finite loss is a real bug, not a transient: do not resume into it.
+  if tail -n 40 "$LOG" | grep -q "non-finite loss"; then
+    echo "=== ${TAG} non-finite loss: not resuming ===" | tee -a "$LOG"; break
+  fi
+  sleep 60
+done
+echo "=== ${TAG} end $(date +%s) exit=$RC attempts=$attempt ===" | tee -a "$LOG"
 echo "exit=$RC" > "${LOG%.log}.exit"
 exit "$RC"
