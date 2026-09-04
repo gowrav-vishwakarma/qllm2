@@ -36,6 +36,19 @@ logs/<version>_<tag>_<gitshorthash>_<YYYYMMDD_HHMM>.log
   `v13_sempty/train.py`): full config + args + geometry + params, so the file
   is self-describing even if renamed.
 
+## Remote GPU box — RTX Pro 6000 (96 GB) (user rule, 2026-09-04)
+- Big/long training runs go on the RTX Pro 6000 (96 GB VRAM), NOT the local
+  4090 (24 GB). Local box is for dev, parity tests, and small smokes.
+- SSH: `ssh ubuntu@34.131.203.207` (host `rtx6000pro`).
+- Remote repo path: `/home/ubuntu/Development/qllm-private`.
+- Git flow: this repo's `origin` is the private remote
+  (`git@github-personal:gowrav-vishwakarma/qllm-private.git`). **Push here,
+  then `git pull` on the remote box BEFORE launching** so the code matches.
+  Typical: (local) commit → push origin → (remote) `cd
+  ~/Development/qllm-private && git pull` → launch in tmux.
+- Same rules as below apply on the remote: long runs ONLY in tmux, log to a
+  file with the naming convention, keep the in-file header block.
+
 ## Long training
 - ONLY in tmux (`tmux new-session -d`), never hub/bash-managed.
 - Keep the watchdog chain alive: `bash v13/tmp/watchdog.sh <log> <verdict_gtok> 2940`
