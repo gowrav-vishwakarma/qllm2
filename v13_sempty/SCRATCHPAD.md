@@ -6,6 +6,15 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
+* **N4 READ-OUT GATE DONE (2026-09-04, run commit `2537782`, code `3c7b9b9`):
+  val PPL 22.96** — beats chrono 23.14 at all 16 val points; 0.27 from the
+  transformer (22.69). Gate verified content-dependent (doubles the effective
+  memory read; co-varies with the Chrono clock). **KEEP; `CHRONO=1 OUT_GATE=1`
+  is the reference (22.96).** Record: `EXPERIMENTS_SEMPY.md` → "N4 read-out
+  gate". Log `logs/v13_sempty_wikitext_chrono_n4gate_fair_2537782_20260904_1517.log`,
+  ckpt `checkpoints_v13_sempty/wikitext_chrono_n4gate_fair_2537782/best_model.pt`.
+  A1 short conv → 23.49 FAIL, code removed. **PPL ladder on WikiText is
+  saturating; next phase = scale the data (see "Scale plan" below).**
 * **N1 CHRONO RUNG DONE (2026-09-04, commit `7b24e44`, RTX Pro 6000): val PPL
   23.14** — beats the 23.81 real baseline by 0.67 at every val point, gap to
   transformer (22.69) now 0.45. sROI KEEP; chrono is the new real-arm
@@ -141,14 +150,12 @@ tok/s combined vs 85k single (−8%); queue instead
   the A1 log; training itself was fine). Fix pending: make
   `tmp_wikitext_fair.sh` copy itself to `mktemp` and `exec` the copy.
 
-**Running (2026-09-04 15:17Z, RTX Pro 6000):**
-* `sempty_n4` — N4 `OUT_GATE=1 CHRONO=1 GRAD_CKPT=0`, commit `2537782`
-  (code = `3c7b9b9`), log
-  `logs/v13_sempty_wikitext_chrono_n4gate_fair_2537782_20260904_1517.log`,
-  **99k tok/s, 30.5 GB, ETA ~3 h 20 m (finish ~18:40Z)**. Compare vs **23.14**
-  (chrono curve: 2k 86.52, 4k 49.06, 8k 32.48, 16k 25.13, 24k 23.45, 32k 23.14).
-  Watchdog armed (`tmp_wiki_watchdog.sh <log> 32130 2940`; re-arm on wake).
-* Done today: A1 → 23.49 FAIL (removed).
+`tmp_wikitext_fair.sh` now `exec`s a private temp copy of itself (safe to edit
+while a run is live) and the `SHORT_CONV` knob is gone.
+
+**Done 2026-09-04 on the RTX Pro 6000:** N1 chrono 23.14 (KEEP) → A1 short
+conv 23.49 (FAIL, removed) → N4 gate 22.96 (KEEP). Reference = `CHRONO=1
+OUT_GATE=1`.
 Data/scale-up (DCLM/FineWeb mix via `--dataset pretrain_mix`, `c7a343b`) comes
 *after* the ladder settles the architecture at 100M.
 

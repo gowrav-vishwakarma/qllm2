@@ -13,7 +13,16 @@
 set -uo pipefail
 # repo-root relative to THIS script (v13_sempty/..), so it works on the local
 # 4090 box and the remote RTX Pro 6000 (qllm-private) without editing.
-cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+cd "$REPO_ROOT"
+# bash reads a script incrementally, so editing this file while a run is in
+# flight makes the wrapper execute garbage after Python returns (it happened:
+# `exit=127` on the A1 log). Run from a private temp copy instead.
+if [ -z "${_FAIR_COPY:-}" ]; then
+  _copy=$(mktemp /tmp/tmp_wikitext_fair.XXXXXX.sh) && cp "${BASH_SOURCE[0]}" "$_copy" \
+    && REPO_ROOT="$REPO_ROOT" _FAIR_COPY=1 exec bash "$_copy" "$@"
+fi
+trap 'rm -f "${BASH_SOURCE[0]}"' EXIT
 
 PRESET="${PRESET:-baseline_real_pm}"
 TAG="${TAG:-wikitext_real_fair}"
@@ -26,8 +35,8 @@ RECALL_FRAC="${RECALL_FRAC:-0}"
 GRAD_CKPT="${GRAD_CKPT:-1}"    # 1 = fits the 4090; use GRAD_CKPT=0 on the 96 GB box
 CHRONO="${CHRONO:-0}"          # N1 Chrono-PAM content-modulated rotary (real arm)
 OUT_GATE="${OUT_GATE:-0}"      # N4 per-head content-dependent read-out gate
-# Architecture-ladder knobs (real arm; one variable per run, stack on CHRONO=1):
-SHORT_CONV="${SHORT_CONV:-0}"  # A1 depthwise causal conv on qkv
+# Architecture-ladder knobs (real arm; one variable per run, stack on
+# CHRONO=1 OUT_GATE=1 = the 22.96 reference). A1 short conv: removed (FAIL).
 NSTATES="${NSTATES:-0}"        # A2 states per head (0 = preset default 1)
 VAULT="${VAULT:-0}"            # A2b pinned state + protect gate
 DELTA="${DELTA:-0}"            # A3 delta erase/write
@@ -42,7 +51,6 @@ if [ "$RECALL_FRAC" != "0" ]; then EXTRA+=(--recall_frac "$RECALL_FRAC"); fi
 if [ "$GRAD_CKPT" = "1" ]; then EXTRA+=(--gradient_checkpointing); fi
 if [ "$CHRONO" = "1" ]; then EXTRA+=(--chrono); fi
 if [ "$OUT_GATE" = "1" ]; then EXTRA+=(--out_gate); fi
-if [ "$SHORT_CONV" = "1" ]; then EXTRA+=(--short_conv); fi
 if [ "$NSTATES" != "0" ]; then EXTRA+=(--n_states "$NSTATES"); fi
 if [ "$VAULT" = "1" ]; then EXTRA+=(--vault); fi
 if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi

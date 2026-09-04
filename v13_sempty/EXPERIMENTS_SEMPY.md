@@ -461,6 +461,71 @@ Python exited 0 (`Training complete`, `latest.pt` saved) — the 127 came from
 editing `tmp_wikitext_fair.sh` while bash was still executing it (see
 SCRATCHPAD pitfalls).
 
+## N4 read-out gate — 22.96: KEEP, new reference (2026-09-04)
+
+**Rung.** Chrono reference (23.14) + a per-token, per-head gate on the memory
+read before `o_proj`: `read_h ← read_h · silu(W_g x_t + b_g)`, `W_g` zero-init,
+`b_g = silu⁻¹(1) = 1.2785` ⇒ exactly 1 at step 0 (bit-parity with chrono,
+`test_out_gate_parity_and_decode`). `dim → n_heads` per layer, +56,544 params
+(102.00M). Elementwise; the fused scan and the `(notebook, clock)` decode carry
+are untouched. Speed gate −2.8 % tok/s (ABAB, B8 T2048). One variable vs
+23.14, same recipe (B18 T2048 10 ep, seed 42, grad-ckpt off, RTX Pro 6000,
+99k tok/s, 30.5 GB, 3 h 20 m). Commit `3c7b9b9` (run `2537782`), log
+`logs/v13_sempty_wikitext_chrono_n4gate_fair_2537782_20260904_1517.log`,
+ckpt `checkpoints_v13_sempty/wikitext_chrono_n4gate_fair_2537782/best_model.pt`.
+
+**Why.** The read reached the residual only through the block's *static*
+`pam_scale`, which sat at 0.11–0.31 after 10 epochs — the model could not
+decide per token how much to trust the notebook. N4 gives it that knob.
+
+**Result: val PPL 22.96** (best, step 32000; NLL 3.1336). Train loss 10.95 →
+2.92. Ahead of chrono at all 16 val points; the lead is largest early (faster
+learning) and settles at −0.18:
+
+| step | 2k | 4k | 8k | 12k | 16k | 20k | 24k | 28k | 32k |
+|---|---|---|---|---|---|---|---|---|---|
+| chrono | 86.52 | 49.06 | 32.48 | 27.45 | 25.13 | 24.09 | 23.45 | 23.17 | 23.14 |
+| +gate | 84.24 | 47.71 | 31.74 | 27.11 | 24.93 | 23.88 | 23.26 | 22.99 | **22.96** |
+| Δ | −2.28 | −1.35 | −0.74 | −0.34 | −0.20 | −0.21 | −0.19 | −0.18 | −0.18 |
+
+| model | params | val PPL @10ep |
+|---|---|---|
+| transformer | 100.3M | **22.69** |
+| **v13_sempty real + Chrono + gate (N1+N4)** | 102.0M | **22.96** |
+| v13_sempty real + Chrono (N1) | 101.9M | 23.14 |
+| v13_sempty real (fair baseline) | 101.9M | 23.81 |
+| v11 E3-K3 complex | 100.5M | 25.77 |
+
+Gap to the transformer: **0.27 PPL** (was 1.12 → 0.45 → 0.27).
+
+**Inside (16 val chunks, all layers).** The gate is content-dependent, not a
+re-learned constant: within-head std over tokens 0.89 on means of 1.6–2.7;
+5–95 % band ≈0.2 → 5.5; 30–70 % of tokens gate > 2. **The model wanted about 2×
+more memory than the static scale allowed**: effective read scale
+`pam_scale × mean gate` = 0.18–0.61 vs chrono's 0.11–0.31, while the static
+`pam_scale` fell to 0.11–0.24 as the gate took over. No position effect (mean
+gate identical for pos < 64 and ≥ 64). Gate correlates +0.3…+0.7 with
+Chrono's `log g` in layers 4–15 — where the clock runs fast the read is
+opened (a "topic shift ⇒ consult the notebook" policy). Frequent/function
+tokens read memory more (L10: 2.16) than rare content tokens (1.52), i.e. the
+notebook is used for context-conditioned predictions, the CGU/residual for
+lexical ones. Retention unchanged (0.70–0.91); the warp statistics match the
+chrono run.
+
+**sROI verdict: KEEP.** Sub-point gain (−0.18) but at ~nil cost (+0.06 %
+params, −2.8 % tok/s, no kernel change), consistent at every val point, with
+a verified mechanism. `CHRONO=1 OUT_GATE=1` is the reference for all further
+rungs (22.96). Sample at 32k (T=0.8): "In 1923, the University of Southern
+California created a university for the students . At that time , there was
+no official school in the state …" — fluent WikiText register.
+
+**Where this leaves the PPL program.** Three rungs on the 23.81 baseline:
+−0.67 (N1), +0.35 (A1, removed), −0.18 (N4). Returns are shrinking and the
+remaining 0.27 to the transformer is one rung's worth; WikiText-103 at 100M
+is close to what this architecture will show. The next information is not
+another 0.2 PPL — it is whether the architecture holds on diverse data at
+more tokens, and whether it can be trained to *recall*. Next: scale the data.
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*
