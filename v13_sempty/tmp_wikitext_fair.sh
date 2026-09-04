@@ -11,7 +11,9 @@
 # Override the arm/geometry via env for the complex A/B (Phase 2):
 #   PRESET=baseline TAG=wikitext_complex_fair bash v13_sempty/tmp_wikitext_fair.sh
 set -uo pipefail
-cd /home/gowrav/Development/qllm2
+# repo-root relative to THIS script (v13_sempty/..), so it works on the local
+# 4090 box and the remote RTX Pro 6000 (qllm-private) without editing.
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 PRESET="${PRESET:-baseline_real_pm}"
 TAG="${TAG:-wikitext_real_fair}"
