@@ -58,3 +58,6 @@ logs/<version>_<tag>_<gitshorthash>_<YYYYMMDD_HHMM>.log
 - ONLY in tmux (`tmux new-session -d`), never hub/bash-managed.
 - Keep the watchdog chain alive: `bash v13/tmp/watchdog.sh <log> <verdict_gtok> 2940`
   async + timeout 3300; re-arm on every wake (see v13/SCRATCHPAD.md).
+
+## Handover ready
+- We run this code on server (rtx pro 6000) and local (rtx 4090) and code is synced using pull push. so always keep scracth pad as handover ready notebook so any time we switch the running context is clear to other agents on server to local or vice versa.

@@ -364,6 +364,68 @@ chance on invented-association recall while the transformer bar used a recall
 curriculum). The architecture ladder (A1–A4, code committed) and recall-mix
 training target exactly this.
 
+## N1 Chrono-PAM — content-modulated rotary retention: 23.14 (2026-09-04)
+
+**Result (commit `7b24e44`, RTX Pro 6000, log
+`logs/v13_sempty_wikitext_chrono_fair_7b24e44_20260904_0620.log`, ckpt
+`checkpoints_v13_sempty/wikitext_chrono_fair_7b24e44/best_model.pt`).**
+Identical recipe to the 23.81 fair run (real-101M `baseline_real_pm`,
+WikiText-103, T=2048, B=18, 10 ep = 32130 steps, 1.184B tok, lr 1e-4 cosine,
+seed 42, bf16, fused PAM+CE, grad-ckpt on) with **one** change: `--chrono`.
+Best **val PPL 23.14** (val NLL 3.1415, step 32000). Train loss 10.94 → 3.06
+(epoch-10 mean 3.047 / ppl 21.06). 82.8k tok/s avg on the 6000 (4 h wall);
+peak 8.9 GB. +56,544 params (one zero-init `dim → n_heads` warp projection per
+layer; 101,945,996 total, +0.06%).
+
+| model | params | val PPL @10ep |
+|---|---|---|
+| transformer | 100.3M | **22.69** |
+| **v13_sempty real + Chrono (N1)** | 101.9M | **23.14** |
+| v13_sempty real (fair baseline) | 101.9M | 23.81 |
+| v11 E3-K3 complex | 100.5M | 25.77 |
+
+The gap to the transformer is now **0.45 PPL** (was 1.12); v11 is beaten by 2.63.
+
+**The math.** A complex *rotating* retention `gamma_t = r_t e^{i theta_t}` on
+the outer-product notebook has closed form `S_s = sum_t (a_s/a_t)
+e^{i(Phi_s-Phi_t)} v_t k_t^*`, `Phi = cumsum(theta)`. The phase factor is
+absorbed by rotating `q_s -> e^{i Phi_s} q_s`, `k_t -> e^{i Phi_t} k_t` — which
+with a *fixed* `theta` is exactly RoPE. Chrono makes `theta_t` input-dependent:
+per head, `g_t = exp(clamp(W x_t, ±3))`, clock `tau_t = sum_{j<t} g_j`, phase
+`phi_t = tau_t (x) inv_freq`. So **learned rotating retention == a
+content-modulated RoPE clock**, folded entirely into q/k; the fused
+magnitude-retention scan is untouched (speed gate on the 4090: 65.9k vs 66.6k
+tok/s, equal). `W` is zero-init ⇒ bit-exact RoPE at step 0
+(`test_chrono_rotary_parity`). CoPE-style, on an associative memory.
+
+**Matched-step val curve (same tokens/step), chrono vs baseline — ahead at
+every checkpoint by 0.6–1.1 PPL, never a crossing:**
+
+| step | 2k | 4k | 6k | 8k | 10k | 12k | 14k | 16k | 18k | 20k | 22k | 24k | 26k | 28k | 30k | 32k |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| baseline | 87.62 | 49.95 | 38.48 | 33.17 | 29.98 | 28.18 | 26.89 | 25.84 | 25.22 | 24.80 | 24.35 | 24.13 | 23.96 | 23.85 | 23.82 | 23.81 |
+| chrono | 86.52 | 49.06 | 37.63 | 32.48 | 29.37 | 27.45 | 26.26 | 25.13 | 24.54 | 24.09 | 23.64 | 23.45 | 23.28 | 23.17 | 23.15 | 23.14 |
+| Δ | −1.10 | −0.89 | −0.85 | −0.69 | −0.61 | −0.73 | −0.63 | −0.71 | −0.68 | −0.71 | −0.71 | −0.68 | −0.68 | −0.68 | −0.67 | −0.67 |
+
+**Is the clock actually used (or is it RoPE with noise)?** Warp statistics on
+8 val chunks (`g` per token/head, all 16 layers): **88–98 % of tokens have
+|log g| > 0.1**; the median clock speed per layer sits at 0.4–1.7×, the 5–95 %
+band spans ~0.2× to ~3–4× (L15: up to the 20× clamp). Per-head means range
+from **0.17×** (slow "long-memory" clocks: L09 h2, L13 h1/h4/h5) to **15.8×**
+(L15 h1, saturating). The model learned genuinely different per-head time
+scales and modulates them by content — not a small perturbation of RoPE.
+Other diagnostics unchanged vs baseline: `pam_scale` 0.11–0.31, `cgu_scale`
+0.71–1.68, realized retention 0.75–0.91 (memory path still soft → N4 gate).
+
+**sROI verdict: KEEP.** −0.67 PPL is sub-point, but the cost is ~nil (+0.06 %
+params, zero kernel change, equal tok/s) and the gain is consistent at all 16
+val points and above the 0.04–0.58 commit/batch noise band recorded above.
+Chrono becomes the new real-arm reference (23.14); subsequent one-variable
+rungs compare against it. Decode for chrono landed after the run (the
+`(notebook, clock)` state carry; `test_chrono_parallel_vs_recurrent` 6.6e-7
+logits vs chunked) — the in-run `[gen @ 8000/16000/24000/32000] failed` lines
+are from before that and are harmless (val/ckpt use the chunked path).
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*

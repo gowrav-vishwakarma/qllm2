@@ -592,14 +592,15 @@ class RealPAMLayer(nn.Module):
         data = state.data if isinstance(state, NamedTensor) else state  # named-exit: restate
         return named(data, layout)
 
-    def _project(self, tokens: NamedTensor, step_offset: int):
-        """Query, key, value on (batch, heads, time, head_feature).
+    def _project(self, tokens: NamedTensor, step_offset: int, clock=None):
+        """Query, key, value on (batch, heads, time, head_feature), + clock.
 
         The fused QKV axis splits with its factors at the end of the layout —
         the one order sempty's named split accepts — then heads move before
         time for the notebook. RoPE rotates query and key by their position
         (a 2x2 rotation per channel pair), so the notebook's associations
-        carry word order.
+        carry word order. The 4th return is the Chrono clock carried out of
+        this call (``None`` unless ``cfg.chrono``).
         """
         batch, time = tokens.layout[0], tokens.layout[1]
         qkv = self.qkv_proj(tokens)
@@ -610,11 +611,14 @@ class RealPAMLayer(nn.Module):
 
         if self.use_rope and self.chrono:
             # N1: content-modulated rotary (learned time-warp). Replaces the
-            # fixed RoPE rotation on q/k; identical to it at init.
+            # fixed RoPE rotation on q/k; identical to it at init. The clock
+            # (per-head cumulative warp) is the position: carried in `clock`
+            # across decode steps instead of `step_offset`.
             layout = (batch, self.heads, time, self.head_feature)
-            queries, keys = self._rotate_learned(queries, keys, tokens,
-                                                 batch, time)
-            return (queries.to(*layout), keys.to(*layout), values.to(*layout))
+            queries, keys, clock_out = self._rotate_learned(
+                queries, keys, tokens, batch, time, clock)
+            return (queries.to(*layout), keys.to(*layout), values.to(*layout),
+                    clock_out)
 
         if self.use_rope:
             position_end = step_offset + tokens.size(time)
@@ -646,7 +650,7 @@ class RealPAMLayer(nn.Module):
             keys = _rotate(keys)
 
         layout = (batch, self.heads, time, self.head_feature)
-        return (queries.to(*layout), keys.to(*layout), values.to(*layout))
+        return (queries.to(*layout), keys.to(*layout), values.to(*layout), None)
 
     def _short_conv(self, qkv: NamedTensor, batch, time) -> NamedTensor:
         """A1 depthwise causal conv on the fused qkv, residual + identity-init.
@@ -661,7 +665,7 @@ class RealPAMLayer(nn.Module):
         conv = nn.functional.silu(self.qkv_conv(xc)).transpose(1, 2)
         return named(x + conv, (batch, time, self.qkv_fused))  # named-exit: conv boundary
 
-    def _rotate_learned(self, queries, keys, tokens, batch, time):
+    def _rotate_learned(self, queries, keys, tokens, batch, time, clock=None):
         """N1 Chrono-PAM rotary: content-modulated cumulative phase on q/k.
 
         Per-head time-warp ``g_t = exp(clamp(W x, +/-3))`` scales the per-step
@@ -672,7 +676,13 @@ class RealPAMLayer(nn.Module):
 
         This folds a complex rotating retention ``gamma_t = e^{i theta_t}`` into
         q/k, so the fused magnitude-retention kernel is untouched (speed held).
-        Raw-torch boundary: cumsum over the time axis, chunked/prefill only.
+        Raw-torch boundary: cumsum over the time axis.
+
+        ``clock`` is the per-head clock ``[B, H]`` (fp32) carried in from the
+        tokens already processed (``None`` == 0, a fresh sequence); the
+        returned ``clock_out`` is the clock after this call's tokens, so
+        decode (``T=1`` steps) continues the same phase the prefill left off
+        at. This is the Chrono analogue of ``step_offset``.
         """
         B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
         P = K // 2
@@ -684,7 +694,11 @@ class RealPAMLayer(nn.Module):
         g = torch.exp(
             self.warp_proj(tokens).alias(self.decay_out, self.heads)
                 .raw(batch, self.heads, time).float().clamp(-3.0, 3.0))  # [B,H,T] fp32
-        tau = torch.cumsum(g, dim=2) - g                              # exclusive: tau_0=0
+        run = torch.cumsum(g, dim=2)                                  # inclusive
+        if clock is not None:
+            run = run + clock.to(run.dtype).unsqueeze(-1)             # continue the clock
+        tau = run - g                                                 # exclusive: tau_0=clock
+        clock_out = run[:, :, -1]                                     # [B,H] after these tokens
         inv = self.chrono_inv_freq.to(device=q.device)               # [P] fp32
         phi = tau.unsqueeze(-1) * inv.view(1, 1, 1, P)                # [B,H,T,P] fp32
         # cos/sin fp32 for phase accuracy, cast to q dtype so the rotation and
@@ -699,7 +713,8 @@ class RealPAMLayer(nn.Module):
         kr = torch.stack((ke * cos - ko * sin, ke * sin + ko * cos), dim=-1)
         layout = (batch, self.heads, time, self.head_feature)
         return (named(qr.reshape(B, H, T, K), layout),  # named-exit: learned-rotary boundary
-                named(kr.reshape(B, H, T, K), layout))
+                named(kr.reshape(B, H, T, K), layout),
+                clock_out)
 
     def _decay(self, tokens: NamedTensor) -> NamedTensor:
         """Per-head retention in (0, 1): exp(-softplus(linear(token) + bias))."""
@@ -845,7 +860,12 @@ class RealPAMLayer(nn.Module):
     def forward(self, x: NamedTensor, state=None, step_offset: int = 0):
         tokens = self._as_token(x)
         seq_len = tokens.size(tokens.layout[1])
-        queries, keys, values = self._project(tokens, step_offset)
+        # Chrono carries (notebook, clock); every other arm carries the notebook.
+        if self.chrono and state is not None:
+            state, clock = state
+        else:
+            clock = None
+        queries, keys, values, clock_out = self._project(tokens, step_offset, clock)
         decay = self._decay(tokens)
 
         if state is None and seq_len > 1:
@@ -856,9 +876,9 @@ class RealPAMLayer(nn.Module):
             else:
                 output, new_state = self._chunked(tokens, queries, keys, values, decay)
         else:
-            if self.n_states > 1 or self.delta or self.chrono:
+            if self.n_states > 1 or self.delta:
                 raise NotImplementedError(
-                    "multi-state / delta / chrono decode is not implemented; run "
+                    "multi-state / delta decode is not implemented; run "
                     "rungs with --gen_every 0 (probe/val use the chunked path)")
             output, new_state = self._stepwise(tokens, queries, keys, values, decay, state)
 
@@ -866,7 +886,10 @@ class RealPAMLayer(nn.Module):
                           .to(tokens.layout[0], tokens.layout[1], self.inner))
         if self.training:
             out = out * as_complex_dropout_mask(self.out_dropout, out)
-        return out, (new_state.data if new_state is not None else None)  # named-exit: state hand-off
+        carried = new_state.data if new_state is not None else None  # named-exit: state hand-off
+        if self.chrono:
+            return out, (carried, clock_out)
+        return out, carried
 
 
 class RealBlock(nn.Module):

@@ -34,6 +34,7 @@ import sys
 from pathlib import Path
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -486,6 +487,55 @@ def test_chrono_rotary_parity(batch_size=2, seq_len=24, seed=0):
     return True
 
 
+def test_chrono_parallel_vs_recurrent(batch_size=2, seq_len=17, seed=0):
+    """Chrono decode: chunked prefill == prefill(prefix) + one-token steps.
+
+    The learned warp is set to random non-zero weights so the clock is
+    genuinely content-dependent (not plain RoPE). The carried state is
+    (notebook, clock); logits from the full chunked pass must equal those
+    from a 5-token prefill followed by 12 stepwise tokens, and a pure
+    token-by-token run from an empty state.
+    """
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.chunk_size = 7
+    cfg.chrono = True
+    model = LM(cfg).eval()
+    for blk in model.blocks:
+        nn.init.normal_(blk.pam.warp_proj.weight, std=0.5)
+        nn.init.normal_(blk.pam.warp_proj.bias, std=0.5)
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+    prefix = 5
+
+    with torch.no_grad():
+        logits_par, states_par, _ = model.forward(ids)
+        # prefill + stepwise
+        lp, states, _ = model.forward(ids[:, :prefix])
+        parts = [lp]
+        for t in range(prefix, seq_len):
+            lt, states, _ = model.forward(ids[:, t:t + 1], states=states, step_offset=t)
+            parts.append(lt)
+        logits_mix = torch.cat(parts, dim=1)
+        # pure stepwise from empty
+        parts, states0 = [], None
+        for t in range(seq_len):
+            lt, states0, _ = model.forward(ids[:, t:t + 1], states=states0, step_offset=t)
+            parts.append(lt)
+        logits_seq = torch.cat(parts, dim=1)
+
+    d_mix = (logits_par - logits_mix).abs().max().item()
+    d_seq = (logits_par - logits_seq).abs().max().item()
+    d_nb = max(_max_diff(sp[0], ss[0]) for sp, ss in zip(states_par, states))
+    d_clk = max(_max_diff(sp[1], ss[1]) for sp, ss in zip(states_par, states))
+    assert d_mix < RECUR_ATOL, f"prefill+step logits disagree: {d_mix:.3e}"
+    assert d_seq < RECUR_ATOL, f"stepwise logits disagree: {d_seq:.3e}"
+    assert d_nb < RECUR_ATOL, f"carried notebook disagrees: {d_nb:.3e}"
+    assert d_clk < 1e-3, f"carried clock disagrees: {d_clk:.3e}"
+    print(f"  max |logit diff| prefill+step = {d_mix:.3e}  stepwise = {d_seq:.3e}   "
+          f"state {d_nb:.3e}  clock {d_clk:.3e}")
+    return True
+
+
 def main():
     torch.set_num_threads(2)
     tests = [
@@ -504,6 +554,7 @@ def main():
         test_real_fused_kernel_parity,
         test_complex_fused_kernel_parity,
         test_chrono_rotary_parity,
+        test_chrono_parallel_vs_recurrent,
     ]
     failures = 0
     for t in tests:

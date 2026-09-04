@@ -6,6 +6,19 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
+* **N1 CHRONO RUNG DONE (2026-09-04, commit `7b24e44`, RTX Pro 6000): val PPL
+  23.14** — beats the 23.81 real baseline by 0.67 at every val point, gap to
+  transformer (22.69) now 0.45. sROI KEEP; chrono is the new real-arm
+  reference. Full record: `EXPERIMENTS_SEMPY.md` → "N1 Chrono-PAM". Log
+  `logs/v13_sempty_wikitext_chrono_fair_7b24e44_20260904_0620.log`, ckpt
+  `checkpoints_v13_sempty/wikitext_chrono_fair_7b24e44/best_model.pt` (on the
+  RTX box). **Chrono decode now implemented** (state = `(notebook, clock)`,
+  `test_chrono_parallel_vs_recurrent`); `--gen_every` may stay on.
+* **Generator for prompt testing:**
+  `.venv/bin/python -m v13_sempty.generate --checkpoint
+  checkpoints_v13_sempty/wikitext_chrono_fair_7b24e44/best_model.pt --interactive`
+  (loads once; type prompts; `/set temperature=0.6 max_tokens=120` retunes;
+  blank line quits). One-shot: `--prompt "..."`. Device auto (cuda if present).
 * **FAIR RUN DONE (2026-09-04, commit `7af42eb`): real-101M hit val PPL
   23.81** at the reference geometry (T=2048, B=18, 10 ep, 1.18B tok). Beats
   v11 E3-K3 complex (25.77) by ~2 PPL; within 1.12 of transformer (22.69).
@@ -45,15 +58,16 @@ inv_freq`. `W` is zero-init (`warp_proj._zero_init`), so at start `g=1`,
 `phi = pos*inv_freq` == **exactly** fixed RoPE. cos/sin in fp32, cast to bf16
 for the rotation (keeps retained activations small).
 
-**Status: PROTOTYPE VERIFIED on the 4090, ready for a rung.**
+**Status: RUNG DONE — 23.14 vs 23.81 (see State of play). Notes below are
+the pre-run record.**
 - Parity: `test_chrono_rotary_parity` (selftest, CPU) — chrono@init == baseline
   RoPE bit-for-bit (`max|dlogit| = 0.0`), warp grads flow. All 15 selftests pass.
 - Layout: `check_torch_layout` clean (`_rotate_learned` is a declared boundary).
 - **Speed gate PASSED**: baseline_real_pm B8 T2048 bf16 on 4090 — baseline avg
   **65.9k** tok/s vs chrono **66.6k** tok/s (equal within noise). Mem +1.6 GB
   (per-head cos/sin x16 layers; recomputed under grad-ckpt, irrelevant at 96 GB).
-- Decode NOT implemented for chrono (chunked/prefill only) — run rungs with
-  `--gen_every 0`; val/probe use the chunked path.
+- Decode: implemented after the run (carried state is `(notebook, clock)`,
+  the clock replaces `step_offset`); parity test 6.6e-7 vs chunked.
 
 **LAUNCHED 2026-09-04 06:20Z on the RTX Pro 6000** (tmux `sempty_chrono`,
 commit `7b24e44`): `logs/v13_sempty_wikitext_chrono_fair_7b24e44_20260904_0620.log`
@@ -81,10 +95,20 @@ a fresh box tokenizes WikiText (sl2048 cache) once. Log name carries the commit
 + timestamp (naming rule in AGENTS.md); the in-file header prints `[ladder]
 chrono=True`.
 
-**Next novel rungs if N1 wins** (all keep the scan / are elementwise, see
-EXPERIMENTS "Positioning"): #4 phase-resonant output gate (memory is underused,
-pam_scale 0.12-0.36); #3 interference-erase (parallel-safe delta for recall);
-#2 frequency-multiplexed keys (multi-timescale from one state).
+**Next rungs (N1 won; stack on `CHRONO=1`, one variable each, same B18 T2048
+10 ep, compare vs 23.14).** All keep the scan / are elementwise, see
+EXPERIMENTS "Positioning":
+1. **N4 phase-resonant output gate** — memory is still underused
+   (`pam_scale` 0.11–0.31 at the end of the chrono run). Not coded yet.
+2. **A1 `--short_conv`** (coded) — cheapest ladder rung.
+3. **A3 `--delta`** (coded) — the recall lever; needs a recall-mix run to be
+   judged (WikiText-only PPL will not show it; see EXPERIMENTS ledger row 4).
+4. **A4 `--cond_mem`**, then **A2 `--n_states`/`--vault`** (weaker sROI).
+5. N3 interference-erase / N2 frequency-multiplexed keys if A3 is not enough.
+On the RTX Pro 6000 run these with `GRAD_CKPT=0` (96 GB; the ckpt default is
+a 4090 fit) — expect ~+25–35 % tok/s. Keep B=18 T=2048 for comparability.
+Data/scale-up (DCLM/FineWeb mix via `--dataset pretrain_mix`, `c7a343b`) comes
+*after* the ladder settles the architecture at 100M.
 
 * Real-101M (`baseline_real_pm`) trains at **~64k tok/s** (was 5.8k), peak
   **7.6 GiB** at B32 T256 with grad-checkpointing OFF (was 21 GB at B8 with

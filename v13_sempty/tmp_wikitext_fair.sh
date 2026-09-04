@@ -23,8 +23,14 @@ STEPS="${STEPS:-32130}"       # 3213 * 10 epochs
 WARMUP="${WARMUP:-500}"
 LR="${LR:-1e-4}"
 RECALL_FRAC="${RECALL_FRAC:-0}"
-GRAD_CKPT="${GRAD_CKPT:-1}"
+GRAD_CKPT="${GRAD_CKPT:-1}"    # 1 = fits the 4090; use GRAD_CKPT=0 on the 96 GB box
 CHRONO="${CHRONO:-0}"          # N1 Chrono-PAM content-modulated rotary (real arm)
+# Architecture-ladder knobs (real arm; one variable per run, stack on CHRONO=1):
+SHORT_CONV="${SHORT_CONV:-0}"  # A1 depthwise causal conv on qkv
+NSTATES="${NSTATES:-0}"        # A2 states per head (0 = preset default 1)
+VAULT="${VAULT:-0}"            # A2b pinned state + protect gate
+DELTA="${DELTA:-0}"            # A3 delta erase/write
+COND_MEM="${COND_MEM:-0}"      # A4 conditional n-gram memory
 
 HASH=$(git rev-parse --short HEAD)
 STAMP=$(date +%Y%m%d_%H%M)
@@ -34,6 +40,11 @@ EXTRA=()
 if [ "$RECALL_FRAC" != "0" ]; then EXTRA+=(--recall_frac "$RECALL_FRAC"); fi
 if [ "$GRAD_CKPT" = "1" ]; then EXTRA+=(--gradient_checkpointing); fi
 if [ "$CHRONO" = "1" ]; then EXTRA+=(--chrono); fi
+if [ "$SHORT_CONV" = "1" ]; then EXTRA+=(--short_conv); fi
+if [ "$NSTATES" != "0" ]; then EXTRA+=(--n_states "$NSTATES"); fi
+if [ "$VAULT" = "1" ]; then EXTRA+=(--vault); fi
+if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi
+if [ "$COND_MEM" = "1" ]; then EXTRA+=(--cond_mem); fi
 .venv/bin/python -u -m v13_sempty.train \
   --preset "$PRESET" \
   --dataset wikitext103 \
