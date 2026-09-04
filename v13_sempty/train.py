@@ -686,6 +686,10 @@ def build_argparser():
     p.add_argument('--seq_len', type=int, default=32)
     p.add_argument('--lr', type=float, default=1e-4)
     p.add_argument('--weight_decay', type=float, default=0.01)
+    p.add_argument('--dropout', type=float, default=None,
+                   help='override the preset dropout (single-pass streaming '
+                        'pretrain wants 0; the WikiText 10-epoch recipe uses the '
+                        'preset 0.1)')
     p.add_argument('--warmup_steps', type=int, default=2)
     p.add_argument('--gradient_clip', type=float, default=1.0)
     p.add_argument('--amp_dtype', type=str, default='off',
@@ -723,6 +727,10 @@ def build_argparser():
                    help='DataLoader workers (forced 0 for a live stream)')
     p.add_argument('--no_wiki_val', action='store_true',
                    help='skip the secondary WikiText-103 val anchor')
+    p.add_argument('--no_chat_vocab', action='store_true',
+                   help='streaming pretrain: use plain gpt2 (50257) instead of the '
+                        'ChatML+reasoning tokenizer (50261). Default keeps the chat '
+                        'tokens so the base can be SFT-ed later.')
     p.add_argument('--checkpoint_dir', type=str, default='checkpoints_v13_sempty')
     p.add_argument('--gradient_checkpointing', action='store_true', default=False,
                    help='recompute blocks in backward; the memory lever for 16-layer runs')
@@ -779,6 +787,8 @@ def main():
         cfg.chrono = True
     if args.out_gate:
         cfg.out_gate = True
+    if args.dropout is not None:
+        cfg.dropout = args.dropout
     device = torch.device(args.device)
     set_kernel_enabled(args.fused_pam)
 
@@ -805,7 +815,12 @@ def main():
         weights = (tuple(float(w) for w in args.pretrain_weights.split(','))
                    if args.pretrain_weights else None)
         target = args.target_tokens if args.target_tokens > 0 else None
-        use_chat_vocab = (cfg.vocab_size > 50257 or args.preset.endswith('_chat')
+        # ChatML + reasoning tokens (<|im_start|> <|im_end|> <think> </think>,
+        # vocab 50261) are needed by the later SFT, so the base is trained with
+        # them from step 0. Default ON for the streaming pretrain; the implicit
+        # triggers (smoltalk source / _chat preset) still force it on.
+        use_chat_vocab = (not args.no_chat_vocab or cfg.vocab_size > 50257
+                          or args.preset.endswith('_chat')
                           or any(s.startswith('smoltalk') for s in sources))
         train_ds, val_ds, tokenizer = load_pretrain_mix(
             seq_len=args.seq_len, edu_score_min=args.edu_score_min,
@@ -892,6 +907,15 @@ def main():
         print(f"train loss: {losses[0]:.4f} -> {losses[-1]:.4f} "
               f"(delta {losses[-1] - losses[0]:+.4f})")
     trainer._save_ckpt('latest.pt')
+    if is_streaming:
+        # HF streaming (pyarrow/aiohttp worker threads) dies with
+        # "Fatal Python error: PyGILState_Release" during interpreter teardown
+        # AFTER everything is saved (smoke 2026-09-04: exit 134 on a complete
+        # run). Flush and leave without running finalizers so the wrapper's
+        # exit code reflects the training, not the teardown.
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(0)
 
 
 if __name__ == '__main__':
