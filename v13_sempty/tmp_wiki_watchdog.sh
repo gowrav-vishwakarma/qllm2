@@ -6,7 +6,8 @@ set -u
 LOG="${1:?log file}"
 VERDICT_STEP="${2:-14400}"
 MAX_S="${3:-2940}"
-cd /home/gowrav/Development/qllm2
+# repo-root relative to THIS script (works on the local 4090 and the remote box)
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 END=$(( $(date +%s) + MAX_S ))
 REASON="timeout"

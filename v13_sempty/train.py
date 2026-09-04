@@ -371,13 +371,18 @@ class Trainer:
     @torch.no_grad()
     def _generate_sample(self, prompt: str, max_tokens: int) -> str:
         self.model.eval()
-        ids = self.tokenizer.encode(prompt)
-        x = torch.tensor([ids], device=self.device)
-        out = self.model.generate(
-            x, max_new_tokens=max_tokens, temperature=0.8, top_k=50,
-            top_p=0.9, repetition_penalty=1.2,
-        )
-        self.model.train()
+        try:
+            ids = self.tokenizer.encode(prompt)
+            x = torch.tensor([ids], device=self.device)
+            out = self.model.generate(
+                x, max_new_tokens=max_tokens, temperature=0.8, top_k=50,
+                top_p=0.9, repetition_penalty=1.2,
+            )
+        finally:
+            # A failing decode (e.g. chrono/delta: NotImplementedError) must
+            # not leave the model in eval mode (dropout off) for the rest of
+            # training -- the caller swallows the exception and keeps going.
+            self.model.train()
         return self.tokenizer.decode(out[0].tolist())
 
     def _save_ckpt(self, name: str):
