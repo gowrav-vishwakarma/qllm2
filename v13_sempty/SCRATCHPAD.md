@@ -106,7 +106,14 @@ EXPERIMENTS "Positioning":
 4. **A4 `--cond_mem`**, then **A2 `--n_states`/`--vault`** (weaker sROI).
 5. N3 interference-erase / N2 frequency-multiplexed keys if A3 is not enough.
 On the RTX Pro 6000 run these with `GRAD_CKPT=0` (96 GB; the ckpt default is
-a 4090 fit) — expect ~+25–35 % tok/s. Keep B=18 T=2048 for comparability.
+a 4090 fit). **Measured 2026-09-04** (chrono, B18 T2048, 60-step smoke):
+grad-ckpt OFF = **~102k tok/s, peak 29.1 GB** vs ON = 83k tok/s, 8.9 GB —
++23 %, a 10-epoch rung drops from 4.0 h to ~3.25 h. Keep B=18 T=2048 for
+comparability. Launch template for the next rung:
+```bash
+GRAD_CKPT=0 CHRONO=1 SHORT_CONV=1 TAG=wikitext_chrono_a1conv_fair \
+  tmux new-session -d -s sempty_a1 "bash v13_sempty/tmp_wikitext_fair.sh"
+```
 Data/scale-up (DCLM/FineWeb mix via `--dataset pretrain_mix`, `c7a343b`) comes
 *after* the ladder settles the architecture at 100M.
 
