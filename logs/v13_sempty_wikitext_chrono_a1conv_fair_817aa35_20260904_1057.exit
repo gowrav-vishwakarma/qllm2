@@ -1,0 +1,4 @@
+exit=0
+# python train exited 0 (Training complete, latest.pt saved). The wrapper line in
+# the .log says exit=127 because tmp_wikitext_fair.sh was edited while bash was
+# still executing it (bash reads scripts incrementally); see SCRATCHPAD pitfall.

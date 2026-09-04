@@ -30,8 +30,8 @@ class PAMConfig:
     # ── architecture ladder (real arm; EXPERIMENTS_SEMPY "Architecture ladder")
     # Each is off by default so 'baseline_real_pm' stays the control. A rung
     # that fails its decision gate is removed from the code (AGENTS rule).
-    short_conv: bool = False         # A1: depthwise causal conv(k) on qkv, identity-init
-    short_conv_k: int = 4
+    # A1 short conv: REMOVED (fair rung 23.49 vs 23.14 chrono ref, -17% tok/s;
+    # EXPERIMENTS_SEMPY "A1 short conv").
     n_states: int = 1                # A2: independent PAM states per head (E3)
     state_dt_spread: float = 2.0     # A2: +/- spread of per-state decay-logit offsets
     vault: bool = False              # A2b: state 0 pinned (retention=1) + protect gate

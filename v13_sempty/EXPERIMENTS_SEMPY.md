@@ -361,7 +361,7 @@ Full sempty val curve (step → ppl): 2000→87.62, 4000→49.95, 6000→38.48,
 
 Open question remains **recall**, not PPL (the 1-epoch probe showed real_pm ≈
 chance on invented-association recall while the transformer bar used a recall
-curriculum). The architecture ladder (A1–A4, code committed) and recall-mix
+curriculum). The architecture ladder (A2–A4 coded; A1 tried and removed, see below) and recall-mix
 training target exactly this.
 
 ## N1 Chrono-PAM — content-modulated rotary retention: 23.14 (2026-09-04)
@@ -425,6 +425,41 @@ rungs compare against it. Decode for chrono landed after the run (the
 `(notebook, clock)` state carry; `test_chrono_parallel_vs_recurrent` 6.6e-7
 logits vs chunked) — the in-run `[gen @ 8000/16000/24000/32000] failed` lines
 are from before that and are harmless (val/ckpt use the chunked path).
+
+## A1 short conv on qkv — 23.49: FAIL, removed (2026-09-04)
+
+**Rung.** Chrono reference (23.14) + a depthwise causal `Conv1d(k=4)` over the
+time axis on the fused qkv, added residually (`qkv + silu(conv(qkv))`), zero-init
+so it was the identity at step 0 (Based / Gated-DeltaNet "short conv"
+convention; +141,120 params → 102.09M). One variable vs 23.14; same recipe
+(B18 T2048 10 ep, seed 42, grad-ckpt off on the RTX Pro 6000). Commit `817aa35`,
+log `logs/v13_sempty_wikitext_chrono_a1conv_fair_817aa35_20260904_1057.log`.
+
+**Math / why it was plausible.** The PAM write is `v_t ⊗ k_t` from the *current*
+token only; a k-tap causal conv lets each key/value/query see a 4-token local
+window before it is written, so the notebook can store short phrases as keys
+rather than single tokens (the argument that made it standard in linear-
+attention models).
+
+**Result: val PPL 23.49 (best, step 32000) — +0.35 vs the 23.14 reference; and
+−17 % tok/s (85k vs 102k, plain-torch conv over `[B,T,3·inner]` × 16 layers).**
+Behind at every val point after 2k: 4k 50.30 (49.06), 8k 33.26 (32.48), 16k
+25.53 (25.13), 24k 23.82 (23.45), 32k 23.49 (23.14). Train loss reached 2.98
+(vs 3.06) — it *fit the train set better and generalised worse*: the extra
+local mixing on top of Chrono's content clock is redundant capacity that
+overfits WikiText at 10 epochs. `pam_scale` (0.15–0.34) and retention
+(0.68–0.88) unchanged vs chrono.
+
+**sROI verdict: FAIL on both axes (worse PPL, meaningful compute cost).** Per
+the ablation rule the code path is removed (`cfg.short_conv`, `_short_conv`,
+`--short_conv`, the layout-guard boundary); this section is the record. Old
+checkpoints with a `short_conv` key in their saved config still load
+(`_config_from_ckpt` filters unknown fields). The A1 checkpoint dir
+`checkpoints_v13_sempty/wikitext_chrono_a1conv_fair_817aa35/` (2.4 GB) is dead
+weight and can be deleted. Note: the wrapper line in the log says `exit=127`;
+Python exited 0 (`Training complete`, `latest.pt` saved) — the 127 came from
+editing `tmp_wikitext_fair.sh` while bash was still executing it (see
+SCRATCHPAD pitfalls).
 
 ## Positioning — is this Mamba? (2026-09-04)
 

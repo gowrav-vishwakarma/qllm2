@@ -98,13 +98,21 @@ chrono=True`.
 **Next rungs (N1 won; stack on `CHRONO=1`, one variable each, same B18 T2048
 10 ep, compare vs 23.14).** All keep the scan / are elementwise, see
 EXPERIMENTS "Positioning":
-1. **N4 phase-resonant output gate** — memory is still underused
-   (`pam_scale` 0.11–0.31 at the end of the chrono run). Not coded yet.
-2. **A1 `--short_conv`** (coded) — cheapest ladder rung.
+1. **N4 read-out gate** (`--out_gate`, coded, commit `3c7b9b9`) — **RUNNING**
+   (see below). Memory was underused (`pam_scale` 0.11–0.31); the gate makes
+   the read-out per token/head. Speed gate −2.8 %.
+2. ~~A1 `--short_conv`~~ — **DONE, FAIL: 23.49 vs 23.14, −17 % tok/s; code
+   removed** (EXPERIMENTS "A1 short conv"). The `SHORT_CONV` knob in
+   `tmp_wikitext_fair.sh` still needs deleting — do it *after* N4 finishes
+   (never edit that script while a run's bash is executing it, see pitfalls).
 3. **A3 `--delta`** (coded) — the recall lever; needs a recall-mix run to be
    judged (WikiText-only PPL will not show it; see EXPERIMENTS ledger row 4).
 4. **A4 `--cond_mem`**, then **A2 `--n_states`/`--vault`** (weaker sROI).
 5. N3 interference-erase / N2 frequency-multiplexed keys if A3 is not enough.
+6. Chrono follow-ups for long context (from the 09-04 discussion; not coded):
+   **segment clock** `tau_t = r_t tau_{t-1} + g_t` (learned reset = position
+   since topic boundary), and **phase wrap** `phi mod 2pi` per frequency (fp32
+   clock loses precision past ~1e5 tokens). Neither matters at T=2048.
 On the RTX Pro 6000 run these with `GRAD_CKPT=0` (96 GB; the ckpt default is
 a 4090 fit). **Measured 2026-09-04** (chrono, B18 T2048, 60-step smoke):
 grad-ckpt OFF = **~102k tok/s, peak 29.1 GB** vs ON = 83k tok/s, 8.9 GB —
@@ -123,16 +131,24 @@ whatever the first session's env said (we got a duplicate A1 instead of N4).
 tok/s combined vs 85k single (−8%); queue instead
 (`while pgrep -f <ckpt-dir-tag>; do sleep 60; done; ...` in the tmux command).
 
-**Running / queued (2026-09-04 11:00Z, RTX Pro 6000):**
-* `sempty_a1` — A1 `SHORT_CONV=1 CHRONO=1 GRAD_CKPT=0`, commit `817aa35`,
-  log `logs/v13_sempty_wikitext_chrono_a1conv_fair_817aa35_20260904_1057.log`,
-  85k tok/s, 33 GB, ETA ~4 h (finish ~15:00Z). Compare vs **23.14**. Note the
-  speed tax: plain-torch depthwise conv costs ~17 % tok/s (102k → 85k) — A1
-  needs a clear PPL win to pass sROI.
-* `sempty_n4` — N4 `OUT_GATE=1 CHRONO=1 GRAD_CKPT=0` (commit `3c7b9b9`)
-  queued; auto-starts when the A1 process exits, log will be
-  `logs/v13_sempty_wikitext_chrono_n4gate_fair_<hash>_<stamp>.log`. Speed gate
-  measured −2.8 %. Compare vs 23.14. Arm the watchdog on it when it starts.
+**More pitfalls (2026-09-04 afternoon, both cost GPU time):**
+* A `while pgrep -f '<tag>'; do sleep; done` waiter inside `tmux new-session
+  "..."` matches **its own** `bash -c` command line → waits forever (N4 sat
+  queued 16 min on an idle GPU). Use `pgrep -f 'python.*<tag>'` or a pid file.
+* **Never edit a `.sh` while a run's bash is executing it.** bash reads the
+  script incrementally; the edit shifted the offset and the wrapper ran
+  garbage after Python returned (`ag_every: command not found`, `exit=127` in
+  the A1 log; training itself was fine). Fix pending: make
+  `tmp_wikitext_fair.sh` copy itself to `mktemp` and `exec` the copy.
+
+**Running (2026-09-04 15:17Z, RTX Pro 6000):**
+* `sempty_n4` — N4 `OUT_GATE=1 CHRONO=1 GRAD_CKPT=0`, commit `2537782`
+  (code = `3c7b9b9`), log
+  `logs/v13_sempty_wikitext_chrono_n4gate_fair_2537782_20260904_1517.log`,
+  **99k tok/s, 30.5 GB, ETA ~3 h 20 m (finish ~18:40Z)**. Compare vs **23.14**
+  (chrono curve: 2k 86.52, 4k 49.06, 8k 32.48, 16k 25.13, 24k 23.45, 32k 23.14).
+  Watchdog armed (`tmp_wiki_watchdog.sh <log> 32130 2940`; re-arm on wake).
+* Done today: A1 → 23.49 FAIL (removed).
 Data/scale-up (DCLM/FineWeb mix via `--dataset pretrain_mix`, `c7a343b`) comes
 *after* the ladder settles the architecture at 100M.
 

@@ -119,7 +119,7 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
     print(_pm)
 
     # --- ladder (only non-default arch flags) -------------------------------
-    _ladder = [k for k in ('short_conv', 'n_states', 'vault', 'delta', 'cond_mem',
+    _ladder = [k for k in ('n_states', 'vault', 'delta', 'cond_mem',
                            'chrono', 'out_gate')
                if getattr(cfg, k) not in (False, 1)]
     if _ladder:
@@ -745,7 +745,6 @@ def build_argparser():
                         'docs (v7._build_recall_doc). 0=off. Val is never mixed.')
     # Architecture-ladder overrides (real arm; see EXPERIMENTS_SEMPY). Each
     # toggles a cfg field on top of the chosen preset.
-    p.add_argument('--short_conv', action='store_true', help='A1: depthwise conv on qkv')
     p.add_argument('--n_states', type=int, default=None, help='A2: PAM states per head')
     p.add_argument('--vault', action='store_true', help='A2b: pinned state + protect gate')
     p.add_argument('--delta', action='store_true', help='A3: delta erase/write')
@@ -768,8 +767,6 @@ def main():
     if args.seq_len:
         cfg.max_seq_len = max(cfg.max_seq_len, args.seq_len)
     # Architecture-ladder overrides.
-    if args.short_conv:
-        cfg.short_conv = True
     if args.n_states is not None:
         cfg.n_states = args.n_states
     if args.vault:
