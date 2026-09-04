@@ -216,6 +216,8 @@ class Trainer:
         device: Optional[torch.device] = None,
         log_interval: int = 1,
         val_loader=None,
+        wiki_val_loader=None,
+        is_streaming: bool = False,
         tokenizer=None,
         gen_every: int = 0,
         gen_prompt: str = 'The',
@@ -255,6 +257,11 @@ class Trainer:
         self.global_step = 0
         self.global_tokens = 0
         self.val_loader = val_loader
+        # Optional secondary eval: WikiText-103 val, the anchor comparable to
+        # the 23.81 fair-run number (never mixed into training).
+        self.wiki_val_loader = wiki_val_loader
+        # Live IterableDataset stream => do not re-iterate across epochs.
+        self.is_streaming = is_streaming
         self.tokenizer = tokenizer
         self.gen_every = gen_every
         self.gen_prompt = gen_prompt
@@ -338,13 +345,14 @@ class Trainer:
         return norms
 
     @torch.no_grad()
-    def _val_loss(self) -> Optional[float]:
+    def _val_loss(self, loader=None) -> Optional[float]:
         """Token-weighted val NLL over up to max_val_batches batches."""
-        if self.val_loader is None or len(self.val_loader) == 0:
+        loader = loader if loader is not None else self.val_loader
+        if loader is None or len(loader) == 0:
             return None
         self.model.eval()
         total, ntok = 0.0, 0
-        for i, batch in enumerate(self.val_loader):
+        for i, batch in enumerate(loader):
             if self.max_val_batches is not None and i >= self.max_val_batches:
                 break
             x = batch['input_ids'].to(self.device)
@@ -485,11 +493,14 @@ class Trainer:
 
         def _epoch_stream():
             """Re-iterate the loader across epochs (re-shuffles each pass) until
-            max_steps; a single pass when max_steps is None."""
+            max_steps; a single pass when max_steps is None or the loader is a
+            live token stream (re-iterating an exhausted IterableDataset would
+            busy-loop forever, so a streaming corpus runs exactly one pass and
+            is stopped by its own token budget)."""
             while True:
                 for b in self.train_loader:
                     yield b
-                if max_steps is None:
+                if max_steps is None or self.is_streaming:
                     return
 
         for batch_idx, batch in enumerate(_epoch_stream()):
@@ -544,6 +555,21 @@ class Trainer:
                         f"(best {self.best_val_ppl:.2f})",
                         flush=True,
                     )
+                # Secondary anchor: WikiText-103 val (comparable to the 23.81
+                # fair run). Eval-only; does not gate best_model checkpointing.
+                if self.wiki_val_loader is not None:
+                    try:
+                        wvl = self._val_loss(self.wiki_val_loader)
+                    except Exception as e:  # noqa: BLE001
+                        wvl = None
+                        print(f"  [wiki_val @ step {self.global_step}] failed: {e}",
+                              flush=True)
+                    if wvl is not None:
+                        print(
+                            f"  [wiki_val @ step {self.global_step}] "
+                            f"val_loss={wvl:.4f} val_ppl={math.exp(min(wvl, 20)):.2f}",
+                            flush=True,
+                        )
 
             if (
                 self.save_every_steps > 0 and self.global_step > 0
@@ -643,7 +669,10 @@ def build_argparser():
     p = argparse.ArgumentParser(description='v13_sempty self-contained trainer')
     p.add_argument('--preset', type=str, default='tiny', choices=list(PRESETS.keys()))
     p.add_argument('--dataset', type=str, default='synthetic',
-                   choices=['synthetic', 'tinystories', 'wikitext103'])
+                   choices=['synthetic', 'tinystories', 'wikitext103',
+                            'dclm', 'fineweb', 'mix'],
+                   help="dclm/fineweb/mix = streaming pretrain via "
+                        "v7.data.load_pretrain_mix (use --target_tokens)")
     p.add_argument('--device', type=str, default='cpu', choices=['cpu', 'cuda'])
     p.add_argument('--steps', type=int, default=8)
     p.add_argument('--epochs', type=int, default=1)
@@ -667,6 +696,27 @@ def build_argparser():
                    help='use the plain-torch PAM scan instead of the Triton kernel')
     p.add_argument('--max_samples', type=int, default=64)
     p.add_argument('--seed', type=int, default=0)
+    # --- streaming pretrain (dclm/fineweb/mix) ---------------------------------
+    p.add_argument('--target_tokens', type=int, default=0,
+                   help='token budget for streaming pretrain (0=off). Derives '
+                        '--steps = target_tokens // (batch_size*seq_len).')
+    p.add_argument('--pretrain_sources', type=str, default='dclm,fineweb',
+                   help="comma sources for --dataset mix (v7 SOURCE_REGISTRY: "
+                        "dclm,fineweb,smoltalk2_mid,recall,reason)")
+    p.add_argument('--pretrain_weights', type=str, default='',
+                   help='comma interleave weights matching --pretrain_sources '
+                        '(empty=equal)')
+    p.add_argument('--edu_score_min', type=int, default=3,
+                   help='edu-score filter for dclm/fineweb (>=)')
+    p.add_argument('--fineweb_name', type=str, default='sample-10BT')
+    p.add_argument('--holdout_pct', type=int, default=5,
+                   help='%% of corpus reserved as the primary streaming val holdout')
+    p.add_argument('--blend_warmup_tokens', type=int, default=0,
+                   help='tokens to draw web-only before non-web sources enter the mix')
+    p.add_argument('--num_workers', type=int, default=2,
+                   help='DataLoader workers (forced 0 for a live stream)')
+    p.add_argument('--no_wiki_val', action='store_true',
+                   help='skip the secondary WikiText-103 val anchor')
     p.add_argument('--checkpoint_dir', type=str, default='checkpoints_v13_sempty')
     p.add_argument('--gradient_checkpointing', action='store_true', default=False,
                    help='recompute blocks in backward; the memory lever for 16-layer runs')
@@ -722,11 +772,56 @@ def main():
     set_kernel_enabled(args.fused_pam)
 
     val_loader = None
+    wiki_val_loader = None
+    is_streaming = False
+    STREAM = {'dclm', 'fineweb', 'mix'}
     if args.dataset == 'synthetic':
         vocab = min(cfg.vocab_size, 256)
         cfg.vocab_size = vocab
         loader = synthetic_loader(vocab, args.batch_size, args.seq_len, args.steps, args.seed)
         tokenizer = None
+    elif args.dataset in STREAM:
+        # Streaming pretrain via the shared v7 pipeline (text iters -> weighted
+        # interleave -> StreamingTokenChunkDataset -> {input_ids, labels}).
+        from v7.data import load_pretrain_mix, load_wikitext103_val
+        if args.dataset == 'dclm':
+            sources = ('dclm',)
+        elif args.dataset == 'fineweb':
+            sources = ('fineweb',)
+        else:
+            sources = tuple(s.strip() for s in args.pretrain_sources.split(',')
+                            if s.strip())
+        weights = (tuple(float(w) for w in args.pretrain_weights.split(','))
+                   if args.pretrain_weights else None)
+        target = args.target_tokens if args.target_tokens > 0 else None
+        use_chat_vocab = (cfg.vocab_size > 50257 or args.preset.endswith('_chat')
+                          or any(s.startswith('smoltalk') for s in sources))
+        train_ds, val_ds, tokenizer = load_pretrain_mix(
+            seq_len=args.seq_len, edu_score_min=args.edu_score_min,
+            token_budget=target, sources=sources, weights=weights,
+            chat_vocab=use_chat_vocab, fineweb_name=args.fineweb_name,
+            holdout_pct=args.holdout_pct, mix_seed=args.seed,
+            blend_warmup_tokens=args.blend_warmup_tokens,
+        )
+        cfg.vocab_size = len(tokenizer)
+        is_streaming = not getattr(train_ds, 'pretrain_cached', False)
+        # Streaming stops on the token budget; derive the step count so the LR
+        # schedule and the header's planned_tokens stay honest.
+        if target is not None:
+            args.steps = max(1, target // (args.batch_size * args.seq_len))
+        nw = 0 if is_streaming else args.num_workers
+        loader = DataLoader(train_ds, batch_size=args.batch_size,
+                            shuffle=not is_streaming, num_workers=nw,
+                            drop_last=True)
+        val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False)
+        if not args.no_wiki_val:
+            wv, _ = load_wikitext103_val(seq_len=args.seq_len)
+            wiki_val_loader = DataLoader(wv, batch_size=args.batch_size,
+                                         shuffle=False)
+        print(f"streaming pretrain: sources={sources} weights={weights} "
+              f"target_tokens={target} steps={args.steps} "
+              f"cached={not is_streaming} chat_vocab={use_chat_vocab} "
+              f"wiki_val={not args.no_wiki_val}")
     else:
         train_ds, val_ds, tokenizer = load_real_dataset(
             args.dataset, args.seq_len, args.max_samples,
@@ -765,6 +860,8 @@ def main():
         device=device,
         log_interval=args.log_interval,
         val_loader=val_loader,
+        wiki_val_loader=wiki_val_loader,
+        is_streaming=is_streaming,
         tokenizer=tokenizer,
         gen_every=args.gen_every,
         gen_prompt=args.gen_prompt,
