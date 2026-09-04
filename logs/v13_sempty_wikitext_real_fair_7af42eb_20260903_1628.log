@@ -1,0 +1,780 @@
+=== wikitext_real_fair start 2026-09-03T10:58:01Z commit=7af42eb log=logs/v13_sempty_wikitext_real_fair_7af42eb_20260903_1628.log ===
+[cache] Loaded WikiText-103 train from .cache/v7_tokens/wikitext103_train_v2_full_sl2048.pt (118,496,145 tokens)
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt (248,461 tokens)
+Train chunks: 57831, Val chunks: 121
+========================================================================
+  v13_sempty trainer  (real-arm PAM, O(1) memory)
+  wall clock start : 2026-09-03 16:28:05
+  commit           : 7af42eb-dirty
+  preset / dataset : baseline_real_pm / wikitext103
+========================================================================
+[env]
+  device=cuda gpu=NVIDIA GeForce RTX 4090 torch=2.8.0+cu128
+  fused_pam=True fused_ce=True ce_gemm_dtype=auto amp=bf16 grad_ckpt=True
+[geometry]
+  batch_size=18 seq_len=2048 tokens/step=36,864
+  steps=32,130 steps/epoch=3213 epochs_implied=10.00
+  planned_tokens=1,184,440,320  lr=0.0001 warmup=500 wd=0.01 grad_clip=1.0
+[data]
+  train_chunks=57831 val_chunks=121 recall_frac=0.0 vocab=50257 tokenizer=gpt2
+[params]
+  total=101,889,452 (101.89M dense)
+[config] {'vocab_size': 50257, 'dim': 588, 'n_heads': 6, 'head_dim': 98, 'n_layers': 16, 'expand': 3, 'dropout': 0.1, 'max_seq_len': 2048, 'use_rope': True, 'tie_weights': True, 'gradient_checkpointing': True, 'activation': 'swish', 'chunk_size': 256, 'base_dt_bias': -4.0, 'is_complex': False, 'short_conv': False, 'short_conv_k': 4, 'n_states': 1, 'state_dt_spread': 2.0, 'vault': False, 'delta': False, 'cond_mem': False, 'cond_mem_slots': 262144, 'cond_mem_dim': 64, 'cond_mem_layers': (0, 1)}
+[args] {'preset': 'baseline_real_pm', 'dataset': 'wikitext103', 'device': 'cuda', 'steps': 32130, 'epochs': 1, 'batch_size': 18, 'seq_len': 2048, 'lr': 0.0001, 'weight_decay': 0.01, 'warmup_steps': 500, 'gradient_clip': 1.0, 'amp_dtype': 'bf16', 'fused_ce': True, 'no_fused_ce': False, 'fused_ce_chunk': 4096, 'ce_gemm_dtype': 'auto', 'fused_pam': True, 'max_samples': 0, 'seed': 42, 'checkpoint_dir': 'checkpoints_v13_sempty/wikitext_real_fair_7af42eb', 'gradient_checkpointing': True, 'log_interval': 50, 'val_every': 2000, 'gen_every': 8000, 'gen_prompt': 'In 1923, the University of', 'gen_max_tokens': 80, 'save_every_steps': 4000, 'diag_every': 2000, 'max_val_batches': 0, 'recall_frac': 0.0, 'short_conv': False, 'n_states': None, 'vault': False, 'delta': False, 'cond_mem': False}
+========================================================================
+step 50 [50/32130   0%]  loss=10.3929 ppl=32626.1 lr=1.00e-05 | 44757 tok/s (avg 44757) ETA 440m22s | gtok=1,843,200 | GPU 1.3/5.0GB
+step 100 [100/32130   0%]  loss=9.7592 ppl=17313.0 lr=2.00e-05 | 45108 tok/s (avg 44932) ETA 437m58s | gtok=3,686,400 | GPU 1.3/5.0GB
+step 150 [150/32130   0%]  loss=8.5906 ppl=5380.8 lr=3.00e-05 | 45013 tok/s (avg 44959) ETA 437m02s | gtok=5,529,600 | GPU 1.3/5.0GB
+step 200 [200/32130   1%]  loss=7.7149 ppl=2241.5 lr=4.00e-05 | 44952 tok/s (avg 44957) ETA 436m22s | gtok=7,372,800 | GPU 1.3/5.0GB
+step 250 [250/32130   1%]  loss=6.9807 ppl=1075.7 lr=5.00e-05 | 44810 tok/s (avg 44927) ETA 435m58s | gtok=9,216,000 | GPU 1.3/5.0GB
+step 300 [300/32130   1%]  loss=6.7477 ppl=852.1 lr=6.00e-05 | 44771 tok/s (avg 44901) ETA 435m32s | gtok=11,059,200 | GPU 1.3/5.0GB
+step 350 [350/32130   1%]  loss=6.4278 ppl=618.8 lr=7.00e-05 | 45004 tok/s (avg 44916) ETA 434m43s | gtok=12,902,400 | GPU 1.3/5.0GB
+step 400 [400/32130   1%]  loss=6.2883 ppl=538.2 lr=8.00e-05 | 44884 tok/s (avg 44912) ETA 434m04s | gtok=14,745,600 | GPU 1.3/5.0GB
+step 450 [450/32130   1%]  loss=6.0862 ppl=439.7 lr=9.00e-05 | 45478 tok/s (avg 44974) ETA 432m47s | gtok=16,588,800 | GPU 1.3/5.0GB
+step 500 [500/32130   2%]  loss=6.0348 ppl=417.7 lr=1.00e-04 | 47069 tok/s (avg 45175) ETA 430m10s | gtok=18,432,000 | GPU 1.3/5.0GB
+step 550 [550/32130   2%]  loss=5.7276 ppl=307.2 lr=1.00e-04 | 47107 tok/s (avg 45344) ETA 427m54s | gtok=20,275,200 | GPU 1.3/5.0GB
+step 600 [600/32130   2%]  loss=5.7374 ppl=310.3 lr=1.00e-04 | 47124 tok/s (avg 45487) ETA 425m52s | gtok=22,118,400 | GPU 1.3/5.0GB
+step 650 [650/32130   2%]  loss=5.6705 ppl=290.2 lr=1.00e-04 | 47125 tok/s (avg 45609) ETA 424m04s | gtok=23,961,600 | GPU 1.3/5.0GB
+step 700 [700/32130   2%]  loss=5.5203 ppl=249.7 lr=1.00e-04 | 47135 tok/s (avg 45715) ETA 422m24s | gtok=25,804,800 | GPU 1.3/5.0GB
+step 750 [750/32130   2%]  loss=5.4618 ppl=235.5 lr=1.00e-04 | 47099 tok/s (avg 45804) ETA 420m55s | gtok=27,648,000 | GPU 1.3/5.0GB
+step 800 [800/32130   2%]  loss=5.3170 ppl=203.8 lr=1.00e-04 | 47128 tok/s (avg 45885) ETA 419m30s | gtok=29,491,200 | GPU 1.3/5.0GB
+step 850 [850/32130   3%]  loss=5.3632 ppl=213.4 lr=1.00e-04 | 47120 tok/s (avg 45956) ETA 418m11s | gtok=31,334,400 | GPU 1.3/5.0GB
+step 900 [900/32130   3%]  loss=5.2337 ppl=187.5 lr=1.00e-04 | 47139 tok/s (avg 46020) ETA 416m56s | gtok=33,177,600 | GPU 1.3/5.0GB
+step 950 [950/32130   3%]  loss=5.1761 ppl=177.0 lr=1.00e-04 | 46905 tok/s (avg 46066) ETA 415m51s | gtok=35,020,800 | GPU 1.3/5.0GB
+step 1000 [1000/32130   3%]  loss=5.0815 ppl=161.0 lr=9.99e-05 | 48969 tok/s (avg 46203) ETA 413m57s | gtok=36,864,000 | GPU 1.3/5.0GB
+step 1050 [1050/32130   3%]  loss=5.1520 ppl=172.8 lr=9.99e-05 | 49005 tok/s (avg 46329) ETA 412m10s | gtok=38,707,200 | GPU 1.3/5.0GB
+step 1100 [1100/32130   3%]  loss=5.0587 ppl=157.4 lr=9.99e-05 | 48962 tok/s (avg 46442) ETA 410m30s | gtok=40,550,400 | GPU 1.3/5.0GB
+step 1150 [1150/32130   4%]  loss=5.1761 ppl=177.0 lr=9.99e-05 | 48969 tok/s (avg 46547) ETA 408m55s | gtok=42,393,600 | GPU 1.3/5.0GB
+step 1200 [1200/32130   4%]  loss=5.0213 ppl=151.6 lr=9.99e-05 | 48971 tok/s (avg 46643) ETA 407m25s | gtok=44,236,800 | GPU 1.3/5.0GB
+step 1250 [1250/32130   4%]  loss=5.0243 ppl=152.1 lr=9.99e-05 | 48960 tok/s (avg 46731) ETA 405m59s | gtok=46,080,000 | GPU 1.3/5.0GB
+step 1300 [1300/32130   4%]  loss=4.8349 ppl=125.8 lr=9.98e-05 | 49007 tok/s (avg 46815) ETA 404m36s | gtok=47,923,200 | GPU 1.3/5.0GB
+step 1350 [1350/32130   4%]  loss=4.7158 ppl=111.7 lr=9.98e-05 | 48994 tok/s (avg 46892) ETA 403m17s | gtok=49,766,400 | GPU 1.3/5.0GB
+step 1400 [1400/32130   4%]  loss=4.9794 ppl=145.4 lr=9.98e-05 | 48993 tok/s (avg 46964) ETA 402m01s | gtok=51,609,600 | GPU 1.3/5.0GB
+step 1450 [1450/32130   5%]  loss=4.6628 ppl=105.9 lr=9.98e-05 | 49012 tok/s (avg 47032) ETA 400m47s | gtok=53,452,800 | GPU 1.3/5.0GB
+step 1500 [1500/32130   5%]  loss=4.6844 ppl=108.2 lr=9.98e-05 | 49008 tok/s (avg 47095) ETA 399m35s | gtok=55,296,000 | GPU 1.3/5.0GB
+step 1550 [1550/32130   5%]  loss=4.7736 ppl=118.3 lr=9.97e-05 | 49004 tok/s (avg 47154) ETA 398m26s | gtok=57,139,200 | GPU 1.3/5.0GB
+step 1600 [1600/32130   5%]  loss=4.7330 ppl=113.6 lr=9.97e-05 | 49004 tok/s (avg 47210) ETA 397m19s | gtok=58,982,400 | GPU 1.3/5.0GB
+step 1650 [1650/32130   5%]  loss=4.7299 ppl=113.3 lr=9.97e-05 | 48995 tok/s (avg 47262) ETA 396m14s | gtok=60,825,600 | GPU 1.3/5.0GB
+step 1700 [1700/32130   5%]  loss=4.7246 ppl=112.7 lr=9.96e-05 | 49007 tok/s (avg 47312) ETA 395m10s | gtok=62,668,800 | GPU 1.3/5.0GB
+step 1750 [1750/32130   5%]  loss=4.7412 ppl=114.6 lr=9.96e-05 | 48994 tok/s (avg 47358) ETA 394m08s | gtok=64,512,000 | GPU 1.3/5.0GB
+step 1800 [1800/32130   6%]  loss=4.6956 ppl=109.5 lr=9.96e-05 | 48953 tok/s (avg 47401) ETA 393m07s | gtok=66,355,200 | GPU 1.3/5.0GB
+step 1850 [1850/32130   6%]  loss=4.5796 ppl=97.5 lr=9.96e-05 | 48998 tok/s (avg 47443) ETA 392m08s | gtok=68,198,400 | GPU 1.3/5.0GB
+step 1900 [1900/32130   6%]  loss=4.5587 ppl=95.5 lr=9.95e-05 | 49007 tok/s (avg 47483) ETA 391m09s | gtok=70,041,600 | GPU 1.3/5.0GB
+step 1950 [1950/32130   6%]  loss=4.6419 ppl=103.7 lr=9.95e-05 | 49002 tok/s (avg 47520) ETA 390m12s | gtok=71,884,800 | GPU 1.3/5.0GB
+step 2000 [2000/32130   6%]  loss=4.5737 ppl=96.9 lr=9.94e-05 | 49002 tok/s (avg 47556) ETA 389m15s | gtok=73,728,000 | GPU 1.3/5.0GB
+  [checkpoint] step 2000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 2000] val_loss=4.4730 val_ppl=87.62 *best* (best 87.62)
+  [diag] step 2000 cgu=+1.04 +1.04 +1.05 +1.06 +1.08 +1.09 +1.10 +1.11 +1.12 +1.14 +1.14 +1.15 +1.15 +1.16 +1.16 +1.13  pam=+0.13 +0.15 +0.18 +0.12 +0.16 +0.14 +0.12 +0.14 +0.17 +0.14 +0.18 +0.19 +0.16 +0.18 +0.17 +0.14
+  [diag] dtbias=-3.99 -3.98 -3.98 -3.99 -3.98 -3.99 -4.00 -3.99 -3.98 -3.99 -3.98 -3.98 -3.99 -3.99 -3.98 -3.99  ret=0.87 0.86 0.81 0.92 0.86 0.90 0.93 0.88 0.82 0.95 0.84 0.81 0.86 0.87 0.81 0.89
+  [diag] gnorm=6.9e-02 7.1e-02 7.0e-02 7.0e-02 7.0e-02 7.1e-02 9.0e-02 1.0e-01 7.8e-02 7.7e-02 8.0e-02 8.7e-02 1.2e-01 1.2e-01 9.7e-02 1.1e-01  wnorm=56.5 56.6 56.8 56.6 56.8 56.8 56.8 57.0 57.3 57.2 57.6 57.8 57.8 58.2 58.5 58.2
+step 2050 [2050/32130   6%]  loss=4.5976 ppl=99.2 lr=9.94e-05 | 45020 tok/s (avg 47491) ETA 389m08s | gtok=75,571,200 | GPU 1.3/8.9GB
+step 2100 [2100/32130   7%]  loss=4.6187 ppl=101.4 lr=9.94e-05 | 48927 tok/s (avg 47524) ETA 388m13s | gtok=77,414,400 | GPU 1.3/8.9GB
+step 2150 [2150/32130   7%]  loss=4.6418 ppl=103.7 lr=9.93e-05 | 48957 tok/s (avg 47557) ETA 387m19s | gtok=79,257,600 | GPU 1.3/8.9GB
+step 2200 [2200/32130   7%]  loss=4.3344 ppl=76.3 lr=9.93e-05 | 48308 tok/s (avg 47573) ETA 386m32s | gtok=81,100,800 | GPU 1.3/8.9GB
+step 2250 [2250/32130   7%]  loss=4.4431 ppl=85.0 lr=9.92e-05 | 45932 tok/s (avg 47536) ETA 386m11s | gtok=82,944,000 | GPU 1.3/8.9GB
+step 2300 [2300/32130   7%]  loss=4.4798 ppl=88.2 lr=9.92e-05 | 46431 tok/s (avg 47511) ETA 385m45s | gtok=84,787,200 | GPU 1.3/8.9GB
+step 2350 [2350/32130   7%]  loss=4.5654 ppl=96.1 lr=9.92e-05 | 46678 tok/s (avg 47493) ETA 385m15s | gtok=86,630,400 | GPU 1.3/8.9GB
+step 2400 [2400/32130   7%]  loss=4.4690 ppl=87.3 lr=9.91e-05 | 47064 tok/s (avg 47484) ETA 384m40s | gtok=88,473,600 | GPU 1.3/8.9GB
+step 2450 [2450/32130   8%]  loss=4.5601 ppl=95.6 lr=9.91e-05 | 47063 tok/s (avg 47475) ETA 384m06s | gtok=90,316,800 | GPU 1.3/8.9GB
+step 2500 [2500/32130   8%]  loss=4.4213 ppl=83.2 lr=9.90e-05 | 47104 tok/s (avg 47468) ETA 383m30s | gtok=92,160,000 | GPU 1.3/8.9GB
+step 2550 [2550/32130   8%]  loss=4.3646 ppl=78.6 lr=9.90e-05 | 46207 tok/s (avg 47442) ETA 383m04s | gtok=94,003,200 | GPU 1.3/8.9GB
+step 2600 [2600/32130   8%]  loss=4.2800 ppl=72.2 lr=9.89e-05 | 46299 tok/s (avg 47420) ETA 382m36s | gtok=95,846,400 | GPU 1.3/8.9GB
+step 2650 [2650/32130   8%]  loss=4.3477 ppl=77.3 lr=9.89e-05 | 44528 tok/s (avg 47362) ETA 382m25s | gtok=97,689,600 | GPU 1.3/8.9GB
+step 2700 [2700/32130   8%]  loss=4.5284 ppl=92.6 lr=9.88e-05 | 44715 tok/s (avg 47310) ETA 382m11s | gtok=99,532,800 | GPU 1.3/8.9GB
+step 2750 [2750/32130   9%]  loss=4.3577 ppl=78.1 lr=9.88e-05 | 44748 tok/s (avg 47261) ETA 381m56s | gtok=101,376,000 | GPU 1.3/8.9GB
+step 2800 [2800/32130   9%]  loss=4.0905 ppl=59.8 lr=9.87e-05 | 44651 tok/s (avg 47212) ETA 381m41s | gtok=103,219,200 | GPU 1.3/8.9GB
+step 2850 [2850/32130   9%]  loss=4.1480 ppl=63.3 lr=9.86e-05 | 45067 tok/s (avg 47172) ETA 381m21s | gtok=105,062,400 | GPU 1.3/8.9GB
+step 2900 [2900/32130   9%]  loss=4.2329 ppl=68.9 lr=9.86e-05 | 45180 tok/s (avg 47136) ETA 380m59s | gtok=106,905,600 | GPU 1.3/8.9GB
+step 2950 [2950/32130   9%]  loss=4.2534 ppl=70.3 lr=9.85e-05 | 44894 tok/s (avg 47096) ETA 380m40s | gtok=108,748,800 | GPU 1.3/8.9GB
+step 3000 [3000/32130   9%]  loss=4.0001 ppl=54.6 lr=9.85e-05 | 45187 tok/s (avg 47063) ETA 380m17s | gtok=110,592,000 | GPU 1.3/8.9GB
+step 3050 [3050/32130   9%]  loss=4.1270 ppl=62.0 lr=9.84e-05 | 45072 tok/s (avg 47029) ETA 379m54s | gtok=112,435,200 | GPU 1.3/8.9GB
+step 3100 [3100/32130  10%]  loss=4.2660 ppl=71.2 lr=9.83e-05 | 45221 tok/s (avg 46999) ETA 379m29s | gtok=114,278,400 | GPU 1.3/8.9GB
+step 3150 [3150/32130  10%]  loss=4.1143 ppl=61.2 lr=9.83e-05 | 45304 tok/s (avg 46971) ETA 379m04s | gtok=116,121,600 | GPU 1.3/8.9GB
+step 3200 [3200/32130  10%]  loss=3.9268 ppl=50.7 lr=9.82e-05 | 45116 tok/s (avg 46941) ETA 378m39s | gtok=117,964,800 | GPU 1.3/8.9GB
+step 3250 [3250/32130  10%]  loss=4.1033 ppl=60.5 lr=9.81e-05 | 45146 tok/s (avg 46912) ETA 378m12s | gtok=119,801,856 | GPU 1.3/8.9GB
+step 3300 [3300/32130  10%]  loss=4.0152 ppl=55.4 lr=9.81e-05 | 45310 tok/s (avg 46887) ETA 377m45s | gtok=121,645,056 | GPU 1.3/8.9GB
+step 3350 [3350/32130  10%]  loss=4.2421 ppl=69.6 lr=9.80e-05 | 45182 tok/s (avg 46861) ETA 377m19s | gtok=123,488,256 | GPU 1.3/8.9GB
+step 3400 [3400/32130  11%]  loss=4.0599 ppl=58.0 lr=9.79e-05 | 44800 tok/s (avg 46829) ETA 376m55s | gtok=125,331,456 | GPU 1.3/8.9GB
+step 3450 [3450/32130  11%]  loss=4.0118 ppl=55.2 lr=9.79e-05 | 45064 tok/s (avg 46802) ETA 376m28s | gtok=127,174,656 | GPU 1.3/8.9GB
+step 3500 [3500/32130  11%]  loss=4.0035 ppl=54.8 lr=9.78e-05 | 45346 tok/s (avg 46781) ETA 375m59s | gtok=129,017,856 | GPU 1.3/8.9GB
+step 3550 [3550/32130  11%]  loss=4.1198 ppl=61.5 lr=9.77e-05 | 45199 tok/s (avg 46758) ETA 375m31s | gtok=130,861,056 | GPU 1.3/8.9GB
+step 3600 [3600/32130  11%]  loss=3.9091 ppl=49.9 lr=9.76e-05 | 45680 tok/s (avg 46743) ETA 374m59s | gtok=132,704,256 | GPU 1.3/8.9GB
+step 3650 [3650/32130  11%]  loss=3.9852 ppl=53.8 lr=9.76e-05 | 45670 tok/s (avg 46728) ETA 374m27s | gtok=134,547,456 | GPU 1.3/8.9GB
+step 3700 [3700/32130  12%]  loss=3.9725 ppl=53.1 lr=9.75e-05 | 45429 tok/s (avg 46710) ETA 373m56s | gtok=136,390,656 | GPU 1.3/8.9GB
+step 3750 [3750/32130  12%]  loss=4.1225 ppl=61.7 lr=9.74e-05 | 45581 tok/s (avg 46694) ETA 373m24s | gtok=138,233,856 | GPU 1.3/8.9GB
+step 3800 [3800/32130  12%]  loss=4.0171 ppl=55.5 lr=9.73e-05 | 45520 tok/s (avg 46678) ETA 372m52s | gtok=140,077,056 | GPU 1.3/8.9GB
+step 3850 [3850/32130  12%]  loss=3.9675 ppl=52.9 lr=9.73e-05 | 45505 tok/s (avg 46663) ETA 372m20s | gtok=141,920,256 | GPU 1.3/8.9GB
+step 3900 [3900/32130  12%]  loss=3.8395 ppl=46.5 lr=9.72e-05 | 45453 tok/s (avg 46647) ETA 371m48s | gtok=143,763,456 | GPU 1.3/8.9GB
+step 3950 [3950/32130  12%]  loss=4.0583 ppl=57.9 lr=9.71e-05 | 45194 tok/s (avg 46628) ETA 371m18s | gtok=145,606,656 | GPU 1.3/8.9GB
+step 4000 [4000/32130  12%]  loss=3.9554 ppl=52.2 lr=9.70e-05 | 45103 tok/s (avg 46608) ETA 370m48s | gtok=147,449,856 | GPU 1.3/8.9GB
+  [checkpoint] step 4000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 4000] val_loss=3.9110 val_ppl=49.95 *best* (best 49.95)
+  [checkpoint] step 4000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/latest.pt
+  [diag] step 4000 cgu=+0.94 +0.95 +0.96 +0.99 +1.01 +1.04 +1.06 +1.10 +1.16 +1.21 +1.23 +1.26 +1.28 +1.30 +1.31 +1.24  pam=+0.14 +0.17 +0.21 +0.13 +0.18 +0.16 +0.12 +0.15 +0.22 +0.16 +0.24 +0.24 +0.19 +0.24 +0.21 +0.17
+  [diag] dtbias=-3.98 -3.97 -3.96 -3.98 -3.97 -3.98 -3.99 -3.98 -3.96 -3.99 -3.96 -3.96 -3.98 -3.98 -3.97 -3.98  ret=0.83 0.82 0.76 0.90 0.82 0.88 0.92 0.86 0.74 0.93 0.76 0.74 0.82 0.82 0.77 0.85
+  [diag] gnorm=6.8e-02 7.0e-02 7.3e-02 7.2e-02 7.2e-02 7.3e-02 9.1e-02 1.2e-01 9.1e-02 8.7e-02 9.6e-02 1.0e-01 1.5e-01 1.6e-01 9.8e-02 1.1e-01  wnorm=56.9 57.1 57.4 57.1 57.5 57.4 57.4 57.8 58.3 58.1 58.8 59.1 59.2 59.8 60.2 59.8
+step 4050 [4050/32130  13%]  loss=4.1642 ppl=64.3 lr=9.69e-05 | 40648 tok/s (avg 46524) ETA 370m48s | gtok=149,293,056 | GPU 1.3/8.9GB
+step 4100 [4100/32130  13%]  loss=3.8356 ppl=46.3 lr=9.68e-05 | 45171 tok/s (avg 46507) ETA 370m17s | gtok=151,136,256 | GPU 1.3/8.9GB
+step 4150 [4150/32130  13%]  loss=3.9984 ppl=54.5 lr=9.68e-05 | 45233 tok/s (avg 46491) ETA 369m45s | gtok=152,979,456 | GPU 1.3/8.9GB
+step 4200 [4200/32130  13%]  loss=4.0830 ppl=59.3 lr=9.67e-05 | 45184 tok/s (avg 46475) ETA 369m13s | gtok=154,822,656 | GPU 1.3/8.9GB
+step 4250 [4250/32130  13%]  loss=3.9228 ppl=50.5 lr=9.66e-05 | 45315 tok/s (avg 46461) ETA 368m40s | gtok=156,665,856 | GPU 1.3/8.9GB
+step 4300 [4300/32130  13%]  loss=4.0296 ppl=56.2 lr=9.65e-05 | 45293 tok/s (avg 46447) ETA 368m07s | gtok=158,509,056 | GPU 1.3/8.9GB
+step 4350 [4350/32130  14%]  loss=3.7261 ppl=41.5 lr=9.64e-05 | 45125 tok/s (avg 46431) ETA 367m34s | gtok=160,352,256 | GPU 1.3/8.9GB
+step 4400 [4400/32130  14%]  loss=3.9025 ppl=49.5 lr=9.63e-05 | 45191 tok/s (avg 46417) ETA 367m02s | gtok=162,195,456 | GPU 1.3/8.9GB
+step 4450 [4450/32130  14%]  loss=3.9417 ppl=51.5 lr=9.62e-05 | 44793 tok/s (avg 46398) ETA 366m31s | gtok=164,038,656 | GPU 1.3/8.9GB
+step 4500 [4500/32130  14%]  loss=4.0562 ppl=57.8 lr=9.61e-05 | 45236 tok/s (avg 46385) ETA 365m57s | gtok=165,881,856 | GPU 1.3/8.9GB
+step 4550 [4550/32130  14%]  loss=3.8247 ppl=45.8 lr=9.60e-05 | 45282 tok/s (avg 46372) ETA 365m24s | gtok=167,725,056 | GPU 1.3/8.9GB
+step 4600 [4600/32130  14%]  loss=4.0280 ppl=56.2 lr=9.59e-05 | 45345 tok/s (avg 46361) ETA 364m49s | gtok=169,568,256 | GPU 1.3/8.9GB
+step 4650 [4650/32130  14%]  loss=3.9357 ppl=51.2 lr=9.58e-05 | 44931 tok/s (avg 46345) ETA 364m17s | gtok=171,411,456 | GPU 1.3/8.9GB
+step 4700 [4700/32130  15%]  loss=3.7348 ppl=41.9 lr=9.57e-05 | 45020 tok/s (avg 46331) ETA 363m44s | gtok=173,254,656 | GPU 1.3/8.9GB
+step 4750 [4750/32130  15%]  loss=3.9251 ppl=50.7 lr=9.56e-05 | 45018 tok/s (avg 46316) ETA 363m11s | gtok=175,097,856 | GPU 1.3/8.9GB
+step 4800 [4800/32130  15%]  loss=3.9189 ppl=50.3 lr=9.55e-05 | 44998 tok/s (avg 46302) ETA 362m38s | gtok=176,941,056 | GPU 1.3/8.9GB
+step 4850 [4850/32130  15%]  loss=3.8756 ppl=48.2 lr=9.54e-05 | 44928 tok/s (avg 46288) ETA 362m05s | gtok=178,784,256 | GPU 1.3/8.9GB
+step 4900 [4900/32130  15%]  loss=3.6975 ppl=40.3 lr=9.53e-05 | 45106 tok/s (avg 46275) ETA 361m31s | gtok=180,627,456 | GPU 1.3/8.9GB
+step 4950 [4950/32130  15%]  loss=3.7385 ppl=42.0 lr=9.52e-05 | 45213 tok/s (avg 46264) ETA 360m56s | gtok=182,470,656 | GPU 1.3/8.9GB
+step 5000 [5000/32130  16%]  loss=3.8631 ppl=47.6 lr=9.51e-05 | 45339 tok/s (avg 46255) ETA 360m21s | gtok=184,313,856 | GPU 1.3/8.9GB
+step 5050 [5050/32130  16%]  loss=3.8799 ppl=48.4 lr=9.50e-05 | 45364 tok/s (avg 46246) ETA 359m45s | gtok=186,157,056 | GPU 1.3/8.9GB
+step 5100 [5100/32130  16%]  loss=3.8574 ppl=47.3 lr=9.49e-05 | 45224 tok/s (avg 46236) ETA 359m10s | gtok=188,000,256 | GPU 1.3/8.9GB
+step 5150 [5150/32130  16%]  loss=3.8385 ppl=46.5 lr=9.48e-05 | 45937 tok/s (avg 46233) ETA 358m32s | gtok=189,843,456 | GPU 1.3/8.9GB
+step 5200 [5200/32130  16%]  loss=3.7104 ppl=40.9 lr=9.47e-05 | 48244 tok/s (avg 46251) ETA 357m43s | gtok=191,686,656 | GPU 1.3/8.9GB
+step 5250 [5250/32130  16%]  loss=3.7199 ppl=41.3 lr=9.45e-05 | 48845 tok/s (avg 46275) ETA 356m52s | gtok=193,529,856 | GPU 1.3/8.9GB
+step 5300 [5300/32130  16%]  loss=3.8627 ppl=47.6 lr=9.44e-05 | 48270 tok/s (avg 46293) ETA 356m04s | gtok=195,373,056 | GPU 1.3/8.9GB
+step 5350 [5350/32130  17%]  loss=3.7944 ppl=44.5 lr=9.43e-05 | 48444 tok/s (avg 46312) ETA 355m16s | gtok=197,216,256 | GPU 1.3/8.9GB
+step 5400 [5400/32130  17%]  loss=3.9070 ppl=49.7 lr=9.42e-05 | 45145 tok/s (avg 46301) ETA 354m41s | gtok=199,059,456 | GPU 1.3/8.9GB
+step 5450 [5450/32130  17%]  loss=3.9077 ppl=49.8 lr=9.41e-05 | 46008 tok/s (avg 46298) ETA 354m02s | gtok=200,902,656 | GPU 1.3/8.9GB
+step 5500 [5500/32130  17%]  loss=3.8843 ppl=48.6 lr=9.40e-05 | 46518 tok/s (avg 46300) ETA 353m22s | gtok=202,745,856 | GPU 1.3/8.9GB
+step 5550 [5550/32130  17%]  loss=3.6453 ppl=38.3 lr=9.38e-05 | 45761 tok/s (avg 46295) ETA 352m44s | gtok=204,589,056 | GPU 1.3/8.9GB
+step 5600 [5600/32130  17%]  loss=3.6358 ppl=37.9 lr=9.37e-05 | 45738 tok/s (avg 46290) ETA 352m07s | gtok=206,432,256 | GPU 1.3/8.9GB
+step 5650 [5650/32130  18%]  loss=3.8368 ppl=46.4 lr=9.36e-05 | 45669 tok/s (avg 46285) ETA 351m29s | gtok=208,275,456 | GPU 1.3/8.9GB
+step 5700 [5700/32130  18%]  loss=3.7918 ppl=44.3 lr=9.35e-05 | 46504 tok/s (avg 46286) ETA 350m49s | gtok=210,118,656 | GPU 1.3/8.9GB
+step 5750 [5750/32130  18%]  loss=3.7675 ppl=43.3 lr=9.34e-05 | 46481 tok/s (avg 46288) ETA 350m08s | gtok=211,961,856 | GPU 1.3/8.9GB
+step 5800 [5800/32130  18%]  loss=3.7038 ppl=40.6 lr=9.32e-05 | 47057 tok/s (avg 46295) ETA 349m25s | gtok=213,805,056 | GPU 1.3/8.9GB
+step 5850 [5850/32130  18%]  loss=3.7432 ppl=42.2 lr=9.31e-05 | 47321 tok/s (avg 46303) ETA 348m42s | gtok=215,648,256 | GPU 1.3/8.9GB
+step 5900 [5900/32130  18%]  loss=3.6609 ppl=38.9 lr=9.30e-05 | 47541 tok/s (avg 46313) ETA 347m57s | gtok=217,491,456 | GPU 1.3/8.9GB
+step 5950 [5950/32130  19%]  loss=3.7140 ppl=41.0 lr=9.29e-05 | 47344 tok/s (avg 46322) ETA 347m14s | gtok=219,334,656 | GPU 1.3/8.9GB
+step 6000 [6000/32130  19%]  loss=3.6549 ppl=38.7 lr=9.27e-05 | 46625 tok/s (avg 46324) ETA 346m33s | gtok=221,177,856 | GPU 1.3/8.9GB
+  [checkpoint] step 6000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 6000] val_loss=3.6500 val_ppl=38.48 *best* (best 38.48)
+  [diag] step 6000 cgu=+0.85 +0.86 +0.88 +0.92 +0.95 +0.99 +1.02 +1.07 +1.17 +1.24 +1.27 +1.32 +1.35 +1.38 +1.40 +1.31  pam=+0.15 +0.19 +0.23 +0.12 +0.19 +0.16 +0.11 +0.15 +0.24 +0.17 +0.27 +0.27 +0.21 +0.28 +0.23 +0.18
+  [diag] dtbias=-3.97 -3.96 -3.95 -3.98 -3.96 -3.98 -3.99 -3.98 -3.94 -3.99 -3.95 -3.95 -3.98 -3.98 -3.96 -3.98  ret=0.82 0.80 0.73 0.88 0.80 0.86 0.91 0.85 0.72 0.93 0.73 0.72 0.81 0.81 0.76 0.84
+  [diag] gnorm=6.6e-02 7.0e-02 7.6e-02 7.4e-02 7.3e-02 7.6e-02 9.8e-02 1.2e-01 9.9e-02 9.5e-02 1.0e-01 1.1e-01 1.6e-01 1.5e-01 1.1e-01 1.1e-01  wnorm=57.3 57.5 57.9 57.5 58.0 57.9 57.9 58.4 59.0 58.8 59.7 60.0 60.2 60.8 61.4 60.9
+step 6050 [6050/32130  19%]  loss=3.8371 ppl=46.4 lr=9.26e-05 | 42711 tok/s (avg 46292) ETA 346m07s | gtok=223,021,056 | GPU 1.3/8.9GB
+step 6100 [6100/32130  19%]  loss=3.8365 ppl=46.4 lr=9.25e-05 | 46820 tok/s (avg 46296) ETA 345m26s | gtok=224,864,256 | GPU 1.3/8.9GB
+step 6150 [6150/32130  19%]  loss=3.7634 ppl=43.1 lr=9.23e-05 | 47516 tok/s (avg 46306) ETA 344m41s | gtok=226,707,456 | GPU 1.3/8.9GB
+step 6200 [6200/32130  19%]  loss=3.7003 ppl=40.5 lr=9.22e-05 | 47571 tok/s (avg 46316) ETA 343m57s | gtok=228,550,656 | GPU 1.3/8.9GB
+step 6250 [6250/32130  19%]  loss=3.6552 ppl=38.7 lr=9.21e-05 | 48116 tok/s (avg 46330) ETA 343m11s | gtok=230,393,856 | GPU 1.3/8.9GB
+step 6300 [6300/32130  20%]  loss=3.7536 ppl=42.7 lr=9.19e-05 | 48007 tok/s (avg 46343) ETA 342m26s | gtok=232,237,056 | GPU 1.3/8.9GB
+step 6350 [6350/32130  20%]  loss=3.6867 ppl=39.9 lr=9.18e-05 | 48276 tok/s (avg 46357) ETA 341m40s | gtok=234,080,256 | GPU 1.3/8.9GB
+step 6400 [6400/32130  20%]  loss=3.9275 ppl=50.8 lr=9.17e-05 | 47833 tok/s (avg 46368) ETA 340m55s | gtok=235,923,456 | GPU 1.3/8.9GB
+step 6450 [6450/32130  20%]  loss=3.5018 ppl=33.2 lr=9.15e-05 | 48321 tok/s (avg 46383) ETA 340m08s | gtok=237,760,512 | GPU 1.3/8.9GB
+step 6500 [6500/32130  20%]  loss=3.6447 ppl=38.3 lr=9.14e-05 | 48169 tok/s (avg 46396) ETA 339m23s | gtok=239,603,712 | GPU 1.3/8.9GB
+step 6550 [6550/32130  20%]  loss=3.5312 ppl=34.2 lr=9.12e-05 | 48212 tok/s (avg 46409) ETA 338m37s | gtok=241,446,912 | GPU 1.3/8.9GB
+step 6600 [6600/32130  21%]  loss=3.6321 ppl=37.8 lr=9.11e-05 | 48231 tok/s (avg 46423) ETA 337m52s | gtok=243,290,112 | GPU 1.3/8.9GB
+step 6650 [6650/32130  21%]  loss=3.6611 ppl=38.9 lr=9.10e-05 | 48120 tok/s (avg 46435) ETA 337m07s | gtok=245,133,312 | GPU 1.3/8.9GB
+step 6700 [6700/32130  21%]  loss=3.7401 ppl=42.1 lr=9.08e-05 | 48077 tok/s (avg 46447) ETA 336m22s | gtok=246,976,512 | GPU 1.3/8.9GB
+step 6750 [6750/32130  21%]  loss=3.6845 ppl=39.8 lr=9.07e-05 | 47990 tok/s (avg 46458) ETA 335m37s | gtok=248,819,712 | GPU 1.3/8.9GB
+step 6800 [6800/32130  21%]  loss=3.6740 ppl=39.4 lr=9.05e-05 | 47579 tok/s (avg 46466) ETA 334m54s | gtok=250,662,912 | GPU 1.3/8.9GB
+step 6850 [6850/32130  21%]  loss=3.5973 ppl=36.5 lr=9.04e-05 | 46335 tok/s (avg 46465) ETA 334m15s | gtok=252,506,112 | GPU 1.3/8.9GB
+step 6900 [6900/32130  21%]  loss=3.5753 ppl=35.7 lr=9.02e-05 | 45302 tok/s (avg 46456) ETA 333m39s | gtok=254,349,312 | GPU 1.3/8.9GB
+step 6950 [6950/32130  22%]  loss=3.6166 ppl=37.2 lr=9.01e-05 | 45087 tok/s (avg 46446) ETA 333m04s | gtok=256,192,512 | GPU 1.3/8.9GB
+step 7000 [7000/32130  22%]  loss=3.7163 ppl=41.1 lr=8.99e-05 | 45387 tok/s (avg 46439) ETA 332m27s | gtok=258,035,712 | GPU 1.3/8.9GB
+step 7050 [7050/32130  22%]  loss=3.4395 ppl=31.2 lr=8.98e-05 | 45072 tok/s (avg 46429) ETA 331m52s | gtok=259,878,912 | GPU 1.3/8.9GB
+step 7100 [7100/32130  22%]  loss=3.3623 ppl=28.9 lr=8.96e-05 | 45980 tok/s (avg 46425) ETA 331m14s | gtok=261,722,112 | GPU 1.3/8.9GB
+step 7150 [7150/32130  22%]  loss=3.6639 ppl=39.0 lr=8.95e-05 | 47847 tok/s (avg 46435) ETA 330m30s | gtok=263,565,312 | GPU 1.3/8.9GB
+step 7200 [7200/32130  22%]  loss=3.6680 ppl=39.2 lr=8.93e-05 | 47807 tok/s (avg 46444) ETA 329m46s | gtok=265,408,512 | GPU 1.3/8.9GB
+step 7250 [7250/32130  23%]  loss=3.6845 ppl=39.8 lr=8.92e-05 | 45116 tok/s (avg 46435) ETA 329m11s | gtok=267,251,712 | GPU 1.3/8.9GB
+step 7300 [7300/32130  23%]  loss=3.5300 ppl=34.1 lr=8.90e-05 | 45193 tok/s (avg 46426) ETA 328m35s | gtok=269,094,912 | GPU 1.3/8.9GB
+step 7350 [7350/32130  23%]  loss=3.5423 ppl=34.5 lr=8.89e-05 | 47536 tok/s (avg 46433) ETA 327m52s | gtok=270,938,112 | GPU 1.3/8.9GB
+step 7400 [7400/32130  23%]  loss=3.6730 ppl=39.4 lr=8.87e-05 | 48759 tok/s (avg 46448) ETA 327m06s | gtok=272,781,312 | GPU 1.3/8.9GB
+step 7450 [7450/32130  23%]  loss=3.5290 ppl=34.1 lr=8.86e-05 | 48099 tok/s (avg 46459) ETA 326m22s | gtok=274,624,512 | GPU 1.3/8.9GB
+step 7500 [7500/32130  23%]  loss=3.6125 ppl=37.1 lr=8.84e-05 | 45779 tok/s (avg 46454) ETA 325m44s | gtok=276,467,712 | GPU 1.3/8.9GB
+step 7550 [7550/32130  23%]  loss=3.4839 ppl=32.6 lr=8.82e-05 | 45378 tok/s (avg 46447) ETA 325m07s | gtok=278,310,912 | GPU 1.3/8.9GB
+step 7600 [7600/32130  24%]  loss=3.4923 ppl=32.9 lr=8.81e-05 | 45274 tok/s (avg 46439) ETA 324m31s | gtok=280,154,112 | GPU 1.3/8.9GB
+step 7650 [7650/32130  24%]  loss=3.5330 ppl=34.2 lr=8.79e-05 | 45191 tok/s (avg 46431) ETA 323m55s | gtok=281,997,312 | GPU 1.3/8.9GB
+step 7700 [7700/32130  24%]  loss=3.5891 ppl=36.2 lr=8.78e-05 | 48384 tok/s (avg 46443) ETA 323m10s | gtok=283,840,512 | GPU 1.3/8.9GB
+step 7750 [7750/32130  24%]  loss=3.5434 ppl=34.6 lr=8.76e-05 | 48907 tok/s (avg 46458) ETA 322m24s | gtok=285,683,712 | GPU 1.3/8.9GB
+step 7800 [7800/32130  24%]  loss=3.4561 ppl=31.7 lr=8.74e-05 | 47364 tok/s (avg 46464) ETA 321m42s | gtok=287,526,912 | GPU 1.3/8.9GB
+step 7850 [7850/32130  24%]  loss=3.5585 ppl=35.1 lr=8.73e-05 | 48399 tok/s (avg 46476) ETA 320m57s | gtok=289,370,112 | GPU 1.3/8.9GB
+step 7900 [7900/32130  25%]  loss=3.3972 ppl=29.9 lr=8.71e-05 | 47881 tok/s (avg 46484) ETA 320m14s | gtok=291,213,312 | GPU 1.3/8.9GB
+step 7950 [7950/32130  25%]  loss=3.6977 ppl=40.4 lr=8.69e-05 | 48847 tok/s (avg 46498) ETA 319m29s | gtok=293,056,512 | GPU 1.3/8.9GB
+step 8000 [8000/32130  25%]  loss=3.4663 ppl=32.0 lr=8.68e-05 | 48806 tok/s (avg 46512) ETA 318m43s | gtok=294,899,712 | GPU 1.3/8.9GB
+  [gen @ step 8000, 294,899,712 tok] prompt: In 1923, the University of
+    In 1923, the University of Illinois was established and established as a public school in 1922 . The university is open to all students from within a city limits . 
+
+
+ = = = Modern era = = = 
+
+
+ The University of Wisconsin has over 150 universities , which are located at least 4 miles ( 6 @.@ 4 km ) to the south of the University of Michigan campus . All colleges have since been founded by
+  [checkpoint] step 8000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 8000] val_loss=3.5017 val_ppl=33.17 *best* (best 33.17)
+  [checkpoint] step 8000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/latest.pt
+  [diag] step 8000 cgu=+0.78 +0.80 +0.83 +0.88 +0.92 +0.96 +1.00 +1.06 +1.18 +1.27 +1.31 +1.37 +1.39 +1.44 +1.47 +1.36  pam=+0.16 +0.20 +0.25 +0.13 +0.20 +0.17 +0.11 +0.15 +0.26 +0.17 +0.29 +0.29 +0.22 +0.31 +0.25 +0.19
+  [diag] dtbias=-3.96 -3.95 -3.93 -3.97 -3.95 -3.97 -3.99 -3.98 -3.93 -3.98 -3.94 -3.94 -3.97 -3.97 -3.96 -3.97  ret=0.81 0.80 0.73 0.88 0.79 0.86 0.91 0.85 0.70 0.92 0.71 0.70 0.80 0.80 0.75 0.82
+  [diag] gnorm=7.5e-02 7.8e-02 8.5e-02 8.4e-02 8.4e-02 8.6e-02 1.1e-01 1.3e-01 1.2e-01 1.1e-01 1.2e-01 1.2e-01 1.8e-01 1.8e-01 1.2e-01 1.2e-01  wnorm=57.7 57.9 58.3 58.0 58.5 58.5 58.4 58.9 59.7 59.4 60.4 60.7 60.9 61.6 62.2 61.8
+step 8050 [8050/32130  25%]  loss=3.4292 ppl=30.9 lr=8.66e-05 | 42632 tok/s (avg 46486) ETA 318m14s | gtok=296,742,912 | GPU 1.3/8.9GB
+step 8100 [8100/32130  25%]  loss=3.6069 ppl=36.9 lr=8.64e-05 | 48871 tok/s (avg 46500) ETA 317m29s | gtok=298,586,112 | GPU 1.3/8.9GB
+step 8150 [8150/32130  25%]  loss=3.5166 ppl=33.7 lr=8.62e-05 | 48854 tok/s (avg 46514) ETA 316m44s | gtok=300,429,312 | GPU 1.3/8.9GB
+step 8200 [8200/32130  26%]  loss=3.5905 ppl=36.3 lr=8.61e-05 | 48931 tok/s (avg 46528) ETA 315m59s | gtok=302,272,512 | GPU 1.3/8.9GB
+step 8250 [8250/32130  26%]  loss=3.7310 ppl=41.7 lr=8.59e-05 | 48983 tok/s (avg 46542) ETA 315m13s | gtok=304,115,712 | GPU 1.3/8.9GB
+step 8300 [8300/32130  26%]  loss=3.5091 ppl=33.4 lr=8.57e-05 | 48990 tok/s (avg 46556) ETA 314m28s | gtok=305,958,912 | GPU 1.3/8.9GB
+step 8350 [8350/32130  26%]  loss=3.4464 ppl=31.4 lr=8.56e-05 | 48744 tok/s (avg 46568) ETA 313m43s | gtok=307,802,112 | GPU 1.3/8.9GB
+step 8400 [8400/32130  26%]  loss=3.4069 ppl=30.2 lr=8.54e-05 | 48827 tok/s (avg 46581) ETA 312m58s | gtok=309,645,312 | GPU 1.3/8.9GB
+step 8450 [8450/32130  26%]  loss=3.5547 ppl=35.0 lr=8.52e-05 | 48138 tok/s (avg 46590) ETA 312m15s | gtok=311,488,512 | GPU 1.3/8.9GB
+step 8500 [8500/32130  26%]  loss=3.4992 ppl=33.1 lr=8.50e-05 | 46858 tok/s (avg 46592) ETA 311m35s | gtok=313,331,712 | GPU 1.3/8.9GB
+step 8550 [8550/32130  27%]  loss=3.4669 ppl=32.0 lr=8.49e-05 | 47103 tok/s (avg 46595) ETA 310m54s | gtok=315,174,912 | GPU 1.3/8.9GB
+step 8600 [8600/32130  27%]  loss=3.4309 ppl=30.9 lr=8.47e-05 | 48490 tok/s (avg 46605) ETA 310m11s | gtok=317,018,112 | GPU 1.3/8.9GB
+step 8650 [8650/32130  27%]  loss=3.5604 ppl=35.2 lr=8.45e-05 | 47524 tok/s (avg 46610) ETA 309m29s | gtok=318,861,312 | GPU 1.3/8.9GB
+step 8700 [8700/32130  27%]  loss=3.6255 ppl=37.5 lr=8.43e-05 | 47237 tok/s (avg 46614) ETA 308m48s | gtok=320,704,512 | GPU 1.3/8.9GB
+step 8750 [8750/32130  27%]  loss=3.5150 ppl=33.6 lr=8.41e-05 | 46361 tok/s (avg 46613) ETA 308m09s | gtok=322,547,712 | GPU 1.3/8.9GB
+step 8800 [8800/32130  27%]  loss=3.5697 ppl=35.5 lr=8.40e-05 | 47089 tok/s (avg 46615) ETA 307m29s | gtok=324,390,912 | GPU 1.3/8.9GB
+step 8850 [8850/32130  28%]  loss=3.5347 ppl=34.3 lr=8.38e-05 | 48456 tok/s (avg 46625) ETA 306m45s | gtok=326,234,112 | GPU 1.3/8.9GB
+step 8900 [8900/32130  28%]  loss=3.4960 ppl=33.0 lr=8.36e-05 | 48145 tok/s (avg 46633) ETA 306m02s | gtok=328,077,312 | GPU 1.3/8.9GB
+step 8950 [8950/32130  28%]  loss=3.5661 ppl=35.4 lr=8.34e-05 | 48827 tok/s (avg 46645) ETA 305m18s | gtok=329,920,512 | GPU 1.3/8.9GB
+step 9000 [9000/32130  28%]  loss=3.5654 ppl=35.4 lr=8.32e-05 | 47406 tok/s (avg 46649) ETA 304m37s | gtok=331,763,712 | GPU 1.3/8.9GB
+step 9050 [9050/32130  28%]  loss=3.4858 ppl=32.6 lr=8.30e-05 | 46440 tok/s (avg 46648) ETA 303m58s | gtok=333,606,912 | GPU 1.3/8.9GB
+step 9100 [9100/32130  28%]  loss=3.3936 ppl=29.8 lr=8.28e-05 | 46291 tok/s (avg 46646) ETA 303m19s | gtok=335,450,112 | GPU 1.3/8.9GB
+step 9150 [9150/32130  28%]  loss=3.5849 ppl=36.1 lr=8.27e-05 | 46503 tok/s (avg 46645) ETA 302m40s | gtok=337,293,312 | GPU 1.3/8.9GB
+step 9200 [9200/32130  29%]  loss=3.4494 ppl=31.5 lr=8.25e-05 | 46710 tok/s (avg 46646) ETA 302m00s | gtok=339,136,512 | GPU 1.3/8.9GB
+step 9250 [9250/32130  29%]  loss=3.6600 ppl=38.9 lr=8.23e-05 | 47635 tok/s (avg 46651) ETA 301m19s | gtok=340,979,712 | GPU 1.3/8.9GB
+step 9300 [9300/32130  29%]  loss=3.4137 ppl=30.4 lr=8.21e-05 | 47986 tok/s (avg 46658) ETA 300m37s | gtok=342,822,912 | GPU 1.3/8.9GB
+step 9350 [9350/32130  29%]  loss=3.4469 ppl=31.4 lr=8.19e-05 | 47480 tok/s (avg 46662) ETA 299m55s | gtok=344,666,112 | GPU 1.3/8.9GB
+step 9400 [9400/32130  29%]  loss=3.5767 ppl=35.8 lr=8.17e-05 | 48917 tok/s (avg 46674) ETA 299m12s | gtok=346,509,312 | GPU 1.3/8.9GB
+step 9450 [9450/32130  29%]  loss=3.3454 ppl=28.4 lr=8.15e-05 | 48815 tok/s (avg 46685) ETA 298m28s | gtok=348,352,512 | GPU 1.3/8.9GB
+step 9500 [9500/32130  30%]  loss=3.5054 ppl=33.3 lr=8.13e-05 | 48847 tok/s (avg 46695) ETA 297m44s | gtok=350,195,712 | GPU 1.3/8.9GB
+step 9550 [9550/32130  30%]  loss=3.4766 ppl=32.3 lr=8.11e-05 | 48924 tok/s (avg 46707) ETA 297m01s | gtok=352,038,912 | GPU 1.3/8.9GB
+step 9600 [9600/32130  30%]  loss=3.5086 ppl=33.4 lr=8.09e-05 | 48948 tok/s (avg 46718) ETA 296m17s | gtok=353,882,112 | GPU 1.3/8.9GB
+step 9650 [9650/32130  30%]  loss=3.3620 ppl=28.8 lr=8.07e-05 | 48967 tok/s (avg 46729) ETA 295m33s | gtok=355,719,168 | GPU 1.3/8.9GB
+step 9700 [9700/32130  30%]  loss=3.2106 ppl=24.8 lr=8.05e-05 | 48981 tok/s (avg 46740) ETA 294m49s | gtok=357,562,368 | GPU 1.3/8.9GB
+step 9750 [9750/32130  30%]  loss=3.4249 ppl=30.7 lr=8.03e-05 | 48977 tok/s (avg 46751) ETA 294m06s | gtok=359,405,568 | GPU 1.3/8.9GB
+step 9800 [9800/32130  31%]  loss=3.3965 ppl=29.9 lr=8.01e-05 | 48938 tok/s (avg 46761) ETA 293m22s | gtok=361,248,768 | GPU 1.3/8.9GB
+step 9850 [9850/32130  31%]  loss=3.5087 ppl=33.4 lr=7.99e-05 | 48928 tok/s (avg 46772) ETA 292m39s | gtok=363,091,968 | GPU 1.3/8.9GB
+step 9900 [9900/32130  31%]  loss=3.4462 ppl=31.4 lr=7.97e-05 | 48658 tok/s (avg 46781) ETA 291m56s | gtok=364,935,168 | GPU 1.3/8.9GB
+step 9950 [9950/32130  31%]  loss=3.3874 ppl=29.6 lr=7.95e-05 | 49002 tok/s (avg 46792) ETA 291m13s | gtok=366,778,368 | GPU 1.3/8.9GB
+step 10000 [10000/32130  31%]  loss=3.3032 ppl=27.2 lr=7.93e-05 | 49059 tok/s (avg 46803) ETA 290m29s | gtok=368,621,568 | GPU 1.3/8.9GB
+  [checkpoint] step 10000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 10000] val_loss=3.4006 val_ppl=29.98 *best* (best 29.98)
+  [diag] step 10000 cgu=+0.74 +0.76 +0.79 +0.85 +0.90 +0.94 +0.98 +1.06 +1.19 +1.28 +1.33 +1.40 +1.43 +1.48 +1.53 +1.41  pam=+0.17 +0.21 +0.26 +0.13 +0.21 +0.17 +0.10 +0.15 +0.26 +0.18 +0.31 +0.30 +0.23 +0.32 +0.26 +0.20
+  [diag] dtbias=-3.96 -3.95 -3.92 -3.97 -3.95 -3.97 -3.99 -3.98 -3.93 -3.98 -3.93 -3.93 -3.97 -3.97 -3.96 -3.97  ret=0.81 0.79 0.71 0.88 0.79 0.85 0.91 0.84 0.69 0.92 0.69 0.69 0.79 0.78 0.74 0.81
+  [diag] gnorm=7.2e-02 7.5e-02 8.2e-02 8.2e-02 8.2e-02 8.4e-02 1.3e-01 1.2e-01 1.1e-01 1.1e-01 1.2e-01 1.2e-01 1.7e-01 1.7e-01 1.2e-01 1.3e-01  wnorm=58.0 58.3 58.8 58.5 58.9 58.9 58.9 59.4 60.2 59.9 60.9 61.3 61.5 62.2 62.9 62.6
+step 10050 [10050/32130  31%]  loss=3.4914 ppl=32.8 lr=7.91e-05 | 44712 tok/s (avg 46792) ETA 289m54s | gtok=370,464,768 | GPU 1.3/8.9GB
+step 10100 [10100/32130  31%]  loss=3.3622 ppl=28.9 lr=7.89e-05 | 49053 tok/s (avg 46802) ETA 289m11s | gtok=372,307,968 | GPU 1.3/8.9GB
+step 10150 [10150/32130  32%]  loss=3.3724 ppl=29.1 lr=7.87e-05 | 49054 tok/s (avg 46813) ETA 288m27s | gtok=374,151,168 | GPU 1.3/8.9GB
+step 10200 [10200/32130  32%]  loss=3.4181 ppl=30.5 lr=7.85e-05 | 49058 tok/s (avg 46823) ETA 287m44s | gtok=375,994,368 | GPU 1.3/8.9GB
+step 10250 [10250/32130  32%]  loss=3.4252 ppl=30.7 lr=7.83e-05 | 49013 tok/s (avg 46834) ETA 287m01s | gtok=377,837,568 | GPU 1.3/8.9GB
+step 10300 [10300/32130  32%]  loss=3.3933 ppl=29.8 lr=7.81e-05 | 49058 tok/s (avg 46844) ETA 286m18s | gtok=379,680,768 | GPU 1.3/8.9GB
+step 10350 [10350/32130  32%]  loss=3.4767 ppl=32.4 lr=7.79e-05 | 49058 tok/s (avg 46854) ETA 285m35s | gtok=381,523,968 | GPU 1.3/8.9GB
+step 10400 [10400/32130  32%]  loss=3.4690 ppl=32.1 lr=7.77e-05 | 49052 tok/s (avg 46864) ETA 284m52s | gtok=383,367,168 | GPU 1.3/8.9GB
+step 10450 [10450/32130  33%]  loss=3.4271 ppl=30.8 lr=7.75e-05 | 49053 tok/s (avg 46874) ETA 284m09s | gtok=385,210,368 | GPU 1.3/8.9GB
+step 10500 [10500/32130  33%]  loss=3.5076 ppl=33.4 lr=7.73e-05 | 49053 tok/s (avg 46884) ETA 283m26s | gtok=387,053,568 | GPU 1.3/8.9GB
+step 10550 [10550/32130  33%]  loss=3.4797 ppl=32.5 lr=7.71e-05 | 49014 tok/s (avg 46894) ETA 282m43s | gtok=388,896,768 | GPU 1.3/8.9GB
+step 10600 [10600/32130  33%]  loss=3.4004 ppl=30.0 lr=7.69e-05 | 49054 tok/s (avg 46904) ETA 282m00s | gtok=390,739,968 | GPU 1.3/8.9GB
+step 10650 [10650/32130  33%]  loss=3.4201 ppl=30.6 lr=7.67e-05 | 49053 tok/s (avg 46913) ETA 281m17s | gtok=392,583,168 | GPU 1.3/8.9GB
+step 10700 [10700/32130  33%]  loss=3.4337 ppl=31.0 lr=7.65e-05 | 49041 tok/s (avg 46923) ETA 280m35s | gtok=394,426,368 | GPU 1.3/8.9GB
+step 10750 [10750/32130  33%]  loss=3.3373 ppl=28.1 lr=7.63e-05 | 49032 tok/s (avg 46932) ETA 279m52s | gtok=396,269,568 | GPU 1.3/8.9GB
+step 10800 [10800/32130  34%]  loss=3.2652 ppl=26.2 lr=7.60e-05 | 49050 tok/s (avg 46942) ETA 279m10s | gtok=398,112,768 | GPU 1.3/8.9GB
+step 10850 [10850/32130  34%]  loss=3.2738 ppl=26.4 lr=7.58e-05 | 49046 tok/s (avg 46951) ETA 278m27s | gtok=399,955,968 | GPU 1.3/8.9GB
+step 10900 [10900/32130  34%]  loss=3.3871 ppl=29.6 lr=7.56e-05 | 49049 tok/s (avg 46960) ETA 277m44s | gtok=401,799,168 | GPU 1.3/8.9GB
+step 10950 [10950/32130  34%]  loss=3.3358 ppl=28.1 lr=7.54e-05 | 49055 tok/s (avg 46969) ETA 277m02s | gtok=403,642,368 | GPU 1.3/8.9GB
+step 11000 [11000/32130  34%]  loss=3.2939 ppl=26.9 lr=7.52e-05 | 49055 tok/s (avg 46978) ETA 276m20s | gtok=405,485,568 | GPU 1.3/8.9GB
+step 11050 [11050/32130  34%]  loss=3.4584 ppl=31.8 lr=7.50e-05 | 49052 tok/s (avg 46987) ETA 275m37s | gtok=407,328,768 | GPU 1.3/8.9GB
+step 11100 [11100/32130  35%]  loss=3.3245 ppl=27.8 lr=7.48e-05 | 49049 tok/s (avg 46996) ETA 274m55s | gtok=409,171,968 | GPU 1.3/8.9GB
+step 11150 [11150/32130  35%]  loss=3.4964 ppl=33.0 lr=7.45e-05 | 49052 tok/s (avg 47005) ETA 274m12s | gtok=411,015,168 | GPU 1.3/8.9GB
+step 11200 [11200/32130  35%]  loss=3.2390 ppl=25.5 lr=7.43e-05 | 49049 tok/s (avg 47014) ETA 273m30s | gtok=412,858,368 | GPU 1.3/8.9GB
+step 11250 [11250/32130  35%]  loss=3.4215 ppl=30.6 lr=7.41e-05 | 49052 tok/s (avg 47022) ETA 272m48s | gtok=414,701,568 | GPU 1.3/8.9GB
+step 11300 [11300/32130  35%]  loss=3.4193 ppl=30.5 lr=7.39e-05 | 49050 tok/s (avg 47031) ETA 272m06s | gtok=416,544,768 | GPU 1.3/8.9GB
+step 11350 [11350/32130  35%]  loss=3.4933 ppl=32.9 lr=7.37e-05 | 49050 tok/s (avg 47040) ETA 271m24s | gtok=418,387,968 | GPU 1.3/8.9GB
+step 11400 [11400/32130  35%]  loss=3.5934 ppl=36.4 lr=7.35e-05 | 49047 tok/s (avg 47048) ETA 270m42s | gtok=420,231,168 | GPU 1.3/8.9GB
+step 11450 [11450/32130  36%]  loss=3.4849 ppl=32.6 lr=7.32e-05 | 49027 tok/s (avg 47056) ETA 270m00s | gtok=422,074,368 | GPU 1.3/8.9GB
+step 11500 [11500/32130  36%]  loss=3.3812 ppl=29.4 lr=7.30e-05 | 49047 tok/s (avg 47065) ETA 269m18s | gtok=423,917,568 | GPU 1.3/8.9GB
+step 11550 [11550/32130  36%]  loss=3.3548 ppl=28.6 lr=7.28e-05 | 49055 tok/s (avg 47073) ETA 268m36s | gtok=425,760,768 | GPU 1.3/8.9GB
+step 11600 [11600/32130  36%]  loss=3.3154 ppl=27.5 lr=7.26e-05 | 49044 tok/s (avg 47081) ETA 267m54s | gtok=427,603,968 | GPU 1.3/8.9GB
+step 11650 [11650/32130  36%]  loss=3.3865 ppl=29.6 lr=7.23e-05 | 49043 tok/s (avg 47089) ETA 267m12s | gtok=429,447,168 | GPU 1.3/8.9GB
+step 11700 [11700/32130  36%]  loss=3.5840 ppl=36.0 lr=7.21e-05 | 49048 tok/s (avg 47097) ETA 266m30s | gtok=431,290,368 | GPU 1.3/8.9GB
+step 11750 [11750/32130  37%]  loss=3.4420 ppl=31.3 lr=7.19e-05 | 49047 tok/s (avg 47105) ETA 265m48s | gtok=433,133,568 | GPU 1.3/8.9GB
+step 11800 [11800/32130  37%]  loss=3.3307 ppl=28.0 lr=7.17e-05 | 49049 tok/s (avg 47113) ETA 265m06s | gtok=434,976,768 | GPU 1.3/8.9GB
+step 11850 [11850/32130  37%]  loss=3.3164 ppl=27.6 lr=7.15e-05 | 49047 tok/s (avg 47121) ETA 264m24s | gtok=436,819,968 | GPU 1.3/8.9GB
+step 11900 [11900/32130  37%]  loss=3.2860 ppl=26.7 lr=7.12e-05 | 49045 tok/s (avg 47129) ETA 263m43s | gtok=438,663,168 | GPU 1.3/8.9GB
+step 11950 [11950/32130  37%]  loss=3.2851 ppl=26.7 lr=7.10e-05 | 49046 tok/s (avg 47136) ETA 263m01s | gtok=440,506,368 | GPU 1.3/8.9GB
+step 12000 [12000/32130  37%]  loss=3.4648 ppl=32.0 lr=7.08e-05 | 49041 tok/s (avg 47144) ETA 262m19s | gtok=442,349,568 | GPU 1.3/8.9GB
+  [checkpoint] step 12000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 12000] val_loss=3.3388 val_ppl=28.18 *best* (best 28.18)
+  [checkpoint] step 12000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/latest.pt
+  [diag] step 12000 cgu=+0.71 +0.74 +0.77 +0.84 +0.88 +0.94 +0.98 +1.06 +1.19 +1.30 +1.35 +1.43 +1.45 +1.51 +1.56 +1.44  pam=+0.18 +0.22 +0.27 +0.13 +0.21 +0.17 +0.10 +0.15 +0.27 +0.18 +0.31 +0.31 +0.23 +0.33 +0.27 +0.20
+  [diag] dtbias=-3.95 -3.94 -3.92 -3.97 -3.94 -3.97 -3.99 -3.97 -3.92 -3.98 -3.92 -3.93 -3.97 -3.96 -3.95 -3.96  ret=0.80 0.78 0.70 0.87 0.78 0.85 0.91 0.84 0.69 0.92 0.69 0.68 0.79 0.78 0.74 0.81
+  [diag] gnorm=7.6e-02 7.9e-02 8.6e-02 8.5e-02 8.5e-02 8.6e-02 1.1e-01 1.3e-01 1.2e-01 1.1e-01 1.2e-01 1.3e-01 1.8e-01 1.9e-01 1.3e-01 1.3e-01  wnorm=58.4 58.7 59.1 58.8 59.3 59.3 59.3 59.9 60.6 60.3 61.4 61.8 62.0 62.7 63.4 63.1
+step 12050 [12050/32130  38%]  loss=3.3859 ppl=29.5 lr=7.06e-05 | 43875 tok/s (avg 47129) ETA 261m45s | gtok=444,192,768 | GPU 1.3/8.9GB
+step 12100 [12100/32130  38%]  loss=3.3761 ppl=29.3 lr=7.03e-05 | 49053 tok/s (avg 47137) ETA 261m04s | gtok=446,035,968 | GPU 1.3/8.9GB
+step 12150 [12150/32130  38%]  loss=3.2950 ppl=27.0 lr=7.01e-05 | 49046 tok/s (avg 47145) ETA 260m22s | gtok=447,879,168 | GPU 1.3/8.9GB
+step 12200 [12200/32130  38%]  loss=3.3892 ppl=29.6 lr=6.99e-05 | 49010 tok/s (avg 47152) ETA 259m40s | gtok=449,722,368 | GPU 1.3/8.9GB
+step 12250 [12250/32130  38%]  loss=3.4279 ppl=30.8 lr=6.96e-05 | 49010 tok/s (avg 47159) ETA 258m59s | gtok=451,565,568 | GPU 1.3/8.9GB
+step 12300 [12300/32130  38%]  loss=3.3378 ppl=28.2 lr=6.94e-05 | 49013 tok/s (avg 47167) ETA 258m17s | gtok=453,408,768 | GPU 1.3/8.9GB
+step 12350 [12350/32130  38%]  loss=3.4143 ppl=30.4 lr=6.92e-05 | 49047 tok/s (avg 47174) ETA 257m36s | gtok=455,251,968 | GPU 1.3/8.9GB
+step 12400 [12400/32130  39%]  loss=3.4710 ppl=32.2 lr=6.90e-05 | 49048 tok/s (avg 47181) ETA 256m55s | gtok=457,095,168 | GPU 1.3/8.9GB
+step 12450 [12450/32130  39%]  loss=3.2142 ppl=24.9 lr=6.87e-05 | 49045 tok/s (avg 47188) ETA 256m13s | gtok=458,938,368 | GPU 1.3/8.9GB
+step 12500 [12500/32130  39%]  loss=3.3096 ppl=27.4 lr=6.85e-05 | 49044 tok/s (avg 47195) ETA 255m32s | gtok=460,781,568 | GPU 1.3/8.9GB
+step 12550 [12550/32130  39%]  loss=3.2326 ppl=25.3 lr=6.83e-05 | 49045 tok/s (avg 47203) ETA 254m50s | gtok=462,624,768 | GPU 1.3/8.9GB
+step 12600 [12600/32130  39%]  loss=3.3091 ppl=27.4 lr=6.80e-05 | 49045 tok/s (avg 47210) ETA 254m09s | gtok=464,467,968 | GPU 1.3/8.9GB
+step 12650 [12650/32130  39%]  loss=3.3288 ppl=27.9 lr=6.78e-05 | 49044 tok/s (avg 47217) ETA 253m28s | gtok=466,311,168 | GPU 1.3/8.9GB
+step 12700 [12700/32130  40%]  loss=3.2368 ppl=25.5 lr=6.76e-05 | 49043 tok/s (avg 47223) ETA 252m47s | gtok=468,154,368 | GPU 1.3/8.9GB
+step 12750 [12750/32130  40%]  loss=3.4856 ppl=32.6 lr=6.73e-05 | 49015 tok/s (avg 47230) ETA 252m05s | gtok=469,997,568 | GPU 1.3/8.9GB
+step 12800 [12800/32130  40%]  loss=3.4692 ppl=32.1 lr=6.71e-05 | 49044 tok/s (avg 47237) ETA 251m24s | gtok=471,840,768 | GPU 1.3/8.9GB
+step 12850 [12850/32130  40%]  loss=3.3355 ppl=28.1 lr=6.69e-05 | 49041 tok/s (avg 47244) ETA 250m43s | gtok=473,683,968 | GPU 1.3/8.9GB
+step 12900 [12900/32130  40%]  loss=3.2794 ppl=26.6 lr=6.66e-05 | 49051 tok/s (avg 47251) ETA 250m02s | gtok=475,521,024 | GPU 1.3/8.9GB
+step 12950 [12950/32130  40%]  loss=3.1653 ppl=23.7 lr=6.64e-05 | 49044 tok/s (avg 47257) ETA 249m20s | gtok=477,364,224 | GPU 1.3/8.9GB
+step 13000 [13000/32130  40%]  loss=3.1643 ppl=23.7 lr=6.62e-05 | 49042 tok/s (avg 47264) ETA 248m39s | gtok=479,207,424 | GPU 1.3/8.9GB
+step 13050 [13050/32130  41%]  loss=3.2311 ppl=25.3 lr=6.59e-05 | 49046 tok/s (avg 47270) ETA 247m58s | gtok=481,050,624 | GPU 1.3/8.9GB
+step 13100 [13100/32130  41%]  loss=3.2107 ppl=24.8 lr=6.57e-05 | 49043 tok/s (avg 47277) ETA 247m17s | gtok=482,893,824 | GPU 1.3/8.9GB
+step 13150 [13150/32130  41%]  loss=3.3033 ppl=27.2 lr=6.55e-05 | 49052 tok/s (avg 47283) ETA 246m36s | gtok=484,737,024 | GPU 1.3/8.9GB
+step 13200 [13200/32130  41%]  loss=3.2956 ppl=27.0 lr=6.52e-05 | 49048 tok/s (avg 47290) ETA 245m55s | gtok=486,580,224 | GPU 1.3/8.9GB
+step 13250 [13250/32130  41%]  loss=3.0461 ppl=21.0 lr=6.50e-05 | 49049 tok/s (avg 47296) ETA 245m14s | gtok=488,423,424 | GPU 1.3/8.9GB
+step 13300 [13300/32130  41%]  loss=3.4191 ppl=30.5 lr=6.48e-05 | 49053 tok/s (avg 47303) ETA 244m33s | gtok=490,266,624 | GPU 1.3/8.9GB
+step 13350 [13350/32130  42%]  loss=3.2768 ppl=26.5 lr=6.45e-05 | 49054 tok/s (avg 47309) ETA 243m52s | gtok=492,109,824 | GPU 1.3/8.9GB
+step 13400 [13400/32130  42%]  loss=3.3146 ppl=27.5 lr=6.43e-05 | 49049 tok/s (avg 47315) ETA 243m12s | gtok=493,953,024 | GPU 1.3/8.9GB
+step 13450 [13450/32130  42%]  loss=3.0225 ppl=20.5 lr=6.40e-05 | 49046 tok/s (avg 47321) ETA 242m31s | gtok=495,796,224 | GPU 1.3/8.9GB
+step 13500 [13500/32130  42%]  loss=3.4125 ppl=30.3 lr=6.38e-05 | 49045 tok/s (avg 47328) ETA 241m50s | gtok=497,639,424 | GPU 1.3/8.9GB
+step 13550 [13550/32130  42%]  loss=3.3504 ppl=28.5 lr=6.36e-05 | 49053 tok/s (avg 47334) ETA 241m09s | gtok=499,482,624 | GPU 1.3/8.9GB
+step 13600 [13600/32130  42%]  loss=3.3002 ppl=27.1 lr=6.33e-05 | 48989 tok/s (avg 47340) ETA 240m28s | gtok=501,325,824 | GPU 1.3/8.9GB
+step 13650 [13650/32130  42%]  loss=3.2303 ppl=25.3 lr=6.31e-05 | 48999 tok/s (avg 47346) ETA 239m48s | gtok=503,169,024 | GPU 1.3/8.9GB
+step 13700 [13700/32130  43%]  loss=3.2456 ppl=25.7 lr=6.28e-05 | 48991 tok/s (avg 47351) ETA 239m07s | gtok=505,012,224 | GPU 1.3/8.9GB
+step 13750 [13750/32130  43%]  loss=3.3901 ppl=29.7 lr=6.26e-05 | 48986 tok/s (avg 47357) ETA 238m26s | gtok=506,855,424 | GPU 1.3/8.9GB
+step 13800 [13800/32130  43%]  loss=3.2980 ppl=27.1 lr=6.24e-05 | 49043 tok/s (avg 47363) ETA 237m46s | gtok=508,698,624 | GPU 1.3/8.9GB
+step 13850 [13850/32130  43%]  loss=3.1899 ppl=24.3 lr=6.21e-05 | 49047 tok/s (avg 47369) ETA 237m05s | gtok=510,541,824 | GPU 1.3/8.9GB
+step 13900 [13900/32130  43%]  loss=3.3478 ppl=28.4 lr=6.19e-05 | 49045 tok/s (avg 47375) ETA 236m24s | gtok=512,385,024 | GPU 1.3/8.9GB
+step 13950 [13950/32130  43%]  loss=3.2217 ppl=25.1 lr=6.16e-05 | 49044 tok/s (avg 47380) ETA 235m44s | gtok=514,228,224 | GPU 1.3/8.9GB
+step 14000 [14000/32130  44%]  loss=3.4429 ppl=31.3 lr=6.14e-05 | 49019 tok/s (avg 47386) ETA 235m03s | gtok=516,071,424 | GPU 1.3/8.9GB
+  [checkpoint] step 14000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 14000] val_loss=3.2917 val_ppl=26.89 *best* (best 26.89)
+  [diag] step 14000 cgu=+0.69 +0.72 +0.77 +0.83 +0.89 +0.94 +0.98 +1.07 +1.21 +1.31 +1.37 +1.45 +1.47 +1.54 +1.60 +1.47  pam=+0.19 +0.23 +0.28 +0.13 +0.22 +0.18 +0.11 +0.15 +0.28 +0.18 +0.33 +0.32 +0.24 +0.34 +0.28 +0.21
+  [diag] dtbias=-3.95 -3.94 -3.91 -3.97 -3.94 -3.96 -3.99 -3.97 -3.92 -3.98 -3.92 -3.92 -3.97 -3.96 -3.95 -3.96  ret=0.80 0.77 0.70 0.87 0.78 0.85 0.91 0.84 0.68 0.92 0.68 0.67 0.78 0.77 0.74 0.80
+  [diag] gnorm=7.8e-02 8.2e-02 9.0e-02 9.2e-02 9.0e-02 9.3e-02 1.2e-01 1.3e-01 1.2e-01 1.2e-01 1.2e-01 1.3e-01 1.8e-01 1.7e-01 1.2e-01 1.3e-01  wnorm=58.7 59.0 59.5 59.1 59.6 59.6 59.6 60.2 60.9 60.7 61.7 62.1 62.3 63.1 63.8 63.6
+step 14050 [14050/32130  44%]  loss=3.2152 ppl=24.9 lr=6.12e-05 | 44788 tok/s (avg 47376) ETA 234m27s | gtok=517,914,624 | GPU 1.3/8.9GB
+step 14100 [14100/32130  44%]  loss=3.1644 ppl=23.7 lr=6.09e-05 | 49043 tok/s (avg 47382) ETA 233m46s | gtok=519,757,824 | GPU 1.3/8.9GB
+step 14150 [14150/32130  44%]  loss=3.2932 ppl=26.9 lr=6.07e-05 | 49024 tok/s (avg 47388) ETA 233m06s | gtok=521,601,024 | GPU 1.3/8.9GB
+step 14200 [14200/32130  44%]  loss=2.9566 ppl=19.2 lr=6.04e-05 | 49038 tok/s (avg 47393) ETA 232m25s | gtok=523,444,224 | GPU 1.3/8.9GB
+step 14250 [14250/32130  44%]  loss=3.1878 ppl=24.2 lr=6.02e-05 | 49046 tok/s (avg 47399) ETA 231m45s | gtok=525,287,424 | GPU 1.3/8.9GB
+step 14300 [14300/32130  45%]  loss=3.1980 ppl=24.5 lr=5.99e-05 | 49050 tok/s (avg 47404) ETA 231m04s | gtok=527,130,624 | GPU 1.3/8.9GB
+step 14350 [14350/32130  45%]  loss=3.3835 ppl=29.5 lr=5.97e-05 | 49052 tok/s (avg 47410) ETA 230m24s | gtok=528,973,824 | GPU 1.3/8.9GB
+step 14400 [14400/32130  45%]  loss=3.2687 ppl=26.3 lr=5.95e-05 | 49052 tok/s (avg 47415) ETA 229m43s | gtok=530,817,024 | GPU 1.3/8.9GB
+step 14450 [14450/32130  45%]  loss=3.4085 ppl=30.2 lr=5.92e-05 | 49042 tok/s (avg 47421) ETA 229m03s | gtok=532,660,224 | GPU 1.3/8.9GB
+step 14500 [14500/32130  45%]  loss=3.1109 ppl=22.4 lr=5.90e-05 | 49043 tok/s (avg 47426) ETA 228m22s | gtok=534,503,424 | GPU 1.3/8.9GB
+step 14550 [14550/32130  45%]  loss=3.2816 ppl=26.6 lr=5.87e-05 | 49046 tok/s (avg 47432) ETA 227m42s | gtok=536,346,624 | GPU 1.3/8.9GB
+step 14600 [14600/32130  45%]  loss=3.2699 ppl=26.3 lr=5.85e-05 | 49036 tok/s (avg 47437) ETA 227m02s | gtok=538,189,824 | GPU 1.3/8.9GB
+step 14650 [14650/32130  46%]  loss=3.1846 ppl=24.2 lr=5.82e-05 | 49040 tok/s (avg 47442) ETA 226m21s | gtok=540,033,024 | GPU 1.3/8.9GB
+step 14700 [14700/32130  46%]  loss=3.1902 ppl=24.3 lr=5.80e-05 | 49041 tok/s (avg 47448) ETA 225m41s | gtok=541,876,224 | GPU 1.3/8.9GB
+step 14750 [14750/32130  46%]  loss=3.2730 ppl=26.4 lr=5.77e-05 | 49044 tok/s (avg 47453) ETA 225m01s | gtok=543,719,424 | GPU 1.3/8.9GB
+step 14800 [14800/32130  46%]  loss=3.1091 ppl=22.4 lr=5.75e-05 | 49041 tok/s (avg 47458) ETA 224m20s | gtok=545,562,624 | GPU 1.3/8.9GB
+step 14850 [14850/32130  46%]  loss=3.2679 ppl=26.3 lr=5.72e-05 | 49050 tok/s (avg 47463) ETA 223m40s | gtok=547,405,824 | GPU 1.3/8.9GB
+step 14900 [14900/32130  46%]  loss=3.2999 ppl=27.1 lr=5.70e-05 | 49045 tok/s (avg 47468) ETA 223m00s | gtok=549,249,024 | GPU 1.3/8.9GB
+step 14950 [14950/32130  47%]  loss=3.3921 ppl=29.7 lr=5.68e-05 | 49019 tok/s (avg 47473) ETA 222m20s | gtok=551,092,224 | GPU 1.3/8.9GB
+step 15000 [15000/32130  47%]  loss=3.3032 ppl=27.2 lr=5.65e-05 | 49044 tok/s (avg 47478) ETA 221m39s | gtok=552,935,424 | GPU 1.3/8.9GB
+step 15050 [15050/32130  47%]  loss=3.3900 ppl=29.7 lr=5.63e-05 | 49048 tok/s (avg 47483) ETA 220m59s | gtok=554,778,624 | GPU 1.3/8.9GB
+step 15100 [15100/32130  47%]  loss=3.3517 ppl=28.5 lr=5.60e-05 | 49052 tok/s (avg 47489) ETA 220m19s | gtok=556,621,824 | GPU 1.3/8.9GB
+step 15150 [15150/32130  47%]  loss=3.1440 ppl=23.2 lr=5.58e-05 | 49048 tok/s (avg 47493) ETA 219m39s | gtok=558,465,024 | GPU 1.3/8.9GB
+step 15200 [15200/32130  47%]  loss=3.4824 ppl=32.5 lr=5.55e-05 | 49044 tok/s (avg 47498) ETA 218m58s | gtok=560,308,224 | GPU 1.3/8.9GB
+step 15250 [15250/32130  47%]  loss=3.2913 ppl=26.9 lr=5.53e-05 | 49052 tok/s (avg 47503) ETA 218m18s | gtok=562,151,424 | GPU 1.3/8.9GB
+step 15300 [15300/32130  48%]  loss=3.2080 ppl=24.7 lr=5.50e-05 | 49055 tok/s (avg 47508) ETA 217m38s | gtok=563,994,624 | GPU 1.3/8.9GB
+step 15350 [15350/32130  48%]  loss=3.2313 ppl=25.3 lr=5.48e-05 | 49054 tok/s (avg 47513) ETA 216m58s | gtok=565,837,824 | GPU 1.3/8.9GB
+step 15400 [15400/32130  48%]  loss=3.2875 ppl=26.8 lr=5.45e-05 | 49057 tok/s (avg 47518) ETA 216m18s | gtok=567,681,024 | GPU 1.3/8.9GB
+step 15450 [15450/32130  48%]  loss=3.3265 ppl=27.8 lr=5.43e-05 | 49052 tok/s (avg 47523) ETA 215m38s | gtok=569,524,224 | GPU 1.3/8.9GB
+step 15500 [15500/32130  48%]  loss=3.2559 ppl=25.9 lr=5.40e-05 | 49051 tok/s (avg 47528) ETA 214m58s | gtok=571,367,424 | GPU 1.3/8.9GB
+step 15550 [15550/32130  48%]  loss=3.2594 ppl=26.0 lr=5.38e-05 | 49051 tok/s (avg 47532) ETA 214m18s | gtok=573,210,624 | GPU 1.3/8.9GB
+step 15600 [15600/32130  49%]  loss=3.2898 ppl=26.8 lr=5.35e-05 | 49054 tok/s (avg 47537) ETA 213m38s | gtok=575,053,824 | GPU 1.3/8.9GB
+step 15650 [15650/32130  49%]  loss=3.2681 ppl=26.3 lr=5.33e-05 | 49050 tok/s (avg 47542) ETA 212m58s | gtok=576,897,024 | GPU 1.3/8.9GB
+step 15700 [15700/32130  49%]  loss=3.2807 ppl=26.6 lr=5.31e-05 | 49051 tok/s (avg 47546) ETA 212m18s | gtok=578,740,224 | GPU 1.3/8.9GB
+step 15750 [15750/32130  49%]  loss=3.1435 ppl=23.2 lr=5.28e-05 | 49048 tok/s (avg 47551) ETA 211m38s | gtok=580,583,424 | GPU 1.3/8.9GB
+step 15800 [15800/32130  49%]  loss=3.3213 ppl=27.7 lr=5.26e-05 | 49040 tok/s (avg 47556) ETA 210m58s | gtok=582,426,624 | GPU 1.3/8.9GB
+step 15850 [15850/32130  49%]  loss=3.2084 ppl=24.7 lr=5.23e-05 | 49005 tok/s (avg 47560) ETA 210m18s | gtok=584,269,824 | GPU 1.3/8.9GB
+step 15900 [15900/32130  49%]  loss=3.2581 ppl=26.0 lr=5.21e-05 | 49041 tok/s (avg 47565) ETA 209m38s | gtok=586,113,024 | GPU 1.3/8.9GB
+step 15950 [15950/32130  50%]  loss=3.1396 ppl=23.1 lr=5.18e-05 | 49045 tok/s (avg 47569) ETA 208m58s | gtok=587,956,224 | GPU 1.3/8.9GB
+step 16000 [16000/32130  50%]  loss=3.1527 ppl=23.4 lr=5.16e-05 | 49043 tok/s (avg 47574) ETA 208m18s | gtok=589,799,424 | GPU 1.3/8.9GB
+  [gen @ step 16000, 589,799,424 tok] prompt: In 1923, the University of
+    In 1923, the University of Michigan had a student population of over 60 @,@ 000 , and it has since become one of the largest public institutions in Canada . In 2010 , the university announced that its first student body would be William C. " Jack " Johnson , who also serves as a professor at University of Michigan . The university has several other colleges with alumni from the university : 
+
+
+ = = Campus = = 
+  [checkpoint] step 16000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 16000] val_loss=3.2521 val_ppl=25.84 *best* (best 25.84)
+  [checkpoint] step 16000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/latest.pt
+  [diag] step 16000 cgu=+0.68 +0.72 +0.76 +0.83 +0.89 +0.94 +0.99 +1.07 +1.21 +1.32 +1.38 +1.46 +1.48 +1.56 +1.62 +1.49  pam=+0.20 +0.24 +0.28 +0.13 +0.23 +0.18 +0.11 +0.15 +0.28 +0.18 +0.33 +0.32 +0.24 +0.34 +0.28 +0.22
+  [diag] dtbias=-3.95 -3.93 -3.90 -3.96 -3.94 -3.96 -3.99 -3.97 -3.91 -3.98 -3.92 -3.92 -3.97 -3.96 -3.95 -3.96  ret=0.79 0.77 0.69 0.87 0.77 0.84 0.90 0.84 0.68 0.92 0.68 0.68 0.79 0.78 0.74 0.80
+  [diag] gnorm=8.1e-02 8.5e-02 9.4e-02 9.3e-02 9.3e-02 9.4e-02 1.2e-01 1.3e-01 1.3e-01 1.2e-01 1.3e-01 1.3e-01 1.9e-01 1.9e-01 1.3e-01 1.3e-01  wnorm=58.9 59.2 59.7 59.4 59.8 59.8 59.8 60.4 61.2 60.9 62.0 62.4 62.6 63.3 64.1 63.9
+step 16050 [16050/32130  50%]  loss=3.2525 ppl=25.9 lr=5.13e-05 | 42918 tok/s (avg 47557) ETA 207m43s | gtok=591,642,624 | GPU 1.3/8.9GB
+step 16100 [16100/32130  50%]  loss=3.0450 ppl=21.0 lr=5.11e-05 | 49038 tok/s (avg 47562) ETA 207m03s | gtok=593,479,680 | GPU 1.3/8.9GB
+step 16150 [16150/32130  50%]  loss=3.2977 ppl=27.1 lr=5.08e-05 | 49031 tok/s (avg 47566) ETA 206m23s | gtok=595,322,880 | GPU 1.3/8.9GB
+step 16200 [16200/32130  50%]  loss=3.1763 ppl=24.0 lr=5.06e-05 | 49031 tok/s (avg 47571) ETA 205m44s | gtok=597,166,080 | GPU 1.3/8.9GB
+step 16250 [16250/32130  51%]  loss=3.0516 ppl=21.1 lr=5.03e-05 | 49031 tok/s (avg 47575) ETA 205m04s | gtok=599,009,280 | GPU 1.3/8.9GB
+step 16300 [16300/32130  51%]  loss=3.1953 ppl=24.4 lr=5.01e-05 | 49030 tok/s (avg 47579) ETA 204m24s | gtok=600,852,480 | GPU 1.3/8.9GB
+step 16350 [16350/32130  51%]  loss=3.2561 ppl=25.9 lr=4.98e-05 | 48994 tok/s (avg 47584) ETA 203m44s | gtok=602,695,680 | GPU 1.3/8.9GB
+step 16400 [16400/32130  51%]  loss=3.2434 ppl=25.6 lr=4.96e-05 | 49032 tok/s (avg 47588) ETA 203m04s | gtok=604,538,880 | GPU 1.3/8.9GB
+step 16450 [16450/32130  51%]  loss=3.1685 ppl=23.8 lr=4.93e-05 | 49029 tok/s (avg 47592) ETA 202m24s | gtok=606,382,080 | GPU 1.3/8.9GB
+step 16500 [16500/32130  51%]  loss=3.1525 ppl=23.4 lr=4.91e-05 | 49000 tok/s (avg 47596) ETA 201m45s | gtok=608,225,280 | GPU 1.3/8.9GB
+step 16550 [16550/32130  52%]  loss=3.0987 ppl=22.2 lr=4.88e-05 | 49041 tok/s (avg 47600) ETA 201m05s | gtok=610,068,480 | GPU 1.3/8.9GB
+step 16600 [16600/32130  52%]  loss=3.4342 ppl=31.0 lr=4.86e-05 | 49042 tok/s (avg 47605) ETA 200m25s | gtok=611,911,680 | GPU 1.3/8.9GB
+step 16650 [16650/32130  52%]  loss=3.4533 ppl=31.6 lr=4.83e-05 | 49044 tok/s (avg 47609) ETA 199m45s | gtok=613,754,880 | GPU 1.3/8.9GB
+step 16700 [16700/32130  52%]  loss=3.1917 ppl=24.3 lr=4.81e-05 | 49010 tok/s (avg 47613) ETA 199m05s | gtok=615,598,080 | GPU 1.3/8.9GB
+step 16750 [16750/32130  52%]  loss=3.2401 ppl=25.5 lr=4.78e-05 | 49040 tok/s (avg 47617) ETA 198m26s | gtok=617,441,280 | GPU 1.3/8.9GB
+step 16800 [16800/32130  52%]  loss=3.3642 ppl=28.9 lr=4.76e-05 | 49043 tok/s (avg 47621) ETA 197m46s | gtok=619,284,480 | GPU 1.3/8.9GB
+step 16850 [16850/32130  52%]  loss=3.2166 ppl=24.9 lr=4.73e-05 | 49041 tok/s (avg 47625) ETA 197m06s | gtok=621,127,680 | GPU 1.3/8.9GB
+step 16900 [16900/32130  53%]  loss=3.2045 ppl=24.6 lr=4.71e-05 | 49041 tok/s (avg 47629) ETA 196m27s | gtok=622,970,880 | GPU 1.3/8.9GB
+step 16950 [16950/32130  53%]  loss=3.1836 ppl=24.1 lr=4.68e-05 | 49042 tok/s (avg 47633) ETA 195m47s | gtok=624,814,080 | GPU 1.3/8.9GB
+step 17000 [17000/32130  53%]  loss=3.0988 ppl=22.2 lr=4.66e-05 | 49046 tok/s (avg 47637) ETA 195m07s | gtok=626,657,280 | GPU 1.3/8.9GB
+step 17050 [17050/32130  53%]  loss=3.0488 ppl=21.1 lr=4.64e-05 | 49044 tok/s (avg 47641) ETA 194m28s | gtok=628,500,480 | GPU 1.3/8.9GB
+step 17100 [17100/32130  53%]  loss=3.2956 ppl=27.0 lr=4.61e-05 | 49044 tok/s (avg 47645) ETA 193m48s | gtok=630,343,680 | GPU 1.3/8.9GB
+step 17150 [17150/32130  53%]  loss=3.0326 ppl=20.8 lr=4.59e-05 | 49045 tok/s (avg 47649) ETA 193m08s | gtok=632,186,880 | GPU 1.3/8.9GB
+step 17200 [17200/32130  54%]  loss=3.3576 ppl=28.7 lr=4.56e-05 | 49006 tok/s (avg 47653) ETA 192m29s | gtok=634,030,080 | GPU 1.3/8.9GB
+step 17250 [17250/32130  54%]  loss=3.2108 ppl=24.8 lr=4.54e-05 | 48988 tok/s (avg 47657) ETA 191m49s | gtok=635,873,280 | GPU 1.3/8.9GB
+step 17300 [17300/32130  54%]  loss=2.9969 ppl=20.0 lr=4.51e-05 | 48986 tok/s (avg 47661) ETA 191m09s | gtok=637,716,480 | GPU 1.3/8.9GB
+step 17350 [17350/32130  54%]  loss=3.2489 ppl=25.8 lr=4.49e-05 | 49044 tok/s (avg 47665) ETA 190m30s | gtok=639,559,680 | GPU 1.3/8.9GB
+step 17400 [17400/32130  54%]  loss=3.3931 ppl=29.8 lr=4.46e-05 | 49020 tok/s (avg 47668) ETA 189m50s | gtok=641,402,880 | GPU 1.3/8.9GB
+step 17450 [17450/32130  54%]  loss=3.3298 ppl=27.9 lr=4.44e-05 | 49047 tok/s (avg 47672) ETA 189m11s | gtok=643,246,080 | GPU 1.3/8.9GB
+step 17500 [17500/32130  54%]  loss=2.9770 ppl=19.6 lr=4.41e-05 | 49040 tok/s (avg 47676) ETA 188m31s | gtok=645,089,280 | GPU 1.3/8.9GB
+step 17550 [17550/32130  55%]  loss=3.2319 ppl=25.3 lr=4.39e-05 | 49039 tok/s (avg 47680) ETA 187m52s | gtok=646,932,480 | GPU 1.3/8.9GB
+step 17600 [17600/32130  55%]  loss=3.1974 ppl=24.5 lr=4.36e-05 | 49044 tok/s (avg 47684) ETA 187m12s | gtok=648,775,680 | GPU 1.3/8.9GB
+step 17650 [17650/32130  55%]  loss=3.1428 ppl=23.2 lr=4.34e-05 | 49004 tok/s (avg 47687) ETA 186m33s | gtok=650,618,880 | GPU 1.3/8.9GB
+step 17700 [17700/32130  55%]  loss=3.1576 ppl=23.5 lr=4.31e-05 | 49047 tok/s (avg 47691) ETA 185m53s | gtok=652,462,080 | GPU 1.3/8.9GB
+step 17750 [17750/32130  55%]  loss=3.1970 ppl=24.5 lr=4.29e-05 | 49044 tok/s (avg 47695) ETA 185m14s | gtok=654,305,280 | GPU 1.3/8.9GB
+step 17800 [17800/32130  55%]  loss=3.3937 ppl=29.8 lr=4.27e-05 | 49043 tok/s (avg 47698) ETA 184m34s | gtok=656,148,480 | GPU 1.3/8.9GB
+step 17850 [17850/32130  56%]  loss=3.3468 ppl=28.4 lr=4.24e-05 | 49024 tok/s (avg 47702) ETA 183m55s | gtok=657,991,680 | GPU 1.3/8.9GB
+step 17900 [17900/32130  56%]  loss=3.2216 ppl=25.1 lr=4.22e-05 | 49042 tok/s (avg 47706) ETA 183m15s | gtok=659,834,880 | GPU 1.3/8.9GB
+step 17950 [17950/32130  56%]  loss=3.0678 ppl=21.5 lr=4.19e-05 | 49036 tok/s (avg 47709) ETA 182m36s | gtok=661,678,080 | GPU 1.3/8.9GB
+step 18000 [18000/32130  56%]  loss=3.3695 ppl=29.1 lr=4.17e-05 | 49034 tok/s (avg 47713) ETA 181m56s | gtok=663,521,280 | GPU 1.3/8.9GB
+  [checkpoint] step 18000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 18000] val_loss=3.2276 val_ppl=25.22 *best* (best 25.22)
+  [diag] step 18000 cgu=+0.68 +0.72 +0.77 +0.85 +0.90 +0.95 +1.00 +1.08 +1.23 +1.34 +1.39 +1.48 +1.50 +1.58 +1.65 +1.52  pam=+0.21 +0.25 +0.29 +0.14 +0.23 +0.19 +0.11 +0.15 +0.28 +0.19 +0.34 +0.33 +0.24 +0.34 +0.29 +0.22
+  [diag] dtbias=-3.94 -3.93 -3.90 -3.96 -3.93 -3.96 -3.99 -3.97 -3.91 -3.98 -3.91 -3.92 -3.96 -3.96 -3.95 -3.96  ret=0.80 0.77 0.70 0.87 0.78 0.85 0.91 0.84 0.68 0.92 0.68 0.67 0.78 0.77 0.74 0.80
+  [diag] gnorm=8.9e-02 9.2e-02 9.9e-02 1.0e-01 9.9e-02 1.0e-01 1.2e-01 1.4e-01 1.3e-01 1.2e-01 1.3e-01 1.3e-01 1.8e-01 1.8e-01 1.3e-01 1.4e-01  wnorm=59.0 59.4 59.9 59.6 60.0 60.0 60.0 60.6 61.3 61.1 62.2 62.6 62.8 63.5 64.3 64.2
+step 18050 [18050/32130  56%]  loss=3.3836 ppl=29.5 lr=4.14e-05 | 44717 tok/s (avg 47704) ETA 181m20s | gtok=665,364,480 | GPU 1.3/8.9GB
+step 18100 [18100/32130  56%]  loss=3.0285 ppl=20.7 lr=4.12e-05 | 49041 tok/s (avg 47708) ETA 180m40s | gtok=667,207,680 | GPU 1.3/8.9GB
+step 18150 [18150/32130  56%]  loss=3.0078 ppl=20.2 lr=4.09e-05 | 49045 tok/s (avg 47711) ETA 180m01s | gtok=669,050,880 | GPU 1.3/8.9GB
+step 18200 [18200/32130  57%]  loss=3.2344 ppl=25.4 lr=4.07e-05 | 49040 tok/s (avg 47715) ETA 179m21s | gtok=670,894,080 | GPU 1.3/8.9GB
+step 18250 [18250/32130  57%]  loss=3.1259 ppl=22.8 lr=4.04e-05 | 49040 tok/s (avg 47718) ETA 178m42s | gtok=672,737,280 | GPU 1.3/8.9GB
+step 18300 [18300/32130  57%]  loss=3.0674 ppl=21.5 lr=4.02e-05 | 49041 tok/s (avg 47722) ETA 178m02s | gtok=674,580,480 | GPU 1.3/8.9GB
+step 18350 [18350/32130  57%]  loss=3.2341 ppl=25.4 lr=4.00e-05 | 49043 tok/s (avg 47725) ETA 177m23s | gtok=676,423,680 | GPU 1.3/8.9GB
+step 18400 [18400/32130  57%]  loss=3.4185 ppl=30.5 lr=3.97e-05 | 49045 tok/s (avg 47729) ETA 176m44s | gtok=678,266,880 | GPU 1.3/8.9GB
+step 18450 [18450/32130  57%]  loss=3.2097 ppl=24.8 lr=3.95e-05 | 49044 tok/s (avg 47732) ETA 176m04s | gtok=680,110,080 | GPU 1.3/8.9GB
+step 18500 [18500/32130  58%]  loss=3.0783 ppl=21.7 lr=3.92e-05 | 49042 tok/s (avg 47736) ETA 175m25s | gtok=681,953,280 | GPU 1.3/8.9GB
+step 18550 [18550/32130  58%]  loss=3.2584 ppl=26.0 lr=3.90e-05 | 49042 tok/s (avg 47739) ETA 174m45s | gtok=683,796,480 | GPU 1.3/8.9GB
+step 18600 [18600/32130  58%]  loss=3.2398 ppl=25.5 lr=3.87e-05 | 49040 tok/s (avg 47742) ETA 174m06s | gtok=685,639,680 | GPU 1.3/8.9GB
+step 18650 [18650/32130  58%]  loss=3.3546 ppl=28.6 lr=3.85e-05 | 49039 tok/s (avg 47746) ETA 173m27s | gtok=687,482,880 | GPU 1.3/8.9GB
+step 18700 [18700/32130  58%]  loss=3.2476 ppl=25.7 lr=3.83e-05 | 49045 tok/s (avg 47749) ETA 172m47s | gtok=689,326,080 | GPU 1.3/8.9GB
+step 18750 [18750/32130  58%]  loss=3.2081 ppl=24.7 lr=3.80e-05 | 49002 tok/s (avg 47752) ETA 172m08s | gtok=691,169,280 | GPU 1.3/8.9GB
+step 18800 [18800/32130  59%]  loss=3.2995 ppl=27.1 lr=3.78e-05 | 49026 tok/s (avg 47756) ETA 171m29s | gtok=693,012,480 | GPU 1.3/8.9GB
+step 18850 [18850/32130  59%]  loss=3.2443 ppl=25.6 lr=3.75e-05 | 49007 tok/s (avg 47759) ETA 170m50s | gtok=694,855,680 | GPU 1.3/8.9GB
+step 18900 [18900/32130  59%]  loss=3.2215 ppl=25.1 lr=3.73e-05 | 49004 tok/s (avg 47762) ETA 170m10s | gtok=696,698,880 | GPU 1.3/8.9GB
+step 18950 [18950/32130  59%]  loss=3.0534 ppl=21.2 lr=3.71e-05 | 49010 tok/s (avg 47765) ETA 169m31s | gtok=698,542,080 | GPU 1.3/8.9GB
+step 19000 [19000/32130  59%]  loss=3.0910 ppl=22.0 lr=3.68e-05 | 49007 tok/s (avg 47769) ETA 168m52s | gtok=700,385,280 | GPU 1.3/8.9GB
+step 19050 [19050/32130  59%]  loss=3.2992 ppl=27.1 lr=3.66e-05 | 49043 tok/s (avg 47772) ETA 168m12s | gtok=702,228,480 | GPU 1.3/8.9GB
+step 19100 [19100/32130  59%]  loss=3.0588 ppl=21.3 lr=3.63e-05 | 49043 tok/s (avg 47775) ETA 167m33s | gtok=704,071,680 | GPU 1.3/8.9GB
+step 19150 [19150/32130  60%]  loss=3.2993 ppl=27.1 lr=3.61e-05 | 49045 tok/s (avg 47778) ETA 166m54s | gtok=705,914,880 | GPU 1.3/8.9GB
+step 19200 [19200/32130  60%]  loss=3.0593 ppl=21.3 lr=3.59e-05 | 49023 tok/s (avg 47781) ETA 166m15s | gtok=707,758,080 | GPU 1.3/8.9GB
+step 19250 [19250/32130  60%]  loss=2.9106 ppl=18.4 lr=3.56e-05 | 49001 tok/s (avg 47785) ETA 165m36s | gtok=709,601,280 | GPU 1.3/8.9GB
+step 19300 [19300/32130  60%]  loss=3.0784 ppl=21.7 lr=3.54e-05 | 49051 tok/s (avg 47788) ETA 164m56s | gtok=711,438,336 | GPU 1.3/8.9GB
+step 19350 [19350/32130  60%]  loss=3.1659 ppl=23.7 lr=3.52e-05 | 49048 tok/s (avg 47791) ETA 164m17s | gtok=713,281,536 | GPU 1.3/8.9GB
+step 19400 [19400/32130  60%]  loss=3.1454 ppl=23.2 lr=3.49e-05 | 49044 tok/s (avg 47794) ETA 163m38s | gtok=715,124,736 | GPU 1.3/8.9GB
+step 19450 [19450/32130  61%]  loss=2.9116 ppl=18.4 lr=3.47e-05 | 49042 tok/s (avg 47797) ETA 162m59s | gtok=716,967,936 | GPU 1.3/8.9GB
+step 19500 [19500/32130  61%]  loss=3.1167 ppl=22.6 lr=3.44e-05 | 49026 tok/s (avg 47800) ETA 162m19s | gtok=718,811,136 | GPU 1.3/8.9GB
+step 19550 [19550/32130  61%]  loss=3.1904 ppl=24.3 lr=3.42e-05 | 49036 tok/s (avg 47803) ETA 161m40s | gtok=720,654,336 | GPU 1.3/8.9GB
+step 19600 [19600/32130  61%]  loss=3.0888 ppl=22.0 lr=3.40e-05 | 49034 tok/s (avg 47806) ETA 161m01s | gtok=722,497,536 | GPU 1.3/8.9GB
+step 19650 [19650/32130  61%]  loss=3.2241 ppl=25.1 lr=3.37e-05 | 49011 tok/s (avg 47809) ETA 160m22s | gtok=724,340,736 | GPU 1.3/8.9GB
+step 19700 [19700/32130  61%]  loss=3.2830 ppl=26.7 lr=3.35e-05 | 49050 tok/s (avg 47812) ETA 159m43s | gtok=726,183,936 | GPU 1.3/8.9GB
+step 19750 [19750/32130  61%]  loss=3.3205 ppl=27.7 lr=3.33e-05 | 49039 tok/s (avg 47816) ETA 159m04s | gtok=728,027,136 | GPU 1.3/8.9GB
+step 19800 [19800/32130  62%]  loss=3.2440 ppl=25.6 lr=3.30e-05 | 49044 tok/s (avg 47819) ETA 158m24s | gtok=729,870,336 | GPU 1.3/8.9GB
+step 19850 [19850/32130  62%]  loss=3.1381 ppl=23.1 lr=3.28e-05 | 49041 tok/s (avg 47822) ETA 157m45s | gtok=731,713,536 | GPU 1.3/8.9GB
+step 19900 [19900/32130  62%]  loss=3.1608 ppl=23.6 lr=3.26e-05 | 49007 tok/s (avg 47824) ETA 157m06s | gtok=733,556,736 | GPU 1.3/8.9GB
+step 19950 [19950/32130  62%]  loss=3.0980 ppl=22.2 lr=3.23e-05 | 49043 tok/s (avg 47827) ETA 156m27s | gtok=735,399,936 | GPU 1.3/8.9GB
+step 20000 [20000/32130  62%]  loss=3.1603 ppl=23.6 lr=3.21e-05 | 49049 tok/s (avg 47830) ETA 155m48s | gtok=737,243,136 | GPU 1.3/8.9GB
+  [checkpoint] step 20000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 20000] val_loss=3.2109 val_ppl=24.80 *best* (best 24.80)
+  [checkpoint] step 20000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/latest.pt
+  [diag] step 20000 cgu=+0.68 +0.72 +0.78 +0.85 +0.91 +0.96 +1.01 +1.09 +1.24 +1.35 +1.41 +1.50 +1.52 +1.59 +1.67 +1.54  pam=+0.22 +0.26 +0.30 +0.14 +0.24 +0.19 +0.11 +0.15 +0.29 +0.19 +0.34 +0.34 +0.25 +0.35 +0.30 +0.23
+  [diag] dtbias=-3.94 -3.93 -3.90 -3.96 -3.93 -3.96 -3.99 -3.97 -3.91 -3.98 -3.91 -3.92 -3.96 -3.96 -3.95 -3.96  ret=0.79 0.77 0.69 0.87 0.78 0.85 0.90 0.84 0.67 0.92 0.67 0.67 0.78 0.77 0.73 0.79
+  [diag] gnorm=8.7e-02 9.1e-02 9.9e-02 1.0e-01 1.0e-01 1.0e-01 1.2e-01 1.4e-01 1.3e-01 1.3e-01 1.3e-01 1.4e-01 1.8e-01 1.8e-01 1.3e-01 1.4e-01  wnorm=59.2 59.5 60.0 59.7 60.2 60.1 60.1 60.7 61.5 61.2 62.3 62.7 62.9 63.7 64.5 64.3
+step 20050 [20050/32130  62%]  loss=3.1144 ppl=22.5 lr=3.19e-05 | 43865 tok/s (avg 47820) ETA 155m11s | gtok=739,086,336 | GPU 1.3/8.9GB
+step 20100 [20100/32130  63%]  loss=2.9990 ppl=20.1 lr=3.16e-05 | 49023 tok/s (avg 47823) ETA 154m32s | gtok=740,929,536 | GPU 1.3/8.9GB
+step 20150 [20150/32130  63%]  loss=3.1593 ppl=23.6 lr=3.14e-05 | 49040 tok/s (avg 47825) ETA 153m53s | gtok=742,772,736 | GPU 1.3/8.9GB
+step 20200 [20200/32130  63%]  loss=3.1137 ppl=22.5 lr=3.12e-05 | 49040 tok/s (avg 47828) ETA 153m14s | gtok=744,615,936 | GPU 1.3/8.9GB
+step 20250 [20250/32130  63%]  loss=2.9081 ppl=18.3 lr=3.10e-05 | 49040 tok/s (avg 47831) ETA 152m35s | gtok=746,459,136 | GPU 1.3/8.9GB
+step 20300 [20300/32130  63%]  loss=3.1400 ppl=23.1 lr=3.07e-05 | 49042 tok/s (avg 47834) ETA 151m56s | gtok=748,302,336 | GPU 1.3/8.9GB
+step 20350 [20350/32130  63%]  loss=3.1851 ppl=24.2 lr=3.05e-05 | 49039 tok/s (avg 47837) ETA 151m17s | gtok=750,145,536 | GPU 1.3/8.9GB
+step 20400 [20400/32130  63%]  loss=3.0490 ppl=21.1 lr=3.03e-05 | 49038 tok/s (avg 47840) ETA 150m38s | gtok=751,988,736 | GPU 1.3/8.9GB
+step 20450 [20450/32130  64%]  loss=3.1215 ppl=22.7 lr=3.00e-05 | 49043 tok/s (avg 47843) ETA 149m59s | gtok=753,831,936 | GPU 1.3/8.9GB
+step 20500 [20500/32130  64%]  loss=3.1373 ppl=23.0 lr=2.98e-05 | 49038 tok/s (avg 47846) ETA 149m20s | gtok=755,675,136 | GPU 1.3/8.9GB
+step 20550 [20550/32130  64%]  loss=3.1118 ppl=22.5 lr=2.96e-05 | 49040 tok/s (avg 47849) ETA 148m41s | gtok=757,518,336 | GPU 1.3/8.9GB
+step 20600 [20600/32130  64%]  loss=2.9936 ppl=20.0 lr=2.94e-05 | 49035 tok/s (avg 47851) ETA 148m02s | gtok=759,361,536 | GPU 1.3/8.9GB
+step 20650 [20650/32130  64%]  loss=3.0548 ppl=21.2 lr=2.91e-05 | 49042 tok/s (avg 47854) ETA 147m23s | gtok=761,204,736 | GPU 1.3/8.9GB
+step 20700 [20700/32130  64%]  loss=3.2056 ppl=24.7 lr=2.89e-05 | 49040 tok/s (avg 47857) ETA 146m44s | gtok=763,047,936 | GPU 1.3/8.9GB
+step 20750 [20750/32130  65%]  loss=3.1123 ppl=22.5 lr=2.87e-05 | 49028 tok/s (avg 47860) ETA 146m05s | gtok=764,891,136 | GPU 1.3/8.9GB
+step 20800 [20800/32130  65%]  loss=3.1418 ppl=23.1 lr=2.85e-05 | 49031 tok/s (avg 47862) ETA 145m26s | gtok=766,734,336 | GPU 1.3/8.9GB
+step 20850 [20850/32130  65%]  loss=3.1814 ppl=24.1 lr=2.82e-05 | 48991 tok/s (avg 47865) ETA 144m47s | gtok=768,577,536 | GPU 1.3/8.9GB
+step 20900 [20900/32130  65%]  loss=3.2821 ppl=26.6 lr=2.80e-05 | 48973 tok/s (avg 47868) ETA 144m08s | gtok=770,420,736 | GPU 1.3/8.9GB
+step 20950 [20950/32130  65%]  loss=3.1593 ppl=23.6 lr=2.78e-05 | 48974 tok/s (avg 47870) ETA 143m29s | gtok=772,263,936 | GPU 1.3/8.9GB
+step 21000 [21000/32130  65%]  loss=2.9578 ppl=19.3 lr=2.76e-05 | 49008 tok/s (avg 47873) ETA 142m50s | gtok=774,107,136 | GPU 1.3/8.9GB
+step 21050 [21050/32130  66%]  loss=3.0242 ppl=20.6 lr=2.73e-05 | 48975 tok/s (avg 47875) ETA 142m11s | gtok=775,950,336 | GPU 1.3/8.9GB
+step 21100 [21100/32130  66%]  loss=2.8779 ppl=17.8 lr=2.71e-05 | 48974 tok/s (avg 47878) ETA 141m32s | gtok=777,793,536 | GPU 1.3/8.9GB
+step 21150 [21150/32130  66%]  loss=3.0730 ppl=21.6 lr=2.69e-05 | 48989 tok/s (avg 47881) ETA 140m53s | gtok=779,636,736 | GPU 1.3/8.9GB
+step 21200 [21200/32130  66%]  loss=3.1737 ppl=23.9 lr=2.67e-05 | 48964 tok/s (avg 47883) ETA 140m14s | gtok=781,479,936 | GPU 1.3/8.9GB
+step 21250 [21250/32130  66%]  loss=2.9533 ppl=19.2 lr=2.65e-05 | 48973 tok/s (avg 47886) ETA 139m35s | gtok=783,323,136 | GPU 1.3/8.9GB
+step 21300 [21300/32130  66%]  loss=3.1100 ppl=22.4 lr=2.62e-05 | 49009 tok/s (avg 47888) ETA 138m56s | gtok=785,166,336 | GPU 1.3/8.9GB
+step 21350 [21350/32130  66%]  loss=3.0829 ppl=21.8 lr=2.60e-05 | 48971 tok/s (avg 47891) ETA 138m17s | gtok=787,009,536 | GPU 1.3/8.9GB
+step 21400 [21400/32130  67%]  loss=3.1395 ppl=23.1 lr=2.58e-05 | 48971 tok/s (avg 47893) ETA 137m38s | gtok=788,852,736 | GPU 1.3/8.9GB
+step 21450 [21450/32130  67%]  loss=3.0986 ppl=22.2 lr=2.56e-05 | 48993 tok/s (avg 47896) ETA 136m59s | gtok=790,695,936 | GPU 1.3/8.9GB
+step 21500 [21500/32130  67%]  loss=3.1204 ppl=22.7 lr=2.54e-05 | 48966 tok/s (avg 47898) ETA 136m20s | gtok=792,539,136 | GPU 1.3/8.9GB
+step 21550 [21550/32130  67%]  loss=3.0733 ppl=21.6 lr=2.52e-05 | 48974 tok/s (avg 47901) ETA 135m41s | gtok=794,382,336 | GPU 1.3/8.9GB
+step 21600 [21600/32130  67%]  loss=3.2295 ppl=25.3 lr=2.49e-05 | 49010 tok/s (avg 47903) ETA 135m03s | gtok=796,225,536 | GPU 1.3/8.9GB
+step 21650 [21650/32130  67%]  loss=3.0104 ppl=20.3 lr=2.47e-05 | 48972 tok/s (avg 47905) ETA 134m24s | gtok=798,068,736 | GPU 1.3/8.9GB
+step 21700 [21700/32130  68%]  loss=3.0738 ppl=21.6 lr=2.45e-05 | 48975 tok/s (avg 47908) ETA 133m45s | gtok=799,911,936 | GPU 1.3/8.9GB
+step 21750 [21750/32130  68%]  loss=3.1542 ppl=23.4 lr=2.43e-05 | 48995 tok/s (avg 47910) ETA 133m06s | gtok=801,755,136 | GPU 1.3/8.9GB
+step 21800 [21800/32130  68%]  loss=3.2326 ppl=25.3 lr=2.41e-05 | 48976 tok/s (avg 47913) ETA 132m27s | gtok=803,598,336 | GPU 1.3/8.9GB
+step 21850 [21850/32130  68%]  loss=3.1817 ppl=24.1 lr=2.39e-05 | 48971 tok/s (avg 47915) ETA 131m48s | gtok=805,441,536 | GPU 1.3/8.9GB
+step 21900 [21900/32130  68%]  loss=3.2752 ppl=26.4 lr=2.37e-05 | 49013 tok/s (avg 47917) ETA 131m09s | gtok=807,284,736 | GPU 1.3/8.9GB
+step 21950 [21950/32130  68%]  loss=2.9747 ppl=19.6 lr=2.35e-05 | 48974 tok/s (avg 47920) ETA 130m30s | gtok=809,127,936 | GPU 1.3/8.9GB
+step 22000 [22000/32130  68%]  loss=3.1259 ppl=22.8 lr=2.32e-05 | 48972 tok/s (avg 47922) ETA 129m52s | gtok=810,971,136 | GPU 1.3/8.9GB
+  [checkpoint] step 22000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 22000] val_loss=3.1925 val_ppl=24.35 *best* (best 24.35)
+  [diag] step 22000 cgu=+0.69 +0.73 +0.79 +0.87 +0.92 +0.97 +1.02 +1.10 +1.25 +1.36 +1.41 +1.51 +1.53 +1.61 +1.68 +1.55  pam=+0.22 +0.27 +0.31 +0.15 +0.24 +0.20 +0.11 +0.15 +0.29 +0.20 +0.35 +0.34 +0.25 +0.35 +0.31 +0.23
+  [diag] dtbias=-3.94 -3.93 -3.90 -3.96 -3.93 -3.96 -3.99 -3.97 -3.91 -3.98 -3.91 -3.91 -3.96 -3.96 -3.95 -3.95  ret=0.79 0.77 0.68 0.87 0.77 0.84 0.90 0.84 0.67 0.92 0.67 0.66 0.78 0.77 0.74 0.79
+  [diag] gnorm=9.7e-02 9.9e-02 1.1e-01 1.1e-01 1.1e-01 1.1e-01 1.3e-01 1.5e-01 1.4e-01 1.3e-01 1.4e-01 1.4e-01 1.9e-01 1.9e-01 1.3e-01 1.4e-01  wnorm=59.2 59.6 60.1 59.8 60.2 60.2 60.2 60.8 61.5 61.3 62.4 62.8 63.0 63.8 64.5 64.4
+step 22050 [22050/32130  69%]  loss=3.1488 ppl=23.3 lr=2.30e-05 | 44759 tok/s (avg 47915) ETA 129m14s | gtok=812,814,336 | GPU 1.3/8.9GB
+step 22100 [22100/32130  69%]  loss=3.1825 ppl=24.1 lr=2.28e-05 | 49032 tok/s (avg 47917) ETA 128m36s | gtok=814,657,536 | GPU 1.3/8.9GB
+step 22150 [22150/32130  69%]  loss=3.1456 ppl=23.2 lr=2.26e-05 | 49034 tok/s (avg 47919) ETA 127m57s | gtok=816,500,736 | GPU 1.3/8.9GB
+step 22200 [22200/32130  69%]  loss=2.9735 ppl=19.6 lr=2.24e-05 | 48995 tok/s (avg 47922) ETA 127m18s | gtok=818,343,936 | GPU 1.3/8.9GB
+step 22250 [22250/32130  69%]  loss=3.3177 ppl=27.6 lr=2.22e-05 | 48993 tok/s (avg 47924) ETA 126m39s | gtok=820,187,136 | GPU 1.3/8.9GB
+step 22300 [22300/32130  69%]  loss=3.1042 ppl=22.3 lr=2.20e-05 | 48994 tok/s (avg 47927) ETA 126m00s | gtok=822,030,336 | GPU 1.3/8.9GB
+step 22350 [22350/32130  70%]  loss=3.1551 ppl=23.5 lr=2.18e-05 | 48990 tok/s (avg 47929) ETA 125m21s | gtok=823,873,536 | GPU 1.3/8.9GB
+step 22400 [22400/32130  70%]  loss=3.0382 ppl=20.9 lr=2.16e-05 | 48995 tok/s (avg 47931) ETA 124m43s | gtok=825,716,736 | GPU 1.3/8.9GB
+step 22450 [22450/32130  70%]  loss=3.1860 ppl=24.2 lr=2.14e-05 | 49035 tok/s (avg 47934) ETA 124m04s | gtok=827,559,936 | GPU 1.3/8.9GB
+step 22500 [22500/32130  70%]  loss=3.0781 ppl=21.7 lr=2.12e-05 | 49006 tok/s (avg 47936) ETA 123m25s | gtok=829,396,992 | GPU 1.3/8.9GB
+step 22550 [22550/32130  70%]  loss=2.8551 ppl=17.4 lr=2.10e-05 | 48982 tok/s (avg 47938) ETA 122m46s | gtok=831,240,192 | GPU 1.3/8.9GB
+step 22600 [22600/32130  70%]  loss=2.9855 ppl=19.8 lr=2.08e-05 | 49000 tok/s (avg 47940) ETA 122m07s | gtok=833,083,392 | GPU 1.3/8.9GB
+step 22650 [22650/32130  70%]  loss=3.1550 ppl=23.5 lr=2.06e-05 | 49001 tok/s (avg 47943) ETA 121m28s | gtok=834,926,592 | GPU 1.3/8.9GB
+step 22700 [22700/32130  71%]  loss=3.0443 ppl=21.0 lr=2.04e-05 | 49002 tok/s (avg 47945) ETA 120m50s | gtok=836,769,792 | GPU 1.3/8.9GB
+step 22750 [22750/32130  71%]  loss=3.0492 ppl=21.1 lr=2.02e-05 | 49032 tok/s (avg 47947) ETA 120m11s | gtok=838,612,992 | GPU 1.3/8.9GB
+step 22800 [22800/32130  71%]  loss=3.0880 ppl=21.9 lr=2.00e-05 | 49034 tok/s (avg 47950) ETA 119m32s | gtok=840,456,192 | GPU 1.3/8.9GB
+step 22850 [22850/32130  71%]  loss=3.0261 ppl=20.6 lr=1.98e-05 | 49020 tok/s (avg 47952) ETA 118m53s | gtok=842,299,392 | GPU 1.3/8.9GB
+step 22900 [22900/32130  71%]  loss=3.1292 ppl=22.9 lr=1.96e-05 | 49011 tok/s (avg 47954) ETA 118m15s | gtok=844,142,592 | GPU 1.3/8.9GB
+step 22950 [22950/32130  71%]  loss=2.9902 ppl=19.9 lr=1.94e-05 | 49052 tok/s (avg 47957) ETA 117m36s | gtok=845,985,792 | GPU 1.3/8.9GB
+step 23000 [23000/32130  72%]  loss=3.0639 ppl=21.4 lr=1.92e-05 | 48975 tok/s (avg 47959) ETA 116m57s | gtok=847,828,992 | GPU 1.3/8.9GB
+step 23050 [23050/32130  72%]  loss=3.1415 ppl=23.1 lr=1.90e-05 | 49030 tok/s (avg 47961) ETA 116m18s | gtok=849,672,192 | GPU 1.3/8.9GB
+step 23100 [23100/32130  72%]  loss=2.9805 ppl=19.7 lr=1.88e-05 | 49051 tok/s (avg 47963) ETA 115m39s | gtok=851,515,392 | GPU 1.3/8.9GB
+step 23150 [23150/32130  72%]  loss=3.2599 ppl=26.0 lr=1.86e-05 | 49044 tok/s (avg 47966) ETA 115m01s | gtok=853,358,592 | GPU 1.3/8.9GB
+step 23200 [23200/32130  72%]  loss=3.1808 ppl=24.1 lr=1.84e-05 | 49039 tok/s (avg 47968) ETA 114m22s | gtok=855,201,792 | GPU 1.3/8.9GB
+step 23250 [23250/32130  72%]  loss=3.2372 ppl=25.5 lr=1.82e-05 | 49039 tok/s (avg 47970) ETA 113m43s | gtok=857,044,992 | GPU 1.3/8.9GB
+step 23300 [23300/32130  73%]  loss=3.0737 ppl=21.6 lr=1.80e-05 | 49038 tok/s (avg 47972) ETA 113m05s | gtok=858,888,192 | GPU 1.3/8.9GB
+step 23350 [23350/32130  73%]  loss=3.1429 ppl=23.2 lr=1.78e-05 | 49035 tok/s (avg 47975) ETA 112m26s | gtok=860,731,392 | GPU 1.3/8.9GB
+step 23400 [23400/32130  73%]  loss=3.0946 ppl=22.1 lr=1.76e-05 | 49049 tok/s (avg 47977) ETA 111m47s | gtok=862,574,592 | GPU 1.3/8.9GB
+step 23450 [23450/32130  73%]  loss=3.2335 ppl=25.4 lr=1.75e-05 | 49050 tok/s (avg 47979) ETA 111m08s | gtok=864,417,792 | GPU 1.3/8.9GB
+step 23500 [23500/32130  73%]  loss=3.1179 ppl=22.6 lr=1.73e-05 | 49049 tok/s (avg 47981) ETA 110m30s | gtok=866,260,992 | GPU 1.3/8.9GB
+step 23550 [23550/32130  73%]  loss=3.2124 ppl=24.8 lr=1.71e-05 | 49050 tok/s (avg 47984) ETA 109m51s | gtok=868,104,192 | GPU 1.3/8.9GB
+step 23600 [23600/32130  73%]  loss=3.1324 ppl=22.9 lr=1.69e-05 | 49041 tok/s (avg 47986) ETA 109m12s | gtok=869,947,392 | GPU 1.3/8.9GB
+step 23650 [23650/32130  74%]  loss=3.1494 ppl=23.3 lr=1.67e-05 | 49047 tok/s (avg 47988) ETA 108m33s | gtok=871,790,592 | GPU 1.3/8.9GB
+step 23700 [23700/32130  74%]  loss=3.2154 ppl=24.9 lr=1.65e-05 | 49044 tok/s (avg 47990) ETA 107m55s | gtok=873,633,792 | GPU 1.3/8.9GB
+step 23750 [23750/32130  74%]  loss=2.9875 ppl=19.8 lr=1.63e-05 | 49042 tok/s (avg 47992) ETA 107m16s | gtok=875,476,992 | GPU 1.3/8.9GB
+step 23800 [23800/32130  74%]  loss=2.9268 ppl=18.7 lr=1.62e-05 | 49002 tok/s (avg 47994) ETA 106m37s | gtok=877,320,192 | GPU 1.3/8.9GB
+step 23850 [23850/32130  74%]  loss=2.9383 ppl=18.9 lr=1.60e-05 | 49003 tok/s (avg 47996) ETA 105m59s | gtok=879,163,392 | GPU 1.3/8.9GB
+step 23900 [23900/32130  74%]  loss=2.9947 ppl=20.0 lr=1.58e-05 | 49042 tok/s (avg 47999) ETA 105m20s | gtok=881,006,592 | GPU 1.3/8.9GB
+step 23950 [23950/32130  75%]  loss=3.0588 ppl=21.3 lr=1.56e-05 | 49038 tok/s (avg 48001) ETA 104m41s | gtok=882,849,792 | GPU 1.3/8.9GB
+step 24000 [24000/32130  75%]  loss=3.2402 ppl=25.5 lr=1.54e-05 | 48991 tok/s (avg 48003) ETA 104m03s | gtok=884,692,992 | GPU 1.3/8.9GB
+  [gen @ step 24000, 884,692,992 tok] prompt: In 1923, the University of
+    In 1923, the University of Illinois at Urbana @-@ Champaign wrote : " There is one reason that the public is trying to make a positive impression on the nation , and there are some important things which help us improve . And as a result , the best work in this country has been done on paper for nearly three decades ... " 
+
+ The article described how the school 's public opinion had become more and
+  [checkpoint] step 24000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 24000] val_loss=3.1834 val_ppl=24.13 *best* (best 24.13)
+  [checkpoint] step 24000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/latest.pt
+  [diag] step 24000 cgu=+0.69 +0.73 +0.79 +0.87 +0.93 +0.98 +1.03 +1.11 +1.25 +1.36 +1.42 +1.52 +1.54 +1.62 +1.69 +1.56  pam=+0.23 +0.27 +0.32 +0.15 +0.25 +0.20 +0.11 +0.16 +0.30 +0.20 +0.35 +0.34 +0.25 +0.35 +0.31 +0.24
+  [diag] dtbias=-3.94 -3.93 -3.89 -3.96 -3.93 -3.96 -3.99 -3.97 -3.91 -3.98 -3.91 -3.91 -3.96 -3.96 -3.95 -3.95  ret=0.79 0.77 0.69 0.87 0.78 0.85 0.91 0.84 0.68 0.92 0.68 0.68 0.78 0.78 0.74 0.80
+  [diag] gnorm=9.7e-02 1.0e-01 1.1e-01 1.1e-01 1.1e-01 1.1e-01 1.3e-01 1.5e-01 1.4e-01 1.3e-01 1.4e-01 1.4e-01 1.9e-01 1.9e-01 1.4e-01 1.4e-01  wnorm=59.3 59.7 60.1 59.8 60.3 60.2 60.2 60.9 61.6 61.3 62.4 62.8 63.1 63.8 64.6 64.5
+step 24050 [24050/32130  75%]  loss=3.2262 ppl=25.2 lr=1.53e-05 | 42899 tok/s (avg 47991) ETA 103m26s | gtok=886,536,192 | GPU 1.3/8.9GB
+step 24100 [24100/32130  75%]  loss=3.0477 ppl=21.1 lr=1.51e-05 | 49036 tok/s (avg 47993) ETA 102m47s | gtok=888,379,392 | GPU 1.3/8.9GB
+step 24150 [24150/32130  75%]  loss=3.1128 ppl=22.5 lr=1.49e-05 | 49015 tok/s (avg 47995) ETA 102m08s | gtok=890,222,592 | GPU 1.3/8.9GB
+step 24200 [24200/32130  75%]  loss=3.0703 ppl=21.5 lr=1.47e-05 | 49045 tok/s (avg 47997) ETA 101m30s | gtok=892,065,792 | GPU 1.3/8.9GB
+step 24250 [24250/32130  75%]  loss=3.2262 ppl=25.2 lr=1.45e-05 | 49037 tok/s (avg 47999) ETA 100m51s | gtok=893,908,992 | GPU 1.3/8.9GB
+step 24300 [24300/32130  76%]  loss=3.1013 ppl=22.2 lr=1.44e-05 | 49032 tok/s (avg 48001) ETA 100m12s | gtok=895,752,192 | GPU 1.3/8.9GB
+step 24350 [24350/32130  76%]  loss=3.1678 ppl=23.8 lr=1.42e-05 | 49032 tok/s (avg 48003) ETA 99m34s | gtok=897,595,392 | GPU 1.3/8.9GB
+step 24400 [24400/32130  76%]  loss=3.0712 ppl=21.6 lr=1.40e-05 | 49012 tok/s (avg 48005) ETA 98m55s | gtok=899,438,592 | GPU 1.3/8.9GB
+step 24450 [24450/32130  76%]  loss=3.1149 ppl=22.5 lr=1.39e-05 | 49031 tok/s (avg 48007) ETA 98m17s | gtok=901,281,792 | GPU 1.3/8.9GB
+step 24500 [24500/32130  76%]  loss=3.0851 ppl=21.9 lr=1.37e-05 | 49030 tok/s (avg 48010) ETA 97m38s | gtok=903,124,992 | GPU 1.3/8.9GB
+step 24550 [24550/32130  76%]  loss=3.0908 ppl=22.0 lr=1.35e-05 | 49031 tok/s (avg 48012) ETA 96m59s | gtok=904,968,192 | GPU 1.3/8.9GB
+step 24600 [24600/32130  77%]  loss=3.0076 ppl=20.2 lr=1.33e-05 | 49036 tok/s (avg 48014) ETA 96m21s | gtok=906,811,392 | GPU 1.3/8.9GB
+step 24650 [24650/32130  77%]  loss=3.1291 ppl=22.9 lr=1.32e-05 | 49034 tok/s (avg 48016) ETA 95m42s | gtok=908,654,592 | GPU 1.3/8.9GB
+step 24700 [24700/32130  77%]  loss=3.1073 ppl=22.4 lr=1.30e-05 | 49036 tok/s (avg 48018) ETA 95m03s | gtok=910,497,792 | GPU 1.3/8.9GB
+step 24750 [24750/32130  77%]  loss=3.0757 ppl=21.7 lr=1.28e-05 | 49035 tok/s (avg 48020) ETA 94m25s | gtok=912,340,992 | GPU 1.3/8.9GB
+step 24800 [24800/32130  77%]  loss=3.0379 ppl=20.9 lr=1.27e-05 | 49015 tok/s (avg 48022) ETA 93m46s | gtok=914,184,192 | GPU 1.3/8.9GB
+step 24850 [24850/32130  77%]  loss=3.0949 ppl=22.1 lr=1.25e-05 | 49024 tok/s (avg 48024) ETA 93m08s | gtok=916,027,392 | GPU 1.3/8.9GB
+step 24900 [24900/32130  77%]  loss=3.1384 ppl=23.1 lr=1.23e-05 | 49028 tok/s (avg 48026) ETA 92m29s | gtok=917,870,592 | GPU 1.3/8.9GB
+step 24950 [24950/32130  78%]  loss=3.0578 ppl=21.3 lr=1.22e-05 | 48990 tok/s (avg 48027) ETA 91m50s | gtok=919,713,792 | GPU 1.3/8.9GB
+step 25000 [25000/32130  78%]  loss=3.1290 ppl=22.9 lr=1.20e-05 | 49032 tok/s (avg 48029) ETA 91m12s | gtok=921,556,992 | GPU 1.3/8.9GB
+step 25050 [25050/32130  78%]  loss=3.2829 ppl=26.7 lr=1.19e-05 | 49031 tok/s (avg 48031) ETA 90m33s | gtok=923,400,192 | GPU 1.3/8.9GB
+step 25100 [25100/32130  78%]  loss=3.0563 ppl=21.2 lr=1.17e-05 | 49008 tok/s (avg 48033) ETA 89m55s | gtok=925,243,392 | GPU 1.3/8.9GB
+step 25150 [25150/32130  78%]  loss=3.0000 ppl=20.1 lr=1.15e-05 | 49028 tok/s (avg 48035) ETA 89m16s | gtok=927,086,592 | GPU 1.3/8.9GB
+step 25200 [25200/32130  78%]  loss=3.1420 ppl=23.1 lr=1.14e-05 | 49030 tok/s (avg 48037) ETA 88m37s | gtok=928,929,792 | GPU 1.3/8.9GB
+step 25250 [25250/32130  79%]  loss=3.0187 ppl=20.5 lr=1.12e-05 | 49036 tok/s (avg 48039) ETA 87m59s | gtok=930,772,992 | GPU 1.3/8.9GB
+step 25300 [25300/32130  79%]  loss=2.9737 ppl=19.6 lr=1.11e-05 | 49034 tok/s (avg 48041) ETA 87m20s | gtok=932,616,192 | GPU 1.3/8.9GB
+step 25350 [25350/32130  79%]  loss=3.1861 ppl=24.2 lr=1.09e-05 | 48990 tok/s (avg 48043) ETA 86m42s | gtok=934,459,392 | GPU 1.3/8.9GB
+step 25400 [25400/32130  79%]  loss=3.2526 ppl=25.9 lr=1.08e-05 | 49007 tok/s (avg 48045) ETA 86m03s | gtok=936,302,592 | GPU 1.3/8.9GB
+step 25450 [25450/32130  79%]  loss=3.0138 ppl=20.4 lr=1.06e-05 | 49028 tok/s (avg 48047) ETA 85m25s | gtok=938,145,792 | GPU 1.3/8.9GB
+step 25500 [25500/32130  79%]  loss=3.1660 ppl=23.7 lr=1.05e-05 | 49027 tok/s (avg 48048) ETA 84m46s | gtok=939,988,992 | GPU 1.3/8.9GB
+step 25550 [25550/32130  80%]  loss=3.2046 ppl=24.6 lr=1.03e-05 | 49027 tok/s (avg 48050) ETA 84m07s | gtok=941,832,192 | GPU 1.3/8.9GB
+step 25600 [25600/32130  80%]  loss=3.0938 ppl=22.1 lr=1.02e-05 | 49007 tok/s (avg 48052) ETA 83m29s | gtok=943,675,392 | GPU 1.3/8.9GB
+step 25650 [25650/32130  80%]  loss=3.2756 ppl=26.5 lr=1.00e-05 | 49027 tok/s (avg 48054) ETA 82m50s | gtok=945,518,592 | GPU 1.3/8.9GB
+step 25700 [25700/32130  80%]  loss=2.9546 ppl=19.2 lr=9.85e-06 | 49031 tok/s (avg 48056) ETA 82m12s | gtok=947,361,792 | GPU 1.3/8.9GB
+step 25750 [25750/32130  80%]  loss=3.0980 ppl=22.2 lr=9.71e-06 | 49035 tok/s (avg 48058) ETA 81m33s | gtok=949,198,848 | GPU 1.3/8.9GB
+step 25800 [25800/32130  80%]  loss=3.1503 ppl=23.3 lr=9.56e-06 | 49030 tok/s (avg 48060) ETA 80m55s | gtok=951,042,048 | GPU 1.3/8.9GB
+step 25850 [25850/32130  80%]  loss=3.0005 ppl=20.1 lr=9.42e-06 | 49017 tok/s (avg 48061) ETA 80m16s | gtok=952,885,248 | GPU 1.3/8.9GB
+step 25900 [25900/32130  81%]  loss=3.1032 ppl=22.3 lr=9.27e-06 | 49032 tok/s (avg 48063) ETA 79m38s | gtok=954,728,448 | GPU 1.3/8.9GB
+step 25950 [25950/32130  81%]  loss=3.0959 ppl=22.1 lr=9.13e-06 | 49035 tok/s (avg 48065) ETA 78m59s | gtok=956,571,648 | GPU 1.3/8.9GB
+step 26000 [26000/32130  81%]  loss=3.0532 ppl=21.2 lr=8.98e-06 | 49024 tok/s (avg 48067) ETA 78m21s | gtok=958,414,848 | GPU 1.3/8.9GB
+  [checkpoint] step 26000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 26000] val_loss=3.1765 val_ppl=23.96 *best* (best 23.96)
+  [diag] step 26000 cgu=+0.69 +0.74 +0.80 +0.88 +0.94 +0.99 +1.03 +1.12 +1.26 +1.37 +1.43 +1.52 +1.54 +1.62 +1.70 +1.57  pam=+0.24 +0.28 +0.32 +0.15 +0.25 +0.20 +0.12 +0.16 +0.30 +0.20 +0.35 +0.35 +0.25 +0.35 +0.31 +0.24
+  [diag] dtbias=-3.94 -3.93 -3.89 -3.96 -3.93 -3.96 -3.99 -3.97 -3.91 -3.98 -3.91 -3.91 -3.96 -3.96 -3.95 -3.95  ret=0.79 0.76 0.69 0.87 0.77 0.85 0.90 0.84 0.67 0.92 0.68 0.67 0.78 0.77 0.74 0.80
+  [diag] gnorm=9.5e-02 9.7e-02 1.1e-01 1.1e-01 1.1e-01 1.1e-01 1.3e-01 1.5e-01 1.4e-01 1.3e-01 1.4e-01 1.4e-01 1.9e-01 1.9e-01 1.3e-01 1.4e-01  wnorm=59.3 59.7 60.2 59.8 60.3 60.3 60.3 60.9 61.6 61.3 62.4 62.9 63.1 63.8 64.6 64.5
+step 26050 [26050/32130  81%]  loss=3.0593 ppl=21.3 lr=8.84e-06 | 44746 tok/s (avg 48060) ETA 77m43s | gtok=960,258,048 | GPU 1.3/8.9GB
+step 26100 [26100/32130  81%]  loss=3.0503 ppl=21.1 lr=8.70e-06 | 48996 tok/s (avg 48062) ETA 77m04s | gtok=962,101,248 | GPU 1.3/8.9GB
+step 26150 [26150/32130  81%]  loss=3.0728 ppl=21.6 lr=8.56e-06 | 49027 tok/s (avg 48064) ETA 76m26s | gtok=963,944,448 | GPU 1.3/8.9GB
+step 26200 [26200/32130  82%]  loss=3.0429 ppl=21.0 lr=8.42e-06 | 49037 tok/s (avg 48065) ETA 75m47s | gtok=965,787,648 | GPU 1.3/8.9GB
+step 26250 [26250/32130  82%]  loss=2.8825 ppl=17.9 lr=8.29e-06 | 49037 tok/s (avg 48067) ETA 75m09s | gtok=967,630,848 | GPU 1.3/8.9GB
+step 26300 [26300/32130  82%]  loss=3.2164 ppl=24.9 lr=8.15e-06 | 49044 tok/s (avg 48069) ETA 74m30s | gtok=969,474,048 | GPU 1.3/8.9GB
+step 26350 [26350/32130  82%]  loss=3.1108 ppl=22.4 lr=8.02e-06 | 48988 tok/s (avg 48071) ETA 73m52s | gtok=971,317,248 | GPU 1.3/8.9GB
+step 26400 [26400/32130  82%]  loss=3.0387 ppl=20.9 lr=7.88e-06 | 49000 tok/s (avg 48073) ETA 73m13s | gtok=973,160,448 | GPU 1.3/8.9GB
+step 26450 [26450/32130  82%]  loss=3.0734 ppl=21.6 lr=7.75e-06 | 48985 tok/s (avg 48074) ETA 72m35s | gtok=975,003,648 | GPU 1.3/8.9GB
+step 26500 [26500/32130  82%]  loss=3.1556 ppl=23.5 lr=7.62e-06 | 48979 tok/s (avg 48076) ETA 71m56s | gtok=976,846,848 | GPU 1.3/8.9GB
+step 26550 [26550/32130  83%]  loss=3.1695 ppl=23.8 lr=7.48e-06 | 49018 tok/s (avg 48078) ETA 71m18s | gtok=978,690,048 | GPU 1.3/8.9GB
+step 26600 [26600/32130  83%]  loss=3.2203 ppl=25.0 lr=7.35e-06 | 48996 tok/s (avg 48079) ETA 70m39s | gtok=980,533,248 | GPU 1.3/8.9GB
+step 26650 [26650/32130  83%]  loss=3.1408 ppl=23.1 lr=7.23e-06 | 49038 tok/s (avg 48081) ETA 70m01s | gtok=982,376,448 | GPU 1.3/8.9GB
+step 26700 [26700/32130  83%]  loss=3.0544 ppl=21.2 lr=7.10e-06 | 49031 tok/s (avg 48083) ETA 69m22s | gtok=984,219,648 | GPU 1.3/8.9GB
+step 26750 [26750/32130  83%]  loss=2.9833 ppl=19.8 lr=6.97e-06 | 49032 tok/s (avg 48085) ETA 68m44s | gtok=986,062,848 | GPU 1.3/8.9GB
+step 26800 [26800/32130  83%]  loss=3.2031 ppl=24.6 lr=6.84e-06 | 49029 tok/s (avg 48086) ETA 68m05s | gtok=987,906,048 | GPU 1.3/8.9GB
+step 26850 [26850/32130  84%]  loss=3.2269 ppl=25.2 lr=6.72e-06 | 49029 tok/s (avg 48088) ETA 67m27s | gtok=989,749,248 | GPU 1.3/8.9GB
+step 26900 [26900/32130  84%]  loss=3.0221 ppl=20.5 lr=6.60e-06 | 49033 tok/s (avg 48090) ETA 66m48s | gtok=991,592,448 | GPU 1.3/8.9GB
+step 26950 [26950/32130  84%]  loss=3.1283 ppl=22.8 lr=6.47e-06 | 49033 tok/s (avg 48091) ETA 66m10s | gtok=993,435,648 | GPU 1.3/8.9GB
+step 27000 [27000/32130  84%]  loss=3.1029 ppl=22.3 lr=6.35e-06 | 49029 tok/s (avg 48093) ETA 65m32s | gtok=995,278,848 | GPU 1.3/8.9GB
+step 27050 [27050/32130  84%]  loss=3.2258 ppl=25.2 lr=6.23e-06 | 49028 tok/s (avg 48095) ETA 64m53s | gtok=997,122,048 | GPU 1.3/8.9GB
+step 27100 [27100/32130  84%]  loss=3.0364 ppl=20.8 lr=6.11e-06 | 49029 tok/s (avg 48097) ETA 64m15s | gtok=998,965,248 | GPU 1.3/8.9GB
+step 27150 [27150/32130  85%]  loss=3.0934 ppl=22.1 lr=5.99e-06 | 49041 tok/s (avg 48098) ETA 63m36s | gtok=1,000,808,448 | GPU 1.3/8.9GB
+step 27200 [27200/32130  85%]  loss=3.0710 ppl=21.6 lr=5.88e-06 | 49038 tok/s (avg 48100) ETA 62m58s | gtok=1,002,651,648 | GPU 1.3/8.9GB
+step 27250 [27250/32130  85%]  loss=3.1027 ppl=22.3 lr=5.76e-06 | 49037 tok/s (avg 48102) ETA 62m19s | gtok=1,004,494,848 | GPU 1.3/8.9GB
+step 27300 [27300/32130  85%]  loss=3.1388 ppl=23.1 lr=5.64e-06 | 49030 tok/s (avg 48103) ETA 61m41s | gtok=1,006,338,048 | GPU 1.3/8.9GB
+step 27350 [27350/32130  85%]  loss=3.1080 ppl=22.4 lr=5.53e-06 | 49029 tok/s (avg 48105) ETA 61m02s | gtok=1,008,181,248 | GPU 1.3/8.9GB
+step 27400 [27400/32130  85%]  loss=3.1879 ppl=24.2 lr=5.42e-06 | 48955 tok/s (avg 48106) ETA 60m24s | gtok=1,010,024,448 | GPU 1.3/8.9GB
+step 27450 [27450/32130  85%]  loss=3.1762 ppl=24.0 lr=5.31e-06 | 49028 tok/s (avg 48108) ETA 59m45s | gtok=1,011,867,648 | GPU 1.3/8.9GB
+step 27500 [27500/32130  86%]  loss=3.1315 ppl=22.9 lr=5.19e-06 | 49030 tok/s (avg 48110) ETA 59m07s | gtok=1,013,710,848 | GPU 1.3/8.9GB
+step 27550 [27550/32130  86%]  loss=3.1617 ppl=23.6 lr=5.08e-06 | 49011 tok/s (avg 48111) ETA 58m29s | gtok=1,015,554,048 | GPU 1.3/8.9GB
+step 27600 [27600/32130  86%]  loss=3.3236 ppl=27.8 lr=4.98e-06 | 48995 tok/s (avg 48113) ETA 57m50s | gtok=1,017,397,248 | GPU 1.3/8.9GB
+step 27650 [27650/32130  86%]  loss=3.0836 ppl=21.8 lr=4.87e-06 | 48993 tok/s (avg 48115) ETA 57m12s | gtok=1,019,240,448 | GPU 1.3/8.9GB
+step 27700 [27700/32130  86%]  loss=3.0137 ppl=20.4 lr=4.76e-06 | 48994 tok/s (avg 48116) ETA 56m33s | gtok=1,021,083,648 | GPU 1.3/8.9GB
+step 27750 [27750/32130  86%]  loss=3.0129 ppl=20.3 lr=4.66e-06 | 48990 tok/s (avg 48118) ETA 55m55s | gtok=1,022,926,848 | GPU 1.3/8.9GB
+step 27800 [27800/32130  87%]  loss=3.0703 ppl=21.5 lr=4.55e-06 | 48993 tok/s (avg 48119) ETA 55m17s | gtok=1,024,770,048 | GPU 1.3/8.9GB
+step 27850 [27850/32130  87%]  loss=2.9694 ppl=19.5 lr=4.45e-06 | 49028 tok/s (avg 48121) ETA 54m38s | gtok=1,026,613,248 | GPU 1.3/8.9GB
+step 27900 [27900/32130  87%]  loss=3.1219 ppl=22.7 lr=4.35e-06 | 48995 tok/s (avg 48122) ETA 54m00s | gtok=1,028,456,448 | GPU 1.3/8.9GB
+step 27950 [27950/32130  87%]  loss=3.1209 ppl=22.7 lr=4.25e-06 | 48992 tok/s (avg 48124) ETA 53m21s | gtok=1,030,299,648 | GPU 1.3/8.9GB
+step 28000 [28000/32130  87%]  loss=3.3046 ppl=27.2 lr=4.15e-06 | 48986 tok/s (avg 48125) ETA 52m43s | gtok=1,032,142,848 | GPU 1.3/8.9GB
+  [checkpoint] step 28000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 28000] val_loss=3.1717 val_ppl=23.85 *best* (best 23.85)
+  [checkpoint] step 28000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/latest.pt
+  [diag] step 28000 cgu=+0.70 +0.74 +0.80 +0.89 +0.94 +0.99 +1.04 +1.12 +1.26 +1.37 +1.43 +1.53 +1.54 +1.63 +1.70 +1.57  pam=+0.24 +0.28 +0.32 +0.15 +0.25 +0.20 +0.12 +0.16 +0.30 +0.20 +0.36 +0.35 +0.25 +0.36 +0.31 +0.24
+  [diag] dtbias=-3.94 -3.93 -3.89 -3.96 -3.93 -3.96 -3.99 -3.97 -3.91 -3.98 -3.91 -3.91 -3.96 -3.96 -3.95 -3.95  ret=0.79 0.76 0.68 0.87 0.77 0.84 0.90 0.83 0.67 0.91 0.67 0.67 0.78 0.77 0.73 0.80
+  [diag] gnorm=9.6e-02 1.0e-01 1.1e-01 1.1e-01 1.1e-01 1.1e-01 1.3e-01 1.5e-01 1.4e-01 1.4e-01 1.4e-01 1.4e-01 1.9e-01 1.9e-01 1.4e-01 1.4e-01  wnorm=59.3 59.7 60.2 59.9 60.3 60.3 60.3 60.9 61.6 61.3 62.5 62.9 63.1 63.9 64.6 64.6
+step 28050 [28050/32130  87%]  loss=3.2327 ppl=25.3 lr=4.05e-06 | 43815 tok/s (avg 48117) ETA 52m05s | gtok=1,033,986,048 | GPU 1.3/8.9GB
+step 28100 [28100/32130  87%]  loss=2.9929 ppl=19.9 lr=3.95e-06 | 48969 tok/s (avg 48118) ETA 51m27s | gtok=1,035,829,248 | GPU 1.3/8.9GB
+step 28150 [28150/32130  88%]  loss=3.0471 ppl=21.1 lr=3.86e-06 | 49037 tok/s (avg 48120) ETA 50m48s | gtok=1,037,672,448 | GPU 1.3/8.9GB
+step 28200 [28200/32130  88%]  loss=3.0461 ppl=21.0 lr=3.76e-06 | 48964 tok/s (avg 48121) ETA 50m10s | gtok=1,039,515,648 | GPU 1.3/8.9GB
+step 28250 [28250/32130  88%]  loss=2.9574 ppl=19.2 lr=3.67e-06 | 49000 tok/s (avg 48123) ETA 49m32s | gtok=1,041,358,848 | GPU 1.3/8.9GB
+step 28300 [28300/32130  88%]  loss=3.1481 ppl=23.3 lr=3.57e-06 | 49035 tok/s (avg 48125) ETA 48m53s | gtok=1,043,202,048 | GPU 1.3/8.9GB
+step 28350 [28350/32130  88%]  loss=3.2352 ppl=25.4 lr=3.48e-06 | 48997 tok/s (avg 48126) ETA 48m15s | gtok=1,045,045,248 | GPU 1.3/8.9GB
+step 28400 [28400/32130  88%]  loss=3.0459 ppl=21.0 lr=3.39e-06 | 49000 tok/s (avg 48128) ETA 47m36s | gtok=1,046,888,448 | GPU 1.3/8.9GB
+step 28450 [28450/32130  89%]  loss=3.1337 ppl=23.0 lr=3.30e-06 | 49035 tok/s (avg 48129) ETA 46m58s | gtok=1,048,731,648 | GPU 1.3/8.9GB
+step 28500 [28500/32130  89%]  loss=3.1754 ppl=23.9 lr=3.21e-06 | 49041 tok/s (avg 48131) ETA 46m20s | gtok=1,050,574,848 | GPU 1.3/8.9GB
+step 28550 [28550/32130  89%]  loss=3.0888 ppl=22.0 lr=3.13e-06 | 48997 tok/s (avg 48132) ETA 45m41s | gtok=1,052,418,048 | GPU 1.3/8.9GB
+step 28600 [28600/32130  89%]  loss=3.1081 ppl=22.4 lr=3.04e-06 | 49038 tok/s (avg 48134) ETA 45m03s | gtok=1,054,261,248 | GPU 1.3/8.9GB
+step 28650 [28650/32130  89%]  loss=3.2149 ppl=24.9 lr=2.96e-06 | 49035 tok/s (avg 48135) ETA 44m25s | gtok=1,056,104,448 | GPU 1.3/8.9GB
+step 28700 [28700/32130  89%]  loss=2.9798 ppl=19.7 lr=2.87e-06 | 49037 tok/s (avg 48137) ETA 43m46s | gtok=1,057,947,648 | GPU 1.3/8.9GB
+step 28750 [28750/32130  89%]  loss=3.0538 ppl=21.2 lr=2.79e-06 | 48994 tok/s (avg 48138) ETA 43m08s | gtok=1,059,790,848 | GPU 1.3/8.9GB
+step 28800 [28800/32130  90%]  loss=3.1240 ppl=22.7 lr=2.71e-06 | 49027 tok/s (avg 48140) ETA 42m29s | gtok=1,061,634,048 | GPU 1.3/8.9GB
+step 28850 [28850/32130  90%]  loss=3.0091 ppl=20.3 lr=2.63e-06 | 49027 tok/s (avg 48141) ETA 41m51s | gtok=1,063,477,248 | GPU 1.3/8.9GB
+step 28900 [28900/32130  90%]  loss=3.1667 ppl=23.7 lr=2.55e-06 | 49029 tok/s (avg 48143) ETA 41m13s | gtok=1,065,320,448 | GPU 1.3/8.9GB
+step 28950 [28950/32130  90%]  loss=3.0740 ppl=21.6 lr=2.47e-06 | 49039 tok/s (avg 48144) ETA 40m34s | gtok=1,067,157,504 | GPU 1.3/8.9GB
+step 29000 [29000/32130  90%]  loss=3.0966 ppl=22.1 lr=2.40e-06 | 49028 tok/s (avg 48146) ETA 39m56s | gtok=1,069,000,704 | GPU 1.3/8.9GB
+step 29050 [29050/32130  90%]  loss=3.0769 ppl=21.7 lr=2.32e-06 | 48988 tok/s (avg 48147) ETA 39m18s | gtok=1,070,843,904 | GPU 1.3/8.9GB
+step 29100 [29100/32130  91%]  loss=2.9561 ppl=19.2 lr=2.25e-06 | 49039 tok/s (avg 48149) ETA 38m39s | gtok=1,072,687,104 | GPU 1.3/8.9GB
+step 29150 [29150/32130  91%]  loss=2.8675 ppl=17.6 lr=2.17e-06 | 48992 tok/s (avg 48150) ETA 38m01s | gtok=1,074,530,304 | GPU 1.3/8.9GB
+step 29200 [29200/32130  91%]  loss=3.0732 ppl=21.6 lr=2.10e-06 | 49026 tok/s (avg 48152) ETA 37m23s | gtok=1,076,373,504 | GPU 1.3/8.9GB
+step 29250 [29250/32130  91%]  loss=2.9873 ppl=19.8 lr=2.03e-06 | 49024 tok/s (avg 48153) ETA 36m44s | gtok=1,078,216,704 | GPU 1.3/8.9GB
+step 29300 [29300/32130  91%]  loss=3.2982 ppl=27.1 lr=1.96e-06 | 49025 tok/s (avg 48155) ETA 36m06s | gtok=1,080,059,904 | GPU 1.3/8.9GB
+step 29350 [29350/32130  91%]  loss=2.9946 ppl=20.0 lr=1.89e-06 | 49029 tok/s (avg 48156) ETA 35m28s | gtok=1,081,903,104 | GPU 1.3/8.9GB
+step 29400 [29400/32130  92%]  loss=3.0245 ppl=20.6 lr=1.83e-06 | 49034 tok/s (avg 48158) ETA 34m49s | gtok=1,083,746,304 | GPU 1.3/8.9GB
+step 29450 [29450/32130  92%]  loss=3.0710 ppl=21.6 lr=1.76e-06 | 49037 tok/s (avg 48159) ETA 34m11s | gtok=1,085,589,504 | GPU 1.3/8.9GB
+step 29500 [29500/32130  92%]  loss=3.1774 ppl=24.0 lr=1.70e-06 | 49032 tok/s (avg 48160) ETA 33m33s | gtok=1,087,432,704 | GPU 1.3/8.9GB
+step 29550 [29550/32130  92%]  loss=2.9525 ppl=19.2 lr=1.63e-06 | 49015 tok/s (avg 48162) ETA 32m54s | gtok=1,089,275,904 | GPU 1.3/8.9GB
+step 29600 [29600/32130  92%]  loss=3.1076 ppl=22.4 lr=1.57e-06 | 49036 tok/s (avg 48163) ETA 32m16s | gtok=1,091,119,104 | GPU 1.3/8.9GB
+step 29650 [29650/32130  92%]  loss=2.9979 ppl=20.0 lr=1.51e-06 | 49034 tok/s (avg 48165) ETA 31m38s | gtok=1,092,962,304 | GPU 1.3/8.9GB
+step 29700 [29700/32130  92%]  loss=3.0329 ppl=20.8 lr=1.45e-06 | 49038 tok/s (avg 48166) ETA 30m59s | gtok=1,094,805,504 | GPU 1.3/8.9GB
+step 29750 [29750/32130  93%]  loss=3.1329 ppl=22.9 lr=1.39e-06 | 49035 tok/s (avg 48168) ETA 30m21s | gtok=1,096,648,704 | GPU 1.3/8.9GB
+step 29800 [29800/32130  93%]  loss=2.9570 ppl=19.2 lr=1.33e-06 | 48999 tok/s (avg 48169) ETA 29m43s | gtok=1,098,491,904 | GPU 1.3/8.9GB
+step 29850 [29850/32130  93%]  loss=3.2526 ppl=25.9 lr=1.28e-06 | 49036 tok/s (avg 48170) ETA 29m04s | gtok=1,100,335,104 | GPU 1.3/8.9GB
+step 29900 [29900/32130  93%]  loss=3.2167 ppl=24.9 lr=1.22e-06 | 49032 tok/s (avg 48172) ETA 28m26s | gtok=1,102,178,304 | GPU 1.3/8.9GB
+step 29950 [29950/32130  93%]  loss=2.9781 ppl=19.7 lr=1.17e-06 | 49028 tok/s (avg 48173) ETA 27m48s | gtok=1,104,021,504 | GPU 1.3/8.9GB
+step 30000 [30000/32130  93%]  loss=3.0205 ppl=20.5 lr=1.11e-06 | 49025 tok/s (avg 48175) ETA 27m09s | gtok=1,105,864,704 | GPU 1.3/8.9GB
+  [checkpoint] step 30000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 30000] val_loss=3.1703 val_ppl=23.82 *best* (best 23.82)
+  [diag] step 30000 cgu=+0.70 +0.74 +0.81 +0.89 +0.94 +0.99 +1.04 +1.12 +1.26 +1.37 +1.43 +1.53 +1.55 +1.63 +1.70 +1.57  pam=+0.24 +0.28 +0.32 +0.15 +0.25 +0.20 +0.12 +0.16 +0.30 +0.20 +0.36 +0.35 +0.26 +0.36 +0.32 +0.24
+  [diag] dtbias=-3.94 -3.93 -3.89 -3.96 -3.93 -3.96 -3.99 -3.97 -3.91 -3.98 -3.91 -3.91 -3.96 -3.96 -3.95 -3.95  ret=0.79 0.76 0.69 0.87 0.77 0.84 0.90 0.83 0.67 0.91 0.68 0.67 0.78 0.77 0.73 0.80
+  [diag] gnorm=8.9e-02 9.5e-02 1.0e-01 1.1e-01 1.1e-01 1.1e-01 1.3e-01 1.5e-01 1.4e-01 1.3e-01 1.4e-01 1.4e-01 1.7e-01 1.7e-01 1.3e-01 1.4e-01  wnorm=59.3 59.7 60.2 59.9 60.3 60.3 60.3 60.9 61.6 61.3 62.5 62.9 63.1 63.9 64.7 64.6
+step 30050 [30050/32130  94%]  loss=3.0905 ppl=22.0 lr=1.06e-06 | 44696 tok/s (avg 48168) ETA 26m31s | gtok=1,107,707,904 | GPU 1.3/8.9GB
+step 30100 [30100/32130  94%]  loss=3.0049 ppl=20.2 lr=1.01e-06 | 49026 tok/s (avg 48170) ETA 25m53s | gtok=1,109,551,104 | GPU 1.3/8.9GB
+step 30150 [30150/32130  94%]  loss=2.8961 ppl=18.1 lr=9.64e-07 | 49023 tok/s (avg 48171) ETA 25m15s | gtok=1,111,394,304 | GPU 1.3/8.9GB
+step 30200 [30200/32130  94%]  loss=3.0830 ppl=21.8 lr=9.16e-07 | 49022 tok/s (avg 48173) ETA 24m36s | gtok=1,113,237,504 | GPU 1.3/8.9GB
+step 30250 [30250/32130  94%]  loss=3.1987 ppl=24.5 lr=8.69e-07 | 49026 tok/s (avg 48174) ETA 23m58s | gtok=1,115,080,704 | GPU 1.3/8.9GB
+step 30300 [30300/32130  94%]  loss=3.1000 ppl=22.2 lr=8.24e-07 | 49025 tok/s (avg 48175) ETA 23m20s | gtok=1,116,923,904 | GPU 1.3/8.9GB
+step 30350 [30350/32130  94%]  loss=3.1651 ppl=23.7 lr=7.79e-07 | 49026 tok/s (avg 48177) ETA 22m41s | gtok=1,118,767,104 | GPU 1.3/8.9GB
+step 30400 [30400/32130  95%]  loss=3.0168 ppl=20.4 lr=7.36e-07 | 49010 tok/s (avg 48178) ETA 22m03s | gtok=1,120,610,304 | GPU 1.3/8.9GB
+step 30450 [30450/32130  95%]  loss=3.0607 ppl=21.3 lr=6.94e-07 | 49025 tok/s (avg 48179) ETA 21m25s | gtok=1,122,453,504 | GPU 1.3/8.9GB
+step 30500 [30500/32130  95%]  loss=2.9779 ppl=19.6 lr=6.54e-07 | 49029 tok/s (avg 48181) ETA 20m47s | gtok=1,124,296,704 | GPU 1.3/8.9GB
+step 30550 [30550/32130  95%]  loss=2.9227 ppl=18.6 lr=6.14e-07 | 49027 tok/s (avg 48182) ETA 20m08s | gtok=1,126,139,904 | GPU 1.3/8.9GB
+step 30600 [30600/32130  95%]  loss=3.0811 ppl=21.8 lr=5.76e-07 | 49030 tok/s (avg 48184) ETA 19m30s | gtok=1,127,983,104 | GPU 1.3/8.9GB
+step 30650 [30650/32130  95%]  loss=2.9978 ppl=20.0 lr=5.39e-07 | 49034 tok/s (avg 48185) ETA 18m52s | gtok=1,129,826,304 | GPU 1.3/8.9GB
+step 30700 [30700/32130  96%]  loss=2.9982 ppl=20.1 lr=5.03e-07 | 49010 tok/s (avg 48186) ETA 18m13s | gtok=1,131,669,504 | GPU 1.3/8.9GB
+step 30750 [30750/32130  96%]  loss=3.0181 ppl=20.5 lr=4.69e-07 | 49028 tok/s (avg 48188) ETA 17m35s | gtok=1,133,512,704 | GPU 1.3/8.9GB
+step 30800 [30800/32130  96%]  loss=3.0018 ppl=20.1 lr=4.36e-07 | 49033 tok/s (avg 48189) ETA 16m57s | gtok=1,135,355,904 | GPU 1.3/8.9GB
+step 30850 [30850/32130  96%]  loss=3.0056 ppl=20.2 lr=4.04e-07 | 49032 tok/s (avg 48190) ETA 16m19s | gtok=1,137,199,104 | GPU 1.3/8.9GB
+step 30900 [30900/32130  96%]  loss=3.0061 ppl=20.2 lr=3.73e-07 | 49027 tok/s (avg 48192) ETA 15m40s | gtok=1,139,042,304 | GPU 1.3/8.9GB
+step 30950 [30950/32130  96%]  loss=2.7724 ppl=16.0 lr=3.43e-07 | 49027 tok/s (avg 48193) ETA 15m02s | gtok=1,140,885,504 | GPU 1.3/8.9GB
+step 31000 [31000/32130  96%]  loss=3.1458 ppl=23.2 lr=3.15e-07 | 49024 tok/s (avg 48194) ETA 14m24s | gtok=1,142,728,704 | GPU 1.3/8.9GB
+step 31050 [31050/32130  97%]  loss=3.0481 ppl=21.1 lr=2.87e-07 | 49004 tok/s (avg 48196) ETA 13m46s | gtok=1,144,571,904 | GPU 1.3/8.9GB
+step 31100 [31100/32130  97%]  loss=3.2834 ppl=26.7 lr=2.61e-07 | 49024 tok/s (avg 48197) ETA 13m07s | gtok=1,146,415,104 | GPU 1.3/8.9GB
+step 31150 [31150/32130  97%]  loss=2.9550 ppl=19.2 lr=2.37e-07 | 49026 tok/s (avg 48198) ETA 12m29s | gtok=1,148,258,304 | GPU 1.3/8.9GB
+step 31200 [31200/32130  97%]  loss=3.0304 ppl=20.7 lr=2.13e-07 | 49026 tok/s (avg 48199) ETA 11m51s | gtok=1,150,101,504 | GPU 1.3/8.9GB
+step 31250 [31250/32130  97%]  loss=3.1900 ppl=24.3 lr=1.91e-07 | 48987 tok/s (avg 48201) ETA 11m12s | gtok=1,151,944,704 | GPU 1.3/8.9GB
+step 31300 [31300/32130  97%]  loss=3.2005 ppl=24.5 lr=1.70e-07 | 48992 tok/s (avg 48202) ETA 10m34s | gtok=1,153,787,904 | GPU 1.3/8.9GB
+step 31350 [31350/32130  98%]  loss=3.1584 ppl=23.5 lr=1.50e-07 | 48989 tok/s (avg 48203) ETA 9m56s | gtok=1,155,631,104 | GPU 1.3/8.9GB
+step 31400 [31400/32130  98%]  loss=2.9430 ppl=19.0 lr=1.31e-07 | 48990 tok/s (avg 48204) ETA 9m18s | gtok=1,157,474,304 | GPU 1.3/8.9GB
+step 31450 [31450/32130  98%]  loss=3.2276 ppl=25.2 lr=1.14e-07 | 49000 tok/s (avg 48206) ETA 8m39s | gtok=1,159,317,504 | GPU 1.3/8.9GB
+step 31500 [31500/32130  98%]  loss=3.1195 ppl=22.6 lr=9.79e-08 | 48989 tok/s (avg 48207) ETA 8m01s | gtok=1,161,160,704 | GPU 1.3/8.9GB
+step 31550 [31550/32130  98%]  loss=3.0857 ppl=21.9 lr=8.29e-08 | 48989 tok/s (avg 48208) ETA 7m23s | gtok=1,163,003,904 | GPU 1.3/8.9GB
+step 31600 [31600/32130  98%]  loss=3.1201 ppl=22.6 lr=6.93e-08 | 48966 tok/s (avg 48209) ETA 6m45s | gtok=1,164,847,104 | GPU 1.3/8.9GB
+step 31650 [31650/32130  99%]  loss=2.9933 ppl=20.0 lr=5.68e-08 | 49008 tok/s (avg 48210) ETA 6m07s | gtok=1,166,690,304 | GPU 1.3/8.9GB
+step 31700 [31700/32130  99%]  loss=2.9224 ppl=18.6 lr=4.56e-08 | 48989 tok/s (avg 48212) ETA 5m28s | gtok=1,168,533,504 | GPU 1.3/8.9GB
+step 31750 [31750/32130  99%]  loss=3.2994 ppl=27.1 lr=3.56e-08 | 49027 tok/s (avg 48213) ETA 4m50s | gtok=1,170,376,704 | GPU 1.3/8.9GB
+step 31800 [31800/32130  99%]  loss=3.2523 ppl=25.8 lr=2.69e-08 | 49025 tok/s (avg 48214) ETA 4m12s | gtok=1,172,219,904 | GPU 1.3/8.9GB
+step 31850 [31850/32130  99%]  loss=3.0042 ppl=20.2 lr=1.93e-08 | 49027 tok/s (avg 48215) ETA 3m34s | gtok=1,174,063,104 | GPU 1.3/8.9GB
+step 31900 [31900/32130  99%]  loss=3.2699 ppl=26.3 lr=1.30e-08 | 49029 tok/s (avg 48217) ETA 2m55s | gtok=1,175,906,304 | GPU 1.3/8.9GB
+step 31950 [31950/32130  99%]  loss=3.1532 ppl=23.4 lr=7.99e-09 | 49004 tok/s (avg 48218) ETA 2m17s | gtok=1,177,749,504 | GPU 1.3/8.9GB
+step 32000 [32000/32130 100%]  loss=3.0829 ppl=21.8 lr=4.17e-09 | 49023 tok/s (avg 48219) ETA 1m39s | gtok=1,179,592,704 | GPU 1.3/8.9GB
+  [gen @ step 32000, 1,179,592,704 tok] prompt: In 1923, the University of
+    In 1923, the University of Michigan , and in 1929 became a member of the National Association of Public Service Commission for a period . The National Library was established by President Calvin Coolidge on April 1 , 1928 , at a ceremony that included the first formal acceptance by President Theodore Roosevelt ( who would later become president ) ; the second was conducted on March 8 , 1933 at the University 's General Hospital of California . 
+
+ In 1938
+  [checkpoint] step 32000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt
+  [val @ step 32000] val_loss=3.1700 val_ppl=23.81 *best* (best 23.81)
+  [checkpoint] step 32000 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/latest.pt
+  [diag] step 32000 cgu=+0.70 +0.75 +0.81 +0.89 +0.94 +0.99 +1.04 +1.12 +1.26 +1.37 +1.43 +1.53 +1.55 +1.63 +1.70 +1.57  pam=+0.24 +0.28 +0.32 +0.15 +0.25 +0.20 +0.12 +0.16 +0.30 +0.20 +0.36 +0.35 +0.26 +0.36 +0.32 +0.24
+  [diag] dtbias=-3.94 -3.93 -3.89 -3.96 -3.93 -3.96 -3.99 -3.97 -3.91 -3.98 -3.91 -3.91 -3.96 -3.96 -3.95 -3.95  ret=0.79 0.76 0.69 0.87 0.78 0.85 0.90 0.84 0.68 0.92 0.67 0.67 0.78 0.77 0.73 0.79
+  [diag] gnorm=9.8e-02 1.0e-01 1.1e-01 1.1e-01 1.1e-01 1.1e-01 1.3e-01 1.5e-01 1.4e-01 1.4e-01 1.4e-01 1.4e-01 1.8e-01 1.9e-01 1.4e-01 1.4e-01  wnorm=59.3 59.7 60.2 59.9 60.3 60.3 60.3 60.9 61.6 61.3 62.5 62.9 63.1 63.9 64.7 64.6
+step 32050 [32050/32130 100%]  loss=3.1291 ppl=22.9 lr=1.58e-09 | 42884 tok/s (avg 48210) ETA 1m01s | gtok=1,181,435,904 | GPU 1.3/8.9GB
+step 32100 [32100/32130 100%]  loss=3.2816 ppl=26.6 lr=2.22e-10 | 48992 tok/s (avg 48211) ETA 0m22s | gtok=1,183,279,104 | GPU 1.3/8.9GB
+
+Training complete. steps=32130 tokens=1,184,378,880 best_val_ppl=23.81
+train loss: 10.9322 -> 3.1228 (delta -7.8094)
+  [checkpoint] step 32130 -> checkpoints_v13_sempty/wikitext_real_fair_7af42eb/latest.pt
+=== wikitext_real_fair end 1788457652 exit=0 ===

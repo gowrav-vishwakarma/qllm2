@@ -6,6 +6,20 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
+* **FAIR RUN DONE (2026-09-04, commit `7af42eb`): real-101M hit val PPL
+  23.81** at the reference geometry (T=2048, B=18, 10 ep, 1.18B tok). Beats
+  v11 E3-K3 complex (25.77) by ~2 PPL; within 1.12 of transformer (22.69).
+  Log `logs/v13_sempty_wikitext_real_fair_7af42eb_20260903_1628.log`,
+  ckpt `checkpoints_v13_sempty/wikitext_real_fair_7af42eb/best_model.pt`.
+  Full curve + comparison + "is this Mamba?" positioning are in
+  `EXPERIMENTS_SEMPY.md` (last two sections). Open gap = recall, not PPL.
+* Logging now V11-style: `_print_run_header` emits full config/args/geometry
+  at the top of every log; step lines carry `epN/M`; epoch-boundary banners
+  print train-loss/ppl/tok/best-val. Log naming convention is in
+  `qllm2/AGENTS.md` ("Log naming convention").
+* **Next: bigger runs on the RTX Pro 6000 (96 GB)** — more data + chat, and
+  scale-up if 100M looks saturated. See "Bigger-run plan" below / the new plan.
+
 * Real-101M (`baseline_real_pm`) trains at **~64k tok/s** (was 5.8k), peak
   **7.6 GiB** at B32 T256 with grad-checkpointing OFF (was 21 GB at B8 with
   it on). One WikiText-103 epoch (118M tok) ≈ **30 min**.

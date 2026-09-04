@@ -474,6 +474,14 @@ class Trainer:
             steps_per_epoch = None
         # ETA/progress track the whole run when max_steps spans many epochs.
         n_batches = max_steps if max_steps is not None else steps_per_epoch
+        # Epoch bookkeeping so the log reads like the V11/V13 per-epoch logs
+        # even though we drive the loop off a single global step budget.
+        total_epochs = (math.ceil(max_steps / steps_per_epoch)
+                        if (max_steps and steps_per_epoch) else None)
+        self._steps_per_epoch = steps_per_epoch
+        self._total_epochs = total_epochs
+        epoch_loss_sum, epoch_loss_n = 0.0, 0
+        epoch_start = time.time()
 
         def _epoch_stream():
             """Re-iterate the loader across epochs (re-shuffles each pass) until
@@ -490,6 +498,8 @@ class Trainer:
             batch_tokens = batch['input_ids'].numel()
             self.global_tokens += batch_tokens
             log_tokens += batch_tokens
+            epoch_loss_sum += loss
+            epoch_loss_n += 1
 
             if self.log_interval and self.global_step % self.log_interval == 0:
                 self._log_line(loss, batch_idx, n_batches, train_start,
@@ -548,6 +558,23 @@ class Trainer:
                 except Exception as e:
                     print(f"  [diag @ step {self.global_step}] failed: {e}", flush=True)
 
+            # Epoch-boundary banner (mirrors the V11/V13 "Epoch N/M" summary so
+            # the logs align epoch-for-epoch with the reference tables).
+            if steps_per_epoch and self.global_step % steps_per_epoch == 0:
+                ep_done = self.global_step // steps_per_epoch
+                ep_avg = epoch_loss_sum / max(epoch_loss_n, 1)
+                ep_time = time.time() - epoch_start
+                print(
+                    f"=== Epoch {ep_done}/{total_epochs} done | step "
+                    f"{self.global_step} | train_loss={ep_avg:.4f} "
+                    f"ppl={math.exp(min(ep_avg, 20)):.2f} | "
+                    f"gtok={self.global_tokens:,} | {ep_time/60:.1f} min | "
+                    f"best_val_ppl={self.best_val_ppl:.2f} ===",
+                    flush=True,
+                )
+                epoch_loss_sum, epoch_loss_n = 0.0, 0
+                epoch_start = time.time()
+
             if max_steps is not None and self.global_step >= max_steps:
                 break
         return losses
@@ -567,8 +594,16 @@ class Trainer:
             prog = f"[{batch_idx + 1}/{n_batches} {pct:3.0f}%]"
         else:
             eta_str, prog = "ETA n/a", f"[{self.global_step}]"
+        # Which epoch this step falls in (1-indexed), matching the V11 logs.
+        spe = getattr(self, '_steps_per_epoch', None)
+        if spe:
+            cur_ep = (self.global_step - 1) // spe + 1
+            tot_ep = getattr(self, '_total_epochs', None)
+            ep_str = f"ep{cur_ep}/{tot_ep} " if tot_ep else f"ep{cur_ep} "
+        else:
+            ep_str = ""
         line = (
-            f"step {self.global_step} {prog}  loss={loss:.4f} ppl={ppl:.1f} "
+            f"step {self.global_step} {ep_str}{prog}  loss={loss:.4f} ppl={ppl:.1f} "
             f"lr={lr:.2e} | {inst_tok_s:.0f} tok/s (avg {avg_tok_s:.0f}) "
             f"{eta_str} | gtok={self.global_tokens:,}"
         )

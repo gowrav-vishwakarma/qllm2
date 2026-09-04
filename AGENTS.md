@@ -15,6 +15,27 @@
 - When we do some ablation and it is proven to be not good, record in experiments, its maths logic but once it is proven not useful, remove its path from all code of that version, to keep code neat and clean. 
 - logs files should be identifeable with name that what version or commit hash made this so we can find which log to see from hundreds of log files. (if we need, last run, we should get by its last modified time or by commit hash if at some specific time) 
 
+## Log naming convention (traceability) (user rule, 2026-09-04)
+Every training/benchmark log MUST be named so it can be located months later
+without opening it. Canonical pattern (used by `v13_sempty/tmp_wikitext_fair.sh`):
+
+```
+logs/<version>_<tag>_<gitshorthash>_<YYYYMMDD_HHMM>.log
+# e.g. logs/v13_sempty_wikitext_real_fair_7af42eb_20260903_1628.log
+```
+
+- `<version>`   : code family, e.g. `v13_sempty`, `v11`, `v13`.
+- `<tag>`       : what the run is — dataset + arm + intent, e.g.
+                  `wikitext_real_fair`, `wikitext_complex_fair`, `a1_conv_rung`.
+- `<gitshorthash>`: `git rev-parse --short HEAD` **at launch** — the exact code.
+- `<YYYYMMDD_HHMM>`: launch timestamp (disambiguates same-commit reruns).
+- Commit-worthy result logs (a finished, recorded run) ARE committed with the
+  code/docs that reference them, so the number and the code that produced it
+  travel together. Smoke/errored/superseded logs are deleted, not committed.
+- Every log MUST also carry the in-file header block (`_print_run_header` in
+  `v13_sempty/train.py`): full config + args + geometry + params, so the file
+  is self-describing even if renamed.
+
 ## Long training
 - ONLY in tmux (`tmux new-session -d`), never hub/bash-managed.
 - Keep the watchdog chain alive: `bash v13/tmp/watchdog.sh <log> <verdict_gtok> 2940`

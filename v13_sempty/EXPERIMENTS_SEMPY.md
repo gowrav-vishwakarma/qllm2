@@ -321,3 +321,73 @@ verification (commits `4740d65` → `7343201`):
   tok/s, previously ~57 h) is answered by the Phase-1 fair run, not by this
   number. WikiText-only behavioral recall on this checkpoint: pending
   (Phase 1 probe).
+
+## The fair run — apples-to-apples vs transformer & v11 (2026-09-04)
+
+**Result (commit `7af42eb`, log
+`logs/v13_sempty_wikitext_real_fair_7af42eb_20260903_1628.log`).**
+Real-arm `baseline_real_pm` (101.9M), WikiText-103, **T=2048, B=18, 10 epochs
+(32130 steps, 1.184B tok)** — the *exact* geometry of the reference bars.
+bf16, fused PAM + fused CE, gradient checkpointing on (5 GB, 48k tok/s, ~6.8 h).
+
+Best **val PPL 23.81** (val NLL 3.170, step 32000; full 248k-token val set,
+fp32 head). Train loss 10.93 → 3.12.
+
+| model | type | params | val PPL @10ep |
+|---|---|---|---|
+| transformer | attention | 100.3M | **22.69** |
+| **v13_sempty real** | **O(1) PAM (real)** | 101.9M | **23.81** |
+| v11 E3-K3 | O(1) PAM (complex) | 100.5M | 25.77 |
+
+So the real arm **beats the v11 complex PAM baseline by 1.96 PPL** and lands
+**within 1.12 PPL of the transformer** — not a strict val-PPL win, but a
+competitive novel O(1) model, and the *real* arm beats the *complex* one.
+
+Matched-token trajectory (same tokens/step, so step ≈ token count) — sempty
+was ahead of E3-K3 the whole way, roughly tied with the transformer's
+per-epoch bars early:
+
+| ~epoch (step) | transformer | v11 E3-K3 | v13_sempty real |
+|---|---|---|---|
+| 1 (3213)  | 73.41 | 81.54 | ~63 (49.95 @ 4000) |
+| 2 (6426)  | 38.77 | 45.59 | 38.48 @ 6000 |
+| 3 (9639)  | —     | 35.75 | 29.98 @ 10000 |
+| 10 (32130)| 22.69 | 25.77 | **23.81** |
+
+Full sempty val curve (step → ppl): 2000→87.62, 4000→49.95, 6000→38.48,
+8000→33.17, 10000→29.98, 12000→28.18, 14000→26.89, 16000→25.84, 18000→25.22,
+20000→24.80, 22000→24.35, 24000→24.13, 26000→23.96, 28000→23.85, 30000→23.82,
+32000→**23.81** (essentially converged; curve flat after ~26k).
+
+Open question remains **recall**, not PPL (the 1-epoch probe showed real_pm ≈
+chance on invented-association recall while the transformer bar used a recall
+curriculum). The architecture ladder (A1–A4, code committed) and recall-mix
+training target exactly this.
+
+## Positioning — is this Mamba? (2026-09-04)
+
+No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*
+state `h_t = A_t ⊙ h_{t-1} + B_t x_t`, `y_t = C_t h_t`, with input-dependent
+`A,B,C` and a hardware-aware **selective scan**. v13_sempty is an
+**outer-product associative memory**: a *matrix* state
+`S_t = γ_t S_{t-1} + v_t ⊗ (conj) k_t`, `read = q·S_t`, with a scalar per-head
+decay `γ_t` and a closed-form chunked cumprod/cumsum (no selective scan). It
+fails both of Mamba's defining tests.
+
+It **does** belong to the broad linear-attention / fast-weight super-family
+(shared by linear Transformers, RetNet, GLA, DeltaNet, RWKV — and Mamba):
+one O(1) recurrent state, linear in sequence, O(1) at decode. Within that
+family:
+- the **real arm** (the 23.81 result) is closest to **RetNet / lightweight
+  GLA** — real outer-product state + scalar head decay. Honest: a competitive
+  member of gated-linear-attention, not a from-scratch paradigm.
+- the **novel contribution** is the **complex phase-associative addressing**
+  (write `conj(k)`, read raw `q` → phase-matched exact recall), which is the
+  **Holographic Reduced Representations / VSA-HDC** lineage (Plate, Kanerva),
+  *not* the SSM lineage; plus the matrix notebook with read-after-write and
+  the O(1)-recall research framing (cf. the pands VSA memory).
+
+Claim to make in writeups: "not Mamba, not a Mamba variant; a phase/complex
+associative-memory member of the linear-recurrent family, competitive with a
+transformer at 100M/10ep on WikiText-103." Do **not** claim "unlike anything"
+— the O(1) recurrent form is a populated family.
