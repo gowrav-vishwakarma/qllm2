@@ -20,6 +20,60 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 * **Next: bigger runs on the RTX Pro 6000 (96 GB)** — more data + chat, and
   scale-up if 100M looks saturated. See "Bigger-run plan" below / the new plan.
 
+## Novel math — N1 Chrono-PAM (content-modulated rotary retention) (2026-09-04)
+
+**Idea, in one line:** make the memory's rotary phase *learned and
+input-dependent* instead of fixed RoPE — a "content clock" per head.
+
+**Why it's principled (the derivation).** A complex *rotating* retention
+`gamma_t = r_t * e^{i*theta_t}` on the outer-product notebook
+`S_t = gamma_t S_{t-1} + v_t (x) conj(k_t)` has closed form
+`S_s = sum_{t<=s} (a_s/a_t) e^{i(Phi_s - Phi_t)} v_t conj(k_t)` with
+`a` = magnitude product, `Phi_t = cumsum(theta)`. The read
+`S_s q_s` shows the `e^{i(Phi_s-Phi_t)}` factor is *absorbed* by rotating
+`q_s -> e^{i*Phi_s} q_s`, `k_t -> e^{i*Phi_t} k_t`. That cumulative rotation
+is exactly what RoPE does with a *fixed* frequency. So **learned rotating
+retention == input-dependent RoPE**, and it folds entirely into q/k — the
+fused magnitude-retention kernel is UNTOUCHED (speed preserved). CoPE-style,
+but on an associative-memory PAM (novel).
+
+**Real-arm implementation** (`RealPAMLayer._rotate_learned`, behind
+`cfg.chrono`): per-head warp `g_t = exp(clamp(W x, +/-3))` scales the per-step
+angle; since `inv_freq` is constant in t, `cumsum(inv*g) = inv * cumsum(g)`,
+so we warp a per-head clock `tau = cumsum(g)` ([B,H,T]) then `phi = tau (x)
+inv_freq`. `W` is zero-init (`warp_proj._zero_init`), so at start `g=1`,
+`phi = pos*inv_freq` == **exactly** fixed RoPE. cos/sin in fp32, cast to bf16
+for the rotation (keeps retained activations small).
+
+**Status: PROTOTYPE VERIFIED on the 4090, ready for a rung.**
+- Parity: `test_chrono_rotary_parity` (selftest, CPU) — chrono@init == baseline
+  RoPE bit-for-bit (`max|dlogit| = 0.0`), warp grads flow. All 15 selftests pass.
+- Layout: `check_torch_layout` clean (`_rotate_learned` is a declared boundary).
+- **Speed gate PASSED**: baseline_real_pm B8 T2048 bf16 on 4090 — baseline avg
+  **65.9k** tok/s vs chrono **66.6k** tok/s (equal within noise). Mem +1.6 GB
+  (per-head cos/sin x16 layers; recomputed under grad-ckpt, irrelevant at 96 GB).
+- Decode NOT implemented for chrono (chunked/prefill only) — run rungs with
+  `--gen_every 0`; val/probe use the chunked path.
+
+**How to run the rung (the "main" run on the RTX Pro 6000):**
+```bash
+# on the remote box, code already pulled to c-hash below:
+cd ~/Development/qllm-private
+CHRONO=1 TAG=wikitext_chrono_fair \
+  tmux new-session -d -s sempty_chrono "bash v13_sempty/tmp_wikitext_fair.sh"
+# identical geometry to the 23.81 baseline (T=2048 B18 10ep 1.18B tok);
+# compare best val_ppl vs 23.81 and the wiki recall probe.
+```
+`tmp_wikitext_fair.sh` now takes `CHRONO=1` (appends `--chrono`). First run on
+a fresh box tokenizes WikiText (sl2048 cache) once. Log name carries the commit
++ timestamp (naming rule in AGENTS.md); the in-file header prints `[ladder]
+chrono=True`.
+
+**Next novel rungs if N1 wins** (all keep the scan / are elementwise, see
+EXPERIMENTS "Positioning"): #4 phase-resonant output gate (memory is underused,
+pam_scale 0.12-0.36); #3 interference-erase (parallel-safe delta for recall);
+#2 frequency-multiplexed keys (multi-timescale from one state).
+
 * Real-101M (`baseline_real_pm`) trains at **~64k tok/s** (was 5.8k), peak
   **7.6 GiB** at B32 T256 with grad-checkpointing OFF (was 21 GB at B8 with
   it on). One WikiText-103 epoch (118M tok) ≈ **30 min**.

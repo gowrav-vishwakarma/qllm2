@@ -22,6 +22,7 @@ WARMUP="${WARMUP:-500}"
 LR="${LR:-1e-4}"
 RECALL_FRAC="${RECALL_FRAC:-0}"
 GRAD_CKPT="${GRAD_CKPT:-1}"
+CHRONO="${CHRONO:-0}"          # N1 Chrono-PAM content-modulated rotary (real arm)
 
 HASH=$(git rev-parse --short HEAD)
 STAMP=$(date +%Y%m%d_%H%M)
@@ -30,6 +31,7 @@ echo "=== ${TAG} start $(date -u +%Y-%m-%dT%H:%M:%SZ) commit=$HASH log=$LOG ==="
 EXTRA=()
 if [ "$RECALL_FRAC" != "0" ]; then EXTRA+=(--recall_frac "$RECALL_FRAC"); fi
 if [ "$GRAD_CKPT" = "1" ]; then EXTRA+=(--gradient_checkpointing); fi
+if [ "$CHRONO" = "1" ]; then EXTRA+=(--chrono); fi
 .venv/bin/python -u -m v13_sempty.train \
   --preset "$PRESET" \
   --dataset wikitext103 \

@@ -119,7 +119,8 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
     print(_pm)
 
     # --- ladder (only non-default arch flags) -------------------------------
-    _ladder = [k for k in ('short_conv', 'n_states', 'vault', 'delta', 'cond_mem')
+    _ladder = [k for k in ('short_conv', 'n_states', 'vault', 'delta', 'cond_mem',
+                           'chrono')
                if getattr(cfg, k) not in (False, 1)]
     if _ladder:
         print('[ladder] ' + " ".join(f"{k}={getattr(cfg, k)}" for k in _ladder))
@@ -744,6 +745,8 @@ def build_argparser():
     p.add_argument('--vault', action='store_true', help='A2b: pinned state + protect gate')
     p.add_argument('--delta', action='store_true', help='A3: delta erase/write')
     p.add_argument('--cond_mem', action='store_true', help='A4: conditional n-gram memory')
+    p.add_argument('--chrono', action='store_true',
+                   help='N1: Chrono-PAM content-modulated rotary retention (real arm)')
     return p
 
 
@@ -768,6 +771,8 @@ def main():
         cfg.delta = True
     if args.cond_mem:
         cfg.cond_mem = True
+    if args.chrono:
+        cfg.chrono = True
     device = torch.device(args.device)
     set_kernel_enabled(args.fused_pam)
 

@@ -40,6 +40,14 @@ class PAMConfig:
     cond_mem_slots: int = 1 << 18    # table rows per (order, head)
     cond_mem_dim: int = 64           # table row width
     cond_mem_layers: tuple = (0, 1)  # blocks after which to add the memory read
+    # N1 Chrono-PAM: content-modulated rotary retention (novel). A per-head
+    # learned time-warp g_t=exp(clamp(W x)) scales the per-step RoPE angle;
+    # cumulative phase = cumsum_t(inv_freq * g_t). Zero-init W => g=1 => this is
+    # EXACTLY standard RoPE (bit-parity), so it is a safe drop-in on the 23.81
+    # baseline. Equivalent to a complex rotating retention folded into q,k, so
+    # the fused kernel is untouched (speed preserved). Chunked/prefill only;
+    # decode is gated out (run rungs with --gen_every 0). Real arm only.
+    chrono: bool = False
 
 
 def _base_flat(**kw) -> PAMConfig:

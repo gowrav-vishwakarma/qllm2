@@ -557,6 +557,23 @@ class RealPAMLayer(nn.Module):
             self.erase_proj = NamedLinear(self.model_dim, self.decay_out)
             self.write_proj = NamedLinear(self.model_dim, self.decay_out)
 
+        # N1 Chrono-PAM: content-modulated rotary retention. A per-head time
+        # warp g_t = exp(clamp(W x, +/-3)) multiplies the per-step RoPE angle;
+        # the cumulative phase is cumsum_t(inv_freq * g_t). W is zero-init
+        # (_zero_init marker below), so at start g=1 and the phase is exactly
+        # pos*inv_freq == standard RoPE (parity test). Folds a complex rotating
+        # retention into q,k -> the fused kernel is untouched. Off unless chrono.
+        self.chrono = cfg.chrono
+        if self.chrono:
+            P = cfg.head_dim // 2
+            self.register_buffer(
+                'chrono_inv_freq',
+                1.0 / (10000.0 ** (torch.arange(P).float() / P)),
+                persistent=False,
+            )
+            self.warp_proj = NamedLinear(self.model_dim, self.decay_out)
+            self.warp_proj._zero_init = True  # identity-init: g=1 == plain RoPE
+
     # ── small named helpers ──────────────────────────────────────────────────
 
     def _as_token(self, x: NamedTensor) -> NamedTensor:
@@ -590,6 +607,14 @@ class RealPAMLayer(nn.Module):
             qkv = self._short_conv(qkv, batch, time)
         qkv = qkv.to(batch, time, self.qkv_slot, self.heads, self.head_feature)
         queries, keys, values = (qkv.select(self.qkv_slot, slot) for slot in (0, 1, 2))
+
+        if self.use_rope and self.chrono:
+            # N1: content-modulated rotary (learned time-warp). Replaces the
+            # fixed RoPE rotation on q/k; identical to it at init.
+            layout = (batch, self.heads, time, self.head_feature)
+            queries, keys = self._rotate_learned(queries, keys, tokens,
+                                                 batch, time)
+            return (queries.to(*layout), keys.to(*layout), values.to(*layout))
 
         if self.use_rope:
             position_end = step_offset + tokens.size(time)
@@ -635,6 +660,46 @@ class RealPAMLayer(nn.Module):
         xc = nn.functional.pad(xc, (self._conv_k - 1, 0))
         conv = nn.functional.silu(self.qkv_conv(xc)).transpose(1, 2)
         return named(x + conv, (batch, time, self.qkv_fused))  # named-exit: conv boundary
+
+    def _rotate_learned(self, queries, keys, tokens, batch, time):
+        """N1 Chrono-PAM rotary: content-modulated cumulative phase on q/k.
+
+        Per-head time-warp ``g_t = exp(clamp(W x, +/-3))`` scales the per-step
+        RoPE angle ``inv_freq``; the position phase is the *causal cumulative*
+        sum ``Phi_t = sum_{j<t} inv_freq * g_j`` (exclusive, so ``Phi_0 = 0``).
+        With ``W`` zero-init, ``g = 1`` and ``Phi_t = t * inv_freq`` -- exactly
+        ``build_rope_cache_real`` (bit-parity with the baseline at start).
+
+        This folds a complex rotating retention ``gamma_t = e^{i theta_t}`` into
+        q/k, so the fused magnitude-retention kernel is untouched (speed held).
+        Raw-torch boundary: cumsum over the time axis, chunked/prefill only.
+        """
+        B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
+        P = K // 2
+        q = queries.raw(batch, self.heads, time, self.head_feature)   # [B,H,T,K]
+        k = keys.raw(batch, self.heads, time, self.head_feature)
+        # per-head warp in (~0.05, 20); zero-init W => exactly 1.0. Since inv is
+        # constant in t, cumsum(inv*g) = inv * cumsum(g): warp a per-head clock
+        # tau = cumsum(g) once ([B,H,T]) instead of a [B,H,T,P] cumsum.
+        g = torch.exp(
+            self.warp_proj(tokens).alias(self.decay_out, self.heads)
+                .raw(batch, self.heads, time).float().clamp(-3.0, 3.0))  # [B,H,T] fp32
+        tau = torch.cumsum(g, dim=2) - g                              # exclusive: tau_0=0
+        inv = self.chrono_inv_freq.to(device=q.device)               # [P] fp32
+        phi = tau.unsqueeze(-1) * inv.view(1, 1, 1, P)                # [B,H,T,P] fp32
+        # cos/sin fp32 for phase accuracy, cast to q dtype so the rotation and
+        # the tensors autograd retains for backward stay in bf16 (memory/speed).
+        cos = torch.cos(phi).to(q.dtype)
+        sin = torch.sin(phi).to(q.dtype)                             # [B,H,T,P]
+        qp = q.reshape(B, H, T, P, 2)
+        kp = k.reshape(B, H, T, P, 2)
+        qe, qo = qp.unbind(-1)
+        ke, ko = kp.unbind(-1)
+        qr = torch.stack((qe * cos - qo * sin, qe * sin + qo * cos), dim=-1)
+        kr = torch.stack((ke * cos - ko * sin, ke * sin + ko * cos), dim=-1)
+        layout = (batch, self.heads, time, self.head_feature)
+        return (named(qr.reshape(B, H, T, K), layout),  # named-exit: learned-rotary boundary
+                named(kr.reshape(B, H, T, K), layout))
 
     def _decay(self, tokens: NamedTensor) -> NamedTensor:
         """Per-head retention in (0, 1): exp(-softplus(linear(token) + bias))."""
@@ -791,10 +856,10 @@ class RealPAMLayer(nn.Module):
             else:
                 output, new_state = self._chunked(tokens, queries, keys, values, decay)
         else:
-            if self.n_states > 1 or self.delta:
+            if self.n_states > 1 or self.delta or self.chrono:
                 raise NotImplementedError(
-                    "multi-state / delta decode is not implemented; run rungs with "
-                    "--gen_every 0 (probe/val use the chunked path)")
+                    "multi-state / delta / chrono decode is not implemented; run "
+                    "rungs with --gen_every 0 (probe/val use the chunked path)")
             output, new_state = self._stepwise(tokens, queries, keys, values, decay, state)
 
         out = self.o_proj(output.alias(self.head_row, self.head_feature)
@@ -899,6 +964,13 @@ class LM(nn.Module):
             embed_weights = {self.embed.embed}
         for module in self.modules():
             if isinstance(module, (nn.Linear, NamedLinear)):
+                if getattr(module, '_zero_init', False):
+                    # Identity-init projections (e.g. Chrono warp): zero weight
+                    # and bias so the layer is a no-op / RoPE at start.
+                    nn.init.zeros_(module.weight)
+                    if module.bias is not None:
+                        nn.init.zeros_(module.bias)
+                    continue
                 nn.init.normal_(module.weight, std=0.02)
                 if module.bias is not None:
                     nn.init.zeros_(module.bias)

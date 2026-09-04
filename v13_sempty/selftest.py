@@ -455,6 +455,37 @@ def test_complex_fused_kernel_parity(batch_size=2, seq_len=130, seed=0):
     return True
 
 
+def test_chrono_rotary_parity(batch_size=2, seq_len=24, seed=0):
+    """N1 Chrono-PAM at init == baseline RoPE (bit-parity) + warp grads flow.
+
+    The learned time-warp W is zero-init, so g=1 and the cumulative phase is
+    exactly pos*inv_freq -- identical to fixed RoPE. Runs on CPU (no CUDA
+    needed): chrono-on logits must equal the same model with chrono flipped
+    off, and one backward must reach every warp_proj.
+    """
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.chrono = True
+    model = LM(cfg).eval()
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+    logits_on, _, _ = model.forward(ids)
+    for blk in model.blocks:
+        blk.pam.chrono = False
+    logits_off, _, _ = model.forward(ids)
+    d = (logits_on - logits_off).abs().max().item()
+    assert d < 1e-4, f"chrono@init != baseline RoPE: {d:.3e}"
+    for blk in model.blocks:
+        blk.pam.chrono = True
+    model.train()
+    model.zero_grad(set_to_none=True)
+    logits, _, _ = model.forward(ids)
+    F.cross_entropy(logits.reshape(-1, cfg.vocab_size), ids.reshape(-1)).backward()
+    n_none = sum(1 for blk in model.blocks if blk.pam.warp_proj.weight.grad is None)
+    assert n_none == 0, f"{n_none} warp_proj got no grad"
+    print(f"  max |logit diff| = {d:.3e}   warp grads: all {len(model.blocks)} present")
+    return True
+
+
 def main():
     torch.set_num_threads(2)
     tests = [
@@ -472,6 +503,7 @@ def main():
         test_real_generate_smoke,
         test_real_fused_kernel_parity,
         test_complex_fused_kernel_parity,
+        test_chrono_rotary_parity,
     ]
     failures = 0
     for t in tests:
