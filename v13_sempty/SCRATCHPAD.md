@@ -109,11 +109,30 @@ On the RTX Pro 6000 run these with `GRAD_CKPT=0` (96 GB; the ckpt default is
 a 4090 fit). **Measured 2026-09-04** (chrono, B18 T2048, 60-step smoke):
 grad-ckpt OFF = **~102k tok/s, peak 29.1 GB** vs ON = 83k tok/s, 8.9 GB —
 +23 %, a 10-epoch rung drops from 4.0 h to ~3.25 h. Keep B=18 T=2048 for
-comparability. Launch template for the next rung:
+comparability. Launch template for the next rung — **put the env vars INSIDE
+the tmux command string**:
 ```bash
-GRAD_CKPT=0 CHRONO=1 SHORT_CONV=1 TAG=wikitext_chrono_a1conv_fair \
-  tmux new-session -d -s sempty_a1 "bash v13_sempty/tmp_wikitext_fair.sh"
+tmux new-session -d -s sempty_n4 \
+  "GRAD_CKPT=0 CHRONO=1 OUT_GATE=1 TAG=wikitext_chrono_n4gate_fair bash v13_sempty/tmp_wikitext_fair.sh"
 ```
+**PITFALL (bit us 2026-09-04):** `VAR=x tmux new-session ...` only works when
+it *starts* the tmux server. Once a server exists, new sessions inherit the
+*server's* environment, so the env prefix is silently ignored and you launch
+whatever the first session's env said (we got a duplicate A1 instead of N4).
+**Do not run two rungs concurrently** on the 6000: measured 39k+39k = 78k
+tok/s combined vs 85k single (−8%); queue instead
+(`while pgrep -f <ckpt-dir-tag>; do sleep 60; done; ...` in the tmux command).
+
+**Running / queued (2026-09-04 11:00Z, RTX Pro 6000):**
+* `sempty_a1` — A1 `SHORT_CONV=1 CHRONO=1 GRAD_CKPT=0`, commit `817aa35`,
+  log `logs/v13_sempty_wikitext_chrono_a1conv_fair_817aa35_20260904_1057.log`,
+  85k tok/s, 33 GB, ETA ~4 h (finish ~15:00Z). Compare vs **23.14**. Note the
+  speed tax: plain-torch depthwise conv costs ~17 % tok/s (102k → 85k) — A1
+  needs a clear PPL win to pass sROI.
+* `sempty_n4` — N4 `OUT_GATE=1 CHRONO=1 GRAD_CKPT=0` (commit `3c7b9b9`)
+  queued; auto-starts when the A1 process exits, log will be
+  `logs/v13_sempty_wikitext_chrono_n4gate_fair_<hash>_<stamp>.log`. Speed gate
+  measured −2.8 %. Compare vs 23.14. Arm the watchdog on it when it starts.
 Data/scale-up (DCLM/FineWeb mix via `--dataset pretrain_mix`, `c7a343b`) comes
 *after* the ladder settles the architecture at 100M.
 
