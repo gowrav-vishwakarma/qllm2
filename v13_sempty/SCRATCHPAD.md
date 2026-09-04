@@ -156,6 +156,47 @@ while a run is live) and the `SHORT_CONV` knob is gone.
 **Done 2026-09-04 on the RTX Pro 6000:** N1 chrono 23.14 (KEEP) → A1 short
 conv 23.49 (FAIL, removed) → N4 gate 22.96 (KEEP). Reference = `CHRONO=1
 OUT_GATE=1`.
+
+## Scale plan (Phase 3, decided 2026-09-04) — data, not more WikiText rungs
+
+Why now: three rungs gave −0.67 / +0.35 / −0.18; WikiText-103 PPL at 100M is
+saturating 0.27 from the transformer. The open questions (does the arch hold on
+diverse data at 3× the tokens; can it be trained to recall; can it chat) need
+diverse data. Remaining ladder rungs (A3 delta, A4 cond-mem, A2) are *recall*
+levers and will be ablated later on the mixed recipe with the recall probe.
+
+1. **Base pretrain (RUNNING, see below):** `v13_sempty/tmp_pretrain_mix.sh` —
+   real-102M `baseline_real_pm` + chrono + out_gate, live stream
+   dclm-edu .45 / fineweb-edu .42 / smoltalk2-Mid as ChatML text .10 /
+   synthetic recall .03 (web-only first 300M tok), **3.0B tokens**, B18 T2048
+   (81,380 steps), lr 2e-4 warmup 1000 cosine, wd 0.01, **dropout 0**, bf16,
+   grad-ckpt off, **chat vocab 50261** (`<|im_start|> <|im_end|> <think>
+   </think>` = ids 50257–50260, default-on for `--dataset mix`). Primary metric
+   = streaming holdout val (244 chunks); `[wiki_val]` is a secondary anchor and
+   is NOT comparable 1:1 with 22.96 (different data, single pass — expect it to
+   sit higher). 86.5k tok/s live (tokenization on the main thread, −13% vs the
+   cached loader) → ~9.7 h.
+2. **SFT** on smoltalk2 `SFT` (v7 `load_smoltalk2`, assistant-only loss, ChatML)
+   from the best base ckpt — needs a v13_sempty SFT entry point (not written).
+3. **Recall probe + A3 `--delta` ablation** on the mixed recipe (short runs).
+4. If (1) is healthy: **scale params** (~350M) on more tokens.
+
+Judging (1): holdout val PPL should fall monotonically; the wiki anchor should
+keep improving through the blend switch at 300M tok (step ~8,140); recall docs
+enter at that point too. Watch `[diag]` pam/gate as before. Sample prompts via
+`generate.py` on `checkpoints_v13_sempty/mix3b_chrono_gate_303c7fb/best_model.pt`
+(the tokenizer is the chat one — `_config_from_ckpt` reads vocab from the ckpt).
+HF auth: a token is stored on the RTX box at `~/.cache/huggingface/token`
+(mode 600, never in the repo or logs; 2026-09-04) — the first launch streamed
+unauthenticated for 4 min and was restarted so the 10 h stream has the higher
+rate limit. `huggingface_hub` picks the file up automatically.
+
+**Running (2026-09-04 18:56Z, RTX Pro 6000):** tmux `sempty_mix`, commit
+`303c7fb`, log `logs/v13_sempty_mix3b_chrono_gate_303c7fb_20260904_1856.log`,
+ckpt dir `checkpoints_v13_sempty/mix3b_chrono_gate_303c7fb/`. ETA ~04:30Z
+2026-09-05. Watchdog: `bash v13_sempty/tmp_wiki_watchdog.sh <log> 81380 2940`
+(re-arm on wake). No `--resume` exists: if the box dies, the run restarts from
+scratch (latest.pt every 4000 steps is for inspection only).
 Data/scale-up (DCLM/FineWeb mix via `--dataset pretrain_mix`, `c7a343b`) comes
 *after* the ladder settles the architecture at 100M.
 
