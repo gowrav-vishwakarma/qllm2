@@ -191,12 +191,35 @@ HF auth: a token is stored on the RTX box at `~/.cache/huggingface/token`
 unauthenticated for 4 min and was restarted so the 10 h stream has the higher
 rate limit. `huggingface_hub` picks the file up automatically.
 
-**Running (2026-09-04 18:56Z, RTX Pro 6000):** tmux `sempty_mix`, commit
-`303c7fb`, log `logs/v13_sempty_mix3b_chrono_gate_303c7fb_20260904_1856.log`,
-ckpt dir `checkpoints_v13_sempty/mix3b_chrono_gate_303c7fb/`. ETA ~04:30Z
-2026-09-05. Watchdog: `bash v13_sempty/tmp_wiki_watchdog.sh <log> 81380 2940`
-(re-arm on wake). No `--resume` exists: if the box dies, the run restarts from
-scratch (latest.pt every 4000 steps is for inspection only).
+**Running (2026-09-04 19:15Z, RTX Pro 6000):** tmux `sempty_mix`, commit
+`bbc12e9`, log `logs/v13_sempty_mix3b_chrono_gate_bbc12e9_20260904_1915.log`,
+ckpt dir `checkpoints_v13_sempty/mix3b_chrono_gate_bbc12e9/` (`latest.pt`
+every 1000 steps = full resume state, `best_model.pt` on holdout-val best,
+`step_XXXXXX.pt` every 10k). 85.5k tok/s → **ETA ~10:30Z 2026-09-05**.
+Watchdog: `bash v13_sempty/tmp_wiki_watchdog.sh <log> 81380 2940` (re-arm on
+wake). Two earlier launches today (`303c7fb` 18:53/18:56) were killed at
+<600 steps and their logs deleted: no resume support yet and the blend warmup
+was silently inactive (see below).
+
+**Resume (2026-09-04, `bbc12e9`).** `--resume auto|<path>` restores model,
+optimizer, LR schedule, AMP scaler, step/token counters, best-val, all RNG
+streams and the **data-stream cursor** (per-source docs consumed + tokens
+yielded, saved in every ckpt); each source skips its consumed docs on resume so
+nothing is trained on twice (the ≤10k buffered chunks ≈20M tok are lost per
+restart, not repeated). The launcher runs `--resume auto` in a retry loop
+(MAX_RETRIES=5), so a crash self-heals inside tmux. **If the box itself
+rebooted:** `tmux new-session -d -s sempty_mix "TAG=mix3b_chrono_gate
+CKPT_DIR=checkpoints_v13_sempty/mix3b_chrono_gate_bbc12e9
+RESUME_LOG=logs/v13_sempty_mix3b_chrono_gate_bbc12e9_20260904_1915.log bash
+v13_sempty/tmp_pretrain_mix.sh"` (same commit checked out). Verified on the
+real stream: killed at step 30 → resumed with the identical LR at 31/32,
+finished exactly on budget. `[resume]` lines in the log show the cursor.
+**Bug found on the way:** `blend_warmup_tokens` gates on `sum(token_counters)`
+inside `v7._blend_interleave_text_iters`, and `v13_sempty/train.py` never
+passed the counters → warmup was a no-op in the 18:56 launch. Now passed;
+verified (0 chat/recall docs before the threshold). Note the ~20M-token lag:
+the interleaver measures *yielded* tokens while the shuffle buffer holds 10k
+chunks ahead, so the blend switch lands ≈300M+20M tokens in.
 Data/scale-up (DCLM/FineWeb mix via `--dataset pretrain_mix`, `c7a343b`) comes
 *after* the ladder settles the architecture at 100M.
 
