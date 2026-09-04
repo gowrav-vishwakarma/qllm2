@@ -47,7 +47,12 @@ logs/<version>_<tag>_<gitshorthash>_<YYYYMMDD_HHMM>.log
   Typical: (local) commit → push origin → (remote) `cd
   ~/Development/qllm-private && git pull` → launch in tmux.
 - Same rules as below apply on the remote: long runs ONLY in tmux, log to a
-  file with the naming convention, keep the in-file header block.
+ file with the naming convention, keep the in-file header block.
+- `v13_sempty` imports `sempyt`, which is NOT a pip dep of this repo. On any
+ box it must be cloned (`https://github.com/gowrav-vishwakarma/sempyt`, e.g.
+ `~/Development/sempyt`) and wired into the venv via a `.pth`:
+ `echo ~/Development/sempyt/src > <site-packages>/sempyt_src.pth`. Done on
+ the RTX box 2026-09-04. WikiText-103 + gpt2 tokenizer need no HF token.
 
 ## Long training
 - ONLY in tmux (`tmux new-session -d`), never hub/bash-managed.

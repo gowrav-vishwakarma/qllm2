@@ -55,6 +55,18 @@ for the rotation (keeps retained activations small).
 - Decode NOT implemented for chrono (chunked/prefill only) — run rungs with
   `--gen_every 0`; val/probe use the chunked path.
 
+**LAUNCHED 2026-09-04 06:20Z on the RTX Pro 6000** (tmux `sempty_chrono`,
+commit `7b24e44`): `logs/v13_sempty_wikitext_chrono_fair_7b24e44_20260904_0620.log`
+(on the remote box, `~/Development/qllm-private`). Header confirms
+`'chrono': True`, B18 T2048 32130 steps = 10 ep — identical geometry to the
+23.81 baseline. ~75-83k tok/s (vs 45.5k on the 4090), ETA ~4.5 h. The
+`[gen @ 8000]` lines will say `failed: ... chrono decode not implemented` —
+expected and harmless (try/except; val/ckpt use the chunked path). Remote
+setup notes: `sempyt` is NOT a pip dep — it is cloned at
+`~/Development/sempyt` and wired via `site-packages/sempyt_src.pth` (same as
+local). WikiText/gpt2 need no HF token (public). Watch:
+`ssh ubuntu@34.131.203.207 'grep -E "^step|val @" ~/Development/qllm-private/logs/v13_sempty_wikitext_chrono_fair_*.log | tail'`.
+
 **How to run the rung (the "main" run on the RTX Pro 6000):**
 ```bash
 # on the remote box, code already pulled to c-hash below:
