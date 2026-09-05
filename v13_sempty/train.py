@@ -537,17 +537,27 @@ class Trainer:
             'g_norm': [],
             'w_norm': [],
             'ret': [],
+            'dt_bias_heads': None,   # per-head dt_bias, averaged over layers
         }
+        # Per-head view (mean over layers): with dt_bias_spread the heads form a
+        # ladder (-4 ... -12 at spread 8) whose per-layer head-MEAN is a flat -8,
+        # so the 'dtbias=' row alone cannot show whether the optimizer keeps or
+        # collapses the long heads (first L1 run, 2026-09-05).
+        head_acc = None
         for i, b in enumerate(self._blocks):
             out['cgu_scale'].append(float(b.cgu_scale.detach()))
             out['pam_scale'].append(float(b.pam_scale.detach()))
-            out['dt_bias'].append(float(b.pam.dt_bias.detach().mean()))
+            db = b.pam.dt_bias.detach().float()
+            out['dt_bias'].append(float(db.mean()))
+            head_acc = db.clone() if head_acc is None else head_acc + db
             out['g_norm'].append(g_norms[i])
             w = 0.0
             for p in b.parameters():
                 w += float(p.detach().float().pow(2).sum())
             out['w_norm'].append(w ** 0.5)
             out['ret'].append(layer_ret[i] if i < len(layer_ret) else float('nan'))
+        if head_acc is not None and head_acc.dim() >= 1:
+            out['dt_bias_heads'] = (head_acc / len(self._blocks)).flatten().tolist()
         return out
 
     def _log_diag(self, d: dict):
@@ -566,6 +576,12 @@ class Trainer:
             f"ret={_row('ret', '{:.2f}')}",
             flush=True,
         )
+        if d.get('dt_bias_heads'):
+            print(
+                f"  [diag] dtbias/head(layer-mean)="
+                f"{' '.join('{:.2f}'.format(v) for v in d['dt_bias_heads'])}",
+                flush=True,
+            )
         print(
             f"  [diag] gnorm={_row('g_norm', '{:.1e}')}  "
             f"wnorm={_row('w_norm', '{:.1f}')}",

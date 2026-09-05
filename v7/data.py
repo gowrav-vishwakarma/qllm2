@@ -144,15 +144,42 @@ class StreamingTokenChunkDataset(IterableDataset):
         self.token_counters = token_counters
         self.default_source = default_source
 
-    def _yield_chunk(self, yielded_tokens: int, source: str) -> int:
+    def _yield_chunk(self, yielded_tokens: int, src_counts: Dict[str, int]) -> int:
+        """Credit each source with the tokens IT contributed to this chunk.
+
+        Before 2026-09-05 the whole chunk was credited to the doc that completed
+        it, so short docs sitting in the buffer were booked to whichever long
+        doc arrived next (PG-19 got ~89 % in the first L1 run while ~95 % of the
+        drawn tokens actually were PG-19 - both numbers wrong). Per-source
+        ``token_counters`` feed the blend warmup and the resume cursor.
+        """
         if self.token_counters is not None:
-            self.token_counters[source] = self.token_counters.get(source, 0) + self.seq_len
+            for src, n in src_counts.items():
+                self.token_counters[src] = self.token_counters.get(src, 0) + n
         return yielded_tokens + self.seq_len
 
     def __iter__(self):
+        from collections import deque
+
         buffer: List[int] = []
+        # (source, n_tokens) runs aligned with ``buffer``; popped as chunks leave
+        runs: deque = deque()
         yielded_tokens = 0
-        pending: List[dict] = []
+        pending: List[Tuple[Dict[str, int], dict]] = []
+        step = self.seq_len + 1
+
+        def _take_runs(n: int) -> Dict[str, int]:
+            out: Dict[str, int] = {}
+            while n > 0 and runs:
+                src, cnt = runs[0]
+                take = min(cnt, n)
+                out[src] = out.get(src, 0) + take
+                n -= take
+                if take == cnt:
+                    runs.popleft()
+                else:
+                    runs[0] = (src, cnt - take)
+            return out
 
         for item in self.text_iterator:
             if isinstance(item, tuple):
@@ -166,32 +193,34 @@ class StreamingTokenChunkDataset(IterableDataset):
                 continue
             ids.append(self.tokenizer.eos_token_id)
             buffer.extend(ids)
+            runs.append((source, len(ids)))
 
-            while len(buffer) >= self.seq_len + 1:
-                chunk = buffer[: self.seq_len + 1]
-                buffer = buffer[self.seq_len + 1 :]
+            while len(buffer) >= step:
+                chunk = buffer[:step]
+                buffer = buffer[step:]
+                src_counts = _take_runs(step)
                 sample = {
                     'input_ids': torch.tensor(chunk[:-1], dtype=torch.long),
                     'labels': torch.tensor(chunk[1:], dtype=torch.long),
                 }
                 if self.shuffle_buffer > 0:
-                    pending.append((source, sample))
+                    pending.append((src_counts, sample))
                     if len(pending) >= self.shuffle_buffer:
                         idx = torch.randint(len(pending), (1,)).item()
-                        src, out = pending.pop(idx)
-                        yielded_tokens = self._yield_chunk(yielded_tokens, src)
+                        sc, out = pending.pop(idx)
+                        yielded_tokens = self._yield_chunk(yielded_tokens, sc)
                         yield out
                         if self.max_tokens and yielded_tokens >= self.max_tokens:
                             return
                 else:
-                    yielded_tokens = self._yield_chunk(yielded_tokens, source)
+                    yielded_tokens = self._yield_chunk(yielded_tokens, src_counts)
                     yield sample
                     if self.max_tokens and yielded_tokens >= self.max_tokens:
                         return
 
         while pending:
-            src, out = pending.pop()
-            yielded_tokens = self._yield_chunk(yielded_tokens, src)
+            sc, out = pending.pop()
+            yielded_tokens = self._yield_chunk(yielded_tokens, sc)
             yield out
             if self.max_tokens and yielded_tokens >= self.max_tokens:
                 return
@@ -1191,19 +1220,31 @@ def _blend_interleave_text_iters(
     token_counters: Optional[Dict[str, int]] = None,
     seed: int = 42,
 ) -> Iterator[Tuple[str, str]]:
-    """Weighted round-robin with a grammar warmup.
+    """Token-weighted blend with a grammar warmup.
+
+    ``weights`` are TOKEN shares, not document shares. Each pick goes to the
+    alive source with the largest token deficit ``w_i * total - served_i``
+    (smooth weighted round-robin), where ``served_i`` is estimated from the
+    text length (``chars / _CHARS_PER_TOKEN``) so no tokenizer call is needed
+    here. Before 2026-09-05 this drew one *document* per pick with the weights,
+    which made the realized share = weight x mean doc length: with PG-19 pieces
+    (~100k tok) next to dclm docs (~1k tok) a nominal 22 % became ~95 % books
+    (first L1 run, killed at 3.5k steps: holdout PPL 3x worse than mix-3B at
+    matched tokens while train PPL looked better). Sources with similar doc
+    lengths (the mix-3B recipe) are unaffected in expectation.
 
     While total tokens consumed (``sum(token_counters.values())``) is below
-    ``warmup_tokens``, only draw from ``warmup_sources`` (web/grammar). After the
-    warmup, the full weighted blend applies. ``warmup_tokens=0`` disables warmup.
+    ``warmup_tokens``, only ``warmup_sources`` (web/grammar) are eligible; the
+    deficits are computed over the eligible set so the warmup keeps their
+    relative shares. ``warmup_tokens=0`` disables warmup. Deterministic given
+    the source streams, so resume (per-source skip cursors) reproduces the
+    same interleaving order.
     """
-    import random as _random
-
-    rng = _random.Random(seed)
     names = [n for n, _ in tagged_iters]
     iters = [iter(it) for _, it in tagged_iters]
     weights = list(weights) if weights else [1.0] * len(iters)
     alive = [True] * len(iters)
+    served = [0.0] * len(iters)          # estimated tokens handed out per source
     warmup_set = set(warmup_sources)
     can_warmup = warmup_tokens > 0 and token_counters is not None and bool(warmup_set)
     while any(alive):
@@ -1215,12 +1256,20 @@ def _blend_interleave_text_iters(
                 cand = [i for i, a in enumerate(alive) if a]
         else:
             cand = [i for i, a in enumerate(alive) if a]
-        w = [weights[i] for i in cand]
-        choice = rng.choices(cand, weights=w, k=1)[0]
+        wsum = sum(weights[i] for i in cand) or 1.0
+        total = sum(served[i] for i in cand)
+        # largest deficit first; ties (start) resolve in declaration order
+        choice = max(cand, key=lambda i: weights[i] / wsum * total - served[i])
         try:
-            yield names[choice], next(iters[choice])
+            text = next(iters[choice])
         except StopIteration:
             alive[choice] = False
+            continue
+        served[choice] += max(len(text), 1) / _CHARS_PER_TOKEN
+        yield names[choice], text
+
+
+_CHARS_PER_TOKEN = 3.9   # GPT-2 BPE on English web/books (measured 3.6-4.2)
 
 
 # ── smoltalk2 streaming (format-aware chat/reasoning) ────────────────────────
