@@ -506,7 +506,10 @@ class RealPAMLayer(nn.Module):
         # The decay: one number per head, read from the token's channels.
         self.decay_out = Dim("decay_out", cfg.n_heads)
         self.dt_proj = NamedLinear(self.model_dim, self.decay_out)
-        self.dt_bias = nn.Parameter(torch.zeros(cfg.n_heads) + cfg.base_dt_bias)
+        # R1: per-head ladder of initial decay biases (spread 0 == all at base).
+        self.dt_bias = nn.Parameter(
+            cfg.base_dt_bias
+            - cfg.dt_bias_spread * torch.linspace(0.0, 1.0, cfg.n_heads))
 
         # RoPE table, built once outside the graph (declared boundary).
         if cfg.use_rope:

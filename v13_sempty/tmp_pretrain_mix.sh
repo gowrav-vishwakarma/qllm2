@@ -46,6 +46,13 @@ DROPOUT="${DROPOUT:-0.0}"
 GRAD_CKPT="${GRAD_CKPT:-0}"    # 96 GB box: off (+23 % tok/s); 1 fits the 4090
 CHRONO="${CHRONO:-1}"
 OUT_GATE="${OUT_GATE:-1}"
+# Retention ladder (one variable per run, stacked on chrono+gate; compare the
+# recall-horizon curve, holdout PPL is the guard):
+DT_SPREAD="${DT_SPREAD:-0}"    # R1 per-head decay-bias ladder (0 = reference)
+NSTATES="${NSTATES:-0}"        # A2 states per head (0 = preset default 1)
+VAULT="${VAULT:-0}"            # A2b pinned state + protect gate (needs NSTATES>=2)
+DELTA="${DELTA:-0}"            # A3 delta erase/write
+GEN_EVERY="${GEN_EVERY:-4000}" # set 0 for vault/delta (no decode path yet)
 VAL_EVERY="${VAL_EVERY:-2000}"
 SAVE_EVERY="${SAVE_EVERY:-1000}"       # latest.pt (full resume state) every ~7 min
 KEEP_EVERY="${KEEP_EVERY:-10000}"      # milestone step_XXXXXX.pt copies (~1.2 GB each)
@@ -62,6 +69,10 @@ EXTRA=()
 if [ "$GRAD_CKPT" = "1" ]; then EXTRA+=(--gradient_checkpointing); fi
 if [ "$CHRONO" = "1" ]; then EXTRA+=(--chrono); fi
 if [ "$OUT_GATE" = "1" ]; then EXTRA+=(--out_gate); fi
+if [ "$DT_SPREAD" != "0" ]; then EXTRA+=(--dt_spread "$DT_SPREAD"); fi
+if [ "$NSTATES" != "0" ]; then EXTRA+=(--n_states "$NSTATES"); fi
+if [ "$VAULT" = "1" ]; then EXTRA+=(--vault); fi
+if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi
 
 # Auto-resume loop: --resume auto picks up <CKPT_DIR>/latest.pt when it exists
 # (fresh start otherwise), restoring model/optimizer/LR schedule/step/tokens/
@@ -93,7 +104,7 @@ while :; do
   --seed 42 \
   --log_interval 50 \
   --val_every "$VAL_EVERY" \
-  --gen_every 4000 \
+  --gen_every "$GEN_EVERY" \
   --gen_max_tokens 80 \
   --save_every_steps "$SAVE_EVERY" \
   --keep_every_steps "$KEEP_EVERY" \

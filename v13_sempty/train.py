@@ -123,8 +123,8 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
 
     # --- ladder (only non-default arch flags) -------------------------------
     _ladder = [k for k in ('n_states', 'vault', 'delta', 'cond_mem',
-                           'chrono', 'out_gate')
-               if getattr(cfg, k) not in (False, 1)]
+                           'chrono', 'out_gate', 'dt_bias_spread')
+               if getattr(cfg, k) not in (False, 1, 0.0)]
     if _ladder:
         print('[ladder] ' + " ".join(f"{k}={getattr(cfg, k)}" for k in _ladder))
 
@@ -858,6 +858,9 @@ def build_argparser():
                    help='N1: Chrono-PAM content-modulated rotary retention (real arm)')
     p.add_argument('--out_gate', action='store_true',
                    help='N4: per-head content-dependent read-out gate (real arm)')
+    p.add_argument('--dt_spread', type=float, default=None,
+                   help='R1: per-head ladder of initial decay biases, head h at '
+                        'base_dt_bias - spread*h/(H-1) (0 = reference)')
     return p
 
 
@@ -884,6 +887,8 @@ def main():
         cfg.chrono = True
     if args.out_gate:
         cfg.out_gate = True
+    if args.dt_spread is not None:
+        cfg.dt_bias_spread = args.dt_spread
     if args.dropout is not None:
         cfg.dropout = args.dropout
     device = torch.device(args.device)
