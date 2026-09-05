@@ -13,7 +13,8 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   now RETENTION** (ladder R1 dt-spread → R2 vault → R3 delta), then Stage L
   (8K/32K). Complex arm: not revisited (same decay; phase ≠ retention).
 * **RUNNING L1 (Stage L-1: T=8192 B=8, dt_spread=8, long mix incl. pg19 /
-  fineweb_long / recall_long, 1B tok, tmux `sempty_l1`, commit `b07e384`)**
+  fineweb_long / recall_long, 1B tok, tmux `sempty_l1`, commit `18ed358`,
+  relaunched 09:56Z after a blend bug made the first launch ~95 % PG-19)**
   — see "Running L1" below. R1 at T=2048 was killed by the user (8K first).
   Checkpoints are now rolling (`KEEP_LAST=1`); stale ckpts pruned (19→4.6 GB).
 * **N4 READ-OUT GATE DONE (2026-09-04, run commit `2537782`, code `3c7b9b9`):
@@ -216,10 +217,24 @@ priority moved to 8K context; log + ckpt dir deleted (no result). The R1
 question (does a per-head decay ladder lengthen the horizon?) is now asked
 directly at T=8192 — see "Running L1" below.
 
-**Running L1 = Stage L-1 (2026-09-05 06:36Z, RTX Pro 6000):** tmux
-`sempty_l1`, commit `b07e384`, log
-`logs/v13_sempty_mix1b_8k_r1_dtspread8_b07e384_20260905_0636.log`, ckpt
-`checkpoints_v13_sempty/mix1b_8k_r1_dtspread8_b07e384/`.
+**L1 first launch (`b07e384`, 06:36Z) KILLED at step 3500 — data bug, not
+model.** Holdout val 152 @3k steps vs mix-3B ~80 at the same step while train
+PPL read 40. Eval path exonerated (fp32/bf16 × fused/reference kernel all
+163.7 on the ckpt). Per-source PPL of the ckpt: dclm 155, fineweb_long 154,
+smoltalk 35, **pg19 seen-pieces 6.5** (unseen books 47.9) → the stream was
+~95 % PG-19: `_blend_interleave_text_iters` drew one *document* per pick with
+the weights, so token share = weight × doc length (100k-tok pieces vs 1k-tok
+web docs). Fixed in `18ed358` (token-weighted deficit round-robin + per-source
+chunk attribution in the chunker; realized shares now equal the weights).
+Lesson: **whenever a new source has a different doc length, check
+`token_counters` in `latest.pt` (`ck['data_cursor']`) after the first save.**
+Also `18ed358`: `[diag] dtbias/head(layer-mean)=` row — the old per-layer
+head-mean shows a spread-8 ladder as a flat −8.
+
+**Running L1 = Stage L-1 (relaunched 2026-09-05 09:56Z, RTX Pro 6000):** tmux
+`sempty_l1`, commit `18ed358`, log
+`logs/v13_sempty_mix1b_8k_r1_dtspread8_18ed358_20260905_0956.log`, ckpt
+`checkpoints_v13_sempty/mix1b_8k_r1_dtspread8_18ed358/`.
 `SEQ=8192 BATCH=8` (65,536 tok/step, GRAD_CKPT=0 → ~55 GB) `DT_SPREAD=8`
 `TARGET_TOKENS=1e9` (15,259 steps) `BLEND_WARMUP=100M WARMUP=500`
 `SOURCES=dclm,fineweb_long,pg19,smoltalk2_mid,recall,recall_long`
@@ -227,11 +242,14 @@ directly at T=8192 — see "Running L1" below.
 KEEP_EVERY=5000 KEEP_LAST=1 GEN_EVERY=2000`. Two things differ from mix-3B
 (T and dt_spread) — deliberate: the reference heads (half-life ~38 tok) cannot
 use an 8K window at all, so "8K without spread" is not an informative arm.
-Measured at step 100: **81k tok/s, 52.4 GB** (2K run was 85.5k — the sequence
-axis is free, as the scan predicted) → **ETA ~10:05Z 2026-09-05**. Startup is
-slow (~4 min to step 1): the 10k-chunk shuffle buffer is 82M tokens at 8K.
-Watchdog: `bash v13_sempty/tmp_wiki_watchdog.sh <log> 15258 2940` (armed
-06:43Z; re-arm on wake).
+First launch measured **81k tok/s, 52.4 GB** at this geometry (2K run was
+85.5k — the sequence axis is free, as the scan predicted) → 15,258 steps ≈
+3.4 h → **ETA ~13:30Z 2026-09-05** for the relaunch. Startup is slow (~4 min
+to step 1): the 10k-chunk shuffle buffer is 82M tokens at 8K.
+Watchdog: `bash v13_sempty/tmp_wiki_watchdog.sh <log> 15258 2940` (re-arm on
+wake). Sanity gate at the first val (step 1000, web-only warmup): holdout PPL
+should be in the mix-3B ballpark for ~1000 steps (mix-3B: 105 @2000 steps /
+74M tok) — the killed run read 365 there.
 **Judge L1 by the horizon, not PPL:**
 ```bash
 .venv/bin/python scripts/run_memory_behavioral.py --model-type v13_sempty \
