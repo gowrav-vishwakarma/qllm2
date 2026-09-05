@@ -12,7 +12,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   at init. Full analysis: `EXPERIMENTS_SEMPY.md` → "Phase 3a". **Program is
   now RETENTION** (ladder R1 dt-spread → R2 vault → R3 delta), then Stage L
   (8K/32K). Complex arm: not revisited (same decay; phase ≠ retention).
-* **RUNNING R1** — see "Running" below.
+* **RUNNING L1 (Stage L-1: T=8192 B=8, dt_spread=8, long mix incl. pg19 /
+  fineweb_long / recall_long, 1B tok, tmux `sempty_l1`, commit `b07e384`)**
+  — see "Running L1" below. R1 at T=2048 was killed by the user (8K first).
+  Checkpoints are now rolling (`KEEP_LAST=1`); stale ckpts pruned (19→4.6 GB).
 * **N4 READ-OUT GATE DONE (2026-09-04, run commit `2537782`, code `3c7b9b9`):
   val PPL 22.96** — beats chrono 23.14 at all 16 val points; 0.27 from the
   transformer (22.69). Gate verified content-dependent (doubles the effective
@@ -208,48 +211,76 @@ wake). Two earlier launches today (`303c7fb` 18:53/18:56) were killed at
 <600 steps and their logs deleted: no resume support yet and the blend warmup
 was silently inactive (see below).
 
-**Running R1 (2026-09-05 06:12Z, RTX Pro 6000):** tmux `sempty_r1`, commit
-`b55c49a`, `TAG=mix1b_r1_dtspread8 TARGET_TOKENS=1e9 BLEND_WARMUP=100M
-DT_SPREAD=8` (else = mix-3B recipe), log
-`logs/v13_sempty_mix1b_r1_dtspread8_b55c49a_20260905_0612.log`, ckpt dir
-`checkpoints_v13_sempty/mix1b_r1_dtspread8_b55c49a/`, 27,126 steps, ~3.3 h →
-ETA ~09:40Z. Watchdog `tmp_wiki_watchdog.sh <log> 27126 2940`.
-**Judge R1 by the horizon, not PPL:**
+**R1 at T=2048 (`b55c49a`, 06:12Z) was killed by the user at <1k steps** —
+priority moved to 8K context; log + ckpt dir deleted (no result). The R1
+question (does a per-head decay ladder lengthen the horizon?) is now asked
+directly at T=8192 — see "Running L1" below.
+
+**Running L1 = Stage L-1 (2026-09-05 06:36Z, RTX Pro 6000):** tmux
+`sempty_l1`, commit `b07e384`, log
+`logs/v13_sempty_mix1b_8k_r1_dtspread8_b07e384_20260905_0636.log`, ckpt
+`checkpoints_v13_sempty/mix1b_8k_r1_dtspread8_b07e384/`.
+`SEQ=8192 BATCH=8` (65,536 tok/step, GRAD_CKPT=0 → ~55 GB) `DT_SPREAD=8`
+`TARGET_TOKENS=1e9` (15,259 steps) `BLEND_WARMUP=100M WARMUP=500`
+`SOURCES=dclm,fineweb_long,pg19,smoltalk2_mid,recall,recall_long`
+`WEIGHTS=0.36,0.20,0.22,0.10,0.04,0.08` `VAL_EVERY=1000 SAVE_EVERY=500
+KEEP_EVERY=5000 KEEP_LAST=1 GEN_EVERY=2000`. Two things differ from mix-3B
+(T and dt_spread) — deliberate: the reference heads (half-life ~38 tok) cannot
+use an 8K window at all, so "8K without spread" is not an informative arm.
+Measured at step 100: **81k tok/s, 52.4 GB** (2K run was 85.5k — the sequence
+axis is free, as the scan predicted) → **ETA ~10:05Z 2026-09-05**. Startup is
+slow (~4 min to step 1): the 10k-chunk shuffle buffer is 82M tokens at 8K.
+Watchdog: `bash v13_sempty/tmp_wiki_watchdog.sh <log> 15258 2940` (armed
+06:43Z; re-arm on wake).
+**Judge L1 by the horizon, not PPL:**
 ```bash
 .venv/bin/python scripts/run_memory_behavioral.py --model-type v13_sempty \
-  --checkpoint checkpoints_v13_sempty/mix1b_r1_dtspread8_b55c49a/best_model.pt \
+  --checkpoint checkpoints_v13_sempty/mix1b_8k_r1_dtspread8_b07e384/best_model.pt \
   --preset baseline_real_pm --context-lengths 128,256,512,1024,2048,4096,8192 \
   --positions 0,0.5,1 --association-counts 1,4,8 --trials 20 \
-  --output logs/memory_probes/v13_sempty_mix1b_r1_dtspread8_b55c49a_behavioral.json
+  --output logs/memory_probes/v13_sempty_mix1b_8k_r1_dtspread8_b07e384_behavioral.json
 ```
-Reference (mix-3B, 3× the tokens): a1 1.00 @128, 0.35 @256, 0.10 @512/2048;
-a8 0.2–0.35. KEEP if a1 stays ≥0.5 at 512–2048 (and anything >chance at
-4096/8192 = recall beyond the training window, which a transformer cannot do)
-with holdout PPL within ~1 of the mix-3B curve at 1B tokens (val @27k ≈ 32.4,
-but that was mid-cosine — expect R1 lower at end-of-schedule). Also read the
-`[diag]` `dtbias=` row: did the long heads keep their −8…−12 or get pulled up?
-Then R2 (`NSTATES=2 VAULT=1 GEN_EVERY=0`), R3 (`DELTA=1 GEN_EVERY=0`) — each
-1B, sequential, never concurrent.
+Reference (mix-3B, 3× the tokens, T=2048): a1 1.00 @128, 0.35 @256, 0.10
+@512/2048; a8 0.2–0.35. KEEP if a1 stays ≥0.5 at 512–4096 with holdout PPL
+not worse than mix-3B at 1B tokens (val @27k ≈ 32.4 mid-cosine; holdout val
+at T=8192 is the same 5 % corpus re-chunked, `val_chunks` differs). Also read
+the `[diag]` `dtbias=` row: did the long heads keep their −8…−12 or get
+pulled up? Then R2 (`NSTATES=2 VAULT=1 GEN_EVERY=0`), R3 (`DELTA=1
+GEN_EVERY=0`) — each 1B at T=8192, sequential, never concurrent.
 
-## Stage L — 8K then 32K context (planned 2026-09-05; starts after the ladder)
+**Checkpoint policy (2026-09-05, `b07e384`, user rule: free stale ckpts).**
+`--keep_last N` (launcher `KEEP_LAST`, default 1): after each milestone
+`step_XXXXXX.pt` only the newest N survive; `latest.pt` is an atomic
+overwrite (`.tmp` + `os.replace`), `best_model.pt` untouched. Steady state per
+run = 3 × 1.2 GB. Pruned 2026-09-05: mix-3B `step_0*.pt` (8 × 1.2 GB), the A1
+FAIL dir, `latest.pt` of the finished WikiText runs → `checkpoints_v13_sempty`
+19 GB → 4.6 GB. `checkpoints_v11_*` (27 GB, mostly `recall_stage6` 11 GB) NOT
+touched — a different program; user to decide.
+
+## Stage L — 8K then 32K context (data landed 2026-09-05 `b07e384`; L1 running)
 
 Measured: the scan is linear — T=8192 B=4 118k tok/s / 26 GB, T=32768 B=1
 98.6k tok/s / 26 GB on the 6000 (synthetic vocab; real CE adds cost but the
-sequence axis is free). What is NOT ready is the data/curriculum/eval:
-1. **Recall curriculum gaps.** `v7.data._build_recall_doc` sparse variant gaps
-   2–200 sentences (≲2–3k tok). Add a long-gap variant parameterised by
-   `seq_len` (gaps up to 6k @8K, 28k @32K) and a needle-style doc (one binding,
-   long filler, query) so the long heads get gradient.
-2. **Long documents.** At T=8K web docs are still short and just get packed;
-   add real long text: pg19 / books, long-doc-filtered fineweb, whole code
-   files (StarCoder), smoltalk2 `longalign` (currently blocked, correctly, for
-   T=2048). Pack, do not truncate.
+sequence axis is free). Real smoke `b07e384`: T=8192 B=4 real CE + 5 sources
+= 29 GB, so B=8 at 8K fits easily; 32K B=2 should too.
+1. **Recall curriculum gaps — DONE.** `_build_recall_doc(rng, max_gap_sentences)`;
+   registry `recall_long` = 500 sentences → docs up to ~5.2k tok (`recall`
+   stays 200 → ~2.3k). For 32K add `recall_xlong` (~2500 sentences) the same
+   way (one registry line). Needle-style single-binding doc: still TODO.
+2. **Long documents — DONE.** `pg19` (`emozilla/pg19` parquet stream; the
+   `deepmind/pg19` script repo is dead in datasets≥3; books cut into ≤400k-char
+   pieces ≈110k tok at paragraph breaks, 44 s first row) and `fineweb_long`
+   (fineweb-edu `min_chars=12000`, 14–17k-char docs). Both `kind='web'` →
+   part of the blend warmup pool. All sources now open through one
+   `_open_source_iter` (live blend and token-cache builder share it). Still
+   TODO: whole code files (StarCoder), smoltalk2 `longalign`.
 3. **Probe.** `run_memory_behavioral.py --context-lengths ... 8192,32768`
    (check `build_example` filler scaling and GPU time at 32K; 20 trials × 3
    positions × 3 counts × 7 lengths).
-4. **Training geometry.** Keep tokens/step ≈ 33–37k: T=8192 B=4, T=32768 B=1
-   (or grad-accum 2 for a steadier batch). Same lr schedule. `max_seq_len`
-   follows `--seq_len` (RoPE cache, Chrono cumsum both length-agnostic).
+4. **Training geometry.** L1 uses T=8192 B=8 = 65k tok/step (memory allows;
+   fewer, larger steps). For 32K: B=2 = 65k tok/step. Same lr schedule.
+   `max_seq_len` follows `--seq_len` (RoPE cache, Chrono cumsum both
+   length-agnostic); holdout val re-chunks at the new T (61 chunks @8K).
 5. **Sequence:** R-winner at T=2048 (1B) → **midtrain T=8192** from that ckpt
    via `--resume` semantics? No — `--resume` restores the optimizer/LR for the
    *same* run; for a length change use a fresh run that loads weights only
