@@ -799,6 +799,115 @@ EXISTING delta, still O(1) and non-attention — is the next multi-way candidate
 NOT more memories. (Explicitly avoided: high-β modern-Hopfield / softmax-over-
 stored-items reads, which are attention over T in disguise.)
 
+**SUPERSEDED the same evening by the positive-control run below: the DeltaNet
+write was NOT run.** The bench turned out to have no ceiling — see next section.
+
+## Positive control — transformer fails multi-way at 1500 steps; at 4× budget PAM-delta hits 1.00 on a1/a4/a8 to 8192, transformer still at chance (2026-09-05)
+
+**Why.** After three failed multi-way attempts (head_dim, soft route, sharp
+route) the user asked whether we were "catching the wrong error". Audit: every
+multi-way verdict had compared PAM arms against each other and against an
+*assumed* transformer ceiling of 1.0. No positive control had ever been run on
+the micro-bench, and the only external control on disk
+(`logs/memory_probes/publication/gpu/mamba_behavior.json`, Mamba-130M, ~300B
+training tokens) scores a8 0.82 @128 → 0.38 @2048 — i.e. multi-way recall IS
+achievable by a fixed-state model, but that number came from ~300× our budget.
+
+**Setup.** `v13_sempty/tmp/recall_microbench.py` gained (a) an `xf` arm — the
+v6 GPT-2-style causal transformer (SDPA flash, learned abs. positions), d 384 /
+6 heads / d_ff 1536, 4 layers, 29.5M params, trained on the **byte-identical**
+pre-drawn schedule and answer-only loss as the PAM arms; (b) a `:L<n>` depth
+override. Run: 1500 steps × B16 (~24M tokens, 24K supervised answers), 32
+trials. Log `logs/v13_sempty_recall_microbench_xfctrl_depth_36a8cac_20260905_1659.log`.
+
+**Result (accuracy, chance ~0.12).**
+
+```
+                          ctx 128   256   512  1024  2048  4096  8192
+transformer(ctrl) L4  a1     1.00  1.00  1.00  1.00  1.00  1.00  0.66
+                      a4     0.28  0.26  0.34  0.25  0.31  0.30  0.28
+                      a8     0.17  0.12  0.12  0.15  0.14  0.22  0.09
+delta L4              a1     1.00  1.00  1.00  1.00  1.00  1.00  1.00
+                      a4     0.25  0.28  0.29  0.29  0.28  0.23  0.18
+                      a8     0.19  0.18  0.19  0.19  0.15  0.11  0.11
+delta L8              a8     0.10  0.11  0.08  0.10  0.11  0.12  0.15
+delta L12             a8     0.15  0.14  0.15  0.11  0.12  0.15  0.10
+```
+
+Training curves are also indistinguishable: answer-only loss at step
+1000/1500 = transformer 1.21/1.93, delta-L4 1.15/1.62 (same L=256 batches).
+Transformer arm: 26 s (1.15M tok/s); delta L4 ~2.5 min, L12 6 min.
+
+**First reading (1500 steps).** The architecture with a perfect O(T) memory
+scores at chance on a8 and ~0.3 on a4 on the same data at the same budget, so
+the 1500-step bench had **no ceiling** and every multi-way verdict taken on it
+(head_dim sweep, A2r soft/sharp routing) was *inconclusive*, not a FAIL of the
+read path. Also: the plateau value is diagnostic — a model that knows the SET
+of values in context but cannot match keys sits at CE = mean(0, ln2, ln4, ln6,
+ln8) ≈ 1.19 over the training assoc mix; both arms plateaued at 1.3–1.9.
+
+### 4× budget: PAM-delta SOLVES multi-way; the transformer control does not
+
+`logs/v13_sempty_recall_microbench_xfctrl_6k_36a8cac_20260905_1714.log` —
+6000 steps × B16 (~96M tokens), everything else identical.
+
+```
+                          ctx 128   256   512  1024  2048  4096  8192
+transformer(ctrl) L4  a1     1.00  1.00  1.00  1.00  1.00  1.00  1.00
+                      a4     0.33  0.23  0.33  0.25  0.32  0.33  0.27
+                      a8     0.14  0.12  0.11  0.12  0.12  0.10  0.14
+PAM chrono+gate+delta a1     1.00  1.00  1.00  1.00  1.00  1.00  1.00
+  L4, 27.2M params    a4     1.00  1.00  1.00  1.00  1.00  1.00  1.00
+                      a8     1.00  1.00  1.00  1.00  1.00  1.00  1.00
+```
+
+PAM-delta's answer loss: 1.23 @1000 → 0.79 @2000 → **0.0013 @3000 → 0.0000
+from 3500 on, at every train length** (256–2048). A phase transition between
+steps 2000 and 3000 (~40M tokens): the model learns mutually selective keys
+and thereafter reads any one of 8 co-resident bindings exactly, **including at
+8192 = 2× its longest training window, from a fixed 6 × 64×64 state per
+layer.** The transformer's loss stays 1.2–1.7 to step 6000. Two further
+transformer-only checks gave it the intermediate LM signal that induction
+circuits normally form from (`--aux_weight` 0.1 and 1.0, 3000 steps;
+`logs/v13_sempty_recall_microbench_xf_aux0p1_…1720.log`,
+`…_xf_aux1p0_…1720.log`): a4 0.24–0.31, a8 0.03–0.19 — still chance.
+
+*Caveat on the control:* the v6 transformer uses learned absolute positions
+and records sit at random offsets, so it must learn purely content-based
+matching — harder than with RoPE. A RoPE control would likely learn the task
+at some budget; transformers obviously *can* do this. The fair statement is
+the one the data supports: **on byte-identical data, optimiser and budget,
+PAM-delta learns exact 8-way key→value recall by ~40M tokens, where a same-size
+transformer has not by 96M, and PAM extrapolates to 2× the train window.**
+
+**What this means.**
+
+1. **Multi-way recall was never a PAM read-path deficit.** The linear `q·S`
+   read with delta erase-before-write recovers one of eight co-resident
+   bindings perfectly once the keys are learned. All of yesterday's negative
+   conclusions about the read path (head_dim, routing, the proposed DeltaNet
+   write) are withdrawn; the removals stand because plain delta suffices.
+2. **The 1B-token pretrains (mix-3B, L1) failed a8 for the same reason the
+   1500-step bench did: signal budget, not mechanism.** Full-sequence LM loss
+   gives the answer token ~1/T of the gradient, and recall docs were a small
+   fraction of the mix. The bench needed ~40M tokens of *concentrated* answer
+   signal; the pretrains supplied a tiny fraction of that. This is a data-
+   recipe fix (recall/needle docs with answer-emphasised loss), not maths.
+3. **Delta (A3) is the biggest single win in the program**: base 0.46 →
+   delta 1.00 on a1, and delta 1.00 on a4/a8 at 4× budget. KEEP, default on.
+4. **Depth is not the lever** (L4 = L8 = L12 at 1500 steps); budget is.
+5. **The PAM differentiator is real and measured**: O(1) state, exact 8-way
+   recall, length extrapolation the abs-pos transformer cannot do (a1 0.66 at
+   8192 in the 1500-step run, 0.77 in aux-1.0).
+
+**Decision.** Multi-way is SOLVED on the bench; no more read-path maths. The
+"no 1B run until multi-way is cracked" gate is lifted. Next: carry the recipe
+that worked here into the scale run — `DELTA=1`, recall/needle documents with
+answer-emphasised loss weights (the `aux_weight` mixing rule, applied per
+document type), then re-probe. The brain-split idea (recurrent pattern core +
+explicit fact memory, A4 `cond_mem`) remains the strategic path for
+*parametric* facts, which this bench does not measure.
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*

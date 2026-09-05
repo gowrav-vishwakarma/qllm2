@@ -1,0 +1,29 @@
+micro-bench: 3000 steps x B16, buckets [256, 512, 1024, 2048, 4096] w=[0.3, 0.28, 0.22, 0.12, 0.08], eval ctx (128, 256, 512, 1024, 2048, 4096, 8192), 32 trials, vocab 50257, aux_weight=1.0
+
+--- arm: transformer(ctrl)@L4 (kind=xf, head_dim=64, n_layers=4) ---
+/home/ubuntu/Development/qllm-private/v13_sempty/tmp/recall_microbench.py:228: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  f"loss={float(loss):.4f} ppl={math.exp(min(float(loss),20)):7.1f} "
+  [transformer(ctrl)@L4] step    1/3000 L= 1024 loss=10.7360 ppl=45980.1 | 54,063 tok/s
+  [transformer(ctrl)@L4] step  500/3000 L= 1024 loss=1.3046 ppl=    3.7 | 174,296 tok/s
+  [transformer(ctrl)@L4] step 1000/3000 L=  256 loss=1.4434 ppl=    4.2 | 174,556 tok/s
+  [transformer(ctrl)@L4] step 1500/3000 L=  256 loss=1.4386 ppl=    4.2 | 175,713 tok/s
+  [transformer(ctrl)@L4] step 2000/3000 L=  256 loss=0.7758 ppl=    2.2 | 175,611 tok/s
+  [transformer(ctrl)@L4] step 2500/3000 L= 1024 loss=0.6414 ppl=    1.9 | 180,219 tok/s
+  [transformer(ctrl)@L4] step 3000/3000 L=  256 loss=0.7670 ppl=    2.2 | 187,890 tok/s
+  [transformer(ctrl)@L4] trained 29.5M params in 271s
+
+============================================================
+== transformer(ctrl)@L4  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   1.00   1.00   0.77
+a4       0.29   0.24   0.25   0.25   0.27   0.28   0.31
+a8       0.10   0.04   0.03   0.05   0.04   0.11   0.08
+
+a1 by arm x ctx:
+  arm                               128    256    512   1024   2048   4096   8192
+  transformer(ctrl)@L4             1.00   1.00   1.00   1.00   1.00   1.00   0.77
+a8 by arm x ctx:
+  arm                               128    256    512   1024   2048   4096   8192
+  transformer(ctrl)@L4             0.10   0.04   0.03   0.05   0.04   0.11   0.08
+EXIT=0

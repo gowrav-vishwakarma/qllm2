@@ -1,0 +1,119 @@
+micro-bench: 1500 steps x B16, buckets [256, 512, 1024, 2048, 4096] w=[0.3, 0.28, 0.22, 0.12, 0.08], eval ctx (128, 256, 512, 1024, 2048, 4096, 8192), 32 trials, vocab 50257
+
+--- arm: transformer(ctrl)@L4 (kind=xf, head_dim=64, n_layers=4) ---
+/home/ubuntu/Development/qllm-private/v13_sempty/tmp/recall_microbench.py:213: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  f"loss={float(loss):.4f} ppl={math.exp(min(float(loss),20)):7.1f} "
+  [transformer(ctrl)@L4] step    1/1500 L= 1024 loss=11.1357 ppl=68574.6 | 74,964 tok/s
+  [transformer(ctrl)@L4] step  100/1500 L=  512 loss=2.7335 ppl=   15.4 | 1,025,912 tok/s
+  [transformer(ctrl)@L4] step  200/1500 L=  256 loss=2.9328 ppl=   18.8 | 1,092,236 tok/s
+  [transformer(ctrl)@L4] step  300/1500 L=  256 loss=2.6669 ppl=   14.4 | 1,120,938 tok/s
+  [transformer(ctrl)@L4] step  400/1500 L= 1024 loss=2.0288 ppl=    7.6 | 1,136,567 tok/s
+  [transformer(ctrl)@L4] step  500/1500 L= 1024 loss=1.7662 ppl=    5.8 | 1,130,433 tok/s
+  [transformer(ctrl)@L4] step  600/1500 L= 1024 loss=2.0598 ppl=    7.8 | 1,132,485 tok/s
+  [transformer(ctrl)@L4] step  700/1500 L= 2048 loss=1.9773 ppl=    7.2 | 1,152,082 tok/s
+  [transformer(ctrl)@L4] step  800/1500 L=  512 loss=1.8753 ppl=    6.5 | 1,152,921 tok/s
+  [transformer(ctrl)@L4] step  900/1500 L=  512 loss=1.1869 ppl=    3.3 | 1,143,249 tok/s
+  [transformer(ctrl)@L4] step 1000/1500 L=  256 loss=1.2147 ppl=    3.4 | 1,140,545 tok/s
+  [transformer(ctrl)@L4] step 1100/1500 L=  256 loss=1.8355 ppl=    6.3 | 1,149,892 tok/s
+  [transformer(ctrl)@L4] step 1200/1500 L=  512 loss=1.3766 ppl=    4.0 | 1,150,158 tok/s
+  [transformer(ctrl)@L4] step 1300/1500 L= 1024 loss=1.4849 ppl=    4.4 | 1,155,502 tok/s
+  [transformer(ctrl)@L4] step 1400/1500 L=  512 loss=1.4164 ppl=    4.1 | 1,158,130 tok/s
+  [transformer(ctrl)@L4] step 1500/1500 L=  256 loss=1.9257 ppl=    6.9 | 1,166,478 tok/s
+  [transformer(ctrl)@L4] trained 29.5M params in 26s
+
+--- arm: chrono+gate+delta@hd64L4 (kind=delta, head_dim=64, n_layers=4) ---
+  [chrono+gate+delta@hd64L4] step    1/1500 L= 1024 loss=10.8637 ppl=52246.6 | 33,984 tok/s
+  [chrono+gate+delta@hd64L4] step  100/1500 L=  512 loss=2.7417 ppl=   15.5 | 174,382 tok/s
+  [chrono+gate+delta@hd64L4] step  200/1500 L=  256 loss=2.8885 ppl=   18.0 | 178,409 tok/s
+  [chrono+gate+delta@hd64L4] step  300/1500 L=  256 loss=2.7319 ppl=   15.4 | 178,950 tok/s
+  [chrono+gate+delta@hd64L4] step  400/1500 L= 1024 loss=2.2728 ppl=    9.7 | 179,882 tok/s
+  [chrono+gate+delta@hd64L4] step  500/1500 L= 1024 loss=1.7116 ppl=    5.5 | 179,975 tok/s
+  [chrono+gate+delta@hd64L4] step  600/1500 L= 1024 loss=1.8669 ppl=    6.5 | 180,087 tok/s
+  [chrono+gate+delta@hd64L4] step  700/1500 L= 2048 loss=1.6250 ppl=    5.1 | 180,877 tok/s
+  [chrono+gate+delta@hd64L4] step  800/1500 L=  512 loss=1.7384 ppl=    5.7 | 180,707 tok/s
+  [chrono+gate+delta@hd64L4] step  900/1500 L=  512 loss=0.8737 ppl=    2.4 | 180,325 tok/s
+  [chrono+gate+delta@hd64L4] step 1000/1500 L=  256 loss=1.1544 ppl=    3.2 | 180,308 tok/s
+  [chrono+gate+delta@hd64L4] step 1100/1500 L=  256 loss=1.3658 ppl=    3.9 | 180,799 tok/s
+  [chrono+gate+delta@hd64L4] step 1200/1500 L=  512 loss=1.2907 ppl=    3.6 | 181,044 tok/s
+  [chrono+gate+delta@hd64L4] step 1300/1500 L= 1024 loss=1.2221 ppl=    3.4 | 181,239 tok/s
+  [chrono+gate+delta@hd64L4] step 1400/1500 L=  512 loss=1.2507 ppl=    3.5 | 181,471 tok/s
+  [chrono+gate+delta@hd64L4] step 1500/1500 L=  256 loss=1.6169 ppl=    5.0 | 182,056 tok/s
+  [chrono+gate+delta@hd64L4] trained 27.2M params in 180s
+
+--- arm: chrono+gate+delta@hd64L8 (kind=delta, head_dim=64, n_layers=8) ---
+  [chrono+gate+delta@hd64L8] step    1/1500 L= 1024 loss=10.9585 ppl=57442.7 | 137,376 tok/s
+  [chrono+gate+delta@hd64L8] step  100/1500 L=  512 loss=2.7578 ppl=   15.8 | 123,241 tok/s
+  [chrono+gate+delta@hd64L8] step  200/1500 L=  256 loss=2.8961 ppl=   18.1 | 124,058 tok/s
+  [chrono+gate+delta@hd64L8] step  300/1500 L=  256 loss=2.7304 ppl=   15.3 | 123,500 tok/s
+  [chrono+gate+delta@hd64L8] step  400/1500 L= 1024 loss=1.6749 ppl=    5.3 | 123,622 tok/s
+  [chrono+gate+delta@hd64L8] step  500/1500 L= 1024 loss=1.4472 ppl=    4.3 | 123,807 tok/s
+  [chrono+gate+delta@hd64L8] step  600/1500 L= 1024 loss=1.7779 ppl=    5.9 | 123,599 tok/s
+  [chrono+gate+delta@hd64L8] step  700/1500 L= 2048 loss=1.8279 ppl=    6.2 | 123,717 tok/s
+  [chrono+gate+delta@hd64L8] step  800/1500 L=  512 loss=1.8643 ppl=    6.5 | 123,355 tok/s
+  [chrono+gate+delta@hd64L8] step  900/1500 L=  512 loss=0.9765 ppl=    2.7 | 123,108 tok/s
+  [chrono+gate+delta@hd64L8] step 1000/1500 L=  256 loss=1.2291 ppl=    3.4 | 122,991 tok/s
+  [chrono+gate+delta@hd64L8] step 1100/1500 L=  256 loss=1.4514 ppl=    4.3 | 123,247 tok/s
+  [chrono+gate+delta@hd64L8] step 1200/1500 L=  512 loss=1.4012 ppl=    4.1 | 123,297 tok/s
+  [chrono+gate+delta@hd64L8] step 1300/1500 L= 1024 loss=1.2453 ppl=    3.5 | 123,191 tok/s
+  [chrono+gate+delta@hd64L8] step 1400/1500 L=  512 loss=1.3509 ppl=    3.9 | 123,181 tok/s
+  [chrono+gate+delta@hd64L8] step 1500/1500 L=  256 loss=1.6166 ppl=    5.0 | 123,483 tok/s
+  [chrono+gate+delta@hd64L8] trained 34.9M params in 272s
+
+--- arm: chrono+gate+delta@hd64L12 (kind=delta, head_dim=64, n_layers=12) ---
+  [chrono+gate+delta@hd64L12] step    1/1500 L= 1024 loss=11.1592 ppl=70205.2 | 105,796 tok/s
+  [chrono+gate+delta@hd64L12] step  100/1500 L=  512 loss=2.7234 ppl=   15.2 | 92,300 tok/s
+  [chrono+gate+delta@hd64L12] step  200/1500 L=  256 loss=2.8927 ppl=   18.0 | 92,918 tok/s
+  [chrono+gate+delta@hd64L12] step  300/1500 L=  256 loss=2.3415 ppl=   10.4 | 92,410 tok/s
+  [chrono+gate+delta@hd64L12] step  400/1500 L= 1024 loss=1.4634 ppl=    4.3 | 92,097 tok/s
+  [chrono+gate+delta@hd64L12] step  500/1500 L= 1024 loss=1.4618 ppl=    4.3 | 92,256 tok/s
+  [chrono+gate+delta@hd64L12] step  600/1500 L= 1024 loss=1.8329 ppl=    6.3 | 92,061 tok/s
+  [chrono+gate+delta@hd64L12] step  700/1500 L= 2048 loss=1.7323 ppl=    5.7 | 92,247 tok/s
+  [chrono+gate+delta@hd64L12] step  800/1500 L=  512 loss=1.7478 ppl=    5.7 | 92,145 tok/s
+  [chrono+gate+delta@hd64L12] step  900/1500 L=  512 loss=1.0914 ppl=    3.0 | 91,999 tok/s
+  [chrono+gate+delta@hd64L12] step 1000/1500 L=  256 loss=1.2595 ppl=    3.5 | 92,059 tok/s
+  [chrono+gate+delta@hd64L12] step 1100/1500 L=  256 loss=1.5815 ppl=    4.9 | 92,270 tok/s
+  [chrono+gate+delta@hd64L12] step 1200/1500 L=  512 loss=1.2272 ppl=    3.4 | 92,407 tok/s
+  [chrono+gate+delta@hd64L12] step 1300/1500 L= 1024 loss=1.1765 ppl=    3.2 | 92,468 tok/s
+  [chrono+gate+delta@hd64L12] step 1400/1500 L=  512 loss=1.1889 ppl=    3.3 | 92,562 tok/s
+  [chrono+gate+delta@hd64L12] step 1500/1500 L=  256 loss=1.6204 ppl=    5.1 | 92,834 tok/s
+  [chrono+gate+delta@hd64L12] trained 42.6M params in 367s
+
+============================================================
+== transformer(ctrl)@L4  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   1.00   1.00   0.66
+a4       0.28   0.26   0.34   0.25   0.31   0.30   0.28
+a8       0.17   0.12   0.12   0.15   0.14   0.22   0.09
+
+== chrono+gate+delta@hd64L4  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a4       0.25   0.28   0.29   0.29   0.28   0.23   0.18
+a8       0.19   0.18   0.19   0.19   0.15   0.11   0.11
+
+== chrono+gate+delta@hd64L8  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a4       0.26   0.26   0.22   0.27   0.32   0.29   0.29
+a8       0.10   0.11   0.08   0.10   0.11   0.12   0.15
+
+== chrono+gate+delta@hd64L12  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a4       0.20   0.19   0.22   0.23   0.22   0.23   0.22
+a8       0.15   0.14   0.15   0.11   0.12   0.15   0.10
+
+a1 by arm x ctx:
+  arm                               128    256    512   1024   2048   4096   8192
+  transformer(ctrl)@L4             1.00   1.00   1.00   1.00   1.00   1.00   0.66
+  chrono+gate+delta@hd64L4         1.00   1.00   1.00   1.00   1.00   1.00   1.00
+  chrono+gate+delta@hd64L8         1.00   1.00   1.00   1.00   1.00   1.00   1.00
+  chrono+gate+delta@hd64L12        1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a8 by arm x ctx:
+  arm                               128    256    512   1024   2048   4096   8192
+  transformer(ctrl)@L4             0.17   0.12   0.12   0.15   0.14   0.22   0.09
+  chrono+gate+delta@hd64L4         0.19   0.18   0.19   0.19   0.15   0.11   0.11
+  chrono+gate+delta@hd64L8         0.10   0.11   0.08   0.10   0.11   0.12   0.15
+  chrono+gate+delta@hd64L12        0.15   0.14   0.15   0.11   0.12   0.15   0.10
+EXIT=0

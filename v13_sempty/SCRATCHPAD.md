@@ -6,6 +6,31 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
+* **MULTI-WAY RECALL SOLVED — PAM-delta a1 = a4 = a8 = 1.00 at ctx 128–8192
+  (2026-09-05 evening, `36a8cac`).** The user asked whether we were chasing the
+  wrong error; we had never run a positive control. Added a transformer arm
+  (`xf`, v6 GPT-2-style, 29.5M, byte-identical data/loss/steps) and a depth
+  knob to the micro-bench. At the old 1500-step budget the **transformer is at
+  chance on a8 too** (bench had no ceiling → all yesterday's multi-way FAILs
+  were inconclusive; depth L4/L8/L12 changes nothing). At **6000 steps (~96M
+  tok) PAM chrono+gate+delta (27M, 4 layers) goes through a phase transition at
+  ~step 2500 and scores 1.00 on a1/a4/a8 at EVERY ctx incl. 8192 = 2× its
+  train window, from a fixed O(1) state; the transformer is still at chance
+  (a8 0.10–0.14), also with aux LM signal (`--aux_weight` 0.1/1.0).** Caveat:
+  abs-pos control, not RoPE. **DeltaNet write CANCELLED (not needed).** The
+  "no 1B run until multi-way is cracked" gate is LIFTED. Why the 1B pretrains
+  showed a8 at chance: full-seq loss gives the answer token ~1/T of the
+  gradient and recall docs were a small share → signal budget, not mechanism.
+  Record: `EXPERIMENTS_SEMPY.md` → "Positive control". Logs
+  `logs/v13_sempty_recall_microbench_xfctrl_depth_36a8cac_20260905_1659.log`
+  (1500 steps, 4 arms), `…_xfctrl_6k_36a8cac_20260905_1714.log` (6000 steps,
+  THE result), `…_xf_aux0p1_…1720.log`, `…_xf_aux1p0_…1720.log`.
+  **Direction now:** (1) `DELTA=1` default; (2) scale run with the recipe that
+  worked: recall/needle docs with answer-emphasised loss (per-doc-type mask
+  weights, the `aux_weight` rule) so the recall signal is concentrated, then
+  re-probe at 8K; (3) strategic: recurrent state = pattern core, explicit
+  fact memory (A4 `cond_mem`) for parametric facts (user's "brain split");
+  (4) optional: RoPE transformer control for a fairer ceiling.
 * **MIX-3B DONE (2026-09-05, `bbc12e9`): holdout PPL 25.73, recall horizon
   ~200 tokens and SHRINKING with training** (a1 recall 1.00 @ctx128, 0.10 =
   chance @512; ctx512 went 0.35 → 0.10 from step 10k → 80k). `dt_bias` stuck
@@ -26,12 +51,11 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   a8 stayed at chance even with sharpened τ=0.2 (= plain delta's level at 4-8×
   cost). Three failures now (head_dim, soft route, sharp route) say multi-way
   is NOT a memory-structure/capacity problem — the model can't learn keys/
-  queries selective enough. **Next candidate = the error-correcting DeltaNet
-  write `S += β(v − Sk)kᵀ`** (current code writes `b_w v kᵀ` after erase, not
-  the prediction error); this is online least-squares and separates overlapping
-  keys — a small change to the EXISTING delta, still O(1)/non-attention. Record:
-  `EXPERIMENTS_SEMPY.md` → "A2r content-routed delta". **Still no 1B run until
-  multi-way is cracked on the micro-bench.** Nothing running on the 6000.
+  queries selective enough. ~~Next candidate = the error-correcting DeltaNet
+  write `S += β(v − Sk)kᵀ`~~ — **superseded the same evening: the transformer
+  positive control (bullet above) fails multi-way identically, so this
+  conclusion about the read path is withdrawn and the DeltaNet write was not
+  run.** Record: `EXPERIMENTS_SEMPY.md` → "A2r content-routed delta".
 * **L1 DONE (2026-09-05, `18ed358`): T=8192 B=8 dt_spread=8 long mix, 1B
   tok → holdout PPL 40.26, recall horizon FLAT ~0.2 at 512–8192, 128-ctx
   recall 0.63 (mix-3B 1.00), a8 at chance; dt_bias ladder never moved from
