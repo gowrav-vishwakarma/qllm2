@@ -749,6 +749,56 @@ the winner (delta + multi-way fix), THEN scale. Tool + result logs:
 `v13_sempty/tmp/recall_microbench.py`,
 `logs/v13_sempty_recall_microbench_hdsweep_543b897_20260905_1503.log`.
 
+## A2r content-routed delta — multi-way attempt #1: soft routing no gain (2026-09-05)
+
+**Idea (novel, stays O(1) / non-attention).** S fixed matrix memories per head
+(S=4,8). One shared per-head centroid table `R[H,K,S]` routes each WRITE by its
+unit key and each READ by its unit query: `rw=softmax(k·R/τ)`, `rq=softmax(q·R/τ)`;
+write gates for state s scaled by `rw[..,s]`, read from s scaled by `rq[..,s]`,
+reads summed. Matched pairs (q≈k, already perfect under delta) route together,
+so co-resident keys should spread across states → fewer keys per state → the
+linear `q·S` read sees fewer competitors. This is a mixture of *content-addressed
+associative memories* with fixed small S — not attention over T (no O(T)), not
+MoE-of-FFNs. Code: `model.py::_chunked_delta_routed`, `cfg.state_route/route_temp`.
+
+**Result (τ=1.0, same 1500×B16 micro-bench).**
+
+| arm | a1 (all ctx) | a4 (mean) | a8 (mean) | tok/s |
+|---|---|---|---|---|
+| chrono+gate | 0.46 | 0.29 | 0.20 | 285k |
+| +delta | 1.00 | 0.26 | 0.16 | 202k |
+| +delta+route4 | 1.00 | 0.23 | 0.10 | ~90k |
+| +delta+route8 | 1.00 | 0.25 | 0.10 | ~55k |
+
+a1 stays perfect; **a8 does NOT improve (≈chance, slightly worse), a4 flat**, at
+S× the cost. Diagnosis: uniform routing is mathematically a single delta
+(all S states identical), and the near-chance result means the router never
+specialized off its small init.
+
+**Sharpened routing (S=8, τ∈{0.5,0.2}) — still no win.** Forcing the router off
+uniform lifts a8 only back to delta's own level: route8 τ0.2 a8 = 0.16 0.16 0.14
+0.15 0.19 0.20 0.20 (mean ~0.17) vs plain delta ~0.16 and chance 0.12 — i.e.
+routing at best *matches* single delta, at 8× cost, and a4 stays ~0.18. So it is
+not that routing failed to specialize; even specialized, partitioning keys
+across states does not make the per-state read selective enough. Multi-way is
+not a memory-structure problem.
+
+**Verdict: A2r routing FAIL → REMOVED** (`state_route`/`route_temp`,
+`_chunked_delta_routed` deleted; AGENTS rule). Delta (single state) stays.
+
+**What the three failures (head_dim, soft route, sharp route) jointly say.** The
+limiter is not capacity, not orthogonalisable room, not state partitioning — it
+is that the model does not LEARN keys/queries mutually selective enough for many
+co-resident bindings. The implemented write `S←gS(I−bₑkkᵀ)+b_w vkᵀ` erases the
+*written* key's own component but adds `b_w v kᵀ` (not the prediction error
+`b_w(v−Sk)kᵀ`); with non-orthogonal keys, writing key j partially corrupts key
+i's binding. The canonical error-correcting DeltaNet/Widrow-Hoff write
+`S += β(v − Sk)kᵀ` is exactly online least-squares and *does* separate
+overlapping keys over the sequence. That — a small, principled change to the
+EXISTING delta, still O(1) and non-attention — is the next multi-way candidate,
+NOT more memories. (Explicitly avoided: high-β modern-Hopfield / softmax-over-
+stored-items reads, which are attention over T in disguise.)
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*

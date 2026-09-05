@@ -1,0 +1,70 @@
+micro-bench: 1500 steps x B16, buckets [256, 512, 1024, 2048, 4096] w=[0.3, 0.28, 0.22, 0.12, 0.08], eval ctx (128, 256, 512, 1024, 2048, 4096, 8192), 32 trials, vocab 50257
+
+--- arm: chrono+gate@hd64 (delta=False, head_dim=64, n_states=1, route=False) ---
+/home/ubuntu/Development/qllm-private/v13_sempty/tmp/recall_microbench.py:171: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  f"loss={float(loss):.4f} ppl={math.exp(min(float(loss),20)):7.1f} "
+  [chrono+gate@hd64] step    1/1500 L= 1024 loss=10.9899 ppl=59273.4 | 27,631 tok/s
+  [chrono+gate@hd64] step  500/1500 L= 1024 loss=2.5901 ppl=   13.3 | 280,972 tok/s
+  [chrono+gate@hd64] step 1000/1500 L=  256 loss=2.5118 ppl=   12.3 | 282,514 tok/s
+  [chrono+gate@hd64] step 1500/1500 L=  256 loss=2.2736 ppl=    9.7 | 285,309 tok/s
+  [chrono+gate@hd64] trained 27.1M params in 98s
+
+--- arm: chrono+gate+delta@hd64 (delta=True, head_dim=64, n_states=1, route=False) ---
+  [chrono+gate+delta@hd64] step    1/1500 L= 1024 loss=10.8637 ppl=52246.6 | 159,330 tok/s
+  [chrono+gate+delta@hd64] step  500/1500 L= 1024 loss=1.7116 ppl=    5.5 | 201,713 tok/s
+  [chrono+gate+delta@hd64] step 1000/1500 L=  256 loss=1.1544 ppl=    3.2 | 201,342 tok/s
+  [chrono+gate+delta@hd64] step 1500/1500 L=  256 loss=1.6169 ppl=    5.0 | 202,234 tok/s
+  [chrono+gate+delta@hd64] trained 27.2M params in 154s
+
+--- arm: delta+route4@hd64 (delta=True, head_dim=64, n_states=4, route=True) ---
+  [delta+route4@hd64] step    1/1500 L= 1024 loss=10.9608 ppl=57575.1 | 113,440 tok/s
+  [delta+route4@hd64] step  500/1500 L= 1024 loss=2.5856 ppl=   13.3 | 103,001 tok/s
+  [delta+route4@hd64] step 1000/1500 L=  256 loss=1.2513 ppl=    3.5 | 102,668 tok/s
+  [delta+route4@hd64] step 1500/1500 L=  256 loss=1.6776 ppl=    5.4 | 103,078 tok/s
+  [delta+route4@hd64] trained 27.2M params in 331s
+
+--- arm: delta+route8@hd64 (delta=True, head_dim=64, n_states=8, route=True) ---
+  [delta+route8@hd64] step    1/1500 L= 1024 loss=10.9982 ppl=59768.9 | 73,666 tok/s
+  [delta+route8@hd64] step  500/1500 L= 1024 loss=2.5905 ppl=   13.3 | 64,385 tok/s
+  [delta+route8@hd64] step 1000/1500 L=  256 loss=1.4256 ppl=    4.2 | 64,060 tok/s
+  [delta+route8@hd64] step 1500/1500 L=  256 loss=1.6088 ppl=    5.0 | 64,141 tok/s
+  [delta+route8@hd64] trained 27.2M params in 553s
+
+============================================================
+== chrono+gate@hd64  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       0.46   0.45   0.46   0.46   0.45   0.45   0.46
+a4       0.28   0.30   0.31   0.29   0.29   0.28   0.28
+a8       0.20   0.19   0.20   0.20   0.21   0.21   0.23
+
+== chrono+gate+delta@hd64  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a4       0.25   0.28   0.29   0.29   0.28   0.23   0.18
+a8       0.19   0.18   0.19   0.19   0.15   0.11   0.11
+
+== delta+route4@hd64  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a4       0.21   0.20   0.20   0.23   0.26   0.23   0.25
+a8       0.09   0.10   0.09   0.10   0.11   0.12   0.09
+
+== delta+route8@hd64  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a4       0.23   0.21   0.21   0.22   0.32   0.31   0.28
+a8       0.07   0.08   0.09   0.10   0.11   0.10   0.12
+
+a1 by arm x ctx:
+  arm                           128    256    512   1024   2048   4096   8192
+  chrono+gate@hd64             0.46   0.45   0.46   0.46   0.45   0.45   0.46
+  chrono+gate+delta@hd64       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+  delta+route4@hd64            1.00   1.00   1.00   1.00   1.00   1.00   1.00
+  delta+route8@hd64            1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a8 by arm x ctx:
+  arm                           128    256    512   1024   2048   4096   8192
+  chrono+gate@hd64             0.20   0.19   0.20   0.20   0.21   0.21   0.23
+  chrono+gate+delta@hd64       0.19   0.18   0.19   0.19   0.15   0.11   0.11
+  delta+route4@hd64            0.09   0.10   0.09   0.10   0.11   0.12   0.09
+  delta+route8@hd64            0.07   0.08   0.09   0.10   0.11   0.10   0.12

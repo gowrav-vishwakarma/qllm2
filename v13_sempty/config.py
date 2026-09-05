@@ -39,6 +39,10 @@ class PAMConfig:
     state_dt_spread: float = 2.0     # A2: +/- spread of per-state decay-logit offsets
     vault: bool = False              # A2b: state 0 pinned (retention=1) + protect gate
     delta: bool = False              # A3: delta erase/write (unit keys, beta_w/beta_e)
+    # (A2r content-routed delta -- route writes by key / reads by query to S
+    # states -- was REMOVED 2026-09-05: a8 stayed at chance at 4-8x cost even
+    # with sharpened routing; multi-way is not a memory-structure problem.
+    # See EXPERIMENTS_SEMPY "A2r content-routed delta".)
     cond_mem: bool = False           # A4: Engram-style hashed n-gram conditional memory
     cond_mem_slots: int = 1 << 18    # table rows per (order, head)
     cond_mem_dim: int = 64           # table row width

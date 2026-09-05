@@ -1,0 +1,38 @@
+micro-bench: 1500 steps x B16, buckets [256, 512, 1024, 2048, 4096] w=[0.3, 0.28, 0.22, 0.12, 0.08], eval ctx (128, 256, 512, 1024, 2048, 4096, 8192), 32 trials, vocab 50257
+
+--- arm: delta+route8@hd64:t0.5 (delta=True, head_dim=64, n_states=8, route=True, temp=0.5) ---
+/home/ubuntu/Development/qllm-private/v13_sempty/tmp/recall_microbench.py:171: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  f"loss={float(loss):.4f} ppl={math.exp(min(float(loss),20)):7.1f} "
+  [delta+route8@hd64:t0.5] step    1/1500 L= 1024 loss=10.9983 ppl=59771.0 | 19,023 tok/s
+  [delta+route8@hd64:t0.5] step  750/1500 L= 2048 loss=1.9628 ppl=    7.1 | 63,885 tok/s
+  [delta+route8@hd64:t0.5] step 1500/1500 L=  256 loss=1.6528 ppl=    5.2 | 64,120 tok/s
+  [delta+route8@hd64:t0.5] trained 27.2M params in 552s
+
+--- arm: delta+route8@hd64:t0.2 (delta=True, head_dim=64, n_states=8, route=True, temp=0.2) ---
+  [delta+route8@hd64:t0.2] step    1/1500 L= 1024 loss=10.9982 ppl=59765.5 | 73,186 tok/s
+  [delta+route8@hd64:t0.2] step  750/1500 L= 2048 loss=1.6839 ppl=    5.4 | 64,204 tok/s
+  [delta+route8@hd64:t0.2] step 1500/1500 L=  256 loss=1.7200 ppl=    5.6 | 64,255 tok/s
+  [delta+route8@hd64:t0.2] trained 27.2M params in 552s
+
+============================================================
+== delta+route8@hd64:t0.5  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   0.97   0.94   1.00
+a4       0.20   0.19   0.20   0.20   0.18   0.20   0.19
+a8       0.19   0.21   0.16   0.14   0.14   0.12   0.15
+
+== delta+route8@hd64:t0.2  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a4       0.19   0.16   0.17   0.16   0.16   0.22   0.24
+a8       0.16   0.16   0.14   0.15   0.19   0.20   0.20
+
+a1 by arm x ctx:
+  arm                           128    256    512   1024   2048   4096   8192
+  delta+route8@hd64:t0.5       1.00   1.00   1.00   1.00   0.97   0.94   1.00
+  delta+route8@hd64:t0.2       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a8 by arm x ctx:
+  arm                           128    256    512   1024   2048   4096   8192
+  delta+route8@hd64:t0.5       0.19   0.21   0.16   0.14   0.14   0.12   0.15
+  delta+route8@hd64:t0.2       0.16   0.16   0.14   0.15   0.19   0.20   0.20

@@ -20,10 +20,18 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   no KV cache. **But multi-way is unsolved:** a4≈0.3, a8≈chance, and a
   head_dim {64,96,128} sweep did NOT help (refutes the orthogonality story) →
   the linear `q·S` read cannot isolate one of several co-resident bindings.
-  Full record: `EXPERIMENTS_SEMPY.md` → "A3 delta rule". **Next = solve
-  MULTI-WAY on the micro-bench (nonlinear/iterative read | n_states routing |
-  product-key), then ONE 1B run at 8K with delta+fix, then scale. No 1B run
-  yet.** Nothing running on the 6000.
+  Full record: `EXPERIMENTS_SEMPY.md` → "A3 delta rule".
+* **MULTI-WAY attempt #1 = content-routed delta (A2r): FAIL, removed
+  (2026-09-05).** Routed S=4/8 delta memories (write-by-key, read-by-query);
+  a8 stayed at chance even with sharpened τ=0.2 (= plain delta's level at 4-8×
+  cost). Three failures now (head_dim, soft route, sharp route) say multi-way
+  is NOT a memory-structure/capacity problem — the model can't learn keys/
+  queries selective enough. **Next candidate = the error-correcting DeltaNet
+  write `S += β(v − Sk)kᵀ`** (current code writes `b_w v kᵀ` after erase, not
+  the prediction error); this is online least-squares and separates overlapping
+  keys — a small change to the EXISTING delta, still O(1)/non-attention. Record:
+  `EXPERIMENTS_SEMPY.md` → "A2r content-routed delta". **Still no 1B run until
+  multi-way is cracked on the micro-bench.** Nothing running on the 6000.
 * **L1 DONE (2026-09-05, `18ed358`): T=8192 B=8 dt_spread=8 long mix, 1B
   tok → holdout PPL 40.26, recall horizon FLAT ~0.2 at 512–8192, 128-ctx
   recall 0.63 (mix-3B 1.00), a8 at chance; dt_bias ladder never moved from

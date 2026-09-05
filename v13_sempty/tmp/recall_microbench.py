@@ -47,10 +47,9 @@ def _make_cfg(vocab_size: int, delta: bool, max_seq_len: int,
     """Small real-arm model: chrono + out_gate is the reference; delta optional.
 
     dim 384 / 6 heads / head_dim 64 => a 64x64 matrix memory per head. 4 layers
-    keeps a step well under a second at ctx<=4096. ``head_dim`` is swept to test
-    whether multi-way interference (a4/a8) is an orthogonality/capacity knob:
-    8 random unit keys in K dims cross-talk ~ (K-way distractors)/sqrt(K).
-    dim tracks 6*head_dim so the per-head width stays the driver.
+    keeps a step well under a second at ctx<=4096. ``head_dim`` was swept (no
+    a8 gain -> multi-way is not a capacity knob). dim tracks 6*head_dim so the
+    per-head width stays the driver.
     """
     return PAMConfig(
         vocab_size=vocab_size, dim=6 * head_dim, n_heads=6, head_dim=head_dim,
@@ -184,8 +183,8 @@ def main():
     p.add_argument('--seed', type=int, default=42)
     p.add_argument('--device', default='cuda')
     p.add_argument('--arms', default='base,delta',
-                   help="comma list from {base,delta} or 'delta@128' to set "
-                        "head_dim per arm (default head_dim 64)")
+                   help="comma list of arms. Each: base|delta with an optional "
+                        "@<head_dim> (default 64). e.g. 'base,delta,delta@128'")
     args = p.parse_args()
 
     set_kernel_enabled(True)
@@ -208,7 +207,7 @@ def main():
           f"{length_buckets} w={bucket_weights}, eval ctx {eval_ctxs}, "
           f"{args.trials} trials, vocab {vocab}", flush=True)
 
-    # Parse arms: 'base'|'delta' with optional '@<head_dim>' suffix.
+    # Parse arms: base | delta, optional '@<head_dim>'.
     arm_specs = []
     for tok in args.arms.split(','):
         tok = tok.strip()
