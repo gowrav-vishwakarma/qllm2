@@ -506,10 +506,12 @@ class RealPAMLayer(nn.Module):
         # The decay: one number per head, read from the token's channels.
         self.decay_out = Dim("decay_out", cfg.n_heads)
         self.dt_proj = NamedLinear(self.model_dim, self.decay_out)
-        # R1: per-head ladder of initial decay biases (spread 0 == all at base).
-        self.dt_bias = nn.Parameter(
-            cfg.base_dt_bias
-            - cfg.dt_bias_spread * torch.linspace(0.0, 1.0, cfg.n_heads))
+        # One shared initial decay bias per head. (R1 "per-head ladder of
+        # initial biases", 2026-09-05, was removed: it left the recall horizon
+        # flat at ~0.2 for 512-8192 ctx and hurt 128-ctx recall; the biases
+        # never moved from init. Retention is not the bottleneck -- retrieval
+        # is. Record: EXPERIMENTS_SEMPY.md -> "L1 / R1 dt-spread".)
+        self.dt_bias = nn.Parameter(torch.full((cfg.n_heads,), cfg.base_dt_bias))
 
         # RoPE table, built once outside the graph (declared boundary).
         if cfg.use_rope:

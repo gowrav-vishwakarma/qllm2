@@ -12,10 +12,18 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   at init. Full analysis: `EXPERIMENTS_SEMPY.md` → "Phase 3a". **Program is
   now RETENTION** (ladder R1 dt-spread → R2 vault → R3 delta), then Stage L
   (8K/32K). Complex arm: not revisited (same decay; phase ≠ retention).
-* **RUNNING L1 (Stage L-1: T=8192 B=8, dt_spread=8, long mix incl. pg19 /
-  fineweb_long / recall_long, 1B tok, tmux `sempty_l1`, commit `18ed358`,
-  relaunched 09:56Z after a blend bug made the first launch ~95 % PG-19)**
-  — see "Running L1" below. R1 at T=2048 was killed by the user (8K first).
+* **L1 DONE (2026-09-05, `18ed358`): T=8192 B=8 dt_spread=8 long mix, 1B
+  tok → holdout PPL 40.26, recall horizon FLAT ~0.2 at 512–8192, 128-ctx
+  recall 0.63 (mix-3B 1.00), a8 at chance; dt_bias ladder never moved from
+  init. R1 FAIL → `dt_bias_spread` removed from code.** Verdict: retention is
+  NOT the bottleneck (state persists 0.83–0.99/layer) — RETRIEVAL is
+  (interference on read). Full record: `EXPERIMENTS_SEMPY.md` → "L1 / R1
+  dt-spread". **Next = R3 delta rule, proven on a minutes-long synthetic
+  recall micro-bench BEFORE any 1B run. Do not scale data/params yet.**
+  Nothing running on the 6000. Generator: `.venv/bin/python -m
+  v13_sempty.generate --checkpoint
+  checkpoints_v13_sempty/mix1b_8k_r1_dtspread8_18ed358/best_model.pt --preset
+  baseline_real_pm --interactive` (chrono decode path verified).
   Checkpoints are now rolling (`KEEP_LAST=1`); stale ckpts pruned (19→4.6 GB).
 * **N4 READ-OUT GATE DONE (2026-09-04, run commit `2537782`, code `3c7b9b9`):
   val PPL 22.96** — beats chrono 23.14 at all 16 val points; 0.27 from the
@@ -231,7 +239,8 @@ Lesson: **whenever a new source has a different doc length, check
 Also `18ed358`: `[diag] dtbias/head(layer-mean)=` row — the old per-layer
 head-mean shows a spread-8 ladder as a flat −8.
 
-**Running L1 = Stage L-1 (relaunched 2026-09-05 09:56Z, RTX Pro 6000):** tmux
+**L1 = Stage L-1 — FINISHED 13:55Z, verdict FAIL on horizon (see State of
+play + EXPERIMENTS "L1 / R1 dt-spread"). Kept for reference:** tmux
 `sempty_l1`, commit `18ed358`, log
 `logs/v13_sempty_mix1b_8k_r1_dtspread8_18ed358_20260905_0956.log`, ckpt
 `checkpoints_v13_sempty/mix1b_8k_r1_dtspread8_18ed358/`.

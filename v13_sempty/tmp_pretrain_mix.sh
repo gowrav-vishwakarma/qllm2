@@ -48,7 +48,6 @@ CHRONO="${CHRONO:-1}"
 OUT_GATE="${OUT_GATE:-1}"
 # Retention ladder (one variable per run, stacked on chrono+gate; compare the
 # recall-horizon curve, holdout PPL is the guard):
-DT_SPREAD="${DT_SPREAD:-0}"    # R1 per-head decay-bias ladder (0 = reference)
 NSTATES="${NSTATES:-0}"        # A2 states per head (0 = preset default 1)
 VAULT="${VAULT:-0}"            # A2b pinned state + protect gate (needs NSTATES>=2)
 DELTA="${DELTA:-0}"            # A3 delta erase/write
@@ -71,7 +70,6 @@ EXTRA=()
 if [ "$GRAD_CKPT" = "1" ]; then EXTRA+=(--gradient_checkpointing); fi
 if [ "$CHRONO" = "1" ]; then EXTRA+=(--chrono); fi
 if [ "$OUT_GATE" = "1" ]; then EXTRA+=(--out_gate); fi
-if [ "$DT_SPREAD" != "0" ]; then EXTRA+=(--dt_spread "$DT_SPREAD"); fi
 if [ "$NSTATES" != "0" ]; then EXTRA+=(--n_states "$NSTATES"); fi
 if [ "$VAULT" = "1" ]; then EXTRA+=(--vault); fi
 if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi

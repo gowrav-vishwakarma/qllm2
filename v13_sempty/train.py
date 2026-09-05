@@ -124,7 +124,7 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
 
     # --- ladder (only non-default arch flags) -------------------------------
     _ladder = [k for k in ('n_states', 'vault', 'delta', 'cond_mem',
-                           'chrono', 'out_gate', 'dt_bias_spread')
+                           'chrono', 'out_gate')
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if _ladder:
         print('[ladder] ' + " ".join(f"{k}={getattr(cfg, k)}" for k in _ladder))
@@ -539,10 +539,9 @@ class Trainer:
             'ret': [],
             'dt_bias_heads': None,   # per-head dt_bias, averaged over layers
         }
-        # Per-head view (mean over layers): with dt_bias_spread the heads form a
-        # ladder (-4 ... -12 at spread 8) whose per-layer head-MEAN is a flat -8,
-        # so the 'dtbias=' row alone cannot show whether the optimizer keeps or
-        # collapses the long heads (first L1 run, 2026-09-05).
+        # Per-head view (mean over layers): the per-layer head-MEAN in the
+        # 'dtbias=' row hides any per-head structure (L1 run, 2026-09-05: a
+        # -4..-12 ladder read as a flat -8), so keep both views.
         head_acc = None
         for i, b in enumerate(self._blocks):
             out['cgu_scale'].append(float(b.cgu_scale.detach()))
@@ -899,9 +898,6 @@ def build_argparser():
                    help='N1: Chrono-PAM content-modulated rotary retention (real arm)')
     p.add_argument('--out_gate', action='store_true',
                    help='N4: per-head content-dependent read-out gate (real arm)')
-    p.add_argument('--dt_spread', type=float, default=None,
-                   help='R1: per-head ladder of initial decay biases, head h at '
-                        'base_dt_bias - spread*h/(H-1) (0 = reference)')
     return p
 
 
@@ -928,8 +924,6 @@ def main():
         cfg.chrono = True
     if args.out_gate:
         cfg.out_gate = True
-    if args.dt_spread is not None:
-        cfg.dt_bias_spread = args.dt_spread
     if args.dropout is not None:
         cfg.dropout = args.dropout
     device = torch.device(args.device)

@@ -591,9 +591,10 @@ fixed, 8-way interference is the limiter and A3 delta does not solve it.
 **Retention ladder (one variable per run on the mix recipe at 1B tokens;
 primary metric = horizon curve incl. ctx 4096/8192 beyond the training window,
 guard = holdout PPL):**
-1. **R1 `--dt_spread 8`** (this commit): head h inits at −4 − 8·h/5 ⇒
+1. **R1 `--dt_spread 8`**: head h inits at −4 − 8·h/5 ⇒
    half-lives 38 / 190 / 940 / 4.6k / 23k / 113k tokens. Zero params, zero
-   cost (98.9k tok/s = ref), decode intact. Launched `b55c49a`.
+   cost (98.9k tok/s = ref), decode intact. **Run at T=8192 → FAIL, removed
+   (see "L1 / R1 dt-spread" below).**
 2. **R2 A2b vault** (`--n_states 2 --vault`, coded): state 0 retention pinned
    to 1 with a protect gate. −21 % tok/s, 36 GB. No decode yet (`GEN_EVERY=0`).
 3. **R3 A3 delta** (`--delta`, coded): overwrite-only forgetting, unit keys.
@@ -607,6 +608,79 @@ guard = holdout PPL):**
 T=8192 B=4 → 118k tok/s, 26 GB; T=32768 B=1 → 98.6k tok/s, 26 GB — identical
 to T=2048. The scan is linear; 8K/32K is a data + curriculum stage, not a
 kernel stage (see SCRATCHPAD "Stage L").
+
+## L1 / R1 dt-spread at T=8192 — horizon flat, FAIL, removed (2026-09-05)
+
+**Run.** `mix1b_8k_r1_dtspread8`, commit `18ed358`, RTX Pro 6000, tmux
+`sempty_l1`. `baseline_real_pm` (102M) + chrono + out_gate + `dt_spread 8`
+(head h init `dt_bias = −4 − 8·h/5`, half-lives 38 → 113k tok), **T=8192
+B=8** (65,536 tok/step), 1.0B tokens = 15,258 steps, lr 2e-4 cosine, warmup
+500, dropout 0, `GRAD_CKPT=0`. Data: token-weighted blend `dclm .36 /
+fineweb_long .20 / pg19 .22 / smoltalk2_mid .10 / recall .04 / recall_long
+.08`, web-only for the first 100M. 79–81k tok/s, 52 GB, 3.9 h. Log
+`logs/v13_sempty_mix1b_8k_r1_dtspread8_18ed358_20260905_0956.log`; ckpt
+`checkpoints_v13_sempty/mix1b_8k_r1_dtspread8_18ed358/best_model.pt`; probe
+`logs/memory_probes/v13_sempty_mix1b_8k_r1_dtspread8_18ed358_behavioral.json`.
+(A first launch on `b07e384` was killed at 3.5k steps: the blend drew one
+*document* per pick so the stream was ~95 % PG-19 — fixed in `18ed358`, see
+`v7/data.py` `_blend_interleave_text_iters`.)
+
+**PPL (guard).** Holdout val 40.26 at 1B (mix-3B at 1B tokens / 27k steps:
+32.4; end 25.73). WikiText 91.7 (mix-3B @1B: 71). Worse, but confounded three
+ways: 56 % web vs 87 %, 15k optimizer steps vs 27k, and 8K windows of books
+vs 2K windows of web. Not the verdict metric.
+
+**Horizon (verdict).** Behavioral recall accuracy, mean over positions
+0/0.5/1, 20 trials each; a1/a4/a8 = 1/4/8 invented bindings in context:
+
+| ctx | 128 | 256 | 512 | 1024 | 2048 | 4096 | 8192 |
+|---|---|---|---|---|---|---|---|
+| L1 a1 | 0.63 | 0.37 | 0.20 | 0.25 | 0.18 | 0.22 | 0.23 |
+| L1 a4 | 0.38 | 0.25 | 0.20 | 0.17 | 0.20 | 0.23 | 0.20 |
+| L1 a8 | 0.10 | 0.07 | 0.10 | 0.10 | 0.07 | 0.03 | 0.02 |
+| mix-3B a1 | 1.00 | – | 0.35 | – | 0.25 | – | – |
+| mix-3B a4 | 0.40 | – | 0.23 | – | 0.27 | – | – |
+| mix-3B a8 | 0.22 | – | 0.22 | – | 0.25 | – | – |
+
+Flat ~0.2 from 512 to 8192 for both models; L1 is *worse* at 128 (0.63 vs
+1.00) and a8 is at/below chance everywhere. Training in 8K windows with 12 %
+recall curriculum up to 5k-token gaps and slow heads with 113k-token
+half-lives did not move the horizon at all. Generation confirms it in one
+line: prompt "…my favourite colour is teal. Later … I said my favourite colour
+is" → "yellow" (30 tokens back).
+
+**Internals (`[diag]`).** `dtbias/head(layer-mean) = −3.95 −5.56 −7.15 −8.74
+−10.32 −11.92` at step 14k = init to 2 decimals: the ladder was preserved but
+**never learned** (a 6-number bias with lr 2e-4 barely moves; same as the
+−3.9 stuck bias in mix-3B). Realized retention per layer 0.83–0.99 (mix-3B
+0.61–0.90) — the state *does* persist longer. `pam_scale` 0.03–0.18,
+`cgu_scale` 0.66–1.64 (mix-3B: 0.01–0.17 / 0.19–1.73) — same shape.
+
+**Reading.** Retention was the hypothesis (mix-3B: "one shared timescale
+cannot serve local PPL and long recall"). It is refuted as the *bottleneck*:
+with information demonstrably held for thousands of tokens, the model still
+cannot retrieve a keyed binding at 512+ and cannot separate 8 bindings at
+128. The limiter is the **read/write path** — the k→v binding written into
+`S += k vᵀ` is not recoverable by `q S` once other tokens have been added,
+i.e. interference / non-orthogonal keys, exactly the oracle "READ-SIDE
+routing gap" from 2026-08-26. This is what the delta rule (A3: erase the old
+value under key k before writing the new one, unit keys) is for; the vault
+(R2) only protects, it does not de-interfere.
+
+**Decision.** R1 FAIL on its sole metric → `dt_bias_spread` removed from
+`config.py`, `model.py`, `train.py`, `tmp_pretrain_mix.sh` (this commit;
+`selftest` 17/17). Old ckpts still load (`dt_bias` is in the state_dict).
+The recall_long / pg19 / fineweb_long sources and the token-weighted blend
+stay — Stage L needs them once retrieval works. Next: R3 delta, but proven
+first on a **minutes-long synthetic recall micro-bench** (train on the recall
+curriculum only, score the probe at 512–8K) before any 1B-token run — the
+1B runs measure PPL well and horizon badly, and we have now spent two of them
+learning that.
+
+**Scaling call (asked 2026-09-05).** Neither data nor params (305M) yet: on
+PPL the 100M model is 0.27 from the transformer, so scaling would buy PPL we
+already have; on recall a 100M transformer scores ~1.0 on every column of
+the table above and we score 0.2. Scale after the mechanism retrieves.
 
 ## Positioning — is this Mamba? (2026-09-04)
 

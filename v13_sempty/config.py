@@ -25,13 +25,9 @@ class PAMConfig:
     activation: str = 'swish'        # 'swish' (v7/v11 default) | 'modrelu' | 'phase_mod'
     chunk_size: int = 256            # notebook carry window (train / prefill)
     base_dt_bias: float = -4.0       # decay bias: init decay ~= e^-4 ~= 0.018
-    # R1 multi-timescale heads: head h starts at base_dt_bias - dt_bias_spread *
-    # h/(H-1), i.e. a ladder of retention half-lives (0 = all heads at base, the
-    # 22.96 / mix-3B reference). base -4 -> retention exp(-softplus(-4)) = 0.982
-    # per token (half-life ~38 tok); -10 -> 0.99995 (~15k tok). The probe on the
-    # mix-3B ckpt showed a ~200-token recall horizon that SHRANK with training:
-    # one shared timescale cannot serve local PPL and long recall at once.
-    dt_bias_spread: float = 0.0
+    # (R1 `dt_bias_spread` -- per-head ladder of initial decay biases -- was
+    # removed 2026-09-05 after the L1 run: no horizon gain, 128-ctx recall
+    # worse, biases frozen at init. See EXPERIMENTS_SEMPY.md "L1 / R1".)
     is_complex: bool = True          # SplitComplex (phase) | fully-real PAM
 
     # ── architecture ladder (real arm; EXPERIMENTS_SEMPY "Architecture ladder")
