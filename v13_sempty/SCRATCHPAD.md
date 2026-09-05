@@ -6,6 +6,26 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
+* **RUNNING on the RTX Pro 6000 (launched 2026-09-05 17:47 UTC, `1c913ef`):
+  `mix3b_delta_answ100`** — the mix-3B recipe (B18 T2048, 3B tok, dclm/
+  fineweb/smoltalk2/recall, 300M web-only warmup) with the two things the
+  micro-bench proved: **`DELTA=1`** and **`ANSWER_W=100`** (answer tokens of the
+  synthetic recall docs get 100× CE weight; recall share raised 3 → 5 %).
+  Direct comparison target: mix-3B `bbc12e9` (holdout PPL 25.73, a8 at chance,
+  horizon ~200 tok). tmux `sempty_mix`, log
+  `logs/v13_sempty_mix3b_delta_answ100_1c913ef_20260905_1747.log`, ckpt
+  `checkpoints_v13_sempty/mix3b_delta_answ100_1c913ef/` (latest.pt every 1000
+  steps, rolling milestones, auto-resume). Throughput **51.8K tok/s vs 86.5K
+  for chrono+gate** (delta = pure-torch chunked scan `pam_delta_torch`, 56 GB
+  vs 31 GB) → ~16 h. GEN_EVERY=0 (delta has no decode path yet — generate.py
+  and `_chunked_delta` decode are TODO before this ckpt can be played with).
+  **Judge by:** (1) holdout PPL vs 25.73 at matched steps (val every 2000);
+  (2) behavioral probe on `latest.pt` (`scripts/run_memory_behavioral.py
+  --model-type v13_sempty`) — the bet is a4/a8 well above chance and a flat
+  horizon; the train loss in the log is the answer-WEIGHTED mean (not
+  comparable to mix-3B's train loss; val is unweighted and comparable).
+  Follow-ups this run un-blocks: Triton delta kernel (speed), delta decode
+  path, then Stage L (8K) with `recall_long` + the same answer weighting.
 * **MULTI-WAY RECALL SOLVED — PAM-delta a1 = a4 = a8 = 1.00 at ctx 128–8192
   (2026-09-05 evening, `36a8cac`).** The user asked whether we were chasing the
   wrong error; we had never run a positive control. Added a transformer arm
