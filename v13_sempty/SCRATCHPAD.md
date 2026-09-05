@@ -6,6 +6,13 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
+* **MIX-3B DONE (2026-09-05, `bbc12e9`): holdout PPL 25.73, recall horizon
+  ~200 tokens and SHRINKING with training** (a1 recall 1.00 @ctx128, 0.10 =
+  chance @512; ctx512 went 0.35 → 0.10 from step 10k → 80k). `dt_bias` stuck
+  at init. Full analysis: `EXPERIMENTS_SEMPY.md` → "Phase 3a". **Program is
+  now RETENTION** (ladder R1 dt-spread → R2 vault → R3 delta), then Stage L
+  (8K/32K). Complex arm: not revisited (same decay; phase ≠ retention).
+* **RUNNING R1** — see "Running" below.
 * **N4 READ-OUT GATE DONE (2026-09-04, run commit `2537782`, code `3c7b9b9`):
   val PPL 22.96** — beats chrono 23.14 at all 16 val points; 0.27 from the
   transformer (22.69). Gate verified content-dependent (doubles the effective
@@ -200,6 +207,57 @@ Watchdog: `bash v13_sempty/tmp_wiki_watchdog.sh <log> 81380 2940` (re-arm on
 wake). Two earlier launches today (`303c7fb` 18:53/18:56) were killed at
 <600 steps and their logs deleted: no resume support yet and the blend warmup
 was silently inactive (see below).
+
+**Running R1 (2026-09-05 06:12Z, RTX Pro 6000):** tmux `sempty_r1`, commit
+`b55c49a`, `TAG=mix1b_r1_dtspread8 TARGET_TOKENS=1e9 BLEND_WARMUP=100M
+DT_SPREAD=8` (else = mix-3B recipe), log
+`logs/v13_sempty_mix1b_r1_dtspread8_b55c49a_20260905_0612.log`, ckpt dir
+`checkpoints_v13_sempty/mix1b_r1_dtspread8_b55c49a/`, 27,126 steps, ~3.3 h →
+ETA ~09:40Z. Watchdog `tmp_wiki_watchdog.sh <log> 27126 2940`.
+**Judge R1 by the horizon, not PPL:**
+```bash
+.venv/bin/python scripts/run_memory_behavioral.py --model-type v13_sempty \
+  --checkpoint checkpoints_v13_sempty/mix1b_r1_dtspread8_b55c49a/best_model.pt \
+  --preset baseline_real_pm --context-lengths 128,256,512,1024,2048,4096,8192 \
+  --positions 0,0.5,1 --association-counts 1,4,8 --trials 20 \
+  --output logs/memory_probes/v13_sempty_mix1b_r1_dtspread8_b55c49a_behavioral.json
+```
+Reference (mix-3B, 3× the tokens): a1 1.00 @128, 0.35 @256, 0.10 @512/2048;
+a8 0.2–0.35. KEEP if a1 stays ≥0.5 at 512–2048 (and anything >chance at
+4096/8192 = recall beyond the training window, which a transformer cannot do)
+with holdout PPL within ~1 of the mix-3B curve at 1B tokens (val @27k ≈ 32.4,
+but that was mid-cosine — expect R1 lower at end-of-schedule). Also read the
+`[diag]` `dtbias=` row: did the long heads keep their −8…−12 or get pulled up?
+Then R2 (`NSTATES=2 VAULT=1 GEN_EVERY=0`), R3 (`DELTA=1 GEN_EVERY=0`) — each
+1B, sequential, never concurrent.
+
+## Stage L — 8K then 32K context (planned 2026-09-05; starts after the ladder)
+
+Measured: the scan is linear — T=8192 B=4 118k tok/s / 26 GB, T=32768 B=1
+98.6k tok/s / 26 GB on the 6000 (synthetic vocab; real CE adds cost but the
+sequence axis is free). What is NOT ready is the data/curriculum/eval:
+1. **Recall curriculum gaps.** `v7.data._build_recall_doc` sparse variant gaps
+   2–200 sentences (≲2–3k tok). Add a long-gap variant parameterised by
+   `seq_len` (gaps up to 6k @8K, 28k @32K) and a needle-style doc (one binding,
+   long filler, query) so the long heads get gradient.
+2. **Long documents.** At T=8K web docs are still short and just get packed;
+   add real long text: pg19 / books, long-doc-filtered fineweb, whole code
+   files (StarCoder), smoltalk2 `longalign` (currently blocked, correctly, for
+   T=2048). Pack, do not truncate.
+3. **Probe.** `run_memory_behavioral.py --context-lengths ... 8192,32768`
+   (check `build_example` filler scaling and GPU time at 32K; 20 trials × 3
+   positions × 3 counts × 7 lengths).
+4. **Training geometry.** Keep tokens/step ≈ 33–37k: T=8192 B=4, T=32768 B=1
+   (or grad-accum 2 for a steadier batch). Same lr schedule. `max_seq_len`
+   follows `--seq_len` (RoPE cache, Chrono cumsum both length-agnostic).
+5. **Sequence:** R-winner at T=2048 (1B) → **midtrain T=8192** from that ckpt
+   via `--resume` semantics? No — `--resume` restores the optimizer/LR for the
+   *same* run; for a length change use a fresh run that loads weights only
+   (needs a `--init_from <ckpt>` flag: weights, not optimizer/step). Then
+   32K the same way. Budget ~1B tokens per stage (3–4 h each).
+6. **Retention prerequisite:** the head ladder must reach 32K half-lives —
+   spread 8 does (23k/113k for heads 4–5). If R1 shows the optimizer pulling
+   the long heads back up, pin the slowest head (vault-style) before Stage L.
 
 **Resume (2026-09-04, `bbc12e9`).** `--resume auto|<path>` restores model,
 optimizer, LR schedule, AMP scaler, step/token counters, best-val, all RNG

@@ -526,6 +526,88 @@ is close to what this architecture will show. The next information is not
 another 0.2 PPL — it is whether the architecture holds on diverse data at
 more tokens, and whether it can be trained to *recall*. Next: scale the data.
 
+## Phase 3a: mix-3B pretrain — PPL fine, recall horizon ~200 tokens (2026-09-05)
+
+**Run (commit `bbc12e9`, RTX Pro 6000, log
+`logs/v13_sempty_mix3b_chrono_gate_bbc12e9_20260904_1915.log`, ckpts
+`checkpoints_v13_sempty/mix3b_chrono_gate_bbc12e9/{best_model,latest,step_0X0000}.pt`).**
+real-102M chrono+gate (the 22.96 arch), live stream dclm-edu .45 / fineweb-edu
+.42 / smoltalk2-Mid ChatML .10 / synthetic recall .03, web-only first 300M tok,
+3.0B tokens, B18 T2048 (81,380 steps), lr 2e-4 warmup 1000 cosine, dropout 0,
+chat vocab 50261, grad-ckpt off. 85k tok/s live, 30.5 GB, 15.5 h, exit 0.
+
+**Result.** Holdout val PPL **25.73** (best at 80k; 104.6 → 44.0 @8k → 31.0
+@30k → 27.1 @56k → 25.7), still `*best*` at every 2k-step val point — data,
+not capacity, is the limiter at this size. WikiText anchor 55.2 (single pass,
+different distribution; not comparable with the 22.96 10-epoch number). Train
+loss 10.96 → 3.22. Samples fluent web/encyclopedic register.
+
+**Trajectories (`[diag]`, every 2k steps).** `cgu_scale` L0 0.95 → 0.19, L15
+1.18 → 1.73; `pam_scale` mean 0.117 → 0.047, L0–7 at 0.006–0.03 by the end;
+`dt_bias` −3.98 → −3.92 (never left init −4.0); realized retention 0.61–0.90
+(mean 0.78); grad norms 0.1–0.6; weight norms 57 → 81 (L0) / 60 → 88 (L15).
+**Lesson: `pam_scale` is not a usage meter.** Ablation on the checkpoint
+(holdout val, NLL): memory off in all layers **+2.93** (ppl 25.7 → 482), L0–7
+off +2.86, L8–11 off +0.63, L12–15 off +1.07; CGU L8–11 off +0.55 for
+calibration. The tiny scalars are normalisation that moved into the PAM
+weights (wnorm ↑); PAM is the block's only token-mixing path and carries the
+model. Gate (N4) on this ckpt: means 1.5–2.5, std 0.9–1.8, effective read
+`pam×gate` 0.01 (L0) → 0.35 (L13).
+
+**Behavioral recall (`scripts/run_memory_behavioral.py`, 8-candidate
+contrastive, 20 trials/cell,
+`logs/memory_probes/v13_sempty_mix3b_chrono_gate_bbc12e9_behavioral.json`).**
+Mean **0.354** vs chance 0.125 (1-epoch WikiText probe was 0.129). The shape is
+the finding:
+
+| ctx | a1 pos0 | a1 pos½ | a1 pos1 | a4 (mean) | a8 (mean) |
+|---|---|---|---|---|---|
+| 128 | **1.00** | **1.00** | **1.00** | 0.40 | 0.22 |
+| 512 | 0.10 | 0.10 | 0.85 | 0.23 | 0.22 |
+| 2048 | 0.10 | 0.10 | 0.55 | 0.27 | 0.25 |
+
+Horizon sweep (a1, binding at pos 0/½): ctx 128 **1.00** → 192 0.75 → 256
+0.35 → 320 0.33 → 384 0.17 → 512 **0.10** (chance). Half-life ≈ 200 tokens.
+Across milestones (a1@ctx128 / a1@ctx512): step 10k 0.75 / 0.35 → 40k 0.90 /
+0.10 → 80k 1.00 / 0.10 — **training on web text shortens the horizon**; more
+tokens make it worse, not better. 8-way stays 0.2–0.35 at every length
+(interference/read routing, the previously identified gap).
+
+**Mechanism.** Retention is `exp(-softplus(W x + dt_bias))` with `dt_bias`
+stuck at −3.9 ⇒ 0.982/token at logit 0 ⇒ the state is at 8 % after 128
+tokens before any input-dependent forgetting (realized mean 0.78). Web PPL is
+dominated by local context and rewards a fast-forgetting cache; a 3 % recall
+slice cannot pull one shared timescale the other way. The memory is a
+~200-token associative cache, not long-term storage. This — not PPL — is what
+separates a matrix memory from a Mamba-style SSM, so it is the program now.
+
+**Complex arm reconsidered: no.** Both arms share the same decay
+(`model.py` `_decay`, L301 vs L705); phase gives key orthogonality (an
+interference lever for the 8-way rows), not retention. Chrono already imported
+phase-keyed addressing into the real arm at half the cost with a 2.6-PPL lead
+(23.14 vs 25.77). Revisit phase-coded keys only if, after the horizon is
+fixed, 8-way interference is the limiter and A3 delta does not solve it.
+
+**Retention ladder (one variable per run on the mix recipe at 1B tokens;
+primary metric = horizon curve incl. ctx 4096/8192 beyond the training window,
+guard = holdout PPL):**
+1. **R1 `--dt_spread 8`** (this commit): head h inits at −4 − 8·h/5 ⇒
+   half-lives 38 / 190 / 940 / 4.6k / 23k / 113k tokens. Zero params, zero
+   cost (98.9k tok/s = ref), decode intact. Launched `b55c49a`.
+2. **R2 A2b vault** (`--n_states 2 --vault`, coded): state 0 retention pinned
+   to 1 with a protect gate. −21 % tok/s, 36 GB. No decode yet (`GEN_EVERY=0`).
+3. **R3 A3 delta** (`--delta`, coded): overwrite-only forgetting, unit keys.
+   −43 % tok/s (torch WY path), 56 GB. No decode yet. Needs a Triton path if
+   it wins.
+4. Novel candidate if R1 moves the horizon but not enough: **clocked
+   retention** — decay in Chrono's content time, `ret = exp(-λ_h · g_t)`, so a
+   stable topic ages slowly and a shift forgets; one λ per head, zero cost.
+
+**Long-context readiness (measured 2026-09-05, synthetic, chrono+gate+spread):**
+T=8192 B=4 → 118k tok/s, 26 GB; T=32768 B=1 → 98.6k tok/s, 26 GB — identical
+to T=2048. The scan is linear; 8K/32K is a data + curriculum stage, not a
+kernel stage (see SCRATCHPAD "Stage L").
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*
