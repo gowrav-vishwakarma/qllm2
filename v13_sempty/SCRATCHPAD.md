@@ -12,16 +12,26 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   at init. Full analysis: `EXPERIMENTS_SEMPY.md` → "Phase 3a". **Program is
   now RETENTION** (ladder R1 dt-spread → R2 vault → R3 delta), then Stage L
   (8K/32K). Complex arm: not revisited (same decay; phase ≠ retention).
+* **DELTA (A3) IS A KEEP — read-path win, found on the micro-bench (2026-09-05,
+  `543b897`).** `v13_sempty/tmp/recall_microbench.py` (small 27M real PAM, pure
+  invented-association recall, answer-only loss, minutes/arm) shows delta's
+  erase-before-write takes single-binding recall from **0.46 → 1.00, flat at
+  ctx 128–8192 (extrapolates past the 4096 train window)** — O(1) state,
+  no KV cache. **But multi-way is unsolved:** a4≈0.3, a8≈chance, and a
+  head_dim {64,96,128} sweep did NOT help (refutes the orthogonality story) →
+  the linear `q·S` read cannot isolate one of several co-resident bindings.
+  Full record: `EXPERIMENTS_SEMPY.md` → "A3 delta rule". **Next = solve
+  MULTI-WAY on the micro-bench (nonlinear/iterative read | n_states routing |
+  product-key), then ONE 1B run at 8K with delta+fix, then scale. No 1B run
+  yet.** Nothing running on the 6000.
 * **L1 DONE (2026-09-05, `18ed358`): T=8192 B=8 dt_spread=8 long mix, 1B
   tok → holdout PPL 40.26, recall horizon FLAT ~0.2 at 512–8192, 128-ctx
   recall 0.63 (mix-3B 1.00), a8 at chance; dt_bias ladder never moved from
   init. R1 FAIL → `dt_bias_spread` removed from code.** Verdict: retention is
-  NOT the bottleneck (state persists 0.83–0.99/layer) — RETRIEVAL is
-  (interference on read). Full record: `EXPERIMENTS_SEMPY.md` → "L1 / R1
-  dt-spread". **Next = R3 delta rule, proven on a minutes-long synthetic
-  recall micro-bench BEFORE any 1B run. Do not scale data/params yet.**
-  Nothing running on the 6000. Generator: `.venv/bin/python -m
-  v13_sempty.generate --checkpoint
+  NOT the bottleneck (state persists 0.83–0.99/layer) — RETRIEVAL is. This is
+  what the delta micro-bench above then tackled. Full record:
+  `EXPERIMENTS_SEMPY.md` → "L1 / R1 dt-spread". Generator: `.venv/bin/python
+  -m v13_sempty.generate --checkpoint
   checkpoints_v13_sempty/mix1b_8k_r1_dtspread8_18ed358/best_model.pt --preset
   baseline_real_pm --interactive` (chrono decode path verified).
   Checkpoints are now rolling (`KEEP_LAST=1`); stale ckpts pruned (19→4.6 GB).

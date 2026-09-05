@@ -682,6 +682,73 @@ PPL the 100M model is 0.27 from the transformer, so scaling would buy PPL we
 already have; on recall a 100M transformer scores ~1.0 on every column of
 the table above and we score 0.2. Scale after the mechanism retrieves.
 
+## A3 delta rule — recall micro-bench: a1 0.46→1.00, multi-way still stuck (2026-09-05)
+
+**Why a micro-bench.** mix-3B and L1 each cost hours and measured PPL well but
+the horizon badly. The tool `v13_sempty/tmp/recall_microbench.py` (throwaway)
+trains a SMALL real-arm PAM (dim 384, 6 heads, head_dim 64, 4 layers, 27M) on
+the pure task — invented-association docs from `memory_probes.build_example`
+("Memory record N: K means V" × assoc, filler, "query: K means" → V), lengths
+bucketed per step (no padding), associations 1–8 — and scores the behavioral
+probe at ctx 128–8192. Two arms on byte-identical data. **Answer-only loss
+mask** (CE on the queried value token only): the first pass used full-sequence
+CE, which is ≥99.9 % filler/record-copy, so train ppl hit 1.0 while the read
+path got ~no gradient and both arms sat at chance — a lesson in itself. 1500
+steps × B16, 32 trials, ~100–150 s/arm on the 6000.
+
+**Result (accuracy; chance ≈0.12, 96 samples/cell).**
+
+| arm | metric | 128 | 256 | 512 | 1024 | 2048 | 4096 | 8192 |
+|---|---|---|---|---|---|---|---|---|
+| chrono+gate | a1 | 0.46 | 0.45 | 0.46 | 0.46 | 0.45 | 0.45 | 0.46 |
+| **+delta** | **a1** | **1.00** | **1.00** | **1.00** | **1.00** | **1.00** | **1.00** | **1.00** |
+| chrono+gate | a8 | 0.20 | 0.19 | 0.20 | 0.20 | 0.21 | 0.21 | 0.23 |
+| +delta | a8 | 0.19 | 0.18 | 0.19 | 0.19 | 0.15 | 0.11 | 0.11 |
+
+**Reading.** The delta rule fixes exactly the L1-identified failure. Baseline
+additive memory `S += k vᵀ` accumulates a write from EVERY token (filler
+included), burying the one real binding → single-binding recall is a flat 0.46
+regardless of distance. Delta's erase-before-write (`S ← gS(I−bₑ k kᵀ)+b_w v kᵀ`,
+unit keys) removes the stale mass, so `q·S` recovers one binding **perfectly and
+length-invariantly, extrapolating past the 4096 training window to 8192** — an
+O(1)-state property a transformer needs an O(T) KV cache for. This is the
+"novel / performative / O(1) / not-transformer" behaviour we want, on the clean
+case.
+
+**What delta does NOT fix: multi-way interference.** a4/a8 stay at/near baseline
+and a8 *droops* at long ctx. Hypothesis: 8 random unit keys in K=64 cross-talk
+≈ 7/√64 ≈ 0.88 ≈ signal, i.e. an orthogonality limit — so sweep head_dim.
+
+**head_dim sweep (delta, dim=6·K, same 1500×B16), REFUTES the capacity story:**
+
+| arm | a4 (mean ctx) | a8 (mean ctx) |
+|---|---|---|
+| +delta @hd64 | 0.26 | 0.16 |
+| +delta @hd96 | 0.22 | 0.12 |
+| +delta @hd128 | 0.31 | 0.10 |
+
+a1 = 1.00 at every head_dim (the delta win is robust); a8 does NOT climb with K
+(flat at chance, hd128 slightly worse). So multi-way failure is not capacity or
+key-orthogonality — it is the **linear `q·S` read**: with several bindings
+co-resident, `q·S = Σ_i (q·k_i) v_i` is a weighted blend, and one learned query
+cannot both hit its key and null the other 7. Increasing K gives more room but
+the model still cannot LEARN keys/queries selective enough — a mechanism limit,
+not a width limit. This is the next "better maths" target (candidates: a
+nonlinear / iterative read; multi-state routing `n_states` so co-residency
+drops; product-key selection — NOT softmax-over-T, which would be transformer
+O(T)).
+
+**Decision.** Delta is a **KEEP on the read path** (a1 0.46→1.00, length-
+invariant, extrapolating past the train window — a qualitative O(1) win, not the
+marginal PPL deltas the ladder chased), so it is NOT removed like R1 — but **no
+1B run yet**: real-text recall is gated by the multi-way case, unsolved and
+proven not to be a head_dim knob. Cost: ~1.4× slower (285k→203k tok/s, torch WY
+path), no decode path (probe uses parallel prefill, fine for eval). Sequence:
+solve multi-way on the micro-bench (minutes each), THEN one 1B run at 8K with
+the winner (delta + multi-way fix), THEN scale. Tool + result logs:
+`v13_sempty/tmp/recall_microbench.py`,
+`logs/v13_sempty_recall_microbench_hdsweep_543b897_20260905_1503.log`.
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*

@@ -1,0 +1,70 @@
+micro-bench: 1500 steps x B16, buckets [256, 512, 1024, 2048, 4096] w=[0.3, 0.28, 0.22, 0.12, 0.08], eval ctx (128, 256, 512, 1024, 2048, 4096, 8192), 32 trials, vocab 50257
+
+--- arm: chrono+gate@hd64 (delta=False, head_dim=64) ---
+/home/ubuntu/Development/qllm-private/v13_sempty/tmp/recall_microbench.py:169: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  f"loss={float(loss):.4f} ppl={math.exp(min(float(loss),20)):7.1f} "
+  [chrono+gate@hd64] step    1/1500 L= 1024 loss=10.9899 ppl=59273.4 | 27,674 tok/s
+  [chrono+gate@hd64] step  500/1500 L= 1024 loss=2.5901 ppl=   13.3 | 282,331 tok/s
+  [chrono+gate@hd64] step 1000/1500 L=  256 loss=2.5118 ppl=   12.3 | 283,867 tok/s
+  [chrono+gate@hd64] step 1500/1500 L=  256 loss=2.2736 ppl=    9.7 | 286,669 tok/s
+  [chrono+gate@hd64] trained 27.1M params in 98s
+
+--- arm: chrono+gate+delta@hd64 (delta=True, head_dim=64) ---
+  [chrono+gate+delta@hd64] step    1/1500 L= 1024 loss=10.8637 ppl=52246.6 | 160,856 tok/s
+  [chrono+gate+delta@hd64] step  500/1500 L= 1024 loss=1.7116 ppl=    5.5 | 202,908 tok/s
+  [chrono+gate+delta@hd64] step 1000/1500 L=  256 loss=1.1544 ppl=    3.2 | 201,780 tok/s
+  [chrono+gate+delta@hd64] step 1500/1500 L=  256 loss=1.6169 ppl=    5.0 | 202,344 tok/s
+  [chrono+gate+delta@hd64] trained 27.2M params in 154s
+
+--- arm: chrono+gate+delta@hd96 (delta=True, head_dim=96) ---
+  [chrono+gate+delta@hd96] step    1/1500 L= 1024 loss=11.2201 ppl=74617.0 | 14,406 tok/s
+  [chrono+gate+delta@hd96] step  500/1500 L= 1024 loss=1.5093 ppl=    4.5 | 137,358 tok/s
+  [chrono+gate+delta@hd96] step 1000/1500 L=  256 loss=1.1872 ppl=    3.3 | 138,301 tok/s
+  [chrono+gate+delta@hd96] step 1500/1500 L=  256 loss=1.6094 ppl=    5.0 | 138,926 tok/s
+  [chrono+gate+delta@hd96] trained 46.6M params in 210s
+
+--- arm: chrono+gate+delta@hd128 (delta=True, head_dim=128) ---
+  [chrono+gate+delta@hd128] step    1/1500 L= 1024 loss=10.7144 ppl=44997.7 | 136,355 tok/s
+  [chrono+gate+delta@hd128] step  500/1500 L= 1024 loss=1.4159 ppl=    4.1 | 110,227 tok/s
+  [chrono+gate+delta@hd128] step 1000/1500 L=  256 loss=1.1461 ppl=    3.1 | 109,845 tok/s
+  [chrono+gate+delta@hd128] step 1500/1500 L=  256 loss=1.5385 ppl=    4.7 | 109,923 tok/s
+  [chrono+gate+delta@hd128] trained 70.0M params in 257s
+
+============================================================
+== chrono+gate@hd64  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       0.46   0.45   0.46   0.46   0.45   0.45   0.46
+a4       0.28   0.30   0.31   0.29   0.29   0.28   0.28
+a8       0.20   0.19   0.20   0.20   0.21   0.21   0.23
+
+== chrono+gate+delta@hd64  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a4       0.25   0.28   0.29   0.29   0.28   0.23   0.18
+a8       0.19   0.18   0.19   0.19   0.15   0.11   0.11
+
+== chrono+gate+delta@hd96  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a4       0.22   0.23   0.23   0.24   0.22   0.21   0.22
+a8       0.10   0.11   0.11   0.10   0.11   0.14   0.14
+
+== chrono+gate+delta@hd128  (accuracy; chance ~0.12)
+ctx        128    256    512   1024   2048   4096   8192
+a1       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a4       0.31   0.31   0.36   0.31   0.30   0.30   0.29
+a8       0.14   0.10   0.08   0.09   0.12   0.09   0.07
+
+a1 by arm x ctx:
+  arm                           128    256    512   1024   2048   4096   8192
+  chrono+gate@hd64             0.46   0.45   0.46   0.46   0.45   0.45   0.46
+  chrono+gate+delta@hd64       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+  chrono+gate+delta@hd96       1.00   1.00   1.00   1.00   1.00   1.00   1.00
+  chrono+gate+delta@hd128      1.00   1.00   1.00   1.00   1.00   1.00   1.00
+a8 by arm x ctx:
+  arm                           128    256    512   1024   2048   4096   8192
+  chrono+gate@hd64             0.20   0.19   0.20   0.20   0.21   0.21   0.23
+  chrono+gate+delta@hd64       0.19   0.18   0.19   0.19   0.15   0.11   0.11
+  chrono+gate+delta@hd96       0.10   0.11   0.11   0.10   0.11   0.14   0.14
+  chrono+gate+delta@hd128      0.14   0.10   0.08   0.09   0.12   0.09   0.07
