@@ -50,7 +50,10 @@ OUT_GATE="${OUT_GATE:-1}"
 # recall-horizon curve, holdout PPL is the guard):
 NSTATES="${NSTATES:-0}"        # A2 states per head (0 = preset default 1)
 VAULT="${VAULT:-0}"            # A2b pinned state + protect gate (needs NSTATES>=2)
-DELTA="${DELTA:-0}"            # A3 delta erase/write
+DELTA="${DELTA:-0}"            # A3 delta erase/write (KEEP 2026-09-05: exact 8-way recall on the micro-bench)
+ANSWER_W="${ANSWER_W:-1}"      # CE weight on answer tokens of synthetic recall/reason docs
+                               # (1 = plain LM loss). Micro-bench: recall is learned only
+                               # with concentrated answer signal -> use e.g. 100.
 GEN_EVERY="${GEN_EVERY:-4000}" # set 0 for vault/delta (no decode path yet)
 VAL_EVERY="${VAL_EVERY:-2000}"
 SAVE_EVERY="${SAVE_EVERY:-1000}"       # latest.pt (full resume state) every ~7 min
@@ -73,6 +76,7 @@ if [ "$OUT_GATE" = "1" ]; then EXTRA+=(--out_gate); fi
 if [ "$NSTATES" != "0" ]; then EXTRA+=(--n_states "$NSTATES"); fi
 if [ "$VAULT" = "1" ]; then EXTRA+=(--vault); fi
 if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi
+if [ "$ANSWER_W" != "1" ]; then EXTRA+=(--answer_weight "$ANSWER_W"); fi
 
 # Auto-resume loop: --resume auto picks up <CKPT_DIR>/latest.pt when it exists
 # (fresh start otherwise), restoring model/optimizer/LR schedule/step/tokens/

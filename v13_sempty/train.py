@@ -849,6 +849,12 @@ def build_argparser():
                    help='%% of corpus reserved as the primary streaming val holdout')
     p.add_argument('--blend_warmup_tokens', type=int, default=0,
                    help='tokens to draw web-only before non-web sources enter the mix')
+    p.add_argument('--answer_weight', type=float, default=1.0,
+                   help='per-token CE weight on the ANSWER tokens of synthetic recall/'
+                        'reason docs (v7.data.ANSWER_MARK); 1.0 = plain LM loss. The '
+                        'micro-bench (EXPERIMENTS "Positive control") showed exact '
+                        '8-way recall is learned only with concentrated answer signal. '
+                        'Train loss becomes the weighted mean; val is unweighted.')
     p.add_argument('--num_workers', type=int, default=2,
                    help='DataLoader workers (forced 0 for a live stream)')
     p.add_argument('--no_wiki_val', action='store_true',
@@ -1003,6 +1009,7 @@ def main():
             blend_warmup_tokens=args.blend_warmup_tokens,
             skip_docs=skip_docs, token_counters=token_counters,
             doc_counters=doc_counters, use_cache=False,
+            answer_weight=args.answer_weight,
         )
         cfg.vocab_size = len(tokenizer)
         is_streaming = not getattr(train_ds, 'pretrain_cached', False)

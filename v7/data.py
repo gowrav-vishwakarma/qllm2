@@ -123,6 +123,12 @@ class StreamingTokenChunkDataset(IterableDataset):
 
     ``text_iterator`` may yield plain strings or ``(source_name, text)`` tuples.
     When ``token_counters`` is provided, increments per-source token counts.
+
+    ``answer_weight`` (2026-09-05): synthetic docs mark their answer spans with
+    ``ANSWER_MARK``. With ``answer_weight != 1`` every sample also carries a
+    float ``loss_mask`` (1.0 per token, ``answer_weight`` on answer tokens)
+    that the fused CE uses as per-token weights (sum(w*CE)/sum(w)). With the
+    default 1.0 the marks are stripped and samples are exactly as before.
     """
 
     def __init__(
@@ -135,6 +141,7 @@ class StreamingTokenChunkDataset(IterableDataset):
         shuffle_buffer: int = 10_000,
         token_counters: Optional[Dict[str, int]] = None,
         default_source: str = 'mix',
+        answer_weight: float = 1.0,
     ):
         self.text_iterator = text_iterator
         self.tokenizer = tokenizer
@@ -143,6 +150,7 @@ class StreamingTokenChunkDataset(IterableDataset):
         self.shuffle_buffer = shuffle_buffer
         self.token_counters = token_counters
         self.default_source = default_source
+        self.answer_weight = float(answer_weight)
 
     def _yield_chunk(self, yielded_tokens: int, src_counts: Dict[str, int]) -> int:
         """Credit each source with the tokens IT contributed to this chunk.
@@ -162,6 +170,8 @@ class StreamingTokenChunkDataset(IterableDataset):
         from collections import deque
 
         buffer: List[int] = []
+        weighted = self.answer_weight != 1.0
+        wbuffer: List[float] = []  # per-token loss weights aligned with ``buffer``
         # (source, n_tokens) runs aligned with ``buffer``; popped as chunks leave
         runs: deque = deque()
         yielded_tokens = 0
@@ -188,11 +198,18 @@ class StreamingTokenChunkDataset(IterableDataset):
                 source, text = self.default_source, item
             if not text or not str(text).strip():
                 continue
-            ids = self.tokenizer.encode(str(text), add_special_tokens=False)
+            text = str(text)
+            if weighted:
+                ids, ws = encode_marked(self.tokenizer, text, self.answer_weight)
+            else:
+                ids = self.tokenizer.encode(strip_answer_marks(text), add_special_tokens=False)
             if not ids:
                 continue
             ids.append(self.tokenizer.eos_token_id)
             buffer.extend(ids)
+            if weighted:
+                ws.append(1.0)
+                wbuffer.extend(ws)
             runs.append((source, len(ids)))
 
             while len(buffer) >= step:
@@ -203,6 +220,11 @@ class StreamingTokenChunkDataset(IterableDataset):
                     'input_ids': torch.tensor(chunk[:-1], dtype=torch.long),
                     'labels': torch.tensor(chunk[1:], dtype=torch.long),
                 }
+                if weighted:
+                    wchunk = wbuffer[:step]
+                    wbuffer = wbuffer[step:]
+                    # weight applies to PREDICTING a token -> align with labels
+                    sample['loss_mask'] = torch.tensor(wchunk[1:], dtype=torch.float32)
                 if self.shuffle_buffer > 0:
                     pending.append((src_counts, sample))
                     if len(pending) >= self.shuffle_buffer:
@@ -1459,6 +1481,45 @@ def _recall_filler(rng, n_sentences: int) -> str:
     return ' '.join(rng.choice(_RECALL_FILLER_BANK) for _ in range(max(1, n_sentences)))
 
 
+# Answer-span marker for synthetic docs (2026-09-05). The recall micro-bench
+# proved PAM-delta learns exact 8-way recall only when the ANSWER token gets a
+# concentrated share of the gradient (answer-only loss: solved by ~40M tokens;
+# full-sequence loss, answer = 1/T of the signal: chance at 1B tokens). The
+# builders below wrap each answer span in ANSWER_MARK; ``encode_marked`` turns
+# that into per-token loss weights, and every other consumer strips it.
+# NUL never occurs in web text, so plain sources are unaffected. Splitting is
+# tokenization-exact for GPT-2 BPE because every span starts at a space
+# boundary (the pre-tokenizer splits there anyway) and ends before punctuation.
+ANSWER_MARK = '\x00'
+
+
+def _ans(text: str) -> str:
+    """Mark ``text`` (which must start with a space) as an answer span."""
+    return f"{ANSWER_MARK}{text}{ANSWER_MARK}"
+
+
+def strip_answer_marks(text: str) -> str:
+    return text.replace(ANSWER_MARK, '') if ANSWER_MARK in text else text
+
+
+def encode_marked(tokenizer, text: str, answer_weight: float) -> Tuple[List[int], List[float]]:
+    """Tokenize marked text -> (ids, per-token weights). Unmarked spans weigh
+    1.0, answer spans ``answer_weight``. Segment-wise encoding is exact for the
+    span boundaries the builders emit (see ANSWER_MARK)."""
+    if ANSWER_MARK not in text:
+        ids = tokenizer.encode(text, add_special_tokens=False)
+        return ids, [1.0] * len(ids)
+    ids: List[int] = []
+    weights: List[float] = []
+    for i, seg in enumerate(text.split(ANSWER_MARK)):
+        if not seg:
+            continue
+        seg_ids = tokenizer.encode(seg, add_special_tokens=False)
+        ids.extend(seg_ids)
+        weights.extend([answer_weight if i % 2 == 1 else 1.0] * len(seg_ids))
+    return ids, weights
+
+
 def _build_recall_doc(rng, max_gap_sentences: int = 200) -> str:
     """One synthetic recall document (passkey | single-kv | multi-kv | dense).
 
@@ -1487,7 +1548,7 @@ def _build_recall_doc(rng, max_gap_sentences: int = 200) -> str:
         code = rng.randint(1000, 9999)
         intro = f"Note: the vault passcode is {code}."
         body = _recall_filler(rng, gap)
-        recall = f"Recall: the vault passcode is {code}."
+        recall = f"Recall: the vault passcode is{_ans(f' {code}')}."
         return f"{intro} {body} {recall}\n"
 
     if task == 'kv':
@@ -1495,7 +1556,7 @@ def _build_recall_doc(rng, max_gap_sentences: int = 200) -> str:
         value = rng.choice(_RECALL_VALUE_NOUNS)
         intro = f"Definition: {key} refers to {value}."
         body = _recall_filler(rng, gap)
-        recall = f"Query: {key} refers to {value}."
+        recall = f"Query: {key} refers to{_ans(f' {value}')}."
         return f"{intro} {body} {recall}\n"
 
     # multi-needle: several bindings, then query one back
@@ -1505,7 +1566,7 @@ def _build_recall_doc(rng, max_gap_sentences: int = 200) -> str:
     records = ' '.join(f"Record: {k} maps to {v}." for k, v in zip(keys, vals))
     body = _recall_filler(rng, gap)
     qi = rng.randrange(n)
-    recall = f"Query: {keys[qi]} maps to {vals[qi]}."
+    recall = f"Query: {keys[qi]} maps to{_ans(f' {vals[qi]}')}."
     return f"{records} {body} {recall}\n"
 
 
@@ -1532,7 +1593,7 @@ def _build_recall_dense_doc(rng) -> str:
     gap = rng.randint(0, 2)
     body = (' '.join(rng.choice(_RECALL_FILLER_BANK) for _ in range(gap)) + ' ') if gap else ''
     qi = rng.randrange(n)
-    recall = f"Query: {keys[qi]} {verb} {vals[qi]}."
+    recall = f"Query: {keys[qi]} {verb}{_ans(f' {vals[qi]}')}."
     return f"{records} {body}{recall}\n"
 
 
@@ -1582,12 +1643,12 @@ def _build_reason_doc(rng: 'random.Random') -> str:
     if task == 'copy':
         n = rng.randint(4, 12)
         seq = ' '.join(rng.choice(_REASON_LETTERS) for _ in range(n))
-        return f"Task: repeat the letter string exactly.\nString: {seq}\nAnswer: {seq}."
+        return f"Task: repeat the letter string exactly.\nString: {seq}\nAnswer:{_ans(f' {seq}')}."
     if task == 'reverse':
         n = rng.randint(4, 10)
         seq = ' '.join(rng.choice(_REASON_LETTERS) for _ in range(n))
         rev = ' '.join(reversed(seq.split()))
-        return f"Task: write the letter string in reverse order.\nString: {seq}\nAnswer: {rev}."
+        return f"Task: write the letter string in reverse order.\nString: {seq}\nAnswer:{_ans(f' {rev}')}."
     if task == 'cipher':
         # Fixed Caesar shift; the model must apply it letter-by-letter.
         shift = rng.randint(1, 25)
@@ -1597,13 +1658,13 @@ def _build_reason_doc(rng: 'random.Random') -> str:
         s = ' '.join(src)
         e = ' '.join(enc)
         return (f"Task: encode with a Caesar shift of {shift}.\n"
-                f"String: {s}\nAnswer: {e}.")
+                f"String: {s}\nAnswer:{_ans(f' {e}')}.")
     # sum: running total of single digits (state = accumulator).
     n = rng.randint(3, 6)
     nums = [rng.randint(0, 9) for _ in range(n)]
     total = sum(nums)
     expr = ' + '.join(str(x) for x in nums)
-    return f"Task: give the sum.\nExpression: {expr}\nAnswer: {total}."
+    return f"Task: give the sum.\nExpression: {expr}\nAnswer:{_ans(f' {total}')}."
 
 
 def _reason_text_iter(
@@ -2013,7 +2074,8 @@ def build_pretrain_mix_token_cache(
             text = item
         if not text or not str(text).strip():
             continue
-        ids = tokenizer.encode(str(text), add_special_tokens=False)
+        # The token cache stores ids only (no loss weights): strip answer marks.
+        ids = tokenizer.encode(strip_answer_marks(str(text)), add_special_tokens=False)
         if not ids:
             continue
         ids.append(tokenizer.eos_token_id)
@@ -2073,6 +2135,7 @@ def load_pretrain_mix(
     doc_counters: Optional[Dict[str, int]] = None,
     offset_tokens: int = 0,
     use_cache: bool = True,
+    answer_weight: float = 1.0,
 ):
     """Stream a blended corpus for from-scratch pretrain (knowledge+reasoning+chat).
 
@@ -2163,6 +2226,7 @@ def load_pretrain_mix(
         f"budget={token_budget or 'none'} vocab={len(tokenizer)} "
         f"holdout_pct={holdout_pct} exclude_holdout={exclude_holdout} "
         f"mix_seed={mix_seed} warmup={blend_warmup_tokens:,} "
+        f"answer_weight={answer_weight} "
         f"skips={ {s: skip_map.get(s, 0) for s in sources} }"
     )
     if len(tagged) > 1:
@@ -2180,6 +2244,7 @@ def load_pretrain_mix(
         max_tokens=token_budget,
         shuffle_buffer=10_000,
         token_counters=token_counters,
+        answer_weight=answer_weight,
     )
     if exclude_holdout:
         val_ds = load_pretrain_holdout_val(
