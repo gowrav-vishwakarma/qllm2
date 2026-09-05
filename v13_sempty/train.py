@@ -94,7 +94,8 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
           f"grad_clip={args.gradient_clip}")
     print(f"  checkpoints: dir={args.checkpoint_dir} latest_every="
           f"{args.save_every_steps} keep_every={args.keep_every_steps} "
-          f"best=on val_every={args.val_every} resume={args.resume or 'off'}")
+          f"keep_last={args.keep_last} best=on val_every={args.val_every} "
+          f"resume={args.resume or 'off'}")
 
     # --- dataset ------------------------------------------------------------
     print('[data]')
@@ -228,6 +229,7 @@ class Trainer:
         gen_max_tokens: int = 80,
         save_every_steps: int = 0,
         keep_every_steps: int = 0,
+        keep_last: int = 1,
         diag_every: int = 500,
         val_every: int = 0,
         max_val_batches: Optional[int] = None,
@@ -277,6 +279,7 @@ class Trainer:
         # Milestone copies (step_XXXXXX.pt) kept alongside latest/best so the
         # trajectory can be inspected later; 0 = off.
         self.keep_every_steps = keep_every_steps
+        self.keep_last = keep_last
         # Live dicts owned by the streaming data pipeline ({'doc_counters':
         # {source: docs consumed}, 'token_counters': {source: tokens yielded}}).
         # Saved in every checkpoint = the stream position for --resume.
@@ -438,6 +441,24 @@ class Trainer:
         torch.save(ckpt, tmp)
         os.replace(tmp, path)
         print(f"  [checkpoint] step {self.global_step} -> {path}", flush=True)
+
+    def _prune_milestones(self):
+        """Rolling milestones: keep only the newest ``keep_last`` step_XXXXXX.pt.
+
+        latest.pt (resume state, overwritten atomically) and best_model.pt are
+        never touched. keep_last <= 0 disables pruning. Each copy is ~1.2 GB at
+        102M params (weights + Adam moments), so the old keep-everything policy
+        cost 12 GB per 3B-token run (2026-09-05 user rule: free stale ckpts).
+        """
+        if self.checkpoint_dir is None or self.keep_last <= 0:
+            return
+        files = sorted(Path(self.checkpoint_dir).glob('step_*.pt'))
+        for old in files[:-self.keep_last]:
+            try:
+                old.unlink()
+                print(f"  [checkpoint] pruned {old.name}", flush=True)
+            except OSError as e:  # never let housekeeping kill the run
+                print(f"  [checkpoint] prune failed {old.name}: {e}", flush=True)
 
     @staticmethod
     def peek_resume(path: Path) -> dict:
@@ -667,6 +688,7 @@ class Trainer:
                 and self.global_step % self.keep_every_steps == 0
             ):
                 self._save_ckpt(f'step_{self.global_step:06d}.pt')
+                self._prune_milestones()
 
             if self.diag_every > 0 and self.global_step > 0 \
                     and self.global_step % self.diag_every == 0:
@@ -824,6 +846,9 @@ def build_argparser():
                         "RNG streams and the data-stream cursor.")
     p.add_argument('--keep_every_steps', type=int, default=0,
                    help='also keep a milestone copy step_XXXXXX.pt every N steps')
+    p.add_argument('--keep_last', type=int, default=1,
+                   help='rolling milestones: keep only the newest N step_*.pt '
+                        '(latest.pt/best_model.pt untouched; 0 = keep all)')
     p.add_argument('--no_chat_vocab', action='store_true',
                    help='streaming pretrain: use plain gpt2 (50257) instead of the '
                         'ChatML+reasoning tokenizer (50261). Default keeps the chat '
@@ -1038,6 +1063,7 @@ def main():
         gen_max_tokens=args.gen_max_tokens,
         save_every_steps=args.save_every_steps,
         keep_every_steps=args.keep_every_steps,
+        keep_last=args.keep_last,
         val_every=args.val_every,
         diag_every=args.diag_every,
         max_val_batches=args.max_val_batches if args.max_val_batches > 0 else None,

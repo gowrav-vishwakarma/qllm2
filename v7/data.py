@@ -1035,12 +1035,15 @@ def _fineweb_edu_text_iter(
     skip_docs: int = 0,
     doc_counters: Optional[Dict[str, int]] = None,
     counter_key: str = 'fineweb',
+    min_chars: int = 0,
 ) -> Iterator[str]:
     """Stream FineWeb-Edu text filtered by the edu classifier score.
 
     If ``FINEWEB_LOCAL_DIR`` points at a directory of ``*.parquet`` shards
     (or a parent that contains ``sample/<name>/``), stream those offline.
     Useful when HF Hub streaming is blocked (e.g. Xet CDN 403 without auth).
+    ``min_chars`` > 0 keeps only long documents (the 'fineweb_long' source for
+    T>=8192 training: 12k chars ~ 3k tokens; checked before tokenizing, cheap).
     """
     import os
     from datasets import load_dataset
@@ -1090,6 +1093,8 @@ def _fineweb_edu_text_iter(
         text = row.get('text') or row.get('content') or ''
         if not text.strip():
             continue
+        if min_chars and len(text) < min_chars:
+            continue
         in_holdout = pretrain_holdout_bucket(text, holdout_pct)
         if exclude_holdout and in_holdout:
             continue
@@ -1100,6 +1105,52 @@ def _fineweb_edu_text_iter(
             continue
         _bump_counter(doc_counters, counter_key)
         yield text
+
+
+PG19_REPO = 'emozilla/pg19'   # parquet mirror; deepmind/pg19 is script-based (dead in datasets>=3)
+
+
+def _pg19_text_iter(
+    *,
+    skip_docs: int = 0,
+    doc_counters: Optional[Dict[str, int]] = None,
+    counter_key: str = 'pg19',
+    max_chars_per_doc: int = 400_000,
+) -> Iterator[str]:
+    """Stream PG-19 books (Project Gutenberg, pre-1919) as long documents.
+
+    Books are 1-5M chars (~0.3-1.2M tokens). They are cut into pieces of at
+    most ``max_chars_per_doc`` (~100k tokens) at paragraph boundaries so one
+    ``tokenizer.encode`` call stays bounded; each piece is a doc for the cursor
+    (``doc_counters``/``skip_docs``). Inside a piece the token chunker packs
+    contiguous seq_len windows, so T=8192/32768 windows see real long-range
+    text (the 'pg19' source, 2026-09-05, Stage L).
+    """
+    from datasets import load_dataset
+
+    stream = load_dataset(PG19_REPO, split='train', streaming=True)
+    skipped = 0
+    for row in stream:
+        text = row.get('text') or ''
+        if not text.strip():
+            continue
+        start = 0
+        n = len(text)
+        while start < n:
+            end = min(start + max_chars_per_doc, n)
+            if end < n:
+                cut = text.rfind('\n\n', start + max_chars_per_doc // 2, end)
+                if cut > start:
+                    end = cut
+            piece = text[start:end]
+            start = end
+            if not piece.strip():
+                continue
+            if skipped < skip_docs:
+                skipped += 1
+                continue
+            _bump_counter(doc_counters, counter_key)
+            yield piece
 
 
 def _tag_source(name: str, it: Iterator[str]) -> Iterator[Tuple[str, str]]:
@@ -1359,7 +1410,7 @@ def _recall_filler(rng, n_sentences: int) -> str:
     return ' '.join(rng.choice(_RECALL_FILLER_BANK) for _ in range(max(1, n_sentences)))
 
 
-def _build_recall_doc(rng) -> str:
+def _build_recall_doc(rng, max_gap_sentences: int = 200) -> str:
     """One synthetic recall document (passkey | single-kv | multi-kv | dense).
 
     ``dense`` (added 2026-08-26) is the DENSE short-context 6-8-way variant that
@@ -1367,6 +1418,12 @@ def _build_recall_doc(rng) -> str:
     (the remaining 50% is the original long-range mix) so the oracle-identified
     READ-SIDE routing gap gets direct pressure while the PPL-winning long-range
     signal is retained.
+
+    ``max_gap_sentences`` sets the log-uniform filler gap [2, max]. A filler
+    sentence is ~12 GPT-2 tokens, so 200 => <=~2.4k tokens (the T=2048 recipe)
+    and 500 => <=~6k tokens (the T=8192 'recall_long' source, 2026-09-05: the
+    mix-3B probe showed a ~200-token horizon that web PPL keeps shortening; the
+    long retention heads only get gradient from gaps this long).
     """
     task = rng.choices(
         ('dense', 'passkey', 'kv', 'multi'), weights=(0.5, 1 / 6, 1 / 6, 1 / 6)
@@ -1374,7 +1431,8 @@ def _build_recall_doc(rng) -> str:
     if task == 'dense':
         return _build_recall_dense_doc(rng)
     # Log-uniform gap so the model sees short and long-range recall alike.
-    gap = int(round(2 * (100 ** rng.random())))  # ~[2, 200] sentences
+    ratio = max(max_gap_sentences, 2) / 2.0
+    gap = int(round(2 * (ratio ** rng.random())))  # ~[2, max_gap] sentences
 
     if task == 'passkey':
         code = rng.randint(1000, 9999)
@@ -1435,18 +1493,23 @@ def _recall_text_iter(
     skip_docs: int = 0,
     doc_counters: Optional[Dict[str, int]] = None,
     counter_key: str = 'recall',
+    max_gap_sentences: int = 200,
 ) -> Iterator[str]:
     """Infinite stream of synthetic recall documents (deterministic per seed).
 
     ``skip_docs`` skips already-consumed docs for cross-round freshness; every
     yielded doc bumps ``doc_counters[counter_key]`` like the web iterators.
+    ``max_gap_sentences`` is forwarded to ``_build_recall_doc`` (200 = the
+    T=2048 recipe; the 'recall_long' registry source uses 500 for T=8192).
     """
     import random as _random
 
-    rng = _random.Random((seed * 2654435761 + 12345) & 0xFFFFFFFF)
+    # Distinct seed stream per variant so 'recall' and 'recall_long' in the same
+    # blend do not emit the same keys/values in lockstep.
+    rng = _random.Random((seed * 2654435761 + 12345 + 7919 * max_gap_sentences) & 0xFFFFFFFF)
     skipped = 0
     while True:
-        doc = _build_recall_doc(rng)
+        doc = _build_recall_doc(rng, max_gap_sentences)
         if skipped < skip_docs:
             skipped += 1
             continue
@@ -1522,11 +1585,61 @@ def _reason_text_iter(
 SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     'dclm':          {'schema': 'text',     'kind': 'web',       'hf': 'HuggingFaceTB/dclm-edu'},
     'fineweb':       {'schema': 'text',     'kind': 'web',       'hf': 'HuggingFaceFW/fineweb-edu'},
+    # Stage L (T>=8192) long-document sources; kind 'web' => part of the
+    # grammar/knowledge warmup pool like dclm/fineweb.
+    'fineweb_long':  {'schema': 'text',     'kind': 'web',       'hf': 'HuggingFaceFW/fineweb-edu', 'min_chars': 12000},
+    'pg19':          {'schema': 'text',     'kind': 'web',       'hf': PG19_REPO},
     'smoltalk2_mid': {'schema': 'messages', 'kind': 'reason',    'hf': SMOLTALK2_REPO, 'config': 'Mid'},
     'smoltalk2_sft': {'schema': 'messages', 'kind': 'chat',      'hf': SMOLTALK2_REPO, 'config': 'SFT'},
     'recall':        {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-recall'},
+    'recall_long':   {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-recall', 'max_gap_sentences': 500},
     'reason':        {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-reason'},
 }
+
+
+def _open_source_iter(
+    name: str,
+    spec: Dict[str, str],
+    *,
+    edu_score_min: int,
+    fineweb_name: str,
+    exclude_holdout: bool,
+    holdout_pct: int,
+    skip: int,
+    doc_counters: Optional[Dict[str, int]],
+    mix_seed: int,
+) -> Iterator[str]:
+    """One text iterator per registry source (shared by the live blend and the
+    token-cache builder so the two can never disagree on a source's recipe)."""
+    if spec['kind'] == 'web':
+        if name == 'dclm':
+            return _dclm_edu_text_iter(
+                edu_score_min, exclude_holdout=exclude_holdout,
+                holdout_pct=holdout_pct, skip_docs=skip,
+                doc_counters=doc_counters, counter_key=name,
+            )
+        if name == 'pg19':
+            return _pg19_text_iter(skip_docs=skip, doc_counters=doc_counters,
+                                   counter_key=name)
+        return _fineweb_edu_text_iter(  # fineweb / fineweb_long
+            edu_score_min, name=fineweb_name, exclude_holdout=exclude_holdout,
+            holdout_pct=holdout_pct, skip_docs=skip,
+            doc_counters=doc_counters, counter_key=name,
+            min_chars=int(spec.get('min_chars', 0)),
+        )
+    if spec['kind'] == 'synthetic':
+        if name == 'reason':
+            return _reason_text_iter(seed=mix_seed, skip_docs=skip,
+                                     doc_counters=doc_counters, counter_key=name)
+        return _recall_text_iter(  # recall / recall_long
+            seed=mix_seed, skip_docs=skip, doc_counters=doc_counters,
+            counter_key=name,
+            max_gap_sentences=int(spec.get('max_gap_sentences', 200)),
+        )
+    return _smoltalk2_blend_text_iter(  # messages -> ChatML text
+        config=spec.get('config', 'Mid'), skip_rows=skip,
+        doc_counters=doc_counters, counter_key=name,
+    )
 
 
 def load_pretrain_holdout_val(
@@ -1760,36 +1873,13 @@ def build_pretrain_mix_token_cache(
         if spec is None:
             raise ValueError(f"Unknown pretrain source: {s}")
         sk = skip_map.get(s, 0)
+        it = _open_source_iter(
+            s, spec, edu_score_min=edu_score_min, fineweb_name=fineweb_name,
+            exclude_holdout=True, holdout_pct=5, skip=sk,
+            doc_counters=doc_counters, mix_seed=mix_seed,
+        )
         if spec['kind'] == 'web':
-            if s == 'dclm':
-                it = _dclm_edu_text_iter(
-                    edu_score_min, exclude_holdout=True,
-                    holdout_pct=5, skip_docs=sk,
-                    doc_counters=doc_counters, counter_key=s,
-                )
-            else:
-                it = _fineweb_edu_text_iter(
-                    edu_score_min, name=fineweb_name, exclude_holdout=True,
-                    holdout_pct=5, skip_docs=sk,
-                    doc_counters=doc_counters, counter_key=s,
-                )
             web_sources.append(s)
-        elif spec['kind'] == 'synthetic':
-            if s == 'reason':
-                it = _reason_text_iter(
-                    seed=mix_seed, skip_docs=sk,
-                    doc_counters=doc_counters, counter_key=s,
-                )
-            else:
-                it = _recall_text_iter(
-                    seed=mix_seed, skip_docs=sk,
-                    doc_counters=doc_counters, counter_key=s,
-                )
-        else:
-            it = _smoltalk2_blend_text_iter(
-                config=spec.get('config', 'Mid'), skip_rows=sk,
-                doc_counters=doc_counters, counter_key=s,
-            )
         tagged.append((s, it))
 
     if len(tagged) > 1:
@@ -2009,36 +2099,13 @@ def load_pretrain_mix(
         if spec is None:
             raise ValueError(f"Unknown pretrain source: {s} (known: {list(SOURCE_REGISTRY)})")
         sk = skip_map.get(s, 0)
+        it = _open_source_iter(
+            s, spec, edu_score_min=edu_score_min, fineweb_name=fineweb_name,
+            exclude_holdout=exclude_holdout, holdout_pct=holdout_pct, skip=sk,
+            doc_counters=doc_counters, mix_seed=mix_seed,
+        )
         if spec['kind'] == 'web':
-            if s == 'dclm':
-                it = _dclm_edu_text_iter(
-                    edu_score_min, exclude_holdout=exclude_holdout,
-                    holdout_pct=holdout_pct, skip_docs=sk,
-                    doc_counters=doc_counters, counter_key=s,
-                )
-            else:  # fineweb
-                it = _fineweb_edu_text_iter(
-                    edu_score_min, name=fineweb_name, exclude_holdout=exclude_holdout,
-                    holdout_pct=holdout_pct, skip_docs=sk,
-                    doc_counters=doc_counters, counter_key=s,
-                )
             web_sources.append(s)
-        elif spec['kind'] == 'synthetic':  # recall / reasoning curriculum
-            if s == 'reason':
-                it = _reason_text_iter(
-                    seed=mix_seed, skip_docs=sk,
-                    doc_counters=doc_counters, counter_key=s,
-                )
-            else:
-                it = _recall_text_iter(
-                    seed=mix_seed, skip_docs=sk,
-                    doc_counters=doc_counters, counter_key=s,
-                )
-        else:  # messages -> ChatML text
-            it = _smoltalk2_blend_text_iter(
-                config=spec.get('config', 'Mid'), skip_rows=sk,
-                doc_counters=doc_counters, counter_key=s,
-            )
         tagged.append((s, it))
 
     print(

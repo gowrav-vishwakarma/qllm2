@@ -56,6 +56,8 @@ GEN_EVERY="${GEN_EVERY:-4000}" # set 0 for vault/delta (no decode path yet)
 VAL_EVERY="${VAL_EVERY:-2000}"
 SAVE_EVERY="${SAVE_EVERY:-1000}"       # latest.pt (full resume state) every ~7 min
 KEEP_EVERY="${KEEP_EVERY:-10000}"      # milestone step_XXXXXX.pt copies (~1.2 GB each)
+KEEP_LAST="${KEEP_LAST:-1}"            # rolling: only the newest KEEP_LAST milestones survive
+                                       # (latest.pt is overwritten atomically; best_model.pt kept)
 MAX_RETRIES="${MAX_RETRIES:-5}"        # auto-resume attempts after a crash
 CKPT_DIR="${CKPT_DIR:-}"               # default checkpoints_v13_sempty/<TAG>_<HASH>
 RESUME_LOG="${RESUME_LOG:-}"           # append to an existing run log instead of a new one
@@ -108,6 +110,7 @@ while :; do
   --gen_max_tokens 80 \
   --save_every_steps "$SAVE_EVERY" \
   --keep_every_steps "$KEEP_EVERY" \
+  --keep_last "$KEEP_LAST" \
   --diag_every 2000 \
   --max_val_batches 0 \
   --resume auto \
