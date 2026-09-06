@@ -550,6 +550,10 @@ class RealPAMLayer(nn.Module):
         if self.delta:
             self.erase_proj = NamedLinear(self.model_dim, self.decay_out)
             self.write_proj = NamedLinear(self.model_dim, self.decay_out)
+        # R2: retention pinned to 1.0 (no passive decay; delta erase only).
+        self.no_decay = cfg.no_decay
+        if self.no_decay and not self.delta:
+            raise ValueError("no_decay requires delta (additive memory would grow unbounded)")
 
         # N1 Chrono-PAM: content-modulated rotary retention. A per-head time
         # warp g_t = exp(clamp(W x, +/-3)) multiplies the per-step RoPE angle;
@@ -711,7 +715,11 @@ class RealPAMLayer(nn.Module):
         """Per-head retention in (0, 1): exp(-softplus(linear(token) + bias))."""
         batch, time = tokens.layout[0], tokens.layout[1]
         logit = self.dt_proj(tokens).alias(self.decay_out, self.heads)
-        retention = exp(-softplus(logit + named(self.dt_bias, (self.heads,))))
+        if self.no_decay:
+            # R2: pinned retention 1.0 (same layout/dtype as the learned one).
+            retention = exp(logit * 0.0)
+        else:
+            retention = exp(-softplus(logit + named(self.dt_bias, (self.heads,))))
         if self.capture_decay:
             _capture_retention(retention)
         return retention.to(batch, self.heads, time)

@@ -674,7 +674,13 @@ def _delta_prep_fn():
         return _delta_prep
     if _delta_prep_compiled is None:
         try:
-            _delta_prep_compiled = torch.compile(_delta_prep, dynamic=False)
+            # dynamic=None: static for the first shape, shape-generic after the
+            # first recompile -- variable T (val windows, probes at 256..8192,
+            # micro-bench buckets) must not exhaust the recompile cache and
+            # silently drop to eager (it did with dynamic=False: limit 8).
+            import torch._dynamo.config as _dynamo_cfg
+            _dynamo_cfg.cache_size_limit = max(_dynamo_cfg.cache_size_limit, 64)
+            _delta_prep_compiled = torch.compile(_delta_prep, dynamic=None)
         except Exception:  # pragma: no cover
             _delta_prep_compiled = _delta_prep
     return _delta_prep_compiled

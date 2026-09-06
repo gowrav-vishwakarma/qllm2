@@ -39,6 +39,13 @@ class PAMConfig:
     state_dt_spread: float = 2.0     # A2: +/- spread of per-state decay-logit offsets
     vault: bool = False              # A2b: state 0 pinned (retention=1) + protect gate
     delta: bool = False              # A3: delta erase/write (unit keys, beta_w/beta_e)
+    # R2 (retention program, 2026-09-06): pin retention to 1.0 -- no passive
+    # decay at all; the memory only changes by delta erase-on-rewrite
+    # (DeltaNet-style). Tests whether the horizon limiter is the learned decay
+    # (which sits at its init and realises 0.64-0.97/token) rather than the
+    # read. Only meaningful with `delta` (the additive memory would grow
+    # unbounded). Candidate; removed if the LM guard / retention bench fails.
+    no_decay: bool = False
     # (A2r content-routed delta -- route writes by key / reads by query to S
     # states -- was REMOVED 2026-09-05: a8 stayed at chance at 4-8x cost even
     # with sharpened routing; multi-way is not a memory-structure problem.
