@@ -802,23 +802,68 @@ class RealPAMLayer(nn.Module):
         """
         batch, time = tokens.layout[0], tokens.layout[1]
         B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
-        F_ = nn.functional
         q = queries.raw(batch, self.heads, time, self.head_feature).reshape(B * H, T, K)
-        k = keys.raw(batch, self.heads, time, self.head_feature).reshape(B * H, T, K)
-        k = F_.normalize(k, dim=-1)
+        k = nn.functional.normalize(
+            keys.raw(batch, self.heads, time, self.head_feature), dim=-1).reshape(B * H, T, K)
         v = values.raw(batch, self.heads, time, self.head_feature).reshape(B * H, T, K)
         retention = decay.raw(batch, self.heads, time).reshape(B * H, T)
-        be = torch.sigmoid(
-            self.erase_proj(tokens).alias(self.decay_out, self.heads).raw(batch, self.heads, time)
-            - 3.0).clamp(max=0.95).reshape(B * H, T)
-        bw = torch.sigmoid(
-            self.write_proj(tokens).alias(self.decay_out, self.heads).raw(batch, self.heads, time)
-            ).reshape(B * H, T)
-        read, state = pam_delta_batched(q, k, v, retention, bw, be, None)
+        bw, be = self._delta_gates(tokens)
+        read, state = pam_delta_batched(q, k, v, retention, bw.reshape(B * H, T),
+                                        be.reshape(B * H, T), None)
         output = named(read.reshape(B, H, T, K) * (self.head_dim ** -0.5),
                        (batch, self.heads, time, self.head_row))
         carried = named(state.reshape(B, H, K, K),
                         (batch, self.heads, self.head_row, self.head_col))
+        return output, carried
+
+    def _delta_gates(self, tokens: NamedTensor):
+        """A3 per-token, per-head write gate ``b_w`` in (0,1) and erase gate
+        ``b_e`` in (0, 0.95) as raw ``[B, H, T]`` (shared by prefill/decode)."""
+        batch, time = tokens.layout[0], tokens.layout[1]
+        be = torch.sigmoid(
+            self.erase_proj(tokens).alias(self.decay_out, self.heads).raw(batch, self.heads, time)
+            - 3.0).clamp(max=0.95)
+        bw = torch.sigmoid(
+            self.write_proj(tokens).alias(self.decay_out, self.heads).raw(batch, self.heads, time))
+        return bw, be
+
+    def _stepwise_delta(self, tokens: NamedTensor, queries, keys, values, decay,
+                        state) -> tuple[NamedTensor, NamedTensor]:
+        """A3 delta decode: one erase/write step per token on the carried
+        notebook (raw-torch boundary; state kept fp32 like the prefill carry).
+
+            S_t = g_t S_{t-1} (I - b_e k_t k_t^T) + b_w v_t k_t^T ,   y_t = S_t q_t
+
+        i.e. fade, erase the old association along ``k_t`` (unit-norm), write
+        the new one, then read -- the same order as the chunked WY form
+        (``pam_delta_batched``), so decode continues a prefill exactly
+        (parity: ``v13_sempty/tmp/delta_decode_parity.py``).
+        """
+        batch, time = tokens.layout[0], tokens.layout[1]
+        B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
+        q = queries.raw(batch, self.heads, time, self.head_feature).float()      # [B,H,T,K]
+        k = nn.functional.normalize(
+            keys.raw(batch, self.heads, time, self.head_feature).float(), dim=-1)
+        v = values.raw(batch, self.heads, time, self.head_feature).float()
+        g = decay.raw(batch, self.heads, time).float()                            # [B,H,T]
+        bw, be = self._delta_gates(tokens)
+        bw, be = bw.float(), be.float()
+        if state is not None:
+            S = self._as_notebook(state, batch).raw(
+                batch, self.heads, self.head_row, self.head_col).float()          # [B,H,K(v),K(k)]
+        else:
+            S = torch.zeros(B, H, K, K, device=tokens.device, dtype=torch.float32)
+        reads = []
+        for t in range(T):
+            kt, vt, qt = k[:, :, t], v[:, :, t], q[:, :, t]                        # [B,H,K]
+            Sk = torch.einsum('bhvk,bhk->bhv', S, kt)                             # S k_t
+            erased = S - be[:, :, t, None, None] * Sk.unsqueeze(-1) * kt.unsqueeze(-2)
+            S = g[:, :, t, None, None] * erased \
+                + bw[:, :, t, None, None] * vt.unsqueeze(-1) * kt.unsqueeze(-2)
+            reads.append(torch.einsum('bhvk,bhk->bhv', S, qt))
+        y = torch.stack(reads, dim=2).to(tokens.dtype) * (self.head_dim ** -0.5)  # [B,H,T,K]
+        output = named(y, (batch, self.heads, time, self.head_row))
+        carried = named(S, (batch, self.heads, self.head_row, self.head_col))
         return output, carried
 
     # ── decode: one step per token on the carried notebook ───────────────────
@@ -867,10 +912,12 @@ class RealPAMLayer(nn.Module):
                 output, new_state = self._chunked_multi(tokens, queries, keys, values)
             else:
                 output, new_state = self._chunked(tokens, queries, keys, values, decay)
+        elif self.delta:
+            output, new_state = self._stepwise_delta(tokens, queries, keys, values, decay, state)
         else:
-            if self.n_states > 1 or self.delta:
+            if self.n_states > 1:
                 raise NotImplementedError(
-                    "multi-state / delta decode is not implemented; run "
+                    "multi-state decode is not implemented; run "
                     "rungs with --gen_every 0 (probe/val use the chunked path)")
             output, new_state = self._stepwise(tokens, queries, keys, values, decay, state)
 

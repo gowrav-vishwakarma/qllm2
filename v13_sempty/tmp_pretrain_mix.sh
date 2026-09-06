@@ -54,7 +54,7 @@ DELTA="${DELTA:-0}"            # A3 delta erase/write (KEEP 2026-09-05: exact 8-
 ANSWER_W="${ANSWER_W:-1}"      # CE weight on answer tokens of synthetic recall/reason docs
                                # (1 = plain LM loss). Micro-bench: recall is learned only
                                # with concentrated answer signal -> use e.g. 100.
-GEN_EVERY="${GEN_EVERY:-4000}" # set 0 for vault/delta (no decode path yet)
+GEN_EVERY="${GEN_EVERY:-4000}" # set 0 for vault/n_states>1 (no decode path); delta decodes (2026-09-06)
 VAL_EVERY="${VAL_EVERY:-2000}"
 SAVE_EVERY="${SAVE_EVERY:-1000}"       # latest.pt (full resume state) every ~7 min
 KEEP_EVERY="${KEEP_EVERY:-10000}"      # milestone step_XXXXXX.pt copies (~1.2 GB each)
