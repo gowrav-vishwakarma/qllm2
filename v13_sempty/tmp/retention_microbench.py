@@ -30,7 +30,7 @@ Arms (``--arms``): ``delta`` (reference, base_dt_bias -4), ``delta@dt-6``,
 at 2048-8192 clearly beats the reference while val PPL is within ~2 %;
 otherwise the knob is removed (sROI).
 
-Usage (4090, ~25 min/arm):
+Usage (RTX 6000, ~110K tok/s, ~15 min/arm):
   PYTHONPATH=. .venv/bin/python -m v13_sempty.tmp.retention_microbench \
       --steps 6000 --batch 16 --arms delta,delta@dt-6,delta@dt-8,delta@nodecay
 """

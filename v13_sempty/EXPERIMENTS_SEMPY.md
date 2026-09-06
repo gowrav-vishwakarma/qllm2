@@ -999,6 +999,70 @@ ANSWER_W=100`). Multi-way read is solved at this scale; the program moves to
 **retention over distance** (the horizon) and to engineering debt the result
 now justifies: Triton delta kernel (speed), delta decode (`generate.py`).
 
+## Engineering: batched delta path (1.4× delta training) + delta decode (2026-09-06)
+
+**Why.** Delta is the reference recipe but cost 2.0× the additive step at 100M
+(B6 T2048 fwd+bwd 251 vs 125 ms; on the 6000 at B18: 51.5K vs 86K tok/s, 56 vs
+31 GB) and had no decode path, so `--gen_every 0` and no `generate.py` on
+delta checkpoints.
+
+**Where the time actually was (profile, `torch.profiler`).** *Not* the Triton
+scan. `pam_delta_torch` looped over T/256 chunks × 16 layers: eight fp32
+`solve_triangular` + their backward (~50 ms), fp32 SIMT GEMMs and `[256,256]`
+elementwise traffic (~70 ms), eight scan launches and eight slice-backward
+nodes. The mathematics didn't need any of that.
+
+**The restructuring (`triton_kernels.pam_delta_batched`).** The pseudo-values
+are *linear* in the carried state: for sub-chunk c with start state S,
+`W_c = A_c⁻¹ diag(b_w) V_c − A_c⁻¹ diag(b_e a) K_c Sᵀ = W0_c − U_c Sᵀ`, and
+`W0, U` do not depend on `S`. So **one** batched unit-triangular solve over all
+64-wide sub-chunks (rhs `[b_w V | b_e a K]`) gives both; the chunk-end state
+then obeys an *affine* recurrence in `S` alone, `S_c = S_{c−1} M_c + N_c` with
+`M_c = a_last I − (E∘U_c)ᵀK_c`, `N_c = (E∘W0_c)ᵀK_c` precomputed batched
+(`E_t = a_last/a_t`); T/64 tiny `[K,K]` `baddbmm` steps; then
+`W = W0 − U S_prevᵀ` for every chunk at once and **one**
+`fused_real_pam_read(q, k, W, retention)` launch over the whole sequence (its
+BT=64 tiles line up with the sub-chunks; its internal states equal `S_c` by
+construction). Sub-chunk 64 instead of 256 makes the solve and all `[w,w]`
+work 4× smaller per token. Things tried and rejected on the way: a log-depth
+(Hillis–Steele) scan for the recurrence (5× the fp32 K³ FLOPs + `cat`
+traffic: slower); per-step `select`/`slice` instead of `unbind`/`stack` (each
+backward zero-fills the full `[BH,NC,K,K]` tensor: 37–58 ms). The coefficient
+GEMMs run in the scan dtype (bf16 under autocast, fp32 accumulate) — the
+precision the kernel itself already uses for `W` and `k`; the `[K,K]`
+recurrence stays fp32. The prep is `torch.compile`d (shape-generic;
+`V13S_DELTA_COMPILE=0` → eager).
+
+**Parity (`v13_sempty/tmp/delta_parity.py`).** vs `pam_delta_torch` (kept as
+the oracle): read, state and all grads (q,k,v,retention,b_w,b_e,carry), fp32
+worst rel 2e-6 (tol 2e-4), bf16 2.3e-3 (tol 3e-2), incl. carry-in and ragged
+T=300. `pam_kernel_test.py` PASS.
+
+**Speed.** B6 T2048 fwd+bwd: 251 → 175 ms (additive 122); delta/additive
+2.0× → 1.45×; peak 18.8 → 15.7 GB. 60-step train smoke (wikitext B8,
+chrono+gate+delta, grad-ckpt, bf16, seed 42): loss trajectory identical to 4
+decimals (9.7201/8.6156/8.4713 vs …/8.4712), **56.1K vs 39.9K tok/s** (RTX
+6000; all numbers in this section are 6000-measured — the commit messages
+say "4090" by mistake). What remains (~55 ms at B6) is diffuse — solve ~10 ms, small bmms,
+casts; a hand-fused WY Triton kernel (fla-style) would buy maybe another 20–30
+ms and is deferred until delta is the Stage-L throughput limiter.
+
+**Delta decode (`PAMLayer._stepwise_delta`).** Per token on the fp32 carried
+notebook: `S_t = g_t S_{t−1}(I − b_e k kᵀ) + b_w v kᵀ`, `y = S_t q` — fade,
+erase along the unit-norm key, write, read; same order as the chunked WY
+form. Parity (`v13_sempty/tmp/delta_decode_parity.py`): full-sequence chunked
+logits vs prefill(T0)+step-wise, 2-layer delta+chrono+gate with gates
+perturbed off init: fp32 rel 5.6e-7 (also ragged T0=64), bf16 3.2e-3, argmax
+agree 1.00/0.97. `generate.py` on `mix3b_delta_answ100` (greedy): "The
+capital of France is" → "Paris. In the year 1848, the French government …"
+(coherent). **Observation worth keeping:** verbatim in-context copy works
+(`The word "florp" means a small green` → `stone`), but free-form multi-way
+lookups do not (`Alice lives in Toronto. Bob lives in Lisbon. Carol lives in
+Nairobi. Bob lives in` → `New York`; `Key: mango -> 9028 … Key: mango ->` →
+`4471`, the *first* value). The probe-format recall (records / filler /
+"query: K means") has not generalised to natural phrasing: a data-format
+diversity item for the recall docs, not a mechanism failure.
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*

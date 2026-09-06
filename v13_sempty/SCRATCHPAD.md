@@ -6,6 +6,37 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
+* **2026-09-06 afternoon — ALL of this was done ON the RTX 6000 (Cursor is
+  ssh'd into it; `ssh 34.131.203.207` from the box itself times out, that is
+  not an outage). The commit messages of `5e517f0`/`b44160b` say "4090" —
+  wrong, every number there is 6000-measured.**
+  - **Delta speed debt PAID (`5e517f0`):** `pam_delta_batched` — one batched
+    64-wide WY solve + affine chunk-state recurrence + ONE scan launch;
+    delta/additive step ratio 2.0× → 1.45×, memory −17 %, loss trajectory
+    identical (parity fp32 2e-6). 6000, B8 T2048 grad-ckpt: 39.9K → 56.1K
+    tok/s; B6 no-ckpt fwd+bwd 48.9K → 70K tok/s (additive 99K). At the
+    training geometry (B18 no-ckpt, was 51.5K) expect ~75K. Not a
+    hand-written Triton WY kernel — the profile said the loop, not the
+    kernel, was the cost; a fused WY kernel is deferred (maybe +15 %).
+    `pam_delta_torch` is the oracle; `v13_sempty/tmp/delta_parity.py` is the
+    test. Prep is `torch.compile`d shape-generic (`V13S_DELTA_COMPILE=0` →
+    eager).
+  - **Delta decode DONE (`b44160b`):** `_stepwise_delta`; `generate.py` works
+    on `mix3b_delta_answ100/best_model.pt` (greedy coherent). `--gen_every`
+    may be non-zero for delta runs now. Parity `tmp/delta_decode_parity.py`.
+    Finding: verbatim copy works; free-form multi-way lookups ("Bob lives in"
+    → wrong city) fail → recall-doc FORMAT diversity is a data item.
+  - **R2 retention program RUNNING (`54c62ed`)** in tmux `retbench` on the
+    6000: `logs/v13_sempty_retention_bench_dt_nodecay_54c62ed_20260906_1411.log`
+    — `v13_sempty/tmp/retention_microbench.py`, 6000 steps × B16, 75 %
+    WikiText LM filler + 25 % recall docs (answer ×100), arms `delta` (ref,
+    dt −4) / `delta@dt-6` / `delta@dt-8` / `delta@nodecay`; eval pos0 vs pos1
+    at 256..8192, WikiText val PPL guard, realised retention, dt_bias drift.
+    ~110K tok/s, ~15 min/arm. **Verdict rule:** KEEP a knob iff pos0 @2048–8192 clearly
+    beats ref with val PPL within ~2 %; else remove `no_decay`/leave
+    `base_dt_bias` at −4 (sROI). New knobs: `--no_decay`, `--base_dt_bias`.
+    If the REF arm shows no pos0 decay at all, the bench does not reproduce
+    the pretrain's forgetting and the question moves to a real 1B run.
 * **MIX-3B + DELTA + ANSWER_W=100 DONE (2026-09-06, `1c913ef`) — the bench
   result TRANSFERRED to the real 100M.** Holdout PPL 26.38 (mix-3B 25.73;
   WikiText 54.73 vs 54.91 → a wash). Behavioral recall vs mix-3B: **a4 @128
@@ -37,9 +68,8 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
      default retention) since it never learns; (c) delta with decay *removed*
      (pure erase-on-rewrite memory, DeltaNet-style, retention pinned 1.0) vs
      current decay — the LM guard (holdout PPL) decides.
-  2. **Engineering debt now justified:** Triton delta kernel (51.5K → ~86K
-     tok/s, 56 → 31 GB) and delta decode in `generate.py` (no generation from
-     delta ckpts yet — user wants to play with it).
+  2. ~~Engineering debt: Triton delta kernel + delta decode~~ DONE 2026-09-06
+     (see top entry; ratio 1.45× not 1.0×, good enough for Stage L).
   3. Then Stage L (8K/32K) on the reference recipe.
   4. A fairer control when convenient: a RoPE transformer on the micro-bench
      (the v6 control is abs-pos); keep claims scoped to "same size, same data,
