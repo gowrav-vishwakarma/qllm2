@@ -26,17 +26,25 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     may be non-zero for delta runs now. Parity `tmp/delta_decode_parity.py`.
     Finding: verbatim copy works; free-form multi-way lookups ("Bob lives in"
     → wrong city) fail → recall-doc FORMAT diversity is a data item.
-  - **R2 retention program RUNNING (`54c62ed`)** in tmux `retbench` on the
-    6000: `logs/v13_sempty_retention_bench_dt_nodecay_54c62ed_20260906_1411.log`
-    — `v13_sempty/tmp/retention_microbench.py`, 6000 steps × B16, 75 %
-    WikiText LM filler + 25 % recall docs (answer ×100), arms `delta` (ref,
-    dt −4) / `delta@dt-6` / `delta@dt-8` / `delta@nodecay`; eval pos0 vs pos1
-    at 256..8192, WikiText val PPL guard, realised retention, dt_bias drift.
-    ~110K tok/s, ~15 min/arm. **Verdict rule:** KEEP a knob iff pos0 @2048–8192 clearly
-    beats ref with val PPL within ~2 %; else remove `no_decay`/leave
-    `base_dt_bias` at −4 (sROI). New knobs: `--no_decay`, `--base_dt_bias`.
-    If the REF arm shows no pos0 decay at all, the bench does not reproduce
-    the pretrain's forgetting and the question moves to a real 1B run.
+  - **R2 retention bench DONE (`54c62ed`,
+    `logs/v13_sempty_retention_bench_dt_nodecay_54c62ed_20260906_1411.log`):**
+    under 75 % WikiText LM pressure every DECAYING arm (dt −4/−6/−8) is at
+    chance on a4 at both needle positions (realised retention .86–.93, bias
+    frozen); **`nodecay` = 1.00 on a1/a4 at every ctx to 8192 (a4 pos0 .88 @
+    8192)** but WikiText val PPL 97.7 vs 87.3 (+12 %). a1 pos0 was 1.00 for
+    all arms (bench doesn't reproduce the 100M's a1 decay). Record:
+    `EXPERIMENTS_SEMPY.md` → "R2 retention bench". dt −6/−8: no gain.
+  - **RUNNING NOW on the 6000 (tmux `sempty_mix`): `mix3b_delta_nodecay_answ100`
+    (`9f33b50`)** = Phase 3b recipe + `--no_decay`, one variable. Log
+    `logs/v13_sempty_mix3b_delta_nodecay_answ100_9f33b50_20260906_1511.log`,
+    ckpt `checkpoints_v13_sempty/mix3b_delta_nodecay_answ100_9f33b50/`.
+    60K tok/s, 45.5 GB, ETA ~24 h (→ ~2026-09-07 15:00 UTC). Launcher
+    auto-resumes from `latest.pt` (every 1000 steps) if the process dies.
+    **Judge:** holdout PPL vs 26.38 (guard ≤ +2–3 %; the bench's +12 % is the
+    risk), then `scripts/run_memory_behavioral.py --max-context 8192` (+
+    `--pam-scale 0` ablation) vs Phase 3b: a4/a8 at 512–8192, a1 pos0
+    horizon. If PPL fails but recall wins: test a learned *floor* (tiny
+    bounded leak) instead of none. `no_decay` is a CANDIDATE until then.
 * **MIX-3B + DELTA + ANSWER_W=100 DONE (2026-09-06, `1c913ef`) — the bench
   result TRANSFERRED to the real 100M.** Holdout PPL 26.38 (mix-3B 25.73;
   WikiText 54.73 vs 54.91 → a wash). Behavioral recall vs mix-3B: **a4 @128

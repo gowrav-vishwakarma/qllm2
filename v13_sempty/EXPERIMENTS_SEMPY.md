@@ -1063,6 +1063,81 @@ Nairobi. Bob lives in` → `New York`; `Key: mango -> 9028 … Key: mango ->` �
 "query: K means") has not generalised to natural phrasing: a data-format
 diversity item for the recall docs, not a mechanism failure.
 
+## R2 retention bench — under LM pressure passive decay kills multi-way recall; `no_decay` (erase-only memory) restores 1.00 to 8192 (2026-09-06)
+
+**Question.** Phase 3b left retention over distance as the horizon limiter,
+with `dt_bias` frozen at −4 and realised retention 0.64–0.97/token (content
+pushes toward forgetting). The pure-recall micro-bench cannot show this: with
+no LM loss the model simply learns to retain. So: a bench with the forgetting
+pressure in it. `v13_sempty/tmp/retention_microbench.py`, 27M chrono+gate+delta
+(4 layers, hd 64), 6000 steps × B16, every step one length bucket
+(256/512/1024/2048/4096, weights .30/.28/.22/.12/.08); **75 % of each batch =
+WikiText-103 train windows (LM loss, weight 1), 25 % = recall docs** (records /
+filler / "query: K means" → V, 1–8 associations, needle at 0 / 0.5 / 1.0 of the
+context, answer token weight ×100 — the reference recipe's loss). Eval:
+position-resolved probe (pos0 = needle at START, pos1 = needle just before the
+query) at ctx 256..8192 (8192 = 2× train window) for a1/a4, 24 trials each;
+WikiText val PPL (32 × 2048 windows) as the LM guard; realised per-layer
+retention on a web window; `dt_bias` drift. Arms, byte-identical data: `dt-4`
+(reference), `dt-6`, `dt-8` (longer default retention since the bias never
+learns), `nodecay` (retention pinned 1.0 — the memory changes only by delta
+erase-on-rewrite). Log
+`logs/v13_sempty_retention_bench_dt_nodecay_54c62ed_20260906_1411.log`, RTX
+6000, ~8 min/arm at 160–200K tok/s.
+
+**Result.**
+
+| arm | val PPL | realised retention/layer | dt_bias | a1 pos0 256→8192 | a4 pos0 256→8192 | a4 pos1 256→8192 |
+|---|---|---|---|---|---|---|
+| delta dt−4 (ref) | 87.32 | .86 .89 .85 .93 | −3.94…−3.98 | 1.00 all | .08 .17 .12 .25 .17 .17 | .42 .38 .42 .42 .42 .42 |
+| delta dt−6 | 86.00 | .89 .94 .89 .89 | −5.92 | 1.00 all | .04 .17 .04 .12 .08 .17 | .12 .17 .21 .21 .21 .21 |
+| delta dt−8 | 85.51 | .91 .97 .91 .86 | −7.89 | 1.00 all | .17 .21 .17 .12 .12 .17 | .17 .17 .25 .25 .25 .17 |
+| **delta nodecay** | **97.65** | 1.0 1.0 1.0 1.0 | (unused) | 1.00 all | **1.00 1.00 1.00 1.00 1.00 .88** | **1.00 all** |
+
+(a1 pos1 = 1.00 for every arm; chance ≈ 0.12.)
+
+**Reading it.**
+1. **The bench reproduces the pretrain's forgetting signature, not its a1
+   symptom.** Realised retention 0.86–0.93/token (an e-fold every ~10 tokens)
+   with `dt_bias` moving < 0.1 from init in every decaying arm — exactly what
+   the 100M showed. But a1 pos0 is 1.00 to 8192 for all arms: a single
+   binding survives because the read is content-gated (retention is high on
+   record tokens, low on filler), so the 100M's a1 pos0 decay is not
+   reproduced at 27M/6k steps. The a1 horizon question stays with the real
+   run.
+2. **What the LM pressure does break is multi-way.** The same architecture
+   that scored a4 = 1.00 on the pure-recall bench is at chance on a4 at
+   *both* positions once 75 % of the tokens are web text — not a retention-
+   over-distance effect (pos1 fails too) but the decaying memory being
+   unable to hold four simultaneous bindings while the LM objective is
+   pulling retention down. `dt_bias` −6/−8 do not help at all (the bias is
+   a prior the content term overrides; realised retention barely moves),
+   confirming the 09-06 diagnosis: the lever is not the bias.
+3. **`no_decay` flips a4 from chance to 1.00 at every length, 0.88 at 8192
+   (2× the train window) — from a fixed O(1) state.** Erase-on-rewrite is
+   the only forgetting the memory needs; passive decay was destroying
+   bindings the LM never asked it to destroy. This is the largest single
+   behavioural jump in the program (the delta rule itself was a1 0.46 →
+   1.00; this is a4 0.12 → 1.00 under realistic data).
+4. **Cost: the LM guard is violated at this scale** — WikiText val PPL 97.65
+   vs 87.32 (+12 %), far outside the ≤2 % rule. Plausible mechanism: with no
+   decay, the state is the sum of *everything* written since the sequence
+   start, so on ordinary text the read is a crowded superposition unless the
+   erase gate learns to clear it; 27M/6k steps may simply not have learned
+   that. Whether the cost persists at 100M/3B tokens (where the holdout PPL
+   reference is 26.38) is the open question, and it is what the launched run
+   decides. If it persists, the middle ground to test is a *learned floor*
+   (retention = 1 − softplus-bounded small leak) rather than none.
+
+**Decision.** `no_decay` stays a **candidate** (not KEEP) pending the 100M
+holdout PPL; `base_dt_bias` −6/−8: no gain, leave at −4 (knob stays as a CLI
+override, no code path to remove). Launched **`mix3b_delta_nodecay_answ100`**
+(`9f33b50`): the exact Phase 3b recipe (102M, 3B tok, 0.44/0.41/0.10/0.05,
+DELTA=1, ANSWER_W=100) + `--no_decay`, one variable; `GEN_EVERY=4000` now that
+delta decodes. 60K tok/s (old delta path 51.5K), 45.5 GB, ETA ~24 h. Judge
+by: holdout PPL vs 26.38 (guard: ≤ +2–3 %), a4/a8 at 512–8192 and a1 pos0
+horizon vs Phase 3b (`run_memory_behavioral.py --max-context 8192`).
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*

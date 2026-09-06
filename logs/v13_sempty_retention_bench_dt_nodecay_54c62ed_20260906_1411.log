@@ -1,0 +1,184 @@
+=== retention bench start 2026-09-06T14:11:56Z commit=54c62ed ===
+retention-bench: 6000 steps x B16, web_frac 0.75 (WikiText-103 train, 118M tok), answer_w 100.0, buckets [256, 512, 1024, 2048, 4096] w=[0.3, 0.28, 0.22, 0.12, 0.08], eval ctx (256, 512, 1024, 2048, 4096, 8192) assoc (1, 4) pos (0.0, 1.0), 24 trials, vocab 50257
+
+--- arm: chrono+gate+delta dt-4 (delta=True, base_dt_bias=-4.0, no_decay=False) ---
+  [chrono+gate+delta dt-4] step    1/6000 L= 1024 loss=10.8905 | 1,932 tok/s
+W0906 14:12:09.890000 2980728 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))), 0) | (512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))) <= 49152*((s25//64))*((s65//((s25//64)))))
+W0906 14:12:19.593000 2980728 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))), 0) | (512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))) <= 49152*((s25//64))*((s65//((s25//64)))))
+W0906 14:12:30.012000 2980728 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))), 0) | (512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))) <= 49152*((s25//64))*((s65//((s25//64)))))
+W0906 14:12:47.526000 2980728 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))), 0) | (512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))) <= 49152*((s25//64))*((s65//((s25//64)))))
+  [chrono+gate+delta dt-4] step  200/6000 L=  512 loss=5.2571 | 40,470 tok/s
+  [chrono+gate+delta dt-4] step  400/6000 L= 1024 loss=4.4638 | 67,230 tok/s
+  [chrono+gate+delta dt-4] step  600/6000 L= 2048 loss=4.3031 | 87,827 tok/s
+  [chrono+gate+delta dt-4] step  800/6000 L=  256 loss=4.0816 | 101,701 tok/s
+  [chrono+gate+delta dt-4] step 1000/6000 L=  512 loss=3.9536 | 112,281 tok/s
+  [chrono+gate+delta dt-4] step 1200/6000 L=  256 loss=3.7106 | 120,987 tok/s
+  [chrono+gate+delta dt-4] step 1400/6000 L= 2048 loss=3.7954 | 129,697 tok/s
+  [chrono+gate+delta dt-4] step 1600/6000 L= 1024 loss=3.8891 | 135,759 tok/s
+  [chrono+gate+delta dt-4] step 1800/6000 L=  512 loss=3.8034 | 140,838 tok/s
+  [chrono+gate+delta dt-4] step 2000/6000 L=  256 loss=3.5859 | 144,924 tok/s
+  [chrono+gate+delta dt-4] step 2200/6000 L=  256 loss=3.6659 | 148,730 tok/s
+  [chrono+gate+delta dt-4] step 2400/6000 L=  256 loss=3.5664 | 151,840 tok/s
+  [chrono+gate+delta dt-4] step 2600/6000 L=  256 loss=3.2341 | 154,378 tok/s
+  [chrono+gate+delta dt-4] step 2800/6000 L=  256 loss=3.4115 | 157,425 tok/s
+  [chrono+gate+delta dt-4] step 3000/6000 L=  256 loss=3.1451 | 159,620 tok/s
+  [chrono+gate+delta dt-4] step 3200/6000 L=  256 loss=3.5301 | 161,375 tok/s
+  [chrono+gate+delta dt-4] step 3400/6000 L= 4096 loss=3.3892 | 163,520 tok/s
+  [chrono+gate+delta dt-4] step 3600/6000 L=  256 loss=3.1496 | 164,984 tok/s
+  [chrono+gate+delta dt-4] step 3800/6000 L= 4096 loss=3.2878 | 166,608 tok/s
+  [chrono+gate+delta dt-4] step 4000/6000 L=  512 loss=3.0546 | 168,367 tok/s
+  [chrono+gate+delta dt-4] step 4200/6000 L=  256 loss=3.2830 | 169,469 tok/s
+  [chrono+gate+delta dt-4] step 4400/6000 L=  512 loss=3.2626 | 171,064 tok/s
+  [chrono+gate+delta dt-4] step 4600/6000 L=  512 loss=3.0931 | 172,329 tok/s
+  [chrono+gate+delta dt-4] step 4800/6000 L= 2048 loss=3.3766 | 173,572 tok/s
+  [chrono+gate+delta dt-4] step 5000/6000 L=  256 loss=3.2410 | 174,621 tok/s
+  [chrono+gate+delta dt-4] step 5200/6000 L=  512 loss=3.2511 | 175,423 tok/s
+  [chrono+gate+delta dt-4] step 5400/6000 L=  256 loss=3.1799 | 176,354 tok/s
+  [chrono+gate+delta dt-4] step 5600/6000 L=  512 loss=3.1887 | 177,105 tok/s
+  [chrono+gate+delta dt-4] step 5800/6000 L=  512 loss=3.1742 | 178,022 tok/s
+  [chrono+gate+delta dt-4] step 6000/6000 L= 1024 loss=3.1770 | 178,743 tok/s
+W0906 14:21:06.142000 2980728 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s26*s65)//(s37*((s25//64))))))
+W0906 14:21:10.025000 2980728 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s26*s65)//(s37*((s25//64))))))
+W0906 14:21:13.023000 2980728 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/7] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s26*s65)//(s37*((s25//64))))))
+W0906 14:21:16.150000 2980728 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/8] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s26*s65)//(s37*((s25//64))))))
+W0906 14:21:21.755000 2980728 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/9] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s26*s65)//(s37*((s25//64))))))
+W0906 14:21:26.741000 2980728 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/10] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s26*s65)//(s37*((s25//64))))))
+  [chrono+gate+delta dt-4] 27.2M params, trained 545s | wikitext val PPL 87.32 | realised retention/layer 0.859 0.891 0.854 0.927 | dt_bias/layer -3.94 -3.96 -3.95 -3.98
+
+--- arm: chrono+gate+delta dt-6 (delta=True, base_dt_bias=-6.0, no_decay=False) ---
+  [chrono+gate+delta dt-6] step    1/6000 L= 1024 loss=10.8903 | 237,298 tok/s
+  [chrono+gate+delta dt-6] step  200/6000 L=  512 loss=5.2860 | 203,884 tok/s
+  [chrono+gate+delta dt-6] step  400/6000 L= 1024 loss=4.4777 | 204,461 tok/s
+  [chrono+gate+delta dt-6] step  600/6000 L= 2048 loss=4.3133 | 205,780 tok/s
+  [chrono+gate+delta dt-6] step  800/6000 L=  256 loss=4.0784 | 204,569 tok/s
+  [chrono+gate+delta dt-6] step 1000/6000 L=  512 loss=3.9498 | 204,239 tok/s
+  [chrono+gate+delta dt-6] step 1200/6000 L=  256 loss=3.7035 | 204,067 tok/s
+  [chrono+gate+delta dt-6] step 1400/6000 L= 2048 loss=3.7976 | 204,894 tok/s
+  [chrono+gate+delta dt-6] step 1600/6000 L= 1024 loss=3.8819 | 204,811 tok/s
+  [chrono+gate+delta dt-6] step 1800/6000 L=  512 loss=3.8078 | 204,720 tok/s
+  [chrono+gate+delta dt-6] step 2000/6000 L=  256 loss=3.5761 | 204,336 tok/s
+  [chrono+gate+delta dt-6] step 2200/6000 L=  256 loss=3.6543 | 204,265 tok/s
+  [chrono+gate+delta dt-6] step 2400/6000 L=  256 loss=3.5663 | 204,140 tok/s
+  [chrono+gate+delta dt-6] step 2600/6000 L=  256 loss=3.2246 | 203,879 tok/s
+  [chrono+gate+delta dt-6] step 2800/6000 L=  256 loss=3.4117 | 204,148 tok/s
+  [chrono+gate+delta dt-6] step 3000/6000 L=  256 loss=3.1527 | 203,511 tok/s
+  [chrono+gate+delta dt-6] step 3200/6000 L=  256 loss=3.5456 | 203,165 tok/s
+  [chrono+gate+delta dt-6] step 3400/6000 L= 4096 loss=3.3745 | 203,237 tok/s
+  [chrono+gate+delta dt-6] step 3600/6000 L=  256 loss=3.1356 | 203,184 tok/s
+  [chrono+gate+delta dt-6] step 3800/6000 L= 4096 loss=3.2749 | 203,177 tok/s
+  [chrono+gate+delta dt-6] step 4000/6000 L=  512 loss=3.0428 | 203,327 tok/s
+  [chrono+gate+delta dt-6] step 4200/6000 L=  256 loss=3.2689 | 203,158 tok/s
+  [chrono+gate+delta dt-6] step 4400/6000 L=  512 loss=3.2588 | 203,375 tok/s
+  [chrono+gate+delta dt-6] step 4600/6000 L=  512 loss=3.0868 | 203,480 tok/s
+  [chrono+gate+delta dt-6] step 4800/6000 L= 2048 loss=3.3607 | 203,612 tok/s
+  [chrono+gate+delta dt-6] step 5000/6000 L=  256 loss=3.2298 | 203,655 tok/s
+  [chrono+gate+delta dt-6] step 5200/6000 L=  512 loss=3.2277 | 203,532 tok/s
+  [chrono+gate+delta dt-6] step 5400/6000 L=  256 loss=3.1820 | 203,547 tok/s
+  [chrono+gate+delta dt-6] step 5600/6000 L=  512 loss=3.1783 | 203,467 tok/s
+  [chrono+gate+delta dt-6] step 5800/6000 L=  512 loss=3.1715 | 203,558 tok/s
+  [chrono+gate+delta dt-6] step 6000/6000 L= 1024 loss=3.1622 | 203,556 tok/s
+  [chrono+gate+delta dt-6] 27.2M params, trained 478s | wikitext val PPL 86.00 | realised retention/layer 0.891 0.941 0.890 0.885 | dt_bias/layer -5.92 -5.92 -5.93 -5.91
+
+--- arm: chrono+gate+delta dt-8 (delta=True, base_dt_bias=-8.0, no_decay=False) ---
+  [chrono+gate+delta dt-8] step    1/6000 L= 1024 loss=10.8900 | 236,750 tok/s
+  [chrono+gate+delta dt-8] step  200/6000 L=  512 loss=5.3047 | 203,859 tok/s
+  [chrono+gate+delta dt-8] step  400/6000 L= 1024 loss=4.4877 | 200,643 tok/s
+  [chrono+gate+delta dt-8] step  600/6000 L= 2048 loss=4.3221 | 203,185 tok/s
+  [chrono+gate+delta dt-8] step  800/6000 L=  256 loss=4.0878 | 202,459 tok/s
+  [chrono+gate+delta dt-8] step 1000/6000 L=  512 loss=3.9511 | 202,437 tok/s
+  [chrono+gate+delta dt-8] step 1200/6000 L=  256 loss=3.7052 | 202,523 tok/s
+  [chrono+gate+delta dt-8] step 1400/6000 L= 2048 loss=3.7991 | 203,433 tok/s
+  [chrono+gate+delta dt-8] step 1600/6000 L= 1024 loss=3.8845 | 203,435 tok/s
+  [chrono+gate+delta dt-8] step 1800/6000 L=  512 loss=3.8041 | 203,406 tok/s
+  [chrono+gate+delta dt-8] step 2000/6000 L=  256 loss=3.5748 | 203,120 tok/s
+  [chrono+gate+delta dt-8] step 2200/6000 L=  256 loss=3.6604 | 203,103 tok/s
+  [chrono+gate+delta dt-8] step 2400/6000 L=  256 loss=3.5720 | 202,941 tok/s
+  [chrono+gate+delta dt-8] step 2600/6000 L=  256 loss=3.2238 | 202,617 tok/s
+  [chrono+gate+delta dt-8] step 2800/6000 L=  256 loss=3.4013 | 202,886 tok/s
+  [chrono+gate+delta dt-8] step 3000/6000 L=  256 loss=3.1640 | 202,757 tok/s
+  [chrono+gate+delta dt-8] step 3200/6000 L=  256 loss=3.5722 | 202,467 tok/s
+  [chrono+gate+delta dt-8] step 3400/6000 L= 4096 loss=3.3816 | 202,607 tok/s
+  [chrono+gate+delta dt-8] step 3600/6000 L=  256 loss=3.1449 | 202,546 tok/s
+  [chrono+gate+delta dt-8] step 3800/6000 L= 4096 loss=3.2749 | 202,555 tok/s
+  [chrono+gate+delta dt-8] step 4000/6000 L=  512 loss=3.0453 | 202,710 tok/s
+  [chrono+gate+delta dt-8] step 4200/6000 L=  256 loss=3.2686 | 202,550 tok/s
+  [chrono+gate+delta dt-8] step 4400/6000 L=  512 loss=3.2515 | 202,463 tok/s
+  [chrono+gate+delta dt-8] step 4600/6000 L=  512 loss=3.0849 | 202,560 tok/s
+  [chrono+gate+delta dt-8] step 4800/6000 L= 2048 loss=3.3567 | 202,685 tok/s
+  [chrono+gate+delta dt-8] step 5000/6000 L=  256 loss=3.2330 | 202,726 tok/s
+  [chrono+gate+delta dt-8] step 5200/6000 L=  512 loss=3.2349 | 202,622 tok/s
+  [chrono+gate+delta dt-8] step 5400/6000 L=  256 loss=3.1806 | 202,646 tok/s
+  [chrono+gate+delta dt-8] step 5600/6000 L=  512 loss=3.1752 | 202,556 tok/s
+  [chrono+gate+delta dt-8] step 5800/6000 L=  512 loss=3.1681 | 202,648 tok/s
+  [chrono+gate+delta dt-8] step 6000/6000 L= 1024 loss=3.1625 | 202,649 tok/s
+  [chrono+gate+delta dt-8] 27.2M params, trained 481s | wikitext val PPL 85.51 | realised retention/layer 0.911 0.967 0.907 0.857 | dt_bias/layer -7.89 -7.89 -7.88 -7.86
+
+--- arm: chrono+gate+delta+nodecay (delta=True, base_dt_bias=-4.0, no_decay=True) ---
+  [chrono+gate+delta+nodecay] step    1/6000 L= 1024 loss=10.8899 | 236,661 tok/s
+  [chrono+gate+delta+nodecay] step  200/6000 L=  512 loss=5.3122 | 204,519 tok/s
+  [chrono+gate+delta+nodecay] step  400/6000 L= 1024 loss=4.5062 | 204,850 tok/s
+  [chrono+gate+delta+nodecay] step  600/6000 L= 2048 loss=4.3543 | 206,116 tok/s
+  [chrono+gate+delta+nodecay] step  800/6000 L=  256 loss=4.1107 | 204,896 tok/s
+  [chrono+gate+delta+nodecay] step 1000/6000 L=  512 loss=3.9843 | 204,537 tok/s
+  [chrono+gate+delta+nodecay] step 1200/6000 L=  256 loss=3.7490 | 204,217 tok/s
+  [chrono+gate+delta+nodecay] step 1400/6000 L= 2048 loss=3.8513 | 204,943 tok/s
+  [chrono+gate+delta+nodecay] step 1600/6000 L= 1024 loss=3.9352 | 204,799 tok/s
+  [chrono+gate+delta+nodecay] step 1800/6000 L=  512 loss=3.8529 | 203,869 tok/s
+  [chrono+gate+delta+nodecay] step 2000/6000 L=  256 loss=3.6292 | 203,529 tok/s
+  [chrono+gate+delta+nodecay] step 2200/6000 L=  256 loss=3.7214 | 203,413 tok/s
+  [chrono+gate+delta+nodecay] step 2400/6000 L=  256 loss=3.6284 | 203,259 tok/s
+  [chrono+gate+delta+nodecay] step 2600/6000 L=  256 loss=3.2787 | 203,015 tok/s
+  [chrono+gate+delta+nodecay] step 2800/6000 L=  256 loss=3.4668 | 203,329 tok/s
+  [chrono+gate+delta+nodecay] step 3000/6000 L=  256 loss=3.2273 | 203,203 tok/s
+  [chrono+gate+delta+nodecay] step 3200/6000 L=  256 loss=3.6510 | 202,933 tok/s
+  [chrono+gate+delta+nodecay] step 3400/6000 L= 4096 loss=3.4658 | 203,090 tok/s
+  [chrono+gate+delta+nodecay] step 3600/6000 L=  256 loss=3.2651 | 203,063 tok/s
+  [chrono+gate+delta+nodecay] step 3800/6000 L= 4096 loss=3.3623 | 203,074 tok/s
+  [chrono+gate+delta+nodecay] step 4000/6000 L=  512 loss=3.1363 | 203,213 tok/s
+  [chrono+gate+delta+nodecay] step 4200/6000 L=  256 loss=3.4155 | 203,042 tok/s
+  [chrono+gate+delta+nodecay] step 4400/6000 L=  512 loss=3.3402 | 203,234 tok/s
+  [chrono+gate+delta+nodecay] step 4600/6000 L=  512 loss=3.1670 | 203,322 tok/s
+  [chrono+gate+delta+nodecay] step 4800/6000 L= 2048 loss=3.4534 | 203,420 tok/s
+  [chrono+gate+delta+nodecay] step 5000/6000 L=  256 loss=3.2295 | 203,422 tok/s
+  [chrono+gate+delta+nodecay] step 5200/6000 L=  512 loss=3.2439 | 203,296 tok/s
+  [chrono+gate+delta+nodecay] step 5400/6000 L=  256 loss=3.1499 | 203,340 tok/s
+  [chrono+gate+delta+nodecay] step 5600/6000 L=  512 loss=3.2320 | 203,252 tok/s
+  [chrono+gate+delta+nodecay] step 5800/6000 L=  512 loss=3.2039 | 203,109 tok/s
+  [chrono+gate+delta+nodecay] step 6000/6000 L= 1024 loss=3.2180 | 203,116 tok/s
+  [chrono+gate+delta+nodecay] 27.2M params, trained 479s | wikitext val PPL 97.65 | realised retention/layer 1.000 1.000 1.000 1.000 | dt_bias/layer -4.00 -4.00 -4.00 -4.00
+
+========================================================================
+LM guard (WikiText val PPL, 32x2048 windows):
+  chrono+gate+delta dt-4                87.32
+  chrono+gate+delta dt-6                86.00
+  chrono+gate+delta dt-8                85.51
+  chrono+gate+delta+nodecay             97.65
+
+a1 pos0 = needle at START (retention):
+  arm                                   256    512   1024   2048   4096   8192
+  chrono+gate+delta dt-4               1.00   1.00   1.00   1.00   1.00   1.00
+  chrono+gate+delta dt-6               1.00   1.00   1.00   1.00   1.00   1.00
+  chrono+gate+delta dt-8               1.00   1.00   1.00   1.00   1.00   1.00
+  chrono+gate+delta+nodecay            1.00   1.00   1.00   1.00   1.00   1.00
+
+a1 pos1 = needle just before query (retrieval):
+  arm                                   256    512   1024   2048   4096   8192
+  chrono+gate+delta dt-4               1.00   1.00   1.00   1.00   1.00   1.00
+  chrono+gate+delta dt-6               1.00   1.00   1.00   1.00   1.00   1.00
+  chrono+gate+delta dt-8               1.00   1.00   1.00   1.00   1.00   1.00
+  chrono+gate+delta+nodecay            1.00   1.00   1.00   1.00   1.00   1.00
+
+a4 pos0 = needle at START (retention):
+  arm                                   256    512   1024   2048   4096   8192
+  chrono+gate+delta dt-4               0.08   0.17   0.12   0.25   0.17   0.17
+  chrono+gate+delta dt-6               0.04   0.17   0.04   0.12   0.08   0.17
+  chrono+gate+delta dt-8               0.17   0.21   0.17   0.12   0.12   0.17
+  chrono+gate+delta+nodecay            1.00   1.00   1.00   1.00   1.00   0.88
+
+a4 pos1 = needle just before query (retrieval):
+  arm                                   256    512   1024   2048   4096   8192
+  chrono+gate+delta dt-4               0.42   0.38   0.42   0.42   0.42   0.42
+  chrono+gate+delta dt-6               0.12   0.17   0.21   0.21   0.21   0.21
+  chrono+gate+delta dt-8               0.17   0.17   0.25   0.25   0.25   0.17
+  chrono+gate+delta+nodecay            1.00   1.00   1.00   1.00   1.00   1.00
+exit=0
