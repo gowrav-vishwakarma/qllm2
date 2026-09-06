@@ -55,7 +55,7 @@ KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {
         "_chunked_fused",          # complex arm: hand-off to fused_complex_pam_read
         "_rotate_learned",         # N1: Chrono content-modulated rotary (cumsum over time)
         "_chunked_multi",          # A2: multi-state batching into the kernel B*H*S axis
-        "_chunked_delta",          # A3: delta erase/write hand-off to pam_delta_torch
+        "_chunked_delta",          # A3: delta erase/write hand-off to pam_delta_batched
     }),
 }
 

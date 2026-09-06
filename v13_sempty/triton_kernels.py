@@ -550,5 +550,136 @@ def pam_delta_torch(q, k, v, retention, beta_w, beta_e, carry, chunk):
     return torch.cat(reads, dim=1), S
 
 
+def pam_delta_batched(q, k, v, retention, beta_w, beta_e, carry, sub=_BT):
+    r"""Same delta recurrence as ``pam_delta_torch``, restructured for speed.
+
+    Why (2026-09-06 profile, 100M B6 T2048): ``pam_delta_torch`` costs 2x the
+    additive path, and none of it is the scan kernel -- it is the per-chunk
+    Python loop (T/256 iterations x 16 layers): eight fp32 triangular solves +
+    their backward, fp32 SIMT GEMMs and ``[w, w]`` elementwise traffic at
+    w=256, eight scan launches, eight slice-backward nodes.
+
+    Key identity: the pseudo-values are LINEAR in the carried state.  For a
+    sub-chunk c with start state ``S`` (rows value, cols key):
+
+        W_c = A_c^{-1} diag(b_w) V_c  -  A_c^{-1} diag(b_e a) K_c  S^T
+            =        W0_c            -           U_c              S^T
+
+    ``W0`` and ``U`` do not depend on ``S``, so ONE batched unit-triangular
+    solve over all sub-chunks (rhs ``[bw V | diag(be a) K]``) gives both.  The
+    chunk-end state then obeys a linear matrix recurrence in ``S`` alone:
+
+        S_c = a_last S_{c-1} + (E o W_c)^T K_c
+            = S_{c-1} (a_last I - (E o U_c)^T K_c) + (E o W0_c)^T K_c
+            = S_{c-1} M_c + N_c                     (E_t = a_last / a_t)
+
+    with ``M_c, N_c`` precomputed batched -- T/64 small ``[K, K]`` bmm steps.
+    Then ``W = W0 - U S_prev^T`` for every sub-chunk at once, and a SINGLE
+    ``fused_real_pam_read(q, k, W, retention)`` over the full sequence returns
+    the read and the final carry (its internal BT=64 tiles line up with the
+    sub-chunks, and its states equal ``S_c`` by construction).
+
+    Sub-chunk 64 (not 256) makes the solve and all ``[w, w]`` work 4x smaller
+    per token.  Ragged ``T`` is zero-padded (retention 1, gates 0 => W = 0).
+    Autograd flows through plain torch ops.  Parity with ``pam_delta_torch``:
+    ``v13_sempty/tmp/delta_parity.py``.
+    """
+    BH, T, K = q.shape
+    dt = q.dtype
+    Tp = ((T + sub - 1) // sub) * sub
+    if Tp != T:
+        pad = Tp - T
+        q = F.pad(q, (0, 0, 0, pad))
+        k = F.pad(k, (0, 0, 0, pad))
+        v = F.pad(v, (0, 0, 0, pad))
+        retention = F.pad(retention, (0, pad), value=1.0)
+        beta_w = F.pad(beta_w, (0, pad), value=0.0)
+        beta_e = F.pad(beta_e, (0, pad), value=0.0)
+    S0 = carry.float() if carry is not None else torch.zeros(BH, K, K, device=q.device)
+    W = _delta_prep_fn()(k, v, retention, beta_w, beta_e, S0, sub)
+    read, S_out = fused_real_pam_read(q, k, W, retention, carry, sub)
+    if Tp != T:
+        read = read[:, :T]
+    return read, S_out
+
+
+def _delta_prep(k, v, retention, beta_w, beta_e, S0, sub: int):
+    """Pseudo-values ``W [BH, Tp, K]`` (scan dtype) for the delta recurrence.
+
+    Batched per-sub-chunk WY solve -> recurrence coefficients -> sequential
+    chunk-state recurrence -> ``W = W0 - U S_prev^T``.  Pure torch; this is
+    the region ``torch.compile`` fuses (eager: ~60 ms/step of un-fused fp32
+    elementwise + casts, plus ~2000 tiny dispatches for the recurrence, at
+    100M B6 T2048).
+    """
+    BH, Tp, K = k.shape
+    dt = k.dtype
+    NC = Tp // sub
+    kf = k.float().reshape(BH * NC, sub, K)
+    vf = v.float().reshape(BH * NC, sub, K)
+    g = retention.float().reshape(BH * NC, sub)
+    bw = beta_w.float().reshape(BH * NC, sub)
+    be = beta_e.float().reshape(BH * NC, sub)
+
+    G = torch.cumsum(torch.log(g + _EPS), dim=-1)                       # [BHN, w]
+    a = torch.exp(G)                                                    # decay from chunk start
+    a_last = a[:, -1]                                                   # [BHN]
+    E = torch.exp(G[:, -1:] - G)                                        # a_last / a_t  <= 1
+    low = torch.tril(torch.ones(sub, sub, device=k.device), -1)
+    Gamma = torch.exp(torch.clamp(G.unsqueeze(-1) - G.unsqueeze(-2), max=0.0))   # a_i / a_j
+    KK = torch.bmm(kf, kf.transpose(1, 2))                              # [BHN, w, w]
+    A = (be.unsqueeze(-1) * (KK * Gamma)) * low + torch.eye(sub, device=k.device)
+    rhs = torch.cat([bw.unsqueeze(-1) * vf, (be * a).unsqueeze(-1) * kf], dim=-1)  # [BHN, w, 2K]
+    sol = torch.linalg.solve_triangular(A, rhs, upper=False, unitriangular=True)
+    W0, U = sol.split(K, dim=-1)                                        # [BHN, w, K] each
+
+    # Chunk recurrence coefficients: S_c = S_{c-1} M_c + N_c.  These GEMMs run
+    # in the scan dtype (bf16 under autocast, fp32 accumulate) -- the precision
+    # the additive kernel itself uses for W and k.  The [K,K] recurrence in
+    # the caller stays fp32.
+    kd = k.reshape(BH * NC, sub, K)
+    EU = (E.unsqueeze(-1) * U).to(dt)
+    EW0 = (E.unsqueeze(-1) * W0).to(dt)
+    B_ = torch.bmm(EU.transpose(1, 2), kd).float()                      # (E o U)^T K  [BHN, K, K]
+    N_ = torch.bmm(EW0.transpose(1, 2), kd).float()                     # (E o W0)^T K
+    eye = torch.eye(K, device=k.device)
+    M_ = (a_last.view(-1, 1, 1) * eye - B_).view(BH, NC, K, K)
+    N_ = N_.view(BH, NC, K, K)
+
+    # Sequential over sub-chunks: NC-1 baddbmm steps of [BH,K,K]x[K,K].  (A
+    # log-depth scan was tried: 5x the fp32 K^3 FLOPs + cat traffic, slower.)
+    # unbind/stack keep autograd to one node each -- per-step select/slice
+    # backward zero-fills the whole [BH,NC,K,K] tensor every time.
+    Ms, Ns = M_.unbind(1), N_.unbind(1)
+    S = S0
+    starts = [S]
+    for c in range(NC - 1):                                             # states at sub-chunk starts
+        S = torch.baddbmm(Ns[c], S, Ms[c])
+        starts.append(S)
+    S_prev = torch.stack(starts, dim=1)                                 # [BH, NC, K, K]
+
+    W = W0.to(dt).view(BH, NC, sub, K) - torch.matmul(
+        U.to(dt).view(BH, NC, sub, K), S_prev.to(dt).transpose(-1, -2))
+    return W.reshape(BH, Tp, K)
+
+
+_DELTA_COMPILE = os.environ.get("V13S_DELTA_COMPILE", "1") == "1"
+_delta_prep_compiled = None
+
+
+def _delta_prep_fn():
+    """``_delta_prep`` compiled once (lazily); eager if disabled/unavailable."""
+    global _delta_prep_compiled
+    if not _DELTA_COMPILE or torch.compiler.is_compiling():
+        return _delta_prep
+    if _delta_prep_compiled is None:
+        try:
+            _delta_prep_compiled = torch.compile(_delta_prep, dynamic=False)
+        except Exception:  # pragma: no cover
+            _delta_prep_compiled = _delta_prep
+    return _delta_prep_compiled
+
+
 __all__ = ["fused_real_pam_read", "fused_complex_pam_read", "pam_scan_torch",
-           "pam_delta_torch", "set_kernel_enabled", "kernel_enabled", "HAS_TRITON"]
+           "pam_delta_torch", "pam_delta_batched", "set_kernel_enabled",
+           "kernel_enabled", "HAS_TRITON"]

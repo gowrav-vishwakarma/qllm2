@@ -114,7 +114,7 @@ from v13_sempty.real_ops import (
 from v13_sempty.triton_kernels import (
     fused_real_pam_read,
     fused_complex_pam_read,
-    pam_delta_torch,
+    pam_delta_batched,
     kernel_enabled,
 )
 
@@ -796,8 +796,9 @@ class RealPAMLayer(nn.Module):
         """A3 delta erase/write chunked read (raw-torch boundary).
 
         Unit-norm keys; per-head erase/write gates; WY solve via
-        ``triton_kernels.pam_delta_torch`` (which reuses the additive scan with
-        pseudo-values).
+        ``triton_kernels.pam_delta_batched`` (one batched 64-wide solve + one
+        additive-scan launch per layer; ``pam_delta_torch`` is the per-chunk
+        reference it is parity-tested against, `v13_sempty/tmp/delta_parity.py`).
         """
         batch, time = tokens.layout[0], tokens.layout[1]
         B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
@@ -813,7 +814,7 @@ class RealPAMLayer(nn.Module):
         bw = torch.sigmoid(
             self.write_proj(tokens).alias(self.decay_out, self.heads).raw(batch, self.heads, time)
             ).reshape(B * H, T)
-        read, state = pam_delta_torch(q, k, v, retention, bw, be, None, self.chunk_size)
+        read, state = pam_delta_batched(q, k, v, retention, bw, be, None)
         output = named(read.reshape(B, H, T, K) * (self.head_dim ** -0.5),
                        (batch, self.heads, time, self.head_row))
         carried = named(state.reshape(B, H, K, K),
