@@ -908,6 +908,97 @@ document type), then re-probe. The brain-split idea (recurrent pattern core +
 explicit fact memory, A4 `cond_mem`) remains the strategic path for
 *parametric* facts, which this bench does not measure.
 
+## Phase 3b: mix-3B + DELTA + answer-weight — multi-way recall transfers to the real 100M; horizon 200 → ~1000 tok; retention is now the limiter (2026-09-06)
+
+**Run.** `mix3b_delta_answ100` (`1c913ef`), RTX Pro 6000, 2026-09-05 17:47 →
+09-06 10:42 UTC (~17 h; delta is the pure-torch chunked scan, 51.5K tok/s vs
+86K for chrono+gate). Identical to mix-3B `bbc12e9` (102M `baseline_real_pm`
++ chrono + out_gate, B18 T2048, 3.0B tokens, dclm/fineweb/smoltalk2/recall,
+300M web-only warmup, lr 2e-4 cosine) except: **`--delta`** (A3), **`--answer_weight
+100`** (CE weight ×100 on the answer tokens of the synthetic recall docs, see
+`v7.data.ANSWER_MARK`), recall share 3 → 5 %. Log
+`logs/v13_sempty_mix3b_delta_answ100_1c913ef_20260905_1747.log`; ckpt
+`checkpoints_v13_sempty/mix3b_delta_answ100_1c913ef/best_model.pt` (step 80k).
+
+**PPL (guard) — a wash.** Holdout val **26.38** vs mix-3B 25.73 (+0.65, +2.5 %);
+WikiText val **54.73** vs 54.91 (−0.18). The train-loss column is the
+answer-weighted mean and is NOT comparable to mix-3B. One transient: val
+spiked to 63.8 at step 10k (mix-3B 41.7) right after the 300M web-only warmup
+ended and the ×100-weighted recall docs entered; recovered by 14k and tracked
+mix-3B ~0.5–1.0 behind thereafter.
+
+**Behavioral recall (`scripts/run_memory_behavioral.py --model-type
+v13_sempty --max-context 8192`, 8 candidates, 20 seeds × 3 positions, chance
+0.125; `logs/memory_probes/v13_sempty_mix3b_delta_answ100_1c913ef_behavioral.json`).**
+Trained at T=2048; 4096/8192 are extrapolation (new `--max-context` flag lets
+the O(1)-state model be probed past `max_seq_len`; its RoPE cache grows on
+demand).
+
+```
+                 ctx   128   256   512  1024  2048  4096  8192
+delta+answ100  a1    1.00  1.00  1.00  0.77  0.50  0.38  0.33
+               a4    1.00  1.00  0.97  0.65  0.52  0.48  0.47
+               a8    0.77  0.72  0.63  0.53  0.38  0.32  0.32
+mix-3B (ref)   a1    1.00    –   0.35    –   0.25    –     –
+               a4    0.40    –   0.23    –   0.27    –     –
+               a8    0.22    –   0.22    –   0.25    –     –
+Mamba-130M     a8    0.82    –   0.57    –   0.38    –     –   (~300B tok, publication probe)
+```
+
+By needle position (pos1 = needle immediately before the query, pos0 = needle
+at the start of the context):
+
+```
+                 ctx   128   256   512  1024  2048  4096  8192
+a1 pos0              1.00  1.00  1.00  0.45  0.10  0.05  0.00
+a1 pos0.5            1.00  1.00  1.00  0.85  0.40  0.10  0.00
+a1 pos1              1.00  1.00  1.00  1.00  1.00  1.00  1.00
+a8 pos0              0.70  0.70  0.60  0.25  0.20  0.15  0.10
+a8 pos1              0.80  0.70  0.70  0.70  0.70  0.60  0.70
+```
+
+**Memory-path ablation** (`--pam-scale 0.0`, PAM read removed from the
+residual; `…_PAM0_behavioral.json`): a1/a4/a8 = 0.05/0.20/0.25 at 128, 512
+and 2048 — identical at every context, i.e. a context-blind prior. Every point
+of recall above comes from the PAM memory.
+
+**What transferred.**
+
+1. **Multi-way recall is real at 100M.** a4 0.40 → **1.00** @128 (0.97 @512);
+   a8 0.22 → **0.77** @128, 0.63 @512. The a8 curve 0.77 → 0.38 (128 → 2048)
+   is the same shape and level as Mamba-130M's 0.82 → 0.38, obtained with ~3B
+   tokens instead of ~300B. The bench prediction (delta + concentrated answer
+   signal ⇒ selective keys) held on real mixed data.
+2. **Horizon ×5.** a1 stays 1.00 to 512 (mix-3B fell to 0.35), 0.77 @1024,
+   0.50 @2048. Read horizon ≈ 1000 tokens (was ~200).
+3. **The read path is length-invariant.** pos1 is perfect at every length,
+   including 8192 = 4× the training window (a1 1.00, a4 1.00, a8 0.70). Nothing
+   breaks positionally; delta reads a fresh binding exactly at any T.
+4. **What fails is RETENTION over distance, not retrieval.** pos0 accuracy
+   falls monotonically with distance (1.00 → 0.45 @1024 → 0.10 @2048 → 0 @8192)
+   while pos1 stays perfect: a binding written ~1–2k tokens earlier has been
+   decayed out of the state before the query arrives. Internals agree:
+   `dt_bias` −3.9…−4.1 (frozen at init in every run so far), realized
+   retention 0.64–0.97 per layer, `pam_scale` 0.04–0.55 growing with depth.
+   This is the exact inverse of the L1 verdict ("retention is fine, retrieval
+   is the bottleneck") — L1 could not read even a fresh binding, so long
+   retention had nothing to show. With the read fixed, the horizon is set by
+   decay. R1's dt-spread failed *under a broken read*; a retention experiment is
+   only now interpretable.
+
+**Caveats (do not oversell).** (a) The probe's record format ("K means V …
+query: K means") is the same *family* as the training dense docs; keys, values
+and prefixes are unseen, but this is a mechanism probe, not natural-language
+needle-in-a-haystack. mix-3B had the same exposure, so the comparison is fair.
+(b) 102M, 3B tokens; no 100M transformer trained on this mix exists to compare
+recall against. (c) Delta costs 40 % throughput on the torch path and has no
+decode path (no generation from this ckpt yet).
+
+**Decision.** **DELTA + answer-weight = the new reference recipe** (`DELTA=1
+ANSWER_W=100`). Multi-way read is solved at this scale; the program moves to
+**retention over distance** (the horizon) and to engineering debt the result
+now justifies: Triton delta kernel (speed), delta decode (`generate.py`).
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*

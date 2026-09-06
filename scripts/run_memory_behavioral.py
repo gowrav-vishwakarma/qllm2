@@ -256,6 +256,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--pam-scale', type=float, default=None,
                         help='Override every V13 PAM residual scale '
                              '(ablation; 0.0 disables the PAM memory path)')
+    parser.add_argument('--max-context', type=int, default=None,
+                        help='Override the model\'s context limit used to skip '
+                             'long probes. O(1)-state models (v13_sempty) grow '
+                             'their RoPE cache on demand, so probing past the '
+                             'training max_seq_len measures length '
+                             'extrapolation rather than erroring.')
     return parser
 
 
@@ -289,7 +295,13 @@ def main() -> int:
         identity = str(args.checkpoint)
     elif args.model_type == 'v13_sempty':
         model, tokenizer, config = _load_v13_sempty(args.checkpoint, args.preset, device)
-        identity = str(args.checkpoint)
+        if args.pam_scale is not None:
+            # Same ablation as v13: 0.0 removes the PAM memory read from the
+            # residual stream, so any remaining recall is not from the memory.
+            with torch.no_grad():
+                for block in model.blocks:
+                    block.pam_scale.fill_(args.pam_scale)
+        identity = f"{args.checkpoint} pam_scale={args.pam_scale}" if args.pam_scale is not None else str(args.checkpoint)
     elif args.model_type == 'transformer':
         model, tokenizer, config = _load_transformer(args.checkpoint, device)
         identity = str(args.checkpoint)
@@ -304,6 +316,8 @@ def main() -> int:
     max_context = getattr(config, 'max_seq_len', None)
     if max_context is None and args.model_type == 'transformer':
         max_context = getattr(config, 'max_position_embeddings', None)
+    if args.max_context is not None:
+        max_context = args.max_context
 
     examples = build_suite(
         tokenizer,

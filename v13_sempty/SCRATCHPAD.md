@@ -6,26 +6,39 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
-* **RUNNING on the RTX Pro 6000 (launched 2026-09-05 17:47 UTC, `1c913ef`):
-  `mix3b_delta_answ100`** — the mix-3B recipe (B18 T2048, 3B tok, dclm/
-  fineweb/smoltalk2/recall, 300M web-only warmup) with the two things the
-  micro-bench proved: **`DELTA=1`** and **`ANSWER_W=100`** (answer tokens of the
-  synthetic recall docs get 100× CE weight; recall share raised 3 → 5 %).
-  Direct comparison target: mix-3B `bbc12e9` (holdout PPL 25.73, a8 at chance,
-  horizon ~200 tok). tmux `sempty_mix`, log
-  `logs/v13_sempty_mix3b_delta_answ100_1c913ef_20260905_1747.log`, ckpt
-  `checkpoints_v13_sempty/mix3b_delta_answ100_1c913ef/` (latest.pt every 1000
-  steps, rolling milestones, auto-resume). Throughput **51.8K tok/s vs 86.5K
-  for chrono+gate** (delta = pure-torch chunked scan `pam_delta_torch`, 56 GB
-  vs 31 GB) → ~16 h. GEN_EVERY=0 (delta has no decode path yet — generate.py
-  and `_chunked_delta` decode are TODO before this ckpt can be played with).
-  **Judge by:** (1) holdout PPL vs 25.73 at matched steps (val every 2000);
-  (2) behavioral probe on `latest.pt` (`scripts/run_memory_behavioral.py
-  --model-type v13_sempty`) — the bet is a4/a8 well above chance and a flat
-  horizon; the train loss in the log is the answer-WEIGHTED mean (not
-  comparable to mix-3B's train loss; val is unweighted and comparable).
-  Follow-ups this run un-blocks: Triton delta kernel (speed), delta decode
-  path, then Stage L (8K) with `recall_long` + the same answer weighting.
+* **MIX-3B + DELTA + ANSWER_W=100 DONE (2026-09-06, `1c913ef`) — the bench
+  result TRANSFERRED to the real 100M.** Holdout PPL 26.38 (mix-3B 25.73;
+  WikiText 54.73 vs 54.91 → a wash). Behavioral recall vs mix-3B: **a4 @128
+  0.40 → 1.00, a8 @128 0.22 → 0.77** (0.63 @512, 0.38 @2048 — Mamba-130M's
+  curve at 1 % of its tokens); **a1 horizon 200 → ~1000 tok** (1.00 to 512,
+  0.77 @1024). Needle-just-before-query is perfect at EVERY length incl. 8192
+  (4× train window): the read is length-invariant. Needle-at-start decays
+  (0.45 @1024, 0.10 @2048, 0 @8192): **RETENTION over distance is now the
+  limiter**, not retrieval (inverse of the L1 verdict; L1 couldn't read even
+  fresh bindings). `--pam-scale 0` ablation → chance at every ctx: all recall
+  is the PAM memory. Full record: `EXPERIMENTS_SEMPY.md` → "Phase 3b". Probe
+  jsons: `logs/memory_probes/v13_sempty_mix3b_delta_answ100_1c913ef_behavioral.json`
+  (+`_PAM0_`). **`DELTA=1 ANSWER_W=100` is the new reference recipe.**
+  Ckpt `checkpoints_v13_sempty/mix3b_delta_answ100_1c913ef/best_model.pt`
+  (step 80k; `latest.pt`/`step_080000.pt` are the same model — prune when space
+  is needed). Nothing running on the 6000.
+  **Next (in order):**
+  1. **Retention over distance = the horizon program, now interpretable.**
+     `dt_bias` has sat at its −4 init in every run (frozen: lr/param-group or
+     gradient path — check before any maths). Cheapest levers first, judged on
+     the micro-bench (≥6000 steps, it has a ceiling now) with a *long-gap*
+     schedule and pos0 needles: (a) data pressure — `recall_long` gaps (≤6k
+     tok) in the mix + Stage L at T=8192; (b) `base_dt_bias` −4 → −6/−8 (longer
+     default retention) since it never learns; (c) delta with decay *removed*
+     (pure erase-on-rewrite memory, DeltaNet-style, retention pinned 1.0) vs
+     current decay — the LM guard (holdout PPL) decides.
+  2. **Engineering debt now justified:** Triton delta kernel (51.5K → ~86K
+     tok/s, 56 → 31 GB) and delta decode in `generate.py` (no generation from
+     delta ckpts yet — user wants to play with it).
+  3. Then Stage L (8K/32K) on the reference recipe.
+  4. A fairer control when convenient: a RoPE transformer on the micro-bench
+     (the v6 control is abs-pos); keep claims scoped to "same size, same data,
+     same budget".
 * **MULTI-WAY RECALL SOLVED — PAM-delta a1 = a4 = a8 = 1.00 at ctx 128–8192
   (2026-09-05 evening, `36a8cac`).** The user asked whether we were chasing the
   wrong error; we had never run a positive control. Added a transformer arm
