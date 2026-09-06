@@ -24,8 +24,13 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   is needed). Nothing running on the 6000.
   **Next (in order):**
   1. **Retention over distance = the horizon program, now interpretable.**
-     `dt_bias` has sat at its −4 init in every run (frozen: lr/param-group or
-     gradient path — check before any maths). Cheapest levers first, judged on
+     `dt_bias` has sat at its −4 init in every run. CHECKED 2026-09-06: it is a
+     normal no-decay parameter on the gradient path, and `dt_proj.bias` barely
+     moved either (±0.2) — there is simply no *consistent* gradient on
+     retention (web LM has no net preference; long-gap answers are rare).
+     Realized retention 0.64–0.97 < the 0.98 the bias alone gives, i.e.
+     content pushes toward forgetting. So the lever is data pressure at long
+     gaps and/or a structural prior, not an optimizer fix. Cheapest first, judged on
      the micro-bench (≥6000 steps, it has a ceiling now) with a *long-gap*
      schedule and pos0 needles: (a) data pressure — `recall_long` gaps (≤6k
      tok) in the mix + Stage L at T=8192; (b) `base_dt_bias` −4 → −6/−8 (longer
