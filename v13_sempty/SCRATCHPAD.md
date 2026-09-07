@@ -56,8 +56,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     2.7× fewer optimizer steps at T=8192 — don't use 8K pretraining for the
     horizon question again. Record: `EXPERIMENTS_SEMPY.md` → "Stage L-2".
     Probe json committed; ckpt pruned to `best_model.pt`.
-  - **R3 = the pre-registered fallback, CODE READY (`6a0e3c9`), launch
-    pending user go:** split decay prior, `--long_heads 2 --long_dt_bias -9`
+  - **R3 RUNNING on the 6000 — launched 2026-09-07 18:41Z, tmux `sempty_r3`,
+    code `5c87148`, log
+    `logs/v13_sempty_mix3b_delta_answ100_long2h9_5c87148_20260907_1841.log`,
+    ckpt `checkpoints_v13_sempty/mix3b_delta_answ100_long2h9_5c87148/`.
+    60K tok/s, 45.6 GB, 81,380 steps → ETA ~14 h (~08:30Z 09-08). Ladder line
+    confirmed `long_heads=2 long_dt_bias=-9.0`.** Split decay prior, `--long_heads 2 --long_dt_bias -9`
     (2/6 heads per layer born slow, softplus(−9)=1.2e-4 ⇒ 0.37 of a binding
     survives 8192 tok), else exact Phase 3b recipe (T=2048 B18 3B tok,
     0.44/0.41/0.10/0.05, DELTA=1 ANSWER_W=100). One variable vs Phase 3b.
