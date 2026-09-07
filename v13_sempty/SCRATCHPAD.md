@@ -46,8 +46,17 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     Record: `EXPERIMENTS_SEMPY.md` → "R2 at scale". Ckpt pruned to
     `best_model.pt` (1.2 GB; load with `git checkout 9f33b50`). Nothing
     running on the 6000.
-  - **Best next call (proposed, not launched): Stage L-2 = data pressure on
-    the reference recipe.** The horizon (~1000 tok) tracks the longest gaps
+  - **Stage L-2 RUNNING on the 6000 — launched 2026-09-07 07:17Z, tmux
+    `sempty_l2`, code `13ea6a8`, log
+    `logs/v13_sempty_mix2b_8k_delta_answ100_long_13ea6a8_20260907_0717.log`,
+    ckpt dir `checkpoints_v13_sempty/mix2b_8k_delta_answ100_long_13ea6a8/`.**
+    Steady 56K tok/s (delta at T=8192; L1 additive was 80K), 79 GB, 30,517
+    steps → ETA ~10 h (~17:30Z). step 250 ppl 950 (L1 at 200: 1624 — fine).
+    Blend + geometry header verified (6 sources, B8 T8192, 65,536 tok/step).
+    When it finishes: `scripts/run_memory_behavioral.py --max-context 8192`
+    on `best_model.pt`, judge by the rule below, record in
+    `EXPERIMENTS_SEMPY.md`, prune `latest.pt`/`step_*.pt`.
+    **Rationale (Stage L-2 = data pressure on the reference recipe).** The horizon (~1000 tok) tracks the longest gaps
     the recall docs ever ask for (`_build_recall_doc` gap log-uniform in
     [2, 200] sentences, median ~240 tok); the model has no reason to hold a
     binding longer. Run the exact Phase 3b recipe (DELTA=1 ANSWER_W=100,
