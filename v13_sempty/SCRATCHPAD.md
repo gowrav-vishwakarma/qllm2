@@ -46,17 +46,32 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     Record: `EXPERIMENTS_SEMPY.md` → "R2 at scale". Ckpt pruned to
     `best_model.pt` (1.2 GB; load with `git checkout 9f33b50`). Nothing
     running on the 6000.
-  - **Stage L-2 RUNNING on the 6000 — launched 2026-09-07 07:17Z, tmux
-    `sempty_l2`, code `13ea6a8`, log
-    `logs/v13_sempty_mix2b_8k_delta_answ100_long_13ea6a8_20260907_0717.log`,
-    ckpt dir `checkpoints_v13_sempty/mix2b_8k_delta_answ100_long_13ea6a8/`.**
-    Steady 56K tok/s (delta at T=8192; L1 additive was 80K), 79 GB, 30,517
-    steps → ETA ~10 h (~17:30Z). step 250 ppl 950 (L1 at 200: 1624 — fine).
-    Blend + geometry header verified (6 sources, B8 T8192, 65,536 tok/step).
-    When it finishes: `scripts/run_memory_behavioral.py --max-context 8192`
-    on `best_model.pt`, judge by the rule below, record in
-    `EXPERIMENTS_SEMPY.md`, prune `latest.pt`/`step_*.pt`.
-    **Rationale (Stage L-2 = data pressure on the reference recipe).** The horizon (~1000 tok) tracks the longest gaps
+  - **Stage L-2 DONE 2026-09-07 18:18Z (`13ea6a8`, 11 h, 56K tok/s) — data
+    pressure FAILS as a horizon lever.** Holdout 30.55 / WikiText 59.26. a1
+    pos0 @1024/2048/4096/8192 = 0.55/0.30/0.20/0.20 vs Phase 3b
+    0.45/0.10/0.05/0.00 (chance 0.125, n=20 → 4k/8k within noise); a1 pos1
+    1.00 everywhere. **dt_bias −4.00 ± 0.1 in all 16 layers after 2B tokens
+    with 8 % long-gap docs** — the prior does not move under data. Short-range
+    multi-way collapsed (a4 @128 0.62 vs 1.00, a8 0.40 vs 0.77), confounded by
+    2.7× fewer optimizer steps at T=8192 — don't use 8K pretraining for the
+    horizon question again. Record: `EXPERIMENTS_SEMPY.md` → "Stage L-2".
+    Probe json committed; ckpt pruned to `best_model.pt`.
+  - **R3 = the pre-registered fallback, CODE READY (`6a0e3c9`), launch
+    pending user go:** split decay prior, `--long_heads 2 --long_dt_bias -9`
+    (2/6 heads per layer born slow, softplus(−9)=1.2e-4 ⇒ 0.37 of a binding
+    survives 8192 tok), else exact Phase 3b recipe (T=2048 B18 3B tok,
+    0.44/0.41/0.10/0.05, DELTA=1 ANSWER_W=100). One variable vs Phase 3b.
+    ~11–16 h at 60–75K tok/s, ~46 GB. Judge: a1 pos0 @1024/2048 (0.45/0.10)
+    and @4096/8192 (0.05/0.00); guards a4/a8 @128–512 (1.00/0.77) and holdout
+    26.38. If long heads help → sweep 1/3 heads and −10; if not → the horizon
+    needs a different write (e.g. content-gated *protection*), not a prior.
+    ```bash
+    tmux new-session -d -s sempty_r3 "TAG=mix3b_delta_answ100_long2h9 \
+      SOURCES=dclm,fineweb,smoltalk2_mid,recall WEIGHTS=0.44,0.41,0.10,0.05 \
+      DELTA=1 ANSWER_W=100 LONG_HEADS=2 LONG_DT_BIAS=-9 \
+      bash v13_sempty/tmp_pretrain_mix.sh"
+    ```
+    **Rationale of L-2 (data pressure on the reference recipe).** The horizon (~1000 tok) tracks the longest gaps
     the recall docs ever ask for (`_build_recall_doc` gap log-uniform in
     [2, 200] sentences, median ~240 tok); the model has no reason to hold a
     binding longer. Run the exact Phase 3b recipe (DELTA=1 ANSWER_W=100,

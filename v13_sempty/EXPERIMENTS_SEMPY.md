@@ -1201,6 +1201,83 @@ load-bearing in this architecture: it is the mechanism that keeps the O(1)
 state clean on ordinary text.** The horizon must come from *better use* of
 decay, not its removal — see the next entry / SCRATCHPAD for the call.
 
+## Stage L-2: 8K ctx + long-gap recall docs — data pressure does NOT move the decay prior; far horizon barely above chance, short-range multi-way collapses (2026-09-07)
+
+**Question.** Is the ~1000-token horizon a *data* problem (the recall docs
+never ask for longer gaps, so the model never learns to hold a binding), or a
+*prior* problem (dt −4 ⇒ 0.982/token passive decay; nothing survives 8k
+tokens unless the content gate pins retention to 1.0)?
+
+**Run.** `mix2b_8k_delta_answ100_long` (`13ea6a8`), RTX 6000, 2026-09-07
+07:17 → 18:18 UTC (11 h, 56K tok/s, 79 GB). Reference recipe (102M, DELTA=1,
+ANSWER_W=100, decay on, dt −4) at **T=8192 B=8** (65,536 tok/step), 2.0B
+tokens = **30,517 steps**, sources
+`dclm,fineweb_long,pg19,smoltalk2_mid,recall,recall_long` at
+`0.36,0.20,0.22,0.10,0.04,0.08` (`recall_long` gaps ≤ 6k tokens), 100M-token
+web-only warmup. Log
+`logs/v13_sempty_mix2b_8k_delta_answ100_long_13ea6a8_20260907_0717.log`, probe
+`logs/memory_probes/v13_sempty_mix2b_8k_delta_answ100_long_13ea6a8_behavioral.json`.
+
+**PPL.** Holdout (this mix) 30.55; WikiText 59.26 (Phase 3b 54.73; L1 at 1B
+on a similar long mix 40.26 holdout — not comparable, different holdout set).
+
+**Behavioral recall (8-way contrastive, 20 trials, `--max-context 8192`).**
+a1 pos0 (needle at start = the horizon metric), ctx 128/256/512/1024/2048/4096/8192:
+
+| arm | 128 | 256 | 512 | 1024 | 2048 | 4096 | 8192 |
+|---|---|---|---|---|---|---|---|
+| Phase 3b (T=2048, 3B, no long docs) | 1.00 | 1.00 | 1.00 | 0.45 | 0.10 | 0.05 | 0.00 |
+| **L-2 (T=8192, 2B, 8 % long docs)** | 1.00 | 1.00 | **0.60** | 0.55 | 0.30 | 0.20 | 0.20 |
+| L1 (T=8192, 1B, additive read) | 0.40 | 0.15 | 0.10 | 0.15 | 0.10 | 0.15 | 0.15 |
+
+Chance is 0.125 (n=20: 4/20 is p≈0.24 under chance). a1 pos1 (needle just
+before query) stays 1.00 at every length — the read is still length-invariant.
+Multi-way, mean over positions, L-2 vs Phase 3b: a4 @128 **0.62 vs 1.00**,
+@512 0.52 vs 0.97; a8 @128 **0.40 vs 0.77**, @512 0.30 vs 0.63. Even the
+fresh-binding multi-way read regressed (a4 pos1 0.75 vs 1.00, a8 pos1 0.45
+vs 0.70).
+
+**Internals (step 30000).** `dt_bias` = **−3.98 … −4.08 in all 16 layers**,
+per-head layer-mean −4.00/−3.98/−3.97/−4.00/−3.97/−3.99 — identical to Phase
+3b and to init, after 2B tokens of which 8 % explicitly require 1k–6k-token
+retention. Realised retention 0.62–1.00 (content gate does all the holding).
+`pam_scale` 0.08–0.45 (healthy, memory path in use; no `no_decay`-style
+collapse).
+
+**Reading.**
+1. **Data pressure does not move the decay prior.** The one number that
+   sets the passive horizon did not move by 0.1 with the most retention-hungry
+   data we have. The gradient into `dt_bias` from ordinary text (which prefers
+   forgetting) swamps the recall-doc gradient; under `softplus`, the gradient
+   at −4 is also small. The horizon therefore has to be given *structurally*.
+2. **Far horizon: at best marginal.** pos0 at 2048–8192 moved 0.10/0.05/0.00 →
+   0.30/0.20/0.20 — the 2048 point is real, the 4k/8k points are within noise
+   of chance. Not the "pos0 moves ⇒ data problem" outcome the pre-registered
+   rule needed.
+3. **Short-range multi-way collapsed** (a4/a8 at 128–512 roughly halved).
+   Confounded: 2.7× fewer optimizer steps (30.5k vs 81k), 2B vs 3B tokens,
+   recall share 0.12 but half of it in long docs with few weighted answer
+   tokens per sequence, and a pg19-heavy mix (WikiText +8 %). Most plausibly a
+   step-budget effect, but this run cannot separate it. **Do not use T=8192
+   pretraining as the vehicle for the horizon question again** — it costs 2.7×
+   the steps per token for the same 100M and muddies every comparison.
+
+**Decision.** Data pressure alone: **FAIL** as a horizon lever (pre-registered
+rule). Nothing added to code from this run; the 8K data path stays (it is
+Stage L infrastructure). **Next = R3, the pre-registered fallback:** a
+*split* decay prior — `--long_heads 2 --long_dt_bias -9` (2 of 6 heads per
+layer born at softplus(−9)=1.2e-4 ⇒ ~0.37 of a binding survives 8192 tokens
+of passive decay; the other 4 heads keep −4), everything else the exact Phase
+3b recipe (T=2048, B18, 3B tok, 0.44/0.41/0.10/0.05, DELTA=1, ANSWER_W=100).
+One variable against the Phase 3b reference; judge by a1 pos0 at 1024/2048
+(in-window: 0.45/0.10) and 4096/8192 (extrapolation: 0.05/0.00), with a4/a8
+@128–512 and holdout PPL 26.38 as guards. This differs from the failed R1
+ladder in two ways: the read is the working delta read (R1 ran under the
+additive read that could not even read fresh bindings), and it is a split
+(4 normal + 2 long) not a spread of every head. Code: `_init_dt_bias` in
+`model.py`, `long_heads`/`long_dt_bias` in `config.py`, `LONG_HEADS` env in
+the launcher (`6a0e3c9`). Ckpt: L-2 pruned to `best_model.pt`.
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*
