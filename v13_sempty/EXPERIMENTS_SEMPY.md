@@ -1138,6 +1138,69 @@ delta decodes. 60K tok/s (old delta path 51.5K), 45.5 GB, ETA ~24 h. Judge
 by: holdout PPL vs 26.38 (guard: ≤ +2–3 %), a4/a8 at 512–8192 and a1 pos0
 horizon vs Phase 3b (`run_memory_behavioral.py --max-context 8192`).
 
+## R2 at scale: `no_decay` FAILS on the 100M — PPL +14 %, recall worse at every length; passive decay is load-bearing (2026-09-07)
+
+**Run.** `mix3b_delta_nodecay_answ100` (`9f33b50`), RTX 6000, 2026-09-06 15:11
+→ 09-07 05:57 UTC (~15 h, 60K tok/s with the batched delta path, 45.5 GB).
+Identical to Phase 3b `1c913ef` (102M, 3B tok, 0.44/0.41/0.10/0.05, DELTA=1,
+ANSWER_W=100) + `--no_decay` (retention pinned 1.0; memory changes only by
+delta erase-on-rewrite). One variable. Log
+`logs/v13_sempty_mix3b_delta_nodecay_answ100_9f33b50_20260906_1511.log`; probes
+`logs/memory_probes/v13_sempty_mix3b_delta_nodecay_answ100_9f33b50_behavioral.json`
+(+`_PAM0_`).
+
+**PPL (guard) — FAIL.** Holdout **30.16 vs 26.38** (+14 %); WikiText **65.5 vs
+54.7** (+20 %). The gap is there from step 10k (83.9 vs 63.8) and never
+closes (40k: 34.8 vs 29.8; 80k: 30.16 vs 26.38) — the bench's +12 % was not a
+small-model artefact.
+
+**Recall — WORSE, not better** (20 trials, chance 0.125; mean over positions):
+
+| | 128 | 256 | 512 | 1024 | 2048 | 4096 | 8192 |
+|---|---|---|---|---|---|---|---|
+| a1 nodecay | 0.87 | 0.85 | 0.62 | 0.63 | 0.38 | 0.33 | 0.15 |
+| a1 ref | 1.00 | 1.00 | 1.00 | 0.77 | 0.50 | 0.38 | 0.33 |
+| a4 nodecay | 0.78 | 0.72 | 0.58 | 0.52 | 0.50 | 0.38 | 0.27 |
+| a4 ref | 1.00 | 1.00 | 0.97 | 0.65 | 0.52 | 0.48 | 0.47 |
+| a8 nodecay | 0.67 | 0.47 | 0.38 | 0.37 | 0.20 | 0.18 | 0.15 |
+| a8 ref | 0.77 | 0.72 | 0.63 | 0.53 | 0.38 | 0.32 | 0.32 |
+
+Position-resolved a1: **pos1 (needle just before the query)** — ref 1.00 at
+every length; nodecay 1.00 → 0.85 → 0.85 → 0.85 → 0.65 → 0.70 → **0.25 @8192**.
+pos0 (needle at start): ref 1.00/1.00/1.00/0.45/0.10/0.05/0.00; nodecay
+0.65/0.85/0.35/0.40/0.25/0.15/0.10 — no horizon gain either. `--pam-scale 0`
+→ chance everywhere (0.15/0.30/0.15): what recall there is still comes from
+the memory.
+
+**Mechanism — state overflow, now measured.** With `g = 1` the state is the
+sum of everything written since the window start, minus whatever the erase
+gate removes along *re-used* keys. Web tokens whose keys never recur are
+never erased, so `S` fills with a superposition of junk, and the read of even
+a *fresh* binding gets noisier the longer the context — that is exactly the
+pos1 curve (retrieval degrading with length is impossible under decay, and
+the reference shows none). The model's own response confirms it: the
+per-layer memory gate `pam_scale` at step 80k is **0.01–0.05 in layers 0–6**
+(reference 0.04–0.19) and 0.10–0.18 in layers 7–13 (ref 0.22–0.41) — it
+turned the memory path *down* across the stack because a crowded state is a
+noisy read on ordinary text, and that is where the PPL went. Only layers 14–15
+kept it (0.56/0.46) for the recall circuit. Erase alone did not learn to keep
+`S` clean; passive decay was doing that job.
+
+**Why the 27M bench got it wrong.** The bench trained on 25 % recall docs;
+the real mix is 5 %. At 27M/6k steps the state was mostly *recall-loaded*, so
+pinning retention looked free and helped multi-way; at 100M with 95 % web
+tokens the same rule floods the state. The bench also never reproduced the
+100M's a1-pos0 decay. **Do not use the retention micro-bench to vet decay
+knobs**; it is fine for the read path (delta) where it did transfer.
+
+**Decision.** `no_decay` **REMOVED** (config, model, train CLI, launcher
+env, bench arm) per the sROI rule. `base_dt_bias` stays a plain CLI override
+(no code path). Ckpt: `latest.pt`/`step_080000.pt` pruned, `best_model.pt`
+kept (needs `git checkout 9f33b50` to load faithfully). **Passive decay is
+load-bearing in this architecture: it is the mechanism that keeps the O(1)
+state clean on ordinary text.** The horizon must come from *better use* of
+decay, not its removal — see the next entry / SCRATCHPAD for the call.
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*

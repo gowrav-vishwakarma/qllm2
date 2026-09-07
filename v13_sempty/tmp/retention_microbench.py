@@ -25,14 +25,15 @@ PPL on 2048 windows) + realised per-layer retention + dt_bias drift.
 
 Arms (``--arms``): ``delta`` (reference, base_dt_bias -4), ``delta@dt-6``,
 ``delta@dt-8`` (longer default retention -- the bias never learns, so set it),
-``delta@nodecay`` (retention pinned 1.0: pure erase-on-rewrite memory),
-``base`` (additive, no delta).  Verdict rule: an arm KEEPS if pos0 accuracy
-at 2048-8192 clearly beats the reference while val PPL is within ~2 %;
-otherwise the knob is removed (sROI).
+``base`` (additive, no delta).  (A ``nodecay`` arm existed 2026-09-06: it won
+this bench outright -- a4 chance -> 1.00 to 8192 -- and then FAILED at 100M/3B
+tok on both PPL and recall; the knob was removed.  CAVEAT: this bench did not
+predict 100M behaviour for a decay knob -- 25 % recall docs at 27M/6k steps
+under-represents the web-token load on the state.)
 
 Usage (RTX 6000, ~110K tok/s, ~15 min/arm):
   PYTHONPATH=. .venv/bin/python -m v13_sempty.tmp.retention_microbench \
-      --steps 6000 --batch 16 --arms delta,delta@dt-6,delta@dt-8,delta@nodecay
+      --steps 6000 --batch 16 --arms delta,delta@dt-6,delta@dt-8
 """
 from __future__ import annotations
 
@@ -54,14 +55,13 @@ WEB_VAL = Path('.cache/v7_tokens/wikitext103_validation_v2_full_sl2048.pt')
 
 
 def _make_cfg(vocab_size, max_seq_len, delta=True, base_dt_bias=-4.0,
-              no_decay=False, head_dim=64, n_layers=4) -> PAMConfig:
+              head_dim=64, n_layers=4) -> PAMConfig:
     """Same small real-arm model as recall_microbench (chrono+gate, 27M)."""
     return PAMConfig(
         vocab_size=vocab_size, dim=6 * head_dim, n_heads=6, head_dim=head_dim,
         n_layers=n_layers, expand=3, dropout=0.0, max_seq_len=max_seq_len,
         chunk_size=256, gradient_checkpointing=False, is_complex=False,
         chrono=True, out_gate=True, delta=delta, base_dt_bias=base_dt_bias,
-        no_decay=no_decay,
     )
 
 
@@ -217,20 +217,17 @@ def _train_arm(label, cfg, tokenizer, web_tokens, val_tokens, plan, device, lr,
 
 
 def _parse_arm(tok: str):
-    kind, dt, nod = tok.strip(), -4.0, False
+    kind, dt = tok.strip(), -4.0
     if '@' in kind:
         kind, mod = kind.split('@', 1)
-        if mod == 'nodecay':
-            nod = True
-        elif mod.startswith('dt'):
+        if mod.startswith('dt'):
             dt = float(mod[2:])
         else:
             raise SystemExit(f"unknown arm modifier '{mod}'")
     if kind not in ('base', 'delta'):
         raise SystemExit(f"unknown arm '{kind}'")
-    label = ('chrono+gate' + ('+delta' if kind == 'delta' else '')
-             + ('+nodecay' if nod else f' dt{dt:g}'))
-    return label, kind == 'delta', dt, nod
+    label = 'chrono+gate' + ('+delta' if kind == 'delta' else '') + f' dt{dt:g}'
+    return label, kind == 'delta', dt
 
 
 def main():
@@ -244,7 +241,7 @@ def main():
     p.add_argument('--log_every', type=int, default=200)
     p.add_argument('--seed', type=int, default=42)
     p.add_argument('--device', default='cuda')
-    p.add_argument('--arms', default='delta,delta@dt-6,delta@dt-8,delta@nodecay')
+    p.add_argument('--arms', default='delta,delta@dt-6,delta@dt-8')
     args = p.parse_args()
 
     set_kernel_enabled(True)
@@ -271,9 +268,9 @@ def main():
 
     results = {}
     for tok in args.arms.split(','):
-        label, delta, dt, nod = _parse_arm(tok)
-        print(f"\n--- arm: {label} (delta={delta}, base_dt_bias={dt}, no_decay={nod}) ---", flush=True)
-        cfg = _make_cfg(vocab, max_seq_len, delta=delta, base_dt_bias=dt, no_decay=nod)
+        label, delta, dt = _parse_arm(tok)
+        print(f"\n--- arm: {label} (delta={delta}, base_dt_bias={dt}) ---", flush=True)
+        cfg = _make_cfg(vocab, max_seq_len, delta=delta, base_dt_bias=dt)
         results[label] = _train_arm(label, cfg, tokenizer, web_tokens, val_tokens, plan,
                                     args.device, args.lr, args.log_every, args.answer_w,
                                     eval_ctxs, eval_assocs, eval_pos, args.trials)

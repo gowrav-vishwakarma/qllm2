@@ -34,17 +34,42 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     8192)** but WikiText val PPL 97.7 vs 87.3 (+12 %). a1 pos0 was 1.00 for
     all arms (bench doesn't reproduce the 100M's a1 decay). Record:
     `EXPERIMENTS_SEMPY.md` → "R2 retention bench". dt −6/−8: no gain.
-  - **RUNNING NOW on the 6000 (tmux `sempty_mix`): `mix3b_delta_nodecay_answ100`
-    (`9f33b50`)** = Phase 3b recipe + `--no_decay`, one variable. Log
-    `logs/v13_sempty_mix3b_delta_nodecay_answ100_9f33b50_20260906_1511.log`,
-    ckpt `checkpoints_v13_sempty/mix3b_delta_nodecay_answ100_9f33b50/`.
-    60K tok/s, 45.5 GB, ETA ~24 h (→ ~2026-09-07 15:00 UTC). Launcher
-    auto-resumes from `latest.pt` (every 1000 steps) if the process dies.
-    **Judge:** holdout PPL vs 26.38 (guard ≤ +2–3 %; the bench's +12 % is the
-    risk), then `scripts/run_memory_behavioral.py --max-context 8192` (+
-    `--pam-scale 0` ablation) vs Phase 3b: a4/a8 at 512–8192, a1 pos0
-    horizon. If PPL fails but recall wins: test a learned *floor* (tiny
-    bounded leak) instead of none. `no_decay` is a CANDIDATE until then.
+  - **`mix3b_delta_nodecay_answ100` (`9f33b50`) DONE 2026-09-07 05:57Z —
+    FAIL, `no_decay` REMOVED from code.** Holdout PPL **30.16 vs 26.38**
+    (+14 %), WikiText 65.5 vs 54.7; recall WORSE at every length (a1 mean
+    0.87/0.62/0.38/0.15 @128/512/2048/8192 vs ref 1.00/1.00/0.50/0.33; a8 @128
+    0.67 vs 0.77). Signature = **state overflow**: the fresh-binding read
+    (pos1) decays with context (1.00 → 0.25 @8192; ref 1.00 flat) and the
+    model turned `pam_scale` down to 0.01–0.05 in layers 0–6. **Passive decay
+    is load-bearing** — it keeps the O(1) state clean on web text. The 27M
+    bench (25 % recall docs) mis-predicted this; don't vet decay knobs there.
+    Record: `EXPERIMENTS_SEMPY.md` → "R2 at scale". Ckpt pruned to
+    `best_model.pt` (1.2 GB; load with `git checkout 9f33b50`). Nothing
+    running on the 6000.
+  - **Best next call (proposed, not launched): Stage L-2 = data pressure on
+    the reference recipe.** The horizon (~1000 tok) tracks the longest gaps
+    the recall docs ever ask for (`_build_recall_doc` gap log-uniform in
+    [2, 200] sentences, median ~240 tok); the model has no reason to hold a
+    binding longer. Run the exact Phase 3b recipe (DELTA=1 ANSWER_W=100,
+    decay ON, dt −4) at **T=8192 B=8** with the L1 sources
+    `dclm,fineweb_long,pg19,smoltalk2_mid,recall,recall_long`
+    (`0.36,0.20,0.22,0.10,0.04,0.08`; recall_long gaps ≤6k tok), ~2B tokens
+    (~9–10 h at ~60K tok/s), `GEN_EVERY=2000` (delta decodes). Judge: a1
+    pos0 at 1024–8192 vs Phase 3b (0.45/0.10/0.05/0.00) and vs L1 (flat
+    ~0.2, broken read); holdout PPL vs L1 at 1B (40.26). If pos0 moves →
+    the horizon is a data problem and Stage L 32K follows; if it does not →
+    re-test a *per-head* long prior (2 of 6 heads at dt −9) under the
+    working delta read (L1's ladder was tested under the broken read).
+    Queue after: recall-doc FORMAT diversity (free-form "X lives in Y"
+    lookups fail in generation).
+    ```bash
+    tmux new-session -d -s sempty_l2 "TAG=mix2b_8k_delta_answ100_long \
+      SEQ=8192 BATCH=8 TARGET_TOKENS=2000000000 BLEND_WARMUP=100000000 WARMUP=500 \
+      SOURCES=dclm,fineweb_long,pg19,smoltalk2_mid,recall,recall_long \
+      WEIGHTS=0.36,0.20,0.22,0.10,0.04,0.08 DELTA=1 ANSWER_W=100 \
+      VAL_EVERY=1000 SAVE_EVERY=500 KEEP_EVERY=5000 GEN_EVERY=2000 \
+      bash v13_sempty/tmp_pretrain_mix.sh"
+    ```
 * **MIX-3B + DELTA + ANSWER_W=100 DONE (2026-09-06, `1c913ef`) — the bench
   result TRANSFERRED to the real 100M.** Holdout PPL 26.38 (mix-3B 25.73;
   WikiText 54.73 vs 54.91 → a wash). Behavioral recall vs mix-3B: **a4 @128

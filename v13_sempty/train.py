@@ -124,7 +124,7 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
 
     # --- ladder (only non-default arch flags) -------------------------------
     _ladder = [k for k in ('n_states', 'vault', 'delta', 'cond_mem',
-                           'chrono', 'out_gate', 'no_decay')
+                           'chrono', 'out_gate')
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if cfg.base_dt_bias != -4.0:
         _ladder.append('base_dt_bias')
@@ -906,12 +906,9 @@ def build_argparser():
                    help='N1: Chrono-PAM content-modulated rotary retention (real arm)')
     p.add_argument('--out_gate', action='store_true',
                    help='N4: per-head content-dependent read-out gate (real arm)')
-    # Retention program (R2, 2026-09-06): default-retention prior / no decay.
     p.add_argument('--base_dt_bias', type=float, default=None,
                    help='initial decay bias (default -4 => retention ~0.982/token; '
-                        '-6 => 0.9975, -8 => 0.99966)')
-    p.add_argument('--no_decay', action='store_true',
-                   help='R2: pin retention to 1.0 (delta erase-only memory; needs --delta)')
+                        '-6 => 0.9975, -8 => 0.99966). Retention bench 2026-09-06: no gain.')
     return p
 
 
@@ -940,8 +937,6 @@ def main():
         cfg.out_gate = True
     if args.base_dt_bias is not None:
         cfg.base_dt_bias = args.base_dt_bias
-    if args.no_decay:
-        cfg.no_decay = True
     if args.dropout is not None:
         cfg.dropout = args.dropout
     device = torch.device(args.device)

@@ -51,10 +51,8 @@ OUT_GATE="${OUT_GATE:-1}"
 NSTATES="${NSTATES:-0}"        # A2 states per head (0 = preset default 1)
 VAULT="${VAULT:-0}"            # A2b pinned state + protect gate (needs NSTATES>=2)
 DELTA="${DELTA:-0}"            # A3 delta erase/write (KEEP 2026-09-05: exact 8-way recall on the micro-bench)
-NO_DECAY="${NO_DECAY:-0}"      # R2 retention pinned 1.0 (delta erase-only memory; needs DELTA=1).
-                               # Retention bench 2026-09-06: a4 chance -> 1.00 to 8192 under LM
-                               # pressure; val PPL +12 % at 27M -> the 100M holdout PPL is the guard.
 BASE_DT_BIAS="${BASE_DT_BIAS:-}" # override initial decay bias (default -4; bench: -6/-8 no gain)
+                               # (NO_DECAY removed 2026-09-07: FAIL at 100M, EXPERIMENTS "R2")
 ANSWER_W="${ANSWER_W:-1}"      # CE weight on answer tokens of synthetic recall/reason docs
                                # (1 = plain LM loss). Micro-bench: recall is learned only
                                # with concentrated answer signal -> use e.g. 100.
@@ -81,7 +79,6 @@ if [ "$NSTATES" != "0" ]; then EXTRA+=(--n_states "$NSTATES"); fi
 if [ "$VAULT" = "1" ]; then EXTRA+=(--vault); fi
 if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi
 if [ "$ANSWER_W" != "1" ]; then EXTRA+=(--answer_weight "$ANSWER_W"); fi
-if [ "$NO_DECAY" = "1" ]; then EXTRA+=(--no_decay); fi
 if [ -n "$BASE_DT_BIAS" ]; then EXTRA+=(--base_dt_bias "$BASE_DT_BIAS"); fi
 
 # Auto-resume loop: --resume auto picks up <CKPT_DIR>/latest.pt when it exists
