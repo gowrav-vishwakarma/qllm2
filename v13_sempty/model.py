@@ -131,6 +131,17 @@ def _capture_retention(retention: NamedTensor) -> None:
     _retention_capture.append(r)
 
 
+def _init_dt_bias(cfg: PAMConfig) -> torch.Tensor:
+    """Per-head initial decay bias. All heads at `base_dt_bias`, except the
+    first `long_heads` heads which start at `long_dt_bias` (R3 split prior:
+    a few heads born slow-decaying so a binding can survive thousands of
+    tokens; the L-2 run showed data alone never moves these biases)."""
+    b = torch.full((cfg.n_heads,), cfg.base_dt_bias)
+    if cfg.long_heads > 0:
+        b[: min(cfg.long_heads, cfg.n_heads)] = cfg.long_dt_bias
+    return b
+
+
 def _stable_notebook(write_nt, decay_nt, carried_nt, window, head_row, head_col,
                      complex_pair, policy, dtype):
     r"""Chunk notebook in the stable log-space decay-matrix form.
@@ -228,7 +239,7 @@ class PAMLayer(nn.Module):
         # The decay: one number per head, read from the token's real+imag.
         self.decay_out = Dim("decay_out", cfg.n_heads)
         self.dt_proj = NamedLinear(self.real_imag_feature, self.decay_out)
-        self.dt_bias = nn.Parameter(torch.zeros(cfg.n_heads) + cfg.base_dt_bias)
+        self.dt_bias = nn.Parameter(_init_dt_bias(cfg))
 
         # RoPE table, built once outside the graph (declared boundary).
         if cfg.use_rope:
@@ -506,12 +517,12 @@ class RealPAMLayer(nn.Module):
         # The decay: one number per head, read from the token's channels.
         self.decay_out = Dim("decay_out", cfg.n_heads)
         self.dt_proj = NamedLinear(self.model_dim, self.decay_out)
-        # One shared initial decay bias per head. (R1 "per-head ladder of
-        # initial biases", 2026-09-05, was removed: it left the recall horizon
-        # flat at ~0.2 for 512-8192 ctx and hurt 128-ctx recall; the biases
-        # never moved from init. Retention is not the bottleneck -- retrieval
-        # is. Record: EXPERIMENTS_SEMPY.md -> "L1 / R1 dt-spread".)
-        self.dt_bias = nn.Parameter(torch.full((cfg.n_heads,), cfg.base_dt_bias))
+        # Initial decay bias per head: `base_dt_bias` everywhere, optionally
+        # `long_heads` slow heads at `long_dt_bias` (R3 split prior). The R1
+        # per-head LADDER (2026-09-05) was removed -- under the old additive
+        # read it left the horizon flat; R3 re-tests a long prior under the
+        # working delta read. Record: EXPERIMENTS_SEMPY.md -> "L1 / R1", "L-2".
+        self.dt_bias = nn.Parameter(_init_dt_bias(cfg))
 
         # RoPE table, built once outside the graph (declared boundary).
         if cfg.use_rope:

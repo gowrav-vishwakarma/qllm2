@@ -28,6 +28,14 @@ class PAMConfig:
     # (R1 `dt_bias_spread` -- per-head ladder of initial decay biases -- was
     # removed 2026-09-05 after the L1 run: no horizon gain, 128-ctx recall
     # worse, biases frozen at init. See EXPERIMENTS_SEMPY.md "L1 / R1".)
+    # R3 (2026-09-08): a SPLIT prior instead of a ladder -- `long_heads` heads
+    # start at `long_dt_bias` (-9 => softplus 1.2e-4 => ~0.37 of a binding
+    # survives 8192 tokens of passive decay), the rest keep `base_dt_bias`.
+    # Motivation: L-2 (8K ctx, 8 % recall_long docs with <=6k-token gaps, 2B
+    # tok) left every dt_bias at -4.00 +/- 0.1 -- data pressure does NOT move
+    # the decay prior, so the horizon has to be given structurally.
+    long_heads: int = 0
+    long_dt_bias: float = -9.0
     is_complex: bool = True          # SplitComplex (phase) | fully-real PAM
 
     # ── architecture ladder (real arm; EXPERIMENTS_SEMPY "Architecture ladder")

@@ -128,6 +128,8 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if cfg.base_dt_bias != -4.0:
         _ladder.append('base_dt_bias')
+    if cfg.long_heads > 0:
+        _ladder += ['long_heads', 'long_dt_bias']
     if _ladder:
         print('[ladder] ' + " ".join(f"{k}={getattr(cfg, k)}" for k in _ladder))
 
@@ -909,6 +911,12 @@ def build_argparser():
     p.add_argument('--base_dt_bias', type=float, default=None,
                    help='initial decay bias (default -4 => retention ~0.982/token; '
                         '-6 => 0.9975, -8 => 0.99966). Retention bench 2026-09-06: no gain.')
+    p.add_argument('--long_heads', type=int, default=0,
+                   help='R3: number of heads (per layer) born slow-decaying at --long_dt_bias; '
+                        'the rest keep --base_dt_bias')
+    p.add_argument('--long_dt_bias', type=float, default=-9.0,
+                   help='R3: initial decay bias of the long heads (-9 => ~0.37 of a '
+                        'binding survives 8192 tokens of passive decay)')
     return p
 
 
@@ -937,6 +945,9 @@ def main():
         cfg.out_gate = True
     if args.base_dt_bias is not None:
         cfg.base_dt_bias = args.base_dt_bias
+    if args.long_heads:
+        cfg.long_heads = args.long_heads
+        cfg.long_dt_bias = args.long_dt_bias
     if args.dropout is not None:
         cfg.dropout = args.dropout
     device = torch.device(args.device)
