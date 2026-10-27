@@ -14,6 +14,9 @@
 #      web-only blend warmup, 0.44/0.41/0.10/0.05, ANSWER_W=100, seed 42).
 #   C. 40-trial recall probe + PG-19 per-position loss on best_model.pt.
 #
+# LR_FULL=<lr> skips A and uses that LR (e.g. a screen already run at an
+# earlier hash with identical math; say which in the notebook).
+#
 # RESUMABLE / idempotent: re-run with SCREEN_HASH=<hash printed at the first
 # launch>. Finished arms (.done) are skipped, a partial arm resumes from its
 # latest.pt into its own log, finished evals are skipped.
@@ -54,6 +57,10 @@ run_arm() {  # run_arm <tag> <max_retries> VAR=val ... ; returns the launcher rc
 
 # --- A. LR screen -----------------------------------------------------------
 CHOICE="checkpoints_v13_sempty/m2lr_choice_${HASH}.txt"
+if [ -n "${LR_FULL:-}" ] && [ ! -f "$CHOICE" ]; then
+  echo "$LR_FULL" > "$CHOICE"
+  echo "=== LR given: $LR_FULL (screen skipped) ==="
+fi
 if [ ! -f "$CHOICE" ]; then
   for lr in 2e-4 6e-4 1.2e-3; do
     run_arm "m2lr_${lr}" 1 LR="$lr" TARGET_TOKENS=99532800 BLEND_WARMUP=0 \

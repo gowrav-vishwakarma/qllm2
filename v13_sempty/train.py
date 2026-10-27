@@ -13,7 +13,9 @@ from __future__ import annotations
 import argparse
 import math
 import os
+import queue
 import random
+import threading
 import time
 import sys
 from dataclasses import asdict
@@ -31,6 +33,64 @@ from v13_sempty.config import PRESETS, get_config
 from v13_sempty.triton_kernels import kernel_enabled, set_kernel_enabled
 
 _NO_DECAY_SUFFIXES = {'dt_bias'}
+
+
+class _Prefetch:
+    """Build the next batches on a background thread while the GPU steps.
+
+    One producer, FIFO queue -> exactly the same batches in the same order as
+    iterating the loader inline. The streaming loader is single-process
+    (num_workers=0), so before this the GPU idled while every batch was
+    tokenized (6000, 2026-10-27: 0.165 s/batch producer vs 0.21 s Mamba-2
+    step -> 98K tok/s instead of ~170K). The live data-cursor dicts run ahead
+    of training by up to ``depth`` batches, so each batch carries a snapshot of
+    the cursor taken right after it was built; the trainer saves the snapshot
+    of the last batch it trained on (checkpoint cursor == the inline one).
+    """
+
+    _END = object()
+
+    def __init__(self, iterable, depth: int, cursor: Optional[dict]):
+        self._q: queue.Queue = queue.Queue(maxsize=max(1, depth))
+        self._cursor = cursor
+        self._err: Optional[BaseException] = None
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, args=(iterable,),
+                                        name='batch-prefetch', daemon=True)
+        self._thread.start()
+
+    def _put(self, item) -> bool:
+        while not self._stop.is_set():
+            try:
+                self._q.put(item, timeout=0.5)
+                return True
+            except queue.Full:
+                continue
+        return False
+
+    def _run(self, iterable):
+        try:
+            for batch in iterable:
+                snap = ({k: dict(v) for k, v in self._cursor.items()}
+                        if self._cursor else None)
+                if not self._put((batch, snap)):
+                    return
+        except BaseException as e:  # re-raised in the training thread
+            self._err = e
+        finally:
+            self._put(self._END)
+
+    def __iter__(self):
+        while True:
+            item = self._q.get()
+            if item is self._END:
+                if self._err is not None:
+                    raise self._err
+                return
+            yield item
+
+    def close(self):
+        self._stop.set()
 
 
 def _git_hash() -> str:
@@ -240,6 +300,7 @@ class Trainer:
         run_label: str = 'v13_sempty',
         data_cursor: Optional[dict] = None,
         run_args: Optional[dict] = None,
+        prefetch: int = 4,
     ):
         self.model = model
         self.train_loader = train_loader
@@ -287,6 +348,11 @@ class Trainer:
         # {source: docs consumed}, 'token_counters': {source: tokens yielded}}).
         # Saved in every checkpoint = the stream position for --resume.
         self.data_cursor = data_cursor
+        # Batches built ahead on a thread (0 = inline); the cursor saved in a
+        # checkpoint is the snapshot taken with the last batch trained on.
+        self.prefetch = prefetch
+        self._cursor_snap: Optional[dict] = None
+        self._last_input_ids = None   # diag panel input (no second stream reader)
         self.run_args = run_args
         # Steps done in THIS process (resume-aware ETA / tok/s).
         self.session_steps = 0
@@ -315,6 +381,7 @@ class Trainer:
 
     def step(self, batch) -> float:
         input_ids = batch['input_ids'].to(self.device)
+        self._last_input_ids = input_ids
         labels = batch['labels'].to(self.device)
         loss_mask = batch.get('loss_mask')
         if loss_mask is not None:
@@ -429,8 +496,9 @@ class Trainer:
             'best_val_ppl': self.best_val_ppl,
             'config': asdict(ck),
             # --- everything --resume needs beyond the weights -----------------
-            'data_cursor': ({k: dict(v) for k, v in self.data_cursor.items()}
-                            if self.data_cursor else None),
+            'data_cursor': (self._cursor_snap if self._cursor_snap is not None
+                            else ({k: dict(v) for k, v in self.data_cursor.items()}
+                                  if self.data_cursor else None)),
             'rng': {
                 'python': random.getstate(),
                 'numpy': np.random.get_state(),
@@ -516,15 +584,16 @@ class Trainer:
         if not all(hasattr(b, 'pam') for b in self._blocks):
             return {}  # baseline arch: the panel is PAM-specific
         # realized retention: one no-grad forward with the capture hook on
+        # Input = the last training batch. (Until 2026-10-27 this opened a
+        # second iter() over the streaming loader: it shares the one text
+        # generator, so each call refilled a 10,000-chunk shuffle buffer
+        # (~20M tokens, 40-100 s) and those documents were never trained on.)
+        x = self._last_input_ids
+        if x is None:
+            return {}
         self._set_capture(True)
         _retention_capture.clear()
         try:
-            it = iter(self.train_loader)
-            try:
-                b0 = next(it)
-            except StopIteration:
-                return {}
-            x = b0['input_ids'].to(self.device)
             with torch.no_grad():
                 _ = self.model(x)
         finally:
@@ -630,7 +699,25 @@ class Trainer:
                 if max_steps is None or self.is_streaming:
                     return
 
-        for batch_idx, batch in enumerate(_epoch_stream()):
+        if self.prefetch > 0:
+            source = _Prefetch(_epoch_stream(), self.prefetch, self.data_cursor)
+        else:
+            source = ((b, None) for b in _epoch_stream())
+        try:
+            return self._train_loop(source, losses, max_steps, n_batches, train_start,
+                                    log_start, log_tokens, steps_per_epoch,
+                                    total_epochs, epoch_loss_sum, epoch_loss_n,
+                                    epoch_start)
+        finally:
+            if isinstance(source, _Prefetch):
+                source.close()
+
+    def _train_loop(self, source, losses, max_steps, n_batches, train_start,
+                    log_start, log_tokens, steps_per_epoch, total_epochs,
+                    epoch_loss_sum, epoch_loss_n, epoch_start) -> list:
+        for batch_idx, (batch, cursor_snap) in enumerate(source):
+            if cursor_snap is not None:
+                self._cursor_snap = cursor_snap
             loss = self.step(batch)
             losses.append(loss)
             batch_tokens = batch['input_ids'].numel()
@@ -912,6 +999,9 @@ def build_argparser():
     p.add_argument('--base_dt_bias', type=float, default=None,
                    help='initial decay bias (default -4 => retention ~0.982/token; '
                         '-6 => 0.9975, -8 => 0.99966). Retention bench 2026-09-06: no gain.')
+    p.add_argument('--prefetch', type=int, default=4,
+                   help='batches built ahead on a background thread while the GPU '
+                        'steps (same order; 0 = inline, the pre-2026-10-27 path)')
     p.add_argument('--arch', choices=('pam', 'mamba2'), default='pam',
                    help='sequence mixer: pam (the v13_sempty model) or mamba2 '
                         '(reference Mamba-2 baseline, baseline_mamba2.py; same '
@@ -1145,6 +1235,7 @@ def main():
         run_label=args.preset,
         data_cursor=data_cursor,
         run_args=vars(args),
+        prefetch=args.prefetch,
     )
     if resume_ck is not None:
         saved_args = resume_ck.get('args') or {}

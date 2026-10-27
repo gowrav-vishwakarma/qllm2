@@ -587,6 +587,65 @@ def test_out_gate_parity_and_decode(batch_size=2, seq_len=17, seed=0):
     return True
 
 
+def test_prefetch_order_and_cursor():
+    """train._Prefetch: the batches built on the background thread are exactly
+    the inline ones, in order, and each carries the data cursor as it stood
+    right after that batch was built (what an inline checkpoint would save).
+    The toy stream mimics StreamingTokenChunkDataset: a shuffle buffer popped
+    with the global CPU RNG and live cursor dicts mutated while reading."""
+    from torch.utils.data import DataLoader, IterableDataset
+    from v13_sempty.train import _Prefetch
+
+    cursor = {'doc_counters': {}, 'token_counters': {}}
+
+    class _Stream(IterableDataset):
+        def __iter__(self):
+            pending = []
+            for i in range(600):
+                cursor['doc_counters']['s'] = cursor['doc_counters'].get('s', 0) + 1
+                pending.append(torch.full((4,), i))
+                if len(pending) >= 16:
+                    j = torch.randint(len(pending), (1,)).item()
+                    cursor['token_counters']['s'] = cursor['token_counters'].get('s', 0) + 4
+                    yield {'input_ids': pending.pop(j)}
+
+    def run(prefetch):
+        for d in cursor.values():
+            d.clear()
+        torch.manual_seed(0)
+        dl = DataLoader(_Stream(), batch_size=3, num_workers=0, drop_last=True)
+        out = []
+        if prefetch:
+            for batch, snap in _Prefetch(dl, 4, cursor):
+                out.append((batch['input_ids'].clone(), snap))
+        else:
+            for batch in dl:
+                out.append((batch['input_ids'].clone(),
+                            {k: dict(v) for k, v in cursor.items()}))
+        return out
+
+    inline, pre = run(False), run(True)
+    assert len(inline) == len(pre) > 100, (len(inline), len(pre))
+    for k, ((x1, c1), (x2, c2)) in enumerate(zip(inline, pre)):
+        assert torch.equal(x1, x2), f"batch {k}: prefetch changed the order"
+        assert c1 == c2, f"batch {k}: cursor snapshot {c2} != inline {c1}"
+
+    def broken():
+        yield {'input_ids': torch.zeros(1)}
+        raise RuntimeError('producer boom')
+
+    got = []
+    try:
+        for batch, _ in _Prefetch(broken(), 2, None):
+            got.append(batch)
+        raise AssertionError('producer exception was swallowed')
+    except RuntimeError as e:
+        assert 'producer boom' in str(e) and len(got) == 1
+    print(f"  {len(inline)} batches identical in order; cursor snapshots match; "
+          f"producer errors re-raised")
+    return True
+
+
 def main():
     torch.set_num_threads(2)
     tests = [
@@ -607,6 +666,7 @@ def main():
         test_chrono_rotary_parity,
         test_chrono_parallel_vs_recurrent,
         test_out_gate_parity_and_decode,
+        test_prefetch_order_and_cursor,
     ]
     failures = 0
     for t in tests:
