@@ -1502,6 +1502,34 @@ answer mask; grads rel ≤ 2e-5; SSD kernel vs torch reference 1.5e-4; resume
   PAM's LR (2e-4) was never screened; Mamba's is — any PPL gap in Mamba's
   favour is an upper bound.
 
+## Engineering: batch prefetch + the diag panel's hidden data skip (2026-10-27, `129b406`)
+
+Found while the Mamba-2 baseline ran data-bound (98K tok/s of a possible
+~170K; GPU idle between steps).
+
+1. **Inline batches.** The streaming loader is single-process, so every
+   batch was tokenized while the GPU waited: producer 0.165 s/batch (224K
+   tok/s, 6000) against a 0.21 s Mamba-2 step and a 0.625 s PAM step (B18
+   T2048). `train._Prefetch` builds batches on one background thread (FIFO,
+   `--prefetch 4`): identical batches and order (selftest
+   `test_prefetch_order_and_cursor`; 4090 PAM run: same loss at all 12 steps
+   and the same saved cursor, prefetch 0 vs 4). Checkpoints save the cursor
+   snapshot taken with the last batch trained on.
+2. **The diag panel skipped ~20M tokens per call.** `_diagnostics` took its
+   input from a fresh `iter(train_loader)`. The streaming dataset wraps ONE
+   shared text generator, so the new iterator refilled its own 10,000-chunk
+   shuffle buffer from the live stream, yielded one batch and was dropped:
+   measured **107 s and 21,621 documents (~20M tokens) per call**, never
+   trained on. With `--diag_every 2000` that is 40 calls per 3B run: Phase 3b,
+   R3, L-2 and both R4 arms trained on a stream with ~40 contiguous ~20M-token
+   gaps (~0.9B tokens of documents read and discarded per 3B run) and lost
+   ~40 s per call (R4 ctrl: steps 2050/4050/6050 at 23K vs 59K tok/s).
+   Consequences: no document was repeated, the source mix is unchanged
+   (realised mix checks still hold), and arms of one screen saw identical
+   streams — so no past comparison is invalidated; the "same tokens as Phase
+   3b" claim holds only up to step 2000. Fixed: the panel uses the last
+   training batch.
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*
