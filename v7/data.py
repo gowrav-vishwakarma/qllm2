@@ -1163,9 +1163,15 @@ def _parquet_row_group_rows(open_pf, group: int, columns: List[str], start_row: 
 
 def _open_parquet(path: str, fs=None):
     """ParquetFile with a read buffer, so a row group is streamed page by page
-    instead of downloaded whole first (dclm: one 2.7 GB group per file)."""
+    instead of downloaded whole first (dclm: one 2.7 GB group per file).
+
+    ``cache_type='background'`` fetches the next 8 MB block while pyarrow
+    decodes the current one: one HF connection delivers ~3 MB/s, so every
+    block used to stall the stream ~3 s (6000, 2026-10-27: mean 0.191 ->
+    0.150 s per 18x2048 batch). Same bytes, same order."""
     import pyarrow.parquet as pq
-    return pq.ParquetFile(fs.open(path) if fs else path, buffer_size=8 << 20)
+    return pq.ParquetFile(fs.open(path, block_size=8 << 20, cache_type='background')
+                          if fs else path, buffer_size=8 << 20)
 
 
 def _estimate_fresh_file(tag: str, files: List[str], start_f: int, left: int,

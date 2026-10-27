@@ -1062,9 +1062,11 @@ def build_argparser():
                    help='1 = streaming batches built in one worker process '
                         '(own GIL, same order); 0 = in this process '
                         '(+ --prefetch thread)')
-    p.add_argument('--prefetch', type=int, default=4,
-                   help='batches built ahead on a background thread while the GPU '
-                        'steps (same order; 0 = inline, the pre-2026-10-27 path)')
+    p.add_argument('--prefetch', type=int, default=64,
+                   help='batches built ahead (worker prefetch_factor, or the thread '
+                        'queue with --stream_worker 0; 0 = inline, the pre-2026-10-27 '
+                        'path). 64 x 0.21 s = 13 s of GPU work: rides out the ~3 s '
+                        'HF read stalls')
     p.add_argument('--arch', choices=('pam', 'mamba2'), default='pam',
                    help='sequence mixer: pam (the v13_sempty model) or mamba2 '
                         '(reference Mamba-2 baseline, baseline_mamba2.py; same '
