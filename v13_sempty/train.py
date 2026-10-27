@@ -27,7 +27,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, IterableDataset, TensorDataset
+from torch.utils.data._utils.collate import default_collate
 from v13_sempty.model import LM, _retention_capture
 from v13_sempty.config import PRESETS, get_config
 from v13_sempty.triton_kernels import kernel_enabled, set_kernel_enabled
@@ -91,6 +92,61 @@ class _Prefetch:
 
     def close(self):
         self._stop.set()
+
+
+class _CursorTagged(IterableDataset):
+    """Worker side of ``_WorkerStream``: restore the parent's RNG states, then
+    tag every sample with the data cursor as it stood right after it was
+    built (the cursor dicts live in the worker; the parent's copies go stale)."""
+
+    def __init__(self, ds, cursor: dict):
+        self.ds, self.cursor, self.rng = ds, cursor, None
+
+    def __iter__(self):
+        if self.rng is not None:
+            t_state, py_state, np_state = self.rng
+            torch.set_rng_state(t_state)
+            random.setstate(py_state)
+            np.random.set_state(np_state)
+        for sample in self.ds:
+            sample['_cursor'] = {k: dict(v) for k, v in self.cursor.items()}
+            yield sample
+
+
+def _collate_tagged(samples):
+    cursor = samples[-1]['_cursor']
+    batch = default_collate([{k: v for k, v in s.items() if k != '_cursor'}
+                             for s in samples])
+    batch['_cursor'] = cursor
+    return batch
+
+
+class _WorkerStream:
+    """Streaming train loader whose batches are built in ONE worker process.
+
+    ``_Prefetch`` (a thread) overlaps batch building with the GPU but shares
+    the GIL with the training loop: Mamba-2 on the 6000 went 98K -> ~125K
+    tok/s of a GPU-bound ~170K. One forked worker has its own GIL. Exactness:
+    one worker = the one stream in order; DataLoader reseeds a worker's RNGs,
+    so ``__iter__`` hands it the torch/python/numpy states the inline path
+    would have had (torch: after the one base-seed draw ``iter()`` makes);
+    batches carry the worker-side cursor snapshot (``batch['_cursor']``),
+    which the Trainer saves in checkpoints.
+    """
+
+    def __init__(self, ds, cursor: dict, batch_size: int, prefetch: int):
+        self.tagged = _CursorTagged(ds, cursor)
+        self.dl = DataLoader(self.tagged, batch_size=batch_size, num_workers=1,
+                             prefetch_factor=max(2, prefetch), drop_last=True,
+                             collate_fn=_collate_tagged,
+                             multiprocessing_context='fork')
+
+    def __iter__(self):
+        g = torch.Generator()
+        g.set_state(torch.get_rng_state())
+        torch.empty((), dtype=torch.int64).random_(generator=g)  # iter()'s base-seed draw
+        self.tagged.rng = (g.get_state(), random.getstate(), np.random.get_state())
+        return iter(self.dl)  # forks now: the worker inherits ``tagged.rng``
 
 
 def _git_hash() -> str:
@@ -718,6 +774,9 @@ class Trainer:
         for batch_idx, (batch, cursor_snap) in enumerate(source):
             if cursor_snap is not None:
                 self._cursor_snap = cursor_snap
+            tagged = batch.pop('_cursor', None) if isinstance(batch, dict) else None
+            if tagged is not None:          # _WorkerStream: worker-side cursor
+                self._cursor_snap = tagged
             loss = self.step(batch)
             losses.append(loss)
             batch_tokens = batch['input_ids'].numel()
@@ -999,6 +1058,10 @@ def build_argparser():
     p.add_argument('--base_dt_bias', type=float, default=None,
                    help='initial decay bias (default -4 => retention ~0.982/token; '
                         '-6 => 0.9975, -8 => 0.99966). Retention bench 2026-09-06: no gain.')
+    p.add_argument('--stream_worker', type=int, default=1,
+                   help='1 = streaming batches built in one worker process '
+                        '(own GIL, same order); 0 = in this process '
+                        '(+ --prefetch thread)')
     p.add_argument('--prefetch', type=int, default=4,
                    help='batches built ahead on a background thread while the GPU '
                         'steps (same order; 0 = inline, the pre-2026-10-27 path)')
@@ -1150,10 +1213,15 @@ def main():
             print(f"[resume] stream re-opened at docs={skip_docs} "
                   f"tokens_consumed={consumed_tokens:,} "
                   f"remaining_budget={remaining_budget:,}", flush=True)
-        nw = 0 if is_streaming else args.num_workers
-        loader = DataLoader(train_ds, batch_size=args.batch_size,
-                            shuffle=not is_streaming, num_workers=nw,
-                            drop_last=True)
+        if is_streaming and args.stream_worker:
+            # Batches built in one worker process (own GIL), same stream/order.
+            loader = _WorkerStream(train_ds, data_cursor, args.batch_size,
+                                   args.prefetch)
+        else:
+            nw = 0 if is_streaming else args.num_workers
+            loader = DataLoader(train_ds, batch_size=args.batch_size,
+                                shuffle=not is_streaming, num_workers=nw,
+                                drop_last=True)
         val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False)
         if not args.no_wiki_val:
             wv, _ = load_wikitext103_val(seq_len=args.seq_len)
@@ -1235,7 +1303,8 @@ def main():
         run_label=args.preset,
         data_cursor=data_cursor,
         run_args=vars(args),
-        prefetch=args.prefetch,
+        # _WorkerStream already builds ahead in its own process.
+        prefetch=(0 if isinstance(loader, _WorkerStream) else args.prefetch),
     )
     if resume_ck is not None:
         saved_args = resume_ck.get('args') or {}

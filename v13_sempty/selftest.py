@@ -646,6 +646,54 @@ def test_prefetch_order_and_cursor():
     return True
 
 
+def test_worker_stream_order_and_cursor():
+    """train._WorkerStream (batches built in a forked worker): identical
+    batches/order to the inline loader and the worker-side cursor snapshot
+    per batch, with torch, python and numpy RNGs all used by the stream (the
+    worker gets the states the inline path would have had)."""
+    import random as _random
+    import numpy as _np
+    from torch.utils.data import DataLoader, IterableDataset
+    from v13_sempty.train import _WorkerStream
+
+    cursor = {'doc_counters': {}, 'token_counters': {}}
+
+    class _Stream(IterableDataset):
+        def __iter__(self):
+            pending = []
+            for i in range(500):
+                cursor['doc_counters']['s'] = cursor['doc_counters'].get('s', 0) + 1
+                noise = _random.random() + float(_np.random.rand())
+                pending.append(torch.full((4,), float(i) + noise))
+                if len(pending) >= 16:
+                    j = torch.randint(len(pending), (1,)).item()
+                    cursor['token_counters']['s'] = cursor['token_counters'].get('s', 0) + 4
+                    yield {'input_ids': pending.pop(j)}
+
+    def run(worker):
+        for d in cursor.values():
+            d.clear()
+        torch.manual_seed(0); _random.seed(1); _np.random.seed(2)
+        out = []
+        if worker:
+            for batch in _WorkerStream(_Stream(), cursor, 3, 4):
+                out.append((batch['input_ids'].clone(), batch['_cursor']))
+        else:
+            for batch in DataLoader(_Stream(), batch_size=3, num_workers=0, drop_last=True):
+                out.append((batch['input_ids'].clone(),
+                            {k: dict(v) for k, v in cursor.items()}))
+        return out
+
+    inline, work = run(False), run(True)
+    assert len(inline) == len(work) > 100, (len(inline), len(work))
+    for k, ((x1, c1), (x2, c2)) in enumerate(zip(inline, work)):
+        assert torch.equal(x1, x2), f"batch {k}: worker changed the batches/order"
+        assert c1 == c2, f"batch {k}: worker cursor {c2} != inline {c1}"
+    print(f"  {len(inline)} batches identical (torch/python/numpy RNG handed over); "
+          f"worker cursor snapshots match")
+    return True
+
+
 def main():
     torch.set_num_threads(2)
     tests = [
@@ -667,6 +715,7 @@ def main():
         test_chrono_parallel_vs_recurrent,
         test_out_gate_parity_and_decode,
         test_prefetch_order_and_cursor,
+        test_worker_stream_order_and_cursor,
     ]
     failures = 0
     for t in tests:
