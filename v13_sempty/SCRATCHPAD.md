@@ -8,10 +8,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 * **NOW (2026-10-27) — R4 warm-start screen RUNNING on the RTX 6000.**
   - **Where:** tmux `r4_screen` on `ubuntu@34.131.203.207`
-    (`~/Development/qllm-private`), code **`f8f98f5`**. Driver log
-    `logs/v13_sempty_r4screen_driver_f8f98f5.log`; arm logs
-    `logs/v13_sempty_r4screen_{store,ctrl}_f8f98f5_<stamp>.log`; ckpts
-    `checkpoints_v13_sempty/r4screen_{store,ctrl}_f8f98f5/`.
+    (`~/Development/qllm-private`), code **`0868a1b`** (launched 07:08Z).
+    Driver log `logs/v13_sempty_r4screen_driver_0868a1b.log`; arm logs
+    `logs/v13_sempty_r4screen_{store,ctrl}_0868a1b_<stamp>.log`; ckpts
+    `checkpoints_v13_sempty/r4screen_{store,ctrl}_0868a1b/`.
+  - **First attempt @`f8f98f5` ABORTED** (06:33–07:00Z, logs moved to
+    `~/qllm_aborted_20261027/` on the box): an HF timeout in smoltalk2 split
+    discovery silently dropped `smoltalk2_mid` (10 % of the mix) → wrong data.
+    Fixed in `68d0cd6` (retry, then fail loudly). That attempt also ran the
+    store at 29.5K tok/s (eager loop); `0868a1b` replaces the loop with a
+    triangular-solve closed form (4090 bench 85 % of no-store tok/s).
   - **What:** two arms warm-started from Phase 3b
     (`mix3b_delta_answ100_1c913ef/best_model.pt`), identical except `--store`
     (R4 consolidation store, `EXPERIMENTS_SEMPY.md` → "R4"): 300M tok each
@@ -24,15 +30,14 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     own log, finished probes are skipped:
     ```bash
     tmux new-session -d -s r4_screen "cd ~/Development/qllm-private && \
-      SCREEN_HASH=f8f98f5 bash v13_sempty/tmp_r4_screen.sh 2>&1 | \
-      tee -a logs/v13_sempty_r4screen_driver_f8f98f5.log"
+      SCREEN_HASH=0868a1b bash v13_sempty/tmp_r4_screen.sh 2>&1 | \
+      tee -a logs/v13_sempty_r4screen_driver_0868a1b.log"
     ```
     On the 4090 use the local repo path; local HF streaming is ~10 MB/s so the
     doc-cursor skip alone takes >25 min there — prefer the 6000.
-  - **Do NOT `git pull` on the 6000 until the driver prints `r4 screen DONE`:**
-    the running driver copy lets the launcher name the ctrl arm's log after
-    HEAD, so a pull would give that log a docs-only hash (fixed in the driver
-    for future launches).
+  - **Avoid `git pull` on the 6000 until the driver prints `r4 screen DONE`:**
+    dirs/logs are pinned to `0868a1b` (safe), but the ctrl arm's in-log
+    `commit=` header would show a docs-only HEAD.
   - **Judge (pre-registered, `EXPERIMENTS_SEMPY.md` "R4"), store vs ctrl:**
     KEEP if a1 pos0 @2048 ≥ 0.5 and @4096 ≥ 0.3; guards: a4/a8 pos1 within 0.1
     at every ctx, a1/a4 pos0 @128–512 within 0.1, holdout ≤ ctrl + 0.3, tok/s
@@ -48,8 +53,9 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     `--init_from` (`5fb614f`); screen driver + `scripts/eval_pos_loss.py`
     (`f8f98f5`); repo hygiene (`9e859dd`).
   - **After `r4 screen DONE`:** pull on the 6000, then rerun
-    `scripts/eval_pos_loss.py` (needs `f366601`+ for `far_gain`) on both
-    `r4screen_*_f8f98f5/best_model.pt` — the driver ran the older script.
+    `scripts/eval_pos_loss.py` (`far_gain` is in `0868a1b`'s copy, so the
+    driver's own PG-19 json already has it) on both
+    `r4screen_*_0868a1b/best_model.pt` if anything needs re-checking.
     Baseline far_gain (nats, context beyond 512 tok) @1-2K/2-4K/4-8K: Phase 3b
     +0.014/+0.019/+0.022, R3 +0.014/+0.020/+0.024, v11-matched transformer
     +0.027 @1-2K (`53c76e7`, `logs/pos_loss/`). R4 should raise it.
