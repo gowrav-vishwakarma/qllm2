@@ -1326,7 +1326,7 @@ the recall loss says an unselective slow memory is noise for exact lookup.
 rule: stop tuning the decay prior. The horizon needs a different *write* —
 R4 below.
 
-## R4 consolidation store — design and pre-registration (2026-10-27)
+## R4 consolidation store — FAIL, removed: never used for recall, multi-way −9 pts (2026-10-27)
 
 **Why every retention run failed (the physics).**
 1. *Horizon ≈ capacity ÷ write rate.* A 98-dim unit-key head holds ~d ≈ 100
@@ -1389,6 +1389,8 @@ is scored with full context and with only 512–1024 tokens of context;
 | Phase 3b (`1c913ef`) | +0.014 | +0.019 | +0.022 | 3.61 |
 | R3 (`5c87148`) | +0.014 | +0.020 | +0.024 | 3.61 |
 | v11-matched transformer (1B tok, 2048 ctx) | +0.027 | — | — | 4.35 |
+| R4 ctrl (Phase 3b + 300M, `0868a1b`) | +0.014 | +0.020 | +0.022 | 3.61 |
+| R4 store (Phase 3b + 300M + store) | +0.014 | +0.020 | +0.022 | 3.60 |
 
 PAM does use far context, and the gain keeps growing past its 2K training
 window, but at 1–2K it gets about half of what a (weaker) transformer gets
@@ -1397,6 +1399,70 @@ models, and the short-context loss rises identically, so that rise is book
 structure, not forgetting. R4 should raise `far_gain`; this table is the
 reference. Results: `logs/pos_loss/`,
 `logs/v13_sempty_pos_loss_pg19_f366601_20261027_0637.log`.
+
+### R4 result — FAIL, removed (2026-10-27)
+
+**Run.** Warm-start screen `v13_sempty/tmp_r4_screen.sh` @`0868a1b` on the RTX
+6000 (renamed `tmp_warm_screen.sh` after, now generic). Both arms from Phase 3b
+`best_model.pt`, 300M tokens each (8,138 steps, B18 T2048, LR 5e-5, warmup 200,
+DELTA=1, ANSWER_W=100), stream continued after the Phase 3b cursor; identical
+except `--store`. Realised mix identical in both arms (dclm 0.430 / fineweb
+0.384 / smoltalk2 0.142 / recall 0.044). Logs
+`logs/v13_sempty_r4screen_{store_0868a1b_20261027_0708,ctrl_0868a1b_20261027_0941}.log`,
+driver `logs/v13_sempty_r4screen_driver_0868a1b.log`, probes
+`logs/memory_probes/v13_sempty_r4screen_{store,ctrl}_0868a1b_t40_behavioral.json`,
+PG-19 `logs/pos_loss/v13_sempty_r4screen_{store,ctrl}_0868a1b_pg19.json`.
+
+**Guards.** Holdout PPL store **26.40** vs ctrl **26.42**; WikiText 55.08 vs
+55.02 — the store bought no LM. tok/s **50.9K vs 59.3K = 86 %** (same box,
+same day; the "98 %" quoted mid-run compared against September's Phase 3b
+speed, wrong reference).
+
+**Recall (40 trials, chance 0.125), store / ctrl:**
+
+| cell | 128 | 256 | 512 | 1024 | 2048 | 4096 | 8192 |
+|---|---|---|---|---|---|---|---|
+| a1 pos0 store | 1.00 | 1.00 | 1.00 | 0.38 | 0.30 | 0.15 | 0.07 |
+| a1 pos0 ctrl | 1.00 | 1.00 | 1.00 | 0.47 | 0.20 | 0.15 | 0.07 |
+| a4 pos0 store | 0.97 | 0.90 | 0.70 | 0.35 | 0.25 | 0.20 | 0.17 |
+| a4 pos0 ctrl | 1.00 | 0.93 | 0.80 | 0.47 | 0.25 | 0.25 | 0.17 |
+| a8 pos0 store | 0.78 | 0.62 | 0.38 | 0.25 | 0.20 | 0.17 | 0.15 |
+| a8 pos0 ctrl | 0.82 | 0.78 | 0.65 | 0.30 | 0.25 | 0.17 | 0.20 |
+| a8 pos1 store | 0.78 | 0.75 | 0.72 | 0.75 | 0.72 | 0.62 | 0.60 |
+| a8 pos1 ctrl | 0.85 | 0.82 | 0.80 | 0.80 | 0.80 | 0.72 | 0.70 |
+
+Mean store − ctrl over all 21 cells per count: a1 −0.008, a4 −0.038, **a8
+−0.087**. Judge: a1 pos0 @2048 0.30 (bar 0.5), @4096 0.15 (bar 0.3) → **FAIL**;
+guards also broken (a8 pos0 @512 −0.27, a8 pos1 @8192 −0.10).
+PG-19 `far_gain` identical to ctrl at every range (table above).
+
+**Is the store used? (final ckpt, `inspect_store.py`, 16 a1 pos0 @2048 docs.)**
+|gate| 0.03–0.07 in 15 of 16 layers (layer 14: 0.17, |gate·read| 0.51).
+Salience does find the needle in upper layers (top-1 within ±8 tokens of the
+value 0.42–0.67 in layers 10–15 vs ~0.27 chance), but **zeroing every store
+gate changes no recall cell by even one trial** (a1 pos0 @1024/2048 0.38/0.30
+on and off; a8 pos0 @256/512 0.62/0.40 on vs 0.62/0.42 off; a8 pos1 @1024 0.75
+both). So (1) the store read carries nothing the probe needs, and (2) the
+multi-way loss is not the read adding noise — it is training: the store's
+gradient flows into the q/k/v projections it *shares* with the fast notebook
+and degraded the notebook's multi-way keys. The +0.10 at a1 pos0 @2048 is
+not the store either (present with the gate zeroed): n=40 noise.
+
+**Reading.** The pre-registered branch "gate stays ~0 → no long-gap pressure
+in the 2K data" fired. Combined with L-2 (long-gap docs at 8K moved nothing
+structural) this is the sixth retention lever that left the horizon at
+~1000 tokens: R1 spread, L-2 data, R2 no_decay, R3 split prior, R4 store, and
++300M tokens (ctrl vs Phase 3b: mean +0.005 / +0.007 / +0.017 for a1/a4/a8).
+Selection learned something (salience finds needles); *use* never did,
+because nothing in 2K-window LM loss pays for exact recall past ~1K.
+
+**Decision.** FAIL → store removed from code (`store/store_chunk/store_writes`,
+`RealPAMLayer._store`, `store_scan`, its two selftests, `--store`, `STORE=1`).
+Kept: `--init_from` warm start and the screen driver (now
+`tmp_warm_screen.sh`, generic arms). The R4 ctrl arm
+(`checkpoints_v13_sempty/r4screen_ctrl_0868a1b` on the 6000) is the reusable
+control for any future warm-start screen with this recipe. To re-probe the
+store ckpt, `git checkout 0868a1b` (current code has no store keys).
 
 ## Positioning — is this Mamba? (2026-09-04)
 

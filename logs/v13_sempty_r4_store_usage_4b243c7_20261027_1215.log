@@ -1,0 +1,122 @@
+# R4 store usage check on the final store ckpt (checkpoints_v13_sempty/r4screen_store_0868a1b/best_model.pt, step 8000)
+# run on the 4090 at 4b243c7 (store code still present); quick bf16 scorer, 40 trials; gate_off = all store_gate_proj zeroed
+# --- script ---
+# """Mid-run R4 check: is the store used, what does it pick, does it drive recall?"""
+# import sys
+# 
+# import torch
+# 
+# sys.path[:0] = ['.', 'scripts']
+# from run_memory_behavioral import _load_v13_sempty  # noqa: E402
+# from memory_probes.behavioral import build_example  # noqa: E402
+# from v13_sempty.model import RealPAMLayer  # noqa: E402
+# 
+# ck = sys.argv[1]
+# dev = torch.device('cuda')
+# m, tok, cfg = _load_v13_sempty(ck, 'baseline_real_pm', dev)
+# C = cfg.store_chunk
+# REC = {'on': False}
+# orig = RealPAMLayer._store
+# 
+# 
+# def patched(self, tokens, qkv, state):
+#     out, ns = orig(self, tokens, qkv, state)
+#     if REC['on']:
+#         b, t = tokens.layout[0], tokens.layout[1]
+#         g = self.store_gate_proj(tokens).alias(self.decay_out, self.heads).raw(b, self.heads, t).float()
+#         s = self.salience_proj(tokens).alias(self.decay_out, self.heads).raw(b, self.heads, t).float()
+#         r = out.raw(b, self.heads, t, self.head_row).float().norm(dim=-1)
+#         REC[self.layer_idx] = (g[0].cpu(), s[0].cpu(), r[0].cpu())
+#     return out, ns
+# 
+# 
+# RealPAMLayer._store = patched
+# 
+# 
+# def run(ids):
+#     with torch.no_grad(), torch.autocast('cuda', dtype=torch.bfloat16):
+#         return m(torch.tensor([ids], device=dev))[0][0, -1].float()
+# 
+# 
+# def acc(ctx, pos, assoc, n, gate_off=False):
+#     saved = []
+#     if gate_off:
+#         for blk in m.blocks:
+#             p = blk.pam.store_gate_proj
+#             saved.append((p.weight.data.clone(), p.bias.data.clone()))
+#             p.weight.data.zero_()
+#             p.bias.data.zero_()
+#     hit = 0
+#     for seed in range(1000, 1000 + n):
+#         ex = build_example(tok, context_tokens=ctx, target_position=pos,
+#                            associations=assoc, seed=seed)
+#         lg = run(ex.prompt_ids)
+#         cand = torch.tensor(ex.candidate_token_ids, device=dev)
+#         hit += int(cand[lg[cand].argmax()].item() == ex.target_token_id)
+#     if gate_off:
+#         for blk, (w, bb) in zip(m.blocks, saved):
+#             blk.pam.store_gate_proj.weight.data.copy_(w)
+#             blk.pam.store_gate_proj.bias.data.copy_(bb)
+#     return hit / n
+# 
+# 
+# REC['on'] = True
+# L = len(m.blocks)
+# gsum = torch.zeros(L)
+# contrib = torch.zeros(L)
+# near = torch.zeros(L)
+# tot = torch.zeros(L)
+# for seed in range(1000, 1016):
+#     ex = build_example(tok, context_tokens=2048, target_position=0.0, associations=1, seed=seed)
+#     run(ex.prompt_ids)
+#     ids = ex.prompt_ids
+#     vpos = [i for i, x in enumerate(ids) if x == ex.target_token_id]
+#     vp = vpos[0] if vpos else None
+#     for li in range(L):
+#         g, s, r = REC[li]
+#         gsum[li] += g.abs().mean()
+#         contrib[li] += (g.abs() * r).mean()
+#         if vp is not None:
+#             c = vp // C
+#             sel = s[:, c * C:(c + 1) * C].argmax(-1) + c * C
+#             near[li] += ((sel - vp).abs() <= 8).float().sum()
+#             tot[li] += sel.numel()
+# REC['on'] = False
+# print('layer  |gate|   |gate*read|  needle-hit(+-8 tok; chance~0.27)')
+# for li in range(L):
+#     print(f'{li:5d}  {gsum[li] / 16:.3f}   {contrib[li] / 16:.3f}       '
+#           f'{near[li] / max(tot[li], 1):.2f}')
+# for ctx in (1024, 2048):
+#     a_on = acc(ctx, 0.0, 1, 40)
+#     a_off = acc(ctx, 0.0, 1, 40, gate_off=True)
+#     print(f'a1 pos0 ctx {ctx}: store on {a_on:.2f}   store gate zeroed {a_off:.2f}')
+# print('a4 pos1 ctx 512 on/off:', acc(512, 1.0, 4, 40), acc(512, 1.0, 4, 40, gate_off=True))
+# for (ctx, pos, a) in ((512, 0.0, 8), (256, 0.0, 8), (512, 0.5, 8), (1024, 1.0, 8)):
+#     print(f'a{a} pos{pos} ctx {ctx} on/off:', acc(ctx, pos, a, 40), acc(ctx, pos, a, 40, gate_off=True))
+# print('DONE')
+# --- output ---
+layer  |gate|   |gate*read|  needle-hit(+-8 tok; chance~0.27)
+    0  0.046   0.087       0.50
+    1  0.035   0.073       0.22
+    2  0.033   0.085       0.38
+    3  0.033   0.081       0.34
+    4  0.029   0.055       0.15
+    5  0.033   0.054       0.34
+    6  0.036   0.049       0.35
+    7  0.042   0.084       0.35
+    8  0.033   0.067       0.28
+    9  0.040   0.080       0.17
+   10  0.074   0.141       0.41
+   11  0.047   0.178       0.67
+   12  0.040   0.109       0.61
+   13  0.032   0.079       0.50
+   14  0.174   0.509       0.64
+   15  0.060   0.189       0.42
+a1 pos0 ctx 1024: store on 0.38   store gate zeroed 0.38
+a1 pos0 ctx 2048: store on 0.30   store gate zeroed 0.30
+a4 pos1 ctx 512 on/off: 0.975 0.975
+a8 pos0.0 ctx 512 on/off: 0.4 0.425
+a8 pos0.0 ctx 256 on/off: 0.625 0.625
+a8 pos0.5 ctx 512 on/off: 0.55 0.575
+a8 pos1.0 ctx 1024 on/off: 0.75 0.75
+DONE
