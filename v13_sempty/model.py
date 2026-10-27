@@ -115,6 +115,7 @@ from v13_sempty.triton_kernels import (
     fused_real_pam_read,
     fused_complex_pam_read,
     pam_delta_batched,
+    store_scan,
     kernel_enabled,
 )
 
@@ -651,32 +652,9 @@ class RealPAMLayer(nn.Module):
                 s = torch.cat([bs, s], dim=2)
                 k = torch.cat([bk, k], dim=2)
                 v = torch.cat([bv, v], dim=2)
-            N = L + T                                     # tokens in the joint stream
-            n_full = N // C
-            n_chunks = -(-N // C)                         # chunks any new token sits in
-            Es = [E]
-            for c in range(n_full):
-                sc = s[:, :, c * C:(c + 1) * C]
-                top = sc.topk(m, dim=-1).indices                            # [B,H,m]
-                b_sel = torch.sigmoid(torch.gather(sc, 2, top))             # [B,H,m]
-                idx = top.unsqueeze(-1).expand(B, H, m, K)
-                k_sel = torch.gather(k[:, :, c * C:(c + 1) * C], 2, idx)    # [B,H,m,K]
-                v_sel = torch.gather(v[:, :, c * C:(c + 1) * C], 2, idx)
-                for j in range(m):
-                    kj, vj = k_sel[:, :, j], v_sel[:, :, j]
-                    err = vj - torch.einsum('bhvk,bhk->bhv', E, kj)
-                    E = E + b_sel[:, :, j, None, None] * err.unsqueeze(-1) * kj.unsqueeze(-2)
-                Es.append(E)
-            # Read: new token at stream index L+t uses Es[(L+t)//C]. Left-pad
-            # the queries by L, right-pad to whole chunks, one batched read.
-            pad = n_chunks * C - N
-            qp = nn.functional.pad(q, (0, 0, L, pad))                       # [B,H,n*C,K]
-            qc = qp.reshape(B, H, n_chunks, C, K)
-            Ec = torch.stack(Es[:n_chunks], dim=2)                          # [B,H,n,K,K]
-            y = torch.einsum('bhnvk,bhnck->bhncv', Ec, qc).reshape(B, H, n_chunks * C, K)
-            y = y[:, :, L:L + T] * (K ** -0.5)
-            tail = n_full * C
-            new_state = (E, s[:, :, tail:], k[:, :, tail:], v[:, :, tail:])
+            y, E, ts, tk, tv = store_scan(s, k, v, q, E, L, C, m)
+            y = y * (K ** -0.5)
+            new_state = (E, ts, tk, tv)
         output = named(y.to(tokens.dtype), (batch, self.heads, time, self.head_row))
         return output, new_state
 

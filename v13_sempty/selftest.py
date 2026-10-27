@@ -587,6 +587,59 @@ def test_out_gate_parity_and_decode(batch_size=2, seq_len=17, seed=0):
     return True
 
 
+def _store_scan_loop(s, k, v, q, E, L, C, m):
+    """Reference R4 store: the plain per-chunk loop (oracle for _store_scan)."""
+    B, H, N = s.shape
+    K = k.shape[-1]
+    T = q.shape[2]
+    Es = [E]
+    for c in range(N // C):
+        sc = s[:, :, c * C:(c + 1) * C]
+        top = sc.topk(m, dim=-1).indices
+        for j in range(m):
+            ix = top[:, :, j]
+            kj = torch.gather(k[:, :, c * C:(c + 1) * C], 2,
+                              ix[..., None, None].expand(B, H, 1, K))[:, :, 0]
+            vj = torch.gather(v[:, :, c * C:(c + 1) * C], 2,
+                              ix[..., None, None].expand(B, H, 1, K))[:, :, 0]
+            bj = torch.sigmoid(torch.gather(sc, 2, ix[..., None]))[..., 0]
+            err = vj - torch.einsum('bhvk,bhk->bhv', E, kj)
+            E = E + bj[..., None, None] * err.unsqueeze(-1) * kj.unsqueeze(-2)
+        Es.append(E)
+    y = torch.stack([torch.einsum('bhvk,bhk->bhv', Es[(L + t) // C], q[:, :, t])
+                     for t in range(T)], dim=2)
+    return y, E
+
+
+def test_store_scan_vs_loop(seed=0):
+    """R4 closed-form (triangular-solve) store == the per-chunk loop, incl.
+    carried buffer (L>0), ragged tail, m=2 writes per chunk, and gradients."""
+    from v13_sempty.triton_kernels import _store_scan
+    torch.manual_seed(seed)
+    B, H, K, C = 2, 3, 8, 4
+    worst = 0.0
+    for (L, T, m) in [(0, 16, 1), (0, 19, 2), (3, 14, 1), (2, 1, 2), (0, 3, 1)]:
+        N = L + T
+        s = torch.randn(B, H, N, dtype=torch.float64, requires_grad=True)
+        k = F.normalize(torch.randn(B, H, N, K, dtype=torch.float64), dim=-1).requires_grad_()
+        v = torch.randn(B, H, N, K, dtype=torch.float64, requires_grad=True)
+        q = torch.randn(B, H, T, K, dtype=torch.float64, requires_grad=True)
+        E0 = torch.randn(B, H, K, K, dtype=torch.float64) * 0.3
+        y1, e1, *_ = _store_scan(s, k, v, q, E0, L, C, m)
+        y2, e2 = _store_scan_loop(s, k, v, q, E0, L, C, m)
+        worst = max(worst, (y1 - y2).abs().max().item(), (e1 - e2).abs().max().item())
+        ins = (s, k, v, q)
+        g1 = torch.autograd.grad((y1 ** 2).sum() + e1.sum(), ins, allow_unused=True)
+        g2 = torch.autograd.grad((y2 ** 2).sum() + e2.sum(), ins, allow_unused=True)
+        for a, b, x in zip(g1, g2, ins):  # unused (no full chunk yet) == zero grad
+            a = torch.zeros_like(x) if a is None else a
+            b = torch.zeros_like(x) if b is None else b
+            worst = max(worst, (a - b).abs().max().item())
+    assert worst < 1e-9, f"closed-form store != loop: {worst:.3e}"
+    print(f"  closed form vs loop (values + grads, fp64): {worst:.3e}")
+    return True
+
+
 def test_store_parity_and_decode(batch_size=2, seq_len=23, seed=0):
     """R4 consolidation store on the hero arch (chrono + out_gate + delta).
 
@@ -682,6 +735,7 @@ def main():
         test_chrono_rotary_parity,
         test_chrono_parallel_vs_recurrent,
         test_out_gate_parity_and_decode,
+        test_store_scan_vs_loop,
         test_store_parity_and_decode,
     ]
     failures = 0
