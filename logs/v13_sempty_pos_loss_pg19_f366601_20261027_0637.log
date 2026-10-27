@@ -1,0 +1,51 @@
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+W1027 12:08:01.690603 1855141 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1027 12:08:06.355166 1855141 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+  10/50 docs (16s)
+  20/50 docs (21s)
+  30/50 docs (26s)
+  40/50 docs (31s)
+  50/50 docs (36s)
+  [    0,   64)  loss 3.9697  ppl   52.97
+  [   64,  128)  loss 3.6604  ppl   38.88
+  [  128,  256)  loss 3.4973  ppl   33.03
+  [  256,  512)  loss 3.4671  ppl   32.04
+  [  512, 1024)  loss 3.5604  ppl   35.18   short-ctx 3.5606  far_gain +0.0002
+  [ 1024, 2048)  loss 3.6075  ppl   36.87   short-ctx 3.6213  far_gain +0.0138
+  [ 2048, 4096)  loss 3.5987  ppl   36.55   short-ctx 3.6180  far_gain +0.0193
+  [ 4096, 8192)  loss 3.6372  ppl   37.98   short-ctx 3.6593  far_gain +0.0221
+wrote logs/pos_loss/v13_sempty_mix3b_delta_answ100_1c913ef_pg19.json
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+W1027 12:08:56.637063 1856811 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1027 12:08:57.612805 1856811 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+  10/50 docs (8s)
+  20/50 docs (13s)
+  30/50 docs (18s)
+  40/50 docs (23s)
+  50/50 docs (28s)
+  [    0,   64)  loss 3.9495  ppl   51.91
+  [   64,  128)  loss 3.6372  ppl   37.99
+  [  128,  256)  loss 3.4881  ppl   32.72
+  [  256,  512)  loss 3.4616  ppl   31.87
+  [  512, 1024)  loss 3.5600  ppl   35.16   short-ctx 3.5597  far_gain -0.0002
+  [ 1024, 2048)  loss 3.6068  ppl   36.85   short-ctx 3.6204  far_gain +0.0136
+  [ 2048, 4096)  loss 3.5955  ppl   36.44   short-ctx 3.6158  far_gain +0.0203
+  [ 4096, 8192)  loss 3.6323  ppl   37.80   short-ctx 3.6560  far_gain +0.0237
+wrote logs/pos_loss/v13_sempty_mix3b_delta_answ100_long2h9_5c87148_pg19.json
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 2048 tokens from pg19
+  10/50 docs (0s)
+  20/50 docs (1s)
+  30/50 docs (1s)
+  40/50 docs (1s)
+  50/50 docs (1s)
+  [    0,   64)  loss 4.7314  ppl  113.45
+  [   64,  128)  loss 4.4090  ppl   82.19
+  [  128,  256)  loss 4.2865  ppl   72.71
+  [  256,  512)  loss 4.2648  ppl   71.15
+  [  512, 1024)  loss 4.3168  ppl   74.95   short-ctx 4.3168  far_gain +0.0001
+  [ 1024, 2048)  loss 4.3538  ppl   77.78   short-ctx 4.3811  far_gain +0.0272
+wrote logs/pos_loss/transformer_v11_recall_matched_1b_pg19.json
+DONE
