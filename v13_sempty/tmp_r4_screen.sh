@@ -33,8 +33,11 @@ for arm in $ARMS; do
   CKPT_DIR="checkpoints_v13_sempty/${TAG}_${HASH}"
   if [ -f "$CKPT_DIR/.done" ]; then echo "=== arm $arm already done, skip ==="; continue; fi
   OLD_LOG=$(ls -t logs/v13_sempty_${TAG}_${HASH}_*.log 2>/dev/null | head -1)
+  # Name a new arm log after the PINNED hash (not HEAD), so a docs-only pull
+  # mid-screen cannot rename it.
+  OLD_LOG="${OLD_LOG:-logs/v13_sempty_${TAG}_${HASH}_$(date +%Y%m%d_%H%M).log}"
   STORE=0; [ "$arm" = "store" ] && STORE=1
-  echo "=== arm $arm (STORE=$STORE) ckpt=$CKPT_DIR log=${OLD_LOG:-new} $(date -u +%FT%TZ) ==="
+  echo "=== arm $arm (STORE=$STORE) ckpt=$CKPT_DIR log=$OLD_LOG $(date -u +%FT%TZ) ==="
   TAG="$TAG" CKPT_DIR="$CKPT_DIR" RESUME_LOG="$OLD_LOG" STORE="$STORE" INIT_FROM="$INIT" \
   SOURCES=dclm,fineweb,smoltalk2_mid,recall WEIGHTS=0.44,0.41,0.10,0.05 \
   DELTA=1 ANSWER_W=100 TARGET_TOKENS="$SCREEN_TOKENS" BLEND_WARMUP=0 \

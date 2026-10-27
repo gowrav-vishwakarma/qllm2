@@ -57,3 +57,6 @@ v13/tmp/omp_cron_state.json
 # Throwaway/debug scripts under v*/tmp/ need no commit (AGENTS.md); files
 # already tracked there stay tracked, new ones need `git add -f`.
 v*/tmp/*
+
+# Launcher exit-code markers (one per run, regenerated)
+logs/*.exit

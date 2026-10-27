@@ -6,6 +6,55 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
+* **NOW (2026-10-27) — R4 warm-start screen RUNNING on the RTX 6000.**
+  - **Where:** tmux `r4_screen` on `ubuntu@34.131.203.207`
+    (`~/Development/qllm-private`), code **`f8f98f5`**. Driver log
+    `logs/v13_sempty_r4screen_driver_f8f98f5.log`; arm logs
+    `logs/v13_sempty_r4screen_{store,ctrl}_f8f98f5_<stamp>.log`; ckpts
+    `checkpoints_v13_sempty/r4screen_{store,ctrl}_f8f98f5/`.
+  - **What:** two arms warm-started from Phase 3b
+    (`mix3b_delta_answ100_1c913ef/best_model.pt`), identical except `--store`
+    (R4 consolidation store, `EXPERIMENTS_SEMPY.md` → "R4"): 300M tok each
+    (8,138 steps, B18 T2048), LR 5e-5 re-warm (Phase 3b ended at LR≈0),
+    stream continues after Phase 3b's doc cursor (no doc seen twice; the skip
+    takes a while at startup). Order: store → ctrl → 40-trial recall probe +
+    PG-19 per-position loss for both. Expected ~1.5–2 h per arm.
+  - **Resume (either box):** if tmux/box dies, rerun the SAME command — done
+    arms are skipped (`.done`), a partial arm resumes from `latest.pt` into its
+    own log, finished probes are skipped:
+    ```bash
+    tmux new-session -d -s r4_screen "cd ~/Development/qllm-private && \
+      SCREEN_HASH=f8f98f5 bash v13_sempty/tmp_r4_screen.sh 2>&1 | \
+      tee -a logs/v13_sempty_r4screen_driver_f8f98f5.log"
+    ```
+    On the 4090 use the local repo path; local HF streaming is ~10 MB/s so the
+    doc-cursor skip alone takes >25 min there — prefer the 6000.
+  - **Do NOT `git pull` on the 6000 until the driver prints `r4 screen DONE`:**
+    the running driver copy lets the launcher name the ctrl arm's log after
+    HEAD, so a pull would give that log a docs-only hash (fixed in the driver
+    for future launches).
+  - **Judge (pre-registered, `EXPERIMENTS_SEMPY.md` "R4"), store vs ctrl:**
+    KEEP if a1 pos0 @2048 ≥ 0.5 and @4096 ≥ 0.3; guards: a4/a8 pos1 within 0.1
+    at every ctx, a1/a4 pos0 @128–512 within 0.1, holdout ≤ ctrl + 0.3, tok/s
+    ≥ 85 %. Tabulate with the 40-trial jsons in `logs/memory_probes/`. If KEEP
+    → 3B scratch run `STORE=1` on the exact Phase 3b recipe on the 6000.
+  - **Qwen on the 6000 was STOPPED** (user-approved, 2026-10-27) to free the
+    GPU: transient user unit `qwen-sglang.service` (SGLang Qwen3.8 Flash-Next,
+    port 8081, `~/qwen38fn/serve.sh`). Restart command in
+    `~/qwen38_RESTART.txt` on the box. `~/model.sh` manages a different server
+    (vLLM Qwen3.6).
+  - **Done today:** R3 FAIL (probed on the 4090 at 40 trials vs Phase 3b
+    re-probed at the same seeds), `long_heads` removed (`5fb614f`); R4 code +
+    `--init_from` (`5fb614f`); screen driver + `scripts/eval_pos_loss.py`
+    (`f8f98f5`); repo hygiene (`9e859dd`).
+  - **Open item:** `eval_pos_loss.py` gives loss ~8 on the WikiText-trained N4
+    fair ckpt (`wikitext_chrono_n4gate_fair_2537782`) — likely a tokenizer /
+    format mismatch, not a model result; investigate before using it. Raw
+    per-position loss on PG-19 RISES after ~512 tokens for Phase 3b, R3 and
+    the v11-matched transformer alike (book structure confound) → add a
+    "full context vs ~1K context on the same tokens" delta before drawing
+    conclusions. Git: push to `origin` only (never `p`).
+
 * **2026-09-06 afternoon — ALL of this was done ON the RTX 6000 (Cursor is
   ssh'd into it; `ssh 34.131.203.207` from the box itself times out, that is
   not an outage). The commit messages of `5e517f0`/`b44160b` say "4090" —
