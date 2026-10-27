@@ -3,10 +3,12 @@
 The LLM-side version of the needle probe. For each of N long documents
 (PG-19 test books by default) take one window of --context tokens, run the
 model once, and average next-token loss over documents in position buckets
-(0-64, 64-128, ..., up to --context). A curve that keeps falling with
-position means the model is using far context; one that flattens at ~1k
-tokens is the retention horizon, measured on ordinary text instead of a
-synthetic binding.
+(0-64, 64-128, ..., up to --context). Raw position curves mix model
+behaviour with document structure (front matter, chapter starts), so each
+token is also scored with only --short..2*--short tokens of context
+(overlapping windows, second half scored). ``far_gain`` = short-context loss
+minus full-context loss on the SAME tokens: > 0 means context beyond --short
+tokens helps; ~0 means the model does not use it (its horizon).
 
 Usage:
   .venv/bin/python scripts/eval_pos_loss.py --model-type v13_sempty \
@@ -75,6 +77,24 @@ def _token_losses(model, model_type: str, ids: torch.Tensor, device) -> torch.Te
     return torch.cat(losses).cpu()
 
 
+def _short_ctx_losses(model, model_type, ids, device, short: int) -> torch.Tensor:
+    """Loss of every token when it may see only short..2*short past tokens.
+
+    Window k covers [(k-1)*short, (k+1)*short) and scores its second half;
+    the first `short` positions keep their (already short) full context.
+    """
+    n = ids.numel() - 1
+    out = torch.full((n,), float('nan'))
+    out[:short] = _token_losses(model, model_type, ids[:short + 1], device)
+    k = 1
+    while k * short < n:
+        a, b = (k - 1) * short, min((k + 1) * short, n)
+        win = _token_losses(model, model_type, ids[a:b + 1], device)
+        out[k * short:b] = win[short:short + (b - k * short)]
+        k += 1
+    return out
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument('--model-type', choices=('v13_sempty', 'transformer'), required=True)
@@ -85,6 +105,8 @@ def main() -> int:
     p.add_argument('--skip-tokens', type=int, default=1024,
                    help='skip each book\'s first tokens (Gutenberg header)')
     p.add_argument('--source', default='pg19')
+    p.add_argument('--short', type=int, default=512,
+                   help='context cap for the far-gain comparison (0 = off)')
     p.add_argument('--output', type=Path, required=True)
     args = p.parse_args()
 
@@ -102,20 +124,31 @@ def main() -> int:
 
     t0 = time.time()
     total = torch.zeros(args.context)
+    total_short = torch.zeros(args.context)
     for i, ids in enumerate(docs):
         total += _token_losses(model, args.model_type, ids, device)
+        if args.short:
+            total_short += _short_ctx_losses(model, args.model_type, ids, device, args.short)
         if (i + 1) % 10 == 0:
             print(f'  {i + 1}/{len(docs)} docs ({time.time() - t0:.0f}s)', flush=True)
     mean = total / len(docs)
+    mean_short = total_short / len(docs)
     rows = []
     for a, b in _buckets(args.context):
         loss = mean[a:b].mean().item()
-        rows.append({'from': a, 'to': b, 'loss': loss, 'ppl': math.exp(loss)})
-        print(f'  [{a:>5},{b:>5})  loss {loss:.4f}  ppl {math.exp(loss):7.2f}')
+        row = {'from': a, 'to': b, 'loss': loss, 'ppl': math.exp(loss)}
+        msg = f'  [{a:>5},{b:>5})  loss {loss:.4f}  ppl {math.exp(loss):7.2f}'
+        if args.short and a >= args.short:
+            sl = mean_short[a:b].mean().item()
+            row.update(short_loss=sl, far_gain=sl - loss)
+            msg += f'   short-ctx {sl:.4f}  far_gain {sl - loss:+.4f}'
+        rows.append(row)
+        print(msg)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     json.dump({'checkpoint': str(args.checkpoint), 'model_type': args.model_type,
                'source': args.source, 'docs': len(docs), 'context': args.context,
-               'skip_tokens': args.skip_tokens, 'buckets': rows},
+               'skip_tokens': args.skip_tokens, 'short': args.short,
+               'buckets': rows},
               open(args.output, 'w'), indent=1)
     print(f'wrote {args.output}')
     return 0
