@@ -1345,17 +1345,31 @@ def _cap_keep(messages: List[dict], fraction: float) -> bool:
     return (zlib.adler32(blob.encode('utf-8', errors='ignore')) % 1000) < int(fraction * 1000)
 
 
-def _smoltalk2_split_names(config: str) -> List[str]:
-    """Discover split names for a smoltalk2 config (sorted for determinism)."""
-    try:
-        from datasets import get_dataset_split_names
+def _smoltalk2_split_names(config: str, retries: int = 6) -> List[str]:
+    """Discover split names for a smoltalk2 config (sorted for determinism).
 
-        names = get_dataset_split_names(SMOLTALK2_REPO, config)
-        if names:
-            return sorted(names)
-    except Exception as exc:  # noqa: BLE001 - fall back to a single 'train' split
-        print(f"  [smoltalk2] split discovery failed for {config}: {exc}; trying 'train'")
-    return ['train']
+    Retries with backoff and RAISES if discovery keeps failing. The old
+    fallback to a single 'train' split (which smoltalk2 does not have) made a
+    transient HF timeout silently drop the whole source from the blend
+    (R4 screen, 2026-10-27: smoltalk2_mid = 10 % of the mix vanished).
+    """
+    import time as _time
+    from datasets import get_dataset_split_names
+
+    last = None
+    for attempt in range(retries):
+        try:
+            names = get_dataset_split_names(SMOLTALK2_REPO, config)
+            if names:
+                return sorted(names)
+            last = RuntimeError('no splits returned')
+        except Exception as exc:  # noqa: BLE001 - network hiccups: retry
+            last = exc
+        wait = min(60, 5 * 2 ** attempt)
+        print(f"  [smoltalk2] split discovery for {config} failed "
+              f"(attempt {attempt + 1}/{retries}): {last}; retry in {wait}s", flush=True)
+        _time.sleep(wait)
+    raise RuntimeError(f"smoltalk2 split discovery failed for {config}: {last}")
 
 
 def _smoltalk2_row_iter(
@@ -1380,12 +1394,14 @@ def _smoltalk2_row_iter(
 
     names = splits or _smoltalk2_split_names(config)
     skipped = 0
+    opened = 0
     for split in names:
         try:
             ds = load_dataset(SMOLTALK2_REPO, config, split=split, streaming=True)
         except Exception as exc:  # noqa: BLE001 - skip a split that fails to open
             print(f"  [smoltalk2] skip split {config}/{split}: {exc}")
             continue
+        opened += 1
         for row in ds:
             msgs = _normalize_messages(row.get('messages') or row.get('conversations'))
             if not msgs:
@@ -1398,6 +1414,9 @@ def _smoltalk2_row_iter(
                 yield split, msgs
             else:
                 yield msgs
+    if opened == 0:
+        # Never let a blend source vanish silently: that changes the data mix.
+        raise RuntimeError(f"smoltalk2 {config}: no split could be opened ({names})")
 
 
 def _smoltalk2_blend_text_iter(
