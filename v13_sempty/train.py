@@ -71,6 +71,7 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
     print(f"  wall clock start : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"  commit           : {_git_hash()}")
     print(f"  preset / dataset : {args.preset} / {args.dataset}")
+    print(f"  arch             : {args.arch}")
     print(bar)
 
     # --- environment --------------------------------------------------------
@@ -128,11 +129,11 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if cfg.base_dt_bias != -4.0:
         _ladder.append('base_dt_bias')
-    if _ladder:
+    if _ladder and args.arch == 'pam':
         print('[ladder] ' + " ".join(f"{k}={getattr(cfg, k)}" for k in _ladder))
 
     # --- full config + args (verbatim, for exact repro) ---------------------
-    print('[config] ' + str(asdict(cfg)))
+    print('[config] ' + str(asdict(model.config)))  # the model actually built
     print('[args] ' + str(vars(args)))
     print(bar, flush=True)
 
@@ -512,6 +513,8 @@ class Trainer:
         path), pam_scale (memory path), realized retention (how long the
         notebook holds), and per-block grad/weight L2 (where it's learning).
         """
+        if not all(hasattr(b, 'pam') for b in self._blocks):
+            return {}  # baseline arch: the panel is PAM-specific
         # realized retention: one no-grad forward with the capture hook on
         self._set_capture(True)
         _retention_capture.clear()
@@ -909,6 +912,13 @@ def build_argparser():
     p.add_argument('--base_dt_bias', type=float, default=None,
                    help='initial decay bias (default -4 => retention ~0.982/token; '
                         '-6 => 0.9975, -8 => 0.99966). Retention bench 2026-09-06: no gain.')
+    p.add_argument('--arch', choices=('pam', 'mamba2'), default='pam',
+                   help='sequence mixer: pam (the v13_sempty model) or mamba2 '
+                        '(reference Mamba-2 baseline, baseline_mamba2.py; same '
+                        'data/loss/schedule/ckpts; PAM ladder flags are ignored)')
+    p.add_argument('--mamba_d_model', type=int, default=768)
+    p.add_argument('--mamba_n_layer', type=int, default=17,
+                   help='17 x 768 = 102.6M, param-matched to the PAM reference')
     p.add_argument('--init_from', type=str, default='',
                    help='warm start: load MODEL weights from this checkpoint '
                         '(new modules keep their identity init; any other '
@@ -1081,7 +1091,13 @@ def main():
         loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True)
         val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False)
 
-    model = LM(cfg)
+    if args.arch == 'mamba2':
+        from v13_sempty.baseline_mamba2 import Mamba2Config, Mamba2LM
+        model = Mamba2LM(Mamba2Config(vocab_size=cfg.vocab_size,
+                                      d_model=args.mamba_d_model,
+                                      n_layer=args.mamba_n_layer))
+    else:
+        model = LM(cfg)
     if init_ck is not None:
         missing, unexpected = model.load_state_dict(init_ck['model_state_dict'],
                                                     strict=False)
