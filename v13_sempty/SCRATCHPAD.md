@@ -18,27 +18,34 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **NOW (2026-10-27 12:46Z) — Mamba-2 "wind tunnel" RUNNING on the RTX 6000.**
+* **NOW (2026-10-27 13:55Z) — Mamba-2 "wind tunnel" 3B run RUNNING on the RTX 6000.**
   - **Where:** tmux `mamba2` on `ubuntu@34.131.203.207`
-    (`~/Development/qllm-private`), code **`3f69057`**. Driver log
-    `logs/v13_sempty_mamba2_baseline_driver_3f69057.log`; arm logs
-    `logs/v13_sempty_{m2lr_<lr>,mix3b_mamba2_answ100}_3f69057_<stamp>.log`;
-    ckpts `checkpoints_v13_sempty/{m2lr_<lr>,mix3b_mamba2_answ100}_3f69057/`.
+    (`~/Development/qllm-private`), code **`9c45e52`** (= `129b406` prefetch
+    code + docs). Driver log `logs/v13_sempty_mamba2_baseline_driver_9c45e52.log`;
+    run log `logs/v13_sempty_mix3b_mamba2_answ100_9c45e52_20261027_1354.log`;
+    ckpt `checkpoints_v13_sempty/mix3b_mamba2_answ100_9c45e52/`.
   - **What:** param-matched reference Mamba-2 (102.6M; `baseline_mamba2.py`,
-    `train.py --arch mamba2`) on the exact Phase 3b recipe; question, design
-    and pre-registered reading in `EXPERIMENTS_SEMPY.md` → "Mamba-2 baseline
-    at equal data". Steps: (A) LR screen 2e-4/6e-4/1.2e-3 × 2,700 steps
-    (~11 min each), choice saved to `checkpoints_v13_sempty/
-    m2lr_choice_3f69057.txt`; (B) 3B-token run (~5 h at ~170K tok/s);
-    (C) 40-trial probe + PG-19. ETA DONE ≈ 18:45Z.
-  - **Resume (either box; the 6000 has the libs):** rerun the SAME command,
-    finished arms/evals are skipped, a partial arm resumes from `latest.pt`:
+    `train.py --arch mamba2`) on the Phase 3b recipe at **LR 1.2e-3**; then the
+    40-trial probe + PG-19 (driver step C). Question, design and the
+    pre-registered reading: `EXPERIMENTS_SEMPY.md` → "Mamba-2 baseline at
+    equal data". ETA DONE ≈ 19:30Z if prefetch gives ~170K tok/s.
+  - **LR screen (done @`3f69057`, inline-batch code, identical math):** final
+    holdout loss after 2,700 steps (~100M tok, real mix): 2e-4 **4.609**, 6e-4
+    **4.233**, 1.2e-3 **4.056** → 1.2e-3 (top of the grid: Mamba's optimum may
+    be higher still). Logs `logs/v13_sempty_m2lr_{2e-4,6e-4,1.2e-3}_3f69057_*.log`,
+    driver `..._driver_3f69057.log`. **PAM's 2e-4 was never screened** — the
+    same −0.55 nats at 100M tok for Mamba suggests PAM may be under-trained
+    by its LR too → worth a PAM LR screen after this run.
+  - A 3f69057 full run started for ~5 s before the handover stopped it; its
+    log/ckpt dir were moved to `~/qllm_pull_aside_20261027/m2_full_3f69057_aborted/`.
+  - **Resume (either box; only the 6000 has the libs):** rerun the SAME command,
+    finished parts are skipped, a partial run resumes from `latest.pt`:
     ```bash
     tmux new-session -d -s mamba2 "cd ~/Development/qllm-private && \
-      SCREEN_HASH=3f69057 bash v13_sempty/tmp_mamba2_baseline.sh"
+      SCREEN_HASH=9c45e52 LR_FULL=1.2e-3 bash v13_sempty/tmp_mamba2_baseline.sh"
     ```
-    If HEAD moved past `3f69057` with code changes the guard refuses →
-    `git checkout 3f69057`, relaunch, `git checkout master` after DONE.
+    If HEAD moved past `9c45e52` with code changes the guard refuses →
+    `git checkout 9c45e52`, relaunch, `git checkout master` after DONE.
     Docs-only pulls (`*.md`, `logs/`) are fine mid-run.
   - **Libraries (6000 only, NOT pip deps):** `mamba_ssm` 2.2.5 +
     `causal_conv1d` 1.5.2 prebuilt cp311/torch2.8/cu12 wheels + `einops`,
