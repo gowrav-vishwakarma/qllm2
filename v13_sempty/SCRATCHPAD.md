@@ -18,8 +18,36 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **NOW (2026-10-27 ~12:30Z) — R4 screen DONE: FAIL, store code removed.
-  RTX 6000 is IDLE (no tmux sessions), on `master`, clean, pulled.**
+* **NOW (2026-10-27 12:46Z) — Mamba-2 "wind tunnel" RUNNING on the RTX 6000.**
+  - **Where:** tmux `mamba2` on `ubuntu@34.131.203.207`
+    (`~/Development/qllm-private`), code **`3f69057`**. Driver log
+    `logs/v13_sempty_mamba2_baseline_driver_3f69057.log`; arm logs
+    `logs/v13_sempty_{m2lr_<lr>,mix3b_mamba2_answ100}_3f69057_<stamp>.log`;
+    ckpts `checkpoints_v13_sempty/{m2lr_<lr>,mix3b_mamba2_answ100}_3f69057/`.
+  - **What:** param-matched reference Mamba-2 (102.6M; `baseline_mamba2.py`,
+    `train.py --arch mamba2`) on the exact Phase 3b recipe; question, design
+    and pre-registered reading in `EXPERIMENTS_SEMPY.md` → "Mamba-2 baseline
+    at equal data". Steps: (A) LR screen 2e-4/6e-4/1.2e-3 × 2,700 steps
+    (~11 min each), choice saved to `checkpoints_v13_sempty/
+    m2lr_choice_3f69057.txt`; (B) 3B-token run (~5 h at ~170K tok/s);
+    (C) 40-trial probe + PG-19. ETA DONE ≈ 18:45Z.
+  - **Resume (either box; the 6000 has the libs):** rerun the SAME command,
+    finished arms/evals are skipped, a partial arm resumes from `latest.pt`:
+    ```bash
+    tmux new-session -d -s mamba2 "cd ~/Development/qllm-private && \
+      SCREEN_HASH=3f69057 bash v13_sempty/tmp_mamba2_baseline.sh"
+    ```
+    If HEAD moved past `3f69057` with code changes the guard refuses →
+    `git checkout 3f69057`, relaunch, `git checkout master` after DONE.
+    Docs-only pulls (`*.md`, `logs/`) are fine mid-run.
+  - **Libraries (6000 only, NOT pip deps):** `mamba_ssm` 2.2.5 +
+    `causal_conv1d` 1.5.2 prebuilt cp311/torch2.8/cu12 wheels + `einops`,
+    installed `uv pip install --no-deps` (torch 2.8 / triton 3.4 /
+    transformers 5.2 untouched; exact command in the `baseline_mamba2.py`
+    docstring). `uv sync` would remove them. No cp39 wheels exist, so the
+    4090 (py3.9) cannot run the mamba2 path. Test scripts in `~/pkgprobe/`.
+
+* **2026-10-27 ~12:30Z — R4 screen DONE: FAIL, store code removed.**
   - **Verdict** (`EXPERIMENTS_SEMPY.md` → "R4 result"): a1 pos0 @2048/4096
     store 0.30/0.15 vs ctrl 0.20/0.15 (bars 0.5/0.3); multi-way worse (a8
     mean −0.087); holdout 26.40 vs 26.42; PG-19 far_gain identical; tok/s 86 %.
