@@ -686,63 +686,6 @@ def _delta_prep_fn():
     return _delta_prep_compiled
 
 
-# ── R4 consolidation store scan ─────────────────────────────────────────────
-
-def _store_scan(s, k, v, q, E, L: int, C: int, m: int):
-    """R4 store over one joint stream (buffered + new tokens), fp32, no loop.
-
-    s [B,H,N] salience, k [B,H,N,K] unit keys, v [B,H,N,K] values (N = L + T,
-    the first L are the carried partial chunk), q [B,H,T,K] queries of the T
-    new tokens, E [B,H,K,K] store before the stream. Each completed chunk of C
-    writes its top-m salience tokens in order with the error-correcting delta
-
-        E <- E + b_j (v_j - E k_j) k_j^T ,   b_j = sigmoid(s_j)
-
-    and a new token at stream index L+t reads the store as of the start of its
-    chunk. Closed form (DeltaNet/WY): the update vectors u_j = b_j(v_j - E_j k_j)
-    solve the unit-lower-triangular system
-
-        (I + diag(b) tril(K K^T, -1)) U = diag(b) (V - K E_0^T)
-
-    so E_c = E_0 + sum_{j < first write of chunk c} u_j k_j^T and every read is
-    a masked product -- no per-chunk loop. Reference loop: selftest
-    ``_store_scan_loop``. Returns (y [B,H,T,K] unscaled, E_final, s/k/v tails).
-    """
-    B, H, N = s.shape
-    K = k.shape[-1]
-    T = q.shape[2]
-    n_full = N // C
-    tail = n_full * C
-    yq = torch.einsum('bhvk,bhtk->bhtv', E, q)                          # E_0 read
-    if n_full == 0:
-        return yq, E, s[:, :, tail:], k[:, :, tail:], v[:, :, tail:]
-    W = n_full * m                                                       # writes, in order
-    sc = s[:, :, :tail].reshape(B, H, n_full, C)
-    top = sc.topk(m, dim=-1).indices                                     # [B,H,n,m]
-    b = torch.sigmoid(torch.gather(sc, 3, top)).reshape(B, H, W)         # [B,H,W]
-    idx = top.unsqueeze(-1).expand(B, H, n_full, m, K)
-    kw = torch.gather(k[:, :, :tail].reshape(B, H, n_full, C, K), 3, idx).reshape(B, H, W, K)
-    vw = torch.gather(v[:, :, :tail].reshape(B, H, n_full, C, K), 3, idx).reshape(B, H, W, K)
-    A = torch.tril(b.unsqueeze(-1) * (kw @ kw.transpose(-1, -2)), -1)
-    A = A + torch.eye(W, device=s.device, dtype=s.dtype)
-    rhs = b.unsqueeze(-1) * (vw - kw @ E.transpose(-1, -2))
-    U = torch.linalg.solve_triangular(A, rhs, upper=False, unitriangular=True)  # [B,H,W,K]
-    # token at stream index L+t (chunk c = (L+t)//C) sees writes j with j//m < c
-    chunk_of_t = torch.div(torch.arange(L, L + T, device=s.device), C, rounding_mode='floor')
-    chunk_of_w = torch.div(torch.arange(W, device=s.device), m, rounding_mode='floor')
-    mask = (chunk_of_w.unsqueeze(0) < chunk_of_t.unsqueeze(1)).to(s.dtype)      # [T,W]
-    scores = (q @ kw.transpose(-1, -2)) * mask                                   # [B,H,T,W]
-    y = yq + scores @ U
-    E_new = E + U.transpose(-1, -2) @ kw                                         # [B,H,K(v),K(k)]
-    return y, E_new, s[:, :, tail:], k[:, :, tail:], v[:, :, tail:]
-
-
-def store_scan(s, k, v, q, E, L: int, C: int, m: int):
-    """Public edge of the R4 store (eager: with the loop gone torch.compile
-    measured no gain, 4090 B4 T2048: 31.1K vs 30.6K tok/s)."""
-    return _store_scan(s, k, v, q, E, L, C, m)
-
-
 __all__ = ["fused_real_pam_read", "fused_complex_pam_read", "pam_scan_torch",
-           "pam_delta_torch", "pam_delta_batched", "store_scan", "set_kernel_enabled",
+           "pam_delta_torch", "pam_delta_batched", "set_kernel_enabled",
            "kernel_enabled", "HAS_TRITON"]

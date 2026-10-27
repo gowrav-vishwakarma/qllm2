@@ -72,19 +72,8 @@ class PAMConfig:
     # bit-parity with the chrono reference. dim -> n_heads params (~3.5k per
     # layer), one broadcast multiply: elementwise, kernel untouched.
     out_gate: bool = False
-    # R4 consolidation store (real arm). A second, per-head d x d memory next
-    # to the fast notebook: NO decay, NO rotary (content-addressed), written
-    # only by the `store_writes` most salient tokens of every `store_chunk`
-    # tokens (salience = linear(x), selection at chunk end), error-correcting
-    # delta write E <- E + sig(s)(v - E k)k^T with unit k. A token reads the
-    # store as it stood after the previous chunk (causal; decode buffers the
-    # current chunk = O(1)). Read enters through a zero-init per-head gate ->
-    # bit-parity with the reference at init (warm-start safe). Motivation:
-    # horizon ~ capacity / write rate, and decay starves the retention
-    # gradient (gamma^L); see EXPERIMENTS_SEMPY "R4".
-    store: bool = False
-    store_chunk: int = 64
-    store_writes: int = 1
+    # (R4 consolidation store removed 2026-10-27: FAIL, never used for recall;
+    # EXPERIMENTS_SEMPY "R4".)
 
 
 def _base_flat(**kw) -> PAMConfig:

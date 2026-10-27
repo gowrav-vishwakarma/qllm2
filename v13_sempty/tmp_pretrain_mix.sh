@@ -53,9 +53,7 @@ VAULT="${VAULT:-0}"            # A2b pinned state + protect gate (needs NSTATES>
 DELTA="${DELTA:-0}"            # A3 delta erase/write (KEEP 2026-09-05: exact 8-way recall on the micro-bench)
 BASE_DT_BIAS="${BASE_DT_BIAS:-}" # override initial decay bias (default -4; bench: -6/-8 no gain)
                                # (LONG_HEADS removed 2026-10-27: R3 FAIL, EXPERIMENTS "R3")
-STORE="${STORE:-0}"            # R4 consolidation store (no decay, chunk-selected writes)
-STORE_CHUNK="${STORE_CHUNK:-64}"
-STORE_WRITES="${STORE_WRITES:-1}"
+                               # (STORE removed 2026-10-27: R4 FAIL, EXPERIMENTS "R4")
 INIT_FROM="${INIT_FROM:-}"     # warm start: weights from this ckpt, stream continues after its cursor
                                # (NO_DECAY removed 2026-09-07: FAIL at 100M, EXPERIMENTS "R2")
 ANSWER_W="${ANSWER_W:-1}"      # CE weight on answer tokens of synthetic recall/reason docs
@@ -88,7 +86,6 @@ if [ "$VAULT" = "1" ]; then EXTRA+=(--vault); fi
 if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi
 if [ "$ANSWER_W" != "1" ]; then EXTRA+=(--answer_weight "$ANSWER_W"); fi
 if [ -n "$BASE_DT_BIAS" ]; then EXTRA+=(--base_dt_bias "$BASE_DT_BIAS"); fi
-if [ "$STORE" = "1" ]; then EXTRA+=(--store --store_chunk "$STORE_CHUNK" --store_writes "$STORE_WRITES"); fi
 if [ -n "$INIT_FROM" ]; then EXTRA+=(--init_from "$INIT_FROM"); fi
 
 # Auto-resume loop: --resume auto picks up <CKPT_DIR>/latest.pt when it exists

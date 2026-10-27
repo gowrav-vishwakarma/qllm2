@@ -18,81 +18,48 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **NOW (2026-10-27) — R4 warm-start screen RUNNING on the RTX 6000.**
-  - **Where:** tmux `r4_screen` on `ubuntu@34.131.203.207`
-    (`~/Development/qllm-private`), code **`0868a1b`** (launched 07:08Z).
-    Driver log `logs/v13_sempty_r4screen_driver_0868a1b.log`; arm logs
-    `logs/v13_sempty_r4screen_{store,ctrl}_0868a1b_<stamp>.log`; ckpts
-    `checkpoints_v13_sempty/r4screen_{store,ctrl}_0868a1b/`.
-  - **Progress (08:01Z):** store arm training since ~07:56Z (the doc-cursor
-    skip took ~47 min; HF read timeouts are retried and harmless). **50.9K
-    tok/s at B18 = 98 % of Phase 3b (51.9K at the same steps), 54.6 GB.**
-    ETA store arm ~09:35Z, ctrl arm ~12:00Z, probes ~12:20Z. Disk: 48 GB free
-    on the box, screen needs ~6 GB (prunable if needed: R3/R1 extra
-    `latest.pt`+`step_*.pt`, ~7 GB). A background watcher (local session)
-    alerts on <20 GB free / Traceback / DONE.
-  - **After each arm:** read the realised per-source token shares from its
-    `latest.pt` `data_cursor.token_counters` (minus the Phase 3b cursor) and
-    confirm ≈ 0.44/0.41/0.10/0.05 for BOTH arms before comparing them.
-  - **First attempt @`f8f98f5` ABORTED** (06:33–07:00Z, logs moved to
-    `~/qllm_aborted_20261027/` on the box): an HF timeout in smoltalk2 split
-    discovery silently dropped `smoltalk2_mid` (10 % of the mix) → wrong data.
-    Fixed in `68d0cd6` (retry, then fail loudly). That attempt also ran the
-    store at 29.5K tok/s (eager loop); `0868a1b` replaces the loop with a
-    triangular-solve closed form (4090 bench 85 % of no-store tok/s).
-  - **What:** two arms warm-started from Phase 3b
-    (`mix3b_delta_answ100_1c913ef/best_model.pt`), identical except `--store`
-    (R4 consolidation store, `EXPERIMENTS_SEMPY.md` → "R4"): 300M tok each
-    (8,138 steps, B18 T2048), LR 5e-5 re-warm (Phase 3b ended at LR≈0),
-    stream continues after Phase 3b's doc cursor (no doc seen twice; the skip
-    takes a while at startup). Order: store → ctrl → 40-trial recall probe +
-    PG-19 per-position loss for both. Expected ~1.5–2 h per arm.
-  - **Resume (either box):** if tmux/box dies, rerun the SAME command — done
-    arms are skipped (`.done`), a partial arm resumes from `latest.pt` into its
-    own log, finished probes are skipped:
-    ```bash
-    tmux new-session -d -s r4_screen "cd ~/Development/qllm-private && \
-      SCREEN_HASH=0868a1b bash v13_sempty/tmp_r4_screen.sh 2>&1 | \
-      tee -a logs/v13_sempty_r4screen_driver_0868a1b.log"
-    ```
-    If HEAD on the box is past `0868a1b` with code changes (e.g. after pulling
-    `03b8acf`, the clean-tree guard), the guard refuses the resume — check out
-    the pinned code first: `git checkout 0868a1b` → relaunch →
-    `git checkout master` once the screen is DONE.
-    On the 4090 use the local repo path; local HF streaming is ~10 MB/s so the
-    doc-cursor skip alone takes >25 min there — prefer the 6000.
-  - **Avoid `git pull` on the 6000 until the driver prints `r4 screen DONE`:**
-    dirs/logs are pinned to `0868a1b` (safe), but the ctrl arm's in-log
-    `commit=` header would show a docs-only HEAD.
-  - **Judge (pre-registered, `EXPERIMENTS_SEMPY.md` "R4"), store vs ctrl:**
-    KEEP if a1 pos0 @2048 ≥ 0.5 and @4096 ≥ 0.3; guards: a4/a8 pos1 within 0.1
-    at every ctx, a1/a4 pos0 @128–512 within 0.1, holdout ≤ ctrl + 0.3, tok/s
-    ≥ 85 %. Tabulate with the 40-trial jsons in `logs/memory_probes/`. If KEEP
-    → 3B scratch run `STORE=1` on the exact Phase 3b recipe on the 6000.
-  - **Qwen on the 6000 was STOPPED** (user-approved, 2026-10-27) to free the
-    GPU: transient user unit `qwen-sglang.service` (SGLang Qwen3.8 Flash-Next,
-    port 8081, `~/qwen38fn/serve.sh`). Restart command in
-    `~/qwen38_RESTART.txt` on the box. `~/model.sh` manages a different server
-    (vLLM Qwen3.6).
-  - **Done today:** R3 FAIL (probed on the 4090 at 40 trials vs Phase 3b
-    re-probed at the same seeds), `long_heads` removed (`5fb614f`); R4 code +
-    `--init_from` (`5fb614f`); screen driver + `scripts/eval_pos_loss.py`
-    (`f8f98f5`); repo hygiene (`9e859dd`).
-  - **After `r4 screen DONE`:** pull on the 6000, then rerun
-    `scripts/eval_pos_loss.py` (`far_gain` is in `0868a1b`'s copy, so the
-    driver's own PG-19 json already has it) on both
-    `r4screen_*_0868a1b/best_model.pt` if anything needs re-checking.
-    Baseline far_gain (nats, context beyond 512 tok) @1-2K/2-4K/4-8K: Phase 3b
-    +0.014/+0.019/+0.022, R3 +0.014/+0.020/+0.024, v11-matched transformer
-    +0.027 @1-2K (`53c76e7`, `logs/pos_loss/`). R4 should raise it.
-  - **Resolved:** `eval_pos_loss.py` loss ~8 on the WikiText-trained N4 fair
-    ckpt is DOMAIN, not a bug — the same ckpt scores PPL 18.6 on WikiText val
-    (8 windows; mix-3B ckpt 43.0 there). WikiText-only models never saw PG-19's
-    hard line breaks / book style → only compare mix-trained models on PG-19. Raw
-    per-position loss on PG-19 RISES after ~512 tokens for Phase 3b, R3 and
-    the v11-matched transformer alike (book structure confound) → add a
-    "full context vs ~1K context on the same tokens" delta before drawing
-    conclusions. Git: push to `origin` only (never `p`).
+* **NOW (2026-10-27 ~12:30Z) — R4 screen DONE: FAIL, store code removed.
+  RTX 6000 is IDLE (no tmux sessions), on `master`, clean, pulled.**
+  - **Verdict** (`EXPERIMENTS_SEMPY.md` → "R4 result"): a1 pos0 @2048/4096
+    store 0.30/0.15 vs ctrl 0.20/0.15 (bars 0.5/0.3); multi-way worse (a8
+    mean −0.087); holdout 26.40 vs 26.42; PG-19 far_gain identical; tok/s 86 %.
+    Zeroing the store gates changes NO recall cell → the store is unused; the
+    multi-way loss came from its gradient on the shared q/k/v. Sixth
+    retention lever that left the horizon at ~1000 tokens.
+  - **Code:** store removed (config/model/kernels/selftest/train/launcher);
+    selftest 17/17, layout guard clean, Phase 3b ckpt loads `strict=True`.
+    `--init_from` kept. Screen driver generalised →
+    `v13_sempty/tmp_warm_screen.sh` (`ARMS="name:VAR=val,VAR=val ..."`,
+    resumable, probes + PG-19 after). The R4 ctrl arm is the reusable control
+    for any screen with that recipe: ckpt `checkpoints_v13_sempty/
+    r4screen_ctrl_0868a1b/` (6000 only), jsons in `logs/memory_probes/` and
+    `logs/pos_loss/` → a new screen runs only its new arm (~1.4 h saved).
+    The store ckpts need `git checkout 0868a1b` to load (extra keys).
+  - **Results committed** (scp'd from the 6000, md5-checked): arm logs, driver
+    log, 40-trial probe + PG-19 jsons for both arms. The 6000's untracked
+    copies were moved to `~/qllm_pull_aside_20261027/r4/` so `git pull` works.
+  - **6000 disk:** 43 GB free (92 %). Prunable if needed: R3/R1 extra
+    `latest.pt`+`step_*.pt` (~7 GB), `r4screen_store_0868a1b` (2.3 GB, FAIL).
+  - **Qwen on the 6000 is still STOPPED** (user-approved, 2026-10-27):
+    transient user unit `qwen-sglang.service` (SGLang Qwen3.8 Flash-Next, port
+    8081, `~/qwen38fn/serve.sh`); restart command in `~/qwen38_RESTART.txt` on
+    the box. `~/model.sh` manages a different server (vLLM Qwen3.6). Restart it
+    if the GPU will sit idle for long.
+  - **NEXT (proposed, awaiting the user's go):** the "wind tunnel" — train a
+    ~100M Mamba-2 (then Gated DeltaNet) on the EXACT Phase 3b 3B-token mix and
+    run the same tests (holdout/WikiText PPL, 40-trial probe, PG-19 far_gain).
+    Our only Mamba number is HF Mamba-130M trained on 300B Pile tokens (100×
+    our data): it holds one fact to 8K (1.00) but loses on multi-fact. Same
+    data separates "our design" from "data/scale" before a seventh lever.
+    Needs a fast library on the 6000 (none installed: no `mamba_ssm`, `fla`,
+    `causal_conv1d`; the old matched-Mamba attempt ran at 15 tok/s and was
+    skipped) and a baseline trainer on the v13_sempty data path (answer
+    weighting included).
+  - Earlier today: R3 FAIL + removed (`5fb614f`); fast stream resume
+    (`4b243c7`); clean-tree guard (`03b8acf`); smoltalk2 loud-fail
+    (`68d0cd6`); PG-19 far_gain eval (`f366601`). PG-19 note: only compare
+    mix-trained models there (WikiText-only ckpts score ~8 = domain shift).
+    Git: push to `origin` only (never `p`), no co-author lines.
 
 * **2026-09-06 afternoon — ALL of this was done ON the RTX 6000 (Cursor is
   ssh'd into it; `ssh 34.131.203.207` from the box itself times out, that is

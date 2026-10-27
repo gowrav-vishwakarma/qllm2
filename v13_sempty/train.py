@@ -128,8 +128,6 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if cfg.base_dt_bias != -4.0:
         _ladder.append('base_dt_bias')
-    if cfg.store:
-        _ladder += ['store', 'store_chunk', 'store_writes']
     if _ladder:
         print('[ladder] ' + " ".join(f"{k}={getattr(cfg, k)}" for k in _ladder))
 
@@ -911,12 +909,6 @@ def build_argparser():
     p.add_argument('--base_dt_bias', type=float, default=None,
                    help='initial decay bias (default -4 => retention ~0.982/token; '
                         '-6 => 0.9975, -8 => 0.99966). Retention bench 2026-09-06: no gain.')
-    p.add_argument('--store', action='store_true',
-                   help='R4: consolidation store (no decay, chunk-selected writes)')
-    p.add_argument('--store_chunk', type=int, default=64,
-                   help='R4: tokens per consolidation chunk')
-    p.add_argument('--store_writes', type=int, default=1,
-                   help='R4: tokens written to the store per chunk')
     p.add_argument('--init_from', type=str, default='',
                    help='warm start: load MODEL weights from this checkpoint '
                         '(new modules keep their identity init; any other '
@@ -952,10 +944,6 @@ def main():
         cfg.out_gate = True
     if args.base_dt_bias is not None:
         cfg.base_dt_bias = args.base_dt_bias
-    if args.store:
-        cfg.store = True
-        cfg.store_chunk = args.store_chunk
-        cfg.store_writes = args.store_writes
     if args.dropout is not None:
         cfg.dropout = args.dropout
     device = torch.device(args.device)
@@ -1097,7 +1085,9 @@ def main():
     if init_ck is not None:
         missing, unexpected = model.load_state_dict(init_ck['model_state_dict'],
                                                     strict=False)
-        new_ok = ('salience_proj', 'store_gate_proj')
+        # Names of identity-init modules a warm-started arm adds (empty now:
+        # R4 added salience_proj/store_gate_proj, removed with it).
+        new_ok: tuple = ()
         bad = [k for k in missing if not any(t in k for t in new_ok)]
         if bad or unexpected:
             raise ValueError(f"--init_from mismatch: missing={bad} unexpected={unexpected}")
