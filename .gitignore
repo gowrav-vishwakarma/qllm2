@@ -51,3 +51,9 @@ logs/remote_medium_pam_v3.log
 learn/
 
 node_modules/
+# Runtime state rewritten by watchers (never a code change)
+v13/tmp/omp_cron_state.json
+
+# Throwaway/debug scripts under v*/tmp/ need no commit (AGENTS.md); files
+# already tracked there stay tracked, new ones need `git add -f`.
+v*/tmp/*
