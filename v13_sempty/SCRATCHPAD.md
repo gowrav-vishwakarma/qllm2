@@ -47,6 +47,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     re-probed at the same seeds), `long_heads` removed (`5fb614f`); R4 code +
     `--init_from` (`5fb614f`); screen driver + `scripts/eval_pos_loss.py`
     (`f8f98f5`); repo hygiene (`9e859dd`).
+  - **After `r4 screen DONE`:** pull on the 6000, then rerun
+    `scripts/eval_pos_loss.py` (needs `f366601`+ for `far_gain`) on both
+    `r4screen_*_f8f98f5/best_model.pt` — the driver ran the older script.
+    Baseline far_gain (nats, context beyond 512 tok) @1-2K/2-4K/4-8K: Phase 3b
+    +0.014/+0.019/+0.022, R3 +0.014/+0.020/+0.024, v11-matched transformer
+    +0.027 @1-2K (`53c76e7`, `logs/pos_loss/`). R4 should raise it.
   - **Resolved:** `eval_pos_loss.py` loss ~8 on the WikiText-trained N4 fair
     ckpt is DOMAIN, not a bug — the same ckpt scores PPL 18.6 on WikiText val
     (8 windows; mix-3B ckpt 43.0 there). WikiText-only models never saw PG-19's

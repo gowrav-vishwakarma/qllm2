@@ -1377,6 +1377,27 @@ not). If the gate opens and pos0 does not move → selection did not learn →
 try surprise-based selection. If the gate stays ~0 → no long-gap pressure in
 the 2K data.
 
+### R4 baseline: far-context gain on natural text (PG-19, 2026-10-27)
+
+LLM-side horizon metric (`scripts/eval_pos_loss.py`, `f366601`): 50 PG-19
+test books, one 8192-token window each (2048 for the transformer). Every token
+is scored with full context and with only 512–1024 tokens of context;
+`far_gain` = short − full loss (nats) on the same tokens.
+
+| model | 1–2K | 2–4K | 4–8K | loss @1–2K |
+|---|---|---|---|---|
+| Phase 3b (`1c913ef`) | +0.014 | +0.019 | +0.022 | 3.61 |
+| R3 (`5c87148`) | +0.014 | +0.020 | +0.024 | 3.61 |
+| v11-matched transformer (1B tok, 2048 ctx) | +0.027 | — | — | 4.35 |
+
+PAM does use far context, and the gain keeps growing past its 2K training
+window, but at 1–2K it gets about half of what a (weaker) transformer gets
+from the same tokens. Raw per-position loss *rises* after ~512 for all three
+models, and the short-context loss rises identically, so that rise is book
+structure, not forgetting. R4 should raise `far_gain`; this table is the
+reference. Results: `logs/pos_loss/`,
+`logs/v13_sempty_pos_loss_pg19_f366601_20261027_0637.log`.
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*
