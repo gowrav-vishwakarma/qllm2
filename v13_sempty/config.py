@@ -28,14 +28,11 @@ class PAMConfig:
     # (R1 `dt_bias_spread` -- per-head ladder of initial decay biases -- was
     # removed 2026-09-05 after the L1 run: no horizon gain, 128-ctx recall
     # worse, biases frozen at init. See EXPERIMENTS_SEMPY.md "L1 / R1".)
-    # R3 (2026-09-08): a SPLIT prior instead of a ladder -- `long_heads` heads
-    # start at `long_dt_bias` (-9 => softplus 1.2e-4 => ~0.37 of a binding
-    # survives 8192 tokens of passive decay), the rest keep `base_dt_bias`.
-    # Motivation: L-2 (8K ctx, 8 % recall_long docs with <=6k-token gaps, 2B
-    # tok) left every dt_bias at -4.00 +/- 0.1 -- data pressure does NOT move
-    # the decay prior, so the horizon has to be given structurally.
-    long_heads: int = 0
-    long_dt_bias: float = -9.0
+    # (R3 `long_heads`/`long_dt_bias` -- a SPLIT prior, 2 of 6 heads born at
+    # dt -9 -- was REMOVED 2026-10-27: start-of-context recall did not move
+    # (0.33/0.20/0.17/0.15 @1k-8k) and short-range multi-way collapsed (a4
+    # @128 0.62 vs 1.00) -- slow heads that every token writes into overflow.
+    # See EXPERIMENTS_SEMPY.md "R3".)
     is_complex: bool = True          # SplitComplex (phase) | fully-real PAM
 
     # ── architecture ladder (real arm; EXPERIMENTS_SEMPY "Architecture ladder")
@@ -75,6 +72,19 @@ class PAMConfig:
     # bit-parity with the chrono reference. dim -> n_heads params (~3.5k per
     # layer), one broadcast multiply: elementwise, kernel untouched.
     out_gate: bool = False
+    # R4 consolidation store (real arm). A second, per-head d x d memory next
+    # to the fast notebook: NO decay, NO rotary (content-addressed), written
+    # only by the `store_writes` most salient tokens of every `store_chunk`
+    # tokens (salience = linear(x), selection at chunk end), error-correcting
+    # delta write E <- E + sig(s)(v - E k)k^T with unit k. A token reads the
+    # store as it stood after the previous chunk (causal; decode buffers the
+    # current chunk = O(1)). Read enters through a zero-init per-head gate ->
+    # bit-parity with the reference at init (warm-start safe). Motivation:
+    # horizon ~ capacity / write rate, and decay starves the retention
+    # gradient (gamma^L); see EXPERIMENTS_SEMPY "R4".
+    store: bool = False
+    store_chunk: int = 64
+    store_writes: int = 1
 
 
 def _base_flat(**kw) -> PAMConfig:

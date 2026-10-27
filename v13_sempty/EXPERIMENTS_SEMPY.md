@@ -1278,6 +1278,105 @@ additive read that could not even read fresh bindings), and it is a split
 `model.py`, `long_heads`/`long_dt_bias` in `config.py`, `LONG_HEADS` env in
 the launcher (`6a0e3c9`). Ckpt: L-2 pruned to `best_model.pt`.
 
+## R3 split decay prior (2 of 6 heads born at dt −9): FAIL, removed (2026-10-27)
+
+**Run.** `mix3b_delta_answ100_long2h9` (`5c87148`), RTX 6000, 2026-09-07 18:41 →
+09-08 09:26 UTC (~15 h, 56.5K tok/s, 3.00B tok, 81,380 steps, exit 0). Exact
+Phase 3b recipe + `--long_heads 2 --long_dt_bias -9`. One variable. Log
+`logs/v13_sempty_mix3b_delta_answ100_long2h9_5c87148_20260907_1841.log`.
+The probe was not run on the 6000 (GPU held by an SGLang server); it was run
+2026-10-27 on the local 4090, **40 trials** (n=20 is too noisy: 4/20 happens
+by chance ~24 % of the time), and Phase 3b was re-probed at the same 40 seeds
+for a like-for-like reference. Probe log
+`logs/v13_sempty_probe_r3_vs_p3b_t40_215fe61_20261027_0551.log`; jsons
+`logs/memory_probes/v13_sempty_mix3b_delta_answ100_long2h9_5c87148_t40_behavioral.json`,
+`logs/memory_probes/v13_sempty_mix3b_delta_answ100_1c913ef_t40_behavioral.json`.
+
+**PPL (guard) — pass.** Holdout **26.12** vs 26.38; WikiText 53.02 vs 54.73.
+
+**Recall (8-way contrastive, 40 trials, chance 0.125), R3 / Phase 3b:**
+
+| cell | 128 | 256 | 512 | 1024 | 2048 | 4096 | 8192 |
+|---|---|---|---|---|---|---|---|
+| a1 pos0 R3 | 0.75 | 0.62 | 0.47 | 0.33 | 0.20 | 0.17 | 0.15 |
+| a1 pos0 ref | 1.00 | 1.00 | 1.00 | 0.38 | 0.12 | 0.10 | 0.07 |
+| a1 pos1 R3 | 1.00 | 1.00 | 1.00 | 1.00 | 0.80 | 0.90 | 0.85 |
+| a1 pos1 ref | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| a4 pos1 R3 | 0.68 | 0.72 | 0.60 | 0.60 | 0.57 | 0.55 | 0.57 |
+| a4 pos1 ref | 1.00 | 1.00 | 1.00 | 1.00 | 0.97 | 0.95 | 0.97 |
+| a8 pos1 R3 | 0.53 | 0.40 | 0.40 | 0.45 | 0.42 | 0.38 | 0.40 |
+| a8 pos1 ref | 0.90 | 0.85 | 0.82 | 0.82 | 0.80 | 0.72 | 0.78 |
+
+The far horizon (pos0 @2048–8192) moved by at most +0.08, at the edge of
+chance. Every guard broke: start-of-context recall at 128–512 fell from 1.00
+to 0.47–0.75, and even the **fresh** binding (pos1) read fell, most for
+multi-way (a4 1.00 → ~0.6, a8 0.8 → ~0.4).
+
+**Internals.** Per-head layer-mean `dt_bias` at step 80k
+−8.94/−8.94/−3.93/−3.94/−3.97/−3.96: frozen at init, like every decay prior.
+
+**Mechanism.** Same overflow signature as `no_decay` (R2 at scale), confined
+to the two slow heads: every token still writes into them, so they fill with
+web-text junk and their read pollutes the head mix, including fresh bindings.
+The small PPL gain says slow heads carry some useful long context for LM;
+the recall loss says an unselective slow memory is noise for exact lookup.
+
+**Decision.** R3 FAIL by its pre-registered rule → `long_heads` /
+`long_dt_bias` **removed** (config, model, train CLI, launcher). Per the same
+rule: stop tuning the decay prior. The horizon needs a different *write* —
+R4 below.
+
+## R4 consolidation store — design and pre-registration (2026-10-27)
+
+**Why every retention run failed (the physics).**
+1. *Horizon ≈ capacity ÷ write rate.* A 98-dim unit-key head holds ~d ≈ 100
+   clean bindings; each unrelated delta write perturbs a stored binding by
+   ~1/√d, so a binding is buried after ~d writes. With every token writing
+   into every head, decay is the only garbage collector (`no_decay`, R3).
+2. *No gradient for retention.* A binding read L tokens later contributes
+   ∝ Πγ ≈ γ^L; at dt −4 (γ = 0.982) and L = 2000 that is e^−36. The
+   gradient that would say "keep this longer" is zero, so dt_bias never moves
+   (L1, L-2, R3) whatever the data.
+3. Every retention run changed *how fast things fade*; none changed *who
+   writes*.
+
+**Mechanism.** Per head, next to the fast notebook (unchanged), a second
+d×d store E sharing the head's q/k/v, taken *before* rotary:
+
+```
+every C=64 tokens: the m=1 token with highest salience s = w_s·x writes
+    E <- E + sigmoid(s) (v - E k) k^T        (unit k, error-correcting delta, NO decay)
+read: y_t = fast_t + g_t * d^-1/2 * E_(chunk start) q_t     (g = zero-init linear)
+```
+
+- no decay → the gradient from a query 8K tokens later reaches the write;
+- 1 write / 64 tokens → 128 writes in 8K ≈ one head's capacity (no_decay
+  with 64× fewer writes);
+- selection at chunk end sees 64 tokens, still causal (a token reads the
+  store as of its chunk start; decode buffers ≤63 tokens → O(1));
+- no rotary → facts addressed by content, not distance;
+- zero-init gate → bit-identical to the reference at init (warm-start safe).
+
++2 `dim→heads` linears per layer (~113K params, 0.1 %). Code:
+`RealPAMLayer._store`, `cfg.store/store_chunk/store_writes`, `--store`,
+`STORE=1`; `--init_from` warm start (weights only, fresh optimizer, stream
+continues after the source cursor). Contract: `selftest
+test_store_parity_and_decode` (init parity 0.0; prefill+step 7.7e-7;
+stepwise 6.6e-7; carried store 2.7e-7), 18/18 pass; layout guard clean.
+
+**Plan.** (1) Warm-start screen from the Phase 3b checkpoint, both arms
+identical except `--store`: control (no store) vs R4, same tokens/LR/seed.
+(2) If it passes, the 3B scratch run on the 6000.
+
+**Pre-registered judge (40 trials, vs the control arm):** KEEP if a1 pos0
+@2048 ≥ 0.5 and @4096 ≥ 0.3; guards a4/a8 pos1 within 0.1 of control at
+every ctx, a1/a4 pos0 @128–512 within 0.1, holdout PPL ≤ control + 0.3, tok/s
+≥ 85 %. Diagnostics: per-layer |store gate| (is it used?), and which tokens
+the salience picks (names/numbers/definitions = learning; punctuation/BOS =
+not). If the gate opens and pos0 does not move → selection did not learn →
+try surprise-based selection. If the gate stays ~0 → no long-gap pressure in
+the 2K data.
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*

@@ -128,8 +128,8 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if cfg.base_dt_bias != -4.0:
         _ladder.append('base_dt_bias')
-    if cfg.long_heads > 0:
-        _ladder += ['long_heads', 'long_dt_bias']
+    if cfg.store:
+        _ladder += ['store', 'store_chunk', 'store_writes']
     if _ladder:
         print('[ladder] ' + " ".join(f"{k}={getattr(cfg, k)}" for k in _ladder))
 
@@ -911,12 +911,19 @@ def build_argparser():
     p.add_argument('--base_dt_bias', type=float, default=None,
                    help='initial decay bias (default -4 => retention ~0.982/token; '
                         '-6 => 0.9975, -8 => 0.99966). Retention bench 2026-09-06: no gain.')
-    p.add_argument('--long_heads', type=int, default=0,
-                   help='R3: number of heads (per layer) born slow-decaying at --long_dt_bias; '
-                        'the rest keep --base_dt_bias')
-    p.add_argument('--long_dt_bias', type=float, default=-9.0,
-                   help='R3: initial decay bias of the long heads (-9 => ~0.37 of a '
-                        'binding survives 8192 tokens of passive decay)')
+    p.add_argument('--store', action='store_true',
+                   help='R4: consolidation store (no decay, chunk-selected writes)')
+    p.add_argument('--store_chunk', type=int, default=64,
+                   help='R4: tokens per consolidation chunk')
+    p.add_argument('--store_writes', type=int, default=1,
+                   help='R4: tokens written to the store per chunk')
+    p.add_argument('--init_from', type=str, default='',
+                   help='warm start: load MODEL weights from this checkpoint '
+                        '(new modules keep their identity init; any other '
+                        'missing/unexpected key is an error), fresh optimizer/'
+                        'LR schedule/step counters, and continue the data '
+                        "stream after the source run's cursor (no doc seen "
+                        'twice). Ignored when --resume finds a checkpoint.')
     return p
 
 
@@ -945,9 +952,10 @@ def main():
         cfg.out_gate = True
     if args.base_dt_bias is not None:
         cfg.base_dt_bias = args.base_dt_bias
-    if args.long_heads:
-        cfg.long_heads = args.long_heads
-        cfg.long_dt_bias = args.long_dt_bias
+    if args.store:
+        cfg.store = True
+        cfg.store_chunk = args.store_chunk
+        cfg.store_writes = args.store_writes
     if args.dropout is not None:
         cfg.dropout = args.dropout
     device = torch.device(args.device)
@@ -970,6 +978,12 @@ def main():
             raise FileNotFoundError(f"--resume {cand} does not exist")
         else:
             print(f"[resume] auto: no {cand}; starting fresh", flush=True)
+    init_ck = None
+    if args.init_from and resume_ck is None:
+        init_ck = torch.load(args.init_from, map_location='cpu', weights_only=False)
+        print(f"[init_from] {args.init_from}: source step="
+              f"{init_ck.get('global_step')} tokens={init_ck.get('global_tokens')} "
+              f"cursor={init_ck.get('data_cursor')}", flush=True)
     STREAM = {'dclm', 'fineweb', 'mix'}
     if args.dataset == 'synthetic':
         vocab = min(cfg.vocab_size, 256)
@@ -1014,6 +1028,12 @@ def main():
             token_counters.update(cur.get('token_counters') or {})
             skip_docs = dict(doc_counters)
             consumed_tokens = int(resume_ck['global_tokens'])
+        elif init_ck is not None and init_ck.get('data_cursor'):
+            # Warm start: fresh budget, but skip every doc the source run saw.
+            cur = init_ck['data_cursor']
+            doc_counters.update(cur.get('doc_counters') or {})
+            token_counters.update(cur.get('token_counters') or {})
+            skip_docs = dict(doc_counters)
         data_cursor = {'doc_counters': doc_counters, 'token_counters': token_counters}
         remaining_budget = (max(target - consumed_tokens, 1) if target is not None
                             else None)
@@ -1071,6 +1091,16 @@ def main():
         val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False)
 
     model = LM(cfg)
+    if init_ck is not None:
+        missing, unexpected = model.load_state_dict(init_ck['model_state_dict'],
+                                                    strict=False)
+        new_ok = ('salience_proj', 'store_gate_proj')
+        bad = [k for k in missing if not any(t in k for t in new_ok)]
+        if bad or unexpected:
+            raise ValueError(f"--init_from mismatch: missing={bad} unexpected={unexpected}")
+        print(f"[init_from] loaded; {len(missing)} new params at identity init "
+              f"({sorted({k.split('.')[-2] for k in missing})})", flush=True)
+        del init_ck
     params = model.count_parameters()
     _print_run_header(args, cfg, model, params, device, loader, val_loader,
                       tokenizer)

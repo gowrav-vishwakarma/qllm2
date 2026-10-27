@@ -131,17 +131,6 @@ def _capture_retention(retention: NamedTensor) -> None:
     _retention_capture.append(r)
 
 
-def _init_dt_bias(cfg: PAMConfig) -> torch.Tensor:
-    """Per-head initial decay bias. All heads at `base_dt_bias`, except the
-    first `long_heads` heads which start at `long_dt_bias` (R3 split prior:
-    a few heads born slow-decaying so a binding can survive thousands of
-    tokens; the L-2 run showed data alone never moves these biases)."""
-    b = torch.full((cfg.n_heads,), cfg.base_dt_bias)
-    if cfg.long_heads > 0:
-        b[: min(cfg.long_heads, cfg.n_heads)] = cfg.long_dt_bias
-    return b
-
-
 def _stable_notebook(write_nt, decay_nt, carried_nt, window, head_row, head_col,
                      complex_pair, policy, dtype):
     r"""Chunk notebook in the stable log-space decay-matrix form.
@@ -239,7 +228,7 @@ class PAMLayer(nn.Module):
         # The decay: one number per head, read from the token's real+imag.
         self.decay_out = Dim("decay_out", cfg.n_heads)
         self.dt_proj = NamedLinear(self.real_imag_feature, self.decay_out)
-        self.dt_bias = nn.Parameter(_init_dt_bias(cfg))
+        self.dt_bias = nn.Parameter(torch.zeros(cfg.n_heads) + cfg.base_dt_bias)
 
         # RoPE table, built once outside the graph (declared boundary).
         if cfg.use_rope:
@@ -517,12 +506,11 @@ class RealPAMLayer(nn.Module):
         # The decay: one number per head, read from the token's channels.
         self.decay_out = Dim("decay_out", cfg.n_heads)
         self.dt_proj = NamedLinear(self.model_dim, self.decay_out)
-        # Initial decay bias per head: `base_dt_bias` everywhere, optionally
-        # `long_heads` slow heads at `long_dt_bias` (R3 split prior). The R1
-        # per-head LADDER (2026-09-05) was removed -- under the old additive
-        # read it left the horizon flat; R3 re-tests a long prior under the
-        # working delta read. Record: EXPERIMENTS_SEMPY.md -> "L1 / R1", "L-2".
-        self.dt_bias = nn.Parameter(_init_dt_bias(cfg))
+        # One shared initial decay bias per head. Per-head decay priors were
+        # tried twice and removed: R1 ladder (2026-09-05) and R3 split prior
+        # (2 heads at -9, 2026-10-27) -- neither moved the horizon and R3 broke
+        # short-range recall. Record: EXPERIMENTS_SEMPY.md "L1 / R1", "R3".
+        self.dt_bias = nn.Parameter(torch.full((cfg.n_heads,), cfg.base_dt_bias))
 
         # RoPE table, built once outside the graph (declared boundary).
         if cfg.use_rope:
@@ -591,6 +579,18 @@ class RealPAMLayer(nn.Module):
             self.gate_proj._zero_init = True
             self.gate_proj._init_bias = 1.2785  # silu(1.2785) = 1.0000
 
+        # R4 consolidation store: salience picks which tokens write; the read
+        # gate is zero-init (plain linear, no nonlinearity) so the store adds
+        # exactly nothing at init. Shares this head's q/k/v projections, taken
+        # BEFORE rotary (content addressing). Off unless cfg.store.
+        self.store = cfg.store
+        if self.store:
+            self.store_chunk = cfg.store_chunk
+            self.store_writes = cfg.store_writes
+            self.salience_proj = NamedLinear(self.model_dim, self.decay_out)
+            self.store_gate_proj = NamedLinear(self.model_dim, self.decay_out)
+            self.store_gate_proj._zero_init = True
+
     # ── small named helpers ──────────────────────────────────────────────────
 
     def _as_token(self, x: NamedTensor) -> NamedTensor:
@@ -609,6 +609,77 @@ class RealPAMLayer(nn.Module):
         data = state.data if isinstance(state, NamedTensor) else state  # named-exit: restate
         return named(data, layout)
 
+    def _store(self, tokens: NamedTensor, qkv_raw, store_state):
+        """R4 consolidation store: chunk-selected writes, no decay, no rotary
+        (raw-torch boundary).
+
+        ``qkv_raw`` = named (q, k, v) on (batch, time, heads, head_feature),
+        taken before rotary.
+        ``store_state`` = ``(E, buf_s, buf_k, buf_v)``: the fp32 store
+        ``[B, H, K(v), K(k)]`` plus the not-yet-complete current chunk
+        (``buf_*`` hold ``L < store_chunk`` earlier tokens), or ``None``.
+
+        The buffered and new tokens form one stream. Every completed chunk of
+        ``store_chunk`` tokens writes its ``store_writes`` highest-salience
+        tokens, in chunk order:
+
+            E <- E + sigmoid(s) (v - E k) k^T          (k unit-norm)
+
+        and every token reads the store as it stood when its chunk began
+        (``y = E q``), so a write is visible from the next chunk on. Prefill
+        and decode run this same code, so they agree by construction (pinned
+        by ``selftest.test_store_parallel_vs_recurrent``). Returns the read
+        ``[batch, heads, time, head_row]`` (NOT gated) and the new state.
+        """
+        batch, time = tokens.layout[0], tokens.layout[1]
+        B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
+        C, m = self.store_chunk, self.store_writes
+        q, k, v = (x.raw(batch, self.heads, time, self.head_feature) for x in qkv_raw)
+        s = self.salience_proj(tokens).alias(self.decay_out, self.heads) \
+            .raw(batch, self.heads, time)                                   # [B,H,T]
+        with torch.autocast(device_type=q.device.type, enabled=False):
+            q = q.float()
+            k = nn.functional.normalize(k.float(), dim=-1)
+            v = v.float()
+            s = s.float()
+            if store_state is None:
+                E = torch.zeros(B, H, K, K, device=q.device, dtype=torch.float32)
+                L = 0
+            else:
+                E, bs, bk, bv = store_state
+                L = bs.shape[-1]
+                s = torch.cat([bs, s], dim=2)
+                k = torch.cat([bk, k], dim=2)
+                v = torch.cat([bv, v], dim=2)
+            N = L + T                                     # tokens in the joint stream
+            n_full = N // C
+            n_chunks = -(-N // C)                         # chunks any new token sits in
+            Es = [E]
+            for c in range(n_full):
+                sc = s[:, :, c * C:(c + 1) * C]
+                top = sc.topk(m, dim=-1).indices                            # [B,H,m]
+                b_sel = torch.sigmoid(torch.gather(sc, 2, top))             # [B,H,m]
+                idx = top.unsqueeze(-1).expand(B, H, m, K)
+                k_sel = torch.gather(k[:, :, c * C:(c + 1) * C], 2, idx)    # [B,H,m,K]
+                v_sel = torch.gather(v[:, :, c * C:(c + 1) * C], 2, idx)
+                for j in range(m):
+                    kj, vj = k_sel[:, :, j], v_sel[:, :, j]
+                    err = vj - torch.einsum('bhvk,bhk->bhv', E, kj)
+                    E = E + b_sel[:, :, j, None, None] * err.unsqueeze(-1) * kj.unsqueeze(-2)
+                Es.append(E)
+            # Read: new token at stream index L+t uses Es[(L+t)//C]. Left-pad
+            # the queries by L, right-pad to whole chunks, one batched read.
+            pad = n_chunks * C - N
+            qp = nn.functional.pad(q, (0, 0, L, pad))                       # [B,H,n*C,K]
+            qc = qp.reshape(B, H, n_chunks, C, K)
+            Ec = torch.stack(Es[:n_chunks], dim=2)                          # [B,H,n,K,K]
+            y = torch.einsum('bhnvk,bhnck->bhncv', Ec, qc).reshape(B, H, n_chunks * C, K)
+            y = y[:, :, L:L + T] * (K ** -0.5)
+            tail = n_full * C
+            new_state = (E, s[:, :, tail:], k[:, :, tail:], v[:, :, tail:])
+        output = named(y.to(tokens.dtype), (batch, self.heads, time, self.head_row))
+        return output, new_state
+
     def _project(self, tokens: NamedTensor, step_offset: int, clock=None):
         """Query, key, value on (batch, heads, time, head_feature), + clock.
 
@@ -623,6 +694,8 @@ class RealPAMLayer(nn.Module):
         qkv = self.qkv_proj(tokens)
         qkv = qkv.to(batch, time, self.qkv_slot, self.heads, self.head_feature)
         queries, keys, values = (qkv.select(self.qkv_slot, slot) for slot in (0, 1, 2))
+        # R4: the store addresses by content, so it takes q/k before rotary.
+        pre = (queries, keys, values) if self.store else None
 
         if self.use_rope and self.chrono:
             # N1: content-modulated rotary (learned time-warp). Replaces the
@@ -633,7 +706,7 @@ class RealPAMLayer(nn.Module):
             queries, keys, clock_out = self._rotate_learned(
                 queries, keys, tokens, batch, time, clock)
             return (queries.to(*layout), keys.to(*layout), values.to(*layout),
-                    clock_out)
+                    clock_out, pre)
 
         if self.use_rope:
             position_end = step_offset + tokens.size(time)
@@ -665,7 +738,7 @@ class RealPAMLayer(nn.Module):
             keys = _rotate(keys)
 
         layout = (batch, self.heads, time, self.head_feature)
-        return (queries.to(*layout), keys.to(*layout), values.to(*layout), None)
+        return (queries.to(*layout), keys.to(*layout), values.to(*layout), None, pre)
 
     def _rotate_learned(self, queries, keys, tokens, batch, time, clock=None):
         """N1 Chrono-PAM rotary: content-modulated cumulative phase on q/k.
@@ -908,12 +981,16 @@ class RealPAMLayer(nn.Module):
     def forward(self, x: NamedTensor, state=None, step_offset: int = 0):
         tokens = self._as_token(x)
         seq_len = tokens.size(tokens.layout[1])
+        # R4 wraps whatever the arm carries as (inner, store_state).
+        store_state = None
+        if self.store and state is not None:
+            state, store_state = state
         # Chrono carries (notebook, clock); every other arm carries the notebook.
         if self.chrono and state is not None:
             state, clock = state
         else:
             clock = None
-        queries, keys, values, clock_out = self._project(tokens, step_offset, clock)
+        queries, keys, values, clock_out, pre = self._project(tokens, step_offset, clock)
         decay = self._decay(tokens)
 
         if state is None and seq_len > 1:
@@ -937,13 +1014,22 @@ class RealPAMLayer(nn.Module):
             gate = silu(self.gate_proj(tokens).alias(self.decay_out, self.heads))
             output = output * gate.to(tokens.layout[0], self.heads, tokens.layout[1])
 
+        if self.store:
+            # R4: add the consolidation-store read through its zero-init gate.
+            store_read, store_state = self._store(tokens, pre, store_state)
+            sgate = self.store_gate_proj(tokens).alias(self.decay_out, self.heads)
+            output = output + store_read * sgate.to(
+                tokens.layout[0], self.heads, tokens.layout[1])
+
         out = self.o_proj(output.alias(self.head_row, self.head_feature)
                           .to(tokens.layout[0], tokens.layout[1], self.inner))
         if self.training:
             out = out * as_complex_dropout_mask(self.out_dropout, out)
         carried = new_state.data if new_state is not None else None  # named-exit: state hand-off
         if self.chrono:
-            return out, (carried, clock_out)
+            carried = (carried, clock_out)
+        if self.store:
+            return out, (carried, store_state)
         return out, carried
 
 

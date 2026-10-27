@@ -587,6 +587,81 @@ def test_out_gate_parity_and_decode(batch_size=2, seq_len=17, seed=0):
     return True
 
 
+def test_store_parity_and_decode(batch_size=2, seq_len=23, seed=0):
+    """R4 consolidation store on the hero arch (chrono + out_gate + delta).
+
+    (1) store on with its zero-init gate == store off, exactly; (2) one
+    backward reaches every store_gate_proj, and once the gate is non-zero
+    every salience_proj; (3) with random gate/salience, chunked prefill ==
+    prefill(5) + one-token steps == pure token-by-token decode. seq_len 23
+    with store_chunk 4 exercises a partial last chunk and a carried buffer.
+    """
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.chunk_size = 7
+    cfg.chrono = True
+    cfg.out_gate = True
+    cfg.delta = True
+    cfg.store = True
+    cfg.store_chunk = 4
+    cfg.store_writes = 2
+    model = LM(cfg).eval()
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+    with torch.no_grad():
+        logits_on, _, _ = model.forward(ids)
+        for blk in model.blocks:
+            blk.pam.store = False
+        logits_off, _, _ = model.forward(ids)
+        for blk in model.blocks:
+            blk.pam.store = True
+    d_init = (logits_on - logits_off).abs().max().item()
+    assert d_init < 1e-6, f"store@init != no store: {d_init:.3e}"
+
+    model.train()
+    model.zero_grad(set_to_none=True)
+    logits, _, _ = model.forward(ids)
+    F.cross_entropy(logits.reshape(-1, cfg.vocab_size), ids.reshape(-1)).backward()
+    n_none = sum(1 for blk in model.blocks if blk.pam.store_gate_proj.weight.grad is None)
+    assert n_none == 0, f"{n_none} store_gate_proj got no grad"
+
+    for blk in model.blocks:
+        nn.init.normal_(blk.pam.store_gate_proj.weight, std=0.5)
+        nn.init.normal_(blk.pam.store_gate_proj.bias, std=0.5)
+        nn.init.normal_(blk.pam.salience_proj.weight, std=0.5)
+    model.zero_grad(set_to_none=True)
+    logits, _, _ = model.forward(ids)
+    F.cross_entropy(logits.reshape(-1, cfg.vocab_size), ids.reshape(-1)).backward()
+    n_zero = sum(1 for blk in model.blocks
+                 if blk.pam.salience_proj.weight.grad is None
+                 or blk.pam.salience_proj.weight.grad.abs().max() == 0)
+    assert n_zero == 0, f"{n_zero} salience_proj got no grad"
+
+    model.eval()
+    prefix = 5
+    with torch.no_grad():
+        logits_par, states_par, _ = model.forward(ids)
+        lp, states, _ = model.forward(ids[:, :prefix])
+        parts = [lp]
+        for t in range(prefix, seq_len):
+            lt, states, _ = model.forward(ids[:, t:t + 1], states=states, step_offset=t)
+            parts.append(lt)
+        logits_mix = torch.cat(parts, dim=1)
+        parts, states0 = [], None
+        for t in range(seq_len):
+            lt, states0, _ = model.forward(ids[:, t:t + 1], states=states0, step_offset=t)
+            parts.append(lt)
+        logits_seq = torch.cat(parts, dim=1)
+    d_mix = (logits_par - logits_mix).abs().max().item()
+    d_seq = (logits_par - logits_seq).abs().max().item()
+    d_E = max(_max_diff(sp[1][0], ss[1][0]) for sp, ss in zip(states_par, states))
+    assert d_mix < RECUR_ATOL, f"store prefill+step logits disagree: {d_mix:.3e}"
+    assert d_seq < RECUR_ATOL, f"store stepwise logits disagree: {d_seq:.3e}"
+    assert d_E < RECUR_ATOL, f"carried store disagrees: {d_E:.3e}"
+    print(f"  init parity {d_init:.3e}   grads ok   prefill+step {d_mix:.3e}  "
+          f"stepwise {d_seq:.3e}  store state {d_E:.3e}")
+    return True
+
+
 def main():
     torch.set_num_threads(2)
     tests = [
@@ -607,6 +682,7 @@ def main():
         test_chrono_rotary_parity,
         test_chrono_parallel_vs_recurrent,
         test_out_gate_parity_and_decode,
+        test_store_parity_and_decode,
     ]
     failures = 0
     for t in tests:
