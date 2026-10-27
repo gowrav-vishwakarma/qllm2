@@ -12,6 +12,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     Driver log `logs/v13_sempty_r4screen_driver_0868a1b.log`; arm logs
     `logs/v13_sempty_r4screen_{store,ctrl}_0868a1b_<stamp>.log`; ckpts
     `checkpoints_v13_sempty/r4screen_{store,ctrl}_0868a1b/`.
+  - **Progress (08:01Z):** store arm training since ~07:56Z (the doc-cursor
+    skip took ~47 min; HF read timeouts are retried and harmless). **50.9K
+    tok/s at B18 = 98 % of Phase 3b (51.9K at the same steps), 54.6 GB.**
+    ETA store arm ~09:35Z, ctrl arm ~12:00Z, probes ~12:20Z. Disk: 48 GB free
+    on the box, screen needs ~6 GB (prunable if needed: R3/R1 extra
+    `latest.pt`+`step_*.pt`, ~7 GB). A background watcher (local session)
+    alerts on <20 GB free / Traceback / DONE.
+  - **After each arm:** read the realised per-source token shares from its
+    `latest.pt` `data_cursor.token_counters` (minus the Phase 3b cursor) and
+    confirm ≈ 0.44/0.41/0.10/0.05 for BOTH arms before comparing them.
   - **First attempt @`f8f98f5` ABORTED** (06:33–07:00Z, logs moved to
     `~/qllm_aborted_20261027/` on the box): an HF timeout in smoltalk2 split
     discovery silently dropped `smoltalk2_mid` (10 % of the mix) → wrong data.
