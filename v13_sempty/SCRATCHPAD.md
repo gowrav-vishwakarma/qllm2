@@ -18,17 +18,26 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **NOW (2026-10-27 13:55Z) — Mamba-2 "wind tunnel" 3B run RUNNING on the RTX 6000.**
+* **NOW (2026-10-27 14:33Z) — Mamba-2 "wind tunnel" 3B run RUNNING on the RTX 6000,
+  188.6K tok/s, GPU 100 %. ETA DONE (incl. probe + PG-19) ≈ 19:20Z.**
   - **Where:** tmux `mamba2` on `ubuntu@34.131.203.207`
-    (`~/Development/qllm-private`), code **`9c45e52`** (= `129b406` prefetch
-    code + docs). Driver log `logs/v13_sempty_mamba2_baseline_driver_9c45e52.log`;
-    run log `logs/v13_sempty_mix3b_mamba2_answ100_9c45e52_20261027_1354.log`;
-    ckpt `checkpoints_v13_sempty/mix3b_mamba2_answ100_9c45e52/`.
+    (`~/Development/qllm-private`), code **`b36e3a5`**. Driver log
+    `logs/v13_sempty_mamba2_baseline_driver_b36e3a5.log`; run log
+    `logs/v13_sempty_mix3b_mamba2_answ100_b36e3a5_20261027_1433.log`;
+    ckpt `checkpoints_v13_sempty/mix3b_mamba2_answ100_b36e3a5/`.
+  - **Data-feed fixes on the way (all verified batch-identical, see
+    EXPERIMENTS "Engineering: batch prefetch ..." + commits):** thread prefetch
+    `129b406` (98K -> ~125K), worker process `09026e9` (no gain: not the GIL),
+    background 8 MB parquet block fetch + 64-batch look-ahead `b36e3a5`
+    (-> 188.6K; the real limit was ~3 s HF read stalls per 8 MB block). These
+    speed up PAM runs too (PAM was 59K with the same stalls + the diag skip).
+    Superseded partial runs @`9c45e52` (step 1600) and @`09026e9` (step 4850)
+    moved to `~/qllm_pull_aside_20261027/m2_full_*_superseded/`.
   - **What:** param-matched reference Mamba-2 (102.6M; `baseline_mamba2.py`,
     `train.py --arch mamba2`) on the Phase 3b recipe at **LR 1.2e-3**; then the
     40-trial probe + PG-19 (driver step C). Question, design and the
     pre-registered reading: `EXPERIMENTS_SEMPY.md` → "Mamba-2 baseline at
-    equal data". ETA DONE ≈ 19:30Z if prefetch gives ~170K tok/s.
+    equal data".
   - **LR screen (done @`3f69057`, inline-batch code, identical math):** final
     holdout loss after 2,700 steps (~100M tok, real mix): 2e-4 **4.609**, 6e-4
     **4.233**, 1.2e-3 **4.056** → 1.2e-3 (top of the grid: Mamba's optimum may
@@ -42,10 +51,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     finished parts are skipped, a partial run resumes from `latest.pt`:
     ```bash
     tmux new-session -d -s mamba2 "cd ~/Development/qllm-private && \
-      SCREEN_HASH=9c45e52 LR_FULL=1.2e-3 bash v13_sempty/tmp_mamba2_baseline.sh"
+      SCREEN_HASH=b36e3a5 LR_FULL=1.2e-3 bash v13_sempty/tmp_mamba2_baseline.sh"
     ```
-    If HEAD moved past `9c45e52` with code changes the guard refuses →
-    `git checkout 9c45e52`, relaunch, `git checkout master` after DONE.
+    If HEAD moved past `b36e3a5` with code changes the guard refuses →
+    `git checkout b36e3a5`, relaunch, `git checkout master` after DONE.
     Docs-only pulls (`*.md`, `logs/`) are fine mid-run.
   - **Libraries (6000 only, NOT pip deps):** `mamba_ssm` 2.2.5 +
     `causal_conv1d` 1.5.2 prebuilt cp311/torch2.8/cu12 wheels + `einops`,
