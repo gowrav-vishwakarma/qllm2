@@ -47,9 +47,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     re-probed at the same seeds), `long_heads` removed (`5fb614f`); R4 code +
     `--init_from` (`5fb614f`); screen driver + `scripts/eval_pos_loss.py`
     (`f8f98f5`); repo hygiene (`9e859dd`).
-  - **Open item:** `eval_pos_loss.py` gives loss ~8 on the WikiText-trained N4
-    fair ckpt (`wikitext_chrono_n4gate_fair_2537782`) — likely a tokenizer /
-    format mismatch, not a model result; investigate before using it. Raw
+  - **Resolved:** `eval_pos_loss.py` loss ~8 on the WikiText-trained N4 fair
+    ckpt is DOMAIN, not a bug — the same ckpt scores PPL 18.6 on WikiText val
+    (8 windows; mix-3B ckpt 43.0 there). WikiText-only models never saw PG-19's
+    hard line breaks / book style → only compare mix-trained models on PG-19. Raw
     per-position loss on PG-19 RISES after ~512 tokens for Phase 3b, R3 and
     the v11-matched transformer alike (book structure confound) → add a
     "full context vs ~1K context on the same tokens" delta before drawing
