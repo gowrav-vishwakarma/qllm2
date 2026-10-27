@@ -1464,6 +1464,44 @@ Kept: `--init_from` warm start and the screen driver (now
 control for any future warm-start screen with this recipe. To re-probe the
 store ckpt, `git checkout 0868a1b` (current code has no store keys).
 
+## Mamba-2 baseline at equal data — the "wind tunnel" (design + pre-registration, 2026-10-27)
+
+**Question.** Six retention levers left PAM's single-fact horizon at ~1000
+tokens (R4 result above). Our only Mamba number is HF Mamba-130M trained on
+300B Pile tokens (100× our 3B): it recalls one fact at 1.00 out to 8192 but
+loses most multi-fact cells. Is the horizon a **design** limit of PAM, or a
+**data/scale** limit any O(1) model has at 100M params / 3B tokens?
+
+**Design.** Reference Mamba-2 (`mamba_ssm` 2.2.5 `MambaLMHeadModel`, Mamba-2
+mixer, its own init; `v13_sempty/baseline_mamba2.py`), d_model 768, 17
+layers, d_state 128, headdim 64, expand 2 = **102.6M** (PAM 102.1M), trained
+by `v13_sempty/train.py --arch mamba2`: same streamed data in the same order,
+the same fused CE with answer weight 100, same AdamW/cosine/clip/wd, same
+holdout + WikiText val, same probes. Driver `v13_sempty/tmp_mamba2_baseline.sh`:
+(A) LR screen 2e-4 (PAM's) / 6e-4 / 1.2e-3 × 2,700 steps on the real mix,
+lowest final holdout loss wins, a higher LR must win by > 0.01 nats; (B) the
+Phase 3b recipe (3B tok, B18 T2048, warmup 1000, 300M web-only blend warmup,
+0.44/0.41/0.10/0.05, seed 42) at the chosen LR; (C) 40-trial probe + PG-19.
+Wrapper checks (6000): fused-CE loss == plain CE exactly, with and without the
+answer mask; grads rel ≤ 2e-5; SSD kernel vs torch reference 1.5e-4; resume
+(kill at step >20, relaunch → step 20 → 30) ok; 177K tok/s at B18 (PAM 59K).
+
+**Pre-registered reading (vs Phase 3b, 40 trials, chance 0.125):**
+- Mamba-2 a1 pos0 **@2048 ≥ 0.5 and @4096 ≥ 0.3** (the R4 bars) → **design**:
+  equal data, Mamba-2 holds what PAM cannot. Its write is ∝ dt and its
+  forget is exp(−A·dt) from the same dt, so a filler token neither writes nor
+  erases — PAM has separate write/erase/decay gates. Next = port that
+  coupling into PAM (one variable, warm-start screen).
+- Mamba-2 a1 pos0 **@2048 ≤ 0.3** (PAM: 0.12–0.20) → **data/scale**: the
+  horizon is not PAM-specific at 3B tokens. Stop retention levers; spend the
+  GPU on scale/quality instead.
+- In between → read PG-19 `far_gain` (PAM +0.014/+0.020/+0.022) as the
+  tie-break.
+- Reported either way: holdout + WikiText PPL at equal tokens ("can we beat
+  Mamba"), a4/a8 multi-fact cells, far_gain, tok/s. Caveat noted up front:
+  PAM's LR (2e-4) was never screened; Mamba's is — any PPL gap in Mamba's
+  favour is an upper bound.
+
 ## Positioning — is this Mamba? (2026-09-04)
 
 No, and not a Mamba variant. Mamba (S6) is a **diagonal SSM**: a *vector*
