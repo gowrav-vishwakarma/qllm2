@@ -33,6 +33,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
       SCREEN_HASH=0868a1b bash v13_sempty/tmp_r4_screen.sh 2>&1 | \
       tee -a logs/v13_sempty_r4screen_driver_0868a1b.log"
     ```
+    If HEAD on the box is past `0868a1b` with code changes (e.g. after pulling
+    `03b8acf`, the clean-tree guard), the guard refuses the resume — check out
+    the pinned code first: `git checkout 0868a1b` → relaunch →
+    `git checkout master` once the screen is DONE.
     On the 4090 use the local repo path; local HF streaming is ~10 MB/s so the
     doc-cursor skip alone takes >25 min there — prefer the 6000.
   - **Avoid `git pull` on the 6000 until the driver prints `r4 screen DONE`:**
