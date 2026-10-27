@@ -1048,6 +1048,9 @@ def main():
             skip_docs=skip_docs, token_counters=token_counters,
             doc_counters=doc_counters, use_cache=False,
             answer_weight=args.answer_weight,
+            # warm start: begin each source at the first never-read file
+            # (no stream skip; a crash-resume uses the exact @f/@r cursor)
+            stream_fresh_file=init_ck is not None,
         )
         cfg.vocab_size = len(tokenizer)
         is_streaming = not getattr(train_ds, 'pretrain_cached', False)

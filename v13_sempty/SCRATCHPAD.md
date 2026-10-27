@@ -6,6 +6,18 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
+* **Fast stream resume (2026-10-27, after the R4 screen's 47-min skips).**
+  `v7/data.py` now reads dclm / fineweb / smoltalk2 (blend) / pg19 file by file
+  with pyarrow in the exact old order (verified doc-for-doc vs the old HF
+  stream). Checkpoints save `<src>@f`/`<src>@r` (file, raw row): crash-resume
+  is seconds (dclm: at most one 2.7 GB file). `--init_from` warm starts begin
+  each source at a never-read file (estimated from footers + the committed
+  index `v7/stream_index/`): **first train step ~3 min after launch instead of
+  ~47** (4090 smoke from the Phase 3b cursor: dclm/fineweb file 6, smoltalk2
+  file 40). Old checkpoints still resume (doc-count cursor, slower path,
+  extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
+  --commit-copy` shares the index via git.
+
 * **NOW (2026-10-27) — R4 warm-start screen RUNNING on the RTX 6000.**
   - **Where:** tmux `r4_screen` on `ubuntu@34.131.203.207`
     (`~/Development/qllm-private`), code **`0868a1b`** (launched 07:08Z).

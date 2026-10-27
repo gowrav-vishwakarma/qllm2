@@ -1037,6 +1037,275 @@ def _bump_counter(counters: Optional[Dict[str, int]], key: str) -> None:
         counters[key] = counters.get(key, 0) + 1
 
 
+# ── Fast, resumable parquet streaming (2026-10-27) ───────────────────────────
+#
+# `load_dataset(..., streaming=True)` cannot seek, so resuming after N docs
+# meant downloading and discarding every row before them (~45 min for a
+# 3B-token cursor, on every warm start and every crash-resume). Sources are now
+# read file by file with pyarrow in the SAME order as that stream (sorted files
+# -> row groups -> rows), so existing cursors keep their meaning:
+#   * cursors also record the raw position, doc_counters['<src>@f'] (file index)
+#     and ['<src>@r'] (raw rows consumed in that file): a resume opens that file
+#     and skips whole row groups from parquet metadata (fineweb/smoltalk2: 1000
+#     rows per group -> instant; dclm: one group per file -> at most one file);
+#   * old cursors (eligible-doc count only) are translated with a per-file
+#     eligible-doc index (v7/stream_index/*.json, committed; extended under
+#     .cache/ whenever a file is read to the end);
+#   * fresh_file=True (warm starts) rounds an old cursor up to the next file
+#     boundary: no skip at all, and still only never-seen data. Where the index
+#     does not reach the cursor, the boundary is ESTIMATED from parquet footers
+#     (raw rows per file) and the eligible-doc rate of indexed files (else of a
+#     20k-row sample) with a 15 % safety margin: may leave some unseen docs
+#     unused, never re-reads seen ones unless the rate drops >15 % later on.
+
+_STREAM_INDEX_REPO_DIR = Path(__file__).resolve().parent / 'stream_index'
+_STREAM_INDEX_CACHE_DIR = Path('.cache') / 'v7_tokens' / 'stream_index'
+
+
+def _stream_retry(fn, what: str, retries: int = 6):
+    """Call ``fn`` with backoff on network errors; raise after ``retries``."""
+    import time as _time
+    for attempt in range(retries):
+        try:
+            return fn()
+        except Exception as exc:  # noqa: BLE001 - HF read timeouts etc.
+            if attempt == retries - 1:
+                raise RuntimeError(f"{what} failed after {retries} tries: {exc}") from exc
+            wait = min(60, 5 * 2 ** attempt)
+            print(f"  [stream] {what}: {exc}; retry {attempt + 1}/{retries} in {wait}s",
+                  flush=True)
+            _time.sleep(wait)
+
+
+def _hf_parquet_files(repo: str, pattern: str) -> List[str]:
+    """Sorted parquet paths of a HF dataset repo pinned to its current commit
+    (``datasets/<repo>@<sha>/<file>``), i.e. the order the old stream read."""
+    from huggingface_hub import HfApi, HfFileSystem
+    sha = _stream_retry(lambda: HfApi().dataset_info(repo).sha, f'{repo} revision')
+    fs = HfFileSystem()
+    files = _stream_retry(lambda: sorted(fs.glob(f'datasets/{repo}@{sha}/{pattern}')),
+                          f'{repo} file list')
+    if not files:
+        raise RuntimeError(f'no parquet files for {repo}/{pattern}@{sha}')
+    return files
+
+
+def _stream_rel(path: str) -> str:
+    """Index key of a file: its path inside the repo (or basename if local)."""
+    return path.split('/', 3)[-1] if path.startswith('datasets/') else os.path.basename(path)
+
+
+def _stream_index_name(tag: str, files: List[str]) -> str:
+    first = files[0]
+    rev = first.split('@', 1)[1].split('/', 1)[0][:10] if first.startswith('datasets/') else 'local'
+    return f'{tag}__{rev}'
+
+
+def _load_stream_index(name: str) -> Dict[str, int]:
+    index: Dict[str, int] = {}
+    for d in (_STREAM_INDEX_REPO_DIR, _STREAM_INDEX_CACHE_DIR):
+        p = d / f'{name}.json'
+        if p.exists():
+            try:
+                index.update(json.loads(p.read_text()).get('eligible', {}))
+            except (OSError, ValueError):
+                pass
+    return index
+
+
+def _save_stream_index(name: str, updates: Dict[str, int]) -> None:
+    """Merge ``updates`` into the .cache copy (atomic; tolerant of other writers)."""
+    d = _STREAM_INDEX_CACHE_DIR
+    d.mkdir(parents=True, exist_ok=True)
+    p = d / f'{name}.json'
+    merged: Dict[str, int] = {}
+    if p.exists():
+        try:
+            merged = json.loads(p.read_text()).get('eligible', {})
+        except (OSError, ValueError):
+            merged = {}
+    merged.update(updates)
+    tmp = p.with_name(f'{p.name}.{os.getpid()}.tmp')
+    tmp.write_text(json.dumps({'eligible': merged}, indent=0, sort_keys=True))
+    os.replace(tmp, p)
+
+
+def _parquet_row_group_rows(open_pf, group: int, columns: List[str], start_row: int,
+                            what: str) -> Iterator[dict]:
+    """Rows (dicts) of one row group from ``start_row``; on a network error the
+    file is re-opened and reading resumes at the next unread row."""
+    import time as _time
+    done, failures = start_row, 0
+    while True:
+        try:
+            pf = open_pf()
+            seen = 0
+            for batch in pf.iter_batches(batch_size=1024, row_groups=[group], columns=columns):
+                n = batch.num_rows
+                if seen + n <= done:
+                    seen += n
+                    continue
+                rows = batch.to_pylist()[max(0, done - seen):]
+                seen += n
+                for row in rows:
+                    done += 1
+                    yield row
+            return
+        except Exception as exc:  # noqa: BLE001 - GeneratorExit is not an Exception
+            failures += 1
+            if failures >= 6:
+                raise RuntimeError(f"{what} row group {group}: {exc}") from exc
+            wait = min(60, 5 * 2 ** (failures - 1))
+            print(f"  [stream] {what} rg {group} at row {done}: {exc}; "
+                  f"retry {failures}/6 in {wait}s", flush=True)
+            _time.sleep(wait)
+
+
+def _open_parquet(path: str, fs=None):
+    """ParquetFile with a read buffer, so a row group is streamed page by page
+    instead of downloaded whole first (dclm: one 2.7 GB group per file)."""
+    import pyarrow.parquet as pq
+    return pq.ParquetFile(fs.open(path) if fs else path, buffer_size=8 << 20)
+
+
+def _estimate_fresh_file(tag: str, files: List[str], start_f: int, left: int,
+                         index: Dict[str, int], extract, columns: List[str], fs) -> int:
+    """First file index that surely lies past ``left`` more eligible docs
+    after ``files[start_f]`` (fresh_file warm start without a full index)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    def raw_rows(path):
+        return _stream_retry(lambda: _open_parquet(path, fs).metadata.num_rows,
+                             f'footer {_stream_rel(path)}')
+
+    known = [f for f in files if _stream_rel(f) in index]
+    name = _stream_index_name(tag, files)
+    if not known and '__rate__' in index:
+        rate, src = float(index['__rate__']), 'cached sample rate'
+    elif known:
+        with ThreadPoolExecutor(16) as ex:
+            known_raw = sum(ex.map(raw_rows, known))
+        rate = sum(index[_stream_rel(f)] for f in known) / max(1, known_raw)
+        src = f'{len(known)} indexed file(s)'
+    else:
+        pf = _stream_retry(lambda: _open_parquet(files[start_f], fs), 'open sample')
+        cols = [c for c in columns if c in pf.schema_arrow.names]
+        n_raw = n_el = 0
+        for g in range(pf.metadata.num_row_groups):
+            for row in _parquet_row_group_rows(lambda: pf, g, cols, 0, 'sample'):
+                n_raw += 1
+                n_el += len(extract(row))
+                if n_raw >= 20_000:
+                    break
+            if n_raw >= 20_000:
+                break
+        rate = n_el / max(1, n_raw)
+        src = f'{n_raw:,}-row sample'
+        _save_stream_index(name, {'__rate__': rate})  # sampled once, reused after
+    need_raw = left / max(rate * 0.85, 1e-9)
+    cum, f = 0, start_f
+    with ThreadPoolExecutor(16) as ex:  # footers in parallel, 16 files at a time
+        while f < len(files) and cum < need_raw:
+            for n in ex.map(raw_rows, files[f:f + 16]):
+                if cum >= need_raw:
+                    break
+                cum += n
+                f += 1
+    print(f"  [stream] estimate: {rate:.3f} eligible/raw row ({src}); {left:,} docs "
+          f"~ {need_raw:,.0f} raw rows -> start at file {f}", flush=True)
+    return f
+
+
+def _parquet_stream(
+    tag: str,
+    files: List[str],
+    extract,
+    columns: List[str],
+    *,
+    skip_docs: int = 0,
+    doc_counters: Optional[Dict[str, int]] = None,
+    counter_key: str = '',
+    fresh_file: bool = False,
+) -> Iterator:
+    """Yield ``extract(row)`` items (a tuple of 0..n docs per row) from ``files``
+    in order, resumable without re-downloading the consumed prefix (see the
+    section comment). ``doc_counters[counter_key]`` counts yielded docs exactly
+    like the old iterators; ``@f``/``@r`` hold the raw position."""
+    remote = files[0].startswith('datasets/')
+    fs = None
+    if remote:
+        from huggingface_hub import HfFileSystem
+        fs = HfFileSystem()
+    name = _stream_index_name(tag, files)
+    index = _load_stream_index(name)
+    fkey, rkey = f'{counter_key}@f', f'{counter_key}@r'
+
+    start_f, start_r, skip_left = 0, 0, 0
+    if doc_counters is not None and fkey in doc_counters:
+        start_f, start_r = int(doc_counters[fkey]), int(doc_counters[rkey])
+        how = f'exact cursor file {start_f} row {start_r}'
+    else:
+        left = int(skip_docs)
+        while left > 0 and start_f < len(files) and \
+                index.get(_stream_rel(files[start_f]), left + 1) <= left:
+            left -= index[_stream_rel(files[start_f])]
+            start_f += 1
+        if left > 0 and fresh_file and _stream_rel(files[start_f]) in index:
+            how = (f'{skip_docs:,} docs -> inside file {start_f}; fresh_file: '
+                   f'start at file {start_f + 1} ({left:,} unseen docs left unused)')
+            start_f, left = start_f + 1, 0
+        elif left > 0 and fresh_file:
+            est = _estimate_fresh_file(tag, files, start_f, left, index, extract, columns, fs)
+            how = (f'{skip_docs:,} docs -> past indexed files at {start_f}; fresh_file '
+                   f'ESTIMATE: start at file {est}')
+            start_f, left = est, 0
+        else:
+            how = (f'{skip_docs:,} docs -> file {start_f}, '
+                   f'{left:,} docs to skip by reading')
+        skip_left = left
+    print(f"  [stream] {tag}: {len(files)} files; {how}", flush=True)
+
+    for fi in range(start_f, len(files)):
+        path = files[fi]
+        rel = _stream_rel(path)
+        open_pf = (lambda p=path: _open_parquet(p, fs))
+        pf = _stream_retry(open_pf, f'open {rel}')
+        md = pf.metadata
+        cols = [c for c in columns if c in pf.schema_arrow.names]
+        group, row0 = 0, (start_r if fi == start_f else 0)
+        while group < md.num_row_groups and md.row_group(group).num_rows <= row0:
+            row0 -= md.row_group(group).num_rows
+            group += 1
+        raw = sum(md.row_group(g).num_rows for g in range(group)) + row0
+        full_read = raw == 0
+        eligible = 0
+        jumped = False
+        for g in range(group, md.num_row_groups):
+            for row in _parquet_row_group_rows(open_pf, g, cols,
+                                               row0 if g == group else 0, rel):
+                raw += 1
+                items = extract(row)
+                if skip_left > 0:
+                    take = min(skip_left, len(items))
+                    skip_left -= take
+                    eligible += take
+                    items = items[take:]
+                    if skip_left == 0 and fresh_file and full_read:
+                        jumped = True  # cursor reached mid-file: next file is fresh
+                        break
+                if doc_counters is not None and counter_key:
+                    doc_counters[fkey], doc_counters[rkey] = fi, raw
+                for item in items:
+                    eligible += 1
+                    _bump_counter(doc_counters, counter_key)
+                    yield item
+            if jumped:
+                break
+        if full_read and not jumped:
+            index[rel] = eligible
+            _save_stream_index(name, {rel: eligible})
+
+
 def _dclm_edu_text_iter(
     edu_score_min: int = 3,
     *,
@@ -1046,34 +1315,35 @@ def _dclm_edu_text_iter(
     skip_docs: int = 0,
     doc_counters: Optional[Dict[str, int]] = None,
     counter_key: str = 'dclm',
+    fresh_file: bool = False,
 ) -> Iterator[str]:
     """Stream DCLM-Edu text filtered by integer edu score.
 
     When ``doc_counters`` is given, increments ``counter_key`` for each yielded
     (post-filter, post-skip) doc -- this is the monotonic cursor used to compute
-    ``skip_docs`` for the next round so no doc is reused.
+    ``skip_docs`` for the next round so no doc is reused. Read via
+    ``_parquet_stream`` (fast resume; same order as the old HF stream).
     """
-    from datasets import load_dataset
-
-    stream = load_dataset('HuggingFaceTB/dclm-edu', split='train', streaming=True)
-    skipped = 0
-    for row in stream:
+    def extract(row):
         score = row.get('edu_int_score')
         if score is not None and score < edu_score_min:
-            continue
+            return ()
         text = row.get('text') or row.get('content') or ''
         if not text.strip():
-            continue
+            return ()
         in_holdout = pretrain_holdout_bucket(text, holdout_pct)
         if exclude_holdout and in_holdout:
-            continue
+            return ()
         if only_holdout and not in_holdout:
-            continue
-        if skipped < skip_docs:
-            skipped += 1
-            continue
-        _bump_counter(doc_counters, counter_key)
-        yield text
+            return ()
+        return (text,)
+
+    mode = 'only' if only_holdout else ('ex' if exclude_holdout else 'all')
+    files = _hf_parquet_files('HuggingFaceTB/dclm-edu', 'data/*.parquet')
+    yield from _parquet_stream(
+        f'dclm_e{edu_score_min}_h{holdout_pct}_{mode}', files, extract,
+        ['text', 'content', 'edu_int_score'], skip_docs=skip_docs,
+        doc_counters=doc_counters, counter_key=counter_key, fresh_file=fresh_file)
 
 
 def _fineweb_edu_text_iter(
@@ -1087,6 +1357,7 @@ def _fineweb_edu_text_iter(
     doc_counters: Optional[Dict[str, int]] = None,
     counter_key: str = 'fineweb',
     min_chars: int = 0,
+    fresh_file: bool = False,
 ) -> Iterator[str]:
     """Stream FineWeb-Edu text filtered by the edu classifier score.
 
@@ -1095,9 +1366,8 @@ def _fineweb_edu_text_iter(
     Useful when HF Hub streaming is blocked (e.g. Xet CDN 403 without auth).
     ``min_chars`` > 0 keeps only long documents (the 'fineweb_long' source for
     T>=8192 training: 12k chars ~ 3k tokens; checked before tokenizing, cheap).
+    Read via ``_parquet_stream`` (fast resume; same order as the old stream).
     """
-    import os
-    from datasets import load_dataset
 
     local_dir = os.environ.get('FINEWEB_LOCAL_DIR', '').strip()
     if local_dir:
@@ -1129,33 +1399,32 @@ def _fineweb_edu_text_iter(
                 f"(tried {[str(c) for c in candidates]})"
             )
         print(f"[fineweb] local parquet stream: {len(files)} shards under {files[0].rsplit('/', 1)[0]}")
-        stream = load_dataset('parquet', data_files=files, split='train', streaming=True)
     else:
-        stream = load_dataset(
-            'HuggingFaceFW/fineweb-edu', name=name, split='train', streaming=True,
-        )
-    skipped = 0
-    for row in stream:
+        files = _hf_parquet_files('HuggingFaceFW/fineweb-edu',
+                                  f"sample/{name.replace('sample-', '')}/*.parquet")
+    def extract(row):
         score = row.get('score')
         if score is None:
             score = row.get('edu_score')
         if score is not None and score < edu_score_min:
-            continue
+            return ()
         text = row.get('text') or row.get('content') or ''
         if not text.strip():
-            continue
+            return ()
         if min_chars and len(text) < min_chars:
-            continue
+            return ()
         in_holdout = pretrain_holdout_bucket(text, holdout_pct)
         if exclude_holdout and in_holdout:
-            continue
+            return ()
         if only_holdout and not in_holdout:
-            continue
-        if skipped < skip_docs:
-            skipped += 1
-            continue
-        _bump_counter(doc_counters, counter_key)
-        yield text
+            return ()
+        return (text,)
+
+    mode = 'only' if only_holdout else ('ex' if exclude_holdout else 'all')
+    yield from _parquet_stream(
+        f'fineweb_{name}_e{edu_score_min}_h{holdout_pct}_{mode}_m{min_chars}', files,
+        extract, ['text', 'content', 'score', 'edu_score'], skip_docs=skip_docs,
+        doc_counters=doc_counters, counter_key=counter_key, fresh_file=fresh_file)
 
 
 PG19_REPO = 'emozilla/pg19'   # parquet mirror; deepmind/pg19 is script-based (dead in datasets>=3)
@@ -1167,6 +1436,7 @@ def _pg19_text_iter(
     doc_counters: Optional[Dict[str, int]] = None,
     counter_key: str = 'pg19',
     max_chars_per_doc: int = 400_000,
+    fresh_file: bool = False,
 ) -> Iterator[str]:
     """Stream PG-19 books (Project Gutenberg, pre-1919) as long documents.
 
@@ -1175,18 +1445,13 @@ def _pg19_text_iter(
     ``tokenizer.encode`` call stays bounded; each piece is a doc for the cursor
     (``doc_counters``/``skip_docs``). Inside a piece the token chunker packs
     contiguous seq_len windows, so T=8192/32768 windows see real long-range
-    text (the 'pg19' source, 2026-09-05, Stage L).
+    text (the 'pg19' source, 2026-09-05, Stage L). Train split files only.
     """
-    from datasets import load_dataset
-
-    stream = load_dataset(PG19_REPO, split='train', streaming=True)
-    skipped = 0
-    for row in stream:
+    def extract(row):
         text = row.get('text') or ''
         if not text.strip():
-            continue
-        start = 0
-        n = len(text)
+            return ()
+        pieces, start, n = [], 0, len(text)
         while start < n:
             end = min(start + max_chars_per_doc, n)
             if end < n:
@@ -1195,13 +1460,14 @@ def _pg19_text_iter(
                     end = cut
             piece = text[start:end]
             start = end
-            if not piece.strip():
-                continue
-            if skipped < skip_docs:
-                skipped += 1
-                continue
-            _bump_counter(doc_counters, counter_key)
-            yield piece
+            if piece.strip():
+                pieces.append(piece)
+        return tuple(pieces)
+
+    files = _hf_parquet_files(PG19_REPO, 'data/train-*.parquet')
+    yield from _parquet_stream(
+        f'pg19_c{max_chars_per_doc}', files, extract, ['text'], skip_docs=skip_docs,
+        doc_counters=doc_counters, counter_key=counter_key, fresh_file=fresh_file)
 
 
 def _tag_source(name: str, it: Iterator[str]) -> Iterator[Tuple[str, str]]:
@@ -1380,6 +1646,7 @@ def _smoltalk2_row_iter(
     counter_key: str = '',
     splits: Optional[List[str]] = None,
     emit_source: bool = False,
+    fresh_file: bool = False,
 ):
     """Stream normalized message lists from a smoltalk2 config.
 
@@ -1391,6 +1658,23 @@ def _smoltalk2_row_iter(
     ``counter_key`` is empty, per-split counts are recorded in ``doc_counters``.
     """
     from datasets import load_dataset
+
+    if not emit_source and counter_key and splits is None:
+        # Pretrain-blend path: fast resumable reader over the same files in the
+        # same order (sorted splits, sorted files) the per-split stream used.
+        files: List[str] = []
+        for split in _smoltalk2_split_names(config):
+            files += _hf_parquet_files(SMOLTALK2_REPO, f'{config}/{split}-*.parquet')
+
+        def extract(row):
+            msgs = _normalize_messages(row.get('messages') or row.get('conversations'))
+            return (msgs,) if msgs else ()
+
+        yield from _parquet_stream(
+            f'smoltalk2_{config}', files, extract, ['messages', 'conversations'],
+            skip_docs=skip_rows, doc_counters=doc_counters, counter_key=counter_key,
+            fresh_file=fresh_file)
+        return
 
     names = splits or _smoltalk2_split_names(config)
     skipped = 0
@@ -1425,6 +1709,7 @@ def _smoltalk2_blend_text_iter(
     skip_rows: int = 0,
     doc_counters: Optional[Dict[str, int]] = None,
     counter_key: str = 'smoltalk2_mid',
+    fresh_file: bool = False,
 ) -> Iterator[str]:
     """smoltalk2 conversations rendered to ChatML *text* for the pretrain blend.
 
@@ -1434,6 +1719,7 @@ def _smoltalk2_blend_text_iter(
     """
     for msgs in _smoltalk2_row_iter(
         config, skip_rows=skip_rows, doc_counters=doc_counters, counter_key=counter_key,
+        fresh_file=fresh_file,
     ):
         msgs = _strip_think_content(msgs)
         if not msgs:
@@ -1737,6 +2023,7 @@ def _open_source_iter(
     skip: int,
     doc_counters: Optional[Dict[str, int]],
     mix_seed: int,
+    fresh_file: bool = False,
 ) -> Iterator[str]:
     """One text iterator per registry source (shared by the live blend and the
     token-cache builder so the two can never disagree on a source's recipe)."""
@@ -1745,16 +2032,16 @@ def _open_source_iter(
             return _dclm_edu_text_iter(
                 edu_score_min, exclude_holdout=exclude_holdout,
                 holdout_pct=holdout_pct, skip_docs=skip,
-                doc_counters=doc_counters, counter_key=name,
+                doc_counters=doc_counters, counter_key=name, fresh_file=fresh_file,
             )
         if name == 'pg19':
             return _pg19_text_iter(skip_docs=skip, doc_counters=doc_counters,
-                                   counter_key=name)
+                                   counter_key=name, fresh_file=fresh_file)
         return _fineweb_edu_text_iter(  # fineweb / fineweb_long
             edu_score_min, name=fineweb_name, exclude_holdout=exclude_holdout,
             holdout_pct=holdout_pct, skip_docs=skip,
             doc_counters=doc_counters, counter_key=name,
-            min_chars=int(spec.get('min_chars', 0)),
+            min_chars=int(spec.get('min_chars', 0)), fresh_file=fresh_file,
         )
     if spec['kind'] == 'synthetic':
         if name == 'reason':
@@ -1767,7 +2054,7 @@ def _open_source_iter(
         )
     return _smoltalk2_blend_text_iter(  # messages -> ChatML text
         config=spec.get('config', 'Mid'), skip_rows=skip,
-        doc_counters=doc_counters, counter_key=name,
+        doc_counters=doc_counters, counter_key=name, fresh_file=fresh_file,
     )
 
 
@@ -2155,6 +2442,7 @@ def load_pretrain_mix(
     offset_tokens: int = 0,
     use_cache: bool = True,
     answer_weight: float = 1.0,
+    stream_fresh_file: bool = False,
 ):
     """Stream a blended corpus for from-scratch pretrain (knowledge+reasoning+chat).
 
@@ -2234,6 +2522,7 @@ def load_pretrain_mix(
             s, spec, edu_score_min=edu_score_min, fineweb_name=fineweb_name,
             exclude_holdout=exclude_holdout, holdout_pct=holdout_pct, skip=sk,
             doc_counters=doc_counters, mix_seed=mix_seed,
+            fresh_file=stream_fresh_file,
         )
         if spec['kind'] == 'web':
             web_sources.append(s)
