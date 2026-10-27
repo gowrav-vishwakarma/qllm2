@@ -15,6 +15,18 @@
 - When we do some ablation and it is proven to be not good, record in experiments, its maths logic but once it is proven not useful, remove its path from all code of that version, to keep code neat and clean. 
 - logs files should be identifeable with name that what version or commit hash made this so we can find which log to see from hundreds of log files. (if we need, last run, we should get by its last modified time or by commit hash if at some specific time) 
 
+## Sync = commit -> push origin -> pull (user rule, 2026-10-27)
+- Code reaches the other box ONLY through git: commit, `git push origin
+  master` (never the `p` remote), `git pull` on the other side. No scp/rsync
+  of code. Throwaway local debugging (`v*/tmp/`, smokes) needs no commit.
+- Launchers (`v13_sempty/tmp_pretrain_mix.sh`, `tmp_wikitext_fair.sh`,
+  `tmp_r4_screen.sh`) source `scripts/require_clean_tree.sh`: they REFUSE to
+  start on uncommitted tracked changes, and when resuming a run pinned to an
+  older hash (`PIN_HASH` / `SCREEN_HASH`) they refuse if code (not *.md /
+  logs/) changed since that hash. Smoke-only overrides: `ALLOW_DIRTY=1`,
+  `ALLOW_CODE_DRIFT=1` (printed as a warning in the log).
+- Commit messages: what + why + verification. No Co-Authored-By lines.
+
 ## Log naming convention (traceability) (user rule, 2026-09-04)
 Every training/benchmark log MUST be named so it can be located months later
 without opening it. Canonical pattern (used by `v13_sempty/tmp_wikitext_fair.sh`):

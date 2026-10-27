@@ -26,6 +26,7 @@ SCREEN_TOKENS="${SCREEN_TOKENS:-300000000}"
 SCREEN_LR="${SCREEN_LR:-5e-5}"
 ARMS="${ARMS:-store ctrl}"
 HASH="${SCREEN_HASH:-$(git rev-parse --short HEAD)}"   # pin on relaunch
+source scripts/require_clean_tree.sh "$HASH"           # committed code == pinned code
 echo "=== r4 screen start $(date -u +%FT%TZ) SCREEN_HASH=$HASH arms='$ARMS' ==="
 
 for arm in $ARMS; do
@@ -38,7 +39,7 @@ for arm in $ARMS; do
   OLD_LOG="${OLD_LOG:-logs/v13_sempty_${TAG}_${HASH}_$(date +%Y%m%d_%H%M).log}"
   STORE=0; [ "$arm" = "store" ] && STORE=1
   echo "=== arm $arm (STORE=$STORE) ckpt=$CKPT_DIR log=$OLD_LOG $(date -u +%FT%TZ) ==="
-  TAG="$TAG" CKPT_DIR="$CKPT_DIR" RESUME_LOG="$OLD_LOG" STORE="$STORE" INIT_FROM="$INIT" \
+  TAG="$TAG" CKPT_DIR="$CKPT_DIR" RESUME_LOG="$OLD_LOG" PIN_HASH="$HASH" STORE="$STORE" INIT_FROM="$INIT" \
   SOURCES=dclm,fineweb,smoltalk2_mid,recall WEIGHTS=0.44,0.41,0.10,0.05 \
   DELTA=1 ANSWER_W=100 TARGET_TOKENS="$SCREEN_TOKENS" BLEND_WARMUP=0 \
   LR="$SCREEN_LR" WARMUP=200 VAL_EVERY=1000 SAVE_EVERY=1000 KEEP_EVERY=0 \

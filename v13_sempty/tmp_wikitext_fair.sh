@@ -42,6 +42,7 @@ VAULT="${VAULT:-0}"            # A2b pinned state + protect gate
 DELTA="${DELTA:-0}"            # A3 delta erase/write
 COND_MEM="${COND_MEM:-0}"      # A4 conditional n-gram memory
 
+source scripts/require_clean_tree.sh "${PIN_HASH:-}"   # no uncommitted code
 HASH=$(git rev-parse --short HEAD)
 STAMP=$(date +%Y%m%d_%H%M)
 LOG="logs/v13_sempty_${TAG}_${HASH}_${STAMP}.log"

@@ -71,6 +71,9 @@ MAX_RETRIES="${MAX_RETRIES:-5}"        # auto-resume attempts after a crash
 CKPT_DIR="${CKPT_DIR:-}"               # default checkpoints_v13_sempty/<TAG>_<HASH>
 RESUME_LOG="${RESUME_LOG:-}"           # append to an existing run log instead of a new one
 
+# Refuse uncommitted code / code drift from a pinned run (PIN_HASH = the
+# commit an existing CKPT_DIR/RESUME_LOG is named after).
+source scripts/require_clean_tree.sh "${PIN_HASH:-}"
 HASH=$(git rev-parse --short HEAD)
 STAMP=$(date +%Y%m%d_%H%M)
 CKPT_DIR="${CKPT_DIR:-checkpoints_v13_sempty/${TAG}_${HASH}}"
