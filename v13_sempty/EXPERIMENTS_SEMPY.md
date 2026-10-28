@@ -1781,6 +1781,30 @@ a1/a4/a8 0.65/0.57/0.49) while PAM is still at chance (0.23/0.16/0.10) —
 attention looks up exact tokens from the start; PAM must learn to write them
 (it does between 150M and 300M, "C1 result" control). The 3B runs decide.
 
+**Transformer++ 3B result (`mix3b_transformer_answ100` @`e072a8f`,
+12:51–18:54Z, 138K tok/s avg).** Logs
+`logs/v13_sempty_mix3b_transformer_answ100_{driver_,}e072a8f*.log`, probe
+`logs/memory_probes/v13_sempty_mix3b_transformer_answ100_e072a8f_t40_behavioral.json`,
+PG-19 `logs/pos_loss/v13_sempty_mix3b_transformer_answ100_e072a8f_pg19.json`.
+
+| 3B tok, equal data | holdout PPL | WikiText PPL | recall mean, 63 cells | recall mean, ctx ≤ 2048 | a1 far (pos0/.5 @1k,2k) | a4/a8 pos1 mean | train tok/s (6000) | state |
+|---|---|---|---|---|---|---|---|---|
+| Mamba-2 (LR 1.2e-3) | **23.68** | 46.91 | 0.613 | 0.697 | **1.000** | 0.450 | **188.6K** | 13.4 MB fixed |
+| Transformer++ (LR 1.2e-3) | 24.69 | **46.61** | 0.539 | 0.693 | 0.806 | 0.523 | 138.4K | 32 KB/token |
+| PAM Phase 3b (old LR 2e-4, `1c913ef`) | 26.38 | 54.73 | **0.667** | **0.772** | 0.412 | **0.900** | 66.5K | **3.7 MB fixed** |
+| PAM @1.2e-3 | running | | | | | | | |
+
+- The transformer reads exact tokens perfectly up to 1024 and fails past
+  its 2048 training length: a1 pos1 @4096 0.23, PG-19 loss 3.55 → 4.28 →
+  5.54 on [1k,2k) / [2k,4k) / [4k,8k) (far_gain +0.018 / −0.70 / −1.92;
+  RoPE does not extrapolate). Mamba-2 +0.017/+0.026/+0.031, PAM
+  +0.014/+0.019/+0.022.
+- Even inside 2048 the transformer's multi-fact recall (a4 0.50, a8 0.41
+  means) is below PAM's (0.72 / 0.57). Attention can see the facts but the
+  100M model does not reliably pick the right one among 4–8.
+- LM: Mamba-2 best holdout, the transformer best WikiText by 0.3 PPL. The
+  old PAM trails both; the 1.2e-3 rerun decides (at 100M tok PAM led both).
+
 ## Engineering: batch prefetch + the diag panel's hidden data skip (2026-10-27, `129b406`)
 
 Found while the Mamba-2 baseline ran data-bound (98K tok/s of a possible

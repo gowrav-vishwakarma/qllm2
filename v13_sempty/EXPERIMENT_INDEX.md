@@ -49,10 +49,10 @@ logs of the original run are named after the *run* hash.)
 | id | model | status | notebook section | code |
 |---|---|---|---|---|
 | Mamba-2 | 102.6M `mamba_ssm` 2.2.5, LR 1.2e-3, 3B tok | DONE: holdout 23.68, WikiText 46.91 | "Mamba-2 result" | `baseline_mamba2.py`, run `b36e3a5` |
-| Transformer++ | 101.9M RMSNorm/RoPE/SwiGLU | queued (LR screen + 3B) | "Equal-data scoreboard" | `baseline_transformer.py` (`53d632e`) |
+| Transformer++ | 101.9M RMSNorm/RoPE/SwiGLU, LR 1.2e-3, 3B tok | DONE: holdout 24.69, WikiText 46.61, recall mean 0.539 (fails past 2048) | "Transformer++ 3B result" | `baseline_transformer.py`, run `e072a8f` |
 
 ## Running / pending
 
 | id | idea | status | notebook section |
 |---|---|---|---|
-| PAM 3B @1.2e-3 | Phase 3b recipe at the tuned LR (no C1) | queued after Transformer++ | "Equal-data scoreboard" |
+| PAM 3B @1.2e-3 | Phase 3b recipe at the tuned LR (no C1) | running on the 6000 from 2026-10-28 18:54Z, run `9982a79`, ETA ~08:00Z 10-29 | "Equal-data scoreboard" |

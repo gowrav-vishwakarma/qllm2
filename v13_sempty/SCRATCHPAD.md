@@ -18,7 +18,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **NOW (2026-10-28 12:15Z) — C1 FAIL (removed, code at `4c688cb`).
+* **NOW (2026-10-28 19:00Z) — Transformer++ 3B DONE (`e072a8f`): holdout
+  24.69, WikiText 46.61, recall mean 0.539 (fails past 2048); EXPERIMENTS
+  "Transformer++ 3B result". PAM 3B @1.2e-3 running on the 6000 (tmux
+  `tfchain`, run hash `9982a79`, TAG `mix3b_delta_answ100_lr1.2e-3`, driver
+  `logs/v13_sempty_mix3b_delta_answ100_lr1.2e-3_driver_9982a79.log`), ETA
+  ~08:00Z 10-29; probe + PG-19 run automatically after it. Resume if it dies:
+  `cd ~/Development/qllm-private && ARCH=pam LR_FULL=1.2e-3 TAG_FULL=mix3b_delta_answ100_lr1.2e-3 SCREEN_HASH=9982a79 bash v13_sempty/tmp_equal_3b.sh`
+  in tmux. Then fill the scoreboard row.**
+
+* (history) **NOW (2026-10-28 12:15Z) — C1 FAIL (removed, code at `4c688cb`).
   Transformer++ equal-data run starting on the RTX 6000 (tmux `tfchain`),
   then PAM 3B at LR 1.2e-3 (no C1). ETA transformer ≈ 18:30Z, PAM 3B ≈
   07:30Z tomorrow.**

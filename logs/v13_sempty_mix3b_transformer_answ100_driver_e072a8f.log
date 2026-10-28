@@ -1,0 +1,96 @@
+=== equal-3b mix3b_transformer_answ100 start 2026-10-28T12:05:02Z SCREEN_HASH=e072a8f arch=transformer extra='' ===
+=== tflr start 2026-10-28T12:05:02Z SCREEN_HASH=e072a8f arms='lr2e-4:LR=2e-4 lr6e-4:LR=6e-4 lr1.2e-3:LR=1.2e-3' base='ARCH=transformer CHRONO=0 OUT_GATE=0 DELTA=0 ANSWER_W=100 SOURCES=dclm,fineweb,smoltalk2_mid,recall WEIGHTS=0.44,0.41,0.10,0.05' ===
+=== arm lr2e-4 (LR=2e-4) ckpt=checkpoints_v13_sempty/tflr_lr2e-4_e072a8f log=logs/v13_sempty_tflr_lr2e-4_e072a8f_20261028_1205.log 2026-10-28T12:05:02Z ===
+=== tflr_lr2e-4 start 2026-10-28T12:05:02Z commit=e072a8f log=logs/v13_sempty_tflr_lr2e-4_e072a8f_20261028_1205.log ckpt=checkpoints_v13_sempty/tflr_lr2e-4_e072a8f ===
+=== tflr_lr2e-4 end 1793189951 exit=0 attempts=1 ===
+=== arm lr2e-4 train exit=0 2026-10-28T12:19:11Z ===
+=== arm lr6e-4 (LR=6e-4) ckpt=checkpoints_v13_sempty/tflr_lr6e-4_e072a8f log=logs/v13_sempty_tflr_lr6e-4_e072a8f_20261028_1219.log 2026-10-28T12:19:11Z ===
+=== tflr_lr6e-4 start 2026-10-28T12:19:11Z commit=e072a8f log=logs/v13_sempty_tflr_lr6e-4_e072a8f_20261028_1219.log ckpt=checkpoints_v13_sempty/tflr_lr6e-4_e072a8f ===
+=== tflr_lr6e-4 end 1793190802 exit=0 attempts=1 ===
+=== arm lr6e-4 train exit=0 2026-10-28T12:33:22Z ===
+=== arm lr1.2e-3 (LR=1.2e-3) ckpt=checkpoints_v13_sempty/tflr_lr1.2e-3_e072a8f log=logs/v13_sempty_tflr_lr1.2e-3_e072a8f_20261028_1233.log 2026-10-28T12:33:22Z ===
+=== tflr_lr1.2e-3 start 2026-10-28T12:33:22Z commit=e072a8f log=logs/v13_sempty_tflr_lr1.2e-3_e072a8f_20261028_1233.log ckpt=checkpoints_v13_sempty/tflr_lr1.2e-3_e072a8f ===
+=== tflr_lr1.2e-3 end 1793191650 exit=0 attempts=1 ===
+=== arm lr1.2e-3 train exit=0 2026-10-28T12:47:30Z ===
+Results saved to logs/memory_probes/v13_sempty_tflr_lr2e-4_e072a8f_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+  10/50 docs (1s)
+  20/50 docs (2s)
+  30/50 docs (3s)
+  40/50 docs (4s)
+  50/50 docs (5s)
+  [    0,   64)  loss 4.8781  ppl  131.39
+  [   64,  128)  loss 4.7136  ppl  111.46
+  [  128,  256)  loss 4.5288  ppl   92.65
+  [  256,  512)  loss 4.6004  ppl   99.52
+  [  512, 1024)  loss 4.7056  ppl  110.57   short-ctx 4.7056  far_gain +0.0000
+  [ 1024, 2048)  loss 4.7333  ppl  113.67   short-ctx 4.7331  far_gain -0.0002
+  [ 2048, 4096)  loss 4.9486  ppl  140.98   short-ctx 4.7814  far_gain -0.1672
+  [ 4096, 8192)  loss 5.3025  ppl  200.83   short-ctx 4.7945  far_gain -0.5079
+wrote logs/pos_loss/v13_sempty_tflr_lr2e-4_e072a8f_pg19.json
+Results saved to logs/memory_probes/v13_sempty_tflr_lr6e-4_e072a8f_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+  10/50 docs (1s)
+  20/50 docs (2s)
+  30/50 docs (3s)
+  40/50 docs (4s)
+  50/50 docs (5s)
+  [    0,   64)  loss 4.6906  ppl  108.92
+  [   64,  128)  loss 4.4543  ppl   85.99
+  [  128,  256)  loss 4.2633  ppl   71.04
+  [  256,  512)  loss 4.2879  ppl   72.81
+  [  512, 1024)  loss 4.3616  ppl   78.39   short-ctx 4.3616  far_gain -0.0000
+  [ 1024, 2048)  loss 4.3883  ppl   80.50   short-ctx 4.3977  far_gain +0.0094
+  [ 2048, 4096)  loss 5.0936  ppl  162.97   short-ctx 4.4263  far_gain -0.6672
+  [ 4096, 8192)  loss 5.5987  ppl  270.08   short-ctx 4.4548  far_gain -1.1439
+wrote logs/pos_loss/v13_sempty_tflr_lr6e-4_e072a8f_pg19.json
+Results saved to logs/memory_probes/v13_sempty_tflr_lr1.2e-3_e072a8f_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+  10/50 docs (1s)
+  20/50 docs (2s)
+  30/50 docs (3s)
+  40/50 docs (4s)
+  50/50 docs (5s)
+  [    0,   64)  loss 4.6592  ppl  105.55
+  [   64,  128)  loss 4.3999  ppl   81.44
+  [  128,  256)  loss 4.2264  ppl   68.47
+  [  256,  512)  loss 4.2383  ppl   69.29
+  [  512, 1024)  loss 4.3294  ppl   75.90   short-ctx 4.3295  far_gain +0.0001
+  [ 1024, 2048)  loss 4.3508  ppl   77.54   short-ctx 4.3629  far_gain +0.0121
+  [ 2048, 4096)  loss 5.0186  ppl  151.19   short-ctx 4.3833  far_gain -0.6353
+  [ 4096, 8192)  loss 5.5123  ppl  247.72   short-ctx 4.4166  far_gain -1.0957
+wrote logs/pos_loss/v13_sempty_tflr_lr1.2e-3_e072a8f_pg19.json
+--- final holdout val_loss (last val of each arm) ---
+  lr2e-4: 4.5543
+  lr6e-4: 4.1379
+  lr1.2e-3: 4.0733
+=== tflr DONE 2026-10-28T12:51:21Z ===
+  LR 2e-4: final holdout val_loss=4.5543
+  LR 6e-4: final holdout val_loss=4.1379
+  LR 1.2e-3: final holdout val_loss=4.0733
+=== LR choice: 1.2e-3 (val_loss 4.0733) ===
+=== mix3b_transformer_answ100 LR=1.2e-3 ckpt=checkpoints_v13_sempty/mix3b_transformer_answ100_e072a8f log=logs/v13_sempty_mix3b_transformer_answ100_e072a8f_20261028_1251.log 2026-10-28T12:51:21Z ===
+=== mix3b_transformer_answ100 start 2026-10-28T12:51:21Z commit=e072a8f log=logs/v13_sempty_mix3b_transformer_answ100_e072a8f_20261028_1251.log ckpt=checkpoints_v13_sempty/mix3b_transformer_answ100_e072a8f ===
+=== mix3b_transformer_answ100 end 1793213561 exit=0 attempts=1 ===
+=== mix3b_transformer_answ100 exit=0 2026-10-28T18:52:41Z ===
+Results saved to logs/memory_probes/v13_sempty_mix3b_transformer_answ100_e072a8f_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+  10/50 docs (1s)
+  20/50 docs (2s)
+  30/50 docs (3s)
+  40/50 docs (4s)
+  50/50 docs (5s)
+  [    0,   64)  loss 4.0141  ppl   55.37
+  [   64,  128)  loss 3.6166  ppl   37.21
+  [  128,  256)  loss 3.4632  ppl   31.92
+  [  256,  512)  loss 3.4326  ppl   30.96
+  [  512, 1024)  loss 3.5208  ppl   33.81   short-ctx 3.5211  far_gain +0.0002
+  [ 1024, 2048)  loss 3.5532  ppl   34.93   short-ctx 3.5712  far_gain +0.0180
+  [ 2048, 4096)  loss 4.2778  ppl   72.08   short-ctx 3.5729  far_gain -0.7049
+  [ 4096, 8192)  loss 5.5353  ppl  253.47   short-ctx 3.6177  far_gain -1.9176
+wrote logs/pos_loss/v13_sempty_mix3b_transformer_answ100_e072a8f_pg19.json
+=== equal-3b mix3b_transformer_answ100 DONE 2026-10-28T18:53:58Z ===
