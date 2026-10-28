@@ -79,6 +79,7 @@ Named axes
 
 from __future__ import annotations
 
+import math
 from typing import Dict
 
 import torch
@@ -546,9 +547,15 @@ class RealPAMLayer(nn.Module):
         # A3: delta erase/write. Unit keys; per-head erase b_e=sigmoid(.-3) (cap
         # 0.95) and write b_w=sigmoid(.) gates. Off unless cfg.delta.
         self.delta = cfg.delta
-        if self.delta:
+        # C1: write/erase/fade all from the decay step dt (no own projections).
+        self.couple = cfg.couple
+        if self.couple and not self.delta:
+            raise ValueError("couple needs delta (C1 couples the A3 gates)")
+        if self.delta and not self.couple:
             self.erase_proj = NamedLinear(self.model_dim, self.decay_out)
             self.write_proj = NamedLinear(self.model_dim, self.decay_out)
+        if self.couple:
+            self.couple_a_log = nn.Parameter(torch.full((cfg.n_heads,), math.log(cfg.couple_a_init)))
 
         # N1 Chrono-PAM: content-modulated rotary retention. A per-head time
         # warp g_t = exp(clamp(W x, +/-3)) multiplies the per-step RoPE angle;
@@ -706,11 +713,19 @@ class RealPAMLayer(nn.Module):
                 named(kr.reshape(B, H, T, K), layout),
                 clock_out)
 
-    def _decay(self, tokens: NamedTensor) -> NamedTensor:
-        """Per-head retention in (0, 1): exp(-softplus(linear(token) + bias))."""
-        batch, time = tokens.layout[0], tokens.layout[1]
+    def _step(self, tokens: NamedTensor) -> NamedTensor:
+        """Per-head step dt = softplus(linear(token) + bias) > 0 (fp32 under
+        autocast: softplus is on autocast's fp32 list)."""
         logit = self.dt_proj(tokens).alias(self.decay_out, self.heads)
-        retention = exp(-softplus(logit + named(self.dt_bias, (self.heads,))))
+        return softplus(logit + named(self.dt_bias, (self.heads,)))
+
+    def _decay(self, tokens: NamedTensor) -> NamedTensor:
+        """Per-head retention in (0, 1): exp(-dt), or exp(-A dt) under C1."""
+        batch, time = tokens.layout[0], tokens.layout[1]
+        dt = self._step(tokens)
+        if self.couple:
+            dt = dt * exp(named(self.couple_a_log, (self.heads,)))
+        retention = exp(-dt)
         if self.capture_decay:
             _capture_retention(retention)
         return retention.to(batch, self.heads, time)
@@ -817,8 +832,12 @@ class RealPAMLayer(nn.Module):
 
     def _delta_gates(self, tokens: NamedTensor):
         """A3 per-token, per-head write gate ``b_w`` in (0,1) and erase gate
-        ``b_e`` in (0, 0.95) as raw ``[B, H, T]`` (shared by prefill/decode)."""
+        ``b_e`` in (0, 0.95) as raw ``[B, H, T]`` (shared by prefill/decode).
+        C1: one gate ``b = 1 - e^{-dt}`` for both, from the decay's own step."""
         batch, time = tokens.layout[0], tokens.layout[1]
+        if self.couple:
+            b = -torch.expm1(-self._step(tokens).raw(batch, self.heads, time))
+            return b, b
         be = torch.sigmoid(
             self.erase_proj(tokens).alias(self.decay_out, self.heads).raw(batch, self.heads, time)
             - 3.0).clamp(max=0.95)

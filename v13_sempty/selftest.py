@@ -587,6 +587,100 @@ def test_out_gate_parity_and_decode(batch_size=2, seq_len=17, seed=0):
     return True
 
 
+def test_couple_gates_and_decode(batch_size=2, seq_len=17, seed=0):
+    """C1 coupled gates: one step dt drives write, erase and fade.
+
+    (1) write == erase == 1 - e^{-dt} and fade == e^{-A dt} with
+    dt = softplus(dt_proj(x) + dt_bias); with A = 1 (init) the fade equals
+    the uncoupled A3 fade for the same weights; (2) one backward reaches
+    couple_a_log and dt_proj, and the A3 erase/write projections do not
+    exist; (3) with live random gates, chunked prefill == prefill + steps ==
+    token-by-token decode, notebook and clock included.
+    """
+    import v13_sempty.triton_kernels as tk
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.chunk_size = 7
+    cfg.chrono = True
+    cfg.delta = True
+    cfg.couple = True
+    model = LM(cfg).eval()
+    pam = model.blocks[0].pam
+    assert not hasattr(pam, 'erase_proj') and not hasattr(pam, 'write_proj')
+    base = get_config('tiny_real')
+    base.chunk_size, base.chrono, base.delta = 7, True, True
+    ref = LM(base).eval()
+    ref.load_state_dict(model.state_dict(), strict=False)
+
+    x = torch.randn(batch_size, seq_len, cfg.dim)
+    batch, time = Dim("batch", batch_size), Dim("time", seq_len)
+    tokens = named(x, (batch, time, pam.model_dim))
+    with torch.no_grad():
+        nn.init.normal_(pam.dt_proj.weight, std=0.5)
+        ref.blocks[0].pam.dt_proj.weight.copy_(pam.dt_proj.weight)
+        dt = F.softplus(x @ pam.dt_proj.weight.T + pam.dt_proj.bias + pam.dt_bias)  # [B,T,H]
+        fade_init = pam._decay(tokens).raw(batch, pam.heads, time)
+        rpam = ref.blocks[0].pam
+        fade_ref = rpam._decay(named(x, (batch, time, rpam.model_dim))).raw(
+            batch, rpam.heads, time)
+        pam.couple_a_log.normal_(std=0.7)
+        a = pam.couple_a_log.exp()
+        bw, be = pam._delta_gates(tokens)
+        fade = pam._decay(tokens).raw(batch, pam.heads, time)
+    want_b = (1 - torch.exp(-dt)).permute(0, 2, 1)
+    want_fade = torch.exp(-dt * a).permute(0, 2, 1)
+    d_b = max((bw - want_b).abs().max().item(), (be - want_b).abs().max().item())
+    d_fade = (fade - want_fade).abs().max().item()
+    d_init = (fade_init - fade_ref).abs().max().item()
+    assert d_b < 1e-6, f"write/erase gate != 1-e^-dt: {d_b:.3e}"
+    assert d_fade < 1e-6, f"fade != e^-A dt: {d_fade:.3e}"
+    assert d_init < 1e-6, f"A=1 fade != uncoupled fade: {d_init:.3e}"
+
+    old = tk._DELTA_COMPILE
+    tk._DELTA_COMPILE = False          # CPU selftest: eager delta prep
+    try:
+        ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len))
+        model.train()
+        model.zero_grad(set_to_none=True)
+        logits, _, _ = model.forward(ids)
+        F.cross_entropy(logits.reshape(-1, cfg.vocab_size), ids.reshape(-1)).backward()
+        for blk in model.blocks:
+            assert blk.pam.couple_a_log.grad is not None, "couple_a_log got no grad"
+            assert blk.pam.dt_proj.weight.grad is not None, "dt_proj got no grad"
+
+        model.eval()
+        with torch.no_grad():
+            for blk in model.blocks:
+                nn.init.normal_(blk.pam.dt_proj.weight, std=0.5)
+                nn.init.normal_(blk.pam.dt_proj.bias, std=1.0)
+                blk.pam.couple_a_log.normal_(std=0.7)
+                nn.init.normal_(blk.pam.warp_proj.weight, std=0.5)
+            logits_par, states_par, _ = model.forward(ids)
+            prefix = 5
+            lp, states, _ = model.forward(ids[:, :prefix])
+            parts = [lp]
+            for t in range(prefix, seq_len):
+                lt, states, _ = model.forward(ids[:, t:t + 1], states=states, step_offset=t)
+                parts.append(lt)
+            logits_mix = torch.cat(parts, dim=1)
+            parts, states0 = [], None
+            for t in range(seq_len):
+                lt, states0, _ = model.forward(ids[:, t:t + 1], states=states0, step_offset=t)
+                parts.append(lt)
+            logits_seq = torch.cat(parts, dim=1)
+    finally:
+        tk._DELTA_COMPILE = old
+    d_mix = (logits_par - logits_mix).abs().max().item()
+    d_seq = (logits_par - logits_seq).abs().max().item()
+    d_nb = max(_max_diff(sp[0], ss[0]) for sp, ss in zip(states_par, states))
+    assert d_mix < RECUR_ATOL, f"prefill+step logits disagree: {d_mix:.3e}"
+    assert d_seq < RECUR_ATOL, f"stepwise logits disagree: {d_seq:.3e}"
+    assert d_nb < RECUR_ATOL, f"carried notebook disagrees: {d_nb:.3e}"
+    print(f"  gates {d_b:.1e}  fade {d_fade:.1e}  A=1 vs A3 fade {d_init:.1e}   "
+          f"decode: prefill+step {d_mix:.3e}  stepwise {d_seq:.3e}  state {d_nb:.3e}")
+    return True
+
+
 def test_prefetch_order_and_cursor():
     """train._Prefetch: the batches built on the background thread are exactly
     the inline ones, in order, and each carries the data cursor as it stood
@@ -714,6 +808,7 @@ def main():
         test_chrono_rotary_parity,
         test_chrono_parallel_vs_recurrent,
         test_out_gate_parity_and_decode,
+        test_couple_gates_and_decode,
         test_prefetch_order_and_cursor,
         test_worker_stream_order_and_cursor,
     ]

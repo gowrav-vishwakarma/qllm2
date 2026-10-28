@@ -51,6 +51,8 @@ OUT_GATE="${OUT_GATE:-1}"
 NSTATES="${NSTATES:-0}"        # A2 states per head (0 = preset default 1)
 VAULT="${VAULT:-0}"            # A2b pinned state + protect gate (needs NSTATES>=2)
 DELTA="${DELTA:-0}"            # A3 delta erase/write (KEEP 2026-09-05: exact 8-way recall on the micro-bench)
+COUPLE="${COUPLE:-0}"          # C1 write=erase=1-e^-dt, fade e^-A dt from ONE dt (needs DELTA=1)
+COUPLE_A="${COUPLE_A:-}"       # C1 initial fade rate A per head (default 1.0 = today's fade)
 BASE_DT_BIAS="${BASE_DT_BIAS:-}" # override initial decay bias (default -4; bench: -6/-8 no gain)
                                # (LONG_HEADS removed 2026-10-27: R3 FAIL, EXPERIMENTS "R3")
                                # (STORE removed 2026-10-27: R4 FAIL, EXPERIMENTS "R4")
@@ -86,6 +88,8 @@ if [ "$OUT_GATE" = "1" ]; then EXTRA+=(--out_gate); fi
 if [ "$NSTATES" != "0" ]; then EXTRA+=(--n_states "$NSTATES"); fi
 if [ "$VAULT" = "1" ]; then EXTRA+=(--vault); fi
 if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi
+if [ "$COUPLE" = "1" ]; then EXTRA+=(--couple); fi
+if [ -n "$COUPLE_A" ]; then EXTRA+=(--couple_a_init "$COUPLE_A"); fi
 if [ "$ANSWER_W" != "1" ]; then EXTRA+=(--answer_weight "$ANSWER_W"); fi
 if [ -n "$BASE_DT_BIAS" ]; then EXTRA+=(--base_dt_bias "$BASE_DT_BIAS"); fi
 if [ -n "$INIT_FROM" ]; then EXTRA+=(--init_from "$INIT_FROM"); fi
