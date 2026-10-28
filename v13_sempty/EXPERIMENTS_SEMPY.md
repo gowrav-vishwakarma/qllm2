@@ -1635,6 +1635,47 @@ Reading (40 trials, chance 0.125):
 - In between (retention up but multi-fact or PPL cost over the bar): report,
   no automatic decision.
 
+**LR screen result (`pamlr` @`ce8bcc2`, 2026-10-28 05:32–07:03Z, 66.5K tok/s).**
+Logs `logs/v13_sempty_pamlr_{driver,lr*}_ce8bcc2*.log`; probes
+`logs/memory_probes/v13_sempty_pamlr_lr*_ce8bcc2_t40_behavioral.json`.
+Mamba-2 rows = its own screen, same protocol and data (`m2lr`, `3f69057`).
+
+| LR | PAM holdout loss (PPL) | PAM WikiText PPL | Mamba-2 holdout loss (PPL) | Mamba-2 WikiText PPL |
+|---|---|---|---|---|
+| 2e-4 | 4.6467 (104.2) | 380.5 | 4.6091 (100.4) | 439.3 |
+| 6e-4 | 4.0963 (60.1) | 165.9 | 4.2329 (68.9) | 258.1 |
+| **1.2e-3** | **4.0293 (56.2)** | **152.1** | 4.0560 (57.8) | 183.3 |
+
+- **Pick 1.2e-3** (beats 6e-4 by 0.067 nats, 2e-4 by **0.617**): PAM *was*
+  LR-undertrained, by about as much as Mamba-2 (−0.553). At the tuned LR and
+  100M tokens PAM is **ahead** of Mamba-2 (holdout −0.027 nats, WikiText
+  152 vs 183). Whether that holds at 3B is the fair PPL test (3B at 1.2e-3,
+  ~12.5 h, user's call).
+- `dt_bias` still does not move at 5–6× the LR (layer means −3.91…−4.05 at
+  step 1800); the realised retention is set by the content path `dt_proj`
+  and falls as LR rises (0.85–0.99 at 2e-4 → 0.78–0.96 at 1.2e-3). A frozen
+  bias is not an LR symptom.
+- **Recall: no arm learned it at 100M tokens.** a1 pos0 @512 = 0.28 / 0.15 /
+  0.17 (precondition ≥ 0.5 failed); even a1 pos1 @128 (needle right before
+  the query) is 0.35 / 0.55 / 0.78 and ~0.25 beyond; a4/a8 at chance. (Phase
+  3b at 3B: 1.00 on all those cells.) 5 % recall docs × 100M = 5M recall
+  tokens is too few; the 27M micro-bench needed ~24M.
+
+**Amendment to the C1 protocol (written 2026-10-28 07:20Z, after the pamlr
+probes, before any C1 result).** The precondition failed, so per the rule the
+judgement moves to longer runs. To avoid a restart if 300M is still too
+short: control + ONE C1 arm on a **600M-token cosine schedule** (16,276
+steps, LR 1.2e-3, warmup 100, otherwise the screen recipe), milestone
+checkpoints every 150M tokens (4,069 steps) copied to the 4090 and probed
+there (40 trials) while the 6000 trains on. Verdict at the first milestone
+where the control meets the precondition (a1 pos0 @512 ≥ 0.5), with the same
+KEEP/FAIL bars on the C1 arm's matching milestone; holdout loss from the val
+at that milestone. If the control never meets it by 600M: no verdict, report
+the emergence curves. C1 variant: the `c1`/`c1a01` 100M arm with the higher
+a1 far mean (pos0/pos0.5 @1024+2048) if they differ by ≥ 0.10, else the
+lower 100M holdout loss if they differ by > 0.01, else `c1` (A = 1, the
+faithful Mamba-2 port). The two 100M C1 arms give no verdict of their own.
+
 ## Engineering: batch prefetch + the diag panel's hidden data skip (2026-10-27, `129b406`)
 
 Found while the Mamba-2 baseline ran data-bound (98K tok/s of a possible

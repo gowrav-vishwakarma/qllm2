@@ -4,8 +4,9 @@
 # env overrides, run SEQUENTIALLY (never concurrent); then the 40-trial recall
 # probe + PG-19 per-position loss for every arm. Same protocol as the Mamba-2
 # LR screen (tmp_mamba2_baseline.sh step A): 2,700 steps x 36,864 tok = 99.5M
-# tokens, warmup 100, val every 900. Use it for LR screens and for
-# architecture changes a warm start cannot judge fairly (new core recurrence).
+# tokens, warmup 100, val every 900 (BASE/ARMS may override any of these, e.g.
+# TARGET_TOKENS/VAL_EVERY/KEEP_EVERY for a longer run with milestones). Use it
+# for LR screens and for architecture changes a warm start cannot judge fairly.
 #
 #   SCREEN=pamlr ARMS="lr2e-4:LR=2e-4 lr6e-4:LR=6e-4 lr1.2e-3:LR=1.2e-3" \
 #     tmux new-session -d -s pamlr "bash v13_sempty/tmp_scratch_screen.sh"
@@ -74,11 +75,11 @@ for spec in $ARMS; do
     --checkpoint "$CK" --context 8192 --docs 50 --output "$LJ"
 done
 
-echo "--- final holdout val_loss (step 2700) ---"
+echo "--- final holdout val_loss (last val of each arm) ---"
 for spec in $ARMS; do
   arm="${spec%%:*}"
   log=$(ls -t logs/v13_sempty_${SCREEN}_${arm}_${HASH}_*.log 2>/dev/null | head -1)
-  vl=$(grep -o "\[val @ step 2700\] val_loss=[0-9.]*" "$log" 2>/dev/null | tail -1 | sed 's/.*=//')
+  vl=$(grep -o "\[val @ step [0-9]*\] val_loss=[0-9.]*" "$log" 2>/dev/null | tail -1 | sed 's/.*=//')
   echo "  $arm: ${vl:-n/a}"
 done
 echo "=== $SCREEN DONE $(date -u +%FT%TZ) ==="
