@@ -13,6 +13,12 @@
 - Never touch the dirty hunk in `v*/train.py` (~lines 445-449, synthetic-source
   resume cursors `skip_docs_map.setdefault`).
 - When we do some ablation and it is proven to be not good, record in experiments, its maths logic but once it is proven not useful, remove its path from all code of that version, to keep code neat and clean. 
+- Removed code must stay reproducible (user rule, 2026-10-28): when a failed
+  path is removed, add/update its row in `v13_sempty/EXPERIMENT_INDEX.md` with
+  the verdict, the run hash, the **last commit that still has the code**
+  (`git rev-parse --short <removal-commit>^`) and the flag/env to rerun it
+  (`git worktree add ../qllm_<id> <hash>`). Read that index before proposing
+  any experiment so the same one is never run twice.
 - logs files should be identifeable with name that what version or commit hash made this so we can find which log to see from hundreds of log files. (if we need, last run, we should get by its last modified time or by commit hash if at some specific time) 
 
 ## Sync = commit -> push origin -> pull (user rule, 2026-10-27)
