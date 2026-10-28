@@ -1,0 +1,24 @@
+=== mamba2 baseline start 2026-10-27T14:33:17Z SCREEN_HASH=b36e3a5 ===
+=== LR given: 1.2e-3 (screen skipped) ===
+=== mix3b_mamba2_answ100 (LR=1.2e-3 TARGET_TOKENS=3000000000 BLEND_WARMUP=300000000 WARMUP=1000 VAL_EVERY=2000 SAVE_EVERY=1000 KEEP_EVERY=10000 GEN_EVERY=4000) ckpt=checkpoints_v13_sempty/mix3b_mamba2_answ100_b36e3a5 log=logs/v13_sempty_mix3b_mamba2_answ100_b36e3a5_20261027_1433.log 2026-10-27T14:33:17Z ===
+=== mix3b_mamba2_answ100 start 2026-10-27T14:33:17Z commit=b36e3a5 log=logs/v13_sempty_mix3b_mamba2_answ100_b36e3a5_20261027_1433.log ckpt=checkpoints_v13_sempty/mix3b_mamba2_answ100_b36e3a5 ===
+=== mix3b_mamba2_answ100 end 1793128080 exit=0 attempts=1 ===
+=== mix3b_mamba2_answ100 exit=0 2026-10-27T19:08:00Z ===
+Results saved to logs/memory_probes/v13_sempty_mix3b_mamba2_answ100_b36e3a5_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+  10/50 docs (8s)
+  20/50 docs (10s)
+  30/50 docs (12s)
+  40/50 docs (13s)
+  50/50 docs (15s)
+  [    0,   64)  loss 3.9073  ppl   49.76
+  [   64,  128)  loss 3.5810  ppl   35.91
+  [  128,  256)  loss 3.4176  ppl   30.50
+  [  256,  512)  loss 3.3827  ppl   29.45
+  [  512, 1024)  loss 3.4751  ppl   32.30   short-ctx 3.4749  far_gain -0.0002
+  [ 1024, 2048)  loss 3.5097  ppl   33.44   short-ctx 3.5267  far_gain +0.0170
+  [ 2048, 4096)  loss 3.5023  ppl   33.19   short-ctx 3.5278  far_gain +0.0255
+  [ 4096, 8192)  loss 3.5369  ppl   34.36   short-ctx 3.5677  far_gain +0.0308
+wrote logs/pos_loss/v13_sempty_mix3b_mamba2_answ100_b36e3a5_pg19.json
+=== mamba2 baseline DONE 2026-10-27T19:09:27Z ===

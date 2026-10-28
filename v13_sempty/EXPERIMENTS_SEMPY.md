@@ -1391,6 +1391,7 @@ is scored with full context and with only 512–1024 tokens of context;
 | v11-matched transformer (1B tok, 2048 ctx) | +0.027 | — | — | 4.35 |
 | R4 ctrl (Phase 3b + 300M, `0868a1b`) | +0.014 | +0.020 | +0.022 | 3.61 |
 | R4 store (Phase 3b + 300M + store) | +0.014 | +0.020 | +0.022 | 3.60 |
+| Mamba-2 102.6M, Phase 3b data (`b36e3a5`, LR 1.2e-3) | +0.017 | +0.025 | +0.031 | 3.51 |
 
 PAM does use far context, and the gain keeps growing past its 2K training
 window, but at 1–2K it gets about half of what a (weaker) transformer gets
@@ -1501,6 +1502,94 @@ answer mask; grads rel ≤ 2e-5; SSD kernel vs torch reference 1.5e-4; resume
   Mamba"), a4/a8 multi-fact cells, far_gain, tok/s. Caveat noted up front:
   PAM's LR (2e-4) was never screened; Mamba's is — any PPL gap in Mamba's
   favour is an upper bound.
+
+## Mamba-2 result — DESIGN: at equal data Mamba-2 keeps one fact 2–4× further, PAM holds many facts far better; Mamba-2 −10 % PPL, 3.6× faster (2026-10-28)
+
+**Run.** `mix3b_mamba2_answ100` @`b36e3a5`, RTX 6000, 2026-10-27 14:33 →
+19:08Z (**4.6 h**, 182K tok/s mean, 188.6K steady; Phase 3b took ~17 h at
+51.5K, before the data-feed fix). 81,380 steps, 3.0B tokens, LR 1.2e-3 (from
+the screen above), one attempt, no NaN. Log
+`logs/v13_sempty_mix3b_mamba2_answ100_b36e3a5_20261027_1433.log`, driver
+`logs/v13_sempty_mamba2_baseline_driver_b36e3a5.log` (LR screen:
+`..._driver_3f69057.log` + `logs/v13_sempty_m2lr_*_3f69057_*.log`); ckpt
+`checkpoints_v13_sempty/mix3b_mamba2_answ100_b36e3a5/best_model.pt` (step
+80k, 6000 only).
+
+**PPL at equal steps (same holdout, same WikiText val):**
+
+| step | 2k | 12k | 20k | 40k | 60k | 80k |
+|---|---|---|---|---|---|---|
+| holdout Mamba-2 | 65.0 | 38.0 | 32.2 | 28.1 | 24.8 | **23.68** |
+| holdout PAM (Phase 3b) | 105.0 | 43.0 | 35.4 | 29.8 | 27.2 | **26.38** |
+| WikiText Mamba-2 | 201.2 | 86.2 | 69.8 | 58.4 | 49.7 | **46.91** |
+| WikiText PAM | 362.6 | 102.6 | 77.1 | 63.5 | 56.6 | **54.73** |
+
+Mamba-2 −10.2 % holdout (−0.108 nats), −14.3 % WikiText (−0.154 nats). Both
+show the same bump at 10k when the ×100 recall docs enter (63.6 vs 63.8). The
+gap is an **upper bound**: PAM's LR (2e-4) was never screened, and Mamba-2's
+own screen moved −0.55 nats at 100M tokens going 2e-4 → 1.2e-3.
+
+**PG-19** (50 docs × 8192): Mamba-2 lower at every position by 0.06–0.10
+nats; far_gain (1024–2048 / 2048–4096 / 4096–8192) **+0.017 / +0.025 /
++0.031** vs PAM +0.014 / +0.019 / +0.022 — uses far context a bit more, both
+small. `logs/pos_loss/v13_sempty_mix3b_mamba2_answ100_b36e3a5_pg19.json`.
+
+**Recall (8-way contrastive, 40 trials, same seeds, chance 0.125;
+`logs/memory_probes/v13_sempty_mix3b_mamba2_answ100_b36e3a5_t40_behavioral.json`
+vs `..._1c913ef_t40_behavioral.json`). Trained at T=2048; 4096/8192 are
+extrapolation for both.**
+
+| cell | 128 | 256 | 512 | 1024 | 2048 | 4096 | 8192 |
+|---|---|---|---|---|---|---|---|
+| a1 pos0 Mamba-2 | 1.00 | 1.00 | 1.00 | **1.00** | **1.00** | 0.30 | 0.15 |
+| a1 pos0 PAM | 1.00 | 1.00 | 1.00 | 0.38 | 0.12 | 0.10 | 0.07 |
+| a1 pos0.5 Mamba-2 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 0.93 | 0.15 |
+| a1 pos0.5 PAM | 1.00 | 1.00 | 1.00 | 0.80 | 0.35 | 0.12 | 0.07 |
+| a1 pos1 Mamba-2 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| a1 pos1 PAM | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| a4 pos0 Mamba-2 | 0.80 | 0.82 | 0.80 | 0.75 | 0.60 | 0.42 | 0.20 |
+| a4 pos0 PAM | 1.00 | 0.97 | 0.90 | 0.33 | 0.23 | 0.23 | 0.20 |
+| a4 pos0.5 Mamba-2 | 0.65 | 0.65 | 0.62 | 0.60 | 0.57 | 0.68 | 0.28 |
+| a4 pos0.5 PAM | 1.00 | 1.00 | 0.97 | 0.62 | 0.30 | 0.25 | 0.20 |
+| a4 pos1 Mamba-2 | 0.68 | 0.60 | 0.60 | 0.53 | 0.47 | 0.50 | 0.45 |
+| a4 pos1 PAM | **1.00** | **1.00** | **1.00** | **1.00** | **0.97** | **0.95** | **0.97** |
+| a8 pos0 Mamba-2 | 0.50 | 0.53 | 0.53 | 0.47 | 0.33 | 0.20 | 0.10 |
+| a8 pos0 PAM | 0.80 | 0.78 | 0.50 | 0.23 | 0.20 | 0.15 | 0.12 |
+| a8 pos0.5 Mamba-2 | 0.57 | 0.42 | 0.42 | 0.45 | 0.42 | 0.23 | 0.15 |
+| a8 pos0.5 PAM | 0.85 | 0.80 | 0.68 | 0.53 | 0.23 | 0.17 | 0.15 |
+| a8 pos1 Mamba-2 | 0.45 | 0.45 | 0.40 | 0.33 | 0.33 | 0.28 | 0.25 |
+| a8 pos1 PAM | **0.90** | **0.85** | **0.82** | **0.82** | **0.80** | **0.72** | **0.78** |
+
+Mean over all positions and lengths, Mamba-2 − PAM: **a1 +0.167, a4 −0.135,
+a8 −0.194.**
+
+**Reading (pre-registered rule).** a1 pos0 @2048 = **1.00** (bar ≥ 0.5; PAM
+0.12, i.e. 40/40 vs 5/40) and @4096 = **0.30** (bar ≥ 0.3, met exactly:
+12/40, past the trained length) → **DESIGN**. With the same params, data,
+loss and tokens, Mamba-2 keeps a single fact across the whole trained
+window; PAM's horizon stays ~512–1024. The tie-break was not needed.
+
+The same table shows the opposite design gap for many facts: PAM's
+outer-product memory holds 4–8 recent bindings almost perfectly (a4 pos1
+0.95–1.00, a8 pos1 0.72–0.90), Mamba-2 does not (0.45–0.68 / 0.25–0.45) and
+never reaches 1.00 on a4 even at 128 tokens — although it saw the same 5 %
+recall docs at ×100 weight. Mamba-2 wins a4/a8 only when the facts are far
+(pos0 @1024–2048). **PAM = better lookup (capacity, precision); Mamba-2 =
+better keeper (retention).**
+
+**Mechanism candidates for PAM's retention gap (not yet tested):**
+1. *Write/forget coupling* (the pre-registered next step): Mamba-2's write is
+   ∝ dt and its forget is exp(−A·dt) from the same per-token dt, so a token
+   the model does not want stored neither writes nor erases. PAM writes
+   every token (delta rule) and decays on a separate path.
+2. *LR*: PAM's decay priors stayed frozen at init over 3B tokens (R3
+   internals, LR 2e-4), and Mamba-2 at this data size wanted ≥ 6× that LR.
+   An unscreened LR could explain part of both the PPL and the retention gap.
+
+**Decision.** Pending (user: "decide later"). Cheapest order: PAM LR screen
+(same 3-arm × 100M-token protocol as Mamba-2's) → coupling port as a
+warm-start screen at the winning LR. "Can we beat Mamba-2" today: not on PPL
+or speed; yes on multi-fact recall.
 
 ## Engineering: batch prefetch + the diag panel's hidden data skip (2026-10-27, `129b406`)
 

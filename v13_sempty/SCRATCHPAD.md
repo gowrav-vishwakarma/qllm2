@@ -18,44 +18,37 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **NOW (2026-10-27 14:33Z) — Mamba-2 "wind tunnel" 3B run RUNNING on the RTX 6000,
-  188.6K tok/s, GPU 100 %. ETA DONE (incl. probe + PG-19) ≈ 19:20Z.**
-  - **Where:** tmux `mamba2` on `ubuntu@34.131.203.207`
-    (`~/Development/qllm-private`), code **`b36e3a5`**. Driver log
-    `logs/v13_sempty_mamba2_baseline_driver_b36e3a5.log`; run log
-    `logs/v13_sempty_mix3b_mamba2_answ100_b36e3a5_20261027_1433.log`;
-    ckpt `checkpoints_v13_sempty/mix3b_mamba2_answ100_b36e3a5/`.
-  - **Data-feed fixes on the way (all verified batch-identical, see
-    EXPERIMENTS "Engineering: batch prefetch ..." + commits):** thread prefetch
-    `129b406` (98K -> ~125K), worker process `09026e9` (no gain: not the GIL),
-    background 8 MB parquet block fetch + 64-batch look-ahead `b36e3a5`
-    (-> 188.6K; the real limit was ~3 s HF read stalls per 8 MB block). These
-    speed up PAM runs too (PAM was 59K with the same stalls + the diag skip).
-    Superseded partial runs @`9c45e52` (step 1600) and @`09026e9` (step 4850)
-    moved to `~/qllm_pull_aside_20261027/m2_full_*_superseded/`.
-  - **What:** param-matched reference Mamba-2 (102.6M; `baseline_mamba2.py`,
-    `train.py --arch mamba2`) on the Phase 3b recipe at **LR 1.2e-3**; then the
-    40-trial probe + PG-19 (driver step C). Question, design and the
-    pre-registered reading: `EXPERIMENTS_SEMPY.md` → "Mamba-2 baseline at
-    equal data".
-  - **LR screen (done @`3f69057`, inline-batch code, identical math):** final
-    holdout loss after 2,700 steps (~100M tok, real mix): 2e-4 **4.609**, 6e-4
-    **4.233**, 1.2e-3 **4.056** → 1.2e-3 (top of the grid: Mamba's optimum may
-    be higher still). Logs `logs/v13_sempty_m2lr_{2e-4,6e-4,1.2e-3}_3f69057_*.log`,
-    driver `..._driver_3f69057.log`. **PAM's 2e-4 was never screened** — the
-    same −0.55 nats at 100M tok for Mamba suggests PAM may be under-trained
-    by its LR too → worth a PAM LR screen after this run.
-  - A 3f69057 full run started for ~5 s before the handover stopped it; its
-    log/ckpt dir were moved to `~/qllm_pull_aside_20261027/m2_full_3f69057_aborted/`.
-  - **Resume (either box; only the 6000 has the libs):** rerun the SAME command,
-    finished parts are skipped, a partial run resumes from `latest.pt`:
-    ```bash
-    tmux new-session -d -s mamba2 "cd ~/Development/qllm-private && \
-      SCREEN_HASH=b36e3a5 LR_FULL=1.2e-3 bash v13_sempty/tmp_mamba2_baseline.sh"
-    ```
-    If HEAD moved past `b36e3a5` with code changes the guard refuses →
-    `git checkout b36e3a5`, relaunch, `git checkout master` after DONE.
-    Docs-only pulls (`*.md`, `logs/`) are fine mid-run.
+* **NOW (2026-10-28 05:30Z) — Mamba-2 "wind tunnel" DONE → verdict DESIGN.
+  Both GPUs idle; next step waits for the user's decision.**
+  - **Result** (`EXPERIMENTS_SEMPY.md` → "Mamba-2 result"): same params, data,
+    loss, tokens. Mamba-2 holdout **23.68** vs PAM 26.38, WikiText **46.91**
+    vs 54.73 (upper bound: PAM LR unscreened); 3.6× faster (188.6K vs 51.5K
+    tok/s; 4.6 h vs ~17 h). Recall: one fact at the start of 2048 tokens
+    Mamba-2 **1.00** vs PAM 0.12 (pre-registered bar 0.5 → DESIGN), @4096
+    0.30 (bar 0.3, met exactly). Many facts: PAM far better (a4 pos1
+    0.95–1.00 vs 0.45–0.68; a8 pos1 0.72–0.90 vs 0.25–0.45). Mean
+    Mamba-2 − PAM: a1 +0.17, a4 −0.14, a8 −0.19. far_gain
+    +0.017/+0.025/+0.031 vs +0.014/+0.019/+0.022.
+  - **Options (user decides):** (1) PAM LR screen, the same 3 × 100M-token
+    protocol as Mamba-2's (`tmp_mamba2_baseline.sh` step A with ARCH=pam),
+    ~1.5 h; (2) port Mamba-2's write/forget coupling (one dt → write ∝ dt,
+    forget = exp(−A·dt)) into PAM as a warm-start screen
+    (`tmp_warm_screen.sh`, reuse the R4 ctrl arm), ~2 h. Suggested: 1 then 2.
+  - **Files:** all logs/jsons committed (run, driver ×2, LR screen ×3, probe,
+    PG-19). Ckpt `checkpoints_v13_sempty/mix3b_mamba2_answ100_b36e3a5/`
+    (6000 only, 3.5 GB: best/latest/step_080000).
+  - **Disk on the 6000: 26 GB free (95 % used)** — prune old checkpoints
+    (ask the user) before the next long run.
+  - **Rerun/resume (6000 only):** `tmux new-session -d -s mamba2 "cd
+    ~/Development/qllm-private && SCREEN_HASH=b36e3a5 LR_FULL=1.2e-3 bash
+    v13_sempty/tmp_mamba2_baseline.sh"` (finished parts are skipped; if code
+    moved past `b36e3a5` the guard refuses → `git checkout b36e3a5` first).
+  - **Data-feed fixes made during this run** (all verified batch-identical;
+    EXPERIMENTS "Engineering: batch prefetch ..."): thread prefetch `129b406`,
+    worker process `09026e9`, background 8 MB parquet block fetch + 64-batch
+    look-ahead `b36e3a5` (98K → 188.6K; the limit was ~3 s HF read stalls).
+    PAM runs get these too (PAM speed after the fix not yet measured).
+    Superseded partial runs are in `~/qllm_pull_aside_20261027/` on the 6000.
   - **Libraries (6000 only, NOT pip deps):** `mamba_ssm` 2.2.5 +
     `causal_conv1d` 1.5.2 prebuilt cp311/torch2.8/cu12 wheels + `einops`,
     installed `uv pip install --no-deps` (torch 2.8 / triton 3.4 /

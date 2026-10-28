@@ -1,0 +1,19 @@
+=== mamba2 baseline start 2026-10-27T12:46:19Z SCREEN_HASH=3f69057 ===
+=== m2lr_2e-4 (LR=2e-4 TARGET_TOKENS=99532800 BLEND_WARMUP=0 WARMUP=100 VAL_EVERY=900 SAVE_EVERY=900 KEEP_EVERY=0 GEN_EVERY=0) ckpt=checkpoints_v13_sempty/m2lr_2e-4_3f69057 log=logs/v13_sempty_m2lr_2e-4_3f69057_20261027_1246.log 2026-10-27T12:46:19Z ===
+=== m2lr_2e-4 start 2026-10-27T12:46:19Z commit=3f69057 log=logs/v13_sempty_m2lr_2e-4_3f69057_20261027_1246.log ckpt=checkpoints_v13_sempty/m2lr_2e-4_3f69057 ===
+=== m2lr_2e-4 end 1793106572 exit=0 attempts=1 ===
+=== m2lr_2e-4 exit=0 2026-10-27T13:09:32Z ===
+=== m2lr_6e-4 (LR=6e-4 TARGET_TOKENS=99532800 BLEND_WARMUP=0 WARMUP=100 VAL_EVERY=900 SAVE_EVERY=900 KEEP_EVERY=0 GEN_EVERY=0) ckpt=checkpoints_v13_sempty/m2lr_6e-4_3f69057 log=logs/v13_sempty_m2lr_6e-4_3f69057_20261027_1309.log 2026-10-27T13:09:32Z ===
+=== m2lr_6e-4 start 2026-10-27T13:09:32Z commit=3f69057 log=logs/v13_sempty_m2lr_6e-4_3f69057_20261027_1309.log ckpt=checkpoints_v13_sempty/m2lr_6e-4_3f69057 ===
+=== m2lr_6e-4 end 1793107913 exit=0 attempts=1 ===
+=== m2lr_6e-4 exit=0 2026-10-27T13:31:53Z ===
+=== m2lr_1.2e-3 (LR=1.2e-3 TARGET_TOKENS=99532800 BLEND_WARMUP=0 WARMUP=100 VAL_EVERY=900 SAVE_EVERY=900 KEEP_EVERY=0 GEN_EVERY=0) ckpt=checkpoints_v13_sempty/m2lr_1.2e-3_3f69057 log=logs/v13_sempty_m2lr_1.2e-3_3f69057_20261027_1331.log 2026-10-27T13:31:53Z ===
+=== m2lr_1.2e-3 start 2026-10-27T13:31:53Z commit=3f69057 log=logs/v13_sempty_m2lr_1.2e-3_3f69057_20261027_1331.log ckpt=checkpoints_v13_sempty/m2lr_1.2e-3_3f69057 ===
+=== m2lr_1.2e-3 end 1793109259 exit=0 attempts=1 ===
+=== m2lr_1.2e-3 exit=0 2026-10-27T13:54:19Z ===
+  LR 2e-4: final holdout val_loss=4.6091
+  LR 6e-4: final holdout val_loss=4.2329
+  LR 1.2e-3: final holdout val_loss=4.0560
+=== LR choice: 1.2e-3 (val_loss 4.0560) ===
+=== mix3b_mamba2_answ100 (LR=1.2e-3 TARGET_TOKENS=3000000000 BLEND_WARMUP=300000000 WARMUP=1000 VAL_EVERY=2000 SAVE_EVERY=1000 KEEP_EVERY=10000 GEN_EVERY=4000) ckpt=checkpoints_v13_sempty/mix3b_mamba2_answ100_3f69057 log=logs/v13_sempty_mix3b_mamba2_answ100_3f69057_20261027_1354.log 2026-10-27T13:54:19Z ===
+=== mix3b_mamba2_answ100 start 2026-10-27T13:54:19Z commit=3f69057 log=logs/v13_sempty_mix3b_mamba2_answ100_3f69057_20261027_1354.log ckpt=checkpoints_v13_sempty/mix3b_mamba2_answ100_3f69057 ===
