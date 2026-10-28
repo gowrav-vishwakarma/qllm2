@@ -41,6 +41,7 @@ logs of the original run are named after the *run* hash.)
 | R3 split prior | 2 of 6 heads born at dt −9 | FAIL: far horizon +≤0.08, short multi-way collapsed | "R3 split decay prior" | `5c87148` | `215fe61` | `--long_heads 2 --long_dt_bias -9` |
 | R4 store | consolidation store beside the notebook | FAIL: gates ~0.05, unused; multi-way −9 pts | "R4 consolidation store" | `0868a1b` | `b1cbc74` | `STORE=1` (warm start, `tmp_r4_screen.sh`) |
 | base_dt_bias −6/−8 | longer default retention | no gain (retention bench) | "R2 retention bench" | `54c62ed` | current (`--base_dt_bias`) | `BASE_DT_BIAS=-8` |
+| C1 coupled gates | one step dt: write = erase = 1−e^{−dt}, fade e^{−A dt} (Mamba-2 coupling on A3) | FAIL @300M: far a1 0.10 vs 0.26, holdout +0.055; fresh multi-fact +0.17 | "C1 result" | `91daf0a` (600M), `9ebd1d2` (100M) | `4c688cb` | `COUPLE=1 COUPLE_A=0.1` (screen: `tmp_scratch_screen.sh`) |
 | torch.compile blocks | `compile_blocks()` on the step | no gain: 171 → 177 ms/step (4090, B4), named-tensor graph breaks | — (2026-10-28 profile) | — | current | `model.compile_blocks()` |
 
 ## Baselines (equal data, same trainer and evals)
@@ -54,5 +55,4 @@ logs of the original run are named after the *run* hash.)
 
 | id | idea | status | notebook section |
 |---|---|---|---|
-| C1 coupled gates | one step dt sets write = erase = 1−e^{−dt}, fade e^{−A dt} | 100M: c1a01 picked; 600M verdict at 300M milestone pending | "PAM LR screen + C1", "C1 100M arms" |
-| PAM 3B @1.2e-3 | Phase 3b recipe at the tuned LR (± C1) | queued after Transformer++ | "Equal-data scoreboard" |
+| PAM 3B @1.2e-3 | Phase 3b recipe at the tuned LR (no C1) | queued after Transformer++ | "Equal-data scoreboard" |

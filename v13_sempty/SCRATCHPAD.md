@@ -18,11 +18,18 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **NOW (2026-10-28 08:10Z) — r600 RUNNING on the RTX 6000 @`91daf0a`
-  (600M ctl, then 600M `c1a01`), Transformer++ then PAM 3B chained after.
-  ETA: 600M ctl ≈ 10:40Z, 600M c1a01 ≈ 13:20Z, transformer ≈ 19:30Z,
-  PAM 3B ≈ 08:30Z tomorrow (needs `~/pam3b_env.txt`, see below).**
-  - C1 100M done (EXPERIMENTS "C1 100M arms"): `c1a01` picked; early
+* **NOW (2026-10-28 12:15Z) — C1 FAIL (removed, code at `4c688cb`).
+  Transformer++ equal-data run starting on the RTX 6000 (tmux `tfchain`),
+  then PAM 3B at LR 1.2e-3 (no C1). ETA transformer ≈ 18:30Z, PAM 3B ≈
+  07:30Z tomorrow.**
+  - C1 verdict at 300M: far a1 0.10 vs 0.26, holdout +0.055 → FAIL
+    (EXPERIMENTS "C1 result"). `c1a01` stopped at step 8,900; the r600
+    driver log got a manual "r600 DONE (stopped early)" line to release
+    `tfchain`. `~/pam3b_env.txt` = `EXTRA=""`,
+    `TAG_FULL=mix3b_delta_answ100_lr1.2e-3`.
+  - **Before proposing anything: read `v13_sempty/EXPERIMENT_INDEX.md`**
+    (every experiment, verdict, code-at hash).
+  - (history) C1 100M done (EXPERIMENTS "C1 100M arms"): `c1a01` picked; early
     short-range recall sign, holdout +0.038 vs control. No verdict yet.
   - Results + amended C1 protocol: `EXPERIMENTS_SEMPY.md` → "LR screen
     result" and "Amendment to the C1 protocol". At 100M tokens no arm learned

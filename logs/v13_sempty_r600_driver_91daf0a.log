@@ -1,0 +1,7 @@
+=== r600 start 2026-10-28T08:03:45Z SCREEN_HASH=91daf0a arms='ctl c1a01:COUPLE=1,COUPLE_A=0.1' base='LR=1.2e-3 TARGET_TOKENS=599998464 VAL_EVERY=4069 SAVE_EVERY=1000 KEEP_EVERY=4069 KEEP_LAST=1' ===
+=== arm ctl (no overrides) ckpt=checkpoints_v13_sempty/r600_ctl_91daf0a log=logs/v13_sempty_r600_ctl_91daf0a_20261028_0803.log 2026-10-28T08:03:45Z ===
+=== r600_ctl start 2026-10-28T08:03:45Z commit=91daf0a log=logs/v13_sempty_r600_ctl_91daf0a_20261028_0803.log ckpt=checkpoints_v13_sempty/r600_ctl_91daf0a ===
+=== r600_ctl end 1793183852 exit=0 attempts=1 ===
+=== arm ctl train exit=0 2026-10-28T10:37:32Z ===
+=== arm c1a01 (COUPLE=1 COUPLE_A=0.1) ckpt=checkpoints_v13_sempty/r600_c1a01_91daf0a log=logs/v13_sempty_r600_c1a01_91daf0a_20261028_1037.log 2026-10-28T10:37:32Z ===
+=== r600_c1a01 start 2026-10-28T10:37:32Z commit=91daf0a log=logs/v13_sempty_r600_c1a01_91daf0a_20261028_1037.log ckpt=checkpoints_v13_sempty/r600_c1a01_91daf0a ===

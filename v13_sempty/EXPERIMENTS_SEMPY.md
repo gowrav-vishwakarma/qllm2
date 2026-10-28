@@ -1696,6 +1696,45 @@ protocol, they only pick the 600M variant).** Control = `pamlr_lr1.2e-3`.
   `logs/memory_probes/v13_sempty_c1_*_9ebd1d2_t40_behavioral.json`.
 - **600M runs launched 08:03Z** (`r600` @`91daf0a`): `ctl`, then `c1a01`.
 
+## C1 result — FAIL, removed: coupling write/erase/fade to one step costs retention and LM; it helps only fresh multi-fact reads (2026-10-28)
+
+**Runs** (`r600` @`91daf0a`, RTX 6000): control (A3 gates) and `c1a01` (C1, A
+init 0.1, the variant the 100M arms picked), LR 1.2e-3, 600M-token cosine
+schedule, milestones every 150M probed on the 4090 (40 trials). Control ran
+to 600M; `c1a01` was stopped at step 8,900 right after its 300M verdict
+(~1.1 GPU-h saved). Logs `logs/v13_sempty_r600_{driver,ctl,c1a01}_91daf0a*.log`,
+probes `logs/memory_probes/v13_sempty_r600_*_91daf0a_s*_t40_behavioral.json`.
+
+| tokens | arm | a1 pos0 @512 (precondition) | a1 far (pos0/0.5 @1k+2k) | a4/a8 pos1 | holdout loss | WikiText PPL |
+|---|---|---|---|---|---|---|
+| 150M | control | 0.35 | 0.200 | 0.439 | 4.0195 | 148.6 |
+| 150M | c1a01 | 0.28 | 0.175 | 0.159 | 4.1662 | 175.5 |
+| 300M | control | **0.57** | **0.263** | 0.202 | **3.7555** | **100.4** |
+| 300M | c1a01 | 0.20 | 0.100 | **0.371** | 3.8105 | 107.7 |
+| 450M | control | 0.70 | 0.519 | 0.266 | 3.5920 | 83.0 |
+| 600M | control | 0.62 | 0.412 | 0.223 | 3.5408 | 75.9 |
+
+**Verdict at 300M** (first milestone where the control meets the
+precondition, as amended): far a1 **−0.163** (KEEP needs +0.25, FAIL is
+< +0.10), holdout **+0.055** nats (bar ≤ +0.03), a4/a8 pos1 +0.170 → **FAIL**.
+
+**Reading.** Tying the write to the fade means every token that writes also
+fades, and the A3 erase is no longer free to be small when the write is
+large; the single far fact is lost faster, not slower. The one gain — more
+fresh bindings readable right before the query — matches Mamba-2's
+pattern inverted: coupling helps "write now, read soon", not "keep for
+long". With the R1–R4 levers this is the seventh retention idea that did
+not move the far horizon; the only lever that did was the LR (the control's
+a1 pos0 @512 0.62 at 600M from scratch).
+
+Also from the control: recall emerges between 150M and 300M tokens from
+scratch at LR 1.2e-3; mid-schedule a4/a8 pos1 is non-monotone (0.44 → 0.20
+→ 0.27 → 0.22), so single milestones of that cell are noisy.
+
+**Decision.** C1 removed (config, model, train CLI + diag, launcher env,
+selftest). Code at `4c688cb`; row in `EXPERIMENT_INDEX.md`. The PAM 3B runs
+as Phase 3b at LR 1.2e-3 without C1 (`TAG_FULL=mix3b_delta_answ100_lr1.2e-3`).
+
 ## Equal-data scoreboard: PAM vs Mamba-2 vs Transformer++ at 3B tokens (design + pre-registration, 2026-10-28)
 
 **Goal (user).** A PAM model with novel parts that beats transformers and
@@ -1712,7 +1751,7 @@ probe and PG-19; each at the LR its own 3-arm from-scratch screen picked
   3B run queued after the C1 600M runs. NOT O(1): O(T) KV cache, O(T²)
   prefill; probes past 2048 are RoPE extrapolation (as for the others).
 - **PAM** 102.1M = Phase 3b (chrono + out_gate + delta) at LR **1.2e-3**
-  (pamlr screen), **plus C1 only if the C1 600M verdict is KEEP**.
+  (pamlr screen); C1 FAILED (see "C1 result"), so no C1.
 
 **What "beats" means (fixed now):**
 - *LM*: holdout loss lower by > 0.01 nats AND WikiText PPL lower.

@@ -240,7 +240,7 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
     print(_pm)
 
     # --- ladder (only non-default arch flags) -------------------------------
-    _ladder = [k for k in ('n_states', 'vault', 'delta', 'couple', 'cond_mem',
+    _ladder = [k for k in ('n_states', 'vault', 'delta', 'cond_mem',
                            'chrono', 'out_gate')
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if cfg.base_dt_bias != -4.0:
@@ -685,8 +685,6 @@ class Trainer:
                 w += float(p.detach().float().pow(2).sum())
             out['w_norm'].append(w ** 0.5)
             out['ret'].append(layer_ret[i] if i < len(layer_ret) else float('nan'))
-            if getattr(b.pam, 'couple', False):
-                out.setdefault('couple_a', []).append(float(b.pam.couple_a_log.detach().exp().mean()))
         if head_acc is not None and head_acc.dim() >= 1:
             out['dt_bias_heads'] = (head_acc / len(self._blocks)).flatten().tolist()
         return out
@@ -707,8 +705,6 @@ class Trainer:
             f"ret={_row('ret', '{:.2f}')}",
             flush=True,
         )
-        if d.get('couple_a'):
-            print(f"  [diag] couple_A={_row('couple_a', '{:.2f}')}", flush=True)
         if d.get('dt_bias_heads'):
             print(
                 f"  [diag] dtbias/head(layer-mean)="
@@ -1054,10 +1050,6 @@ def build_argparser():
     p.add_argument('--n_states', type=int, default=None, help='A2: PAM states per head')
     p.add_argument('--vault', action='store_true', help='A2b: pinned state + protect gate')
     p.add_argument('--delta', action='store_true', help='A3: delta erase/write')
-    p.add_argument('--couple', action='store_true',
-                   help='C1: one step dt drives write=erase=1-e^-dt and fade e^-A dt (needs --delta)')
-    p.add_argument('--couple_a_init', type=float, default=None,
-                   help='C1: initial fade rate A per head (default 1.0 = today\'s fade)')
     p.add_argument('--cond_mem', action='store_true', help='A4: conditional n-gram memory')
     p.add_argument('--chrono', action='store_true',
                    help='N1: Chrono-PAM content-modulated rotary retention (real arm)')
@@ -1110,10 +1102,6 @@ def main():
         cfg.vault = True
     if args.delta:
         cfg.delta = True
-    if args.couple:
-        cfg.couple = True
-    if args.couple_a_init is not None:
-        cfg.couple_a_init = args.couple_a_init
     if args.cond_mem:
         cfg.cond_mem = True
     if args.chrono:

@@ -44,15 +44,10 @@ class PAMConfig:
     state_dt_spread: float = 2.0     # A2: +/- spread of per-state decay-logit offsets
     vault: bool = False              # A2b: state 0 pinned (retention=1) + protect gate
     delta: bool = False              # A3: delta erase/write (unit keys, beta_w/beta_e)
-    # C1 coupled gates (Mamba-2's write/forget coupling ported onto A3): ONE
-    # per-token, per-head step dt = softplus(dt_proj(x) + dt_bias) drives all
-    # three memory gates -- write = erase = 1 - e^{-dt}, fade = e^{-A dt} (A
-    # per head, learned, init couple_a_init; A = 1 is today's fade exactly).
-    # dt -> 0 leaves the notebook untouched: no write, no erase, no fade.
-    # Replaces the separate erase/write projections. Needs delta.
-    # EXPERIMENTS_SEMPY "C1 coupled gates".
-    couple: bool = False
-    couple_a_init: float = 1.0
+    # (C1 coupled gates -- one step dt sets write = erase = 1-e^{-dt} and fade
+    # e^{-A dt} -- was REMOVED 2026-10-28: at 300M tok far single-fact recall
+    # 0.10 vs 0.26 and holdout +0.055 nats (fresh multi-fact reads +0.17).
+    # Code at 4c688cb; EXPERIMENTS_SEMPY "C1 result", EXPERIMENT_INDEX.md.)
     # (R2 `no_decay` -- retention pinned to 1.0, delta erase-only memory -- was
     # REMOVED 2026-09-07: at 100M/3B tok holdout PPL 30.16 vs 26.38 and recall
     # WORSE at every length (state overflow: the fresh-binding read decays with
