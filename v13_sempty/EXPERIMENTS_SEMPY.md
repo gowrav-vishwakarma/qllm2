@@ -1591,6 +1591,50 @@ better keeper (retention).**
 warm-start screen at the winning LR. "Can we beat Mamba-2" today: not on PPL
 or speed; yes on multi-fact recall.
 
+## PAM LR screen + C1 coupled gates (design + pre-registration, 2026-10-28)
+
+**Why both.** The Mamba-2 result points at two causes for PAM's short
+single-fact horizon: (1) PAM's LR (2e-4) was never screened while Mamba-2's
+own screen moved −0.55 nats at 100M tokens going 2e-4 → 1.2e-3, and PAM's
+decay priors never left their init; (2) PAM's three separate memory gates
+(fade, erase, write) vs Mamba-2's one step dt for write and forget.
+
+**Protocol (both): from-scratch screen** `v13_sempty/tmp_scratch_screen.sh`
+(`ce8bcc2`): the Mamba-2 LR-screen protocol on the Phase 3b PAM recipe —
+2,700 steps × 36,864 tok = 99.5M tokens, recall docs from token 0 (no
+web-only warmup), warmup 100, val every 900, seed 42, then the 40-trial probe
++ PG-19 per arm. RTX 6000, 66.5K tok/s (Phase 3b ran at 51.5K before the
+data-feed fixes), ~32 min per arm.
+
+**LR screen** `SCREEN=pamlr`, arms 2e-4 / 6e-4 / 1.2e-3 @`ce8bcc2`.
+- Pick: lowest holdout val_loss at step 2700; a higher LR must beat a lower
+  one by > 0.01 nats (Mamba-2's rule).
+- If the pick beats 2e-4 by ≥ 0.05 nats, PAM was LR-undertrained: a 3B rerun
+  at the new LR is the fair PPL test against Mamba-2's 23.68 (~12.5 h; user's
+  call). Also reported: per-arm recall + dt_bias movement.
+
+**C1 coupled gates** (`504da12`, `--couple`): per token and head one step
+`dt = softplus(dt_proj(x) + dt_bias)` (the existing decay step) sets
+write = erase = 1 − e^{−dt} and fade = e^{−A·dt}, A per head learned. dt → 0
+leaves the notebook untouched; a strong write also fades the head by e^{−A·dt}.
+Arms at the screen's LR: `c1` (A init 1 = today's fade exactly) and `c1a01`
+(A init 0.1: strong writes fade the rest of the head 10× less, leaving
+overwrite to the targeted erase). Control = the `pamlr` arm at the same LR
+(same code path, data and seed; init RNG differs because C1 builds two fewer
+projections per layer, so single-seed noise applies).
+
+Reading (40 trials, chance 0.125):
+- *Precondition*: the control recalls at short range (a1 pos0 @512 ≥ 0.5).
+  If not, 100M tokens is too short to judge retention → rerun control + best
+  C1 arm at 300M tokens before any verdict.
+- **KEEP** (→ propose a 3B run): the better C1 arm has a1 mean over
+  pos0/pos0.5 at 1024+2048 ≥ control + 0.25, AND a4/a8 pos1 mean over all
+  lengths ≥ control − 0.10, AND holdout loss ≤ control + 0.03 nats.
+- **FAIL**: neither arm meets KEEP and neither moves that a1 mean by ≥ +0.10
+  → record, remove the C1 code.
+- In between (retention up but multi-fact or PPL cost over the bar): report,
+  no automatic decision.
+
 ## Engineering: batch prefetch + the diag panel's hidden data skip (2026-10-27, `129b406`)
 
 Found while the Mamba-2 baseline ran data-bound (98K tok/s of a possible

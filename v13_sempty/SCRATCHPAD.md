@@ -18,8 +18,31 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **NOW (2026-10-28 05:30Z) — Mamba-2 "wind tunnel" DONE → verdict DESIGN.
-  Both GPUs idle; next step waits for the user's decision.**
+* **NOW (2026-10-28 05:45Z) — PAM LR screen RUNNING on the RTX 6000, then
+  C1 coupled-gates screen chained (auto). ETA all DONE ≈ 09:00Z.**
+  - Design + pre-registered reading: `EXPERIMENTS_SEMPY.md` → "PAM LR screen +
+    C1 coupled gates". Both are from-scratch 100M-token screens
+    (`v13_sempty/tmp_scratch_screen.sh`, ~32 min/arm at 66.5K tok/s).
+  - **LR screen:** tmux `pamlr`, code `ce8bcc2`, arms 2e-4 / 6e-4 / 1.2e-3.
+    Driver log `logs/v13_sempty_pamlr_driver_ce8bcc2.log`; arm logs
+    `logs/v13_sempty_pamlr_lr*_ce8bcc2_*.log`; ckpts
+    `checkpoints_v13_sempty/pamlr_lr*_ce8bcc2/`. Resume:
+    `tmux new-session -d -s pamlr "cd ~/Development/qllm-private && SCREEN=pamlr SCREEN_HASH=ce8bcc2 ARMS=\"lr2e-4:LR=2e-4 lr6e-4:LR=6e-4 lr1.2e-3:LR=1.2e-3\" bash v13_sempty/tmp_scratch_screen.sh"`
+    **Do NOT `git pull` on the 6000 while pamlr runs**: HEAD has code
+    (`504da12`) past `ce8bcc2`, so the guard would refuse the next arm.
+  - **C1 chain:** tmux `c1chain` runs `~/c1_chain.sh` (outside the repo):
+    waits for "pamlr DONE", picks the LR by the screen rule (> 0.01 nats to
+    win), `git pull`, then `SCREEN=c1 ARMS="c1:COUPLE=1,LR=<pick>
+    c1a01:COUPLE=1,COUPLE_A=0.1,LR=<pick>"` at the pulled HEAD (hash printed
+    in `logs/v13_sempty_c1_driver_<hash>.log`). Control = the pamlr arm at
+    the same LR. If the chain died: rerun that command by hand with
+    `SCREEN_HASH=<hash>`.
+  - C1 code `504da12`: `--couple` (launcher `COUPLE=1`, `COUPLE_A=`), verified
+    (selftest 20/20, CUDA decode parity, 80-step real-mix smoke).
+  - **Disk on the 6000: 26 GB free before these screens** (~2.3 GB per arm,
+    5 arms ≈ 12 GB). Prune old checkpoints (ask the user) before any 3B run.
+
+* **2026-10-28 05:30Z — Mamba-2 "wind tunnel" DONE → verdict DESIGN.**
   - **Result** (`EXPERIMENTS_SEMPY.md` → "Mamba-2 result"): same params, data,
     loss, tokens. Mamba-2 holdout **23.68** vs PAM 26.38, WikiText **46.91**
     vs 54.73 (upper bound: PAM LR unscreened); 3.6× faster (188.6K vs 51.5K
