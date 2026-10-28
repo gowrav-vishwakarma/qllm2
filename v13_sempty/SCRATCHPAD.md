@@ -18,8 +18,39 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **NOW (2026-10-28 05:45Z) — PAM LR screen RUNNING on the RTX 6000, then
-  C1 coupled-gates screen chained (auto). ETA all DONE ≈ 09:00Z.**
+* **NOW (2026-10-28 07:15Z) — LR screen DONE (1.2e-3 wins by 0.62 nats;
+  PAM ahead of Mamba-2 at 100M). C1 100M arms RUNNING, then the 600M
+  control + C1 runs chained (auto). ETA: C1 100M ≈ 08:20Z, 600M ctl ≈ 11:00Z,
+  600M C1 ≈ 13:40Z.**
+  - Results + amended C1 protocol: `EXPERIMENTS_SEMPY.md` → "LR screen
+    result" and "Amendment to the C1 protocol". At 100M tokens no arm learned
+    recall, so C1 is judged on a 600M schedule with milestones every 150M.
+  - **C1 100M** (no verdict, picks the variant): tmux `c1chain` on the 6000,
+    code `9ebd1d2`, arms `c1` (A init 1) / `c1a01` (A init 0.1) at LR 1.2e-3.
+    Driver `logs/v13_sempty_c1_driver_9ebd1d2.log`. Resume: `tmux new-session
+    -d -s c1 "cd ~/Development/qllm-private && SCREEN=c1 SCREEN_HASH=9ebd1d2
+    ARMS=\"c1:COUPLE=1,LR=1.2e-3 c1a01:COUPLE=1,COUPLE_A=0.1,LR=1.2e-3\" bash
+    v13_sempty/tmp_scratch_screen.sh"`. **No `git pull` on the 6000 until
+    "c1 DONE"** (HEAD moved past 9ebd1d2 with code).
+  - **600M runs:** tmux `r600chain` runs `~/r600_chain.sh` (outside the repo):
+    waits for "c1 DONE", picks the variant by the amended rule, moves aside
+    untracked files the pull would overwrite (`~/qllm_pull_aside_*_r600/`),
+    `git pull`, then `SCREEN=r600 BASE="LR=1.2e-3 TARGET_TOKENS=599998464
+    VAL_EVERY=4069 SAVE_EVERY=1000 KEEP_EVERY=4069 KEEP_LAST=1" ARMS="ctl
+    <variant>"`. Hash = HEAD at that pull (see `~/r600_chain.log`). If it
+    died: rerun that screen command by hand with `SCREEN_HASH=<hash>`.
+  - **4090 helper:** local tmux `r600probe` runs a scratchpad script that
+    copies each new `checkpoints_v13_sempty/r600_*/step_*.pt` (md5-checked),
+    probes it (40 trials) → `logs/memory_probes/v13_sempty_r600_<arm>_<hash>_s<step>_t40_behavioral.json`,
+    deletes the copy (validated: 4090 probe of pamlr_lr1.2e-3 best == the 6000
+    probe in all 63 cells; ~105 s copy + ~130 s probe). KEEP_LAST=1 on the
+    6000 deletes each milestone when the
+    next one lands (~38 min later), so the helper must keep running; a missed
+    milestone is lost (the final one + best_model stay).
+  - **Disk on the 6000: 19 GB free at 07:10Z**; C1 100M arms + 600M arms
+    add ≈ 12 GB. Prune before anything else (ask the user first).
+
+* **2026-10-28 05:45Z — PAM LR screen launched (DONE 07:03Z, see above); C1 chained.**
   - Design + pre-registered reading: `EXPERIMENTS_SEMPY.md` → "PAM LR screen +
     C1 coupled gates". Both are from-scratch 100M-token screens
     (`v13_sempty/tmp_scratch_screen.sh`, ~32 min/arm at 66.5K tok/s).

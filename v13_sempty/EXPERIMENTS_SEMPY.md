@@ -1661,7 +1661,7 @@ Mamba-2 rows = its own screen, same protocol and data (`m2lr`, `3f69057`).
   3b at 3B: 1.00 on all those cells.) 5 % recall docs × 100M = 5M recall
   tokens is too few; the 27M micro-bench needed ~24M.
 
-**Amendment to the C1 protocol (written 2026-10-28 07:20Z, after the pamlr
+**Amendment to the C1 protocol (written 2026-10-28 07:10Z, after the pamlr
 probes, before any C1 result).** The precondition failed, so per the rule the
 judgement moves to longer runs. To avoid a restart if 300M is still too
 short: control + ONE C1 arm on a **600M-token cosine schedule** (16,276
