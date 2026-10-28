@@ -18,10 +18,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **NOW (2026-10-28 07:15Z) — LR screen DONE (1.2e-3 wins by 0.62 nats;
-  PAM ahead of Mamba-2 at 100M). C1 100M arms RUNNING, then the 600M
-  control + C1 runs chained (auto). ETA: C1 100M ≈ 08:20Z, 600M ctl ≈ 11:00Z,
-  600M C1 ≈ 13:40Z.**
+* **NOW (2026-10-28 08:10Z) — r600 RUNNING on the RTX 6000 @`91daf0a`
+  (600M ctl, then 600M `c1a01`), Transformer++ then PAM 3B chained after.
+  ETA: 600M ctl ≈ 10:40Z, 600M c1a01 ≈ 13:20Z, transformer ≈ 19:30Z,
+  PAM 3B ≈ 08:30Z tomorrow (needs `~/pam3b_env.txt`, see below).**
+  - C1 100M done (EXPERIMENTS "C1 100M arms"): `c1a01` picked; early
+    short-range recall sign, holdout +0.038 vs control. No verdict yet.
   - Results + amended C1 protocol: `EXPERIMENTS_SEMPY.md` → "LR screen
     result" and "Amendment to the C1 protocol". At 100M tokens no arm learned
     recall, so C1 is judged on a 600M schedule with milestones every 150M.

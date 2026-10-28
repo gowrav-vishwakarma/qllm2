@@ -1676,6 +1676,26 @@ a1 far mean (pos0/pos0.5 @1024+2048) if they differ by ≥ 0.10, else the
 lower 100M holdout loss if they differ by > 0.01, else `c1` (A = 1, the
 faithful Mamba-2 port). The two 100M C1 arms give no verdict of their own.
 
+**C1 100M arms (`c1` @`9ebd1d2`, 07:03–08:03Z; no verdict by the amended
+protocol, they only pick the 600M variant).** Control = `pamlr_lr1.2e-3`.
+
+| arm | holdout loss | WikiText PPL | train loss @2650 (answer-weighted) | A after 100M (layer range) |
+|---|---|---|---|---|
+| control (A3 gates) | **4.0293** | **152.1** | 3.41 | — |
+| `c1` (A init 1) | 4.1332 (+0.104) | 206.5 | 3.26 | 0.71–0.96 |
+| `c1a01` (A init 0.1) | 4.0677 (+0.038) | 169.2 | **3.19** | 0.07–0.11 |
+
+- Pick (rule): `c1a01` — a1 far means 0.138 vs 0.106 (< 0.10 apart, both
+  chance), holdout 4.0677 vs 4.1332.
+- Early sign, not a verdict: `c1a01` is the only arm starting to recall at
+  short range (a1 pos0 @128/256 **0.82/0.70** vs control 0.53/0.33, a1 pos1
+  @256 0.68 vs 0.45) and both C1 arms have the lowest answer-weighted train
+  loss, while their holdout loss is worse. A = 1 (`c1`) is worst on both: a
+  strong write that also fades the whole head costs LM quality.
+- Logs `logs/v13_sempty_c1_{driver,c1,c1a01}_9ebd1d2*.log`, probes
+  `logs/memory_probes/v13_sempty_c1_*_9ebd1d2_t40_behavioral.json`.
+- **600M runs launched 08:03Z** (`r600` @`91daf0a`): `ctl`, then `c1a01`.
+
 ## Equal-data scoreboard: PAM vs Mamba-2 vs Transformer++ at 3B tokens (design + pre-registration, 2026-10-28)
 
 **Goal (user).** A PAM model with novel parts that beats transformers and

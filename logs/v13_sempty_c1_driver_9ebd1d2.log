@@ -1,0 +1,63 @@
+=== c1 start 2026-10-28T07:03:06Z SCREEN_HASH=9ebd1d2 arms='c1:COUPLE=1,LR=1.2e-3 c1a01:COUPLE=1,COUPLE_A=0.1,LR=1.2e-3' base='' ===
+=== arm c1 (COUPLE=1 LR=1.2e-3) ckpt=checkpoints_v13_sempty/c1_c1_9ebd1d2 log=logs/v13_sempty_c1_c1_9ebd1d2_20261028_0703.log 2026-10-28T07:03:06Z ===
+=== c1_c1 start 2026-10-28T07:03:06Z commit=9ebd1d2 log=logs/v13_sempty_c1_c1_9ebd1d2_20261028_0703.log ckpt=checkpoints_v13_sempty/c1_c1_9ebd1d2 ===
+=== c1_c1 end 1793172631 exit=0 attempts=1 ===
+=== arm c1 train exit=0 2026-10-28T07:30:31Z ===
+=== arm c1a01 (COUPLE=1 COUPLE_A=0.1 LR=1.2e-3) ckpt=checkpoints_v13_sempty/c1_c1a01_9ebd1d2 log=logs/v13_sempty_c1_c1a01_9ebd1d2_20261028_0730.log 2026-10-28T07:30:31Z ===
+=== c1_c1a01 start 2026-10-28T07:30:31Z commit=9ebd1d2 log=logs/v13_sempty_c1_c1a01_9ebd1d2_20261028_0730.log ckpt=checkpoints_v13_sempty/c1_c1a01_9ebd1d2 ===
+=== c1_c1a01 end 1793174270 exit=0 attempts=1 ===
+=== arm c1a01 train exit=0 2026-10-28T07:57:50Z ===
+W1028 07:58:05.083000 1253584 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1028 07:58:13.610000 1253584 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1028 07:58:22.466000 1253584 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1028 07:58:32.366000 1253584 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1028 07:58:44.490000 1253584 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1028 07:59:04.169000 1253584 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+Results saved to logs/memory_probes/v13_sempty_c1_c1_9ebd1d2_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+W1028 08:00:09.698000 1263693 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1028 08:00:12.437000 1263693 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+  10/50 docs (19s)
+  20/50 docs (25s)
+  30/50 docs (31s)
+  40/50 docs (36s)
+  50/50 docs (42s)
+  [    0,   64)  loss 4.5868  ppl   98.18
+  [   64,  128)  loss 4.3995  ppl   81.41
+  [  128,  256)  loss 4.2272  ppl   68.53
+  [  256,  512)  loss 4.2709  ppl   71.59
+  [  512, 1024)  loss 4.3647  ppl   78.63   short-ctx 4.3648  far_gain +0.0001
+  [ 1024, 2048)  loss 4.4098  ppl   82.26   short-ctx 4.4128  far_gain +0.0030
+  [ 2048, 4096)  loss 4.4471  ppl   85.38   short-ctx 4.4503  far_gain +0.0033
+  [ 4096, 8192)  loss 4.4693  ppl   87.29   short-ctx 4.4728  far_gain +0.0036
+wrote logs/pos_loss/v13_sempty_c1_c1_9ebd1d2_pg19.json
+W1028 08:01:00.922000 1269657 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1028 08:01:09.358000 1269657 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1028 08:01:18.235000 1269657 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1028 08:01:28.142000 1269657 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1028 08:01:40.284000 1269657 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1028 08:01:59.993000 1269657 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+Results saved to logs/memory_probes/v13_sempty_c1_c1a01_9ebd1d2_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+W1028 08:03:04.455000 1279767 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1028 08:03:05.517000 1279767 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+  10/50 docs (10s)
+  20/50 docs (15s)
+  30/50 docs (21s)
+  40/50 docs (27s)
+  50/50 docs (32s)
+  [    0,   64)  loss 4.5604  ppl   95.62
+  [   64,  128)  loss 4.3853  ppl   80.26
+  [  128,  256)  loss 4.1800  ppl   65.37
+  [  256,  512)  loss 4.2114  ppl   67.45
+  [  512, 1024)  loss 4.3138  ppl   74.72   short-ctx 4.3139  far_gain +0.0001
+  [ 1024, 2048)  loss 4.3557  ppl   77.92   short-ctx 4.3620  far_gain +0.0064
+  [ 2048, 4096)  loss 4.3866  ppl   80.37   short-ctx 4.3942  far_gain +0.0076
+  [ 4096, 8192)  loss 4.4076  ppl   82.07   short-ctx 4.4150  far_gain +0.0075
+wrote logs/pos_loss/v13_sempty_c1_c1a01_9ebd1d2_pg19.json
+--- final holdout val_loss (step 2700) ---
+  c1: 4.1332
+  c1a01: 4.0677
+=== c1 DONE 2026-10-28T08:03:36Z ===
