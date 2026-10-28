@@ -57,7 +57,7 @@ BASE_DT_BIAS="${BASE_DT_BIAS:-}" # override initial decay bias (default -4; benc
                                # (LONG_HEADS removed 2026-10-27: R3 FAIL, EXPERIMENTS "R3")
                                # (STORE removed 2026-10-27: R4 FAIL, EXPERIMENTS "R4")
 INIT_FROM="${INIT_FROM:-}"     # warm start: weights from this ckpt, stream continues after its cursor
-ARCH="${ARCH:-pam}"            # pam | mamba2 (reference Mamba-2 baseline; set CHRONO=0 OUT_GATE=0 DELTA=0)
+ARCH="${ARCH:-pam}"            # pam | mamba2 | transformer (baselines; set CHRONO=0 OUT_GATE=0 DELTA=0)
 MAMBA_N_LAYER="${MAMBA_N_LAYER:-17}"   # 17 x 768 = 102.6M (param-matched to PAM)
                                # (NO_DECAY removed 2026-09-07: FAIL at 100M, EXPERIMENTS "R2")
 ANSWER_W="${ANSWER_W:-1}"      # CE weight on answer tokens of synthetic recall/reason docs

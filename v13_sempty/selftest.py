@@ -681,6 +681,61 @@ def test_couple_gates_and_decode(batch_size=2, seq_len=17, seed=0):
     return True
 
 
+def test_transformer_baseline(seed=0):
+    """Transformer++ baseline (equal-data quality reference).
+
+    (1) the default config is param-matched to PAM (101.9M vs 102.1M);
+    (2) causal: changing later tokens leaves earlier logits unchanged;
+    (3) the training loss (fused chunked CE) equals plain CE on the logits,
+    and its gradients match; (4) runs past any fixed window (RoPE grows);
+    (5) config + state_dict round-trip as the probe loader does it.
+    """
+    from dataclasses import asdict
+    from v13_sempty.baseline_transformer import TransformerConfig, TransformerLM
+    torch.manual_seed(seed)
+    n = TransformerLM(TransformerConfig()).count_parameters()['total']
+    assert 101.5e6 < n < 102.5e6, f"default size {n/1e6:.2f}M not ~102M"
+
+    cfg = TransformerConfig(vocab_size=300, d_model=64, n_layer=2, n_head=4, d_ff=96)
+    model = TransformerLM(cfg)
+    ids = torch.randint(0, cfg.vocab_size, (2, 24))
+    with torch.no_grad():
+        a, _, _ = model(ids)
+        ids2 = ids.clone()
+        ids2[:, 12:] = torch.randint(0, cfg.vocab_size, (2, 12))
+        b, _, _ = model(ids2)
+    d_causal = (a[:, :12] - b[:, :12]).abs().max().item()
+    assert d_causal < 1e-5, f"future tokens leak into the past: {d_causal:.3e}"
+
+    labels = torch.randint(0, cfg.vocab_size, ids.shape)
+    model.zero_grad()
+    logits, _, _ = model(ids)
+    plain = F.cross_entropy(logits.reshape(-1, cfg.vocab_size), labels.reshape(-1))
+    plain.backward()
+    g_plain = {k: p.grad.clone() for k, p in model.named_parameters()}
+    model.zero_grad()
+    lm, _ = model._hidden_to_lm(ids)
+    fused = model.ce_from_lm(lm, labels, chunk=5)
+    fused.backward()
+    d_loss = (plain - fused).abs().item()
+    d_grad = max((g_plain[k] - p.grad).abs().max().item() for k, p in model.named_parameters())
+    assert d_loss < 1e-5 and d_grad < 1e-4, f"fused CE != plain CE: {d_loss:.3e} {d_grad:.3e}"
+    assert all(p.grad is not None for p in model.parameters()), "a parameter got no grad"
+
+    with torch.no_grad():
+        long_logits, _, _ = model(torch.randint(0, cfg.vocab_size, (1, 700)))
+    assert long_logits.shape == (1, 700, cfg.vocab_size)
+
+    clone = TransformerLM(TransformerConfig(**asdict(model.config)))
+    clone.load_state_dict(model.state_dict())
+    with torch.no_grad():
+        d_rt = (clone(ids)[0] - model(ids)[0]).abs().max().item()
+    assert d_rt == 0.0, f"round-trip changed logits: {d_rt:.3e}"
+    print(f"  {n/1e6:.2f}M   causal {d_causal:.1e}   fused CE loss {d_loss:.1e} grad {d_grad:.1e}   "
+          f"T=700 ok   round-trip exact")
+    return True
+
+
 def test_prefetch_order_and_cursor():
     """train._Prefetch: the batches built on the background thread are exactly
     the inline ones, in order, and each carries the data cursor as it stood
@@ -809,6 +864,7 @@ def main():
         test_chrono_parallel_vs_recurrent,
         test_out_gate_parity_and_decode,
         test_couple_gates_and_decode,
+        test_transformer_baseline,
         test_prefetch_order_and_cursor,
         test_worker_stream_order_and_cursor,
     ]
