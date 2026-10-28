@@ -17,6 +17,8 @@
 # BASE="VAR=val ..." overrides them for all arms (e.g. ARCH=mamba2 ...).
 # A diverged arm is reported as failed and the screen goes on.
 #
+# Disk: a finished arm's latest.pt is deleted (PRUNE_LATEST=0 keeps it).
+#
 # RESUMABLE / idempotent: re-run the SAME command with SCREEN_HASH=<hash of the
 # first launch>. A finished arm (.done) is skipped, a half-done arm resumes
 # from its latest.pt into its own log, finished probes are skipped.
@@ -57,7 +59,12 @@ for spec in $ARMS; do
     "${BASE_ENV[@]}" "${ENVS[@]}" bash v13_sempty/tmp_pretrain_mix.sh
   RC=$?
   echo "=== arm $arm train exit=$RC $(date -u +%FT%TZ) ==="
-  if [ "$RC" -eq 0 ]; then touch "$CKPT_DIR/.done"; else echo "=== arm $arm FAILED (diverged?) ==="; fi
+  if [ "$RC" -eq 0 ]; then
+    touch "$CKPT_DIR/.done"
+    # latest.pt only resumes an unfinished arm; best_model.pt (+ any kept
+    # milestone) carries the result. PRUNE_LATEST=0 keeps it.
+    [ "${PRUNE_LATEST:-1}" = "1" ] && rm -f "$CKPT_DIR/latest.pt"
+  else echo "=== arm $arm FAILED (diverged?) ==="; fi
 done
 
 for spec in $ARMS; do

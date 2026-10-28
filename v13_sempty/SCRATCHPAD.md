@@ -47,8 +47,19 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     6000 deletes each milestone when the
     next one lands (~38 min later), so the helper must keep running; a missed
     milestone is lost (the final one + best_model stay).
-  - **Disk on the 6000: 19 GB free at 07:10Z**; C1 100M arms + 600M arms
-    add ≈ 12 GB. Prune before anything else (ask the user first).
+  - **Disk on the 6000: 37 GB free at 07:20Z** after pruning resume-only
+    files of finished runs + superseded partial runs (user: "if you don't
+    need, delete"; every best_model.pt kept). Screens now delete a finished
+    arm's latest.pt themselves (`PRUNE_LATEST=0` keeps it).
+  - **Queue after r600 (goal: PAM that beats Transformer++ and Mamba-2 at
+    equal data, O(1)):** `EXPERIMENTS_SEMPY.md` → "Equal-data scoreboard".
+    tmux `tfchain` (`~/tf_chain.sh`, outside the repo) waits for "r600 DONE",
+    pulls, runs `ARCH=transformer bash v13_sempty/tmp_equal_3b.sh` (LR screen
+    + 3B + probes, ~6 h), then waits for `~/pam3b_env.txt` (written after the
+    C1 verdict: `EXTRA=...` and `TAG_FULL=...`) and runs the PAM 3B at LR
+    1.2e-3 (~12.5 h). Transformer++ code `53d632e`. The Mamba-2 driver
+    `tmp_mamba2_baseline.sh` became `tmp_equal_3b.sh` (`ARCH=mamba2`); the
+    b36e3a5 run used the old file (git history).
 
 * **2026-10-28 05:45Z — PAM LR screen launched (DONE 07:03Z, see above); C1 chained.**
   - Design + pre-registered reading: `EXPERIMENTS_SEMPY.md` → "PAM LR screen +
@@ -90,13 +101,11 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     (`tmp_warm_screen.sh`, reuse the R4 ctrl arm), ~2 h. Suggested: 1 then 2.
   - **Files:** all logs/jsons committed (run, driver ×2, LR screen ×3, probe,
     PG-19). Ckpt `checkpoints_v13_sempty/mix3b_mamba2_answ100_b36e3a5/`
-    (6000 only, 3.5 GB: best/latest/step_080000).
-  - **Disk on the 6000: 26 GB free (95 % used)** — prune old checkpoints
-    (ask the user) before the next long run.
-  - **Rerun/resume (6000 only):** `tmux new-session -d -s mamba2 "cd
-    ~/Development/qllm-private && SCREEN_HASH=b36e3a5 LR_FULL=1.2e-3 bash
-    v13_sempty/tmp_mamba2_baseline.sh"` (finished parts are skipped; if code
-    moved past `b36e3a5` the guard refuses → `git checkout b36e3a5` first).
+    (6000 only; latest/step_080000 pruned 2026-10-28, best_model.pt kept).
+  - **Rerun (6000 only):** the run used `tmp_mamba2_baseline.sh`, which exists
+    at `b36e3a5` only (`git checkout b36e3a5`, then `SCREEN_HASH=b36e3a5
+    LR_FULL=1.2e-3 bash v13_sempty/tmp_mamba2_baseline.sh`); today's
+    equivalent is `ARCH=mamba2 bash v13_sempty/tmp_equal_3b.sh`.
   - **Data-feed fixes made during this run** (all verified batch-identical;
     EXPERIMENTS "Engineering: batch prefetch ..."): thread prefetch `129b406`,
     worker process `09026e9`, background 8 MB parquet block fetch + 64-batch

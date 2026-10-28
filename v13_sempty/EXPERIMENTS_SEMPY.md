@@ -1676,6 +1676,33 @@ a1 far mean (pos0/pos0.5 @1024+2048) if they differ by ≥ 0.10, else the
 lower 100M holdout loss if they differ by > 0.01, else `c1` (A = 1, the
 faithful Mamba-2 port). The two 100M C1 arms give no verdict of their own.
 
+## Equal-data scoreboard: PAM vs Mamba-2 vs Transformer++ at 3B tokens (design + pre-registration, 2026-10-28)
+
+**Goal (user).** A PAM model with novel parts that beats transformers and
+Mamba at equal data while keeping an O(1) state.
+
+**Design.** Three ~102M models, the EXACT Phase 3b data recipe (3B tok, B18
+T2048, warmup 1000, 300M web-only warmup, 0.44/0.41/0.10/0.05, answer weight
+100, seed 42), the same trainer, fused CE, holdout + WikiText val, 40-trial
+probe and PG-19; each at the LR its own 3-arm from-scratch screen picked
+(> 0.01 nats to win). Driver `v13_sempty/tmp_equal_3b.sh` (`ARCH=`).
+- **Mamba-2** 102.6M, LR 1.2e-3: done (`b36e3a5`, "Mamba-2 result").
+- **Transformer++** 101.9M (`baseline_transformer.py`: RMSNorm, RoPE, SwiGLU,
+  tied, causal SDPA; 672 × 12 layers × 12 heads, SwiGLU 1920): LR screen +
+  3B run queued after the C1 600M runs. NOT O(1): O(T) KV cache, O(T²)
+  prefill; probes past 2048 are RoPE extrapolation (as for the others).
+- **PAM** 102.1M = Phase 3b (chrono + out_gate + delta) at LR **1.2e-3**
+  (pamlr screen), **plus C1 only if the C1 600M verdict is KEEP**.
+
+**What "beats" means (fixed now):**
+- *LM*: holdout loss lower by > 0.01 nats AND WikiText PPL lower.
+- *Recall*: mean accuracy over all 63 probe cells higher by > 0.05 (2/40
+  trials); a1 / a4 / a8 and pos0 / pos1 reported separately.
+- Also reported: PG-19 far_gain, train tok/s (same box), inference state
+  per sequence (PAM 16 × 6 × 98² fp32 = 3.7 MB fixed; Mamba-2 17 × 24 × 64 ×
+  128 fp32 = 13.4 MB fixed; transformer KV 2 × 12 × 672 bf16 = 32 KB per
+  token → 66 MB at 2048, 264 MB at 8192).
+
 ## Engineering: batch prefetch + the diag panel's hidden data skip (2026-10-27, `129b406`)
 
 Found while the Mamba-2 baseline ran data-bound (98K tok/s of a possible
