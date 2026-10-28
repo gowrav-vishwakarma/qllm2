@@ -1762,6 +1762,25 @@ probe and PG-19; each at the LR its own 3-arm from-scratch screen picked
   128 fp32 = 13.4 MB fixed; transformer KV 2 × 12 × 672 bf16 = 32 KB per
   token → 66 MB at 2048, 264 MB at 8192).
 
+**Transformer++ LR screen (`tflr` @`e072a8f`, 12:05–12:51Z, 142K tok/s).**
+Same protocol as PAM's and Mamba-2's (100M tok from scratch). Logs
+`logs/v13_sempty_tflr_{driver,lr*}_e072a8f*.log`; probes
+`logs/memory_probes/v13_sempty_tflr_lr*_e072a8f_t40_behavioral.json`.
+
+| LR | holdout loss | WikiText PPL |
+|---|---|---|
+| 2e-4 | 4.5543 | 365.4 |
+| 6e-4 | 4.1379 | 161.2 |
+| **1.2e-3** (pick) | **4.0733** | **153.8** |
+
+At 100M tokens and each model's tuned LR (1.2e-3 for all three): holdout
+**PAM 4.0293** < Mamba-2 4.0560 < Transformer++ 4.0733; WikiText **PAM 152.1**
+< Transformer++ 153.8 < Mamba-2 183.3. Recall at 100M: the transformer
+already reads invented bindings (a1 pos0 @512 0.97, a4/a8 pos1 0.63; means
+a1/a4/a8 0.65/0.57/0.49) while PAM is still at chance (0.23/0.16/0.10) —
+attention looks up exact tokens from the start; PAM must learn to write them
+(it does between 150M and 300M, "C1 result" control). The 3B runs decide.
+
 ## Engineering: batch prefetch + the diag panel's hidden data skip (2026-10-27, `129b406`)
 
 Found while the Mamba-2 baseline ran data-bound (98K tok/s of a possible
