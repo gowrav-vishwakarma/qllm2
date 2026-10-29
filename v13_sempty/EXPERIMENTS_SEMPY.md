@@ -2040,6 +2040,18 @@ same schedule): KEEP if holdout ≤ echo + 0.01 nats AND WikiText ≤ echo +
 3 % AND recall 63-cell mean ≥ echo − 0.05 — i.e. same quality at 1.8× the
 speed. Better than echo on holdout → it is the new reference outright.
 
+**M1 milestone log** (`m1_m1echo_ccbf028`, 6000, 116K tok/s vs echo 64K):
+
+| tokens | holdout (M1 / echo) | WikiText (M1 / echo) |
+|---|---|---|
+| 150M (step 4069) | **3.9225 / 3.9516** (−0.029) | **109.70 / 119.64** |
+
+Lesson: on the SAME batches M1's train loss was ~0.09 *worse* than echo at
+steps 1750–2500, yet its holdout is better. The train loss carries the
+recall docs at answer weight 100, so for arms that change the memory it
+mostly measures recall training, not LM. Same-batch train loss is an early
+signal only; the 150M holdout val is the first real verdict.
+
 ## M2 shared reads — one write, read at every level (design + pre-registration, 2026-10-29)
 
 **Idea (user: "memory is not the brain; a brain that thinks hard and can
@@ -2182,5 +2194,8 @@ slow event stream beat the same params spent on token-level blocks?**
   train-loss difference T1 − echo over steps 1750–2250 ≤ +0.02 → promote to
   the full 600M screen on the 6000 (after M2). > +0.05 and not closing →
   FAIL for futility.
+- Also reported (added 2026-10-29 11:30Z, before T1 reached it, after the
+  M1 lesson above): T1's 150M holdout vs echo 3.9516 — this outranks the
+  train-loss rule if they disagree.
 - Full 600M: PASS if holdout ≤ 3.4885 (echo) — equal quality at 1.23× speed
   is already a win; recall ≥ 0.38; PG-19 4–8k far gain ≥ 0.035.
