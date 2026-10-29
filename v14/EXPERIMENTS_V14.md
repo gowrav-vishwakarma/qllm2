@@ -24,7 +24,7 @@ The one-row-per-idea index (status, verdict, run hash, rerun recipe) is
 | Multi-way recall fails because of the **linear read** | `q·S = Σ_i (q·k_i) v_i`: one query cannot hit its key and null 7 others. Not a width problem: a8 flat over head_dim/K (`EXPERIMENTS_SEMPY.md` A2r note) | a better read (nonlinear, selective, interference) is the open lever. Echo fixed a4/a8 on the micro-bench; the wall beyond that is unmeasured (B0) |
 | Echo is a large win | micro-bench a4/a8 chance → 1.00; LM −0.068 / −0.060 nats at 150M / 300M, WikiText 88.0 vs 100.4 | echo is part of the control body |
 | Hierarchy / grouped layers / cross-level drift regress | v7 7f-0..7f-3 | slow-stream designs are owned by T1 (v13_sempty, other session). v14 reuses its verdict, does not rerun it |
-| Event / salience episodic memory was inert | V6 memory reframe: +35 % cost, PPL identical (56.55 vs 56.46) | a surprise-gated write must be load-bearing by construction (pands lesson 1, `NOTES.md` §1) |
+| Event / salience episodic memory was inert | V6 memory reframe: +35 % cost, PPL identical (56.55 vs 56.46) | a surprise-gated write must be load-bearing by construction (pands lesson: an extra path the LM loss can ignore becomes decoration, `pands/v2/EXPERIMENTS_V2.md`) |
 | Iterative reasoning loops collapse to passthrough | V8 QLC: α/γ pinned at noise floor; later "muted" | extra paths that the LM loss can ignore will be ignored |
 | Readout gates / norms / short conv | V9 gates (not reproduced), v13 A1 short conv FAIL, G2 read norm FAIL | no more read-path normalizers |
 | Multi-scale aux loss, reverse association, QK-norm on PAM | v7 7f-1 (+0.82), 7f-2 (+2.46), V6 Bug 8 (repetition collapse) | closed |
@@ -42,7 +42,7 @@ The one-row-per-idea index (status, verdict, run hash, rerun recipe) is
 | Phase-modulated activation (magnitude → phase rotation, zero-init so it starts as ModSwish) | v7 Exp 7 Design B; run `exp7b_phase_mod` stopped mid-epoch 1, no val | coded in `v13_sempty/complex_ops.py` (`activation='phase_mod'`), complex arm only | **N2** |
 | Formula weights: `W = Σ_k e^{iφ_k} U_k V_kᵀ` (phase-superposed linear) | v7 Exp 4 | design only, never coded | **N3** (with input-dependent φ) |
 | E/I heads (half the heads build state, half clear it) | v7 Exp 6 | design only | skipped: delta erase covers "clear", R3 (heads with different decay priors) failed |
-| Spatial neuron field | `v14/NOTES.md` (2026-08-22) | notes only | **S1**, kill criteria in NOTES §5 |
+| Spatial neuron field | an August design note, before v14 began; removed from `v14/` 2026-10-29, read it with `git show 73ea737:v14/NOTES.md` | notes only | not in the v14 plan |
 | Multi-state superposition on the lean body | v13_sempty A2 `--n_states` | in code, not adopted (cost, no decode); never measured on LM with a phase-combined read | **N1** |
 
 ---
@@ -66,7 +66,6 @@ is withdrawn.
 | N4 | memory inside every unit, written in proportion to echo's surprise | fast weights, TTT, Titans |
 | N5 | binding by synchrony inside an O(1) language model | AKOrN, complex autoencoders (vision) |
 | N6 | the state is an inferred operator applied to new inputs, not stored items | RotatE (static KG), HRR/TPR |
-| S1 | learned neuron positions, distance-gated, sparse by geometry | RSGN |
 
 Priority = how new × how likely to move the three bars: N6 (targets bar 3
 directly), then N1 (cheap, proven once in v11), then N4 / N5. Before a 6000
@@ -372,11 +371,6 @@ run).** Arms trained on identical data: echo (control), op (N6), opdiag
   of the idea, worth showing).
 - two_hop: composition, the informative middle case.
 - reverse3: positional, not a rotation of content. No gain expected.
-
-### S1 — spatial neuron
-
-See `NOTES.md`. Kept as a candidate. Its own kill criteria (gate decorative,
-or speed > 1.5× the matched transformer at 1M) apply.
 
 ---
 

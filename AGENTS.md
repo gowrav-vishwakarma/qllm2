@@ -85,7 +85,7 @@ logs/<version>_<tag>_<gitshorthash>_<YYYYMMDD_HHMM>.log
   as things happen, unasked: design + pre-registered rules before a run,
   milestones, results and verdict after. v13_sempty: `EXPERIMENTS_SEMPY.md`,
   `EXPERIMENT_INDEX.md`, `SCRATCHPAD.md`; v14: `EXPERIMENTS_V14.md`,
-  `NOTES.md`, `SCRATCHPAD.md`. A new version starts with its own
+  `EXPERIMENT_INDEX.md`, `SCRATCHPAD.md`. A new version starts with its own
   EXPERIMENTS + SCRATCHPAD files on day one.
 - Commit + push the notes with the logs behind their numbers, so a fresh
   session on either box can pick up the chain and the findings from git.

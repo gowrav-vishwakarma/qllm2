@@ -15,7 +15,6 @@ learns better at the same size and speed.
 | `EXPERIMENT_INDEX.md` | one row per idea: status, verdict, run hash, rerun recipe. Read before proposing anything |
 | `EXPERIMENTS_V14.md` | lab notebook: the do-not-repeat digest of v4–v13, the never-tested leftovers, and the pre-registered v14 experiments |
 | `SCRATCHPAD.md` | handover: what is running, where, what is next |
-| `NOTES.md` | the 2026-08-22 spatial-neuron design (track S1). Notes only, never built |
 | `config.py` | `V14Config` = v13_sempty `PAMConfig` + v14 switches (all off by default) |
 | `units.py` | v14 units (N1 `PhaseStatesPAM`) and `V14LM` (the v13 LM with units swapped in) |
 | `selftest.py` | CPU checks: off == v13, start parity, prefill == decode, gradients |

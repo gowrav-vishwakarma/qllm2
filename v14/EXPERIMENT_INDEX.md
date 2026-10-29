@@ -54,4 +54,3 @@ None yet.
 | N3 | formula-weight neuron `W(x)x` | **folded into N2**: `U·(c(x)⊙Vᵀx)` is a GLU-gated bottleneck, nothing new to test | "N3" |
 | N4 | living neuron: per-unit fast weight, written by surprise | design only | "N4" |
 | N5 | resonant binding: oscillator phases as binding tags | design only | "N5" |
-| S1 | spatial neuron: learned positions, distance-gated, sparse by geometry | design only (`NOTES.md`) | "S1" |
