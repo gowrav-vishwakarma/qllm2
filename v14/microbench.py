@@ -32,6 +32,7 @@ Optional suffixes: @<head_dim> (default 64), :L<n_layers> (default 4).
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
 import math
 import random
@@ -42,6 +43,7 @@ from dataclasses import dataclass
 
 import torch
 
+from memory_probes.rules import TASKS as RULE_TASKS, build_rule_example
 from v13_sempty.config import PAMConfig
 from v13_sempty.triton_kernels import set_kernel_enabled
 from v14.config import from_pam
@@ -60,6 +62,11 @@ N_CANDIDATES = 8
 # stayed at chance for every arm: logs/v14_b0_a0f672a_20261029_1232.log.
 SIZES = {'facts': (1, 2, 4, 8, 16, 32, 64), 'bind': (1, 2, 4, 8, 16), 'rebind': (2, 4, 8, 16)}
 POSITIONS = (0.0, 0.5, 1.0)
+# B1: in-context rule tasks from the shared generator (memory_probes/rules.py,
+# the v13 session's learning probe). Answers are never in the context.
+RULE_SHOTS_TRAIN = (1, 2, 3, 4, 5, 6, 7, 8)
+RULE_SHOTS_EVAL = (2, 4, 8)
+RULE_SEP = '\n\n'
 
 
 # ── vocabulary pools ────────────────────────────────────────────────────────
@@ -165,8 +172,46 @@ def _rebind(P, rng, n):
 FAMILIES = {'facts': _facts, 'bind': _bind, 'rebind': _rebind}
 
 
-def build_doc(P, family, size, length, position, seed) -> Doc:
+class CachedTokenizer:
+    """Memoised ``encode`` for the rule generator, which re-encodes the same
+    short words (letters, numbers, labels, candidates) for every example."""
+
+    def __init__(self, tok):
+        self.tok, self.cache = tok, {}
+
+    def encode(self, text, add_special_tokens=False):
+        key = (text, add_special_tokens)
+        if key not in self.cache:
+            self.cache[key] = self.tok.encode(text, add_special_tokens=add_special_tokens)
+        return self.cache[key]
+
+
+def build_rules_doc(P, tok, length, seed, tasks=RULE_TASKS, shots=RULE_SHOTS_TRAIN) -> Doc:
+    """B1: rule episodes packed into one ``length + 1`` sequence, filler after.
+
+    Each episode is a shared-generator prompt + its answer + a blank line;
+    every answer is supervised / scored. Episodes are independent, so the
+    memory must also learn to start each episode afresh."""
+    rng = random.Random(seed)
+    ids, answers = [], []
+    sep = tok.encode(RULE_SEP, add_special_tokens=False)
+    while True:
+        ex = build_rule_example(tok, rng.choice(tasks), rng.choice(shots), rng.randrange(1 << 30))
+        episode = ex.prompt_ids + [ex.target_token_id] + sep
+        if len(ids) + len(episode) > length + 1:
+            break
+        answers.append((len(ids) + len(ex.prompt_ids), ex.target_token_id,
+                        list(ex.candidate_token_ids)))
+        ids += episode
+    if not answers:
+        raise ValueError(f"no rule episode fits in {length}")
+    return Doc(ids + P.filler(length + 1 - len(ids)), answers)
+
+
+def build_doc(P, family, size, length, position, seed, tok=None) -> Doc:
     """One document of exactly ``length + 1`` tokens."""
+    if family == 'rules':
+        return build_rules_doc(P, tok, length, seed)
     rng = random.Random(seed)
     records, queries = FAMILIES[family](P, rng, size)
     tail, answers_rel = [], []
@@ -242,29 +287,67 @@ def parse_arms(spec):
 
 # ── train / eval ────────────────────────────────────────────────────────────
 
-def train_plan(steps, batch, seed):
+def train_plan(steps, batch, seed, families=tuple(SIZES)):
     """Per step: (length, [(family, size, position, doc_seed)])."""
     rng = random.Random(seed)
-    lengths, weights = (512, 1024, 2048, 4096), (0.35, 0.30, 0.20, 0.15)
+    if tuple(families) == ('rules',):     # B1: short episodes, no long context needed
+        lengths, weights = (512, 1024), (0.5, 0.5)
+    else:
+        lengths, weights = (512, 1024, 2048, 4096), (0.35, 0.30, 0.20, 0.15)
     plan, doc_seed = [], 10_000_000
     for _ in range(steps):
         L = rng.choices(lengths, weights=weights)[0]
         specs = []
         for _ in range(batch):
-            fam = rng.choice(tuple(SIZES))
-            specs.append((fam, rng.choice(SIZES[fam]), rng.choice(POSITIONS), doc_seed))
+            fam = rng.choice(tuple(families))
+            size = rng.choice(SIZES[fam]) if fam in SIZES else 0
+            specs.append((fam, size, rng.choice(POSITIONS), doc_seed))
             doc_seed += 1
         plan.append((L, specs))
     return plan
 
 
 @torch.no_grad()
-def evaluate(model, P, device, ctxs, trials, eval_batch=8):
+def _score(model, embed, docs, device, eval_batch=8):
+    """Hits / total over every answer of ``docs`` (contrastive, 8 candidates)."""
+    hit = tot = 0
+    for i in range(0, len(docs), eval_batch):
+        chunk = docs[i:i + eval_batch]
+        x, _, _ = batch_tensors(chunk, device)
+        with torch.amp.autocast('cuda', dtype=torch.bfloat16):
+            lm, _ = model._hidden_to_lm(x)
+        h = lm.raw(*lm.layout).float()
+        for b, d in enumerate(chunk):
+            for idx, target, cands in d.answers:
+                scores = h[b, idx - 1] @ embed[cands].float().T
+                hit += int(cands[int(scores.argmax())] == target)
+                tot += 1
+    return hit, tot
+
+
+def evaluate_rules(model, P, tok, device, trials, length=1024):
+    """B1 cells: one (task, shots) per document, held-out seeds (2e9+)."""
+    model.eval()
+    embed = model.embed.embed.weight
+    out = {}
+    for task in RULE_TASKS:
+        for shots in RULE_SHOTS_EVAL:
+            docs = [build_rules_doc(P, tok, length, 2_000_000_000 + 7919 * s,
+                                    tasks=(task,), shots=(shots,)) for s in range(trials)]
+            hit, tot = _score(model, embed, docs, device)
+            out[f"{task}{shots}"] = {'acc': hit / max(tot, 1), 'n': tot}
+    model.train()
+    return out
+
+
+def evaluate(model, P, device, ctxs, trials, eval_batch=8, families=tuple(SIZES)):
     """Accuracy per (family, size, ctx), and per position, over 8 candidates."""
     model.eval()
     embed = model.embed.embed.weight
     out = {}
     for fam, sizes in SIZES.items():
+        if fam not in families:
+            continue
         for size in sizes:
             for ctx in ctxs:
                 docs = [(pos, build_doc(P, fam, size, ctx, pos, 2_000_000_000 + 7919 * s + int(pos * 10)))
@@ -290,7 +373,8 @@ def evaluate(model, P, device, ctxs, trials, eval_batch=8):
     return out
 
 
-def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials, aux_weight=0.0):
+def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials, aux_weight=0.0,
+              tok=None, families=tuple(SIZES)):
     torch.manual_seed(0)
     model = V14LM(cfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
@@ -299,8 +383,18 @@ def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials, aux_weig
         opt, max_lr=lr, total_steps=len(plan), pct_start=0.05,
         anneal_strategy='cos', div_factor=10, final_div_factor=10)
     t0, toks = time.time(), 0
+
+    def make_batch(i):
+        L, specs = plan[i]
+        return [build_doc(P, *spec[:2], L, *spec[2:], tok=tok) for spec in specs]
+
+    # Build batch i+1 on a CPU thread while the GPU runs batch i.
+    pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+    pending = pool.submit(make_batch, 0)
     for step, (L, specs) in enumerate(plan, 1):
-        docs = [build_doc(P, *spec[:2], L, *spec[2:]) for spec in specs]
+        docs = pending.result()
+        if step < len(plan):
+            pending = pool.submit(make_batch, step)
         x, y, mask = batch_tensors(docs, device, aux_weight)
         with torch.amp.autocast('cuda', dtype=torch.bfloat16):
             lm, _ = model._hidden_to_lm(x)
@@ -314,21 +408,33 @@ def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials, aux_weig
         if step % log_every == 0 or step == 1:
             print(f"  [{label}] step {step:5d}/{len(plan)} L={L:5d} loss={float(loss):.4f} "
                   f"| {toks / (time.time() - t0):,.0f} tok/s", flush=True)
+    pool.shutdown()
     train_s = time.time() - t0
     print(f"  [{label}] trained {n_params / 1e6:.1f}M params in {train_s:.0f}s "
           f"({1000 * train_s / len(plan):.0f} ms/step)", flush=True)
-    res = evaluate(model, P, device, ctxs, trials)
-    return {'params': n_params, 'train_s': train_s, 'results': res}
+    res = evaluate(model, P, device, ctxs, trials, families=families)
+    if 'rules' in families:
+        res.update(evaluate_rules(model, P, tok, device, trials))
+    return {'params': n_params, 'train_s': train_s, 'ms_per_step': 1000 * train_s / len(plan),
+            'results': res}
 
 
 def table(name, res, ctxs):
-    lines = [f"== {name}  (accuracy over 8 candidates; chance 0.125)",
-             "task       " + "".join(f"{c:>8}" for c in ctxs)]
-    for fam, sizes in SIZES.items():
-        for size in sizes:
-            row = f"{fam}{size:<{10 - len(fam)}}"
-            row += "".join(f"{res[f'{fam}{size}@{c}']['acc']:8.2f}" for c in ctxs)
-            lines.append(row)
+    lines = [f"== {name}  (accuracy over 8 candidates; chance 0.125)"]
+    if any('@' in k for k in res):
+        lines.append("task       " + "".join(f"{c:>8}" for c in ctxs))
+        for fam, sizes in SIZES.items():
+            for size in sizes:
+                if f'{fam}{size}@{ctxs[0]}' not in res:
+                    continue
+                row = f"{fam}{size:<{10 - len(fam)}}"
+                row += "".join(f"{res[f'{fam}{size}@{c}']['acc']:8.2f}" for c in ctxs)
+                lines.append(row)
+    if any(k.startswith(RULE_TASKS) for k in res):
+        lines.append("rule task       " + "".join(f"{f'{n}-shot':>8}" for n in RULE_SHOTS_EVAL))
+        for task in RULE_TASKS:
+            lines.append(f"{task:<16}" + "".join(
+                f"{res[f'{task}{n}']['acc']:8.2f}" for n in RULE_SHOTS_EVAL))
     return "\n".join(lines)
 
 
@@ -343,6 +449,8 @@ def main():
     ap.add_argument('--seed', type=int, default=42)
     ap.add_argument('--device', default='cuda')
     ap.add_argument('--ctxs', default='1024,4096,8192', help="eval context lengths")
+    ap.add_argument('--families', default='facts,bind,rebind',
+                    help="B0: facts,bind,rebind  |  B1: rules (shared rule generator)")
     ap.add_argument('--aux_weight', type=float, default=0.0,
                     help="LM loss weight on non-answer positions (0 = answer-only)")
     ap.add_argument('--json', default='', help="write all results here")
@@ -352,20 +460,26 @@ def main():
     from transformers import AutoTokenizer
     tok = AutoTokenizer.from_pretrained('gpt2')
     P = Pools(tok)
+    tok_rules = CachedTokenizer(tok)
     ctxs = tuple(int(c) for c in args.ctxs.split(','))
     commit = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'],
                             capture_output=True, text=True).stdout.strip()
     print(f"B0 micro-bench @ {commit}: {args.steps} steps x B{args.batch}, lr {args.lr}, "
           f"eval ctx {ctxs}, {args.trials} docs x {len(POSITIONS)} positions x "
-          f"{N_QUERIES} queries per cell, aux_weight {args.aux_weight}", flush=True)
-    plan = train_plan(args.steps, args.batch, args.seed)
+          f"{N_QUERIES} queries per cell, aux_weight {args.aux_weight}, "
+          f"families {args.families}", flush=True)
+    families = tuple(f.strip() for f in args.families.split(','))
+    unknown = [f for f in families if f not in SIZES and f != 'rules']
+    if unknown:
+        raise SystemExit(f"unknown families {unknown}")
+    plan = train_plan(args.steps, args.batch, args.seed, families)
     all_res = {'commit': commit, 'args': vars(args), 'arms': {}}
     for label, kind, hd, nl in parse_arms(args.arms):
         print(f"\n--- arm {label} ---", flush=True)
         cfg = make_cfg(kind, len(tok), head_dim=hd, n_layers=nl)
         all_res['arms'][label] = train_arm(label, cfg, P, plan, args.device, args.lr,
                                            args.log_every, ctxs, args.trials,
-                                           args.aux_weight)
+                                           args.aux_weight, tok=tok_rules, families=families)
         print(table(label, all_res['arms'][label]['results'], ctxs), flush=True)
         if args.json:
             with open(args.json, 'w') as f:

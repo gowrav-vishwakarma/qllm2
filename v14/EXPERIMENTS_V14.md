@@ -9,7 +9,7 @@ a closed question.
 | id | idea | status | verdict | code at | log |
 |---|---|---|---|---|---|
 | B0 | find the wall: where does today's best (delta + echo) fail? | run 1 INVALID (no arm learned lookup: no easy rung); run 2 (sizes from 1) queued on the 4090 after T1 | — | — | `logs/v14_b0_a0f672a_20261029_1232.log` |
-| B1 | rule induction in context (learning beyond recall, goal bar 3) | planned: uses the shared rule generator from the v13 session's learning probe | — | — | — |
+| B1 | rule induction in context (learning beyond recall, goal bar 3) | run 1 queued on the 4090 after B0 run 2 (shared generator `memory_probes/rules.py`, `ed326a1`) | — | — | — |
 | N1 | phase interference revived: v11 E3 on the lean body | coded + selftest PASS (`v14/units.py`), micro-bench queued with B0 | — | — | — |
 | N2 | phase-modulated activation (magnitude sets phase) | planned (flag exists: `activation='phase_mod'`, complex arm) | — | — | — |
 | N3 | formula-weight neuron | **folded into N2**: reduces to a gated bottleneck (GLU family), see N3 | — | — | — |
@@ -163,22 +163,37 @@ setting becomes the memory bar for N1, N4, N5. If nothing fails up to a64
 and bound attributes, memory is not the limiter and v14 focuses on LM
 quality (N2, N3).
 
-### B1 — rule induction (design; generator shared with the v13 session)
+### B1 — rule induction (shared generator, pre-registered 2026-10-29)
 
 **Question.** Can a unit learn a rule from a few examples in the context
 and apply it to a new input whose answer is nowhere in the context?
 
-**Design.** Same small model and training loop as B0, with a fourth task
-family drawn from the shared generator of the v13 session's learning probe
-(`scripts/run_learning_probe.py`; requested 2026-10-29 as an importable
-module so the micro-bench trains on the same tasks the probe scores on
-checkpoints). Answers are never copied from the context, so echo's
-succession memory cannot solve it by lookup. Bars are written when the
-task list is fixed, before any B1 run.
+**Tasks** (`memory_probes/rules.py`, the v13 session's learning probe,
+`ed326a1`; 8 candidates incl. tempting wrong answers, chance 0.125):
+letter_shift (hidden shift 1–3), number_step (step 2–9), reverse3 (answer
+= first query word, placed by the rule), label_category (invented label per
+semantic category, query item never labelled), two_hop (owner → pet →
+name, facts shuffled).
 
-**Why it matters for v14.** N4 (fast weights inside the unit) is a learner
-by construction: fast-weight / test-time-training layers are known to do
-in-context regression. B1, not B0, is its primary test.
+**Micro-bench form (`v14/microbench.py --families rules`).** Episodes
+(prompt + answer + blank line) packed into 512 / 1024-token sequences;
+every answer supervised (answer-only loss). Train shots 1–8, random task
+per episode; eval 2 / 4 / 8 shots, one task per document, held-out seeds,
+16 docs per cell (18–73 answers per doc). Same small body and loop as B0.
+
+**Run 1 (queued on the 4090 after B0 run 2):** arms delta, echo, n1sum,
+n1gate, n1phase; 6000 steps × B16; `TAG=b1 FAMILIES=rules`.
+**Purpose:** control levels for small bodies. **No unit is judged on run 1**
+(N1 is a memory mechanism, not a learner). **Validity check:** the bench is
+usable if some arm reaches ≥ 0.50 on reverse3 or two_hop at 8 shots; else
+run 2 adds `--aux_weight 0.1`.
+
+**Reference numbers at scale** come from the v13 session's probe on the
+600M / 3B checkpoints (PAM, M1, Transformer++, Mamba-2), so "beats the
+transformer at learning" has a number.
+
+**Why it matters for v14.** N6 (operator memory) and N4 (fast weights in
+the unit) are learners by construction: B1, not B0, is their primary test.
 
 ### N1 — phase interference revived (v11 E3 on the lean body)
 
@@ -285,33 +300,42 @@ Complex AutoEncoder / Rotating Features (object binding by phase, vision).
 Not known in an O(1) recurrent LM. Micro-bench only, on B0's bound-attribute
 case, after N1 has a verdict.
 
-### N6 — operator memory (candidate, 2026-10-29)
+### N6 — operator memory (candidate, 2026-10-29; reviewed by the v13 session)
 
-**Idea.** Every known O(1) memory (SSM, linear attention, DeltaNet, PAM)
-stores *items*: what was seen, as key → value associations, and recall
-looks items up. Operator memory stores *operators*: how things change. Its
-state is a transformation inferred from the context, and prediction applies
-that transformation to a new input, so the answer never has to be in the
-context. That is rule application (goal bar 3), not lookup.
+**Idea.** Prediction applies a transformation inferred from the context to
+a new input, so the answer never has to be in the context: rule
+application (goal bar 3), not lookup.
 
-**Sketch in phase space.** Represent tokens as complex vectors. A relation
-between an input and an output is a rotation per channel,
-`Δφ = arg(v) − arg(k)`. From examples ("France → Paris, Japan → Tokyo") the
-state accumulates a confidence-weighted average of these rotations: a point
-on a torus, O(d) per head, O(1) per token. A new input is answered as
-`k_new · e^{iΔφ}`. Two relations compose by adding phases, so composition
-is built in. Open design questions: which positions play "input" and
-"output" (learned role gates), several operators at once (a small set,
-selected by the input), and magnitude changes as well as rotations.
+**The claim, stated precisely (from the cross-review).** A delta /
+outer-product state is already an inferred linear operator (online least
+squares), and `S k_new` also "applies a rule" to unseen inputs. So "items
+vs operators" alone is not the difference. The difference is the
+**inductive bias**: a phase-only diagonal operator has d numbers per head
+instead of d², so it can be inferred from 1–2 examples; relations compose
+by adding phases; and it generalises by construction when a rule *is* a
+rotation.
 
-**Prior art to check before any claim:** RotatE (relations as complex
-rotations, but static knowledge-graph embeddings with no in-context
-inference), tensor-product / holographic representations, analogy by
-vector offsets (word2vec), meta-learning / in-context learning theory.
-No recurrent LM whose state *is* an inferred operator is known to us.
+**Sketch.** Tokens as complex vectors. A relation between an input and an
+output is a rotation per channel, `Δφ = arg(v) − arg(k)`. The state keeps a
+confidence-weighted **circular mean** of these rotations (O(d) per head,
+O(1) per token). A new input is answered as `k_new · e^{iΔφ}`. Open
+questions: which positions play input / output (learned role gates),
+several operators at once (selected by the input), magnitude changes.
 
-**First test:** B1 rule tasks with answers absent from the context. Bar:
-beat the echo / M1 small bodies on rule application at equal size and state.
+**Prior art to cite:** FHRR (Plate, phase-only holographic binding),
+Associative LSTM (Danihelka et al. 2016: complex HRR inside an LSTM, very
+close in spirit), RotatE (static knowledge-graph rotations), AKOrN (phase
+dynamics). Not known anywhere: a circular-mean estimator of the relation,
+inferred in context, used as the read-out operator of a recurrent LM.
+
+**Per-task predictions (to be frozen before the first N6 run):**
+- letter_shift, number_step: ordinal shifts, which are rotations if the
+  model puts ordinals on a circle (Chrono-like). N6 should beat the
+  echo / M1 small bodies clearly here.
+- label_category: many-to-one, not a rotation. Expected to FAIL (a limit
+  of the idea, worth showing).
+- two_hop: composition, the informative middle case.
+- reverse3: positional, not a rotation of content. No gain expected.
 
 ### S1 — spatial neuron
 

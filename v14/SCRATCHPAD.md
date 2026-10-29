@@ -16,6 +16,10 @@ pre-registered plan) first.
   only after the v13 session's T1 tmux ends (~21:45 IST). Do not gate on
   free memory alone: when maya stopped, B0 started next to T1 (18:30, killed
   after ~1 min). Validity: echo >= 0.90 on facts1/facts2.
+* **B1 run 1** (rule induction, shared generator `memory_probes/rules.py`)
+  queued after B0 run 2: tmux `v14b1` runs `WAIT_TMUX="t1loc v14b0"
+  TAG=b1 FAMILIES=rules bash v14/run_b0.sh`. Purpose: control levels; no
+  unit judged. Logs `logs/v14_b1_<hash>_<time>.{log,json}`.
 * **Session coordination:** v14 (this) and v13_sempty (qllm2-04) ping each
   other on every GPU start/stop and on verdicts. The 4090 runs T1 until
   ~21:45 IST; the 6000 is qllm2-04's again after B0.
