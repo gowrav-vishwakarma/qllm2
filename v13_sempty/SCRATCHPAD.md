@@ -24,6 +24,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   `lpmamba` runs the Mamba-2 3B probe (needs mamba_ssm, only on the 6000)
   after "m2 DONE"; copy `logs/learning_probes/v13_sempty_mix3b_mamba2_answ100_b36e3a5_rules.json`.
   4090: T1 (`t1loc`) to ~16:15Z, then the v14 session's B0/B1 (gated on t1loc).
+  **Before the next v13 launch on the 6000** (after M2 + lpmamba): `cd
+  ~/Development/sempyt && git pull` — sempyt `b99e038` (abs/conj/normalize
+  raise if the SplitComplex pair axis is not last; scan per-step-decay fix
+  2790c69). v13 selftest all 25 pass against it (local, 13:40Z).
 
 * **2026-10-29 12:35Z: M1 KEEP — new reference body** (4 notebooks in blocks
   3,7,11,15 + echo, MLP 2352): holdout 3.4906 (echo 3.4885), WikiText 69.4
