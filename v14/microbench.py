@@ -353,6 +353,7 @@ def evaluate_rules(model, P, tok, device, trials, length=1024):
     return out
 
 
+@torch.no_grad()
 def evaluate(model, P, device, ctxs, trials, eval_batch=8, families=tuple(SIZES)):
     """Accuracy per (family, size, ctx), and per position, over 8 candidates."""
     model.eval()
@@ -425,6 +426,9 @@ def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials, aux_weig
     train_s = time.time() - t0
     print(f"  [{label}] trained {n_params / 1e6:.1f}M params in {train_s:.0f}s "
           f"({1000 * train_s / len(plan):.0f} ms/step)", flush=True)
+    del opt, sched                          # free optimizer state before the long-context eval
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
         torch.save(model.state_dict(), os.path.join(save_dir, f"{label}.pt"))

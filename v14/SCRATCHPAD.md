@@ -13,16 +13,19 @@ Keep all three current as things happen (user rule, 2026-10-29).
      0.76 / 0.77 / 0.52** (chance 0.50 / 0.50 / 0.25), so the diagonal
      memory helps, not the rotation. two_hop: every arm at chance. Full
      table and verdict: EXPERIMENTS_V14 "B1", "N6".
-  2. tmux `v14b0`: **B0 run 2 RUNNING** since 00:20 IST at `0671d65`
-     (first start at 00:18 died after 20 s: python3.9 segfault during a
-     torch.compile recompile, RAM peak 3.5G, so not the cap; relaunched
-     as is). Log `logs/v14_b0_0671d65_20261030_0020.log`. ETA ~02:30 IST.
-     Validity: echo >= 0.90 on facts1/facts2 @1024.
+  2. **B0 run 2, attempt 3 queued** (tmux `v14b0`, behind `v14b1r2`; ETA
+     ~03:45 IST). Arms echo, delta, n1sum, n1gate, n1phase, op, opdiag.
+     Validity: echo >= 0.90 on facts1/facts2 @1024. Attempt 1 (00:18):
+     python3.9 segfault in a torch.compile recompile after 20 s (RAM peak
+     3.5G, not the cap). Attempt 2 (00:20-00:39): CUDA OOM in the eval once
+     echo had trained. B0's `evaluate()` ran with autograd on (no
+     `no_grad`), which fit on the 96 GB 6000 but not on the 4090. Fixed.
   Both run under a 12G RAM cap (systemd-run scope) and close their tmux on
   exit.
-  3. tmux `v14b1r2`: **B1 run 2 queued** behind `v14b0` (pre-registered in
-     EXPERIMENTS_V14 "B1"): arms echo, op, opdiag, opdiag_ownq, echo_tied;
-     new seed; unseen rule parameters. ~1 h. ETA ~03:30 IST.
+  3. tmux `v14b1r2`: **B1 run 2 RUNNING** since 00:39 IST at `84f426b`
+     (pre-registered in EXPERIMENTS_V14 "B1"): arms echo, op, opdiag,
+     opdiag_ownq, echo_tied; new seed; unseen rule parameters. Log
+     `logs/v14_b1r2_84f426b_20261030_0039.log`. ETA ~01:40 IST.
 * **Launcher:** `v14/run_bench.sh` (replaces `run_b0.sh`; the running B0 run
   2 still executes its already-open copy). It also stops waiting when the
   other run's log prints its DONE line (`WAIT_DONE=file:pattern`): the v13

@@ -25,8 +25,8 @@ AGENTS.md). All launchers refuse a dirty tree. `v14/run_bench.sh` replaced `v14/
 
 | id | measures | status | run hash | log | rerun |
 |---|---|---|---|---|---|
-| B0 | memory wall: facts / bind / rebind, 8 candidates, chance 0.125 | run 1 **INVALID** (no easy rung: no arm learned lookup). Run 2 (sizes from 1) running on the 4090 since 00:20 IST 2026-10-30 | run 1 `a0f672a` | `logs/v14_b0_a0f672a_20261029_1232.log` | `ARMS=echo,delta,n1sum,n1gate,n1phase,op TAG=b0 bash v14/run_b0.sh` |
-| B1 | rule induction in context (goal bar 3), shared generator `memory_probes/rules.py` | run 1 **done** (00:17 IST 2026-10-30): letter_shift / number_step / reverse3 at the ceiling (1.00, every arm, learned in weights); label_category and two_hop separate. **Run 2 pre-registered** (EXPERIMENTS_V14 "B1": unseen rule parameters, new seed, 2x2 cause arms); queued behind B0 run 2 | `5b1eb9d` | `logs/v14_b1_5b1eb9d_20261029_2329.{log,json}` | `TAG=b1 FAMILIES=rules ARMS=echo,op,opdiag,n1phase,delta bash v14/run_b0.sh` |
+| B0 | memory wall: facts / bind / rebind, 8 candidates, chance 0.125 | run 1 **INVALID** (no easy rung: no arm learned lookup). Run 2 (sizes from 1) queued on the 4090 behind B1 run 2 (attempts 1-2 died: a python segfault, then an eval OOM from a missing `no_grad`, fixed) | run 1 `a0f672a` | `logs/v14_b0_a0f672a_20261029_1232.log` | `ARMS=echo,delta,n1sum,n1gate,n1phase,op TAG=b0 bash v14/run_b0.sh` |
+| B1 | rule induction in context (goal bar 3), shared generator `memory_probes/rules.py` | run 1 **done** (00:17 IST 2026-10-30): letter_shift / number_step / reverse3 at the ceiling (1.00, every arm, learned in weights); label_category and two_hop separate. **Run 2 RUNNING** since 00:39 IST at `84f426b` (pre-registered in EXPERIMENTS_V14 "B1": unseen rule parameters, new seed, 2x2 cause arms) | `5b1eb9d` | `logs/v14_b1_5b1eb9d_20261029_2329.{log,json}` | `TAG=b1 FAMILIES=rules ARMS=echo,op,opdiag,n1phase,delta bash v14/run_b0.sh` |
 
 ## Candidates in code (not yet judged)
 
