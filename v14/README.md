@@ -15,6 +15,11 @@ learns better at the same size and speed.
 | `EXPERIMENTS_V14.md` | lab notebook: the do-not-repeat digest of v4–v13, the never-tested leftovers, and the pre-registered v14 experiments (index table at the top) |
 | `SCRATCHPAD.md` | handover: what is running, where, what is next |
 | `NOTES.md` | the 2026-08-22 spatial-neuron design (track S1). Notes only, never built |
+| `config.py` | `V14Config` = v13_sempty `PAMConfig` + v14 switches (all off by default) |
+| `units.py` | v14 units (N1 `PhaseStatesPAM`) and `V14LM` (the v13 LM with units swapped in) |
+| `selftest.py` | CPU checks: off == v13, start parity, prefill == decode, gradients |
+| `check_layout.py` | the sempyt layout guard for v14 (reuses v13_sempty's checker) |
+| `microbench.py`, `run_b0.sh` | B0 memory micro-bench (facts / bind / rebind) and its launcher |
 | `data/` | untracked scratch from August |
 
 ## Ground rules (from the v4–v13 record, see EXPERIMENTS_V14 part A)
@@ -39,4 +44,8 @@ learns better at the same size and speed.
 
 ## Status (2026-10-29)
 
-Docs only. No v14 code yet. First step is B0 (find the wall), then N1–N3.
+N1 coded and self-tested; B0 + N1 micro-bench queued on the 4090. N3 folded
+into N2 (see EXPERIMENTS_V14 "N3"). sempyt gained `rotate` (`e403dd8`).
+
+    .venv/bin/python -m v14.selftest        # CPU, ~1 min
+    .venv/bin/python -m v14.check_layout     # must print OK

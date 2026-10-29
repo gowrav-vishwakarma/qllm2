@@ -5,10 +5,14 @@ pre-registered plan) first.
 
 ## State (2026-10-29, IST)
 
-* **v14 is docs only.** Plan: B0 (find where delta + echo fails on the
-  micro-bench) → N1 (v11 phase interference on the lean body), N3
-  (formula-weight neuron), N2 (phase-modulated activation). N4, N5, S1 are
-  design only.
+* **N1 coded + selftest PASS** (`v14/units.py`, `python -m v14.selftest`).
+  **B0 tool ready** (`v14/microbench.py`). N3 folded into N2 (analysis in
+  EXPERIMENTS_V14). sempyt `rotate` op added + pushed (`e403dd8`); pull
+  sempyt on the 6000 before running v14 there.
+* **Queued:** tmux `v14b0` on the 4090 runs `v14/run_b0.sh` (arms delta,
+  echo, n1sum, n1gate, n1phase; 6000 steps each, ~20 min/arm). It waits for
+  14 GB free GPU memory, then logs to `logs/v14_b0_<hash>_<time>.log` + `.json`.
+  Restart: `tmux new-session -d -s v14b0 "bash v14/run_b0.sh"`.
 * **Machines are busy with v13_sempty work (other session):**
   - 6000: tmux `m1chain` (M1 sparse memory, from ~16:30 IST) → `m2chain`
     (M2 shared reads, done ~20:15 IST). Details: `v13_sempty/SCRATCHPAD.md`.
@@ -21,5 +25,6 @@ pre-registered plan) first.
 
 ## Next action
 
-Extend `v13_sempty/tmp/recall_microbench.py` with the B0 cases (a16/a32/a64,
-bound attributes, rebinding) and run the control arm on the 4090.
+When `v14b0` finishes: fill the B0 / N1 rows in EXPERIMENTS_V14 (headroom
+cells H = echo < 0.90; N1 bars there). If N1 passes, add a v14 hook to the
+v13_sempty trainer for the 150M LM check.

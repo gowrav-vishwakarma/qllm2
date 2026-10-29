@@ -8,10 +8,10 @@ a closed question.
 
 | id | idea | status | verdict | code at | log |
 |---|---|---|---|---|---|
-| B0 | find the wall: where does today's best (delta + echo) fail? | planned | — | — | — |
-| N1 | phase interference revived: v11 E3 on the lean body | planned | — | — | — |
-| N2 | phase-modulated activation (magnitude sets phase) | planned | — | — | — |
-| N3 | formula-weight neuron: weight = context-chosen interference of K bases | planned | — | — | — |
+| B0 | find the wall: where does today's best (delta + echo) fail? | tool ready (`v14/microbench.py`), queued on the 4090 | — | — | — |
+| N1 | phase interference revived: v11 E3 on the lean body | coded + selftest PASS (`v14/units.py`), micro-bench queued with B0 | — | — | — |
+| N2 | phase-modulated activation (magnitude sets phase) | planned (flag exists: `activation='phase_mod'`, complex arm) | — | — | — |
+| N3 | formula-weight neuron | **folded into N2**: reduces to a gated bottleneck (GLU family), see N3 | — | — | — |
 | N4 | living neuron: per-unit fast weight, written by surprise | design only | — | — | — |
 | N5 | resonant binding: oscillator phases as binding tags | design only | — | — | — |
 | S1 | spatial neuron (learned positions, distance-gated) | notes only (`NOTES.md`) | — | — | — |
@@ -85,6 +85,17 @@ nothing to prove on memory.
 - **distractor overwrite**: same key rebound later; query must return the
   newest value.
 
+**Tool (`v14/microbench.py`, 2026-10-29).** Words are random single GPT-2
+tokens, redrawn per document (disjoint key / value / entity pools). 4
+queries per document, answers teacher-forced and the only supervised
+positions. 8 candidates, hard distractors first (other values of the same
+document; for `bind` the entity's other attributes and the other entities'
+same-relation values; for `rebind` the key's old values). Sizes: facts
+8/16/32/64, bind 4/8/16 entities, rebind 4/8/16 keys. Train lengths
+512–4096; eval 1024 / 4096 / 8192 at positions 0, 0.5, 1 (16 docs each:
+192 answers per cell, SE ≈ 0.036). 6000 steps × B16, LR 3e-4, same data
+for every arm. Launcher: `v14/run_b0.sh` (waits for free GPU memory).
+
 **Output.** The smallest setting where the control drops below 0.5. That
 setting becomes the memory bar for N1, N4, N5. If nothing fails up to a64
 and bound attributes, memory is not the limiter and v14 focuses on LM
@@ -95,18 +106,39 @@ quality (N2, N3).
 **Why.** The only architecture change that beat the v7 baseline (−1.11 PPL),
 and the one mechanism that is uniquely PAM. Never retested after the lean rewrite.
 
-**Mechanism.** K = 2 notebooks per head, each with its own decay bias.
-Read `y = Re( Σ_k e^{iφ_k(x)} · S_k q )`, `φ_k(x) = W_φ x`, zero-init, so the
-model starts as an equal sum. In the real arm, the phase acts on channel
-pairs (a 2-D rotation, as RoPE does), so no complex arm is needed. Write
-path unchanged (delta into each S_k).
+**Mechanism (`v14/units.py` `PhaseStatesPAM`, flags `phase_states=2`,
+`phase_read`).** K = 2 delta notebooks per head. They share q, k, v and the
+write/erase gates; only the fade differs (decay offsets −2 / +2 around the
+head's dt, as v11 E3 and v13 A2). Each is read with the same query, then:
 
-**Arms.** control; `n_states=2` with a plain sum (isolates the state count);
-`n_states=2` + phase read (N1). State is 2× in both K=2 arms.
+| arm | read | new params |
+|---|---|---|
+| `n1sum` | `y = Σ_k a_{h,k} y_k`, a = 1/K at start | H·K |
+| `n1gate` | `y = (1/K) Σ_k (1 + c_k(x)) y_k`, `c = W x` | D·H·K + H·K |
+| `n1phase` | `y = (1/K) Σ_k R(φ_k(x)) y_k`, `φ = W x`, R turns every channel pair by φ (`sempyt.rotate`) | D·H·K + H·K |
 
-**Bars.** Micro-bench: N1 ≥ plain-sum + 0.20 on the B0 wall case.
-LM: 150M holdout ≤ control − 0.02 nats AND ≤ plain-sum − 0.01. Step time ≤ 1.35× control.
-**Kill:** holdout ≥ plain-sum (the phase adds nothing).
+W is zero-init, so all three start as the plain average (selftest: identical
+logits at start). `gate` and `phase` have identical parameters: one scales
+each read by a real number, the other turns it. A `cos φ` gate was rejected:
+zero gradient at φ = 0. State is 2× the control in all three. Decode is
+implemented (O(1), K notebooks carried); prefill == decode to 7e-7.
+
+**Selftest (`v14/selftest.py`, CPU, 2026-10-29): ALL PASS.** Switches off ==
+v13 (bit-identical); three reads identical at start; prefill == decode for
+each read across the 64-token sub-chunk edge; every new parameter gets a
+gradient; nonzero angles make phase ≠ gate.
+
+**Bars (micro-bench, written before any run).** Headroom cells H = the B0
+cells where the echo control scores < 0.90 (mean over positions).
+- PASS: mean_H(n1phase) − mean_H(n1sum) ≥ +0.10 AND
+  mean_H(n1phase) − mean_H(n1gate) ≥ +0.05.
+- If H is empty, memory is not the limiter at this size; N1 is then judged
+  on the LM check only.
+- Also reported: ms/step of each arm vs echo.
+
+**Bars (LM, 150M holdout, same batches as control).** n1phase ≤ control −
+0.02 nats AND ≤ n1sum − 0.01 AND ≤ n1gate − 0.01. Step time ≤ 1.35× control.
+**Kill:** n1phase within 0.01 of n1gate (turning adds nothing over a real weight).
 
 ### N2 — phase-modulated activation
 
@@ -124,25 +156,31 @@ against its own complex control.
 first evidence that complex units carry something real units cannot, and N3
 gets the complex arm too. **Kill:** within ±0.01 (α stays near 0).
 
-### N3 — formula-weight neuron ("a weight is a formula, not a number")
+### N3 — formula-weight neuron: folded into N2 (analysis, 2026-10-29)
 
-**Why.** The user's idea, 2026-10-29: a neuron is more than weight and bias.
-Here each weight is K interfering parts, and the input picks how they combine,
-so the same neuron computes a different function in a different context.
+The idea (user, 2026-10-29: "a neuron is more than weight and bias"): each
+weight is K interfering parts and the input picks how they combine,
+`W(x) = Σ_k c_k(x) U_k V_kᵀ`.
 
-**Mechanism.** In the CGU/MLP up-projection:
-`W(x) = Σ_k c_k(x) · U_k V_kᵀ`, `c_k(x) = e^{iφ_k(x)}` (complex arm) or
-`c_k(x) = cos φ_k(x)` on channel pairs (real arm). Mixing coefficients can be
-negative or cancel, unlike CondConv / DynamicConv, which mix with softmax
-weights. Rank chosen so total params = control. Computed as
-`Σ_k c_k(x) · U_k (V_kᵀ x)`, so no per-token weight matrix is materialized.
+**It reduces to a known unit.** Stack the bases, `U = [U_1 … U_K]`,
+`V = [V_1 … V_K]`, and repeat each `c_k` over its rank block:
 
-**Prior art.** CondConv (Yang 2019), DynamicConv (Chen 2020), hypernetworks,
-mixture-of-LoRA. The new part is phase (cancellation) mixing inside a
-recurrent O(1) LM.
+    W(x) x = Σ_k c_k(x) U_k (V_kᵀ x) = U · ( c(x) ⊙ Vᵀx )
 
-**Bars.** 150M holdout ≤ control − 0.02 nats, step time ≤ 1.3×.
-**Kill:** φ collapses to a constant (all tokens use the same mix) or holdout ≥ control.
+That is a low-rank bottleneck with a multiplicative gate on it: the GLU
+family, which the CGU/MLP already is (silu gate × linear). Param-matched
+(D 588, hidden 1764, K 4 → rank 110 each) it costs the same FLOPs as the
+dense layer and adds only another gate. In the real arm it is not a new
+neuron. In the complex arm, `c_k = e^{iφ_k}` turns the bottleneck instead of
+scaling it, which is exactly the question N2 already asks (does a phase gate
+carry something a real gate cannot?). So N3 is not run separately.
+
+**What this says about "new neurons".** Any unit whose output depends only
+on the current input, however its weights are composed, is a function
+`f(x)`, and a gated MLP already approximates it. A neuron that is really
+different needs something that persists across time: **its own state**
+(N4: memory inside the unit) or **its own dynamics** (N5: an oscillator with
+a phase that evolves). That is where v14 looks for the new species.
 
 ### N4 — living neuron (design only; after B0, N1–N3)
 
@@ -175,11 +213,11 @@ or speed > 1.5× the matched transformer at 1M) apply.
 
 ## Order and machines
 
-1. **B0** on the 4090 (micro-bench only, minutes) once T1's local check
-   (other session, `t1loc_t1_ea002e6`) frees the GPU, or alongside it if
-   memory allows and T1's speed numbers are already taken.
-2. **N1, N3** selftests on CPU while waiting; then micro-bench + LM check on
-   the 4090.
+1. **B0 + N1 micro-bench** in one run on the 4090 (`v14/run_b0.sh`, arms
+   delta, echo, n1sum, n1gate, n1phase; ~20 min per arm). It waits until the
+   GPU has ≥ 14 GB free (T1's local check, other session, holds it now).
+2. **N1 LM check** on the 4090 if the micro-bench passes (needs a v14 hook in
+   the v13_sempty trainer: not built yet).
 3. **N2** LM check (complex arm) on the 4090.
 4. Anything that passes stage 3 queues on the 6000 behind the v13_sempty
    chain (M2, then T1 600M).
