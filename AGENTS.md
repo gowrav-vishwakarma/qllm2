@@ -80,5 +80,15 @@ logs/<version>_<tag>_<gitshorthash>_<YYYYMMDD_HHMM>.log
 - Keep the watchdog chain alive: `bash v13/tmp/watchdog.sh <log> <verdict_gtok> 2940`
   async + timeout 3300; re-arm on every wake (see v13/SCRATCHPAD.md).
 
+## Experiment notebooks are a habit, not a request (user rule, 2026-10-29)
+- Every version keeps its own notebook files and BOTH sessions update them
+  as things happen, unasked: design + pre-registered rules before a run,
+  milestones, results and verdict after. v13_sempty: `EXPERIMENTS_SEMPY.md`,
+  `EXPERIMENT_INDEX.md`, `SCRATCHPAD.md`; v14: `EXPERIMENTS_V14.md`,
+  `NOTES.md`, `SCRATCHPAD.md`. A new version starts with its own
+  EXPERIMENTS + SCRATCHPAD files on day one.
+- Commit + push the notes with the logs behind their numbers, so a fresh
+  session on either box can pick up the chain and the findings from git.
+
 ## Handover ready
 - We run this code on server (rtx pro 6000) and local (rtx 4090) and code is synced using pull push. so always keep scracth pad as handover ready notebook so any time we switch the running context is clear to other agents on server to local or vice versa.
