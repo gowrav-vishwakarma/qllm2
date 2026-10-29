@@ -1,0 +1,32 @@
+=== equal-3b mix3b_delta_answ100_lr1.2e-3 start 2026-10-28T18:54:00Z SCREEN_HASH=9982a79 arch=pam extra='' ===
+=== LR given: 1.2e-3 (screen skipped) ===
+=== mix3b_delta_answ100_lr1.2e-3 LR=1.2e-3 ckpt=checkpoints_v13_sempty/mix3b_delta_answ100_lr1.2e-3_9982a79 log=logs/v13_sempty_mix3b_delta_answ100_lr1.2e-3_9982a79_20261028_1854.log 2026-10-28T18:54:01Z ===
+=== mix3b_delta_answ100_lr1.2e-3 start 2026-10-28T18:54:01Z commit=9982a79 log=logs/v13_sempty_mix3b_delta_answ100_lr1.2e-3_9982a79_20261028_1854.log ckpt=checkpoints_v13_sempty/mix3b_delta_answ100_lr1.2e-3_9982a79 ===
+=== mix3b_delta_answ100_lr1.2e-3 end 1793259470 exit=0 attempts=1 ===
+=== mix3b_delta_answ100_lr1.2e-3 exit=0 2026-10-29T07:37:50Z ===
+W1029 07:38:05.396000 220828 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1029 07:38:13.798000 220828 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1029 07:38:22.667000 220828 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1029 07:38:32.557000 220828 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1029 07:38:44.607000 220828 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1029 07:39:04.364000 220828 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+Results saved to logs/memory_probes/v13_sempty_mix3b_delta_answ100_lr1.2e-3_9982a79_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+W1029 07:40:04.903000 230818 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1029 07:40:05.977000 230818 .venv/lib/python3.11/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+  10/50 docs (10s)
+  20/50 docs (16s)
+  30/50 docs (21s)
+  40/50 docs (27s)
+  50/50 docs (33s)
+  [    0,   64)  loss 3.9905  ppl   54.08
+  [   64,  128)  loss 3.7032  ppl   40.58
+  [  128,  256)  loss 3.5387  ppl   34.42
+  [  256,  512)  loss 3.5055  ppl   33.30
+  [  512, 1024)  loss 3.6123  ppl   37.05   short-ctx 3.6120  far_gain -0.0003
+  [ 1024, 2048)  loss 3.6500  ppl   38.47   short-ctx 3.6629  far_gain +0.0129
+  [ 2048, 4096)  loss 3.6401  ppl   38.09   short-ctx 3.6574  far_gain +0.0174
+  [ 4096, 8192)  loss 3.6816  ppl   39.71   short-ctx 3.7024  far_gain +0.0208
+wrote logs/pos_loss/v13_sempty_mix3b_delta_answ100_lr1.2e-3_9982a79_pg19.json
+=== equal-3b mix3b_delta_answ100_lr1.2e-3 DONE 2026-10-29T07:40:36Z ===

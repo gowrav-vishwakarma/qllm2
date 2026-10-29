@@ -25,7 +25,7 @@ logs of the original run are named after the *run* hash.)
 | N4 gate | per-head read-out gate silu(Wx+b) | KEEP: 23.14 → 22.96 | "N4 read-out gate" | `--out_gate` / `OUT_GATE=1` |
 | A3 delta | delta erase/write, unit keys, WY chunked form | KEEP: micro-bench a1 0.46 → 1.00; Phase 3b multi-way recall | "A3 delta rule", "Phase 3b" | `--delta` / `DELTA=1` |
 | answer weight | CE ×100 on recall answer tokens | KEEP: recall learned only with it | "Phase 3b" | `ANSWER_W=100` |
-| LR 1.2e-3 | PAM LR screen 2e-4 / 6e-4 / 1.2e-3 at 100M tok | KEEP: −0.617 nats vs 2e-4; PAM ahead of Mamba-2 at 100M | "LR screen result" | `LR=1.2e-3` |
+| LR 2e-4 | PAM LR at 3B tok | KEEP 2e-4: 1.2e-3 (picked by the 100M screen, −0.62 nats at 100M) is WORSE at 3B: holdout 3.2842 vs 3.2728, recall 0.602 vs 0.667; behind from step 6000. **100M screens cannot pick PAM's LR — screen PAM on ≥ 600M tok** | "Scoreboard result" | `LR=2e-4` (run `9982a79` was 1.2e-3) |
 | A2 / A2b | n states per head; vault (pinned state + protect gate) | still in code, not adopted (cost, no decode) | "Retention ladder" | `--n_states`, `--vault` |
 | A4 cond_mem | hashed n-gram conditional memory | still in code, not adopted | config comments | `--cond_mem` |
 
@@ -44,6 +44,17 @@ logs of the original run are named after the *run* hash.)
 | C1 coupled gates | one step dt: write = erase = 1−e^{−dt}, fade e^{−A dt} (Mamba-2 coupling on A3) | FAIL @300M: far a1 0.10 vs 0.26, holdout +0.055; fresh multi-fact +0.17 | "C1 result" | `91daf0a` (600M), `9ebd1d2` (100M) | `4c688cb` | `COUPLE=1 COUPLE_A=0.1` (screen: `tmp_scratch_screen.sh`) |
 | torch.compile blocks | `compile_blocks()` on the step | no gain: 171 → 177 ms/step (4090, B4), named-tensor graph breaks | — (2026-10-28 profile) | — | current | `model.compile_blocks()` |
 
+## Equal-data scoreboard (3B tok, ~102M) — 2026-10-29
+
+| model | holdout loss / PPL | WikiText PPL | recall 63-cell | tok/s (6000) | state |
+|---|---|---|---|---|---|
+| Mamba-2 `b36e3a5` | **3.1644 / 23.68** | 46.91 | 0.613 | **189K** | 13.4 MB |
+| Transformer++ `e072a8f` | 3.2064 / 24.69 | **46.61** | 0.539 | 138K | 32 KB/tok |
+| PAM 2e-4 `1c913ef` | 3.2728 / 26.38 | 54.73 | **0.667** | 66K | **3.7 MB** |
+| PAM 1.2e-3 `9982a79` | 3.2842 / 26.69 | 55.83 | 0.602 | 66K | 3.7 MB |
+
+Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
+
 ## Baselines (equal data, same trainer and evals)
 
 | id | model | status | notebook section | code |
@@ -55,4 +66,4 @@ logs of the original run are named after the *run* hash.)
 
 | id | idea | status | notebook section |
 |---|---|---|---|
-| PAM 3B @1.2e-3 | Phase 3b recipe at the tuned LR (no C1) | running on the 6000 from 2026-10-28 18:54Z, run `9982a79`, ETA ~08:00Z 10-29 | "Equal-data scoreboard" |
+| G screen | G1 short conv (pretrain regime) / G2 read RMSNorm / both, 600M tok vs r600 ctl | running on the 6000 (`gscreen`) | "G screen" |

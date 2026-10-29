@@ -1792,7 +1792,7 @@ PG-19 `logs/pos_loss/v13_sempty_mix3b_transformer_answ100_e072a8f_pg19.json`.
 | Mamba-2 (LR 1.2e-3) | **23.68** | 46.91 | 0.613 | 0.697 | **1.000** | 0.450 | **188.6K** | 13.4 MB fixed |
 | Transformer++ (LR 1.2e-3) | 24.69 | **46.61** | 0.539 | 0.693 | 0.806 | 0.523 | 138.4K | 32 KB/token |
 | PAM Phase 3b (old LR 2e-4, `1c913ef`) | 26.38 | 54.73 | **0.667** | **0.772** | 0.412 | **0.900** | 66.5K | **3.7 MB fixed** |
-| PAM @1.2e-3 | running | | | | | | | |
+| PAM Phase 3b @1.2e-3 (`9982a79`, pre-registered arm) | 26.69 | 55.83 | 0.602 | 0.697 | 0.487 | 0.782 | 65.5K | 3.7 MB fixed |
 
 - The transformer reads exact tokens perfectly up to 1024 and fails past
   its 2048 training length: a1 pos1 @4096 0.23, PG-19 loss 3.55 → 4.28 →
@@ -1804,6 +1804,91 @@ PG-19 `logs/pos_loss/v13_sempty_mix3b_transformer_answ100_e072a8f_pg19.json`.
   100M model does not reliably pick the right one among 4–8.
 - LM: Mamba-2 best holdout, the transformer best WikiText by 0.3 PPL. The
   old PAM trails both; the 1.2e-3 rerun decides (at 100M tok PAM led both).
+
+## Scoreboard result — PAM does NOT beat either baseline on LM; beats Transformer++ on recall; the 100M LR screen picked the wrong LR for PAM (2026-10-29)
+
+PAM 3B at LR 1.2e-3 (`mix3b_delta_answ100_lr1.2e-3` @`9982a79`, 18:54Z →
+07:40Z, 65.5K tok/s avg). Logs
+`logs/v13_sempty_mix3b_delta_answ100_lr1.2e-3_{driver_,}9982a79*.log`, probe
+`logs/memory_probes/v13_sempty_mix3b_delta_answ100_lr1.2e-3_9982a79_t40_behavioral.json`,
+PG-19 `logs/pos_loss/v13_sempty_mix3b_delta_answ100_lr1.2e-3_9982a79_pg19.json`.
+Table rows: "Transformer++ 3B result" above.
+
+**Pre-registered verdict (PAM arm = 1.2e-3 run):**
+
+| PAM vs | LM: holdout Δ nats (need < −0.01) and WikiText | recall: 63-cell Δ (need > +0.05) |
+|---|---|---|
+| Mamba-2 | +0.120 (3.2842 vs 3.1644), WikiText 55.83 vs 46.91 → **LOSE** | −0.011 (0.602 vs 0.613) → **tie** |
+| Transformer++ | +0.078 (vs 3.2064), WikiText 55.83 vs 46.61 → **LOSE** | +0.063 (vs 0.539) → **BEATS** |
+
+Not pre-registered, for reference: PAM at LR 2e-4 (`1c913ef`) is better than
+the 1.2e-3 run on everything — holdout 3.2728 (−0.011), WikiText 54.73,
+recall 0.667 (beats Mamba-2 by +0.054, Transformer++ by +0.128) — but still
+LOSES LM to both (+0.108 / +0.066 nats).
+
+**Why the LR pick was wrong.** Holdout loss, PAM 1.2e-3 vs 2e-4: step 2000
+4.185 vs 4.654 (high LR far ahead; the 100M screen ends at step 2700), step
+6000 3.989 vs 3.858 (already behind), then behind to the end (+0.011 at
+80000). Mamba-2 and Transformer++ at 1.2e-3 lead PAM-2e-4 at every val.
+So PAM at high LR learns fast early then plateaus worse; the baselines do
+not. Rule from now on (EXPERIMENT_INDEX): **a 100M screen cannot pick PAM's
+LR or judge a PAM change; screen PAM on ≥ 600M tokens** (the C1 r600
+schedule already did this) and compare curves past step 6000.
+
+**Where PAM stands at equal data (3B tok, ~102M):**
+- LM: behind Mamba-2 by ~0.11 nats, behind Transformer++ by ~0.07. This gap
+  is 10× the LR effect — it is architectural, not tuning.
+- Recall: best multi-fact recall of the three (a4/a8 pos1 0.90 vs 0.45 /
+  0.52 at LR 2e-4); worst far single-fact recall (a1 far 0.41 vs 1.00 /
+  0.81). Transformer++ fails past its 2048 training length.
+- State: 3.7 MB fixed vs 13.4 MB fixed (Mamba-2) vs 32 KB/token.
+- Speed: 66K tok/s vs 189K / 138K (6000) — a 2.1–2.9× gap.
+
+## G screen: close the LM gap with the Gated-DeltaNet parts PAM lacks (design + pre-registration, 2026-10-29)
+
+**Why these.** PAM is Gated DeltaNet's recurrence (fade × delta erase/write,
+unit keys) plus Chrono rotary and the N4 gate, inside a SwiGLU block. It is
+missing two parts every strong delta / SSM LM has:
+- **G1 short conv** — depthwise causal `Conv1d(k=4)` over time on fused qkv,
+  residual + zero-init (`qkv + silu(conv(qkv))`, identity at start). Each
+  key/value then encodes a 4-token phrase, not one token. A1 tested exactly
+  this on **10-epoch WikiText** and FAILED by overfitting (train loss better,
+  val worse); in **single-pass pretraining** overfitting cannot happen, so
+  the A1 verdict does not carry over. Code reproduces A1's `2537782`.
+- **G2 read norm** — per-head RMSNorm of y = S q (fp32, learned per-channel
+  scale, init 1) before the N4 gate. The read's size today depends on |q| and
+  on how full S is (it changes with context length and decay); the norm
+  removes both (y/‖y‖ is invariant to q's scale, so it also covers q-norm).
+
+**Arms** (one variable each, then the pair), 600M-token schedule on the
+6000 at LR 1.2e-3 — the r600 protocol (`91daf0a`: TARGET 599,998,464, val
+every 4069), so the finished **r600 control is reused** (C1 code since
+removed, off-path identical):
+
+| arm | change | step time (4090, B4) | params |
+|---|---|---|---|
+| ctl (`r600_ctl_91daf0a`) | — | 166.7 ms | 102.12M |
+| `conv` | G1 | 192.9 ms (+16 %) | 102.26M |
+| `onorm` | G2 | 176.7 ms (+6 %) | 102.13M |
+| `both` | G1 + G2 | 197.5 ms (+18 %) | 102.27M |
+
+Control at 600M: holdout **3.5408** (PPL 34.50), WikiText **75.89**, recall
+63-cell mean **0.343** (a1/a4/a8 0.613/0.295/0.121).
+
+**Decision rule (fixed now):**
+- PASS = holdout ≤ **3.5208** (−0.02 nats; the scoreboard gap is 0.07–0.11)
+  AND WikiText < 75.89 AND recall 63-cell mean ≥ 0.293 (not −0.05).
+- `both` is taken over a single arm only if it beats it by > 0.01 nats.
+- A PASS goes to a 3B confirm at LR **2e-4** (PAM's best 3B LR), compared with
+  `1c913ef` (3.2728). The conv's cost is cut first with a fused causal-conv
+  kernel if it passes.
+- FAIL → removed, row in EXPERIMENT_INDEX (A1 row gets the pretraining-
+  regime result too).
+- Not a decode-ready model: G1 has no decode state yet (GEN_EVERY 0;
+  val, probes, PG-19 use the chunked path). Added only if G1 passes.
+
+Self-test `test_short_conv_and_read_norm` (conv init parity 0, causal,
+grads reach every conv/norm, out_norm decode == chunked 7e-7): 21/21 pass.
 
 ## Engineering: batch prefetch + the diag panel's hidden data skip (2026-10-27, `129b406`)
 
