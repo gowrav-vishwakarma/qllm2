@@ -329,7 +329,46 @@ similarity-lookup reading: with one projection, items of the same category
 land near each other, so the query hits their keys. It is a lead for run
 3, not a result.
 
+**Run 3 (PRE-REGISTERED 2026-10-30 02:10 IST, before any run-3 number;
+the v13 review's pairing and format (a) folded in).** Question: does tying
+echo's query and key projections (echo_tied) really help, and does it help
+because the tied query lands on the keys of *similar* earlier states (an
+in-context similarity lookup)?
+- **Arms:** echo vs echo_tied, in **3 seed pairs**. Within a pair both arms
+  get the same data and the same init seed: pair i = `--seed 1i
+  --doc_seed0 i·100M --init_seed 1i` (i = 1, 2, 3). One launch per pair,
+  tag `b1r3p<i>`.
+- **Training:** the shared tasks **plus `label_marker`** (format (a):
+  two-word items, category marker + stem, marker first or second per
+  episode; train word pools). Shots 1–8, 6000 × B16, lr 3e-4.
+- **Eval:** every shared task, the unseen-parameter tasks, `label_marker`
+  (train pools), and **`label_marker_new`**: marker and stem words from
+  pools never used in training, so every item is unseen
+  (`v14/rules_ood.py`).
+- **Bars (frozen).** For each pair i, d_i = arm mean over 2 / 4 / 8 shots,
+  echo_tied − echo.
+  - **P, paired replication** (label_category): mean(d) ≥ +0.15 AND
+    mean(d) ≥ 2·SD(d) (sample SD over the 3 pairs). Valid if echo's mean is
+    < 0.90 in every pair.
+  - **A, similarity lookup** (label_marker_new): the same paired rule.
+    Valid if some arm's label_marker mean is > 0.517 (in-context chance mean
+    0.417, plus 0.10). If no arm learns the format, A is uninformative.
+- **What each outcome means:**
+  - P and A both met: tying gives an in-context similarity lookup that
+    works on unseen items. echo_tied goes to the LM check; the v13 session
+    pre-registers a 600M tied-echo arm against two-stage M1 (holdout
+    3.4743, recall 0.825, label_category 8-shot 0.55).
+  - P met, A not met: the gain needs categories known in the weights, so
+    the similarity-lookup reading is wrong. echo_tied still gets an LM
+    check, framed as an abstraction / recall tweak.
+  - P not met: run 2 was seed luck. echo_tied closes.
+- **Predictions:** P met (mean d ≈ +0.3); A met, with a smaller gain.
+  Unseen rule parameters stay ≤ chance for both arms.
+- **Reported only:** the ceiling tasks, two_hop, the unseen-parameter
+  tasks, ms / step.
+
 **Run 3 candidates (from the v13 review, 2026-10-30; NOT pre-registered).**
+(a) was adopted into run 3 above; (b) is still open.
 They put category membership in the context without turning the task into
 two_hop. Choose after run 2.
 - **(a) Surface-feature categories.** Each item is a novel multi-token

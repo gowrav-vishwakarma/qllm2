@@ -63,11 +63,12 @@ Keep all three current as things happen (user rule, 2026-10-29).
 
 ## Next action
 
-1. Pre-register **B1 run 3** before it runs: echo vs echo_tied on ≥ 3
-   training seeds (label_category), plus the v13 review's
-   surface-feature category format (a) (unseen items, category marker in
-   the item), which tests the similarity-lookup reading directly. Queue it
-   behind `v14b0`.
+1. **B1 run 3 queued** (tmux `v14b1r3`, behind `v14b0`; pre-registered in
+   EXPERIMENTS_V14 "B1"): echo vs echo_tied in 3 seed pairs, trained with
+   `label_marker` added; bars P (label_category) and A
+   (label_marker_new, every item unseen) on the paired difference. ~70
+   min, ETA ~05:00 IST. When it ends: notebook + index first, then ping
+   Qllm v13 (their 600M tied-echo arm waits on P), then the user.
 2. When `v14b0` ends: the same for B0 run 2 and N1 (headroom cells H = echo
    < 0.90; N1 bars in EXPERIMENTS_V14 "N1").
 3. If N1 passes B0, or echo_tied replicates in run 3: build the v14 hook in

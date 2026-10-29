@@ -50,12 +50,13 @@ from memory_probes.rules import TASKS as RULE_TASKS
 from v13_sempty.config import PAMConfig
 from v13_sempty.triton_kernels import set_kernel_enabled
 from v14.config import from_pam
-from v14.rules_ood import OOD_TASKS, build_example
+from v14.rules_ood import EXTRA_TASKS, build_example
 from v14.units import V14LM
 
-# B1 trains on the shared tasks; it is scored on them AND on OOD_TASKS (rule
-# parameters never drawn in training, v14/rules_ood.py).
-EVAL_RULE_TASKS = RULE_TASKS + OOD_TASKS
+# B1 trains on the shared tasks (plus --rule_tasks extras); it is scored on
+# them AND on EXTRA_TASKS (unseen rule parameters, marker categories;
+# v14/rules_ood.py).
+EVAL_RULE_TASKS = RULE_TASKS + EXTRA_TASKS
 
 FILLER = (
     'The archive clerk reviewed an ordinary report and placed it on the shelf. '
@@ -216,10 +217,10 @@ def build_rules_doc(P, tok, length, seed, tasks=RULE_TASKS, shots=RULE_SHOTS_TRA
     return Doc(ids + P.filler(length + 1 - len(ids)), answers)
 
 
-def build_doc(P, family, size, length, position, seed, tok=None) -> Doc:
+def build_doc(P, family, size, length, position, seed, tok=None, rule_tasks=RULE_TASKS) -> Doc:
     """One document of exactly ``length + 1`` tokens."""
     if family == 'rules':
-        return build_rules_doc(P, tok, length, seed)
+        return build_rules_doc(P, tok, length, seed, tasks=rule_tasks)
     rng = random.Random(seed)
     records, queries = FAMILIES[family](P, rng, size)
     tail, answers_rel = [], []
@@ -384,7 +385,7 @@ def evaluate(model, P, device, ctxs, trials, eval_batch=8, families=tuple(SIZES)
 
 
 def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials, aux_weight=0.0,
-              tok=None, families=tuple(SIZES), init_seed=0, save_dir=''):
+              tok=None, families=tuple(SIZES), init_seed=0, save_dir='', rule_tasks=RULE_TASKS):
     torch.manual_seed(init_seed)
     model = V14LM(cfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
@@ -396,7 +397,8 @@ def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials, aux_weig
 
     def make_batch(i):
         L, specs = plan[i]
-        return [build_doc(P, *spec[:2], L, *spec[2:], tok=tok) for spec in specs]
+        return [build_doc(P, *spec[:2], L, *spec[2:], tok=tok, rule_tasks=rule_tasks)
+                for spec in specs]
 
     # Build batch i+1 on a CPU thread while the GPU runs batch i.
     pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
@@ -474,6 +476,8 @@ def main():
     ap.add_argument('--doc_seed0', type=int, default=10_000_000,
                     help="first training-document seed (run 1: 10M; eval seeds are 2e9+)")
     ap.add_argument('--save_dir', default='', help="save each arm's trained weights here")
+    ap.add_argument('--rule_tasks', default=','.join(RULE_TASKS),
+                    help="B1 training tasks (default: the shared generator's; run 3 adds label_marker)")
     ap.add_argument('--resume', action='store_true',
                     help="keep the arms already in --json and train only the rest (after a crash)")
     args = ap.parse_args()
@@ -492,6 +496,10 @@ def main():
           f"families {args.families}, seed {args.seed}, init_seed {args.init_seed}, "
           f"doc_seed0 {args.doc_seed0}", flush=True)
     families = tuple(f.strip() for f in args.families.split(','))
+    rule_tasks = tuple(t.strip() for t in args.rule_tasks.split(','))
+    bad = [t for t in rule_tasks if t not in EVAL_RULE_TASKS]
+    if bad:
+        raise SystemExit(f"unknown rule tasks {bad}")
     unknown = [f for f in families if f not in SIZES and f != 'rules']
     if unknown:
         raise SystemExit(f"unknown families {unknown}")
@@ -516,7 +524,8 @@ def main():
         all_res['arms'][label] = train_arm(label, cfg, P, plan, args.device, args.lr,
                                            args.log_every, ctxs, args.trials,
                                            args.aux_weight, tok=tok_rules, families=families,
-                                           init_seed=args.init_seed, save_dir=args.save_dir)
+                                           init_seed=args.init_seed, save_dir=args.save_dir,
+                                           rule_tasks=rule_tasks)
         print(table(label, all_res['arms'][label]['results'], ctxs), flush=True)
         if args.json:
             with open(args.json, 'w') as f:
