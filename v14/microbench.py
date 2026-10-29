@@ -27,6 +27,10 @@ Arms (all real arm, chrono + out_gate + delta):
     echo         + E1 echo: the current control body
     n1sum / n1gate / n1phase   echo body with N1 (2 notebooks, sum/gate/phase)
     echo_tied    echo with W_q = W_k (one projection for query and key)
+    tpp          REFERENCE, not a candidate: Transformer++ (attention, O(T)) at
+                 the same width and depth, MLP sized to echo's parameter count.
+                 It calibrates the bench: what a model that can look back at
+                 every token learns from the same data.
     (N6 arms op / opdiag / opdiag_ownq left with N6 after B1 run 2: 78e4354)
 Optional suffixes: @<head_dim> (default 64), :L<n_layers> (default 4).
 """
@@ -269,7 +273,29 @@ ARMS = {
     'n1gate': dict(echo=True, phase_states=2, phase_read='gate'),
     'n1phase': dict(echo=True, phase_states=2, phase_read='phase'),
     'echo_tied': dict(echo=True, echo_tied_qk=True),
+    'tpp': dict(echo=True),          # the echo cfg, used only to match sizes (build_model)
 }
+
+
+def build_model(kind, cfg):
+    """The arm's model. ``tpp`` is v13_sempty's Transformer++ with echo's
+    width, depth and heads, and an MLP (multiple of 64) that matches echo's
+    parameter count."""
+    if kind != 'tpp':
+        return V14LM(cfg)
+    from v13_sempty.baseline_transformer import TransformerConfig, TransformerLM
+    with torch.random.fork_rng(devices=[]):          # sizing must not move the init RNG
+        target = sum(p.numel() for p in V14LM(cfg).parameters())
+    d, L = cfg.dim, cfg.n_layers
+    body = target - cfg.vocab_size * d - d                     # tied embedding + final norm
+    d_ff = max(64, round((body / L - 4 * d * d - 2 * d) / (3 * d) / 64) * 64)
+    return TransformerLM(TransformerConfig(vocab_size=cfg.vocab_size, d_model=d,
+                                           n_layer=L, n_head=cfg.n_heads, d_ff=d_ff))
+
+
+def _embed_weight(model):
+    """Output embedding of either body (V14LM wraps it, TransformerLM does not)."""
+    return getattr(model.embed, 'embed', model.embed).weight
 
 
 def make_cfg(kind, vocab, head_dim=64, n_layers=4, max_seq_len=8192):
@@ -326,7 +352,7 @@ def _score(model, embed, docs, device, eval_batch=8):
         x, _, _ = batch_tensors(chunk, device)
         with torch.amp.autocast('cuda', dtype=torch.bfloat16):
             lm, _ = model._hidden_to_lm(x)
-        h = lm.raw(*lm.layout).float()
+        h = (lm.raw(*lm.layout) if hasattr(lm, 'raw') else lm).float()          # NamedTensor or Tensor
         for b, d in enumerate(chunk):
             for idx, target, cands in d.answers:
                 scores = h[b, idx - 1] @ embed[cands].float().T
@@ -338,7 +364,7 @@ def _score(model, embed, docs, device, eval_batch=8):
 def evaluate_rules(model, P, tok, device, trials, length=1024):
     """B1 cells: one (task, shots) per document, held-out seeds (2e9+)."""
     model.eval()
-    embed = model.embed.embed.weight
+    embed = _embed_weight(model)
     out = {}
     for task in EVAL_RULE_TASKS:
         for shots in RULE_SHOTS_EVAL:
@@ -354,7 +380,7 @@ def evaluate_rules(model, P, tok, device, trials, length=1024):
 def evaluate(model, P, device, ctxs, trials, eval_batch=8, families=tuple(SIZES)):
     """Accuracy per (family, size, ctx), and per position, over 8 candidates."""
     model.eval()
-    embed = model.embed.embed.weight
+    embed = _embed_weight(model)
     out = {}
     for fam, sizes in SIZES.items():
         if fam not in families:
@@ -387,7 +413,7 @@ def evaluate(model, P, device, ctxs, trials, eval_batch=8, families=tuple(SIZES)
 def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials, aux_weight=0.0,
               tok=None, families=tuple(SIZES), init_seed=0, save_dir='', rule_tasks=RULE_TASKS):
     torch.manual_seed(init_seed)
-    model = V14LM(cfg).to(device)
+    model = build_model(label.split('@')[0], cfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01, betas=(0.9, 0.95))
     sched = torch.optim.lr_scheduler.OneCycleLR(
