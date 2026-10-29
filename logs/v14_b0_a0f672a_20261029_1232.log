@@ -1,0 +1,87 @@
+B0 micro-bench @ a0f672a: 6000 steps x B16, lr 0.0003, eval ctx (1024, 4096, 8192), 16 docs x 3 positions x 4 queries per cell
+
+--- arm delta@hd64L4 ---
+/home/ubuntu/Development/qllm-private/v14/microbench.py:302: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"  [{label}] step {step:5d}/{len(plan)} L={L:5d} loss={float(loss):.4f} "
+  [delta@hd64L4] step     1/6000 L= 1024 loss=10.9304 | 1,830 tok/s
+  [delta@hd64L4] step   250/6000 L= 1024 loss=6.5270 | 74,127 tok/s
+  [delta@hd64L4] step   500/6000 L=  512 loss=6.4646 | 110,443 tok/s
+  [delta@hd64L4] step   750/6000 L= 1024 loss=6.4605 | 128,712 tok/s
+  [delta@hd64L4] step  1000/6000 L= 1024 loss=6.4571 | 142,910 tok/s
+  [delta@hd64L4] step  1250/6000 L=  512 loss=6.4659 | 154,155 tok/s
+  [delta@hd64L4] step  1500/6000 L=  512 loss=6.4120 | 162,186 tok/s
+  [delta@hd64L4] step  1750/6000 L= 1024 loss=6.4805 | 168,882 tok/s
+  [delta@hd64L4] step  2000/6000 L=  512 loss=6.4568 | 173,554 tok/s
+  [delta@hd64L4] step  2250/6000 L= 1024 loss=6.3904 | 177,999 tok/s
+  [delta@hd64L4] step  2500/6000 L=  512 loss=6.4074 | 181,808 tok/s
+  [delta@hd64L4] step  2750/6000 L= 1024 loss=6.4220 | 185,024 tok/s
+  [delta@hd64L4] step  3000/6000 L= 2048 loss=6.4160 | 187,839 tok/s
+  [delta@hd64L4] step  3250/6000 L= 4096 loss=6.4089 | 189,721 tok/s
+  [delta@hd64L4] step  3500/6000 L=  512 loss=6.3854 | 191,668 tok/s
+  [delta@hd64L4] step  3750/6000 L= 2048 loss=6.4035 | 193,521 tok/s
+  [delta@hd64L4] step  4000/6000 L= 1024 loss=6.4033 | 194,916 tok/s
+  [delta@hd64L4] step  4250/6000 L=  512 loss=6.3273 | 196,195 tok/s
+  [delta@hd64L4] step  4500/6000 L=  512 loss=6.3951 | 197,315 tok/s
+  [delta@hd64L4] step  4750/6000 L= 1024 loss=6.3868 | 198,433 tok/s
+  [delta@hd64L4] step  5000/6000 L= 1024 loss=6.3726 | 199,468 tok/s
+  [delta@hd64L4] step  5250/6000 L= 1024 loss=6.3574 | 200,263 tok/s
+  [delta@hd64L4] step  5500/6000 L= 1024 loss=6.3030 | 201,143 tok/s
+  [delta@hd64L4] step  5750/6000 L=  512 loss=6.3579 | 201,816 tok/s
+  [delta@hd64L4] step  6000/6000 L=  512 loss=6.3630 | 202,508 tok/s
+  [delta@hd64L4] trained 27.2M params in 715s (119 ms/step)
+== delta@hd64L4  (accuracy over 8 candidates; chance 0.125)
+task           1024    4096    8192
+facts8        0.09    0.10    0.09
+facts16       0.11    0.11    0.11
+facts32       0.11    0.12    0.12
+facts64       0.11    0.10    0.11
+bind4         0.11    0.11    0.14
+bind8         0.12    0.14    0.12
+bind16        0.12    0.12    0.13
+rebind4       0.14    0.14    0.14
+rebind8       0.14    0.15    0.12
+rebind16      0.12    0.11    0.14
+
+--- arm echo@hd64L4 ---
+  [echo@hd64L4] step     1/6000 L= 1024 loss=10.8803 | 870 tok/s
+  [echo@hd64L4] step   250/6000 L= 1024 loss=6.5627 | 52,806 tok/s
+  [echo@hd64L4] step   500/6000 L=  512 loss=6.4909 | 83,564 tok/s
+  [echo@hd64L4] step   750/6000 L= 1024 loss=6.4610 | 100,749 tok/s
+  [echo@hd64L4] step  1000/6000 L= 1024 loss=6.4771 | 115,198 tok/s
+  [echo@hd64L4] step  1250/6000 L=  512 loss=6.4633 | 126,756 tok/s
+  [echo@hd64L4] step  1500/6000 L=  512 loss=6.3962 | 135,385 tok/s
+  [echo@hd64L4] step  1750/6000 L= 1024 loss=6.3314 | 142,695 tok/s
+  [echo@hd64L4] step  2000/6000 L=  512 loss=6.0214 | 148,005 tok/s
+  [echo@hd64L4] step  2250/6000 L= 1024 loss=5.7425 | 153,073 tok/s
+  [echo@hd64L4] step  2500/6000 L=  512 loss=5.3014 | 157,457 tok/s
+  [echo@hd64L4] step  2750/6000 L= 1024 loss=5.5041 | 161,212 tok/s
+  [echo@hd64L4] step  3000/6000 L= 2048 loss=4.6997 | 164,245 tok/s
+  [echo@hd64L4] step  3250/6000 L= 4096 loss=4.9466 | 166,754 tok/s
+  [echo@hd64L4] step  3500/6000 L=  512 loss=4.8031 | 169,145 tok/s
+  [echo@hd64L4] step  3750/6000 L= 2048 loss=4.4603 | 171,395 tok/s
+  [echo@hd64L4] step  4000/6000 L= 1024 loss=4.5782 | 173,136 tok/s
+  [echo@hd64L4] step  4250/6000 L=  512 loss=4.6384 | 174,741 tok/s
+  [echo@hd64L4] step  4500/6000 L=  512 loss=4.5982 | 176,185 tok/s
+  [echo@hd64L4] step  4750/6000 L= 1024 loss=4.2855 | 177,578 tok/s
+  [echo@hd64L4] step  5000/6000 L= 1024 loss=4.9836 | 178,863 tok/s
+  [echo@hd64L4] step  5250/6000 L= 1024 loss=4.3900 | 179,891 tok/s
+  [echo@hd64L4] step  5500/6000 L= 1024 loss=4.4794 | 180,984 tok/s
+  [echo@hd64L4] step  5750/6000 L=  512 loss=4.2930 | 181,975 tok/s
+  [echo@hd64L4] step  6000/6000 L=  512 loss=4.2587 | 182,853 tok/s
+  [echo@hd64L4] trained 27.6M params in 791s (132 ms/step)
+== echo@hd64L4  (accuracy over 8 candidates; chance 0.125)
+task           1024    4096    8192
+facts8        0.13    0.12    0.12
+facts16       0.17    0.16    0.16
+facts32       0.15    0.15    0.15
+facts64       0.10    0.11    0.11
+bind4         0.12    0.12    0.13
+bind8         0.12    0.13    0.13
+bind16        0.11    0.11    0.12
+rebind4       0.32    0.31    0.30
+rebind8       0.26    0.24    0.24
+rebind16      0.20    0.20    0.20
+
+--- arm n1sum@hd64L4 ---
+  [n1sum@hd64L4] step     1/6000 L= 1024 loss=10.9407 | 870 tok/s

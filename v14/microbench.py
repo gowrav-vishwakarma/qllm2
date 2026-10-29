@@ -4,7 +4,7 @@ The v13_sempty recall micro-bench (16 keys, 8 values, a1/a4/a8) is solved
 by echo (1.00 everywhere), so it can no longer separate designs. B0 asks
 harder questions of the same small model (real arm, 4 layers, hd 64):
 
-  facts   n invented key -> value records (n = 8 .. 64), query some keys.
+  facts   n invented key -> value records (n = 1 .. 64), query some keys.
   bind    e entities, each with 3 attributes (colour / home / owner) in a
           shuffled order; query one attribute of one entity. A query needs
           the entity AND the relation: the case V6 HSB failed on.
@@ -55,7 +55,10 @@ FILLER = (
 RELATIONS = (' colour', ' home', ' owner')
 N_QUERIES = 4
 N_CANDIDATES = 8
-SIZES = {'facts': (8, 16, 32, 64), 'bind': (4, 8, 16), 'rebind': (4, 8, 16)}
+# Small sizes are the easy rung the lookup circuit forms on (the v13
+# micro-bench learned a1 first). B0 run 1 (sizes from 8 up, answer-only)
+# stayed at chance for every arm: logs/v14_b0_a0f672a_20261029_1232.log.
+SIZES = {'facts': (1, 2, 4, 8, 16, 32, 64), 'bind': (1, 2, 4, 8, 16), 'rebind': (2, 4, 8, 16)}
 POSITIONS = (0.0, 0.5, 1.0)
 
 
