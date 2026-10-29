@@ -2376,7 +2376,8 @@ recall docs far faster. Alternative: the two-stage schedule itself (LR
 re-warmup, --init_from). The data stays (`v7/aptitude.py`, also used by
 v14); no model code to remove.
 
-Also visible in the learning probe: label_category, the one rule task where
+Also visible in the learning probe (but see C1-ctl: the schedule does this,
+not aptitude): label_category, the one rule task where
 LMs score above in-context chance, moves at 8 shots — 2/4/8 shots: M1
 0.65/0.67/0.29, C1b 0.57/0.59/**0.49**, Transformer++ 3B 0.63/0.69/0.56.
 
@@ -2398,6 +2399,68 @@ step.
 - 2026-10-29 18:31Z: stage A `c1ctla_pre` done, holdout 3.9231 (C1a
   4.1194 — not comparable: aptitude took 40 % of C1a's tokens, and the
   holdout is web text), PG-19 4–8k far gain 0.0446. Stage B started.
+- 2026-10-29 19:46Z: stage B `c1ctlb_main` done; probes 19:48Z.
+
+**C1-ctl result (2026-10-30, `7ae6f1f`): by the rule, the aptitude data
+adds to the jump (C1b − ctl = +0.102 ≥ 0.10); but most of the jump is the
+two-stage schedule itself.**
+
+| model | holdout | WikiText | recall 63-cell (a1/a4/a8) | 8192-tok a1/a4/a8 | learning probe (label_cat 8-shot) |
+|---|---|---|---|---|---|
+| M1 600M, one stage | 3.4906 | 69.44 | 0.615 (0.895/0.624/0.326) | 0.62/0.48/0.28 | 0.175 (0.29) |
+| ctl @ step 9766 | 3.5140 | 75.07 | 0.805 (0.871/0.839/0.705) | 0.56/0.54/0.39 | 0.191 (0.51) |
+| C1b @ step 9766 (aptitude) | 3.5397 | 76.00 | **0.907** (0.919/0.948/0.855) | 0.67/0.78/0.53 | 0.199 (0.49) |
+| **ctl final (600M total)** | **3.4743** | 69.86 | **0.825** (0.879/0.865/0.732) | 0.58/0.57/0.43 | 0.197 (0.55) |
+| ctl stage A (120M, no recall docs) | 3.9231 | 130.30 | 0.408 (0.873/0.267/0.086) | | 0.182 (0.37) |
+
+- Recall: M1 0.615 → two stages without aptitude 0.805 (+0.19) → with
+  aptitude 0.907 (+0.10 more), all at step 9766. Probe SE of the 63-cell
+  mean ≈ 0.01, so both steps are real; the aptitude step sits on the
+  pre-registered 0.10 line.
+- LM: aptitude COSTS holdout at the matched step (3.5397 vs 3.5140,
+  +0.026: 120M fewer web tokens). The two-stage schedule alone ends
+  **better than M1 on holdout (3.4743 vs 3.4906, −0.016) AND recall (0.825
+  vs 0.615)**; WikiText equal (69.86 vs 69.44).
+- The label_category 8-shot gain is the schedule, not aptitude (ctl 0.51 at
+  9766, 0.55 final ≈ Transformer++ 3B 0.56). (Corrects the C1 note above.)
+- Learning probe mean unchanged by anything (0.18–0.20).
+
+**What the two-stage schedule changes vs M1's one stage:** (1) the first
+120M tokens have NO recall docs (web 0.75 + chat 0.25: language first),
+(2) the LR re-warms and a second cosine starts at 120M, (3) stage B reads
+never-read files. (1) is the user's "grammar first" idea in its plain form;
+(1) vs (2) is untested.
+
+## S2 fairness — does the two-stage schedule help Transformer++ too? (pre-registration, 2026-10-30)
+
+The recall/LM gain above only counts for the architecture if the baseline
+does not get the same gain from the same recipe. Two Transformer++ runs
+(ARCH=transformer, 17 × 768 = 101.9M, LR 1.2e-3 = its tuned LR, answer
+weight 100, the r600 trainer and evals):
+- `tfs1`: one stage, the r600 protocol (M1 mix from token 0, 600M) =
+  M1's schedule.
+- `tfs2`: two stages, C1-ctl's exact recipe (120M web+chat, then 480M M1
+  mix with --init_from).
+
+**Rules (fixed now):**
+- Schedule gain is PAM-specific if PAM's recall gain (0.825 − 0.615 =
+  +0.210) exceeds Transformer++'s (tfs2 − tfs1) by ≥ 0.10. Same for
+  holdout: PAM −0.016; Transformer++'s gain is reported.
+- Head-to-head at 600M, same two-stage recipe (C1-ctl vs tfs2): PAM BEATS
+  Transformer++ on recall if 63-cell Δ ≥ +0.05; on LM if holdout Δ <
+  −0.01 (the scoreboard thresholds).
+
+## S2 on the M2 body (pre-registration, 2026-10-30)
+
+C1-ctl's recipe (no aptitude) on the M2 body (SHARE_READS=1, MLP 2128):
+`c2m2`. Controls: M2 one-stage (3.4697 / recall 0.522) and C1-ctl (3.4743 /
+0.825). KEEP over M2 if final holdout ≤ 3.4797 AND recall ≥ 0.622 (as C1 on
+M2). **Next reference body + recipe** (fixed now): among C1-ctl, c1m2 and
+c2m2, the lowest final holdout among those with recall ≥ 0.70; within
+0.005 the faster one (M1 body) wins.
+
+Queue on the 6000 after the running C1-on-M2 (`~/s2_chain.sh`): tfs1 →
+tfs2 → c2m2, ETA ~08:00 IST.
 
 ## C1 on the M2 body (pre-registration, 2026-10-29) — queued after C1-ctl
 

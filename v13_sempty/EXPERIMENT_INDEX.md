@@ -74,3 +74,6 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 | G1 short conv | conv on qkv, single-pass pretraining regime | deferred (e1g conv arm skipped for M1) | "G screen" |
 | Learning probe (bar 3) | in-context rule tasks, answer must be inferred (`ed326a1`) | baselines: all ≤ chance on letter/number/reverse incl. Transformer++ 3B (mean 0.228); follow priors ("last+1") | "Learning probe" |
 | C1 reason-first curriculum | grammar 30M → real aptitude Q&A + chat 90M → normal mix 480M (M1 body, 600M total) | **FAIL primary** (`5b1eb9d`): learning probe 0.199 vs 0.175; **recall 0.907 vs M1 0.615** (unexpected, measured @ step 9766); control `c1ctl` + C1-on-M2 running (`7ae6f1f`) | "C1 result", "C1-ctl" |
+| C1-ctl two-stage schedule (S2) | 120M web+chat (no recall docs, no aptitude) → 480M M1 mix, LR re-warm | **beats M1 on both**: holdout 3.4743 vs 3.4906, recall 0.825 vs 0.615 (`7ae6f1f`); aptitude adds +0.10 recall, costs +0.026 holdout | "C1-ctl" |
+| S2 fairness | Transformer++ one-stage vs two-stage at 600M | queued (`~/s2_chain.sh`) | "S2 fairness" |
+| S2 on M2 | C1-ctl recipe on the M2 body (`c2m2`) | queued after S2 fairness | "S2 on the M2 body" |
