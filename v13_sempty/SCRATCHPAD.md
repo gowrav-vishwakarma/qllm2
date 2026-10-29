@@ -18,6 +18,19 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-29 19:53Z (01:23 IST): S2 chain queued on the 6000** (tmux
+  `s2chain`, `~/s2_chain.sh`, log `logs/v13_sempty_s2_driver_20261029_1952.log`;
+  it prints the code hash it pulled). Waits for "=== chain DONE" of the
+  c1ctl chain (C1 on M2, ETA ~22:00Z), pulls (pull_aside) + sempyt, then
+  `tfs1` (Transformer++ one stage, 600M) → `tfs2` (Transformer++ two
+  stages) → `c2m2` (two stages on the M2 body); ETA ~02:30Z = 08:00 IST.
+  Disk guard: stops if < 5 GB free (was 19 GB at launch). Resume: relaunch
+  the same command with `SCREEN_HASH=<hash in the driver log>`.
+  **C1-ctl verdict:** the two-stage schedule alone (120M web+chat, no recall
+  docs → 480M M1 mix, LR re-warm) beats M1: holdout 3.4743 vs 3.4906,
+  recall 0.825 vs 0.615. Aptitude adds +0.10 recall at step 9766 but costs
+  +0.026 holdout. EXPERIMENTS "C1-ctl", "S2 fairness", "S2 on the M2 body".
+
 * **2026-10-29 18:10Z (23:40 IST): overnight chain on the 6000** (tmux
   `c1ctl`, `~/c1ctl_chain.sh`, log
   `logs/v13_sempty_c1ctl_driver_7ae6f1f.log`, code `7ae6f1f`). Order:
