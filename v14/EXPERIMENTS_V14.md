@@ -213,7 +213,13 @@ Answers per cell: label_category 1088 / 704 / 416, two_hop 512 / 289 /
   two facts. At scale it is the same (v13 learning probe).
 - At scale, label_category 8-shot (chance 0.25): Transformer++ 3B 0.56,
   delta 3B 0.53, Mamba-2 3B 0.38, M1 600M 0.29 (`logs/learning_probes/`).
-  It is the only rule task where any LM is above chance.
+  It is the only rule task where any LM is above chance. **Update
+  2026-10-30 (v13 C1-ctl, `237173a`):** M1's body on a *two-stage schedule*
+  (120M web + chat first, then 480M of the M1 mix, LR re-warmed) reaches
+  0.55 at the end (0.51 at the matched step). That is the schedule, not
+  aptitude data. It also beats one-stage M1 on holdout (3.4743 vs 3.4906)
+  and recall (0.825 vs 0.615). So 0.55 is what a v14 unit must beat on
+  label_category at 600M, not 0.29.
 **Purpose:** control levels for small bodies, and the first N6 test. N1 and
 delta are reported only (memory mechanisms, not learners). **Validity check:** the bench is
 usable if some arm reaches ≥ 0.50 on reverse3 or two_hop at 8 shots; else
@@ -266,8 +272,10 @@ review by the v13 session folded in).** Code: `v14/rules_ood.py`, arms
   test of in-context rule inference.
 - **If R is met, next is the 150M LM check (stage 3), pre-registered
   before it runs.** M1 + the winning memory vs M1, both trained on their own
-  150M schedule with one data mix and no aptitude data, so C1's +0.20 at 8
-  shots cannot confound. Primary: holdout loss, and the learning-probe
+  150M schedule with one data mix and no aptitude data, and **the same
+  schedule shape** (both one-stage, or both two-stage). The v13 C1-ctl run
+  showed that the schedule alone moves label_category 8-shot from 0.29 to
+  0.55. Primary: holdout loss, and the learning-probe
   label_category at 2 / 4 / 8 shots with `--trials 400` (SE ≈ 0.025).
   Also recall 63-cell.
 

@@ -70,8 +70,15 @@ Keep all three current as things happen (user rule, 2026-10-29).
   dclm,fineweb,smoltalk2_mid,aptitude = 0.25,0.20,0.15,0.40,
   blend_warmup_tokens 30M). The test/validation splits are untouched, so
   they also work as a real-data reasoning eval.
-* **Possible B0 family (later):** a multiple-choice recall format, if the C1
-  control confirms the format is what helped.
+* **v13 C1-ctl verdict (`237173a`):** most of C1's recall jump, and its
+  label_category gain, come from the **two-stage schedule** (language first,
+  recall docs later, LR re-warmed), not the aptitude data or its
+  multiple-choice format. The ctl beats one-stage M1 on holdout (3.4743 vs
+  3.4906), recall (0.825 vs 0.615) and label_category 8-shot (0.55 vs
+  0.29). So the multiple-choice B0 family is dropped. For stage 3, both arms
+  use the same schedule shape. Next on the 6000 (tmux `s2chain`, after C1
+  on M2, ~03:30-08:00 IST): Transformer++ in one stage vs two, then two
+  stages on M2.
 * **Session coordination:** v14 (this session, "Qllm v14") and v13_sempty
   ("Qllm v13") ping each other on every GPU start/stop and on every verdict.
 * **sempyt:** v14 needs ≥ `b99e038`. Pull it on the 6000 before running
