@@ -18,6 +18,31 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-29 18:10Z (23:40 IST): overnight chain on the 6000** (tmux
+  `c1ctl`, `~/c1ctl_chain.sh`, log
+  `logs/v13_sempty_c1ctl_driver_7ae6f1f.log`, code `7ae6f1f`). Order:
+  learning probes M2 + T1 (DONE: 0.185, 0.171) → **C1-ctl** (`c1ctla_pre`
+  120M web+chat, NO aptitude → `c1ctlb_main` 480M M1 mix, keeps
+  step_009766.pt; ETA ~19:55Z = 01:25 IST) → **C1 on the M2 body**
+  (`c1m2a_pre` / `c1m2b_main`, SHARE_READS=1 MLP 2128; ETA ~22:00Z = 03:30
+  IST). Each prints `=== <p> DONE`; probes (recall, PG-19, learning, plus the
+  step-9766 recall + learning) run inside. Rules: EXPERIMENTS "C1-ctl", "C1 on
+  the M2 body". Resume after a crash: `tmux new-session -d -s c1ctl "cd
+  ~/Development/qllm-private && SCREEN_HASH=7ae6f1f bash ~/c1ctl_chain.sh 2>&1
+  | tee -a logs/v13_sempty_c1ctl_driver_7ae6f1f.log"` (finished stages skip
+  via .done, half-done resume from latest.pt).
+  **Verdicts landed today:** M2 KEEP (holdout 3.4697, −0.021 vs M1; recall
+  0.522 < M1 0.615). T1 FAIL (3.4977 vs echo 3.4885; code removal pending,
+  T1 code is at `7ae6f1f`). C1 primary FAIL (learning probe 0.199) but
+  **recall 0.907 vs M1 0.615** (8-fact 0.855 vs 0.326) — the control decides
+  whether the aptitude data or the two-stage schedule causes it. Fixed
+  `609fb1f`: the final step is always validated (C1b's last 114M tokens
+  were unmeasured). Learning probe (bar 3): every model 0.17–0.23, near
+  chance; still open. Results logs for m2 / c1a / c1b / t1loc are committed.
+  4090: v14 owns it tonight (v14b1 then v14b0, ETA ~02:30 IST). Lesson: a
+  4090 launcher must NOT end in `exec bash` (t1loc's open shell blocked
+  v14's WAIT_TMUX gate for 2 h).
+
 * **2026-10-29 13:55Z: C1 reason-first curriculum queued on the 6000** (tmux
   `c1chain`, `~/c1_chain.sh`, log `~/c1_chain.log`): waits for "m2 DONE" and
   the Mamba-2 learning-probe json, pulls code + sempyt, runs `c1a_pre`

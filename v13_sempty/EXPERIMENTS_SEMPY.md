@@ -2114,6 +2114,15 @@ sequential in time.
 OR recall 63-cell mean ≥ M1 + 0.05 (with holdout ≤ M1 + 0.01); either one,
 vs full PAM + echo, the same "quality at ≥ 1.5× speed" bar as M1.
 
+**M2 result (2026-10-29, 6000, `ed326a1`, 600M): KEEP.** Holdout 3.4697 vs
+M1 3.4906 (−0.021 ≤ −0.01 → rule met); WikiText 68.84 vs 69.44; PG-19 4–8k
+far gain 0.0414 vs 0.0446. Not in the rule but reported: recall 63-cell
+0.522 vs M1 0.615 (a1/a4/a8 0.774/0.596/0.196 vs 0.895/0.624/0.326) — the
+shared reads buy LM quality and cost single-fact recall; learning probe
+0.185 (M1 0.175). Milestones (holdout): 3.9054 / 3.6602 / 3.5146 / 3.4697 at
+150/300/450/600M (M1 3.9225 / 3.6829 / 3.5348 / 3.4906): the lead holds
+(−0.017, −0.023, −0.020, −0.021), unlike echo, M1 and T1. 1.18× slower than M1.
+
 ## Speed: where PAM's 2.9× gap to Mamba-2 is (2026-10-29, 4090, B4 T2048)
 
 - **Not width alignment.** Step time by geometry (all chrono+gate+delta):
@@ -2251,6 +2260,20 @@ holdout, recall, PG-19); watch whether the WikiText gap closes.
 At 300M the WikiText gap closed (T1 now −2.4 % vs echo, was +2.6 %); the
 holdout lead shrank −0.031 → −0.015 (same shrinking pattern as M1 and echo).
 
+| tokens | holdout (T1 / echo / M1) | WikiText PPL (T1 / echo / M1) |
+|---|---|---|
+| 450M (step 12207) | 3.5414 / 3.5373 / **3.5348** | 73.12 / 75.66 / 73.90 |
+| 600M (step 16276) | 3.4977 / **3.4885** / 3.4906 | 69.64 / 71.09 / **69.44** |
+
+**T1 verdict (2026-10-29): FAIL.** Holdout 3.4977 > 3.4885 (+0.009; the
+lead went −0.031, −0.015, +0.004, +0.009). Recall 0.539 ≥ 0.38 PASS
+(a1/a4/a8 0.843/0.417/0.357, 8-fact above M1's 0.326); PG-19 4–8k far gain
+0.0448 ≥ 0.035 PASS (best of the 600M arms, tied with M1 0.0446). Learning
+probe 0.171. Reading: the slow event stream helps early (it is a shortcut
+to longer context) but the same params as token blocks win by 600M. The
+idea it was meant to lead to (surprise-timed events, event-level targets)
+is untested; code removal with an EXPERIMENT_INDEX row follows.
+
 ## Learning probe (goal bar 3: learning beyond recall) — baselines (2026-10-29)
 
 **Why.** The user's goal: "a different kind of intelligence.. not just recall
@@ -2270,7 +2293,11 @@ label_category (invented label per category, query never labelled), two_hop
 | M1 600M (`m1_m1echo_ccbf028`) | 0.047 | 0.023 | 0.007 | 0.537 | 0.263 | 0.175 |
 | PAM 3B (`1c913ef`) | 0.033 | 0.053 | 0.093 | 0.590 | 0.297 | 0.213 |
 | Transformer++ 3B (`e072a8f`) | 0.130 | 0.053 | 0.070 | 0.627 | 0.260 | 0.228 |
-| Mamba-2 3B (`b36e3a5`) | pending (needs mamba_ssm; runs on the 6000) | | | | | |
+| Mamba-2 3B (`b36e3a5`) | 0.120 | 0.067 | 0.027 | 0.517 | 0.280 | 0.202 |
+| M2 600M (`m2_m2echo_ed326a1`) | 0.090 | 0.040 | 0.010 | 0.503 | 0.283 | 0.185 |
+| T1 600M (`t1loc_t1_ea002e6`) | 0.057 | 0.020 | 0.003 | 0.507 | 0.267 | 0.171 |
+| C1a stage A 120M (`c1a_pre_5b1eb9d`) | 0.063 | 0.113 | 0.003 | 0.497 | 0.297 | 0.195 |
+| C1b @9766 (`c1b_main_5b1eb9d`) | 0.043 | 0.080 | 0.023 | 0.550 | 0.300 | 0.199 |
 
 **Reading.** No model — the transformer included — applies an in-context
 rule. On letter/number/reverse they sit at or BELOW chance because they
