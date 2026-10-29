@@ -10,6 +10,7 @@ source scripts/require_clean_tree.sh
 ARMS="${ARMS:-delta,echo,n1sum,n1gate,n1phase}"
 STEPS="${STEPS:-6000}"
 BATCH="${BATCH:-16}"
+AUX="${AUX:-0}"
 NEED_MB="${NEED_MB:-14000}"
 GPU="${GPU:-0}"
 
@@ -24,7 +25,7 @@ HASH=$(git rev-parse --short HEAD)
 STAMP=$(date +%Y%m%d_%H%M)
 LOG="logs/v14_b0_${HASH}_${STAMP}.log"
 JSON="logs/v14_b0_${HASH}_${STAMP}.json"
-echo "v14 B0 start $(date) commit=${HASH} arms=${ARMS} steps=${STEPS} batch=${BATCH} log=${LOG}"
+echo "v14 B0 start $(date) commit=${HASH} arms=${ARMS} steps=${STEPS} batch=${BATCH} aux=${AUX} log=${LOG}"
 CUDA_VISIBLE_DEVICES="$GPU" .venv/bin/python -u -m v14.microbench \
-  --arms "$ARMS" --steps "$STEPS" --batch "$BATCH" --json "$JSON" 2>&1 | tee "$LOG"
+  --arms "$ARMS" --steps "$STEPS" --batch "$BATCH" --aux_weight "$AUX" --json "$JSON" 2>&1 | tee "$LOG"
 echo "v14 B0 DONE $(date)"

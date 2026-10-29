@@ -181,12 +181,22 @@ def build_doc(P, family, size, length, position, seed) -> Doc:
     return Doc(ids, answers)
 
 
-def batch_tensors(docs, device):
-    """x, y and the answer-only loss mask for one equal-length batch."""
+def batch_tensors(docs, device, aux_weight: float = 0.0):
+    """x, y and the loss mask for one equal-length batch.
+
+    Answer positions get weight 1 each. With ``aux_weight = w > 0`` the other
+    positions of a document share a total weight ``w * n_answers`` (so the
+    loss is answer CE plus w x the mean CE elsewhere, per answer). That LM
+    signal is what copy circuits form from: answer-only training left the
+    delta arm at ln(600) (it learned only "some value word")."""
     t = torch.tensor([d.ids for d in docs], dtype=torch.long, device=device)
     x, y = t[:, :-1].contiguous(), t[:, 1:].contiguous()
+    T = y.shape[1]
     mask = torch.zeros_like(y, dtype=torch.float32)
     for b, d in enumerate(docs):
+        n = len(d.answers)
+        if aux_weight > 0:
+            mask[b] = aux_weight * n / (T - n)
         for idx, target, _ in d.answers:
             assert int(y[b, idx - 1]) == target
             mask[b, idx - 1] = 1.0
@@ -277,7 +287,7 @@ def evaluate(model, P, device, ctxs, trials, eval_batch=8):
     return out
 
 
-def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials):
+def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials, aux_weight=0.0):
     torch.manual_seed(0)
     model = V14LM(cfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
@@ -288,7 +298,7 @@ def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials):
     t0, toks = time.time(), 0
     for step, (L, specs) in enumerate(plan, 1):
         docs = [build_doc(P, *spec[:2], L, *spec[2:]) for spec in specs]
-        x, y, mask = batch_tensors(docs, device)
+        x, y, mask = batch_tensors(docs, device, aux_weight)
         with torch.amp.autocast('cuda', dtype=torch.bfloat16):
             lm, _ = model._hidden_to_lm(x)
         loss = model.ce_from_lm(lm, y, loss_mask=mask, chunk=4096, gemm_dtype=torch.float32)
@@ -330,6 +340,8 @@ def main():
     ap.add_argument('--seed', type=int, default=42)
     ap.add_argument('--device', default='cuda')
     ap.add_argument('--ctxs', default='1024,4096,8192', help="eval context lengths")
+    ap.add_argument('--aux_weight', type=float, default=0.0,
+                    help="LM loss weight on non-answer positions (0 = answer-only)")
     ap.add_argument('--json', default='', help="write all results here")
     args = ap.parse_args()
 
@@ -342,14 +354,15 @@ def main():
                             capture_output=True, text=True).stdout.strip()
     print(f"B0 micro-bench @ {commit}: {args.steps} steps x B{args.batch}, lr {args.lr}, "
           f"eval ctx {ctxs}, {args.trials} docs x {len(POSITIONS)} positions x "
-          f"{N_QUERIES} queries per cell", flush=True)
+          f"{N_QUERIES} queries per cell, aux_weight {args.aux_weight}", flush=True)
     plan = train_plan(args.steps, args.batch, args.seed)
     all_res = {'commit': commit, 'args': vars(args), 'arms': {}}
     for label, kind, hd, nl in parse_arms(args.arms):
         print(f"\n--- arm {label} ---", flush=True)
         cfg = make_cfg(kind, len(tok), head_dim=hd, n_layers=nl)
         all_res['arms'][label] = train_arm(label, cfg, P, plan, args.device, args.lr,
-                                           args.log_every, ctxs, args.trials)
+                                           args.log_every, ctxs, args.trials,
+                                           args.aux_weight)
         print(table(label, all_res['arms'][label]['results'], ctxs), flush=True)
         if args.json:
             with open(args.json, 'w') as f:
