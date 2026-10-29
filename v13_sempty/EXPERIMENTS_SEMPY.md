@@ -2469,3 +2469,58 @@ C1's exact chain (aptitude stage A 120M, M1-mix stage B 480M) on the M2 body
 recall 0.522, PG-19 far gain 0.0414). **KEEP as the new reference** if final
 holdout ≤ M2 + 0.01 (≤ 3.4797) AND recall ≥ M2 + 0.10 (≥ 0.622). Learning
 probe reported (bar 3 stays open).
+
+### C1 on M2 result (2026-10-30, 6000, `7ae6f1f`) — KEEP: best LM model at 600M so far
+
+Stage A `c1m2a_pre` 19:48Z → 20:10Z, stage B `c1m2b_main` 20:13Z → 21:39Z,
+probes done 21:44Z (03:14 IST). Final val at step 13021 (the `609fb1f` fix).
+
+| model | holdout | WikiText | recall 63-cell (a1/a4/a8) | 8192-tok a1/a4/a8 | learning probe (label_cat 8-shot) | PG-19 4–8k far gain |
+|---|---|---|---|---|---|---|
+| M2 600M, one stage (control) | 3.4697 | 68.84 | 0.522 (0.774/0.596/0.196) | 0.56/0.48/0.19 | 0.185 (0.31) | 0.0414 |
+| C1-ctl final (M1, two stages, no aptitude) | 3.4743 | 69.86 | 0.825 (0.879/0.865/0.732) | 0.58/0.57/0.43 | 0.197 (0.55) | 0.0410 |
+| c1m2 stage A (120M, 40 % aptitude) | 4.0921 | 121.74 | 0.369 (0.758/0.218/0.131) | 0.40/0.16/0.13 | 0.195 (0.40) | 0.0401 |
+| c1m2 @ step 9766 | 3.4941 | 71.93 | 0.888 (0.919/0.902/0.844) | 0.62/0.60/0.50 | 0.185 (0.37) | — |
+| **c1m2 final (600M)** | **3.4473** | **65.74** | **0.870** (0.945/0.890/0.775) | 0.75/0.67/0.49 | 0.187 (0.38) | 0.0436 |
+
+**Verdict vs the pre-registered rule: KEEP.** Final holdout 3.4473 ≤ 3.4797
+AND recall 0.870 ≥ 0.622. It is the lowest holdout of any 600M model
+(M2 −0.022, C1-ctl −0.027, M1 −0.043) and the lowest WikiText (65.7 vs
+M2 68.8), with recall second only to C1b @ 9766 (0.907).
+
+- **Matched step 9766** (holdout / recall): C1b (M1 + aptitude) 3.5397 /
+  0.907, ctl (M1, no aptitude) 3.5140 / 0.805, **c1m2 3.4941 / 0.888**. On
+  M1, aptitude cost +0.026 holdout at this step; on M2 the aptitude recipe
+  is −0.046 ahead of C1b, about twice M2's one-stage body gain (−0.021).
+  M2's own no-aptitude two-stage control is `c2m2` (tonight); until it
+  lands, the aptitude effect on M2 is not known — do not attribute.
+- **label_category 8-shot does not lift on M2** (0.38; M2 one stage 0.31)
+  while the two-stage M1 reaches 0.55. The lift looks body-dependent
+  (shared reads), not only schedule-dependent. Single probe, ~0.04 SE.
+- Learning probe mean flat (0.185–0.197): bar 3 still open.
+- Speed 92.6K tok/s vs M1 110.2K (1.19× slower), the same as M2.
+- Not yet a baseline comparison: Transformer++ at 600M (`tfs1`, `tfs2`)
+  is running now; the aptitude recipe on Transformer++ (`tfc1`) is
+  pre-registered below.
+
+## tfc1 — does the aptitude recipe help Transformer++ as much? (pre-registration, 2026-10-30 03:20 IST)
+
+c1m2's recipe (aptitude stage A 120M at 0.25/0.20/0.15/0.40 + 30M
+web-only warmup, then the M1 mix 480M with --init_from) on Transformer++
+(ARCH=transformer, CHRONO=0, OUT_GATE=0, DELTA=0, 101.9M, LR 1.2e-3), the
+same code as tfs1/tfs2 (`b788731`). Queued on the 6000 after the S2 chain
+(`~/s3_chain.sh`, tmux `s3chain`). Controls: tfs1 (one stage), tfs2 (two
+stages, no aptitude).
+
+**Rules (fixed now, before tfs1/tfs2/tfc1 report):**
+- The aptitude recipe's gain is PAM-specific if c1m2's recall gain over
+  its one-stage body (0.870 − 0.522 = +0.348) exceeds Transformer++'s
+  (tfc1 − tfs1) by ≥ 0.10. Holdout gains reported (PAM: −0.022).
+- Head-to-head on the same recipe (c1m2 vs tfc1): PAM BEATS
+  Transformer++ on recall if 63-cell Δ ≥ +0.05; on LM if holdout Δ <
+  −0.01 (the scoreboard thresholds).
+
+**Tie-break for the next reference** (added before c2m2 runs, to the "S2 on
+the M2 body" rule): c1m2 and c2m2 share the M2 body, so speed cannot break
+a tie. Within 0.005 holdout, the higher recall wins; if recall is also within
+0.02, the simpler recipe (c2m2, no aptitude) wins.

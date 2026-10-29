@@ -18,6 +18,20 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-29 21:44Z (03:14 IST): C1 on M2 DONE — KEEP, new best LM at 600M.**
+  `c1m2b_main_7ae6f1f`: holdout 3.4473 (M2 3.4697), WikiText 65.74, recall
+  0.870 (M2 0.522), learning probe 0.187 (bar 3 open), label_cat 8-shot 0.38
+  (M2 body does not get the 0.55 two-stage lift). Logs + probe jsons
+  committed. Freed c1m2b step_009766.pt (probes done); 6000 disk 17 GB.
+  The S2 chain started `tfs1` at 21:45Z on `b788731` (T++ 142K tok/s →
+  tfs1 ~23:00Z, tfs2 ~00:20Z, c2m2 ~02:30Z = 08:00 IST). **Queued after it:
+  `tfc1`** (T++ on c1m2's aptitude recipe; tmux `s3chain`, `~/s3_chain.sh`,
+  log `logs/v13_sempty_s3_driver_b788731_20261029_2150.log`, waits for
+  "=== s2 chain DONE"; ETA ~04:00Z = 09:30 IST). Rules: EXPERIMENTS "C1 on
+  M2 result", "tfc1". Resume: rerun the same tmux command (stages skip via
+  .done). E2 tied echo: waits on v14 B1 run 3 bar P (~05:00 IST) AND the
+  reference pick after c2m2.
+
 * **2026-10-29 19:53Z (01:23 IST): S2 chain queued on the 6000** (tmux
   `s2chain`, `~/s2_chain.sh`, log `logs/v13_sempty_s2_driver_20261029_1952.log`;
   it prints the code hash it pulled). Waits for "=== chain DONE" of the
