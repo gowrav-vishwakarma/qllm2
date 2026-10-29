@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""Score a trained LM on the in-context rule-learning tasks (memory_probes/rules.py).
+
+Bar 3 of the project goal: learning beyond recall. Each prompt shows a few
+examples of a hidden rule; the model must apply it to a new input (for
+letter_shift / number_step the answer never appears in the context).
+Contrastive scoring over 8 single-token candidates (chance 0.125).
+
+Example (CPU, so a training run can keep the GPU):
+  CUDA_VISIBLE_DEVICES= .venv/bin/python scripts/run_learning_probe.py \
+    --model-type v13_sempty --checkpoint checkpoints_v13_sempty/<run>/best_model.pt \
+    --output logs/learning_probes/v13_sempty_<run>_rules.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import platform
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+import numpy as np
+import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from memory_probes.rules import TASKS, aggregate, build_rule_suite, score_candidate_logits
+from run_memory_behavioral import _last_logits, _load_hf, _load_transformer, _load_v13_sempty
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description=__doc__.split('\n')[0])
+    p.add_argument('--model-type', choices=('v13_sempty', 'transformer', 'hf'), required=True)
+    p.add_argument('--checkpoint', type=Path)
+    p.add_argument('--model-id', default='state-spaces/mamba-130m-hf')
+    p.add_argument('--preset', default='baseline_real_pm')
+    p.add_argument('--tasks', default=','.join(TASKS))
+    p.add_argument('--shots', default='2,4,8')
+    p.add_argument('--trials', type=int, default=100)
+    p.add_argument('--seed', type=int, default=5000)
+    p.add_argument('--output', type=Path, required=True)
+    args = p.parse_args()
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if args.model_type == 'v13_sempty':
+        model, tokenizer, _ = _load_v13_sempty(args.checkpoint, args.preset, device)
+        identity = str(args.checkpoint)
+    elif args.model_type == 'transformer':
+        model, tokenizer, _ = _load_transformer(args.checkpoint, device)
+        identity = str(args.checkpoint)
+    else:
+        model, tokenizer, _ = _load_hf(args.model_id, device)
+        identity = args.model_id
+    model.eval()
+
+    tasks = tuple(t.strip() for t in args.tasks.split(',') if t.strip())
+    shots = tuple(int(s) for s in args.shots.split(','))
+    seeds = tuple(range(args.seed, args.seed + args.trials))
+    examples = build_rule_suite(tokenizer, tasks=tasks, shots=shots, seeds=seeds)
+    rows = []
+    with torch.no_grad():
+        for i, ex in enumerate(examples, 1):
+            ids = torch.tensor([ex.prompt_ids], dtype=torch.long, device=device)
+            logits = _last_logits(args.model_type, model, ids)[0]
+            cand = logits[ex.candidate_token_ids].float().cpu()
+            if not torch.isfinite(cand).all():
+                rows.append({**ex.to_dict(), 'skipped': True})
+                continue
+            rows.append({**ex.to_dict(), **score_candidate_logits(ex, cand.tolist())})
+            if i % 250 == 0 or i == len(examples):
+                print(f'  scored {i}/{len(examples)}', flush=True)
+
+    agg = aggregate(rows)
+    per_task = {t: float(np.mean([a['accuracy'] for a in agg if a['task'] == t])) for t in tasks}
+    result = {
+        'schema_version': 'learning-probe-rules/v1',
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'model_type': args.model_type,
+        'model_identity': identity,
+        'device': str(device),
+        'platform': platform.platform(),
+        'parameter_count': sum(x.numel() for x in model.parameters()),
+        'protocol': {'tasks': list(tasks), 'shots': list(shots), 'seeds': [seeds[0], seeds[-1]],
+                     'candidates': 8, 'chance': 0.125},
+        'per_task_accuracy': per_task,
+        'mean_accuracy': float(np.mean(list(per_task.values()))),
+        'aggregates': agg,
+    }
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(result, indent=2) + '\n')
+    print('per task:', {t: round(v, 3) for t, v in per_task.items()},
+          ' mean', round(result['mean_accuracy'], 3))
+    print(f'saved {args.output}')
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
