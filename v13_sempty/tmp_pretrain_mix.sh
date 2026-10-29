@@ -55,6 +55,8 @@ DELTA="${DELTA:-0}"            # A3 delta erase/write (KEEP 2026-09-05: exact 8-
 SHORT_CONV="${SHORT_CONV:-0}"  # G1 short conv on qkv (2026-10-29 screen; needs GEN_EVERY=0)
 OUT_NORM="${OUT_NORM:-0}"      # G2 per-head RMSNorm of the memory read
 ECHO="${ECHO:-0}"              # E1 echo (succession) memory into the head
+PAM_LAYERS="${PAM_LAYERS:-}"   # M1 blocks that keep a notebook, e.g. 3,7,11,15 (default all)
+MLP_HIDDEN="${MLP_HIDDEN:-0}"  # M1 gated-MLP width (0 = dim*expand), to param-match
 BASE_DT_BIAS="${BASE_DT_BIAS:-}" # override initial decay bias (default -4; bench: -6/-8 no gain)
                                # (LONG_HEADS removed 2026-10-27: R3 FAIL, EXPERIMENTS "R3")
                                # (STORE removed 2026-10-27: R4 FAIL, EXPERIMENTS "R4")
@@ -93,6 +95,8 @@ if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi
 if [ "$SHORT_CONV" = "1" ]; then EXTRA+=(--short_conv); fi
 if [ "$OUT_NORM" = "1" ]; then EXTRA+=(--out_norm); fi
 if [ "$ECHO" = "1" ]; then EXTRA+=(--echo); fi
+if [ -n "$PAM_LAYERS" ]; then EXTRA+=(--pam_layers "$PAM_LAYERS"); fi
+if [ "$MLP_HIDDEN" != "0" ]; then EXTRA+=(--mlp_hidden "$MLP_HIDDEN"); fi
 if [ "$ANSWER_W" != "1" ]; then EXTRA+=(--answer_weight "$ANSWER_W"); fi
 if [ -n "$BASE_DT_BIAS" ]; then EXTRA+=(--base_dt_bias "$BASE_DT_BIAS"); fi
 if [ -n "$INIT_FROM" ]; then EXTRA+=(--init_from "$INIT_FROM"); fi

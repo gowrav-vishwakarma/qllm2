@@ -241,7 +241,8 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
 
     # --- ladder (only non-default arch flags) -------------------------------
     _ladder = [k for k in ('n_states', 'vault', 'delta', 'cond_mem',
-                           'chrono', 'out_gate', 'short_conv', 'out_norm', 'echo')
+                           'chrono', 'out_gate', 'short_conv', 'out_norm', 'echo',
+                           'pam_layers', 'mlp_hidden')
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if cfg.base_dt_bias != -4.0:
         _ladder.append('base_dt_bias')
@@ -673,20 +674,28 @@ class Trainer:
         # 'dtbias=' row hides any per-head structure (L1 run, 2026-09-05: a
         # -4..-12 ladder read as a flat -8), so keep both views.
         head_acc = None
+        n_pam, j = 0, 0   # M1: blocks without a notebook report nan for PAM fields
         for i, b in enumerate(self._blocks):
             out['cgu_scale'].append(float(b.cgu_scale.detach()))
-            out['pam_scale'].append(float(b.pam_scale.detach()))
-            db = b.pam.dt_bias.detach().float()
-            out['dt_bias'].append(float(db.mean()))
-            head_acc = db.clone() if head_acc is None else head_acc + db
+            has_pam = getattr(b, 'pam', None) is not None
+            out['pam_scale'].append(float(b.pam_scale.detach()) if has_pam else float('nan'))
+            if has_pam:
+                db = b.pam.dt_bias.detach().float()
+                out['dt_bias'].append(float(db.mean()))
+                head_acc = db.clone() if head_acc is None else head_acc + db
+                n_pam += 1
+                out['ret'].append(layer_ret[j] if j < len(layer_ret) else float('nan'))
+                j += 1
+            else:
+                out['dt_bias'].append(float('nan'))
+                out['ret'].append(float('nan'))
             out['g_norm'].append(g_norms[i])
             w = 0.0
             for p in b.parameters():
                 w += float(p.detach().float().pow(2).sum())
             out['w_norm'].append(w ** 0.5)
-            out['ret'].append(layer_ret[i] if i < len(layer_ret) else float('nan'))
         if head_acc is not None and head_acc.dim() >= 1:
-            out['dt_bias_heads'] = (head_acc / len(self._blocks)).flatten().tolist()
+            out['dt_bias_heads'] = (head_acc / max(n_pam, 1)).flatten().tolist()
         return out
 
     def _log_diag(self, d: dict):
@@ -1059,6 +1068,10 @@ def build_argparser():
                    help='G1: depthwise causal short conv on fused qkv (no decode yet)')
     p.add_argument('--out_norm', action='store_true',
                    help='G2: per-head RMSNorm of the memory read')
+    p.add_argument('--pam_layers', type=str, default='',
+                   help="M1: comma list of blocks that keep a PAM notebook (default all)")
+    p.add_argument('--mlp_hidden', type=int, default=0,
+                   help='M1: gated-MLP hidden width (0 = dim*expand); widen to param-match')
     p.add_argument('--echo', action='store_true',
                    help='E1: top-of-stack succession (echo) memory into the head')
     p.add_argument('--base_dt_bias', type=float, default=None,
@@ -1120,6 +1133,10 @@ def main():
         cfg.out_norm = True
     if args.echo:
         cfg.echo = True
+    if args.pam_layers:
+        cfg.pam_layers = tuple(int(i) for i in args.pam_layers.split(','))
+    if args.mlp_hidden:
+        cfg.mlp_hidden = args.mlp_hidden
     if args.base_dt_bias is not None:
         cfg.base_dt_bias = args.base_dt_bias
     if args.dropout is not None:

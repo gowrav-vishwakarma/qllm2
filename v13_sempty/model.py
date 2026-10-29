@@ -991,20 +991,26 @@ class RealBlock(nn.Module):
         self.dropout = cfg.dropout
         self.norm1 = RealNorm(self.model_dim)
         self.cgu = RealGatedUnit(self.model_dim, cfg.expand,
-                                 activation=cfg.activation)
+                                 activation=cfg.activation, hidden=cfg.mlp_hidden)
         self.cgu_dropout = nn.Dropout(cfg.dropout)
         self.cgu_scale = nn.Parameter(torch.tensor(1.0))
-        self.norm2 = RealNorm(self.model_dim)
-        self.pam = RealPAMLayer(cfg, layer_idx=layer_idx,
-                                model_dim=self.model_dim)
-        # PAM starts soft: the memory path learns while the residual carries.
-        self.pam_scale = nn.Parameter(torch.tensor(0.1))
+        # M1: a block outside cfg.pam_layers is a pure gated-MLP block.
+        self.has_pam = not cfg.pam_layers or layer_idx in tuple(cfg.pam_layers)
+        self.pam = None
+        if self.has_pam:
+            self.norm2 = RealNorm(self.model_dim)
+            self.pam = RealPAMLayer(cfg, layer_idx=layer_idx,
+                                    model_dim=self.model_dim)
+            # PAM starts soft: the memory path learns while the residual carries.
+            self.pam_scale = nn.Parameter(torch.tensor(0.1))
 
     def forward(self, x: NamedTensor, pam_state=None, step_offset: int = 0):
         cgu_out = self.cgu(self.norm1(x))
         if self.training:
             cgu_out = cgu_out * as_complex_dropout_mask(self.cgu_dropout, cgu_out)
         x = x + cgu_out * self.cgu_scale
+        if not self.has_pam:
+            return x, None
         pam_out, new_state = self.pam(self.norm2(x), state=pam_state,
                                       step_offset=step_offset)
         return x + pam_out * self.pam_scale, new_state
@@ -1027,6 +1033,7 @@ class LM(nn.Module):
         self.config = cfg
         self.model_dim = Dim("model_dim", cfg.dim)
         if cfg.is_complex:
+            assert not cfg.pam_layers and not cfg.mlp_hidden, "M1 is real-arm only"
             self.complex_pair = Dim("complex_pair", 2)
             self.real_imag_feature = Dim("real_imag_feature", cfg.dim * 2)
             self.policy = SplitComplex(self.complex_pair)

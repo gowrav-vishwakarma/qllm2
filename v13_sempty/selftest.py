@@ -746,6 +746,44 @@ def test_echo_memory(batch_size=2, seq_len=48, seed=0):
     return True
 
 
+def test_sparse_memory(batch_size=2, seq_len=30, seed=0):
+    """M1 sparse memory: only cfg.pam_layers keep a notebook; the rest are
+    gated-MLP blocks. Builds, trains one step, and decode == chunked (with
+    echo on, so the carried states mix None, notebooks and the echo state)."""
+    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.n_layers = 4
+    cfg.chunk_size = 16
+    cfg.chrono = cfg.out_gate = cfg.delta = cfg.echo = True
+    cfg.pam_layers = (1, 3)
+    cfg.mlp_hidden = 320
+    m = LM(cfg).to(dev)
+    has = [b.pam is not None for b in m.blocks]
+    assert has == [False, True, False, True], has
+    assert m.blocks[0].cgu.hidden.size == 320
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len), device=dev)
+    m.train()
+    lg, _, _ = m.forward(ids)
+    F.cross_entropy(lg.reshape(-1, cfg.vocab_size).float(), ids.reshape(-1)).backward()
+    assert m.blocks[1].pam.qkv_proj.weight.grad is not None
+    m.eval()
+    nn.init.normal_(m.echo_out.weight, std=0.3)
+    with torch.no_grad():
+        par, _, _ = m.forward(ids)
+        out, st, _ = m.forward(ids[:, :5])
+        parts = [out]
+        for t in range(5, seq_len):
+            lt, st, _ = m.forward(ids[:, t:t + 1], states=st, step_offset=t)
+            parts.append(lt)
+        seq_l = torch.cat(parts, dim=1)
+    d = (par - seq_l).abs().max().item()
+    assert d < 2e-3, f"sparse decode disagrees: {d:.3e}"
+    print(f"  notebooks in {list(cfg.pam_layers)} of {cfg.n_layers}; mlp_hidden 320; "
+          f"grads ok; decode vs chunked {d:.2e} ({dev})")
+    return True
+
+
 def test_transformer_baseline(seed=0):
     """Transformer++ baseline (equal-data quality reference).
 
@@ -930,6 +968,7 @@ def main():
         test_out_gate_parity_and_decode,
         test_short_conv_and_read_norm,
         test_echo_memory,
+        test_sparse_memory,
         test_transformer_baseline,
         test_prefetch_order_and_cursor,
         test_worker_stream_order_and_cursor,

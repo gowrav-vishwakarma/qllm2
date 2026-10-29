@@ -96,6 +96,12 @@ class PAMConfig:
     # Real arm; decode carries (S, h_prev) as the last element of states.
     echo: bool = False
     echo_dt_bias: float = -6.0     # echo retention init e^-softplus(-6) ~ 0.9975
+    # M1 sparse memory (2026-10-29, "few memories, deep thought"): only the
+    # blocks listed here carry a PAM notebook; the others are pure gated-MLP
+    # "thinking" blocks (GEMM-bound, fast). Empty = every block (default).
+    # Real arm. mlp_hidden (0 = dim*expand) widens the MLP to param-match.
+    pam_layers: tuple = ()
+    mlp_hidden: int = 0
     # (R4 consolidation store removed 2026-10-27: FAIL, never used for recall;
     # EXPERIMENTS_SEMPY "R4".)
 

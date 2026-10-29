@@ -74,10 +74,11 @@ class RealGatedUnit(nn.Module):
     ``ComplexGatedUnit`` so the two models carry the same block structure.
     """
 
-    def __init__(self, feature: Dim, expand: int = 3, activation: str = 'swish'):
+    def __init__(self, feature: Dim, expand: int = 3, activation: str = 'swish',
+                 hidden: int = 0):
         super().__init__()
         self.feature = feature
-        self.hidden = Dim("hidden", feature.size * expand)
+        self.hidden = Dim("hidden", hidden or feature.size * expand)
         self.gate_proj = NamedLinear(self.feature, self.hidden, bias=False)
         self.up_proj = NamedLinear(self.feature, self.hidden, bias=False)
         self.down_proj = NamedLinear(self.hidden, self.feature, bias=False)

@@ -309,7 +309,8 @@ def main() -> int:
         if args.pam_scale is not None:
             with torch.no_grad():
                 for block in model.blocks:
-                    block.pam_scale.fill_(args.pam_scale)
+                    if getattr(block, 'pam', None) is not None:
+                        block.pam_scale.fill_(args.pam_scale)
         identity = str(args.checkpoint)
     elif args.model_type == 'v13_sempty':
         model, tokenizer, config = _load_v13_sempty(args.checkpoint, args.preset, device)
@@ -318,7 +319,8 @@ def main() -> int:
             # residual stream, so any remaining recall is not from the memory.
             with torch.no_grad():
                 for block in model.blocks:
-                    block.pam_scale.fill_(args.pam_scale)
+                    if getattr(block, 'pam', None) is not None:
+                        block.pam_scale.fill_(args.pam_scale)
         identity = f"{args.checkpoint} pam_scale={args.pam_scale}" if args.pam_scale is not None else str(args.checkpoint)
     elif args.model_type == 'transformer':
         model, tokenizer, config = _load_transformer(args.checkpoint, device)
