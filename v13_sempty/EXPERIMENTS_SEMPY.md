@@ -2199,3 +2199,10 @@ slow event stream beat the same params spent on token-level blocks?**
   train-loss rule if they disagree.
 - Full 600M: PASS if holdout ≤ 3.4885 (echo) — equal quality at 1.23× speed
   is already a win; recall ≥ 0.38; PG-19 4–8k far gain ≥ 0.035.
+
+**T1 early check (2026-10-29 11:52Z, local 4090, 38.9K tok/s with grad ckpt):**
+train loss T1 − echo on the same batches, 250-step windows to step 2250:
++0.19, +0.13, +0.09, +0.10, +0.00, +0.11, **−0.08, −0.02, +0.01** — starts
+behind (4 fewer token blocks) and closes; pre-registered window 1750–2250
+mean **−0.03 ≤ +0.02 → early PASS, promote to the 600M screen.** (The run
+keeps going locally to the 150M holdout val.)
