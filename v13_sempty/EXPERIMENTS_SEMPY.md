@@ -2423,6 +2423,8 @@ two-stage schedule itself.**
   vs 0.615)**; WikiText equal (69.86 vs 69.44).
 - The label_category 8-shot gain is the schedule, not aptitude (ctl 0.51 at
   9766, 0.55 final ≈ Transformer++ 3B 0.56). (Corrects the C1 note above.)
+  (2026-10-30: single seed; v14 B1 run 3 found the lookup circuit forms
+  bimodally by seed, so this is a hypothesis, see "E2" caveat.)
 - Learning probe mean unchanged by anything (0.18–0.20).
 
 **What the two-stage schedule changes vs M1's one stage:** (1) the first
@@ -2552,6 +2554,23 @@ P passes → E2 as below, unchanged. P fails → echo_tied closes and the flag
 is removed (code at `55b99ab`). Side note from v14: a related in-context
 task in the training mix closes echo's label_category gap entirely, a data
 lever (cf. C1-ctl: the schedule, not the body, moved label_category).
+
+**Run 3 final (v14, `d4e0f0d`, 04:44 IST):** P INVALID (echo at ceiling in
+pairs 1 and 3); where the arms differ, tied is worse (d +0.00 / −0.07 /
+−0.54). A NOT met: d −0.12 / +0.01 / −0.16 (mean −0.09, SD 0.09), evidence
+AGAINST the induction/similarity-lookup reading of the tie. v14's
+mechanism note: the in-context lookup circuit forms per seed or not
+(bimodal: label_category + label_marker together at ~1.0 or at
+~0.4–0.5); echo formed it in 2 of 3 seeds, tied in 1 of 3; run 2's +0.39
+was a seed where only tied formed it. The gate stays run 4's P.
+
+**Caveat this puts on v13's label_category readings:** if circuit
+formation is bimodal by seed, single-run label_category gaps at 600M (M1
+0.29 vs C1-ctl 0.55 vs c1m2 0.38) may be seed luck, not schedule or body.
+The C1-ctl note "the schedule, not aptitude, lifts label_category" is
+single-seed and is downgraded to a hypothesis. Transformer++ 600M (0.73)
+is also one seed, but v14's micro-bench reference arm (tpp) will show
+whether attention forms the circuit reliably.
 
 **Design (option (a), agreed with v14).** Arm `e2t` = M1 body
 (PAM_LAYERS=3,7,11,15, MLP 2352, ECHO=1) + ECHO_TIED=1, on C1-ctl's exact
