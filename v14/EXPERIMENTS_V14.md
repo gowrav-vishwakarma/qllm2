@@ -4,19 +4,10 @@ Read part A before proposing anything. It is the condensed result of every
 experiment file from v4 to v13_sempty (read 2026-10-29), so v14 never reruns
 a closed question.
 
-## Index (one row per v14 idea)
+## Index
 
-| id | idea | status | verdict | code at | log |
-|---|---|---|---|---|---|
-| B0 | find the wall: where does today's best (delta + echo) fail? | run 1 INVALID (no arm learned lookup: no easy rung); run 2 (sizes from 1) queued on the 4090 after T1 | — | — | `logs/v14_b0_a0f672a_20261029_1232.log` |
-| B1 | rule induction in context (learning beyond recall, goal bar 3) | run 1 queued on the 4090 after B0 run 2 (shared generator `memory_probes/rules.py`, `ed326a1`) | — | — | — |
-| N1 | phase interference revived: v11 E3 on the lean body | coded + selftest PASS (`v14/units.py`), micro-bench queued with B0 | — | — | — |
-| N2 | phase-modulated activation (magnitude sets phase) | planned (flag exists: `activation='phase_mod'`, complex arm) | — | — | — |
-| N3 | formula-weight neuron | **folded into N2**: reduces to a gated bottleneck (GLU family), see N3 | — | — | — |
-| N4 | living neuron: per-unit fast weight, written by surprise | design only | — | — | — |
-| N5 | resonant binding: oscillator phases as binding tags | design only | — | — | — |
-| N6 | operator memory: the state is an inferred transformation, not stored items | coded + selftest PASS (`OperatorMemory`); B1 run queued first on the 4090 | — | — | — |
-| S1 | spatial neuron (learned positions, distance-gated) | notes only (`NOTES.md`) | — | — | — |
+The one-row-per-idea index (status, verdict, run hash, rerun recipe) is
+`EXPERIMENT_INDEX.md`. Update it whenever a row's state changes.
 
 ---
 
@@ -99,6 +90,13 @@ holdout 3.4906 (echo 3.4885), WikiText 69.4 (71.1), recall 0.615 (0.401),
 micro-bench keeps its own small all-notebook body (4 layers): it tests the
 memory mechanism, not the layout.
 
+**M2 is also KEEP** (2026-10-29, v13 session: shared reads, holdout 3.4697
+vs M1 3.4906, WikiText 68.84). But its recall fell (0.522 vs 0.615) and it is
+1.18x slower than M1. Decision: stage 3 keeps **M1** as the control. It is
+faster, and its memory reads are not shared, so a v14 memory unit is not
+mixed up with M2's shared reads. A unit that passes stage 3 is also compared
+with M2's 600M numbers before it gets a 6000 slot.
+
 **Stages for every N-arm:**
 1. selftest: parallel == recurrent (or decode) to round-off; layout guard clean.
 2. micro-bench (4090, minutes): `v13_sempty/tmp/recall_microbench.py`
@@ -152,7 +150,7 @@ micro-bench grew the lookup circuit on 1 association first (a1 0.46 → 1.00)
 and then scaled; run 1 started at 8 facts with words redrawn per document.
 Log + JSON: `logs/v14_b0_a0f672a_20261029_1232.{log,json}`.
 
-**Run 2 (queued, 4090, starts when T1's tmux `t1loc` ends, ~21:45 IST).**
+**Run 2 (queued, 4090, starts when B1's tmux `v14b1` ends, ~00:30 IST 2026-10-30).**
 One change: sizes start at 1 (facts 1/2/4/8/16/32/64, bind 1/2/4/8/16,
 rebind 2/4/8/16), train and eval (`316b0f9`). Still answer-only
 (`--aux_weight 0`; the option exists if run 2 also fails).
@@ -181,7 +179,7 @@ every answer supervised (answer-only loss). Train shots 1–8, random task
 per episode; eval 2 / 4 / 8 shots, one task per document, held-out seeds,
 16 docs per cell (18–73 answers per doc). Same small body and loop as B0.
 
-**Run 1 (queued FIRST on the 4090, after T1):** arms echo, op, opdiag,
+**Run 1 (running on the 4090 since 23:29 IST, `5b1eb9d`, log `logs/v14_b1_5b1eb9d_20261029_2329.log`):** arms echo, op, opdiag,
 n1phase, delta; 6000 steps × B16; `TAG=b1 FAMILIES=rules`. N6 bars are
 frozen in the N6 section.
 **Purpose:** control levels for small bodies, and the first N6 test. N1 and
@@ -384,11 +382,16 @@ or speed > 1.5× the matched transformer at 1M) apply.
 
 ## Order and machines
 
-1. **B0 + N1 micro-bench** in one run on the 4090 (`v14/run_b0.sh`, arms
-   delta, echo, n1sum, n1gate, n1phase; ~20 min per arm). It waits until the
-   GPU has ≥ 14 GB free (T1's local check, other session, holds it now).
-2. **N1 LM check** on the 4090 if the micro-bench passes (needs a v14 hook in
-   the v13_sempty trainer: not built yet).
-3. **N2** LM check (complex arm) on the 4090.
-4. Anything that passes stage 3 queues on the 6000 behind the v13_sempty
-   chain (M2, then T1 600M).
+Updated 2026-10-29 23:50 IST.
+
+1. **B1 run 1** (rules; N6 first test), 4090, running since 23:29 IST.
+   Arms echo, op, opdiag, n1phase, delta, ~11 min each. It was meant to start
+   at ~21:45; the v13 session's T1 tmux stayed open two hours after its run
+   ended (a trailing `exec bash`, now removed on their side).
+2. **B0 run 2** (memory, sizes from 1; N1 judged), 4090, starts when B1's
+   tmux ends. Arms echo, delta, n1sum, n1gate, n1phase, op.
+3. **LM check** (stage 3) for whichever of N1 / N6 passes, on the 4090.
+   It needs a v14 hook in the v13_sempty trainer, not built yet.
+4. **N2** LM check (complex arm) on the 4090.
+5. Anything that passes stage 3 queues on the 6000. The v13 session's chain
+   holds it until ~03:30 IST 2026-10-30 (C1 control, then C1 on M2).

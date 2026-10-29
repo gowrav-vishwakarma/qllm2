@@ -12,7 +12,8 @@ learns better at the same size and speed.
 
 | file | what |
 |---|---|
-| `EXPERIMENTS_V14.md` | lab notebook: the do-not-repeat digest of v4–v13, the never-tested leftovers, and the pre-registered v14 experiments (index table at the top) |
+| `EXPERIMENT_INDEX.md` | one row per idea: status, verdict, run hash, rerun recipe. Read before proposing anything |
+| `EXPERIMENTS_V14.md` | lab notebook: the do-not-repeat digest of v4–v13, the never-tested leftovers, and the pre-registered v14 experiments |
 | `SCRATCHPAD.md` | handover: what is running, where, what is next |
 | `NOTES.md` | the 2026-08-22 spatial-neuron design (track S1). Notes only, never built |
 | `config.py` | `V14Config` = v13_sempty `PAMConfig` + v14 switches (all off by default) |
@@ -44,8 +45,10 @@ learns better at the same size and speed.
 
 ## Status (2026-10-29)
 
-N1 coded and self-tested; B0 + N1 micro-bench queued on the 4090. N3 folded
-into N2 (see EXPERIMENTS_V14 "N3"). sempyt gained `rotate` (`e403dd8`).
+N1 and N6 coded and self-tested. B1 (rules, N6's first test) is running on
+the 4090; B0 run 2 (memory, N1) follows. N3 is folded into N2 (see
+EXPERIMENTS_V14 "N3"). Live state: `EXPERIMENT_INDEX.md` and `SCRATCHPAD.md`.
+The notebooks are kept current as things happen (user rule, AGENTS.md).
 
     .venv/bin/python -m v14.selftest        # CPU, ~1 min
     .venv/bin/python -m v14.check_layout     # must print OK
