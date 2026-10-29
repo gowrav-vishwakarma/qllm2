@@ -18,6 +18,18 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-29 22:05Z (03:35 IST): E2 tied echo prepared, gated on v14 bar P.**
+  RULE (local box): `/home/gowrav/Development/qllm2` is SHARED by the v13
+  and v14 sessions. While the other session's runs may launch
+  (require_clean_tree) or crash-resume (HEAD pin), edit code in a worktree
+  (`git worktree add ../qllm_<id> -b <id> master`) and do not move master.
+  v13's E2 code + notes live on branch `e2` (worktree `../qllm_e2`,
+  symlinks `.venv`, `.cache` → the main checkout; C1-ctl best_model.pt copied
+  there for the 400-trial probe). After v14 pings that run 3 ended:
+  ff-merge `e2` into master, push origin, launch `~/e2_chain.sh` in tmux
+  `e2` FROM THE WORKTREE (it waits until the GPU has no compute apps).
+  ETA ~4.5 h → ~09:30–10:00 IST. Rules: EXPERIMENTS "E2".
+
 * **2026-10-29 21:44Z (03:14 IST): C1 on M2 DONE — KEEP, new best LM at 600M.**
   `c1m2b_main_7ae6f1f`: holdout 3.4473 (M2 3.4697), WikiText 65.74, recall
   0.870 (M2 0.522), learning probe 0.187 (bar 3 open), label_cat 8-shot 0.38

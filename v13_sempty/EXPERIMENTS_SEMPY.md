@@ -2524,3 +2524,55 @@ stages, no aptitude).
 the M2 body" rule): c1m2 and c2m2 share the M2 body, so speed cannot break
 a tie. Within 0.005 holdout, the higher recall wins; if recall is also within
 0.02, the simpler recipe (c2m2, no aptitude) wins.
+
+## E2 — tied echo at 600M (pre-registration, 2026-10-30 03:35 IST)
+
+**Idea.** E1 echo reads `S_t q_t` with `q_t = W_q h_t` and keys `k_t =
+unit(W_k h_{t-1})`. E2 ties them, `W_q = W_k = W` (one Linear(dim, dim)):
+the read becomes a similarity lookup of the current state against the
+states that preceded earlier tokens, returning those tokens, i.e. an
+induction match ("when I was last in a state like this, the next word
+was ..."). In v14 B1 run 2 (micro-bench, 1 seed) it scored label_category
+8-shot 0.857 vs untied 0.471. Code: `--echo_tied` / `ECHO_TIED=1` (`55b99ab`;
+selftest `test_echo_tied`, grad-checkpoint parity exact on the M1 body).
+
+**Gate.** Runs only if v14 B1 run 3 bar P passes (label_category, tied −
+untied paired over 3 seed pairs: mean d ≥ +0.15 AND ≥ 2 SD). If P fails, E2
+closes without a 600M run (index row FAIL, flag removed).
+
+**Design (option (a), agreed with v14).** Arm `e2t` = M1 body
+(PAM_LAYERS=3,7,11,15, MLP 2352, ECHO=1) + ECHO_TIED=1, on C1-ctl's exact
+two-stage recipe: stage A `e2ta_pre` 120M dclm/fineweb/smoltalk2_mid
+0.4167/0.3333/0.25, 30M web-only warmup, VAL_EVERY 3255; stage B
+`e2tb_main` 480M M1 mix 0.44/0.41/0.10/0.05, VAL_EVERY 4883 + final,
+--init_from A best, step_009766.pt kept. Seed 42, LR 1.2e-3, B18 T2048.
+102.60M params vs ctl 102.95M (−0.34 %, not re-matched: the tied arm is the
+smaller one). Why the M1 body: label_category's two-stage lift shows on M1
+(0.55) and not on M2 (c1m2 0.38), so a tied-echo effect is readable on M1;
+M1 also fits the 4090 with grad checkpointing (M2 share_reads does not).
+If E2 passes, it is ported to the reference picked after c2m2.
+
+**Control.** C1-ctl final `c1ctlb_main_7ae6f1f`: holdout 3.4743, recall
+0.825, label_category 8-shot 0.55 (100 trials), learning mean 0.197.
+
+**Rules (fixed now):**
+- Primary: label_category 8-shot from the learning probe at `--trials 400`
+  (seeds 5000–5399), run on the 4090 for BOTH e2t final and C1-ctl final:
+  e2t − ctl ≥ +0.15 (SE of the difference ≈ 0.035).
+- Guards: holdout ≤ ctl + 0.01 (≤ 3.4843); recall 63-cell ≥ ctl − 0.05
+  (≥ 0.775).
+- **PASS** (adopt; port to the reference): primary AND both guards.
+  **LM-only KEEP**: primary fails, holdout ≤ ctl − 0.01 (≤ 3.4643) and the
+  recall guard holds; reported as an LM gain, not a learning gain.
+  **FAIL**: anything else → flag removed, index row with the code-at hash.
+- Reported, not rules: all 5 learning tasks + mean at 400 trials,
+  label_category 2/4-shot, WikiText, PG-19 4–8k far gain, 8192-token recall,
+  step-9766 recall, tok/s.
+
+**Caveat.** e2t trains on the 4090 (GRAD_CKPT=1, same maths), ctl trained on
+the 6000: different kernels act like a seed change, and 600M seed noise is
+not measured (holdout thresholds 0.01 as everywhere; T1 was judged the same
+way). The primary probe runs both models on the same box and prompts.
+
+Launch: `~/e2_chain.sh` from the worktree `../qllm_e2` (shared checkout
+stays free for v14), tmux `e2`, after v14's run 3 frees the 4090.
