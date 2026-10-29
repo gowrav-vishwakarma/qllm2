@@ -18,6 +18,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-29 11:15Z: T1 thought stream (two-speed mind) — local 4090
+  same-batch check** tmux `t1loc` (`SCREEN=t1loc ARMS='t1:ECHO=1,N_LAYERS=12,THOUGHT=1'
+  BASE='LR=1.2e-3 TARGET_TOKENS=599998464 VAL_EVERY=4069 SAVE_EVERY=500
+  KEEP_EVERY=4069 KEEP_LAST=1 GRAD_CKPT=1' bash v13_sempty/tmp_scratch_screen.sh`,
+  hash `ea002e6`, log `logs/v13_sempty_t1loc_t1_ea002e6_*.log`). Compare
+  train loss vs `logs/v13_sempty_e1g_echo_a0fab65_20261029_0817.log` at step
+  2250 with the cmp script (EXPERIMENTS "T1 thought stream" rules); then stop
+  it (`tmux kill-session -t t1loc`) or let it run if clearly ahead. Resume:
+  same command with `SCREEN_HASH=ea002e6`.
+
 * **2026-10-29 11:10Z: E1 echo PASS at 600M** (holdout 3.4885 vs 3.5408,
   WikiText 71.1 vs 75.9, recall 0.401 vs 0.343, PG-19 far gain 2.4×; table +
   generations in EXPERIMENTS "E1 at scale"). Echo = default recipe from now.

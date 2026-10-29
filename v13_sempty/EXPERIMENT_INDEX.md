@@ -71,3 +71,4 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 | E1 echo | top-of-stack succession memory (key h_{t-1}, value E[x_t]) into the head | **PASS** `e1g` (6000, `a0fab65`) 600M: holdout 3.4885 vs 3.5408 (−0.052), WikiText 71.1 vs 75.9, recall 0.401 vs 0.343, PG-19 far gain 2.4× | "E1 Echo memory" |
 | M1 sparse memory | notebooks in blocks 3,7,11,15 only + echo, MLP 2352 (param-matched, 1.8× faster) | queued after e1g (`m1chain`) | "M1 sparse memory" |
 | M2 shared reads | M1 + every notebook-less block reads the nearest notebook below (own query/gate) | queued after m1 (`m2chain`) | "M2 shared reads" |
+| T1 thought stream | 12 token blocks + 4-block PAM thinker over 16-token events, top-down into block 6 (param-matched +1 %, 1.23× faster) | early same-batch check running locally (`t1loc`, `ea002e6`) | "T1 thought stream" |

@@ -2145,3 +2145,42 @@ Claim to make in writeups: "not Mamba, not a Mamba variant; a phase/complex
 associative-memory member of the linear-recurrent family, competitive with a
 transformer at 100M/10ep on WikiText-103." Do **not** claim "unlike anything"
 — the O(1) recurrent form is a populated family.
+
+## T1 thought stream — "two-speed mind" (design + pre-registration, 2026-10-29)
+
+**Why.** Echo, M1 and M2 are still a token-by-token predictor. A mind does
+not think in tokens: it reads them, but it thinks in events, on a slower
+clock. T1 is the simplest testable form of that: a second, slow stream.
+
+**Mechanism (`ea002e6`, `--thought`).**
+1. The main stack reads tokens (blocks 0..5).
+2. Every 16 tokens the chunk is pooled into one event,
+   e_c = W_in [mean(h_chunk); h_last] (h = output of block 5).
+3. A separate stack of 4 PAM blocks (the thinker: its own delta memory, its
+   own Chrono clock) runs over the event sequence e_1..e_N (N = T/16).
+4. Its thought after event c, W_out rmsnorm(t_c) (W_out zero-init), is added
+   to the residual of every token of chunk c+1, before main block 6 — so it
+   reaches all upper blocks (top-down). Causal at chunk granularity; training
+   stays fully parallel (the thinker reads low, writes high).
+
+Param-matched arm: 12 main blocks + 4 thinker blocks + echo = 104.20M vs the
+echo arm 16 blocks 103.17M (+1 %); 4090 bench 143 vs 176 ms/step (1.23×
+faster: the 4 thinker blocks run on 16× fewer positions).
+
+**Prior art (honest).** The two-stream / fixed-chunk shape is close to the
+Temporal Latent Bottleneck (Didolkar 2022), Block-Recurrent Transformer
+(Hutchins 2022), MEGABYTE / Hourglass (global model over patches). What is
+new here: both streams are O(1) delta memories (no attention anywhere), the
+thinker writes top-down into the token stack, and it is meant as step one
+toward surprise-timed events (echo's prediction error sets the boundary)
+and event-level prediction targets. T1 tests only the base claim: **does a
+slow event stream beat the same params spent on token-level blocks?**
+
+**Pre-registered rules** (control = `e1g_echo_a0fab65`, same batches, same
+600M schedule, LR 1.2e-3):
+- Early (local 4090, `t1loc_t1_ea002e6`, GRAD_CKPT=1, same stream): mean
+  train-loss difference T1 − echo over steps 1750–2250 ≤ +0.02 → promote to
+  the full 600M screen on the 6000 (after M2). > +0.05 and not closing →
+  FAIL for futility.
+- Full 600M: PASS if holdout ≤ 3.4885 (echo) — equal quality at 1.23× speed
+  is already a win; recall ≥ 0.38; PG-19 4–8k far gain ≥ 0.035.
