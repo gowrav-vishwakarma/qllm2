@@ -81,6 +81,7 @@ from __future__ import annotations
 
 from typing import Dict
 
+import copy
 import torch
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint as grad_checkpoint
@@ -1139,6 +1140,21 @@ class LM(nn.Module):
             self.echo_gates = nn.Linear(cfg.dim, 3 * cfg.n_heads)   # dt | write | erase
             self.echo_out = nn.Linear(cfg.dim, cfg.dim, bias=False)
             self.echo_out._zero_init = True                         # identity at start
+        # T1 thought stream (see PAMConfig.thought).
+        self.thought = cfg.thought
+        if self.thought:
+            assert not cfg.is_complex and not cfg.share_reads, "T1: real arm, no M2"
+            assert 0 < cfg.thought_at < cfg.n_layers, "thought_at must split the main stack"
+            tcfg = copy.copy(cfg)
+            tcfg.pam_layers, tcfg.share_reads, tcfg.mlp_hidden = (), False, 0
+            tcfg.chunk_size = min(cfg.chunk_size, 64)
+            self.thought_blocks = nn.ModuleList([
+                RealBlock(tcfg, layer_idx=i, model_dim=self.model_dim)
+                for i in range(cfg.thought_layers)
+            ])
+            self.thought_in = nn.Linear(2 * cfg.dim, cfg.dim, bias=False)
+            self.thought_out = nn.Linear(cfg.dim, cfg.dim, bias=False)
+            self.thought_out._zero_init = True                      # identity at start
         self._init_weights()
         if self.echo:
             with torch.no_grad():
@@ -1187,6 +1203,10 @@ class LM(nn.Module):
             raise NotImplementedError(
                 "M2 share_reads: chunked full-sequence forward only (no grad "
                 "checkpointing, no decode yet); run with --gen_every 0")
+        if self.thought and states is not None:
+            raise NotImplementedError(
+                "T1 thought stream: chunked full-sequence forward only (no "
+                "decode yet); run with --gen_every 0")
         new_states = []
         shared = None
         for i, block in enumerate(self.blocks):
@@ -1203,7 +1223,34 @@ class LM(nn.Module):
             new_states.append(new_state)
             if self.cond_mem_layers and i in self.cond_mem_layers:
                 z = self.cond_mem[str(i)](z, input_ids)
+            if self.thought and i == self.config.thought_at - 1:
+                z = z + self._thought(z, batch, time)
         return z, new_states
+
+    def _thought(self, z: NamedTensor, batch: Dim, time: Dim) -> NamedTensor:
+        """T1 thought stream (raw-torch boundary): pool each full chunk of C
+        tokens into an event (mean + last -> thought_in), run the thought
+        blocks over the event sequence, and give the thought after event c
+        to every token of chunk c+1 (chunk 0 gets 0). Token t only sees
+        events of chunks that ended before its own chunk began: causal."""
+        cfg = self.config
+        C = cfg.thought_chunk
+        h = z.raw(batch, time, self.model_dim)                          # [B,T,D]
+        B, T, D = h.shape
+        n_ev = T // C
+        if n_ev == 0:
+            return named(torch.zeros_like(h), (batch, time, self.model_dim))  # named-exit: thought boundary
+        chunks = h[:, :n_ev * C].reshape(B, n_ev, C, D)
+        ev = self.thought_in(torch.cat([chunks.mean(2), chunks[:, :, -1]], dim=-1))
+        ev_time = Dim("time", n_ev)
+        t = named(ev, (batch, ev_time, self.model_dim))
+        for blk in self.thought_blocks:
+            t, _ = blk(t)
+        tr = t.raw(batch, ev_time, self.model_dim)
+        out = self.thought_out(nn.functional.rms_norm(tr.float(), (D,), eps=1e-6).to(h.dtype))
+        out = nn.functional.pad(out, (0, 0, 1, 0))                      # chunk c gets thought c-1
+        out = out.repeat_interleave(C, dim=1)[:, :T]
+        return named(out, (batch, time, self.model_dim))                # named-exit: thought boundary
 
     def _echo_read(self, hidden: NamedTensor, input_ids, batch: Dim, time: Dim,
                    state=None):
@@ -1433,10 +1480,15 @@ class LM(nn.Module):
                         cm_table_p += p.numel()
                     else:
                         cm_dense_p += p.numel()
+        # E1 echo + T1 thought stream (and anything else outside the buckets).
+        other_p = (sum(p.numel() for p in self.parameters())
+                   - embed_p - block_p - head_p - norm_p - cm_dense_p - cm_table_p)
         # 'total' = dense params (comparison budget); table is reported apart.
-        total = embed_p + block_p + head_p + norm_p + cm_dense_p
+        total = embed_p + block_p + head_p + norm_p + cm_dense_p + other_p
         out = {'embedding (tied)': embed_p, 'blocks': block_p,
                'norms': norm_p, 'lm_head': head_p, 'total': total}
+        if other_p:
+            out['echo/thought'] = other_p
         if self.cond_mem_layers:
             out['cond_mem_dense'] = cm_dense_p
             out['cond_mem_table'] = cm_table_p
