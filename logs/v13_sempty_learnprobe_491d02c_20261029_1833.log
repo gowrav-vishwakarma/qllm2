@@ -1,0 +1,27 @@
+=== r600_ctl_91daf0a 2026-10-29T13:03:50Z
+per task: {'letter_shift': 0.053, 'number_step': 0.023, 'reverse3': 0.023, 'label_category': 0.573, 'two_hop': 0.31}  mean 0.197
+saved logs/learning_probes/v13_sempty_r600_ctl_91daf0a_rules.json
+=== e1g_echo_a0fab65 2026-10-29T13:05:42Z
+per task: {'letter_shift': 0.023, 'number_step': 0.007, 'reverse3': 0.01, 'label_category': 0.553, 'two_hop': 0.307}  mean 0.18
+saved logs/learning_probes/v13_sempty_e1g_echo_a0fab65_rules.json
+=== m1_m1echo_ccbf028 2026-10-29T13:10:22Z
+per task: {'letter_shift': 0.047, 'number_step': 0.023, 'reverse3': 0.007, 'label_category': 0.537, 'two_hop': 0.263}  mean 0.175
+saved logs/learning_probes/v13_sempty_m1_m1echo_ccbf028_rules.json
+=== mix3b_delta_answ100_1c913ef 2026-10-29T13:13:02Z
+per task: {'letter_shift': 0.033, 'number_step': 0.053, 'reverse3': 0.093, 'label_category': 0.59, 'two_hop': 0.297}  mean 0.213
+saved logs/learning_probes/v13_sempty_mix3b_delta_answ100_1c913ef_rules.json
+=== mix3b_transformer_answ100_e072a8f 2026-10-29T13:14:31Z
+per task: {'letter_shift': 0.13, 'number_step': 0.053, 'reverse3': 0.07, 'label_category': 0.627, 'two_hop': 0.26}  mean 0.228
+saved logs/learning_probes/v13_sempty_mix3b_transformer_answ100_e072a8f_rules.json
+=== mix3b_mamba2_answ100_b36e3a5 2026-10-29T13:15:09Z
+Traceback (most recent call last):
+  File "/home/gowrav/Development/qllm2/scripts/run_learning_probe.py", line 101, in <module>
+    raise SystemExit(main())
+  File "/home/gowrav/Development/qllm2/scripts/run_learning_probe.py", line 49, in main
+    model, tokenizer, _ = _load_v13_sempty(args.checkpoint, args.preset, device)
+  File "/home/gowrav/Development/qllm2/scripts/run_memory_behavioral.py", line 111, in _load_v13_sempty
+    model = Mamba2LM(cfg)
+  File "/home/gowrav/Development/qllm2/v13_sempty/baseline_mamba2.py", line 69, in __init__
+    from mamba_ssm.models.config_mamba import MambaConfig
+ModuleNotFoundError: No module named 'mamba_ssm'
+=== learnprobe DONE 2026-10-29T13:15:11Z

@@ -72,3 +72,4 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 | M1 sparse memory | notebooks in blocks 3,7,11,15 only + echo, MLP 2352 (param-matched, 1.8× faster) | **KEEP — new reference** `m1_m1echo` (`ccbf028`) 600M: holdout 3.4906 (echo 3.4885), WikiText 69.4 (71.1), recall **0.615** (0.401), 1.8× faster | "M1 sparse memory" |
 | M2 shared reads | M1 + every notebook-less block reads the nearest notebook below (own query/gate) | queued after m1 (`m2chain`) | "M2 shared reads" |
 | T1 thought stream | 12 token blocks + 4-block PAM thinker over 16-token events, top-down into block 6 (param-matched +1 %, 1.23× faster) | early same-batch check running locally (`t1loc`, `ea002e6`) | "T1 thought stream" |
+| Learning probe (bar 3) | in-context rule tasks, answer must be inferred (`ed326a1`) | baselines: all ≤ chance on letter/number/reverse incl. Transformer++ 3B (mean 0.228); follow priors ("last+1") | "Learning probe" |

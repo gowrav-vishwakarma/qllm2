@@ -2247,3 +2247,36 @@ keeps going locally to the 150M holdout val.)
 Mixed at 150M: best holdout (−0.031 vs echo, in-distribution DCLM-Edu) but
 WikiText +2.6 % (out of distribution). Not a rule trigger (T1 is judged on
 holdout, recall, PG-19); watch whether the WikiText gap closes.
+
+## Learning probe (goal bar 3: learning beyond recall) — baselines (2026-10-29)
+
+**Why.** The user's goal: "a different kind of intelligence.. not just recall
+of things but true learning from the data"; a transformer "is learning data,
+not intelligence". LM loss and the recall probe cannot show this. New probe
+(`memory_probes/rules.py`, CLI `scripts/run_learning_probe.py`, `ed326a1`):
+few-shot examples of a hidden rule, then a NEW input — letter_shift and
+number_step answers never appear in the context; reverse3 (positional rule),
+label_category (invented label per category, query never labelled), two_hop
+(owner → pet → name). 8 single-token candidates incl. tempting wrong answers
+(chance 0.125); 100 seeds × shots 2/4/8; CPU.
+
+| model | letter_shift | number_step | reverse3 | label_category | two_hop | mean |
+|---|---|---|---|---|---|---|
+| PAM ctl 600M (`r600_ctl_91daf0a`) | 0.053 | 0.023 | 0.023 | 0.573 | 0.310 | 0.197 |
+| PAM + echo 600M (`e1g_echo_a0fab65`) | 0.023 | 0.007 | 0.010 | 0.553 | 0.307 | 0.180 |
+| M1 600M (`m1_m1echo_ccbf028`) | 0.047 | 0.023 | 0.007 | 0.537 | 0.263 | 0.175 |
+| PAM 3B (`1c913ef`) | 0.033 | 0.053 | 0.093 | 0.590 | 0.297 | 0.213 |
+| Transformer++ 3B (`e072a8f`) | 0.130 | 0.053 | 0.070 | 0.627 | 0.260 | 0.228 |
+| Mamba-2 3B (`b36e3a5`) | pending (needs mamba_ssm; runs on the 6000) | | | | | |
+
+**Reading.** No model — the transformer included — applies an in-context
+rule. On letter/number/reverse they sit at or BELOW chance because they
+follow training priors (error analysis, 4 shots, 60 seeds): number_step →
+"last + 1" in 54/60 (M1) and 43/60 (Transformer++), i.e. they count by one
+and ignore the step shown; letter_shift → mostly copy the query; reverse3 →
+repeat the wrong word. two_hop equals in-context chance at every shot count
+(0.51 / 0.27 / 0.15 vs 0.50 / 0.25 / 0.125): no composition. Only
+label_category is above in-context chance, modestly. Echo / M1 gain recall
+(previous sections) but not rule learning. **Bar 3 is open territory:** a
+model that truly applies a rule (e.g. number_step > 0.5) separates from
+every baseline. This is now the third scoreboard column.
