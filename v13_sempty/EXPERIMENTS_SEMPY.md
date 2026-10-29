@@ -2589,3 +2589,31 @@ way). The primary probe runs both models on the same box and prompts.
 
 Launch: `~/e2_chain.sh` from the worktree `../qllm_e2` (shared checkout
 stays free for v14), tmux `e2`, after v14's run 3 frees the 4090.
+
+### S2 fairness, half 1: Transformer++ one stage at 600M (`tfs1_tf_b788731`, 6000, done 22:59Z = 04:29 IST)
+
+The first Transformer++ at the r600 protocol (same data, trainer, evals as
+M1/M2), so the first equal-data 600M baseline for the one-stage PAM models.
+
+| model (600M, one stage) | holdout | WikiText | recall 63-cell (a1/a4/a8) | recall at 2048 / 4096 / 8192 tok | PG-19 4–8k far gain | learning probe (label_cat 2/4/8-shot) | tok/s (6000) |
+|---|---|---|---|---|---|---|---|
+| Transformer++ 101.9M | 3.4885 | **66.38** | **0.645** (0.694/0.627/0.613) | 0.58 / 0.17 / 0.15 | **−1.095** | **0.217** (0.69/0.84/0.73) | **136.6K** |
+| M2 (PAM) | **3.4697** | 68.84 | 0.522 (0.774/0.596/0.196) | 0.45 / 0.40 / 0.41 | +0.0414 | 0.185 (0.59/0.61/0.31) | 92.6K |
+| M1 (PAM) | 3.4906 | 69.44 | 0.615 (0.895/0.624/0.326) | 0.66 / 0.56 / 0.46 | +0.0446 | 0.175 (0.65/0.67/0.29) | 110.2K |
+
+- **LM:** M2 beats Transformer++ on holdout by −0.019 (past the −0.01
+  scoreboard line); M1 ties it (+0.002). Transformer++ is better on
+  WikiText (66.4 vs 68.8).
+- **Recall:** Transformer++ is better inside its 2048-token training
+  window (mean over contexts ≤ 2048: 0.839 vs M1 0.657 / M2 0.569; 8-fact
+  0.61 vs 0.33 / 0.20). It collapses past it (4096: 0.17, 8192: 0.15; PG-19
+  4–8k loss +1.1 nats worse than short context), while PAM keeps 0.40–0.56
+  and a positive far gain. The 63-cell mean (0.645) mixes the two regimes.
+- **Learning probe:** Transformer++ is clearly ahead on label_category
+  (8-shot 0.73 vs PAM 0.29–0.31 one-stage, 0.55 for two-stage M1): attention
+  does the in-context label lookup that no PAM model has learned yet. The
+  other four tasks are near chance for every model. Bar 3 (learning beyond
+  recall) is not met by anyone; on the one task that moves, the baseline
+  leads.
+- Fairness rule pending: needs tfs2 (two stages, ~05:50 IST) for the
+  schedule-gain comparison, and tfc1 for c1m2.

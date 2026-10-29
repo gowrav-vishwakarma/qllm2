@@ -18,6 +18,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-29 22:59Z (04:29 IST): tfs1 (Transformer++ one stage 600M) DONE**:
+  holdout 3.4885 (M2 beats it by −0.019; M1 ties), WikiText 66.38 (better than
+  PAM), recall 0.645 (strong ≤ 2048, collapses past: 8192 0.15), learning
+  probe 0.217 with label_cat 8-shot 0.73 (PAM ≤ 0.55). Logs on branch `e2`
+  (master frozen). tfs2 started 22:59Z.
+
 * **2026-10-29 22:05Z (03:35 IST): E2 tied echo prepared, gated on v14 bar P.**
   RULE (local box): `/home/gowrav/Development/qllm2` is SHARED by the v13
   and v14 sessions. While the other session's runs may launch

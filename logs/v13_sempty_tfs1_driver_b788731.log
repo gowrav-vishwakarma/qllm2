@@ -1,0 +1,25 @@
+=== tfs1 start 2026-10-29T21:44:56Z SCREEN_HASH=b788731 arms='tf:ARCH=transformer,CHRONO=0,OUT_GATE=0,DELTA=0' base='LR=1.2e-3 TARGET_TOKENS=599998464 VAL_EVERY=4069 SAVE_EVERY=1000 KEEP_EVERY=0 KEEP_LAST=1' ===
+=== arm tf (ARCH=transformer CHRONO=0 OUT_GATE=0 DELTA=0) ckpt=checkpoints_v13_sempty/tfs1_tf_b788731 log=logs/v13_sempty_tfs1_tf_b788731_20261029_2144.log 2026-10-29T21:44:56Z ===
+=== tfs1_tf start 2026-10-29T21:44:56Z commit=b788731 log=logs/v13_sempty_tfs1_tf_b788731_20261029_2144.log ckpt=checkpoints_v13_sempty/tfs1_tf_b788731 ===
+=== tfs1_tf end 1793314701 exit=0 attempts=1 ===
+=== arm tf train exit=0 2026-10-29T22:58:21Z ===
+Results saved to logs/memory_probes/v13_sempty_tfs1_tf_b788731_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+  10/50 docs (1s)
+  20/50 docs (2s)
+  30/50 docs (3s)
+  40/50 docs (4s)
+  50/50 docs (5s)
+  [    0,   64)  loss 4.2234  ppl   68.26
+  [   64,  128)  loss 3.9301  ppl   50.91
+  [  128,  256)  loss 3.7444  ppl   42.28
+  [  256,  512)  loss 3.7110  ppl   40.89
+  [  512, 1024)  loss 3.7997  ppl   44.69   short-ctx 3.7995  far_gain -0.0001
+  [ 1024, 2048)  loss 3.8281  ppl   45.98   short-ctx 3.8468  far_gain +0.0186
+  [ 2048, 4096)  loss 4.2171  ppl   67.83   short-ctx 3.8611  far_gain -0.3560
+  [ 4096, 8192)  loss 4.9939  ppl  147.51   short-ctx 3.8989  far_gain -1.0950
+wrote logs/pos_loss/v13_sempty_tfs1_tf_b788731_pg19.json
+--- final holdout val_loss (last val of each arm) ---
+  tf: 3.4885
+=== tfs1 DONE 2026-10-29T22:59:38Z ===

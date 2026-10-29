@@ -66,6 +66,7 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 |---|---|---|---|---|
 | Mamba-2 | 102.6M `mamba_ssm` 2.2.5, LR 1.2e-3, 3B tok | DONE: holdout 23.68, WikiText 46.91 | "Mamba-2 result" | `baseline_mamba2.py`, run `b36e3a5` |
 | Transformer++ | 101.9M RMSNorm/RoPE/SwiGLU, LR 1.2e-3, 3B tok | DONE: holdout 24.69, WikiText 46.61, recall mean 0.539 (fails past 2048) | "Transformer++ 3B result" | `baseline_transformer.py`, run `e072a8f` |
+| Transformer++ 600M | same model, r600 protocol, one stage (`tfs1_tf_b788731`) | DONE: holdout 3.4885 (M2 3.4697, M1 3.4906), WikiText 66.38, recall 0.645 (≤2048 0.839; 8192 0.15), PG-19 far −1.095, learning 0.217 (label_cat 8-shot 0.73) | "S2 fairness, half 1" | `ARCH=transformer CHRONO=0 OUT_GATE=0 DELTA=0`, run `b788731` |
 
 ## Running / pending
 
@@ -76,7 +77,7 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 | C1 reason-first curriculum | grammar 30M → real aptitude Q&A + chat 90M → normal mix 480M (M1 body, 600M total) | **FAIL primary** (`5b1eb9d`): learning probe 0.199 vs 0.175; **recall 0.907 vs M1 0.615** (unexpected, measured @ step 9766); control `c1ctl` + C1-on-M2 running (`7ae6f1f`) | "C1 result", "C1-ctl" |
 | C1-ctl two-stage schedule (S2) | 120M web+chat (no recall docs, no aptitude) → 480M M1 mix, LR re-warm | **beats M1 on both**: holdout 3.4743 vs 3.4906, recall 0.825 vs 0.615 (`7ae6f1f`); aptitude adds +0.10 recall, costs +0.026 holdout | "C1-ctl" |
 | C1 on M2 (`c1m2`) | C1's aptitude two-stage recipe on the M2 body | **KEEP — best LM at 600M** (`7ae6f1f`): holdout **3.4473** (M2 3.4697, C1-ctl 3.4743), WikiText 65.74, recall **0.870** (M2 0.522); learning probe 0.187, label_cat 8-shot 0.38 (no lift on M2); reference unless c2m2 beats it | "C1 on M2 result" |
-| S2 fairness | Transformer++ one-stage vs two-stage at 600M | running (`tfs1` started 21:45Z, `b788731`, `~/s2_chain.sh`) | "S2 fairness" |
+| S2 fairness | Transformer++ one-stage vs two-stage at 600M | tfs1 DONE (3.4885 / 0.645); tfs2 running (`b788731`, `~/s2_chain.sh`, ~05:50 IST) | "S2 fairness" |
 | tfc1 | Transformer++ on c1m2's aptitude recipe (fairness for c1m2) | queued after the S2 chain (`~/s3_chain.sh`) | "tfc1" |
 | S2 on M2 | C1-ctl recipe on the M2 body (`c2m2`) | queued after S2 fairness | "S2 on the M2 body" |
 | E2 tied echo | echo with W_q = W_k (`--echo_tied`, `55b99ab`): an induction lookup, current state vs earlier predecessor states → their next token | v14 B1 run 2 (1 seed): label_category 8-shot 0.857 vs echo 0.471. **600M pre-registered** on the M1 body + C1-ctl recipe vs C1-ctl (3.4743 / 0.825 / 0.55), gated on v14 B1 run 3 bar P; 4090 from ~05:00 IST | "E2" |
