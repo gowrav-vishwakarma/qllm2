@@ -4,7 +4,7 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-30 00:35 IST)
+## State (2026-10-30 01:05 IST)
 
 * **4090 (this session owns it until `v14b0` ends):**
   1. **B1 run 1 DONE** (00:17 IST, `5b1eb9d`). N6's frozen bar NOT MET:
@@ -13,8 +13,9 @@ Keep all three current as things happen (user rule, 2026-10-29).
      0.76 / 0.77 / 0.52** (chance 0.50 / 0.50 / 0.25), so the diagonal
      memory helps, not the rotation. two_hop: every arm at chance. Full
      table and verdict: EXPERIMENTS_V14 "B1", "N6".
-  2. **B0 run 2, attempt 3 queued** (tmux `v14b0`, behind `v14b1r2`; ETA
-     ~03:45 IST). Arms echo, delta, n1sum, n1gate, n1phase, op, opdiag.
+  2. **B0 run 2, attempt 4 queued** (tmux `v14b0`, behind `v14b1r2`; ETA
+     ~04:00 IST). Attempt 3 was stopped a minute in so B1 run 2 could go
+     first. Arms echo, delta, n1sum, n1gate, n1phase, op, opdiag.
      Validity: echo >= 0.90 on facts1/facts2 @1024. Attempt 1 (00:18):
      python3.9 segfault in a torch.compile recompile after 20 s (RAM peak
      3.5G, not the cap). Attempt 2 (00:20-00:39): CUDA OOM in the eval once
@@ -22,10 +23,22 @@ Keep all three current as things happen (user rule, 2026-10-29).
      `no_grad`), which fit on the 96 GB 6000 but not on the 4090. Fixed.
   Both run under a 12G RAM cap (systemd-run scope) and close their tmux on
   exit.
-  3. tmux `v14b1r2`: **B1 run 2 RUNNING** since 00:39 IST at `84f426b`
+  3. tmux `v14b1r2`: **B1 run 2 RUNNING** since 00:57 IST at `85ecf02`
      (pre-registered in EXPERIMENTS_V14 "B1"): arms echo, op, opdiag,
      opdiag_ownq, echo_tied; new seed; unseen rule parameters. Log
-     `logs/v14_b1r2_84f426b_20261030_0039.log`. ETA ~01:40 IST.
+     `logs/v14_b1r2_85ecf02_20261030_0057.log`. ETA ~02:00 IST. The first
+     start (00:39, `84f426b`) died at 00:55 in op's training: python3.9
+     "invalid opcode". Its files were deleted. 85ecf02 includes the v13
+     session's T1 removal (v14 selftest ALL PASS on it).
+* **The 4090 box crashes python itself (2026-10-30):** a segfault (00:18,
+  write into the interpreter's code) and an invalid opcode (00:55, in the
+  interpreter's code), both in steady work, neither a Python error. The CPU
+  is an **i9-14900KS** (microcode 0x133), the model most hit by Intel's
+  13th/14th-gen instability, whose symptoms are exactly these. There is no
+  ECC, so nothing else logs it. A hypothesis, not proven; it is the user's
+  hardware call. Meanwhile `run_bench.sh` reruns a run that died by a
+  signal with `--resume` (RETRIES=2), so a crash costs one arm, not the
+  queue.
 * **Launcher:** `v14/run_bench.sh` (replaces `run_b0.sh`; the running B0 run
   2 still executes its already-open copy). It also stops waiting when the
   other run's log prints its DONE line (`WAIT_DONE=file:pattern`): the v13

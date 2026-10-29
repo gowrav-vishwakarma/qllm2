@@ -8,7 +8,9 @@
 #   SAVE=1 (keep each arm's weights in checkpoints_v14/<TAG>_<hash>_<time>/),
 #   GPU, NEED_MB (free GPU memory to wait for), MEM_MAX (RAM cap, 0 = off),
 #   WAIT_TMUX (tmux sessions that must end first),
-#   WAIT_DONE ("file:pattern": the wait also ends when that log has the line).
+#   WAIT_DONE ("file:pattern": the wait also ends when that log has the line),
+#   RETRIES (default 2): if python dies by a signal (segfault, illegal
+#   instruction), rerun it with --resume; arms already in the JSON are kept.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/require_clean_tree.sh
@@ -67,8 +69,28 @@ CAP=()
 if [ "$MEM_MAX" != "0" ] && command -v systemd-run >/dev/null; then
   CAP=(systemd-run --user --scope -q -p MemoryMax="$MEM_MAX" --)
 fi
-# shellcheck disable=SC2086  # EXTRA is a list of args
-CUDA_VISIBLE_DEVICES="$GPU" "${CAP[@]}" .venv/bin/python -u -m v14.microbench \
-  --arms "$ARMS" --steps "$STEPS" --batch "$BATCH" --aux_weight "$AUX" --families "$FAMILIES" \
-  --json "$JSON" "${SAVE_ARGS[@]}" $EXTRA 2>&1 | tee "$LOG"
+# Python itself crashed twice on this box on 2026-10-30 (a segfault, an
+# illegal instruction, both inside the interpreter binary), so a death by
+# signal reruns with --resume. A Python error (exit < 128) does not: that is
+# a bug, not a crash.
+RETRIES="${RETRIES:-2}"
+attempt=1
+RESUME=()
+while :; do
+  set +e
+  # shellcheck disable=SC2086  # EXTRA is a list of args
+  CUDA_VISIBLE_DEVICES="$GPU" "${CAP[@]}" .venv/bin/python -u -m v14.microbench \
+    --arms "$ARMS" --steps "$STEPS" --batch "$BATCH" --aux_weight "$AUX" --families "$FAMILIES" \
+    --json "$JSON" "${SAVE_ARGS[@]}" "${RESUME[@]}" $EXTRA 2>&1 | tee -a "$LOG"
+  rc=${PIPESTATUS[0]}
+  set -e
+  [ "$rc" -eq 0 ] && break
+  if [ "$rc" -lt 128 ] || [ "$attempt" -gt "$RETRIES" ]; then
+    echo "v14 ${TAG} FAILED rc=${rc} after ${attempt} attempt(s) $(date)" | tee -a "$LOG"
+    exit "$rc"
+  fi
+  echo "v14 ${TAG}: python died by signal $((rc - 128)) (attempt ${attempt}); resuming from ${JSON} $(date)" | tee -a "$LOG"
+  attempt=$((attempt + 1))
+  RESUME=(--resume)
+done
 echo "v14 ${TAG} DONE $(date)"

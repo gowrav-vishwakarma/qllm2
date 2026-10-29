@@ -478,6 +478,8 @@ def main():
     ap.add_argument('--doc_seed0', type=int, default=10_000_000,
                     help="first training-document seed (run 1: 10M; eval seeds are 2e9+)")
     ap.add_argument('--save_dir', default='', help="save each arm's trained weights here")
+    ap.add_argument('--resume', action='store_true',
+                    help="keep the arms already in --json and train only the rest (after a crash)")
     args = ap.parse_args()
 
     set_kernel_enabled(True)
@@ -499,7 +501,20 @@ def main():
         raise SystemExit(f"unknown families {unknown}")
     plan = train_plan(args.steps, args.batch, args.seed, families, args.doc_seed0)
     all_res = {'commit': commit, 'args': vars(args), 'arms': {}}
+    if args.resume and args.json and os.path.exists(args.json):
+        with open(args.json) as f:
+            prev = json.load(f)
+        same = lambda a: {k: v for k, v in a.items() if k != 'resume'}
+        if same(prev['args']) != same(vars(args)):
+            raise SystemExit(f"--resume: {args.json} was written with other args: {prev['args']}")
+        if prev['commit'] != commit:
+            raise SystemExit(f"--resume: {args.json} is from commit {prev['commit']}, HEAD is {commit}")
+        all_res['arms'] = prev['arms']
+        all_res['resumes'] = prev.get('resumes', 0) + 1
+        print(f"resume #{all_res['resumes']}: keeping {list(all_res['arms'])}", flush=True)
     for label, kind, hd, nl in parse_arms(args.arms):
+        if label in all_res['arms']:
+            continue
         print(f"\n--- arm {label} ---", flush=True)
         cfg = make_cfg(kind, len(tok), head_dim=hd, n_layers=nl)
         all_res['arms'][label] = train_arm(label, cfg, P, plan, args.device, args.lr,
@@ -510,6 +525,9 @@ def main():
         if args.json:
             with open(args.json, 'w') as f:
                 json.dump(all_res, f, indent=1)
+    if args.json:                                   # also when --resume found every arm done
+        with open(args.json, 'w') as f:
+            json.dump(all_res, f, indent=1)
     print("\n" + "=" * 64)
     for label, r in all_res['arms'].items():
         print(table(label, r['results'], ctxs) + "\n")
