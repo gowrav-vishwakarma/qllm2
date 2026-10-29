@@ -1969,6 +1969,18 @@ echo gets there in ≤ 2000 (train loss 0.0000 by step 1800) and holds to
 read straight into the head is a one-step induction head. Caveat: a pure
 recall task; the LM verdict is the `e1g` 600M screen.
 
+### E1 at scale — milestone log (`e1g_echo` @`a0fab65`, 6000, 600M schedule)
+
+| tokens | holdout (echo / ctl) | Δ nats | WikiText PPL (echo / ctl) |
+|---|---|---|---|
+| 150M (step 4069) | 3.9516 / 4.0195 | **−0.068** | **119.64 / 148.56** (−19 %) |
+
+Train loss on the same batches, echo − ctl per 250-step window to step
+2250: −0.02, −0.44, −0.36, −0.41, −0.07, −0.24, −0.04, −0.21, −0.19 (the
+train loss includes recall docs with answer weight 100; the holdout is pure
+DCLM-Edu and WikiText has no recall docs, so the holdout/WikiText gains are
+LM, not recall). Speed 64K tok/s (ctl 66K).
+
 ## Speed: where PAM's 2.9× gap to Mamba-2 is (2026-10-29, 4090, B4 T2048)
 
 - **Not width alignment.** Step time by geometry (all chrono+gate+delta):

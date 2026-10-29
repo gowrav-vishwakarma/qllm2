@@ -18,6 +18,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-29 09:10Z: E1 echo at 150M tok: holdout −0.068 nats, WikiText
+  119.6 vs 148.6 (−19 %)** — far past the −0.02 bar; milestone table in
+  EXPERIMENTS "E1 at scale". Micro-bench: a4/a8 1.00 in 2000 steps.
+
 * **NOW (2026-10-29 08:20Z) — screen `e1g` on the 6000** (tmux `e1g`,
   `~/e1g_chain.sh`, log `~/e1g_chain.log`, pinned `a0fab65`): arm `echo`
   (E1, ETA ~11:05Z) then `conv` (G1, ETA ~14:10Z), 600M tok each vs
