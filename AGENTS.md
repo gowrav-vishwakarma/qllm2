@@ -23,7 +23,7 @@
 
 ## Sync = commit -> push origin -> pull (user rule, 2026-10-27)
 - Code reaches the other box ONLY through git: commit, `git push origin
-  master` (never the `p` remote), `git pull` on the other side. No scp/rsync
+  master` (never `shared` or `public_repo`), `git pull` on the other side. No scp/rsync
   of code. Throwaway local debugging (`v*/tmp/`, smokes) needs no commit.
 - Launchers (`v13_sempty/tmp_pretrain_mix.sh`, `tmp_wikitext_fair.sh`,
   `tmp_r4_screen.sh`) source `scripts/require_clean_tree.sh`: they REFUSE to
@@ -59,8 +59,11 @@ logs/<version>_<tag>_<gitshorthash>_<YYYYMMDD_HHMM>.log
   4090 (24 GB). Local box is for dev, parity tests, and small smokes.
 - SSH: `ssh ubuntu@34.131.203.207` (host `rtx6000pro`).
 - Remote repo path: `/home/ubuntu/Development/qllm-private`.
-- Git flow: this repo's `origin` is the private remote
-  (`git@github-personal:gowrav-vishwakarma/qllm-private.git`). **Push here,
+- Git flow: this repo's `origin` is the private remote, since 2026-10-29
+  `gowrav-vishwakarma/qllm-private-personal` (local:
+  `git@github-personal:...qllm-private-personal.git`; 6000:
+  `https://github.com/gowrav-vishwakarma/qllm-private-personal.git`). The old
+  `qllm-private` repo is now the `shared` remote — do not push there. **Push here,
   then `git pull` on the remote box BEFORE launching** so the code matches.
   Typical: (local) commit → push origin → (remote) `cd
   ~/Development/qllm-private && git pull` → launch in tmux.
