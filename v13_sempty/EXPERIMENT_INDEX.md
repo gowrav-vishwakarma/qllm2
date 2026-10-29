@@ -77,3 +77,4 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 | C1-ctl two-stage schedule (S2) | 120M web+chat (no recall docs, no aptitude) → 480M M1 mix, LR re-warm | **beats M1 on both**: holdout 3.4743 vs 3.4906, recall 0.825 vs 0.615 (`7ae6f1f`); aptitude adds +0.10 recall, costs +0.026 holdout | "C1-ctl" |
 | S2 fairness | Transformer++ one-stage vs two-stage at 600M | queued (`~/s2_chain.sh`) | "S2 fairness" |
 | S2 on M2 | C1-ctl recipe on the M2 body (`c2m2`) | queued after S2 fairness | "S2 on the M2 body" |
+| E2 tied echo (candidate) | echo with W_q = W_k (one shared projection in `echo_qk`): an induction lookup, current state vs earlier predecessor states → their next token | v14 B1 run 2 (micro-bench, 1 seed): label_category 8-shot 0.74 vs echo 0.27 (seed noise ~0.2); waiting on v14 B1 run 3 (paired seeds + surface-feature format) before a 600M arm vs the two-stage M1 (3.4743 / 0.825 / 0.55) | v14 EXPERIMENTS_V14 "B1" |
