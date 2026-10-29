@@ -18,7 +18,24 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **NOW (2026-10-28 19:00Z) — Transformer++ 3B DONE (`e072a8f`): holdout
+* **NOW (2026-10-29 08:00Z) — scoreboard DONE: PAM loses LM to both
+  baselines (holdout +0.11 nats vs Mamba-2, +0.07 vs Transformer++), best
+  multi-fact recall. LR 1.2e-3 was the wrong pick for PAM at 3B (2e-4 is
+  better); 100M screens can't judge PAM — use >= 600M. EXPERIMENTS
+  "Scoreboard result".**
+  - **G screen running** on the 6000, tmux `gscreen` (`~/g_chain.sh`, log
+    `~/g_chain.log`), code `3cc2b72`, arms `onorm` (G2 read RMSNorm), `conv`
+    (G1 short conv), `both`, 600M tok each at LR 1.2e-3, ~2.6-3h per arm,
+    ETA all done ~17:00Z 10-29. Control = finished `r600_ctl_91daf0a`
+    (holdout 3.5408, WikiText 75.89, recall 0.343). Pass rule + design:
+    EXPERIMENTS "G screen". Driver log
+    `logs/v13_sempty_gscreen_driver_3cc2b72.log`. Resume after a crash:
+    `tmux new-session -d -s gscreen "SCREEN_HASH=3cc2b72 bash ~/g_chain.sh"`
+    (SCREEN_HASH skips the pull; finished arms are skipped).
+  - Local 4090: PG-19 of the r600 control (tmux `pgctl`) ->
+    `logs/pos_loss/v13_sempty_r600_ctl_91daf0a_pg19.json`.
+
+* (history) **NOW (2026-10-28 19:00Z) — Transformer++ 3B DONE (`e072a8f`): holdout
   24.69, WikiText 46.61, recall mean 0.539 (fails past 2048); EXPERIMENTS
   "Transformer++ 3B result". PAM 3B @1.2e-3 running on the 6000 (tmux
   `tfchain`, run hash `9982a79`, TAG `mix3b_delta_answ100_lr1.2e-3`, driver
