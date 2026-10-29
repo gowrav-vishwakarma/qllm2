@@ -2243,10 +2243,13 @@ keeps going locally to the 150M holdout val.)
 | tokens | holdout (T1 / echo / M1) | WikiText PPL (T1 / echo / M1) |
 |---|---|---|
 | 150M (step 4069) | **3.9204** / 3.9516 / 3.9225 | 122.70 / 119.64 / **109.70** |
+| 300M (step 8138) | **3.6810** / 3.6955 / 3.6829 | 85.85 / 87.99 / **84.60** |
 
 Mixed at 150M: best holdout (−0.031 vs echo, in-distribution DCLM-Edu) but
 WikiText +2.6 % (out of distribution). Not a rule trigger (T1 is judged on
 holdout, recall, PG-19); watch whether the WikiText gap closes.
+At 300M the WikiText gap closed (T1 now −2.4 % vs echo, was +2.6 %); the
+holdout lead shrank −0.031 → −0.015 (same shrinking pattern as M1 and echo).
 
 ## Learning probe (goal bar 3: learning beyond recall) — baselines (2026-10-29)
 
