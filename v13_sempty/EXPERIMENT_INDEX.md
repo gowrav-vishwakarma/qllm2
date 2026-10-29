@@ -68,6 +68,6 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 |---|---|---|---|
 | G2 read norm | per-head RMSNorm of the PAM read | FAIL (futility): +0.14 nats vs ctl on the same batches at step 2250, not closing | "G2 read norm — stopped" |
 | G1 short conv | conv on qkv, single-pass pretraining regime | deferred (e1g conv arm skipped for M1) | "G screen" |
-| E1 echo | top-of-stack succession memory (key h_{t-1}, value E[x_t]) into the head | running, `e1g` (6000, `a0fab65`): −0.068 / −0.060 nats at 150M / 300M | "E1 Echo memory" |
+| E1 echo | top-of-stack succession memory (key h_{t-1}, value E[x_t]) into the head | **PASS** `e1g` (6000, `a0fab65`) 600M: holdout 3.4885 vs 3.5408 (−0.052), WikiText 71.1 vs 75.9, recall 0.401 vs 0.343, PG-19 far gain 2.4× | "E1 Echo memory" |
 | M1 sparse memory | notebooks in blocks 3,7,11,15 only + echo, MLP 2352 (param-matched, 1.8× faster) | queued after e1g (`m1chain`) | "M1 sparse memory" |
 | M2 shared reads | M1 + every notebook-less block reads the nearest notebook below (own query/gate) | queued after m1 (`m2chain`) | "M2 shared reads" |

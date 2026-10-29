@@ -1975,6 +1975,32 @@ recall task; the LM verdict is the `e1g` 600M screen.
 |---|---|---|---|
 | 150M (step 4069) | 3.9516 / 4.0195 | **−0.068** | **119.64 / 148.56** (−19 %) |
 | 300M (step 8138) | 3.6955 / 3.7555 | **−0.060** | **87.99 / 100.38** (−12 %) |
+| 450M (step 12207) | 3.5373 / 3.5920 | **−0.055** | **75.66 / 83.01** (−9 %) |
+| 600M (step 16276) | **3.4885 / 3.5408** | **−0.052** | **71.09 / 75.89** (−6 %) |
+
+**Verdict (2026-10-29): E1 PASS at 600M — echo is now part of the PAM
+default recipe.** All three axes improve at equal data (+1.05M params, 1 %):
+
+- Holdout −0.052 nats, WikiText −6 % PPL.
+- Recall (40-seed behavioral probe, mean accuracy): **0.401 vs 0.343**.
+- PG-19 (50 books × 8192 tok) loss by position, echo / ctl:
+  0–64 4.267 / 4.190 (worse: cold start, empty echo memory),
+  64–128 3.925 / 3.952, 128–256 3.738 / 3.753, 256–512 3.715 / 3.738,
+  512–1k 3.799 / 3.841, 1–2k 3.821 / 3.890, 2–4k 3.818 / 3.885,
+  4–8k **3.849 / 3.920**. Far-context gain (full − 512-window loss) at 4–8k:
+  **0.044 vs 0.018** (2.4×) — echo gets better the longer the book.
+- Generations (seed 0, T 0.8, top-k 50, no rep. penalty, 80 tok, 600M ckpts):
+  prompt "Photosynthesis is the process by which" — ctl loops ("Plants have
+  large spines. / Plants have small spines. / …"), echo stays on topic
+  ("…plants convert carbon dioxide and water into oxygen…"). Prompt "The
+  history of the city began in" — echo repeats the name "San Diego" ×5
+  (the copy habit shows in names, no hard loop).
+- Gain shrinks with tokens (−0.068 → −0.052), the usual pattern; it must be
+  re-checked at 3B before the scoreboard claim.
+
+Logs: `logs/v13_sempty_e1g_echo_a0fab65_20261029_0817.log` (md5 0ee692e8…),
+`logs/memory_probes/v13_sempty_e1g_echo_a0fab65_t40_behavioral.json`,
+`logs/pos_loss/v13_sempty_e1g_echo_a0fab65_pg19.json` (md5 166384bf…).
 
 Train loss on the same batches, echo − ctl per 250-step window to step
 2250: −0.02, −0.44, −0.36, −0.41, −0.07, −0.24, −0.04, −0.21, −0.19 (the
