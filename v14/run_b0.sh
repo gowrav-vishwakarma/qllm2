@@ -40,6 +40,13 @@ STAMP=$(date +%Y%m%d_%H%M)
 LOG="logs/v14_${TAG}_${HASH}_${STAMP}.log"
 JSON="logs/v14_${TAG}_${HASH}_${STAMP}.json"
 echo "v14 ${TAG} start $(date) commit=${HASH} families=${FAMILIES} arms=${ARMS} steps=${STEPS} batch=${BATCH} aux=${AUX} log=${LOG}"
-CUDA_VISIBLE_DEVICES="$GPU" .venv/bin/python -u -m v14.microbench \
+# RAM cap (user: do not flood RAM on the shared box): the scope is killed
+# at MEM_MAX instead of hanging the machine. MEM_MAX=0 disables it.
+MEM_MAX="${MEM_MAX:-12G}"
+CAP=()
+if [ "$MEM_MAX" != "0" ] && command -v systemd-run >/dev/null; then
+  CAP=(systemd-run --user --scope -q -p MemoryMax="$MEM_MAX" --)
+fi
+CUDA_VISIBLE_DEVICES="$GPU" "${CAP[@]}" .venv/bin/python -u -m v14.microbench \
   --arms "$ARMS" --steps "$STEPS" --batch "$BATCH" --aux_weight "$AUX" --families "$FAMILIES" --json "$JSON" 2>&1 | tee "$LOG"
 echo "v14 ${TAG} DONE $(date)"
