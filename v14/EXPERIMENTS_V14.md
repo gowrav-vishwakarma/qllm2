@@ -271,6 +271,22 @@ review by the v13 session folded in).** Code: `v14/rules_ood.py`, arms
   label_category at 2 / 4 / 8 shots with `--trials 400` (SE ≈ 0.025).
   Also recall 63-cell.
 
+**Run 3 candidates (from the v13 review, 2026-10-30; NOT pre-registered).**
+They put category membership in the context without turning the task into
+two_hop. Choose after run 2.
+- **(a) Surface-feature categories.** Each item is a novel multi-token
+  string, and its category is a shared marker inside it, e.g. `zq-kel ->
+  alpha, zq-mor -> alpha, vb-tun -> beta; zq-pli ->`. Every item is unseen,
+  and membership is visible in the context. Solving it takes one
+  partial-match lookup: exactly the "similarity lookup" reading of bar C.
+  The marker's position varies across episodes, so copying the first token
+  does not work.
+- **(b) Held-out labels and pairings.** Test labels come from a vocabulary
+  never used as labels in training, and the category pairs in a test
+  episode never co-occurred in training. This shows whether the binding is
+  a general copy mechanism or is tied to particular label embeddings and
+  combinations. Only the split changes.
+
 **Reference numbers at scale** come from the v13 session's probe on the
 600M / 3B checkpoints (PAM, M1, Transformer++, Mamba-2), so "beats the
 transformer at learning" has a number.
