@@ -293,6 +293,12 @@ def build_model(kind, cfg):
                                            n_layer=L, n_head=cfg.n_heads, d_ff=d_ff))
 
 
+def _hidden(lm):
+    """Raw [B, T, D] hidden of either body: V14LM gives a NamedTensor,
+    TransformerLM a Tensor (test ``raw``: a Tensor also has ``.layout``)."""
+    return lm.raw(*lm.layout) if hasattr(lm, 'raw') else lm
+
+
 def _embed_weight(model):
     """Output embedding of either body (V14LM wraps it, TransformerLM does not)."""
     return getattr(model.embed, 'embed', model.embed).weight
@@ -352,7 +358,7 @@ def _score(model, embed, docs, device, eval_batch=8):
         x, _, _ = batch_tensors(chunk, device)
         with torch.amp.autocast('cuda', dtype=torch.bfloat16):
             lm, _ = model._hidden_to_lm(x)
-        h = (lm.raw(*lm.layout) if hasattr(lm, 'raw') else lm).float()          # NamedTensor or Tensor
+        h = _hidden(lm).float()
         for b, d in enumerate(chunk):
             for idx, target, cands in d.answers:
                 scores = h[b, idx - 1] @ embed[cands].float().T
@@ -395,7 +401,7 @@ def evaluate(model, P, device, ctxs, trials, eval_batch=8, families=tuple(SIZES)
                     x, _, _ = batch_tensors([d for _, d in chunk], device)
                     with torch.amp.autocast('cuda', dtype=torch.bfloat16):
                         lm, _ = model._hidden_to_lm(x)
-                    h = lm.raw(*lm.layout).float()                       # [B, T, D]
+                    h = _hidden(lm).float()                              # [B, T, D]
                     for b, (pos, d) in enumerate(chunk):
                         for idx, target, cands in d.answers:
                             scores = h[b, idx - 1] @ embed[cands].float().T
