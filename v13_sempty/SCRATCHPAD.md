@@ -24,6 +24,9 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   DONE", pulls, runs screen `m1` arm `m1echo` (4 notebooks + echo, MLP
   2352, `497bbca`+). EXPERIMENTS "M1 sparse memory". Resume:
   `tmux new-session -d -s m1chain "SCREEN_HASH=<hash in ~/m1_chain.log> bash ~/m1_chain.sh"`.
+  Then tmux `m2chain` (`~/m2_chain.sh`, log `~/m2_chain.log`) waits for "m1
+  DONE", pulls, runs screen `m2` arm `m2echo` (M2 shared reads, MLP 2128,
+  `b9b446c`+). Same resume pattern.
 
 * **2026-10-29 09:10Z: E1 echo at 150M tok: holdout −0.068 nats, WikiText
   119.6 vs 148.6 (−19 %)** — far past the −0.02 bar; milestone table in

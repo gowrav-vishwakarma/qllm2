@@ -2014,6 +2014,37 @@ same schedule): KEEP if holdout ≤ echo + 0.01 nats AND WikiText ≤ echo +
 3 % AND recall 63-cell mean ≥ echo − 0.05 — i.e. same quality at 1.8× the
 speed. Better than echo on holdout → it is the new reference outright.
 
+## M2 shared reads — one write, read at every level (design + pre-registration, 2026-10-29)
+
+**Idea (user: "memory is not the brain; a brain that thinks hard and can
+access memory at each level").** On top of M1, every notebook-less block
+above the first notebook READS the nearest notebook below it:
+
+    y_t = silu(W_g x_t + b) * (S^w_t . rot_w(W_q x_t)) / sqrt(d),   out = W_o y   (W_o = 0 at init)
+
+`S^w` is writer w's delta notebook, `rot_w` its Chrono rotation (the query
+meets the keys in the writer's time frame). The cost of a notebook is the
+WRITE (WY solve); the read is cheap and exact via the pseudo-values: the
+delta recurrence over (k, W, g) is additive, so one `fused_real_pam_read`
+gives S_t q_t for any q (`pam_shared_read`; self-test: equals the writer's
+own read to 0.0). Readers' gradients flow into the writer, so a notebook
+learns to store what every level above it needs. Writes stay low in the
+stack: a top-written memory read by lower blocks would make training
+sequential in time.
+
+| model | params | step (4090, B4) |
+|---|---|---|
+| full PAM + echo | 103.17M | 174.4 ms |
+| M1 (4 notebooks + echo, MLP 2352) | 102.95M | 99.6 ms |
+| **M2 (4 notebooks, 9 readers, echo, MLP 2128)** | **102.88M** | **117.7 ms (1.5×)** |
+
+**Run.** Screen `m2`, arm `m2echo`, r600 protocol, queued after `m1`
+(tmux `m2chain`, `~/m2_chain.sh`).
+
+**Decision rule (fixed now):** M2 KEEP over M1 if holdout ≤ M1 − 0.01 nats
+OR recall 63-cell mean ≥ M1 + 0.05 (with holdout ≤ M1 + 0.01); either one,
+vs full PAM + echo, the same "quality at ≥ 1.5× speed" bar as M1.
+
 ## Speed: where PAM's 2.9× gap to Mamba-2 is (2026-10-29, 4090, B4 T2048)
 
 - **Not width alignment.** Step time by geometry (all chrono+gate+delta):
