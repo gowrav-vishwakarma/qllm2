@@ -18,6 +18,13 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-29 13:20Z: learning probe (bar 3) baselines DONE** (EXPERIMENTS
+  "Learning probe"): no model applies an in-context rule, Transformer++ 3B
+  included. 6000 queue: M2 (`m2chain`, started 13:00Z, ETA ~14:50Z) → tmux
+  `lpmamba` runs the Mamba-2 3B probe (needs mamba_ssm, only on the 6000)
+  after "m2 DONE"; copy `logs/learning_probes/v13_sempty_mix3b_mamba2_answ100_b36e3a5_rules.json`.
+  4090: T1 (`t1loc`) to ~16:15Z, then the v14 session's B0/B1 (gated on t1loc).
+
 * **2026-10-29 12:35Z: M1 KEEP — new reference body** (4 notebooks in blocks
   3,7,11,15 + echo, MLP 2352): holdout 3.4906 (echo 3.4885), WikiText 69.4
   (71.1), recall 0.615 (0.401), 1.8× faster. Best ckpt on the 6000
