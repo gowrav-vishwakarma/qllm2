@@ -56,18 +56,23 @@ a closed question.
 
 ## Part B — the v14 experiments (pre-registered)
 
-**Control body** for every arm: the current best v13_sempty preset
-(`baseline_real_pm` + chrono + out_gate + delta + echo; `e1g_echo_a0fab65`).
-If M1 or M2 wins on the 6000 (verdicts due 2026-10-29 evening IST), the
-control switches to the winner **before** any v14 run starts, and this line
-is updated.
+**Control body** for every LM arm: **M1** (KEEP at 600M, 2026-10-29,
+session "Qllm v13"): `baseline_real_pm` + chrono + out_gate + delta + echo,
+notebooks only in blocks 3, 7, 11, 15, MLP hidden 2352 (102.94M). 600M:
+holdout 3.4906 (echo 3.4885), WikiText 69.4 (71.1), recall 0.615 (0.401),
+1.8x faster (116K vs 64K tok/s on the 6000). Checkpoint (6000)
+`checkpoints_v13_sempty/m1_m1echo_ccbf028/best_model.pt`. N1 on M1 swaps the
+4 notebook blocks only (+28k params with `phase_read='phase'`). The B0
+micro-bench keeps its own small all-notebook body (4 layers): it tests the
+memory mechanism, not the layout.
 
 **Stages for every N-arm:**
 1. selftest: parallel == recurrent (or decode) to round-off; layout guard clean.
 2. micro-bench (4090, minutes): `v13_sempty/tmp/recall_microbench.py`
    extended with the B0 cases.
-3. LM same-batch check (4090): train loss vs control over steps 1750–2250,
-   then **150M holdout** vs control (echo at 150M: 3.9516). Holdout outranks train loss.
+3. LM same-batch check: **150M holdout** vs control (M1 at 150M: 3.9225;
+   echo 3.9516). Holdout outranks train loss, which the ×100 recall-answer
+   weight dominates for memory-changing arms.
 4. 600M screen (6000) only if stage 3 passes. Same pass format as the
    v13_sempty screens (holdout, recall 63-cell, PG-19 far gain, tok/s).
 

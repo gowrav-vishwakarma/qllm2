@@ -25,10 +25,11 @@ pre-registered plan) first.
     (M2 shared reads, done ~20:15 IST). Details: `v13_sempty/SCRATCHPAD.md`.
   - 4090: T1 thought-stream local check, log
     `logs/v13_sempty_t1loc_t1_ea002e6_20261029_1641.log`.
-* **Control body** = echo (E1 PASSED at 600M: holdout 3.4885 vs 3.5408,
-  recall 0.401 vs 0.343). M1 is ahead of echo at 150M (3.9225 vs 3.9516);
-  if M1 wins at 600M (~18:15 IST), switch the control to M1 before any v14
-  LM run.
+* **Control body = M1** (KEEP at 600M: holdout 3.4906 vs echo 3.4885,
+  recall 0.615 vs 0.401, 1.8x faster). Flags: echo, pam_layers 3,7,11,15,
+  mlp_hidden 2352 + chrono/out_gate/delta. N1 on M1 = +28k params.
+* **B0 started on the 6000 at 18:02 IST** (delta arm ~22 min; 5 arms + evals,
+  cap 165 min).
 * **Git:** origin = `qllm-private-personal` on both boxes. Commit → push
   origin → pull on the 6000.
 
