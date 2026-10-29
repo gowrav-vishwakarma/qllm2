@@ -2002,7 +2002,7 @@ def _reason_text_iter(
 # Format-aware source registry: single source of truth for schema + kind so the
 # pretrain blend and the SFT stage agree on how each dataset is shaped.
 #   schema: 'text' (raw web docs) | 'messages' (chat, rendered to ChatML text)
-#   kind:   'web' (grammar/knowledge, warmup pool) | 'reason' | 'chat' | 'synthetic'
+#   kind:   'web' (grammar/knowledge, warmup pool) | 'reason' | 'chat' | 'synthetic' | 'qa' (real Q&A)
 SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     'dclm':          {'schema': 'text',     'kind': 'web',       'hf': 'HuggingFaceTB/dclm-edu'},
     'fineweb':       {'schema': 'text',     'kind': 'web',       'hf': 'HuggingFaceFW/fineweb-edu'},
@@ -2015,6 +2015,9 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     'recall':        {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-recall'},
     'recall_long':   {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-recall', 'max_gap_sentences': 500},
     'reason':        {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-reason'},
+    # Real aptitude / reasoning Q&A with worked answers, TRAIN splits only
+    # (v7/aptitude.py; 2026-10-29 "reason first" curriculum, real data).
+    'aptitude':      {'schema': 'text',     'kind': 'qa',        'hf': 'real-aptitude-qa'},
 }
 
 
@@ -2049,6 +2052,10 @@ def _open_source_iter(
             doc_counters=doc_counters, counter_key=name,
             min_chars=int(spec.get('min_chars', 0)), fresh_file=fresh_file,
         )
+    if spec['kind'] == 'qa':
+        from v7.aptitude import aptitude_text_iter
+        return aptitude_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters,
+                                  counter_key=name, bump=_bump_counter)
     if spec['kind'] == 'synthetic':
         if name == 'reason':
             return _reason_text_iter(seed=mix_seed, skip_docs=skip,
