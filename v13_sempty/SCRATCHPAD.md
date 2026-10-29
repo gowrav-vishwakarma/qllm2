@@ -18,6 +18,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **NOW (2026-10-29 08:20Z) — screen `e1g` on the 6000** (tmux `e1g`,
+  `~/e1g_chain.sh`, log `~/e1g_chain.log`, pinned `a0fab65`): arm `echo`
+  (E1, ETA ~11:05Z) then `conv` (G1, ETA ~14:10Z), 600M tok each vs
+  `r600_ctl_91daf0a`. Driver `logs/v13_sempty_e1g_driver_a0fab65.log`.
+  Resume: `tmux new-session -d -s e1g "SCREEN_HASH=a0fab65 bash ~/e1g_chain.sh"`.
+  gscreen (and e1chain) were STOPPED: G2 onorm FAIL for futility (+0.14
+  nats at step 2250). Remove the G2 code after e1g finishes (not before:
+  it would break a pinned resume). Compare runs step-by-step against the
+  control's train loss (same batches) — it tells within ~1000 steps.
+
 * **NOW (2026-10-29 08:00Z) — scoreboard DONE: PAM loses LM to both
   baselines (holdout +0.11 nats vs Mamba-2, +0.07 vs Transformer++), best
   multi-fact recall. LR 1.2e-3 was the wrong pick for PAM at 3B (2e-4 is

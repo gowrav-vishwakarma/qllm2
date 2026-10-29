@@ -1895,6 +1895,21 @@ Control PG-19 (run on the 4090 from `r600_ctl_91daf0a/best_model.pt`,
 [2k,4k) / [4k,8k) 3.8897 / 3.8850 / 3.9201, far_gain +0.011 / +0.016 /
 +0.018.
 
+### G2 read norm — stopped for futility at step 2250 (2026-10-29)
+
+`gscreen_onorm` @`3cc2b72`: train loss minus the control's on the SAME
+batches (same seed and stream), mean per 250-step window: steps 1–250
+−0.059, 251–500 −0.001, 501–750 +0.052, 751–1000 +0.072, 1001–1250 +0.134,
+1251–1500 +0.163, 1501–1750 +0.168, 1751–2000 +0.129, 2001–2250 +0.137. A
+pass needs −0.02 at 600M; a +0.14 gap that is not closing makes that
+implausible, so the arm was stopped (as C1 was) to give the GPU to E1.
+Likely why: the norm fixes every head's read at unit RMS, so the N4 gate
+and `pam_scale` (0.1 init) — not the memory's own confidence — set how much
+memory reaches the residual; an empty/irrelevant notebook now speaks as
+loudly as a full one. Verdict **FAIL (futility)**; code removed after the
+E1/G1 screen (`e1g`, pinned `a0fab65`) finishes.
+G1 conv now runs as the 2nd arm of screen `e1g` (after echo).
+
 ## E1 Echo memory — an O(1) succession memory into the head (novel; design + pre-registration, 2026-10-29)
 
 **Where it came from.** Every failed lever so far (R1–R4, C1, L-2) tried to
