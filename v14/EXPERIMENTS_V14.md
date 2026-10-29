@@ -15,7 +15,7 @@ a closed question.
 | N3 | formula-weight neuron | **folded into N2**: reduces to a gated bottleneck (GLU family), see N3 | — | — | — |
 | N4 | living neuron: per-unit fast weight, written by surprise | design only | — | — | — |
 | N5 | resonant binding: oscillator phases as binding tags | design only | — | — | — |
-| N6 | operator memory: the state is an inferred transformation, not stored items | candidate (novelty check pending) | — | — | — |
+| N6 | operator memory: the state is an inferred transformation, not stored items | main candidate (literature check pending) | — | — | — |
 | S1 | spatial neuron (learned positions, distance-gated) | notes only (`NOTES.md`) | — | — | — |
 
 ---
@@ -58,29 +58,28 @@ a closed question.
 
 ## Part B — the v14 experiments (pre-registered)
 
-**Novelty rule (user, 2026-10-29): "not a variant of any existing known
-architecture, no transformer and no mamba etc".** PAM itself (outer-product
-delta memory) is in the fast-weight / linear-attention / DeltaNet family, so
-known families serve only as baselines, and reused parts count only inside a
-genuinely new computational scheme. Working test: the per-token computation
-must not be expressible as attention, a linear / selective recurrence (SSM),
-an outer-product fast-weight memory, or an MLP / MoE. A new arrangement of
-those parts does not count.
+**Novelty rule (user, 2026-10-29).** Not a transformer or Mamba variant.
+Clarified the same day: this does not rule out ideas that have been written
+about. "Anything that can be called innovation or novelty is what we need."
+Known parts are fine; the bar is that what we build is a genuine innovation
+(a new mechanism, or a new scheme), not a re-run of a known model. An
+earlier, stricter reading ("drop anything in a known family") was wrong and
+is withdrawn.
 
-**Audit of this plan against that rule (2026-10-29), honest:**
+**What is new in each item:**
 
-| id | family it belongs to | role now |
+| id | what is new | closest prior art |
 |---|---|---|
-| N1 | multi-state fast weights (v11 E3) | cheap probe only |
-| N2 | complex-valued activation tweak | cheap probe only |
-| N3 | GLU-gated bottleneck | folded |
-| N4 | fast weights / TTT / Titans | cheap probe only |
-| N5 | Kuramoto neurons (AKOrN), complex autoencoders | idea source only |
-| S1 | RSGN (learned-position neurons) | idea source only |
-| **N6** | none known (see N6), novelty check pending | **main candidate** |
+| N1 | rotation interference between delta notebooks (v11's own idea, never on the lean body) | multi-state fast weights, v11 E3 |
+| N2 | a unit whose output phase depends on its own strength | complex-valued activations |
+| N4 | memory inside every unit, written in proportion to echo's surprise | fast weights, TTT, Titans |
+| N5 | binding by synchrony inside an O(1) language model | AKOrN, complex autoencoders (vision) |
+| N6 | the state is an inferred operator applied to new inputs, not stored items | RotatE (static KG), HRR/TPR |
+| S1 | learned neuron positions, distance-gated, sparse by geometry | RSGN |
 
-No item gets a 6000 slot as "the architecture" until the v13 session has
-reviewed its novelty (agreed between the sessions).
+Priority = how new × how likely to move the three bars: N6 (targets bar 3
+directly), then N1 (cheap, proven once in v11), then N4 / N5. Before a 6000
+slot is spent on a "new architecture" claim, the other session reviews it.
 
 **The goal has three bars, all needed** (user, 2026-10-29; shared memory
 `goal-pam-beats-baselines`): (1) O(1) state per token; (2) beat
