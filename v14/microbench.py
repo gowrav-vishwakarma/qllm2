@@ -26,6 +26,7 @@ Arms (all real arm, chrono + out_gate + delta):
     delta        the v13 memory without echo
     echo         + E1 echo: the current control body
     n1sum / n1gate / n1phase   echo body with N1 (2 notebooks, sum/gate/phase)
+    op / opdiag  echo body + N6 operator memory (rotation-only / plain diagonal)
 Optional suffixes: @<head_dim> (default 64), :L<n_layers> (default 4).
 """
 
@@ -259,6 +260,8 @@ ARMS = {
     'n1sum': dict(echo=True, phase_states=2, phase_read='sum'),
     'n1gate': dict(echo=True, phase_states=2, phase_read='gate'),
     'n1phase': dict(echo=True, phase_states=2, phase_read='phase'),
+    'op': dict(echo=True, opmem='phase'),
+    'opdiag': dict(echo=True, opmem='diag'),
 }
 
 

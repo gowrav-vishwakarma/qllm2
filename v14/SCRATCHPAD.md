@@ -16,10 +16,14 @@ pre-registered plan) first.
   only after the v13 session's T1 tmux ends (~21:45 IST). Do not gate on
   free memory alone: when maya stopped, B0 started next to T1 (18:30, killed
   after ~1 min). Validity: echo >= 0.90 on facts1/facts2.
-* **B1 run 1** (rule induction, shared generator `memory_probes/rules.py`)
-  queued after B0 run 2: tmux `v14b1` runs `WAIT_TMUX="t1loc v14b0"
-  TAG=b1 FAMILIES=rules bash v14/run_b0.sh`. Purpose: control levels; no
-  unit judged. Logs `logs/v14_b1_<hash>_<time>.{log,json}`.
+* **4090 queue (both gated on the v13 session's tmux `t1loc` ending ~21:45 IST):**
+  1. tmux `v14b1`: B1 run 1 (rules), arms echo, op, opdiag, n1phase, delta.
+     First N6 test; bars frozen in EXPERIMENTS_V14 "N6".
+  2. tmux `v14b0`: B0 run 2 (memory, sizes from 1), arms echo, delta,
+     n1sum, n1gate, n1phase, op; waits for `v14b1` too.
+  Logs `logs/v14_{b1,b0}_<hash>_<time>.{log,json}`.
+* **N6 operator memory coded + selftest PASS** (mechanism test: the read
+  turns a new input by the rotation inferred from examples, cos 1.0000).
 * **Session coordination:** v14 (this) and v13_sempty (qllm2-04) ping each
   other on every GPU start/stop and on verdicts. The 4090 runs T1 until
   ~21:45 IST; the 6000 is qllm2-04's again after B0.

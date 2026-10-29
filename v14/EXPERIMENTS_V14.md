@@ -15,7 +15,7 @@ a closed question.
 | N3 | formula-weight neuron | **folded into N2**: reduces to a gated bottleneck (GLU family), see N3 | — | — | — |
 | N4 | living neuron: per-unit fast weight, written by surprise | design only | — | — | — |
 | N5 | resonant binding: oscillator phases as binding tags | design only | — | — | — |
-| N6 | operator memory: the state is an inferred transformation, not stored items | main candidate (literature check pending) | — | — | — |
+| N6 | operator memory: the state is an inferred transformation, not stored items | coded + selftest PASS (`OperatorMemory`); B1 run queued first on the 4090 | — | — | — |
 | S1 | spatial neuron (learned positions, distance-gated) | notes only (`NOTES.md`) | — | — | — |
 
 ---
@@ -181,10 +181,11 @@ every answer supervised (answer-only loss). Train shots 1–8, random task
 per episode; eval 2 / 4 / 8 shots, one task per document, held-out seeds,
 16 docs per cell (18–73 answers per doc). Same small body and loop as B0.
 
-**Run 1 (queued on the 4090 after B0 run 2):** arms delta, echo, n1sum,
-n1gate, n1phase; 6000 steps × B16; `TAG=b1 FAMILIES=rules`.
-**Purpose:** control levels for small bodies. **No unit is judged on run 1**
-(N1 is a memory mechanism, not a learner). **Validity check:** the bench is
+**Run 1 (queued FIRST on the 4090, after T1):** arms echo, op, opdiag,
+n1phase, delta; 6000 steps × B16; `TAG=b1 FAMILIES=rules`. N6 bars are
+frozen in the N6 section.
+**Purpose:** control levels for small bodies, and the first N6 test. N1 and
+delta are reported only (memory mechanisms, not learners). **Validity check:** the bench is
 usable if some arm reaches ≥ 0.50 on reverse3 or two_hop at 8 shots; else
 run 2 adds `--aux_weight 0.1`.
 
@@ -328,7 +329,44 @@ close in spirit), RotatE (static knowledge-graph rotations), AKOrN (phase
 dynamics). Not known anywhere: a circular-mean estimator of the relation,
 inferred in context, used as the read-out operator of a recurrent LM.
 
-**Per-task predictions (to be frozen before the first N6 run):**
+**Implementation (`v14/units.py` `OperatorMemory`, flag `opmem`, 2026-10-29).**
+Sits on top of the echo body and reads into the head next to echo. Channel
+pairs are complex numbers (sempyt split-complex, named end to end):
+
+    a_t = W_in h_{t-1},  b_t = W_role ê(x_t),  r_t = b_t · conj(a_t)
+    S_t = γ_t S_{t-1} + w_t r_t          (sempyt.scan, per-step γ)
+    q_t = W_in h_t,  p_t = q_t · S_t / (|S_t| + 1)
+
+`opmem='phase'` stores `r / |r|` (rotation only: S is a weighted circular
+mean). `opmem='diag'` stores `r` from per-head RMS-normalised a, b (rotation
+and magnitude: a plain diagonal memory, same parameters): the control for
+the "rotation only" bias. The read is RMS-normalised per head, then a
+zero-init projection adds it to the pre-logit vector. +4·D² + 2·D·H
+parameters (≈ 0.6M at D 384). Decode is O(1): carries (h_{T}, S_T).
+
+**Selftest (2026-10-29): ALL PASS.** At start == the echo body (0.0 diff);
+prefill == decode over 150 tokens (≤ 8e-6, both modes); every parameter
+gets a gradient; **mechanism test:** with W_in = W_role = I and examples
+whose outputs are their inputs turned by a hidden θ per channel (uneven
+magnitudes), the read of a NEW input equals that input turned by θ:
+cos 1.0000 (phase), 0.9879 (diag). sempyt fixes made along the way:
+`scan` with a per-step decay was wrong past ~260 steps (fixed, `2790c69`).
+
+**Per-task predictions and bars for B1 (FROZEN 2026-10-29, before any N6
+run).** Arms trained on identical data: echo (control), op (N6), opdiag
+(N6 without the rotation-only bias).
+- **PASS (the N6 claim):** mean over letter_shift and number_step at 4 and
+  8 shots: op ≥ echo + 0.15 AND op ≥ opdiag + 0.10.
+- label_category: many-to-one, not a rotation: predicted |op − echo| ≤ 0.05.
+- reverse3: positional, not a rotation of content: predicted |op − echo| ≤ 0.05.
+- two_hop: composition, reported only.
+- Also reported: ms/step vs echo; B0 memory cells (op must stay within
+  0.05 of echo on facts 1–8).
+- Context: at scale (v13 session's probe, 600M / 3B, PAM, M1, echo,
+  Transformer++) no model applies an in-context rule: letter_shift ≤ 0.13,
+  number_step ≤ 0.053 (mostly "last + 1"), two_hop at in-context chance.
+
+**Original per-task reasoning (cross-review):**
 - letter_shift, number_step: ordinal shifts, which are rotations if the
   model puts ordinals on a circle (Chrono-like). N6 should beat the
   echo / M1 small bodies clearly here.
