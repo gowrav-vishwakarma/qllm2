@@ -8,7 +8,7 @@ a closed question.
 
 | id | idea | status | verdict | code at | log |
 |---|---|---|---|---|---|
-| B0 | find the wall: where does today's best (delta + echo) fail? | tool ready (`v14/microbench.py`), queued on the 4090 | — | — | — |
+| B0 | find the wall: where does today's best (delta + echo) fail? | run 1 INVALID (no arm learned lookup: no easy rung); run 2 (sizes from 1) queued on the 4090 after T1 | — | — | `logs/v14_b0_a0f672a_20261029_1232.log` |
 | B1 | rule induction in context (learning beyond recall, goal bar 3) | planned: uses the shared rule generator from the v13 session's learning probe | — | — | — |
 | N1 | phase interference revived: v11 E3 on the lean body | coded + selftest PASS (`v14/units.py`), micro-bench queued with B0 | — | — | — |
 | N2 | phase-modulated activation (magnitude sets phase) | planned (flag exists: `activation='phase_mod'`, complex arm) | — | — | — |
@@ -134,7 +134,31 @@ same-relation values; for `rebind` the key's old values). Sizes: facts
 192 answers per cell, SE ≈ 0.036). 6000 steps × B16, LR 3e-4, same data
 for every arm. Launcher: `v14/run_b0.sh` (waits for free GPU memory).
 
-**Output.** The smallest setting where the control drops below 0.5. That
+**Output.** The smallest setting where the control drops below 0.5.
+
+**Run 1 (6000, 2026-10-29 18:02–18:29 IST, code `a0f672a`, sizes from 8
+up, answer-only, 6000 steps): INVALID as a bench.** Stopped after 2 of 5
+arms to give the slot back to M2: neither arm learned lookup, so the N1 arms
+could not have been judged.
+
+| arm | facts 8–64 | bind 4–16 | rebind 4–16 | final train loss |
+|---|---|---|---|---|
+| delta | 0.09–0.12 | 0.11–0.14 | 0.11–0.15 | 6.36 (= ln 600: "some value word") |
+| echo | 0.10–0.17 | 0.11–0.13 | 0.20–0.32 | 4.26 |
+
+(range over sizes and ctx 1024/4096/8192; chance 0.125.) Echo's rebind
+edge is a recency bias, not lookup. **Diagnosis:** no easy rung. The v13
+micro-bench grew the lookup circuit on 1 association first (a1 0.46 → 1.00)
+and then scaled; run 1 started at 8 facts with words redrawn per document.
+Log + JSON: `logs/v14_b0_a0f672a_20261029_1232.{log,json}`.
+
+**Run 2 (queued, 4090, starts when T1's tmux `t1loc` ends, ~21:45 IST).**
+One change: sizes start at 1 (facts 1/2/4/8/16/32/64, bind 1/2/4/8/16,
+rebind 2/4/8/16), train and eval (`316b0f9`). Still answer-only
+(`--aux_weight 0`; the option exists if run 2 also fails).
+**Validity check, written before the run:** the bench is valid only if echo
+scores ≥ 0.90 on facts1 and facts2 at ctx 1024. If not, run 3 adds
+`--aux_weight 0.1` and nothing is judged from run 2. That
 setting becomes the memory bar for N1, N4, N5. If nothing fails up to a64
 and bound attributes, memory is not the limiter and v14 focuses on LM
 quality (N2, N3).

@@ -13,6 +13,15 @@ BATCH="${BATCH:-16}"
 AUX="${AUX:-0}"
 NEED_MB="${NEED_MB:-14000}"
 GPU="${GPU:-0}"
+# WAIT_TMUX: space-separated tmux sessions that must be gone before start
+# (another session's training run). Free memory alone is not a safe gate:
+# a user service stopping freed 8.8 GB and B0 started next to T1 (2026-10-29).
+WAIT_TMUX="${WAIT_TMUX:-}"
+
+for s in $WAIT_TMUX; do
+  echo "v14 B0: waiting for tmux session '$s' to end ($(date))"
+  while tmux has-session -t "$s" 2>/dev/null; do sleep 60; done
+done
 
 echo "v14 B0: waiting for >= ${NEED_MB} MB free on GPU ${GPU} ($(date))"
 while :; do

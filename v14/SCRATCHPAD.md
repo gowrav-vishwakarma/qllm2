@@ -9,14 +9,13 @@ pre-registered plan) first.
   **B0 tool ready** (`v14/microbench.py`). N3 folded into N2 (analysis in
   EXPERIMENTS_V14). sempyt `rotate` op added + pushed (`e403dd8`); pull
   sempyt on the 6000 before running v14 there.
-* **Queued on the 6000 (slot between M1 and M2, agreed with session
-  qllm2-04):** tmux `v14b0` runs `~/v14_b0_chain.sh` (log
-  `~/v14_b0_chain.log`): waits for "=== m1 DONE" (~18:15 IST), pulls
-  qllm-private + sempyt, runs `v14/run_b0.sh` (arms delta, echo, n1sum,
-  n1gate, n1phase; 6000 steps each; cap 165 min), then ALWAYS
-  `touch ~/v14_slot.done`, which starts m2chain. Results:
-  `logs/v14_b0_<hash>_<time>.{log,json}` on the 6000.
-  Rerun: `tmux new-session -d -s v14b0 "bash ~/v14_b0_chain.sh 2>&1 | tee -a ~/v14_b0_chain.log"`.
+* **B0 run 1 (6000) INVALID, slot returned to M2 at 18:29 IST:** no arm
+  learned lookup (delta loss = ln 600; echo ~chance on facts/bind). Fix:
+  sizes from 1 (easy rung). **B0 run 2** queued on the 4090: tmux `v14b0`
+  runs `WAIT_TMUX=t1loc NEED_MB=12000 bash v14/run_b0.sh`, i.e. it starts
+  only after the v13 session's T1 tmux ends (~21:45 IST). Do not gate on
+  free memory alone: when maya stopped, B0 started next to T1 (18:30, killed
+  after ~1 min). Validity: echo >= 0.90 on facts1/facts2.
 * **Session coordination:** v14 (this) and v13_sempty (qllm2-04) ping each
   other on every GPU start/stop and on verdicts. The 4090 runs T1 until
   ~21:45 IST; the 6000 is qllm2-04's again after B0.
@@ -28,8 +27,6 @@ pre-registered plan) first.
 * **Control body = M1** (KEEP at 600M: holdout 3.4906 vs echo 3.4885,
   recall 0.615 vs 0.401, 1.8x faster). Flags: echo, pam_layers 3,7,11,15,
   mlp_hidden 2352 + chrono/out_gate/delta. N1 on M1 = +28k params.
-* **B0 started on the 6000 at 18:02 IST** (delta arm ~22 min; 5 arms + evals,
-  cap 165 min).
 * **Git:** origin = `qllm-private-personal` on both boxes. Commit → push
   origin → pull on the 6000.
 
