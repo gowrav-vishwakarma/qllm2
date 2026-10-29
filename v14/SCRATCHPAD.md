@@ -4,7 +4,7 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-30 01:05 IST)
+## State (2026-10-30 03:25 IST)
 
 * **4090 (this session owns it until `v14b0` ends):**
   1. **B1 run 1 DONE** (00:17 IST, `5b1eb9d`) and **B1 run 2 DONE** (01:44,
@@ -25,8 +25,18 @@ Keep all three current as things happen (user rule, 2026-10-29).
   2 still executes its already-open copy). It also stops waiting when the
   other run's log prints its DONE line (`WAIT_DONE=file:pattern`): the v13
   T1 tmux stayed open two hours after its run ended on 2026-10-29.
-* **6000:** the v13 session's chain until ~03:30 IST 2026-10-30 (tmux
-  `c1ctl`, C1 control without aptitude, ETA ~01:25; then C1 on M2).
+* **6000:** the v13 session's chain. tfs1 (Transformer++ one stage, started
+  03:15 IST at `b788731`) -> tfs2 -> c2m2 (ETA ~08:00 IST) -> tfc1
+  (Transformer++ on c1m2's aptitude recipe, tmux `s3chain`, ETA ~09:30 IST).
+  Their E2 tied-echo 600M arm waits on B1 run 3 bar P; its recipe is the
+  reference picked after c2m2 (c1m2 leads). The 4090 frees at ~05:00 IST
+  after run 3, offered to them for E2 if P passes.
+* **v13 C1 on M2 (`fed73cf`): KEEP, best 600M LM so far.** Holdout 3.4473
+  (M2 3.4697, C1-ctl 3.4743), WikiText 65.74, recall 0.870, learning probe
+  0.187 (flat). **label_category 8-shot does NOT lift on M2:** c1m2 0.38,
+  M2 one-stage 0.31, C1-ctl (M1, two stages) 0.55. So the two-stage lift
+  depends on the body (shared reads hide it). Compare label_category with
+  M1-body numbers, or within one body (an M2 arm against c1m2's 0.38).
 * **v13 results this evening (600M, r600 protocol):** M2 shared reads KEEP
   (holdout 3.4697 vs M1 3.4906; recall 0.522 vs 0.615; 1.18x slower). T1
   thought stream FAIL (3.4977 vs echo 3.4885). C1 aptitude curriculum
