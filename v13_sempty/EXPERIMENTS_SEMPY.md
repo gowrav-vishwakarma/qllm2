@@ -2318,3 +2318,54 @@ untouched.
   tokens), recall ≥ M1 − 0.05 (≥ 0.565).
 - Reported, not a rule: stage-A probes (does pre-training alone change the
   learning probe?), WikiText, PG-19.
+
+### C1 result (2026-10-29, 6000, `5b1eb9d`) — primary FAIL; but recall jumps 0.615 → 0.907 (unexpected, needs a control)
+
+| model | holdout | WikiText | recall 63-cell (a1/a4/a8) | learning probe | PG-19 4–8k far gain |
+|---|---|---|---|---|---|
+| M1 600M (control) | 3.4906 | 69.44 | 0.615 (0.895/0.624/0.326) | 0.175 | 0.0446 |
+| C1a stage A (120M) | 4.1194 | 125.88 | 0.417 (0.815/0.337/0.100) | 0.195 | 0.0421 |
+| C1b @ step 9766 (486M total) | 3.5397 | 76.00 | **0.907 (0.919/0.948/0.855)** | 0.199 | 0.0428 |
+
+**Caveat.** C1b validated last at step 9766 of 13021 (VAL_EVERY 4883 does
+not divide the run; fixed in `609fb1f`, the final step is now always
+validated). So best_model.pt and every probe are the 486M-token model; the
+last 114M tokens were never measured or kept. M1 at 450M was 3.5348.
+
+**Verdict vs the pre-registered rules: FAIL.** Primary: learning probe
+0.199 < 0.225 (+0.024 over M1, about 2 SE; number_step 0.023 → 0.080, still
+below chance 0.125). Guards: holdout 3.5397 > 3.52 FAIL (measured early);
+recall 0.907 ≥ 0.565 PASS.
+
+**Unexpected: in-context recall 0.907 vs M1 0.615.** 8-fact recall 0.855 vs
+0.326; at 8192 tokens 4-fact 0.78 vs 0.48 and 8-fact 0.53 vs 0.28. Same
+probe protocol (checked identical). Stage A alone (no recall docs) scores
+0.417; the jump appears in stage B, which saw FEWER recall docs than M1
+(366M × 5 % vs 600M × 5 %). Hypothesis: the multiple-choice format
+("A) … B) … Answer: B) text") is natural associative recall (find the key
+in the context, copy its value), so after stage A the model learns the
+recall docs far faster. Alternative: the two-stage schedule itself (LR
+re-warmup, --init_from). The data stays (`v7/aptitude.py`, also used by
+v14); no model code to remove.
+
+## C1-ctl — is the recall jump the aptitude data or the two-stage schedule? (pre-registration, 2026-10-29)
+
+Same chain as C1, one change: stage A drops aptitude (dclm/fineweb/
+smoltalk2_mid 0.417/0.333/0.25 = C1's stage-A shares renormalised; same
+30M web-only warmup; 120M). Stage B identical (M1 mix, 480M, VAL_EVERY
+4883, --init_from A). Final val on (`609fb1f`); step_009766.pt kept so the
+probes also compare at C1b's step.
+
+**Rule (at step 9766; C1b recall 0.907):** C1b − ctl ≥ 0.10 → the aptitude
+data causes the jump (keep it as a curriculum ingredient). ctl ≥ 0.85 →
+the two-stage schedule causes it, not the data. In between → mixed, report
+both. Also reported: holdout and learning probe at 9766 and at the final
+step.
+
+## C1 on the M2 body (pre-registration, 2026-10-29) — queued after C1-ctl
+
+C1's exact chain (aptitude stage A 120M, M1-mix stage B 480M) on the M2 body
+(SHARE_READS=1, MLP 2128), final val on. Control = M2 600M (holdout 3.4697,
+recall 0.522, PG-19 far gain 0.0414). **KEEP as the new reference** if final
+holdout ≤ M2 + 0.01 (≤ 3.4797) AND recall ≥ M2 + 0.10 (≥ 0.622). Learning
+probe reported (bar 3 stays open).
