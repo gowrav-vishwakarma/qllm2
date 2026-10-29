@@ -2283,3 +2283,38 @@ label_category is above in-context chance, modestly. Echo / M1 gain recall
 (previous sections) but not rule learning. **Bar 3 is open territory:** a
 model that truly applies a rule (e.g. number_step > 0.5) separates from
 every baseline. This is now the third scoreboard column.
+
+## C1 reason-first curriculum on REAL aptitude data (design + pre-registration, 2026-10-29)
+
+**Idea (user).** "First understand grammar a bit, then complex questions
+like aptitude, then chat that has complex relations, so the system learns
+reasoning first, and then we feed data." Real datasets only — no synthetic
+generators (the v12 synthetic reason/recall curricula were done before).
+Prior evidence that order can matter: curriculum learning (Bengio 2009),
+formal-language pre-pretraining (Hu et al. 2025), LIME (Wu et al. 2021),
+textbook-quality data (Phi, 2023). Risk: later web data washes it out.
+
+**Data.** Source `aptitude` (`v7/aptitude.py`, `138cddb`): TRAIN splits of
+14 real datasets — AQuA-RAT (GMAT/GRE with rationale), GSM8K, LogiQA 2.0,
+ReClor, RACE, ARC, CommonsenseQA, OpenBookQA, SciQ, QASC, BoolQ,
+StrategyQA, WinoGrande, HellaSwag: 276K docs, ~48.8M tokens. Test splits
+untouched.
+
+**Schedule (M1 body, 600M tokens total = M1's budget).**
+- Stage A `c1a_pre` (120M tok, LR 1.2e-3 cosine): first 30M web only
+  (BLEND_WARMUP, "a bit of grammar"), then token shares dclm 0.25, fineweb
+  0.20, smoltalk2_mid 0.15 (chat), aptitude 0.40 — the token-deficit
+  blender serves aptitude first after the warmup, then chat joins; the
+  90M reasoning phase is ≈ 53 % aptitude (≈ 1 epoch), 20 % chat, 27 % web.
+- Stage B `c1b_main` (480M tok, `--init_from` stage A, fresh LR warmup +
+  cosine): EXACTLY M1's mix (dclm/fineweb/smoltalk2_mid/recall 0.44/0.41/
+  0.10/0.05); sources start at never-read files.
+
+**Pre-registered rules** (control = M1 `m1_m1echo_ccbf028` at 600M):
+- Primary: learning-probe mean (invented rule tasks, nothing like them in
+  the aptitude data, so this measures transfer of reasoning) ≥ M1 + 0.05
+  (M1 0.175 → ≥ 0.225; SE ≈ 0.01 at 1500 prompts).
+- Guards: holdout ≤ M1 + 0.03 (≤ 3.52; stage B sees 120M fewer normal-mix
+  tokens), recall ≥ M1 − 0.05 (≥ 0.565).
+- Reported, not a rule: stage-A probes (does pre-training alone change the
+  learning probe?), WikiText, PG-19.

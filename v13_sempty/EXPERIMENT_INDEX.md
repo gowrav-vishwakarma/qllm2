@@ -73,3 +73,4 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 | M2 shared reads | M1 + every notebook-less block reads the nearest notebook below (own query/gate) | queued after m1 (`m2chain`) | "M2 shared reads" |
 | T1 thought stream | 12 token blocks + 4-block PAM thinker over 16-token events, top-down into block 6 (param-matched +1 %, 1.23× faster) | early same-batch check running locally (`t1loc`, `ea002e6`) | "T1 thought stream" |
 | Learning probe (bar 3) | in-context rule tasks, answer must be inferred (`ed326a1`) | baselines: all ≤ chance on letter/number/reverse incl. Transformer++ 3B (mean 0.228); follow priors ("last+1") | "Learning probe" |
+| C1 reason-first curriculum | grammar 30M → real aptitude Q&A + chat 90M → normal mix 480M (M1 body, 600M total) | queued on the 6000 after M2 (`c1chain`) | "C1 reason-first curriculum" |
