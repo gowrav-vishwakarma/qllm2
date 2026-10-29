@@ -290,12 +290,12 @@ def main():
             tok, nl = tok.split(':L'); nl = int(nl)
         if '@' in tok:
             tok, hd = tok.split('@'); hd = int(hd)
-        if tok not in ('base', 'delta', 'xf'):
+        if tok not in ('base', 'delta', 'xf', 'echo'):
             raise SystemExit(f"unknown arm '{tok}'")
         if tok == 'xf':
             label = f"transformer(ctrl)@L{nl}"
         else:
-            label = f"chrono+gate{'+delta' if tok == 'delta' else ''}@hd{hd}L{nl}"
+            label = f"chrono+gate{'+delta' if tok in ('delta', 'echo') else ''}{'+echo' if tok == 'echo' else ''}@hd{hd}L{nl}"
         arm_specs.append((label, tok, hd, nl))
 
     results = {}
@@ -305,8 +305,9 @@ def main():
         if kind == 'xf':
             cfg = _XfArm(vocab, max_seq_len, n_layers=nl)
         else:
-            cfg = _make_cfg(vocab, kind == 'delta', max_seq_len, head_dim=hd,
+            cfg = _make_cfg(vocab, kind in ('delta', 'echo'), max_seq_len, head_dim=hd,
                             n_layers=nl)
+            cfg.echo = kind == 'echo'
         results[label] = _train_arm(
             label, cfg, tokenizer, plan, args.device, args.lr,
             args.log_every, eval_ctxs, eval_assocs, args.trials,

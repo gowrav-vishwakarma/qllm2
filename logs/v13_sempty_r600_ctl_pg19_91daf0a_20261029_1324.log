@@ -1,0 +1,18 @@
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+W1029 13:25:09.213757 3020835 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1029 13:25:10.284503 3020835 .venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+  10/50 docs (9s)
+  20/50 docs (15s)
+  30/50 docs (20s)
+  40/50 docs (25s)
+  50/50 docs (31s)
+  [    0,   64)  loss 4.1899  ppl   66.02
+  [   64,  128)  loss 3.9517  ppl   52.02
+  [  128,  256)  loss 3.7534  ppl   42.67
+  [  256,  512)  loss 3.7376  ppl   42.00
+  [  512, 1024)  loss 3.8415  ppl   46.59   short-ctx 3.8417  far_gain +0.0002
+  [ 1024, 2048)  loss 3.8897  ppl   48.90   short-ctx 3.9007  far_gain +0.0110
+  [ 2048, 4096)  loss 3.8850  ppl   48.67   short-ctx 3.9013  far_gain +0.0164
+  [ 4096, 8192)  loss 3.9201  ppl   50.40   short-ctx 3.9383  far_gain +0.0183
+wrote logs/pos_loss/v13_sempty_r600_ctl_91daf0a_pg19.json

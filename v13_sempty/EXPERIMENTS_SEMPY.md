@@ -1952,6 +1952,23 @@ WikiText < 75.89 AND recall 63-cell mean ≥ 0.293; the expected signature is
 a1 far recall (pos0/.5 @1k–2k, control 0.412) going up. PASS → 3B confirm
 at LR 2e-4 (+ a decode path). FAIL → removed with an index row.
 
+### E1 micro-bench: echo solves 4- and 8-way recall in 2000 steps; plain delta is at chance (2026-10-29, 4090)
+
+`v13_sempty/tmp/recall_microbench.py --steps 2000 --batch 16 --arms delta,echo`
+(27.6M, 4 layers, hd 64; same data/seed per arm; code `86baea2`). Log
+`logs/v13_sempty_echo_microbench_86baea2_20261029_1340.log`.
+
+| arm | a1 (128–8192) | a4 | a8 |
+|---|---|---|---|
+| chrono+gate+delta | 1.00 all | 0.18–0.26 | 0.12–0.21 (chance) |
+| **+ echo** | 1.00 all | **1.00 all** | **1.00 all** |
+
+The delta reference needed 6000 steps to reach this ("Positive control");
+echo gets there in ≤ 2000 (train loss 0.0000 by step 1800) and holds to
+8192 (4× its longest train doc). Mechanism confirmed: a succession memory
+read straight into the head is a one-step induction head. Caveat: a pure
+recall task; the LM verdict is the `e1g` 600M screen.
+
 ## Speed: where PAM's 2.9× gap to Mamba-2 is (2026-10-29, 4090, B4 T2048)
 
 - **Not width alignment.** Step time by geometry (all chrono+gate+delta):
