@@ -52,6 +52,8 @@ NSTATES="${NSTATES:-0}"        # A2 states per head (0 = preset default 1)
 VAULT="${VAULT:-0}"            # A2b pinned state + protect gate (needs NSTATES>=2)
 DELTA="${DELTA:-0}"            # A3 delta erase/write (KEEP 2026-09-05: exact 8-way recall on the micro-bench)
                                # (COUPLE removed 2026-10-28: C1 FAIL, code at 4c688cb)
+SHORT_CONV="${SHORT_CONV:-0}"  # G1 short conv on qkv (2026-10-29 screen; needs GEN_EVERY=0)
+OUT_NORM="${OUT_NORM:-0}"      # G2 per-head RMSNorm of the memory read
 BASE_DT_BIAS="${BASE_DT_BIAS:-}" # override initial decay bias (default -4; bench: -6/-8 no gain)
                                # (LONG_HEADS removed 2026-10-27: R3 FAIL, EXPERIMENTS "R3")
                                # (STORE removed 2026-10-27: R4 FAIL, EXPERIMENTS "R4")
@@ -87,6 +89,8 @@ if [ "$OUT_GATE" = "1" ]; then EXTRA+=(--out_gate); fi
 if [ "$NSTATES" != "0" ]; then EXTRA+=(--n_states "$NSTATES"); fi
 if [ "$VAULT" = "1" ]; then EXTRA+=(--vault); fi
 if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi
+if [ "$SHORT_CONV" = "1" ]; then EXTRA+=(--short_conv); fi
+if [ "$OUT_NORM" = "1" ]; then EXTRA+=(--out_norm); fi
 if [ "$ANSWER_W" != "1" ]; then EXTRA+=(--answer_weight "$ANSWER_W"); fi
 if [ -n "$BASE_DT_BIAS" ]; then EXTRA+=(--base_dt_bias "$BASE_DT_BIAS"); fi
 if [ -n "$INIT_FROM" ]; then EXTRA+=(--init_from "$INIT_FROM"); fi

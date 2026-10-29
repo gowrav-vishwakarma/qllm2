@@ -76,6 +76,17 @@ class PAMConfig:
     # bit-parity with the chrono reference. dim -> n_heads params (~3.5k per
     # layer), one broadcast multiply: elementwise, kernel untouched.
     out_gate: bool = False
+    # G1 short conv (2026-10-29): depthwise causal Conv1d(k) over time on the
+    # fused qkv, residual + zero-init (identity at start): qkv + silu(conv(qkv)).
+    # A1 tried this on 10-epoch WikiText (overfit, FAIL); G1 retests it in the
+    # single-pass pretraining regime, where the Gated-DeltaNet / Mamba-2 short
+    # conv is standard. Chunked forward only (no decode state yet).
+    short_conv: bool = False
+    short_conv_k: int = 4
+    # G2 read norm (2026-10-29): per-head RMSNorm of the memory read y = S q
+    # (learned per-channel scale, init 1) before the N4 gate, as in Gated
+    # DeltaNet. Makes the read independent of |q| and of how full S is.
+    out_norm: bool = False
     # (R4 consolidation store removed 2026-10-27: FAIL, never used for recall;
     # EXPERIMENTS_SEMPY "R4".)
 

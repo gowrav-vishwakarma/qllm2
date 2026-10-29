@@ -59,6 +59,8 @@ KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {
         "_chunked_delta",          # A3: delta erase/write hand-off to pam_delta_batched
         "_delta_gates",            # A3: raw [B,H,T] write/erase gates shared by prefill/decode
         "_stepwise_delta",         # A3: per-token erase/write decode on the fp32 notebook
+        "_short_conv",             # G1: depthwise causal Conv1d over time on fused qkv
+        "_read_norm",              # G2: per-head fp32 RMSNorm of the memory read
     }),
 }
 

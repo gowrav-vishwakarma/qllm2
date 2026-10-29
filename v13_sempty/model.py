@@ -579,6 +579,19 @@ class RealPAMLayer(nn.Module):
             self.gate_proj._zero_init = True
             self.gate_proj._init_bias = 1.2785  # silu(1.2785) = 1.0000
 
+        # G1 short conv on the fused qkv (see PAMConfig.short_conv).
+        self.short_conv = cfg.short_conv
+        if self.short_conv:
+            self._conv_k = cfg.short_conv_k
+            C = 3 * cfg.n_heads * cfg.head_dim
+            self.qkv_conv = nn.Conv1d(C, C, kernel_size=self._conv_k, groups=C, bias=True)
+            nn.init.zeros_(self.qkv_conv.weight)
+            nn.init.zeros_(self.qkv_conv.bias)
+        # G2 per-head RMSNorm of the read (see PAMConfig.out_norm).
+        self.out_norm = cfg.out_norm
+        if self.out_norm:
+            self.out_norm_weight = nn.Parameter(torch.ones(cfg.n_heads, cfg.head_dim))
+
     # ── small named helpers ──────────────────────────────────────────────────
 
     def _as_token(self, x: NamedTensor) -> NamedTensor:
@@ -609,6 +622,8 @@ class RealPAMLayer(nn.Module):
         """
         batch, time = tokens.layout[0], tokens.layout[1]
         qkv = self.qkv_proj(tokens)
+        if self.short_conv:
+            qkv = self._short_conv(qkv, batch, time)
         qkv = qkv.to(batch, time, self.qkv_slot, self.heads, self.head_feature)
         queries, keys, values = (qkv.select(self.qkv_slot, slot) for slot in (0, 1, 2))
 
@@ -654,6 +669,26 @@ class RealPAMLayer(nn.Module):
 
         layout = (batch, self.heads, time, self.head_feature)
         return (queries.to(*layout), keys.to(*layout), values.to(*layout), None)
+
+    def _short_conv(self, qkv: NamedTensor, batch, time) -> NamedTensor:
+        """G1 depthwise causal conv on the fused qkv, residual + identity-init.
+
+        Raw-torch boundary (Conv1d over the time axis): [B,T,C] -> [B,C,T],
+        causal left-pad by k-1, depthwise conv, SiLU, back to [B,T,C], add.
+        At init the conv weight/bias are zero so this is exactly the identity.
+        """
+        x = qkv.raw(batch, time, self.qkv_fused)              # [B, T, C]
+        xc = nn.functional.pad(x.transpose(1, 2), (self._conv_k - 1, 0))
+        conv = nn.functional.silu(self.qkv_conv(xc)).transpose(1, 2)
+        return named(x + conv, (batch, time, self.qkv_fused))  # named-exit: conv boundary
+
+    def _read_norm(self, output: NamedTensor, batch, time) -> NamedTensor:
+        """G2 per-head RMSNorm of the read over head_row (fp32), times a
+        learned per-(head, channel) scale. Raw-torch boundary."""
+        y = output.raw(batch, self.heads, time, self.head_row)          # [B,H,T,K]
+        normed = nn.functional.rms_norm(y.float(), (self.head_dim,), eps=1e-6)
+        normed = (normed * self.out_norm_weight[None, :, None, :]).to(y.dtype)
+        return named(normed, (batch, self.heads, time, self.head_row))  # named-exit: norm boundary
 
     def _rotate_learned(self, queries, keys, tokens, batch, time, clock=None):
         """N1 Chrono-PAM rotary: content-modulated cumulative phase on q/k.
@@ -906,6 +941,10 @@ class RealPAMLayer(nn.Module):
             state, clock = state
         else:
             clock = None
+        if self.short_conv and (state is not None or seq_len == 1):
+            raise NotImplementedError(
+                "G1 short_conv has no decode state yet; run with --gen_every 0 "
+                "(val / probes / PG-19 use the chunked full-sequence path)")
         queries, keys, values, clock_out = self._project(tokens, step_offset, clock)
         decay = self._decay(tokens)
 
@@ -925,6 +964,8 @@ class RealPAMLayer(nn.Module):
                     "rungs with --gen_every 0 (probe/val use the chunked path)")
             output, new_state = self._stepwise(tokens, queries, keys, values, decay, state)
 
+        if self.out_norm:
+            output = self._read_norm(output, tokens.layout[0], tokens.layout[1])
         if self.out_gate:
             # N4: per-token, per-head read-out gate (broadcast over head_row).
             gate = silu(self.gate_proj(tokens).alias(self.decay_out, self.heads))
