@@ -29,6 +29,8 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   ff-merge `e2` into master, push origin, launch `~/e2_chain.sh` in tmux
   `e2` FROM THE WORKTREE (it waits until the GPU has no compute apps).
   ETA ~4.5 h → ~09:30–10:00 IST. Rules: EXPERIMENTS "E2".
+  04:00 IST: run 3's P INVALID (echo at ceiling); gate moved to v14 B1
+  run 4's P (~05:45 IST). Do NOT launch E2 before v14 pings run 4's P.
 
 * **2026-10-29 21:44Z (03:14 IST): C1 on M2 DONE — KEEP, new best LM at 600M.**
   `c1m2b_main_7ae6f1f`: holdout 3.4473 (M2 3.4697), WikiText 65.74, recall

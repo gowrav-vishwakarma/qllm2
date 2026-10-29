@@ -2540,6 +2540,19 @@ selftest `test_echo_tied`, grad-checkpoint parity exact on the M1 body).
 untied paired over 3 seed pairs: mean d ≥ +0.15 AND ≥ 2 SD). If P fails, E2
 closes without a 600M run (index row FAIL, flag removed).
 
+**Gate amended (2026-10-30 04:00 IST, before any E2 training):** run 3's
+P is INVALID by its own validity rule, not failed. Pair 1 trained with
+label_marker in the mix, which taught plain echo label_category to
+ceiling (echo 0.999, tied 1.000; P needs echo < 0.90). Pair 1's A
+(label_marker_new, every item unseen) went the other way: tied 0.530 vs echo
+0.653 (d −0.12), evidence against the induction-lookup reading. The gate
+is now **v14 B1 run 4 bar P**: run 2's training set (no label_marker),
+echo vs echo_tied, new seed pairs 21/22/23, P's rule frozen (~05:45 IST).
+P passes → E2 as below, unchanged. P fails → echo_tied closes and the flag
+is removed (code at `55b99ab`). Side note from v14: a related in-context
+task in the training mix closes echo's label_category gap entirely, a data
+lever (cf. C1-ctl: the schedule, not the body, moved label_category).
+
 **Design (option (a), agreed with v14).** Arm `e2t` = M1 body
 (PAM_LAYERS=3,7,11,15, MLP 2352, ECHO=1) + ECHO_TIED=1, on C1-ctl's exact
 two-stage recipe: stage A `e2ta_pre` 120M dclm/fineweb/smoltalk2_mid
