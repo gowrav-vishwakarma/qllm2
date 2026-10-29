@@ -32,8 +32,9 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   | tee -a logs/v13_sempty_c1ctl_driver_7ae6f1f.log"` (finished stages skip
   via .done, half-done resume from latest.pt).
   **Verdicts landed today:** M2 KEEP (holdout 3.4697, −0.021 vs M1; recall
-  0.522 < M1 0.615). T1 FAIL (3.4977 vs echo 3.4885; code removal pending,
-  T1 code is at `7ae6f1f`). C1 primary FAIL (learning probe 0.199) but
+  0.522 < M1 0.615). T1 FAIL (3.4977 vs echo 3.4885; code REMOVED in `a0b0337`,
+  last commit with it `5eff3b9`). NOTE: the 6000 has untracked copies of
+  logs now committed here — pull there with the chain's `pull_aside`. C1 primary FAIL (learning probe 0.199) but
   **recall 0.907 vs M1 0.615** (8-fact 0.855 vs 0.326) — the control decides
   whether the aptitude data or the two-stage schedule causes it. Fixed
   `609fb1f`: the final step is always validated (C1b's last 114M tokens
