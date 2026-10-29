@@ -35,8 +35,15 @@ Keep all three current as things happen (user rule, 2026-10-29).
   interpreter's code), both in steady work, neither a Python error. The CPU
   is an **i9-14900KS** (microcode 0x133), the model most hit by Intel's
   13th/14th-gen instability, whose symptoms are exactly these. There is no
-  ECC, so nothing else logs it. A hypothesis, not proven; it is the user's
-  hardware call. Meanwhile `run_bench.sh` reruns a run that died by a
+  ECC, so nothing else logs it. **Equal suspects** (v13 session's check):
+  (1) a DDR5 XMP/EXPO overclock, which gives the same symptoms; (2) **this
+  bench's own software.** These are the only two such crashes since Oct 1,
+  both in v14 microbench processes, while the v13 T1 run went 4h50m on the
+  4090 tonight without a restart. The bench builds the next batch in a
+  Python thread while torch.compile (with recompiles) runs in the main
+  thread, on python 3.9. If it crashes again, test without the prefetch
+  thread before blaming the hardware. Hardware checks are the user's call;
+  no stress test while training is on the box. Meanwhile `run_bench.sh` reruns a run that died by a
   signal with `--resume` (RETRIES=2), so a crash costs one arm, not the
   queue.
 * **Launcher:** `v14/run_bench.sh` (replaces `run_b0.sh`; the running B0 run
