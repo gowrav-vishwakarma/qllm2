@@ -1982,6 +1982,38 @@ train loss includes recall docs with answer weight 100; the holdout is pure
 DCLM-Edu and WikiText has no recall docs, so the holdout/WikiText gains are
 LM, not recall). Speed 64K tok/s (ctl 66K).
 
+## M1 sparse memory — "few memories, deep thought" (design + pre-registration, 2026-10-29)
+
+**Idea.** The 16 per-layer delta notebooks are PAM's slow part (flat profile
+of small solves), and E1 showed that ONE well-placed memory carries a lot.
+A brain does not put a hippocampus in every cortical layer. M1 keeps
+notebooks in blocks 3, 7, 11, 15 only; the other 12 blocks are pure gated-MLP
+"thinking" blocks (GEMM-bound); the saved params widen every MLP
+(hidden 1764 → 2352) so the total is matched; echo stays on top.
+
+| model | params | step (4090, B4) |
+|---|---|---|
+| PAM (16 notebooks) | 102.12M | 173.3 ms |
+| PAM + echo | 103.17M | 177.2 ms |
+| **M1: 4 notebooks + echo + MLP 2352** | **102.95M** | **98.7 ms (1.8×)** |
+
+**Next step it enables (the user's framing: "memory is not the brain; a
+brain that thinks hard and can reach memory at every level").** M2 = ONE
+shared notebook written once low in the stack and READ by every block above
+it with its own query/gate — the write (WY solve) is the cost, the read is
+cheap. Writes must come from a low block so higher blocks can read in
+parallel training (a top-written memory read by lower blocks would make
+training sequential).
+
+**Run.** Screen `m1`, arm `m1echo` (ECHO=1, PAM_LAYERS=3,7,11,15,
+MLP_HIDDEN=2352), r600 protocol, queued after `e1g` (tmux `m1chain`).
+`e1g`'s conv arm was skipped (marker) to give the GPU to M1.
+
+**Decision rule (fixed now):** compared with `e1g_echo` (full PAM + echo,
+same schedule): KEEP if holdout ≤ echo + 0.01 nats AND WikiText ≤ echo +
+3 % AND recall 63-cell mean ≥ echo − 0.05 — i.e. same quality at 1.8× the
+speed. Better than echo on holdout → it is the new reference outright.
+
 ## Speed: where PAM's 2.9× gap to Mamba-2 is (2026-10-29, 4090, B4 T2048)
 
 - **Not width alignment.** Step time by geometry (all chrono+gate+delta):

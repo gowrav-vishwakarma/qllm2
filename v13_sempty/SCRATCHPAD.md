@@ -18,6 +18,13 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-29 10:00Z: queue on the 6000** — `e1g` echo arm (finishing
+  ~10:45Z; conv arm SKIPPED by marker `checkpoints_v13_sempty/e1g_conv_a0fab65/.done`)
+  → tmux `m1chain` (`~/m1_chain.sh`, log `~/m1_chain.log`) waits for "e1g
+  DONE", pulls, runs screen `m1` arm `m1echo` (4 notebooks + echo, MLP
+  2352, `497bbca`+). EXPERIMENTS "M1 sparse memory". Resume:
+  `tmux new-session -d -s m1chain "SCREEN_HASH=<hash in ~/m1_chain.log> bash ~/m1_chain.sh"`.
+
 * **2026-10-29 09:10Z: E1 echo at 150M tok: holdout −0.068 nats, WikiText
   119.6 vs 148.6 (−19 %)** — far past the −0.02 bar; milestone table in
   EXPERIMENTS "E1 at scale". Micro-bench: a4/a8 1.00 in 2000 steps.
