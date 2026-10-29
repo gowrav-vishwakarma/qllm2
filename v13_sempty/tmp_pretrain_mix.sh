@@ -53,7 +53,6 @@ VAULT="${VAULT:-0}"            # A2b pinned state + protect gate (needs NSTATES>
 DELTA="${DELTA:-0}"            # A3 delta erase/write (KEEP 2026-09-05: exact 8-way recall on the micro-bench)
                                # (COUPLE removed 2026-10-28: C1 FAIL, code at 4c688cb)
 SHORT_CONV="${SHORT_CONV:-0}"  # G1 short conv on qkv (2026-10-29 screen; needs GEN_EVERY=0)
-OUT_NORM="${OUT_NORM:-0}"      # G2 per-head RMSNorm of the memory read
 ECHO="${ECHO:-0}"              # E1 echo (succession) memory into the head
 PAM_LAYERS="${PAM_LAYERS:-}"   # M1 blocks that keep a notebook, e.g. 3,7,11,15 (default all)
 MLP_HIDDEN="${MLP_HIDDEN:-0}"  # M1 gated-MLP width (0 = dim*expand), to param-match
@@ -94,7 +93,6 @@ if [ "$NSTATES" != "0" ]; then EXTRA+=(--n_states "$NSTATES"); fi
 if [ "$VAULT" = "1" ]; then EXTRA+=(--vault); fi
 if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi
 if [ "$SHORT_CONV" = "1" ]; then EXTRA+=(--short_conv); fi
-if [ "$OUT_NORM" = "1" ]; then EXTRA+=(--out_norm); fi
 if [ "$ECHO" = "1" ]; then EXTRA+=(--echo); fi
 if [ -n "$PAM_LAYERS" ]; then EXTRA+=(--pam_layers "$PAM_LAYERS"); fi
 if [ "$MLP_HIDDEN" != "0" ]; then EXTRA+=(--mlp_hidden "$MLP_HIDDEN"); fi

@@ -587,13 +587,12 @@ def test_out_gate_parity_and_decode(batch_size=2, seq_len=17, seed=0):
     return True
 
 
-def test_short_conv_and_read_norm(batch_size=2, seq_len=40, seed=0):
-    """G1 short conv + G2 read norm on the Phase 3b arm (chrono+gate+delta).
+def test_short_conv(batch_size=2, seq_len=40, seed=0):
+    """G1 short conv on the Phase 3b arm (chrono+gate+delta).
 
     (1) short_conv at init (zero conv) == the model without it; (2) with
     random conv weights the model stays causal (changing token t moves no
-    logit before t); (3) one backward reaches every qkv_conv and
-    out_norm_weight; (4) out_norm alone: chunked == token-by-token decode.
+    logit before t); (3) one backward reaches every qkv_conv.
     """
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(seed)
@@ -628,31 +627,16 @@ def test_short_conv_and_read_norm(batch_size=2, seq_len=40, seed=0):
     cfg2 = get_config('tiny_real')
     cfg2.chunk_size = 16
     cfg2.chrono = cfg2.out_gate = cfg2.delta = True
-    cfg2.short_conv = cfg2.out_norm = True
+    cfg2.short_conv = True
     m2 = LM(cfg2).to(dev).train()
     lg, _, _ = m2.forward(ids)
     F.cross_entropy(lg.reshape(-1, cfg2.vocab_size).float(), ids.reshape(-1)).backward()
     n_none = sum(1 for blk in m2.blocks
-                 if blk.pam.qkv_conv.weight.grad is None or blk.pam.out_norm_weight.grad is None)
-    assert n_none == 0, f"{n_none} blocks missing G1/G2 grads"
+                 if blk.pam.qkv_conv.weight.grad is None)
+    assert n_none == 0, f"{n_none} blocks missing G1 grads"
 
-    cfg3 = get_config('tiny_real')
-    cfg3.chunk_size = 16
-    cfg3.chrono = cfg3.out_gate = cfg3.delta = True
-    cfg3.out_norm = True
-    m3 = LM(cfg3).to(dev).eval()
-    T = 20
-    with torch.no_grad():
-        par, _, _ = m3.forward(ids[:, :T])
-        parts, states = [], None
-        for t in range(T):
-            lt, states, _ = m3.forward(ids[:, t:t + 1], states=states, step_offset=t)
-            parts.append(lt)
-        seq = torch.cat(parts, dim=1)
-    d_dec = (par - seq).abs().max().item()
-    assert d_dec < 2e-3, f"out_norm decode disagrees: {d_dec:.3e}"
     print(f"  conv init parity {d_init:.3e}   causal: past {d_past:.1e} now {d_now:.1e}   "
-          f"grads ok   out_norm decode vs chunked {d_dec:.3e} ({dev})")
+          f"grads ok ({dev})")
     return True
 
 
@@ -1042,7 +1026,7 @@ def main():
         test_chrono_rotary_parity,
         test_chrono_parallel_vs_recurrent,
         test_out_gate_parity_and_decode,
-        test_short_conv_and_read_norm,
+        test_short_conv,
         test_echo_memory,
         test_sparse_memory,
         test_shared_reads,

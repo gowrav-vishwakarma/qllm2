@@ -83,10 +83,6 @@ class PAMConfig:
     # conv is standard. Chunked forward only (no decode state yet).
     short_conv: bool = False
     short_conv_k: int = 4
-    # G2 read norm (2026-10-29): per-head RMSNorm of the memory read y = S q
-    # (learned per-channel scale, init 1) before the N4 gate, as in Gated
-    # DeltaNet. Makes the read independent of |q| and of how full S is.
-    out_norm: bool = False
     # E1 Echo memory (2026-10-29, novel): one delta memory at the top of the
     # stack that stores SUCCESSION -- key = final hidden of token t-1, value =
     # the (unit-RMS) embedding of token t -- read with the hidden of token t

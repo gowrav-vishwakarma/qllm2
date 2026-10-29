@@ -241,7 +241,7 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
 
     # --- ladder (only non-default arch flags) -------------------------------
     _ladder = [k for k in ('n_states', 'vault', 'delta', 'cond_mem',
-                           'chrono', 'out_gate', 'short_conv', 'out_norm', 'echo',
+                           'chrono', 'out_gate', 'short_conv', 'echo',
                            'pam_layers', 'mlp_hidden', 'share_reads')
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if cfg.base_dt_bias != -4.0:
@@ -1066,8 +1066,6 @@ def build_argparser():
                    help='N4: per-head content-dependent read-out gate (real arm)')
     p.add_argument('--short_conv', action='store_true',
                    help='G1: depthwise causal short conv on fused qkv (no decode yet)')
-    p.add_argument('--out_norm', action='store_true',
-                   help='G2: per-head RMSNorm of the memory read')
     p.add_argument('--pam_layers', type=str, default='',
                    help="M1: comma list of blocks that keep a PAM notebook (default all)")
     p.add_argument('--mlp_hidden', type=int, default=0,
@@ -1131,8 +1129,6 @@ def main():
         cfg.out_gate = True
     if args.short_conv:
         cfg.short_conv = True
-    if args.out_norm:
-        cfg.out_norm = True
     if args.echo:
         cfg.echo = True
     if args.pam_layers:

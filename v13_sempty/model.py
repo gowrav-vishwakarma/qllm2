@@ -592,10 +592,6 @@ class RealPAMLayer(nn.Module):
             self.qkv_conv = nn.Conv1d(C, C, kernel_size=self._conv_k, groups=C, bias=True)
             nn.init.zeros_(self.qkv_conv.weight)
             nn.init.zeros_(self.qkv_conv.bias)
-        # G2 per-head RMSNorm of the read (see PAMConfig.out_norm).
-        self.out_norm = cfg.out_norm
-        if self.out_norm:
-            self.out_norm_weight = nn.Parameter(torch.ones(cfg.n_heads, cfg.head_dim))
 
     # ── small named helpers ──────────────────────────────────────────────────
 
@@ -686,14 +682,6 @@ class RealPAMLayer(nn.Module):
         xc = nn.functional.pad(x.transpose(1, 2), (self._conv_k - 1, 0))
         conv = nn.functional.silu(self.qkv_conv(xc)).transpose(1, 2)
         return named(x + conv, (batch, time, self.qkv_fused))  # named-exit: conv boundary
-
-    def _read_norm(self, output: NamedTensor, batch, time) -> NamedTensor:
-        """G2 per-head RMSNorm of the read over head_row (fp32), times a
-        learned per-(head, channel) scale. Raw-torch boundary."""
-        y = output.raw(batch, self.heads, time, self.head_row)          # [B,H,T,K]
-        normed = nn.functional.rms_norm(y.float(), (self.head_dim,), eps=1e-6)
-        normed = (normed * self.out_norm_weight[None, :, None, :]).to(y.dtype)
-        return named(normed, (batch, self.heads, time, self.head_row))  # named-exit: norm boundary
 
     def _rotate_learned(self, queries, keys, tokens, batch, time, clock=None):
         """N1 Chrono-PAM rotary: content-modulated cumulative phase on q/k.
@@ -977,8 +965,6 @@ class RealPAMLayer(nn.Module):
                     "rungs with --gen_every 0 (probe/val use the chunked path)")
             output, new_state = self._stepwise(tokens, queries, keys, values, decay, state)
 
-        if self.out_norm:
-            output = self._read_norm(output, tokens.layout[0], tokens.layout[1])
         if self.out_gate:
             # N4: per-token, per-head read-out gate (broadcast over head_row).
             gate = silu(self.gate_proj(tokens).alias(self.decay_out, self.heads))
