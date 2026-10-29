@@ -115,6 +115,7 @@ from v13_sempty.triton_kernels import (
     fused_real_pam_read,
     fused_complex_pam_read,
     pam_delta_batched,
+    pam_shared_read,
     kernel_enabled,
 )
 
@@ -549,6 +550,10 @@ class RealPAMLayer(nn.Module):
         if self.delta:
             self.erase_proj = NamedLinear(self.model_dim, self.decay_out)
             self.write_proj = NamedLinear(self.model_dim, self.decay_out)
+        # M2: a notebook other blocks read (cfg.share_reads) caches its write.
+        self.expose = cfg.share_reads
+        self._shared = None
+        self._rot = None
 
         # N1 Chrono-PAM: content-modulated rotary retention. A per-head time
         # warp g_t = exp(clamp(W x, +/-3)) multiplies the per-step RoPE angle;
@@ -730,6 +735,8 @@ class RealPAMLayer(nn.Module):
         # the tensors autograd retains for backward stay in bf16 (memory/speed).
         cos = torch.cos(phi).to(q.dtype)
         sin = torch.sin(phi).to(q.dtype)                             # [B,H,T,P]
+        if self.expose:
+            self._rot = (cos, sin)                                    # M2: readers use the writer's clock
         qp = q.reshape(B, H, T, P, 2)
         kp = k.reshape(B, H, T, P, 2)
         qe, qo = qp.unbind(-1)
@@ -847,8 +854,14 @@ class RealPAMLayer(nn.Module):
         v = values.raw(batch, self.heads, time, self.head_feature).reshape(B * H, T, K)
         retention = decay.raw(batch, self.heads, time).reshape(B * H, T)
         bw, be = self._delta_gates(tokens)
-        read, state = pam_delta_batched(q, k, v, retention, bw.reshape(B * H, T),
-                                        be.reshape(B * H, T), None)
+        if self.expose:
+            read, state, write = pam_delta_batched(
+                q, k, v, retention, bw.reshape(B * H, T), be.reshape(B * H, T), None,
+                return_write=True)
+            self._shared = {'write': write, 'rot': self._rot}
+        else:
+            read, state = pam_delta_batched(q, k, v, retention, bw.reshape(B * H, T),
+                                            be.reshape(B * H, T), None)
         output = named(read.reshape(B, H, T, K) * (self.head_dim ** -0.5),
                        (batch, self.heads, time, self.head_row))
         carried = named(state.reshape(B, H, K, K),
@@ -981,6 +994,48 @@ class RealPAMLayer(nn.Module):
         return out, carried
 
 
+class SharedRead(nn.Module):
+    """M2: a cheap reader of another block's notebook (see PAMConfig.share_reads).
+
+        y_t = gate_t * (S^w_t . rot_w(q_t)) / sqrt(d),   out = W_o y   (W_o = 0 at init)
+
+    ``S^w`` is the writer's delta notebook, ``rot_w`` its Chrono rotation at
+    t (so the query meets the keys in the writer's own time frame). Only the
+    query, gate and out-projection are this block's; the write is shared.
+    """
+
+    def __init__(self, cfg: PAMConfig, model_dim: Dim):
+        super().__init__()
+        self.model_dim = model_dim
+        self.n_heads, self.head_dim = cfg.n_heads, cfg.head_dim
+        inner = cfg.n_heads * cfg.head_dim
+        self.q_proj = nn.Linear(cfg.dim, inner, bias=False)
+        self.gate = nn.Linear(cfg.dim, cfg.n_heads)
+        self.gate._zero_init = True
+        self.gate._init_bias = 1.2785                       # silu(1.2785) = 1
+        self.o_proj = nn.Linear(inner, cfg.dim, bias=False)
+        self.o_proj._zero_init = True                       # identity at start
+
+    def forward(self, x: NamedTensor, shared: dict) -> NamedTensor:
+        return self._shared_read(x, shared)
+
+    def _shared_read(self, x: NamedTensor, shared: dict) -> NamedTensor:
+        """Raw-torch boundary: project, rotate by the writer's clock, read."""
+        batch, time = x.layout[0], x.layout[1]
+        h = x.raw(batch, time, self.model_dim)                          # [B,T,D]
+        B, T, D = h.shape
+        H, K = self.n_heads, self.head_dim
+        P = K // 2
+        q = self.q_proj(h).reshape(B, T, H, K).transpose(1, 2)          # [B,H,T,K]
+        cos, sin = shared['rot']                                        # [B,H,T,P]
+        qe, qo = q.reshape(B, H, T, P, 2).unbind(-1)
+        q = torch.stack((qe * cos - qo * sin, qe * sin + qo * cos), dim=-1).reshape(B * H, T, K)
+        read = pam_shared_read(q, shared['write']) * (K ** -0.5)        # [BH,T,K]
+        gate = nn.functional.silu(self.gate(h)).transpose(1, 2).reshape(B * H, T, 1)
+        y = (read * gate.to(read.dtype)).reshape(B, H, T, K).transpose(1, 2).reshape(B, T, H * K)
+        return named(self.o_proj(y.to(h.dtype)), (batch, time, self.model_dim))  # named-exit: shared-read boundary
+
+
 class RealBlock(nn.Module):
     """Pre-norm residual, real: gated channel mix, then real PAM sequence mix."""
 
@@ -1003,13 +1058,23 @@ class RealBlock(nn.Module):
                                     model_dim=self.model_dim)
             # PAM starts soft: the memory path learns while the residual carries.
             self.pam_scale = nn.Parameter(torch.tensor(0.1))
+        # M2: a notebook-less block above the first notebook reads the
+        # nearest notebook below it.
+        self.reader = None
+        if (not self.has_pam and cfg.share_reads
+                and layer_idx > min(tuple(cfg.pam_layers))):
+            self.norm2 = RealNorm(self.model_dim)
+            self.reader = SharedRead(cfg, self.model_dim)
 
-    def forward(self, x: NamedTensor, pam_state=None, step_offset: int = 0):
+    def forward(self, x: NamedTensor, pam_state=None, step_offset: int = 0,
+                shared=None):
         cgu_out = self.cgu(self.norm1(x))
         if self.training:
             cgu_out = cgu_out * as_complex_dropout_mask(self.cgu_dropout, cgu_out)
         x = x + cgu_out * self.cgu_scale
         if not self.has_pam:
+            if self.reader is not None:
+                x = x + self.reader(self.norm2(x), shared)
             return x, None
         pam_out, new_state = self.pam(self.norm2(x), state=pam_state,
                                       step_offset=step_offset)
@@ -1033,7 +1098,8 @@ class LM(nn.Module):
         self.config = cfg
         self.model_dim = Dim("model_dim", cfg.dim)
         if cfg.is_complex:
-            assert not cfg.pam_layers and not cfg.mlp_hidden, "M1 is real-arm only"
+            assert not cfg.pam_layers and not cfg.mlp_hidden and not cfg.share_reads, \
+                "M1/M2 are real-arm only"
             self.complex_pair = Dim("complex_pair", 2)
             self.real_imag_feature = Dim("real_imag_feature", cfg.dim * 2)
             self.policy = SplitComplex(self.complex_pair)
@@ -1076,6 +1142,9 @@ class LM(nn.Module):
             })
         # E1 Echo memory (see PAMConfig.echo): plain-torch projections at the
         # top of the stack; the delta read reuses pam_delta_batched.
+        if cfg.share_reads:
+            assert cfg.pam_layers and cfg.delta and cfg.chrono, \
+                "M2 share_reads needs pam_layers, delta and chrono"
         self.echo = cfg.echo
         if self.echo:
             assert not cfg.is_complex, "echo is implemented for the real arm"
@@ -1127,11 +1196,22 @@ class LM(nn.Module):
 
     def _run_blocks(self, z, batch, time, states, step_offset, input_ids=None):
         use_ckpt = self.config.gradient_checkpointing and self.training and states is None
+        share = self.config.share_reads
+        if share and (use_ckpt or states is not None or time.size == 1):
+            raise NotImplementedError(
+                "M2 share_reads: chunked full-sequence forward only (no grad "
+                "checkpointing, no decode yet); run with --gen_every 0")
         new_states = []
+        shared = None
         for i, block in enumerate(self.blocks):
             state = states[i] if states is not None else None
             if use_ckpt:
                 z, new_state = self._ckpt_block(block, z, step_offset)
+            elif share:
+                z, new_state = block(z, pam_state=state, step_offset=step_offset,
+                                     shared=shared)
+                if block.pam is not None:
+                    shared = block.pam._shared
             else:
                 z, new_state = block(z, pam_state=state, step_offset=step_offset)
             new_states.append(new_state)

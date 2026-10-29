@@ -62,6 +62,7 @@ KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {
         "_short_conv",             # G1: depthwise causal Conv1d over time on fused qkv
         "_read_norm",              # G2: per-head fp32 RMSNorm of the memory read
         "_echo_read",              # E1: top-of-stack succession delta memory (raw boundary)
+        "_shared_read",            # M2: read another block's notebook (raw boundary)
     }),
 }
 

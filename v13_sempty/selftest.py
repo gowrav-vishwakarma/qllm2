@@ -784,6 +784,82 @@ def test_sparse_memory(batch_size=2, seq_len=30, seed=0):
     return True
 
 
+def test_shared_reads(batch_size=2, seq_len=40, seed=0):
+    """M2 shared reads: (1) pam_shared_read with the writer's own query equals
+    the writer's read (the write is reusable, exactly); (2) share_reads at
+    init == off; (3) causal; (4) a reader's gradient reaches its q_proj AND
+    the writer's qkv (the notebook learns what the readers need)."""
+    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+    from v13_sempty.triton_kernels import pam_delta_batched, pam_shared_read
+    torch.manual_seed(seed)
+    BH, T, K = 4, 70, 32
+    q = torch.randn(BH, T, K, device=dev)
+    k = F.normalize(torch.randn(BH, T, K, device=dev), dim=-1)
+    v = torch.randn(BH, T, K, device=dev)
+    ret = torch.rand(BH, T, device=dev) * 0.2 + 0.8
+    bw, be = torch.rand(BH, T, device=dev), torch.rand(BH, T, device=dev) * 0.5
+    r0, _, write = pam_delta_batched(q, k, v, ret, bw, be, None, return_write=True)
+    r1 = pam_shared_read(q, write)
+    d_k = (r0 - r1).abs().max().item()
+    assert d_k < 1e-4, f"shared read != writer read: {d_k:.3e}"
+
+    cfg = get_config('tiny_real')
+    cfg.n_layers = 4
+    cfg.chunk_size = 16
+    cfg.chrono = cfg.out_gate = cfg.delta = True
+    cfg.pam_layers = (1,)
+    cfg.share_reads = True
+    m = LM(cfg).to(dev).eval()
+    assert [b.reader is not None for b in m.blocks] == [False, False, True, True]
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len), device=dev)
+    with torch.no_grad():
+        on, _, _ = m.forward(ids)
+        m.config.share_reads = False
+        readers = [b.reader for b in m.blocks]
+        for b in m.blocks:
+            b.reader = None
+        off, _, _ = m.forward(ids)
+        for b, r in zip(m.blocks, readers):
+            b.reader = r
+        m.config.share_reads = True
+    d_init = (on - off).abs().max().item()
+    assert d_init < 1e-5, f"share_reads@init != off: {d_init:.3e}"
+
+    for b in m.blocks:
+        if b.reader is not None:
+            nn.init.normal_(b.reader.o_proj.weight, std=0.3)
+    t0 = 25
+    ids2 = ids.clone()
+    ids2[:, t0] = (ids2[:, t0] + 1) % cfg.vocab_size
+    with torch.no_grad():
+        a, _, _ = m.forward(ids)
+        b2, _, _ = m.forward(ids2)
+    d_past = (a[:, :t0] - b2[:, :t0]).abs().max().item()
+    assert d_past < 1e-4, f"shared reads not causal: {d_past:.3e}"
+
+    # gradient of the READER path alone reaches the writer's qkv.
+    m.train()
+    m.zero_grad(set_to_none=True)
+    lg, _, _ = m.forward(ids)
+    lg_off = None
+    F.cross_entropy(lg.reshape(-1, cfg.vocab_size).float(), ids.reshape(-1)).backward()
+    g_reader = m.blocks[2].reader.q_proj.weight.grad
+    assert g_reader is not None and g_reader.abs().sum() > 0, "reader q_proj got no grad"
+    w_with = m.blocks[1].pam.qkv_proj.weight.grad.clone()
+    m.zero_grad(set_to_none=True)
+    for b in m.blocks:
+        if b.reader is not None:
+            b.reader.o_proj.weight.data.zero_()
+    lg, _, _ = m.forward(ids)
+    F.cross_entropy(lg.reshape(-1, cfg.vocab_size).float(), ids.reshape(-1)).backward()
+    w_without = m.blocks[1].pam.qkv_proj.weight.grad
+    d_w = (w_with - w_without).abs().max().item()
+    assert d_w > 1e-8, "readers send no gradient into the writer"
+    print(f"  shared read == writer read {d_k:.1e}   init parity {d_init:.1e}   "
+          f"causal {d_past:.1e}   reader grad ok, writer grad shift {d_w:.1e} ({dev})")
+    return True
+
+
 def test_transformer_baseline(seed=0):
     """Transformer++ baseline (equal-data quality reference).
 
@@ -969,6 +1045,7 @@ def main():
         test_short_conv_and_read_norm,
         test_echo_memory,
         test_sparse_memory,
+        test_shared_reads,
         test_transformer_baseline,
         test_prefetch_order_and_cursor,
         test_worker_stream_order_and_cursor,

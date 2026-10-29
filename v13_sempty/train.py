@@ -242,7 +242,7 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
     # --- ladder (only non-default arch flags) -------------------------------
     _ladder = [k for k in ('n_states', 'vault', 'delta', 'cond_mem',
                            'chrono', 'out_gate', 'short_conv', 'out_norm', 'echo',
-                           'pam_layers', 'mlp_hidden')
+                           'pam_layers', 'mlp_hidden', 'share_reads')
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if cfg.base_dt_bias != -4.0:
         _ladder.append('base_dt_bias')
@@ -1072,6 +1072,8 @@ def build_argparser():
                    help="M1: comma list of blocks that keep a PAM notebook (default all)")
     p.add_argument('--mlp_hidden', type=int, default=0,
                    help='M1: gated-MLP hidden width (0 = dim*expand); widen to param-match')
+    p.add_argument('--share_reads', action='store_true',
+                   help='M2: notebook-less blocks read the nearest notebook below (no decode yet)')
     p.add_argument('--echo', action='store_true',
                    help='E1: top-of-stack succession (echo) memory into the head')
     p.add_argument('--base_dt_bias', type=float, default=None,
@@ -1137,6 +1139,8 @@ def main():
         cfg.pam_layers = tuple(int(i) for i in args.pam_layers.split(','))
     if args.mlp_hidden:
         cfg.mlp_hidden = args.mlp_hidden
+    if args.share_reads:
+        cfg.share_reads = True
     if args.base_dt_bias is not None:
         cfg.base_dt_bias = args.base_dt_bias
     if args.dropout is not None:

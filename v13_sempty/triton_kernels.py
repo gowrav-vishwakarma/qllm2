@@ -550,7 +550,8 @@ def pam_delta_torch(q, k, v, retention, beta_w, beta_e, carry, chunk):
     return torch.cat(reads, dim=1), S
 
 
-def pam_delta_batched(q, k, v, retention, beta_w, beta_e, carry, sub=_BT):
+def pam_delta_batched(q, k, v, retention, beta_w, beta_e, carry, sub=_BT,
+                      return_write=False):
     r"""Same delta recurrence as ``pam_delta_torch``, restructured for speed.
 
     Why (2026-09-06 profile, 100M B6 T2048): ``pam_delta_torch`` costs 2x the
@@ -600,7 +601,25 @@ def pam_delta_batched(q, k, v, retention, beta_w, beta_e, carry, sub=_BT):
     read, S_out = fused_real_pam_read(q, k, W, retention, carry, sub)
     if Tp != T:
         read = read[:, :T]
+    if return_write:
+        # M2: the written memory as (keys, pseudo-values, retention), padded
+        # to Tp -- any other query can read it with pam_shared_read.
+        return read, S_out, (k, W, retention)
     return read, S_out
+
+
+def pam_shared_read(q, write, sub=_BT):
+    """M2: read a notebook written by ``pam_delta_batched(..., return_write=True)``
+    with a different query ``q [BH, T, K]``. The delta write (WY solve) is
+    NOT redone: the pseudo-values ``W`` turn the delta recurrence into the
+    additive one, so one ``fused_real_pam_read`` gives ``S_t q_t`` exactly."""
+    k, W, retention = write
+    BH, T, K = q.shape
+    Tp = k.shape[1]
+    if Tp != T:
+        q = F.pad(q, (0, 0, 0, Tp - T))
+    read, _ = fused_real_pam_read(q, k, W, retention, None, sub)
+    return read[:, :T]
 
 
 def _delta_prep(k, v, retention, beta_w, beta_e, S0, sub: int):
@@ -687,5 +706,5 @@ def _delta_prep_fn():
 
 
 __all__ = ["fused_real_pam_read", "fused_complex_pam_read", "pam_scan_torch",
-           "pam_delta_torch", "pam_delta_batched", "set_kernel_enabled",
+           "pam_delta_torch", "pam_delta_batched", "pam_shared_read", "set_kernel_enabled",
            "kernel_enabled", "HAS_TRITON"]

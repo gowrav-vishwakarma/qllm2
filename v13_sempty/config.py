@@ -102,6 +102,13 @@ class PAMConfig:
     # Real arm. mlp_hidden (0 = dim*expand) widens the MLP to param-match.
     pam_layers: tuple = ()
     mlp_hidden: int = 0
+    # M2 shared reads (2026-10-29, "memory is not the brain"): every block
+    # WITHOUT a notebook (above the first one) gets a cheap reader of the
+    # nearest notebook below it -- own query (rotated by the writer's Chrono
+    # clock), own per-head gate, zero-init out-proj. The write (WY solve) is
+    # done once; reads reuse its pseudo-values. Needs pam_layers, delta,
+    # chrono; chunked forward only (no decode yet).
+    share_reads: bool = False
     # (R4 consolidation store removed 2026-10-27: FAIL, never used for recall;
     # EXPERIMENTS_SEMPY "R4".)
 
