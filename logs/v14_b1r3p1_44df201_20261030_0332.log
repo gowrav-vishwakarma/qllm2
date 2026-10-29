@@ -1,0 +1,108 @@
+B0 micro-bench @ 44df201: 6000 steps x B16, lr 0.0003, eval ctx (1024, 4096, 8192), 16 docs x 3 positions x 4 queries per cell, aux_weight 0.0, families rules, seed 11, init_seed 11, doc_seed0 100000000
+
+--- arm echo@hd64L4 ---
+/home/gowrav/Development/qllm2/v14/microbench.py:421: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"  [{label}] step {step:5d}/{len(plan)} L={L:5d} loss={float(loss):.4f} "
+  [echo@hd64L4] step     1/6000 L=  512 loss=10.9118 | 4,678 tok/s
+  [echo@hd64L4] step   250/6000 L= 1024 loss=2.4467 | 96,366 tok/s
+  [echo@hd64L4] step   500/6000 L=  512 loss=1.0771 | 103,217 tok/s
+  [echo@hd64L4] step   750/6000 L=  512 loss=0.7112 | 105,149 tok/s
+  [echo@hd64L4] step  1000/6000 L= 1024 loss=0.6331 | 106,493 tok/s
+  [echo@hd64L4] step  1250/6000 L= 1024 loss=0.5742 | 107,241 tok/s
+  [echo@hd64L4] step  1500/6000 L=  512 loss=0.6259 | 107,820 tok/s
+  [echo@hd64L4] step  1750/6000 L=  512 loss=0.5564 | 108,406 tok/s
+  [echo@hd64L4] step  2000/6000 L=  512 loss=0.5540 | 108,583 tok/s
+  [echo@hd64L4] step  2250/6000 L= 1024 loss=0.5156 | 108,780 tok/s
+  [echo@hd64L4] step  2500/6000 L=  512 loss=0.4875 | 109,208 tok/s
+  [echo@hd64L4] step  2750/6000 L= 1024 loss=0.4056 | 109,333 tok/s
+  [echo@hd64L4] step  3000/6000 L= 1024 loss=0.3895 | 109,674 tok/s
+  [echo@hd64L4] step  3250/6000 L= 1024 loss=0.3464 | 109,772 tok/s
+  [echo@hd64L4] step  3500/6000 L=  512 loss=0.2791 | 109,947 tok/s
+  [echo@hd64L4] step  3750/6000 L= 1024 loss=0.2577 | 110,204 tok/s
+  [echo@hd64L4] step  4000/6000 L=  512 loss=0.3392 | 110,245 tok/s
+  [echo@hd64L4] step  4250/6000 L=  512 loss=0.2781 | 110,467 tok/s
+  [echo@hd64L4] step  4500/6000 L= 1024 loss=0.2568 | 110,431 tok/s
+  [echo@hd64L4] step  4750/6000 L=  512 loss=0.1805 | 110,653 tok/s
+  [echo@hd64L4] step  5000/6000 L=  512 loss=0.1725 | 110,804 tok/s
+  [echo@hd64L4] step  5250/6000 L= 1024 loss=0.2091 | 110,771 tok/s
+  [echo@hd64L4] step  5500/6000 L= 1024 loss=0.2294 | 110,952 tok/s
+  [echo@hd64L4] step  5750/6000 L= 1024 loss=0.2062 | 111,032 tok/s
+  [echo@hd64L4] step  6000/6000 L= 1024 loss=0.2410 | 110,980 tok/s
+  [echo@hd64L4] trained 27.6M params in 661s (110 ms/step)
+== echo@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        1.00    1.00    1.00
+two_hop               0.53    0.25    0.14
+letter_shift_ood      0.03    0.05    0.10
+number_step_ood       0.11    0.14    0.07
+label_marker          1.00    1.00    0.95
+label_marker_new      0.76    0.75    0.45
+
+--- arm echo_tied@hd64L4 ---
+  [echo_tied@hd64L4] step     1/6000 L=  512 loss=10.9157 | 64,395 tok/s
+  [echo_tied@hd64L4] step   250/6000 L= 1024 loss=2.3211 | 117,053 tok/s
+  [echo_tied@hd64L4] step   500/6000 L=  512 loss=0.9861 | 117,148 tok/s
+  [echo_tied@hd64L4] step   750/6000 L=  512 loss=0.6548 | 116,849 tok/s
+  [echo_tied@hd64L4] step  1000/6000 L= 1024 loss=0.6115 | 116,979 tok/s
+  [echo_tied@hd64L4] step  1250/6000 L= 1024 loss=0.5789 | 116,423 tok/s
+  [echo_tied@hd64L4] step  1500/6000 L=  512 loss=0.6172 | 116,820 tok/s
+  [echo_tied@hd64L4] step  1750/6000 L=  512 loss=0.5475 | 116,822 tok/s
+  [echo_tied@hd64L4] step  2000/6000 L=  512 loss=0.5599 | 116,837 tok/s
+  [echo_tied@hd64L4] step  2250/6000 L= 1024 loss=0.5624 | 116,956 tok/s
+  [echo_tied@hd64L4] step  2500/6000 L=  512 loss=0.4215 | 116,805 tok/s
+  [echo_tied@hd64L4] step  2750/6000 L= 1024 loss=0.2461 | 116,808 tok/s
+  [echo_tied@hd64L4] step  3000/6000 L= 1024 loss=0.2535 | 116,583 tok/s
+  [echo_tied@hd64L4] step  3250/6000 L= 1024 loss=0.2590 | 116,568 tok/s
+  [echo_tied@hd64L4] step  3500/6000 L=  512 loss=0.2514 | 116,696 tok/s
+  [echo_tied@hd64L4] step  3750/6000 L= 1024 loss=0.2258 | 116,640 tok/s
+  [echo_tied@hd64L4] step  4000/6000 L=  512 loss=0.3282 | 116,675 tok/s
+  [echo_tied@hd64L4] step  4250/6000 L=  512 loss=0.2700 | 116,788 tok/s
+  [echo_tied@hd64L4] step  4500/6000 L= 1024 loss=0.2382 | 116,896 tok/s
+  [echo_tied@hd64L4] step  4750/6000 L=  512 loss=0.1765 | 116,914 tok/s
+  [echo_tied@hd64L4] step  5000/6000 L=  512 loss=0.1679 | 116,776 tok/s
+  [echo_tied@hd64L4] step  5250/6000 L= 1024 loss=0.2019 | 116,823 tok/s
+  [echo_tied@hd64L4] step  5500/6000 L= 1024 loss=0.2273 | 116,821 tok/s
+  [echo_tied@hd64L4] step  5750/6000 L= 1024 loss=0.2006 | 116,824 tok/s
+  [echo_tied@hd64L4] step  6000/6000 L= 1024 loss=0.2343 | 116,782 tok/s
+  [echo_tied@hd64L4] trained 27.5M params in 628s (105 ms/step)
+== echo_tied@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        1.00    1.00    1.00
+two_hop               0.54    0.27    0.12
+letter_shift_ood      0.00    0.00    0.01
+number_step_ood       0.12    0.08    0.04
+label_marker          1.00    1.00    1.00
+label_marker_new      0.55    0.63    0.40
+
+================================================================
+== echo@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        1.00    1.00    1.00
+two_hop               0.53    0.25    0.14
+letter_shift_ood      0.03    0.05    0.10
+number_step_ood       0.11    0.14    0.07
+label_marker          1.00    1.00    0.95
+label_marker_new      0.76    0.75    0.45
+
+== echo_tied@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        1.00    1.00    1.00
+two_hop               0.54    0.27    0.12
+letter_shift_ood      0.00    0.00    0.01
+number_step_ood       0.12    0.08    0.04
+label_marker          1.00    1.00    1.00
+label_marker_new      0.55    0.63    0.40
+

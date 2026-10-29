@@ -4,33 +4,52 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-30 03:25 IST)
+## State (2026-10-30 04:50 IST)
 
-* **4090 (this session owns it until `v14b0` ends):**
-  1. **B1 run 1 DONE** (00:17 IST, `5b1eb9d`) and **B1 run 2 DONE** (01:44,
-     `85ecf02`). **N6 CLOSED, FAIL:** replication not met (label_category
-     mean op 0.427, opdiag 0.587 vs echo 0.471), and every arm is below
-     chance on unseen rule parameters (letter_shift_ood 0.00: the models
-     pick a trained shift). N6 code removed; it is at `78e4354`.
-     **Lead: echo_tied** (W_q = W_k) label_category 0.92 / 0.92 / 0.74 vs
-     echo 0.61 / 0.54 / 0.27, one seed. Seed noise ≈ 0.2 (echo 0.68 ->
-     0.47 between runs), so ≥ 3 seeds before any claim.
-  2. tmux `v14b0`: **B0 run 2 RUNNING** since 01:45 IST at `bcfd88a`.
-     Arms echo, delta, n1sum, n1gate, n1phase, echo_tied (op / opdiag
-     dropped with N6). ETA ~03:45 IST. Validity: echo >= 0.90 on
-     facts1/facts2 @1024. Earlier attempts lost: 00:18 python segfault,
-     00:39 eval OOM (missing `no_grad`, fixed in 5eff3b9), 00:56 stopped
-     so B1 run 2 could go first.
-* **Launcher:** `v14/run_bench.sh` (replaces `run_b0.sh`; the running B0 run
-  2 still executes its already-open copy). It also stops waiting when the
+* **4090 (this session, until B1 run 4 ends ~05:45 IST):**
+  1. **B0 run 2 DONE (03:31 IST, `bcfd88a`): INVALID.** Echo facts2 @1024
+     0.55 (bar 0.90): every echo arm picks a value of the document, not the
+     bound one. Descriptive: n1sum / n1gate do partial lookup (facts2 0.79),
+     n1phase falls back to echo's level (turning cancels the second
+     notebook); echo_tied costs no memory. **B0 run 3** (`--aux_weight 0.1`,
+     arms echo, n1sum, n1gate, n1phase, echo_tied + the **tpp** attention
+     reference, branch `v14dev`, GPU smoke passed; validity and
+     stop rule in EXPERIMENTS_V14 "B0") is pre-registered and goes after run 4, or after
+     E2 if the v13 session takes the 4090.
+  2. **B1 run 3 DONE (04:37 IST, `44df201`).** **P INVALID** (echo at the ceiling in pairs 1
+     and 3; where the arms differ, tied is worse: d −0.07, −0.54). **A NOT
+     met** (d −0.12, +0.01, −0.16: tied is worse on unseen items). The
+     lookup circuit forms per seed or not: echo in 2 of 3 seeds, tied in 1
+     of 3. Run 2's lead was a seed where only tied formed it.
+  3. **B1 run 4 RUNNING** (tmux `v14b1r4`, since ~04:50 IST at
+     the commit that recorded run 3): the clean P test, run 2's training set, echo vs echo_tied
+     in seed pairs 21/22/23. **Its P gates the v13 session's E2** (tied echo
+     600M vs C1-ctl on the M1 body, on the 4090 from ~05:45 if P passes).
+     When it ends: notebook + index first, then ping Qllm v13, then the user.
+* **Shared checkout rule (2026-10-30):** both sessions work in
+  `/home/gowrav/Development/qllm2`. While a bench runs, nobody commits to
+  master or leaves tracked edits: each pair launch checks for a clean tree,
+  `--resume` refuses a moved HEAD, and each pair re-imports v13_sempty. The
+  v13 session keeps its E2 code and notes on branch `e2` (worktree
+  `../qllm_e2`) and rebases it onto master after run 4.
+* **Launcher:** `v14/run_bench.sh` (replaced `run_b0.sh`). It also stops waiting when the
   other run's log prints its DONE line (`WAIT_DONE=file:pattern`): the v13
   T1 tmux stayed open two hours after its run ended on 2026-10-29.
 * **6000:** the v13 session's chain. tfs1 (Transformer++ one stage, started
   03:15 IST at `b788731`) -> tfs2 -> c2m2 (ETA ~08:00 IST) -> tfc1
   (Transformer++ on c1m2's aptitude recipe, tmux `s3chain`, ETA ~09:30 IST).
-  Their E2 tied-echo 600M arm waits on B1 run 3 bar P; its recipe is the
-  reference picked after c2m2 (c1m2 leads). The 4090 frees at ~05:00 IST
-  after run 3, offered to them for E2 if P passes.
+  Their E2 (tied echo, 600M, M1 body, C1-ctl's exact recipe, paired against
+  C1-ctl; pre-registered in EXPERIMENTS_SEMPY "E2" on branch `e2`) is gated on
+  **B1 run 4's P** (run 3's P was invalid). If P passes, E2 runs on the 4090
+  from ~05:45 IST.
+* **v13 tfs1 (Transformer++ one stage, 600M, r600, `b788731`; recorded on
+  branch `e2` 174c2b8):** holdout 3.4885 (M2 3.4697 beats it, M1 ties
+  3.4906), WikiText 66.4 (M2 68.8), recall 0.645 (0.84 inside 2048, 0.15 at
+  8192), learning probe 0.217. **label_category 2/4/8-shot: T++
+  0.69/0.84/0.73** vs M1 0.65/0.67/0.29, M2 0.59/0.61/0.31, two-stage M1
+  0.62/0.71/0.55. Attention does the in-context label lookup that the O(1)
+  bodies do not: **this is the gap for v14 to close** (B1's `tpp` arm
+  measures the same gap at 27M).
 * **v13 C1 on M2 (`fed73cf`): KEEP, best 600M LM so far.** Holdout 3.4473
   (M2 3.4697, C1-ctl 3.4743), WikiText 65.74, recall 0.870, learning probe
   0.187 (flat). **label_category 8-shot does NOT lift on M2:** c1m2 0.38,
@@ -73,16 +92,24 @@ Keep all three current as things happen (user rule, 2026-10-29).
 
 ## Next action
 
-1. **B1 run 3 queued** (tmux `v14b1r3`, behind `v14b0`; pre-registered in
-   EXPERIMENTS_V14 "B1"): echo vs echo_tied in 3 seed pairs, trained with
-   `label_marker` added; bars P (label_category) and A
-   (label_marker_new, every item unseen) on the paired difference. ~70
-   min, ETA ~05:00 IST. When it ends: notebook + index first, then ping
-   Qllm v13 (their 600M tied-echo arm waits on P), then the user.
-2. When `v14b0` ends: the same for B0 run 2 and N1 (headroom cells H = echo
-   < 0.90; N1 bars in EXPERIMENTS_V14 "N1").
-3. If N1 passes B0, or echo_tied replicates in run 3: build the v14 hook in
-   the v13_sempty trainer for the 150M LM check on M1 (same schedule shape
-   for both arms). If neither: record them, then choose N5 or N4. Bar 3 in
-   its strong form (inferring an unseen rule parameter) is still unmet by
-   every arm, which points at N4 (in-context learning in the unit).
+1. When `v14b1r4` ends (~05:45 IST): score P with
+   the run-3 scorer (paired d over 3 pairs, mean ≥ +0.15 and ≥ 2·SD; valid if
+   echo < 0.90 in every pair). Record in EXPERIMENTS_V14 "B1" + index +
+   this file, commit with the logs (cleaned of torch recompile warnings),
+   then ping Qllm v13 (they rebase `e2`, then launch E2 if P passed), then
+   the user.
+2. If P fails: echo_tied closes (remove the flag, index row with code at the
+   last commit that has it). B0 run 3 goes on the 4090 next.
+3. If P passes: E2 owns the 4090. B0 run 3 waits for it.
+4. Bar 3 in its strong form (inferring an unseen rule parameter) is still
+   unmet by every arm (B1 runs 2-3: below chance). Plan in EXPERIMENTS_V14
+   "N4" (bar-3 analysis): first the `tpp` reference on B1's unseen
+   parameters on run 4's data (`for i in 1 2 3; do TAG=b1r4tpp$i
+   FAMILIES=rules ARMS=tpp SAVE=1 EXTRA="--seed 2$i --doc_seed0
+   $((i+3))00000000 --init_seed 2$i" bash v14/run_bench.sh; done`, ~30 min,
+   right after run 4 unless E2 takes the 4090). If attention also fails, build a bench
+   where inference beats selection (many training parameters, held-out
+   ones to interpolate), and only then an N4 unit.
+5. Branch `v14dev` (worktree `../qllm_v14dev`, `c9bff5c` + `51a94cd`: the
+   tpp arm; GPU smoke passed 04:45 IST): merge into master after B1 run 4
+   (master stays frozen while a bench runs).

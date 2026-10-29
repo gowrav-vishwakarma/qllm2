@@ -149,7 +149,7 @@ micro-bench grew the lookup circuit on 1 association first (a1 0.46 → 1.00)
 and then scaled; run 1 started at 8 facts with words redrawn per document.
 Log + JSON: `logs/v14_b0_a0f672a_20261029_1232.{log,json}`.
 
-**Run 2 (queued, 4090, starts when B1's tmux `v14b1` ends, ~00:30 IST 2026-10-30).**
+**Run 2 (design, written before the run; it ran on the 4090 2026-10-30 01:45–03:31 IST).**
 One change: sizes start at 1 (facts 1/2/4/8/16/32/64, bind 1/2/4/8/16,
 rebind 2/4/8/16), train and eval (`316b0f9`). Still answer-only
 (`--aux_weight 0`; the option exists if run 2 also fails).
@@ -159,6 +159,73 @@ scores ≥ 0.90 on facts1 and facts2 at ctx 1024. If not, run 3 adds
 setting becomes the memory bar for N1, N4, N5. If nothing fails up to a64
 and bound attributes, memory is not the limiter and v14 focuses on LM
 quality (N2, N3).
+
+**Run 2 RESULT (4090, 2026-10-30 01:45–03:31 IST, code `bcfd88a`, sizes
+from 1, answer-only): INVALID by its validity rule.** Echo scores 1.00 on
+facts1 but only 0.55 on facts2 @1024 (bar 0.90). Nothing is judged.
+Log + JSON: `logs/v14_b0_bcfd88a_20261030_0145.{log,json}`. The log is
+cleaned of torch recompile warnings.
+
+| arm | f1 | f2 | f4 | f8 | f16–64 | bind1 | bind2 | bind4 | bind8–16 | rebind2 | rebind4 | rebind8–16 | ms/step |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| echo | 1.00 | 0.56 | 0.28 | 0.10 | 0.14–0.15 | 1.00 | 0.46 | 0.24 | 0.11–0.16 | 0.40 | 0.24 | 0.19–0.25 | 159 |
+| delta | 0.15 | 0.16 | 0.12 | 0.13 | 0.13–0.14 | 0.15 | 0.17 | 0.12 | 0.14 | 0.19 | 0.12 | 0.11–0.13 | 146 |
+| n1sum | 1.00 | **0.79** | **0.50** | 0.18 | 0.11–0.18 | 1.00 | 0.51 | 0.17 | 0.12–0.14 | 0.53 | 0.35 | 0.19–0.31 | 194 |
+| n1gate | 1.00 | **0.78** | **0.52** | 0.14 | 0.11–0.15 | 1.00 | 0.49 | 0.24 | 0.12–0.17 | 0.48 | 0.27 | 0.23–0.27 | 188 |
+| n1phase | 1.00 | 0.51 | 0.29 | 0.13 | 0.11–0.15 | 1.00 | 0.52 | 0.20 | 0.13–0.16 | 0.41 | 0.22 | 0.23–0.24 | 193 |
+| echo_tied | 1.00 | 0.50 | 0.26 | 0.12 | 0.08–0.14 | 1.00 | 0.55 | 0.26 | 0.16 | 0.39 | 0.22 | 0.23–0.25 | 157 |
+
+(Each cell is the mean over ctx 1024/4096/8192, 576 answers per cell, SE ≈ 0.02.
+Candidate chance is 0.125; "pick any value of this document" gives 1/n on
+facts n.)
+
+**Reading (descriptive, not a verdict):**
+- Echo and echo_tied sit at 1/n on facts n: they answer with a value from
+  the document, but not the one bound to the queried key. That is why the
+  bench is invalid: the control never learned lookup.
+- **n1sum and n1gate are clearly above 1/n** (facts2 0.79 / 0.78 vs 0.50,
+  facts4 0.50 / 0.52 vs 0.25, rebind4 0.35): two delta notebooks with
+  different fades do real partial lookup. delta alone stays at chance
+  (train loss 6.41 = ln 600), so the gain needs echo plus the second
+  notebook.
+- **n1phase falls back to echo's level** (0.51 / 0.29). Turning the reads
+  cancels the second notebook's gain. That is the opposite of the N1
+  hypothesis (phase > gate > sum).
+- **echo_tied costs no memory** vs echo (facts2 0.50 vs 0.56, ~2 SE; equal
+  elsewhere). It runs at the same speed (157 vs 159 ms/step).
+- N1 arms cost 1.2× echo per step (188–194 ms), within the 1.35× budget.
+
+**Run 3 (pre-registered 2026-10-30 ~04:20 IST, before any run-3 number;
+runs on the 4090 after B1 run 4, or after E2 if the v13 session takes it).**
+The rule written for run 2 applies: one change, `--aux_weight 0.1` (LM
+loss on the non-answer positions, total weight 0.1 per answer). The other
+settings are the same as run 2 (sizes from 1, 6000 steps × B16, LR 3e-4,
+seed 42, same data for every arm).
+- **Arms:** echo, n1sum, n1gate, n1phase, echo_tied, and **tpp**, a
+  REFERENCE (Transformer++, attention, O(T), not a candidate; same width,
+  depth and heads, MLP 1280 so params match echo: 27.56M vs 27.61M; arm
+  added in `c9bff5c`). delta is dropped: it was at chance in every cell of
+  runs 1 and 2, and no bar uses it.
+- **Validity (amended before run 3):** the bench is learnable if **echo or
+  tpp** scores ≥ 0.90 on facts1 and facts2 @1024. Run 2 asked echo alone
+  because there was no reference, so a broken bench and a weak body looked
+  the same. tpp is that reference.
+  - echo passes: as planned. The N1 bars are judged on the headroom cells H
+    (echo < 0.90).
+  - tpp passes and echo fails: **the wall is found**. The O(1) control fails
+    lookup at a size where attention succeeds on the same data. The N1 bars
+    are judged on H as written, and the echo-vs-tpp gap per cell is the
+    memory target for N1, N4 and N5.
+  - both fail: the bench is broken at this size. Stop rule below.
+- echo_tied vs echo is reported over the same cells (no bar: this is
+  echo_tied's memory cost).
+- **Stop rule:** if neither echo nor tpp passes, B0 closes as a memory
+  bench at this size (lookup of words redrawn per document does not grow at
+  27.6M / 6000 steps, with or without aux). There is no run 4 without a new,
+  pre-registered design. N1 then has no micro-bench judgement. It gets the
+  150M LM check only if n1phase ≥ n1sum on mean(facts2, facts4) @1024 in
+  run 3. Otherwise N1 closes as FAIL (in both runs, turning removed the
+  second notebook's gain).
 
 ### B1 — rule induction (shared generator, pre-registered 2026-10-29)
 
@@ -367,6 +434,80 @@ in-context similarity lookup)?
 - **Reported only:** the ceiling tasks, two_hop, the unseen-parameter
   tasks, ms / step.
 
+**Run 3 RESULT (4090, 2026-10-30 03:32–04:37 IST, code `44df201`): P
+INVALID, A NOT MET (the sign is reversed).** Logs + JSON:
+`logs/v14_b1r3p{1,2,3}_44df201_20261030_{0332,0354,0415}.{log,json}`.
+Each value is the mean over 2 / 4 / 8 shots. letter_shift, number_step and
+reverse3 are 1.00 for every arm and pair.
+
+| pair (seed) | arm | label_category | label_marker | label_marker_new | two_hop | letter_shift_ood | number_step_ood | ms/step |
+|---|---|---|---|---|---|---|---|---|
+| p1 (11) | echo | 0.999 | 0.983 | 0.653 | 0.306 | 0.062 | 0.108 | 110 |
+| | echo_tied | 1.000 | 1.000 | 0.530 | 0.310 | 0.005 | 0.081 | 105 |
+| p2 (12) | echo | 0.487 | 0.568 | 0.412 | 0.312 | 0.021 | 0.114 | 111 |
+| | echo_tied | 0.420 | 0.409 | 0.423 | 0.287 | 0.005 | 0.227 | 104 |
+| p3 (13) | echo | 0.946 | 0.938 | 0.593 | 0.301 | 0.001 | 0.114 | 110 |
+| | echo_tied | 0.402 | 0.425 | 0.438 | 0.297 | 0.002 | 0.069 | 104 |
+
+- **P:** d = +0.001, −0.067, −0.544 (mean −0.203, SD 0.297). **INVALID**:
+  echo ≥ 0.90 in pairs 1 and 3. Where the arms differ, tied is worse.
+- **A:** d = −0.123, +0.011, −0.155 (mean −0.089, SD 0.088). Valid
+  (label_marker up to 1.00). **NOT met:** tied is worse on unseen items.
+
+**Reading:**
+- **The lookup circuit forms per seed, or it does not.** label_category and
+  label_marker move together: ≈ 1.0 when it forms (echo p1 and p3, tied p1)
+  and ≈ 0.4–0.5 when it does not. Echo formed it in 2 of 3 seeds, tied in 1
+  of 3. Run 2's lead (tied 0.857 vs echo 0.471) was one seed where only tied
+  formed it.
+- **Tying does not make the circuit form more often, and it is worse on
+  unseen items (A).** The similarity-lookup reading of the tie is not
+  supported.
+- When the circuit forms, it carries over to words never seen in training
+  (label_marker_new 0.59–0.65 vs in-context chance 0.417), only partly.
+- **Data, not the body:** with `label_marker` in training, plain echo
+  learned label_category to the ceiling in 2 of 3 seeds (runs 1 and 2
+  without it: 0.68, 0.47). A related task in the mix helps the circuit form.
+- Unseen rule parameters are still at or below chance (letter_shift_ood ≤ 0.06;
+  number_step_ood ≤ 0.11 except one tied seed at 0.23).
+- Tied runs 5 % faster per step (one projection fewer).
+- The pre-registered outcome map had no row for "P invalid". Run 4 (below,
+  pre-registered before any run-4 number) is the clean P test, agreed with
+  the v13 session as E2's gate.
+
+**Run 4 (PRE-REGISTERED 2026-10-30, drafted 04:00 IST before any run-4
+number): the clean P test.** Run 3's P was invalid. With `label_marker` in
+training, plain echo reached 0.999 on label_category in pair 1 (bar: < 0.90
+in every pair), so the tying gain had no headroom to show. Run 4 restores
+run 2's training set and keeps P's frozen rule.
+- **Arms:** echo vs echo_tied, 3 new seed pairs. Pair i = `--seed 2i
+  --doc_seed0 (i+3)·100M --init_seed 2i` (i = 1, 2, 3); tag `b1r4p<i>`.
+- **Training:** the shared tasks only (`--rule_tasks` default: letter_shift,
+  number_step, reverse3, label_category, two_hop). This is run 2's set.
+  Shots 1–8, 6000 × B16, lr 3e-4.
+- **Eval:** the same task list as run 3. label_marker / label_marker_new
+  are reported only: the format is not trained.
+- **Bar P (unchanged from run 3):** d_i = echo_tied − echo on label_category,
+  mean over 2 / 4 / 8 shots. Met if mean(d) ≥ +0.15 AND mean(d) ≥ 2·SD(d).
+  Valid if echo's mean is < 0.90 in every pair.
+- **Outcomes:**
+  - P met: the v13 session runs E2, tied echo at 600M against C1-ctl on the
+    M1 body (their pre-registration, EXPERIMENTS_SEMPY "E2").
+  - P not met (valid): run 2's +0.39 was seed luck. echo_tied closes and
+    its flag is removed.
+  - P invalid again (echo ≥ 0.90 in some pair): label_category does not
+    separate the arms at this size. echo_tied closes for B1 and goes to the
+    LM check only if A (run 3) was met.
+- **Reported only, after run 4:** the `tpp` attention reference on the same
+  3 seeds' data (separate launch `b1r4tpp<i>`, after branch `v14dev` merges).
+  It is the 27M version of the v13 600M gap (label_category 8-shot: T++ 0.73
+  vs M1 0.29), and it shows whether attention infers unseen rule parameters
+  here (bar-3 analysis under "N4").
+- **Run 3's lesson, recorded before run 4:** with one related in-context
+  task in the mix, plain echo learned label_category to the ceiling. At
+  this size, the label_category gap in run 2 was a matter of what the data
+  teaches, at least as much as of the body.
+
 **Run 3 candidates (from the v13 review, 2026-10-30; NOT pre-registered).**
 (a) was adopted into run 3 above; (b) is still open.
 They put category membership in the context without turning the task into
@@ -430,6 +571,14 @@ cells where the echo control scores < 0.90 (mean over positions).
 0.02 nats AND ≤ n1sum − 0.01 AND ≤ n1gate − 0.01. Step time ≤ 1.35× control.
 **Kill:** n1phase within 0.01 of n1gate (turning adds nothing over a real weight).
 
+**B0 run 2 (2026-10-30): no judgement** (the bench was invalid: echo never
+learned lookup). Descriptive only: n1sum / n1gate did partial lookup
+(facts2 0.79 / 0.78, facts4 0.50 / 0.52, against 1/n = 0.50 / 0.25), and
+n1phase fell back to echo's level (0.51 / 0.29). Turning cancelled the
+second notebook's gain, the opposite of the N1 hypothesis. B0 run 3
+(`--aux_weight 0.1`) carries a stop rule that decides N1 if the bench is
+invalid again (section "B0").
+
 ### N2 — phase-modulated activation
 
 **Why.** Coded since v7, never measured. A neuron whose output phase depends
@@ -484,6 +633,25 @@ updates itself while reading is a learner, so its claim is learning, not
 recall; B0 is secondary.
 **Lesson to respect:** V6 salience memory was inert, so the fast weight must
 carry information the slow path cannot get (pands lesson 1).
+
+**Bar-3 analysis before any N4 run (2026-10-30, after B1 runs 2–3; design
+note, not pre-registered).** Every arm, N6 included, is below chance on
+unseen rule parameters: the models pick a trained shift. Two causes are
+mixed up in that number:
+1. *The bench.* Training draws shift k from only 3 values (1–3) and the test
+   asks for 4–5, i.e. extrapolation from 3 points. Selecting among 3
+   memorised tables is cheaper than inferring the rule, so no body has a
+   reason to learn inference.
+2. *The body.* The delta notebook is already a least-squares fast weight
+   (TTT-linear-like): S fits values from keys in context. If keys and values
+   carried a linear ordinal code (letters on a line), S k(x_q) would
+   extrapolate a shift from 2 examples. Nothing in training forces that code.
+**Next steps, in order:** (a) the `tpp` reference on B1's unseen parameters
+(run 2's data, one ~10 min arm). If attention also fails, cause 1 dominates
+and B1-OOD cannot judge N4. (b) Then a bench where inference beats
+selection: many training parameters with some held out for interpolation
+(e.g. shift 1–12 without {5, 9}; affine number maps y = a·x + b with held-out
+(a, b) pairs), tpp as the reference. (c) Only then an N4 unit, judged there.
 
 ### N5 — resonant binding (design only)
 
