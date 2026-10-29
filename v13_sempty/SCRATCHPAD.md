@@ -18,6 +18,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-29 12:35Z: M1 KEEP — new reference body** (4 notebooks in blocks
+  3,7,11,15 + echo, MLP 2352): holdout 3.4906 (echo 3.4885), WikiText 69.4
+  (71.1), recall 0.615 (0.401), 1.8× faster. Best ckpt on the 6000
+  `checkpoints_v13_sempty/m1_m1echo_ccbf028/best_model.pt`. 6000 now: v14 B0
+  (session qllm2-d5) then M2 (on top of M1). T1 still on the 4090 (echo body).
+
 * **2026-10-29 12:00Z: two sessions share the GPUs.** v13_sempty = session
   `qllm2-04`; v14 (new neurons) = session `qllm2-d5`. Rules: ping the other
   (SendMessage) on every GPU job start/stop (box, tmux, GB, ETA); ask before

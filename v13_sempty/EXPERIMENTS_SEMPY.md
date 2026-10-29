@@ -2045,6 +2045,37 @@ speed. Better than echo on holdout → it is the new reference outright.
 | tokens | holdout (M1 / echo) | WikiText (M1 / echo) |
 |---|---|---|
 | 150M (step 4069) | **3.9225 / 3.9516** (−0.029) | **109.70 / 119.64** |
+| 300M (step 8138) | **3.6829 / 3.6955** (−0.013) | **84.60 / 87.99** |
+| 450M (step 12207) | **3.5348 / 3.5373** (−0.003) | **73.90 / 75.66** |
+| 600M (step 16276) | 3.4906 / 3.4885 (+0.002) | **69.44 / 71.09** (−2.3 %) |
+
+**Verdict (2026-10-29): M1 KEEP — the new reference body.** All three
+pre-registered rules hold (holdout +0.002 ≤ +0.01; WikiText −2.3 % ≤ +3 %;
+recall far above echo − 0.05), at **1.8× the speed** (116K vs 64K tok/s).
+
+- **Recall 0.615 vs echo 0.401** (40-seed probe, 63-cell mean). The gain is
+  multi-fact recall: accuracy by context × facts (M1 / echo):
+
+  | ctx | 1 fact | 4 facts | 8 facts |
+  |---|---|---|---|
+  | 128 | 1.00 / 1.00 | **0.57** / 0.18 | **0.41** / 0.07 |
+  | 512 | 0.99 / 0.98 | **0.70** / 0.21 | **0.27** / 0.08 |
+  | 2048 | 0.94 / 0.90 | **0.67** / 0.23 | **0.36** / 0.12 |
+  | 8192 | 0.62 / 0.61 | **0.48** / 0.22 | **0.28** / 0.12 |
+
+  Fewer, deeper-placed notebooks hold several facts far better than 16
+  shallow ones (hypothesis: with 16 notebooks at pam_scale 0.1 the recall
+  signal is spread thin; with 4 each must become a real memory, and the
+  wider MLPs between them have more room to use what is read).
+- PG-19 loss by position (M1 / echo): 0–64 4.267 / 4.267, 1–2k 3.848 /
+  3.821, 4–8k 3.872 / 3.849 (+0.023, slightly worse); far gain at 4–8k
+  0.0446 / 0.0440 (same).
+- Same-batch train loss was ~0.09 worse than echo early (recall-weighted);
+  the holdout told the true story.
+
+Logs: `logs/v13_sempty_m1_m1echo_ccbf028_20261029_1100.log` (md5 d6e5c816…),
+`logs/memory_probes/v13_sempty_m1_m1echo_ccbf028_t40_behavioral.json`,
+`logs/pos_loss/v13_sempty_m1_m1echo_ccbf028_pg19.json` (md5 147bd888…).
 
 Lesson: on the SAME batches M1's train loss was ~0.09 *worse* than echo at
 steps 1750–2500, yet its holdout is better. The train loss carries the
