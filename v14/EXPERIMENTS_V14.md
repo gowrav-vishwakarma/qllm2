@@ -9,6 +9,7 @@ a closed question.
 | id | idea | status | verdict | code at | log |
 |---|---|---|---|---|---|
 | B0 | find the wall: where does today's best (delta + echo) fail? | tool ready (`v14/microbench.py`), queued on the 4090 | — | — | — |
+| B1 | rule induction in context (learning beyond recall, goal bar 3) | planned: uses the shared rule generator from the v13 session's learning probe | — | — | — |
 | N1 | phase interference revived: v11 E3 on the lean body | coded + selftest PASS (`v14/units.py`), micro-bench queued with B0 | — | — | — |
 | N2 | phase-modulated activation (magnitude sets phase) | planned (flag exists: `activation='phase_mod'`, complex arm) | — | — | — |
 | N3 | formula-weight neuron | **folded into N2**: reduces to a gated bottleneck (GLU family), see N3 | — | — | — |
@@ -55,6 +56,14 @@ a closed question.
 ---
 
 ## Part B — the v14 experiments (pre-registered)
+
+**The goal has three bars, all needed** (user, 2026-10-29; shared memory
+`goal-pam-beats-baselines`): (1) O(1) state per token; (2) beat
+Transformer++ and Mamba-2 at equal data; (3) learning beyond recall:
+apply a rule seen in context to inputs that never appear in the context
+(rule induction, composition, abstraction). B0 and the recall probe only
+measure memory. **B1** measures bar 3 on the micro-bench, and every v14
+unit reports both B0 and B1.
 
 **Control body** for every LM arm: **M1** (KEEP at 600M, 2026-10-29,
 session "Qllm v13"): `baseline_real_pm` + chrono + out_gate + delta + echo,
@@ -105,6 +114,23 @@ for every arm. Launcher: `v14/run_b0.sh` (waits for free GPU memory).
 setting becomes the memory bar for N1, N4, N5. If nothing fails up to a64
 and bound attributes, memory is not the limiter and v14 focuses on LM
 quality (N2, N3).
+
+### B1 — rule induction (design; generator shared with the v13 session)
+
+**Question.** Can a unit learn a rule from a few examples in the context
+and apply it to a new input whose answer is nowhere in the context?
+
+**Design.** Same small model and training loop as B0, with a fourth task
+family drawn from the shared generator of the v13 session's learning probe
+(`scripts/run_learning_probe.py`; requested 2026-10-29 as an importable
+module so the micro-bench trains on the same tasks the probe scores on
+checkpoints). Answers are never copied from the context, so echo's
+succession memory cannot solve it by lookup. Bars are written when the
+task list is fixed, before any B1 run.
+
+**Why it matters for v14.** N4 (fast weights inside the unit) is a learner
+by construction: fast-weight / test-time-training layers are known to do
+in-context regression. B1, not B0, is its primary test.
 
 ### N1 — phase interference revived (v11 E3 on the lean body)
 
@@ -194,7 +220,9 @@ with write strength set by echo's prediction error (surprise). Memory moves
 into every unit instead of a separate notebook.
 **Prior art is close:** fast weights (Ba 2016), TTT-MLP (Sun 2024), Titans
 (2025). The new parts would be the echo-surprise gain and the complex/phase
-form. Run only if B0 shows a memory wall that N1 does not move.
+form. **Primary test: B1** (rule induction, goal bar 3). A unit that
+updates itself while reading is a learner, so its claim is learning, not
+recall; B0 is secondary.
 **Lesson to respect:** V6 salience memory was inert, so the fast weight must
 carry information the slow path cannot get (pands lesson 1).
 
