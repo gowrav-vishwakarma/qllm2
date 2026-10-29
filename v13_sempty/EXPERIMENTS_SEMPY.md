@@ -2206,3 +2206,13 @@ train loss T1 − echo on the same batches, 250-step windows to step 2250:
 behind (4 fewer token blocks) and closes; pre-registered window 1750–2250
 mean **−0.03 ≤ +0.02 → early PASS, promote to the 600M screen.** (The run
 keeps going locally to the 150M holdout val.)
+
+**T1 milestone log** (local 4090, same 600M schedule as echo):
+
+| tokens | holdout (T1 / echo / M1) | WikiText PPL (T1 / echo / M1) |
+|---|---|---|
+| 150M (step 4069) | **3.9204** / 3.9516 / 3.9225 | 122.70 / 119.64 / **109.70** |
+
+Mixed at 150M: best holdout (−0.031 vs echo, in-distribution DCLM-Edu) but
+WikiText +2.6 % (out of distribution). Not a rule trigger (T1 is judged on
+holdout, recall, PG-19); watch whether the WikiText gap closes.
