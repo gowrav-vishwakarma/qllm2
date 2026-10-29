@@ -242,7 +242,7 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
     # --- ladder (only non-default arch flags) -------------------------------
     _ladder = [k for k in ('n_states', 'vault', 'delta', 'cond_mem',
                            'chrono', 'out_gate', 'short_conv', 'echo',
-                           'pam_layers', 'mlp_hidden', 'share_reads', 'thought')
+                           'pam_layers', 'mlp_hidden', 'share_reads')
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if cfg.base_dt_bias != -4.0:
         _ladder.append('base_dt_bias')
@@ -1079,12 +1079,6 @@ def build_argparser():
                    help='E1: top-of-stack succession (echo) memory into the head')
     p.add_argument('--n_layers', type=int, default=0,
                    help='main-stack block count (0 = preset)')
-    p.add_argument('--thought', action='store_true',
-                   help='T1: slow thought stream over 16-token events (no decode yet)')
-    p.add_argument('--thought_layers', type=int, default=4)
-    p.add_argument('--thought_chunk', type=int, default=16)
-    p.add_argument('--thought_at', type=int, default=6,
-                   help='T1: events are pooled after main block thought_at-1')
     p.add_argument('--base_dt_bias', type=float, default=None,
                    help='initial decay bias (default -4 => retention ~0.982/token; '
                         '-6 => 0.9975, -8 => 0.99966). Retention bench 2026-09-06: no gain.')
@@ -1150,11 +1144,6 @@ def main():
         cfg.share_reads = True
     if args.n_layers:
         cfg.n_layers = args.n_layers
-    if args.thought:
-        cfg.thought = True
-        cfg.thought_layers = args.thought_layers
-        cfg.thought_chunk = args.thought_chunk
-        cfg.thought_at = args.thought_at
     if args.base_dt_bias is not None:
         cfg.base_dt_bias = args.base_dt_bias
     if args.dropout is not None:

@@ -105,17 +105,8 @@ class PAMConfig:
     # done once; reads reuse its pseudo-values. Needs pam_layers, delta,
     # chrono; chunked forward only (no decode yet).
     share_reads: bool = False
-    # T1 thought stream (2026-10-29, "two-speed mind"): after main block
-    # thought_at-1, every thought_chunk tokens are pooled (mean + last) into
-    # one EVENT; a separate stack of thought_layers PAM blocks (own memory,
-    # own Chrono clock) runs over the event sequence, 16x fewer steps; the
-    # thought after event c is added (zero-init) to the residual of the
-    # tokens of chunk c+1 -- top-down, causal, parallel in training.
-    # Real arm; chunked forward only (no decode yet).
-    thought: bool = False
-    thought_layers: int = 4
-    thought_chunk: int = 16
-    thought_at: int = 6
+    # (T1 thought stream removed 2026-10-30: FAIL at 600M, holdout +0.009 vs
+    # echo; EXPERIMENTS_SEMPY "T1", rerun via EXPERIMENT_INDEX.)
     # (R4 consolidation store removed 2026-10-27: FAIL, never used for recall;
     # EXPERIMENTS_SEMPY "R4".)
 

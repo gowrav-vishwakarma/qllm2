@@ -768,64 +768,6 @@ def test_sparse_memory(batch_size=2, seq_len=30, seed=0):
     return True
 
 
-def test_thought_stream(batch_size=2, seq_len=72, seed=0):
-    """T1 thought stream: (1) at init (zero thought_out) == thought off;
-    (2) the thought given to token t depends only on chunks that ENDED before
-    t's chunk began (perturb hidden at t0: no change before the next chunk
-    boundary after t0); whole model stays causal; (3) one backward reaches
-    the thought blocks; (4) the thinker is in the reported param total."""
-    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-    torch.manual_seed(seed)
-    cfg = get_config('tiny_real')
-    cfg.n_layers = 4
-    cfg.chunk_size = 16
-    cfg.chrono = cfg.out_gate = cfg.delta = cfg.echo = True
-    cfg.thought, cfg.thought_layers, cfg.thought_chunk, cfg.thought_at = True, 2, 8, 2
-    m = LM(cfg).to(dev).eval()
-    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len), device=dev)
-    with torch.no_grad():
-        on, _, _ = m.forward(ids)
-        m.thought = False
-        off, _, _ = m.forward(ids)
-        m.thought = True
-    d_init = (on - off).abs().max().item()
-    assert d_init < 1e-5, f"thought@init != off: {d_init:.3e}"
-
-    nn.init.normal_(m.thought_out.weight, std=0.3)
-    C, t0 = cfg.thought_chunk, 21                       # t0 in chunk 2 -> first change at 24
-    B, T, D = batch_size, seq_len, cfg.dim
-    batch, time = Dim("batch", B), Dim("time", T)
-    h = torch.randn(B, T, D, device=dev)
-    h2 = h.clone()
-    h2[:, t0] += 1.0
-    with torch.no_grad():
-        ta = m._thought(named(h, (batch, time, m.model_dim)), batch, time).raw(batch, time, m.model_dim)
-        tb = m._thought(named(h2, (batch, time, m.model_dim)), batch, time).raw(batch, time, m.model_dim)
-    edge = (t0 // C + 1) * C
-    d_early = (ta[:, :edge] - tb[:, :edge]).abs().max().item()
-    d_late = (ta[:, edge:] - tb[:, edge:]).abs().max().item()
-    assert d_early == 0.0 and d_late > 1e-4, f"thought leak: early {d_early:.3e} late {d_late:.3e}"
-    ids2 = ids.clone()
-    ids2[:, t0] = (ids2[:, t0] + 1) % cfg.vocab_size
-    with torch.no_grad():
-        a, _, _ = m.forward(ids)
-        b2, _, _ = m.forward(ids2)
-    d_past = (a[:, :t0] - b2[:, :t0]).abs().max().item()
-    assert d_past < 1e-4, f"model with thought not causal: {d_past:.3e}"
-
-    m.train()
-    lg, _, _ = m.forward(ids)
-    F.cross_entropy(lg.reshape(-1, cfg.vocab_size).float(), ids.reshape(-1)).backward()
-    n_none = sum(1 for p in m.thought_blocks.parameters() if p.grad is None)
-    assert n_none == 0 and m.thought_in.weight.grad.abs().sum() > 0, "thinker got no grad"
-    total = m.count_parameters()['total']
-    n_all = sum(p.numel() for p in m.parameters())
-    assert total == n_all, f"param total {total} != all params {n_all}"
-    print(f"  init parity {d_init:.1e}   chunk-causal: before edge {d_early:.1e} after {d_late:.1e}   "
-          f"model causal {d_past:.1e}   thinker grads ok   params {total} ({dev})")
-    return True
-
-
 def test_shared_reads(batch_size=2, seq_len=40, seed=0):
     """M2 shared reads: (1) pam_shared_read with the writer's own query equals
     the writer's read (the write is reusable, exactly); (2) share_reads at
@@ -1088,7 +1030,6 @@ def main():
         test_echo_memory,
         test_sparse_memory,
         test_shared_reads,
-        test_thought_stream,
         test_transformer_baseline,
         test_prefetch_order_and_cursor,
         test_worker_stream_order_and_cursor,

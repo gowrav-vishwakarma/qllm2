@@ -2272,7 +2272,8 @@ lead went −0.031, −0.015, +0.004, +0.009). Recall 0.539 ≥ 0.38 PASS
 probe 0.171. Reading: the slow event stream helps early (it is a shortcut
 to longer context) but the same params as token blocks win by 600M. The
 idea it was meant to lead to (surprise-timed events, event-level targets)
-is untested; code removal with an EXPERIMENT_INDEX row follows.
+is untested. **Code removed 2026-10-30**; the last commit with it is
+`5eff3b9` (rerun recipe in EXPERIMENT_INDEX "Failed and removed").
 
 ## Learning probe (goal bar 3: learning beyond recall) — baselines (2026-10-29)
 

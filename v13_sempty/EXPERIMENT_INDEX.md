@@ -28,6 +28,9 @@ logs of the original run are named after the *run* hash.)
 | LR 2e-4 | PAM LR at 3B tok | KEEP 2e-4: 1.2e-3 (picked by the 100M screen, −0.62 nats at 100M) is WORSE at 3B: holdout 3.2842 vs 3.2728, recall 0.602 vs 0.667; behind from step 6000. **100M screens cannot pick PAM's LR — screen PAM on ≥ 600M tok** | "Scoreboard result" | `LR=2e-4` (run `9982a79` was 1.2e-3) |
 | A2 / A2b | n states per head; vault (pinned state + protect gate) | still in code, not adopted (cost, no decode) | "Retention ladder" | `--n_states`, `--vault` |
 | A4 cond_mem | hashed n-gram conditional memory | still in code, not adopted | config comments | `--cond_mem` |
+| E1 echo | top-of-stack succession memory (key h_{t-1}, value E[x_t]) into the head | **PASS** `e1g` (6000, `a0fab65`) 600M: holdout 3.4885 vs 3.5408 (−0.052), WikiText 71.1 vs 75.9, recall 0.401 vs 0.343, PG-19 far gain 2.4× | "E1 Echo memory" | `--echo` / `ECHO=1` |
+| M1 sparse memory | notebooks in blocks 3,7,11,15 only + echo, MLP 2352 (param-matched, 1.8× faster) | **KEEP** `m1_m1echo` (`ccbf028`) 600M: holdout 3.4906 (echo 3.4885), WikiText 69.4 (71.1), recall **0.615** (0.401), 1.8× faster | "M1 sparse memory" | `PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2352` |
+| M2 shared reads | M1 + every notebook-less block reads the nearest notebook below (own query/gate) | **KEEP — best LM** (`ed326a1`, 600M): holdout 3.4697 vs M1 3.4906 (−0.021, lead held at every milestone), WikiText 68.84; recall 0.522 vs 0.615 (lower), 1.18× slower than M1; learning probe 0.185 | "M2 shared reads" | `SHARE_READS=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2128` |
 
 ## Failed and removed (code at the listed commit)
 
@@ -43,6 +46,8 @@ logs of the original run are named after the *run* hash.)
 | base_dt_bias −6/−8 | longer default retention | no gain (retention bench) | "R2 retention bench" | `54c62ed` | current (`--base_dt_bias`) | `BASE_DT_BIAS=-8` |
 | C1 coupled gates | one step dt: write = erase = 1−e^{−dt}, fade e^{−A dt} (Mamba-2 coupling on A3) | FAIL @300M: far a1 0.10 vs 0.26, holdout +0.055; fresh multi-fact +0.17 | "C1 result" | `91daf0a` (600M), `9ebd1d2` (100M) | `4c688cb` | `COUPLE=1 COUPLE_A=0.1` (screen: `tmp_scratch_screen.sh`) |
 | torch.compile blocks | `compile_blocks()` on the step | no gain: 171 → 177 ms/step (4090, B4), named-tensor graph breaks | — (2026-10-28 profile) | — | current | `model.compile_blocks()` |
+| G2 read norm | per-head RMSNorm of the PAM read | FAIL (futility): +0.14 nats vs ctl on the same batches at step 2250, not closing | "G2 read norm — stopped" | `3cc2b72` (`gscreen_onorm`) | `d4a57d1` | `OUT_NORM=1` (`--out_norm`) in `tmp_pretrain_mix.sh` |
+| T1 thought stream | 12 token blocks + 4-block PAM thinker over 16-token events (mean+last pooled after block 5), zero-init top-down into block 6; param-matched +1 %, 1.23× faster | FAIL @600M: holdout 3.4977 vs echo 3.4885 (+0.009; lead −0.031 @150M shrank every milestone); PG-19 far 0.0448, recall 0.539 (8-fact 0.357), learning probe 0.171 | "T1 thought stream" | `ea002e6` (`t1loc_t1`, 4090) | `5eff3b9` | `SCREEN=t1loc ARMS='t1:ECHO=1,N_LAYERS=12,THOUGHT=1' BASE='LR=1.2e-3 TARGET_TOKENS=599998464 VAL_EVERY=4069 GRAD_CKPT=1' bash v13_sempty/tmp_scratch_screen.sh` |
 
 ## Equal-data scoreboard (3B tok, ~102M) — 2026-10-29
 
@@ -66,11 +71,6 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 
 | id | idea | status | notebook section |
 |---|---|---|---|
-| G2 read norm | per-head RMSNorm of the PAM read | FAIL (futility): +0.14 nats vs ctl on the same batches at step 2250, not closing. Run `gscreen_onorm` @`3cc2b72`. **Code removed** after `d4a57d1` (last commit with it); rerun: `git worktree add ../qllm_g2 d4a57d1`, then `OUT_NORM=1` in `tmp_pretrain_mix.sh` (`--out_norm`) | "G2 read norm — stopped" |
 | G1 short conv | conv on qkv, single-pass pretraining regime | deferred (e1g conv arm skipped for M1) | "G screen" |
-| E1 echo | top-of-stack succession memory (key h_{t-1}, value E[x_t]) into the head | **PASS** `e1g` (6000, `a0fab65`) 600M: holdout 3.4885 vs 3.5408 (−0.052), WikiText 71.1 vs 75.9, recall 0.401 vs 0.343, PG-19 far gain 2.4× | "E1 Echo memory" |
-| M1 sparse memory | notebooks in blocks 3,7,11,15 only + echo, MLP 2352 (param-matched, 1.8× faster) | **KEEP — new reference** `m1_m1echo` (`ccbf028`) 600M: holdout 3.4906 (echo 3.4885), WikiText 69.4 (71.1), recall **0.615** (0.401), 1.8× faster | "M1 sparse memory" |
-| M2 shared reads | M1 + every notebook-less block reads the nearest notebook below (own query/gate) | **KEEP** (`ed326a1`, 600M): holdout 3.4697 vs M1 3.4906 (−0.021), WikiText 68.84; recall 0.522 vs 0.615 (lower), 1.18× slower than M1; learning probe 0.185 | "M2 shared reads" |
-| T1 thought stream | 12 token blocks + 4-block PAM thinker over 16-token events, top-down into block 6 (param-matched +1 %, 1.23× faster) | **FAIL** (`ea002e6`, 600M, 4090): holdout 3.4977 vs echo 3.4885 (lead −0.031 @150M shrank to +0.009); PG-19 far 0.0448, recall 0.539, learning probe 0.171. Code removal pending | "T1 thought stream" |
 | Learning probe (bar 3) | in-context rule tasks, answer must be inferred (`ed326a1`) | baselines: all ≤ chance on letter/number/reverse incl. Transformer++ 3B (mean 0.228); follow priors ("last+1") | "Learning probe" |
 | C1 reason-first curriculum | grammar 30M → real aptitude Q&A + chat 90M → normal mix 480M (M1 body, 600M total) | **FAIL primary** (`5b1eb9d`): learning probe 0.199 vs 0.175; **recall 0.907 vs M1 0.615** (unexpected, measured @ step 9766); control `c1ctl` + C1-on-M2 running (`7ae6f1f`) | "C1 result", "C1-ctl" |
