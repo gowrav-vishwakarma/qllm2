@@ -2375,6 +2375,10 @@ recall docs far faster. Alternative: the two-stage schedule itself (LR
 re-warmup, --init_from). The data stays (`v7/aptitude.py`, also used by
 v14); no model code to remove.
 
+Also visible in the learning probe: label_category, the one rule task where
+LMs score above in-context chance, moves at 8 shots — 2/4/8 shots: M1
+0.65/0.67/0.29, C1b 0.57/0.59/**0.49**, Transformer++ 3B 0.63/0.69/0.56.
+
 ## C1-ctl — is the recall jump the aptitude data or the two-stage schedule? (pre-registration, 2026-10-29)
 
 Same chain as C1, one change: stage A drops aptitude (dclm/fineweb/
@@ -2388,6 +2392,11 @@ data causes the jump (keep it as a curriculum ingredient). ctl ≥ 0.85 →
 the two-stage schedule causes it, not the data. In between → mixed, report
 both. Also reported: holdout and learning probe at 9766 and at the final
 step.
+
+**C1-ctl milestone log** (6000, `7ae6f1f`):
+- 2026-10-29 18:31Z: stage A `c1ctla_pre` done, holdout 3.9231 (C1a
+  4.1194 — not comparable: aptitude took 40 % of C1a's tokens, and the
+  holdout is web text), PG-19 4–8k far gain 0.0446. Stage B started.
 
 ## C1 on the M2 body (pre-registration, 2026-10-29) — queued after C1-ctl
 
