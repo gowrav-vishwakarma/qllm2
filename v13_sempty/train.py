@@ -813,9 +813,12 @@ class Trainer:
                 except Exception as e:
                     print(f"  [gen @ step {self.global_step}] failed: {e}", flush=True)
 
+            # Always validate the last step too: a VAL_EVERY that does not
+            # divide the run left C1b's final 114M tokens unmeasured.
+            is_last = max_steps is not None and self.global_step >= max_steps
             if (
                 self.val_every > 0 and self.global_step > 0
-                and self.global_step % self.val_every == 0
+                and (self.global_step % self.val_every == 0 or is_last)
                 and self.val_loader is not None
             ):
                 try:
