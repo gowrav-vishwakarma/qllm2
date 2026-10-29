@@ -92,6 +92,11 @@ class PAMConfig:
     # Real arm; decode carries (S, h_prev) as the last element of states.
     echo: bool = False
     echo_dt_bias: float = -6.0     # echo retention init e^-softplus(-6) ~ 0.9975
+    # E2 tied echo (2026-10-30, v14 B1 lead): W_q = W_k, one Linear(dim, dim)
+    # gives q_t = W h_t and k_t = W h_{t-1}, so the read is a similarity lookup
+    # (current state vs earlier predecessor states -> their next token), an
+    # induction match. Needs echo. EXPERIMENTS_SEMPY "E2".
+    echo_tied: bool = False
     # M1 sparse memory (2026-10-29, "few memories, deep thought"): only the
     # blocks listed here carry a PAM notebook; the others are pure gated-MLP
     # "thinking" blocks (GEMM-bound, fast). Empty = every block (default).
