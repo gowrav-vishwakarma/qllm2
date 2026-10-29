@@ -1067,7 +1067,20 @@ class LM(nn.Module):
                 str(i): ConditionalMemory(cfg, self.model_dim)
                 for i in self.cond_mem_layers
             })
+        # E1 Echo memory (see PAMConfig.echo): plain-torch projections at the
+        # top of the stack; the delta read reuses pam_delta_batched.
+        self.echo = cfg.echo
+        if self.echo:
+            assert not cfg.is_complex, "echo is implemented for the real arm"
+            assert cfg.dim == cfg.n_heads * cfg.head_dim, "echo heads must tile dim"
+            self.echo_qk = nn.Linear(cfg.dim, 2 * cfg.dim, bias=False)
+            self.echo_gates = nn.Linear(cfg.dim, 3 * cfg.n_heads)   # dt | write | erase
+            self.echo_out = nn.Linear(cfg.dim, cfg.dim, bias=False)
+            self.echo_out._zero_init = True                         # identity at start
         self._init_weights()
+        if self.echo:
+            with torch.no_grad():
+                self.echo_gates.bias[:cfg.n_heads].fill_(cfg.echo_dt_bias)
 
     def _init_weights(self):
         if self.config.is_complex:
@@ -1119,10 +1132,55 @@ class LM(nn.Module):
                 z = self.cond_mem[str(i)](z, input_ids)
         return z, new_states
 
+    def _echo_read(self, hidden: NamedTensor, input_ids, batch: Dim, time: Dim) -> NamedTensor:
+        """E1 Echo memory read (raw-torch boundary).
+
+            S_t = g_t S_{t-1} (I - b_e k_t k_t^T) + b_w v_t k_t^T,  r_t = S_t q_t
+            k_t = unit(W_k h_{t-1}),  v_t = rms_unit(E[x_t]),  q_t = W_q h_t
+
+        so ``r_t`` recalls the embedding of the token that followed the last
+        hidden state like ``h_t`` -- the next-token guess of a copy/induction
+        head. Gates read ``h_t`` (which has seen ``x_t``: causal). Per-head
+        RMS-normed, then the zero-init ``echo_out`` maps it onto the pre-logit
+        vector.
+        """
+        cfg = self.config
+        h = hidden.raw(batch, time, self.model_dim)                     # [B,T,D]
+        B, T, D = h.shape
+        H, K = cfg.n_heads, cfg.head_dim
+        q, k = self.echo_qk(h).chunk(2, dim=-1)
+        k = nn.functional.pad(k, (0, 0, 1, 0))[:, :T]                   # k_t from h_{t-1}; k_0 = 0
+        v = nn.functional.embedding(input_ids, self.embed.embed.weight).to(h.dtype)
+        v = v * torch.rsqrt(v.float().pow(2).mean(-1, keepdim=True) + 1e-6).to(h.dtype)
+
+        heads = lambda x: x.reshape(B, T, H, K).transpose(1, 2).reshape(B * H, T, K)  # [B,T,D] -> [B*H,T,K]
+        per_head = lambda x: x.transpose(1, 2).reshape(B * H, T)        # [B,T,H] -> [B*H,T]
+        dt, wr, er = self.echo_gates(h).split(H, dim=-1)                # [B,T,H] each
+        retention = per_head(torch.exp(-nn.functional.softplus(dt)))
+        bw = per_head(torch.sigmoid(wr))
+        be = per_head(torch.sigmoid(er - 3.0).clamp(max=0.95))
+        kn = nn.functional.normalize(heads(k), dim=-1)
+        read, _ = pam_delta_batched(heads(q), kn, heads(v), retention, bw, be, None)
+        read = nn.functional.rms_norm(read.float(), (K,), eps=1e-6).to(h.dtype)
+        read = read.reshape(B, H, T, K).transpose(1, 2).reshape(B, T, D)
+        return named(self.echo_out(read), (batch, time, self.model_dim))  # named-exit: echo boundary
+
+    def _lm_vector(self, z: NamedTensor, input_ids, batch: Dim, time: Dim) -> NamedTensor:
+        """Pre-logit vector: head projection + norm, plus the E1 echo read."""
+        hidden = self.output_norm(z)
+        lm = self.lm_head_norm(self.lm_head_proj(hidden))
+        if self.echo:
+            lm = lm + self._echo_read(hidden, input_ids, batch, time)
+        return lm
+
     def forward(self, input_ids, states=None, step_offset: int = 0, labels=None):
+        if self.echo and states is not None:
+            raise NotImplementedError(
+                "E1 echo has no decode state yet; run with --gen_every 0 "
+                "(val / probes / PG-19 use the full-sequence forward)")
         z, batch, time = self._stem(input_ids, step_offset)
         z, new_states = self._run_blocks(z, batch, time, states, step_offset, input_ids)
-        lm = self.lm_head_norm(self.lm_head_proj(self.output_norm(z)))
+        lm = self._lm_vector(z, input_ids, batch, time)
         logits = self._tied_logits(lm, batch, time)
         aux_loss = torch.zeros((), device=input_ids.device)
         return logits, new_states, aux_loss
@@ -1132,7 +1190,7 @@ class LM(nn.Module):
         z, batch, time = self._stem(input_ids, step_offset)
         z, _ = self._run_blocks(z, batch, time, states=None, step_offset=step_offset,
                                 input_ids=input_ids)
-        lm = self.lm_head_norm(self.lm_head_proj(self.output_norm(z)))
+        lm = self._lm_vector(z, input_ids, batch, time)
         aux_loss = torch.zeros((), device=input_ids.device)
         return lm, aux_loss
 

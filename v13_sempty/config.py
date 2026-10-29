@@ -87,6 +87,15 @@ class PAMConfig:
     # (learned per-channel scale, init 1) before the N4 gate, as in Gated
     # DeltaNet. Makes the read independent of |q| and of how full S is.
     out_norm: bool = False
+    # E1 Echo memory (2026-10-29, novel): one delta memory at the top of the
+    # stack that stores SUCCESSION -- key = final hidden of token t-1, value =
+    # the (unit-RMS) embedding of token t -- read with the hidden of token t
+    # and added to the pre-logit vector through a zero-init projection
+    # (identity at start). An O(1) learned copy/induction channel straight
+    # into the tied head ("after a moment like this, that word came").
+    # Real arm, chunked forward only (no decode state yet).
+    echo: bool = False
+    echo_dt_bias: float = -6.0     # echo retention init e^-softplus(-6) ~ 0.9975
     # (R4 consolidation store removed 2026-10-27: FAIL, never used for recall;
     # EXPERIMENTS_SEMPY "R4".)
 

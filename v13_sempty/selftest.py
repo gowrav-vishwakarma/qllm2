@@ -656,6 +656,79 @@ def test_short_conv_and_read_norm(batch_size=2, seq_len=40, seed=0):
     return True
 
 
+def test_echo_memory(batch_size=2, seq_len=48, seed=0):
+    """E1 echo memory: identity at init, causal, grads flow, and it can copy.
+
+    (1) echo on with zero echo_out == the model without it; (2) with a random
+    echo_out, changing token t moves no logit before t; (3) one backward
+    reaches echo_qk / echo_gates / echo_out; (4) mechanism: hand-wire the
+    echo to a 'hidden = embedding of current token' model and check that the
+    read after a repeated token points at the token that followed it before.
+    """
+    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.chunk_size = 16
+    cfg.chrono = cfg.out_gate = cfg.delta = True
+    cfg.echo = True
+    model = LM(cfg).to(dev).eval()
+    ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len), device=dev)
+    with torch.no_grad():
+        on, _, _ = model.forward(ids)
+        model.echo = False
+        off, _, _ = model.forward(ids)
+        model.echo = True
+    d_init = (on - off).abs().max().item()
+    assert d_init < 1e-5, f"echo@init != off: {d_init:.3e}"
+
+    nn.init.normal_(model.echo_out.weight, std=0.3)
+    t0 = 30
+    ids2 = ids.clone()
+    ids2[:, t0] = (ids2[:, t0] + 1) % cfg.vocab_size
+    with torch.no_grad():
+        a, _, _ = model.forward(ids)
+        b, _, _ = model.forward(ids2)
+    d_past = (a[:, :t0] - b[:, :t0]).abs().max().item()
+    d_now = (a[:, t0:] - b[:, t0:]).abs().max().item()
+    assert d_past < 1e-4 and d_now > 1e-3, f"echo not causal: past {d_past:.3e} now {d_now:.3e}"
+
+    model.train()
+    model.zero_grad(set_to_none=True)
+    lg, _, _ = model.forward(ids)
+    F.cross_entropy(lg.reshape(-1, cfg.vocab_size).float(), ids.reshape(-1)).backward()
+    for name in ('echo_qk', 'echo_gates', 'echo_out'):
+        g = getattr(model, name).weight.grad
+        assert g is not None and g.abs().sum() > 0, f"{name} got no grad"
+
+    # (4) mechanism, on the raw read: hidden_t := unit embedding of x_t,
+    # W_q = W_k = I, write/erase ~1, no fade. Sequence: A B ... A -> the read
+    # at the second A must be closest to embedding(B).
+    model.eval()
+    D = cfg.dim
+    with torch.no_grad():
+        model.echo_qk.weight.copy_(torch.cat([torch.eye(D), torch.eye(D)]).to(dev))
+        model.echo_gates.weight.zero_()
+        Hh = cfg.n_heads
+        model.echo_gates.bias[:Hh].fill_(-20.0)     # retention ~ 1
+        model.echo_gates.bias[Hh:2 * Hh].fill_(20.0)  # write ~ 1
+        model.echo_gates.bias[2 * Hh:].fill_(20.0)    # erase -> 0.95
+        model.echo_out.weight.copy_(torch.eye(D).to(dev))
+        seq = torch.randint(0, cfg.vocab_size, (1, 12), device=dev)
+        seq[0, 11] = seq[0, 3]                        # repeat token 3 at the end
+        from sempyt.tensor import named as _named
+        from sempyt.dim import Dim as _Dim
+        bt, tt = _Dim("batch", 1), _Dim("time", 12)
+        E = model.embed.embed.weight
+        hid = nn.functional.normalize(E[seq], dim=-1)
+        r = model._echo_read(_named(hid, (bt, tt, model.model_dim)), seq, bt, tt).raw(bt, tt, model.model_dim)
+        sims = nn.functional.normalize(r[0, 11], dim=-1) @ nn.functional.normalize(E, dim=-1).T
+        top = int(sims.argmax())
+    assert top == int(seq[0, 4]), f"echo read at repeat -> {top}, want successor {int(seq[0, 4])}"
+    print(f"  init parity {d_init:.3e}   causal: past {d_past:.1e} now {d_now:.1e}   "
+          f"grads ok   copy: repeat of x3 recalls x4 ({dev})")
+    return True
+
+
 def test_transformer_baseline(seed=0):
     """Transformer++ baseline (equal-data quality reference).
 
@@ -839,6 +912,7 @@ def main():
         test_chrono_parallel_vs_recurrent,
         test_out_gate_parity_and_decode,
         test_short_conv_and_read_norm,
+        test_echo_memory,
         test_transformer_baseline,
         test_prefetch_order_and_cursor,
         test_worker_stream_order_and_cursor,

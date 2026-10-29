@@ -61,6 +61,7 @@ KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {
         "_stepwise_delta",         # A3: per-token erase/write decode on the fp32 notebook
         "_short_conv",             # G1: depthwise causal Conv1d over time on fused qkv
         "_read_norm",              # G2: per-head fp32 RMSNorm of the memory read
+        "_echo_read",              # E1: top-of-stack succession delta memory (raw boundary)
     }),
 }
 
