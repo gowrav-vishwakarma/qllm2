@@ -18,6 +18,15 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-29 13:55Z: C1 reason-first curriculum queued on the 6000** (tmux
+  `c1chain`, `~/c1_chain.sh`, log `~/c1_chain.log`): waits for "m2 DONE" and
+  the Mamba-2 learning-probe json, pulls code + sempyt, runs `c1a_pre`
+  (120M: 30M web, then aptitude 0.40 / chat 0.15 / web) then `c1b_main`
+  (480M, M1 mix, `--init_from` c1a best), then the learning probe on both.
+  ETA ~17:05Z. Resume: `tmux new-session -d -s c1chain "SCREEN_HASH=<hash in
+  ~/c1_chain.log> bash ~/c1_chain.sh 2>&1 | tee -a ~/c1_chain.log"` (finished
+  stages skip via .done). Rules: EXPERIMENTS "C1".
+
 * **2026-10-29 13:20Z: learning probe (bar 3) baselines DONE** (EXPERIMENTS
   "Learning probe"): no model applies an in-context rule, Transformer++ 3B
   included. 6000 queue: M2 (`m2chain`, started 13:00Z, ETA ~14:50Z) → tmux
