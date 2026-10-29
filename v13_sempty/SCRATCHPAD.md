@@ -18,6 +18,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-29 12:00Z: two sessions share the GPUs.** v13_sempty = session
+  `qllm2-04`; v14 (new neurons) = session `qllm2-d5`. Rules: ping the other
+  (SendMessage) on every GPU job start/stop (box, tmux, GB, ETA); ask before
+  launching on a GPU the other uses; ping on verdicts. Plan now: 4090 = T1
+  (`t1loc`) to ~16:15Z incl. probes; v14 `v14b0` waits for 12 GB free there.
+  6000 = M1 → **v14 B0 slot** → M2: `~/m2_chain.sh` now waits for "m1 DONE"
+  AND `~/v14_slot.done` (touched by the v14 session when B0 ends; 3h
+  timeout). The maya3 voice server + voice-agent (user's, ~10 GB) also live
+  on the 4090 — leave them alone.
+
 * **2026-10-29 11:15Z: T1 thought stream (two-speed mind) — local 4090
   same-batch check** tmux `t1loc` (`SCREEN=t1loc ARMS='t1:ECHO=1,N_LAYERS=12,THOUGHT=1'
   BASE='LR=1.2e-3 TARGET_TOKENS=599998464 VAL_EVERY=4069 SAVE_EVERY=500
@@ -26,7 +36,7 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   train loss vs `logs/v13_sempty_e1g_echo_a0fab65_20261029_0817.log` at step
   2250 with the cmp script (EXPERIMENTS "T1 thought stream" rules); then stop
   it (`tmux kill-session -t t1loc`) or let it run if clearly ahead. Resume:
-  same command with `SCREEN_HASH=ea002e6`.
+  same command with `SCREEN_HASH=ea002e6`. Not paused (user 12:00Z: keep it).
 
 * **2026-10-29 11:10Z: E1 echo PASS at 600M** (holdout 3.4885 vs 3.5408,
   WikiText 71.1 vs 75.9, recall 0.401 vs 0.343, PG-19 far gain 2.4×; table +
