@@ -26,14 +26,14 @@ AGENTS.md). All launchers refuse a dirty tree.
 | id | measures | status | run hash | log | rerun |
 |---|---|---|---|---|---|
 | B0 | memory wall: facts / bind / rebind, 8 candidates, chance 0.125 | run 1 **INVALID** (no easy rung: no arm learned lookup). Run 2 (sizes from 1) queued on the 4090 behind B1 | run 1 `a0f672a` | `logs/v14_b0_a0f672a_20261029_1232.log` | `ARMS=echo,delta,n1sum,n1gate,n1phase,op TAG=b0 bash v14/run_b0.sh` |
-| B1 | rule induction in context (goal bar 3), shared generator `memory_probes/rules.py` | run 1 **running** on the 4090 since 23:29 IST 2026-10-29 | `5b1eb9d` | `logs/v14_b1_5b1eb9d_20261029_2329.log` | `TAG=b1 FAMILIES=rules ARMS=echo,op,opdiag,n1phase,delta bash v14/run_b0.sh` |
+| B1 | rule induction in context (goal bar 3), shared generator `memory_probes/rules.py` | run 1 **done** (00:17 IST 2026-10-30): letter_shift / number_step / reverse3 at the ceiling (1.00, every arm, learned in weights); label_category and two_hop separate. Run 2 (unseen rule parameters, new seed) to be pre-registered | `5b1eb9d` | `logs/v14_b1_5b1eb9d_20261029_2329.{log,json}` | `TAG=b1 FAMILIES=rules ARMS=echo,op,opdiag,n1phase,delta bash v14/run_b0.sh` |
 
 ## Candidates in code (not yet judged)
 
 | id | idea | status | notebook section | flag / micro-bench arm |
 |---|---|---|---|---|
 | N1 | K delta notebooks whose reads interfere by rotation (v11 E3 on the lean body) | selftest PASS; arm `n1phase` in B1, all three reads in B0 run 2 | "N1" | `phase_states=2 phase_read=sum\|gate\|phase`; arms `n1sum`, `n1gate`, `n1phase` |
-| N6 | operator memory: the state is an inferred per-channel rotation, applied to the next input | selftest PASS (applies an inferred rotation, cos 1.0000); first real test in B1 | "N6" | `opmem=phase\|diag` (needs echo); arms `op`, `opdiag` |
+| N6 | operator memory: the state is an inferred per-channel rotation, applied to the next input | B1 run 1: frozen bar **NOT MET** (ceiling: op = echo = 1.00 on letter_shift / number_step). **Unexpected:** label_category op = opdiag = 1.00 vs echo 0.76 / 0.77 / 0.52, so the diagonal memory helps, not the rotation. Exploratory until it replicates (B1 run 2) | "N6" | `opmem=phase\|diag` (needs echo); arms `op`, `opdiag` |
 
 Selftests: `.venv/bin/python -m v14.selftest` (CPU, minutes) and
 `.venv/bin/python -m v14.check_layout`.

@@ -178,9 +178,42 @@ every answer supervised (answer-only loss). Train shots 1–8, random task
 per episode; eval 2 / 4 / 8 shots, one task per document, held-out seeds,
 16 docs per cell (18–73 answers per doc). Same small body and loop as B0.
 
-**Run 1 (running on the 4090 since 23:29 IST, `5b1eb9d`, log `logs/v14_b1_5b1eb9d_20261029_2329.log`):** arms echo, op, opdiag,
+**Run 1 (done 2026-10-30 00:17 IST, 4090, `5b1eb9d`, log + JSON
+`logs/v14_b1_5b1eb9d_20261029_2329.{log,json}`):** arms echo, op, opdiag,
 n1phase, delta; 6000 steps × B16; `TAG=b1 FAMILIES=rules`. N6 bars are
 frozen in the N6 section.
+
+| task (in-context chance at 2 / 4 / 8 shots) | echo | op | opdiag | n1phase | delta |
+|---|---|---|---|---|---|
+| letter_shift (0.125) | 1.00 1.00 1.00 | 1.00 1.00 1.00 | 1.00 1.00 1.00 | 1.00 1.00 1.00 | 1.00 1.00 1.00 |
+| number_step (0.125) | 1.00 1.00 1.00 | 1.00 1.00 1.00 | 1.00 1.00 1.00 | 1.00 1.00 1.00 | 1.00 1.00 1.00 |
+| reverse3 (0.33) | 1.00 1.00 1.00 | 1.00 1.00 1.00 | 1.00 1.00 1.00 | 1.00 1.00 1.00 | 1.00 1.00 1.00 |
+| label_category (0.50 0.50 0.25) | 0.76 0.77 0.52 | **1.00 1.00 1.00** | **1.00 1.00 1.00** | 0.54 0.51 0.24 | 0.52 0.49 0.26 |
+| two_hop (0.50 0.25 0.125) | 0.52 0.25 0.12 | 0.51 0.27 0.09 | 0.51 0.27 0.11 | 0.51 0.27 0.12 | 0.49 0.24 0.11 |
+| ms / step (train) | 99 | 94 | 95 | 107 | 83 |
+
+Answers per cell: label_category 1088 / 704 / 416, two_hop 512 / 289 /
+160 (16 held-out docs each).
+
+**Reading.**
+- **Validity: met by the letter of the rule, but three tasks hit the
+  ceiling.** Every arm, delta included, scores 1.00 on letter_shift,
+  number_step and reverse3. When a small body trains on the same task
+  family, it learns these rules in its weights. Context only has to pick
+  the hidden parameter (k from 3 values, d from 8). These cells cannot
+  separate arms. **Bench lesson:** a rule with a small, trained parameter
+  set is not an in-context induction test. Evaluate on rule parameters
+  never seen in training (B1 run 2).
+- **label_category separates arms.** The query item is never labelled in
+  the context, so the label must be bound to the *category*. Delta and
+  n1phase sit at in-context chance (they know the answer is one of the
+  labels shown, not which). Echo is above chance. op and opdiag are
+  perfect at all shot counts.
+- **two_hop: every arm is at in-context chance.** No small body composes
+  two facts. At scale it is the same (v13 learning probe).
+- At scale, label_category 8-shot (chance 0.25): Transformer++ 3B 0.56,
+  delta 3B 0.53, Mamba-2 3B 0.38, M1 600M 0.29 (`logs/learning_probes/`).
+  It is the only rule task where any LM is above chance.
 **Purpose:** control levels for small bodies, and the first N6 test. N1 and
 delta are reported only (memory mechanisms, not learners). **Validity check:** the bench is
 usable if some arm reaches ≥ 0.50 on reverse3 or two_hop at 8 shots; else
@@ -372,6 +405,29 @@ run).** Arms trained on identical data: echo (control), op (N6), opdiag
 - two_hop: composition, the informative middle case.
 - reverse3: positional, not a rotation of content. No gain expected.
 
+**B1 run 1 result and verdict (2026-10-30 00:30 IST; table in "B1").**
+- **PASS bar: NOT MET.** On letter_shift and number_step, op = echo =
+  opdiag = 1.00 (the ceiling: every arm, delta included, solves them in
+  weights). The cell cannot show the claim either way. This is a bench
+  defect, not a mechanism failure. The original claim (an inferred
+  rotation applies to a new input) moves to B1 run 2, on rule parameters
+  never seen in training.
+- **reverse3 prediction held** (op − echo = 0.00).
+- **label_category prediction WRONG, in N6's favour:** op 1.00 / 1.00 /
+  1.00 vs echo 0.76 / 0.77 / 0.52 (+0.24 / +0.23 / +0.48). But opdiag is
+  also 1.00, so the **rotation-only bias is not what helps.** What op and
+  opdiag share, and echo lacks: a *diagonal* (per-channel) memory from the
+  previous hidden state to the next token, with **one shared projection
+  for key and query** (`a = W_in h_{t−1}`, `q = W_in h_t`) and a
+  magnitude-normalised read. Echo pairs the same two things, but in a full
+  delta matrix with separate W_q and W_k. Two candidate reasons, to be
+  separated: (i) the shared projection makes "same category" match by
+  construction; (ii) a diagonal state binds a few category-level features
+  cleanly, where a matrix state also binds item detail.
+- **two_hop:** op at in-context chance, like every arm.
+- **Cost:** none. op 94 ms/step vs echo 99 (+0.5M params).
+- **Status: exploratory, not pre-registered.** The label_category gain must
+  replicate on a new training seed (B1 run 2) before it counts.
 ---
 
 ## Order and machines
