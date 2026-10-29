@@ -34,7 +34,8 @@ AGENTS.md). All launchers refuse a dirty tree. `v14/run_bench.sh` replaced `v14/
 | id | idea | status | notebook section | flag / micro-bench arm |
 |---|---|---|---|---|
 | N1 | K delta notebooks whose reads interfere by rotation (v11 E3 on the lean body) | selftest PASS; arm `n1phase` in B1, all three reads in B0 run 2 | "N1" | `phase_states=2 phase_read=sum\|gate\|phase`; arms `n1sum`, `n1gate`, `n1phase` |
-| N6 | operator memory: the state is an inferred per-channel rotation, applied to the next input | B1 run 1: frozen bar **NOT MET** (ceiling: op = echo = 1.00 on letter_shift / number_step). **Unexpected:** label_category op = opdiag = 1.00 vs echo 0.76 / 0.77 / 0.52, so the diagonal memory helps, not the rotation. Exploratory until it replicates (B1 run 2) | "N6" | `opmem=phase\|diag` (needs echo); arms `op`, `opdiag` |
+
+| echo_tied | echo with one projection for query and key (W_q = W_k): a query lands on keys of hidden states like its own (similarity lookup) | B1 run 2, exploratory: label_category 0.92 / 0.92 / 0.74 vs echo 0.61 / 0.54 / 0.27 (one seed; seed noise ≈ 0.2). In B0 run 2 (memory cost). Needs ≥ 3 seeds (B1 run 3) | "B1" run 2 | `echo_tied_qk=True`; arm `echo_tied` |
 
 Selftests: `.venv/bin/python -m v14.selftest` (CPU, minutes) and
 `.venv/bin/python -m v14.check_layout`.
@@ -45,7 +46,9 @@ None yet.
 
 ## Failed and removed (code at the listed commit)
 
-None yet.
+| id | idea | verdict / key number | notebook section | run hash | code at | rerun (at *code at*) |
+|---|---|---|---|---|---|---|
+| N6 | operator memory: the state is an inferred per-channel rotation (circular mean of b·conj(a), a = W_in h_{t-1}, b = W_role ê(x_t)), applied to the next input q = W_in h_t | **FAIL** (B1 run 2). Replication not met: label_category mean op 0.427, opdiag 0.587 vs echo 0.471, need +0.15 (run 1's 1.00 was seed luck). Unseen rule parameters: op 0.037 vs echo 0.063 (all below chance). Rotation never beat the plain diagonal | "N6" | `85ecf02` (run 2), `5b1eb9d` (run 1) | `78e4354` | `TAG=b1r2 FAMILIES=rules ARMS=echo,op,opdiag,opdiag_ownq SAVE=1 EXTRA='--seed 7 --doc_seed0 50000000 --init_seed 1' bash v14/run_bench.sh` |
 
 ## Folded or not built
 

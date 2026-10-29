@@ -18,6 +18,13 @@ parameters; ``gate`` scales each read by a real number (it may go negative),
 ``phase`` turns it. The pair isolates whether turning carries anything that a
 real data-dependent weight does not. (A ``cos φ`` gate was rejected: its
 gradient at φ = 0 is zero, so it could never leave the start.)
+
+Tied echo (``V14Config.echo_tied_qk``): echo with one projection for query
+and key (W_q = W_k), so a query lands on keys of hidden states like its own.
+The B1 run 2 lead (label_category 0.857 vs echo 0.471, one seed).
+
+N6 operator memory was removed after B1 run 2 (FAIL); its code is at
+``78e4354`` (v14/EXPERIMENT_INDEX.md).
 """
 
 from __future__ import annotations
@@ -25,10 +32,8 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from sempyt import (cat, exp, mean, rotate, scan, select, shift, sigmoid, softplus,
-                    sqrt, square, stack, sum as named_sum, take)
+from sempyt import rotate, sum as named_sum
 from sempyt.dim import Dim, ProductDim
-from sempyt.policies import REAL, SplitComplex
 from sempyt.nn import Linear as NamedLinear
 from sempyt.tensor import NamedTensor, named
 
@@ -38,8 +43,6 @@ from v13_sempty.triton_kernels import pam_delta_batched
 from v14.config import V14Config
 
 PHASE_READS = ('sum', 'gate', 'phase')
-OPMEM_QUERIES = ('shared', 'own')
-OPMEM_MODES = ('phase', 'diag')
 
 
 class PhaseStatesPAM(RealPAMLayer):
@@ -158,122 +161,6 @@ class PhaseStatesPAM(RealPAMLayer):
         return self._combine(tokens, reads_named), carried
 
 
-class OperatorMemory(nn.Module):
-    r"""N6: a memory of how things change, applied to the next input.
-
-    Each channel pair of each head is one complex number. At every token t:
-
-        a_t = W_in h_{t-1}            the input side   (what came before)
-        b_t = W_role ê(x_t)           the output side  (the token that followed)
-        r_t = b_t · conj(a_t)         their relation: a rotation (and a scale)
-        S_t = γ_t S_{t-1} + w_t r_t   relations accumulated, faded per head
-        q_t = W_in h_t                the next input (W_q h_t with opmem_query='own')
-        p_t = q_t · S_t / (|S_t| + 1)  (phase)   or   q_t · S_t  (diag)
-
-    ``phase`` keeps only the rotation of each relation (r / |r|), so S is a
-    weighted circular mean and the read TURNS the next input by the mean
-    turn: d numbers per head, inferable from one or two examples, composing
-    by adding angles. ``diag`` keeps rotation and magnitude, a plain diagonal
-    memory with the same parameters: the control for the "rotation only" bias.
-    ê is the unit-RMS embedding of the current token; w (write) and γ (fade)
-    are per-head gates read from h_t. The read is RMS-normalised per head and
-    added to the pre-logit vector through a zero-init projection.
-    """
-
-    def __init__(self, cfg: V14Config, model_dim: Dim):
-        super().__init__()
-        if cfg.opmem not in OPMEM_MODES:
-            raise ValueError(f"opmem must be one of {OPMEM_MODES}")
-        if cfg.opmem_query not in OPMEM_QUERIES:
-            raise ValueError(f"opmem_query must be one of {OPMEM_QUERIES}")
-        self.mode = cfg.opmem
-        self.model_dim = model_dim
-        self.heads = Dim("op_heads", cfg.n_heads)
-        self.plane = Dim("op_plane", cfg.head_dim // 2)
-        self.pair = Dim("op_pair", 2)
-        self.feat = ProductDim(self.heads, self.plane, self.pair)
-        self.w_in = NamedLinear(model_dim, self.feat, bias=False)
-        self.w_role = NamedLinear(model_dim, self.feat, bias=False)
-        # The query's projection: the key's W_in ('shared') or its own W_q ('own').
-        self.w_q = NamedLinear(model_dim, self.feat, bias=False) if cfg.opmem_query == 'own' else None
-        self.write = NamedLinear(model_dim, self.heads)
-        self.write._zero_init = True                      # w = 1/2 at start
-        self.fade = NamedLinear(model_dim, self.heads)
-        self.fade._zero_init = True
-        self.fade._init_bias = cfg.opmem_fade_bias
-        self.out = NamedLinear(self.feat, model_dim, bias=False)
-        self.out._zero_init = True                        # identity at start
-        self.eps = 1e-6
-
-    def _complex(self, x: NamedTensor, batch: Dim, time: Dim) -> NamedTensor:
-        return x.to(batch, time, self.heads, self.plane, self.pair).with_policy(
-            SplitComplex(self.pair))
-
-    def _head_rms(self, z: NamedTensor) -> NamedTensor:
-        """sqrt(mean |z|² over the head's planes) + eps, per head."""
-        return sqrt(mean(square(z.abs()), over=self.plane) + self.eps)
-
-    def forward(self, hidden: NamedTensor, embedded: NamedTensor, state=None):
-        """hidden, embedded: (batch, time, model_dim). state = (h_last, S_last) or None.
-        Returns the pre-logit contribution (batch, time, model_dim) and the new state."""
-        batch, time = hidden.layout[0], hidden.layout[1]
-        p, new_state = self.read(hidden, embedded, state)
-        return self.out(p.with_policy(REAL).to(batch, time, self.feat)), new_state
-
-    def read(self, hidden: NamedTensor, embedded: NamedTensor, state=None):
-        """The operator read p_t (batch, time, heads, plane | complex), RMS-normalised per head."""
-        batch, time = hidden.layout[0], hidden.layout[1]
-        T = time.size
-        if state is None:
-            h_prev = shift(hidden, time, 1)
-        else:
-            last = self._restate(state[0], (batch, self.model_dim))
-            if T == 1:
-                h_prev = stack([last], into=time, at=self.model_dim)
-            else:
-                first = stack([last], into=Dim("time", 1), at=self.model_dim)
-                h_prev = cat([first, take(hidden, time, 0, T - 1)], over=time, into=time)
-        unit_embed = embedded / sqrt(mean(square(embedded), over=self.model_dim) + self.eps)
-        a = self._complex(self.w_in(h_prev), batch, time)
-        b = self._complex(self.w_role(unit_embed), batch, time)
-        w_q = self.w_in if self.w_q is None else self.w_q
-        q = self._complex(w_q(hidden), batch, time)
-        if self.mode == 'phase':
-            r = b * a.conj()
-            r = r / (r.abs() + self.eps)
-        else:
-            r = (b / self._head_rms(b)) * (a / self._head_rms(a)).conj()
-        w = sigmoid(self.write(hidden))                                  # (batch, time, heads)
-        g = exp(-softplus(self.fade(hidden)))                            # retention in (0, 1)
-        # scan returns time last; split-complex ops (abs, conj, cmul) need the
-        # pair axis last, so restore that order.
-        S = scan(r * w, g, over=time, mode='chunked').to(
-            batch, time, self.heads, self.plane, self.pair)
-        if state is not None:
-            S_in = self._restate(state[1], (batch, self.heads, self.plane, self.pair)
-                                 ).with_policy(SplitComplex(self.pair))
-            S = S + exp(cumsum_log(g, time)) * S_in
-        if self.mode == 'phase':
-            p = q * S / (S.abs() + 1.0)
-        else:
-            p = q * S
-        p = p / self._head_rms(p)
-        new_state = (select(hidden, time, T - 1).data.detach(),          # named-exit: decode state
-                     select(S, time, T - 1).to(batch, self.heads, self.plane, self.pair).data)  # named-exit: decode state
-        return p, new_state
-
-    @staticmethod
-    def _restate(data, layout):
-        """A carried raw state back onto this call's axes (no data moves)."""
-        return named(data, layout)  # named-exit: restate
-
-
-def cumsum_log(g: NamedTensor, over: Dim) -> NamedTensor:
-    """log of the running product of g along ``over``: Σ_{k≤t} log g_k."""
-    from sempyt import cumsum, log
-    return cumsum(log(g), over=over)
-
-
 class TiedEchoQK(nn.Module):
     """Echo's query/key projection with W_q = W_k: one D x D map whose output
     is returned twice, so v13's ``q, k = echo_qk(h).chunk(2)`` gives q = k."""
@@ -298,12 +185,6 @@ class V14LM(LM):
                 raise ValueError("echo_tied_qk needs echo")
             self.echo_qk = TiedEchoQK(cfg.dim)
             swapped = True
-        self.opmem = None
-        if getattr(cfg, 'opmem', ''):
-            if cfg.is_complex or not cfg.echo:
-                raise ValueError("N6 opmem is implemented on the real echo body")
-            self.opmem = OperatorMemory(cfg, self.model_dim)
-            swapped = True
         if getattr(cfg, 'phase_states', 1) > 1:
             if cfg.is_complex:
                 raise ValueError("N1 is implemented for the real arm")
@@ -318,16 +199,3 @@ class V14LM(LM):
             if self.echo:
                 with torch.no_grad():
                     self.echo_gates.bias[:cfg.n_heads].fill_(cfg.echo_dt_bias)
-
-    def _lm_vector(self, z, input_ids, batch, time, echo_state=None):
-        """Pre-logit vector: head + echo (as in v13) + N6 operator memory.
-        With opmem the echo state slot carries (echo_state, op_state)."""
-        if self.opmem is None:
-            return super()._lm_vector(z, input_ids, batch, time, echo_state)
-        e_state, o_state = echo_state if echo_state is not None else (None, None)
-        hidden = self.output_norm(z)
-        lm = self.lm_head_norm(self.lm_head_proj(hidden))
-        out, new_echo = self._echo_read(hidden, input_ids, batch, time, e_state)
-        lm = lm + out
-        op_out, new_op = self.opmem(hidden, self.embed(input_ids, batch, time), o_state)
-        return lm + op_out, (new_echo, new_op)

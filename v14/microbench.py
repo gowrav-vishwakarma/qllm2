@@ -26,9 +26,8 @@ Arms (all real arm, chrono + out_gate + delta):
     delta        the v13 memory without echo
     echo         + E1 echo: the current control body
     n1sum / n1gate / n1phase   echo body with N1 (2 notebooks, sum/gate/phase)
-    op / opdiag  echo body + N6 operator memory (rotation-only / plain diagonal)
-    opdiag_ownq  opdiag with its own query projection W_q (key still W_in h_{t-1})
     echo_tied    echo with W_q = W_k (one projection for query and key)
+    (N6 arms op / opdiag / opdiag_ownq left with N6 after B1 run 2: 78e4354)
 Optional suffixes: @<head_dim> (default 64), :L<n_layers> (default 4).
 """
 
@@ -268,9 +267,6 @@ ARMS = {
     'n1sum': dict(echo=True, phase_states=2, phase_read='sum'),
     'n1gate': dict(echo=True, phase_states=2, phase_read='gate'),
     'n1phase': dict(echo=True, phase_states=2, phase_read='phase'),
-    'op': dict(echo=True, opmem='phase'),
-    'opdiag': dict(echo=True, opmem='diag'),
-    'opdiag_ownq': dict(echo=True, opmem='diag', opmem_query='own'),
     'echo_tied': dict(echo=True, echo_tied_qk=True),
 }
 
