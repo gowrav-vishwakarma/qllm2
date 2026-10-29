@@ -1890,6 +1890,30 @@ Control at 600M: holdout **3.5408** (PPL 34.50), WikiText **75.89**, recall
 Self-test `test_short_conv_and_read_norm` (conv init parity 0, causal,
 grads reach every conv/norm, out_norm decode == chunked 7e-7): 21/21 pass.
 
+Control PG-19 (run on the 4090 from `r600_ctl_91daf0a/best_model.pt`,
+`logs/pos_loss/v13_sempty_r600_ctl_91daf0a_pg19.json`): loss [1k,2k) /
+[2k,4k) / [4k,8k) 3.8897 / 3.8850 / 3.9201, far_gain +0.011 / +0.016 /
++0.018.
+
+## Speed: where PAM's 2.9× gap to Mamba-2 is (2026-10-29, 4090, B4 T2048)
+
+- **Not width alignment.** Step time by geometry (all chrono+gate+delta):
+  588/6×98 166.6 ms (102.1M) · 576/6×96 159.4 ms (98.6M) · 576/9×64 148.6 ms
+  (98.7M) · 640/10×64 169.4 ms (118.3M) · 768/6×128 ×12 layers 173.4 ms
+  (131.5M). Aligned widths buy ~4 %, mostly from fewer params.
+- **Profile is flat and GPU-bound** (161 ms CUDA per 166 ms step): the
+  biggest single kernel is 4.6 %; ~1,500 tiny GEMMs/solves (4 µs each) and
+  thousands of elementwise launches (5–30 µs) from the chunked delta (WY,
+  trsm 5.4 %), gates, Chrono rotary and norms. No hotspot to hand-tune — the
+  fix is one fused chunked delta kernel.
+- **Candidate: flash-linear-attention's `chunk_gated_delta_rule`** (Gated
+  DeltaNet's fused Triton kernel, Mamba-2-class speed). PAM maps onto it
+  exactly: S_t = g S(I − b_e k kᵀ) + b_w v kᵀ = g S(I − β k kᵀ) + β v' kᵀ
+  with β = b_e, v' = (b_w / b_e) v, log-decay = log g, unit keys, scale
+  d^{-1/2}. Not installed on either box (needs Python ≥ 3.10; the 4090 venv
+  is 3.9, the 6000 is 3.11). Installing third-party kernels needs the user's
+  OK — pending.
+
 ## Engineering: batch prefetch + the diag panel's hidden data skip (2026-10-27, `129b406`)
 
 Found while the Mamba-2 baseline ran data-bound (98K tok/s of a possible

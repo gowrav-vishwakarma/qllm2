@@ -32,8 +32,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     `logs/v13_sempty_gscreen_driver_3cc2b72.log`. Resume after a crash:
     `tmux new-session -d -s gscreen "SCREEN_HASH=3cc2b72 bash ~/g_chain.sh"`
     (SCREEN_HASH skips the pull; finished arms are skipped).
-  - Local 4090: PG-19 of the r600 control (tmux `pgctl`) ->
-    `logs/pos_loss/v13_sempty_r600_ctl_91daf0a_pg19.json`.
+  - Local 4090: PG-19 of the r600 control DONE ->
+    `logs/pos_loss/v13_sempty_r600_ctl_91daf0a_pg19.json` (far_gain
+    +0.011/+0.016/+0.018).
+  - Speed: not alignment; flat profile; next lever = fused delta kernel,
+    e.g. flash-linear-attention `chunk_gated_delta_rule` (exact mapping in
+    EXPERIMENTS "Speed: where PAM's 2.9x gap is"). Needs user OK to install.
 
 * (history) **NOW (2026-10-28 19:00Z) — Transformer++ 3B DONE (`e072a8f`): holdout
   24.69, WikiText 46.61, recall mean 0.539 (fails past 2048); EXPERIMENTS
