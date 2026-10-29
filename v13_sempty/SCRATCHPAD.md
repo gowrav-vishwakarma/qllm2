@@ -32,6 +32,13 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     `logs/v13_sempty_gscreen_driver_3cc2b72.log`. Resume after a crash:
     `tmux new-session -d -s gscreen "SCREEN_HASH=3cc2b72 bash ~/g_chain.sh"`
     (SCREEN_HASH skips the pull; finished arms are skipped).
+  - G `both` arm SKIPPED (marker `checkpoints_v13_sempty/gscreen_both_3cc2b72/.done`
+    + SKIPPED note); run later under a new screen name only if conv AND onorm pass.
+  - **E1 echo** (novel, `86baea2`, EXPERIMENTS "E1 Echo memory") queued: tmux
+    `e1chain` (`~/e1_chain.sh`, log `~/e1_chain.log`) waits for "gscreen DONE",
+    pulls, runs `SCREEN=e1 ARMS=echo:ECHO=1` 600M. ETA start ~13:40Z, done
+    ~16:30Z. Resume: `tmux new-session -d -s e1chain "SCREEN_HASH=<hash in
+    ~/e1_chain.log> bash ~/e1_chain.sh"`.
   - Local 4090: PG-19 of the r600 control DONE ->
     `logs/pos_loss/v13_sempty_r600_ctl_91daf0a_pg19.json` (far_gain
     +0.011/+0.016/+0.018).

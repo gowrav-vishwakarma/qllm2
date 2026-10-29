@@ -66,4 +66,5 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 
 | id | idea | status | notebook section |
 |---|---|---|---|
-| G screen | G1 short conv (pretrain regime) / G2 read RMSNorm / both, 600M tok vs r600 ctl | running on the 6000 (`gscreen`) | "G screen" |
+| G screen | G1 short conv (pretrain regime) / G2 read RMSNorm (both skipped unless both pass), 600M tok vs r600 ctl | running on the 6000 (`gscreen`) | "G screen" |
+| E1 echo | top-of-stack succession memory (key h_{t-1}, value E[x_t]) into the head | queued after G (`e1chain`) | "E1 Echo memory" |

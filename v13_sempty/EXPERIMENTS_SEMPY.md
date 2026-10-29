@@ -1895,6 +1895,48 @@ Control PG-19 (run on the 4090 from `r600_ctl_91daf0a/best_model.pt`,
 [2k,4k) / [4k,8k) 3.8897 / 3.8850 / 3.9201, far_gain +0.011 / +0.016 /
 +0.018.
 
+## E1 Echo memory — an O(1) succession memory into the head (novel; design + pre-registration, 2026-10-29)
+
+**Where it came from.** Every failed lever so far (R1–R4, C1, L-2) tried to
+make the notebook keep things *longer*. But the LM gap to Mamba-2 /
+Transformer++ (0.07–0.11 nats) is mostly *now*: repeated names, phrases,
+copying — what a transformer's induction head does (find the earlier
+occurrence of this moment, emit what came after it), and exactly what the
+recall probe asks. PAM never stores *what came next*; it stores token →
+token-features inside the stack and must rebuild succession indirectly.
+Biology does store it directly: spike-timing plasticity strengthens the link
+from the neuron that fired *before* to the one that fired *after*.
+
+**Math.** One extra delta memory on the final hidden h (after output_norm),
+6 heads × 98 tiling dim 588:
+
+    k_t = unit(W_k h_{t-1})      (k_0 = 0: no write at t=0)
+    v_t = E[x_t] / rms(E[x_t])   (the tied embedding of the token that came)
+    q_t = W_q h_t
+    S_t = g_t S_{t-1} (I − b_e k_t k_tᵀ) + b_w v_t k_tᵀ        (A3 form, pam_delta_batched)
+    r_t = rmsnorm_head(S_t q_t);   lm_t = head(h_t) + W_o r_t,   W_o = 0 at init
+
+so `E · lm_t` gains the logit of "the word that followed the last moment
+like this one" — a learned, content-addressed neural cache (Grave et al.'s
+continuous cache) with a FIXED d×d state instead of an O(T) cache. Gates
+g, b_w, b_e read h_t (causal: h_t has seen x_t); echo retention init
+e^{−softplus(−6)} ≈ 0.9975. Differs from A4 (static hashed n-gram table, no
+context) and R4 (a second notebook of the same kind inside a block).
+
+**Cost.** +1.05M params (103.17M, +1 %); 4090 B4 step 167.7 → 174.9 ms
+(+4 %). Self-test `test_echo_memory`: identity at init, causal, grads flow,
+and a hand-wired copy check (the second occurrence of x3 reads back x4).
+
+**Run.** `e1` screen, arm `echo` (ECHO=1), the r600 protocol (600M tok, LR
+1.2e-3) vs the same `r600_ctl_91daf0a` control, queued on the 6000 after
+the G screen (`~/e1_chain.sh`, tmux `e1chain`; G's `both` arm was skipped
+to start E1 ~3 h sooner — it runs later only if conv AND onorm pass).
+
+**Decision rule (fixed now):** same as G — PASS = holdout ≤ 3.5208 AND
+WikiText < 75.89 AND recall 63-cell mean ≥ 0.293; the expected signature is
+a1 far recall (pos0/.5 @1k–2k, control 0.412) going up. PASS → 3B confirm
+at LR 2e-4 (+ a decode path). FAIL → removed with an index row.
+
 ## Speed: where PAM's 2.9× gap to Mamba-2 is (2026-10-29, 4090, B4 T2048)
 
 - **Not width alignment.** Step time by geometry (all chrono+gate+delta):
