@@ -720,12 +720,29 @@ def test_echo_memory(batch_size=2, seq_len=48, seed=0):
         bt, tt = _Dim("batch", 1), _Dim("time", 12)
         E = model.embed.embed.weight
         hid = nn.functional.normalize(E[seq], dim=-1)
-        r = model._echo_read(_named(hid, (bt, tt, model.model_dim)), seq, bt, tt).raw(bt, tt, model.model_dim)
+        r = model._echo_read(_named(hid, (bt, tt, model.model_dim)), seq, bt, tt)[0].raw(bt, tt, model.model_dim)
         sims = nn.functional.normalize(r[0, 11], dim=-1) @ nn.functional.normalize(E, dim=-1).T
         top = int(sims.argmax())
     assert top == int(seq[0, 4]), f"echo read at repeat -> {top}, want successor {int(seq[0, 4])}"
+
+    # (5) decode: chunked prefill == token-by-token decode (random echo).
+    torch.manual_seed(seed + 1)
+    m5 = LM(cfg).to(dev).eval()
+    nn.init.normal_(m5.echo_out.weight, std=0.3)
+    nn.init.normal_(m5.echo_gates.weight, std=0.3)
+    T5 = 20
+    with torch.no_grad():
+        par, _, _ = m5.forward(ids[:, :T5])
+        half, st, _ = m5.forward(ids[:, :7])                 # prefill 7, then decode
+        parts = [half]
+        for t in range(7, T5):
+            lt, st, _ = m5.forward(ids[:, t:t + 1], states=st, step_offset=t)
+            parts.append(lt)
+        seq_l = torch.cat(parts, dim=1)
+    d_dec = (par - seq_l).abs().max().item()
+    assert d_dec < 2e-3, f"echo decode disagrees: {d_dec:.3e}"
     print(f"  init parity {d_init:.3e}   causal: past {d_past:.1e} now {d_now:.1e}   "
-          f"grads ok   copy: repeat of x3 recalls x4 ({dev})")
+          f"grads ok   copy: repeat of x3 recalls x4   decode vs chunked {d_dec:.2e} ({dev})")
     return True
 
 

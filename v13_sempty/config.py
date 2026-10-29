@@ -93,7 +93,7 @@ class PAMConfig:
     # and added to the pre-logit vector through a zero-init projection
     # (identity at start). An O(1) learned copy/induction channel straight
     # into the tied head ("after a moment like this, that word came").
-    # Real arm, chunked forward only (no decode state yet).
+    # Real arm; decode carries (S, h_prev) as the last element of states.
     echo: bool = False
     echo_dt_bias: float = -6.0     # echo retention init e^-softplus(-6) ~ 0.9975
     # (R4 consolidation store removed 2026-10-27: FAIL, never used for recall;

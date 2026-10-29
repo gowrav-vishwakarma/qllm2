@@ -1132,8 +1132,9 @@ class LM(nn.Module):
                 z = self.cond_mem[str(i)](z, input_ids)
         return z, new_states
 
-    def _echo_read(self, hidden: NamedTensor, input_ids, batch: Dim, time: Dim) -> NamedTensor:
-        """E1 Echo memory read (raw-torch boundary).
+    def _echo_read(self, hidden: NamedTensor, input_ids, batch: Dim, time: Dim,
+                   state=None):
+        """E1 Echo memory read (raw-torch boundary). Returns (out, new_state).
 
             S_t = g_t S_{t-1} (I - b_e k_t k_t^T) + b_w v_t k_t^T,  r_t = S_t q_t
             k_t = unit(W_k h_{t-1}),  v_t = rms_unit(E[x_t]),  q_t = W_q h_t
@@ -1142,14 +1143,19 @@ class LM(nn.Module):
         hidden state like ``h_t`` -- the next-token guess of a copy/induction
         head. Gates read ``h_t`` (which has seen ``x_t``: causal). Per-head
         RMS-normed, then the zero-init ``echo_out`` maps it onto the pre-logit
-        vector.
+        vector. ``state`` = (S [B,H,K(v),K(k)] fp32, h_prev [B,D]) carried
+        across decode calls; ``None`` = fresh sequence (chunked kernel, k_0 = 0).
         """
         cfg = self.config
         h = hidden.raw(batch, time, self.model_dim)                     # [B,T,D]
         B, T, D = h.shape
         H, K = cfg.n_heads, cfg.head_dim
         q, k = self.echo_qk(h).chunk(2, dim=-1)
-        k = nn.functional.pad(k, (0, 0, 1, 0))[:, :T]                   # k_t from h_{t-1}; k_0 = 0
+        if state is None:
+            k = nn.functional.pad(k, (0, 0, 1, 0))[:, :T]               # k_t from h_{t-1}; k_0 = 0
+        else:
+            k_prev = self.echo_qk(state[1].to(h.dtype)).chunk(2, dim=-1)[1]
+            k = torch.cat([k_prev[:, None], k[:, :T - 1]], dim=1)       # k_t from h_{t-1}, across calls
         v = nn.functional.embedding(input_ids, self.embed.embed.weight).to(h.dtype)
         v = v * torch.rsqrt(v.float().pow(2).mean(-1, keepdim=True) + 1e-6).to(h.dtype)
 
@@ -1160,27 +1166,50 @@ class LM(nn.Module):
         bw = per_head(torch.sigmoid(wr))
         be = per_head(torch.sigmoid(er - 3.0).clamp(max=0.95))
         kn = nn.functional.normalize(heads(k), dim=-1)
-        read, _ = pam_delta_batched(heads(q), kn, heads(v), retention, bw, be, None)
+        if state is None:
+            read, S = pam_delta_batched(heads(q), kn, heads(v), retention, bw, be, None)
+            S = S.reshape(B * H, K, K).float()
+        else:
+            # Decode: one fade / erase / write / read per token, fp32 (same
+            # order as the chunked WY form, like RealPAMLayer._stepwise_delta).
+            S = state[0].reshape(B * H, K, K).float()
+            qf, kf, vf = heads(q).float(), kn.float(), heads(v).float()
+            g, bwf, bef = retention.float(), bw.float(), be.float()
+            reads = []
+            for t in range(T):
+                kt, vt, qt = kf[:, t], vf[:, t], qf[:, t]                 # [BH,K]
+                Sk = torch.einsum('nvk,nk->nv', S, kt)
+                erased = S - bef[:, t, None, None] * Sk.unsqueeze(-1) * kt.unsqueeze(-2)
+                S = g[:, t, None, None] * erased + bwf[:, t, None, None] * vt.unsqueeze(-1) * kt.unsqueeze(-2)
+                reads.append(torch.einsum('nvk,nk->nv', S, qt))
+            read = torch.stack(reads, dim=1)                              # [BH,T,K]
         read = nn.functional.rms_norm(read.float(), (K,), eps=1e-6).to(h.dtype)
         read = read.reshape(B, H, T, K).transpose(1, 2).reshape(B, T, D)
-        return named(self.echo_out(read), (batch, time, self.model_dim))  # named-exit: echo boundary
+        new_state = (S.reshape(B, H, K, K), h[:, -1].detach().float())
+        return named(self.echo_out(read), (batch, time, self.model_dim)), new_state  # named-exit: echo boundary
 
-    def _lm_vector(self, z: NamedTensor, input_ids, batch: Dim, time: Dim) -> NamedTensor:
-        """Pre-logit vector: head projection + norm, plus the E1 echo read."""
+    def _lm_vector(self, z: NamedTensor, input_ids, batch: Dim, time: Dim,
+                   echo_state=None):
+        """Pre-logit vector: head projection + norm, plus the E1 echo read.
+        Returns (lm, echo_state_out); the state is None without echo."""
         hidden = self.output_norm(z)
         lm = self.lm_head_norm(self.lm_head_proj(hidden))
+        new_echo = None
         if self.echo:
-            lm = lm + self._echo_read(hidden, input_ids, batch, time)
-        return lm
+            out, new_echo = self._echo_read(hidden, input_ids, batch, time, echo_state)
+            lm = lm + out
+        return lm, new_echo
 
     def forward(self, input_ids, states=None, step_offset: int = 0, labels=None):
+        # With echo the carried states are [block_0 .. block_{L-1}, echo_state].
+        echo_state = None
         if self.echo and states is not None:
-            raise NotImplementedError(
-                "E1 echo has no decode state yet; run with --gen_every 0 "
-                "(val / probes / PG-19 use the full-sequence forward)")
+            states, echo_state = states[:-1], states[-1]
         z, batch, time = self._stem(input_ids, step_offset)
         z, new_states = self._run_blocks(z, batch, time, states, step_offset, input_ids)
-        lm = self._lm_vector(z, input_ids, batch, time)
+        lm, new_echo = self._lm_vector(z, input_ids, batch, time, echo_state)
+        if self.echo:
+            new_states = list(new_states) + [new_echo]
         logits = self._tied_logits(lm, batch, time)
         aux_loss = torch.zeros((), device=input_ids.device)
         return logits, new_states, aux_loss
@@ -1190,7 +1219,7 @@ class LM(nn.Module):
         z, batch, time = self._stem(input_ids, step_offset)
         z, _ = self._run_blocks(z, batch, time, states=None, step_offset=step_offset,
                                 input_ids=input_ids)
-        lm = self._lm_vector(z, input_ids, batch, time)
+        lm, _ = self._lm_vector(z, input_ids, batch, time)
         aux_loss = torch.zeros((), device=input_ids.device)
         return lm, aux_loss
 

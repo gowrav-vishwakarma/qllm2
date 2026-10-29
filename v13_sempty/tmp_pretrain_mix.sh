@@ -54,7 +54,7 @@ DELTA="${DELTA:-0}"            # A3 delta erase/write (KEEP 2026-09-05: exact 8-
                                # (COUPLE removed 2026-10-28: C1 FAIL, code at 4c688cb)
 SHORT_CONV="${SHORT_CONV:-0}"  # G1 short conv on qkv (2026-10-29 screen; needs GEN_EVERY=0)
 OUT_NORM="${OUT_NORM:-0}"      # G2 per-head RMSNorm of the memory read
-ECHO="${ECHO:-0}"              # E1 echo (succession) memory into the head; needs GEN_EVERY=0
+ECHO="${ECHO:-0}"              # E1 echo (succession) memory into the head
 BASE_DT_BIAS="${BASE_DT_BIAS:-}" # override initial decay bias (default -4; bench: -6/-8 no gain)
                                # (LONG_HEADS removed 2026-10-27: R3 FAIL, EXPERIMENTS "R3")
                                # (STORE removed 2026-10-27: R4 FAIL, EXPERIMENTS "R4")

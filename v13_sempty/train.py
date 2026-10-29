@@ -1060,7 +1060,7 @@ def build_argparser():
     p.add_argument('--out_norm', action='store_true',
                    help='G2: per-head RMSNorm of the memory read')
     p.add_argument('--echo', action='store_true',
-                   help='E1: top-of-stack succession (echo) memory into the head (no decode yet)')
+                   help='E1: top-of-stack succession (echo) memory into the head')
     p.add_argument('--base_dt_bias', type=float, default=None,
                    help='initial decay bias (default -4 => retention ~0.982/token; '
                         '-6 => 0.9975, -8 => 0.99966). Retention bench 2026-09-06: no gain.')
