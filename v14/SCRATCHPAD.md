@@ -35,6 +35,13 @@ pre-registered plan) first.
 * **Control body = M1** (KEEP at 600M: holdout 3.4906 vs echo 3.4885,
   recall 0.615 vs 0.401, 1.8x faster). Flags: echo, pam_layers 3,7,11,15,
   mlp_hidden 2352 + chrono/out_gate/delta. N1 on M1 = +28k params.
+* **Data for the N6 LM check (if B1 passes):** the v13 session's real
+  aptitude blend, `v7/aptitude.py` (`138cddb`): train splits of 14 reasoning
+  datasets (AQuA-RAT, GSM8K, LogiQA2, ReClor, RACE, ARC, CSQA, OBQA, SciQ,
+  QASC, BoolQ, StrategyQA, WinoGrande, HellaSwag), ~48.8M tok, source
+  `aptitude` in load_pretrain_mix (C1 stage-A weights dclm,fineweb,
+  smoltalk2_mid,aptitude = 0.25,0.20,0.15,0.40, blend_warmup_tokens 30M).
+  Their TEST/validation splits are untouched: a real-data reasoning eval.
 * **Git:** origin = `qllm-private-personal` on both boxes. Commit → push
   origin → pull on the 6000.
 
