@@ -15,6 +15,7 @@ a closed question.
 | N3 | formula-weight neuron | **folded into N2**: reduces to a gated bottleneck (GLU family), see N3 | — | — | — |
 | N4 | living neuron: per-unit fast weight, written by surprise | design only | — | — | — |
 | N5 | resonant binding: oscillator phases as binding tags | design only | — | — | — |
+| N6 | operator memory: the state is an inferred transformation, not stored items | candidate (novelty check pending) | — | — | — |
 | S1 | spatial neuron (learned positions, distance-gated) | notes only (`NOTES.md`) | — | — | — |
 
 ---
@@ -56,6 +57,30 @@ a closed question.
 ---
 
 ## Part B — the v14 experiments (pre-registered)
+
+**Novelty rule (user, 2026-10-29): "not a variant of any existing known
+architecture, no transformer and no mamba etc".** PAM itself (outer-product
+delta memory) is in the fast-weight / linear-attention / DeltaNet family, so
+known families serve only as baselines, and reused parts count only inside a
+genuinely new computational scheme. Working test: the per-token computation
+must not be expressible as attention, a linear / selective recurrence (SSM),
+an outer-product fast-weight memory, or an MLP / MoE. A new arrangement of
+those parts does not count.
+
+**Audit of this plan against that rule (2026-10-29), honest:**
+
+| id | family it belongs to | role now |
+|---|---|---|
+| N1 | multi-state fast weights (v11 E3) | cheap probe only |
+| N2 | complex-valued activation tweak | cheap probe only |
+| N3 | GLU-gated bottleneck | folded |
+| N4 | fast weights / TTT / Titans | cheap probe only |
+| N5 | Kuramoto neurons (AKOrN), complex autoencoders | idea source only |
+| S1 | RSGN (learned-position neurons) | idea source only |
+| **N6** | none known (see N6), novelty check pending | **main candidate** |
+
+No item gets a 6000 slot as "the architecture" until the v13 session has
+reviewed its novelty (agreed between the sessions).
 
 **The goal has three bars, all needed** (user, 2026-10-29; shared memory
 `goal-pam-beats-baselines`): (1) O(1) state per token; (2) beat
@@ -236,6 +261,34 @@ bindings in a vector. **Prior art:** AKOrN (Kuramoto neurons, vision, 2025),
 Complex AutoEncoder / Rotating Features (object binding by phase, vision).
 Not known in an O(1) recurrent LM. Micro-bench only, on B0's bound-attribute
 case, after N1 has a verdict.
+
+### N6 — operator memory (candidate, 2026-10-29)
+
+**Idea.** Every known O(1) memory (SSM, linear attention, DeltaNet, PAM)
+stores *items*: what was seen, as key → value associations, and recall
+looks items up. Operator memory stores *operators*: how things change. Its
+state is a transformation inferred from the context, and prediction applies
+that transformation to a new input, so the answer never has to be in the
+context. That is rule application (goal bar 3), not lookup.
+
+**Sketch in phase space.** Represent tokens as complex vectors. A relation
+between an input and an output is a rotation per channel,
+`Δφ = arg(v) − arg(k)`. From examples ("France → Paris, Japan → Tokyo") the
+state accumulates a confidence-weighted average of these rotations: a point
+on a torus, O(d) per head, O(1) per token. A new input is answered as
+`k_new · e^{iΔφ}`. Two relations compose by adding phases, so composition
+is built in. Open design questions: which positions play "input" and
+"output" (learned role gates), several operators at once (a small set,
+selected by the input), and magnitude changes as well as rotations.
+
+**Prior art to check before any claim:** RotatE (relations as complex
+rotations, but static knowledge-graph embeddings with no in-context
+inference), tensor-product / holographic representations, analogy by
+vector offsets (word2vec), meta-learning / in-context learning theory.
+No recurrent LM whose state *is* an inferred operator is known to us.
+
+**First test:** B1 rule tasks with answers absent from the context. Bar:
+beat the echo / M1 small bodies on rule application at equal size and state.
 
 ### S1 — spatial neuron
 
