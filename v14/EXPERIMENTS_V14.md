@@ -279,6 +279,56 @@ review by the v13 session folded in).** Code: `v14/rules_ood.py`, arms
   label_category at 2 / 4 / 8 shots with `--trials 400` (SE ≈ 0.025).
   Also recall 63-cell.
 
+**Run 2 result (done 2026-10-30 01:44 IST, 4090, `85ecf02`; log + JSON
+`logs/v14_b1r2_85ecf02_20261030_0057.{log,json}`).** The first start
+(00:39, `84f426b`) died of a python crash at 00:55 and was rerun from the
+start.
+
+| task (2 / 4 / 8 shots) | echo | op | opdiag | opdiag_ownq | echo_tied |
+|---|---|---|---|---|---|
+| letter_shift, number_step, reverse3 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| label_category (chance 0.50 0.50 0.25) | 0.61 0.54 0.27 | 0.52 0.53 0.23 | 0.67 0.68 0.41 | 0.52 0.52 0.23 | **0.92 0.92 0.74** |
+| two_hop (chance 0.50 0.25 0.125) | 0.54 0.30 0.09 | 0.53 0.31 0.08 | 0.50 0.28 0.09 | 0.52 0.27 0.12 | 0.51 0.28 0.08 |
+| letter_shift_ood (chance 0.125) | 0.00 0.00 0.00 | 0.00 0.00 0.00 | 0.00 0.00 0.00 | 0.00 0.00 0.00 | 0.02 0.03 0.04 |
+| number_step_ood (chance 0.125) | 0.09 0.20 0.05 | 0.04 0.09 0.06 | 0.04 0.15 0.05 | 0.08 0.14 0.04 | 0.06 0.14 0.04 |
+| ms / step | 96 | 93 | 94 | 94 | 86 |
+
+Answers per cell: label_category 1088 / 704 / 416; letter_shift_ood 1024 /
+672 / 400; number_step_ood 1632 / 1168 / 736.
+
+**Verdict against the frozen bars.**
+- **R (replication): NOT MET.** label_category mean over 2 / 4 / 8 shots:
+  echo 0.471, op 0.427, opdiag 0.587, opdiag_ownq 0.423, echo_tied 0.857.
+  opdiag − echo = +0.116 and op − echo = −0.044, against +0.15 for both.
+  Valid (echo < 0.90). Run 1's perfect op / opdiag did not replicate on a
+  new seed, and op fell to chance. **By the frozen rule, N6 closes on B1
+  evidence** (see "N6").
+- **C (cause): not read**, since R is not met. Recorded anyway, as
+  exploratory: **echo_tied − echo = +0.386**, the largest effect in either
+  run. opdiag_ownq − echo = −0.048.
+- **O (unseen rule parameters): NOT MET, as predicted.** The mean over
+  letter_shift_ood and number_step_ood at 4 / 8 shots is 0.04–0.06 for
+  every arm, below chance. letter_shift_ood is 0.00 for every arm except
+  echo_tied: the models always answer with a trained shift, the tempting
+  prior candidate. So no small body infers a new rule parameter from the
+  examples. What run 1's ceiling hid is **selection among rules learned in
+  the weights, not in-context induction.**
+- two_hop: chance for every arm again.
+
+**Seed variance is large on label_category.** Echo moved from a mean of
+0.68 (run 1) to 0.47 (run 2), and op from 1.00 to 0.43. A single-seed gap
+of ≈ 0.2 is within this bench's training-seed noise. So any claim from
+here needs ≥ 3 training seeds per arm. echo_tied's 0.857 is above every
+other arm in both runs, but it is one seed.
+
+**What the 2×2 does say, read loosely.** The two arms whose query and key
+share one projection, opdiag and echo_tied, are the two above echo. The
+two with separate projections, echo and opdiag_ownq, are tied at the
+bottom. op (shared, rotation-only) breaks the pattern. That fits the
+similarity-lookup reading: with one projection, items of the same category
+land near each other, so the query hits their keys. It is a lead for run
+3, not a result.
+
 **Run 3 candidates (from the v13 review, 2026-10-30; NOT pre-registered).**
 They put category membership in the context without turning the task into
 two_hop. Choose after run 2.
@@ -504,6 +554,18 @@ run).** Arms trained on identical data: echo (control), op (N6), opdiag
 - **Cost:** none. op 94 ms/step vs echo 99 (+0.5M params).
 - **Status: exploratory, not pre-registered.** The label_category gain must
   replicate on a new training seed (B1 run 2) before it counts.
+
+**N6 VERDICT: CLOSED, FAIL (B1 run 2, 2026-10-30 01:50 IST).** Every
+pre-registered test failed or could not be read:
+- the run 1 PASS bar sat at the ceiling;
+- replication R was not met (op 0.427 vs echo 0.471 on label_category,
+  opdiag +0.116 < +0.15);
+- O was not met: on unseen rule parameters op is 0.037, echo 0.063.
+
+The rotation-only bias never beat the plain diagonal, in either run. The
+maths stays above. The code is removed from v14; it is reproducible from
+the commit in `EXPERIMENT_INDEX.md`. What survives is the lead it
+uncovered: **a tied query/key projection** (echo_tied).
 ---
 
 ## Order and machines
