@@ -1974,6 +1974,7 @@ recall task; the LM verdict is the `e1g` 600M screen.
 | tokens | holdout (echo / ctl) | Δ nats | WikiText PPL (echo / ctl) |
 |---|---|---|---|
 | 150M (step 4069) | 3.9516 / 4.0195 | **−0.068** | **119.64 / 148.56** (−19 %) |
+| 300M (step 8138) | 3.6955 / 3.7555 | **−0.060** | **87.99 / 100.38** (−12 %) |
 
 Train loss on the same batches, echo − ctl per 250-step window to step
 2250: −0.02, −0.44, −0.36, −0.41, −0.07, −0.24, −0.04, −0.21, −0.19 (the
