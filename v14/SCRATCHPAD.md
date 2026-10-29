@@ -20,11 +20,13 @@ Keep all three current as things happen (user rule, 2026-10-29).
      Validity: echo >= 0.90 on facts1/facts2 @1024.
   Both run under a 12G RAM cap (systemd-run scope) and close their tmux on
   exit.
-* **Why B1 was two hours late:** the v13 session's T1 tmux `t1loc` stayed
-  open after "t1loc DONE" (21:31 IST): its launcher ended with `exec bash`.
-  They removed it. **To do after `v14b0` ends** (editing the running
-  launcher is unsafe): let `run_b0.sh` also start when the other run's
-  driver log prints DONE, not only when its tmux closes.
+  3. tmux `v14b1r2`: **B1 run 2 queued** behind `v14b0` (pre-registered in
+     EXPERIMENTS_V14 "B1"): arms echo, op, opdiag, opdiag_ownq, echo_tied;
+     new seed; unseen rule parameters. ~1 h. ETA ~03:30 IST.
+* **Launcher:** `v14/run_bench.sh` (replaces `run_b0.sh`; the running B0 run
+  2 still executes its already-open copy). It also stops waiting when the
+  other run's log prints its DONE line (`WAIT_DONE=file:pattern`): the v13
+  T1 tmux stayed open two hours after its run ended on 2026-10-29.
 * **6000:** the v13 session's chain until ~03:30 IST 2026-10-30 (tmux
   `c1ctl`, C1 control without aptitude, ETA ~01:25; then C1 on M2).
 * **v13 results this evening (600M, r600 protocol):** M2 shared reads KEEP
@@ -56,11 +58,9 @@ Keep all three current as things happen (user rule, 2026-10-29).
 
 ## Next action
 
-1. Pre-register and build **B1 run 2** (next commit): rule parameters
-   never seen in training (letter_shift k 4-5, number_step d 10-13), a new
-   training seed (does the label_category gain replicate?), and an arm
-   with its own query projection (shared projection vs diagonal state).
-   Queue it on the 4090 behind `v14b0`.
+1. When `v14b1r2` ends: score bars R, C, O (EXPERIMENTS_V14 "B1" run 2)
+   into the notebook and the index first; commit with the logs; ping Qllm
+   v13; tell the user. If R is met, pre-register the 150M LM check.
 2. When `v14b0` ends: the same for B0 run 2 and N1 (headroom cells H = echo
    < 0.90; N1 bars in EXPERIMENTS_V14 "N1").
 3. If N6 or N1 passes: build the v14 hook in the v13_sempty trainer for the

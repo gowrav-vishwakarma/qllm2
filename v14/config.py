@@ -32,6 +32,13 @@ class V14Config(PAMConfig):
     # '' = off. Needs echo (shares its decode-state slot).
     opmem: str = ''
     opmem_fade_bias: float = -3.9     # retention e^-softplus(-3.9) ~ 0.98 at start
+    # Which projection makes the read query q_t from h_t:
+    #   'shared' : the key's own W_in (q_t = W_in h_t, a_t = W_in h_{t-1})
+    #   'own'    : a separate W_q (B1 run 2: is the shared projection the cause?)
+    opmem_query: str = 'shared'
+    # Echo with ONE projection for query and key (W_q = W_k), the "full matrix,
+    # tied" corner of the B1 run 2 2x2. False = v13 echo (separate W_q, W_k).
+    echo_tied_qk: bool = False
 
 
 def from_pam(cfg: PAMConfig, **overrides) -> V14Config:

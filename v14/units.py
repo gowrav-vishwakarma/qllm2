@@ -38,6 +38,7 @@ from v13_sempty.triton_kernels import pam_delta_batched
 from v14.config import V14Config
 
 PHASE_READS = ('sum', 'gate', 'phase')
+OPMEM_QUERIES = ('shared', 'own')
 OPMEM_MODES = ('phase', 'diag')
 
 
@@ -166,7 +167,7 @@ class OperatorMemory(nn.Module):
         b_t = W_role ê(x_t)           the output side  (the token that followed)
         r_t = b_t · conj(a_t)         their relation: a rotation (and a scale)
         S_t = γ_t S_{t-1} + w_t r_t   relations accumulated, faded per head
-        q_t = W_in h_t                the next input
+        q_t = W_in h_t                the next input (W_q h_t with opmem_query='own')
         p_t = q_t · S_t / (|S_t| + 1)  (phase)   or   q_t · S_t  (diag)
 
     ``phase`` keeps only the rotation of each relation (r / |r|), so S is a
@@ -183,6 +184,8 @@ class OperatorMemory(nn.Module):
         super().__init__()
         if cfg.opmem not in OPMEM_MODES:
             raise ValueError(f"opmem must be one of {OPMEM_MODES}")
+        if cfg.opmem_query not in OPMEM_QUERIES:
+            raise ValueError(f"opmem_query must be one of {OPMEM_QUERIES}")
         self.mode = cfg.opmem
         self.model_dim = model_dim
         self.heads = Dim("op_heads", cfg.n_heads)
@@ -191,6 +194,8 @@ class OperatorMemory(nn.Module):
         self.feat = ProductDim(self.heads, self.plane, self.pair)
         self.w_in = NamedLinear(model_dim, self.feat, bias=False)
         self.w_role = NamedLinear(model_dim, self.feat, bias=False)
+        # The query's projection: the key's W_in ('shared') or its own W_q ('own').
+        self.w_q = NamedLinear(model_dim, self.feat, bias=False) if cfg.opmem_query == 'own' else None
         self.write = NamedLinear(model_dim, self.heads)
         self.write._zero_init = True                      # w = 1/2 at start
         self.fade = NamedLinear(model_dim, self.heads)
@@ -231,7 +236,8 @@ class OperatorMemory(nn.Module):
         unit_embed = embedded / sqrt(mean(square(embedded), over=self.model_dim) + self.eps)
         a = self._complex(self.w_in(h_prev), batch, time)
         b = self._complex(self.w_role(unit_embed), batch, time)
-        q = self._complex(self.w_in(hidden), batch, time)
+        w_q = self.w_in if self.w_q is None else self.w_q
+        q = self._complex(w_q(hidden), batch, time)
         if self.mode == 'phase':
             r = b * a.conj()
             r = r / (r.abs() + self.eps)
@@ -268,12 +274,30 @@ def cumsum_log(g: NamedTensor, over: Dim) -> NamedTensor:
     return cumsum(log(g), over=over)
 
 
+class TiedEchoQK(nn.Module):
+    """Echo's query/key projection with W_q = W_k: one D x D map whose output
+    is returned twice, so v13's ``q, k = echo_qk(h).chunk(2)`` gives q = k."""
+
+    def __init__(self, dim: int):
+        super().__init__()
+        self.proj = nn.Linear(dim, dim, bias=False)
+
+    def forward(self, h):
+        y = self.proj(h)
+        return torch.cat([y, y], dim=-1)  # named-exit: v13 echo boundary (raw torch)
+
+
 class V14LM(LM):
     """The v13_sempty LM with v14 units swapped in. ``V14Config()`` == v13 LM."""
 
     def __init__(self, cfg: V14Config):
         super().__init__(cfg)
         swapped = False
+        if getattr(cfg, 'echo_tied_qk', False):
+            if not cfg.echo:
+                raise ValueError("echo_tied_qk needs echo")
+            self.echo_qk = TiedEchoQK(cfg.dim)
+            swapped = True
         self.opmem = None
         if getattr(cfg, 'opmem', ''):
             if cfg.is_complex or not cfg.echo:

@@ -129,7 +129,7 @@ same-relation values; for `rebind` the key's old values). Sizes: facts
 8/16/32/64, bind 4/8/16 entities, rebind 4/8/16 keys. Train lengths
 512–4096; eval 1024 / 4096 / 8192 at positions 0, 0.5, 1 (16 docs each:
 192 answers per cell, SE ≈ 0.036). 6000 steps × B16, LR 3e-4, same data
-for every arm. Launcher: `v14/run_b0.sh` (waits for free GPU memory).
+for every arm. Launcher: `v14/run_bench.sh` (`v14/run_b0.sh` up to `0671d65`).
 
 **Output.** The smallest setting where the control drops below 0.5.
 
@@ -218,6 +218,58 @@ Answers per cell: label_category 1088 / 704 / 416, two_hop 512 / 289 /
 delta are reported only (memory mechanisms, not learners). **Validity check:** the bench is
 usable if some arm reaches ≥ 0.50 on reverse3 or two_hop at 8 shots; else
 run 2 adds `--aux_weight 0.1`.
+
+**Run 2 (PRE-REGISTERED 2026-10-30 00:40 IST, before any run-2 number;
+review by the v13 session folded in).** Code: `v14/rules_ood.py`, arms
+`opdiag_ownq` and `echo_tied`, launcher `v14/run_bench.sh`.
+- **Training:** the same task mix as run 1 (shared tasks, shots 1–8, 6000 ×
+  B16, lr 3e-4). New data (`--seed 7 --doc_seed0 50000000`: no training
+  document is shared with run 1) and new init (`--init_seed 1`). Weights
+  kept (`SAVE=1`, `checkpoints_v14/b1r2_<hash>_<time>/`), so later evals
+  need no retraining.
+- **Arms: a 2×2 cause test plus the rotation arm.** All arms have echo. The
+  "diagonal" row adds N6's diagonal memory on top of it.
+
+  | | query and key share one projection | separate projections |
+  |---|---|---|
+  | + diagonal memory | `opdiag` | `opdiag_ownq` |
+  | echo's matrix only | `echo_tied` (W_q = W_k) | `echo` (control) |
+
+  Plus `op` (rotation-only diagonal, shared projection).
+- **Eval:** run 1's cells, plus `letter_shift_ood` (k 4–5) and
+  `number_step_ood` (d 10–13) at 2 / 4 / 8 shots. These parameters are
+  never drawn in training. The tempting candidates lead with the
+  training-prior answers (the trained shifts 1–3; last + 1 and last + 9),
+  so falling back on the prior scores below chance.
+- **Bars (frozen):**
+  - **R, replication** (mean of label_category over 2 / 4 / 8 shots):
+    opdiag − echo ≥ +0.15 AND op − echo ≥ +0.15. Valid only if echo's mean
+    is < 0.90 (else no room to show a gain). Not met → run 1's gain is
+    recorded as not replicated, and N6 closes on B1 evidence.
+  - **C, cause** (read only if R is met; G = opdiag − echo, same mean):
+    echo_tied − echo ≥ 0.5·G → tying the query to the key is enough on its
+    own (a similarity lookup: same-category hidden states sit close).
+    opdiag_ownq − echo ≥ 0.5·G → the diagonal memory is enough on its own.
+    Both or neither is reported as such.
+  - **O, the original N6 claim on unseen parameters** (mean over
+    letter_shift_ood and number_step_ood at 4 and 8 shots): op ≥ echo +
+    0.15 AND op ≥ opdiag + 0.10. **Prediction: not met.** Every arm ≤ 0.25,
+    with the prior answers winning. Nothing in a small body puts letters or
+    numbers on a circle.
+- **Not done from the review: holding out label_category items or
+  categories.** In this task, an item's category can only come from the
+  weights (the context shows labels, never categories). A never-trained
+  item therefore carries no category signal for any arm, and every arm
+  would sit at chance by construction. What the context supplies is the
+  binding of a per-episode label to a category, and that binding is never
+  shown for the query item. The unseen-parameter tasks are the held-out
+  test of in-context rule inference.
+- **If R is met, next is the 150M LM check (stage 3), pre-registered
+  before it runs.** M1 + the winning memory vs M1, both trained on their own
+  150M schedule with one data mix and no aptitude data, so C1's +0.20 at 8
+  shots cannot confound. Primary: holdout loss, and the learning-probe
+  label_category at 2 / 4 / 8 shots with `--trials 400` (SE ≈ 0.025).
+  Also recall 63-cell.
 
 **Reference numbers at scale** come from the v13 session's probe on the
 600M / 3B checkpoints (PAM, M1, Transformer++, Mamba-2), so "beats the

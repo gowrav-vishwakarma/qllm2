@@ -27,6 +27,8 @@ Arms (all real arm, chrono + out_gate + delta):
     echo         + E1 echo: the current control body
     n1sum / n1gate / n1phase   echo body with N1 (2 notebooks, sum/gate/phase)
     op / opdiag  echo body + N6 operator memory (rotation-only / plain diagonal)
+    opdiag_ownq  opdiag with its own query projection W_q (key still W_in h_{t-1})
+    echo_tied    echo with W_q = W_k (one projection for query and key)
 Optional suffixes: @<head_dim> (default 64), :L<n_layers> (default 4).
 """
 
@@ -36,6 +38,7 @@ import argparse
 import concurrent.futures
 import json
 import math
+import os
 import random
 import re
 import subprocess
@@ -44,11 +47,16 @@ from dataclasses import dataclass
 
 import torch
 
-from memory_probes.rules import TASKS as RULE_TASKS, build_rule_example
+from memory_probes.rules import TASKS as RULE_TASKS
 from v13_sempty.config import PAMConfig
 from v13_sempty.triton_kernels import set_kernel_enabled
 from v14.config import from_pam
+from v14.rules_ood import OOD_TASKS, build_example
 from v14.units import V14LM
+
+# B1 trains on the shared tasks; it is scored on them AND on OOD_TASKS (rule
+# parameters never drawn in training, v14/rules_ood.py).
+EVAL_RULE_TASKS = RULE_TASKS + OOD_TASKS
 
 FILLER = (
     'The archive clerk reviewed an ordinary report and placed it on the shelf. '
@@ -197,7 +205,7 @@ def build_rules_doc(P, tok, length, seed, tasks=RULE_TASKS, shots=RULE_SHOTS_TRA
     ids, answers = [], []
     sep = tok.encode(RULE_SEP, add_special_tokens=False)
     while True:
-        ex = build_rule_example(tok, rng.choice(tasks), rng.choice(shots), rng.randrange(1 << 30))
+        ex = build_example(tok, rng.choice(tasks), rng.choice(shots), rng.randrange(1 << 30))
         episode = ex.prompt_ids + [ex.target_token_id] + sep
         if len(ids) + len(episode) > length + 1:
             break
@@ -262,6 +270,8 @@ ARMS = {
     'n1phase': dict(echo=True, phase_states=2, phase_read='phase'),
     'op': dict(echo=True, opmem='phase'),
     'opdiag': dict(echo=True, opmem='diag'),
+    'opdiag_ownq': dict(echo=True, opmem='diag', opmem_query='own'),
+    'echo_tied': dict(echo=True, echo_tied_qk=True),
 }
 
 
@@ -290,14 +300,14 @@ def parse_arms(spec):
 
 # ── train / eval ────────────────────────────────────────────────────────────
 
-def train_plan(steps, batch, seed, families=tuple(SIZES)):
+def train_plan(steps, batch, seed, families=tuple(SIZES), doc_seed0=10_000_000):
     """Per step: (length, [(family, size, position, doc_seed)])."""
     rng = random.Random(seed)
     if tuple(families) == ('rules',):     # B1: short episodes, no long context needed
         lengths, weights = (512, 1024), (0.5, 0.5)
     else:
         lengths, weights = (512, 1024, 2048, 4096), (0.35, 0.30, 0.20, 0.15)
-    plan, doc_seed = [], 10_000_000
+    plan, doc_seed = [], doc_seed0
     for _ in range(steps):
         L = rng.choices(lengths, weights=weights)[0]
         specs = []
@@ -333,7 +343,7 @@ def evaluate_rules(model, P, tok, device, trials, length=1024):
     model.eval()
     embed = model.embed.embed.weight
     out = {}
-    for task in RULE_TASKS:
+    for task in EVAL_RULE_TASKS:
         for shots in RULE_SHOTS_EVAL:
             docs = [build_rules_doc(P, tok, length, 2_000_000_000 + 7919 * s,
                                     tasks=(task,), shots=(shots,)) for s in range(trials)]
@@ -377,8 +387,8 @@ def evaluate(model, P, device, ctxs, trials, eval_batch=8, families=tuple(SIZES)
 
 
 def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials, aux_weight=0.0,
-              tok=None, families=tuple(SIZES)):
-    torch.manual_seed(0)
+              tok=None, families=tuple(SIZES), init_seed=0, save_dir=''):
+    torch.manual_seed(init_seed)
     model = V14LM(cfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01, betas=(0.9, 0.95))
@@ -415,6 +425,9 @@ def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials, aux_weig
     train_s = time.time() - t0
     print(f"  [{label}] trained {n_params / 1e6:.1f}M params in {train_s:.0f}s "
           f"({1000 * train_s / len(plan):.0f} ms/step)", flush=True)
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+        torch.save(model.state_dict(), os.path.join(save_dir, f"{label}.pt"))
     res = evaluate(model, P, device, ctxs, trials, families=families)
     if 'rules' in families:
         res.update(evaluate_rules(model, P, tok, device, trials))
@@ -434,9 +447,9 @@ def table(name, res, ctxs):
                 row += "".join(f"{res[f'{fam}{size}@{c}']['acc']:8.2f}" for c in ctxs)
                 lines.append(row)
     if any(k.startswith(RULE_TASKS) for k in res):
-        lines.append("rule task       " + "".join(f"{f'{n}-shot':>8}" for n in RULE_SHOTS_EVAL))
-        for task in RULE_TASKS:
-            lines.append(f"{task:<16}" + "".join(
+        lines.append("rule task         " + "".join(f"{f'{n}-shot':>8}" for n in RULE_SHOTS_EVAL))
+        for task in (t for t in EVAL_RULE_TASKS if f"{t}{RULE_SHOTS_EVAL[0]}" in res):
+            lines.append(f"{task:<18}" + "".join(
                 f"{res[f'{task}{n}']['acc']:8.2f}" for n in RULE_SHOTS_EVAL))
     return "\n".join(lines)
 
@@ -457,6 +470,10 @@ def main():
     ap.add_argument('--aux_weight', type=float, default=0.0,
                     help="LM loss weight on non-answer positions (0 = answer-only)")
     ap.add_argument('--json', default='', help="write all results here")
+    ap.add_argument('--init_seed', type=int, default=0, help="model init seed (run 1: 0)")
+    ap.add_argument('--doc_seed0', type=int, default=10_000_000,
+                    help="first training-document seed (run 1: 10M; eval seeds are 2e9+)")
+    ap.add_argument('--save_dir', default='', help="save each arm's trained weights here")
     args = ap.parse_args()
 
     set_kernel_enabled(True)
@@ -470,19 +487,21 @@ def main():
     print(f"B0 micro-bench @ {commit}: {args.steps} steps x B{args.batch}, lr {args.lr}, "
           f"eval ctx {ctxs}, {args.trials} docs x {len(POSITIONS)} positions x "
           f"{N_QUERIES} queries per cell, aux_weight {args.aux_weight}, "
-          f"families {args.families}", flush=True)
+          f"families {args.families}, seed {args.seed}, init_seed {args.init_seed}, "
+          f"doc_seed0 {args.doc_seed0}", flush=True)
     families = tuple(f.strip() for f in args.families.split(','))
     unknown = [f for f in families if f not in SIZES and f != 'rules']
     if unknown:
         raise SystemExit(f"unknown families {unknown}")
-    plan = train_plan(args.steps, args.batch, args.seed, families)
+    plan = train_plan(args.steps, args.batch, args.seed, families, args.doc_seed0)
     all_res = {'commit': commit, 'args': vars(args), 'arms': {}}
     for label, kind, hd, nl in parse_arms(args.arms):
         print(f"\n--- arm {label} ---", flush=True)
         cfg = make_cfg(kind, len(tok), head_dim=hd, n_layers=nl)
         all_res['arms'][label] = train_arm(label, cfg, P, plan, args.device, args.lr,
                                            args.log_every, ctxs, args.trials,
-                                           args.aux_weight, tok=tok_rules, families=families)
+                                           args.aux_weight, tok=tok_rules, families=families,
+                                           init_seed=args.init_seed, save_dir=args.save_dir)
         print(table(label, all_res['arms'][label]['results'], ctxs), flush=True)
         if args.json:
             with open(args.json, 'w') as f:

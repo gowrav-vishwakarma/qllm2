@@ -7,6 +7,9 @@
                    for each read rule, across the 64-token sub-chunk edge.
 4. N1 learns       every new parameter gets a nonzero gradient at init.
 5. N1 turns        with nonzero angles, phase and gate give different reads.
+6. N6 (op memory)  starts as echo, decode == prefill, learns, applies an
+                   inferred rotation; each for shared and own query projection.
+7. tied echo       W_q = W_k gives q = k; decode == prefill; learns.
 """
 
 from __future__ import annotations
@@ -18,7 +21,7 @@ from v14.config import get_config
 import sempyt
 from sempyt import Dim, named
 
-from v14.units import OPMEM_MODES, OperatorMemory, PHASE_READS, PhaseStatesPAM, V14LM
+from v14.units import OPMEM_MODES, OperatorMemory, PHASE_READS, PhaseStatesPAM, TiedEchoQK, V14LM
 
 ATOL = 2e-4
 
@@ -113,9 +116,24 @@ def test_n1_phase_differs_from_gate():
     print(f"  nonzero angles: phase vs gate max |diff| = {diff:.2e}")
 
 
-def _n6(mode, seed=0, **kw):
+# (mode, query projection): rotation-only, plain diagonal, diagonal with its own W_q
+N6_VARIANTS = (('phase', 'shared'), ('diag', 'shared'), ('diag', 'own'))
+
+
+def _n6(mode, seed=0, query='shared', **kw):
     torch.manual_seed(seed)
-    return V14LM(_cfg(opmem=mode, **kw)).eval()
+    return V14LM(_cfg(opmem=mode, opmem_query=query, **kw)).eval()
+
+
+def _decode_diff(model, seq_len):
+    ids = torch.randint(0, 512, (2, seq_len))
+    full = _logits(model, ids)
+    states, steps = None, []
+    with torch.no_grad():
+        for t in range(seq_len):
+            lt, states, _ = model(ids[:, t:t + 1], states=states, step_offset=t)
+            steps.append(lt)
+    return (full - torch.cat(steps, dim=1)).abs().max().item()
 
 
 def test_n6_starts_as_echo():
@@ -123,37 +141,30 @@ def test_n6_starts_as_echo():
     torch.manual_seed(0)
     ref = LM(_cfg()).eval()
     ids = torch.randint(0, 512, (2, 40))
-    for mode in OPMEM_MODES:
-        model = _n6(mode)
+    for mode, query in N6_VARIANTS:
+        model = _n6(mode, query=query)
         missing = model.load_state_dict(ref.state_dict(), strict=False)
         assert all(k.startswith('opmem.') for k in missing.missing_keys), missing
         diff = (_logits(model, ids) - _logits(ref, ids)).abs().max().item()
-        assert diff == 0.0, f"{mode}: N6 at start != echo: {diff:.3e}"
-        print(f"  start: N6 {mode} == echo body  max |diff| = {diff:.1e}")
+        assert diff == 0.0, f"{mode}/{query}: N6 at start != echo: {diff:.3e}"
+        print(f"  start: N6 {mode}/{query} == echo body  max |diff| = {diff:.1e}")
 
 
 def test_n6_decode_matches_prefill(seq_len=150):
     """Prefill (chunked scan, 64-step chunks) == one token at a time, both modes."""
-    for mode in OPMEM_MODES:
-        model = _n6(mode, seed=4)
+    for mode, query in N6_VARIANTS:
+        model = _n6(mode, seed=4, query=query)
         torch.nn.init.normal_(model.opmem.out.weight, std=0.5)       # make the read matter
         torch.nn.init.normal_(model.opmem.fade.weight, std=0.5)
         torch.nn.init.normal_(model.opmem.write.weight, std=0.5)
-        ids = torch.randint(0, 512, (2, seq_len))
-        full = _logits(model, ids)
-        states, steps = None, []
-        with torch.no_grad():
-            for t in range(seq_len):
-                lt, states, _ = model(ids[:, t:t + 1], states=states, step_offset=t)
-                steps.append(lt)
-        diff = (full - torch.cat(steps, dim=1)).abs().max().item()
-        assert diff < ATOL, f"{mode}: prefill != decode: {diff:.3e}"
-        print(f"  decode == prefill (N6 {mode}): max |logit diff| = {diff:.2e}")
+        diff = _decode_diff(model, seq_len)
+        assert diff < ATOL, f"{mode}/{query}: prefill != decode: {diff:.3e}"
+        print(f"  decode == prefill (N6 {mode}/{query}): max |logit diff| = {diff:.2e}")
 
 
 def test_n6_learns():
-    for mode in OPMEM_MODES:
-        model = _n6(mode, seed=5).train()
+    for mode, query in N6_VARIANTS:
+        model = _n6(mode, seed=5, query=query).train()
         torch.nn.init.normal_(model.opmem.out.weight, std=0.02)       # past step 0
         ids = torch.randint(0, 512, (2, 40))
         logits = model(ids)[0]
@@ -161,8 +172,8 @@ def test_n6_learns():
             logits[:, :-1].reshape(-1, logits.shape[-1]), ids[:, 1:].reshape(-1)).backward()
         for name, p in model.opmem.named_parameters():
             g = 0.0 if p.grad is None else p.grad.abs().max().item()
-            assert g > 0, f"{mode}: opmem.{name} has no gradient"
-        print(f"  N6 {mode}: every operator-memory parameter has a gradient")
+            assert g > 0, f"{mode}/{query}: opmem.{name} has no gradient"
+        print(f"  N6 {mode}/{query}: every operator-memory parameter has a gradient")
 
 
 def test_n6_applies_an_inferred_rotation(T=12, seed=6):
@@ -201,13 +212,37 @@ def test_n6_applies_an_inferred_rotation(T=12, seed=6):
           f"phase {results['phase']:.4f}, diag {results['diag']:.4f}")
 
 
+def test_echo_tied():
+    """echo_tied_qk: q = k by construction; prefill == decode; the tied map learns."""
+    torch.manual_seed(8)
+    model = V14LM(_cfg(echo_tied_qk=True)).eval()
+    assert isinstance(model.echo_qk, TiedEchoQK)
+    h = torch.randn(2, 5, model.config.dim)
+    q, k = model.echo_qk(h).chunk(2, dim=-1)
+    assert torch.equal(q, k), "tied echo: q != k"
+    # make the read matter. std 0.1, not 0.5: at 0.5 even untied v13 echo
+    # misses ATOL (2.3e-4; tied 2.8e-4, the same ~4e-5 relative error of the
+    # chunked WY form vs the fp32 step loop), so 0.5 tests v13's rounding, not the tie.
+    torch.nn.init.normal_(model.echo_out.weight, std=0.1)
+    diff = _decode_diff(model, 150)
+    assert diff < ATOL, f"tied echo: prefill != decode: {diff:.3e}"
+    model.train()
+    ids = torch.randint(0, 512, (2, 40))
+    logits = model(ids)[0]
+    torch.nn.functional.cross_entropy(
+        logits[:, :-1].reshape(-1, logits.shape[-1]), ids[:, 1:].reshape(-1)).backward()
+    g = model.echo_qk.proj.weight.grad
+    assert g is not None and g.abs().max().item() > 0, "tied echo: no gradient"
+    print(f"  tied echo: q == k, decode == prefill (max |diff| = {diff:.2e}), learns")
+
+
 def main():
     torch.set_num_threads(8)
     for test in (test_off_is_v13, test_n1_reads_equal_at_start,
                  test_n1_decode_matches_prefill, test_n1_new_params_learn,
                  test_n1_phase_differs_from_gate, test_n6_starts_as_echo,
                  test_n6_decode_matches_prefill, test_n6_learns,
-                 test_n6_applies_an_inferred_rotation):
+                 test_n6_applies_an_inferred_rotation, test_echo_tied):
         print(f"{test.__name__}:")
         test()
     print("ALL PASS")
