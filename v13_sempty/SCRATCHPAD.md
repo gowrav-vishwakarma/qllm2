@@ -31,6 +31,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   ETA ~4.5 h → ~09:30–10:00 IST. Rules: EXPERIMENTS "E2".
   04:00 IST: run 3's P INVALID (echo at ceiling); gate moved to v14 B1
   run 4's P (~05:45 IST). Do NOT launch E2 before v14 pings run 4's P.
+  Master is FROZEN (v14 run 4 pairs re-import v13 code + pin HEAD) until
+  that ping: no merge/commit/push to master; v13 notes go on branch `e2`.
+  Then: rebase `e2` onto master (no run is named after an e2 hash yet), ff
+  master, push origin, launch E2 if P passed.
 
 * **2026-10-29 21:44Z (03:14 IST): C1 on M2 DONE — KEEP, new best LM at 600M.**
   `c1m2b_main_7ae6f1f`: holdout 3.4473 (M2 3.4697), WikiText 65.74, recall
