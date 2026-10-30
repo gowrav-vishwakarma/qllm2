@@ -2841,3 +2841,22 @@ LM-only case either.
   transfer to pretraining.
 - Code removed (`--echo_tied` / `ECHO_TIED`, `_echo_qk`, `test_echo_tied`);
   index row with the rerun recipe. S4 runs without the E2 port.
+
+### tfc1 result (2026-10-30, 6000, `b788731`): by the pre-registered rules, the aptitude recipe's recall gain is PAM-specific and c1m2 beats Transformer++ on holdout and recall; Transformer++ wins WikiText
+
+| model (600M, aptitude two-stage recipe) | holdout | WikiText | recall 63-cell (a1/a4/a8) | ≤ 2048 / > 2048 | learning (label_cat 2/4/8) |
+|---|---|---|---|---|---|
+| Transformer++ (tfc1) | 3.4802 | **63.83** | 0.648 (0.735/0.623/0.586) | 0.826 / 0.201 | **0.209** (0.69/0.73/0.62) |
+| **c1m2 (PAM M2)** | **3.4473** | 65.74 | **0.870** (0.945/0.890/0.775) | **0.939** / **0.697** | 0.187 (0.49/0.58/0.38) |
+| tfc1 stage A (120M) | 4.2452 | 143.51 | 0.327 | | 0.229 |
+
+- Rule 1: PAM's recall gain from the recipe (+0.348) vs Transformer++'s
+  (tfc1 − tfs1 = +0.003): +0.345 ≥ 0.10 → **PAM-specific, MET.** Holdout
+  gains: PAM −0.022, Transformer++ −0.008.
+- Rule 2, head-to-head: recall +0.222 (≥ 0.05) → **beats**; holdout −0.033
+  (< −0.01) → **beats** on holdout. Here PAM wins inside 2048 too (0.939 vs
+  0.826).
+- Against: WikiText 63.83 vs 65.74, Transformer++ better (the aptitude stage
+  improved its WikiText by 2.4 ppl, ours by none). Learning probe:
+  Transformer++ 0.209 vs 0.187; its stage A alone scores 0.229, the highest
+  of any model (number_step 0.083, reverse3 0.063). Still near chance.
