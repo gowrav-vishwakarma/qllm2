@@ -18,6 +18,22 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-30 12:25 IST: label_category gap diagnosed; g1c queued on the 4090.**
+  label_diag: PAM fails EXACT in-context copy too (0.50–0.62 vs T++
+  0.78–0.88, Mamba-2 0.62–0.72); not capacity (3.3× state no help), not
+  data (3B same); near-duplicate keys (echo key cosine 0.67–0.72 at label
+  positions) + delta erase = last write wins (recency 0.72 → 0.29 over 5
+  pairs). Mamba-2 (3.44 / 65.0) leads LM by 0.010 and label_cat; PAM leads
+  recall past 2048 with ~11× smaller state. **g1c** (C1-ctl recipe +
+  SHORT_CONV=1) waits in tmux `g1c` (`~/g1c_chain.sh`, worktree
+  `../qllm_g1c` at 9c2b632, log `logs/v13_sempty_g1c_driver_9c2b632_20261030_0654.log`
+  in that worktree) for "lcl DONE"; whole 4090 ~3 h by agreement with v14
+  (one small v14 job may run beside it). **LCL** (tmux `lcl`, `~/lcl_run2.sh`,
+  worktree `../qllm_e2`) ~13:15 IST. **r3b** on the 6000 ~21:30 IST.
+  Local checkpoints now live on d_drive: `checkpoints_v13_sempty` is a symlink
+  to `/media/gowrav/d_drive/qllm2/checkpoints_v13_sempty` (gitignored by
+  `/checkpoints*`; never commit it: the 6000 has real dirs).
+
 * **2026-10-30 ~10:45 IST — step back (think in the void) after today's results.**
   1. Our clearest edge is not "better at 2048": it is that memory keeps
      working past the trained length (T++ 0.15–0.20 vs PAM 0.60–0.72 past
