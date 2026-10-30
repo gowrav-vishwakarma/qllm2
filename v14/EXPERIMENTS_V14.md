@@ -1027,6 +1027,32 @@ diagnosis):** "first strong alignment, then pick the best one."
    and the true value is shared by both (count-min-sketch logic). Cost 2×O(1).
 **Relation to N7:** N7's exact hash is the hard limit of step 1 (no
 similarity); N9 is the learned version that can also match by meaning.
+
+**Refined (user via v13, 2026-10-30 ~13:00): nested, not parallel.** "Get the
+phase, then a memory learned in that phase picks the best." Two facts: (1)
+more phase or more state only adds address bits, and our collisions come
+from look-alike keys, not too few bits; (2) two linear memories read in
+sequence are still linear in the query (forward Σ(e·v)(k·q) = backward
+Σ(q·k)(v·e)), so a second store cannot *pick*: picking needs a nonlinear,
+competitive step. v13's pick: N8 gate (what to store) + content-phase keys
+(each item its own valley) + **settling** (2–3 fixed Hopfield-style
+relaxation rounds pulling the query to the nearest stored key, with a
+sharpening nonlinearity; then read the value). Constant cost. Limit: a
+settling d×d memory holds only a few dozen clean valleys per head.
+
+**Build call (v14, 2026-10-30).** Step 1 in two variants on the N7 bench,
+head to head, after N7 micro run 1:
+- **N9a, content-phase keys** on the learned store (v13's step 1); judged by
+  key cosine at answer positions and label_exact.
+- **N9b, semantic N7:** N7's table with a locality-sensitive slot hash
+  (sign bits of a fixed random projection) over the *embeddings* of the last
+  n tokens, 2 banks, product vote. Exact repeats always share a slot; similar
+  n-grams ("car is" / "truck is") share one with a probability that grows
+  with similarity. The discrete lookup is the nonlinear pick: no settling,
+  no few-dozen ceiling, parallel (N7's sort), O(1), and keyed on content
+  tokens, so no template collision.
+- Settling (step 2) is built on N9a only if N9a beats N9b on label_category.
+  N8's gate goes on whichever store wins.
 **Bars (v13's proposal, freeze before the run):** label_exact ≥ T++ (0.88),
 label_category ≥ 0.73, accuracy 5 pairs back ≥ 0.70, LCL past 2048; recall
 and holdout not worse. Micro first, on the N7 bench (N7 as the exact-copy
