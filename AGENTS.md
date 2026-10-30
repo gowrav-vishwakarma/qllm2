@@ -14,6 +14,14 @@
   trained on (transformers collapse there). Measure results inside AND
   beyond the training length.
 
+## Step back before the next step (user rule, 2026-10-30)
+- After every finding and before choosing the next experiment, pause and
+  "think in the void": step back, look at the whole problem from far away
+  and from inside, from every angle, and let unrelated ideas surface. Most
+  inventions come from there, not from tuning what is in front of us. Write
+  the useful part (what surprised us, what it really says, a bold different
+  angle) into the version's SCRATCHPAD/EXPERIMENTS. Both sessions.
+
 ## Git: commit after every good code change (user rule, 2026-08-22)
 - After ANY verified working change to model/training/inference code
   (`v11/`, `v13/`, `v7/`, `scripts/`), commit it immediately with a message that
