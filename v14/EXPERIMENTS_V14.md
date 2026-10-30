@@ -1167,6 +1167,76 @@ question's item (0 of 300 checked). `_new` uses words never seen in training.
 - **Prediction:** N9a and echo fail label_gap (item outside the window); N9s
   forms it.
 
+**N9s micro run RESULT (4090, 2026-10-31 00:11–04:04 IST, code `5d416bb`):
+bar G NOT met, no claim (the pre-registered "N9a forms too" case). One
+surprise: N9s formed two_hop in one seed, which no arm has ever done.**
+Logs + JSON: `logs/v14_n9sp{1,2,3}_5d416bb_*.{log,json}`. Seed 113's N9s
+arm was stopped at step 1500/6000 (04:04 IST): N9a had already formed
+label_gap in 3 of 3, so no N9s result could change bar G, and the stop let
+the n9r chain start 40 min earlier. Mean over 2 / 4 / 8 shots, per shot in
+brackets.
+
+| seed | arm | label_gap | label_gap_new | label_category | label_exact_new | two_hop | ms/step |
+|---|---|---|---|---|---|---|---|
+| 111 | echo | 0.29 | 0.29 | 0.43 | 0.28 | 0.30 | 619 |
+| | N9a | **1.00** | 0.99 (0.99/1.00/0.98) | 1.00 | 0.98 | 0.30 (0.52/0.23/0.16) | 309 |
+| | N9s | **1.00** | 0.84 (1.00/0.90/0.62) | 1.00 | 0.94 (0.99/0.96/0.87) | **0.92 (0.97/0.93/0.85)** | 218 |
+| 112 | echo | **1.00** | 1.00 | 1.00 | 0.98 (1.00/1.00/0.95) | 0.29 | 216 |
+| | N9a | **1.00** | 0.98 | 1.00 | 0.87 (0.91/0.88/0.83) | 0.29 | 180 |
+| | N9s | **1.00** | 1.00 | 1.00 | **0.50** (label_exact 0.76) | 0.28 | 214 |
+| 113 | echo | 0.29 | 0.27 | 0.42 | 0.30 | 0.30 | 204 |
+| | N9a | **1.00** | 0.83 (1.00/0.90/0.60) | 1.00 | 0.79 (0.91/0.89/0.56) | 0.30 | 218 |
+| | N9s | stopped | | | | | |
+
+(ms/step is wall time on a shared card, not a speed comparison.)
+
+- **G:** N9a formed label_gap in 3 of 3 (the bar needed ≤ 1). Echo formed
+  it in 1 of 3, together with its whole label circuit (label_category,
+  label_exact). **My prediction was wrong.** The key is built from the body
+  state h_{t-1}, which carries the item across 1–5 filler words; the window
+  phase only separates the keys. On this bench the fixed window is not the
+  limit. The phase's value is formation again: N9a 3 of 3 here, 5 of 5 in F1,
+  echo 1 of 3 and 1 of 5.
+- **Secondary:** label_gap_new d (N9s − N9a) = −0.15 (111), +0.02 (112).
+  Not met. **Guard:** label_category 1.00 = 1.00, met; but in seed 112 N9s
+  lost label_exact (0.76) and label_exact_new (0.50, chance).
+- **Phase arms lose on new words at 8 shots:** label_gap_new @8 N9a 0.98 /
+  0.97 / 0.60, label_exact_new @8 0.98 / 0.83 / 0.56; echo, in the seed
+  where it formed, 1.00 / 0.95. The angles come from learned embeddings, and
+  words never seen in training have untrained embeddings, so they separate
+  less when many entries share the context.
+- **two_hop ("Ana owns the dog. The dog is called Rex. … Ana's pet is
+  called" → Rex): N9s seed 111 = 0.97 / 0.93 / 0.85.** Every other arm and
+  seed here is at in-context chance (0.09–0.16 at 8 shots). So is every arm
+  of every earlier run: B1 runs 1–4, F1 (N9a 5 seeds), and same-size
+  attention (tpp, B1 run 4, 3 seeds: 0.50 / 0.25 / 0.12). In the query, the
+  name that decides the answer ("Ana") is 4–5 tokens before the answer, out
+  of the 3-token window. That is the user's case for salience, better than
+  label_gap. One seed of two; replication below.
+
+**N9s two-hop replication `n9th` (PRE-REGISTERED 2026-10-31 ~04:10 IST,
+before any n9th number).** Question: does the salient phase let a 27M O(1)
+body compose two facts in context (two_hop), where the fixed window and
+same-size attention stay at chance?
+- **Arms:** echo_phase (N9a, control), echo_phase_sal (N9s), tpp
+  (Transformer++ reference, params matched). Same training as n9s (`--rule_tasks
+  letter_shift,number_step,reverse3,label_category,two_hop,label_gap`),
+  6000 steps × B16, lr 3e-4, `--seed 13i --doc_seed0 (i+50)·100M
+  --init_seed 13i`, i = 1..5, tag `n9thp<i>`. Same init and data per seed.
+  Code `5d416bb` (N9s unchanged). Hardware by agreement between sessions.
+- **Formed:** two_hop mean over 2 / 4 / 8 shots ≥ 0.75 (in-context chance
+  0.29; seed 111 had 0.92).
+- **Bar H (primary):** N9s forms two_hop in ≥ 2 of 5 seeds AND in at least
+  2 more seeds than N9a.
+- **Guard:** N9s forms label_gap (≥ 0.9) in ≥ (N9a's count − 1) seeds.
+- **Reported:** tpp's two_hop count (the "where attention fails" part),
+  two_hop per shot, label_exact_new, every other cell.
+- **Outcomes:** H met → salience lets the O(1) body chain two lookups in
+  context at 27M. Next: find how (what the running angle holds at the query,
+  per layer), then a 600M plan with v13 (two_hop-format data in training,
+  as B2 did). H not met → seed 111 was luck; N9s closes as FAIL, is
+  recorded in the index with its last-code commit, and is removed from code.
+
 ### N9 — phase-aligned dual memory (the user's 2×O(1) memory, 2026-10-30; design only)
 
 **Idea (user, mapped by the v13 session against the key-collision

@@ -4,7 +4,34 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-30 13:45 IST)
+## State (2026-10-31 04:15 IST) — read this first
+
+* **4090:** v14's one job = **n9r** (tmux `n9r`, worktree `../qllm_v14n9r`
+  at `37fa333`, checkpoints on d_drive `qllm_ckpt/v14_n9r`, driver
+  `~/n9r_chain.sh`, chain log `logs/v14_n9r_chain.log` in the worktree):
+  ctl43 then n9a43, stage A + B each, then probes; started 04:04 IST,
+  ~47k tok/s, ends ~12:00 IST. Score with the recall scorer (v13's
+  definition: t40 behavioral JSON, accuracy·n over `aggregates`, split at
+  context_tokens 2048) against the bars in EXPERIMENTS_V14 "N9a recall
+  replication". Beside it: v15's G1r (its own small job).
+* **N9s micro run done** (`5d416bb`): bar G not met (N9a forms label_gap
+  too); **N9s formed two_hop in seed 111**, a first for any arm including
+  attention. Replication `n9th` pre-registered (EXPERIMENTS_V14 "N9s"):
+  arms echo_phase / echo_phase_sal / tpp × 5 seeds, needs a slot (6000 by
+  agreement with v13, or the 4090 after n9r). Launch from a worktree at
+  `5d416bb` or later (N9s code unchanged), checkpoints symlinked to d_drive:
+  `TAG=n9thp$i FAMILIES=rules ARMS=echo_phase,echo_phase_sal,tpp SAVE=1
+  EXTRA="--seed 13$i --doc_seed0 $((i+50))00000000 --init_seed 13$i
+  --rule_tasks letter_shift,number_step,reverse3,label_category,two_hop,label_gap"
+  bash v14/run_bench.sh`, i = 1..5.
+* **6000:** v13's runs (r3c flagship 3B, b2m Mamba-2 B2 arm, then the `lb`
+  label-format pair). v14 asks before using it.
+* **v13 news (2526ca7):** the B2 edge over T++ replicates at 600M in both
+  seeds (`_new` 0.991 / 0.944 vs T++ 0.734); bar 3 waits on Mamba-2 (b2m).
+  step_wide_new (copy the exact last far term through filler) collapses at
+  1024 for both PAM and T++: an open cell for a v14 unit.
+
+## Old state (2026-10-30 13:45 IST; superseded, kept for history)
 
 * **4090 queue (15:40 IST):** v13 g1c (whole card) until ~18:00; v14's slot:
   **F1** (tmux `v14f1`, worktree `../qllm_v14f1` at `7c8c6e2`: echo +
@@ -258,18 +285,61 @@ T++ and Mamba-2 by +0.10 in both seeds. If it holds, the v13 session posts the
 ntfy EUREKA (its run); v14 does not double-post. For v14 units judged on B2:
 also run with `--spread` (the distance edge is where the body differs).
 
+## Step back (2026-10-31 ~04:15 IST, after the N9s micro run)
+
+**What surprised us.** (1) The fixed 3-token window was not the limit on
+label_gap: N9a formed it 3/3, because the key is W_k h_{t-1} and the body
+state already carries the item across a few filler words. I had pictured
+N9a's key as "the window", and it is not: the window gives a separating
+angle, the body gives the content. (2) N9s formed two_hop once, and nothing
+else ever has, attention included. (3) The phase arms lose on words never
+seen in training when there are 8 entries (0.56–0.83 vs 0.95–1.00).
+
+**What it really says.** In two_hop the query is "Ana's pet is called": the
+word that decides everything sits outside the window, and the answer needs a
+chain (Ana -> dog -> Rex). A running angle that holds "Ana" through "'s pet
+is called" is a topic register: who we are talking about right now. Language
+has this (the discourse topic, the entity in focus), and the brain has it
+(a held item in working memory steering what gets retrieved). label_gap
+could not show it because the body solved it anyway; two_hop shows it
+because the chain needs a clean first address. One seed: replicate first.
+
+**Bold angles (not built; only after n9th says yes).**
+- **Pointer-following angle:** let the running angle be rewritten by what
+  the memory READ at this layer, not only by the input token. Then layer 1
+  reads "dog" with Ana's angle, layer 2 addresses with dog's angle and reads
+  "Rex": hops = depth, still O(1). N9s writes the angle from embeddings
+  only, so it cannot do this; a clean two_hop circuit would need it at more
+  hops (three_hop as the bench).
+- **Fixed random angles for unseen words:** the 8-shot `_new` drop says
+  learned separation does not reach new words. A fixed random angle per
+  token id (dentate-gyrus style: separation that needs no learning) plus
+  the learned part would separate any word. Cheap ablation if N9a goes to
+  scale and `_new` matters.
+- **A held value, not a held angle (for v13's open cell):** step_wide_new
+  through filler needs the exact last term copied across distance. A
+  salience-gated slot that holds the last important token's content and is
+  readable is the same idea as N9s one step further. Needs a micro
+  `--spread` eval first.
+
+**Next:** n9th (two_hop replication) when a slot is agreed; n9r readout
+~12:00 IST.
+
 ## Next action
 
-1. **v13 flagship r3c** (`16f372e`, 6000, from ~00:45 IST, ~14 h): 16
+1. **n9r** (4090, running, ends ~12:00 IST): score recall vs the bars
+   (EXPERIMENTS_V14 "N9a recall replication"), report label_diag t200 and
+   PG-19 far gain. If met: N9a gets its own arm on the r3c recipe, paired
+   with r3c at a matched token budget (v13 runs it via `ECHO_PHASE_LAGS=3`).
+2. **n9th** (N9s two_hop replication, bar H): launch as soon as a slot is
+   agreed (command in State above). H met -> mechanism check, then a 600M
+   plan with v13. H not met -> N9s FAIL, record + remove from code.
+3. **v13 flagship r3c** (`16f372e`, 6000, ~14 h from ~00:45 IST): 16
    notebooks + echo + two stages + LR 1.2e-3 straight to 3B vs T++ 3.206 /
-   Mamba-2 3.164 (futility stop at ~1.56B if holdout > 3.4714). v14 units
-   are NOT in it (unproven parts would confound bar 2).
-2. **n9c** (N9a at 600M, 4090, ~01:30 IST): read its lookup bars. If it
-   passes, N9a gets its own arm on the r3c recipe, paired with r3c at a
-   matched token budget (v13 runs it via `ECHO_PHASE_LAGS=3`).
-3. **N7 as a cache LM**: its own arm on the r3c recipe (`NGRAM_ORDERS=2,3`,
+   Mamba-2 3.164. v14 units are NOT in it.
+4. **N7 as a cache LM**: its own arm on the r3c recipe (`NGRAM_ORDERS=2,3`,
    hook `a55e1f0`), paired with r3c, ≥ 1.5B tokens; pre-register after r3c's
    first readout.
-4. Stopped / closed today (see EXPERIMENTS_V14): N7 micro (bench could not
-   show copy), N10 formation (no verdict), Q1 / S1 (F1 0/5), N1, N6 on B1.
-   Rule (user): run only what can be superior; run known-best directly.
+5. Closed (see EXPERIMENTS_V14): N9s bar G (no claim), N7 micro (bench could
+   not show copy), N10 formation (no verdict), Q1 / S1 (F1 0/5), N1, N6 on
+   B1. Rule (user): run only what can be superior; run known-best directly.
