@@ -241,7 +241,7 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
 
     # --- ladder (only non-default arch flags) -------------------------------
     _ladder = [k for k in ('n_states', 'vault', 'delta', 'cond_mem',
-                           'chrono', 'out_gate', 'short_conv', 'echo', 'echo_qk_tied_init', 'echo_sparse_k',
+                           'chrono', 'out_gate', 'short_conv', 'echo',
                            'pam_layers', 'mlp_hidden', 'share_reads')
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if cfg.base_dt_bias != -4.0:
@@ -1077,10 +1077,6 @@ def build_argparser():
                    help='M2: notebook-less blocks read the nearest notebook below (no decode yet)')
     p.add_argument('--echo', action='store_true',
                    help='E1: top-of-stack succession (echo) memory into the head')
-    p.add_argument('--echo_qk_tied_init', action='store_true',
-                   help='Q1: initialise the echo W_q equal to W_k, then train both freely; needs --echo')
-    p.add_argument('--echo_sparse_k', type=int, default=0,
-                   help='S1: centre echo q/k by the running key mean and keep the top-k per head (0 = off)')
     p.add_argument('--echo_phase_lags', type=int, default=0,
                    help='v14 N9a: turn echo q/k by content phases of the last N tokens; builds '
                         'v14.units.V14LM through v14/hook.py (0 = off, plain v13 LM; needs --echo)')
@@ -1143,10 +1139,6 @@ def main():
         cfg.short_conv = True
     if args.echo:
         cfg.echo = True
-    if args.echo_qk_tied_init:
-        cfg.echo_qk_tied_init = True
-    if args.echo_sparse_k:
-        cfg.echo_sparse_k = args.echo_sparse_k
     if args.pam_layers:
         cfg.pam_layers = tuple(int(i) for i in args.pam_layers.split(','))
     if args.mlp_hidden:

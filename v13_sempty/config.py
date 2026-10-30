@@ -92,18 +92,8 @@ class PAMConfig:
     # Real arm; decode carries (S, h_prev) as the last element of states.
     echo: bool = False
     echo_dt_bias: float = -6.0     # echo retention init e^-softplus(-6) ~ 0.9975
-    # Q1 tied START (2026-10-30, user: "engineer the start the lucky seeds
-    # had"): W_q is initialised equal to W_k (the read starts as a
-    # similarity lookup, which formed the circuit in 4/4 seeds tied vs 0/5
-    # untied in v14 B1), then both train FREELY (no tie, so recall is not
-    # capped like E2's permanent q = k). Needs echo. EXPERIMENTS_SEMPY "Q1".
-    echo_qk_tied_init: bool = False
-    # S1 separated keys (2026-10-30, label_category diagnosis + v14's pattern
-    # separation): echo keys AND queries are centred by the causal running
-    # mean of the keys so far (removes the shared template component) and
-    # sparsified to their top-k magnitudes per head (0 = off). Offline on
-    # c2m2's keys, top 8: label-key cosine 0.67 -> 0.25. Needs echo.
-    echo_sparse_k: int = 0
+    # (Q1 tied start and S1 separated keys removed 2026-10-30: F1 FAIL, 0/5
+    # seeds each vs echo 1/5; EXPERIMENTS_SEMPY "F1", rerun via EXPERIMENT_INDEX.)
     # (E2 tied echo W_q = W_k removed 2026-10-30: FAIL at 600M, holdout +0.055,
     # label_category 8-shot 0.365 vs 0.50; EXPERIMENTS_SEMPY "E2", rerun via EXPERIMENT_INDEX.)
     # M1 sparse memory (2026-10-29, "few memories, deep thought"): only the

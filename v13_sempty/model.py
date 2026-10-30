@@ -1132,8 +1132,6 @@ class LM(nn.Module):
             assert cfg.pam_layers and cfg.delta and cfg.chrono, \
                 "M2 share_reads needs pam_layers, delta and chrono"
         self.echo = cfg.echo
-        assert self.echo or not cfg.echo_qk_tied_init, "echo_qk_tied_init needs echo"
-        assert self.echo or not cfg.echo_sparse_k, "echo_sparse_k needs echo"
         if self.echo:
             assert not cfg.is_complex, "echo is implemented for the real arm"
             assert cfg.dim == cfg.n_heads * cfg.head_dim, "echo heads must tile dim"
@@ -1145,9 +1143,6 @@ class LM(nn.Module):
         if self.echo:
             with torch.no_grad():
                 self.echo_gates.bias[:cfg.n_heads].fill_(cfg.echo_dt_bias)
-                if cfg.echo_qk_tied_init:            # Q1: q rows start = k rows, then train freely
-                    D = cfg.dim
-                    self.echo_qk.weight[:D].copy_(self.echo_qk.weight[D:])
 
     def _init_weights(self):
         if self.config.is_complex:
@@ -1210,26 +1205,6 @@ class LM(nn.Module):
                 z = self.cond_mem[str(i)](z, input_ids)
         return z, new_states
 
-    def _echo_separate(self, q: torch.Tensor, k: torch.Tensor, state):
-        """S1: centre q and k by the causal running mean of the keys so far,
-        then keep each head's top-k magnitudes (pattern separation of
-        look-alike template keys). Raw [B,T,D] in and out; returns the new
-        (key sum, key count) carry for decode."""
-        cfg = self.config
-        B, T, D = k.shape
-        H, K, kk = cfg.n_heads, cfg.head_dim, cfg.echo_sparse_k
-        kf = k.float()
-        prev_sum = state[2] if state is not None else kf.new_zeros(B, D)
-        prev_cnt = state[3] if state is not None else 0.0
-        csum = kf.cumsum(1) + prev_sum[:, None]
-        cnt = torch.arange(1, T + 1, device=k.device, dtype=torch.float32)[None, :, None] + prev_cnt
-        mu = (csum / cnt).to(k.dtype)                                    # mean of k_1..k_t (causal, inclusive)
-        def top(x):
-            y = (x - mu).reshape(B, T, H, K)  # named-exit: echo boundary (raw [B,T,D] keys)
-            idx = y.abs().topk(kk, dim=-1).indices  # named-exit: echo boundary (raw [B,T,D] keys)
-            return torch.zeros_like(y).scatter(-1, idx, y.gather(-1, idx)).reshape(B, T, D)  # named-exit: echo boundary (raw [B,T,D] keys)
-        return top(q), top(k), (csum[:, -1], prev_cnt + T)
-
     def _echo_read(self, hidden: NamedTensor, input_ids, batch: Dim, time: Dim,
                    state=None):
         """E1 Echo memory read (raw-torch boundary). Returns (out, new_state).
@@ -1254,8 +1229,6 @@ class LM(nn.Module):
         else:
             k_prev = self.echo_qk(state[1].to(h.dtype)).chunk(2, dim=-1)[1]
             k = torch.cat([k_prev[:, None], k[:, :T - 1]], dim=1)       # k_t from h_{t-1}, across calls
-        if cfg.echo_sparse_k:
-            q, k, kstat = self._echo_separate(q, k, state)
         v = nn.functional.embedding(input_ids, self.embed.embed.weight).to(h.dtype)
         v = v * torch.rsqrt(v.float().pow(2).mean(-1, keepdim=True) + 1e-6).to(h.dtype)
 
@@ -1286,8 +1259,6 @@ class LM(nn.Module):
         read = nn.functional.rms_norm(read.float(), (K,), eps=1e-6).to(h.dtype)
         read = read.reshape(B, H, T, K).transpose(1, 2).reshape(B, T, D)
         new_state = (S.reshape(B, H, K, K), h[:, -1].detach().float())
-        if cfg.echo_sparse_k:
-            new_state = new_state + kstat                                # (key sum, key count) for the running mean
         return named(self.echo_out(read), (batch, time, self.model_dim)), new_state  # named-exit: echo boundary
 
     def _lm_vector(self, z: NamedTensor, input_ids, batch: Dim, time: Dim,

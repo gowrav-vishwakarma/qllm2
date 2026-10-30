@@ -640,7 +640,7 @@ def test_short_conv(batch_size=2, seq_len=40, seed=0):
     return True
 
 
-def test_echo_memory(batch_size=2, seq_len=48, seed=0, sparse_k=0):
+def test_echo_memory(batch_size=2, seq_len=48, seed=0):
     """E1 echo memory: identity at init, causal, grads flow, and it can copy.
 
     (1) echo on with zero echo_out == the model without it; (2) with a random
@@ -655,7 +655,6 @@ def test_echo_memory(batch_size=2, seq_len=48, seed=0, sparse_k=0):
     cfg.chunk_size = 16
     cfg.chrono = cfg.out_gate = cfg.delta = True
     cfg.echo = True
-    cfg.echo_sparse_k = sparse_k
     model = LM(cfg).to(dev).eval()
     ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len), device=dev)
     with torch.no_grad():
@@ -728,55 +727,6 @@ def test_echo_memory(batch_size=2, seq_len=48, seed=0, sparse_k=0):
     assert d_dec < 2e-3, f"echo decode disagrees: {d_dec:.3e}"
     print(f"  init parity {d_init:.3e}   causal: past {d_past:.1e} now {d_now:.1e}   "
           f"grads ok   copy: repeat of x3 recalls x4   decode vs chunked {d_dec:.2e} ({dev})")
-    return True
-
-
-def test_echo_sparse_keys():
-    """S1 separated keys: the E1 checks (identity at init, causal, grads,
-    copy, decode == chunked) with centred top-k echo keys/queries, plus <= k
-    non-zeros per head in the separated keys."""
-    torch.manual_seed(0)
-    cfg = get_config('tiny_real')
-    cfg.chrono = cfg.out_gate = cfg.delta = cfg.echo = True
-    cfg.echo_sparse_k = 8
-    m = LM(cfg)
-    q, k = m.echo_qk(torch.randn(2, 10, cfg.dim)).chunk(2, dim=-1)
-    qs, ks, _ = m._echo_separate(q, k, None)
-    nz = (ks.reshape(2, 10, cfg.n_heads, cfg.head_dim) != 0).sum(-1).max().item()
-    assert nz <= 8, f"{nz} non-zeros per head"
-    return test_echo_memory(sparse_k=8)
-
-
-def test_echo_qk_tied_init(seed=0):
-    """Q1: with echo_qk_tied_init the echo query rows start equal to the key
-    rows (so q_t = k-projection of h_t at init), the model is still identity
-    at init (echo_out zero), and one optimiser step makes them differ (they
-    train freely; nothing ties them)."""
-    torch.manual_seed(seed)
-    cfg = get_config('tiny_real')
-    cfg.chunk_size = 16
-    cfg.chrono = cfg.out_gate = cfg.delta = True
-    cfg.echo = cfg.echo_qk_tied_init = True
-    m = LM(cfg)
-    D = cfg.dim
-    W = m.echo_qk.weight
-    assert torch.equal(W[:D], W[D:]), "q rows != k rows at init"
-    ids = torch.randint(0, cfg.vocab_size, (2, 40))
-    with torch.no_grad():
-        on, _, _ = m.forward(ids)
-        m.echo = False
-        off, _, _ = m.forward(ids)
-        m.echo = True
-    d_init = (on - off).abs().max().item()
-    assert d_init < 1e-5, f"echo@init != off: {d_init:.3e}"
-    nn.init.normal_(m.echo_out.weight, std=0.3)          # give the read a path to the loss
-    opt = torch.optim.SGD(m.parameters(), lr=0.1)
-    lg, _, _ = m.forward(ids)
-    F.cross_entropy(lg.reshape(-1, cfg.vocab_size).float(), ids.reshape(-1)).backward()
-    opt.step()
-    gap = (W[:D] - W[D:]).abs().max().item()
-    assert gap > 0, "q and k rows stayed tied after a step"
-    print(f"  q == k at init; init parity {d_init:.1e}; after one step |q - k| max {gap:.2e} (untied)")
     return True
 
 
@@ -1078,8 +1028,6 @@ def main():
         test_out_gate_parity_and_decode,
         test_short_conv,
         test_echo_memory,
-        test_echo_qk_tied_init,
-        test_echo_sparse_keys,
         test_sparse_memory,
         test_shared_reads,
         test_transformer_baseline,
