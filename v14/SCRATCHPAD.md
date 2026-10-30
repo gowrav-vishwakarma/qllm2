@@ -6,7 +6,17 @@ Keep all three current as things happen (user rule, 2026-10-29).
 
 ## State (2026-10-30 13:45 IST)
 
-* **4090 queue (13:45 IST):** v13 g1c (whole card, agreed) since 13:35 ->
+* **4090 queue (15:40 IST):** v13 g1c (whole card) until ~18:00; v14's slot:
+  **F1** (tmux `v14f1`, worktree `../qllm_v14f1` at `7c8c6e2`: echo +
+  echo_phase × 5 seeds on B1) then **N10 formation run** (tmux `v14n10`,
+  `../qllm_v14n10run` at `9bd36e6`, checkpoints symlinked to d_drive: echo /
+  op / opcoord × 5 seeds on B2). After g1c, v13 runs echo_qinit (Q1) and
+  echo_sparse (S1) on the F1 seeds. **Checkpoints lost** (worktree remove
+  --force, 15:40): B2 run 2, state sweep, N7 pair 1 micro weights (numbers
+  are in logs/); rerun from the commit if a formed checkpoint is needed for
+  probing. F1's checkpoints are inside `../qllm_v14f1`: move them to d_drive
+  before removing that worktree.
+* **(old, 13:45) 4090 queue:** v13 g1c (whole card, agreed) since 13:35 ->
   ~16:45. Beside it, v14's one small job: **N7 micro run 1** (tmux `v14n7`,
   worktree `../qllm_v14n7run` at `73265e9`, driver `n7r1_driver.sh`; echo /
   echo_n7 / tpp, 3 pairs, bar X) since 13:35, then **N9a micro run 1**
