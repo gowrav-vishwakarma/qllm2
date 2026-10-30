@@ -56,6 +56,7 @@ SHORT_CONV="${SHORT_CONV:-0}"  # G1 short conv on qkv (2026-10-29 screen; needs 
 SEED="${SEED:-42}"            # init + data-mix seed (default 42 = every run so far)
 ECHO="${ECHO:-0}"              # E1 echo (succession) memory into the head
 ECHO_PHASE_LAGS="${ECHO_PHASE_LAGS:-0}" # v14 N9a content-phase echo keys (0 = off; needs ECHO=1; builds V14LM)
+NGRAM_ORDERS="${NGRAM_ORDERS:-}"      # v14 N7 in-context n-gram memory orders, e.g. 2,3 (empty = off; builds V14LM)
 PAM_LAYERS="${PAM_LAYERS:-}"   # M1 blocks that keep a notebook, e.g. 3,7,11,15 (default all)
 MLP_HIDDEN="${MLP_HIDDEN:-0}"  # M1 gated-MLP width (0 = dim*expand), to param-match
 SHARE_READS="${SHARE_READS:-0}" # M2 notebook-less blocks read the nearest notebook below; GEN_EVERY=0
@@ -98,6 +99,7 @@ if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi
 if [ "$SHORT_CONV" = "1" ]; then EXTRA+=(--short_conv); fi
 if [ "$ECHO" = "1" ]; then EXTRA+=(--echo); fi
 if [ "$ECHO_PHASE_LAGS" != "0" ]; then EXTRA+=(--echo_phase_lags "$ECHO_PHASE_LAGS"); fi
+if [ -n "$NGRAM_ORDERS" ]; then EXTRA+=(--ngram_orders "$NGRAM_ORDERS"); fi
 if [ -n "$PAM_LAYERS" ]; then EXTRA+=(--pam_layers "$PAM_LAYERS"); fi
 if [ "$MLP_HIDDEN" != "0" ]; then EXTRA+=(--mlp_hidden "$MLP_HIDDEN"); fi
 if [ "$SHARE_READS" = "1" ]; then EXTRA+=(--share_reads); fi

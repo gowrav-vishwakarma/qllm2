@@ -18,7 +18,7 @@
                    build v14 units): every v14 switch off -> the plain v13 LM
                    class; a checkpoint config rebuilds the same V14LM (strict
                    load, equal logits); gradient checkpointing on == off for
-                   the v13 LM and for N9a (loss and grads).
+                   the v13 LM, N9a and N7 (loss and grads).
 9. B2 splits       held-out rule parameters appear only in the ``_new`` tasks,
                    trained ones only in the base tasks; answers stay out of
                    the context; the nearest-parameter decoy is a candidate.
@@ -265,19 +265,22 @@ def test_hook():
     assert d == 0.0, f"hook: reloaded V14LM differs: {d:.3e}"
     # gradient checkpointing parity (the 4090 suspect): loss and grads, on vs off
     worst = 0.0
-    for lags in (0, 3):
+    for lags, orders in ((0, ()), (3, ()), (0, (2, 3))):
         runs = []
         for ckpt in (False, True):
             c = with_v14_switches(v13_get_config('tiny_real', gradient_checkpointing=ckpt, **base),
-                                  echo_phase_lags=lags)
+                                  echo_phase_lags=lags, ngram_orders=orders)
             torch.manual_seed(1)
             m = build_lm(c).train()
-            if lags:
-                with torch.no_grad():
+            with torch.no_grad():
+                if lags:
                     m.phase_proj.normal_(std=0.3)
-            logits = m(ids)[0]
+                for r in getattr(m, 'ngram_read', {}).values():
+                    r.proj.normal_(std=0.05)
+            ids_rep = torch.cat([ids[:, :20], ids[:, :20]], dim=1) if orders else ids  # repeats: lookups fire
+            logits = m(ids_rep)[0]
             loss = torch.nn.functional.cross_entropy(
-                logits[:, :-1].reshape(-1, logits.shape[-1]), ids[:, 1:].reshape(-1))
+                logits[:, :-1].reshape(-1, logits.shape[-1]), ids_rep[:, 1:].reshape(-1))
             loss.backward()
             runs.append((loss.item(), {n: p.grad.clone() for n, p in m.named_parameters() if p.grad is not None}))
         (l0, g0), (l1, g1) = runs
@@ -285,7 +288,7 @@ def test_hook():
         worst = max(worst, max((g0[k] - g1[k]).abs().max().item() for k in g0))
     assert worst < 1e-5, f"hook: grad checkpointing changes grads: {worst:.3e}"
     print(f"  hook: off -> v13 LM class; reload strict, logits equal; grad ckpt on == off "
-          f"(v13 LM and N9a): max grad diff {worst:.1e}")
+          f"(v13 LM, N9a, N7): max grad diff {worst:.1e}")
 
 
 def _b2_param(task, text):

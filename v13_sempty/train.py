@@ -1077,6 +1077,9 @@ def build_argparser():
                    help='M2: notebook-less blocks read the nearest notebook below (no decode yet)')
     p.add_argument('--echo', action='store_true',
                    help='E1: top-of-stack succession (echo) memory into the head')
+    p.add_argument('--ngram_orders', type=str, default='',
+                   help='v14 N7: in-context n-gram memory orders, e.g. "2,3"; builds v14.units.V14LM '
+                        'through v14/hook.py (empty = off)')
     p.add_argument('--echo_phase_lags', type=int, default=0,
                    help='v14 N9a: turn echo q/k by content phases of the last N tokens; builds '
                         'v14.units.V14LM through v14/hook.py (0 = off, plain v13 LM; needs --echo)')
@@ -1301,7 +1304,9 @@ def main():
         model = TransformerLM(TransformerConfig(vocab_size=cfg.vocab_size))
     else:
         from v14.hook import build_lm, with_v14_switches
-        cfg = with_v14_switches(cfg, echo_phase_lags=args.echo_phase_lags)
+        cfg = with_v14_switches(
+            cfg, echo_phase_lags=args.echo_phase_lags,
+            ngram_orders=tuple(int(n) for n in args.ngram_orders.split(',') if n.strip()))
         model = build_lm(cfg)                    # plain v13 LM unless a v14 switch is on
     if init_ck is not None:
         missing, unexpected = model.load_state_dict(init_ck['model_state_dict'],

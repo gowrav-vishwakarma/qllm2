@@ -246,8 +246,7 @@ class V14LM(LM):
     def _run_blocks(self, z, batch, time, states, step_offset, input_ids=None):
         if not self.ngram_orders:
             return super()._run_blocks(z, batch, time, states, step_offset, input_ids)
-        if self.config.gradient_checkpointing and self.training and states is None:
-            raise NotImplementedError("N7: gradient checkpointing not wired yet")
+        use_ckpt = self.config.gradient_checkpointing and self.training and states is None
         value, found, self._ng_out = lookup_orders(
             input_ids, self.ngram_orders, self.config.ngram_slots,
             state=self._ng_in if states is not None else None, want_state=self._ng_want_state)
@@ -255,7 +254,10 @@ class V14LM(LM):
         new_states = []
         for i, block in enumerate(self.blocks):
             state = states[i] if states is not None else None
-            z, new_state = block(z, pam_state=state, step_offset=step_offset)
+            if use_ckpt:                                   # as LM._run_blocks: recompute in backward
+                z, new_state = self._ckpt_block(block, z, step_offset)
+            else:
+                z, new_state = block(z, pam_state=state, step_offset=step_offset)
             new_states.append(new_state)
             if self.cond_mem_layers and i in self.cond_mem_layers:
                 z = self.cond_mem[str(i)](z, input_ids)
