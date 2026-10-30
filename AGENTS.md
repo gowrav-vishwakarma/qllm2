@@ -23,6 +23,11 @@
   its own units, no tuning of the v13 body or recipes.
 - Before starting work, ask which lane it is in; hand work across by
   message.
+- **Share eureka moments (user, 2026-10-30):** separate lanes, one goal. Any
+  insight that could change the other session's design goes into the root
+  `EUREKA.md` (newest first: what we saw + hash, what it says, what it means
+  for the other) AND is sent at once by message starting `EUREKA:`. Read
+  `EUREKA.md` before choosing a next step.
 
 ## Step back before the next step (user rule, 2026-10-30)
 - After every finding and before choosing the next experiment, pause and
