@@ -1,0 +1,15 @@
+boxchk: F1 done, start 2026-10-30T15:27:24Z code 9c2b632
+=== boxchk start 2026-10-30T15:27:24Z SCREEN_HASH=9c2b632 arms='main:ECHO=1' base='LR=1.2e-3 TARGET_TOKENS=480006144 VAL_EVERY=4883 SAVE_EVERY=100000 KEEP_EVERY=0 KEEP_LAST=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2352 GRAD_CKPT=1 MAX_RETRIES=1 INIT_FROM=checkpoints_v13_sempty/c1ctla_pre_7ae6f1f/best_model.pt' ===
+=== arm main (ECHO=1) ckpt=checkpoints_v13_sempty/boxchk_main_9c2b632 log=logs/v13_sempty_boxchk_main_9c2b632_20261030_2057.log 2026-10-30T15:27:24Z ===
+=== boxchk_main start 2026-10-30T15:27:24Z commit=9c2b632 log=logs/v13_sempty_boxchk_main_9c2b632_20261030_2057.log ckpt=checkpoints_v13_sempty/boxchk_main_9c2b632 ===
+boxchk: reached step 4600 (or exited), stopping 2026-10-30T16:29:25Z
+Terminated                 .venv/bin/python -u -m v13_sempty.train --preset "$PRESET" --dataset mix --pretrain_sources "$SOURCES" --pretrain_weights "$WEIGHTS" --target_tokens "$TARGET_TOKENS" --blend_warmup_tokens "$BLEND_WARMUP" --device cuda --batch_size "$BATCH" --seq_len "$SEQ" --lr "$LR" --warmup_steps "$WARMUP" --dropout "$DROPOUT" --amp_dtype bf16 --fused_ce --fused_pam --ce_gemm_dtype auto --seed 42 --log_interval 50 --val_every "$VAL_EVERY" --gen_every "$GEN_EVERY" --gen_max_tokens 80 --save_every_steps "$SAVE_EVERY" --keep_every_steps "$KEEP_EVERY" --keep_last "$KEEP_LAST" --diag_every 2000 --max_val_batches 0 --resume auto "${EXTRA[@]}" --checkpoint_dir "$CKPT_DIR" >> "$LOG" 2>&1
+=== boxchk_main attempt 1 died exit=143 2026-10-30T16:29:25Z ===
+=== boxchk_main end 1793377765 exit=143 attempts=1 ===
+=== arm main train exit=143 2026-10-30T16:29:25Z ===
+=== arm main FAILED (diverged?) ===
+skip probes: main not done
+--- final holdout val_loss (last val of each arm) ---
+  main: n/a
+=== boxchk DONE 2026-10-30T16:29:25Z ===
+=== boxchk DONE 2026-10-30T16:29:30Z ===
