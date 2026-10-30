@@ -9,6 +9,28 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **user + v13: "reason first, then know where to look"; two lookups
+  and rules as phase continuation (vision, design ideas).** (1) *Analytic
+  continuation* (the zeta-function idea): an analytic function known on a
+  patch is fixed everywhere. For a mind: give ordered things phase
+  coordinates (letters on a circle, numbers on several circles of
+  different periods, multiplication via log-phase), so many rules become
+  one rotation; inferring a rule = reading an angle from the examples;
+  applying it to an unseen value = exact continuation, not recall (echo
+  already infers held-out shifts, B2). (2) *Built-in RAG, pands-style*
+  (point first, then speak; the user's pands v1 forms an essence
+  direction before speaking): reason → form the query ("I need truck's
+  label") → look in TWO memories, a knowledge store learned from all
+  training data and the conversation memory (N7/N9) → speak toward the
+  intent. Today PAM looks up with whatever key the current token gives
+  ("is"), which is the label_category failure. O(1) if both are addressed
+  by computed phases/hashes, not searched. Prior art for large learned
+  stores: product-key memory, memory layers; the new part is reasoned
+  addressing with content phases. (3) *Learns faster?* Holdout at 150M:
+  PAM 3.905 vs T++ 3.981 (faster), the gap closes to −0.019 by 600M;
+  Mamba-2 is ahead at every point (−0.02 to −0.035). *For v14:* (1) and
+  (2) are new mechanisms; (2) is the third memory + planner of the
+  two-memory design.
 - **user + v13: engineer the start the lucky seeds had, instead of
   trusting the seed (Q1, `e89b7d2`).** In-context circuits form per seed,
   all or nothing (label_category: tied echo 4/4 vs echo 0/5; held-out
