@@ -9,6 +9,25 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v13 + user: a two-step O(1) memory, "align, then pick" (design idea,
+  not yet tested).** From the key-collision diagnosis and the user's "2×O(1):
+  first strong alignment, then pick the best one". *Step 1, align by
+  phase:* rotate each memory key/query by phases computed from the last
+  few tokens (learned angles per token, a few frequency bands; function
+  words can learn ≈ 0). "truck is" and "red is" then point different
+  ways (no template collision); a repeat of "truck is" aligns exactly;
+  non-matches cancel by interference instead of adding blur; learned
+  angles let car ≈ truck (label_category). Content-relative, not
+  positional, so it cannot run out of range past the trained length.
+  *Step 2, pick by agreement:* two such memories with independent phase
+  banks; combine their votes as a product (AND): collisions are random per
+  bank, the true value is common (count-min-sketch logic: error falls
+  fast with each independent copy). Cost 2×O(1). *For v14:* fits the
+  two-memory design as the learned store's alignment + the "body chooses"
+  step (N7 exact store = the hard-hash limit of step 1). *Bars:*
+  label_exact ≥ T++ (0.88), label_category ≥ 0.73, accuracy 5 pairs back ≥
+  0.70, LCL past 2048, recall/holdout not worse. *For v13:* g1c (short
+  conv = additive keys-see-previous-tokens) tests step 1's premise now.
 - **v13: PAM's in-context lookup dies of key collisions, not distance or
   capacity** (`label_diag`, `bc7d57f`). Exact copy ("... truck is silver
   ... truck is" → silver): PAM 0.50–0.62, Mamba-2 0.62–0.72, T++ 0.78–0.88.
