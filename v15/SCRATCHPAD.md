@@ -39,6 +39,27 @@
 3. If G1 fails in all 3 pairs: back to the meditation, not to tuning.
 
 ## Step-back notes
+- 2026-10-31 03:40, after G1r pair 1 (rules yes, lookup no, guard no).
+  What it says: ripening made Grove a rule learner (letter_shift 0.99,
+  reverse3 1.00), so selection-as-recurrence does carry a rule. Lookup is
+  weaker than echo because inside a season the address of a fact is a
+  *soft hash*: the share vector softmax(τ·cos(x, dawn roots)) over 32 trees.
+  Two random keys overlap on many trees, and every tree's fruit is a mix of
+  everything that touched it; the read of a key is then a blur of its
+  neighbours' values. The roots only sharpen at season ends, and growth
+  merges (mean-seeking), it never separates. The higher train loss (0.61 vs
+  0.38) is the same blur seen from the LM side.
+  From far away: an economy allocates by *competition for territory*, and
+  what I built competes only for share, not for territory. A tree that wins
+  a token should push neighbours out of that region (the territory becomes
+  its own), and a token nobody fits should found a new tree (a birth) rather
+  than be split among strangers. Both are the "repulsion" that competitive
+  learning in nature has and mean-seeking growth lacks.
+  Not run, not designed yet: (a) births at season ends from the season's
+  least-fit tokens, into trees with ~0 share for a whole season; (b) a
+  territory term: growth moves the winner toward x and the runner-up away;
+  (c) sharper innate address: τ per tree, not per grove. Decide after pairs
+  2–6 land; if L/P fail in all pairs, the void again, not a knob.
 - 2026-10-31 02:50, after G1 pair 1 (chance everywhere). What surprised me:
   the toy passed and the bench failed for a reason that was visible in the
   design text all along ("a fact written in a season is readable from the
