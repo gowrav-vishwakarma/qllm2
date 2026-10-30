@@ -3067,3 +3067,29 @@ start; record and remove.
 PASS if label_exact (label_diag mean) ≥ ctl + 0.10 OR label_category 8-shot
 (400 trials) ≥ ctl + 0.15; guards holdout ≤ ctl + 0.01 (3.4843), recall ≥
 ctl − 0.05 (0.775). Read with g1c (short conv) as a separate arm.
+
+### Addendum: pattern separation would cut the collisions ~4× (offline, no training; 2026-10-30 15:25 IST)
+
+v14's suggestion (hippocampal pattern separation: expand the key to a large
+dimension and keep only the top-k entries, so look-alike inputs get
+near-orthogonal codes). Measured on c2m2's real echo keys at the label
+positions of 60 label_category prompts (mean cosine between keys of
+different pairs; random text positions for reference), with a fixed random
+expansion per head:
+
+| key | label–label | random–random |
+|---|---|---|
+| dense unit keys (today) | 0.671 | 0.303 |
+| dense, mean-centred | 0.462 | −0.005 |
+| sparse D = 1024, top 32 | 0.334 | 0.142 |
+| sparse D = 2048, top 32 | 0.297 | 0.114 |
+| **centred, then sparse D = 2048, top 32** | **0.166** | 0.053 |
+
+Centring + sparse expansion lowers the overlap of look-alike keys from 0.67
+to 0.17 with no learning; the delta erase would then wipe ~4× less of the
+earlier pairs, and capacity rises (sparse codes). Echo state with D = 1024
+key dims per head: 6 × 98 × 1024 fp32 ≈ 2.4 MB (Mamba-2 13.4 MB). **Candidate
+S1** (my lane, the existing echo): centred sparse-expansion keys and
+queries in the echo read/write, pre-registered after g1c / Q1 report (one
+variable at a time). Implementation check needed: `pam_delta_batched` with a
+key dim different from the value dim.
