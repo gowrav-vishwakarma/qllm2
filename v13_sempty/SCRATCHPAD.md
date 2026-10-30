@@ -27,6 +27,14 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   4090: n9c ends ~01:30; then v15 G1 (tmux `v15g1`, ~6 h) starts by itself when
   the `n9c` tmux session closes. v13 has no 4090 job queued after n9c.
 
+* **2026-10-31 02:00 IST: queues.** 6000: `s5` r3c (16 nb + echo, 3B; futility @ step 39060,
+  ends ~16:00-20:00 IST depending on side jobs) | `s6` (`~/s6_chain.sh`, 38e3c29) b2p2 →
+  b2ma → b2m | `s7` (`~/s7_chain.sh`, worktree `~/Development/qllm_lab` at `c4173be`,
+  links to the main checkout's .venv/.cache/data/checkpoints) waits for s6 to end, then
+  lbp → lbt (label-format pair). Do NOT pull the 6000 main checkout while s5/s6 run.
+  4090: v15 `v15g1` (G1, ~08:00) | v14 `v14n9s` then `n9r` (v14's N9a recall replication,
+  ctl43 vs n9a43, ~10:30 IST; scored with the t40 aggregates: >2048 = context_tokens > 2048).
+
 * **2026-10-31 02:10 IST: n9c FAIL on lookup** (EXPERIMENTS "n9c result"): N9a pulls the
   label keys apart (0.715 → 0.538) but label_exact 0.61 → 0.47 and category 0.50 → 0.32;
   recall 0.825 → 0.975 (> 2048: 0.92). Lookup skills follow the TRAINED format (recall docs
