@@ -620,6 +620,26 @@ here, reported only).
   highest, affine_map_new lowest). The O(1) arms pass the trained cells and
   sit below chance on `_new` (they pick a neighbour).
 
+**Reference with no B2 training (v13 session, 600M / 3B checkpoints,
+inference only, 400 trials × 2/4/8 shots, seeds 5000–5399, `a214002`; JSONs
+`logs/learning_probes/v13_sempty_*_b2_t400.json`).** Mean / base / `_new`:
+T++ 600M 0.048 / 0.056 / 0.040; T++ two-stage 0.053 / 0.059 / 0.048; M1
+0.037 / 0.045 / 0.029; M2 0.046 / 0.053 / 0.038; C1-ctl 0.038 / 0.050 /
+0.026; c1m2 0.071 / 0.084 / 0.057; T++ 3B 0.088 / 0.111 / 0.064; Mamba-2 3B
+0.094 / 0.118 / 0.071; PAM 3B 0.066 / 0.078 / 0.054 (chance 0.125).
+- Every model is below chance: it picks an answer next to the right one.
+  More shots barely help.
+- **Difficulty control:** without B2 training, `_new` sits 0.015–0.047 below
+  base in every model (SE ≈ 0.006 per half). The held-out values are a
+  little harder in themselves. Subtract this before reading a trained-vs-
+  held-out gap at 27M (it is small next to the 0–1 range of trained models).
+- **Caveat on reading "below chance":** the nearest-parameter decoys are
+  also the answer ± 1 step (± 1 letter, ± 1 number). So a neighbour pick
+  can be selection of a memorised parameter or imprecise inference of the
+  right one. B2 tests *exact* inference and does not separate those two.
+  L and I do not depend on the distinction. The affine a ± 1 decoys (answer
+  ± x_q) are the only ones that separate a wrong slope from an off-by-one.
+
 ### N1 — phase interference revived (v11 E3 on the lean body)
 
 **Why.** The only architecture change that beat the v7 baseline (−1.11 PPL),

@@ -55,6 +55,16 @@ Keep all three current as things happen (user rule, 2026-10-29).
   0.62/0.71/0.55. Attention does the in-context label lookup that the O(1)
   bodies do not: **this is the gap for v14 to close** (B1's `tpp` arm
   measures the same gap at 27M).
+* **v13 S2 fairness (`048f8c2`): MET.** T++ gets nothing from the two-stage
+  schedule (tfs2 holdout 3.4907 vs 3.4885 one stage; recall 0.703;
+  label_category 8-shot 0.73 unchanged); PAM does. Two-stage M1 vs tfs2:
+  holdout −0.016, recall +0.122, but recall ties inside 2048 tokens (0.917
+  vs 0.926); the win is past 2048, where T++ collapses (0.15 vs 0.60).
+  WikiText and label_category favour T++.
+* **B2 with no B2 training (v13 probe on 600M / 3B, `a214002`):** every
+  model is below chance (0.04-0.09; chance 0.125), attention included:
+  they pick the answer next to the right one. `_new` is 0.015-0.047 harder
+  in itself (difficulty control). Numbers in EXPERIMENTS_V14 "B2".
 * **v13 C1 on M2 (`fed73cf`): KEEP, best 600M LM so far.** Holdout 3.4473
   (M2 3.4697, C1-ctl 3.4743), WikiText 65.74, recall 0.870, learning probe
   0.187 (flat). **label_category 8-shot does NOT lift on M2:** c1m2 0.38,
