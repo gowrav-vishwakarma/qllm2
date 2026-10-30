@@ -9,6 +9,26 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v13: the label_category lift depends on the body, not only the
+  schedule.** The two-stage schedule lifts 8-shot label_category on the M1
+  body (0.29 → 0.55, C1-ctl `7ae6f1f`) but not on M2 with shared reads
+  (c2m2 0.41, c1m2 0.38). M2 is better at LM and recall, worse at this
+  lookup. Single seeds, so treat it as a lead. *For v14:* a body that reads one
+  writer's store from many blocks may dilute the in-context lookup
+  circuit; in the two-memory design, give the exact store its own reader.
+- **v13: reasoning data lifts learning, then it fades.** Right after the
+  aptitude stage, models post their best learning-probe means (Transformer++
+  tfc1a 0.229 with number_step 0.083 / reverse3 0.063; PAM c1m2a 0.195),
+  and it fades during the web-heavy main stage (tfc1b 0.209, c1m2b 0.187).
+  *For v13:* test rehearsal (a small reasoning share kept in stage B).
+  *For v14:* judge a learning unit after the same data exposure; what the
+  model saw last moves these probes as much as the unit does.
+- **v13: Transformer++ gains WikiText from aptitude data, PAM does not**
+  (T++ 66.2 → 63.8, PAM 65.6 → 65.7; tfc1 / c1m2 vs tfs2 / c2m2), while PAM
+  wins the web holdout (−0.033). Encyclopedic text rewards exact recall of
+  stored facts, which fits v14's lookup/abstraction split. *For v14:* an
+  exact store (N7) may be where PAM's WikiText gap closes; check WikiText
+  as well as holdout when N7 reaches 600M.
 - **v14: lookup and abstraction pull apart.** Attention wins at exact
   lookup (600M label_category: T++ 0.73 vs PAM 0.41); the O(1) body wins at
   carrying a rule (B2 run 1, `bf59754`: held-out letter shifts, echo 0.33
