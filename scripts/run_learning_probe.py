@@ -10,6 +10,12 @@ Example (CPU, so a training run can keep the GPU):
   CUDA_VISIBLE_DEVICES= .venv/bin/python scripts/run_learning_probe.py \
     --model-type v13_sempty --checkpoint checkpoints_v13_sempty/<run>/best_model.pt \
     --output logs/learning_probes/v13_sempty_<run>_rules.json
+
+``--suite b2`` scores v14's "inference beats selection" tasks instead
+(v14/rules_ood.py: shift_wide, step_wide, affine_map + their *_new
+held-out-parameter variants; the nearest trained parameter's answer is always
+among the decoys, so selection by a memorised neighbour scores ~0). For a model
+with no B2 training, base and *_new should score alike (difficulty control).
 """
 
 from __future__ import annotations
@@ -37,7 +43,9 @@ def main() -> int:
     p.add_argument('--checkpoint', type=Path)
     p.add_argument('--model-id', default='state-spaces/mamba-130m-hf')
     p.add_argument('--preset', default='baseline_real_pm')
-    p.add_argument('--tasks', default=','.join(TASKS))
+    p.add_argument('--suite', choices=('rules', 'b2'), default='rules',
+                   help='rules = memory_probes/rules.py; b2 = v14/rules_ood.py (see docstring)')
+    p.add_argument('--tasks', default='', help='comma list (default: every task of the suite)')
     p.add_argument('--shots', default='2,4,8')
     p.add_argument('--trials', type=int, default=100)
     p.add_argument('--seed', type=int, default=5000)
@@ -59,7 +67,13 @@ def main() -> int:
     tasks = tuple(t.strip() for t in args.tasks.split(',') if t.strip())
     shots = tuple(int(s) for s in args.shots.split(','))
     seeds = tuple(range(args.seed, args.seed + args.trials))
-    examples = build_rule_suite(tokenizer, tasks=tasks, shots=shots, seeds=seeds)
+    if args.suite == 'b2':
+        from v14.rules_ood import B2_NEW_TASKS, B2_TASKS, build_example as b2_example
+        tasks = tasks or B2_TASKS + B2_NEW_TASKS
+        examples = [b2_example(tokenizer, t, n, sd) for t in tasks for n in shots for sd in seeds]
+    else:
+        tasks = tasks or TASKS
+        examples = build_rule_suite(tokenizer, tasks=tasks, shots=shots, seeds=seeds)
     rows = []
     with torch.no_grad():
         for i, ex in enumerate(examples, 1):
@@ -76,14 +90,14 @@ def main() -> int:
     agg = aggregate(rows)
     per_task = {t: float(np.mean([a['accuracy'] for a in agg if a['task'] == t])) for t in tasks}
     result = {
-        'schema_version': 'learning-probe-rules/v1',
+        'schema_version': 'learning-probe-b2/v1' if args.suite == 'b2' else 'learning-probe-rules/v1',
         'created_at': datetime.now(timezone.utc).isoformat(),
         'model_type': args.model_type,
         'model_identity': identity,
         'device': str(device),
         'platform': platform.platform(),
         'parameter_count': sum(x.numel() for x in model.parameters()),
-        'protocol': {'tasks': list(tasks), 'shots': list(shots), 'seeds': [seeds[0], seeds[-1]],
+        'protocol': {'suite': args.suite, 'tasks': list(tasks), 'shots': list(shots), 'seeds': [seeds[0], seeds[-1]],
                      'candidates': 8, 'chance': 0.125},
         'per_task_accuracy': per_task,
         'mean_accuracy': float(np.mean(list(per_task.values()))),
