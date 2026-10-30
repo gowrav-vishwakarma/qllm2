@@ -42,8 +42,8 @@ def _load_tokenizer(vocab_size: int):
 def _config_from_ckpt(ckpt: dict, preset_fallback: str) -> PAMConfig:
     raw = ckpt.get('config')
     if isinstance(raw, dict) and raw:
-        fields = set(PAMConfig.__dataclass_fields__)
-        return PAMConfig(**{k: v for k, v in raw.items() if k in fields})
+        from v14.hook import config_from_raw
+        return config_from_raw(raw)              # V14Config if a v14 unit is on
     return get_config(preset_fallback)
 
 
@@ -127,7 +127,8 @@ def main() -> None:
     cfg.vocab_size = len(tok)
     cfg.gradient_checkpointing = False
 
-    model = LM(cfg)
+    from v14.hook import build_lm
+    model = build_lm(cfg)                        # plain v13 LM unless a v14 switch is on
     model.load_state_dict(ckpt['model_state_dict'])
     want = 'cuda' if args.device == 'auto' else args.device
     device = torch.device(want if want == 'cpu' or torch.cuda.is_available() else 'cpu')

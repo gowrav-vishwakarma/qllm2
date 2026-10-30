@@ -98,8 +98,7 @@ def _load_v13(checkpoint: Path, preset: str, device: torch.device, extra: dict[s
 
 
 def _load_v13_sempty(checkpoint: Path, preset: str, device: torch.device):
-    from v13_sempty.config import PAMConfig, get_config
-    from v13_sempty.model import LM
+    from v13_sempty.config import get_config
 
     payload = torch.load(checkpoint, map_location='cpu', weights_only=False)
     raw = payload.get('config')
@@ -121,14 +120,14 @@ def _load_v13_sempty(checkpoint: Path, preset: str, device: torch.device):
         model.load_state_dict(payload['model_state_dict'])
         model.to(device).eval()
         return model, get_chat_tokenizer(), cfg
+    from v14.hook import build_lm, config_from_raw
     if isinstance(raw, dict) and raw:
-        fields = set(PAMConfig.__dataclass_fields__)
-        cfg = PAMConfig(**{k: v for k, v in raw.items() if k in fields})
+        cfg = config_from_raw(raw)               # V14Config if a v14 unit is on
     else:
         cfg = get_config(preset)
     cfg.dropout = 0.0
     cfg.gradient_checkpointing = False
-    model = LM(cfg)
+    model = build_lm(cfg)                        # plain v13 LM unless a v14 switch is on
     model.load_state_dict(payload['model_state_dict'])
     model.to(device).eval()
 

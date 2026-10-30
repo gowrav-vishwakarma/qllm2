@@ -1081,6 +1081,9 @@ def build_argparser():
                    help='Q1: initialise the echo W_q equal to W_k, then train both freely; needs --echo')
     p.add_argument('--echo_sparse_k', type=int, default=0,
                    help='S1: centre echo q/k by the running key mean and keep the top-k per head (0 = off)')
+    p.add_argument('--echo_phase_lags', type=int, default=0,
+                   help='v14 N9a: turn echo q/k by content phases of the last N tokens; builds '
+                        'v14.units.V14LM through v14/hook.py (0 = off, plain v13 LM; needs --echo)')
     p.add_argument('--n_layers', type=int, default=0,
                    help='main-stack block count (0 = preset)')
     p.add_argument('--base_dt_bias', type=float, default=None,
@@ -1305,7 +1308,9 @@ def main():
         from v13_sempty.baseline_transformer import TransformerConfig, TransformerLM
         model = TransformerLM(TransformerConfig(vocab_size=cfg.vocab_size))
     else:
-        model = LM(cfg)
+        from v14.hook import build_lm, with_v14_switches
+        cfg = with_v14_switches(cfg, echo_phase_lags=args.echo_phase_lags)
+        model = build_lm(cfg)                    # plain v13 LM unless a v14 switch is on
     if init_ck is not None:
         missing, unexpected = model.load_state_dict(init_ck['model_state_dict'],
                                                     strict=False)

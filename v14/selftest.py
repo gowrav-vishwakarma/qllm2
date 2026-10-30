@@ -14,7 +14,12 @@
                    starts bit-identical to echo at the same seed (body and RNG
                    untouched); decode == prefill with a live read; every
                    parameter learns.
-8. B2 splits       held-out rule parameters appear only in the ``_new`` tasks,
+8. v13 hook      v14/hook.py (how v13_sempty/train.py and the probe loaders
+                   build v14 units): every v14 switch off -> the plain v13 LM
+                   class; a checkpoint config rebuilds the same V14LM (strict
+                   load, equal logits); gradient checkpointing on == off for
+                   the v13 LM and for N9a (loss and grads).
+9. B2 splits       held-out rule parameters appear only in the ``_new`` tasks,
                    trained ones only in the base tasks; answers stay out of
                    the context; the nearest-parameter decoy is a candidate.
 (Tests of removed units: N6 operator memory at 78e4354; tied echo at 5100fd7;
@@ -232,6 +237,57 @@ def test_opmem():
         print(f"  {mode}: init == echo; decode == prefill {diff:.2e}; every parameter learns")
 
 
+def test_hook():
+    from dataclasses import asdict
+    from v13_sempty.config import get_config as v13_preset
+    from v14.hook import build_lm, config_from_raw, with_v14_switches
+    base = dict(chunk_size=32, delta=True, chrono=True, out_gate=True, echo=True,
+                vocab_size=512, max_seq_len=256)
+
+    def v13_get_config(preset, **kw):                 # v13's get_config takes no overrides
+        c = v13_preset(preset)
+        for k, v in kw.items():
+            setattr(c, k, v)
+        return c
+    plain = v13_get_config('tiny_real', **base)
+    assert with_v14_switches(plain, echo_phase_lags=0) is plain
+    assert type(build_lm(plain)) is LM, "hook: switches off must build the v13 LM class"
+    cfg = with_v14_switches(v13_get_config('tiny_real', **base), echo_phase_lags=3)
+    torch.manual_seed(0)
+    model = build_lm(cfg).eval()
+    assert type(model) is V14LM
+    with torch.no_grad():
+        model.phase_proj.normal_(std=0.3)
+    re = build_lm(config_from_raw(asdict(cfg))).eval()               # what a loader does
+    re.load_state_dict(model.state_dict(), strict=True)
+    ids = torch.randint(0, 512, (2, 40))
+    d = (_logits(model, ids) - _logits(re, ids)).abs().max().item()
+    assert d == 0.0, f"hook: reloaded V14LM differs: {d:.3e}"
+    # gradient checkpointing parity (the 4090 suspect): loss and grads, on vs off
+    worst = 0.0
+    for lags in (0, 3):
+        runs = []
+        for ckpt in (False, True):
+            c = with_v14_switches(v13_get_config('tiny_real', gradient_checkpointing=ckpt, **base),
+                                  echo_phase_lags=lags)
+            torch.manual_seed(1)
+            m = build_lm(c).train()
+            if lags:
+                with torch.no_grad():
+                    m.phase_proj.normal_(std=0.3)
+            logits = m(ids)[0]
+            loss = torch.nn.functional.cross_entropy(
+                logits[:, :-1].reshape(-1, logits.shape[-1]), ids[:, 1:].reshape(-1))
+            loss.backward()
+            runs.append((loss.item(), {n: p.grad.clone() for n, p in m.named_parameters() if p.grad is not None}))
+        (l0, g0), (l1, g1) = runs
+        assert abs(l0 - l1) < 1e-6 and g0.keys() == g1.keys(), f"hook: ckpt changes the loss (lags={lags})"
+        worst = max(worst, max((g0[k] - g1[k]).abs().max().item() for k in g0))
+    assert worst < 1e-5, f"hook: grad checkpointing changes grads: {worst:.3e}"
+    print(f"  hook: off -> v13 LM class; reload strict, logits equal; grad ckpt on == off "
+          f"(v13 LM and N9a): max grad diff {worst:.1e}")
+
+
 def _b2_param(task, text):
     """The hidden parameter of a B2 prompt (k, d, or the affine b)."""
     lines = text.split('\n')[1:]
@@ -273,7 +329,7 @@ def test_b2_splits(seeds=40):
 def main():
     torch.set_num_threads(8)
     for test in (test_off_is_v13, test_n7_lookup, test_n7_off_at_init,
-                 test_n7_decode_matches_prefill, test_n7_learns, test_n9a, test_opmem, test_b2_splits):
+                 test_n7_decode_matches_prefill, test_n7_learns, test_n9a, test_opmem, test_hook, test_b2_splits):
         print(f"{test.__name__}:")
         test()
     print("ALL PASS")
