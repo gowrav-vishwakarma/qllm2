@@ -180,6 +180,7 @@ class GroveLayer(nn.Module):
         expo = (idx[:, None] - idx[None, :]).clamp_min(0).to(h.dtype)    # [C, C]
         Lmat = torch.where(idx[:, None] >= idx[None, :], lam[:, None, None] ** expo, 0.0)  # [G,C,C]
         carry = lam[:, None] ** (idx + 1).to(h.dtype)                     # [G, C]
+        strict = (idx[:, None] > idx[None, :]).to(h.dtype)                # [C, C] s < t
         ev, roots, fruits, m_last = state.ev, state.roots, state.fruits, state.m_last
         outs = []
         ac = torch.autocast(device_type=h.device.type, enabled=False)
@@ -190,13 +191,23 @@ class GroveLayer(nn.Module):
             f = self._fitness(xc, roots)
             evc = torch.einsum('gts,bsgk->btgk', Lmat, f) + carry.T[None, :, :, None] * ev[:, None]
             m = torch.softmax(evc, dim=-1)                                # [B, C, G, K]
-            outs.append(torch.einsum('bcgk,bgkn->bcgn', m, fruits))
-            # season's end: growth
             m_prev = torch.cat([m_last[:, None], m[:, :-1]], dim=1)      # share at t-1
+            # ripening read: at t the fruit is grow(fruit, Sy(<=t), gy(<=t)) with
+            # Sy(<=t) = sum_{s<=t} m_prev(s) y_s, so a value seen earlier in the
+            # same season is readable at once.  Written without materialising
+            # Sy(<=t): a causal C x C mixing matrix per grove (A[t,s]).
+            gy_all = m_prev.cumsum(1)                                     # [B, C, G, K]  s <= t
+            gy = gy_all - m_prev                                          # s < t (read, then credit)
+            step = 1 - torch.exp(-alpha[None, None, :, None] * gy)
+            w = m * step / gy.clamp_min(1e-6)
+            A = torch.einsum('btgk,bsgk->bgts', w, m_prev) * strict
+            outs.append(torch.einsum('btgk,bgkn->btgn', m * (1 - step), fruits)
+                        + torch.einsum('bgts,bsgn->btgn', A, yc))
+            # season's end: growth (== the ripening one token past the season)
             Sx = torch.einsum('bcgk,bcgn->bgkn', m, xc)
             Sy = torch.einsum('bcgk,bcgn->bgkn', m_prev, yc)
             roots = self._grow(roots, Sx, m.sum(1), alpha)
-            fruits = self._grow(fruits, Sy, m_prev.sum(1), alpha)
+            fruits = self._grow(fruits, Sy, gy_all[:, -1], alpha)
             ev, m_last = evc[:, -1], m[:, -1]
         ac.__exit__(None, None, None)
         o = torch.cat(outs, dim=1).reshape(B, T, G * n)[:, :T0]
@@ -223,8 +234,9 @@ class GroveLayer(nn.Module):
         f = self._fitness(x, state.roots)
         ev = self.lam[None, :, None] * state.ev + f
         m = torch.softmax(ev, dim=-1)                                     # [B, G, K]
-        o = torch.einsum('bgk,bgkn->bgn', m, state.fruits).reshape(B, G * n)
-        buf['Sx'] = buf['Sx'] + m.unsqueeze(-1) * x.unsqueeze(2)
+        ripe = self._grow(state.fruits, buf['Sy'], buf['gy'], self.alpha)   # ripening read
+        o = torch.einsum('bgk,bgkn->bgn', m, ripe).reshape(B, G * n)
+        buf['Sx'] = buf['Sx'] + m.unsqueeze(-1) * x.unsqueeze(2)             # then credit
         buf['gx'] = buf['gx'] + m
         buf['Sy'] = buf['Sy'] + state.m_last.unsqueeze(-1) * y.unsqueeze(2)
         buf['gy'] = buf['gy'] + state.m_last
