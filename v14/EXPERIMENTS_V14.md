@@ -601,6 +601,14 @@ transformer at learning" has a number.
 **Why it matters for v14.** N6 (operator memory) and N4 (fast weights in
 the unit) are learners by construction: B1, not B0, is their primary test.
 
+**HELD OPEN (2026-10-30 ~16:30 IST):** v13 found a possible 4090 confound. E2
+and g1c (unrelated changes, both trained on the 4090 with grad checkpointing)
+lose the same ~0.05 holdout to the 6000 control, tracking it through stage A
+and the first ~3,000 stage-B steps, then drifting up ~0.07. v13's box control
+(C1-ctl stage B rerun on the 4090) decides. If the box drifts, E2 is re-run on
+the 6000 (code at `5100fd7`). Micro-benches are unaffected (every pair runs on
+one box, no grad checkpointing).
+
 **echo_tied VERDICT: CLOSED, FAIL at 600M (v13 E2, 2026-10-30, run by the
 v13 session on the 4090; EXPERIMENTS_SEMPY "E2").** Tied echo on the M1 body
 with C1-ctl's exact two-stage recipe, against C1-ctl, 400 trials both:
