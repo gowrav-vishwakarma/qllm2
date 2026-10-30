@@ -7,11 +7,10 @@
                    for each read rule, across the 64-token sub-chunk edge.
 4. N1 learns       every new parameter gets a nonzero gradient at init.
 5. N1 turns        with nonzero angles, phase and gate give different reads.
-6. tied echo       W_q = W_k gives q = k; decode == prefill; learns.
-7. B2 splits       held-out rule parameters appear only in the ``_new`` tasks,
+6. B2 splits       held-out rule parameters appear only in the ``_new`` tasks,
                    trained ones only in the base tasks; answers stay out of
                    the context; the nearest-parameter decoy is a candidate.
-(The N6 operator-memory tests left with N6, after B1 run 2; they are at 78e4354.)
+(Tests of removed units: N6 operator memory at 78e4354; tied echo at 5100fd7.)
 """
 
 from __future__ import annotations
@@ -20,7 +19,7 @@ import torch
 
 from v13_sempty.model import LM
 from v14.config import get_config
-from v14.units import PHASE_READS, PhaseStatesPAM, TiedEchoQK, V14LM
+from v14.units import PHASE_READS, PhaseStatesPAM, V14LM
 
 ATOL = 2e-4
 
@@ -126,30 +125,6 @@ def _decode_diff(model, seq_len):
     return (full - torch.cat(steps, dim=1)).abs().max().item()
 
 
-def test_echo_tied():
-    """echo_tied_qk: q = k by construction; prefill == decode; the tied map learns."""
-    torch.manual_seed(8)
-    model = V14LM(_cfg(echo_tied_qk=True)).eval()
-    assert isinstance(model.echo_qk, TiedEchoQK)
-    h = torch.randn(2, 5, model.config.dim)
-    q, k = model.echo_qk(h).chunk(2, dim=-1)
-    assert torch.equal(q, k), "tied echo: q != k"
-    # make the read matter. std 0.1, not 0.5: at 0.5 even untied v13 echo
-    # misses ATOL (2.3e-4; tied 2.8e-4, the same ~4e-5 relative error of the
-    # chunked WY form vs the fp32 step loop), so 0.5 tests v13's rounding, not the tie.
-    torch.nn.init.normal_(model.echo_out.weight, std=0.1)
-    diff = _decode_diff(model, 150)
-    assert diff < ATOL, f"tied echo: prefill != decode: {diff:.3e}"
-    model.train()
-    ids = torch.randint(0, 512, (2, 40))
-    logits = model(ids)[0]
-    torch.nn.functional.cross_entropy(
-        logits[:, :-1].reshape(-1, logits.shape[-1]), ids[:, 1:].reshape(-1)).backward()
-    g = model.echo_qk.proj.weight.grad
-    assert g is not None and g.abs().max().item() > 0, "tied echo: no gradient"
-    print(f"  tied echo: q == k, decode == prefill (max |diff| = {diff:.2e}), learns")
-
-
 def _b2_param(task, text):
     """The hidden parameter of a B2 prompt (k, d, or the affine b)."""
     lines = text.split('\n')[1:]
@@ -192,7 +167,7 @@ def main():
     torch.set_num_threads(8)
     for test in (test_off_is_v13, test_n1_reads_equal_at_start,
                  test_n1_decode_matches_prefill, test_n1_new_params_learn,
-                 test_n1_phase_differs_from_gate, test_echo_tied, test_b2_splits):
+                 test_n1_phase_differs_from_gate, test_b2_splits):
         print(f"{test.__name__}:")
         test()
     print("ALL PASS")

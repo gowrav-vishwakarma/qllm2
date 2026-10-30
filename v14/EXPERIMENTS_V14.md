@@ -209,7 +209,7 @@ The rule written for run 2 applies: one change, `--aux_weight 0.1` (LM
 loss on the non-answer positions, total weight 0.1 per answer). The other
 settings are the same as run 2 (sizes from 1, 6000 steps × B16, LR 3e-4,
 seed 42, same data for every arm).
-- **Arms:** echo, n1sum, n1gate, n1phase, echo_tied, and **tpp**, a
+- **Arms:** echo, n1sum, n1gate, n1phase, and **tpp**, a
   REFERENCE (Transformer++, attention, O(T), not a candidate; same width,
   depth and heads, MLP 1280 so params match echo: 27.56M vs 27.61M; arm
   added in `c9bff5c`). delta is dropped: it was at chance in every cell of
@@ -225,8 +225,7 @@ seed 42, same data for every arm).
     are judged on H as written, and the echo-vs-tpp gap per cell is the
     memory target for N1, N4 and N5.
   - both fail: the bench is broken at this size. Stop rule below.
-- echo_tied vs echo is reported over the same cells (no bar: this is
-  echo_tied's memory cost).
+- (echo_tied was dropped before the run: it closed with v13 E2.)
 - **Stop rule:** if neither echo nor tpp passes, B0 closes as a memory
   bench at this size (lookup of words redrawn per document does not grow at
   27.6M / 6000 steps, with or without aux). There is no run 4 without a new,
@@ -580,6 +579,18 @@ transformer at learning" has a number.
 **Why it matters for v14.** N6 (operator memory) and N4 (fast weights in
 the unit) are learners by construction: B1, not B0, is their primary test.
 
+**echo_tied VERDICT: CLOSED, FAIL at 600M (v13 E2, 2026-10-30, run by the
+v13 session on the 4090; EXPERIMENTS_SEMPY "E2").** Tied echo on the M1 body
+with C1-ctl's exact two-stage recipe, against C1-ctl, 400 trials both:
+label_category 8-shot 0.365 vs 0.500 (d −0.135; bar +0.15), 2/4-shot
+0.615 / 0.67 vs 0.593 / 0.68. Guards failed too: holdout 3.5298 vs 3.4743
+(+0.055, behind at every validation), recall 0.602 vs 0.825, learning probe
+0.177 vs 0.194. Stage A matched (3.9255 vs 3.9231), so the loss is in stage B,
+not the box. **Lesson:** a clean micro-bench effect (B1 run 4: circuit in 4 of
+4 seeds vs 0 of 5) did not transfer to real text at 600M, where tying hurt LM
+and recall. Micro-bench wins are leads, not evidence; the LM check decides.
+Code removed from v14 (last at `5100fd7`), v13 flag removed (`26ef94a`).
+
 ### B2 — inference beats selection (bar 3, pre-registered 2026-10-30 ~06:45 IST)
 
 **Why.** B1's unseen parameters (shift 4–5 after training on 1–3) ask for
@@ -607,8 +618,8 @@ chance.
 **Run 1 (calibration, one seed; runs when a GPU frees).** `--rule_tasks
 shift_wide,step_wide,affine_map` (B2 only), shots 1–8, 6000 × B16, lr 3e-4,
 `--seed 31 --doc_seed0 700000000 --init_seed 31`. Arms: **tpp** (attention
-reference, O(T)), echo, echo_tied, n1sum (n1sum is the best memory arm in
-B0 run 2's descriptive read). Every B1 task is also evaluated (untrained
+reference, O(T)), echo, n1sum (n1sum is the best memory arm in B0 run 2's
+descriptive read; echo_tied dropped before the run, closed with v13 E2). Every B1 task is also evaluated (untrained
 here, reported only).
 - **L, learnable:** tpp ≥ 0.90 on the trained-value cells (mean of
   shift_wide, step_wide, affine_map over 2 / 4 / 8 shots). If not, attention

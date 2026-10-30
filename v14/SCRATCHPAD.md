@@ -4,9 +4,12 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-30 07:00 IST)
+## State (2026-10-30 09:00 IST)
 
-* **4090: the v13 session's E2 since 05:43 IST** (tmux `e2`, run from the
+* **echo_tied CLOSED (FAIL at 600M, v13 E2, 08:48 IST):** label_category
+  0.365 vs C1-ctl 0.500, holdout +0.055, recall 0.602 vs 0.825. Code
+  removed (last at `5100fd7`). The micro-bench win did not transfer.
+* **(old) 4090: the v13 session's E2 since 05:43 IST** (tmux `e2`, run from the
   worktree `../qllm_e2` at `e5b1a2a`, ECHO_TIED code `26ef94a`; two stages,
   ETA ~10:15 IST plus probes).
   1. **B0 run 2 DONE (03:31 IST, `bcfd88a`): INVALID.** Echo facts2 @1024
@@ -14,7 +17,7 @@ Keep all three current as things happen (user rule, 2026-10-29).
      bound one. Descriptive: n1sum / n1gate do partial lookup (facts2 0.79),
      n1phase falls back to echo's level (turning cancels the second
      notebook); echo_tied costs no memory. **B0 run 3** (`--aux_weight 0.1`,
-     arms echo, n1sum, n1gate, n1phase, echo_tied + the **tpp** attention
+     arms echo, n1sum, n1gate, n1phase + the **tpp** attention
      reference, branch `v14dev`, GPU smoke passed; validity and
      stop rule in EXPERIMENTS_V14 "B0") is pre-registered and goes after run 4, or after
      E2 if the v13 session takes the 4090.
@@ -123,7 +126,7 @@ Keep all three current as things happen (user rule, 2026-10-29).
      TAG=b1r4tpp$i FAMILIES=rules ARMS=tpp SAVE=1 EXTRA="--seed 2$i
      --doc_seed0 $((i+3))00000000 --init_seed 2$i" bash v14/run_bench.sh;
      done`): does attention form the label_category circuit in every seed?
-     (b) **B2 run 1** (`TAG=b2 FAMILIES=rules ARMS=tpp,echo,echo_tied,n1sum
+     (b) **B2 run 1** (`TAG=b2 FAMILIES=rules ARMS=tpp,echo,n1sum
      SAVE=1 EXTRA='--seed 31 --doc_seed0 700000000 --init_seed 31
      --rule_tasks shift_wide,step_wide,affine_map' bash v14/run_bench.sh`;
      readouts L and I in EXPERIMENTS_V14 "B2"). The 6000 then goes back to
@@ -135,7 +138,7 @@ Keep all three current as things happen (user rule, 2026-10-29).
      S4's code-drift guard). When (a) and (b) end: `touch
      ~/v14_slot2.done` on the 6000 (S4 starts on that file).
    - **4090, when v13 pings that E2 freed it (~09:15):** (c) **B0 run 3**
-     (`TAG=b0r3 ARMS=echo,n1sum,n1gate,n1phase,echo_tied,tpp AUX=0.1 SAVE=1
+     (`TAG=b0r3 ARMS=echo,n1sum,n1gate,n1phase,tpp AUX=0.1 SAVE=1
      bash v14/run_bench.sh`, ~2 h).
    - v13 will run the B2 tasks as an inference-only probe on their 600M
      checkpoints (base and `_new` reported separately: for models with no

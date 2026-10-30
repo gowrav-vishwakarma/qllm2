@@ -19,12 +19,9 @@ parameters; ``gate`` scales each read by a real number (it may go negative),
 real data-dependent weight does not. (A ``cos φ`` gate was rejected: its
 gradient at φ = 0 is zero, so it could never leave the start.)
 
-Tied echo (``V14Config.echo_tied_qk``): echo with one projection for query
-and key (W_q = W_k), so a query lands on keys of hidden states like its own.
-The B1 run 2 lead (label_category 0.857 vs echo 0.471, one seed).
-
-N6 operator memory was removed after B1 run 2 (FAIL); its code is at
-``78e4354`` (v14/EXPERIMENT_INDEX.md).
+Removed after a FAIL (code at the listed commit, v14/EXPERIMENT_INDEX.md):
+N6 operator memory (B1 run 2) at ``78e4354``; tied echo, W_q = W_k (v13 E2
+at 600M) at ``5100fd7``.
 """
 
 from __future__ import annotations
@@ -161,30 +158,12 @@ class PhaseStatesPAM(RealPAMLayer):
         return self._combine(tokens, reads_named), carried
 
 
-class TiedEchoQK(nn.Module):
-    """Echo's query/key projection with W_q = W_k: one D x D map whose output
-    is returned twice, so v13's ``q, k = echo_qk(h).chunk(2)`` gives q = k."""
-
-    def __init__(self, dim: int):
-        super().__init__()
-        self.proj = nn.Linear(dim, dim, bias=False)
-
-    def forward(self, h):
-        y = self.proj(h)
-        return torch.cat([y, y], dim=-1)  # named-exit: v13 echo boundary (raw torch)
-
-
 class V14LM(LM):
     """The v13_sempty LM with v14 units swapped in. ``V14Config()`` == v13 LM."""
 
     def __init__(self, cfg: V14Config):
         super().__init__(cfg)
         swapped = False
-        if getattr(cfg, 'echo_tied_qk', False):
-            if not cfg.echo:
-                raise ValueError("echo_tied_qk needs echo")
-            self.echo_qk = TiedEchoQK(cfg.dim)
-            swapped = True
         if getattr(cfg, 'phase_states', 1) > 1:
             if cfg.is_complex:
                 raise ValueError("N1 is implemented for the real arm")

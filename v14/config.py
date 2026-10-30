@@ -22,9 +22,6 @@ class V14Config(PAMConfig):
     phase_states: int = 1
     phase_read: str = 'phase'
     phase_dt_spread: float = 2.0
-    # Echo with ONE projection for query and key (W_q = W_k), the "full matrix,
-    # tied" corner of the B1 run 2 2x2. False = v13 echo (separate W_q, W_k).
-    echo_tied_qk: bool = False
 
 
 def from_pam(cfg: PAMConfig, **overrides) -> V14Config:
