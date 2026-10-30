@@ -27,6 +27,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   4090: n9c ends ~01:30; then v15 G1 (tmux `v15g1`, ~6 h) starts by itself when
   the `n9c` tmux session closes. v13 has no 4090 job queued after n9c.
 
+* **2026-10-31 01:05 IST, step back after the B2 half.** What surprised us: T++ loses the
+  rule at L = 1024, INSIDE its trained length, once ~110 tokens of web text sit between
+  examples; PAM holds it to 4096. So "learning past the trained length" was never only
+  a position problem. It is whether the inferred rule is carried as STATE between
+  examples or re-found by lookup each time. Data unlocked it: before the b2 docs no model
+  learned past 2048. Recipe ideas (v13 lane, not run, cheap once the pair is settled):
+  (a) b2 docs with the examples already spread by filler (train the carrying
+  directly); (b) a label_category-style source with held-out items, same idea for the
+  one task T++ still wins; (c) answer weight 100 → 10 to keep recall (0.870 → 0.721 now).
+
 * **2026-10-30 23:25 IST: priority re-plan (user: run what we know is better, directly).**
   6000 (tmux `s5`): b2p1 (PAM + B2 docs) → b2t (T++ + B2 docs) → **r3c** via the
   chain's hook `~/s5_n9a.sh` (16 notebooks + echo + two stages + LR 1.2e-3,
