@@ -9,6 +9,14 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v13: the 600M lead does NOT survive scale** (`r3b`, 3B tokens). The
+  reference recipe (M2 + two stages + echo) ends at holdout 3.309 vs T++
+  3.206 and Mamba-2 3.164, and even behind PAM's own old 16-notebook 3B run
+  (3.273). PAM learns fast early (ties at 1.2B) and plateaus; Mamba-2 reaches
+  PAM's 3B loss at ~1.6B tokens. Every 600M verdict we have is in the
+  regime where fast early learning helps. *For v14:* judge LM effects of a
+  unit at ≥ 1.5B tokens before believing them; formation/lookup effects
+  (F1, label_diag) are less schedule-bound but still need a long run.
 - **v14: content-phase keys (N9a) make the lookup circuit form on EVERY seed**
   (F1, `7c8c6e2`, 5 seeds on B1 run 4's set: label_category 1.000 in 5/5
   vs plain echo 1/5, 0.40–0.91; other tasks unchanged). The key-collision

@@ -3168,3 +3168,36 @@ step_wide_new, affine_map_new; 400 trials, 2/4/8 shots) is ≥ T++ + 0.10 in
 BOTH PAM seeds. Reported: base (trained-value) cells, formation (≥ 0.9) per
 task, `_new` past 2048 (LCL spread), holdout / recall vs c1m2 / tfc1 (b2 costs
 3 % of the web tokens).
+
+### S4 scale test result: the reference at 3B tokens (`r3b_main_685de4e`, 6000) — FAILS; the 600M lead does not survive scale
+
+c1m2's stage A + a 2.88B-token stage B (M2 body, LR 2e-4, warmup 1000), 3.0B
+tokens total = the 3B baselines' budget, same holdout and probes.
+
+| model, 3B tokens | holdout | WikiText | recall 63-cell (a1/a4/a8) | ≤ 2048 / > 2048 | learning (label_cat 2/4/8) | B2 |
+|---|---|---|---|---|---|---|
+| **PAM reference (r3b)** | 3.3094 | 58.03 | 0.620 (0.874/0.550/0.437) | 0.676 / 0.482 | 0.189 (0.54/0.60/0.39) | 0.076 |
+| PAM old 16-notebook (LR 2e-4) | 3.2728 | 54.73 | **0.667** | | 0.213 (0.50/0.74/0.53) | 0.066 |
+| Transformer++ | 3.2064 | **46.61** | 0.539 | | **0.228** (0.63/0.69/0.56) | 0.088 |
+| Mamba-2 | **3.1644** | 46.91 | 0.613 | | 0.202 | **0.094** |
+
+Holdout along the way (matched tokens, cosine schedules over 3B): at 1.2B
+r3b 3.462 / old PAM 3.461 / T++ 3.430 / Mamba-2 3.370; at 2.0B 3.354 /
+3.333 / 3.288 / 3.243; at 3.0B 3.309 / 3.273 / 3.206 / 3.164.
+
+**Verdict (pre-registered "beats" definition):** LM vs Transformer++
++0.103 and WikiText 58.0 vs 46.6 → **LOSE**; vs Mamba-2 +0.145 → **LOSE**;
+outside the user's ±0.01 tolerance by 10×. Recall vs T++ +0.081 → beats; vs
+Mamba-2 +0.007 → tie. **Not even better than PAM's own old 3B run**
+(+0.036): the M2 / two-stage / echo recipe that won at 600M is worse at 3B.
+Mamba-2 reaches r3b's final loss at ~1.6–1.7B tokens, T++ at ~1.8B: PAM
+needs ~1.7–1.8× the data to match, which is not "a bit more training".
+
+**Reading.** PAM learns fast early and plateaus: every 600M comparison sits
+in the regime where that helps (the 100M LR screen fooled us the same way,
+EXPERIMENT_INDEX "LR 2e-4"). The 600M wins (M2, two stages, beating T++ by
+0.04) are short-horizon effects. Possible culprits for r3b vs old PAM: the
+sparse body (4 of 16 blocks with a notebook) scales worse, or LR 2e-4 after
+a 1.2e-3 stage A; not separated. **Consequence for the protocol:** a
+change that wins at 600M must also show it at ≥ 1.5B tokens before it counts,
+and LM gains are judged at the end of a ≥ 3B run.

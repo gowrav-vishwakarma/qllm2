@@ -69,6 +69,7 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 | Transformer++ | 101.9M RMSNorm/RoPE/SwiGLU, LR 1.2e-3, 3B tok | DONE: holdout 24.69, WikiText 46.61, recall mean 0.539 (fails past 2048) | "Transformer++ 3B result" | `baseline_transformer.py`, run `e072a8f` |
 | Transformer++ 600M | same model, r600 protocol, one stage (`tfs1_tf_b788731`) | DONE: holdout 3.4885 (M2 3.4697, M1 3.4906), WikiText 66.38, recall 0.645 (≤2048 0.839; 8192 0.15), PG-19 far −1.095, learning 0.217 (label_cat 8-shot 0.73) | "S2 fairness, half 1" | `ARCH=transformer CHRONO=0 OUT_GATE=0 DELTA=0`, run `b788731` |
 | Mamba-2 600M | Mamba-2 102.6M, r600 one stage (`mbs1`) and two stages (`mbs2`), `685de4e` | DONE: holdout 3.4349 / 3.4393, WikiText 66.25 / 65.04, recall 0.594 / 0.762 (> 2048: 0.36 / 0.46), learning 0.199 / 0.227 (label_cat 8-shot 0.47 / 0.55); vs c2m2: Mamba-2 −0.010 LM, PAM +0.086 recall (+0.26 past 2048), PAM state ~1.2 MB vs 13.4 MB | "S4 Mamba-2 at 600M result" | `ARCH=mamba2`, run `685de4e` |
+| PAM reference at 3B (`r3b`) | c1m2 recipe, stage B 2.88B tokens, LR 2e-4 (`685de4e`) | **FAIL**: holdout 3.3094 vs T++ 3.2064 / Mamba-2 3.1644 / old PAM 3.2728; WikiText 58.0 vs 46.6; recall 0.620 (beats T++ 0.539). The 600M lead does not survive scale; PAM learns fast early, then plateaus | "S4 scale test result" | run `685de4e` |
 
 ## Running / pending
 
