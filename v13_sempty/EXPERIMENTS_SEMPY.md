@@ -3313,8 +3313,11 @@ met for seed 42; the pre-registered verdict needs b2p2 (seed 43).
   filler block from the last. A format effect, not a model difference
   (not checked further).
 - Cost of the b2 docs (answer weight 100): PAM recall −0.149 (0.870 → 0.721),
-  holdout +0.030; T++ holdout +0.077, recall +0.024. A lighter weight or share
-  is an open recipe question, not run now.
+  holdout +0.030; T++ holdout +0.077, recall +0.024. Read it as a DATA-MIX
+  trade, not "inference costs recall": the b2 mix cut the recall docs from
+  5 % to 4 %, and b2 answers at weight 100 compete for the same gradient
+  (untested; v14's note). A lighter weight or share is an open recipe
+  question, not run now.
 - Caveats: trained rule FORMATS with held-out VALUES, not unseen rule
   families. One seed. T++ only: Mamba-2 is also recurrent and O(1), so it may
   share the distance edge.
