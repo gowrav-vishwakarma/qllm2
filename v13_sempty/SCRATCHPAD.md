@@ -18,6 +18,18 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-30 02:32Z (08:02 IST): S4 chain queued on the 6000** (tmux `s4`,
+  `~/s4_chain.sh`, log `logs/v13_sempty_s4_driver_20261030_0232.log`). Waits
+  for "=== s3 chain DONE" AND `~/v14_slot2.done` (v14 touches it after its
+  tpp calibration + B2 run 1, ~10:40 IST) AND no python on the GPU; then
+  pulls once and pins that hash. Order: [E2 port `e2m2` only if
+  `~/s4_port.flags` exists] → `mbs1` (Mamba-2 one stage) → `mbs2` (Mamba-2
+  two stages) → `r3b` (reference at 3B tokens, LR 2e-4, init c1m2a_pre;
+  extra flags from `~/s4_r3b.flags`, tied echo then inits from e2m2a_pre).
+  ETA ~11 h → ~22:00–23:30 IST. Rules: EXPERIMENTS "S4". Resume: relaunch
+  the same tmux command with `SCREEN_HASH=<hash in the driver log>`.
+  Freed 7.6 GB on the 6000 (latest.pt of finished July v11 runs); 17 GB free.
+
 * **2026-10-30 02:16Z (07:46 IST): c2m2 DONE — KEEP; reference = c1m2** (tie-break:
   holdout within 0.005, c1m2 recall +0.022 > 0.02). c2m2: holdout 3.4497,
   WikiText 65.57 (beats T++ two-stage 66.20), recall 0.848. The s3 chain
