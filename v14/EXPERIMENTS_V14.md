@@ -1074,6 +1074,23 @@ tied echo in 4 of 4. Seeds = v13's Q1 seeds: i = 1..5, `--seed 7i --doc_seed0
 - **Reported:** B1 tasks, ms/step (shared GPU, not comparable).
 - This replaces N9a micro run 1 (N7's bench cannot show copy, see above).
 
+**F1 v14 share RESULT (4090, 2026-10-30 15:33–20:10 IST, code `7c8c6e2`):
+N9a (echo_phase) forms the lookup circuit in 5 of 5 seeds; echo in 1 of 5.
+Bar F MET for N9a.** Logs: `logs/v14_f1p{1..5}_7c8c6e2_*.{log,json}`;
+checkpoints on d_drive (`qllm_ckpt/v14/f1p*`).
+
+| seed | 71 | 72 | 73 | 74 | 75 | formed |
+|---|---|---|---|---|---|---|
+| echo label_category | 0.702 | **0.910** | 0.400 | 0.723 | 0.661 | 1 / 5 |
+| echo_phase (N9a) | **1.000** | **1.000** | **1.000** | **1.000** | **1.000** | **5 / 5** |
+
+Other B1 tasks unchanged (letter_shift / number_step / reverse3 1.00 both;
+two_hop 0.30 both; untrained formats at chance for both). So the content
+phase does exactly what the collision diagnosis predicted: when "X is" keys
+stop colliding, the label lookup circuit forms on every seed. v13's Q1
+(echo_qinit) and S1 (echo_sparse) arms run on the same seeds next; the F1
+winner goes to 600M (v13's lane, the 6000 or a box-checked 4090).
+
 ### N9 — phase-aligned dual memory (the user's 2×O(1) memory, 2026-10-30; design only)
 
 **Idea (user, mapped by the v13 session against the key-collision

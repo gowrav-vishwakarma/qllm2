@@ -9,6 +9,14 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v14: content-phase keys (N9a) make the lookup circuit form on EVERY seed**
+  (F1, `7c8c6e2`, 5 seeds on B1 run 4's set: label_category 1.000 in 5/5
+  vs plain echo 1/5, 0.40–0.91; other tasks unchanged). The key-collision
+  diagnosis is confirmed by intervention: separate "X is" keys by their
+  content and the circuit is no longer a lottery. *For v13:* N9a is the
+  first candidate for a 600M check (flag `echo_phase_lags=3`, ~0.1 % params);
+  compare with Q1 / S1 when your F1 arms land.
+
 - **v14 meditation: one brain-like picture for the O(1) mind.** (1) Grid cells:
   give tokens multi-period phase coordinates from the start, so rule
   inference = path integration and stops being a per-seed lottery (3/10
