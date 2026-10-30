@@ -1,5 +1,19 @@
 # Agent Rules (qllm2)
 
+## Goal and how to judge it (user, 2026-10-29 / 10-30)
+- A novel, O(1)-state architecture (not a Transformer or Mamba variant;
+  known parts are fine if the whole is a real innovation) that (1) keeps O(1)
+  state, (2) beats Transformer++ and Mamba-2 at equal data, and (3) shows
+  learning beyond recall (in-context rule inference on unseen inputs).
+- Bar 2 tolerance: needing a few more parameters or a bit more training than
+  a transformer to match it is still a win. An O(1) model serves more users
+  per GPU and its inference is cheaper (no KV cache growing with context).
+  Judge quality at comparable cost, and report params + tokens next to
+  every comparison.
+- Our models' learning should hold beyond the context length they were
+  trained on (transformers collapse there). Measure results inside AND
+  beyond the training length.
+
 ## Git: commit after every good code change (user rule, 2026-08-22)
 - After ANY verified working change to model/training/inference code
   (`v11/`, `v13/`, `v7/`, `scripts/`), commit it immediately with a message that
