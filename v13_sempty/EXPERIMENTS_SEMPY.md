@@ -2535,7 +2535,7 @@ the read becomes a similarity lookup of the current state against the
 states that preceded earlier tokens, returning those tokens, i.e. an
 induction match ("when I was last in a state like this, the next word
 was ..."). In v14 B1 run 2 (micro-bench, 1 seed) it scored label_category
-8-shot 0.857 vs untied 0.471. Code: `--echo_tied` / `ECHO_TIED=1` (`55b99ab`;
+8-shot 0.857 vs untied 0.471. Code: `--echo_tied` / `ECHO_TIED=1` (`26ef94a`;
 selftest `test_echo_tied`, grad-checkpoint parity exact on the M1 body).
 
 **Gate.** Runs only if v14 B1 run 3 bar P passes (label_category, tied −
@@ -2551,7 +2551,7 @@ ceiling (echo 0.999, tied 1.000; P needs echo < 0.90). Pair 1's A
 is now **v14 B1 run 4 bar P**: run 2's training set (no label_marker),
 echo vs echo_tied, new seed pairs 21/22/23, P's rule frozen (~05:45 IST).
 P passes → E2 as below, unchanged. P fails → echo_tied closes and the flag
-is removed (code at `55b99ab`). Side note from v14: a related in-context
+is removed (code at `26ef94a`). Side note from v14: a related in-context
 task in the training mix closes echo's label_category gap entirely, a data
 lever (cf. C1-ctl: the schedule, not the body, moved label_category).
 
