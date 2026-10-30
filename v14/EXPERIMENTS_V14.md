@@ -927,6 +927,23 @@ beyond the trained length, tpp as the reference. (2) B2 must not drop
 recall probe past 2048, and the long-context learning probe they are
 building.
 
+### N8 — self-opened memory (learned critical period; handed over by the v13 session, 2026-10-30)
+
+**Observation (v13).** The two-stage schedule (language first, recall docs
+later, LR re-warmed) helps only PAM, not T++. It looks like a critical
+period: the notebooks need mature representations before they can learn what
+to store.
+**Mechanism (sketch).** Replace the fixed stage cut with a gate the model
+opens itself: each memory write is scaled by the body's own maturity
+signal, e.g. its prediction confidence on the current token (or a slow
+running average of it), so writes stay small while language is immature
+and open as it matures. In the two-memory design (N7 + rule memory) this is
+the write gate of both stores; per-token surprise then decides *what* to
+write, maturity decides *how much*.
+**Test (to pre-register).** One-stage training with the gate vs two-stage
+without it, at equal data: does the gate recover the two-stage recall gain
+with no schedule? Micro first (dense copy bench), then a v13 600M check.
+
 ### N6 — operator memory (candidate, 2026-10-29; reviewed by the v13 session)
 
 **Idea.** Prediction applies a transformation inferred from the context to
