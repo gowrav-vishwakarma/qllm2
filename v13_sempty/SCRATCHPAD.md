@@ -18,6 +18,29 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-30 ~10:45 IST — step back (think in the void) after today's results.**
+  1. Our clearest edge is not "better at 2048": it is that memory keeps
+     working past the trained length (T++ 0.15–0.20 vs PAM 0.60–0.72 past
+     2048). But every LEARNING probe we run is short (≤ ~1k tokens; the
+     pools run out at 32–128 shots). We never tested learning where our edge
+     lives. Next probe: long-context in-context learning — the same rules
+     with examples spread over 4–8k tokens (filler text between shots, or
+     many shots), query at the end. Does learning hold past the trained
+     context (user's claim) while attention's collapses?
+  2. The schedule effect (language first, then memory exercises, LR
+     re-warm) helps PAM only. Smells like a critical period: the notebooks
+     need good representations before they learn what to store. Untested
+     split: language-first vs the LR restart itself. A bolder angle: let the
+     model open its own memory gates as its language matures (write
+     strength tied to its own loss), instead of a fixed two-stage cut.
+  3. Accident worth chasing: right after the aptitude stage, models score
+     their highest learning-probe means (T++ stage A 0.229, c1m2a 0.195),
+     then it fades in the web-heavy stage B. Reasoning data may need
+     rehearsal (a small share kept in stage B), not only a first course.
+  4. v14 B2 run 1: echo infers held-out letter shifts with a rising shot
+     curve where attention falls back to memorised neighbours. If B2 run 2
+     replicates, the 600M test should also be long-context (combine 1 + 4).
+
 * **2026-10-30 04:25Z (09:55 IST): S4 chain RUNNING on the 6000 at `685de4e`**
   (no E2 port). mbs1 (Mamba-2 one stage, 189K tok/s) ~10:55 IST → mbs2 ~12:00
   → r3b (reference at 3B tok) ~21:30 IST. tfc1 recorded (685de4e). Shared
