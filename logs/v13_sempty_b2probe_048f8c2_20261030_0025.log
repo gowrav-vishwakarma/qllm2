@@ -1,0 +1,28 @@
+=== tfs1_tf_b788731 2026-10-30T00:25:02Z
+per task: {'shift_wide': 0.018, 'step_wide': 0.037, 'affine_map': 0.113, 'shift_wide_new': 0.017, 'step_wide_new': 0.023, 'affine_map_new': 0.08}  mean 0.048
+saved logs/learning_probes/v13_sempty_tfs1_tf_b788731_b2_t400.json
+=== tfs2b_main_b788731 2026-10-30T00:26:07Z
+per task: {'shift_wide': 0.039, 'step_wide': 0.019, 'affine_map': 0.117, 'shift_wide_new': 0.023, 'step_wide_new': 0.03, 'affine_map_new': 0.091}  mean 0.053
+saved logs/learning_probes/v13_sempty_tfs2b_main_b788731_b2_t400.json
+=== m1_m1echo_ccbf028 2026-10-30T00:27:11Z
+per task: {'shift_wide': 0.025, 'step_wide': 0.02, 'affine_map': 0.09, 'shift_wide_new': 0.016, 'step_wide_new': 0.007, 'affine_map_new': 0.065}  mean 0.037
+saved logs/learning_probes/v13_sempty_m1_m1echo_ccbf028_b2_t400.json
+=== m2_m2echo_ed326a1 2026-10-30T00:28:59Z
+per task: {'shift_wide': 0.039, 'step_wide': 0.018, 'affine_map': 0.102, 'shift_wide_new': 0.018, 'step_wide_new': 0.004, 'affine_map_new': 0.091}  mean 0.046
+saved logs/learning_probes/v13_sempty_m2_m2echo_ed326a1_b2_t400.json
+=== c1ctlb_main_7ae6f1f 2026-10-30T00:30:59Z
+per task: {'shift_wide': 0.034, 'step_wide': 0.014, 'affine_map': 0.101, 'shift_wide_new': 0.007, 'step_wide_new': 0.017, 'affine_map_new': 0.053}  mean 0.038
+saved logs/learning_probes/v13_sempty_c1ctlb_main_7ae6f1f_b2_t400.json
+=== c1m2b_main_7ae6f1f 2026-10-30T00:32:47Z
+per task: {'shift_wide': 0.044, 'step_wide': 0.075, 'affine_map': 0.134, 'shift_wide_new': 0.047, 'step_wide_new': 0.015, 'affine_map_new': 0.109}  mean 0.071
+saved logs/learning_probes/v13_sempty_c1m2b_main_7ae6f1f_b2_t400.json
+=== mix3b_transformer_answ100_e072a8f 2026-10-30T00:34:49Z
+per task: {'shift_wide': 0.106, 'step_wide': 0.066, 'affine_map': 0.161, 'shift_wide_new': 0.076, 'step_wide_new': 0.034, 'affine_map_new': 0.083}  mean 0.088
+saved logs/learning_probes/v13_sempty_mix3b_transformer_answ100_e072a8f_b2_t400.json
+=== mix3b_mamba2_answ100_b36e3a5 2026-10-30T00:35:49Z
+per task: {'shift_wide': 0.089, 'step_wide': 0.1, 'affine_map': 0.166, 'shift_wide_new': 0.037, 'step_wide_new': 0.057, 'affine_map_new': 0.118}  mean 0.094
+saved logs/learning_probes/v13_sempty_mix3b_mamba2_answ100_b36e3a5_b2_t400.json
+=== mix3b_delta_answ100_1c913ef 2026-10-30T00:37:53Z
+per task: {'shift_wide': 0.036, 'step_wide': 0.057, 'affine_map': 0.142, 'shift_wide_new': 0.02, 'step_wide_new': 0.019, 'affine_map_new': 0.122}  mean 0.066
+saved logs/learning_probes/v13_sempty_mix3b_delta_answ100_1c913ef_b2_t400.json
+=== b2probe DONE 2026-10-30T00:41:01Z

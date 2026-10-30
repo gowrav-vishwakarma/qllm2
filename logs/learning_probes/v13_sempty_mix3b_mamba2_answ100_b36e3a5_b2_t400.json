@@ -1,0 +1,204 @@
+{
+  "schema_version": "learning-probe-b2/v1",
+  "created_at": "2026-10-30T00:37:52.477077+00:00",
+  "model_type": "v13_sempty",
+  "model_identity": "/home/ubuntu/Development/qllm-private/checkpoints_v13_sempty/mix3b_mamba2_answ100_b36e3a5/best_model.pt",
+  "device": "cuda",
+  "platform": "Linux-7.0.0-1010-gcp-x86_64-with-glibc2.43",
+  "parameter_count": 102613960,
+  "protocol": {
+    "suite": "b2",
+    "tasks": [
+      "shift_wide",
+      "step_wide",
+      "affine_map",
+      "shift_wide_new",
+      "step_wide_new",
+      "affine_map_new"
+    ],
+    "shots": [
+      2,
+      4,
+      8
+    ],
+    "seeds": [
+      5000,
+      5399
+    ],
+    "candidates": 8,
+    "chance": 0.125
+  },
+  "per_task_accuracy": {
+    "shift_wide": 0.08916666666666666,
+    "step_wide": 0.09999999999999999,
+    "affine_map": 0.16583333333333336,
+    "shift_wide_new": 0.03666666666666667,
+    "step_wide_new": 0.05666666666666667,
+    "affine_map_new": 0.11833333333333333
+  },
+  "mean_accuracy": 0.09444444444444444,
+  "aggregates": [
+    {
+      "task": "affine_map",
+      "n_shots": 2,
+      "n": 400,
+      "accuracy": 0.1675,
+      "mean_target_margin": -0.7535040932893753,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "affine_map",
+      "n_shots": 4,
+      "n": 400,
+      "accuracy": 0.175,
+      "mean_target_margin": -0.760499050617218,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "affine_map",
+      "n_shots": 8,
+      "n": 400,
+      "accuracy": 0.155,
+      "mean_target_margin": -0.8618614375591278,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "affine_map_new",
+      "n_shots": 2,
+      "n": 400,
+      "accuracy": 0.1425,
+      "mean_target_margin": -0.8300331500172615,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "affine_map_new",
+      "n_shots": 4,
+      "n": 400,
+      "accuracy": 0.11,
+      "mean_target_margin": -0.8903639662265778,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "affine_map_new",
+      "n_shots": 8,
+      "n": 400,
+      "accuracy": 0.1025,
+      "mean_target_margin": -0.977102991938591,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "shift_wide",
+      "n_shots": 2,
+      "n": 400,
+      "accuracy": 0.08,
+      "mean_target_margin": -1.5181963046640157,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "shift_wide",
+      "n_shots": 4,
+      "n": 400,
+      "accuracy": 0.1,
+      "mean_target_margin": -1.6659381079673767,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "shift_wide",
+      "n_shots": 8,
+      "n": 400,
+      "accuracy": 0.0875,
+      "mean_target_margin": -1.9360498267412185,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "shift_wide_new",
+      "n_shots": 2,
+      "n": 400,
+      "accuracy": 0.0325,
+      "mean_target_margin": -1.656101884394884,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "shift_wide_new",
+      "n_shots": 4,
+      "n": 400,
+      "accuracy": 0.03,
+      "mean_target_margin": -1.8394431200623513,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "shift_wide_new",
+      "n_shots": 8,
+      "n": 400,
+      "accuracy": 0.0475,
+      "mean_target_margin": -1.9484010808169843,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "step_wide",
+      "n_shots": 2,
+      "n": 400,
+      "accuracy": 0.09,
+      "mean_target_margin": -0.996403896920383,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "step_wide",
+      "n_shots": 4,
+      "n": 400,
+      "accuracy": 0.105,
+      "mean_target_margin": -1.2450921392440797,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "step_wide",
+      "n_shots": 8,
+      "n": 400,
+      "accuracy": 0.105,
+      "mean_target_margin": -1.0058066022396088,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "step_wide_new",
+      "n_shots": 2,
+      "n": 400,
+      "accuracy": 0.0525,
+      "mean_target_margin": -1.064822273403406,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "step_wide_new",
+      "n_shots": 4,
+      "n": 400,
+      "accuracy": 0.0825,
+      "mean_target_margin": -1.1946857962012292,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "step_wide_new",
+      "n_shots": 8,
+      "n": 400,
+      "accuracy": 0.035,
+      "mean_target_margin": -1.0875323390960694,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    }
+  ]
+}

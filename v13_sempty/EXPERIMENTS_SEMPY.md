@@ -2686,3 +2686,39 @@ recipe as C1-ctl (120M web+chat, then 480M M1 mix with --init_from).
   the pre-registered holdout + recall rules for the two-stage M1 and
   pending for c1m2 (tfc1, ~09:30 IST); not met on WikiText or the learning
   probe. Mamba-2 at 600M is not run yet (3B only: it beat PAM there).
+
+## B2 probe ("inference beats selection") on the 600M and 3B checkpoints (2026-10-30, 6000, `048f8c2`)
+
+v14's B2 tasks (v14/rules_ood.py, via `run_learning_probe.py --suite b2`,
+400 trials × 2/4/8 shots, seeds 5000–5399): shift_wide (k 1–12), step_wide
+(d 2–20), affine_map (a·x+b), each also as `_new` (held-out parameter
+values for v14's micro-bench). The answer that the nearest *other*
+parameter would give is always among the 8 candidates, so a model that
+selects a memorised neighbour instead of inferring the rule scores ~0.
+Chance 0.125. None of these models saw B2 training, so base and `_new` are
+equally unseen for them: their gap measures how much harder the held-out
+values are (v14's difficulty control).
+
+| model | B2 mean | base | `_new` | 2/4/8-shot |
+|---|---|---|---|---|
+| Transformer++ 600M one stage | 0.048 | 0.056 | 0.040 | 0.054/0.051/0.040 |
+| Transformer++ 600M two stages | 0.053 | 0.059 | 0.048 | 0.050/0.053/0.056 |
+| M1 600M | 0.037 | 0.045 | 0.029 | 0.030/0.041/0.040 |
+| M2 600M | 0.046 | 0.053 | 0.038 | 0.041/0.045/0.051 |
+| C1-ctl 600M | 0.038 | 0.050 | 0.026 | 0.029/0.038/0.047 |
+| c1m2 600M (aptitude) | **0.071** | 0.084 | 0.057 | 0.057/0.083/0.073 |
+| Transformer++ 3B | 0.088 | 0.111 | 0.064 | 0.063/0.100/0.099 |
+| Mamba-2 3B | **0.094** | 0.118 | 0.071 | 0.094/0.100/0.089 |
+| PAM 3B (2e-4) | 0.066 | 0.078 | 0.054 | 0.050/0.076/0.072 |
+
+- **Every model is BELOW chance**: they systematically pick a decoy (a
+  nearby-parameter answer), i.e. they select, they do not infer. More shots
+  barely help. Bar 3 is not met by any architecture at 600M or 3B,
+  attention included.
+- **Difficulty control for v14:** `_new` scores 0.015–0.047 below base for
+  every model with no B2 training (SE ≈ 0.006 per half), so the held-out
+  values are harder by themselves; a 27M trained-vs-held-out gap has to be
+  read against this.
+- Weak ordering: 3B > 600M; at 600M the aptitude-trained c1m2 is highest
+  (0.071; the aptitude mix has GSM8K/AQuA arithmetic), Transformer++ ≈ M2 >
+  M1 ≈ C1-ctl. All differences are small next to the distance to chance.
