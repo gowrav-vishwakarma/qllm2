@@ -734,6 +734,26 @@ shifts where same-size attention only selects, across seeds?
   v13 session). R not met: run 1 was seed luck, and B2's letters cell is
   the target for new units (N4).
 
+**B2 state sweep (PRE-REGISTERED 2026-10-30 ~10:55 IST, before any number):
+does a smaller memory make the body infer rules better?** From the step back
+(SCRATCHPAD): attention keeps every example and memorises a table per
+parameter (tpp shift_wide_new 0.02). A fixed-size state cannot hold the
+examples, so it may be pushed to hold the rule. If the bottleneck causes the
+abstraction, a smaller state should infer held-out rules better.
+- **Arms:** echo@32x12 (12 heads × 32: state 12,288 per layer), echo (6 ×
+  64: 24,576), echo@128x3 (3 × 128: 49,152). Width 384 and params (27.59–
+  27.67M) are the same, so only the memory size changes (`x<heads>` suffix,
+  this commit).
+- **Seeds:** 2 launches, `--seed 5j --doc_seed0 (j+10)·100M --init_seed 5j`
+  (j = 1, 2), tag `b2statej`. B2 training only, 6000 × B16, lr 3e-4.
+- **Bar S (shift_wide_new, mean over 2/4/8 shots and both seeds):** the
+  hypothesis holds if hd32 ≥ hd64 ≥ hd128 AND hd32 − hd128 ≥ +0.15. It is
+  refuted if hd128 − hd32 ≥ +0.15 (more memory infers better). Anything
+  else: no effect at this range.
+- **Reported:** trained-value cells, the number `_new` cells (and their
+  8-shot dip), ms/step. **These run in parallel with B2 run 2 on the 4090,
+  so ms/step is not comparable** with solo runs.
+
 ### N1 — phase interference revived (v11 E3 on the lean body)
 
 **Why.** The only architecture change that beat the v7 baseline (−1.11 PPL),

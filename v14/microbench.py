@@ -32,7 +32,8 @@ Arms (all real arm, chrono + out_gate + delta):
     (N6 arms op / opdiag / opdiag_ownq left with N6 after B1 run 2: 78e4354;
      echo_tied left after v13 E2 failed at 600M: 5100fd7;
      n1sum / n1gate / n1phase left with N1 after B0 run 3: 9e0a3fd)
-Optional suffixes: @<head_dim> (default 64), :L<n_layers> (default 4).
+Optional suffixes: @<head_dim> (default 64), x<n_heads> after it (default 6;
+e.g. echo@32x12 keeps width 384 with a smaller memory), :L<n_layers> (default 4).
 """
 
 from __future__ import annotations
@@ -300,9 +301,12 @@ def _embed_weight(model):
     return getattr(model.embed, 'embed', model.embed).weight
 
 
-def make_cfg(kind, vocab, head_dim=64, n_layers=4, max_seq_len=8192):
+def make_cfg(kind, vocab, head_dim=64, n_layers=4, max_seq_len=8192, n_heads=6):
+    """width = n_heads x head_dim (384 by default). Trading heads for head_dim
+    at a fixed width changes the memory state (n_heads x head_dim^2 per layer)
+    and keeps the projections the same size."""
     base = PAMConfig(
-        vocab_size=vocab, dim=6 * head_dim, n_heads=6, head_dim=head_dim,
+        vocab_size=vocab, dim=n_heads * head_dim, n_heads=n_heads, head_dim=head_dim,
         n_layers=n_layers, expand=3, dropout=0.0, max_seq_len=max_seq_len,
         chunk_size=256, gradient_checkpointing=False, is_complex=False,
         chrono=True, out_gate=True, delta=True)
@@ -312,14 +316,17 @@ def make_cfg(kind, vocab, head_dim=64, n_layers=4, max_seq_len=8192):
 def parse_arms(spec):
     out = []
     for tok in spec.split(','):
-        tok, hd, nl = tok.strip(), 64, 4
+        tok, hd, nl, nh = tok.strip(), 64, 4, 6
         if ':L' in tok:
             tok, nl = tok.split(':L'); nl = int(nl)
+        if 'x' in tok.split('@')[-1] and '@' in tok:     # echo@32x12: head_dim 32, 12 heads
+            tok, nh = tok.rsplit('x', 1); nh = int(nh)
         if '@' in tok:
             tok, hd = tok.split('@'); hd = int(hd)
         if tok not in ARMS:
             raise SystemExit(f"unknown arm '{tok}' (have {list(ARMS)})")
-        out.append((f"{tok}@hd{hd}L{nl}", tok, hd, nl))
+        label = f"{tok}@hd{hd}L{nl}" + (f"H{nh}" if nh != 6 else "")   # old labels unchanged
+        out.append((label, tok, hd, nl, nh))
     return out
 
 
@@ -544,11 +551,11 @@ def main():
         all_res['arms'] = prev['arms']
         all_res['resumes'] = prev.get('resumes', 0) + 1
         print(f"resume #{all_res['resumes']}: keeping {list(all_res['arms'])}", flush=True)
-    for label, kind, hd, nl in parse_arms(args.arms):
+    for label, kind, hd, nl, nh in parse_arms(args.arms):
         if label in all_res['arms']:
             continue
         print(f"\n--- arm {label} ---", flush=True)
-        cfg = make_cfg(kind, len(tok), head_dim=hd, n_layers=nl)
+        cfg = make_cfg(kind, len(tok), head_dim=hd, n_layers=nl, n_heads=nh)
         all_res['arms'][label] = train_arm(label, cfg, P, plan, args.device, args.lr,
                                            args.log_every, ctxs, args.trials,
                                            args.aux_weight, tok=tok_rules, families=families,
