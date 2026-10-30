@@ -3201,3 +3201,21 @@ sparse body (4 of 16 blocks with a notebook) scales worse, or LR 2e-4 after
 a 1.2e-3 stage A; not separated. **Consequence for the protocol:** a
 change that wins at 600M must also show it at ≥ 1.5B tokens before it counts,
 and LM gains are judged at the end of a ≥ 3B run.
+
+## n9c — v14 N9a content-phase echo keys at 600M (pre-registration, 2026-10-30 22:35 IST)
+
+The F1 winner (N9a `echo_phase`, 5/5 seeds vs echo 1/5 on B1). Arm `n9c`:
+C1-ctl's exact recipe and body (M1, ECHO=1, two stages) + `ECHO_PHASE_LAGS=3`
+in BOTH stages (v14 hook `424afd6`, builds V14LM), local 4090 with GRAD_CKPT=1
+(box control: ±0.01). Control = C1-ctl. All lookup probes on the 4090 for both.
+
+**Rules (fixed now).** This 600M run measures LOOKUP / FORMATION only (the 3B
+lesson: LM effects need ≥ 1.5B tokens).
+- PASS if label_exact (label_diag mean, 200 trials) ≥ ctl + 0.10 (0.610 →
+  ≥ 0.710) OR label_category 8-shot (400 trials) ≥ ctl + 0.15 (0.500 →
+  ≥ 0.650).
+- Guard (big-loss only): holdout ≤ ctl + 0.03 (≤ 3.504), recall ≥ ctl − 0.05
+  (≥ 0.775).
+- Reported: accuracy by pairs back (recency), key cosine at label
+  positions, LCL label_category past 2048 vs in-context chance 0.25.
+- PASS → N9a's LM effect gets a ≥ 1.5B-token run before any bar-2 claim.
