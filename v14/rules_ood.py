@@ -28,6 +28,12 @@ into four disjoint pools: train markers, eval markers, train stems, eval
 stems. ``label_marker`` draws from the train pools; ``label_marker_new``
 from the eval pools, which are never seen in training (every item unseen).
 
+N7 bench (exact copy in a format never trained): ``repeat_copy`` trains
+generic copying in one format ("Copy rule.\n w1 .. wk\n w1 .. wp ->
+w_{p+1}"); ``label_exact`` asks for it in another ("Group rule. moss is
+alpha, quill is beta, ... quill is" -> beta, every item with its own label),
+and ``label_exact_new`` does the same with words never seen in training.
+
 B2 (bar-3 analysis, EXPERIMENTS_V14 "N4"): inference must beat selection.
 B1's unseen parameters ask for extrapolation from 3 trained values, where
 picking one of 3 memorised tables is the cheap solution. B2 trains on MANY
@@ -58,7 +64,8 @@ OOD_TASKS = ('letter_shift_ood', 'number_step_ood')
 MARKER_TASKS = ('label_marker', 'label_marker_new')
 B2_TASKS = ('shift_wide', 'step_wide', 'affine_map')
 B2_NEW_TASKS = tuple(t + '_new' for t in B2_TASKS)
-EXTRA_TASKS = OOD_TASKS + MARKER_TASKS + B2_TASKS + B2_NEW_TASKS   # append only: index seeds the rng
+COPY_TASKS = ('repeat_copy', 'label_exact', 'label_exact_new')   # N7 bench (format-free exact copy)
+EXTRA_TASKS = OOD_TASKS + MARKER_TASKS + B2_TASKS + B2_NEW_TASKS + COPY_TASKS   # append only: index seeds the rng
 TRAIN_SHIFTS = (1, 2, 3)          # what rules._letter_shift draws
 OOD_SHIFTS = (4, 5)
 OOD_STEPS = (10, 11, 12, 13)      # rules._number_step draws 2-9
@@ -154,6 +161,30 @@ def _affine_map(tokenizer, rng, n_shots, new=False):
     return prompt, target, R._candidates(tokenizer, rng, target, tempting, pool, 8), 1 / 8
 
 
+def _repeat_copy(tokenizer, rng, n_shots):
+    pools = _marker_pools(tokenizer)
+    k = n_shots + 3
+    words = list(rng.choice(pools['train_stems'], size=k, replace=False))
+    p = int(rng.integers(1, k))                                  # shown prefix of the repeat
+    prompt = 'Copy rule.\n' + ' '.join(words) + '\n' + ' '.join(words[:p])
+    target = str(words[p])
+    tempting = [w for w in words if w != target]
+    return prompt, target, R._candidates(tokenizer, rng, target, tempting, pools['train_stems'], 8), 1 / 8
+
+
+def _label_exact(tokenizer, rng, n_shots, new=False):
+    pools = _marker_pools(tokenizer)
+    n_items = max(2, n_shots)
+    items = list(rng.choice(pools['eval_stems' if new else 'train_stems'], size=n_items, replace=False))
+    labels = list(rng.choice(R._pool(tokenizer, R.LABELS), size=n_items, replace=False))
+    qi = int(rng.integers(n_items))
+    prompt = 'Group rule. ' + ', '.join(f'{w} is {lab}' for w, lab in zip(items, labels)) \
+        + f', {items[qi]} is'
+    target = str(labels[qi])
+    tempting = [str(lab) for lab in labels if lab != target]
+    return prompt, target, R._candidates(tokenizer, rng, target, tempting, R.LABELS, 8), 1 / n_items
+
+
 _MARKER_POOLS: dict = {}
 
 
@@ -195,7 +226,9 @@ _BUILDERS = {'letter_shift_ood': _letter_shift_ood, 'number_step_ood': _number_s
              'shift_wide': _shift_wide, 'step_wide': _step_wide, 'affine_map': _affine_map,
              'shift_wide_new': lambda tok, rng, n: _shift_wide(tok, rng, n, new=True),
              'step_wide_new': lambda tok, rng, n: _step_wide(tok, rng, n, new=True),
-             'affine_map_new': lambda tok, rng, n: _affine_map(tok, rng, n, new=True)}
+             'affine_map_new': lambda tok, rng, n: _affine_map(tok, rng, n, new=True),
+             'repeat_copy': _repeat_copy, 'label_exact': _label_exact,
+             'label_exact_new': lambda tok, rng, n: _label_exact(tok, rng, n, new=True)}
 
 
 def build_example(tokenizer, task: str, n_shots: int, seed: int) -> R.RuleExample:

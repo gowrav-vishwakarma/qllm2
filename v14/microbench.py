@@ -25,6 +25,7 @@ length: extrapolation). Every arm trains on byte-identical data.
 Arms (all real arm, chrono + out_gate + delta):
     delta        the v13 memory without echo
     echo         + E1 echo: the current control body
+    echo_n7      echo + N7 in-context n-gram memory (orders 2, 3; read after the first and last block)
     tpp          REFERENCE, not a candidate: Transformer++ (attention, O(T)) at
                  the same width and depth, MLP sized to echo's parameter count.
                  It calibrates the bench: what a model that can look back at
@@ -270,6 +271,7 @@ def batch_tensors(docs, device, aux_weight: float = 0.0):
 ARMS = {
     'delta': dict(echo=False),
     'echo': dict(echo=True),
+    'echo_n7': dict(echo=True, ngram_orders=(2, 3), ngram_layers=(0, -1)),   # N7 exact n-gram memory
     'tpp': dict(echo=True),          # the echo cfg, used only to match sizes (build_model)
 }
 

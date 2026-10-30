@@ -983,6 +983,55 @@ beyond the trained length, tpp as the reference. (2) B2 must not drop
 recall probe past 2048, and the long-context learning probe they are
 building.
 
+**N7 code (2026-10-30, `83f49dc`, selftest ALL PASS).** `v14/ngram.py`,
+switches `ngram_orders` / `ngram_slots` / `ngram_layers`, micro arm
+`echo_n7` = echo + orders (2, 3), read after the first and last block, 2^16
+slots per order. Zero-init readers (bit-identical to echo at start).
+
+**N7 micro run 1 (PRE-REGISTERED 2026-10-30 ~12:55 IST, before any N7
+number).** Question: does the body use an exact in-context copy it never
+trained on in that format?
+- **Training:** `--rule_tasks letter_shift,number_step,reverse3,
+  label_category,two_hop,shift_wide,step_wide,affine_map,repeat_copy`
+  (repeat_copy = generic copying in one format). 6000 × B16, lr 3e-4.
+- **Eval:** every task, plus `label_exact` (train words) and
+  **`label_exact_new`** ("X is L ... X is", a format never trained, words
+  never seen in training; in-context chance 1/n_items).
+- **Arms:** echo, echo_n7, tpp (reference), 3 seed pairs: pair i = `--seed
+  6i --doc_seed0 (i+12)·100M --init_seed 6i`, tag `n7r1p<i>`.
+- **Bar X (primary, label_exact_new):** d_i = echo_n7 − echo, mean over 2 /
+  4 / 8 shots; met if mean(d) ≥ +0.15 AND ≥ 2·SD.
+- **Guard G (abstraction kept):** mean over pairs of the B2 held-out mean
+  (3 `_new` tasks): echo_n7 ≥ echo − 0.05.
+- **Reported:** label_exact, label_category, repeat_copy, tpp's level on
+  label_exact_new (attention reference), ms/step (shared GPU: not comparable).
+- **Outcomes:** X met and G holds: N7 goes to the v13 session for the 600M
+  check (bar in "N7": label_exact ≥ T++ inside and past 2048, recall and
+  holdout not worse), after wiring gradient checkpointing. X not met: the
+  body does not use the exact read at this size; check the read (gate,
+  injection block) before closing N7.
+
+### N9 — phase-aligned dual memory (the user's 2×O(1) memory, 2026-10-30; design only)
+
+**Idea (user, mapped by the v13 session against the key-collision
+diagnosis):** "first strong alignment, then pick the best one."
+1. **Align by phase.** Rotate each memory key and query by phases computed
+   from the last few tokens (learned angle per token, a few frequency bands;
+   function words can learn ≈ 0). "truck is" vs "red is" stop colliding, an
+   exact repeat aligns exactly, non-matches cancel by interference instead
+   of blurring, and learned angles can put car ≈ truck (label_category).
+   Content-relative, not positional, so nothing runs out of range past the
+   trained length. Our own phase lineage (v11 E3, Chrono).
+2. **Pick by agreement.** Two such memories with independent phase banks;
+   the reads are combined as a product (AND). Collisions are random per bank
+   and the true value is shared by both (count-min-sketch logic). Cost 2×O(1).
+**Relation to N7:** N7's exact hash is the hard limit of step 1 (no
+similarity); N9 is the learned version that can also match by meaning.
+**Bars (v13's proposal, freeze before the run):** label_exact ≥ T++ (0.88),
+label_category ≥ 0.73, accuracy 5 pairs back ≥ 0.70, LCL past 2048; recall
+and holdout not worse. Micro first, on the N7 bench (N7 as the exact-copy
+control).
+
 ### N8 — self-opened memory (learned critical period; handed over by the v13 session, 2026-10-30)
 
 **Observation (v13).** The two-stage schedule (language first, recall docs
