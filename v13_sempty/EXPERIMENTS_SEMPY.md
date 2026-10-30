@@ -2891,3 +2891,34 @@ Local 4090, one small job (the shared-4090 rule).
   at both L = 4096 and 8192 (difference SE ≈ 0.04). Inside the window
   (1024 / 2048) the difference is reported either way.
 - Same reading for PAM 3B vs Mamba-2 3B and Transformer++ 3B.
+
+### S4 Mamba-2 at 600M result (2026-10-30, 6000, `685de4e`): Mamba-2 is the LM leader (by 0.010) and leads label_category; PAM leads recall past 2048 with an ~11× smaller state
+
+| model (600M) | holdout | WikiText | recall 63-cell (a1/a4/a8) | ≤ 2048 / > 2048 | PG-19 4–8k | learning (label_cat 8) | tok/s | state / seq |
+|---|---|---|---|---|---|---|---|---|
+| Mamba-2 one stage (mbs1) | **3.4349** | 66.25 | 0.594 (0.748/0.571/0.462) | 0.687 / 0.361 | 0.0256 | 0.199 (0.47) | 178.8K | 13.4 MB |
+| Mamba-2 two stages (mbs2) | 3.4393 | **65.04** | 0.762 (0.777/0.765/0.742) | 0.884 / 0.456 | 0.0240 | **0.227 (0.55)** | 173.0K | 13.4 MB |
+| PAM M2 two stages (c2m2) | 3.4497 | 65.57 | **0.848** (0.945/0.849/0.749) | **0.899 / 0.718** | **0.0440** | 0.185 (0.41) | 92.3K | ~1.2 MB |
+| PAM M2 + aptitude (c1m2, reference) | 3.4473 | 65.74 | **0.870** | **0.939** / 0.697 | 0.0436 | 0.187 (0.38) | 92.6K | ~1.2 MB |
+
+(PAM M1/M2 state: 4 notebooks × 6 heads × 98² fp32 = 0.92 MB + echo 6 × 98²
+= 0.23 MB; Mamba-2 17 × 24 × 64 × 128 fp32 = 13.4 MB.)
+
+**Rules:**
+- Mamba-2 fairness: PAM's recall gain from the schedule (+0.326) vs
+  Mamba-2's (+0.168): +0.158 ≥ 0.10 → **PAM-specific, MET** (Mamba-2 gains
+  recall too, but half as much; neither gets an LM gain: Mamba-2 +0.004).
+- Head-to-head, same recipe (c2m2 vs mbs2): LM: Mamba-2 lower by 0.0104
+  AND WikiText lower (65.04 vs 65.57) → **Mamba-2 beats PAM on LM**, by the
+  smallest margin the rule allows (within the user's bar-2 tolerance band
+  ±0.01 it is a tie at 1/11 the state). Recall: +0.086 → **PAM beats
+  Mamba-2 on recall** (inside 2048 a tie, 0.899 vs 0.884; past it 0.718 vs
+  0.456).
+- Not in the rules: Mamba-2 leads the learning probe (0.227 vs 0.185) and
+  label_category 8-shot (0.55 vs 0.41), and is 1.9× faster to train.
+
+**Reading (step back).** The label_category gap is NOT an attention-only
+skill: Mamba-2, also O(1), gets 0.55 (two stages) where PAM M2 gets 0.41.
+So a fixed-size state can do it; our memory read does it worse. PAM's real
+edges at 600M: recall past the trained length (0.72 vs 0.46 vs T++ 0.15)
+with an ~11× smaller state than Mamba-2. r3b (3B tokens) started 06:29Z.
