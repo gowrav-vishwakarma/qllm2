@@ -4,9 +4,9 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-30 04:50 IST)
+## State (2026-10-30 05:50 IST)
 
-* **4090 (this session, until B1 run 4 ends ~05:45 IST):**
+* **4090: handed to the v13 session for E2 at ~05:50 IST (B1 run 4 P met).**
   1. **B0 run 2 DONE (03:31 IST, `bcfd88a`): INVALID.** Echo facts2 @1024
      0.55 (bar 0.90): every echo arm picks a value of the document, not the
      bound one. Descriptive: n1sum / n1gate do partial lookup (facts2 0.79),
@@ -21,11 +21,12 @@ Keep all three current as things happen (user rule, 2026-10-29).
      met** (d −0.12, +0.01, −0.16: tied is worse on unseen items). The
      lookup circuit forms per seed or not: echo in 2 of 3 seeds, tied in 1
      of 3. Run 2's lead was a seed where only tied formed it.
-  3. **B1 run 4 RUNNING** (tmux `v14b1r4`, since ~04:50 IST at
-     the commit that recorded run 3): the clean P test, run 2's training set, echo vs echo_tied
-     in seed pairs 21/22/23. **Its P gates the v13 session's E2** (tied echo
-     600M vs C1-ctl on the M1 body, on the 4090 from ~05:45 if P passes).
-     When it ends: notebook + index first, then ping Qllm v13, then the user.
+  3. **B1 run 4 DONE (05:40 IST, `d4e0f0d`): P MET.** d +0.589 / +0.595 /
+     +0.222 (mean +0.469, 2·SD 0.427); echo 0.41–0.44, tied 1.00 / 1.00 /
+     0.66. On run 2's training set the tie makes the lookup circuit form
+     (tied 4 of 4 seeds, echo 0 of 5). With label_marker in training it does
+     not (run 3). **E2 is GO** (v13 session, 600M tied echo vs C1-ctl, M1
+     body, on the 4090).
 * **Shared checkout rule (2026-10-30):** both sessions work in
   `/home/gowrav/Development/qllm2`. While a bench runs, nobody commits to
   master or leaves tracked edits: each pair launch checks for a clean tree,
@@ -92,24 +93,22 @@ Keep all three current as things happen (user rule, 2026-10-29).
 
 ## Next action
 
-1. When `v14b1r4` ends (~05:45 IST): score P with
-   the run-3 scorer (paired d over 3 pairs, mean ≥ +0.15 and ≥ 2·SD; valid if
-   echo < 0.90 in every pair). Record in EXPERIMENTS_V14 "B1" + index +
-   this file, commit with the logs (cleaned of torch recompile warnings),
-   then ping Qllm v13 (they rebase `e2`, then launch E2 if P passed), then
-   the user.
-2. If P fails: echo_tied closes (remove the flag, index row with code at the
-   last commit that has it). B0 run 3 goes on the 4090 next.
-3. If P passes: E2 owns the 4090. B0 run 3 waits for it.
-4. Bar 3 in its strong form (inferring an unseen rule parameter) is still
-   unmet by every arm (B1 runs 2-3: below chance). Plan in EXPERIMENTS_V14
-   "N4" (bar-3 analysis): first the `tpp` reference on B1's unseen
-   parameters on run 4's data (`for i in 1 2 3; do TAG=b1r4tpp$i
-   FAMILIES=rules ARMS=tpp SAVE=1 EXTRA="--seed 2$i --doc_seed0
-   $((i+3))00000000 --init_seed 2$i" bash v14/run_bench.sh; done`, ~30 min,
-   right after run 4 unless E2 takes the 4090). If attention also fails, build a bench
-   where inference beats selection (many training parameters, held-out
-   ones to interpolate), and only then an N4 unit.
-5. Branch `v14dev` (worktree `../qllm_v14dev`, `c9bff5c` + `51a94cd`: the
-   tpp arm; GPU smoke passed 04:45 IST): merge into master after B1 run 4
-   (master stays frozen while a bench runs).
+1. The v13 session rebases `e2` onto master and pushes, then launches E2 on
+   the 4090 (~4.5-5 h). After their push: merge `v14dev` (the tpp arm) into
+   master and run `v14.selftest` on the merged tree (v14 imports their
+   `v13_sempty/model.py`).
+2. GPU time for v14 while E2 runs: ask the v13 session for the 6000 after
+   tfc1 (~09:30 IST). Queue there, in order: (a) the tpp B1 calibration on
+   run 4's data (`for i in 1 2 3; do TAG=b1r4tpp$i FAMILIES=rules ARMS=tpp
+   SAVE=1 EXTRA="--seed 2$i --doc_seed0 $((i+3))00000000 --init_seed 2$i"
+   bash v14/run_bench.sh; done`, ~30 min): does attention form the
+   label_category circuit in every seed, and does it infer unseen rule
+   parameters at 27M? (b) B0 run 3 (`TAG=b0r3
+   ARMS=echo,n1sum,n1gate,n1phase,echo_tied,tpp AUX=0.1 SAVE=1 bash
+   v14/run_bench.sh`, ~2 h; pre-registered in EXPERIMENTS_V14 "B0").
+3. Open question from runs 3-4: why does label_marker in training stop the
+   tied arm from forming the circuit (1 of 3) while helping echo (2 of 3)?
+   Cheap to probe on the saved checkpoints (`checkpoints_v14/b1r3p*`,
+   `b1r4p*`): what do q and k attend to at the label positions?
+4. Bar 3 in its strong form is untouched by every arm (plan under
+   EXPERIMENTS_V14 "N4", bar-3 analysis).

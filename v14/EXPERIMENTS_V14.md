@@ -459,10 +459,12 @@ reverse3 are 1.00 for every arm and pair.
   label_marker move together: ≈ 1.0 when it forms (echo p1 and p3, tied p1)
   and ≈ 0.4–0.5 when it does not. Echo formed it in 2 of 3 seeds, tied in 1
   of 3. Run 2's lead (tied 0.857 vs echo 0.471) was one seed where only tied
-  formed it.
-- **Tying does not make the circuit form more often, and it is worse on
-  unseen items (A).** The similarity-lookup reading of the tie is not
-  supported.
+  formed it. *(Corrected by run 4: on run 2's training set, tied formed it
+  in 3 of 3 seeds and echo in 0 of 3. "Seed luck" holds only with
+  label_marker in the mix.)*
+- **With label_marker in training, tying does not make the circuit form
+  more often, and it is worse on unseen items (A).** The similarity-lookup
+  reading of the tie is not supported.
 - When the circuit forms, it carries over to words never seen in training
   (label_marker_new 0.59–0.65 vs in-context chance 0.417), only partly.
 - **Data, not the body:** with `label_marker` in training, plain echo
@@ -507,6 +509,44 @@ run 2's training set and keeps P's frozen rule.
   task in the mix, plain echo learned label_category to the ceiling. At
   this size, the label_category gap in run 2 was a matter of what the data
   teaches, at least as much as of the body.
+
+**Run 4 RESULT (4090, 2026-10-30 04:44–05:40 IST, code `d4e0f0d`): P MET.**
+Logs + JSON: `logs/v14_b1r4p{1,2,3}_d4e0f0d_20261030_{0443,0502,0521}.{log,json}`.
+Each value is the mean over 2 / 4 / 8 shots. letter_shift, number_step and
+reverse3 are 1.00 for every arm and pair.
+
+| pair (seed) | arm | label_category (2/4/8) | two_hop | letter_shift_ood | number_step_ood | ms/step |
+|---|---|---|---|---|---|---|
+| p1 (21) | echo | 0.411 (0.50 / 0.49 / 0.25) | 0.293 | 0.016 | 0.227 | 96 |
+| | echo_tied | **1.000** (1.00 / 1.00 / 1.00) | 0.288 | 0.022 | 0.194 | 88 |
+| p2 (22) | echo | 0.405 (0.48 / 0.48 / 0.26) | 0.277 | 0.004 | 0.094 | 96 |
+| | echo_tied | **1.000** (1.00 / 1.00 / 1.00) | 0.280 | 0.001 | 0.075 | 87 |
+| p3 (23) | echo | 0.440 (0.52 / 0.54 / 0.26) | 0.294 | 0.031 | 0.093 | 96 |
+| | echo_tied | **0.662** (0.77 / 0.76 / 0.45) | 0.297 | 0.045 | 0.088 | 87 |
+
+- **P:** d = +0.589, +0.595, +0.222 (mean **+0.469**, SD 0.214, 2·SD
+  0.427). **MET**, and valid: echo is < 0.90 in every pair (0.41–0.44).
+- label_marker / label_marker_new (format not trained): every arm is at
+  in-context chance (≤ 0.47). Reported only.
+
+**Reading:**
+- **On run 2's training set, tying makes the lookup circuit form.** Tied
+  formed it in 4 of 4 seeds (run 2: 0.857; run 4: 1.00, 1.00, 0.66). Echo
+  formed it in 0 of 5 (run 1: 0.68 partial; run 2: 0.47; run 4: 0.41, 0.41,
+  0.44, at in-context chance 1/n_cat). This is not seed luck.
+- **The training mix flips it.** With label_marker added (run 3), echo
+  formed it in 2 of 3 seeds and tied in 1 of 3, and tied was worse on unseen
+  items. Why the marker task hurts the tied arm is open (3 seeds per cell;
+  the two-word items put the category word 1–2 tokens before "is").
+- Unseen rule parameters are still at chance or below for both arms (bar 3 in
+  its strong form is untouched).
+- Tied is 9 % faster per step (one D × D projection fewer).
+- **Pre-registered consequence:** P met, A (run 3) not met. Per run 3's
+  map, the tie goes to the LM check framed as an abstraction / recall tweak,
+  not as similarity lookup. The v13 session runs **E2** (tied echo 600M vs
+  C1-ctl, M1 body, EXPERIMENTS_SEMPY "E2"). At 600M a single run per arm
+  meets the same per-seed risk: v13's label_category gaps (M1 0.29, C1-ctl
+  0.55) may themselves be one seed each.
 
 **Run 3 candidates (from the v13 review, 2026-10-30; NOT pre-registered).**
 (a) was adopted into run 3 above; (b) is still open.
