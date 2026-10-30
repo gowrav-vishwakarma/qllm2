@@ -21,6 +21,10 @@
   and commit with the verdict). Bars: EXPERIMENTS_V15 §4 G1 (unchanged).
   Arm: `V14_EXT_ARMS="grove=v15.bench:build_grove"` (27.67M vs echo 27.61M).
   4090 sharing: v14's whole-card n9r runs beside it from ~03:30 (agreed).
+  Pair 1 (03:28 IST): rules learned (letter_shift 0.99, reverse3 1.00) but
+  lookup below echo (label_exact 0.34 vs 0.50 at 2-shot; label_category 0.42
+  vs 0.49 at 4-shot), guard fails (train loss 0.61 vs 0.38). L, P not met.
+  Summary tool: `.venv/bin/python v15/tmp/g1_summary.py` (reads the jsons).
 - G1 as built (`84b41d8`): pair 1 FAIL at chance, blind-window cause found
   and fixed (EXPERIMENTS §4 G1); its worktree `../qllm_v15_g1` is stopped by a
   docs-only dirty edit (the guard refuses launches) and can be removed.
