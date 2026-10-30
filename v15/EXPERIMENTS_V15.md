@@ -73,13 +73,27 @@ relative**: nothing on the state decays; a tree loses share only when another
 gains. The growth step is in [0, 1) and never overshoots: a tree that wins one
 token with α = 2 moves 86 % of the way to it.
 
-**Seasons** make it a GPU model. Inside a season every read uses the roots and
-fruits of the season's start, so a season is three batched ops (a C×C
-retention matrix per grove for the evidence scan, one softmax, one matmul);
-the growth is one more at the season's end. Decode keeps a C-token buffer and
-grows every C tokens, so prefill == decode exactly (selftest: 1e-15). A fact
-written in a season is readable from the next one; the conv covers the first
-few tokens.
+**Seasons** make it a GPU model. Inside a season the *selection* uses the
+roots of the season's start (a tree's identity is fixed for a season), so
+the evidence scan is a C×C retention matrix per grove and one softmax. The
+*fruit ripens daily* (added 2026-10-31 after G1 pair 1, see §4): the read at
+t uses the fruit as it would be if the season had ended at t−1,
+
+```
+ripening   u_i(t) = u_i + (1 − e^{−α g_i(<t)}) (ȳ_i(<t) − u_i)
+           g_i(<t) = Σ_{s<t} m_i(s−1),  ȳ_i(<t) = Σ_{s<t} m_i(s−1) y_s / g_i(<t)
+read       o(t)   = Σ_i m_i(t) u_i(t)
+```
+
+which is, without materialising the partial sums, one strict-causal C×C
+mixing matrix per grove, A[t,s] = Σ_i m_i(t)·step_i(t)/g_i(<t)·m_i(s−1),
+applied to the season's y. At t = C the ripened fruit *is* the next season's
+fruit, so growth and ripening are one rule seen at two cadences. Reads see a
+fact the token after it is written; the strict s < t matters: with s ≤ t the
+tree read at t is the one just credited with the query's own sap (evidence
+persists across tokens), and the toy fails (0.16). Decode keeps a C-token
+buffer: read, then credit, then grow every C tokens; prefill == decode
+exactly (selftest: 1e-14).
 
 **Cost.** Per token per layer: G·K·n·3 MACs (G 8, K 32, n 64: 49k), far below
 the MLP (d 768: ~3.6M). State per layer at those sizes: 33k numbers (132 KB);
@@ -131,7 +145,32 @@ season 8. First version (dot-product fitness, step αg/(1+αg), λ 0.9) stayed
 at chance: competition must be sharp (cosine × temperature) and growth
 decisive (1 − e^{−αg}). Written down so it is not re-learned.
 
-### G1 — micro: does the economy choose? (next; 4090; one small job)
+### G1 — micro: does the economy choose? (4090; one small job)
+
+**Pair 1 as built (`84b41d8`, seed 21, 2026-10-31 02:34 IST): FAIL, and
+the reason is the design, not the seed.** Grove sat at chance on every rule
+task (label_exact 0.15/0.14/0.12 at 2/4/8-shot, label_category
+0.14/0.21/0.25, chance 0.125); echo on the same seed: label_exact
+0.50/0.26/0.12, label_category 0.50/0.49/0.25, letter_shift 1.00. Train
+loss was LM-like (3.31 → 2.92), so the body learned text, not the context.
+Log: `logs/v14_v15g1p1_84b41d8_20261031_0146.{log,json}`.
+Cause, verified on CPU (`v15/tmp/toy_season.py`, selftest's toy lookup with
+the season as the knob; 400 steps, chance 0.125): season 8 → 0.988, 16 →
+1.000, 32 → **0.062**. With season-start reads a fact seen fewer than C
+tokens ago is invisible, and the bench's shots are ~4 tokens apart: an
+8-shot prompt lives inside one season of 32. The toy passed only because its
+16 tokens of pairs straddled two seasons of 8.
+Fix = **ripening** (§1, commit `abe4c89`), a design change, not a tuning:
+the read sees the current season's growth so far. Same toy after it (400 /
+1200 steps): season 8 0.750 / 0.992, 16 0.953 / 0.984, 32 0.957 / **1.000**.
+Pairs 2–6 of `84b41d8` were not run (they could not change the verdict; the
+clean-tree guard was used to stop the queue, no job was killed).
+
+**G1r = G1 rerun at `abe4c89` with ripening, same six pairs, same bars
+(unchanged, below), started 02:35 IST 2026-10-31** (tmux `v15g1r`,
+worktree `../qllm_v15_g1r`, logs `v14_v15g1rp{1,2,3}_abe4c89_*`,
+`v14_v15g1rb2p*`).
+
 Arm `grove` in `v14/microbench.py` (a V15 model class with the bench's
 interface), size-matched to echo (27.6M), vs `echo` and `tpp`, on B1 run 4's
 training set (rules + label_category + label_exact + two_hop), 3 seed pairs,
