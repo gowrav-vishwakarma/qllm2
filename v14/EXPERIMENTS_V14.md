@@ -920,6 +920,16 @@ Infini-gram (corpus-level), hashed n-gram embeddings. The new part to
 claim is a bounded, write-while-reading n-gram table inside an O(1)
 recurrent body, measured past the trained context.
 
+**Design constraints from v13's insights (EUREKA.md, 2026-10-30).** (a)
+Give the exact store its OWN reader in each block that uses it, not M2-style
+shared reads: shared reads seemed to dilute the lookup circuit
+(label_category lifts on M1, 0.29 -> 0.55, not on M2). (b) Judge learning
+after matched data exposure: reasoning-data gains fade in a web-heavy stage
+B. (c) At the 600M check read WikiText, not just the web holdout: T++ gains
+WikiText from stored facts (aptitude 66.2 -> 63.8), PAM does not, so the
+exact store may be where that gap closes. (d) Keep q != k for anything that
+serves recall (E2).
+
 **Tests (to pre-register before any code).** (1) A dense-supervision
 copy/recall micro-bench (B0 broke on answer-only supervision), inside and
 beyond the trained length, tpp as the reference. (2) B2 must not drop
