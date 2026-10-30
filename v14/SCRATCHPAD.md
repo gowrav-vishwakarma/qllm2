@@ -232,6 +232,13 @@ Looking at the whole day from far away:
    (beats same-size T++), N9a's phase keys (lookup forms on every seed), long
    recall past 2048. The plan is a competitive base body plus these, not
    these instead of a base body.
+**Checked by v13 the same night (EXPERIMENTS_SEMPY "Slope check"):** late
+slope 2 -> 3B holdout: PAM 4 notebooks LR 2e-4 −0.045; 16 notebooks LR 2e-4
+−0.060; **16 notebooks LR 1.2e-3 −0.086**; T++ −0.081; Mamba-2 −0.079. The
+plateau is the layout AND the LR; with 16 notebooks at a high LR the body
+keeps pace (it starts worse: 3.537 at 1.2B, ends 3.284). v13 runs body × LR
+at 1.5B next. **So v14's LM tests use that body (16 notebooks + echo, high
+LR), not M1/M2.**
 Next for v14: after n9c and N10 land, pre-register N7 as an LM test (600M
 first as a signal, then ≥ 1.5B on the 6000), and design the sparse-key
 notebook (Willshaw) as the capacity unit.
