@@ -21,14 +21,7 @@ SKIP_FILES = frozenset({
     "check_layout.py",
 })
 
-KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {
-    "units.py": frozenset({
-        "_notebook_retention",   # N1: per-notebook fade [B,H,K,T] for the kernel
-        "_chunked_delta",        # N1: K notebooks batched into pam_delta_batched
-        "_fan",                  # N1: one tensor fanned out to the K notebooks
-        "_stepwise_delta",       # N1: K-notebook decode on fp32 notebooks
-    }),
-}
+KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {}   # N1's kernel boundaries left with N1 (9e0a3fd)
 
 
 def main() -> int:

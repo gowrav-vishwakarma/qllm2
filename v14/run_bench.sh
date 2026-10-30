@@ -15,7 +15,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/require_clean_tree.sh
 
-ARMS="${ARMS:-delta,echo,n1sum,n1gate,n1phase}"
+ARMS="${ARMS:-echo,tpp}"
 FAMILIES="${FAMILIES:-facts,bind,rebind}"
 TAG="${TAG:-b0}"
 STEPS="${STEPS:-6000}"

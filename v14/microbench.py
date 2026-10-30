@@ -25,13 +25,13 @@ length: extrapolation). Every arm trains on byte-identical data.
 Arms (all real arm, chrono + out_gate + delta):
     delta        the v13 memory without echo
     echo         + E1 echo: the current control body
-    n1sum / n1gate / n1phase   echo body with N1 (2 notebooks, sum/gate/phase)
     tpp          REFERENCE, not a candidate: Transformer++ (attention, O(T)) at
                  the same width and depth, MLP sized to echo's parameter count.
                  It calibrates the bench: what a model that can look back at
                  every token learns from the same data.
     (N6 arms op / opdiag / opdiag_ownq left with N6 after B1 run 2: 78e4354;
-     echo_tied left after v13 E2 failed at 600M: 5100fd7)
+     echo_tied left after v13 E2 failed at 600M: 5100fd7;
+     n1sum / n1gate / n1phase left with N1 after B0 run 3: 9e0a3fd)
 Optional suffixes: @<head_dim> (default 64), :L<n_layers> (default 4).
 """
 
@@ -269,9 +269,6 @@ def batch_tensors(docs, device, aux_weight: float = 0.0):
 ARMS = {
     'delta': dict(echo=False),
     'echo': dict(echo=True),
-    'n1sum': dict(echo=True, phase_states=2, phase_read='sum'),
-    'n1gate': dict(echo=True, phase_states=2, phase_read='gate'),
-    'n1phase': dict(echo=True, phase_states=2, phase_read='phase'),
     'tpp': dict(echo=True),          # the echo cfg, used only to match sizes (build_model)
 }
 

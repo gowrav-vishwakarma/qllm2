@@ -36,9 +36,10 @@ AGENTS.md). All launchers refuse a dirty tree. `v14/run_bench.sh` replaced `v14/
 
 ## Candidates in code (not yet judged)
 
+None live (2026-10-30): N6, echo_tied and N1 failed and were removed. Reference arm `tpp` (Transformer++) stays in the micro-bench.
+
 | id | idea | status | notebook section | flag / micro-bench arm |
 |---|---|---|---|---|
-| N1 | K delta notebooks whose reads interfere by rotation (v11 E3 on the lean body) | selftest PASS. B1 run 1 arm `n1phase` (ceiling tasks only). B0 run 2 invalid, so no judgement; descriptively turning cancelled the second notebook's lookup gain (n1phase 0.51 vs n1sum 0.79 on facts2). Decided by B0 run 3 and its stop rule | "N1" | `phase_states=2 phase_read=sum\|gate\|phase`; arms `n1sum`, `n1gate`, `n1phase` |
 
 
 Selftests: `.venv/bin/python -m v14.selftest` (CPU, minutes) and
@@ -54,6 +55,7 @@ None yet.
 |---|---|---|---|---|---|---|
 | N6 | operator memory: the state is an inferred per-channel rotation (circular mean of b·conj(a), a = W_in h_{t-1}, b = W_role ê(x_t)), applied to the next input q = W_in h_t | **FAIL** (B1 run 2). Replication not met: label_category mean op 0.427, opdiag 0.587 vs echo 0.471, need +0.15 (run 1's 1.00 was seed luck). Unseen rule parameters: op 0.037 vs echo 0.063 (all below chance). Rotation never beat the plain diagonal | "N6" | `85ecf02` (run 2), `5b1eb9d` (run 1) | `78e4354` | `TAG=b1r2 FAMILIES=rules ARMS=echo,op,opdiag,opdiag_ownq SAVE=1 EXTRA='--seed 7 --doc_seed0 50000000 --init_seed 1' bash v14/run_bench.sh` |
 | echo_tied | echo with one projection for query and key (W_q = W_k) | **FAIL** (v13 E2, 600M, M1 body, C1-ctl recipe, 2026-10-30): label_category 8-shot 0.365 vs C1-ctl 0.500 (d −0.135, bar +0.15); holdout 3.5298 vs 3.4743 (+0.055); recall 0.602 vs 0.825. The micro-bench effect (B1 run 4 P met: circuit in 4 of 4 seeds vs 0 of 5) did not transfer to real text | "B1" runs 2–4; v13 EXPERIMENTS_SEMPY "E2" | `d4e0f0d` (B1 run 4), `85ecf02` (run 2) | `5100fd7` (v13 flag: `26ef94a`) | `TAG=b1r4p1 FAMILIES=rules ARMS=echo,echo_tied SAVE=1 EXTRA="--seed 21 --doc_seed0 400000000 --init_seed 21" bash v14/run_bench.sh` |
+| N1 | K delta notebooks whose reads interfere by rotation (v11 E3 on the lean body); arms n1sum / n1gate / n1phase | **FAIL** (B0 run 3 stop rule, 2026-10-30): mean(facts2, facts4) @1024 n1phase 0.370 < n1sum 0.380; turning never helped in B0 runs 2–3; n1sum's run-2 partial lookup (facts2 0.79) did not reappear (0.49); B2 run 1 n1sum 0.731 vs echo 0.739 | "N1", "B0" | `bcfd88a` (B0 run 2), `bf59754` (B0 run 3) | `9e0a3fd` | `TAG=b0r3 ARMS=echo,n1sum,n1gate,n1phase,tpp AUX=0.1 SAVE=1 bash v14/run_bench.sh` |
 
 ## Folded or not built
 
