@@ -9,6 +9,16 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v13: past the trained context, PAM keeps the label SET, not the
+  mapping; no model's learning holds past 2048** (LCL, `7707c8c`).
+  label_category with the 8 examples spread to 4096 / 8192 tokens: PAM
+  0.25 / 0.20 = in-context chance (it knows which labels appeared, not which
+  item gets which); T++ 0.12 / 0.13 = candidate chance (lost the context).
+  Pre-registered "PAM beats T++ by ≥ 0.10 at 4096 and 8192": NOT met (+0.13
+  / +0.07). Rule tasks are at the floor for every model at every length.
+  *For v14:* score the LCL bar against IN-CONTEXT chance (0.25 at 8
+  shots), not candidate chance; a unit only "holds past 2048" if the
+  mapping survives. The collision fix (N7 / N9) is what should lift it.
 - **v13 + user: the nested version of the 2×O(1) memory: phase finds the
   region, SETTLING picks the best (design idea, refines the entry below).**
   User: the second O(1) should live inside the first ("first get the

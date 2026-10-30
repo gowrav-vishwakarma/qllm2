@@ -1,0 +1,9 @@
+=== c2m2b_main_b788731 rules 2026-10-30T06:03:07Z
+per task: {'label_category@0': 0.44, 'label_category@1024': 0.367, 'label_category@2048': 0.347, 'label_category@4096': 0.253, 'label_category@8192': 0.197, 'two_hop@0': 0.157, 'two_hop@1024': 0.12, 'two_hop@2048': 0.143, 'two_hop@4096': 0.117, 'two_hop@8192': 0.15}  mean 0.229
+=== c2m2b_main_b788731 b2 2026-10-30T06:06:01Z
+per task: {'shift_wide@0': 0.015, 'shift_wide@1024': 0.03, 'shift_wide@2048': 0.045, 'shift_wide@4096': 0.03, 'shift_wide@8192': 0.065, 'affine_map@0': 0.125, 'affine_map@1024': 0.055, 'affine_map@2048': 0.075, 'affine_map@4096': 0.045, 'affine_map@8192': 0.055}  mean 0.054
+=== tfs2b_main_b788731 rules 2026-10-30T06:07:58Z
+per task: {'label_category@0': 0.73, 'label_category@1024': 0.527, 'label_category@2048': 0.39, 'label_category@4096': 0.123, 'label_category@8192': 0.133, 'two_hop@0': 0.11, 'two_hop@1024': 0.097, 'two_hop@2048': 0.123, 'two_hop@4096': 0.097, 'two_hop@8192': 0.137}  mean 0.247
+=== tfs2b_main_b788731 b2 2026-10-30T06:10:45Z
+per task: {'shift_wide@0': 0.055, 'shift_wide@1024': 0.035, 'shift_wide@2048': 0.055, 'shift_wide@4096': 0.05, 'shift_wide@8192': 0.115, 'affine_map@0': 0.14, 'affine_map@1024': 0.135, 'affine_map@2048': 0.095, 'affine_map@4096': 0.04, 'affine_map@8192': 0.05}  mean 0.077
+=== c1m2b_main_7ae6f1f rules 2026-10-30T06:12:39Z

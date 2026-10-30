@@ -2997,3 +2997,48 @@ first), else the 6000 after r3b.
   0.05).
 - PASS → G1 goes into the reference (M2 port at 600M, then 3B). FAIL →
   record and remove G1, try key centering.
+
+### LCL result (2026-10-30, 4090, probe `7707c8c`): learning does NOT hold past the trained context for any model; past 2048 PAM keeps the label SET (in-context chance), Transformer++ loses even that
+
+label_category, 8 shots (in-context chance 0.25 = picking any of the 4
+labels shown; candidate chance 0.125), 300 trials, L = 0 / 1024 / 2048 /
+4096 / 8192:
+
+| model | L=0 | 1024 | 2048 | 4096 | 8192 |
+|---|---|---|---|---|---|
+| PAM M2 two stages (c2m2) | 0.44 | 0.37 | 0.35 | 0.25 | 0.20 |
+| Transformer++ two stages (tfs2) | 0.73 | 0.53 | 0.39 | 0.12 | 0.13 |
+| PAM c1m2 (aptitude) | 0.39 | 0.36 | 0.33 | 0.27 | 0.19 |
+| Transformer++ aptitude (tfc1) | 0.60 | 0.45 | 0.38 | 0.15 | 0.13 |
+| PAM M2 one stage | 0.33 | 0.31 | 0.30 | 0.25 | 0.18 |
+| Transformer++ one stage (tfs1) | 0.68 | 0.59 | 0.49 | 0.16 | 0.15 |
+| PAM M1 one / two stages | 0.38 / 0.51 | 0.37 / 0.37 | 0.32 / 0.33 | 0.26 / 0.26 | 0.19 / 0.19 |
+| Transformer++ 3B | 0.54 | 0.55 | 0.44 | 0.13 | 0.14 |
+| PAM 3B | 0.51 | 0.23 | 0.20 | 0.14 | 0.12 |
+
+(Mamba-2 3B not run: mamba_ssm is not installed on the 4090 box.)
+
+**Rules:**
+- *Learning holds past the trained context* (4096 and 8192 ≥ own 2048 −
+  0.10): **no model.** PAM M2 two stages meets it at 4096 (0.25 vs 0.25
+  needed) and misses at 8192 (0.20).
+- *PAM beats Transformer++ by ≥ 0.10 at both 4096 and 8192* on matched
+  recipes: 4096 +0.13 / +0.12 / +0.09, 8192 +0.07 / +0.06 / +0.03 (two
+  stages / aptitude / one stage) → **NOT met** (8192 misses). 3B: tie at
+  chance.
+
+**Reading.** Past 2048, PAM sits at in-context chance (0.25): it still
+knows WHICH labels were in the document but not which item maps to which.
+Transformer++ drops to candidate chance (0.125): it loses the context
+entirely. So PAM's long-context edge is memory of the context, not
+learning from it; the mapping is lost to the same key collisions found in
+the label_category diagnosis (filler adds distance, the examples still
+collide). Even inside 2048, filler costs both models (PAM 0.44 → 0.35,
+Transformer++ 0.73 → 0.39). PAM 3B (old 16-notebook body, one stage)
+collapses with any filler (0.51 → 0.23 at 1024).
+
+**Rule tasks** (letter_shift, number_step, shift_wide(_new),
+step_wide(_new), affine_map, two_hop): at the floor (≤ 0.16, mostly below
+0.125) for every model at every length, so they cannot show a long-context
+edge at 600M without training on such tasks: the B2-in-training 600M pair
+(planned) is the way to measure inference past 2048.
