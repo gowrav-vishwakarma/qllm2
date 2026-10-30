@@ -18,6 +18,13 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-30 02:16Z (07:46 IST): c2m2 DONE — KEEP; reference = c1m2** (tie-break:
+  holdout within 0.005, c1m2 recall +0.022 > 0.02). c2m2: holdout 3.4497,
+  WikiText 65.57 (beats T++ two-stage 66.20), recall 0.848. The s3 chain
+  (tfc1) started 02:17Z, ETA ~03:50Z = 09:20 IST; then the 6000 → v14.
+  B2 probe for c2m2 running (tmux `b2probe`, worktree ~/Development/qllm_probe).
+  6000 disk 11 GB.
+
 * **2026-10-30 00:18Z (05:48 IST): tfs2 DONE — S2 fairness rules MET**: two-stage
   M1 beats two-stage T++ on holdout (−0.016) and recall (+0.122; the win is
   past 2048 tokens, ≤ 2048 ties); T++ better on WikiText and label_category.

@@ -2728,3 +2728,46 @@ values are (v14's difficulty control).
 - Weak ordering: 3B > 600M; at 600M the aptitude-trained c1m2 is highest
   (0.071; the aptitude mix has GSM8K/AQuA arithmetic), Transformer++ ≈ M2 >
   M1 ≈ C1-ctl. All differences are small next to the distance to chance.
+
+## S2 on M2 result + next reference (2026-10-30, 6000, `b788731`)
+
+`c2m2a_pre` 00:18Z → 00:47Z, `c2m2b_main` → 02:16Z (07:46 IST). C1-ctl's
+recipe (no aptitude) on the M2 body.
+
+| model (600M) | holdout | WikiText | recall 63-cell (a1/a4/a8) | ≤ 2048 / > 2048 tok | PG-19 4–8k | learning (label_cat 2/4/8) | tok/s |
+|---|---|---|---|---|---|---|---|
+| M2 one stage | 3.4697 | 68.84 | 0.522 (0.774/0.596/0.196) | 0.569 / 0.46 | 0.0414 | 0.185 (0.59/0.61/0.31) | 92.6K |
+| C1-ctl (M1, two stages) | 3.4743 | 69.86 | 0.825 (0.879/0.865/0.732) | 0.917 / 0.597 | 0.0410 | 0.197 (0.62/0.71/0.55) | 110.2K |
+| **c2m2 (M2, two stages)** | 3.4497 | **65.57** | 0.848 (0.945/0.849/0.749) | 0.899 / **0.718** | 0.0440 | 0.185 (0.60/0.71/0.41) | 92.3K |
+| **c1m2 (M2, two stages + aptitude)** | **3.4473** | 65.74 | **0.870** (0.945/0.890/0.775) | **0.939** / 0.697 | 0.0436 | 0.187 (0.49/0.58/0.38) | 92.6K |
+| Transformer++ two stages (tfs2) | 3.4907 | 66.20 | 0.703 (0.705/0.733/0.671) | 0.926 / 0.147 | −1.223 | 0.217 (0.70/0.84/0.73) | 133.5K |
+| c2m2 stage A (120M) | 3.8952 | 124.32 | 0.393 | 0.441 / 0.274 | 0.0448 | | |
+
+**c2m2 vs its rule (KEEP over M2 if holdout ≤ 3.4797 AND recall ≥ 0.622):
+KEEP** (3.4497, 0.848).
+
+**Next reference (rule + tie-break fixed before c2m2 ran):** candidates with
+recall ≥ 0.70: C1-ctl 3.4743, c1m2 3.4473, c2m2 3.4497. Lowest holdout =
+c1m2; c2m2 is within 0.005 (Δ 0.0024), so the higher recall wins unless
+recall is also within 0.02: c1m2 0.870 vs c2m2 0.848, Δ 0.022 > 0.02 →
+**c1m2 (M2 body + aptitude two-stage recipe) is the reference.** The margin
+is thin (probe SE ≈ 0.01); c2m2 is equal on LM and the simpler recipe.
+
+**What the aptitude data does on M2** (c1m2 − c2m2, matched recipe and
+body): holdout −0.002, WikiText +0.2, recall +0.022 (inside 2048 +0.040,
+past it −0.021), learning probe equal, label_cat 8-shot −0.03. Free on LM
+at the final step (on M1 it cost +0.026 at step 9766, measured early), and
+a small recall gain. Not a learning gain.
+
+**M2 body vs M1 body on the same two-stage recipe** (c2m2 − C1-ctl): holdout
+−0.025, WikiText −4.3 ppl, recall +0.023 (past 2048 +0.12). The M2 body
+gain grows with the two-stage recipe (one stage: −0.021, WikiText −0.6).
+
+**Head-to-head with Transformer++ on the same recipe (c2m2 vs tfs2;
+scoreboard thresholds, not a separate pre-registered rule):** holdout
+−0.041 (< −0.01: beats), WikiText 65.57 vs 66.20 (−0.0096 nats: ahead, under
+the 0.01 line), recall +0.145 (≥ +0.05: beats; inside 2048 −0.027, past it
++0.57). The two-stage M2 is the first PAM model ahead of Transformer++ on
+both holdout and WikiText at equal data. Transformer++ still leads the
+learning probe (0.217 vs 0.185; label_cat 8-shot 0.73 vs 0.41) and is
+1.45× faster per token at T = 2048.
