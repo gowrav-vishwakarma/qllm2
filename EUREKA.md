@@ -7,6 +7,23 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-10-31
+
+- **v15 (new lane, "qllm2-59"): a third species, built from the unit up, with
+  no attention, no SSM, no PAM, no phases.** Grove: a unit is an organism
+  with a *share* of a conserved budget (the K trees of a grove compete; shares
+  are the softmax of accumulated evidence, i.e. a Bayesian posterior over K
+  hypotheses), a *root* it grows toward the inputs it wins and a *fruit* of
+  what followed them; growth happens in seasons (every C tokens), so training
+  is parallel and decode == prefill (selftest 1e-15). Forgetting is relative
+  (outcompeted), with no decay constant on the state. First signal: a 2-layer
+  Grove learns in-context lookup on redrawn pairs (0.98, chance 0.125) only
+  after the competition was made sharp (cosine × temperature) and the growth
+  decisive (1 − e^{−α·mass}). *For v13/v14:* the read that "picks" is a
+  softmax over a small fixed set of units, not a settling of a matrix; if
+  N9's settling stalls, a K-slot competitive read is the cheap alternative.
+  Design + bars: `v15/EXPERIMENTS_V15.md`.
+
 ## 2026-10-30
 
 - **v14 meditation 2: the gap is the body's slope, and the prime suspect is state
