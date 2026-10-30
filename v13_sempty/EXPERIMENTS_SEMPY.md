@@ -3219,3 +3219,23 @@ lesson: LM effects need ≥ 1.5B tokens).
 - Reported: accuracy by pairs back (recency), key cosine at label
   positions, LCL label_category past 2048 vs in-context chance 0.25.
 - PASS → N9a's LM effect gets a ≥ 1.5B-token run before any bar-2 claim.
+
+### Slope check from the 3B logs (2026-10-30 23:05 IST): the plateau tracks memory layout AND learning rate
+
+| model (3B tokens, own cosine) | 1.2B | 2.0B | 3.0B | 1.2 → 3B | 2 → 3B |
+|---|---|---|---|---|---|
+| PAM M2, 4 notebooks (~1.2 MB), LR 2e-4 (r3b) | 3.447 | 3.354 | 3.309 | −0.138 | **−0.045** |
+| PAM 16 notebooks (~3.7 MB), LR 2e-4 | 3.461 | 3.333 | 3.273 | −0.188 | −0.060 |
+| PAM 16 notebooks, LR 1.2e-3 | 3.537 | 3.371 | 3.284 | −0.253 | **−0.086** |
+| Transformer++ | 3.430 | 3.288 | 3.206 | −0.224 | −0.081 |
+| Mamba-2 (13.4 MB, 17 mixing layers) | 3.370 | 3.243 | 3.164 | −0.206 | −0.079 |
+
+- At the same LR (2e-4), more mixing / state = steeper late slope (4 →
+  16 notebooks: −0.045 → −0.060).
+- At LR 1.2e-3 the 16-notebook body keeps improving as fast as the
+  baselines (−0.086 vs −0.081 / −0.079), but starts worse (high-LR early
+  penalty), so it ends 3.284. LR 2e-4 bought a good start and a flat finish.
+- r3b had BOTH flatteners: the 4-notebook body and LR 2e-4. **The slope test
+  should cross body × LR**: 16-notebook + echo + two stages vs M2, at LR
+  1.2e-3 (and a mid LR, 6e-4), read by the 600M → 1.5B drop and the late
+  slope, not by the 600M number.
