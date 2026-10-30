@@ -1057,6 +1057,17 @@ diagnosis):** "first strong alignment, then pick the best one."
 **Relation to N7:** N7's exact hash is the hard limit of step 1 (no
 similarity); N9 is the learned version that can also match by meaning.
 
+**Pattern separation, measured (v13 offline, c2m2's real echo keys at label
+positions, 60 prompts, fixed random expansion per head, no training).** Mean
+cosine between keys of different pairs, label-label / random positions:
+dense 0.671 / 0.303; mean-centred 0.462 / −0.005; sparse (D 2048, top 32)
+0.297 / 0.114; **centred then sparse 0.166 / 0.053** (~4× less overlap, so the
+delta erase wipes ~4× less of earlier pairs; a learned expansion should do
+better). v13 tests it on the existing echo as S1 (their lane). **For N9
+(hippocampus, step back / meditation): DG step = centre + k-WTA expansion,
+then CA3 step = settling; phase keys become optional.** Build after N7 /
+N9a land, without duplicating S1 (N9 adds the completion step).
+
 **N9b dropped before any code (2026-10-30).** v13's offline check on c2m2's
 embedding table: raw embeddings barely separate categories (cos same vs
 different category 0.57 vs 0.45 for E[item]+E[is]); 2-bank sign-bit LSH puts
