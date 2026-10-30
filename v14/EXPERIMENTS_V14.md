@@ -949,7 +949,14 @@ truck is"), PAM copies poorly: M2 c2m2 0.58 / 0.73 / 0.54 and M1 C1-ctl
 scores 0.94 on the recall probe in its trained recall-doc format: its copy
 skill is format-bound. An n-gram store does this copy by construction, in
 any format. **N7's bar at 600M (to freeze before the run): label_exact ≥
-T++ inside AND past 2048 tokens, recall and holdout not worse.** v13's data
+T++ inside 2048 tokens, and past 2048 (examples spread to 4096 / 8192, the
+v13 LCL format) ≥ in-context chance + 0.15, i.e. the item -> label mapping
+survives; recall and holdout not worse.** Why the second form: v13's LCL
+(`4bc181d`) shows that past 2048 PAM keeps the label SET but loses the
+mapping (label_category 0.25 / 0.20 at 4096 / 8192 = in-context chance 0.25),
+while T++ loses the context entirely (0.12 / 0.13 = candidate chance). So
+"≥ T++" past 2048 is trivially met and says nothing; only beating in-context
+chance shows the mapping held. Exact keys that never fade are N7's case. v13's data
 lever (generic repeated-text / ICL data) is complementary.
 
 **Why PAM's lookup fails: key collisions (v13 diagnosis, `77efe61`).** Not
@@ -1083,7 +1090,8 @@ head to head, after N7 micro run 1:
 - Settling (step 2) is built on N9a only if N9a beats N9b on label_category.
   N8's gate goes on whichever store wins.
 **Bars (v13's proposal, freeze before the run):** label_exact ≥ T++ (0.88),
-label_category ≥ 0.73, accuracy 5 pairs back ≥ 0.70, LCL past 2048; recall
+label_category ≥ 0.73, accuracy 5 pairs back ≥ 0.70, LCL past 2048 ≥
+in-context chance + 0.15 (the mapping, not the label set; see N7); recall
 and holdout not worse. Micro first, on the N7 bench (N7 as the exact-copy
 control).
 
