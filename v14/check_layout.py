@@ -22,7 +22,13 @@ SKIP_FILES = frozenset({
     "ngram.py",          # N7: integer hashing / sort / scatter (declared boundary, like v13 cond_mem.py)
 })
 
-KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {}   # N1's kernel boundaries left with N1 (9e0a3fd)
+KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {   # N1's kernel boundaries left with N1 (9e0a3fd)
+    "units.py": frozenset({
+        "_echo_read",        # N9a: v13's echo read (raw-torch boundary there too) + content phases
+        "_content_phase",    # N9a: integer ids -> angles (masked gather over -1 padding)
+        "_turn",             # N9a: channel-pair rotation of raw q / k
+    }),
+}
 
 
 def main() -> int:

@@ -7,7 +7,10 @@
 3. N7 start       N7 on (zero-init readers) is bit-identical to N7 off.
 4. N7 decode      full-sequence logits == token-by-token decode with live readers.
 5. N7 learns      every reader parameter gets a gradient.
-6. B2 splits       held-out rule parameters appear only in the ``_new`` tasks,
+6. N9a           content-phase echo: off at init == echo; decode == prefill
+                   with live phases; "X is" template keys separate by X
+                   (collision check) and the same X stays aligned; learns.
+7. B2 splits       held-out rule parameters appear only in the ``_new`` tasks,
                    trained ones only in the base tasks; answers stay out of
                    the context; the nearest-parameter decoy is a candidate.
 (Tests of removed units: N6 operator memory at 78e4354; tied echo at 5100fd7;
@@ -156,6 +159,49 @@ def test_n7_learns():
     print("  N7: every reader parameter gets a gradient")
 
 
+def _n9a(seed=0):
+    torch.manual_seed(seed)
+    return V14LM(_cfg(echo_phase_lags=3)).eval()
+
+
+def test_n9a():
+    """Content-phase echo keys: identity at init, decode == prefill, collisions separate."""
+    torch.manual_seed(0)
+    echo = V14LM(_cfg()).eval()
+    model = _n9a(0)
+    ids = torch.randint(0, 512, (2, 60))
+    diff0 = (_logits(echo, ids) - _logits(model, ids)).abs().max().item()
+    assert diff0 == 0.0, f"N9a at init != echo: {diff0:.3e}"
+    with torch.no_grad():
+        model.phase_proj.normal_(std=0.3)
+        torch.nn.init.normal_(model.echo_out.weight, std=0.1)
+    torch.manual_seed(5)
+    diff = _decode_diff(model, 150)
+    assert diff < ATOL, f"N9a prefill != decode: {diff:.3e}"
+    # collision check: the same template key turned by the windows (X_i, is)
+    # of different nouns X_i must spread apart; the same X must stay aligned
+    is_ = 7
+    xs = list(range(100, 140))
+    win = torch.tensor([[x, is_] for x in xs])                       # [40, 2]: windows ending at "is"
+    with torch.no_grad():
+        alpha = model._content_phase(win)[:, -1]                     # [40, planes]
+        key = torch.randn(1, 1, alpha.shape[-1] * 2).expand(len(xs), 1, -1)
+        turned = model._turn(key, alpha[:, None])[:, 0]
+        turned = torch.nn.functional.normalize(turned.reshape(len(xs), -1), dim=-1)
+        cos = turned @ turned.t()
+        off = cos[~torch.eye(len(xs), dtype=torch.bool)].abs().mean().item()
+        again = model._turn(key[:1], model._content_phase(win[:1])[:, -1][:, None])[:, 0]
+        same = torch.nn.functional.cosine_similarity(again.reshape(1, -1), turned[:1]).item()
+    assert off < 0.3 and same > 0.999, f"N9a collision check: different-X |cos| {off:.2f}, same-X {same:.3f}"
+    model.train()
+    out = model(torch.randint(0, 512, (2, 40)))[0]
+    out.float().pow(2).mean().backward()
+    g = model.phase_proj.grad
+    assert g is not None and g.abs().max().item() > 0, "N9a: no gradient on the phases"
+    print(f"  N9a: init == echo; decode == prefill {diff:.2e}; template keys of 40 nouns |cos| {off:.2f} "
+          f"(was 1.0 unturned), same noun {same:.3f}; phases learn")
+
+
 def _b2_param(task, text):
     """The hidden parameter of a B2 prompt (k, d, or the affine b)."""
     lines = text.split('\n')[1:]
@@ -197,7 +243,7 @@ def test_b2_splits(seeds=40):
 def main():
     torch.set_num_threads(8)
     for test in (test_off_is_v13, test_n7_lookup, test_n7_off_at_init,
-                 test_n7_decode_matches_prefill, test_n7_learns, test_b2_splits):
+                 test_n7_decode_matches_prefill, test_n7_learns, test_n9a, test_b2_splits):
         print(f"{test.__name__}:")
         test()
     print("ALL PASS")

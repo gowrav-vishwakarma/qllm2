@@ -1028,6 +1028,35 @@ diagnosis):** "first strong alignment, then pick the best one."
 **Relation to N7:** N7's exact hash is the hard limit of step 1 (no
 similarity); N9 is the learned version that can also match by meaning.
 
+**N9b dropped before any code (2026-10-30).** v13's offline check on c2m2's
+embedding table: raw embeddings barely separate categories (cos same vs
+different category 0.57 vs 0.45 for E[item]+E[is]); 2-bank sign-bit LSH puts
+same-category pairs in one bucket no more often than different ones (8 bits
+OR 0.09 vs 0.04; 16 bits ≈ 0 both). So N9b would only repeat N7's exact copy.
+Fuzzy matching needs a learned similarity before the pick.
+
+**N9a code (2026-10-30, branch `n9a`, selftest ALL PASS).** `echo_phase_lags`
+(arm `echo_phase` = 3 lags): echo's q and k turned per channel pair by
+alpha_t = Σ_j W_j rms(E[x_{t-j}]) (query: window ending at t; key: window
+ending at t-1), W zero-init (+24.6k params at the micro size). Selftest: init
+== echo bit for bit; decode == prefill 4.4e-5; collision check: one template
+key turned by 40 "X is" windows has mean |cos| 0.09 between different X
+(1.0 unturned) and 1.000 for the same X; phases get gradients.
+
+**N9a micro run 1 (PRE-REGISTERED 2026-10-30 ~13:25 IST, before any number).**
+Same bench, training tasks and seeds as N7 micro run 1 (pairs i = `--seed 6i
+--doc_seed0 (i+12)·100M --init_seed 6i`), tag `n9ar1p<i>`. Arms echo vs
+echo_phase (echo rerun in each pair as the paired control).
+- **Bar Xa (primary, label_exact_new):** d = echo_phase − echo, mean over 2 /
+  4 / 8 shots; met if mean(d) ≥ +0.15 AND ≥ 2·SD over the 3 pairs.
+- **Guard G:** B2 held-out mean, echo_phase ≥ echo − 0.05.
+- **Reported:** label_category (trained here; the fuzzy-match signal that
+  decides whether settling, step 2, is needed), label_exact, repeat_copy;
+  N7's echo_n7 from N7 run 1 at the same seeds as the exact-copy reference.
+- **Next:** Xa met and label_category up: step 1 works, and settling is
+  only built if a gap to tpp remains on label_category. Xa not met: the phases
+  do not reach the read at this size; check the learned angles before closing.
+
 **Refined (user via v13, 2026-10-30 ~13:00): nested, not parallel.** "Get the
 phase, then a memory learned in that phase picks the best." Two facts: (1)
 more phase or more state only adds address bits, and our collisions come

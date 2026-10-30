@@ -19,6 +19,12 @@ class V14Config(PAMConfig):
     ngram_orders: tuple = ()
     ngram_slots: int = 1 << 16
     ngram_layers: tuple = (0, -1)
+    # N9a content-phase echo keys (step 1 of the nested 2xO(1) memory). Echo's
+    # query and key are turned, per channel pair, by angles from the last
+    # echo_phase_lags tokens (alpha_t = sum_j W_j E[x_{t-j}], W_j zero-init):
+    # the query uses the window ending at t, the key the window ending at t-1,
+    # so "X is" only aligns with an earlier "X is". 0 = off (plain echo).
+    echo_phase_lags: int = 0
 
 
 def from_pam(cfg: PAMConfig, **overrides) -> V14Config:

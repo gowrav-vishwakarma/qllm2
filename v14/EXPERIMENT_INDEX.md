@@ -64,7 +64,7 @@ None yet.
 | N2 | phase-modulated activation (magnitude sets phase), complex arm only | planned; flag already in v13_sempty (`activation='phase_mod'`) | "N2" |
 | N3 | formula-weight neuron `W(x)x` | **folded into N2**: `U·(c(x)⊙Vᵀx)` is a GLU-gated bottleneck, nothing new to test | "N3" |
 | N7 | in-context n-gram memory: bounded hash table of (last n tokens -> next token), written while reading, read as an extra input; exact lookup that does not fade (user idea) | **in code** (`83f49dc`, selftest PASS); micro run 1 (echo vs echo_n7 vs tpp, 3 pairs, bar X on label_exact_new, guard G on B2) pre-registered | "N7" | `ngram_orders=(2,3)`; arm `echo_n7` |
-| N9 | phase-aligned dual memory (user's 2×O(1)): keys/queries rotated by learned content phases of the last few tokens; two independent phase banks voting by product | design only (2026-10-30) | "N9" |
+| N9 | nested 2×O(1) memory (user): step 1 content-phase keys (N9a), step 2 settling; N9b (LSH over embeddings) dropped before code (no fuzzy separation in raw embeddings) | **N9a in code** (selftest PASS: template keys |cos| 1.0 -> 0.09); micro run 1 (echo vs echo_phase, 3 pairs, bar Xa on label_exact_new) pre-registered, queued after N7 run 1 | "N9" | `echo_phase_lags=3`; arm `echo_phase` |
 | N8 | self-opened memory: write strength set by the body's own maturity (prediction confidence) instead of a fixed two-stage cut (handed over by v13) | design only (2026-10-30) | "N8" |
 | N4 | living neuron: per-unit fast weight, written by surprise | design only | "N4" |
 | N5 | resonant binding: oscillator phases as binding tags | design only | "N5" |
