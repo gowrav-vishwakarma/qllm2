@@ -18,6 +18,13 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 04:20 IST: 6000 slot given to v14's n9th** (27M micro, ~7 GB, 3-4 h, from
+  `~/Development/qllm_v14`, its own tmux): runs beside r3c + b2m, then lbp. Limits agreed:
+  ≤ 8 GB VRAM, no checkpoints on the root disk (14 GB free), pause it if b2m/r3c tok/s drops
+  > 30 %. v14 note for the "best package": N9a loses on never-trained words at 8 shots
+  (label_*_new@8 0.56-0.98 vs echo 0.95-1.00), so N9a joins only if n9r replicates AND it
+  passes an untrained-word check.
+
 * **2026-10-31 04:05 IST: B2 pair vs T++ MET in both seeds; Mamba-2 arm next.** b2p2 (seed 43):
   `_new` mean 0.944 vs T++ 0.734 (seed 42 was 0.991); affine `_new` @4096 0.905 (T++ 0.45),
   @8192 0.61. Holdout 3.4800, recall 0.707 (> 2048 0.474). EXPERIMENTS "B2 pair — seed-43
