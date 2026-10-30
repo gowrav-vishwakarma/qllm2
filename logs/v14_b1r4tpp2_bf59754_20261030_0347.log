@@ -1,0 +1,69 @@
+B0 micro-bench @ bf59754: 6000 steps x B16, lr 0.0003, eval ctx (1024, 4096, 8192), 16 docs x 3 positions x 4 queries per cell, aux_weight 0.0, families rules, seed 22, init_seed 22, doc_seed0 500000000
+
+--- arm tpp@hd64L4 ---
+/home/ubuntu/Development/qllm_v14/v14/microbench.py:452: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"  [{label}] step {step:5d}/{len(plan)} L={L:5d} loss={float(loss):.4f} "
+  [tpp@hd64L4] step     1/6000 L= 1024 loss=10.9043 | 28,035 tok/s
+  [tpp@hd64L4] step   250/6000 L= 1024 loss=1.9700 | 233,651 tok/s
+  [tpp@hd64L4] step   500/6000 L=  512 loss=0.8457 | 237,747 tok/s
+  [tpp@hd64L4] step   750/6000 L= 1024 loss=0.7407 | 239,333 tok/s
+  [tpp@hd64L4] step  1000/6000 L= 1024 loss=0.6159 | 241,149 tok/s
+  [tpp@hd64L4] step  1250/6000 L=  512 loss=0.5545 | 240,669 tok/s
+  [tpp@hd64L4] step  1500/6000 L=  512 loss=0.4460 | 239,764 tok/s
+  [tpp@hd64L4] step  1750/6000 L=  512 loss=0.5112 | 240,615 tok/s
+  [tpp@hd64L4] step  2000/6000 L=  512 loss=0.6044 | 239,473 tok/s
+  [tpp@hd64L4] step  2250/6000 L=  512 loss=0.5146 | 239,971 tok/s
+  [tpp@hd64L4] step  2500/6000 L= 1024 loss=0.5159 | 239,031 tok/s
+  [tpp@hd64L4] step  2750/6000 L=  512 loss=0.5204 | 239,529 tok/s
+  [tpp@hd64L4] step  3000/6000 L= 1024 loss=0.4480 | 238,373 tok/s
+  [tpp@hd64L4] step  3250/6000 L= 1024 loss=0.4523 | 238,926 tok/s
+  [tpp@hd64L4] step  3500/6000 L=  512 loss=0.4545 | 239,374 tok/s
+  [tpp@hd64L4] step  3750/6000 L= 1024 loss=0.4767 | 238,055 tok/s
+  [tpp@hd64L4] step  4000/6000 L=  512 loss=0.5500 | 238,469 tok/s
+  [tpp@hd64L4] step  4250/6000 L= 1024 loss=0.4539 | 238,837 tok/s
+  [tpp@hd64L4] step  4500/6000 L=  512 loss=0.3893 | 239,198 tok/s
+  [tpp@hd64L4] step  4750/6000 L= 1024 loss=0.4661 | 238,037 tok/s
+  [tpp@hd64L4] step  5000/6000 L=  512 loss=0.5164 | 238,340 tok/s
+  [tpp@hd64L4] step  5250/6000 L=  512 loss=0.4648 | 238,542 tok/s
+  [tpp@hd64L4] step  5500/6000 L=  512 loss=0.4246 | 238,819 tok/s
+  [tpp@hd64L4] step  5750/6000 L= 1024 loss=0.5015 | 237,665 tok/s
+  [tpp@hd64L4] step  6000/6000 L= 1024 loss=0.4917 | 237,865 tok/s
+  [tpp@hd64L4] trained 27.6M params in 310s (52 ms/step)
+== tpp@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           0.84    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        0.50    0.52    0.25
+two_hop               0.50    0.26    0.11
+letter_shift_ood      0.00    0.00    0.00
+number_step_ood       0.21    0.45    0.16
+label_marker          0.50    0.48    0.24
+label_marker_new      0.49    0.51    0.25
+shift_wide            0.34    0.32    0.35
+step_wide             0.48    0.60    0.51
+affine_map            0.19    0.20    0.18
+shift_wide_new        0.12    0.13    0.14
+step_wide_new         0.36    0.48    0.37
+affine_map_new        0.17    0.19    0.19
+
+================================================================
+== tpp@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           0.84    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        0.50    0.52    0.25
+two_hop               0.50    0.26    0.11
+letter_shift_ood      0.00    0.00    0.00
+number_step_ood       0.21    0.45    0.16
+label_marker          0.50    0.48    0.24
+label_marker_new      0.49    0.51    0.25
+shift_wide            0.34    0.32    0.35
+step_wide             0.48    0.60    0.51
+affine_map            0.19    0.20    0.18
+shift_wide_new        0.12    0.13    0.14
+step_wide_new         0.36    0.48    0.37
+affine_map_new        0.17    0.19    0.19
+

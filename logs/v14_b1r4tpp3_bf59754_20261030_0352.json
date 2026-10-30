@@ -1,0 +1,211 @@
+{
+ "commit": "bf59754",
+ "args": {
+  "arms": "tpp",
+  "steps": 6000,
+  "batch": 16,
+  "lr": 0.0003,
+  "trials": 16,
+  "log_every": 250,
+  "seed": 23,
+  "device": "cuda",
+  "ctxs": "1024,4096,8192",
+  "families": "rules",
+  "aux_weight": 0.0,
+  "json": "logs/v14_b1r4tpp3_bf59754_20261030_0352.json",
+  "init_seed": 23,
+  "doc_seed0": 600000000,
+  "save_dir": "checkpoints_v14/b1r4tpp3_bf59754_20261030_0352",
+  "rule_tasks": "letter_shift,number_step,reverse3,label_category,two_hop",
+  "resume": false
+ },
+ "arms": {
+  "tpp@hd64L4": {
+   "params": 27559680,
+   "train_s": 306.9291801452637,
+   "ms_per_step": 51.154863357543945,
+   "results": {
+    "letter_shift2": {
+     "acc": 1.0,
+     "n": 1024
+    },
+    "letter_shift4": {
+     "acc": 1.0,
+     "n": 672
+    },
+    "letter_shift8": {
+     "acc": 1.0,
+     "n": 400
+    },
+    "number_step2": {
+     "acc": 1.0,
+     "n": 1632
+    },
+    "number_step4": {
+     "acc": 1.0,
+     "n": 1168
+    },
+    "number_step8": {
+     "acc": 0.998641304347826,
+     "n": 736
+    },
+    "reverse32": {
+     "acc": 1.0,
+     "n": 572
+    },
+    "reverse34": {
+     "acc": 1.0,
+     "n": 358
+    },
+    "reverse38": {
+     "acc": 1.0,
+     "n": 208
+    },
+    "label_category2": {
+     "acc": 0.5027573529411765,
+     "n": 1088
+    },
+    "label_category4": {
+     "acc": 0.5184659090909091,
+     "n": 704
+    },
+    "label_category8": {
+     "acc": 0.25961538461538464,
+     "n": 416
+    },
+    "two_hop2": {
+     "acc": 0.5078125,
+     "n": 512
+    },
+    "two_hop4": {
+     "acc": 0.25259515570934254,
+     "n": 289
+    },
+    "two_hop8": {
+     "acc": 0.11875,
+     "n": 160
+    },
+    "letter_shift_ood2": {
+     "acc": 0.0,
+     "n": 1024
+    },
+    "letter_shift_ood4": {
+     "acc": 0.0,
+     "n": 672
+    },
+    "letter_shift_ood8": {
+     "acc": 0.0,
+     "n": 400
+    },
+    "number_step_ood2": {
+     "acc": 0.4319852941176471,
+     "n": 1632
+    },
+    "number_step_ood4": {
+     "acc": 0.4392123287671233,
+     "n": 1168
+    },
+    "number_step_ood8": {
+     "acc": 0.24048913043478262,
+     "n": 736
+    },
+    "label_marker2": {
+     "acc": 0.33370535714285715,
+     "n": 896
+    },
+    "label_marker4": {
+     "acc": 0.3923611111111111,
+     "n": 576
+    },
+    "label_marker8": {
+     "acc": 0.2976190476190476,
+     "n": 336
+    },
+    "label_marker_new2": {
+     "acc": 0.35379464285714285,
+     "n": 896
+    },
+    "label_marker_new4": {
+     "acc": 0.3836805555555556,
+     "n": 576
+    },
+    "label_marker_new8": {
+     "acc": 0.23511904761904762,
+     "n": 336
+    },
+    "shift_wide2": {
+     "acc": 0.314453125,
+     "n": 1024
+    },
+    "shift_wide4": {
+     "acc": 0.3229166666666667,
+     "n": 672
+    },
+    "shift_wide8": {
+     "acc": 0.3525,
+     "n": 400
+    },
+    "step_wide2": {
+     "acc": 0.6550245098039216,
+     "n": 1632
+    },
+    "step_wide4": {
+     "acc": 0.6695205479452054,
+     "n": 1168
+    },
+    "step_wide8": {
+     "acc": 0.53125,
+     "n": 736
+    },
+    "affine_map2": {
+     "acc": 0.162109375,
+     "n": 1024
+    },
+    "affine_map4": {
+     "acc": 0.18154761904761904,
+     "n": 672
+    },
+    "affine_map8": {
+     "acc": 0.1525,
+     "n": 400
+    },
+    "shift_wide_new2": {
+     "acc": 0.1259765625,
+     "n": 1024
+    },
+    "shift_wide_new4": {
+     "acc": 0.15773809523809523,
+     "n": 672
+    },
+    "shift_wide_new8": {
+     "acc": 0.1425,
+     "n": 400
+    },
+    "step_wide_new2": {
+     "acc": 0.41299019607843135,
+     "n": 1632
+    },
+    "step_wide_new4": {
+     "acc": 0.5222602739726028,
+     "n": 1168
+    },
+    "step_wide_new8": {
+     "acc": 0.391304347826087,
+     "n": 736
+    },
+    "affine_map_new2": {
+     "acc": 0.2275390625,
+     "n": 1024
+    },
+    "affine_map_new4": {
+     "acc": 0.20982142857142858,
+     "n": 672
+    },
+    "affine_map_new8": {
+     "acc": 0.1875,
+     "n": 400
+    }
+   }
+  }
+ }
+}

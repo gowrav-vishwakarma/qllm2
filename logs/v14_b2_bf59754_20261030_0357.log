@@ -1,0 +1,215 @@
+B0 micro-bench @ bf59754: 6000 steps x B16, lr 0.0003, eval ctx (1024, 4096, 8192), 16 docs x 3 positions x 4 queries per cell, aux_weight 0.0, families rules, seed 31, init_seed 31, doc_seed0 700000000
+
+--- arm tpp@hd64L4 ---
+/home/ubuntu/Development/qllm_v14/v14/microbench.py:452: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"  [{label}] step {step:5d}/{len(plan)} L={L:5d} loss={float(loss):.4f} "
+  [tpp@hd64L4] step     1/6000 L=  512 loss=10.8574 | 14,336 tok/s
+  [tpp@hd64L4] step   250/6000 L= 1024 loss=3.1408 | 196,228 tok/s
+  [tpp@hd64L4] step   500/6000 L= 1024 loss=1.2469 | 199,243 tok/s
+  [tpp@hd64L4] step   750/6000 L= 1024 loss=0.7061 | 200,855 tok/s
+  [tpp@hd64L4] step  1000/6000 L=  512 loss=0.4966 | 201,537 tok/s
+  [tpp@hd64L4] step  1250/6000 L= 1024 loss=0.3905 | 201,932 tok/s
+  [tpp@hd64L4] step  1500/6000 L= 1024 loss=0.2904 | 202,992 tok/s
+  [tpp@hd64L4] step  1750/6000 L=  512 loss=0.2457 | 202,621 tok/s
+  [tpp@hd64L4] step  2000/6000 L=  512 loss=0.2326 | 202,187 tok/s
+  [tpp@hd64L4] step  2250/6000 L= 1024 loss=0.1612 | 202,893 tok/s
+  [tpp@hd64L4] step  2500/6000 L= 1024 loss=0.1407 | 202,593 tok/s
+  [tpp@hd64L4] step  2750/6000 L=  512 loss=0.1387 | 203,335 tok/s
+  [tpp@hd64L4] step  3000/6000 L=  512 loss=0.1169 | 202,840 tok/s
+  [tpp@hd64L4] step  3250/6000 L= 1024 loss=0.0899 | 203,411 tok/s
+  [tpp@hd64L4] step  3500/6000 L=  512 loss=0.1159 | 202,933 tok/s
+  [tpp@hd64L4] step  3750/6000 L= 1024 loss=0.0566 | 203,319 tok/s
+  [tpp@hd64L4] step  4000/6000 L= 1024 loss=0.0420 | 202,530 tok/s
+  [tpp@hd64L4] step  4250/6000 L= 1024 loss=0.0368 | 202,892 tok/s
+  [tpp@hd64L4] step  4500/6000 L= 1024 loss=0.0216 | 203,289 tok/s
+  [tpp@hd64L4] step  4750/6000 L= 1024 loss=0.0388 | 202,633 tok/s
+  [tpp@hd64L4] step  5000/6000 L= 1024 loss=0.0187 | 202,975 tok/s
+  [tpp@hd64L4] step  5250/6000 L=  512 loss=0.0143 | 203,297 tok/s
+  [tpp@hd64L4] step  5500/6000 L= 1024 loss=0.0186 | 202,743 tok/s
+  [tpp@hd64L4] step  5750/6000 L= 1024 loss=0.0267 | 203,042 tok/s
+  [tpp@hd64L4] step  6000/6000 L=  512 loss=0.0114 | 203,295 tok/s
+  [tpp@hd64L4] trained 27.6M params in 363s (61 ms/step)
+== tpp@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              0.10    0.08    0.17
+label_category        0.11    0.12    0.14
+two_hop               0.14    0.15    0.09
+letter_shift_ood      0.54    0.57    0.54
+number_step_ood       1.00    1.00    1.00
+label_marker          0.12    0.12    0.13
+label_marker_new      0.12    0.10    0.11
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            0.99    1.00    1.00
+shift_wide_new        0.01    0.01    0.03
+step_wide_new         1.00    1.00    0.97
+affine_map_new        0.98    0.99    1.00
+
+--- arm echo@hd64L4 ---
+  [echo@hd64L4] step     1/6000 L=  512 loss=10.8892 | 895 tok/s
+                 from /tmp/tmpmjr2s5mw/__triton_launcher.c:4:
+/home/ubuntu/.local/share/uv/python/cpython-3.11.9-linux-x86_64-gnu/include/python3.11/pyconfig.h:1793:9: warning: ‘_POSIX_C_SOURCE’ redefined
+ 1793 | #define _POSIX_C_SOURCE 200809L
+      |         ^~~~~~~~~~~~~~~
+                 from /usr/include/stdlib.h:26,
+                 from /home/ubuntu/Development/qllm-private/.venv/lib/python3.11/site-packages/triton/backends/nvidia/include/cuda.h:56,
+                 from /tmp/tmpmjr2s5mw/__triton_launcher.c:2:
+/usr/include/features.h:319:10: note: this is the location of the previous definition
+  319 | # define _POSIX_C_SOURCE        202405L
+      |          ^~~~~~~~~~~~~~~
+                 from /tmp/tmpan1xa0hu/__triton_launcher.c:4:
+/home/ubuntu/.local/share/uv/python/cpython-3.11.9-linux-x86_64-gnu/include/python3.11/pyconfig.h:1793:9: warning: ‘_POSIX_C_SOURCE’ redefined
+ 1793 | #define _POSIX_C_SOURCE 200809L
+      |         ^~~~~~~~~~~~~~~
+                 from /usr/include/stdlib.h:26,
+                 from /home/ubuntu/Development/qllm-private/.venv/lib/python3.11/site-packages/triton/backends/nvidia/include/cuda.h:56,
+                 from /tmp/tmpan1xa0hu/__triton_launcher.c:2:
+/usr/include/features.h:319:10: note: this is the location of the previous definition
+  319 | # define _POSIX_C_SOURCE        202405L
+      |          ^~~~~~~~~~~~~~~
+  [echo@hd64L4] step   250/6000 L= 1024 loss=3.1786 | 55,086 tok/s
+  [echo@hd64L4] step   500/6000 L= 1024 loss=1.3299 | 75,874 tok/s
+  [echo@hd64L4] step   750/6000 L= 1024 loss=0.6274 | 88,198 tok/s
+  [echo@hd64L4] step  1000/6000 L=  512 loss=0.5955 | 96,110 tok/s
+  [echo@hd64L4] step  1250/6000 L= 1024 loss=0.4387 | 101,655 tok/s
+  [echo@hd64L4] step  1500/6000 L= 1024 loss=0.3314 | 105,574 tok/s
+  [echo@hd64L4] step  1750/6000 L=  512 loss=0.3608 | 108,628 tok/s
+  [echo@hd64L4] step  2000/6000 L=  512 loss=0.3289 | 110,127 tok/s
+  [echo@hd64L4] step  2250/6000 L= 1024 loss=0.2001 | 112,431 tok/s
+  [echo@hd64L4] step  2500/6000 L= 1024 loss=0.1865 | 114,268 tok/s
+  [echo@hd64L4] step  2750/6000 L=  512 loss=0.2316 | 115,793 tok/s
+  [echo@hd64L4] step  3000/6000 L=  512 loss=0.1264 | 117,093 tok/s
+  [echo@hd64L4] step  3250/6000 L= 1024 loss=0.1031 | 117,540 tok/s
+  [echo@hd64L4] step  3500/6000 L=  512 loss=0.1160 | 118,475 tok/s
+  [echo@hd64L4] step  3750/6000 L= 1024 loss=0.0564 | 119,330 tok/s
+  [echo@hd64L4] step  4000/6000 L= 1024 loss=0.0380 | 119,917 tok/s
+  [echo@hd64L4] step  4250/6000 L= 1024 loss=0.0517 | 120,662 tok/s
+  [echo@hd64L4] step  4500/6000 L= 1024 loss=0.0123 | 121,319 tok/s
+  [echo@hd64L4] step  4750/6000 L= 1024 loss=0.0175 | 121,357 tok/s
+  [echo@hd64L4] step  5000/6000 L= 1024 loss=0.0117 | 121,926 tok/s
+  [echo@hd64L4] step  5250/6000 L=  512 loss=0.0087 | 122,372 tok/s
+  [echo@hd64L4] step  5500/6000 L= 1024 loss=0.0204 | 122,816 tok/s
+  [echo@hd64L4] step  5750/6000 L= 1024 loss=0.0132 | 123,140 tok/s
+  [echo@hd64L4] step  6000/6000 L=  512 loss=0.0051 | 123,420 tok/s
+  [echo@hd64L4] trained 27.6M params in 598s (100 ms/step)
+== echo@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              0.15    0.14    0.12
+label_category        0.08    0.10    0.12
+two_hop               0.13    0.13    0.12
+letter_shift_ood      0.76    0.81    0.81
+number_step_ood       1.00    1.00    0.95
+label_marker          0.10    0.07    0.12
+label_marker_new      0.09    0.11    0.11
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            1.00    1.00    1.00
+shift_wide_new        0.20    0.31    0.47
+step_wide_new         0.98    1.00    0.72
+affine_map_new        0.98    1.00    1.00
+
+--- arm n1sum@hd64L4 ---
+  [n1sum@hd64L4] step     1/6000 L=  512 loss=10.8964 | 2,049 tok/s
+  [n1sum@hd64L4] step   250/6000 L= 1024 loss=3.2601 | 96,097 tok/s
+  [n1sum@hd64L4] step   500/6000 L= 1024 loss=1.3054 | 109,230 tok/s
+  [n1sum@hd64L4] step   750/6000 L= 1024 loss=0.6447 | 114,201 tok/s
+  [n1sum@hd64L4] step  1000/6000 L=  512 loss=0.5345 | 114,840 tok/s
+  [n1sum@hd64L4] step  1250/6000 L= 1024 loss=0.4361 | 117,265 tok/s
+  [n1sum@hd64L4] step  1500/6000 L= 1024 loss=0.3559 | 118,770 tok/s
+  [n1sum@hd64L4] step  1750/6000 L=  512 loss=0.3189 | 119,662 tok/s
+  [n1sum@hd64L4] step  2000/6000 L=  512 loss=0.3184 | 120,479 tok/s
+  [n1sum@hd64L4] step  2250/6000 L= 1024 loss=0.2643 | 120,099 tok/s
+  [n1sum@hd64L4] step  2500/6000 L= 1024 loss=0.1986 | 120,677 tok/s
+  [n1sum@hd64L4] step  2750/6000 L=  512 loss=0.2072 | 121,246 tok/s
+  [n1sum@hd64L4] step  3000/6000 L=  512 loss=0.1370 | 121,717 tok/s
+  [n1sum@hd64L4] step  3250/6000 L= 1024 loss=0.0617 | 122,110 tok/s
+  [n1sum@hd64L4] step  3500/6000 L=  512 loss=0.0660 | 121,799 tok/s
+  [n1sum@hd64L4] step  3750/6000 L= 1024 loss=0.0525 | 122,095 tok/s
+  [n1sum@hd64L4] step  4000/6000 L= 1024 loss=0.0307 | 122,340 tok/s
+  [n1sum@hd64L4] step  4250/6000 L= 1024 loss=0.0310 | 122,742 tok/s
+  [n1sum@hd64L4] step  4500/6000 L= 1024 loss=0.0094 | 123,012 tok/s
+  [n1sum@hd64L4] step  4750/6000 L= 1024 loss=0.0287 | 122,762 tok/s
+  [n1sum@hd64L4] step  5000/6000 L= 1024 loss=0.0080 | 122,975 tok/s
+  [n1sum@hd64L4] step  5250/6000 L=  512 loss=0.0163 | 123,173 tok/s
+  [n1sum@hd64L4] step  5500/6000 L= 1024 loss=0.0174 | 123,387 tok/s
+  [n1sum@hd64L4] step  5750/6000 L= 1024 loss=0.0117 | 123,524 tok/s
+  [n1sum@hd64L4] step  6000/6000 L=  512 loss=0.0029 | 123,264 tok/s
+  [n1sum@hd64L4] trained 27.6M params in 599s (100 ms/step)
+== n1sum@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              0.12    0.15    0.08
+label_category        0.14    0.12    0.15
+two_hop               0.13    0.10    0.13
+letter_shift_ood      0.76    0.82    0.84
+number_step_ood       0.99    1.00    0.96
+label_marker          0.13    0.13    0.12
+label_marker_new      0.13    0.12    0.12
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            1.00    1.00    1.00
+shift_wide_new        0.17    0.28    0.41
+step_wide_new         0.97    1.00    0.78
+affine_map_new        0.98    0.99    1.00
+
+================================================================
+== tpp@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              0.10    0.08    0.17
+label_category        0.11    0.12    0.14
+two_hop               0.14    0.15    0.09
+letter_shift_ood      0.54    0.57    0.54
+number_step_ood       1.00    1.00    1.00
+label_marker          0.12    0.12    0.13
+label_marker_new      0.12    0.10    0.11
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            0.99    1.00    1.00
+shift_wide_new        0.01    0.01    0.03
+step_wide_new         1.00    1.00    0.97
+affine_map_new        0.98    0.99    1.00
+
+== echo@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              0.15    0.14    0.12
+label_category        0.08    0.10    0.12
+two_hop               0.13    0.13    0.12
+letter_shift_ood      0.76    0.81    0.81
+number_step_ood       1.00    1.00    0.95
+label_marker          0.10    0.07    0.12
+label_marker_new      0.09    0.11    0.11
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            1.00    1.00    1.00
+shift_wide_new        0.20    0.31    0.47
+step_wide_new         0.98    1.00    0.72
+affine_map_new        0.98    1.00    1.00
+
+== n1sum@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              0.12    0.15    0.08
+label_category        0.14    0.12    0.15
+two_hop               0.13    0.10    0.13
+letter_shift_ood      0.76    0.82    0.84
+number_step_ood       0.99    1.00    0.96
+label_marker          0.13    0.13    0.12
+label_marker_new      0.13    0.12    0.12
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            1.00    1.00    1.00
+shift_wide_new        0.17    0.28    0.41
+step_wide_new         0.97    1.00    0.78
+affine_map_new        0.98    0.99    1.00
+

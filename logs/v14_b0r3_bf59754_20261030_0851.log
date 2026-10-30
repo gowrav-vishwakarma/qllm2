@@ -1,0 +1,331 @@
+B0 micro-bench @ bf59754: 6000 steps x B16, lr 0.0003, eval ctx (1024, 4096, 8192), 16 docs x 3 positions x 4 queries per cell, aux_weight 0.1, families facts,bind,rebind, seed 42, init_seed 0, doc_seed0 10000000
+
+--- arm echo@hd64L4 ---
+/home/gowrav/Development/qllm2/v14/microbench.py:452: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"  [{label}] step {step:5d}/{len(plan)} L={L:5d} loss={float(loss):.4f} "
+  [echo@hd64L4] step     1/6000 L= 1024 loss=10.8464 | 10,214 tok/s
+  [echo@hd64L4] step   250/6000 L= 4096 loss=5.9922 | 121,220 tok/s
+  [echo@hd64L4] step   500/6000 L= 2048 loss=5.8378 | 134,534 tok/s
+  [echo@hd64L4] step   750/6000 L=  512 loss=5.9700 | 139,517 tok/s
+  [echo@hd64L4] step  1000/6000 L=  512 loss=5.7489 | 142,046 tok/s
+  [echo@hd64L4] step  1250/6000 L= 2048 loss=5.0577 | 143,745 tok/s
+  [echo@hd64L4] step  1500/6000 L=  512 loss=4.4120 | 144,855 tok/s
+  [echo@hd64L4] step  1750/6000 L=  512 loss=3.4047 | 145,632 tok/s
+  [echo@hd64L4] step  2000/6000 L= 1024 loss=2.7946 | 146,202 tok/s
+  [echo@hd64L4] step  2250/6000 L= 1024 loss=3.4155 | 146,588 tok/s
+  [echo@hd64L4] step  2500/6000 L= 1024 loss=2.8458 | 146,956 tok/s
+  [echo@hd64L4] step  2750/6000 L= 1024 loss=3.8618 | 147,231 tok/s
+  [echo@hd64L4] step  3000/6000 L=  512 loss=2.8382 | 147,495 tok/s
+  [echo@hd64L4] step  3250/6000 L= 2048 loss=3.1756 | 147,687 tok/s
+  [echo@hd64L4] step  3500/6000 L= 1024 loss=2.8982 | 147,851 tok/s
+  [echo@hd64L4] step  3750/6000 L= 1024 loss=3.5085 | 148,004 tok/s
+  [echo@hd64L4] step  4000/6000 L=  512 loss=2.8413 | 148,126 tok/s
+  [echo@hd64L4] step  4250/6000 L=  512 loss=2.7641 | 148,264 tok/s
+  [echo@hd64L4] step  4500/6000 L= 1024 loss=2.8975 | 148,393 tok/s
+  [echo@hd64L4] step  4750/6000 L=  512 loss=2.7496 | 148,487 tok/s
+  [echo@hd64L4] step  5000/6000 L= 1024 loss=2.3388 | 148,574 tok/s
+  [echo@hd64L4] step  5250/6000 L= 1024 loss=2.6772 | 148,667 tok/s
+  [echo@hd64L4] step  5500/6000 L= 4096 loss=3.1352 | 148,748 tok/s
+  [echo@hd64L4] step  5750/6000 L= 1024 loss=2.8932 | 148,810 tok/s
+  [echo@hd64L4] step  6000/6000 L=  512 loss=2.3759 | 148,894 tok/s
+  [echo@hd64L4] trained 27.6M params in 976s (163 ms/step)
+== echo@hd64L4  (accuracy over 8 candidates; chance 0.125)
+task           1024    4096    8192
+facts1        1.00    1.00    1.00
+facts2        0.52    0.52    0.53
+facts4        0.28    0.27    0.29
+facts8        0.13    0.14    0.14
+facts16       0.15    0.15    0.16
+facts32       0.16    0.17    0.17
+facts64       0.11    0.11    0.11
+bind1         1.00    1.00    1.00
+bind2         0.49    0.49    0.49
+bind4         0.27    0.27    0.27
+bind8         0.12    0.13    0.13
+bind16        0.15    0.15    0.14
+rebind2       0.45    0.45    0.32
+rebind4       0.22    0.22    0.21
+rebind8       0.22    0.21    0.22
+rebind16      0.18    0.19    0.19
+
+--- arm n1sum@hd64L4 ---
+  [n1sum@hd64L4] step     1/6000 L= 1024 loss=10.9487 | 4,569 tok/s
+  [n1sum@hd64L4] step   250/6000 L= 4096 loss=5.9947 | 96,864 tok/s
+  [n1sum@hd64L4] step   500/6000 L= 2048 loss=5.8330 | 109,786 tok/s
+  [n1sum@hd64L4] step   750/6000 L=  512 loss=5.8740 | 114,853 tok/s
+  [n1sum@hd64L4] step  1000/6000 L=  512 loss=5.3903 | 117,523 tok/s
+  [n1sum@hd64L4] step  1250/6000 L= 2048 loss=3.5242 | 119,218 tok/s
+  [n1sum@hd64L4] step  1500/6000 L=  512 loss=3.5272 | 120,344 tok/s
+  [n1sum@hd64L4] step  1750/6000 L=  512 loss=3.1905 | 121,056 tok/s
+  [n1sum@hd64L4] step  2000/6000 L= 1024 loss=2.5739 | 121,714 tok/s
+  [n1sum@hd64L4] step  2250/6000 L= 1024 loss=3.2024 | 122,207 tok/s
+  [n1sum@hd64L4] step  2500/6000 L= 1024 loss=2.8679 | 122,617 tok/s
+  [n1sum@hd64L4] step  2750/6000 L= 1024 loss=3.6370 | 122,932 tok/s
+  [n1sum@hd64L4] step  3000/6000 L=  512 loss=2.7522 | 123,219 tok/s
+  [n1sum@hd64L4] step  3250/6000 L= 2048 loss=3.0420 | 123,446 tok/s
+  [n1sum@hd64L4] step  3500/6000 L= 1024 loss=2.9201 | 123,587 tok/s
+  [n1sum@hd64L4] step  3750/6000 L= 1024 loss=3.4628 | 123,778 tok/s
+  [n1sum@hd64L4] step  4000/6000 L=  512 loss=2.8367 | 123,931 tok/s
+  [n1sum@hd64L4] step  4250/6000 L=  512 loss=2.7494 | 124,084 tok/s
+  [n1sum@hd64L4] step  4500/6000 L= 1024 loss=2.9488 | 124,218 tok/s
+  [n1sum@hd64L4] step  4750/6000 L=  512 loss=2.6588 | 124,331 tok/s
+  [n1sum@hd64L4] step  5000/6000 L= 1024 loss=2.3353 | 124,406 tok/s
+  [n1sum@hd64L4] step  5250/6000 L= 1024 loss=2.6267 | 124,504 tok/s
+  [n1sum@hd64L4] step  5500/6000 L= 4096 loss=3.0307 | 124,592 tok/s
+  [n1sum@hd64L4] step  5750/6000 L= 1024 loss=2.9332 | 124,667 tok/s
+  [n1sum@hd64L4] step  6000/6000 L=  512 loss=2.4966 | 124,751 tok/s
+  [n1sum@hd64L4] trained 27.6M params in 1164s (194 ms/step)
+== n1sum@hd64L4  (accuracy over 8 candidates; chance 0.125)
+task           1024    4096    8192
+facts1        1.00    1.00    1.00
+facts2        0.49    0.49    0.48
+facts4        0.27    0.29    0.25
+facts8        0.15    0.14    0.14
+facts16       0.11    0.11    0.13
+facts32       0.14    0.14    0.14
+facts64       0.12    0.12    0.13
+bind1         1.00    1.00    1.00
+bind2         0.50    0.50    0.51
+bind4         0.28    0.28    0.28
+bind8         0.16    0.16    0.16
+bind16        0.13    0.13    0.14
+rebind2       0.45    0.45    0.30
+rebind4       0.23    0.22    0.20
+rebind8       0.24    0.25    0.22
+rebind16      0.24    0.24    0.23
+
+--- arm n1gate@hd64L4 ---
+  [n1gate@hd64L4] step     1/6000 L= 1024 loss=10.8819 | 126,621 tok/s
+  [n1gate@hd64L4] step   250/6000 L= 4096 loss=5.9954 | 124,726 tok/s
+  [n1gate@hd64L4] step   500/6000 L= 2048 loss=5.8352 | 125,172 tok/s
+  [n1gate@hd64L4] step   750/6000 L=  512 loss=5.9598 | 125,257 tok/s
+  [n1gate@hd64L4] step  1000/6000 L=  512 loss=5.5212 | 125,367 tok/s
+  [n1gate@hd64L4] step  1250/6000 L= 2048 loss=4.3645 | 125,456 tok/s
+  [n1gate@hd64L4] step  1500/6000 L=  512 loss=3.8089 | 125,567 tok/s
+  [n1gate@hd64L4] step  1750/6000 L=  512 loss=3.3726 | 125,603 tok/s
+  [n1gate@hd64L4] step  2000/6000 L= 1024 loss=2.8541 | 125,478 tok/s
+  [n1gate@hd64L4] step  2250/6000 L= 1024 loss=3.4279 | 125,485 tok/s
+  [n1gate@hd64L4] step  2500/6000 L= 1024 loss=3.0527 | 125,520 tok/s
+  [n1gate@hd64L4] step  2750/6000 L= 1024 loss=3.7257 | 125,517 tok/s
+  [n1gate@hd64L4] step  3000/6000 L=  512 loss=2.8221 | 125,548 tok/s
+  [n1gate@hd64L4] step  3250/6000 L= 2048 loss=3.0439 | 125,537 tok/s
+  [n1gate@hd64L4] step  3500/6000 L= 1024 loss=2.7944 | 125,444 tok/s
+  [n1gate@hd64L4] step  3750/6000 L= 1024 loss=3.4590 | 125,479 tok/s
+  [n1gate@hd64L4] step  4000/6000 L=  512 loss=2.9108 | 125,479 tok/s
+  [n1gate@hd64L4] step  4250/6000 L=  512 loss=2.8320 | 125,507 tok/s
+  [n1gate@hd64L4] step  4500/6000 L= 1024 loss=2.9961 | 125,532 tok/s
+  [n1gate@hd64L4] step  4750/6000 L=  512 loss=2.6286 | 125,531 tok/s
+  [n1gate@hd64L4] step  5000/6000 L= 1024 loss=2.5071 | 125,553 tok/s
+  [n1gate@hd64L4] step  5250/6000 L= 1024 loss=2.7248 | 125,524 tok/s
+  [n1gate@hd64L4] step  5500/6000 L= 4096 loss=3.2171 | 125,536 tok/s
+  [n1gate@hd64L4] step  5750/6000 L= 1024 loss=2.9763 | 125,535 tok/s
+  [n1gate@hd64L4] step  6000/6000 L=  512 loss=2.6110 | 125,556 tok/s
+  [n1gate@hd64L4] trained 27.6M params in 1157s (193 ms/step)
+== n1gate@hd64L4  (accuracy over 8 candidates; chance 0.125)
+task           1024    4096    8192
+facts1        1.00    1.00    1.00
+facts2        0.49    0.45    0.48
+facts4        0.28    0.29    0.27
+facts8        0.14    0.14    0.15
+facts16       0.09    0.09    0.10
+facts32       0.14    0.14    0.14
+facts64       0.14    0.14    0.14
+bind1         1.00    1.00    1.00
+bind2         0.54    0.54    0.52
+bind4         0.26    0.25    0.26
+bind8         0.11    0.11    0.11
+bind16        0.16    0.16    0.16
+rebind2       0.43    0.39    0.38
+rebind4       0.20    0.22    0.22
+rebind8       0.23    0.23    0.24
+rebind16      0.23    0.22    0.23
+
+--- arm n1phase@hd64L4 ---
+  [n1phase@hd64L4] step     1/6000 L= 1024 loss=10.8819 | 124,685 tok/s
+  [n1phase@hd64L4] step   250/6000 L= 4096 loss=5.9968 | 122,655 tok/s
+  [n1phase@hd64L4] step   500/6000 L= 2048 loss=5.8538 | 122,167 tok/s
+  [n1phase@hd64L4] step   750/6000 L=  512 loss=5.8974 | 122,269 tok/s
+  [n1phase@hd64L4] step  1000/6000 L=  512 loss=5.2849 | 122,391 tok/s
+  [n1phase@hd64L4] step  1250/6000 L= 2048 loss=3.7306 | 122,479 tok/s
+  [n1phase@hd64L4] step  1500/6000 L=  512 loss=3.7271 | 122,590 tok/s
+  [n1phase@hd64L4] step  1750/6000 L=  512 loss=3.0679 | 122,514 tok/s
+  [n1phase@hd64L4] step  2000/6000 L= 1024 loss=2.7104 | 122,491 tok/s
+  [n1phase@hd64L4] step  2250/6000 L= 1024 loss=3.2800 | 122,504 tok/s
+  [n1phase@hd64L4] step  2500/6000 L= 1024 loss=3.0336 | 122,530 tok/s
+  [n1phase@hd64L4] step  2750/6000 L= 1024 loss=3.7045 | 122,522 tok/s
+  [n1phase@hd64L4] step  3000/6000 L=  512 loss=2.7880 | 122,483 tok/s
+  [n1phase@hd64L4] step  3250/6000 L= 2048 loss=2.9305 | 122,479 tok/s
+  [n1phase@hd64L4] step  3500/6000 L= 1024 loss=2.9196 | 122,460 tok/s
+  [n1phase@hd64L4] step  3750/6000 L= 1024 loss=3.3823 | 122,503 tok/s
+  [n1phase@hd64L4] step  4000/6000 L=  512 loss=2.8650 | 122,504 tok/s
+  [n1phase@hd64L4] step  4250/6000 L=  512 loss=2.6833 | 122,486 tok/s
+  [n1phase@hd64L4] step  4500/6000 L= 1024 loss=2.9188 | 122,519 tok/s
+  [n1phase@hd64L4] step  4750/6000 L=  512 loss=2.6089 | 122,523 tok/s
+  [n1phase@hd64L4] step  5000/6000 L= 1024 loss=2.3467 | 122,551 tok/s
+  [n1phase@hd64L4] step  5250/6000 L= 1024 loss=2.6809 | 122,565 tok/s
+  [n1phase@hd64L4] step  5500/6000 L= 4096 loss=3.1463 | 122,536 tok/s
+  [n1phase@hd64L4] step  5750/6000 L= 1024 loss=3.1320 | 122,540 tok/s
+  [n1phase@hd64L4] step  6000/6000 L=  512 loss=2.5593 | 122,570 tok/s
+  [n1phase@hd64L4] trained 27.6M params in 1185s (198 ms/step)
+== n1phase@hd64L4  (accuracy over 8 candidates; chance 0.125)
+task           1024    4096    8192
+facts1        1.00    1.00    1.00
+facts2        0.45    0.48    0.49
+facts4        0.29    0.28    0.30
+facts8        0.13    0.14    0.11
+facts16       0.12    0.12    0.11
+facts32       0.16    0.15    0.16
+facts64       0.10    0.10    0.10
+bind1         1.00    1.00    1.00
+bind2         0.52    0.53    0.52
+bind4         0.26    0.23    0.22
+bind8         0.15    0.15    0.15
+bind16        0.13    0.14    0.14
+rebind2       0.47    0.45    0.26
+rebind4       0.24    0.23    0.23
+rebind8       0.23    0.22    0.23
+rebind16      0.23    0.23    0.24
+
+--- arm tpp@hd64L4 ---
+  [tpp@hd64L4] step     1/6000 L= 1024 loss=10.8352 | 215,213 tok/s
+  [tpp@hd64L4] step   250/6000 L= 4096 loss=5.9360 | 210,044 tok/s
+  [tpp@hd64L4] step   500/6000 L= 2048 loss=5.8667 | 209,764 tok/s
+  [tpp@hd64L4] step   750/6000 L=  512 loss=5.9721 | 209,458 tok/s
+  [tpp@hd64L4] step  1000/6000 L=  512 loss=5.8827 | 209,502 tok/s
+  [tpp@hd64L4] step  1250/6000 L= 2048 loss=5.8212 | 209,573 tok/s
+  [tpp@hd64L4] step  1500/6000 L=  512 loss=5.8750 | 209,677 tok/s
+  [tpp@hd64L4] step  1750/6000 L=  512 loss=5.8885 | 209,674 tok/s
+  [tpp@hd64L4] step  2000/6000 L= 1024 loss=5.7910 | 209,578 tok/s
+  [tpp@hd64L4] step  2250/6000 L= 1024 loss=5.8410 | 209,480 tok/s
+  [tpp@hd64L4] step  2500/6000 L= 1024 loss=5.8185 | 209,470 tok/s
+  [tpp@hd64L4] step  2750/6000 L= 1024 loss=5.8304 | 209,401 tok/s
+  [tpp@hd64L4] step  3000/6000 L=  512 loss=5.9230 | 209,422 tok/s
+  [tpp@hd64L4] step  3250/6000 L= 2048 loss=5.8387 | 209,390 tok/s
+  [tpp@hd64L4] step  3500/6000 L= 1024 loss=5.8456 | 209,304 tok/s
+  [tpp@hd64L4] step  3750/6000 L= 1024 loss=5.8643 | 209,354 tok/s
+  [tpp@hd64L4] step  4000/6000 L=  512 loss=5.8490 | 209,323 tok/s
+  [tpp@hd64L4] step  4250/6000 L=  512 loss=5.8843 | 209,337 tok/s
+  [tpp@hd64L4] step  4500/6000 L= 1024 loss=5.8455 | 209,358 tok/s
+  [tpp@hd64L4] step  4750/6000 L=  512 loss=5.8586 | 209,347 tok/s
+  [tpp@hd64L4] step  5000/6000 L= 1024 loss=5.8669 | 209,383 tok/s
+  [tpp@hd64L4] step  5250/6000 L= 1024 loss=5.8264 | 209,389 tok/s
+  [tpp@hd64L4] step  5500/6000 L= 4096 loss=5.8242 | 209,408 tok/s
+  [tpp@hd64L4] step  5750/6000 L= 1024 loss=5.8337 | 209,397 tok/s
+  [tpp@hd64L4] step  6000/6000 L=  512 loss=5.8631 | 209,435 tok/s
+  [tpp@hd64L4] trained 27.6M params in 694s (116 ms/step)
+== tpp@hd64L4  (accuracy over 8 candidates; chance 0.125)
+task           1024    4096    8192
+facts1        0.17    0.17    0.17
+facts2        0.12    0.12    0.14
+facts4        0.13    0.13    0.13
+facts8        0.13    0.13    0.13
+facts16       0.12    0.12    0.11
+facts32       0.14    0.15    0.15
+facts64       0.14    0.14    0.14
+bind1         0.15    0.15    0.15
+bind2         0.19    0.18    0.18
+bind4         0.10    0.10    0.10
+bind8         0.10    0.10    0.10
+bind16        0.14    0.14    0.14
+rebind2       0.21    0.21    0.22
+rebind4       0.10    0.10    0.10
+rebind8       0.10    0.10    0.11
+rebind16      0.12    0.13    0.14
+
+================================================================
+== echo@hd64L4  (accuracy over 8 candidates; chance 0.125)
+task           1024    4096    8192
+facts1        1.00    1.00    1.00
+facts2        0.52    0.52    0.53
+facts4        0.28    0.27    0.29
+facts8        0.13    0.14    0.14
+facts16       0.15    0.15    0.16
+facts32       0.16    0.17    0.17
+facts64       0.11    0.11    0.11
+bind1         1.00    1.00    1.00
+bind2         0.49    0.49    0.49
+bind4         0.27    0.27    0.27
+bind8         0.12    0.13    0.13
+bind16        0.15    0.15    0.14
+rebind2       0.45    0.45    0.32
+rebind4       0.22    0.22    0.21
+rebind8       0.22    0.21    0.22
+rebind16      0.18    0.19    0.19
+
+== n1sum@hd64L4  (accuracy over 8 candidates; chance 0.125)
+task           1024    4096    8192
+facts1        1.00    1.00    1.00
+facts2        0.49    0.49    0.48
+facts4        0.27    0.29    0.25
+facts8        0.15    0.14    0.14
+facts16       0.11    0.11    0.13
+facts32       0.14    0.14    0.14
+facts64       0.12    0.12    0.13
+bind1         1.00    1.00    1.00
+bind2         0.50    0.50    0.51
+bind4         0.28    0.28    0.28
+bind8         0.16    0.16    0.16
+bind16        0.13    0.13    0.14
+rebind2       0.45    0.45    0.30
+rebind4       0.23    0.22    0.20
+rebind8       0.24    0.25    0.22
+rebind16      0.24    0.24    0.23
+
+== n1gate@hd64L4  (accuracy over 8 candidates; chance 0.125)
+task           1024    4096    8192
+facts1        1.00    1.00    1.00
+facts2        0.49    0.45    0.48
+facts4        0.28    0.29    0.27
+facts8        0.14    0.14    0.15
+facts16       0.09    0.09    0.10
+facts32       0.14    0.14    0.14
+facts64       0.14    0.14    0.14
+bind1         1.00    1.00    1.00
+bind2         0.54    0.54    0.52
+bind4         0.26    0.25    0.26
+bind8         0.11    0.11    0.11
+bind16        0.16    0.16    0.16
+rebind2       0.43    0.39    0.38
+rebind4       0.20    0.22    0.22
+rebind8       0.23    0.23    0.24
+rebind16      0.23    0.22    0.23
+
+== n1phase@hd64L4  (accuracy over 8 candidates; chance 0.125)
+task           1024    4096    8192
+facts1        1.00    1.00    1.00
+facts2        0.45    0.48    0.49
+facts4        0.29    0.28    0.30
+facts8        0.13    0.14    0.11
+facts16       0.12    0.12    0.11
+facts32       0.16    0.15    0.16
+facts64       0.10    0.10    0.10
+bind1         1.00    1.00    1.00
+bind2         0.52    0.53    0.52
+bind4         0.26    0.23    0.22
+bind8         0.15    0.15    0.15
+bind16        0.13    0.14    0.14
+rebind2       0.47    0.45    0.26
+rebind4       0.24    0.23    0.23
+rebind8       0.23    0.22    0.23
+rebind16      0.23    0.23    0.24
+
+== tpp@hd64L4  (accuracy over 8 candidates; chance 0.125)
+task           1024    4096    8192
+facts1        0.17    0.17    0.17
+facts2        0.12    0.12    0.14
+facts4        0.13    0.13    0.13
+facts8        0.13    0.13    0.13
+facts16       0.12    0.12    0.11
+facts32       0.14    0.15    0.15
+facts64       0.14    0.14    0.14
+bind1         0.15    0.15    0.15
+bind2         0.19    0.18    0.18
+bind4         0.10    0.10    0.10
+bind8         0.10    0.10    0.10
+bind16        0.14    0.14    0.14
+rebind2       0.21    0.21    0.22
+rebind4       0.10    0.10    0.10
+rebind8       0.10    0.10    0.11
+rebind16      0.12    0.13    0.14
+

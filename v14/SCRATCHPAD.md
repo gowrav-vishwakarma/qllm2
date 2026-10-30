@@ -4,42 +4,33 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-30 09:00 IST)
+## State (2026-10-30 10:30 IST)
 
-* **echo_tied CLOSED (FAIL at 600M, v13 E2, 08:48 IST):** label_category
-  0.365 vs C1-ctl 0.500, holdout +0.055, recall 0.602 vs 0.825. Code
-  removed (last at `5100fd7`). The micro-bench win did not transfer.
-* **(old) 4090: the v13 session's E2 since 05:43 IST** (tmux `e2`, run from the
-  worktree `../qllm_e2` at `e5b1a2a`, ECHO_TIED code `26ef94a`; two stages,
-  ETA ~10:15 IST plus probes).
-  1. **B0 run 2 DONE (03:31 IST, `bcfd88a`): INVALID.** Echo facts2 @1024
-     0.55 (bar 0.90): every echo arm picks a value of the document, not the
-     bound one. Descriptive: n1sum / n1gate do partial lookup (facts2 0.79),
-     n1phase falls back to echo's level (turning cancels the second
-     notebook); echo_tied costs no memory. **B0 run 3** (`--aux_weight 0.1`,
-     arms echo, n1sum, n1gate, n1phase + the **tpp** attention
-     reference, branch `v14dev`, GPU smoke passed; validity and
-     stop rule in EXPERIMENTS_V14 "B0") is pre-registered and goes after run 4, or after
-     E2 if the v13 session takes the 4090.
-  2. **B1 run 3 DONE (04:37 IST, `44df201`).** **P INVALID** (echo at the ceiling in pairs 1
-     and 3; where the arms differ, tied is worse: d −0.07, −0.54). **A NOT
-     met** (d −0.12, +0.01, −0.16: tied is worse on unseen items). The
-     lookup circuit forms per seed or not: echo in 2 of 3 seeds, tied in 1
-     of 3. Run 2's lead was a seed where only tied formed it.
-  3. **B1 run 4 DONE (05:40 IST, `d4e0f0d`): P MET.** d +0.589 / +0.595 /
-     +0.222 (mean +0.469, 2·SD 0.427); echo 0.41–0.44, tied 1.00 / 1.00 /
-     0.66. On run 2's training set the tie makes the lookup circuit form
-     (tied 4 of 4 seeds, echo 0 of 5). With label_marker in training it does
-     not (run 3). **E2 is GO** (v13 session, 600M tied echo vs C1-ctl, M1
-     body, on the 4090).
-* **Branch `v14dev` merged** (`a0259ca`: the tpp reference arm, `c9bff5c`
-  + `51a94cd`); v14 selftest ALL PASS and layout OK on the merged tree.
-* **Shared checkout rule (2026-10-30):** both sessions work in
-  `/home/gowrav/Development/qllm2`. While a bench runs, nobody commits to
-  master or leaves tracked edits: each pair launch checks for a clean tree,
-  `--resume` refuses a moved HEAD, and each pair re-imports v13_sempty. The
-  v13 session keeps its E2 code and notes on branch `e2` (worktree
-  `../qllm_e2`) and rebases it onto master after run 4.
+* **Bar-3 lead: B2 run 1 (6000, `bf59754`, one seed): L and I met (B2 is
+  valid).** Held-out rule parameters: echo 0.739, n1sum 0.731, tpp 0.666.
+  Numbers (held-out step / affine offset): every arm ~0.9–0.99 (exact
+  inference). **Letters (held-out shift): echo 0.33, rising 0.20 → 0.47 with
+  shots; tpp 0.02 (picks the neighbour = memorised tables).** First bar-3
+  signal for the O(1) body. **B2 run 2** (echo vs tpp, 3 seed pairs
+  41/42/43, bar R on shift_wide_new) is pre-registered and goes on the 4090.
+  If R is met: a 600M check with B2 docs in training for both bodies
+  (design with v13: they offered rules_ood docs in their mix).
+* **Closed today:** N6 (B1 run 2), echo_tied (v13 E2 at 600M: label_category
+  0.365 vs 0.500, holdout +0.055; the micro-bench win did not transfer), N1
+  (B0 run 3 stop rule: n1phase 0.370 < n1sum 0.380), and B0 itself (bench
+  broken: echo facts2 0.52, tpp facts1 0.17).
+* **tpp calibration on B1:** attention does not form the label_category
+  circuit at 27M either (0.42–0.43, 3 seeds), so micro-bench label_category
+  does not predict the 600M gap (T++ 0.73).
+* **Lesson (E2):** a micro-bench win is a lead, not evidence. Seed pairs
+  first, then the LM check.
+* **GPUs:** 6000 = v13 S4 chain (~11 h from ~10:00 IST; Mamba-2 600M ×2,
+  then the reference at 3B); v14 runs there only from the worktree
+  `~/Development/qllm_v14`, never by pulling `qllm-private`. 4090 = v14.
+* **Shared checkout rule:** both sessions use
+  `/home/gowrav/Development/qllm2`. v14 benches now run from a local
+  worktree (`../qllm_v14run`, detached, `.venv` symlinked) so commits to
+  master never block a crash-resume.
 * **Launcher:** `v14/run_bench.sh` (replaced `run_b0.sh`). It also stops waiting when the
   other run's log prints its DONE line (`WAIT_DONE=file:pattern`): the v13
   T1 tmux stayed open two hours after its run ended on 2026-10-29.
@@ -117,35 +108,15 @@ Keep all three current as things happen (user rule, 2026-10-29).
 
 ## Next action
 
-1. **GPU plan (IST), agreed with v13 at ~07:00.** E2 (4090) ends ~09:15
-   with probes (59K tok/s, faster than planned).
-   - **6000, after the v13 s3 ping (~09:30 -> ~10:40):** in the worktree
-     below (needs ≥ `1e9a0b8`; sempyt ≥
-     `b99e038`), a 30-step smoke of tpp + one B2 task, then in one tmux:
-     (a) **tpp B1 calibration** on run 4's data (`for i in 1 2 3; do
-     TAG=b1r4tpp$i FAMILIES=rules ARMS=tpp SAVE=1 EXTRA="--seed 2$i
-     --doc_seed0 $((i+3))00000000 --init_seed 2$i" bash v14/run_bench.sh;
-     done`): does attention form the label_category circuit in every seed?
-     (b) **B2 run 1** (`TAG=b2 FAMILIES=rules ARMS=tpp,echo,n1sum
-     SAVE=1 EXTRA='--seed 31 --doc_seed0 700000000 --init_seed 31
-     --rule_tasks shift_wide,step_wide,affine_map' bash v14/run_bench.sh`;
-     readouts L and I in EXPERIMENTS_V14 "B2"). The 6000 then goes back to
-     v13 (E2 port to M2 if E2 passes).
-     **6000 rules (v13 S4 queue waits in tmux `s4`):** run ONLY from a
-     detached worktree, `git worktree add --detach ~/Development/qllm_v14
-     origin/master` + `ln -s ~/Development/qllm-private/.venv
-     ~/Development/qllm_v14/.venv`. Never pull in `qllm-private` (it trips
-     S4's code-drift guard). When (a) and (b) end: `touch
-     ~/v14_slot2.done` on the 6000 (S4 starts on that file).
-   - **4090, when v13 pings that E2 freed it (~09:15):** (c) **B0 run 3**
-     (`TAG=b0r3 ARMS=echo,n1sum,n1gate,n1phase,tpp AUX=0.1 SAVE=1
-     bash v14/run_bench.sh`, ~2 h).
-   - v13 will run the B2 tasks as an inference-only probe on their 600M
-     checkpoints (base and `_new` reported separately: for models with no
-     B2 training they should score alike, which is the difficulty control).
-2. Open question from runs 3-4: why does label_marker in training stop the
-   tied arm from forming the circuit (1 of 3) while helping echo (2 of 3)?
-   Probe the saved checkpoints (`checkpoints_v14/b1r3p*`, `b1r4p*`, on the
-   4090 box) on CPU: what do q and k match at the label positions?
-3. Bar 3 in its strong form is untouched by every arm (plan under
-   EXPERIMENTS_V14 "N4", bar-3 analysis).
+1. B2 run 2 on the 4090 (from `../qllm_v14run`): `for i in 1 2 3; do
+   TAG=b2r2p$i FAMILIES=rules ARMS=echo,tpp SAVE=1 EXTRA="--seed 4$i
+   --doc_seed0 $((i+7))00000000 --init_seed 4$i --rule_tasks
+   shift_wide,step_wide,affine_map" bash v14/run_bench.sh; done` (~1 h).
+   Score R (paired d on shift_wide_new), record, ping v13, tell the user.
+2. If R is met: design the 600M check with v13 (B2 docs in stage B for an
+   M1/c1m2 arm and a T++ arm; read shift_wide_new inside and beyond the
+   trained context). If R is not met: shift_wide_new is the target cell for
+   a new unit (N4 design under EXPERIMENTS_V14 "N4").
+3. Open: why echo infers letter shifts partly and not fully (0.47 at 8
+   shots); probe the B2 run 1 checkpoints (6000,
+   `~/Development/qllm_v14/checkpoints_v14/b2_bf59754_*`).

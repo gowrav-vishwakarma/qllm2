@@ -234,6 +234,28 @@ seed 42, same data for every arm).
   run 3. Otherwise N1 closes as FAIL (in both runs, turning removed the
   second notebook's gain).
 
+**Run 3 RESULT (4090, 2026-10-30 08:51–10:19 IST, code `bf59754`, aux 0.1):
+INVALID again, so the stop rule applies. B0 CLOSED as a memory bench at
+this size.** Log + JSON: `logs/v14_b0r3_bf59754_20261030_0851.{log,json}`.
+
+| arm | f1 | f2 | f4 | f8–64 | bind1 | bind2 | bind4 | rebind2 | rebind4 | ms/step |
+|---|---|---|---|---|---|---|---|---|---|---|
+| echo | 1.00 | 0.52 | 0.28 | 0.11–0.16 | 1.00 | 0.49 | 0.27 | 0.41 | 0.22 | 163 |
+| n1sum | 1.00 | 0.49 | 0.27 | 0.12–0.14 | 1.00 | 0.50 | 0.28 | 0.40 | 0.22 | 194 |
+| n1gate | 1.00 | 0.47 | 0.28 | 0.10–0.14 | 1.00 | 0.53 | 0.26 | 0.40 | 0.22 | 193 |
+| n1phase | 1.00 | 0.47 | 0.29 | 0.10–0.15 | 1.00 | 0.52 | 0.24 | 0.39 | 0.24 | 198 |
+| tpp | 0.17 | 0.13 | 0.13 | 0.12–0.15 | 0.15 | 0.18 | 0.10 | 0.21 | 0.10 | 116 |
+
+- **Validity:** echo facts2 @1024 0.52 and tpp facts1 0.17 (chance): neither
+  passes, so the bench is broken at this size. Attention does not even learn
+  one-fact lookup here, and the O(1) bodies sit at 1/n (they pick a value
+  of the document, not the bound one).
+- **N1 by the stop rule:** mean(facts2, facts4) @1024: n1phase 0.370 vs
+  n1sum 0.380, so n1phase < n1sum and **N1 CLOSES AS FAIL** (no LM check).
+  Run 2's n1sum / n1gate partial lookup (facts2 0.79 / 0.76) did not
+  reappear with aux 0.1 (0.49 / 0.49): it was not robust either.
+- No run 4 without a new, pre-registered design.
+
 ### B1 — rule induction (shared generator, pre-registered 2026-10-29)
 
 **Question.** Can a unit learn a rule from a few examples in the context
@@ -659,6 +681,59 @@ T++ 600M 0.048 / 0.056 / 0.040; T++ two-stage 0.053 / 0.059 / 0.048; M1
   L and I do not depend on the distinction. The affine a ± 1 decoys (answer
   ± x_q) are the only ones that separate a wrong slope from an off-by-one.
 
+**Run 1 RESULT (6000, 2026-10-30 09:27–09:54 IST, code `bf59754`, one
+seed; worktree `~/Development/qllm_v14` on the 6000): L MET, I MET, so B2 is
+the bar-3 bench. The O(1) arms match attention on numbers and beat it on
+letters.** Log + JSON: `logs/v14_b2_bf59754_20261030_0357.{log,json}` (6000
+box clock, UTC). Mean over 2 / 4 / 8 shots, per shot in brackets.
+
+| arm | trained values (3 tasks) | held out (3 tasks) | shift_wide_new | step_wide_new | affine_map_new | ms/step (6000) |
+|---|---|---|---|---|---|---|
+| tpp | 0.999 | 0.666 | **0.02** (0.01 / 0.01 / 0.03) | 0.99 | 0.99 | 61 |
+| echo | 1.000 | **0.739** | **0.33** (0.20 / 0.31 / 0.47) | 0.90 (0.98 / 1.00 / 0.72) | 0.99 | 100 |
+| n1sum | 1.000 | 0.731 | 0.28 (0.17 / 0.28 / 0.41) | 0.92 | 0.99 | 100 |
+
+- **L:** tpp 0.999 ≥ 0.90. **I:** tpp 0.666 ≥ 0.40. Both met.
+- **Numbers (step_wide_new, affine_map_new):** every arm infers the
+  held-out step or offset almost exactly. The nearest-parameter decoys
+  (± 1) are in every candidate set, so this is exact inference, not
+  selection. The difficulty offset (v13 probe, ≤ 0.05) is negligible here.
+- **Letters (shift_wide_new):** tpp picks the neighbouring trained shift
+  (0.02, below chance): it memorised one table per trained k. Echo and n1sum
+  partly infer the held-out shift, and they improve with more examples
+  (echo 0.20 → 0.31 → 0.47), the signature of inference from the context.
+- **My prediction was wrong** (O(1) arms below chance on `_new`). This is
+  one seed: the replication (run 2) decides before any claim.
+- Gap closed G is not defined (echo > tpp). shift_wide_new is the open cell:
+  0.33 for the best body, 1.0 possible.
+
+**Calibration: tpp on B1 run 4's data (6000, `bf59754`, 3 seeds, logs
+`logs/v14_b1r4tpp{1,2,3}_bf59754_*.{log,json}`).** label_category 0.42 /
+0.42 / 0.43 (chance; per shot 0.50 / 0.51 / 0.25): attention does NOT form
+the label circuit at 27M, like plain echo (0.41–0.44); tied echo did (then
+failed at 600M). So micro-bench label_category does not predict the 600M
+label_category gap (T++ 0.73), which is one more reason E2 did not transfer.
+Unseen rule parameters: number_step_ood tpp 0.27–0.38 vs echo 0.09–0.23
+(above chance 0.125); letter_shift_ood 0.00 for everyone. tpp 52 ms/step.
+
+**Run 2 (PRE-REGISTERED 2026-10-30 ~10:10 IST, before any run-2 number):
+replication in seed pairs.** Question: does echo infer held-out letter
+shifts where same-size attention only selects, across seeds?
+- **Arms:** echo vs tpp, 3 pairs, same data and init seed within a pair:
+  pair i = `--seed 4i --doc_seed0 (i+7)·100M --init_seed 4i` (i = 1, 2, 3;
+  run 1 used 31, so these share no seed with it),
+  tag `b2r2p<i>`. B2 training only, 6000 × B16, lr 3e-4.
+- **Bar R (shift_wide_new):** d_i = echo − tpp, mean over 2 / 4 / 8 shots.
+  Met if mean(d) ≥ +0.15 AND mean(d) ≥ 2·SD(d).
+- **Inference signature (reported, not a bar):** echo's shift_wide_new
+  8-shot minus 2-shot > 0 in every pair.
+- **Reported:** the other `_new` cells, trained-value cells, ms/step.
+- **Outcomes:** R met: at 27M, the O(1) echo body infers unseen letter
+  shifts that a same-size transformer cannot. The next step is a 600M check
+  with B2 data mixed into training for both bodies (design then, with the
+  v13 session). R not met: run 1 was seed luck, and B2's letters cell is
+  the target for new units (N4).
+
 ### N1 — phase interference revived (v11 E3 on the lean body)
 
 **Why.** The only architecture change that beat the v7 baseline (−1.11 PPL),
@@ -705,6 +780,13 @@ n1phase fell back to echo's level (0.51 / 0.29). Turning cancelled the
 second notebook's gain, the opposite of the N1 hypothesis. B0 run 3
 (`--aux_weight 0.1`) carries a stop rule that decides N1 if the bench is
 invalid again (section "B0").
+
+**N1 VERDICT: CLOSED, FAIL (B0 run 3 stop rule, 2026-10-30).** B0 was
+invalid twice (neither echo nor the tpp reference learned lookup), and by
+the pre-registered rule n1phase had to reach n1sum on mean(facts2, facts4)
+to earn an LM check: 0.370 vs 0.380. In both runs turning never helped. In
+B2 run 1, n1sum (0.731 held out) did not beat echo (0.739). Code removed;
+it is at the commit listed in the index.
 
 ### N2 — phase-modulated activation
 
