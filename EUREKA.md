@@ -9,6 +9,28 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v13 + user: the nested version of the 2×O(1) memory: phase finds the
+  region, SETTLING picks the best (design idea, refines the entry below).**
+  User: the second O(1) should live inside the first ("first get the
+  phase, then another memory learned in that phase picks the best"), and
+  maybe be something altogether different. Two facts shape it: (1) more
+  phase / more state = more address bits, but our collisions come from
+  look-alike keys, not too few bits; (2) two plain linear memories read in
+  sequence give the SAME score as one (forward Σ(e·v)(k·q) = backward
+  Σ(q·k)(v·e)), so a second store cannot pick. Picking needs a nonlinear,
+  competitive step. *Design:* step 1 = content-phase keys (each stored item
+  its own valley); step 2 = a fixed 2–3 rounds of SETTLING: pull the query
+  toward the nearest stored key (Hopfield-style relaxation on the key
+  autocorrelation, with a sharpening nonlinearity) so close-but-wrong
+  items lose instead of blending; then read the value. Constant cost; no
+  attention cache, no state-in-state. Limit: a settling memory holds only
+  a few dozen clean valleys per head, so writes need the N8 gate (store on
+  surprise / maturity). Nature: systems relax into the nearest stable
+  state; hippocampal theta-gamma nesting (slow phase = context, fast cycles
+  = items). *For v14:* N9 = gate (N8) + content phase + settling; the
+  two-bank vote is the fallback. Build in stages: phase keys alone (key
+  cosine + label_exact), then add settling (5-pairs-back accuracy), then
+  600M with the same bars.
 - **v14: REPLICATED: the O(1) echo body infers unseen rule parameters where a
   same-size transformer only selects** (B2 run 2, `9e0a3fd`, 3 seed pairs:
   held-out letter shifts echo 0.14 / 0.26 / 0.34, rising with shots, vs
