@@ -601,7 +601,8 @@ transformer at learning" has a number.
 **Why it matters for v14.** N6 (operator memory) and N4 (fast weights in
 the unit) are learners by construction: B1, not B0, is their primary test.
 
-**HELD OPEN (2026-10-30 ~16:30 IST):** v13 found a possible 4090 confound. E2
+**Box confound CLEARED (v13 box control, `38e3c29`): the FAIL below stands.**
+(Was held open 2026-10-30 ~16:30 IST:) v13 found a possible 4090 confound. E2
 and g1c (unrelated changes, both trained on the 4090 with grad checkpointing)
 lose the same ~0.05 holdout to the 6000 control, tracking it through stage A
 and the first ~3,000 stage-B steps, then drifting up ~0.07. v13's box control
@@ -1088,8 +1089,10 @@ Other B1 tasks unchanged (letter_shift / number_step / reverse3 1.00 both;
 two_hop 0.30 both; untrained formats at chance for both). So the content
 phase does exactly what the collision diagnosis predicted: when "X is" keys
 stop colliding, the label lookup circuit forms on every seed. v13's Q1
-(echo_qinit) and S1 (echo_sparse) arms run on the same seeds next; the F1
-winner goes to 600M (v13's lane, the 6000 or a box-checked 4090).
+(echo_qinit) and S1 (echo_sparse) arms ran on the same seeds in the v13 slot
+(`38e3c29`): **Q1 0/5, S1 0/5.** N9a is the only arm that meets bar F. It goes
+to 600M in v13's lane through the trainer hook (`424afd6`, `--echo_phase_lags
+3` / `ECHO_PHASE_LAGS=3`).
 
 ### N9 — phase-aligned dual memory (the user's 2×O(1) memory, 2026-10-30; design only)
 
