@@ -18,6 +18,15 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-30 16:00 IST: joint re-plan with v14 (user ask).** 4090: g1c (→ ~18:00)
+  → F1 v13 arms (tmux `f1`, `~/f1_chain.sh`, worktree `../qllm_q1` at 3208b64:
+  echo_qinit + echo_sparse, 5 seeds; v14 runs echo + echo_phase in `v14f1`) →
+  the F1 winner at 600M. 6000: r3b (→ ~20:30) → B2-in-training 600M pair
+  (source `b2`, d27b256), PAM arms start with the F1 winner. Deferred: Q1-B2,
+  language-first vs LR restart, rehearsal. 6000 disk: the 9 old 100M LR-screen
+  checkpoints (pamlr/tflr/m2lr) moved to `/media/gowrav/d_drive/qllm2/from_6000/`
+  on the local box (md5 verified), 6000 now 20 GB free.
+
 * **2026-10-30 13:35 IST: g1c RUNNING on the 4090** (worktree `../qllm_g1c`,
   9c2b632, ~3 h → ~16:45 IST). LCL DONE: no model's learning holds past
   2048 (PAM keeps the label set, loses the mapping). **Q1 tied start**
