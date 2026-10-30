@@ -1094,6 +1094,28 @@ stop colliding, the label lookup circuit forms on every seed. v13's Q1
 to 600M in v13's lane through the trainer hook (`424afd6`, `--echo_phase_lags
 3` / `ECHO_PHASE_LAGS=3`).
 
+**N9a at 600M (v13 n9c, 2026-10-31, `df8aed6`; 103.5M vs C1-ctl 102.95M, 600M
+tokens each, M1 body, C1-ctl recipe): LOOKUP FAIL by the pre-registered bars;
+RECALL much better (exploratory, not a bar).**
+- label_exact 0.472 vs 0.610 (bar ≥ 0.710); label_category 8-shot 0.318 vs
+  0.500 (bar ≥ 0.650; 2 / 4 shots 0.507 / 0.502 vs 0.593 / 0.680).
+- Guards held: holdout 3.4725 vs 3.4743.
+- Recall 0.975 vs 0.825; **past 2048: 0.924 vs 0.597** (T++ 0.20, Mamba-2
+  0.46 there): the best of any 600M model.
+- Keys de-collide as designed: cosine at label positions 0.538 vs 0.715
+  (random positions 0.227 vs 0.379).
+- label_exact by pairs back 0..5: 0.58 / 0.54 / 0.37 / 0.43 / 0.16 / 0.12
+  vs ctl 0.57 / 0.62 / 0.48 / 0.67 / 0.34 / 0.47; wrong picks are all
+  in-context labels.
+**Reading (with v13's B2 600M result):** PAM learns lookup and rule skills
+from the formats it trains on. The micro F1 5/5 trained on label_category
+itself; at 600M "<item> is <label>," is never trained, so separating keys
+alone did not create the skill (the collision was a symptom). Open design
+question: why exact lookup decays with pairs back once keys are distinct
+(write / erase gates, or the query window reaching into the previous label).
+**The recall jump is unplanned**, so it needs a pre-registered replication
+with recall as the primary bar before any claim.
+
 ### N9s — salient phase (user idea, 2026-10-31; PRE-REGISTERED ~00:40 IST)
 
 **Idea (user).** N9a's phase comes from a FIXED window of the last 3 tokens.
