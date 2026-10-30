@@ -1132,11 +1132,10 @@ class LM(nn.Module):
             assert cfg.pam_layers and cfg.delta and cfg.chrono, \
                 "M2 share_reads needs pam_layers, delta and chrono"
         self.echo = cfg.echo
-        assert self.echo or not cfg.echo_tied, "echo_tied needs echo"
         if self.echo:
             assert not cfg.is_complex, "echo is implemented for the real arm"
             assert cfg.dim == cfg.n_heads * cfg.head_dim, "echo heads must tile dim"
-            self.echo_qk = nn.Linear(cfg.dim, (1 if cfg.echo_tied else 2) * cfg.dim, bias=False)
+            self.echo_qk = nn.Linear(cfg.dim, 2 * cfg.dim, bias=False)
             self.echo_gates = nn.Linear(cfg.dim, 3 * cfg.n_heads)   # dt | write | erase
             self.echo_out = nn.Linear(cfg.dim, cfg.dim, bias=False)
             self.echo_out._zero_init = True                         # identity at start
@@ -1206,11 +1205,6 @@ class LM(nn.Module):
                 z = self.cond_mem[str(i)](z, input_ids)
         return z, new_states
 
-    def _echo_qk(self, h: torch.Tensor):
-        """(q, k) projections of raw h; E2 tied echo shares one W (q = k = W h)."""
-        p = self.echo_qk(h)
-        return (p, p) if self.config.echo_tied else p.chunk(2, dim=-1)  # named-exit: echo boundary, h is raw [B,T,D]
-
     def _echo_read(self, hidden: NamedTensor, input_ids, batch: Dim, time: Dim,
                    state=None):
         """E1 Echo memory read (raw-torch boundary). Returns (out, new_state).
@@ -1229,11 +1223,11 @@ class LM(nn.Module):
         h = hidden.raw(batch, time, self.model_dim)                     # [B,T,D]
         B, T, D = h.shape
         H, K = cfg.n_heads, cfg.head_dim
-        q, k = self._echo_qk(h)
+        q, k = self.echo_qk(h).chunk(2, dim=-1)
         if state is None:
             k = nn.functional.pad(k, (0, 0, 1, 0))[:, :T]               # k_t from h_{t-1}; k_0 = 0
         else:
-            k_prev = self._echo_qk(state[1].to(h.dtype))[1]
+            k_prev = self.echo_qk(state[1].to(h.dtype)).chunk(2, dim=-1)[1]
             k = torch.cat([k_prev[:, None], k[:, :T - 1]], dim=1)       # k_t from h_{t-1}, across calls
         v = nn.functional.embedding(input_ids, self.embed.embed.weight).to(h.dtype)
         v = v * torch.rsqrt(v.float().pow(2).mean(-1, keepdim=True) + 1e-6).to(h.dtype)

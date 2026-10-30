@@ -18,6 +18,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-30 03:17Z (08:47 IST): E2 tied echo FAIL, code removed** (holdout
+  +0.055, recall 0.602 vs 0.825, label_cat 8-shot 0.365 vs 0.50; code at
+  `5100fd7`). 4090 handed to v14 (B0 run 3). S4 has no port: Mamba-2 → r3b.
+
 * **2026-10-30 02:32Z (08:02 IST): S4 chain queued on the 6000** (tmux `s4`,
   `~/s4_chain.sh`, log `logs/v13_sempty_s4_driver_20261030_0232.log`). Waits
   for "=== s3 chain DONE" AND `~/v14_slot2.done` (v14 touches it after its

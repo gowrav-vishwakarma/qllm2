@@ -640,7 +640,7 @@ def test_short_conv(batch_size=2, seq_len=40, seed=0):
     return True
 
 
-def test_echo_memory(batch_size=2, seq_len=48, seed=0, tied=False):
+def test_echo_memory(batch_size=2, seq_len=48, seed=0):
     """E1 echo memory: identity at init, causal, grads flow, and it can copy.
 
     (1) echo on with zero echo_out == the model without it; (2) with a random
@@ -655,9 +655,7 @@ def test_echo_memory(batch_size=2, seq_len=48, seed=0, tied=False):
     cfg.chunk_size = 16
     cfg.chrono = cfg.out_gate = cfg.delta = True
     cfg.echo = True
-    cfg.echo_tied = tied
     model = LM(cfg).to(dev).eval()
-    assert model.echo_qk.weight.shape[0] == (1 if tied else 2) * cfg.dim
     ids = torch.randint(0, cfg.vocab_size, (batch_size, seq_len), device=dev)
     with torch.no_grad():
         on, _, _ = model.forward(ids)
@@ -692,7 +690,7 @@ def test_echo_memory(batch_size=2, seq_len=48, seed=0, tied=False):
     model.eval()
     D = cfg.dim
     with torch.no_grad():
-        model.echo_qk.weight.copy_((torch.eye(D) if tied else torch.cat([torch.eye(D), torch.eye(D)])).to(dev))
+        model.echo_qk.weight.copy_(torch.cat([torch.eye(D), torch.eye(D)]).to(dev))
         model.echo_gates.weight.zero_()
         Hh = cfg.n_heads
         model.echo_gates.bias[:Hh].fill_(-20.0)     # retention ~ 1
@@ -727,15 +725,9 @@ def test_echo_memory(batch_size=2, seq_len=48, seed=0, tied=False):
         seq_l = torch.cat(parts, dim=1)
     d_dec = (par - seq_l).abs().max().item()
     assert d_dec < 2e-3, f"echo decode disagrees: {d_dec:.3e}"
-    print(f"  {'tied ' if tied else ''}init parity {d_init:.3e}   causal: past {d_past:.1e} now {d_now:.1e}   "
+    print(f"  init parity {d_init:.3e}   causal: past {d_past:.1e} now {d_now:.1e}   "
           f"grads ok   copy: repeat of x3 recalls x4   decode vs chunked {d_dec:.2e} ({dev})")
     return True
-
-
-def test_echo_tied():
-    """E2 tied echo (W_q = W_k): same checks as E1 (identity at init, causal,
-    grads, copy with W = I, decode == chunked) with one shared projection."""
-    return test_echo_memory(tied=True)
 
 
 def test_sparse_memory(batch_size=2, seq_len=30, seed=0):
@@ -1036,7 +1028,6 @@ def main():
         test_out_gate_parity_and_decode,
         test_short_conv,
         test_echo_memory,
-        test_echo_tied,
         test_sparse_memory,
         test_shared_reads,
         test_transformer_baseline,

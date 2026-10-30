@@ -241,7 +241,7 @@ def _print_run_header(args, cfg, model, params, device, loader, val_loader,
 
     # --- ladder (only non-default arch flags) -------------------------------
     _ladder = [k for k in ('n_states', 'vault', 'delta', 'cond_mem',
-                           'chrono', 'out_gate', 'short_conv', 'echo', 'echo_tied',
+                           'chrono', 'out_gate', 'short_conv', 'echo',
                            'pam_layers', 'mlp_hidden', 'share_reads')
                if getattr(cfg, k) not in (False, 1, 0.0)]
     if cfg.base_dt_bias != -4.0:
@@ -1077,8 +1077,6 @@ def build_argparser():
                    help='M2: notebook-less blocks read the nearest notebook below (no decode yet)')
     p.add_argument('--echo', action='store_true',
                    help='E1: top-of-stack succession (echo) memory into the head')
-    p.add_argument('--echo_tied', action='store_true',
-                   help='E2: tie the echo query and key projections (W_q = W_k); needs --echo')
     p.add_argument('--n_layers', type=int, default=0,
                    help='main-stack block count (0 = preset)')
     p.add_argument('--base_dt_bias', type=float, default=None,
@@ -1138,8 +1136,6 @@ def main():
         cfg.short_conv = True
     if args.echo:
         cfg.echo = True
-    if args.echo_tied:
-        cfg.echo_tied = True
     if args.pam_layers:
         cfg.pam_layers = tuple(int(i) for i in args.pam_layers.split(','))
     if args.mlp_hidden:

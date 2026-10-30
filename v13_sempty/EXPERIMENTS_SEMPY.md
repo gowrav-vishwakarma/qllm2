@@ -2815,3 +2815,29 @@ same trainer, data and evals):
 separately] → mbs1 → mbs2 → r3b. r3b's arm flags come from `~/s4_r3b.flags`
 on the 6000 if it exists when r3b starts (set only by a passed E2 port);
 otherwise the plain reference.
+
+### E2 result (2026-10-30, 4090, `e5b1a2a`) — FAIL; code removed (last commit with it: `5100fd7`)
+
+`e2ta_pre` 00:13Z → 00:51Z, `e2tb_main` → 03:13Z, probes → 03:17Z (08:47 IST).
+57K tok/s on the 4090 with grad checkpointing, no crash.
+
+| model (600M, M1 body, C1-ctl recipe) | holdout | WikiText | recall 63-cell (a1/a4/a8) | label_cat 2/4/8-shot @ 400 trials (4090) | learning mean @ 400 | PG-19 4–8k |
+|---|---|---|---|---|---|---|
+| C1-ctl (echo, untied; 6000) | **3.4743** | **69.86** | **0.825** (0.879/0.865/0.732) | 0.593 / 0.680 / **0.500** | **0.194** | 0.0410 |
+| e2t (tied echo; 4090) | 3.5298 | 75.25 | 0.602 (0.827/0.615/0.364) | 0.615 / 0.670 / 0.365 | 0.177 | 0.0395 |
+| e2t stage A (120M) | 3.9255 (ctl A 3.9231) | 127.01 | | | | |
+
+**Verdict: FAIL** on every rule. Primary: label_category 8-shot 0.365 vs
+0.500 (d −0.135; bar +0.15). Guards: holdout +0.055 (bar ≤ +0.01), behind
+at every val (+0.063 @ 4883, +0.059 @ 9766); recall 0.602 < 0.775. Not the
+LM-only case either.
+
+- Stage A matched the control (3.9255 vs 3.9231), so the gap grows in stage
+  B (recall docs + the M1 mix) and is far beyond cross-box kernel noise.
+- Reading: on real text at 600M, sharing q = k costs the echo its
+  separate "what am I looking for" vs "what preceded this" projections, so
+  multi-fact recall collapses (8-fact 0.36 vs 0.73) and LM follows. The
+  micro-bench gain (circuit forms 4/4 seeds on v14's B1 data) does not
+  transfer to pretraining.
+- Code removed (`--echo_tied` / `ECHO_TIED`, `_echo_qk`, `test_echo_tied`);
+  index row with the rerun recipe. S4 runs without the E2 port.
