@@ -930,6 +930,20 @@ any format. **N7's bar at 600M (to freeze before the run): label_exact ≥
 T++ inside AND past 2048 tokens, recall and holdout not worse.** v13's data
 lever (generic repeated-text / ICL data) is complementary.
 
+**Why PAM's lookup fails: key collisions (v13 diagnosis, `77efe61`).** Not
+capacity (16 notebooks + echo, 3.3× state: exact copy 0.533 < M1 0.585; PAM
+3B 0.618) and not distance (1,000 filler tokens: 0.44 -> 0.37). Accuracy
+falls with the number of similar pairs in between (0.72 -> 0.29 for 0-5
+back; T++ flat ~0.8); 45 % of wrong answers are the most recent label. Echo
+keys at the label positions of different "X is Y" pairs have cosine
+0.67-0.72 (random positions 0.31-0.38): every label is filed under the
+template "<noun> is", and the delta erase makes the last write win.
+**Design rules:** keys must carry the content token, not the template. N7's
+hash of the last n tokens is collision-free by construction; any learned
+store needs keys that see the previous tokens (Mamba-2's short conv likely
+explains its 0.72) and a collision check in its selftest (key cosine at
+answer positions vs random).
+
 **Design constraints from v13's insights (EUREKA.md, 2026-10-30).** (a)
 Give the exact store its OWN reader in each block that uses it, not M2-style
 shared reads: shared reads seemed to dilute the lookup circuit
