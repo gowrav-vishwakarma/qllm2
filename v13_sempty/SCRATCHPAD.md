@@ -18,6 +18,24 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-30 ~23:00 IST — step back after the 3B result.**
+  - What we know: PAM learns fast early and plateaus (3B: T++ −0.10, Mamba-2
+    −0.145). Its lookup fails from key collisions (fix found: N9a 5/5 at
+    micro). It carries rules (B2 held-out shifts, replicated at 27M) and
+    keeps memory past the trained length. The 600M wins were intercept, not
+    slope.
+  - Plateau hypothesis: capacity, not learning. The body we optimised at
+    600M is cheap: 4 notebooks out of 16 blocks, ~1.2 MB state (Mamba-2 13.4
+    MB, 17 mixing layers). The old 16-notebook body did better at 3B (3.273 vs
+    3.309). At 600M, data limits everyone, so the fast learner wins; at 3B,
+    capacity limits, and the small state shows.
+  - Process lesson (2nd time: the 100M LR screen, now the 600M recipe):
+    choose by SLOPE. Measure every candidate at two budgets (e.g. 600M and
+    1.5B) and keep what improves the drop between them, not the 600M number.
+  - Next, after n9c and the B2 pair: a slope test on the 6000 of state /
+    mixing capacity at 1.5B tokens (M2 4-notebook vs 16-notebook + echo +
+    two stages; + N9a if it passes), read by the 600M → 1.5B drop.
+
 * **2026-10-30 16:00 IST: joint re-plan with v14 (user ask).** 4090: g1c (→ ~18:00)
   → F1 v13 arms (tmux `f1`, `~/f1_chain.sh`, worktree `../qllm_q1` at 3208b64:
   echo_qinit + echo_sparse, 5 seeds; v14 runs echo + echo_phase in `v14f1`) →
