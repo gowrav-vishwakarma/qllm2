@@ -2711,10 +2711,16 @@ values are (v14's difficulty control).
 | Mamba-2 3B | **0.094** | 0.118 | 0.071 | 0.094/0.100/0.089 |
 | PAM 3B (2e-4) | 0.066 | 0.078 | 0.054 | 0.050/0.076/0.072 |
 
-- **Every model is BELOW chance**: they systematically pick a decoy (a
-  nearby-parameter answer), i.e. they select, they do not infer. More shots
-  barely help. Bar 3 is not met by any architecture at 600M or 3B,
-  attention included.
+- **Every model is BELOW chance: nobody infers these rules EXACTLY in
+  context.** They systematically land on a decoy. Correction (v14): the
+  nearest-parameter decoys are also the answer ± 1 step, so a model that
+  infers the rule roughly (approximate arithmetic, off-by-one letter) lands
+  on the same decoys as one that selects a memorised neighbour. Our 600M/3B
+  models had no B2 training, hence no memorised tables, so below chance most
+  likely means IMPRECISE inference, not selection; B2 cannot separate the
+  two (only the affine a±1 decoys, answer ± x_q, tell a wrong slope from an
+  off-by-one). More shots barely help. Bar 3 (exact in-context inference)
+  is not met by any architecture at 600M or 3B, attention included.
 - **Difficulty control for v14:** `_new` scores 0.015–0.047 below base for
   every model with no B2 training (SE ≈ 0.006 per half), so the held-out
   values are harder by themselves; a 27M trained-vs-held-out gap has to be
