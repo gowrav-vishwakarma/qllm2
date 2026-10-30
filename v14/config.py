@@ -25,6 +25,14 @@ class V14Config(PAMConfig):
     # the query uses the window ending at t, the key the window ending at t-1,
     # so "X is" only aligns with an earlier "X is". 0 = off (plain echo).
     echo_phase_lags: int = 0
+    # N6 / N10 operator memory (v14/units.py OperatorMemory), on the echo body:
+    # 'phase' / 'diag' = N6 (code restored from 78e4354), 'coord' = N10 (one
+    # learned coordinate per head on circles of periods spread by
+    # opmem_coord_base). '' = off.
+    opmem: str = ''
+    opmem_fade_bias: float = -3.9     # retention e^-softplus(-3.9) ~ 0.98 at start
+    opmem_query: str = 'shared'       # 'shared': q_t = W_in h_t; 'own': its own W_q
+    opmem_coord_base: float = 100.0
 
 
 def from_pam(cfg: PAMConfig, **overrides) -> V14Config:

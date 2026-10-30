@@ -27,6 +27,8 @@ KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {   # N1's kernel boundaries left 
         "_echo_read",        # N9a: v13's echo read (raw-torch boundary there too) + content phases
         "_content_phase",    # N9a: integer ids -> angles (masked gather over -1 padding)
         "_turn",             # N9a: channel-pair rotation of raw q / k
+        "_circles",          # N10: coordinate -> unit complex on P circles (cos / sin)
+        "__init__",          # init pairing: fork_rng so the body and RNG stay as plain echo
     }),
 }
 

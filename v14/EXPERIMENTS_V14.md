@@ -1172,6 +1172,32 @@ numbers can sit on several clocks at once). Bar: formation rate on
 shift_wide_new over 5 seeds vs echo (≥ 0.9 counts as formed), plus B2
 held-out numbers not worse.
 
+**N10 code (2026-10-30, branch `n10`).** N6's `OperatorMemory` restored from
+`78e4354` (modes `phase`, `diag`) plus mode **`coord`** (N10): one learned
+coordinate per head for the input side (W_in h_{t-1}), the output side (W_role
+ê(x_t)) and the query, each read on P = head_dim/2 circles with periods spread
+geometrically (omega_p = 100^(-p/P)); a rule = one step along the coordinate,
+the same step on every circle; S = faded circular mean of the steps, read
+p = q·S/(|S|+1), zero-init output. Init pairing fixed: the memory is built
+and initialised under fork_rng and the body reloaded, so at the same seed the
+model is bit-identical to plain echo (N6's old hook re-initialised the whole
+body). Selftest: init == echo for both modes; decode == prefill 1.2e-5 /
+5.1e-6; every parameter learns. Params: N6 +49.7k, N10 +17.4k (micro size).
+
+**N10 formation run (PRE-REGISTERED 2026-10-30 ~16:10 IST, before any number).**
+Does a built-in multi-circle coordinate make held-out rule inference form for
+every seed?
+- **Bench:** B2 training (`--rule_tasks shift_wide,step_wide,affine_map`),
+  6000 × B16. **Formed** = shift_wide_new mean over 2/4/8 shots ≥ 0.9.
+- **Arms:** echo, op (N6, its first fair test: B1 could not show
+  inference), opcoord (N10). 5 seeds: i = 1..5, `--seed 9i --doc_seed0
+  (i+25)·100M --init_seed 9i`, tag `n10p<i>`, same init and data per seed.
+- **Bar C (per arm):** formed in ≥ 4 of 5 seeds while echo forms in ≤ 2 of
+  5. **Guard:** held-out numbers (step_wide_new, affine_map_new) mean not
+  below echo's by more than 0.05.
+- **Reading:** if echo itself forms ≥ 3 of 5, the bench cannot show a
+  reliability gain on this seed set: report rates, no verdict.
+
 ### N11 — reason first, then look (pands-style planner + three memories; user vision, design only)
 
 **Idea.** The user's pands v1 reads a passage into an essence direction z

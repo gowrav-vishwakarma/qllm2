@@ -10,7 +10,11 @@
 6. N9a           content-phase echo: off at init == echo; decode == prefill
                    with live phases; "X is" template keys separate by X
                    (collision check) and the same X stays aligned; learns.
-7. B2 splits       held-out rule parameters appear only in the ``_new`` tasks,
+7. N6 / N10      operator memory ('phase' = N6, 'coord' = N10 circles):
+                   starts bit-identical to echo at the same seed (body and RNG
+                   untouched); decode == prefill with a live read; every
+                   parameter learns.
+8. B2 splits       held-out rule parameters appear only in the ``_new`` tasks,
                    trained ones only in the base tasks; answers stay out of
                    the context; the nearest-parameter decoy is a candidate.
 (Tests of removed units: N6 operator memory at 78e4354; tied echo at 5100fd7;
@@ -202,6 +206,32 @@ def test_n9a():
           f"(was 1.0 unturned), same noun {same:.3f}; phases learn")
 
 
+def test_opmem():
+    for mode in ('phase', 'coord'):
+        torch.manual_seed(0)
+        echo = V14LM(_cfg()).eval()
+        torch.manual_seed(0)
+        model = V14LM(_cfg(opmem=mode)).eval()
+        ids = torch.randint(0, 512, (2, 50))
+        d0 = (_logits(echo, ids) - _logits(model, ids)).abs().max().item()
+        assert d0 == 0.0, f"{mode}: opmem at init != echo: {d0:.3e}"
+        with torch.no_grad():
+            torch.nn.init.normal_(model.opmem.out.weight, std=0.5)    # make the read matter
+            torch.nn.init.normal_(model.opmem.fade.weight, std=0.5)
+            torch.nn.init.normal_(model.opmem.write.weight, std=0.5)
+            torch.nn.init.normal_(model.opmem.w_in.weight, std=0.5)
+            torch.nn.init.normal_(model.opmem.w_role.weight, std=0.5)
+        torch.manual_seed(7)
+        diff = _decode_diff(model, 150)
+        assert diff < ATOL, f"{mode}: opmem prefill != decode: {diff:.3e}"
+        model.train()
+        out = model(torch.randint(0, 512, (2, 40)))[0]
+        out.float().pow(2).mean().backward()
+        for name, prm in model.opmem.named_parameters():
+            assert prm.grad is not None and prm.grad.abs().max().item() > 0, f"{mode}: no grad on {name}"
+        print(f"  {mode}: init == echo; decode == prefill {diff:.2e}; every parameter learns")
+
+
 def _b2_param(task, text):
     """The hidden parameter of a B2 prompt (k, d, or the affine b)."""
     lines = text.split('\n')[1:]
@@ -243,7 +273,7 @@ def test_b2_splits(seeds=40):
 def main():
     torch.set_num_threads(8)
     for test in (test_off_is_v13, test_n7_lookup, test_n7_off_at_init,
-                 test_n7_decode_matches_prefill, test_n7_learns, test_n9a, test_b2_splits):
+                 test_n7_decode_matches_prefill, test_n7_learns, test_n9a, test_opmem, test_b2_splits):
         print(f"{test.__name__}:")
         test()
     print("ALL PASS")
