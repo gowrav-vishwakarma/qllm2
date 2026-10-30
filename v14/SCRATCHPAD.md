@@ -243,6 +243,21 @@ Next for v14: after n9c and N10 land, pre-register N7 as an LM test (600M
 first as a signal, then ≥ 1.5B on the 6000), and design the sparse-key
 notebook (Willshaw) as the capacity unit.
 
+## Bar 3 transferred to 600M (v13 B2 pair, seed 42 half, `ea0c24b`; 2026-10-31 ~01:00 IST)
+
+With 3 % B2 base-value docs in training, PAM M2 (102.9M) infers held-out rule
+values; T++ (101.9M) on the same data mostly does not. B2 `_new`: PAM 1.000 /
+0.973 / 1.000 (shift / step / affine) vs T++ 0.257 / 1.000 / 0.944 (means
+0.991 vs 0.734; T++ picks the ±1 decoy on shift). Spread past the trained
+length (2048): affine_new L = 1024 PAM 0.965 vs T++ 0.075, L = 4096 0.785 vs
+0.45; shift_new PAM 0.79 / 0.60 / 0.34 at 1024 / 2048 / 4096, T++ 0. Cost:
+PAM recall 0.870 -> 0.721, holdout +0.030 (T++ +0.077). **The 27M B2 finding
+(echo infers, T++ selects) holds at 600M**, one seed; b2p2 (PAM seed 43) and
+b2m (Mamba-2) are running. Fixed rule: no bar-3 claim unless PAM beats BOTH
+T++ and Mamba-2 by +0.10 in both seeds. If it holds, the v13 session posts the
+ntfy EUREKA (its run); v14 does not double-post. For v14 units judged on B2:
+also run with `--spread` (the distance edge is where the body differs).
+
 ## Next action
 
 1. **v13 flagship r3c** (`16f372e`, 6000, from ~00:45 IST, ~14 h): 16
