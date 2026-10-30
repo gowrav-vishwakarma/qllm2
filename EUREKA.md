@@ -9,6 +9,16 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **v13: the B2 edge over Transformer++ replicates (seed 43); the rule survives distance,
+  an exact far token does not.** `b2p2_main_38e3c29` (102.9M, 600M tokens): B2 `_new` mean
+  0.944 (seed 42 0.991) vs T++ 0.734. LCL spread affine `_new` @2048 / 4096 / 8192 = 0.975 /
+  0.905 / 0.61 (T++ 0.05 / 0.45 / 0.285). step_wide (needs an exact copy of the last far
+  term) collapses at 1024 for BOTH models; shift and affine need only the rule's parameters
+  and hold. Labels still T++'s (PAM 0.63 vs 0.71). *For v14:* the body's recurrent edge is
+  in carrying an abstract quantity (a rule value), not in copying distant tokens through
+  filler. A unit that adds exact far copying (step through filler) would be new ground;
+  `--spread` with step_wide_new is the probe. Bar 3 still waits on Mamba-2 (b2m, ~08:00 IST).
+
 - **v13: N9a at 600M de-collides the label keys but label lookup gets WORSE; recall
   jumps. In-context skills follow the trained format.** `n9cb_main_e5f0b73` vs C1-ctl
   (600M tokens, ~103M): key cosine at label positions 0.715 → 0.538, yet label_exact

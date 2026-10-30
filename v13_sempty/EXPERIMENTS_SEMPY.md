@@ -3416,3 +3416,52 @@ PG-19, holdout.
 5. One seed. A pass gets a second seed before any claim. A FAIL on rule 1
    means the label gap is the body's (back to v14's lookup work), and `lab`
    is removed from the code (index row with the hash).
+
+## B2 pair — seed-43 result (2026-10-31 04:05 IST): PAM beats Transformer++ on held-out rule values in BOTH seeds (Mamba-2 arm still to come)
+
+`b2p2_main_38e3c29` (6000, PAM M2 + echo + shared reads, 102.9M, seed 43,
+same recipe as b2p1: 120M aptitude stage A `c1m2a_pre` + 480M stage B with
+3 % `b2` docs; 600M tokens). T++ row = b2t (101.9M, seed 42, 600M tokens).
+
+| 600M tokens | params | holdout | recall 63 (≤ 2048 / > 2048) | PG-19 far gain 4–8k | label_diag cat / exact (mean) | B2 base | B2 `_new` shift / step / affine (mean) |
+|---|---|---|---|---|---|---|---|
+| **PAM b2p2 (s43)** | 102.9M | 3.4800 | 0.707 (0.801 / **0.474**) | **+0.042** | 0.592 / 0.660 (0.626) | 1.000 | **1.000 / 0.834 / 0.999 (0.944)** |
+| PAM b2p1 (s42) | 102.9M | 3.4777 | 0.721 (0.781 / 0.572) | +0.043 | 0.547 / 0.588 (0.567) | 1.000 | 1.000 / 0.973 / 1.000 (0.991) |
+| T++ b2t (s42) | 101.9M | 3.5572 | 0.672 (0.844 / 0.242) | −0.778 | **0.673 / 0.752 (0.713)** | 0.999 | 0.257 / 1.000 / 0.944 (0.734) |
+
+Rules suite (100): b2p2 label_category 0.587, two_hop 0.293 (b2p1 0.557 / 0.290; T++ 0.687 / 0.273).
+
+LCL spread, `_new` tasks (8 shots, 200 trials, chance 0.125, trained length 2048):
+
+| `_new` @ L | 0 | 1024 | 2048 | 4096 | 8192 |
+|---|---|---|---|---|---|
+| PAM s43 shift_wide | 1.00 | 0.735 | 0.53 | 0.295 | 0.12 |
+| PAM s42 shift_wide | 1.00 | 0.79 | 0.60 | 0.34 | 0.105 |
+| T++ shift_wide | 0.315 | 0.00 | 0.00 | 0.00 | 0.00 |
+| PAM s43 affine_map | 1.00 | **0.995** | **0.975** | **0.905** | **0.61** |
+| PAM s42 affine_map | 1.00 | 0.965 | 0.965 | 0.785 | 0.435 |
+| T++ affine_map | 0.975 | 0.075 | 0.05 | 0.45 | 0.285 |
+| PAM s43 step_wide | 0.925 | 0.09 | 0.065 | 0.085 | 0.04 |
+| T++ step_wide | 1.00 | 0.09 | 0.085 | 0.09 | 0.055 |
+
+**Verdict vs Transformer++ (pre-registered: `_new` mean ≥ T++ + 0.10 in BOTH
+PAM seeds): MET.** Seed 42 +0.257, seed 43 +0.210. Across distance both seeds
+agree: affine `_new` at 2048 / 4096 is PAM 0.965–0.975 / 0.785–0.905 vs T++
+0.05 / 0.45 (margin ≥ +0.33). Bar 3 is NOT yet claimed: the amendment needs
+PAM ≥ Mamba-2 (b2m) + 0.10 in both seeds too (b2ma → b2m running in tmux `s6`).
+
+**Reading.**
+- The rule-value edge replicates; seed noise is real on single cells
+  (step_wide_new 0.973 vs 0.834, recall > 2048 0.572 vs 0.474). Read any one
+  cell to ±0.1 from one seed.
+- What survives distance: shift and affine need only the RULE (k, or a and b);
+  the query sits next to the answer. Step needs an exact COPY of the last far
+  term, and it collapses at 1024 for both models. PAM carries the abstract rule
+  across thousands of tokens, but not an exact distant token through filler.
+  Shift decays smoothly (≈ halving above chance per doubling of L), affine much
+  less. Both use the same ±1 decoys, so decoy spacing is not why. Untested
+  guess: the letter offset drifts back toward the trained k values. The probe
+  JSONs keep only aggregates, so the picks were not checked.
+- Labels: PAM 0.57 / 0.63 vs T++ 0.71 on the same data. The lb pair
+  (pre-registered above) tests whether that is the missing format.
+- Cost stays as in seed 42: holdout +0.033 vs c1m2, recall 0.870 → 0.707.

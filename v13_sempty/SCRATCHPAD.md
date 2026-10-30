@@ -18,6 +18,20 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 04:05 IST: B2 pair vs T++ MET in both seeds; Mamba-2 arm next.** b2p2 (seed 43):
+  `_new` mean 0.944 vs T++ 0.734 (seed 42 was 0.991); affine `_new` @4096 0.905 (T++ 0.45),
+  @8192 0.61. Holdout 3.4800, recall 0.707 (> 2048 0.474). EXPERIMENTS "B2 pair — seed-43
+  result". The 6000 s6 chain is now on b2ma (Mamba-2 aptitude stage A, started 03:56 IST),
+  then b2m (~07:30-08:00 IST), then s7 lbp → lbt (~12:00 IST). Bar 3 / ntfy ONLY if PAM ≥
+  b2m + 0.10 in both seeds. 6000 root disk: 14 GB free (98 %; the rest is other users'
+  folders); the four queued ckpts need ~5 GB. Re-check before s7 starts.
+  Step back: the rule survives distance but an exact far token does not (step collapses
+  for both models; shift and affine need only the rule). Our recurrent edge is carrying
+  ABSTRACT state. Idea not run: rule docs with the examples spread by filler INSIDE the
+  2048 training window, judged at 4096/8192 (trained-length generalisation of the skill),
+  and a combined known-best stage B (N9a if n9r replicates + b2 + lab if lb passes, recall
+  share kept at 5 %) as the next 600M "best package" before any scale-up.
+
 * **2026-10-31 01:00 IST: B2 pair seed-42 half MET; b2p2 + Mamba-2 arm moved next to r3c.**
   b2p1 vs b2t (EXPERIMENTS "B2 pair — seed-42 half"): held-out rule values PAM 0.991 vs
   T++ 0.734; across distance PAM holds affine to 4096 (0.785) while T++ collapses at
