@@ -282,10 +282,29 @@ ARMS = {
 }
 
 
+# External arms: another lane's model with this bench's interface, without
+# editing v14 (e.g. v15's Grove):
+#   V14_EXT_ARMS="grove=v15.bench:build_grove" bash v14/run_bench.sh   (ARMS=grove,echo)
+# The builder gets the echo-sized cfg (width, depth, heads, vocab) and returns a
+# model with: _hidden_to_lm(x) -> (hidden [B, T, D] Tensor or NamedTensor, aux);
+# ce_from_lm(lm, labels, loss_mask=, chunk=, gemm_dtype=) -> loss; an output
+# embedding at model.embed.weight (or model.embed.embed.weight). Several arms:
+# separate the specs with ';'. The specs are recorded in the results JSON.
+EXT_ARMS = {}
+for _spec in filter(None, os.environ.get('V14_EXT_ARMS', '').split(';')):
+    _name, _target = (x.strip() for x in _spec.split('=', 1))
+    EXT_ARMS[_name] = _target
+    ARMS[_name] = dict(echo=True)          # the echo cfg, for size matching
+
+
 def build_model(kind, cfg):
     """The arm's model. ``tpp`` is v13_sempty's Transformer++ with echo's
     width, depth and heads, and an MLP (multiple of 64) that matches echo's
     parameter count."""
+    if kind in EXT_ARMS:
+        import importlib
+        module, fn = EXT_ARMS[kind].split(':')
+        return getattr(importlib.import_module(module), fn)(cfg)
     if kind != 'tpp':
         return V14LM(cfg)
     from v13_sempty.baseline_transformer import TransformerConfig, TransformerLM
@@ -547,7 +566,7 @@ def main():
     if unknown:
         raise SystemExit(f"unknown families {unknown}")
     plan = train_plan(args.steps, args.batch, args.seed, families, args.doc_seed0)
-    all_res = {'commit': commit, 'args': vars(args), 'arms': {}}
+    all_res = {'commit': commit, 'args': vars(args), 'arms': {}, 'ext_arms': dict(EXT_ARMS)}
     if args.resume and args.json and os.path.exists(args.json):
         with open(args.json) as f:
             prev = json.load(f)
