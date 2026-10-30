@@ -1097,12 +1097,15 @@ def build_argparser():
                         'queue with --stream_worker 0; 0 = inline, the pre-2026-10-27 '
                         'path). 64 x 0.21 s = 13 s of GPU work: rides out the ~3 s '
                         'HF read stalls')
-    p.add_argument('--arch', choices=('pam', 'mamba2', 'transformer'), default='pam',
+    p.add_argument('--arch', choices=('pam', 'mamba2', 'transformer', 'grove'), default='pam',
                    help='sequence mixer: pam (the v13_sempty model), mamba2 '
                         '(reference Mamba-2 baseline, baseline_mamba2.py) or '
                         'transformer (Transformer++ baseline, baseline_transformer.py); '
                         'same data/loss/schedule/ckpts; PAM ladder flags are ignored')
     p.add_argument('--mamba_d_model', type=int, default=768)
+    p.add_argument('--grove_spec', type=str, default='',
+                   help='v15 Grove body for --arch grove (v15/hook.py spec string; '
+                        "empty = v15.hook.DEFAULT_SPEC, ~102.6M)")
     p.add_argument('--mamba_n_layer', type=int, default=17,
                    help='17 x 768 = 102.6M, param-matched to the PAM reference')
     p.add_argument('--init_from', type=str, default='',
@@ -1302,6 +1305,9 @@ def main():
     elif args.arch == 'transformer':
         from v13_sempty.baseline_transformer import TransformerConfig, TransformerLM
         model = TransformerLM(TransformerConfig(vocab_size=cfg.vocab_size))
+    elif args.arch == 'grove':
+        from v15.hook import DEFAULT_SPEC, build_grove_lm
+        model = build_grove_lm(cfg.vocab_size, args.grove_spec or DEFAULT_SPEC)
     else:
         from v14.hook import build_lm, with_v14_switches
         cfg = with_v14_switches(

@@ -22,6 +22,8 @@
   Arm: `V14_EXT_ARMS="grove=v15.bench:build_grove"` (27.67M vs echo 27.61M).
 
 ## Next action
+0. G2 plumbing is DONE and verified on CPU (`v15/hook.py`, `--arch grove`,
+   launcher `ARCH=grove GROVE_SPEC=`); see EXPERIMENTS §4 G2 for the command.
 1. Read G1 when the pairs land: L (label_exact >= echo + 0.15 in >= 2/3),
    P (label_category >= 0.9 in >= 2/3). Record in the index, EUREKA if met.
 2. If G1 passes L and P: G2 (150M same-batch LM via a trainer hook).

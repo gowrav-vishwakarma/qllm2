@@ -144,10 +144,18 @@ Bars, written before the run:
 Pass = L and P. Fail = neither in 3 pairs → the design goes back to §0 (not to tuning).
 
 ### G2 — 150M same-batch LM (after G1 passes; 4090)
-GroveLM param-matched to M1 (102.9M; groves in every block), v13 trainer
-data and schedule (hook like `v14/hook.py`), holdout at 150M vs M1 3.9225
-and echo 3.9516. Bar: within +0.05 of M1 (a new body at its first LM run) and
-tok/s ≥ 0.8× M1. Pass → G3.
+GroveLM param-matched to M1 (102.96M: dim 768, 12 blocks, G 12, K 32, n 64,
+season 32, MLP 1536; `v15/hook.py` DEFAULT_SPEC), v13 trainer data and
+schedule (`--arch grove`, launcher `ARCH=grove`), holdout at 150M tokens
+(step 4069 of the r600 protocol) vs M1 3.9225 and echo 3.9516. Bar: within
++0.05 of M1 (a new body at its first LM run) and tok/s ≥ 0.8× M1. Pass → G3.
+Plumbing verified 2026-10-31 (CPU, no GPU): 4-step synthetic run with
+checkpoints; greedy `generate` through `step` == full forward; step logits
+vs season path 5e-16; checkpoint config round-trips. Launch (clean tree,
+tmux, 4090 when a whole-card slot is free, or the 6000):
+`TAG=v15g2 ARCH=grove CHRONO=0 OUT_GATE=0 DELTA=0 TARGET_TOKENS=600000000
+GRAD_CKPT=1 bash v13_sempty/tmp_pretrain_mix.sh` (the M1 control ran on the
+6000 at B 18 × T 2048, SEED 42; GEN_EVERY may stay on: Grove decodes).
 
 ### G3 — 600M on the 6000, then slope
 r600 protocol, two stages, vs T++ 600M 3.4885 / c1m2 3.4473 / Mamba-2 3.4349;

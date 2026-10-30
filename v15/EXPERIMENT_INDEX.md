@@ -10,6 +10,7 @@ side worktree (`git worktree add ../qllm_v15_<id> <hash>`).
 |---|---|---|---|---|---|
 | G0 | selftest: parity, simplex, gradients, O(1), toy lookup | **PASS** 2026-10-31 (toy lookup 0.98, chance 0.125) | `8d60a55`, `84b41d8` | stdout | `.venv/bin/python -m v15.selftest` |
 | G1 | micro: grove vs echo, B1 run 4 set (3 pairs) + B2 set (3 pairs); bars L, P (§4) | **QUEUED** 00:12 IST 2026-10-31 (tmux `v15g1`, behind n9c) | `84b41d8` | `logs/v14_v15g1p{1,2,3}_84b41d8_*`, `v14_v15g1b2p*` | `V14_EXT_ARMS="grove=v15.bench:build_grove" TAG=v15g1p1 FAMILIES=rules ARMS=grove,echo EXTRA="--seed 21 --doc_seed0 400000000 --init_seed 21" bash v14/run_bench.sh` |
+| G2 | 150M-token holdout on the r600 recipe, Grove 102.96M vs M1 3.9225 (bar +0.05, tok/s ≥ 0.8× M1) | **PREPARED** (plumbing verified on CPU 2026-10-31; waits for G1 PASS + a whole-card slot) | — | `logs/v13_sempty_v15g2_<hash>_*.log` | `TAG=v15g2 ARCH=grove CHRONO=0 OUT_GATE=0 DELTA=0 TARGET_TOKENS=600000000 GRAD_CKPT=1 bash v13_sempty/tmp_pretrain_mix.sh` |
 
 ## Candidates
 
