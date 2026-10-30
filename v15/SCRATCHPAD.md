@@ -12,7 +12,7 @@
 - Nothing has run on a GPU yet. 4090: v13's n9c was using ~15 GB at 00:30.
 
 ## Running
-- **G1 QUEUED (00:12 IST 2026-10-31)**, tmux `v15g1`, driver `v15/tmp/g1_chain.sh`
+- **G1 RUNNING (started 01:46 IST 2026-10-31, n9c closed 01:45)**, tmux `v15g1`, driver `v15/tmp/g1_chain.sh`
   (untracked), pinned worktree `../qllm_v15_g1` at `84b41d8` (.venv symlinked).
   Waits for tmux `n9c` to end and >= 12 GB free on the 4090, then runs
   grove vs echo (B1 run 4's set, seeds 21/22/23: TAG v15g1p{1,2,3}), then the
