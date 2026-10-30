@@ -12,7 +12,13 @@ from v13_sempty.config import PAMConfig, get_config as v13_get_config
 
 @dataclass
 class V14Config(PAMConfig):
-    """No v14 switch is live (N6, tied echo and N1 were removed after a FAIL)."""
+    # N7 in-context n-gram memory (v14/ngram.py). Orders () = off. Each order
+    # has a table of ngram_slots slots per sequence (O(1) state); the read is
+    # added after the blocks in ngram_layers (negative = from the end), each
+    # with its own reader (no M2 shared reads).
+    ngram_orders: tuple = ()
+    ngram_slots: int = 1 << 16
+    ngram_layers: tuple = (0, -1)
 
 
 def from_pam(cfg: PAMConfig, **overrides) -> V14Config:

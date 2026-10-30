@@ -19,6 +19,7 @@ SKIP_FILES = frozenset({
     "selftest.py",       # compares against raw torch references
     "microbench.py",     # data generation + training loop
     "check_layout.py",
+    "ngram.py",          # N7: integer hashing / sort / scatter (declared boundary, like v13 cond_mem.py)
 })
 
 KERNEL_FUNCTIONS: dict[str, frozenset[str]] = {}   # N1's kernel boundaries left with N1 (9e0a3fd)
