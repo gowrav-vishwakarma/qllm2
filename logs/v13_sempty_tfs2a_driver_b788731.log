@@ -1,0 +1,25 @@
+=== tfs2a start 2026-10-29T22:59:47Z SCREEN_HASH=b788731 arms='pre:ARCH=transformer,CHRONO=0,OUT_GATE=0,DELTA=0' base='LR=1.2e-3 TARGET_TOKENS=119992320 VAL_EVERY=3255 SAVE_EVERY=1000 KEEP_EVERY=0 KEEP_LAST=1  SOURCES=dclm,fineweb,smoltalk2_mid WEIGHTS=0.4167,0.3333,0.25 BLEND_WARMUP=30000000' ===
+=== arm pre (ARCH=transformer CHRONO=0 OUT_GATE=0 DELTA=0) ckpt=checkpoints_v13_sempty/tfs2a_pre_b788731 log=logs/v13_sempty_tfs2a_pre_b788731_20261029_2259.log 2026-10-29T22:59:47Z ===
+=== tfs2a_pre start 2026-10-29T22:59:47Z commit=b788731 log=logs/v13_sempty_tfs2a_pre_b788731_20261029_2259.log ckpt=checkpoints_v13_sempty/tfs2a_pre_b788731 ===
+=== tfs2a_pre end 1793315743 exit=0 attempts=1 ===
+=== arm pre train exit=0 2026-10-29T23:15:43Z ===
+Results saved to logs/memory_probes/v13_sempty_tfs2a_pre_b788731_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+  10/50 docs (1s)
+  20/50 docs (2s)
+  30/50 docs (3s)
+  40/50 docs (4s)
+  50/50 docs (5s)
+  [    0,   64)  loss 4.6922  ppl  109.09
+  [   64,  128)  loss 4.4640  ppl   86.83
+  [  128,  256)  loss 4.2523  ppl   70.27
+  [  256,  512)  loss 4.2498  ppl   70.09
+  [  512, 1024)  loss 4.3421  ppl   76.87   short-ctx 4.3422  far_gain +0.0001
+  [ 1024, 2048)  loss 4.3599  ppl   78.25   short-ctx 4.3732  far_gain +0.0133
+  [ 2048, 4096)  loss 4.9168  ppl  136.56   short-ctx 4.3973  far_gain -0.5195
+  [ 4096, 8192)  loss 5.5508  ppl  257.45   short-ctx 4.4244  far_gain -1.1264
+wrote logs/pos_loss/v13_sempty_tfs2a_pre_b788731_pg19.json
+--- final holdout val_loss (last val of each arm) ---
+  pre: 4.0446
+=== tfs2a DONE 2026-10-29T23:17:00Z ===

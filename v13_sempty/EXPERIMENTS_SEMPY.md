@@ -2646,3 +2646,43 @@ M1/M2), so the first equal-data 600M baseline for the one-stage PAM models.
   leads.
 - Fairness rule pending: needs tfs2 (two stages, ~05:50 IST) for the
   schedule-gain comparison, and tfc1 for c1m2.
+
+### S2 fairness result (2026-10-30, 6000, `b788731`): by the pre-registered rules, two-stage PAM beats two-stage Transformer++ on LM AND recall; the schedule's recall gain is PAM-specific
+
+`tfs2a_pre` 22:59Z → 23:17Z, `tfs2b_main` → 00:18Z (05:48 IST). Same
+recipe as C1-ctl (120M web+chat, then 480M M1 mix with --init_from).
+
+| model (600M) | holdout | WikiText | recall 63-cell (a1/a4/a8) | recall ≤ 2048 / > 2048 tok | 2048/4096/8192 | PG-19 4–8k far gain | learning (label_cat 2/4/8) | tok/s |
+|---|---|---|---|---|---|---|---|---|
+| Transformer++ one stage (tfs1) | 3.4885 | 66.38 | 0.645 (0.694/0.627/0.613) | 0.839 / 0.158 | 0.58/0.17/0.15 | −1.095 | 0.217 (0.69/0.84/0.73) | 136.6K |
+| Transformer++ two stages (tfs2) | 3.4907 | **66.20** | 0.703 (0.705/0.733/0.671) | **0.926** / 0.147 | 0.72/0.14/0.15 | −1.223 | **0.217** (0.70/0.84/0.73) | 133.5K |
+| M1 one stage | 3.4906 | 69.44 | 0.615 (0.895/0.624/0.326) | 0.657 / 0.510 | 0.66/0.56/0.46 | +0.0446 | 0.175 (0.65/0.67/0.29) | 110.2K |
+| **C1-ctl = M1 two stages** | **3.4743** | 69.86 | **0.825** (0.879/0.865/0.732) | 0.917 / **0.597** | 0.79/0.67/0.52 | +0.0410 | 0.197 (0.62/0.71/0.55) | 110.2K |
+| tfs2 stage A (120M) | 4.0446 | 145.11 | 0.354 | 0.444 / 0.128 | | −1.126 | | |
+
+**Rules (fixed before tfs1/tfs2 ran):**
+- Schedule gain PAM-specific if PAM's recall gain (+0.210) exceeds
+  Transformer++'s (tfs2 − tfs1 = +0.058) by ≥ 0.10: **+0.152 → MET.**
+  Holdout: PAM −0.016, Transformer++ +0.002 (no LM gain from the schedule).
+- Head-to-head, same recipe (C1-ctl vs tfs2): recall Δ +0.122 ≥ +0.05 →
+  **PAM beats Transformer++ on recall**; holdout Δ −0.0164 < −0.01 →
+  **PAM beats Transformer++ on LM.**
+
+**What the rule verdict does NOT say (read these with it):**
+- The recall win is the long-context half. Inside Transformer++'s 2048-token
+  training window it is a tie (≤ 2048: 0.926 vs 0.917); past it Transformer++
+  collapses (0.147) and PAM keeps 0.597. That is a real property of an
+  O(1)-state model (no positional range to run out of), but it is length
+  generalisation, not better recall at equal length.
+- WikiText goes the other way: Transformer++ 66.20 vs C1-ctl 69.86 (+0.054
+  nats for PAM). The holdout (web text from the training distribution)
+  favours PAM by 0.016; the out-of-distribution encyclopedic text favours
+  Transformer++ by more. LM is mixed, not a clean win.
+- Learning probe: Transformer++ leads (0.217, label_category 8-shot 0.73 vs
+  0.55). Bar 3 is not met by anyone.
+- One seed per arm. Speed: Transformer++ 1.2× faster per token at T=2048 on
+  this GPU (its cost grows with context; PAM's does not).
+- Scoreboard so far at 600M equal data: bar 2 (beat Transformer++) is MET on
+  the pre-registered holdout + recall rules for the two-stage M1 and
+  pending for c1m2 (tfc1, ~09:30 IST); not met on WikiText or the learning
+  probe. Mamba-2 at 600M is not run yet (3B only: it beat PAM there).

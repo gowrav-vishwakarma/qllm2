@@ -18,6 +18,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-30 00:18Z (05:48 IST): tfs2 DONE — S2 fairness rules MET**: two-stage
+  M1 beats two-stage T++ on holdout (−0.016) and recall (+0.122; the win is
+  past 2048 tokens, ≤ 2048 ties); T++ better on WikiText and label_category.
+  c2m2 (two stages on M2) started 00:18Z, ETA ~02:15Z = 07:45 IST; then the
+  s3 chain (tfc1) ~09:30 IST. 6000 disk 14 GB.
+
 * **2026-10-30 00:13Z (05:43 IST): E2 tied echo LAUNCHED on the 4090** (v14 B1
   run 4 bar P met). tmux `e2`, `~/e2_chain.sh`, run FROM THE WORKTREE
   `/home/gowrav/Development/qllm_e2` at `e5b1a2a` (ECHO_TIED code `26ef94a`);
