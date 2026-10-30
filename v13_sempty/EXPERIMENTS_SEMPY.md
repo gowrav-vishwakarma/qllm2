@@ -2572,6 +2572,16 @@ single-seed and is downgraded to a hypothesis. Transformer++ 600M (0.73)
 is also one seed, but v14's micro-bench reference arm (tpp) will show
 whether attention forms the circuit reliably.
 
+**Gate result: v14 B1 run 4 bar P MET (`b6550ec`, ~05:50 IST) → E2 GO.**
+d = +0.589 / +0.595 / +0.222 (mean +0.469, SD 0.214, 2·SD 0.427); valid
+(echo 0.41–0.44 in every pair, at in-context chance; tied 1.00 / 1.00 /
+0.66). On run 2's training set the tie makes the circuit form: tied 4 of 4
+seeds, echo 0 of 5. Only with label_marker in the mix does it flip (run
+3). By v14's pre-registered map the frame is "abstraction/recall tweak",
+not a similarity lookup (A was not met in run 3). Unseen rule parameters
+stay ≤ chance for both arms; tied is 9 % faster per step. At 600M each arm
+is one seed, so the 400-trial primary is read with that risk in mind.
+
 **Design (option (a), agreed with v14).** Arm `e2t` = M1 body
 (PAM_LAYERS=3,7,11,15, MLP 2352, ECHO=1) + ECHO_TIED=1, on C1-ctl's exact
 two-stage recipe: stage A `e2ta_pre` 120M dclm/fineweb/smoltalk2_mid
