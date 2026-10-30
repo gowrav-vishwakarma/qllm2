@@ -7,6 +7,8 @@
 - Design written and the organ coded: `v15/grove.py` (GroveLayer season form
   + `step`, GroveLM). `python -m v15.selftest` PASS: parity 1e-15, toy
   in-context lookup 0.98 (chance 0.125) on CPU in 20 s.
+- Isolation (user, 2026-10-31): v15's ideas stay unpolluted by v13/v14. Their
+  work is used only as baselines, benches and trainer plumbing.
 - Nothing has run on a GPU yet. 4090: v13's n9c was using ~15 GB at 00:30.
 
 ## Next action
