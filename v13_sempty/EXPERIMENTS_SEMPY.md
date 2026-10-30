@@ -3239,3 +3239,31 @@ lesson: LM effects need ≥ 1.5B tokens).
   should cross body × LR**: 16-notebook + echo + two stages vs M2, at LR
   1.2e-3 (and a mid LR, 6e-4), read by the 600M → 1.5B drop and the late
   slope, not by the 600M number.
+
+## r3c — run the known-good combination straight at 3B (pre-registration, 2026-10-30 23:20 IST)
+
+User: "do not waste time on things we already know are not superior; run
+directly what deserves priority." What the evidence already says works for
+PAM's LM slope and quality: all 16 blocks with a notebook (late slope −0.060
+vs −0.045 for 4; at LR 1.2e-3 −0.086 ≈ baselines), LR 1.2e-3, E1 echo (−0.052
+at 600M on exactly this body), the two-stage schedule (PAM-only gain). Never
+run together. So instead of a 2×2 body × LR test at 1.5B (~25 GPU-h), one
+3B run of the combination:
+
+`r3c`: baseline_real_pm (16 notebooks, chrono + out_gate + delta) + ECHO=1;
+stage A 120M dclm / fineweb / smoltalk2_mid 0.4167 / 0.3333 / 0.25 (30M
+web-only warmup) → stage B 2.88B tokens M1 mix 0.44 / 0.41 / 0.10 / 0.05,
+`--init_from` A; LR 1.2e-3 both stages, warmup 100 / 1000, VAL_EVERY 3906,
+step 39062 kept (~1.56B tokens). 6000, after b2t (b2p2 deferred). ~14 h.
+N9a not included (its 600M lookup check lands 01:30; its LM effect at scale is
+unknown: it gets its own run).
+
+**Rules (fixed now):**
+- *Futility at ~1.56B tokens*: stop if r3c's holdout is worse than the old
+  16-notebook LR-1.2e-3 3B run at matched tokens (3.484 @ 1.475B; interpolate
+  to r3c's token count) — then the combination adds nothing over the old body.
+- *Final, vs the 3B baselines* (same definition as S4): beats if holdout lower
+  by > 0.01 AND WikiText lower; within ±0.01 = competitive at lower serving
+  cost (state ~3.9 MB vs Mamba-2 13.4 MB, vs T++ KV cache); T++ 3.2064 /
+  46.61, Mamba-2 3.1644 / 46.91. Also reported: late slope 2 → 3B vs
+  baselines (−0.081 / −0.079), recall, label_diag, B2, LCL.
