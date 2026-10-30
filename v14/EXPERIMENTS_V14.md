@@ -79,6 +79,14 @@ apply a rule seen in context to inputs that never appear in the context
 measure memory. **B1** measures bar 3 on the micro-bench, and every v14
 unit reports both B0 and B1.
 
+**Bar 2 in practice (user, 2026-10-30).** A few more parameters or a bit
+more training than the transformer is acceptable: an O(1) model serves more
+users and its inference is cheaper (no KV cache growing with context). So
+compare quality at comparable cost and state params and tokens with every
+result. **Learning past the trained context length is a strength to
+measure:** report results inside and beyond the training length (v13 S2:
+T++ recall collapses past 2048, 0.15, while two-stage M1 holds 0.60).
+
 **Control body** for every LM arm: **M1** (KEEP at 600M, 2026-10-29,
 session "Qllm v13"): `baseline_real_pm` + chrono + out_gate + delta + echo,
 notebooks only in blocks 3, 7, 11, 15, MLP hidden 2352 (102.94M). 600M:
