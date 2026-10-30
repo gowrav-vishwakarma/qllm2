@@ -77,6 +77,7 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 
 | id | idea | status | notebook section |
 |---|---|---|---|
+| B2-in-training pair (bar 3) | `b2` rule docs (3 %, held-out values) in stage B; PAM b2p1/b2p2 vs T++ b2t, + Mamba-2 b2m (amendment) (`38e3c29`) | **seed 42 MET**: `_new` mean PAM 0.991 vs T++ 0.734 (+0.257, bar +0.10); spread affine `_new` @1024 0.965 vs 0.075, @4096 0.785 vs 0.45 (first learning past 2048); cost: PAM recall 0.870 → 0.721, holdout +0.030 (T++ +0.077). b2p2 (seed 43) + b2m running (tmux `s6`, 6000) | "B2 pair — seed-42 half result + amendment" |
 | G1 short conv | conv on qkv, single-pass pretraining (`g1c`, 4090, `9c2b632`) | **FAIL as measured, verdict held open**: label_exact 0.517 vs ctl 0.610, holdout +0.049; E2 and g1c (both 4090) lose the same ~0.05 to the 6000 control, so a 4090 box control runs first | "g1c result" |
 | Learning probe (bar 3) | in-context rule tasks, answer must be inferred (`ed326a1`) | baselines: all ≤ chance on letter/number/reverse incl. Transformer++ 3B (mean 0.228); follow priors ("last+1") | "Learning probe" |
 | B2 probe (bar 3, selection-proof) | v14 rules_ood via `run_learning_probe.py --suite b2` (`fa404dc`): nearest-parameter answers among the decoys | every 600M/3B model BELOW chance 0.125 (0.037–0.094; T++ 3B 0.088, Mamba-2 3B 0.094, best 600M c1m2 0.071): nobody infers these rules exactly (decoys = answer ± 1 step, so imprecise inference and selection look alike); `_new` 0.015–0.047 below base (difficulty control) | "B2 probe" |

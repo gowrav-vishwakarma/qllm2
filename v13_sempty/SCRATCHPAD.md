@@ -18,6 +18,15 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 01:00 IST: B2 pair seed-42 half MET; b2p2 + Mamba-2 arm moved next to r3c.**
+  b2p1 vs b2t (EXPERIMENTS "B2 pair — seed-42 half"): held-out rule values PAM 0.991 vs
+  T++ 0.734; across distance PAM holds affine to 4096 (0.785) while T++ collapses at
+  1024. 6000 tmux `s6` (`~/s6_chain.sh`, code 38e3c29, NO pull on the 6000 main
+  checkout while s5/s6 run): b2p2 (seed 43) → b2ma (Mamba-2 aptitude stage A) → b2m
+  (Mamba-2 + b2), all next to r3c (s5, started 00:44 IST; now ends ~16:15 IST).
+  4090: n9c ends ~01:30; then v15 G1 (tmux `v15g1`, ~6 h) starts by itself when
+  the `n9c` tmux session closes. v13 has no 4090 job queued after n9c.
+
 * **2026-10-30 23:25 IST: priority re-plan (user: run what we know is better, directly).**
   6000 (tmux `s5`): b2p1 (PAM + B2 docs) → b2t (T++ + B2 docs) → **r3c** via the
   chain's hook `~/s5_n9a.sh` (16 notebooks + echo + two stages + LR 1.2e-3,

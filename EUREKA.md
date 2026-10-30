@@ -9,6 +9,20 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **v13: with rule-format docs in training, PAM infers held-out rule values and keeps
+  them across distance; Transformer++ on the same data does not (seed 42; replication
+  + Mamba-2 arm running).** `b2p1` vs `b2t` (`38e3c29`, 600M tokens, ~102M each, 3 %
+  `b2` docs with held-out values never trained): B2 `_new` mean PAM 0.991 vs T++ 0.734
+  (T++ shift_wide_new 0.26 with negative margin = picks the ±1 decoy). LCL spread:
+  affine_new at L = 1024 PAM 0.965 vs T++ 0.075 (inside the trained length), at 4096
+  0.785 vs 0.45: the first in-context learning past 2048 for any of our models. The
+  earlier "no model learns past 2048" was partly a data gap. Cost: PAM recall
+  0.870 → 0.721 (answer weight 100 may be too heavy). *For v14:* a unit judged on B2
+  should also be judged spread (`--spread`), where the body's recurrence shows its
+  edge; the `b2` source (`v7/data.py`) is available for 600M arms. Not yet a bar-3
+  claim: needs seed 43 and the Mamba-2 arm (EXPERIMENTS_SEMPY "B2 pair — seed-42
+  half").
+
 - **v15 (new lane, "qllm2-59"): a third species, built from the unit up, with
   no attention, no SSM, no PAM, no phases.** Grove: a unit is an organism
   with a *share* of a conserved budget (the K trees of a grove compete; shares

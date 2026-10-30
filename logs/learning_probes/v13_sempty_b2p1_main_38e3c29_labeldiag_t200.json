@@ -1,0 +1,89 @@
+{
+  "schema_version": "learning-probe-rules/v1",
+  "created_at": "2026-10-30T18:09:39.318236+00:00",
+  "model_type": "v13_sempty",
+  "model_identity": "checkpoints_v13_sempty/b2p1_main_38e3c29/best_model.pt",
+  "device": "cuda",
+  "platform": "Linux-7.0.0-1010-gcp-x86_64-with-glibc2.43",
+  "parameter_count": 102884948,
+  "protocol": {
+    "suite": "label_diag",
+    "spread": [],
+    "tasks": [
+      "label_category",
+      "label_exact"
+    ],
+    "shots": [
+      2,
+      4,
+      8
+    ],
+    "seeds": [
+      5000,
+      5199
+    ],
+    "candidates": 8,
+    "chance": 0.125
+  },
+  "per_task_accuracy": {
+    "label_category": 0.5466666666666666,
+    "label_exact": 0.5883333333333333
+  },
+  "mean_accuracy": 0.5674999999999999,
+  "aggregates": [
+    {
+      "task": "label_category",
+      "n_shots": 2,
+      "n": 200,
+      "accuracy": 0.52,
+      "mean_target_margin": -0.055267875790596006,
+      "chance": 0.125,
+      "in_context_chance": 0.5
+    },
+    {
+      "task": "label_category",
+      "n_shots": 4,
+      "n": 200,
+      "accuracy": 0.65,
+      "mean_target_margin": 0.6679589581489563,
+      "chance": 0.125,
+      "in_context_chance": 0.5
+    },
+    {
+      "task": "label_category",
+      "n_shots": 8,
+      "n": 200,
+      "accuracy": 0.47,
+      "mean_target_margin": -0.38140522480010985,
+      "chance": 0.125,
+      "in_context_chance": 0.25
+    },
+    {
+      "task": "label_exact",
+      "n_shots": 2,
+      "n": 200,
+      "accuracy": 0.6,
+      "mean_target_margin": 0.2624507886171341,
+      "chance": 0.125,
+      "in_context_chance": 0.5
+    },
+    {
+      "task": "label_exact",
+      "n_shots": 4,
+      "n": 200,
+      "accuracy": 0.675,
+      "mean_target_margin": 0.914804208278656,
+      "chance": 0.125,
+      "in_context_chance": 0.5
+    },
+    {
+      "task": "label_exact",
+      "n_shots": 8,
+      "n": 200,
+      "accuracy": 0.49,
+      "mean_target_margin": -0.21935897469520568,
+      "chance": 0.125,
+      "in_context_chance": 0.25
+    }
+  ]
+}

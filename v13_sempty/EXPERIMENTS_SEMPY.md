@@ -3267,3 +3267,69 @@ unknown: it gets its own run).
   cost (state ~3.9 MB vs Mamba-2 13.4 MB, vs T++ KV cache); T++ 3.2064 /
   46.61, Mamba-2 3.1644 / 46.91. Also reported: late slope 2 → 3B vs
   baselines (−0.081 / −0.079), recall, label_diag, B2, LCL.
+
+## B2 pair — seed-42 half result + amendment (2026-10-31 ~01:00 IST)
+
+Runs (6000, code `38e3c29`, 600M tokens each = 120M aptitude stage A + 480M
+stage B with the `b2` source at 3 %): `b2p1_main_38e3c29` PAM (M2 + echo +
+shared reads, 102.9M, stage A `c1m2a_pre`), `b2t_main_38e3c29`
+Transformer++ (101.9M, stage A `tfc1a_pre`). Same data order (seed 42).
+
+| 600M tokens | params | holdout | recall 63 (≤ 2048 / > 2048) | PG-19 far gain 4–8k | label_diag cat / exact | B2 base | B2 `_new` shift / step / affine (mean) |
+|---|---|---|---|---|---|---|---|
+| **PAM b2p1** | 102.9M | **3.4777** | **0.721** (0.781 / **0.572**) | **+0.043** | 0.547 / 0.588 | 1.000 | **1.000 / 0.973 / 1.000 (0.991)** |
+| T++ b2t | 101.9M | 3.5572 | 0.672 (**0.844** / 0.242) | −0.778 | **0.673 / 0.752** | 0.999 | 0.257 / 1.000 / 0.944 (0.734) |
+| same recipes without b2: c1m2 / tfc1 | | 3.4473 / 3.4802 | 0.870 / 0.648 | | | below chance (0.04–0.09) | |
+
+Rules suite (100 trials): PAM label_category 0.557, two_hop 0.290; T++ 0.687 / 0.273.
+
+LCL spread on the `_new` tasks (8 shots, 200 trials; L = whole prompt length,
+examples pulled apart by held-out web text; candidate chance 0.125; trained
+length 2048):
+
+| `_new` @ L | 0 | 1024 | 2048 | 4096 | 8192 |
+|---|---|---|---|---|---|
+| PAM shift_wide | 1.00 | 0.79 | 0.60 | 0.34 | 0.105 |
+| T++ shift_wide | 0.315 | 0.00 | 0.00 | 0.00 | 0.00 |
+| PAM affine_map | 1.00 | **0.965** | **0.965** | **0.785** | 0.435 |
+| T++ affine_map | 0.975 | 0.075 | 0.05 | 0.45 | 0.285 |
+| PAM step_wide | 1.00 | 0.115 | 0.14 | 0.10 | 0.105 |
+| T++ step_wide | 1.00 | 0.09 | 0.085 | 0.09 | 0.055 |
+
+**Half-verdict (seed 42):** `_new` mean PAM − T++ = **+0.257** (bar +0.10) →
+met for seed 42; the pre-registered verdict needs b2p2 (seed 43).
+
+**Reading.**
+- With the rule formats in training (values held out), PAM infers the new
+  values exactly (target margins 6–19 nats). T++ learns step and affine but
+  not shift: 0.26 with a NEGATIVE margin, i.e. it prefers a decoy one step
+  from the answer.
+- Across distance the gap is large, and it starts INSIDE the trained length:
+  affine at L = 1024 is PAM 0.965 vs T++ 0.075 (gaps of ~110 tokens). PAM
+  still holds affine past the trained length (0.785 at 4096). This is the
+  first time any model's in-context learning holds past 2048 in LCL. The
+  earlier LCL floor (no model, no rule data) was partly a data gap.
+- step_wide collapses at 1024 for BOTH: it is a sequence, so each term sits a
+  filler block from the last. A format effect, not a model difference
+  (not checked further).
+- Cost of the b2 docs (answer weight 100): PAM recall −0.149 (0.870 → 0.721),
+  holdout +0.030; T++ holdout +0.077, recall +0.024. A lighter weight or share
+  is an open recipe question, not run now.
+- Caveats: trained rule FORMATS with held-out VALUES, not unseen rule
+  families. One seed. T++ only: Mamba-2 is also recurrent and O(1), so it may
+  share the distance edge.
+
+**Amendment (fixed before these runs start; tmux `s6` on the 6000, next to r3c):**
+1. **b2p2** (PAM, SEED=43, exactly as pre-registered) runs NOW, not after
+   r3c. Cost: r3c ends ~1.5 h later (~16:15 IST instead of ~14:45). Gain: the
+   pair verdict ~12 h earlier. The s5 chain's own b2p2 step then skips
+   (`.done`).
+2. **New arm b2m: Mamba-2 (102.6M) on the same data.** Stage A `b2ma` =
+   tfc1a's aptitude recipe with ARCH=mamba2 (120M; mbs2a had no aptitude, so
+   it is not reused). Stage B = the b2 mix, seed 42, same probes. Why: if
+   Mamba-2 shows the same edge, it is "recurrence vs attention", not PAM.
+   **Rule:** PAM beats Mamba-2 on held-out rule values if the `_new` mean is
+   ≥ b2m + 0.10 in BOTH PAM seeds. Across distance, PAM's affine/shift `_new`
+   at L = 2048 and 4096 vs b2m is reported (same +0.10 margin).
+3. Bar 3 counts as replicated only if PAM clears BOTH T++ and Mamba-2 in both
+   seeds. Only then: EUREKA + ntfy.
