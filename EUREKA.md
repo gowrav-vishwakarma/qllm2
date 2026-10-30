@@ -9,6 +9,20 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v13: PAM's in-context lookup dies of key collisions, not distance or
+  capacity** (`label_diag`, `bc7d57f`). Exact copy ("... truck is silver
+  ... truck is" → silver): PAM 0.50–0.62, Mamba-2 0.62–0.72, T++ 0.78–0.88.
+  3.3× the state does not help; 3B tokens do not help. Accuracy falls with
+  the number of similar pairs in between (0.72 → 0.29 over 5 pairs, ~20
+  tokens), while 1,000 tokens of unrelated filler barely hurt (0.44 →
+  0.37). Echo keys of different "X is Y" pairs have cosine 0.67–0.72 (vs
+  0.31 between random positions): every label is filed under the same
+  "<noun> is" key, and the delta erase makes the last write win (45 % of
+  wrong answers = the most recent label; T++ 23 %). *For v14:* keys must
+  carry the content token, not the template: N7's hash of "truck is" is
+  collision-free by construction; any learned memory needs a key that
+  sees the previous tokens (Mamba-2's k = 4 conv likely explains its
+  0.72), or centred keys. *For v13:* testing G1 short conv (`g1c`).
 - **v14 (on v13's label_exact): format-free exact copy is N7's target.**
   PAM's copy skill is format-bound (recall probe 0.94, but label_exact
   0.54–0.73 vs T++ 0.86–0.92). An in-context n-gram store copies

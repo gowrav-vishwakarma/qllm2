@@ -2922,3 +2922,78 @@ skill: Mamba-2, also O(1), gets 0.55 (two stages) where PAM M2 gets 0.41.
 So a fixed-size state can do it; our memory read does it worse. PAM's real
 edges at 600M: recall past the trained length (0.72 vs 0.46 vs T++ 0.15)
 with an ~11× smaller state than Mamba-2. r3b (3B tokens) started 06:29Z.
+
+## label_category diagnosis: PAM's in-context lookup is lost to key collisions, not to distance or capacity (2026-10-30, `bc7d57f`)
+
+User: label_category (short context) is the one place we still lose. Step
+back: label_category = find the in-context example of the query's category
+and copy its label ("truck is silver ... car is" → silver). Diagnostic
+`--suite label_diag`: the same prompts plus `label_exact`, where the query
+is an item that IS in the context ("... truck is" → silver): pure lookup and
+copy. 200 trials × 2/4/8 shots, CPU (Mamba-2 rows on the 6000).
+
+| model | label_exact (2/4/8) | label_category (2/4/8) |
+|---|---|---|
+| Transformer++ 600M two stages | **0.883** (0.86/0.92/0.86) | **0.763** (0.71/0.81/0.76) |
+| Transformer++ 600M one stage | 0.812 (0.78/0.84/0.81) | 0.750 (0.69/0.84/0.72) |
+| Transformer++ 3B | 0.777 (0.68/0.84/0.81) | 0.630 (0.60/0.71/0.57) |
+| Mamba-2 600M two stages | 0.720 (0.67/0.81/0.69) | 0.637 (0.56/0.76/0.59) |
+| Mamba-2 600M one stage | 0.642 (0.65/0.74/0.54) | 0.572 (0.58/0.65/0.48) |
+| Mamba-2 3B | 0.623 (0.44/0.74/0.69) | 0.537 (0.47/0.69/0.46) |
+| PAM M1 two stages (C1-ctl) | 0.610 (0.61/0.63/0.59) | 0.595 (0.58/0.68/0.53) |
+| PAM M2 two stages (c2m2) | 0.617 (0.58/0.73/0.54) | 0.578 (0.55/0.73/0.46) |
+| PAM M1 one stage | 0.585 (0.62/0.72/0.41) | 0.535 (0.57/0.68/0.35) |
+| PAM M2 one stage | 0.502 (0.54/0.65/0.32) | 0.478 (0.52/0.61/0.30) |
+| PAM E1, 16 notebooks (3.3× state) | 0.533 (0.58/0.65/0.37) | 0.527 (0.55/0.67/0.36) |
+| PAM 16 notebooks, no echo (r600 ctl) | 0.588 (0.59/0.74/0.43) | 0.558 (0.56/0.72/0.39) |
+| PAM 3B (16 notebooks) | 0.618 (0.44/0.78/0.64) | 0.575 (0.47/0.71/0.54) |
+
+In-context chance: 0.5 / 0.33 / 0.25 at 2 / 4 / 8 shots.
+
+1. **PAM fails exact copy, not just the fuzzy match**: label_exact 0.50–0.62
+   vs Transformer++ 0.78–0.88. Exact helps PAM by only +0.01–0.04
+   (Transformer++ +0.06–0.12). The same models score 0.94 on the recall
+   probe in the trained recall-doc format: the recall skill is format-bound.
+2. **Not capacity, not data scale**: 3.3× the state (16 notebooks) does not
+   help (0.533 vs M1's 0.585); 3B tokens give 0.618 ≈ 600M. The echo does
+   not help either (16 notebooks: no echo 0.588, with echo 0.533). The
+   two-stage schedule helps a little (one stage 0.50–0.59 → 0.61).
+3. **The lookup is lost to interference from similar writes, not to
+   distance** (8 shots, 300 trials, accuracy by how many pairs back the
+   correct example sits): PAM M2 exact 0.72 / 0.60 / 0.52 / 0.47 / 0.38 /
+   0.29 for 0–5 pairs back (~4 tokens per pair), Transformer++ 0.84 / 0.82 /
+   0.82 / 0.90 / 0.78 / 0.71. Yet 1,000 tokens of unrelated filler cost PAM
+   only 0.44 → 0.37 (LCL). When wrong, PAM picks an in-context label 99 % of
+   the time and the most recent one 45 % (Transformer++ 23 %): last write
+   wins.
+4. **Mechanism**: the echo keys at the label positions of different "X is
+   Y" pairs are near-duplicates: mean cosine 0.67 (c2m2) / 0.72 (C1-ctl) vs
+   0.31 / 0.38 between random text positions. Every label is filed under
+   almost the same "<noun> is" key, so the delta write's erase partly
+   overwrites the earlier pairs, and the query cannot select among them.
+   Mamba-2 (0.72 exact) has a k = 4 causal conv on its inputs, so its key
+   at "is" carries "truck"; PAM's notebooks and echo have none.
+
+**Next (my lane, the existing body):** G1 short conv (already in code,
+`--short_conv`, never tested in pretraining) gives every notebook key the
+last 4 tokens. Fallback idea if G1 fails: key centering (subtract a running
+mean key before normalising, removing the shared template component).
+
+## G1 short conv on the two-stage M1, judged on in-context copy (pre-registration, 2026-10-30 12:35 IST)
+
+Arm `g1c`: C1-ctl's exact recipe and body (M1, ECHO=1, two stages) +
+`SHORT_CONV=1` (k = 4 causal depthwise conv on each notebook's fused qkv,
+residual, zero-init; ~28K params). Control = C1-ctl (`c1ctlb_main_7ae6f1f`).
+Local 4090 with GRAD_CKPT=1 (needs the whole card ~3 h: agreed with v14
+first), else the 6000 after r3b.
+
+**Rules (fixed now):**
+- Primary: label_exact mean (label_diag, 200 trials, 2/4/8 shots) ≥ ctl +
+  0.10 (0.610 → ≥ 0.710), on the same box as a fresh ctl score.
+- Secondary (reported, and needed for "closes the gap"): label_category
+  mean ≥ ctl + 0.05 (≥ 0.645); accuracy 5 pairs back ≥ 0.50; echo / notebook
+  key cosine at label positions lower than ctl's.
+- Guards: holdout ≤ 3.4843 (ctl + 0.01), recall 63-cell ≥ 0.775 (ctl −
+  0.05).
+- PASS → G1 goes into the reference (M2 port at 600M, then 3B). FAIL →
+  record and remove G1, try key centering.
