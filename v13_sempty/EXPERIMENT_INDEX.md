@@ -77,6 +77,7 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 
 | id | idea | status | notebook section |
 |---|---|---|---|
+| Label-format pair (`lbp` / `lbt`) | `lab` source (`c4173be`): label-rule docs, probe format, disjoint vocabulary, 3 % of stage B; PAM vs T++ on the c1m2 recipe | **PENDING** (6000, tmux `s7` after s6, next to r3c): PASS if PAM label_diag ≥ 0.767; vs T++ ≥ lbt − 0.02 = gap closed | "Label-format pair `lb`" |
 | n9c: v14 N9a phase keys at 600M | C1-ctl recipe + `ECHO_PHASE_LAGS=3` (4090, `e5f0b73`) | **FAIL (lookup)**: label_exact 0.472 vs ctl 0.610, label_cat 8-shot 0.318 vs 0.500 (both worse); keys de-collided (cos 0.715 → 0.538); **recall 0.975 vs 0.825 (> 2048: 0.924 vs 0.597)**; holdout 3.4725 vs 3.4743. No v13 scale run; the unit stays in v14 | "n9c result" |
 | B2-in-training pair (bar 3) | `b2` rule docs (3 %, held-out values) in stage B; PAM b2p1/b2p2 vs T++ b2t, + Mamba-2 b2m (amendment) (`38e3c29`) | **seed 42 MET**: `_new` mean PAM 0.991 vs T++ 0.734 (+0.257, bar +0.10); spread affine `_new` @1024 0.965 vs 0.075, @4096 0.785 vs 0.45 (first learning past 2048); cost: PAM recall 0.870 → 0.721, holdout +0.030 (T++ +0.077). b2p2 (seed 43) + b2m running (tmux `s6`, 6000) | "B2 pair — seed-42 half result + amendment" |
 | G1 short conv | conv on qkv, single-pass pretraining (`g1c`, 4090, `9c2b632`) | **FAIL as measured, verdict held open**: label_exact 0.517 vs ctl 0.610, holdout +0.049; E2 and g1c (both 4090) lose the same ~0.05 to the 6000 control, so a 4090 box control runs first | "g1c result" |

@@ -3376,3 +3376,43 @@ LM run for N9a in v13. The unit stays in v14 (the v13 trainer keeps only the
   it. "Formation at micro" was formation on the trained format.
 - Not run: why exact lookup drops with distance (write gates? query turned by
   a window that includes the previous label?). That is v14's design question.
+
+## Label-format pair `lb` (pre-registration, 2026-10-31 02:50 IST): is the label gap a data-format gap?
+
+Why now: two results tonight point one way. B2 docs in training took PAM's
+held-out rule values from ~0.05 to 0.99 (T++ 0.73). The recall docs' single
+template took N9a's recall to 0.975, while label lookup (a format never
+trained) fell. "<item> is <label>," never appears in our training data, and
+label_category / label_exact is the one probe T++ still wins (b2 pair: label_diag
+mean PAM 0.567 vs T++ 0.712).
+
+**Source `lab`** (`c4173be`): label-rule docs in the probes' exact format.
+Vocabulary is disjoint from the probes: 14 categories (tool, bird, metal,
+drink, …), 20 labels (echo, flux, north, …). 0 of the 136 distinct training
+words are probe words. Half the queries are new members of a shown category,
+half are in-context items. 6 prompts per doc, answers marked (weight 100).
+The probes test the skill on words never seen in these docs.
+
+**Arms** (6000, code `c4173be`, worktree `~/Development/qllm_lab`, tmux `s7`,
+starts when s6 ends, next to r3c). The b2 pair's recipe with `lab` in place
+of `b2`: stage B 480M dclm / fineweb / smoltalk2_mid / recall / lab = 0.43 /
+0.40 / 0.10 / 0.04 / 0.03, seed 42.
+- `lbp`: PAM M2 + echo + shared reads, `--init_from c1m2a_pre_7ae6f1f`.
+- `lbt`: Transformer++, `--init_from tfc1a_pre_b788731`.
+
+Probes: label_diag 200, rules 100 + t400 (label_category 2/4/8 shots), LCL
+spread (label_category, two_hop; 8 shots, 300; L = 0 … 8192), recall 63-cell,
+PG-19, holdout.
+
+**Rules (fixed now):**
+1. *Format gap (primary):* PAM label_diag mean (category + exact) ≥ 0.767
+   (= b2p1's 0.567 + 0.20) → the label gap was mostly a data-format gap.
+2. *vs T++ on the same data:* PAM label_diag mean ≥ lbt − 0.02 → gap closed;
+   ≥ lbt + 0.05 → PAM ahead.
+3. *Past the trained length (reported):* LCL label_category at 4096 / 8192
+   vs T++ (in-context chance 0.25).
+4. *Guards:* holdout ≤ 3.487 (c1m2 + 0.04, the b2 docs cost +0.030); recall
+   reported (the b2 docs cost 0.15).
+5. One seed. A pass gets a second seed before any claim. A FAIL on rule 1
+   means the label gap is the body's (back to v14's lookup work), and `lab`
+   is removed from the code (index row with the hash).
