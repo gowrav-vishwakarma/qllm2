@@ -32,6 +32,12 @@ _FORMATS: Dict[str, Tuple[str, str]] = {
     'two_hop': ('Story.', r'(?<=\.)'),               # " The duck is called Sam." ... " Eli's pet is called"
     'affine_map': ('Map rule.', r'(?=\n)'),          # "\n21 -> 43" ... "\n29 ->"
     'shift_wide': ('Letter rule.', r'(?=\n)'),       # "\no -> u" ... "\nl ->"
+    'letter_shift': ('Letter rule.', r'(?=\n)'),     # "\nc -> d" ... "\nj ->"
+    'reverse3': ('Word rule.', r'(?=\n)'),           # "\nrock book nest -> nest book rock" ... "\nmilk bird rock -> rock bird"
+    # Sequences have no query line: the last term is the query unit, so the
+    # step must be read from terms a filler block (or more) away.
+    'number_step': ('Number rule.', r'(?<=,)'),      # "\n36," " 45," ... " 99,"
+    'step_wide': ('Number rule.', r'(?<=,)'),
 }
 SPREAD_TASKS = tuple(_FORMATS)
 _SEP = '\n\n'
