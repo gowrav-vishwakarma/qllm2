@@ -8,7 +8,8 @@ side worktree (`git worktree add ../qllm_v15_<id> <hash>`).
 
 | id | measures | status | run hash | log | rerun |
 |---|---|---|---|---|---|
-| G0 | selftest: parity, simplex, gradients, O(1), toy lookup | **PASS** 2026-10-31 (toy lookup 0.98, chance 0.125) | (this commit) | stdout | `.venv/bin/python -m v15.selftest` |
+| G0 | selftest: parity, simplex, gradients, O(1), toy lookup | **PASS** 2026-10-31 (toy lookup 0.98, chance 0.125) | `8d60a55`, `84b41d8` | stdout | `.venv/bin/python -m v15.selftest` |
+| G1 | micro: grove vs echo, B1 run 4 set (3 pairs) + B2 set (3 pairs); bars L, P (§4) | **QUEUED** 00:12 IST 2026-10-31 (tmux `v15g1`, behind n9c) | `84b41d8` | `logs/v14_v15g1p{1,2,3}_84b41d8_*`, `v14_v15g1b2p*` | `V14_EXT_ARMS="grove=v15.bench:build_grove" TAG=v15g1p1 FAMILIES=rules ARMS=grove,echo EXTRA="--seed 21 --doc_seed0 400000000 --init_seed 21" bash v14/run_bench.sh` |
 
 ## Candidates
 
