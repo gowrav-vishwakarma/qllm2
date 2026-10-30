@@ -4,9 +4,21 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-30 10:30 IST)
+## State (2026-10-30 13:45 IST)
 
-* **Bar-3 lead: B2 run 1 (6000, `bf59754`, one seed): L and I met (B2 is
+* **4090 queue (13:45 IST):** v13 g1c (whole card, agreed) since 13:35 ->
+  ~16:45. Beside it, v14's one small job: **N7 micro run 1** (tmux `v14n7`,
+  worktree `../qllm_v14n7run` at `73265e9`, driver `n7r1_driver.sh`; echo /
+  echo_n7 / tpp, 3 pairs, bar X) since 13:35, then **N9a micro run 1**
+  (tmux `v14n9`, `../qllm_v14n9run` at `b0e7fc6`; echo / echo_phase, 3
+  pairs, bar Xa). After g1c, v13 runs **Q1** (tied START of echo q/k,
+  formation rate over 5 seeds on B1 + B2; arm `echo_qinit`, `3cf2aa8`) on this
+  bench as its small job, results ~21:30.
+* **B2 so far:** run 2 R MET (echo infers held-out shifts, T++ only
+  selects); state sweep: no reliable size effect, but the O(1) body solves
+  held-out shifts FULLY in some seeds (3 of 10 echo-family runs ≥ 0.9; T++
+  0 of 4). Formation rate is the open lever (Q1 and N8 target it).
+ (6000, `bf59754`, one seed): L and I met (B2 is
   valid).** Held-out rule parameters: echo 0.739, n1sum 0.731, tpp 0.666.
   Numbers (held-out step / affine offset): every arm ~0.9–0.99 (exact
   inference). **Letters (held-out shift): echo 0.33, rising 0.20 → 0.47 with
