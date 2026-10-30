@@ -734,6 +734,28 @@ shifts where same-size attention only selects, across seeds?
   v13 session). R not met: run 1 was seed luck, and B2's letters cell is
   the target for new units (N4).
 
+**Run 2 RESULT (4090, 2026-10-30 10:20–12:28 IST, code `9e0a3fd`, shared
+with other jobs so ms/step is not comparable): R MET. Echo infers held-out
+letter shifts where same-size attention only selects, in 3 of 3 seed pairs.**
+Logs + JSON: `logs/v14_b2r2p{1,2,3}_9e0a3fd_20261030_*.{log,json}`.
+
+| pair (seed) | echo shift_wide_new (2/4/8) | tpp shift_wide_new | d | step_wide_new echo / tpp | affine_map_new echo / tpp |
+|---|---|---|---|---|---|
+| p1 (41) | 0.141 (0.08 / 0.13 / 0.21) | 0.017 | +0.123 | 0.93 / 0.99 | 1.00 / 0.96 |
+| p2 (42) | 0.259 (0.14 / 0.25 / 0.39) | 0.025 | +0.234 | 0.95 / 1.00 | 1.00 / 0.96 |
+| p3 (43) | 0.339 (0.26 / 0.37 / 0.39) | 0.007 | +0.333 | 0.95 / 0.98 | 0.91 / 0.97 |
+
+- **R:** mean d **+0.230** ≥ +0.15, SD 0.105, 2·SD 0.210 → **met**.
+- **Inference signature:** echo's 8-shot > 2-shot in every pair (0.21 > 0.08,
+  0.39 > 0.14, 0.39 > 0.26). tpp stays at the neighbour-pick floor (≤ 0.03).
+- Trained values ≈ 1.00 for both arms; held-out numbers ≈ 0.91–1.00 for both.
+- **Replicated accident:** echo's held-out steps dip at 8 shots (0.80 /
+  0.85 / 0.90, vs ≥ 0.97 at 2 shots); tpp does not.
+- **Claim at 27M:** the O(1) echo body infers an unseen rule parameter from
+  the examples, and a same-size transformer does not (it memorises one table
+  per trained value). Level is partial (0.14–0.34). Next: the state sweep
+  (does the bottleneck cause it?) and a 600M check with B2 data in training.
+
 **B2 state sweep (PRE-REGISTERED 2026-10-30 ~10:55 IST, before any number):
 does a smaller memory make the body infer rules better?** From the step back
 (SCRATCHPAD): attention keeps every example and memorises a table per

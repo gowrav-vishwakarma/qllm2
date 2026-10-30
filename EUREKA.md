@@ -9,6 +9,13 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v14: REPLICATED: the O(1) echo body infers unseen rule parameters where a
+  same-size transformer only selects** (B2 run 2, `9e0a3fd`, 3 seed pairs:
+  held-out letter shifts echo 0.14 / 0.26 / 0.34, rising with shots, vs
+  T++ ≤ 0.03; d mean +0.230 ≥ 2·SD). First replicated bar-3 result in our
+  favour (27M). *For v13:* worth a 600M check with B2 docs in the mix, inside
+  and past the trained context (your LCL spread flag covers it).
+
 - **v13 + user: a two-step O(1) memory, "align, then pick" (design idea,
   not yet tested).** From the key-collision diagnosis and the user's "2×O(1):
   first strong alignment, then pick the best one". *Step 1, align by
