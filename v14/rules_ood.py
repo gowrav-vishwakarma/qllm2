@@ -27,6 +27,22 @@ not work. Words are GPT-2 single-token lowercase words split by a fixed hash
 into four disjoint pools: train markers, eval markers, train stems, eval
 stems. ``label_marker`` draws from the train pools; ``label_marker_new``
 from the eval pools, which are never seen in training (every item unseen).
+
+B2 (bar-3 analysis, EXPERIMENTS_V14 "N4"): inference must beat selection.
+B1's unseen parameters ask for extrapolation from 3 trained values, where
+picking one of 3 memorised tables is the cheap solution. B2 trains on MANY
+parameter values and holds a few out from inside the range, so a model that
+selects a memorised table lands next to the answer and only a model that
+infers the parameter from the examples gets it (interpolation):
+
+    shift_wide    letter shift, k in 1-12 without {5, 9}
+    step_wide     arithmetic sequence, step d in 2-20 without {7, 13, 17}
+    affine_map    x -> a*x + b, a in 1-3, b in 0-20 without {7, 13, 17}
+
+Each ``<task>_new`` draws only the held-out values. Tempting wrong answers
+are what the nearest trained parameter would give (k +- 1, d +- 1,
+b +- 1, a +- 1), so falling back to a memorised neighbour scores 0, not
+chance.
 """
 
 from __future__ import annotations
@@ -40,10 +56,19 @@ from memory_probes import rules as R
 
 OOD_TASKS = ('letter_shift_ood', 'number_step_ood')
 MARKER_TASKS = ('label_marker', 'label_marker_new')
-EXTRA_TASKS = OOD_TASKS + MARKER_TASKS
+B2_TASKS = ('shift_wide', 'step_wide', 'affine_map')
+B2_NEW_TASKS = tuple(t + '_new' for t in B2_TASKS)
+EXTRA_TASKS = OOD_TASKS + MARKER_TASKS + B2_TASKS + B2_NEW_TASKS   # append only: index seeds the rng
 TRAIN_SHIFTS = (1, 2, 3)          # what rules._letter_shift draws
 OOD_SHIFTS = (4, 5)
 OOD_STEPS = (10, 11, 12, 13)      # rules._number_step draws 2-9
+SHIFT_NEW = (5, 9)                                            # B2 held-out values
+SHIFT_TRAIN = tuple(k for k in range(1, 13) if k not in SHIFT_NEW)
+STEP_NEW = (7, 13, 17)
+STEP_TRAIN = tuple(d for d in range(2, 21) if d not in STEP_NEW)
+AFFINE_A = (1, 2, 3)
+AFFINE_B_NEW = (7, 13, 17)
+AFFINE_B_TRAIN = tuple(b for b in range(0, 21) if b not in AFFINE_B_NEW)
 
 
 def _letter_shift_ood(tokenizer, rng, n_shots):
@@ -78,6 +103,54 @@ def _number_step_ood(tokenizer, rng, n_shots):
                 str(last + d - 1), str(last + d + 2), str(last + d - 2)]
     pool = [str(n) for n in range(1, 300)]
     prompt = 'Number rule.\n' + ', '.join(str(t) for t in shown) + ','
+    return prompt, target, R._candidates(tokenizer, rng, target, tempting, pool, 8), 1 / 8
+
+
+def _shift_wide(tokenizer, rng, n_shots, new=False):
+    k = int(rng.choice(SHIFT_NEW if new else SHIFT_TRAIN))
+    letters = R._pool(tokenizer, R.LETTERS)
+    usable = [c for c in letters if chr(ord(c) + k) in letters]
+    if len(usable) < n_shots + 1:
+        return None
+    picks = list(rng.choice(usable, size=n_shots + 1, replace=False))
+    query = picks[-1]
+    target = chr(ord(query) + k)
+    shown = set()
+    for x in picks[:-1]:
+        shown |= {x, chr(ord(x) + k)}
+    if target in shown:                                    # keep the answer out of the context
+        return None
+    lines = ''.join(f'{x} -> {chr(ord(x) + k)}\n' for x in picks[:-1])
+    prompt = f'Letter rule.\n{lines}{query} ->'
+    near = [chr(ord(query) + k + j) for j in (-1, 1, -2, 2)]
+    tempting = [c for c in near if c in letters and c != query] + [query]
+    return prompt, target, R._candidates(tokenizer, rng, target, tempting, letters, 8), 1 / 8
+
+
+def _step_wide(tokenizer, rng, n_shots, new=False):
+    d = int(rng.choice(STEP_NEW if new else STEP_TRAIN))
+    s = int(rng.integers(1, 40))
+    terms = [s + i * d for i in range(max(n_shots, 2) + 1)]
+    target = str(terms[-1])
+    shown = terms[:-1]
+    last = shown[-1]
+    tempting = [str(last + d + j) for j in (-1, 1, -2, 2)] + [str(last), str(last + 2 * d)]
+    pool = [str(n) for n in range(1, 260)]
+    prompt = 'Number rule.\n' + ', '.join(str(t) for t in shown) + ','
+    return prompt, target, R._candidates(tokenizer, rng, target, tempting, pool, 8), 1 / 8
+
+
+def _affine_map(tokenizer, rng, n_shots, new=False):
+    a = int(rng.choice(AFFINE_A))
+    b = int(rng.choice(AFFINE_B_NEW if new else AFFINE_B_TRAIN))
+    xs = [int(x) for x in rng.choice(np.arange(1, 31), size=max(n_shots, 2) + 1, replace=False)]
+    xq = xs[-1]
+    target = str(a * xq + b)
+    lines = ''.join(f'{x} -> {a * x + b}\n' for x in xs[:-1])
+    prompt = f'Map rule.\n{lines}{xq} ->'
+    tempting = [str(a * xq + b + j) for j in (-1, 1)] + \
+               [str(a2 * xq + b) for a2 in (a - 1, a + 1) if a2 >= 1] + [str(xq + b), str(a * xq)]
+    pool = [str(n) for n in range(0, 260)]
     return prompt, target, R._candidates(tokenizer, rng, target, tempting, pool, 8), 1 / 8
 
 
@@ -118,7 +191,11 @@ def _label_marker(tokenizer, rng, n_shots, new=False):
 
 _BUILDERS = {'letter_shift_ood': _letter_shift_ood, 'number_step_ood': _number_step_ood,
              'label_marker': _label_marker,
-             'label_marker_new': lambda tok, rng, n: _label_marker(tok, rng, n, new=True)}
+             'label_marker_new': lambda tok, rng, n: _label_marker(tok, rng, n, new=True),
+             'shift_wide': _shift_wide, 'step_wide': _step_wide, 'affine_map': _affine_map,
+             'shift_wide_new': lambda tok, rng, n: _shift_wide(tok, rng, n, new=True),
+             'step_wide_new': lambda tok, rng, n: _step_wide(tok, rng, n, new=True),
+             'affine_map_new': lambda tok, rng, n: _affine_map(tok, rng, n, new=True)}
 
 
 def build_example(tokenizer, task: str, n_shots: int, seed: int) -> R.RuleExample:

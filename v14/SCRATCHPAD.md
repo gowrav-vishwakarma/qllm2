@@ -97,19 +97,23 @@ Keep all three current as things happen (user rule, 2026-10-29).
 
 ## Next action
 
-1. **6000 is ours after the v13 s3 chain** (tfc1, ~09:30 IST; they ping on
-   "=== s3 chain DONE"). On the 6000: `cd ~/Development/qllm-private && git
-   pull` (needs ≥ `a0259ca`; sempyt ≥ `b99e038`), then in tmux, in order:
-   (a) the tpp B1 calibration on run 4's data (`for i in 1 2 3; do
+1. **GPU plan (IST).** 6000: ours after the v13 s3 chain (~09:30; they ping
+   on "=== s3 chain DONE"), back to v13 at ~12:00 for E2's port to M2 if E2
+   passes. 4090: E2 until ~10:15 + probes. On the 6000: `cd
+   ~/Development/qllm-private && git pull` (needs the B2 merge; sempyt ≥
+   `b99e038`), smoke the tpp arm and a B2 task for 30 steps first, then in
+   tmux, in order:
+   (a) **tpp B1 calibration** on run 4's data (`for i in 1 2 3; do
    TAG=b1r4tpp$i FAMILIES=rules ARMS=tpp SAVE=1 EXTRA="--seed 2$i
    --doc_seed0 $((i+3))00000000 --init_seed 2$i" bash v14/run_bench.sh;
-   done`, ~30 min on the 4090, less on the 6000): does attention form the
-   label_category circuit in every seed, and infer unseen rule parameters
-   at 27M? (b) B0 run 3 (`TAG=b0r3
-   ARMS=echo,n1sum,n1gate,n1phase,echo_tied,tpp AUX=0.1 SAVE=1 bash
-   v14/run_bench.sh`, ~2 h; pre-registered in EXPERIMENTS_V14 "B0").
-   GPU index on the 6000: check `nvidia-smi` (GPU=0 default). After B0
-   run 3, the 6000 goes back to v13 for E2's port to M2 (if E2 passes).
+   done`): does attention form the label_category circuit in every seed?
+   (b) **B2 run 1** (`TAG=b2 FAMILIES=rules ARMS=tpp,echo,echo_tied,n1sum
+   SAVE=1 EXTRA='--seed 31 --doc_seed0 700000000 --init_seed 31
+   --rule_tasks shift_wide,step_wide,affine_map' bash v14/run_bench.sh`;
+   readouts L and I in EXPERIMENTS_V14 "B2").
+   (c) **B0 run 3** (`TAG=b0r3 ARMS=echo,n1sum,n1gate,n1phase,echo_tied,tpp
+   AUX=0.1 SAVE=1 bash v14/run_bench.sh`, ~2 h). If the 6000 slot ends
+   first, (c) goes to the 4090 after E2.
 2. Open question from runs 3-4: why does label_marker in training stop the
    tied arm from forming the circuit (1 of 3) while helping echo (2 of 3)?
    Probe the saved checkpoints (`checkpoints_v14/b1r3p*`, `b1r4p*`, on the

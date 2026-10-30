@@ -572,6 +572,54 @@ transformer at learning" has a number.
 **Why it matters for v14.** N6 (operator memory) and N4 (fast weights in
 the unit) are learners by construction: B1, not B0, is their primary test.
 
+### B2 — inference beats selection (bar 3, pre-registered 2026-10-30 ~06:45 IST)
+
+**Why.** B1's unseen parameters (shift 4–5 after training on 1–3) ask for
+extrapolation from 3 trained values. Every arm, N6 included, falls back to a
+trained shift. That says little about any body, because selecting one of 3
+memorised tables is the cheap solution (bar-3 analysis under "N4"). B2 makes
+inference the cheap solution. It trains on many parameter values and holds a
+few out from inside the range, so a model that selects a memorised neighbour
+is wrong and only a model that infers the parameter from the examples is right.
+
+**Tasks (`v14/rules_ood.py`, selftest `test_b2_splits`).** Same prompt formats
+as B1, 8 candidates, chance 0.125.
+
+| task | rule | trained values | held out (`<task>_new`) |
+|---|---|---|---|
+| shift_wide | letter shift by k | k 1–12 without 5, 9 | k = 5, 9 |
+| step_wide | arithmetic sequence, step d | d 2–20 without 7, 13, 17 | d = 7, 13, 17 |
+| affine_map | x -> a·x + b (x 1–30) | a 1–3, b 0–20 without 7, 13, 17 | b = 7, 13, 17 (any a) |
+
+The candidates always include the answers that the nearest trained
+parameter would give (k ± 1, d ± 1, b ± 1, a ± 1; present in 600 of 600
+checked episodes). A model that falls back to a neighbour scores ≈ 0, below
+chance.
+
+**Run 1 (calibration, one seed; runs when a GPU frees).** `--rule_tasks
+shift_wide,step_wide,affine_map` (B2 only), shots 1–8, 6000 × B16, lr 3e-4,
+`--seed 31 --doc_seed0 700000000 --init_seed 31`. Arms: **tpp** (attention
+reference, O(T)), echo, echo_tied, n1sum (n1sum is the best memory arm in
+B0 run 2's descriptive read). Every B1 task is also evaluated (untrained
+here, reported only).
+- **L, learnable:** tpp ≥ 0.90 on the trained-value cells (mean of
+  shift_wide, step_wide, affine_map over 2 / 4 / 8 shots). If not, attention
+  cannot learn the tasks in 6000 steps either. Rerun with 3× steps before
+  reading anything.
+- **I, inference measurable:** tpp ≥ 0.40 on the held-out cells (mean of the
+  three `_new` tasks). If L holds and I fails, attention at 27M also selects
+  instead of inferring. B2 then cannot judge bar 3 at this size: say so,
+  and move the question to scale (the v13 600M learning probe) or to other
+  task families.
+- **If L and I hold, B2 is the bar-3 bench.** For each O(1) arm, report the
+  held-out mean and the gap closed, G = (arm − echo) / (tpp − echo). Run 1
+  has no pass bar (one seed, a calibration, like B1 run 1). The candidate bar
+  (paired seeds, as in B1 run 3) is written after run 1, from its numbers,
+  before any candidate runs on B2.
+- **Predictions:** tpp passes L and is partly above I (shift_wide_new
+  highest, affine_map_new lowest). The O(1) arms pass the trained cells and
+  sit below chance on `_new` (they pick a neighbour).
+
 ### N1 — phase interference revived (v11 E3 on the lean body)
 
 **Why.** The only architecture change that beat the v7 baseline (−1.11 PPL),
@@ -691,7 +739,8 @@ mixed up in that number:
 and B1-OOD cannot judge N4. (b) Then a bench where inference beats
 selection: many training parameters with some held out for interpolation
 (e.g. shift 1–12 without {5, 9}; affine number maps y = a·x + b with held-out
-(a, b) pairs), tpp as the reference. (c) Only then an N4 unit, judged there.
+(a, b) pairs), tpp as the reference (**built: B2**, section "B2"). (c) Only
+then an N4 unit, judged there.
 
 ### N5 — resonant binding (design only)
 
