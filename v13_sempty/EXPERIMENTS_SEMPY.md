@@ -3093,3 +3093,23 @@ S1** (my lane, the existing echo): centred sparse-expansion keys and
 queries in the echo read/write, pre-registered after g1c / Q1 report (one
 variable at a time). Implementation check needed: `pam_delta_batched` with a
 key dim different from the value dim.
+
+## S1 separated echo keys + the joint formation bench F1 (pre-registration, 2026-10-30 16:10 IST)
+
+**S1** (`--echo_sparse_k K` / `ECHO_SPARSE_K`): echo keys AND queries are
+centred by the causal running mean of the keys so far (removes the shared
+template component; carry = key sum + count, O(1)) and sparsified to their
+top-K magnitudes per head (pattern separation). No kernel change, same state
+size. Offline on c2m2's keys (top 8, global mean): label-key cosine 0.67 →
+0.25. K = 8 for F1. Selftest `test_echo_sparse_keys` (identity at init,
+causal, grads, copy, decode == chunked 8.9e-5, ≤ K non-zeros per head).
+
+**F1** (joint with v14, pre-registered in EXPERIMENTS_V14 too): v14's B1
+micro-bench on run 4's training set, label_category; seeds 7i, doc_seed0
+(i+15)e8, init 7i, i = 1..5; "formed" = label_category ≥ 0.9 (mean over
+2/4/8 shots). Arms paired by identical seed / init / data: `echo` (control)
+and `echo_phase` (v14 N9a) in v14's slot; `echo_qinit` (Q1) and
+`echo_sparse` (S1, K = 8) in v13's slot after g1c. **Rule: an arm passes if
+it forms in ≥ 4/5 seeds where echo forms in ≤ 2/5; the best-forming
+passing arm goes to 600M** (C1-ctl recipe, the label_diag / label_category
+bars of Q1 stage 2). If none passes, record and remove the losers.

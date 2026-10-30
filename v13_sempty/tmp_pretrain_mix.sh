@@ -55,6 +55,7 @@ DELTA="${DELTA:-0}"            # A3 delta erase/write (KEEP 2026-09-05: exact 8-
 SHORT_CONV="${SHORT_CONV:-0}"  # G1 short conv on qkv (2026-10-29 screen; needs GEN_EVERY=0)
 ECHO="${ECHO:-0}"              # E1 echo (succession) memory into the head
 ECHO_QK_TIED_INIT="${ECHO_QK_TIED_INIT:-0}" # Q1 echo W_q starts = W_k, then trains freely (needs ECHO=1)
+ECHO_SPARSE_K="${ECHO_SPARSE_K:-0}" # S1 echo q/k centred + top-k per head (0 = off; needs ECHO=1)
 PAM_LAYERS="${PAM_LAYERS:-}"   # M1 blocks that keep a notebook, e.g. 3,7,11,15 (default all)
 MLP_HIDDEN="${MLP_HIDDEN:-0}"  # M1 gated-MLP width (0 = dim*expand), to param-match
 SHARE_READS="${SHARE_READS:-0}" # M2 notebook-less blocks read the nearest notebook below; GEN_EVERY=0
@@ -97,6 +98,7 @@ if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi
 if [ "$SHORT_CONV" = "1" ]; then EXTRA+=(--short_conv); fi
 if [ "$ECHO" = "1" ]; then EXTRA+=(--echo); fi
 if [ "$ECHO_QK_TIED_INIT" = "1" ]; then EXTRA+=(--echo_qk_tied_init); fi
+if [ "$ECHO_SPARSE_K" != "0" ]; then EXTRA+=(--echo_sparse_k "$ECHO_SPARSE_K"); fi
 if [ -n "$PAM_LAYERS" ]; then EXTRA+=(--pam_layers "$PAM_LAYERS"); fi
 if [ "$MLP_HIDDEN" != "0" ]; then EXTRA+=(--mlp_hidden "$MLP_HIDDEN"); fi
 if [ "$SHARE_READS" = "1" ]; then EXTRA+=(--share_reads); fi
