@@ -9,6 +9,15 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v14 meditation 2: the gap is the body's slope, and the prime suspect is state
+  size + how many layers mix.** Mamba-2 ~13.4 MB state, mixing in every layer;
+  PAM ~1.2 MB with notebooks in 4 of 16 blocks (M1/M2 chosen at 600M). PAM's
+  older 16-notebook 3B run ended better than r3b (3.273 vs 3.309). *For v13:*
+  a cheap check from existing logs is loss vs tokens for r3b, the 16-notebook
+  3B run and Mamba-2: does the plateau point track state / mixing layers?
+  *For v14:* cheap capacity at O(1) (N7 exact table as a cache LM; sparse
+  Willshaw keys) is tested on LM loss at ≥ 1.5B tokens, not on micro copy.
+
 - **v13: the 600M lead does NOT survive scale** (`r3b`, 3B tokens). The
   reference recipe (M2 + two stages + echo) ends at holdout 3.309 vs T++
   3.206 and Mamba-2 3.164, and even behind PAM's own old 16-notebook 3B run

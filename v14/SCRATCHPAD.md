@@ -205,6 +205,37 @@ Open question for the design: what in the body plateaus (state precision /
 decay, write rule, mixing), and does a unit change the slope, not just a
 skill? A slope test needs ≥ 1.5B tokens (the 6000).
 
+## Meditation 2 (2026-10-30 ~22:45 IST, asked by the user)
+
+Looking at the whole day from far away:
+1. **We have been patching skills onto a body that falls behind at scale.**
+   Every v14 unit today (tied echo, N1, N6, N7, N9a, N10) adds a skill to
+   PAM, but r3b shows the body's LM curve flattens (3B: 3.309 vs T++ 3.206,
+   Mamba-2 3.164). Skills cannot fix a slope.
+2. **The prime suspect for the slope is state size and how many layers mix.**
+   Mamba-2 carries ~13.4 MB of state per sequence and mixes in every layer;
+   PAM ~1.2 MB, with notebooks in only 4 of 16 blocks (M1/M2 were chosen at
+   600M for speed and early loss). PAM's own older 16-notebook 3B run (more
+   state, more mixing) ended better (3.273). Known O(1) models (Mamba-2,
+   Gated DeltaNet, RWKV-7) do match T++ at this scale, so O(1) is not the
+   wall; our layout may be. This is v13's lane, sent as a EUREKA.
+3. **v14's real lever for the slope may be cheap capacity, not more skills.**
+   N7's exact n-gram table is a large, sparse state at O(1) cost per token,
+   and cache LMs (Grave 2017, kNN-LM) gave real perplexity gains on web text
+   because web text repeats names and phrases. So N7 should be tested on LM
+   loss (≥ 1.5B tokens), not on a micro copy task. Same family: sparse
+   high-dimensional keys (Willshaw capacity) for the notebooks.
+4. **Micro-benches answered "why" well, but transfer poorly.** Keep them for
+   diagnosis (the collision story, formation), and send anything aimed at bar
+   2 to a slope test early.
+5. **The novel parts that hold up are ours to keep:** echo's rule inference
+   (beats same-size T++), N9a's phase keys (lookup forms on every seed), long
+   recall past 2048. The plan is a competitive base body plus these, not
+   these instead of a base body.
+Next for v14: after n9c and N10 land, pre-register N7 as an LM test (600M
+first as a signal, then ≥ 1.5B on the 6000), and design the sparse-key
+notebook (Willshaw) as the capacity unit.
+
 ## Next action
 
 1. B2 run 2 on the 4090 (from `../qllm_v14run`): `for i in 1 2 3; do
