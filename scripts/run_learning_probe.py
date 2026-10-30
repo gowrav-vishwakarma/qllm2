@@ -16,6 +16,10 @@ Example (CPU, so a training run can keep the GPU):
 held-out-parameter variants; the nearest trained parameter's answer is always
 among the decoys, so selection by a memorised neighbour scores ~0). For a model
 with no B2 training, base and *_new should score alike (difficulty control).
+
+``--spread 0,1024,2048,4096,8192`` spreads each prompt's examples across a long
+document of held-out web text (memory_probes/spread.py; tasks become
+``<task>@<length>``): does in-context learning hold past the trained context?
 """
 
 from __future__ import annotations
@@ -49,6 +53,10 @@ def main() -> int:
     p.add_argument('--shots', default='2,4,8')
     p.add_argument('--trials', type=int, default=100)
     p.add_argument('--seed', type=int, default=5000)
+    p.add_argument('--spread', default='',
+                   help='comma list of prompt lengths (0 = no filler) to spread the examples to')
+    p.add_argument('--filler', default='.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt',
+                   help='token cache the spread filler is drawn from (held-out web text)')
     p.add_argument('--output', type=Path, required=True)
     args = p.parse_args()
 
@@ -74,6 +82,11 @@ def main() -> int:
     else:
         tasks = tasks or TASKS
         examples = build_rule_suite(tokenizer, tasks=tasks, shots=shots, seeds=seeds)
+    lengths = tuple(int(x) for x in args.spread.split(',') if x.strip())
+    if lengths:
+        from memory_probes.spread import filler_tokens, spread_suite
+        examples = spread_suite(examples, tokenizer, lengths, filler_tokens(args.filler))
+        tasks = tuple(dict.fromkeys(ex.task for ex in examples))
     rows = []
     with torch.no_grad():
         for i, ex in enumerate(examples, 1):
@@ -97,7 +110,7 @@ def main() -> int:
         'device': str(device),
         'platform': platform.platform(),
         'parameter_count': sum(x.numel() for x in model.parameters()),
-        'protocol': {'suite': args.suite, 'tasks': list(tasks), 'shots': list(shots), 'seeds': [seeds[0], seeds[-1]],
+        'protocol': {'suite': args.suite, 'spread': list(lengths), 'tasks': list(tasks), 'shots': list(shots), 'seeds': [seeds[0], seeds[-1]],
                      'candidates': 8, 'chance': 0.125},
         'per_task_accuracy': per_task,
         'mean_accuracy': float(np.mean(list(per_task.values()))),

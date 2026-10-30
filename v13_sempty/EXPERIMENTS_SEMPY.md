@@ -2860,3 +2860,34 @@ LM-only case either.
   improved its WikiText by 2.4 ppl, ours by none). Learning probe:
   Transformer++ 0.209 vs 0.187; its stage A alone scores 0.229, the highest
   of any model (number_step 0.083, reverse3 0.063). Still near chance.
+
+## LCL — does in-context learning hold past the trained context? (pre-registration, 2026-10-30 11:20 IST)
+
+**Why (step back after S2/tfc1).** PAM's clearest edge is memory past the
+2048-token training length (recall > 2048: PAM 0.60–0.72, Transformer++
+0.15–0.20). The user's claim: our models' *learning* should hold beyond the
+trained context too. Every learning probe so far is under ~1k tokens, so
+this was never measured.
+
+**Probe** (`memory_probes/spread.py`, `run_learning_probe.py --spread`): the
+8-shot rule prompts with their examples pulled apart by blocks of held-out
+web text (pretraining holdout cache, newline-free), header first and query
+last, to total lengths L = 0 (no filler) / 1024 / 2048 / 4096 / 8192; the
+nearest example is always a full filler block away from the query. Same
+targets, candidates and scoring; 300 trials (seeds 5000–5299); the same
+filler draw for every model. Tasks: label_category (primary: the only rule
+task with signal at 600M), two_hop; B2 shift_wide / affine_map reported (at
+the 600M floor).
+
+**Models.** 600M: Transformer++ tfs1 / tfs2 / tfc1; PAM M1, M2, C1-ctl,
+c2m2, c1m2. 3B: Transformer++, Mamba-2, PAM (2e-4). All trained at 2048.
+Local 4090, one small job (the shared-4090 rule).
+
+**Rules (fixed now):**
+- *Learning holds past the trained context* (per model): label_category at
+  L = 4096 AND 8192 ≥ its own L = 2048 value − 0.10.
+- *PAM beats Transformer++ on long-context learning*: on the same recipe
+  (c2m2 vs tfs2, c1m2 vs tfc1, M2 vs tfs1), label_category higher by ≥ 0.10
+  at both L = 4096 and 8192 (difference SE ≈ 0.04). Inside the window
+  (1024 / 2048) the difference is reported either way.
+- Same reading for PAM 3B vs Mamba-2 3B and Transformer++ 3B.
