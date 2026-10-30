@@ -97,6 +97,7 @@ class GroveLayer(nn.Module):
         self.alpha_p = nn.Parameter(torch.full((G,), math.log(math.expm1(cfg.alpha_init))))
         self.temp_p = nn.Parameter(torch.full((G,), math.log(cfg.temp_init)))
         self.conv = nn.Conv1d(G * n, G * n, cfg.conv, groups=G * n) if cfg.conv > 1 else None
+        self._record = None                              # diagnostics: list to collect shares m
 
     # ---- helpers -------------------------------------------------------------------
     @property
@@ -191,6 +192,8 @@ class GroveLayer(nn.Module):
             f = self._fitness(xc, roots)
             evc = torch.einsum('gts,bsgk->btgk', Lmat, f) + carry.T[None, :, :, None] * ev[:, None]
             m = torch.softmax(evc, dim=-1)                                # [B, C, G, K]
+            if self._record is not None:
+                self._record.append(m.detach())
             m_prev = torch.cat([m_last[:, None], m[:, :-1]], dim=1)      # share at t-1
             # ripening read: at t the fruit is grow(fruit, Sy(<=t), gy(<=t)) with
             # Sy(<=t) = sum_{s<=t} m_prev(s) y_s, so a value seen earlier in the
