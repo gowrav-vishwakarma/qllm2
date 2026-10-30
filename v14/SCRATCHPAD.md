@@ -4,7 +4,7 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-30 06:00 IST)
+## State (2026-10-30 07:00 IST)
 
 * **4090: the v13 session's E2 since 05:43 IST** (tmux `e2`, run from the
   worktree `../qllm_e2` at `e5b1a2a`, ECHO_TIED code `26ef94a`; two stages,
@@ -97,23 +97,26 @@ Keep all three current as things happen (user rule, 2026-10-29).
 
 ## Next action
 
-1. **GPU plan (IST).** 6000: ours after the v13 s3 chain (~09:30; they ping
-   on "=== s3 chain DONE"), back to v13 at ~12:00 for E2's port to M2 if E2
-   passes. 4090: E2 until ~10:15 + probes. On the 6000: `cd
-   ~/Development/qllm-private && git pull` (needs the B2 merge; sempyt ≥
-   `b99e038`), smoke the tpp arm and a B2 task for 30 steps first, then in
-   tmux, in order:
-   (a) **tpp B1 calibration** on run 4's data (`for i in 1 2 3; do
-   TAG=b1r4tpp$i FAMILIES=rules ARMS=tpp SAVE=1 EXTRA="--seed 2$i
-   --doc_seed0 $((i+3))00000000 --init_seed 2$i" bash v14/run_bench.sh;
-   done`): does attention form the label_category circuit in every seed?
-   (b) **B2 run 1** (`TAG=b2 FAMILIES=rules ARMS=tpp,echo,echo_tied,n1sum
-   SAVE=1 EXTRA='--seed 31 --doc_seed0 700000000 --init_seed 31
-   --rule_tasks shift_wide,step_wide,affine_map' bash v14/run_bench.sh`;
-   readouts L and I in EXPERIMENTS_V14 "B2").
-   (c) **B0 run 3** (`TAG=b0r3 ARMS=echo,n1sum,n1gate,n1phase,echo_tied,tpp
-   AUX=0.1 SAVE=1 bash v14/run_bench.sh`, ~2 h). If the 6000 slot ends
-   first, (c) goes to the 4090 after E2.
+1. **GPU plan (IST), agreed with v13 at ~07:00.** E2 (4090) ends ~09:15
+   with probes (59K tok/s, faster than planned).
+   - **6000, after the v13 s3 ping (~09:30 -> ~10:40):** `cd
+     ~/Development/qllm-private && git pull` (needs ≥ `1e9a0b8`; sempyt ≥
+     `b99e038`), a 30-step smoke of tpp + one B2 task, then in one tmux:
+     (a) **tpp B1 calibration** on run 4's data (`for i in 1 2 3; do
+     TAG=b1r4tpp$i FAMILIES=rules ARMS=tpp SAVE=1 EXTRA="--seed 2$i
+     --doc_seed0 $((i+3))00000000 --init_seed 2$i" bash v14/run_bench.sh;
+     done`): does attention form the label_category circuit in every seed?
+     (b) **B2 run 1** (`TAG=b2 FAMILIES=rules ARMS=tpp,echo,echo_tied,n1sum
+     SAVE=1 EXTRA='--seed 31 --doc_seed0 700000000 --init_seed 31
+     --rule_tasks shift_wide,step_wide,affine_map' bash v14/run_bench.sh`;
+     readouts L and I in EXPERIMENTS_V14 "B2"). The 6000 then goes back to
+     v13 (E2 port to M2 if E2 passes).
+   - **4090, when v13 pings that E2 freed it (~09:15):** (c) **B0 run 3**
+     (`TAG=b0r3 ARMS=echo,n1sum,n1gate,n1phase,echo_tied,tpp AUX=0.1 SAVE=1
+     bash v14/run_bench.sh`, ~2 h).
+   - v13 will run the B2 tasks as an inference-only probe on their 600M
+     checkpoints (base and `_new` reported separately: for models with no
+     B2 training they should score alike, which is the difficulty control).
 2. Open question from runs 3-4: why does label_marker in training stop the
    tied arm from forming the circuit (1 of 3) while helping echo (2 of 3)?
    Probe the saved checkpoints (`checkpoints_v14/b1r3p*`, `b1r4p*`, on the
