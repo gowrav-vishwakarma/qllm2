@@ -12,31 +12,24 @@
 - Nothing has run on a GPU yet. 4090: v13's n9c was using ~15 GB at 00:30.
 
 ## Running
-- **G1r RUNNING (started 02:35 IST 2026-10-31)**, tmux `v15g1r`, driver
-  `v15/tmp/g1r_chain.sh` (untracked), pinned worktree `../qllm_v15_g1r` at
-  `abe4c89` (ripening; .venv symlinked). Six pairs grove vs echo: B1 run 4's
-  set (seeds 21/22/23: TAG v15g1rp{1,2,3}), then the B2 set (seeds 41/42/43:
-  v15g1rb2p{1,2,3}); ~1 h per pair; chain end ~09:00 IST. Logs:
-  `../qllm_v15_g1r/logs/v14_v15g1r*_abe4c89_*.{log,json}` (copy to `logs/`
-  and commit with the verdict). Bars: EXPERIMENTS_V15 §4 G1 (unchanged).
-  Arm: `V14_EXT_ARMS="grove=v15.bench:build_grove"` (27.67M vs echo 27.61M).
-  4090 sharing: v14's whole-card n9r runs beside it from ~03:30 (agreed).
-  Pair 1 (03:28 IST): rules learned (letter_shift 0.99, reverse3 1.00) but
-  lookup below echo (label_exact 0.34 vs 0.50 at 2-shot; label_category 0.42
-  vs 0.49 at 4-shot), guard fails (train loss 0.61 vs 0.38). L, P not met.
-  Summary tool: `.venv/bin/python v15/tmp/g1_summary.py` (reads the jsons).
-- G1 as built (`84b41d8`): pair 1 FAIL at chance, blind-window cause found
-  and fixed (EXPERIMENTS §4 G1); its worktree `../qllm_v15_g1` is stopped by a
-  docs-only dirty edit (the guard refuses launches) and can be removed.
+- **G1d QUEUED (04:44 IST 2026-10-31)**: grove arm of pair 1 with SAVE=1 for a
+  CPU probe of the trained organ (tmux `v15diag`, worktree `../qllm_v15_diag`
+  at `abe4c89`, ckpt -> `/media/gowrav/d_drive/qllm_ckpts/v15_diag_checkpoints_v14/`).
+  Probe: `.venv/bin/python v15/tmp/probe_shares.py <ckpt>/grove@hd64L4.pt 4`
+  (share entropy per grove, cos(m_query, m_same_key) vs other keys, learned
+  τ/λ/α). Random init: entropy ~2.7 of 3.47 nats, overlap 0.86 vs 0.73.
+- G1r DONE 04:44 IST: FAIL on L and P after 2 of 3 pairs (EXPERIMENTS §4 G1).
+  Pairs 3–6 stopped by the guard (dirty docs edit in `../qllm_v15_g1r`).
+  Worktrees `../qllm_v15_g1` and `../qllm_v15_g1r` can be removed (logs copied).
 
 ## Next action
 0. G2 plumbing is DONE and verified on CPU (`v15/hook.py`, `--arch grove`,
    launcher `ARCH=grove GROVE_SPEC=`); see EXPERIMENTS §4 G2 for the command.
-1. Read G1r when the pairs land: L (label_exact >= echo + 0.15 in >= 2/3),
-   P (label_category >= 0.9 in >= 2/3). Record in the index, EUREKA if met.
-   Watch the guard too: train loss within 0.1 nat of echo.
-2. If G1 passes L and P: G2 (150M same-batch LM via a trainer hook).
-3. If G1 fails in all 3 pairs: back to the meditation, not to tuning.
+1. G1d: when the ckpt lands (~05:30 IST), run the probe; write what the
+   trained organ does (sharp or blurred addresses? which groves live?).
+2. Step back (the void), then redesign the addressing in the organism frame
+   (territory / births, SCRATCHPAD 03:40) or something better; new G1 chain.
+3. G2 only after a G1 pass (plumbing is ready).
 
 ## Step-back notes
 - 2026-10-31 03:40, after G1r pair 1 (rules yes, lookup no, guard no).

@@ -167,9 +167,27 @@ Pairs 2–6 of `84b41d8` were not run (they could not change the verdict; the
 clean-tree guard was used to stop the queue, no job was killed).
 
 **G1r = G1 rerun at `abe4c89` with ripening, same six pairs, same bars
-(unchanged, below), started 02:35 IST 2026-10-31** (tmux `v15g1r`,
-worktree `../qllm_v15_g1r`, logs `v14_v15g1rp{1,2,3}_abe4c89_*`,
-`v14_v15g1rb2p*`).
+(unchanged, below), 02:37–04:44 IST 2026-10-31. Verdict: FAIL on L and P
+after two of the three rules pairs; pairs 3–6 were not run (they could not
+change the verdict).** Logs `logs/v14_v15g1rp{1,2}_abe4c89_*.{log,json}`.
+
+| pair | label_exact 2/4/8 (grove vs echo) | label_category 2/4/8 | letter_shift 8 | number_step 8 | train loss | ms/step |
+|---|---|---|---|---|---|---|
+| p1 (seed 21) | 0.34/0.22/0.12 vs 0.50/0.26/0.12 | 0.33/0.42/0.25 vs 0.50/0.49/0.25 | 0.99 vs 1.00 | 0.86 vs 1.00 | 0.61 vs 0.38 | 319 vs 176 |
+| p2 (seed 22) | 0.35/0.21/0.10 vs 0.48/0.25/0.12 | 0.33/0.47/0.27 vs 0.48/0.48/0.26 | 0.97 vs 1.00 | 0.69 vs 1.00 | 0.76 vs 0.46 | 310 vs 411* |
+
+(*echo p2 shared the card with v14's whole-card job.) Reading: ripening
+turned Grove from blind (chance everywhere) into a rule learner (reverse3
+1.00, letter_shift 0.97–0.99), but it is behind echo everywhere by a margin
+that looks like slower learning (train loss 0.6–0.76 vs 0.38–0.46), and the
+2-shot lookup numbers (0.34 vs 0.50) say echo knows the label *set* (0.50 =
+one of two seen labels) while Grove only partly does; nobody binds at
+8-shot (0.12). The L and P bars as written are not met. CPU toy with a
+large key vocabulary (`v15/tmp/toy_bigvocab.py`, 8 pairs, season 32, 1200
+steps): 31 keys 0.998, 512 keys 0.879, 4096 keys 0.846: the soft hash
+degrades with key vocabulary but is not the whole story. Next: G1d, a
+diagnostic of the trained organ (share entropy, address overlap), then the
+step-back before any redesign (SCRATCHPAD 03:40 note: territory / births).
 
 Arm `grove` in `v14/microbench.py` (a V15 model class with the bench's
 interface), size-matched to echo (27.6M), vs `echo` and `tpp`, on B1 run 4's
