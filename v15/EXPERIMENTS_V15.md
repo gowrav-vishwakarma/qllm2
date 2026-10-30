@@ -33,6 +33,9 @@ Then the step back, from far away and from inside:
 
 That is v15. The rest of this file makes it precise and testable.
 
+**Isolation (user, 2026-10-31).** v15 thinks on its own. v13/v14 are consulted
+only for plumbing (trainer, benches) and baseline numbers, never for ideas.
+
 ## 1. The unit and the organ
 
 Model width d. A layer has G groves; a grove has K trees; roots and fruits
@@ -76,8 +79,7 @@ retention matrix per grove for the evidence scan, one softmax, one matmul);
 the growth is one more at the season's end. Decode keeps a C-token buffer and
 grows every C tokens, so prefill == decode exactly (selftest: 1e-15). A fact
 written in a season is readable from the next one; the conv covers the first
-few tokens. This is the "write with hindsight at the end of a unit" idea from
-EUREKA (v13, 2026-10-30) built into the model's clock.
+few tokens.
 
 **Cost.** Per token per layer: G·K·n·3 MACs (G 8, K 32, n 64: 49k), far below
 the MLP (d 768: ~3.6M). State per layer at those sizes: 33k numbers (132 KB);
