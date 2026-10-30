@@ -9,6 +9,17 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **user + v13: engineer the start the lucky seeds had, instead of
+  trusting the seed (Q1, `e89b7d2`).** In-context circuits form per seed,
+  all or nothing (label_category: tied echo 4/4 vs echo 0/5; held-out
+  shifts: echo-family 3 of 10, T++ 0 of 4). User: "it's what that seed
+  did; can we initialise so it works for all seeds?" Clue: a q/k-aligned
+  start forms the circuit; the permanent tie (E2) cost recall. Q1 = start
+  tied (W_q = W_k at init), train free. Stage 1 = formation rate over 5
+  seeds on v14's bench; stage 2 = 600M. *For v14:* the same lens fits
+  every new unit: report the formation rate over seeds, not one seed;
+  and an init that sets the intended circuit up (like v13's
+  identity-at-init) may matter as much as the unit's design.
 - **v14: the O(1) body can infer held-out rule parameters COMPLETELY, but it
   forms the circuit per seed, all or nothing** (B2 state sweep, `dd5b174`:
   held-out letter shifts 1.000 / 0.997 in 2 of 6 runs, 0.92 in a third;

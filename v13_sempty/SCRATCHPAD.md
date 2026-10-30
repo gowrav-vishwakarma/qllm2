@@ -18,6 +18,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-30 13:35 IST: g1c RUNNING on the 4090** (worktree `../qllm_g1c`,
+  9c2b632, ~3 h → ~16:45 IST). LCL DONE: no model's learning holds past
+  2048 (PAM keeps the label set, loses the mapping). **Q1 tied start**
+  (`--echo_qk_tied_init`, e89b7d2) pre-registered: formation rate over 5
+  seeds on v14's bench first, then 600M. r3b on the 6000 ~21:30 IST.
+
 * **2026-10-30 12:25 IST: label_category gap diagnosed; g1c queued on the 4090.**
   label_diag: PAM fails EXACT in-context copy too (0.50–0.62 vs T++
   0.78–0.88, Mamba-2 0.62–0.72); not capacity (3.3× state no help), not
