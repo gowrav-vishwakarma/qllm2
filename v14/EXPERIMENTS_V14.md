@@ -1116,6 +1116,24 @@ question: why exact lookup decays with pairs back once keys are distinct
 **The recall jump is unplanned**, so it needs a pre-registered replication
 with recall as the primary bar before any claim.
 
+**N9a recall replication `n9r` (PRE-REGISTERED 2026-10-31 ~02:00 IST, before
+any n9r number; agreed with v13).** n9c's recall jump was unplanned, and recall
+past 2048 has looked seed-lucky before, so both arms run at a NEW seed, paired.
+- **Arms (4090, whole card, v13's launcher + the v14 hook, worktree on
+  master):** ctl43 = C1-ctl's exact recipe (M1 body: PAM_LAYERS=3,7,11,15,
+  MLP_HIDDEN=2352, echo; stage A 120M tokens dclm/fineweb/smoltalk2_mid
+  0.4167/0.3333/0.25, blend warmup 30M; stage B 480M on the M1 mix with
+  --init_from; LR 1.2e-3; GRAD_CKPT=1) and n9a43 = the same + ECHO_PHASE_LAGS=3.
+  SEED=43 for both (init + data mix).
+- **Primary bars (the screen's 40-trial recall probe, scored as in v13's n9c
+  record):** recall past 2048 ≥ ctl43 + 0.15 AND overall recall ≥ ctl43 + 0.08.
+- **Guard:** web holdout ≤ ctl43 + 0.01.
+- **Reported:** label_diag (t200), PG-19 far gain (eval_pos_loss; n9c: +0.037
+  vs +0.041), so a recall gain with no long-text LM gain is visible.
+- **Outcome:** both bars met: N9a's long recall is real at 600M, and it goes
+  to a ≥ 1.5B-token arm on the r3c recipe (paired with r3c). Not met: n9c's
+  recall jump was seed luck, recorded as such.
+
 ### N9s — salient phase (user idea, 2026-10-31; PRE-REGISTERED ~00:40 IST)
 
 **Idea (user).** N9a's phase comes from a FIXED window of the last 3 tokens.
