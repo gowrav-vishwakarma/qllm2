@@ -14,16 +14,15 @@ Keep all three current as things happen (user rule, 2026-10-29).
   definition: t40 behavioral JSON, accuracy·n over `aggregates`, split at
   context_tokens 2048) against the bars in EXPERIMENTS_V14 "N9a recall
   replication". Beside it: v15's G1r (its own small job).
-* **N9s micro run done** (`5d416bb`): bar G not met (N9a forms label_gap
-  too); **N9s formed two_hop in seed 111**, a first for any arm including
-  attention. Replication `n9th` pre-registered (EXPERIMENTS_V14 "N9s"):
-  arms echo_phase / echo_phase_sal / tpp × 5 seeds, needs a slot (6000 by
-  agreement with v13, or the 4090 after n9r). Launch from a worktree at
-  `5d416bb` or later (N9s code unchanged), checkpoints symlinked to d_drive:
-  `TAG=n9thp$i FAMILIES=rules ARMS=echo_phase,echo_phase_sal,tpp SAVE=1
-  EXTRA="--seed 13$i --doc_seed0 $((i+50))00000000 --init_seed 13$i
-  --rule_tasks letter_shift,number_step,reverse3,label_category,two_hop,label_gap"
-  bash v14/run_bench.sh`, i = 1..5.
+* **n9th running on the 6000** (agreed with v13 04:10 IST): tmux `n9th`,
+  worktree `~/Development/qllm_v14` at `161a3c9`, driver `~/n9th_chain.sh`,
+  driver log `logs/v14_n9th_driver_161a3c9.log` (box clock UTC). Arms
+  echo_phase / echo_phase_sal / tpp, seeds 131..135 in sequence (each pair
+  ~45-60 min shared), bar H in EXPERIMENTS_V14 "N9s". v13's limits: one
+  process, ≤ 8 GB (allocator capped, `V14_GPU_MEM_FRAC=0.076`), no
+  checkpoints (`SAVE=0`), stop if free disk < 7 GB (driver watcher), pause
+  if r3cb (30.2k tok/s at launch) or b2ma (86.7k) stays > 30 % down. Copy
+  `logs/v14_n9thp*_161a3c9_*.{log,json}` back to this repo when done.
 * **6000:** v13's runs (r3c flagship 3B, b2m Mamba-2 B2 arm, then the `lb`
   label-format pair). v14 asks before using it.
 * **v13 news (2526ca7):** the B2 edge over T++ replicates at 600M in both
