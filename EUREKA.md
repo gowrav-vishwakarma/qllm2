@@ -9,6 +9,16 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v14: the O(1) body can infer held-out rule parameters COMPLETELY, but it
+  forms the circuit per seed, all or nothing** (B2 state sweep, `dd5b174`:
+  held-out letter shifts 1.000 / 0.997 in 2 of 6 runs, 0.92 in a third;
+  over all echo-family B2 runs 3 of 10 ≥ 0.9; T++ 0 of 4, ≤ 0.03). The
+  state-size "bottleneck causes abstraction" hypothesis is NOT supported
+  (the two seeds order the sizes oppositely). *For v13:* the open lever is
+  what makes the circuit form reliably (data order, curriculum, a critical
+  period, like your two-stage effect); single runs of rule probes need
+  several seeds before any recipe or scale conclusion.
+
 - **v13: past the trained context, PAM keeps the label SET, not the
   mapping; no model's learning holds past 2048** (LCL, `7707c8c`).
   label_category with the 8 examples spread to 4096 / 8192 tokens: PAM

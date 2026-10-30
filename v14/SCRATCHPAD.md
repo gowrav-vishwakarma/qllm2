@@ -119,7 +119,9 @@ and from inside before choosing the next run.
    q/k symmetric (similarity), which lost recall (asymmetric: "what came
    after X"), 0.825 -> 0.602 at 600M. Stop patching lookup into echo; lean
    into abstraction, where an O(1) state has an edge.
-2. **Hypothesis: the bottleneck causes the abstraction.** Attention can keep
+2. **(Tested 13:34: NOT supported; seeds order sizes oppositely. The O(1)
+   body solves held-out shifts fully in some seeds: circuit formation is the
+   open lever.) Hypothesis: the bottleneck causes the abstraction.** Attention can keep
    every example, so memorising a table per parameter is cheap. A fixed-size
    state cannot hold the examples, so it is pushed to hold the rule. If
    true, a smaller state should infer held-out rules *better* (and recall

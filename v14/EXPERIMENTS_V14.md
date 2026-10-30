@@ -776,6 +776,28 @@ abstraction, a smaller state should infer held-out rules better.
   8-shot dip), ms/step. **These run in parallel with B2 run 2 on the 4090,
   so ms/step is not comparable** with solo runs.
 
+**State sweep RESULT (4090, 2026-10-30 10:47–13:34 IST, code `dd5b174`, 2
+seeds): by the frozen rule S is REFUTED (hd128 − hd32 = +0.168 ≥ +0.15), but
+the honest reading is NO reliable state-size effect: the two seeds order the
+sizes in opposite directions.** Logs: `logs/v14_b2state{1,2}_dd5b174_*.{log,json}`.
+
+| shift_wide_new (2/4/8) | hd32 ×12 (12k state) | hd64 ×6 (25k) | hd128 ×3 (49k) |
+|---|---|---|---|
+| seed 51 | **1.000** (1.0 / 1.0 / 1.0) | 0.924 | 0.500 (0.32 / 0.49 / 0.70) |
+| seed 52 | 0.162 | 0.086 | **0.997** (0.99 / 1.0 / 1.0) |
+| mean | 0.581 | 0.505 | 0.749 |
+
+Trained values 1.000 everywhere; held-out numbers 0.92–1.00; the 8-shot step
+dip appears at every size (0.81–0.92).
+- **Bottleneck hypothesis (step back, point 2): not supported.** Neither
+  "smaller abstracts better" nor "bigger is better" holds across seeds.
+- **New finding: the O(1) body can solve held-out shift inference COMPLETELY**
+  (1.000 and 0.997 here). Whether it does is per seed, all or nothing, like
+  the label circuit in B1. Count over every echo-family B2 run so far: 3 of
+  10 runs ≥ 0.9 on shift_wide_new; tpp 0 of 4 (≤ 0.03). The metric that
+  matters is the rate at which the inference circuit forms, and what makes
+  it form reliably (seed, data order, a critical period?).
+
 ### N1 — phase interference revived (v11 E3 on the lean body)
 
 **Why.** The only architecture change that beat the v7 baseline (−1.11 PPL),
