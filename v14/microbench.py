@@ -27,16 +27,15 @@ Arms (all real arm, chrono + out_gate + delta):
     echo         + E1 echo: the current control body
     echo_n7      echo + N7 in-context n-gram memory (orders 2, 3; read after the first and last block)
     echo_phase   N9a: echo with content-phase keys (angles from the last 3 tokens)
-    echo_qinit   v13 Q1: echo whose query rows start equal to the key rows (no tie after)
     op / opcoord N6 operator memory / N10 coordinate-on-circles version
-    echo_sparse  v13 S1: echo q and k centred by the running key mean, top-8 magnitudes kept
     tpp          REFERENCE, not a candidate: Transformer++ (attention, O(T)) at
                  the same width and depth, MLP sized to echo's parameter count.
                  It calibrates the bench: what a model that can look back at
                  every token learns from the same data.
     (N6 arms op / opdiag / opdiag_ownq left with N6 after B1 run 2: 78e4354;
      echo_tied left after v13 E2 failed at 600M: 5100fd7;
-     n1sum / n1gate / n1phase left with N1 after B0 run 3: 9e0a3fd)
+     n1sum / n1gate / n1phase left with N1 after B0 run 3: 9e0a3fd;
+     echo_qinit (v13 Q1) / echo_sparse (v13 S1) left after F1 (0/5 each): 6187681)
 Optional suffixes: @<head_dim> (default 64), x<n_heads> after it (default 6;
 e.g. echo@32x12 keeps width 384 with a smaller memory), :L<n_layers> (default 4).
 """
@@ -277,10 +276,8 @@ ARMS = {
     'echo': dict(echo=True),
     'echo_n7': dict(echo=True, ngram_orders=(2, 3), ngram_layers=(0, -1)),   # N7 exact n-gram memory
     'echo_phase': dict(echo=True, echo_phase_lags=3),   # N9a content-phase echo keys
-    'echo_qinit': dict(echo=True, echo_qk_tied_init=True),   # v13 Q1: q starts = k, trains free
     'op': dict(echo=True, opmem='phase'),                  # N6 operator memory (restored)
     'opcoord': dict(echo=True, opmem='coord'),             # N10 rules as phase continuation
-    'echo_sparse': dict(echo=True, echo_sparse_k=8),       # v13 S1: centred top-8 echo q/k
     'tpp': dict(echo=True),          # the echo cfg, used only to match sizes (build_model)
 }
 
