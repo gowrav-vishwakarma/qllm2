@@ -3139,3 +3139,32 @@ rerun C1-ctl's stage B on the 4090 from C1-ctl's own stage-A checkpoint
 tracks the 6000 log, the 4090 is fine and E2 / g1c stand; if it drifts after
 ~3,000 steps, every 4090 600M verdict (E2, g1c, T1) is re-opened.
 Queued on the 4090 after F1 (~19:50 IST).
+
+## Box control result + F1 result + B2-in-training pair (2026-10-30 22:15 IST)
+
+**Box control (4090, `boxchk`)**: C1-ctl's stage B rerun on the 4090 from
+C1-ctl's own stage-A checkpoint (same data, seed, recipe; grad ckpt on) tracks
+the 6000 log: train-loss windows +0.003 / +0.005 / +0.006 / +0.005 / +0.013 /
++0.012 (steps 0–4600), vs +0.07–0.08 for E2 and g1c. **The 4090 is not the
+cause: E2, g1c and T1 FAILs stand.** Cross-box comparisons carry ~0.01 noise.
+
+**F1 (joint formation bench, B1 label_category, 5 paired seeds; formed ≥
+0.9)**: N9a content-phase keys (`echo_phase`, v14) **5/5** (1.000 each);
+echo control 1/5 (0.70 / 0.91 / 0.40 / 0.72 / 0.66); **Q1 tied start 0/5**
+(0.67 / 0.42 / 0.42 / 0.43 / 0.42); **S1 separated keys 0/5** (0.44 / 0.41 /
+0.58 / 0.43 / 0.41). Q1 and S1 FAIL (their code is removed, index rows keep
+the rerun hash); N9a goes to 600M on the 6000 (pre-registered when its
+trainer hook lands).
+
+**B2-in-training 600M pair (pre-registration).** Stage B of the reference
+recipe (c1m2: M2 body, aptitude stage A reused: `--init_from
+c1m2a_pre_7ae6f1f`) with the `b2` source added: dclm / fineweb /
+smoltalk2_mid / recall / b2 = 0.43 / 0.40 / 0.10 / 0.04 / 0.03 (b2 = trained
+rule values only, seeds ≥ 1e7). Arms on the 6000: `b2p1` PAM (seed 42),
+`b2t` Transformer++ (same, from its own aptitude stage A `tfc1a_pre`), `b2p2`
+PAM (SEED = 43: another data order and init draw). **Rule:** PAM infers held-out
+rule values better than Transformer++ if the B2 `_new` mean (shift_wide_new,
+step_wide_new, affine_map_new; 400 trials, 2/4/8 shots) is ≥ T++ + 0.10 in
+BOTH PAM seeds. Reported: base (trained-value) cells, formation (≥ 0.9) per
+task, `_new` past 2048 (LCL spread), holdout / recall vs c1m2 / tfc1 (b2 costs
+3 % of the web tokens).

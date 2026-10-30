@@ -53,6 +53,7 @@ VAULT="${VAULT:-0}"            # A2b pinned state + protect gate (needs NSTATES>
 DELTA="${DELTA:-0}"            # A3 delta erase/write (KEEP 2026-09-05: exact 8-way recall on the micro-bench)
                                # (COUPLE removed 2026-10-28: C1 FAIL, code at 4c688cb)
 SHORT_CONV="${SHORT_CONV:-0}"  # G1 short conv on qkv (2026-10-29 screen; needs GEN_EVERY=0)
+SEED="${SEED:-42}"            # init + data-mix seed (default 42 = every run so far)
 ECHO="${ECHO:-0}"              # E1 echo (succession) memory into the head
 ECHO_QK_TIED_INIT="${ECHO_QK_TIED_INIT:-0}" # Q1 echo W_q starts = W_k, then trains freely (needs ECHO=1)
 ECHO_SPARSE_K="${ECHO_SPARSE_K:-0}" # S1 echo q/k centred + top-k per head (0 = off; needs ECHO=1)
@@ -135,7 +136,7 @@ while :; do
   --fused_ce \
   --fused_pam \
   --ce_gemm_dtype auto \
-  --seed 42 \
+  --seed "$SEED" \
   --log_interval 50 \
   --val_every "$VAL_EVERY" \
   --gen_every "$GEN_EVERY" \
