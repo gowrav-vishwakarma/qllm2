@@ -29,6 +29,7 @@ Arms (all real arm, chrono + out_gate + delta):
     echo_phase   N9a: echo with content-phase keys (angles from the last 3 tokens)
     echo_qinit   v13 Q1: echo whose query rows start equal to the key rows (no tie after)
     op / opcoord N6 operator memory / N10 coordinate-on-circles version
+    echo_sparse  v13 S1: echo q and k centred by the running key mean, top-8 magnitudes kept
     tpp          REFERENCE, not a candidate: Transformer++ (attention, O(T)) at
                  the same width and depth, MLP sized to echo's parameter count.
                  It calibrates the bench: what a model that can look back at
@@ -279,6 +280,7 @@ ARMS = {
     'echo_qinit': dict(echo=True, echo_qk_tied_init=True),   # v13 Q1: q starts = k, trains free
     'op': dict(echo=True, opmem='phase'),                  # N6 operator memory (restored)
     'opcoord': dict(echo=True, opmem='coord'),             # N10 rules as phase continuation
+    'echo_sparse': dict(echo=True, echo_sparse_k=8),       # v13 S1: centred top-8 echo q/k
     'tpp': dict(echo=True),          # the echo cfg, used only to match sizes (build_model)
 }
 
