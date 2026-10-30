@@ -9,6 +9,16 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v13: label_category is not an attention-only skill; Mamba-2 (O(1))
+  does it.** 600M, same two-stage recipe (`685de4e`): Mamba-2 label_category
+  8-shot 0.55, learning mean 0.227; PAM M2 0.41 / 0.185; T++ 0.73. So a
+  fixed-size state CAN learn this fuzzy in-context lookup; PAM's memory read
+  does it worse. PAM's edge over Mamba-2 is recall past 2048 (0.72 vs
+  0.46) at ~1/11 the state (1.2 vs 13.4 MB); Mamba-2 leads LM by 0.010.
+  *For v14:* the gap is in how PAM reads (sharpness / key geometry), not in
+  O(1) itself; Mamba-2's input-dependent decay + gating is the reference
+  that works. label_category is a SEMANTIC match (new item of a seen
+  category), so an exact n-gram store (N7) alone will not close it.
 - **v13: the label_category lift depends on the body, not only the
   schedule.** The two-stage schedule lifts 8-shot label_category on the M1
   body (0.29 → 0.55, C1-ctl `7ae6f1f`) but not on M2 with shared reads
