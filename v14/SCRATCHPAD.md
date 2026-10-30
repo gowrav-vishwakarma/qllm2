@@ -190,6 +190,21 @@ Body = cortex; coordinates = grid cells; memory = hippocampus; planner =
 prefrontal. Each part has a micro test on B2 / the N7 bench; N7 and N9a,
 running now, are the first two data points.
 
+## Step back (2026-10-30 ~22:20 IST, after v13's 3B result)
+
+v13 r3b (`ef136f5`): the reference PAM recipe at 3B tokens ends at holdout
+3.309 vs T++ 3.206 / Mamba-2 3.164 (WikiText 58.0 vs 46.6); PAM ties early
+(1.2B) and plateaus, and Mamba-2 reaches PAM's 3B loss at ~1.6B tokens (~2×
+data efficiency). Recall still beats T++ (0.620 vs 0.539). **So bar 2 is not
+a lookup problem: the body's LM quality plateaus.** v14's wins so far
+(N9a lookup formation 5/5; echo infers held-out rules where T++ selects) are
+real but sit on a body that falls behind at scale. Lesson for every v14 unit:
+LM effects need ≥ 1.5B tokens before belief; 600M checks only measure the
+targeted skill (lookup, formation, inference) with holdout as a guard.
+Open question for the design: what in the body plateaus (state precision /
+decay, write rule, mixing), and does a unit change the slope, not just a
+skill? A slope test needs ≥ 1.5B tokens (the 6000).
+
 ## Next action
 
 1. B2 run 2 on the 4090 (from `../qllm_v14run`): `for i in 1 2 3; do
