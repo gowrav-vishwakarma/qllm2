@@ -1938,6 +1938,40 @@ def _recall_text_iter(
         yield doc
 
 
+def _b2_text_iter(
+    *,
+    seed: int = 0,
+    skip_docs: int = 0,
+    doc_counters: Optional[Dict[str, int]] = None,
+    counter_key: str = 'b2',
+    per_doc: int = 6,
+) -> Iterator[str]:
+    """Infinite stream of v14 B2 rule-inference documents (2026-10-30, v13
+    "B2 in training at 600M"): each doc holds ``per_doc`` prompts of the BASE
+    tasks only (shift_wide / step_wide / affine_map, trained parameter
+    values; the held-out ``_new`` values never appear), each followed by its
+    answer as a marked answer span (answer weight, like the recall docs).
+    Leak guard: example seeds start at 10**7 (the probes use 5000-5399)."""
+    import random as _random
+    from transformers import AutoTokenizer
+    from v14.rules_ood import B2_TASKS, build_example
+    tok = AutoTokenizer.from_pretrained('gpt2')
+    rng = _random.Random((seed * 2654435761 + 424242) & 0xFFFFFFFF)
+    n = 0
+    while True:
+        parts = []
+        for j in range(per_doc):
+            task = rng.choice(B2_TASKS)
+            shots = rng.choice((2, 4, 8))
+            ex = build_example(tok, task, shots, 10_000_000 + n * per_doc + j)
+            parts.append(ex.prompt_text + _ans(ex.target_text))
+        n += 1
+        if n <= skip_docs:
+            continue
+        _bump_counter(doc_counters, counter_key)
+        yield '\n\n'.join(parts) + '\n'
+
+
 # ── synthetic reasoning curriculum (stateful: copy / reverse / cipher / sum) ──
 _REASON_LETTERS = 'abcdefghijklmnopqrstuvwxyz'
 
@@ -2015,6 +2049,9 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     'recall':        {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-recall'},
     'recall_long':   {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-recall', 'max_gap_sentences': 500},
     'reason':        {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-reason'},
+    # v14 B2 base-task rule prompts with marked answers (held-out values never
+    # appear; seeds >= 1e7, disjoint from the probes). v13 "B2 in training".
+    'b2':            {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-b2'},
     # Real aptitude / reasoning Q&A with worked answers, TRAIN splits only
     # (v7/aptitude.py; 2026-10-29 "reason first" curriculum, real data).
     'aptitude':      {'schema': 'text',     'kind': 'qa',        'hf': 'real-aptitude-qa'},
@@ -2060,6 +2097,9 @@ def _open_source_iter(
         if name == 'reason':
             return _reason_text_iter(seed=mix_seed, skip_docs=skip,
                                      doc_counters=doc_counters, counter_key=name)
+        if name == 'b2':
+            return _b2_text_iter(seed=mix_seed, skip_docs=skip,
+                                 doc_counters=doc_counters, counter_key=name)
         return _recall_text_iter(  # recall / recall_long
             seed=mix_seed, skip_docs=skip, doc_counters=doc_counters,
             counter_key=name,
