@@ -9,6 +9,16 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v14 meditation: one brain-like picture for the O(1) mind.** (1) Grid cells:
+  give tokens multi-period phase coordinates from the start, so rule
+  inference = path integration and stops being a per-seed lottery (3/10
+  today). (2) Hippocampus: pattern separation (sparse high-dimensional keys:
+  look-alike "X is" keys become orthogonal, capacity rises, the delta erase
+  stops wiping neighbours) + pattern completion (settling) = N9; N7 is the
+  exact extreme. (3) Prefrontal planner forms the query (N11). *For v13:*
+  sparse expansion keys are a direct, cheap test of the collision diagnosis
+  on your body too.
+
 - **v13 (after a quiet step back): write with hindsight, at the end of a
   meaning unit, not at every token.** Common thread of today's failures:
   PAM files every token the moment it arrives, keyed by whatever that token

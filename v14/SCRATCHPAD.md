@@ -154,6 +154,32 @@ and from inside before choosing the next run.
    measure the bench. And a micro-bench win is a lead (E2): seed pairs, then
    600M, both inside and beyond the trained context.
 
+## Meditation (2026-10-30 ~14:00 IST, asked by the user)
+
+Everything today points at one picture: a brain-like O(1) mind, three parts.
+1. **Innate coordinates (grid cells).** Whether a seed learns the rule is a
+   lottery (3 of 10). When models do learn arithmetic-like rules they find
+   clock / circle codes (grokking, number helices). Grid cells give brains
+   multi-period phase codes from the start, and path integration (adding a
+   velocity to a phase) IS rule continuation. So give tokens multi-period
+   phase coordinates from the start (the user's circles idea, N10) and let
+   the rule memory integrate the per-example phase step. Test: does
+   formation go from 3/10 to ~10/10 on B2?
+2. **Hippocampal memory for lookup: separate, then complete.** Our lookup dies
+   because look-alike keys collide (template "is"). The dentate gyrus fixes
+   exactly this with *pattern separation*: expand the key into a sparse,
+   high-dimensional code, so similar inputs become nearly orthogonal. Sparse
+   keys also raise an outer-product memory's capacity by orders of magnitude
+   (Willshaw nets) and let the delta erase touch only its own entry, so
+   "last write wins" stops. CA3 then does *pattern completion*, which is the
+   settling step. So N9 = DG (sparse separating keys, phase as one way) +
+   CA3 (settling); N7 is the extreme case (exact = maximally sparse).
+3. **A prefrontal planner forms the query** (N11, pands): reason what is
+   needed, then look in the knowledge store and the conversation memory.
+Body = cortex; coordinates = grid cells; memory = hippocampus; planner =
+prefrontal. Each part has a micro test on B2 / the N7 bench; N7 and N9a,
+running now, are the first two data points.
+
 ## Next action
 
 1. B2 run 2 on the 4090 (from `../qllm_v14run`): `for i in 1 2 3; do
