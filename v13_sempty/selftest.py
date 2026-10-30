@@ -730,6 +730,39 @@ def test_echo_memory(batch_size=2, seq_len=48, seed=0):
     return True
 
 
+def test_echo_qk_tied_init(seed=0):
+    """Q1: with echo_qk_tied_init the echo query rows start equal to the key
+    rows (so q_t = k-projection of h_t at init), the model is still identity
+    at init (echo_out zero), and one optimiser step makes them differ (they
+    train freely; nothing ties them)."""
+    torch.manual_seed(seed)
+    cfg = get_config('tiny_real')
+    cfg.chunk_size = 16
+    cfg.chrono = cfg.out_gate = cfg.delta = True
+    cfg.echo = cfg.echo_qk_tied_init = True
+    m = LM(cfg)
+    D = cfg.dim
+    W = m.echo_qk.weight
+    assert torch.equal(W[:D], W[D:]), "q rows != k rows at init"
+    ids = torch.randint(0, cfg.vocab_size, (2, 40))
+    with torch.no_grad():
+        on, _, _ = m.forward(ids)
+        m.echo = False
+        off, _, _ = m.forward(ids)
+        m.echo = True
+    d_init = (on - off).abs().max().item()
+    assert d_init < 1e-5, f"echo@init != off: {d_init:.3e}"
+    nn.init.normal_(m.echo_out.weight, std=0.3)          # give the read a path to the loss
+    opt = torch.optim.SGD(m.parameters(), lr=0.1)
+    lg, _, _ = m.forward(ids)
+    F.cross_entropy(lg.reshape(-1, cfg.vocab_size).float(), ids.reshape(-1)).backward()
+    opt.step()
+    gap = (W[:D] - W[D:]).abs().max().item()
+    assert gap > 0, "q and k rows stayed tied after a step"
+    print(f"  q == k at init; init parity {d_init:.1e}; after one step |q - k| max {gap:.2e} (untied)")
+    return True
+
+
 def test_sparse_memory(batch_size=2, seq_len=30, seed=0):
     """M1 sparse memory: only cfg.pam_layers keep a notebook; the rest are
     gated-MLP blocks. Builds, trains one step, and decode == chunked (with
@@ -1028,6 +1061,7 @@ def main():
         test_out_gate_parity_and_decode,
         test_short_conv,
         test_echo_memory,
+        test_echo_qk_tied_init,
         test_sparse_memory,
         test_shared_reads,
         test_transformer_baseline,

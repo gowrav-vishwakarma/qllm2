@@ -1132,6 +1132,7 @@ class LM(nn.Module):
             assert cfg.pam_layers and cfg.delta and cfg.chrono, \
                 "M2 share_reads needs pam_layers, delta and chrono"
         self.echo = cfg.echo
+        assert self.echo or not cfg.echo_qk_tied_init, "echo_qk_tied_init needs echo"
         if self.echo:
             assert not cfg.is_complex, "echo is implemented for the real arm"
             assert cfg.dim == cfg.n_heads * cfg.head_dim, "echo heads must tile dim"
@@ -1143,6 +1144,9 @@ class LM(nn.Module):
         if self.echo:
             with torch.no_grad():
                 self.echo_gates.bias[:cfg.n_heads].fill_(cfg.echo_dt_bias)
+                if cfg.echo_qk_tied_init:            # Q1: q rows start = k rows, then train freely
+                    D = cfg.dim
+                    self.echo_qk.weight[:D].copy_(self.echo_qk.weight[D:])
 
     def _init_weights(self):
         if self.config.is_complex:

@@ -3042,3 +3042,28 @@ step_wide(_new), affine_map, two_hop): at the floor (≤ 0.16, mostly below
 0.125) for every model at every length, so they cannot show a long-context
 edge at 600M without training on such tasks: the B2-in-training 600M pair
 (planned) is the way to measure inference past 2048.
+
+## Q1 — engineer the lucky start: echo W_q initialised = W_k, then trained freely (pre-registration, 2026-10-30 13:50 IST)
+
+**Why (user, after v14's seed results).** In-context circuits form per seed,
+all or nothing: label_category in v14 B1 (echo 0 of 5 seeds, tied echo 4 of
+4), held-out letter shifts in B2 (echo-family 3 of 10 reach ≥ 0.9, one
+seed solves it at 1.000; T++ 0 of 4). User: "it's not about other seeds,
+it's what that seed did; can we initialise so it works with all seeds,
+instead of random?" Clue: a q/k-aligned start (tied echo) makes the
+circuit form, but a permanent tie cost recall at 600M (E2). Q1 keeps the
+start and drops the tie: `--echo_qk_tied_init` / `ECHO_QK_TIED_INIT=1`
+copies the key rows of `echo_qk` into its query rows at init; both then
+train freely (selftest `test_echo_qk_tied_init`: q == k at init, identity at
+init, untied after one step).
+
+**Stage 1: formation rate on the micro-bench** (cheap, many seeds): v14's
+B1 data (run 4's set, label_category) and B2 (shift_wide_new), echo vs echo
++ Q1, 5 seeds each. Rule: Q1 forms the circuit (≥ 0.9) in ≥ 4/5 seeds where
+echo forms it in ≤ 2/5 → go to stage 2. Otherwise Q1 does not engineer the
+start; record and remove.
+
+**Stage 2: 600M** (C1-ctl recipe, M1 body + ECHO_QK_TIED_INIT=1, vs C1-ctl):
+PASS if label_exact (label_diag mean) ≥ ctl + 0.10 OR label_category 8-shot
+(400 trials) ≥ ctl + 0.15; guards holdout ≤ ctl + 0.01 (3.4843), recall ≥
+ctl − 0.05 (0.775). Read with g1c (short conv) as a separate arm.
