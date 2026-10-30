@@ -4,9 +4,11 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-30 05:50 IST)
+## State (2026-10-30 06:00 IST)
 
-* **4090: handed to the v13 session for E2 at ~05:50 IST (B1 run 4 P met).**
+* **4090: the v13 session's E2 since 05:43 IST** (tmux `e2`, run from the
+  worktree `../qllm_e2` at `e5b1a2a`, ECHO_TIED code `26ef94a`; two stages,
+  ETA ~10:15 IST plus probes).
   1. **B0 run 2 DONE (03:31 IST, `bcfd88a`): INVALID.** Echo facts2 @1024
      0.55 (bar 0.90): every echo arm picks a value of the document, not the
      bound one. Descriptive: n1sum / n1gate do partial lookup (facts2 0.79),
@@ -27,6 +29,8 @@ Keep all three current as things happen (user rule, 2026-10-29).
      (tied 4 of 4 seeds, echo 0 of 5). With label_marker in training it does
      not (run 3). **E2 is GO** (v13 session, 600M tied echo vs C1-ctl, M1
      body, on the 4090).
+* **Branch `v14dev` merged** (`a0259ca`: the tpp reference arm, `c9bff5c`
+  + `51a94cd`); v14 selftest ALL PASS and layout OK on the merged tree.
 * **Shared checkout rule (2026-10-30):** both sessions work in
   `/home/gowrav/Development/qllm2`. While a bench runs, nobody commits to
   master or leaves tracked edits: each pair launch checks for a clean tree,
@@ -93,22 +97,22 @@ Keep all three current as things happen (user rule, 2026-10-29).
 
 ## Next action
 
-1. The v13 session rebases `e2` onto master and pushes, then launches E2 on
-   the 4090 (~4.5-5 h). After their push: merge `v14dev` (the tpp arm) into
-   master and run `v14.selftest` on the merged tree (v14 imports their
-   `v13_sempty/model.py`).
-2. GPU time for v14 while E2 runs: ask the v13 session for the 6000 after
-   tfc1 (~09:30 IST). Queue there, in order: (a) the tpp B1 calibration on
-   run 4's data (`for i in 1 2 3; do TAG=b1r4tpp$i FAMILIES=rules ARMS=tpp
-   SAVE=1 EXTRA="--seed 2$i --doc_seed0 $((i+3))00000000 --init_seed 2$i"
-   bash v14/run_bench.sh; done`, ~30 min): does attention form the
-   label_category circuit in every seed, and does it infer unseen rule
-   parameters at 27M? (b) B0 run 3 (`TAG=b0r3
+1. **6000 is ours after the v13 s3 chain** (tfc1, ~09:30 IST; they ping on
+   "=== s3 chain DONE"). On the 6000: `cd ~/Development/qllm-private && git
+   pull` (needs ≥ `a0259ca`; sempyt ≥ `b99e038`), then in tmux, in order:
+   (a) the tpp B1 calibration on run 4's data (`for i in 1 2 3; do
+   TAG=b1r4tpp$i FAMILIES=rules ARMS=tpp SAVE=1 EXTRA="--seed 2$i
+   --doc_seed0 $((i+3))00000000 --init_seed 2$i" bash v14/run_bench.sh;
+   done`, ~30 min on the 4090, less on the 6000): does attention form the
+   label_category circuit in every seed, and infer unseen rule parameters
+   at 27M? (b) B0 run 3 (`TAG=b0r3
    ARMS=echo,n1sum,n1gate,n1phase,echo_tied,tpp AUX=0.1 SAVE=1 bash
    v14/run_bench.sh`, ~2 h; pre-registered in EXPERIMENTS_V14 "B0").
-3. Open question from runs 3-4: why does label_marker in training stop the
+   GPU index on the 6000: check `nvidia-smi` (GPU=0 default). After B0
+   run 3, the 6000 goes back to v13 for E2's port to M2 (if E2 passes).
+2. Open question from runs 3-4: why does label_marker in training stop the
    tied arm from forming the circuit (1 of 3) while helping echo (2 of 3)?
-   Cheap to probe on the saved checkpoints (`checkpoints_v14/b1r3p*`,
-   `b1r4p*`): what do q and k attend to at the label positions?
-4. Bar 3 in its strong form is untouched by every arm (plan under
+   Probe the saved checkpoints (`checkpoints_v14/b1r3p*`, `b1r4p*`, on the
+   4090 box) on CPU: what do q and k match at the label positions?
+3. Bar 3 in its strong form is untouched by every arm (plan under
    EXPERIMENTS_V14 "N4", bar-3 analysis).

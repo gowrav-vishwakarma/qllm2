@@ -19,7 +19,7 @@ learns better at the same size and speed.
 | `units.py` | v14 units (N1 `PhaseStatesPAM`) and `V14LM` (the v13 LM with units swapped in) |
 | `selftest.py` | CPU checks: off == v13, start parity, prefill == decode, gradients |
 | `check_layout.py` | the sempyt layout guard for v14 (reuses v13_sempty's checker) |
-| `microbench.py`, `run_bench.sh` | B0 memory (facts / bind / rebind) and B1 rule micro-bench, and their launcher |
+| `microbench.py`, `run_bench.sh` | B0 memory (facts / bind / rebind) and B1 rule micro-bench, and their launcher. Arm `tpp` is a Transformer++ REFERENCE matched to echo's size (calibration, not a candidate) |
 | `rules_ood.py` | B1 tasks beyond the shared generator: unseen rule parameters (run 2), marker categories `label_marker` (run 3) |
 | `data/` | untracked scratch from August |
 
