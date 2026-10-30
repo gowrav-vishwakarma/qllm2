@@ -18,6 +18,13 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-30 23:25 IST: priority re-plan (user: run what we know is better, directly).**
+  6000 (tmux `s5`): b2p1 (PAM + B2 docs) → b2t (T++ + B2 docs) → **r3c** via the
+  chain's hook `~/s5_n9a.sh` (16 notebooks + echo + two stages + LR 1.2e-3,
+  straight to 3B, futility stop at step 39060 if holdout > 3.4714; ~00:45 →
+  ~14:45 IST) → b2p2 (deferred seed). The 1.5B body × LR grid is CANCELLED
+  (the 3B logs already answer it). 4090: n9c (N9a lookup check, ~01:30).
+
 * **2026-10-30 ~23:00 IST — step back after the 3B result.**
   - What we know: PAM learns fast early and plateaus (3B: T++ −0.10, Mamba-2
     −0.145). Its lookup fails from key collisions (fix found: N9a 5/5 at
