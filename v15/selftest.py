@@ -54,6 +54,16 @@ def parity(conv):
         outs.append(o_t)
     e = (o2 - torch.stack(outs, 1)).abs().max().item()
     check(f"continuation from state (conv={conv})", e < 1e-10, f"{e:.2e}")
+    # a length that is not a multiple of the season: outputs equal the decode's
+    h3 = torch.randn(B, 10, cfg.dim, dtype=torch.double)
+    o3, _ = layer(h3)
+    st = None
+    outs = []
+    for t in range(10):
+        o_t, st = layer.step(h3[:, t], st)
+        outs.append(o_t)
+    e = (o3 - torch.stack(outs, 1)).abs().max().item()
+    check(f"partial last season (T=10, C=4) == decode (conv={conv})", e < 1e-10, f"{e:.2e}")
 
 
 def simplex_and_grads():

@@ -155,16 +155,25 @@ class GroveLayer(nn.Module):
 
     # ---- season (parallel) form ----------------------------------------------------
     def forward(self, h: torch.Tensor, state: GroveState | None = None):
-        """h [B, T, d] -> o [B, T, d], new state.  T must be a multiple of the season."""
-        B, T, _ = h.shape
+        """h [B, T, d] -> o [B, T, d], new state.  A trailing partial season is
+        padded with zeros (causal: the real outputs are unchanged); its growth
+        and the returned state are then those of the padded sequence, so a
+        state to continue from needs T to be a multiple of the season."""
+        B, T0, _ = h.shape
         cfg = self.cfg
         G, K, n, C = cfg.groves, cfg.trees, cfg.root, cfg.season
-        assert T % C == 0, (T, C)
+        if T0 % C:
+            h = F.pad(h, (0, 0, 0, C - T0 % C))
+        T = h.shape[1]
         if state is None:
             state = self.init_state(B, h.device)
         tail = None if state.buf is None else state.buf.get('tail')
         x, tail = self._soil(h, tail)                                    # [B, T, G, n]
         y = self.sap(h).view(B, T, G, n)
+        # the economy runs in fp32 whatever the autocast dtype: evidence sums
+        # reach ~temp * C / (1 - lam) and the state must not drift to bf16
+        if x.dtype in (torch.bfloat16, torch.float16):
+            x, y = x.float(), y.float()
         lam, alpha = self.lam, self.alpha
         # evidence scan inside a season: L[g, t, s] = lam_g^(t-s) for s <= t
         idx = torch.arange(C, device=h.device)
@@ -173,6 +182,8 @@ class GroveLayer(nn.Module):
         carry = lam[:, None] ** (idx + 1).to(h.dtype)                     # [G, C]
         ev, roots, fruits, m_last = state.ev, state.roots, state.fruits, state.m_last
         outs = []
+        ac = torch.autocast(device_type=h.device.type, enabled=False)
+        ac.__enter__()
         for c in range(T // C):
             xc = x[:, c * C:(c + 1) * C]                                  # [B, C, G, n]
             yc = y[:, c * C:(c + 1) * C]
@@ -187,9 +198,10 @@ class GroveLayer(nn.Module):
             roots = self._grow(roots, Sx, m.sum(1), alpha)
             fruits = self._grow(fruits, Sy, m_prev.sum(1), alpha)
             ev, m_last = evc[:, -1], m[:, -1]
-        o = torch.cat(outs, dim=1).reshape(B, T, G * n)
+        ac.__exit__(None, None, None)
+        o = torch.cat(outs, dim=1).reshape(B, T, G * n)[:, :T0]
         buf = {'tail': tail} if tail is not None else None
-        return self.out(o), GroveState(ev, roots, fruits, m_last, buf)
+        return self.out(o.to(h.dtype)), GroveState(ev, roots, fruits, m_last, buf)
 
     # ---- token-by-token (decode) form ----------------------------------------------
     def step(self, h_t: torch.Tensor, state: GroveState | None = None):
