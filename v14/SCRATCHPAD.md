@@ -116,8 +116,8 @@ Keep all three current as things happen (user rule, 2026-10-29).
 
 1. **GPU plan (IST), agreed with v13 at ~07:00.** E2 (4090) ends ~09:15
    with probes (59K tok/s, faster than planned).
-   - **6000, after the v13 s3 ping (~09:30 -> ~10:40):** `cd
-     ~/Development/qllm-private && git pull` (needs ≥ `1e9a0b8`; sempyt ≥
+   - **6000, after the v13 s3 ping (~09:30 -> ~10:40):** in the worktree
+     below (needs ≥ `1e9a0b8`; sempyt ≥
      `b99e038`), a 30-step smoke of tpp + one B2 task, then in one tmux:
      (a) **tpp B1 calibration** on run 4's data (`for i in 1 2 3; do
      TAG=b1r4tpp$i FAMILIES=rules ARMS=tpp SAVE=1 EXTRA="--seed 2$i
@@ -128,6 +128,12 @@ Keep all three current as things happen (user rule, 2026-10-29).
      --rule_tasks shift_wide,step_wide,affine_map' bash v14/run_bench.sh`;
      readouts L and I in EXPERIMENTS_V14 "B2"). The 6000 then goes back to
      v13 (E2 port to M2 if E2 passes).
+     **6000 rules (v13 S4 queue waits in tmux `s4`):** run ONLY from a
+     detached worktree, `git worktree add --detach ~/Development/qllm_v14
+     origin/master` + `ln -s ~/Development/qllm-private/.venv
+     ~/Development/qllm_v14/.venv`. Never pull in `qllm-private` (it trips
+     S4's code-drift guard). When (a) and (b) end: `touch
+     ~/v14_slot2.done` on the 6000 (S4 starts on that file).
    - **4090, when v13 pings that E2 freed it (~09:15):** (c) **B0 run 3**
      (`TAG=b0r3 ARMS=echo,n1sum,n1gate,n1phase,echo_tied,tpp AUX=0.1 SAVE=1
      bash v14/run_bench.sh`, ~2 h).
