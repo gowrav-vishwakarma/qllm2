@@ -74,7 +74,7 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 
 | id | idea | status | notebook section |
 |---|---|---|---|
-| G1 short conv | conv on qkv, single-pass pretraining regime | **pre-registered as `g1c`** (2026-10-30): the label_category diagnosis found PAM's lookup lost to near-duplicate keys (cosine 0.67–0.72); G1 gives keys the last 4 tokens; primary = label_exact ≥ 0.71 vs C1-ctl 0.61 | "label_category diagnosis", "G1 short conv on the two-stage M1" |
+| G1 short conv | conv on qkv, single-pass pretraining (`g1c`, 4090, `9c2b632`) | **FAIL as measured, verdict held open**: label_exact 0.517 vs ctl 0.610, holdout +0.049; E2 and g1c (both 4090) lose the same ~0.05 to the 6000 control, so a 4090 box control runs first | "g1c result" |
 | Q1 tied start | echo W_q initialised = W_k, then trained freely (`--echo_qk_tied_init`) | pre-registered: stage 1 = formation rate over 5 seeds on v14's micro-bench (≥ 4/5 vs echo ≤ 2/5), stage 2 = 600M vs C1-ctl | "Q1" |
 | S1 separated keys | echo q/k centred by the running key mean + top-K per head (`--echo_sparse_k`, pattern separation) | offline: label-key overlap 0.67 → 0.25 (top 8) / 0.17 (expanded 2048, not built); in the joint formation bench F1 with Q1 and N9a (≥ 4/5 seeds vs echo ≤ 2/5) | "S1 separated echo keys + F1" |
 | Learning probe (bar 3) | in-context rule tasks, answer must be inferred (`ed326a1`) | baselines: all ≤ chance on letter/number/reverse incl. Transformer++ 3B (mean 0.228); follow priors ("last+1") | "Learning probe" |

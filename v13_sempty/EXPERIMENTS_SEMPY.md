@@ -3113,3 +3113,29 @@ and `echo_phase` (v14 N9a) in v14's slot; `echo_qinit` (Q1) and
 it forms in ≥ 4/5 seeds where echo forms in ≤ 2/5; the best-forming
 passing arm goes to 600M** (C1-ctl recipe, the label_diag / label_category
 bars of Q1 stage 2). If none passes, record and remove the losers.
+
+### g1c result (2026-10-30, 4090, `9c2b632`): FAIL as measured, but a 4090 confound is now suspected (verdict held open)
+
+| model (600M, M1 body, C1-ctl recipe) | holdout | WikiText | recall 63-cell (a1/a4/a8) | label_exact (2/4/8) | label_category (2/4/8) | PG-19 4–8k |
+|---|---|---|---|---|---|---|
+| C1-ctl (6000) | **3.4743** | **69.86** | **0.825** | **0.610** (0.61/0.63/0.59) | **0.595** (0.58/0.68/0.53) | 0.0410 |
+| g1c short conv (4090) | 3.5232 | 77.41 | 0.770 (0.873/0.800/0.638) | 0.517 (0.49/0.64/0.42) | 0.492 (0.48/0.62/0.36) | 0.0431 |
+
+(label_diag for both scored on the 4090, same prompts.) By the rules:
+primary label_exact 0.517 < 0.710 → FAIL; holdout +0.049 > +0.01 → FAIL.
+
+**But a box confound now looks likely.** Both 4090 runs of this recipe, E2
+(tied echo) and g1c (short conv), lose almost the same amount to the
+6000 control: holdout +0.055 and +0.049. Their data cursors are identical
+to the control's (same files and rows), and their training loss tracks the
+control through stage A and the first 3,000 steps of stage B, then both
+drift up ~0.07 and stay there (steps 3000–6000: ctl 3.187, E2 3.270, g1c
+3.264; 6000–13021: 3.032 / 3.101 / 3.066). Differences on the 4090:
+gradient checkpointing (exact parity on CPU, untested on GPU kernels),
+torch / kernel versions (6000: torch 2.8.0+cu128, Blackwell). Two unrelated
+changes failing by the same margin is suspicious. **Check (box control)**:
+rerun C1-ctl's stage B on the 4090 from C1-ctl's own stage-A checkpoint
+(same data, same seed, GRAD_CKPT=1) for ~4,500 steps; if its training loss
+tracks the 6000 log, the 4090 is fine and E2 / g1c stand; if it drifts after
+~3,000 steps, every 4090 600M verdict (E2, g1c, T1) is re-opened.
+Queued on the 4090 after F1 (~19:50 IST).
