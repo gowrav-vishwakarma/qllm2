@@ -2771,3 +2771,47 @@ the 0.01 line), recall +0.145 (≥ +0.05: beats; inside 2048 −0.027, past it
 both holdout and WikiText at equal data. Transformer++ still leads the
 learning probe (0.217 vs 0.185; label_cat 8-shot 0.73 vs 0.41) and is
 1.45× faster per token at T = 2048.
+
+## S4 — Mamba-2 at 600M and the reference at 3B tokens (pre-registration, 2026-10-30 08:20 IST)
+
+User (08:00 IST): before scaling, check (1) Mamba-2 at 600M, the other O(1)
+baseline, where the cost argument does not help us, and (2) whether the
+600M lead holds with more data. "All your calls." Queue on the 6000 after
+v14's slot (tpp calibration + B2 run 1, ~10:40 IST), `~/s4_chain.sh`,
+tmux `s4`, code = master at launch (pulled).
+
+**Runs** (Mamba-2: `ARCH=mamba2`, 17 × 768 = 102.6M, LR 1.2e-3, its tuned LR;
+same trainer, data and evals):
+- `mbs1`: Mamba-2 one stage, the r600 protocol (= tfs1).
+- `mbs2`: Mamba-2 two stages, C1-ctl's recipe without aptitude (= tfs2,
+  c2m2).
+- `r3b`: the reference recipe (c1m2) scaled in its main stage: `--init_from`
+  c1m2's own stage A (`c1m2a_pre_7ae6f1f`, 120M, aptitude), then stage B
+  2,880,000,000 tokens (78,125 steps) on the M1 mix, M2 body, LR **2e-4**
+  (the index's 3B rule: PAM's 3B LR is 2e-4, not the 100M-screen pick),
+  warmup 1000 (the 3B protocol), VAL_EVERY 3906 + final. Total 3.0B tokens
+  = the 3B baselines' count. ~8.7 h at 92K tok/s.
+
+**Rules (fixed now):**
+- *Mamba-2 fairness* (as S2): the two-stage gain is PAM-specific vs Mamba-2
+  if PAM's recall gain on the reference body (c2m2 − M2 = +0.326) exceeds
+  Mamba-2's (mbs2 − mbs1) by ≥ 0.10; holdout gains reported.
+- *Head-to-head at 600M, same recipe (c2m2 vs mbs2)*, the 3B scoreboard's
+  definition of "beats": LM if holdout lower by > 0.01 AND WikiText lower;
+  recall if 63-cell mean higher by > 0.05. Recall also split ≤ 2048 /
+  > 2048 tokens.
+- *Scale test (r3b vs the 3B baselines, same 3.0B tokens, same holdout,
+  same probes)*: Transformer++ 3B 3.2064 / WikiText 46.61 / recall 0.539;
+  Mamba-2 3B 3.1644 / 46.91 / 0.613. Same "beats" definition. Read with the
+  user's bar-2 tolerance: a gap within ±0.01 holdout counts as competitive
+  at lower serving cost (report params, tokens, state size and tok/s). The
+  600M lead to compare against: c1m2 vs tfs1 −0.041 (vs mbs1: pending).
+  The protocols differ (baselines: one stage with a 300M web-only blend
+  warmup; r3b: two stages); S2 showed Transformer++ gains nothing on LM
+  from the two-stage schedule, and mbs2 − mbs1 shows it for Mamba-2.
+- Reported for all: learning probe (rules, 100 trials) and B2 (400 trials).
+
+**Order:** [E2 port to the reference, only if E2 passes; pre-registered
+separately] → mbs1 → mbs2 → r3b. r3b's arm flags come from `~/s4_r3b.flags`
+on the 6000 if it exists when r3b starts (set only by a passed E2 port);
+otherwise the plain reference.
