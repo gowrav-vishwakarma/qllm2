@@ -63,5 +63,6 @@ None yet.
 |---|---|---|---|
 | N2 | phase-modulated activation (magnitude sets phase), complex arm only | planned; flag already in v13_sempty (`activation='phase_mod'`) | "N2" |
 | N3 | formula-weight neuron `W(x)x` | **folded into N2**: `U·(c(x)⊙Vᵀx)` is a GLU-gated bottleneck, nothing new to test | "N3" |
+| N7 | in-context n-gram memory: bounded hash table of (last n tokens -> next token), written while reading, read as an extra input; exact lookup that does not fade (user idea) | design only (2026-10-30) | "N7" |
 | N4 | living neuron: per-unit fast weight, written by surprise | design only | "N4" |
 | N5 | resonant binding: oscillator phases as binding tags | design only | "N5" |

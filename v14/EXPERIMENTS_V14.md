@@ -894,6 +894,39 @@ Complex AutoEncoder / Rotating Features (object binding by phase, vision).
 Not known in an O(1) recurrent LM. Micro-bench only, on B0's bound-attribute
 case, after N1 has a verdict.
 
+### N7 — in-context n-gram memory (design only, user idea 2026-10-30)
+
+**Why.** Today's results split two skills. The O(1) body is good at
+*abstraction*, carrying one rule across examples (B2 run 1: echo infers
+held-out letter shifts, tpp picks memorised tables). Attention is good at
+*exact lookup*, finding an item and copying what followed (600M
+label_category, T++ 0.73 vs PAM 0.41). Patching lookup into echo failed (tied
+echo, E2). User's idea: let the body think, and borrow lookup from an n-gram
+system.
+
+**Mechanism (sketch).** A fixed-size hash table per sequence, S slots. At
+each token: write `hash(last n tokens) -> token that followed`, overwriting
+on collision; read `hash(current last n tokens)` and give the stored
+token's embedding (plus a found / not-found bit) to the body as an extra
+input, gated by the body. Constant time and fixed memory per token, so still
+O(1). Exact entries do not fade with distance, unlike the recurrent state,
+so it should hold past the trained context length (goal note, 2026-10-30).
+Several n (2, 3, 4) as separate tables.
+
+**Limits, said up front.** It only serves exact repeats (names, numbers,
+"key: value" facts). label_category needs similarity (dog ~ cat), which
+exact n-grams do not give. Prior art: cache LMs (Grave et al. 2017), kNN-LM,
+Infini-gram (corpus-level), hashed n-gram embeddings. The new part to
+claim is a bounded, write-while-reading n-gram table inside an O(1)
+recurrent body, measured past the trained context.
+
+**Tests (to pre-register before any code).** (1) A dense-supervision
+copy/recall micro-bench (B0 broke on answer-only supervision), inside and
+beyond the trained length, tpp as the reference. (2) B2 must not drop
+(abstraction kept). (3) 600M LM check with the v13 session: holdout, the
+recall probe past 2048, and the long-context learning probe they are
+building.
+
 ### N6 — operator memory (candidate, 2026-10-29; reviewed by the v13 session)
 
 **Idea.** Prediction applies a transformation inferred from the context to
