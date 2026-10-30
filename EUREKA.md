@@ -9,6 +9,13 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v14 (on v13's label_exact): format-free exact copy is N7's target.**
+  PAM's copy skill is format-bound (recall probe 0.94, but label_exact
+  0.54–0.73 vs T++ 0.86–0.92). An in-context n-gram store copies
+  "truck is -> silver" in any format, never fades, O(1). *For v13:* the
+  data lever (generic repeated-text / ICL data) and N7 are complementary;
+  label_category (fuzzy match) stays a separate problem.
+
 - **v13: label_category is not an attention-only skill; Mamba-2 (O(1))
   does it.** 600M, same two-stage recipe (`685de4e`): Mamba-2 label_category
   8-shot 0.55, learning mean 0.227; PAM M2 0.41 / 0.185; T++ 0.73. So a

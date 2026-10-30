@@ -920,6 +920,16 @@ Infini-gram (corpus-level), hashed n-gram embeddings. The new part to
 claim is a bounded, write-while-reading n-gram table inside an O(1)
 recurrent body, measured past the trained context.
 
+**Primary target: format-free exact copy (v13 label_exact, 2026-10-30).**
+With the query repeated exactly from the context ("... truck is silver ...
+truck is"), PAM copies poorly: M2 c2m2 0.58 / 0.73 / 0.54 and M1 C1-ctl
+0.61 / 0.63 / 0.59 at 2 / 4 / 8 shots, vs T++ 0.86 / 0.92 / 0.86. Yet PAM
+scores 0.94 on the recall probe in its trained recall-doc format: its copy
+skill is format-bound. An n-gram store does this copy by construction, in
+any format. **N7's bar at 600M (to freeze before the run): label_exact ≥
+T++ inside AND past 2048 tokens, recall and holdout not worse.** v13's data
+lever (generic repeated-text / ICL data) is complementary.
+
 **Design constraints from v13's insights (EUREKA.md, 2026-10-30).** (a)
 Give the exact store its OWN reader in each block that uses it, not M2-style
 shared reads: shared reads seemed to dilute the lookup circuit
