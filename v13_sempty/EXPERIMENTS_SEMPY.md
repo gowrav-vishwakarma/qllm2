@@ -3336,3 +3336,43 @@ met for seed 42; the pre-registered verdict needs b2p2 (seed 43).
    at L = 2048 and 4096 vs b2m is reported (same +0.10 margin).
 3. Bar 3 counts as replicated only if PAM clears BOTH T++ and Mamba-2 in both
    seeds. Only then: EUREKA + ntfy.
+
+### n9c result (2026-10-31 01:45 IST): FAIL on lookup — the micro formation win does not transfer; recall jumps instead
+
+`n9cb_main_e5f0b73` (4090, 103.5M, 600M tokens, C1-ctl recipe + ECHO_PHASE_LAGS=3)
+vs C1-ctl (`c1ctlb_main_7ae6f1f`, ~102.9M, same recipe; lookup probes on the 4090).
+
+| | n9c (N9a) | C1-ctl | bar |
+|---|---|---|---|
+| label_exact (label_diag, 200) | **0.472** | 0.610 | ≥ 0.710 → **FAIL** |
+| label_category 8-shot (400) | **0.318** | 0.500 | ≥ 0.650 → **FAIL** |
+| label_category 2 / 4-shot (400) | 0.507 / 0.502 | 0.593 / 0.680 | |
+| holdout | 3.4725 | 3.4743 | guard ≤ 3.504 ok |
+| recall 63-cell (≤ 2048 / > 2048) | **0.975** (0.996 / **0.924**) | 0.825 (0.917 / 0.597) | guard ≥ 0.775 ok |
+| PG-19 far gain 4–8k | +0.037 | +0.041 | |
+| echo key cosine at label positions (random positions) | **0.538** (0.227) | 0.715 (0.379) | reported |
+| label_exact by pairs back 0/1/2/3/4/5 (300, CPU) | 0.58/0.54/0.37/0.43/0.16/0.12 | 0.57/0.62/0.48/0.67/0.34/0.47 | reported |
+| LCL label_category @ 0/1024/2048/4096/8192 (300) | 0.31/0.30/0.27/0.23/0.18 | 0.51/0.37/0.33/0.26/0.19 | in-context chance 0.25 |
+
+**Verdict: FAIL** (pre-registered). Both lookup bars missed, and both moved
+the WRONG way (−0.14 exact, −0.18 category 8-shot). Consequence: no ≥ 1.5B
+LM run for N9a in v13. The unit stays in v14 (the v13 trainer keeps only the
+`--echo_phase_lags` hook; v14 decides on its unit).
+
+**Reading.**
+- N9a did what it was built for: label keys are pulled apart (cosine 0.715 →
+  0.538). The lookup still got worse. So key collision was a real symptom
+  but not the cause of the label gap at 600M.
+- Recall jumps (+0.150; past 2048 0.597 → 0.924, the best of any 600M
+  model; T++ 0.20, Mamba-2 0.46). The training recall docs use one fixed
+  template ("Query: <key> refers to"). N9a got very good at the format it
+  was trained on, and worse at a format it was not ("<item> is <label>,"
+  never appears in training). That fits the B2 finding the same night: PAM
+  learns in-context skills from formats seen in training.
+- Wrong answers are always an in-context label (100 %; ctl 93–96 %). The fall
+  with distance is steeper (4–5 pairs back 0.16 / 0.12 vs 0.34 / 0.47): older
+  pairs are lost faster even with distinct keys.
+- Micro F1 (5/5 formed) trained on label_category itself; 600M never shows
+  it. "Formation at micro" was formation on the trained format.
+- Not run: why exact lookup drops with distance (write gates? query turned by
+  a window that includes the previous label?). That is v14's design question.

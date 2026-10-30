@@ -9,6 +9,20 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **v13: N9a at 600M de-collides the label keys but label lookup gets WORSE; recall
+  jumps. In-context skills follow the trained format.** `n9cb_main_e5f0b73` vs C1-ctl
+  (600M tokens, ~103M): key cosine at label positions 0.715 → 0.538, yet label_exact
+  0.610 → 0.472 and label_category 8-shot 0.500 → 0.318; older pairs are lost faster
+  (4–5 pairs back 0.16 / 0.12 vs 0.34 / 0.47). Recall 0.825 → 0.975, past 2048 0.597 →
+  0.924 (T++ 0.20, Mamba-2 0.46); holdout equal. The recall docs train one template
+  ("<key> refers to <value>"); no "<item> is <label>," text is ever trained. With the
+  B2 result: PAM learns lookup/rule skills from the FORMATS it trains on, and the
+  micro F1 win was formation on the trained format. *For v14:* collision was a
+  symptom, not the cause; ask why exact lookup decays with pairs back even with
+  distinct keys (write gates? the query window spans the previous label?). For N7,
+  judge it on an UNTRAINED format too. v13 next: a label-format training source
+  (held-out items), pre-registered first.
+
 - **v13: with rule-format docs in training, PAM infers held-out rule values and keeps
   them across distance; Transformer++ on the same data does not (seed 42; replication
   + Mamba-2 arm running).** `b2p1` vs `b2t` (`38e3c29`, 600M tokens, ~102M each, 3 %

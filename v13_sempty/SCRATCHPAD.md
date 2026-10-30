@@ -27,6 +27,13 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   4090: n9c ends ~01:30; then v15 G1 (tmux `v15g1`, ~6 h) starts by itself when
   the `n9c` tmux session closes. v13 has no 4090 job queued after n9c.
 
+* **2026-10-31 02:10 IST: n9c FAIL on lookup** (EXPERIMENTS "n9c result"): N9a pulls the
+  label keys apart (0.715 → 0.538) but label_exact 0.61 → 0.47 and category 0.50 → 0.32;
+  recall 0.825 → 0.975 (> 2048: 0.92). Lookup skills follow the TRAINED format (recall docs
+  "X refers to Y"; B2 docs → B2). The label gap looks like a data-format gap: next
+  candidate is a label-format source (held-out items/labels, like b2), pre-register before
+  running. 4090 now: v14 `v14n9s` + v15 `v15g1` (~13 GB); v13 has no 4090 job.
+
 * **2026-10-31 01:05 IST, step back after the B2 half.** What surprised us: T++ loses the
   rule at L = 1024, INSIDE its trained length, once ~110 tokens of web text sit between
   examples; PAM holds it to 4096. So "learning past the trained length" was never only
