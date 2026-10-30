@@ -546,6 +546,14 @@ def main():
                     help="keep the arms already in --json and train only the rest (after a crash)")
     args = ap.parse_args()
 
+    # Shared card: V14_GPU_MEM_FRAC caps this process's allocator, so a peak
+    # stops this run with an OOM instead of taking memory from other runs.
+    mem_frac = float(os.environ.get('V14_GPU_MEM_FRAC', '0') or 0)
+    if mem_frac > 0 and torch.cuda.is_available():
+        torch.cuda.set_per_process_memory_fraction(mem_frac)
+        print(f"GPU allocator capped at {mem_frac:.3f} of "
+              f"{torch.cuda.get_device_properties(0).total_memory / 2**30:.1f} GiB", flush=True)
+
     set_kernel_enabled(True)
     from transformers import AutoTokenizer
     tok = AutoTokenizer.from_pretrained('gpt2')
