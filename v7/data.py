@@ -1972,6 +1972,80 @@ def _b2_text_iter(
         yield '\n\n'.join(parts) + '\n'
 
 
+
+# Label-rule training docs (2026-10-31, v13 "label-format source"): the
+# probes' label_category / label_exact FORMAT ("Label rule. <item> is <label>,
+# ... <query> is") with a vocabulary DISJOINT from memory_probes/rules.py
+# (no probe category, item, label, owner, pet or pet name), so the probes
+# measure the skill on words never seen in these docs. Items and labels are
+# single GPT-2 tokens after a space, like the probes' answer slot.
+_LAB_CATEGORIES = {
+    'tool': ('hammer', 'saw', 'drill', 'wrench', 'shovel', 'rake', 'axe', 'screw', 'nail'),
+    'bird': ('eagle', 'owl', 'crow', 'pigeon', 'hawk'),
+    'metal': ('iron', 'copper', 'zinc', 'tin', 'lead', 'nickel', 'steel', 'brass', 'bronze'),
+    'drink': ('tea', 'coffee', 'milk', 'juice', 'wine', 'beer', 'soda', 'water', 'cocoa'),
+    'furniture': ('chair', 'table', 'sofa', 'bed', 'desk', 'shelf', 'stool', 'bench', 'cabinet'),
+    'clothing': ('shirt', 'coat', 'hat', 'sock', 'shoe', 'scarf', 'glove', 'dress', 'jacket'),
+    'instrument': ('piano', 'guitar', 'violin', 'drum', 'trumpet'),
+    'city': ('London', 'Tokyo', 'Berlin', 'Madrid', 'Rome', 'Moscow', 'Cairo', 'Sydney', 'Boston', 'Chicago'),
+    'weather': ('rain', 'snow', 'wind', 'fog', 'hail', 'storm', 'frost', 'cloud', 'mist'),
+    'tree': ('oak', 'pine', 'maple', 'ash', 'palm'),
+    'job': ('doctor', 'teacher', 'farmer', 'pilot', 'nurse', 'lawyer', 'chef', 'baker', 'judge'),
+    'fish': ('salmon', 'trout', 'tuna', 'cod', 'shark', 'carp', 'bass'),
+    'room': ('kitchen', 'bedroom', 'attic', 'garage', 'hall', 'cellar', 'lobby', 'office', 'porch'),
+    'shape': ('circle', 'square', 'triangle', 'oval', 'cube', 'sphere', 'cone', 'ring', 'line'),
+}
+_LAB_LABELS = ('echo', 'flux', 'core', 'comet', 'apex', 'north', 'south', 'east', 'west', 'blitz',
+               'neon', 'node', 'grid', 'zone', 'mode', 'link', 'peak', 'bolt', 'edge', 'pulse')
+
+
+def _build_lab_prompt(rng: 'random.Random') -> str:
+    """One label-rule prompt + marked answer, built like the probe's
+    label_category (2/4/8 shots, 2-4 categories, every category shown). Half
+    query a member never labelled in the context (category), half an item
+    already labelled there (exact)."""
+    shots = rng.choice((2, 4, 8))
+    n_cat = max(2, min(4, shots // 2))
+    cats = rng.sample(sorted(_LAB_CATEGORIES), n_cat)
+    labels = rng.sample(_LAB_LABELS, n_cat)
+    members = {c: rng.sample(_LAB_CATEGORIES[c], len(_LAB_CATEGORIES[c])) for c in cats}
+    used = dict.fromkeys(cats, 0)
+    pairs = []
+    for i in range(max(shots, n_cat)):
+        c = cats[i % n_cat]
+        pairs.append((members[c][used[c]], labels[i % n_cat], c))
+        used[c] += 1
+    rng.shuffle(pairs)
+    if rng.random() < 0.5:
+        qc = rng.choice(cats)
+        query = members[qc][used[qc]]
+    else:
+        query, _, qc = rng.choice(pairs)
+    body = ', '.join(f'{w} is {lab}' for w, lab, _ in pairs)
+    return f"Label rule. {body}, {query} is" + _ans(f' {labels[cats.index(qc)]}')
+
+
+def _lab_text_iter(
+    *,
+    seed: int = 0,
+    skip_docs: int = 0,
+    doc_counters: Optional[Dict[str, int]] = None,
+    counter_key: str = 'lab',
+    per_doc: int = 6,
+) -> Iterator[str]:
+    """Infinite stream of label-rule documents (``per_doc`` prompts each,
+    answers marked for the answer weight, like the recall / b2 docs)."""
+    import random as _random
+    rng = _random.Random((seed * 2654435761 + 515151) & 0xFFFFFFFF)
+    n = 0
+    while True:
+        doc = '\n\n'.join(_build_lab_prompt(rng) for _ in range(per_doc)) + '\n'
+        n += 1
+        if n <= skip_docs:
+            continue
+        _bump_counter(doc_counters, counter_key)
+        yield doc
+
 # ── synthetic reasoning curriculum (stateful: copy / reverse / cipher / sum) ──
 _REASON_LETTERS = 'abcdefghijklmnopqrstuvwxyz'
 
@@ -2052,6 +2126,9 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     # v14 B2 base-task rule prompts with marked answers (held-out values never
     # appear; seeds >= 1e7, disjoint from the probes). v13 "B2 in training".
     'b2':            {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-b2'},
+    # Label-rule prompts in the probes' format, disjoint vocabulary (v13
+    # "label-format source", 2026-10-31).
+    'lab':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-lab'},
     # Real aptitude / reasoning Q&A with worked answers, TRAIN splits only
     # (v7/aptitude.py; 2026-10-29 "reason first" curriculum, real data).
     'aptitude':      {'schema': 'text',     'kind': 'qa',        'hf': 'real-aptitude-qa'},
@@ -2100,6 +2177,9 @@ def _open_source_iter(
         if name == 'b2':
             return _b2_text_iter(seed=mix_seed, skip_docs=skip,
                                  doc_counters=doc_counters, counter_key=name)
+        if name == 'lab':
+            return _lab_text_iter(seed=mix_seed, skip_docs=skip,
+                                  doc_counters=doc_counters, counter_key=name)
         return _recall_text_iter(  # recall / recall_long
             seed=mix_seed, skip_docs=skip, doc_counters=doc_counters,
             counter_key=name,
