@@ -242,6 +242,18 @@ class V14LM(LM):
             # zero-init (no RNG drawn), so the model starts as plain echo
             self.phase_proj = nn.Parameter(torch.zeros(self.phase_lags, planes, cfg.dim))
             self.phase_proj._zero_init = True
+        self.phase_salient = bool(getattr(cfg, 'echo_phase_salient', False))
+        if self.phase_salient:
+            if not self.phase_lags:
+                raise ValueError("N9s echo_phase_salient needs echo_phase_lags > 0")
+            planes = cfg.n_heads * cfg.head_dim // 2
+            self.sal_proj = nn.Parameter(torch.zeros(planes, cfg.dim))   # W_s: zero, starts as N9a
+            self.sal_proj._zero_init = True
+            # importance gate per head; its own generator, so the body and the
+            # global RNG stay exactly as N9a at the same seed
+            g = torch.Generator().manual_seed(9137)
+            self.sal_gate_w = nn.Parameter(torch.randn(cfg.n_heads, cfg.dim, generator=g) * 0.02)
+            self.sal_gate_b = nn.Parameter(torch.zeros(cfg.n_heads))
 
     def _run_blocks(self, z, batch, time, states, step_offset, input_ids=None):
         if not self.ngram_orders:
@@ -294,6 +306,29 @@ class V14LM(LM):
             alpha = alpha + ej @ self.phase_proj[j].float().t()
         return alpha
 
+    def _salient_phase(self, h: torch.Tensor, ids: torch.Tensor, psi_prev=None):
+        """N9s: psi_t = (1 - s_t) psi_{t-1} + s_t W_s rms(E[x_t]), s_t = sigmoid(w . rms(h_t) + b)
+        per head. h [B, T, D], ids [B, T] -> psi [B, T, planes], psi at the last t."""
+        from sempyt import scan
+        B, T, _ = h.shape
+        H = self.sal_gate_w.shape[0]
+        per = self.sal_proj.shape[0] // H                                 # planes per head
+        e = self.embed.embed.weight[ids].float()
+        e = e * torch.rsqrt(e.pow(2).mean(-1, keepdim=True) + 1e-6)
+        hn = h.float() * torch.rsqrt(h.float().pow(2).mean(-1, keepdim=True) + 1e-6)
+        s = torch.sigmoid(hn @ self.sal_gate_w.float().t() + self.sal_gate_b.float())   # [B, T, H]
+        a = e @ self.sal_proj.float().t()                                 # [B, T, planes]
+        u = (s.repeat_interleave(per, dim=-1) * a).view(B, T, H, per)
+        g = 1.0 - s                                                       # keep (1 - importance)
+        bd, td, hd, pd = Dim('batch', B), Dim('time', T), Dim('sal_head', H), Dim('sal_plane', per)
+        psi = scan(named(u, (bd, td, hd, pd)), named(g, (bd, td, hd)), over=td, mode='chunked')
+        psi = psi.raw(bd, td, hd, pd)                                     # named-exit: N9s boundary
+        if psi_prev is not None:                                          # carried angle, faded by the gates
+            keep = torch.exp(torch.cumsum(torch.log(g.clamp(min=1e-12)), dim=1))   # [B, T, H]
+            psi = psi + keep[..., None] * psi_prev.view(B, 1, H, per)
+        psi = psi.reshape(B, T, H * per)
+        return psi, psi[:, -1]
+
     @staticmethod
     def _turn(x: torch.Tensor, alpha: torch.Tensor) -> torch.Tensor:
         """x [B, T, D] turned per channel pair (2i, 2i + 1) by alpha [B, T, D/2]."""
@@ -324,6 +359,11 @@ class V14LM(LM):
         phi = self._content_phase(ids_ext)[:, m - 1:]                   # [B, T, planes]: window ending at t
         phi_prev = state[2] if state is not None else torch.zeros_like(phi[:, :1, :].squeeze(1))
         phi_key = torch.cat([phi_prev[:, None], phi[:, :T - 1]], dim=1)  # key k_t: window ending at t-1
+        if self.phase_salient:
+            psi, psi_last = self._salient_phase(h, input_ids, state[4] if state is not None else None)
+            phi = phi + psi                                             # window angles + salient angles
+            psi_key_prev = state[2] if state is not None else torch.zeros_like(phi[:, 0])
+            phi_key = torch.cat([psi_key_prev[:, None], phi[:, :T - 1]], dim=1)
         q, k = self._turn(q, phi), self._turn(k, phi_key)
         v = nn.functional.embedding(input_ids, self.embed.embed.weight).to(h.dtype)
         v = v * torch.rsqrt(v.float().pow(2).mean(-1, keepdim=True) + 1e-6).to(h.dtype)
@@ -353,6 +393,8 @@ class V14LM(LM):
         read = read.reshape(B, H, T, K).transpose(1, 2).reshape(B, T, D)
         new_tail = ids_ext[:, ids_ext.shape[1] - (m - 1):] if m > 1 else ids_ext[:, :0]
         new_state = (S.reshape(B, H, K, K), h[:, -1].detach().float(), phi[:, -1].detach(), new_tail)
+        if self.phase_salient:
+            new_state = new_state + (psi_last.detach(),)
         return named(self.echo_out(read), (batch, time, self.model_dim)), new_state  # named-exit: echo boundary
 
     # ── N6 / N10 operator memory on the pre-logit vector ─────────────────────

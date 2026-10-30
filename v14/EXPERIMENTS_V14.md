@@ -1094,6 +1094,39 @@ stop colliding, the label lookup circuit forms on every seed. v13's Q1
 to 600M in v13's lane through the trainer hook (`424afd6`, `--echo_phase_lags
 3` / `ECHO_PHASE_LAGS=3`).
 
+### N9s — salient phase (user idea, 2026-10-31; PRE-REGISTERED ~00:40 IST)
+
+**Idea (user).** N9a's phase comes from a FIXED window of the last 3 tokens.
+In real text the word that identifies a fact is often further back ("the big
+red **truck** that we bought last year **is** silver"), so the window sees
+only filler and the keys collide again. Instead let important words set the
+phase: per head an importance s_t = sigmoid(w · rms(h_t) + b), and a running
+angle psi_t = (1 − s_t) psi_{t-1} + s_t W_s rms(E[x_t]) added to N9a's
+window angles. An important word mostly OVERWRITES the angle (so the same
+"truck is" still aligns across paragraphs), filler leaves it alone, so the
+window stretches with meaning. O(1): one angle per channel pair. W_s
+zero-init: N9s starts exactly as N9a (selftest; scan == loop 4.5e-5; decode
+== prefill 5.0e-5). Arm `echo_phase_sal`.
+
+**Bench `label_gap` / `label_gap_new`** (`v14/rules_ood.py`): "truck, seen
+near the old river, is silver; ...; truck, last year, is" -> silver; every
+item has its own label; definitions put 0-5 filler words between the item
+and "is", the question always 1-5, so a fixed 3-token window never sees the
+question's item (0 of 300 checked). `_new` uses words never seen in training.
+
+**N9s micro run (pre-registered).** Training: the default B1 tasks +
+`label_gap` (train words). Arms echo, echo_phase (N9a), echo_phase_sal
+(N9s); 3 seeds, i = 1..3: `--seed 11i --doc_seed0 (i+30)·100M --init_seed
+11i`, tag `n9sp<i>`, same init and data per seed.
+- **Bar G (primary, label_gap formation, ≥ 0.9 over 2/4/8 shots):** N9s forms
+  in ≥ 2 of 3 seeds AND N9a in ≤ 1 of 3.
+- **Secondary:** label_gap_new mean d (N9s − N9a) ≥ +0.15.
+- **Guard:** label_category mean N9s ≥ N9a − 0.05.
+- **If N9a also forms label_gap in ≥ 2 of 3:** the fixed window is not the
+  limit on this bench (the body carries the item some other way): no claim.
+- **Prediction:** N9a and echo fail label_gap (item outside the window); N9s
+  forms it.
+
 ### N9 — phase-aligned dual memory (the user's 2×O(1) memory, 2026-10-30; design only)
 
 **Idea (user, mapped by the v13 session against the key-collision

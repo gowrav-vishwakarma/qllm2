@@ -25,6 +25,13 @@ class V14Config(PAMConfig):
     # the query uses the window ending at t, the key the window ending at t-1,
     # so "X is" only aligns with an earlier "X is". 0 = off (plain echo).
     echo_phase_lags: int = 0
+    # N9s (user idea, 2026-10-31): add a SALIENT phase to N9a's window. Each
+    # token gets an importance s_t = sigmoid(w . h_t + b) per head; a running
+    # angle psi_t = (1 - s_t) psi_{t-1} + s_t W_s rms(E[x_t]) is added to the
+    # window's angles, so an important word ("truck") keeps the key's phase
+    # across filler words. W_s zero-init: starts exactly as N9a. Needs
+    # echo_phase_lags > 0.
+    echo_phase_salient: bool = False
     # N6 / N10 operator memory (v14/units.py OperatorMemory), on the echo body:
     # 'phase' / 'diag' = N6 (code restored from 78e4354), 'coord' = N10 (one
     # learned coordinate per head on circles of periods spread by

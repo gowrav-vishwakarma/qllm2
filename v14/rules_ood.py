@@ -65,7 +65,10 @@ MARKER_TASKS = ('label_marker', 'label_marker_new')
 B2_TASKS = ('shift_wide', 'step_wide', 'affine_map')
 B2_NEW_TASKS = tuple(t + '_new' for t in B2_TASKS)
 COPY_TASKS = ('repeat_copy', 'label_exact', 'label_exact_new')   # N7 bench (format-free exact copy)
-EXTRA_TASKS = OOD_TASKS + MARKER_TASKS + B2_TASKS + B2_NEW_TASKS + COPY_TASKS   # append only: index seeds the rng
+GAP_TASKS = ('label_gap', 'label_gap_new')                       # N9s bench (the item out of a fixed window)
+EXTRA_TASKS = OOD_TASKS + MARKER_TASKS + B2_TASKS + B2_NEW_TASKS + COPY_TASKS + GAP_TASKS   # append only: index seeds the rng
+FILLER = ('that', 'we', 'saw', 'near', 'the', 'old', 'river', 'last', 'year', 'in', 'a',
+          'small', 'town', 'with', 'my', 'friend', 'when', 'it', 'was', 'dark')
 TRAIN_SHIFTS = (1, 2, 3)          # what rules._letter_shift draws
 OOD_SHIFTS = (4, 5)
 OOD_STEPS = (10, 11, 12, 13)      # rules._number_step draws 2-9
@@ -185,6 +188,28 @@ def _label_exact(tokenizer, rng, n_shots, new=False):
     return prompt, target, R._candidates(tokenizer, rng, target, tempting, R.LABELS, 8), 1 / n_items
 
 
+def _label_gap(tokenizer, rng, n_shots, new=False):
+    """'truck, seen near the old river, is silver; ...; truck, last year, is' -> silver.
+    Every item has its own label; the question always puts filler between the
+    item and 'is', so a fixed 3-token window ending at 'is' never sees the item."""
+    pools = _marker_pools(tokenizer)
+    filler = R._pool(tokenizer, FILLER)
+    n_items = max(2, n_shots)
+    items = list(rng.choice(pools['eval_stems' if new else 'train_stems'], size=n_items, replace=False))
+    labels = list(rng.choice(R._pool(tokenizer, R.LABELS), size=n_items, replace=False))
+
+    def entry(item, gap):
+        if gap == 0:
+            return f'{item} is'
+        return f'{item}, ' + ' '.join(rng.choice(filler, size=gap)) + ', is'
+    lines = [entry(w, int(rng.integers(0, 6))) + f' {lab}' for w, lab in zip(items, labels)]
+    qi = int(rng.integers(n_items))
+    prompt = 'Group rule. ' + '; '.join(lines) + '; ' + entry(items[qi], int(rng.integers(1, 6)))
+    target = str(labels[qi])
+    tempting = [str(lab) for lab in labels if lab != target]
+    return prompt, target, R._candidates(tokenizer, rng, target, tempting, R.LABELS, 8), 1 / n_items
+
+
 _MARKER_POOLS: dict = {}
 
 
@@ -228,7 +253,9 @@ _BUILDERS = {'letter_shift_ood': _letter_shift_ood, 'number_step_ood': _number_s
              'step_wide_new': lambda tok, rng, n: _step_wide(tok, rng, n, new=True),
              'affine_map_new': lambda tok, rng, n: _affine_map(tok, rng, n, new=True),
              'repeat_copy': _repeat_copy, 'label_exact': _label_exact,
-             'label_exact_new': lambda tok, rng, n: _label_exact(tok, rng, n, new=True)}
+             'label_exact_new': lambda tok, rng, n: _label_exact(tok, rng, n, new=True),
+             'label_gap': _label_gap,
+             'label_gap_new': lambda tok, rng, n: _label_gap(tok, rng, n, new=True)}
 
 
 def build_example(tokenizer, task: str, n_shots: int, seed: int) -> R.RuleExample:

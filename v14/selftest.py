@@ -10,6 +10,9 @@
 6. N9a           content-phase echo: off at init == echo; decode == prefill
                    with live phases; "X is" template keys separate by X
                    (collision check) and the same X stays aligned; learns.
+6b. N9s          salient phase on top of N9a: starts == N9a; the parallel
+                   running angle == a step-by-step loop; decode == prefill with
+                   live gates; every new parameter learns.
 7. N6 / N10      operator memory ('phase' = N6, 'coord' = N10 circles):
                    starts bit-identical to echo at the same seed (body and RNG
                    untouched); decode == prefill with a live read; every
@@ -211,6 +214,50 @@ def test_n9a():
           f"(was 1.0 unturned), same noun {same:.3f}; phases learn")
 
 
+def test_n9s():
+    torch.manual_seed(0)
+    n9a = V14LM(_cfg(echo_phase_lags=3)).eval()
+    torch.manual_seed(0)
+    model = V14LM(_cfg(echo_phase_lags=3, echo_phase_salient=True)).eval()
+    ids = torch.randint(0, 512, (2, 60))
+    d0 = (_logits(n9a, ids) - _logits(model, ids)).abs().max().item()
+    assert d0 == 0.0, f"N9s at init != N9a: {d0:.3e}"
+    with torch.no_grad():
+        model.phase_proj.normal_(std=0.3)
+        model.sal_proj.normal_(std=0.3)
+        model.sal_gate_w.normal_(std=0.5)
+        torch.nn.init.normal_(model.echo_out.weight, std=0.1)
+    # the parallel scan against a plain loop
+    h = torch.randn(2, 37, model.config.dim)
+    x = torch.randint(0, 512, (2, 37))
+    with torch.no_grad():
+        psi, last = model._salient_phase(h, x)
+        e = model.embed.embed.weight[x].float()
+        e = e * torch.rsqrt(e.pow(2).mean(-1, keepdim=True) + 1e-6)
+        hn = h * torch.rsqrt(h.pow(2).mean(-1, keepdim=True) + 1e-6)
+        sg = torch.sigmoid(hn @ model.sal_gate_w.t() + model.sal_gate_b)
+        per = model.sal_proj.shape[0] // sg.shape[-1]
+        sp = sg.repeat_interleave(per, dim=-1)
+        a = e @ model.sal_proj.t()
+        ref, cur = [], torch.zeros_like(a[:, 0])
+        for t in range(37):
+            cur = (1 - sp[:, t]) * cur + sp[:, t] * a[:, t]
+            ref.append(cur)
+        ref = torch.stack(ref, 1)
+    dscan = (psi - ref).abs().max().item()
+    assert dscan < 1e-4, f"N9s scan != loop: {dscan:.3e}"
+    torch.manual_seed(11)
+    diff = _decode_diff(model, 150)
+    assert diff < ATOL, f"N9s prefill != decode: {diff:.3e}"
+    model.train()
+    out = model(torch.randint(0, 512, (2, 40)))[0]
+    out.float().pow(2).mean().backward()
+    for name in ('sal_proj', 'sal_gate_w', 'sal_gate_b', 'phase_proj'):
+        g = getattr(model, name).grad
+        assert g is not None and g.abs().max().item() > 0, f"N9s: no gradient on {name}"
+    print(f"  N9s: init == N9a; scan == loop {dscan:.1e}; decode == prefill {diff:.2e}; gates learn")
+
+
 def test_opmem():
     for mode in ('phase', 'coord'):
         torch.manual_seed(0)
@@ -332,7 +379,7 @@ def test_b2_splits(seeds=40):
 def main():
     torch.set_num_threads(8)
     for test in (test_off_is_v13, test_n7_lookup, test_n7_off_at_init,
-                 test_n7_decode_matches_prefill, test_n7_learns, test_n9a, test_opmem, test_hook, test_b2_splits):
+                 test_n7_decode_matches_prefill, test_n7_learns, test_n9a, test_n9s, test_opmem, test_hook, test_b2_splits):
         print(f"{test.__name__}:")
         test()
     print("ALL PASS")
