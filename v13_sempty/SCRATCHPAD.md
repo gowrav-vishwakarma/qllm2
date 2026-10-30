@@ -18,6 +18,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-30 04:25Z (09:55 IST): S4 chain RUNNING on the 6000 at `685de4e`**
+  (no E2 port). mbs1 (Mamba-2 one stage, 189K tok/s) ~10:55 IST → mbs2 ~12:00
+  → r3b (reference at 3B tok) ~21:30 IST. tfc1 recorded (685de4e). Shared
+  checkout: v14 now runs from its own worktree (../qllm_v14run), so master
+  commits here are safe again.
+
 * **2026-10-30 03:17Z (08:47 IST): E2 tied echo FAIL, code removed** (holdout
   +0.055, recall 0.602 vs 0.825, label_cat 8-shot 0.365 vs 0.50; code at
   `5100fd7`). 4090 handed to v14 (B0 run 3). S4 has no port: Mamba-2 → r3b.
