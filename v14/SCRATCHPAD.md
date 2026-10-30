@@ -106,6 +106,40 @@ Keep all three current as things happen (user rule, 2026-10-29).
 * **Git:** origin = `qllm-private-personal` on both boxes. Commit → push
   origin → pull on the 6000.
 
+## Step back (2026-10-30 ~10:45 IST, after B0 closed, N1/E2 failed, B2 run 1)
+
+Habit (memory `meditate-before-next-step`): after each finding, look from far
+and from inside before choosing the next run.
+
+1. **Two kinds of in-context skill pull apart.** Attention wins at *lookup*
+   (find this item and copy what followed: label_category at 600M, T++ 0.73
+   vs PAM 0.41). The recurrent body wins at *abstraction* (carry one rule
+   across examples: B2 letters, echo 0.33 rising with shots, T++ 0.02 =
+   per-k tables). Today's failures all tried to buy lookup: the tie made
+   q/k symmetric (similarity), which lost recall (asymmetric: "what came
+   after X"), 0.825 -> 0.602 at 600M. Stop patching lookup into echo; lean
+   into abstraction, where an O(1) state has an edge.
+2. **Hypothesis: the bottleneck causes the abstraction.** Attention can keep
+   every example, so memorising a table per parameter is cheap. A fixed-size
+   state cannot hold the examples, so it is pushed to hold the rule. If
+   true, a smaller state should infer held-out rules *better* (and recall
+   worse), and that is a new, testable claim. Cheap test: a head-dim sweep
+   on B2 (the micro-bench already takes `echo@32`, `@64`, `@128`), with tpp
+   as the reference.
+3. **The accident to chase:** echo's held-out numbers get *worse* with more
+   shots (step_wide_new 0.98 / 1.00 / 0.72 at 2 / 4 / 8 shots); tpp does
+   not (0.97 at 8). Larger numbers (s + 8d) or state saturation over a long
+   numeric run? It is a capacity / precision clue for the same story.
+4. **Mechanism direction (N4 rewritten):** a *relation memory*: write the
+   relation between paired items (δ = φ(y) − φ(x)) instead of the items, then
+   read it once and apply it to the query. N6 tried the rotation version and
+   was judged on B1, a bench that could not show inference (extrapolation
+   from 3 values). B2 is the fair test for this family.
+5. **Bench lesson:** B0 broke even for attention (answer-only supervision,
+   redrawn words). Micro-benches need dense LM-style supervision, or they
+   measure the bench. And a micro-bench win is a lead (E2): seed pairs, then
+   600M, both inside and beyond the trained context.
+
 ## Next action
 
 1. B2 run 2 on the 4090 (from `../qllm_v14run`): `for i in 1 2 3; do
@@ -117,6 +151,8 @@ Keep all three current as things happen (user rule, 2026-10-29).
    M1/c1m2 arm and a T++ arm; read shift_wide_new inside and beyond the
    trained context). If R is not met: shift_wide_new is the target cell for
    a new unit (N4 design under EXPERIMENTS_V14 "N4").
-3. Open: why echo infers letter shifts partly and not fully (0.47 at 8
+3. After R: pre-register the B2 head-dim sweep (step back, point 2) and the
+   relation-memory unit (point 4) before either runs.
+4. Open: why echo infers letter shifts partly and not fully (0.47 at 8
    shots); probe the B2 run 1 checkpoints (6000,
    `~/Development/qllm_v14/checkpoints_v14/b2_bf59754_*`).
