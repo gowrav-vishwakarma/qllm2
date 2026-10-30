@@ -245,17 +245,16 @@ notebook (Willshaw) as the capacity unit.
 
 ## Next action
 
-1. B2 run 2 on the 4090 (from `../qllm_v14run`): `for i in 1 2 3; do
-   TAG=b2r2p$i FAMILIES=rules ARMS=echo,tpp SAVE=1 EXTRA="--seed 4$i
-   --doc_seed0 $((i+7))00000000 --init_seed 4$i --rule_tasks
-   shift_wide,step_wide,affine_map" bash v14/run_bench.sh; done` (~1 h).
-   Score R (paired d on shift_wide_new), record, ping v13, tell the user.
-2. If R is met: design the 600M check with v13 (B2 docs in stage B for an
-   M1/c1m2 arm and a T++ arm; read shift_wide_new inside and beyond the
-   trained context). If R is not met: shift_wide_new is the target cell for
-   a new unit (N4 design under EXPERIMENTS_V14 "N4").
-3. After R: pre-register the B2 head-dim sweep (step back, point 2) and the
-   relation-memory unit (point 4) before either runs.
-4. Open: why echo infers letter shifts partly and not fully (0.47 at 8
-   shots); probe the B2 run 1 checkpoints (6000,
-   `~/Development/qllm_v14/checkpoints_v14/b2_bf59754_*`).
+1. **v13 flagship r3c** (`16f372e`, 6000, from ~00:45 IST, ~14 h): 16
+   notebooks + echo + two stages + LR 1.2e-3 straight to 3B vs T++ 3.206 /
+   Mamba-2 3.164 (futility stop at ~1.56B if holdout > 3.4714). v14 units
+   are NOT in it (unproven parts would confound bar 2).
+2. **n9c** (N9a at 600M, 4090, ~01:30 IST): read its lookup bars. If it
+   passes, N9a gets its own arm on the r3c recipe, paired with r3c at a
+   matched token budget (v13 runs it via `ECHO_PHASE_LAGS=3`).
+3. **N7 as a cache LM**: its own arm on the r3c recipe (`NGRAM_ORDERS=2,3`,
+   hook `a55e1f0`), paired with r3c, ≥ 1.5B tokens; pre-register after r3c's
+   first readout.
+4. Stopped / closed today (see EXPERIMENTS_V14): N7 micro (bench could not
+   show copy), N10 formation (no verdict), Q1 / S1 (F1 0/5), N1, N6 on B1.
+   Rule (user): run only what can be superior; run known-best directly.
