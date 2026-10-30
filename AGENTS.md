@@ -14,6 +14,16 @@
   trained on (transformers collapse there). Measure results inside AND
   beyond the training length.
 
+## Session roles (user, 2026-10-30)
+- **v13_sempty session = maturity:** the existing PAM body, training recipes
+  and schedules, scaling (600M → 3B), the Transformer++ / Mamba-2
+  baselines, the probes (recall, learning, LCL), and the 600M LM checks of
+  units v14 hands over.
+- **v14 session = new design:** new mechanisms only; benches only to judge
+  its own units, no tuning of the v13 body or recipes.
+- Before starting work, ask which lane it is in; hand work across by
+  message.
+
 ## Step back before the next step (user rule, 2026-10-30)
 - After every finding and before choosing the next experiment, pause and
   "think in the void": step back, look at the whole problem from far away
