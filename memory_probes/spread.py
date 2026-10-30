@@ -29,6 +29,7 @@ from memory_probes.rules import RuleExample
 # task -> (header text, regex that splits the body into example/query units)
 _FORMATS: Dict[str, Tuple[str, str]] = {
     'label_category': ('Label rule.', r'(?<=,)'),   # " red is alpha," ... " car is"
+    'label_exact': ('Label rule.', r'(?<=,)'),      # label_category with an in-context query item
     'two_hop': ('Story.', r'(?<=\.)'),               # " The duck is called Sam." ... " Eli's pet is called"
     'affine_map': ('Map rule.', r'(?=\n)'),          # "\n21 -> 43" ... "\n29 ->"
     'shift_wide': ('Letter rule.', r'(?=\n)'),       # "\no -> u" ... "\nl ->"

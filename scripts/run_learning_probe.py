@@ -47,8 +47,9 @@ def main() -> int:
     p.add_argument('--checkpoint', type=Path)
     p.add_argument('--model-id', default='state-spaces/mamba-130m-hf')
     p.add_argument('--preset', default='baseline_real_pm')
-    p.add_argument('--suite', choices=('rules', 'b2'), default='rules',
-                   help='rules = memory_probes/rules.py; b2 = v14/rules_ood.py (see docstring)')
+    p.add_argument('--suite', choices=('rules', 'b2', 'label_diag'), default='rules',
+                   help='rules = memory_probes/rules.py; b2 = v14/rules_ood.py; label_diag = '
+                        'label_category + label_exact (memory_probes/label_diag.py)')
     p.add_argument('--tasks', default='', help='comma list (default: every task of the suite)')
     p.add_argument('--shots', default='2,4,8')
     p.add_argument('--trials', type=int, default=100)
@@ -79,6 +80,11 @@ def main() -> int:
         from v14.rules_ood import B2_NEW_TASKS, B2_TASKS, build_example as b2_example
         tasks = tasks or B2_TASKS + B2_NEW_TASKS
         examples = [b2_example(tokenizer, t, n, sd) for t in tasks for n in shots for sd in seeds]
+    elif args.suite == 'label_diag':
+        from memory_probes.label_diag import exact_variant
+        base = build_rule_suite(tokenizer, tasks=('label_category',), shots=shots, seeds=seeds)
+        examples = base + [exact_variant(ex, tokenizer) for ex in base]
+        tasks = ('label_category', 'label_exact')
     else:
         tasks = tasks or TASKS
         examples = build_rule_suite(tokenizer, tasks=tasks, shots=shots, seeds=seeds)
