@@ -18,6 +18,19 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-30 00:13Z (05:43 IST): E2 tied echo LAUNCHED on the 4090** (v14 B1
+  run 4 bar P met). tmux `e2`, `~/e2_chain.sh`, run FROM THE WORKTREE
+  `/home/gowrav/Development/qllm_e2` at `e5b1a2a` (ECHO_TIED code `26ef94a`);
+  logs + checkpoints live in the worktree (`logs/v13_sempty_e2_driver_e5b1a2a_20261030_0013.log`,
+  `e2ta_pre` 120M → `e2tb_main` 480M, then the probes incl. the 400-trial
+  learning probe on e2t AND C1-ctl). ETA ~10:15 IST + probes. Resume after a
+  crash: `tmux new-session -d -s e2 "cd /home/gowrav/Development/qllm_e2 &&
+  SCREEN_HASH=e5b1a2a bash ~/e2_chain.sh 2>&1 | tee -a <same driver log>"`.
+  When done: copy logs/probe jsons from the worktree into this checkout and
+  commit here. **6000 hand-off:** after `=== s3 chain DONE` (tfc1, ~09:30 IST)
+  the 6000 goes to v14 (tpp calibration, then B0 run 3, until ~12:00); ping
+  v14 when s3 ends. An E2 port to the M2 reference waits until after that.
+
 * **2026-10-29 22:59Z (04:29 IST): tfs1 (Transformer++ one stage 600M) DONE**:
   holdout 3.4885 (M2 beats it by −0.019; M1 ties), WikiText 66.38 (better than
   PAM), recall 0.645 (strong ≤ 2048, collapses past: 8192 0.15), learning
