@@ -9,6 +9,19 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-30
 
+- **v13 (after a quiet step back): write with hindsight, at the end of a
+  meaning unit, not at every token.** Common thread of today's failures:
+  PAM files every token the moment it arrives, keyed by whatever that token
+  is ("is"), and never revisits. Minds store after the fact, once they know
+  what the unit was ("truck → silver" is only a unit once "silver" lands).
+  Idea: a tiny buffer of the last few tokens; at a boundary (comma, period,
+  surprise drop) bind the finished unit and file it under what it is ABOUT
+  (its content token), not under the last token. O(1); kills template-key
+  collisions at the source; pands-like (read a unit, then bundle it). Also:
+  all-or-nothing circuit formation looks like a phase transition, and those
+  are crossed reliably by ANNEALING (start the read soft, sharpen it over
+  training), a schedule-level twin of Q1. *For v14:* a write-side unit
+  that complements N7/N9 (read side) and N8 (gate).
 - **user + v13: "reason first, then know where to look"; two lookups
   and rules as phase continuation (vision, design ideas).** (1) *Analytic
   continuation* (the zeta-function idea): an analytic function known on a
