@@ -1226,6 +1226,18 @@ every seed?
 - **Reading:** if echo itself forms ≥ 3 of 5, the bench cannot show a
   reliability gain on this seed set: report rates, no verdict.
 
+**N10 formation run: STOPPED after 2 seeds, no verdict (2026-10-30 22:30 IST,
+code `9bd36e6`).** shift_wide_new: seed 91 echo 0.960 / op 1.000 / opcoord
+0.999; seed 92 echo 0.998 (the op / opcoord arms of seed 92 were stopped).
+Echo formed in both, so by the pre-registered reading ("if echo itself
+forms ≥ 3 of 5 ... no verdict") this seed set cannot show a reliability gain,
+and the remaining ~5 h would only slow the 600M N9a run beside it. B2
+formation rates swing between seed sets (3/10 earlier, 2/2 here), so a
+reliability claim would need many seeds, which is not worth GPU time now (user,
+2026-10-30: run only what can be superior). N10 stays in code as an untested
+candidate; N6 (`op`) formed in its one seed. Log + JSON:
+`logs/v14_n10p1_9bd36e6_*`.
+
 ### N11 — reason first, then look (pands-style planner + three memories; user vision, design only)
 
 **Idea.** The user's pands v1 reads a passage into an essence direction z

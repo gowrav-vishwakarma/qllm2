@@ -1,0 +1,213 @@
+B0 micro-bench @ 9bd36e6: 6000 steps x B16, lr 0.0003, eval ctx (1024, 4096, 8192), 16 docs x 3 positions x 4 queries per cell, aux_weight 0.0, families rules, seed 91, init_seed 91, doc_seed0 2600000000
+
+--- arm echo@hd64L4 ---
+/home/gowrav/Development/qllm_v14n10run/v14/microbench.py:465: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"  [{label}] step {step:5d}/{len(plan)} L={L:5d} loss={float(loss):.4f} "
+  [echo@hd64L4] step     1/6000 L=  512 loss=10.8958 | 3,626 tok/s
+  [echo@hd64L4] step   250/6000 L= 1024 loss=3.3392 | 48,004 tok/s
+  [echo@hd64L4] step   500/6000 L=  512 loss=1.3188 | 49,245 tok/s
+  [echo@hd64L4] step   750/6000 L= 1024 loss=0.6086 | 49,419 tok/s
+  [echo@hd64L4] step  1000/6000 L= 1024 loss=0.3396 | 49,562 tok/s
+  [echo@hd64L4] step  1250/6000 L= 1024 loss=0.2342 | 49,679 tok/s
+  [echo@hd64L4] step  1500/6000 L= 1024 loss=0.1576 | 50,107 tok/s
+  [echo@hd64L4] step  1750/6000 L=  512 loss=0.1648 | 50,221 tok/s
+  [echo@hd64L4] step  2000/6000 L= 1024 loss=0.1009 | 51,906 tok/s
+  [echo@hd64L4] step  2250/6000 L= 1024 loss=0.1230 | 53,055 tok/s
+  [echo@hd64L4] step  2500/6000 L= 1024 loss=0.0609 | 52,994 tok/s
+  [echo@hd64L4] step  2750/6000 L= 1024 loss=0.0429 | 53,002 tok/s
+  [echo@hd64L4] step  3000/6000 L=  512 loss=0.0792 | 53,070 tok/s
+  [echo@hd64L4] step  3250/6000 L= 1024 loss=0.0428 | 53,059 tok/s
+  [echo@hd64L4] step  3500/6000 L=  512 loss=0.0209 | 53,075 tok/s
+  [echo@hd64L4] step  3750/6000 L=  512 loss=0.0101 | 53,098 tok/s
+  [echo@hd64L4] step  4000/6000 L= 1024 loss=0.0047 | 53,099 tok/s
+  [echo@hd64L4] step  4250/6000 L= 1024 loss=0.0281 | 53,159 tok/s
+  [echo@hd64L4] step  4500/6000 L= 1024 loss=0.0066 | 53,205 tok/s
+  [echo@hd64L4] step  4750/6000 L=  512 loss=0.0021 | 53,207 tok/s
+  [echo@hd64L4] step  5000/6000 L= 1024 loss=0.0052 | 53,244 tok/s
+  [echo@hd64L4] step  5250/6000 L=  512 loss=0.0014 | 53,292 tok/s
+  [echo@hd64L4] step  5500/6000 L= 1024 loss=0.0014 | 53,287 tok/s
+  [echo@hd64L4] step  5750/6000 L=  512 loss=0.0013 | 53,286 tok/s
+  [echo@hd64L4] step  6000/6000 L=  512 loss=0.0100 | 53,266 tok/s
+  [echo@hd64L4] trained 27.6M params in 1393s (232 ms/step)
+== echo@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              0.14    0.14    0.12
+label_category        0.15    0.12    0.11
+two_hop               0.13    0.12    0.11
+letter_shift_ood      0.95    1.00    1.00
+number_step_ood       1.00    1.00    0.98
+label_marker          0.14    0.15    0.12
+label_marker_new      0.14    0.13    0.11
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            1.00    1.00    1.00
+shift_wide_new        0.90    0.98    1.00
+step_wide_new         0.98    1.00    0.87
+affine_map_new        1.00    1.00    1.00
+repeat_copy           0.12    0.15    0.11
+label_exact           0.13    0.12    0.12
+label_exact_new       0.12    0.12    0.11
+
+--- arm op@hd64L4 ---
+  [op@hd64L4] step     1/6000 L=  512 loss=10.8958 | 40,183 tok/s
+  [op@hd64L4] step   250/6000 L= 1024 loss=3.0363 | 53,311 tok/s
+  [op@hd64L4] step   500/6000 L=  512 loss=0.9255 | 52,510 tok/s
+  [op@hd64L4] step   750/6000 L= 1024 loss=0.3053 | 57,030 tok/s
+  [op@hd64L4] step  1000/6000 L= 1024 loss=0.0680 | 56,451 tok/s
+  [op@hd64L4] step  1250/6000 L= 1024 loss=0.0304 | 54,857 tok/s
+  [op@hd64L4] step  1500/6000 L= 1024 loss=0.0288 | 53,817 tok/s
+  [op@hd64L4] step  1750/6000 L=  512 loss=0.0493 | 53,188 tok/s
+  [op@hd64L4] step  2000/6000 L= 1024 loss=0.0165 | 52,485 tok/s
+  [op@hd64L4] step  2250/6000 L= 1024 loss=0.0320 | 52,301 tok/s
+  [op@hd64L4] step  2500/6000 L= 1024 loss=0.0091 | 51,966 tok/s
+  [op@hd64L4] step  2750/6000 L= 1024 loss=0.0147 | 51,592 tok/s
+  [op@hd64L4] step  3000/6000 L=  512 loss=0.0166 | 51,275 tok/s
+  [op@hd64L4] step  3250/6000 L= 1024 loss=0.0057 | 51,073 tok/s
+  [op@hd64L4] step  3500/6000 L=  512 loss=0.0052 | 50,966 tok/s
+  [op@hd64L4] step  3750/6000 L=  512 loss=0.0014 | 50,832 tok/s
+  [op@hd64L4] step  4000/6000 L= 1024 loss=0.0046 | 50,719 tok/s
+  [op@hd64L4] step  4250/6000 L= 1024 loss=0.0091 | 50,574 tok/s
+  [op@hd64L4] step  4500/6000 L= 1024 loss=0.0017 | 50,507 tok/s
+  [op@hd64L4] step  4750/6000 L=  512 loss=0.0002 | 50,547 tok/s
+  [op@hd64L4] step  5000/6000 L= 1024 loss=0.0043 | 50,481 tok/s
+  [op@hd64L4] step  5250/6000 L=  512 loss=0.0013 | 50,720 tok/s
+  [op@hd64L4] step  5500/6000 L= 1024 loss=0.0011 | 51,845 tok/s
+  [op@hd64L4] step  5750/6000 L=  512 loss=0.0026 | 53,053 tok/s
+  [op@hd64L4] step  6000/6000 L=  512 loss=0.0028 | 54,236 tok/s
+  [op@hd64L4] trained 28.1M params in 1368s (228 ms/step)
+== op@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              0.12    0.13    0.11
+label_category        0.13    0.14    0.10
+two_hop               0.15    0.14    0.10
+letter_shift_ood      1.00    1.00    1.00
+number_step_ood       1.00    1.00    0.97
+label_marker          0.12    0.15    0.10
+label_marker_new      0.14    0.10    0.15
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            1.00    1.00    1.00
+shift_wide_new        1.00    1.00    1.00
+step_wide_new         1.00    1.00    0.88
+affine_map_new        1.00    1.00    1.00
+repeat_copy           0.13    0.13    0.12
+label_exact           0.12    0.12    0.13
+label_exact_new       0.12    0.11    0.12
+
+--- arm opcoord@hd64L4 ---
+  [opcoord@hd64L4] step     1/6000 L=  512 loss=10.8958 | 60,057 tok/s
+  [opcoord@hd64L4] step   250/6000 L= 1024 loss=3.1883 | 110,131 tok/s
+  [opcoord@hd64L4] step   500/6000 L=  512 loss=1.2402 | 109,225 tok/s
+  [opcoord@hd64L4] step   750/6000 L= 1024 loss=0.5310 | 109,516 tok/s
+  [opcoord@hd64L4] step  1000/6000 L= 1024 loss=0.3697 | 109,589 tok/s
+  [opcoord@hd64L4] step  1250/6000 L= 1024 loss=0.2382 | 109,750 tok/s
+  [opcoord@hd64L4] step  1500/6000 L= 1024 loss=0.1505 | 109,303 tok/s
+  [opcoord@hd64L4] step  1750/6000 L=  512 loss=0.1146 | 69,621 tok/s
+  [opcoord@hd64L4] step  2000/6000 L= 1024 loss=0.0806 | 42,092 tok/s
+  [opcoord@hd64L4] step  2250/6000 L= 1024 loss=0.0794 | 32,206 tok/s
+  [opcoord@hd64L4] step  2500/6000 L= 1024 loss=0.0434 | 27,324 tok/s
+  [opcoord@hd64L4] step  2750/6000 L= 1024 loss=0.0446 | 24,214 tok/s
+  [opcoord@hd64L4] step  3000/6000 L=  512 loss=0.0697 | 22,072 tok/s
+  [opcoord@hd64L4] step  3250/6000 L= 1024 loss=0.0188 | 20,556 tok/s
+  [opcoord@hd64L4] step  3500/6000 L=  512 loss=0.0180 | 19,372 tok/s
+  [opcoord@hd64L4] step  3750/6000 L=  512 loss=0.0179 | 18,474 tok/s
+  [opcoord@hd64L4] step  4000/6000 L= 1024 loss=0.0102 | 17,749 tok/s
+  [opcoord@hd64L4] step  4250/6000 L= 1024 loss=0.0203 | 17,153 tok/s
+  [opcoord@hd64L4] step  4500/6000 L= 1024 loss=0.0055 | 16,642 tok/s
+  [opcoord@hd64L4] step  4750/6000 L=  512 loss=0.0027 | 16,237 tok/s
+  [opcoord@hd64L4] step  5000/6000 L= 1024 loss=0.0047 | 16,772 tok/s
+  [opcoord@hd64L4] step  5250/6000 L=  512 loss=0.0012 | 17,506 tok/s
+  [opcoord@hd64L4] step  5500/6000 L= 1024 loss=0.0059 | 18,209 tok/s
+  [opcoord@hd64L4] step  5750/6000 L=  512 loss=0.0053 | 18,886 tok/s
+  [opcoord@hd64L4] step  6000/6000 L=  512 loss=0.0059 | 19,561 tok/s
+  [opcoord@hd64L4] trained 27.8M params in 3794s (632 ms/step)
+== opcoord@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              0.13    0.13    0.12
+label_category        0.13    0.15    0.11
+two_hop               0.16    0.13    0.11
+letter_shift_ood      1.00    1.00    1.00
+number_step_ood       1.00    1.00    0.98
+label_marker          0.12    0.13    0.12
+label_marker_new      0.14    0.12    0.12
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            1.00    1.00    1.00
+shift_wide_new        1.00    1.00    1.00
+step_wide_new         1.00    1.00    0.85
+affine_map_new        1.00    1.00    1.00
+repeat_copy           0.12    0.14    0.14
+label_exact           0.12    0.12    0.15
+label_exact_new       0.14    0.13    0.12
+
+================================================================
+== echo@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              0.14    0.14    0.12
+label_category        0.15    0.12    0.11
+two_hop               0.13    0.12    0.11
+letter_shift_ood      0.95    1.00    1.00
+number_step_ood       1.00    1.00    0.98
+label_marker          0.14    0.15    0.12
+label_marker_new      0.14    0.13    0.11
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            1.00    1.00    1.00
+shift_wide_new        0.90    0.98    1.00
+step_wide_new         0.98    1.00    0.87
+affine_map_new        1.00    1.00    1.00
+repeat_copy           0.12    0.15    0.11
+label_exact           0.13    0.12    0.12
+label_exact_new       0.12    0.12    0.11
+
+== op@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              0.12    0.13    0.11
+label_category        0.13    0.14    0.10
+two_hop               0.15    0.14    0.10
+letter_shift_ood      1.00    1.00    1.00
+number_step_ood       1.00    1.00    0.97
+label_marker          0.12    0.15    0.10
+label_marker_new      0.14    0.10    0.15
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            1.00    1.00    1.00
+shift_wide_new        1.00    1.00    1.00
+step_wide_new         1.00    1.00    0.88
+affine_map_new        1.00    1.00    1.00
+repeat_copy           0.13    0.13    0.12
+label_exact           0.12    0.12    0.13
+label_exact_new       0.12    0.11    0.12
+
+== opcoord@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              0.13    0.13    0.12
+label_category        0.13    0.15    0.11
+two_hop               0.16    0.13    0.11
+letter_shift_ood      1.00    1.00    1.00
+number_step_ood       1.00    1.00    0.98
+label_marker          0.12    0.13    0.12
+label_marker_new      0.14    0.12    0.12
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            1.00    1.00    1.00
+shift_wide_new        1.00    1.00    1.00
+step_wide_new         1.00    1.00    0.85
+affine_map_new        1.00    1.00    1.00
+repeat_copy           0.12    0.14    0.14
+label_exact           0.12    0.12    0.15
+label_exact_new       0.14    0.13    0.12
+
