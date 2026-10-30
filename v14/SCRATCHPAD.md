@@ -55,6 +55,13 @@ Keep all three current as things happen (user rule, 2026-10-29).
   0.62/0.71/0.55. Attention does the in-context label lookup that the O(1)
   bodies do not: **this is the gap for v14 to close** (B1's `tpp` arm
   measures the same gap at 27M).
+* **v13 reference body = c1m2** (M2 + aptitude two-stage; tie-break set
+  before c2m2, `900dde2`). c2m2 (M2, two stages, no aptitude) KEEP: holdout
+  3.4497, WikiText 65.57, recall 0.848, label_category 8-shot 0.41. vs T++ on
+  the same recipe (tfs2): holdout −0.041, WikiText 65.6 vs 66.2, recall
+  +0.145. **First PAM ahead of T++ on holdout AND WikiText at equal data.** T++
+  still leads label_category (0.73 vs 0.41) and training speed (1.45× at
+  T=2048).
 * **v13 S2 fairness (`048f8c2`): MET.** T++ gets nothing from the two-stage
   schedule (tfs2 holdout 3.4907 vs 3.4885 one stage; recall 0.703;
   label_category 8-shot 0.73 unchanged); PAM does. Two-stage M1 vs tfs2:
