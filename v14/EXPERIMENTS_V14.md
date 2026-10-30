@@ -1117,6 +1117,37 @@ in-context chance + 0.15 (the mapping, not the label set; see N7); recall
 and holdout not worse. Micro first, on the N7 bench (N7 as the exact-copy
 control).
 
+### N10 — rules as phase continuation (user vision via v13, 2026-10-30; design only)
+
+**Idea.** Give ordered things phase coordinates (letters on a circle; numbers
+on several circles of different periods; multiplication via log-phase). A rule
+is then one rotation, inferring it is reading an angle from the examples, and
+an unseen value is exact continuation. Echo already infers held-out shifts,
+but per seed (B2 state sweep: 3 of 10 runs ≥ 0.9); built-in phase structure
+should make it reliable.
+**Relation to N6.** N6 (operator memory) was this mechanism: the state is the
+circular mean of b·conj(a) over example pairs, applied to the next input. It
+was closed as FAIL on B1 run 2, a bench where selecting among 3 trained shifts
+beats inference, so it never had a fair test. **N10 = N6 ported from
+`78e4354`, judged on B2**, with the user's twist: several circles of different
+periods (a token's phase on circle c is learned, with periods spread so that
+numbers can sit on several clocks at once). Bar: formation rate on
+shift_wide_new over 5 seeds vs echo (≥ 0.9 counts as formed), plus B2
+held-out numbers not worse.
+
+### N11 — reason first, then look (pands-style planner + three memories; user vision, design only)
+
+**Idea.** The user's pands v1 reads a passage into an essence direction z
+before speaking and steers every token toward it (its planner is the main
+lever: honest vs oracle gap ~7 PPL). For lookup: reason first, form the
+query ("I need truck's label"), then look in TWO stores, a knowledge store
+learned from all training data (parametric; v13's A4 `cond_mem` Engram table
+is in code, never run) and the conversation memory (N7 / N9), then speak
+toward the intent. Today PAM looks up with the current token's state at
+"is", which is where the label failure starts. Design after N7 / N9a land:
+which state forms the query (a slow planner state vs the body), and how the
+two stores' reads are combined.
+
 ### N8 — self-opened memory (learned critical period; handed over by the v13 session, 2026-10-30)
 
 **Observation (v13).** The two-stage schedule (language first, recall docs
