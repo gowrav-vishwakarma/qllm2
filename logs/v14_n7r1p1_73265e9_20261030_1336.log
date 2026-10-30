@@ -1,0 +1,104 @@
+B0 micro-bench @ 73265e9: 6000 steps x B16, lr 0.0003, eval ctx (1024, 4096, 8192), 16 docs x 3 positions x 4 queries per cell, aux_weight 0.0, families rules, seed 61, init_seed 61, doc_seed0 1300000000
+
+--- arm echo@hd64L4 ---
+/home/gowrav/Development/qllm_v14n7run/v14/microbench.py:458: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"  [{label}] step {step:5d}/{len(plan)} L={L:5d} loss={float(loss):.4f} "
+  [echo@hd64L4] step     1/6000 L=  512 loss=10.8865 | 4,621 tok/s
+  [echo@hd64L4] step   250/6000 L=  512 loss=4.0066 | 94,798 tok/s
+  [echo@hd64L4] step   500/6000 L= 1024 loss=2.3048 | 101,613 tok/s
+  [echo@hd64L4] step   750/6000 L=  512 loss=1.5837 | 62,719 tok/s
+  [echo@hd64L4] step  1000/6000 L= 1024 loss=1.4839 | 34,897 tok/s
+  [echo@hd64L4] step  1250/6000 L=  512 loss=1.2862 | 27,447 tok/s
+  [echo@hd64L4] step  1500/6000 L=  512 loss=0.9636 | 23,999 tok/s
+  [echo@hd64L4] step  1750/6000 L= 1024 loss=0.6923 | 22,168 tok/s
+  [echo@hd64L4] step  2000/6000 L=  512 loss=0.4297 | 20,895 tok/s
+  [echo@hd64L4] step  2250/6000 L=  512 loss=0.4979 | 20,008 tok/s
+  [echo@hd64L4] step  2500/6000 L=  512 loss=0.3845 | 19,308 tok/s
+  [echo@hd64L4] step  2750/6000 L=  512 loss=0.3255 | 18,842 tok/s
+  [echo@hd64L4] step  3000/6000 L= 1024 loss=0.3553 | 18,762 tok/s
+  [echo@hd64L4] step  3250/6000 L= 1024 loss=0.2951 | 18,844 tok/s
+  [echo@hd64L4] step  3500/6000 L= 1024 loss=0.2972 | 19,964 tok/s
+  [echo@hd64L4] step  3750/6000 L= 1024 loss=0.2957 | 21,095 tok/s
+  [echo@hd64L4] step  4000/6000 L=  512 loss=0.2445 | 21,461 tok/s
+  [echo@hd64L4] step  4250/6000 L=  512 loss=0.3388 | 20,901 tok/s
+  [echo@hd64L4] step  4500/6000 L= 1024 loss=0.2910 | 20,488 tok/s
+  [echo@hd64L4] step  4750/6000 L= 1024 loss=0.2635 | 20,593 tok/s
+  [echo@hd64L4] step  5000/6000 L=  512 loss=0.3034 | 21,303 tok/s
+  [echo@hd64L4] step  5250/6000 L=  512 loss=0.2672 | 21,896 tok/s
+  [echo@hd64L4] step  5500/6000 L=  512 loss=0.2432 | 22,702 tok/s
+  [echo@hd64L4] step  5750/6000 L=  512 loss=0.2350 | 23,457 tok/s
+  [echo@hd64L4] step  6000/6000 L= 1024 loss=0.3104 | 24,273 tok/s
+  [echo@hd64L4] trained 27.6M params in 3034s (506 ms/step)
+== echo@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        0.53    0.49    0.22
+two_hop               0.51    0.26    0.14
+letter_shift_ood      1.00    1.00    1.00
+number_step_ood       1.00    0.99    0.97
+label_marker          0.51    0.51    0.22
+label_marker_new      0.53    0.51    0.26
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            0.99    1.00    1.00
+shift_wide_new        1.00    1.00    1.00
+step_wide_new         1.00    0.94    0.88
+affine_map_new        0.98    1.00    1.00
+repeat_copy           1.00    1.00    1.00
+label_exact           0.50    0.28    0.10
+label_exact_new       0.52    0.21    0.11
+
+--- arm echo_n7@hd64L4 ---
+  [echo_n7@hd64L4] step     1/6000 L=  512 loss=10.8865 | 56,353 tok/s
+  [echo_n7@hd64L4] step   250/6000 L=  512 loss=3.9837 | 115,338 tok/s
+  [echo_n7@hd64L4] step   500/6000 L= 1024 loss=2.3068 | 115,470 tok/s
+  [echo_n7@hd64L4] step   750/6000 L=  512 loss=1.5039 | 114,824 tok/s
+  [echo_n7@hd64L4] step  1000/6000 L= 1024 loss=1.3378 | 115,348 tok/s
+  [echo_n7@hd64L4] step  1250/6000 L=  512 loss=0.8363 | 115,438 tok/s
+  [echo_n7@hd64L4] step  1500/6000 L=  512 loss=0.4657 | 115,608 tok/s
+  [echo_n7@hd64L4] step  1750/6000 L= 1024 loss=0.4224 | 115,104 tok/s
+  [echo_n7@hd64L4] step  2000/6000 L=  512 loss=0.3925 | 115,208 tok/s
+  [echo_n7@hd64L4] step  2250/6000 L=  512 loss=0.4461 | 98,185 tok/s
+  [echo_n7@hd64L4] step  2500/6000 L=  512 loss=0.3961 | 62,554 tok/s
+  [echo_n7@hd64L4] step  2750/6000 L=  512 loss=0.3018 | 48,148 tok/s
+  [echo_n7@hd64L4] step  3000/6000 L= 1024 loss=0.3365 | 40,385 tok/s
+  [echo_n7@hd64L4] step  3250/6000 L= 1024 loss=0.3005 | 35,605 tok/s
+  [echo_n7@hd64L4] step  3500/6000 L= 1024 loss=0.2959 | 32,312 tok/s
+  [echo_n7@hd64L4] step  3750/6000 L= 1024 loss=0.2818 | 29,822 tok/s
+  [echo_n7@hd64L4] step  4000/6000 L=  512 loss=0.2364 | 27,905 tok/s
+  [echo_n7@hd64L4] step  4250/6000 L=  512 loss=0.3377 | 26,532 tok/s
+  [echo_n7@hd64L4] step  4500/6000 L= 1024 loss=0.2905 | 25,413 tok/s
+  [echo_n7@hd64L4] step  4750/6000 L= 1024 loss=0.2552 | 24,413 tok/s
+  [echo_n7@hd64L4] step  5000/6000 L=  512 loss=0.2976 | 23,601 tok/s
+  [echo_n7@hd64L4] step  5250/6000 L=  512 loss=0.2766 | 22,976 tok/s
+  [echo_n7@hd64L4] step  5500/6000 L=  512 loss=0.2402 | 22,381 tok/s
+  [echo_n7@hd64L4] step  5750/6000 L=  512 loss=0.2322 | 21,861 tok/s
+  [echo_n7@hd64L4] step  6000/6000 L= 1024 loss=0.3108 | 21,404 tok/s
+  [echo_n7@hd64L4] trained 28.2M params in 3441s (574 ms/step)
+== echo_n7@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        0.54    0.51    0.25
+two_hop               0.53    0.26    0.14
+letter_shift_ood      1.00    1.00    1.00
+number_step_ood       1.00    0.99    0.95
+label_marker          0.51    0.52    0.29
+label_marker_new      0.49    0.52    0.25
+shift_wide            1.00    1.00    1.00
+step_wide             1.00    1.00    1.00
+affine_map            1.00    1.00    1.00
+shift_wide_new        1.00    1.00    1.00
+step_wide_new         0.97    0.93    0.79
+affine_map_new        0.97    1.00    1.00
+repeat_copy           1.00    1.00    1.00
+label_exact           0.55    0.30    0.13
+label_exact_new       0.55    0.27    0.14
+
+--- arm tpp@hd64L4 ---
+  [tpp@hd64L4] step     1/6000 L=  512 loss=10.9108 | 17,002 tok/s
+  [tpp@hd64L4] step   250/6000 L=  512 loss=4.2770 | 15,802 tok/s

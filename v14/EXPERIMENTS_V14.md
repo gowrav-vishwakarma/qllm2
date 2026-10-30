@@ -1040,6 +1040,32 @@ trained on in that format?
   body does not use the exact read at this size; check the read (gate,
   injection block) before closing N7.
 
+**N7 micro run 1: STOPPED after pair 1, inconclusive by design (not a FAIL;
+2026-10-30 15:35 IST, code `73265e9`).** Pair 1 (seed 61): label_exact_new
+echo 0.28 vs echo_n7 0.32 (d +0.04); in-context chance is 0.29 (1/2, 1/4,
+1/8 items), so both sit AT chance in the untrained format. repeat_copy was
+1.00 for both: echo already solves the training copy task alone, so the N7
+reader never got a training signal to rely on. The other pairs would have
+cost ~5 h (the 4090 is shared with a 600M run: ~55 min per arm) to confirm a
+bench-made null. Log + JSON: `logs/v14_n7r1p1_73265e9_*` (echo, echo_n7; the
+tpp arm was stopped). **N7's real test:** 600M on web text (exact repeats
+past echo's reach), or a micro bench whose training needs copying echo
+cannot do (many look-alike keys, long gaps).
+
+**F1 formation bench (PRE-REGISTERED 2026-10-30 ~15:40 IST, before any F1
+number; joint with v13's Q1 stage 1).** Which start or key type makes the
+lookup circuit form for every seed? Bench = B1 run 4's training set (default
+rule tasks), where echo formed the label_category circuit in 0 of 5 seeds and
+tied echo in 4 of 4. Seeds = v13's Q1 seeds: i = 1..5, `--seed 7i --doc_seed0
+(i+15)·100M --init_seed 7i` (same init and data for every arm of a seed).
+- **Arms:** echo (control, run once, in the v14 slot), echo_phase (N9a, v14
+  slot), echo_qinit (Q1, v13 slot), echo_sparse (S1, v13 slot, when built).
+- **Formed** = label_category mean over 2/4/8 shots ≥ 0.9.
+- **Bar F (per arm):** formed in ≥ 4 of 5 seeds while echo forms in ≤ 2 of 5.
+  The winner (or winners) decides which key/start goes to 600M first.
+- **Reported:** B1 tasks, ms/step (shared GPU, not comparable).
+- This replaces N9a micro run 1 (N7's bench cannot show copy, see above).
+
 ### N9 — phase-aligned dual memory (the user's 2×O(1) memory, 2026-10-30; design only)
 
 **Idea (user, mapped by the v13 session against the key-collision
