@@ -2784,6 +2784,27 @@ fitted threshold:
     − 0.05 on every cell. Met → the package hands rows warm. Parity first: the
     chunked state path must reproduce the one-pass logits (bench's Reader) on a
     4k doc before any number.
+  - **A6 VERDICT (2026-11-01 01:52 IST; code 238c62e;
+    `logs/v14_a6_b2p2_32768_238c62e_20261101_0135.jsonl` + .log, 320 rows, rows
+    found 1.00; parity 2e-3): NOT met, REVERSED: cold is far better.**
+
+    | cell (sentence) | cold | warm | state only (norow) | warm − cold |
+    |---|---|---|---|---|
+    | kv syn / nat | 0.925 / 0.825 | 0.525 / 0.15 | 0 / 0 | −0.40 / −0.675 |
+    | para syn / nat | 0.725 / 0.55 | 0.45 / 0.025 | 0 / 0 | −0.275 / −0.525 |
+    | tool syn / nat | 0.475 / 0.50 | 0.25 / 0.275 | 0 / 0 | −0.225 / −0.225 |
+    | natq syn / nat | 0.075 / 0.20 | 0 / 0 | 0 / 0 | −0.075 / −0.20 |
+
+    - **Warm ≈ state only.** On natural keys the warm answer is nearly the same
+      sentence as the no-row answer (" the place where the king was killed" vs
+      " the place where the king was ..."; 32 / 34 warm misses start " the"):
+      after 32k tokens of carried state (b2p2 trained at 2,048, so 16×) the
+      mind does not let the row it was JUST shown steer its answer. Synthetic
+      keys (novel words) break through half the time.
+    - Says: past its trained length the mind's long state outvotes the newest
+      sentence (= Mind's EUREKA 3bc29c7 "outvoted, not lost", from the other
+      side). Package: keep the COLD re-read (a fresh scratch state per fetched
+      row); the current design is right.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
