@@ -195,3 +195,11 @@ re-fetch = the pack placed before the query (O_reread, KV cost
 mem.tpp_refetch_kv_bytes). Replay integration (reported, no gate): replay_refresh
 (R_alone vs R_state_plus vs A_state) and replay_hop2 (H_integrate vs H_oracle vs
 H_hop2only; 4 owners).
+
+**A3 (2026-10-31 15:00 IST, before any number uses it; Lead).** `v16/bench.py` gained two
+additive options, `--vec_layer k` (take the address vector from the mind's residual
+stream after block k instead of the pre-logit vector) and `--centre` (subtract the
+running mean of that vector before matching). They come from Library's finding that the
+mind's mid-layer centred residual is a far better zero-training address than the
+pre-logit vector. Existing cells and their defaults are unchanged; every row records
+`vec_layer` and `centre`, so numbers with and without the options are never mixed.
