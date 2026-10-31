@@ -502,6 +502,10 @@ def main():
                     rec['P_margin_burst'] = int(bbest[1] == ans)
                     lgcb = R.last_logits([t for sp in bspans for t in sp] + ids[doc_end:])
                     rec['P_concat_burst'] = int(cand[int(lgcb[cand].argmax())] == ans)
+                    if bspans:                                           # the same read, free generation (Library): 5 rows + question, cold, greedy to '.'
+                        gtxt = tok.decode(R.greedy([t for sp in bspans for t in sp] + ids[doc_end:]))
+                        rec['P_concat_burst_text'] = gtxt
+                        rec['P_concat_burst_sent'] = int(re.search(r'\b' + re.escape(str(meta['val'])) + r'\b', gtxt, re.I) is not None)
                     rec['P_rereads_per_query'] = len(bspans)
                     gv = docv[gpos]; gs = gv @ q; gtop = [gpos[i] for i in gs.topk(min(5, len(gpos))).indices.tolist()]
                     rec['C5_rows'] = len(gpos); rec['C5_rows_per_event'] = round(len(gpos) / max(1, n_ev), 1)
