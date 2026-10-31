@@ -2712,6 +2712,26 @@ fitted threshold:
   - **A4 MIND RUN v2 (PRE-REGISTERED 01:35 IST):** the same run with 238c62e on a
     FRESH seed 27000 (seed 24000's docs are now seen); same bars
     (`P_free_sent` para and tool ≥ 0.80, neg abstain ≥ 0.90, both key types).
+  - **A4 MIND RUN v2 VERDICT (2026-11-01 02:08 IST; Lead's run
+    `logs/v16_pkg_a4norm2_b2p2_32768_b886a03_20261101_0137.jsonl`, strict +
+    PACKAGE_NORM=1, seed 27000, code b886a03 ⊇ 238c62e, 320 rows, 0 errors):
+    NOT met (para natural and tool).** Fetch is exact; the misses are writing.
+
+    | cell (syn / nat) | organ hit | abstain | `P_free_sent` | 20-way | bar |
+    |---|---|---|---|---|---|
+    | kv | 1.00 / 1.00 | 0 / 0 | 0.975 / 0.825 | 1.00 / 1.00 | (reported) |
+    | para | 1.00 / 1.00 | 0 / 0 | **0.80 / 0.75** | 1.00 / 1.00 | ≥ 0.80: syn met, nat NOT |
+    | tool | 1.00 / 1.00 | 0 / 0 | **0.60 / 0.50** | 0.675 / 0.675 | NOT met |
+    | neg | 0.025 / 0.025 | **0.975 / 0.975** | 0 / 0 | – | met |
+
+    - The organ does its job: para fetch 0.40-0.75 → 1.00, neg abstain kept.
+      Para natural misses are wording (" a bike.", " ave.", generic prose);
+      tool misses are the multi-field row (20-way 0.675 WITH the right row:
+      the wrong field's value, or a loop on the value / job name: " onyx;
+      onyx; ...", " lapneb; label: lapneb").
+    - Package level after A4 (strict, 32k): never-stored abstain 0.975, exact
+      and case / plural variants fetched 1.00; what remains is the mind's
+      expression, the same finding as S2 and A6.
 - **A3 follow-up, near-miss data (for Mind's cu2 VERIFY; 01:13 IST, descriptive,
   offline):** in the strict run's never-stored docs (seed 22000, rebuilt), the
   top row is another stored fact in 18 / 40 (synthetic) and 14 / 40 (natural);
