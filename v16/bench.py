@@ -445,13 +445,16 @@ def main():
                     # alone in front of the query, pick the answer with the largest top1-top2 margin
                     bspans = [ids[span_of(i)[0]:span_of(i)[1]] for i in border]
                     bbest = None; pc = []
+                    lp0 = torch.log_softmax(lg[cand].float(), -1)        # state-only log p over the candidates (no row)
                     for rank, (sp, bi) in enumerate(zip(bspans, border)):
                         lgb = R.last_logits(sp + ids[doc_end:])[cand]
                         vb, ib = lgb.topk(2); mb = float(vb[0] - vb[1]); pa = cand[int(ib[0])]
+                        lpb = torch.log_softmax(lgb.float(), -1)
+                        gain = float(lpb[int(ib[0])] - lp0[int(ib[0])])   # Library's idea: gain of the row for ITS answer, prior cancelled
                         # per-candidate record for offline selectors (L1+P1): key sim, re-read answer,
                         # margin, whether that answer is right, whether the row truly holds the answer
                         pc.append({'rank': rank, 'sim': round(float(bsim[bi]), 5), 'answer': int(pa),
-                                   'margin': round(mb, 4), 'correct': int(pa == ans),
+                                   'margin': round(mb, 4), 'gain': round(gain, 4), 'correct': int(pa == ans),
                                    'row_has_answer': int(in_span_i(bi))})
                         if bbest is None or mb > bbest[0]:
                             bbest = (mb, pa)
