@@ -18,6 +18,14 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 15:45 IST: lg32 OOMed at its first step (15:41)** beside r3c (52.2 GB) + b2m2 (14.7 GB): the
+  card hit 94.9 / 95 GB. My 28.3 GB benchmark was fwd+bwd only (no AdamW state, no loader, b2m2 grew). No
+  checkpoint lost. The gate resumed s8 when law1 ended; s8's controller is PAUSED AGAIN (pid 518542, `T`)
+  while b2m2 trains. New order: **lg32 waits for b2m2's .done (~16:20) AND ≥ 34 GB free**, then runs beside
+  r3c alone (~84 / 95 GB); the gate resumes s8 (b2p3) when lg32 is .done (~18:30), s5 ends, or law1 ends;
+  lg8 / lg2 follow s8. Guard `lg32g` takes its r3c baseline when lg32's process appears. ETAs: lg32
+  ~16:30-18:30, s8 verdict ~20:30, lg8 ~22:30, lg2 ~00:30 IST. Lead offered the flip (b2p3 first).
+
 * **2026-10-31 15:20 IST: state of the 6000.** r3c PASSED futility (3.4010 vs 3.4714 @ 39,060; continues,
   ends ~04:00 IST Nov 1). **lg32 (LAW-1) started 15:06** (tmux `law1`, worktree `qllm_law` @ 2229a5b;
   M2 body has NO grad-ckpt support, removed; 1.3 s/step at 32k after a ~7 min first-step compile).
