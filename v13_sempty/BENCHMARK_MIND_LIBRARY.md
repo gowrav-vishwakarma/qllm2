@@ -1,9 +1,9 @@
-# Mind + Library benchmark (MLB-1) — DRAFT v0.3 (2026-10-31; v14 comments 13:01, organiser row format + user comparison rule 13:02, novelty rule + skill library 13:27 IST)
+# Mind + Library benchmark (MLB-1) — v1 (FIXED 2026-10-31 13:45 IST; harness `v16/bench.py` @ `d319e8d`)
 
-Status: **draft, not fixed.** Freeze condition for v1: the harness implements every
-§2 cell and is validated on CPU at 32k (organiser), then v1 is committed as "MLB-1 v1
-(fixed)" and the harness is `v16/bench.py` (moved in `d1e1a56`). Later changes are dated amendments.
-No package run is scored before v1.
+Status: **v1, fixed.** Frozen after Lead validated every §2 cell of `v16/bench.py` at
+32k on CPU (`d319e8d`; logs `logs/v16_bench_validate32k_{d1e1a56,b_d319e8d}_*.jsonl`).
+Any later change is a dated amendment at the end of this file, written before the
+numbers it affects. Drafts v0–v0.3 are in git history (§7).
 
 **Thesis (user, 2026-10-31):** "having intelligence separate from knowledge is itself
 a big novelty, specifically when it holds beyond the training context." Every cell and
@@ -38,7 +38,7 @@ mind's own edge is R2". Training data is equal for
 every arm; the package arms may add fetch-training data (stated per run, with
 the ledger row).
 
-## 2. Library half (harness `v16/bench.py`, organiser; moved from `scripts/session_index_probe.py` in `d1e1a56`)
+## 2. Library half (harness `v16/bench.py` @ `d319e8d`, Lead) — clause: *intelligence separate from knowledge*
 
 Held-out prose filler, needles inserted at random positions, 20 candidate
 values (chance 0.05), query at the end.
@@ -59,28 +59,36 @@ memory allows and the limit is stated in the table (its KV cache at 128k is
 ~4.9 GB at this width and depth). The held-out filler cache is 500k tokens, so
 1M documents wrap the filler: the organ then meets exact repeats of prose, while
 the needles stay unique (stated next to every 1M number). Docs per cell: 32 on CPU (±0.09) for the first table; 100 on GPU (±0.05) for
-any claim. Harness: `v16/bench.py` (`d1e1a56`; was `scripts/session_index_probe.py`, `fc5d682`), one JSON line per
+any claim. Harness: `v16/bench.py` (`d319e8d`; was `scripts/session_index_probe.py`, `fc5d682`), one JSON line per
 document with fields {arch, ckpt, task, keys, needles, L, doc, T, mem{…} in bytes,
 A_state, B_hit, B_ngram, B_hop2_chain, C_hop2_reread, C2_*, C5_rows,
 C5_rows_per_event, C5_event_has_row, C5_hit / top5, C5_index_bytes, O_reread,
 C2_maxsim, C5_maxsim, C5_rows_per_16tok, C5_library_bytes_272,
-mem.library_272B_per_event, sec}; cell
+mem.library_272B_per_event, A_letters / O_letters (instr), P_concat / P_margin
+(planner v0 on the top-5 spans), C5_bursts, C5_bursts_per_16tok, C5_burst_in_needle,
+C5_burst_hit, C5_library_bytes_272_bursts, mem.install_cost_*, sec}; cell
 mean = mean over docs. Read paths: A = state only, B = exact organ, C2 = frozen
 address at the key token, C5 = gated rows, O = oracle re-read (the fetch's upper bound); v1 package =
 v14's learned fetch via `--key_fn` / `--dump_rows` / `--gate_tau`. Tasks in the
 harness: kv, kv1, kvupd (latest wins), hop2, tool, instr, neg, para; synthetic and
 natural keys (16 task × key cells).
 
-## 3. Mind half (from the existing probes)
+Readings from the validation that bound what each path can claim (Lead, 32k): the
+frozen address cannot abstain (never-stored max-sim 0.86 vs stored 0.79–0.88), so the
+abstain bar applies to the learned fetch only; the burst gate at tau 10 segments
+correctly (0.6 rows per 16 tokens, a burst inside the needle 100 %), but the burst-mean
+key retrieves 0/4, so retrieval needs the learned key (Library's L1).
+
+## 3. Mind half — clause: *holds beyond the training context* (general LM = quality guard)
 
 | task | content | source |
 |---|---|---|
 | rule at distance | shift_wide_new, affine_map_new, 8 shots, examples spread by filler to L = 0, 2k, 4k, 8k, 32k; D = mean at 2k + 4k | `run_learning_probe.py --suite b2 --spread`, probe seed ≥ 7000 (fresh), 400 trials |
-| instruction persistence | the B2 builders (`v14/rules_ood`, held-out shift / affine values) with the rule stated ONCE in words at the start ("Rule: shift each letter by 3"), then L tokens of filler, then `x ->` queries. Two variants: **mind-only** (the rule must sit in state) and **library** (the rule is one row; the query "7 ->" shares no words with it, so the exact organ cannot fetch it and only a learned key can) | **new** source + probe; format-trained (v14 §7.3) |
+| instruction persistence | the B2 builders (`v14/rules_ood`, held-out shift / affine values) with the rule stated ONCE in words at the start ("Rule: shift each letter by 3"), then L tokens of filler, then `x ->` queries. Two variants: **mind-only** (the rule must sit in state) and **library** (the rule is one row; the query "7 ->" shares no words with it, so the exact organ cannot fetch it and only a learned key can) | harness `instr` (trained "Letter rule." format, `--shots` control); training docs "stated rule + demonstrations" are the curriculum's job. Baseline (b2p2): 0.000 at 2k / 8k / 32k even with the rule re-read in front; 2 demonstrations 0.625 / 1.0 / 0.75 |
 | label binding at distance | label_category spread to L | `lcl_t300` |
 | general LM | holdout loss; loss by token class (copy / seen / new) with `v13_sempty/tmp/attr3b.py`; PG-19 far gain | existing |
-| **skill-pack persistence** (flagship) | a pack of demonstrations (B2 formats, held-out values; 8 shots, packed together) is fetched ONCE at t0; queries of the same rule follow at t0 + 2k / 8k / 32k / 128k / 1M of unrelated text, with the pack gone. PAM: the pack read once into the state, nothing re-fetched. T++: must re-fetch the pack into its window for each query (its KV cost counted per query) or hold the whole stream. Mamba-2: read once, like PAM | **new** cell (organiser's flagship); probe seeds ≥ 7000 |
-| **replay integration** | a fetched span replayed through the state must combine with what the state already holds: two-hop where hop 1 sits in the state (read earlier) and hop 2 arrives as a replayed span; and a rule held in state applied to an item that arrives only in a replayed span | **new** cell |
+| **skill-pack persistence** (flagship) | a pack of demonstrations (B2 formats, held-out values; 8 shots, packed together) is fetched ONCE at t0; queries of the same rule follow at t0 + 2k / 8k / 32k / 128k / 1M of unrelated text, with the pack gone. PAM: the pack read once into the state, nothing re-fetched. T++: must re-fetch the pack into its window for each query (its KV cost counted per query) or hold the whole stream. Mamba-2: read once, like PAM | **defined in v1, implemented before its first score** (the code must match this text); probe seeds ≥ 7000. Packs carry demonstrations, not only a rule sentence (words do not write the rule state, see `instr`) |
+| **replay integration** | a fetched span replayed through the state must combine with what the state already holds: two-hop where hop 1 sits in the state (read earlier) and hop 2 arrives as a replayed span; and a rule held in state applied to an item that arrives only in a replayed span | defined in v1, reported (no gate) in v1 |
 
 **Prediction for skill-pack persistence (written before any number, from our own
 measurements):** the trained mind's long memory is the echo memory, whose heads keep
@@ -120,7 +128,7 @@ library built on it (skill-pack persistence); unseen rule FAMILIES are the front
   negative cells; span precision (right row top-1 / top-5); re-read tokens per
   query; rows per 1k tokens; write-gate recall (fraction of needles that got a row).
 
-## 5. Pre-registered rules (v0 proposal)
+## 5. Pre-registered rules (v1, fixed)
 
 - **R1 library recall:** the package ≥ 0.90 on needle, multi-needle 8, latest
   wins and two-hop at every L ≤ 128k, and ≥ 0.80 at 400k. **1M is reported, not
@@ -138,7 +146,14 @@ library built on it (skill-pack persistence); unseen rule FAMILIES are the front
   (each with its OWN key head trained the same way) and they match the package on
   R1, the write-up says the recall win is the library's and the mind's claim is
   R2 + R4.
-- **Win** = R1, R2, R4 hold and R3's guard holds, with the §1 honesty line and R5 stated.
+- **R6 stated rule (mind):** 0-shot stated rule (instr, mind-only) ≥ 0.75 at 32k,
+  inside and past the trained length; T++ and Mamba-2 reported as they are.
+- **R7 skill-pack persistence (flagship, mind):** at t0 + 32k, PAM (pack read once) ≥
+  max(Mamba-2 read once, T++ without re-fetch) + 0.10 in every PAM seed; T++ WITH
+  re-fetch is reported with its KV cost per query; 128k and 1M reported. The written
+  prediction (§3) is that today's checkpoints fail R7.
+- **Win** = R1, R2, R4 hold and R3's guard holds, with the §1 honesty line and R5
+  stated. R6 and R7 are claimed separately (they are the mind's beyond-context claims).
 
 ## 6. Protocol
 
@@ -150,11 +165,19 @@ library built on it (skill-pack persistence); unseen rule FAMILIES are the front
   values, not unseen rule families; retrieval itself exists, the claim is the
   mind–library interface and the O(1) mind's rule carrying.
 
-## 7. Open for comments
+## 7. Change log
 
-1. v14: answered (row format, fetch metrics, R1 / R4 / R5 wording above).
-2. Communicator: answered (row format, tool task, doc counts, 1M wrap). 400k on
-   CPU ≈ 160 s per doc on c1ctlb: the headline 400k cells ≈ 15 CPU-hours overnight;
-   the full grid on a 4090 slot after 18:00 IST.
-3. Communicator: negative cells and both instruction-persistence variants agreed,
-   going in today.
+- v0 (12:56 IST, `2e92399`): first draft (arms, both halves, MB accounting, R1–R5).
+- v0.1 (13:01, `c15aed3`): Library's comments (272 B rows, R4 ≤ 1/100, 1M reported not
+  gated, own key heads for fairness arms, fetch metrics, negative cells, instruction
+  persistence variants).
+- v0.2 (13:02, `aa7fa23`): Lead's row format and tool / paraphrase / negative cells, 1M
+  filler wrap, docs 32 CPU / 100 GPU; the user's comparison rule (baselines as they are).
+- v0.3 (13:27, `72c8e5e`): novelty rule, related work, skill-pack persistence and
+  replay integration cells, the written prediction; thesis line (`b2c02a7`).
+- **v1 (13:45, this commit): frozen** on Lead's 32k validation; harness `d319e8d`;
+  R6, R7 added; validation readings recorded in §2.
+
+## 8. Amendments (dated, each before the numbers it affects)
+
+(none yet)
