@@ -626,6 +626,36 @@ embedder as a named baseline row, so the cost table shows what the mind's own
 keys buy there (nothing, by the sweep). Plumbing, cited, no claim. To build
 after the package table's handover.
 
+## Meditation (2026-10-31 ~23:45 IST, asked by the user via Lead: think in the void, no planning)
+
+**What surprised me.** The same state that finds a fact perfectly inside its
+own stream finds nothing across texts, and training could not change it. The
+organ, the dumbest tool, beat every learned key across documents. Surprise
+marked where something new began, not what it was. "Stored but reworded"
+and "never stored" looked identical to the key. Training to hold longer made
+the mind forget faster.
+
+**What it really says.** The mind's state is not a description of a thing;
+it is the reader's position in its own experience. Retrieval inside a stream
+is RECOGNITION: the query state already carries the trace of having read the
+row. Across texts there is no shared experience, so nothing to recognise.
+The mind is a reader: text should get things into its stream (cheap, exact),
+and the mind does what only it can, reading and recognising within what it
+has read. Forgetting after ~2k is not a defect to train away; a mind that
+forgets fast and re-reads its notes is "intelligence separate from knowledge"
+taken literally.
+
+**A bold different angle (not tested).** Raw confidence failed as a selector
+because on natural text it follows the mind's prior. The GAIN a fetched row
+gives (log p of the mind's answer with the row minus without it) cancels that
+prior. That could be both the selector the planner lacks and the "nothing
+stored" signal similarity could not give: abstain when no candidate row moves
+the mind. Known idea (PMI scoring / contextual calibration: Holtzman et al.
+2021, Zhao et al. 2021); what would be ours is using the O(1) mind's own
+re-read as the verifier. A second, quieter thought: the session library could
+store the mind's recognitions rather than keys, i.e. the places where the mind
+was surprised, so that re-reading them is what keeps the mind current.
+
 ## Next action
 
 1. **n9r** (4090, running, ends ~12:00 IST): score recall vs the bars
