@@ -4727,3 +4727,26 @@ irrelevant; a vs a per-token gate. No method claim (CAD / contrastive decoding).
 - Also reported: the first 64 prose tokens separately (where the pack's influence is largest), and one shown
   free-text continuation at a = 0 / 4 (greedy, 40 tokens). Prior work: CAD (Shi et al. 2023) reports harm
   when the context is irrelevant; that is what this checks.
+
+### cd3 result (03:22 IST, 2026-11-01): FAIL. The contrast must be GATED: on ordinary text it is destructive
+
+b2p2, CPU, `logs/diag/v13_sempty_cd3_b2p2_5a7e47c.json` (`v13_sempty/tmp/cd3_plain_text.py`).
+
+| prose NLL, 60 windows × 1,024 tokens | all tokens | first 64 |
+|---|---|---|
+| no pack | 3.816 | 4.287 |
+| irrelevant pack, plain (a = 0) | 3.899 (+0.083) | 5.208 |
+| irrelevant pack, contrast a = 4 | **8.559** | 27.45 |
+| irrelevant pack, contrast a = 8 | 17.87 | 54.81 |
+
+Bar (a = 4 ≤ plain-with-pack + 0.02): **FAIL** by 4.66 nats. Shown (greedy, 40 tokens; prose about blood
+sugar after an affine "Map rule" pack): a = 0 → ".8 HbA1C = 4.8 HbA1C = 7.8 HbA1C = 7.8 …"; a = 4 →
+" 64 64 64 64 …". The contrast amplifies whatever the pack changed, and on unrelated text that is pure
+damage. Even without contrast an irrelevant pack costs +0.08 (+0.92 in the first 64 tokens): the mind
+keeps "doing" the rule.
+
+**Consequence for the package (written now):** state-contrast decoding is a **query-time tool, OFF by
+default**. It is on only for the answer tokens of a query that the package itself paired with a skill
+read (the package knows when it fetched or installed a skill). It is never on for free text. A learned
+or adaptive gate (e.g. a set by the disagreement between the two streams, as in adaptive CAD) is a
+separate experiment, not yet pre-registered. cd2's reach gain holds only under this gate.
