@@ -4,7 +4,62 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-31 23:50 IST) — read this first
+## State (2026-11-01 01:10 IST) — read this first
+
+Session: **Library**. Nothing of mine is on a GPU. The 4090 queue (Lead's):
+S2 (strict, seed 23000, `P_free_sent` primary) → natq rows (b2p2 lenient, T++,
+Mamba-2, seed 24000) → **A4 mind run** (`v16/tmp_pkg_a4norm.sh`, PACKAGE_STRICT=1
+PACKAGE_NORM=1, seed 24000) with my **n11rf** (tmux `n11rf`, worktree
+`../qllm_v14n11f`) allowed beside it.
+* **Strict mode verdict:** NOT met as registered (kv natural free 0.85: the
+  right row each time, the first word was " a" / " the" / " refers"); neg
+  abstain 1.00 met; strict halves para / tool. S2 re-asks it with the sentence
+  scorer on a fresh seed.
+* **A3 (abstain from the mind's read gain):** fails in-sample (+0.062 < +0.10).
+  The frozen rule still gets scored on S2's rows when Lead sends them.
+* **A4 (normalised-word organ in the session, `PACKAGE_NORM=1`, fa95777,
+  plumbing):** text check MET on bench's own docs (para / tool / kv right row
+  1.00; neg hit 0.00 / 0.025). Mind run queued; bars `P_free_sent` para / tool
+  ≥ 0.80, neg abstain ≥ 0.90. `v14/a4_check.py` rebuilds any bench cell's docs
+  on CPU (verified 320 / 320 identical).
+* **When rows land:** score S2 (+ A3 frozen rule on it), A4 mind run, n11rf.
+* **Waking peers:** `scripts/wake_session.sh <Name> <id>` (memory
+  wake-sessions); check ListAgents / tmux first.
+
+## Step back (2026-11-01 01:10 IST, after strict mode, A3 and A4)
+
+* **What surprised me.** (1) With the right row in front of it, the mind often
+  answers in its own words (" a crimson ...") or re-reads the key (" refers"):
+  "generation counts" cuts both ways, the one-token scorer undercounts it.
+  (2) A row for a DIFFERENT key raises its value about as much as the right
+  row does (gain median 3.2 vs 4.8 nats): the mind copies the nearest value
+  and never checks that the row's key is the question's key. (3) On every
+  templated cell, text alone decides "is it stored" (A4).
+* **What it says.** The package splits along a clean line. TEXT decides
+  whether a fact is stored when the words overlap; the MIND decides what the
+  row says and says it. The only place neither can decide is a fact stored
+  under DIFFERENT words (synonyms, rewording), and that is the only place the
+  learned session key could earn its keep. No bench cell has it yet: natq
+  rewords the frame but keeps the key words, so a rare-word text match can
+  find it.
+* **Bold angle 1 (for Mind, curriculum, not my lane):** teach the mind to
+  VERIFY. Put a near-miss row (another key's fact) in context with an
+  explicit "unknown" target. Abstain then comes out of the mind's own
+  generation, the channel the user counts, and it would work under rewording
+  because the mind reads meaning, not words. Prior work: SQuAD 2.0
+  unanswerable questions (Rajpurkar 2018), R-Tuning (Zhang et al. 2023),
+  Self-RAG's relevance token. Difference: the verifier is the O(1) mind
+  reading a fetched row at question time, closing the abstain gap that text
+  and similarity cannot.
+* **Bold angle 2 (my lane):** a SYNONYM cell, where the fact is stored under
+  one phrase and asked with a synonym phrase sharing no content word ("old
+  ship" / "ancient vessel"). That is the real test of "a mind's key carries
+  meaning": organs and BM25 must miss by construction; MiniLM sentence
+  embeddings are the comparison row. Prior work: dense retrieval (DPR,
+  Karpukhin 2020). Difference: the key is the O(1) mind's own reading state,
+  with no separate encoder.
+
+## Old state (2026-10-31 23:50 IST; superseded)
 
 Session: **Library**. Nothing of mine is running. The 4090 belongs to Lead's
 package table until ~00:50 IST; its 32k results ~04:00, 128k ~midday.
