@@ -321,6 +321,48 @@ def test_n12():
           f"decode == prefill {diff:.2e} at write rate {rate:.2f}; memory learns, gates unused")
 
 
+def test_l1():
+    import os
+    import tempfile
+    from v14 import l1_key as L
+    torch.manual_seed(0)
+    T, D = 300, L.DIM
+    nll = torch.rand(T) * 6
+    for p in (50, 51, 52, 120, 200):                 # three bursts: 50-52 (gaps merge), 120, 200
+        nll[p] = 12.0
+    assert L.bursts(nll) == [(50, 53), (120, 121), (200, 201)], L.bursts(nll)
+    fwd = L.row_spans(T, nll, 'fwd')
+    evt = L.row_spans(T, nll, 'evt')
+    assert fwd == [(50, 74), (120, 144), (200, 224)], fwd
+    assert evt == [(0, 50), (50, 120), (120, 200)], evt
+    head = L.SpanKey()
+    vecs = torch.randn(T, D)
+    # the harness hook (every position) == the training path (spans) for the fwd form
+    with tempfile.TemporaryDirectory() as tmp:
+        ck = os.path.join(tmp, 'h.pt')
+        torch.save({'state': head.state_dict(), 'form': 'fwd'}, ck)
+        os.environ['L1_CKPT'] = ck
+        L._HEAD.clear()
+        K = L.key_fn(vecs, None)
+        assert K.shape == (T, L.KEY_DIM)
+        ref = L.pool_spans(head, vecs, [(p, min(T, p + L.SPAN)) for p in (0, 77, T - 5, T - 1)], L.SPAN)
+        d = (K[[0, 77, T - 5, T - 1]] - ref).abs().max().item()
+        assert d < 1e-5, f"L1 key_fn != pool_spans: {d:.2e}"
+        kb = L.key_fn(vecs, None, [(50, 53), (120, 121)])
+        assert kb.shape == (2, L.KEY_DIM)
+    # training signal: the loss falls when the query span carries the target's content
+    doc = dict(vecs=torch.randn(T, D).half(), nll=nll, target=122, tlen=1, qpos=250)
+    doc['vecs'][250:274] = (0.3 * doc['vecs'][120:144].float() + torch.randn(24, D)).half()   # a noisy repeat
+    l0, nq, _ = L.batch_loss(head, [doc], 'fwd', torch.device('cpu'))
+    l0 = l0.detach()
+    opt = torch.optim.AdamW(head.parameters(), lr=1e-2)
+    for _ in range(30):
+        loss, _, _ = L.batch_loss(head, [doc], 'fwd', torch.device('cpu'))
+        opt.zero_grad(); loss.backward(); opt.step()
+    assert nq == 1 and float(l0) > 0.1 and float(loss) < 0.5 * float(l0), f"L1 loss did not fall: {float(l0):.3f} -> {float(loss):.3f}"
+    print(f"  L1: bursts / fwd / evt rows as specified; key_fn == pool_spans {d:.1e}; loss {float(l0):.3f} -> {float(loss.detach()):.3f}")
+
+
 def test_opmem():
     for mode in ('phase', 'coord'):
         torch.manual_seed(0)
@@ -444,7 +486,7 @@ def test_b2_splits(seeds=40):
 def main():
     torch.set_num_threads(8)
     for test in (test_off_is_v13, test_n7_lookup, test_n7_off_at_init,
-                 test_n7_decode_matches_prefill, test_n7_learns, test_n9a, test_n9s, test_n12, test_opmem, test_hook, test_b2_splits):
+                 test_n7_decode_matches_prefill, test_n7_learns, test_n9a, test_n9s, test_n12, test_l1, test_opmem, test_hook, test_b2_splits):
         print(f"{test.__name__}:")
         test()
     print("ALL PASS")

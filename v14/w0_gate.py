@@ -33,7 +33,10 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 
 from memory_probes.spread import filler_tokens  # noqa: E402
 from run_memory_behavioral import _load_v13_sempty  # noqa: E402
-from session_index_probe import natural_key  # noqa: E402
+try:
+    from v16.bench import natural_key  # noqa: E402  (the harness moved here at d1e1a56)
+except ImportError:                      # older checkouts
+    from session_index_probe import natural_key  # noqa: E402
 from v7.data import _RECALL_VALUE_NOUNS, _recall_key  # noqa: E402
 
 TAUS = (4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0)

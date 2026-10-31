@@ -19,7 +19,8 @@ SKIP_FILES = frozenset({
     "selftest.py",       # compares against raw torch references
     "microbench.py",     # data generation + training loop
     "check_layout.py",
-    "train_pool.py",     # L1: tokenised web text for the key head (data prep)
+    "l1_data.py",        # L1: document builder + frozen-mind reader (data prep)
+    "l1_key.py",         # L1: the key head, its training loop and the harness hook (raw torch)
     "train_pool.py",     # L1: tokenised web text for the key head (data prep)
     "w0_gate.py",        # W0: eval harness (surprise scoring on frozen checkpoints)
     "ngram.py",          # N7: integer hashing / sort / scatter (declared boundary, like v13 cond_mem.py)
