@@ -2553,6 +2553,37 @@ fitted threshold:
   `P_free` in strict mode ≥ 0.95 and within 0.02 of lenient mode's on the same
   docs. Para / tool reported in both metrics. Run with PACKAGE_STRICT=1 at
   `172adf4` or later (Lead's queue).
+- **STRICT MODE VERDICT (2026-11-01 00:57 IST; Lead's run
+  `logs/v16_pkg_strict_b2p2_32768_d2aacdf_20261101_0035.jsonl`, b2p2, 32k, seed
+  22000, 40 docs per cell, PACKAGE_STRICT=1, 320 rows, 0 errors): NOT met as
+  registered (kv natural, one-token free scorer).**
+
+  | cell | bar (S/A1) | free (one token) | 20-way | abstain | verdict |
+  |---|---|---|---|---|---|
+  | neg syn / nat | abstain ≥ 0.90 | – | – | **1.00 / 1.00** (wrong 0.00) | **met** |
+  | kv synthetic | free ≥ 0.95, within 0.02 of lenient | **0.975** | 0.975 | 0.00 | met |
+  | kv natural | same | **0.85** | 1.00 | 0.00 | **NOT met** |
+  | para syn / nat | reported | 0.275 / 0.20 | 0.275 / 0.275 | 0.725 | (lenient 20-way 0.40 / 0.525) |
+  | tool syn / nat | reported | 0.075 / 0.15 | 0.075 / 0.15 | 0.80 / 0.75 | (lenient 0.35 / 0.325) |
+
+  - "Within 0.02 of lenient" holds trivially: the organ hit every kv query, so
+    strict and lenient are the same procedure on these docs.
+  - **Why kv natural misses: wording, not fetch.** All 6 misses had the right
+    row (20-way correct, margins 2.9-5.4); the greedy first token was " refers"
+    (×3), " a" (×2), " the" (×1): the mind continues in its own words (" a
+    crimson ...") or re-reads the key. The one-token scorer counts that as a
+    miss; a sentence scorer would not. The registered verdict stands (NOT met);
+    the scorer is NOT swapped after the fact.
+  - **The trade-off (as predicted):** strict mode makes "nothing stored"
+    perfect (1.00) and halves paraphrase / tool, because only the exact organ
+    can say "found it"; lenient mode keeps them but always fetches something.
+- **Strict mode S2 (PRE-REGISTERED 2026-11-01 00:57 IST, before any number of
+  it):** the same strict run on a FRESH seed 23000 with the sentence scorer as
+  PRIMARY (`P_free_sent`: greedy decode to the first "." or newline, cap 16
+  tokens, the value matched in the decoded text); one-token free and 20-way
+  secondary. Bars: neg abstain ≥ 0.90; kv `P_free_sent` ≥ 0.95 on both key
+  types. b2p2, 32k, 40 docs per cell, kv / para / tool / neg × syn + nat. Runs
+  when Lead's harness has `P_free_sent`.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
