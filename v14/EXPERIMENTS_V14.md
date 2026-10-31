@@ -2192,6 +2192,15 @@ another, and both sides are centred by the shipped reference mean.
 - **Thesis clause / prior work:** separate from knowledge; dense retrieval
   trained on query-document pairs (DPR class): plumbing for the mechanism. What
   is ours is that the encoder is the mind's own state.
+- **Added by Lead (21:25, before any L3 number):** report how cross-document
+  top-1 scales with library size, 40 / 400 / 4,000 entries (20+20, 200+200,
+  2000+2000), for the L1 head and the L3 head on the same fresh seed 19000
+  (reported, the bars stay at 400). Then, only once L3 no longer needs the
+  card, SR-0b may run ONCE, eval-only, renamed as a PRODUCT-OPTION test: "can a
+  skill pack be installed as a stored notebook state merged into a live
+  session, instead of re-read as text?", with its cost (1.15 MB per skill) next
+  to the re-read cost. Mind's M2 streaming (`41f8ae8`) provides the hook; keep
+  the current chrono clock when swapping notebooks.
 
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
