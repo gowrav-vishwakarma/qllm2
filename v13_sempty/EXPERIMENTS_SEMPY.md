@@ -4604,3 +4604,12 @@ recurrent mind's one-read reach.
 **Not shown (needs its own pre-registration):** a fresh seed with a fixed (a = 4, plus a = 8 past the
 grid edge); 8k / 16k; other skills (two-hop, recall); the effect of the contrast on ordinary
 generation (it must apply only where a read happened).
+
+## cd2: fresh-seed confirmation of state-contrast decoding (pre-registration, 2026-11-01 01:52 IST; eval only, CPU)
+
+- **Cells / seeds:** b2p2, skill-pack cell, affine_map_new + shift_wide_new, **seeds 8200–8299 (never used)**,
+  L = 0 / 2k / 4k / 8k / 16k, a ∈ {0, 4, 8} FIXED (no tuning).
+- **Bar (a = 4):** 20-way reach(4k) ≥ 0.75 AND free(4k) ≥ 0.45 AND free(L = 0) ≥ 0.98. Then cd1's 4k effect
+  is confirmed on fresh docs. Reported, no bar: a = 8; 8k / 16k; at 2k, the token that wins the free
+  argmax on misses (the plateau diagnosis).
+- Prior work as cd1 (CAD; contrastive decoding). No method claim.

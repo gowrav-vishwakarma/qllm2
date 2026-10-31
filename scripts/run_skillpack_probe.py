@@ -163,13 +163,14 @@ def run(args):
                                               'sec': round(time.time() - t0, 2)}) + '\n')
                     if 'contrast' in variants:           # cd1: l = l_pack + a * (l_pack - l_nopack)
                         lp_, ln_ = body.last_logits(pack + fill + q).float(), body.last_logits(fill + q).float()
-                        fa, ca = {}, {}
+                        fa, ca, ta = {}, {}, {}
                         for al in alphas:
                             lg = lp_ + al * (lp_ - ln_)
                             fa[str(al)] = int(int(lg.argmax()) == ex.target_token_id)
+                            ta[str(al)] = int(lg.argmax())                       # what wins the free argmax
                             ca[str(al)] = int(score_candidate_logits(ex, lg[ex.candidate_token_ids].cpu().tolist())['correct'])
                         out.write(json.dumps({**row, 'task': 'contrast', 'T': len(pack + fill + q), 'free_a': fa,
-                                              'cand_a': ca, 'sec': round(time.time() - t0, 2)}) + '\n')
+                                              'cand_a': ca, 'tok_a': ta, 'target': ex.target_token_id, 'sec': round(time.time() - t0, 2)}) + '\n')
                     if 'replay_refresh' in variants:
                         replay = sum(U[-3:-1], [])
                         ids_alone = H + fill + replay + q
