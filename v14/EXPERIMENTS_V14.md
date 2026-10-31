@@ -2750,6 +2750,27 @@ fitted threshold:
   0.194 / 0.175). The mind tells a wrong NONSENSE key from the right one,
   not a wrong ENGLISH key (it copies the nearest value ~57 % of the time).
   Sent to Mind for cu2's VERIFY mix (weight natural keys).
+- **A6: hand the fetched row WARM or COLD (PRE-REGISTERED 2026-11-01 01:30 IST,
+  before any number of it). Design choice, no novelty claim** (closest prior
+  work: In-Context RALM, Ram et al. 2023, puts retrieved text into the running
+  context; RAG / FLARE prepend it; for a recurrent O(1) mind the choice is a
+  fresh state vs the carried state). Why: S2 and natq show the misses are
+  EXPRESSION (right row, wrong words; natq oracle 20-way only 0.45 / 0.55), and
+  today's re-read is COLD: the row + question alone from a fresh state, a
+  40-token context unlike training.
+  - Rows: the sentence holding the asked fact, by construction (fetch held
+    fixed; equals the organ chain's row on kv / para / tool).
+  - Arms: COLD = fresh state, row + question, greedy; WARM = the mind's state
+    after the document (carried, chunked prefill), then row + question,
+    greedy; NOROW = the carried state + question only (floor).
+  - Score: Lead's sentence scorer (greedy to "." / newline, cap 16, the value
+    matched as a whole word, case-insensitive).
+  - b2p2, 32k, fresh seed 26000, 40 docs per cell; kv / para / tool / natq ×
+    synthetic / natural (bench's own `build()` docs).
+  - Bar MET iff WARM ≥ COLD + 0.10 on the mean over the 8 cells AND WARM ≥ COLD
+    − 0.05 on every cell. Met → the package hands rows warm. Parity first: the
+    chunked state path must reproduce the one-pass logits (bench's Reader) on a
+    4k doc before any number.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
