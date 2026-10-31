@@ -18,6 +18,13 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 13:20 IST: MLB-1 benchmark draft v0 written** (`v13_sempty/BENCHMARK_MIND_LIBRARY.md`),
+  sent to v14 and the Communicator for comments; fixed as v1 before any package run. Ownership: v14 =
+  the fetch (gate, trained key at the salient token, re-read) + the library row format (one row per
+  event, keys versioned with the model); Communicator = the library half of the probe
+  (`scripts/session_index_probe.py`, more docs, natural keys, 400k-1M cells); v13 = the mind half,
+  the fetch-training recipe, the package runs. No new GPU job until v1 is fixed.
+
 * **2026-10-31 12:55 IST: lb pair PASS; fresh-probe old models hold; DIRECTION fixed: "O(1) mind + growing library".**
   lbp label_diag 0.934 (exact 0.995) vs lbt 0.798: the label gap was format (EXPERIMENTS "Label-format
   pair lb result"); cost tiny (holdout +0.004). s8 part 1 (probe seed 7000): D PAM 0.645 / 0.691 vs
