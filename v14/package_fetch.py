@@ -7,7 +7,8 @@ Two-organ rule (L2, pre-registered 21:12 IST):
      the latest match is added as a row whose key IS the query key, so it ranks first (similarity 1).
   2. else the LEARNED KEY: the key head (PACKAGE_HEAD; the L1 head until L3 lands) on the mind's block-8 state,
      centred by the shipped reference mean (PACKAGE_MEAN), one row per surprise burst.
-  3. ABSTAIN: when the organ misses and the best learned-key similarity is below PACKAGE_T, info['abstain'] = 1.
+  3. ABSTAIN: when the organ misses and the best learned-key similarity is below PACKAGE_T, info['abstain'] = 1;
+     with PACKAGE_STRICT=1, abstain whenever the organ misses (strict mode, a rule, not a threshold).
 Rows are FIELD-AWARE: from the burst start to the end of its sentence (the next '.'), at most 64 tokens.
 Returns (row keys [n, d], query key [d], row spans [(start, end), ...]); info gets 'organ_hit', 'abstain',
 'best_sim' for the harness to record.
@@ -24,6 +25,7 @@ from v14 import l1_key as L
 HEAD = os.environ.get('PACKAGE_HEAD', '/media/gowrav/d_drive/qllm_ckpt/v14/l1p_fwd_L8c_99e6803.pt')
 MEAN = os.environ.get('PACKAGE_MEAN', '/media/gowrav/d_drive/qllm_ckpt/v14/l1p_fwd_L8c_99e6803.mean.pt')
 T_ABSTAIN = float(os.environ.get('PACKAGE_T', '0.655151'))
+STRICT = os.environ.get('PACKAGE_STRICT', '0') == '1'      # strict mode: answer only on an exact-organ hit
 NGRAM, MAX_ROW, DOT = 4, 64, 13
 _S = {}
 
@@ -84,5 +86,5 @@ def key_fn(keys: torch.Tensor, ids, info):
     else:
         best = float((F.normalize(kb, dim=-1) @ F.normalize(kq, dim=-1)).max()) if kb.numel() else -1.0
         info['best_sim'] = round(best, 4)
-        info['abstain'] = int(best < T_ABSTAIN)
+        info['abstain'] = 1 if STRICT else int(best < T_ABSTAIN)
     return kb, kq, spans
