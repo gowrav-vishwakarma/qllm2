@@ -58,6 +58,8 @@ Overall ~35 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill hol
 
 - 15:45 IST: lg32 OOM at its first step (15:41; card 94.9/95 GB: r3c 52.2 + b2m2 14.7 + lg32; Mind's 28.3 GB benchmark lacked AdamW state, data pipeline and b2m2 growth). Nothing lost. Order kept, corrected: lg32 waits for b2m2 .done (~16:20) AND >= 34 GB free, runs ~16:30-18:30 beside r3c alone; b2p3 after lg32 via the gate (s8 verdict ~20:30); lg8 ~22:30; lg2 ~00:30. New launch rule: measured peak (20-step dry run incl. optimizer + val) or benchmark x 1.4, and free VRAM >= peak + 3 GB.
 
+- 16:20 IST: HARNESS BUG (Lead's own): per-doc seeding used Python's per-process randomized hash(task) -> separate runs with the same --seed built DIFFERENT documents. Fixed in 0eb2ead (zlib.crc32; MLB-1 A4). Within-run comparisons were paired; cross-run ones (ORG-1's PAM / T++ / Mamba-2 tables, l1free vs the grid) were unpaired samples; headline readings unchanged, paired claims rerun at 0eb2ead. Mind's skill-pack probe is unaffected (no hash()). Same commit: key_fn gets the layer-k keys (Library's point 1), 3-arg burst key_fn, span-rule C5 fields (Library's point 2). Library's first L1-proper head: burst top-1 0.78-0.82 on its 4k validation (frozen burst 0.50 at 32k); bench run at 0eb2ead next.
+
 ## Open questions
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
