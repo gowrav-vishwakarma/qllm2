@@ -9,6 +9,8 @@
 | organiser (harness, coordination) | ORG-1 probe (EUREKA); v16/bench.py with all MLB-1 section-2 cells; v16 lane; PLAN sheet | 32k validation of all 16 cells (CPU); instr cell on b2p2 | burst rows (C5), distractor/planner cell (concat-m vs each-alone-margin), install-cost column; "validated" -> v13 freezes v1; baseline grid (CPU headline cells, GPU grid after 18:00) | nothing |
 
 ## Decisions (organiser)
+- 15:35 IST: v14 may run the L1 data pass + head training on the 4090 NOW under a 3.5 GB cap beside a4f and Evol V1's pair (stop if a4f tok/s -30 % or < 1.5 GB free).
+- 15:35 IST: N9s (v14's salient phase; two_hop bar met at 2 seeds, 27M): NO standalone 600M run; at most one paired arm inside v13's curriculum run if that mix carries the two_hop format; otherwise stays a 27M result. Its anchor idea seeds the planner (N11).
 - GPU order after a4f ends (~16:15): 4090 -> v14 L1 (vectors + head; small) beside Evol V1's pair; v13's SL0 vector pass runs on the 6000 beside r3c (24 GB free there). The organiser's GPU grid takes whatever is free after 18:00.
 - T++ / Mamba-2: existing checkpoints and logs only; no new baseline training; "+ library" arms are optional diagnostics.
 - Every unit: pre-registered bars before numbers; params + tokens + MB on every row; nothing to Evol V1.
