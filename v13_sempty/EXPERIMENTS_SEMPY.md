@@ -3602,7 +3602,7 @@ but is not its cause. The recall docs (one trained template) gave N9a 0.975, so 
 format hypothesis is the live one: the lb pair (running) tests it. *For v14's
 N12:* a hard selector targets distance; judge it on 2-shot label_exact too.
 
-## 3B LM gap attribution (2026-10-31 08:40 IST; eval only, no training): vs T++ the gap is mostly in-window copy; vs Mamba-2 it is mostly general modelling
+## 3B LM gap attribution (2026-10-31 08:25 IST; eval only, no training): vs T++ the gap is mostly in-window copy; vs Mamba-2 it is mostly general modelling
 
 Why: before a 3B "best package" run, know which part of the bar-2 gap a memory
 fix can close. Script `v13_sempty/tmp/attr3b.py` (dump → score per box → report;
@@ -3653,7 +3653,7 @@ general part is the body's: r3c's result, then capacity levers (width 588 vs
 768; state 3.7 MB vs Mamba-2's 13.4 MB, "a few more params" is allowed). None of
 these has been tested at ≥ 1.5B.
 
-**LR confound check (v14's question, 09:00 IST).** Is the new-token gap just the
+**LR confound check (v14's question, 08:45 IST).** Is the new-token gap just the
 2e-4 run being under-trained? The same old body at LR 1.2e-3 (`9982a79`, 3B, one
 stage) scored on the same text is WORSE overall (+0.043 PG-19 / +0.013 web vs
 2e-4). Its gap to Mamba-2 is +0.134 / +0.124 with the same split: new tokens 46 %
@@ -3673,7 +3673,7 @@ Plan: a paired 600M filter run (kill if no gain on new tokens at positions 0–6
 this script), then into the best package. Not pre-registered yet; that happens
 after r3c's futility point.
 
-## A4 cond_mem filter `a4f` (pre-registration, 2026-10-31 09:40 IST): does a hashed n-gram table close the new-token gap?
+## A4 cond_mem filter `a4f` (pre-registration, 2026-10-31 08:50 IST): does a hashed n-gram table close the new-token gap?
 
 Why: the 3B attribution puts 52–55 % of the Mamba-2 gap on NEW tokens, already
 +0.05–0.09 at positions 0–8, where no memory helps. A4 (`v13_sempty/cond_mem.py`,

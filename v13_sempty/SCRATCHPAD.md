@@ -18,7 +18,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **2026-10-31 08:45 IST: 3B gap attribution done** (EXPERIMENTS "3B LM gap attribution"). vs
+* **2026-10-31 08:55 IST: a4f (A4 cond_mem filter) queued on the 4090** (tmux `a4f`, script
+  `/tmp/claude-1000/-home-gowrav-Development-qllm2/99371c3c-8382-42b3-a3d3-6861632abc19/scratchpad/a4f_chain.sh`, worktree `../qllm_a4` at `d338469`,
+  ckpts on d_drive `qllm_a4_checkpoints_v13_sempty`). Waits for v14's `n9r` tmux to end
+  (~12:00-12:15) AND ≥ 11 GB free, then stage A 120M → stage B 480M (~4 h) → rules, label_diag,
+  attr3b vs ctl43 (v14's n9r control, same box / seed / data; v14 agreed; leave n9r ckpts in
+  place). Pre-registration: EXPERIMENTS "A4 cond_mem filter a4f". If the box crashes, re-run
+  the script (stages resume). v14: N9a shows no LM / copy effect at 600M (its attr3b on n9c),
+  so N9a is not counted toward the copy gap.
+
+* **2026-10-31 08:30 IST: 3B gap attribution done** (EXPERIMENTS "3B LM gap attribution"). vs
   T++: 53-58 % copy → a binding fix closes ~half. vs Mamba-2: 52-55 % NEW tokens, already +0.05-
   0.09 at positions 0-8 → mostly GENERAL modelling; memory closes only ~0.02-0.03 of ~0.10.
   This corrects view 1 below: the "local" part is bigger than memory, but the gap also grows
@@ -28,7 +37,7 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   best package needs a body-level gain too: candidates for a ≥ 1.5B test are width 768
   (bar-2 tolerance allows a few more params) and a larger state, picked after r3c.
 
-* **2026-10-31 08:30 IST: step back (user: "play on strength, mitigate gaps, scale").**
+* **2026-10-31 08:15 IST: step back (user: "play on strength, mitigate gaps, scale").**
   Run ingredients ledger added to EXPERIMENT_INDEX (user rule): r3c has NO b2 / lab / N9a,
   so it tests the 16nb + echo + 2st BODY at 3B, not the best package.
   Fresh views:
