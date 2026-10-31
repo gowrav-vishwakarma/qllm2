@@ -1463,6 +1463,54 @@ DeltaNet's β, by contrast, are learned soft gates.
 - 600M, through v13: label_diag AND spread step_wide_new must rise, while
   spread shift/affine `_new` must not fall.
 
+**In code (`787db29`, hook `8ce7edd`).** Arm `echo_surp` (tau = 3 nats:
+the body gave the token < 5 %).
+- **What it is:** echo's own memory and init, with no new parameters. It
+  never fades. A token writes (b_w = 1, b_e = 0.95, every head) only when
+  u_t > tau.
+- **Surprise:** u_t = −log softmax(lm_body_{t−1} · Eᵀ)[x_t], where lm_body
+  is the head's pre-memory vector. It is chunked and computed without
+  gradient.
+- **Change from the design:** an absolute threshold instead of top-m per
+  window. A fixed rank rule writes the same share of every text, so dense
+  item lists ("apple is beta, dog is gold") would lose half their items.
+  The threshold writes everything while the body predicts nothing, and gets
+  selective as the body learns, so selection develops with training.
+- **No fade means reach is counted in writes, not tokens:** for random keys,
+  the delta rule keeps about the last ~d (64) writes per head.
+- **Checks:** selftest `test_n12` (init == echo; surprise ==
+  log-softmax 9.5e-07; an empty store adds 0; decode == prefill 1.56e-04 at
+  write rate 0.58; echo's gates unused) and `test_hook` (grad ckpt on == off
+  with N12). The micro-bench records `write_rate` per arm.
+- **600M:** `ECHO_SURPRISE_TAU=3` (or `--echo_surprise_tau 3`) with
+  `ECHO=1`.
+
+**N12 micro screen `n12m` (PRE-REGISTERED 2026-10-31 ~06:40 IST, before any
+N12 number).** Question: does the surprise-selected store select on its
+own, and is it at least as good an item memory as echo's learned gates
+without breaking the rules?
+- **Arms:** echo (control), echo_surp (N12), same init and data per seed.
+  Training as n9s / n9th (`--rule_tasks
+  letter_shift,number_step,reverse3,label_category,two_hop,label_gap`),
+  6000 steps × B16, lr 3e-4, `--seed 14i --doc_seed0 (i+60)·100M
+  --init_seed 14i`, i = 1..3, tag `n12mp<i>`. 4090, after n9th.
+- **Selects:** N12's write rate on the last training batch ≤ 0.5 in every
+  seed.
+- **Guard:** mean (letter_shift, number_step, reverse3) N12 ≥ echo − 0.05.
+- **Screen bar S:** N12 forms the label circuit (label_gap ≥ 0.9) in at
+  least as many seeds as echo, AND the mean over seeds of (label_exact_new
+  + label_gap_new) / 2 at 8 shots gives d = N12 − echo ≥ 0.
+- **Reported:** d itself (≥ +0.15 = a strong signal), two_hop, repeat_copy,
+  every other cell, ms/step.
+- **Outcomes:**
+  - Selects + guard + S met → hand to v13 for the 600M check on the B2
+    recipe, paired with b2p2 (PAM seed 43). The bars there are label_diag
+    and spread step_wide_new up, and spread shift/affine `_new` not down;
+    v13 pre-registers the exact numbers.
+  - Write rate > 0.5 is the only failure → one retry at tau = 5, written
+    down before it runs.
+  - Otherwise → N12 at this form closes (recorded, removed).
+
 ### N8 — self-opened memory (learned critical period; handed over by the v13 session, 2026-10-30)
 
 **Observation (v13).** The two-stage schedule (language first, recall docs

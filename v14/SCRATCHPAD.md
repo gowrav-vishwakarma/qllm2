@@ -363,15 +363,19 @@ the 4090 after n9r, ~12:00–16:00). N12 code + selftest while they run
    (EXPERIMENTS_V14 "N9a recall replication"), report label_diag t200 and
    PG-19 far gain. If met: N9a gets its own arm on the r3c recipe, paired
    with r3c at a matched token budget (v13 runs it via `ECHO_PHASE_LAGS=3`).
-2. **n9th** (N9s two_hop replication, bar H): launch as soon as a slot is
-   agreed (command in State above). H met -> mechanism check, then a 600M
-   plan with v13. H not met -> N9s FAIL, record + remove from code.
-3. **v13 flagship r3c** (`16f372e`, 6000, ~14 h from ~00:45 IST): 16
+2. **n12m** (N12 micro screen, echo vs echo_surp × 3 seeds, bars in
+   EXPERIMENTS_V14 "N12"): queued on the 4090 after n9th (tmux `n12m`,
+   worktree `../qllm_v14n12m`, driver `~/n12m_4090.sh`). Pass -> hand to v13
+   for 600M on the B2 recipe paired with b2p2 (`ECHO_SURPRISE_TAU=3`).
+3. **n9th** (N9s two_hop replication, bar H): running (seed 131 on the
+   6000, seeds 132-135 on the 4090 after n9r; see State). H met -> mechanism
+   check, then a 600M plan with v13. H not met -> N9s FAIL, record + remove.
+4. **v13 flagship r3c** (`16f372e`, 6000, ~14 h from ~00:45 IST): 16
    notebooks + echo + two stages + LR 1.2e-3 straight to 3B vs T++ 3.206 /
    Mamba-2 3.164. v14 units are NOT in it.
-4. **N7 as a cache LM**: its own arm on the r3c recipe (`NGRAM_ORDERS=2,3`,
+5. **N7 as a cache LM**: its own arm on the r3c recipe (`NGRAM_ORDERS=2,3`,
    hook `a55e1f0`), paired with r3c, ≥ 1.5B tokens; pre-register after r3c's
    first readout.
-5. Closed (see EXPERIMENTS_V14): N9s bar G (no claim), N7 micro (bench could
+6. Closed (see EXPERIMENTS_V14): N9s bar G (no claim), N7 micro (bench could
    not show copy), N10 formation (no verdict), Q1 / S1 (F1 0/5), N1, N6 on
    B1. Rule (user): run only what can be superior; run known-best directly.
