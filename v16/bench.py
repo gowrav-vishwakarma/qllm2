@@ -16,7 +16,7 @@ Read paths
   C3 same, but the index keeps only sentence-boundary snapshots ('.' tokens): the cheap one.
 """
 from __future__ import annotations
-import argparse, json, os, random, sys, time, zlib
+import argparse, json, os, random, re, sys, time, zlib
 from pathlib import Path
 import numpy as np, torch
 ROOT = Path(__file__).resolve().parents[1]      # v16/ -> repo root
@@ -81,6 +81,18 @@ class Reader:
         return out
 
     @torch.no_grad()
+    @torch.no_grad()
+    def greedy(self, ids: list[int], max_new: int = 16, stops=(13, 198)) -> list[int]:
+        """Free generation (user, Nov 1): greedy tokens after `ids` until '.' / newline or max_new.
+        Re-runs the short context each step (the re-read is span + query, not the document)."""
+        out = []
+        for _ in range(max_new):
+            t = int(self.last_logits(ids + out).argmax())
+            out.append(t)
+            if t in stops:
+                break
+        return out
+
     def last_logits(self, ids: list[int], vecs=None) -> torch.Tensor:
         if self.arch == 'pam':
             v = vecs[-1] if vecs is not None else self.vectors(ids)[-1]
@@ -160,6 +172,17 @@ def build(rng, tok, filler, L, task, n, keys='synthetic', shots=0):
         query = enc(f" Query: {key} refers to")
         pos = sorted(rng.sample(range(0, max(1, L - 64)), len(inserts)))
         meta = dict(key=key, val=val, hop_key=None, negative=True)
+    elif task == 'natq':  # NATURAL QUESTION (user, Nov 1: generation counts): fact in prose, plain question, free answer
+        keys_ = [mk() for _ in range(n)]
+        vals = [rng.choice(_RECALL_VALUE_NOUNS) for _ in range(n)]
+        state_t = [" By the way, {k} is just another name for {v}.", " People around here call {v} by the name {k}.",
+                   " It turns out that {k} is what everyone means when they say {v}.", " In the old records, {k} stands for {v}."]
+        for kk, v in zip(keys_, vals):
+            inserts.append(enc(rng.choice(state_t).format(k=kk, v=v)))
+        qi = rng.randrange(n); key, val = keys_[qi], vals[qi]
+        query = enc(f" Question: what does {key} stand for? Answer:")
+        pos = sorted(rng.sample(range(0, max(1, L - 64)), len(inserts)))
+        meta = dict(key=key, val=val, hop_key=None)
     elif task == 'para':  # key stored one way, asked in a paraphrase (inflection / case); organ misses by design
         keys_ = [mk() for _ in range(n)]
         vals = [rng.choice(_RECALL_VALUE_NOUNS) for _ in range(n)]
@@ -311,7 +334,7 @@ def main():
                             lg2 = R.last_logits(span + span2 + q2)
                             rec['C_hop2_reread'] = int(cand[int(lg2[cand].argmax())] == ans)
                 # oracle fetch: the stored sentence put right in front of the query (upper bound of any fetch)
-                if vecs is not None and a.task in ('instr', 'kv', 'kv1', 'para', 'tool'):
+                if vecs is not None and a.task in ('instr', 'kv', 'kv1', 'para', 'tool', 'natq'):
                     if a.task == 'instr':
                         span_o = ids[:meta['rule_len']]
                     else:
@@ -341,7 +364,7 @@ def main():
                         K_all = K_all - mu
                     q = torch.nn.functional.normalize(K_all[qk], dim=-1)
                     docv = torch.nn.functional.normalize(K_all[:doc_end], dim=-1)
-                    span_r = 24 if a.task == 'tool' else 6
+                    span_r = 24 if a.task in ('tool', 'natq') else 6
                     def in_right(pp):
                         return any(ids[j] == ans for j in range(pp + 1, min(doc_end, pp + span_r)))
                     sims = docv @ q; top = sims.topk(5).indices.tolist(); p = top[0]
@@ -462,6 +485,11 @@ def main():
                             bbest = (mb, pa)
                     rec['P_cands'] = pc
                     rec['P_free'] = pc[0]['free'] if pc else 0           # user (Nov 1): the answer must be GENERATED, not picked among candidates
+                    if bspans:                                           # sentence-level free generation on the top row (Library's scorer)
+                        gen = R.greedy(bspans[0] + ids[doc_end:])
+                        txt = tok.decode(gen)
+                        rec['P_free_text'] = txt
+                        rec['P_free_sent'] = int(re.search(r'\b' + re.escape(str(meta['val'])) + r'\b', txt, re.I) is not None)
                     rec['A_free'] = int(int(lg.argmax()) == ans)        # state only, free
                     rec['P_margin_burst'] = int(bbest[1] == ans)
                     lgcb = R.last_logits([t for sp in bspans for t in sp] + ids[doc_end:])
