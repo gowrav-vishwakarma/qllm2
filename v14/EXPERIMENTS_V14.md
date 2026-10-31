@@ -3052,6 +3052,11 @@ fitted threshold:
     the "free token is a value" rule's accuracy on the same rows.
   - Met → abstain on non-organ fetch becomes a query-time check (cu2 drops
     VERIFY, Mind); not met → VERIFY stays in cu2a.
+  - **Amendment A11/1 (05:05 IST, before any number; Mind's round-2 ask):** the
+    same rows are also read by cu1 (`cu1_best_2efb422.pt`), REPORTED (no bar):
+    does a mind trained to say " unknown" check keys more (higher AUROC)?
+    The bar stays on b2p2. Lead's ruling: VERIFY stays in cu2a iff b2p2's
+    AUROC < 0.85.
   - Closest prior work: context-aware decoding (Shi et al. 2023: contrast
     with / without the CONTEXT); perturbation / counterfactual relevance;
     Self-RAG's IsRel (trained). Difference: the QUESTION's key is perturbed
