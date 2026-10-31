@@ -286,7 +286,11 @@ def key_fn_bursts(keys: torch.Tensor, ids, info) -> tuple[torch.Tensor, torch.Te
         key_fn(keys[:1], ids)                                  # loads the checkpoint
     head = _HEAD['head'].to(keys.device)
     v = keys.float()
-    if _HEAD.get('centre'):
+    if os.environ.get('L1_MEAN'):                              # deployment: the shipped reference mean
+        if 'mean' not in _HEAD:
+            _HEAD['mean'] = torch.load(os.environ['L1_MEAN'], map_location='cpu')['mean'].float()
+        v = v - _HEAD['mean'].to(v.device)
+    elif _HEAD.get('centre'):                                   # the document's own mean (as trained)
         v = v - v.mean(0, keepdim=True)
     T, end = v.shape[0], int(info['doc_end'])
     spans = [(int(b0), max(int(b0) + 1, min(end, int(b0) + SPAN))) for b0, _ in info['bursts']]
