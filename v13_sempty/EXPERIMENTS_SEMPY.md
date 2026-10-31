@@ -4629,6 +4629,8 @@ user's "expression counts").** It replaces the mix clause (cu1 had no "Win": its
   hop and srd 14.4M each (cu1 9.6M / 4.8M / 9.6M).
 - **HARD gate (expression):** final holdout ≤ r3c + 0.02 = **3.2391**. If missed, r3p does not replace
   r3c as the expression body; its skills are reported, and the package's LM line stays r3c's.
+  (Lead: this gate guards only the curriculum's cost against r3c. MLB-1 R3 as written, within +0.02 of
+  Mamba-2 at 3B, stays unmet by r3c (+0.055), so the package table's R3 line stays the 600M b2 pair.)
 - **Written prediction:** fewer web tokens (−2.9 %) +0.006, formats +0.006 (cu1's residual, ~0.004 per
   point × 2.5 points × 0.6 for the 3B late slope). So **r3p ≈ 3.231**: the gate passes narrowly, and
   the public ±0.01 bar vs T++ (3.2064) is missed by ~0.025. Recall may dip with its share (5 % → 4 %);
