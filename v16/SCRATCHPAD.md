@@ -89,6 +89,8 @@ Overall ~47 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 holds BEY
 
 - 22:00 IST: PACK TOOL cross-document result (Library, 59c53fb; the product condition, library and session from different texts): learned key top-1 0.55 / 0.54 at 400 entries / 82k tokens (top-5 0.74), 0.90 at 40 entries; exact organ 0.99 / 1.00. The same-document-trained head does not transfer across documents. L3 approved and first on the 4090: head trained on cross-document pairs, centred by the shipped mean; bars exact >= 0.85, paraphrase >= 0.70 and >= organ + 0.30, no in-doc regression; plus top-1 vs library size (40 / 400 / 4,000). Package memory: 28 MB per 1M tokens (keys 13.6 + organ 12 + text 2 + pointers 0.6). SR-0b may run once later only as a PRODUCT-OPTION test (install a skill pack as a merged notebook state, 1.15 MB per skill, vs re-reading text), after L3's GPU use.
 
+- 22:05 IST: R6 split (Mind's argument, accepted; the mind-only 32k bar contradicted the closed limit): R6a (mind) 0-shot stated rule >= 0.75 right before the query AND at 2k after one read; R6b (package) re-fetched rule at 32k >= 0.75; mind-only 32k reported with the stated-limit caption, no bar. Curriculum run (600M, b2p2 recipe): stated rule + demos, fetched spans + question with distractors and abstain, two-hop format; main arm after b2p3 beside r3c, N9s paired arm when memory allows or after r3c (~03:00).
+
 ## Open questions
 - (closed 21:55) Product body: M2 streams (41f8ae8).
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
