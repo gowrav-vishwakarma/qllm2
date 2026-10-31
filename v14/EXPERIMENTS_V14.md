@@ -3034,6 +3034,29 @@ fitted threshold:
       appeared. Mind's fixed-row verify probe covers it (cu1 " unknown" 0.86,
       wrong value 0.01 vs b2p2 0.59). A package-level test needs the rows held
       fixed across minds (b2p2's L1-head rows read by both).
+- **A11: key-swap relevance (PRE-REGISTERED 2026-11-01 05:04 IST, before any
+  number of it; the first D4 unit, settled with Mind and Lead).** Does the
+  mind's answer depend on the question's KEY? rel = log p(v | row, q) −
+  mean_k log p(v | row, q_swap_k), with v = the mind's greedy first answer token
+  given row + q, and q_swap_k = the same question with the key replaced by a
+  never-stored natural phrase (K = 3). A right row's answer should depend on
+  the key; a wrong row's should not (the mind copies it either way). No
+  training; cold short reads (~40 tokens), CPU.
+  - b2p2; bench's kv docs, NATURAL keys, L = 32,768, FRESH seed 31000, 40 docs.
+    Per doc 3 rows: the asked key's fact (positive), another stored key's
+    fact in the same template (hard negative), a prose sentence (easy
+    negative).
+  - Bar (Mind's): AUROC of rel ≥ 0.85 for right rows vs same-template wrong
+    rows. Reported: AUROC vs prose rows and vs all wrong rows; the same AUROCs
+    for the plain confidence log p(v | row, q) (the baseline rel must beat);
+    the "free token is a value" rule's accuracy on the same rows.
+  - Met → abstain on non-organ fetch becomes a query-time check (cu2 drops
+    VERIFY, Mind); not met → VERIFY stays in cu2a.
+  - Closest prior work: context-aware decoding (Shi et al. 2023: contrast
+    with / without the CONTEXT); perturbation / counterfactual relevance;
+    Self-RAG's IsRel (trained). Difference: the QUESTION's key is perturbed
+    with the row fixed, testing key dependence of an O(1) mind's answer at
+    query time with no training.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
