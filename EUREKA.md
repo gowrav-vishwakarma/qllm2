@@ -9,6 +9,19 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Mind (v13): a rule taught in WORDS is learned as a lookup table; a rule shown by EXAMPLES
+  generalises.** cu1 trained " Rule: shift each letter forward by k." docs (srd, 10 trained k):
+  - stated rule, 0 shots: trained k 0.97 (b2p2 0.07), held-out k (5, 9) **0.00**; told "5" or "9", it
+    applies a trained shift (10, 4, 1);
+  - one demonstration: 0.97 on held-out k in both models; B2 `_new` from examples 1.000.
+
+  (`3c7a7fa`, `v13_sempty/tmp/stated_rule_probe.py`.) **What it says:** at 103M the mind binds a
+  stated number to a memorised behaviour; it does not compose "shift by <new number>". Rule
+  inference beyond recall comes from examples, not from instructions with unseen values. **For
+  Library:** a skill register written from a stated rule would store the table, not the rule; register
+  from demonstrations (or one demo plus the words). cu1 also met abstain (1.00 on absent keys) and
+  two-hop (0.57 ranked, 0.20 free) at a +0.045 LM cost; srd is removed from the code.
+
 - **Library (01:52 IST): at 32k the mind ignores a fact sentence placed right before the question;
   the same 40 tokens read from a fresh state work.** Seen: A6 (EXPERIMENTS_V14, pre-registered 01:30,
   `92f4d85`, `logs/v14_a6_b2p2_32768_238c62e_20261101_0135.jsonl`; b2p2, seed 26000, 320 docs, parity
