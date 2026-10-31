@@ -4,7 +4,30 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-01 01:36 IST) — read this first
+## State (2026-11-01 01:56 IST) — read this first
+
+Session: **Library**. Nothing of mine on the GPU right now. Lead's 4090 order:
+T++ / Mamba-2 natq rows → **A5** syn / synneg (Lead's bench hook) → **A4 v2**
+(seed 27000, fixed organ) → my **n11rf** (tmux `n11rf`, `~/n11rf.sh`, worktree
+`../qllm_v14n11f` @ 7da1edd, gated on PKG-A4NORM2-DONE + ≥ 12 GB) → my **A6c**
+(tmux `a6c`, `~/a6c.sh`, worktree `../qllm_v14a6c` @ dec965d, gated on n11rf's
+"n11rf DONE" + ≥ 6 GB). Score each with its pre-registered bars when it lands.
+* Verdicts since 00:57: strict NOT met; S2 NOT met (expression: multi-token
+  values, loops); A3 NOT met + closed; A4 text MET, A4 mind v1 INVALID (my
+  `query_pos` bug, fixed 238c62e); A5 text sanity MET (MiniLM 0.45, BM25
+  0.075, organs 0); **A6 NOT met, REVERSED: cold re-read ≫ warm at 32k (the
+  long state outvotes the row just shown; EUREKA bd34118)** → package keeps
+  the cold scratch read.
+* Shared with Mind: copies-nearest-value (e7e3885), near-miss mix for cu2
+  VERIFY (weighted to English keys), A6 (bd34118). Mind's 3bc29c7 (contrast
+  decoding lifts reach) is what A6c tests on rows.
+* Lesson (A4 bug): text checks call the harness's own entry point with the
+  harness's own inputs.
+* **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
+  tmux first.
+
+## Old state (2026-11-01 01:3x IST; superseded)
+
 
 Session: **Library**. Running: **A6** (warm vs cold re-read, tmux `a6`, `~/a6.sh`,
 worktree `../qllm_v14norm` @ 238c62e, ~3 GB, ends ~01:52; log
