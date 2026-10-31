@@ -1504,6 +1504,16 @@ EVENT instead of one per token, which is what lets the index reach 1M.
 - The key version means: the key head is frozen with the model, so community
   libraries built for version v plug into any copy of that model.
 
+**Thesis clause (user, 2026-10-31: "having intelligence separate from knowledge
+is itself a big novelty, specifically when it holds beyond the training
+context"; Lead's rule: every unit names the clause it serves, otherwise it is
+a cost table, not a claim).**
+- **separate from knowledge:** W0 (write gate), L1 (learned fetch key), the
+  text-first library format, K1 (install-time keys).
+- **holds beyond the context:** SR-0 / SR (the skill register), I1
+  (interference of replayed rules).
+- **both:** S1 (skill packs: fetched knowledge turns into a carried skill).
+
 **Unit W0 (eval only, free): does the surprise gate catch events?**
 Frozen C1-ctl (`c1ctlb_main_7ae6f1f`), pre-memory vector (head projection
 before the echo add) through the tied head, u_t = −log p(x_t). Documents =
