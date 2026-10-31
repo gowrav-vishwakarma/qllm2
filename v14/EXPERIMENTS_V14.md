@@ -2229,6 +2229,30 @@ L3 trades synthetic for natural (−0.10 / +0.20). The pre-registered judgement
 is the fresh-seed pack_check (exact + paraphrase, 400 entries) and the size
 sweep, running on the 4090. Logs `logs/v14_l3data_*`, `logs/v14_l3chain_*`.
 
+**L2 VERDICT (2026-10-31 22:35 IST; seed 17000, scored once with t = 0.655 from
+seed 15000; L1 head, document-mean centring; bench `b03964d`; 16 docs per cell):
+NOT met (paraphrase).** Logs `logs/v16_bench_l2_score_*`.
+
+| cell | L2 two-organ | organ alone | L2 without abstain (reported) | bar | verdict |
+|---|---|---|---|---|---|
+| kv synthetic 32k / 128k | 1.00 / 1.00 (organ answers all) | 1.00 | – | ≥ 0.95 / ≥ 0.90 | met |
+| kv natural 32k / 128k | 1.00 / 1.00 (organ answers all) | 1.00 | – | ≥ 0.95 / ≥ 0.90 | met |
+| neg, wrong fetch (syn / nat) | 0.06 / 0.06 | – | – | ≤ 0.10 | met |
+| para synthetic | 0.375 (abstain 0.50) | 0.31 | 0.50 | ≥ organ + 0.10 = 0.41 | **NOT met** |
+| para natural | 0.56 (abstain 0.38) | 0.44 | 0.69 | ≥ 0.75 | **NOT met** |
+| tool syn / nat (reported) | 0.31 / 0.44 | 0.25 / 0.25 | 0.375 / 0.56 | – | – |
+
+- **One threshold cannot serve exact and paraphrased questions.** t was tuned
+  where the organ answers (kv) and on never-stored keys; paraphrased questions
+  match the learned key more weakly, so L2 abstains on 38-50 % of them and each
+  abstain is a miss (cost 0.12-0.19).
+- **Even without abstain, paraphrase is the weak cell** (0.50 / 0.69), and it is
+  the learned key's only job in the package (the organ covers exact keys).
+- Next: the L3 head on the product condition (pack_check at 400 entries with
+  paraphrased questions, running), then a paraphrase-aware abstain rule (e.g.
+  abstain only when BOTH the organ misses and the key is below t on a threshold
+  tuned on paraphrased questions too), pre-registered before scoring.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
