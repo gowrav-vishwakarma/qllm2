@@ -34,6 +34,8 @@
 
 - 14:10 IST: skill-pack / replay cells (scripts/run_skillpack_probe.py @ 53d0e52) REVIEWED against v1 R7 + A1 and APPROVED by Lead; captions: T++ O_reread = re-fetch into a fresh window (KV = pack + query), T++ without re-fetch limited by memory at 128k, Mamba-2 state = 13.4 MB constant. Timing: start now on the 6000 with --mem_frac 0.10 (b2p1, b2p2, b2t, b2m at L <= 32k), 128k/1M and the seed-43/44 arms after s8.
 
+- 14:15 IST: SL0 VERDICT (Mind): kNN-LM over the frozen 3B PAM's state, 5M rows (1.3 GB, install 106 s) -0.0014/-0.0040 PG-19/web; 20M rows (5.2 GB, install 328 s, exact query 951 s per 320k tokens) -0.0059/-0.0119; gap to Mamba-2 stays +0.086/+0.100; -0.05 would need ~200M+ rows (~52 GB) + ANN. Rules 1 and 2 FAIL. Filed as plumbing / cost table (serves neither thesis clause); the general-modelling gap stays the mind's. /dev/shm cleared.
+
 ## Open questions
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
 - The instr cell on c1ctlb was invalid (no rule skill); b2p2 rerun decides whether words can write the rule state.
