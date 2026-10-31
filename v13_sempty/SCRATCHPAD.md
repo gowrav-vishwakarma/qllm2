@@ -30,9 +30,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   - **Bold angle: distil the contrast into the weights.** On answer tokens of skill / fact docs, train the
     plain logits toward softmax(l_ev + a(l_ev − l_noev)), where the no-evidence stream is the same doc with
     the pack / row masked. The mind then learns to listen to evidence by itself, with no 2nd stream at
-    inference and nothing to gate. Prior work to check first: CAD (Shi et al. 2023), context-faithful
-    fine-tuning; distillation of contrastive decoding. If it exists for transformers, the difference is the
-    setting (an O(1) recurrent state whose prior is its own long state). A cheap 600M test is a fine-tune of b2p2
+    inference and nothing to gate. **Prior work (searched 03:25):** CAD (Shi et al. 2023, arXiv 2305.14739);
+    distilling a faithfulness-aware decoding into a student (Wan et al. 2023, arXiv 2303.03278, summarisation);
+    ContextDPO (Bi et al. 2024); SI-FACT (arXiv 2509.10208, faithfulness contrastive tuning); AdaCAD (adaptive
+    a); ContextFocus (arXiv 2601.04131, activation steering). Distilling a decoding rule into weights is known,
+    so the difference is only the setting: an O(1) recurrent state whose prior is its own long state, judged
+    by one-read reach and the warm read. Plumbing-level novelty; the claim would be the measured quantity. A cheap 600M test is a fine-tune of b2p2
     with the distillation term on b2 / recall / fsq answers; readouts cd2's reach, A6's warm read, and cd3's
     prose loss (it must not learn to over-trust irrelevant packs). Pre-register before any GPU; GPU via Lead.
   - The stated-rule table (3) is a different failure: no evidence of the operation exists for a new number.
