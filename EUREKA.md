@@ -60,10 +60,10 @@ could mean for the other session. Read it before choosing a next step.
   - **Mamba-2 (`mbs2b_main_685de4e`, 102.6M, 4090, 8 docs):** state only 1 needle
     0.0 / 0.375 / 0.0 / 0.0 and 8 needles 0.25 / 0.125 / 0.125 / 0.25 at 2k / 8k / 32k /
     128k: at the floor like the other two bodies on this format; organ 1.0 throughout.
-  - **400k (PAM, 1 needle, 4 docs over two runs):** state 0/4, snapshot index 0/4
-    (top-5 0/4), organ 4/4. The frozen-state address that is 0.75 top-1 at 128k is
-    gone at 400k: the nearest-neighbour over 400k positions falls below the noise
-    floor. A trained key, or one row per event instead of per token, is needed there.
+  - **400k (PAM, 1 needle, 4 docs over two runs):** state 0/4, snapshot index 1/4
+    (top-5 1/4), organ 4/4. The frozen-state address that is 0.75 top-1 at 128k
+    mostly fails at 400k: the nearest-neighbour over 400k per-token positions is near
+    the noise floor. A trained key, or one row per event instead of per token, is needed there.
   *Caveats:* 8 docs per cell (about +-0.15 noise), synthetic needles with unique
   nonsense keys favour the n-gram organ, one seed, CPU fp32 for PAM / T++ and the
   4090 for Mamba-2; the "Definition: KEY refers to VALUE." format is the recall-doc
