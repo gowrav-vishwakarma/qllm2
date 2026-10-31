@@ -18,6 +18,9 @@
 - 15:45 IST: 6000 disk: gscreen_onorm_3cc2b72/latest.pt (v13's abandoned G2 screen, resume-only) deleted on my authority; v13 prunes resume-only latest.pt of finished runs and moves superseded best_model.pt to d_drive (md5 first); target >= 15 GB free.
 - Timing: a4f ends ~18:20 IST (stage B slower on the shared card); SL0 (shared library, 5M then 20M rows, /dev/shm, install cost printed) running on the 6000 in worktree qllm_sl0; v14's L1 data pass + head on the 4090 under the 3.5 GB cap.
 
+- 16:35 IST: 6000 disk 6.5 -> 21 GB free (v13: gscreen_onorm latest.pt deleted; 11 finished best_model.pt moved to d_drive with md5 checks). MLB-1 v0.3: related-work table (kNN-LM/RETRO, EM-LLM, Titans, State Soup, Memorizing Transformers); SL0 labelled kNN-LM on a PAM mind; skill-pack persistence + replay-integration cells in.
+- PRE-REGISTERED PREDICTION (v13, before any number): today's checkpoints lose an induced skill between 8k and 32k of filler (echo filler half-lives 660-3100 tokens; spread affine 0.44-0.61 at 8k). Remedies as two lanes: v13 = long-gap rule docs at long training lengths; v14 = a structural SKILL REGISTER (written once at induction, no decay, protected) as a new mechanism; closest prior work State Soup (2406.08423).
+
 ## Open questions
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
 - The instr cell on c1ctlb was invalid (no rule skill); b2p2 rerun decides whether words can write the rule state.

@@ -55,6 +55,10 @@ benchmark first; the distributable model once it wins that table.
   the demonstrations are gone (a transformer's induced skill dies with its window; Mamba-2
   loses it at ~110 tokens). Cell: "skill-pack persistence": fetch at t0, queries at t0+32k,
   +128k, +1M, against T++ (re-fetch into window each time, KV cost) and Mamba-2.
+- Closest prior work for the skill library: State Soup (Pioro et al. 2024): recurrent states stored,
+  retrieved and mixed as task vectors. Our difference: the skill persists across distance after the
+  demonstrations are gone, and packs are text, portable across mind versions. Candidate mechanism:
+  a structural skill register (written once at induction, no decay; v14).
 - Candidate novelty to test before claiming: reading a fetched span by replaying it through
   the state (no window to paste into) integrates with what the state already holds.
 
