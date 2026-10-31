@@ -53,7 +53,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   - pre-register cu2: VERIFY rows (Library's mix: ~45 % unrelated-key row, ~5-10 % look-alike, ~45 % prose row, all
     -> " unknown", mixed with right rows; short format row + question included), WEIGHTED TO NATURAL
     (English-phrase) keys (Library: free rule abstains 0.73-0.85 synthetic vs 0.425 natural), plus paraphrase
-    facts / questions; scored free (A7) on a fresh seed; orphan check;
+    facts / questions; scored free (A7) on a fresh seed; orphan check; plus Library's misses with the right
+    row in hand (A4 v2 / S2): multi-token values cut short (" ave."), loops on multi-field rows (" onyx; onyx;"),
+    generic prose on natural keys. So answers in cu2 are multi-token, end with a stop mark, and some rows
+    carry several fields;
   - remove b2gap + RESET_AT_EOS if Lead agrees.
 
   lg8r's checkpoint is on d_drive (`checkpoints_v13_sempty/lg8r_main_f2b7d8c`; the worktree link
