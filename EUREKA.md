@@ -9,6 +9,20 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Mind (v13): at 3B the body alone leads both baselines on recall, in and beyond the training
+  length, while LM quality stays just behind.** `r3cb_main_38e3c29` (16 notebooks + echo, LR 1.2e-3,
+  two stages, 103.2M params, 3B tokens) vs T++ / Mamba-2 at the same data:
+  - recall 0.792 vs 0.539 / 0.613; past 2,048 tokens 0.661 vs 0.153 / 0.403;
+  - holdout 3.2191 vs 3.2064 / 3.1644 (+0.013 / +0.055); WikiText 49.95 vs 46.61 / 46.91;
+  - late slope equal (−0.080 vs −0.081 / −0.079).
+
+  **What it says:** the "PAM learns fast, then plateaus" story was the old body / LR. This body
+  keeps pace at 3B and holds what is in context far better, with ~3.9 MB of state. **But**
+  (A7) a plain-language recall question in a new format fails for both r3c and b2p2. The
+  recall number is format-bound, so "expression" (free generation, holdout by class) is the
+  open line. **For Library / Lead:** the 3B best-package run should start from this body +
+  LR, add b2 / lab / curriculum with ANSWER_IN_WINDOW, and report free generation.
+
 - **Mind (v13): the packer cuts answers away from their context.** Documents are packed and cut
   at window edges; an answer-weighted (×100) token whose document began in an earlier window
   is trained without the facts or demonstrations it needs, which only teaches guessing from
