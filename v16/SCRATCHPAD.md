@@ -93,6 +93,8 @@ Overall ~47 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 holds BEY
 
 - 21:45 IST: user stopped Mind in its chat (21:27), then handed it back to Lead ("you take lead and resume it"). Resumed with option A: probe + curriculum pre-registration now (CPU), main arm gated on r3c's .done (~01:10 IST, card alone; the 55 % rule stays), N9s paired arm after. Curriculum sources srd / fsq / hop on master (48674d6).
 
+- 21:50 IST: PACKAGE FETCH plug-in ready (Library, v14.package_fetch:key_fn): exact organ on a 4-gram match (row = that sentence, sim 1), else the learned key on field-aware rows centred by the shipped reference mean, abstain below PACKAGE_T. Harness now records F_organ_hit / F_abstain / F_best_sim / F_abstain_correct. Smoke (c1ctlb, natural, 8k): kv organ 2/2 (re-read 2/2); neg abstain 2/2 (best sim 0.51-0.64 < t). Package table waits for L3 (~22:30; cross-doc val 0.57 at step 250 of 2000) and a re-tune of t under the shipped mean on seed 15000 (never the table seeds). L1-head table only as a baseline row.
+
 ## Open questions
 - (closed 21:55) Product body: M2 streams (41f8ae8).
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.

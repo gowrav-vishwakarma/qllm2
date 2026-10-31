@@ -408,8 +408,12 @@ def main():
                         rec['C5_burst_in_needle'] = int(any(pkn - 4 <= b0 <= pkn + len(nk) + 6 for b0 in bstart))
                     row_spans = None              # [start, end) per row; default = burst start + 24 tokens
                     if key_fn and key_fn_bursts:   # learned fetch: one key per burst row + its own query key
-                        out_kf = key_fn(keys_doc, ids, {'bursts': bursts, 'query_pos': qk, 'doc_end': doc_end})
+                        kf_info = {'bursts': bursts, 'query_pos': qk, 'doc_end': doc_end}
+                        out_kf = key_fn(keys_doc, ids, kf_info)
                         kb, kq = out_kf[0], out_kf[1]
+                        for fld in ('organ_hit', 'abstain', 'best_sim'):   # package fetch flags (Library)
+                            if fld in kf_info:
+                                v = kf_info[fld]; rec['F_' + fld] = round(float(v), 4) if fld == 'best_sim' else int(bool(v))
                         if len(out_kf) > 2 and out_kf[2] is not None:   # optional: the row's own span (field-aware rows)
                             row_spans = [(int(a0), min(doc_end, int(b1))) for a0, b1 in out_kf[2]]
                         bvec = torch.nn.functional.normalize(torch.as_tensor(kb).float(), dim=-1)
@@ -427,6 +431,8 @@ def main():
                         a0, b1 = span_of(i); return any(ids[j] == ans for j in range(a0, b1))
                     def in_span(b0):               # kept for the per-firing rows below
                         return any(ids[j] == ans for j in range(b0, min(doc_end, b0 + 24)))
+                    if rec.get('F_abstain'):
+                        rec['F_abstain_correct'] = int(bool(meta.get('negative')))   # abstain is right only when nothing is stored
                     rec['C5_burst_hit_span'] = int(in_span_i(border[0]))
                     rec['C5_burst_top5_span'] = int(any(in_span_i(i) for i in border))
                     rec['C5_row_span_mode'] = 'key_fn' if row_spans is not None else 'fixed24'
