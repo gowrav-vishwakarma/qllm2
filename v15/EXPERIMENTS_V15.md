@@ -365,6 +365,7 @@ Grove I reference extracted from `abe4c89` as `v15/tmp/grove_I.py`):
 | Grove III (`4b06ad2`) | soft | hard, running mean | yes / off | 0.575 / 0.090 | 1.000 |
 | Grove IV-b (`8e6214b`, record) | soft | soft, 1−e^{−αg} | yes / off | 0.072, 0.081, 0.488 (seeds 2–4) / 0.655 | 1.000 |
 | **Grove IV (`4a33187`)** | soft | soft, running mean | yes / off | **0.638, 0.093, 0.947** (seeds 2–4) / 0.481 (seed 2) | 1.000 |
+| **Grove IV + sapling mask (`dcd5c86`)** | soft, fruit-bearing trees only | soft, running mean | yes | **0.846, 0.853, 0.626** (seeds 2–4; no collapse) | 1.000 |
 
 Readings: (1) the soft read carries rules (II → III: 0.26 → 0.58); (2) soft
 eating/growth carries more (III → IV: 0.58 → 0.64, and IV-b without births
@@ -374,9 +375,14 @@ rules in IV (0.64 vs 0.48) and lookups everywhere (1.000); (5) the toy's
 seed noise is large (Grove I 0.66–0.94), so single-seed differences under
 ~0.15 mean nothing. (6) **Grove IV is bimodal**: seeds 2–4 give 0.64 / 0.09
 / 0.95, i.e. it either learns the rule as well as Grove I or sits on a dead
-plateau (loss ≈ 2.55); Grove I never collapses. Births plus the soft economy
-race against something early in training; the next step is to find what
-(a loss trace of the collapsed seed), not to re-roll seeds.
+plateau (loss ≈ 2.55); Grove I never collapses. The loss trace of the
+collapsed seed sits at 2.55–2.60 from step 250 to the end: a dead plateau,
+not a divergence. Cause: at every novel token (every token, in the strict
+groves) the read included the newborn's own empty fruit (fruit0_born), a
+constant injected into the residual that training never escaped. **A
+sapling bears no fruit**: the read now excludes newborns nobody has credited
+yet (`dcd5c86`); seeds 2–4 give 0.846 / 0.853 / 0.626 with no collapse, lookup
+1.000. This is the bench candidate (GIV-2 = the G1 pairs again, same bars).
 
 ## 5. Roads not taken (so they are not retaken)
 - Prime-period wheels / CRT phases for time and numbers (2026-10-31, 20

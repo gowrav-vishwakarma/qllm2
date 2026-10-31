@@ -12,25 +12,23 @@
 - Nothing has run on a GPU yet. 4090: v13's n9c was using ~15 GB at 00:30.
 
 ## Running
-- Nothing on a GPU (08:50 IST 2026-10-31). GII-2 ended after pair 1 (FAIL,
-  EXPERIMENT_INDEX GII-2); the 4090 is v14's until ~19:00 IST, the 6000
-  v13's until ~18:00. v15 asks before any next GPU job (user, 07:30 IST).
-- CPU work in progress: Grove III/IV variants judged on two toys
-  (`v15/tmp/toy_rule.py` letter-shift rule on an unseen letter, E=8, 4000
-  steps; `v15/tmp/toy_bigvocab.py` 4096-key lookup). Grove I (`grove_I.py`
-  = abe4c89) is the reference: rule 0.839 (0.907 with identity conv), lookup 0.955.
+- Nothing on a GPU (10:30 IST 2026-10-31). The 4090 is v14's until ~19:00,
+  the 6000 v13's until ~18:00; v15 asks before any GPU job (user, 07:30).
+- **Bench candidate: Grove IV + sapling mask (`dcd5c86`)**: soft economy
+  (Grove I) + births into starved niches, newborns unreadable until fed.
+  Rule toy 0.85/0.85/0.63 (Grove I 0.91/0.66/0.94), lookup toy 1.000.
+  GIV-2 (= G1 pairs, same bars) is prepared; worktree `../qllm_v15_giv2`;
+  driver `v15/tmp/giv2_chain.sh`; one pair ~2.3 h at ~8 GB. Asked v14 for a
+  slot beside their jobs.
 
 ## Next action
-0. G2 plumbing is DONE and verified on CPU (`v15/hook.py`, `--arch grove`,
-   launcher `ARCH=grove GROVE_SPEC=`); see EXPERIMENTS §4 G2 for the command.
-1. Read GII-2 pairs as they land (bars L, P; guard; R recorded). Probe pair
-   1's saved grove (addresses, births/token per grove on label_exact).
-2. If L and P pass: G2 (150M-token LM on the r600 recipe; plumbing ready,
-   `v15/hook.py`; check speed first: Grove II is heavier per season).
-3. If they fail: the void again. Candidates already noted: satiety
-   (conscience) against generalist monopolies in loose groves; θ per grove
-   learned through the surrogate; the binding path (reign vs conv).
-
+1. When v14 gives a slot: run GIV-2 pair 1 (grove vs echo, seed 21, SAVE=1),
+   read bars L, P, guard; probe the saved grove. Two agreeing pairs decide.
+2. If L and P pass: G2 (150M-token LM on the r600 recipe; `v15/hook.py`
+   ready) after a speed pass (torch.compile of the season body; Grove IV is
+   launch-bound, ~3.5x slower than Grove I).
+3. If they fail: the void again (satiety against generalist monopolies;
+   learned θ; the binding path).
 ## Speed note (06:40 IST 2026-10-31)
 - Grove II on the bench: 12.5k tok/s vs Grove I 43.8k (3.5x slower; echo
   ~80k alone). CPU profile of one forward+backward (bench shape, 8 seasons):
