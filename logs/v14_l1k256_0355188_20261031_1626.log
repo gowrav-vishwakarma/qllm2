@@ -1,0 +1,123 @@
+  50/3000 docs
+  100/3000 docs
+  150/3000 docs
+  200/3000 docs
+  250/3000 docs
+  300/3000 docs
+  350/3000 docs
+  400/3000 docs
+  450/3000 docs
+  500/3000 docs
+  550/3000 docs
+  600/3000 docs
+  650/3000 docs
+  700/3000 docs
+  750/3000 docs
+  800/3000 docs
+  850/3000 docs
+  900/3000 docs
+  950/3000 docs
+  1000/3000 docs
+  1050/3000 docs
+  1100/3000 docs
+  1150/3000 docs
+  1200/3000 docs
+  1250/3000 docs
+  1300/3000 docs
+  1350/3000 docs
+  1400/3000 docs
+  1450/3000 docs
+  1500/3000 docs
+  1550/3000 docs
+  1600/3000 docs
+  1650/3000 docs
+  1700/3000 docs
+  1750/3000 docs
+  1800/3000 docs
+  1850/3000 docs
+  1900/3000 docs
+  1950/3000 docs
+  2000/3000 docs
+  2050/3000 docs
+  2100/3000 docs
+  2150/3000 docs
+  2200/3000 docs
+  2250/3000 docs
+  2300/3000 docs
+  2350/3000 docs
+  2400/3000 docs
+  2450/3000 docs
+  2500/3000 docs
+  2550/3000 docs
+  2600/3000 docs
+  2650/3000 docs
+  2700/3000 docs
+  2750/3000 docs
+  2800/3000 docs
+  2850/3000 docs
+  2900/3000 docs
+  2950/3000 docs
+  3000/3000 docs
+saved 3000 docs to /media/gowrav/d_drive/qllm_ckpt/v14/l1_cache8/train2
+6000 train docs, val sets [('val_indist', 150), ('val', 150)], form fwd, arch full
+head parameters: 151,118
+/home/gowrav/Development/qllm_v14dev2/v14/l1_key.py:229: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"step {step:5d} loss {float(loss):.3f} queries {n_q} skipped {n_skip} "
+step     1 loss 6.994 queries 28 skipped 4 temp 14.3
+step    50 loss 4.113 queries 25 skipped 7 temp 14.3
+step   100 loss 3.235 queries 32 skipped 0 temp 15.4
+step   150 loss 3.596 queries 29 skipped 3 temp 16.6
+step   200 loss 3.574 queries 29 skipped 3 temp 17.6
+step   250 loss 2.305 queries 28 skipped 4 temp 18.2
+  val | val_indist: top1 0.373 top5 0.487 ev 0.86 | val: top1 0.747 top5 0.880 ev 1.00
+  best so far on val_indist: 0.373 (step 250)
+step   300 loss 2.570 queries 31 skipped 1 temp 19.0
+step   350 loss 2.853 queries 28 skipped 4 temp 19.8
+step   400 loss 2.255 queries 26 skipped 6 temp 20.3
+step   450 loss 2.341 queries 27 skipped 5 temp 20.9
+step   500 loss 3.027 queries 27 skipped 5 temp 21.6
+  val | val_indist: top1 0.413 top5 0.553 ev 0.86 | val: top1 0.707 top5 0.847 ev 1.00
+  best so far on val_indist: 0.413 (step 500)
+step   550 loss 2.063 queries 28 skipped 4 temp 22.2
+step   600 loss 1.738 queries 26 skipped 6 temp 22.9
+step   650 loss 1.212 queries 24 skipped 8 temp 23.5
+step   700 loss 1.737 queries 28 skipped 4 temp 24.1
+step   750 loss 1.601 queries 25 skipped 7 temp 24.9
+  val | val_indist: top1 0.460 top5 0.607 ev 0.86 | val: top1 0.573 top5 0.813 ev 1.00
+  best so far on val_indist: 0.460 (step 750)
+step   800 loss 1.158 queries 28 skipped 4 temp 25.4
+step   850 loss 1.611 queries 28 skipped 4 temp 26.1
+step   900 loss 1.735 queries 30 skipped 2 temp 26.6
+step   950 loss 1.318 queries 28 skipped 4 temp 27.2
+step  1000 loss 1.542 queries 27 skipped 5 temp 27.8
+  val | val_indist: top1 0.467 top5 0.667 ev 0.86 | val: top1 0.673 top5 0.813 ev 1.00
+  best so far on val_indist: 0.467 (step 1000)
+step  1050 loss 1.889 queries 29 skipped 3 temp 28.3
+step  1100 loss 1.180 queries 27 skipped 5 temp 28.9
+step  1150 loss 0.731 queries 28 skipped 4 temp 29.3
+step  1200 loss 1.785 queries 26 skipped 6 temp 29.8
+step  1250 loss 0.396 queries 25 skipped 7 temp 30.1
+  val | val_indist: top1 0.447 top5 0.620 ev 0.86 | val: top1 0.720 top5 0.893 ev 1.00
+step  1300 loss 0.585 queries 26 skipped 6 temp 30.4
+step  1350 loss 0.794 queries 29 skipped 3 temp 30.8
+step  1400 loss 0.597 queries 30 skipped 2 temp 31.2
+step  1450 loss 0.572 queries 28 skipped 4 temp 31.4
+step  1500 loss 0.870 queries 30 skipped 2 temp 31.7
+  val | val_indist: top1 0.473 top5 0.673 ev 0.86 | val: top1 0.687 top5 0.893 ev 1.00
+  best so far on val_indist: 0.473 (step 1500)
+step  1550 loss 0.461 queries 28 skipped 4 temp 32.0
+step  1600 loss 0.645 queries 27 skipped 5 temp 32.2
+step  1650 loss 0.330 queries 29 skipped 3 temp 32.4
+step  1700 loss 1.379 queries 27 skipped 5 temp 32.5
+step  1750 loss 0.632 queries 30 skipped 2 temp 32.6
+  val | val_indist: top1 0.487 top5 0.680 ev 0.86 | val: top1 0.707 top5 0.887 ev 1.00
+  best so far on val_indist: 0.487 (step 1750)
+step  1800 loss 0.240 queries 23 skipped 9 temp 32.7
+step  1850 loss 0.285 queries 31 skipped 1 temp 32.7
+step  1900 loss 0.414 queries 29 skipped 3 temp 32.7
+step  1950 loss 0.457 queries 26 skipped 6 temp 32.7
+step  2000 loss 0.638 queries 26 skipped 6 temp 32.7
+  val | val_indist: top1 0.480 top5 0.660 ev 0.86 | val: top1 0.720 top5 0.913 ev 1.00
+saved /media/gowrav/d_drive/qllm_ckpt/v14/l1p_fwd_L8c_k256_0355188.pt best 0.4866666666666667
+=== l1_256 DONE 2026-10-31T11:55:49Z ===

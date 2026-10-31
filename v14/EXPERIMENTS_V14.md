@@ -1995,6 +1995,15 @@ best-scoring row. ABSTAIN when the best score is below a threshold t.
   accuracy 0.72 with abstain-on-stored counted as a miss, abstain rate 0.22,
   neg wrong-fetch 0.09. Logs `logs/v16_bench_l1p1_tune_*`.
 
+**L1-256 development (finished 17:25 IST): no gain over the 128-d key on
+validation.** 6000 docs (3000 + 3000 single-template), 2000 steps, 256-d key
+(~23 MB per 1M tokens). Harness-template validation top-1 0.67-0.75 (128-d:
+0.78-0.82), mixed in-distribution 0.49 (128-d: 0.51). Log
+`logs/v14_l1k256_0355188_*.log`. The pre-registered Bar A run in the harness
+(kv, 32k, seed 14000 = the paired docs) is queued for the record; on this
+evidence the memory latitude does not buy accuracy here, so the next lever is
+not key size.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
