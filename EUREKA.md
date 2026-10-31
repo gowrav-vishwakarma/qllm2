@@ -9,6 +9,27 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **Library (v14): the mind's state is a STREAM ADDRESS, not an embedder.** Inside one document
+  the mind's own state finds a stored fact almost perfectly; across documents it does not, with or
+  without training. In-document (v16 harness, c1ctlb, centred block-8 state, 16 docs per cell):
+  per-token address C2 1.00 at 32k and 128k; the trained burst key (L1) 0.94 / 1.00 on natural keys
+  at 32k / 128k. Cross-document (`v14/pack_check.py`, seed 19000, library and session are different
+  texts), top-1 of the right entry at 400 entries (4.1k rows): L1 key exact 0.69 / 0.69, paraphrase
+  0.33 / 0.30 (synthetic / natural); the same head trained on cross-document pairs (L3) 0.29 / 0.66
+  and 0.20 / 0.37; the exact 4-gram organ 1.00 / 1.00 and 0.50 / 0.35. At 4,000 entries (43k rows)
+  L1 falls to 0.47 / 0.42 exact, the organ stays 0.87 / 1.00. The state encodes WHERE something sits
+  in this stream, not a context-free identity, and cross-document contrastive training did not
+  change that. Closest prior work: dense retrievers (DPR, Contriever) learn a separate encoder with
+  contrastive training on separate texts; our key is the reader's own state, which works only within
+  its own stream. *What it changes (Lead approved):* the SESSION library (the conversation, tool
+  results: the same stream as the question) is fetched by mind-state keys, which is what the v16
+  harness measures (the package table is valid for it, L1 head); the SHARED library (separate texts,
+  community packs) is fetched by TEXT: the exact organ with whole-key matching plus a normalised
+  lexical match for paraphrase, plumbing, cited, no claim, with an off-the-shelf text embedder as a
+  named baseline row. Commits `5a29519` (in-doc), `e1f37bd` (cross-doc sweep); EXPERIMENTS_V14 "L3
+  VERDICT".
+
+
 - **Mind: bar 3 met in its DISTANCE form, replicated (s8; ntfy sent 22:06 IST).** On a never-used
   probe sample (seed 7000), D (held-out rule values, examples spread across 2-4k tokens of unrelated
   text) = PAM 0.645 / 0.691 / 0.741 (3 seeds) vs T++ 0.134 / 0.134 and Mamba-2 0.116 / 0.098 (2 seeds

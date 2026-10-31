@@ -587,6 +587,16 @@ skill was last read), not only a "when to fetch a fact" rule. Cost: the pack's
 tokens once per ~2k of session. Mind's `replay_refresh` probe cell is the
 measurement. To be pre-registered with N11.
 
+## Shared-library fetch (approved by Lead, 22:50 IST)
+
+Session library = mind-state keys (L1 head, in-document). Shared library =
+text: (1) exact organ with WHOLE-KEY matching (fixes the 4-gram collisions
+that drop it to 0.87 at 4000 entries); (2) a normalised lexical match for
+paraphrase (case-folding, inflection; BM25 class); (3) an off-the-shelf text
+embedder as a named baseline row, so the cost table shows what the mind's own
+keys buy there (nothing, by the sweep). Plumbing, cited, no claim. To build
+after the package table's handover.
+
 ## Next action
 
 1. **n9r** (4090, running, ends ~12:00 IST): score recall vs the bars
