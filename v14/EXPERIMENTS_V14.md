@@ -1770,6 +1770,15 @@ tokens, spread affine 0.44-0.61 at 8k).**
   where the body's own state is at 0.14, is the first clean evidence for the
   register route.
 
+- **Why SR is the live route (Mind, 2026-10-31 evening):** training the mind
+  at 32k on long-gap rule docs (lg32) SHRANK its one-read reach (2k 0.86 →
+  0.31) and SHORTENED its memory: echo half-lives on filler fell 718→537,
+  1564→1026, 1274→802, 2376→1427, 1548→984, 2539→1137 tokens; notebook b11 h4
+  648→401 (EXPERIMENTS_SEMPY "lg32 decay half-lives"). Two reasons a decaying
+  state will not be trained to hold a skill: the gradient through a 1-3k
+  half-life vanishes, and the LM objective over many unrelated docs per window
+  pushes the decays down. A protected register written once sidesteps both;
+  SR-0 asks first whether a transplantable vector exists.
 - **SR (to build only if SR-0 is met), bars on the skill-pack cell (Mind's probe, above):** skill
   at +32k / +128k / +1M ≥ 0.9 of its +2k value; recall (t40) and holdout
   not worse (≤ +0.01); one register per head or a small bank. Training needs
