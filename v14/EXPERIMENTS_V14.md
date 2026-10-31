@@ -2268,6 +2268,21 @@ before any number of it; Lead's decision, deadline 00:30 IST).**
   neg cell is reported as failing its constraint.
 - **Handover:** PACKAGE_HEAD + PACKAGE_T to Lead for the package table (fresh
   seeds 18000+, run by Lead). No number from the table's seeds is used here.
+- **A2 tuning RESULT (seed 15000, 23:03 IST; bench `5a3a8a8`; 32 para + 32 neg
+  docs per head): no t meets both constraints, for either head.** L1: the
+  smallest t with neg wrong-fetch ≤ 0.10 is 0.669 (neg 0.094), and it abstains
+  on 0.44 of stored paraphrased questions (> 0.20); L3: t 0.732, false abstain
+  0.50. The similarities overlap: never-stored mean 0.56 / 0.59, paraphrased
+  stored (organ miss) 0.62 / 0.63 (L1 / L3); the organ hit 0 of 32 never-stored
+  queries. **By the pre-registered rule: abstain is DISABLED when the organ
+  misses (PACKAGE_T = −1), and the neg cell is reported as failing its
+  constraint (wrong-fetch 1.00 when the organ misses).** Handover: PACKAGE_HEAD
+  = L1 (`l1p_fwd_L8c_99e6803.pt`), PACKAGE_T = −1. Reading: the learned key's
+  similarity cannot tell "stored but paraphrased" from "never stored", so in
+  this package only the exact organ can abstain; "nothing stored" for a
+  paraphrased question would need another signal (e.g. the mind's answer
+  after re-reading the fetched row, already shown unsafe on natural text, or a
+  trained abstain head). Logs `logs/v16_bench_a2tune_*`.
 
 **Deployment cost of the shipped mean (2026-10-31 22:42 IST, reported; same
 seed-17000 docs as the L2 verdict; bench `582acad`; L1 head; t 0.655).** L2
