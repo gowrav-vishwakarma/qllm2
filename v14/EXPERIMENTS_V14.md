@@ -1902,6 +1902,26 @@ in-distribution set. Log `logs/v14_l1p_99e6803_*.log`, head
   (answer within 6 tokens after the row's start) can score a correct burst
   row as a miss.
 
+**L1 proper, harness, PAIRED (2026-10-31 16:23 IST; bench.py @ 0eb2ead via
+`2cc01c5`, c1ctlb, kv, 32k, 16 docs, seed 14000, gate_tau 10, --vec_layer 8
+--centre; arm A = trained burst head `l1p_fwd_L8c_99e6803`, arm B = frozen
+burst-mean key, same documents).** Logs `logs/v16_bench_l1pair_*_kv_*_32768.*`.
+
+| keys | C2 per-token ceiling | trained burst key top-1 (top-5) | frozen burst key top-1 (top-5) | rows / 16 tokens |
+|---|---|---|---|---|
+| synthetic | 1.00 | **0.81** (1.00) | 0.06 (0.12) | 0.64 |
+| natural | 1.00 | **0.94** (1.00) | 0.56 (0.56) | 0.60 |
+
+- **Bar A at 32k: NOT met** (synthetic 0.81 < 0.90, and 0.19 below the C2
+  ceiling). Natural keys reach 0.94.
+- **At the row budget the trained key is a large gain over the frozen one**
+  (synthetic 0.06 → 0.81, natural 0.56 → 0.94).
+- **The right row is ALWAYS in the top 5** (1.00 on both): the misses are
+  confusions between needles of the same template, which a re-read can settle.
+  Next (development, to pre-register before running): fetch top-5 and let the
+  mind pick by its own answer margin (planner v0, already in the harness), and
+  separately the memory latitude (256-d key). 128k pending.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
