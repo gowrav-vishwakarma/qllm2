@@ -1983,7 +1983,7 @@ best-scoring row. ABSTAIN when the best score is below a threshold t.
 - **Needs from the harness:** per candidate (top 5): its key similarity, its
   re-read answer and margin, and whether it is right (a `P_cands` list per
   record). Asked of Lead; nothing is scored until it exists.
-- **Amendment P1/A1 (17:20 IST, before any P1 number; a flaw in my own
+- **Amendment P1/A1 (17:11 IST, before any P1 number; a flaw in my own
   rule).** z-scoring within the 5 candidates removes the absolute level, so a
   threshold on the best z-score cannot detect "nothing stored". Abstain uses
   the chosen row's RAW key similarity instead: abstain when sim_best < t (the
