@@ -4622,7 +4622,7 @@ user's "expression counts").** It replaces the mix clause (cu1 had no "Win": its
   +0.022). The rest (~0.025) is capacity spent on the new formats at 103M.
 - **Rule:** match or exceed cu1's ABSOLUTE tokens per skill at the smallest share. At 2.88B stage-B
   tokens, 0.5 % = 14.4M tokens (cu1 had 9.6M per curriculum source).
-- **Stage-B mix (fixed now):** dclm 0.427, fineweb 0.398 (r3c's 0.44 : 0.41 ratio), smoltalk2_mid 0.10,
+- **Stage-B mix (fixed now; srd OUT after cu1, its 0.005 to dclm = 0.432):** dclm 0.427, fineweb 0.398 (r3c's 0.44 : 0.41 ratio), smoltalk2_mid 0.10,
   recall 0.04, b2 0.01, lab 0.01, fsq 0.005, hop 0.005, srd 0.005. srd goes in only if cu1's R6a passes
   in the rerun; else its 0.005 goes to dclm. Synthetic share 7.5 % vs r3c's 5 %.
 - **Absolute stage-B tokens:** recall 115M (r3c 144M); b2 and lab 28.8M each (cu1 14.4M / 9.6M); fsq,
