@@ -134,6 +134,7 @@ def run(args):
     tasks = [t for t in args.tasks.split(',') if t]
     lengths = [int(x) for x in args.lengths.split(',') if x]
     variants = [v for v in args.variants.split(',') if v]
+    alphas = [float(x) for x in args.alphas.split(',') if x]
     out = open(args.out, 'a')
     S = body.state_bytes()
     for task in tasks + (['two_hop'] if 'replay_hop2' in variants else []):
@@ -160,6 +161,15 @@ def run(args):
                                               'mem': {'state_bytes': S, 'tpp_kv_bytes_full': body.kv_bytes(len(ids)),
                                                       'tpp_refetch_kv_bytes': body.kv_bytes(len(refetch))},
                                               'sec': round(time.time() - t0, 2)}) + '\n')
+                    if 'contrast' in variants:           # cd1: l = l_pack + a * (l_pack - l_nopack)
+                        lp_, ln_ = body.last_logits(pack + fill + q).float(), body.last_logits(fill + q).float()
+                        fa, ca = {}, {}
+                        for al in alphas:
+                            lg = lp_ + al * (lp_ - ln_)
+                            fa[str(al)] = int(int(lg.argmax()) == ex.target_token_id)
+                            ca[str(al)] = int(score_candidate_logits(ex, lg[ex.candidate_token_ids].cpu().tolist())['correct'])
+                        out.write(json.dumps({**row, 'task': 'contrast', 'T': len(pack + fill + q), 'free_a': fa,
+                                              'cand_a': ca, 'sec': round(time.time() - t0, 2)}) + '\n')
                     if 'replay_refresh' in variants:
                         replay = sum(U[-3:-1], [])
                         ids_alone = H + fill + replay + q
@@ -192,6 +202,7 @@ if __name__ == '__main__':
     p.add_argument('--tasks', default='shift_wide_new,affine_map_new')
     p.add_argument('--variants', default='skillpack,replay_refresh,replay_hop2')
     p.add_argument('--shots', type=int, default=8)
+    p.add_argument('--alphas', default='0,0.5,1,2,4', help='contrast variant (cd1): l_pack + a (l_pack - l_nopack)')
     p.add_argument('--hop_facts', type=int, default=4, help='two_hop: owners (= pets = names) in the story')
     p.add_argument('--lengths', default='0,2048,8192,32768,131072')
     p.add_argument('--docs', type=int, default=100)
