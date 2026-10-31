@@ -1,7 +1,7 @@
 # v16 handover + board (Lead = the organiser session; Mind = formerly "Qllm v13"; Library = formerly "Qllm v14"; Lead since 2026-10-31 13:20 IST)
 
 ## Progress to 100 % (Lead's estimate; 100 % = thesis shown on MLB-1 vs baselines as they are + a distributable mind+library package)
-Overall ~35 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill holds BEYOND training context after one read 10 % (LAW-1: lg32 ~16:30-18:30; SR fallback) | 3 rule from words 0 % (curriculum) | 4 session library 50 % (L1 burst key, abstain) | 5 planner 20 % | 6 shared library / skill packs 15 % | 7 LM quality guard 60 % (r3c to 3B) | 8 benchmark MLB-1 70 % (GPU grid) | 9 package + release 0 %. If LAW-1 passes: ~55 %.
+Overall ~35 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill holds BEYOND training context after one read 10 % (LAW-1: lg32 ~16:30-18:30; SR fallback) | 3 rule from words 0 % (curriculum) | 4 session library 60 % (L1 burst key 0.81/0.94 at 32k vs bar 0.90; top-5 1.00; planner v0 next) | 5 planner 20 % | 6 shared library / skill packs 15 % | 7 LM quality guard 60 % (r3c to 3B) | 8 benchmark MLB-1 70 % (GPU grid) | 9 package + release 0 %. If LAW-1 passes: ~55 %.
 
 ## Board (2026-10-31 15:50 IST)
 
@@ -63,6 +63,8 @@ Overall ~35 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill hol
 - 16:20 IST: a4f VERDICT (Mind): in between, NOT in the package. Hashed n-gram table (+33.5M sparse params) on the 600M mind: holdout 3.4488 vs C1-ctl 3.4743 (-0.026, bar -0.02 met); new-token loss 0-64 web -0.062 (met), PG-19 -0.0275 (bar -0.03, missed); recall guard met (0.916 vs 0.825). Engram-class parametric knowledge = cost table, serves neither thesis clause, no more GPU. 4090 now: Library (one job at a time) + Evol V1's finishing pair. lg32 started beside r3c alone (41 GB free at start vs its 42.6 GB gate: Lead asked Mind to confirm; guard baseline 31.4k tok/s, 0 strikes).
 
 - 16:35 IST: CPU BASELINE GRID done (c1ctlb, 32k, 14 cells x 32 docs, harness 4691ee3 = pre-A4 seeding, so cells are unpaired across tasks; output-vector keys). Mind alone 0.00-0.28 everywhere; exact organ 1.0 on kv / kv1 / kvupd, 0.34-0.41 on tool / para (by design), 0.0 on neg (abstains); re-read of the right span 0.88-1.0 (tool 0.47-0.56); two-hop by chained organ reads 1.0 (re-read 1.0); output-vector address C2 0.06-0.62; burst row in needle 0.94-1.0; never-stored max-sim 0.83 vs stored 0.81-0.89 (frozen output vector cannot abstain). Logs committed. Next: same grid on b2p2 at 0eb2ead with the layer-8 centred address.
+
+- 16:50 IST: L1 PAIRED RESULT (Library; bench 0eb2ead, kv 32k, 16 docs, same docs both arms): trained burst key top-1 (top-5) synthetic 0.81 (1.00) vs frozen burst-mean 0.06 (0.12); natural 0.94 (1.00) vs 0.56 (0.56); C2 per-token ceiling 1.00; 0.6 rows / 16 tokens. Bar A NOT met (0.81 < 0.90); misses are same-template confusions. Approved next: "L1 + planner v0" (top-5 fetch, mind picks by its own answer margin; 5 re-reads per query; reported separately, never as Bar A) and the 256-d key (memory latitude). Harness: P_margin_burst / P_concat_burst added. Suggested hard negatives from the same document.
 
 ## Open questions
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
