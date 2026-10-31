@@ -446,7 +446,7 @@ the needle probe, while the exact organ stays at 1.0. The frozen-state
 address is 0.75 top-1 at 128k but 1/4 at 400k. Build a LEARNED key at the
 salient token, with one row per event (not per token).
 
-## Step back (2026-10-31 ~13:30 IST, after the pivot, n9r and n9th seed 131)
+## Step back (2026-10-31 ~13:00 IST, after the pivot, n9r and n9th seed 131)
 
 **What surprised us.** (1) n9r killed the last recall claim: the control's
 own seed moves recall by 0.08 / 0.14, five to ten times N9a's effect, and

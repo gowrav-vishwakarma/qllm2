@@ -1451,7 +1451,7 @@ toward the intent. Today PAM looks up with the current token's state at
 which state forms the query (a slow planner state vs the body), and how the
 two stores' reads are combined.
 
-### L — the library (v14's lane after the 2026-10-31 pivot; PRE-REGISTERED 13:30 IST, before any L number)
+### L — the library (v14's lane after the 2026-10-31 pivot; PRE-REGISTERED ~13:00 IST, before any L number)
 
 **What the pivot changes.** The O(1) body is the mind; verbatim knowledge
 lives in a session library and a shared growing library. v14 builds the
@@ -1490,7 +1490,7 @@ nats.
   (key / value / other).
 - If the natural cell fails: the write gate needs training (a learned gate on
   the same signal); the frozen surprise alone is not enough.
-- **Amendment A1 (13:50 IST, before any W0 number; arithmetic, not data).**
+- **Amendment A1 (~13:00 IST, before any W0 number; arithmetic, not data).**
   (1) The tau grid is {4, 5, 6, 7, 8, 9, 10} nats: mean surprise on web text is
   ~3.5 nats, so tau ≤ 5 fires on far more than 1 token in 16. A "row" is one
   firing token (u > tau); row rate = firing tokens / tokens; the bar applies
@@ -1501,6 +1501,11 @@ nats.
   at r = 1/16): a gate that fires at random would already catch 63 %, so a
   95 % bar on them is impossible by arithmetic. The lift over chance is the
   number.
+- **Amendment A2 (13:02 IST, after a 2-document smoke run, before the full
+  run).** The smoke showed ~1 row per 16 tokens even at 10 nats, so the grid
+  is extended to {4, ..., 14} nats; a bar at row rate ≤ 1/16 is read at the
+  lowest tau in the grid that reaches it. Full run: 40 documents per cell,
+  8192 tokens, 8 needles per document, seed 9100.
 
 **Unit L1 (trained key head on the frozen mind).** Key head W_k and query head
 W_q, 128 dims each, trained contrastively (InfoNCE, temperature learned) on
