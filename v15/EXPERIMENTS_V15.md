@@ -363,7 +363,7 @@ Grove I reference extracted from `abe4c89` as `v15/tmp/grove_I.py`):
 | Grove I (`abe4c89`) | soft | soft, 1−e^{−αg} | none | 0.839 (0.907 with identity conv; seed 3: 0.661) | 0.955 |
 | Grove II (`b599a56`) | hard (ST) | hard, running mean | yes | 0.255 | 1.000 |
 | Grove III (`4b06ad2`) | soft | hard, running mean | yes / off | 0.575 / 0.090 | 1.000 |
-| Grove IV-b (`4a33187`, record) | soft | soft, 1−e^{−αg} | yes / off | 0.072, 0.081, 0.488 (seeds 2–4) / 0.655 | 1.000 |
+| Grove IV-b (`f20e4c5`, record) | soft | soft, 1−e^{−αg} | yes / off | 0.072, 0.081, 0.488 (seeds 2–4) / 0.655 | 1.000 |
 | **Grove IV (`4a33187`)** | soft | soft, running mean | yes / off | 0.638 / 0.481 (seed 2; seeds 3–4 pending) | 1.000 |
 
 Readings: (1) the soft read carries rules (II → III: 0.26 → 0.58); (2) soft
