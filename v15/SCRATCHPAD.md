@@ -16,8 +16,13 @@
   echo, six pairs (rules seeds 21/22/23 then B2 seeds 41/42/43), tmux
   `gii2_v15`, driver `v15/tmp/gii2_chain.sh`, worktree `../qllm_v15_gii2`
   (ckpts of pair 1 -> `/media/gowrav/d_drive/qllm_ckpts/v15_gii2_checkpoints_v14/`).
-  ~8.1 GB beside v14's whole-card n9r (13.9 GB); ~1 h per pair, chain end
-  ~12:30 IST. Bars: EXPERIMENTS §4 G1; prediction §6. Summary:
+  ~8.1 GB beside v14's whole-card n9r (13.9 GB); Grove II is 3.5x slower
+  (~2.3 h per pair). **Chain trimmed to pairs 1–2 (user, 07:30 IST: give the
+  4090 to v13/v14 after this run)**: two agreeing pairs decide a 2-of-3 bar;
+  a split would need pair 3, asked for separately. B2 pairs dropped. Chain
+  end ~10:40 IST; then v15 stays off the GPUs (CPU work: speed, toys, design)
+  and asks v13/v14 before any next GPU job. Bars: EXPERIMENTS §4 G1;
+  prediction §6. Summary:
   `.venv/bin/python v15/tmp/g1_summary.py "../qllm_v15_gii2/logs/v14_v15gii2*_b599a56_*.json"`.
   Probe after pair 1: `.venv/bin/python v15/tmp/probe_shares.py <ckpt>/grove@hd64L4.pt 8`.
 
