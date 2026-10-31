@@ -2475,6 +2475,24 @@ before any code or number; Lead's order item 3; eval only).**
 - **Prediction (written now):** R ≤ 2048 holds the skill; R = 4096 gives about
   the one-read 4k value (0.42 / 0.27); the overhead at R = 2048 is the pack
   length / 2048 (a few percent).
+- **N11-R RESULT (2026-10-31 23:43 IST; b2p2; code `bbf5adc` local; seeds
+  8100-8149, 50 docs per cell): bar MET.** Log
+  `logs/v14_n11r_b2p2_bbf5adc_20261031_2333.jsonl`.
+
+  | rule, L | no refresh | R = 4096 | **R = 2048** | R = 1024 |
+  |---|---|---|---|---|
+  | affine 8k | 0.12 | 0.30 | 0.90 | 1.00 |
+  | affine 32k | 0.10 | 0.32 | **0.96** (bar ≥ 0.95) | 1.00 |
+  | shift 8k | 0.04 | 0.12 | 0.62 | 0.82 |
+  | shift 32k | 0.00 | 0.32 | **0.80** (bar ≥ 0.70) | 0.86 |
+  | token overhead | 0 | 0.7 % | **1.6 %** | 3.3 % |
+
+  - The written prediction held: R ≤ 2k keeps the skill; R = 4k gives about
+    the one-read 4k value (0.32 / 0.32 here vs 0.42 / 0.27 one-read).
+  - **For the package:** a standing skill stays alive to any length for ~1.6 %
+    extra tokens (R = 2k), or ~3.3 % for the sturdier R = 1k (shift 0.86).
+    The O(1) mind plus a refresh rule holds a skill past the trained length;
+    the cost is stated, not hidden.
 - **Thesis clause:** holds beyond the context (with the library's help);
   closest prior work: periodic re-prompting / "system prompt reminders" in
   long-running agents. Plumbing; the claim is only the measured cost of
