@@ -4152,3 +4152,28 @@ Guards: attr3b vs b2p2 PG-19 +0.015, web −0.002 (bar ≤ +0.02, met); B2 `_new
    model) than the gap distribution, and lg2 (the control) will show it.
 3. For Library's skill register: a register that does not decay (written once at
    induction) removes the vanishing path entirely. That fits this result.
+
+**lg32 decay half-lives (Lead's ask, measured early for lg32, 19:05 IST).** `v13_sempty/tmp/gates_diag.py`,
+affine_map_new prompts at L = 4096 (12 prompts), CPU; filler half-life per head (geometric mean
+retention on filler tokens), content half-life in brackets. Logs `logs/diag/v13_sempty_halflives_{b2p2,lg32}_*`.
+
+| head | b2p2 filler (content) | lg32 filler (content) | change |
+|---|---|---|---|
+| echo h0 | 718 (46) | 537 (88) | −25 % |
+| echo h1 | 1,564 (47) | 1,026 (61) | −34 % |
+| echo h2 | 1,274 (11) | 802 (23) | −37 % |
+| echo h3 | 2,376 (220) | 1,427 (462) | −40 % |
+| echo h4 | 1,548 (38) | 984 (68) | −36 % |
+| echo h5 | 2,539 (264) | 1,137 (359) | −55 % |
+| notebook b11 h4 | 648 (149) | 401 (149) | −38 % |
+| other notebook heads (≥ 30) | 38–202 | 33–179 | small |
+
+**The decays moved, toward FASTER forgetting.** So "no gradient reached the decays" is
+refuted for lg32; the gradient reached them and shortened them, while write gates barely
+changed and the reset at rule tokens weakened slightly (content half-lives up). Revised
+reading (still a hypothesis): at SEQ 32k, each window packs many unrelated web documents,
+so the LM objective rewards forgetting faster, and that outweighs the sparse (3 %) long-
+gap rule signal, whose own gradient is weak across ~15k-token gaps. Consequences: reach
+extension by training would need long COHERENT documents at long context (books, long
+code), a larger share of long-gap docs or a curriculum, or a structural decay floor /
+protected register (Library's SR). lg8 / lg2 get the same table in their write-up.
