@@ -2584,6 +2584,34 @@ fitted threshold:
   secondary. Bars: neg abstain ≥ 0.90; kv `P_free_sent` ≥ 0.95 on both key
   types. b2p2, 32k, 40 docs per cell, kv / para / tool / neg × syn + nat. Runs
   when Lead's harness has `P_free_sent`.
+- **S2 VERDICT (2026-11-01 01:16 IST; Lead's run
+  `logs/v16_pkg_s2_b2p2_32768_719d598_20261101_0106.jsonl`, b2p2, 32k, fresh
+  seed 23000, strict, 320 rows, 0 errors): NOT met.**
+
+  | cell | bar | `P_free_sent` (primary) | one-token free | 20-way | abstain |
+  |---|---|---|---|---|---|
+  | kv synthetic | sent ≥ 0.95 | **0.875** | 0.875 | 1.00 | 0.00 |
+  | kv natural | sent ≥ 0.95 | **0.70** | 0.675 | 1.00 | 0.00 |
+  | neg syn / nat | abstain ≥ 0.90 | – | – | – | **1.00 / 1.00** (met) |
+  | para syn / nat | reported | 0.275 / 0.10 | | | 0.675 / 0.85 |
+  | tool syn / nat | reported | 0.10 / 0.10 | | | 0.75 / 0.75 |
+
+  - **Every kv miss had the right row; the mind failed to WRITE the value.**
+    14 of the 20 value nouns are 2-3 tokens (" will"+"ow", " on"+"yx", " sa"+"ff"+"ron").
+    kv by value length (sentence): synthetic single-token 1.00 (n 11) vs
+    multi-token 0.83 (n 29); natural 0.75 (n 12) vs 0.68 (n 28). Misses: a
+    wrong first piece (" ake." / " ave." / " ite." for willow / onyx / clover),
+    loops on natural keys (" refers to refers to ...", " the base of the base
+    of ..."), generic prose (" the activity of a protein."). The 20-way pick
+    compares first tokens only, so the registered v1 score was lenient on
+    exactly these; the sentence scorer is the honest one (Lead).
+  - Reading: fetch right, expression wrong: the 103M mind, reading the row
+    COLD (row + question alone, fresh state), does not reliably copy a
+    multi-token word or hold the format on natural keys.
+- **A3 CONFIRM (frozen rule top-1 gain ≥ 5.6186 on S2's unseen rows, 01:16 IST):
+  NOT met.** para + tool answered-and-correct 0.212 vs strict 0.175 (+0.038 <
+  +0.10); neg abstain 1.00 / 0.825 (natural < 0.90). A3 closed: the mind's
+  read gain cannot set abstain (it is in-script, offline; no code to remove).
 - **A3: "found it" from the mind's own evidence (PRE-REGISTERED 2026-11-01
   01:00 IST, before any number of it; offline, no GPU).** A2 showed similarity
   cannot decide abstain (stored-paraphrase and never-stored sims overlap).
