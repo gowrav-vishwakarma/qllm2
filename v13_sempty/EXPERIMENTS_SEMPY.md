@@ -4240,3 +4240,19 @@ exists only in v14's micro-bench today. Otherwise dropped, and recorded so.
 - **Win** = R6a and R-fsq, with the guards met; R6b, R-hop and the bench re-read are claimed
   separately. Any FAIL is recorded with its numbers; failed sources are removed from the code
   per the AGENTS rule (index row with the code-at hash).
+
+**cu1 amendment A1 (2026-10-31 22:25 IST, before any cu1 number): the N9s paired arm is ON.**
+Library ported N9s to the LM trainer (`c91f4c6`: `ECHO_PHASE_LAGS=3 ECHO_PHASE_SALIENT=1`, v14
+self-test ALL PASS, grad-ckpt parity, builds and reloads on M2) before cu1 started, which was
+Lead's condition. **Arm `cu1n9s`:** its OWN stage A (the init_from warm start refuses N9s's new
+parameters; same precedent as n9c), with c1m2a's recipe (dclm / fineweb / smoltalk2_mid /
+aptitude 0.25 / 0.20 / 0.15 / 0.40, 120M tokens, blend warmup 30M, LR 1.2e-3, seed 42, M2 + echo)
+plus N9s, then cu1's stage B exactly (same mix, seed 42). Runs after cu1 on the same card (a
+second gate on cu1's end), code at master `2e75098` (cu1's code plus the additive switch).
+**Caveats that travel with it:** N9s needs N9a's 3-token lags, and N9a alone FAILED its
+replication (n9r) and hurt lookup at 600M (n9c), so the arm measures N9a + N9s together. Its
+stage A differs from cu1's (trained with N9s on), a second confound.
+**Rules for the arm (fixed now):** (i) *N9s helps two-hop at 600M* if cu1n9s two-hop (run_cur_probe)
+≥ cu1's + 0.15 AND ≥ 0.50; (ii) guards against cu1: holdout ≤ cu1 + 0.02, label_diag ≥ cu1 − 0.05
+(N9a hurt lookup before), R6a not worse than cu1 by > 0.10; (iii) every cu1 cell reported for
+both arms. A pass is a 600M paired result for Library's unit, not a package claim.
