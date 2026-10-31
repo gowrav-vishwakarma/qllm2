@@ -180,17 +180,20 @@ def build(rng, tok, filler, L, task, n, keys='synthetic', shots=0):
         query = enc(f" Query: {key} refers to")
         pos = sorted(rng.sample(range(0, max(1, L - 64)), len(inserts)))
         meta = dict(key=key, val=val, hop_key=None, negative=True)
-    elif task == 'natq':  # NATURAL QUESTION (user, Nov 1: generation counts): fact in prose, plain question, free answer
+    elif task in ('natq', 'natqneg'):  # NATURAL QUESTION (user, Nov 1: generation counts): fact in prose, plain question, free answer
         keys_ = [mk() for _ in range(n)]
         vals = [rng.choice(_RECALL_VALUE_NOUNS) for _ in range(n)]
         state_t = [" By the way, {k} is just another name for {v}.", " People around here call {v} by the name {k}.",
                    " It turns out that {k} is what everyone means when they say {v}.", " In the old records, {k} stands for {v}."]
         for kk, v in zip(keys_, vals):
             inserts.append(enc(rng.choice(state_t).format(k=kk, v=v)))
-        qi = rng.randrange(n); key, val = keys_[qi], vals[qi]
+        if task == 'natqneg':          # never-stated key (Library's D4): the n prose facts are stored, the asked key is not
+            key = mk(); val = rng.choice(_RECALL_VALUE_NOUNS); meta_neg = True
+        else:
+            qi = rng.randrange(n); key, val = keys_[qi], vals[qi]; meta_neg = False
         query = enc(f" Question: what does {key} stand for? Answer:")
         pos = sorted(rng.sample(range(0, max(1, L - 64)), len(inserts)))
-        meta = dict(key=key, val=val, hop_key=None)
+        meta = dict(key=key, val=val, hop_key=None, negative=meta_neg)
     elif task == 'para':  # key stored one way, asked in a paraphrase (inflection / case); organ misses by design
         keys_ = [mk() for _ in range(n)]
         vals = [rng.choice(_RECALL_VALUE_NOUNS) for _ in range(n)]
@@ -342,7 +345,7 @@ def main():
                             lg2 = R.last_logits(span + span2 + q2)
                             rec['C_hop2_reread'] = int(cand[int(lg2[cand].argmax())] == ans)
                 # oracle fetch: the stored sentence put right in front of the query (upper bound of any fetch)
-                if vecs is not None and a.task in ('instr', 'kv', 'kv1', 'para', 'tool', 'natq', 'syn'):
+                if vecs is not None and a.task in ('instr', 'kv', 'kv1', 'para', 'tool', 'natq', 'natqneg', 'syn'):
                     if a.task == 'instr':
                         span_o = ids[:meta['rule_len']]
                     else:
@@ -372,7 +375,7 @@ def main():
                         K_all = K_all - mu
                     q = torch.nn.functional.normalize(K_all[qk], dim=-1)
                     docv = torch.nn.functional.normalize(K_all[:doc_end], dim=-1)
-                    span_r = 24 if a.task in ('tool', 'natq') else 6
+                    span_r = 24 if a.task in ('tool', 'natq', 'natqneg') else 6
                     def in_right(pp):
                         return any(ids[j] == ans for j in range(pp + 1, min(doc_end, pp + span_r)))
                     sims = docv @ q; top = sims.topk(5).indices.tolist(); p = top[0]
