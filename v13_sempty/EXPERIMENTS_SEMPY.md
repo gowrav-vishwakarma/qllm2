@@ -3549,3 +3549,55 @@ text, past its trained length (affine 0.61 at 8192 for seed 43).
      holdout, recall, step_wide_new spread.
    - Caveat that stays with any claim: trained rule FORMATS with held-out
      VALUES, not unseen rule families.
+
+## Gate diagnostic + test-time gate floor (2026-10-31 07:30 IST; CPU, no training): soft write gates are selective by rank but weak; the label gap is NOT filler burial
+
+Why: Mamba-2 keeps exact items better (labels, step through filler), and v14
+read that as "PAM's write cannot be refused". Scripts: `v13_sempty/tmp/gates_diag.py`
+(token classes item / label / format / filler in spread prompts; gates read via
+hooks on `_delta_gates`, `_decay` and `echo_gates`) and
+`v13_sempty/tmp/gate_floor_probe.py`. Outputs: `logs/diag/v13_sempty_gate*_3d7d889_20261031.txt`.
+Models: `c1m2b_main_7ae6f1f` (M2 body, no b2 docs) and `b2p2_main_38e3c29`.
+
+**The knob already exists.** A3 delta (on in every M2 run) writes with
+b_w = sigmoid(write_proj(x)) per token and head, separate from the decay. The
+echo memory has its own dt / write / erase gates. The coupled Mamba-2 form was
+C1 (FAIL).
+
+**What the gates do** (label prompts at L = 2048 / 4096, 20 / 12 prompts):
+- Long memory is the echo: filler half-lives of the 6 heads 660–3100 tokens.
+  Notebook heads are mostly 1–46 tokens, plus a few at 150–740 (b11 h4 ~700, b3 h5 ~180).
+- Write gates are selective by rank: AUROC(item/label > filler) 0.84–0.95 in
+  echo, b7 and b11; b3 0.60. By size they are weak: echo filler write 0.12–0.14
+  and erase ~0.11 per token, vs 0.2–0.5 at items. Filler outnumbers items ~100:1.
+- PAM learned a soft write-forget tie: echo retention drops at item/label
+  tokens (c1m2b h2: filler half-life 1236 → 159 at items).
+- With b2 docs, on affine prompts this becomes a reset: echo half-life at rule
+  tokens 11–264 (c1m2b 107–611), while filler is still 700–2500. Reading: the
+  model overwrites a rule register at each example and carries the LATEST one
+  across weakly written filler. That replaces the earlier "coherent
+  integration" guess (neither reading tested).
+
+**Test-time floor** (b2p2, label_diag 8 shots, 80 trials, ±0.05; gates < tau → 0):
+
+| | category @0 / 2048 / 4096 | exact @0 / 2048 / 4096 |
+|---|---|---|
+| no floor | 0.51 / 0.33 / 0.21 | 0.61 / 0.26 / 0.21 |
+| echo, tau 0.2 | 0.49 / 0.33 / 0.20 | 0.54 / 0.29 / 0.23 |
+| echo, tau 0.3 | 0.48 / 0.30 / 0.26 | 0.53 / 0.34 / 0.29 |
+| all memories, tau 0.2 | 0.46 / 0.28 / 0.15 | 0.50 / 0.35 / 0.15 |
+
+At most +0.05 to +0.08 at distance (echo, tau 0.3; ~1.5 SE), at a cost of
+−0.04 / −0.09 in context. Not a rescue, and an untrained floor is a weak test.
+
+**The deciding fact is short context** (label_diag, 200 trials, no filler):
+
+| exact @ 2 / 4 / 8 shots | PAM b2p1 | PAM b2p2 | Mamba-2 b2m | T++ b2t |
+|---|---|---|---|---|
+| label_exact | 0.60 / 0.675 / 0.49 | 0.63 / 0.735 / 0.615 | **0.865 / 0.905 / 0.815** | 0.725 / 0.825 / 0.705 |
+
+With 2 shots the prompt is ~15 tokens, so there is nothing to bury. PAM's label
+gap is a short-context lookup / binding gap. Filler burial adds to it at distance
+but is not its cause. The recall docs (one trained template) gave N9a 0.975, so the
+format hypothesis is the live one: the lb pair (running) tests it. *For v14's
+N12:* a hard selector targets distance; judge it on 2-shot label_exact too.

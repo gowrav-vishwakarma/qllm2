@@ -1,0 +1,4 @@
+b2p2_main_38e3c29 tau=0.0 scope=echo trials=80 {'label_category@0': 0.512, 'label_category@2048': 0.325, 'label_category@4096': 0.212, 'label_exact@0': 0.613, 'label_exact@2048': 0.263, 'label_exact@4096': 0.212}
+b2p2_main_38e3c29 tau=0.2 scope=echo trials=80 {'label_category@0': 0.487, 'label_category@2048': 0.325, 'label_category@4096': 0.2, 'label_exact@0': 0.537, 'label_exact@2048': 0.287, 'label_exact@4096': 0.225}
+b2p2_main_38e3c29 tau=0.3 scope=echo trials=80 {'label_category@0': 0.475, 'label_category@2048': 0.3, 'label_category@4096': 0.263, 'label_exact@0': 0.525, 'label_exact@2048': 0.338, 'label_exact@4096': 0.287}
+b2p2_main_38e3c29 tau=0.2 scope=all trials=80 {'label_category@0': 0.463, 'label_category@2048': 0.275, 'label_category@4096': 0.15, 'label_exact@0': 0.5, 'label_exact@2048': 0.35, 'label_exact@4096': 0.15}
