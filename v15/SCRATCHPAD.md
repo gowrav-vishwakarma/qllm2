@@ -12,23 +12,35 @@
 - Nothing has run on a GPU yet. 4090: v13's n9c was using ~15 GB at 00:30.
 
 ## Running
-- Nothing on a GPU (05:45 IST 2026-10-31). G1d done: the bench-trained
-  organ never formed addresses (τ stayed at init; same-key overlap 0.78 vs
-  other 0.79). EXPERIMENTS §4 G1d. Worktrees `../qllm_v15_g1`,
-  `../qllm_v15_g1r`, `../qllm_v15_diag` can be removed (logs copied; the
-  diag ckpt stays on d_drive).
+- **GII-2 RUNNING (started 07:02 IST 2026-10-31)**: Grove II (`b599a56`) vs
+  echo, six pairs (rules seeds 21/22/23 then B2 seeds 41/42/43), tmux
+  `gii2_v15`, driver `v15/tmp/gii2_chain.sh`, worktree `../qllm_v15_gii2`
+  (ckpts of pair 1 -> `/media/gowrav/d_drive/qllm_ckpts/v15_gii2_checkpoints_v14/`).
+  ~8.1 GB beside v14's whole-card n9r (13.9 GB); ~1 h per pair, chain end
+  ~13:00 IST. Bars: EXPERIMENTS §4 G1; prediction §6. Summary:
+  `.venv/bin/python v15/tmp/g1_summary.py "../qllm_v15_gii2/logs/v14_v15gii2*_b599a56_*.json"`.
+  Probe after pair 1: `.venv/bin/python v15/tmp/probe_shares.py <ckpt>/grove@hd64L4.pt 8`.
 
 ## Next action
 0. G2 plumbing is DONE and verified on CPU (`v15/hook.py`, `--arch grove`,
    launcher `ARCH=grove GROVE_SPEC=`); see EXPERIMENTS §4 G2 for the command.
-1. Step back (the void) on G1d, then write §6 of EXPERIMENTS (design +
-   pre-registration): selection that decides (competitive exclusion) and
-   colonisation of empty niches (births); implement in `v15/grove.py`,
-   selftest parity, toys (big-vocab 4096 keys at lr 3e-4 must stay >= 0.95;
-   bench-like regime), then a new G1 chain (same bars).
-2. G2 only after a G1 pass (plumbing is ready).
+1. Read GII-2 pairs as they land (bars L, P; guard; R recorded). Probe pair
+   1's saved grove (addresses, births/token per grove on label_exact).
+2. If L and P pass: G2 (150M-token LM on the r600 recipe; plumbing ready,
+   `v15/hook.py`; check speed first: Grove II is heavier per season).
+3. If they fail: the void again. Candidates already noted: satiety
+   (conscience) against generalist monopolies in loose groves; θ per grove
+   learned through the surrogate; the binding path (reign vs conv).
 
 ## Step-back notes
+- 2026-10-31 07:05, after building Grove II. Four of the five faults found
+  this morning were not in the idea but in defaults carried over from Grove I
+  (soft-share growth rate, conv bias, coupled spreads) and in one rule I had
+  not thought through (a novel token eating an old tree). The decode-parity
+  test did not catch any of them: both forms agreed on the wrong thing. What
+  caught them was a *trace of one document* (who was born, who ate what).
+  Lesson for the lane: every organ gets a one-document trace tool on day one,
+  next to the parity test. Parity says "consistent"; the trace says "right".
 - 2026-10-31 03:40, after G1r pair 1 (rules yes, lookup no, guard no).
   What it says: ripening made Grove a rule learner (letter_shift 0.99,
   reverse3 1.00), so selection-as-recurrence does carry a rule. Lookup is

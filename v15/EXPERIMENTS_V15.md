@@ -308,11 +308,28 @@ succession fruit, and seasons. The whole is the claim, as in §2.
 
 **Pre-registered tests (Grove II).**
 - GII-0 selftest: season == decode to round-off incl. births, placement and
-  continuation; toy lookup ≥ 0.5; O(1) state.
+  continuation; toy lookup ≥ 0.5; O(1) state. **PASS** (`b599a56`): parity
+  1e-15 with 39–41 births; toy 1.000 at 400 steps (Grove I 0.750).
 - GII-1 toys (CPU): big-vocab 4096 keys, season 32, lr 3e-4, 1200 steps:
-  ≥ 0.95 (Grove I: 0.955). Birth rate per grove logged.
+  ≥ 0.95 (Grove I: 0.955). **PASS: 1.000**; lr 3e-3 400 steps 1.000 (Grove
+  I 0.062); 31 keys season 8 1.000. Fast strict grove: same-key overlap 1.00
+  vs 0.00 (an exact instance cache); loose slow groves 0.5–0.9 vs 0.2–0.5.
+
+**What the toys taught on the way (06:00–07:00 IST), all found by the
+decode-parity test and the birth/landing trace, none by guessing:** (1) a
+novel token must be eaten by its newborn only; landing on the best old tree
+too corrupted it (toy 0.055). (2) Growth of 86 %/token (Grove I's α for
+soft masses) destroyed instances; a root is now the running mean of what the
+tree ate with `use` as the count, and α is gone. (3) The conv's bias made
+every token look alike (cos 0.8–0.9), so nothing was novel and a repeat was
+not recognised; the conv has no bias and starts as identity on the current
+token. (4) λ and θ were both spread in grove order, so no grove was fast and
+strict; the spreads are now paired the other way (fast = strict cache, slow
+= loose prototype). In a slow grove (λ 0.9) the accumulated fitness noise of
+other trees (a random walk) beats a perfect match, so slow groves are context
+selectors, not lookups: a division of labour, not a bug.
 - GII-2 = G1 again (same six pairs, same bars L, P, R, guard; `grove` arm
-  at the new hash). Prediction, written before the run: label_exact 2-shot
+  at the new hash). **Running since 07:02 IST 2026-10-31 at `b599a56`.** Prediction, written before the run: label_exact 2-shot
   > 0.5 in ≥ 2 pairs (binding, not just the label set), label_category
   unknown (prototype formation now depends on the soil clustering tokens
   under θ), guard within 0.1 nat. If label_exact stays at echo's 0.50, the
