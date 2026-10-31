@@ -1,0 +1,44 @@
+  [synthetic] doc 1/40  [synthetic] doc 2/40  [synthetic] doc 3/40  [synthetic] doc 4/40  [synthetic] doc 5/40  [synthetic] doc 6/40  [synthetic] doc 7/40  [synthetic] doc 8/40  [synthetic] doc 9/40  [synthetic] doc 10/40  [synthetic] doc 11/40  [synthetic] doc 12/40  [synthetic] doc 13/40  [synthetic] doc 14/40  [synthetic] doc 15/40  [synthetic] doc 16/40  [synthetic] doc 17/40  [synthetic] doc 18/40  [synthetic] doc 19/40  [synthetic] doc 20/40  [synthetic] doc 21/40  [synthetic] doc 22/40  [synthetic] doc 23/40  [synthetic] doc 24/40  [synthetic] doc 25/40  [synthetic] doc 26/40  [synthetic] doc 27/40  [synthetic] doc 28/40  [synthetic] doc 29/40  [synthetic] doc 30/40  [synthetic] doc 31/40  [synthetic] doc 32/40  [synthetic] doc 33/40  [synthetic] doc 34/40  [synthetic] doc 35/40  [synthetic] doc 36/40  [synthetic] doc 37/40  [synthetic] doc 38/40  [synthetic] doc 39/40  [synthetic] doc 40/40
+[synthetic] pre-memory surprise (tau: rows/16 tok | needle caught | key | value | chance):
+  tau  4.0: 8.07 | 1.000 | 1.000 | 0.994 | 0.999
+  tau  5.0: 6.52 | 1.000 | 1.000 | 0.959 | 0.994
+  tau  6.0: 5.10 | 1.000 | 1.000 | 0.787 | 0.977
+  tau  7.0: 3.81 | 1.000 | 1.000 | 0.487 | 0.932
+  tau  8.0: 2.70 | 1.000 | 1.000 | 0.275 | 0.839
+  tau  9.0: 1.79 | 1.000 | 0.956 | 0.138 | 0.691
+  tau 10.0: 1.10 | 0.994 | 0.825 | 0.066 | 0.505
+  tau 11.0: 0.61 | 0.950 | 0.609 | 0.022 | 0.317
+  tau 12.0: 0.30 | 0.841 | 0.456 | 0.009 | 0.170
+  tau 13.0: 0.14 | 0.653 | 0.281 | 0.003 | 0.083
+  tau 14.0: 0.06 | 0.422 | 0.134 | 0.000 | 0.035
+  [natural] doc 1/40  [natural] doc 2/40  [natural] doc 3/40  [natural] doc 4/40  [natural] doc 5/40  [natural] doc 6/40  [natural] doc 7/40  [natural] doc 8/40  [natural] doc 9/40  [natural] doc 10/40  [natural] doc 11/40  [natural] doc 12/40  [natural] doc 13/40  [natural] doc 14/40  [natural] doc 15/40  [natural] doc 16/40  [natural] doc 17/40  [natural] doc 18/40  [natural] doc 19/40  [natural] doc 20/40  [natural] doc 21/40  [natural] doc 22/40  [natural] doc 23/40  [natural] doc 24/40  [natural] doc 25/40  [natural] doc 26/40  [natural] doc 27/40  [natural] doc 28/40  [natural] doc 29/40  [natural] doc 30/40  [natural] doc 31/40  [natural] doc 32/40  [natural] doc 33/40  [natural] doc 34/40  [natural] doc 35/40  [natural] doc 36/40  [natural] doc 37/40  [natural] doc 38/40  [natural] doc 39/40  [natural] doc 40/40
+[natural] pre-memory surprise (tau: rows/16 tok | needle caught | key | value | chance):
+  tau  4.0: 8.05 | 1.000 | 1.000 | 1.000 | 0.998
+  tau  5.0: 6.50 | 1.000 | 0.997 | 1.000 | 0.990
+  tau  6.0: 5.08 | 1.000 | 0.991 | 0.997 | 0.966
+  tau  7.0: 3.77 | 1.000 | 0.969 | 0.988 | 0.907
+  tau  8.0: 2.66 | 1.000 | 0.916 | 0.934 | 0.799
+  tau  9.0: 1.74 | 1.000 | 0.759 | 0.778 | 0.639
+  tau 10.0: 1.04 | 0.991 | 0.581 | 0.550 | 0.449
+  tau 11.0: 0.57 | 0.928 | 0.394 | 0.287 | 0.274
+  tau 12.0: 0.28 | 0.753 | 0.197 | 0.128 | 0.146
+  tau 13.0: 0.13 | 0.534 | 0.059 | 0.034 | 0.070
+  tau 14.0: 0.05 | 0.325 | 0.019 | 0.006 | 0.029
+W1031 13:03:39.415993 1280618 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1031 13:03:54.474708 1280618 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+  [plain] doc 1/40W1031 13:04:05.951603 1280618 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1031 13:04:10.700448 1280618 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+  [plain] doc 2/40  [plain] doc 3/40  [plain] doc 4/40  [plain] doc 5/40  [plain] doc 6/40  [plain] doc 7/40  [plain] doc 8/40  [plain] doc 9/40  [plain] doc 10/40  [plain] doc 11/40  [plain] doc 12/40  [plain] doc 13/40  [plain] doc 14/40  [plain] doc 15/40  [plain] doc 16/40  [plain] doc 17/40  [plain] doc 18/40  [plain] doc 19/40  [plain] doc 20/40  [plain] doc 21/40  [plain] doc 22/40  [plain] doc 23/40  [plain] doc 24/40  [plain] doc 25/40  [plain] doc 26/40  [plain] doc 27/40  [plain] doc 28/40  [plain] doc 29/40  [plain] doc 30/40  [plain] doc 31/40  [plain] doc 32/40  [plain] doc 33/40  [plain] doc 34/40  [plain] doc 35/40  [plain] doc 36/40  [plain] doc 37/40  [plain] doc 38/40  [plain] doc 39/40  [plain] doc 40/40
+[plain] pre-memory surprise (tau: rows/16 tok | needle caught | key | value | chance):
+  tau  4.0: 8.08 | 1.000 | 0.000 | 0.000 | 1.000
+  tau  5.0: 6.49 | 1.000 | 0.000 | 0.000 | 1.000
+  tau  6.0: 5.06 | 1.000 | 0.000 | 0.000 | 1.000
+  tau  7.0: 3.77 | 1.000 | 0.000 | 0.000 | 0.998
+  tau  8.0: 2.66 | 0.997 | 0.000 | 0.000 | 0.984
+  tau  9.0: 1.76 | 0.991 | 0.000 | 0.000 | 0.928
+  tau 10.0: 1.07 | 0.959 | 0.000 | 0.000 | 0.792
+  tau 11.0: 0.59 | 0.887 | 0.000 | 0.000 | 0.574
+  tau 12.0: 0.29 | 0.738 | 0.000 | 0.000 | 0.342
+  tau 13.0: 0.14 | 0.506 | 0.000 | 0.000 | 0.174
+  tau 14.0: 0.06 | 0.297 | 0.000 | 0.000 | 0.079
+saved logs/v14_w0_c1ctl_232748e_20261031_1303.json

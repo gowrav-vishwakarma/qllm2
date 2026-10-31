@@ -1,0 +1,633 @@
+{
+ "checkpoint": "/media/gowrav/d_drive/qllm2/checkpoints_v13_sempty/c1ctlb_main_7ae6f1f/best_model.pt",
+ "length": 8192,
+ "docs": 40,
+ "taus": [
+  4.0,
+  5.0,
+  6.0,
+  7.0,
+  8.0,
+  9.0,
+  10.0,
+  11.0,
+  12.0,
+  13.0,
+  14.0
+ ],
+ "seed": 9100,
+ "cells": {
+  "synthetic": {
+   "pre": {
+    "4.0": {
+     "row_rate": 0.5044921875,
+     "rows_per_16": 8.071875,
+     "caught": 1.0,
+     "key_fires": 1.0,
+     "value_fires": 0.99375,
+     "chance_catch": 0.9990215701729792,
+     "needles": 320
+    },
+    "5.0": {
+     "row_rate": 0.4076080322265625,
+     "rows_per_16": 6.521728515625,
+     "caught": 1.0,
+     "key_fires": 1.0,
+     "value_fires": 0.959375,
+     "chance_catch": 0.9942991887689876,
+     "needles": 320
+    },
+    "6.0": {
+     "row_rate": 0.318798828125,
+     "rows_per_16": 5.10078125,
+     "caught": 1.0,
+     "key_fires": 1.0,
+     "value_fires": 0.7875,
+     "chance_catch": 0.9773725054146009,
+     "needles": 320
+    },
+    "7.0": {
+     "row_rate": 0.2380950927734375,
+     "rows_per_16": 3.809521484375,
+     "caught": 1.0,
+     "key_fires": 1.0,
+     "value_fires": 0.4875,
+     "chance_catch": 0.9316862334280087,
+     "needles": 320
+    },
+    "8.0": {
+     "row_rate": 0.1689117431640625,
+     "rows_per_16": 2.702587890625,
+     "caught": 1.0,
+     "key_fires": 1.0,
+     "value_fires": 0.275,
+     "chance_catch": 0.8389288459203643,
+     "needles": 320
+    },
+    "9.0": {
+     "row_rate": 0.112115478515625,
+     "rows_per_16": 1.79384765625,
+     "caught": 1.0,
+     "key_fires": 0.95625,
+     "value_fires": 0.1375,
+     "chance_catch": 0.6907262493334232,
+     "needles": 320
+    },
+    "10.0": {
+     "row_rate": 0.068682861328125,
+     "rows_per_16": 1.09892578125,
+     "caught": 0.99375,
+     "key_fires": 0.825,
+     "value_fires": 0.065625,
+     "chance_catch": 0.5045134244194276,
+     "needles": 320
+    },
+    "11.0": {
+     "row_rate": 0.037896728515625,
+     "rows_per_16": 0.60634765625,
+     "caught": 0.95,
+     "key_fires": 0.609375,
+     "value_fires": 0.021875,
+     "chance_catch": 0.3170025739066037,
+     "needles": 320
+    },
+    "12.0": {
+     "row_rate": 0.0187042236328125,
+     "rows_per_16": 0.299267578125,
+     "caught": 0.840625,
+     "key_fires": 0.45625,
+     "value_fires": 0.009375,
+     "chance_catch": 0.17000484910300662,
+     "needles": 320
+    },
+    "13.0": {
+     "row_rate": 0.0087493896484375,
+     "rows_per_16": 0.139990234375,
+     "caught": 0.653125,
+     "key_fires": 0.28125,
+     "value_fires": 0.003125,
+     "chance_catch": 0.08307123494022917,
+     "needles": 320
+    },
+    "14.0": {
+     "row_rate": 0.003564453125,
+     "rows_per_16": 0.05703125,
+     "caught": 0.421875,
+     "key_fires": 0.134375,
+     "value_fires": 0.0,
+     "chance_catch": 0.03462585619510217,
+     "needles": 320
+    }
+   },
+   "full": {
+    "4.0": {
+     "row_rate": 0.39744873046875,
+     "rows_per_16": 6.3591796875,
+     "caught": 1.0,
+     "key_fires": 1.0,
+     "value_fires": 0.9625,
+     "chance_catch": 0.9932575793369189,
+     "needles": 320
+    },
+    "5.0": {
+     "row_rate": 0.308294677734375,
+     "rows_per_16": 4.93271484375,
+     "caught": 1.0,
+     "key_fires": 1.0,
+     "value_fires": 0.875,
+     "chance_catch": 0.9736839000821824,
+     "needles": 320
+    },
+    "6.0": {
+     "row_rate": 0.231085205078125,
+     "rows_per_16": 3.69736328125,
+     "caught": 1.0,
+     "key_fires": 1.0,
+     "value_fires": 0.715625,
+     "chance_catch": 0.9252242706558846,
+     "needles": 320
+    },
+    "7.0": {
+     "row_rate": 0.167803955078125,
+     "rows_per_16": 2.68486328125,
+     "caught": 1.0,
+     "key_fires": 1.0,
+     "value_fires": 0.490625,
+     "chance_catch": 0.8367974808207963,
+     "needles": 320
+    },
+    "8.0": {
+     "row_rate": 0.11611328125,
+     "rows_per_16": 1.8578125,
+     "caught": 1.0,
+     "key_fires": 0.984375,
+     "value_fires": 0.36875,
+     "chance_catch": 0.704197712804848,
+     "needles": 320
+    },
+    "9.0": {
+     "row_rate": 0.077301025390625,
+     "rows_per_16": 1.23681640625,
+     "caught": 0.996875,
+     "key_fires": 0.9125,
+     "value_fires": 0.2,
+     "chance_catch": 0.5479502328894751,
+     "needles": 320
+    },
+    "10.0": {
+     "row_rate": 0.04951171875,
+     "rows_per_16": 0.7921875,
+     "caught": 0.99375,
+     "key_fires": 0.8,
+     "value_fires": 0.134375,
+     "chance_catch": 0.3941541264642413,
+     "needles": 320
+    },
+    "11.0": {
+     "row_rate": 0.0295196533203125,
+     "rows_per_16": 0.472314453125,
+     "caught": 0.984375,
+     "key_fires": 0.628125,
+     "value_fires": 0.08125,
+     "chance_catch": 0.25599571238202945,
+     "needles": 320
+    },
+    "12.0": {
+     "row_rate": 0.01689453125,
+     "rows_per_16": 0.2703125,
+     "caught": 0.95,
+     "key_fires": 0.45,
+     "value_fires": 0.040625,
+     "chance_catch": 0.15477495928452412,
+     "needles": 320
+    },
+    "13.0": {
+     "row_rate": 0.0091949462890625,
+     "rows_per_16": 0.147119140625,
+     "caught": 0.825,
+     "key_fires": 0.303125,
+     "value_fires": 0.025,
+     "chance_catch": 0.08713054025994593,
+     "needles": 320
+    },
+    "14.0": {
+     "row_rate": 0.004608154296875,
+     "rows_per_16": 0.07373046875,
+     "caught": 0.671875,
+     "key_fires": 0.20625,
+     "value_fires": 0.015625,
+     "chance_catch": 0.044558582116689505,
+     "needles": 320
+    }
+   }
+  },
+  "natural": {
+   "pre": {
+    "4.0": {
+     "row_rate": 0.502886962890625,
+     "rows_per_16": 8.04619140625,
+     "caught": 1.0,
+     "key_fires": 1.0,
+     "value_fires": 1.0,
+     "chance_catch": 0.997918525993576,
+     "needles": 320
+    },
+    "5.0": {
+     "row_rate": 0.406231689453125,
+     "rows_per_16": 6.49970703125,
+     "caught": 1.0,
+     "key_fires": 0.996875,
+     "value_fires": 1.0,
+     "chance_catch": 0.9899988988020955,
+     "needles": 320
+    },
+    "6.0": {
+     "row_rate": 0.3174224853515625,
+     "rows_per_16": 5.078759765625,
+     "caught": 1.0,
+     "key_fires": 0.990625,
+     "value_fires": 0.996875,
+     "chance_catch": 0.9657361327958957,
+     "needles": 320
+    },
+    "7.0": {
+     "row_rate": 0.2356048583984375,
+     "rows_per_16": 3.769677734375,
+     "caught": 1.0,
+     "key_fires": 0.96875,
+     "value_fires": 0.9875,
+     "chance_catch": 0.9068491692439259,
+     "needles": 320
+    },
+    "8.0": {
+     "row_rate": 0.16611328125,
+     "rows_per_16": 2.6578125,
+     "caught": 1.0,
+     "key_fires": 0.915625,
+     "value_fires": 0.934375,
+     "chance_catch": 0.7990767677896116,
+     "needles": 320
+    },
+    "9.0": {
+     "row_rate": 0.1087921142578125,
+     "rows_per_16": 1.740673828125,
+     "caught": 1.0,
+     "key_fires": 0.759375,
+     "value_fires": 0.778125,
+     "chance_catch": 0.6385103140115533,
+     "needles": 320
+    },
+    "10.0": {
+     "row_rate": 0.0652069091796875,
+     "rows_per_16": 1.043310546875,
+     "caught": 0.990625,
+     "key_fires": 0.58125,
+     "value_fires": 0.55,
+     "chance_catch": 0.44882477180716185,
+     "needles": 320
+    },
+    "11.0": {
+     "row_rate": 0.0355438232421875,
+     "rows_per_16": 0.568701171875,
+     "caught": 0.928125,
+     "key_fires": 0.39375,
+     "value_fires": 0.2875,
+     "chance_catch": 0.2736504018627941,
+     "needles": 320
+    },
+    "12.0": {
+     "row_rate": 0.017724609375,
+     "rows_per_16": 0.28359375,
+     "caught": 0.753125,
+     "key_fires": 0.196875,
+     "value_fires": 0.128125,
+     "chance_catch": 0.1461418300318551,
+     "needles": 320
+    },
+    "13.0": {
+     "row_rate": 0.0081512451171875,
+     "rows_per_16": 0.130419921875,
+     "caught": 0.534375,
+     "key_fires": 0.059375,
+     "value_fires": 0.034375,
+     "chance_catch": 0.06975403663188351,
+     "needles": 320
+    },
+    "14.0": {
+     "row_rate": 0.0032745361328125,
+     "rows_per_16": 0.052392578125,
+     "caught": 0.325,
+     "key_fires": 0.01875,
+     "value_fires": 0.00625,
+     "chance_catch": 0.028560170234298243,
+     "needles": 320
+    }
+   },
+   "full": {
+    "4.0": {
+     "row_rate": 0.39769287109375,
+     "rows_per_16": 6.3630859375,
+     "caught": 1.0,
+     "key_fires": 1.0,
+     "value_fires": 1.0,
+     "chance_catch": 0.9886543423508656,
+     "needles": 320
+    },
+    "5.0": {
+     "row_rate": 0.3067596435546875,
+     "rows_per_16": 4.908154296875,
+     "caught": 1.0,
+     "key_fires": 1.0,
+     "value_fires": 1.0,
+     "chance_catch": 0.9607076370956305,
+     "needles": 320
+    },
+    "6.0": {
+     "row_rate": 0.22926025390625,
+     "rows_per_16": 3.6681640625,
+     "caught": 1.0,
+     "key_fires": 0.996875,
+     "value_fires": 0.9875,
+     "chance_catch": 0.8997923901879488,
+     "needles": 320
+    },
+    "7.0": {
+     "row_rate": 0.164727783203125,
+     "rows_per_16": 2.63564453125,
+     "caught": 1.0,
+     "key_fires": 0.98125,
+     "value_fires": 0.95,
+     "chance_catch": 0.7961082961812419,
+     "needles": 320
+    },
+    "8.0": {
+     "row_rate": 0.113836669921875,
+     "rows_per_16": 1.82138671875,
+     "caught": 1.0,
+     "key_fires": 0.95625,
+     "value_fires": 0.878125,
+     "chance_catch": 0.656191188081905,
+     "needles": 320
+    },
+    "9.0": {
+     "row_rate": 0.074871826171875,
+     "rows_per_16": 1.19794921875,
+     "caught": 1.0,
+     "key_fires": 0.853125,
+     "value_fires": 0.79375,
+     "chance_catch": 0.49717718684201406,
+     "needles": 320
+    },
+    "10.0": {
+     "row_rate": 0.046844482421875,
+     "rows_per_16": 0.74951171875,
+     "caught": 1.0,
+     "key_fires": 0.715625,
+     "value_fires": 0.628125,
+     "chance_catch": 0.3454770225341861,
+     "needles": 320
+    },
+    "11.0": {
+     "row_rate": 0.0272552490234375,
+     "rows_per_16": 0.436083984375,
+     "caught": 0.98125,
+     "key_fires": 0.525,
+     "value_fires": 0.44375,
+     "chance_catch": 0.21661049915778396,
+     "needles": 320
+    },
+    "12.0": {
+     "row_rate": 0.015264892578125,
+     "rows_per_16": 0.24423828125,
+     "caught": 0.93125,
+     "key_fires": 0.33125,
+     "value_fires": 0.30625,
+     "chance_catch": 0.12706629112136092,
+     "needles": 320
+    },
+    "13.0": {
+     "row_rate": 0.008056640625,
+     "rows_per_16": 0.12890625,
+     "caught": 0.8,
+     "key_fires": 0.178125,
+     "value_fires": 0.19375,
+     "chance_catch": 0.06896988111777502,
+     "needles": 320
+    },
+    "14.0": {
+     "row_rate": 0.0040924072265625,
+     "rows_per_16": 0.065478515625,
+     "caught": 0.65625,
+     "key_fires": 0.09375,
+     "value_fires": 0.0875,
+     "chance_catch": 0.03557965868982482,
+     "needles": 320
+    }
+   }
+  },
+  "plain": {
+   "pre": {
+    "4.0": {
+     "row_rate": 0.5047149658203125,
+     "rows_per_16": 8.075439453125,
+     "caught": 1.0,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.9999998749589543,
+     "needles": 320
+    },
+    "5.0": {
+     "row_rate": 0.4056365966796875,
+     "rows_per_16": 6.490185546875,
+     "caught": 1.0,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.9999922619066787,
+     "needles": 320
+    },
+    "6.0": {
+     "row_rate": 0.3165496826171875,
+     "rows_per_16": 5.064794921875,
+     "caught": 1.0,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.9998177106594747,
+     "needles": 320
+    },
+    "7.0": {
+     "row_rate": 0.235845947265625,
+     "rows_per_16": 3.77353515625,
+     "caught": 1.0,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.9977231553906177,
+     "needles": 320
+    },
+    "8.0": {
+     "row_rate": 0.1661163330078125,
+     "rows_per_16": 2.657861328125,
+     "caught": 0.996875,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.9835843626807754,
+     "needles": 320
+    },
+    "9.0": {
+     "row_rate": 0.109808349609375,
+     "rows_per_16": 1.75693359375,
+     "caught": 0.990625,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.9280182461351556,
+     "needles": 320
+    },
+    "10.0": {
+     "row_rate": 0.0669830322265625,
+     "rows_per_16": 1.071728515625,
+     "caught": 0.959375,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.7916253037080127,
+     "needles": 320
+    },
+    "11.0": {
+     "row_rate": 0.03699951171875,
+     "rows_per_16": 0.5919921875,
+     "caught": 0.8875,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.5738123157884316,
+     "needles": 320
+    },
+    "12.0": {
+     "row_rate": 0.01832275390625,
+     "rows_per_16": 0.2931640625,
+     "caught": 0.7375,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.34186119893957,
+     "needles": 320
+    },
+    "13.0": {
+     "row_rate": 0.008441162109375,
+     "rows_per_16": 0.13505859375,
+     "caught": 0.50625,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.17449950755279098,
+     "needles": 320
+    },
+    "14.0": {
+     "row_rate": 0.00362548828125,
+     "rows_per_16": 0.0580078125,
+     "caught": 0.296875,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.07887946373364829,
+     "needles": 320
+    }
+   },
+   "full": {
+    "4.0": {
+     "row_rate": 0.400390625,
+     "rows_per_16": 6.40625,
+     "caught": 1.0,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.9999905601077033,
+     "needles": 320
+    },
+    "5.0": {
+     "row_rate": 0.311260986328125,
+     "rows_per_16": 4.98017578125,
+     "caught": 1.0,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.9997829832216794,
+     "needles": 320
+    },
+    "6.0": {
+     "row_rate": 0.233709716796875,
+     "rows_per_16": 3.73935546875,
+     "caught": 1.0,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.9975747299463568,
+     "needles": 320
+    },
+    "7.0": {
+     "row_rate": 0.168701171875,
+     "rows_per_16": 2.69921875,
+     "caught": 1.0,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.98469770073296,
+     "needles": 320
+    },
+    "8.0": {
+     "row_rate": 0.1162353515625,
+     "rows_per_16": 1.859765625,
+     "caught": 0.996875,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.9389010360812904,
+     "needles": 320
+    },
+    "9.0": {
+     "row_rate": 0.076727294921875,
+     "rows_per_16": 1.22763671875,
+     "caught": 0.99375,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.835676560414754,
+     "needles": 320
+    },
+    "10.0": {
+     "row_rate": 0.0484832763671875,
+     "rows_per_16": 0.775732421875,
+     "caught": 0.975,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.6751079524196996,
+     "needles": 320
+    },
+    "11.0": {
+     "row_rate": 0.02896728515625,
+     "rows_per_16": 0.4634765625,
+     "caught": 0.946875,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.48571244042078165,
+     "needles": 320
+    },
+    "12.0": {
+     "row_rate": 0.016558837890625,
+     "rows_per_16": 0.26494140625,
+     "caught": 0.875,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.3145831136912175,
+     "needles": 320
+    },
+    "13.0": {
+     "row_rate": 0.00888671875,
+     "rows_per_16": 0.1421875,
+     "caught": 0.75625,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.1828501906629333,
+     "needles": 320
+    },
+    "14.0": {
+     "row_rate": 0.0044464111328125,
+     "rows_per_16": 0.071142578125,
+     "caught": 0.571875,
+     "key_fires": 0.0,
+     "value_fires": 0.0,
+     "chance_catch": 0.09589560643446304,
+     "needles": 320
+    }
+   }
+  }
+ }
+}

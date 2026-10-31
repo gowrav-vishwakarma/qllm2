@@ -1507,6 +1507,40 @@ nats.
   lowest tau in the grid that reaches it. Full run: 40 documents per cell,
   8192 tokens, 8 needles per document, seed 9100.
 
+**W0 RESULT (4090, 2026-10-31 13:03-13:25 IST, frozen C1-ctl, code
+`232748e`, 40 docs × 8k tokens × 8 needles per cell): bar NOT met on the
+natural cell, met on the synthetic cell only at the edge, and the catch is
+mostly a template effect.** Logs `logs/v14_w0_c1ctl_232748e_20261031_1303.{json,log}`.
+The lowest tau with ≤ 1 row per 16 tokens is 11 nats:
+
+| cell (tau 11) | rows / 16 tok | needle has a firing token (bar ≥ 0.95) | key fires | value fires | chance catch |
+|---|---|---|---|---|---|
+| synthetic | 0.61 | **0.950** | 0.61 | 0.02 | 0.32 |
+| natural keys | 0.57 | **0.928** (not met) | 0.39 | 0.29 | 0.27 |
+| plain real sentences | 0.59 | 0.887 (lift +0.31) | – | – | 0.57 |
+
+- **Why the catch is high:** a token-level look at 15 documents per cell
+  shows the firing token is mostly the FIRST word of the inserted sentence
+  (" Definition": 13.3 nats, above 11 in 84-86 % of needles), not the key (9
+  nats mean, above 11 in about 25 %) or the value. The inserted sentence is a
+  topic break in the prose. So the frozen surprise gate detects WHERE A NEW
+  EVENT BEGINS (a surprise burst), not what is in it.
+- **Plain real sentences** are caught 0.887 vs 0.574 by chance: sentences with
+  rare content stand out, so the gate does select content-bearing text.
+- **What it means for the row:** a row anchored on the firing token alone does
+  not hold the key word. The key word sits a few tokens after the firing one.
+
+**Amendment A3 to L1 (14:05 IST, after W0, before any L1 number): the row is
+a BURST SPAN.** A firing token f (u > tau, refractory 16 tokens) opens a row
+over tokens [f, f + 24); its key is a learned attentive pooling of the span's
+vectors, k = Σ_i softmax_i(a · v_i) · W_k v_i (128 dims). The query stays the
+mind's vector at the question's salient token through W_q. This keeps the
+index at ≤ 1 row per 16 tokens and lets the key head find the key word inside
+the span. The all-position frozen address stays the comparison, and the
+"row at the firing token only" index is reported as an ablation. Bars A / P /
+R are unchanged. Training documents come from the training pool (the
+organiser's `--filler` switch), never from the held-out prose.
+
 **Unit L1 (trained key head on the frozen mind).** Key head W_k and query head
 W_q, 128 dims each, trained contrastively (InfoNCE, temperature learned) on
 the frozen C1-ctl vectors. The mind is never updated.
