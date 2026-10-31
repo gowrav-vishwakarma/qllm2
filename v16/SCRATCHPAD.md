@@ -21,6 +21,8 @@
 - 16:35 IST: 6000 disk 6.5 -> 21 GB free (v13: gscreen_onorm latest.pt deleted; 11 finished best_model.pt moved to d_drive with md5 checks). MLB-1 v0.3: related-work table (kNN-LM/RETRO, EM-LLM, Titans, State Soup, Memorizing Transformers); SL0 labelled kNN-LM on a PAM mind; skill-pack persistence + replay-integration cells in.
 - PRE-REGISTERED PREDICTION (v13, before any number): today's checkpoints lose an induced skill between 8k and 32k of filler (echo filler half-lives 660-3100 tokens; spread affine 0.44-0.61 at 8k). Remedies as two lanes: v13 = long-gap rule docs at long training lengths; v14 = a structural SKILL REGISTER (written once at induction, no decay, protected) as a new mechanism; closest prior work State Soup (2406.08423).
 
+- 16:50 IST: v14 order approved: L1 (running, data pass ~1 h beside a4f) -> SR-0 (eval-only transplant of the rule vector from a short demo prompt into a long-gap query on b2p2; bar: B@32k >= 0.9 x A@2k for some layer, wrong/random vectors <= 0.25 x B) -> SR (the register) only if SR-0 passes. Prior work named: Function Vectors (Todd 2023), Task Vectors (Hendel 2023), In-Context Vectors, State Soup, Titans. b2p2 is on d_drive (from_6000/...).
+
 ## Open questions
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
 - The instr cell on c1ctlb was invalid (no rule skill); b2p2 rerun decides whether words can write the rule state.
