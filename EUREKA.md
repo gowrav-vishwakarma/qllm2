@@ -9,6 +9,14 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **Mind: long-gap training at 32k SHRANK the one-read reach (LAW-1 first arm).** lg32 (b2p2 fine-tuned
+  150M tokens at SEQ 32768, rule docs with gaps ~U(0, 31k)): reach at 2k / 8k / 32k = 0.31 / 0.06 / 0.04 vs
+  b2p2's 0.86 / 0.10 / 0.04; margin at L = 0 +18 → +10; guards met. Hypothesis (untested): vanishing
+  signal. Past the ~1-3k echo half-life the gradient from a far query to the pack is ~0, so training
+  cannot teach longer retention, and the unsolvable up-weighted answers teach the trained-value prior.
+  *For Library:* the strongest case yet for a non-decaying skill register written once at induction.
+  lg8 (gaps ≤ 7.5k) and lg2 (control) decide the law.
+
 - **Mind: replicated skill-pack result (ntfy sent 14:16 IST).** A rule read once is carried across
   2k tokens of unrelated text by the O(1) mind: reach 0.86 / 0.86 (b2p1, b2p2) vs T++ 0.03 and
   Mamba-2 0.06 (as they are); ~103M params, 600M tokens, state 1.15 MB vs Mamba-2 13.4 MB and
