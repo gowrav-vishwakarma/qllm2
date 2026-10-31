@@ -4574,3 +4574,33 @@ Free reach is ~0.2 below 20-way at 2k-4k in both models: a fading skill is ranke
   gets a 2× compute, still-O(1) decode option.
 - **Prior work:** context-aware decoding (Shi et al. 2023), contrastive decoding (Li et al. 2022).
   The difference is only the setting: a decaying O(1) recurrent state's one-read reach. No method claim.
+
+### cd1 result (01:51 IST, 2026-11-01): FAIL as pre-registered (2k free 0.70 < 0.81), but at 4k the skill is outvoted, not lost: contrast lifts free reach 0.17 → 0.59 and 20-way 0.355 → 0.815
+
+b2p2, CPU, `logs/diag/v13_sempty_cd1_b2p2_{tune,test}_cb8053b.jsonl` (`run_skillpack_probe --variants contrast`,
+`cb8053b`; a = 0 equals the plain cell, 12 / 12 checked). Logits l = l_pack + a·(l_pack − l_nopack).
+
+| test, seeds 8000–8099 (200 rows per L) | a = 0 | 0.5 | 1 | 2 | **4** |
+|---|---|---|---|---|---|
+| free, L = 0 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
+| free, 2k | 0.615 | 0.675 | 0.700 | 0.725 | 0.700 |
+| free, 4k | 0.170 | 0.265 | 0.350 | 0.465 | **0.590** |
+| 20-way, 2k | 0.860 | 0.900 | 0.920 | 0.945 | 0.940 |
+| 20-way, 4k | 0.355 | 0.475 | 0.580 | 0.700 | **0.815** |
+
+a was chosen on the tune split (seeds 8100–8149: best free 2k + 4k with L = 0 ≥ 0.98): **a = 4** (the edge
+of the grid). Bars: free at L = 0 ≥ 0.98 met (1.00); 4k ≥ 0.305 met (0.590); **2k ≥ 0.81 missed (0.700)**,
+so the pre-registered conjunction FAILS.
+
+**Reading.** At 4k, after one read, the skill is still in the state but outvoted by the LM prior. A
+decode-time contrast with the same stream minus the pack recovers it: 20-way reach 0.815, above the
+0.75 that lg8r's 50M tokens of training failed to reach (0.465). Free generation triples. At 2k free
+plateaus near 0.70 while 20-way is 0.94: there the misses are not a weak skill but another token
+winning the free argmax. Not diagnosed yet. Cost: 2 forward streams and 2 O(1) states (2 × 1.15 MB).
+In a package, the no-pack stream is the same session without the skill read. Prior work: CAD (Shi et
+al. 2023), contrastive decoding (Li et al. 2022). No method claim; the measured quantity is a
+recurrent mind's one-read reach.
+
+**Not shown (needs its own pre-registration):** a fresh seed with a fixed (a = 4, plus a = 8 past the
+grid edge); 8k / 16k; other skills (two-hop, recall); the effect of the contrast on ordinary
+generation (it must apply only where a read happened).
