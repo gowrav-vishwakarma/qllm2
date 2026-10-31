@@ -79,7 +79,9 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     facts / questions; scored free (A7) on a fresh seed; orphan check; plus Library's misses with the right
     row in hand (A4 v2 / S2): multi-token values cut short (" ave."), loops on multi-field rows (" onyx; onyx;"),
     generic prose on natural keys. So answers in cu2 are multi-token, end with a stop mark, and some rows
-    carry several fields;
+    carry several fields. After Library's A9 (warm read + contrast = package default, +0.142), the main
+    mind-side gap is TOOL FIELDS: run-on 47-55 % (the mind reads out the whole row), natural-key tool 0.575.
+    So cu2's first target is extracting ONE field from a multi-field row and stopping;
   - remove b2gap + RESET_AT_EOS if Lead agrees.
 
   lg8r's checkpoint is on d_drive (`checkpoints_v13_sempty/lg8r_main_f2b7d8c`; the worktree link
