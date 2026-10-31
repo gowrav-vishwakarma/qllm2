@@ -420,12 +420,18 @@ def main():
                     # planner v0 on the top-5 BURST rows (L1 + planner): re-read each stored span [f, f+24)
                     # alone in front of the query, pick the answer with the largest top1-top2 margin
                     bspans = [ids[b[0]:min(doc_end, b[0] + 24)] for b in btop_b]
-                    bbest = None
-                    for sp in bspans:
+                    bbest = None; pc = []
+                    for rank, (sp, bi) in enumerate(zip(bspans, border)):
                         lgb = R.last_logits(sp + ids[doc_end:])[cand]
-                        vb, ib = lgb.topk(2); mb = float(vb[0] - vb[1])
+                        vb, ib = lgb.topk(2); mb = float(vb[0] - vb[1]); pa = cand[int(ib[0])]
+                        # per-candidate record for offline selectors (L1+P1): key sim, re-read answer,
+                        # margin, whether that answer is right, whether the row truly holds the answer
+                        pc.append({'rank': rank, 'sim': round(float(bsim[bi]), 5), 'answer': int(pa),
+                                   'margin': round(mb, 4), 'correct': int(pa == ans),
+                                   'row_has_answer': int(in_span(btop_b[rank][0]))})
                         if bbest is None or mb > bbest[0]:
-                            bbest = (mb, cand[int(ib[0])])
+                            bbest = (mb, pa)
+                    rec['P_cands'] = pc
                     rec['P_margin_burst'] = int(bbest[1] == ans)
                     lgcb = R.last_logits([t for sp in bspans for t in sp] + ids[doc_end:])
                     rec['P_concat_burst'] = int(cand[int(lgcb[cand].argmax())] == ans)
