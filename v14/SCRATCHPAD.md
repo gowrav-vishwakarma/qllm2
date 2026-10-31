@@ -4,7 +4,34 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-01 03:28 IST) — read this first
+## State (2026-11-01 03:44 IST) — read this first
+
+Session: **Library**. Nothing of mine is running or queued; the 4090 is
+handed back to Lead. **The package spec is `v14/PACKAGE.md`** (fetch: organs +
+strict abstain; read: warm + no-row contrast on the answer tokens only, stop
+at the value; skills as demonstrations, refresh R 2k; shared library; cost;
+A9's numbers).
+* Tonight's verdicts (EXPERIMENTS_V14): strict / S2 NOT met (writing); A3
+  closed; A4 v2 NOT met (fetch exact, writing misses); A5 NOT met (synonyms
+  top-1 0.40, MiniLM 0.45); A6 / A6c: warm read fails at every length, warm +
+  contrast best; N11-R/F NOT met (shift); A8 NOT met just short; **A9 MET
+  (warm + contrast is the package read: 32k kv 0.925 / 0.925, para 0.925 /
+  0.925, tool 0.75 / 0.575, abstain 1.00 / 0.925)**; A10 NOT met (cu1 reads
+  well, its own-state fetch is weaker).
+* Next candidates: (1) the three-step package (organ → learned key + the
+  mind's own " unknown" → abstain), when Mind's cu2 has a checkpoint; needs
+  the rows held fixed across minds; (2) "R 2k + contrast" refresh default on
+  fresh seeds (A8 descriptive 0.79); (3) the line-up read (top-k rows
+  together; `P_concat_burst_sent` in bench a2b5488); (4) synonyms: a key that
+  carries meaning (frozen state 0.375 ≈ head 0.40 ≈ MiniLM 0.45).
+* Worktrees of finished runs (`../qllm_v14a6c`, `../qllm_v14a9`,
+  `../qllm_v14a10`, `../qllm_v14n11f`) can be removed; their hashes are in the
+  verdicts.
+* **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
+  tmux first.
+
+## Old state (2026-11-01 03:28 IST; superseded)
+
 
 Session: **Library**. The 4090 is mine (Lead, 03:23): **A9** running (tmux `a9`,
 `~/a9.sh`, worktree `../qllm_v14a9` @ 1b29b86: the package's strict fetch, row
