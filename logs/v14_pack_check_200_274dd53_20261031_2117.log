@@ -1,0 +1,20 @@
+Token indices sequence length is longer than the specified maximum sequence length for this model (1026 > 1024). Running this sequence through the model will result in indexing errors
+{"entries": 400, "tokens": 82384, "rows": 4292, "rows_per_16_tokens": 0.834, "mb_per_1M_tokens": {"keys": 13.34, "row_pointers": 0.63, "text": 2.0, "organ": 12.0}, "mb_per_1M_total": 27.97, "install_seconds": 24.2, "install_seconds_per_1M_tokens": 294.3}
+{
+ "synthetic": {
+  "n": 100,
+  "key1": 0.55,
+  "key5": 0.74,
+  "key_ans": 0.59,
+  "organ_hit": 0.99,
+  "organ_ans": 0.99
+ },
+ "natural": {
+  "n": 100,
+  "key1": 0.54,
+  "key5": 0.74,
+  "key_ans": 0.42,
+  "organ_hit": 1.0,
+  "organ_ans": 1.0
+ }
+}

@@ -2140,6 +2140,37 @@ state excluded).
 - **Closest prior work:** State Soup (Pioro et al. 2024). Different only if (b)
   holds in-context without decay; otherwise it is State Soup.
 
+**Pack format + install tool (`582acad`, Lead's order item 2).** `v14/pack.py`:
+a pack is plain JSONL (header + one entry per line: text, source, sha256,
+time, trust; no keys). Install = one pass of the mind: rows at surprise bursts
+(tau 10) inside each entry (at least one per entry), keys from the L1 head on
+the block-8 state centred by a SHIPPED reference mean (mean over 1.7M
+training-pool tokens; a document's own mean sits 16 % of the within-doc spread
+away, max 30 %), an exact 4-gram organ, the text as u16. MB per 1M tokens:
+keys 13.6 + organ 12.0 + text 2.0 + pointers 0.6 = **28 MB** (within the ≤ 50 MB
+latitude); install 294 s per 1M tokens on the shared 4090.
+
+**Cross-document check (`v14/pack_check.py`, the product condition: library and
+session are different texts; seed 18000; development, not a bar).** Pack = N
+definitions inside held-out prose paragraphs + N prose-only distractors; each
+session = 1024 tokens of other held-out prose + " Query: K refers to".
+
+| pack | key type | learned key top-1 (top-5) | answer after re-read | organ entry / answer |
+|---|---|---|---|---|
+| 20 + 20 (8k tokens) | synthetic / natural | 0.90 / 0.90 (0.90 / 0.90) | 0.90 / 0.60 | 1.00 / 1.00 |
+| 200 + 200 (82k tokens, ~3.4k rows) | synthetic / natural | **0.55 / 0.54** (0.74 / 0.74) | 0.59 / 0.42 | 0.99 / 1.00 |
+
+- **The learned key does not transfer across documents.** In-document at 128k
+  (~5k rows) the same head gives natural 1.00; cross-document at ~3.4k rows it
+  gives 0.54. The head was trained only on same-document pairs, where the
+  state at the key word shares the surrounding document with the stored row.
+- **The exact organ is unaffected** (0.99-1.00): for exact keys the package is
+  already complete; the learned key's job (paraphrase, natural variants) is the
+  part that fails in the product condition.
+- **Next (to pre-register): L3, a cross-document head** trained on pairs whose
+  query sits in a different document from the row, centred by the shipped
+  mean, judged on a fresh-seed pack_check with paraphrased queries added.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
