@@ -2349,6 +2349,27 @@ texts, so (EUREKA "stream address") it is fetched by TEXT. Plumbing, cited
   Reported: each method per cell, index MB per 1M tokens, query time.
 - The L1 mind key's cross-document numbers (seed 19000 sweep) stand as the
   reference row; it is not rerun here.
+- **SL1 RESULT (2026-10-31 23:12 IST; seed 20000; code `88095d5` local =
+  `0eedc35` on origin; retrieval only, CPU): NOT met (natural paraphrase).**
+  Logs `logs/v14_sl1_88095d5_*`.
+
+  | question | 400 entries: SL1 (organ-4 / long / BM25 / MiniLM) | 4000 entries: SL1 (organ-4 / long / BM25 / MiniLM) | bar |
+  |---|---|---|---|
+  | exact synthetic | **1.00** (0.99 / 1.00 / 1.00 / 0.41) | **1.00** (0.86 / 1.00 / 1.00 / 0.22) | ≥ 0.99 / ≥ 0.97: met |
+  | exact natural | **1.00** (1.00 / 1.00 / 0.56 / 0.17) | **1.00** (1.00 / 1.00 / 0.31 / 0.08) | met |
+  | para synthetic | **0.98** (0.54 / 0.65 / 1.00 / 0.41) | **0.91** (0.47 / 0.58 / 1.00 / 0.23) | ≥ 0.80 / ≥ 0.70: met |
+  | para natural | **0.68** (0.20 / 0.21 / 0.56 / 0.17) | **0.49** (0.26 / 0.26 / 0.31 / 0.07) | **NOT met** |
+
+  - SL1 ≥ MiniLM − 0.05 in every cell (met), but the embedder baseline is
+    unfairly weak as registered: it embeds whole 200-word entries against a
+    one-line question; a fair baseline embeds sentences or chunks.
+  - Why natural paraphrase fails: real-word keys are common words, so BM25 is
+    ambiguous (0.31 at 4000), and the token organ misses exactly the forms that
+    change BPE tokens (Title / UPPER / plural). An organ over NORMALISED words
+    (case-folded, plural stripped) would match those forms directly.
+  - Organ index memory as implemented (a dict per n = 2..8): 24-66 MB per 1M
+    tokens; a suffix array over tokens gives the same longest-match lookups
+    at ~4 MB per 1M (implementation, not method).
 
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative

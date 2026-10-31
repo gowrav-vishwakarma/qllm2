@@ -1,0 +1,91 @@
+{
+ "synthetic_exact": {
+  "organ4": {
+   "top1": 0.99,
+   "top5": 0.99
+  },
+  "organ_long": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "bm25": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "sl1": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "minilm": {
+   "top1": 0.41,
+   "top5": 0.66
+  }
+ },
+ "synthetic_para": {
+  "organ4": {
+   "top1": 0.54,
+   "top5": 0.54
+  },
+  "organ_long": {
+   "top1": 0.65,
+   "top5": 0.65
+  },
+  "bm25": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "sl1": {
+   "top1": 0.98,
+   "top5": 0.98
+  },
+  "minilm": {
+   "top1": 0.41,
+   "top5": 0.65
+  }
+ },
+ "natural_exact": {
+  "organ4": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "organ_long": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "bm25": {
+   "top1": 0.56,
+   "top5": 0.92
+  },
+  "sl1": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "minilm": {
+   "top1": 0.17,
+   "top5": 0.39
+  }
+ },
+ "natural_para": {
+  "organ4": {
+   "top1": 0.2,
+   "top5": 0.2
+  },
+  "organ_long": {
+   "top1": 0.21,
+   "top5": 0.21
+  },
+  "bm25": {
+   "top1": 0.56,
+   "top5": 0.92
+  },
+  "sl1": {
+   "top1": 0.68,
+   "top5": 0.94
+  },
+  "minilm": {
+   "top1": 0.17,
+   "top5": 0.39
+  }
+ }
+}
+{'entries': 400, 'tokens': 82298, 'index_mb_per_1M_tokens': {'organ_2to8': 65.53, 'minilm': 7.47}, 'index_seconds': 0.3, 'embed_seconds': 19.4}
