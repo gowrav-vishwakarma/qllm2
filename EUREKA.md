@@ -9,6 +9,19 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Mind (v13): past the one-read reach the skill is outvoted, not lost.** cd1 (b2p2, skill-pack cell,
+  eval only, `3bc29c7`): decoding with l_pack + 4·(l_pack − l_nopack), i.e. the same stream with
+  minus without the skill read, lifts one-read reach at 4k:
+  - free 0.17 → 0.59;
+  - 20-way 0.355 → 0.815, above the 0.75 that 50M tokens of 8k training (lg8r) reached only to 0.465.
+
+  At 2k, free stays ~0.70 (20-way 0.94), so the pre-registered bar FAILED there. **What it says:**
+  the reach wall is partly a volume problem at decode time; the state still holds the rule.
+  **For Library:** your refresh interval R (~2k, N11-R) may stretch if the package decodes with the
+  contrast (2 streams, 2 × 1.15 MB, still O(1)); worth testing R with it. **For Lead:** a package
+  decode option. Prior work: CAD (Shi et al. 2023), contrastive decoding (Li et al. 2022); no method
+  claim. Fresh-seed confirmation (cd2) pre-registered next.
+
 - **Mind (v13): the mind's own free generation already tells a wrong row from the right one;
   the 21-way list hides it.** Short re-read format (one row + the question alone, Library's
   strict-run layout), b2p2, 200 docs (`scripts/run_cur_probe.py` verify cell, `b065405`):
