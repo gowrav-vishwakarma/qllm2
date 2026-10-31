@@ -1183,6 +1183,22 @@ reproduced; n9c's jump was seed luck.** Logs: `logs/v13_sempty_n9r*b_main_37fa33
 
 ### N9s — salient phase (user idea, 2026-10-31; PRE-REGISTERED ~00:40 IST)
 
+**600M VERDICT + REMOVAL (2026-11-01 04:36 IST): FAIL; N9a and N9s removed from
+the code (last code `d255fcd`).** Mind's paired arm cu1n9s
+(`cu1n9sb_main_fa9e410`, its own stage A with N9a lags 3 + N9s, then cu1's
+stage B, seed 42; v13_sempty EXPERIMENTS "cu1n9s VERDICT"): two-hop 0.090 vs
+cu1 0.570 (rule ≥ cu1 + 0.15 and ≥ 0.50), holdout 3.7533 vs 3.5254 (+0.228),
+label_diag 0.732 vs 0.913, fsq false abstain 0.35 vs 0.06, skill-pack 2k 0.535
+vs 0.81, WikiText 4.64 vs 4.27; B2 `_new` equal. With N9a's own failures (n9c
+lookup, n9r replication), the micro win (bar H, 27M) did not carry to 600M.
+Maths kept here for the record: query / key turned per channel pair by
+alpha_t = Σ_j W_j E[x_(t−j)] (window of 3), plus the salient running angle
+psi_t = (1 − s_t) psi_(t−1) + s_t W_s rms(E[x_t]), s_t = sigmoid(w · rms(h_t) + b).
+Rerun: `git worktree add ../qllm_n9 d255fcd`, then `ECHO=1 ECHO_PHASE_LAGS=3
+[ECHO_PHASE_SALIENT=1] bash v13_sempty/tmp_pretrain_mix.sh`. Old N9 checkpoints
+(n9c e5f0b73, n9r 37fa333, cu1n9sb fa9e410) now refuse to load at HEAD with an
+error naming `d255fcd`.
+
 **Idea (user).** N9a's phase comes from a FIXED window of the last 3 tokens.
 In real text the word that identifies a fact is often further back ("the big
 red **truck** that we bought last year **is** silver"), so the window sees

@@ -27,7 +27,7 @@ shared reads) · **E1** echo memory (10-29) · **2st** two-stage schedule, stage
 120M (apt = with aptitude data) · **LR** · **rec** recall docs share (answer weight
 100) · **b2** rule docs, held-out values (10-31, rule inference + distance edge) ·
 **lab** label docs (pending, lb pair) · **N9a** echo phase lags (v14; recall
-0.975 @600M, replication n9r pending) · **N12** selective store (v14, micro pending).
+0.975 @600M, replication n9r pending) [N9a + N9s REMOVED 2026-11-01 after cu1n9s FAIL; last code `d255fcd`, rerun `ECHO=1 ECHO_PHASE_LAGS=3 [ECHO_PHASE_SALIENT=1] bash v13_sempty/tmp_pretrain_mix.sh` in a worktree at `d255fcd`] · **N12** selective store (v14, micro pending).
 
 | run (hash) | box | tokens / params | body | E1 | 2st | LR | rec | b2 | lab | N9a | N12 | answers |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -46,7 +46,7 @@ shared reads) · **E1** echo memory (10-29) · **2st** two-stage schedule, stage
 
 **Direction (user, 10-31): O(1) mind + growing library.** The state is the mind; verbatim knowledge goes to a session library + a shared library; benchmark first (see EXPERIMENTS "Direction").
 
-**Not yet in any 3B run:** b2 rule docs, lab (PASS), fetch training, N12 (pending micro). N9a is out (n9r FAIL). A 3B "best package" run is the place
+**Not yet in any 3B run:** b2 rule docs, lab (PASS), fetch training, N12 (pending micro). N9a is out (n9r FAIL); N9s is out (cu1n9s FAIL); both removed from the code (last code `d255fcd`). A 3B "best package" run is the place
 they meet; r3c's result says nothing about them.
 
 ## Kept (in the current code)

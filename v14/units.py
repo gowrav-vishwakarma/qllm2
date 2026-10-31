@@ -10,15 +10,10 @@ the last earlier occurrence of the current n-gram (exact hash keys, bounded
 table, O(1)), through its own zero-init reader. Decode carries one table per
 order as the last entry of ``states``.
 
-N9a (``echo_phase_lags``): content-phase echo keys. Echo's query and key are
-turned by learned angles from the last few tokens (window ending at t for the
-query, at t - 1 for the key), so look-alike template keys ("<noun> is") are
-pulled apart by their content instead of colliding (v13 diagnosis). Zero-init:
-identical to echo at start. Decode carries (S, h_prev, phase_prev, tail ids).
-
 Removed after a FAIL (code at the listed commit, v14/EXPERIMENT_INDEX.md):
 N6 operator memory at ``78e4354``; tied echo at ``5100fd7``; N1 phase
-interference between notebooks at ``9e0a3fd``.
+interference between notebooks at ``9e0a3fd``; N9a content-phase echo keys and
+N9s salient phase at ``d255fcd`` (cu1n9s FAIL at 600M, 2026-11-01).
 """
 
 from __future__ import annotations
@@ -233,33 +228,12 @@ class V14LM(LM):
             if self.echo:
                 with torch.no_grad():
                     self.echo_gates.bias[:cfg.n_heads].fill_(cfg.echo_dt_bias)
-        self.phase_lags = int(getattr(cfg, 'echo_phase_lags', 0) or 0)
-        if self.phase_lags:
-            if not cfg.echo:
-                raise ValueError("N9a echo_phase_lags needs echo")
-            planes = cfg.n_heads * cfg.head_dim // 2
-            # alpha_t = sum_j W_j E[x_{t-j}]: one angle per head channel pair;
-            # zero-init (no RNG drawn), so the model starts as plain echo
-            self.phase_proj = nn.Parameter(torch.zeros(self.phase_lags, planes, cfg.dim))
-            self.phase_proj._zero_init = True
-        self.phase_salient = bool(getattr(cfg, 'echo_phase_salient', False))
-        if self.phase_salient:
-            if not self.phase_lags:
-                raise ValueError("N9s echo_phase_salient needs echo_phase_lags > 0")
-            planes = cfg.n_heads * cfg.head_dim // 2
-            self.sal_proj = nn.Parameter(torch.zeros(planes, cfg.dim))   # W_s: zero, starts as N9a
-            self.sal_proj._zero_init = True
-            # importance gate per head; its own generator, so the body and the
-            # global RNG stay exactly as N9a at the same seed
-            g = torch.Generator().manual_seed(9137)
-            self.sal_gate_w = nn.Parameter(torch.randn(cfg.n_heads, cfg.dim, generator=g) * 0.02)
-            self.sal_gate_b = nn.Parameter(torch.zeros(cfg.n_heads))
         self.surp_tau = float(getattr(cfg, 'echo_surprise_tau', 0.0) or 0.0)
         if self.surp_tau:
             if cfg.is_complex or not cfg.echo:
                 raise ValueError("N12 surprise-selected writes need the real echo body")
-            if self.phase_lags or self.opmem is not None:
-                raise ValueError("N12 is built on plain echo (no N9a phase / opmem yet)")
+            if self.opmem is not None:
+                raise ValueError("N12 is built on plain echo (no opmem yet)")
 
     def _run_blocks(self, z, batch, time, states, step_offset, input_ids=None):
         if not self.ngram_orders:
@@ -297,111 +271,6 @@ class V14LM(LM):
         finally:
             self._ng_in, self._ng_want_state = None, False
         return logits, list(new_states) + [self._ng_out], aux
-
-    # ── N9a: content-phase echo keys (raw-torch boundary, like v13's echo) ──
-
-    def _content_phase(self, ids: torch.Tensor) -> torch.Tensor:
-        """ids [B, L] (-1 = no token) -> angles [B, L, planes]: alpha_t = sum_j W_j E[x_{t-j}]."""
-        E = self.embed.embed.weight
-        e = E[ids.clamp(min=0)].float()
-        e = e * torch.rsqrt(e.pow(2).mean(-1, keepdim=True) + 1e-6)     # unit RMS: angles do not track embedding scale
-        e = torch.where((ids >= 0)[..., None], e, torch.zeros((), device=e.device))
-        alpha = torch.zeros(*ids.shape, self.phase_proj.shape[1], device=ids.device, dtype=torch.float32)
-        for j in range(self.phase_lags):
-            ej = nn.functional.pad(e, (0, 0, j, 0))[:, :ids.shape[1]]
-            alpha = alpha + ej @ self.phase_proj[j].float().t()
-        return alpha
-
-    def _salient_phase(self, h: torch.Tensor, ids: torch.Tensor, psi_prev=None):
-        """N9s: psi_t = (1 - s_t) psi_{t-1} + s_t W_s rms(E[x_t]), s_t = sigmoid(w . rms(h_t) + b)
-        per head. h [B, T, D], ids [B, T] -> psi [B, T, planes], psi at the last t."""
-        from sempyt import scan
-        B, T, _ = h.shape
-        H = self.sal_gate_w.shape[0]
-        per = self.sal_proj.shape[0] // H                                 # planes per head
-        e = self.embed.embed.weight[ids].float()
-        e = e * torch.rsqrt(e.pow(2).mean(-1, keepdim=True) + 1e-6)
-        hn = h.float() * torch.rsqrt(h.float().pow(2).mean(-1, keepdim=True) + 1e-6)
-        s = torch.sigmoid(hn @ self.sal_gate_w.float().t() + self.sal_gate_b.float())   # [B, T, H]
-        a = e @ self.sal_proj.float().t()                                 # [B, T, planes]
-        u = (s.repeat_interleave(per, dim=-1) * a).view(B, T, H, per)
-        g = 1.0 - s                                                       # keep (1 - importance)
-        bd, td, hd, pd = Dim('batch', B), Dim('time', T), Dim('sal_head', H), Dim('sal_plane', per)
-        psi = scan(named(u, (bd, td, hd, pd)), named(g, (bd, td, hd)), over=td, mode='chunked')
-        psi = psi.raw(bd, td, hd, pd)                                     # named-exit: N9s boundary
-        if psi_prev is not None:                                          # carried angle, faded by the gates
-            keep = torch.exp(torch.cumsum(torch.log(g.clamp(min=1e-12)), dim=1))   # [B, T, H]
-            psi = psi + keep[..., None] * psi_prev.view(B, 1, H, per)
-        psi = psi.reshape(B, T, H * per)
-        return psi, psi[:, -1]
-
-    @staticmethod
-    def _turn(x: torch.Tensor, alpha: torch.Tensor) -> torch.Tensor:
-        """x [B, T, D] turned per channel pair (2i, 2i + 1) by alpha [B, T, D/2]."""
-        pairs = x.float().unflatten(-1, (-1, 2))
-        c, s = torch.cos(alpha), torch.sin(alpha)
-        out = torch.stack([pairs[..., 0] * c - pairs[..., 1] * s,
-                           pairs[..., 0] * s + pairs[..., 1] * c], dim=-1)
-        return out.flatten(-2).to(x.dtype)
-
-    def _echo_read(self, hidden, input_ids, batch, time, state=None):
-        """v13 echo read with N9a content-phase keys (see ``LM._echo_read``)."""
-        if not self.phase_lags:
-            return super()._echo_read(hidden, input_ids, batch, time, state)
-        cfg = self.config
-        h = hidden.raw(batch, time, self.model_dim)                     # named-exit: N9a echo boundary
-        B, T, D = h.shape
-        H, K = cfg.n_heads, cfg.head_dim
-        m = self.phase_lags
-        q, k = self.echo_qk(h).chunk(2, dim=-1)
-        if state is None:
-            tail = torch.full((B, m - 1), -1, dtype=torch.long, device=h.device)
-            k = nn.functional.pad(k, (0, 0, 1, 0))[:, :T]               # k_t from h_{t-1}; k_0 = 0
-        else:
-            tail = state[3]
-            k_prev = self.echo_qk(state[1].to(h.dtype)).chunk(2, dim=-1)[1]
-            k = torch.cat([k_prev[:, None], k[:, :T - 1]], dim=1)
-        ids_ext = torch.cat([tail, input_ids.long()], dim=1)            # lags reach into the carried tail
-        phi = self._content_phase(ids_ext)[:, m - 1:]                   # [B, T, planes]: window ending at t
-        phi_prev = state[2] if state is not None else torch.zeros_like(phi[:, :1, :].squeeze(1))
-        phi_key = torch.cat([phi_prev[:, None], phi[:, :T - 1]], dim=1)  # key k_t: window ending at t-1
-        if self.phase_salient:
-            psi, psi_last = self._salient_phase(h, input_ids, state[4] if state is not None else None)
-            phi = phi + psi                                             # window angles + salient angles
-            psi_key_prev = state[2] if state is not None else torch.zeros_like(phi[:, 0])
-            phi_key = torch.cat([psi_key_prev[:, None], phi[:, :T - 1]], dim=1)
-        q, k = self._turn(q, phi), self._turn(k, phi_key)
-        v = nn.functional.embedding(input_ids, self.embed.embed.weight).to(h.dtype)
-        v = v * torch.rsqrt(v.float().pow(2).mean(-1, keepdim=True) + 1e-6).to(h.dtype)
-        heads = lambda x: x.reshape(B, T, H, K).transpose(1, 2).reshape(B * H, T, K)
-        per_head = lambda x: x.transpose(1, 2).reshape(B * H, T)
-        dt, wr, er = self.echo_gates(h).split(H, dim=-1)
-        retention = per_head(torch.exp(-nn.functional.softplus(dt)))
-        bw = per_head(torch.sigmoid(wr))
-        be = per_head(torch.sigmoid(er - 3.0).clamp(max=0.95))
-        kn = nn.functional.normalize(heads(k), dim=-1)
-        if state is None:
-            read, S = pam_delta_batched(heads(q), kn, heads(v), retention, bw, be, None)
-            S = S.reshape(B * H, K, K).float()
-        else:
-            S = state[0].reshape(B * H, K, K).float()
-            qf, kf, vf = heads(q).float(), kn.float(), heads(v).float()
-            g, bwf, bef = retention.float(), bw.float(), be.float()
-            reads = []
-            for t in range(T):
-                kt, vt, qt = kf[:, t], vf[:, t], qf[:, t]
-                Sk = torch.einsum('nvk,nk->nv', S, kt)
-                erased = S - bef[:, t, None, None] * Sk.unsqueeze(-1) * kt.unsqueeze(-2)
-                S = g[:, t, None, None] * erased + bwf[:, t, None, None] * vt.unsqueeze(-1) * kt.unsqueeze(-2)
-                reads.append(torch.einsum('nvk,nk->nv', S, qt))
-            read = torch.stack(reads, dim=1)
-        read = nn.functional.rms_norm(read.float(), (K,), eps=1e-6).to(h.dtype)
-        read = read.reshape(B, H, T, K).transpose(1, 2).reshape(B, T, D)
-        new_tail = ids_ext[:, ids_ext.shape[1] - (m - 1):] if m > 1 else ids_ext[:, :0]
-        new_state = (S.reshape(B, H, K, K), h[:, -1].detach().float(), phi[:, -1].detach(), new_tail)
-        if self.phase_salient:
-            new_state = new_state + (psi_last.detach(),)
-        return named(self.echo_out(read), (batch, time, self.model_dim)), new_state  # named-exit: echo boundary
 
     # ── N12: echo's memory written only at the body's surprises ──────────────
 

@@ -7,12 +7,6 @@
 3. N7 start       N7 on (zero-init readers) is bit-identical to N7 off.
 4. N7 decode      full-sequence logits == token-by-token decode with live readers.
 5. N7 learns      every reader parameter gets a gradient.
-6. N9a           content-phase echo: off at init == echo; decode == prefill
-                   with live phases; "X is" template keys separate by X
-                   (collision check) and the same X stays aligned; learns.
-6b. N9s          salient phase on top of N9a: starts == N9a; the parallel
-                   running angle == a step-by-step loop; decode == prefill with
-                   live gates; every new parameter learns.
 7. N6 / N10      operator memory ('phase' = N6, 'coord' = N10 circles):
                    starts bit-identical to echo at the same seed (body and RNG
                    untouched); decode == prefill with a live read; every
@@ -21,7 +15,9 @@
                    build v14 units): every v14 switch off -> the plain v13 LM
                    class; a checkpoint config rebuilds the same V14LM (strict
                    load, equal logits); gradient checkpointing on == off for
-                   the v13 LM, N9a, N7 and N12 (loss and grads).
+                   the v13 LM, N7 and N12 (loss and grads); a removed switch
+                   (N9a / N9s, d255fcd) refuses to load instead of building
+                   plain echo.
 8b. N12          surprise-selected writes: same init as echo (no new params);
                    surprise == -log_softmax of the body's tied logits; no
                    writes -> the memory adds nothing; decode == prefill with a
@@ -173,93 +169,6 @@ def test_n7_learns():
     for name, p in model.ngram_read.named_parameters():
         assert p.grad is not None and p.grad.abs().max().item() > 0, f"N7: no gradient on {name}"
     print("  N7: every reader parameter gets a gradient")
-
-
-def _n9a(seed=0):
-    torch.manual_seed(seed)
-    return V14LM(_cfg(echo_phase_lags=3)).eval()
-
-
-def test_n9a():
-    """Content-phase echo keys: identity at init, decode == prefill, collisions separate."""
-    torch.manual_seed(0)
-    echo = V14LM(_cfg()).eval()
-    model = _n9a(0)
-    ids = torch.randint(0, 512, (2, 60))
-    diff0 = (_logits(echo, ids) - _logits(model, ids)).abs().max().item()
-    assert diff0 == 0.0, f"N9a at init != echo: {diff0:.3e}"
-    with torch.no_grad():
-        model.phase_proj.normal_(std=0.3)
-        torch.nn.init.normal_(model.echo_out.weight, std=0.1)
-    torch.manual_seed(5)
-    diff = _decode_diff(model, 150)
-    assert diff < ATOL, f"N9a prefill != decode: {diff:.3e}"
-    # collision check: the same template key turned by the windows (X_i, is)
-    # of different nouns X_i must spread apart; the same X must stay aligned
-    is_ = 7
-    xs = list(range(100, 140))
-    win = torch.tensor([[x, is_] for x in xs])                       # [40, 2]: windows ending at "is"
-    with torch.no_grad():
-        alpha = model._content_phase(win)[:, -1]                     # [40, planes]
-        key = torch.randn(1, 1, alpha.shape[-1] * 2).expand(len(xs), 1, -1)
-        turned = model._turn(key, alpha[:, None])[:, 0]
-        turned = torch.nn.functional.normalize(turned.reshape(len(xs), -1), dim=-1)
-        cos = turned @ turned.t()
-        off = cos[~torch.eye(len(xs), dtype=torch.bool)].abs().mean().item()
-        again = model._turn(key[:1], model._content_phase(win[:1])[:, -1][:, None])[:, 0]
-        same = torch.nn.functional.cosine_similarity(again.reshape(1, -1), turned[:1]).item()
-    assert off < 0.3 and same > 0.999, f"N9a collision check: different-X |cos| {off:.2f}, same-X {same:.3f}"
-    model.train()
-    out = model(torch.randint(0, 512, (2, 40)))[0]
-    out.float().pow(2).mean().backward()
-    g = model.phase_proj.grad
-    assert g is not None and g.abs().max().item() > 0, "N9a: no gradient on the phases"
-    print(f"  N9a: init == echo; decode == prefill {diff:.2e}; template keys of 40 nouns |cos| {off:.2f} "
-          f"(was 1.0 unturned), same noun {same:.3f}; phases learn")
-
-
-def test_n9s():
-    torch.manual_seed(0)
-    n9a = V14LM(_cfg(echo_phase_lags=3)).eval()
-    torch.manual_seed(0)
-    model = V14LM(_cfg(echo_phase_lags=3, echo_phase_salient=True)).eval()
-    ids = torch.randint(0, 512, (2, 60))
-    d0 = (_logits(n9a, ids) - _logits(model, ids)).abs().max().item()
-    assert d0 == 0.0, f"N9s at init != N9a: {d0:.3e}"
-    with torch.no_grad():
-        model.phase_proj.normal_(std=0.3)
-        model.sal_proj.normal_(std=0.3)
-        model.sal_gate_w.normal_(std=0.5)
-        torch.nn.init.normal_(model.echo_out.weight, std=0.1)
-    # the parallel scan against a plain loop
-    h = torch.randn(2, 37, model.config.dim)
-    x = torch.randint(0, 512, (2, 37))
-    with torch.no_grad():
-        psi, last = model._salient_phase(h, x)
-        e = model.embed.embed.weight[x].float()
-        e = e * torch.rsqrt(e.pow(2).mean(-1, keepdim=True) + 1e-6)
-        hn = h * torch.rsqrt(h.pow(2).mean(-1, keepdim=True) + 1e-6)
-        sg = torch.sigmoid(hn @ model.sal_gate_w.t() + model.sal_gate_b)
-        per = model.sal_proj.shape[0] // sg.shape[-1]
-        sp = sg.repeat_interleave(per, dim=-1)
-        a = e @ model.sal_proj.t()
-        ref, cur = [], torch.zeros_like(a[:, 0])
-        for t in range(37):
-            cur = (1 - sp[:, t]) * cur + sp[:, t] * a[:, t]
-            ref.append(cur)
-        ref = torch.stack(ref, 1)
-    dscan = (psi - ref).abs().max().item()
-    assert dscan < 1e-4, f"N9s scan != loop: {dscan:.3e}"
-    torch.manual_seed(11)
-    diff = _decode_diff(model, 150)
-    assert diff < ATOL, f"N9s prefill != decode: {diff:.3e}"
-    model.train()
-    out = model(torch.randint(0, 512, (2, 40)))[0]
-    out.float().pow(2).mean().backward()
-    for name in ('sal_proj', 'sal_gate_w', 'sal_gate_b', 'phase_proj'):
-        g = getattr(model, name).grad
-        assert g is not None and g.abs().max().item() > 0, f"N9s: no gradient on {name}"
-    print(f"  N9s: init == N9a; scan == loop {dscan:.1e}; decode == prefill {diff:.2e}; gates learn")
 
 
 def test_n12():
@@ -417,36 +326,37 @@ def test_hook():
             setattr(c, k, v)
         return c
     plain = v13_get_config('tiny_real', **base)
-    assert with_v14_switches(plain, echo_phase_lags=0) is plain
+    assert with_v14_switches(plain, ngram_orders=()) is plain
     assert type(build_lm(plain)) is LM, "hook: switches off must build the v13 LM class"
-    cfg = with_v14_switches(v13_get_config('tiny_real', **base), echo_phase_lags=3)
+    cfg = with_v14_switches(v13_get_config('tiny_real', **base), ngram_orders=(2, 3))
     torch.manual_seed(0)
     model = build_lm(cfg).eval()
     assert type(model) is V14LM
     with torch.no_grad():
-        model.phase_proj.normal_(std=0.3)
+        for r in model.ngram_read.values():
+            r.proj.normal_(std=0.05)
     re = build_lm(config_from_raw(asdict(cfg))).eval()               # what a loader does
     re.load_state_dict(model.state_dict(), strict=True)
     ids = torch.randint(0, 512, (2, 40))
     d = (_logits(model, ids) - _logits(re, ids)).abs().max().item()
     assert d == 0.0, f"hook: reloaded V14LM differs: {d:.3e}"
+    for k in ('echo_phase_lags', 'echo_phase_salient'):     # removed units: refuse, never load as plain echo
+        try:
+            config_from_raw(dict(asdict(cfg), **{k: 3 if k == 'echo_phase_lags' else True}))
+        except ValueError as e:
+            assert 'd255fcd' in str(e), f"hook: {k} refusal names no commit: {e}"
+        else:
+            raise AssertionError(f"hook: a removed switch ({k}) loaded silently")
     # gradient checkpointing parity (the 4090 suspect): loss and grads, on vs off
     worst = 0.0
-    for lags, orders, tau, sal in ((0, (), 0.0, False), (3, (), 0.0, False), (0, (2, 3), 0.0, False),
-                                   (0, (), 3.0, False), (3, (), 0.0, True)):
+    for orders, tau in (((), 0.0), ((2, 3), 0.0), ((), 3.0)):
         runs = []
         for ckpt in (False, True):
             c = with_v14_switches(v13_get_config('tiny_real', gradient_checkpointing=ckpt, **base),
-                                  echo_phase_lags=lags, ngram_orders=orders, echo_surprise_tau=tau,
-                                  echo_phase_salient=sal)
+                                  ngram_orders=orders, echo_surprise_tau=tau)
             torch.manual_seed(1)
             m = build_lm(c).train()
             with torch.no_grad():
-                if lags:
-                    m.phase_proj.normal_(std=0.3)
-                if sal:
-                    m.sal_proj.normal_(std=0.3)
-                    m.sal_gate_w.normal_(std=0.5)
                 if tau:
                     torch.nn.init.normal_(m.echo_out.weight, std=0.1)
                 for r in getattr(m, 'ngram_read', {}).values():
@@ -458,11 +368,11 @@ def test_hook():
             loss.backward()
             runs.append((loss.item(), {n: p.grad.clone() for n, p in m.named_parameters() if p.grad is not None}))
         (l0, g0), (l1, g1) = runs
-        assert abs(l0 - l1) < 1e-6 and g0.keys() == g1.keys(), f"hook: ckpt changes the loss (lags={lags}, tau={tau})"
+        assert abs(l0 - l1) < 1e-6 and g0.keys() == g1.keys(), f"hook: ckpt changes the loss (orders={orders}, tau={tau})"
         worst = max(worst, max((g0[k] - g1[k]).abs().max().item() for k in g0))
     assert worst < 1e-5, f"hook: grad checkpointing changes grads: {worst:.3e}"
     print(f"  hook: off -> v13 LM class; reload strict, logits equal; grad ckpt on == off "
-          f"(v13 LM, N9a, N7, N12, N9s): max grad diff {worst:.1e}")
+          f"(v13 LM, N7, N12); removed N9a / N9s refuse: max grad diff {worst:.1e}")
 
 
 def _b2_param(task, text):
@@ -506,7 +416,7 @@ def test_b2_splits(seeds=40):
 def main():
     torch.set_num_threads(8)
     for test in (test_off_is_v13, test_n7_lookup, test_n7_off_at_init,
-                 test_n7_decode_matches_prefill, test_n7_learns, test_n9a, test_n9s, test_n12, test_l1, test_opmem, test_hook, test_b2_splits):
+                 test_n7_decode_matches_prefill, test_n7_learns, test_n12, test_l1, test_opmem, test_hook, test_b2_splits):
         print(f"{test.__name__}:")
         test()
     print("ALL PASS")

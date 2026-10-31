@@ -5,7 +5,7 @@ The v13 session trains and probes 600M models; v14 units live only here
 second copy. A v13 config with every v14 switch off still builds the plain
 v13 LM, bit for bit.
 
-    trainer   cfg = with_v14_switches(cfg, echo_phase_lags=3); model = build_lm(cfg)
+    trainer   cfg = with_v14_switches(cfg, ngram_orders=(2, 3)); model = build_lm(cfg)
     loaders   cfg = config_from_raw(payload['config']); model = build_lm(cfg)
 """
 
@@ -16,17 +16,28 @@ from dataclasses import fields
 from v13_sempty.config import PAMConfig
 
 # A checkpoint config is a v14 one when any of these is on.
-V14_SWITCHES = ('echo_phase_lags', 'ngram_orders', 'opmem', 'echo_surprise_tau', 'echo_phase_salient')
+V14_SWITCHES = ('ngram_orders', 'opmem', 'echo_surprise_tau')
+# Removed after a FAIL: switch -> the last commit that has its code (v14/EXPERIMENT_INDEX.md).
+REMOVED_SWITCHES = {'echo_phase_lags': 'd255fcd', 'echo_phase_salient': 'd255fcd'}   # N9a / N9s (cu1n9s FAIL)
+
+
+def _refuse_removed(get):
+    on = [k for k in REMOVED_SWITCHES if get(k)]
+    if on:
+        raise ValueError(f"v14 unit(s) {on} were removed after a FAIL; use the code at "
+                         f"{sorted({REMOVED_SWITCHES[k] for k in on})} (git worktree add ../qllm_<id> <hash>)")
 
 
 def is_v14(raw) -> bool:
     """True if a config (dict or dataclass) turns on any v14 unit."""
     get = raw.get if isinstance(raw, dict) else (lambda k, d=None: getattr(raw, k, d))
+    _refuse_removed(get)                          # an old N9a / N9s checkpoint must not load as plain echo
     return any(get(k) for k in V14_SWITCHES)
 
 
 def with_v14_switches(cfg: PAMConfig, **switches):
     """A v13 PAMConfig plus v14 switches -> V14Config (unchanged if all off)."""
+    _refuse_removed(switches.get)
     if not any(switches.values()):
         return cfg
     from v14.config import from_pam

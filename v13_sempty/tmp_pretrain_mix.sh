@@ -55,11 +55,9 @@ DELTA="${DELTA:-0}"            # A3 delta erase/write (KEEP 2026-09-05: exact 8-
 SHORT_CONV="${SHORT_CONV:-0}"  # G1 short conv on qkv (2026-10-29 screen; needs GEN_EVERY=0)
 SEED="${SEED:-42}"            # init + data-mix seed (default 42 = every run so far)
 ECHO="${ECHO:-0}"              # E1 echo (succession) memory into the head
-ECHO_PHASE_LAGS="${ECHO_PHASE_LAGS:-0}" # v14 N9a content-phase echo keys (0 = off; needs ECHO=1; builds V14LM)
 NGRAM_ORDERS="${NGRAM_ORDERS:-}"      # v14 N7 in-context n-gram memory orders, e.g. 2,3 (empty = off; builds V14LM)
 RESET_AT_EOS="${RESET_AT_EOS:-0}"      # lg8r: state reset at document separators
 COND_MEM="${COND_MEM:-0}"              # A4 hashed n-gram conditional memory (tables lr x5, no wd)
-ECHO_PHASE_SALIENT="${ECHO_PHASE_SALIENT:-0}" # v14 N9s salient running phase on top of N9a (1 = on; needs ECHO_PHASE_LAGS > 0; builds V14LM)
 ECHO_SURPRISE_TAU="${ECHO_SURPRISE_TAU:-0}" # v14 N12 surprise-selected echo writes, nats (0 = off; needs ECHO=1; builds V14LM)
 PAM_LAYERS="${PAM_LAYERS:-}"   # M1 blocks that keep a notebook, e.g. 3,7,11,15 (default all)
 MLP_HIDDEN="${MLP_HIDDEN:-0}"  # M1 gated-MLP width (0 = dim*expand), to param-match
@@ -105,9 +103,7 @@ if [ "$SHORT_CONV" = "1" ]; then EXTRA+=(--short_conv); fi
 if [ "$ECHO" = "1" ]; then EXTRA+=(--echo); fi
 if [ "$COND_MEM" = "1" ]; then EXTRA+=(--cond_mem); fi
 if [ "$RESET_AT_EOS" = "1" ]; then EXTRA+=(--reset_at_eos); fi
-if [ "$ECHO_PHASE_LAGS" != "0" ]; then EXTRA+=(--echo_phase_lags "$ECHO_PHASE_LAGS"); fi
 if [ -n "$NGRAM_ORDERS" ]; then EXTRA+=(--ngram_orders "$NGRAM_ORDERS"); fi
-if [ "$ECHO_PHASE_SALIENT" != "0" ]; then EXTRA+=(--echo_phase_salient); fi
 if [ "$ECHO_SURPRISE_TAU" != "0" ]; then EXTRA+=(--echo_surprise_tau "$ECHO_SURPRISE_TAU"); fi
 if [ -n "$PAM_LAYERS" ]; then EXTRA+=(--pam_layers "$PAM_LAYERS"); fi
 if [ "$MLP_HIDDEN" != "0" ]; then EXTRA+=(--mlp_hidden "$MLP_HIDDEN"); fi
