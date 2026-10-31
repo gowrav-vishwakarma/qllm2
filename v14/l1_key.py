@@ -277,6 +277,26 @@ def key_fn(vecs: torch.Tensor, ids, bursts_=None) -> torch.Tensor:
     return out
 
 
+def key_fn_bursts(keys: torch.Tensor, ids, info) -> tuple[torch.Tensor, torch.Tensor]:
+    """Harness hook, burst form (v16/bench.py >= 0eb2ead): keys [T, D] = the mind's layer-k state,
+    info = {'bursts': [[start, end), ...], 'query_pos', 'doc_end'} -> (one key per burst, the query key).
+    A burst row is the span [start, start + SPAN) clipped at doc_end (form fwd); the query key is the same
+    head on [query_pos, query_pos + SPAN)."""
+    if 'head' not in _HEAD:
+        key_fn(keys[:1], ids)                                  # loads the checkpoint
+    head = _HEAD['head'].to(keys.device)
+    v = keys.float()
+    if _HEAD.get('centre'):
+        v = v - v.mean(0, keepdim=True)
+    T, end = v.shape[0], int(info['doc_end'])
+    spans = [(int(b0), max(int(b0) + 1, min(end, int(b0) + SPAN))) for b0, _ in info['bursts']]
+    q0 = int(info['query_pos'])
+    with torch.no_grad():
+        kb = pool_spans(head, v, spans, SPAN)
+        kq = pool_spans(head, v, [(q0, min(T, q0 + SPAN))], SPAN)[0]
+    return kb, kq
+
+
 def main():
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest='cmd', required=True)
