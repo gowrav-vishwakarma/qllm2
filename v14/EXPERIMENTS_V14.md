@@ -1808,6 +1808,55 @@ attentive pooling, 75k parameters), 1500 steps, batch 48. Logs
   at the 1.9 GB cap (rows up to 128 tokens × 48 docs); retry at a smaller
   batch.
 
+**L1 development CORRECTION (14:55 IST): the first L1 result above was a bug of
+mine, and the conclusion drawn from it is withdrawn.** Two defects in my data
+preparation (`v14/l1_data.py` / `v14/l1_key.py`, fixed in `9f71835` and the
+commit after it):
+1. **Wrong anchor.** For keys of several tokens I anchored the query and the
+   target on the first token (a fragment). The harness anchors on the LAST
+   token. Fixed (`anchor()`).
+2. **The query matched itself.** My documents include the query sentence at
+   the end and I let rows start inside it, so the query's own span was always
+   the most similar "row" (similarity 1) and always ranked first; in training
+   it was a negative the head had to push away. The harness indexes only
+   `[:doc_end]`. Fixed (`doc_end()`: rows only before the query).
+Everything measured before the fix (train 0.93 vs validation 0.09-0.19, the
+three small heads, the retraining `full2`) is invalid, including the reading
+that the head "memorised". The logs stay in the repo as the record of the bug
+(`logs/v14_l1_fwd_a3e3265_*`, `logs/v14_l1_full2_67a3cc1_*`).
+
+**Frozen address, corrected (no training; 4096-token docs, about 200 candidate
+rows, the same rows as the gate; top-1 of the row that holds the key).**
+Centred cosine (the document's mean vector subtracted) between the vector at
+the query's key last token and the vectors in each row:
+
+| state used | harness-template docs (60) | synthetic, in-distribution (59) | natural pairs (46) |
+|---|---|---|---|
+| output vector (pre-logit), uncentred | 0.61 | 0.59 | 0.12 |
+| output vector (after block 16), centred | 0.93 | 0.93 | 0.22 |
+| **intermediate state, blocks 4-11, centred** | **1.00** | **1.00** | 0.54-0.57 |
+| embeddings / after block 0, centred | 0.77 | 0.80 | 0.83 |
+
+- **The mind's intermediate state at the last token of a key is a perfect
+  frozen address at 4k tokens, with no training** (100 % top-1 in blocks 4-11
+  on both synthetic sets). The output vector is weaker because it is tuned to
+  predict the NEXT word (every key ends in the same " refers"); centring
+  removes much of that shared part (0.61 → 0.93).
+- **Natural recurrence pairs are the hard case**, and the one the organ cannot
+  help with once words are paraphrased: real words recur in several places
+  (a row can hold the word without being the first mention, which my label
+  does not count as correct), and mid-layer states drift with context (0.54);
+  the embedding layer, which is pure word identity, is best there (0.83).
+- **What this means for L1:** the key should be built from the mind's
+  intermediate state (centred), not from the output vector the harness passes
+  as `vecs`. The harness only needs to hand over a layer (`--vec_layer`), or
+  the key function can run the frozen mind itself on `ids`, which is how a
+  library would be installed anyway (text first, keys rebuilt by the reader).
+  The honest status: at 4k tokens the frozen mid-layer address already meets
+  what Bar A asks; the open questions are 32k-1M (Bar A's real test),
+  natural and paraphrased keys (Bar P), and then whether a trained head adds
+  anything.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),

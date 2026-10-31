@@ -1,0 +1,44 @@
+5155 train docs, val sets [('val_indist', 150), ('val', 150)], form fwd, arch full
+head parameters: 75,854
+/home/gowrav/Development/qllm_v14dev/v14/l1_key.py:215: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"step {step:5d} loss {float(loss):.3f} queries {n_q} skipped {n_skip} "
+step     1 loss 8.327 queries 24 skipped 8 temp 14.3
+step    50 loss 6.712 queries 28 skipped 4 temp 14.2
+step   100 loss 4.997 queries 28 skipped 4 temp 14.0
+step   150 loss 4.808 queries 28 skipped 4 temp 13.8
+step   200 loss 3.959 queries 29 skipped 3 temp 13.7
+step   250 loss 4.423 queries 28 skipped 4 temp 13.8
+  val | val_indist: top1 0.027 top5 0.207 ev 0.86 | val: top1 0.000 top5 0.473 ev 1.00
+  best so far on val_indist: 0.027 (step 250)
+step   300 loss 3.895 queries 26 skipped 6 temp 13.9
+step   350 loss 4.525 queries 31 skipped 1 temp 14.0
+step   400 loss 4.169 queries 29 skipped 3 temp 14.3
+step   450 loss 3.738 queries 29 skipped 3 temp 14.5
+step   500 loss 3.948 queries 31 skipped 1 temp 14.6
+  val | val_indist: top1 0.007 top5 0.247 ev 0.86 | val: top1 0.000 top5 0.493 ev 1.00
+step   550 loss 3.944 queries 27 skipped 5 temp 15.0
+step   600 loss 3.579 queries 26 skipped 6 temp 15.1
+step   650 loss 3.487 queries 24 skipped 8 temp 15.5
+step   700 loss 3.724 queries 27 skipped 5 temp 15.8
+step   750 loss 3.757 queries 29 skipped 3 temp 15.9
+  val | val_indist: top1 0.013 top5 0.213 ev 0.86 | val: top1 0.000 top5 0.527 ev 1.00
+step   800 loss 3.799 queries 28 skipped 4 temp 16.1
+step   850 loss 3.649 queries 26 skipped 6 temp 16.3
+step   900 loss 3.577 queries 32 skipped 0 temp 16.4
+step   950 loss 3.945 queries 25 skipped 7 temp 16.7
+step  1000 loss 3.373 queries 29 skipped 3 temp 16.7
+  val | val_indist: top1 0.007 top5 0.240 ev 0.86 | val: top1 0.000 top5 0.493 ev 1.00
+step  1050 loss 3.576 queries 30 skipped 2 temp 16.8
+step  1100 loss 3.621 queries 29 skipped 3 temp 16.9
+step  1150 loss 3.457 queries 27 skipped 5 temp 17.0
+step  1200 loss 3.142 queries 27 skipped 5 temp 17.0
+step  1250 loss 3.330 queries 31 skipped 1 temp 17.1
+  val | val_indist: top1 0.007 top5 0.240 ev 0.86 | val: top1 0.000 top5 0.500 ev 1.00
+step  1300 loss 2.963 queries 29 skipped 3 temp 17.1
+step  1350 loss 3.413 queries 28 skipped 4 temp 17.1
+step  1400 loss 3.246 queries 29 skipped 3 temp 17.1
+step  1450 loss 3.125 queries 29 skipped 3 temp 17.1
+step  1500 loss 3.054 queries 28 skipped 4 temp 17.1
+  val | val_indist: top1 0.007 top5 0.240 ev 0.86 | val: top1 0.000 top5 0.513 ev 1.00
+saved /media/gowrav/d_drive/qllm_ckpt/v14/l1_fwd_full2_67a3cc1.pt best 0.02666666666666667
