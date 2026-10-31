@@ -12,19 +12,13 @@
 - Nothing has run on a GPU yet. 4090: v13's n9c was using ~15 GB at 00:30.
 
 ## Running
-- **GII-2 RUNNING (started 06:22 IST 2026-10-31)**: Grove II (`b599a56`) vs
-  echo, six pairs (rules seeds 21/22/23 then B2 seeds 41/42/43), tmux
-  `gii2_v15`, driver `v15/tmp/gii2_chain.sh`, worktree `../qllm_v15_gii2`
-  (ckpts of pair 1 -> `/media/gowrav/d_drive/qllm_ckpts/v15_gii2_checkpoints_v14/`).
-  ~8.1 GB beside v14's whole-card n9r (13.9 GB); Grove II is 3.5x slower
-  (~2.3 h per pair). **Chain trimmed to pairs 1–2 (user, 07:30 IST: give the
-  4090 to v13/v14 after this run)**: two agreeing pairs decide a 2-of-3 bar;
-  a split would need pair 3, asked for separately. B2 pairs dropped. Chain
-  end ~10:40 IST; then v15 stays off the GPUs (CPU work: speed, toys, design)
-  and asks v13/v14 before any next GPU job. Bars: EXPERIMENTS §4 G1;
-  prediction §6. Summary:
-  `.venv/bin/python v15/tmp/g1_summary.py "../qllm_v15_gii2/logs/v14_v15gii2*_b599a56_*.json"`.
-  Probe after pair 1: `.venv/bin/python v15/tmp/probe_shares.py <ckpt>/grove@hd64L4.pt 8`.
+- Nothing on a GPU (08:50 IST 2026-10-31). GII-2 ended after pair 1 (FAIL,
+  EXPERIMENT_INDEX GII-2); the 4090 is v14's until ~19:00 IST, the 6000
+  v13's until ~18:00. v15 asks before any next GPU job (user, 07:30 IST).
+- CPU work in progress: Grove III/IV variants judged on two toys
+  (`v15/tmp/toy_rule.py` letter-shift rule on an unseen letter, E=8, 4000
+  steps; `v15/tmp/toy_bigvocab.py` 4096-key lookup). Grove I (`grove_I.py`
+  = abe4c89) is the reference: rule 0.839 (0.907 with identity conv), lookup 0.955.
 
 ## Next action
 0. G2 plumbing is DONE and verified on CPU (`v15/hook.py`, `--arch grove`,
