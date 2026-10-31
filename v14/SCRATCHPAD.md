@@ -365,6 +365,40 @@ logits, and capacity under web filler at 8k (threshold or bigger store).
 the 4090 after n9r, ~12:00–16:00). N12 code + selftest while they run
 (CPU / small); its micro run goes after n9th.
 
+## Step back (2026-10-31 ~09:00 IST, after v13's 3B LM gap attribution, `0771dca`)
+
+**What we saw.** At 3B, the gap to T++ (+0.05 / +0.06 nats) is mostly
+in-window copy (53–58 %). The gap to Mamba-2 (+0.09 / +0.11) is mostly NEW
+tokens (52–55 %), and Mamba-2 is already 0.05–0.09 better on new tokens at
+positions 0–8, with almost no context. Memory units (N12, N9a, recall
+formats) can close ~0.03 of the T++ gap but only ~0.02–0.03 of the Mamba-2
+gap.
+
+**Before designing for it, two cautions.**
+1. **The 3B PAM was trained at LR 2e-4, one stage.** v13's slope check
+   (10-30) showed its plateau tracks the LR, and at 1.2e-3 PAM keeps pace
+   with both baselines on the late slope. Part of the "general modelling"
+   gap may be under-training. r3c (LR 1.2e-3) must be scored the same way,
+   at equal tokens, before a body or unit is built for it.
+2. **Mamba-2's short conv is not the missing piece:** v13's G1 (conv on
+   qkv) failed and the box control upheld it (+0.07 train loss).
+
+**What it says for v14.** Bar 2 against Mamba-2 is a per-token processing
+question (positions 0–64, new tokens), not a memory question. v14's memory
+units are the bar-3 / copy half. If r3c still trails on new tokens, the
+candidate levers are:
+- **Parametric n-gram knowledge:** v13's A4 `cond_mem` Engram table is in
+  code and has never been run. It targets exactly short-context new-token
+  prediction, with extra params but O(1) lookups (bar-2 tolerance). The
+  over-encoding literature shows big small-model gains from n-gram input
+  embeddings; fairness caveat: it helps any architecture.
+- **Surprise-routed compute:** the N12 signal reused, so hard tokens get
+  extra processing. Speculative; not designed.
+
+**Free data:** score n9c vs C1-ctl (600M, on d_drive) with
+`v13_sempty/tmp/attr3b.py` when the 4090 has room. That shows whether
+N9a's recall jump moves copy tokens (part of the T++ gap).
+
 ## Next action
 
 1. **n9r** (4090, running, ends ~12:00 IST): score recall vs the bars
