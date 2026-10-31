@@ -1922,7 +1922,7 @@ burst-mean key, same documents).** Logs `logs/v16_bench_l1pair_*_kv_*_32768.*`.
   mind pick by its own answer margin (planner v0, already in the harness), and
   separately the memory latitude (256-d key). 128k pending.
 
-**PRE-REGISTERED 2026-10-31 ~16:30 IST (before any number of these), agreed
+**PRE-REGISTERED 2026-10-31 16:25 IST (before any number of these), agreed
 with Lead.**
 - **L1+P0 (trained burst key + planner v0):** fetch the top 5 burst rows by
   the trained key, let the frozen mind re-read EACH alone in front of the
