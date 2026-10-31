@@ -1,0 +1,30 @@
+
+[pg19] tokens 122880; share copy 0.258 seen 0.377 new 0.365
+  loss  pam3b 3.5600  tpp 3.5098  r3b 3.6247  mamba2 3.4693
+  pam3b - tpp: total +0.0502
+     by class (gap / share of total): copy +0.113 / +58%  seen -0.002 / -1%  new +0.060 / +43%
+     by position:                     0-8 -0.090  8-64 -0.041  64-512 +0.045  512-2048 +0.056
+     new tokens by position:          0-8 -0.095  8-64 -0.018  64-512 +0.058  512-2048 +0.068
+  pam3b - r3b: total -0.0647
+     by class (gap / share of total): copy -0.011 / +4%  seen -0.050 / +29%  new -0.118 / +67%
+     by position:                     0-8 -0.014  8-64 -0.095  64-512 -0.082  512-2048 -0.059
+     new tokens by position:          0-8 -0.016  8-64 -0.105  64-512 -0.129  512-2048 -0.116
+  pam3b - mamba2: total +0.0906
+     by class (gap / share of total): copy +0.083 / +24%  seen +0.052 / +21%  new +0.136 / +55%
+     by position:                     0-8 +0.048  8-64 +0.061  64-512 +0.085  512-2048 +0.094
+     new tokens by position:          0-8 +0.062  8-64 +0.093  64-512 +0.124  512-2048 +0.145
+
+[web] tokens 195046; share copy 0.227 seen 0.386 new 0.387
+  loss  pam3b 3.2472  tpp 3.1832  r3b 3.2829  mamba2 3.1355
+  pam3b - tpp: total +0.0640
+     by class (gap / share of total): copy +0.148 / +53%  seen +0.017 / +10%  new +0.061 / +37%
+     by position:                     0-8 -0.464  8-64 +0.015  64-512 +0.053  512-2048 +0.079
+     new tokens by position:          0-8 -0.489  8-64 +0.016  64-512 +0.057  512-2048 +0.088
+  pam3b - r3b: total -0.0357
+     by class (gap / share of total): copy +0.027 / -17%  seen -0.017 / +18%  new -0.091 / +99%
+     by position:                     0-8 -0.158  8-64 -0.073  64-512 -0.041  512-2048 -0.029
+     new tokens by position:          0-8 -0.167  8-64 -0.096  64-512 -0.085  512-2048 -0.094
+  pam3b - mamba2: total +0.1117
+     by class (gap / share of total): copy +0.116 / +24%  seen +0.071 / +25%  new +0.150 / +52%
+     by position:                     0-8 +0.095  8-64 +0.113  64-512 +0.107  512-2048 +0.115
+     new tokens by position:          0-8 +0.091  8-64 +0.136  64-512 +0.140  512-2048 +0.162

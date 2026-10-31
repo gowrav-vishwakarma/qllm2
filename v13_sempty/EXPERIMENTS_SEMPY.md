@@ -3601,3 +3601,54 @@ gap is a short-context lookup / binding gap. Filler burial adds to it at distanc
 but is not its cause. The recall docs (one trained template) gave N9a 0.975, so the
 format hypothesis is the live one: the lb pair (running) tests it. *For v14's
 N12:* a hard selector targets distance; judge it on 2-shot label_exact too.
+
+## 3B LM gap attribution (2026-10-31 08:40 IST; eval only, no training): vs T++ the gap is mostly in-window copy; vs Mamba-2 it is mostly general modelling
+
+Why: before a 3B "best package" run, know which part of the bar-2 gap a memory
+fix can close. Script `v13_sempty/tmp/attr3b.py` (dump → score per box → report;
+Mamba-2 scored on the 6000, which has `mamba_ssm`, on the identical frozen text).
+Models: the 3B scoreboard runs PAM `1c913ef` (old 16nb body, no echo, one stage,
+2e-4), T++ `e072a8f`, Mamba-2 `b36e3a5`, plus r3b `685de4e` (M2 + echo + two
+stages). Text: 60 PG-19 windows of 2048 tokens (skip 1024 into each book) and
+150 web holdout docs (≥ 512 tokens, from the doc start). Token classes:
+**copy** = the bigram (x_t, y_t) occurred earlier in the window, **seen** = the
+target occurred earlier but not after this token, **new** = first occurrence.
+Output: `logs/diag/v13_sempty_attr3b_4a4a5fb_20261031.{txt,json}`.
+
+| PG-19 / web | loss PAM 3B | T++ | Mamba-2 | r3b |
+|---|---|---|---|---|
+| all tokens | 3.560 / 3.247 | 3.510 / 3.183 | **3.469 / 3.136** | 3.625 / 3.283 |
+
+| gap (PAM − base), PG-19 / web | vs T++ | vs Mamba-2 |
+|---|---|---|
+| total | +0.050 / +0.064 | +0.091 / +0.112 |
+| copy tokens (26 % / 23 % of tokens): gap, share | +0.113 / +0.148, **58 % / 53 %** | +0.083 / +0.116, 24 % / 24 % |
+| seen tokens (38 % / 39 %) | −0.002 / +0.017, −1 % / 10 % | +0.052 / +0.071, 21 % / 25 % |
+| new tokens (37 % / 39 %) | +0.060 / +0.061, 43 % / 37 % | +0.136 / +0.150, **55 % / 52 %** |
+| positions 0–8 / 8–64 / 64–512 / 512–2048 (PG-19) | −0.090 / −0.041 / +0.045 / +0.056 | +0.048 / +0.061 / +0.085 / +0.094 |
+| same on web | −0.464 / +0.015 / +0.053 / +0.079 | +0.095 / +0.113 / +0.107 / +0.115 |
+| new tokens only, 0–8 → 512–2048 (PG-19) | −0.095 → +0.068 | +0.062 → +0.145 |
+
+**Reading.**
+- *vs T++:* over half the gap is exact in-window copy (+0.11 to +0.15 nats on
+  the copyable quarter of tokens). The rest is new tokens late in the window:
+  attention uses far context to predict unseen words better. PAM is better at
+  the start (T++ is poor in the first 8 tokens of a web doc, −0.46). A binding /
+  copy fix (N12, lab / recall formats) can close up to ~0.03 of this ~0.06.
+- *vs Mamba-2:* copy is only a quarter. Over half is new tokens, and Mamba-2 is
+  already 0.05–0.09 better on new tokens at positions 0–8, with almost no
+  context. The gap then grows with context for every class. So the Mamba-2 gap
+  is mostly GENERAL modelling (local + context semantics), not memory. Memory
+  units can close at most ~0.02–0.03 of ~0.10; the rest needs the body.
+- *r3b vs the old body:* r3b's extra loss (+0.036 / +0.065) is almost all on new
+  tokens (67–99 %). Its copy is equal or better, because echo helps copy. The M2
+  body (4 notebooks) lost general modelling capacity. That fits r3c (16nb +
+  echo) as the right body test; score r3c with this script at its futility point.
+- Caveat: one seed per model; the PAM 3B reference predates echo and the
+  two-stage schedule (ledger).
+
+**What it changes:** the best-package 3B run needs BOTH a copy fix (worth ~half
+of the T++ gap) and a general-modelling gain (most of the Mamba-2 gap). The
+general part is the body's: r3c's result, then capacity levers (width 588 vs
+768; state 3.7 MB vs Mamba-2's 13.4 MB, "a few more params" is allowed). None of
+these has been tested at ≥ 1.5B.
