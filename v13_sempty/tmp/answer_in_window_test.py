@@ -1,6 +1,6 @@
 # ANSWER_IN_WINDOW test: (1) off = old weights exactly; (2) on = answer weight only where the
 # token's document starts inside the window, checked against an independent recount;
-# (3) the share of b2gap answer tokens that are orphaned at SEQ 8192 (the size of the fix).
+# (3) the share of orphaned answer tokens on a real long-doc source (the size of the fix).
 import itertools, os, random, sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from transformers import AutoTokenizer
@@ -35,13 +35,14 @@ for c, ((_, _, mo), (_, lab, mn)) in enumerate(zip(off, on)):
         assert mn[j] == exp, (c, j, float(mn[j]), exp)
         n_ans += w[g] > 1; n_orph += (w[g] > 1) and start[g] < c * step
 print(f'recount OK: {len(on)} windows, answer tokens {n_ans}, orphaned {n_orph} ({n_orph / n_ans:.1%})')
-def fake_gap():
-    i = 0
-    while True:
-        yield ' '.join(words[(i + j) % 10] for j in range(300)); i += 1
-gd = list(itertools.islice(D._b2gap_text_iter(seed=42, gmax=7500, gap_iter=fake_gap()), 120))
-for name, mix in (('b2gap only', gd), ('b2gap 1 in 4 docs, rest web-like', [x for g in gd for x in (g, *[' '.join(rng.choice(words) for _ in range(900))] * 3)])):
-    a, b = run(False, 8192, mix), run(True, 8192, mix)
+# (3) size of the fix on a real long-doc source. The b2gap source this was first measured on
+# (44 % orphaned at SEQ 8192) was removed after LAW-1 / lg8r; srd (stated rule + gap) is the
+# longest answer-weighted source left (22 % at SEQ 2048, orphan_rate.py).
+it = D._open_source_iter('srd', D.SOURCE_REGISTRY['srd'], edu_score_min=3, fineweb_name='sample-10BT',
+                         exclude_holdout=True, holdout_pct=5, skip=0, doc_counters=None, mix_seed=42)
+gd = [x[1] if isinstance(x, tuple) else x for x in itertools.islice(it, 200)]
+for name, mix in (('srd 1 : 1 with web-like docs', [x for g in gd for x in (g, ' '.join(rng.choice(words) for _ in range(900)))]),):
+    a, b = run(False, 2048, mix), run(True, 2048, mix)
     tot = sum(int((m > 1).sum()) for _, _, m in a); kept = sum(int((m > 1).sum()) for _, _, m in b)
-    print(f'SEQ 8192, {name}: answer tokens {tot}, orphaned {tot - kept} ({(tot - kept) / tot:.1%})')
+    print(f'SEQ 2048, {name}: answer tokens {tot}, orphaned {tot - kept} ({(tot - kept) / tot:.1%})')
 print('ANSWER_IN_WINDOW TEST PASS')

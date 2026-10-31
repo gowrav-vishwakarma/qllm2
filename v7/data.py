@@ -1997,54 +1997,6 @@ def _b2_text_iter(
 
 
 
-# Long-gap rule docs (2026-10-31, v13 LAW-1 "does one-read skill reach track the
-# training length?"): the B2 skill-pack layout of scripts/run_skillpack_probe.py.
-# The header + 8 demonstrations of a BASE task (trained values only; the held-out
-# `_new` values never appear; example seeds >= 10**7, the probes use 5000-8099),
-# then a gap of G ~ U(0, G_max) tokens of training-split web text (a separate
-# fineweb iterator; newlines folded to spaces, like the probe's filler), then the
-# query line with its answer marked. G_max comes from env B2GAP_MAX (per arm).
-_B2GAP_TASKS = ('shift_wide', 'affine_map')   # step_wide needs an exact far copy, not a rule
-
-
-def _b2gap_text_iter(
-    *,
-    seed: int = 0,
-    skip_docs: int = 0,
-    doc_counters: Optional[Dict[str, int]] = None,
-    counter_key: str = 'b2gap',
-    gmax: int = 1800,
-    gap_iter: Optional[Iterator[str]] = None,
-) -> Iterator[str]:
-    import random as _random
-    from transformers import AutoTokenizer
-    from v14.rules_ood import build_example
-    from memory_probes.spread import split_units
-    tok = AutoTokenizer.from_pretrained('gpt2')
-    rng = _random.Random((seed * 2654435761 + 737373) & 0xFFFFFFFF)
-    if gap_iter is None:
-        gap_iter = _open_source_iter(
-            'fineweb', SOURCE_REGISTRY['fineweb'], edu_score_min=3, fineweb_name='sample-10BT',
-            exclude_holdout=True, holdout_pct=5, skip=0, doc_counters=None, mix_seed=seed + 7777)
-    buf: List[int] = []
-    n = 0
-    while True:
-        task = rng.choice(_B2GAP_TASKS)
-        g = rng.randint(0, gmax)
-        ex_seed = 10_000_000 + n
-        n += 1
-        if n <= skip_docs:                       # resume: skip the rule part (gap text restarts)
-            continue
-        ex = build_example(tok, task, 8, ex_seed)
-        header, units = split_units(ex)
-        while len(buf) < g:
-            buf += tok(re.sub(r'\s*\n+\s*', ' ', next(gap_iter)), add_special_tokens=False)['input_ids']
-        gap, buf = buf[:g], buf[g:]
-        gap_text = ('\n\n' + tok.decode(gap) + '\n\n') if g else ''
-        _bump_counter(doc_counters, counter_key)
-        yield header + ''.join(units[:-1]) + gap_text + units[-1] + _ans(ex.target_text) + '\n'
-
-
 # Curriculum sources (2026-10-31, v13 "curriculum run cu1"): formats of v16/bench.py's
 # cells with TRAINED values / DISJOINT vocabularies, so the bench measures transfer.
 #  srd : a rule STATED in words (" Rule: shift each letter forward by k." / " Rule:
@@ -2330,7 +2282,6 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     # Label-rule prompts in the probes' format, disjoint vocabulary (v13
     # "label-format source", 2026-10-31).
     'lab':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-lab'},
-    'b2gap':         {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-b2gap'},
     'srd':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-srd'},
     'fsq':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-fsq'},
     'hop':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-hop'},
@@ -2388,9 +2339,6 @@ def _open_source_iter(
             return _fsq_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
         if name == 'hop':
             return _hop_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
-        if name == 'b2gap':
-            return _b2gap_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters,
-                                    counter_key=name, gmax=int(os.environ.get('B2GAP_MAX', '1800')))
         if name == 'lab':
             return _lab_text_iter(seed=mix_seed, skip_docs=skip,
                                   doc_counters=doc_counters, counter_key=name)

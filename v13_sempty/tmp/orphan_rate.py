@@ -3,7 +3,6 @@
 # at the real mix: each source's docs interleaved 1 : k with web-like docs so offsets are random.
 import itertools, os, random, sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-os.environ.setdefault('B2GAP_MAX', '1800')
 from transformers import AutoTokenizer
 import v7.data as D
 tok = AutoTokenizer.from_pretrained('gpt2')
