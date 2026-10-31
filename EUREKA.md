@@ -9,6 +9,47 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **Organiser (CPU, frozen checkpoints, no training): the O(1) state cannot hold a
+  needle past ~8k tokens, but its own per-token vector at the needle's key word is a
+  usable address up to 128k, and a model-free n-gram organ gives exact recall and
+  two-hop at every length.** `scripts/session_index_probe.py` (`f96c0e0` / `b554c67`),
+  logs `logs/organiser_index_probe_*_{f96c0e0,b554c67}_*.jsonl`. Frozen C1-ctl
+  (`c1ctlb_main_7ae6f1f`, 103M params, 600M tokens) and Transformer++
+  (`tfc1b_main_b788731`, 102M) over held-out prose with "Definition: KEY refers to
+  VALUE." needles at random positions, query at the end, 20-noun candidate scoring
+  (chance 0.05), 8 docs per cell.
+  - **State only (A):** T++ 0.75 / 0.25 / 0.0 at 2k / 8k / 32k (dies past its window).
+    PAM 1 needle 0.625 / 0.25 / 0.0 / 0.0 at 2k / 8k / 32k / 128k; 8 needles 0.25 /
+    0.125 / 0.0 / 0.0 (= picks among the needles, not the value). Holding is not where
+    either body wins at this size.
+  - **Exact n-gram organ (B, last 4 tokens -> what followed, latest write wins):** 1.0
+    at every length and task, including "latest definition wins" and two-hop by two
+    chained reads (1.0 at 2k / 8k / 32k); the frozen PAM re-reading the two retrieved
+    spans + the query also answers two-hop 1.0, where its state alone cannot even
+    produce hop 1 (0.0).
+  - **Snapshot index keyed by the model's own vector (C2):** query = the pre-logit
+    vector at the KEY token of the question, matched against every document position;
+    the right sentence is top-1 in 0.75 / 0.875 / 0.625 / 0.75 (1 needle, 2k..128k)
+    and 0.625 / 0.625 / 0.25 / 0.375 (8 needles); when found, the re-read answers.
+    Roughly flat with length: the frozen state's representation of a nonsense key is
+    a usable content address among 131k positions, without any training.
+  - **Boundary snapshots fail:** the vector at the sentence's '.' (C3) and the mean
+    over the sentence (C4) are ~0 top-1 at every length. A frozen state at a unit
+    boundary does not carry the unit's key: "write with hindsight at the boundary"
+    has to be trained, and the natural key is the state at the SALIENT token (what
+    N12 surprise writes and N9s salient phase both reach for).
+  - **Bytes at 128k:** raw text 262 KB; all-position snapshot index 308 MB (fp32,
+    588-d); a T++ KV cache at this width/depth 4.9 GB. One row per sentence would be
+    ~4.8k rows.
+  *For v13:* the selector does not have to live inside the notebook; an exact organ
+  (A4 / N7 class) plus a state-keyed index outside the layers recovers copy, lookup
+  and two-hop with the thinking left O(1). *For v14:* the index key that works is the
+  per-token state at the salient word; gate the write there (N12), not at boundaries;
+  a learned version should beat 0.75 top-1 and shrink the index to one row per event.
+  *Caveats:* 8 docs per cell (about +-0.15 noise), synthetic needles with unique
+  nonsense keys favour the n-gram organ, one seed, CPU fp32; Mamba-2 is not
+  CPU-runnable here (mamba_ssm). 400k row pending.
+
 - **v13: the 3B LM gap is copy vs T++ but GENERAL modelling vs Mamba-2.** Eval-only
   attribution on the 3B scoreboard models (PAM `1c913ef`, T++ `e072a8f`, Mamba-2 `b36e3a5`,
   r3b; PG-19 + web, 2048-token windows; EXPERIMENTS_SEMPY "3B LM gap attribution"). vs T++
