@@ -2671,6 +2671,37 @@ fitted threshold:
       text, so strict mode no longer has to give up para / tool. Says NOTHING
       about rewording or synonyms. Next: the mind run (expression,
       `P_free_sent`), queued with Lead.
+- **A3 follow-up, near-miss data (for Mind's cu2 VERIFY; 01:13 IST, descriptive,
+  offline):** in the strict run's never-stored docs (seed 22000, rebuilt), the
+  top row is another stored fact in 18 / 40 (synthetic) and 14 / 40 (natural);
+  of those only 1 / 18 shares a syllable and 1 / 14 shares a word with the
+  asked key (base 0.6 %). The rest are prose sentences. The mind copies the
+  value from UNRELATED same-template rows; sent to Mind as the VERIFY mix.
+- **A5: the SYNONYM cell (PRE-REGISTERED 2026-11-01 01:13 IST, before any number
+  of it).** The test the learned session key exists for: a fact stored under
+  one phrase, asked with a synonym phrase that shares no content word, so
+  text cannot find it. `v14/syn_cell.py`: 82 hand-made pairs ("old ship" /
+  "ancient vessel"), 328 distinct words, no word shared within a pair or
+  reused, none a value noun; 8 facts " Definition: {A} refers to {v}." in
+  held-out prose, asked " Query: {B} refers to" (the stored side random);
+  `synneg` asks a pair that was never stored.
+  - TEXT PART (CPU, now): seed 25000, L = 32768, 40 docs per cell; the organ
+    chain (token + A4 normalised), BM25 over the doc's sentences
+    (`shared_fetch.norm_words`), MiniLM-L6 over the doc's sentences (top-1).
+    Score: the top-1 sentence holds the asked fact ("{A} refers to {v}").
+    Sanity bar (the cell is a synonym test): organ-chain right row ≤ 0.10.
+    MiniLM reported as the named dense baseline (if < 0.50, the pairs are too
+    hard even for a trained semantic encoder; reported, not a bar).
+  - MIND PART (4090, Lead's queue; needs a 2-line `syn` / `synneg` hook in
+    bench.build that calls `v14.syn_cell.build_syn`): b2p2 package lenient
+    (PACKAGE_T = -1, no PACKAGE_NORM), 32k, seed 25000, 40 docs. Bar MET iff
+    the learned key's top-1 row is the asked fact (`C5_burst_hit_span`) ≥ 0.50
+    AND ≥ BM25 top-1 + 0.25. Reported beside it: `P_free_sent`, C2 (the frozen
+    centred block-8 address) top-1, MiniLM top-1 and its MB per 1M tokens.
+  - Closest prior work: dense retrieval with a trained encoder (DPR, Karpukhin
+    2020; Sentence-BERT / MiniLM, Reimers 2019). Difference: the key is the O(1)
+    mind's own reading state plus a small head (L1), with no separate encoder;
+    met = the mind's state carries meaning that text matching cannot.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
