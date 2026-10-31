@@ -4562,7 +4562,7 @@ answer-in-window weighting on recall docs (4.8 % orphaned at 8k vs 15.9 % at 2k)
 Free reach is ~0.2 below 20-way at 2k-4k in both models: a fading skill is ranked before it is said
 (the step-back's contrast-decoding test is the cheap follow-up, eval only; GPU via Lead).
 
-## cd1: state-contrast decoding (pre-registration, 2026-11-01 01:31 IST; eval only, CPU; Lead: yes, 3 lines)
+## cd1: state-contrast decoding (pre-registration, 2026-11-01 01:22 IST; eval only, CPU; Lead: yes, 3 lines)
 
 - **Cells / seeds:** b2p2, skill-pack cell (pack read once, L filler, query), L = 0 / 2k / 4k,
   affine_map_new + shift_wide_new. Logits `l = l_pack + a·(l_pack − l_nopack)`, where
