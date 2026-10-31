@@ -1,4 +1,4 @@
-# v16 handover + board (organiser leads v16 since 2026-10-31 13:20 IST; "v13"/"v14" are session names)
+# v16 handover + board (Lead = the organiser session; Mind = formerly "Qllm v13"; Library = formerly "Qllm v14"; Lead since 2026-10-31 13:20 IST)
 
 ## Board (2026-10-31 13:25 IST)
 
