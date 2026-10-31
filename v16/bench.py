@@ -126,6 +126,9 @@ def natural_key(rng, tok, filler, avoid_lo, avoid_hi):
 
 def build(rng, tok, filler, L, task, n, keys='synthetic', shots=0):
     def enc(s): return tok.encode(s, add_special_tokens=False)
+    if task in ('syn', 'synneg'):   # A5 (Library): synonym cell, docs built by v14/syn_cell (draws its own start)
+        from v14.syn_cell import build_syn
+        return build_syn(rng, tok, filler, L, n, neg=(task == 'synneg'))
     start = rng.randrange(0, len(filler) - L - 1)
     body = filler[start:start + L].tolist()
     def mk():
@@ -334,7 +337,7 @@ def main():
                             lg2 = R.last_logits(span + span2 + q2)
                             rec['C_hop2_reread'] = int(cand[int(lg2[cand].argmax())] == ans)
                 # oracle fetch: the stored sentence put right in front of the query (upper bound of any fetch)
-                if vecs is not None and a.task in ('instr', 'kv', 'kv1', 'para', 'tool', 'natq'):
+                if vecs is not None and a.task in ('instr', 'kv', 'kv1', 'para', 'tool', 'natq', 'syn'):
                     if a.task == 'instr':
                         span_o = ids[:meta['rule_len']]
                     else:
