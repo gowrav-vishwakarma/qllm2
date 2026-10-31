@@ -33,7 +33,10 @@ def parity(conv):
         layer.out.weight.normal_()                      # out is zero-init; make it visible
     B, T = 3, 12
     h = torch.randn(B, T, cfg.dim, dtype=torch.double)
+    layer._record = []
     o_par, st_par = layer(h)
+    n_born = int(sum(int(b.sum()) for _, b in layer._record))
+    layer._record = None
     st = None
     outs = []
     for t in range(T):
@@ -42,7 +45,8 @@ def parity(conv):
     o_seq = torch.stack(outs, 1)
     err = (o_par - o_seq).abs().max().item()
     check(f"season form == decode (conv={conv})", err < 1e-10, f"max |diff| {err:.2e}")
-    for name in ('ev', 'roots', 'fruits', 'm_last'):
+    check(f"births happened in the parity run (conv={conv})", n_born > 0, f"{n_born} born")
+    for name in ('ev', 'roots', 'fruits', 'm_last', 'use'):
         e = (getattr(st_par, name) - getattr(st, name)).abs().max().item()
         check(f"  state '{name}' matches", e < 1e-10, f"{e:.2e}")
     # a second call continues from the state (two more seasons)
@@ -76,12 +80,12 @@ def simplex_and_grads():
     o, st = layer(h)
     check("shares sum to 1 (softmax over trees)", torch.allclose(st.m_last.sum(-1), torch.ones(2, 2)))
     o.pow(2).mean().backward()
-    for name in ('root0', 'fruit0', 'bias', 'lam_p', 'alpha_p', 'soil.weight', 'sap.weight'):
+    for name in ('root0', 'fruit0', 'fruit0_born', 'bias', 'bias_born', 'lam_p', 'temp_p', 'soil.weight', 'sap.weight'):
         p = dict(layer.named_parameters())[name]
         check(f"gradient reaches {name}", p.grad is not None and p.grad.abs().sum() > 0)
     lm = GroveLM(GroveLMConfig(vocab_size=100, dim=64, n_layers=2, mlp_hidden=128,
                                grove=GroveConfig(groves=2, trees=8, root=16, season=8)))
-    check("state is O(1)", lm.state_bytes(1) == 2 * 2 * 8 * (2 * 16 + 2) * 4,
+    check("state is O(1)", lm.state_bytes(1) == 2 * 2 * 8 * (2 * 16 + 3) * 4,
           f"{lm.state_bytes(1)} bytes per sequence for 2 layers")
 
 
