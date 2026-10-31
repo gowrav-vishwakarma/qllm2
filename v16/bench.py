@@ -103,10 +103,13 @@ class Reader:
             # last-position logits only (the full [T, V] head would not fit beside other jobs)
             hidden = self.m.net.backbone(x)[0, -1]
             return (hidden.float() @ self.m._head_weight().float().T).cpu()
-        # transformer: window = the whole sequence (RoPE); attention cost grows with length
-        out = self.m(x)
-        logits = out[0] if isinstance(out, tuple) else out
-        return logits[0, -1].float().cpu()
+        # transformer: window = the whole sequence (RoPE); attention cost grows with length.
+        # Last-position logits only: the full [T, V] head (6.6 GB fp32 at 32k) OOMed the 4090 on natq.
+        # bf16 autocast so SDPA takes the flash / memory-efficient kernel (fp32 at 32k fell back to the
+        # quadratic math kernel and OOMed the 4090); the state-only argmax is read in fp32 from the last hidden.
+        with torch.autocast('cuda', dtype=torch.bfloat16, enabled=(x.device.type == 'cuda')):
+            hidden, _ = self.m._hidden_to_lm(x)
+        return (hidden[0, -1].float() @ self.m._head_weight().float().T).cpu()
 
 
 def natural_key(rng, tok, filler, avoid_lo, avoid_hi):
@@ -518,6 +521,8 @@ def main():
             except Exception as e:  # keep going; record the failure
                 rec['error'] = f'{type(e).__name__}: {str(e)[:200]}'
             rec['sec'] = round(time.time() - t0, 1)
+            if a.device == 'cuda' and a.arch != 'pam':
+                torch.cuda.empty_cache()                      # T++ at 32k fills the 4090; release between docs
             outf.write(json.dumps(rec) + '\n'); outf.flush()
             print(rec, flush=True)
             vecs = None
