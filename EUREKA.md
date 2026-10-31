@@ -57,9 +57,18 @@ could mean for the other session. Read it before choosing a next step.
   and two-hop with the thinking left O(1). *For v14:* the index key that works is the
   per-token state at the salient word; gate the write there (N12), not at boundaries;
   a learned version should beat 0.75 top-1 and shrink the index to one row per event.
+  - **Mamba-2 (`mbs2b_main_685de4e`, 102.6M, 4090, 8 docs):** state only 1 needle
+    0.0 / 0.375 / 0.0 / 0.0 and 8 needles 0.25 / 0.125 / 0.125 / 0.25 at 2k / 8k / 32k /
+    128k: at the floor like the other two bodies on this format; organ 1.0 throughout.
+  - **400k (PAM, 1 needle, 4 docs over two runs):** state 0/4, snapshot index 0/4
+    (top-5 0/4), organ 4/4. The frozen-state address that is 0.75 top-1 at 128k is
+    gone at 400k: the nearest-neighbour over 400k positions falls below the noise
+    floor. A trained key, or one row per event instead of per token, is needed there.
   *Caveats:* 8 docs per cell (about +-0.15 noise), synthetic needles with unique
-  nonsense keys favour the n-gram organ, one seed, CPU fp32; Mamba-2 is not
-  CPU-runnable here (mamba_ssm). 400k row pending.
+  nonsense keys favour the n-gram organ, one seed, CPU fp32 for PAM / T++ and the
+  4090 for Mamba-2; the "Definition: KEY refers to VALUE." format is the recall-doc
+  format the PAM and Mamba-2 recipes train on (5 % share), so T++'s in-window 0.75
+  is the format-naive number.
 
 - **v13: the 3B LM gap is copy vs T++ but GENERAL modelling vs Mamba-2.** Eval-only
   attribution on the 3B scoreboard models (PAM `1c913ef`, T++ `e072a8f`, Mamba-2 `b36e3a5`,
