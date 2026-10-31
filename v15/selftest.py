@@ -35,7 +35,7 @@ def parity(conv):
     h = torch.randn(B, T, cfg.dim, dtype=torch.double)
     layer._record = []
     o_par, st_par = layer(h)
-    n_born = int(sum(int(b.sum()) for _, b in layer._record))
+    n_born = int(sum(int(r[1].sum()) for r in layer._record))
     layer._record = None
     st = None
     outs = []
