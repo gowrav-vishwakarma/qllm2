@@ -4,7 +4,29 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-31 23:10 IST) — read this first
+## State (2026-10-31 23:50 IST) — read this first
+
+Session: **Library**. Nothing of mine is running. The 4090 belongs to Lead's
+package table until ~00:50 IST; its 32k results ~04:00, 128k ~midday.
+* **Package (handed to Lead 23:05):** session library = mind-state keys
+  (L1 head, shipped mean, PACKAGE_T = −1); shared library = SL2 text fetch
+  over suffix arrays (~11.4 MB per 1M tokens, 0.99-1.00 at 4000 entries on
+  exact + surface variants); standing skills = N11-R refresh every ~2k tokens
+  (32k: 0.96 / 0.80, +1.6 % tokens); explicit questions fetch at question time.
+* **Verdicts today:** L1 Bar A not met (synthetic), natural 0.94-1.00 in-doc;
+  L2 paraphrase not met; L3 not met; SR-0 not met; A2 abstain infeasible;
+  SL1 not met → SL2 met; N11-R met. EUREKA: the mind's state is a stream
+  address (a reader, not an embedder).
+* **Open (board):** paraphrase by synonyms / rewording (no cell yet); "nothing
+  stored" for a paraphrased question (similarity cannot; the simple gain idea
+  failed Lead's smoke; null-row gain and top-5 outlier still to test OFFLINE on
+  the table's P_cands); BM25 postings memory if the fallback stays.
+* **Next when Lead hands out work:** the offline gain tests on P_cands; N11-F
+  is measured by the package table itself (no separate run).
+* **Waking peers:** `scripts/wake_session.sh <Name> <id>` (memory
+  wake-sessions); check ListAgents / tmux first.
+
+## Old state (2026-10-31 23:10 IST; superseded)
 
 Session: **Library**. Nothing of mine runs on the GPU; the CPU lanes are done.
 * **Handed to Lead (23:05) for the package table (session library):**
