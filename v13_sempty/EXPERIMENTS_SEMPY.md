@@ -3652,3 +3652,23 @@ of the T++ gap) and a general-modelling gain (most of the Mamba-2 gap). The
 general part is the body's: r3c's result, then capacity levers (width 588 vs
 768; state 3.7 MB vs Mamba-2's 13.4 MB, "a few more params" is allowed). None of
 these has been tested at ≥ 1.5B.
+
+**LR confound check (v14's question, 09:00 IST).** Is the new-token gap just the
+2e-4 run being under-trained? The same old body at LR 1.2e-3 (`9982a79`, 3B, one
+stage) scored on the same text is WORSE overall (+0.043 PG-19 / +0.013 web vs
+2e-4). Its gap to Mamba-2 is +0.134 / +0.124 with the same split: new tokens 46 %
+/ 49 %, copy 24 %. New tokens at positions 0–8: +0.027 / +0.174. So for the old body
+the general-modelling gap is not an LR artifact (both LRs). r3c (16nb + echo +
+two stages, 1.2e-3) is the open case; the baselines kept no intermediate
+checkpoints, so equal-token comparison by token class is impossible (equal-token
+TOTAL loss is possible from the val curves). Output:
+`logs/diag/v13_sempty_attr3b_lr12_061869d_20261031.txt`.
+
+**Candidate for the general part: A4 `cond_mem`** (hashed n-gram conditional
+memory: in the code, never run at scale; flag `--cond_mem`, slots 262144 ×
+dim 64, layers 0 and 1). It targets exactly short-context next-token prediction,
+with O(1) lookups and extra params (bar-2 tolerance allows them). Fairness caveat:
+an n-gram table would help any architecture, so a bar-2 claim with it must say so.
+Plan: a paired 600M filter run (kill if no gain on new tokens at positions 0–64 by
+this script), then into the best package. Not pre-registered yet; that happens
+after r3c's futility point.

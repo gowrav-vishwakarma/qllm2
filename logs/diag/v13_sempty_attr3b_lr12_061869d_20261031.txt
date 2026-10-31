@@ -1,0 +1,23 @@
+[pg19] tokens 122880; share copy 0.258 seen 0.377 new 0.365
+  loss  pam3b_lr12 3.6029  pam3b 3.5600  tpp 3.5098  r3b 3.6247  mamba2 3.4693
+  pam3b_lr12 - pam3b: total +0.0429
+     by class (gap / share of total): copy +0.043 / +26%  seen +0.055 / +48%  new +0.030 / +26%
+     by position:                     0-8 -0.019  8-64 +0.033  64-512 +0.036  512-2048 +0.046
+     new tokens by position:          0-8 -0.035  8-64 +0.024  64-512 +0.028  512-2048 +0.032
+--
+  pam3b_lr12 - mamba2: total +0.1336
+     by class (gap / share of total): copy +0.126 / +24%  seen +0.107 / +30%  new +0.166 / +46%
+     by position:                     0-8 +0.028  8-64 +0.094  64-512 +0.121  512-2048 +0.139
+     new tokens by position:          0-8 +0.027  8-64 +0.117  64-512 +0.152  512-2048 +0.178
+
+[web] tokens 195046; share copy 0.227 seen 0.386 new 0.387
+  loss  pam3b_lr12 3.2599  pam3b 3.2472  tpp 3.1832  r3b 3.2829  mamba2 3.1355
+  pam3b_lr12 - pam3b: total +0.0127
+     by class (gap / share of total): copy +0.016 / +29%  seen +0.015 / +47%  new +0.008 / +24%
+     by position:                     0-8 +0.077  8-64 +0.018  64-512 +0.012  512-2048 +0.012
+     new tokens by position:          0-8 +0.082  8-64 +0.015  64-512 +0.008  512-2048 +0.005
+--
+  pam3b_lr12 - mamba2: total +0.1244
+     by class (gap / share of total): copy +0.132 / +24%  seen +0.087 / +27%  new +0.158 / +49%
+     by position:                     0-8 +0.172  8-64 +0.131  64-512 +0.119  512-2048 +0.126
+     new tokens by position:          0-8 +0.174  8-64 +0.151  64-512 +0.148  512-2048 +0.167
