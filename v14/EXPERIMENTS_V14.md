@@ -2371,6 +2371,23 @@ texts, so (EUREKA "stream address") it is fetched by TEXT. Plumbing, cited
     tokens; a suffix array over tokens gives the same longest-match lookups
     at ~4 MB per 1M (implementation, not method).
 
+**SL2 — normalised-word organ for the shared library (PRE-REGISTERED 2026-10-31
+23:15 IST, before any SL2 code or number).** SL1 failed on natural
+paraphrase (0.68 / 0.49) because the token organ misses forms that change BPE
+tokens and BM25 is ambiguous on common words.
+- **Method:** an organ over NORMALISED words (lower-case, a plural "s"
+  stripped, the articles "the / a / an" dropped on both sides): the longest
+  word n-gram (n = 6 down to 3) of the question's tail found in the library,
+  latest match; else SL1's token organ (n ≥ 3); else BM25.
+- **Honest scope:** this fixes SURFACE variants (case, plural, article) by
+  construction, which is all the current paraphrase cell contains; it says
+  nothing about synonyms or rewording, which no cell tests yet (that would
+  need a synonym resource or human paraphrases: listed as open).
+- **Eval:** the SL1 script and builder, fresh seed 21000, 400 and 4000
+  entries, exact + paraphrased questions; MiniLM row kept as registered.
+- **Bars:** exact ≥ 0.99 / ≥ 0.97 at 400 / 4000; paraphrase ≥ 0.80 / ≥ 0.70 on
+  BOTH key types. Reported: index MB per 1M tokens.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
