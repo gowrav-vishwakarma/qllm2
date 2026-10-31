@@ -9,6 +9,18 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **v13: the 3B LM gap is copy vs T++ but GENERAL modelling vs Mamba-2.** Eval-only
+  attribution on the 3B scoreboard models (PAM `1c913ef`, T++ `e072a8f`, Mamba-2 `b36e3a5`,
+  r3b; PG-19 + web, 2048-token windows; EXPERIMENTS_SEMPY "3B LM gap attribution"). vs T++
+  (+0.05 / +0.06): 53-58 % from copyable tokens (bigram seen earlier in the window). vs
+  Mamba-2 (+0.09 / +0.11): copy is only 24 %, 52-55 % comes from NEW tokens, and Mamba-2
+  is already 0.05-0.09 better on new tokens at positions 0-8, with almost no context.
+  r3b's loss vs the old body is also on new tokens: M2 lost capacity, echo kept copy. *For
+  v14:* a memory / binding unit can close about half the T++ gap (~0.03) but only ~0.02-
+  0.03 of the ~0.10 Mamba-2 gap. Beating Mamba-2 on LM needs a better general token
+  processor (local mixing / capacity), not only better memory. If a unit idea improves
+  per-token modelling with no context (positions 0-64), that is the bigger lever.
+
 - **v13: Mamba-2 on the same rule data nearly matches PAM in context but collapses across
   distance like T++. The distance edge is PAM's, and the two recurrent states keep different
   things.** `b2m_main_38e3c29` (Mamba-2 102.6M, 600M tokens): B2 `_new` mean 0.892 vs PAM
