@@ -17,6 +17,14 @@ Overall ~52 %. 1 rules in context vs T++/Mamba-2: DONE (s8 MET, 3 PAM seeds vs 2
 - Ids: Mind 99371c3c-8382-42b3-a3d3-6861632abc19 | Library fdbac1f0-c2c3-4b9c-8baf-2585a9e7b8eb | Lead 683d2316-c093-4e15-b19c-044555bd5293 | Evol V1 0001093e-8355-4d42-a4fd-ed097ef58d71 (wake Evol V1 only on the user's word).
 - Any session may wake any other, including Lead; check ListAgents / `tmux ls` first so no second copy is started; after waking, message it with what landed.
 
+## Step back (Lead, 2026-10-31 23:50 IST; user: "think in the void, read the meditation memory, ask the others too")
+Not plans. What surfaced:
+1. The organ keeps winning at finding; the mind keeps winning at carrying a rule. Maybe the mind should never find: it reads what the organ hands it and carries what it induces; the "planner" becomes a few lines of code, not a model part.
+2. The stream-address finding is the mind describing itself: its state is "where I am in this stream" because it was trained on streams; a reader, not an embedder.
+3. Forgetting was learned (half-lives shrank under packed web shards), so remembering could be learned too: we never trained on one coherent stream (a book, a session). The LM objective and rule-carrying fight only over PACKED data.
+4. Nobody has let the mind WRITE its own library: rows today come from surprise or hashing. A "sleep" pass where the mind re-reads the session and writes gists as text rows (consolidation) is text-first, portable, needs no training, and is a claim no one has.
+5. The product value is generation with packs (the user's "nestjs expert"), not retrieval: give 50 examples once, later write in that style with the pack out of reach, refreshed every ~2k. MLB-1 has no generation cell; the eureka table measures finding, the user will feel writing.
+
 ## Decisions (organiser)
 - 13:35 IST: v14 may run the L1 data pass + head training on the 4090 NOW under a 3.5 GB cap beside a4f and Evol V1's pair (stop if a4f tok/s -30 % or < 1.5 GB free).
 - 13:35 IST: N9s (v14's salient phase; two_hop bar met at 2 seeds, 27M): NO standalone 600M run; at most one paired arm inside v13's curriculum run if that mix carries the two_hop format; otherwise stays a 27M result. Its anchor idea seeds the planner (N11).
