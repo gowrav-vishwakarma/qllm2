@@ -2611,6 +2611,16 @@ fitted threshold:
     Difference: no trained critic and no question likelihood; the O(1) mind's
     answer gain with the no-row prior cancelled, and agreement across rows, set
     the abstain.
+  - **A3 FIT (2026-11-01 01:01 IST, seed 22000 only, in-sample): below the bar
+    already.** Best: f2 top-1 `gain` ≥ 5.6186 → para + tool answered-and-correct
+    0.256 vs strict 0.194 (+0.062 < +0.10); para 0.30 / 0.275, tool 0.175 /
+    0.275 (syn / nat); neg abstain 0.975 / 0.90. Quantiles (10 / 50 / 90 %):
+    top-1 gain neg 0.66 / 3.16 / 5.36 vs stored-and-right 2.86 / 4.83 / 6.40;
+    agreement neg 1 / 1 / 2 vs right 1 / 2 / 3; outlier gap identical
+    (0.01-0.04). Reading: gain says "this row states a value", not "this row
+    answers THIS question": any row naming one of the 20 values raises it, so
+    never-stored queries gain too. The frozen rule still runs on S2 as
+    registered (expected NOT met).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
