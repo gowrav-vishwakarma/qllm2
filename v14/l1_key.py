@@ -147,6 +147,8 @@ def evaluate(head, files, form, device, tau_list=(TAU,)):
 
 def train(args):
     device = torch.device('cuda')
+    if os.environ.get('L1_MEM_FRAC'):                      # hard cap when sharing a busy card
+        torch.cuda.set_per_process_memory_fraction(float(os.environ['L1_MEM_FRAC']))
     torch.manual_seed(args.seed)
     files = load_docs(args.docs)
     val = load_docs(args.val)
