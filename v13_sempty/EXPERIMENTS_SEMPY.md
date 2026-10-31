@@ -4561,3 +4561,16 @@ the reach answer does not depend on it, since the reach stayed far below the bar
 answer-in-window weighting on recall docs (4.8 % orphaned at 8k vs 15.9 % at 2k). Not isolated.
 Free reach is ~0.2 below 20-way at 2k-4k in both models: a fading skill is ranked before it is said
 (the step-back's contrast-decoding test is the cheap follow-up, eval only; GPU via Lead).
+
+## cd1: state-contrast decoding (pre-registration, 2026-11-01 01:31 IST; eval only, CPU; Lead: yes, 3 lines)
+
+- **Cells / seeds:** b2p2, skill-pack cell (pack read once, L filler, query), L = 0 / 2k / 4k,
+  affine_map_new + shift_wide_new. Logits `l = l_pack + a·(l_pack − l_nopack)`, where
+  `l_nopack` is the same filler + query without the pack; a ∈ {0, 0.5, 1, 2, 4}. a is chosen on a
+  tune split (seeds 8100–8149) and scored on seeds 8000–8099 (100 docs per task).
+- **Bar:** free reach (argmax over the whole vocab == answer) with the chosen a ≥ the 20-way
+  reach − 0.05 at both 2k (0.86) and 4k (0.355), i.e. ≥ 0.81 and ≥ 0.305 (a = 0 today: 0.615 / 0.170),
+  AND free at L = 0 ≥ 0.98. Then "a fading skill is outvoted, not lost" holds, and the package
+  gets a 2× compute, still-O(1) decode option.
+- **Prior work:** context-aware decoding (Shi et al. 2023), contrastive decoding (Li et al. 2022).
+  The difference is only the setting: a decaying O(1) recurrent state's one-read reach. No method claim.
