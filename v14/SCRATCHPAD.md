@@ -27,6 +27,28 @@ EXPERIMENTS text if lost).
 * **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
   tmux first.
 
+## Step back (2026-11-01 03:38 IST, after A6c / A8 / A9: the contrast)
+
+* **What surprised me.** The cure for "the mind does not listen" was not a
+  fresher state but a DIFFERENCE: what the row adds over the same state
+  without it. Warm + contrast beats even the cold read (natural kv 0.925 vs
+  0.775), so the long state is not noise to be thrown away; it is a prior to
+  be subtracted.
+* **What it says.** The package now has a clean split: TEXT decides what is
+  stored (organs; abstain by rule), the MIND reads and says it, and the
+  contrast makes it say what the evidence added. Two holes remain: (1)
+  facts stored under other words (synonyms: the learned key finds 0.40, and
+  strict mode abstains on every one of them, because the organs miss); (2)
+  writing on multi-field rows (tool 0.575 natural; run-on).
+* **Bold angle: a three-step package.** Organ hit → answer (warm +
+  contrast). Organ miss → learned key's top row → the mind reads it and EITHER
+  says the value OR says " unknown" (cu1 / cu2's verify skill, A10 tests it).
+  No row → abstain. That turns strict mode's blanket abstain on paraphrases
+  into the mind's own judgement, and is where the learned key and Mind's
+  curriculum meet. Prior work: Self-RAG's relevance / support tokens.
+  Difference: an O(1) mind judging its own fetched row, after an exact-text
+  first pass.
+
 ## Old state (2026-11-01 01:56 IST; superseded)
 
 
