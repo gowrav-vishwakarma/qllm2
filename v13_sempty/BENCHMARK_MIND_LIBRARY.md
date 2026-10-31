@@ -260,7 +260,7 @@ generation also counts: not a database, a model that is intelligent AND expresse
   Any curriculum change (cu1, cu2) keeps a generation-quality readout: holdout by token class
   plus 3 shown samples.
 
-**A8 (2026-11-01 01:00 IST; Lead's decision, from the A7 shown generations): a NATURAL-QUESTION
+**A8 (2026-11-01 00:51 IST; Lead's decision, from the A7 shown generations): a NATURAL-QUESTION
 cell `natq` enters the harness as a REPORTED cell in v1 (no gate until its first numbers exist).**
 Why: a plain-language recall question ("…the backup key is with Priya in room 18. … Question: who
 has the backup key? Answer:") was answered wrongly by both b2p2 and r3c (3B), whose recall in the

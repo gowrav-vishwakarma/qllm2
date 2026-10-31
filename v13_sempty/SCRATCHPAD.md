@@ -18,7 +18,7 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **2026-11-01 01:05 IST: STEP BACK after the orphan bug, r3c and the A7 generations.** What surfaced:
+* **2026-11-01 00:53 IST: STEP BACK after the orphan bug, r3c and the A7 generations.** What surfaced:
   - *Ranked is not said.* At 2k after one read b2p2 ranks the rule's answer first among 20 in 0.88
     of docs but SAYS it in only 0.68. The fading state still carries the skill; it is outvoted by
     the LM prior over 50k tokens. So part of the "reach wall" is a volume problem, not a storage

@@ -4434,7 +4434,7 @@ this at 600M are not in r3c).
 b2 + lab + curriculum, with ANSWER_IN_WINDOW) is the place they meet, after cu1 says which
 curriculum parts help. GPU via Lead.
 
-## r3p: the 3B best-package mind (pre-registration, 2026-11-01 00:58 IST; GPU slot approved by Lead after cu1 + cu1n9s)
+## r3p: the 3B best-package mind (pre-registration, 2026-11-01 00:51 IST; GPU slot approved by Lead after cu1 + cu1n9s)
 
 **What it is.** One 3B run that brings together everything that worked at 600M on the only body
 proven at 3B, so the package's mind is measured at the baselines' scale, and LM quality
