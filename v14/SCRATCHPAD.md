@@ -414,6 +414,21 @@ for when v15's job leaves the 4090, ~10:40 IST; v13's frozen text copied
 from the 6000 `~/attr/data.npz`). That shows whether
 N9a's recall jump moves copy tokens (part of the T++ gap).
 
+## Direction (user via v13, 2026-10-31): intelligence mind + learned fetch
+
+The O(1) state is trained for rules / gist / reasoning, not recall. Recall
+comes from a LEARNED FETCH over the user context and tool results
+(RAG-like). This fetch is v14's mechanism to design, in three parts:
+- **when to fetch:** a gate;
+- **the query:** the state at the salient token, where N12 writes; the
+  organiser probe got top-1 0.63-0.88 to 128k zero-shot with it;
+- **re-reading:** the fetched span, which gave two-hop 1.0.
+
+N7 and N12 are its first organs. Communicator's check on n9c's lookup
+reversal: with 3 lags, the key includes the token before the item, which
+varies in natural text, so one fact gets two keys. Try 2 lags or a
+salient-gated variant. Design after the n9th / n12m readouts.
+
 ## Next action
 
 1. **n9r** (4090, running, ends ~12:00 IST): score recall vs the bars
