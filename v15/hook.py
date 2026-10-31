@@ -21,7 +21,7 @@ from typing import Dict
 import torch
 import torch.nn.functional as F
 
-from v15.grove import GroveConfig, GroveLM, GroveLMConfig
+from v15.grove import maybe_compile, GroveConfig, GroveLM, GroveLMConfig
 
 # ~102.6M total, the r600 protocol's body size (M1 / Mamba-2 17x768 / T++).
 DEFAULT_SPEC = "dim=768,layers=12,groves=12,trees=32,root=64,season=32,conv=4,mlp=0,target_m=102.6"
@@ -137,6 +137,7 @@ def build_grove_lm(vocab_size: int, spec: str = DEFAULT_SPEC) -> GroveTrainLM:
     cfg = GroveLMConfig(vocab_size=vocab_size, dim=s['dim'], n_layers=s['layers'],
                         mlp_hidden=mlp, grove=g)
     model = GroveTrainLM(cfg)
+    maybe_compile(model)
     n = sum(p.numel() for p in model.parameters())
     print(f"[grove] dim={s['dim']} layers={s['layers']} G={g.groves} K={g.trees} n={g.root} "
           f"season={g.season} conv={g.conv} mlp={mlp}: {n / 1e6:.2f}M params, "

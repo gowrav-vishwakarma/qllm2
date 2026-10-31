@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import torch
 
-from v15.grove import GroveConfig, GroveLM, GroveLMConfig
+from v15.grove import maybe_compile, GroveConfig, GroveLM, GroveLMConfig
 
 # the grove layout for the micro-bench body (width 384): G*n = width
 BENCH_GROVE = dict(groves=6, trees=32, root=64, season=32, conv=4)
@@ -57,6 +57,7 @@ def build_grove(cfg, grove: dict | None = None):
     fixed = _grove_params(base) - 3 * cfg.dim * 64 * cfg.n_layers      # everything but the MLPs
     mlp = max(64, round((target - fixed) / (3 * cfg.dim) / cfg.n_layers / 64) * 64)
     model = GroveBench(GroveLMConfig(**{**base.__dict__, 'mlp_hidden': mlp}))
+    maybe_compile(model)
     n = sum(p.numel() for p in model.parameters())
     print(f"  [grove] G={g.groves} K={g.trees} n={g.root} season={g.season} mlp={mlp}: "
           f"{n / 1e6:.2f}M params (echo {target / 1e6:.2f}M), state "
