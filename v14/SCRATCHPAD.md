@@ -28,6 +28,28 @@ needs a 3-line bench hook). **n11rf** OOMed at 01:17 (4 rows); relaunch after A6
 * **Waking peers:** `scripts/wake_session.sh <Name> <id>` (memory
   wake-sessions); check ListAgents / tmux first.
 
+## Step back (2026-11-01 01:55 IST, after A6: the mind does not listen late)
+
+* **What surprised me.** I expected the warm read (the mind's own state + the
+  row) to help a cold-started mind. Instead, at 32k the row it was just shown
+  barely moves its answer: warm ≈ state-only, while the SAME 40 tokens from a
+  fresh state give 0.83-0.93. The fact is understood; the long state outvotes
+  it.
+* **What it says.** Two separate abilities: holding (the long state) and
+  listening (letting the newest text decide). Past the trained length the
+  first drowns the second. The package's cold re-read works because it is in
+  effect a second, fresh working state; the library's job includes giving the
+  mind a clean place to read.
+* **Bold angle: a two-state O(1) mind.** A long state for gist / skills plus a
+  short WORKING state that starts fresh at each question, reads the fetched
+  rows + the question, and consults the long state only through a gate or a
+  contrast (A6c tests the contrast). Still O(1) (two fixed states). Prior
+  work: hybrid recurrent + local attention (Griffin, De et al. 2024; Samba),
+  Block-Recurrent Transformers (Hutchins 2022), complementary learning
+  systems. Difference: the working state is reset per question and fed by the
+  library, not a sliding window over the stream. Design input for Mind / Lead
+  once A6c lands; not my lane to build in the body.
+
 ## Old state (2026-11-01 01:10 IST; superseded)
 
 
