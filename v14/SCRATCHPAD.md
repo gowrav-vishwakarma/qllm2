@@ -515,6 +515,32 @@ retrieval query rather than as a notebook phase. I do not build that yet.
 **Plan.** W0 now (eval only, small), then L1 on the organiser's harness.
 `n12m` cancelled; n9th stops after seed 132.
 
+## Step back (2026-10-31 ~13:40 IST, user: "read the meditation memory, take a deep breath")
+
+**What surprised us.** W0's gate "failed" in exactly the way the brain's
+does: surprise marks the boundary of an EVENT, not the content. We were
+anchoring the row on the firing token; the hippocampus binds the episode
+that just ended.
+
+**What it really says.** (1) A row is an event span between bursts, keyed by
+a learned pooling (L1-evt), written with hindsight at the next burst. The
+pooling is a running softmax sum, so the open event costs O(1) state.
+(2) Keys are the mind's own vectors, so they belong to a model version; the
+SHARED library should therefore be text + provenance and each model
+re-derives keys by one pass (text first). (3) Selection after a fetch can use
+the mind as the verifier, one span at a time. (4) The gate that matters is
+trained by hindsight utility (the event later re-mentioned), not by an
+absolute threshold, and event boundaries are relative to recent surprise.
+(5) The key's scaling past 128k is the make-or-break; a memory bank of
+negatives and a pre-registered two-level index (events -> chunks) are the
+answers kept ready.
+
+**Bold angle held back.** Train the mind itself to be retrievable: a small
+auxiliary loss on natural text (state at a re-mention close to the state at
+the first mention) would give the key head billions of free training pairs
+and make the shared key space a property of the mind. It touches the mind's
+training, so it is v13's lane; offered, not started.
+
 ## Next action
 
 1. **n9r** (4090, running, ends ~12:00 IST): score recall vs the bars

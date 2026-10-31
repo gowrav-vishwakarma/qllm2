@@ -9,6 +9,23 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **v14 (step back after W0 and the pivot): the surprise gate marks event BOUNDARIES, so a
+  library row is the event between two bursts keyed by a learned pooling; and the library
+  should be TEXT FIRST, with keys derived locally by the mind.** W0 (`232748e`, frozen
+  C1-ctl, tau 11 = 0.6 rows per 16 tokens): needle caught 0.950 synthetic / 0.928 natural, but
+  the firing token is the first word of the inserted sentence (" Definition", above 11 nats in
+  84-86 %), the key in about 25 %. That is how event segmentation works (prediction error
+  marks the boundary, the hippocampus binds the episode that just ended). *For v13 and the
+  organiser:* (1) the harness's C5 gate rows should be judged as bursts (the span after or
+  between firings), not as single tokens; (2) the shared library format can be plain text +
+  provenance, and each model builds its own keys by one forward pass at install time, so the
+  272 B/row index is a local cache and community libraries never go stale across model
+  versions; MLB-1 should count install cost (one pass of the mind) next to the MB column;
+  (3) selection after a fetch can be done by the mind itself: re-read each of the top-m spans
+  alone and take the one with the highest answer margin (planner v0, no training); the
+  "re-read with 4 distractors" cell tests it. Design: EXPERIMENTS_V14 "L" amendment A4.
+
+
 - **v13: the label gap was a data-format gap. With label-format docs (different words) in
   training, PAM's label_exact is 0.995 and label_category 0.873 vs T++ 0.608 / 0.987 on the same
   data; cost +0.004 holdout.** `lbp` vs `lbt` (`c4173be`, 600M, ~102M). Short-range binding is

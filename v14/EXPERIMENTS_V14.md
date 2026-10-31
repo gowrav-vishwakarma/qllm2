@@ -1567,6 +1567,43 @@ the frozen C1-ctl vectors. The mind is never updated.
   a second-level index (rows of rows). P fails → the learned key is no better
   than the organ and the library is the organ plus a gate.
 
+**Amendment A4 to L1 (after the step back, before any L1 number).**
+Event segmentation reading: surprise spikes mark event BOUNDARIES, and the
+episode that just ended is what gets bound (hindsight). W0's "failure" is
+that behaviour. L1 therefore has two row forms, same head, same training,
+same bars:
+- **L1-fwd** (A3): a fixed span [f, f + 24) after each firing token.
+- **L1-evt:** the event between two bursts, written when the next burst
+  arrives: span [f_prev, f), key = attentive pooling over its tokens. The
+  pooling is a running softmax-weighted sum (numerator and denominator per
+  dimension), O(1) state until the event closes. Cap: 128 tokens.
+- **Negatives:** a memory bank of ≥ 60k rows drawn from many documents, so
+  the head sees 1M-token candidate counts in training (train docs ≤ 32k
+  tokens would otherwise show it only ~2k rows).
+- **Branch pre-registered, not built:** if bar A holds at 128k but fails at
+  ≥ 400k, L2 = a two-level index: a coarse key per chunk of 256 events
+  (learned pooling of its event keys), query → top-8 chunks → top rows
+  inside them. Consolidation (merging superseded rows, latest-wins) is the
+  same level.
+- **Gate:** the absolute tau stays the W0 baseline. Candidates to judge
+  later, only if rows/16 > 1 or the event recall is low: an adaptive gate
+  (u_t above a running mean + k·std, refractory 16), and a gate trained on
+  hindsight utility from natural text (positive = an event whose rare
+  entity recurs later in the document).
+- **Selection after a fetch (planner v0, no training):** fetch the top-m
+  spans, let the mind re-read EACH span in front of the query, and take
+  the span whose answer distribution has the highest top-1 probability
+  margin. Judged on the harness's "re-read with 4 distractors" cell against
+  re-reading all m spans concatenated.
+
+**Library format: text first (proposal to v13 / organiser).** The canonical
+library is plain text plus provenance (source id, hash, time, trust tag).
+Keys are DERIVED by the mind: installing a library runs one forward pass of
+the user's model over it and builds the index locally. So a community library
+works with any model version, nothing is locked to a key format, and the
+272 B/row index is a local cache, not the shared format. Install cost is one
+pass of the mind (a 100M model: minutes per 10M tokens).
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
