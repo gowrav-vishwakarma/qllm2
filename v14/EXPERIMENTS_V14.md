@@ -2866,6 +2866,21 @@ fitted threshold:
   - Met C → a stream-inserted read (N11 refresh, or a warm row) can be made
     to work with a second O(1) stream; not met → the package keeps the cold
     scratch read.
+- **A8 (N11-RC): refresh half as often with a contrast stream (PRE-REGISTERED
+  2026-11-01 03:14 IST, before any number of it; Mind's proposal after cd2).**
+  Design / cost, no novelty claim (closest prior work: context-aware decoding,
+  Shi et al. 2023; contrastive decoding, Li et al. 2023; Mind's cd1 / cd2).
+  - Cell: N11-R's (Mind's skill pack, affine_map_new + shift_wide_new), b2p2,
+    FRESH seeds 8300-8349, L = 8,192 / 32,768.
+  - Arms: plain refresh R = 2,048 / 4,096 / 0, and CONTRAST at R = 4,096 and
+    R = 0: last logits l_R + 4 (l_R − l_nopack), where nopack = the same
+    filler + question with no pack anywhere (= run_skillpack_probe's cd1).
+  - Score: FREE (greedy token over the whole vocabulary = the target),
+    primary; 20-way secondary. Pooled over the 2 tasks (100 docs per arm).
+  - Bar MET iff at L = 32,768: free(R = 4,096 + contrast) ≥ free(R = 2,048
+    plain) − 0.05 AND ≥ free(R = 4,096 plain) + 0.10. Met → the package
+    refreshes every ~4k with one extra O(1) stream (+1.15 MB, 2× compute
+    while on): refresh tokens halved (~1.6 % → ~0.8 %).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
