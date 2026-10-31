@@ -27,6 +27,7 @@ SKIP_FILES = frozenset({
     "a5_text.py",        # A5: synonym-cell text eval (MiniLM CPU thread cap)
     "a6_reread.py",      # A6: warm / cold re-read eval (frozen-mind decode loop, raw torch)
     "a11_keyswap.py",    # A11: key-swap relevance eval (frozen-mind short reads, raw torch)
+    "a13_manykey.py",    # A13: many-key fetch eval (frozen states, max-sim, raw torch)
     "package_fetch.py",  # the package fetch as a harness key_fn (two organs, raw torch)
     "pack.py",           # library packs: text-first format + install tool (raw torch / numpy)
     "pack_check.py",     # cross-document check of the install tool
