@@ -3672,3 +3672,40 @@ an n-gram table would help any architecture, so a bar-2 claim with it must say s
 Plan: a paired 600M filter run (kill if no gain on new tokens at positions 0–64 by
 this script), then into the best package. Not pre-registered yet; that happens
 after r3c's futility point.
+
+## A4 cond_mem filter `a4f` (pre-registration, 2026-10-31 09:40 IST): does a hashed n-gram table close the new-token gap?
+
+Why: the 3B attribution puts 52–55 % of the Mamba-2 gap on NEW tokens, already
++0.05–0.09 at positions 0–8, where no memory helps. A4 (`v13_sempty/cond_mem.py`,
+Engram-style: canonical-id suffix 2/3-grams, 2 hash heads each, one shared
+2^18 × 64 table per read, gated by the hidden state, read after blocks 0 and 1;
+table lr × 5, no weight decay) targets exactly short-context next-token
+prediction, with O(1) lookups. It has been in the code since `38e6595` and was
+never run. Launcher switch `COND_MEM=1` (`d338469`; smoke in that commit).
+
+**Arm** (4090, worktree `../qllm_a4`, code `d338469`): v14's n9r control recipe
+exactly, plus `COND_MEM=1` in both stages. Body M1 (`PAM_LAYERS=3,7,11,15
+MLP_HIDDEN=2352 ECHO=1 GRAD_CKPT=1`), LR 1.2e-3, seed 43. Stage A 120M
+dclm / fineweb / smoltalk2_mid 0.4167 / 0.3333 / 0.25 (30M blend warmup);
+stage B 480M M1 mix (0.44 / 0.41 / 0.10 / 0.05 recall), `--init_from` A.
+**Control:** `n9rctl43{a,b}_37fa333` (same box, seed, data; v14's run). Code
+differs only by additive switches (v14 hooks off, launcher switch). Params: arm
+103.6M dense + 33.5M table (137.1M with table) vs 102.9M. The 4090 holdout runs
+~0.12 above the 6000's for this recipe (box effect), so compare only within the 4090.
+
+**Measures:** holdout; `attr3b` on the frozen text (new-token loss at positions
+0–64 and overall, copy / seen / new split); recall 63-cell; label_diag 200;
+rules 100; tok/s.
+
+**Rules (fixed now):**
+1. *KEEP for the 3B best package* if holdout ≤ ctl43 − 0.02 AND new-token loss
+   at positions 0–64 is lower by ≥ 0.03 on BOTH PG-19 and web.
+2. *FAIL* if the holdout gain is < 0.01: A4 is removed from the code (index row
+   with the code-at hash).
+3. In between: not in the package; reported, and decided at 3B only if
+   nothing better exists.
+4. *Guards:* recall ≥ ctl43 − 0.05; tok/s cost reported.
+5. *Fairness, stated with any bar-2 claim that uses it:* an n-gram table helps
+   any architecture. If it goes into the package, the bar-2 report must say so,
+   and the claim must state how much of any lead it explains.
+6. One seed. A 600M pass gets judged again at 3B, not claimed at 600M.
