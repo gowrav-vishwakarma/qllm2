@@ -180,4 +180,18 @@ library built on it (skill-pack persistence); unseen rule FAMILIES are the front
 
 ## 8. Amendments (dated, each before the numbers it affects)
 
-(none yet)
+**A1 (2026-10-31 13:55 IST, before any skill-pack or replay number; Lead's decision).**
+The skill-pack persistence and replay-integration cells are implemented by Mind in
+`scripts/run_skillpack_probe.py` (rows in bench.py's vocabulary: arch, ckpt, task,
+sub, L, doc, T, A_state, O_reread, mem{state_bytes, tpp_kv_bytes_full,
+tpp_refetch_kv_bytes}, sec; Lead reviews the code against this text before the first
+scored run). **In v1 the pack is PLACED at t0;** fetching a pack by key from a library
+of packs is bench.py's and lands with Library's L1. Pack = the B2 header + 8
+demonstration lines (shift_wide_new, affine_map_new; held-out values); probe seeds
+8000–8099 (never used); 100 docs per cell; L = 0, 2k, 8k, 32k, 128k (1M reported
+later). Arms: PAM read once (A_state), Mamba-2 read once (A_state), T++ without
+re-fetch = the whole stream in its window (A_state, as far as memory allows), T++ with
+re-fetch = the pack placed before the query (O_reread, KV cost
+mem.tpp_refetch_kv_bytes). Replay integration (reported, no gate): replay_refresh
+(R_alone vs R_state_plus vs A_state) and replay_hop2 (H_integrate vs H_oracle vs
+H_hop2only; 4 owners).
