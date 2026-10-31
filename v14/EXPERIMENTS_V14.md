@@ -2699,6 +2699,19 @@ fitted threshold:
       text, so strict mode no longer has to give up para / tool. Says NOTHING
       about rewording or synonyms. Next: the mind run (expression,
       `P_free_sent`), queued with Lead.
+  - **A4 MIND RUN v1: INVALID (my bug; 2026-11-01 01:35 IST).** Lead's run
+    (`logs/v16_pkg_a4norm_b2p2_32768_cb4fa04_20261101_0108.jsonl`, 320 rows, 0
+    errors) hit only at the token organ's rate (para 0.40 / 0.75, tool 0.25 /
+    0.225, syn / nat). package_fetch passed bench's `query_pos` to the organ,
+    and that is the query KEY's last token, not the question start (the
+    pre-registration's "[query_pos, T)" meant the question; the text check
+    used the question start). Reproduced on CPU with bench's own qk: old call
+    = the GPU rates exactly; fixed in 238c62e (whole question) → 1.00 on all
+    four. Seen from v1 (token organ, unaffected): kv `P_free_sent` 0.875 / 0.75,
+    20-way 1.00 / 1.00; neg abstain 1.00 / 0.975.
+  - **A4 MIND RUN v2 (PRE-REGISTERED 01:35 IST):** the same run with 238c62e on a
+    FRESH seed 27000 (seed 24000's docs are now seen); same bars
+    (`P_free_sent` para and tool ≥ 0.80, neg abstain ≥ 0.90, both key types).
 - **A3 follow-up, near-miss data (for Mind's cu2 VERIFY; 01:13 IST, descriptive,
   offline):** in the strict run's never-stored docs (seed 22000, rebuilt), the
   top row is another stored fact in 18 / 40 (synthetic) and 14 / 40 (natural);
