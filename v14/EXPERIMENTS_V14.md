@@ -2516,6 +2516,29 @@ before any code or number; Lead's order item 3; eval only).**
   long-running agents. Plumbing; the claim is only the measured cost of
   keeping an O(1) mind's skill alive.
 
+**PACKAGE strict mode (PRE-REGISTERED 2026-11-01 00:45 IST, before any number of it;
+after Lead's package table, `abf5b69`).** Lead's table (fresh seeds 18000 /
+18500; L1 head; PACKAGE_T = −1) met R1 at 1.00 on every exact-key cell at 32k
+and 128k on both bodies (T++ / Mamba-2 state alone 0.04-0.18; PAM minds alone
+0.08-0.19); paraphrase 0.46-0.66 (organ alone 0.26-0.35); tool 0.31-0.46;
+neg wrong-fetch 1.00 when the organ misses. Lead found post hoc that t = 0.97
+gives abstain 1.00; that number was fitted on the table's own docs, and since
+every exact hit has similarity 1.00 by construction, it is in effect the RULE
+"abstain whenever the exact organ misses". So the honest form is a rule, not a
+fitted threshold:
+- **Strict mode:** answer only on an exact-organ hit; otherwise abstain.
+  (Lenient mode = the table's PACKAGE_T = −1: never abstain on an organ miss.)
+- **Eval (Lead's harness, fresh seed 22000, never used):** kv / para / tool /
+  neg × synthetic + natural, 32k, 40 docs per cell, b2p2.
+- **Bars:** neg abstain ≥ 0.90 (the pre-registered abstain bar); kv top-1 =
+  1.00 (unchanged). Reported: paraphrase and tool in strict vs lenient mode
+  (expected to fall to the organ's level): the precision / recall trade-off
+  is the finding, with no middle ground available from key similarity (A2).
+- **Honesty line (proposed to Lead):** the exact-key recall win is the
+  package's (its exact organ: plumbing); the mind's own key contributes on
+  paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
+  the mind's claim is R2 + R4.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
