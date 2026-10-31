@@ -250,6 +250,7 @@ def main():
     ap.add_argument('--gate_tau', type=float, default=None, help='C5: surprisal threshold in nats (overrides --gate_frac)')
     ap.add_argument('--vec_layer', type=int, default=None, help='key vectors = residual after block k (Library: mid-layer address); surprisal still from the output')
     ap.add_argument('--centre', action='store_true', help='subtract the document mean from the key vectors before the cosine')
+    ap.add_argument('--centre_ref', default=None, help='with --centre: subtract a FIXED reference mean [D] (torch .pt) instead of the document mean; the deployed condition, where library and session come from different texts')
     ap.add_argument('--filler', default=None, help='token cache for the filler (default: the held-out prose cache = the EVAL pool; pass a pretrain-mix cache for TRAINING docs)')
     ap.add_argument('--key_fn', default=None, help='module:function(vecs[T,D], ids) -> keys[T,d]; replaces the frozen address in C2/C5 (v14 learned fetch)')
     ap.add_argument('--dump_rows', default=None, help='dir: per doc, save ids, candidate row positions/kinds, their vectors, query pos and the answer span (v14 training/eval interface)')
@@ -257,6 +258,9 @@ def main():
     a = ap.parse_args()
     model, tok, cfg = _load_v13_sempty(Path(a.ckpt), 'baseline_real_pm', torch.device(a.device)); model.eval()
     R = Reader(model, a.arch); R.vec_layer = a.vec_layer; R.centre = a.centre
+    centre_ref = None
+    if a.centre_ref:
+        centre_ref = torch.as_tensor(torch.load(a.centre_ref, map_location='cpu')).float().reshape(1, -1)
     fill = filler_tokens(a.filler or str(ROOT / '.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt'))
     key_fn = None; key_fn_bursts = False
     if a.key_fn:
@@ -274,7 +278,7 @@ def main():
             ids, ans, qlen, meta = build(rng, tok, filler, L, a.task, a.needles, keys=a.keys, shots=a.shots)
             T = len(ids); doc_end = T - qlen
             rec = dict(arch=a.arch, ckpt=a.ckpt, task=a.task, keys=a.keys, needles=a.needles, L=L, doc=d, T=T,
-                       vec_layer=a.vec_layer, centre=a.centre)
+                       vec_layer=a.vec_layer, centre=a.centre, centre_ref=a.centre_ref)
             n_ev = 4 if a.task == 'hop2' else 1 if a.task in ('kv1', 'instr') else a.needles + (1 if a.task == 'kvupd' else 0)
             try:
                 rec['mem'] = mem_bytes(a.arch, cfg, L, n_ev, doc_end)
@@ -332,7 +336,8 @@ def main():
                     # --vec_layer, else the pre-logit vector); 2-arg form -> per-token keys [T, d]
                     K_all = key_fn(keys_doc, ids) if (key_fn and not key_fn_bursts) else keys_doc
                     if a.centre:
-                        K_all = K_all - K_all[:doc_end].mean(0, keepdim=True)
+                        mu = centre_ref if centre_ref is not None else K_all[:doc_end].mean(0, keepdim=True)
+                        K_all = K_all - mu
                     q = torch.nn.functional.normalize(K_all[qk], dim=-1)
                     docv = torch.nn.functional.normalize(K_all[:doc_end], dim=-1)
                     span_r = 24 if a.task == 'tool' else 6
