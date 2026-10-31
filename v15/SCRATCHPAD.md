@@ -37,10 +37,22 @@
   no hot op; ~360 slice-backwards, ~380 divs, ~770 copies, ~440 zero-fills
   per 8 seasons. On the GPU that is launch-bound: hundreds of tiny kernels
   per season x seasons x layers. Remedy = `torch.compile` of the season body
-  or one fused season kernel; not before GII-2 is read. Loss at step 1000:
-  1.93 (Grove I 3.15), so the slowness buys something.
+  or one fused season kernel. 09:35 IST: `torch.compile` works on the season
+  form after the autocast refactor (`a8fe35f`): output identical, state 1e-15,
+  2x on CPU at toy size; switch `V15_COMPILE=1` (bench adapter + trainer
+  hook). GPU gain unmeasured (no slot). The queued GIV-2 runs the pinned
+  `dcd5c86` (same maths, eager).
 
 ## Step-back notes
+- 2026-10-31 09:35, after the sapling fix. The bimodal rule toy (0.09 vs
+  0.95 by seed) was not noise: a loss trace showed a dead plateau from step
+  250, and the cause was one line of the read (a newborn's empty fruit read
+  at every novel token). Two lessons. (1) When a run is bimodal across seeds,
+  trace the bad seed before touching anything else; a plateau from the start
+  is a constant being injected somewhere. (2) In the organism frame the fix
+  read itself: a sapling bears no fruit. When the fix is a sentence in the
+  frame's own language, it is probably right; when it needs a knob, it is
+  probably not.
 - 2026-10-31 06:25, after building Grove II. Four of the five faults found
   this morning were not in the idea but in defaults carried over from Grove I
   (soft-share growth rate, conv bias, coupled spreads) and in one rule I had
