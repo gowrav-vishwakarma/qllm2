@@ -12,14 +12,16 @@
 - Nothing has run on a GPU yet. 4090: v13's n9c was using ~15 GB at 00:30.
 
 ## Running
-- Nothing on a GPU (10:30 IST 2026-10-31). The 4090 is v14's until ~19:00,
+- Nothing on a GPU (09:20 IST 2026-10-31). The 4090 is v14's until ~19:00,
   the 6000 v13's until ~18:00; v15 asks before any GPU job (user, 07:30).
 - **Bench candidate: Grove IV + sapling mask (`dcd5c86`)**: soft economy
   (Grove I) + births into starved niches, newborns unreadable until fed.
   Rule toy 0.85/0.85/0.63 (Grove I 0.91/0.66/0.94), lookup toy 1.000.
   GIV-2 (= G1 pairs, same bars) is prepared; worktree `../qllm_v15_giv2`;
-  driver `v15/tmp/giv2_chain.sh`; one pair ~2.3 h at ~8 GB. Asked v14 for a
-  slot beside their jobs.
+  driver `v15/tmp/giv2_chain.sh`; one pair ~2.3 h at ~8 GB. **Queued 09:19
+  IST in tmux `giv2_v15` behind the gate agreed with v14** (`v15/tmp/giv2_gate.sh`:
+  tmux `n9r` ended AND v13's a4f log shows training, then NEED_MB=8500);
+  expected start ~16:30 IST, two pairs (~5 h). Tell v14 when it ends.
 
 ## Next action
 1. When v14 gives a slot: run GIV-2 pair 1 (grove vs echo, seed 21, SAVE=1),
