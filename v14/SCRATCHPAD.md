@@ -20,6 +20,11 @@ Keep all three current as things happen (user rule, 2026-10-29).
   `n9th4090`, worktree `../qllm_v14n9th` at `161a3c9`, `SAVE=1` to d_drive,
   driver `~/n9th_4090.sh`, log `logs/v14_n9th4090_driver_161a3c9.log`;
   waits for tmux `n9r` to end). Score all 5 seeds together.
+* **4090 queue after n9r:** n9th seeds 132-135 (tmux `n9th4090`, ~4 h),
+  then **n12m** (N12 micro screen, tmux `n12m`, worktree
+  `../qllm_v14n12m` at `7156302`, driver `~/n12m_4090.sh`, log
+  `logs/v14_n12m_driver_7156302.log`; waits for `n9r` then `n9th4090`).
+  Dev edits go in `../qllm_v14dev` (detached), never the shared checkout.
 * **n9th on the 6000** (agreed with v13 04:10 IST): tmux `n9th`,
   worktree `~/Development/qllm_v14` at `161a3c9`, driver `~/n9th_chain.sh`,
   driver log `logs/v14_n9th_driver_161a3c9.log` (box clock UTC). Arms
