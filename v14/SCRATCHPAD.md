@@ -446,6 +446,35 @@ the needle probe, while the exact organ stays at 1.0. The frozen-state
 address is 0.75 top-1 at 128k but 1/4 at 400k. Build a LEARNED key at the
 salient token, with one row per event (not per token).
 
+## Step back (2026-10-31 ~13:30 IST, after the pivot, n9r and n9th seed 131)
+
+**What surprised us.** (1) n9r killed the last recall claim: the control's
+own seed moves recall by 0.08 / 0.14, five to ten times N9a's effect, and
+ctl43 is a 0.14-worse outlier on loss. Every "notebook selects better"
+result so far is smaller than one seed's spread, except the micro-bench
+formation results. (2) The one robust notebook effect is N9s on two_hop
+(2 of 2 seeds, attention and N9a at chance): an anchor that stays alive
+across the words between the entity and the question. Two hops need an
+anchor, not more memory.
+
+**What it says for the library.** The same structure appears there. The
+query "Ana's pet is called" works only if the state keeps "Ana" as the
+current topic; the fetch's query former is that anchor. So N9s's finding
+transfers: the planner (N11) can be the salient running angle used as the
+retrieval query rather than as a notebook phase. I do not build that yet.
+
+**Bold angles.**
+- The library is the one place where the exact organ is perfect, so the
+  learned parts should be judged only where the organ is not: paraphrase,
+  an instruction with no shared words, and index size at 1M. If a learned
+  key cannot beat the organ there it should not exist.
+- "One row per event" is a claim about the write gate; the gate is the part
+  that can fail silently (missing facts), so it is tested first, for free
+  (W0), before any training.
+
+**Plan.** W0 now (eval only, small), then L1 on the organiser's harness.
+`n12m` cancelled; n9th stops after seed 132.
+
 ## Next action
 
 1. **n9r** (4090, running, ends ~12:00 IST): score recall vs the bars

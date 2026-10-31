@@ -1451,6 +1451,77 @@ toward the intent. Today PAM looks up with the current token's state at
 which state forms the query (a slow planner state vs the body), and how the
 two stores' reads are combined.
 
+### L — the library (v14's lane after the 2026-10-31 pivot; PRE-REGISTERED 13:30 IST, before any L number)
+
+**What the pivot changes.** The O(1) body is the mind; verbatim knowledge
+lives in a session library and a shared growing library. v14 builds the
+library's write side (which events become rows), its address (the key) and
+the fetch (when to look, how to re-read). The exact n-gram organ already
+recalls 1.0 at every length, so the learned part must earn its place where
+the organ cannot: (a) paraphrased or fuzzy queries, (b) an instruction whose
+query shares no words with it ("x ->" vs "Rule: add 3"), (c) one row per
+EVENT instead of one per token, which is what lets the index reach 1M.
+
+**Row format (proposal for MLB-1 §4).** One row per event:
+- key: 128 dims × bf16 = 256 B (learned projection of the mind's pre-logit
+  vector at the salient token; key-version tag below);
+- span pointer: start u32 + length u16 = 6 B;
+- session id u32 (4 B), write ordinal u32 (4 B, for latest-wins), model/key
+  version u16 (2 B). Shared libraries add a provenance hash (8 B) and a
+  source id (4 B) later.
+→ **272 B/row** (284 B shared). The raw text is kept as u16 token ids
+(2 B/token), so any span can be re-read.
+- At 1M tokens with ~1 row per 16 tokens: 62.5k rows × 272 B = 17 MB + 2 MB
+  text + 3.9 MB mind state ≈ 23 MB, against ~38 GB of T++ KV cache. At 128k:
+  ≈ 6.4 MB vs 4.9 GB.
+- The key version means: the key head is frozen with the model, so community
+  libraries built for version v plug into any copy of that model.
+
+**Unit W0 (eval only, free): does the surprise gate catch events?**
+Frozen C1-ctl (`c1ctlb_main_7ae6f1f`), pre-memory vector (head projection
+before the echo add) through the tied head, u_t = −log p(x_t). Documents =
+the organiser's needle docs, 8k tokens, 40 docs per cell, tau ∈ {2, 3, 4, 5}
+nats.
+- Cells: synthetic definitions, and natural facts (real sentences from other
+  held-out documents as needles).
+- **Bar W0:** at a row rate ≤ 1 per 16 tokens, ≥ 95 % of needle events have
+  a gate-firing token inside the needle sentence, in both cells. Reported:
+  rows per 1k tokens by tau; where the gate fires inside the needle
+  (key / value / other).
+- If the natural cell fails: the write gate needs training (a learned gate on
+  the same signal); the frozen surprise alone is not enough.
+
+**Unit L1 (trained key head on the frozen mind).** Key head W_k and query head
+W_q, 128 dims each, trained contrastively (InfoNCE, temperature learned) on
+the frozen C1-ctl vectors. The mind is never updated.
+- **Data:** (a) synthetic definitions with ≥ 8 templates and the organiser's
+  word pools; (b) natural: a rare token in a held-out-document pair (second
+  mention → the sentence of the first mention). Training documents ≤ 32k
+  tokens; negatives = all other rows of the document, with hard negatives
+  from other sentences carrying the same token.
+- **Eval (organiser's harness, ≥ 40 docs per cell, words and templates not in
+  training, rows from the W0 gate, paired with the frozen address on the same
+  docs):**
+  - **Bar A (address):** top-1 of the right row ≥ 0.90 at 128k, ≥ 0.75 at
+    400k, ≥ 0.60 at 1M (frozen all-position address: 0.63-0.88 at 128k,
+    1 of 4 at 400k). Never below the frozen address in any cell.
+  - **Bar P (what the organ cannot do):** on the paraphrased-key cell and the
+    instruction cell (query shares no words with the stored sentence), top-1
+    ≥ organ + 0.20.
+  - **Bar R (rows):** ≤ 1 row per 16 tokens on prose; memory per row = 272 B.
+- Two key-head seeds; the same head is trained for the Transformer++ and
+  Mamba-2 fairness arms (their own vectors), so a win is credited to the
+  mind's vector only if it beats theirs.
+- **Outcomes:** A + P + R met → the key goes to v13's 600M package run on
+  MLB-1. A fails at 400k-1M but not at 128k → needs a learned write gate or
+  a second-level index (rows of rows). P fails → the learned key is no better
+  than the organ and the library is the organ plus a gate.
+
+**Fetch metrics to report (every package run):** fetch rate (share of
+queries that fetch), abstain rate on queries with no stored answer (negative
+cell: the model must NOT fetch), span precision (right row top-1 / top-5),
+re-read tokens per query, row rate per 1k tokens, write-gate recall.
+
 ### N12 — surprise-selected item store (design only, 2026-10-31 ~06:45 IST)
 
 **Why (v13 EUREKA, `adbf1f3`).** At 600M on the same B2 data, Mamba-2
