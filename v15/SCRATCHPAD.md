@@ -40,8 +40,10 @@
   or one fused season kernel. 09:35 IST: `torch.compile` works on the season
   form after the autocast refactor (`a8fe35f`): output identical, state 1e-15,
   2x on CPU at toy size; switch `V15_COMPILE=1` (bench adapter + trainer
-  hook). GPU gain unmeasured (no slot). The queued GIV-2 runs the pinned
-  `dcd5c86` (same maths, eager).
+  hook). Bench shape (T 1024, 32 seasons unrolled): compile 110 s, output
+  identical, CPU fwd 0.08 -> 0.06 s (CPU is not launch-bound; the GPU gain
+  is the open question, unmeasured: no slot). The queued GIV-2 runs the
+  pinned `dcd5c86` (same maths, eager).
 
 ## Step-back notes
 - 2026-10-31 09:35, after the sapling fix. The bimodal rule toy (0.09 vs
