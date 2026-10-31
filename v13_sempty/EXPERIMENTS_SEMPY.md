@@ -3710,7 +3710,7 @@ rules 100; tok/s.
    and the claim must state how much of any lead it explains.
 6. One seed. A 600M pass gets judged again at 3B, not claimed at 600M.
 
-**a4f amendment (2026-10-31 14:15 IST, before its result lands ~16:15):** the paired
+**a4f amendment (2026-10-31 13:01 IST, before its result lands ~16:50):** the paired
 control `ctl43` is a loss outlier (v14, n9r): stage A 3.9456 vs a4f 3.8994, n9a43 3.9009
 (same seed and box), C1-ctl 3.9231; stage B 3.598 vs n9a43 3.459, C1-ctl 3.4743. The
 "4090 box effect" I assumed does not exist (n9c 3.4725, n9a43 3.459 on the 4090). So the
@@ -3804,9 +3804,9 @@ Lanes: v14 designs the learned fetch (gate, trained key at the salient token,
 re-read); v13 builds the benchmark, the training recipe that teaches the mind
 to use fetched text, and the package runs.
 
-## Step back after the pivot (2026-10-31 15:00 IST): the mind is made by its curriculum; the shared library is knowledge
+## Step back after the pivot (2026-10-31 13:10 IST): the mind is made by its curriculum; the shared library is knowledge
 
-Full note: SCRATCHPAD 15:00. The useful part:
+Full note: SCRATCHPAD 13:10. The useful part:
 - **Low prior, high ceiling.** Each in-context skill was a format gap (b2: rules
   0.05 → 0.99; lab: labels 0.57 → 0.934 on unseen words; recall docs). With the
   format PAM beats T++ on the same data; without it, it trails. Its in-context
@@ -3825,9 +3825,9 @@ Full note: SCRATCHPAD 15:00. The useful part:
   space), packs versioned with the mind; later, consolidation from session to
   shared library and slow skill fine-tuning.
 
-## SL0: shared library as knowledge, zero training (pre-registration, 2026-10-31 15:20 IST)
+## SL0: shared library as knowledge, zero training (pre-registration, 2026-10-31 13:11 IST)
 
-**Closest prior work (novelty rule, added 16:40 IST):** kNN-LM (Khandelwal et al. 2020); RETRO for chunks. **What differs:** nothing in the mechanism. SL0 is kNN-LM applied to a PAM mind. It is reported as the knowledge organ's cost table (rows, MB, install cost, loss by token class) and never claimed as an invention.
+**Closest prior work (novelty rule, added 13:27 IST):** kNN-LM (Khandelwal et al. 2020); RETRO for chunks. **What differs:** nothing in the mechanism. SL0 is kNN-LM applied to a PAM mind. It is reported as the knowledge organ's cost table (rows, MB, install cost, loss by token class) and never claimed as an invention.
 
 Question: does a shared library keyed by the mind's own state close the 3B
 new-token gap to Mamba-2 (+0.091 PG-19 / +0.112 web; 52–55 % on new tokens)?
@@ -3859,7 +3859,7 @@ y of exp(−d / T).
   with Mamba-2 as is; it does not touch in-context copy (the session library's
   job).
 
-**SL0 amendment (2026-10-31 15:55 IST, after a 60k-row pipeline smoke and before the
+**SL0 amendment (2026-10-31 13:19 IST, after a 60k-row pipeline smoke and before the
 scored run).** The smoke (60k rows, not a scored run) showed the pre-registered T grid
 {1, 3, 10, 30} is degenerate: squared-L2 distances are ~4.5k, so the weights collapse
 to the nearest neighbour (mean p_kNN equals the top-1 hit rate exactly). Pipeline sanity:
@@ -3869,3 +3869,25 @@ T ∈ {0.003, 0.01, 0.03, 0.1, 0.3, 1}; λ ∈ {0.02, 0.05, 0.1, 0.2, 0.3}. Libr
 **5M rows (primary)** and **20M rows (second point, reported)**; build packs training
 text into 2048-token windows (8 per forward), like training. Rules unchanged. Smoke at
 60k with the new grid: +0.006 / +0.007 vs the mind alone (worse, as expected at this size).
+
+### SL0 result, 5M rows (2026-10-31 13:27 IST; the 20M point is running)
+
+Library: 5,000,000 rows from 3,876 training docs; 1,300 MB (1,280 MB keys + 20 MB
+values); **install 106 s** (one pass of the frozen 3B mind over 5M tokens on the 6000,
+~47k tok/s at the end); query 243 s for the 213k scored + tuning tokens (exact search).
+Tuned on the first third: λ = 0.02, T = 0.3 × median nearest distance (both sets).
+
+| scored 2/3 | all | copy | seen | new | new @ 0–64 | 0–8 |
+|---|---|---|---|---|---|---|
+| PG-19 PAM 3B | 3.4892 | 1.3060 | 2.7777 | 5.8498 | 5.2488 | 4.9085 |
+| PG-19 PAM 3B + library | 3.4878 | 1.3110 | 2.7792 | 5.8407 | 5.2402 | 4.9033 |
+| PG-19 Mamba-2 3B | **3.3970** | 1.2162 | 2.7280 | 5.7127 | 5.1322 | 4.7936 |
+| web PAM 3B | 3.2274 | 1.3351 | 2.6167 | 4.9452 | 4.3982 | 4.0984 |
+| web PAM 3B + library | 3.2234 | 1.3400 | 2.6149 | 4.9337 | 4.3882 | 4.0827 |
+| web Mamba-2 3B | **3.1155** | 1.2197 | 2.5444 | 4.7958 | 4.2746 | 4.0167 |
+
+**Rule 1 (≤ PAM − 0.05): FAIL at 5M** (−0.0014 PG-19, −0.0040 web). **Rule 2 (≤ Mamba-2):
+FAIL** (+0.091 / +0.108). The small gain is where expected (new tokens −0.009 / −0.012;
+copy slightly worse, +0.005). The tuner picked the smallest λ: at 0.17 % of the training
+data, the library rarely holds the right continuation. This is a 5M result, not a verdict
+on size (pre-registered); 20M reported next.

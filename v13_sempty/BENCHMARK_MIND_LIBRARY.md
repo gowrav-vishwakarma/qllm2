@@ -1,4 +1,4 @@
-# Mind + Library benchmark (MLB-1) — DRAFT v0.3 (2026-10-31; v14 comments 14:10, organiser row format + user comparison rule 14:30, novelty rule + skill library 16:40 IST)
+# Mind + Library benchmark (MLB-1) — DRAFT v0.3 (2026-10-31; v14 comments 13:01, organiser row format + user comparison rule 13:02, novelty rule + skill library 13:27 IST)
 
 Status: **draft, not fixed.** Freeze condition for v1: the harness implements every
 §2 cell and is validated on CPU at 32k (organiser), then v1 is committed as "MLB-1 v1

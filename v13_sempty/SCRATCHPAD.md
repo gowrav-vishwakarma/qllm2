@@ -18,7 +18,7 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **2026-10-31 16:25 IST: 6000 disk cleanup (organiser-authorised; checkpoint-cleanup rule):** root 6.5 → **21 GB
+* **2026-10-31 13:26 IST: 6000 disk cleanup (organiser-authorised; checkpoint-cleanup rule):** root 6.5 → **21 GB
   free**. Deleted `gscreen_onorm_3cc2b72/latest.pt` (1.17 GB; resume-only, abandoned G2 screen, code removed in
   2872d7f). Removed the 6000 copies of 11 finished best_model.pt files whose d_drive copy
   (`/media/gowrav/d_drive/qllm2/checkpoints_v13_sempty/<run>/best_model.pt`) has the SAME md5 (checked both
@@ -29,17 +29,17 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   b2t2, tfc1a, b2ma, c1m2a, 1c913ef for SL0), all Mamba-2 checkpoints (only scorable there), the recent pair
   models (b2p1/2, b2t, b2m, lbp, lbt). No other user's file touched.
 
-* **2026-10-31 16:00 IST: organiser leads v16** (user): board `v16/SCRATCHPAD.md`; GPU order and scope go
+* **2026-10-31 13:23 IST: organiser leads v16** (user): board `v16/SCRATCHPAD.md`; GPU order and scope go
   through the organiser; v13 keeps the mind, the MLB-1 spec, the release, its own pre-registrations.
   **SL0 running on the 6000** (tmux `sl0`, `~/sl0_chain.sh`, worktree `~/Development/qllm_sl0` @ 8445f73;
   main checkout untouched): library in /dev/shm (root disk 6.6 GB free, /data not writable), 5M then 20M
   rows; reports to `qllm_sl0/logs/diag/v13_sempty_sl0_*`, neighbours copied to `~/attr`. Smoke (60k rows)
   showed the T grid had to scale with distance (fixed before the scored run, de9ac36). a4f: stage B 17 %,
-  35-39k tok/s beside v14's L1, ends ~18:20 IST. Organiser's stated-rule rerun on b2p2 with the trained
+  35-39k tok/s beside v14's L1, ends ~16:50 IST. Organiser's stated-rule rerun on b2p2 with the trained
   header + a 2-shot control is pending; it decides whether "stated rule + demonstrations" docs go into
   the curriculum run (N9s may join it as a paired arm: v13's call). Disk risk flagged to the organiser.
 
-* **2026-10-31 15:00 IST: MEDITATION (user, via organiser: "stop, think in the void, we are onto something").**
+* **2026-10-31 13:10 IST: MEDITATION (user, via organiser: "stop, think in the void, we are onto something").**
   *What surprised me.* (1) Every in-context skill PAM has was a FORMAT gap: rules 0.05 → 0.99 (b2), labels
   0.57 → 0.934 (lab), recall up with recall docs. Without the format T++ / Mamba-2 beat it (labels); with it
   PAM is best, even on words it never saw (lab vocab disjoint). PAM = LOW PRIOR, HIGH CEILING: its in-context
@@ -67,14 +67,14 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   *Choice.* (a) first: eval only, decisive for bar 2. Then one pre-registered curriculum run with (c) + (d)
   and a separate family-generalisation arm (b). Correction sent to the organiser on (3).
 
-* **2026-10-31 14:15 IST: v14 comments folded into MLB-1 (v0.1): row 272 B, R4 ≤ 1/100, 1M reported
+* **2026-10-31 13:01 IST: v14 comments folded into MLB-1 (v0.1): row 272 B, R4 ≤ 1/100, 1M reported
   not gated, fairness arms train their own key head, fetch metrics + negative cells, instruction
   persistence = B2 rule stated once in words (mind-only and library variants). n9r FAIL (N9a out
   of every plan; v14 ac3a76e). a4f's reference changed to C1-ctl BEFORE its result: ctl43 is a loss
   outlier (3.598; stage A already +0.045), and there is no 4090 box effect. 4090 after a4f: free
   for v15's queued pair (v14 cancelled n12m; n9th stops after seed 132).
 
-* **2026-10-31 13:20 IST: MLB-1 benchmark draft v0 written** (`v13_sempty/BENCHMARK_MIND_LIBRARY.md`),
+* **2026-10-31 12:56 IST: MLB-1 benchmark draft v0 written** (`v13_sempty/BENCHMARK_MIND_LIBRARY.md`),
   sent to v14 and the Communicator for comments; fixed as v1 before any package run. Ownership: v14 =
   the fetch (gate, trained key at the salient token, re-read) + the library row format (one row per
   event, keys versioned with the model); Communicator = the library half of the probe
@@ -85,7 +85,7 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   lbp label_diag 0.934 (exact 0.995) vs lbt 0.798: the label gap was format (EXPERIMENTS "Label-format
   pair lb result"); cost tiny (holdout +0.004). s8 part 1 (probe seed 7000): D PAM 0.645 / 0.691 vs
   T++ 0.134 / Mamba-2 0.116; b2t2 training (35 %), then b2m2, b2p3 (~18:15). r3c 42 %, val 3.4802 @
-  31248; futility at step 39060 (~15:00 IST, stop if > 3.4714). a4f STARTED 12:45 IST on the 4090
+  31248; futility at step 39060 (~15:20 IST by the real clock, stop if > 3.4714). a4f STARTED 12:45 IST on the 4090
   (stage B, ~3.5 h): kept, now read as "what n-gram knowledge buys the mind" (a shared-library
   organ could supply it without parameters). Queued: `s9` lbm (Mamba-2 + lab) after s8.
   User (12:30): the O(1) body stays and IS the mind; drop only "the state must also be the
