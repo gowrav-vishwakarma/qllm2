@@ -1507,7 +1507,7 @@ nats.
   lowest tau in the grid that reaches it. Full run: 40 documents per cell,
   8192 tokens, 8 needles per document, seed 9100.
 
-**W0 RESULT (4090, 2026-10-31 13:03-13:25 IST, frozen C1-ctl, code
+**W0 RESULT (4090, 2026-10-31 13:03-13:04 IST, frozen C1-ctl, code
 `232748e`, 40 docs × 8k tokens × 8 needles per cell): bar NOT met on the
 natural cell, met on the synthetic cell only at the edge, and the catch is
 mostly a template effect.** Logs `logs/v14_w0_c1ctl_232748e_20261031_1303.{json,log}`.
@@ -1530,7 +1530,7 @@ The lowest tau with ≤ 1 row per 16 tokens is 11 nats:
 - **What it means for the row:** a row anchored on the firing token alone does
   not hold the key word. The key word sits a few tokens after the firing one.
 
-**Amendment A3 to L1 (14:05 IST, after W0, before any L1 number): the row is
+**Amendment A3 to L1 (13:06 IST, after W0, before any L1 number): the row is
 a BURST SPAN.** A firing token f (u > tau, refractory 16 tokens) opens a row
 over tokens [f, f + 24); its key is a learned attentive pooling of the span's
 vectors, k = Σ_i softmax_i(a · v_i) · W_k v_i (128 dims). The query stays the
