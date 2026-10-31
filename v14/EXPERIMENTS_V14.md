@@ -1885,6 +1885,23 @@ budget. Bar A is therefore judged on the burst index.
   of keys per 1M). If a later run uses it, its pre-registration states the
   MB per 1M tokens.
 
+**L1 proper, first head (development, 4k validation; NOT the bar, which is
+judged in the harness).** Centred block-8 state, burst rows (fwd span 24),
+3000 training docs, full head (75k params), 1500 steps, best step by the
+in-distribution set. Log `logs/v14_l1p_99e6803_*.log`, head
+`qllm_ckpt/v14/l1p_fwd_L8c_99e6803.pt` (d_drive).
+- Burst top-1 / top-5: harness-template docs 0.78-0.82 / 0.93; mixed
+  in-distribution (synthetic + natural pairs) 0.51 / 0.67. Event recall 1.00
+  / 0.86.
+- Plan (i) so far (frozen layer-8 centred, harness, 32k, synthetic, 16 docs):
+  kv C2 1.00 / C5 0.50; kv1 1.00 / 0.44; tool 1.00 / 0.60 (5 docs); para
+  0.31 (= the organ); neg max-sim 0.54 vs stored 0.95 (gap 0.41: abstain by
+  threshold works).
+- Before the harness run, two harness questions sent to Lead (15:30): key_fn
+  receives the output vector even with --vec_layer, and the C5 hit window
+  (answer within 6 tokens after the row's start) can score a correct burst
+  row as a miss.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
