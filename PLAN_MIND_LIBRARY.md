@@ -46,6 +46,16 @@ benchmark first; the distributable model once it wins that table.
 - Every claim: params + tokens + memory MB next to it; inside AND beyond the trained
   length; replicated (seed pairs) before ntfy.
 
+## Stated limit, closed (user, 2026-10-31 21:40 IST)
+- "Holds beyond the training context" is closed as DONE at the PACKAGE level: mind + library re-fetch
+  carries a skill at 1.00 to 128k (tested), with ~1 MB of re-read per query; with examples spread
+  through the text the mind alone holds rules to 4k-8k (0.905 / 0.61 at 2k training) where T++ and
+  Mamba-2 collapse. The mind ALONE after a single read reaches ~ its training length (2k) at 103M:
+  a stated limit of this scale, not a failure; we do not expect a 103M O(1) state to carry a one-time
+  read to 1M. LAW-1's remaining arms (lg8 / lg2 / lg32-reset) are cancelled as unable to change this;
+  the side lesson (training on packed unrelated documents at long windows SHORTENS memory half-lives,
+  -25 % to -55 %) stays recorded.
+
 ## Memory budget (user, 2026-10-31 15:20 IST)
 - Lead may trade memory for accuracy up to ~2x today's per-session figure (~23 MB at 1M tokens ->
   <= ~50 MB at 1M), vs T++ ~38 GB KV at the same length. An order-of-magnitude jump (hundreds of
