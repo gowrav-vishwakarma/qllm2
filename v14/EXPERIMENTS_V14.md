@@ -1922,6 +1922,28 @@ burst-mean key, same documents).** Logs `logs/v16_bench_l1pair_*_kv_*_32768.*`.
   mind pick by its own answer margin (planner v0, already in the harness), and
   separately the memory latitude (256-d key). 128k pending.
 
+**PRE-REGISTERED 2026-10-31 ~16:30 IST (before any number of these), agreed
+with Lead.**
+- **L1+P0 (trained burst key + planner v0):** fetch the top 5 burst rows by
+  the trained key, let the frozen mind re-read EACH alone in front of the
+  query, and take the answer with the largest top-1 minus top-2 margin
+  (harness `P_margin_burst`; `P_concat_burst` reported). Cost printed next
+  to it: 5 short re-reads per query (`P_rereads_per_query`). **Bar: ≥ 0.95 at
+  32k and ≥ 0.85 at 128k on kv, synthetic AND natural keys, 16 docs, seed
+  14000, same documents as the paired runs.** Reported as its own row, NEVER
+  as Bar A on the key alone. Abstain (neg cell) is judged separately.
+- **L1-256 (memory latitude):** the same burst head with a 256-d key, trained
+  on the same data plus more single-template docs. Memory: ~0.62 rows per 16
+  tokens × 1M / 16 ≈ 39k rows per 1M tokens × (512 B key + 16 B pointer and
+  tags) ≈ 20 MB, plus 2 MB of raw text and the 1.2 MB mind state: **≈ 23 MB per
+  1M tokens** (inside the ≤ ~50 MB latitude). Bar: Bar A as pre-registered (≥
+  0.9 at 32k, ≥ 0.75 at 128k on synthetic, within 0.05 of C2). On hard
+  negatives: the InfoNCE batch already holds every other row of the same
+  document, and each synthetic training doc uses ONE template for all its
+  needles, so same-template negatives are already in; what differs at test is
+  the template itself (held out by design), so L1-256 adds more docs rather
+  than a new negative scheme.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
