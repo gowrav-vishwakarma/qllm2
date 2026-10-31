@@ -18,6 +18,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 16:00 IST: organiser leads v16** (user): board `v16/SCRATCHPAD.md`; GPU order and scope go
+  through the organiser; v13 keeps the mind, the MLB-1 spec, the release, its own pre-registrations.
+  **SL0 running on the 6000** (tmux `sl0`, `~/sl0_chain.sh`, worktree `~/Development/qllm_sl0` @ 8445f73;
+  main checkout untouched): library in /dev/shm (root disk 6.6 GB free, /data not writable), 5M then 20M
+  rows; reports to `qllm_sl0/logs/diag/v13_sempty_sl0_*`, neighbours copied to `~/attr`. Smoke (60k rows)
+  showed the T grid had to scale with distance (fixed before the scored run, de9ac36). a4f: stage B 17 %,
+  35-39k tok/s beside v14's L1, ends ~18:20 IST. Organiser's stated-rule rerun on b2p2 with the trained
+  header + a 2-shot control is pending; it decides whether "stated rule + demonstrations" docs go into
+  the curriculum run (N9s may join it as a paired arm: v13's call). Disk risk flagged to the organiser.
+
 * **2026-10-31 15:00 IST: MEDITATION (user, via organiser: "stop, think in the void, we are onto something").**
   *What surprised me.* (1) Every in-context skill PAM has was a FORMAT gap: rules 0.05 → 0.99 (b2), labels
   0.57 → 0.934 (lab), recall up with recall docs. Without the format T++ / Mamba-2 beat it (labels); with it
