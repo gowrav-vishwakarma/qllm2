@@ -180,6 +180,17 @@ def main():
                         pb = btop[0]; lg3 = R.last_logits(ids[max(0, pb - 14):pb + 1] + ids[doc_end:])
                         rec['C3_snap'] = int(cand[int(lg3[cand].argmax())] == ans)
                         rec['C3_index_rows'] = len(bpos)
+                        # C4: one row per sentence, key = mean of the sentence's vectors
+                        # (a non-learned 'write with hindsight at the unit boundary')
+                        starts = [0] + [b + 1 for b in bpos[:-1]]
+                        sv = torch.stack([docv[s:b + 1].mean(0) for s, b in zip(starts, bpos)])
+                        sv = torch.nn.functional.normalize(sv, dim=-1)
+                        ss = sv @ q; stop = ss.topk(min(5, len(bpos))).indices.tolist()
+                        def in_right_s(si):
+                            return any(ids[j] == ans for j in range(starts[si], bpos[si] + 1))
+                        rec['C4_hit'] = int(in_right_s(stop[0])); rec['C4_top5'] = int(any(in_right_s(si) for si in stop))
+                        si = stop[0]; lg4 = R.last_logits(ids[starts[si]:bpos[si] + 1] + ids[doc_end:])
+                        rec['C4_snap'] = int(cand[int(lg4[cand].argmax())] == ans)
             except Exception as e:  # keep going; record the failure
                 rec['error'] = f'{type(e).__name__}: {str(e)[:200]}'
             rec['sec'] = round(time.time() - t0, 1)
