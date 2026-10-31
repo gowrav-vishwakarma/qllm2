@@ -5,6 +5,13 @@ Status: **draft, not fixed.** Freeze condition for v1: the harness implements ev
 (fixed)" and the harness is `v16/bench.py` (moved in `d1e1a56`). Later changes are dated amendments.
 No package run is scored before v1.
 
+**Thesis (user, 2026-10-31):** "having intelligence separate from knowledge is itself
+a big novelty, specifically when it holds beyond the training context." Every cell and
+every unit says which clause it serves: *holds beyond the training context* (the
+rule-carrying mind, skill-pack persistence, the skill register) or *intelligence
+separate from knowledge* (the exact organ, the learned fetch, text-first packs). A unit
+that serves neither is a cost table, not a claim.
+
 Purpose: one table that judges the package (**O(1) mind + growing library**)
 against Transformer++ with its full context and Mamba-2, with memory in MB in
 every row and the mind's general quality never hidden. The direction is
