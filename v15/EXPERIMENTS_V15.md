@@ -252,6 +252,73 @@ pick by slope, not by the 600M number).
   to every grove (a neuromodulator); free at train and decode.
 - **sempyt port and a fused season kernel** once the organ earns a 6000 run.
 
+
+## 6. Grove II — competitive exclusion and colonisation (design, 2026-10-31 06:00 IST)
+
+**The void, after G1d.** Grove I made selection *soft* and hoped backprop
+would sharpen it (τ, roots, soil). In a single-task toy it did; in a
+twenty-task bench it never did, and half the groves collapsed to one tree.
+Ecology does not sharpen by gradient. Two of its laws are missing here:
+*competitive exclusion* (one occupant per niche: a token lands on exactly one
+tree) and *colonisation* (a token that fits no occupant founds a tree in an
+empty niche). A third follows: *starvation* (a tree nobody feeds loses its
+niche). With these, addresses are sharp by construction, dead trees are
+recycled by construction, and instances are remembered exactly while
+prototypes still form (a tree fed by many similar tokens grows toward their
+mean). Every part is in the organism frame; none is a tuning of Grove I.
+
+**Rules (per grove, K niches, season C).** State as before plus `use_i`.
+```
+fitness     f_i(t) = τ cos(x_t, r_i) + b_i                   dawn trees (K)
+            f_s(t) = τ cos(x_t, x_s) + b_born                 trees born this season at s < t
+evidence    ℓ(t)   = λ ℓ(t−1) + f(t)                          over K + born
+landing     w(t)   = argmax ℓ(t)                              ONE tree eats the token
+            m(t)   = onehot(w) + softmax(ℓ) − stopgrad(softmax(ℓ))   (straight-through)
+read        o(t)   = ripe_w(t)                                the winner's ripening fruit
+novelty     nov(t) = max_i cos(x_t, r_i) < θ_g                 no dawn root fits
+birth       born(t)= nov(t) ∧ ¬∃ s<t: nov(s) ∧ cos(x_t, x_s) ≥ θ_g
+                                                               (first of its kind this season)
+            a born tree's root is x_s; its fruit starts at fruit0_born and is
+            credited y_{s+1} (founding) and then whatever follows its reigns
+season end  dawn trees: grow roots/fruits toward what they ate (hard credits)
+            use_i ← ρ use_i + wins_i ;  born: use = wins + 1
+            placement: born trees, in birth order, take the niches with the
+            smallest use (≤ K per season; the rest are not kept)
+```
+θ_g is an innate per-grove threshold spread across groves (eager groves are
+caches of recent distinct tokens; strict groves keep prototypes), ρ an innate
+decay of use. τ now shapes only the surrogate gradient. λ keeps the reign: a
+tree that just won keeps winning for a few tokens and collects what follows,
+which is how a key binds to the value after it (and groves with different λ
+bind at different lags).
+
+**Parallel form.** Inside a season everything is C×C per grove: the cosine
+matrix of the season's soil gives births (a strict-causal "first of its
+kind" mask) and born-tree fitness; the evidence scan is the same retention
+matrix; the landing is one argmax over K + C columns; the reads are the
+ripening matrices of §1 with hard credits; placement is one scatter at the
+season's end. Decode mirrors it with a per-season buffer of born trees.
+Prefill == decode is the first test, as before.
+
+**What is new, honestly.** Hard assignment with a straight-through gradient
+is standard (VQ); online centroids in a sequence layer exist (OVQ-attention,
+2026). New here: births into *starved* niches from the token itself,
+competition on *accumulated evidence* (a reign, not a per-token match), the
+succession fruit, and seasons. The whole is the claim, as in §2.
+
+**Pre-registered tests (Grove II).**
+- GII-0 selftest: season == decode to round-off incl. births, placement and
+  continuation; toy lookup ≥ 0.5; O(1) state.
+- GII-1 toys (CPU): big-vocab 4096 keys, season 32, lr 3e-4, 1200 steps:
+  ≥ 0.95 (Grove I: 0.955). Birth rate per grove logged.
+- GII-2 = G1 again (same six pairs, same bars L, P, R, guard; `grove` arm
+  at the new hash). Prediction, written before the run: label_exact 2-shot
+  > 0.5 in ≥ 2 pairs (binding, not just the label set), label_category
+  unknown (prototype formation now depends on the soil clustering tokens
+  under θ), guard within 0.1 nat. If label_exact stays at echo's 0.50, the
+  binding by reign (λ) is not happening and the conv/soil would have to
+  carry the key: that is a finding, not a knob.
+
 ## 5. Roads not taken (so they are not retaken)
 - Prime-period wheels / CRT phases for time and numbers (2026-10-31, 20
   minutes, code never committed): exact by construction and range-free, but
