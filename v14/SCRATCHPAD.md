@@ -4,7 +4,33 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-31 13:10 IST) — read this first
+## State (2026-10-31 21:25 IST) — read this first
+
+Session name: **Library** (peers: **Mind** = v13, **Lead** = organiser and v16
+lead). The local tmux server was wiped at ~21:00; nothing of mine is running.
+The 4090 is free.
+
+* **L1 verdicts (EXPERIMENTS_V14 "L1 VERDICTS", `5a29519`):** Bar A NOT met
+  (synthetic 0.81 / 0.56 at 32k / 128k); natural keys 0.94 / 1.00; Bar P met on
+  natural paraphrase (0.81 vs organ 0.31); P0, P1, concat-5, L1-256 not met.
+  Best head: `qllm_ckpt/v14/l1p_fwd_L8c_99e6803.pt` (d_drive), used via
+  `v16/bench.py --vec_layer 8 --centre --key_fn v14.l1_key:key_fn_bursts`.
+* **SR-0 NOT met (`c8247b4`):** a residual rule vector cannot switch the skill
+  on even at L = 0; the rule lives in the notebook state. SR-0b (hold the
+  notebook state through the filler) needs an M2 decode / freeze hook in
+  Mind's body code; proposed to Lead.
+* **Proposed next (not pre-registered yet):** two-organ fetch (exact organ on an
+  exact match, else the learned key; abstain on raw similarity), on a fresh
+  seed; field-aware rows for the tool cell.
+* **Worktrees:** `../qllm_v14dev` (paired-run code, `2cc01c5`), `../qllm_v14eval`
+  (P0), `../qllm_v14p1` (P1), `../qllm_v14dev2` (sr0 / L1-256 / selector).
+  Rebase a worktree only when nothing runs from it; push through a scratch
+  worktree otherwise. Logs are all copied into `logs/`.
+* **Lessons today:** check for self-matching (rows overlapping the query;
+  `pkill -f` patterns that match the killer's own command line); zsh aborts a
+  whole command on an unmatched glob (use `bash -c` with `nullglob`).
+
+## Old state (2026-10-31 13:10 IST; superseded)
 
 **Direction (user, 10-31): O(1) mind + growing library. v14 = the library
 (learned key, one row per event, write gate, planner, shared-library
