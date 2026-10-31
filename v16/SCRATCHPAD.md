@@ -12,6 +12,11 @@ Overall ~52 %. 1 rules in context vs T++/Mamba-2: DONE (s8 MET, 3 PAM seeds vs 2
 | Lead (harness, board) | harness frozen + validated; A4 seeding fix; layer-k / centre / centre_ref / field-aware rows / P_cands / F_ flags; c1ctlb + b2p2 32k grids; instr verdict; GPU decisions; thesis closed at package level with the stated limit (user) | waiting for L3 + t (no CPU load added meanwhile) | PACKAGE TABLE (eureka condition): b2p2 + c1ctlb, 7 tasks x 2 key types, 32k + 128k, >= 40 docs/cell, seeds 18000+, vs existing T++ / Mamba-2 rows, MB per row | L3 + t from Library |
 | Evol V1 (isolated) | Grove IV + sapling mask; GIV-2 pair ended 18:40 | session not running | its own lane | none from us |
 
+## Waking a session that has exited (user rule, 2026-10-31 23:30 IST: everyone keeps everyone awake)
+- Sessions drop their cache after ~60 min idle and may exit; the Lead stall check pings idle sessions every 30 min (keepalive) and, if a session is ABSENT from ListAgents, wakes it with `scripts/wake_session.sh <Name> <session-id>` (tmux + `claude --resume <id> --name <Name> '<prompt>'`, then Enter twice for the setup screens), as Library did for Mind at 23:08.
+- Ids: Mind 99371c3c-8382-42b3-a3d3-6861632abc19 | Library fdbac1f0-c2c3-4b9c-8baf-2585a9e7b8eb | Lead 683d2316-c093-4e15-b19c-044555bd5293 | Evol V1 0001093e-8355-4d42-a4fd-ed097ef58d71 (wake Evol V1 only on the user's word).
+- Any session may wake any other, including Lead; check ListAgents / `tmux ls` first so no second copy is started; after waking, message it with what landed.
+
 ## Decisions (organiser)
 - 13:35 IST: v14 may run the L1 data pass + head training on the 4090 NOW under a 3.5 GB cap beside a4f and Evol V1's pair (stop if a4f tok/s -30 % or < 1.5 GB free).
 - 13:35 IST: N9s (v14's salient phase; two_hop bar met at 2 seeds, 27M): NO standalone 600M run; at most one paired arm inside v13's curriculum run if that mix carries the two_hop format; otherwise stays a 27M result. Its anchor idea seeds the planner (N11).
