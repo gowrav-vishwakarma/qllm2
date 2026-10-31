@@ -3856,3 +3856,14 @@ y of exp(−d / T).
 - Caveats that travel with it: kNN-LM exists; this measures it for the O(1) mind
   with Mamba-2 as is; it does not touch in-context copy (the session library's
   job).
+
+**SL0 amendment (2026-10-31 15:55 IST, after a 60k-row pipeline smoke and before the
+scored run).** The smoke (60k rows, not a scored run) showed the pre-registered T grid
+{1, 3, 10, 30} is degenerate: squared-L2 distances are ~4.5k, so the weights collapse
+to the nearest neighbour (mean p_kNN equals the top-1 hit rate exactly). Pipeline sanity:
+the right next token is among the 64 neighbours 47–48 % of the time, top-1 8–11 %.
+Changes, fixed now: T is in units of the median nearest distance on the tuning docs,
+T ∈ {0.003, 0.01, 0.03, 0.1, 0.3, 1}; λ ∈ {0.02, 0.05, 0.1, 0.2, 0.3}. Library sizes:
+**5M rows (primary)** and **20M rows (second point, reported)**; build packs training
+text into 2048-token windows (8 per forward), like training. Rules unchanged. Smoke at
+60k with the new grid: +0.006 / +0.007 vs the mind alone (worse, as expected at this size).
