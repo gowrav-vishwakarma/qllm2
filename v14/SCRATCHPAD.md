@@ -4,7 +4,47 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-31 04:15 IST) — read this first
+## State (2026-10-31 13:10 IST) — read this first
+
+**Direction (user, 10-31): O(1) mind + growing library. v14 = the library
+(learned key, one row per event, write gate, planner, shared-library
+schema); v13 = mind + benchmark MLB-1 + 600M/3B; the Communicator = the
+harness `v16/bench.py`; accepted units move into `v16/`. Do not send any of
+this to v15 (Evol V1).** Plan sheet: `PLAN_MIND_LIBRARY.md`; benchmark:
+`v13_sempty/BENCHMARK_MIND_LIBRARY.md` (v0.2).
+
+* **Done today:** N9a recall replication n9r = FAIL (+0.016 / +0.014 vs bars
+  +0.08 / +0.15; the control's seed spread is 5-10x the effect). n9th seed
+  131: N9s two_hop 0.89 vs N9a 0.28, tpp 0.30 (second formed seed). `n12m`
+  cancelled. W0 (write-gate eval) done, bar not met: the frozen surprise
+  gate fires on the first word of an inserted sentence (topic break), not
+  on the key; rows must be burst SPANS (amendment A3).
+* **Running:** 4090: v13's a4f (A4 cond_mem 600M, ~12:45-16:15 IST) + my
+  `n9th4090` seed 132 (micro, 4090, stops itself after seed 132 via tmux
+  `n9thstop4090`, ~14:00 IST; the 6000 ran seed 131 only). v15's pair waits
+  for the card. Nothing else of mine runs.
+* **Next unit L1** (pre-registered, EXPERIMENTS_V14 section "L" + A3): a
+  learned key over BURST SPANS on the frozen C1-ctl (`c1ctlb_main_7ae6f1f`,
+  /media/gowrav/d_drive/qllm2/checkpoints_v13_sempty/). Plan:
+  1. Training pool: stream fineweb (skip 1M docs) into a token cache; never
+     the held-out prose. 2. Build training docs with `v16/bench.py`'s
+     builder (`build`), vectors from `Reader.vectors` (GPU), cache them.
+  3. Head: K(p) = attentive pooling over vectors [p, p+24) -> W_k (128-d);
+     InfoNCE, query = K at the question's key token, positives = the burst
+     row of the answer sentence, negatives = all other burst rows.
+  4. Expose as `v14.l1_key:key_fn` for `v16/bench.py --key_fn`, evaluate
+     with `--gate_tau 11`, lengths 32k-1M, cells needle / multi / latest /
+     two-hop / natural / paraphrase / instr / neg.
+  W0 numbers (tau 11 = 0.6 rows per 16 tokens): `logs/v14_w0_c1ctl_232748e_*`.
+  `v14/w0_gate.py` imports `session_index_probe`, which moved to
+  `v16/bench.py` (d1e1a56): fix the import before rerunning.
+* **Dev worktree:** edit in `../qllm_v14dev` (detached; `git fetch` then
+  `checkout --detach origin/master`), push with `git push origin HEAD:master`
+  after `git pull --rebase`; the shared checkout only fast-forwards.
+* **Old state below is kept for history** (some runs there are done or
+  cancelled).
+
+## Old state (2026-10-31 04:15 IST; superseded by the section above)
 
 * **4090:** v14's one job = **n9r** (tmux `n9r`, worktree `../qllm_v14n9r`
   at `37fa333`, checkpoints on d_drive `qllm_ckpt/v14_n9r`, driver
