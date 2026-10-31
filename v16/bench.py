@@ -412,6 +412,19 @@ def main():
                     rec['C5_burst_hit_span'] = int(in_span(btop_b[0][0]))
                     rec['C5_burst_top5_span'] = int(any(in_span(b[0]) for b in btop_b))
                     rec['C5_burst_maxsim'] = round(float(bsim.max()), 4)
+                    # planner v0 on the top-5 BURST rows (L1 + planner): re-read each stored span [f, f+24)
+                    # alone in front of the query, pick the answer with the largest top1-top2 margin
+                    bspans = [ids[b[0]:min(doc_end, b[0] + 24)] for b in btop_b]
+                    bbest = None
+                    for sp in bspans:
+                        lgb = R.last_logits(sp + ids[doc_end:])[cand]
+                        vb, ib = lgb.topk(2); mb = float(vb[0] - vb[1])
+                        if bbest is None or mb > bbest[0]:
+                            bbest = (mb, cand[int(ib[0])])
+                    rec['P_margin_burst'] = int(bbest[1] == ans)
+                    lgcb = R.last_logits([t for sp in bspans for t in sp] + ids[doc_end:])
+                    rec['P_concat_burst'] = int(cand[int(lgcb[cand].argmax())] == ans)
+                    rec['P_rereads_per_query'] = len(bspans)
                     gv = docv[gpos]; gs = gv @ q; gtop = [gpos[i] for i in gs.topk(min(5, len(gpos))).indices.tolist()]
                     rec['C5_rows'] = len(gpos); rec['C5_rows_per_event'] = round(len(gpos) / max(1, n_ev), 1)
                     rec['C5_hit'] = int(in_right(gtop[0])); rec['C5_top5'] = int(any(in_right(pp) for pp in gtop))
