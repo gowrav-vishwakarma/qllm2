@@ -22,6 +22,7 @@ SKIP_FILES = frozenset({
     "l1_data.py",        # L1: document builder + frozen-mind reader (data prep)
     "l1_key.py",         # L1: the key head, its training loop and the harness hook (raw torch)
     "train_pool.py",     # L1: tokenised web text for the key head (data prep)
+    "l3_data.py",        # L3: cross-document pair builder (data prep)
     "pack.py",           # library packs: text-first format + install tool (raw torch / numpy)
     "pack_check.py",     # cross-document check of the install tool
     "sr0.py",            # SR-0: rule-vector transplant test (eval harness, raw torch)

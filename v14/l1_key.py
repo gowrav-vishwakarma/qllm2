@@ -115,22 +115,30 @@ def doc_end(d):
 
 
 CENTRE = [False]          # subtract the document mean from the vectors (harness --centre)
+CENTRE_REF = [None]       # or subtract a fixed reference mean [D] (deployment; L3)
 
 
 def prep(d, form):
     """Per-document cache: row spans, their index tensors, positives, the query span's index."""
     T = d['vecs'].shape[0]
     qpos, target = anchor(d)
-    end = doc_end(d)
+    cross = bool(d.get('cross'))                       # L3: the question lives in another text (d['qvecs'])
+    end = T if cross else doc_end(d)
     spans = row_spans(end, d['nll'][:end], form)       # rows come only from BEFORE the query (as the harness: [:doc_end])
     pos = positives(spans, target, 1)
     ml = SPAN if form == 'fwd' else EVT_MAX
     idx, mask = span_index(spans, ml) if spans else (None, None)
-    qi, qm = span_index([(qpos, min(T, qpos + SPAN))], SPAN)
+    TQ = d['qvecs'].shape[0] if cross else T
+    qi, qm = span_index([(qpos, min(TQ, qpos + SPAN))], SPAN)
     v = d['vecs']
-    if CENTRE[0]:
+    qv = d['qvecs'] if cross else None
+    if CENTRE_REF[0] is not None:                      # the shipped reference mean (deployment)
+        v = (v.float() - CENTRE_REF[0]).half()
+        qv = (qv.float() - CENTRE_REF[0]).half() if cross else None
+    elif CENTRE[0]:
         v = (v.float() - v.float().mean(0, keepdim=True)).half()
-    return dict(vecs=v, spans=spans, pos=pos, idx=idx, mask=mask, qi=qi, qm=qm, kind=d['kind'])
+        qv = (qv.float() - qv.float().mean(0, keepdim=True)).half() if cross else None
+    return dict(vecs=v, qvecs=qv, spans=spans, pos=pos, idx=idx, mask=mask, qi=qi, qm=qm, kind=d['kind'])
 
 
 def positives(spans, target, tlen):
@@ -152,7 +160,8 @@ def batch_loss(head, docs, device):
             continue
         v = p['vecs'].to(device).float()
         k = head(v[p['idx'].to(device)], p['mask'].to(device))
-        q = head(v[p['qi'].to(device)], p['qm'].to(device))
+        qv = p['qvecs'].to(device).float() if p.get('qvecs') is not None else v
+        q = head(qv[p['qi'].to(device)], p['qm'].to(device))
         all_keys.append(k)
         row_pos.append([base + x for x in p['pos']])
         q_keys.append(q)
@@ -181,7 +190,8 @@ def evaluate(head, preps, device):
             continue
         has += 1
         k = head(v[p['idx'].to(device)], p['mask'].to(device))
-        q = head(v[p['qi'].to(device)], p['qm'].to(device))
+        qv = p['qvecs'].to(device).float() if p.get('qvecs') is not None else v
+        q = head(qv[p['qi'].to(device)], p['qm'].to(device))
         top = (q @ k.t()).squeeze(0).topk(min(5, k.shape[0])).indices.tolist()
         hit1 += int(top[0] in p['pos'])
         hit5 += int(any(t in p['pos'] for t in top))
@@ -196,6 +206,8 @@ def train(args):
         torch.cuda.set_per_process_memory_fraction(float(os.environ['L1_MEM_FRAC']))
     torch.manual_seed(args.seed)
     CENTRE[0] = args.centre
+    if args.centre_ref:
+        CENTRE_REF[0] = torch.load(args.centre_ref, map_location='cpu')['mean'].float()
     files = [f for d in args.docs.split(',') for f in load_docs(d)]
     vals = {os.path.basename(d.rstrip('/')): [prep(torch.load(f), args.form) for f in load_docs(d)]
             for d in args.val.split(',')}
@@ -240,7 +252,7 @@ def train(args):
                 best = (score, {k: v.detach().cpu().clone() for k, v in head.state_dict().items()})
                 print(f"  best so far on {key_set}: {score:.3f} (step {step})", flush=True)
     torch.save({'state': best[1], 'form': args.form, 'tau': TAU, 'span': SPAN, 'arch': args.arch,
-                'rank': args.rank, 'key_dim': args.key_dim, 'centre': args.centre, 'select': key_set, 'best_top1': best[0], 'args': vars(args)}, args.out)
+                'rank': args.rank, 'key_dim': args.key_dim, 'centre': args.centre, 'centre_ref': args.centre_ref, 'select': key_set, 'best_top1': best[0], 'args': vars(args)}, args.out)
     print('saved', args.out, 'best', best[0], flush=True)
 
 
@@ -321,6 +333,7 @@ def main():
     t.add_argument('--select', default='val_indist', help='validation set (dir name) that picks the best step')
     t.add_argument('--cache_docs', type=int, default=400)
     t.add_argument('--centre', action='store_true', help='subtract the document mean (as the harness --centre)')
+    t.add_argument('--centre_ref', default='', help='subtract this shipped reference mean instead (deployment; L3)')
     t.add_argument('--log_every', type=int, default=50)
     t.add_argument('--eval_every', type=int, default=250)
     args = ap.parse_args()
