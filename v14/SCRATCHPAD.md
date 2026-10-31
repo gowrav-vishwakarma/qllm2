@@ -4,7 +4,31 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-01 01:56 IST) — read this first
+## State (2026-11-01 03:28 IST) — read this first
+
+Session: **Library**. The 4090 is mine (Lead, 03:23): **A9** running (tmux `a9`,
+`~/a9.sh`, worktree `../qllm_v14a9` @ 1b29b86: the package's strict fetch, row
+read cold vs warm + contrast, seed 29000), then **A10** armed (tmux `a10`,
+`~/a10.sh`, worktree `../qllm_v14a10` @ a589262: cu1 vs b2p2 abstain by the
+mind's own words, seed 30000; Mind's request). Score each with its
+pre-registered bar (scorer for A9 in my scratch dir; re-derive from the
+EXPERIMENTS text if lost).
+* Tonight's verdicts (EXPERIMENTS_V14): strict / S2 NOT met (writing); A3
+  closed; A4 text MET, v1 INVALID (my bug), v2 NOT met (fetch exact, writing
+  misses); A5 text sanity MET, mind NOT met (synonyms top-1 0.40, MiniLM
+  0.45); A6 NOT met (cold ≫ warm); **A6c: warm fails at 2k too (not a length
+  effect), warm + no-row contrast 0.90-1.00 beats cold at every L (EUREKA
+  89eebd9)**; N11-R/F NOT met (shift 0.34 at R 2k; R 1k passes); A8 NOT met
+  just short (contrast at R 4k 0.58 < 0.61; at R 2k 0.79 vs 0.66).
+* Next candidates: "R 2k + contrast" refresh default (fresh seeds); the
+  line-up read (top-k rows together, needs `P_concat_burst_sent`, now in
+  bench a2b5488); a two-state O(1) mind (design input).
+* Lesson (A4 bug): text checks call the harness's own entry point.
+* **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
+  tmux first.
+
+## Old state (2026-11-01 01:56 IST; superseded)
+
 
 Session: **Library**. Nothing of mine on the GPU right now. Lead's 4090 order:
 T++ / Mamba-2 natq rows → **A5** syn / synneg (Lead's bench hook) → **A4 v2**
