@@ -1,7 +1,7 @@
 # v16 handover + board (Lead = the organiser session; Mind = formerly "Qllm v13"; Library = formerly "Qllm v14"; Lead since 2026-10-31 13:20 IST)
 
 ## Progress to 100 % (Lead's estimate; 100 % = thesis shown on MLB-1 vs baselines as they are + a distributable mind+library package)
-Overall ~45 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 holds BEYOND training context: DONE at package level (re-fetch 1.00 to 128k; spread 0.905 @4k; one-read reach = training length at 103M, a stated limit; user 21:40) | 3 rule from words 0 % (curriculum) | 4 session library 65 % (L1 burst key: 32k 0.81/0.94, 128k 0.56/1.00 synth/natural; top-5 0.94-1.00; L1+P1 scoring next) | 5 planner 20 % | 6 shared library / skill packs 15 % | 7 LM quality guard 60 % (r3c to 3B) | 8 benchmark MLB-1 70 % (GPU grid) | 9 package + release 5 % (M2 streaming = first release blocker). If LAW-1 passes: ~55 %.
+Overall ~47 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 holds BEYOND training context: DONE at package level (re-fetch 1.00 to 128k; spread 0.905 @4k; one-read reach = training length at 103M, a stated limit; user 21:40) | 3 rule from words 0 % (curriculum) | 4 session library 65 % (L1 burst key: 32k 0.81/0.94, 128k 0.56/1.00 synth/natural; top-5 0.94-1.00; L1+P1 scoring next) | 5 planner 20 % | 6 shared library / skill packs 15 % | 7 LM quality guard 60 % (r3c to 3B) | 8 benchmark MLB-1 70 % (GPU grid) | 9 package + release 20 % (M2 streams, parity verified; pack format + install next). If LAW-1 passes: ~55 %.
 
 ## Board (2026-10-31 18:50 IST)
 
@@ -85,8 +85,10 @@ Overall ~45 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 holds BEY
 
 - 21:40 IST: USER DECISION: #2 closed as done with the limit stated (package holds beyond the context via re-fetch; one-read mind reach ~ training length at this scale). CANCELLED: LAW-1 lg8 / lg2 / lg32-reset. KEPT: s8's b2p3 (distance edge vs Mamba-2) and r3c. Next: Mind = M2 streaming (release blocker) + curriculum run (stated rule + demos, fetched spans + question) in the freed 6000 slot; Library = two-organ fetch, then text-first pack format + install tool; Lead = package rows in MLB-1 (mind + fetch + re-read vs T++ / Mamba-2 as they are, 32k-1M, MB).
 
+- 21:55 IST: RELEASE ITEM DONE (Mind, 41f8ae8): the M2 body STREAMS: carried-state chunked prefill + O(1) token decode. Parity: b2p2 prefix-then-suffix vs full 2.0e-4, decode vs full 5.0e-5 (logit scale ~18); c1ctlb 4.3e-4 / 7.6e-5; 4090 Triton fp32 same; self-test 24/24. Lead re-ran v13_sempty/tmp/stream_parity.py on CPU: PASS. Demo (b2p2, generate): prompt "Map rule. 3->10, 5->14, 8->20, 11 ->" -> " 26", then its own correct lines 27->58, 6->16, 28->60, 25->54, 15->34 (rule 2x+4). MLB-1 A6 lifts the A5 caveat; the M1-vs-M2 rule is moot (M2 ships). LAW-1 closed, lg8/lg2 killed before start. Next: Mind's curriculum pre-registration for the 6000 slot after b2p3 (~22:15).
+
 ## Open questions
-- Product body: M2 (better LM / skill numbers, no streaming yet) vs M1 (streams today). Decided by the M2 streaming effort.
+- (closed 21:55) Product body: M2 streams (41f8ae8).
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
 - The instr cell on c1ctlb was invalid (no rule skill); b2p2 rerun decides whether words can write the rule state.
