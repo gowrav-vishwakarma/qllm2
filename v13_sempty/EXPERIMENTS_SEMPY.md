@@ -4088,3 +4088,33 @@ only (not a claim): ~1.5–2× r3b's late gains would end r3c near 3.20–3.25, 
 3.2064 and still behind Mamba-2 3.1644 (scoreboard). Kept checkpoint
 `r3cb_main_38e3c29/step_039062.pt` for the attr3b split. Ledger reminder: r3c has none
 of the 10-31 findings (no b2 / lab / b2gap docs).
+
+## A4 cond_mem filter `a4f` result (2026-10-31 16:20 IST): IN BETWEEN (rule 3); not in the package
+
+`a4fb_main_d338469` (4090; n9r ctl43 recipe + COND_MEM=1 in both stages; M1 body + echo,
+seed 43; 600M tokens; 103.6M dense + 33.5M table = 137.1M). Reference per the 13:01
+amendment: C1-ctl `c1ctlb_main_7ae6f1f` (seed 42); ctl43 (the seed-43 outlier) reported.
+
+| 600M tokens | params | holdout | recall 63 (≤ 2048 / > 2048) | label_diag cat / exact | PG-19 far gain 4–8k |
+|---|---|---|---|---|---|
+| **a4f (table)** | 103.6M + 33.5M table | **3.4488** | **0.916** (0.991 / **0.728**) | 0.650 / 0.675 | +0.044 |
+| C1-ctl (ref) | 102.9M | 3.4743 | 0.825 (0.917 / 0.597) | – / 0.610 | +0.041 |
+| ctl43 (reported) | 102.9M | 3.598 | 0.901 (– / 0.735) | 0.637 / 0.673 | |
+
+attr3b on the frozen text (a4f − C1-ctl): PG-19 all −0.025, new tokens −0.039, **new @ 0–64
+−0.0275**; web all −0.031, new −0.040, **new @ 0–64 −0.0615**; copy −0.020 / −0.025, seen
+−0.016 / −0.025. (vs ctl43: −0.164 / −0.149, inflated by ctl43's outlier.)
+
+**Verdict (pre-registered).** Rule 1 KEEP needs holdout ≤ ref − 0.02 (met: −0.026) AND new-token
+loss at 0–64 ≤ ref − 0.03 on BOTH texts: web met (−0.062), **PG-19 missed by 0.0025 (−0.0275)**.
+Not KEEP. Rule 2 FAIL needs a holdout gain < 0.01: no. → **Rule 3, in between:** not in the
+package; reported; revisited at 3B only if nothing better exists. Recall guard met (+0.09).
+
+**Reading.** A hashed n-gram table gives a real but modest gain (~0.025–0.03 nats, spread
+over all token classes, largest on new tokens and early positions on web text), about a
+quarter of the 3B Mamba-2 gap, for +33% parameters (sparse rows). One seed, cross-seed
+reference (seed 43 vs 42; seed noise ~0.003 here). **Novelty / thesis:** Engram-style
+n-gram memory is known (DeepSeek Engram), and it is parametric knowledge inside the
+weights, so it serves neither thesis clause: a cost table, not a claim. The recall jump
+(+0.13 past 2048) is unexplained; it may be the table making key tokens more distinct.
+A4 stays in the code as a reported option; no further GPU unless a mechanism needs it.

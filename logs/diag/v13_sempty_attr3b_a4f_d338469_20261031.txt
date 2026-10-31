@@ -1,0 +1,14 @@
+
+[pg19] tokens 122880; share copy 0.258 seen 0.377 new 0.365
+  loss  a4f 3.7618  ctl43 3.9254
+  a4f - ctl43: total -0.1635
+     by class (gap / share of total): copy -0.089 / +14%  seen -0.140 / +32%  new -0.241 / +54%
+     by position:                     0-8 -0.151  8-64 -0.153  64-512 -0.153  512-2048 -0.167
+     new tokens by position:          0-8 -0.165  8-64 -0.211  64-512 -0.236  512-2048 -0.245
+
+[web] tokens 195046; share copy 0.227 seen 0.386 new 0.387
+  loss  a4f 3.4206  ctl43 3.5695
+  a4f - ctl43: total -0.1489
+     by class (gap / share of total): copy -0.080 / +12%  seen -0.122 / +32%  new -0.216 / +56%
+     by position:                     0-8 -0.268  8-64 -0.194  64-512 -0.146  512-2048 -0.146
+     new tokens by position:          0-8 -0.284  8-64 -0.252  64-512 -0.208  512-2048 -0.215
