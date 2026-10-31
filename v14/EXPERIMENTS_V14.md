@@ -2515,6 +2515,20 @@ before any code or number; Lead's order item 3; eval only).**
     is not known in advance):** free accuracy at R = 2048, L = 32k ≥ 0.9 × the
     free accuracy with no refresh at L = 2048 in the same run, for each rule.
     Reported: both metrics in every cell, the free tokens, the overhead.
+  - **N11-R/F VERDICT (2026-11-01 03:22 IST; code 7da1edd;
+    `logs/v14_n11rf_b2p2_7da1edd_20261101_0207.jsonl` + driver log, 1,200 rows):
+    NOT met (one rule of two).**
+
+    | rule | free one-read 2k (R none) | bar 0.9× | free R = 2048, 32k | verdict |
+    |---|---|---|---|---|
+    | affine_map_new | 0.86 | 0.774 | **0.84** (20-way 0.96) | met |
+    | shift_wide_new | 0.48 | 0.432 | **0.34** (20-way 0.56) | NOT met |
+
+    Free at 32k by R (affine / shift): R 1024 0.90 / 0.52 (+3.3 % tokens),
+    R 2048 0.84 / 0.34 (+1.6 %), R 4096 0.10 / 0.08, none 0.00 / 0.02. With no
+    refresh, free is 0.00 already at 8k. R = 1024 would pass both (not the
+    registered R). A refreshed skill survives 32k in FREE generation for the
+    stronger rule; the weaker rule needs R ≈ 1k.
   - **Checked by Mind (2026-11-01 00:25, `b136dab`, 300 real docs per source):**
     the packing flaw orphans only 3.3 % of B2 answer tokens at 2k windows
     (B2 docs are short: median 143 tokens), so b2p2's 2k reach and R as tuned
@@ -2866,6 +2880,31 @@ fitted threshold:
   - Met C → a stream-inserted read (N11 refresh, or a warm row) can be made
     to work with a second O(1) stream; not met → the package keeps the cold
     scratch read.
+  - **A6c VERDICT (2026-11-01 03:22 IST; code dec965d;
+    `logs/v14_a6c_b2p2_dec965d_20261101_0212.jsonl` + .log, 360 rows, rows found
+    1.00): Bar L NOT met (warm fails at 2k too: NOT a length effect); Bar C MET
+    (the contrast rescues the warm read, and beats cold).**
+
+    | L | cold (kv syn / kv nat / para nat) | warm | warm + contrast (a = 4) |
+    |---|---|---|---|
+    | 2,048 | 0.875 / 0.80 / 0.775 | 0.675 / 0.275 / 0.125 | **0.95 / 0.975 / 1.00** |
+    | 8,192 | 0.825 / 0.875 / 0.725 | 0.575 / 0.225 / 0.075 | **0.90 / 1.00 / 0.925** |
+    | 32,768 | 0.925 / 0.775 / 0.70 | 0.45 / 0.125 / 0.125 | **0.90 / 0.95 / 0.975** |
+
+    - Correction to A6's reading and EUREKA bd34118: the warm read fails at
+      the trained length 2k as well, so "the long state outvotes the newest
+      sentence" holds at ANY length, not only past the trained length.
+    - The contrast (l_warm + 4 (l_warm − l_norow), on the answer tokens only)
+      gives the best expression we have: natural keys 0.95-1.00 vs cold
+      0.70-0.875, at every length; it fixes cold's " ave." / prose misses
+      (" indigo.", " willow.", " juniper."). Answer starts with the value
+      0.88-1.00 (cold 0.60-0.93).
+    - Caveat: 20-38 % of contrast answers RUN ON after the value (e.g.
+      ' marigold." Definition: ...'); Mind's cd3: contrast on free text
+      collapses (NLL 3.90 → 8.56). So: contrast on the answer tokens only,
+      stop at the value / first stop. Package candidate: the row read WARM
+      with a no-row contrast stream (one prefill, two short O(1)
+      continuations), to be confirmed on the package cells (fresh seed).
 - **A8 (N11-RC): refresh half as often with a contrast stream (PRE-REGISTERED
   2026-11-01 03:14 IST, before any number of it; Mind's proposal after cd2).**
   Design / cost, no novelty claim (closest prior work: context-aware decoding,
