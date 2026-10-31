@@ -2650,6 +2650,27 @@ fitted threshold:
   - If met: the mind run (b2p2, 32k, strict + `PACKAGE_NORM=1`, seed 24000,
     `P_free_sent` primary) on Lead's gate; bars there: para and tool
     `P_free_sent` ≥ 0.80, neg abstain ≥ 0.90, both key types.
+  - **A4 TEXT CHECK: MET (2026-11-01 01:07 IST; code fa95777; `logs/v14_a4_text_fa95777_20261031_1937.log` + .json).**
+    Docs = bench's own (rebuild verified on seed 22000: 320 / 320 same length
+    and token-organ hit as Lead's strict run).
+
+    | cell (syn / nat) | token organ | normalised organ (step) | right row |
+    |---|---|---|---|
+    | kv | 1.00 / 1.00 | 0 / 0 | **1.00 / 1.00** |
+    | para | 0.40 / 0.35 | 0.60 / 0.65 (all step 1, suffix) | **1.00 / 1.00** |
+    | tool | 0.25 / 0.225 | 0.75 (step 3, rare bigram) / 0.775 (step 2, any 3-gram) | **1.00 / 1.00** |
+    | neg (any hit) | 0 / 0 | 0 / 0.025 | bar ≤ 0.05: **0.00 / 0.025** |
+
+    - The one neg false hit is the predicted collision: never-stored "problems
+      involving" vs stored "done involving" share "involving refers to"
+      (suffix 3-gram). Natural keys of common words can collide this way.
+    - Cost: 0.02-0.05 s per 32k doc (a Python scan at query time, no stored
+      index); an indexed form is SL2's word suffix array (~5.4 MB per 1M
+      tokens).
+    - Says: on bench's templated cells the "found it" decision is solved by
+      text, so strict mode no longer has to give up para / tool. Says NOTHING
+      about rewording or synonyms. Next: the mind run (expression,
+      `P_free_sent`), queued with Lead.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

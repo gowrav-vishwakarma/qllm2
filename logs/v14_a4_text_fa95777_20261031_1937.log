@@ -1,0 +1,9 @@
+kv    synthetic token 1.000 norm 0.000 (s1 0 s2 0 s3 0) any 1.000 right 1.000  0.004s/doc
+para  synthetic token 0.400 norm 0.600 (s1 24 s2 0 s3 0) any 1.000 right 1.000  0.025s/doc
+tool  synthetic token 0.250 norm 0.750 (s1 0 s2 0 s3 30) any 1.000 right 1.000  0.034s/doc
+neg   synthetic token 0.000 norm 0.000 (s1 0 s2 0 s3 0) any 0.000 right 0.000  0.043s/doc
+kv    natural   token 1.000 norm 0.000 (s1 0 s2 0 s3 0) any 1.000 right 1.000  0.004s/doc
+para  natural   token 0.350 norm 0.650 (s1 26 s2 0 s3 0) any 1.000 right 1.000  0.022s/doc
+tool  natural   token 0.225 norm 0.775 (s1 0 s2 31 s3 0) any 1.000 right 1.000  0.031s/doc
+neg   natural   token 0.000 norm 0.025 (s1 1 s2 0 s3 0) any 0.025 right 0.000  0.046s/doc
+   miss {"doc": 23, "q": " Query: problems involving refers to", "row": "No new phyla is what an evolutionist would expect? Is evolution merely the subdivision of pre-existing designs into reproductively isolated subtypes and the extinction of \"enorm Definition: done involving refers to indigo."}
