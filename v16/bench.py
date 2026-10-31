@@ -16,7 +16,7 @@ Read paths
   C3 same, but the index keeps only sentence-boundary snapshots ('.' tokens): the cheap one.
 """
 from __future__ import annotations
-import argparse, json, os, random, sys, time
+import argparse, json, os, random, sys, time, zlib
 from pathlib import Path
 import numpy as np, torch
 ROOT = Path(__file__).resolve().parents[1]      # v16/ -> repo root
@@ -253,16 +253,17 @@ def main():
     model, tok, cfg = _load_v13_sempty(Path(a.ckpt), 'baseline_real_pm', torch.device(a.device)); model.eval()
     R = Reader(model, a.arch); R.vec_layer = a.vec_layer; R.centre = a.centre
     fill = filler_tokens(a.filler or str(ROOT / '.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt'))
-    key_fn = None
+    key_fn = None; key_fn_bursts = False
     if a.key_fn:
-        import importlib; mod, fn = a.key_fn.split(':'); key_fn = getattr(importlib.import_module(mod), fn)
+        import importlib, inspect; mod, fn = a.key_fn.split(':'); key_fn = getattr(importlib.import_module(mod), fn)
+        key_fn_bursts = len(inspect.signature(key_fn).parameters) >= 3   # fn(keys, ids, bursts) -> one key per burst
     if a.dump_rows:
         Path(a.dump_rows).mkdir(parents=True, exist_ok=True)
     cand = [tok.encode(f" {v}", add_special_tokens=False)[0] for v in _RECALL_VALUE_NOUNS]
     outf = open(a.out, 'a')
     for L in [int(x) for x in a.lengths.split(',')]:
         filler = fill if L + 2 < len(fill) else np.concatenate([fill] * (L // len(fill) + 2))
-        rng = random.Random(a.seed * 1000 + L + hash(a.task) % 997)
+        rng = random.Random(a.seed * 1000 + L + zlib.crc32(a.task.encode()) % 997)   # stable across processes (A4; was hash(), randomized per process)
         for d in range(a.docs):
             t0 = time.time()
             ids, ans, qlen, meta = build(rng, tok, filler, L, a.task, a.needles, keys=a.keys, shots=a.shots)
@@ -322,7 +323,9 @@ def main():
                     qsrc = meta.get('query_key') or meta['key']
                     key_ids = tok.encode(f" {qsrc}", add_special_tokens=False)
                     qk = doc_end + ids[doc_end:].index(key_ids[-1])
-                    K_all = key_fn(vecs, ids) if key_fn else keys_doc
+                    # key_fn receives the key vectors the built-in path uses (layer-k residual with
+                    # --vec_layer, else the pre-logit vector); 2-arg form -> per-token keys [T, d]
+                    K_all = key_fn(keys_doc, ids) if (key_fn and not key_fn_bursts) else keys_doc
                     if a.centre:
                         K_all = K_all - K_all[:doc_end].mean(0, keepdim=True)
                     q = torch.nn.functional.normalize(K_all[qk], dim=-1)
@@ -393,12 +396,26 @@ def main():
                     pkn = next((i for i in range(doc_end) if ids[i:i + len(nk)] == nk), None) if nk else None
                     if pkn is not None:   # needle span = the inserted sentence around the key
                         rec['C5_burst_in_needle'] = int(any(pkn - 4 <= b0 <= pkn + len(nk) + 6 for b0 in bstart))
-                    bvec = torch.stack([docv[b0:b1].mean(0) for b0, b1 in bursts]); bvec = torch.nn.functional.normalize(bvec, dim=-1)
-                    bsim = bvec @ q; btop_b = [bursts[i] for i in bsim.topk(min(5, len(bursts))).indices.tolist()]
-                    rec['C5_burst_hit'] = int(any(in_right(pp) for pp in range(btop_b[0][0] - 1, btop_b[0][1])))
+                    if key_fn and key_fn_bursts:   # learned fetch: one key per burst row + its own query key
+                        kb, kq = key_fn(keys_doc, ids, {'bursts': bursts, 'query_pos': qk, 'doc_end': doc_end})
+                        bvec = torch.nn.functional.normalize(torch.as_tensor(kb).float(), dim=-1)
+                        bsim = bvec @ torch.nn.functional.normalize(torch.as_tensor(kq).float(), dim=-1)
+                    else:
+                        bvec = torch.stack([docv[b0:b1].mean(0) for b0, b1 in bursts]); bvec = torch.nn.functional.normalize(bvec, dim=-1)
+                        bsim = bvec @ q
+                    border = bsim.topk(min(5, len(bursts))).indices.tolist(); btop_b = [bursts[i] for i in border]
+                    rec['C5_burst_hit'] = int(any(in_right(pp) for pp in range(btop_b[0][0] - 1, btop_b[0][1])))   # old rule (continuity)
+                    # span rule (A4): a hit = the answer token lies inside the stored row span [f, f + 24),
+                    # i.e. what the re-read actually gets; C2 keeps its 6-token rule
+                    def in_span(b0):
+                        return any(ids[j] == ans for j in range(b0, min(doc_end, b0 + 24)))
+                    rec['C5_burst_hit_span'] = int(in_span(btop_b[0][0]))
+                    rec['C5_burst_top5_span'] = int(any(in_span(b[0]) for b in btop_b))
+                    rec['C5_burst_maxsim'] = round(float(bsim.max()), 4)
                     gv = docv[gpos]; gs = gv @ q; gtop = [gpos[i] for i in gs.topk(min(5, len(gpos))).indices.tolist()]
                     rec['C5_rows'] = len(gpos); rec['C5_rows_per_event'] = round(len(gpos) / max(1, n_ev), 1)
                     rec['C5_hit'] = int(in_right(gtop[0])); rec['C5_top5'] = int(any(in_right(pp) for pp in gtop))
+                    rec['C5_hit_span'] = int(any(ids[j] == ans for j in range(gtop[0], min(doc_end, gtop[0] + 24))))
                     rec['C5_event_has_row'] = int(any(in_right(pp) for pp in gpos))
                     pg = gtop[0]; lg5 = R.last_logits(ids[max(0, pg - 8):min(doc_end, pg + 8)] + ids[doc_end:])
                     rec['C5_snap'] = int(cand[int(lg5[cand].argmax())] == ans)
