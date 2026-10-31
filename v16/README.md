@@ -11,8 +11,8 @@ accepted ones here; the organiser maintains the harness and this plan.
 
 Files (day one): `EXPERIMENTS_V16.md` (lab notebook), `EXPERIMENT_INDEX.md` (one
 row per unit: status, verdict, hash, rerun), `SCRATCHPAD.md` (handover).
-The harness `scripts/session_index_probe.py` moves to `v16/bench.py` when MLB-1
-v1 is fixed (until then it stays put so no path breaks).
+The harness is `v16/bench.py` (moved from scripts/session_index_probe.py at the MLB-1
+v1 freeze, 2026-10-31).
 
 Comparison rule (user, 2026-10-31): Transformer++ and Mamba-2 are compared AS
 THEY ARE (their existing numbers and runs, full context where it fits); no

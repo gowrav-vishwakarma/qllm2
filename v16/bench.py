@@ -1,4 +1,4 @@
-"""Session-index probe (organiser, CPU): frozen model + non-learned session index,
+"""v16/bench.py: the library-half benchmark harness (MLB-1 section 2). Session-index probe (organiser): frozen model + non-learned session index,
 360 view. Any checkpoint loadable by scripts/run_memory_behavioral._load_v13_sempty
 (PAM, Transformer++, Mamba-2). Writes one JSON line per document to --out (survives kills).
 
@@ -19,7 +19,7 @@ from __future__ import annotations
 import argparse, json, os, random, sys, time
 from pathlib import Path
 import numpy as np, torch
-ROOT = Path(__file__).resolve().parents[1]      # scripts/ -> repo root
+ROOT = Path(__file__).resolve().parents[1]      # v16/ -> repo root
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / 'scripts'))
 from run_memory_behavioral import _load_v13_sempty  # noqa: E402
 from memory_probes.spread import filler_tokens  # noqa: E402
@@ -114,6 +114,37 @@ def build(rng, tok, filler, L, task, n, keys='synthetic'):
             order = [i for i, _ in sorted(pos_map.items(), key=lambda kv: kv[1])]
             inserts = [inserts[i] for i in order]
         meta = dict(key=key, val=val, hop_key=None)
+    elif task == 'instr':  # a rule stated ONCE in words at the start; "x ->" asked after L filler
+        from v14.rules_ood import SHIFT_NEW
+        k = rng.choice(SHIFT_NEW)                      # held-out shift value (never trained)
+        letters = 'abcdefghijklmnopqrstuvwxyz'
+        rule = enc(f" Rule: shift each letter forward by {k}.")
+        x = rng.choice(letters[:26 - k]); y = letters[(letters.index(x) + k) % 26]
+        query = enc(f" {x} ->")
+        ids = rule + body[:L] + query
+        ans = tok.encode(f" {y}", add_special_tokens=False)[0]
+        meta = dict(key=None, val=y, hop_key=None, rule_len=len(rule), rule_text=f" Rule: shift each letter forward by {k}.")
+        return ids, ans, len(query), meta
+    elif task == 'neg':   # n needles stored, but the queried key was NEVER stored: abstain is right
+        keys_ = [mk() for _ in range(n)]
+        for kk in keys_:
+            inserts.append(enc(f" Definition: {kk} refers to {rng.choice(_RECALL_VALUE_NOUNS)}."))
+        key = mk(); val = rng.choice(_RECALL_VALUE_NOUNS)   # a 'right answer' only for bookkeeping
+        query = enc(f" Query: {key} refers to")
+        pos = sorted(rng.sample(range(0, max(1, L - 64)), len(inserts)))
+        meta = dict(key=key, val=val, hop_key=None, negative=True)
+    elif task == 'para':  # key stored one way, asked in a paraphrase (inflection / case); organ misses by design
+        keys_ = [mk() for _ in range(n)]
+        vals = [rng.choice(_RECALL_VALUE_NOUNS) for _ in range(n)]
+        for kk, v in zip(keys_, vals):
+            inserts.append(enc(f" Definition: {kk} refers to {v}."))
+        qi = rng.randrange(n); key, val = keys_[qi], vals[qi]
+        w = key.split()
+        forms = [key.title(), key.upper(), (w[0] + ' ' + (w[1][:-1] if w[1].endswith('s') else w[1] + 's')), 'the ' + key]
+        qkey = rng.choice(forms)
+        query = enc(f" Query: {qkey} refers to")
+        pos = sorted(rng.sample(range(0, max(1, L - 64)), len(inserts)))
+        meta = dict(key=key, val=val, hop_key=None, query_key=qkey)
     elif task == 'tool':  # a tool call's result block mid-stream; one field asked later
         job = mk(); fields = ['status', 'owner', 'region', 'label']
         vals = [rng.choice(_RECALL_VALUE_NOUNS) for _ in fields]
@@ -156,6 +187,7 @@ def mem_bytes(arch, cfg, L, n_events, index_rows_all):
         out['mind_state'] = 4 * (P * H * hd * hd + (H * hd * hd + d if getattr(cfg, 'echo', False) else 0))
         out['library_index_all_tokens'] = 4 * index_rows_all * d
         out['library_index_per_event'] = 4 * n_events * d
+        out['library_272B_per_event'] = 272 * n_events + 2 * L
         out['tpp_kv_same_shape'] = 2 * cfg.n_layers * 2 * d * L
     elif arch == 'transformer':
         d = cfg.d_model; out['kv_cache'] = 2 * cfg.n_layer * 2 * d * L
@@ -187,11 +219,20 @@ def main():
     ap.add_argument('--ngram', type=int, default=4); ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--keys', default='synthetic', choices=['synthetic', 'natural'])
     ap.add_argument('--gate_frac', type=float, default=0.02, help='C5: fraction of most-surprising tokens that get an index row')
+    ap.add_argument('--gate_tau', type=float, default=None, help='C5: surprisal threshold in nats (overrides --gate_frac)')
+    ap.add_argument('--filler', default=None, help='token cache for the filler (default: the held-out prose cache = the EVAL pool; pass a pretrain-mix cache for TRAINING docs)')
+    ap.add_argument('--key_fn', default=None, help='module:function(vecs[T,D], ids) -> keys[T,d]; replaces the frozen address in C2/C5 (v14 learned fetch)')
+    ap.add_argument('--dump_rows', default=None, help='dir: per doc, save ids, candidate row positions/kinds, their vectors, query pos and the answer span (v14 training/eval interface)')
     ap.add_argument('--out', required=True); ap.add_argument('--device', default='cpu', help='cpu, or cuda (required for mamba2: Triton kernels)')
     a = ap.parse_args()
     model, tok, cfg = _load_v13_sempty(Path(a.ckpt), 'baseline_real_pm', torch.device(a.device)); model.eval()
     R = Reader(model, a.arch)
-    fill = filler_tokens(str(ROOT / '.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt'))
+    fill = filler_tokens(a.filler or str(ROOT / '.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt'))
+    key_fn = None
+    if a.key_fn:
+        import importlib; mod, fn = a.key_fn.split(':'); key_fn = getattr(importlib.import_module(mod), fn)
+    if a.dump_rows:
+        Path(a.dump_rows).mkdir(parents=True, exist_ok=True)
     cand = [tok.encode(f" {v}", add_special_tokens=False)[0] for v in _RECALL_VALUE_NOUNS]
     outf = open(a.out, 'a')
     for L in [int(x) for x in a.lengths.split(',')]:
@@ -202,7 +243,7 @@ def main():
             ids, ans, qlen, meta = build(rng, tok, filler, L, a.task, a.needles, keys=a.keys)
             T = len(ids); doc_end = T - qlen
             rec = dict(arch=a.arch, ckpt=a.ckpt, task=a.task, keys=a.keys, needles=a.needles, L=L, doc=d, T=T)
-            n_ev = 4 if a.task == 'hop2' else (1 if a.task == 'kv1' else a.needles) + (1 if a.task == 'kvupd' else 0)
+            n_ev = 4 if a.task == 'hop2' else 1 if a.task in ('kv1', 'instr') else a.needles + (1 if a.task == 'kvupd' else 0)
             try:
                 rec['mem'] = mem_bytes(a.arch, cfg, L, n_ev, doc_end)
             except Exception as e:
@@ -231,17 +272,36 @@ def main():
                             span2 = ids[max(0, hit2 - 16):min(doc_end, hit2 + 8)]
                             lg2 = R.last_logits(span + span2 + q2)
                             rec['C_hop2_reread'] = int(cand[int(lg2[cand].argmax())] == ans)
+                # oracle fetch: the stored sentence put right in front of the query (upper bound of any fetch)
+                if vecs is not None and a.task in ('instr', 'kv', 'kv1', 'para', 'tool'):
+                    if a.task == 'instr':
+                        span_o = ids[:meta['rule_len']]
+                    else:
+                        tgt_ids = tok.encode(f" {meta['key']}", add_special_tokens=False)
+                        pk = next((i for i in range(doc_end) if ids[i:i + len(tgt_ids)] == tgt_ids), None)
+                        span_o = ids[max(0, pk - 4):min(doc_end, pk + 40)] if pk is not None else []
+                    if span_o:
+                        lgo = R.last_logits(span_o + ids[doc_end:])
+                        rec['O_reread'] = int(cand[int(lgo[cand].argmax())] == ans) if a.task != 'instr' else int(int(lgo.argmax()) == ans)
+                if a.task == 'instr':
+                    rec['A_state'] = int(int(lg.argmax()) == ans)      # letters: exact next token
+                    rec['B_hit'] = rec['B_ngram'] = 0                  # "x ->" shares no 4-gram with the rule
                 # C2 / C3 (PAM): snapshot index keyed by the model's own vectors
-                if vecs is not None and a.task != 'hop2':
-                    key_ids = tok.encode(f" {meta['key']}", add_special_tokens=False)
+                if vecs is not None and a.task not in ('hop2', 'instr'):
+                    qsrc = meta.get('query_key') or meta['key']
+                    key_ids = tok.encode(f" {qsrc}", add_special_tokens=False)
                     qk = doc_end + ids[doc_end:].index(key_ids[-1])
-                    q = torch.nn.functional.normalize(vecs[qk], dim=-1)
-                    docv = torch.nn.functional.normalize(vecs[:doc_end], dim=-1)
+                    K_all = key_fn(vecs, ids) if key_fn else vecs
+                    q = torch.nn.functional.normalize(K_all[qk], dim=-1)
+                    docv = torch.nn.functional.normalize(K_all[:doc_end], dim=-1)
                     span_r = 24 if a.task == 'tool' else 6
                     def in_right(pp):
                         return any(ids[j] == ans for j in range(pp + 1, min(doc_end, pp + span_r)))
                     sims = docv @ q; top = sims.topk(5).indices.tolist(); p = top[0]
+                    rec['C2_maxsim'] = round(float(sims[p]), 4)
                     rec['C2_hit'] = int(in_right(p)); rec['C2_top5'] = int(any(in_right(pp) for pp in top))
+                    if meta.get('negative'):   # nothing stored for this key: any confident fetch is wrong
+                        rec['C2_hit'] = rec['C2_top5'] = 0
                     lg2 = R.last_logits(ids[max(0, p - 8):min(doc_end, p + 8)] + ids[doc_end:])
                     rec['C2_snap'] = int(cand[int(lg2[cand].argmax())] == ans)
                     bpos = [i for i in range(doc_end) if ids[i] == DOT]
@@ -269,8 +329,11 @@ def main():
                     # vector at that token. Reports rows kept, whether the queried needle got a row,
                     # and the hit when the search is restricted to those rows.
                     nll = R.surprisal(ids, vecs)[:doc_end]
-                    kkeep = max(1, int(a.gate_frac * doc_end))
-                    gpos = nll.topk(kkeep).indices.sort().values.tolist()
+                    if a.gate_tau is not None:
+                        gpos = (nll > a.gate_tau).nonzero().flatten().tolist() or [int(nll.argmax())]
+                    else:
+                        kkeep = max(1, int(a.gate_frac * doc_end))
+                        gpos = nll.topk(kkeep).indices.sort().values.tolist()
                     ndef = len(tok.encode(f" Definition: {meta['key']} refers to", add_special_tokens=False))
                     # the queried needle's own token span (its key last token is at p_true for in_right)
                     gv = docv[gpos]; gs = gv @ q; gtop = [gpos[i] for i in gs.topk(min(5, len(gpos))).indices.tolist()]
@@ -279,7 +342,16 @@ def main():
                     rec['C5_event_has_row'] = int(any(in_right(pp) for pp in gpos))
                     pg = gtop[0]; lg5 = R.last_logits(ids[max(0, pg - 8):min(doc_end, pg + 8)] + ids[doc_end:])
                     rec['C5_snap'] = int(cand[int(lg5[cand].argmax())] == ans)
+                    rec['C5_maxsim'] = round(float(gs.max()), 4)
+                    rec['C5_rows_per_16tok'] = round(16 * len(gpos) / max(1, doc_end), 2)
                     rec['C5_index_bytes'] = 4 * len(gpos) * cfg.dim
+                    rec['C5_library_bytes_272'] = 272 * len(gpos) + 2 * doc_end   # v14 row format + raw text
+                    if a.dump_rows:   # v14 interface: candidate rows (surprise + boundary), vectors, query, answer span
+                        torch.save({'ids': ids, 'doc_end': doc_end, 'query_pos': qk, 'answer_token': ans,
+                                    'needle_key': meta.get('key'), 'rows_surprise': gpos, 'rows_boundary': bpos,
+                                    'vecs_surprise': vecs[gpos].half(), 'vecs_boundary': vecs[bpos].half(),
+                                    'nll': nll.half(), 'task': a.task, 'L': L, 'doc': d},
+                                   Path(a.dump_rows) / f"{a.task}_{a.keys}_L{L}_d{d}.pt")
             except Exception as e:  # keep going; record the failure
                 rec['error'] = f'{type(e).__name__}: {str(e)[:200]}'
             rec['sec'] = round(time.time() - t0, 1)

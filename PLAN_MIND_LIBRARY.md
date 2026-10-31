@@ -23,7 +23,7 @@ benchmark first; the distributable model once it wins that table.
 - **v14 = library.** Learned key at the salient token, one row per event, write
   gate (N12), planner/query former (N11), shared-library schema with provenance.
   Judged on the benchmark with v13's checkpoints.
-- **Organiser = library-half harness + coordination.** `scripts/session_index_probe.py`
+- **Organiser = library-half harness + coordination.** `v16/bench.py` (was scripts/session_index_probe.py)
   grows into the library benchmark: needle, multi-needle (8, 64), latest-definition-
   wins, two-hop, at 32k / 128k / 400k / 1M; synthetic AND natural-text keys; >= 32
   docs per cell (target +-0.05); memory in MB per row (mind state + library index vs
