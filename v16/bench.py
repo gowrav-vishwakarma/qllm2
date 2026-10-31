@@ -81,7 +81,6 @@ class Reader:
         return out
 
     @torch.no_grad()
-    @torch.no_grad()
     def greedy(self, ids: list[int], max_new: int = 16, stops=(13, 198)) -> list[int]:
         """Free generation (user, Nov 1): greedy tokens after `ids` until '.' / newline or max_new.
         Re-runs the short context each step (the re-read is span + query, not the document)."""
@@ -93,6 +92,7 @@ class Reader:
                 break
         return out
 
+    @torch.no_grad()
     def last_logits(self, ids: list[int], vecs=None) -> torch.Tensor:
         if self.arch == 'pam':
             v = vecs[-1] if vecs is not None else self.vectors(ids)[-1]
@@ -107,6 +107,8 @@ class Reader:
         # Last-position logits only: the full [T, V] head (6.6 GB fp32 at 32k) OOMed the 4090 on natq.
         # bf16 autocast so SDPA takes the flash / memory-efficient kernel (fp32 at 32k fell back to the
         # quadratic math kernel and OOMed the 4090); the state-only argmax is read in fp32 from the last hidden.
+        if x.device.type == 'cuda':
+            torch.backends.cuda.enable_math_sdp(False)       # flash / mem-efficient only: the math kernel is T^2 (26 GB at 32k)
         with torch.autocast('cuda', dtype=torch.bfloat16, enabled=(x.device.type == 'cuda')):
             hidden, _ = self.m._hidden_to_lm(x)
         return (hidden[0, -1].float() @ self.m._head_weight().float().T).cpu()
@@ -521,8 +523,10 @@ def main():
             except Exception as e:  # keep going; record the failure
                 rec['error'] = f'{type(e).__name__}: {str(e)[:200]}'
             rec['sec'] = round(time.time() - t0, 1)
-            if a.device == 'cuda' and a.arch != 'pam':
-                torch.cuda.empty_cache()                      # T++ at 32k fills the 4090; release between docs
+            if a.device == 'cuda':
+                rec['cuda_peak_mb'] = int(torch.cuda.max_memory_allocated() / 2**20); torch.cuda.reset_peak_memory_stats()
+                if a.arch != 'pam':
+                    torch.cuda.empty_cache()                  # T++ at 32k fills the 4090; release between docs
             outf.write(json.dumps(rec) + '\n'); outf.flush()
             print(rec, flush=True)
             vecs = None
