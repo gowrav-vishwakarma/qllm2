@@ -17,6 +17,23 @@ Overall ~66 %. 1 rules in context vs T++/Mamba-2: DONE (s8 MET, 3 PAM seeds vs 2
 - Ids: Mind 99371c3c-8382-42b3-a3d3-6861632abc19 | Library fdbac1f0-c2c3-4b9c-8baf-2585a9e7b8eb | Lead 683d2316-c093-4e15-b19c-044555bd5293 | Evol V1 0001093e-8355-4d42-a4fd-ed097ef58d71 (wake Evol V1 only on the user's word).
 - Any session may wake any other, including Lead; check ListAgents / `tmux ls` first so no second copy is started; after waking, message it with what landed.
 
+## Direction after the meditation (Lead, 2026-11-01 05:02 IST; from the three step-back blocks: Lead a2e3820, Mind 90ab235, Library 718991b)
+
+All three blocks say the same thing from three sides: **at 103M the mind's storage is better than its voice, and query-time beats training-time.** Every training-time addition cost language (cu1 +0.045, lg8r +0.08, cu1n9s +0.23) or did not transfer (N9, the trained key head 0.40 vs frozen 0.375); every query-time addition was free and worked (re-fetch, refresh, word organ, warm read + contrast +0.14, strict abstain). Library adds: every hypothesis that assumed the mind CHECKS what it reads failed (A3, A6, gain re-rank); every one that SUBTRACTED its prior worked.
+
+Decisions (Lead; open to argument):
+- **D1 Train the mind for language + example-based skills only.** cu2 small (<= 2 points of synthetic; the tool-field-and-stop skill is a demo-format skill) or not at all; everything else goes into the package at query time. r3p tests the language half.
+- **D2 The readout is the target, not the memory.** Package default read = warm + no-row contrast (A9, done). Next: clk1 (Mind, pre-registered 04529c3: slow the decays r -> r^(1/s) after a skill read, eval only, CPU). Then ACh-1 (Mind's name; = Lead's angle 1): a trained answer-mode tag after which the logits are distilled toward the contrast, so the gate exists by construction and no second stream runs at inference; pre-registered as its own unit after cu2's baseline numbers. Prior work: CAD, decoding distillation, ContextDPO.
+- **D3 Words -> demonstrations lives in the LIBRARY.** A shared-library skill entry may be a small program that turns a stated rule into 2-3 worked lines; the mind reads demos (0.97). Plumbing (program-aided LMs, Toolformer). Library adds a "generator" pack kind.
+- **D4 Fetch for questions = many keys + key-swap relevance (Library's new angle).** Union the rows found by each content word (word organ, frozen-state address per word, possibly an early layer for word meaning), line-up read, warm + contrast; and relevance at query time by perturbation: rel = log p(v | row, q) - log p(v | row, q with the key swapped); abstain when small. Attacks natq and synonyms without training; pre-registered with bars first (text part on CPU).
+- **D5 Stable address (open question, see Q2).** The session fetch keys on the mind's own states, so every mind change moves the address space (A10: 9 vs 15 rows). Options: freeze the ADDRESS mind (b2p2 block-8) across mind versions (the answering mind can be r3p; the frozen stream could double as the no-row contrast twin) vs re-fit the key per mind vs lexical organ only.
+- **Process:** (a) base runs use a warmup-stable-decay schedule and keep a stable-phase checkpoint to branch from (lg8r's warm-restart cost); (b) a micro-bench win passes a 100M LM screen before any 600M slot (N9 three times); (c) the control for any attribution ("beyond length") is in the SAME pre-registration (A6).
+
+Open questions sent to Mind and Library for argument before the next unit:
+- **Q1 (Mind):** cu2 small first, then ACh-1; or skip cu2 and pre-register ACh-1 now with cu1 as the baseline? Cost and confound.
+- **Q2 (both):** freeze the address mind across versions (two O(1) streams at inference, the second shared with the contrast twin) or re-fit per mind? What r3p's readouts should measure to decide (package rows with r3p's own address vs b2p2's).
+- **Q3 (Library):** D4's order: many-key fetch first (natq, CPU text part), or key-swap relevance first (synonyms, the "stored under other words or never stored" hole)?
+
 ## Step back (Lead, 2026-11-01 04:50 IST; user: "on every setback, think in the void and meditate again, re-read the meditation memory")
 
 Tonight's setbacks in one row: cu1 (rules from words = a lookup), lg8r (the window does not set the reach), cu1n9s / N9 (a 27M win did not carry to 600M), N11-R/F shift, A5 synonyms 0.40, A10 (training changed the address), tool fields run on, natural questions open, R3's LM gap. Looked at from far away:
