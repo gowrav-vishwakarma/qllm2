@@ -2504,6 +2504,13 @@ before any code or number; Lead's order item 3; eval only).**
     1.00 / 0.86 / 0.355 / 0.10 at 0 / 2k / 4k / 8k per Mind). If Mind's fixed
     long-gap recipe (lg8r) lengthens the reach, R grows and the overhead falls
     in proportion; N11-R should be re-run on that checkpoint.
+  - **Checked by Mind (2026-11-01 00:25, `b136dab`, 300 real docs per source):**
+    the packing flaw orphans only 3.3 % of B2 answer tokens at 2k windows
+    (B2 docs are short: median 143 tokens), so b2p2's 2k reach and R as tuned
+    STAND. Recall docs lose 15.9 % at 2k in every arm alike (T++ and Mamba-2
+    included), so comparisons stay fair. The flaw was large only for long-gap
+    windows (b2gap at 8k 44 %, lg32 ~45 %). A new R waits for lg8r PLUS its
+    control lg2r and a second seed (Lead's queue), not for lg8r alone.
 - **Thesis clause:** holds beyond the context (with the library's help);
   closest prior work: periodic re-prompting / "system prompt reminders" in
   long-running agents. Plumbing; the claim is only the measured cost of
