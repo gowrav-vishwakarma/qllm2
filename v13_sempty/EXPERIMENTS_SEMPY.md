@@ -3923,3 +3923,45 @@ plumbing, never a claim. Its value is the knowledge organ's cost table (rows, MB
 install, query). It does not close the general-modelling gap to Mamba-2 at this size;
 that gap stays the mind's (r3c, body levers). Next priority (Lead): the skill-pack
 cell, not more library rows. Logs: `logs/diag/v13_sempty_sl0_*`.
+
+## Skill-pack persistence, first rows (2026-10-31 14:00 IST): PAM carries a rule ~2k tokens after ONE read; the spread cell overstated the carrying distance
+
+MLB-1 v1 R7 cell (`scripts/run_skillpack_probe.py` @ `0029128`, 6000, 100 docs per cell,
+probe seeds 8000–8099): the B2 header + 8 demonstration lines (held-out values) read
+ONCE at t0, then L tokens of held-out filler, then the query. A_state = read once;
+O_reread = the pack re-placed right before the query (T++'s "re-fetch into a fresh
+window, KV = pack + query"). Chance 0.125. b2m (Mamba-2) and b2p1 are still running.
+
+| L | PAM b2p2 affine (A_margin) | PAM shift | T++ b2t affine (A_margin) | T++ shift | T++ KV, whole stream |
+|---|---|---|---|---|---|
+| 0 | 1.00 (+18.3) | 1.00 | 0.96 (+5.1) | 0.24 | 1.2 MB |
+| 2k | **0.98 (+4.1)** | **0.74** | 0.06 (−1.0) | 0.00 | 67 MB |
+| 8k | 0.14 (−1.8) | 0.05 | 0.39 (−0.0) | 0.00 | 266 MB |
+| 32k | 0.07 (−1.9) | 0.01 | 0.08 (−1.4) | 0.00 | 1,058 MB |
+| re-fetch (any L) | 1.00 | 1.00 | 0.96 | 0.24 | 1.23 MB per query |
+
+PAM state 1.15 MB (measured, M2 body). The T++ last-position check passed at rel err
+8.2e-3 (bf16 on GPU).
+
+**Reading.**
+- After ONE read PAM carries the rule ~2k tokens (affine 0.98 at 2k, inside the trained
+  length, where T++ already fails at 0.06 with the pack in its window) and loses it by
+  8k. That is about the training length (2048) and fits the echo memory's half-lives
+  (660–3100 tokens).
+- **Correction to the distance headline.** In the spread cell (s8, B2 pair) the
+  examples are spread evenly, so the LAST example is L/8 from the query (~1k tokens at
+  L = 8k). "Holds affine to 8k" was carrying across ~1k gaps, repeatedly re-exposed;
+  the total context exceeded the trained length, the single gap did not. The edge over
+  T++ and Mamba-2 is real (they fail at ~110-token gaps), but its single-exposure reach
+  is ~2k.
+- **My written prediction was wrong in the direction that matters:** I predicted the
+  skill would be lost between 8k and 32k. It fades between 2k and 8k. R7 (at t0 + 32k,
+  PAM ≥ max(...) + 0.10) fails: 0.07 vs T++ 0.08 (Mamba-2 pending).
+- A_margin shows the fade before accuracy (affine +18.3 → +4.1 at 2k → −1.8 at 8k).
+- What it says: the carrying distance looks LEARNED from the training length (the
+  model never had to carry beyond 2048 in training). An O(1) mind can train at 8k–32k
+  for the same cost per token. That makes the long-gap rule-doc recipe at long training
+  lengths the direct test (next pre-registration), with Library's structural skill
+  register as the other route. Re-fetch is cheap for both bodies (1.15 MB state vs
+  1.23 MB KV per query), so the skill library's value at > 2k is "re-read the pack",
+  not "carry it".

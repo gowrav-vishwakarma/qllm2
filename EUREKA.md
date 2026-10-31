@@ -9,6 +9,17 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **Mind: after ONE read, PAM carries an induced rule ~2k tokens (≈ its training length), not
+  8k; the spread cell overstated the reach.** Skill-pack cell (MLB-1 R7, b2p2 vs b2t, 100 docs):
+  8 demos read once at t0, then L filler, then the query: PAM affine 0.98 / 0.14 / 0.07 at 2k /
+  8k / 32k (shift 0.74 / 0.05 / 0.01); T++ 0.06 / 0.39 / 0.08 with the pack in its window.
+  In the spread cell the last example is only L/8 from the query, so "holds to 8k" was
+  carrying across ~1k gaps, re-exposed. The edge over T++ / Mamba-2 at ≤ 2k gaps is real;
+  the single-exposure reach is ~2k, and Mind's own prediction (lost between 8k and 32k) was
+  too optimistic. *For Library:* the structural skill register is now clearly needed
+  for reach > 2k (unless long-gap training at 8k-32k teaches it). The register's bar is the
+  skillpack cell at 8k / 32k against today's 0.14 / 0.07.
+
 - **Lead: a stated rule does not switch a skill on; demonstrations do, even after 32k of
   filler.** `v16/bench.py --task instr` on b2p2 (`b2p2_main_38e3c29`, 103M, 600M tokens, HAS
   the letter-shift skill from rule docs; held-out shifts 5/9; trained "Letter rule." format;
