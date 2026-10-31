@@ -652,7 +652,15 @@ prior. That could be both the selector the planner lacks and the "nothing
 stored" signal similarity could not give: abstain when no candidate row moves
 the mind. Known idea (PMI scoring / contextual calibration: Holtzman et al.
 2021, Zhao et al. 2021); what would be ours is using the O(1) mind's own
-re-read as the verifier. A second, quieter thought: the session library could
+re-read as the verifier. **Lead's first smoke (23:40, `7f49c7b`, c1ctlb, 2k,
+natural, 2 docs per cell) does NOT support the simple form:** right rows gain
+0.7-2.5, wrong rows 1.9-5.9, never-stored rows 0.5-8.0. A wrong row raises the
+probability of ITS OWN answer too, so a row's gain for its own answer rewards
+any confident span; cancelling the prior needs the TRUE answer's gain, which is
+unknown at question time. Kept as a popped idea; to test OFFLINE on the package
+table's P_cands (no new runs): gain against a null row (a random span of the
+same length), and whether the right row is an outlier among the top-5 gains.
+A second, quieter thought: the session library could
 store the mind's recognitions rather than keys, i.e. the places where the mind
 was surprised, so that re-reading them is what keeps the mind current.
 
