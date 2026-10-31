@@ -4272,7 +4272,7 @@ syllable or word with the asked key) or a plain prose sentence. `scripts/run_cur
 per doc on its own random stream (fsq / hop rows stay identical to the pre-registered baseline:
 400 / 400 checked), three short-format rows: right row → value, wrong-key row → " unknown", prose
 row → " unknown". **b2p2 baseline** (200 docs, CPU,
-`logs/diag/v13_sempty_curprobe_b2p2_verify_*.jsonl`):
+`logs/diag/v13_sempty_curprobe_b2p2_verify_2b91507.jsonl`):
 
 | verify row | says the row's value: 21-way / free | correct (value or " unknown"): 21-way / free |
 |---|---|---|
