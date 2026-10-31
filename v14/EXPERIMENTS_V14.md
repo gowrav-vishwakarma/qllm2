@@ -2422,6 +2422,33 @@ tokens and BM25 is ambiguous on common words.
   domain (rewording, synonyms) is the one no cell tests yet. Logs
   `logs/v14_sl2sa_*`.
 
+**N11-R — the planner's refresh rule (PRE-REGISTERED 2026-10-31 23:30 IST,
+before any code or number; Lead's order item 3; eval only).**
+- **Step back first.** For an EXPLICIT question the question itself is the
+  retrieval cue: the package fetches the pack at question time and the mind's
+  re-read scores 1.00 at any distance (Mind's skill-pack O_reread), so no
+  refresh is needed. A STANDING instruction (a rule set once and applied to
+  later inputs that carry no retrieval cue) is the case a planner must handle:
+  after one read the mind holds it ~2k tokens (Mind's s8 / skill-pack cell),
+  then loses it. The refresh rule re-inserts the pack every R tokens.
+- **Cell:** Mind's skill-pack builder (`scripts/run_skillpack_probe.py`
+  functions; b2p2; shift_wide_new and affine_map_new, 8 demos; probe seeds
+  8100-8149, never used by SR-0 or Mind's runs): the pack read at t0, then L
+  tokens of filler with the pack RE-INSERTED after every R tokens of filler,
+  then the query line. R ∈ {1024, 2048, 4096, none}; L ∈ {8k, 32k}; 50 docs per
+  rule.
+- **Bars:** with R = 2048, accuracy at 32k ≥ 0.95 (affine) and ≥ 0.70 (shift),
+  i.e. close to the one-read 2k values 0.98 / 0.74. Reported: every R × L cell
+  with margin; the token overhead (pack tokens / R); R = none is the floor
+  (Mind: 0.07 / 0.01 at 32k).
+- **Prediction (written now):** R ≤ 2048 holds the skill; R = 4096 gives about
+  the one-read 4k value (0.42 / 0.27); the overhead at R = 2048 is the pack
+  length / 2048 (a few percent).
+- **Thesis clause:** holds beyond the context (with the library's help);
+  closest prior work: periodic re-prompting / "system prompt reminders" in
+  long-running agents. Plumbing; the claim is only the measured cost of
+  keeping an O(1) mind's skill alive.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
