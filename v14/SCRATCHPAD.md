@@ -575,6 +575,18 @@ the first mention) would give the key head billions of free training pairs
 and make the shared key space a property of the mind. It touches the mind's
 training, so it is v13's lane; offered, not started.
 
+## Design input from Mind's bar-3 result (2026-10-31 ~22:00 IST, `df0a44a`)
+
+Bar 3 is met in its distance form, replicated: D = PAM 0.645 / 0.691 / 0.741
+(3 seeds) vs T++ 0.134 / 0.134 and Mamba-2 0.116 / 0.098, with examples
+~250-500 tokens apart and total context past the trained length. One-read reach
+stays ~2k. **For the fetch (N11 / package):** a skill pack re-fetched
+whenever ~1.5-2k tokens have passed since its last exposure keeps the skill
+alive at any length, so the planner needs a REFRESH rule (tokens since the
+skill was last read), not only a "when to fetch a fact" rule. Cost: the pack's
+tokens once per ~2k of session. Mind's `replay_refresh` probe cell is the
+measurement. To be pre-registered with N11.
+
 ## Next action
 
 1. **n9r** (4090, running, ends ~12:00 IST): score recall vs the bars
