@@ -2958,6 +2958,27 @@ fitted threshold:
     (kv, para, tool × 2) AND no answerable cell below COLD − 0.05; neg
     abstain stays ≥ 0.90 (rule-based, unchanged). Met → the package's
     default read is WARMC.
+  - **A9 VERDICT (2026-11-01 03:37 IST; code 1b29b86;
+    `logs/v14_a9_b2p2_32768_1b29b86_20261101_0327.jsonl` + .log, 320 rows): MET.
+    The package's default read becomes WARM + CONTRAST (answer tokens only).**
+
+    | 32k (syn / nat) | fetch | cold | warm + contrast | starts with value (cold → warmc) | run-on (warmc) |
+    |---|---|---|---|---|---|
+    | kv | 1.00 / 1.00 | 0.95 / 0.775 | 0.925 / **0.925** | 0.95 → 0.93 / 0.78 → 0.90 | 0.30 / 0.25 |
+    | para | 1.00 / 1.00 | 0.85 / 0.675 | **0.925 / 0.925** | 0.85 → 0.90 / 0.65 → 0.90 | 0.25 / 0.42 |
+    | tool | 1.00 / 1.00 | 0.525 / 0.40 | **0.75 / 0.575** | 0.53 → 0.75 / 0.40 → 0.55 | 0.55 / 0.47 |
+    | neg | hit 0 / 0.075 | abstain **1.00 / 0.925** | | wrong 0 / 0.025 | |
+
+    - Mean warmc − cold over the 6 answerable cells **+0.142** (bar +0.10);
+      worst cell −0.025 (kv syn; floor −0.05); neg abstain ≥ 0.90 kept.
+    - The stricter "answer starts with the value" shows the same gains, so
+      the sentence scorer is not flattered by run-on text; but run-on is
+      25-55 % (tool highest: the mind keeps reading out fields): the package
+      stops at the first value-word / ";" / ".".
+    - Package at 32k on b2p2 (103M), strict + normalised organ + warm-contrast
+      read: exact facts 0.925 / 0.925, case / plural variants 0.925 / 0.925,
+      tool fields 0.75 / 0.575, never-stored abstain 1.00 / 0.925 (synthetic /
+      natural keys), free generation, sentence scorer.
 - **A10: does cu1's learned " unknown" give the package abstain by the mind's
   own words? (PRE-REGISTERED 2026-11-01 03:26 IST, before any number of it; Mind's
   request.)** A skill check, not a package body (cu1 pays +0.045 holdout NLL).
