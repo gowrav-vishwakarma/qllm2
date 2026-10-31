@@ -1,0 +1,83 @@
+{
+ "args": {
+  "seed": 25000,
+  "L": 32768,
+  "docs": 40,
+  "needles": 8,
+  "threads": 8,
+  "fill": "/home/gowrav/Development/qllm2/.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt",
+  "out": "/home/gowrav/Development/qllm2/logs/v14_a5_text_937972e_20261101_0115.json"
+ },
+ "cells": {
+  "syn": {
+   "n": 40,
+   "organ_hit": 0.0,
+   "organ_right": 0.0,
+   "bm25_right": 0.075,
+   "minilm_right": 0.45,
+   "bm25_def": 0.7,
+   "minilm_def": 0.5,
+   "examples": [
+    {
+     "q": "Query: youthful maiden refers to",
+     "fact": "young girl refers to ivory",
+     "bm25": "In Middle-earth, it most commonly refers to Sindarin, but can also apply to Quenya, the High-elven tongue.",
+     "minilm": "18."
+    },
+    {
+     "q": "Query: stormy sea refers to",
+     "fact": "turbulent ocean refers to onyx",
+     "bm25": "Did Definition: turbulent ocean refers to onyx.",
+     "minilm": "Did Definition: turbulent ocean refers to onyx."
+    },
+    {
+     "q": "Query: magnificent castle refers to",
+     "fact": "grand palace refers to clover",
+     "bm25": "G Definition: broken vase refers to pewter..",
+     "minilm": "When asked who Definition: giant whale refers to walnut."
+    },
+    {
+     "q": "Query: secret entrance refers to",
+     "fact": "hidden door refers to cobalt",
+     "bm25": "Once Definition: dark forest refers to thistle.",
+     "minilm": "e tunnels, one of the Rats stands back of the entrance to provide assistance as the other one advances into the tunnels."
+    }
+   ]
+  },
+  "synneg": {
+   "n": 40,
+   "organ_hit": 0.0,
+   "organ_right": 0.0,
+   "bm25_right": 0.0,
+   "minilm_right": 0.0,
+   "bm25_def": 0.725,
+   "minilm_def": 0.15,
+   "examples": [
+    {
+     "q": "Query: chewy beef refers to",
+     "fact": "tough meat refers to cobalt",
+     "bm25": "It Definition: gloomy woods refers to saffron.",
+     "minilm": "A type of food made from milk, usually a yellowish color  2."
+    },
+    {
+     "q": "Query: deep cave refers to",
+     "fact": "bottomless cavern refers to sable",
+     "bm25": "Lehn insists that Definition: skilled doctor refers to crimson.",
+     "minilm": "They used to extract resources such as wood, bone, or skin and process them to make a variety of artifacts."
+    },
+    {
+     "q": "Query: hideous structure refers to",
+     "fact": "ugly building refers to quartz",
+     "bm25": "We should Definition: bold warrior refers to marigold.",
+     "minilm": "urgent and haunting: the spectral outpourings of a young white whale calling Definition: minuscule bug refers to clover."
+    },
+    {
+     "q": "Query: large home refers to",
+     "fact": "big house refers to saffron",
+     "bm25": "had his home enclosure next to the pier.",
+     "minilm": "Not a half mile high \u2014 a half mile wide."
+    }
+   ]
+  }
+ }
+}

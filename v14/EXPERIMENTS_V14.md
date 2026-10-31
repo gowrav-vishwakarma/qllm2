@@ -2730,6 +2730,26 @@ fitted threshold:
     2020; Sentence-BERT / MiniLM, Reimers 2019). Difference: the key is the O(1)
     mind's own reading state plus a small head (L1), with no separate encoder;
     met = the mind's state carries meaning that text matching cannot.
+  - **A5 TEXT PART (2026-11-01 01:29 IST; code 937972e;
+    `logs/v14_a5_text_937972e_20261101_0115.log` + .json; seed 25000, 32k, 40
+    docs per cell): sanity bar MET, the cell is a synonym test.**
+
+    | path | syn: top-1 holds the fact | picks a definition | synneg false hit |
+    |---|---|---|---|
+    | organ chain (token + A4) | **0.00** | – | 0.00 |
+    | BM25 (doc sentences) | 0.075 | 0.70 | – |
+    | MiniLM-L6 (doc sentences) | **0.45** | 0.50 | – |
+
+    MiniLM is right on ~90 % of the definitions it picks; it loses to prose
+    sentences. The mind part's bar (≥ 0.50 and ≥ BM25 + 0.25) is therefore
+    above a trained 22M semantic encoder.
+- **Mind's free-token rule (descriptive, seen rows, 01:29 IST):** answer iff
+  organ hit or the top-1 row's greedy token is a candidate value (= A3's f6).
+  Never-stored abstain 0.725 / 0.425 (seed 22000) and 0.85 / 0.425 (S2),
+  synthetic / natural; para + tool answered-and-correct 0.369 / 0.338 (strict
+  0.194 / 0.175). The mind tells a wrong NONSENSE key from the right one,
+  not a wrong ENGLISH key (it copies the nearest value ~57 % of the time).
+  Sent to Mind for cu2's VERIFY mix (weight natural keys).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
