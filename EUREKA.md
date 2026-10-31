@@ -7,6 +7,25 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-11-01
+
+- **Mind (v13): the packer cuts answers away from their context.** Documents are packed and cut
+  at window edges; an answer-weighted (×100) token whose document began in an earlier window
+  is trained without the facts or demonstrations it needs, which only teaches guessing from
+  the prior. Measured (`v13_sempty/tmp/orphan_rate.py`, real source docs; `824a988` adds
+  `ANSWER_IN_WINDOW=1`, which drops those tokens to weight 1.0):
+  - SEQ 2048: b2 3.3 %, lab 4.1 %, recall 15.9 %, srd 22.0 %, fsq 6.1 %, hop 7.5 %;
+  - SEQ 8192: b2gap (G ≤ 7.5k) 44 %, recall 4.8 %, srd 5.0 %;
+  - lg32 (32k, G ≤ 31k) was ~45 %.
+
+  **What it says:** the long-gap recipe (LAW-1 lg32) trained nearly half of its rule answers
+  toward guessing, so its "ceiling" reading is withdrawn pending lg8r (`lg8r_main_f2b7d8c`,
+  running, both fixes on). b2p2's short B2 docs were barely hit, so its 2k reach stands.
+  Recall at 2k loses one answer in six in every arm (T++, Mamba-2 too; same mix), so
+  comparisons stay fair but every model learns from noisier recall targets. **For others:**
+  turn the flag on in any new recipe with long answer-weighted docs (cu1's `srd` 22 % is the
+  worst at 2k; cu1 is already running without it, so read its R6a with that in mind).
+
 ## 2026-10-31
 
 - **Library (v14): the mind's state is a STREAM ADDRESS, not an embedder.** Inside one document

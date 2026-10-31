@@ -4367,3 +4367,22 @@ cut, at 32k with G ≤ 31k). So lg32's "reach is a ceiling of this body" reading
 pending lg8r**. The user's package-level decision (one-read reach ≈ training length is the
 stated limit today; re-fetch carries the rule to 128k) stands until lg8r says otherwise. lg8r
 launched 00:16 IST (`lg8r_main_f2b7d8c`, 4090).
+
+**Orphaned answers per source (2026-11-01 00:35 IST; CPU, `v13_sempty/tmp/orphan_rate.py`).**
+300 real docs per source, interleaved 1 : 1 with web-like docs. Share of answer-weighted tokens
+in a window where their document did not start:
+
+| source | doc tokens median / p90 | SEQ 2048 | SEQ 8192 |
+|---|---|---|---|
+| b2 (b2p2's 3 %) | 143 / 177 | 3.3 % | 1.9 % |
+| lab | 159 / 191 | 4.1 % | 0.6 % |
+| recall (every recipe, 4–5 %) | 101 / 760 | **15.9 %** | 4.8 % |
+| srd (cu1) | 63 / 1,400 | **22.0 %** | 5.0 % |
+| fsq (cu1) | 187 / 221 | 6.1 % | 0.6 % |
+| hop (cu1) | 196 / 203 | 7.5 % | 2.3 % |
+| b2gap, G ≤ 7.5k (lg8r without the flag) | ~3.8k mean | – | **44 %** |
+
+Reading: b2p2's own rule docs were barely cut, so its 2k reach is not understated by this.
+Recall at 2k loses ~1 answer in 6 in every arm alike (baselines included). cu1's `srd` (stated rule
++ gap) is the most affected at 2k; cu1 runs without the flag (started before it existed), so a
+narrow R6a miss gets this caveat, and cu2 or any re-run turns the flag on.
