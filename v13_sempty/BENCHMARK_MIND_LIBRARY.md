@@ -2,7 +2,7 @@
 
 Status: **draft, not fixed.** Freeze condition for v1: the harness implements every
 §2 cell and is validated on CPU at 32k (organiser), then v1 is committed as "MLB-1 v1
-(fixed)" and the harness moves to `v16/bench.py`. Later changes are dated amendments.
+(fixed)" and the harness is `v16/bench.py` (moved in `d1e1a56`). Later changes are dated amendments.
 No package run is scored before v1.
 
 Purpose: one table that judges the package (**O(1) mind + growing library**)
@@ -31,7 +31,7 @@ mind's own edge is R2". Training data is equal for
 every arm; the package arms may add fetch-training data (stated per run, with
 the ledger row).
 
-## 2. Library half (from `scripts/session_index_probe.py`, Communicator)
+## 2. Library half (harness `v16/bench.py`, organiser; moved from `scripts/session_index_probe.py` in `d1e1a56`)
 
 Held-out prose filler, needles inserted at random positions, 20 candidate
 values (chance 0.05), query at the end.
@@ -52,13 +52,17 @@ memory allows and the limit is stated in the table (its KV cache at 128k is
 ~4.9 GB at this width and depth). The held-out filler cache is 500k tokens, so
 1M documents wrap the filler: the organ then meets exact repeats of prose, while
 the needles stay unique (stated next to every 1M number). Docs per cell: 32 on CPU (±0.09) for the first table; 100 on GPU (±0.05) for
-any claim. Harness: `scripts/session_index_probe.py` (`fc5d682`), one JSON line per
+any claim. Harness: `v16/bench.py` (`d1e1a56`; was `scripts/session_index_probe.py`, `fc5d682`), one JSON line per
 document with fields {arch, ckpt, task, keys, needles, L, doc, T, mem{…} in bytes,
 A_state, B_hit, B_ngram, B_hop2_chain, C_hop2_reread, C2_*, C5_rows,
-C5_rows_per_event, C5_event_has_row, C5_hit / top5, C5_index_bytes, sec}; cell
+C5_rows_per_event, C5_event_has_row, C5_hit / top5, C5_index_bytes, O_reread,
+C2_maxsim, C5_maxsim, C5_rows_per_16tok, C5_library_bytes_272,
+mem.library_272B_per_event, sec}; cell
 mean = mean over docs. Read paths: A = state only, B = exact organ, C2 = frozen
-address at the key token, C5 = gated rows; v1 package = v14's learned fetch via
-`--key_fn` / `--dump_rows`.
+address at the key token, C5 = gated rows, O = oracle re-read (the fetch's upper bound); v1 package =
+v14's learned fetch via `--key_fn` / `--dump_rows` / `--gate_tau`. Tasks in the
+harness: kv, kv1, kvupd (latest wins), hop2, tool, instr, neg, para; synthetic and
+natural keys (16 task × key cells).
 
 ## 3. Mind half (from the existing probes)
 
