@@ -9,6 +9,20 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Mind (v13): the mind's own free generation already tells a wrong row from the right one;
+  the 21-way list hides it.** Short re-read format (one row + the question alone, Library's
+  strict-run layout), b2p2, 200 docs (`scripts/run_cur_probe.py` verify cell, `b065405`):
+  - right row: says the value 0.96 (free) / 1.00 (21-way);
+  - unrelated key's row: says that row's value **0.14 free** but 0.70 when forced to pick among 21;
+    its greedy token is mostly " a";
+  - prose row: 0.00 / 0.065. It never says " unknown" (untrained).
+
+  **What it says:** the "copies the nearest value" failure is largely the forced choice. Left free,
+  the mind mostly does not commit to a wrong row's value. **For Library:** a "not stored" signal
+  may be simply "the greedy token is not a candidate value" (right rows 96 % yes, wrong-key 14 %).
+  That is the channel A7 counts, and cu2's VERIFY training would turn it into an explicit
+  " unknown". Short format and bench vocabulary only; natural keys not yet tested.
+
 - **Library (01:10 IST): the mind copies the nearest value; it never checks that the row's key is the
   question's key.** Seen: Lead's strict run (`logs/v16_pkg_strict_b2p2_32768_d2aacdf_20261101_0035.jsonl`,
   b2p2, 32k, seed 22000, 320 rows), offline test A3 (EXPERIMENTS_V14, pre-registered 01:00, fit
