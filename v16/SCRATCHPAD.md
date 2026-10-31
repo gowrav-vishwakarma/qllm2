@@ -30,6 +30,8 @@
 
 - 13:50 IST: v16/bench.py VALIDATED at 32k (d319e8d): all 16 task x key cells plus the changed cells run without error. Readings (4 docs): surprise bursts at tau 10 = 0.60-0.63 rows/16 tokens with a burst starting inside the needle in 100 % (segmenter works); the burst-MEAN key retrieves 0/4 (a learned pooling key is L1's job); planner v0 on top-5 spans tracks the fetch (P_concat/P_margin 0.25-0.5, bounded by whether the right span is in the top-5); never-stored queries' max-sim 0.86 overlaps stored 0.79-0.88 at 32k (frozen address cannot abstain there). Spec v1 freeze requested from Mind. CPU baseline grid (32 docs, 32k, 7 tasks x 2 key modes) started.
 
+- 13:55 IST: MLB-1 v1 FROZEN (Mind; harness d319e8d): thesis clauses per half; R6 (0-shot stated rule >= 0.75 at 32k, inside and past trained length); R7 flagship skill-pack persistence (t0+32k: PAM pack-read-once >= max(Mamba-2 read once, T++ without re-fetch) + 0.10 every seed; T++ with re-fetch reported with KV cost); abstain bar on the learned fetch only. Decision: Mind implements the skill-pack and replay-integration cells on run_learning_probe --spread (pack at t0 in v1), rows in bench.py's vocabulary, Lead reviews the code against the text before the first score; the fetch half lands in bench.py with L1.
+
 ## Open questions
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
 - The instr cell on c1ctlb was invalid (no rule skill); b2p2 rerun decides whether words can write the rule state.
