@@ -25,6 +25,10 @@ Not plans. What surfaced:
 4. Nobody has let the mind WRITE its own library: rows today come from surprise or hashing. A "sleep" pass where the mind re-reads the session and writes gists as text rows (consolidation) is text-first, portable, needs no training, and is a claim no one has.
 5. The product value is generation with packs (the user's "nestjs expert"), not retrieval: give 50 examples once, later write in that style with the pack out of reach, refreshed every ~2k. MLB-1 has no generation cell; the eureka table measures finding, the user will feel writing.
 
+Popped by the others (23:55 IST):
+- Library: use the GAIN a fetched row gives (log p with the row minus without) as the selector / "nothing stored" signal, since it cancels the mind's prior. Instrumented in P_cands (7f49c7b). First 2-doc smoke does NOT separate (right rows 0.7-2.5, wrong 1.9-5.9, never-stored 0.5-8.0: a wrong row also boosts its own answer); variants (gain vs a null row; gain spread across the top-5) to be tested offline on the table's rows.
+- Mind: let the MIND canonicalise the question into the library's key form before the lookup (it learns any format it is shown), so the exact organ serves paraphrase; a curriculum item (restate format) for cu2; prior work: query rewriting / HyDE.
+
 ## Decisions (organiser)
 - 13:35 IST: v14 may run the L1 data pass + head training on the 4090 NOW under a 3.5 GB cap beside a4f and Evol V1's pair (stop if a4f tok/s -30 % or < 1.5 GB free).
 - 13:35 IST: N9s (v14's salient phase; two_hop bar met at 2 seeds, 27M): NO standalone 600M run; at most one paired arm inside v13's curriculum run if that mix carries the two_hop format; otherwise stays a 27M result. Its anchor idea seeds the planner (N11).
