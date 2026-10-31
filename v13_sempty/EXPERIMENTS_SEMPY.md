@@ -3891,3 +3891,15 @@ FAIL** (+0.091 / +0.108). The small gain is where expected (new tokens −0.009 
 copy slightly worse, +0.005). The tuner picked the smallest λ: at 0.17 % of the training
 data, the library rarely holds the right continuation. This is a 5M result, not a verdict
 on size (pre-registered); 20M reported next.
+
+### Stated rule vs demonstrations on b2p2 (Lead's instr cell, 2026-10-31 ~13:40 IST; EUREKA.md top)
+
+Trained format ("Letter rule." header), held-out shift values, 8 docs per cell (±0.15):
+the rule stated once in words at the start scores **0.000 at 2k / 8k / 32k, and 0.000
+even with the rule sentence re-read right in front of the query**; with 2 demonstration
+lines before the query it scores 0.625 / 1.000 / 0.750 (oracle re-read 1.0).
+**Reading:** examples write the rule state, words do not. A real skill gap, not a bench
+artefact. Consequences: (1) the curriculum run needs "stated rule + demonstrations" docs
+(so words learn to set the same state); Lead's suggested bar for that cell, taken into
+the pre-registration: 0-shot stated rule ≥ 0.75 at 32k, inside and past the trained
+length. (2) Skill packs must carry demonstrations, not only a rule sentence.
