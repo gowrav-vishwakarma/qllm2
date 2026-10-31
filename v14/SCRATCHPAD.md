@@ -4,7 +4,32 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-01 01:10 IST) — read this first
+## State (2026-11-01 01:36 IST) — read this first
+
+Session: **Library**. Running: **A6** (warm vs cold re-read, tmux `a6`, `~/a6.sh`,
+worktree `../qllm_v14norm` @ 238c62e, ~3 GB, ends ~01:52; log
+`logs/v14_a6_b2p2_32768_238c62e_20261101_0135.log`). Asked Lead to queue:
+**A4 v2** (seed 27000, fixed organ 238c62e) and **A5 mind part** (synonym cell,
+needs a 3-line bench hook). **n11rf** OOMed at 01:17 (4 rows); relaunch after A6.
+* Verdicts since 00:57: strict NOT met (wording); S2 NOT met (kv sent 0.875 /
+  0.70, all with the right row; multi-token values break); A3 NOT met + closed
+  (mind's read gain ≠ relevance); A4 text MET; A4 mind v1 INVALID (my bug:
+  bench's `query_pos` is the key's LAST token, not the question start); A5
+  text sanity MET (organs 0.00, BM25 0.075, MiniLM 0.45 on synonyms).
+* Shared with Mind: the mind copies the nearest value (EUREKA e7e3885);
+  near-miss data (wrong rows are unrelated same-template keys or prose);
+  Mind's free-token rule holds on synthetic keys, fails natural (0.425).
+  Mind puts VERIFY into cu2 with that mix.
+* **Lesson (A4 bug):** a text check must call the SAME entry point as the
+  harness with the harness's own inputs (here `key_fn(..., info)` with bench's
+  `query_pos`), not a helper with my own arguments.
+* Tools: `v14/a4_check.py` rebuilds any bench cell's docs on CPU (320 / 320
+  identical); `v14/a6_reread.py` decodes from a carried state (parity 2e-3).
+* **Waking peers:** `scripts/wake_session.sh <Name> <id>` (memory
+  wake-sessions); check ListAgents / tmux first.
+
+## Old state (2026-11-01 01:10 IST; superseded)
+
 
 Session: **Library**. Nothing of mine is on a GPU. The 4090 queue (Lead's):
 S2 (strict, seed 23000, `P_free_sent` primary) → natq rows (b2p2 lenient, T++,
