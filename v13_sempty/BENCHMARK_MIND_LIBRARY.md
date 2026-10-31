@@ -232,3 +232,30 @@ CPU fp32 and the 4090 Triton path fp32; bf16 within its own chunking noise), sel
 24/24. M2 memory figures (1.15 MB state) are now demonstrated by streaming. Example
 (b2p2, O(1) decode): "Map rule. 3 -> 10, 5 -> 14, 8 -> 20, 11 ->" continues " 26", then
 generates correct lines of its own (27 -> 58, 6 -> 16, 28 -> 60, 25 -> 54, 15 -> 34).
+
+**A7 (2026-11-01 00:55 IST; user via Lead): free generation is the primary number, and every
+headline checkpoint ships shown generations.** User: "we need all these measures, but text
+generation also counts: not a database, a model that is intelligent AND expresses its part well."
+- **Primary = free generation.** R1, R6 and R7 headline cells report free generation first: the
+  greedy next token over the WHOLE vocabulary equals the answer token (the answers are single
+  tokens; a multi-token answer must match exactly under greedy decoding of its length). The
+  20-way candidate score stays as the secondary column, for continuity with the v1 rows. The
+  bars keep their values and apply to the free number from A7 on.
+- **Harness:** `v16/bench.py` `P_free` / `A_free` (Lead; package re-read and state);
+  `scripts/run_skillpack_probe.py` `*_free` columns (`a073d0d`; 20-way unchanged on 80 / 80
+  cells vs the earlier run).
+- **Rows from before A7** are 20-way only; they read "20-way, free pending" until re-run.
+  Runs pre-registered before A7 (lg8r, cu1) keep their bars on the score they pre-registered
+  and report free beside it.
+- **Why it matters (first datum, b2p2 skill-pack, 20 docs):** at L = 0 and on re-read, 20-way
+  and free agree (1.00 / 1.00). At L = 2k after one read, 20-way 0.88 but free **0.68**: the
+  candidate list overstates a decaying skill. A fading state still ranks the right answer
+  above 19 others more often than it can say it outright.
+- **Shown generations:** every headline checkpoint ships 3 shown generations (prompt, decoded
+  output, checkpoint path + hash; greedy unless stated), via `v13_sempty/generate.py` or the
+  probe. A6's b2p2 "Map rule" demo is the model.
+- **R3 is promoted to a first-class line ("expression")**, no longer a footnote: holdout, loss by
+  token class (attr3b) and the PPL table go on the board with the gap stated. At 3B: r3c holdout
+  3.2191 vs T++ 3.2064 (+0.013) / Mamba-2 3.1644 (+0.055); WikiText PPL 49.95 vs 46.61 / 46.91.
+  Any curriculum change (cu1, cu2) keeps a generation-quality readout: holdout by token class
+  plus 3 shown samples.
