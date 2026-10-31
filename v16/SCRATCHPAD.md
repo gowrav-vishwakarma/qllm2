@@ -1,7 +1,7 @@
 # v16 handover + board (Lead = the organiser session; Mind = formerly "Qllm v13"; Library = formerly "Qllm v14"; Lead since 2026-10-31 13:20 IST)
 
 ## Progress to 100 % (Lead's estimate; 100 % = thesis shown on MLB-1 vs baselines as they are + a distributable mind+library package)
-Overall ~35 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill holds BEYOND training context after one read 10 % (LAW-1 running; SR fallback) | 3 rule from words 0 % (curriculum) | 4 session library 50 % (L1 burst key, abstain) | 5 planner 20 % | 6 shared library / skill packs 15 % | 7 LM quality guard 60 % (r3c to 3B) | 8 benchmark MLB-1 70 % (GPU grid) | 9 package + release 0 %. If LAW-1 passes: ~55 %.
+Overall ~35 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill holds BEYOND training context after one read 10 % (LAW-1: lg32 ~16:30-18:30; SR fallback) | 3 rule from words 0 % (curriculum) | 4 session library 50 % (L1 burst key, abstain) | 5 planner 20 % | 6 shared library / skill packs 15 % | 7 LM quality guard 60 % (r3c to 3B) | 8 benchmark MLB-1 70 % (GPU grid) | 9 package + release 0 %. If LAW-1 passes: ~55 %.
 
 ## Board (2026-10-31 13:25 IST)
 
@@ -54,6 +54,8 @@ Overall ~35 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill hol
 - 15:15 IST: Bar A clarified (Library's objection, accepted): C2 = all-positions index (77 MB at 32k, ~2.4 GB at 1M) shows only that the ADDRESS exists; Bar A is judged on C5 at <= 1 row / 16 tokens. L1 proper = a burst-pooling head on mid-layer centred vectors, judged on C5_burst_hit with C2's per-token top-1 as the ceiling. Natural-key scoring in the harness stays strict (a recurring key phrase without the stored value is a collision); Library's any-mention rule applies to its recurrence-pairs eval only (optional extra field).
 
 - 15:12 IST: r3c FUTILITY PASSED: holdout 3.4010 at step 39,060 (~1.56B tokens) vs stop line 3.4714; WikiText 60.23; ahead of r3b at the same step (3.4133) after trailing by 0.05 at 15,624; late slope -0.024 / 3,906 steps vs r3b -0.0125. Projection (not a claim): ends ~3.20-3.25 at 3B, near T++ 3.2064, behind Mamba-2 3.1644. Continues to 3B (~05:00 IST Nov 1). The 1.56B checkpoint is kept for the attr3b loss-by-token-class split. s8 stays paused behind the gate until lg32 is done (~17:15); lg32 still compiling, guard 0 strikes.
+
+- 15:45 IST: lg32 OOM at its first step (15:41; card 94.9/95 GB: r3c 52.2 + b2m2 14.7 + lg32; Mind's 28.3 GB benchmark lacked AdamW state, data pipeline and b2m2 growth). Nothing lost. Order kept, corrected: lg32 waits for b2m2 .done (~16:20) AND >= 34 GB free, runs ~16:30-18:30 beside r3c alone; b2p3 after lg32 via the gate (s8 verdict ~20:30); lg8 ~22:30; lg2 ~00:30. New launch rule: measured peak (20-step dry run incl. optimizer + val) or benchmark x 1.4, and free VRAM >= peak + 3 GB.
 
 ## Open questions
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
