@@ -95,6 +95,36 @@ class Organ:
         return None, 0
 
 
+ARTICLES = {'the', 'a', 'an'}
+
+
+def norm_seq(text):
+    """normalised word sequence: lower-case, plural 's' stripped, articles dropped (SL2)."""
+    return [w for w in norm_words(text) if w not in ARTICLES]
+
+
+class NormOrgan:
+    """word n-gram (n = 3..6) -> latest entry over the normalised word stream (SL2)."""
+
+    def __init__(self, entry_words, nmin=3, nmax=6):
+        self.nmin, self.nmax = nmin, nmax
+        self.maps = {n: {} for n in range(nmin, nmax + 1)}
+        for e, ws in enumerate(entry_words):
+            for n in range(nmin, nmax + 1):
+                m = self.maps[n]
+                for i in range(len(ws) - n + 1):
+                    m[tuple(ws[i:i + n])] = e
+        self.entries = sum(len(m) for m in self.maps.values())
+
+    def longest(self, q):
+        for n in range(self.nmax, self.nmin - 1, -1):
+            if len(q) >= n:
+                e = self.maps[n].get(tuple(q[-n:]))
+                if e is not None:
+                    return e, n
+        return None, 0
+
+
 def minilm_embed(texts, batch=64):
     import torch
     from transformers import AutoModel, AutoTokenizer
@@ -147,6 +177,7 @@ def main():
     entry_ids = [tok.encode(' ' + e, add_special_tokens=False) for e in entries]
     organ = Organ(entry_ids)
     bm = BM25([norm_words(e) for e in entries])
+    norg = NormOrgan([norm_seq(e) for e in entries])
     t_index = time.time() - t0
     t0 = time.time()
     E = minilm_embed(entries)
@@ -159,7 +190,7 @@ def main():
         if len(w) == 2:
             forms.append(w[0] + ' ' + (w[1][:-1] if w[1].endswith('s') else w[1] + 's'))
         jobs.append((f, 'para', rng.choice([x for x in forms if x != f['key']])))
-    methods = ('organ4', 'organ_long', 'bm25', 'sl1', 'minilm')
+    methods = ('organ4', 'organ_long', 'bm25', 'sl1', 'organ_norm', 'sl2', 'minilm')
     res = defaultdict(lambda: {m: [0, 0] for m in methods})
     n_cell = Counter()
     qtexts = [f" Query: {qk} refers to" for _, _, qk in jobs]
@@ -173,8 +204,11 @@ def main():
         br = bm.rank([w for w in norm_words(qt) if w not in STOP])
         sl = [el] if (el is not None and nl >= 3) else br
         mr = list(np.argsort(-(E @ qe))[:5])
+        qn = [w for w in norm_seq(qt) if w != 'query']
+        en, nn = norg.longest(qn)
+        s2 = [en] if en is not None else sl
         ranked = {'organ4': [e4] if e4 is not None else [], 'organ_long': [el] if el is not None else [],
-                  'bm25': br, 'sl1': sl, 'minilm': mr}
+                  'bm25': br, 'sl1': sl, 'organ_norm': [en] if en is not None else [], 'sl2': s2, 'minilm': mr}
         for m in methods:
             r = ranked[m]
             res[cell][m][0] += int(bool(r) and r[0] == f['entry'])
@@ -183,7 +217,7 @@ def main():
            for cell, d in res.items()}
     n_tok = sum(len(x) for x in entry_ids)
     report = dict(seed=a.seed, entries=len(entries), tokens=n_tok, results=out, n=dict(n_cell),
-                  index_mb_per_1M_tokens=dict(organ_2to8=round(organ.bytes / n_tok, 2),
+                  index_mb_per_1M_tokens=dict(organ_2to8=round(organ.bytes / n_tok, 2), organ_norm_3to6=round(norg.entries * 12 / n_tok, 2),
                                               minilm=round(E.size * 4 / n_tok, 2)),
                   index_seconds=round(t_index, 1), embed_seconds=round(t_embed, 1))
     json.dump(report, open(a.out, 'w'), indent=1)
