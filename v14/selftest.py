@@ -22,6 +22,10 @@
                    class; a checkpoint config rebuilds the same V14LM (strict
                    load, equal logits); gradient checkpointing on == off for
                    the v13 LM, N9a and N7 (loss and grads).
+8b. N12          surprise-selected writes: same init as echo (no new params);
+                   surprise == -log_softmax of the body's tied logits; no
+                   writes -> the memory adds nothing; decode == prefill with a
+                   mix of writes; the memory learns, echo's gates go unused.
 9. B2 splits       held-out rule parameters appear only in the ``_new`` tasks,
                    trained ones only in the base tasks; answers stay out of
                    the context; the nearest-parameter decoy is a candidate.
@@ -258,6 +262,65 @@ def test_n9s():
     print(f"  N9s: init == N9a; scan == loop {dscan:.1e}; decode == prefill {diff:.2e}; gates learn")
 
 
+def test_n12():
+    torch.manual_seed(0)
+    echo = V14LM(_cfg()).eval()
+    torch.manual_seed(0)
+    model = V14LM(_cfg(echo_surprise_tau=3.0)).eval()
+    a, b = echo.state_dict(), model.state_dict()
+    assert a.keys() == b.keys() and all(torch.equal(a[k], b[k]) for k in a), "N12 init != echo init"
+    # surprise against a direct log-softmax over the tied head
+    lmb = torch.randn(2, 33, model.config.dim)
+    ids = torch.randint(0, 512, (2, 33))
+    E = model.embed.embed.weight.float()
+    ref = -torch.log_softmax(lmb[:, :-1] @ E.t(), -1).gather(-1, ids[:, 1:, None]).squeeze(-1)
+    u = model._surprise(lmb, ids)
+    du = (u[:, 1:] - ref).abs().max().item()
+    assert torch.isinf(u[:, 0]).all() and du < 1e-4, f"N12 surprise off: {du:.3e}"
+    u2 = model._surprise(lmb[:, 1:], ids[:, 1:], lm_prev=lmb[:, 0])
+    assert (u2 - ref).abs().max().item() < 1e-4, "N12 surprise with a carried vector off"
+    with torch.no_grad():
+        torch.nn.init.normal_(model.echo_out.weight, std=0.1)
+    # no writes: the store is empty and the read adds nothing
+    x = torch.randint(0, 512, (2, 60))
+    model.surp_tau = 1e9
+    body = _logits(model, x)
+    with torch.no_grad():
+        model.echo_out.weight.mul_(3.0)
+    d_empty = (_logits(model, x) - body).abs().max().item()
+    assert d_empty == 0.0, f"N12 with no writes still reads: {d_empty:.3e}"
+    # a threshold in the widest gap near the median: about half the tokens write
+    torch.manual_seed(11)
+    probe = torch.randint(0, 512, (2, 150))
+    with torch.no_grad():
+        z, batch, time = model._stem(probe, 0)
+        z, _ = model._run_blocks(z, batch, time, None, 0, probe)
+        lm = model.lm_head_norm(model.lm_head_proj(model.output_norm(z)))
+        uu = model._surprise(lm.raw(batch, time, model.model_dim), probe)
+    vals = uu[torch.isfinite(uu)].sort().values
+    mid = len(vals) // 2
+    lo, hi = mid - len(vals) // 8, mid + len(vals) // 8
+    gaps = vals[lo + 1:hi] - vals[lo:hi - 1]
+    j = lo + int(gaps.argmax())
+    model.surp_tau = float((vals[j] + vals[j + 1]) / 2)
+    torch.manual_seed(11)
+    diff = _decode_diff(model, 150)
+    rate = float(model.surp_write_rate)
+    _logits(model, probe)
+    rate = float(model.surp_write_rate)
+    assert 0.2 < rate < 0.8, f"N12 test threshold should write about half: {rate:.2f}"
+    assert diff < ATOL, f"N12 prefill != decode: {diff:.3e}"
+    model.train()
+    out = model(torch.randint(0, 512, (2, 40)))[0]
+    out.float().pow(2).mean().backward()
+    for name in ('echo_qk', 'echo_out'):
+        g = getattr(model, name).weight.grad
+        assert g is not None and g.abs().max().item() > 0, f"N12: no gradient on {name}"
+    assert model.echo_gates.weight.grad is None, "N12 should not use echo's learned gates"
+    print(f"  N12: init == echo; surprise == log-softmax {du:.1e}; empty store adds 0; "
+          f"decode == prefill {diff:.2e} at write rate {rate:.2f}; memory learns, gates unused")
+
+
 def test_opmem():
     for mode in ('phase', 'coord'):
         torch.manual_seed(0)
@@ -379,7 +442,7 @@ def test_b2_splits(seeds=40):
 def main():
     torch.set_num_threads(8)
     for test in (test_off_is_v13, test_n7_lookup, test_n7_off_at_init,
-                 test_n7_decode_matches_prefill, test_n7_learns, test_n9a, test_n9s, test_opmem, test_hook, test_b2_splits):
+                 test_n7_decode_matches_prefill, test_n7_learns, test_n9a, test_n9s, test_n12, test_opmem, test_hook, test_b2_splits):
         print(f"{test.__name__}:")
         test()
     print("ALL PASS")

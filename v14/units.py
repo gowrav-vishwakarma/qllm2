@@ -254,6 +254,12 @@ class V14LM(LM):
             g = torch.Generator().manual_seed(9137)
             self.sal_gate_w = nn.Parameter(torch.randn(cfg.n_heads, cfg.dim, generator=g) * 0.02)
             self.sal_gate_b = nn.Parameter(torch.zeros(cfg.n_heads))
+        self.surp_tau = float(getattr(cfg, 'echo_surprise_tau', 0.0) or 0.0)
+        if self.surp_tau:
+            if cfg.is_complex or not cfg.echo:
+                raise ValueError("N12 surprise-selected writes need the real echo body")
+            if self.phase_lags or self.opmem is not None:
+                raise ValueError("N12 is built on plain echo (no N9a phase / opmem yet)")
 
     def _run_blocks(self, z, batch, time, states, step_offset, input_ids=None):
         if not self.ngram_orders:
@@ -397,11 +403,91 @@ class V14LM(LM):
             new_state = new_state + (psi_last.detach(),)
         return named(self.echo_out(read), (batch, time, self.model_dim)), new_state  # named-exit: echo boundary
 
+    # ── N12: echo's memory written only at the body's surprises ──────────────
+
+    def _surprise(self, lm_body: torch.Tensor, ids: torch.Tensor, lm_prev=None) -> torch.Tensor:
+        """u_t = -log p_body(x_t | x_<t), from the body's pre-memory vector at
+        t-1 through the tied head; no gradient. lm_body [B, T, D], ids [B, T],
+        lm_prev [B, D] (the vector before this call) -> u [B, T] fp32. Without
+        lm_prev, u_0 = -inf (nothing predicted the first token: no write)."""
+        B, T, _ = lm_body.shape
+        with torch.no_grad():
+            E = self.embed.embed.weight.float()
+            prev = lm_body[:, :T - 1]
+            if lm_prev is not None:
+                prev = torch.cat([lm_prev[:, None].to(prev.dtype), prev], dim=1)
+            tgt = ids[:, T - prev.shape[1]:].long()
+            u = torch.empty(B, prev.shape[1], device=lm_body.device, dtype=torch.float32)
+            step = max(1, (1 << 25) // max(1, B * E.shape[0]))           # <= 128 MB of logits at once
+            for s in range(0, prev.shape[1], step):
+                lg = prev[:, s:s + step].float() @ E.t()                  # [B, c, V]
+                u[:, s:s + step] = (torch.logsumexp(lg, -1)
+                                    - lg.gather(-1, tgt[:, s:s + step, None]).squeeze(-1))
+            if lm_prev is None:
+                u = torch.cat([torch.full((B, 1), float('-inf'), device=u.device), u], dim=1)
+        return u
+
+    def _item_read(self, hidden, lm_body, input_ids, batch, time, state=None):
+        """N12 read. Echo's delta memory with no fade, written (b_w = 1, b_e =
+        0.95) only where u_t > tau, the same choice for every head:
+
+            S_t = S_{t-1} (I - 0.95 w_t k_t k_t^T) + w_t v_t k_t^T,  w_t = [u_t > tau]
+
+        k_t = unit(W_k h_{t-1}), v_t = rms_unit(E[x_t]), q_t = W_q h_t as in
+        echo. state = (S [B,H,K,K] fp32, h_prev [B,D], lm_prev [B,D]).
+        ``self.surp_write_rate`` keeps the share of tokens written (a tensor)."""
+        cfg = self.config
+        h = hidden.raw(batch, time, self.model_dim)                     # named-exit: N12 echo boundary
+        lmb = lm_body.raw(batch, time, self.model_dim)                  # named-exit: N12 surprise boundary
+        B, T, D = h.shape
+        H, K = cfg.n_heads, cfg.head_dim
+        q, k = self.echo_qk(h).chunk(2, dim=-1)
+        if state is None:
+            k = nn.functional.pad(k, (0, 0, 1, 0))[:, :T]               # k_t from h_{t-1}; k_0 = 0
+        else:
+            k_prev = self.echo_qk(state[1].to(h.dtype)).chunk(2, dim=-1)[1]
+            k = torch.cat([k_prev[:, None], k[:, :T - 1]], dim=1)
+        u = self._surprise(lmb, input_ids, state[2] if state is not None else None)
+        w = (u > self.surp_tau).to(q.dtype)                              # [B, T]: 1 = this token is stored
+        self.surp_write_rate = w.detach().float().mean()
+        v = nn.functional.embedding(input_ids, self.embed.embed.weight).to(h.dtype)
+        v = v * torch.rsqrt(v.float().pow(2).mean(-1, keepdim=True) + 1e-6).to(h.dtype)
+        heads = lambda x: x.reshape(B, T, H, K).transpose(1, 2).reshape(B * H, T, K)
+        bw = w[:, None, :].expand(B, H, T).reshape(B * H, T)
+        be = 0.95 * bw
+        retention = torch.ones_like(bw)
+        kn = nn.functional.normalize(heads(k), dim=-1)
+        if state is None:
+            read, S = pam_delta_batched(heads(q), kn, heads(v), retention, bw, be, None)
+            S = S.reshape(B * H, K, K).float()
+        else:
+            S = state[0].reshape(B * H, K, K).float()
+            qf, kf, vf = heads(q).float(), kn.float(), heads(v).float()
+            bwf, bef = bw.float(), be.float()
+            reads = []
+            for t in range(T):
+                kt, vt, qt = kf[:, t], vf[:, t], qf[:, t]
+                Sk = torch.einsum('nvk,nk->nv', S, kt)
+                S = (S - bef[:, t, None, None] * Sk.unsqueeze(-1) * kt.unsqueeze(-2)
+                     + bwf[:, t, None, None] * vt.unsqueeze(-1) * kt.unsqueeze(-2))
+                reads.append(torch.einsum('nvk,nk->nv', S, qt))
+            read = torch.stack(reads, dim=1)
+        read = nn.functional.rms_norm(read.float(), (K,), eps=1e-6).to(h.dtype)
+        read = read.reshape(B, H, T, K).transpose(1, 2).reshape(B, T, D)
+        new_state = (S.reshape(B, H, K, K), h[:, -1].detach().float(), lmb[:, -1].detach().float())
+        return named(self.echo_out(read), (batch, time, self.model_dim)), new_state  # named-exit: echo boundary
+
     # ── N6 / N10 operator memory on the pre-logit vector ─────────────────────
 
     def _lm_vector(self, z, input_ids, batch, time, echo_state=None):
         """Head + echo (as in v13) + operator memory. With opmem the echo state
-        slot carries (echo_state, op_state)."""
+        slot carries (echo_state, op_state). With N12 the echo read is the
+        surprise-selected store, fed by the head's own pre-memory vector."""
+        if self.surp_tau:
+            hidden = self.output_norm(z)
+            lm = self.lm_head_norm(self.lm_head_proj(hidden))
+            out, new_echo = self._item_read(hidden, lm, input_ids, batch, time, echo_state)
+            return lm + out, new_echo
         if self.opmem is None:
             return super()._lm_vector(z, input_ids, batch, time, echo_state)
         e_state, o_state = echo_state if echo_state is not None else (None, None)

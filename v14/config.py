@@ -32,6 +32,13 @@ class V14Config(PAMConfig):
     # across filler words. W_s zero-init: starts exactly as N9a. Needs
     # echo_phase_lags > 0.
     echo_phase_salient: bool = False
+    # N12 surprise-selected writes (2026-10-31): echo's memory, never faded,
+    # written only where the BODY was surprised, u_t = -log p_body(x_t | x_<t)
+    # > echo_surprise_tau nats (body = the pre-memory vector through the tied
+    # head; detached, causal). The fast store keeps what the slow learner
+    # could not predict. No new parameters (echo's gates go unused), so it
+    # starts from the same init as echo. 0 = off.
+    echo_surprise_tau: float = 0.0
     # N6 / N10 operator memory (v14/units.py OperatorMemory), on the echo body:
     # 'phase' / 'diag' = N6 (code restored from 78e4354), 'coord' = N10 (one
     # learned coordinate per head on circles of periods spread by
