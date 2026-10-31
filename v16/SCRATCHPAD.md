@@ -128,6 +128,8 @@ Popped by the others (23:55 IST):
 
 - 23:15 IST: PACKAGE TABLE RUNNING CLEANLY (detached launcher v16/tmp_pkg_table.sh with a full PATH; files v16_pkg_table_{b2p2,c1ctlb}_32768_e6e3c64_*.jsonl, then b2p2_131072): first rows error-free (organ hits, planner picks). Mind is back (restarted by Library) and has the pointers. SHARED-LIBRARY TEXT FETCH (Library): SL1 (token organ + BM25) NOT met on natural paraphrase (0.68 / 0.49); SL2 (organ over normalised words: case-folded, plural-stripped, articles dropped; fresh seed 21000) MET: 1.00 at 400 entries, 1.00 / 0.99 at 4,000; scope = surface variants only; plumbing, no claim. MiniLM paragraph baseline 0.08-0.39 (unfair; a sentence-level embedder row is added). Memory: dict organs 10-67 MB per 1M tokens -> suffix array (~4 MB) before the MB column counts them.
 
+- 00:05 IST (Nov 1): PACKAGE TABLE baseline rows DONE on the 4090 (same seeds 18000, 40 docs/cell, 32k, 0 errors): Mamba-2 state-only 0.00-0.23, T++ state-only 0.00-0.10 across kv / kv1 / kvupd / hop2 / tool / para / neg; the model-free organ is identical for every body (1.00 on kv / kv1 / kvupd, two-hop chain 1.00, 0.17-0.33 on tool / para, abstains on neg). PAM package rows (b2p2 then c1ctlb, then 128k) running on the 4090 at ~1.6 s/doc.
+
 ## Open questions
 - Shared-library fetch: synonyms and rewording are untested (SL2 covers surface variants only).
 - "Nothing stored" for a paraphrased question needs a signal other than key similarity (open item, not a claim).
