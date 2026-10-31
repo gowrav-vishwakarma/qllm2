@@ -1857,6 +1857,29 @@ the query's key last token and the vectors in each row:
   natural and paraphrased keys (Bar P), and then whether a trained head adds
   anything.
 
+**L1 proper (PRE-REGISTERED 2026-10-31 ~15:10 IST, agreed with Lead after
+discussion, before any L1-proper number).** A C2 pass (the all-positions
+index, one key per token: 77 MB at 32k, ~2.4 GB at 1M) only shows that the
+ADDRESS exists in the mind's state; it breaks R4 and the 272 B per event
+budget. Bar A is therefore judged on the burst index.
+- **Unit:** a pooling head that turns each burst span (C5 rows, ≤ 1 per 16
+  tokens) into ONE key, from the mind's intermediate state after block 8,
+  centred; the query key is the same head on the query's span. Trained
+  contrastively on the training pool (synthetic needles with my 8 templates
+  + natural recurrence pairs), rows only before the query (`doc_end`),
+  anchored at the key's last token.
+- **Ceiling to match:** C2 per-token top-1 of the frozen layer-8 centred
+  address on the same docs (plan (i), running).
+- **Bar A (harness, c1ctlb, synthetic keys, ≥ 16 docs per cell, gate_tau 10):**
+  C5 burst top-1 ≥ 0.9 at 32k and ≥ 0.75 at 128k, AND within 0.05 of the C2
+  per-token ceiling at 32k. Rows ≤ 1 per 16 tokens; 272 B per row.
+- **Reported:** natural-key cells as the harness scores them (a recurring
+  phrase without the value is a collision, Lead's rule); my recurrence-pair
+  validation with the any-earlier-mention rule (its own metric, not C2);
+  neg cell max-sim gap; para cell.
+- **Thesis clause:** separate from knowledge. Closest prior work: dense
+  retrieval with learned pooling (plumbing for the mechanism).
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
