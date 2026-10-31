@@ -1648,6 +1648,54 @@ works with any model version, nothing is locked to a key format, and the
 272 B/row index is a local cache, not the shared format. Install cost is one
 pass of the mind (a 100M model: minutes per 10M tokens).
 
+**Novelty rule: closest prior work and what differs (added before the first
+L1 number; user rule 2026-10-31, organiser PLAN_MIND_LIBRARY.md).**
+- **W0, surprise bursts as event boundaries + storing the span:** EM-LLM
+  (Fountas et al., 2024) does surprise-based event segmentation into an
+  episodic memory. **Different: nothing in the mechanism.** The setting is
+  new (the keys are the vectors of an O(1) recurrent mind, no KV cache),
+  which is a property of the body, not of this unit.
+- **N12 / surprise-gated writes:** Titans (Behrouz et al., 2024) gates memory
+  writes by surprise. **Different: nothing.**
+- **L1, a learned attentive-pooled key over spans, InfoNCE:** standard
+  contrastive dense retrieval (DPR; ColBERT-style pooling). **Different:
+  nothing.**
+- **Text-first library, keys rebuilt by the reader at install time:** the
+  usual RAG practice of re-embedding a corpus with the local encoder. What is
+  specific here: the encoder IS the mind, so keys are in the mind's own state
+  space and are rebuilt with one forward pass.
+- **So W0 and L1 are PLUMBING: they are needed for the benchmark, and no
+  claim is made for the mechanism.** They get no GPU beyond what the
+  benchmark needs.
+
+**Where the library can be new (organiser's three; to pre-register as
+separate units, design only now).**
+- **S1, skill packs.** A pack = demonstrations of a rule (B2 builders:
+  held-out shift / affine values). Fetched ONCE, the mind induces the rule
+  and carries it in O(1) state for the rest of the session; fact recall
+  stays in the exact organ. The fetch key is the mind's state at the moment
+  it needs the skill (a request that names the skill in other words than
+  the pack, so no lexical match exists). Judged on: rule accuracy at
+  L = 2k...32k after one fetch, vs (a) the same pack re-fetched at every use
+  and (b) T++ and Mamba-2 with the pack in context. The thing to beat is the
+  re-fetch arm: the claim is that the state carries the skill after the pack
+  has left the window.
+- **I1, interference.** Replay a fetched span through the state (no window)
+  while the state already holds rules from earlier fetches; measure the
+  accuracy of the earlier rules before / after, and of the new one. Pass =
+  the earlier rules lose ≤ 0.05 per added pack up to 8 packs.
+- **K1, install-time keys.** Rebuild all keys of a text pack by the reader
+  and compare retrieval to keys built by another model version; pass = a
+  pack built for version v works after a mind update with ≤ 0.05 loss.
+- **Closest prior work for these:** in-context demonstration retrieval
+  (e.g. retrieval of in-context examples, Rubin et al. 2022) and
+  skill libraries for agents (Voyager, Wang et al. 2023) store and fetch
+  demonstrations / code by embedding similarity. **Different (to be shown,
+  not assumed):** the rule is carried in the recurrent state after the
+  pack leaves the window (S1), and replay must coexist with what the
+  state already holds (I1). If the re-fetch arm matches the carried arm,
+  S1 is ordinary retrieval and is recorded as such.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
