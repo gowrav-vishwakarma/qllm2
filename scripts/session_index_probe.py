@@ -49,14 +49,16 @@ class Reader:
         if self.arch == 'pam':
             v = vecs[-1] if vecs is not None else self.vectors(ids)[-1]
             return v @ self.m.embed.embed.weight.float().T
-        x = torch.tensor([ids])
-        if self.arch == 'transformer':
-            # window = the whole sequence (RoPE); attention cost grows with length
-            out = self.m(x)
-        else:
-            out = self.m(x)
+        dev = next(self.m.parameters()).device
+        x = torch.tensor([ids], device=dev)
+        if self.arch == 'mamba2':
+            # last-position logits only (the full [T, V] head would not fit beside other jobs)
+            hidden = self.m.net.backbone(x)[0, -1]
+            return (hidden.float() @ self.m._head_weight().float().T).cpu()
+        # transformer: window = the whole sequence (RoPE); attention cost grows with length
+        out = self.m(x)
         logits = out[0] if isinstance(out, tuple) else out
-        return logits[0, -1].float()
+        return logits[0, -1].float().cpu()
 
 
 def build(rng, tok, filler, L, task, n):
