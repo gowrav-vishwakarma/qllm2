@@ -350,14 +350,29 @@ def test_l1():
         assert d < 1e-5, f"L1 key_fn != pool_spans: {d:.2e}"
         kb = L.key_fn(vecs, None, [(50, 53), (120, 121)])
         assert kb.shape == (2, L.KEY_DIM)
+        for arch in ('w', 'lr'):
+            h2 = L.SpanKey(arch=arch)
+            with torch.no_grad():
+                if arch == 'lr':
+                    h2.up.weight.normal_(std=0.05)
+            ck2 = os.path.join(tmp, f'{arch}.pt')
+            torch.save({'state': h2.state_dict(), 'form': 'fwd', 'arch': arch, 'rank': 32}, ck2)
+            os.environ['L1_CKPT'] = ck2
+            L._HEAD.clear()
+            K2 = L.key_fn(vecs, None)
+            r2 = L.pool_spans(h2.eval(), vecs, [(77, 77 + L.SPAN)], L.SPAN)
+            assert (K2[77] - r2[0]).abs().max().item() < 1e-5, f"key_fn != pool_spans for arch {arch}"
+        os.environ['L1_CKPT'] = ck
+        L._HEAD.clear()
     # training signal: the loss falls when the query span carries the target's content
-    doc = dict(vecs=torch.randn(T, D).half(), nll=nll, target=122, tlen=1, qpos=250)
+    doc = dict(vecs=torch.randn(T, D).half(), nll=nll, target=122, tlen=1, qpos=250, kind='synthetic')
     doc['vecs'][250:274] = (0.3 * doc['vecs'][120:144].float() + torch.randn(24, D)).half()   # a noisy repeat
-    l0, nq, _ = L.batch_loss(head, [doc], 'fwd', torch.device('cpu'))
+    pd = L.prep(doc, 'fwd')
+    l0, nq, _ = L.batch_loss(head, [pd], torch.device('cpu'))
     l0 = l0.detach()
     opt = torch.optim.AdamW(head.parameters(), lr=1e-2)
     for _ in range(30):
-        loss, _, _ = L.batch_loss(head, [doc], 'fwd', torch.device('cpu'))
+        loss, _, _ = L.batch_loss(head, [pd], torch.device('cpu'))
         opt.zero_grad(); loss.backward(); opt.step()
     assert nq == 1 and float(l0) > 0.1 and float(loss) < 0.5 * float(l0), f"L1 loss did not fall: {float(l0):.3f} -> {float(loss):.3f}"
     print(f"  L1: bursts / fwd / evt rows as specified; key_fn == pool_spans {d:.1e}; loss {float(l0):.3f} -> {float(loss.detach()):.3f}")
