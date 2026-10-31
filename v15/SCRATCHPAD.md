@@ -32,6 +32,15 @@
    (conscience) against generalist monopolies in loose groves; θ per grove
    learned through the surrogate; the binding path (reign vs conv).
 
+## Speed note (06:40 IST 2026-10-31)
+- Grove II on the bench: 12.5k tok/s vs Grove I 43.8k (3.5x slower; echo
+  ~80k alone). CPU profile of one forward+backward (bench shape, 8 seasons):
+  no hot op; ~360 slice-backwards, ~380 divs, ~770 copies, ~440 zero-fills
+  per 8 seasons. On the GPU that is launch-bound: hundreds of tiny kernels
+  per season x seasons x layers. Remedy = `torch.compile` of the season body
+  or one fused season kernel; not before GII-2 is read. Loss at step 1000:
+  1.93 (Grove I 3.15), so the slowness buys something.
+
 ## Step-back notes
 - 2026-10-31 06:25, after building Grove II. Four of the five faults found
   this morning were not in the idea but in defaults carried over from Grove I
