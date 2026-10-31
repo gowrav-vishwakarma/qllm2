@@ -3097,6 +3097,23 @@ fitted threshold:
     run keeps only the natq oracle / expression arms. Else per-word mind
     addresses join D4. Reported: R1 top-1 / top-5; AUROC of R1's top-1 score,
     natq vs natqneg.
+  - **A12 VERDICT (2026-11-01 05:11 IST; code 9e2b136;
+    `logs/v14_a12_natq_text_9e2b136_20261101_0510.json` + .log): NOT met → per-word
+    mind addresses join D4.**
+
+    | 40 docs per cell | synthetic | natural |
+    |---|---|---|
+    | R1 BM25 top-1 / top-5 holds the fact (natq) | 0.175 / 0.525 | 0.525 / 0.825 |
+    | R2 rarest span: right row (natq) | 0.45 | 0.725 |
+    | R2 abstain (natqneg) | 0.125 | 0.125 |
+    | R1 top-1 score AUROC natq vs natqneg | 0.565 | 0.793 |
+
+    - The question's FRAME words ("question", "stand for", "answer") are as rare
+      in prose as the key, and other facts' templates share them ("... stands
+      for ..."), so text cannot tell the key from the frame: it picks the frame
+      (R2) or spreads over it (BM25). Synthetic keys, though unique, lose to
+      longer frame spans at equal count. Text does not handle natq fetch or
+      abstain; the mind's own per-word addresses go into D4's GPU run.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

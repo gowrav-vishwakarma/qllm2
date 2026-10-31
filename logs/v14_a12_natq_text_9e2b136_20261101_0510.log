@@ -1,0 +1,15 @@
+natq synthetic {"r1_top1": 0.175, "r1_top5": 0.525, "r2_abstain": 0.0, "r2_right": 0.45}
+    {"q": " Question: what does ropriz stand for? Answer:", "key": "ropriz", "span": "question what", "count": 1, "r2_row": "em, a student would begin by asking questions: What situation or problem is similar to this problem
+    {"q": " Question: what does dimpes stand for? Answer:", "key": "dimpes", "span": "question what", "count": 1, "r2_row": "em, a student would begin by asking questions: What situation or problem is similar to this problem
+natqneg synthetic {"r1_top1": 0.0, "r1_top5": 0.0, "r2_abstain": 0.125, "r2_right": 0.0}
+    {"q": " Question: what does papfip stand for? Answer:", "key": "papfip", "span": "stand for", "count": 2, "r2_row": "organ Robertson.The book tells the story of a large triple-screw luxury ocean liner named the Titan."}
+    {"q": " Question: what does sevlag stand for? Answer:", "key": "sevlag", "span": "stand for", "count": 1, "r2_row": "intact, as with healthy individuals, however awareness In the old records, kadbef stands for cobalt."}
+natq natural {"r1_top1": 0.525, "r1_top5": 0.825, "r2_abstain": 0.0, "r2_right": 0.725}
+    {"q": " Question: what does common ancestor stand for? Answer:", "key": "common ancestor", "span": "common ancestor stand", "count": 1, "r2_row": "ac{1}{2} +\\frac{\\sqrt{3}}{2} i$$(\\frac{1}{2}, In the old records, comm
+    {"q": " Question: what does good suggestions stand for? Answer:", "key": "good suggestions", "span": "good suggestion", "count": 1, "r2_row": "e are brown or black.black widow spider By the way, good suggestions is just 
+natqneg natural {"r1_top1": 0.0, "r1_top5": 0.0, "r2_abstain": 0.125, "r2_right": 0.0}
+    {"q": " Question: what does with true stand for? Answer:", "key": "with true", "span": "stand for", "count": 3, "r2_row": "y important if you have a food allergy that can In the old records, quality water stands for basa
+    {"q": " Question: what does More relevant stand for? Answer:", "key": "More relevant", "span": "stand for", "count": 3, "r2_row": "Float In the old records, they were stands for cedar."}
+R1 top-1 score AUROC natq vs natqneg synthetic 0.565
+R1 top-1 score AUROC natq vs natqneg natural 0.7931
+BAR (R2 natq right >= 0.90 and natqneg abstain >= 0.90, both key types): NOT met
