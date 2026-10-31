@@ -497,11 +497,20 @@ def train_arm(label, cfg, P, plan, device, lr, log_every, ctxs, trials, aux_weig
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
         torch.save(model.state_dict(), os.path.join(save_dir, f"{label}.pt"))
+    write_rate = None
+    if getattr(model, 'surp_tau', 0):        # N12: share of tokens its store writes, trained model
+        with torch.no_grad(), torch.amp.autocast('cuda', dtype=torch.bfloat16):
+            model._hidden_to_lm(x)           # the last training batch
+        write_rate = float(model.surp_write_rate)
+        print(f"  [{label}] N12 write rate on the last training batch: {write_rate:.3f}", flush=True)
     res = evaluate(model, P, device, ctxs, trials, families=families)
     if 'rules' in families:
         res.update(evaluate_rules(model, P, tok, device, trials))
-    return {'params': n_params, 'train_s': train_s, 'ms_per_step': 1000 * train_s / len(plan),
-            'results': res}
+    out = {'params': n_params, 'train_s': train_s, 'ms_per_step': 1000 * train_s / len(plan),
+           'results': res}
+    if write_rate is not None:
+        out['write_rate'] = write_rate
+    return out
 
 
 def table(name, res, ctxs):
