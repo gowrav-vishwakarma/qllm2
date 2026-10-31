@@ -10,4 +10,5 @@
 | LAW-1 | one-read reach vs training length: lg2/lg8/lg32 fine-tunes with long-gap rule docs | pre-registered (7527ea3) | | | 6000 after s8 or in r3c's slot |
 | L1 | burst-pooling key head on the mind's centred block-8 state (Library) | pre-registered (EXPERIMENTS_V14 "L1 proper") | bars on C5 burst rows: >= 0.9 @32k, >= 0.75 @128k, within 0.05 of the C2 per-token ceiling | | v16/bench.py --key_fn |
 | A4F | hashed n-gram table (A4 cond_mem, +33.5M sparse params) on the 600M mind (Mind) | done | in between: holdout -0.026 (met), PG-19 new-token -0.0275 vs bar -0.03 (missed); Engram-class knowledge, cost table, not in the package | d338469 | EXPERIMENTS_SEMPY "A4 cond_mem filter a4f result" |
+| S8 | bar 3, distance form: held-out rules spread 2k + 4k, fresh probe seed 7000, 3 PAM seeds vs T++ / Mamba-2 (2 seeds each) | done | MET: PAM 0.645-0.741 vs <= 0.134; primary +0.607 (bar +0.10), worst pair +0.511; holdout parity with Mamba-2 | 38e3c29 (df0a44a) | EXPERIMENTS_SEMPY "s8 VERDICT" |
 
