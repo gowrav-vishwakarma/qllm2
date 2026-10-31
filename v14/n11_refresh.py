@@ -2,7 +2,8 @@
 
 Mind's skill-pack cell on b2p2: the pack (header + 8 demonstration lines) is read at t0, then L tokens of held-out
 filler in which the pack is RE-INSERTED after every R filler tokens, then the query line. R = 0 means no refresh.
-Scored at the last position (correct, margin), as scripts/run_skillpack_probe.py does.
+Scored at the last position: the 20-way pick (correct, margin) as scripts/run_skillpack_probe.py does, and FREE
+generation (the greedy token over the whole vocabulary equals the target; primary since the user's 'generation counts').
 
     .venv/bin/python -m v14.n11_refresh --out <jsonl>        (seeds 8100-8149, R 1024/2048/4096/0, L 8192/32768)
 """
@@ -65,8 +66,12 @@ def main():
                 for R in (int(x) for x in a.refresh.split(',')):
                     t0 = time.time()
                     ids, n_ins = stream(pack, fill, q, sep, R)
-                    c, m = score(ex, mind.forward(ids)[0])
-                    out.write(json.dumps(dict(task=task, doc=seed, L=L, R=R, correct=c, margin=m, inserts=n_ins,
+                    lg = mind.forward(ids)[0]
+                    c, m = score(ex, lg)
+                    top = int(lg.argmax())                  # free generation: greedy token over the whole vocab
+                    out.write(json.dumps(dict(task=task, doc=seed, L=L, R=R, correct=c, margin=m,
+                                              free=int(top == ex.target_token_id), free_tok=tok.decode([top]),
+                                              inserts=n_ins,
                                               pack_tokens=len(pack), total_tokens=len(ids),
                                               overhead=round(n_ins * len(pack) / max(1, L), 4),
                                               sec=round(time.time() - t0, 2))) + '\n')
