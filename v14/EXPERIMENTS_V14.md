@@ -2083,6 +2083,50 @@ often lies beyond the 24-token row); neg max-sim 0.53-0.59 (stored 0.68-0.77).
   the learned key; abstain by the key's raw similarity. The tool cell needs a
   longer or field-aware row.
 
+**PRE-REGISTERED 2026-10-31 21:35 IST (before any number of these; approved by
+Lead).**
+
+**L2 — two-organ fetch.** Rule, per query: if the exact organ finds an exact
+4-gram match of the query's last 4 tokens (`B_hit`, knowable at inference),
+answer with the organ (`B_ngram`); otherwise fetch the top burst row by the
+learned key (head `l1p_fwd_L8c_99e6803`) and answer with the mind's re-read of
+that row (`P_cands[0]`), ABSTAINING when that row's raw key similarity is below
+t. t is tuned ONLY on the existing seed-15000 runs (same rule, neg wrong-fetch
+≤ 0.10). Scored once on a fresh seed 17000: kv synthetic + natural at 32k and
+128k, para synthetic + natural at 32k, neg synthetic + natural at 32k, tool
+synthetic + natural at 32k, 16 docs each.
+- **Bars:** kv ≥ 0.95 at 32k and ≥ 0.90 at 128k on BOTH key types (abstain on
+  a stored key = miss); para natural ≥ 0.75 (organ 0.31 at seed 14000) and para
+  synthetic ≥ organ + 0.10; neg wrong-fetch (organ hit OR similarity ≥ t) ≤
+  0.10. Tool is reported (the row length is a separate unit).
+- **Novelty line (Lead):** hybrid sparse + dense retrieval (BM25 + dense
+  retriever class): the package's fetch, cited, NO claim. The claim stays the
+  interface: keys in the mind's own state, rows written on the mind's
+  surprise.
+- **Field-aware tool row (reported arm, needs a harness change):** a row spans
+  from the burst start to the end of its sentence (≤ 64 tokens), the key pooled
+  over that span, the hit scored inside the row's own span. Asked of Lead.
+
+**SR-0b — is the skill in the notebooks, and can a stored skill state
+coexist? (b2p2, skill-pack cell, seeds 8000-8099, L = 2k / 8k / 32k).**
+Snapshot S_pack = the NOTEBOOK states right after the pack (echo and any other
+state excluded).
+- **(a) replace:** at the query, the notebook states are REPLACED by S_pack
+  while echo state and the residual stream come from the filler. Bar: accuracy
+  at 32k ≥ 0.9 × A(L = 0) (affine ≥ 0.90, shift ≥ 0.90). Met → the skill lives
+  in the notebooks.
+- **(b) merge:** at the query, S_pack is ADDED to the filler-evolved notebook
+  states. Bar: accuracy at 32k ≥ 0.9 × A(L = 2k) (affine ≥ 0.88, shift ≥
+  0.67, the SR-0 bar). Met → a stored skill state can coexist with unrelated
+  content: the register's real question.
+- **Controls:** a different rule's S_pack (must fall to the no-pack floor);
+  the plain one-read A.
+- **Needs:** snapshot / restore of notebook states on the M2 chunked path
+  (Mind's body code; Lead asks only if under an hour). Product fallback
+  exists: re-fetching the pack gives 1.00 at any L.
+- **Closest prior work:** State Soup (Pioro et al. 2024). Different only if (b)
+  holds in-context without decay; otherwise it is State Soup.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
