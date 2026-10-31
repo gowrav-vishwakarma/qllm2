@@ -132,6 +132,8 @@ Popped by the others (23:55 IST):
 
 - 23:45 IST: N11-R MET (Library; b2p2, seeds 8100-8149, 50 docs/cell): refreshing a standing skill pack every R = 2048 tokens keeps it alive at 32k: affine 0.96 / shift 0.80 (bars 0.95 / 0.70) vs 0.10 / 0.00 without refresh, for 1.6 % extra tokens; R = 1024 -> 1.00 / 0.86 at 3.3 %; R = 4096 -> 0.32 / 0.32 (prediction held: the refresh must sit inside the ~2k reach). The package's answer to "holds beyond the training context" for STANDING instructions: a refresh heartbeat at the mind's reach, ~1.6-3.3 % token cost; explicit questions fetch at question time.
 
+- 23:55 IST: user asks one cheap check of the window law: lg8r = b2p2 fine-tuned at 8k windows for 50M tokens WITH the document-boundary state reset (packing confound removed), readouts one-read reach at 0 / 2k / 4k / 8k + half-lives vs b2p2; bars reach(4k) >= 0.75 and half-lives not shorter; on the 4090 after the package table (~40 min + probes), not the 6000. Mind pre-registers and runs.
+
 ## Open questions
 - Shared-library fetch: synonyms and rewording are untested (SL2 covers surface variants only).
 - "Nothing stored" for a paraphrased question needs a signal other than key similarity (open item, not a claim).
