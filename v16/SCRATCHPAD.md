@@ -66,6 +66,8 @@ Overall ~35 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill hol
 
 - 16:50 IST: L1 PAIRED RESULT (Library; bench 0eb2ead, kv 32k, 16 docs, same docs both arms): trained burst key top-1 (top-5) synthetic 0.81 (1.00) vs frozen burst-mean 0.06 (0.12); natural 0.94 (1.00) vs 0.56 (0.56); C2 per-token ceiling 1.00; 0.6 rows / 16 tokens. Bar A NOT met (0.81 < 0.90); misses are same-template confusions. Approved next: "L1 + planner v0" (top-5 fetch, mind picks by its own answer margin; 5 re-reads per query; reported separately, never as Bar A) and the 256-d key (memory latitude). Harness: P_margin_burst / P_concat_burst added. Suggested hard negatives from the same document.
 
+- 17:05 IST: lg32 TRAINING (restarted 16:43 with FineWeb read from the 6000's local shards after ~25 min of HuggingFace timeouts, caught by Lead's check): step 100 / 4,578 at 17:03, 36k tok/s, 29.2 GB; card 82.7 / 97.9 GB; r3c unaffected (62-64k tok/s), guard 0 strikes. ETA training ~18:15, probes (skill-pack 0-128k, B2 t400, attr3b) ~18:40; b2p3 resumes via the gate after.
+
 ## Open questions
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
