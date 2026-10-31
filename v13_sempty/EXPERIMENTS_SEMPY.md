@@ -4358,3 +4358,12 @@ weight 1.0.
 
 **Ledger:** lg8r = b2p2 recipe + b2gap + reset + answer-in-window. It has none of cu1's
 curriculum (srd / fsq / hop) and no N9s.
+
+**lg8r amendment approved (Lead, 2026-11-01 00:18 IST), and a correction to LAW-1.** Lead
+approved ANSWER_IN_WINDOW=1 and the bars as written. **lg32 carried both confounds lg8r
+removes:** packed windows that reward forgetting across unrelated documents, and ~45 % of its
+b2gap answers trained at ×100 in windows without their rule's demonstrations (the same packer
+cut, at 32k with G ≤ 31k). So lg32's "reach is a ceiling of this body" reading is **WITHDRAWN
+pending lg8r**. The user's package-level decision (one-read reach ≈ training length is the
+stated limit today; re-fetch carries the rule to 128k) stands until lg8r says otherwise. lg8r
+launched 00:16 IST (`lg8r_main_f2b7d8c`, 4090).
