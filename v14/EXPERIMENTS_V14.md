@@ -1298,6 +1298,16 @@ mean over 2 / 4 / 8 shots (chance 0.29):
   600M belongs to the mind lane (v13) and the board (organiser). It also
   seeds the planner (N11): the salient angle as the retrieval query.
 
+**N9s at 600M (Mind's cu1n9s, cu1 amendment A1 `fa9e410`; switch `c91f4c6`).**
+Paired arm of Mind's curriculum run cu1 on the 6000 (seed 42; its own stage A,
+because the warm start refuses new parameters; then cu1's stage B; the data
+carries the two_hop Record format through the `hop` source). Bars (Mind's):
+two-hop ≥ cu1 + 0.15 AND ≥ 0.50; guards on holdout, label_diag, R6a. ETA
+~03:15-05:45 IST. **Attribution caveat (sent to Mind):** the arm adds N9a's
+3 lags, N9s's salience and a different stage A at once; if it passes, an
+N9a-only arm (same new stage A, same seed) is needed before anything is
+credited to salience. At 27M N9a alone formed two_hop in 0 of 3 seeds.
+
 **N9s two-hop replication `n9th` (PRE-REGISTERED 2026-10-31 ~04:10 IST,
 before any n9th number).** Question: does the salient phase let a 27M O(1)
 body compose two facts in context (two_hop), where the fixed window and
