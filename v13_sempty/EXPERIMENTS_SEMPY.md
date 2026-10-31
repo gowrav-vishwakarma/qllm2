@@ -4765,3 +4765,17 @@ training used only synthetic 3-syllable keys, says " unknown" outright 86 % of t
 on synthetic ones) and almost never the wrong value. The cost is 8 % false abstain on right rows. So the
 fresh-key abstain skill transfers to English-phrase keys in this format. Library's package rows decide it
 (next: their strict scoring on cu1's checkpoint). Logs `logs/diag/v13_sempty_curprobe_{b2p2,cu1}_verifynat_573db4b.jsonl`.
+
+**cu1 at the package level (Library A10, `7c4356a`; 03:44 IST): NOT met as registered, but the miss is FETCH, not
+cu1's reading.** 32k, seed 30000; each mind fetched with its own frozen block-8 address.
+- Never-stored abstain by the rule (syn / nat): cu1 1.00 / 1.00, b2p2 0.825 / 0.975. cu1 says " unknown" outright
+  only 0.10-0.125.
+- kv answered-and-correct: cu1 0.30 / 0.20, b2p2 0.20 / 0.35 (bar fails).
+- Split by the top row: with the right row, cu1 says the value 20 / 22 (no false abstain); with a wrong row, cu1
+  says a wrong value 1 / 58 (b2p2 6 / 57).
+- The kv gap: **cu1's own state addresses facts less well than b2p2's.** The right row was fetched on natural
+  keys in 9 docs vs 15. The curriculum changed the state the fetch keys on.
+
+For r3p: Library's fetch must be re-fit on its states, and its address quality is a readout, not an assumption.
+The near-miss English-key case barely occurred with own-state fetch (wrong rows were mostly prose). The
+fixed-row verify cell (cu1 0.86 " unknown" vs b2p2 0.59 wrong value) stays the evidence for that case.
