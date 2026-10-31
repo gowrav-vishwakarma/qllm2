@@ -50,6 +50,8 @@
 
 - 15:15 IST: Bar A clarified (Library's objection, accepted): C2 = all-positions index (77 MB at 32k, ~2.4 GB at 1M) shows only that the ADDRESS exists; Bar A is judged on C5 at <= 1 row / 16 tokens. L1 proper = a burst-pooling head on mid-layer centred vectors, judged on C5_burst_hit with C2's per-token top-1 as the ceiling. Natural-key scoring in the harness stays strict (a recurring key phrase without the stored value is a collision); Library's any-mention rule applies to its recurrence-pairs eval only (optional extra field).
 
+- 15:12 IST: r3c FUTILITY PASSED: holdout 3.4010 at step 39,060 (~1.56B tokens) vs stop line 3.4714; WikiText 60.23; ahead of r3b at the same step (3.4133) after trailing by 0.05 at 15,624; late slope -0.024 / 3,906 steps vs r3b -0.0125. Projection (not a claim): ends ~3.20-3.25 at 3B, near T++ 3.2064, behind Mamba-2 3.1644. Continues to 3B (~05:00 IST Nov 1). The 1.56B checkpoint is kept for the attr3b loss-by-token-class split. s8 stays paused behind the gate until lg32 is done (~17:15); lg32 still compiling, guard 0 strikes.
+
 ## Open questions
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
