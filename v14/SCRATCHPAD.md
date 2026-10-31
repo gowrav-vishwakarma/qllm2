@@ -4,7 +4,43 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-01 03:44 IST) — read this first
+## State (2026-11-01 05:15 IST) — read this first
+
+Session: **Library**. Running: **A13 / D4** (tmux `a13`, `~/a13.sh`, worktree
+`../qllm_v14norm` @ b34636e; b2p2, 32k, seed 33000, syn / synneg / natq /
+natqneg; scorer in my scratch dir, bars in EXPERIMENTS_V14 "A13"). Then the
+4090 goes to Mind's cu2a (VERIFY kept: A11 not met).
+* Settled with Mind and Lead (05:05 round): session address = lexical organs;
+  synonyms: a frozen small encoder vs the mind's own address (± a re-fit
+  head) decided by r3p's readout; the contrast twin = the answering mind,
+  answer tokens only; ACh-1 in cu2b with an LM guard; order A11 → A12 → A13 →
+  cu2a → r3p readouts.
+* Since 04:50: N9a / N9s REMOVED (07f7d5d, last code d255fcd); A11 NOT met
+  (b2p2 key-swap AUROC 0.698; cu1 0.815 and its own words abstain on 97 % of
+  wrong rows: checking is a learned skill); A12 NOT met (text cannot tell a
+  question's key from its frame).
+* Package spec: `v14/PACKAGE.md`.
+* **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
+  tmux first.
+
+## Step back (2026-11-01 05:15 IST, after A11 / A12)
+
+* **Surprise:** a question-time key check (A11) found almost nothing to read
+  in b2p2 (its answer barely depends on the key), yet cu1, trained on a few
+  points of " unknown" data, depends on the key strongly. And text (A12)
+  cannot separate a question's key from its frame.
+* **What it says:** the division of labour is sharper than "query-time
+  beats training-time". Query time wins for things that are TEXT (is it
+  stored, subtract the prior); training wins for things that are a SKILL of
+  reading (checking a key, saying " unknown"). Salience (what in the
+  question is the key) is in between: the mind's own surprise may pick it
+  (A13 tests this) without training.
+* **Angle:** if surprise picks the key, the package can hand the mind's own
+  salient tokens to the TEXT organs too (organ on the salient span only),
+  which may fix A12's frame problem cheaply.
+
+## Old state (2026-11-01 03:4x IST; superseded)
+
 
 Session: **Library**. Nothing of mine is running or queued; the 4090 is
 handed back to Lead. **The package spec is `v14/PACKAGE.md`** (fetch: organs +
