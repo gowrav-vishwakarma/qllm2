@@ -25,7 +25,9 @@ two_hop):
 
 In v1 the pack is PLACED at t0; fetching a pack by key from a library of packs is
 bench.py's (Lead) and lands with Library's L1. Scored at the last position only
-(no full [T, V] logits), so long L fits. T++ without re-fetch is the whole stream in
+(no full [T, V] logits), so long L fits. MLB-1 A7: every cell also reports FREE
+generation (`*_free`: greedy argmax over the whole vocabulary == the answer token; the
+answers are single tokens), the primary number from A7 on; the 20-way score is secondary. T++ without re-fetch is the whole stream in
 its window (run as far as memory allows; the limit goes in the table).
 """
 from __future__ import annotations
@@ -112,9 +114,10 @@ def filler_block(filler: np.ndarray, n: int, seed: int, L: int) -> list:
 
 
 def score(body, ex, ids):
-    cand = body.last_logits(ids)[ex.candidate_token_ids].float().cpu().tolist()
-    r = score_candidate_logits(ex, cand)
-    return int(r['correct']), float(r['target_margin'])
+    """(20-way correct, 20-way margin, free: greedy argmax over the whole vocab == answer)."""
+    logits = body.last_logits(ids)
+    r = score_candidate_logits(ex, logits[ex.candidate_token_ids].float().cpu().tolist())
+    return int(r['correct']), float(r['target_margin']), int(int(logits.argmax()) == ex.target_token_id)
 
 
 def run(args):
@@ -149,10 +152,11 @@ def run(args):
                 if task != 'two_hop':
                     pack = H + sum(U[:-1], []); q = U[-1]
                     if 'skillpack' in variants:
-                        ids = pack + fill + q; a, am = score(body, ex, ids)
-                        refetch = pack + q; o, om = score(body, ex, refetch)
+                        ids = pack + fill + q; a, am, af = score(body, ex, ids)
+                        refetch = pack + q; o, om, of = score(body, ex, refetch)
                         out.write(json.dumps({**row, 'task': 'skillpack', 'T': len(ids), 'A_state': a, 'A_margin': am,
-                                              'O_reread': o, 'O_margin': om, 'pack_tokens': len(pack),
+                                              'A_free': af, 'O_reread': o, 'O_margin': om, 'O_free': of,
+                                              'pack_tokens': len(pack),
                                               'mem': {'state_bytes': S, 'tpp_kv_bytes_full': body.kv_bytes(len(ids)),
                                                       'tpp_refetch_kv_bytes': body.kv_bytes(len(refetch))},
                                               'sec': round(time.time() - t0, 2)}) + '\n')
@@ -160,20 +164,22 @@ def run(args):
                         replay = sum(U[-3:-1], [])
                         ids_alone = H + fill + replay + q
                         ids_plus = pack + fill + replay + q
-                        ra, _ = score(body, ex, ids_alone); rp, _ = score(body, ex, ids_plus)
+                        ra, _, raf = score(body, ex, ids_alone); rp, _, rpf = score(body, ex, ids_plus)
                         out.write(json.dumps({**row, 'task': 'replay_refresh', 'T': len(ids_plus),
-                                              'R_alone': ra, 'R_state_plus': rp, 'replay_tokens': len(replay),
+                                              'R_alone': ra, 'R_state_plus': rp, 'R_alone_free': raf,
+                                              'R_state_plus_free': rpf, 'replay_tokens': len(replay),
                                               'mem': {'state_bytes': S}, 'sec': round(time.time() - t0, 2)}) + '\n')
                 else:
                     facts, q = U[:-1], U[-1]
                     texts = units[:-1]
                     hop1 = sum([f for f, s in zip(facts, texts) if ' owns the ' in s], [])
                     hop2 = sum([f for f, s in zip(facts, texts) if ' is called ' in s], [])
-                    hi, _ = score(body, ex, H + hop1 + fill + hop2 + q)
-                    ho, _ = score(body, ex, H + fill + hop1 + hop2 + q)
-                    h2, _ = score(body, ex, H + fill + hop2 + q)
+                    hi, _, hif = score(body, ex, H + hop1 + fill + hop2 + q)
+                    ho, _, hof = score(body, ex, H + fill + hop1 + hop2 + q)
+                    h2, _, h2f = score(body, ex, H + fill + hop2 + q)
                     out.write(json.dumps({**row, 'task': 'replay_hop2', 'T': len(H + hop1 + fill + hop2 + q),
                                           'H_integrate': hi, 'H_oracle': ho, 'H_hop2only': h2,
+                                          'H_integrate_free': hif, 'H_oracle_free': hof, 'H_hop2only_free': h2f,
                                           'chance': ex.in_context_chance, 'mem': {'state_bytes': S},
                                           'sec': round(time.time() - t0, 2)}) + '\n')
                 out.flush()
