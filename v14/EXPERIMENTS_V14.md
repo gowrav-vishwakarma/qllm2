@@ -3081,6 +3081,22 @@ fitted threshold:
     Self-RAG's IsRel (trained). Difference: the QUESTION's key is perturbed
     with the row fixed, testing key dependence of an O(1) mind's answer at
     query time with no training.
+- **A12: many-key TEXT fetch on natq (PRE-REGISTERED 2026-11-01 05:09 IST, before
+  any number of it; D4's CPU part).** Plumbing, no claim (closest prior work:
+  BM25, Robertson et al. 1994, which is "every word a key, weighted by
+  rarity"). Docs: bench's natq and natqneg (Lead's 3d1e55b), L = 32,768, FRESH
+  seed 32000, 40 docs × synthetic / natural keys.
+  - R1: BM25 over the doc's sentences (`shared_fetch.norm_words`) with the
+    whole question; top-1 / top-5 hold the stated fact.
+  - R2 (rarest span): the question's contiguous normalised word span (n =
+    3, 2, 1) with the SMALLEST nonzero count in the stream (ties: longer span,
+    then latest); row = the sentence of its latest occurrence; ABSTAIN if that
+    count > 2 (not key-like).
+  - Bar (decision, not a claim): R2 right row ≥ 0.90 on natq AND abstain ≥
+    0.90 on natqneg, both key types → text handles natq FETCH, and D4's GPU
+    run keeps only the natq oracle / expression arms. Else per-word mind
+    addresses join D4. Reported: R1 top-1 / top-5; AUROC of R1's top-1 score,
+    natq vs natqneg.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
