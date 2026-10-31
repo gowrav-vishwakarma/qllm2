@@ -2077,6 +2077,161 @@ def _hop_text_iter(*, seed: int = 0, skip_docs: int = 0, doc_counters=None,
         yield '\n\n'.join(parts) + '\n'
 
 
+# cu2 sources (2026-11-01, v13 "cu2"): ONE field from a multi-field row, then a stop; and VERIFY a
+# fetched row (another key's row, a look-alike key or a plain prose sentence -> " unknown.").
+#  fld : 1-3 rows of 2-4 fields (row formats _FLD_ROWS) then a question about one field of one key
+#        (_FLD_QS); the answer is " <value>." (stop included, weighted). 15 % ask a field the row does
+#        not have -> " unknown.".
+#  vfy : one row (or a prose sentence) right before a question; 50 % the row is the key's own row ->
+#        value; else (45 % another key's row, 10 % a look-alike key, 45 % a prose sentence) -> " unknown.".
+# Values are multi-token; a crc32 split holds 20 % of values out of training (the probe uses only
+# those). The probe's question formats (_FLD_QS_PROBE), row format (_FLD_ROW_PROBE) and natural keys
+# (two-word phrases from held-out prose) never appear here. Training keys: 3-syllable synthetic words
+# (_fsq_key) or two lowercase GPT-2 words.
+_FLD_FIELDS = ('colour', 'city', 'code', 'owner', 'room', 'tool')
+_FLD_SHADE = ('pale', 'deep', 'dark', 'light', 'dusty', 'bright', 'soft', 'burnt')
+_FLD_COLOUR = ('amber', 'teal', 'crimson', 'olive', 'ivory', 'slate', 'coral', 'indigo', 'saffron', 'cobalt', 'umber', 'jade')
+_FLD_SUFFIX = ('Vale', 'Ford', 'Point', 'Hollow', 'Ridge', 'Bay', 'Cross', 'Field')
+_FLD_FIRST = ('Priya', 'Tomas', 'Elena', 'Marcus', 'Aiko', 'Farah', 'Jonas', 'Lucia', 'Nadia', 'Oskar', 'Ravi', 'Sofia', 'Kofi', 'Ingrid', 'Mateo', 'Yara')
+_FLD_LAST = ('Okafor', 'Lind', 'Moreau', 'Tanaka', 'Silva', 'Kowal', 'Haddad', 'Brandt', 'Novak', 'Reyes')
+_FLD_TOOLS = ('hammer', 'chisel', 'wrench', 'ladder', 'kettle', 'scanner', 'drill', 'trowel')
+_FLD_ADJ = ('brass', 'steel', 'spare', 'old', 'red', 'small', 'heavy', 'folding')
+_FLD_ROWS = (
+    lambda k, fv: f' Record: {k} | ' + ' | '.join(f'{f}: {v}' for f, v in fv) + '.',
+    lambda k, fv: f' {k}: ' + '; '.join(f'{f} {v}' for f, v in fv) + '.',
+    lambda k, fv: f' For {k}, ' + ', '.join(f'the {f} is {v}' for f, v in fv[:-1]) + (' and ' if len(fv) > 1 else '') + f'the {fv[-1][0]} is {fv[-1][1]}.',
+)
+_FLD_ROW_PROBE = lambda k, fv: f' [{k}] ' + ', '.join(f'{f}={v}' for f, v in fv) + '.'  # noqa: E731
+_FLD_QS = (' Query: the {f} of {k} is', ' Q: What is the {f} of {k}? A:', ' The {f} for {k} is',
+           " Question: {k}'s {f}? Answer:")
+_FLD_QS_PROBE = (' What {f} does {k} have? Answer:', ' Asked for the {f} of {k}, the record says')
+_FLD_PROSE_ADJ = ('quiet', 'narrow', 'early', 'wooden', 'busy', 'empty', 'warm', 'distant')
+_FLD_PROSE_N = ('market', 'river', 'station', 'garden', 'school', 'bridge', 'harbour', 'library')
+_FLD_PROSE_V = ('opened', 'flooded', 'closed', 'filled', 'emptied', 'changed')
+
+
+def _fld_heldout(v: str) -> bool:
+    return zlib.crc32(v.encode()) % 5 == 0
+
+
+def _fld_value(rng, field: str, held: bool = False) -> str:
+    """A multi-token value; held=False never returns a held-out value, held=True only those."""
+    while True:
+        if field == 'colour':
+            v = f'{rng.choice(_FLD_SHADE)} {rng.choice(_FLD_COLOUR)}'
+        elif field == 'city':
+            v = _fsq_key(rng)[:4].capitalize() + rng.choice('nrlst') + ' ' + rng.choice(_FLD_SUFFIX)
+        elif field == 'code':
+            v = f"{rng.choice('BDFGKMPRTVZ')}-{rng.randint(100, 999)}"
+        elif field == 'owner':
+            v = f'{rng.choice(_FLD_FIRST)} {rng.choice(_FLD_LAST)}'
+        elif field == 'room':
+            v = f"{rng.choice(('east', 'west', 'north', 'south'))} wing {rng.randint(2, 99)}"
+        else:
+            v = f'{rng.choice(_FLD_ADJ)} {rng.choice(_FLD_TOOLS)}'
+        if _fld_heldout(v) == held:
+            return v
+
+
+_FLD_WORDS = None
+
+
+def _fld_words():
+    # frozen list (committed): GPT-2 single-token lowercase words of 4-9 letters that are dictionary words
+    global _FLD_WORDS
+    if _FLD_WORDS is None:
+        _FLD_WORDS = [w for w in open(os.path.join(os.path.dirname(__file__), 'fld_words.txt')).read().split() if w]
+    return _FLD_WORDS
+
+
+def _fld_key(rng, natural: bool) -> str:
+    if natural:
+        w = _fld_words()
+        return f'{rng.choice(w)} {rng.choice(w)}'
+    return _fsq_key(rng)
+
+
+def _fld_lookalike(rng, key: str, natural: bool) -> str:
+    """Another key sharing the first word (natural) or the first syllable (synthetic)."""
+    while True:
+        k2 = (key.split()[0] + ' ' + rng.choice(_fld_words())) if natural else key[:2] + _fsq_key(rng)[2:]
+        if k2 != key:
+            return k2
+
+
+def _fld_row(rng, key: str, n_fields: int, held: bool = False, fmt=None):
+    fields = rng.sample(_FLD_FIELDS, n_fields)
+    fv = [(f, _fld_value(rng, f, held)) for f in fields]
+    return (fmt or rng.choice(_FLD_ROWS))(key, fv), fv
+
+
+def _fld_prose(rng) -> str:
+    return (f' The {rng.choice(_FLD_PROSE_ADJ)} {rng.choice(_FLD_PROSE_N)} {rng.choice(_FLD_PROSE_V)} '
+            f'before the {rng.choice(_FLD_PROSE_N)} did.')
+
+
+def _fld_text_iter(*, seed: int = 0, skip_docs: int = 0, doc_counters=None,
+                   counter_key: str = 'fld', per_doc: int = 3) -> Iterator[str]:
+    import random as _random
+    rng = _random.Random((seed * 2654435761 + 949494) & 0xFFFFFFFF)
+    n = 0
+    while True:
+        parts = []
+        for _ in range(per_doc):
+            nat = rng.random() < 0.6
+            keys = []
+            while len(keys) < rng.randint(1, 3):
+                k = _fld_key(rng, nat)
+                if k not in keys:
+                    keys.append(k)
+            rows = [_fld_row(rng, k, rng.randint(2, 4)) for k in keys]
+            i = rng.randrange(len(keys)); row_fv = rows[i][1]
+            if rng.random() < 0.15:                           # a field this key's row does not have
+                missing = [f for f in _FLD_FIELDS if f not in dict(row_fv)]
+                f, ans = rng.choice(missing), ' unknown.'
+            else:
+                f, v = rng.choice(row_fv); ans = f' {v}.'
+            parts.append(''.join(r for r, _ in rows) + rng.choice(_FLD_QS).format(f=f, k=keys[i]) + _ans(ans))
+        n += 1
+        if n <= skip_docs:
+            continue
+        _bump_counter(doc_counters, counter_key)
+        yield '\n\n'.join(parts) + '\n'
+
+
+def _vfy_text_iter(*, seed: int = 0, skip_docs: int = 0, doc_counters=None,
+                   counter_key: str = 'vfy', per_doc: int = 4) -> Iterator[str]:
+    import random as _random
+    rng = _random.Random((seed * 2654435761 + 959595) & 0xFFFFFFFF)
+    n = 0
+    while True:
+        parts = []
+        for _ in range(per_doc):
+            nat = rng.random() < 0.7
+            key = _fld_key(rng, nat)
+            u = rng.random()
+            if u < 0.5:                                         # the key's own row -> the value
+                row, fv = _fld_row(rng, key, rng.randint(1, 3)); f, v = rng.choice(fv); ans = f' {v}.'
+            else:
+                f = rng.choice(_FLD_FIELDS); ans = ' unknown.'
+                w = rng.random()
+                if w < 0.45:                                    # another key's row (unrelated)
+                    other = _fld_key(rng, nat)
+                    while other == key:
+                        other = _fld_key(rng, nat)
+                    row, _ = _fld_row(rng, other, rng.randint(1, 3))
+                elif w < 0.55:                                  # a look-alike key's row
+                    row, _ = _fld_row(rng, _fld_lookalike(rng, key, nat), rng.randint(1, 3))
+                else:                                           # a plain prose sentence
+                    row = _fld_prose(rng)
+            parts.append(row + rng.choice(_FLD_QS).format(f=f, k=key) + _ans(ans))
+        n += 1
+        if n <= skip_docs:
+            continue
+        _bump_counter(doc_counters, counter_key)
+        yield '\n\n'.join(parts) + '\n'
+
+
 # Label-rule training docs (2026-10-31, v13 "label-format source"): the
 # probes' label_category / label_exact FORMAT ("Label rule. <item> is <label>,
 # ... <query> is") with a vocabulary DISJOINT from memory_probes/rules.py
@@ -2235,6 +2390,8 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     'lab':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-lab'},
     'fsq':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-fsq'},
     'hop':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-hop'},
+    'fld':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-fld'},
+    'vfy':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-vfy'},
     # Real aptitude / reasoning Q&A with worked answers, TRAIN splits only
     # (v7/aptitude.py; 2026-10-29 "reason first" curriculum, real data).
     'aptitude':      {'schema': 'text',     'kind': 'qa',        'hf': 'real-aptitude-qa'},
@@ -2287,6 +2444,10 @@ def _open_source_iter(
             return _fsq_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
         if name == 'hop':
             return _hop_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
+        if name == 'fld':
+            return _fld_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
+        if name == 'vfy':
+            return _vfy_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
         if name == 'lab':
             return _lab_text_iter(seed=mix_seed, skip_docs=skip,
                                   doc_counters=doc_counters, counter_key=name)
