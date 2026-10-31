@@ -4683,3 +4683,35 @@ not from the WORDS of an unseen value.
 3. **fsq and hop stay** (their rules met).
 4. The holdout cost is the r3p A1 budget's input. 10 % synthetic at 600M costs ~+0.045; r3p keeps the
    share at 7.0 % (srd out) with the hard gate 3.2391.
+
+### cd2 result (03:13 IST, 2026-11-01): MET on fresh seeds. State-contrast decoding roughly DOUBLES the one-read reach (~2k → ~4k); by 8k the skill is gone
+
+b2p2, seeds 8200–8299 (never used), a fixed, CPU, `logs/diag/v13_sempty_cd2_b2p2_cb1f9c7.jsonl` (200 rows per L).
+Bar (a = 4): 20-way(4k) **0.780** ≥ 0.75 ✓, free(4k) **0.575** ≥ 0.45 ✓, free(0) **0.995** ≥ 0.98 ✓ → **MET**.
+
+**One-read reach curve, one table (Lead's ask; 20-way / free, 100 docs × 2 tasks per cell):**
+
+| model / decode | L = 0 | 2k | 4k | 8k | 16k | 32k |
+|---|---|---|---|---|---|---|
+| b2p2, plain (cd2 seeds) | 1.00 / 1.00 | 0.805 / 0.58 | 0.355 / 0.165 | 0.055 / 0.01 | 0.045 / 0.005 | – |
+| b2p2, plain (seeds 8000–8099) | 1.00 / 1.00 | 0.86 / 0.615 | 0.355 / 0.170 | 0.10 / – | – | 0.04 / – |
+| lg8r (8k-trained + reset), plain | 1.00 / 1.00 | 0.905 / 0.68 | 0.465 / 0.265 | 0.105 / – | – | 0.055 / – |
+| **b2p2 + contrast a = 4** | 1.00 / 0.995 | 0.91 / 0.685 | **0.78 / 0.575** | 0.11 / 0.045 | 0.045 / 0.005 | – |
+| b2p2 + contrast a = 8 | 1.00 / 0.995 | 0.925 / 0.665 | 0.855 / 0.665 | 0.18 / 0.085 | 0.045 / 0.005 | – |
+
+Per task at 4k, a = 4: affine 0.88 / 0.69, shift 0.68 / 0.46.
+**2k free misses (a = 4, 63 rows):** the winning token is a wrong letter (" u", " q", " j", …) or a wrong number
+(" 67", " 43", …), i.e. the right format with a wrong rule application, not a format failure.
+
+**Reading.** Up to ~4k after one read, the rule is still in the state and a decode-time contrast recovers
+it. That beats what 50M tokens of 8k training (lg8r) did at 4k (0.465). Past ~8k the state has really
+lost it: contrast cannot recover what is gone (16k at chance for every a). The one-read reach of this
+mind is ~2k plain and ~4k with contrast. Beyond that the package's route stays re-fetch (1.00 at
+every L) or Library's refresh (N11-R), whose interval may stretch from ~2k to ~4k with contrast (to test).
+
+**Deployment cost (Lead's ask; the memory column stays honest):** the no-pack stream is a SECOND O(1)
+state (+1.15 MB, so 2.30 MB in all) and a SECOND forward pass over every session token while contrast is
+on (2× compute). It must be the same session without the skill read, so it starts at the read and runs
+alongside. Still O(1) in context length; T++'s KV at 4k is ~0.2 GB.
+**Not yet shown:** other skills (two-hop, recall, natq); effect on ordinary text when the pack is
+irrelevant; a vs a per-token gate. No method claim (CAD / contrastive decoding).

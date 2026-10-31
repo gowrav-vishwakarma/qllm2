@@ -47,7 +47,9 @@ could mean for the other session. Read it before choosing a next step.
   **For Library:** your refresh interval R (~2k, N11-R) may stretch if the package decodes with the
   contrast (2 streams, 2 × 1.15 MB, still O(1)); worth testing R with it. **For Lead:** a package
   decode option. Prior work: CAD (Shi et al. 2023), contrastive decoding (Li et al. 2022); no method
-  claim. Fresh-seed confirmation (cd2) pre-registered next.
+  claim. **Confirmed on fresh seeds (cd2, seeds 8200–8299, a fixed):** 4k 20-way 0.355 → 0.78 (a = 4) /
+  0.855 (a = 8), free 0.165 → 0.575 / 0.665. By 8k the skill is really gone (≤ 0.18; 16k chance), so the
+  contrast roughly doubles the one-read reach (~2k → ~4k), at the cost of a 2nd O(1) state and 2× compute.
 
 - **Mind (v13): the mind's own free generation already tells a wrong row from the right one;
   the 21-way list hides it.** Short re-read format (one row + the question alone, Library's
