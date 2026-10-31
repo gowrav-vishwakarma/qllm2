@@ -1,0 +1,73 @@
+lg8r chain: code f2b7d8c in /home/gowrav/Development/qllm_reset2, 2026-10-31T18:43:49Z
+=== lg8r train start 2026-10-31T18:46:49Z
+=== lg8r start 2026-10-31T18:46:49Z SCREEN_HASH=f2b7d8c arms='main:ECHO=1,SHARE_READS=1' base='LR=3e-4 WARMUP=100 TARGET_TOKENS=50003968 VAL_EVERY=1526 SAVE_EVERY=200 KEEP_EVERY=0 KEEP_LAST=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2128 SEED=45 SOURCES=dclm,fineweb,smoltalk2_mid,recall,b2gap WEIGHTS=0.43,0.40,0.10,0.04,0.03 INIT_FROM=/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt SEQ=8192 BATCH=2 B2GAP_MAX=7500 RESET_AT_EOS=1 ANSWER_IN_WINDOW=1 MAX_RETRIES=5' ===
+=== arm main (ECHO=1 SHARE_READS=1) ckpt=checkpoints_v13_sempty/lg8r_main_f2b7d8c log=logs/v13_sempty_lg8r_main_f2b7d8c_20261101_0016.log 2026-10-31T18:46:49Z ===
+=== lg8r_main start 2026-10-31T18:46:49Z commit=f2b7d8c log=logs/v13_sempty_lg8r_main_f2b7d8c_20261101_0016.log ckpt=checkpoints_v13_sempty/lg8r_main_f2b7d8c ===
+=== lg8r_main end 1793474297 exit=0 attempts=1 ===
+=== arm main train exit=0 2026-10-31T19:18:17Z ===
+W1101 00:48:28.406233 1037945 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:48:29.167666 1037945 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:48:33.214429 1037945 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:48:34.030262 1037945 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:48:38.655299 1037945 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:48:39.733168 1037945 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/7] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:48:45.444062 1037945 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/8] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:48:46.719027 1037945 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/9] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:48:57.249515 1037945 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/10] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:48:59.182427 1037945 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/11] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:49:27.830014 1037945 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/12] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:49:31.091749 1037945 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/13] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+Results saved to logs/memory_probes/v13_sempty_lg8r_main_f2b7d8c_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+W1101 00:50:44.990727 1040519 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:50:46.072524 1040519 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:50:46.922433 1040519 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 00:50:48.164972 1040519 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+  10/50 docs (11s)
+  20/50 docs (15s)
+  30/50 docs (19s)
+  40/50 docs (23s)
+  50/50 docs (27s)
+  [    0,   64)  loss 4.3421  ppl   76.87
+  [   64,  128)  loss 4.0946  ppl   60.02
+  [  128,  256)  loss 3.8599  ppl   47.46
+  [  256,  512)  loss 3.8184  ppl   45.53
+  [  512, 1024)  loss 3.9124  ppl   50.02   short-ctx 3.9125  far_gain +0.0001
+  [ 1024, 2048)  loss 3.9259  ppl   50.70   short-ctx 3.9484  far_gain +0.0225
+  [ 2048, 4096)  loss 3.9190  ppl   50.35   short-ctx 3.9599  far_gain +0.0409
+  [ 4096, 8192)  loss 3.9401  ppl   51.43   short-ctx 3.9922  far_gain +0.0521
+wrote logs/pos_loss/v13_sempty_lg8r_main_f2b7d8c_pg19.json
+--- final holdout val_loss (last val of each arm) ---
+  main: 3.5320
+=== lg8r DONE 2026-10-31T19:21:09Z ===
+pam: last-position check rel err 5.56e-04; state 1.15 MB
+  shift_wide_new done
+  affine_map_new done
+per task: {'shift_wide': 1.0, 'step_wide': 1.0, 'affine_map': 0.997, 'shift_wide_new': 0.987, 'step_wide_new': 0.812, 'affine_map_new': 0.999}  mean 0.966
+saved logs/learning_probes/v13_sempty_lg8r_main_f2b7d8c_b2_t400.json
+b2p2 {'pg19': 3.7883, 'web': 3.4516}
+lg8r {'pg19': 3.8992, 'web': 3.5278}
+
+[pg19] tokens 122880; share copy 0.258 seen 0.377 new 0.365
+  loss  lg8r 3.8992  b2p2 3.7883
+  lg8r - b2p2: total +0.1109
+     by class (gap / share of total): copy +0.046 / +11%  seen +0.060 / +20%  new +0.210 / +69%
+     by position:                     0-8 +0.081  8-64 +0.140  64-512 +0.127  512-2048 +0.105
+     new tokens by position:          0-8 +0.093  8-64 +0.159  64-512 +0.203  512-2048 +0.217
+
+[web] tokens 195046; share copy 0.227 seen 0.386 new 0.387
+  loss  lg8r 3.5278  b2p2 3.4516
+  lg8r - b2p2: total +0.0763
+     by class (gap / share of total): copy +0.034 / +10%  seen +0.037 / +19%  new +0.140 / +71%
+     by position:                     0-8 +0.100  8-64 +0.106  64-512 +0.077  512-2048 +0.073
+     new tokens by position:          0-8 +0.105  8-64 +0.120  64-512 +0.125  512-2048 +0.156
+=== readouts
+reach L=0: 1.000  (affine 1.00, shift 1.00, n 200)
+reach L=2048: 0.905  (affine 0.96, shift 0.85, n 200)
+reach L=4096: 0.465  (affine 0.52, shift 0.41, n 200)
+reach L=8192: 0.105  (affine 0.18, shift 0.03, n 200)
+reach L=32768: 0.055  (affine 0.10, shift 0.01, n 200)
+v13_sempty_halflives_b2p2_affine_L4096_82cd5a5.txt: long-head filler half-lives [718, 1564, 1274, 2376, 1548, 2539, 648] geomean 1361
+v13_sempty_halflives_lg8r_affine_L4096_f2b7d8c.txt: long-head filler half-lives [632, 3052, 1614, 1619, 1471, 1847, 468] geomean 1304
+=== lg8r DONE 2026-10-31T19:27:49Z

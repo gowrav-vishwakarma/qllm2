@@ -4489,3 +4489,55 @@ quality stated. The recipe (pretraining with synthetic mixtures) is known; no re
 **Ledger:** r3p = r3c's body + b2 + lab + (cu1 parts by rule) + ANSWER_IN_WINDOW. Not in it: M2
 shared reads (untested at 3B at LR 1.2e-3; r3b's M2 failed at LR 2e-4), the doc-boundary reset
 (lg8r is testing it at 8k; r3p trains at 2k), fetch training.
+
+## lg8r VERDICT (2026-11-01 01:18 IST): the reach does NOT follow the window. The reset stopped the forgetting (half-lives held) but the reach barely moved, and the short fine-tune cost LM quality
+
+`lg8r_main_f2b7d8c` (4090; b2p2 + 50.0M tokens at SEQ 8192 × 2, LR 3e-4, `RESET_AT_EOS=1`,
+`ANSWER_IN_WINDOW=1`, b2gap 3 % with G ≤ 7.5k; 102.9M params; 55.9k tok/s, 16.5 GB peak).
+Pre-registered bars (EXPERIMENTS "lg8r"): reach(4k) ≥ 0.75 AND long-head half-life geomean ≥ 1293.
+
+| one-read reach (100 docs × 2 tasks) | L = 0 | 2k | 4k | 8k | 32k |
+|---|---|---|---|---|---|
+| b2p2, 20-way | 1.00 | 0.86 | 0.355 | 0.10 | 0.04 |
+| **lg8r, 20-way** | 1.00 | **0.905** | **0.465** | 0.105 | 0.055 |
+| b2p2, free (A7) | 1.00 | 0.615 | 0.170 | | |
+| lg8r, free (A7) | 1.00 | 0.680 | 0.265 | | |
+
+Re-read (pack before the query): 1.00 at every L, both models, 20-way and free. Per task, lg8r
+20-way at 4k: affine 0.52, shift 0.41.
+
+| | b2p2 | lg8r | bar / guard |
+|---|---|---|---|
+| reach(4k), 20-way | 0.355 | 0.465 | ≥ 0.75: **FAIL** |
+| long-head half-life geomean | 1361 | 1304 (0.958×) | ≥ 1293: met, narrowly |
+| per head (echo h0-h5, b11 h4) | 718 / 1564 / 1274 / 2376 / 1548 / 2539 / 648 | 632 / **3052** / 1614 / 1619 / 1471 / 1847 / 468 | reported |
+| B2 `_new` at L = 0 (t400) | 0.944 | 0.933 (0.987 / 0.812 / 0.999) | ≥ 0.894: met |
+| attr3b holdout vs b2p2 (PG-19 / web) | – | **+0.111 / +0.076** | ≤ +0.02: **FAIL** |
+| PG-19 position loss, every bucket 0–8k | 3.70–4.21 | +0.10…+0.13 worse everywhere | reported |
+| WikiText val | 4.2292 | 4.2410 (+0.012) | reported |
+| recall t40 all / ≤ 2k / > 2k | 0.707 / 0.801 / 0.474 | 0.747 / 0.858 / 0.469 | reported |
+
+(lg32, for the record: half-life geomean 835, reach(2k) 0.31, attr3b +0.015 / −0.002 after 150M tokens.)
+
+**Verdict.** Bar 1 FAILS (0.465 vs 0.75) and the LM guard FAILS. This is the pre-registered mixed
+case "the reset fixed the forgetting, the reach did not follow". Training at 8k with the
+packing confound and the orphaned answers removed kept the decays where they were (lg32 shortened
+them by 39 %; lg8r 4 % on the summary, with one echo head doubling and two shortening ~30 %).
+The reach rose a little (+0.045 at 2k, +0.11 at 4k; free +0.065 / +0.095), far from the bar. The
+window alone does not set the reach. The half-lives do, and an 8k window of mostly < 8k documents
+gives no pressure to lengthen them. **Per the pre-registration: reach-by-training is a ceiling of this
+body at this scale. Stop spending GPU on it.** The route stays re-fetch (1.00 at every L), the
+~2k refresh (Library's N11-R) and the register.
+
+**The LM damage, checked:** the reset is NOT a masking bug. Batch-of-two consistency
+(`v13_sempty/tmp/reset_batch.py`, separators at different positions per row): each row equals its
+batch-1 run within 6.3e-5 (scale 17.8). The attr3b windows and the PG-19 docs contain no
+separators, so the mask is inert at eval. The damage is in the weights: most likely the short warm
+restart (LR re-warmed to 3e-4 on an annealed model, 16k-token batches, 50M tokens). lg32 had 3×
+the tokens at 2× the batch and recovered to +0.015. Not separated by a run, and not worth one:
+the reach answer does not depend on it, since the reach stayed far below the bar.
+
+**What it leaves for the curriculum.** Recall inside the window rose (+0.057, ≤ 2k), plausibly the
+answer-in-window weighting on recall docs (4.8 % orphaned at 8k vs 15.9 % at 2k). Not isolated.
+Free reach is ~0.2 below 20-way at 2k-4k in both models: a fading skill is ranked before it is said
+(the step-back's contrast-decoding test is the cheap follow-up, eval only; GPU via Lead).
