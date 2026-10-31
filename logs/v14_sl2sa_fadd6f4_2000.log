@@ -1,0 +1,155 @@
+{
+ "synthetic_exact": {
+  "organ4": {
+   "top1": 0.868,
+   "top5": 0.868
+  },
+  "organ_long": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "bm25": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "sl1": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "organ_norm": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "sl2": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "sl2_sa": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "minilm": {
+   "top1": 0.203,
+   "top5": 0.375
+  },
+  "minilm_sent": {
+   "top1": 0.65,
+   "top5": 0.836
+  }
+ },
+ "synthetic_para": {
+  "organ4": {
+   "top1": 0.493,
+   "top5": 0.493
+  },
+  "organ_long": {
+   "top1": 0.613,
+   "top5": 0.613
+  },
+  "bm25": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "sl1": {
+   "top1": 0.926,
+   "top5": 0.926
+  },
+  "organ_norm": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "sl2": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "sl2_sa": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "minilm": {
+   "top1": 0.212,
+   "top5": 0.373
+  },
+  "minilm_sent": {
+   "top1": 0.662,
+   "top5": 0.834
+  }
+ },
+ "natural_exact": {
+  "organ4": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "organ_long": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "bm25": {
+   "top1": 0.329,
+   "top5": 0.607
+  },
+  "sl1": {
+   "top1": 1.0,
+   "top5": 1.0
+  },
+  "organ_norm": {
+   "top1": 0.997,
+   "top5": 0.997
+  },
+  "sl2": {
+   "top1": 0.997,
+   "top5": 0.997
+  },
+  "sl2_sa": {
+   "top1": 0.997,
+   "top5": 0.997
+  },
+  "minilm": {
+   "top1": 0.078,
+   "top5": 0.16
+  },
+  "minilm_sent": {
+   "top1": 0.322,
+   "top5": 0.485
+  }
+ },
+ "natural_para": {
+  "organ4": {
+   "top1": 0.254,
+   "top5": 0.254
+  },
+  "organ_long": {
+   "top1": 0.263,
+   "top5": 0.263
+  },
+  "bm25": {
+   "top1": 0.329,
+   "top5": 0.607
+  },
+  "sl1": {
+   "top1": 0.49,
+   "top5": 0.683
+  },
+  "organ_norm": {
+   "top1": 0.995,
+   "top5": 0.995
+  },
+  "sl2": {
+   "top1": 0.995,
+   "top5": 0.995
+  },
+  "sl2_sa": {
+   "top1": 0.995,
+   "top5": 0.995
+  },
+  "minilm": {
+   "top1": 0.077,
+   "top5": 0.153
+  },
+  "minilm_sent": {
+   "top1": 0.318,
+   "top5": 0.482
+  }
+ }
+}
+{'entries': 4000, 'tokens': 822844, 'sa_agrees_with_dict': '4000/4000', 'index_mb_per_1M_tokens': {'organ_2to8': 23.69, 'organ_norm_3to6': 9.92, 'sa_tokens': 4.02, 'sa_words': 5.38, 'minilm_sentences': 49.59, 'minilm': 7.47}, 'index_seconds': 6.6, 'embed_seconds': 181.4}

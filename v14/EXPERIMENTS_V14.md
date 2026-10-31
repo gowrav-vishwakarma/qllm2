@@ -2406,6 +2406,21 @@ tokens and BM25 is ambiguous on common words.
     the token organ 24-67 MB (dicts per n); a suffix array over each stream
     gives the same longest-match lookups at ~4 MB per 1M (to do before the
     package counts MB).
+- **Deployable form + fair embedder row (2026-10-31 23:35 IST; same seed 21000;
+  code `359a49d`; Lead's requests).** Depth-limited suffix arrays (tokens depth
+  8, normalised words depth 6; 4 bytes per position) replace the n-gram dicts:
+  they return the SAME entry as the dicts on every query (400 / 400 and
+  4000 / 4000), so SL2's accuracy is unchanged (all cells 1.00 at 400; 1.00 /
+  1.00 / 0.99 / 1.00 at 4000). **Measured memory per 1M tokens: token organ
+  4.02 MB, normalised-word organ 5.4 MB (array + word stream), raw text 2.0 MB
+  → ~11.4 MB** (the dicts were 24-67 + 10-27 MB). Not yet counted: BM25's
+  posting lists (the fallback). Fair embedder baseline (sentence-level MiniLM,
+  an entry scored by its best sentence): 0.55-0.75 at 400 entries and 0.32-0.66
+  at 4000 (entry-level 0.08-0.39); its index is 49.6 MB per 1M tokens (384-d
+  fp32 per sentence; ~25 MB in fp16). On this task family the text organ is far
+  ahead of the standard embedder at a quarter of its memory; the embedder's
+  domain (rewording, synonyms) is the one no cell tests yet. Logs
+  `logs/v14_sl2sa_*`.
 
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative

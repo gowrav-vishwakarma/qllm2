@@ -1,0 +1,177 @@
+{
+ "seed": 21000,
+ "entries": 400,
+ "tokens": 82256,
+ "results": {
+  "synthetic_exact": {
+   "organ4": {
+    "top1": 0.97,
+    "top5": 0.97
+   },
+   "organ_long": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "bm25": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "sl1": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "organ_norm": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "sl2": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "sl2_sa": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "minilm": {
+    "top1": 0.37,
+    "top5": 0.7
+   },
+   "minilm_sent": {
+    "top1": 0.75,
+    "top5": 0.94
+   }
+  },
+  "synthetic_para": {
+   "organ4": {
+    "top1": 0.5,
+    "top5": 0.5
+   },
+   "organ_long": {
+    "top1": 0.62,
+    "top5": 0.62
+   },
+   "bm25": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "sl1": {
+    "top1": 0.98,
+    "top5": 0.98
+   },
+   "organ_norm": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "sl2": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "sl2_sa": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "minilm": {
+    "top1": 0.39,
+    "top5": 0.71
+   },
+   "minilm_sent": {
+    "top1": 0.75,
+    "top5": 0.94
+   }
+  },
+  "natural_exact": {
+   "organ4": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "organ_long": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "bm25": {
+    "top1": 0.67,
+    "top5": 0.88
+   },
+   "sl1": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "organ_norm": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "sl2": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "sl2_sa": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "minilm": {
+    "top1": 0.18,
+    "top5": 0.45
+   },
+   "minilm_sent": {
+    "top1": 0.57,
+    "top5": 0.72
+   }
+  },
+  "natural_para": {
+   "organ4": {
+    "top1": 0.22,
+    "top5": 0.22
+   },
+   "organ_long": {
+    "top1": 0.23,
+    "top5": 0.23
+   },
+   "bm25": {
+    "top1": 0.67,
+    "top5": 0.88
+   },
+   "sl1": {
+    "top1": 0.76,
+    "top5": 0.91
+   },
+   "organ_norm": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "sl2": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "sl2_sa": {
+    "top1": 1.0,
+    "top5": 1.0
+   },
+   "minilm": {
+    "top1": 0.17,
+    "top5": 0.43
+   },
+   "minilm_sent": {
+    "top1": 0.55,
+    "top5": 0.72
+   }
+  }
+ },
+ "n": {
+  "synthetic_exact": 100,
+  "synthetic_para": 100,
+  "natural_exact": 100,
+  "natural_para": 100
+ },
+ "sa_agrees_with_dict": "400/400",
+ "words": 55086,
+ "index_mb_per_1M_tokens": {
+  "organ_2to8": 66.53,
+  "organ_norm_3to6": 26.99,
+  "sa_tokens": 4.02,
+  "sa_words": 5.36,
+  "minilm_sentences": 49.9,
+  "minilm": 7.47
+ },
+ "index_seconds": 0.6,
+ "embed_seconds": 19.5
+}
