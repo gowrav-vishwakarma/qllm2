@@ -18,6 +18,33 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 23:40 IST: MEDITATION (user, via Lead: "think in the void, actually think nothing").** What surfaced,
+  unplanned:
+  - *Forgetting is learned from the life it is trained on.* Packed windows of unrelated documents
+    taught every echo head to forget faster. The mind's half-life is its prior on how long the world
+    stays the same. Trained on lives (one long coherent stream: a book, an agent's whole session with
+    its tool results, a long conversation), not on shuffled documents, it should learn to keep the past
+    longer. Training was teaching it that every 2k tokens the world resets.
+  - *It is a place-keeper, not a container.* "The state is a stream address" plus the reach plus the
+    drifting half-lives sounds like the temporal-context models of human memory (a slowly drifting
+    context that items are bound to; recall works by reinstating the context). Known in cognitive
+    science; what is new is that the trained network found it by itself.
+  - *Now and then.* The mind holds "now" (~2k tokens of rules and gist); the library holds "then";
+    rehearsal (re-reading a pack) bridges them. Reach is not a defect to fight: it is the size of the
+    present. Re-fetch at 1.00 is the bridge, already working.
+  - *The bottleneck may be what makes it abstract.* T++ fails at a 2k gap even with every example in its
+    window (0.06); the O(1) mind keeps the rule (0.86). A fixed-size state is FORCED to compress, and the
+    compression keeps the rule and drops the tokens. Bold, untested: a smaller state might generalise
+    better to unseen rule families, while recall gets worse (the library covers recall anyway).
+  - *Show, don't tell.* Words do not write a rule; demonstrations do. An imitation learner. A stated rule
+    could become a skill if the mind (or the library) turns the words into a few demonstrations
+    first, then reads them: self-demonstration loads the register.
+  - *The mind can make the exact organ work for paraphrase.* The shared library is fetched by text, and
+    the exact organ fails only on paraphrase. The mind learns any format it is shown, so it could
+    restate a question in the library's canonical form ("Query: <stored key> refers to") before the
+    lookup. The skill lives in the mind, the exact match in the organ: no fuzzy embedder needed.
+    That changes the shared-library design (Library's L2 paraphrase miss); one line sent to Lead.
+
 * **2026-10-31 23:15 IST: resumed (process had exited ~22:16; Library restarted it in tmux `mind`).**
   Done since 21:35: s8 VERDICT MET (D PAM 0.645 / 0.691 / 0.741 vs T++ 0.134 / 0.134, Mamba-2 0.116 / 0.098;
   primary +0.607, all pairs +0.511; ntfy sent 22:06); cu1 pre-registered (59ac5d7) + A1 (N9s arm ON,
