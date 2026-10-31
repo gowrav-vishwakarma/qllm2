@@ -1,5 +1,12 @@
 # O(1) mind + growing library — the goal sheet (organiser, 2026-10-31)
 
+**Thesis (user, 2026-10-31): intelligence separate from knowledge, and the intelligence
+holds beyond the training context.** Every unit must say which clause it serves: the
+rule-carrying mind and the skill register serve "holds beyond the context"; the exact
+organ, the learned fetch and text-first packs serve "separate from knowledge". A unit
+that serves neither (e.g. kNN knowledge rows that only move loss) is a cost table, not a
+claim. Session names by what they build: Mind (was v13), Library (was v14), Lead (organiser).
+
 User decision (2026-10-31, to v13 and v14): the O(1) body stays and is the MIND; the
 demand that its state also be the LIBRARY is dropped. Knowledge lives in libraries:
 a per-session library (the context, tool results) and a shared, growing library
