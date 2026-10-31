@@ -30,6 +30,58 @@ A9's numbers).
 * **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
   tmux first.
 
+## Step back (2026-11-01 04:51 IST; user via Lead: "on every setback, think in the void, meditate again, re-read the meditation memory")
+
+Re-read `meditate-before-next-step` and Lead's 04:50 block first. My setbacks
+tonight: N9 (my unit; a 27M win, a 600M FAIL, removed), A3 (the mind's read
+gain is not relevance), A4 v1 (my interface bug), A6 (warm read reversed), my
+EUREKA's length attribution (wrong; warm fails at 2k too), A5 (synonyms 0.40),
+A8 (just short), N11-R/F (shift), A10 (cu1's own address finds less), natq open.
+
+* **From inside: what surprised me.** Every hypothesis of mine that assumed
+  the mind CHECKS what it reads failed (A3, A6, the gain re-rank). Every one
+  that SUBTRACTED the mind's prior worked (warm + contrast: natural kv 0.775 →
+  0.925). And my trained key head added almost nothing over the frozen state
+  (synonyms 0.40 vs 0.375): training-time fetch lost to query-time fetch too.
+* **From far away: what it says.** At 103M the mind is a strong copier with a
+  loud prior and no checking. So the library must (a) decide "is it stored"
+  by text where words overlap (organs), (b) hand evidence so the prior is
+  subtracted (contrast), (c) never trust the mind's confidence as relevance
+  unless a contrast isolates what depends on the QUESTION. Lead's "query-time
+  beats training-time" holds in my lane as well: the organ, the warm read,
+  the contrast, strict abstain all cost no LM and worked; N9 and the head did
+  not.
+* **Lessons for my process.** (1) A micro win is a hypothesis, not a result,
+  until it holds at the target scale (N9). (2) When I attribute a cause
+  ("past the trained length"), the control (2k) belongs in the SAME
+  pre-registration, before the claim goes out. (3) Text checks call the
+  harness's own entry point (A4 v1).
+* **Angles that surfaced (my lane; none run yet):**
+  1. **Key-swap contrast = relevance at query time (new).** Read the fetched
+     row with the real question and with the question's key swapped for a
+     random one: rel = log p(v | row, q) − log p(v | row, q_swap). A right row's
+     answer depends on the key; a wrong row's does not (the mind copies it
+     either way). Abstain when rel is small. One more short O(1) read per
+     candidate; no training. Prior work: context-aware decoding (Shi 2023),
+     perturbation-based attribution. It attacks the one hole text cannot
+     close: "stored under other words or never stored?".
+  2. **A question is many keys** (Lead's 5): union of the rows found by each
+     content word (word organ per word, frozen-state address per word, an
+     EARLY layer for word meaning: "castle" ~ "palace" may live near the
+     embedding, not at block 8), then the line-up read (top-k rows together,
+     0.55 on synonyms vs 0.40 one by one) and warm + contrast. Pattern
+     completion from partial cues, as the hippocampus does.
+  3. **Words → demonstrations** (Lead's 2): a shared-library skill entry may
+     be a small program that turns a stated rule into 2-3 worked lines (the
+     mind reads demos at 0.97, words as a lookup). Plumbing (program-aided
+     LMs, Toolformer); the pack schema gets a "generator" kind.
+  4. **Stop claiming the trained key head.** The frozen state does the work
+     (0.375 vs 0.40); keep the head only if a per-word or line-up test needs
+     it.
+* **Next unit (decided after this):** 2 + 1 together on natq and the synonym
+  cell: many-key fetch (text part on CPU first) and the key-swap relevance
+  check, pre-registered with bars before any number.
+
 ## Old state (2026-11-01 03:28 IST; superseded)
 
 
