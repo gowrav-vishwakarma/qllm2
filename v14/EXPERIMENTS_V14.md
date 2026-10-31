@@ -2939,6 +2939,22 @@ fitted threshold:
     (kv, para, tool × 2) AND no answerable cell below COLD − 0.05; neg
     abstain stays ≥ 0.90 (rule-based, unchanged). Met → the package's
     default read is WARMC.
+- **A10: does cu1's learned " unknown" give the package abstain by the mind's
+  own words? (PRE-REGISTERED 2026-11-01 03:26 IST, before any number of it; Mind's
+  request.)** A skill check, not a package body (cu1 pays +0.045 holdout NLL).
+  - cu1 (`cu1_best_2efb422.pt`, warm-started from c1m2a's stage A, NOT b2p2,
+    so my L1 head does not apply) vs b2p2 (control), SAME docs: bench.py
+    LENIENT with NO key_fn, each mind fetching by its own frozen address
+    (`--vec_layer 8 --centre`, doc mean; burst rows, gate_tau 10); 32k, FRESH
+    seed 30000, 40 docs; kv and neg × synthetic / natural.
+  - Rule (Mind's): answer iff the top-1 row's greedy token over the whole
+    vocabulary (`P_cands[0].free_tok`) is one of the 20 candidate values;
+    else abstain (cu1's " unknown" abstains).
+  - Bar MET iff on cu1: neg natural abstain ≥ 0.80 AND kv natural
+    answered-and-correct (`P_cands[0].free` when answered) ≥ b2p2's − 0.05 on
+    the same docs. Synthetic reported. Prior work: SQuAD 2.0 / R-Tuning /
+    Self-RAG (as in Mind's cu1 notes); difference: abstain read off an O(1)
+    mind's free generation over its own fetched row.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
