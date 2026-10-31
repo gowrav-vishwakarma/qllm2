@@ -1,8 +1,9 @@
-# Mind + Library benchmark (MLB-1) — DRAFT v0.1 for comments (2026-10-31; v14 comments folded in 14:10 IST)
+# Mind + Library benchmark (MLB-1) — DRAFT v0.2 (2026-10-31; v14 comments 14:10, organiser row format + user comparison rule 14:30 IST)
 
-Status: **draft, not fixed.** v14 and the Communicator comment; the fixed
-version is committed as "MLB-1 v1 (fixed)" and later changes are dated
-amendments. No package run is scored before v1 is fixed.
+Status: **draft, not fixed.** Freeze condition for v1: the harness implements every
+§2 cell and is validated on CPU at 32k (organiser), then v1 is committed as "MLB-1 v1
+(fixed)" and the harness moves to `v16/bench.py`. Later changes are dated amendments.
+No package run is scored before v1.
 
 Purpose: one table that judges the package (**O(1) mind + growing library**)
 against Transformer++ with its full context and Mamba-2, with memory in MB in
@@ -17,12 +18,16 @@ distributable model once it wins it.
 | PAM state | the mind alone, state only | state bytes |
 | **PAM + session library** | the package: mind + per-session library (v0 = model-free exact organ + re-read; v1 = v14's learned fetch: gate, trained key at the salient token, re-read; one row per event) | state + library index + fetched text |
 | T++ full context | the whole sequence in one window (its KV cache) | KV cache bytes at L |
-| T++ + library | fairness arm: the same library and re-read | KV + library |
+| T++ + library | optional diagnostic: the same library, its OWN key head | KV + library |
 | Mamba-2 state | state only | state bytes |
-| Mamba-2 + library | fairness arm | state + library |
+| Mamba-2 + library | optional diagnostic | state + library |
 
-Fairness arms exist so a win on recall is credited to the library, not the
-mind, unless the mind arm is ahead of them too. Training data is equal for
+**Comparison rule (user, 2026-10-31, via the organiser):** Transformer++ and
+Mamba-2 are compared AS THEY ARE: their existing numbers and runs, full context
+where it fits, no library bolted on. The "+ library" arms are optional diagnostics,
+not headline rows. Honesty line that travels with the headline: "the baselines ran
+without a library; the recall win belongs to the package (mind + library), and the
+mind's own edge is R2". Training data is equal for
 every arm; the package arms may add fetch-training data (stated per run, with
 the ledger row).
 
@@ -34,17 +39,26 @@ values (chance 0.05), query at the end.
 | task | content |
 |---|---|
 | needle | 1 definition "Definition: KEY refers to VALUE." |
-| multi-needle 8 / 64 | 8 or 64 definitions, one queried |
+| multi-needle 8 / 64 | 8 or 64 definitions, one queried (at 64 the values repeat; the queried value is one of 20) |
 | latest wins | the queried key is redefined later; the newer value is right |
 | two-hop | "K1 maps to K2" and "K2 maps to V" far apart; query K1 |
 | natural keys | as multi-needle 8, but keys and values are entities drawn from real text (collisions and paraphrase allowed), not unique synthetic nouns |
-| tool result | a "Result: {…}" block (tool-call style text) inserted mid-stream; a field of it is queried later |
-| negative | a query whose key was never stored; the right behaviour is to abstain (no fetch, no invented value) |
+| tool result | a "Result: job: X; status: v; owner: v; …" block inserted mid-stream, one field queried later; the exact organ fails on 3 of 4 fields by construction (no shared 4-gram), so this cell separates organ from fetch |
+| paraphrased key | the query names the key in other words than the stored sentence (for the learned key, v14 L1) |
+| negative | a query whose key was never stored; abstain = the fetch's top similarity below a threshold set on the positive cells (the organ abstains by construction on a miss); reported as abstain rate |
 
 Lengths L: 2k, 8k, 32k, 128k, 400k, 1M. T++ full context is run as far as
 memory allows and the limit is stated in the table (its KV cache at 128k is
-~4.9 GB at this width and depth). Docs per cell: ≥ 80 for the headline cells
-(needle, multi-needle 8, two-hop; SE ≤ 0.05), ≥ 40 elsewhere.
+~4.9 GB at this width and depth). The held-out filler cache is 500k tokens, so
+1M documents wrap the filler: the organ then meets exact repeats of prose, while
+the needles stay unique (stated next to every 1M number). Docs per cell: 32 on CPU (±0.09) for the first table; 100 on GPU (±0.05) for
+any claim. Harness: `scripts/session_index_probe.py` (`fc5d682`), one JSON line per
+document with fields {arch, ckpt, task, keys, needles, L, doc, T, mem{…} in bytes,
+A_state, B_hit, B_ngram, B_hop2_chain, C_hop2_reread, C2_*, C5_rows,
+C5_rows_per_event, C5_event_has_row, C5_hit / top5, C5_index_bytes, sec}; cell
+mean = mean over docs. Read paths: A = state only, B = exact organ, C2 = frozen
+address at the key token, C5 = gated rows; v1 package = v14's learned fetch via
+`--key_fn` / `--dump_rows`.
 
 ## 3. Mind half (from the existing probes)
 
@@ -83,11 +97,12 @@ memory allows and the limit is stated in the table (its KV cache at 128k is
   within +0.02. Loss by token class is always shown.
 - **R4 memory:** at 128k the package's total memory (state + rows + stored text)
   ≤ 1/100 of the T++ KV cache; the ratio is in the table (expected ≈ 1/770).
-- **R5 fairness:** T++ + library and Mamba-2 + library are run, each with its
-  OWN key head trained the same way (same data, same size), never PAM's key. If
-  they match the package on R1, the recall win is the library's, and the claim
-  is R2 + R4 only.
-- **Win** = R1, R2, R4 hold and R3's guard holds, with R5 stated.
+- **R5 attribution (no longer a gate, per the comparison rule):** the headline
+  carries the honesty line of §1. If the optional "+ library" diagnostics are run
+  (each with its OWN key head trained the same way) and they match the package on
+  R1, the write-up says the recall win is the library's and the mind's claim is
+  R2 + R4.
+- **Win** = R1, R2, R4 hold and R3's guard holds, with the §1 honesty line and R5 stated.
 
 ## 6. Protocol
 
@@ -102,7 +117,8 @@ memory allows and the limit is stated in the table (its KV cache at 128k is
 ## 7. Open for comments
 
 1. v14: answered (row format, fetch metrics, R1 / R4 / R5 wording above).
-2. Communicator: doc counts, the natural-key and tool-result task designs,
-   the 400k / 1M cells (time on CPU; which arms).
-3. Communicator: add the negative cells and the two instruction-persistence
-   variants to the harness; confirm the 400k bar is feasible on CPU.
+2. Communicator: answered (row format, tool task, doc counts, 1M wrap). 400k on
+   CPU ≈ 160 s per doc on c1ctlb: the headline 400k cells ≈ 15 CPU-hours overnight;
+   the full grid on a 4090 slot after 18:00 IST.
+3. Communicator: negative cells and both instruction-persistence variants agreed,
+   going in today.
