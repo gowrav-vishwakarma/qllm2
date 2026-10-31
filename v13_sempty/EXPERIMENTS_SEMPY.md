@@ -4750,3 +4750,18 @@ default**. It is on only for the answer tokens of a query that the package itsel
 read (the package knows when it fetched or installed a skill). It is never on for free text. A learned
 or adaptive gate (e.g. a set by the disagreement between the two streams, as in adaptive CAD) is a
 separate experiment, not yet pre-registered. cd2's reach gain holds only under this gate.
+
+**cu1 A3 addendum: the verify cell with NATURAL keys (03:23 IST, 2026-11-01; reported, CPU).** `run_cur_probe --keys
+natural` uses two-word phrases from held-out prose, as `bench --keys natural`. Short re-read format, 200 docs:
+
+| verify row, natural keys | b2p2: correct 21-way / free | b2p2: wrong value said, free | cu1: correct 21-way / free | cu1: wrong value said, free |
+|---|---|---|---|---|
+| right row (→ value) | 1.000 / 0.940 | – | 0.920 / 0.910 | – |
+| unrelated key's row (→ " unknown") | 0.000 / 0.000 | **0.590** | **0.990 / 0.860** | **0.010** |
+| prose row (→ " unknown") | 0.000 / 0.000 | 0.000 | 0.970 / 0.310 | 0.000 |
+
+b2p2 copies a wrong natural-key row's value 59 % of the time (Library's package rows: ~57 %). **cu1, whose fsq
+training used only synthetic 3-syllable keys, says " unknown" outright 86 % of the time on natural keys** (32 %
+on synthetic ones) and almost never the wrong value. The cost is 8 % false abstain on right rows. So the
+fresh-key abstain skill transfers to English-phrase keys in this format. Library's package rows decide it
+(next: their strict scoring on cu1's checkpoint). Logs `logs/diag/v13_sempty_curprobe_{b2p2,cu1}_verifynat_573db4b.jsonl`.

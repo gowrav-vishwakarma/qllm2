@@ -46,6 +46,8 @@ def main():
     p.add_argument('--device', default='cpu')
     p.add_argument('--mem_frac', type=float, default=0.0)
     p.add_argument('--out', required=True)
+    p.add_argument('--keys', default='synthetic', choices=['synthetic', 'natural'],
+                   help='verify cell keys: synthetic (bench _recall_key) or natural (two-word phrases from held-out prose, as bench --keys natural)')
     a = p.parse_args()
     dev = torch.device(a.device)
     if a.mem_frac and dev.type == 'cuda':
@@ -55,6 +57,11 @@ def main():
     first = lambda w: tok.encode(' ' + w, add_special_tokens=False)[0]  # noqa: E731
     nouns = list(_RECALL_VALUE_NOUNS); cand = [first(w) for w in nouns]; unk = first('unknown')
     out = open(a.out, 'a')
+    if a.keys == 'natural':
+        sys.path.insert(0, str(ROOT / 'v16'))
+        from bench import natural_key  # noqa: E402
+        from memory_probes.spread import filler_tokens  # noqa: E402
+        nat_filler = filler_tokens(str(ROOT / '.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt'))
     for d in range(a.docs):
         rng = random.Random(a.seed * 1000 + d)
         t0 = time.time()
@@ -77,13 +84,17 @@ def main():
         # verify (short re-read format: one row + the question alone)
         vr = random.Random(a.seed * 1000 + d + 7_000_000)   # own stream: fsq / hop docs stay as pre-registered
         vk, wk = keys[0], keys[1]; vv = vr.choice(nouns)
+        if a.keys == 'natural':
+            vk = natural_key(vr, tok, nat_filler, 0, 0); wk = natural_key(vr, tok, nat_filler, 0, 0)
+            while wk == vk:
+                wk = natural_key(vr, tok, nat_filler, 0, 0)
         rows = (('right', f' Definition: {vk} refers to {vv}.', first(vv)),
                 ('wrong_key', f' Definition: {wk} refers to {vv}.', unk),
                 ('prose', ' ' + vr.choice(PROSE), unk))
         for kind, row, want in rows:
             lg = body.last_logits(tok.encode(row + f' Query: {vk} refers to', add_special_tokens=False))
             pred = cs[int(lg[cs].argmax())]
-            out.write(json.dumps({'arch': body.arch, 'ckpt': str(a.checkpoint), 'task': 'verify', 'kind': kind,
+            out.write(json.dumps({'arch': body.arch, 'ckpt': str(a.checkpoint), 'task': 'verify', 'kind': kind, 'keys': a.keys,
                                   'doc': d, 'correct': int(pred == want), 'abstained': int(pred == unk),
                                   'free': int(int(lg.argmax()) == want),
                                   'copied': int(pred == first(vv)), 'copied_free': int(int(lg.argmax()) == first(vv)),

@@ -9,6 +9,17 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Mind (v13): cu1's abstain skill transfers to NATURAL keys.** cu1 was trained with synthetic-key
+  fsq only. In the short re-read format (one row + the question), with English-phrase keys:
+  - an unrelated key's row: cu1 says " unknown" outright 0.86 and the wrong value 0.01;
+  - b2p2 says the wrong value 0.59 (Library's package rows: ~57 %);
+  - right rows: cu1 0.91 free (8 % false abstain), b2p2 0.94.
+
+  **What it says:** the near-miss copying Library found is fixed by a small amount of abstain training,
+  and it generalises across key style. **For Library:** score your strict package rows on cu1
+  (`checkpoints_v13_sempty/cu1_main_2efb422/best_model.pt`) before cu2 adds natural-key VERIFY; cu2 may
+  only need the prose-row case (cu1 free 0.31) and the multi-token answers. Fresh seed needed for any claim.
+
 - **Library (03:23 IST): a fetched fact read on the mind's own state WITH a no-row contrast is the best
   answer path we have (0.90-1.00 at 2k-32k), and the "outvoted" effect is NOT a length effect.** Seen:
   A6c (EXPERIMENTS_V14, pre-registered 01:53, `06f3109`, `logs/v14_a6c_b2p2_dec965d_20261101_0212.jsonl`;
