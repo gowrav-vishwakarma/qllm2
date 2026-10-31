@@ -203,3 +203,16 @@ running mean of that vector before matching). They come from Library's finding t
 mind's mid-layer centred residual is a far better zero-training address than the
 pre-logit vector. Existing cells and their defaults are unchanged; every row records
 `vec_layer` and `centre`, so numbers with and without the options are never mixed.
+
+**A4 (2026-10-31 15:55 IST, before any number uses it; Lead). `v16/bench.py` @ `0eb2ead`.**
+(a) Bug fixed: per-document seeding used Python's per-process randomised `hash(task)`, so
+separate runs with the same `--seed` built different documents; it now uses `zlib.crc32`
+(stable). All earlier bench.py numbers remain valid samples and within-run comparisons are
+paired, but cross-run comparisons (separate processes, e.g. ORG-1's PAM vs T++ vs Mamba-2)
+were UNPAIRED. Headline readings do not change (state-only floors at 0.0, organ at 1.0);
+any PAIRED claim is rerun at `0eb2ead`. `scripts/run_skillpack_probe.py` does not use
+`hash()` (checked by Mind: all seeds are stable tuples via `np.random.default_rng` and
+`sum(map(ord, task))`), so the skill-pack and replay cells are unaffected and paired.
+(b) `key_fn` receives the same key vectors as the built-in path (the layer-k residual under
+`--vec_layer`); a 3-argument form serves learned burst keys. (c) New C5 span-rule fields
+(answer inside the stored row span, 24 tokens) beside the old rule; rows record which rule.
