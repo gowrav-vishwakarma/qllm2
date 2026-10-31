@@ -12,24 +12,21 @@
 - Nothing has run on a GPU yet. 4090: v13's n9c was using ~15 GB at 00:30.
 
 ## Running
-- **G1d QUEUED (04:44 IST 2026-10-31)**: grove arm of pair 1 with SAVE=1 for a
-  CPU probe of the trained organ (tmux `v15diag`, worktree `../qllm_v15_diag`
-  at `abe4c89`, ckpt -> `/media/gowrav/d_drive/qllm_ckpts/v15_diag_checkpoints_v14/`).
-  Probe: `.venv/bin/python v15/tmp/probe_shares.py <ckpt>/grove@hd64L4.pt 4`
-  (share entropy per grove, cos(m_query, m_same_key) vs other keys, learned
-  τ/λ/α). Random init: entropy ~2.7 of 3.47 nats, overlap 0.86 vs 0.73.
-- G1r DONE 04:44 IST: FAIL on L and P after 2 of 3 pairs (EXPERIMENTS §4 G1).
-  Pairs 3–6 stopped by the guard (dirty docs edit in `../qllm_v15_g1r`).
-  Worktrees `../qllm_v15_g1` and `../qllm_v15_g1r` can be removed (logs copied).
+- Nothing on a GPU (05:45 IST 2026-10-31). G1d done: the bench-trained
+  organ never formed addresses (τ stayed at init; same-key overlap 0.78 vs
+  other 0.79). EXPERIMENTS §4 G1d. Worktrees `../qllm_v15_g1`,
+  `../qllm_v15_g1r`, `../qllm_v15_diag` can be removed (logs copied; the
+  diag ckpt stays on d_drive).
 
 ## Next action
 0. G2 plumbing is DONE and verified on CPU (`v15/hook.py`, `--arch grove`,
    launcher `ARCH=grove GROVE_SPEC=`); see EXPERIMENTS §4 G2 for the command.
-1. G1d: when the ckpt lands (~05:30 IST), run the probe; write what the
-   trained organ does (sharp or blurred addresses? which groves live?).
-2. Step back (the void), then redesign the addressing in the organism frame
-   (territory / births, SCRATCHPAD 03:40) or something better; new G1 chain.
-3. G2 only after a G1 pass (plumbing is ready).
+1. Step back (the void) on G1d, then write §6 of EXPERIMENTS (design +
+   pre-registration): selection that decides (competitive exclusion) and
+   colonisation of empty niches (births); implement in `v15/grove.py`,
+   selftest parity, toys (big-vocab 4096 keys at lr 3e-4 must stay >= 0.95;
+   bench-like regime), then a new G1 chain (same bars).
+2. G2 only after a G1 pass (plumbing is ready).
 
 ## Step-back notes
 - 2026-10-31 03:40, after G1r pair 1 (rules yes, lookup no, guard no).

@@ -185,9 +185,32 @@ one of two seen labels) while Grove only partly does; nobody binds at
 8-shot (0.12). The L and P bars as written are not met. CPU toy with a
 large key vocabulary (`v15/tmp/toy_bigvocab.py`, 8 pairs, season 32, 1200
 steps): 31 keys 0.998, 512 keys 0.879, 4096 keys 0.846: the soft hash
-degrades with key vocabulary but is not the whole story. Next: G1d, a
-diagnostic of the trained organ (share entropy, address overlap), then the
-step-back before any redesign (SCRATCHPAD 03:40 note: territory / births).
+degrades with key vocabulary but is not the whole story. 
+**G1d — what the trained organ does (05:40 IST; `logs/v14_v15diag1_abe4c89_*`,
+probe `v15/tmp/probe_shares.py`).** The grove arm of pair 1 re-trained with
+saved weights, probed on 40 held-out label_exact prompts per shot count:
+
+| | bench Grove (27.7M, 6000 steps, lr 3e-4) | big-vocab toy that works (4096 keys, lr 3e-4) |
+|---|---|---|
+| τ after training (init 10) | 9.8–10.6, every layer and grove | 13.4–13.6 (fast groves) |
+| λ, α | unchanged from init | λ unchanged |
+| share entropy, fast groves (ln K 3.47 / 2.77) | 2.0–2.7 | 0.4–0.7 |
+| cos(m_query, m_same_key) vs other keys, 8-shot | **0.78 vs 0.79** | **1.00 vs 0.13** |
+| slow groves (λ ≥ 0.74) | collapsed: entropy 0.1–0.3, overlap 1.0 for every key | collapsed too (grove 3: overlap 1.0 / 1.0) |
+
+So the organ never formed addresses: a repeated key is not re-selected any
+more than a different key. In the single-task toy the same organ learns a
+near one-hot hash by itself (and at the bench's learning rate), so the
+difference is the regime: with twenty tasks and an MLP path the LM loss
+never paid the groves for separating keys, and the innate traits sat where
+they were initialised. Nature does not learn sharpness by gradient descent;
+lateral inhibition gives a winner by construction. The collapsed slow groves
+are the dead-unit problem of competitive learning, the same thing seen from
+the other side: no mechanism re-seeds a tree nobody selects.
+**Reading for the redesign (step-back below, §6):** selection must *decide*
+(a winner per grove, structural), and empty niches must be *colonised*
+(a token no tree fits founds a tree). Both exist in ecology (competitive
+exclusion; colonisation of empty niches); neither is in Grove today.
 
 Arm `grove` in `v14/microbench.py` (a V15 model class with the bench's
 interface), size-matched to echo (27.6M), vs `echo` and `tpp`, on B1 run 4's

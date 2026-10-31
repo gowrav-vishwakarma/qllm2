@@ -1,0 +1,80 @@
+B0 micro-bench @ abe4c89: 6000 steps x B16, lr 0.0003, eval ctx (1024, 4096, 8192), 16 docs x 3 positions x 4 queries per cell, aux_weight 0.0, families rules, seed 21, init_seed 21, doc_seed0 400000000
+
+--- arm grove@hd64L4 ---
+  [grove] G=6 K=32 n=64 season=32 mlp=1408: 27.67M params (echo 27.61M), state 390 KB/seq
+/home/gowrav/Development/qllm_v15_diag/v14/microbench.py:485: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"  [{label}] step {step:5d}/{len(plan)} L={L:5d} loss={float(loss):.4f} "
+  [grove@hd64L4] step     1/6000 L=  512 loss=10.9017 | 5,986 tok/s
+  [grove@hd64L4] step   250/6000 L= 1024 loss=2.7353 | 19,667 tok/s
+  [grove@hd64L4] step   500/6000 L= 1024 loss=2.3841 | 25,606 tok/s
+  [grove@hd64L4] step   750/6000 L= 1024 loss=2.2405 | 29,513 tok/s
+  [grove@hd64L4] step  1000/6000 L=  512 loss=1.9388 | 33,590 tok/s
+  [grove@hd64L4] step  1250/6000 L= 1024 loss=1.7552 | 36,749 tok/s
+  [grove@hd64L4] step  1500/6000 L= 1024 loss=1.4200 | 39,075 tok/s
+  [grove@hd64L4] step  1750/6000 L= 1024 loss=1.3154 | 40,859 tok/s
+  [grove@hd64L4] step  2000/6000 L= 1024 loss=1.1470 | 37,190 tok/s
+  [grove@hd64L4] step  2250/6000 L= 1024 loss=1.3094 | 31,945 tok/s
+  [grove@hd64L4] step  2500/6000 L=  512 loss=1.0772 | 28,639 tok/s
+  [grove@hd64L4] step  2750/6000 L= 1024 loss=0.9999 | 26,484 tok/s
+  [grove@hd64L4] step  3000/6000 L= 1024 loss=0.9607 | 24,858 tok/s
+  [grove@hd64L4] step  3250/6000 L=  512 loss=0.8446 | 23,663 tok/s
+  [grove@hd64L4] step  3500/6000 L=  512 loss=0.7943 | 22,676 tok/s
+  [grove@hd64L4] step  3750/6000 L= 1024 loss=0.7840 | 21,900 tok/s
+  [grove@hd64L4] step  4000/6000 L=  512 loss=0.6315 | 21,302 tok/s
+  [grove@hd64L4] step  4250/6000 L=  512 loss=0.7446 | 20,783 tok/s
+  [grove@hd64L4] step  4500/6000 L= 1024 loss=0.6802 | 20,333 tok/s
+  [grove@hd64L4] step  4750/6000 L= 1024 loss=0.6467 | 19,946 tok/s
+  [grove@hd64L4] step  5000/6000 L= 1024 loss=0.6599 | 19,635 tok/s
+  [grove@hd64L4] step  5250/6000 L=  512 loss=0.5629 | 19,357 tok/s
+  [grove@hd64L4] step  5500/6000 L= 1024 loss=0.5642 | 19,098 tok/s
+  [grove@hd64L4] step  5750/6000 L=  512 loss=0.6789 | 18,858 tok/s
+  [grove@hd64L4] step  6000/6000 L=  512 loss=0.6059 | 18,675 tok/s
+  [grove@hd64L4] trained 27.7M params in 3970s (662 ms/step)
+== grove@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          0.73    0.94    0.99
+number_step           0.45    0.70    0.86
+reverse3              1.00    1.00    0.98
+label_category        0.33    0.42    0.25
+two_hop               0.43    0.24    0.09
+letter_shift_ood      0.03    0.07    0.03
+number_step_ood       0.08    0.14    0.05
+label_marker          0.37    0.45    0.25
+label_marker_new      0.34    0.43    0.25
+shift_wide            0.23    0.30    0.35
+step_wide             0.26    0.42    0.42
+affine_map            0.16    0.19    0.15
+shift_wide_new        0.08    0.07    0.08
+step_wide_new         0.17    0.29    0.33
+affine_map_new        0.15    0.12    0.15
+repeat_copy           0.11    0.11    0.11
+label_exact           0.34    0.22    0.12
+label_exact_new       0.34    0.21    0.10
+label_gap             0.40    0.23    0.12
+label_gap_new         0.35    0.27    0.13
+
+================================================================
+== grove@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          0.73    0.94    0.99
+number_step           0.45    0.70    0.86
+reverse3              1.00    1.00    0.98
+label_category        0.33    0.42    0.25
+two_hop               0.43    0.24    0.09
+letter_shift_ood      0.03    0.07    0.03
+number_step_ood       0.08    0.14    0.05
+label_marker          0.37    0.45    0.25
+label_marker_new      0.34    0.43    0.25
+shift_wide            0.23    0.30    0.35
+step_wide             0.26    0.42    0.42
+affine_map            0.16    0.19    0.15
+shift_wide_new        0.08    0.07    0.08
+step_wide_new         0.17    0.29    0.33
+affine_map_new        0.15    0.12    0.15
+repeat_copy           0.11    0.11    0.11
+label_exact           0.34    0.22    0.12
+label_exact_new       0.34    0.21    0.10
+label_gap             0.40    0.23    0.12
+label_gap_new         0.35    0.27    0.13
+
