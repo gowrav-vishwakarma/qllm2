@@ -4009,3 +4009,23 @@ A_state of affine_map_new and shift_wide_new. Today b2p2: 1.00 / 0.86 / – / 0.
 5. One seed. If rule 1 holds, a second seed and the 3B question follow before any claim.
 6. If rule 1 fails while rule 2 holds: reach is a ceiling of the body; record it, and
    the register (Library, SR) is the route.
+
+### Skill-pack persistence, four models (2026-10-31 14:05 IST)
+
+One read at t0, 100 docs per cell, seeds 8000–8099, chance 0.125. Per cell: accuracy (mean A_margin).
+
+| model (600M tokens, ~102M) | affine @ 0 / 2k / 8k / 32k | shift @ 0 / 2k / 8k / 32k | re-fetch (affine / shift) | state |
+|---|---|---|---|---|
+| PAM b2p1 (s42) | 1.00 / **0.91** (+2.6) / 0.05 / 0.08 | 1.00 / **0.80** (+1.6) / 0.02 / 0.02 | 1.00 / 1.00 | 1.15 MB |
+| PAM b2p2 (s43) | 1.00 / **0.98** (+4.1) / 0.14 / 0.07 | 1.00 / **0.74** (+1.0) / 0.05 / 0.01 | 1.00 / 1.00 | 1.15 MB |
+| T++ b2t | 0.96 / 0.06 (−1.0) / 0.39 / 0.08 | 0.24 / 0.00 / 0.00 / 0.00 | 0.96 / 0.24 | KV 67 / 266 / 1,058 MB |
+| Mamba-2 b2m | 1.00 / 0.11 (−1.5) / 0.03 / 0.05 | 0.73 / 0.00 / 0.00 / 0.00 | 1.00 / 0.73 | 13.4 MB (scoreboard) |
+
+**Reach (mean of the two) at 2k: PAM 0.86 / 0.86 (two seeds) vs T++ 0.03, Mamba-2 0.06.**
+At a 2k one-read gap (inside the trained length) PAM keeps the rule while both baselines
+lose it (T++ with the pack in its window). By 8k all four are at chance. **R7 (32k): FAIL**
+for every model (0.07 / 0.08 vs 0.08 / 0.05). Re-fetching the pack works at every L for
+all bodies (T++ and Mamba-2 at their L = 0 skill). Two readings for the record:
+- The replicated mind edge is "carries an induced rule across ~2k tokens of unrelated
+  text after one read", with an O(1) state of 1.15 MB (12× smaller than Mamba-2's).
+- The reach wall at ~2k is the LAW-1 question (pre-registered above).
