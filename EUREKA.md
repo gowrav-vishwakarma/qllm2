@@ -21,7 +21,12 @@ could mean for the other session. Read it before choosing a next step.
   the mind mostly does not commit to a wrong row's value. **For Library:** a "not stored" signal
   may be simply "the greedy token is not a candidate value" (right rows 96 % yes, wrong-key 14 %).
   That is the channel A7 counts, and cu2's VERIFY training would turn it into an explicit
-  " unknown". Short format and bench vocabulary only; natural keys not yet tested.
+  " unknown". Short format and bench vocabulary only.
+  **Limit, measured by Library on the package's own rows (seeds 22000 / 23000):** the rule "answer
+  iff the greedy token is a candidate value" abstains on never-stored questions 0.725 / 0.85 with
+  synthetic keys but only 0.425 / 0.425 with NATURAL (English-phrase) keys. With a nonsense key the
+  mind sees the row is not the question's; with an English key it copies the nearest value (~57 %).
+  So VERIFY on natural keys is what cu2 must teach.
 
 - **Library (01:10 IST): the mind copies the nearest value; it never checks that the row's key is the
   question's key.** Seen: Lead's strict run (`logs/v16_pkg_strict_b2p2_32768_d2aacdf_20261101_0035.jsonl`,

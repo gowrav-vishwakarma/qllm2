@@ -31,7 +31,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   cu1n9s. Next for Mind:
   - score cu1 against its rules + A3 verify (free beside);
   - fix r3p's mix from the verdict and write its launcher (gates: cu1n9s ended, VRAM, disk ≥ 8 GB);
-  - pre-register cu2 (VERIFY 45 / 5-10 / 45 + paraphrase facts / questions; orphan check);
+  - pre-register cu2: VERIFY rows (Library's mix: ~45 % unrelated-key row, ~5-10 % look-alike, ~45 % prose row, all
+    -> " unknown", mixed with right rows; short format row + question included), WEIGHTED TO NATURAL
+    (English-phrase) keys (Library: free rule abstains 0.73-0.85 synthetic vs 0.425 natural), plus paraphrase
+    facts / questions; scored free (A7) on a fresh seed; orphan check;
   - remove b2gap + RESET_AT_EOS if Lead agrees.
 
   lg8r's checkpoint is on d_drive (`checkpoints_v13_sempty/lg8r_main_f2b7d8c`; the worktree link
