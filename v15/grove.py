@@ -59,8 +59,8 @@ class GroveConfig:
     theta_init: tuple = (0.95, 0.2) # novelty threshold on cosine, spread across groves, paired
                                     # with lam: fast groves strict (instance caches), slow groves
                                     # loose (prototypes / context)
-    use_decay: float = 0.75        # starvation: use <- use_decay * use + wins, per season
-    use_init: float = 1.0          # innate experience of a dawn tree (its root0 counts this much)
+    alpha_init: float = 2.0        # growth rate: step = 1 - exp(-alpha * mass eaten), learnable per grove
+    use_decay: float = 0.75        # starvation: use <- use_decay * use + mass eaten, per season
     conv: int = 4             # depthwise causal conv on the soil path (0 = off)
 
 
@@ -103,6 +103,7 @@ class GroveLayer(nn.Module):
         lam0 = torch.linspace(lo, hi, G) if G > 1 else torch.tensor([hi])
         self.lam_p = nn.Parameter(torch.log(lam0 / (1 - lam0)))
         self.temp_p = nn.Parameter(torch.full((G,), math.log(cfg.temp_init)))
+        self.alpha_p = nn.Parameter(torch.full((G,), math.log(math.expm1(cfg.alpha_init))))
         t_lo, t_hi = cfg.theta_init
         self.register_buffer('theta', torch.linspace(t_lo, t_hi, G) if G > 1 else torch.tensor([t_hi]))
         self.conv = nn.Conv1d(G * n, G * n, cfg.conv, groups=G * n, bias=False) if cfg.conv > 1 else None
@@ -121,12 +122,15 @@ class GroveLayer(nn.Module):
     def temp(self):
         return self.temp_p.exp()                         # [G]
 
+    @property
+    def alpha(self):
+        return F.softplus(self.alpha_p)                  # [G]
+
     def init_state(self, B: int, device=None) -> GroveState:
         G, K, n = self.cfg.groves, self.cfg.trees, self.cfg.root
         z = torch.zeros(B, G, K, device=device, dtype=self.root0.dtype)
         return GroveState(z.clone(), self.root0.expand(B, G, K, n).clone(),
-                          self.fruit0.expand(B, G, K, n).clone(), z.clone(),
-                          torch.full_like(z, self.cfg.use_init))
+                          self.fruit0.expand(B, G, K, n).clone(), z.clone(), z.clone())
 
     def _soil(self, h: torch.Tensor, tail: torch.Tensor | None):
         """h [B, T, d] -> x [B, T, G, n] after the causal conv, and the new conv
@@ -147,19 +151,21 @@ class GroveLayer(nn.Module):
         return x.reshape(B, T, G, n), new_tail
 
     @staticmethod
-    def _grow(proto, S, g, base):
-        """A tree is the running mean of what it ate: proto counts for `base`
-        tokens (its decayed use), the new food for g.  proto [..., J, n],
-        S [..., J, n] = sum m x, g [..., J] = sum m, base [..., J] (0 for a newborn)."""
-        step = g / (base + g).clamp_min(1e-6)                                 # in [0, 1]
+    def _grow(proto, S, g, alpha):
+        """Move a tree toward the mass-weighted mean of what it ate, by a step
+        that grows with the mass and never overshoots.  proto [B,G,J,n],
+        S [B,G,J,n] = sum m x, g [B,G,J] = sum m, alpha [G] (a newborn's prior
+        is its founding token)."""
+        step = 1 - torch.exp(-alpha[None, :, None] * g)                      # in [0, 1)
         mean = S / g.clamp_min(1e-6).unsqueeze(-1)
         return proto + step.unsqueeze(-1) * (mean - proto)
 
-    def _place(self, roots, fruits, use, ev, bornT, rootb, fruitb, useb, evb_end, w_last):
+    def _place(self, roots, fruits, use, ev, bornT, rootb, fruitb, useb, evb_end, me_last):
         """Season's end: born trees (in birth order) take the niches with the
         smallest use.  bornT [B,G,C] bool; rootb/fruitb [B,G,C,n]; useb/evb_end
-        [B,G,C]; w_last [B,G] winner column at the last token (K+C columns).
-        Returns new roots, fruits, use, ev and the one-hot m_last [B,G,K]."""
+        [B,G,C]; me_last [B,G,K+C] the eating mass at the last token.
+        Returns new roots, fruits, use, ev and m_last [B,G,K] (that mass carried
+        into the niches: a replaced dawn tree's and a dropped newborn's are lost)."""
         B, G, K, n = roots.shape
         C = bornT.shape[-1]
         rank = bornT.long().cumsum(-1) - 1                                   # [B,G,C]
@@ -177,16 +183,7 @@ class GroveLayer(nn.Module):
         ev = put(ev, evb_end)
         replaced = torch.zeros(B, G, K + 1, dtype=torch.bool, device=roots.device)
         replaced = replaced.scatter(2, idx, torch.ones_like(idx, dtype=torch.bool))[:, :, :K]
-        # where does the last winner live now?  a dawn tree that was not replaced keeps
-        # its niche; a born tree that was kept is at its slot; otherwise nobody.
-        dawn = w_last < K
-        col_dawn = w_last.clamp(max=K - 1)
-        dawn_ok = dawn & ~torch.gather(replaced, -1, col_dawn[..., None])[..., 0]
-        s = (w_last - K).clamp(0, C - 1)
-        born_ok = (~dawn) & torch.gather(keep, -1, s[..., None])[..., 0]
-        col_born = torch.gather(slot, -1, s[..., None])[..., 0]
-        col = torch.where(dawn_ok, col_dawn, torch.where(born_ok, col_born, torch.full_like(col_dawn, K)))
-        m_last = F.one_hot(col, K + 1).to(roots.dtype)[:, :, :K]
+        m_last = me_last[:, :, :K] * (~replaced).to(roots.dtype) + put(torch.zeros_like(use), me_last[:, :, K:])
         return roots, fruits, use, ev, m_last
 
     # ---- season (parallel) form ----------------------------------------------------
@@ -210,7 +207,7 @@ class GroveLayer(nn.Module):
         if x.dtype in (torch.bfloat16, torch.float16):
             x, y = x.float(), y.float()
         dt = x.dtype
-        lam, temp, theta, rho = self.lam, self.temp, self.theta, cfg.use_decay
+        lam, temp, theta, alpha, rho = self.lam, self.temp, self.theta, self.alpha, cfg.use_decay
         idx = torch.arange(C, device=h.device)
         expo = (idx[:, None] - idx[None, :]).clamp_min(0).to(dt)
         Lmat = torch.where(idx[:, None] >= idx[None, :], lam[:, None, None] ** expo, 0.0)  # [G,C,C]
@@ -244,42 +241,43 @@ class GroveLayer(nn.Module):
             evb_m = torch.where(valid, evb, torch.full((), neg, dtype=dt, device=h.device))
             score = torch.cat([evd, evb_m.permute(0, 1, 3, 2)], dim=-1)   # [B,C,G,K+C]
             # canopy: the READ is a soft mixture over the trees that exist (what you see);
-            # niche: the token is EATEN by one tree, its own newborn if it is novel
+            # eating is soft too (every tree grows by its share), except that a novel
+            # token is eaten by its own newborn alone
             m = torch.softmax(score, dim=-1)
-            eat = torch.where(born, K + idx[None, :, None], score.argmax(-1))     # [B,C,G]
-            mh = F.one_hot(eat, K + C).to(dt)
+            newborn = F.one_hot(K + idx, K + C).to(dt)                     # [C, K+C]
+            me = torch.where(born[..., None], newborn[None, :, None], m)   # [B,C,G,K+C]
             if self._record is not None:
-                self._record.append((mh.detach(), born.detach(), m.detach()))
-            # succession credit: y_t goes to the tree that ATE x_{t-1}
+                self._record.append((me.detach(), born.detach(), m.detach()))
+            # succession credit: y_t goes to whoever ate x_{t-1}, by share
             m_last_ext = torch.cat([m_last, torch.zeros(B, G, C, dtype=dt, device=h.device)], -1)
-            m_prev = torch.cat([m_last_ext[:, None], mh[:, :-1]], dim=1)  # [B,C,G,K+C] hard
+            m_prev = torch.cat([m_last_ext[:, None], me[:, :-1]], dim=1)  # [B,C,G,K+C]
             gy_all = m_prev.cumsum(1)
             gy = gy_all - m_prev                                          # credits before t
             prior = torch.cat([fruits, self.fruit0_born[None, :, None].expand(B, G, C, n)], dim=2)
-            base = torch.cat([rho * use, torch.zeros(B, G, C, dtype=dt, device=h.device)], -1)
-            step = gy / (base[:, None] + gy).clamp_min(1e-6)              # ripening = running mean
+            step = 1 - torch.exp(-alpha[None, None, :, None] * gy)        # ripening = growth so far
             wr = m * step / gy.clamp_min(1e-6)
             A = torch.einsum('btgj,bsgj->bgts', wr, m_prev) * strictf
             outs.append(torch.einsum('btgj,bgjn->btgn', m * (1 - step), prior)
                         + torch.einsum('bgts,bsgn->btgn', A, yc))
             # season's end: growth, starvation, placement
-            wins = mh.sum(1)                                              # [B,G,K+C]
+            wins = me.sum(1)                                              # [B,G,K+C] mass eaten
             massx = wins
-            Sx = torch.einsum('btgj,btgn->bgjn', mh, xc)
+            Sx = torch.einsum('btgj,btgn->bgjn', me, xc)
             Sy = torch.einsum('btgj,btgn->bgjn', m_prev, yc)
             gyS = gy_all[:, -1]
-            roots_n = self._grow(roots, Sx[:, :, :K], massx[:, :, :K], rho * use)
-            fruits_n = self._grow(fruits, Sy[:, :, :K], gyS[:, :, :K], rho * use)
+            roots_n = self._grow(roots, Sx[:, :, :K], massx[:, :, :K], alpha)
+            fruits_n = self._grow(fruits, Sy[:, :, :K], gyS[:, :, :K], alpha)
             use_n = rho * use + wins[:, :, :K]
-            zero = torch.zeros(B, G, C, dtype=dt, device=h.device)
-            rootb = self._grow(xc.permute(0, 2, 1, 3), Sx[:, :, K:], massx[:, :, K:], zero)
-            fruitb = self._grow(prior[:, :, K:], Sy[:, :, K:], gyS[:, :, K:], zero)
+            # a newborn's root starts at its founding token (already in Sx with mass 1)
+            Sxb, gb = Sx[:, :, K:] - xc.permute(0, 2, 1, 3) * born.permute(0, 2, 1)[..., None], massx[:, :, K:] - born.permute(0, 2, 1).to(dt)
+            rootb = self._grow(xc.permute(0, 2, 1, 3), Sxb, gb, alpha)
+            fruitb = self._grow(prior[:, :, K:], Sy[:, :, K:], gyS[:, :, K:], alpha)
             useb = wins[:, :, K:]
             roots, fruits, use, ev, m_last = self._place(
                 roots_n, fruits_n, use_n, evd[:, -1], born.permute(0, 2, 1), rootb, fruitb,
                 useb, torch.where(born.permute(0, 2, 1), evb[:, -1].permute(0, 2, 1),
                                   torch.full((), neg, dtype=dt, device=h.device)),
-                mh[:, -1].argmax(-1))
+                me[:, -1])
         ac.__exit__(None, None, None)
         o = torch.cat(outs, dim=1).reshape(B, T, G * n)[:, :T0]
         buf = {'tail': tail} if tail is not None else None
@@ -311,7 +309,7 @@ class GroveLayer(nn.Module):
                        credit=torch.cat([state.m_last, torch.zeros(B, G, C, device=dev, dtype=dt)], -1),
                        count=torch.zeros((), device=dev))
         p = int(buf['count'])
-        lam, temp, theta, rho = self.lam, self.temp, self.theta, cfg.use_decay
+        lam, temp, theta, alpha, rho = self.lam, self.temp, self.theta, self.alpha, cfg.use_decay
         x, tail = self._soil(h_t[:, None], buf.get('tail'))
         x = x[:, 0].to(dt)                                                # [B, G, n]
         y = self.sap(h_t).view(B, G, n).to(dt)
@@ -333,12 +331,10 @@ class GroveLayer(nn.Module):
         scb = torch.where(valid, evb, torch.full((), neg, dtype=dt, device=dev))
         score = torch.cat([ev, scb], -1)
         m = torch.softmax(score, dim=-1)                                   # soft read
-        w = torch.where(born_now, torch.full_like(score.argmax(-1), K + p), score.argmax(-1))
-        mh = F.one_hot(w, K + C).to(dt)                                    # hard eat
+        mh = torch.where(born_now[..., None], F.one_hot(torch.tensor(K + p, device=dev), K + C).to(dt)[None, None], m)  # eating mass
         # read: the winner's ripening fruit (credits before this token)
         prior = torch.cat([state.fruits, self.fruit0_born[None, :, None].expand(B, G, C, n)], 2)
-        base = torch.cat([rho * state.use, torch.zeros(B, G, C, dtype=dt, device=dev)], -1)
-        ripe = self._grow(prior, buf['Sy'], buf['gy'], base)               # [B,G,K+C,n]
+        ripe = self._grow(prior, buf['Sy'], buf['gy'], alpha)              # [B,G,K+C,n]
         o = torch.einsum('bgj,bgjn->bgn', m, ripe).reshape(B, G * n)
         # credit this token's sap to the winner at t-1 (+ founding), then eat
         credit = buf['credit']
@@ -357,16 +353,17 @@ class GroveLayer(nn.Module):
         buf['count'] = buf['count'] + 1
         roots, fruits, use, m_last = state.roots, state.fruits, state.use, mh[:, :, :K]
         if p + 1 == C:
-            roots_n = self._grow(roots, buf['Sx'][:, :, :K], buf['massx'][:, :, :K], rho * use)
-            fruits_n = self._grow(fruits, buf['Sy'][:, :, :K], buf['gy'][:, :, :K], rho * use)
+            roots_n = self._grow(roots, buf['Sx'][:, :, :K], buf['massx'][:, :, :K], alpha)
+            fruits_n = self._grow(fruits, buf['Sy'][:, :, :K], buf['gy'][:, :, :K], alpha)
             use_n = rho * use + buf['wins'][:, :, :K]
-            zero = torch.zeros(B, G, C, dtype=dt, device=dev)
-            rootb = self._grow(buf['xs'], buf['Sx'][:, :, K:], buf['massx'][:, :, K:], zero)
-            fruitb = self._grow(prior[:, :, K:], buf['Sy'][:, :, K:], buf['gy'][:, :, K:], zero)
+            bf = buf['born'].to(dt)
+            Sxb = buf['Sx'][:, :, K:] - buf['xs'] * bf[..., None]
+            rootb = self._grow(buf['xs'], Sxb, buf['massx'][:, :, K:] - bf, alpha)
+            fruitb = self._grow(prior[:, :, K:], buf['Sy'][:, :, K:], buf['gy'][:, :, K:], alpha)
             useb = buf['wins'][:, :, K:]
             evb_end = torch.where(buf['born'], evb, torch.full((), neg, dtype=dt, device=dev))
             roots, fruits, use, ev, m_last = self._place(
-                roots_n, fruits_n, use_n, ev, buf['born'], rootb, fruitb, useb, evb_end, w)
+                roots_n, fruits_n, use_n, ev, buf['born'], rootb, fruitb, useb, evb_end, mh)
             keep_tail = buf.get('tail')
             buf = {} if keep_tail is None else {'tail': keep_tail}
         return self.out(o.to(h_t.dtype)), GroveState(ev, roots, fruits, m_last, use, buf)

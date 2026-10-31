@@ -80,7 +80,7 @@ def simplex_and_grads():
     o, st = layer(h)
     check("shares sum to 1 (softmax over trees)", torch.allclose(st.m_last.sum(-1), torch.ones(2, 2)))
     o.pow(2).mean().backward()
-    for name in ('root0', 'fruit0', 'fruit0_born', 'bias', 'bias_born', 'lam_p', 'temp_p', 'soil.weight', 'sap.weight'):
+    for name in ('root0', 'fruit0', 'fruit0_born', 'bias', 'bias_born', 'lam_p', 'temp_p', 'alpha_p', 'soil.weight', 'sap.weight'):
         p = dict(layer.named_parameters())[name]
         check(f"gradient reaches {name}", p.grad is not None and p.grad.abs().sum() > 0)
     lm = GroveLM(GroveLMConfig(vocab_size=100, dim=64, n_layers=2, mlp_hidden=128,
