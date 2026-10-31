@@ -53,9 +53,12 @@ def main():
     ap.add_argument('--session', type=int, default=1024)
     ap.add_argument('--seed', type=int, default=18000)
     ap.add_argument('--out', required=True)
+    ap.add_argument('--head', default=P.HEAD)
+    ap.add_argument('--mean', default=P.MEAN)
+    ap.add_argument('--para', action='store_true', help='also ask each fact with a paraphrased key (Title / UPPER / the K / plural)')
     a = ap.parse_args()
     rng = random.Random(a.seed)
-    mind, head = P.Mind(), P.KeyHead()
+    mind, head = P.Mind(), P.KeyHead(a.head, a.mean)
     tok = mind.tok
     filler = filler_tokens(HOLDOUT)
     # library text from the first half of the held-out prose, sessions from the second half
@@ -87,13 +90,23 @@ def main():
     meta = P.install(out / 'pack.jsonl', out / 'library', mind=mind, head=head)
     lib = P.Library(out / 'library')
     cand = [tok.encode(' ' + v, add_special_tokens=False)[0] for v in _RECALL_VALUE_NOUNS]
-    res = {k: dict(n=0, key1=0, key5=0, key_ans=0, organ_hit=0, organ_ans=0) for k in ('synthetic', 'natural')}
+    res = {f'{k}_{form}': dict(n=0, key1=0, key5=0, key_ans=0, organ_hit=0, organ_ans=0)
+           for k in ('synthetic', 'natural') for form in ('exact', 'para')}
+    jobs = []
     for f in facts:
-        r = res[f['kind']]
+        jobs.append((f, 'exact', f['key']))
+        if a.para:
+            w = f['key'].split()
+            forms = [f['key'].title(), f['key'].upper(), 'the ' + f['key']]
+            if len(w) == 2:
+                forms.append(w[0] + ' ' + (w[1][:-1] if w[1].endswith('s') else w[1] + 's'))
+            jobs.append((f, 'para', rng.choice([x for x in forms if x != f['key']])))
+    for f, form, qkey in jobs:
+        r = res[f"{f['kind']}_{form}"]
         r['n'] += 1
         sess = tok.encode(prose(rng, tok, filler, a.session, 0.5, 1.0), add_special_tokens=False)
-        q = tok.encode(f" Query: {f['key']} refers to", add_special_tokens=False)
-        kid = tok.encode(f" {f['key']}", add_special_tokens=False)
+        q = tok.encode(f" Query: {qkey} refers to", add_special_tokens=False)
+        kid = tok.encode(f" {qkey}", add_special_tokens=False)
         ids = sess + q
         qpos = len(sess) + next(i for i in range(len(q)) if q[i:i + len(kid)] == kid) + len(kid) - 1
         top = lib.by_key(P.query_key(mind, head, ids, qpos), 5)
@@ -112,10 +125,11 @@ def main():
         if org is not None:
             r['organ_hit'] += int(org[0] == f['entry'])
             r['organ_ans'] += int(int(lib.T[org[1]]) == cand[_RECALL_VALUE_NOUNS.index(f['val'])])
-    for k, r in res.items():
+    for k, r in list(res.items()):
         n = max(1, r['n'])
         res[k] = {kk: (round(vv / n, 3) if kk != 'n' else vv) for kk, vv in r.items()}
-    report = dict(library=meta, results=res, session_tokens=a.session, seed=a.seed)
+    res = {k: v for k, v in res.items() if v['n']}
+    report = dict(library=meta, results=res, session_tokens=a.session, seed=a.seed, head=a.head)
     json.dump(report, open(out / 'report.json', 'w'), indent=1)
     print(json.dumps(res, indent=1))
 
