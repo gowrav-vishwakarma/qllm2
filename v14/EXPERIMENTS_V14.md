@@ -1734,7 +1734,7 @@ tokens, spread affine 0.44-0.61 at 8k).**
     rule: f_l from a different rule. (D) random vector of the same norm.
   - **Bar SR-0:** for some single layer l, (B) at G = 32k ≥ 0.9 × (A) at G =
     2k, AND (C) and (D) ≤ 0.25 × (B) (it is the rule, not any push).
-    Reported: l by l, G = 8k / 32k / 128k, and (A) at 32k (the loss to beat).
+    Reported (organiser's request, before any SR-0 number): the transplant curve at G = 2k / 8k / 32k / 128k, layer by layer, so the curve shows where the vector dies (v13 predicts between 8k and 32k), and (A) at each G (the loss to beat). Checkpoint: `/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt`.
   - **Outcomes:** met → a transplantable rule vector exists; build SR
     (the latch + a no-decay slot) and pre-register its bars. Not met → a
     residual-stream register does not work in this body; the alternative is
