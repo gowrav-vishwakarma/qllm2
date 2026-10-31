@@ -51,6 +51,25 @@ needs a 3-line bench hook). **n11rf** OOMed at 01:17 (4 rows); relaunch after A6
 * **Waking peers:** `scripts/wake_session.sh <Name> <id>` (memory
   wake-sessions); check ListAgents / tmux first.
 
+## Step back (2026-11-01 02:00 IST, after A5: synonyms)
+
+* **What surprised me.** The frozen state with NO head (C2) finds the synonym
+  fact 0.375 of the time, almost as often as the trained head (0.40) and the
+  trained 22M encoder (0.45). My head adds little; the meaning is already in
+  the mind's state. And reading the 5 candidate rows TOGETHER (0.55) beats
+  reading them one at a time (max margin 0.45): in context, side by side, the
+  mind does some synonym matching itself.
+* **What it says.** Fetch by meaning exists in the body, weakly. The library
+  should lean on the mind's reading (several candidates at once, cold) rather
+  than on a better key head.
+* **Bold angle: a "line-up" read.** Fetch top-k by the state key, then hand
+  the mind all k rows at once, cold, plus the question: the mind's own
+  comparison is the re-rank. Cost k × ~30 tokens, still O(1) state. Prior
+  work: listwise LLM re-ranking (RankGPT, Sun et al. 2023), Fusion-in-Decoder
+  (Izacard & Grave 2021). Difference: an O(1) mind reading a cold line-up of
+  its own fetched rows. Needs `P_concat_burst_sent` (asked of Lead) before
+  any bar.
+
 ## Step back (2026-11-01 01:55 IST, after A6: the mind does not listen late)
 
 * **What surprised me.** I expected the warm read (the mind's own state + the
