@@ -4177,3 +4177,21 @@ gap rule signal, whose own gradient is weak across ~15k-token gaps. Consequences
 extension by training would need long COHERENT documents at long context (books, long
 code), a larger share of long-gap docs or a curriculum, or a structural decay floor /
 protected register (Library's SR). lg8 / lg2 get the same table in their write-up.
+
+## LAW-1 closed (user decision via Lead, 2026-10-31 21:20 IST): one-read reach ≈ training length is a STATED LIMIT at this scale
+
+User: "That's not a failure, it's our limit at this scale; mark it done and move next."
+"Holds beyond the training context" is DONE at the package level: re-fetch 1.00 at every
+length to 128k; spread rules 0.905 at 4k (re-exposure); the mind's one-read reach ≈ its
+training length (~2k at 103M / 600M tokens) is the stated limit (PLAN "Stated limit,
+closed"). **lg8, lg2 and lg32-reset are CANCELLED before they started** (they could not
+change this decision). Only lg32 ran (result above).
+
+**Lesson recorded as done (the half-life side finding):** fine-tuning the mind at 32k on
+packed web text plus 3 % long-gap rule docs SHORTENED every echo memory half-life by
+25–55 % and the longest notebook head by 38 %. The training objective at long context
+teaches forgetting; extending a decaying state's reach by gradient needs a different
+data regime (coherent long documents, or a curriculum), or a protected register. Not
+pursued now. The reset-at-separator mask (to test the packing explanation) is left
+UNFINISHED on branch `reset` (`qllm_reset`): its isolation test still fails (some cross-
+document path remains), and it is not on master.

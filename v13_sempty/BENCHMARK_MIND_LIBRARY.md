@@ -216,3 +216,11 @@ any PAIRED claim is rerun at `0eb2ead`. `scripts/run_skillpack_probe.py` does no
 (b) `key_fn` receives the same key vectors as the built-in path (the layer-k residual under
 `--vec_layer`); a 3-argument form serves learned burst keys. (c) New C5 span-rule fields
 (answer inside the stored row span, 24 tokens) beside the old rule; rows record which rule.
+
+**A5 (2026-10-31 21:20 IST; Lead): streaming caveat.** Every memory figure for an M2 body
+(notebooks in blocks 3, 7, 11, 15 + shared reads; b2p1 / b2p2 / b2p3, state 1.15 MB) is
+COMPUTED from the state size, not yet demonstrated by streaming: the M2 body has no
+carried-state chunked prefill and no O(1) decode yet (a Mind release blocker). M1 bodies
+(e.g. `c1ctlb`, no shared reads) stream today. Until streaming lands with parity tests,
+M2 MB figures carry this line. Decision rule (Lead): if M2 streaming takes more than ~1 day,
+quantify the M1-vs-M2 gap on the skill-pack and LM cells and pick the body that streams.
