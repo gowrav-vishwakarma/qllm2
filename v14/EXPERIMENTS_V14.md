@@ -2584,6 +2584,33 @@ fitted threshold:
   secondary. Bars: neg abstain ≥ 0.90; kv `P_free_sent` ≥ 0.95 on both key
   types. b2p2, 32k, 40 docs per cell, kv / para / tool / neg × syn + nat. Runs
   when Lead's harness has `P_free_sent`.
+- **A3: "found it" from the mind's own evidence (PRE-REGISTERED 2026-11-01
+  01:00 IST, before any number of it; offline, no GPU).** A2 showed similarity
+  cannot decide abstain (stored-paraphrase and never-stored sims overlap).
+  A3 asks whether the mind's READ of the candidates can: per query, from the
+  logged top-5 `P_cands` only.
+  - Features (fixed now): (f1) max `gain` over top-5 (log p of the row's own
+    answer with the row minus without it, over the 20 candidates, prior
+    cancelled); (f2) top-1 `gain`; (f3) agreement = how many of the top-5 rows
+    re-read to the top-1 answer; (f4) top-1 `margin`; (f5) top-1 sim minus the
+    mean of ranks 2-5 (outlier gap); (f6) the top-1 free token equals the top-1
+    20-way answer.
+  - Rule form: strict mode, then, when the organ misses, answer with the top-1
+    row iff ONE feature ≥ a threshold, else abstain.
+  - FIT on Lead's strict run (`logs/v16_pkg_strict_b2p2_32768_d2aacdf_20261101_0035.jsonl`,
+    seed 22000): choose the feature and threshold that maximise mean
+    answered-and-correct (20-way) over para + tool, both key types, subject to
+    neg abstain ≥ 0.90 on both key types.
+  - CONFIRM on S2's rows (seed 23000, unseen), with the rule frozen. Bar MET iff
+    there neg abstain ≥ 0.90 on both key types AND para + tool
+    answered-and-correct is at least strict mode + 0.10 (absolute, same rows).
+    Free (`P_free_sent`) reported beside it.
+  - Closest prior work: UPR (Sachan et al. 2022, rerank passages by the LM's
+    log p(question | passage)); Self-RAG (Asai et al. 2023, trained relevance
+    critic tokens); selective QA (Kamath et al. 2020, a trained calibrator).
+    Difference: no trained critic and no question likelihood; the O(1) mind's
+    answer gain with the no-row prior cancelled, and agreement across rows, set
+    the abstain.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
