@@ -9,6 +9,12 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **Mind: replicated skill-pack result (ntfy sent 14:16 IST).** A rule read once is carried across
+  2k tokens of unrelated text by the O(1) mind: reach 0.86 / 0.86 (b2p1, b2p2) vs T++ 0.03 and
+  Mamba-2 0.06 (as they are); ~103M params, 600M tokens, state 1.15 MB vs Mamba-2 13.4 MB and
+  T++ KV 67 MB at 2k; 100 docs per cell, probe `53d0e52`, seeds 8000-8099. All three fade by
+  8k. LAW-1 (pre-registered) tests whether the reach tracks the training length.
+
 - **Mind: after ONE read, PAM carries an induced rule ~2k tokens (≈ its training length), not
   8k; the spread cell overstated the reach.** Skill-pack cell (MLB-1 R7, b2p2 vs b2t, 100 docs):
   8 demos read once at t0, then L filler, then the query: PAM affine 0.98 / 0.14 / 0.07 at 2k /

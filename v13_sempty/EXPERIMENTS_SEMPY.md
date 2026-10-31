@@ -4029,3 +4029,20 @@ all bodies (T++ and Mamba-2 at their L = 0 skill). Two readings for the record:
 - The replicated mind edge is "carries an induced rule across ~2k tokens of unrelated
   text after one read", with an O(1) state of 1.15 MB (12× smaller than Mamba-2's).
 - The reach wall at ~2k is the LAW-1 question (pre-registered above).
+
+**LAW-1 amendment A1 (2026-10-31 14:15 IST, before any LAW-1 number; Lead's decisions).**
+(1) Reach at 2k (the control's own length) is reported for every arm, so the table shows
+a slope, not only the endpoint. (2) Order on the 6000: lg32 first (decisive), then lg8,
+then lg2; starts when s8 ends (~18:00), or at once if r3c fails its futility check. (3)
+Source `b2gap` committed with tests in `e4d4fcd` (400 docs: 0 format errors, 0 held-out
+values, 0 wrong answers, deterministic, resume OK, length ≤ bound).
+
+**`lbm` (Mamba-2 + lab) cancelled before it started** (Lead, 14:15 IST): the user's comparison
+rule (baselines as they are, no new baseline training) now governs; it was the label
+pair's amendment-1 arm. The label result therefore stands as PAM vs T++ on the same data
+(0.934 vs 0.798) with Mamba-2's existing number without label docs (b2m label_diag 0.787)
+quoted beside it, not as a same-data Mamba-2 comparison.
+
+**ntfy EUREKA sent 14:16 IST** (user's rule: replicated, ahead of both baselines at lower
+memory cost, params and tokens stated): the one-read 2k reach (PAM 0.86 / 0.86 vs T++
+0.03, Mamba-2 0.06; ~103M, 600M tokens, 1.15 MB state; b2p1 / b2p2_main_38e3c29, probe 53d0e52).
