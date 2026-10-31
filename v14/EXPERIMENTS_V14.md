@@ -1150,6 +1150,37 @@ past 2048 has looked seed-lucky before, so both arms run at a NEW seed, paired.
   to a ≥ 1.5B-token arm on the r3c recipe (paired with r3c). Not met: n9c's
   recall jump was seed luck, recorded as such.
 
+**n9r RESULT (4090, 2026-10-31, `37fa333`; 103.5M vs 102.9M, 600M tokens
+each, SEED=43 both): BOTH recall bars NOT met. N9a's recall gain is not
+reproduced; n9c's jump was seed luck.** Logs: `logs/v13_sempty_n9r*b_main_37fa333_*.log`,
+`logs/memory_probes/v13_sempty_n9r*b_main_37fa333_t40_behavioral.json`,
+`logs/learning_probes/*labeldiag_t200.json`, `logs/pos_loss/*pg19.json`,
+`logs/v14_n9r_chain_37fa333_20261031.log`. Scored with the v13 definition
+(accuracy·n over `aggregates`; 63 rows).
+
+| | overall | ≤ 2048 | > 2048 | label_diag | PG-19 far gain (4096-8192) | val (holdout) |
+|---|---|---|---|---|---|---|
+| ctl43 | 0.901 | 0.968 | 0.735 | 0.655 | 0.043 | 3.598 |
+| n9a43 | 0.917 | 0.985 | 0.749 | 0.634 | 0.039 | 3.459 |
+| d | **+0.016** (bar ≥ +0.08) | +0.017 | **+0.014** (bar ≥ +0.15) | −0.021 | −0.004 | −0.139 |
+
+- **Reading:** against its own paired control N9a is the same on recall. The
+  big numbers in n9c were a weak control: C1-ctl scored 0.825 / 0.597 and
+  ctl43 (same recipe, seed 43) scores 0.901 / 0.735. **The seed moves recall
+  by +0.08 overall and +0.14 past 2048, 5× to 10× N9a's effect.** Both seed-43
+  models sit above C1-ctl, so this recipe's recall is not stable at one seed.
+- **A pre-registered bar answers the question; the guard is moot.** ctl43 is
+  an outlier on LM loss: holdout 3.598 vs C1-ctl 3.474 and n9a43 3.459, and
+  it is 0.045 worse already at the end of stage A. So "N9a is 0.14 better on
+  holdout" is NOT a finding (the control is bad, not N9a good); PG-19 shows
+  the same 0.14 shift at every position. Cause unknown (seed, or an unlucky
+  run; the box control was clean for C1-ctl).
+- **Verdict: N9a (recall) FAIL as a registered claim; no ≥ 1.5B arm.** It
+  also had no LM effect by token class (attr3b, n9c vs C1-ctl) and lost
+  label lookup at 600M. N9a stays in code only because N9s builds on it.
+- **Lesson:** a single 600M seed pair cannot support a recall claim; the
+  control's own seed spread is ±0.1. Recall claims need ≥ 2 control seeds.
+
 ### N9s — salient phase (user idea, 2026-10-31; PRE-REGISTERED ~00:40 IST)
 
 **Idea (user).** N9a's phase comes from a FIXED window of the last 3 tokens.
@@ -1229,6 +1260,16 @@ brackets.
   name that decides the answer ("Ana") is 4–5 tokens before the answer, out
   of the 3-token window. That is the user's case for salience, better than
   label_gap. One seed of two; replication below.
+
+**n9th partial (2026-10-31 12:55 IST): seed 131 (6000, `161a3c9`) replicates
+the two_hop formation.** two_hop mean (2 / 4 / 8 shots): N9s **0.89**
+(0.95 / 0.89 / 0.82), N9a 0.28, tpp 0.30 (chance 0.29). label_gap 1.00 for
+N9a and N9s, tpp 0.30. With seed 111 (0.92), N9s has formed two_hop in 2 of
+2 seeds, N9a in 0 of 2, and the same-size transformer in 0 of 4. Seed 132
+(4090) finishes next; the run then STOPS (pivot rule: notebook-select work
+ends once n9th reports). Bar H is met as soon as N9s forms in 2 seeds while
+N9a forms in none, so seed 132 decides it. Logs
+`logs/v14_n9thp1_161a3c9_20261030_2241.{log,json}` (box clock UTC).
 
 **N9s two-hop replication `n9th` (PRE-REGISTERED 2026-10-31 ~04:10 IST,
 before any n9th number).** Question: does the salient phase let a 27M O(1)
