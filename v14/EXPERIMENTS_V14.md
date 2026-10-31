@@ -2329,6 +2329,27 @@ transfer across documents at all.** Reports `logs/pack_check/v14_pack_check_1900
   between pseudo-word keys (the query's tail "K refers to" shares its last
   tokens across keys): longer n-grams or a whole-key match fix it.
 
+**SL1 — shared-library fetch by text (PRE-REGISTERED 2026-10-31 23:05 IST, before
+any SL1 code or number; approved by Lead).** The shared library holds separate
+texts, so (EUREKA "stream address") it is fetched by TEXT. Plumbing, cited
+(BM25: Robertson & Zaragoza 2009; MiniLM sentence embeddings: Wang et al.
+2020 / Reimers & Gurevych 2019), no claim.
+- **Methods (retrieval of the right entry, cross-document pack_check setup:
+  definitions inside held-out prose paragraphs + prose distractors, fresh seed
+  20000, 400 and 4000 entries, exact and paraphrased questions; retrieval only,
+  CPU):** (a) organ-4 (the current exact 4-gram organ); (b) organ-long: the
+  LONGEST n-gram (n = 8 down to 2 tokens) of the question's tail that occurs in
+  the library, latest match; (c) lexical-norm: BM25 over normalised words
+  (lower-case, a leading "the" and a plural "s" stripped); (d) **SL1 = (b) when
+  it matches with n ≥ 3, else (c)**; (e) baseline: an off-the-shelf sentence
+  embedder (all-MiniLM-L6-v2, mean-pooled, cosine) over entries vs the question.
+- **Bars for (d):** exact top-1 ≥ 0.99 at 400 and ≥ 0.97 at 4000 entries;
+  paraphrase top-1 ≥ 0.80 at 400 and ≥ 0.70 at 4000; and (d) ≥ (e) − 0.05 in
+  every cell (text plumbing must not lose to an off-the-shelf embedder).
+  Reported: each method per cell, index MB per 1M tokens, query time.
+- The L1 mind key's cross-document numbers (seed 19000 sweep) stand as the
+  reference row; it is not rerun here.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
