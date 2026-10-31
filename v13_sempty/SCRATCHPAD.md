@@ -18,6 +18,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 21:35 IST: LAW-1 CLOSED (user) + M2 STREAMING LANDED.** User via Lead: one-read reach ≈ training
+  length is a stated limit at this scale; lg8 / lg2 / lg32-reset cancelled (law1 killed before start); lesson
+  recorded. The reset-at-EOS mask is UNFINISHED on local branch `reset` (`../qllm_reset`; isolation test
+  fails). **M2 body streams now** (`41f8ae8`): carried-state chunked prefill + O(1) decode, parity 2e-4 /
+  5e-5, self-test 24/24, `v13_sempty/tmp/stream_parity{,_gpu}.py`; MLB-1 A6 lifts the A5 caveat. Library's
+  state test can use it (states out after a prefix, edited, then in for the next chunk). Next (Lead's
+  order): pre-register the curriculum run (stated rule + demonstrations, fetched spans + question with
+  abstain, two-hop format; N9s optional paired arm) as a 600M run on b2p2's recipe for the freed slot.
+  6000 now: r3c (~02:55) + b2p3 (s8, ~22:15). Nothing else queued.
+
 * **2026-10-31 17:11 IST: lg32 relaunched under option B (Lead).** At 17:08 the guard paused it at step 450
   (r3c 41.5k vs its ALONE speed 64.1k = −35 %, three strikes; no checkpoint yet). Lead agreed the 80 %
   rule was miscalibrated (any second training job time-slices the card; the box gains +20 % total

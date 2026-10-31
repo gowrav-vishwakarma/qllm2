@@ -224,3 +224,11 @@ carried-state chunked prefill and no O(1) decode yet (a Mind release blocker). M
 (e.g. `c1ctlb`, no shared reads) stream today. Until streaming lands with parity tests,
 M2 MB figures carry this line. Decision rule (Lead): if M2 streaming takes more than ~1 day,
 quantify the M1-vs-M2 gap on the skill-pack and LM cells and pick the body that streams.
+
+**A6 (2026-10-31 21:35 IST): the A5 streaming caveat is lifted.** The M2 body now streams:
+carried-state chunked prefill and O(1) token-by-token decode (`41f8ae8`). Parity:
+prefix-then-suffix vs one full pass 2.0e-4, decode vs full 5.0e-5 (b2p2, logit scale ~18;
+CPU fp32 and the 4090 Triton path fp32; bf16 within its own chunking noise), self-test
+24/24. M2 memory figures (1.15 MB state) are now demonstrated by streaming. Example
+(b2p2, O(1) decode): "Map rule. 3 -> 10, 5 -> 14, 8 -> 20, 11 ->" continues " 26", then
+generates correct lines of its own (27 -> 58, 6 -> 16, 28 -> 60, 25 -> 54, 15 -> 34).
