@@ -109,7 +109,10 @@ Overall ~52 %. 1 rules in context vs T++/Mamba-2: DONE (s8 MET, 3 PAM seeds vs 2
 
 - 23:30 IST: package-table launch hit two environment bugs, both fixed: (a) the harness's background subshell has a minimal PATH, so `nice` and `nvcc` were not found (Mind's delta path uses torch.compile, which needs nvcc even on CPU): launch commands now export a full PATH; (b) Reader.last_keys was unset for non-PAM bodies (4699f56). Failed logs deleted; table relaunched 23:28 (b2p2 + c1ctlb 32k, 40 docs; b2p2 128k, 16 docs); Mamba-2 / T++ rows rerun on the 4090 after the dead loop exits.
 
+- 23:15 IST: PACKAGE TABLE RUNNING CLEANLY (detached launcher v16/tmp_pkg_table.sh with a full PATH; files v16_pkg_table_{b2p2,c1ctlb}_32768_e6e3c64_*.jsonl, then b2p2_131072): first rows error-free (organ hits, planner picks). Mind is back (restarted by Library) and has the pointers. SHARED-LIBRARY TEXT FETCH (Library): SL1 (token organ + BM25) NOT met on natural paraphrase (0.68 / 0.49); SL2 (organ over normalised words: case-folded, plural-stripped, articles dropped; fresh seed 21000) MET: 1.00 at 400 entries, 1.00 / 0.99 at 4,000; scope = surface variants only; plumbing, no claim. MiniLM paragraph baseline 0.08-0.39 (unfair; a sentence-level embedder row is added). Memory: dict organs 10-67 MB per 1M tokens -> suffix array (~4 MB) before the MB column counts them.
+
 ## Open questions
+- Shared-library fetch: synonyms and rewording are untested (SL2 covers surface variants only).
 - "Nothing stored" for a paraphrased question needs a signal other than key similarity (open item, not a claim).
 - Shared-library fetch at scale (4,000+ entries): organ-only drops to 0.87 exact / 0.27-0.47 para; the text fetch for the shared library needs its own pre-registered bars.
 - (closed 21:55) Product body: M2 streams (41f8ae8).
