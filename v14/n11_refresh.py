@@ -50,9 +50,13 @@ def main():
     ap.add_argument('--refresh', default='1024,2048,4096,0')
     ap.add_argument('--lengths', default='8192,32768')
     ap.add_argument('--mem_frac', type=float, default=0.35)
+    ap.add_argument('--contrast', type=float, default=None,
+                    help='A8 (N11-RC): also score l_R + a (l_R - l_nopack), nopack = filler + question, no pack')
+    ap.add_argument('--device', default='cuda')
     a = ap.parse_args()
-    torch.cuda.set_per_process_memory_fraction(a.mem_frac)
-    mind = Mind(a.ckpt, torch.device('cuda'))
+    if a.device == 'cuda':
+        torch.cuda.set_per_process_memory_fraction(a.mem_frac)
+    mind = Mind(a.ckpt, torch.device(a.device))
     tok = mind.tok
     filler = filler_tokens(HOLDOUT)
     sep = tok.encode(_SEP, add_special_tokens=False)
@@ -63,18 +67,25 @@ def main():
             ex, H, U, pack, q = doc(tok, task, seed)
             for L in (int(x) for x in a.lengths.split(',')):
                 fill = filler_block(filler, L, seed, L)
+                lg_n = mind.forward(sep + fill + sep + q)[0] if a.contrast is not None else None
                 for R in (int(x) for x in a.refresh.split(',')):
                     t0 = time.time()
                     ids, n_ins = stream(pack, fill, q, sep, R)
                     lg = mind.forward(ids)[0]
                     c, m = score(ex, lg)
                     top = int(lg.argmax())                  # free generation: greedy token over the whole vocab
+                    extra = {}
+                    if lg_n is not None:                    # A8: state-contrast decoding at the query
+                        lgc = lg + a.contrast * (lg - lg_n)
+                        cc, mc = score(ex, lgc); tc = int(lgc.argmax())
+                        extra = dict(alpha=a.contrast, correct_c=cc, margin_c=mc,
+                                     free_c=int(tc == ex.target_token_id), free_tok_c=tok.decode([tc]))
                     out.write(json.dumps(dict(task=task, doc=seed, L=L, R=R, correct=c, margin=m,
                                               free=int(top == ex.target_token_id), free_tok=tok.decode([top]),
                                               inserts=n_ins,
                                               pack_tokens=len(pack), total_tokens=len(ids),
                                               overhead=round(n_ins * len(pack) / max(1, L), 4),
-                                              sec=round(time.time() - t0, 2))) + '\n')
+                                              sec=round(time.time() - t0, 2), **extra)) + '\n')
                     out.flush()
         print(f'{task} done', flush=True)
 
