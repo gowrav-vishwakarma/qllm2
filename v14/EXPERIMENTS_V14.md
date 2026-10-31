@@ -1989,6 +1989,11 @@ best-scoring row. ABSTAIN when the best score is below a threshold t.
   the chosen row's RAW key similarity instead: abstain when sim_best < t (the
   frozen address separated stored 0.95 from never-stored 0.54). Selection
   still uses z(sim) + w·z(margin). w and t are still chosen only on seed 15000.
+- **Tuned on seed 15000 (18:23 IST; fixed before any seed-16000 number):**
+  w = 0.5, t = 0.654 (`v14/l1p1_select.py tune`, kv synthetic + natural and
+  neg synthetic + natural, 32k, 32 + 32 docs). On the tuning split itself:
+  accuracy 0.72 with abstain-on-stored counted as a miss, abstain rate 0.22,
+  neg wrong-fetch 0.09. Logs `logs/v16_bench_l1p1_tune_*`.
 
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
