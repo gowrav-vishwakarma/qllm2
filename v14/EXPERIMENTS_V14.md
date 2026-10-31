@@ -1271,6 +1271,33 @@ ends once n9th reports). Bar H is met as soon as N9s forms in 2 seeds while
 N9a forms in none, so seed 132 decides it. Logs
 `logs/v14_n9thp1_161a3c9_20261030_2241.{log,json}` (box clock UTC).
 
+**n9th RESULT (2026-10-31 13:15 IST): bar H MET at 2 seeds; the run stopped
+there (pivot rule). N9s forms the two-hop lookup in every seed run (3 of 3
+with seed 111), N9a and same-size attention in none.** Seeds 131 (6000) and
+132 (4090), code `161a3c9`, 6000 steps × B16, 27.9M / 27.6M params. two_hop
+mean over 2 / 4 / 8 shots (chance 0.29):
+
+| seed | N9s | N9a | tpp (Transformer++) |
+|---|---|---|---|
+| 111 (earlier run) | 0.92 | 0.30 | – |
+| 131 | **0.89** (0.95 / 0.89 / 0.82) | 0.28 | 0.30 |
+| 132 | **0.90** (0.99 / 0.94 / 0.76) | 0.29 | 0.30 |
+
+- **Bar H:** N9s forms in ≥ 2 of 5 seeds AND ≥ 2 more than N9a: 2 formed vs
+  0, met by arithmetic after two seeds, so seeds 133-135 were not run.
+  **Guard:** label_gap 1.00 for N9a and N9s in both seeds. Logs
+  `logs/v14_n9thp{1,2}_161a3c9_*.{log,json}` (box clock UTC).
+- **What it is:** the only notebook-side effect in two days that survived
+  replication and beat attention at the same size. In "Ana's pet is called",
+  the running angle keeps "Ana" as the current topic across the words that
+  follow. Two hops need an anchor, not more memory.
+- **What it is not (yet):** a 600M result. At 600M, in-context skills follow
+  the trained format (B2, lb), so it needs two_hop-format data in the mix
+  before any claim, and N9a's 600M lookup was negative. It is a MIND
+  candidate (reasoning over fetched facts), so the decision to test it at
+  600M belongs to the mind lane (v13) and the board (organiser). It also
+  seeds the planner (N11): the salient angle as the retrieval query.
+
 **N9s two-hop replication `n9th` (PRE-REGISTERED 2026-10-31 ~04:10 IST,
 before any n9th number).** Question: does the salient phase let a 27M O(1)
 body compose two facts in context (two_hop), where the fixed window and

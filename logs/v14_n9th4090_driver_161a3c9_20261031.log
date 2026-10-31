@@ -1,0 +1,312 @@
+v14 n9thp2: waiting for tmux session 'n9r' to end (Sat Oct 31 06:26:25 AM IST 2026)
+v14 n9thp2: waiting for >= 9000 MB free on GPU 0 (Sat Oct 31 08:50:58 AM IST 2026)
+v14 n9thp2 start Sat Oct 31 08:50:58 AM IST 2026 commit=161a3c9 families=rules arms=echo_phase,echo_phase_sal,tpp steps=6000 batch=16 aux=0 extra='--seed 132 --doc_seed0 5200000000 --init_seed 132 --rule_tasks letter_shift,number_step,reverse3,label_category,two_hop,label_gap' save=1 log=logs/v14_n9thp2_161a3c9_20261031_0850.log
+B0 micro-bench @ 161a3c9: 6000 steps x B16, lr 0.0003, eval ctx (1024, 4096, 8192), 16 docs x 3 positions x 4 queries per cell, aux_weight 0.0, families rules, seed 132, init_seed 132, doc_seed0 5200000000
+
+--- arm echo_phase@hd64L4 ---
+/home/gowrav/Development/qllm_v14n9th/v14/microbench.py:485: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"  [{label}] step {step:5d}/{len(plan)} L={L:5d} loss={float(loss):.4f} "
+  [echo_phase@hd64L4] step     1/6000 L=  512 loss=10.8343 | 2,145 tok/s
+W1031 08:51:10.344940 1130282 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))), 0) | (512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))) <= 49152*((s25//64))*((s65//((s25//64)))))
+W1031 08:51:13.402686 1130282 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))), 0) | (512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))) <= 49152*((s25//64))*((s65//((s25//64)))))
+  [echo_phase@hd64L4] step   250/6000 L= 1024 loss=2.4325 | 17,857 tok/s
+  [echo_phase@hd64L4] step   500/6000 L= 1024 loss=1.0513 | 17,913 tok/s
+  [echo_phase@hd64L4] step   750/6000 L=  512 loss=0.5112 | 18,026 tok/s
+  [echo_phase@hd64L4] step  1000/6000 L=  512 loss=0.5004 | 18,122 tok/s
+  [echo_phase@hd64L4] step  1250/6000 L=  512 loss=0.4109 | 18,349 tok/s
+  [echo_phase@hd64L4] step  1500/6000 L= 1024 loss=0.2829 | 18,252 tok/s
+  [echo_phase@hd64L4] step  1750/6000 L=  512 loss=0.2668 | 18,293 tok/s
+  [echo_phase@hd64L4] step  2000/6000 L= 1024 loss=0.1861 | 18,287 tok/s
+  [echo_phase@hd64L4] step  2250/6000 L= 1024 loss=0.2273 | 18,258 tok/s
+  [echo_phase@hd64L4] step  2500/6000 L= 1024 loss=0.2529 | 18,996 tok/s
+  [echo_phase@hd64L4] step  2750/6000 L= 1024 loss=0.1914 | 19,015 tok/s
+  [echo_phase@hd64L4] step  3000/6000 L= 1024 loss=0.2891 | 19,034 tok/s
+  [echo_phase@hd64L4] step  3250/6000 L=  512 loss=0.1872 | 19,051 tok/s
+  [echo_phase@hd64L4] step  3500/6000 L=  512 loss=0.2739 | 19,073 tok/s
+  [echo_phase@hd64L4] step  3750/6000 L=  512 loss=0.2220 | 19,126 tok/s
+  [echo_phase@hd64L4] step  4000/6000 L= 1024 loss=0.2369 | 19,138 tok/s
+  [echo_phase@hd64L4] step  4250/6000 L=  512 loss=0.1521 | 19,132 tok/s
+  [echo_phase@hd64L4] step  4500/6000 L= 1024 loss=0.2714 | 19,138 tok/s
+  [echo_phase@hd64L4] step  4750/6000 L=  512 loss=0.3050 | 19,168 tok/s
+  [echo_phase@hd64L4] step  5000/6000 L=  512 loss=0.2235 | 19,265 tok/s
+  [echo_phase@hd64L4] step  5250/6000 L= 1024 loss=0.1869 | 19,742 tok/s
+  [echo_phase@hd64L4] step  5500/6000 L=  512 loss=0.2961 | 19,713 tok/s
+  [echo_phase@hd64L4] step  5750/6000 L= 1024 loss=0.2528 | 19,681 tok/s
+  [echo_phase@hd64L4] step  6000/6000 L= 1024 loss=0.1909 | 19,651 tok/s
+  [echo_phase@hd64L4] trained 27.8M params in 3758s (626 ms/step)
+W1031 09:53:44.227871 1130282 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s27*s65)//(s37*((s25//64))))))
+W1031 09:53:46.005773 1130282 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s26*s65)//(s37*((s25//64))))))
+== echo_phase@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        1.00    1.00    1.00
+two_hop               0.48    0.25    0.14
+letter_shift_ood      0.01    0.02    0.02
+number_step_ood       0.23    0.23    0.05
+label_marker          0.61    0.66    0.45
+label_marker_new      0.70    0.78    0.64
+shift_wide            0.34    0.34    0.38
+step_wide             0.62    0.60    0.50
+affine_map            0.12    0.11    0.10
+shift_wide_new        0.09    0.10    0.09
+step_wide_new         0.50    0.69    0.37
+affine_map_new        0.13    0.10    0.14
+repeat_copy           0.15    0.13    0.16
+label_exact           1.00    1.00    1.00
+label_exact_new       0.89    0.85    0.91
+label_gap             1.00    1.00    1.00
+label_gap_new         1.00    0.99    0.99
+
+--- arm echo_phase_sal@hd64L4 ---
+  [echo_phase_sal@hd64L4] step     1/6000 L=  512 loss=10.8343 | 14,113 tok/s
+  [echo_phase_sal@hd64L4] step   250/6000 L= 1024 loss=2.4172 | 19,414 tok/s
+  [echo_phase_sal@hd64L4] step   500/6000 L= 1024 loss=1.0028 | 19,195 tok/s
+  [echo_phase_sal@hd64L4] step   750/6000 L=  512 loss=0.3476 | 19,060 tok/s
+  [echo_phase_sal@hd64L4] step  1000/6000 L=  512 loss=0.3115 | 19,065 tok/s
+  [echo_phase_sal@hd64L4] step  1250/6000 L=  512 loss=0.2624 | 19,012 tok/s
+  [echo_phase_sal@hd64L4] step  1500/6000 L= 1024 loss=0.2498 | 19,482 tok/s
+  [echo_phase_sal@hd64L4] step  1750/6000 L=  512 loss=0.1130 | 19,393 tok/s
+  [echo_phase_sal@hd64L4] step  2000/6000 L= 1024 loss=0.0855 | 19,353 tok/s
+  [echo_phase_sal@hd64L4] step  2250/6000 L= 1024 loss=0.0657 | 19,293 tok/s
+  [echo_phase_sal@hd64L4] step  2500/6000 L= 1024 loss=0.0388 | 19,204 tok/s
+  [echo_phase_sal@hd64L4] step  2750/6000 L= 1024 loss=0.0586 | 19,206 tok/s
+  [echo_phase_sal@hd64L4] step  3000/6000 L= 1024 loss=0.0705 | 19,114 tok/s
+  [echo_phase_sal@hd64L4] step  3250/6000 L=  512 loss=0.0327 | 19,019 tok/s
+  [echo_phase_sal@hd64L4] step  3500/6000 L=  512 loss=0.0641 | 18,936 tok/s
+  [echo_phase_sal@hd64L4] step  3750/6000 L=  512 loss=0.0869 | 18,926 tok/s
+  [echo_phase_sal@hd64L4] step  4000/6000 L= 1024 loss=0.0558 | 18,974 tok/s
+  [echo_phase_sal@hd64L4] step  4250/6000 L=  512 loss=0.0254 | 18,952 tok/s
+  [echo_phase_sal@hd64L4] step  4500/6000 L= 1024 loss=0.0315 | 18,940 tok/s
+  [echo_phase_sal@hd64L4] step  4750/6000 L=  512 loss=0.0426 | 18,949 tok/s
+  [echo_phase_sal@hd64L4] step  5000/6000 L=  512 loss=0.0202 | 18,955 tok/s
+  [echo_phase_sal@hd64L4] step  5250/6000 L= 1024 loss=0.0386 | 19,183 tok/s
+  [echo_phase_sal@hd64L4] step  5500/6000 L=  512 loss=0.0411 | 19,420 tok/s
+  [echo_phase_sal@hd64L4] step  5750/6000 L= 1024 loss=0.0527 | 19,401 tok/s
+  [echo_phase_sal@hd64L4] step  6000/6000 L= 1024 loss=0.0332 | 19,330 tok/s
+  [echo_phase_sal@hd64L4] trained 27.9M params in 3821s (637 ms/step)
+== echo_phase_sal@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        1.00    1.00    1.00
+two_hop               0.99    0.94    0.76
+letter_shift_ood      0.00    0.00    0.00
+number_step_ood       0.20    0.24    0.04
+label_marker          0.64    0.59    0.51
+label_marker_new      0.73    0.78    0.57
+shift_wide            0.35    0.36    0.36
+step_wide             0.63    0.60    0.49
+affine_map            0.12    0.11    0.10
+shift_wide_new        0.07    0.06    0.06
+step_wide_new         0.49    0.57    0.37
+affine_map_new        0.13    0.12    0.11
+repeat_copy           0.12    0.12    0.13
+label_exact           1.00    1.00    1.00
+label_exact_new       0.99    0.91    0.75
+label_gap             1.00    1.00    1.00
+label_gap_new         0.94    0.84    0.61
+
+--- arm tpp@hd64L4 ---
+  [tpp@hd64L4] step     1/6000 L=  512 loss=10.8258 | 91,867 tok/s
+  [tpp@hd64L4] step   250/6000 L= 1024 loss=2.8575 | 23,285 tok/s
+  [tpp@hd64L4] step   500/6000 L= 1024 loss=1.2958 | 22,404 tok/s
+  [tpp@hd64L4] step   750/6000 L=  512 loss=1.0293 | 21,715 tok/s
+  [tpp@hd64L4] step  1000/6000 L=  512 loss=0.9645 | 21,388 tok/s
+  [tpp@hd64L4] step  1250/6000 L=  512 loss=0.9765 | 21,232 tok/s
+  [tpp@hd64L4] step  1500/6000 L= 1024 loss=0.8420 | 21,095 tok/s
+  [tpp@hd64L4] step  1750/6000 L=  512 loss=0.7338 | 21,176 tok/s
+  [tpp@hd64L4] step  2000/6000 L= 1024 loss=0.7073 | 21,037 tok/s
+  [tpp@hd64L4] step  2250/6000 L= 1024 loss=0.6254 | 20,931 tok/s
+  [tpp@hd64L4] step  2500/6000 L= 1024 loss=0.6841 | 20,906 tok/s
+  [tpp@hd64L4] step  2750/6000 L= 1024 loss=0.6084 | 20,865 tok/s
+  [tpp@hd64L4] step  3000/6000 L= 1024 loss=0.6468 | 20,838 tok/s
+  [tpp@hd64L4] step  3250/6000 L=  512 loss=0.5973 | 22,086 tok/s
+  [tpp@hd64L4] step  3500/6000 L=  512 loss=0.6194 | 21,957 tok/s
+  [tpp@hd64L4] step  3750/6000 L=  512 loss=0.6251 | 21,863 tok/s
+  [tpp@hd64L4] step  4000/6000 L= 1024 loss=0.6102 | 21,773 tok/s
+  [tpp@hd64L4] step  4250/6000 L=  512 loss=0.5696 | 21,707 tok/s
+  [tpp@hd64L4] step  4500/6000 L= 1024 loss=0.6239 | 21,633 tok/s
+  [tpp@hd64L4] step  4750/6000 L=  512 loss=0.6211 | 22,332 tok/s
+  [tpp@hd64L4] step  5000/6000 L=  512 loss=0.6142 | 23,339 tok/s
+  [tpp@hd64L4] step  5250/6000 L= 1024 loss=0.5551 | 24,330 tok/s
+  [tpp@hd64L4] step  5500/6000 L=  512 loss=0.5882 | 25,192 tok/s
+  [tpp@hd64L4] step  5750/6000 L= 1024 loss=0.6406 | 25,987 tok/s
+  [tpp@hd64L4] step  6000/6000 L= 1024 loss=0.5467 | 26,729 tok/s
+  [tpp@hd64L4] trained 27.6M params in 2763s (460 ms/step)
+== tpp@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        0.52    0.45    0.26
+two_hop               0.52    0.25    0.14
+letter_shift_ood      0.00    0.00    0.00
+number_step_ood       0.08    0.48    0.11
+label_marker          0.49    0.52    0.24
+label_marker_new      0.50    0.50    0.25
+shift_wide            0.33    0.33    0.35
+step_wide             0.60    0.78    0.50
+affine_map            0.14    0.16    0.15
+shift_wide_new        0.13    0.13    0.14
+step_wide_new         0.49    0.72    0.35
+affine_map_new        0.18    0.18    0.17
+repeat_copy           0.11    0.10    0.11
+label_exact           0.49    0.27    0.12
+label_exact_new       0.48    0.25    0.13
+label_gap             0.50    0.24    0.12
+label_gap_new         0.51    0.25    0.13
+
+================================================================
+== echo_phase@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        1.00    1.00    1.00
+two_hop               0.48    0.25    0.14
+letter_shift_ood      0.01    0.02    0.02
+number_step_ood       0.23    0.23    0.05
+label_marker          0.61    0.66    0.45
+label_marker_new      0.70    0.78    0.64
+shift_wide            0.34    0.34    0.38
+step_wide             0.62    0.60    0.50
+affine_map            0.12    0.11    0.10
+shift_wide_new        0.09    0.10    0.09
+step_wide_new         0.50    0.69    0.37
+affine_map_new        0.13    0.10    0.14
+repeat_copy           0.15    0.13    0.16
+label_exact           1.00    1.00    1.00
+label_exact_new       0.89    0.85    0.91
+label_gap             1.00    1.00    1.00
+label_gap_new         1.00    0.99    0.99
+
+== echo_phase_sal@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        1.00    1.00    1.00
+two_hop               0.99    0.94    0.76
+letter_shift_ood      0.00    0.00    0.00
+number_step_ood       0.20    0.24    0.04
+label_marker          0.64    0.59    0.51
+label_marker_new      0.73    0.78    0.57
+shift_wide            0.35    0.36    0.36
+step_wide             0.63    0.60    0.49
+affine_map            0.12    0.11    0.10
+shift_wide_new        0.07    0.06    0.06
+step_wide_new         0.49    0.57    0.37
+affine_map_new        0.13    0.12    0.11
+repeat_copy           0.12    0.12    0.13
+label_exact           1.00    1.00    1.00
+label_exact_new       0.99    0.91    0.75
+label_gap             1.00    1.00    1.00
+label_gap_new         0.94    0.84    0.61
+
+== tpp@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        0.52    0.45    0.26
+two_hop               0.52    0.25    0.14
+letter_shift_ood      0.00    0.00    0.00
+number_step_ood       0.08    0.48    0.11
+label_marker          0.49    0.52    0.24
+label_marker_new      0.50    0.50    0.25
+shift_wide            0.33    0.33    0.35
+step_wide             0.60    0.78    0.50
+affine_map            0.14    0.16    0.15
+shift_wide_new        0.13    0.13    0.14
+step_wide_new         0.49    0.72    0.35
+affine_map_new        0.18    0.18    0.17
+repeat_copy           0.11    0.10    0.11
+label_exact           0.49    0.27    0.12
+label_exact_new       0.48    0.25    0.13
+label_gap             0.50    0.24    0.12
+label_gap_new         0.51    0.25    0.13
+
+v14 n9thp2 DONE Sat Oct 31 11:50:03 AM IST 2026
+v14 n9thp3: waiting for >= 9000 MB free on GPU 0 (Sat Oct 31 11:50:03 AM IST 2026)
+v14 n9thp3 start Sat Oct 31 11:50:03 AM IST 2026 commit=161a3c9 families=rules arms=echo_phase,echo_phase_sal,tpp steps=6000 batch=16 aux=0 extra='--seed 133 --doc_seed0 5300000000 --init_seed 133 --rule_tasks letter_shift,number_step,reverse3,label_category,two_hop,label_gap' save=1 log=logs/v14_n9thp3_161a3c9_20261031_1150.log
+B0 micro-bench @ 161a3c9: 6000 steps x B16, lr 0.0003, eval ctx (1024, 4096, 8192), 16 docs x 3 positions x 4 queries per cell, aux_weight 0.0, families rules, seed 133, init_seed 133, doc_seed0 5300000000
+
+--- arm echo_phase@hd64L4 ---
+/home/gowrav/Development/qllm_v14n9th/v14/microbench.py:485: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"  [{label}] step {step:5d}/{len(plan)} L={L:5d} loss={float(loss):.4f} "
+  [echo_phase@hd64L4] step     1/6000 L=  512 loss=11.0150 | 4,628 tok/s
+W1031 11:50:09.041315 1191271 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))), 0) | (512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))) <= 49152*((s25//64))*((s65//((s25//64)))))
+W1031 11:50:10.545130 1191271 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))), 0) | (512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))) <= 49152*((s25//64))*((s65//((s25//64)))))
+  [echo_phase@hd64L4] step   250/6000 L=  512 loss=2.4441 | 70,995 tok/s
+  [echo_phase@hd64L4] step   500/6000 L= 1024 loss=0.8060 | 84,228 tok/s
+  [echo_phase@hd64L4] step   750/6000 L=  512 loss=0.5447 | 91,523 tok/s
+  [echo_phase@hd64L4] step  1000/6000 L= 1024 loss=0.3849 | 95,231 tok/s
+  [echo_phase@hd64L4] step  1250/6000 L= 1024 loss=0.4510 | 97,649 tok/s
+  [echo_phase@hd64L4] step  1500/6000 L= 1024 loss=0.2453 | 99,679 tok/s
+  [echo_phase@hd64L4] step  1750/6000 L= 1024 loss=0.2450 | 90,269 tok/s
+  [echo_phase@hd64L4] step  2000/6000 L=  512 loss=0.2140 | 59,827 tok/s
+  [echo_phase@hd64L4] step  2250/6000 L=  512 loss=0.2697 | 47,902 tok/s
+  [echo_phase@hd64L4] step  2500/6000 L=  512 loss=0.2733 | 40,614 tok/s
+  [echo_phase@hd64L4] step  2750/6000 L=  512 loss=0.2020 | 36,207 tok/s
+  [echo_phase@hd64L4] step  3000/6000 L=  512 loss=0.2381 | 33,405 tok/s
+  [echo_phase@hd64L4] step  3250/6000 L= 1024 loss=0.2427 | 31,394 tok/s
+  [echo_phase@hd64L4] step  3500/6000 L=  512 loss=0.2539 | 29,708 tok/s
+  [echo_phase@hd64L4] step  3750/6000 L=  512 loss=0.2925 | 28,449 tok/s
+  [echo_phase@hd64L4] step  4000/6000 L=  512 loss=0.2050 | 27,397 tok/s
+  [echo_phase@hd64L4] step  4250/6000 L=  512 loss=0.1531 | 27,127 tok/s
+  [echo_phase@hd64L4] step  4500/6000 L= 1024 loss=0.2188 | 26,524 tok/s
+  [echo_phase@hd64L4] step  4750/6000 L=  512 loss=0.2664 | 25,929 tok/s
+  [echo_phase@hd64L4] step  5000/6000 L=  512 loss=0.2186 | 25,432 tok/s
+  [echo_phase@hd64L4] step  5250/6000 L=  512 loss=0.2785 | 24,456 tok/s
+  [echo_phase@hd64L4] step  5500/6000 L=  512 loss=0.2163 | 24,075 tok/s
+  [echo_phase@hd64L4] step  5750/6000 L= 1024 loss=0.2344 | 24,255 tok/s
+  [echo_phase@hd64L4] step  6000/6000 L= 1024 loss=0.2630 | 23,991 tok/s
+  [echo_phase@hd64L4] trained 27.8M params in 3095s (516 ms/step)
+W1031 12:41:45.588505 1191271 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s27*s65)//(s37*((s25//64))))))
+W1031 12:41:47.640165 1191271 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s26*s65)//(s37*((s25//64))))))
+== echo_phase@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        1.00    1.00    1.00
+two_hop               0.50    0.22    0.12
+letter_shift_ood      0.01    0.01    0.01
+number_step_ood       0.05    0.19    0.05
+label_marker          0.64    0.57    0.54
+label_marker_new      0.71    0.76    0.60
+shift_wide            0.33    0.32    0.36
+step_wide             0.55    0.62    0.48
+affine_map            0.14    0.13    0.10
+shift_wide_new        0.06    0.08    0.09
+step_wide_new         0.47    0.56    0.38
+affine_map_new        0.11    0.10    0.12
+repeat_copy           0.11    0.15    0.14
+label_exact           1.00    1.00    1.00
+label_exact_new       0.94    0.93    0.93
+label_gap             1.00    1.00    1.00
+label_gap_new         1.00    1.00    1.00
+
+--- arm echo_phase_sal@hd64L4 ---
+  [echo_phase_sal@hd64L4] step     1/6000 L=  512 loss=11.0150 | 27,242 tok/s
+  [echo_phase_sal@hd64L4] step   250/6000 L=  512 loss=2.4417 | 34,009 tok/s
+  [echo_phase_sal@hd64L4] step   500/6000 L= 1024 loss=0.7417 | 41,826 tok/s
+  [echo_phase_sal@hd64L4] step   750/6000 L=  512 loss=0.3293 | 51,394 tok/s
+  [echo_phase_sal@hd64L4] step  1000/6000 L= 1024 loss=0.2355 | 58,258 tok/s
+  [echo_phase_sal@hd64L4] step  1250/6000 L= 1024 loss=0.3415 | 64,499 tok/s
+  [echo_phase_sal@hd64L4] step  1500/6000 L= 1024 loss=0.2295 | 69,596 tok/s
+  [echo_phase_sal@hd64L4] step  1750/6000 L= 1024 loss=0.2430 | 74,031 tok/s
+  [echo_phase_sal@hd64L4] step  2000/6000 L=  512 loss=0.2054 | 77,513 tok/s
+  [echo_phase_sal@hd64L4] step  2250/6000 L=  512 loss=0.2549 | 80,445 tok/s
+  [echo_phase_sal@hd64L4] step  2500/6000 L=  512 loss=0.2371 | 82,856 tok/s
+  [echo_phase_sal@hd64L4] step  2750/6000 L=  512 loss=0.1344 | 85,038 tok/s
+  [echo_phase_sal@hd64L4] step  3000/6000 L=  512 loss=0.0952 | 86,812 tok/s
+  [echo_phase_sal@hd64L4] step  3250/6000 L= 1024 loss=0.0743 | 75,211 tok/s
+  [echo_phase_sal@hd64L4] step  3500/6000 L=  512 loss=0.0753 | 61,833 tok/s
+  [echo_phase_sal@hd64L4] step  3750/6000 L=  512 loss=0.0678 | 53,524 tok/s
+n9th4090 stopped after seed 132 Sat Oct 31 07:28:04 AM UTC 2026
