@@ -2756,6 +2756,29 @@ fitted threshold:
     MiniLM is right on ~90 % of the definitions it picks; it loses to prose
     sentences. The mind part's bar (≥ 0.50 and ≥ BM25 + 0.25) is therefore
     above a trained 22M semantic encoder.
+  - **A5 MIND PART VERDICT (2026-11-01 02:00 IST; Lead's run
+    `logs/v16_pkg_syn_b2p2_32768_2738b2c_20261101_0130.jsonl`, b2p2 lenient,
+    32k, seed 25000, 80 rows, 0 errors): NOT met (top-1 0.40 < 0.50; the
+    "≥ BM25 + 0.25" half met).**
+
+    | syn (40 docs) | top-1 holds the fact | top-5 | answer |
+    |---|---|---|---|
+    | learned burst key (L1 head on the mind's state) | **0.40** | 0.775 | 20-way 0.40, sentence free 0.325 |
+    | C2 per-token address (frozen state, no head) | 0.375 | 0.525 | |
+    | exact organ / state only | 0.025 / – | | 0.025 |
+    | MiniLM-L6 (text part) / BM25 (text part) | 0.45 / 0.075 | | |
+    | oracle row re-read | | | 20-way 0.975 |
+
+    synneg (never stored, lenient so no abstain): top-1 0.05, answer 0.05.
+    - Reading: on true synonyms the mind's own state is the only in-house
+      path that works (0.40 vs BM25 0.075, organs 0.025), close to a trained
+      22M sentence encoder (0.45) with no encoder, but below the bar. Handed
+      the right row the mind answers 0.975: the miss is the fetch.
+    - Re-rank of the top-5 (descriptive, seen rows): max margin 0.45, read
+      all 5 together (20-way) 0.55, max gain 0.225; of the 31 docs with the
+      fact in the top-5, margin picks it in 18. The mind's read re-ranks a
+      little; copy-nearest-value (A3) caps it. Lever: the VERIFY skill (cu2)
+      and reading the 5 rows together, not a gain threshold.
 - **Mind's free-token rule (descriptive, seen rows, 01:29 IST):** answer iff
   organ hit or the top-1 row's greedy token is a candidate value (= A3's f6).
   Never-stored abstain 0.725 / 0.425 (seed 22000) and 0.85 / 0.425 (S2),
