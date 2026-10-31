@@ -2920,6 +2920,25 @@ fitted threshold:
     plain) − 0.05 AND ≥ free(R = 4,096 plain) + 0.10. Met → the package
     refreshes every ~4k with one extra O(1) stream (+1.15 MB, 2× compute
     while on): refresh tokens halved (~1.6 % → ~0.8 %).
+- **A9: the package reads its fetched row WARM + CONTRAST (PRE-REGISTERED
+  2026-11-01 03:23 IST, before any number of it).** Design choice (closest prior
+  work: context-aware decoding, Shi et al. 2023; Mind's cd1-cd3; A6c here).
+  - Fetch = the real package in strict mode: token organ, then the A4
+    normalised organ on the whole question (238c62e); abstain iff both miss.
+  - Arms on the same fetched row: COLD (today's package: row + question,
+    fresh state, greedy) and WARMC (the session's state after the document,
+    then row + question, decoding l_warm + 4 (l_warm − l_norow) on the answer
+    tokens only; l_norow = the same state + question without the row); NOROW
+    (state only) reported.
+  - Score: sentence scorer (greedy to "." / newline, cap 16, the value as a
+    whole word), abstained = not answered; also "starts with the value" and
+    run-on rate.
+  - b2p2, 32k, FRESH seed 29000, 40 docs per cell; kv / para / tool / neg ×
+    synthetic / natural (bench's own docs).
+  - Bar MET iff WARMC − COLD ≥ +0.10 on the mean over the 6 answerable cells
+    (kv, para, tool × 2) AND no answerable cell below COLD − 0.05; neg
+    abstain stays ≥ 0.90 (rule-based, unchanged). Met → the package's
+    default read is WARMC.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
