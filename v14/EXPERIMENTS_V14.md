@@ -1762,6 +1762,13 @@ tokens, spread affine 0.44-0.61 at 8k).**
   0.88, shift ≥ 0.67), and wrong-rule and random vectors ≤ 0.25 × that.
   The no-transplant rows at 8k / 32k (0.14 / 0.07, 0.05 / 0.01) are the
   floor.
+  **Amendment SR-0/A2 (Lead's request, before any SR-0 number):** the gap
+  grid is L = 0 / 2k / 4k / 8k / 32k / 128k (the fade is between 2k and 8k),
+  and the transplant margin (accuracy of the correct candidate minus the best
+  wrong candidate, as in Mind's rows: +18 at 0, +4 at 2k, -2 at 8k) is
+  reported next to accuracy. A transplanted vector that still holds at 8k,
+  where the body's own state is at 0.14, is the first clean evidence for the
+  register route.
 
 - **SR (to build only if SR-0 is met), bars on the skill-pack cell (Mind's probe, above):** skill
   at +32k / +128k / +1M ≥ 0.9 of its +2k value; recall (t40) and holdout
