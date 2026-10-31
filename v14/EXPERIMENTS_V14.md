@@ -1780,6 +1780,13 @@ tokens, spread affine 0.44-0.61 at 8k).**
   where the body's own state is at 0.14, is the first clean evidence for the
   register route.
 
+- **CORRECTION (2026-11-01 00:20 IST, from Mind's bug report, v16 board / `824a988`):**
+  the lg32 evidence below is CONFOUNDED. Mind's long-gap packer cut documents
+  at window edges, so 44 % of the answer tokens (at 8k) sat in a window
+  without their demonstrations yet carried ×100 loss weight, i.e. the run was
+  trained to guess the prior. Mind withdrew the "vanishing signal / LM pressure"
+  reading pending lg8r (8k windows + document reset + the fix). The two reasons
+  quoted below are NOT established; the register question stays parked.
 - **Why SR is the live route (Mind, 2026-10-31 evening):** training the mind
   at 32k on long-gap rule docs (lg32) SHRANK its one-read reach (2k 0.86 →
   0.31) and SHORTENED its memory: echo half-lives on filler fell 718→537,
@@ -2493,6 +2500,10 @@ before any code or number; Lead's order item 3; eval only).**
     extra tokens (R = 2k), or ~3.3 % for the sturdier R = 1k (shift 0.86).
     The O(1) mind plus a refresh rule holds a skill past the trained length;
     the cost is stated, not hidden.
+  - **Note (2026-11-01 00:20):** R is set by the mind's one-read reach (b2p2:
+    1.00 / 0.86 / 0.355 / 0.10 at 0 / 2k / 4k / 8k per Mind). If Mind's fixed
+    long-gap recipe (lg8r) lengthens the reach, R grows and the overhead falls
+    in proportion; N11-R should be re-run on that checkpoint.
 - **Thesis clause:** holds beyond the context (with the library's help);
   closest prior work: periodic re-prompting / "system prompt reminders" in
   long-running agents. Plumbing; the claim is only the measured cost of

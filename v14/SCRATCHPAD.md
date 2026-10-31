@@ -665,7 +665,11 @@ The mind is a reader: text should get things into its stream (cheap, exact),
 and the mind does what only it can, reading and recognising within what it
 has read. Forgetting after ~2k is not a defect to train away; a mind that
 forgets fast and re-reads its notes is "intelligence separate from knowledge"
-taken literally.
+taken literally. **(Correction 2026-11-01 00:20: the "training to hold
+longer made it forget faster" premise came from lg32, which Mind found was
+confounded by an orphaned-answer packing bug; whether reach can be trained is
+open again until lg8r reports. The re-read picture stands as a product choice,
+not as a law.)**
 
 **A bold different angle (not tested).** Raw confidence failed as a selector
 because on natural text it follows the mind's prior. The GAIN a fetched row
