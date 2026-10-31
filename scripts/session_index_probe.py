@@ -45,6 +45,18 @@ class Reader:
         return lm.raw(b, t, self.m.model_dim)[0].float()
 
     @torch.no_grad()
+    def surprisal(self, ids: list[int], vecs: torch.Tensor, chunk: int = 2048) -> torch.Tensor:
+        """nats of each token given the prefix (PAM only), from the pre-logit vectors."""
+        W = self.m.embed.embed.weight.float()
+        out = torch.empty(len(ids))
+        out[0] = 0.0
+        tgt = torch.tensor(ids[1:]); pv = vecs[:-1]          # position t predicts ids[t+1]
+        for s0 in range(0, len(ids) - 1, chunk):
+            lg = pv[s0:s0 + chunk] @ W.T
+            out[s0 + 1:s0 + 1 + lg.shape[0]] = torch.nn.functional.cross_entropy(lg, tgt[s0:s0 + lg.shape[0]], reduction='none')
+        return out
+
+    @torch.no_grad()
     def last_logits(self, ids: list[int], vecs=None) -> torch.Tensor:
         if self.arch == 'pam':
             v = vecs[-1] if vecs is not None else self.vectors(ids)[-1]
@@ -61,20 +73,40 @@ class Reader:
         return logits[0, -1].float().cpu()
 
 
-def build(rng, tok, filler, L, task, n):
+def natural_key(rng, tok, filler, avoid_lo, avoid_hi):
+    """A real two-word phrase taken from the held-out prose OUTSIDE the document's own
+    slice (so the organ and the index meet look-alike text): two consecutive tokens
+    that decode to two alphabetic words of >= 4 letters."""
+    for _ in range(1000):
+        i = rng.randrange(0, len(filler) - 2)
+        if avoid_lo <= i < avoid_hi:
+            continue
+        txt = tok.decode(filler[i:i + 2].tolist())
+        w = txt.strip().split()
+        if len(w) == 2 and all(x.isalpha() and len(x) >= 4 for x in w) and txt.startswith(' '):
+            return txt.strip()
+    return _recall_key(rng)
+
+
+def build(rng, tok, filler, L, task, n, keys='synthetic'):
     def enc(s): return tok.encode(s, add_special_tokens=False)
     start = rng.randrange(0, len(filler) - L - 1)
     body = filler[start:start + L].tolist()
+    def mk():
+        return natural_key(rng, tok, filler, start, start + L) if keys == 'natural' else _recall_key(rng)
     inserts = []  # (pos, ids)
     if task in ('kv', 'kv1', 'kvupd'):
         n = 1 if task == 'kv1' else n
-        keys = [_recall_key(rng) for _ in range(n)]
-        vals = rng.sample(_RECALL_VALUE_NOUNS, n + 1)
+        keys_ = [mk() for _ in range(n)]
+        # values may repeat when n > 20; the queried needle's value is still one of 20
+        vals = [rng.choice(_RECALL_VALUE_NOUNS) for _ in range(n)] + [rng.choice(_RECALL_VALUE_NOUNS)]
+        keys = keys_
         for k, v in zip(keys, vals[:n]):
             inserts.append(enc(f" Definition: {k} refers to {v}."))
         qi = rng.randrange(n); key, val = keys[qi], vals[qi]
         if task == 'kvupd':
-            val = vals[n]; inserts.append(enc(f" Definition: {key} refers to {val}."))  # later = newer
+            val = rng.choice([v for v in _RECALL_VALUE_NOUNS if v != vals[qi]])
+            inserts.append(enc(f" Definition: {key} refers to {val}."))  # later = newer
         query = enc(f" Query: {key} refers to")
         pos = sorted(rng.sample(range(0, max(1, L - 64)), len(inserts)))
         if task == 'kvupd':  # the update must come after the original
@@ -82,9 +114,20 @@ def build(rng, tok, filler, L, task, n):
             order = [i for i, _ in sorted(pos_map.items(), key=lambda kv: kv[1])]
             inserts = [inserts[i] for i in order]
         meta = dict(key=key, val=val, hop_key=None)
+    elif task == 'tool':  # a tool call's result block mid-stream; one field asked later
+        job = mk(); fields = ['status', 'owner', 'region', 'label']
+        vals = [rng.choice(_RECALL_VALUE_NOUNS) for _ in fields]
+        inserts = [enc(f" Result: job: {job}; " + "; ".join(f"{f}: {v}" for f, v in zip(fields, vals)) + ".")]
+        for _ in range(n - 1):   # distractor result blocks for other jobs
+            inserts.append(enc(f" Result: job: {mk()}; " + "; ".join(f"{f}: {rng.choice(_RECALL_VALUE_NOUNS)}" for f in fields) + "."))
+        pos = sorted(rng.sample(range(0, max(1, L - 64)), len(inserts)))
+        order = list(range(len(inserts))); rng.shuffle(order); inserts = [inserts[i] for i in order]
+        fi = rng.randrange(len(fields)); key, val = job, vals[fi]
+        query = enc(f" Query: job: {job}; {fields[fi]}:")
+        meta = dict(key=job, val=val, hop_key=None)
     else:  # hop2
-        k1, k2 = _recall_key(rng), _recall_key(rng)
-        dk1, dk2 = _recall_key(rng), _recall_key(rng)   # a distractor chain
+        k1, k2 = mk(), mk()
+        dk1, dk2 = mk(), mk()   # a distractor chain
         v, dv = rng.sample(_RECALL_VALUE_NOUNS, 2)
         inserts = [enc(f" Record: {k1} maps to {k2}."), enc(f" Record: {k2} maps to {v}."),
                    enc(f" Record: {dk1} maps to {dk2}."), enc(f" Record: {dk2} maps to {dv}.")]
@@ -100,6 +143,26 @@ def build(rng, tok, filler, L, task, n):
     ids = out + query
     ans = tok.encode(f" {val}", add_special_tokens=False)[0]
     return ids, ans, len(query), meta
+
+
+def mem_bytes(arch, cfg, L, n_events, index_rows_all):
+    """Per-row memory accounting (bytes), from the checkpoint config.
+    mind_state: what the O(1) body carries between tokens.  library_*: the session
+    index.  tpp_kv: a Transformer++ KV cache for the same width/depth at length L
+    (bf16, K and V, every layer).  mamba2_state: SSM + conv state per layer."""
+    out = {'raw_text': 2 * L}
+    if arch == 'pam':
+        d = cfg.dim; hd = cfg.head_dim; H = cfg.n_heads; P = len(cfg.pam_layers)
+        out['mind_state'] = 4 * (P * H * hd * hd + (H * hd * hd + d if getattr(cfg, 'echo', False) else 0))
+        out['library_index_all_tokens'] = 4 * index_rows_all * d
+        out['library_index_per_event'] = 4 * n_events * d
+        out['tpp_kv_same_shape'] = 2 * cfg.n_layers * 2 * d * L
+    elif arch == 'transformer':
+        d = cfg.d_model; out['kv_cache'] = 2 * cfg.n_layer * 2 * d * L
+    elif arch == 'mamba2':
+        d_in = cfg.d_model * cfg.expand; nh = d_in // cfg.headdim
+        out['mind_state'] = 4 * cfg.n_layer * (nh * cfg.headdim * cfg.d_state + cfg.d_conv * (d_in + 2 * cfg.ngroups * cfg.d_state))
+    return out
 
 
 def ngram_table(ids, K, upto):
@@ -122,6 +185,8 @@ def main():
     ap.add_argument('--task', default='kv'); ap.add_argument('--lengths', default='2048,8192,32768')
     ap.add_argument('--docs', type=int, default=8); ap.add_argument('--needles', type=int, default=8)
     ap.add_argument('--ngram', type=int, default=4); ap.add_argument('--seed', type=int, default=0)
+    ap.add_argument('--keys', default='synthetic', choices=['synthetic', 'natural'])
+    ap.add_argument('--gate_frac', type=float, default=0.02, help='C5: fraction of most-surprising tokens that get an index row')
     ap.add_argument('--out', required=True); ap.add_argument('--device', default='cpu', help='cpu, or cuda (required for mamba2: Triton kernels)')
     a = ap.parse_args()
     model, tok, cfg = _load_v13_sempty(Path(a.ckpt), 'baseline_real_pm', torch.device(a.device)); model.eval()
@@ -134,9 +199,14 @@ def main():
         rng = random.Random(a.seed * 1000 + L + hash(a.task) % 997)
         for d in range(a.docs):
             t0 = time.time()
-            ids, ans, qlen, meta = build(rng, tok, filler, L, a.task, a.needles)
+            ids, ans, qlen, meta = build(rng, tok, filler, L, a.task, a.needles, keys=a.keys)
             T = len(ids); doc_end = T - qlen
-            rec = dict(arch=a.arch, ckpt=a.ckpt, task=a.task, L=L, doc=d, T=T)
+            rec = dict(arch=a.arch, ckpt=a.ckpt, task=a.task, keys=a.keys, needles=a.needles, L=L, doc=d, T=T)
+            n_ev = 4 if a.task == 'hop2' else (1 if a.task == 'kv1' else a.needles) + (1 if a.task == 'kvupd' else 0)
+            try:
+                rec['mem'] = mem_bytes(a.arch, cfg, L, n_ev, doc_end)
+            except Exception as e:
+                rec['mem'] = f'n/a: {e}'
             try:
                 vecs = R.vectors(ids)
                 lg = R.last_logits(ids, vecs)
@@ -167,8 +237,9 @@ def main():
                     qk = doc_end + ids[doc_end:].index(key_ids[-1])
                     q = torch.nn.functional.normalize(vecs[qk], dim=-1)
                     docv = torch.nn.functional.normalize(vecs[:doc_end], dim=-1)
+                    span_r = 24 if a.task == 'tool' else 6
                     def in_right(pp):
-                        return any(ids[j] == ans for j in range(pp + 1, min(doc_end, pp + 6)))
+                        return any(ids[j] == ans for j in range(pp + 1, min(doc_end, pp + span_r)))
                     sims = docv @ q; top = sims.topk(5).indices.tolist(); p = top[0]
                     rec['C2_hit'] = int(in_right(p)); rec['C2_top5'] = int(any(in_right(pp) for pp in top))
                     lg2 = R.last_logits(ids[max(0, p - 8):min(doc_end, p + 8)] + ids[doc_end:])
@@ -193,6 +264,22 @@ def main():
                         rec['C4_hit'] = int(in_right_s(stop[0])); rec['C4_top5'] = int(any(in_right_s(si) for si in stop))
                         si = stop[0]; lg4 = R.last_logits(ids[starts[si]:bpos[si] + 1] + ids[doc_end:])
                         rec['C4_snap'] = int(cand[int(lg4[cand].argmax())] == ans)
+                    # C5: surprise-gated rows (N12 as a LIBRARY write gate, no training): keep only
+                    # tokens whose surprisal is in the top --gate_frac of the document; key = the
+                    # vector at that token. Reports rows kept, whether the queried needle got a row,
+                    # and the hit when the search is restricted to those rows.
+                    nll = R.surprisal(ids, vecs)[:doc_end]
+                    kkeep = max(1, int(a.gate_frac * doc_end))
+                    gpos = nll.topk(kkeep).indices.sort().values.tolist()
+                    ndef = len(tok.encode(f" Definition: {meta['key']} refers to", add_special_tokens=False))
+                    # the queried needle's own token span (its key last token is at p_true for in_right)
+                    gv = docv[gpos]; gs = gv @ q; gtop = [gpos[i] for i in gs.topk(min(5, len(gpos))).indices.tolist()]
+                    rec['C5_rows'] = len(gpos); rec['C5_rows_per_event'] = round(len(gpos) / max(1, n_ev), 1)
+                    rec['C5_hit'] = int(in_right(gtop[0])); rec['C5_top5'] = int(any(in_right(pp) for pp in gtop))
+                    rec['C5_event_has_row'] = int(any(in_right(pp) for pp in gpos))
+                    pg = gtop[0]; lg5 = R.last_logits(ids[max(0, pg - 8):min(doc_end, pg + 8)] + ids[doc_end:])
+                    rec['C5_snap'] = int(cand[int(lg5[cand].argmax())] == ans)
+                    rec['C5_index_bytes'] = 4 * len(gpos) * cfg.dim
             except Exception as e:  # keep going; record the failure
                 rec['error'] = f'{type(e).__name__}: {str(e)[:200]}'
             rec['sec'] = round(time.time() - t0, 1)
