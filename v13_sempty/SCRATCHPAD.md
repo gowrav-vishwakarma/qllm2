@@ -18,6 +18,26 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 01:05 IST: STEP BACK after the orphan bug, r3c and the A7 generations.** What surfaced:
+  - *Ranked is not said.* At 2k after one read b2p2 ranks the rule's answer first among 20 in 0.88
+    of docs but SAYS it in only 0.68. The fading state still carries the skill; it is outvoted by
+    the LM prior over 50k tokens. So part of the "reach wall" is a volume problem, not a storage
+    problem. **Cheap test (eval only, no training):** contrast the state with itself: logits(pack
+    read) + a·(logits(pack read) − logits(same stream, no pack)), i.e. context-aware decoding
+    (Shi et al. 2023; contrastive decoding, Li et al. 2022) applied to a DECAYING O(1) state. 2×
+    compute, still O(1) memory. Measure free reach at 2k / 4k / 8k against a. Prior work is
+    named, so the difference is only the setting (a recurrent mind's one-read reach). Propose to
+    Lead after lg8r; the skill-pack probe already builds both streams.
+  - *Unanswerable targets teach guessing.* The orphan bug is one case of a general hazard: any
+    weighted target whose evidence is not in view trains the prior, not the skill. Every new
+    curriculum source should get the orphan-rate check (`orphan_rate.py`) before a run.
+  - *Format-bound recall.* r3c holds key-value facts far past 2k, but a plain question about a
+    plain sentence fails. The mind binds what it was trained to bind. That is Lead's "mind
+    canonicalises the question" idea from the other side: train facts and questions in many
+    phrasings (cu2 = paraphrase-varied facts / questions, held-out phrasings in the probe), and
+    measure with A8's natq cell. Plumbing (known: instruction / QA data); the claim would be
+    natq beyond the training length.
+
 * **2026-11-01 00:13 IST: lg8r READY, queued on the 4090 (tmux `lg8r`, worktree `../qllm_reset2`).**
   Reset mask on master (`f2587b5`, parity PASS CPU + GPU) and answer-in-window weighting
   (`824a988`; 44 % of b2gap answers at 8k sat in a window without their demos). Pre-registration
