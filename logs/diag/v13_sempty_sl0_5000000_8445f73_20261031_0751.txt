@@ -1,0 +1,23 @@
+=== SL0 5000000 rows, code 8445f73, 2026-10-31T07:51:01Z
+  835,584 rows  20,009 tok/s
+  1,654,784 rows  30,010 tok/s
+  2,473,984 rows  35,607 tok/s
+  3,293,184 rows  39,885 tok/s
+  4,112,384 rows  44,316 tok/s
+  4,931,584 rows  46,844 tok/s
+library: 5,000,000 rows from 3876 docs, 1280 MB keys + 20 MB values, build 106 s
+query done in 243 s
+library 5,000,000 rows, 1300 MB, install 106 s (one mind pass over the library text); tuned (lambda, T): {'pg19': (0.02, 0.3), 'web': (0.02, 0.3)}
+
+[pg19] scored docs 40, tokens 81920
+  pam3b      all 3.4892 | copy 1.3060  seen 2.7777  new 5.8498 | 0-8 4.9085  8-64 3.9241  64-512 3.4798  512-2048 3.4686 | new@0-64 5.2488
+  pam3b+lib  all 3.4878 | copy 1.3110  seen 2.7792  new 5.8407 | 0-8 4.9033  8-64 3.9198  64-512 3.4775  512-2048 3.4676 | new@0-64 5.2402
+  mamba2     all 3.3970 | copy 1.2162  seen 2.7280  new 5.7127 | 0-8 4.7936  8-64 3.8469  64-512 3.3956  512-2048 3.3738 | new@0-64 5.1322
+  rule 1 (lib helps, <= pam - 0.05): -0.0014   rule 2 (<= mamba2): +0.0907
+
+[web] scored docs 100, tokens 131509
+  pam3b      all 3.2274 | copy 1.3351  seen 2.6167  new 4.9452 | 0-8 4.0984  8-64 3.5729  64-512 3.1782  512-2048 3.2220 | new@0-64 4.3982
+  pam3b+lib  all 3.2234 | copy 1.3400  seen 2.6149  new 4.9337 | 0-8 4.0827  8-64 3.5671  64-512 3.1742  512-2048 3.2183 | new@0-64 4.3882
+  mamba2     all 3.1155 | copy 1.2197  seen 2.5444  new 4.7958 | 0-8 4.0167  8-64 3.4595  64-512 3.0716  512-2048 3.1070 | new@0-64 4.2746
+  rule 1 (lib helps, <= pam - 0.05): -0.0040   rule 2 (<= mamba2): +0.1078
+=== done 2026-10-31T07:57:12Z

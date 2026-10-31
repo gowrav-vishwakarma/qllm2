@@ -1,0 +1,24 @@
+=== SL0 20000000 rows (rerun after OOM fix), code b664080, 2026-10-31T08:05:29Z
+  19,677,184 rows  60,855 tok/s
+library: 20,000,000 rows from 15646 docs, 5120 MB keys + 80 MB values, build 328 s
+Traceback (most recent call last):
+  File "/home/ubuntu/Development/qllm_sl0/v13_sempty/tmp/sl0.py", line 151, in <module>
+    query(sys.argv[2], sys.argv[3], sys.argv[4])
+  File "/home/ubuntu/Development/qllm_sl0/.venv/lib/python3.11/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/Development/qllm_sl0/v13_sempty/tmp/sl0.py", line 86, in query
+    dist = qq + kk[b:b + KEYCHUNK] - 2 * (qc.half() @ keys[b:b + KEYCHUNK].T).float()
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 1.91 GiB. GPU 0 has a total capacity of 94.97 GiB of which 9.03 GiB is free. Process 3284481 has 52.16 GiB memory in use. Process 2303352 has 21.73 GiB memory in use. Including non-PyTorch memory, this process has 12.03 GiB memory in use. 11.40 GiB allowed; Of the allocated memory 10.17 GiB is allocated by PyTorch, and 1.20 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+Traceback (most recent call last):
+  File "/home/ubuntu/Development/qllm_sl0/v13_sempty/tmp/sl0.py", line 153, in <module>
+    report(*sys.argv[2:6])
+  File "/home/ubuntu/Development/qllm_sl0/v13_sempty/tmp/sl0.py", line 101, in report
+    sets = load_sets(data); nb = np.load(f'{out}/neighbours.npz'); lib = torch.load(f'{out}/library.pt')
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/Development/qllm_sl0/.venv/lib/python3.11/site-packages/numpy/lib/_npyio_impl.py", line 454, in load
+    fid = stack.enter_context(open(os.fspath(file), "rb"))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/dev/shm/sl0_20000000/neighbours.npz'
+=== done 2026-10-31T08:11:17Z

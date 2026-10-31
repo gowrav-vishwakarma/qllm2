@@ -3903,3 +3903,23 @@ artefact. Consequences: (1) the curriculum run needs "stated rule + demonstratio
 (so words learn to set the same state); Lead's suggested bar for that cell, taken into
 the pre-registration: 0-shot stated rule ≥ 0.75 at 32k, inside and past the trained
 length. (2) Skill packs must carry demonstrations, not only a rule sentence.
+
+### SL0 verdict (2026-10-31 13:59 IST): the knowledge library is a cost table here, not a fix for the new-token gap
+
+| library (rows) | MB (keys + values) | install (one mind pass, 6000) | PAM 3B + library − PAM 3B (PG-19 / web) | gap to Mamba-2 after (PG-19 / web) |
+|---|---|---|---|---|
+| 5M | 1,300 | 106 s | −0.0014 / −0.0040 | +0.091 / +0.108 |
+| 20M | 5,200 | 328 s | −0.0059 / −0.0119 | +0.086 / +0.100 |
+
+Query (exact, chunked brute force) 243 s at 5M, 951 s at 20M for ~320k query tokens.
+Tuned λ = 0.02 for both sizes; T = 0.3 / 0.1 × median nearest distance.
+
+**Verdict (pre-registered): rule 1 FAIL at 5M and at 20M; rule 2 FAIL.** 4× the rows
+bought ~3× the gain; at that rate a −0.05 gain needs roughly 200M+ rows (~52 GB of keys
+at 128-d fp16) and ANN search, and closing the Mamba-2 gap far more. The gain sits on
+new tokens (web −0.026 at 20M) and at early positions (web 0–8 −0.036), as kNN-LM
+predicts, but it is small. **Reading (novelty rule):** SL0 is kNN-LM on a PAM mind,
+plumbing, never a claim. Its value is the knowledge organ's cost table (rows, MB,
+install, query). It does not close the general-modelling gap to Mamba-2 at this size;
+that gap stays the mind's (r3c, body levers). Next priority (Lead): the skill-pack
+cell, not more library rows. Logs: `logs/diag/v13_sempty_sl0_*`.
