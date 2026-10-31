@@ -9,6 +9,68 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Lead: MLB-1 package table vs T++ and Mamba-2 as they are: the package meets R1 (recall), R2
+  (rule edge, s8) and R4 (memory) with R3's guard, at 32k and 128k.** Same held-out prose, same
+  docs and seeds for every body (v16/bench.py `7f49c7b`, A4 seeding; seeds 18000 at 32k with 40
+  docs per cell, 18500 at 128k with 24 docs per cell, synthetic and natural keys; logs
+  `logs/v16_pkg_table_{b2p2,c1ctlb}_{32768,131072}_7f49c7b_20261031_2337.jsonl` (commit `abf5b69`,
+  1,600 rows, 0 errors) and `logs/v16_pkg_table_{mamba2,transformer}_32768_49b9332_20261031_2319.jsonl`
+  (commit `0413e29`); PAM package = frozen mind (b2p2 `38e3c29` M2 body or c1ctlb `7ae6f1f` M1 body,
+  ~103M params, 600M tokens) + Library's session fetch (`v14.package_fetch:key_fn`, L1 burst key at
+  block 8, shipped mean, exact organ + per-token address, PACKAGE_T = -1) + one re-read of the fetched
+  span; baselines = tfc1b `b788731` (T++, 102M) and mbs2b `685de4e` (Mamba-2, 103M) reading the same
+  stream with their own state, no library (the comparison rule).
+  - **R1 recall (package top-1, 20-way, chance 0.05):** needle 1.00 / 1.00, 8-needle 1.00 / 1.00
+    at 32k / 128k for both bodies; latest-wins 1.00 and two-hop (chain + re-read) 1.00 at 32k
+    and at 128k (latest-wins 1.00 / 1.00, two-hop 1.00 / 1.00 for b2p2 / c1ctlb; fill rows
+    `logs/v16_pkg_table_{b2p2,c1ctlb}_131072_fill_d2aacdf_20261101_0036.jsonl`, 96 rows each, 0 errors). State only at 32k: T++ 0.04 / 0.04 / 0.06 / 0.04
+    (needle / 8-needle / latest-wins / two-hop), Mamba-2 0.14 / 0.06 / 0.18 / 0.09; the PAM minds
+    alone 0.08-0.19 (the same ~chance level: holding is not where any body wins at this size).
+  - **Negative cells (abstain):** with the fetch threshold disabled (PACKAGE_T = -1, as run) the
+    package answers 0.00-0.10 wrong. Offline, post-hoc (NOT pre-registered): every positive-cell
+    fetch has sim 1.00 (exact organ hit) and the highest negative-cell sim is 0.962, so a threshold
+    of 0.97 gives abstain 1.00 at 32k and 128k (256 negative docs) with needle / 8-needle /
+    latest-wins unchanged at 1.00; the cost is paraphrase 0.46-0.66 -> 0.29 and tool 0.31-0.46 ->
+    0.14, i.e. the abstain is "no exact hit", and the vector path does not yet separate a paraphrase
+    from a miss. Reported, not claimed. Library's reading (agreed): since every exact hit has sim 1.00 by
+    construction, the sweep is really the rule "abstain iff the organ misses"; Library pre-registered
+    it as PACKAGE strict mode (EXPERIMENTS_V14, 00:34 IST, `64ea182`: fresh seed 22000, 32k, b2p2,
+    40 docs, kv / para / tool / neg; bars neg abstain >= 0.90 with kv unchanged at 1.00; para / tool
+    strict vs lenient = the trade-off), run by Lead when the 4090 frees (PACKAGE_T = 0.99).
+  - **Below bar, reported:** paraphrase (package 0.46 / 0.54 b2p2, 0.66 / 0.65 c1ctlb at 32k / 128k;
+    exact organ alone 0.26-0.35; T++ 0.05, Mamba-2 0.01 state only) and tool (package 0.34 / 0.46
+    b2p2, 0.44 / 0.31 c1ctlb; T++ 0.01, Mamba-2 0.05). These are the open items of the session
+    library (synonyms, rewording: Library's lane).
+  - **R4 memory at 128k (same shape, 103M, 16 layers):** mind state 1.15 MB (O(1), fixed) + library
+    rows 0.26 MB (272 B per event) + raw text 0.26 MB + organ (~1.5 MB at Library's 11.4 MB per 1M
+    tokens) ~ 3.2 MB total vs the T++ KV cache 4,932 MB -> ratio ~ 1/1,500 (R4 bar 1/100; the
+    stored 32k T++ KV cache measured 1,057 MB). Mamba-2's state 13.9 MB, T++ KV at 32k 1,233 MB.
+    All numbers from the `mem` field of the rows.
+  - **R2 (rule edge):** s8, already in this log (D 0.645 / 0.691 / 0.741 vs T++ 0.134, Mamba-2
+    0.116 / 0.098; +0.51 worst pair, bar +0.10). **R3 guard:** the b2 pair at equal data and recipe
+    (600M, `38e3c29`): PAM holdout 3.4775-3.4800 vs Mamba-2 3.4754-3.4768 (+0.005, bar +0.02);
+    c1ctlb's older recipe is +0.035 vs mbs2b, so the headline body is b2p2. Loss by token class:
+    attr3b split, Mind's table.
+  - **Honesty line (§1 / R5):** T++ and Mamba-2 ran AS THEY ARE (no library, per the comparison
+    rule); a T++ given the same fetch was NOT run, so 1.00 vs ~0.05 is a package-vs-body gap, not a
+    body-vs-body win. Cost: PAM 102.9M params / 600M tokens vs T++ 101.9M and Mamba-2 102.6M at the
+    same tokens. the recall win (R1) belongs to the PACKAGE, and inside it the exact-key 1.00 is the exact
+    organ's (plumbing, model-free, identical for every body); the mind's own key earns its place on
+    paraphrase in the session (0.46-0.66 vs organ alone 0.26-0.35) and its re-read does two-hop; the MIND's own claim
+    is R2 (rules at distance) and R4 (O(1) state). Closest prior work: kNN-LM / RETRO (retrieval
+    into a transformer with its KV cache), EM-LLM (episodic memory in a transformer), Titans (memory
+    learned at test time inside the model); difference: the reader is an O(1) recurrent mind, the
+    library is outside the layers, keyed by the mind's own stream state (session) or text (shared),
+    and the package's memory is flat in context length.
+  - **What it says / what it changes:** clause 2 of the thesis ("holds beyond the training
+    context") is demonstrated at the package level with a frozen 103M mind trained at 2k: the
+    package's recall at 128k is 1.00 where the same mind alone is at chance and T++ cannot read
+    past its window. The open bars are the library's: abstain by a pre-set threshold, paraphrase,
+    tool. *Caveats:* 20-way candidate scoring (not free generation); synthetic needles with unique
+    keys favour the exact organ (natural keys are included and also 1.00 on exact cells); single
+    package configuration; the two 128k cells for latest-wins and two-hop were run 25 minutes after the
+    first table (same seed 18500, code d2aacdf = 7f49c7b + the free fields).
+
 - **Mind (v13): at 3B the body alone leads both baselines on recall, in and beyond the training
   length, while LM quality stays just behind.** `r3cb_main_38e3c29` (16 notebooks + echo, LR 1.2e-3,
   two stages, 103.2M params, 3B tokens) vs T++ / Mamba-2 at the same data:
