@@ -73,7 +73,7 @@ def query(ck, out, data):
     from attr3b import load_sets
     m, _ = load(ck); lib = torch.load(f'{out}/library.pt')
     keys = lib['keys'].to(dev); vals = lib['vals'].to(dev).long(); P, mu = lib['P'].to(dev), lib['mu'].to(dev)
-    kk = (keys.float() ** 2).sum(1)
+    kk = torch.cat([(keys[b:b + KEYCHUNK].float() ** 2).sum(1) for b in range(0, len(keys), KEYCHUNK)])   # chunked: no fp32 copy of all keys
     res, t0 = {}, time.time()
     for name, docs in load_sets(data).items():
         for i, d in enumerate(docs):
