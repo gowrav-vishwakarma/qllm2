@@ -3114,6 +3114,41 @@ fitted threshold:
       (R2) or spreads over it (BM25). Synthetic keys, though unique, lose to
       longer frame spans at equal count. Text does not handle natq fetch or
       abstain; the mind's own per-word addresses go into D4's GPU run.
+- **A13 (D4 GPU run): a question is many keys, chosen by the mind's own
+  surprise (PRE-REGISTERED 2026-11-01 05:12 IST, before any number of it).**
+  A12 showed text cannot tell a question's key from its frame ("stand for",
+  "Answer:" are as rare in prose as the key). The mind can: the frame is
+  PREDICTABLE to it, the key is not.
+  - Cells: syn, synneg (A5's), natq, natqneg (bench); b2p2; L = 32,768; FRESH
+    seed 33000; 40 docs each (natq / natqneg: natural keys).
+  - Rows: the doc's sentences (split at ".", 4-64 tokens). Each row keeps its
+    per-token frozen vectors (centred by the doc mean).
+  - Fetch arms (score = max cosine over a row's tokens):
+    - F2 (primary): the 2 question tokens with the highest surprisal under
+      the mind (excluding the question's first 2 tokens); their block-8
+      vectors are 2 keys; a row's score = the sum of its 2 max-sims.
+    - F3: F2 at block 2 (word meaning near the embedding).
+    - F1: the key's last token at block 8 (key position known: a reference
+      arm, as bench's C2).
+    - MiniLM-L6 over sentences (the named text baseline).
+  - Reads (b2p2, warm + no-row contrast, answer tokens only, stop at "." /
+    newline, sentence scorer): F2's top-1 row; F2's top-5 rows together
+    (line-up, doc order); the ORACLE fact row on natq (the ceiling).
+    Key-swap rel on F2's top-1 (reported only; A11 settled it).
+  - Bars:
+    - B1 (natq fetch): F2 top-1 holds the fact ≥ A12's BM25 top-1 + 0.15 on
+      natq (≥ 0.325 synthetic, ≥ 0.675 natural).
+    - B2 (synonyms): F2 top-1 ≥ 0.50 on syn (A5's bar; the L1 head had 0.40).
+    - B3 (line-up): line-up read sentence ≥ the top-1 read + 0.10 on syn.
+  - Reported: F1 / F3 / MiniLM top-1 / top-5; natq oracle under warm +
+    contrast; top-1 score AUROC natq vs natqneg and syn vs synneg; key-swap
+    rel AUROC on F2's top-1.
+  - Closest prior work: BM25 / query-term weighting by IDF (Robertson
+    1994); surprisal-based saliency (Hale 2001; "salience" in LM retrieval
+    queries, e.g. query term weighting with LMs); ColBERT late interaction
+    (max-sim over tokens, Khattab & Zaharia 2020). Difference: the query
+    terms are chosen by the O(1) mind's OWN surprise and matched in its OWN
+    states, with no trained encoder.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
