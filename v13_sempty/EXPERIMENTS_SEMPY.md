@@ -4635,3 +4635,49 @@ user's "expression counts").** It replaces the mix clause (cu1 had no "Win": its
   ANSWER_IN_WINDOW should offset part of that.
 - **Futility unchanged** (3.431 at step 39060). The A7 readouts (free primary, 3 shown generations)
   and A8's natq cell (when Lead's harness has it) go into the readout list.
+
+## cu1 VERDICT (02:33 IST, 2026-11-01): NOT a Win. R-fsq and R-hop MET; R6a / R6b FAIL (the stated rule was learned as a lookup table over trained values); the holdout guard FAILS (+0.045)
+
+`cu1_main_2efb422` (6000; b2p2's recipe, stage B 480M tokens with srd / fsq / hop at 2 / 2 / 1 %, lab 2 %,
+102.9M params). The bench cells (instr, kv) errored in cu1's chain (a device bug in the pinned
+`2efb422` harness). They were rerun from master `a1101e8` (`~/cu1rb.sh`, same args), for cu1 and b2p2.
+
+| rule | cu1 | b2p2 | bar | verdict |
+|---|---|---|---|---|
+| R6a stated rule, 0 shots, held-out shift, L = 0 / 2k | 0.00 / 0.00 | 0.00 / 0.01 | ≥ 0.75 both | **FAIL** |
+| R6b same, re-read in front of the query, 32k | 0.00 | 0.00 | ≥ 0.75 | **FAIL** |
+| R-fsq abstain on an absent key / present / false abstain | 1.000 / 0.940 / 0.060 | 0.000 / 0.990 / 0.000 | ≥ 0.75 / ≥ 0.94 / ≤ 0.10 | **MET** |
+| R-hop two-hop (20-way; free 0.20) | 0.570 | 0.100 | ≥ 0.50 | **MET** (20-way as registered) |
+| bench kv 8 needles 32k, re-read | 1.00 | 1.00 | not worse by > 0.02 | met |
+| guard holdout | 3.5254 | 3.4800 | ≤ 3.500 | **FAIL** |
+| guard B2 `_new` / label_diag / skill-pack 2k | 1.000 / 0.913 / 0.81 | 0.944 / – / 0.86 | ≥ 0.894 / 0.884 / 0.81 | met |
+
+**Why R6a fails (diagnostic, `v13_sempty/tmp/stated_rule_probe.py`, CPU, 120 prompts per cell, the bench's
+exact format):**
+
+| stated rule, L = 0 | cu1, trained k | cu1, held-out k (5, 9) | b2p2, trained k | b2p2, held-out k |
+|---|---|---|---|---|
+| 0 shots | **0.97** | **0.00** | 0.07 | 0.00 |
+| 1 shot | 1.00 | 0.97 | 1.00 | 0.96 |
+| 2 shots | 1.00 | 1.00 | 1.00 | 0.99 |
+
+srd taught words → rule state, but as a LOOKUP TABLE over the 10 trained shift values. Told "shift by
+5" or "9" (never trained), cu1 applies a trained shift (mostly 10, 4 or 1). One demonstration fixes it
+in both models. That is recall of a stated-value table, not rule inference from words. It is the
+honest boundary of goal 3 here: rules are induced from EXAMPLES on unseen values (B2 `_new` 1.000),
+not from the WORDS of an unseen value.
+
+**Also reported (A3, A7):**
+- verify, cu1 vs b2p2: an unrelated key's row abstains 0.925 (21-way) and says " unknown" outright
+  0.32 (free); says the wrong value 0.015 free (b2p2 0.14). A prose row abstains 0.28 / free 0.02.
+  So fsq's abstain transfers to the short re-read format for synthetic keys, mostly when forced to choose.
+- two-hop is 0.57 ranked but 0.20 said outright.
+
+**Consequences (rules fixed before the numbers):**
+1. **srd is out of r3p** (A1: in only if R6a passes); its 0.005 goes to dclm (0.432).
+2. **srd is removed from the code** (AGENTS rule; the cu1 pre-registration said so). A stated-rule source
+   for cu2 must be redesigned so a table cannot solve it: many values, held-out values in the probe,
+   the rule's number used compositionally.
+3. **fsq and hop stay** (their rules met).
+4. The holdout cost is the r3p A1 budget's input. 10 % synthetic at 600M costs ~+0.045; r3p keeps the
+   share at 7.0 % (srd out) with the hard gate 3.2391.
