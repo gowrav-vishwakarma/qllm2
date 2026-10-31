@@ -2504,6 +2504,17 @@ before any code or number; Lead's order item 3; eval only).**
     1.00 / 0.86 / 0.355 / 0.10 at 0 / 2k / 4k / 8k per Mind). If Mind's fixed
     long-gap recipe (lg8r) lengthens the reach, R grows and the overhead falls
     in proportion; N11-R should be re-run on that checkpoint.
+  - **N11-R/F — free-generation rerun (PRE-REGISTERED 2026-11-01 00:49 IST, before
+    any number of it).** The verdict above used the 20-way pick (registered
+    metric; it stands). Under the user's rule "generation counts" (A7) the
+    headline must be FREE generation (the greedy token over the whole
+    vocabulary == the target); Mind measured the 20-way pick reads higher
+    (b2p2 skill-pack at 2k: 0.88 vs 0.68). Rerun: same cell, FRESH seeds
+    8150-8199 (50 docs per rule), L = 2048 / 8192 / 32768, R = 1024 / 2048 /
+    4096 / none; code `9daea9a`. **Bar (relative, since the free one-read level
+    is not known in advance):** free accuracy at R = 2048, L = 32k ≥ 0.9 × the
+    free accuracy with no refresh at L = 2048 in the same run, for each rule.
+    Reported: both metrics in every cell, the free tokens, the overhead.
   - **Checked by Mind (2026-11-01 00:25, `b136dab`, 300 real docs per source):**
     the packing flaw orphans only 3.3 % of B2 answer tokens at 2k windows
     (B2 docs are short: median 143 tokens), so b2p2's 2k reach and R as tuned
