@@ -2995,6 +2995,29 @@ fitted threshold:
     the same docs. Synthetic reported. Prior work: SQuAD 2.0 / R-Tuning /
     Self-RAG (as in Mind's cu1 notes); difference: abstain read off an O(1)
     mind's free generation over its own fetched row.
+  - **A10 VERDICT (2026-11-01 03:43 IST; code a589262;
+    `logs/v14_a10_{cu1,b2p2}_32768_a589262_20261101_0336.jsonl`, 160 rows each,
+    0 errors): NOT met as registered; the miss is FETCH, not cu1's reading.**
+
+    | 32k, seed 30000 (syn / nat) | cu1 | b2p2 |
+    |---|---|---|
+    | neg: abstain by the rule | 1.00 / **1.00** | 0.825 / 0.975 |
+    | kv: answered-and-correct | 0.30 / **0.20** | 0.20 / 0.35 |
+    | kv: top-1 row holds the fact (own frozen address) | 0.325 / 0.225 | 0.20 / 0.375 |
+    | " unknown" said outright (neg) | 0.125 / 0.10 | 0 / 0 |
+
+    Bar: cu1 neg natural abstain 1.00 ≥ 0.80 met; cu1 kv natural 0.20 < b2p2
+    0.35 − 0.05 NOT met.
+    - Split by the top row (descriptive): right row → says the value, cu1
+      20 / 22 vs b2p2 22 / 23 (no false abstain); wrong row → says a wrong
+      value, cu1 1 / 58 vs b2p2 6 / 57. The kv gap is cu1's weaker own-state
+      fetch (right row 9 vs 15 docs on natural keys), not its reading.
+    - Design limit: with each mind's own frozen address the wrong rows were
+      mostly prose (b2p2 natural 0 / 25 wrong values here vs ~57 % on the L1
+      head's rows), so the hard case (another key's English-word fact) barely
+      appeared. Mind's fixed-row verify probe covers it (cu1 " unknown" 0.86,
+      wrong value 0.01 vs b2p2 0.59). A package-level test needs the rows held
+      fixed across minds (b2p2's L1-head rows read by both).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
