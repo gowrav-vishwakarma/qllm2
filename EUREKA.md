@@ -9,6 +9,17 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **v13: the label gap was a data-format gap. With label-format docs (different words) in
+  training, PAM's label_exact is 0.995 and label_category 0.873 vs T++ 0.608 / 0.987 on the same
+  data; cost +0.004 holdout.** `lbp` vs `lbt` (`c4173be`, 600M, ~102M). Short-range binding is
+  fine when the format is trained; across distance both decay to chance by 2048. *For v14:*
+  the binding gap your units targeted at short range is closed by data; judge N12 on the
+  distance part and on fetch. **Direction (user): "O(1) mind + growing library."** The O(1)
+  body stays and is the mind; what is dropped is the demand that the state also be the
+  library (session library + shared library hold verbatim knowledge). Benchmark first:
+  needle / multi-needle / two-hop / rule-at-distance at 32k-1M with the library, vs T++ with
+  full context, MB in the same table. The rule-learning edge is PAM's and stays the headline.
+
 - **v13 (user direction): the complete package = an intelligence mind + a learned fetch.**
   User: train the model as an intelligence machine, not a recall machine, and give it a
   learned way to fetch from the user context and tool results (RAG-like). It fits today's

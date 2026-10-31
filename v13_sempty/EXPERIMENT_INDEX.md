@@ -38,8 +38,10 @@ shared reads) · **E1** echo memory (10-29) · **2st** two-stage schedule, stage
 | **r3c** (`38e3c29`, running) | 6000 | 3B / ~103M | 16nb | yes | web/chat | 1.2e-3 | 5 % | **no** | **no** | **no** | **no** | does the 16nb + echo + 2st BODY close the 3B LM gap? NOT the best package |
 | b2p1 / b2p2 (`38e3c29`) | 6000 | 600M / 102.9M | M2 | yes | apt | 1.2e-3 | 4 % | 3 % | no | no | no | bar 3 rules (with b2t, b2m) |
 | s8: b2t2 / b2m2 / b2p3 (`38e3c29`, queued) | 6000 | 600M | as b2 pair | | | | 4 % | 3 % | no | no | no | distance confirmation |
-| lbp / lbt (`c4173be`, running) | 6000 | 600M | M2 / T++ | yes | apt | 1.2e-3 | 4 % | no | 3 % | no | no | label gap = format? |
+| lbp / lbt (`c4173be`) | 6000 | 600M | M2 / T++ | yes | apt | 1.2e-3 | 4 % | no | 3 % | no | no | label gap = format? |
 | n9c (`e5f0b73`) | 4090 | 600M / 103.5M | M2 | yes | web (C1-ctl) | 1.2e-3 | 5 % | no | no | yes | no | N9a lookup (FAIL), recall +0.15 |
+
+**Direction (user, 10-31): O(1) mind + growing library.** The state is the mind; verbatim knowledge goes to a session library + a shared library; benchmark first (see EXPERIMENTS "Direction").
 
 **Not yet in any 3B run:** b2 rule docs, lab (pending), N9a (pending replication +
 untrained-word check), N12 (pending micro). A 3B "best package" run is the place
@@ -106,7 +108,7 @@ Any PAM change must close the ~0.07–0.11 nat LM gap ("Scoreboard result").
 
 | id | idea | status | notebook section |
 |---|---|---|---|
-| Label-format pair (`lbp` / `lbt`) | `lab` source (`c4173be`): label-rule docs, probe format, disjoint vocabulary, 3 % of stage B; PAM vs T++ on the c1m2 recipe | **PENDING** (6000, tmux `s7` after s6, next to r3c): PASS if PAM label_diag ≥ 0.767; vs T++ ≥ lbt − 0.02 = gap closed | "Label-format pair `lb`" |
+| Label-format pair (`lbp` / `lbt`) | `lab` source (`c4173be`): label-rule docs, probe format, disjoint vocabulary, 3 % of stage B; PAM vs T++ on the c1m2 recipe | **PASS, PAM ahead**: label_diag PAM 0.934 (exact 0.995, cat 0.873) vs T++ 0.798 (bar 0.767; ahead ≥ +0.05); holdout 3.4516 (cost +0.004), recall 0.846. The label gap was a data-format gap. `lbm` (Mamba-2 + lab) queued (tmux `s9`) before any claim | "Label-format pair `lb` result" |
 | n9c: v14 N9a phase keys at 600M | C1-ctl recipe + `ECHO_PHASE_LAGS=3` (4090, `e5f0b73`) | **FAIL (lookup)**: label_exact 0.472 vs ctl 0.610, label_cat 8-shot 0.318 vs 0.500 (both worse); keys de-collided (cos 0.715 → 0.538); **recall 0.975 vs 0.825 (> 2048: 0.924 vs 0.597)**; holdout 3.4725 vs 3.4743. No v13 scale run; the unit stays in v14 | "n9c result" |
 | B2-in-training pair (bar 3) | `b2` rule docs (3 %, held-out values) in stage B; PAM b2p1/b2p2 vs T++ b2t + Mamba-2 b2m (`38e3c29`) | **vs T++ MET both seeds; vs Mamba-2 NOT MET** (`_new` mean PAM 0.991 / 0.944, Mamba-2 0.892: +0.099 / +0.052, bar +0.10) → bar 3 not met in its pre-registered form. **Distance edge is PAM's alone:** shift/affine `_new` @2048+4096 mean PAM 0.673 / 0.676 vs Mamba-2 0.084, T++ 0.125 (both collapse at ~110-token gaps). Mamba-2 leads labels (0.787) and exact far copy (step through filler 0.27-0.31); holdout PAM 3.4777 / 3.4800, Mamba-2 3.4754, T++ 3.5572. Distance confirmation pre-registered and queued: tmux `s8` (b2t2, b2m2, b2p3; probe seed 7000) | "B2 pair — seed-42 half", "seed-43 result", "B2 Mamba-2 arm b2m" |
 | G1 short conv | conv on qkv, single-pass pretraining (`g1c`, 4090, `9c2b632`) | **FAIL as measured, verdict held open**: label_exact 0.517 vs ctl 0.610, holdout +0.049; E2 and g1c (both 4090) lose the same ~0.05 to the 6000 control, so a 4090 box control runs first | "g1c result" |

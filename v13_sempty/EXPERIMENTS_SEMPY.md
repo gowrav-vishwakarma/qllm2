@@ -3709,3 +3709,87 @@ rules 100; tok/s.
    any architecture. If it goes into the package, the bar-2 report must say so,
    and the claim must state how much of any lead it explains.
 6. One seed. A 600M pass gets judged again at 3B, not claimed at 600M.
+
+## Label-format pair `lb` result (2026-10-31 12:50 IST): PASS — the label gap was a data-format gap; PAM beats T++ on labels on the same data
+
+`lbp_main_c4173be` (PAM M2 + echo + shared reads, 102.9M) vs `lbt_main_c4173be`
+(T++ 101.9M); 600M tokens each, stage B with 3 % `lab` docs (probe format,
+disjoint vocabulary), seed 42, 6000.
+
+| 600M tokens | holdout | WikiText | recall 63 (≤ 2048 / > 2048) | PG-19 far gain 4–8k | label_diag cat / exact (mean) | category @ 2 / 4 / 8 shots | rules label_cat (100 / 400) | two_hop |
+|---|---|---|---|---|---|---|---|---|
+| **PAM lbp** | **3.4516** | 66.00 | **0.846** (0.945 / **0.600**) | **+0.044** | **0.873 / 0.995 (0.934)** | **0.84 / 0.88 / 0.90** | **0.877 / 0.891** | 0.31 |
+| T++ lbt | 3.4927 | **65.80** | 0.667 (0.877 / 0.142) | −0.94 | 0.608 / 0.987 (0.798) | 0.425 / 0.605 / 0.795 | 0.587 / 0.626 | 0.287 |
+| without lab: PAM b2p1 / c1m2 | 3.4777 / 3.4473 | | 0.721 / 0.870 | | 0.567 / – | 0.52 / 0.65 / 0.47 (b2p1) | 0.557 | 0.29 |
+
+LCL label_category @ 0 / 1024 / 2048 / 4096 / 8192 (8 shots, 300; in-context
+chance 0.25): PAM 0.903 / 0.413 / 0.337 / 0.277 / 0.207; T++ 0.76 / 0.48 / 0.393 /
+0.14 / 0.133. two_hop at chance for both at every L.
+
+**Verdict (pre-registered rules):** rule 1 **PASS** (0.934 ≥ 0.767); rule 2
+**PAM ahead** (+0.136 ≥ +0.05); guard holdout 3.4516 ≤ 3.487 (cost vs c1m2
+only +0.004, where the b2 docs cost +0.030); recall 0.846 (−0.024 vs c1m2; the
+b2 docs cost −0.15). Labels across distance: reported, both at chance by 2048.
+
+**Reading.**
+- The "exact lookup" weakness at short range was a FORMAT gap. With the format
+  trained (on different words), label_exact is 0.995 at 2 shots and category
+  0.84–0.90. T++ also reaches exact 0.987 but category only 0.608: PAM
+  generalises the semantic binding (new member of a shown category) better.
+- Skills are format-specific: lbp has no b2 docs and is below chance on
+  letter / number rules (0.003 / 0.05), as c1m2 was. The next recipe trains b2
+  + lab + recall together (r3d).
+- Lookup across distance still decays to chance by 2048 for both bodies, with
+  the format trained. That lookup belongs to a library, not the state
+  (direction below).
+- Caveats: one seed; `lbm` (Mamba-2 + lab, tmux `s9` after s8) runs before any
+  label claim (amendment 1), and a second PAM seed before any claim.
+
+## s8 part 1 (2026-10-31 12:04 IST): fresh probe seed 7000 on the four finished B2 models
+
+`--seed 7000 --trials 400 --spread 0,2048,4096`, shift_wide_new + affine_map_new,
+8 shots. D = mean of the 4 cells at 2048 / 4096.
+
+| | shift @ 0 / 2048 / 4096 | affine @ 0 / 2048 / 4096 | **D** |
+|---|---|---|---|
+| PAM b2p1 (s42) | 1.00 / 0.595 / 0.278 | 1.00 / 0.935 / 0.772 | **0.645** |
+| PAM b2p2 (s43) | 1.00 / 0.583 / 0.300 | 1.00 / 0.970 / 0.912 | **0.691** |
+| T++ b2t | 0.282 / 0.00 / 0.003 | 0.97 / 0.033 / 0.502 | 0.134 |
+| Mamba-2 b2m | 0.762 / 0.00 / 0.00 | 1.00 / 0.302 / 0.160 | 0.116 |
+
+On a never-used probe sample the old-model half of the "all pairs" rule holds
+with margin ≥ +0.51 (bar +0.10). The verdict waits on the new training seeds
+b2t2 (training), b2m2, b2p3 (~18:15 IST).
+
+## Direction (user decision, 2026-10-31 ~12:30 IST): O(1) mind + growing library
+
+The O(1) body stays and is the point: it is the MIND (rules, gist, reasoning,
+learning that holds past the trained length). What is dropped is the demand
+that the O(1) state also be the LIBRARY. Verbatim knowledge lives in libraries:
+a per-session library (the context and tool results, as text streams in) and a
+shared, growing library (corpora; later community packs: bio, coding, a
+framework). "Skill = skill + lookup data." Intelligence separate from knowledge.
+
+Why now (evidence): copy is 53–58 % of the 3B LM gap to T++; a model-free exact
+organ recalls 1.0 up to 128k where PAM, T++ and Mamba-2 all fade to 0 by 32k
+(Communicator, a1baefc); PAM's own pre-logit vector at the key token retrieves
+the right sentence top-1 0.63–0.88 to 128k zero-shot, 1/4 at 400k (so the fetch
+key must be trained past ~128k); the frozen PAM re-reading two fetched spans
+answers two-hop 1.0; rule-at-distance is PAM's alone (above); short-range
+binding is fine once the format is trained (lb pair).
+
+**Order (user): a pre-registered benchmark first, the distributable model once
+it wins that table.** Benchmark (spec to be fixed in its own commit before any
+package run): needle, multi-needle, latest-definition-wins, two-hop,
+rule-at-distance and instruction persistence at 2k–1M with the library,
+against Transformer++ with FULL context (and Mamba-2), memory in MB in the same
+table (mind state + library index vs KV cache), plus general LM loss by token
+class so the mind's quality is never hidden.
+
+What does not change: the mind must stay a competent general LM (the new-token
+gap to Mamba-2 is a mind problem; the library does not fix it: r3c, body
+levers). Novelty must be in the mind–library interface (a learned fetch keyed
+in the mind's own space; rules carried in state), since retrieval itself exists.
+Lanes: v14 designs the learned fetch (gate, trained key at the salient token,
+re-read); v13 builds the benchmark, the training recipe that teaches the mind
+to use fetched text, and the package runs.

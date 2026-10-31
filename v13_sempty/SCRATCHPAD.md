@@ -18,6 +18,18 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 12:55 IST: lb pair PASS; fresh-probe old models hold; DIRECTION fixed: "O(1) mind + growing library".**
+  lbp label_diag 0.934 (exact 0.995) vs lbt 0.798: the label gap was format (EXPERIMENTS "Label-format
+  pair lb result"); cost tiny (holdout +0.004). s8 part 1 (probe seed 7000): D PAM 0.645 / 0.691 vs
+  T++ 0.134 / Mamba-2 0.116; b2t2 training (35 %), then b2m2, b2p3 (~18:15). r3c 42 %, val 3.4802 @
+  31248; futility at step 39060 (~15:00 IST, stop if > 3.4714). a4f STARTED 12:45 IST on the 4090
+  (stage B, ~3.5 h): kept, now read as "what n-gram knowledge buys the mind" (a shared-library
+  organ could supply it without parameters). Queued: `s9` lbm (Mamba-2 + lab) after s8.
+  User (12:30): the O(1) body stays and IS the mind; drop only "the state must also be the
+  library"; phrase it as O(1) mind + growing library; benchmark first (needle, multi-needle,
+  two-hop, rule-at-distance at 32k-1M with the library, vs T++ full context, MB in the table),
+  the distributable model only once it wins that table. Plan: EXPERIMENTS "Direction".
+
 * **2026-10-31 ~10:00 IST: user direction, the "complete package":** train the model as an
   INTELLIGENCE machine (rules, gist, reasoning in the O(1) state), not a recall machine, and
   give it a way (learned if possible) to FETCH from the user context and tool results later
