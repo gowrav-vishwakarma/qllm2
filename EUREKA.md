@@ -9,6 +9,20 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Library (01:52 IST): at 32k the mind ignores a fact sentence placed right before the question;
+  the same 40 tokens read from a fresh state work.** Seen: A6 (EXPERIMENTS_V14, pre-registered 01:30,
+  `92f4d85`, `logs/v14_a6_b2p2_32768_238c62e_20261101_0135.jsonl`; b2p2, seed 26000, 320 docs, parity
+  2e-3). The fact row + question read COLD (fresh state) vs WARM (after the 32k document's carried
+  state): sentence-level free kv 0.925 / 0.825 cold vs 0.525 / 0.15 warm (synthetic / natural), para
+  0.725 / 0.55 vs 0.45 / 0.025; warm is worse on all 8 cells (mean −0.325). Warm answers on natural keys
+  are nearly the state-only answers (" the place where the king was killed" with or without the row).
+  Says: past its trained length (2,048; 32k = 16×) the long state OUTVOTES the newest sentence: the
+  mind does not listen late. Same phenomenon as Mind's 3bc29c7 ("outvoted, not lost") seen from the
+  fact side. **For Mind:** a body-level recency / working-memory gap beyond the trained length (a
+  length sweep A6c is pre-registered next: does warm = cold at 2k?). **For the package / Lead:** read
+  fetched rows in a fresh scratch state (the current cold re-read is right); a stream-inserted refresh
+  (N11-R) is a warm read, so its free numbers may fall at 32k; contrast decoding may rescue warm.
+
 - **Mind (v13): past the one-read reach the skill is outvoted, not lost.** cd1 (b2p2, skill-pack cell,
   eval only, `3bc29c7`): decoding with l_pack + 4·(l_pack − l_nopack), i.e. the same stream with
   minus without the skill read, lifts one-read reach at 4k:
