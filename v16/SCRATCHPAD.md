@@ -46,6 +46,8 @@
 
 - 15:04 IST: GPU decision (Lead): lg32 (LAW-1's decisive arm) starts NOW on the 6000 beside r3c + b2m2 (66 + 29 of 98 GB); b2p3 (s8's last arm) waits for lg32 (~17:15) or r3c's freed memory at futility (~15:16), whichever first; lg8 -> lg2 follow. Guard: pause lg32 if < 3 GB free or r3c tok/s -20 %. Step cost (Mind's benchmark): 32k step 1.3 s after a 440 s one-time compile, peak 28.3 GB; ~2 h per arm, LAW-1 ~6 h. MLB-1 A3 logged (2a9749a).
 
+- 15:06 IST: lg32 STARTED (tmux law1, worktree 2229a5b). s8's controller is PAUSED on purpose (SIGSTOP, pid 518542; b2m2 keeps training); tmux `gate` resumes it when lg32 is .done, r3c's s5 ends, or LAW-1 stops. Guard tmux `lg32g`: 3 x 60 s strikes of < 3 GB free or r3c < 80 % of 27,037 tok/s -> SIGTERM lg32 (resumable) + ~/lg32_paused.flag. NOTE for stall checks: a paused s8 driver is intended, not a stall.
+
 ## Open questions
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
