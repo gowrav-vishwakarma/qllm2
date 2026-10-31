@@ -1490,6 +1490,17 @@ nats.
   (key / value / other).
 - If the natural cell fails: the write gate needs training (a learned gate on
   the same signal); the frozen surprise alone is not enough.
+- **Amendment A1 (13:50 IST, before any W0 number; arithmetic, not data).**
+  (1) The tau grid is {4, 5, 6, 7, 8, 9, 10} nats: mean surprise on web text is
+  ~3.5 nats, so tau ≤ 5 fires on far more than 1 token in 16. A "row" is one
+  firing token (u > tau); row rate = firing tokens / tokens; the bar applies
+  at the lowest tau whose measured row rate on plain filler is ≤ 1/16.
+  (2) "Natural" = the organiser's natural keys (real two-word phrases in the
+  definition template). (3) Plain real sentences as needles are REPORTED only,
+  against the chance catch rate 1 − (1 − r)^len (63 % for a 16-token sentence
+  at r = 1/16): a gate that fires at random would already catch 63 %, so a
+  95 % bar on them is impossible by arithmetic. The lift over chance is the
+  number.
 
 **Unit L1 (trained key head on the frozen mind).** Key head W_k and query head
 W_q, 128 dims each, trained contrastively (InfoNCE, temperature learned) on
