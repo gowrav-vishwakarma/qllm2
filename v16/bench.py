@@ -36,6 +36,7 @@ class Reader:
 
     vec_layer = None    # None = pre-logit vector; k = residual after block k (Library: mid-layer address)
     centre = False      # subtract the document mean from the keys before the cosine
+    last_keys = None    # key vectors of the last vectors() call (PAM only; None for other bodies)
 
     @torch.no_grad()
     def vectors(self, ids: list[int]) -> torch.Tensor | None:
