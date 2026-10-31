@@ -1,0 +1,68 @@
+layer 2: x1.0: 0.03 x2.0: 0.03 x4.0: 0.03 x8.0: 0.03
+layer 4: x1.0: 0.03 x2.0: 0.03 x4.0: 0.07 x8.0: 0.07
+layer 6: x1.0: 0.03 x2.0: 0.10 x4.0: 0.10 x8.0: 0.10
+layer 8: x1.0: 0.03 x2.0: 0.10 x4.0: 0.10 x8.0: 0.12
+layer 10: x1.0: 0.03 x2.0: 0.10 x4.0: 0.10 x8.0: 0.10
+layer 12: x1.0: 0.07 x2.0: 0.10 x4.0: 0.10 x8.0: 0.10
+layer 14: x1.0: 0.05 x2.0: 0.05 x4.0: 0.05 x8.0: 0.05
+best (8, 8.0)
+chosen on dev seeds: layer 8 scale 8.0
+Traceback (most recent call last):
+  File "/home/gowrav/.local/share/uv/python/cpython-3.9.24-linux-x86_64-gnu/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/gowrav/.local/share/uv/python/cpython-3.9.24-linux-x86_64-gnu/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/home/gowrav/Development/qllm_v14dev2/v14/sr0.py", line 185, in <module>
+    main()
+  File "/home/gowrav/Development/qllm_v14dev2/v14/sr0.py", line 176, in main
+    o = run_cell(mind, tok, filler, sep, task, seed, L, a.layer, (a.scale,), other)
+  File "/home/gowrav/Development/qllm_v14dev2/v14/sr0.py", line 107, in run_cell
+    out = {'A': score(ex, mind.forward(pack + fill + q)[0])}      # pack at t0, filler, query
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/gowrav/Development/qllm_v14dev2/v14/sr0.py", line 61, in forward
+    z, _ = blk(z, pam_state=None, step_offset=0, shared=shared)
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/gowrav/Development/qllm_v14dev2/v13_sempty/model.py", line 1065, in forward
+    pam_out, new_state = self.pam(self.norm2(x), state=pam_state,
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/gowrav/Development/qllm_v14dev2/v13_sempty/model.py", line 954, in forward
+    output, new_state = self._chunked_delta(tokens, queries, keys, values, decay)
+  File "/home/gowrav/Development/qllm_v14dev2/v13_sempty/model.py", line 846, in _chunked_delta
+    read, state, write = pam_delta_batched(
+  File "/home/gowrav/Development/qllm_v14dev2/v13_sempty/triton_kernels.py", line 600, in pam_delta_batched
+    W = _delta_prep_fn()(k, v, retention, beta_w, beta_e, S0, sub)
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/_dynamo/eval_frame.py", line 736, in compile_wrapper
+    return fn(*args, **kwargs)
+  File "/home/gowrav/Development/qllm_v14dev2/v13_sempty/triton_kernels.py", line 625, in _delta_prep
+    def _delta_prep(k, v, retention, beta_w, beta_e, S0, sub: int):
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/_dynamo/eval_frame.py", line 929, in _fn
+    return fn(*args, **kwargs)
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/_functorch/aot_autograd.py", line 1241, in forward
+    return compiled_fn(full_args)
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 384, in runtime_wrapper
+    all_outs = call_func_at_runtime_with_args(
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/_functorch/_aot_autograd/utils.py", line 126, in call_func_at_runtime_with_args
+    out = normalize_as_list(f(args))
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 750, in inner_fn
+    outs = compiled_fn(args)
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 556, in wrapper
+    return compiled_fn(runtime_args)
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/_inductor/output_code.py", line 584, in __call__
+    return self.current_callable(inputs)
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/_inductor/utils.py", line 2716, in run
+    out = model(new_inputs)
+  File "/tmp/torchinductor_gowrav/oh/cohlsvu5yglo2tq6bzlc7amcne3dh4m2iu37qyos4myehbj5bqwz.py", line 176859, in call
+    buf6 = torch.ops.aten.linalg_solve_triangular.default(buf4, buf5, upper=False, unitriangular=True)
+  File "/home/gowrav/Development/qllm_v14dev2/.venv/lib/python3.9/site-packages/torch/_ops.py", line 829, in __call__
+    return self._op(*args, **kwargs)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 590.00 MiB. GPU 0 has a total capacity of 23.51 GiB of which 15.36 GiB is free. Process 1186025 has 165.05 MiB memory in use. Process 1232834 has 103.61 MiB memory in use. Process 1249242 has 131.36 MiB memory in use. Including non-PyTorch memory, this process has 7.50 GiB memory in use. 7.05 GiB allowed; Of the allocated memory 5.97 GiB is allocated by PyTorch, and 1.03 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+=== sr0 DONE 2026-10-31T13:56:06Z ===
+affine_map_new done
+shift_wide_new done

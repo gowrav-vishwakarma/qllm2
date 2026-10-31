@@ -1779,6 +1779,42 @@ tokens, spread affine 0.44-0.61 at 8k).**
   half-life vanishes, and the LM objective over many unrelated docs per window
   pushes the decays down. A protected register written once sidesteps both;
   SR-0 asks first whether a transplantable vector exists.
+- **SR-0 RESULT (2026-10-31 21:20 IST, b2p2, code `97923ed`): NOT met; the
+  register route as a residual-stream vector is dropped.** Dev (seeds
+  8200-8219, L = 8k): every layer 2-14 × scale 1-8 gives 0.025-0.125 (chance
+  0.125); chosen layer 8, scale 8. Test (seeds 8000-8099, 100 docs per rule;
+  accuracy / margin):
+
+  | rule | L | A: pack once | no pack | B: rule vector | C: wrong rule | D: random |
+  |---|---|---|---|---|---|---|
+  | affine | 0 | 1.00 / +18.3 | 0.03 | 0.10 | 0.03 | 0.17 |
+  | affine | 2k | 0.98 / +4.1 | 0.04 | 0.15 | 0.10 | 0.14 |
+  | affine | 4k | 0.42 / −0.4 | 0.07 | 0.11 | 0.19 | 0.13 |
+  | affine | 8k | 0.14 / −1.8 | 0.12 | 0.16 | 0.17 | 0.14 |
+  | affine | 32k | 0.08 / −1.9 | 0.07 | **0.16** (bar ≥ 0.88) | 0.13 | 0.11 |
+  | shift | 0 | 1.00 / +10.5 | 0.00 | 0.00 | 0.00 | 0.01 |
+  | shift | 2k | 0.74 / +1.0 | 0.01 | 0.09 | 0.04 | 0.07 |
+  | shift | 8k | 0.05 / −2.7 | 0.03 | 0.12 | 0.07 | 0.05 |
+  | shift | 32k | 0.01 / −3.0 | 0.01 | **0.08** (bar ≥ 0.67) | 0.07 | 0.05 |
+
+  Logs `logs/v14_sr0_{dev_b2p2_97923ed.json,test_b2p2_L8_s8.0_97923ed_*_to32k.jsonl,driver_97923ed_*.log}`
+  (the 128k pass was dropped: the bar is at 32k and the result was clear).
+  - **Decisive row: L = 0.** With no filler at all, the injected vector cannot
+    switch the skill on (0.10 / 0.00), and it is no better than a wrong-rule
+    or random vector of the same norm. In this body the rule is NOT carried by
+    one residual vector (unlike function vectors in transformers). The
+    one-read curve A reproduces Mind's (affine 1.00 / 0.98 / 0.42 / 0.14 /
+    0.08; shift 1.00 / 0.74 / 0.27 / 0.05 / 0.01).
+  - **What it implies for SR:** the rule most likely lives in the recurrent
+    notebook STATE built while reading the demonstrations, so a register would
+    have to hold that state (about 1 MB per skill), not a vector. That is
+    State Soup (Pioro et al. 2024) in spirit; what could still be ours is
+    protecting it in-context without decay. The cheap test (SR-0b, not
+    pre-registered yet): hold the notebook state from the end of the pack
+    through the filler (decay 1, no writes during the filler) and read it at the
+    query. It needs a decode path or a "freeze the notebooks over a span"
+    hook in the M2 body (shared reads have no decode), which is Mind's code.
+
 - **SR (to build only if SR-0 is met), bars on the skill-pack cell (Mind's probe, above):** skill
   at +32k / +128k / +1M ≥ 0.9 of its +2k value; recall (t40) and holdout
   not worse (≤ +0.01); one register per head or a small bank. Training needs
