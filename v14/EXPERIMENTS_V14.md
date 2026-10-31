@@ -2112,6 +2112,14 @@ synthetic + natural at 32k, 16 docs each.
   from the burst start to the end of its sentence (≤ 64 tokens), the key pooled
   over that span, the hit scored inside the row's own span. Asked of Lead.
 
+**SR-0b PARKED (user via Lead, 2026-10-31 ~21:20 IST):** "holds beyond the
+training context" is closed as DONE at the package level (re-fetching the pack
+gives 1.00 to 128k; the mind alone reaches about its training length after one
+read, a stated limit of this scale). The pre-registration below stays for the
+record; nothing is queued. Order now: (1) L2 two-organ fetch, (2) text-first
+pack format + install tool, (3) N11 planner (constraint: the mind's confidence
+is not a safe selector over natural spans).
+
 **SR-0b — is the skill in the notebooks, and can a stored skill state
 coexist? (b2p2, skill-pack cell, seeds 8000-8099, L = 2k / 8k / 32k).**
 Snapshot S_pack = the NOTEBOOK states right after the pack (echo and any other
