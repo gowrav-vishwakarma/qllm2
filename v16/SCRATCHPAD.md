@@ -107,6 +107,8 @@ Overall ~52 %. 1 rules in context vs T++/Mamba-2: DONE (s8 MET, 3 PAM seeds vs 2
 
 - 23:10 IST: PACKAGE TABLE LAUNCHED (Lead): PACKAGE_HEAD = L1 (l1p_fwd_L8c_99e6803), shipped reference mean, PACKAGE_T = -1 (A2 fallback: no threshold meets both constraints; never-stored sim 0.56 overlaps paraphrased-stored 0.62, so abstain is disabled when the organ misses and the neg cell will be reported as FAILING its constraint). Cells: b2p2 + c1ctlb, 7 tasks x 2 key types, 32k, 40 docs, seed 18000 (CPU); b2p2 128k (kv/kv1/para/neg/tool, 16 docs, seed 18500); Mamba-2 + T++ state-only on the same seeds at 32k (4090). ETA 32k ~04:00 IST, 128k ~midday. FOR MIND (when back): Library's EUREKA "the mind's state is a stream address, not an embedder" is in EUREKA.md.
 
+- 23:30 IST: package-table launch hit two environment bugs, both fixed: (a) the harness's background subshell has a minimal PATH, so `nice` and `nvcc` were not found (Mind's delta path uses torch.compile, which needs nvcc even on CPU): launch commands now export a full PATH; (b) Reader.last_keys was unset for non-PAM bodies (4699f56). Failed logs deleted; table relaunched 23:28 (b2p2 + c1ctlb 32k, 40 docs; b2p2 128k, 16 docs); Mamba-2 / T++ rows rerun on the 4090 after the dead loop exits.
+
 ## Open questions
 - "Nothing stored" for a paraphrased question needs a signal other than key similarity (open item, not a claim).
 - Shared-library fetch at scale (4,000+ entries): organ-only drops to 0.87 exact / 0.27-0.47 para; the text fetch for the shared library needs its own pre-registered bars.
