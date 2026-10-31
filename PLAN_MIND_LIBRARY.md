@@ -39,6 +39,25 @@ benchmark first; the distributable model once it wins that table.
 - Every claim: params + tokens + memory MB next to it; inside AND beyond the trained
   length; replicated (seed pairs) before ntfy.
 
+## Novelty rule (user, 2026-10-31 15:55 IST: "make sure we are making something novel")
+- Every pre-registration names the CLOSEST PRIOR WORK and says in one line what is different.
+  If nothing is different, the unit is plumbing: no claim, no GPU beyond what the benchmark
+  needs. Known, to be cited not claimed: kNN-LM / RETRO (datastore keyed by the model's
+  state; SL0 is kNN-LM on PAM), EM-LLM (surprise-based event segmentation of context into
+  episodic memory; v14's burst rows), Titans (surprise-gated memory writes), MemGPT-class
+  session memory, linear-attention / DeltaNet memories (the notebook), Hopfield settling.
+- Ours so far: (1) the rule-carrying mind: an O(1) state that induces a rule from examples
+  and keeps it across thousands of filler tokens past the trained length where attention
+  and Mamba-2 collapse; (2) knowledge as a file, intelligence as the reader: one key space
+  for session and shared libraries, text-first packs keyed by the reader at install time.
+- Flagship claim to build: the SKILL LIBRARY. Packs of demonstrations the mind fetches once,
+  induces the rule from, and then carries in O(1) state for the rest of a long session after
+  the demonstrations are gone (a transformer's induced skill dies with its window; Mamba-2
+  loses it at ~110 tokens). Cell: "skill-pack persistence": fetch at t0, queries at t0+32k,
+  +128k, +1M, against T++ (re-fetch into window each time, KV cost) and Mamba-2.
+- Candidate novelty to test before claiming: reading a fetched span by replaying it through
+  the state (no window to paste into) integrates with what the state already holds.
+
 ## Milestones
 1. Spec merged (v13 + organiser), commented by v14, frozen before any run.
 2. Baselines on the suite: T++ (full context where it fits), Mamba-2, frozen PAM +
