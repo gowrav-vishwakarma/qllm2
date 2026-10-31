@@ -1999,11 +1999,8 @@ def _b2_text_iter(
 
 # Curriculum sources (2026-10-31, v13 "curriculum run cu1"): formats of v16/bench.py's
 # cells with TRAINED values / DISJOINT vocabularies, so the bench measures transfer.
-#  srd : a rule STATED in words (" Rule: shift each letter forward by k." / " Rule:
-#        multiply by a and add b."), then optionally a gap of training-split web text
-#        (U(1, 1800) tokens, half the docs), then the trained header, 0-4 demonstration
-#        lines and the query; the answer marked. Shift k in SHIFT_TRAIN, affine b in
-#        AFFINE_B_TRAIN (held-out values never appear). Teaches words -> rule state.
+#  (srd, a rule stated in words, was REMOVED 2026-11-01 after cu1: it was learned as a
+#   lookup over the trained values, 0-shot held-out 0.00; see EXPERIMENT_INDEX.)
 #  fsq : re-read definitions (" Definition: KEY refers to VALUE." x 2-6, look-alike
 #        keys among them), then " Query: KEY refers to"; 25 % of docs ask a key that is
 #        NOT among them and the answer is " unknown". Keys are 3-syllable synthetic
@@ -2020,52 +2017,6 @@ _FSQ_VOW = 'aeiou'
 
 def _fsq_key(rng) -> str:
     return ''.join(rng.choice(_FSQ_CONS) + rng.choice(_FSQ_VOW) for _ in range(3))
-
-
-def _cur_gap_iter(seed: int):
-    return _open_source_iter('fineweb', SOURCE_REGISTRY['fineweb'], edu_score_min=3,
-                             fineweb_name='sample-10BT', exclude_holdout=True, holdout_pct=5,
-                             skip=0, doc_counters=None, mix_seed=seed + 8888)
-
-
-def _srd_text_iter(*, seed: int = 0, skip_docs: int = 0, doc_counters=None,
-                   counter_key: str = 'srd', gap_iter=None, gmax: int = 1800) -> Iterator[str]:
-    import random as _random
-    from transformers import AutoTokenizer
-    from v14.rules_ood import SHIFT_TRAIN, AFFINE_A, AFFINE_B_TRAIN
-    tok = AutoTokenizer.from_pretrained('gpt2')
-    rng = _random.Random((seed * 2654435761 + 616161) & 0xFFFFFFFF)
-    gap_iter = gap_iter if gap_iter is not None else _cur_gap_iter(seed)
-    letters = 'abcdefghijklmnopqrstuvwxyz'
-    buf, n = [], 0
-    while True:
-        fam = rng.choice(('shift', 'affine'))
-        shots = rng.choice((0, 0, 1, 2, 4))
-        g = rng.randint(1, gmax) if rng.random() < 0.5 else 0
-        n += 1
-        if fam == 'shift':
-            k = rng.choice(SHIFT_TRAIN)
-            picks = rng.sample(letters[:26 - k], shots + 1)
-            rule = f' Rule: shift each letter forward by {k}.'
-            demo = ''.join(f'{a} -> {letters[letters.index(a) + k]}\n' for a in picks[:-1])
-            x = picks[-1]; y = letters[letters.index(x) + k]
-            body = f'Letter rule.\n{demo}{x} ->'
-        else:
-            a = rng.choice(AFFINE_A); b = rng.choice(AFFINE_B_TRAIN)
-            xs = rng.sample(range(1, 31), shots + 1)
-            rule = f' Rule: multiply by {a} and add {b}.'
-            demo = ''.join(f'{u} -> {a * u + b}\n' for u in xs[:-1])
-            x = xs[-1]; y = str(a * x + b)
-            body = f'Map rule.\n{demo}{x} ->'
-        if n <= skip_docs:
-            continue
-        gap_text = ''
-        if g:
-            while len(buf) < g:
-                buf += tok(re.sub(r'\s*\n+\s*', ' ', next(gap_iter)), add_special_tokens=False)['input_ids']
-            gap_text = tok.decode(buf[:g]); buf = buf[g:]     # joined like bench.py: rule + filler + header
-        _bump_counter(doc_counters, counter_key)
-        yield rule + gap_text + body + _ans(f' {y}') + '\n'
 
 
 def _fsq_text_iter(*, seed: int = 0, skip_docs: int = 0, doc_counters=None,
@@ -2282,7 +2233,6 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     # Label-rule prompts in the probes' format, disjoint vocabulary (v13
     # "label-format source", 2026-10-31).
     'lab':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-lab'},
-    'srd':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-srd'},
     'fsq':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-fsq'},
     'hop':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-hop'},
     # Real aptitude / reasoning Q&A with worked answers, TRAIN splits only
@@ -2333,8 +2283,6 @@ def _open_source_iter(
         if name == 'b2':
             return _b2_text_iter(seed=mix_seed, skip_docs=skip,
                                  doc_counters=doc_counters, counter_key=name)
-        if name == 'srd':
-            return _srd_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
         if name == 'fsq':
             return _fsq_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
         if name == 'hop':
