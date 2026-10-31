@@ -1879,6 +1879,11 @@ budget. Bar A is therefore judged on the burst index.
   neg cell max-sim gap; para cell.
 - **Thesis clause:** separate from knowledge. Closest prior work: dense
   retrieval with learned pooling (plumbing for the mechanism).
+- **Memory latitude (user via Lead, 15:20 IST):** the session library may
+  grow to ~2x (≤ ~50 MB per 1M tokens: e.g. 1 row per 8 tokens, or a 256-d
+  key). Not used in this first run (128-d, ~0.8 rows per 16 tokens ≈ 14 MB
+  of keys per 1M). If a later run uses it, its pre-registration states the
+  MB per 1M tokens.
 
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
