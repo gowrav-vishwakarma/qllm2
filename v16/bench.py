@@ -44,7 +44,7 @@ class Reader:
         KEY vectors are the residual after that block instead, kept on self.last_keys."""
         if self.arch != 'pam':
             return None
-        x = torch.tensor([ids])
+        x = torch.tensor([ids], device=next(self.m.parameters()).device)   # PAM on cuda too (package table)
         z, b, t = self.m._stem(x, 0)
         if self.vec_layer is None:
             z, _ = self.m._run_blocks(z, b, t, None, 0, x)
@@ -64,27 +64,27 @@ class Reader:
                     keys = z.raw(b, t, self.m.model_dim)[0].float().clone()
             assert keys is not None, f'vec_layer {self.vec_layer} out of range'
         lm, _ = self.m._lm_vector(z, x, b, t)
-        out = lm.raw(b, t, self.m.model_dim)[0].float()
-        self.last_keys = keys if keys is not None else out
+        out = lm.raw(b, t, self.m.model_dim)[0].float().cpu()
+        self.last_keys = (keys if keys is not None else out).cpu()
         return out
 
     @torch.no_grad()
     def surprisal(self, ids: list[int], vecs: torch.Tensor, chunk: int = 2048) -> torch.Tensor:
         """nats of each token given the prefix (PAM only), from the pre-logit vectors."""
-        W = self.m.embed.embed.weight.float()
+        W = self.m.embed.embed.weight.float(); dev = W.device
         out = torch.empty(len(ids))
         out[0] = 0.0
-        tgt = torch.tensor(ids[1:]); pv = vecs[:-1]          # position t predicts ids[t+1]
+        tgt = torch.tensor(ids[1:], device=dev); pv = vecs[:-1].to(dev)          # position t predicts ids[t+1]
         for s0 in range(0, len(ids) - 1, chunk):
             lg = pv[s0:s0 + chunk] @ W.T
-            out[s0 + 1:s0 + 1 + lg.shape[0]] = torch.nn.functional.cross_entropy(lg, tgt[s0:s0 + lg.shape[0]], reduction='none')
+            out[s0 + 1:s0 + 1 + lg.shape[0]] = torch.nn.functional.cross_entropy(lg, tgt[s0:s0 + lg.shape[0]], reduction='none').cpu()
         return out
 
     @torch.no_grad()
     def last_logits(self, ids: list[int], vecs=None) -> torch.Tensor:
         if self.arch == 'pam':
             v = vecs[-1] if vecs is not None else self.vectors(ids)[-1]
-            return v @ self.m.embed.embed.weight.float().T
+            return (v.to(self.m.embed.embed.weight.device) @ self.m.embed.embed.weight.float().T).cpu()
         dev = next(self.m.parameters()).device
         x = torch.tensor([ids], device=dev)
         if self.arch == 'mamba2':
