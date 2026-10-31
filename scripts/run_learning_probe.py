@@ -102,12 +102,14 @@ def main() -> int:
             if not torch.isfinite(cand).all():
                 rows.append({**ex.to_dict(), 'skipped': True})
                 continue
-            rows.append({**ex.to_dict(), **score_candidate_logits(ex, cand.tolist())})
+            rows.append({**ex.to_dict(), **score_candidate_logits(ex, cand.tolist()),
+                         'free': int(int(logits.argmax()) == ex.target_token_id)})   # MLB-1 A7: greedy over the whole vocab
             if i % 250 == 0 or i == len(examples):
                 print(f'  scored {i}/{len(examples)}', flush=True)
 
     agg = aggregate(rows)
     per_task = {t: float(np.mean([a['accuracy'] for a in agg if a['task'] == t])) for t in tasks}
+    per_task_free = {t: float(np.mean([r['free'] for r in rows if r['task'] == t and 'free' in r])) for t in tasks}
     result = {
         'schema_version': 'learning-probe-b2/v1' if args.suite == 'b2' else 'learning-probe-rules/v1',
         'created_at': datetime.now(timezone.utc).isoformat(),
@@ -120,12 +122,15 @@ def main() -> int:
                      'candidates': 8, 'chance': 0.125},
         'per_task_accuracy': per_task,
         'mean_accuracy': float(np.mean(list(per_task.values()))),
+        'per_task_free': per_task_free,          # A7: argmax over the whole vocab == answer (primary from A7 on)
+        'mean_free': float(np.mean(list(per_task_free.values()))),
         'aggregates': agg,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + '\n')
     print('per task:', {t: round(v, 3) for t, v in per_task.items()},
           ' mean', round(result['mean_accuracy'], 3))
+    print('free (A7):', {t: round(v, 3) for t, v in per_task_free.items()}, ' mean', round(result['mean_free'], 3))
     print(f'saved {args.output}')
     return 0
 
