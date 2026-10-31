@@ -4118,3 +4118,37 @@ n-gram memory is known (DeepSeek Engram), and it is parametric knowledge inside 
 weights, so it serves neither thesis clause: a cost table, not a claim. The recall jump
 (+0.13 past 2048) is unexplained; it may be the table making key tokens more distinct.
 A4 stays in the code as a reported option; no further GPU unless a mechanism needs it.
+
+## LAW-1 first arm `lg32` (2026-10-31 18:59 IST): training at 32k with long-gap rule docs SHRANK the one-read reach
+
+`lg32_main_2229a5b` (6000; fine-tune from b2p2, 150M tokens, SEQ 32768 × 1, LR 3e-4, `b2gap`
+3 % with G ~ U(0, 31,000), fineweb read from local shards). Skill-pack cell (100 docs per
+cell, seeds 8000–8099; the first probe run OOMed at its own 5.9 GB cap on the first 128k
+doc, so 0–32k were rerun; 128k pending). Reach = mean of affine and shift A_state.
+
+| one-read reach | L = 0 | 2k | 4k | 8k | 32k | affine A_margin @ 0 / 2k |
+|---|---|---|---|---|---|---|
+| b2p2 (start point, 2k-trained) | 1.00 | **0.86** | – | 0.10 | 0.04 | +18.3 / +4.1 |
+| **lg32** (32k-trained, long gaps) | 1.00 | **0.31** | 0.08 | 0.06 | 0.04 | +10.2 / +0.0 |
+
+Per task: lg32 affine 1.00 / 0.42 / 0.12 / 0.11 / 0.06, shift 0.99 / 0.20 / 0.03 / 0.00 / 0.01.
+Guards: attr3b vs b2p2 PG-19 +0.015, web −0.002 (bar ≤ +0.02, met); B2 `_new` at L = 0
+0.953 / 0.751 / 0.995 (mean 0.900, bar 0.90, met exactly). Own 32k-window val 3.4374.
+
+**Rule 1 for lg32 (reach_lg32(32k) ≥ 0.75): FAIL** (0.035), and worse: reach at 2k fell from
+0.86 to 0.31. The full LAW-1 verdict needs lg8 and the control lg2 (queued after s8).
+
+**Reading (hypotheses, untested).**
+1. *Vanishing signal, not a capacity wall.* The mind's memory half-life is ~1–3k tokens
+   (echo). With gaps ~U(0, 31k) (mean 15.5k), the gradient from a query back to the pack
+   through ~15k tokens of decay is ~0, so the model gets no push to keep the rule longer.
+   Meanwhile answer-weighted (×100) loss on queries it cannot solve pushes it toward the
+   trained-value prior, which hurts held-out values even at short gaps (margin +18 → +10
+   at L = 0). This is the classic RNN long-dependency problem, met by the recipe.
+2. *Prediction:* lg8 (G ≤ 7.5k, mean 3.75k, much of it within today's reach) does
+   better than lg32, and a curriculum (gaps just beyond the current reach, growing as
+   reach grows) would extend reach where uniform long gaps fail. If lg8 also shrinks
+   the reach, the culprit is more likely the fine-tune itself (LR 3e-4 on a converged
+   model) than the gap distribution, and lg2 (the control) will show it.
+3. For Library's skill register: a register that does not decay (written once at
+   induction) removes the vanishing path entirely. That fits this result.

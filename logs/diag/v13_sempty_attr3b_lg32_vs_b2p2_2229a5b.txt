@@ -1,0 +1,14 @@
+
+[pg19] tokens 122880; share copy 0.258 seen 0.377 new 0.365
+  loss  lg32 3.8034  b2p2 3.7884
+  lg32 - b2p2: total +0.0150
+     by class (gap / share of total): copy +0.002 / +3%  seen +0.008 / +21%  new +0.031 / +75%
+     by position:                     0-8 +0.051  8-64 +0.048  64-512 +0.027  512-2048 +0.010
+     new tokens by position:          0-8 +0.069  8-64 +0.050  64-512 +0.036  512-2048 +0.027
+
+[web] tokens 195046; share copy 0.227 seen 0.386 new 0.387
+  loss  lg32 3.4498  b2p2 3.4516
+  lg32 - b2p2: total -0.0018
+     by class (gap / share of total): copy -0.010 / +129%  seen -0.005 / +102%  new +0.006 / -131%
+     by position:                     0-8 +0.015  8-64 +0.018  64-512 +0.002  512-2048 -0.005
+     new tokens by position:          0-8 +0.012  8-64 +0.019  64-512 +0.006  512-2048 +0.004
