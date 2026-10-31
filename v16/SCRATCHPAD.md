@@ -134,6 +134,8 @@ Popped by the others (23:55 IST):
 
 - 23:55 IST: user asks one cheap check of the window law: lg8r = b2p2 fine-tuned at 8k windows for 50M tokens WITH the document-boundary state reset (packing confound removed), readouts one-read reach at 0 / 2k / 4k / 8k + half-lives vs b2p2; bars reach(4k) >= 0.75 and half-lives not shorter; on the 4090 after the package table (~40 min + probes), not the 6000. Mind pre-registers and runs.
 
+- 00:10 IST (Nov 1): BUG FOUND by Mind in the long-gap recipe (824a988): the packer cuts documents at window edges, so 44 % of b2gap answer tokens (at 8k) sit in a window WITHOUT their demonstrations yet carry x100 loss weight = trained to guess the prior; lg32 had it too (likely its margin drop +18 -> +10). Fix: ANSWER_IN_WINDOW=1 gives orphaned answers weight 1.0 (flag off reproduces the old weights exactly). Also: document-boundary state reset on master (f2587b5; parity 1e-4; standard practice, cited). LAW-1's "ceiling" reading is withdrawn pending lg8r, which is the first fair test: 8k windows + reset + fix, 50M tokens; b2p2's 4k reach measured for the first time = 0.355 (1.00 / 0.86 / 0.355 / 0.10 at 0 / 2k / 4k / 8k); bars reach(4k) >= 0.75 AND long-head half-life geomean >= 1293 (b2p2 1361, lg32 835). Queued on the 4090 behind the package table (tmux lg8r, worktree qllm_reset2 @ f2b7d8c). If PASS: lg2r control + second seed before any claim.
+
 ## Open questions
 - Shared-library fetch: synonyms and rewording are untested (SL2 covers surface variants only).
 - "Nothing stored" for a paraphrased question needs a signal other than key similarity (open item, not a claim).
