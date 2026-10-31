@@ -336,6 +336,44 @@ selectors, not lookups: a division of labour, not a bug.
   binding by reign (λ) is not happening and the conv/soil would have to
   carry the key: that is a finding, not a knob.
 
+### 6.1 GII-2 pair 1 and what followed (08:00–09:30 IST 2026-10-31)
+
+**GII-2 pair 1 (`b599a56`, seed 21): FAIL, and worse than Grove I on
+rules.** label_exact 2/4/8-shot 0.39/0.22/0.12 (echo 0.50/0.26/0.12),
+label_category 0.40/0.49/0.25 (0.50/0.49/0.25); letter_shift 8-shot 0.69
+(Grove I 0.99, echo 1.00), number_step 0.59 (0.86), reverse3 0.12 (1.00);
+train loss 1.53 (Grove I 0.61, echo 0.38); 933 ms/step. The chain was
+stopped after pair 1 (the user asked v15 to leave the GPUs to v13/v14; two
+more pairs could not change the verdict). Logs
+`logs/v14_v15gii2p1_b599a56_*`. The probe of the saved grove showed the
+mechanism: in layers 1–3 every token is born (contextual states are never
+within cos 0.95 of an earlier self), so a query was "novel", eaten by its
+newborn, and read that newborn's empty fruit. **Reading and eating must not
+be the same winner**: a seed may found a tree, but what you see is the
+nearest existing canopy.
+
+**A rule toy for the CPU** (`v15/tmp/toy_rule.py`): infer a letter shift
+from 8 in-context pairs and apply it to an unseen letter (chance 0.038;
+2 layers, 4 groves × 16 trees, season 8, 4000 steps). It reproduces the
+bench's rule result and separates the variants (one seed each unless noted;
+Grove I reference extracted from `abe4c89` as `v15/tmp/grove_I.py`):
+
+| variant | read | eat / credits / growth | births | rule toy | lookup toy (4096 keys, lr 3e-4) |
+|---|---|---|---|---|---|
+| Grove I (`abe4c89`) | soft | soft, 1−e^{−αg} | none | 0.839 (0.907 with identity conv; seed 3: 0.661) | 0.955 |
+| Grove II (`b599a56`) | hard (ST) | hard, running mean | yes | 0.255 | 1.000 |
+| Grove III (`4b06ad2`) | soft | hard, running mean | yes / off | 0.575 / 0.090 | 1.000 |
+| Grove IV-b (`b8…`, record) | soft | soft, 1−e^{−αg} | yes / off | 0.072, 0.081, 0.488 (seeds 2–4) / 0.655 | 1.000 |
+| **Grove IV (`4a33187`)** | soft | soft, running mean | yes / off | 0.638 / 0.481 (seed 2; seeds 3–4 pending) | 1.000 |
+
+Readings: (1) the soft read carries rules (II → III: 0.26 → 0.58); (2) soft
+eating/growth carries more (III → IV: 0.58 → 0.64, and IV-b without births
+0.66 vs III without births 0.09); (3) α-growth with births is unstable
+(2 of 3 seeds collapse) where the running mean is not; (4) births help
+rules in IV (0.64 vs 0.48) and lookups everywhere (1.000); (5) the toy's
+seed noise is large (Grove I 0.66–0.91), so single-seed differences under
+~0.15 mean nothing. The Grove I reference is still ahead on rules.
+
 ## 5. Roads not taken (so they are not retaken)
 - Prime-period wheels / CRT phases for time and numbers (2026-10-31, 20
   minutes, code never committed): exact by construction and range-free, but
