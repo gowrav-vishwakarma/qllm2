@@ -159,6 +159,8 @@ def main():
     ap.add_argument('--frac_natural', type=float, default=0.5)
     ap.add_argument('--harness_template', action='store_true', help='validation: the harness template (held out of training)')
     ap.add_argument('--mem_frac', type=float, default=0.0)
+    ap.add_argument('--pool_lo', type=float, default=0.0, help='use this fraction range of the pool (train 0-0.85, val 0.85-1)')
+    ap.add_argument('--pool_hi', type=float, default=1.0)
     args = ap.parse_args()
     if args.mem_frac > 0:
         torch.cuda.set_per_process_memory_fraction(args.mem_frac)
@@ -168,6 +170,7 @@ def main():
     model, _, _ = _load_v13_sempty(args.ckpt, 'baseline_real_pm', device)
     model.eval()
     pool = filler_tokens(args.pool)
+    pool = pool[int(args.pool_lo * len(pool)):int(args.pool_hi * len(pool))]
     counts = np.bincount(pool, minlength=50257)
     rng = random.Random(args.seed)
     out = Path(args.out)
