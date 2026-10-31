@@ -95,3 +95,189 @@ Token indices sequence length is longer than the specified maximum sequence leng
  }
 }
 --- done l1p_fwd_L8c_99e6803 20
+Token indices sequence length is longer than the specified maximum sequence length for this model (1026 > 1024). Running this sequence through the model will result in indexing errors
+{"entries": 400, "tokens": 82387, "rows": 4111, "rows_per_16_tokens": 0.798, "mb_per_1M_tokens": {"keys": 12.77, "row_pointers": 0.6, "text": 2.0, "organ": 12.0}, "mb_per_1M_total": 27.37, "install_seconds": 27.2, "install_seconds_per_1M_tokens": 330.5}
+{
+ "synthetic_exact": {
+  "n": 100,
+  "key1": 0.69,
+  "key5": 0.81,
+  "key_ans": 0.69,
+  "organ_hit": 1.0,
+  "organ_ans": 1.0
+ },
+ "synthetic_para": {
+  "n": 100,
+  "key1": 0.33,
+  "key5": 0.44,
+  "key_ans": 0.36,
+  "organ_hit": 0.5,
+  "organ_ans": 0.5
+ },
+ "natural_exact": {
+  "n": 100,
+  "key1": 0.69,
+  "key5": 0.89,
+  "key_ans": 0.59,
+  "organ_hit": 1.0,
+  "organ_ans": 1.0
+ },
+ "natural_para": {
+  "n": 100,
+  "key1": 0.3,
+  "key5": 0.51,
+  "key_ans": 0.23,
+  "organ_hit": 0.35,
+  "organ_ans": 0.35
+ }
+}
+--- done l1p_fwd_L8c_99e6803 200
+Token indices sequence length is longer than the specified maximum sequence length for this model (1026 > 1024). Running this sequence through the model will result in indexing errors
+{"entries": 4000, "tokens": 823887, "rows": 42870, "rows_per_16_tokens": 0.833, "mb_per_1M_tokens": {"keys": 13.32, "row_pointers": 0.62, "text": 2.0, "organ": 12.0}, "mb_per_1M_total": 27.94, "install_seconds": 59.2, "install_seconds_per_1M_tokens": 71.8}
+{
+ "synthetic_exact": {
+  "n": 1000,
+  "key1": 0.474,
+  "key5": 0.597,
+  "key_ans": 0.492,
+  "organ_hit": 0.874,
+  "organ_ans": 0.879
+ },
+ "synthetic_para": {
+  "n": 1000,
+  "key1": 0.3,
+  "key5": 0.377,
+  "key_ans": 0.335,
+  "organ_hit": 0.47,
+  "organ_ans": 0.474
+ },
+ "natural_exact": {
+  "n": 1000,
+  "key1": 0.425,
+  "key5": 0.584,
+  "key_ans": 0.361,
+  "organ_hit": 1.0,
+  "organ_ans": 1.0
+ },
+ "natural_para": {
+  "n": 1000,
+  "key1": 0.192,
+  "key5": 0.298,
+  "key_ans": 0.174,
+  "organ_hit": 0.265,
+  "organ_ans": 0.265
+ }
+}
+--- done l1p_fwd_L8c_99e6803 2000
+Token indices sequence length is longer than the specified maximum sequence length for this model (1025 > 1024). Running this sequence through the model will result in indexing errors
+{"entries": 40, "tokens": 8238, "rows": 404, "rows_per_16_tokens": 0.785, "mb_per_1M_tokens": {"keys": 12.55, "row_pointers": 0.59, "text": 2.0, "organ": 11.99}, "mb_per_1M_total": 27.13, "install_seconds": 16.7, "install_seconds_per_1M_tokens": 2030.4}
+{
+ "synthetic_exact": {
+  "n": 10,
+  "key1": 0.5,
+  "key5": 0.8,
+  "key_ans": 0.5,
+  "organ_hit": 1.0,
+  "organ_ans": 1.0
+ },
+ "synthetic_para": {
+  "n": 10,
+  "key1": 0.3,
+  "key5": 0.7,
+  "key_ans": 0.3,
+  "organ_hit": 0.5,
+  "organ_ans": 0.5
+ },
+ "natural_exact": {
+  "n": 10,
+  "key1": 0.9,
+  "key5": 0.9,
+  "key_ans": 0.4,
+  "organ_hit": 1.0,
+  "organ_ans": 1.0
+ },
+ "natural_para": {
+  "n": 10,
+  "key1": 0.7,
+  "key5": 0.8,
+  "key_ans": 0.3,
+  "organ_hit": 0.4,
+  "organ_ans": 0.4
+ }
+}
+--- done l3_fwd_L8r_ec5cb21 20
+Token indices sequence length is longer than the specified maximum sequence length for this model (1026 > 1024). Running this sequence through the model will result in indexing errors
+{"entries": 400, "tokens": 82387, "rows": 4111, "rows_per_16_tokens": 0.798, "mb_per_1M_tokens": {"keys": 12.77, "row_pointers": 0.6, "text": 2.0, "organ": 12.0}, "mb_per_1M_total": 27.37, "install_seconds": 15.4, "install_seconds_per_1M_tokens": 187.1}
+{
+ "synthetic_exact": {
+  "n": 100,
+  "key1": 0.29,
+  "key5": 0.46,
+  "key_ans": 0.32,
+  "organ_hit": 1.0,
+  "organ_ans": 1.0
+ },
+ "synthetic_para": {
+  "n": 100,
+  "key1": 0.2,
+  "key5": 0.35,
+  "key_ans": 0.27,
+  "organ_hit": 0.5,
+  "organ_ans": 0.5
+ },
+ "natural_exact": {
+  "n": 100,
+  "key1": 0.66,
+  "key5": 0.78,
+  "key_ans": 0.53,
+  "organ_hit": 1.0,
+  "organ_ans": 1.0
+ },
+ "natural_para": {
+  "n": 100,
+  "key1": 0.37,
+  "key5": 0.53,
+  "key_ans": 0.28,
+  "organ_hit": 0.35,
+  "organ_ans": 0.35
+ }
+}
+--- done l3_fwd_L8r_ec5cb21 200
+Token indices sequence length is longer than the specified maximum sequence length for this model (1026 > 1024). Running this sequence through the model will result in indexing errors
+{"entries": 4000, "tokens": 823887, "rows": 42870, "rows_per_16_tokens": 0.833, "mb_per_1M_tokens": {"keys": 13.32, "row_pointers": 0.62, "text": 2.0, "organ": 12.0}, "mb_per_1M_total": 27.94, "install_seconds": 30.5, "install_seconds_per_1M_tokens": 37.0}
+{
+ "synthetic_exact": {
+  "n": 1000,
+  "key1": 0.201,
+  "key5": 0.258,
+  "key_ans": 0.248,
+  "organ_hit": 0.874,
+  "organ_ans": 0.879
+ },
+ "synthetic_para": {
+  "n": 1000,
+  "key1": 0.185,
+  "key5": 0.24,
+  "key_ans": 0.228,
+  "organ_hit": 0.47,
+  "organ_ans": 0.474
+ },
+ "natural_exact": {
+  "n": 1000,
+  "key1": 0.478,
+  "key5": 0.613,
+  "key_ans": 0.394,
+  "organ_hit": 1.0,
+  "organ_ans": 1.0
+ },
+ "natural_para": {
+  "n": 1000,
+  "key1": 0.223,
+  "key5": 0.322,
+  "key_ans": 0.191,
+  "organ_hit": 0.265,
+  "organ_ans": 0.265
+ }
+}
+--- done l3_fwd_L8r_ec5cb21 2000
+=== l3chain DONE 2026-10-31T16:56:14Z ===

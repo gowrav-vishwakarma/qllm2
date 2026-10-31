@@ -1,0 +1,65 @@
+{
+ "library": {
+  "pack": {
+   "format": "qllm-pack/v1",
+   "pack_id": "pack_check",
+   "title": "cross-document check",
+   "license": "test",
+   "created": "2026-10-31"
+  },
+  "entries": 40,
+  "tokens": 8238,
+  "rows": 404,
+  "rows_per_16_tokens": 0.785,
+  "key_version": "l3_fwd_L8r_ec5cb21+l1p_fwd_L8c_99e6803.mean",
+  "mind": "/media/gowrav/d_drive/qllm2/checkpoints_v13_sempty/c1ctlb_main_7ae6f1f/best_model.pt",
+  "layer": 8,
+  "tau": 10.0,
+  "mb_per_1M_tokens": {
+   "keys": 12.55,
+   "row_pointers": 0.59,
+   "text": 2.0,
+   "organ": 11.99
+  },
+  "mb_per_1M_total": 27.13,
+  "install_seconds": 16.7,
+  "install_seconds_per_1M_tokens": 2030.4
+ },
+ "results": {
+  "synthetic_exact": {
+   "n": 10,
+   "key1": 0.5,
+   "key5": 0.8,
+   "key_ans": 0.5,
+   "organ_hit": 1.0,
+   "organ_ans": 1.0
+  },
+  "synthetic_para": {
+   "n": 10,
+   "key1": 0.3,
+   "key5": 0.7,
+   "key_ans": 0.3,
+   "organ_hit": 0.5,
+   "organ_ans": 0.5
+  },
+  "natural_exact": {
+   "n": 10,
+   "key1": 0.9,
+   "key5": 0.9,
+   "key_ans": 0.4,
+   "organ_hit": 1.0,
+   "organ_ans": 1.0
+  },
+  "natural_para": {
+   "n": 10,
+   "key1": 0.7,
+   "key5": 0.8,
+   "key_ans": 0.3,
+   "organ_hit": 0.4,
+   "organ_ans": 0.4
+  }
+ },
+ "session_tokens": 1024,
+ "seed": 19000,
+ "head": "/media/gowrav/d_drive/qllm_ckpt/v14/l3_fwd_L8r_ec5cb21.pt"
+}

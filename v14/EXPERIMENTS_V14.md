@@ -2269,6 +2269,43 @@ before any number of it; Lead's decision, deadline 00:30 IST).**
 - **Handover:** PACKAGE_HEAD + PACKAGE_T to Lead for the package table (fresh
   seeds 18000+, run by Lead). No number from the table's seeds is used here.
 
+**L3 VERDICT + library-size sweep (2026-10-31 22:45 IST; pack_check seed 19000,
+cross-document: library and session are different texts; session 1024;
+shipped-mean centring): L3 NOT met on every bar; the learned key does not
+transfer across documents at all.** Reports `logs/pack_check/v14_pack_check_19000_*_report.json`.
+
+| entries (rows) | question | L1 key top-1 | L3 key top-1 | exact organ |
+|---|---|---|---|---|
+| 40 (404) | exact syn / nat | 0.80 / 0.80 | 0.50 / 0.90 | 1.00 / 1.00 |
+| 40 | para syn / nat | 0.40 / 0.70 | 0.30 / 0.70 | 0.50 / 0.40 |
+| 400 (4.1k) | exact syn / nat | 0.69 / 0.69 | 0.29 / 0.66 | 1.00 / 1.00 |
+| 400 | para syn / nat | 0.33 / 0.30 | 0.20 / 0.37 | 0.50 / 0.35 |
+| 4000 (43k) | exact syn / nat | 0.47 / 0.42 | 0.20 / 0.48 | 0.87 / 1.00 |
+| 4000 | para syn / nat | 0.30 / 0.19 | 0.18 / 0.22 | 0.47 / 0.27 |
+
+- **L3 bars:** exact ≥ 0.85 (0.29 / 0.66), para ≥ 0.70 and ≥ organ + 0.30
+  (0.20 / 0.37): NOT met. L3 is worse than L1 on synthetic keys.
+- **A2 head choice (pre-registered rule): L1** (pooled paraphrase top-1 at 400
+  entries 0.315 vs 0.285).
+- **What it really says:** inside ONE document the mind's state is an
+  excellent address (per-token C2 1.00; L1 0.94-1.00 on natural keys up to
+  128k), and across documents it is below the exact organ everywhere, even
+  on paraphrase at 400 entries (organ 0.50 / 0.35 vs key 0.33 / 0.30; forms
+  such as "the K" keep the key's tokens). The state encodes WHERE something
+  sits in this stream, not a context-free identity, and cross-document
+  training did not change that. It maps onto the two libraries the user asked
+  for:
+  - **session library** (the conversation, tool results: the same stream as
+    the question) → fetched by the mind's own state (the condition the harness
+    measures; L1 in-document numbers apply);
+  - **shared library** (separate texts) → fetched by TEXT: the exact organ
+    (1.00 at 400 entries, 0.87-1.00 at 4000) plus a normalised lexical match
+    for paraphrase (case-folding, inflection), which is plumbing (BM25 class),
+    not a claim.
+- The organ's 0.87 on synthetic exact keys at 4000 entries is 4-gram collisions
+  between pseudo-word keys (the query's tail "K refers to" shares its last
+  tokens across keys): longer n-grams or a whole-key match fix it.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
