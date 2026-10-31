@@ -15,6 +15,9 @@
 - T++ / Mamba-2: existing checkpoints and logs only; no new baseline training; "+ library" arms are optional diagnostics.
 - Every unit: pre-registered bars before numbers; params + tokens + MB on every row; nothing to Evol V1.
 
+- 15:45 IST: 6000 disk: gscreen_onorm_3cc2b72/latest.pt (v13's abandoned G2 screen, resume-only) deleted on my authority; v13 prunes resume-only latest.pt of finished runs and moves superseded best_model.pt to d_drive (md5 first); target >= 15 GB free.
+- Timing: a4f ends ~18:20 IST (stage B slower on the shared card); SL0 (shared library, 5M then 20M rows, /dev/shm, install cost printed) running on the 6000 in worktree qllm_sl0; v14's L1 data pass + head on the 4090 under the 3.5 GB cap.
+
 ## Open questions
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
 - The instr cell on c1ctlb was invalid (no rule skill); b2p2 rerun decides whether words can write the rule state.
