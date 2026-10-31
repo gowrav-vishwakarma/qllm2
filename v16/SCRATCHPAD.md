@@ -36,7 +36,10 @@
 
 - 14:15 IST: SL0 VERDICT (Mind): kNN-LM over the frozen 3B PAM's state, 5M rows (1.3 GB, install 106 s) -0.0014/-0.0040 PG-19/web; 20M rows (5.2 GB, install 328 s, exact query 951 s per 320k tokens) -0.0059/-0.0119; gap to Mamba-2 stays +0.086/+0.100; -0.05 would need ~200M+ rows (~52 GB) + ANN. Rules 1 and 2 FAIL. Filed as plumbing / cost table (serves neither thesis clause); the general-modelling gap stays the mind's. /dev/shm cleared.
 
+- 14:25 IST: SKILL-PACK FIRST ROWS (Mind, 100 docs/cell, chance 0.125; pack of 8 demos read ONCE at t0): PAM b2p2 affine 1.00 / 0.98 / 0.14 / 0.07 at L = 0 / 2k / 8k / 32k (margin +18 -> +4 -> -2), shift 1.00 / 0.74 / 0.05 / 0.01; T++ b2t affine 0.96 / 0.06 / 0.39 / 0.08, shift 0.24 / 0 / 0 / 0. Re-fetch at any L: PAM 1.00, T++ 0.96 / 0.24 (KV 1.2 MB per query vs PAM state 1.15 MB). HEADLINE CORRECTION: the earlier "rule holds to 8k" came from the spread cell (examples ~1k apart = re-exposure); after ONE read PAM's reach is ~2k = the training length; the edge over T++ at <= 2k gaps stands. R7 at 32k FAILS today (0.07 vs 0.08). Mind's prediction (fade 8k-32k) was too optimistic: it fades 2k-8k. Remedies: long-gap rule docs at 8k-32k training length (Mind; hypothesis: reach tracks the training length) and the skill register (Library; SR-0 grid must include 4k).
+
 ## Open questions
+- Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
 - The instr cell on c1ctlb was invalid (no rule skill); b2p2 rerun decides whether words can write the rule state.
 
