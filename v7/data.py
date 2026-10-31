@@ -2021,6 +2021,135 @@ def _b2gap_text_iter(
         yield header + ''.join(units[:-1]) + gap_text + units[-1] + _ans(ex.target_text) + '\n'
 
 
+# Curriculum sources (2026-10-31, v13 "curriculum run cu1"): formats of v16/bench.py's
+# cells with TRAINED values / DISJOINT vocabularies, so the bench measures transfer.
+#  srd : a rule STATED in words (" Rule: shift each letter forward by k." / " Rule:
+#        multiply by a and add b."), then optionally a gap of training-split web text
+#        (U(1, 1800) tokens, half the docs), then the trained header, 0-4 demonstration
+#        lines and the query; the answer marked. Shift k in SHIFT_TRAIN, affine b in
+#        AFFINE_B_TRAIN (held-out values never appear). Teaches words -> rule state.
+#  fsq : re-read definitions (" Definition: KEY refers to VALUE." x 2-6, look-alike
+#        keys among them), then " Query: KEY refers to"; 25 % of docs ask a key that is
+#        NOT among them and the answer is " unknown". Keys are 3-syllable synthetic
+#        words, values from _FSQ_VALUES: both disjoint from the bench's 2-syllable keys
+#        and _RECALL_VALUE_NOUNS.
+#  hop : " Record: K1 maps to K2." / " Record: K2 maps to V." plus a distractor chain,
+#        shuffled, then " Query: K1 maps to" -> V (same disjoint vocabularies).
+_FSQ_VALUES = ('lantern', 'harbor', 'meadow', 'compass', 'ribbon', 'pebble', 'falcon',
+               'orchard', 'canyon', 'velvet', 'beacon', 'tundra', 'marble', 'summit',
+               'prairie', 'glacier', 'violet', 'thunder', 'anchor', 'feather')
+_FSQ_CONS = 'bdfgklmnprstvz'
+_FSQ_VOW = 'aeiou'
+
+
+def _fsq_key(rng) -> str:
+    return ''.join(rng.choice(_FSQ_CONS) + rng.choice(_FSQ_VOW) for _ in range(3))
+
+
+def _cur_gap_iter(seed: int):
+    return _open_source_iter('fineweb', SOURCE_REGISTRY['fineweb'], edu_score_min=3,
+                             fineweb_name='sample-10BT', exclude_holdout=True, holdout_pct=5,
+                             skip=0, doc_counters=None, mix_seed=seed + 8888)
+
+
+def _srd_text_iter(*, seed: int = 0, skip_docs: int = 0, doc_counters=None,
+                   counter_key: str = 'srd', gap_iter=None, gmax: int = 1800) -> Iterator[str]:
+    import random as _random
+    from transformers import AutoTokenizer
+    from v14.rules_ood import SHIFT_TRAIN, AFFINE_A, AFFINE_B_TRAIN
+    tok = AutoTokenizer.from_pretrained('gpt2')
+    rng = _random.Random((seed * 2654435761 + 616161) & 0xFFFFFFFF)
+    gap_iter = gap_iter if gap_iter is not None else _cur_gap_iter(seed)
+    letters = 'abcdefghijklmnopqrstuvwxyz'
+    buf, n = [], 0
+    while True:
+        fam = rng.choice(('shift', 'affine'))
+        shots = rng.choice((0, 0, 1, 2, 4))
+        g = rng.randint(1, gmax) if rng.random() < 0.5 else 0
+        n += 1
+        if fam == 'shift':
+            k = rng.choice(SHIFT_TRAIN)
+            picks = rng.sample(letters[:26 - k], shots + 1)
+            rule = f' Rule: shift each letter forward by {k}.'
+            demo = ''.join(f'{a} -> {letters[letters.index(a) + k]}\n' for a in picks[:-1])
+            x = picks[-1]; y = letters[letters.index(x) + k]
+            body = f'Letter rule.\n{demo}{x} ->'
+        else:
+            a = rng.choice(AFFINE_A); b = rng.choice(AFFINE_B_TRAIN)
+            xs = rng.sample(range(1, 31), shots + 1)
+            rule = f' Rule: multiply by {a} and add {b}.'
+            demo = ''.join(f'{u} -> {a * u + b}\n' for u in xs[:-1])
+            x = xs[-1]; y = str(a * x + b)
+            body = f'Map rule.\n{demo}{x} ->'
+        if n <= skip_docs:
+            continue
+        gap_text = ''
+        if g:
+            while len(buf) < g:
+                buf += tok(re.sub(r'\s*\n+\s*', ' ', next(gap_iter)), add_special_tokens=False)['input_ids']
+            gap_text = tok.decode(buf[:g]); buf = buf[g:]     # joined like bench.py: rule + filler + header
+        _bump_counter(doc_counters, counter_key)
+        yield rule + gap_text + body + _ans(f' {y}') + '\n'
+
+
+def _fsq_text_iter(*, seed: int = 0, skip_docs: int = 0, doc_counters=None,
+                   counter_key: str = 'fsq', per_doc: int = 4) -> Iterator[str]:
+    import random as _random
+    rng = _random.Random((seed * 2654435761 + 727272) & 0xFFFFFFFF)
+    n = 0
+    while True:
+        parts = []
+        for _ in range(per_doc):
+            m = rng.randint(2, 6)
+            keys = [_fsq_key(rng) for _ in range(m)]
+            if m >= 2 and rng.random() < 0.5:          # a look-alike key (shares the first syllable)
+                keys[1] = keys[0][:2] + _fsq_key(rng)[2:]
+            for i in range(m):                         # keys must be unique, or the answer is ambiguous
+                while keys[i] in keys[:i]:
+                    keys[i] = keys[0][:2] + _fsq_key(rng)[2:] if i == 1 else _fsq_key(rng)
+            vals = [rng.choice(_FSQ_VALUES) for _ in range(m)]
+            spans = ''.join(f' Definition: {k} refers to {v}.' for k, v in zip(keys, vals))
+            if rng.random() < 0.25:                    # abstain: the key was never fetched
+                q = _fsq_key(rng)
+                while q in keys:
+                    q = _fsq_key(rng)
+                ans = ' unknown'
+            else:
+                i = rng.randrange(m); q, ans = keys[i], f' {vals[i]}'
+            parts.append(spans + f' Query: {q} refers to' + _ans(ans))
+        n += 1
+        if n <= skip_docs:
+            continue
+        _bump_counter(doc_counters, counter_key)
+        yield '\n\n'.join(parts) + '\n'
+
+
+def _hop_text_iter(*, seed: int = 0, skip_docs: int = 0, doc_counters=None,
+                   counter_key: str = 'hop', per_doc: int = 4) -> Iterator[str]:
+    import random as _random
+    rng = _random.Random((seed * 2654435761 + 838383) & 0xFFFFFFFF)
+    n = 0
+    while True:
+        parts = []
+        for _ in range(per_doc):
+            ks = []
+            while len(ks) < 4:                         # four distinct keys
+                kk = _fsq_key(rng)
+                if kk not in ks:
+                    ks.append(kk)
+            k1, k2, d1, d2 = ks
+            v, dv = rng.sample(_FSQ_VALUES, 2)
+            recs = [f' Record: {k1} maps to {k2}.', f' Record: {k2} maps to {v}.',
+                    f' Record: {d1} maps to {d2}.', f' Record: {d2} maps to {dv}.']
+            rng.shuffle(recs)
+            parts.append(''.join(recs) + f' Query: {k1} maps to' + _ans(f' {v}'))
+        n += 1
+        if n <= skip_docs:
+            continue
+        _bump_counter(doc_counters, counter_key)
+        yield '\n\n'.join(parts) + '\n'
+
+
 # Label-rule training docs (2026-10-31, v13 "label-format source"): the
 # probes' label_category / label_exact FORMAT ("Label rule. <item> is <label>,
 # ... <query> is") with a vocabulary DISJOINT from memory_probes/rules.py
@@ -2178,6 +2307,9 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     # "label-format source", 2026-10-31).
     'lab':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-lab'},
     'b2gap':         {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-b2gap'},
+    'srd':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-srd'},
+    'fsq':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-fsq'},
+    'hop':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-hop'},
     # Real aptitude / reasoning Q&A with worked answers, TRAIN splits only
     # (v7/aptitude.py; 2026-10-29 "reason first" curriculum, real data).
     'aptitude':      {'schema': 'text',     'kind': 'qa',        'hf': 'real-aptitude-qa'},
@@ -2226,6 +2358,12 @@ def _open_source_iter(
         if name == 'b2':
             return _b2_text_iter(seed=mix_seed, skip_docs=skip,
                                  doc_counters=doc_counters, counter_key=name)
+        if name == 'srd':
+            return _srd_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
+        if name == 'fsq':
+            return _fsq_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
+        if name == 'hop':
+            return _hop_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
         if name == 'b2gap':
             return _b2gap_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters,
                                     counter_key=name, gmax=int(os.environ.get('B2GAP_MAX', '1800')))
