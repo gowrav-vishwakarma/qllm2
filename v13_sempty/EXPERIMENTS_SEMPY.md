@@ -3465,3 +3465,87 @@ PAM ≥ Mamba-2 (b2m) + 0.10 in both seeds too (b2ma → b2m running in tmux `s6
 - Labels: PAM 0.57 / 0.63 vs T++ 0.71 on the same data. The lb pair
   (pre-registered above) tests whether that is the missing format.
 - Cost stays as in seed 42: holdout +0.033 vs c1m2, recall 0.870 → 0.707.
+
+## B2 Mamba-2 arm b2m (2026-10-31 06:20 IST): bar 3 NOT met in its pre-registered form, but the distance edge is PAM's alone
+
+`b2m_main_38e3c29` (6000, Mamba-2 102.6M, `ARCH=mamba2,CHRONO=0,OUT_GATE=0,DELTA=0`,
+stage A `b2ma_pre_38e3c29` = 120M aptitude mix as tfc1a, stage B = the b2 mix,
+seed 42, 600M tokens total; same probes as the PAM / T++ arms).
+
+| 600M tokens | params | holdout | recall 63 (≤ 2048 / > 2048) | PG-19 far gain 4–8k | label_diag cat / exact (mean) | B2 base | B2 `_new` shift / step / affine (mean) |
+|---|---|---|---|---|---|---|---|
+| PAM b2p1 (s42) | 102.9M | 3.4777 | 0.721 (0.781 / **0.572**) | **+0.043** | 0.547 / 0.588 (0.567) | 1.000 | 1.000 / 0.973 / 1.000 (**0.991**) |
+| PAM b2p2 (s43) | 102.9M | 3.4800 | 0.707 (0.801 / 0.474) | +0.042 | 0.592 / 0.660 (0.626) | 1.000 | 1.000 / 0.834 / 0.999 (0.944) |
+| **Mamba-2 b2m (s42)** | 102.6M | **3.4754** | 0.702 (0.818 / 0.410) | +0.022 | **0.713 / 0.862 (0.787)** | 1.000 | 0.677 / 1.000 / 1.000 (0.892) |
+| T++ b2t (s42) | 101.9M | 3.5572 | 0.672 (**0.844** / 0.242) | −0.778 | 0.673 / 0.752 (0.713) | 0.999 | 0.257 / 1.000 / 0.944 (0.734) |
+
+Rules suite (100): b2m label_category 0.733, two_hop 0.32 (PAM 0.557–0.587 / 0.29; T++ 0.687 / 0.273).
+
+LCL spread, `_new` tasks (8 shots, 200 trials, probe seed 5000, chance 0.125;
+filler between EVERY example, so L = 1024 is ~110-token gaps, 4096 ~500):
+
+| `_new` @ L | 0 | 1024 | 2048 | 4096 | 8192 |
+|---|---|---|---|---|---|
+| PAM s42 / s43 shift_wide | 1.00 / 1.00 | 0.79 / 0.735 | **0.60 / 0.53** | **0.34 / 0.295** | 0.105 / 0.12 |
+| Mamba-2 shift_wide | 0.765 | 0.00 | 0.00 | 0.00 | 0.00 |
+| T++ shift_wide | 0.315 | 0.00 | 0.00 | 0.00 | 0.00 |
+| PAM s42 / s43 affine_map | 1.00 / 1.00 | 0.965 / 0.995 | **0.965 / 0.975** | **0.785 / 0.905** | 0.435 / 0.61 |
+| Mamba-2 affine_map | 1.00 | 0.425 | 0.225 | 0.11 | 0.055 |
+| T++ affine_map | 0.975 | 0.075 | 0.05 | 0.45 | 0.285 |
+| PAM s42 / s43 step_wide | 1.00 / 0.925 | 0.115 / 0.09 | 0.14 / 0.065 | 0.10 / 0.085 | 0.105 / 0.04 |
+| Mamba-2 step_wide | 1.00 | **0.305** | **0.31** | **0.27** | **0.22** |
+| T++ step_wide | 1.00 | 0.09 | 0.085 | 0.09 | 0.055 |
+
+**Verdict (amendment rule 2: PAM `_new` mean ≥ b2m + 0.10 in BOTH PAM
+seeds): NOT MET.** Seed 42 +0.099, seed 43 +0.052. Hence (rule 3) **bar 3 is
+not replicated in its pre-registered form; no ntfy.** Mamba-2's only miss in
+context is shift `_new` (0.68).
+
+**Across distance (the amendment's reported cells, named before b2m ran:
+shift/affine `_new` at L = 2048 and 4096, margin +0.10): PAM ahead in every
+cell, both seeds.** Mean of the 4 cells D: PAM 0.673 / 0.676, Mamba-2 0.084,
+T++ 0.125. So the distance edge is NOT "recurrence vs attention": Mamba-2 is
+recurrent and O(1) too, and it collapses with ~110-token gaps exactly like T++.
+Only PAM carries an inferred rule through thousands of tokens of unrelated
+text, past its trained length (affine 0.61 at 8192 for seed 43).
+
+**Reading.**
+- Two kinds of memory. Mamba-2 keeps exact items better: labels 0.79 (best of
+  all), the last far number through filler (step 0.27–0.31 vs PAM ≤ 0.14), and
+  holdout slightly better (−0.002 / −0.005). PAM keeps the RULE. That fits
+  their state: Mamba-2's input-dependent Δ chooses which tokens to keep.
+  PAM writes complex outer products, so a rule that repeats as the same phase
+  relation across 8 examples adds up coherently while filler adds incoherent
+  noise. A single exact item has no such advantage (guess; test below).
+- Labels: Mamba-2 is the leader (0.787), not T++. The lb pair compares lbp
+  only with lbt, so its rule 2 is now too weak (amendment below).
+- Bar 2 at 600M with this mix: Mamba-2 ≤ PAM on holdout by 0.002–0.005 (noise
+  level), PAM ahead on far gain (+0.042 vs +0.022).
+
+**Amendments (fixed now, before any of these run):**
+1. *lb pair:* if lbp passes its rule 1 (label_diag mean ≥ 0.767), an `lbm`
+   arm (Mamba-2 + lab, stage A `b2ma_pre`, seed 42) runs before any label
+   claim; "gap closed / PAM ahead" are then judged against max(lbt, lbm).
+   If lbp fails rule 1, no lbm.
+2. *Distance confirmation (bar 3, distance form), tmux `s8`, 6000, code
+   `38e3c29`, after s7.* The distance cells were named before b2m ran; only
+   their promotion to the bar is new, so the test uses NEW training seeds and
+   a NEW probe sample:
+   - Runs (stage B as b2p1 / b2t / b2m; stage As reused): `b2t2` T++ seed 43,
+     `b2m2` Mamba-2 seed 43, `b2p3` PAM seed 44.
+   - Probe: `--suite b2 --tasks shift_wide_new,affine_map_new --shots 8
+     --trials 400 --seed 7000 --spread 0,2048,4096` (probe seeds 7000–7399,
+     never used before) on all 7 models. D = mean of the 4 cells at 2048 and
+     4096.
+   - **Primary:** D(b2p3) ≥ max(D(b2t2), D(b2m2)) + 0.10.
+   - **All pairs:** every PAM seed (42, 43, 44) ≥ every baseline run (b2t,
+     b2t2, b2m, b2m2) + 0.10 on probe seed 7000.
+   - Both hold → bar 3 met in its distance form (in-context learning of
+     held-out rule values that survives distance past the trained length; T++
+     and Mamba-2 do not) → EUREKA + ntfy, params and tokens stated. Either
+     fails → no claim. The in-context form stays failed vs Mamba-2 either way
+     and is reported with it.
+   - Reported, no bar: L = 0 and the standard probes for every new run,
+     holdout, recall, step_wide_new spread.
+   - Caveat that stays with any claim: trained rule FORMATS with held-out
+     VALUES, not unseen rule families.

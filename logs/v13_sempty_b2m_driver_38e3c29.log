@@ -1,0 +1,25 @@
+=== b2m start 2026-10-30T22:55:36Z SCREEN_HASH=38e3c29 arms='main:ARCH=mamba2,CHRONO=0,OUT_GATE=0,DELTA=0' base='LR=1.2e-3 TARGET_TOKENS=480006144 VAL_EVERY=4883 SAVE_EVERY=1000 KEEP_EVERY=0 KEEP_LAST=1 SOURCES=dclm,fineweb,smoltalk2_mid,recall,b2 WEIGHTS=0.43,0.40,0.10,0.04,0.03 SEED=42 INIT_FROM=checkpoints_v13_sempty/b2ma_pre_38e3c29/best_model.pt' ===
+=== arm main (ARCH=mamba2 CHRONO=0 OUT_GATE=0 DELTA=0) ckpt=checkpoints_v13_sempty/b2m_main_38e3c29 log=logs/v13_sempty_b2m_main_38e3c29_20261030_2255.log 2026-10-30T22:55:36Z ===
+=== b2m_main start 2026-10-30T22:55:36Z commit=38e3c29 log=logs/v13_sempty_b2m_main_38e3c29_20261030_2255.log ckpt=checkpoints_v13_sempty/b2m_main_38e3c29 ===
+=== b2m_main end 1793407028 exit=0 attempts=1 ===
+=== arm main train exit=0 2026-10-31T00:37:08Z ===
+Results saved to logs/memory_probes/v13_sempty_b2m_main_38e3c29_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+  10/50 docs (16s)
+  20/50 docs (19s)
+  30/50 docs (22s)
+  40/50 docs (25s)
+  50/50 docs (29s)
+  [    0,   64)  loss 4.1630  ppl   64.26
+  [   64,  128)  loss 3.8612  ppl   47.52
+  [  128,  256)  loss 3.6942  ppl   40.21
+  [  256,  512)  loss 3.6616  ppl   38.92
+  [  512, 1024)  loss 3.7615  ppl   43.01   short-ctx 3.7615  far_gain -0.0000
+  [ 1024, 2048)  loss 3.8126  ppl   45.27   short-ctx 3.8265  far_gain +0.0139
+  [ 2048, 4096)  loss 3.8145  ppl   45.35   short-ctx 3.8328  far_gain +0.0184
+  [ 4096, 8192)  loss 3.8419  ppl   46.61   short-ctx 3.8640  far_gain +0.0221
+wrote logs/pos_loss/v13_sempty_b2m_main_38e3c29_pg19.json
+--- final holdout val_loss (last val of each arm) ---
+  main: 3.4754
+=== b2m DONE 2026-10-31T00:39:46Z ===

@@ -18,6 +18,25 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 06:25 IST: Mamba-2 arm b2m → bar 3 NOT met as pre-registered; distance edge is PAM's.**
+  `_new` mean (in context) PAM 0.991 / 0.944 vs Mamba-2 0.892 (+0.099 / +0.052, bar +0.10): no
+  claim, no ntfy. Across distance (cells named before b2m ran) PAM 0.67 vs Mamba-2 0.08 and T++
+  0.13: Mamba-2 collapses at ~110-token gaps like T++. Mamba-2 leads labels (0.787) and exact
+  far copy (step through filler 0.3). EXPERIMENTS "B2 Mamba-2 arm b2m".
+  6000 queue now: s5 r3c (stage B 9 %, ~24 h with side jobs) | s7 lbp (started 06:16 IST) → lbt
+  | v14 `n9th` (to ~08:30) | **s8** (`~/s8_chain.sh`, main checkout 38e3c29, driver
+  `logs/v13_sempty_s8_driver_38e3c29_20261031_0100.log`) waits for s7, then probe seed 7000 on
+  b2p1/b2p2/b2t/b2m → b2t2 (T++ s43) → b2m2 (Mamba-2 s43) → b2p3 (PAM s44) (~1h45m each).
+  Score with amendment 2 (primary D(b2p3) ≥ max(b2t2, b2m2) + 0.10 AND all pairs). lb pair:
+  lbm (Mamba-2 + lab) only if lbp passes rule 1. GPU now ~94/98 GB (r3c 53, lbp 33, n9th 8).
+  Step back: two kinds of memory. Mamba-2's Δ selects exact tokens to keep (labels, last
+  number); PAM's outer-product state integrates a rule that repeats coherently over examples
+  while filler adds incoherent noise (guess). If true, PAM gains from a selective (input-
+  dependent) write strength for single items. That is v14's lane (unit design), so it went as
+  a EUREKA, not a v13 run. Cheap probe of the guess (not run): fixed gap per example, shots
+  2/4/8: coherent integration predicts PAM's far accuracy rises with shots much more than
+  Mamba-2's.
+
 * **2026-10-31 04:20 IST: 6000 slot given to v14's n9th** (27M micro, ~7 GB, 3-4 h, from
   `~/Development/qllm_v14`, its own tmux): runs beside r3c + b2m, then lbp. Limits agreed:
   ≤ 8 GB VRAM, no checkpoints on the root disk (14 GB free), pause it if b2m/r3c tok/s drops

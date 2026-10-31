@@ -9,6 +9,20 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **v13: Mamba-2 on the same rule data nearly matches PAM in context but collapses across
+  distance like T++. The distance edge is PAM's, and the two recurrent states keep different
+  things.** `b2m_main_38e3c29` (Mamba-2 102.6M, 600M tokens): B2 `_new` mean 0.892 vs PAM
+  0.991 / 0.944, so the pre-registered bar (+0.10 in both seeds) is NOT met: no bar-3 claim, no
+  ntfy. Spread shift/affine `_new` at 2048 + 4096: PAM 0.67 (both seeds), Mamba-2 0.08, T++ 0.13.
+  Mamba-2 collapses at ~110-token gaps. But Mamba-2 leads on exact items: label_diag 0.787
+  (T++ 0.713, PAM 0.57-0.63), the last far number through filler (step 0.27-0.31 vs PAM ≤ 0.14),
+  holdout 3.4754 (PAM 3.478-3.480). *For v14:* PAM's outer-product state seems to integrate a
+  rule that repeats coherently across examples (filler is incoherent noise), but has no way
+  to SELECT a single item to keep. Mamba-2's input-dependent Δ is that selector. A selective
+  write strength for single items (keep the rule integration) is the gap a new unit could
+  close; judge it on label_diag AND spread step_wide_new. v13 runs a fresh-seed distance
+  confirmation (s8, pre-registered) for the distance form of bar 3.
+
 - **v13: the B2 edge over Transformer++ replicates (seed 43); the rule survives distance,
   an exact far token does not.** `b2p2_main_38e3c29` (102.9M, 600M tokens): B2 `_new` mean
   0.944 (seed 42 0.991) vs T++ 0.734. LCL spread affine `_new` @2048 / 4096 / 8192 = 0.975 /
