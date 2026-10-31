@@ -16,6 +16,35 @@ cd ../qllm_<id> && <command in the row>           # launcher env names as of tha
 (The launchers refuse a dirty tree; a worktree is clean. Checkpoints and
 logs of the original run are named after the *run* hash.)
 
+## Run ingredients ledger — which findings each big run contains (user rule, 2026-10-31)
+
+Long runs on the 6000 start before the 4090's newer findings exist. Before
+comparing a big run with anything, read its row: a result only tests what is
+IN it. Add a row when a big run starts; add a column when a finding is KEPT.
+
+Findings (columns): **16nb** = notebooks in all 16 blocks (M2 = blocks 3,7,11,15 +
+shared reads) · **E1** echo memory (10-29) · **2st** two-stage schedule, stage A
+120M (apt = with aptitude data) · **LR** · **rec** recall docs share (answer weight
+100) · **b2** rule docs, held-out values (10-31, rule inference + distance edge) ·
+**lab** label docs (pending, lb pair) · **N9a** echo phase lags (v14; recall
+0.975 @600M, replication n9r pending) · **N12** selective store (v14, micro pending).
+
+| run (hash) | box | tokens / params | body | E1 | 2st | LR | rec | b2 | lab | N9a | N12 | answers |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Mamba-2 3B (`b36e3a5`) | 6000 | 3B / 102.6M | Mamba-2 | – | no | 1.2e-3 | 5 % | no | no | – | – | 3B baseline: 3.1644 / 46.91 |
+| T++ 3B (`e072a8f`) | 6000 | 3B / 101.9M | T++ | – | no | 1.2e-3 | 5 % | no | no | – | – | 3B baseline: 3.2064 / 46.61 |
+| PAM 3B (`1c913ef`) | 6000 | 3B / 102.1M | 16nb | no | no | 2e-4 | 5 % | no | no | no | no | old body at 3B: 3.2728 |
+| r3b (`685de4e`) | 6000 | 3B / 102.9M | M2 | yes | apt | 2e-4 | 5 % | no | no | no | no | M2 + echo + 2st at 3B: 3.3094 (FAIL) |
+| **r3c** (`38e3c29`, running) | 6000 | 3B / ~103M | 16nb | yes | web/chat | 1.2e-3 | 5 % | **no** | **no** | **no** | **no** | does the 16nb + echo + 2st BODY close the 3B LM gap? NOT the best package |
+| b2p1 / b2p2 (`38e3c29`) | 6000 | 600M / 102.9M | M2 | yes | apt | 1.2e-3 | 4 % | 3 % | no | no | no | bar 3 rules (with b2t, b2m) |
+| s8: b2t2 / b2m2 / b2p3 (`38e3c29`, queued) | 6000 | 600M | as b2 pair | | | | 4 % | 3 % | no | no | no | distance confirmation |
+| lbp / lbt (`c4173be`, running) | 6000 | 600M | M2 / T++ | yes | apt | 1.2e-3 | 4 % | no | 3 % | no | no | label gap = format? |
+| n9c (`e5f0b73`) | 4090 | 600M / 103.5M | M2 | yes | web (C1-ctl) | 1.2e-3 | 5 % | no | no | yes | no | N9a lookup (FAIL), recall +0.15 |
+
+**Not yet in any 3B run:** b2 rule docs, lab (pending), N9a (pending replication +
+untrained-word check), N12 (pending micro). A 3B "best package" run is the place
+they meet; r3c's result says nothing about them.
+
 ## Kept (in the current code)
 
 | id | idea | verdict / key number | notebook section | flag / env |

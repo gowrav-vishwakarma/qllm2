@@ -18,6 +18,35 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 08:30 IST: step back (user: "play on strength, mitigate gaps, scale").**
+  Run ingredients ledger added to EXPERIMENT_INDEX (user rule): r3c has NO b2 / lab / N9a,
+  so it tests the 16nb + echo + 2st BODY at 3B, not the best package.
+  Fresh views:
+  1. The 3B LM gap splits in two (existing PG-19 files): vs Mamba-2 PAM is +0.063 at
+     positions 0-64, where no memory helps (LOCAL modelling), rising only to +0.10 by 8k.
+     vs T++, PAM is better at 0-64 (-0.044) and behind from 64-2048 (+0.03 to +0.05):
+     in-window exact copy, the same weakness as labels. Two gaps, two fixes; memory units
+     (echo / N9a / N12) cannot close the local part. Attribution by token type (copy / seen /
+     new) running on the 4090: `v13_sempty/tmp/attr3b.py` → `logs/diag/v13_sempty_attr3b_*`.
+  2. r3b (M2 + echo) is worse than the old 16nb body even at 0-64 (+0.085): notebook fast
+     heads (half-lives 1-46 tokens) are PAM's LOCAL mixers, and M2 removed 12 of 16. A 600M
+     win (M2) did not survive 3B. Same lesson as the LR: screen bodies at ≥ 1.5B.
+  3. Width: PAM residual 588 vs 768 for both baselines, never tested as a capacity lever at
+     scale. But T++ (768) is worse than PAM at 0-64, so width alone does not explain the
+     local gap. Candidate only.
+  4. Strength, framed: PAM remembers HOW (rules, gist) across distance; Mamba-2 remembers WHAT
+     (chosen tokens). Play on it: a long-horizon rule / instruction persistence probe (a
+     rule set early, applied thousands of tokens later). That is a real pain point of chat
+     models and our cleanest bar-3 story.
+  5. PAM is very teachable by format (b2 → 0.99, recall docs → 0.975), but pays LM loss
+     for it (b2 3 % cost +0.030 holdout at 600M). At 3B, 1 % rule docs gives 2× the 600M
+     exposure at a third of the share.
+  Plan: best-package 3B run ("r3d") = the body r3c / attribution supports + b2 (~1 %) +
+  lab (if lb passes) + recall 5 % + N9a (if n9r + untrained-word check pass), pre-
+  registered vs Mamba-2 3.1644 / 46.91. It starts when the 6000 has a 3B slot: r3c's
+  futility check (~15:00-16:00 IST) decides whether that is today or after r3c ends
+  (~04:30 IST Nov 1).
+
 * **2026-10-31 06:25 IST: Mamba-2 arm b2m → bar 3 NOT met as pre-registered; distance edge is PAM's.**
   `_new` mean (in context) PAM 0.991 / 0.944 vs Mamba-2 0.892 (+0.099 / +0.052, bar +0.10): no
   claim, no ntfy. Across distance (cells named before b2m ran) PAM 0.67 vs Mamba-2 0.08 and T++
