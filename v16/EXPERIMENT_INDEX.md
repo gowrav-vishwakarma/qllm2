@@ -8,4 +8,4 @@
 | SL0 | shared knowledge library = kNN-LM over the frozen 3B PAM state (Mind) | done | FAIL rules 1+2: 20M rows -0.012 web vs bar -0.05, +0.10 behind Mamba-2; plumbing / cost table | see EXPERIMENTS_SEMPY "SL0 verdict" | logs/diag/v13_sempty_sl0_* |
 | SKP-1 | skill-pack persistence, one read at t0 (Mind, scripts/run_skillpack_probe.py 53d0e52) | done | PAM carries a rule read once across 2k (0.86 vs T++ 0.03 / Mamba-2 0.06; 2 seeds, 100 docs); all fade by 8k; R7@32k FAIL | see EXPERIMENTS_SEMPY | logs committed by Mind |
 | LAW-1 | one-read reach vs training length: lg2/lg8/lg32 fine-tunes with long-gap rule docs | pre-registered (7527ea3) | | | 6000 after s8 or in r3c's slot |
-
+| L1 | burst-pooling key head on the mind's centred block-8 state (Library) | pre-registered (EXPERIMENTS_V14 "L1 proper") | bars on C5 burst rows: >= 0.9 @32k, >= 0.75 @128k, within 0.05 of the C2 per-token ceiling | | v16/bench.py --key_fn |
