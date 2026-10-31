@@ -4613,3 +4613,25 @@ generation (it must apply only where a read happened).
   is confirmed on fresh docs. Reported, no bar: a = 8; 8k / 16k; at 2k, the token that wins the free
   argmax on misses (the plateau diagnosis).
 - Prior work as cd1 (CAD; contrastive decoding). No method claim.
+
+**r3p amendment A1 (02:22 IST, 2026-11-01, before r3p starts; Lead: the LM guard is a HARD gate, per the
+user's "expression counts").** It replaces the mix clause (cu1 had no "Win": its holdout guard failed,
++0.045 over b2p2). The synthetic share is now set by a written budget.
+- **Evidence:** cu1 at 600M added ~6 points of synthetic share over b2p2 (13 % vs 7 %) and lost 0.045
+  nats of holdout. About a third to a half is fewer web tokens (7 % fewer; late slopes give +0.015 to
+  +0.022). The rest (~0.025) is capacity spent on the new formats at 103M.
+- **Rule:** match or exceed cu1's ABSOLUTE tokens per skill at the smallest share. At 2.88B stage-B
+  tokens, 0.5 % = 14.4M tokens (cu1 had 9.6M per curriculum source).
+- **Stage-B mix (fixed now):** dclm 0.427, fineweb 0.398 (r3c's 0.44 : 0.41 ratio), smoltalk2_mid 0.10,
+  recall 0.04, b2 0.01, lab 0.01, fsq 0.005, hop 0.005, srd 0.005. srd goes in only if cu1's R6a passes
+  in the rerun; else its 0.005 goes to dclm. Synthetic share 7.5 % vs r3c's 5 %.
+- **Absolute stage-B tokens:** recall 115M (r3c 144M); b2 and lab 28.8M each (cu1 14.4M / 9.6M); fsq,
+  hop and srd 14.4M each (cu1 9.6M / 4.8M / 9.6M).
+- **HARD gate (expression):** final holdout ≤ r3c + 0.02 = **3.2391**. If missed, r3p does not replace
+  r3c as the expression body; its skills are reported, and the package's LM line stays r3c's.
+- **Written prediction:** fewer web tokens (−2.9 %) +0.006, formats +0.006 (cu1's residual, ~0.004 per
+  point × 2.5 points × 0.6 for the 3B late slope). So **r3p ≈ 3.231**: the gate passes narrowly, and
+  the public ±0.01 bar vs T++ (3.2064) is missed by ~0.025. Recall may dip with its share (5 % → 4 %);
+  ANSWER_IN_WINDOW should offset part of that.
+- **Futility unchanged** (3.431 at step 39060). The A7 readouts (free primary, 3 shown generations)
+  and A8's natq cell (when Lead's harness has it) go into the readout list.
