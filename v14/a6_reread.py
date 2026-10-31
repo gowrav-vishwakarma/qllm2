@@ -129,6 +129,9 @@ def main():
     ap.add_argument('--lengths', default=None, help='A6c: comma list of L (overrides --L)')
     ap.add_argument('--cells', default=None, help='A6c: comma list of task/keys, e.g. kv/synthetic,para/natural')
     ap.add_argument('--contrast', type=float, default=None, help='A6c: add the WARMC arm with this alpha')
+    ap.add_argument('--rows', default='fact', choices=['fact', 'organ'],
+                    help='A9: organ = the package\'s strict fetch (token organ, then the normalised organ on the whole question; none = abstain)')
+    ap.add_argument('--arms', default='cold,warmc,warm,norow', help='A9: which arms to run')
     ap.add_argument('--parity', action='store_true'); ap.add_argument('--out', default=None)
     a = ap.parse_args()
     dev = torch.device(a.device)
@@ -148,18 +151,32 @@ def main():
                 t0 = time.time()
                 ids, ans, qlen, meta = build(rng, mind.tok, filler, L, task, a.needles, keys=keys)
                 end = len(ids) - qlen; q = ids[end:]
-                row = fact_row(ids, end, mind.tok, meta)
-                rec = dict(task=task, keys=keys, L=L, seed=a.seed, doc=d, val=meta['val'], row_found=int(row is not None))
+                step = None
+                if a.rows == 'fact':
+                    row = fact_row(ids, end, mind.tok, meta)
+                else:                                   # A9: the package's strict fetch, text only
+                    hit = P.organ(ids, end, len(ids))
+                    row = P.row_around(ids, hit, hit, end) if hit is not None else None
+                    step = 0 if row is not None else None
+                    if row is None:
+                        nh = P.norm_hit(ids, end, end)
+                        row, step = (nh[2:], nh[0]) if nh else (None, None)
+                rec = dict(task=task, keys=keys, L=L, seed=a.seed, doc=d, val=meta['val'], row_found=int(row is not None),
+                           rows=a.rows, organ_step=step, negative=int(bool(meta.get('negative'))))
+                if row is not None and a.rows == 'organ':
+                    rec['row_has_fact'] = int(f"{meta['val']}" in mind.tok.decode(ids[row[0]:row[1]]))
                 if row is not None:
                     span = ids[row[0]:row[1]]
                     _, st, off = mind.feed(ids[:end])
-                    cold = mind.greedy(span + q)
-                    arms = [('cold', cold)]
-                    if a.contrast is not None:
+                    want = set(a.arms.split(','))
+                    arms = [('cold', mind.greedy(span + q))] if 'cold' in want else []
+                    if a.contrast is not None and 'warmc' in want:
                         arms.append(('warmc', mind.greedy_contrast(span + q, copy.deepcopy(st), off,
                                                                    q, copy.deepcopy(st), off, a.contrast)))
-                    arms.append(('warm', mind.greedy(span + q, copy.deepcopy(st), off)))
-                    arms.append(('norow', mind.greedy(q, st, off)))
+                    if 'warm' in want:
+                        arms.append(('warm', mind.greedy(span + q, copy.deepcopy(st), off)))
+                    if 'norow' in want:
+                        arms.append(('norow', mind.greedy(q, st, off)))
                     for name, g in arms:
                         txt = mind.tok.decode(g)
                         rec[name] = sent_ok(txt, meta['val']); rec[name + '_text'] = txt
