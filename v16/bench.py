@@ -34,15 +34,33 @@ class Reader:
     def __init__(self, model, arch):
         self.m, self.arch = model, arch
 
+    vec_layer = None    # None = pre-logit vector; k = residual after block k (Library: mid-layer address)
+    centre = False      # subtract the document mean from the keys before the cosine
+
     @torch.no_grad()
     def vectors(self, ids: list[int]) -> torch.Tensor | None:
+        """Pre-logit vectors [T, D] (always, for surprisal and logits); with vec_layer set the
+        KEY vectors are the residual after that block instead, kept on self.last_keys."""
         if self.arch != 'pam':
             return None
         x = torch.tensor([ids])
         z, b, t = self.m._stem(x, 0)
-        z, _ = self.m._run_blocks(z, b, t, None, 0, x)
+        if self.vec_layer is None:
+            z, _ = self.m._run_blocks(z, b, t, None, 0, x)
+            keys = None
+        else:
+            keys = None
+            for i, block in enumerate(self.m.blocks):
+                z, _ = block(z, pam_state=None, step_offset=0)
+                if self.m.cond_mem_layers and i in self.m.cond_mem_layers:
+                    z = self.m.cond_mem[str(i)](z, x)
+                if i == self.vec_layer:
+                    keys = z.raw(b, t, self.m.model_dim)[0].float().clone()
+            assert keys is not None, f'vec_layer {self.vec_layer} out of range'
         lm, _ = self.m._lm_vector(z, x, b, t)
-        return lm.raw(b, t, self.m.model_dim)[0].float()
+        out = lm.raw(b, t, self.m.model_dim)[0].float()
+        self.last_keys = keys if keys is not None else out
+        return out
 
     @torch.no_grad()
     def surprisal(self, ids: list[int], vecs: torch.Tensor, chunk: int = 2048) -> torch.Tensor:
@@ -225,13 +243,15 @@ def main():
     ap.add_argument('--shots', type=int, default=0, help='instr: demonstration lines placed right before the query (control that the skill is present)')
     ap.add_argument('--gate_frac', type=float, default=0.02, help='C5: fraction of most-surprising tokens that get an index row')
     ap.add_argument('--gate_tau', type=float, default=None, help='C5: surprisal threshold in nats (overrides --gate_frac)')
+    ap.add_argument('--vec_layer', type=int, default=None, help='key vectors = residual after block k (Library: mid-layer address); surprisal still from the output')
+    ap.add_argument('--centre', action='store_true', help='subtract the document mean from the key vectors before the cosine')
     ap.add_argument('--filler', default=None, help='token cache for the filler (default: the held-out prose cache = the EVAL pool; pass a pretrain-mix cache for TRAINING docs)')
     ap.add_argument('--key_fn', default=None, help='module:function(vecs[T,D], ids) -> keys[T,d]; replaces the frozen address in C2/C5 (v14 learned fetch)')
     ap.add_argument('--dump_rows', default=None, help='dir: per doc, save ids, candidate row positions/kinds, their vectors, query pos and the answer span (v14 training/eval interface)')
     ap.add_argument('--out', required=True); ap.add_argument('--device', default='cpu', help='cpu, or cuda (required for mamba2: Triton kernels)')
     a = ap.parse_args()
     model, tok, cfg = _load_v13_sempty(Path(a.ckpt), 'baseline_real_pm', torch.device(a.device)); model.eval()
-    R = Reader(model, a.arch)
+    R = Reader(model, a.arch); R.vec_layer = a.vec_layer; R.centre = a.centre
     fill = filler_tokens(a.filler or str(ROOT / '.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt'))
     key_fn = None
     if a.key_fn:
@@ -247,7 +267,8 @@ def main():
             t0 = time.time()
             ids, ans, qlen, meta = build(rng, tok, filler, L, a.task, a.needles, keys=a.keys, shots=a.shots)
             T = len(ids); doc_end = T - qlen
-            rec = dict(arch=a.arch, ckpt=a.ckpt, task=a.task, keys=a.keys, needles=a.needles, L=L, doc=d, T=T)
+            rec = dict(arch=a.arch, ckpt=a.ckpt, task=a.task, keys=a.keys, needles=a.needles, L=L, doc=d, T=T,
+                       vec_layer=a.vec_layer, centre=a.centre)
             n_ev = 4 if a.task == 'hop2' else 1 if a.task in ('kv1', 'instr') else a.needles + (1 if a.task == 'kvupd' else 0)
             try:
                 rec['mem'] = mem_bytes(a.arch, cfg, L, n_ev, doc_end)
@@ -255,6 +276,7 @@ def main():
                 rec['mem'] = f'n/a: {e}'
             try:
                 vecs = R.vectors(ids)
+                keys_doc = R.last_keys          # captured now: later short re-reads overwrite R.last_keys
                 lg = R.last_logits(ids, vecs)
                 pa = cand[int(lg[cand].argmax())]
                 rec['A_state'] = int(pa == ans)
@@ -300,7 +322,9 @@ def main():
                     qsrc = meta.get('query_key') or meta['key']
                     key_ids = tok.encode(f" {qsrc}", add_special_tokens=False)
                     qk = doc_end + ids[doc_end:].index(key_ids[-1])
-                    K_all = key_fn(vecs, ids) if key_fn else vecs
+                    K_all = key_fn(vecs, ids) if key_fn else keys_doc
+                    if a.centre:
+                        K_all = K_all - K_all[:doc_end].mean(0, keepdim=True)
                     q = torch.nn.functional.normalize(K_all[qk], dim=-1)
                     docv = torch.nn.functional.normalize(K_all[:doc_end], dim=-1)
                     span_r = 24 if a.task == 'tool' else 6
