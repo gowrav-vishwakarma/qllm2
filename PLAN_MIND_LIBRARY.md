@@ -46,6 +46,14 @@ benchmark first; the distributable model once it wins that table.
 - Every claim: params + tokens + memory MB next to it; inside AND beyond the trained
   length; replicated (seed pairs) before ntfy.
 
+## Memory budget (user, 2026-10-31 15:20 IST)
+- Lead may trade memory for accuracy up to ~2x today's per-session figure (~23 MB at 1M tokens ->
+  <= ~50 MB at 1M), vs T++ ~38 GB KV at the same length. An order-of-magnitude jump (hundreds of
+  MB per session) goes back to the user for a rethink.
+- Hashed n-gram tables inside big models (e.g. Engram-style "conditional memory") are parametric
+  KNOWLEDGE organs in the same class as a4f: cite, do not claim; they do not remove a growing KV
+  cache, so they do not touch the thesis.
+
 ## Novelty rule (user, 2026-10-31 15:55 IST: "make sure we are making something novel")
 - Every pre-registration names the CLOSEST PRIOR WORK and says in one line what is different.
   If nothing is different, the unit is plumbing: no claim, no GPU beyond what the benchmark

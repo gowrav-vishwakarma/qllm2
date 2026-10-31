@@ -1,5 +1,8 @@
 # v16 handover + board (Lead = the organiser session; Mind = formerly "Qllm v13"; Library = formerly "Qllm v14"; Lead since 2026-10-31 13:20 IST)
 
+## Progress to 100 % (Lead's estimate; 100 % = thesis shown on MLB-1 vs baselines as they are + a distributable mind+library package)
+Overall ~35 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill holds BEYOND training context after one read 10 % (LAW-1 running; SR fallback) | 3 rule from words 0 % (curriculum) | 4 session library 50 % (L1 burst key, abstain) | 5 planner 20 % | 6 shared library / skill packs 15 % | 7 LM quality guard 60 % (r3c to 3B) | 8 benchmark MLB-1 70 % (GPU grid) | 9 package + release 0 %. If LAW-1 passes: ~55 %.
+
 ## Board (2026-10-31 13:25 IST)
 
 | session | DONE today | DOING now | NEXT (pre-registered) | needs |
