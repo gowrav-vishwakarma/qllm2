@@ -2083,7 +2083,7 @@ often lies beyond the 24-token row); neg max-sim 0.53-0.59 (stored 0.68-0.77).
   the learned key; abstain by the key's raw similarity. The tool cell needs a
   longer or field-aware row.
 
-**PRE-REGISTERED 2026-10-31 21:35 IST (before any number of these; approved by
+**PRE-REGISTERED 2026-10-31 21:12 IST (before any number of these; approved by
 Lead).**
 
 **L2 — two-organ fetch.** Rule, per query: if the exact organ finds an exact
