@@ -2171,7 +2171,7 @@ session = 1024 tokens of other held-out prose + " Query: K refers to".
   query sits in a different document from the row, centred by the shipped
   mean, judged on a fresh-seed pack_check with paraphrased queries added.
 
-**L3 — cross-document key head (PRE-REGISTERED 2026-10-31 21:22 IST, before
+**L3 — cross-document key head (PRE-REGISTERED 2026-10-31 21:19 IST, before
 any L3 code or number).** Same head form as L1 (attentive pooling over the
 24-token span from the block-8 state, 128-d), but trained on the PRODUCT
 condition: every pair has its stored row in one document and its question in
