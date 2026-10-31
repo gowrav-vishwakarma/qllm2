@@ -4386,3 +4386,50 @@ Reading: b2p2's own rule docs were barely cut, so its 2k reach is not understate
 Recall at 2k loses ~1 answer in 6 in every arm alike (baselines included). cu1's `srd` (stated rule
 + gap) is the most affected at 2k; cu1 runs without the flag (started before it existed), so a
 narrow R6a miss gets this caveat, and cu2 or any re-run turns the flag on.
+
+## r3c VERDICT (2026-11-01 01:00 IST): does NOT beat the 3B baselines on LM quality (+0.013 vs T++, +0.055 vs Mamba-2); leads both clearly on recall, in and beyond the training length
+
+`r3cb_main_38e3c29` (6000; 16 notebooks + echo, LR 1.2e-3, two stages, 3B tokens, 103.2M params).
+Pre-registered rule (EXPERIMENTS "r3c"): beats = holdout lower by > 0.01 AND WikiText lower;
+within ±0.01 = competitive. All three: ~102–103M params, 3B tokens, the same mix.
+
+| 3B, same data | holdout | WikiText PPL | late slope 2→3B | recall all / ≤2k / >2k | PG-19 loss 1–2k / 2–4k / 4–8k | rules / B2 / label_diag | state |
+|---|---|---|---|---|---|---|---|
+| T++ (`e072a8f`) | 3.2064 | 46.61 | −0.081 | 0.539 / 0.693 / **0.153** | 3.553 / 4.278 / **5.535** | 0.228 / 0.088 / 0.703 | KV grows |
+| Mamba-2 (`b36e3a5`) | **3.1644** | 46.91 | −0.079 | 0.613 / 0.697 / 0.403 | 3.510 / 3.502 / 3.537 | 0.202 / 0.094 / 0.580 | 13.4 MB |
+| **r3c** | 3.2191 | 49.95 | −0.080 | **0.792 / 0.844 / 0.661** | 3.552 / 3.540 / 3.572 | 0.217 / 0.059 / 0.610 | ~3.9 MB |
+| r3b (M2, LR 2e-4) | 3.3094 | 58.0 | | 0.620 / 0.676 / 0.482 | | | |
+| old PAM 3B (`1c913ef`) | 3.2728 | | | 0.667 | | | |
+
+(Late slope = holdout at 3B minus holdout at 2B, interpolated between the 1.95B / 2.10B vals.
+Recall = mean of the 63 t40 cells, the scoreboard definition (r3b recomputes to its 0.620).)
+
+**Verdict by the rule: NOT beat, and not "competitive"** (vs T++ +0.0127, just outside ±0.01; vs
+Mamba-2 +0.0547; WikiText worse than both). It closes most of the old gap: T++ − PAM went from
+−0.066 (old PAM 3B) and −0.103 (r3b) to −0.013. The late slope equals the baselines'
+(−0.080 vs −0.081 / −0.079): r3c keeps pace in the last third but does not close the gap.
+
+**Where r3c wins clearly (body alone, no library):** recall 0.792 vs 0.539 / 0.613. Beyond the
+2,048 training length it is 0.661 vs T++ 0.153 (collapse) and Mamba-2 0.403. PG-19 loss holds
+past the training length (4–8k 3.572, +0.02 over 1–2k) where T++ collapses (5.535); Mamba-2 holds
+as well and is 0.035 better in absolute terms. Rule probes tie (no rule docs in this recipe: B2
+0.059 ≈ chance for all three). label_diag is behind T++ (0.610 vs 0.703; the lab docs that fixed
+this at 600M are not in r3c).
+
+**Shown generations (A7; CPU; greedy unless stated; same prompts for b2p2):**
+- r3c `r3cb_main_38e3c29/best_model.pt`, rule: "Map rule.\n3 -> 10\n5 -> 14\n8 -> 20\n11 ->" → " 21",
+  then counts (12 -> 22, 13 -> 23, …). **Wrong** (no rule docs). b2p2: " 26", then a correct new
+  line "28 -> 60".
+- r3c, recall in plain language ("…the backup key is with Priya in room 18. [2 sentences] Question:
+  who has the backup key? Answer:") → "The backup key is the one that is used by the backup".
+  **Wrong.** b2p2: "The store has a backup key." **Wrong too.** The recall probe's 0.79 is a
+  trained key-value FORMAT; a plain-language question in a new format is not answered. That is
+  the A7 point: the 20-way / trained-format number is not yet expression.
+- r3c, free text (T 0.8, top-k 50, top-p 0.9, rep 1.2, seed 1), "The first printing presses in
+  Europe" → "were made by the Greek and Roman governments. In this case, they are called
+  "Bardae". In 1482, the Romans invaded Poland. …". Fluent, invented facts (103M scale).
+
+**Ledger:** r3c has none of the 10-31 findings (no b2 / lab / curriculum docs, no M2 shared reads).
+**Next:** no further 3B run is queued from this. The 3B "best package" run (M2 or 16nb + echo +
+b2 + lab + curriculum, with ANSWER_IN_WINDOW) is the place they meet, after cu1 says which
+curriculum parts help. GPU via Lead.

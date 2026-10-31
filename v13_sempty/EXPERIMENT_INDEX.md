@@ -35,7 +35,7 @@ shared reads) · **E1** echo memory (10-29) · **2st** two-stage schedule, stage
 | T++ 3B (`e072a8f`) | 6000 | 3B / 101.9M | T++ | – | no | 1.2e-3 | 5 % | no | no | – | – | 3B baseline: 3.2064 / 46.61 |
 | PAM 3B (`1c913ef`) | 6000 | 3B / 102.1M | 16nb | no | no | 2e-4 | 5 % | no | no | no | no | old body at 3B: 3.2728 |
 | r3b (`685de4e`) | 6000 | 3B / 102.9M | M2 | yes | apt | 2e-4 | 5 % | no | no | no | no | M2 + echo + 2st at 3B: 3.3094 (FAIL) |
-| **r3c** (`38e3c29`, running) | 6000 | 3B / ~103M | 16nb | yes | web/chat | 1.2e-3 | 5 % | **no** | **no** | **no** | **no** | does the 16nb + echo + 2st BODY close the 3B LM gap? NOT the best package |
+| **r3c** (`38e3c29`, DONE) | 6000 | 3B / 103.2M | 16nb | yes | web/chat | 1.2e-3 | 5 % | **no** | **no** | **no** | **no** | 3.2191 / 49.95: NOT beat (T++ +0.013, Mamba-2 +0.055); recall 0.792 (>2k 0.661) vs 0.539 / 0.613. NOT the best package |
 | b2p1 / b2p2 (`38e3c29`) | 6000 | 600M / 102.9M | M2 | yes | apt | 1.2e-3 | 4 % | 3 % | no | no | no | bar 3 rules (with b2t, b2m) |
 | s8: b2t2 / b2m2 / b2p3 (`38e3c29`, queued) | 6000 | 600M | as b2 pair | | | | 4 % | 3 % | no | no | no | distance confirmation |
 | lbp / lbt (`c4173be`) | 6000 | 600M | M2 / T++ | yes | apt | 1.2e-3 | 4 % | no | 3 % | no | no | label gap = format? |
