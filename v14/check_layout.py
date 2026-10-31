@@ -25,6 +25,7 @@ SKIP_FILES = frozenset({
     "l3_data.py",        # L3: cross-document pair builder (data prep)
     "shared_fetch.py",   # SL1: shared-library text fetch eval (numpy / raw torch embedder)
     "a5_text.py",        # A5: synonym-cell text eval (MiniLM CPU thread cap)
+    "a6_reread.py",      # A6: warm / cold re-read eval (frozen-mind decode loop, raw torch)
     "package_fetch.py",  # the package fetch as a harness key_fn (two organs, raw torch)
     "pack.py",           # library packs: text-first format + install tool (raw torch / numpy)
     "pack_check.py",     # cross-document check of the install tool
