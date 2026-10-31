@@ -95,3 +95,15 @@ benchmark first; the distributable model once it wins that table.
    one row per event); planner solves two-hop without a hand-coded chain.
 4. Mind + library at 600M on the full suite vs T++/Mamba-2; then 3B.
 5. Library format + provenance; release.
+
+## Later versions (ideas noted, not planned; user 2026-10-31 22:15 IST)
+- Portability today: pack = plain text + provenance (portable); keys = the mind's own block-8 state
+  (the model is its own embedder), rebuilt at install by one read pass. World knowledge from
+  pretraining stays in the weights (SL0: rows do not replace it at this size).
+- v17+ candidates: (a) a stable key contract across mind versions (train the key head so versions
+  share a key space, or ship a per-version adapter), so keys travel with packs; (b) install a skill
+  as a notebook state snapshot (~1 MB per skill) merged into a session (the parked SR-0b product
+  option); (c) a knowledge-light mind: train it to rely on fetch for facts so the weights hold
+  skill more than facts and the model can shrink while the library grows (needs its own
+  pre-registered LM-loss test; SL0 says it is not free at 103M).
+
