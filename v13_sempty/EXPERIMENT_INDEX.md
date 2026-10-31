@@ -40,11 +40,11 @@ shared reads) · **E1** echo memory (10-29) · **2st** two-stage schedule, stage
 | s8: b2t2 / b2m2 / b2p3 (`38e3c29`, queued) | 6000 | 600M | as b2 pair | | | | 4 % | 3 % | no | no | no | distance confirmation |
 | lbp / lbt (`c4173be`) | 6000 | 600M | M2 / T++ | yes | apt | 1.2e-3 | 4 % | no | 3 % | no | no | label gap = format? |
 | n9c (`e5f0b73`) | 4090 | 600M / 103.5M | M2 | yes | web (C1-ctl) | 1.2e-3 | 5 % | no | no | yes | no | N9a lookup (FAIL), recall +0.15 |
+| n9r ctl43 / n9a43 (`37fa333`, v14) | 4090 | 600M / 102.9M | M1 | yes | web | 1.2e-3 | 5 % | no | no | no / yes | no | N9a recall replication **FAIL** (+0.016 / +0.014, bars +0.08 / +0.15); ctl43 is a loss outlier (3.598). **N9a is out of every plan.** |
 
 **Direction (user, 10-31): O(1) mind + growing library.** The state is the mind; verbatim knowledge goes to a session library + a shared library; benchmark first (see EXPERIMENTS "Direction").
 
-**Not yet in any 3B run:** b2 rule docs, lab (pending), N9a (pending replication +
-untrained-word check), N12 (pending micro). A 3B "best package" run is the place
+**Not yet in any 3B run:** b2 rule docs, lab (PASS), fetch training, N12 (pending micro). N9a is out (n9r FAIL). A 3B "best package" run is the place
 they meet; r3c's result says nothing about them.
 
 ## Kept (in the current code)
@@ -58,7 +58,7 @@ they meet; r3c's result says nothing about them.
 | answer weight | CE ×100 on recall answer tokens | KEEP: recall learned only with it | "Phase 3b" | `ANSWER_W=100` |
 | LR 2e-4 | PAM LR at 3B tok | KEEP 2e-4: 1.2e-3 (picked by the 100M screen, −0.62 nats at 100M) is WORSE at 3B: holdout 3.2842 vs 3.2728, recall 0.602 vs 0.667; behind from step 6000. **100M screens cannot pick PAM's LR — screen PAM on ≥ 600M tok** | "Scoreboard result" | `LR=2e-4` (run `9982a79` was 1.2e-3) |
 | A2 / A2b | n states per head; vault (pinned state + protect gate) | still in code, not adopted (cost, no decode) | "Retention ladder" | `--n_states`, `--vault` |
-| A4 cond_mem | hashed n-gram conditional memory (Engram-style, 33.5M table) | **PENDING filter `a4f`** (4090, `d338469`, vs v14 n9r ctl43): KEEP if holdout ≤ ctl − 0.02 AND new-token loss @0-64 −0.03 (PG-19 + web); FAIL (< 0.01) → removed | "A4 cond_mem filter" | `--cond_mem` / `COND_MEM=1` |
+| A4 cond_mem | hashed n-gram conditional memory (Engram-style, 33.5M table) | **PENDING filter `a4f`** (4090, `d338469`, reference C1-ctl `c1ctlb_main_7ae6f1f`; ctl43 is a loss outlier, reported only): KEEP if holdout ≤ ref − 0.02 AND new-token loss @0-64 −0.03 (PG-19 + web); FAIL (< 0.01) → removed | "A4 cond_mem filter" | `--cond_mem` / `COND_MEM=1` |
 | E1 echo | top-of-stack succession memory (key h_{t-1}, value E[x_t]) into the head | **PASS** `e1g` (6000, `a0fab65`) 600M: holdout 3.4885 vs 3.5408 (−0.052), WikiText 71.1 vs 75.9, recall 0.401 vs 0.343, PG-19 far gain 2.4× | "E1 Echo memory" | `--echo` / `ECHO=1` |
 | M1 sparse memory | notebooks in blocks 3,7,11,15 only + echo, MLP 2352 (param-matched, 1.8× faster) | **KEEP** `m1_m1echo` (`ccbf028`) 600M: holdout 3.4906 (echo 3.4885), WikiText 69.4 (71.1), recall **0.615** (0.401), 1.8× faster | "M1 sparse memory" | `PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2352` |
 | M2 shared reads | M1 + every notebook-less block reads the nearest notebook below (own query/gate) | **KEEP — best LM** (`ed326a1`, 600M): holdout 3.4697 vs M1 3.4906 (−0.021, lead held at every milestone), WikiText 68.84; recall 0.522 vs 0.615 (lower), 1.18× slower than M1; learning probe 0.185 | "M2 shared reads" | `SHARE_READS=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2128` |

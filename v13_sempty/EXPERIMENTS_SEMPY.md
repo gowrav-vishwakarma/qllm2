@@ -3710,6 +3710,16 @@ rules 100; tok/s.
    and the claim must state how much of any lead it explains.
 6. One seed. A 600M pass gets judged again at 3B, not claimed at 600M.
 
+**a4f amendment (2026-10-31 14:15 IST, before its result lands ~16:15):** the paired
+control `ctl43` is a loss outlier (v14, n9r): stage A 3.9456 vs a4f 3.8994, n9a43 3.9009
+(same seed and box), C1-ctl 3.9231; stage B 3.598 vs n9a43 3.459, C1-ctl 3.4743. The
+"4090 box effect" I assumed does not exist (n9c 3.4725, n9a43 3.459 on the 4090). So the
+**reference for every a4f rule is C1-ctl** (`c1ctlb_main_7ae6f1f`, holdout 3.4743, seed 42;
+checkpoint on d_drive, attr3b-able locally); `ctl43` is reported, not used. Thresholds
+unchanged (holdout ≤ ref − 0.02; new-token loss @0–64 ≤ ref − 0.03 on PG-19 and web). The
+chain's attr3b step scores ctl43; C1-ctl is scored right after with the same frozen text.
+Seed differs (43 vs 42); seed noise on holdout at this recipe is ~0.003 (b2p1 / b2p2).
+
 ## Label-format pair `lb` result (2026-10-31 12:50 IST): PASS — the label gap was a data-format gap; PAM beats T++ on labels on the same data
 
 `lbp_main_c4173be` (PAM M2 + echo + shared reads, 102.9M) vs `lbt_main_c4173be`

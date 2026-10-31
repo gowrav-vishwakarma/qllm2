@@ -18,6 +18,13 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 14:15 IST: v14 comments folded into MLB-1 (v0.1): row 272 B, R4 ≤ 1/100, 1M reported
+  not gated, fairness arms train their own key head, fetch metrics + negative cells, instruction
+  persistence = B2 rule stated once in words (mind-only and library variants). n9r FAIL (N9a out
+  of every plan; v14 ac3a76e). a4f's reference changed to C1-ctl BEFORE its result: ctl43 is a loss
+  outlier (3.598; stage A already +0.045), and there is no 4090 box effect. 4090 after a4f: free
+  for v15's queued pair (v14 cancelled n12m; n9th stops after seed 132).
+
 * **2026-10-31 13:20 IST: MLB-1 benchmark draft v0 written** (`v13_sempty/BENCHMARK_MIND_LIBRARY.md`),
   sent to v14 and the Communicator for comments; fixed as v1 before any package run. Ownership: v14 =
   the fetch (gate, trained key at the salient token, re-read) + the library row format (one row per
