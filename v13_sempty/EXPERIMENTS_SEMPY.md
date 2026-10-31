@@ -3827,6 +3827,8 @@ Full note: SCRATCHPAD 15:00. The useful part:
 
 ## SL0: shared library as knowledge, zero training (pre-registration, 2026-10-31 15:20 IST)
 
+**Closest prior work (novelty rule, added 16:40 IST):** kNN-LM (Khandelwal et al. 2020); RETRO for chunks. **What differs:** nothing in the mechanism. SL0 is kNN-LM applied to a PAM mind. It is reported as the knowledge organ's cost table (rows, MB, install cost, loss by token class) and never claimed as an invention.
+
 Question: does a shared library keyed by the mind's own state close the 3B
 new-token gap to Mamba-2 (+0.091 PG-19 / +0.112 web; 52–55 % on new tokens)?
 kNN-LM style (Khandelwal et al. 2020, a known part): datastore = (PAM's

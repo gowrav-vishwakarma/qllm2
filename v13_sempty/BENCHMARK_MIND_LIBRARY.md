@@ -1,4 +1,4 @@
-# Mind + Library benchmark (MLB-1) — DRAFT v0.2 (2026-10-31; v14 comments 14:10, organiser row format + user comparison rule 14:30 IST)
+# Mind + Library benchmark (MLB-1) — DRAFT v0.3 (2026-10-31; v14 comments 14:10, organiser row format + user comparison rule 14:30, novelty rule + skill library 16:40 IST)
 
 Status: **draft, not fixed.** Freeze condition for v1: the harness implements every
 §2 cell and is validated on CPU at 32k (organiser), then v1 is committed as "MLB-1 v1
@@ -72,6 +72,31 @@ natural keys (16 task × key cells).
 | instruction persistence | the B2 builders (`v14/rules_ood`, held-out shift / affine values) with the rule stated ONCE in words at the start ("Rule: shift each letter by 3"), then L tokens of filler, then `x ->` queries. Two variants: **mind-only** (the rule must sit in state) and **library** (the rule is one row; the query "7 ->" shares no words with it, so the exact organ cannot fetch it and only a learned key can) | **new** source + probe; format-trained (v14 §7.3) |
 | label binding at distance | label_category spread to L | `lcl_t300` |
 | general LM | holdout loss; loss by token class (copy / seen / new) with `v13_sempty/tmp/attr3b.py`; PG-19 far gain | existing |
+| **skill-pack persistence** (flagship) | a pack of demonstrations (B2 formats, held-out values; 8 shots, packed together) is fetched ONCE at t0; queries of the same rule follow at t0 + 2k / 8k / 32k / 128k / 1M of unrelated text, with the pack gone. PAM: the pack read once into the state, nothing re-fetched. T++: must re-fetch the pack into its window for each query (its KV cost counted per query) or hold the whole stream. Mamba-2: read once, like PAM | **new** cell (organiser's flagship); probe seeds ≥ 7000 |
+| **replay integration** | a fetched span replayed through the state must combine with what the state already holds: two-hop where hop 1 sits in the state (read earlier) and hop 2 arrives as a replayed span; and a rule held in state applied to an item that arrives only in a replayed span | **new** cell |
+
+**Prediction for skill-pack persistence (written before any number, from our own
+measurements):** the trained mind's long memory is the echo memory, whose heads keep
+filler with half-lives of 660–3100 tokens (gate diagnostic), and spread affine `_new`
+already falls to 0.44–0.61 at 8k. So the CURRENT body is expected to lose the skill
+somewhere between 8k and 32k. Winning the flagship cell will likely need (a) rule docs
+with long gaps at long training lengths (cheap for an O(1) mind: per-token cost does not
+grow with the sequence, a transformer's does) or (b) a structural skill register (a
+slot written once at induction, no decay; a new mechanism, v14's lane). The cell is in
+the spec so that this is measured, not assumed.
+
+## 3b. Related work and what differs (novelty rule, user 2026-10-31)
+
+| closest prior work | what it does | what differs here |
+|---|---|---|
+| kNN-LM (Khandelwal et al. 2020), RETRO (Borgeaud et al. 2022) | retrieval over a corpus datastore (hidden state → next token; chunks) | nothing in the mechanism for the knowledge library: SL0 is kNN-LM on a PAM mind, reported as the knowledge organ's cost table, never as an invention |
+| EM-LLM (Fountas et al. 2024) | a transformer's KV split into events by Bayesian surprise, recalled by similarity + temporal contiguity, training-free | rows are written by a recurrent O(1) mind keyed by its own state, and read back as raw text through the state; no KV cache is kept |
+| Titans (Behrouz et al. 2025) | a neural memory learned at test time (surprise = gradient, momentum, decay) beside attention | our state is a fixed delta/phase memory with no attention core; the growing library is non-parametric; the claim is rule carrying across distance |
+| State Soup (Pióro et al. 2024) | recurrent states (Mamba-2) stored, retrieved and mixed as task vectors | skill packs are TEXT (portable across mind versions), induced once, then carried by the mind across long unrelated text after the demonstrations are gone; persistence across distance is measured, not assumed; Mamba-2 loses the rule at ~110-token gaps in our data |
+| Memorizing Transformers (Wu et al. 2022), Landmark attention | kNN over past KV inside attention | no attention and no KV at any length |
+
+What is ours and is protected: the rule-carrying mind (B2 spread, s8) and the skill
+library built on it (skill-pack persistence); unseen rule FAMILIES are the frontier.
 
 ## 4. Memory accounting (every row)
 
