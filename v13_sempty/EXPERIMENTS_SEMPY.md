@@ -3965,3 +3965,47 @@ PAM state 1.15 MB (measured, M2 body). The T++ last-position check passed at rel
   register as the other route. Re-fetch is cheap for both bodies (1.15 MB state vs
   1.23 MB KV per query), so the skill library's value at > 2k is "re-read the pack",
   not "carry it".
+
+## LAW-1: does an O(1) mind's one-read skill reach track its training length? (pre-registration, 2026-10-31 14:10 IST)
+
+**Hypothesis (primary, Lead's framing): the law.** After one read, PAM's reach for an
+induced rule is set by the length it was trained at (b2p2, trained at 2048: skill-pack
+reach ~2k, gone by 8k). If the law holds, "holds beyond the training context" becomes
+"reach is set by the training length, and extending it is cheap for an O(1) mind" (per-
+token cost does not grow with context; a transformer's does). If reach stays ~2k at
+every training length, it is a ceiling of this body and Library's skill register is the
+only route.
+
+**Closest prior work (novelty rule):** long-context continued pretraining (e.g.
+Fu et al. 2024, "Data engineering for scaling language models to 128K context") and
+length-extrapolation training of SSMs / linear RNNs. **What differs:** the measured
+quantity is one-read RULE reach (an induced skill carried in O(1) state across unrelated
+text), not recall or perplexity; the claim, if it holds, is a law for training an O(1)
+mind. The recipe itself (train longer, with long-range docs) is known.
+
+**Data: new source `b2gap`** (v7/data.py, to be committed with tests before any run):
+B2 base tasks only (trained values; held-out `_new` values never appear; example seeds
+≥ 10^7, probe seeds 8000–8099), in the probe's layout: header + 8 demonstrations, then 1–3
+queries each after a gap of training-split web text (fineweb, a separate iterator) of
+G ~ U(0, G_max) tokens, answers marked (answer weight 100). G_max is set per arm.
+
+**Arms** (fine-tunes from `b2p2_main_38e3c29`, 150M tokens each, LR 3e-4 with warmup 100,
+cosine; stage-B mix with `b2` replaced by `b2gap` at 3 %; 32,768 tokens per step in every arm):
+- `lg2`: SEQ 2048 × BATCH 16, G_max 1,800 (control: same data and steps at the old length);
+- `lg8`: SEQ 8192 × BATCH 4, G_max 7,500;
+- `lg32`: SEQ 32768 × BATCH 1, G_max 31,000.
+
+**Measure:** the skill-pack cell as fixed (`scripts/run_skillpack_probe.py`, seeds
+8000–8099, 100 docs) at L = 0 / 2k / 4k / 8k / 32k (+ 128k for lg32). Reach(L) = mean
+A_state of affine_map_new and shift_wide_new. Today b2p2: 1.00 / 0.86 / – / 0.10 / 0.04.
+
+**Rules (fixed now):**
+1. *Law:* reach_lg8(8k) ≥ 0.75 AND reach_lg32(32k) ≥ 0.75.
+2. *Not just more training:* reach_lg2(8k) ≤ reach_b2p2(8k) + 0.15 (the control does not
+   extend the reach).
+3. *Guard:* holdout ≤ b2p2 + 0.02 (3.500) for every arm; spread B2 `_new` at L = 0 ≥ 0.90.
+4. Reported: reach_lg8 at 32k (4× beyond its training length), lg32 at 128k; T++ and
+   Mamba-2 at the same L as they are (b2t, b2m, b2t2, b2m2); tokens/s per arm.
+5. One seed. If rule 1 holds, a second seed and the 3B question follow before any claim.
+6. If rule 1 fails while rule 2 holds: reach is a ceiling of the body; record it, and
+   the register (Library, SR) is the route.
