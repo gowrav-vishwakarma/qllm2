@@ -25,7 +25,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-DIM, KEY_DIM, SPAN, EVT_MAX = 384, 128, 24, 128
+DIM, KEY_DIM, SPAN, EVT_MAX = 588, 128, 24, 128   # DIM = the C1-ctl mind width
 TAU = 10.0
 
 
