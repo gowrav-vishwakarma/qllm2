@@ -18,6 +18,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 08:45 IST: 3B gap attribution done** (EXPERIMENTS "3B LM gap attribution"). vs
+  T++: 53-58 % copy → a binding fix closes ~half. vs Mamba-2: 52-55 % NEW tokens, already +0.05-
+  0.09 at positions 0-8 → mostly GENERAL modelling; memory closes only ~0.02-0.03 of ~0.10.
+  This corrects view 1 below: the "local" part is bigger than memory, but the gap also grows
+  with context for every class. Next: score r3c's ckpt at its futility point (step 39062,
+  ~15:00-16:00 IST) with `v13_sempty/tmp/attr3b.py`; Mamba-2 is scored on the 6000 (local venv
+  has no `mamba_ssm`; the frozen text + `loss_mamba2.npz` live in `~/attr` on the 6000). The
+  best package needs a body-level gain too: candidates for a ≥ 1.5B test are width 768
+  (bar-2 tolerance allows a few more params) and a larger state, picked after r3c.
+
 * **2026-10-31 08:30 IST: step back (user: "play on strength, mitigate gaps, scale").**
   Run ingredients ledger added to EXPERIMENT_INDEX (user rule): r3c has NO b2 / lab / N9a,
   so it tests the 16nb + echo + 2st BODY at 3B, not the best package.
