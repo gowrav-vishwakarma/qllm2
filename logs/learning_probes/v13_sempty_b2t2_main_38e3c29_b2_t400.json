@@ -1,0 +1,205 @@
+{
+  "schema_version": "learning-probe-b2/v1",
+  "created_at": "2026-10-31T09:02:53.137355+00:00",
+  "model_type": "v13_sempty",
+  "model_identity": "checkpoints_v13_sempty/b2t2_main_38e3c29/best_model.pt",
+  "device": "cuda",
+  "platform": "Linux-7.0.0-1010-gcp-x86_64-with-glibc2.43",
+  "parameter_count": 101916864,
+  "protocol": {
+    "suite": "b2",
+    "spread": [],
+    "tasks": [
+      "shift_wide",
+      "step_wide",
+      "affine_map",
+      "shift_wide_new",
+      "step_wide_new",
+      "affine_map_new"
+    ],
+    "shots": [
+      2,
+      4,
+      8
+    ],
+    "seeds": [
+      5000,
+      5399
+    ],
+    "candidates": 8,
+    "chance": 0.125
+  },
+  "per_task_accuracy": {
+    "shift_wide": 1.0,
+    "step_wide": 1.0,
+    "affine_map": 0.9975,
+    "shift_wide_new": 0.5208333333333334,
+    "step_wide_new": 1.0,
+    "affine_map_new": 0.975
+  },
+  "mean_accuracy": 0.9155555555555556,
+  "aggregates": [
+    {
+      "task": "affine_map",
+      "n_shots": 2,
+      "n": 400,
+      "accuracy": 0.9925,
+      "mean_target_margin": 8.869260177612304,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "affine_map",
+      "n_shots": 4,
+      "n": 400,
+      "accuracy": 1.0,
+      "mean_target_margin": 9.745796067714691,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "affine_map",
+      "n_shots": 8,
+      "n": 400,
+      "accuracy": 1.0,
+      "mean_target_margin": 9.548640133142472,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "affine_map_new",
+      "n_shots": 2,
+      "n": 400,
+      "accuracy": 0.955,
+      "mean_target_margin": 4.944516965597868,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "affine_map_new",
+      "n_shots": 4,
+      "n": 400,
+      "accuracy": 0.985,
+      "mean_target_margin": 5.419189441204071,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "affine_map_new",
+      "n_shots": 8,
+      "n": 400,
+      "accuracy": 0.985,
+      "mean_target_margin": 5.601466684341431,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "shift_wide",
+      "n_shots": 2,
+      "n": 400,
+      "accuracy": 1.0,
+      "mean_target_margin": 14.08890843153,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "shift_wide",
+      "n_shots": 4,
+      "n": 400,
+      "accuracy": 1.0,
+      "mean_target_margin": 15.273529008626937,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "shift_wide",
+      "n_shots": 8,
+      "n": 400,
+      "accuracy": 1.0,
+      "mean_target_margin": 15.240828186273575,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "shift_wide_new",
+      "n_shots": 2,
+      "n": 400,
+      "accuracy": 0.38,
+      "mean_target_margin": -1.1592119026184082,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "shift_wide_new",
+      "n_shots": 4,
+      "n": 400,
+      "accuracy": 0.5775,
+      "mean_target_margin": 0.13834102153778077,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "shift_wide_new",
+      "n_shots": 8,
+      "n": 400,
+      "accuracy": 0.605,
+      "mean_target_margin": 0.4587539529800415,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "step_wide",
+      "n_shots": 2,
+      "n": 400,
+      "accuracy": 1.0,
+      "mean_target_margin": 18.61218508400023,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "step_wide",
+      "n_shots": 4,
+      "n": 400,
+      "accuracy": 1.0,
+      "mean_target_margin": 18.83615845799446,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "step_wide",
+      "n_shots": 8,
+      "n": 400,
+      "accuracy": 1.0,
+      "mean_target_margin": 16.560872445106508,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "step_wide_new",
+      "n_shots": 2,
+      "n": 400,
+      "accuracy": 1.0,
+      "mean_target_margin": 18.2090759550035,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "step_wide_new",
+      "n_shots": 4,
+      "n": 400,
+      "accuracy": 1.0,
+      "mean_target_margin": 17.199605315327645,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "step_wide_new",
+      "n_shots": 8,
+      "n": 400,
+      "accuracy": 1.0,
+      "mean_target_margin": 14.932178266048432,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    }
+  ]
+}

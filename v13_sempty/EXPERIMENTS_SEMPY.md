@@ -4263,3 +4263,34 @@ If cu1n9s passes its two-hop rule, one more arm runs before ANY claim about sali
 Then N9s is credited only with what cu1n9s adds over cu1n9a (same +0.15 margin on two-hop);
 cu1n9a vs cu1 shows what the lags plus a fresh stage A do. If cu1n9s fails its rule, cu1n9a
 does not run. GPU order for cu1n9a goes through Lead.
+
+## s8 VERDICT (2026-10-31 22:05 IST): distance confirmation MET, replicated on fresh seeds and a fresh probe sample
+
+Pre-registered in "B2 Mamba-2 arm b2m", amendment 2. Probe: `--suite b2 --tasks
+shift_wide_new,affine_map_new --shots 8 --trials 400 --seed 7000 --spread 0,2048,4096` (probe seeds
+7000–7399, never used before); D = mean of the four cells at 2048 and 4096. All runs 600M tokens on
+code `38e3c29`.
+
+| run | params | seed | holdout | shift @ 0 / 2k / 4k | affine @ 0 / 2k / 4k | **D** |
+|---|---|---|---|---|---|---|
+| PAM b2p1 | 102.9M | 42 | 3.4777 | 1.00 / 0.595 / 0.278 | 1.00 / 0.935 / 0.772 | **0.645** |
+| PAM b2p2 | 102.9M | 43 | 3.4800 | 1.00 / 0.583 / 0.300 | 1.00 / 0.970 / 0.912 | **0.691** |
+| **PAM b2p3** (new) | 102.9M | 44 | 3.4775 | 1.00 / 0.775 / 0.438 | 1.00 / 0.945 / 0.807 | **0.741** |
+| T++ b2t | 101.9M | 42 | 3.5572 | 0.282 / 0.00 / 0.003 | 0.97 / 0.033 / 0.502 | 0.134 |
+| **T++ b2t2** (new) | 101.9M | 43 | 3.5547 | 0.585 / 0.00 / 0.00 | 0.988 / 0.072 / 0.463 | 0.134 |
+| Mamba-2 b2m | 102.6M | 42 | 3.4754 | 0.762 / 0.00 / 0.00 | 1.00 / 0.302 / 0.160 | 0.116 |
+| **Mamba-2 b2m2** (new) | 102.6M | 43 | 3.4768 | 0.033 / 0.00 / 0.00 | 1.00 / 0.275 / 0.115 | 0.098 |
+
+**Primary: D(b2p3) − max(D(b2t2), D(b2m2)) = +0.607** (bar +0.10): MET. **All pairs: min PAM 0.645 −
+max baseline 0.134 = +0.511** (bar +0.10): MET. → **Bar 3 is met in its distance form**, as
+pre-registered: in-context inference of held-out rule values from examples spread across 2–4k
+tokens of unrelated text, holding past the trained length (2048) in total context, where T++ and
+Mamba-2 do not. Three PAM seeds, two seeds of each baseline, a never-used probe sample. Holdout
+is at parity with Mamba-2 (3.4775 vs 3.4768) and 0.08 better than T++.
+
+**Wording that travels with the claim (the skill-pack correction, same day):** this is the SPREAD
+cell. The examples are spread by filler, so the gaps between them are ~250–500 tokens and the last
+example sits L/8 before the query. One-read reach (all examples together, then one long gap) is
+~2k at this scale, a stated limit. The claim is "rules inferred from spread-out examples survive
+unrelated text, past the trained length in total", not "one read carries a rule 4k".
+Caveat (unchanged): trained rule FORMATS with held-out VALUES, not unseen rule families.

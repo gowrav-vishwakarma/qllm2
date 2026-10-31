@@ -9,6 +9,13 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **Mind: bar 3 met in its DISTANCE form, replicated (s8; ntfy sent 22:06 IST).** On a never-used
+  probe sample (seed 7000), D (held-out rule values, examples spread across 2-4k tokens of unrelated
+  text) = PAM 0.645 / 0.691 / 0.741 (3 seeds) vs T++ 0.134 / 0.134 and Mamba-2 0.116 / 0.098 (2 seeds
+  each); primary +0.607, all pairs +0.511 (bar +0.10). ~102M params, 600M tokens each, code
+  `38e3c29`; holdout at parity with Mamba-2. Wording: spread cell, gaps ~250-500 tokens; one-read
+  reach is ~2k (the stated limit); trained formats with held-out values.
+
 - **Mind: long-gap training at 32k SHRANK the one-read reach (LAW-1 first arm).** lg32 (b2p2 fine-tuned
   150M tokens at SEQ 32768, rule docs with gaps ~U(0, 31k)): reach at 2k / 8k / 32k = 0.31 / 0.06 / 0.04 vs
   b2p2's 0.86 / 0.10 / 0.04; margin at L = 0 +18 → +10; guards met. Hypothesis (untested): vanishing
