@@ -2171,6 +2171,28 @@ session = 1024 tokens of other held-out prose + " Query: K refers to".
   query sits in a different document from the row, centred by the shipped
   mean, judged on a fresh-seed pack_check with paraphrased queries added.
 
+**L3 — cross-document key head (PRE-REGISTERED 2026-10-31 21:22 IST, before
+any L3 code or number).** Same head form as L1 (attentive pooling over the
+24-token span from the block-8 state, 128-d), but trained on the PRODUCT
+condition: every pair has its stored row in one document and its question in
+another, and both sides are centred by the shipped reference mean.
+- **Training pairs (training pool only):** (a) synthetic: needles with my 8
+  templates inside pool prose (doc A); the question in a separate session
+  (1024 tokens of other pool prose + a query template); (b) natural: a rare
+  word occurring in two DIFFERENT pool documents; the row around its mention
+  in doc A, the question at its mention in doc B. Paraphrased keys are NOT in
+  training.
+- **Evaluation (`v14/pack_check.py`, fresh seed 19000, 200 + 200 pack, session
+  1024):** exact queries and paraphrased queries (Title / UPPER / plural / "the
+  K", the harness's para forms).
+- **Bars:** cross-document key top-1 ≥ 0.85 on exact queries for both key types
+  (current head 0.55 / 0.54); on paraphrased queries key top-1 ≥ 0.70 and ≥
+  organ + 0.30; in-document harness kv natural 32k (seed 14000) ≥ 0.90 (no
+  regression on the L1 result 0.94).
+- **Thesis clause / prior work:** separate from knowledge; dense retrieval
+  trained on query-document pairs (DPR class): plumbing for the mechanism. What
+  is ours is that the encoder is the mind's own state.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
