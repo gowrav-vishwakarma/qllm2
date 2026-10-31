@@ -22,7 +22,10 @@ Keep all three current as things happen (user rule, 2026-10-29).
   waits for tmux `n9r` to end). Score all 5 seeds together.
 * **4090 since 08:51 IST:** v15 left (CPU only, asks before GPU jobs), so
   n9th seeds 132-135 (tmux `n9th4090`, ~4 h) run BESIDE n9r's last stage
-  (n9a43 stage B, 08:45 -> ~11:45, then probes); then **n12m** (N12 micro screen, tmux `n12m`, worktree
+  (n9a43 stage B, 08:45 -> ~11:45, then probes). Agreed with v13: its
+  **a4f** (A4 cond_mem 600M filter, paired with OUR n9r ctl43; ~10 GB,
+  tmux `a4f`) starts when tmux `n9r` ends (~12:00-12:15) and reads ctl43's
+  checkpoint / probes read-only: keep the n9r checkpoints. Then **n12m** (N12 micro screen, tmux `n12m`, worktree
   `../qllm_v14n12m` at `7156302`, driver `~/n12m_4090.sh`, log
   `logs/v14_n12m_driver_7156302.log`; waits for `n9r` then `n9th4090`).
   Dev edits go in `../qllm_v14dev` (detached), never the shared checkout.
