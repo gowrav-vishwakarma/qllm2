@@ -1,0 +1,400 @@
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 0, "absent": false, "correct": 1, "abstained": 0, "sec": 5.347}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 0, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 1, "absent": true, "correct": 0, "abstained": 0, "sec": 1.797}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 1, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 2, "absent": false, "correct": 1, "abstained": 0, "sec": 2.351}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 2, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 3, "absent": true, "correct": 0, "abstained": 0, "sec": 1.774}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 3, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 4, "absent": false, "correct": 1, "abstained": 0, "sec": 0.058}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 4, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 5, "absent": true, "correct": 0, "abstained": 0, "sec": 0.829}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 5, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 6, "absent": false, "correct": 1, "abstained": 0, "sec": 2.306}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 6, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 7, "absent": true, "correct": 0, "abstained": 0, "sec": 0.965}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 7, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 8, "absent": false, "correct": 1, "abstained": 0, "sec": 2.193}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 8, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 9, "absent": true, "correct": 0, "abstained": 0, "sec": 1.944}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 9, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 10, "absent": false, "correct": 1, "abstained": 0, "sec": 0.041}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 10, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 11, "absent": true, "correct": 0, "abstained": 0, "sec": 0.039}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 11, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 12, "absent": false, "correct": 1, "abstained": 0, "sec": 0.042}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 12, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 13, "absent": true, "correct": 0, "abstained": 0, "sec": 0.039}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 13, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 14, "absent": false, "correct": 1, "abstained": 0, "sec": 0.905}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 14, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 15, "absent": true, "correct": 0, "abstained": 0, "sec": 0.281}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 15, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 16, "absent": false, "correct": 1, "abstained": 0, "sec": 1.204}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 16, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 17, "absent": true, "correct": 0, "abstained": 0, "sec": 1.154}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 17, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 18, "absent": false, "correct": 1, "abstained": 0, "sec": 2.181}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 18, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 19, "absent": true, "correct": 0, "abstained": 0, "sec": 0.043}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 19, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 20, "absent": false, "correct": 1, "abstained": 0, "sec": 0.343}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 20, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 21, "absent": true, "correct": 0, "abstained": 0, "sec": 1.657}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 21, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 22, "absent": false, "correct": 1, "abstained": 0, "sec": 1.089}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 22, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 23, "absent": true, "correct": 0, "abstained": 0, "sec": 2.162}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 23, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 24, "absent": false, "correct": 1, "abstained": 0, "sec": 0.977}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 24, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 25, "absent": true, "correct": 0, "abstained": 0, "sec": 0.247}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 25, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 26, "absent": false, "correct": 1, "abstained": 0, "sec": 0.463}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 26, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 27, "absent": true, "correct": 0, "abstained": 0, "sec": 1.786}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 27, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 28, "absent": false, "correct": 1, "abstained": 0, "sec": 1.071}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 28, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 29, "absent": true, "correct": 0, "abstained": 0, "sec": 0.04}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 29, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 30, "absent": false, "correct": 1, "abstained": 0, "sec": 1.799}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 30, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 31, "absent": true, "correct": 0, "abstained": 0, "sec": 0.04}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 31, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 32, "absent": false, "correct": 1, "abstained": 0, "sec": 0.262}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 32, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 33, "absent": true, "correct": 0, "abstained": 0, "sec": 0.425}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 33, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 34, "absent": false, "correct": 1, "abstained": 0, "sec": 0.319}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 34, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 35, "absent": true, "correct": 0, "abstained": 0, "sec": 0.366}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 35, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 36, "absent": false, "correct": 1, "abstained": 0, "sec": 1.508}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 36, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 37, "absent": true, "correct": 0, "abstained": 0, "sec": 0.663}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 37, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 38, "absent": false, "correct": 1, "abstained": 0, "sec": 0.049}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 38, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 39, "absent": true, "correct": 0, "abstained": 0, "sec": 0.489}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 39, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 40, "absent": false, "correct": 1, "abstained": 0, "sec": 0.18}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 40, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 41, "absent": true, "correct": 0, "abstained": 0, "sec": 0.187}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 41, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 42, "absent": false, "correct": 1, "abstained": 0, "sec": 0.356}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 42, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 43, "absent": true, "correct": 0, "abstained": 0, "sec": 0.355}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 43, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 44, "absent": false, "correct": 1, "abstained": 0, "sec": 0.043}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 44, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 45, "absent": true, "correct": 0, "abstained": 0, "sec": 0.056}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 45, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 46, "absent": false, "correct": 1, "abstained": 0, "sec": 0.605}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 46, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 47, "absent": true, "correct": 0, "abstained": 0, "sec": 0.521}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 47, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 48, "absent": false, "correct": 1, "abstained": 0, "sec": 0.213}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 48, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 49, "absent": true, "correct": 0, "abstained": 0, "sec": 0.173}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 49, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 50, "absent": false, "correct": 1, "abstained": 0, "sec": 1.198}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 50, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 51, "absent": true, "correct": 0, "abstained": 0, "sec": 0.201}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 51, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 52, "absent": false, "correct": 1, "abstained": 0, "sec": 0.187}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 52, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 53, "absent": true, "correct": 0, "abstained": 0, "sec": 0.382}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 53, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 54, "absent": false, "correct": 1, "abstained": 0, "sec": 0.563}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 54, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 55, "absent": true, "correct": 0, "abstained": 0, "sec": 1.192}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 55, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 56, "absent": false, "correct": 1, "abstained": 0, "sec": 1.208}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 56, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 57, "absent": true, "correct": 0, "abstained": 0, "sec": 2.237}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 57, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 58, "absent": false, "correct": 1, "abstained": 0, "sec": 1.159}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 58, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 59, "absent": true, "correct": 0, "abstained": 0, "sec": 1.57}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 59, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 60, "absent": false, "correct": 1, "abstained": 0, "sec": 1.703}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 60, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 61, "absent": true, "correct": 0, "abstained": 0, "sec": 0.667}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 61, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 62, "absent": false, "correct": 1, "abstained": 0, "sec": 1.379}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 62, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 63, "absent": true, "correct": 0, "abstained": 0, "sec": 0.839}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 63, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 64, "absent": false, "correct": 1, "abstained": 0, "sec": 0.178}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 64, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 65, "absent": true, "correct": 0, "abstained": 0, "sec": 2.207}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 65, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 66, "absent": false, "correct": 1, "abstained": 0, "sec": 1.124}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 66, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 67, "absent": true, "correct": 0, "abstained": 0, "sec": 2.203}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 67, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 68, "absent": false, "correct": 1, "abstained": 0, "sec": 0.664}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 68, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 69, "absent": true, "correct": 0, "abstained": 0, "sec": 0.958}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 69, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 70, "absent": false, "correct": 1, "abstained": 0, "sec": 0.152}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 70, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 71, "absent": true, "correct": 0, "abstained": 0, "sec": 0.747}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 71, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 72, "absent": false, "correct": 1, "abstained": 0, "sec": 2.268}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 72, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 73, "absent": true, "correct": 0, "abstained": 0, "sec": 0.674}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 73, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 74, "absent": false, "correct": 1, "abstained": 0, "sec": 0.225}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 74, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 75, "absent": true, "correct": 0, "abstained": 0, "sec": 1.466}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 75, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 76, "absent": false, "correct": 1, "abstained": 0, "sec": 0.39}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 76, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 77, "absent": true, "correct": 0, "abstained": 0, "sec": 0.16}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 77, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 78, "absent": false, "correct": 1, "abstained": 0, "sec": 0.7}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 78, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 79, "absent": true, "correct": 0, "abstained": 0, "sec": 1.994}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 79, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 80, "absent": false, "correct": 1, "abstained": 0, "sec": 0.121}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 80, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 81, "absent": true, "correct": 0, "abstained": 0, "sec": 0.602}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 81, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 82, "absent": false, "correct": 1, "abstained": 0, "sec": 0.257}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 82, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 83, "absent": true, "correct": 0, "abstained": 0, "sec": 2.213}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 83, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 84, "absent": false, "correct": 0, "abstained": 0, "sec": 0.497}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 84, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 85, "absent": true, "correct": 0, "abstained": 0, "sec": 1.308}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 85, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 86, "absent": false, "correct": 1, "abstained": 0, "sec": 1.826}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 86, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 87, "absent": true, "correct": 0, "abstained": 0, "sec": 1.563}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 87, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 88, "absent": false, "correct": 1, "abstained": 0, "sec": 0.472}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 88, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 89, "absent": true, "correct": 0, "abstained": 0, "sec": 0.077}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 89, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 90, "absent": false, "correct": 1, "abstained": 0, "sec": 0.81}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 90, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 91, "absent": true, "correct": 0, "abstained": 0, "sec": 0.917}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 91, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 92, "absent": false, "correct": 1, "abstained": 0, "sec": 1.764}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 92, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 93, "absent": true, "correct": 0, "abstained": 0, "sec": 2.429}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 93, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 94, "absent": false, "correct": 1, "abstained": 0, "sec": 2.242}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 94, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 95, "absent": true, "correct": 0, "abstained": 0, "sec": 1.999}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 95, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 96, "absent": false, "correct": 1, "abstained": 0, "sec": 0.85}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 96, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 97, "absent": true, "correct": 0, "abstained": 0, "sec": 1.065}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 97, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 98, "absent": false, "correct": 1, "abstained": 0, "sec": 2.276}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 98, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 99, "absent": true, "correct": 0, "abstained": 0, "sec": 2.11}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 99, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 100, "absent": false, "correct": 1, "abstained": 0, "sec": 2.301}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 100, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 101, "absent": true, "correct": 0, "abstained": 0, "sec": 0.465}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 101, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 102, "absent": false, "correct": 1, "abstained": 0, "sec": 2.367}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 102, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 103, "absent": true, "correct": 0, "abstained": 0, "sec": 1.827}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 103, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 104, "absent": false, "correct": 1, "abstained": 0, "sec": 2.299}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 104, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 105, "absent": true, "correct": 0, "abstained": 0, "sec": 2.193}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 105, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 106, "absent": false, "correct": 1, "abstained": 0, "sec": 1.837}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 106, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 107, "absent": true, "correct": 0, "abstained": 0, "sec": 2.407}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 107, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 108, "absent": false, "correct": 1, "abstained": 0, "sec": 1.469}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 108, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 109, "absent": true, "correct": 0, "abstained": 0, "sec": 0.179}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 109, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 110, "absent": false, "correct": 1, "abstained": 0, "sec": 0.416}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 110, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 111, "absent": true, "correct": 0, "abstained": 0, "sec": 2.588}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 111, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 112, "absent": false, "correct": 1, "abstained": 0, "sec": 1.115}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 112, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 113, "absent": true, "correct": 0, "abstained": 0, "sec": 2.432}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 113, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 114, "absent": false, "correct": 1, "abstained": 0, "sec": 2.44}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 114, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 115, "absent": true, "correct": 0, "abstained": 0, "sec": 2.659}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 115, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 116, "absent": false, "correct": 1, "abstained": 0, "sec": 2.781}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 116, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 117, "absent": true, "correct": 0, "abstained": 0, "sec": 1.953}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 117, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 118, "absent": false, "correct": 1, "abstained": 0, "sec": 2.534}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 118, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 119, "absent": true, "correct": 0, "abstained": 0, "sec": 3.158}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 119, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 120, "absent": false, "correct": 1, "abstained": 0, "sec": 2.343}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 120, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 121, "absent": true, "correct": 0, "abstained": 0, "sec": 2.971}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 121, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 122, "absent": false, "correct": 1, "abstained": 0, "sec": 2.805}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 122, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 123, "absent": true, "correct": 0, "abstained": 0, "sec": 2.243}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 123, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 124, "absent": false, "correct": 1, "abstained": 0, "sec": 2.556}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 124, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 125, "absent": true, "correct": 0, "abstained": 0, "sec": 2.568}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 125, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 126, "absent": false, "correct": 1, "abstained": 0, "sec": 2.015}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 126, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 127, "absent": true, "correct": 0, "abstained": 0, "sec": 2.686}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 127, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 128, "absent": false, "correct": 1, "abstained": 0, "sec": 2.882}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 128, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 129, "absent": true, "correct": 0, "abstained": 0, "sec": 0.449}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 129, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 130, "absent": false, "correct": 1, "abstained": 0, "sec": 2.385}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 130, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 131, "absent": true, "correct": 0, "abstained": 0, "sec": 2.521}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 131, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 132, "absent": false, "correct": 1, "abstained": 0, "sec": 2.608}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 132, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 133, "absent": true, "correct": 0, "abstained": 0, "sec": 2.447}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 133, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 134, "absent": false, "correct": 1, "abstained": 0, "sec": 2.612}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 134, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 135, "absent": true, "correct": 0, "abstained": 0, "sec": 2.955}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 135, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 136, "absent": false, "correct": 1, "abstained": 0, "sec": 2.446}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 136, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 137, "absent": true, "correct": 0, "abstained": 0, "sec": 2.708}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 137, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 138, "absent": false, "correct": 1, "abstained": 0, "sec": 2.798}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 138, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 139, "absent": true, "correct": 0, "abstained": 0, "sec": 2.678}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 139, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 140, "absent": false, "correct": 1, "abstained": 0, "sec": 2.455}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 140, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 141, "absent": true, "correct": 0, "abstained": 0, "sec": 2.52}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 141, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 142, "absent": false, "correct": 1, "abstained": 0, "sec": 2.468}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 142, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 143, "absent": true, "correct": 0, "abstained": 0, "sec": 1.742}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 143, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 144, "absent": false, "correct": 1, "abstained": 0, "sec": 2.784}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 144, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 145, "absent": true, "correct": 0, "abstained": 0, "sec": 2.354}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 145, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 146, "absent": false, "correct": 1, "abstained": 0, "sec": 1.727}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 146, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 147, "absent": true, "correct": 0, "abstained": 0, "sec": 2.674}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 147, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 148, "absent": false, "correct": 1, "abstained": 0, "sec": 2.613}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 148, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 149, "absent": true, "correct": 0, "abstained": 0, "sec": 2.754}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 149, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 150, "absent": false, "correct": 1, "abstained": 0, "sec": 2.193}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 150, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 151, "absent": true, "correct": 0, "abstained": 0, "sec": 0.646}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 151, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 152, "absent": false, "correct": 1, "abstained": 0, "sec": 0.808}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 152, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 153, "absent": true, "correct": 0, "abstained": 0, "sec": 1.611}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 153, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 154, "absent": false, "correct": 1, "abstained": 0, "sec": 2.161}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 154, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 155, "absent": true, "correct": 0, "abstained": 0, "sec": 0.996}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 155, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 156, "absent": false, "correct": 1, "abstained": 0, "sec": 1.405}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 156, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 157, "absent": true, "correct": 0, "abstained": 0, "sec": 1.465}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 157, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 158, "absent": false, "correct": 1, "abstained": 0, "sec": 0.079}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 158, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 159, "absent": true, "correct": 0, "abstained": 0, "sec": 0.075}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 159, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 160, "absent": false, "correct": 1, "abstained": 0, "sec": 0.076}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 160, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 161, "absent": true, "correct": 0, "abstained": 0, "sec": 0.077}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 161, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 162, "absent": false, "correct": 1, "abstained": 0, "sec": 1.92}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 162, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 163, "absent": true, "correct": 0, "abstained": 0, "sec": 0.429}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 163, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 164, "absent": false, "correct": 1, "abstained": 0, "sec": 1.405}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 164, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 165, "absent": true, "correct": 0, "abstained": 0, "sec": 2.175}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 165, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 166, "absent": false, "correct": 1, "abstained": 0, "sec": 2.415}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 166, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 167, "absent": true, "correct": 0, "abstained": 0, "sec": 0.588}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 167, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 168, "absent": false, "correct": 1, "abstained": 0, "sec": 1.678}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 168, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 169, "absent": true, "correct": 0, "abstained": 0, "sec": 1.483}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 169, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 170, "absent": false, "correct": 1, "abstained": 0, "sec": 1.5}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 170, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 171, "absent": true, "correct": 0, "abstained": 0, "sec": 1.516}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 171, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 172, "absent": false, "correct": 1, "abstained": 0, "sec": 0.996}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 172, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 173, "absent": true, "correct": 0, "abstained": 0, "sec": 0.266}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 173, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 174, "absent": false, "correct": 1, "abstained": 0, "sec": 0.833}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 174, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 175, "absent": true, "correct": 0, "abstained": 0, "sec": 0.08}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 175, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 176, "absent": false, "correct": 1, "abstained": 0, "sec": 0.911}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 176, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 177, "absent": true, "correct": 0, "abstained": 0, "sec": 1.943}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 177, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 178, "absent": false, "correct": 1, "abstained": 0, "sec": 2.677}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 178, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 179, "absent": true, "correct": 0, "abstained": 0, "sec": 2.797}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 179, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 180, "absent": false, "correct": 1, "abstained": 0, "sec": 2.734}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 180, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 181, "absent": true, "correct": 0, "abstained": 0, "sec": 2.83}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 181, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 182, "absent": false, "correct": 1, "abstained": 0, "sec": 2.912}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 182, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 183, "absent": true, "correct": 0, "abstained": 0, "sec": 2.378}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 183, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 184, "absent": false, "correct": 1, "abstained": 0, "sec": 2.422}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 184, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 185, "absent": true, "correct": 0, "abstained": 0, "sec": 2.058}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 185, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 186, "absent": false, "correct": 1, "abstained": 0, "sec": 2.582}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 186, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 187, "absent": true, "correct": 0, "abstained": 0, "sec": 2.5}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 187, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 188, "absent": false, "correct": 1, "abstained": 0, "sec": 2.521}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 188, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 189, "absent": true, "correct": 0, "abstained": 0, "sec": 3.058}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 189, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 190, "absent": false, "correct": 1, "abstained": 0, "sec": 2.727}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 190, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 191, "absent": true, "correct": 0, "abstained": 0, "sec": 2.322}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 191, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 192, "absent": false, "correct": 1, "abstained": 0, "sec": 0.692}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 192, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 193, "absent": true, "correct": 0, "abstained": 0, "sec": 1.88}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 193, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 194, "absent": false, "correct": 1, "abstained": 0, "sec": 1.987}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 194, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 195, "absent": true, "correct": 0, "abstained": 0, "sec": 2.478}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 195, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 196, "absent": false, "correct": 1, "abstained": 0, "sec": 2.406}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 196, "correct": 0}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 197, "absent": true, "correct": 0, "abstained": 0, "sec": 2.712}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 197, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 198, "absent": false, "correct": 1, "abstained": 0, "sec": 2.698}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 198, "correct": 1}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "fsq", "doc": 199, "absent": true, "correct": 0, "abstained": 0, "sec": 2.689}
+{"arch": "pam", "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt", "task": "hop", "doc": 199, "correct": 0}

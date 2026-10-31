@@ -4195,3 +4195,48 @@ data regime (coherent long documents, or a curriculum), or a protected register.
 pursued now. The reset-at-separator mask (to test the packing explanation) is left
 UNFINISHED on branch `reset` (`qllm_reset`): its isolation test still fails (some cross-
 document path remains), and it is not on master.
+
+## cu1: skill curriculum for the mind (pre-registration, 2026-10-31 22:15 IST)
+
+**Thesis clauses served:** *intelligence separate from knowledge* (the mind learns to use
+re-read spans and to abstain when the library holds nothing), and *holds beyond the
+training context* at the package level (a stated rule re-fetched at 32k, R6b).
+
+**Closest prior work (novelty rule):** instruction tuning (FLAN, T0: stated instructions in
+training); retrieval-augmented fine-tuning (RA-DIT; Self-RAG) and "say I don't know"
+training (R-Tuning). **What differs (one line):** the recipe is known; what is measured is
+whether words read once, and spans re-read from a library, write the SAME rule / lookup
+state that demonstrations write in an O(1) recurrent mind, with held-out values and
+vocabularies disjoint from the bench. That is the skill-plus-library contract the package
+needs.
+
+**Why (baselines measured now, b2p2):** stated rule 0-shot 0.000 even re-read in front of
+the query (Lead's instr cell); bench-vocabulary probe (`scripts/run_cur_probe.py`, 200
+docs, CPU, `logs/diag/v13_sempty_curprobe_b2p2_baseline_*`): re-read lookup present 0.990,
+**abstain on an absent key 0.000** (it always names a value), **two-hop 0.10** (chance 0.05).
+
+**Arm `cu1`** (6000, code at launch on master, which includes the sources `srd` / `fsq` / `hop`
+of `48674d6`): b2p2's recipe (M2 + echo + shared reads, stage A `c1m2a_pre_7ae6f1f`, stage B
+480M, LR 1.2e-3, seed 42 so it pairs with b2p1 / lbp), stage-B mix dclm / fineweb /
+smoltalk2_mid / recall / b2 / lab / srd / fsq / hop = 0.40 / 0.37 / 0.10 / 0.03 / 0.03 / 0.02 /
+0.02 / 0.02 / 0.01. **Starts when r3c ENDS** (gate on `r3cb_main_38e3c29/.done`, plus ≥ peak + 3 GB
+free: b2p3's measured ~40 GB → ≥ 43 GB), so the 55 % rule is never broken. Saves every 200 steps.
+**Paired arm `cu1n9s`** (same data and seed, N9s salient-phase echo keys): runs after cu1
+ONLY if Library supplies an LM-trainer switch for N9s with a self-test before cu1 ends; N9s
+exists only in v14's micro-bench today. Otherwise dropped, and recorded so.
+
+**Rules (fixed now; 100 docs per bench cell, 200 per run_cur_probe cell; probe seeds fresh):**
+- **R6a (mind):** `v16/bench.py --task instr --shots 0`, held-out shift values: A_state ≥ 0.75 at
+  L = 0 (the rule right before the query) AND at L = 2048 (one read, inside the reach).
+- **R6b (package):** the same cell at L = 32768, O_reread (rule re-fetched in front of the query)
+  ≥ 0.75. Mind-only A_state at 32k is reported with the stated-limit caption, no bar.
+- **R-fsq (abstain):** run_cur_probe absent-key abstain ≥ 0.75 AND present accuracy ≥ 0.94
+  (b2p2 − 0.05) AND false abstain ≤ 0.10.
+- **R-hop:** run_cur_probe two-hop ≥ 0.50 (b2p2 0.10, chance 0.05).
+- **Bench re-read (Lead's cell):** `v16/bench.py --task kv` (8 needles, 32k) O_reread for cu1 vs b2p2
+  on the same docs (crc32 seeding, paired): reported; cu1 must not be worse than b2p2 by > 0.02.
+- **Guards:** holdout ≤ 3.500 (b2p2 + 0.02); B2 `_new` mean at L = 0 ≥ 0.894 (b2p2 − 0.05);
+  label_diag mean ≥ 0.884 (lbp − 0.05); skill-pack reach at 2k ≥ 0.81 (b2p2 − 0.05).
+- **Win** = R6a and R-fsq, with the guards met; R6b, R-hop and the bench re-read are claimed
+  separately. Any FAIL is recorded with its numbers; failed sources are removed from the code
+  per the AGENTS rule (index row with the code-at hash).
