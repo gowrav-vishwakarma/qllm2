@@ -2805,6 +2805,24 @@ fitted threshold:
       sentence (= Mind's EUREKA 3bc29c7 "outvoted, not lost", from the other
       side). Package: keep the COLD re-read (a fresh scratch state per fetched
       row); the current design is right.
+- **A6c: is "the mind does not listen late" a beyond-trained-length effect,
+  and does a contrast rescue it? (PRE-REGISTERED 2026-11-01 01:53 IST, before
+  any number of it.)** A measurement, no novelty claim (closest prior work:
+  context-aware decoding, Shi et al. 2023, (1+α) log p(y | c, x) − α log
+  p(y | x); contrastive decoding, Li et al. 2023; Mind's 3bc29c7 used it for the
+  skill pack).
+  - b2p2, fresh seed 28000, L = 2,048 / 8,192 / 32,768 (b2p2 trained at
+    2,048), 40 docs per cell; cells kv synthetic, kv natural, para natural;
+    fact row by construction; sentence scorer (as A6).
+  - Arms: COLD, WARM, NOROW (as A6) and WARMC = the warm stream contrasted
+    with the no-row stream, logits l_warm + 4 (l_warm − l_norow), both streams
+    fed the generated tokens (Mind's a = 4).
+  - Bar L (length) MET iff at 2k WARM ≥ COLD − 0.05 on all 3 cells AND at 32k
+    WARM ≤ COLD − 0.20 on kv natural (A6 replicated).
+  - Bar C (contrast) MET iff at 32k WARMC ≥ COLD − 0.05 on all 3 cells.
+  - Met C → a stream-inserted read (N11 refresh, or a warm row) can be made
+    to work with a second O(1) stream; not met → the package keeps the cold
+    scratch read.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
