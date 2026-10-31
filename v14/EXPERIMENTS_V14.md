@@ -2534,6 +2534,14 @@ fitted threshold:
   1.00 (unchanged). Reported: paraphrase and tool in strict vs lenient mode
   (expected to fall to the organ's level): the precision / recall trade-off
   is the finding, with no middle ground available from key similarity (A2).
+- **Amendment S/A1 (00:50 IST, before any strict-mode number; user via Lead:
+  "generation counts"):** the PRIMARY metric is free generation: the mind's
+  greedy token over the whole vocabulary after the re-read (`P_free`; state
+  only `A_free`), not the pick among 20 candidates (secondary). Bars: neg
+  abstain ≥ 0.90 (unchanged; abstaining does not depend on the metric); kv
+  `P_free` in strict mode ≥ 0.95 and within 0.02 of lenient mode's on the same
+  docs. Para / tool reported in both metrics. Run with PACKAGE_STRICT=1 at
+  `172adf4` or later (Lead's queue).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
