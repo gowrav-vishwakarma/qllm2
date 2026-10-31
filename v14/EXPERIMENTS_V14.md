@@ -1116,6 +1116,22 @@ question: why exact lookup decays with pairs back once keys are distinct
 **The recall jump is unplanned**, so it needs a pre-registered replication
 with recall as the primary bar before any claim.
 
+**n9c LM attribution (v14, 2026-10-31 08:48 IST, eval only).** Scored with
+v13's `v13_sempty/tmp/attr3b.py` on v13's frozen text (60 PG-19 windows +
+150 web docs, 2048 tokens) on the 4090. Log
+`logs/diag/v14_attr3b_n9c_c1ctl_7d5bac4_20261031.{txt,json}`. Sign: ctl −
+n9c, so positive = N9a better.
+
+| | total | copy | seen | new |
+|---|---|---|---|---|
+| PG-19 | −0.006 | −0.015 | −0.023 | +0.018 |
+| web | +0.005 | +0.016 | −0.008 | +0.011 |
+
+No LM effect beyond noise (cross-run ±0.01–0.02). The recall jump does not
+show up as better copy on real text: copy is −0.015 on books and +0.016 on
+web. So N9a cannot be counted toward the T++ copy gap at 600M; any LM claim
+would need the ≥ 1.5B-token arm.
+
 **N9a recall replication `n9r` (PRE-REGISTERED 2026-10-31 ~02:00 IST, before
 any n9r number; agreed with v13).** n9c's recall jump was unplanned, and recall
 past 2048 has looked seed-lucky before, so both arms run at a NEW seed, paired.

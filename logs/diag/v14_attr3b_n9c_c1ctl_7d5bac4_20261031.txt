@@ -1,0 +1,21 @@
+# v14 attr3b: n9c (N9a, n9cb_main_e5f0b73) vs C1-ctl (c1ctlb_main_7ae6f1f), 600M tokens, scored on v13's frozen text (6000 ~/attr/data.npz), 4090, code 7d5bac4, 2026-10-31 08:48-08:50 IST. Sign: ctl - n9c (positive = n9c better).
+start 08:48 IST
+ctl {'pg19': 3.7872, 'web': 3.4515}
+n9c {'pg19': 3.7931, 'web': 3.4465}
+
+[pg19] tokens 122880; share copy 0.258 seen 0.377 new 0.365
+  loss  ctl 3.7872  n9c 3.7931
+  ctl - n9c: total -0.0059
+     by class (gap / share of total): copy -0.015 / +67%  seen -0.023 / +147%  new +0.018 / -114%
+     by position:                     0-8 -0.009  8-64 -0.014  64-512 -0.007  512-2048 -0.005
+     new tokens by position:          0-8 -0.014  8-64 -0.016  64-512 +0.018  512-2048 +0.022
+
+[web] tokens 195046; share copy 0.227 seen 0.386 new 0.387
+  loss  ctl 3.4515  n9c 3.4465
+  ctl - n9c: total +0.0050
+     by class (gap / share of total): copy +0.016 / +71%  seen -0.008 / -60%  new +0.011 / +89%
+     by position:                     0-8 -0.013  8-64 +0.017  64-512 +0.007  512-2048 +0.003
+     new tokens by position:          0-8 -0.033  8-64 +0.008  64-512 +0.017  512-2048 +0.009
+end 08:50 IST
+
+[exited with code 0]
