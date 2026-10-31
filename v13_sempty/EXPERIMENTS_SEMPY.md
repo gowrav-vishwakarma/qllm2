@@ -3824,3 +3824,35 @@ Full note: SCRATCHPAD 15:00. The useful part:
   library (keyed at surprise), knowledge in the shared library (same key
   space), packs versioned with the mind; later, consolidation from session to
   shared library and slow skill fine-tuning.
+
+## SL0: shared library as knowledge, zero training (pre-registration, 2026-10-31 15:20 IST)
+
+Question: does a shared library keyed by the mind's own state close the 3B
+new-token gap to Mamba-2 (+0.091 PG-19 / +0.112 web; 52–55 % on new tokens)?
+kNN-LM style (Khandelwal et al. 2020, a known part): datastore = (PAM's
+pre-logit vector at training position t → token t+1) over training text; at
+eval, p = λ·p_kNN + (1 − λ)·p_LM, p_kNN(y) ∝ Σ over the k nearest keys with value
+y of exp(−d / T).
+
+- **Mind:** frozen PAM 3B `1c913ef` (the attribution's reference). **Baseline:**
+  Mamba-2 3B `b36e3a5` as is (user's comparison rule), its per-token losses
+  already on the frozen attr3b text.
+- **Library:** 5M tokens of the training mix (dclm + fineweb, training split
+  only: the frozen eval text is the holdout cache and PG-19 test, so no leak).
+  Keys: the 588-d pre-logit vector, PCA to 128-d fp16 (PCA fitted on 50k training
+  vectors); exact search (chunked brute force on the 4090, k = 64, squared L2).
+- **Tuning split:** λ ∈ {0.1, 0.2, 0.3, 0.4}, T ∈ {1, 3, 10, 30} chosen on the
+  first third of the frozen docs (PG-19 0–19, web 0–49). **Scored** on the other
+  two thirds only (PG-19 20–59, web 50–149), for PAM, PAM + library and Mamba-2.
+- **Rules (fixed now):**
+  1. *Library helps the mind:* PAM + library ≤ PAM − 0.05 nats on BOTH test sets.
+  2. *Closes the Mamba-2 gap:* PAM + library ≤ Mamba-2 on BOTH test sets.
+  3. Reported: loss by token class (copy / seen / new) and position; library
+     tokens, MB (keys + values), install cost (library tokens × 1 mind pass, GPU
+     s), query cost per token.
+- 5M tokens is 0.17 % of the 3B training data. kNN-LM gains grow with the
+  datastore, so a pass at 5M is followed by a 20–50M datastore. A fail at 5M is
+  not a verdict on size; it is reported as a 5M result.
+- Caveats that travel with it: kNN-LM exists; this measures it for the O(1) mind
+  with Mamba-2 as is; it does not touch in-context copy (the session library's
+  job).
