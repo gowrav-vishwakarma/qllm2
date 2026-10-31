@@ -60,6 +60,20 @@ class Mind:
             lg, st, off = self.feed([t], st, off)
         return out
 
+    @torch.no_grad()
+    def greedy_contrast(self, pa, sa, oa, pb, sb, ob, alpha, max_new=16):
+        """A6c: greedy on l_a + alpha (l_a - l_b); both streams are fed the generated tokens."""
+        la, sa, oa = self.feed(pa, sa, oa)
+        lb, sb, ob = self.feed(pb, sb, ob)
+        out = []
+        for _ in range(max_new):
+            t = int((la + alpha * (la - lb)).argmax()); out.append(t)
+            if t in STOPS:
+                break
+            la, sa, oa = self.feed([t], sa, oa)
+            lb, sb, ob = self.feed([t], sb, ob)
+        return out
+
 
 def fact_row(ids, end, tok, meta):
     """(start, end) of the sentence holding the asked fact: the key's tokens within 24 tokens of the value's."""
@@ -112,38 +126,47 @@ def main():
     ap.add_argument('--seed', type=int, default=26000); ap.add_argument('--L', type=int, default=32768)
     ap.add_argument('--docs', type=int, default=40); ap.add_argument('--needles', type=int, default=8)
     ap.add_argument('--tasks', default='kv,para,tool,natq'); ap.add_argument('--keys', default='synthetic,natural')
+    ap.add_argument('--lengths', default=None, help='A6c: comma list of L (overrides --L)')
+    ap.add_argument('--cells', default=None, help='A6c: comma list of task/keys, e.g. kv/synthetic,para/natural')
+    ap.add_argument('--contrast', type=float, default=None, help='A6c: add the WARMC arm with this alpha')
     ap.add_argument('--parity', action='store_true'); ap.add_argument('--out', default=None)
     a = ap.parse_args()
     dev = torch.device(a.device)
     mind = Mind(a.ckpt, dev)
     fill = filler_tokens(FILL)
-    filler = fill if a.L + 2 < len(fill) else np.concatenate([fill] * (a.L // len(fill) + 2))
     if a.parity:
-        parity(mind, filler)
+        parity(mind, fill if a.L + 2 < len(fill) else np.concatenate([fill] * (a.L // len(fill) + 2)))
         return
+    cells = ([tuple(c.split('/')) for c in a.cells.split(',')] if a.cells else
+             [(t, k) for k in a.keys.split(',') for t in a.tasks.split(',')])
     outf = open(a.out, 'a')
-    for keys in a.keys.split(','):
-        for task in a.tasks.split(','):
-            rng = random.Random(a.seed * 1000 + a.L + zlib.crc32(task.encode()) % 997)   # = bench.py main()
+    for L in ([int(x) for x in a.lengths.split(',')] if a.lengths else [a.L]):
+        filler = fill if L + 2 < len(fill) else np.concatenate([fill] * (L // len(fill) + 2))
+        for task, keys in cells:
+            rng = random.Random(a.seed * 1000 + L + zlib.crc32(task.encode()) % 997)   # = bench.py main()
             for d in range(a.docs):
                 t0 = time.time()
-                ids, ans, qlen, meta = build(rng, mind.tok, filler, a.L, task, a.needles, keys=keys)
+                ids, ans, qlen, meta = build(rng, mind.tok, filler, L, task, a.needles, keys=keys)
                 end = len(ids) - qlen; q = ids[end:]
                 row = fact_row(ids, end, mind.tok, meta)
-                rec = dict(task=task, keys=keys, L=a.L, seed=a.seed, doc=d, val=meta['val'], row_found=int(row is not None))
+                rec = dict(task=task, keys=keys, L=L, seed=a.seed, doc=d, val=meta['val'], row_found=int(row is not None))
                 if row is not None:
                     span = ids[row[0]:row[1]]
                     _, st, off = mind.feed(ids[:end])
                     cold = mind.greedy(span + q)
-                    warm = mind.greedy(span + q, copy.deepcopy(st), off)
-                    norow = mind.greedy(q, st, off)
-                    for name, g in (('cold', cold), ('warm', warm), ('norow', norow)):
+                    arms = [('cold', cold)]
+                    if a.contrast is not None:
+                        arms.append(('warmc', mind.greedy_contrast(span + q, copy.deepcopy(st), off,
+                                                                   q, copy.deepcopy(st), off, a.contrast)))
+                    arms.append(('warm', mind.greedy(span + q, copy.deepcopy(st), off)))
+                    arms.append(('norow', mind.greedy(q, st, off)))
+                    for name, g in arms:
                         txt = mind.tok.decode(g)
                         rec[name] = sent_ok(txt, meta['val']); rec[name + '_text'] = txt
                     rec['row_text'] = mind.tok.decode(span)[-160:]
                 rec['sec'] = round(time.time() - t0, 2)
                 outf.write(json.dumps(rec) + '\n'); outf.flush()
-                print(task, keys, d, {k: rec.get(k) for k in ('row_found', 'cold', 'warm', 'norow')}, rec['sec'], flush=True)
+                print(L, task, keys, d, {k: rec.get(k) for k in ('row_found', 'cold', 'warmc', 'warm', 'norow')}, rec['sec'], flush=True)
 
 
 if __name__ == '__main__':
