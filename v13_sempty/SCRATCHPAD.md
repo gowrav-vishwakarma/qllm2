@@ -18,6 +18,21 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 04:32 IST: HANDOVER STATE.** Since 02:35:
+  - cd2 MET (contrast doubles one-read reach to ~4k); cd3 FAIL (contrast must be query-time only).
+  - Library A9 made warm + contrast the package default (+0.142); A10 says cu1 reads well, but its own-state
+    fetch is weaker.
+  - Natural-key verify: cu1 says " unknown" 0.86 vs b2p2 copying 0.59.
+  - **cu1n9s FAIL** (two-hop 0.09, holdout +0.228); cu1n9a not run.
+
+  **Running:** r3p on the 6000 (tmux `r3p`, `~/Development/qllm_r3p` @ `c13d8fe`, started 04:27 IST, 64k tok/s).
+  Futility at step 39060 ~10:40 IST (stop if > 3.431; a local wait is armed). End ~17:00 + readouts. Hard
+  gate holdout ≤ 3.2391, prediction 3.231. 6000 disk 15 GB free.
+
+  **Next for Mind:** pre-register cu2 (one field from multi-field rows + stop; prose-row abstain; natural
+  keys; paraphrases; fresh seed; free primary; small synthetic share, since cu1 cost +0.045); GPU = a 4090
+  slot via Lead. The contrast-distillation idea (scratchpad 03:24) is a candidate after cu2.
+
 * **2026-11-01 03:24 IST: STEP BACK after cd1-3, cu1 and Library's A6c. One pattern, four faces.** Tonight the
   mind failed the same way four times. In each case the strongest prior decides, and weak or new evidence is
   outvoted:
