@@ -103,7 +103,7 @@ def key_fn(keys: torch.Tensor, ids, info):
     hit = organ(ids, end, len(ids))
     row = row_around(ids, hit, hit, end) if hit is not None else None
     if row is None and NORM:                  # A4: the normalised-word organ
-        nh = norm_hit(ids, end, q0)
+        nh = norm_hit(ids, end, end)       # the whole question (info query_pos = the key's last token)
         info['norm_step'] = nh[0] if nh else 0
         row = nh[2:] if nh else None
     info['organ_hit'] = int(row is not None)
