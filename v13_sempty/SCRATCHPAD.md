@@ -36,7 +36,7 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   3B run includes the organ explicitly. Design of the learned fetch = v14's lane (sent).
   Addendum (Communicator): Mamba-2 (mbs2b) is also at the floor on the needle probe (all three
   bodies fail state-only recall from 2k to 128k; the organ is 1.0 throughout). The zero-shot frozen-state
-  address (0.75 top-1 at 128k) is 0/4 at 400k, so past ~128k the fetch key must be TRAINED, or
+  address (0.75 top-1 at 128k) is 1/4 at 400k (corrected), so past ~128k the fetch key must be TRAINED, or
   one row per event used.
 
 * **2026-10-31 08:55 IST: a4f (A4 cond_mem filter) queued on the 4090** (tmux `a4f`, script
