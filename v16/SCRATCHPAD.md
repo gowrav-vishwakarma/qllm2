@@ -32,6 +32,8 @@
 
 - 13:55 IST: MLB-1 v1 FROZEN (Mind; harness d319e8d): thesis clauses per half; R6 (0-shot stated rule >= 0.75 at 32k, inside and past trained length); R7 flagship skill-pack persistence (t0+32k: PAM pack-read-once >= max(Mamba-2 read once, T++ without re-fetch) + 0.10 every seed; T++ with re-fetch reported with KV cost); abstain bar on the learned fetch only. Decision: Mind implements the skill-pack and replay-integration cells on run_learning_probe --spread (pack at t0 in v1), rows in bench.py's vocabulary, Lead reviews the code against the text before the first score; the fetch half lands in bench.py with L1.
 
+- 14:10 IST: skill-pack / replay cells (scripts/run_skillpack_probe.py @ 53d0e52) REVIEWED against v1 R7 + A1 and APPROVED by Lead; captions: T++ O_reread = re-fetch into a fresh window (KV = pack + query), T++ without re-fetch limited by memory at 128k, Mamba-2 state = 13.4 MB constant. Timing: start now on the 6000 with --mem_frac 0.10 (b2p1, b2p2, b2t, b2m at L <= 32k), 128k/1M and the seed-43/44 arms after s8.
+
 ## Open questions
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
 - The instr cell on c1ctlb was invalid (no rule skill); b2p2 rerun decides whether words can write the rule state.
