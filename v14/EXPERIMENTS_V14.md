@@ -3057,6 +3057,25 @@ fitted threshold:
     does a mind trained to say " unknown" check keys more (higher AUROC)?
     The bar stays on b2p2. Lead's ruling: VERIFY stays in cu2a iff b2p2's
     AUROC < 0.85.
+  - **A11 VERDICT (2026-11-01 05:09 IST; code 2c2e760 (run as c7c016e, rebased,
+    code identical); `logs/v14_a11_keyswap_2c2e760_20261101_0506.jsonl` + .log, 240
+    rows): NOT met. VERIFY stays in cu2a.**
+
+    | AUROC (40 right / 40 same-template wrong / 40 prose rows) | key-swap rel: vs def / vs prose | plain confidence: vs def / vs prose | says a value on: right / def / prose |
+    |---|---|---|---|
+    | b2p2 (bar on vs def) | **0.698** / 0.688 | 0.677 / 0.817 | 0.78 / 0.53 / 0.00 |
+    | cu1 (reported) | 0.815 / 0.816 | 0.774 / 0.774 | 0.72 / **0.03** / 0.00 |
+
+    rel medians: b2p2 right 0.68, def 0.29, prose 0.20; cu1 right 3.83, def
+    0.63, prose 0.44.
+    - b2p2's answer barely depends on the question's key: a query-time key
+      check has little to read. cu1, trained to say " unknown", has a strong
+      key dependence and its own words abstain on 97 % of wrong same-template
+      rows.
+    - Says: CHECKING is a skill the mind must learn from examples; the first
+      counterexample to "query-time beats training-time" (it fits D1: train the
+      mind for language and example-based skills). Key-swap stays as a
+      reported arm only.
   - Closest prior work: context-aware decoding (Shi et al. 2023: contrast
     with / without the CONTEXT); perturbation / counterfactual relevance;
     Self-RAG's IsRel (trained). Difference: the QUESTION's key is perturbed
