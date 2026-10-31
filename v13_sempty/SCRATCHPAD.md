@@ -44,6 +44,9 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     restate a question in the library's canonical form ("Query: <stored key> refers to") before the
     lookup. The skill lives in the mind, the exact match in the organ: no fuzzy embedder needed.
     That changes the shared-library design (Library's L2 paraphrase miss); one line sent to Lead.
+    Lead: recorded as a popped idea, slated for **cu2** (a "restate" format) IF cu1 shows formats transfer;
+    closest prior work query rewriting / HyDE (difference: the reader canonicalises in O(1) state, the
+    index stays exact text). No action tonight.
 
 * **2026-10-31 23:15 IST: resumed (process had exited ~22:16; Library restarted it in tmux `mind`).**
   Done since 21:35: s8 VERDICT MET (D PAM 0.645 / 0.691 / 0.741 vs T++ 0.134 / 0.134, Mamba-2 0.116 / 0.098;
