@@ -1530,6 +1530,23 @@ The lowest tau with ≤ 1 row per 16 tokens is 11 nats:
 - **What it means for the row:** a row anchored on the firing token alone does
   not hold the key word. The key word sits a few tokens after the firing one.
 
+**W0, second reading (same JSON, `full` column; NOT the registered
+measurement).** The harness gates on the model's actual output vector, which
+includes the echo read; the pre-memory vector I registered does not. With the
+echo included, filler is less surprising and the topic break stays high:
+
+| cell (echo-included surprise) | tau 10: rows / 16 tok, caught, key fires | tau 11 |
+|---|---|---|
+| synthetic | 0.79, **0.994**, 0.80 | 0.47, 0.984, 0.63 |
+| natural keys | 0.75, **1.000**, 0.72 | 0.44, 0.981, 0.53 |
+| plain sentences | 0.78, 0.975, – | 0.46, 0.947, – |
+
+By this reading the W0 bar would be met at tau 10 (≤ 1 row per 16 tokens,
+≥ 0.95 in both cells). The registered verdict above stands (not met); this
+only decides which gate L1 uses: **the harness's own gate, echo-included
+surprisal at tau 10** (amendment A5, before any L1 number). The topic-break
+reading is unchanged (the key still fires in only 72-80 % of needles).
+
 **Amendment A3 to L1 (13:06 IST, after W0, before any L1 number): the row is
 a BURST SPAN.** A firing token f (u > tau, refractory 16 tokens) opens a row
 over tokens [f, f + 24); its key is a learned attentive pooling of the span's
