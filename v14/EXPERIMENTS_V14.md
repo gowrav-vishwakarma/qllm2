@@ -2516,7 +2516,7 @@ before any code or number; Lead's order item 3; eval only).**
   long-running agents. Plumbing; the claim is only the measured cost of
   keeping an O(1) mind's skill alive.
 
-**PACKAGE strict mode (PRE-REGISTERED 2026-11-01 00:45 IST, before any number of it;
+**PACKAGE strict mode (PRE-REGISTERED 2026-11-01 00:34 IST, before any number of it;
 after Lead's package table, `abf5b69`).** Lead's table (fresh seeds 18000 /
 18500; L1 head; PACKAGE_T = −1) met R1 at 1.00 on every exact-key cell at 32k
 and 128k on both bodies (T++ / Mamba-2 state alone 0.04-0.18; PAM minds alone
