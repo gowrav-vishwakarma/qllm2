@@ -101,14 +101,22 @@ def pool_spans(head: SpanKey, vecs: torch.Tensor, spans: list[tuple[int, int]], 
     return head(vecs[idx.to(vecs.device)], mask.to(vecs.device))
 
 
+def anchor(d):
+    """(query position, target position) at the LAST token of the key: there the mind has read the whole key.
+    (v14/l1_data.py stored the first token and the key length; the first token alone is a word fragment.)"""
+    k = max(1, int(d['tlen'])) - 1
+    return d['qpos'] + k, d['target'] + k
+
+
 def prep(d, form):
     """Per-document cache: row spans, their index tensors, positives, the query span's index."""
     T = d['vecs'].shape[0]
+    qpos, target = anchor(d)
     spans = row_spans(T, d['nll'], form)
-    pos = positives(spans, d['target'], d['tlen'])
+    pos = positives(spans, target, 1)
     ml = SPAN if form == 'fwd' else EVT_MAX
     idx, mask = span_index(spans, ml) if spans else (None, None)
-    qi, qm = span_index([(d['qpos'], min(T, d['qpos'] + SPAN))], SPAN)
+    qi, qm = span_index([(qpos, min(T, qpos + SPAN))], SPAN)
     return dict(vecs=d['vecs'], spans=spans, pos=pos, idx=idx, mask=mask, qi=qi, qm=qm, kind=d['kind'])
 
 
