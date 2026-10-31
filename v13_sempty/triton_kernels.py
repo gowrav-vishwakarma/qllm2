@@ -602,9 +602,10 @@ def pam_delta_batched(q, k, v, retention, beta_w, beta_e, carry, sub=_BT,
     if Tp != T:
         read = read[:, :T]
     if return_write:
-        # M2: the written memory as (keys, pseudo-values, retention), padded
-        # to Tp -- any other query can read it with pam_shared_read.
-        return read, S_out, (k, W, retention)
+        # M2: the written memory as (keys, pseudo-values, retention, carry),
+        # padded to Tp -- any other query can read it with pam_shared_read
+        # (the carry makes a chunk continue a carried notebook exactly).
+        return read, S_out, (k, W, retention, carry)
     return read, S_out
 
 
@@ -613,12 +614,13 @@ def pam_shared_read(q, write, sub=_BT):
     with a different query ``q [BH, T, K]``. The delta write (WY solve) is
     NOT redone: the pseudo-values ``W`` turn the delta recurrence into the
     additive one, so one ``fused_real_pam_read`` gives ``S_t q_t`` exactly."""
-    k, W, retention = write
+    k, W, retention = write[:3]
+    carry = write[3] if len(write) > 3 else None    # the writer's carried notebook (chunked prefill)
     BH, T, K = q.shape
     Tp = k.shape[1]
     if Tp != T:
         q = F.pad(q, (0, 0, 0, Tp - T))
-    read, _ = fused_real_pam_read(q, k, W, retention, None, sub)
+    read, _ = fused_real_pam_read(q, k, W, retention, carry, sub)
     return read[:, :T]
 
 

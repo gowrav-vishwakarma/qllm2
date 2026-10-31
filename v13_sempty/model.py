@@ -826,7 +826,7 @@ class RealPAMLayer(nn.Module):
                         (batch, self.heads, self.state_dim, self.head_row, self.head_col))
         return output, carried
 
-    def _chunked_delta(self, tokens, queries, keys, values, decay):
+    def _chunked_delta(self, tokens, queries, keys, values, decay, state=None):
         """A3 delta erase/write chunked read (raw-torch boundary).
 
         Unit-norm keys; per-head erase/write gates; WY solve via
@@ -842,14 +842,18 @@ class RealPAMLayer(nn.Module):
         v = values.raw(batch, self.heads, time, self.head_feature).reshape(B * H, T, K)
         retention = decay.raw(batch, self.heads, time).reshape(B * H, T)
         bw, be = self._delta_gates(tokens)
+        carry = None
+        if state is not None:                                     # chunked prefill continuing a notebook
+            carry = self._as_notebook(state, batch).raw(
+                batch, self.heads, self.head_row, self.head_col).reshape(B * H, K, K).float()
         if self.expose:
             read, state, write = pam_delta_batched(
-                q, k, v, retention, bw.reshape(B * H, T), be.reshape(B * H, T), None,
+                q, k, v, retention, bw.reshape(B * H, T), be.reshape(B * H, T), carry,
                 return_write=True)
             self._shared = {'write': write, 'rot': self._rot}
         else:
             read, state = pam_delta_batched(q, k, v, retention, bw.reshape(B * H, T),
-                                            be.reshape(B * H, T), None)
+                                            be.reshape(B * H, T), carry)
         output = named(read.reshape(B, H, T, K) * (self.head_dim ** -0.5),
                        (batch, self.heads, time, self.head_row))
         carried = named(state.reshape(B, H, K, K),
@@ -902,6 +906,10 @@ class RealPAMLayer(nn.Module):
                 + bw[:, :, t, None, None] * vt.unsqueeze(-1) * kt.unsqueeze(-2)
             reads.append(torch.einsum('bhvk,bhk->bhv', S, qt))
         y = torch.stack(reads, dim=2).to(tokens.dtype) * (self.head_dim ** -0.5)  # [B,H,T,K]
+        if self.expose:                                           # M2 decode: readers read S_t
+            if T != 1:
+                raise NotImplementedError("M2 stepwise writer exposes one step at a time")
+            self._shared = {'state': S, 'rot': self._rot}
         output = named(y, (batch, self.heads, time, self.head_row))
         carried = named(S, (batch, self.heads, self.head_row, self.head_col))
         return output, carried
@@ -949,7 +957,9 @@ class RealPAMLayer(nn.Module):
         queries, keys, values, clock_out = self._project(tokens, step_offset, clock)
         decay = self._decay(tokens)
 
-        if state is None and seq_len > 1:
+        if self.delta and seq_len > 1:                            # prefill, fresh or continuing
+            output, new_state = self._chunked_delta(tokens, queries, keys, values, decay, state)
+        elif state is None and seq_len > 1:
             if self.delta:
                 output, new_state = self._chunked_delta(tokens, queries, keys, values, decay)
             elif self.n_states > 1:
@@ -1016,7 +1026,11 @@ class SharedRead(nn.Module):
         cos, sin = shared['rot']                                        # [B,H,T,P]
         qe, qo = q.reshape(B, H, T, P, 2).unbind(-1)
         q = torch.stack((qe * cos - qo * sin, qe * sin + qo * cos), dim=-1).reshape(B * H, T, K)
-        read = pam_shared_read(q, shared['write']) * (K ** -0.5)        # [BH,T,K]
+        if 'state' in shared:                                           # M2 decode: S_t q_t
+            S = shared['state'].reshape(B * H, K, K)
+            read = torch.einsum('bvk,btk->btv', S, q.float()).to(q.dtype) * (K ** -0.5)
+        else:
+            read = pam_shared_read(q, shared['write']) * (K ** -0.5)    # [BH,T,K]
         gate = nn.functional.silu(self.gate(h)).transpose(1, 2).reshape(B * H, T, 1)
         y = (read * gate.to(read.dtype)).reshape(B, H, T, K).transpose(1, 2).reshape(B, T, H * K)
         return named(self.o_proj(y.to(h.dtype)), (batch, time, self.model_dim))  # named-exit: shared-read boundary
@@ -1183,10 +1197,10 @@ class LM(nn.Module):
     def _run_blocks(self, z, batch, time, states, step_offset, input_ids=None):
         use_ckpt = self.config.gradient_checkpointing and self.training and states is None
         share = self.config.share_reads
-        if share and (use_ckpt or states is not None or time.size == 1):
+        if share and use_ckpt:
             raise NotImplementedError(
-                "M2 share_reads: chunked full-sequence forward only (no grad "
-                "checkpointing, no decode yet); run with --gen_every 0")
+                "M2 share_reads: no grad checkpointing (carried-state prefill and "
+                "decode are supported)")
         new_states = []
         shared = None
         for i, block in enumerate(self.blocks):
