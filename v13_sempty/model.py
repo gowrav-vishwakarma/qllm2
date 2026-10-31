@@ -844,6 +844,11 @@ class RealPAMLayer(nn.Module):
         keep = getattr(self, '_keep', None)      # lg8r reset: 0 at document separators, else 1
         if keep is not None:
             retention = retention * keep[:, None, :].expand(B, H, T).reshape(B * H, T).to(retention.dtype)
+        dil = getattr(self, '_dilate', None)     # clk1 eval hook: (start, end, s) -> retention ** (1/s) on [start, end)
+        if dil is not None:
+            d0, d1, sc = dil
+            retention = retention.clone()
+            retention[:, d0:d1] = retention[:, d0:d1].clamp_min(1e-12) ** (1.0 / sc)
         bw, be = self._delta_gates(tokens)
         carry = None
         if state is not None:                                     # chunked prefill continuing a notebook
@@ -1214,6 +1219,7 @@ class LM(nn.Module):
         for block in self.blocks:
             if block.pam is not None:
                 block.pam._keep = keep
+                block.pam._dilate = getattr(self, '_dilate', None)   # clk1 eval hook (None = off)
         for i, block in enumerate(self.blocks):
             state = states[i] if states is not None else None
             if use_ckpt:
@@ -1264,6 +1270,11 @@ class LM(nn.Module):
         bw = per_head(torch.sigmoid(wr))
         be = per_head(torch.sigmoid(er - 3.0).clamp(max=0.95))
         kn = nn.functional.normalize(heads(k), dim=-1)
+        dil = getattr(self, '_dilate', None)      # clk1 eval hook on the echo memory too
+        if dil is not None:
+            d0, d1, sc = dil
+            retention = retention.clone()
+            retention[:, d0:d1] = retention[:, d0:d1].clamp_min(1e-12) ** (1.0 / sc)
         if getattr(cfg, 'reset_at_eos', False):
             # The separator acts as a fresh start: retention 0 there, and its key (built from
             # h_{t-1}, the previous document's last token) is zeroed like a fresh k_0 = 0.

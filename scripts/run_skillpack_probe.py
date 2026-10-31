@@ -135,6 +135,7 @@ def run(args):
     lengths = [int(x) for x in args.lengths.split(',') if x]
     variants = [v for v in args.variants.split(',') if v]
     alphas = [float(x) for x in args.alphas.split(',') if x]
+    dilations = [float(x) for x in args.dilations.split(',') if x]
     out = open(args.out, 'a')
     S = body.state_bytes()
     for task in tasks + (['two_hop'] if 'replay_hop2' in variants else []):
@@ -171,6 +172,21 @@ def run(args):
                             ca[str(al)] = int(score_candidate_logits(ex, lg[ex.candidate_token_ids].cpu().tolist())['correct'])
                         out.write(json.dumps({**row, 'task': 'contrast', 'T': len(pack + fill + q), 'free_a': fa,
                                               'cand_a': ca, 'tok_a': ta, 'target': ex.target_token_id, 'sec': round(time.time() - t0, 2)}) + '\n')
+                    if 'dilate' in variants:             # clk1: retention ** (1/s) over the filler between read and query
+                        fd, cd_ = {}, {}
+                        for sc in dilations:
+                            body.m._dilate = (len(pack), len(pack) + len(fill), sc) if fill else None
+                            lg = body.last_logits(pack + fill + q).float()
+                            fd[str(sc)] = int(int(lg.argmax()) == ex.target_token_id)
+                            cd_[str(sc)] = int(score_candidate_logits(ex, lg[ex.candidate_token_ids].cpu().tolist())['correct'])
+                            if sc == dilations[-1]:          # dilation + contrast (a = 4), both streams dilated over the filler
+                                body.m._dilate = (0, len(fill), sc) if fill else None
+                                ln_ = body.last_logits(fill + q).float(); lc = lg + 4.0 * (lg - ln_)
+                                fd[f'{sc}+c4'] = int(int(lc.argmax()) == ex.target_token_id)
+                                cd_[f'{sc}+c4'] = int(score_candidate_logits(ex, lc[ex.candidate_token_ids].cpu().tolist())['correct'])
+                        body.m._dilate = None
+                        out.write(json.dumps({**row, 'task': 'dilate', 'T': len(pack + fill + q), 'free_s': fd, 'cand_s': cd_,
+                                              'sec': round(time.time() - t0, 2)}) + '\n')
                     if 'replay_refresh' in variants:
                         replay = sum(U[-3:-1], [])
                         ids_alone = H + fill + replay + q
@@ -204,6 +220,7 @@ if __name__ == '__main__':
     p.add_argument('--variants', default='skillpack,replay_refresh,replay_hop2')
     p.add_argument('--shots', type=int, default=8)
     p.add_argument('--alphas', default='0,0.5,1,2,4', help='contrast variant (cd1): l_pack + a (l_pack - l_nopack)')
+    p.add_argument('--dilations', default='1,2,4', help='dilate variant (clk1): retention ** (1/s) over the filler')
     p.add_argument('--hop_facts', type=int, default=4, help='two_hop: owners (= pets = names) in the story')
     p.add_argument('--lengths', default='0,2048,8192,32768,131072')
     p.add_argument('--docs', type=int, default=100)
