@@ -429,7 +429,7 @@ reversal: with 3 lags, the key includes the token before the item, which
 varies in natural text, so one fact gets two keys. Try 2 lags or a
 salient-gated variant. Design after the n9th / n12m readouts. Addendum (organiser): Mamba-2 is also at the floor on
 the needle probe, while the exact organ stays at 1.0. The frozen-state
-address is 0.75 top-1 at 128k but 0/4 at 400k. Build a LEARNED key at the
+address is 0.75 top-1 at 128k but 1/4 at 400k. Build a LEARNED key at the
 salient token, with one row per event (not per token).
 
 ## Next action
