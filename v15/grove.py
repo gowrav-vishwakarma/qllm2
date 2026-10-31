@@ -235,19 +235,23 @@ class GroveLayer(nn.Module):
             evb = torch.einsum('gtr,brsg->btsg', Lmat, fb)                # [B,C,C(s),G]
             evb_m = torch.where(valid, evb, torch.full((), neg, dtype=dt, device=h.device))
             score = torch.cat([evd, evb_m.permute(0, 1, 3, 2)], dim=-1)   # [B,C,G,K+C]
-            # canopy: the READ is a soft mixture over the trees that exist (what you see);
-            # eating is soft too (every tree grows by its share), except that a novel
-            # token is eaten by its own newborn alone
-            m = torch.softmax(score, dim=-1)
+            # eating is soft (every tree grows by its share), except that a novel token
+            # is eaten by its own newborn alone
+            m_eat = torch.softmax(score, dim=-1)
             newborn = F.one_hot(K + idx, K + C).to(dt)                     # [C, K+C]
-            me = torch.where(born[..., None], newborn[None, :, None], m)   # [B,C,G,K+C]
-            if self._record is not None:
-                self._record.append((me.detach(), born.detach(), m.detach()))
+            me = torch.where(born[..., None], newborn[None, :, None], m_eat)   # [B,C,G,K+C]
             # succession credit: y_t goes to whoever ate x_{t-1}, by share
             m_last_ext = torch.cat([m_last, torch.zeros(B, G, C, dtype=dt, device=h.device)], -1)
             m_prev = torch.cat([m_last_ext[:, None], me[:, :-1]], dim=1)  # [B,C,G,K+C]
             gy_all = m_prev.cumsum(1)
             gy = gy_all - m_prev                                          # credits before t
+            # canopy: the READ is a soft mixture over the trees that BEAR FRUIT (what you
+            # see); a sapling (a newborn nobody has credited yet) is not readable
+            sapling = torch.cat([torch.zeros(B, C, G, K, dtype=torch.bool, device=h.device),
+                                 gy[..., K:] <= 0], dim=-1)
+            m = torch.softmax(torch.where(sapling, torch.full((), neg, dtype=dt, device=h.device), score), dim=-1)
+            if self._record is not None:
+                self._record.append((me.detach(), born.detach(), m.detach()))
             prior = torch.cat([fruits, self.fruit0_born[None, :, None].expand(B, G, C, n)], dim=2)
             base = torch.cat([rho * use, torch.zeros(B, G, C, dtype=dt, device=h.device)], -1)
             step = gy / (base[:, None] + gy).clamp_min(1e-6)              # ripening = running mean
@@ -325,8 +329,10 @@ class GroveLayer(nn.Module):
         neg = torch.finfo(dt).min
         scb = torch.where(valid, evb, torch.full((), neg, dtype=dt, device=dev))
         score = torch.cat([ev, scb], -1)
-        m = torch.softmax(score, dim=-1)                                   # soft read
-        mh = torch.where(born_now[..., None], F.one_hot(torch.tensor(K + p, device=dev), K + C).to(dt)[None, None], m)  # eating mass
+        m_eat = torch.softmax(score, dim=-1)
+        mh = torch.where(born_now[..., None], F.one_hot(torch.tensor(K + p, device=dev), K + C).to(dt)[None, None], m_eat)  # eating mass
+        sapling = torch.cat([torch.zeros(B, G, K, dtype=torch.bool, device=dev), buf['gy'][:, :, K:] <= 0], -1)
+        m = torch.softmax(torch.where(sapling, torch.full((), neg, dtype=dt, device=dev), score), dim=-1)   # soft read
         # read: the winner's ripening fruit (credits before this token)
         prior = torch.cat([state.fruits, self.fruit0_born[None, :, None].expand(B, G, C, n)], 2)
         base = torch.cat([rho * state.use, torch.zeros(B, G, C, dtype=dt, device=dev)], -1)
