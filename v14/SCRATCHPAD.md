@@ -21,6 +21,16 @@ package table until ~00:50 IST; its 32k results ~04:00, 128k ~midday.
   stored" for a paraphrased question (similarity cannot; the simple gain idea
   failed Lead's smoke; null-row gain and top-5 outlier still to test OFFLINE on
   the table's P_cands); BM25 postings memory if the fallback stays.
+* **Added 00:50 IST:** (1) N11-R's verdict is the 20-way pick; its FREE-generation
+  rerun N11-R/F (pre-registered 00:49, seeds 8150-8199) is queued in tmux `n11rf`
+  (worktree `../qllm_v14n11f`) behind Lead's strict + 128k fill jobs; the
+  board says "20-way" until it reports. (2) Lead adds a natural-question cell
+  `natq` to v16/bench.py (fact in prose, plain question, free generation to the
+  first "."); MY next unit once it exists: the session key from a SALIENT token
+  chosen in a free-form question, against the shared library's BM25 path as the
+  first comparison row. (3) Strict mode (pre-registered 00:34, amended to free
+  generation S/A1 00:39) runs in Lead's queue with PACKAGE_STRICT=1; Lead
+  sends the cells, I write the verdict.
 * **Next when Lead hands out work:** the offline gain tests on P_cands; N11-F
   is measured by the package table itself (no separate run).
 * **Waking peers:** `scripts/wake_session.sh <Name> <id>` (memory
