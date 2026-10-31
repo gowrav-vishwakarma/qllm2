@@ -1,0 +1,78 @@
+"""N11-R: the planner's skill-refresh rule (v14/EXPERIMENTS_V14.md "N11-R", pre-registered 23:32 IST). Eval only.
+
+Mind's skill-pack cell on b2p2: the pack (header + 8 demonstration lines) is read at t0, then L tokens of held-out
+filler in which the pack is RE-INSERTED after every R filler tokens, then the query line. R = 0 means no refresh.
+Scored at the last position (correct, margin), as scripts/run_skillpack_probe.py does.
+
+    .venv/bin/python -m v14.n11_refresh --out <jsonl>        (seeds 8100-8149, R 1024/2048/4096/0, L 8192/32768)
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+from pathlib import Path
+
+import torch
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / 'scripts'))
+
+from memory_probes.spread import _SEP, filler_tokens  # noqa: E402
+from run_skillpack_probe import filler_block  # noqa: E402
+from v14.sr0 import HOLDOUT, Mind, doc, score  # noqa: E402
+
+B2P2 = '/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt'
+
+
+def stream(pack, fill, q, sep, R):
+    out = list(pack)
+    if R <= 0:
+        return out + sep + fill + sep + q, 0
+    n_ins = 0
+    for i in range(0, len(fill), R):
+        out += sep + fill[i:i + R]
+        if i + R < len(fill):
+            out += sep + pack
+            n_ins += 1
+    return out + sep + q, n_ins
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--ckpt', default=B2P2)
+    ap.add_argument('--out', required=True)
+    ap.add_argument('--tasks', default='affine_map_new,shift_wide_new')
+    ap.add_argument('--seeds', default='8100,8150')
+    ap.add_argument('--refresh', default='1024,2048,4096,0')
+    ap.add_argument('--lengths', default='8192,32768')
+    ap.add_argument('--mem_frac', type=float, default=0.35)
+    a = ap.parse_args()
+    torch.cuda.set_per_process_memory_fraction(a.mem_frac)
+    mind = Mind(a.ckpt, torch.device('cuda'))
+    tok = mind.tok
+    filler = filler_tokens(HOLDOUT)
+    sep = tok.encode(_SEP, add_special_tokens=False)
+    s0, s1 = (int(x) for x in a.seeds.split(','))
+    out = open(a.out, 'a')
+    for task in a.tasks.split(','):
+        for seed in range(s0, s1):
+            ex, H, U, pack, q = doc(tok, task, seed)
+            for L in (int(x) for x in a.lengths.split(',')):
+                fill = filler_block(filler, L, seed, L)
+                for R in (int(x) for x in a.refresh.split(',')):
+                    t0 = time.time()
+                    ids, n_ins = stream(pack, fill, q, sep, R)
+                    c, m = score(ex, mind.forward(ids)[0])
+                    out.write(json.dumps(dict(task=task, doc=seed, L=L, R=R, correct=c, margin=m, inserts=n_ins,
+                                              pack_tokens=len(pack), total_tokens=len(ids),
+                                              overhead=round(n_ins * len(pack) / max(1, L), 4),
+                                              sec=round(time.time() - t0, 2))) + '\n')
+                    out.flush()
+        print(f'{task} done', flush=True)
+
+
+if __name__ == '__main__':
+    main()

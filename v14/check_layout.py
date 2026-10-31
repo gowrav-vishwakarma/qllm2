@@ -27,6 +27,7 @@ SKIP_FILES = frozenset({
     "package_fetch.py",  # the package fetch as a harness key_fn (two organs, raw torch)
     "pack.py",           # library packs: text-first format + install tool (raw torch / numpy)
     "pack_check.py",     # cross-document check of the install tool
+    "n11_refresh.py",    # N11-R: refresh-rule eval (raw torch, M2 full forwards)
     "sr0.py",            # SR-0: rule-vector transplant test (eval harness, raw torch)
     "w0_gate.py",        # W0: eval harness (surprise scoring on frozen checkpoints)
     "ngram.py",          # N7: integer hashing / sort / scatter (declared boundary, like v13 cond_mem.py)
