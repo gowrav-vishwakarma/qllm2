@@ -10,7 +10,7 @@ cd "$(dirname "$0")/../.." || exit 1
 : "${MIX_SOURCES:?set MIX_SOURCES from the cu1 verdict}"; : "${MIX_WEIGHTS:?set MIX_WEIGHTS}"
 H=${SCREEN_HASH:-$(git rev-parse --short HEAD)}; C=checkpoints_v13_sempty; PY=.venv/bin/python; X="symbolic\|Warning\|warn"
 echo "r3p chain: code $H in $PWD, mix $MIX_SOURCES = $MIX_WEIGHTS, $(date -u +%FT%TZ)"
-until ! tmux has-session -t cu1 2>/dev/null && ! tmux has-session -t cu1n9s 2>/dev/null; do sleep 120; done
+until ! tmux has-session -t =cu1 2>/dev/null && ! tmux has-session -t =cu1n9s 2>/dev/null; do sleep 120; done   # "=" = exact name (tmux matches prefixes)
 free_mb() { nvidia-smi --query-gpu=memory.total,memory.used --format=csv,noheader,nounits | awk -F", " '{print $1-$2}'; }
 until [ "$(free_mb)" -ge 50000 ]; do sleep 60; done           # r3c's peak 46.9 GB + 3
 g=$(df -BG / | awk 'NR==2{gsub("G","",$4); print $4}'); echo "r3p: disk ${g}G, VRAM free $(free_mb) MiB, $(date -u +%FT%TZ)"; [ "$g" -ge 8 ] || { echo "r3p: disk < 8 GB, stop"; exit 1; }
@@ -18,7 +18,7 @@ g=$(df -BG / | awk 'NR==2{gsub("G","",$4); print $4}'); echo "r3p: disk ${g}G, V
 futility() {
   until L=$(ls -t logs/v13_sempty_r3p_main_${H}_*.log 2>/dev/null | head -1) && [ -n "$L" ] && grep -aq "\[val @ step 39060\]" "$L"; do sleep 300; done
   v=$(grep -a "\[val @ step 39060\]" "$L" | head -1 | sed 's/.*val_loss=\([0-9.]*\).*/\1/')
-  if awk -v v="$v" 'BEGIN{exit !(v > 3.431)}'; then echo "r3p: FUTILITY STOP ($v > 3.431) $(date -u +%FT%TZ)"; tmux kill-session -t r3p
+  if awk -v v="$v" 'BEGIN{exit !(v > 3.431)}'; then echo "r3p: FUTILITY STOP ($v > 3.431) $(date -u +%FT%TZ)"; tmux kill-session -t =r3p
   else echo "r3p: futility check passed ($v <= 3.431) $(date -u +%FT%TZ)"; fi
 }
 futility &
