@@ -97,6 +97,8 @@ Overall ~47 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 holds BEY
 
 - 22:00 IST: cu1 (skill curriculum, 600M on b2p2's recipe) PRE-REGISTERED (Mind, 59ac5d7): R6a stated rule 0-shot >= 0.75 at L 0 and 2k; R6b re-fetched at 32k >= 0.75 (mind-only 32k reported, no bar); R-fsq abstain >= 0.75 / present >= 0.94 / false abstain <= 0.10; R-hop >= 0.50; paired kv O_reread vs b2p2 not worse than 0.02; guards holdout <= 3.500, B2 _new >= 0.894, label_diag >= 0.884, skill-pack reach at 2k >= 0.81; prior work FLAN / T0, RA-DIT / Self-RAG, R-Tuning. b2p2 baselines: abstain 0.000, two-hop 0.10, present lookup 0.990. Gate ARMED (tmux cu1, worktree @ 2efb422): starts when r3c .done AND s8 / s5 ended AND >= 43 GB free; saves every 200; ETA cu1 ~00:55-02:45, probes ~03:15. N9s arm dropped unless Library ports it. b2p3 finished 21:51; s8 verdict pending.
 
+- 22:10 IST: N9s paired arm ON (Library ported it, c91f4c6, self-tested; cu1 amendment A1 fa9e410): own stage A (c1m2a recipe + N9s, warm start refuses new params), then cu1's stage B, seed 42; measures N9a + N9s jointly (caveat recorded); rules two-hop >= cu1 + 0.15 AND >= 0.50, guards vs cu1 (holdout +0.02, label_diag -0.05, R6a -0.10). Armed as tmux cu1n9s after the cu1 chain, >= 43 GB free. ETA cu1 ~00:55-02:45, cu1n9s ~03:15-05:45 IST.
+
 ## Open questions
 - (closed 21:55) Product body: M2 streams (41f8ae8).
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
