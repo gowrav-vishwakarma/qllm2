@@ -4264,6 +4264,26 @@ Then N9s is credited only with what cu1n9s adds over cu1n9a (same +0.15 margin o
 cu1n9a vs cu1 shows what the lags plus a fresh stage A do. If cu1n9s fails its rule, cu1n9a
 does not run. GPU order for cu1n9a goes through Lead.
 
+**cu1 amendment A3 (2026-11-01 01:20 IST, before any cu1 number; from Library's near-miss finding): a
+REPORTED `verify` cell, plus free generation in every run_cur_probe cell (no new bar).** Library's
+strict run showed that the package re-reads ONE row plus the question alone, and that the wrong
+rows are mostly UNRELATED keys in the same template (17 / 18 synthetic, 13 / 14 natural share no
+syllable or word with the asked key) or a plain prose sentence. `scripts/run_cur_probe.py` now adds,
+per doc on its own random stream (fsq / hop rows stay identical to the pre-registered baseline:
+400 / 400 checked), three short-format rows: right row → value, wrong-key row → " unknown", prose
+row → " unknown". **b2p2 baseline** (200 docs, CPU,
+`logs/diag/v13_sempty_curprobe_b2p2_verify_*.jsonl`):
+
+| verify row | says the row's value: 21-way / free | correct (value or " unknown"): 21-way / free |
+|---|---|---|
+| right row | 1.000 / 0.960 | 1.000 / 0.960 |
+| wrong-key row | 0.700 / **0.140** | 0.000 / 0.000 |
+| prose row | 0.065 / 0.000 | 0.000 / 0.000 |
+
+b2p2 never says " unknown" (0.000 everywhere), but under free generation it says a wrong row's value
+only 14 % of the time against 96 % for the right row; its greedy token is mostly " a". Reported for
+cu1 / cu1n9s beside R-fsq; it becomes a bar only by a later dated amendment.
+
 ## s8 VERDICT (2026-10-31 22:05 IST): distance confirmation MET, replicated on fresh seeds and a fresh probe sample
 
 Pre-registered in "B2 Mamba-2 arm b2m", amendment 2. Probe: `--suite b2 --tasks

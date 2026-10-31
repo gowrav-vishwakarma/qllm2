@@ -9,7 +9,13 @@
   hop  : bench hop2 records with no filler: " Record: K1 maps to K2." / " Record: K2 maps
          to V." + a distractor chain, shuffled, " Query: K1 maps to" -> V; candidates the
          20 nouns.
-One JSON line per document (arch, ckpt, task, doc, correct, ...).
+  verify: Library's near-miss finding (strict run): the package re-reads ONE row + the
+         question alone, and the mind copies the row's value even when the row is another
+         key's. Three rows per doc, short format: right row " Definition: K refers to V.
+         Query: K refers to" -> V; wrong row (an unrelated key, same template) -> " unknown";
+         a plain prose sentence as the row -> " unknown". Candidates: the 20 nouns + unknown.
+All cells also report FREE generation (`free`: argmax over the whole vocab == the expected
+first token; MLB-1 A7). One JSON line per row (arch, ckpt, task, doc, correct, free, ...).
 """
 from __future__ import annotations
 
@@ -23,6 +29,13 @@ sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / 'scripts'))
 from run_memory_behavioral import _load_v13_sempty  # noqa: E402
 from run_skillpack_probe import Body  # noqa: E402
 from v7.data import _RECALL_VALUE_NOUNS, _recall_key  # noqa: E402
+
+PROSE = ('The museum is closed on Mondays during the winter.', 'Most of the rain fell before noon.',
+         'She took the early train to the coast.', 'The committee will meet again next month.',
+         'Two of the windows were left open overnight.', 'The recipe calls for a pinch of salt.',
+         'He spent the afternoon repairing the fence.', 'The river rose after the storm.',
+         'Tickets go on sale at the end of the week.', 'The old bridge was rebuilt in stone.',
+         'Our office moved to the third floor.', 'The garden needs water every evening.')
 
 
 def main():
@@ -60,7 +73,21 @@ def main():
         cs = cand + [unk]; pred = cs[int(lg[cs].argmax())]
         out.write(json.dumps({'arch': body.arch, 'ckpt': str(a.checkpoint), 'task': 'fsq', 'doc': d,
                               'absent': absent, 'correct': int(pred == ans), 'abstained': int(pred == unk),
-                              'sec': round(time.time() - t0, 3)}) + '\n')
+                              'free': int(int(lg.argmax()) == ans), 'sec': round(time.time() - t0, 3)}) + '\n')
+        # verify (short re-read format: one row + the question alone)
+        vr = random.Random(a.seed * 1000 + d + 7_000_000)   # own stream: fsq / hop docs stay as pre-registered
+        vk, wk = keys[0], keys[1]; vv = vr.choice(nouns)
+        rows = (('right', f' Definition: {vk} refers to {vv}.', first(vv)),
+                ('wrong_key', f' Definition: {wk} refers to {vv}.', unk),
+                ('prose', ' ' + vr.choice(PROSE), unk))
+        for kind, row, want in rows:
+            lg = body.last_logits(tok.encode(row + f' Query: {vk} refers to', add_special_tokens=False))
+            pred = cs[int(lg[cs].argmax())]
+            out.write(json.dumps({'arch': body.arch, 'ckpt': str(a.checkpoint), 'task': 'verify', 'kind': kind,
+                                  'doc': d, 'correct': int(pred == want), 'abstained': int(pred == unk),
+                                  'free': int(int(lg.argmax()) == want),
+                                  'copied': int(pred == first(vv)), 'copied_free': int(int(lg.argmax()) == first(vv)),
+                                  'free_tok': tok.decode([int(lg.argmax())])}) + '\n')
         # hop
         k1, k2, d1, d2 = keys[:4]
         v, dv = rng.sample(nouns, 2)
@@ -69,7 +96,8 @@ def main():
         rng.shuffle(recs)
         lg = body.last_logits(tok.encode(''.join(recs) + f' Query: {k1} maps to', add_special_tokens=False))
         out.write(json.dumps({'arch': body.arch, 'ckpt': str(a.checkpoint), 'task': 'hop', 'doc': d,
-                              'correct': int(cand[int(lg[cand].argmax())] == first(v))}) + '\n')
+                              'correct': int(cand[int(lg[cand].argmax())] == first(v)),
+                              'free': int(int(lg.argmax()) == first(v))}) + '\n')
         out.flush()
 
 
