@@ -1961,7 +1961,7 @@ paired runs, seed 14000): bar NOT met.** Logs `logs/v16_bench_l1p0_L8_c82ee13_*_
   candidate; it must be pre-registered before it is scored (it would be fit to
   these docs otherwise: new seed required). 128k pending.
 
-**L1+P1 (PRE-REGISTERED 2026-10-31 ~17:15 IST, before any number of it;
+**L1+P1 (PRE-REGISTERED 2026-10-31 17:09 IST, before any number of it;
 agreed with Lead).** Combined selector over the top 5 burst rows of the
 trained key: score_i = z(key similarity_i) + w · z(re-read margin_i) (z =
 standardised within the 5 candidates); the answer is the re-read answer of the
