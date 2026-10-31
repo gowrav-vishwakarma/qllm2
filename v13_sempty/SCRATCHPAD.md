@@ -18,6 +18,26 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 03:24 IST: STEP BACK after cd1-3, cu1 and Library's A6c. One pattern, four faces.** Tonight the
+  mind failed the same way four times. In each case the strongest prior decides, and weak or new evidence is
+  outvoted:
+  (1) a fading skill after one read: 20-way 0.355, free 0.17 at 4k (cd2);
+  (2) a fresh fact row after a long carried state, at ANY length (A6 / A6c: warm 0.125-0.675 vs cold 0.70-0.93);
+  (3) a stated number mapped to a trained table (cu1 R6a);
+  (4) a wrong row's value copied under forced choice (verify).
+  A counterfactual contrast (with minus without the evidence) recovers (1) and (2) almost fully
+  (cd2 0.78; A6c 0.90-1.00), but it costs a 2nd stream and must be gated (cd3).
+  - **Bold angle: distil the contrast into the weights.** On answer tokens of skill / fact docs, train the
+    plain logits toward softmax(l_ev + a(l_ev − l_noev)), where the no-evidence stream is the same doc with
+    the pack / row masked. The mind then learns to listen to evidence by itself, with no 2nd stream at
+    inference and nothing to gate. Prior work to check first: CAD (Shi et al. 2023), context-faithful
+    fine-tuning; distillation of contrastive decoding. If it exists for transformers, the difference is the
+    setting (an O(1) recurrent state whose prior is its own long state). A cheap 600M test is a fine-tune of b2p2
+    with the distillation term on b2 / recall / fsq answers; readouts cd2's reach, A6's warm read, and cd3's
+    prose loss (it must not learn to over-trust irrelevant packs). Pre-register before any GPU; GPU via Lead.
+  - The stated-rule table (3) is a different failure: no evidence of the operation exists for a new number.
+    That stays a stated limit at 103M.
+
 * **2026-11-01 02:35 IST: HANDOVER STATE.** New since 01:22:
   - cd1 (contrast decode, 4k reach 0.815 ranked / 0.59 free; FAIL at 2k as registered); cd2 running on
     local CPU (fresh seeds 8200-8299; `logs/diag/v13_sempty_cd2_b2p2_cb1f9c7.jsonl`).
