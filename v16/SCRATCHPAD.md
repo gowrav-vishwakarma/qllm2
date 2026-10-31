@@ -68,6 +68,8 @@ Overall ~35 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill hol
 
 - 17:05 IST: lg32 TRAINING (restarted 16:43 with FineWeb read from the 6000's local shards after ~25 min of HuggingFace timeouts, caught by Lead's check): step 100 / 4,578 at 17:03, 36k tok/s, 29.2 GB; card 82.7 / 97.9 GB; r3c unaffected (62-64k tok/s), guard 0 strikes. ETA training ~18:15, probes (skill-pack 0-128k, B2 t400, attr3b) ~18:40; b2p3 resumes via the gate after.
 
+- 17:15 IST: L1 + planner v0 (Library, same 16 docs, 32k) MISSES its bar 0.95: P_margin_burst 0.94 synthetic / 0.69 natural vs key alone 0.81 / 0.94; P_concat_burst 1.00 / 0.50 (post-hoc, not a claim). Reading: re-reading helps synthetic keys and HURTS natural ones; the mind's own answer margin follows its priors over plausible text, so confidence alone is not a safe selector (constraint for N11). Next (approved): combined rule (key similarity + re-read margin) and concat-m as a named arm, pre-registered, weight tuned on a held-out split, scored on a NEW seed, abstain rate reported. 128k and L1-256 still running.
+
 ## Open questions
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
