@@ -1944,6 +1944,23 @@ with Lead.**
   the template itself (held out by design), so L1-256 adds more docs rather
   than a new negative scheme.
 
+**L1+P0 RESULT at 32k (17:08 IST; bench @ c82ee13, same 16 docs per keys as the
+paired runs, seed 14000): bar NOT met.** Logs `logs/v16_bench_l1p0_L8_c82ee13_*_32768.*`.
+
+| keys | key alone top-1 | P_margin_burst (re-read each, pick by margin; bar ≥ 0.95) | P_concat_burst (5 spans together) | re-reads |
+|---|---|---|---|---|
+| synthetic | 0.81 | **0.94** | 1.00 | 5 |
+| natural | 0.94 | **0.69** | 0.50 | 5 |
+
+- Re-reading helps on synthetic keys (0.81 → 0.94, concat 1.00) and HURTS on
+  natural ones (0.94 → 0.69): with real words the wrong spans are plausible
+  text, and the mind's answer margin follows its priors as much as the
+  evidence. The mind's confidence is not a safe selector on its own.
+- Reading: the key's own similarity carries information the re-read throws
+  away. A combined rule (key similarity + re-read margin) is the obvious next
+  candidate; it must be pre-registered before it is scored (it would be fit to
+  these docs otherwise: new seed required). 128k pending.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
