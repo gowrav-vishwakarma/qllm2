@@ -96,7 +96,7 @@ def span_index(spans, max_len):
 def pool_spans(head: SpanKey, vecs: torch.Tensor, spans: list[tuple[int, int]], max_len: int) -> torch.Tensor:
     """keys for spans of one document; vecs [T, D]."""
     if not spans:
-        return vecs.new_zeros(0, KEY_DIM)
+        return vecs.new_zeros(0, head.proj.out_features if hasattr(head, 'proj') else vecs.shape[-1])
     idx, mask = span_index(spans, max_len)
     return head(vecs[idx.to(vecs.device)], mask.to(vecs.device))
 
@@ -201,7 +201,7 @@ def train(args):
             for d in args.val.split(',')}
     print(f"{len(files)} train docs, val sets {[(k, len(v)) for k, v in vals.items()]}, form {args.form}, "
           f"arch {args.arch}", flush=True)
-    head = SpanKey(arch=args.arch, rank=args.rank, drop=args.drop).to(device)
+    head = SpanKey(key_dim=args.key_dim, arch=args.arch, rank=args.rank, drop=args.drop).to(device)
     print(f"head parameters: {sum(p.numel() for p in head.parameters()):,}", flush=True)
     opt = torch.optim.AdamW(head.parameters(), lr=args.lr, weight_decay=args.wd)
     rng = random.Random(args.seed)
@@ -240,7 +240,7 @@ def train(args):
                 best = (score, {k: v.detach().cpu().clone() for k, v in head.state_dict().items()})
                 print(f"  best so far on {key_set}: {score:.3f} (step {step})", flush=True)
     torch.save({'state': best[1], 'form': args.form, 'tau': TAU, 'span': SPAN, 'arch': args.arch,
-                'rank': args.rank, 'centre': args.centre, 'select': key_set, 'best_top1': best[0], 'args': vars(args)}, args.out)
+                'rank': args.rank, 'key_dim': args.key_dim, 'centre': args.centre, 'select': key_set, 'best_top1': best[0], 'args': vars(args)}, args.out)
     print('saved', args.out, 'best', best[0], flush=True)
 
 
@@ -252,7 +252,7 @@ def key_fn(vecs: torch.Tensor, ids, bursts_=None) -> torch.Tensor:
     With ``bursts_`` (list of (start, end)) -> one key per burst span instead."""
     if 'head' not in _HEAD:
         ck = torch.load(os.environ['L1_CKPT'], map_location='cpu')
-        h = SpanKey(arch=ck.get('arch', 'full'), rank=ck.get('rank', 32))
+        h = SpanKey(key_dim=ck.get('key_dim', KEY_DIM), arch=ck.get('arch', 'full'), rank=ck.get('rank', 32))
         h.load_state_dict(ck['state'])
         _HEAD['head'], _HEAD['form'], _HEAD['centre'] = h.eval(), ck['form'], ck.get('centre', False)
     head = _HEAD['head'].to(vecs.device)
@@ -311,6 +311,7 @@ def main():
     t.add_argument('--seed', type=int, default=0)
     t.add_argument('--arch', choices=['full', 'w', 'lr'], default='full')
     t.add_argument('--rank', type=int, default=32)
+    t.add_argument('--key_dim', type=int, default=KEY_DIM)
     t.add_argument('--drop', type=float, default=0.0)
     t.add_argument('--wd', type=float, default=0.01)
     t.add_argument('--select', default='val_indist', help='validation set (dir name) that picks the best step')
