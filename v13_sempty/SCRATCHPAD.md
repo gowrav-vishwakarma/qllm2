@@ -18,6 +18,34 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 15:00 IST: MEDITATION (user, via organiser: "stop, think in the void, we are onto something").**
+  *What surprised me.* (1) Every in-context skill PAM has was a FORMAT gap: rules 0.05 → 0.99 (b2), labels
+  0.57 → 0.934 (lab), recall up with recall docs. Without the format T++ / Mamba-2 beat it (labels); with it
+  PAM is best, even on words it never saw (lab vocab disjoint). PAM = LOW PRIOR, HIGH CEILING: its in-context
+  intelligence is MADE by the skill curriculum; more web text does not teach it (3B label gap unchanged).
+  (2) I said the library cannot close the new-token gap to Mamba-2. True for the SESSION library, wrong
+  for the SHARED one: a corpus library IS world knowledge, and much new-token loss is knowledge. kNN-LM /
+  RETRO cut perplexity a lot with retrieval; a4f is a tiny parametric "knowledge library" of n-grams. The
+  shared library keyed by the mind's own state may be the bar-2 path. (3) The organiser's "cannot follow a
+  stated rule" smoke ran on c1ctlb, which has NO rule docs and cannot shift letters even from examples;
+  the real question needs b2p (has the skill): can WORDS write the rule register that examples write?
+  (4) Bar 3's standing caveat is the frontier: all rule results are held-out VALUES of trained FAMILIES.
+  *What it really says.* The product splits cleanly: skills (mind, made by a curriculum, carried across
+  distance), episodes (session library, keyed by the mind's state at surprise), knowledge (shared library,
+  same key space). One key space for both libraries; packs are versioned with the mind.
+  *Bold angles.* (a) SHARED LIBRARY = KNOWLEDGE: a zero-training test, kNN over the frozen mind's state on
+  training text (no holdout), interpolated with its LM, scored by attr3b on new tokens 0-64; if PAM + shared
+  library beats Mamba-2's loss, bar 2 lives under the new direction (honesty: kNN-LM exists; the novelty is
+  the whole). (b) FAMILY GENERALISATION: a procedural rule curriculum (composed primitives) with held-out
+  FAMILIES: the test that the mind learns to learn, not formats. (c) WORDS WRITE THE REGISTER: docs that
+  pair a stated rule with demonstrations, so words set the same state examples set; tested on held-out
+  values stated only in words, inside and past the trained length (the instruction cell). (d) READ-WHAT-
+  WAS-FETCHED: "fetched spans + question" docs with look-alike distractors and abstain cases. (e) Later:
+  consolidation ("sleep"): often-fetched session rows promoted to the shared library; the mind fine-tuned
+  on skills it keeps needing; continual learning without forgetting (knowledge outside the weights).
+  *Choice.* (a) first: eval only, decisive for bar 2. Then one pre-registered curriculum run with (c) + (d)
+  and a separate family-generalisation arm (b). Correction sent to the organiser on (3).
+
 * **2026-10-31 14:15 IST: v14 comments folded into MLB-1 (v0.1): row 272 B, R4 ≤ 1/100, 1M reported
   not gated, fairness arms train their own key head, fetch metrics + negative cells, instruction
   persistence = B2 rule stated once in words (mind-only and library variants). n9r FAIL (N9a out

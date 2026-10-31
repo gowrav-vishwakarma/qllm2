@@ -3803,3 +3803,24 @@ in the mind's own space; rules carried in state), since retrieval itself exists.
 Lanes: v14 designs the learned fetch (gate, trained key at the salient token,
 re-read); v13 builds the benchmark, the training recipe that teaches the mind
 to use fetched text, and the package runs.
+
+## Step back after the pivot (2026-10-31 15:00 IST): the mind is made by its curriculum; the shared library is knowledge
+
+Full note: SCRATCHPAD 15:00. The useful part:
+- **Low prior, high ceiling.** Each in-context skill was a format gap (b2: rules
+  0.05 → 0.99; lab: labels 0.57 → 0.934 on unseen words; recall docs). With the
+  format PAM beats T++ on the same data; without it, it trails. Its in-context
+  intelligence is made by the skill curriculum, so the curriculum is part of the
+  architecture, and family-level generalisation (unseen rule FAMILIES, not only
+  values) is the test that it learns to learn.
+- **Correction: the shared library can attack the new-token gap.** The attribution
+  put 52–55 % of the Mamba-2 gap on new tokens. The session library cannot help
+  there; a shared corpus library can (world knowledge, kNN-LM / RETRO style),
+  keyed by the mind's own state. Zero-training test first.
+- **The organiser's stated-rule failure is confounded** (c1ctlb has no rule
+  skill at all). The clean question: can words write the rule state that
+  demonstrations write, in a model that has the skill (b2p)?
+- **Product shape:** skills in the mind (curriculum), episodes in the session
+  library (keyed at surprise), knowledge in the shared library (same key
+  space), packs versioned with the mind; later, consolidation from session to
+  shared library and slow skill fine-tuning.
