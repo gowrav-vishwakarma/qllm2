@@ -4715,3 +4715,15 @@ on (2× compute). It must be the same session without the skill read, so it star
 alongside. Still O(1) in context length; T++'s KV at 4k is ~0.2 GB.
 **Not yet shown:** other skills (two-hop, recall, natq); effect on ordinary text when the pack is
 irrelevant; a vs a per-token gate. No method claim (CAD / contrastive decoding).
+
+## cd3: does state-contrast decoding hurt ordinary text when the pack is irrelevant? (pre-registration, 2026-11-01 03:14 IST; eval only, CPU; Lead's follow-up)
+
+- **Cells:** b2p2; 60 held-out prose windows of 1,024 tokens (the probe filler, fixed offsets, seed 31), each
+  preceded by an IRRELEVANT skill pack (B2 header + 8 demos, affine / shift alternating). Per prose token:
+  NLL under plain-with-pack (a = 0), contrast a = 4 and a = 8 (l_pack + a(l_pack − l_nopack), l_nopack = the
+  same prose without the pack), and no pack at all.
+- **Bar:** mean prose NLL at a = 4 ≤ plain-with-pack + 0.02 → the contrast can be on by default. Otherwise it
+  needs a gate (on only for the query after a read), and the size of the harm is reported.
+- Also reported: the first 64 prose tokens separately (where the pack's influence is largest), and one shown
+  free-text continuation at a = 0 / 4 (greedy, 40 tokens). Prior work: CAD (Shi et al. 2023) reports harm
+  when the context is irrelevant; that is what this checks.
