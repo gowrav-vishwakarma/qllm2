@@ -88,7 +88,7 @@ def natural_key(rng, tok, filler, avoid_lo, avoid_hi):
     return _recall_key(rng)
 
 
-def build(rng, tok, filler, L, task, n, keys='synthetic'):
+def build(rng, tok, filler, L, task, n, keys='synthetic', shots=0):
     def enc(s): return tok.encode(s, add_special_tokens=False)
     start = rng.randrange(0, len(filler) - L - 1)
     body = filler[start:start + L].tolist()
@@ -119,11 +119,14 @@ def build(rng, tok, filler, L, task, n, keys='synthetic'):
         k = rng.choice(SHIFT_NEW)                      # held-out shift value (never trained)
         letters = 'abcdefghijklmnopqrstuvwxyz'
         rule = enc(f" Rule: shift each letter forward by {k}.")
-        x = rng.choice(letters[:26 - k]); y = letters[(letters.index(x) + k) % 26]
-        query = enc(f" {x} ->")
+        picks = rng.sample(letters[:26 - k], shots + 1)
+        x = picks[-1]; y = letters[letters.index(x) + k]
+        demo = ''.join(f'{a} -> {letters[letters.index(a) + k]}\n' for a in picks[:-1])   # trained demo lines
+        query = enc(f"Letter rule.\n{demo}{x} ->")       # the trained header + optional shots + query line
         ids = rule + body[:L] + query
         ans = tok.encode(f" {y}", add_special_tokens=False)[0]
-        meta = dict(key=None, val=y, hop_key=None, rule_len=len(rule), rule_text=f" Rule: shift each letter forward by {k}.")
+        meta = dict(key=None, val=y, hop_key=None, rule_len=len(rule), rule_text=f" Rule: shift each letter forward by {k}.",
+                    letter_cands=[tok.encode(f" {c}", add_special_tokens=False)[0] for c in letters])
         return ids, ans, len(query), meta
     elif task == 'neg':   # n needles stored, but the queried key was NEVER stored: abstain is right
         keys_ = [mk() for _ in range(n)]
@@ -139,8 +142,9 @@ def build(rng, tok, filler, L, task, n, keys='synthetic'):
         for kk, v in zip(keys_, vals):
             inserts.append(enc(f" Definition: {kk} refers to {v}."))
         qi = rng.randrange(n); key, val = keys_[qi], vals[qi]
-        w = key.split()
-        forms = [key.title(), key.upper(), (w[0] + ' ' + (w[1][:-1] if w[1].endswith('s') else w[1] + 's')), 'the ' + key]
+        w = key.split(); last = w[-1]
+        plural = ' '.join(w[:-1] + [last[:-1] if last.endswith('s') else last + 's'])
+        forms = [key.title(), key.upper(), plural, 'the ' + key]
         qkey = rng.choice(forms)
         query = enc(f" Query: {qkey} refers to")
         pos = sorted(rng.sample(range(0, max(1, L - 64)), len(inserts)))
@@ -181,7 +185,7 @@ def mem_bytes(arch, cfg, L, n_events, index_rows_all):
     mind_state: what the O(1) body carries between tokens.  library_*: the session
     index.  tpp_kv: a Transformer++ KV cache for the same width/depth at length L
     (bf16, K and V, every layer).  mamba2_state: SSM + conv state per layer."""
-    out = {'raw_text': 2 * L}
+    out = {'raw_text': 2 * L, 'install_cost_mind_passes': 1, 'install_cost_tokens': L}
     if arch == 'pam':
         d = cfg.dim; hd = cfg.head_dim; H = cfg.n_heads; P = len(cfg.pam_layers)
         out['mind_state'] = 4 * (P * H * hd * hd + (H * hd * hd + d if getattr(cfg, 'echo', False) else 0))
@@ -218,6 +222,7 @@ def main():
     ap.add_argument('--docs', type=int, default=8); ap.add_argument('--needles', type=int, default=8)
     ap.add_argument('--ngram', type=int, default=4); ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--keys', default='synthetic', choices=['synthetic', 'natural'])
+    ap.add_argument('--shots', type=int, default=0, help='instr: demonstration lines placed right before the query (control that the skill is present)')
     ap.add_argument('--gate_frac', type=float, default=0.02, help='C5: fraction of most-surprising tokens that get an index row')
     ap.add_argument('--gate_tau', type=float, default=None, help='C5: surprisal threshold in nats (overrides --gate_frac)')
     ap.add_argument('--filler', default=None, help='token cache for the filler (default: the held-out prose cache = the EVAL pool; pass a pretrain-mix cache for TRAINING docs)')
@@ -240,7 +245,7 @@ def main():
         rng = random.Random(a.seed * 1000 + L + hash(a.task) % 997)
         for d in range(a.docs):
             t0 = time.time()
-            ids, ans, qlen, meta = build(rng, tok, filler, L, a.task, a.needles, keys=a.keys)
+            ids, ans, qlen, meta = build(rng, tok, filler, L, a.task, a.needles, keys=a.keys, shots=a.shots)
             T = len(ids); doc_end = T - qlen
             rec = dict(arch=a.arch, ckpt=a.ckpt, task=a.task, keys=a.keys, needles=a.needles, L=L, doc=d, T=T)
             n_ev = 4 if a.task == 'hop2' else 1 if a.task in ('kv1', 'instr') else a.needles + (1 if a.task == 'kvupd' else 0)
@@ -283,9 +288,13 @@ def main():
                     if span_o:
                         lgo = R.last_logits(span_o + ids[doc_end:])
                         rec['O_reread'] = int(cand[int(lgo[cand].argmax())] == ans) if a.task != 'instr' else int(int(lgo.argmax()) == ans)
+                        if a.task == 'instr':
+                            lc = meta['letter_cands']; rec['O_letters'] = int(lc[int(lgo[lc].argmax())] == ans)
                 if a.task == 'instr':
                     rec['A_state'] = int(int(lg.argmax()) == ans)      # letters: exact next token
+                    lc = meta['letter_cands']; rec['A_letters'] = int(lc[int(lg[lc].argmax())] == ans)
                     rec['B_hit'] = rec['B_ngram'] = 0                  # "x ->" shares no 4-gram with the rule
+                    rec['shots'] = a.shots
                 # C2 / C3 (PAM): snapshot index keyed by the model's own vectors
                 if vecs is not None and a.task not in ('hop2', 'instr'):
                     qsrc = meta.get('query_key') or meta['key']
@@ -304,6 +313,17 @@ def main():
                         rec['C2_hit'] = rec['C2_top5'] = 0
                     lg2 = R.last_logits(ids[max(0, p - 8):min(doc_end, p + 8)] + ids[doc_end:])
                     rec['C2_snap'] = int(cand[int(lg2[cand].argmax())] == ans)
+                    # planner v0 on the top-5 fetched spans: concat-all vs each-alone-max-margin
+                    spans = [ids[max(0, pp - 8):min(doc_end, pp + span_r + 2)] for pp in top]
+                    lgc = R.last_logits([t for sp in spans for t in sp] + ids[doc_end:])
+                    rec['P_concat'] = int(cand[int(lgc[cand].argmax())] == ans)
+                    best = None
+                    for sp in spans:
+                        lgs = R.last_logits(sp + ids[doc_end:])[cand]
+                        v2, i2 = lgs.topk(2); margin = float(v2[0] - v2[1])
+                        if best is None or margin > best[0]:
+                            best = (margin, cand[int(i2[0])])
+                    rec['P_margin'] = int(best[1] == ans)
                     bpos = [i for i in range(doc_end) if ids[i] == DOT]
                     if bpos:
                         bv = docv[bpos]; bs = bv @ q; btop = [bpos[i] for i in bs.topk(min(5, len(bpos))).indices.tolist()]
@@ -336,6 +356,22 @@ def main():
                         gpos = nll.topk(kkeep).indices.sort().values.tolist()
                     ndef = len(tok.encode(f" Definition: {meta['key']} refers to", add_special_tokens=False))
                     # the queried needle's own token span (its key last token is at p_true for in_right)
+                    bursts = []            # [start, end) of consecutive firings (gap <= 2)
+                    for gp in gpos:
+                        if bursts and gp - bursts[-1][1] <= 2:
+                            bursts[-1][1] = gp + 1
+                        else:
+                            bursts.append([gp, gp + 1])
+                    bstart = [b[0] for b in bursts]
+                    rec['C5_bursts'] = len(bursts); rec['C5_bursts_per_16tok'] = round(16 * len(bursts) / max(1, doc_end), 3)
+                    rec['C5_library_bytes_272_bursts'] = 272 * len(bursts) + 2 * doc_end
+                    nk = tok.encode(f" {meta['key']}", add_special_tokens=False) if meta.get('key') else []
+                    pkn = next((i for i in range(doc_end) if ids[i:i + len(nk)] == nk), None) if nk else None
+                    if pkn is not None:   # needle span = the inserted sentence around the key
+                        rec['C5_burst_in_needle'] = int(any(pkn - 4 <= b0 <= pkn + len(nk) + 6 for b0 in bstart))
+                    bvec = torch.stack([docv[b0:b1].mean(0) for b0, b1 in bursts]); bvec = torch.nn.functional.normalize(bvec, dim=-1)
+                    bsim = bvec @ q; btop_b = [bursts[i] for i in bsim.topk(min(5, len(bursts))).indices.tolist()]
+                    rec['C5_burst_hit'] = int(any(in_right(pp) for pp in range(btop_b[0][0] - 1, btop_b[0][1])))
                     gv = docv[gpos]; gs = gv @ q; gtop = [gpos[i] for i in gs.topk(min(5, len(gpos))).indices.tolist()]
                     rec['C5_rows'] = len(gpos); rec['C5_rows_per_event'] = round(len(gpos) / max(1, n_ev), 1)
                     rec['C5_hit'] = int(in_right(gtop[0])); rec['C5_top5'] = int(any(in_right(pp) for pp in gtop))
