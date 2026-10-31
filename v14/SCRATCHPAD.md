@@ -4,7 +4,36 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-10-31 21:25 IST) — read this first
+## State (2026-10-31 23:10 IST) — read this first
+
+Session: **Library**. Nothing of mine runs on the GPU; the CPU lanes are done.
+* **Handed to Lead (23:05) for the package table (session library):**
+  PACKAGE_HEAD = `qllm_ckpt/v14/l1p_fwd_L8c_99e6803.pt`, PACKAGE_MEAN =
+  `...99e6803.mean.pt` (bench `--centre_ref ...mean_raw.pt`), PACKAGE_T = −1
+  (abstain disabled when the organ misses: no threshold met both A2
+  constraints), `--key_fn v14.package_fetch:key_fn`. Lead runs it on fresh
+  seeds 18000+ against T++ / Mamba-2.
+* **Verdicts today:** L1 Bar A not met (synthetic), natural 0.94-1.00 in-doc;
+  L2 (two-organ) kv / neg met, paraphrase not met; L3 (cross-doc head) not
+  met; SR-0 not met (residual vector cannot carry a rule); A2 abstain:
+  infeasible. EUREKA: the mind's state is a STREAM ADDRESS, not an embedder.
+* **Next, in order (Lead approved):** (1) SHARED library fetch by text: the
+  exact organ with whole-key matching, a normalised lexical match for
+  paraphrase, an off-the-shelf text embedder as a named baseline row
+  (plumbing, cited, no claim); (2) N11 planner with two rules: fetch a fact,
+  and REFRESH a skill pack every ~2k tokens (Mind's bar-3 result); its
+  selector must not rely on the mind's confidence over natural spans;
+  (3) SR-0b once, eval-only, as a product-option test (Mind's M2 streaming
+  `41f8ae8`), only when the card is free and Lead says go.
+* **Tools:** `v14/pack.py` (pack format + install, 28 MB per 1M tokens),
+  `v14/pack_check.py` (cross-document check), `v14/package_fetch.py`
+  (harness key_fn), `v14/l2_select.py`, `v14/l1p1_select.py`, `v14/sr0.py`.
+* **Worktrees:** `../qllm_v14dev` `../qllm_v14eval` `../qllm_v14p1`
+  `../qllm_v14ref` `../qllm_v14tune` `../qllm_v14dev2` (all idle). Push from a
+  scratch worktree when a worktree has running jobs; in the shared checkout
+  stage only my own paths.
+
+## Old state (2026-10-31 21:25 IST; superseded)
 
 Session name: **Library** (peers: **Mind** = v13, **Lead** = organiser and v16
 lead). The local tmux server was wiped at ~21:00; nothing of mine is running.
