@@ -23,6 +23,14 @@ this to v15 (Evol V1).** Plan sheet: `PLAN_MIND_LIBRARY.md`; benchmark:
   `n9th4090` seed 132 (micro, 4090, stops itself after seed 132 via tmux
   `n9thstop4090`, ~14:00 IST; the 6000 ran seed 131 only). v15's pair waits
   for the card. Nothing else of mine runs.
+* **Decisions (organiser, v16 lead, 13:25 IST):** N9s gets NO standalone
+  600M run; at most one paired arm inside v13's curriculum run that already
+  carries two_hop-format data (proposed to v13). Its "anchor kept alive"
+  idea goes into the planner (N11). L1 data pass approved on the 4090 now
+  (hard cap 2.7 GB, guards: stop if a4f < 70 % of its start tok/s or free
+  VRAM < 1.5 GB); tmux `l1data`, script `~/l1_data.sh`, vectors on d_drive
+  `qllm_ckpt/v14/l1_cache/{train,val}`, log `logs/v14_l1_data_8445f73_*.log`
+  in `../qllm_v14dev`.
 * **Next unit L1** (pre-registered, EXPERIMENTS_V14 section "L" + A3): a
   learned key over BURST SPANS on the frozen C1-ctl (`c1ctlb_main_7ae6f1f`,
   /media/gowrav/d_drive/qllm2/checkpoints_v13_sempty/). Plan:
