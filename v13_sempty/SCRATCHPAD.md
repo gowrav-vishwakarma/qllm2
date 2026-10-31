@@ -18,6 +18,18 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 23:15 IST: resumed (process had exited ~22:16; Library restarted it in tmux `mind`).**
+  Done since 21:35: s8 VERDICT MET (D PAM 0.645 / 0.691 / 0.741 vs T++ 0.134 / 0.134, Mamba-2 0.116 / 0.098;
+  primary +0.607, all pairs +0.511; ntfy sent 22:06); cu1 pre-registered (59ac5d7) + A1 (N9s arm ON,
+  Library's c91f4c6) + A2 (conditional cu1n9a); curriculum sources srd / fsq / hop (48674d6);
+  `scripts/run_cur_probe.py` (b2p2 baseline: present 0.990, abstain 0.000, two-hop 0.10).
+  6000 queue: r3c alone (90 %, ends ~00:30 IST; its s5 chain runs final probes) → tmux `cu1`
+  (~/cu1_chain.sh, worktree qllm_cu1 @ 2efb422; gate: r3cb .done + s5/s8 ended + ≥ 43 GB free) →
+  tmux `cu1n9s` (~/cu1n9s_chain.sh, worktree qllm_cu1n9s @ fa9e410; own stage A). Library's
+  EUREKA: the mind state is a STREAM address (session library by state keys; shared by text).
+  Write-tool calls were refused as "user rejected" several times though the user said they never
+  stopped me; files written via shell heredoc instead.
+
 * **2026-10-31 21:35 IST: LAW-1 CLOSED (user) + M2 STREAMING LANDED.** User via Lead: one-read reach ≈ training
   length is a stated limit at this scale; lg8 / lg2 / lg32-reset cancelled (law1 killed before start); lesson
   recorded. The reset-at-EOS mask is UNFINISHED on local branch `reset` (`../qllm_reset`; isolation test
