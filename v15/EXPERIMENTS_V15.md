@@ -360,19 +360,23 @@ Grove I reference extracted from `abe4c89` as `v15/tmp/grove_I.py`):
 
 | variant | read | eat / credits / growth | births | rule toy | lookup toy (4096 keys, lr 3e-4) |
 |---|---|---|---|---|---|
-| Grove I (`abe4c89`) | soft | soft, 1−e^{−αg} | none | 0.839 (0.907 with identity conv; seed 3: 0.661) | 0.955 |
+| Grove I (`abe4c89`) | soft | soft, 1−e^{−αg} | none | 0.839 (identity conv, seeds 2–4: **0.907, 0.661, 0.935**) | 0.955 |
 | Grove II (`b599a56`) | hard (ST) | hard, running mean | yes | 0.255 | 1.000 |
 | Grove III (`4b06ad2`) | soft | hard, running mean | yes / off | 0.575 / 0.090 | 1.000 |
 | Grove IV-b (`8e6214b`, record) | soft | soft, 1−e^{−αg} | yes / off | 0.072, 0.081, 0.488 (seeds 2–4) / 0.655 | 1.000 |
-| **Grove IV (`4a33187`)** | soft | soft, running mean | yes / off | 0.638 / 0.481 (seed 2; seeds 3–4 pending) | 1.000 |
+| **Grove IV (`4a33187`)** | soft | soft, running mean | yes / off | **0.638, 0.093, 0.947** (seeds 2–4) / 0.481 (seed 2) | 1.000 |
 
 Readings: (1) the soft read carries rules (II → III: 0.26 → 0.58); (2) soft
 eating/growth carries more (III → IV: 0.58 → 0.64, and IV-b without births
 0.66 vs III without births 0.09); (3) α-growth with births is unstable
 (2 of 3 seeds collapse) where the running mean is not; (4) births help
 rules in IV (0.64 vs 0.48) and lookups everywhere (1.000); (5) the toy's
-seed noise is large (Grove I 0.66–0.91), so single-seed differences under
-~0.15 mean nothing. The Grove I reference is still ahead on rules.
+seed noise is large (Grove I 0.66–0.94), so single-seed differences under
+~0.15 mean nothing. (6) **Grove IV is bimodal**: seeds 2–4 give 0.64 / 0.09
+/ 0.95, i.e. it either learns the rule as well as Grove I or sits on a dead
+plateau (loss ≈ 2.55); Grove I never collapses. Births plus the soft economy
+race against something early in training; the next step is to find what
+(a loss trace of the collapsed seed), not to re-roll seeds.
 
 ## 5. Roads not taken (so they are not retaken)
 - Prime-period wheels / CRT phases for time and numbers (2026-10-31, 20
