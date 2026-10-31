@@ -4804,3 +4804,18 @@ everything they touch: LM quality, lookup (false abstain 0.35), labels and two-h
 for). This matches the earlier N9a failures (n9c lookup, n9r replication). The confound A1 named
 (N9s's own stage A) cannot explain a 0.23-nat LM gap and a two-hop collapse. **Per A2, cu1n9a does not
 run.** N9s is Library's unit: its removal from the code is Library's call, with the index row.
+
+## clk1: reach is a clock: test-time decay dilation after a skill read (pre-registration, 2026-11-01 04:51 IST; eval only, CPU; Lead's angle 2)
+
+- **Mechanism:** over the span between a skill read and the query, every retention r (notebook decays and
+  the echo memory) becomes r^(1/s); s = 1 is the unchanged model. Applied by a model hook off by default
+  (parity at s = 1 checked before any number).
+- **Cells:** b2p2, skill-pack cell, affine_map_new + shift_wide_new, **fresh seeds 8400–8449** (50 docs per
+  task), L = 4k / 8k, s ∈ {1, 2, 4}; free (primary) and 20-way. Cost: cd3's prose cell (60 windows ×
+  1,024 tokens after an irrelevant pack) with the dilation over the prose; prose NLL vs s = 1.
+- **Bar:** some s ∈ {2, 4} gives free reach(4k) ≥ 0.45 (plain 0.165, contrast a = 4 0.575) AND prose NLL ≤ the
+  s = 1 value + 0.05. Then dilation is a cheap, second-stream-free reach extender, gated by the package
+  (on only after a read). Reported: 8k, the 20-way column, dilation + contrast together.
+- **Prior work:** Δ / dt scaling for SSM length extrapolation (DeciMamba, LongMamba; "Stuffed Mamba" on state
+  collapse). The difference is the trigger: the package dilates after its own skill read, measured on
+  one-read rule reach. No method claim.
