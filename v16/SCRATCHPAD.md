@@ -23,7 +23,7 @@
 
 - 13:55 IST: v14 order approved: L1 (running, data pass ~1 h beside a4f) -> SR-0 (eval-only transplant of the rule vector from a short demo prompt into a long-gap query on b2p2; bar: B@32k >= 0.9 x A@2k for some layer, wrong/random vectors <= 0.25 x B) -> SR (the register) only if SR-0 passes. Prior work named: Function Vectors (Todd 2023), Task Vectors (Hendel 2023), In-Context Vectors, State Soup, Titans. b2p2 is on d_drive (from_6000/...).
 
-- 13:58 IST (clock corrected: notes had drifted ~2 h ahead; times above now follow `date`/commit times). Real ETAs: a4f ~16:50; r3c futility val (step 39060) ~15:20; s8 ~18:00; lbm ~20:00; SL0 20M ~13:50.
+- 13:30 IST (clock corrected: notes had drifted ~2 h ahead; times above now follow `date`/commit times). Real ETAs: a4f ~16:50; r3c futility val (step 39060) ~15:20; s8 ~18:00; lbm ~20:00; SL0 20M ~13:50.
 - SL0 at 5M rows (v13, unit landed): library 1.3 GB, install 106 s (one 3B-mind pass over 5M tokens), query 243 s; PAM 3B + library vs PAM 3B: -0.0014 PG-19 / -0.0040 web (bar -0.05) -> rule 1 FAILS; still +0.09 / +0.11 behind Mamba-2 -> rule 2 fails; the small gain sits on new tokens (-0.009 / -0.012). 20M point reported, running. Reading: a kNN-LM knowledge library over the mind's own state does not close the general-modelling gap at this size.
 
 ## Open questions
