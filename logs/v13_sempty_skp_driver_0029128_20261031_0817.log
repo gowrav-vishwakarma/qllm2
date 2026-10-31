@@ -1,0 +1,46 @@
+skp_chain: code 0029128; r3c baseline 24201 tok/s (2026-10-31T08:17:12Z)
+  r3c 24201 tok/s (baseline 24201)
+=== b2p2 skillpack -> logs/diag/v13_sempty_skillpack_b2p2_skillpack_0029128_20261031_0817.jsonl 2026-10-31T08:17:12Z
+pam: last-position check rel err 1.06e-03; state 1.15 MB
+  shift_wide_new done
+  affine_map_new done
+  r3c 22872 tok/s (baseline 24201)
+=== b2t skillpack -> logs/diag/v13_sempty_skillpack_b2t_skillpack_0029128_20261031_0826.jsonl 2026-10-31T08:26:22Z
+transformer: last-position check rel err 8.19e-03; state 0.00 MB
+  shift_wide_new done
+  affine_map_new done
+  r3c 22128 tok/s (baseline 24201)
+=== b2p1 skillpack -> logs/diag/v13_sempty_skillpack_b2p1_skillpack_0029128_20261031_0828.jsonl 2026-10-31T08:28:40Z
+pam: last-position check rel err 1.19e-03; state 1.15 MB
+  shift_wide_new done
+  affine_map_new done
+  r3c 22396 tok/s (baseline 24201)
+=== b2m skillpack -> logs/diag/v13_sempty_skillpack_b2m_skillpack_0029128_20261031_0831.jsonl 2026-10-31T08:31:58Z
+mamba2: last-position check rel err 6.94e-03; state 13.40 MB
+  shift_wide_new done
+  affine_map_new done
+  r3c 21921 tok/s (baseline 24201)
+=== b2p2 replay_refresh,replay_hop2 -> logs/diag/v13_sempty_skillpack_b2p2_replay_refresh_0029128_20261031_0833.jsonl 2026-10-31T08:33:27Z
+pam: last-position check rel err 1.06e-03; state 1.15 MB
+  shift_wide_new done
+  affine_map_new done
+  two_hop done
+  r3c 21322 tok/s (baseline 24201)
+=== b2t replay_refresh,replay_hop2 -> logs/diag/v13_sempty_skillpack_b2t_replay_refresh_0029128_20261031_0840.jsonl 2026-10-31T08:40:55Z
+transformer: last-position check rel err 8.19e-03; state 0.00 MB
+  shift_wide_new done
+  affine_map_new done
+  two_hop done
+  r3c 21030 tok/s (baseline 24201)
+=== b2p1 replay_refresh,replay_hop2 -> logs/diag/v13_sempty_skillpack_b2p1_replay_refresh_0029128_20261031_0846.jsonl 2026-10-31T08:46:28Z
+pam: last-position check rel err 1.19e-03; state 1.15 MB
+  shift_wide_new done
+  affine_map_new done
+  two_hop done
+  r3c 22026 tok/s (baseline 24201)
+=== b2m replay_refresh,replay_hop2 -> logs/diag/v13_sempty_skillpack_b2m_replay_refresh_0029128_20261031_0853.jsonl 2026-10-31T08:53:58Z
+mamba2: last-position check rel err 6.94e-03; state 13.40 MB
+  shift_wide_new done
+  affine_map_new done
+  two_hop done
+=== skp chain DONE 2026-10-31T08:56:35Z

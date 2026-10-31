@@ -4052,3 +4052,28 @@ guard (rule 3) is measured on the frozen attr3b text (PG-19 + web, 2048-token wi
 `~/attr/data.npz` on the 6000) for every arm AND for b2p2 with the same script, because the
 trainer's own validation uses windows of the arm's SEQ (8k / 32k), which are not
 comparable with b2p2's 2048-window holdout. Guard: arm − b2p2 ≤ +0.02 on both texts.
+
+### Replay integration (MLB-1 reported cell, 2026-10-31 14:45 IST): a replayed span combines with the state inside the reach
+
+Same probe and seeds (100 docs per cell; refresh = mean of affine and shift). *Replay
+alone* = the header at t0, L filler, then 2 replayed demonstration lines + the query.
+*State + replay* = the 8-demo pack at t0 as well.
+
+| model | replay alone @ 0 / 2k / 8k / 32k | state + replay @ 0 / 2k / 8k / 32k | one-read state alone @ 2k | two_hop integrate / oracle / hop-2 only (chance 0.25) |
+|---|---|---|---|---|
+| PAM b2p1 | 0.99 / 0.66 / 0.67 / 0.69 | 1.00 / **0.98** / 0.69 / 0.70 | 0.86 | ~0.19–0.29 everywhere |
+| PAM b2p2 | 1.00 / 0.79 / 0.75 / 0.76 | 1.00 / **0.98** / 0.77 / 0.76 | 0.86 | ~0.18–0.24 everywhere |
+| T++ b2t | 0.54 / 0.53 / 0.31 / 0.18 | 0.57 / 0.53 / 0.34 / 0.20 | 0.03 | ~0.19–0.28 |
+| Mamba-2 b2m | 0.81 / 0.56 / 0.56 / 0.56 | 0.88 / 0.60 / 0.56 / 0.56 | 0.06 | ~0.20–0.28 |
+
+**Reading.**
+- *Inside the reach the state and a replay add up:* PAM at 2k, state + replay 0.98 vs
+  replay alone 0.66 / 0.79 and state alone 0.86 (both seeds). Beyond the reach (8k,
+  32k) the state adds nothing (it has faded), and the replay works alone at ~0.7.
+- *A short re-fetch works at any distance for PAM* (2 lines → ~0.7, flat from 2k to
+  32k). T++ with the same 2 lines falls with total length (0.53 → 0.18; positions past
+  its trained length). Mamba-2 stays at 0.56.
+- *two_hop* is at chance for every model even with both hops in front (oracle): the
+  two-hop skill was never trained, so this cell cannot say anything about integration
+  across hops yet. It needs the format in training (the "low prior, high ceiling" rule)
+  before it can be read.
