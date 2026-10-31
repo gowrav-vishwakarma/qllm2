@@ -70,6 +70,8 @@ Overall ~35 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill hol
 
 - 17:15 IST: L1 + planner v0 (Library, same 16 docs, 32k) MISSES its bar 0.95: P_margin_burst 0.94 synthetic / 0.69 natural vs key alone 0.81 / 0.94; P_concat_burst 1.00 / 0.50 (post-hoc, not a claim). Reading: re-reading helps synthetic keys and HURTS natural ones; the mind's own answer margin follows its priors over plausible text, so confidence alone is not a safe selector (constraint for N11). Next (approved): combined rule (key similarity + re-read margin) and concat-m as a named arm, pre-registered, weight tuned on a held-out split, scored on a NEW seed, abstain rate reported. 128k and L1-256 still running.
 
+- 17:20 IST: lg32 PAUSED by the guard at step 450 (r3c 64.1k alone -> 41.5k shared = -35 %; VRAM fine). Lead: the 20 % rule was miscalibrated (baseline measured alone; two training jobs time-slice, total box throughput +20 %). Decision B: rerun lg32 now, guard r3c >= 55 % of alone-speed, 3 GB floor, checkpoint every 200 steps; standing rule for any two training jobs on one card. New ETAs: LAW-1 lg32 answer ~18:50; r3c ends ~01:00-03:00. L1+P1 pre-registered (combined key-sim + re-read margin, tuned on seed 15000, scored once on 16000); harness P_cands added.
+
 ## Open questions
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
