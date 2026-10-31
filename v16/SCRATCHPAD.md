@@ -91,6 +91,8 @@ Overall ~47 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 holds BEY
 
 - 22:05 IST: R6 split (Mind's argument, accepted; the mind-only 32k bar contradicted the closed limit): R6a (mind) 0-shot stated rule >= 0.75 right before the query AND at 2k after one read; R6b (package) re-fetched rule at 32k >= 0.75; mind-only 32k reported with the stated-limit caption, no bar. Curriculum run (600M, b2p2 recipe): stated rule + demos, fetched spans + question with distractors and abstain, two-hop format; main arm after b2p3 beside r3c, N9s paired arm when memory allows or after r3c (~03:00).
 
+- 21:45 IST: user stopped Mind in its chat (21:27), then handed it back to Lead ("you take lead and resume it"). Resumed with option A: probe + curriculum pre-registration now (CPU), main arm gated on r3c's .done (~01:10 IST, card alone; the 55 % rule stays), N9s paired arm after. Curriculum sources srd / fsq / hop on master (48674d6).
+
 ## Open questions
 - (closed 21:55) Product body: M2 streams (41f8ae8).
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
