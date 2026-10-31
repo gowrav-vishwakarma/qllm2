@@ -18,6 +18,17 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 16:25 IST: 6000 disk cleanup (organiser-authorised; checkpoint-cleanup rule):** root 6.5 → **21 GB
+  free**. Deleted `gscreen_onorm_3cc2b72/latest.pt` (1.17 GB; resume-only, abandoned G2 screen, code removed in
+  2872d7f). Removed the 6000 copies of 11 finished best_model.pt files whose d_drive copy
+  (`/media/gowrav/d_drive/qllm2/checkpoints_v13_sempty/<run>/best_model.pt`) has the SAME md5 (checked both
+  sides before rm; each folder keeps `MOVED_TO_D_DRIVE.txt` with the md5), 1.17 GB each: c2m2b_main_b788731,
+  e1g_echo_a0fab65, m1_m1echo_ccbf028, m2_m2echo_ed326a1, mix3b_delta_answ100_long2h9_5c87148,
+  r4screen_store_0868a1b, r600_ctl_91daf0a, tfc1b_main_b788731, tfs1_tf_b788731, tfs2b_main_b788731,
+  wikitext_chrono_n4gate_fair_2537782. Kept on the 6000: everything a running / queued job needs (r3ca/r3cb,
+  b2t2, tfc1a, b2ma, c1m2a, 1c913ef for SL0), all Mamba-2 checkpoints (only scorable there), the recent pair
+  models (b2p1/2, b2t, b2m, lbp, lbt). No other user's file touched.
+
 * **2026-10-31 16:00 IST: organiser leads v16** (user): board `v16/SCRATCHPAD.md`; GPU order and scope go
   through the organiser; v13 keeps the mind, the MLB-1 spec, the release, its own pre-registrations.
   **SL0 running on the 6000** (tmux `sl0`, `~/sl0_chain.sh`, worktree `~/Development/qllm_sl0` @ 8445f73;
