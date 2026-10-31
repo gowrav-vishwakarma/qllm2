@@ -11,7 +11,8 @@
 import os, sys, time, numpy as np, torch
 R = os.environ.get('SL0_ROOT') or __file__.rsplit('/v13_sempty/', 1)[0]
 sys.path.insert(0, R); sys.path.insert(0, R + '/scripts'); sys.path.insert(0, R + '/v13_sempty/tmp')
-K, DIM, KEYCHUNK, QCHUNK = 64, 128, 500_000, 1024
+K, DIM, KEYCHUNK = 64, 128, 500_000
+QCHUNK = int(os.environ.get("SL0_QCHUNK", "1024"))   # smaller for big libraries on a shared card
 dev = torch.device('cuda')
 if os.environ.get('SL0_MEM_FRAC'):
     torch.cuda.set_per_process_memory_fraction(float(os.environ['SL0_MEM_FRAC']))
