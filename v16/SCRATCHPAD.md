@@ -60,6 +60,8 @@ Overall ~35 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill hol
 
 - 16:20 IST: HARNESS BUG (Lead's own): per-doc seeding used Python's per-process randomized hash(task) -> separate runs with the same --seed built DIFFERENT documents. Fixed in 0eb2ead (zlib.crc32; MLB-1 A4). Within-run comparisons were paired; cross-run ones (ORG-1's PAM / T++ / Mamba-2 tables, l1free vs the grid) were unpaired samples; headline readings unchanged, paired claims rerun at 0eb2ead. Mind's skill-pack probe is unaffected (no hash()). Same commit: key_fn gets the layer-k keys (Library's point 1), 3-arg burst key_fn, span-rule C5 fields (Library's point 2). Library's first L1-proper head: burst top-1 0.78-0.82 on its 4k validation (frozen burst 0.50 at 32k); bench run at 0eb2ead next.
 
+- 16:20 IST: a4f VERDICT (Mind): in between, NOT in the package. Hashed n-gram table (+33.5M sparse params) on the 600M mind: holdout 3.4488 vs C1-ctl 3.4743 (-0.026, bar -0.02 met); new-token loss 0-64 web -0.062 (met), PG-19 -0.0275 (bar -0.03, missed); recall guard met (0.916 vs 0.825). Engram-class parametric knowledge = cost table, serves neither thesis clause, no more GPU. 4090 now: Library (one job at a time) + Evol V1's finishing pair. lg32 started beside r3c alone (41 GB free at start vs its 42.6 GB gate: Lead asked Mind to confirm; guard baseline 31.4k tok/s, 0 strikes).
+
 ## Open questions
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
