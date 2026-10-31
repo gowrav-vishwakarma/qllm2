@@ -1063,6 +1063,8 @@ def build_argparser():
     p.add_argument('--vault', action='store_true', help='A2b: pinned state + protect gate')
     p.add_argument('--delta', action='store_true', help='A3: delta erase/write')
     p.add_argument('--cond_mem', action='store_true', help='A4: conditional n-gram memory')
+    p.add_argument('--reset_at_eos', action='store_true',
+                   help='lg8r: reset notebooks and echo at document separators (EOS)')
     p.add_argument('--chrono', action='store_true',
                    help='N1: Chrono-PAM content-modulated rotary retention (real arm)')
     p.add_argument('--out_gate', action='store_true',
@@ -1144,6 +1146,8 @@ def main():
         cfg.delta = True
     if args.cond_mem:
         cfg.cond_mem = True
+    if args.reset_at_eos:
+        cfg.reset_at_eos = True
     if args.chrono:
         cfg.chrono = True
     if args.out_gate:

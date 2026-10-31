@@ -56,6 +56,8 @@ class PAMConfig:
     # states -- was REMOVED 2026-09-05: a8 stayed at chance at 4-8x cost even
     # with sharpened routing; multi-way is not a memory-structure problem.
     # See EXPERIMENTS_SEMPY "A2r content-routed delta".)
+    reset_at_eos: bool = False       # lg8r: recurrent state reset at document separators
+    reset_token_id: int = 50256      #   (retention 0 at the separator in the notebooks; echo also at the next token)
     cond_mem: bool = False           # A4: Engram-style hashed n-gram conditional memory
     cond_mem_slots: int = 1 << 18    # table rows per (order, head)
     cond_mem_dim: int = 64           # table row width

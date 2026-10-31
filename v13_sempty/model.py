@@ -841,6 +841,9 @@ class RealPAMLayer(nn.Module):
             keys.raw(batch, self.heads, time, self.head_feature), dim=-1).reshape(B * H, T, K)
         v = values.raw(batch, self.heads, time, self.head_feature).reshape(B * H, T, K)
         retention = decay.raw(batch, self.heads, time).reshape(B * H, T)
+        keep = getattr(self, '_keep', None)      # lg8r reset: 0 at document separators, else 1
+        if keep is not None:
+            retention = retention * keep[:, None, :].expand(B, H, T).reshape(B * H, T).to(retention.dtype)
         bw, be = self._delta_gates(tokens)
         carry = None
         if state is not None:                                     # chunked prefill continuing a notebook
@@ -1203,6 +1206,14 @@ class LM(nn.Module):
                 "decode are supported)")
         new_states = []
         shared = None
+        keep = None
+        if getattr(self.config, 'reset_at_eos', False) and input_ids is not None:
+            if not self.config.delta:
+                raise NotImplementedError("reset_at_eos: masks the delta notebook path only")
+            keep = (input_ids != self.config.reset_token_id).float()          # [B, T]
+        for block in self.blocks:
+            if block.pam is not None:
+                block.pam._keep = keep
         for i, block in enumerate(self.blocks):
             state = states[i] if states is not None else None
             if use_ckpt:
@@ -1253,6 +1264,12 @@ class LM(nn.Module):
         bw = per_head(torch.sigmoid(wr))
         be = per_head(torch.sigmoid(er - 3.0).clamp(max=0.95))
         kn = nn.functional.normalize(heads(k), dim=-1)
+        if getattr(cfg, 'reset_at_eos', False):
+            # The separator acts as a fresh start: retention 0 there, and its key (built from
+            # h_{t-1}, the previous document's last token) is zeroed like a fresh k_0 = 0.
+            sep = (input_ids == cfg.reset_token_id)
+            retention = retention * (~sep).to(retention.dtype)[:, None, :].expand(B, H, T).reshape(B * H, T)
+            kn = kn * (~sep).to(kn.dtype)[:, None, :, None].expand(B, H, T, 1).reshape(B * H, T, 1)
         if state is None:
             read, S = pam_delta_batched(heads(q), kn, heads(v), retention, bw, be, None)
             S = S.reshape(B * H, K, K).float()

@@ -57,6 +57,7 @@ SEED="${SEED:-42}"            # init + data-mix seed (default 42 = every run so 
 ECHO="${ECHO:-0}"              # E1 echo (succession) memory into the head
 ECHO_PHASE_LAGS="${ECHO_PHASE_LAGS:-0}" # v14 N9a content-phase echo keys (0 = off; needs ECHO=1; builds V14LM)
 NGRAM_ORDERS="${NGRAM_ORDERS:-}"      # v14 N7 in-context n-gram memory orders, e.g. 2,3 (empty = off; builds V14LM)
+RESET_AT_EOS="${RESET_AT_EOS:-0}"      # lg8r: state reset at document separators
 COND_MEM="${COND_MEM:-0}"              # A4 hashed n-gram conditional memory (tables lr x5, no wd)
 ECHO_PHASE_SALIENT="${ECHO_PHASE_SALIENT:-0}" # v14 N9s salient running phase on top of N9a (1 = on; needs ECHO_PHASE_LAGS > 0; builds V14LM)
 ECHO_SURPRISE_TAU="${ECHO_SURPRISE_TAU:-0}" # v14 N12 surprise-selected echo writes, nats (0 = off; needs ECHO=1; builds V14LM)
@@ -103,6 +104,7 @@ if [ "$DELTA" = "1" ]; then EXTRA+=(--delta); fi
 if [ "$SHORT_CONV" = "1" ]; then EXTRA+=(--short_conv); fi
 if [ "$ECHO" = "1" ]; then EXTRA+=(--echo); fi
 if [ "$COND_MEM" = "1" ]; then EXTRA+=(--cond_mem); fi
+if [ "$RESET_AT_EOS" = "1" ]; then EXTRA+=(--reset_at_eos); fi
 if [ "$ECHO_PHASE_LAGS" != "0" ]; then EXTRA+=(--echo_phase_lags "$ECHO_PHASE_LAGS"); fi
 if [ -n "$NGRAM_ORDERS" ]; then EXTRA+=(--ngram_orders "$NGRAM_ORDERS"); fi
 if [ "$ECHO_PHASE_SALIENT" != "0" ]; then EXTRA+=(--echo_phase_salient); fi
