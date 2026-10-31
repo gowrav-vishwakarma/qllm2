@@ -336,8 +336,11 @@ because the chain needs a clean first address. One seed: replicate first.
 context, collapses at distance (0.08 vs PAM 0.67), and beats PAM on exact
 items (label_diag 0.787 vs 0.57–0.63, a far number through filler).
 
-**What it really says.** It comes down to two update rules. PAM's
-notebooks can write without forgetting, but cannot refuse a write; Mamba-2
+**What it really says.** (Corrected by v13 at ~06:45: with DELTA = 1 the
+notebooks have a soft write gate, selective by rank (AUROC 0.84-0.95) but
+~10x too weak in size; see EXPERIMENTS_V14 "N12" Correction.) It comes down
+to two update rules. PAM's notebooks can write without forgetting, but
+refuse filler only softly; Mamba-2
 cannot write without forgetting (one Δ). So PAM integrates and Mamba-2
 selects. Neither does both, and the brain uses two systems for this
 (neocortex integrates, hippocampus stores the surprising single episode).

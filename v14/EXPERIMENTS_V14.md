@@ -1418,6 +1418,32 @@ The tie explains both results:
 
 **What is missing:** a write that is selective but not tied to forgetting.
 
+**Correction (v13, 2026-10-31 ~06:45 IST, CPU diagnostic on trained
+checkpoints).** I read the non-delta formula. With DELTA = 1 (A3, on in
+every M2 run) the notebooks DO write through a soft per-token, per-head gate
+b_w = sigmoid(write_proj(x)) that is not tied to decay. The coupled
+Mamba-2 form was v13's C1, which FAILED at 300M (far a1 0.10 vs 0.26), and
+that fits the tie reading. The trained gates are:
+- **Selective by rank:** AUROC(item / label > filler) is 0.84–0.95 in echo
+  and blocks 7 / 11 (block 3: 0.60).
+- **Far too weak by size:** echo writes ~0.12–0.14 and erases ~0.11 at each
+  filler token, vs 0.2–0.5 at items. Filler outnumbers items ~100:1, so an
+  item keeps about exp(−0.11·N/98) through N filler tokens (~0.57 per
+  500-token gap).
+
+So "PAM cannot refuse a write" should read "PAM refuses filler only
+softly, about 10× too weakly". The case for a structural selector is
+stronger, not weaker.
+
+v13 also found that echo retention drops at item / label tokens (it learned
+the tie softly), and that B2 training sharpens this into a reset on rule
+prompts. The distance edge may therefore be "overwrite a rule register at
+each example, carry the latest across weakly written filler" rather than
+coherent integration (v13 retracted its integration guess). v13 is testing
+a test-time gate floor (gates < tau set to 0) on label_diag at 0 / 2048 /
+4096: if far label accuracy rises without training, filler writes are what
+bury items.
+
 **Why not a learned soft gate.** v13's echo memory already has separate
 soft decay / write / erase gates, and label_diag is still 0.57–0.63. v15's
 G1d saw the same thing in another unit: learned soft addressing stayed soft
