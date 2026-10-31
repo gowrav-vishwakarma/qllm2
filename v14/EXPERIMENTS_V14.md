@@ -1394,6 +1394,75 @@ toward the intent. Today PAM looks up with the current token's state at
 which state forms the query (a slow planner state vs the body), and how the
 two stores' reads are combined.
 
+### N12 — surprise-selected item store (design only, 2026-10-31 ~06:45 IST)
+
+**Why (v13 EUREKA, `adbf1f3`).** At 600M on the same B2 data, Mamba-2
+nearly matches PAM in context but collapses across distance (spread
+shift/affine `_new` at 2048 + 4096: PAM 0.67, Mamba-2 0.08, T++ 0.13).
+Mamba-2 leads on exact single items (label_diag 0.787 vs PAM 0.57–0.63; the
+last far number through filler 0.27–0.31 vs PAM ≤ 0.14).
+
+**Reading from the two update rules.**
+- PAM notebook: S_t = a_t S + v⊗k̄. The retention a_t depends on the input,
+  but every token WRITES at full strength.
+- Mamba-2: h_t = exp(−Δ_t A) h + Δ_t B_t x_t. One Δ_t ties "write this" to
+  "forget the past".
+
+The tie explains both results:
+- Mamba-2 can skip filler (Δ ≈ 0: no write, no forget), so single items
+  survive.
+- But writing each new example also forgets the earlier ones, so examples
+  far apart do not add up.
+- PAM can write without forgetting (rules add up across distance), but it
+  cannot refuse a write, so filler buries single items.
+
+**What is missing:** a write that is selective but not tied to forgetting.
+
+**Why not a learned soft gate.** v13's echo memory already has separate
+soft decay / write / erase gates, and label_diag is still 0.57–0.63. v15's
+G1d saw the same thing in another unit: learned soft addressing stayed soft
+("sharpness must be structural"). So the selection should be structural.
+
+**Idea: the fast store keeps what the slow learner failed to predict.** A
+separate item store beside the notebooks (which keep integrating
+everything). A token writes to it only when the BODY was surprised by it:
+u_t = −log p_body(x_t | x_<t), computed from the body's pre-memory logits.
+
+- It is detached: no gradient flows through the choice.
+- It is causal.
+- It needs no training to become sparse, because filler is predictable;
+  names, labels and new numbers are not.
+
+This is the complementary-learning-systems rule (the hippocampus stores the
+neocortex's prediction errors) as the write policy. Mamba-2's Δ and Gated
+DeltaNet's β, by contrast, are learned soft gates.
+
+- **Write (per head, delta rule, no decay):** w_t = 1 if u_t is in the top m
+  of the last C positions' u (causal rank, so at most ~m/C of tokens write),
+  else 0. S_t = S − w_t (S k_t − v_t) k_tᵀ with k_t = unit(W_k h_{t−1}) (the
+  N9a phase is optional) and v_t = rms(E[x_t]) (the exact token).
+- **Read:** r_t = S unit(W_q h_t), through a zero-init output into the LM
+  vector, as echo does. O(1): one d×d matrix per head.
+- **Salience for N9s:** the same u_t can set N9s's running angle (a topic
+  register driven by surprise, not a learned gate). This links to n9th if
+  H is met.
+
+**Open questions before code.**
+1. Body logits cost one more LM-head pass (no grad, chunked over time).
+2. Web-text filler has its own surprising words. At a ~1/8 write rate,
+   8k tokens of spread give ~1000 writes into a d = 64 store, so either the
+   threshold must be absolute (write only u above a high bar) or the store
+   must be larger.
+3. The micro bench has no web filler; a micro `--spread` needs in-domain
+   filler (label_gap's FILLER words) and says less than v13's 600M
+   spread.
+
+**Judgement (to pre-register with the code).**
+- Micro: label_exact(_new), label_gap(_new), two_hop vs echo and N9a on the
+  same seeds.
+- 600M, through v13: label_diag AND spread step_wide_new must rise, while
+  spread shift/affine `_new` must not fall.
+
 ### N8 — self-opened memory (learned critical period; handed over by the v13 session, 2026-10-30)
 
 **Observation (v13).** The two-stage schedule (language first, recall docs

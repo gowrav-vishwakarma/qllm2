@@ -14,7 +14,13 @@ Keep all three current as things happen (user rule, 2026-10-29).
   definition: t40 behavioral JSON, accuracy·n over `aggregates`, split at
   context_tokens 2048) against the bars in EXPERIMENTS_V14 "N9a recall
   replication". Beside it: v15's G1r (its own small job).
-* **n9th running on the 6000** (agreed with v13 04:10 IST): tmux `n9th`,
+* **n9th split (06:30 IST):** the 6000 gives it only ~9k tok/s (saturated),
+  so the 6000 runs seed 131 only (a tmux `n9thstop` watcher kills `n9th`
+  after its DONE line, ~11:30 IST); seeds 132–135 run on the 4090 (tmux
+  `n9th4090`, worktree `../qllm_v14n9th` at `161a3c9`, `SAVE=1` to d_drive,
+  driver `~/n9th_4090.sh`, log `logs/v14_n9th4090_driver_161a3c9.log`;
+  waits for tmux `n9r` to end). Score all 5 seeds together.
+* **n9th on the 6000** (agreed with v13 04:10 IST): tmux `n9th`,
   worktree `~/Development/qllm_v14` at `161a3c9`, driver `~/n9th_chain.sh`,
   driver log `logs/v14_n9th_driver_161a3c9.log` (box clock UTC). Arms
   echo_phase / echo_phase_sal / tpp, seeds 131..135 in sequence (each pair
@@ -323,6 +329,33 @@ because the chain needs a clean first address. One seed: replicate first.
 
 **Next:** n9th (two_hop replication) when a slot is agreed; n9r readout
 ~12:00 IST.
+
+## Step back (2026-10-31 ~06:45 IST, after v13's Mamba-2 EUREKA)
+
+**What we saw (v13, `adbf1f3`).** Mamba-2 nearly matches PAM on rules in
+context, collapses at distance (0.08 vs PAM 0.67), and beats PAM on exact
+items (label_diag 0.787 vs 0.57–0.63, a far number through filler).
+
+**What it really says.** It comes down to two update rules. PAM's
+notebooks can write without forgetting, but cannot refuse a write; Mamba-2
+cannot write without forgetting (one Δ). So PAM integrates and Mamba-2
+selects. Neither does both, and the brain uses two systems for this
+(neocortex integrates, hippocampus stores the surprising single episode).
+v14 has pointed at that pair since 10-30 (N7 was a first try at the
+episodic part); now we know what the episodic part must do: select, and
+not decay.
+
+**The bold angle: let the body's own surprise choose what gets written.**
+That is what the slow learner could not predict, which is what the
+hippocampus stores. It needs no learned gate, so it cannot stay soft (v15's
+G1d lesson), and it is sparse for free on natural text. It may also be the
+right salience for N9s: the words you could not predict are the ones that
+name the topic. Written as N12 (design only). Open: the cost of the body
+logits, and capacity under web filler at 8k (threshold or bigger store).
+
+**Order.** n9th first (seed 131 on the 6000 ~11:30 IST; seeds 132–135 on
+the 4090 after n9r, ~12:00–16:00). N12 code + selftest while they run
+(CPU / small); its micro run goes after n9th.
 
 ## Next action
 
