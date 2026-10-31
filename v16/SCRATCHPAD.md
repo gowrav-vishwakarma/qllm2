@@ -28,6 +28,8 @@
 
 - 13:45 IST: instr cell on b2p2 (trained format): stated rule alone 0.000 at 2k/8k/32k (also 0 with the rule re-read in front); 2 demonstrations before the query 0.625/1.000/0.750 (oracle 1.0). Words do not write the rule register; demonstrations do. Curriculum item confirmed (Mind); skill packs must carry demonstrations (Library). EUREKA entry added.
 
+- 13:50 IST: v16/bench.py VALIDATED at 32k (d319e8d): all 16 task x key cells plus the changed cells run without error. Readings (4 docs): surprise bursts at tau 10 = 0.60-0.63 rows/16 tokens with a burst starting inside the needle in 100 % (segmenter works); the burst-MEAN key retrieves 0/4 (a learned pooling key is L1's job); planner v0 on top-5 spans tracks the fetch (P_concat/P_margin 0.25-0.5, bounded by whether the right span is in the top-5); never-stored queries' max-sim 0.86 overlaps stored 0.79-0.88 at 32k (frozen address cannot abstain there). Spec v1 freeze requested from Mind. CPU baseline grid (32 docs, 32k, 7 tasks x 2 key modes) started.
+
 ## Open questions
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
 - The instr cell on c1ctlb was invalid (no rule skill); b2p2 rerun decides whether words can write the rule state.
