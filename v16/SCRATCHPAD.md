@@ -1,7 +1,7 @@
 # v16 handover + board (Lead = the organiser session; Mind = formerly "Qllm v13"; Library = formerly "Qllm v14"; Lead since 2026-10-31 13:20 IST)
 
 ## Progress to 100 % (Lead's estimate; 100 % = thesis shown on MLB-1 vs baselines as they are + a distributable mind+library package)
-Overall ~37 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill holds BEYOND training context after one read 10 % (LAW-1 lg32 FAIL: reach shrank; lg8/lg2 overnight; SR-0 now) | 3 rule from words 0 % (curriculum) | 4 session library 65 % (L1 burst key: 32k 0.81/0.94, 128k 0.56/1.00 synth/natural; top-5 0.94-1.00; L1+P1 scoring next) | 5 planner 20 % | 6 shared library / skill packs 15 % | 7 LM quality guard 60 % (r3c to 3B) | 8 benchmark MLB-1 70 % (GPU grid) | 9 package + release 0 %. If LAW-1 passes: ~55 %.
+Overall ~37 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill holds BEYOND training context after one read 10 % (LAW-1 lg32 FAIL: reach shrank; lg8/lg2 overnight; SR-0 now) | 3 rule from words 0 % (curriculum) | 4 session library 65 % (L1 burst key: 32k 0.81/0.94, 128k 0.56/1.00 synth/natural; top-5 0.94-1.00; L1+P1 scoring next) | 5 planner 20 % | 6 shared library / skill packs 15 % | 7 LM quality guard 60 % (r3c to 3B) | 8 benchmark MLB-1 70 % (GPU grid) | 9 package + release 5 % (M2 streaming = first release blocker). If LAW-1 passes: ~55 %.
 
 ## Board (2026-10-31 18:50 IST)
 
@@ -81,7 +81,10 @@ Overall ~37 %. 1 rules in context vs T++/Mamba-2 80 % (s8 pending) | 2 skill hol
 
 - 21:20 IST: Library verdicts (5a29519, c8247b4): SR-0 NOT met on the test seeds too (32k: B 0.16 / 0.08 vs bars 0.88 / 0.67; decisive L = 0 row 0.10 / 0.00 = no better than wrong-rule / random): the residual-vector register is DROPPED; in PAM the rule likely lives in the notebook STATE. L1 Bar A NOT met (synthetic 0.81 / 0.56 at 32k / 128k; natural 0.94 / 1.00; frozen burst 0.06 / 0.25); Bar P MET on natural paraphrase (0.81 vs organ 0.31); P0 / P1 (0.69 / 0.875) / concat-5 / L1-256 miss. Decisions: two-organ fetch (exact organ on exact match, else learned key, abstain on raw similarity; field-aware tool rows) APPROVED as the package fetch (hybrid sparse+dense = cited, no claim), pre-registered on a fresh seed. SR-0b only in its informative forms (notebooks-only REPLACE at the query; MERGE into filler-evolved notebooks); Mind builds the snapshot/restore hook only if < 1 h.
 
+- 21:30 IST: Mind: the M2 body (b2p2's, shared reads) cannot STREAM today (no chunked prefill with carried state, no O(1) decode); the state hook needs init-state wiring through delta notebooks, SharedRead and echo with parity tests (2-4 h). Decisions: order (1) reset-at-document-boundary mask for lg32-reset, (2) carried-state chunked prefill + O(1) decode for M2 with parity tests = RELEASE item (also gives Library's state hook). Until (2) lands, MLB-1 gets a dated caveat: M2 memory figures are computed, not yet demonstrated by streaming (M1 / c1ctlb streams today). If M2 streaming > ~1 day: quantify M1 vs M2 on skill-pack + LM cells and ship the body that streams. Register route (SR-0b) waits behind LAW-1.
+
 ## Open questions
+- Product body: M2 (better LM / skill numbers, no streaming yet) vs M1 (streams today). Decided by the M2 streaming effort.
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
 - The instr cell on c1ctlb was invalid (no rule skill); b2p2 rerun decides whether words can write the rule state.
