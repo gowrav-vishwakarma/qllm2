@@ -18,6 +18,25 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 01:22 IST: HANDOVER STATE.** Done tonight:
+  - reset mask (`f2587b5`) and ANSWER_IN_WINDOW (`824a988`);
+  - lg8r VERDICT FAIL, mixed case (reach 4k 0.465, half-lives held, LM +0.08 / +0.11); reach-by-training stopped;
+  - r3c VERDICT (3B: LM +0.013 / +0.055 behind, recall 0.79 vs 0.54 / 0.61);
+  - MLB-1 A7 (free generation primary) + A8 (natq reported);
+  - free columns in run_skillpack_probe / run_learning_probe / run_cur_probe;
+  - verify cell + cu1 A3 (b2p2: wrong row's value said 0.14 free vs 0.96 right; EUREKA);
+  - r3p pre-registered (6000 after cu1n9s; mix by cu1's verdict).
+
+  Running: cu1 on the 6000 (`~/Development/qllm_cu1`, ends ~02:30 IST, then its readouts), then
+  cu1n9s. Next for Mind:
+  - score cu1 against its rules + A3 verify (free beside);
+  - fix r3p's mix from the verdict and write its launcher (gates: cu1n9s ended, VRAM, disk ≥ 8 GB);
+  - pre-register cu2 (VERIFY 45 / 5-10 / 45 + paraphrase facts / questions; orphan check);
+  - remove b2gap + RESET_AT_EOS if Lead agrees.
+
+  lg8r's checkpoint is on d_drive (`checkpoints_v13_sempty/lg8r_main_f2b7d8c`; the worktree link
+  was a real dir, fixed).
+
 * **2026-11-01 00:53 IST: STEP BACK after the orphan bug, r3c and the A7 generations.** What surfaced:
   - *Ranked is not said.* At 2k after one read b2p2 ranks the rule's answer first among 20 in 0.88
     of docs but SAYS it in only 0.68. The fading state still carries the skill; it is outvoted by
