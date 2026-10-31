@@ -19,7 +19,7 @@ from __future__ import annotations
 import argparse, json, os, random, sys, time
 from pathlib import Path
 import numpy as np, torch
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]      # scripts/ -> repo root
 sys.path.insert(0, str(ROOT)); sys.path.insert(0, str(ROOT / 'scripts'))
 from run_memory_behavioral import _load_v13_sempty  # noqa: E402
 from memory_probes.spread import filler_tokens  # noqa: E402
