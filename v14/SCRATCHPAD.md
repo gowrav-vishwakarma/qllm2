@@ -51,6 +51,18 @@ needs a 3-line bench hook). **n11rf** OOMed at 01:17 (4 rows); relaunch after A6
 * **Waking peers:** `scripts/wake_session.sh <Name> <id>` (memory
   wake-sessions); check ListAgents / tmux first.
 
+## Skill register rule (from Mind's EUREKA 3c7a7fa, 02:36 IST)
+
+* A rule taught in WORDS is learned as a lookup table (cu1: stated shift rule
+  0.97 on trained k, 0.00 on held-out k); shown by EXAMPLES it generalises
+  (one demo: 0.97 on held-out k). **Library schema rule: a skill entry is
+  stored as demonstrations (optionally plus its words), never words only.**
+  The N11 refresh pack already is (header + 8 demo lines). Pack schema
+  (`qllm-pack/v1`) entries of kind "skill" must carry ≥ 1 demonstration.
+* cu1 on my verify cell: an unrelated key's row → " unknown" said 0.32,
+  ranked abstain 0.925, wrong value 0.015 (b2p2 0.14), synthetic keys only;
+  natural keys remain cu2's job.
+
 ## Step back (2026-11-01 02:00 IST, after A5: synonyms)
 
 * **What surprised me.** The frozen state with NO head (C2) finds the synonym
