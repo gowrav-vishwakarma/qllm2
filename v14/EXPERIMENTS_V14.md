@@ -2422,6 +2422,37 @@ tokens and BM25 is ambiguous on common words.
   domain (rewording, synonyms) is the one no cell tests yet. Logs
   `logs/v14_sl2sa_*`.
 
+**N11 — the planner (design, 2026-10-31 ~23:40 IST; Lead's order item 3).** What
+it decides, from today's evidence:
+1. **Explicit question → fetch at question time.** Order: (a) the exact organ
+   over the session stream and the shared library (an exact match wins);
+   (b) the session library by mind-state keys (L1 head, in-document: 0.94 /
+   1.00 on natural keys at 32k / 128k); (c) the shared library by text (SL2:
+   0.99-1.00 at 4000 entries). The question is its own cue, so no refresh.
+2. **Standing instruction → refresh** every R ≈ 2k tokens (N11-R, below),
+   because after one read the mind holds a skill ~2k tokens.
+3. **Two hops → chain:** fetch hop 1, the mind re-reads it, the key word it
+   produces forms the hop-2 query, fetch again (the harness's planner chain
+   on the organ already does this on exact keys).
+4. **Selector constraint:** candidates are chosen by rule (exact match >
+   session key > shared text), NEVER by the mind's answer confidence (L1+P0:
+   on natural spans that confidence picked 0.69 vs the key's 0.94).
+5. **Abstain:** only when nothing matches exactly and no candidate exists; a
+   similarity threshold cannot separate paraphrased-stored from never-stored
+   (A2: 0.62 vs 0.56).
+- **Closest prior work:** ReAct (Yao et al. 2023: interleaved reasoning and
+  tool calls), Self-Ask (Press et al. 2022: follow-up questions for multi-hop),
+  query rewriting for RAG (Ma et al. 2023), FLARE (Jiang et al. 2023: active
+  retrieval triggered by low-confidence tokens). **Difference (one line):**
+  these steer a transformer that keeps its whole window; ours steers an O(1)
+  mind that keeps a skill only ~2k tokens, so the planner must also SCHEDULE
+  REFRESH, and its trigger and selector cannot be the model's confidence
+  (FLARE's trigger), which our data shows is unsafe over natural spans.
+- **Where it is measured:** the fetch rule (1, 3, 4, 5) = Lead's package table
+  (kv / kv1 / kvupd / hop2 / tool / para / neg, 40 docs per cell, fresh seeds
+  18000+); the refresh rule (2) = N11-R. No separate pre-registration for the
+  fetch rule: the table IS its evaluation.
+
 **N11-R — the planner's refresh rule (PRE-REGISTERED 2026-10-31 23:32 IST,
 before any code or number; Lead's order item 3; eval only).**
 - **Step back first.** For an EXPLICIT question the question itself is the
