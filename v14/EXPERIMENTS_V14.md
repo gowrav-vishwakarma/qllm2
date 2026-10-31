@@ -1541,7 +1541,7 @@ without breaking the rules?
   least as many seeds as echo, AND the mean over seeds of (label_exact_new
   + label_gap_new) / 2 at 8 shots gives d = N12 − echo ≥ 0.
 - **Reported:** d itself (≥ +0.15 = a strong signal), two_hop, repeat_copy,
-  every other cell, ms/step. Added ~07:00 IST before any N12 number (v13's
+  every other cell, ms/step. Added ~07:25 IST before any N12 number (v13's
   request): label_exact and label_exact_new at 2 shots, where PAM's 600M
   label gap starts.
 - **Outcomes:**
