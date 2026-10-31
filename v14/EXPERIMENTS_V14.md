@@ -2387,6 +2387,25 @@ tokens and BM25 is ambiguous on common words.
   entries, exact + paraphrased questions; MiniLM row kept as registered.
 - **Bars:** exact ≥ 0.99 / ≥ 0.97 at 400 / 4000; paraphrase ≥ 0.80 / ≥ 0.70 on
   BOTH key types. Reported: index MB per 1M tokens.
+- **SL2 RESULT (2026-10-31 23:20 IST; seed 21000; code `f781a9e` local =
+  `bdfa727` on origin; retrieval only, CPU): ALL bars MET.** Logs
+  `logs/v14_sl2_f781a9e_*`.
+
+  | question | 400 entries: SL2 (SL1 / organ-norm / MiniLM) | 4000 entries: SL2 (SL1 / organ-norm / MiniLM) |
+  |---|---|---|
+  | exact synthetic | 1.00 (1.00 / 1.00 / 0.37) | 1.00 (1.00 / 1.00 / 0.20) |
+  | exact natural | 1.00 (1.00 / 1.00 / 0.18) | 1.00 (1.00 / 1.00 / 0.08) |
+  | para synthetic | 1.00 (0.98 / 1.00 / 0.39) | 1.00 (0.93 / 1.00 / 0.21) |
+  | para natural | **1.00** (0.76 / 1.00 / 0.17) | **0.99** (0.49 / 0.99 / 0.08) |
+
+  - **Scope, as registered:** surface variants only (case, plural, article),
+    fixed by construction; synonyms and rewording are untested (open item).
+    Plumbing, no claim: the SHARED library's text fetch for exact and
+    surface-variant questions is solved at 4000 entries.
+  - **Memory as implemented:** normalised-word organ 10-27 MB per 1M tokens and
+    the token organ 24-67 MB (dicts per n); a suffix array over each stream
+    gives the same longest-match lookups at ~4 MB per 1M (to do before the
+    package counts MB).
 
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
