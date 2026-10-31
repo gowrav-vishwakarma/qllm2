@@ -2621,6 +2621,35 @@ fitted threshold:
     answers THIS question": any row naming one of the 20 values raises it, so
     never-stored queries gain too. The frozen rule still runs on S2 as
     registered (expected NOT met).
+- **A4: the normalised-word organ inside the session (PRE-REGISTERED
+  2026-11-01 01:04 IST, before any number of it). PLUMBING, no novelty claim**
+  (closest prior work: IR case folding / suffix stripping / stop words, Porter
+  1980, plus exact phrase match; SL2 already used it across documents). Why:
+  strict mode halves para / tool because only the token organ may say "found";
+  bench's para cell varies only case / plural / a leading "the" (undone by
+  this normaliser BY DESIGN), so a met A4 says nothing about rewording or
+  synonyms (no cell yet).
+  - Rule (`PACKAGE_NORM=1`, after the token organ misses): words = runs of
+    letters / digits in the decoded tokens, lower-cased, "a / an / the" dropped,
+    one trailing "s" stripped when the word has ≥ 4 letters; stream words from
+    tokens [0, doc_end), query words from [query_pos, T). (1) the longest query
+    SUFFIX word n-gram, n = 6..3, found in the stream; else (2) the longest
+    ANY-position query word n-gram, n = 6..3; else (3) any query word bigram
+    holding a word seen ≤ 2 times in the stream. Latest occurrence wins. Row =
+    its sentence (previous "." to the next "." after the match, ≤ 64 tokens
+    each way), ranked first like the token organ's row. Strict: abstain iff the
+    token organ and steps 1-3 all miss.
+  - TEXT-ONLY CHECK (CPU; the harness's own `build()` and rng, so the documents
+    are exactly bench's): seed 24000 (fresh), L = 32768, 40 docs per cell,
+    kv / para / tool / neg × synthetic / natural, needles 8. "Right row" = the
+    row's decoded text holds the asked definition ("{key} refers to {val}")
+    or, for tool, the asked job's block ("job: {job};" and "{field}: {val}").
+  - Bars: para and tool right row ≥ 0.95 on both key types; neg any-organ hit
+    ≤ 0.05 on both key types; kv right row ≥ 0.975 (the token organ, unchanged).
+    Per-step hit counts reported.
+  - If met: the mind run (b2p2, 32k, strict + `PACKAGE_NORM=1`, seed 24000,
+    `P_free_sent` primary) on Lead's gate; bars there: para and tool
+    `P_free_sent` ≥ 0.80, neg abstain ≥ 0.90, both key types.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
