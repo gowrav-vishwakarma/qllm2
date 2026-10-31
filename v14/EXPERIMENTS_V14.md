@@ -2269,6 +2269,14 @@ before any number of it; Lead's decision, deadline 00:30 IST).**
 - **Handover:** PACKAGE_HEAD + PACKAGE_T to Lead for the package table (fresh
   seeds 18000+, run by Lead). No number from the table's seeds is used here.
 
+**Deployment cost of the shipped mean (2026-10-31 22:42 IST, reported; same
+seed-17000 docs as the L2 verdict; bench `582acad`; L1 head; t 0.655).** L2
+with keys centred by the document's own mean vs by the SHIPPED reference mean:
+para synthetic 0.375 → 0.3125, para natural 0.5625 → 0.5625, tool 0.3125 →
+0.3125 / 0.4375 → 0.375, neg wrong-fetch 0.06 → 0.06 / 0.00. The largest
+change is one document in 16, within noise: deploying with a fixed mean costs
+little in-document. Logs `logs/v16_bench_l2ref_score_*`.
+
 **L3 VERDICT + library-size sweep (2026-10-31 22:45 IST; pack_check seed 19000,
 cross-document: library and session are different texts; session 1024;
 shipped-mean centring): L3 NOT met on every bar; the learned key does not
