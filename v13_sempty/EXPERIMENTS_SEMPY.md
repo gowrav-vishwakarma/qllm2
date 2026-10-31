@@ -4779,3 +4779,28 @@ cu1's reading.** 32k, seed 30000; each mind fetched with its own frozen block-8 
 For r3p: Library's fetch must be re-fit on its states, and its address quality is a readout, not an assumption.
 The near-miss English-key case barely occurred with own-state fetch (wrong rows were mostly prose). The
 fixed-row verify cell (cu1 0.86 " unknown" vs b2p2 0.59 wrong value) stays the evidence for that case.
+
+## cu1n9s VERDICT (04:32 IST, 2026-11-01): FAIL on its rule and on every guard. N9a + N9s cost 0.23 nats of LM and two-hop collapses; cu1n9a does NOT run (A2)
+
+`cu1n9sb_main_fa9e410` (6000; its own stage A `cu1n9sa_pre_fa9e410` with N9a lags 3 + N9s salience, then cu1's
+stage B exactly, seed 42). Rules from cu1 amendment A1:
+
+| | cu1n9s | cu1 | rule / guard | verdict |
+|---|---|---|---|---|
+| (i) two-hop (run_cur_probe) | **0.090** | 0.570 | ≥ cu1 + 0.15 AND ≥ 0.50 | **FAIL** |
+| (ii) holdout | 3.7533 | 3.5254 | ≤ cu1 + 0.02 | **FAIL (+0.228)** |
+| (ii) label_diag | 0.732 (category 0.488) | 0.913 | ≥ cu1 − 0.05 | **FAIL** |
+| fsq present / abstain / false abstain | 0.650 / 1.000 / 0.350 | 0.940 / 1.000 / 0.060 | reported | worse |
+| B2 `_new` (t400) | 0.995 | 1.000 | reported | equal |
+| skill-pack reach 2k | 0.535 | 0.81 | reported | worse |
+| WikiText val | 4.6429 | 4.2748 | reported | worse |
+
+The stage A with N9s (120M tokens) already ended at val 4.0893. The bench cells errored again (the same
+pinned-harness device bug at `fa9e410`). They are not rerun: they cannot change a verdict this clear,
+and R6a was 0.00 for cu1 anyway.
+
+**Reading:** N9a's content-phase lags with N9s's salient running phase, on this body at 600M, hurt
+everything they touch: LM quality, lookup (false abstain 0.35), labels and two-hop (the thing N9s was
+for). This matches the earlier N9a failures (n9c lookup, n9r replication). The confound A1 named
+(N9s's own stage A) cannot explain a 0.23-nat LM gap and a two-hop collapse. **Per A2, cu1n9a does not
+run.** N9s is Library's unit: its removal from the code is Library's call, with the index row.
