@@ -18,6 +18,42 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 04:51 IST: STEP BACK after the setbacks (user via Lead: "on every setback, think in the void";
+  meditation memory re-read).** The setbacks: cu1's stated rule (a table) and LM cost (+0.045); cu1's weaker fetch
+  address; lg8r (reach did not follow, LM +0.08); cu1n9s (+0.23, two-hop collapse); the 3B LM gap (+0.013 / +0.055).
+  - *From far away:* at 103M **every training-time addition cost language** (cu1 +0.045 for 6 points of
+    synthetic data, lg8r +0.08, cu1n9s +0.23). **Every query-time addition was free** (re-fetch 1.00, refresh,
+    contrast +0.14 in the package, the verify rule). Capacity, not cleverness, is the bound. So train the mind
+    for language + skills learned from examples, and put everything else in the package (Lead's angle 3).
+    cu2 must therefore be small (≤ 2 points of synthetic) or not run at all.
+  - *From inside:* **the mind's storage is better than its voice.** Every miss tonight moved from memory to
+    readout: the contrast recovers a skill at 4k and a fact read late; free trails 20-way by ~0.2; abstain
+    transfers across key style. The readout (head) is trained by LM loss to trust the prior; at an answer it
+    should trust evidence.
+  - *Analogy (brains):* acetylcholine raises the gain on sensory evidence over top-down priors when
+    uncertainty is expected; norepinephrine resets on surprise. Our two fixes match: the **contrast = an
+    "ACh mode"** for answers, and **the doc-boundary reset = an NE reset**. A mind with a learned, gated
+    evidence-gain mode is the bold angle. **ACh-1:** a trained answer-mode tag. After it, the plain logits
+    are distilled toward softmax(l_ev + a(l_ev − l_noev)), with the no-evidence twin built by the data
+    pipeline from the same doc with its rows / pack masked. The gate exists by construction (no harm to free
+    text: cd3), and no second stream runs at inference. Lead's angle 1 is the same idea. Prior work: CAD,
+    decoding distillation (Wan et al. 2023), ContextDPO; the difference is the O(1) state's own prior and the
+    gated mode. Needs trainer support (paired docs, 2 forwards on that share). Pre-register as its own unit,
+    after cu2's baseline numbers.
+  - *Reach is a clock (Lead's angle 2):* after a skill read, slow the decays (retention r → r^(1/s)) for the
+    heads that wrote it, until the query. Eval only, CPU; measure reach at 4k / 8k vs prose NLL. Prior work:
+    Δ / dt scaling for Mamba length extension (DeciMamba, LongMamba); the difference is a package-triggered,
+    per-head dilation after a read. Cheap, do it next.
+  - *Process lessons:*
+    (a) fine-tuning an annealed checkpoint pays a warm-restart cost (lg8r): future base runs should use a
+        warmup-stable-decay schedule and keep a stable-phase checkpoint to branch from (known: WSD, MiniCPM);
+    (b) a micro-bench win (N9a, three times now) must pass a 100M LM screen before any 600M slot;
+    (c) the session fetch keys on the mind's own states, so every mind change moves the address space
+        (cu1 A10: 9 vs 15 rows found). A stable address (lexical organ, or a frozen key encoder) would
+        decouple them; offer it to Library.
+  - *Not chasing:* the stated-rule table at 103M (no evidence of the operation exists for an unseen
+    number); more long-window training (lg8r answered it).
+
 * **2026-11-01 04:32 IST: HANDOVER STATE.** Since 02:35:
   - cd2 MET (contrast doubles one-read reach to ~4k); cd3 FAIL (contrast must be query-time only).
   - Library A9 made warm + contrast the package default (+0.142); A10 says cu1 reads well, but its own-state
