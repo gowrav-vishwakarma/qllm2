@@ -2253,6 +2253,22 @@ NOT met (paraphrase).** Logs `logs/v16_bench_l2_score_*`.
   abstain only when BOTH the organ misses and the key is below t on a threshold
   tuned on paraphrased questions too), pre-registered before scoring.
 
+**PACKAGE abstain rule A2 + head choice (PRE-REGISTERED 2026-10-31 22:37 IST,
+before any number of it; Lead's decision, deadline 00:30 IST).**
+- **Head:** the L1 or L3 head, whichever has the higher learned-key top-1 on
+  PARAPHRASED questions in pack_check at 400 entries (seed 19000; synthetic +
+  natural pooled; ties → L3, the head trained on the product condition).
+- **Rule:** exact organ on an exact match; else the learned key's top row;
+  ABSTAIN only when the organ misses AND the key's best similarity < t_para.
+- **Tuning (seed 15000 only; bench at the package_fetch commit; shipped-mean
+  centring; 16 docs per cell, 32k):** para synthetic + natural and neg
+  synthetic + natural, for BOTH heads. t_para = the smallest t with neg
+  wrong-fetch ≤ 0.10; it must also give false abstain on para ≤ 0.20. If no t
+  meets both, abstain is disabled when the organ misses (t_para = −1) and the
+  neg cell is reported as failing its constraint.
+- **Handover:** PACKAGE_HEAD + PACKAGE_T to Lead for the package table (fresh
+  seeds 18000+, run by Lead). No number from the table's seeds is used here.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
