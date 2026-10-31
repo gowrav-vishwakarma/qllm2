@@ -2372,7 +2372,7 @@ texts, so (EUREKA "stream address") it is fetched by TEXT. Plumbing, cited
     at ~4 MB per 1M (implementation, not method).
 
 **SL2 — normalised-word organ for the shared library (PRE-REGISTERED 2026-10-31
-23:15 IST, before any SL2 code or number).** SL1 failed on natural
+23:10 IST, before any SL2 code or number).** SL1 failed on natural
 paraphrase (0.68 / 0.49) because the token organ misses forms that change BPE
 tokens and BM25 is ambiguous on common words.
 - **Method:** an organ over NORMALISED words (lower-case, a plural "s"
