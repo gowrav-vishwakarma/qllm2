@@ -233,7 +233,7 @@ CPU fp32 and the 4090 Triton path fp32; bf16 within its own chunking noise), sel
 (b2p2, O(1) decode): "Map rule. 3 -> 10, 5 -> 14, 8 -> 20, 11 ->" continues " 26", then
 generates correct lines of its own (27 -> 58, 6 -> 16, 28 -> 60, 25 -> 54, 15 -> 34).
 
-**A7 (2026-11-01 00:55 IST; user via Lead): free generation is the primary number, and every
+**A7 (2026-11-01 00:45 IST; user via Lead): free generation is the primary number, and every
 headline checkpoint ships shown generations.** User: "we need all these measures, but text
 generation also counts: not a database, a model that is intelligent AND expresses its part well."
 - **Primary = free generation.** R1, R6 and R7 headline cells report free generation first: the

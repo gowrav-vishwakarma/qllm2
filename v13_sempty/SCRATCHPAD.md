@@ -18,7 +18,7 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
-* **2026-11-01 00:20 IST: lg8r READY, queued on the 4090 (tmux `lg8r`, worktree `../qllm_reset2`).**
+* **2026-11-01 00:13 IST: lg8r READY, queued on the 4090 (tmux `lg8r`, worktree `../qllm_reset2`).**
   Reset mask on master (`f2587b5`, parity PASS CPU + GPU) and answer-in-window weighting
   (`824a988`; 44 % of b2gap answers at 8k sat in a window without their demos). Pre-registration
   "lg8r" in EXPERIMENTS_SEMPY. The chain `v13_sempty/tmp/lg8r_chain.sh` waits for Lead's package

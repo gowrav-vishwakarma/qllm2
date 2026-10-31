@@ -4295,7 +4295,7 @@ example sits L/8 before the query. One-read reach (all examples together, then o
 unrelated text, past the trained length in total", not "one read carries a rule 4k".
 Caveat (unchanged): trained rule FORMATS with held-out VALUES, not unseen rule families.
 
-## lg8r: does an 8k training window lengthen the one-read reach once documents stop teaching forgetting? (pre-registration, 2026-11-01 00:15 IST)
+## lg8r: does an 8k training window lengthen the one-read reach once documents stop teaching forgetting? (pre-registration, 2026-11-01 00:13 IST)
 
 **Request (user via Lead, 2026-10-31 23:55 IST):** one cheap check of the window law ("the
 maths cannot be sure"), with little GPU: the 4090 after Lead's package table, not the 6000.
@@ -4368,7 +4368,7 @@ pending lg8r**. The user's package-level decision (one-read reach ≈ training l
 stated limit today; re-fetch carries the rule to 128k) stands until lg8r says otherwise. lg8r
 launched 00:16 IST (`lg8r_main_f2b7d8c`, 4090).
 
-**Orphaned answers per source (2026-11-01 00:35 IST; CPU, `v13_sempty/tmp/orphan_rate.py`).**
+**Orphaned answers per source (2026-11-01 00:20 IST; CPU, `v13_sempty/tmp/orphan_rate.py`).**
 300 real docs per source, interleaved 1 : 1 with web-like docs. Share of answer-weighted tokens
 in a window where their document did not start:
 
@@ -4387,7 +4387,7 @@ Recall at 2k loses ~1 answer in 6 in every arm alike (baselines included). cu1's
 + gap) is the most affected at 2k; cu1 runs without the flag (started before it existed), so a
 narrow R6a miss gets this caveat, and cu2 or any re-run turns the flag on.
 
-## r3c VERDICT (2026-11-01 01:00 IST): does NOT beat the 3B baselines on LM quality (+0.013 vs T++, +0.055 vs Mamba-2); leads both clearly on recall, in and beyond the training length
+## r3c VERDICT (2026-11-01 00:48 IST): does NOT beat the 3B baselines on LM quality (+0.013 vs T++, +0.055 vs Mamba-2); leads both clearly on recall, in and beyond the training length
 
 `r3cb_main_38e3c29` (6000; 16 notebooks + echo, LR 1.2e-3, two stages, 3B tokens, 103.2M params).
 Pre-registered rule (EXPERIMENTS "r3c"): beats = holdout lower by > 0.01 AND WikiText lower;
