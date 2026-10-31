@@ -21,7 +21,7 @@
                    build v14 units): every v14 switch off -> the plain v13 LM
                    class; a checkpoint config rebuilds the same V14LM (strict
                    load, equal logits); gradient checkpointing on == off for
-                   the v13 LM, N9a and N7 (loss and grads).
+                   the v13 LM, N9a, N7 and N12 (loss and grads).
 8b. N12          surprise-selected writes: same init as echo (no new params);
                    surprise == -log_softmax of the body's tied logits; no
                    writes -> the memory adds nothing; decode == prefill with a
@@ -375,16 +375,18 @@ def test_hook():
     assert d == 0.0, f"hook: reloaded V14LM differs: {d:.3e}"
     # gradient checkpointing parity (the 4090 suspect): loss and grads, on vs off
     worst = 0.0
-    for lags, orders in ((0, ()), (3, ()), (0, (2, 3))):
+    for lags, orders, tau in ((0, (), 0.0), (3, (), 0.0), (0, (2, 3), 0.0), (0, (), 3.0)):
         runs = []
         for ckpt in (False, True):
             c = with_v14_switches(v13_get_config('tiny_real', gradient_checkpointing=ckpt, **base),
-                                  echo_phase_lags=lags, ngram_orders=orders)
+                                  echo_phase_lags=lags, ngram_orders=orders, echo_surprise_tau=tau)
             torch.manual_seed(1)
             m = build_lm(c).train()
             with torch.no_grad():
                 if lags:
                     m.phase_proj.normal_(std=0.3)
+                if tau:
+                    torch.nn.init.normal_(m.echo_out.weight, std=0.1)
                 for r in getattr(m, 'ngram_read', {}).values():
                     r.proj.normal_(std=0.05)
             ids_rep = torch.cat([ids[:, :20], ids[:, :20]], dim=1) if orders else ids  # repeats: lookups fire
@@ -394,11 +396,11 @@ def test_hook():
             loss.backward()
             runs.append((loss.item(), {n: p.grad.clone() for n, p in m.named_parameters() if p.grad is not None}))
         (l0, g0), (l1, g1) = runs
-        assert abs(l0 - l1) < 1e-6 and g0.keys() == g1.keys(), f"hook: ckpt changes the loss (lags={lags})"
+        assert abs(l0 - l1) < 1e-6 and g0.keys() == g1.keys(), f"hook: ckpt changes the loss (lags={lags}, tau={tau})"
         worst = max(worst, max((g0[k] - g1[k]).abs().max().item() for k in g0))
     assert worst < 1e-5, f"hook: grad checkpointing changes grads: {worst:.3e}"
     print(f"  hook: off -> v13 LM class; reload strict, logits equal; grad ckpt on == off "
-          f"(v13 LM, N9a, N7): max grad diff {worst:.1e}")
+          f"(v13 LM, N9a, N7, N12): max grad diff {worst:.1e}")
 
 
 def _b2_param(task, text):

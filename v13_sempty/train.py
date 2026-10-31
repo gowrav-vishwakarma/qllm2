@@ -1083,6 +1083,10 @@ def build_argparser():
     p.add_argument('--echo_phase_lags', type=int, default=0,
                    help='v14 N9a: turn echo q/k by content phases of the last N tokens; builds '
                         'v14.units.V14LM through v14/hook.py (0 = off, plain v13 LM; needs --echo)')
+    p.add_argument('--echo_surprise_tau', type=float, default=0.0,
+                   help='v14 N12: echo memory never fades and is written only where the body\'s own '
+                        'pre-memory surprise -log p(x_t) > this many nats; builds v14.units.V14LM '
+                        'through v14/hook.py (0 = off; needs --echo)')
     p.add_argument('--n_layers', type=int, default=0,
                    help='main-stack block count (0 = preset)')
     p.add_argument('--base_dt_bias', type=float, default=None,
@@ -1312,7 +1316,8 @@ def main():
         from v14.hook import build_lm, with_v14_switches
         cfg = with_v14_switches(
             cfg, echo_phase_lags=args.echo_phase_lags,
-            ngram_orders=tuple(int(n) for n in args.ngram_orders.split(',') if n.strip()))
+            ngram_orders=tuple(int(n) for n in args.ngram_orders.split(',') if n.strip()),
+            echo_surprise_tau=args.echo_surprise_tau)
         model = build_lm(cfg)                    # plain v13 LM unless a v14 switch is on
     if init_ck is not None:
         missing, unexpected = model.load_state_dict(init_ck['model_state_dict'],
