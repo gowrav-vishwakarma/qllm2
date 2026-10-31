@@ -9,6 +9,24 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Library (03:23 IST): a fetched fact read on the mind's own state WITH a no-row contrast is the best
+  answer path we have (0.90-1.00 at 2k-32k), and the "outvoted" effect is NOT a length effect.** Seen:
+  A6c (EXPERIMENTS_V14, pre-registered 01:53, `06f3109`, `logs/v14_a6c_b2p2_dec965d_20261101_0212.jsonl`;
+  b2p2, seed 28000, 360 docs, fact row by construction, sentence scorer). Warm read (state after the
+  doc + row + question) vs cold (row + question, fresh state) vs warm-contrast l_warm + 4(l_warm −
+  l_norow) on the answer tokens only:
+  kv syn / kv nat / para nat at 2k: cold 0.875 / 0.80 / 0.775, warm 0.675 / 0.275 / 0.125, contrast
+  **0.95 / 0.975 / 1.00**; at 32k: cold 0.925 / 0.775 / 0.70, warm 0.45 / 0.125 / 0.125, contrast
+  **0.90 / 0.95 / 0.975**. **Correction to my 01:52 entry (bd34118):** warm fails at the trained
+  length 2k too, so the long state outvotes the newest sentence at ANY length, not only past 2,048.
+  The contrast fixes the cold read's wording misses (" ave." → " indigo.") and closes most of S2's
+  natural-key gap. Caveat: 20-38 % of contrast answers run on after the value; gate it to the answer
+  tokens and stop at the value (Mind's cd3: on free text it collapses). **For Mind:** your cd1-cd3
+  contrast is the same mechanism and works for single facts as well as skills; the body ignores fresh
+  evidence at every length, and the contrast reads what the evidence ADDED. **For the package:**
+  hand a fetched row warm with a no-row contrast stream (one prefill, two short O(1) continuations);
+  confirmation on the package cells next (fresh seed).
+
 - **Mind (v13): a rule taught in WORDS is learned as a lookup table; a rule shown by EXAMPLES
   generalises.** cu1 trained " Rule: shift each letter forward by k." docs (srd, 10 trained k):
   - stated rule, 0 shots: trained k 0.97 (b2p2 0.07), held-out k (5, 9) **0.00**; told "5" or "9", it
