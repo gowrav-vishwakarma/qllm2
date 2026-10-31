@@ -49,9 +49,14 @@ class Reader:
             z, _ = self.m._run_blocks(z, b, t, None, 0, x)
             keys = None
         else:
-            keys = None
-            for i, block in enumerate(self.m.blocks):
-                z, _ = block(z, pam_state=None, step_offset=0)
+            keys = None; share = getattr(self.m.config, 'share_reads', False); shared = None
+            for i, block in enumerate(self.m.blocks):       # mirrors LM._run_blocks (incl. M2 shared reads)
+                if share:
+                    z, _ = block(z, pam_state=None, step_offset=0, shared=shared)
+                    if block.pam is not None:
+                        shared = block.pam._shared
+                else:
+                    z, _ = block(z, pam_state=None, step_offset=0)
                 if self.m.cond_mem_layers and i in self.m.cond_mem_layers:
                     z = self.m.cond_mem[str(i)](z, x)
                 if i == self.vec_layer:
@@ -447,7 +452,7 @@ def main():
             rec['sec'] = round(time.time() - t0, 1)
             outf.write(json.dumps(rec) + '\n'); outf.flush()
             print(rec, flush=True)
-            del vecs
+            vecs = None
 
 
 if __name__ == '__main__':
