@@ -1696,6 +1696,59 @@ separate units, design only now).**
   state already holds (I1). If the re-fetch arm matches the carried arm,
   S1 is ordinary retrieval and is recorded as such.
 
+**SR — structural skill register (design + pre-registration of SR-0, 2026-10-31
+~13:30 IST; requested by the organiser from v13's prediction that bodies lose
+an induced skill between 8k and 32k of filler: echo half-lives 660-3100
+tokens, spread affine 0.44-0.61 at 8k).**
+- **Idea:** an O(1) slot per head, written once at the moment a rule is
+  induced, never decayed, protected from overwrite (the N8 critical-period
+  gate applied to skills), read by the body at every token through a
+  zero-init projection. The write trigger is an "aha" latch: the surprise
+  of the example outputs collapses against its own running mean after a
+  few repeats of the pattern. The content is the rule's carrier, which in a
+  PAM is a read-out of the notebooks at the demonstration's arrow token.
+- **Closest prior work:** Function Vectors (Todd et al. 2023, arXiv
+  2310.15213) and Task Vectors (Hendel et al. 2023): the residual stream
+  at a demonstration's arrow token encodes the task and can be injected to
+  run it zero-shot; In-Context Vectors (Liu et al. 2023); State Soup (Pioro
+  et al. 2024, arXiv 2406.08423): stored / retrieved / mixed recurrent
+  states as task vectors; gated fast weights; Titans' persistent memory.
+  **Different, to be shown (not assumed):** (1) induced in context by a
+  self-detected latch, not extracted by a researcher with a labelled
+  dataset; (2) held without decay past the trained length by a slot that
+  nothing overwrites; (3) portable as a text pack: replaying the pack
+  rebuilds the register. If (1)-(3) are not demonstrated this is function
+  vectors in a recurrent body and is recorded as plumbing.
+- **SR-0 (eval only, no training; run FIRST, because a register can only
+  work if a transplantable rule vector exists in a body that already infers
+  rules).** Model: v13's `b2p2_main_38e3c29` (PAM 102.9M, B2-in-training; it
+  is on the 6000 and needs a copy to d_drive for local runs). Tasks
+  shift_wide_new and affine_map_new, 8 shots, probe seeds ≥ 7000, 80 trials
+  per cell.
+  - Arms: (A) the normal prompt (demos, then G tokens of filler, then the
+    query): accuracy at G = 2k and 32k. (B) no demos: G tokens of filler,
+    then the query, with the function vector f_l added to the residual
+    stream at the query's arrow token after layer l (f_l = the residual at
+    the last demonstration's arrow token in a SEPARATE short prompt with the
+    same rule; scale chosen on a dev seed, not the test seeds). (C) wrong
+    rule: f_l from a different rule. (D) random vector of the same norm.
+  - **Bar SR-0:** for some single layer l, (B) at G = 32k ≥ 0.9 × (A) at G =
+    2k, AND (C) and (D) ≤ 0.25 × (B) (it is the rule, not any push).
+    Reported: l by l, G = 8k / 32k / 128k, and (A) at 32k (the loss to beat).
+  - **Outcomes:** met → a transplantable rule vector exists; build SR
+    (the latch + a no-decay slot) and pre-register its bars. Not met → a
+    residual-stream register does not work in this body; the alternative is
+    long-gap training (v13's recipe), recorded as the answer.
+- **SR (to build only if SR-0 is met), bars on the skill-pack cell:** skill
+  at +32k / +128k / +1M ≥ 0.9 of its +2k value; recall (t40) and holdout
+  not worse (≤ +0.01); one register per head or a small bank. Training needs
+  a long-gap curriculum for the READ to be learned (format-trained), so the
+  micro-bench also needs a `--spread` rule eval first.
+- **Order (my preference):** L1 (running now) → SR-0 (eval only, small GPU,
+  can run beside L1 once the b2p2 checkpoint is on d_drive) → SR only if
+  SR-0 passes. S1 / I1 / K1 come after SR-0, because S1 is the same question
+  asked at the library level.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
