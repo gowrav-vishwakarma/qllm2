@@ -4077,3 +4077,14 @@ alone* = the header at t0, L filler, then 2 replayed demonstration lines + the q
   two-hop skill was never trained, so this cell cannot say anything about integration
   across hops yet. It needs the format in training (the "low prior, high ceiling" rule)
   before it can be read.
+
+### r3c futility check (2026-10-31 15:16 IST): PASSED, r3c continues
+
+Pre-registered (EXPERIMENTS "r3c"): stop if holdout at ~1.56B tokens > 3.4714. **r3c @ step
+39,060: 3.4010** (WikiText 60.23) → continues. Same step for r3b (M2 + echo, LR 2e-4):
+3.4133, so r3c (16 notebooks + echo, LR 1.2e-3) has overtaken it (it trailed by 0.05 at
+step 15,624). Late slope over the last 3,906 steps: r3c −0.024, r3b −0.0125. Projection
+only (not a claim): ~1.5–2× r3b's late gains would end r3c near 3.20–3.25, close to T++
+3.2064 and still behind Mamba-2 3.1644 (scoreboard). Kept checkpoint
+`r3cb_main_38e3c29/step_039062.pt` for the attr3b split. Ledger reminder: r3c has none
+of the 10-31 findings (no b2 / lab / b2gap docs).

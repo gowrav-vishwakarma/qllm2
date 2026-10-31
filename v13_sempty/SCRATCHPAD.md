@@ -18,6 +18,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 15:20 IST: state of the 6000.** r3c PASSED futility (3.4010 vs 3.4714 @ 39,060; continues,
+  ends ~04:00 IST Nov 1). **lg32 (LAW-1) started 15:06** (tmux `law1`, worktree `qllm_law` @ 2229a5b;
+  M2 body has NO grad-ckpt support, removed; 1.3 s/step at 32k after a ~7 min first-step compile).
+  **s8's controller is PAUSED** (SIGSTOP on pid 518542, its bash; b2m2 keeps training under it);
+  tmux `gate` (~/gate_b2p3.sh) sends SIGCONT when lg32 is .done, s5 ends, or law1 ends → b2m2's
+  probes + b2p3 then run as s8 would. tmux `lg32g` (~/lg32_guard.sh): pauses lg32 (SIGTERM,
+  MAX_RETRIES=1; resume from latest.pt) on 3 strikes of free VRAM < 3 GB or r3c < 80 % of 27,037
+  tok/s; flag ~/lg32_paused.flag. lg8 / lg2 wait until s8 or s5 ends. If anything is stuck: `kill -CONT
+  518542` resumes s8 by hand.
+
 * **2026-10-31 13:26 IST: 6000 disk cleanup (organiser-authorised; checkpoint-cleanup rule):** root 6.5 → **21 GB
   free**. Deleted `gscreen_onorm_3cc2b72/latest.pt` (1.17 GB; resume-only, abandoned G2 screen, code removed in
   2872d7f). Removed the 6000 copies of 11 finished best_model.pt files whose d_drive copy
