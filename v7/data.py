@@ -129,6 +129,13 @@ class StreamingTokenChunkDataset(IterableDataset):
     float ``loss_mask`` (1.0 per token, ``answer_weight`` on answer tokens)
     that the fused CE uses as per-token weights (sum(w*CE)/sum(w)). With the
     default 1.0 the marks are stripped and samples are exactly as before.
+
+    ``ANSWER_IN_WINDOW=1`` (env, lg8r 2026-11-01): answer weights count only for a
+    document that STARTS inside the window. Packing cuts documents at window edges;
+    a cut long-gap rule doc puts its queries in a window without the rule's
+    demonstrations, so x100 weight on them only teaches guessing from the prior.
+    Those orphaned answer tokens fall back to weight 1.0 (plain LM loss). Off by
+    default (every earlier recipe is unchanged).
     """
 
     def __init__(
@@ -172,6 +179,11 @@ class StreamingTokenChunkDataset(IterableDataset):
         buffer: List[int] = []
         weighted = self.answer_weight != 1.0
         wbuffer: List[float] = []  # per-token loss weights aligned with ``buffer``
+        in_window = weighted and os.environ.get('ANSWER_IN_WINDOW', '0') == '1'
+        dbuffer: List[int] = []    # document ordinal per token (in_window only)
+        doc_no, prev_last = 0, -1
+        if in_window:
+            print('[data] ANSWER_IN_WINDOW=1: answer weights only for docs that start in the window', flush=True)
         # (source, n_tokens) runs aligned with ``buffer``; popped as chunks leave
         runs: deque = deque()
         yielded_tokens = 0
@@ -210,6 +222,8 @@ class StreamingTokenChunkDataset(IterableDataset):
             if weighted:
                 ws.append(1.0)
                 wbuffer.extend(ws)
+            if in_window:
+                dbuffer.extend([doc_no] * len(ids)); doc_no += 1
             runs.append((source, len(ids)))
 
             while len(buffer) >= step:
@@ -223,6 +237,16 @@ class StreamingTokenChunkDataset(IterableDataset):
                 if weighted:
                     wchunk = wbuffer[:step]
                     wbuffer = wbuffer[step:]
+                    if in_window:
+                        dchunk = dbuffer[:step]
+                        dbuffer = dbuffer[step:]
+                        if dchunk[0] == prev_last:            # first doc began in an earlier window
+                            for i, d in enumerate(dchunk):
+                                if d != dchunk[0]:
+                                    break
+                                if wchunk[i] > 1.0:
+                                    wchunk[i] = 1.0
+                        prev_last = dchunk[-1]
                     # weight applies to PREDICTING a token -> align with labels
                     sample['loss_mask'] = torch.tensor(wchunk[1:], dtype=torch.float32)
                 if self.shuffle_buffer > 0:
