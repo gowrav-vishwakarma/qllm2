@@ -2013,6 +2013,40 @@ validation.** 6000 docs (3000 + 3000 single-template), 2000 steps, 256-d key
 evidence the memory latitude does not buy accuracy here, so the next lever is
 not key size.
 
+**L1 VERDICTS (2026-10-31 21:10 IST; harness, c1ctlb, centred block-8 state,
+16 docs per cell, paired arms on the same documents).** Logs
+`logs/v16_bench_l1{pair,p0,p1,k256}_*` (pair / P0 / L1-256: seed 14000;
+P1 scored once on seed 16000 with w 0.5, t 0.654 from seed 15000).
+
+| unit | synthetic keys 32k / 128k | natural keys 32k / 128k | bar | verdict |
+|---|---|---|---|---|
+| L1 trained burst key (Bar A) | **0.81 / 0.56** (frozen burst key 0.06 / 0.25; C2 ceiling 1.00 / 1.00) | **0.94 / 1.00** (frozen 0.56 / 0.19) | ≥ 0.90 / ≥ 0.75 on synthetic, within 0.05 of C2 | **NOT met** |
+| L1 on para (Bar P) | 0.56 vs organ 0.56 (C2 0.75) | **0.81 vs organ 0.31** (C2 0.56) | ≥ organ + 0.20 | **met on natural keys only** |
+| L1+P0 (re-read top 5, pick by margin) | 0.94 / 0.88 | 0.69 / 1.00 | ≥ 0.95 / ≥ 0.85, both | NOT met |
+| L1+P1 (combined, abstain) | 0.69 (abstain 0.19) / 0.56 (0.38) | 0.875 (0.125) / 0.875 (0.06) | ≥ 0.95 / ≥ 0.85, both | NOT met (neg wrong-fetch 0.06 at 32k) |
+| concat-5 arm | 1.00 / 0.94 | 0.50 / 0.75 | same | NOT met |
+| L1-256 | 0.69 (32k) | 1.00 (32k) | Bar A | NOT met; no gain over 128-d |
+
+Other cells (L1 key vs frozen, 32k, synthetic / natural): kv1 0.94 / 0.94 vs
+0.38 / 0.31; tool 0.50 / 0.44 vs 0.25 / 0.31 (C2 1.00: the queried field
+often lies beyond the 24-token row); neg max-sim 0.53-0.59 (stored 0.68-0.77).
+
+- **What failed:** Bar A as registered (synthetic pseudo-word keys) at 32k and
+  128k, every selector built on top of it, and the 256-d key.
+- **What it really says:** the trained key is STRONG on natural language
+  (0.94-1.00 up to 128k, kv1 0.94) and beats the exact organ on natural
+  paraphrase by +0.50; it is WEAK on random pseudo-words, which the exact
+  organ gets at 1.00. The per-token state still separates pseudo-words (C2
+  1.00), so it is the pooling over a 24-token span that loses a meaningless
+  string's identity. The two organs are complementary: exact strings (codes,
+  ids, made-up names) → the exact organ; natural / paraphrased language → the
+  learned key. The mind's confidence is not a safe selector on natural text
+  (P0 natural 0.69).
+- **Next (to pre-register before any number, fresh seed):** a two-organ
+  fetch: the exact organ when it finds an exact match of the query key, else
+  the learned key; abstain by the key's raw similarity. The tool cell needs a
+  longer or field-aware row.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
