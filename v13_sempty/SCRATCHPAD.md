@@ -18,6 +18,16 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 00:20 IST: lg8r READY, queued on the 4090 (tmux `lg8r`, worktree `../qllm_reset2`).**
+  Reset mask on master (`f2587b5`, parity PASS CPU + GPU) and answer-in-window weighting
+  (`824a988`; 44 % of b2gap answers at 8k sat in a window without their demos). Pre-registration
+  "lg8r" in EXPERIMENTS_SEMPY. The chain `v13_sempty/tmp/lg8r_chain.sh` waits for Lead's package
+  table (`PKG-TABLE-DONE`) and >= 21 GB free, trains 50M tokens (SEQ 8192 x 2), then runs the
+  readouts: reach 0-32k, half-lives (`hl_summary.py`), B2 t400, attr3b vs b2p2 (data in
+  `/media/gowrav/d_drive/qllm2/attr/`). Bars: reach(4k) >= 0.75 (b2p2 0.355) AND long-head
+  geomean >= 1293 (b2p2 1361). Resume: rerun the same tmux command with SCREEN_HASH=<launch hash>.
+  Still open: r3c final (6000, wait bb4gmil0b), then cu1 -> cu1n9s on the 6000.
+
 * **2026-10-31 23:40 IST: MEDITATION (user, via Lead: "think in the void, actually think nothing").** What surfaced,
   unplanned:
   - *Forgetting is learned from the life it is trained on.* Packed windows of unrelated documents

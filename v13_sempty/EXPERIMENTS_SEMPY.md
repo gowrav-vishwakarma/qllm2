@@ -4294,3 +4294,67 @@ example sits L/8 before the query. One-read reach (all examples together, then o
 ~2k at this scale, a stated limit. The claim is "rules inferred from spread-out examples survive
 unrelated text, past the trained length in total", not "one read carries a rule 4k".
 Caveat (unchanged): trained rule FORMATS with held-out VALUES, not unseen rule families.
+
+## lg8r: does an 8k training window lengthen the one-read reach once documents stop teaching forgetting? (pre-registration, 2026-11-01 00:15 IST)
+
+**Request (user via Lead, 2026-10-31 23:55 IST):** one cheap check of the window law ("the
+maths cannot be sure"), with little GPU: the 4090 after Lead's package table, not the 6000.
+
+**Hypothesis.** lg32 shrank the reach because 32k windows of PACKED unrelated documents reward
+forgetting (every echo half-life −25..55 %, long-head geomean 1361 → 835). With the state reset
+at every document boundary, forgetting an old document costs nothing, so training at 8k
+should no longer shorten the decays. If the one-read reach follows the training window, the
+4k reach (b2p2: 0.355) rises toward b2p2's 2k level.
+
+**Closest prior work (novelty rule):** long-context continued pretraining (Fu et al. 2024,
+"Data engineering for scaling language models to 128K context"). Document-boundary state
+resets in packed recurrent training are standard: Mamba-2's `seq_idx` / varlen kernels, and
+intra-document attention masks for transformers (Llama 3; Zhao et al. 2024 on sequence
+composition in pretraining). **What differs:** only the measured quantity (one-read reach of
+an induced rule, plus per-head memory half-lives, against the training window, with the
+packing confound removed). The reset and the answer-in-window weighting are plumbing; there
+is no mechanism claim. (Lead's line said the reset is ours. It is not; it is known.)
+
+**Code:** `f2587b5` reset (`RESET_AT_EOS=1`; parity "reset == fresh sequence after the
+separator" PASS on CPU and GPU, `v13_sempty/tmp/reset_parity.py`); `824a988` answer-in-window
+(`ANSWER_IN_WINDOW=1`; `v13_sempty/tmp/answer_in_window_test.py` PASS). **Amendment to Lead's
+design (raised with Lead before launch):** the packer cuts documents at window edges, so at
+SEQ 8192 **44 % of b2gap answer tokens sit in a window without their rule's demonstrations**.
+Their ×100 weight can only teach guessing from the trained-value prior, and it is about as
+large as the useful long-gap signal (lg32 had the same flaw). With the flag, those tokens get
+weight 1.0.
+
+**Run `lg8r_main_<hash>`** (4090, own worktree). Fine-tune from `b2p2_main_38e3c29/best_model.pt`:
+- SEQ 8192 × BATCH 2 (16,384 tokens/step), 3,052 steps = 50.0M tokens (a third of a LAW-1 arm);
+- LR 3e-4, warmup 100, cosine; seed 45; M2 (ECHO=1, SHARE_READS=1, PAM_LAYERS 3,7,11,15);
+- mix as LAW-1: dclm 0.43, fineweb 0.40, smoltalk2_mid 0.10, recall 0.04, b2gap 0.03, `B2GAP_MAX` 7500;
+- `RESET_AT_EOS=1 ANSWER_IN_WINDOW=1`; save every 200 steps; val every 1,526 steps.
+
+**Readouts (fixed now):**
+1. *Reach:* skill-pack cell (`scripts/run_skillpack_probe.py`, seeds 8000–8099, 100 docs),
+   mean A_state of affine_map_new + shift_wide_new at L = 0 / 2k / 4k / 8k (+ 32k reported).
+   b2p2: 1.00 / 0.86 / **0.355** / 0.10 / 0.04 (4k measured tonight:
+   `logs/diag/v13_sempty_skillpack_b2p2_4k_skillpack_f2587b5_20261031_1836.jsonl`, affine 0.42,
+   shift 0.29). The probe filler has no separators (480,534 tokens, 0 EOS), so the reset does
+   not touch it.
+2. *Half-lives:* `v13_sempty/tmp/gates_diag.py <ckpt> 4096 12 affine_map_new` (same prompts as
+   b2p2's table). Summary = geometric mean of the filler half-lives of the 7 long-memory heads
+   (echo h0–h5, notebook b11 h4), `v13_sempty/tmp/hl_summary.py`. b2p2 **1361**, lg32 835.
+
+**Bars:**
+- **"Reach follows the window" = reach(4k) ≥ 0.75 AND long-head geomean ≥ 1293 (0.95 × b2p2).**
+- Otherwise: a ceiling of this body at this scale; stop spending GPU on reach-by-training (the
+  route stays re-fetch / Library's register). Mixed cases are recorded as they are: reach up
+  with half-lives shorter = "reach grew by another path"; half-lives held with reach < 0.75 =
+  "the reset fixed the forgetting, the reach did not follow". Neither gets a follow-up without Lead.
+- *Guards (a failed guard voids a PASS):* attr3b holdout vs b2p2 ≤ +0.02 nats in both strata
+  (PG-19, web; documents scored one at a time, so the reset does not act); B2 `_new` at L = 0
+  (learning probe, b2 suite, 400 trials) mean ≥ 0.894 (b2p2 0.944 − 0.05).
+- Reported: per-task reach and margins, the per-head table, reach at 8k and 32k, tok/s, peak
+  VRAM, own 8k val (not comparable to b2p2's 2k val).
+- One seed and no control arm (cheap check). **If PASS, before any claim:** the control `lg2r`
+  (same recipe at 2k windows, 50M tokens) separates "window" from "more fine-tuning with
+  long-gap docs", then a second seed; GPU via Lead.
+
+**Ledger:** lg8r = b2p2 recipe + b2gap + reset + answer-in-window. It has none of cu1's
+curriculum (srd / fsq / hop) and no N9s.
