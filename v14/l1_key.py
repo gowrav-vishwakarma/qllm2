@@ -108,11 +108,18 @@ def anchor(d):
     return d['qpos'] + k, d['target'] + k
 
 
+def doc_end(d):
+    """Rows may only be written before the query sentence (a row that contains the query's own key matches itself).
+    The stored first-token position of the key minus 4 covers the longest query prefix of the templates."""
+    return max(0, int(d['qpos']) - 4)
+
+
 def prep(d, form):
     """Per-document cache: row spans, their index tensors, positives, the query span's index."""
     T = d['vecs'].shape[0]
     qpos, target = anchor(d)
-    spans = row_spans(T, d['nll'], form)
+    end = doc_end(d)
+    spans = row_spans(end, d['nll'][:end], form)       # rows come only from BEFORE the query (as the harness: [:doc_end])
     pos = positives(spans, target, 1)
     ml = SPAN if form == 'fwd' else EVT_MAX
     idx, mask = span_index(spans, ml) if spans else (None, None)
