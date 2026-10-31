@@ -2422,7 +2422,7 @@ tokens and BM25 is ambiguous on common words.
   domain (rewording, synonyms) is the one no cell tests yet. Logs
   `logs/v14_sl2sa_*`.
 
-**N11-R — the planner's refresh rule (PRE-REGISTERED 2026-10-31 23:30 IST,
+**N11-R — the planner's refresh rule (PRE-REGISTERED 2026-10-31 23:32 IST,
 before any code or number; Lead's order item 3; eval only).**
 - **Step back first.** For an EXPLICIT question the question itself is the
   retrieval cue: the package fetches the pack at question time and the mind's
