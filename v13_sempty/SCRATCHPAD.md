@@ -18,6 +18,14 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 16:43 IST: lg32 restarted with `FINEWEB_LOCAL_DIR=data/fineweb-edu`.** Its first restart sat
+  ~25 min in HF read timeouts (mostly fineweb shard 000, opened twice: main stream + b2gap's gap
+  stream; dclm / smoltalk2 occasionally). Same data, local read path: the 6000 has shards 000-007,
+  cursor file 0 row 475,640. dclm / smoltalk2 stay remote. The gate no longer resumes s8 when law1
+  ends (only on lg32 / lg8 .done or s5 ending), so b2p3 waits under Lead's fallback. The fallback,
+  if lg32 OOMs beside r3c alone, is lg8 / lg2 at 16,384 tokens per step (a dated amendment first).
+  lg8 at 4 × 8k saves NO memory (same tokens per step).
+
 * **2026-10-31 15:45 IST: lg32 OOMed at its first step (15:41)** beside r3c (52.2 GB) + b2m2 (14.7 GB): the
   card hit 94.9 / 95 GB. My 28.3 GB benchmark was fwd+bwd only (no AdamW state, no loader, b2m2 grew). No
   checkpoint lost. The gate resumed s8 when law1 ended; s8's controller is PAUSED AGAIN (pid 518542, `T`)
