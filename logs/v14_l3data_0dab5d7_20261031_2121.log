@@ -1,0 +1,21 @@
+pool 4,993,252 tokens, 16,066 rare words with >= 2 mentions
+  200/3000
+  400/3000
+  600/3000
+  800/3000
+  1000/3000
+  1200/3000
+  1400/3000
+  1600/3000
+  1800/3000
+  2000/3000
+  2200/3000
+  2400/3000
+  2600/3000
+  2800/3000
+  3000/3000
+saved 3000 samples to /media/gowrav/d_drive/qllm_ckpt/v14/l3_cache/train
+pool 881,406 tokens, 13,476 rare words with >= 2 mentions
+  200/300
+saved 300 samples to /media/gowrav/d_drive/qllm_ckpt/v14/l3_cache/val
+=== l3data DONE 2026-10-31T16:00:54Z ===

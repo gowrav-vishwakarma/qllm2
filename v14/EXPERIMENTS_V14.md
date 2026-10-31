@@ -2212,6 +2212,23 @@ another, and both sides are centred by the shipped reference mean.
   to the re-read cost. Mind's M2 streaming (`41f8ae8`) provides the hook; keep
   the current chrono clock when swapping notebooks.
 
+**L3 head trained (22:10 IST, `l3_fwd_L8r_ec5cb21.pt` on d_drive; development,
+not the bar).** 3000 cross-document pairs (50 % synthetic sessions, 50 %
+natural rare-word pairs across two pool documents), shipped-mean centring,
+2000 steps; best step by the cross-document validation (300 pairs, pool
+0.85-1.0): top-1 0.61, top-5 0.67 (row exists 0.89), plateau from step 250
+(0.57). Split by kind against the L1 head on the SAME validation pairs, both
+centred by the shipped mean:
+
+| head | synthetic sessions | natural rare-word pairs |
+|---|---|---|
+| L1 (same-document training) | **0.90** (top-5 0.96) | 0.21 (0.36) |
+| L3 (cross-document training) | 0.80 (0.88) | **0.41** (0.46) |
+
+L3 trades synthetic for natural (−0.10 / +0.20). The pre-registered judgement
+is the fresh-seed pack_check (exact + paraphrase, 400 entries) and the size
+sweep, running on the 4090. Logs `logs/v14_l3data_*`, `logs/v14_l3chain_*`.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),

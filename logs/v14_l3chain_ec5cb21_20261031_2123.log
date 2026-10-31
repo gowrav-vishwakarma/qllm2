@@ -1,0 +1,97 @@
+3000 train docs, val sets [('val', 300)], form fwd, arch full
+head parameters: 75,854
+/home/gowrav/Development/qllm_v14dev2/v14/l1_key.py:241: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"step {step:5d} loss {float(loss):.3f} queries {n_q} skipped {n_skip} "
+step     1 loss 7.500 queries 27 skipped 5 temp 14.3
+step    50 loss 5.119 queries 29 skipped 3 temp 14.1
+step   100 loss 2.907 queries 30 skipped 2 temp 15.5
+step   150 loss 1.795 queries 28 skipped 4 temp 17.2
+step   200 loss 1.364 queries 29 skipped 3 temp 18.6
+step   250 loss 1.521 queries 30 skipped 2 temp 19.9
+  val | val: top1 0.570 top5 0.640 ev 0.89
+  best so far on val: 0.570 (step 250)
+step   300 loss 1.922 queries 27 skipped 5 temp 21.1
+step   350 loss 1.302 queries 31 skipped 1 temp 21.8
+step   400 loss 1.157 queries 31 skipped 1 temp 22.7
+step   450 loss 1.376 queries 32 skipped 0 temp 23.5
+step   500 loss 0.772 queries 29 skipped 3 temp 24.2
+  val | val: top1 0.567 top5 0.657 ev 0.89
+step   550 loss 0.649 queries 30 skipped 2 temp 24.9
+step   600 loss 1.114 queries 31 skipped 1 temp 25.6
+step   650 loss 0.596 queries 30 skipped 2 temp 26.1
+step   700 loss 1.137 queries 28 skipped 4 temp 26.4
+step   750 loss 1.566 queries 30 skipped 2 temp 27.0
+  val | val: top1 0.553 top5 0.660 ev 0.89
+step   800 loss 0.882 queries 27 skipped 5 temp 27.7
+step   850 loss 0.481 queries 30 skipped 2 temp 28.2
+step   900 loss 0.732 queries 30 skipped 2 temp 28.7
+step   950 loss 0.571 queries 32 skipped 0 temp 29.0
+step  1000 loss 0.685 queries 27 skipped 5 temp 29.3
+  val | val: top1 0.570 top5 0.660 ev 0.89
+step  1050 loss 0.496 queries 30 skipped 2 temp 29.8
+step  1100 loss 0.514 queries 27 skipped 5 temp 30.1
+step  1150 loss 0.715 queries 31 skipped 1 temp 30.5
+step  1200 loss 0.401 queries 29 skipped 3 temp 30.8
+step  1250 loss 0.533 queries 29 skipped 3 temp 31.1
+  val | val: top1 0.580 top5 0.673 ev 0.89
+  best so far on val: 0.580 (step 1250)
+step  1300 loss 0.577 queries 28 skipped 4 temp 31.4
+step  1350 loss 0.247 queries 31 skipped 1 temp 31.7
+step  1400 loss 0.443 queries 30 skipped 2 temp 31.8
+step  1450 loss 0.310 queries 30 skipped 2 temp 32.1
+step  1500 loss 0.401 queries 30 skipped 2 temp 32.2
+  val | val: top1 0.593 top5 0.673 ev 0.89
+  best so far on val: 0.593 (step 1500)
+step  1550 loss 0.607 queries 31 skipped 1 temp 32.4
+step  1600 loss 0.237 queries 30 skipped 2 temp 32.5
+step  1650 loss 0.392 queries 32 skipped 0 temp 32.6
+step  1700 loss 0.124 queries 30 skipped 2 temp 32.7
+step  1750 loss 0.502 queries 31 skipped 1 temp 32.7
+  val | val: top1 0.607 top5 0.673 ev 0.89
+  best so far on val: 0.607 (step 1750)
+step  1800 loss 0.923 queries 29 skipped 3 temp 32.7
+step  1850 loss 0.453 queries 31 skipped 1 temp 32.8
+step  1900 loss 1.011 queries 29 skipped 3 temp 32.8
+step  1950 loss 0.309 queries 32 skipped 0 temp 32.8
+step  2000 loss 0.603 queries 32 skipped 0 temp 32.8
+  val | val: top1 0.610 top5 0.673 ev 0.89
+  best so far on val: 0.610 (step 2000)
+saved /media/gowrav/d_drive/qllm_ckpt/v14/l3_fwd_L8r_ec5cb21.pt best 0.61
+Token indices sequence length is longer than the specified maximum sequence length for this model (1025 > 1024). Running this sequence through the model will result in indexing errors
+{"entries": 40, "tokens": 8238, "rows": 404, "rows_per_16_tokens": 0.785, "mb_per_1M_tokens": {"keys": 12.55, "row_pointers": 0.59, "text": 2.0, "organ": 11.99}, "mb_per_1M_total": 27.13, "install_seconds": 32.9, "install_seconds_per_1M_tokens": 3989.2}
+{
+ "synthetic_exact": {
+  "n": 10,
+  "key1": 0.8,
+  "key5": 1.0,
+  "key_ans": 0.8,
+  "organ_hit": 1.0,
+  "organ_ans": 1.0
+ },
+ "synthetic_para": {
+  "n": 10,
+  "key1": 0.4,
+  "key5": 0.7,
+  "key_ans": 0.3,
+  "organ_hit": 0.5,
+  "organ_ans": 0.5
+ },
+ "natural_exact": {
+  "n": 10,
+  "key1": 0.8,
+  "key5": 0.8,
+  "key_ans": 0.4,
+  "organ_hit": 1.0,
+  "organ_ans": 1.0
+ },
+ "natural_para": {
+  "n": 10,
+  "key1": 0.7,
+  "key5": 0.7,
+  "key_ans": 0.3,
+  "organ_hit": 0.4,
+  "organ_ans": 0.4
+ }
+}
+--- done l1p_fwd_L8c_99e6803 20
