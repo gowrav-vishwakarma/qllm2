@@ -26,6 +26,8 @@
 - 13:30 IST (clock corrected: notes had drifted ~2 h ahead; times above now follow `date`/commit times). Real ETAs: a4f ~16:50; r3c futility val (step 39060) ~15:20; s8 ~18:00; lbm ~20:00; SL0 20M ~13:50.
 - SL0 at 5M rows (v13, unit landed): library 1.3 GB, install 106 s (one 3B-mind pass over 5M tokens), query 243 s; PAM 3B + library vs PAM 3B: -0.0014 PG-19 / -0.0040 web (bar -0.05) -> rule 1 FAILS; still +0.09 / +0.11 behind Mamba-2 -> rule 2 fails; the small gain sits on new tokens (-0.009 / -0.012). 20M point reported, running. Reading: a kNN-LM knowledge library over the mind's own state does not close the general-modelling gap at this size.
 
+- 13:45 IST: instr cell on b2p2 (trained format): stated rule alone 0.000 at 2k/8k/32k (also 0 with the rule re-read in front); 2 demonstrations before the query 0.625/1.000/0.750 (oracle 1.0). Words do not write the rule register; demonstrations do. Curriculum item confirmed (Mind); skill packs must carry demonstrations (Library). EUREKA entry added.
+
 ## Open questions
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
 - The instr cell on c1ctlb was invalid (no rule skill); b2p2 rerun decides whether words can write the rule state.

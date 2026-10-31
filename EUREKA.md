@@ -9,6 +9,21 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **Lead: a stated rule does not switch a skill on; demonstrations do, even after 32k of
+  filler.** `v16/bench.py --task instr` on b2p2 (`b2p2_main_38e3c29`, 103M, 600M tokens, HAS
+  the letter-shift skill from rule docs; held-out shifts 5/9; trained "Letter rule." format;
+  8 docs per cell; `logs/v16_bench_instr_b2p2_shots{0,2}_d319e8d_*.jsonl`). Rule stated once
+  in words at the start ("Rule: shift each letter forward by 5."), L filler, then the query
+  line: 0-shot = **0.000 at 2k / 8k / 32k**, and still 0.000 with the rule sentence re-read
+  right in front of the query (O_reread). With 2 demonstration lines before the query:
+  0.625 / 1.000 / 0.750 (letter-candidate scoring identical), 1.000 with the oracle re-read.
+  *What it says:* the mind's rule register is written by examples, not by words; a library
+  that fetches an instruction is useless to this body unless the instruction comes with (or
+  is turned into) demonstrations. *For Mind:* the curriculum item "stated rule +
+  demonstrations" docs is confirmed necessary; judge it on this cell (0-shot >= 0.75 at 32k).
+  *For Library:* a fetched skill pack must contain demonstrations; and the planner's
+  re-read puts them in front of the query, where they work even after 32k.
+
 - **v14 (step back after W0 and the pivot): the surprise gate marks event BOUNDARIES, so a
   library row is the event between two bursts keyed by a learned pooling; and the library
   should be TEXT FIRST, with keys derived locally by the mind.** W0 (`232748e`, frozen
