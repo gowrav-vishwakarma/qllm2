@@ -432,16 +432,21 @@ def test_hook():
     assert d == 0.0, f"hook: reloaded V14LM differs: {d:.3e}"
     # gradient checkpointing parity (the 4090 suspect): loss and grads, on vs off
     worst = 0.0
-    for lags, orders, tau in ((0, (), 0.0), (3, (), 0.0), (0, (2, 3), 0.0), (0, (), 3.0)):
+    for lags, orders, tau, sal in ((0, (), 0.0, False), (3, (), 0.0, False), (0, (2, 3), 0.0, False),
+                                   (0, (), 3.0, False), (3, (), 0.0, True)):
         runs = []
         for ckpt in (False, True):
             c = with_v14_switches(v13_get_config('tiny_real', gradient_checkpointing=ckpt, **base),
-                                  echo_phase_lags=lags, ngram_orders=orders, echo_surprise_tau=tau)
+                                  echo_phase_lags=lags, ngram_orders=orders, echo_surprise_tau=tau,
+                                  echo_phase_salient=sal)
             torch.manual_seed(1)
             m = build_lm(c).train()
             with torch.no_grad():
                 if lags:
                     m.phase_proj.normal_(std=0.3)
+                if sal:
+                    m.sal_proj.normal_(std=0.3)
+                    m.sal_gate_w.normal_(std=0.5)
                 if tau:
                     torch.nn.init.normal_(m.echo_out.weight, std=0.1)
                 for r in getattr(m, 'ngram_read', {}).values():
@@ -457,7 +462,7 @@ def test_hook():
         worst = max(worst, max((g0[k] - g1[k]).abs().max().item() for k in g0))
     assert worst < 1e-5, f"hook: grad checkpointing changes grads: {worst:.3e}"
     print(f"  hook: off -> v13 LM class; reload strict, logits equal; grad ckpt on == off "
-          f"(v13 LM, N9a, N7, N12): max grad diff {worst:.1e}")
+          f"(v13 LM, N9a, N7, N12, N9s): max grad diff {worst:.1e}")
 
 
 def _b2_param(task, text):

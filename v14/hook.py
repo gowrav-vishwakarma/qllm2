@@ -16,7 +16,7 @@ from dataclasses import fields
 from v13_sempty.config import PAMConfig
 
 # A checkpoint config is a v14 one when any of these is on.
-V14_SWITCHES = ('echo_phase_lags', 'ngram_orders', 'opmem', 'echo_surprise_tau')
+V14_SWITCHES = ('echo_phase_lags', 'ngram_orders', 'opmem', 'echo_surprise_tau', 'echo_phase_salient')
 
 
 def is_v14(raw) -> bool:
