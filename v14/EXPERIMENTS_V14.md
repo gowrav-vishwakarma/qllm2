@@ -2650,7 +2650,7 @@ fitted threshold:
   - If met: the mind run (b2p2, 32k, strict + `PACKAGE_NORM=1`, seed 24000,
     `P_free_sent` primary) on Lead's gate; bars there: para and tool
     `P_free_sent` ≥ 0.80, neg abstain ≥ 0.90, both key types.
-  - **A4 TEXT CHECK: MET (2026-11-01 01:07 IST; code fa95777; `logs/v14_a4_text_fa95777_20261031_1937.log` + .json).**
+  - **A4 TEXT CHECK: MET (2026-11-01 01:07 IST; code fa95777; `logs/v14_a4_text_fa95777_20261101_0107.log` + .json).**
     Docs = bench's own (rebuild verified on seed 22000: 320 / 320 same length
     and token-organ hit as Lead's strict run).
 
