@@ -416,6 +416,20 @@ N9a's recall jump moves copy tokens (part of the T++ gap).
 
 ## Direction (user via v13, 2026-10-31): intelligence mind + learned fetch
 
+**Fixed (v13 `e27d88d`):**
+- **The label gap was data format.** In the lb pair, PAM label_diag is
+  0.934 vs T++ 0.798. v14 units no longer target short-range binding.
+- **Roles:**
+  - the O(1) body IS the mind (rules, gist, learning past the trained
+    length);
+  - verbatim knowledge goes to a per-session library and a shared growing
+    library;
+  - v14 owns the learned fetch (gate, trained key at the salient token,
+    re-read) plus the library row format;
+  - v13 writes the benchmark spec (32k-1M, MB in the table) and runs the
+    600M checks of the organs handed over.
+- **Order:** the benchmark first, the distributable model only once it wins.
+
 The O(1) state is trained for rules / gist / reasoning, not recall. Recall
 comes from a LEARNED FETCH over the user context and tool results
 (RAG-like). This fetch is v14's mechanism to design, in three parts:
