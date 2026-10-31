@@ -48,6 +48,8 @@
 
 - 15:06 IST: lg32 STARTED (tmux law1, worktree 2229a5b). s8's controller is PAUSED on purpose (SIGSTOP, pid 518542; b2m2 keeps training); tmux `gate` resumes it when lg32 is .done, r3c's s5 ends, or LAW-1 stops. Guard tmux `lg32g`: 3 x 60 s strikes of < 3 GB free or r3c < 80 % of 27,037 tok/s -> SIGTERM lg32 (resumable) + ~/lg32_paused.flag. NOTE for stall checks: a paused s8 driver is intended, not a stall.
 
+- 15:15 IST: Bar A clarified (Library's objection, accepted): C2 = all-positions index (77 MB at 32k, ~2.4 GB at 1M) shows only that the ADDRESS exists; Bar A is judged on C5 at <= 1 row / 16 tokens. L1 proper = a burst-pooling head on mid-layer centred vectors, judged on C5_burst_hit with C2's per-token top-1 as the ceiling. Natural-key scoring in the harness stays strict (a recurring key phrase without the stored value is a collision); Library's any-mention rule applies to its recurrence-pairs eval only (optional extra field).
+
 ## Open questions
 - Thesis clause "holds beyond the training context" is, as of 14:25, true only with re-exposure (spread) or up to the training length after one read. The long-gap recipe decides whether reach is a training-length law (cheap for O(1)) or a ceiling.
 - SL0's install cost (library tokens x one mind pass) must be printed next to MB (spec column).
