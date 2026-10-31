@@ -12,12 +12,12 @@
 - Nothing has run on a GPU yet. 4090: v13's n9c was using ~15 GB at 00:30.
 
 ## Running
-- **GII-2 RUNNING (started 07:02 IST 2026-10-31)**: Grove II (`b599a56`) vs
+- **GII-2 RUNNING (started 06:22 IST 2026-10-31)**: Grove II (`b599a56`) vs
   echo, six pairs (rules seeds 21/22/23 then B2 seeds 41/42/43), tmux
   `gii2_v15`, driver `v15/tmp/gii2_chain.sh`, worktree `../qllm_v15_gii2`
   (ckpts of pair 1 -> `/media/gowrav/d_drive/qllm_ckpts/v15_gii2_checkpoints_v14/`).
   ~8.1 GB beside v14's whole-card n9r (13.9 GB); ~1 h per pair, chain end
-  ~13:00 IST. Bars: EXPERIMENTS §4 G1; prediction §6. Summary:
+  ~12:30 IST. Bars: EXPERIMENTS §4 G1; prediction §6. Summary:
   `.venv/bin/python v15/tmp/g1_summary.py "../qllm_v15_gii2/logs/v14_v15gii2*_b599a56_*.json"`.
   Probe after pair 1: `.venv/bin/python v15/tmp/probe_shares.py <ckpt>/grove@hd64L4.pt 8`.
 
@@ -33,7 +33,7 @@
    learned through the surrogate; the binding path (reign vs conv).
 
 ## Step-back notes
-- 2026-10-31 07:05, after building Grove II. Four of the five faults found
+- 2026-10-31 06:25, after building Grove II. Four of the five faults found
   this morning were not in the idea but in defaults carried over from Grove I
   (soft-share growth rate, conv bias, coupled spreads) and in one rule I had
   not thought through (a novel token eating an old tree). The decode-parity

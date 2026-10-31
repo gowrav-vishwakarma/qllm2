@@ -315,7 +315,7 @@ succession fruit, and seasons. The whole is the claim, as in §2.
   I 0.062); 31 keys season 8 1.000. Fast strict grove: same-key overlap 1.00
   vs 0.00 (an exact instance cache); loose slow groves 0.5–0.9 vs 0.2–0.5.
 
-**What the toys taught on the way (06:00–07:00 IST), all found by the
+**What the toys taught on the way (05:50–06:20 IST), all found by the
 decode-parity test and the birth/landing trace, none by guessing:** (1) a
 novel token must be eaten by its newborn only; landing on the best old tree
 too corrupted it (toy 0.055). (2) Growth of 86 %/token (Grove I's α for
@@ -329,7 +329,7 @@ strict; the spreads are now paired the other way (fast = strict cache, slow
 other trees (a random walk) beats a perfect match, so slow groves are context
 selectors, not lookups: a division of labour, not a bug.
 - GII-2 = G1 again (same six pairs, same bars L, P, R, guard; `grove` arm
-  at the new hash). **Running since 07:02 IST 2026-10-31 at `b599a56`.** Prediction, written before the run: label_exact 2-shot
+  at the new hash). **Running since 06:22 IST 2026-10-31 at `b599a56`.** Prediction, written before the run: label_exact 2-shot
   > 0.5 in ≥ 2 pairs (binding, not just the label set), label_category
   unknown (prototype formation now depends on the soil clustering tokens
   under θ), guard within 0.1 nat. If label_exact stays at echo's 0.50, the
