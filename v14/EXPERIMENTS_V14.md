@@ -2534,7 +2534,7 @@ fitted threshold:
   1.00 (unchanged). Reported: paraphrase and tool in strict vs lenient mode
   (expected to fall to the organ's level): the precision / recall trade-off
   is the finding, with no middle ground available from key similarity (A2).
-- **Amendment S/A1 (00:50 IST, before any strict-mode number; user via Lead:
+- **Amendment S/A1 (00:39 IST, before any strict-mode number; user via Lead:
   "generation counts"):** the PRIMARY metric is free generation: the mind's
   greedy token over the whole vocabulary after the re-read (`P_free`; state
   only `A_free`), not the pick among 20 candidates (secondary). Bars: neg
