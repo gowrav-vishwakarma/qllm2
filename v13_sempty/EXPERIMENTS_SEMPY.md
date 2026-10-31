@@ -4046,3 +4046,9 @@ quoted beside it, not as a same-data Mamba-2 comparison.
 **ntfy EUREKA sent 14:16 IST** (user's rule: replicated, ahead of both baselines at lower
 memory cost, params and tokens stated): the one-read 2k reach (PAM 0.86 / 0.86 vs T++
 0.03, Mamba-2 0.06; ~103M, 600M tokens, 1.15 MB state; b2p1 / b2p2_main_38e3c29, probe 53d0e52).
+
+**LAW-1 amendment A2 (2026-10-31 14:20 IST, before any LAW-1 number):** the holdout
+guard (rule 3) is measured on the frozen attr3b text (PG-19 + web, 2048-token windows;
+`~/attr/data.npz` on the 6000) for every arm AND for b2p2 with the same script, because the
+trainer's own validation uses windows of the arm's SEQ (8k / 32k), which are not
+comparable with b2p2's 2048-window holdout. Guard: arm − b2p2 ≤ +0.02 on both texts.
