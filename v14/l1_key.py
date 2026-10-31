@@ -114,6 +114,9 @@ def doc_end(d):
     return max(0, int(d['qpos']) - 4)
 
 
+CENTRE = [False]          # subtract the document mean from the vectors (harness --centre)
+
+
 def prep(d, form):
     """Per-document cache: row spans, their index tensors, positives, the query span's index."""
     T = d['vecs'].shape[0]
@@ -124,7 +127,10 @@ def prep(d, form):
     ml = SPAN if form == 'fwd' else EVT_MAX
     idx, mask = span_index(spans, ml) if spans else (None, None)
     qi, qm = span_index([(qpos, min(T, qpos + SPAN))], SPAN)
-    return dict(vecs=d['vecs'], spans=spans, pos=pos, idx=idx, mask=mask, qi=qi, qm=qm, kind=d['kind'])
+    v = d['vecs']
+    if CENTRE[0]:
+        v = (v.float() - v.float().mean(0, keepdim=True)).half()
+    return dict(vecs=v, spans=spans, pos=pos, idx=idx, mask=mask, qi=qi, qm=qm, kind=d['kind'])
 
 
 def positives(spans, target, tlen):
@@ -189,6 +195,7 @@ def train(args):
     if os.environ.get('L1_MEM_FRAC'):                      # hard cap when sharing a busy card
         torch.cuda.set_per_process_memory_fraction(float(os.environ['L1_MEM_FRAC']))
     torch.manual_seed(args.seed)
+    CENTRE[0] = args.centre
     files = [f for d in args.docs.split(',') for f in load_docs(d)]
     vals = {os.path.basename(d.rstrip('/')): [prep(torch.load(f), args.form) for f in load_docs(d)]
             for d in args.val.split(',')}
@@ -233,7 +240,7 @@ def train(args):
                 best = (score, {k: v.detach().cpu().clone() for k, v in head.state_dict().items()})
                 print(f"  best so far on {key_set}: {score:.3f} (step {step})", flush=True)
     torch.save({'state': best[1], 'form': args.form, 'tau': TAU, 'span': SPAN, 'arch': args.arch,
-                'rank': args.rank, 'select': key_set, 'best_top1': best[0], 'args': vars(args)}, args.out)
+                'rank': args.rank, 'centre': args.centre, 'select': key_set, 'best_top1': best[0], 'args': vars(args)}, args.out)
     print('saved', args.out, 'best', best[0], flush=True)
 
 
@@ -247,9 +254,11 @@ def key_fn(vecs: torch.Tensor, ids, bursts_=None) -> torch.Tensor:
         ck = torch.load(os.environ['L1_CKPT'], map_location='cpu')
         h = SpanKey(arch=ck.get('arch', 'full'), rank=ck.get('rank', 32))
         h.load_state_dict(ck['state'])
-        _HEAD['head'], _HEAD['form'] = h.eval(), ck['form']
+        _HEAD['head'], _HEAD['form'], _HEAD['centre'] = h.eval(), ck['form'], ck.get('centre', False)
     head = _HEAD['head'].to(vecs.device)
     v = vecs.float()
+    if _HEAD.get('centre'):
+        v = v - v.mean(0, keepdim=True)
     T = v.shape[0]
     with torch.no_grad():
         if bursts_ is not None:
@@ -286,6 +295,7 @@ def main():
     t.add_argument('--wd', type=float, default=0.01)
     t.add_argument('--select', default='val_indist', help='validation set (dir name) that picks the best step')
     t.add_argument('--cache_docs', type=int, default=400)
+    t.add_argument('--centre', action='store_true', help='subtract the document mean (as the harness --centre)')
     t.add_argument('--log_every', type=int, default=50)
     t.add_argument('--eval_every', type=int, default=250)
     args = ap.parse_args()

@@ -132,12 +132,18 @@ def make_natural(rng, tok, pool, L, counts):
 
 
 @torch.no_grad()
-def read_doc(model, ids: list[int], device):
-    """-> vecs [T, D] fp16 (the actual output vector, echo included), nll [T] fp16 (nats)."""
+def read_doc(model, ids: list[int], device, vec_layer=None):
+    """-> vecs [T, D] fp16, nll [T] fp16 (nats, always from the output vector).
+    vecs = the output vector (echo included), or with vec_layer=k the residual after block k
+    (the mind's intermediate state: the better address, EXPERIMENTS_V14 'L1 development CORRECTION')."""
     x = torch.tensor([ids], device=device)
     with torch.autocast('cuda', dtype=torch.bfloat16):
         z, b, t = model._stem(x, 0)
-        z, _ = model._run_blocks(z, b, t, None, 0, x)
+        mid = None
+        for i, blk in enumerate(model.blocks):
+            z, _ = blk(z, pam_state=None, step_offset=0)
+            if vec_layer is not None and i + 1 == vec_layer:
+                mid = z.raw(b, t, model.model_dim)[0]
         lm, _ = model._lm_vector(z, x, b, t)
         v = lm.raw(b, t, model.model_dim)[0]
     E = model.embed.embed.weight.float()
@@ -145,7 +151,7 @@ def read_doc(model, ids: list[int], device):
     for s in range(0, len(ids) - 1, 1024):
         lg = v[s:min(s + 1024, len(ids) - 1)].float() @ E.t()
         nll[s + 1:s + 1 + lg.shape[0]] = torch.logsumexp(lg, -1) - lg.gather(-1, x[0, s + 1:s + 1 + lg.shape[0], None]).squeeze(-1)
-    return v.half().cpu(), nll.half().cpu()
+    return (mid if mid is not None else v).half().cpu(), nll.half().cpu()
 
 
 def main():
@@ -159,6 +165,7 @@ def main():
     ap.add_argument('--frac_natural', type=float, default=0.5)
     ap.add_argument('--harness_template', action='store_true', help='validation: the harness template (held out of training)')
     ap.add_argument('--mem_frac', type=float, default=0.0)
+    ap.add_argument('--vec_layer', type=int, default=None, help='store the residual after block k instead of the output vector')
     ap.add_argument('--pool_lo', type=float, default=0.0, help='use this fraction range of the pool (train 0-0.85, val 0.85-1)')
     ap.add_argument('--pool_hi', type=float, default=1.0)
     args = ap.parse_args()
@@ -185,7 +192,7 @@ def main():
             d = make_synthetic(rng, tok, pool, args.length, TEMPLATES, values, harness=args.harness_template)
         if d is None:
             continue
-        vecs, nll = read_doc(model, d['ids'], device)
+        vecs, nll = read_doc(model, d['ids'], device, args.vec_layer)
         d.update(vecs=vecs, nll=nll)
         torch.save(d, out / f'doc_{made:05d}.pt')
         made += 1
