@@ -18,6 +18,13 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 17:11 IST: lg32 relaunched under option B (Lead).** At 17:08 the guard paused it at step 450
+  (r3c 41.5k vs its ALONE speed 64.1k = −35 %, three strikes; no checkpoint yet). Lead agreed the 80 %
+  rule was miscalibrated (any second training job time-slices the card; the box gains +20 % total
+  throughput). Now: guard r3c ≥ 55 % of its alone speed (~35k), VRAM floor 3 GB, SAVE_EVERY 200
+  (`~/law1_chain_b.sh`, `~/lg32_guard_b.sh`). Standing launch rule updated. ETA lg32 ~18:30 + probes ~18:55;
+  r3c ends ~01:00-03:00 IST. s8 still paused; the gate resumes b2p3 on lg32 .done.
+
 * **2026-10-31 16:43 IST: lg32 restarted with `FINEWEB_LOCAL_DIR=data/fineweb-edu`.** Its first restart sat
   ~25 min in HF read timeouts (mostly fineweb shard 000, opened twice: main stream + b2gap's gap
   stream; dclm / smoltalk2 occasionally). Same data, local read path: the 6000 has shards 000-007,
