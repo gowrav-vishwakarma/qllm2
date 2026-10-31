@@ -18,6 +18,25 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 02:35 IST: HANDOVER STATE.** New since 01:22:
+  - cd1 (contrast decode, 4k reach 0.815 ranked / 0.59 free; FAIL at 2k as registered); cd2 running on
+    local CPU (fresh seeds 8200-8299; `logs/diag/v13_sempty_cd2_b2p2_cb1f9c7.jsonl`).
+  - **cu1 VERDICT: not a Win** (R-fsq + R-hop met; R6a / R6b fail: the stated rule is a lookup over
+    trained values; holdout +0.045). srd and b2gap removed from the code; RESET_AT_EOS kept (Lead).
+  - cu1n9s unstuck on the 6000 (tmux prefix bug; exact names now), stage A since 02:19 IST.
+  - **r3p QUEUED on the 6000:** tmux `r3p`, worktree `~/Development/qllm_r3p` @ `c13d8fe`. Mix A1, 7.0 %
+    synthetic; hard gate holdout ≤ 3.2391; futility 3.431 @ step 39060. Starts when cu1n9s ends (~04:30).
+    Resume: same tmux command with SCREEN_HASH=c13d8fe.
+  - 6000 eval worktree `~/Development/qllm_eval` (master; the main checkout there cannot pull because of
+    untracked logs, so leave it).
+
+  Next for Mind:
+  - cd2 verdict;
+  - cu1n9s readouts vs its A1 rules (two-hop ≥ cu1 + 0.15 AND ≥ 0.50; guards vs cu1), plus the verify
+    cell from `qllm_eval`;
+  - pre-register cu2: VERIFY on natural keys + paraphrases, and a compositional stated-rule source if
+    any (many values, held-out in the probe).
+
 * **2026-11-01 01:22 IST: HANDOVER STATE.** Done tonight:
   - reset mask (`f2587b5`) and ANSWER_IN_WINDOW (`824a988`);
   - lg8r VERDICT FAIL, mixed case (reach 4k 0.465, half-lives held, LM +0.08 / +0.11); reach-by-training stopped;
