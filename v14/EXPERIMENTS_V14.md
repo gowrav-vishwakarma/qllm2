@@ -1749,7 +1749,21 @@ tokens, spread affine 0.44-0.61 at 8k).**
     (the latch + a no-decay slot) and pre-register its bars. Not met → a
     residual-stream register does not work in this body; the alternative is
     long-gap training (v13's recipe), recorded as the answer.
-- **SR (to build only if SR-0 is met), bars on the skill-pack cell:** skill
+- **Amendment SR-0/A1 (after Mind's skill-pack result, before any SR-0
+  number): the cell is Mind's.** The spread cell overstated the reach (its
+  last example sits L/8 from the query, so it measured ~1k gaps with
+  re-exposure). SR-0 uses `scripts/run_skillpack_probe.py` (`53d0e52`, task
+  `skillpack`, tasks shift_wide_new and affine_map_new, 8 demos read ONCE at
+  t0, then L tokens of filler, then the query; seeds 8000-8099; L = 0 / 2k
+  / 8k / 32k / 128k). The loss to beat, from Mind (b2p2, 100 docs): affine
+  0.98 / 0.14 / 0.07 at 2k / 8k / 32k, shift 0.74 / 0.05 / 0.01. The SR-0
+  bar becomes: with the demonstrations REMOVED and the transplanted vector
+  added, accuracy at 32k ≥ 0.9 × the no-transplant value at 2k (affine ≥
+  0.88, shift ≥ 0.67), and wrong-rule and random vectors ≤ 0.25 × that.
+  The no-transplant rows at 8k / 32k (0.14 / 0.07, 0.05 / 0.01) are the
+  floor.
+
+- **SR (to build only if SR-0 is met), bars on the skill-pack cell (Mind's probe, above):** skill
   at +32k / +128k / +1M ≥ 0.9 of its +2k value; recall (t40) and holdout
   not worse (≤ +0.01); one register per head or a small bank. Training needs
   a long-gap curriculum for the READ to be learned (format-trained), so the
