@@ -1444,6 +1444,20 @@ a test-time gate floor (gates < tau set to 0) on label_diag at 0 / 2048 /
 4096: if far label accuracy rises without training, filler writes are what
 bury items.
 
+**v13 gate floor (`b8f7b08`, ~07:00 IST): no rescue, and the label gap is
+not filler burial.** Setting echo's gates below 0.3 to 0 at test time
+moves label_diag exact @2048 / 4096 from 0.26 / 0.21 to 0.34 / 0.29 (about
+1.5 SE) but costs 0.04–0.09 at L = 0; a floor on every memory is worse.
+The deciding fact is label_exact with NO filler at 2 / 4 / 8 shots: PAM
+0.60–0.63 / 0.68–0.74 / 0.49–0.62, Mamba-2 0.865 / 0.905 / 0.815, T++
+0.725 / 0.825 / 0.705. A 2-shot prompt is ~15 tokens, so nothing is buried:
+PAM's label gap is a short-range lookup / binding gap, and burial only adds
+to it at distance. N12 targets the distance part (far labels, step through
+filler). It does not target the short-range binding gap, which v13's `lb`
+pair tests as a format effect (label-format docs in training). A short
+conv on the keys is not the answer either: v13's G1 / A1 failed
+(label_exact 0.517 vs 0.610).
+
 **Why not a learned soft gate.** v13's echo memory already has separate
 soft decay / write / erase gates, and label_diag is still 0.57–0.63. v15's
 G1d saw the same thing in another unit: learned soft addressing stayed soft
@@ -1527,7 +1541,9 @@ without breaking the rules?
   least as many seeds as echo, AND the mean over seeds of (label_exact_new
   + label_gap_new) / 2 at 8 shots gives d = N12 − echo ≥ 0.
 - **Reported:** d itself (≥ +0.15 = a strong signal), two_hop, repeat_copy,
-  every other cell, ms/step.
+  every other cell, ms/step. Added ~07:00 IST before any N12 number (v13's
+  request): label_exact and label_exact_new at 2 shots, where PAM's 600M
+  label gap starts.
 - **Outcomes:**
   - Selects + guard + S met → hand to v13 for the 600M check on the B2
     recipe, paired with b2p2 (PAM seed 43). The bars there are label_diag
