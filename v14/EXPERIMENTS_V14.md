@@ -2099,6 +2099,11 @@ synthetic + natural at 32k, 16 docs each.
   a stored key = miss); para natural ≥ 0.75 (organ 0.31 at seed 14000) and para
   synthetic ≥ organ + 0.10; neg wrong-fetch (organ hit OR similarity ≥ t) ≤
   0.10. Tool is reported (the row length is a separate unit).
+- **Tuned on seed 15000 (21:15 IST, fixed before any seed-17000 number):**
+  t = 0.655 (`v14/l2_select.py tune`): tuning kv accuracy 1.00 with the organ
+  answering every kv query (the kv keys are exact strings, so there the
+  two-organ fetch IS the organ); neg wrong-fetch 0.09. The learned key only
+  decides on cells where the organ misses (para, tool fields).
 - **Novelty line (Lead):** hybrid sparse + dense retrieval (BM25 + dense
   retriever class): the package's fetch, cited, NO claim. The claim stays the
   interface: keys in the mind's own state, rows written on the mind's
