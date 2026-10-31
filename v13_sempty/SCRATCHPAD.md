@@ -18,6 +18,23 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-10-31 ~10:00 IST: user direction, the "complete package":** train the model as an
+  INTELLIGENCE machine (rules, gist, reasoning in the O(1) state), not a recall machine, and
+  give it a way (learned if possible) to FETCH from the user context and tool results later
+  (RAG-like). Evidence today: copy = 53-58 % of the 3B T++ gap; Communicator's model-free exact
+  n-gram organ recalls 1.0 to 128k where any state fades to 0 by 32k; the model's own pre-logit
+  vector at the key token retrieves the right sentence top-1 0.63-0.88 to 128k, zero-shot;
+  frozen PAM re-reading 2 retrieved spans answers two-hop 1.0. Package = mind (PAM state) +
+  exact store (context / tool text; A4 / N7 class) + learned fetch (when / what, then re-read).
+  Honesty: bar 1 becomes "O(1) mind + sparse fetch index" (at 128k: text 0.26 MB, salient-key
+  index ~15 MB, all-position 308 MB, vs T++ KV 4.9 GB). It does NOT close the Mamba-2 gap
+  (general modelling on new tokens): that stays the a4f / body track.
+  v13 steps (this lane): (1) a probe suite for the package: fetch-and-reread on needles,
+  "latest definition wins", two-hop, tool-result lookup, at 2k-128k, memory in MB beside each
+  number, plus rule-at-distance as a named benchmark; (2) the 600M LM check of an exact organ
+  (a4f now; N7 when v14 hands it over), scored with attr3b on copy tokens; (3) the best-package
+  3B run includes the organ explicitly. Design of the learned fetch = v14's lane (sent).
+
 * **2026-10-31 08:55 IST: a4f (A4 cond_mem filter) queued on the 4090** (tmux `a4f`, script
   `/tmp/claude-1000/-home-gowrav-Development-qllm2/99371c3c-8382-42b3-a3d3-6861632abc19/scratchpad/a4f_chain.sh`, worktree `../qllm_a4` at `d338469`,
   ckpts on d_drive `qllm_a4_checkpoints_v13_sempty`). Waits for v14's `n9r` tmux to end

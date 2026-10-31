@@ -9,6 +9,17 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-10-31
 
+- **v13 (user direction): the complete package = an intelligence mind + a learned fetch.**
+  User: train the model as an intelligence machine, not a recall machine, and give it a
+  learned way to fetch from the user context and tool results (RAG-like). It fits today's
+  numbers: copy is over half the 3B T++ gap; a model-free exact organ recalls 1.0 to 128k;
+  PAM's pre-logit vector at the key token already retrieves the right sentence top-1
+  0.63-0.88 zero-shot; and re-reading the fetched spans gives two-hop 1.0 (Communicator,
+  a1baefc). *For v14:* the learned fetch (when to fetch, the query = state at the salient
+  token, re-read the span) is the mechanism to design. N7 / N12 are its first organs. The
+  state can then spend its capacity on rules (its edge) instead of verbatim items. v13 builds
+  the probe suite (fetch at 2k-128k with MB per number) and the 600M / 3B checks.
+
 - **Organiser (CPU, frozen checkpoints, no training): the O(1) state cannot hold a
   needle past ~8k tokens, but its own per-token vector at the needle's key word is a
   usable address up to 128k, and a model-free n-gram organ gives exact recall and
