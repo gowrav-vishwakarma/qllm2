@@ -365,7 +365,7 @@ logits, and capacity under web filler at 8k (threshold or bigger store).
 the 4090 after n9r, ~12:00–16:00). N12 code + selftest while they run
 (CPU / small); its micro run goes after n9th.
 
-## Step back (2026-10-31 ~09:00 IST, after v13's 3B LM gap attribution, `0771dca`)
+## Step back (2026-10-31 ~08:20 IST, after v13's 3B LM gap attribution, `0771dca`)
 
 **What we saw.** At 3B, the gap to T++ (+0.05 / +0.06 nats) is mostly
 in-window copy (53–58 %). The gap to Mamba-2 (+0.09 / +0.11) is mostly NEW
@@ -380,6 +380,13 @@ gap.
    with both baselines on the late slope. Part of the "general modelling"
    gap may be under-training. r3c (LR 1.2e-3) must be scored the same way,
    at equal tokens, before a body or unit is built for it.
+   **Checked by v13 (~08:30): the confound does NOT hold for the old body.**
+   The same body at LR 1.2e-3 (`9982a79`, 3B) is worse overall (+0.043 PG-19
+   / +0.013 web), with the same split vs Mamba-2 (new tokens 46-49 %, copy
+   24 %). r3c (16nb + echo + two stages, 1.2e-3) is still the open case;
+   v13 scores its ~1.56B checkpoint ~15:00-16:00 IST. v13 will pre-register
+   A4 `cond_mem` as a paired 600M filter (new tokens at positions 0-64 +
+   holdout) after r3c's futility point.
 2. **Mamba-2's short conv is not the missing piece:** v13's G1 (conv on
    qkv) failed and the box control upheld it (+0.07 train loss).
 
@@ -396,7 +403,9 @@ candidate levers are:
   extra processing. Speculative; not designed.
 
 **Free data:** score n9c vs C1-ctl (600M, on d_drive) with
-`v13_sempty/tmp/attr3b.py` when the 4090 has room. That shows whether
+`v13_sempty/tmp/attr3b.py` when the 4090 has room (queued in the background
+for when v15's job leaves the 4090, ~10:40 IST; v13's frozen text copied
+from the 6000 `~/attr/data.npz`). That shows whether
 N9a's recall jump moves copy tokens (part of the T++ gap).
 
 ## Next action
