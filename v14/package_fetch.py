@@ -21,11 +21,13 @@ import torch
 import torch.nn.functional as F
 
 from v14 import l1_key as L
+from v14 import norm_organ as N
 
 HEAD = os.environ.get('PACKAGE_HEAD', '/media/gowrav/d_drive/qllm_ckpt/v14/l1p_fwd_L8c_99e6803.pt')
 MEAN = os.environ.get('PACKAGE_MEAN', '/media/gowrav/d_drive/qllm_ckpt/v14/l1p_fwd_L8c_99e6803.mean.pt')
 T_ABSTAIN = float(os.environ.get('PACKAGE_T', '0.655151'))
 STRICT = os.environ.get('PACKAGE_STRICT', '0') == '1'      # strict mode: answer only on an exact-organ hit
+NORM = os.environ.get('PACKAGE_NORM', '0') == '1'          # A4: the normalised-word organ after the token organ
 NGRAM, MAX_ROW, DOT = 4, 64, 13
 _S = {}
 
@@ -47,6 +49,33 @@ def sentence_end(ids, start, end):
         if ids[j] == DOT:
             return j + 1
     return min(end, start + MAX_ROW)
+
+
+def _strs():
+    if 'strs' not in _S:
+        from v7.data import get_chat_tokenizer
+        _S['strs'] = N.tok_strings(get_chat_tokenizer())
+    return _S['strs']
+
+
+def row_around(ids, a, b, end):
+    """the sentence holding tokens [a, b): from after the previous '.' (<= 64 back) to the next '.' at or after b."""
+    s0 = max(0, a - 16)
+    for j in range(a - 1, max(0, a - 64), -1):
+        if ids[j] == DOT:
+            s0 = j + 1
+            break
+    return s0, max(a + 1, sentence_end(ids, b, end))
+
+
+def norm_hit(ids, end, q0):
+    """A4: (step, n, row start, row end) of the normalised-word organ, or None."""
+    strs = _strs()
+    h = N.find(N.words(strs, ids, 0, end), N.words(strs, ids, q0, len(ids)))
+    if h is None:
+        return None
+    step, n, a, b = h
+    return (step, n) + row_around(ids, a, b, end)
 
 
 def organ(ids, doc_end, qend):
@@ -72,14 +101,14 @@ def key_fn(keys: torch.Tensor, ids, info):
         kb = L.pool_spans(head, v, spans, MAX_ROW) if spans else v.new_zeros(0, L.KEY_DIM)
         kq = L.pool_spans(head, v, [(q0, min(T, q0 + L.SPAN))], L.SPAN)[0]
     hit = organ(ids, end, len(ids))
-    info['organ_hit'] = int(hit is not None)
-    if hit is not None:                       # the exact organ's sentence, ranked first by construction
-        s0 = max(0, hit - 16)
-        for j in range(hit - 1, max(0, hit - 64), -1):
-            if ids[j] == DOT:
-                s0 = j + 1
-                break
-        spans = [(s0, sentence_end(ids, hit, end))] + spans
+    row = row_around(ids, hit, hit, end) if hit is not None else None
+    if row is None and NORM:                  # A4: the normalised-word organ
+        nh = norm_hit(ids, end, q0)
+        info['norm_step'] = nh[0] if nh else 0
+        row = nh[2:] if nh else None
+    info['organ_hit'] = int(row is not None)
+    if row is not None:                       # the organ's sentence, ranked first by construction
+        spans = [row] + spans
         kb = torch.cat([kq[None], kb])
         info['best_sim'] = 1.0
         info['abstain'] = 0
