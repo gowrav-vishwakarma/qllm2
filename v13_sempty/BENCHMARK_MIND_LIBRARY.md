@@ -259,3 +259,18 @@ generation also counts: not a database, a model that is intelligent AND expresse
   3.2191 vs T++ 3.2064 (+0.013) / Mamba-2 3.1644 (+0.055); WikiText PPL 49.95 vs 46.61 / 46.91.
   Any curriculum change (cu1, cu2) keeps a generation-quality readout: holdout by token class
   plus 3 shown samples.
+
+**A8 (2026-11-01 01:00 IST; Lead's decision, from the A7 shown generations): a NATURAL-QUESTION
+cell `natq` enters the harness as a REPORTED cell in v1 (no gate until its first numbers exist).**
+Why: a plain-language recall question ("…the backup key is with Priya in room 18. … Question: who
+has the backup key? Answer:") was answered wrongly by both b2p2 and r3c (3B), whose recall in the
+trained key-value format is 0.79. Every fetch cell so far uses the "Query: K refers to"
+template, so the format-bound part of recall had not been measured.
+- **Cell:** a fact stated in prose at a random position in the document, a plain question at the
+  end. Scored by free generation only: greedy decode to the first "." or newline, cap 16 tokens,
+  exact match of the value.
+- **Arms:** the package (mind + session fetch), and T++ / Mamba-2 as they are. Harness: Lead
+  (`v16/bench.py`, after the current 4090 jobs). The key-word choice for the session fetch:
+  Library.
+- **Gate:** none in v1. A bar is set by a dated amendment once the first rows exist and before
+  any claim uses them.

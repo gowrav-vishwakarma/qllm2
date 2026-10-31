@@ -4433,3 +4433,59 @@ this at 600M are not in r3c).
 **Next:** no further 3B run is queued from this. The 3B "best package" run (M2 or 16nb + echo +
 b2 + lab + curriculum, with ANSWER_IN_WINDOW) is the place they meet, after cu1 says which
 curriculum parts help. GPU via Lead.
+
+## r3p: the 3B best-package mind (pre-registration, 2026-11-01 00:58 IST; GPU slot approved by Lead after cu1 + cu1n9s)
+
+**What it is.** One 3B run that brings together everything that worked at 600M on the only body
+proven at 3B, so the package's mind is measured at the baselines' scale, and LM quality
+("expression", A7) is stated next to it.
+
+**Closest prior work (novelty rule):** delta-rule linear RNNs with gated decay (DeltaNet /
+Gated DeltaNet, Yang et al. 2024), Mamba-2 (SSD), RWKV-7, Titans (test-time memory); synthetic
+skill data mixed into pretraining (procedural / "physics of LMs" style mixtures). **What
+differs (one line):** the body (PAM: delta notebooks with content-modulated rotary retention,
+an echo succession memory into the head, ~3.9 MB state) trained as the MIND of a mind + library
+package and judged at equal data on recall and rules in and beyond the training length, with LM
+quality stated. The recipe (pretraining with synthetic mixtures) is known; no recipe claim.
+
+**Run `r3p`** (6000; ~103.2M params; 3.0B tokens = the baselines' budget):
+- Body and schedule exactly as r3c: `baseline_real_pm` (16 notebooks, chrono + out_gate + delta) +
+  ECHO=1, LR 1.2e-3, seed 42, SEQ 2048.
+- **Stage A reused:** `r3ca_pre_38e3c29/best_model.pt` (120M tokens, identical recipe), so stage B
+  starts at once; `--init_from` it.
+- **Stage B 2.88B tokens**, `ANSWER_IN_WINDOW=1` (`824a988`). The mix is fixed now by cu1's verdict:
+  - cu1 Win (R6a AND R-fsq, guards met): cu1's mix with each source kept only if its own rule passed
+    (srd ← R6a, fsq ← R-fsq, hop ← R-hop); a failed source's share goes back to dclm / fineweb in
+    their 0.40 : 0.37 ratio. cu1's full mix: dclm / fineweb / smoltalk2_mid / recall / b2 / lab /
+    srd / fsq / hop = 0.40 / 0.37 / 0.10 / 0.03 / 0.03 / 0.02 / 0.02 / 0.02 / 0.01.
+  - cu1 no Win: dclm / fineweb / smoltalk2_mid / recall / b2 / lab = 0.41 / 0.38 / 0.10 / 0.04 / 0.03 /
+    0.04 (b2p2's and lbp's ingredients together, never trained jointly at 600M: stated).
+  - cu1n9s: N9a + N9s go in only if cu1n9s passes its rule AND cu1n9a (A2) credits N9s; else off.
+- Launcher gates: cu1n9s ended; free VRAM ≥ peak + 3 GB (r3c's measured peak); disk ≥ 8 GB free
+  (the 6000 has 17 GB at writing). Saves every 1,000 steps; keeps step 39,062 (1.5B) for attribution.
+
+**Readouts (fixed now):**
+1. **Expression (R3, the public bar; A7):** holdout and WikiText vs T++ 3.2064 / 46.61 and Mamba-2
+   3.1644 / 46.91. **Beats** = holdout lower by > 0.01 AND WikiText lower; **competitive** = within
+   ±0.01. **Prediction, written now: r3p MISSES both, narrowly.** r3c was +0.013 behind T++, and
+   ~8–13 % of r3p's stage B goes to synthetic docs that the baselines spent on web text. Loss by
+   token class (attr3b) vs r3c, T++ and Mamba-2, on the 3B attribution windows.
+2. **Recall** (t40, scoreboard definition) all / ≤ 2k / > 2k vs r3c 0.792 / 0.844 / 0.661 and the
+   baselines. Guard: not worse than r3c by > 0.03 overall.
+3. **Rules:** B2 `_new` and the spread (LCL) cell vs the 3B baselines as they are (no b2 docs there:
+   the asymmetry is stated in the caption). Bar, the 600M s8 form: spread-cell distance D ≥
+   max(T++, Mamba-2) + 0.10. label_diag reported (T++ 0.703, no lab docs there).
+4. **Skill-pack** reach at 0 / 2k / 4k / 8k / 32k, 20-way and free; and the cu1 cells (R6a, R-fsq, R-hop)
+   for every curriculum source that went in.
+5. **Free generation (A7) is the primary column** of 2–4. `run_learning_probe` gets `*_free`
+   before r3p ends (to do; the skill-pack probe has it, `a073d0d`).
+6. **Shown generations:** the same three prompts as r3c / b2p2 (`v13_sempty/tmp/show3.sh`): rule
+   (greedy), plain-language recall (greedy), free text (T 0.8, seed 1).
+7. **Futility at 1.5B tokens (step 39,062):** stop if holdout > r3c's 3.4010 + 0.03 (= 3.431). The
+   synthetic share is expected to cost ~0.01; three times that means the mix is hurting.
+8. Package R1 (exact-key fetch at 32k / 128k) needs Library's fetch re-fit on r3p's states:
+   Library's lane, GPU via Lead.
+
+**Ledger:** r3p = r3c's body + b2 + lab + (cu1 parts by rule) + ANSWER_IN_WINDOW. Not in it: M2
+shared reads (untested at 3B at LR 1.2e-3; r3b's M2 failed at LR 2e-4), the doc-boundary reset
+(lg8r is testing it at 8k; r3p trains at 2k), fetch training.

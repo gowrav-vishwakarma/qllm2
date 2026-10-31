@@ -41,6 +41,7 @@ shared reads) · **E1** echo memory (10-29) · **2st** two-stage schedule, stage
 | lbp / lbt (`c4173be`) | 6000 | 600M | M2 / T++ | yes | apt | 1.2e-3 | 4 % | no | 3 % | no | no | label gap = format? |
 | n9c (`e5f0b73`) | 4090 | 600M / 103.5M | M2 | yes | web (C1-ctl) | 1.2e-3 | 5 % | no | no | yes | no | N9a lookup (FAIL), recall +0.15 |
 | n9r ctl43 / n9a43 (`37fa333`, v14) | 4090 | 600M / 102.9M | M1 | yes | web | 1.2e-3 | 5 % | no | no | no / yes | no | N9a recall replication **FAIL** (+0.016 / +0.014, bars +0.08 / +0.15); ctl43 is a loss outlier (3.598). **N9a is out of every plan.** |
+| **r3p** (pre-registered, 6000 after cu1n9s) | 6000 | 3B / ~103.2M | 16nb | yes | web/chat (r3ca reused) | 1.2e-3 | 3–4 % | 3 % | 2–4 % | by cu1n9s rule | no | 3B best-package mind: b2 + lab + cu1 parts by rule + ANSWER_IN_WINDOW; expression bar ±0.01 vs T++ (predicted miss) |
 | **lg8r** (`824a988`, pre-registered, 4090) | 4090 | b2p2 + 50M / 102.9M | M2 | yes | apt | 3e-4 | 4 % | b2gap 3 % | no | no | no | 8k windows + doc-boundary reset + answer-in-window: does one-read reach follow the window? No cu1 curriculum, no N9s |
 
 **Direction (user, 10-31): O(1) mind + growing library.** The state is the mind; verbatim knowledge goes to a session library + a shared library; benchmark first (see EXPERIMENTS "Direction").
