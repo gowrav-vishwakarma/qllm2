@@ -1961,6 +1961,29 @@ paired runs, seed 14000): bar NOT met.** Logs `logs/v16_bench_l1p0_L8_c82ee13_*_
   candidate; it must be pre-registered before it is scored (it would be fit to
   these docs otherwise: new seed required). 128k pending.
 
+**L1+P1 (PRE-REGISTERED 2026-10-31 ~17:15 IST, before any number of it;
+agreed with Lead).** Combined selector over the top 5 burst rows of the
+trained key: score_i = z(key similarity_i) + w · z(re-read margin_i) (z =
+standardised within the 5 candidates); the answer is the re-read answer of the
+best-scoring row. ABSTAIN when the best score is below a threshold t.
+- **Tuning split (only place w and t are chosen):** kv, synthetic + natural,
+  32k, 16 docs each, `--seed 15000`; w from {0, 0.25, 0.5, 1, 2, 4}; t chosen
+  so the neg cell (`--seed 15000`) fetches wrongly in ≤ 10 % of docs.
+- **Scoring split (one run, nothing chosen on it):** `--seed 16000`, kv
+  synthetic + natural at 32k and 128k, 16 docs each, plus the neg cell at 32k.
+- **Arms on the scoring split (same docs):** key alone (C5_burst_hit_span),
+  P1-combined, P0 margin alone (P_margin_burst), concat-5 (P_concat_burst) as a
+  named arm (the 1.00 on synthetic at seed 14000 was a post-hoc observation and
+  is NOT claimed).
+- **Bars:** P1-combined ≥ 0.95 at 32k and ≥ 0.85 at 128k on BOTH key types,
+  counting an abstain on a stored-key query as a miss; abstain rate reported
+  beside it; neg cell wrong-fetch ≤ 0.10. Concat-5: the same bars, judged
+  separately. Cost: 5 short re-reads per query (concat: one re-read of 5
+  spans).
+- **Needs from the harness:** per candidate (top 5): its key similarity, its
+  re-read answer and margin, and whether it is right (a `P_cands` list per
+  record). Asked of Lead; nothing is scored until it exists.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
