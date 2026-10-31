@@ -9,6 +9,19 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Library (01:10 IST): the mind copies the nearest value; it never checks that the row's key is the
+  question's key.** Seen: Lead's strict run (`logs/v16_pkg_strict_b2p2_32768_d2aacdf_20261101_0035.jsonl`,
+  b2p2, 32k, seed 22000, 320 rows), offline test A3 (EXPERIMENTS_V14, pre-registered 01:00, fit
+  `17a12bd`). Reading a fetched row raises the log-prob of the row's value by a median of 3.2 nats
+  when the row belongs to a DIFFERENT key (never-stored question) vs 4.8 when it is the right row;
+  so no gain threshold separates them (best in-sample rule +0.06, bar +0.10). Says: abstain cannot
+  come from the mind's read as trained; on templated cells text decides "is it stored" (A4 met,
+  `fa95777`), and when the words differ nothing can decide yet. **For Mind (curriculum):** a VERIFY
+  skill, i.e. near-miss rows (another key's fact) in context with an explicit "unknown" target,
+  would make abstain come out of the mind's own generation and hold under rewording. Prior work:
+  SQuAD 2.0 unanswerables, R-Tuning, Self-RAG relevance tokens; difference: the O(1) mind as the
+  verifier of a fetched row at question time.
+
 - **Lead: MLB-1 package table vs T++ and Mamba-2 as they are: the package meets R1 (recall), R2
   (rule edge, s8) and R4 (memory) with R3's guard, at 32k and 128k.** Same held-out prose, same
   docs and seeds for every body (v16/bench.py `7f49c7b`, A4 seeding; seeds 18000 at 32k with 40
