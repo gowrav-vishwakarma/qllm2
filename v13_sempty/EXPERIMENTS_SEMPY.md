@@ -4256,3 +4256,10 @@ stage A differs from cu1's (trained with N9s on), a second confound.
 ≥ cu1's + 0.15 AND ≥ 0.50; (ii) guards against cu1: holdout ≤ cu1 + 0.02, label_diag ≥ cu1 − 0.05
 (N9a hurt lookup before), R6a not worse than cu1 by > 0.10; (iii) every cu1 cell reported for
 both arms. A pass is a 600M paired result for Library's unit, not a package claim.
+
+**cu1 amendment A2 (2026-10-31 22:35 IST, before any cu1 number; Library's attribution point).**
+If cu1n9s passes its two-hop rule, one more arm runs before ANY claim about salience: `cu1n9a`
+= the same new stage A recipe and stage B with `ECHO_PHASE_LAGS=3` only (no salience), seed 42.
+Then N9s is credited only with what cu1n9s adds over cu1n9a (same +0.15 margin on two-hop);
+cu1n9a vs cu1 shows what the lags plus a fresh stage A do. If cu1n9s fails its rule, cu1n9a
+does not run. GPU order for cu1n9a goes through Lead.
