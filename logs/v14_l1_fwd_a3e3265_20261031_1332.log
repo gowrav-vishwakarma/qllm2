@@ -1,0 +1,42 @@
+1500 train docs, 150 val docs, form fwd
+/home/gowrav/Development/qllm_v14dev/v14/l1_key.py:178: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"step {step:5d} loss {float(loss):.3f} queries {n_q} skipped {n_skip} "
+step     1 loss 8.683 queries 45 skipped 3 temp 14.3
+step    50 loss 5.171 queries 37 skipped 11 temp 14.3
+step   100 loss 3.223 queries 39 skipped 9 temp 14.9
+step   150 loss 3.183 queries 38 skipped 10 temp 16.3
+step   200 loss 1.707 queries 45 skipped 3 temp 18.0
+step   250 loss 1.685 queries 37 skipped 11 temp 19.4
+  val: top1 0.040 top5 0.333 event_recall 1.000 rows/16 0.86 (n 150)
+step   300 loss 1.074 queries 39 skipped 9 temp 20.8
+step   350 loss 1.134 queries 45 skipped 3 temp 21.9
+step   400 loss 0.975 queries 44 skipped 4 temp 23.0
+step   450 loss 0.721 queries 38 skipped 10 temp 24.2
+step   500 loss 0.478 queries 44 skipped 4 temp 25.3
+  val: top1 0.060 top5 0.347 event_recall 1.000 rows/16 0.86 (n 150)
+step   550 loss 0.380 queries 41 skipped 7 temp 26.2
+step   600 loss 0.305 queries 39 skipped 9 temp 27.1
+step   650 loss 0.366 queries 43 skipped 5 temp 28.1
+step   700 loss 0.401 queries 42 skipped 6 temp 29.0
+step   750 loss 0.157 queries 41 skipped 7 temp 29.9
+  val: top1 0.093 top5 0.427 event_recall 1.000 rows/16 0.86 (n 150)
+step   800 loss 0.301 queries 41 skipped 7 temp 30.7
+step   850 loss 0.175 queries 44 skipped 4 temp 31.4
+step   900 loss 0.122 queries 40 skipped 8 temp 32.0
+step   950 loss 0.339 queries 44 skipped 4 temp 32.7
+step  1000 loss 0.177 queries 38 skipped 10 temp 33.3
+  val: top1 0.093 top5 0.407 event_recall 1.000 rows/16 0.86 (n 150)
+step  1050 loss 0.102 queries 42 skipped 6 temp 33.9
+step  1100 loss 0.084 queries 41 skipped 7 temp 34.3
+step  1150 loss 0.055 queries 37 skipped 11 temp 34.7
+step  1200 loss 0.158 queries 42 skipped 6 temp 35.1
+step  1250 loss 0.179 queries 41 skipped 7 temp 35.3
+  val: top1 0.087 top5 0.420 event_recall 1.000 rows/16 0.86 (n 150)
+step  1300 loss 0.132 queries 40 skipped 8 temp 35.5
+step  1350 loss 0.126 queries 42 skipped 6 temp 35.6
+step  1400 loss 0.071 queries 42 skipped 6 temp 35.7
+step  1450 loss 0.152 queries 41 skipped 7 temp 35.7
+step  1500 loss 0.114 queries 44 skipped 4 temp 35.7
+  val: top1 0.087 top5 0.407 event_recall 1.000 rows/16 0.86 (n 150)
+saved /media/gowrav/d_drive/qllm_ckpt/v14/l1_fwd_a3e3265.pt

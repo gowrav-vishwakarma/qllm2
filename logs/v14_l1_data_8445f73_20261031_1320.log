@@ -1,0 +1,37 @@
+l1_data: code 8445f73, a4f baseline 36185 tok/s
+  50/1500 docs
+  100/1500 docs
+  150/1500 docs
+  200/1500 docs
+  250/1500 docs
+  300/1500 docs
+  350/1500 docs
+  400/1500 docs
+  450/1500 docs
+  500/1500 docs
+  550/1500 docs
+  600/1500 docs
+  650/1500 docs
+  700/1500 docs
+  750/1500 docs
+  800/1500 docs
+  850/1500 docs
+  900/1500 docs
+  950/1500 docs
+  1000/1500 docs
+  1050/1500 docs
+  1100/1500 docs
+  1150/1500 docs
+  1200/1500 docs
+  1250/1500 docs
+  1300/1500 docs
+  1350/1500 docs
+  1400/1500 docs
+  1450/1500 docs
+  1500/1500 docs
+saved 1500 docs to /media/gowrav/d_drive/qllm_ckpt/v14/l1_cache/train
+  50/150 docs
+  100/150 docs
+  150/150 docs
+saved 150 docs to /media/gowrav/d_drive/qllm_ckpt/v14/l1_cache/val
+=== l1_data DONE 2026-10-31T08:00:06Z ===

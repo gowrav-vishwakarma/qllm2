@@ -1759,6 +1759,34 @@ tokens, spread affine 0.44-0.61 at 8k).**
   SR-0 passes. S1 / I1 / K1 come after SR-0, because S1 is the same question
   asked at the library level.
 
+**L1 development, first head (13:30-13:55 IST; NOT a bar result: the bars are
+judged on the harness at 32k-1M with new words).** C1-ctl frozen; 1500
+training docs (4096 tokens, 50 % synthetic with 8 templates, 50 % natural
+recurrence pairs), 150 validation docs with the harness template and
+words; `fwd` rows (burst + 24 tokens), the full head (588 → 128 projection +
+attentive pooling, 75k parameters), 1500 steps, batch 48. Logs
+`logs/v14_l1_fwd_a3e3265_20261031_1332.log`, `logs/v14_l1_data_8445f73_*.log`.
+
+| set | frozen vector at the firing token | frozen span mean | learned head |
+|---|---|---|---|
+| training docs, seen (150) | top-1 0.19 | 0.02 | **0.93** (top-5 1.00) |
+| validation, harness template (150) | 0.03 | 0.01 | 0.09 (top-5 0.41) |
+| in-distribution validation, synthetic (64) | 0.22 | 0.00 | 0.19 (top-5 0.59) |
+| in-distribution validation, natural pairs (65) | 0.05 | 0.02 | 0.06 (top-5 0.17) |
+
+- **Event recall is fine** (a row holds the target): 1.00 on the harness
+  validation, 0.76 on the natural pairs. Rows 0.86 per 16 tokens.
+- **The head memorises its training documents.** 0.93 on seen documents, 0.06
+  to 0.19 on new ones of the same kind, so this is not a template shift. It
+  beats the frozen baselines on the harness validation (0.09 vs 0.03, top-5
+  0.41 vs 0.06), but it is nowhere near the 0.90 bar.
+- **Next (development, selected on in-distribution validation):** 4× more
+  documents (4500 more, generation under way), smaller or regularised heads
+  (token weights only: 589 numbers; identity + rank-32; feature dropout and
+  weight decay), best step by validation. The `evt` form failed with an OOM
+  at the 1.9 GB cap (rows up to 128 tokens × 48 docs); retry at a smaller
+  batch.
+
 **Fetch metrics to report (every package run):** fetch rate (share of
 queries that fetch), abstain rate on queries with no stored answer (negative
 cell: the model must NOT fetch), span precision (right row top-1 / top-5),
