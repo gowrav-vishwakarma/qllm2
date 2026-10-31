@@ -122,9 +122,9 @@ def main():
     ap.add_argument('--task', default='kv'); ap.add_argument('--lengths', default='2048,8192,32768')
     ap.add_argument('--docs', type=int, default=8); ap.add_argument('--needles', type=int, default=8)
     ap.add_argument('--ngram', type=int, default=4); ap.add_argument('--seed', type=int, default=0)
-    ap.add_argument('--out', required=True)
+    ap.add_argument('--out', required=True); ap.add_argument('--device', default='cpu', help='cpu, or cuda (required for mamba2: Triton kernels)')
     a = ap.parse_args()
-    model, tok, cfg = _load_v13_sempty(Path(a.ckpt), 'baseline_real_pm', torch.device('cpu')); model.eval()
+    model, tok, cfg = _load_v13_sempty(Path(a.ckpt), 'baseline_real_pm', torch.device(a.device)); model.eval()
     R = Reader(model, a.arch)
     fill = filler_tokens(str(ROOT / '.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt'))
     cand = [tok.encode(f" {v}", add_special_tokens=False)[0] for v in _RECALL_VALUE_NOUNS]
