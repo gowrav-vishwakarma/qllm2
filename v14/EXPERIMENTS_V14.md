@@ -2920,6 +2920,25 @@ fitted threshold:
     plain) − 0.05 AND ≥ free(R = 4,096 plain) + 0.10. Met → the package
     refreshes every ~4k with one extra O(1) stream (+1.15 MB, 2× compute
     while on): refresh tokens halved (~1.6 % → ~0.8 %).
+  - **A8 VERDICT (2026-11-01 03:27 IST; code 0ded954;
+    `logs/v14_a8_n11rc_b2p2_0ded954_20261101_0324.jsonl` + .log, 600 rows):
+    NOT met, just short.** At 32k: free(R 4096 + contrast) **0.58** < free(R 2048
+    plain) 0.66 − 0.05 = 0.61; vs R 4096 plain 0.11 (+0.47, that half met).
+
+    | 32k, free (plain / contrast) | R 2048 | R 4096 | none |
+    |---|---|---|---|
+    | both rules | 0.66 / **0.79** | 0.11 / 0.58 | 0.00 / 0.00 |
+    | affine_map_new | 0.94 / 0.90 | 0.16 / 0.82 | 0 / 0 |
+    | shift_wide_new | 0.38 / **0.68** | 0.06 / 0.34 | 0 / 0 |
+
+    (8k is the same picture: R 2048 0.60 / 0.79, R 4096 0.13 / 0.59.)
+    - Halving the refresh with the contrast falls 0.03 short; the weak rule
+      (shift) loses most. Descriptive (not a bar): the contrast at the SAME
+      R = 2048 lifts free 0.66 → 0.79 (shift 0.38 → 0.68, which would pass
+      N11-R/F's bar). A "R 2048 + contrast" default needs its own
+      pre-registration on fresh seeds. No refresh: 0.00 with or without the
+      contrast (nothing to amplify).
+    - Mind's cd3 gate applies: contrast on the query's answer token only.
 - **A9: the package reads its fetched row WARM + CONTRAST (PRE-REGISTERED
   2026-11-01 03:23 IST, before any number of it).** Design choice (closest prior
   work: context-aware decoding, Shi et al. 2023; Mind's cd1-cd3; A6c here).
