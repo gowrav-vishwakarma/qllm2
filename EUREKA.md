@@ -9,6 +9,16 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Mind (v13): the skill's trace lives in the ECHO memory; slow only its clock and one read reaches 8k at
+  almost no LM cost.** clk2 (b2p2, fresh seeds 8500–8549): echo retention r → r^(1/4) between a package read and its query,
+  plus the query-time contrast:
+  - free 0.46 / 20-way 0.64 at 8k (4× the training length);
+  - **text cost +0.013 nats** (all-memory dilation: +0.18; notebooks only: +0.16 with little reach).
+
+  Baselines at the same 8k gap, as they are: T++ 0.195, Mamba-2 0.015 (20-way). **What it says:** the reach wall is the
+  echo memory's clock, and the package can slow it on purpose. **For Library:** refresh interval ~8k with echo dilation +
+  contrast is now testable (N11). One checkpoint, one seed set: replicate before any claim.
+
 - **Library (06:00 IST): the mind's own SURPRISE picks the keys of a question, and its own frozen states find
   the fact better than a trained sentence encoder, even for synonyms.** Seen: A13 (EXPERIMENTS_V14,
   pre-registered 05:12, `f917720`, `logs/v14_a13_manykey_b2p2_32768_b34636e_20261101_0514.jsonl`; b2p2, 32k,

@@ -4929,3 +4929,33 @@ The r3p futility rule (3.431 at step 39060) decides at ~10:40 as pre-registered.
 "+0.04, will likely fail" prediction above was wrong. The 600M per-share fit overstates the cost for fld / vfy (perhaps
 ANSWER_IN_WINDOW, or because short single-answer items weigh differently), and r3p's 3B gap stays only partly explained.
 The loss-weight-share rule stands as a reporting rule; its numeric fit does not.
+
+### clk2 result (08:32 IST, 2026-11-01): MET. Dilating only the ECHO memory carries one read to 8k (with the contrast) for +0.013 nats on the text
+
+b2p2, CPU, fresh seeds 8500–8549 (100 rows per L), `logs/diag/v13_sempty_clk2_{echo,notebook}_b2p2_89ea841.jsonl` + prose json.
+
+| target, s | free 4k | free 4k + contrast | free 8k | **free 8k + contrast** | 20-way 8k + contrast | prose NLL (vs 3.8988) |
+|---|---|---|---|---|---|---|
+| none (s = 1) | 0.17 | – | 0.01 | – | – | 3.8988 |
+| **echo, s = 4** | 0.46 | 0.62 | 0.05 | **0.46** | 0.64 | **3.9120 (+0.013)** |
+| echo, s = 8 | 0.51 | 0.60 | 0.13 | 0.49 | 0.74 | not measured (prose cell ran s ≤ 4) |
+| notebook, s = 4 | 0.25 | 0.61 | 0.01 | 0.12 | 0.29 | 4.0630 (+0.164) |
+| notebook, s = 8 | 0.31 | 0.67 | 0.05 | 0.19 | 0.39 | not measured |
+| (clk1: all memory, s = 4, seeds 8400–8449) | 0.49 | 0.58 | 0.08 | 0.52 | 0.76 | 4.0812 (+0.182) |
+
+**Bar (free 8k + contrast ≥ 0.40 AND prose ≤ +0.05): MET by echo, s = 4** (0.46, +0.013). The skill's trace lives in the
+**echo memory**. Slowing only its forgetting keeps the trace to 8k, while the notebooks hold most of the language cost.
+
+**Against the baselines at the same one-read gap (8k), as they are** (the four-model table, seeds 8000–8099, 20-way
+mean of affine + shift): T++ 0.195 (pack still inside its window), Mamba-2 0.015, PAM plain ~0.10. **PAM + echo dilation +
+contrast 0.64 (20-way) / 0.46 (free).** Different seed sets; the baselines get none of the query-time tools (comparison
+rule).
+
+**Deployment rule (written now, as for the contrast):** dilation is ON only between a package-paired read (a skill pack
+the package installed) and its query, and only on the echo memory. It is never on during free text outside such a
+span; the contrast is on only for the query's answer tokens. Cost while on: the session text in the span is read at
++0.013 nats; the contrast's second stream costs +1.15 MB and 2× compute at the query.
+
+**Not yet shown:** a second checkpoint (e.g. b2p1 or cu2a); s between 4 and 8 with its prose cost; other skills
+(two-hop, recall); where a refresh fits (Library's N11 with dilation). Prior work as clk1 (Δ / dt scaling for SSM
+length extension); the setting is the package-triggered, memory-targeted dilation. No method claim.
