@@ -3319,6 +3319,10 @@ fitted threshold:
   - Bar MET iff cu2a RENDERED ≥ cu2a RAW + 0.15 on tool (both key types,
     sentence scorer). Reported: kv / para, b2p2 (the format effect without
     training), run-on rate, cold reads.
+  - **Amendment A17/1 (08:51 IST, before any A17 number; Mind's diagnosis of the
+    run-on):** a reported arm WARMC1 = the contrast on the FIRST answer token
+    only, then plain greedy from the warm stream (the trained stop can act
+    after the value). The bar stays on WARMC as registered.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
