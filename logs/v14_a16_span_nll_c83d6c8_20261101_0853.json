@@ -1,0 +1,818 @@
+{
+ "args": {
+  "seeds": "8600,8650",
+  "L": 32768,
+  "R": 8192,
+  "dilate": 4.0,
+  "tasks": "affine_map_new,shift_wide_new",
+  "out": "/home/gowrav/Development/qllm2/logs/v14_a16_span_nll_c83d6c8_20261101_0853.json",
+  "device": "cuda"
+ },
+ "summary": {
+  "n": 100,
+  "mean_cost_nats": 0.020350885153195053,
+  "mean_plain": 3.7373582592130385
+ },
+ "rows": [
+  {
+   "task": "affine_map_new",
+   "seed": 8600,
+   "span": 8193,
+   "nll_plain": 4.136507472551947,
+   "nll_dilated": 4.162742327468147,
+   "cost": 0.02623485491620059
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8601,
+   "span": 8193,
+   "nll_plain": 3.8523631521332296,
+   "nll_dilated": 3.858337579040639,
+   "cost": 0.005974426907409569
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8602,
+   "span": 8193,
+   "nll_plain": 3.671275780457914,
+   "nll_dilated": 3.693584102247423,
+   "cost": 0.022308321789509034
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8603,
+   "span": 8193,
+   "nll_plain": 3.8963663684831467,
+   "nll_dilated": 3.928876958661037,
+   "cost": 0.032510590177890375
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8604,
+   "span": 8193,
+   "nll_plain": 3.778189266381298,
+   "nll_dilated": 3.8045450299268935,
+   "cost": 0.026355763545595323
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8605,
+   "span": 8193,
+   "nll_plain": 3.625016883748596,
+   "nll_dilated": 3.638505015168946,
+   "cost": 0.01348813142034988
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8606,
+   "span": 8193,
+   "nll_plain": 3.740023996983345,
+   "nll_dilated": 3.7536084056264327,
+   "cost": 0.013584408643087631
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8607,
+   "span": 8193,
+   "nll_plain": 3.8924296085874954,
+   "nll_dilated": 3.9159074184092266,
+   "cost": 0.0234778098217312
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8608,
+   "span": 8193,
+   "nll_plain": 3.7963105840414095,
+   "nll_dilated": 3.8203282851548943,
+   "cost": 0.02401770111348478
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8609,
+   "span": 8193,
+   "nll_plain": 3.6191806083166105,
+   "nll_dilated": 3.632249710863361,
+   "cost": 0.013069102546750422
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8610,
+   "span": 8193,
+   "nll_plain": 3.5894530848183357,
+   "nll_dilated": 3.615267272864479,
+   "cost": 0.025814188046143105
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8611,
+   "span": 8193,
+   "nll_plain": 3.8158070455900583,
+   "nll_dilated": 3.839792144265088,
+   "cost": 0.023985098675029626
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8612,
+   "span": 8193,
+   "nll_plain": 3.9818494972053005,
+   "nll_dilated": 4.011650549424054,
+   "cost": 0.029801052218753732
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8613,
+   "span": 8193,
+   "nll_plain": 3.300272413477507,
+   "nll_dilated": 3.3199623522996524,
+   "cost": 0.019689938822145425
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8614,
+   "span": 8193,
+   "nll_plain": 3.8665555114494667,
+   "nll_dilated": 3.892809090532256,
+   "cost": 0.026253579082789358
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8615,
+   "span": 8193,
+   "nll_plain": 3.779214246738936,
+   "nll_dilated": 3.7916524873815236,
+   "cost": 0.012438240642587584
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8616,
+   "span": 8193,
+   "nll_plain": 3.827585574661901,
+   "nll_dilated": 3.8496087858939685,
+   "cost": 0.022023211232067297
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8617,
+   "span": 8193,
+   "nll_plain": 3.751687887720932,
+   "nll_dilated": 3.763886909992372,
+   "cost": 0.012199022271440096
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8618,
+   "span": 8193,
+   "nll_plain": 3.6454281003196116,
+   "nll_dilated": 3.6649437985489484,
+   "cost": 0.019515698229336742
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8619,
+   "span": 8193,
+   "nll_plain": 3.4393420499366063,
+   "nll_dilated": 3.4604193532509084,
+   "cost": 0.02107730331430213
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8620,
+   "span": 8193,
+   "nll_plain": 3.6531936580788793,
+   "nll_dilated": 3.6795398020037187,
+   "cost": 0.02634614392483936
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8621,
+   "span": 8193,
+   "nll_plain": 3.778311936625133,
+   "nll_dilated": 3.7991436660675344,
+   "cost": 0.020831729442401414
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8622,
+   "span": 8193,
+   "nll_plain": 3.444773833946359,
+   "nll_dilated": 3.4674982665499736,
+   "cost": 0.022724432603614453
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8623,
+   "span": 8193,
+   "nll_plain": 3.819141409357258,
+   "nll_dilated": 3.8323736914810818,
+   "cost": 0.013232282123823769
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8624,
+   "span": 8193,
+   "nll_plain": 3.653804493637206,
+   "nll_dilated": 3.6771610101238648,
+   "cost": 0.02335651648665893
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8625,
+   "span": 8193,
+   "nll_plain": 3.709019877106573,
+   "nll_dilated": 3.7336813813671297,
+   "cost": 0.024661504260556466
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8626,
+   "span": 8193,
+   "nll_plain": 3.7134163673873,
+   "nll_dilated": 3.735176126991569,
+   "cost": 0.02175975960426868
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8627,
+   "span": 8193,
+   "nll_plain": 3.7484144644758777,
+   "nll_dilated": 3.7654216992873986,
+   "cost": 0.017007234811520888
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8628,
+   "span": 8193,
+   "nll_plain": 3.7321483976861636,
+   "nll_dilated": 3.7423611347250167,
+   "cost": 0.01021273703885317
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8629,
+   "span": 8193,
+   "nll_plain": 3.6681121483719803,
+   "nll_dilated": 3.684643763464536,
+   "cost": 0.01653161509255563
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8630,
+   "span": 8193,
+   "nll_plain": 3.551350474022952,
+   "nll_dilated": 3.5751659624250354,
+   "cost": 0.023815488402083584
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8631,
+   "span": 8193,
+   "nll_plain": 3.8612388675791665,
+   "nll_dilated": 3.8918603146074746,
+   "cost": 0.030621447028308157
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8632,
+   "span": 8193,
+   "nll_plain": 3.8519699072701057,
+   "nll_dilated": 3.8818439285527884,
+   "cost": 0.029874021282682683
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8633,
+   "span": 8193,
+   "nll_plain": 3.668872540968759,
+   "nll_dilated": 3.691742037411474,
+   "cost": 0.022869496442714965
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8634,
+   "span": 8193,
+   "nll_plain": 3.8756744804275236,
+   "nll_dilated": 3.9003200686983353,
+   "cost": 0.024645588270811647
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8635,
+   "span": 8193,
+   "nll_plain": 3.6559616696713797,
+   "nll_dilated": 3.6821064290787353,
+   "cost": 0.02614475940735561
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8636,
+   "span": 8193,
+   "nll_plain": 3.7134216665479562,
+   "nll_dilated": 3.743194461465391,
+   "cost": 0.029772794917434897
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8637,
+   "span": 8193,
+   "nll_plain": 3.8040664504768356,
+   "nll_dilated": 3.8099992609600233,
+   "cost": 0.005932810483187723
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8638,
+   "span": 8193,
+   "nll_plain": 3.779849093751594,
+   "nll_dilated": 3.8000791804135448,
+   "cost": 0.020230086661950697
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8639,
+   "span": 8193,
+   "nll_plain": 4.194125087826037,
+   "nll_dilated": 4.1982661642667995,
+   "cost": 0.004141076440762781
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8640,
+   "span": 8193,
+   "nll_plain": 3.581423655514256,
+   "nll_dilated": 3.59407015916528,
+   "cost": 0.012646503651024155
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8641,
+   "span": 8193,
+   "nll_plain": 3.542409359775852,
+   "nll_dilated": 3.564737620377561,
+   "cost": 0.022328260601709005
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8642,
+   "span": 8193,
+   "nll_plain": 3.593846038018451,
+   "nll_dilated": 3.6107047441953504,
+   "cost": 0.01685870617689922
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8643,
+   "span": 8193,
+   "nll_plain": 3.9761434806712916,
+   "nll_dilated": 3.9977497327579448,
+   "cost": 0.02160625208665312
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8644,
+   "span": 8193,
+   "nll_plain": 3.7400956057838712,
+   "nll_dilated": 3.7596120006738674,
+   "cost": 0.019516394889996125
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8645,
+   "span": 8193,
+   "nll_plain": 3.7822093982247225,
+   "nll_dilated": 3.7984569729516666,
+   "cost": 0.01624757472694416
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8646,
+   "span": 8193,
+   "nll_plain": 3.8117409824495656,
+   "nll_dilated": 3.8306392789338077,
+   "cost": 0.018898296484242127
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8647,
+   "span": 8193,
+   "nll_plain": 3.9751605902576017,
+   "nll_dilated": 3.9965106367439223,
+   "cost": 0.02135004648632055
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8648,
+   "span": 8193,
+   "nll_plain": 3.519653820953686,
+   "nll_dilated": 3.540625370132258,
+   "cost": 0.020971549178572246
+  },
+  {
+   "task": "affine_map_new",
+   "seed": 8649,
+   "span": 8193,
+   "nll_plain": 3.5837061389758738,
+   "nll_dilated": 3.6147016745033858,
+   "cost": 0.030995535527511997
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8600,
+   "span": 8193,
+   "nll_plain": 4.135289669909874,
+   "nll_dilated": 4.161087742221962,
+   "cost": 0.02579807231208875
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8601,
+   "span": 8193,
+   "nll_plain": 3.8443013587801738,
+   "nll_dilated": 3.848670204960644,
+   "cost": 0.004368846180470065
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8602,
+   "span": 8193,
+   "nll_plain": 3.666261171284837,
+   "nll_dilated": 3.6890951982132902,
+   "cost": 0.022834026928453266
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8603,
+   "span": 8193,
+   "nll_plain": 3.8872268146667146,
+   "nll_dilated": 3.9194872516365287,
+   "cost": 0.032260436969814066
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8604,
+   "span": 8193,
+   "nll_plain": 3.773227301823064,
+   "nll_dilated": 3.797481291491689,
+   "cost": 0.024253989668624687
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8605,
+   "span": 8193,
+   "nll_plain": 3.6239656157128675,
+   "nll_dilated": 3.6375273578000797,
+   "cost": 0.01356174208721228
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8606,
+   "span": 8193,
+   "nll_plain": 3.73734195610986,
+   "nll_dilated": 3.749823372485974,
+   "cost": 0.012481416376114218
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8607,
+   "span": 8193,
+   "nll_plain": 3.884470197695538,
+   "nll_dilated": 3.907080680244676,
+   "cost": 0.022610482549137778
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8608,
+   "span": 8193,
+   "nll_plain": 3.7916227297862632,
+   "nll_dilated": 3.8134689072644217,
+   "cost": 0.021846177478158424
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8609,
+   "span": 8193,
+   "nll_plain": 3.6165105388319625,
+   "nll_dilated": 3.6301787464985056,
+   "cost": 0.013668207666543086
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8610,
+   "span": 8193,
+   "nll_plain": 3.5855902235658994,
+   "nll_dilated": 3.6112770647207024,
+   "cost": 0.02568684115480302
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8611,
+   "span": 8193,
+   "nll_plain": 3.812932063819404,
+   "nll_dilated": 3.8361676231374036,
+   "cost": 0.023235559317999588
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8612,
+   "span": 8193,
+   "nll_plain": 3.98100670146721,
+   "nll_dilated": 4.011502285951167,
+   "cost": 0.03049558448395695
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8613,
+   "span": 8193,
+   "nll_plain": 3.2976858681932875,
+   "nll_dilated": 3.3168178286203807,
+   "cost": 0.019131960427093198
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8614,
+   "span": 8193,
+   "nll_plain": 3.8615432550920814,
+   "nll_dilated": 3.8889273501833497,
+   "cost": 0.027384095091268268
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8615,
+   "span": 8193,
+   "nll_plain": 3.7769929927070254,
+   "nll_dilated": 3.788849942605312,
+   "cost": 0.011856949898286562
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8616,
+   "span": 8193,
+   "nll_plain": 3.820873058309314,
+   "nll_dilated": 3.8411584187380403,
+   "cost": 0.020285360428726307
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8617,
+   "span": 8193,
+   "nll_plain": 3.743129829281956,
+   "nll_dilated": 3.7547117305677857,
+   "cost": 0.011581901285829588
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8618,
+   "span": 8193,
+   "nll_plain": 3.639629481927999,
+   "nll_dilated": 3.6580248750872655,
+   "cost": 0.018395393159266415
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8619,
+   "span": 8193,
+   "nll_plain": 3.4361037137117574,
+   "nll_dilated": 3.4564327188540944,
+   "cost": 0.020329005142337042
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8620,
+   "span": 8193,
+   "nll_plain": 3.648276178766691,
+   "nll_dilated": 3.674327722067771,
+   "cost": 0.02605154330107995
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8621,
+   "span": 8193,
+   "nll_plain": 3.7715676163457243,
+   "nll_dilated": 3.792305907472126,
+   "cost": 0.020738291126401798
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8622,
+   "span": 8193,
+   "nll_plain": 3.4368576070524086,
+   "nll_dilated": 3.4587440114747063,
+   "cost": 0.021886404422297723
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8623,
+   "span": 8193,
+   "nll_plain": 3.8132308858459165,
+   "nll_dilated": 3.823837155607846,
+   "cost": 0.010606269761929354
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8624,
+   "span": 8193,
+   "nll_plain": 3.6475680752957564,
+   "nll_dilated": 3.668698573103758,
+   "cost": 0.02113049780800136
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8625,
+   "span": 8193,
+   "nll_plain": 3.703198344806721,
+   "nll_dilated": 3.7281263667585853,
+   "cost": 0.024928021951864388
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8626,
+   "span": 8193,
+   "nll_plain": 3.710771160249118,
+   "nll_dilated": 3.731178070269966,
+   "cost": 0.02040691002084838
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8627,
+   "span": 8193,
+   "nll_plain": 3.7471486114544788,
+   "nll_dilated": 3.7642982402127783,
+   "cost": 0.017149628758299507
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8628,
+   "span": 8193,
+   "nll_plain": 3.7301720876797324,
+   "nll_dilated": 3.7401516618825252,
+   "cost": 0.00997957420279283
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8629,
+   "span": 8193,
+   "nll_plain": 3.663187186214261,
+   "nll_dilated": 3.6807888959421136,
+   "cost": 0.017601709727852466
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8630,
+   "span": 8193,
+   "nll_plain": 3.5461838867846796,
+   "nll_dilated": 3.5688123895064767,
+   "cost": 0.022628502721797172
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8631,
+   "span": 8193,
+   "nll_plain": 3.852388815552153,
+   "nll_dilated": 3.8829196956471095,
+   "cost": 0.030530880094956636
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8632,
+   "span": 8193,
+   "nll_plain": 3.8430650606996974,
+   "nll_dilated": 3.8740599786029053,
+   "cost": 0.030994917903207853
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8633,
+   "span": 8193,
+   "nll_plain": 3.6658687394834852,
+   "nll_dilated": 3.6887317873045564,
+   "cost": 0.02286304782107118
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8634,
+   "span": 8193,
+   "nll_plain": 3.8733452470198113,
+   "nll_dilated": 3.8992433913473126,
+   "cost": 0.02589814432750126
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8635,
+   "span": 8193,
+   "nll_plain": 3.6543162646317504,
+   "nll_dilated": 3.679770412628982,
+   "cost": 0.02545414799723167
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8636,
+   "span": 8193,
+   "nll_plain": 3.7125858823472906,
+   "nll_dilated": 3.742201693718881,
+   "cost": 0.029615811371590528
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8637,
+   "span": 8193,
+   "nll_plain": 3.797831783040923,
+   "nll_dilated": 3.803224487472305,
+   "cost": 0.005392704431381734
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8638,
+   "span": 8193,
+   "nll_plain": 3.775333810431696,
+   "nll_dilated": 3.795541200273482,
+   "cost": 0.02020738984178605
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8639,
+   "span": 8193,
+   "nll_plain": 4.186594673933366,
+   "nll_dilated": 4.190181460730339,
+   "cost": 0.003586786796972774
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8640,
+   "span": 8193,
+   "nll_plain": 3.5774641181324682,
+   "nll_dilated": 3.590240340463905,
+   "cost": 0.012776222331436937
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8641,
+   "span": 8193,
+   "nll_plain": 3.540836938932296,
+   "nll_dilated": 3.562734933413386,
+   "cost": 0.021897994481089977
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8642,
+   "span": 8193,
+   "nll_plain": 3.5855431847122436,
+   "nll_dilated": 3.602380533962187,
+   "cost": 0.0168373492499434
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8643,
+   "span": 8193,
+   "nll_plain": 3.970825316369657,
+   "nll_dilated": 3.9909930434634977,
+   "cost": 0.020167727093840515
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8644,
+   "span": 8193,
+   "nll_plain": 3.7373447133030164,
+   "nll_dilated": 3.7553821629138127,
+   "cost": 0.01803744961079623
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8645,
+   "span": 8193,
+   "nll_plain": 3.7768911996429604,
+   "nll_dilated": 3.7925036673171606,
+   "cost": 0.015612467674200214
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8646,
+   "span": 8193,
+   "nll_plain": 3.8068355056053114,
+   "nll_dilated": 3.8255844126687037,
+   "cost": 0.018748907063392384
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8647,
+   "span": 8193,
+   "nll_plain": 3.969081992851601,
+   "nll_dilated": 3.989438632432902,
+   "cost": 0.02035663958130085
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8648,
+   "span": 8193,
+   "nll_plain": 3.51327461767412,
+   "nll_dilated": 3.53345377139959,
+   "cost": 0.0201791537254703
+  },
+  {
+   "task": "shift_wide_new",
+   "seed": 8649,
+   "span": 8193,
+   "nll_plain": 3.574416844323632,
+   "nll_dilated": 3.6052251278837564,
+   "cost": 0.030808283560124217
+  }
+ ]
+}

@@ -3317,7 +3317,13 @@ fitted threshold:
       (0.42); at 4k, dilation + contrast (0.65) matches 2k plain (0.63),
       descriptive, and the dilation adds only +0.02 over the contrast alone
       there. Best overall: R 2048 + contrast 0.70 (+1.6 % tokens).
-    - Prose cost of the dilation: the A16/1 follow-up (running next).
+    - **Prose cost of the dilation (A16/1, 08:58 IST; code c83d6c8;
+      `logs/v14_a16_span_nll_c83d6c8_20261101_0853.json` + .log, 100 gaps of
+      ~8k tokens):** +0.020 nats per token (plain 3.737 → dilated), a little
+      above Mind's +0.013 on its own docs. So "every 8k + dilation" would cost
+      0.4 % refresh tokens plus +0.020 nats on the gaps, and still misses the
+      bar; "every 4k + dilation + contrast" pays the same per-token cost for
+      +0.02 free over the contrast alone: not worth it at 4k.
 - **A17: render the fetched row in the mind's TRAINED template (PRE-REGISTERED
   2026-11-01 08:47 IST, before any number of it; Mind's EUREKA d92c2cf: skills
   are format-bound).** Plumbing on the library side (closest prior work:
