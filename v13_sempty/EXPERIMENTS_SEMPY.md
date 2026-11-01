@@ -4851,3 +4851,53 @@ query-time contrast, triggered by the package's own read, is the setting. No met
   + contrast is a usable mind-level reach extender, gated by the package: on only between a package-paired read and
   its query, never on free text (the contrast's rule, cd3).
 - Prior work as clk1. No method claim.
+
+## cu2: one field + stop, and verify a fetched row; cu2a = data, cu2b = data + ACh-1 (pre-registration, 2026-11-01 06:04 IST; paired arms per Lead's round)
+
+**Why.** After the package's default read became warm read + contrast (Library A9, +0.142), the mind-side gaps are:
+tool fields running on past the value (47–55 %, natural 0.575), and abstaining on prose rows (cu1 free 0.31).
+Abstaining where the words differ must be TRAINED: query-time checks failed on b2p2 (key-swap AUROC 0.70, A11;
+fetch scores 0.66–0.77, A13), while cu1's trained abstain transferred (wrong value 3 %). The readout is the target
+(step back 04:51): ACh-1 trains the plain logits after an answer tag toward the mind's own evidence contrast.
+
+**Closest prior work (novelty rule):** SQuAD 2.0 (unanswerables), R-Tuning (refusal tuning), Self-RAG (relevance
+tokens), slot filling; for ACh-1: CAD (Shi et al. 2023), decoding distillation (Wan et al. 2023), ContextDPO.
+**What differs:** an O(1) recurrent mind, free generation only, held-out values / keys / formats, and ACh-1
+distilling the mind's OWN evidence contrast behind a tag (gate by construction). No recipe novelty claimed.
+
+**Arms** (4090, same seed 43 and data; b2p2's recipe: M2 + echo + shared reads, stage A `c1m2a_pre_7ae6f1f` (local copy,
+md5 checked), stage B 480M tokens, LR 1.2e-3, warmup 100, VAL_EVERY 4883; batch 18 × 2048 as GRAD_ACCUM=3
+(exact accumulation: `4397449`, grads within 2e-5 of the full batch); ANSWER_IN_WINDOW=1; selftest 24/24):
+- mix dclm 0.42 / fineweb 0.39 / smoltalk2_mid 0.10 / recall 0.04 / b2 0.03 / fld 0.01 / vfy 0.01 (synthetic 9 % vs b2p2's 7 %;
+  fld / vfy: `a7c4887`, test PASS);
+- **cu2a** = the mix; **cu2b** = the same + ACH_LAMBDA=0.2, ACH_ALPHA=4 (16 short + 1 long tagged item per step, long
+  fill ≤ 4096). The teacher is trusted only where its top token is the gold token: added after the first smoke
+  collapsed tagged accuracy to 0.00 (KL 2.88 → 0.20), before any cu2 number; with it, tagged acc 0.79 / 0.67.
+- Expected ends: cu2a ~2.4 h (55k tok/s), cu2b ~3.7 h (36k tok/s); one after the other.
+- **Futility at step 4883 (180M tokens):** cu2a stops if val > b2p2's 3.7508 + 0.04 = 3.7908; cu2b stops if val >
+  cu2a's at step 4883 + 0.02 (Lead's 100M LM screen, at the first val point).
+
+**Readouts (free generation primary):**
+- `run_fld_probe` (seed 31000, 100 docs; qset in = trained question formats, out = held-out ones);
+- `run_cur_probe` verify (natural / synthetic);
+- skill-pack 0 / 2k / 4k (plain, contrast a = 4, and --tag);
+- B2 t400; attr3b holdout vs b2p2; cd3's prose cell (irrelevant pack); 3 shown generations;
+- package A9 cells with the arm's own address, with and without the twin (Lead / Library harness, reported).
+
+**Bars, cu2a (the data effect, vs b2p2):**
+- R-fld-in: fld, natural keys, trained row formats, qset in: exact ≥ 0.70. b2p2's in-format baseline is being measured
+  now; its out-format exact is 0.00–0.02.
+- R-fld-out: the same with held-out question formats: exact ≥ 0.40 (transfer).
+- R-stop: among fld answers that start with the value, run-on ≤ 0.10.
+- R-vfy-in: natural keys, qset in: " unknown." exact ≥ 0.70 on prose rows AND on wrong-key rows, AND right rows exact ≥ 0.70.
+- Guards: holdout ≤ 3.500 (b2p2 + 0.02); B2 `_new` ≥ 0.894; skill-pack 2k (20-way) ≥ 0.81.
+
+**Bars, cu2b (ACh-1 alone, vs cu2a):**
+- R-ach-mind: skill-pack free reach at 4k, --tag, plain decode (no twin) ≥ cu2a's free reach at 4k with contrast
+  a = 4 − 0.05. The tag makes the plain read do what the twin did.
+- R-ach-gate (Lead): package A9 cells on cu2b WITHOUT the twin ≥ cu2b WITH the twin − 0.03.
+- Guards: cd3's prose NLL (irrelevant pack, no tag) ≤ cu2a + 0.02; holdout ≤ cu2a + 0.02; cu2a's fld / vfy cells not
+  worse by > 0.05.
+
+**Consequences:** cu2a fails a guard → no fld / vfy in any release recipe. cu2b passes → ACh-1 enters the next 3B
+recipe (r3p's successor), GPU via Lead. Either failing → recorded and removed per the AGENTS rule.
