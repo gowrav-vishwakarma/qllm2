@@ -37,6 +37,7 @@ SKIP_FILES = frozenset({
     "bg_counts.py",      # A20: background word counts (data prep, torch.load of the token pool)
     "a21_package.py",    # A21: natural-variant package eval (raw torch)
     "a22_story.py",      # A22: the package on the story test (raw torch decode)
+    "a24_rules.py",      # A24: rules as words vs demonstrations (eval)
     "package_fetch.py",  # the package fetch as a harness key_fn (two organs, raw torch)
     "pack.py",           # library packs: text-first format + install tool (raw torch / numpy)
     "pack_check.py",     # cross-document check of the install tool
