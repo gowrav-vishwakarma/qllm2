@@ -5587,3 +5587,41 @@ At 2k the examples are 254 tokens apart, so W512 sees 2 and W1024 sees 4 of them
 **Consequence:**
 - The 600M W1 decision stays as proposed, at W = 128. That run is the user's call.
 - SEQ 4096 is not needed (W1024 did not win).
+
+## w1m: W1 (W = 128) at 600M on the M2 body, b2p2's recipe (pre-registration, 2026-11-01 16:57 IST; Lead APPROVED, the user handed Lead the call)
+
+**Why:** W1 replicated as a REACH unit at 100M (w1r), and W = 128 is the best window tested (w1w). Does it hold at 600M, on b2p2's
+recipe, against the three-seed b2p spread? The verdict decides PAM's body for the matched 1.5B tier. The bar order is the user's:
+INTELLIGENCE first (rules, reach), then the infrastructure saving.
+
+**Arm:** `w1m_w128`, an exact copy of b2p2's recipe (`38e3c29` log header) + `SWA_LAYERS=5,9,13 SWA_WINDOW=128`:
+- `c1m2a_pre_7ae6f1f` stage A; stage B 480,006,144 tokens; LR 1.2e-3 cosine, warmup 100; batch 18 × 2048;
+- mix dclm / fineweb / smoltalk2_mid / recall / b2 = 0.43 / 0.40 / 0.10 / 0.04 / 0.03; answers ×100; seed 43;
+- ANSWER_IN_WINDOW off, as in b2p1 / 2 / 3;
+- on the 4090, GRAD_ACCUM=3 (exact accumulation, verified equal to the full batch within 2e-5);
+- 107.0M vs 102.9M (+4 %); 600M tokens in total.
+
+**Control:** b2p1 / b2p2 / b2p3 as they are (102.9M, the same recipe, three seeds).
+
+| readout | b2p1 / b2p2 / b2p3 | bar for w1m_w128 |
+|---|---|---|
+| s8 D (2k / 4k, scored, 400 trials, seeds 7000–7399) | 0.645 / 0.691 / 0.741 | **≥ 0.80** (the best seed + 0.06) |
+| holdout | 3.4777 / 3.4800 / 3.4775 | **≤ 3.4900** |
+| clk2 8k (echo s = 8 + contrast), 20-way | b2p1 0.81, b2p2 0.74 | **≥ 0.74** |
+| t40 far needles (position 0, contexts 4096 + 8192) | 0.521 / 0.263 / 0.504 (mean 0.429) | **≥ 0.379** (W0 mean − 0.05) |
+
+**Also reported:**
+- s8 at 4k alone (beyond W128's 381-token reach; b2p 4k means 0.525 / 0.606 / 0.623);
+- skill pack 0 / 2k / 4k / 8k, plain + contrast;
+- the text-arm tool read;
+- kb1 (the 600M tier);
+- t40 near needles;
+- WikiText.
+
+**Pass:** all four bars. Then W128 is a candidate for PAM's 1.5B-tier body (see Lead's tier decision and the 16nb question).
+**Fail:** W1 stays a 100M finding, and the 1.5B tier runs the plain body.
+
+**Prior work:** Griffin / Samba (local attention + recurrence); no mechanism claim. **Per-body slope:** this is the 600M point;
+the 220M point is w1s / w1r (s8 D W128 0.787, W0 0.541).
+
+**Order on the 4090:** after kb1 → Library's A25 → Lead's BABILong pass (Lead's GPU order).
