@@ -67,6 +67,14 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     - s8 D +0.32; beyond the windows' reach, s8 at 4k 0.416 → 0.771; clk2 +0.12; holdout +0.002.
     - W1 is a reach unit (not a reader). The 600M run (b2p2 recipe + W1) is the USER's decision. The 4090 is free.
     - Keep W1's code.
+  - **w1w window sweep** (user: "why not a bit bigger?"; Lead GO):
+    - tmux `w1w` on the 4090 since 15:07 IST, `../qllm_w1w` @ `f68ab64`; `bash v13_sempty/tmp/w1w_chain.sh`;
+    - W 512, then W 1024, then the readouts, then skill pack 8k on the four old arms; done ~16:45 IST;
+    - score with `.venv/bin/python v13_sempty/tmp/w1w_score.py` (guards g1–g4 + the gain, as pre-registered).
+  - **Needle trade-off at W 128** (t40, both seeds; needle at the start): 4k 0.495 → 0.44, 8k 0.305 → 0.22; near needles better.
+    Part of the w1w guard.
+  - Lead runs the 300k package rows today (text library + cold read, CPU). Library runs the full package at 300k after the sweep
+    (chunked block-8 capture, distance bins <2k / 2–32k / 32–128k / 128–300k, MB per session).
   - bud verdict;
   - then cu3 design:
     - open field vocabulary, held-out names, many formats, loss-weight budget;
