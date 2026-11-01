@@ -444,24 +444,52 @@ class Trainer:
         if loss_mask is not None:
             loss_mask = loss_mask.to(self.device)
 
-        with torch.amp.autocast(
-            self.device.type,
-            enabled=self.use_amp,
-            dtype=self.amp_dtype or torch.float16,
-        ):
-            loss = self._step_loss(input_ids, labels, loss_mask)
-
-        if not torch.isfinite(loss).all():
-            raise RuntimeError(f"non-finite loss at step {self.global_step}: {loss}")
+        ach = getattr(self, 'ach', None)      # cu2b ACh-1: answer-mode distillation (v13_sempty/ach.py)
+        if ach is not None:
+            from v13_sempty.ach import ach_loss
+            items = ach.build(input_ids[0].detach().cpu())
+            with torch.amp.autocast(self.device.type, enabled=self.use_amp, dtype=self.amp_dtype or torch.float16):
+                kl, ach_acc, ach_ok = ach_loss(self.model, items, self.ach_alpha, self.device, long_len=ach.max_fill + 256)
+            aux = self.ach_lambda * kl
+            if not torch.isfinite(aux):
+                raise RuntimeError(f"non-finite ACh-1 loss at step {self.global_step}: {aux}")
+            (self.scaler.scale(aux) if self.scaler is not None else aux).backward()
+            self._ach_last = (float(kl.detach()), ach_acc, ach_ok)
+        n_acc = getattr(self, 'grad_accum', 1)
+        if n_acc <= 1:
+            with torch.amp.autocast(
+                self.device.type,
+                enabled=self.use_amp,
+                dtype=self.amp_dtype or torch.float16,
+            ):
+                loss = self._step_loss(input_ids, labels, loss_mask)
+            if not torch.isfinite(loss).all():
+                raise RuntimeError(f"non-finite loss at step {self.global_step}: {loss}")
+            (self.scaler.scale(loss) if self.scaler is not None else loss).backward()
+        else:
+            # Gradient accumulation (cu2 on the 4090): micro-batches along the batch dim, each loss scaled
+            # by its share of the batch's (answer-weighted) token total, so the summed gradient equals the
+            # full-batch gradient of sum(w * CE) / sum(w).
+            wt = (loss_mask if loss_mask is not None else (labels != -100).float())
+            W = wt.sum()
+            loss = torch.zeros((), device=self.device)
+            for idx in torch.arange(input_ids.shape[0], device=input_ids.device).chunk(n_acc):
+                with torch.amp.autocast(self.device.type, enabled=self.use_amp,
+                                        dtype=self.amp_dtype or torch.float16):
+                    li = self._step_loss(input_ids[idx], labels[idx],
+                                         loss_mask[idx] if loss_mask is not None else None)
+                part = li * (wt[idx].sum() / W)
+                if not torch.isfinite(part).all():
+                    raise RuntimeError(f"non-finite loss at step {self.global_step}: {part}")
+                (self.scaler.scale(part) if self.scaler is not None else part).backward()
+                loss = loss + part.detach()
 
         if self.scaler is not None:
-            self.scaler.scale(loss).backward()
             self.scaler.unscale_(self.optimizer)
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.gradient_clip)
             self.scaler.step(self.optimizer)
             self.scaler.update()
         else:
-            loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.gradient_clip)
             self.optimizer.step()
         if self.diag_every > 0 and (self.global_step + 1) % self.diag_every == 0:
@@ -932,6 +960,8 @@ class Trainer:
             mem = torch.cuda.memory_allocated() / 1e9
             peak = torch.cuda.max_memory_allocated() / 1e9
             line += f" | GPU {mem:.1f}/{peak:.1f}GB"
+        if getattr(self, '_ach_last', None) is not None:
+            line += f" | ach_kl={self._ach_last[0]:.3f} ach_acc={self._ach_last[1]:.2f} teacher_ok={self._ach_last[2]:.2f}"
         print(line, flush=True)
 
 
@@ -1065,6 +1095,14 @@ def build_argparser():
     p.add_argument('--cond_mem', action='store_true', help='A4: conditional n-gram memory')
     p.add_argument('--reset_at_eos', action='store_true',
                    help='lg8r: reset notebooks and echo at document separators (EOS)')
+    p.add_argument('--grad_accum', type=int, default=1,
+                   help='micro-batches per step (exact: losses scaled by their weight share); 1 = off')
+    p.add_argument('--ach_lambda', type=float, default=0.0,
+                   help='cu2b ACh-1: weight of the answer-mode distillation KL (0 = off; v13_sempty/ach.py)')
+    p.add_argument('--ach_alpha', type=float, default=4.0, help='ACh-1: contrast strength of the teacher')
+    p.add_argument('--ach_short', type=int, default=16, help='ACh-1: short tagged items per step')
+    p.add_argument('--ach_long', type=int, default=1, help='ACh-1: long (skill pack + filler) items per step')
+    p.add_argument('--ach_fill', type=int, default=2048, help='ACh-1: max filler tokens in a long item')
     p.add_argument('--chrono', action='store_true',
                    help='N1: Chrono-PAM content-modulated rotary retention (real arm)')
     p.add_argument('--out_gate', action='store_true',
@@ -1370,6 +1408,18 @@ def main():
         # _WorkerStream already builds ahead in its own process.
         prefetch=(0 if isinstance(loader, _WorkerStream) else args.prefetch),
     )
+    if args.grad_accum > 1:
+        trainer.grad_accum = args.grad_accum
+        print(f"[accum] {args.grad_accum} micro-batches of {args.batch_size // args.grad_accum} per step", flush=True)
+    if args.ach_lambda > 0:                 # cu2b ACh-1 (off by default)
+        if tokenizer is None:
+            raise SystemExit('--ach_lambda needs the GPT-2 tokenizer (a text dataset)')
+        from v13_sempty.ach import AChBatcher
+        trainer.ach = AChBatcher(tokenizer, seed=args.seed, n_short=args.ach_short, n_long=args.ach_long,
+                                 max_fill=args.ach_fill)
+        trainer.ach_lambda, trainer.ach_alpha = args.ach_lambda, args.ach_alpha
+        print(f"[ach] ACh-1 on: lambda {args.ach_lambda}, alpha {args.ach_alpha}, {args.ach_short} short + "
+              f"{args.ach_long} long items per step (fill <= {args.ach_fill})", flush=True)
     if resume_ck is not None:
         saved_args = resume_ck.get('args') or {}
         for k in ('preset', 'batch_size', 'seq_len', 'lr', 'warmup_steps',
