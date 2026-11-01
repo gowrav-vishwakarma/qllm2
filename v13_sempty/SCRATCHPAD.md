@@ -45,8 +45,14 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   **Decisions:** code moves into v16 once at release; v16/learnings/MIND.md is kept current. The W1 600M pair is the user's
   decision (with w1s + A19). The controller unit comes after R × K.
 
-  **Next for Mind:** rxk verdict; w1s verdict (body vs package reader by holdout / copy class); bud verdict; then cu3 design (open field
-  vocabulary, held-out names, many formats, loss-weight budget).
+  **Next for Mind:**
+  - rxk verdict;
+  - w1r verdict (tmux `w1r` on the 4090 since 13:04 IST; `bash v13_sempty/tmp/w1r_chain.sh` in `../qllm_w1s`; ~15:00 IST);
+  - bud verdict;
+  - then cu3 design:
+    - open field vocabulary, held-out names, many formats, loss-weight budget;
+    - headline = field selection with Library's cut OFF (`cut_fields=False`) vs ON, on the same rows (Library's ask);
+    - plus the same-recipe T++ reference (gap 0.30 / 0.425 at 600M).
 
 * **2026-11-01 10:26 IST: STEP BACK (user via Lead: "how long have you not meditated… fresh air"; memory re-read).**
   - *From far away:* every fix that worked tonight acted on TIME or on PRIORS, never on capacity: subtract the prior
