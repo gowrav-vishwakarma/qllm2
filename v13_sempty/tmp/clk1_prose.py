@@ -8,7 +8,7 @@ from v14.rules_ood import build_example
 torch.set_num_threads(int(os.environ.get('OMP_NUM_THREADS', '8')))
 ck, out = sys.argv[1], sys.argv[2]
 WHERE = sys.argv[3] if len(sys.argv) > 3 else 'all'
-S = (1.0, 2.0, 4.0)
+S = tuple(float(x) for x in os.environ.get('S_LIST', '1,2,4').split(','))
 m, tok, _ = _load_v13_sempty(ck, 'baseline_real_pm', torch.device('cpu')); m.eval()
 filler = filler_tokens(R + '/.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt')
 sep = tok.encode(_SEP, add_special_tokens=False); enc = lambda s: tok.encode(s, add_special_tokens=False)  # noqa: E731
