@@ -3571,6 +3571,28 @@ fitted threshold:
     it does NOT help questions that need several sentences (order of events,
     summary, the weekday inference) or arithmetic on a rule (price of weight
     four), because it hands the mind ONE row.
+  - **A22 RESULT (12:46 IST; code 6238b80; report
+    `logs/v14_story_package_6238b80_20261101_1241.md` (every answer with its fetched
+    row) + `logs/v14_a22_story_6238b80_20261101_1241.log`): the prediction held.**
+    Keyword hits of 22 (11 questions × chat / plain): package 8 / 10 / 7 at 2k /
+    4k / 8k, strict 5 / 6 / 4, b2p2 alone 1 / 3 / 2.
+
+    | question (6 = 3 lengths × 2 forms) | package | alone | reading |
+    |---|---|---|---|
+    | how many sheep and why | 6 | 0 | real ("lost eleven sheep") |
+    | who found the lantern | 4 | 0 | partly lucky ("Mira" inside a garbled sentence) |
+    | what H stood for | 4 | 0 | |
+    | why the bridge closed | 3 | 0 | |
+    | where the key was hidden | 2 | 0 | |
+    | which weekday Tomas left | 6 | 1 | LUCKY: the fetched row says "the Tuesday after the flood"; no inference |
+    | order of events | 0 | 4 | needs several sentences |
+    | the promise | 0 | 1 | wrong row fetched (the bridge sentence) |
+    | price rule applied, true / false, summary | 0 | 0 | arithmetic, a negation, several sentences |
+
+    - Single-sentence facts: the package turns "nothing" (mind alone) into
+      answers; multi-sentence questions, rule arithmetic, negation and
+      summaries stay at zero, since the package hands the mind one row. The
+      keyword scorer is lenient (lucky hits marked); outputs are in the report.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
