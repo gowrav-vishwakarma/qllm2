@@ -287,6 +287,7 @@ def main():
     ap.add_argument('--centre', action='store_true', help='subtract the document mean from the key vectors before the cosine')
     ap.add_argument('--centre_ref', default=None, help='with --centre: subtract a FIXED reference mean [D] (torch .pt) instead of the document mean; the deployed condition, where library and session come from different texts')
     ap.add_argument('--filler', default=None, help='token cache for the filler (default: the held-out prose cache = the EVAL pool; pass a pretrain-mix cache for TRAINING docs)')
+    ap.add_argument('--skip_state', action='store_true', help='no full-document forward (A_state / B / vector fields omitted): the text-package cold reads alone, CPU-feasible for any body')
     ap.add_argument('--text_package', action='store_true', help='body-agnostic TEXT-ONLY library (v14 organs: token organ, then the normalised-word organ if PACKAGE_NORM=1; strict abstain = organ miss) + a cold re-read of row + question; works for T++ / Mamba-2 / PAM alike (the T++ + library arm)')
     ap.add_argument('--key_fn', default=None, help='module:function(vecs[T,D], ids) -> keys[T,d]; replaces the frozen address in C2/C5 (v14 learned fetch)')
     ap.add_argument('--dump_rows', default=None, help='dir: per doc, save ids, candidate row positions/kinds, their vectors, query pos and the answer span (v14 training/eval interface)')
