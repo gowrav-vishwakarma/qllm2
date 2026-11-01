@@ -4,7 +4,31 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-01 09:24 IST) — read this first
+## State (2026-11-01 09:54 IST) — read this first
+
+Session: **Library**. Armed: **A18** (tmux `a18`, `~/a18.sh`, worktree
+`../qllm_v14a18` @ 5d08477): T++ + text library warm reads (cold / 2k window +
+contrast / full 32k + contrast) beside b2p2 warm + contrast, seed 18000; starts
+after Lead's text-library arm (marker TEXTARM-DONE) with ≥ 6 GB free. Scorer
+in my scratch dir; compare with the prediction in EXPERIMENTS_V14 "A18".
+* New today for Lead's comparison: `package_fetch.text_fetch` (63812b0, the
+  body-agnostic text library: token organ → normalised organ → strict
+  abstain) and `v14/styles.py` (ca80fbd: natural statement / question /
+  field-question pools + the 82 synonym pairs; user: "test like normal, not
+  toy"). Lead wires `--qstyle varied` into bench.py; natural variants become
+  every cell's headline.
+* Verdicts since 09:2x: A16/1 dilation prose cost +0.020 nats (out of the
+  package); A17 NOT met (rendering into cu2a's template: cold reads say
+  " unknown" on untrained field names; warm + contrast overrides).
+* **Process lessons (repeat offender):** never pipe a check into grep / tail
+  inside a commit chain: run the check, read its exit code, THEN commit
+  (8aaad04 claimed a check that had not run; corrected in ca80fbd). Text
+  checks call the harness's own entry point.
+* **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
+  tmux first.
+
+## Old state (2026-11-01 09:2x IST; superseded)
+
 
 Session: **Library**. Nothing of mine is running or queued; the 4090 is Mind's
 cu2 chain (cu2b), then r3p's readouts when r3p lands.
