@@ -5474,3 +5474,53 @@ scale: 40 trials, scored 0.10 (W0) / 0.15 (W128), chance 0.125.
 - **SEQ 4096** (more work for the state beyond W) only if W = 1024 wins.
 
 **Consequence:** the user's 600M decision becomes "which W", with these numbers.
+
+## kb1: KNOWN small-model benchmarks, our bodies and the baselines as they are (pre-registration, 2026-11-01 15:46 IST; the user's standing rule via Lead: "participate in known benchmarks; intelligence first, then the infrastructure saving")
+
+**What:** the standard zero-shot suite small LMs report, run through **lm-eval-harness 0.4.9.1** (its own task prompts, scoring
+and stderr).
+- Our bodies are wrapped as a harness `LM` (`scripts/lm_eval_bodies.py`; log-likelihood requests only).
+- References run through the SAME harness with its stock `hf` model.
+
+**Tasks** (full sets, zero-shot; both acc and acc_norm reported):
+
+| task | headline metric |
+|---|---|
+| hellaswag | acc_norm |
+| arc_easy | acc |
+| arc_challenge | acc_norm |
+| piqa | acc_norm |
+| winogrande | acc |
+| openbookqa | acc_norm |
+| lambada_openai | acc, plus ppl |
+
+**Models, as they are** (no tuning on any benchmark, one run each):
+- **600M tier** (same data, 600M tokens): PAM b2p2 (102.9M), PAM cu2a (102.9M; +2 % fld / vfy), T++ b2t2 (101.9M),
+  Mamba-2 b2m2 (102.6M).
+- **3B tier** (3.0B tokens): PAM r3c (`r3cb_main_38e3c29`, 103.2M), T++ (`mix3b_transformer_answ100_e072a8f`), Mamba-2
+  (`mix3b_mamba2_answ100_b36e3a5`).
+- **Known references, same harness** (their tokens stated beside every number):
+  - SmolLM2-135M (2T tokens; card: HellaSwag 42.1, ARC 43.9, PIQA 68.4 via lighteval, so its card numbers are NOT the same
+    harness);
+  - Pythia-160M (300B tokens, the Pile);
+  - GPT-2 124M (WebText).
+
+**Protocol** (fixed now):
+- Requests are encoded exactly as the harness's HF path does it. Trailing context whitespace moves to the continuation; the
+  continuation is taken as `whole[len(context):]`; an empty context becomes EOT; requests are left-truncated to 2048. No prefix
+  is added for any model.
+- bf16 autocast, batch sorted by length, right padding (all bodies are causal).
+- One run per model. The harness stderr is reported. No prompt, metric or task is changed after the first number.
+
+**Prediction** (written first):
+- Every 100M body here is far below SmolLM2 (3,300× more data). Expected HellaSwag ~0.28–0.31 and ARC-e ~0.40–0.45.
+- What matters is the EQUAL-DATA rows:
+  - 600M: PAM within ±0.01 of T++ on the suite mean (b2p2 holdout 3.48 vs b2t2 3.56), and Mamba-2 about the same;
+  - 3B: PAM slightly behind Mamba-2 (holdout gap 0.055) and about level with T++.
+- LAMBADA (a long-range last word) is where a recall-strong body may show.
+
+**Where it runs:** the 4090 after w1w (~16:45 IST), as Lead orders it beside Library's 300k run (each eval is a 100M model,
+~2 GB). The r3c checkpoint is copied from the 6000.
+
+**Reading rule:** this becomes the "intelligence" line of the progress bar. An equal-data row is the claim; the reference rows
+are context, never a claim. No 128k+ length claims from this suite.
