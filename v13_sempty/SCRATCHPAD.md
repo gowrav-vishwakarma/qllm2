@@ -18,6 +18,26 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 10:53 IST: HANDOVER STATE.**
+  **Running:**
+  - **bud** on the 6000 (tmux `bud`, `~/Development/qllm_bud` @ `e96588b`): bud0 + bud1 side by side, then bud2, then
+    readouts (~5–6 h). Resume: SCREEN_HASH=e96588b.
+  - **w1s** on the 4090 (tmux `w1s`, `../qllm_w1s` @ `508aaff`): w0 then w128, 100M each, then text-arm / skill-pack / clk2 /
+    s8 readouts.
+  - **rxk** on local CPU (`logs/diag/v13_sempty_rxk_{b2p2,cu2a,b2t2}_99d2951.jsonl`, ~1 h).
+
+  **Verdicts since 06:12:**
+  - cu2a: trained formats MET, transfer FAIL;
+  - cu2b: futility FAIL, ACh-1 removed (`d27281d`, code last at 7bdf568);
+  - clk2 / clk2r: echo dilation s = 8 + contrast to 8k on 3 minds (ntfy posted);
+  - r3p: futility stop; cause = loss-weight share; cold text read written.
+
+  **Decisions:** code moves into v16 once at release; v16/learnings/MIND.md is kept current. The W1 600M pair is the user's
+  decision (with w1s + A19). The controller unit comes after R × K.
+
+  **Next for Mind:** rxk verdict; w1s verdict (body vs package reader by holdout / copy class); bud verdict; then cu3 design (open field
+  vocabulary, held-out names, many formats, loss-weight budget).
+
 * **2026-11-01 10:26 IST: STEP BACK (user via Lead: "how long have you not meditated… fresh air"; memory re-read).**
   - *From far away:* every fix that worked tonight acted on TIME or on PRIORS, never on capacity: subtract the prior
     (contrast; A9 +0.142), slow the clock (echo dilation: one read to 8k), refresh, cut the row to one field (A19). Every
