@@ -1044,6 +1044,52 @@ class SharedRead(nn.Module):
         return named(self.o_proj(y.to(h.dtype)), (batch, time, self.model_dim))  # named-exit: shared-read boundary
 
 
+class WindowRead(nn.Module):
+    """W1: bounded sliding-window attention over the last ``window`` tokens (raw-torch boundary).
+
+    A repair of the fetched-row read (exact copy from a short span), not a claim: Griffin / Hawk local attention,
+    Based. Own RoPE on q / k, zero-init out-proj (identity at start). KV is bounded by the window, so memory does not
+    grow with context. Chunked over queries (C tokens at a time against at most C + window - 1 keys), so long
+    probes never build a T x T mask. Prefill / training only: token-by-token decode would need a window KV cache.
+    """
+
+    def __init__(self, cfg: PAMConfig, model_dim: Dim, chunk: int = 256):
+        super().__init__()
+        self.model_dim, self.window, self.chunk = model_dim, int(cfg.swa_window), chunk
+        self.n_heads, self.head_dim = cfg.n_heads, cfg.head_dim
+        inner = cfg.n_heads * cfg.head_dim
+        self.qkv = nn.Linear(cfg.dim, 3 * inner, bias=False)
+        self.o_proj = nn.Linear(inner, cfg.dim, bias=False)
+        self.o_proj._zero_init = True                       # identity at start
+
+    def forward(self, x: NamedTensor, step_offset: int = 0) -> NamedTensor:
+        batch, time = x.layout[0], x.layout[1]
+        h = x.raw(batch, time, self.model_dim)                          # [B,T,D]
+        B, T, D = h.shape
+        H, K, W = self.n_heads, self.head_dim, self.window
+        if T == 1:
+            raise NotImplementedError("W1 WindowRead: prefill / training only (no window KV cache for decode yet)")
+        q, k, v = self.qkv(h).reshape(B, T, 3, H, K).permute(2, 0, 3, 1, 4)   # [B,H,T,K] each
+        pos = torch.arange(T, device=h.device, dtype=torch.float32) + float(step_offset)
+        inv = 1.0 / (10000.0 ** (torch.arange(0, K, 2, device=h.device, dtype=torch.float32) / K))
+        ang = pos[:, None] * inv[None]                                  # [T, K/2]
+        cos, sin = ang.cos(), ang.sin()
+
+        def rot(t):
+            te, to = t.float().reshape(B, H, T, K // 2, 2).unbind(-1)
+            return torch.stack((te * cos - to * sin, te * sin + to * cos), dim=-1).reshape(B, H, T, K).to(t.dtype)
+        q, k = rot(q), rot(k)
+        outs = []
+        for c0 in range(0, T, self.chunk):
+            c1 = min(T, c0 + self.chunk); k0 = max(0, c0 - W + 1)
+            qi = torch.arange(c0, c1, device=h.device)[:, None]; kj = torch.arange(k0, c1, device=h.device)[None, :]
+            mask = (kj <= qi) & (kj > qi - W)                           # attend: causal, inside the window
+            outs.append(nn.functional.scaled_dot_product_attention(q[:, :, c0:c1], k[:, :, k0:c1], v[:, :, k0:c1],
+                                                                    attn_mask=mask))
+        y = torch.cat(outs, dim=2).transpose(1, 2).reshape(B, T, H * K)
+        return named(self.o_proj(y), (batch, time, self.model_dim))    # named-exit: window-read boundary
+
+
 class RealBlock(nn.Module):
     """Pre-norm residual, real: gated channel mix, then real PAM sequence mix."""
 
@@ -1073,6 +1119,11 @@ class RealBlock(nn.Module):
                 and layer_idx > min(tuple(cfg.pam_layers))):
             self.norm2 = RealNorm(self.model_dim)
             self.reader = SharedRead(cfg, self.model_dim)
+        # W1: a bounded window reader in the listed blocks (off by default).
+        self.window = None
+        if getattr(cfg, 'swa_layers', ()) and layer_idx in tuple(cfg.swa_layers):
+            self.norm3 = RealNorm(self.model_dim)
+            self.window = WindowRead(cfg, self.model_dim)
 
     def forward(self, x: NamedTensor, pam_state=None, step_offset: int = 0,
                 shared=None):
@@ -1080,13 +1131,17 @@ class RealBlock(nn.Module):
         if self.training:
             cgu_out = cgu_out * as_complex_dropout_mask(self.cgu_dropout, cgu_out)
         x = x + cgu_out * self.cgu_scale
+        new_state = None
         if not self.has_pam:
             if self.reader is not None:
                 x = x + self.reader(self.norm2(x), shared)
-            return x, None
-        pam_out, new_state = self.pam(self.norm2(x), state=pam_state,
-                                      step_offset=step_offset)
-        return x + pam_out * self.pam_scale, new_state
+        else:
+            pam_out, new_state = self.pam(self.norm2(x), state=pam_state,
+                                          step_offset=step_offset)
+            x = x + pam_out * self.pam_scale
+        if self.window is not None:                                     # W1 (off by default)
+            x = x + self.window(self.norm3(x), step_offset)
+        return x, new_state
 
 
 # ── Language model ───────────────────────────────────────────────────────────

@@ -1109,6 +1109,9 @@ def build_argparser():
                    help='N4: per-head content-dependent read-out gate (real arm)')
     p.add_argument('--short_conv', action='store_true',
                    help='G1: depthwise causal short conv on fused qkv (no decode yet)')
+    p.add_argument('--swa_layers', type=str, default='',
+                   help='W1: blocks with a bounded sliding-window attention reader, e.g. "5,9,13" (empty = off)')
+    p.add_argument('--swa_window', type=int, default=128, help='W1: window length in tokens')
     p.add_argument('--pam_layers', type=str, default='',
                    help="M1: comma list of blocks that keep a PAM notebook (default all)")
     p.add_argument('--mlp_hidden', type=int, default=0,
@@ -1190,6 +1193,9 @@ def main():
         cfg.echo = True
     if args.pam_layers:
         cfg.pam_layers = tuple(int(i) for i in args.pam_layers.split(','))
+    if args.swa_layers:
+        cfg.swa_layers = tuple(int(i) for i in args.swa_layers.split(','))
+        cfg.swa_window = args.swa_window
     if args.mlp_hidden:
         cfg.mlp_hidden = args.mlp_hidden
     if args.share_reads:

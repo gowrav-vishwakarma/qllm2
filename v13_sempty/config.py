@@ -104,6 +104,11 @@ class PAMConfig:
     # Real arm. mlp_hidden (0 = dim*expand) widens the MLP to param-match.
     pam_layers: tuple = ()
     mlp_hidden: int = 0
+    # W1 window reader (2026-11-01, repair of the fetched-row read; Griffin / Based style, no claim): blocks listed
+    # here get a bounded sliding-window attention over the last swa_window tokens (zero-init out-proj, own RoPE).
+    # KV is fixed by the window, so the body stays O(1) in context length. Empty = off.
+    swa_layers: tuple = ()
+    swa_window: int = 128
     # M2 shared reads (2026-10-29, "memory is not the brain"): every block
     # WITHOUT a notebook (above the first one) gets a cheap reader of the
     # nearest notebook below it -- own query (rotated by the writer's Chrono
