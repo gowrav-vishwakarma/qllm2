@@ -287,6 +287,7 @@ def main():
     ap.add_argument('--centre', action='store_true', help='subtract the document mean from the key vectors before the cosine')
     ap.add_argument('--centre_ref', default=None, help='with --centre: subtract a FIXED reference mean [D] (torch .pt) instead of the document mean; the deployed condition, where library and session come from different texts')
     ap.add_argument('--filler', default=None, help='token cache for the filler (default: the held-out prose cache = the EVAL pool; pass a pretrain-mix cache for TRAINING docs)')
+    ap.add_argument('--text_package', action='store_true', help='body-agnostic TEXT-ONLY library (v14 organs: token organ, then the normalised-word organ if PACKAGE_NORM=1; strict abstain = organ miss) + a cold re-read of row + question; works for T++ / Mamba-2 / PAM alike (the T++ + library arm)')
     ap.add_argument('--key_fn', default=None, help='module:function(vecs[T,D], ids) -> keys[T,d]; replaces the frozen address in C2/C5 (v14 learned fetch)')
     ap.add_argument('--dump_rows', default=None, help='dir: per doc, save ids, candidate row positions/kinds, their vectors, query pos and the answer span (v14 training/eval interface)')
     ap.add_argument('--out', required=True); ap.add_argument('--device', default='cpu', help='cpu, or cuda (required for mamba2: Triton kernels)')
@@ -333,17 +334,39 @@ def main():
                 hit = table.get(tuple(ids[T - K:T]))
                 rec['B_hit'] = int(hit is not None)
                 rec['B_ngram'] = int((ids[hit] if hit is not None else pa) == ans)
+                if a.text_package:   # TEXT-ONLY package for any body (user, Nov 1: the 'T++ + library' arm)
+                    from v14.package_fetch import text_fetch          # Library's text-only fetch (63812b0): token organ, then the normalised-word organ; no mind keys
+                    tp_row, tp_info = text_fetch(ids, doc_end)
+                    tp_src = {0: 'organ', 1: 'norm', 2: 'norm', 3: 'norm'}.get(tp_info.get('step'), None) if tp_row is not None else None
+                    rec['TP_organ_hit'] = int(tp_row is not None); rec['TP_src'] = tp_src; rec['TP_step'] = tp_info.get('step')
+                    rec['TP_abstain'] = int(tp_row is None)              # strict: no row, no answer
+                    if tp_row is not None and a.task != 'hop2':
+                        tp_span = ids[tp_row[0]:tp_row[1]]; tp_ctx = tp_span + ids[doc_end:]
+                        lgt = R.last_logits(tp_ctx)
+                        rec['TP_20way'] = int(cand[int(lgt[cand].argmax())] == ans)
+                        rec['TP_free'] = int(int(lgt.argmax()) == ans)
+                        gen = R.greedy(tp_ctx); txt = tok.decode(gen)
+                        rec['TP_free_text'] = txt
+                        rec['TP_free_sent'] = int(re.search(r'\b' + re.escape(str(meta['val'])) + r'\b', txt, re.I) is not None)
+                        rec['TP_read_tokens'] = len(tp_ctx)
+                    elif a.task != 'hop2':
+                        rec['TP_20way'] = 0; rec['TP_free'] = 0; rec['TP_free_sent'] = 0; rec['TP_read_tokens'] = 0
+                    rec['TP_wrong'] = int(bool(meta.get('negative')) and rec.get('TP_free_sent', 0) == 0 and tp_row is not None and int(lgt.argmax()) in cand) if tp_row is not None and a.task != 'hop2' else 0
                 if a.task == 'hop2':  # planner: organ hop 1 -> K2 text -> organ hop 2
                     k2_ids = read_until_dot(ids, hit, doc_end) if hit is not None else []
                     q2 = tok.encode(' Query:', add_special_tokens=False) + k2_ids + tok.encode(' maps to', add_special_tokens=False)
                     hit2 = table.get(tuple(q2[-K:]))
                     rec['B_hop2_chain'] = int(hit2 is not None and ids[hit2] == ans)
-                    if vecs is not None and hit is not None:  # hop 2 by the model re-reading the retrieved span
+                    if hit is not None:  # hop 2 by the model re-reading the retrieved spans (any body; was PAM-only before Nov 1)
                         span = ids[max(0, hit - 16):min(doc_end, hit + 12)]
                         if hit2 is not None:
                             span2 = ids[max(0, hit2 - 16):min(doc_end, hit2 + 8)]
                             lg2 = R.last_logits(span + span2 + q2)
                             rec['C_hop2_reread'] = int(cand[int(lg2[cand].argmax())] == ans)
+                            if a.text_package:
+                                g2 = tok.decode(R.greedy(span + span2 + q2))
+                                rec['TP_hop2_sent'] = int(re.search(r'\b' + re.escape(str(meta['val'])) + r'\b', g2, re.I) is not None)
+                                rec['TP_hop2_text'] = g2; rec['TP_read_tokens'] = len(span) + len(span2) + len(q2)
                 # oracle fetch: the stored sentence put right in front of the query (upper bound of any fetch)
                 if vecs is not None and a.task in ('instr', 'kv', 'kv1', 'para', 'tool', 'natq', 'natqneg', 'syn'):
                     if a.task == 'instr':

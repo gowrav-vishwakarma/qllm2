@@ -3376,6 +3376,24 @@ fitted threshold:
       fix is cu3's open field vocabulary (Mind), not a library field map.
       The package keeps the raw row for tool; definitions rendered + warm +
       contrast is a candidate for cu2a (descriptive, needs a fresh seed).
+- **A18: the "T++ + library" WARM rows (PRE-REGISTERED 2026-11-01 09:49 IST, before
+  any number of it; a COMPARISON row for Lead's text-library arm, no bar).**
+  Every body gets the same text-only library (`text_fetch`, strict). Reads on the
+  same fetched row:
+  - T++ (tfc1b, trained at 2,048, RoPE): COLD (row + question only); WINDOW =
+    the last 2,048 session tokens + row + question, contrast twin = the same
+    window + question (KV ≈ 2 × 12 layers × d × 2 B × context); FULL = the whole
+    session + row + question with its twin (KV ≈ 1.2 GB at 32k; 20 docs per
+    cell); WINDOW without contrast reported.
+  - PAM b2p2: warm + no-row contrast (A9's read; state 1.15 MB), same docs.
+  - Cells: kv / para / tool × synthetic / natural + natq (natural); L = 32,768;
+    seed 18000 (the package table's); 40 docs per cell (FULL: the first 20).
+    Free generation, sentence scorer; KV / state bytes held and the tokens
+    run per answer (row + question + generated, × 2 with the twin) per row.
+  - Prediction (written before any number): T++ WINDOW ≈ T++ COLD on exact
+    keys (within 0.05); T++ FULL below both (beyond its trained length);
+    b2p2 warm + contrast ≥ T++ WINDOW on natural-key kv / para; all bodies
+    equal on fetch (same text library).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
