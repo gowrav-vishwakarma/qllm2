@@ -441,6 +441,13 @@ def test_text_fetch():
     assert P.field_cut(row, " Query: job: pelmet; location:") is None          # a field synonym does not match
     assert P.field_cut(" Definition: zorvak refers to amber.", " Query: zorvak refers to") is None
     print("  field_cut: the asked field's clause re-rendered; a synonym field or a non-tool row -> None")
+    for q, ok in ((" I forgot what zorvak means. It means", True), (" hey, tarvin was what again? It was", True),
+                  (" I forgot what blimtar means. It means", False)):      # A20 step 4: reworded one-word keys
+        ids = doc + enc(q)
+        assert P.text_fetch(ids, len(doc))[1]['abstain'] == 1, "text_fetch default changed"
+        row, info = P.text_fetch(ids, len(doc), step4=True)
+        assert (row is not None) == ok and (not ok or info['step'] == 4), f"step4: {q!r} -> {info}"
+    print("  step4: reworded one-word keys found by the rare-in-English unigram; a never-stored key still abstains")
 
 
 def main():

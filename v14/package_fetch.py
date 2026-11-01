@@ -68,30 +68,42 @@ def row_around(ids, a, b, end):
     return s0, max(a + 1, sentence_end(ids, b, end))
 
 
-def norm_hit(ids, end, q0):
-    """A4: (step, n, row start, row end) of the normalised-word organ, or None."""
+BG = '/media/gowrav/d_drive/qllm_ckpt/v14/bg_wordcounts_fineweb014.json'   # A20 background counts (v14/bg_counts.py)
+
+
+def _bg():
+    if 'bg' not in _S:
+        import json
+        _S['bg'] = json.load(open(os.environ.get('PACKAGE_BG', BG)))
+    return _S['bg']
+
+
+def norm_hit(ids, end, q0, step4=False):
+    """A4: (step, n, row start, row end) of the normalised-word organ, or None. step4 (A20): add the
+    rare-in-stream-and-in-English unigram step before the bigram step."""
     strs = _strs()
-    h = N.find(N.words(strs, ids, 0, end), N.words(strs, ids, q0, len(ids)))
+    h = N.find(N.words(strs, ids, 0, end), N.words(strs, ids, q0, len(ids)), bg=_bg() if step4 else None)
     if h is None:
         return None
     step, n, a, b = h
     return (step, n) + row_around(ids, a, b, end)
 
 
-def text_fetch(ids, doc_end):
+def text_fetch(ids, doc_end, step4=False):
     """The TEXT-ONLY library, body-agnostic (no mind keys; Lead's "every body gets the same library" arm).
 
     Token organ (the question's last NGRAM tokens, latest exact match), then the normalised-word organ on the
     WHOLE question (A4); strict abstain = both miss. ids = document + question, doc_end = where the question
     starts. Returns (row or None, info): row = (start, end) token span of the fetched sentence; info has
-    organ_hit, step (0 = token organ, 1-3 = normalised organ step) and abstain. Step 3 (a bigram holding a word
+    organ_hit, step (0 = token organ, 1-4 = normalised organ step) and abstain. step4=True (A20) adds the
+    rare-in-stream-and-in-English unigram step (background counts, BG / PACKAGE_BG) before the bigram step. Step 3 (a bigram holding a word
     seen <= 2 times) assumes a real stream: in a very short document a frame bigram ("refers to") can be rare.
     Measured never-stored false hits at 32k: 0.00 / 0.025 (A4)."""
     end = int(doc_end)
     hit = organ(ids, end, len(ids))
     if hit is not None:
         return row_around(ids, hit, hit, end), dict(organ_hit=1, step=0, abstain=0)
-    nh = norm_hit(ids, end, end)
+    nh = norm_hit(ids, end, end, step4=step4)
     if nh:
         return tuple(nh[2:]), dict(organ_hit=1, step=int(nh[0]), abstain=0)
     return None, dict(organ_hit=0, step=None, abstain=1)

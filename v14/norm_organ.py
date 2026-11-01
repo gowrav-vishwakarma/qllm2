@@ -6,6 +6,8 @@ stripped when the word has >= 4 letters. Then, over the stream words before doc_
   (1) the longest query SUFFIX word n-gram, n = 6..3;
   (2) else the longest ANY-position query word n-gram, n = 6..3;
   (3) else any query word bigram holding a word seen <= RARE times in the stream.
+  (4) A20, only with `bg` (background counts) and tried BEFORE (3): the question word seen 1-2 times in the stream
+      and <= bg_max times in the background (key-like: a name, a made-up word; never a frame word).
 The latest stream occurrence wins. find() returns (step, n, first token, last token + 1) of the match, or None.
 """
 from __future__ import annotations
@@ -61,7 +63,7 @@ def _latest(sw, grams, n):
     return best
 
 
-def find(stream, query):
+def find(stream, query, bg=None, bg_max=3):
     sw = [w for w, _, _ in stream]
     qw = [w for w, _, _ in query]
     hit = None
@@ -75,6 +77,13 @@ def find(stream, query):
             r = _latest(sw, {tuple(qw[i:i + n]) for i in range(len(qw) - n + 1)}, n)
             if r:
                 hit = (2, n, r[0]); break
+    if hit is None and bg is not None:                           # (4) A20: rare in the stream AND rare in English
+        cnt = Counter(sw)
+        cands = [(bg.get(w, 0), cnt[w], -i, w) for i, w in enumerate(qw) if 1 <= cnt[w] <= RARE and bg.get(w, 0) <= bg_max]
+        if cands:
+            w = min(cands)[3]
+            last = max(i for i, x in enumerate(sw) if x == w)
+            hit = (4, 1, last)
     if hit is None:                                              # (3) rare-word bigram
         cnt = Counter(sw)
         grams = {tuple(qw[i:i + 2]) for i in range(len(qw) - 1)}
