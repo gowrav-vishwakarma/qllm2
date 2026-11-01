@@ -3608,6 +3608,24 @@ fitted threshold:
       " unknown" here; its lower score comes from F2 on its own states fetching
       prose rows (e.g. "what H stood for" → a semiconductor passage), the weaker
       own-state address A10 saw for cu1.
+- **A23: `pkg.apply`, rule x knowledge through the package (REGISTERED
+  2026-11-01 14:19 IST, before any number; Lead's GO).** The planner fetches
+  the key's row, takes the value out (the library's own row formats), writes
+  the skill's trained query line ("<v> ->") and the mind answers with the
+  skill contrast (the twin = the session WITHOUT the skill pack, a full
+  second stream); optional echo dilation from the pack's end to the session
+  end.
+  - Reproduction (the only criterion): Mind's R × K docs (scripts/
+    run_rxk_probe.py: seeds 8800-8849, affine_map_new + shift_wide_new,
+    record row " Record: K | x: v.", key question "K ->"), b2p2 and cu2a, L =
+    2,048 (contrast) and 8,192 (dilation s = 8 + contrast). Package free
+    (first answer token = target) within ± 0.05 of Mind's `exp_c4` /
+    `exp_dil8_c4` on the same docs.
+  - Story check (prediction, outputs shown): Old Pell's rule ("twice its
+    weight plus one") held only as the story's WORDS + "4 ->" FAILS; the same
+    rule held as a register skill in the trained affine format ("Map rule.",
+    "2 -> 5", "3 -> 7", "5 -> 11") with the weight fetched from the story
+    ("weight four") answers 9.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
