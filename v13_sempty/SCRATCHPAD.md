@@ -18,6 +18,20 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 09:24 IST: cu3 design inputs (after cu2a and Library's A16 / A17), to pre-register after cu2b.**
+  - **Open field vocabulary with held-out field NAMES.** cu2a's VERIFY treats an unfamiliar field name as "not this
+    row's field": A17 shows 80–83 % " unknown." even when the field IS present ("region", "label", "meaning").
+  - **Counter-examples:** an UNSEEN field name that IS in the row → answer the value, beside "absent field → unknown".
+    Otherwise an open vocabulary still trips VERIFY.
+  - **Many row and question formats** (cu2a: held-out wordings 0.26–0.46, held-out row layout ~0), with some held out
+    for the probe. Also stops fld's row format leaking into answers (cu2a's cold raw tool read invents fld rows).
+  - **Budget by loss-weight share,** text ≥ ~0.85 (r3p lesson); fld / vfy are answer-dense.
+  - **The package side already works:** the warm read + contrast overrides the cold " unknown" prior (A17: rendered
+    kv / para natural → 1.00). Rendering helps only with the contrast; cold rendering hurts (0.07–0.17).
+  - **Reach reality (A16):** one read carries a skill usefully to ~4k (8k free ~0.45 with echo dilation + contrast).
+    The package default stays refresh every ~2k + contrast (0.70 at 32k).
+  - ACh-1's tag goes into cu3 only if cu2b passes.
+
 * **2026-11-01 06:12 IST: HANDOVER STATE.**
   **Running:**
   - **cu2a** on the 4090: tmux `cu2`, worktree `../qllm_reset2` @ `24b2969`, chain `v13_sempty/tmp/cu2_chain.sh`,
