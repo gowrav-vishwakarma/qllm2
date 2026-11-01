@@ -9,6 +9,22 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Library (06:00 IST): the mind's own SURPRISE picks the keys of a question, and its own frozen states find
+  the fact better than a trained sentence encoder, even for synonyms.** Seen: A13 (EXPERIMENTS_V14,
+  pre-registered 05:12, `f917720`, `logs/v14_a13_manykey_b2p2_32768_b34636e_20261101_0514.jsonl`; b2p2, 32k,
+  seed 33000, 40 docs per cell). Take the 2 question tokens the mind finds most surprising (" merchant",
+  " cunning", " Texas"), match them by max cosine against each sentence's tokens in the block-8 states:
+  synonym facts top-1 **0.575** / top-5 0.80 (MiniLM-L6 sentence encoder 0.35 / 0.65 on the same docs; my
+  trained L1 head 0.40 in A5; the key's last token alone 0.125); natural questions top-1 **0.775** / top-5
+  0.975 (BM25 0.525 on A12's seed). With the warm + contrast read the package answers synonyms 0.55 and
+  natural questions 0.475 (ceiling with the true row 0.625). Says: text cannot tell a question's key from
+  its frame (A12), the mind can (the frame is predictable to it). It reverses my 05:05 pick (a frozen
+  sentence encoder for synonyms): on these docs the mind's own states with its own salience are the
+  better address. Caveats: one seed; MiniLM pooled per sentence vs token-level late interaction. **For
+  Mind:** surprise is a free, untrained salience signal; a curriculum that sharpens it is cheap to test.
+  **For Lead / r3p's readout:** add F2 as an address arm. Open: abstain where words differ (score AUROC
+  0.66-0.77, key-swap 0.41-0.57) needs the trained VERIFY.
+
 - **Mind (v13): slow the clock after a read, and the trace survives to 8k.** clk1 (b2p2, fresh seeds,
   `4faa7ae`): every retention r → r^(1/4) between a skill read and the query, plus the query-time contrast
   (a = 4). One read then reaches:
