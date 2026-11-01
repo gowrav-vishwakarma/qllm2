@@ -175,12 +175,12 @@ def run(args):
                     if 'dilate' in variants:             # clk1: retention ** (1/s) over the filler between read and query
                         fd, cd_ = {}, {}
                         for sc in dilations:
-                            body.m._dilate = (len(pack), len(pack) + len(fill), sc) if fill else None
+                            body.m._dilate = (len(pack), len(pack) + len(fill), sc, args.dilate_where) if fill else None
                             lg = body.last_logits(pack + fill + q).float()
                             fd[str(sc)] = int(int(lg.argmax()) == ex.target_token_id)
                             cd_[str(sc)] = int(score_candidate_logits(ex, lg[ex.candidate_token_ids].cpu().tolist())['correct'])
-                            if sc == dilations[-1]:          # dilation + contrast (a = 4), both streams dilated over the filler
-                                body.m._dilate = (0, len(fill), sc) if fill else None
+                            if sc > 1:                       # dilation + contrast (a = 4), both streams dilated over the filler
+                                body.m._dilate = (0, len(fill), sc, args.dilate_where) if fill else None
                                 ln_ = body.last_logits(fill + q).float(); lc = lg + 4.0 * (lg - ln_)
                                 fd[f'{sc}+c4'] = int(int(lc.argmax()) == ex.target_token_id)
                                 cd_[f'{sc}+c4'] = int(score_candidate_logits(ex, lc[ex.candidate_token_ids].cpu().tolist())['correct'])
@@ -221,6 +221,7 @@ if __name__ == '__main__':
     p.add_argument('--shots', type=int, default=8)
     p.add_argument('--alphas', default='0,0.5,1,2,4', help='contrast variant (cd1): l_pack + a (l_pack - l_nopack)')
     p.add_argument('--dilations', default='1,2,4', help='dilate variant (clk1): retention ** (1/s) over the filler')
+    p.add_argument('--dilate_where', default='all', choices=['all', 'echo', 'notebook'], help='clk2: which memory is dilated')
     p.add_argument('--hop_facts', type=int, default=4, help='two_hop: owners (= pets = names) in the story')
     p.add_argument('--lengths', default='0,2048,8192,32768,131072')
     p.add_argument('--docs', type=int, default=100)

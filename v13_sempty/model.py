@@ -844,9 +844,9 @@ class RealPAMLayer(nn.Module):
         keep = getattr(self, '_keep', None)      # lg8r reset: 0 at document separators, else 1
         if keep is not None:
             retention = retention * keep[:, None, :].expand(B, H, T).reshape(B * H, T).to(retention.dtype)
-        dil = getattr(self, '_dilate', None)     # clk1 eval hook: (start, end, s) -> retention ** (1/s) on [start, end)
-        if dil is not None:
-            d0, d1, sc = dil
+        dil = getattr(self, '_dilate', None)     # clk1 eval hook: (start, end, s[, where]) -> retention ** (1/s) on [start, end)
+        if dil is not None and (len(dil) < 4 or dil[3] in ('all', 'notebook')):   # clk2: where = all / notebook / echo
+            d0, d1, sc = dil[:3]
             retention = retention.clone()
             retention[:, d0:d1] = retention[:, d0:d1].clamp_min(1e-12) ** (1.0 / sc)
         bw, be = self._delta_gates(tokens)
@@ -1271,8 +1271,8 @@ class LM(nn.Module):
         be = per_head(torch.sigmoid(er - 3.0).clamp(max=0.95))
         kn = nn.functional.normalize(heads(k), dim=-1)
         dil = getattr(self, '_dilate', None)      # clk1 eval hook on the echo memory too
-        if dil is not None:
-            d0, d1, sc = dil
+        if dil is not None and (len(dil) < 4 or dil[3] in ('all', 'echo')):
+            d0, d1, sc = dil[:3]
             retention = retention.clone()
             retention[:, d0:d1] = retention[:, d0:d1].clamp_min(1e-12) ** (1.0 / sc)
         if getattr(cfg, 'reset_at_eos', False):
