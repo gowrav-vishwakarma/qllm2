@@ -1050,7 +1050,8 @@ class WindowRead(nn.Module):
     A repair of the fetched-row read (exact copy from a short span), not a claim: Griffin / Hawk local attention,
     Based. Own RoPE on q / k, zero-init out-proj (identity at start). KV is bounded by the window, so memory does not
     grow with context. Chunked over queries (C tokens at a time against at most C + window - 1 keys), so long
-    probes never build a T x T mask. Prefill / training only: token-by-token decode would need a window KV cache.
+    probes never build a T x T mask. Streaming: ``cache`` = (k, v) of the previous <= window - 1 tokens (RoPE already
+    applied at their absolute positions), so chunked prefill and token-by-token decode equal one pass.
     """
 
     def __init__(self, cfg: PAMConfig, model_dim: Dim, chunk: int = 256):
@@ -1062,13 +1063,11 @@ class WindowRead(nn.Module):
         self.o_proj = nn.Linear(inner, cfg.dim, bias=False)
         self.o_proj._zero_init = True                       # identity at start
 
-    def forward(self, x: NamedTensor, step_offset: int = 0) -> NamedTensor:
+    def forward(self, x: NamedTensor, step_offset: int = 0, cache=None, return_cache: bool = False):
         batch, time = x.layout[0], x.layout[1]
         h = x.raw(batch, time, self.model_dim)                          # [B,T,D]
         B, T, D = h.shape
         H, K, W = self.n_heads, self.head_dim, self.window
-        if T == 1:
-            raise NotImplementedError("W1 WindowRead: prefill / training only (no window KV cache for decode yet)")
         q, k, v = self.qkv(h).reshape(B, T, 3, H, K).permute(2, 0, 3, 1, 4)   # [B,H,T,K] each
         pos = torch.arange(T, device=h.device, dtype=torch.float32) + float(step_offset)
         inv = 1.0 / (10000.0 ** (torch.arange(0, K, 2, device=h.device, dtype=torch.float32) / K))
@@ -1079,15 +1078,23 @@ class WindowRead(nn.Module):
             te, to = t.float().reshape(B, H, T, K // 2, 2).unbind(-1)
             return torch.stack((te * cos - to * sin, te * sin + to * cos), dim=-1).reshape(B, H, T, K).to(t.dtype)
         q, k = rot(q), rot(k)
+        P = 0                                                           # cached keys before this call
+        if cache is not None:
+            k, v = torch.cat((cache[0].to(k.dtype), k), dim=2), torch.cat((cache[1].to(v.dtype), v), dim=2)
+            P = cache[0].shape[2]
         outs = []
         for c0 in range(0, T, self.chunk):
-            c1 = min(T, c0 + self.chunk); k0 = max(0, c0 - W + 1)
-            qi = torch.arange(c0, c1, device=h.device)[:, None]; kj = torch.arange(k0, c1, device=h.device)[None, :]
+            c1 = min(T, c0 + self.chunk); k0 = max(0, P + c0 - W + 1)
+            qi = torch.arange(P + c0, P + c1, device=h.device)[:, None]; kj = torch.arange(k0, P + c1, device=h.device)[None, :]
             mask = (kj <= qi) & (kj > qi - W)                           # attend: causal, inside the window
-            outs.append(nn.functional.scaled_dot_product_attention(q[:, :, c0:c1], k[:, :, k0:c1], v[:, :, k0:c1],
+            outs.append(nn.functional.scaled_dot_product_attention(q[:, :, c0:c1], k[:, :, k0:P + c1], v[:, :, k0:P + c1],
                                                                     attn_mask=mask))
         y = torch.cat(outs, dim=2).transpose(1, 2).reshape(B, T, H * K)
-        return named(self.o_proj(y), (batch, time, self.model_dim))    # named-exit: window-read boundary
+        out = named(self.o_proj(y), (batch, time, self.model_dim))     # named-exit: window-read boundary
+        if return_cache:
+            s = max(0, k.shape[2] - (W - 1))                            # keep the last window - 1 keys / values
+            return out, (k[:, :, s:].detach(), v[:, :, s:].detach())
+        return out
 
 
 class RealBlock(nn.Module):
@@ -1140,7 +1147,11 @@ class RealBlock(nn.Module):
                                           step_offset=step_offset)
             x = x + pam_out * self.pam_scale
         if self.window is not None:                                     # W1 (off by default)
-            x = x + self.window(self.norm3(x), step_offset)
+            if getattr(self, '_win_want', False):                       # streaming: _run_blocks sets _win_in / _win_want
+                w_out, self._win_out = self.window(self.norm3(x), step_offset, cache=self._win_in, return_cache=True)
+                x = x + w_out
+            else:
+                x = x + self.window(self.norm3(x), step_offset)
         return x, new_state
 
 
@@ -1257,7 +1268,9 @@ class LM(nn.Module):
             logits = contract(lm, embed, over=self.model_dim)
         return logits.raw(batch, time, self.embed.vocab)  # named-exit: public logits are raw
 
-    def _run_blocks(self, z, batch, time, states, step_offset, input_ids=None):
+    def _run_blocks(self, z, batch, time, states, step_offset, input_ids=None, win_states=None, carry=False):
+        """``carry`` (forward only): W1 blocks also return their window KV caches, left in ``self._win_new``
+        (one (k, v) per W1 block, in block order); ``win_states`` feeds the previous ones back."""
         use_ckpt = self.config.gradient_checkpointing and self.training and states is None
         share = self.config.share_reads
         if share and use_ckpt:
@@ -1275,6 +1288,9 @@ class LM(nn.Module):
             if block.pam is not None:
                 block.pam._keep = keep
                 block.pam._dilate = getattr(self, '_dilate', None)   # clk1 eval hook (None = off)
+        w_blocks = [b for b in self.blocks if b.window is not None]
+        for j, b in enumerate(w_blocks):
+            b._win_want, b._win_in, b._win_out = carry, (win_states[j] if win_states is not None else None), None
         for i, block in enumerate(self.blocks):
             state = states[i] if states is not None else None
             if use_ckpt:
@@ -1289,6 +1305,9 @@ class LM(nn.Module):
             new_states.append(new_state)
             if self.cond_mem_layers and i in self.cond_mem_layers:
                 z = self.cond_mem[str(i)](z, input_ids)
+        self._win_new = [b._win_out for b in w_blocks] if carry else None
+        for b in w_blocks:
+            b._win_want, b._win_in, b._win_out = False, None, None
         return z, new_states
 
     def _echo_read(self, hidden: NamedTensor, input_ids, batch: Dim, time: Dim,
@@ -1371,15 +1390,26 @@ class LM(nn.Module):
         return lm, new_echo
 
     def forward(self, input_ids, states=None, step_offset: int = 0, labels=None):
-        # With echo the carried states are [block_0 .. block_{L-1}, echo_state].
-        echo_state = None
-        if self.echo and states is not None:
-            states, echo_state = states[:-1], states[-1]
+        # Carried states: [block_0 .. block_{L-1}] + [W1 window caches, if any W1 block] + [echo_state, if echo].
+        # Per-block states and "echo last" are unchanged; the window caches are one extra entry before the echo state.
+        echo_state = win_states = None
+        has_win = any(b.window is not None for b in self.blocks)
+        if states is not None:
+            states = list(states)
+            if self.echo:
+                states, echo_state = states[:-1], states[-1]
+            if has_win:
+                states, win_states = states[:-1], states[-1]
         z, batch, time = self._stem(input_ids, step_offset)
-        z, new_states = self._run_blocks(z, batch, time, states, step_offset, input_ids)
+        z, new_states = self._run_blocks(z, batch, time, states, step_offset, input_ids,
+                                         win_states=win_states, carry=has_win)
         lm, new_echo = self._lm_vector(z, input_ids, batch, time, echo_state)
+        new_states = list(new_states)
+        if has_win:
+            new_states.append(self._win_new)
+            self._win_new = None
         if self.echo:
-            new_states = list(new_states) + [new_echo]
+            new_states = new_states + [new_echo]
         logits = self._tied_logits(lm, batch, time)
         aux_loss = torch.zeros((), device=input_ids.device)
         return logits, new_states, aux_loss
