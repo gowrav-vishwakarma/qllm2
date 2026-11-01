@@ -3394,6 +3394,20 @@ fitted threshold:
     keys (within 0.05); T++ FULL below both (beyond its trained length);
     b2p2 warm + contrast ≥ T++ WINDOW on natural-key kv / para; all bodies
     equal on fetch (same text library).
+- **A19: field-cut tool rows (PRE-REGISTERED 2026-11-01 10:10 IST, before any
+  number of it; Lead's package-side repair, agreed).** PLUMBING, labelled
+  "field-cut rows": the LIBRARY picks the asked field's clause and the mind
+  copies one value; the uncut row stays the headline ("reads a record").
+  `package_fetch.field_cut` (a54c4f3) re-renders " Result: job: K; f: v." from
+  the fetched row's text when the asked field name appears in the question;
+  a field SYNONYM does not match (the open hole one level down).
+  - Rows: Lead's text-arm tool docs (seed 18000, L = 32,768, 40 docs ×
+    synthetic / natural), `text_fetch` (strict).
+  - Arms: b2p2 COLD on cut rows (the bar), b2p2 cold on uncut rows, T++
+    (tfc1b) cold on the same cut and uncut rows, b2p2 warm + contrast on cut
+    and uncut rows (4090).
+  - Bar MET iff b2p2 cold sentence ≥ 0.80 on cut rows, both key types (T++
+    cold on uncut rows 0.90 is the reference).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
