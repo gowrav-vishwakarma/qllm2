@@ -9,6 +9,11 @@ and the measured numbers behind each line (EXPERIMENTS_V14 has the pre-registrat
 2. **Normalised-word organ** (`PACKAGE_NORM=1`, A4, plumbing): words lower-cased, "a / an / the" dropped, one
    plural "s" stripped; the question's longest suffix word n-gram (6..3), else any-position n-gram (6..3), else a
    bigram holding a word seen ≤ 2 times; read over the WHOLE question (238c62e).
+2b. **Rare-in-English word (A20, `text_fetch(step4=True)`):** a question word seen 1-2 times in the stream and ≤ 3 times
+   in shipped background counts (1.47 MB) is the key in any wording: reworded one-word keys 0.25 → 1.00, never-stored
+   unchanged. Tried before the bigram step, which is where question-frame words cause false hits.
+2c. **Tool rows (A19, labelled "field-cut rows"):** the library cuts a multi-field row to the asked field's clause;
+   the package read then gives 1.00 / 1.00 (uncut 0.75 / 0.675; T++ cold uncut 0.90).
 3. **Strict mode** (`PACKAGE_STRICT=1`): abstain iff both organs miss (a rule, not a similarity threshold:
    A2 showed similarity cannot separate "stored under other words" from "never stored").
 4. Where words differ (lenient): the mind's 2 most-surprising question tokens, matched by max cosine against each
@@ -50,6 +55,7 @@ Code: `v14/package_fetch.py` (`key_fn` for v16/bench.py), `v14/norm_organ.py`.
 |---|---|
 | mind state | 1.15 MB, O(1) in context length |
 | raw text kept for rows | 2 bytes per token (2 MB per 1M tokens) |
+| background word counts (A20) | 1.47 MB, fixed (not per session) |
 | fetch | organ scans at question time (0.02-0.05 s per 32k doc in Python); indexed form = word suffix array ~5.4 MB per 1M tokens |
 | read (default) | no extra prefill (the session state exists); two short O(1) continuations of row + question (~30-60 tokens) + ≤ 16 answer tokens; a second 1.15 MB state during the answer only |
 | refresh | +1.6 % tokens at R = 2,048 |

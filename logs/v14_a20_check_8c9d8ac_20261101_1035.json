@@ -1,0 +1,363 @@
+{
+ "args": {
+  "seed": 37000,
+  "L": 32768,
+  "docs": 40,
+  "out": "/home/gowrav/Development/qllm2/logs/v14_a20_check_8c9d8ac_20261101_1035.json"
+ },
+ "cells": {
+  "kv/synthetic": {
+   "old_hit": 0.3,
+   "old_right": 0.225,
+   "new_hit": 1.0,
+   "new_right": 1.0,
+   "new_step0": 0.1,
+   "n": 40,
+   "new_step4": 0.775,
+   "new_step2": 0.125,
+   "per_wording": {
+    "template": {
+     "n": 4,
+     "right": 4,
+     "hit": 4
+    },
+    "recall": {
+     "n": 5,
+     "right": 5,
+     "hit": 5
+    },
+    "forgot": {
+     "n": 8,
+     "right": 8,
+     "hit": 8
+    },
+    "chat": {
+     "n": 3,
+     "right": 3,
+     "hit": 3
+    },
+    "stand_for": {
+     "n": 7,
+     "right": 7,
+     "hit": 7
+    },
+    "direct": {
+     "n": 5,
+     "right": 5,
+     "hit": 5
+    },
+    "remind": {
+     "n": 4,
+     "right": 4,
+     "hit": 4
+    },
+    "qa": {
+     "n": 4,
+     "right": 4,
+     "hit": 4
+    }
+   }
+  },
+  "kv1/synthetic": {
+   "old_hit": 0.325,
+   "old_right": 0.275,
+   "new_hit": 1.0,
+   "new_right": 1.0,
+   "new_step2": 0.125,
+   "n": 40,
+   "new_step4": 0.75,
+   "new_step0": 0.125,
+   "per_wording": {
+    "direct": {
+     "n": 5,
+     "right": 5,
+     "hit": 5
+    },
+    "chat": {
+     "n": 6,
+     "right": 6,
+     "hit": 6
+    },
+    "recall": {
+     "n": 5,
+     "right": 5,
+     "hit": 5
+    },
+    "remind": {
+     "n": 4,
+     "right": 4,
+     "hit": 4
+    },
+    "qa": {
+     "n": 5,
+     "right": 5,
+     "hit": 5
+    },
+    "template": {
+     "n": 5,
+     "right": 5,
+     "hit": 5
+    },
+    "stand_for": {
+     "n": 5,
+     "right": 5,
+     "hit": 5
+    },
+    "forgot": {
+     "n": 5,
+     "right": 5,
+     "hit": 5
+    }
+   }
+  },
+  "kvupd/synthetic": {
+   "old_hit": 0.3,
+   "old_right": 0.25,
+   "new_hit": 1.0,
+   "new_right": 1.0,
+   "new_step4": 0.75,
+   "n": 40,
+   "new_step0": 0.125,
+   "new_step2": 0.125,
+   "per_wording": {
+    "forgot": {
+     "n": 5,
+     "right": 5,
+     "hit": 5
+    },
+    "stand_for": {
+     "n": 6,
+     "right": 6,
+     "hit": 6
+    },
+    "remind": {
+     "n": 9,
+     "right": 9,
+     "hit": 9
+    },
+    "chat": {
+     "n": 2,
+     "right": 2,
+     "hit": 2
+    },
+    "qa": {
+     "n": 5,
+     "right": 5,
+     "hit": 5
+    },
+    "recall": {
+     "n": 3,
+     "right": 3,
+     "hit": 3
+    },
+    "template": {
+     "n": 5,
+     "right": 5,
+     "hit": 5
+    },
+    "direct": {
+     "n": 5,
+     "right": 5,
+     "hit": 5
+    }
+   }
+  },
+  "neg/synthetic": {
+   "old_hit": 0.0,
+   "old_right": 0.0,
+   "new_hit": 0.0,
+   "new_right": 0.0,
+   "new_stepNone": 1.0,
+   "n": 40,
+   "per_wording": {
+    "template": {
+     "n": 40,
+     "right": 0,
+     "hit": 0
+    }
+   }
+  },
+  "kv/natural": {
+   "old_hit": 0.775,
+   "old_right": 0.75,
+   "new_hit": 0.775,
+   "new_right": 0.75,
+   "new_step3": 0.475,
+   "n": 40,
+   "new_stepNone": 0.225,
+   "new_step2": 0.075,
+   "new_step0": 0.225,
+   "per_wording": {
+    "remind": {
+     "n": 4,
+     "right": 3,
+     "hit": 3
+    },
+    "stand_for": {
+     "n": 2,
+     "right": 1,
+     "hit": 1
+    },
+    "direct": {
+     "n": 3,
+     "right": 3,
+     "hit": 3
+    },
+    "template": {
+     "n": 9,
+     "right": 9,
+     "hit": 9
+    },
+    "forgot": {
+     "n": 6,
+     "right": 5,
+     "hit": 5
+    },
+    "qa": {
+     "n": 7,
+     "right": 5,
+     "hit": 5
+    },
+    "chat": {
+     "n": 5,
+     "right": 2,
+     "hit": 3
+    },
+    "recall": {
+     "n": 4,
+     "right": 2,
+     "hit": 2
+    }
+   }
+  },
+  "kv1/natural": {
+   "old_hit": 0.825,
+   "old_right": 0.825,
+   "new_hit": 0.825,
+   "new_right": 0.825,
+   "new_step3": 0.475,
+   "n": 40,
+   "new_stepNone": 0.175,
+   "new_step0": 0.25,
+   "new_step2": 0.1,
+   "per_wording": {
+    "qa": {
+     "n": 5,
+     "right": 4,
+     "hit": 4
+    },
+    "remind": {
+     "n": 4,
+     "right": 4,
+     "hit": 4
+    },
+    "forgot": {
+     "n": 4,
+     "right": 2,
+     "hit": 2
+    },
+    "recall": {
+     "n": 5,
+     "right": 4,
+     "hit": 4
+    },
+    "stand_for": {
+     "n": 6,
+     "right": 5,
+     "hit": 5
+    },
+    "template": {
+     "n": 10,
+     "right": 10,
+     "hit": 10
+    },
+    "chat": {
+     "n": 2,
+     "right": 0,
+     "hit": 0
+    },
+    "direct": {
+     "n": 4,
+     "right": 4,
+     "hit": 4
+    }
+   }
+  },
+  "kvupd/natural": {
+   "old_hit": 0.725,
+   "old_right": 0.7,
+   "new_hit": 0.725,
+   "new_right": 0.7,
+   "new_stepNone": 0.275,
+   "n": 40,
+   "new_step3": 0.325,
+   "new_step0": 0.2,
+   "new_step2": 0.175,
+   "new_step1": 0.025,
+   "per_wording": {
+    "chat": {
+     "n": 3,
+     "right": 0,
+     "hit": 0
+    },
+    "remind": {
+     "n": 4,
+     "right": 3,
+     "hit": 4
+    },
+    "template": {
+     "n": 8,
+     "right": 8,
+     "hit": 8
+    },
+    "direct": {
+     "n": 7,
+     "right": 7,
+     "hit": 7
+    },
+    "stand_for": {
+     "n": 7,
+     "right": 3,
+     "hit": 3
+    },
+    "qa": {
+     "n": 3,
+     "right": 2,
+     "hit": 2
+    },
+    "forgot": {
+     "n": 4,
+     "right": 3,
+     "hit": 3
+    },
+    "recall": {
+     "n": 4,
+     "right": 2,
+     "hit": 2
+    }
+   }
+  },
+  "neg/natural": {
+   "old_hit": 0.025,
+   "old_right": 0.0,
+   "new_hit": 0.025,
+   "new_right": 0.0,
+   "new_stepNone": 0.975,
+   "n": 40,
+   "new_step1": 0.025,
+   "per_wording": {
+    "template": {
+     "n": 40,
+     "right": 0,
+     "hit": 1
+    }
+   }
+  },
+  "bars": {
+   "syn_kv": true,
+   "neg": true,
+   "nat_kv": true
+  },
+  "verdict": "MET"
+ }
+}

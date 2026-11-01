@@ -3444,7 +3444,11 @@ fitted threshold:
       the library can remove it by text, labelled "field-cut rows"; the
       uncut headline (the mind reading a record) stays b2p2 0.475 / 0.40 vs
       T++ 0.90. Open one level down: a field SYNONYM in the question.
-    - Warm + contrast part: on the 4090 after A18.
+    - **Warm + contrast part (10:36 IST; `logs/v14_a19_fieldcut_warm_fac2750_20261101_1028.jsonl` + .log, 80 docs):** b2p2 warm
+      + contrast on field-cut rows **1.00 / 1.00** (T++ cold on the same cut rows
+      0.825 / 0.85); on UNCUT rows 0.75 / 0.675 (cold 0.475 / 0.40; T++ cold 0.90
+      / 0.90). The package read closes most of the record gap and, with the
+      field cut, passes the transformer's cold read.
 - **A20: a rare-in-English unigram step for reworded questions (PRE-REGISTERED
   2026-11-01 10:32 IST, before any number of it).** Plumbing (closest prior
   work: IDF weighting from a background corpus, BM25's idf, Robertson 1994).
@@ -3462,6 +3466,21 @@ fitted threshold:
   - Bars: synthetic kv right row ≥ 0.90 (today 0.475 hit); neg any-hit ≤ 0.05
     on both key types; natural kv right row not below today's chain − 0.05 on
     the same docs. Reported: per-wording and per-step hits, kv1 / kvupd.
+  - **A20 VERDICT (10:36 IST; code 8c9d8ac; `logs/v14_a20_check_8c9d8ac_20261101_1035.json` + .log): MET.**
+
+    | varied wording, 32k, seed 37000 (40 docs) | old chain: right row | with step 4 | step 4 answered |
+    |---|---|---|---|
+    | kv / kv1 / kvupd synthetic | 0.225 / 0.275 / 0.25 | **1.00 / 1.00 / 1.00** | 31 / 30 / 30 |
+    | kv / kv1 / kvupd natural | 0.75 / 0.825 / 0.70 | same | 0 |
+    | neg synthetic / natural (any hit) | 0.00 / 0.025 | 0.00 / 0.025 | 0 |
+
+    - A rare-in-English word that the stream holds once or twice is the key in
+      any wording; frame words are common English and never qualify.
+      Background counts: 101,252 words, 1.47 MB (JSON; a compact form would be
+      well under 1 MB).
+    - Natural keys of common words stay at 0.70-0.825 with 7-11 / 40 misses:
+      text cannot separate them from the question's frame; that is the mind's
+      salience (F2), Lead's pkgV run.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

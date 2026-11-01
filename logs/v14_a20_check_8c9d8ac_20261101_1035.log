@@ -1,0 +1,9 @@
+kv    synthetic old hit 0.300 right 0.225 | new hit 1.000 right 1.000 | new steps {'0': 4, '4': 31, '2': 5}
+kv1   synthetic old hit 0.325 right 0.275 | new hit 1.000 right 1.000 | new steps {'2': 5, '4': 30, '0': 5}
+kvupd synthetic old hit 0.300 right 0.250 | new hit 1.000 right 1.000 | new steps {'4': 30, '0': 5, '2': 5}
+neg   synthetic old hit 0.000 right 0.000 | new hit 0.000 right 0.000 | new steps {'None': 40}
+kv    natural   old hit 0.775 right 0.750 | new hit 0.775 right 0.750 | new steps {'3': 19, 'None': 9, '2': 3, '0': 9}
+kv1   natural   old hit 0.825 right 0.825 | new hit 0.825 right 0.825 | new steps {'3': 19, 'None': 7, '0': 10, '2': 4}
+kvupd natural   old hit 0.725 right 0.700 | new hit 0.725 right 0.700 | new steps {'None': 11, '3': 13, '0': 8, '2': 7, '1': 1}
+neg   natural   old hit 0.025 right 0.000 | new hit 0.025 right 0.000 | new steps {'None': 39, '1': 1}
+BARS {'syn_kv': True, 'neg': True, 'nat_kv': True} -> MET
