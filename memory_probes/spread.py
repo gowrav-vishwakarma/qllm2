@@ -76,9 +76,12 @@ def filler_tokens(path: str, max_id: int = 50256) -> np.ndarray:
 
 
 def spread_example(example: RuleExample, tokenizer, length: int,
-                   filler: np.ndarray) -> RuleExample | None:
+                   filler: np.ndarray, tail: int = 0) -> RuleExample | None:
     """The example spread to ``length`` tokens (0 = no filler). The task is
-    renamed ``<task>@<length>``. None if ``length`` is too short to fit."""
+    renamed ``<task>@<length>``. None if ``length`` is too short to fit.
+    ``tail`` > 0 adds that many more filler tokens between the last example and
+    the query (task ``<task>@<length>+t<tail>``), so the rule must be carried
+    past any bounded attention window; tail = 0 gives the old prompts exactly."""
     header, units = split_units(example)
     head_ids = tokenizer.encode(header, add_special_tokens=False)
     unit_ids = [tokenizer.encode(u, add_special_tokens=False) for u in units]
@@ -94,20 +97,25 @@ def spread_example(example: RuleExample, tokenizer, length: int,
         rng = np.random.default_rng([example.seed, length, sum(map(ord, example.task))])
         starts = rng.integers(0, len(filler) - per_gap, size=gaps)
         chunks = [sep + filler[s:s + per_gap].tolist() + sep for s in starts]
+    if tail:
+        t0 = int(np.random.default_rng([example.seed, length, tail, 7]).integers(0, len(filler) - tail))
+        tail_ids = filler[t0:t0 + tail].tolist()
+        chunks[-1] = (chunks[-1][:-len(sep)] if chunks[-1] else sep) + tail_ids + sep
     ids = list(head_ids) + list(unit_ids[0])
     for chunk, unit in zip(chunks, unit_ids[1:]):
         ids += chunk + unit
     text_note = f'{header}{units[0]} ...[{gaps} filler blocks]... {units[-1]}' if length else header + ''.join(units)
-    return replace(example, example_id=f'{example.example_id}_L{length}',
-                   task=f'{example.task}@{length}', prompt_ids=ids, prompt_text=text_note)
+    tag = f'{length}+t{tail}' if tail else f'{length}'
+    return replace(example, example_id=f'{example.example_id}_L{tag}',
+                   task=f'{example.task}@{tag}', prompt_ids=ids, prompt_text=text_note)
 
 
 def spread_suite(examples: Sequence[RuleExample], tokenizer, lengths: Sequence[int],
-                 filler: np.ndarray) -> List[RuleExample]:
+                 filler: np.ndarray, tail: int = 0) -> List[RuleExample]:
     out = []
     for ex in examples:
         for L in lengths:
-            s = spread_example(ex, tokenizer, L, filler)
+            s = spread_example(ex, tokenizer, L, filler, tail)
             if s is not None:
                 out.append(s)
     return out

@@ -54,6 +54,8 @@ def main() -> int:
     p.add_argument('--shots', default='2,4,8')
     p.add_argument('--trials', type=int, default=100)
     p.add_argument('--seed', type=int, default=5000)
+    p.add_argument('--spread_tail', type=int, default=0,
+                   help='extra filler tokens between the last spread example and the query (carry the rule past a window)')
     p.add_argument('--spread', default='',
                    help='comma list of prompt lengths (0 = no filler) to spread the examples to')
     p.add_argument('--filler', default='.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt',
@@ -91,7 +93,7 @@ def main() -> int:
     lengths = tuple(int(x) for x in args.spread.split(',') if x.strip())
     if lengths:
         from memory_probes.spread import filler_tokens, spread_suite
-        examples = spread_suite(examples, tokenizer, lengths, filler_tokens(args.filler))
+        examples = spread_suite(examples, tokenizer, lengths, filler_tokens(args.filler), args.spread_tail)
         tasks = tuple(dict.fromkeys(ex.task for ex in examples))
     rows = []
     with torch.no_grad():
@@ -118,7 +120,7 @@ def main() -> int:
         'device': str(device),
         'platform': platform.platform(),
         'parameter_count': sum(x.numel() for x in model.parameters()),
-        'protocol': {'suite': args.suite, 'spread': list(lengths), 'tasks': list(tasks), 'shots': list(shots), 'seeds': [seeds[0], seeds[-1]],
+        'protocol': {'suite': args.suite, 'spread': list(lengths), 'spread_tail': args.spread_tail, 'tasks': list(tasks), 'shots': list(shots), 'seeds': [seeds[0], seeds[-1]],
                      'candidates': 8, 'chance': 0.125},
         'per_task_accuracy': per_task,
         'mean_accuracy': float(np.mean(list(per_task.values()))),
