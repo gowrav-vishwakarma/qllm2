@@ -122,6 +122,19 @@ Each entry gives: the idea (maths), the recipe, the numbers, the verdict and the
   - Unexpected, one seed: s8 D 0.559 → 0.730 and clk2 8k 20-way 0.31 → 0.53, with the decays unchanged. A seed replicate (w1r) is
     proposed.
 
+## 7b. Rule × fetched fact (R × K, the thesis cell)
+
+- **Cell:** pack (B2 header + 8 demos, held-out values) read ONCE; L tokens of prose; a fetched row " Record: K | x: v."; then the
+  question. Explicit = the planner substitutes v ("v ->"); implicit = "K ->".
+- **Numbers** (free; b2p2 / cu2a 102.9M vs T++ b2t2 101.9M, 600M tokens; `99d2951`):
+  - explicit 2k + contrast: 0.61 / 0.62 (20-way 0.90–0.94); bar 0.70 missed;
+  - 8k + echo dilation s = 8 + contrast: 0.45 / 0.49; bar 0.40 met;
+  - floor ~0; ceiling 0.83–0.92; T++ 0.01 (2k) / 0.07 (8k), ceiling 0.30;
+  - implicit ≤ 0.07 for every model.
+- **Lesson:** the mind applies a held rule to a fact the planner hands it, far past the trained length. It does NOT compose
+  key → row → rule, so the planner substitutes. A record format learned in training can capture a held rule at document start
+  (cu2a 1.00 → 0.02).
+
 ## 8. Budgets and data hygiene
 
 - **Orphaned answers:** the packer cuts docs at window edges, so an answer whose doc began in an earlier window has no evidence.

@@ -5246,3 +5246,75 @@ tool read is also reported.
 - **Replicates if:** w128 − w0 ≥ +0.08 on s8 D (scored), AND ≥ +0.10 on clk2 8k 20-way, AND holdout w128 ≤ w0 + 0.02.
 - **Pooled report:** the mean over seeds 43 + 44.
 - **If it fails:** W1's code (`WindowRead`, `--swa_layers`, the SWA env) is removed and the index row names its last commit.
+
+## rxk VERDICT (14:16 IST, 2026-11-01): FAIL as pre-registered. Bar 1 is missed on both minds (explicit + contrast at 2k, free 0.61 / 0.62 vs 0.70); bar 2 is MET on both (explicit + echo dilation s = 8 + contrast at 8k, free 0.45 / 0.49 vs 0.40). A rule read once, held only in the state, is applied to a fetched fact 4× past the trained length (floor 0.00–0.02; T++ as it is 0.01–0.07)
+
+**Setup:**
+- 100 docs per L: affine_map_new + shift_wide_new × seeds 8800–8849. CPU, `99d2951`.
+- Models: b2p2 (102.9M) and cu2a (102.9M), both 600M tokens; T++ b2t2 (101.9M), same data, as it is.
+- Logs: `logs/diag/v13_sempty_rxk_{b2p2,cu2a,b2t2}_99d2951.jsonl`.
+
+| cell, free / 20-way | b2p2 | cu2a | T++ b2t2 |
+|---|---|---|---|
+| explicit, L = 0, plain | 0.92 / 0.99 | 0.00 / 0.05 (see below) | 0.25 / 0.40 |
+| explicit, 2k, plain | 0.55 / 0.77 | 0.48 / 0.76 | **0.01** / 0.02 (registered) |
+| **explicit, 2k, contrast a = 4 (bar ≥ 0.70)** | **0.61** / 0.94 | **0.62** / 0.90 | 0.02 / 0.07 |
+| explicit, 2k, adaptive a | 0.56 / 0.88 | 0.58 / 0.84 | 0.00 / 0.02 |
+| explicit, 4k: plain / contrast / dilation + contrast | 0.16 / 0.42 / 0.53 | 0.18 / 0.46 / 0.67 | 0.00 (plain) |
+| explicit, 8k: plain / contrast | 0.01 / 0.02 | 0.00 / 0.02 | **0.07** / 0.25 (plain, registered) |
+| **explicit, 8k, dilation s = 8 + contrast (bar ≥ 0.40)** | **0.45** / 0.71 | **0.49** / 0.84 | – |
+| CEILING (pack re-inserted at the query), 2k / 8k | 0.92 / 0.92 | 0.87 / 0.83 | 0.30 / 0.02 |
+| FLOOR (no pack), any L | 0.00–0.01 | 0.00–0.02 | 0.00 |
+| implicit ("K ->"), best decode at any L, incl. the ceiling | ≤ 0.04 | ≤ 0.05 | ≤ 0.07 |
+
+Notes on the table:
+- The T++ registered numbers are plain only. Its contrast / adaptive values were computed but not registered.
+- T++ has no echo memory, so dilation does not apply to it.
+
+**Post-hoc control** (not a bar cell; `v13_sempty/tmp/rxk_nl.py`, `logs/diag/v13_sempty_rxk_nl_*_99d2951.jsonl`): at L = 0 and in
+the ceiling, the probe glued the row onto the last demo line (no newline). In the bar cells, the "\n\n" separator precedes the row.
+
+| L = 0, free / 20-way | b2p2 | cu2a | T++ |
+|---|---|---|---|
+| pack + question (no row) | 1.00 / 1.00 | 1.00 / 1.00 | 0.69 / 0.79 |
+| pack + "\n" + row + question | 0.91 / 0.99 | 0.02 / 0.09 | 0.17 / 0.29 |
+| ceiling at 2k with the newline | 0.92 / 0.98 | 0.87 / 1.00 | 0.26 / 0.39 |
+
+The newline changes nothing, so the glue is not the cause.
+
+Generations (greedy; prompt tail `…27 -> 94 Record: lagtud | x: 7.\n\n7 ->`, gold ` 34`, affine doc 8800):
+- b2p2 at L = 0: ` 34`.
+- cu2a at L = 0: ` 32` (and on shift doc 8800, `j -> j`, copying the row's value).
+- cu2a at 2k: ` 34`.
+
+**Reading:**
+- **The composition works when the package substitutes the value.**
+  - The rule lives only in the state: the floor is ~0.
+  - With the clock tools, it is applied to the fetched value 4× past the trained length (8k: 0.45 / 0.49, about half the ceiling).
+  - At 2k, the contrast lifts the 20-way score to 0.90–0.94 but free only to 0.61–0.62: the rule ranks first among the candidates,
+    but loses free generation to other tokens.
+  - Dilation + contrast beats contrast alone already at 4k (0.53 / 0.67 vs 0.42 / 0.46). At 2k, dilation was not registered.
+- **Implicit composition fails for EVERY model, even with the pack in view:** no one takes v from the row when asked by key. The
+  planner must substitute the value (amendment 2's assumption, now measured). Stated limit at 103M.
+- **A fetched row between the rule and the query:**
+  - barely disturbs b2p2 (1.00 → 0.91);
+  - wrecks T++ (0.69 → 0.17);
+  - hijacks cu2a at the start of a document: its fld training reads a record row there as "copy the field". After 2k of text, cu2a
+    is fine (ceiling 0.87). A curriculum's format can capture a rule.
+- **Versus T++ at equal params and data, as it is:**
+  - 2k, inside T++'s window: PAM 0.55 plain / 0.61 contrast vs T++ 0.01;
+  - 8k: PAM 0.45–0.49 (with the query-time tools) vs T++ 0.07;
+  - even with the pack re-inserted, T++ reaches only 0.30.
+  - This mirrors s8 (T++ D 0.134). Mamba-2 was not run on this cell.
+- **Prefix note** (amendment 2): a reader conditioned on one prefix vector would likely drop the rule (Library's SR-0). Here the mind
+  reads itself (warm + contrast). A reader organ, if ever built, is for records and formats, not for applying held rules.
+
+**Consequence:**
+- Not a Win as registered, because the 2k bar is missed.
+- The 8k half shows the package claim (one read, applied far past the trained length) when the planner substitutes the value.
+- Package rules:
+  - explicit substitution is REQUIRED;
+  - keep the 2k refresh + contrast default (A16);
+  - for one read to 8k, dilation s = 8 + contrast.
+- Mind side: free generation at 2k loses a rule that ranks first among the candidates. That is an expression gap, cu3's business
+  (the answer format), not memory.

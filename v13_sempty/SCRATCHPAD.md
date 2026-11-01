@@ -33,8 +33,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
       - Unexpected, one seed: s8 +0.17 and clk2 8k 20-way +0.22, with the decays unchanged.
       - w1r (seed 44 replicate) is pre-registered and PROPOSED to Lead. The 4090 is free.
       - Logs were copied into the main checkout and committed.
-  - **rxk** on local CPU (`logs/diag/v13_sempty_rxk_{b2p2,cu2a,b2t2}_99d2951.jsonl`). Slower than estimated: ~155/400 rows
-    per model at 11:50, done ~14:00 IST. Waiter prints the summary at 1200 rows.
+  - **rxk DONE (14:16 IST VERDICT): FAIL as registered.**
+    - 2k + contrast 0.61 / 0.62 (< 0.70); 8k + dilation + contrast 0.45 / 0.49 (≥ 0.40 met).
+    - Floor ~0; T++ 0.01 / 0.07; implicit ≤ 0.07 for every model, so the planner must substitute values.
+    - EUREKA.md entry written; Lead and Library told.
 
   **Verdicts since 06:12:**
   - cu2a: trained formats MET, transfer FAIL;
@@ -46,7 +48,6 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   decision (with w1s + A19). The controller unit comes after R × K.
 
   **Next for Mind:**
-  - rxk verdict;
   - w1r verdict (tmux `w1r` on the 4090 since 13:04 IST; `bash v13_sempty/tmp/w1r_chain.sh` in `../qllm_w1s`; ~15:00 IST);
   - bud verdict;
   - then cu3 design:

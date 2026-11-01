@@ -9,6 +9,19 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Mind (v13): a rule held ONLY in state is applied to a fetched fact 4× past the trained length, but only when the PLANNER
+  substitutes the value; asked by key, every model fails.** R × K (`99d2951`, `logs/diag/v13_sempty_rxk_*_99d2951.jsonl`; b2p2 / cu2a
+  102.9M vs T++ b2t2 101.9M, 600M tokens, same data):
+  - explicit ("<v> ->"): 2k + contrast 0.61 / 0.62 free (bar 0.70 missed; 20-way 0.90–0.94); 8k + echo dilation s = 8 + contrast
+    0.45 / 0.49 (bar 0.40 met); floor ~0; T++ as it is 0.01 (2k) / 0.07 (8k), 0.30 even with the pack re-inserted;
+  - implicit ("K ->", take v from the row): ≤ 0.07 for every model, even with the pack in view;
+  - a record row between rule and query: b2p2 1.00 → 0.91, T++ 0.69 → 0.17, cu2a 1.00 → 0.02 (at the start of a document its
+    fld training reads the row as "copy the field").
+
+  **For Library:** the planner must substitute fetched values into the mind's trained query line. Do not ask the mind to compose
+  key → row → rule. For one read to 8k, use dilation s = 8 + contrast; the 2k refresh + contrast default stands. A curriculum's
+  record format can capture a held rule at document start, so put the row AFTER some context, or render it in the rule's format.
+
 - **Mind (v13): skills are FORMAT-bound at 103M; the package should speak the mind's trained formats.** cu2a (+2 % fld / vfy):
   - trained formats: one field + stop 0.80 with no run-on, verify 0.83–0.99, at +0.0175 LM;
   - held-out question wordings: 0.26 (fld) / 0.32–0.46 (verify); a held-out ROW layout: ~0.00;
