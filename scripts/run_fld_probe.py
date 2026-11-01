@@ -11,6 +11,7 @@ Cells (one JSON line per item):
   vfy      ONE row right before the question: the key's own row (-> value), another key's row or a
            prose sentence (-> " unknown.")
   fld_doc  the row read once at t0, L tokens of held-out filler, then the question (-> " <value>.")
+Each cell runs with the held-out question formats ('qset': 'out', transfer) and the trained ones ('in').
 Scoring: greedy decode (whole vocabulary) up to 16 tokens; the text up to the first "." or newline.
   exact  = it equals the expected answer and the "." follows (the stop);
   runon  = it starts with the expected value but runs on without the stop;
@@ -79,16 +80,20 @@ def main():
     def key(rng, nat):
         return natural_key(rng, tok, filler, 0, 0) if nat else D._recall_key(rng)
 
+    qset_now = ['out']
+
     def write(cell, rng_tag, nat, extra, ids, want, t0):
         gen = decode(body, tok, ids)
-        out.write(json.dumps({'arch': body.arch, 'ckpt': str(a.checkpoint), 'cell': cell, 'keys': 'natural' if nat else 'synthetic',
+        out.write(json.dumps({'arch': body.arch, 'ckpt': str(a.checkpoint), 'cell': cell, 'keys': 'natural' if nat else 'synthetic', 'qset': qset_now[0],
                               **extra, 'want': want, 'gen': gen, 'judge': judge(gen, want),
                               'contains': int(want[1:-1] in gen.split('\n')[0]), 'sec': round(time.time() - t0, 2)}) + '\n')
 
     for d in range(a.docs):
-        for nat in (True, False):
-            rng = random.Random(a.seed * 1000 + d * 2 + nat)
-            q = rng.choice(D._FLD_QS_PROBE)
+        for nat, qset in ((True, 'out'), (False, 'out'), (True, 'in'), (False, 'in')):
+            # qset 'out' = the held-out question formats (transfer); 'in' = the trained ones (skill, still held-out
+            # values and keys). The 'out' streams keep their earlier seeds, so those rows are unchanged.
+            rng = random.Random(a.seed * 1000 + d * 2 + nat + (0 if qset == 'out' else 7_000_000))
+            q = rng.choice(D._FLD_QS_PROBE if qset == 'out' else D._FLD_QS); qset_now[0] = qset
             for heldfmt in (False, True):
                 for nrows in (1, 3):
                     t0 = time.time()
@@ -121,7 +126,7 @@ def main():
                     row = ' ' + rng.choice(PROSE); f = rng.choice(D._FLD_FIELDS); want = ' unknown.'
                 write('vfy', None, nat, {'doc': d, 'kind': kind}, enc(row + q.format(f=f, k=k)), want, t0)
             # fld_doc: one read at t0, L filler, question (natural keys only)
-            if nat and a.doc_L:
+            if nat and a.doc_L and qset == 'out':
                 t0 = time.time(); k = key(rng, nat); row, fv = D._fld_row(rng, k, 3, held=True); f, v = rng.choice(fv)
                 ids = enc(row) + sep + filler_block(np.asarray(filler), a.doc_L, a.seed * 1000 + d, a.doc_L) + sep + enc(q.format(f=f, k=k).lstrip())
                 write('fld_doc', None, nat, {'doc': d, 'L': a.doc_L}, ids, f' {v}.', t0)
