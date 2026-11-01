@@ -5650,3 +5650,66 @@ the 220M point is w1s / w1r (s8 D W128 0.787, W0 0.541).
   pre-registered failure lesson: lower weights don't teach.
 - So r3p' and any tier carry FEWER synthetic tokens at full weight, not lighter weights.
 - **Per-body slope:** PAM 16nb only (one tier). bud0 vs r3c at 3B: 3.5132 → 3.2191 holdout with the same mix (r3c's).
+
+## t15: the MATCHED 1.5B-token tier, three bodies on the 600M tier's mix (pre-registration, 2026-11-01 17:32 IST; Lead's decision, the user handed Lead the call)
+
+**Why** (the user, 16:40 IST): "if we train on more data will it improve, which version improves more; keep an eye on this."
+- The 3B tier has no rule docs: at L = 0 all three 3B bodies are at chance on B2 (scored 0.055–0.09, chance 0.125). It gives no
+  rules point.
+- So this tier keeps the 600M tier's mix EXACTLY and changes ONLY tokens. Each body's slope 600M → 1.5B is then clean.
+- The bar order is the user's: intelligence first (rules at distance, reach), then the infrastructure saving.
+
+**Prior work:** matched-data SSM vs Transformer comparisons (Mamba-2, Dao & Gu 2024; Waleffe et al. 2024, "An Empirical Study of
+Mamba-based Language Models"). This tier is a measurement; claims only by the bars.
+
+**Recipe, all arms:**
+- dclm / fineweb / smoltalk2_mid / recall / b2 = 0.43 / 0.40 / 0.10 / 0.04 / 0.03; answers ×100; ANSWER_IN_WINDOW off; seed 43;
+- LR 1.2e-3 cosine, warmup 100; batch 18 × 2048;
+- stage B 1,380,003,840 tokens (37,435 steps) + each body's own 120M stage A = **1.50B tokens**;
+- val every 4,883 steps; save every 200; 6000; chain `v13_sempty/tmp/t15_chain.sh`.
+
+**Arms:**
+- **t15tpp:** T++ (101.9M), from `tfc1a_pre_b788731`, as b2t2.
+- **t15mamba:** Mamba-2 (102.6M), from `b2ma_pre_38e3c29`, as b2m2.
+- **t15pam:** PAM 16nb + echo (103.2M, r3c's body), from `r3ca_pre_38e3c29`, GRAD_ACCUM 2. It runs LAST, with W128 only by the
+  decision rule below.
+
+**Bars:**
+- **Rules at distance:** s8 D (2k / 4k, scored, 400 trials) of t15pam ≥ max(t15tpp, t15mamba) + 0.10. s8 at 4k is also reported
+  alone.
+- **LM:** holdout of t15pam ≤ t15mamba + 0.02.
+- **Reported:**
+  - one-read reach (skill pack 0–8k plain + contrast; clk2 8k);
+  - t40 + PG-19;
+  - the text-arm tool read;
+  - kb1 (run on the 4090);
+  - BABILong-package (Lead's runner);
+  - **the per-body slope 600M → 1.5B for every readout.**
+
+**Decision rule for t15pam's body** (Lead):
+- w1m (M2, 4090) AND w1n (16nb, below) both pass → 16nb + W128;
+- only w1m passes → 16nb plain (W noted as an M2 finding);
+- neither → 16nb plain.
+
+Mind writes `checkpoints_v13_sempty/t15_pam_body.txt` after both verdicts; the chain waits for it.
+
+**Consequence:** r3p' (3B) waits for this tier's verdict. Budget rule (bud): carry FEWER synthetic tokens at full weight, not lighter
+weights.
+
+## w1n: W1 (W = 128) on the 16nb body at 600M, on the tier's mix (pre-registration, 2026-11-01 17:32 IST; Lead GO)
+
+**Why:** W128 was found and tested only on the M2 body. The tier's PAM body is 16nb (windows in blocks 5 / 9 / 13 sit beside
+notebooks, not in place of reads). The plain arm is also PAM's 16nb 600M point on the tier's mix, for the clean slope.
+
+**Arms** (6000, the t15 mix above, `r3ca_pre_38e3c29`, stage B 480,006,144 tokens = the 600M tier, seed 43, GRAD_ACCUM 2):
+- **w1n_n0:** 16nb + echo;
+- **w1n_n128:** + SWA_LAYERS=5,9,13, SWA_WINDOW=128 (+4.15M).
+
+**Bars** (n128 vs n0):
+- s8 D ≥ n0 + 0.08;
+- clk2 8k 20-way ≥ n0;
+- t40 far needles (position 0, contexts 4096 + 8192) ≥ n0 − 0.05;
+- holdout ≤ n0 + 0.01.
+
+**Reported:** s8 at 4k; skill pack 0–8k; the tool read; near needles; the per-body slope (w1s / w1r 220M → 600M).
+**Prior work:** Griffin / Samba; no mechanism claim.
