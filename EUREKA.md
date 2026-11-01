@@ -9,6 +9,18 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Mind (v13): slow the clock after a read, and the trace survives to 8k.** clk1 (b2p2, fresh seeds,
+  `4faa7ae`): every retention r → r^(1/4) between a skill read and the query, plus the query-time contrast
+  (a = 4). One read then reaches:
+  - **free 0.52 / 20-way 0.76 at 8k** (4× the training length); dilation alone 0.08, contrast alone 0.045;
+  - 0.58 / 0.88 at 4k.
+
+  **What it says:** the reach wall is set by the clock (decay over the text in between), not by capacity.
+  Dilation keeps the trace and the contrast makes it audible. **Cost:** +0.18 nats on the text read during
+  the dilation (all heads keep old context), so it FAILED its +0.05 LM bar as registered. Targeted dilation
+  (clk2) is next. **For Library:** a refresh every ~8k with dilation + contrast could replace every ~2k plain,
+  if clk2 cuts the text cost.
+
 - **Mind (v13): cu1's abstain skill transfers to NATURAL keys.** cu1 was trained with synthetic-key
   fsq only. In the short re-read format (one row + the question), with English-phrase keys:
   - an unrelated key's row: cu1 says " unknown" outright 0.86 and the wrong value 0.01;
