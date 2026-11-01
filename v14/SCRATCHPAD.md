@@ -23,6 +23,23 @@ natqneg; scorer in my scratch dir, bars in EXPERIMENTS_V14 "A13"). Then the
 * **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
   tmux first.
 
+## Step back (2026-11-01 06:01 IST, after A13: surprise picks the key)
+
+* **Surprise:** the mind's own surprise, an untrained by-product of reading,
+  picked the key words of a question, and its frozen states (no head) beat a
+  trained sentence encoder on synonyms (0.575 vs 0.35). My trained head was
+  never the point; WHICH query tokens to look with was.
+* **What it says:** the mind already holds two things the library needs, a
+  salience signal (surprise) and a semantic address (its block-8 states).
+  The library's job is to ask with the right tokens and to read with the
+  prior subtracted. Reading five rows at once hurt (0.275): the mind reads
+  one piece of evidence at a time, so re-rank BEFORE the read, not inside it.
+* **Angles:** (1) re-rank the top-5 by surprise-keyed max-sim at block 8 plus
+  the organ, then read the top-1 only; (2) drop frame tokens from the 2
+  salient picks by the same surprise rule applied to the template's own
+  repeats (a frame word recurs across questions, a key does not); (3) the
+  surprise keys could feed the text organs too (A12's frame problem).
+
 ## Step back (2026-11-01 05:15 IST, after A11 / A12)
 
 * **Surprise:** a question-time key check (A11) found almost nothing to read

@@ -11,7 +11,9 @@ and the measured numbers behind each line (EXPERIMENTS_V14 has the pre-registrat
    bigram holding a word seen ≤ 2 times; read over the WHOLE question (238c62e).
 3. **Strict mode** (`PACKAGE_STRICT=1`): abstain iff both organs miss (a rule, not a similarity threshold:
    A2 showed similarity cannot separate "stored under other words" from "never stored").
-4. Lenient only: the learned key (L1 head on the mind's block-8 state, shipped mean) ranks burst rows.
+4. Where words differ (lenient): the mind's 2 most-surprising question tokens, matched by max cosine against each
+   sentence's tokens in its frozen block-8 states (A13: synonyms top-1 0.575, natural questions 0.775; a trained
+   sentence encoder 0.35 / 0.55 on the same docs). The L1 head is superseded here.
 
 Code: `v14/package_fetch.py` (`key_fn` for v16/bench.py), `v14/norm_organ.py`.
 
@@ -64,8 +66,9 @@ Code: `v14/package_fetch.py` (`key_fn` for v16/bench.py), `v14/norm_organ.py`.
 
 ## 7. Known limits (open)
 
-- **Synonyms** (stored under other words): the learned key's top-1 is 0.40 (MiniLM-L6 0.45, BM25 0.075), and
-  strict mode abstains on all of them (A5). Planned: organ miss → learned key → the mind says the value or
-  " unknown" (cu1 / cu2 verify skill; A10).
+- **Synonyms / natural questions** (words differ): fetch by surprise-chosen keys (A13), read warm + contrast:
+  synonyms 0.55, natural questions 0.475 (ceiling 0.625), lenient. Abstain there is NOT solved by fetch scores
+  (AUROC 0.66-0.77) or a key-swap check (A11: 0.70 on b2p2); it needs the trained VERIFY skill (cu1: wrong value
+  on 3 % of wrong rows; cu2).
 - **Writing on multi-field rows** (tool 0.575 natural) and **plain-question comprehension** (natq oracle
   20-way 0.45-0.55): the mind's side (Mind's cu2).
