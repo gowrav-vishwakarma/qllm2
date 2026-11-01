@@ -5531,3 +5531,14 @@ are context, never a claim. No 128k+ length claims from this suite.
   - w1s / w1r W0 and W128 (seeds 43 / 44, 220M tokens);
   - w1w W512 / W1024 (seed 43).
 - Tokens beside every row: 220M (100M-stage arms) / 600M / 3B / SmolLM2 2T / Pythia 300B / GPT-2 WebText (~10B).
+
+**kb1 layout (the user, 16:30 IST via Lead; before any number):**
+- Comparisons go by TOKENS TRAINED ON, not parameter count alone. The benchmark runs are diagnostics for what to improve.
+- Blocks:
+  - the 600M tier (b2p2, cu2a, b2t2, b2m2);
+  - the 3B tier (r3c, e072a8f, b36e3a5);
+  - the 220M window arms;
+  - a separate REFERENCE block (SmolLM2-135M 2T, Pythia-160M 300B, GPT-2 ~10B), labelled "reference, different data and tokens,
+    no claim".
+- Tokens and data beside every row. Claims and deltas only within a block. The same layout for the write-up
+  (`v13_sempty/tmp/kb1_table.py`).
