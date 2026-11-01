@@ -38,9 +38,18 @@ from v14.a6_reread import CKPT as B2P2, Mind  # noqa: E402
 from v14.a13_manykey import capture, maxsim_scores, sentence_rows  # noqa: E402
 from v14.package_fetch import field_cut, row_value, text_fetch  # noqa: E402
 
-STOP_TOKENS = (13, 198)                       # "." and newline
-STATE_BYTES = {'b2p2': 1154832}
-CONTENT_BG = 3000                            # fetch_rows: a question word is CONTENT if seen <= 3,000 times in 4.2M background words               # the mind's fixed state, fp32 at decode (M2 body)
+CONTENT_BG = 3000                            # fetch_rows: a question word is CONTENT if seen <= 3,000 times in 4.2M background words
+
+
+def _nbytes(st) -> int:
+    """bytes held by a mind state (any nesting of lists / tuples / dicts of tensors), measured, not a per-body constant."""
+    if torch.is_tensor(st):
+        return st.numel() * st.element_size()
+    if isinstance(st, dict):
+        return sum(_nbytes(v) for v in st.values())
+    if isinstance(st, (list, tuple)):
+        return sum(_nbytes(v) for v in st)
+    return 0
 
 
 class Package:
@@ -90,7 +99,7 @@ class Package:
             hook.remove()
         off = len(ids)
         V = torch.cat(caps).float(); mu = V.mean(0)
-        state_bytes = sum(t.numel() * t.element_size() for x in st for t in (x if isinstance(x, (list, tuple)) else [x]) if torch.is_tensor(t))
+        state_bytes = _nbytes(st)
         self._session = dict(key=key, text=session_text if isinstance(session_text, str) else None, ids=ids, state=st, state_bytes=state_bytes,
                              off=off, last_lp=prev, rows=sentence_rows(ids, len(ids)), V=V.half(), mu=mu,
                              surp=torch.cat(surp))
@@ -157,7 +166,7 @@ class Package:
                 break
             la, sa, oa = self.mind.feed([t], sa, oa); lb, sb, ob = self.mind.feed([t], sb, ob)
         info.update(abstain=0, query_text=self.tok.decode(q), first_token=out[0],
-                    bytes_held=dict(mind_state=STATE_BYTES['b2p2'], no_pack_twin_state=STATE_BYTES['b2p2'], library_text=2 * len(S), note='b2p2 state size'))
+                    bytes_held=dict(mind_state=_nbytes(stS), no_pack_twin_state=_nbytes(stT), library_text=2 * len(S)))
         return self.tok.decode(out), info
 
     @torch.no_grad()
