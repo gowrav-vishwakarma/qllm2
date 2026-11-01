@@ -5271,6 +5271,33 @@ Notes on the table:
 - The T++ registered numbers are plain only. Its contrast / adaptive values were computed but not registered.
 - T++ has no echo memory, so dilation does not apply to it.
 
+**Mamba-2 rows** (14:53 IST, Lead's request: both baselines; `qllm311` venv with `mamba_ssm` 2.2.5, 4090;
+`logs/diag/v13_sempty_rxk_{b2m2,mbs2b}_9d7ac4c.jsonl`). The probe code is identical to `99d2951`; the only diff is v7/data.py's
+training-only ANSWER_W_SRC. Same docs and cells; plain is the registered decode for baselines. Free / 20-way:
+
+| cell | **b2m2** (Mamba-2, b2 mix: same data as b2p2 / b2t2; 102.6M) | mbs2b (Mamba-2, aptitude recipe: no b2 docs) |
+|---|---|---|
+| explicit, L = 0 | 0.42 / 0.44 | 0.00 / 0.04 |
+| explicit, 2k, plain | **0.03** / 0.13 (contrast 0.09 / 0.27) | 0.00 / 0.04 |
+| explicit, 4k, plain | 0.01 / 0.03 | 0.00 / 0.02 |
+| explicit, 8k, plain | **0.00** / 0.04 (contrast 0.00) | 0.00 / 0.03 |
+| ceiling, 2k / 8k | 0.44 / 0.43 | 0.00 / 0.00 |
+| floor, 2k / 8k | 0.00 / 0.00 | 0.00 / 0.00 |
+
+mbs2b never trained on B2 rule docs: it is 0.00 even with the pack adjacent, so its row says nothing about memory. b2m2 is the
+matched baseline.
+
+**Separation row, at equal params and data** (600M tokens; b2p2 / cu2a 102.9M, b2t2 101.9M, b2m2 102.6M):
+
+| model, explicit, free | 2k | 8k |
+|---|---|---|
+| PAM b2p2 / cu2a, plain | 0.55 / 0.48 | – |
+| PAM b2p2 / cu2a, with query-time tools (2k contrast; 8k echo dilation + contrast) | 0.61 / 0.62 | 0.45 / 0.49 |
+| T++, plain (as it is) | 0.01 | 0.07 |
+| Mamba-2, plain (as it is) | 0.03 | 0.00 |
+
+With the contrast, the baselines reach T++ 0.02 / 0.04 and Mamba-2 0.09 / 0.00. Dilation is PAM-specific.
+
 **Post-hoc control** (not a bar cell; `v13_sempty/tmp/rxk_nl.py`, `logs/diag/v13_sempty_rxk_nl_*_99d2951.jsonl`): at L = 0 and in
 the ceiling, the probe glued the row onto the last demo line (no newline). In the bar cells, the "\n\n" separator precedes the row.
 
