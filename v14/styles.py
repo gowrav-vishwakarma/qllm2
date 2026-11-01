@@ -64,8 +64,5 @@ def _check():
     return len(STATEMENTS), len(QUESTIONS), len(FIELD_QUESTIONS), len(SYN_PAIRS)
 
 
-if __name__ == '__main__':
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+if __name__ == '__main__':          # run as a module from the repo root: python -m v14.styles
     print('statements, questions, field questions, synonym pairs:', _check())
