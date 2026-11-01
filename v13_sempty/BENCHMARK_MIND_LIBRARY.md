@@ -274,3 +274,19 @@ template, so the format-bound part of recall had not been measured.
   Library.
 - **Gate:** none in v1. A bar is set by a dated amendment once the first rows exist and before
   any claim uses them.
+
+**A9 (2026-11-01 09:52 IST; user via Lead: "when we test, test like normal, not toy: recall must also be asked with its
+synonyms and in different styles; then only it is alike real intelligence"). Lead's note calls this A8; A8 is the
+natq cell, so this is A9.**
+- **Headline = the NATURAL variant of every cell:** a synonym of the stored key, and a question wording sampled from a
+  style pool (direct, indirect, chat style, a prose-stated fact). The trained template is reported SECONDARY.
+- **Same variants for every body:** T++ and Mamba-2 (as they are, and the "+ library" diagnostic arm), and the PAM minds.
+- **Per row, the fetch path that answered** (organ / mind address / none) is recorded, so a natural-cell score can be
+  attributed to the library or to the mind.
+- **Written expectation (before any number):** natural scores fall well below template scores for EVERY body. That
+  gap is the headline measure of what remains. The mind's evidence so far: cu2a trained formats 0.80–0.99 vs held-out
+  wordings 0.26–0.46 (EXPERIMENTS "cu2a result").
+- **Training side:** curricula (cu3) count the held-out-wording / held-out-format cell as their headline, not the
+  trained one.
+- Bars: R1 / R6 / R7 values unchanged, applied to the natural variant from A9 on. Earlier rows read "template only"
+  until re-run with the natural variants (harness: Lead, `--qstyle varied` + synonym keys).
