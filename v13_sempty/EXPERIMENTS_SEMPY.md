@@ -5291,8 +5291,8 @@ Generations (greedy; prompt tail `…27 -> 94 Record: lagtud | x: 7.\n\n7 ->`, g
 - **The composition works when the package substitutes the value.**
   - The rule lives only in the state: the floor is ~0.
   - With the clock tools, it is applied to the fetched value 4× past the trained length (8k: 0.45 / 0.49, about half the ceiling).
-  - At 2k, the contrast lifts the 20-way score to 0.90–0.94 but free only to 0.61–0.62: the rule ranks first among the candidates,
-    but loses free generation to other tokens.
+  - At 2k, the contrast lifts the 20-way score to 0.90–0.94 but free only to 0.61–0.62. The misses are classified below (b2p2): the
+    20-way score overstates fidelity, because its candidate set leaves out the confusable values.
   - Dilation + contrast beats contrast alone already at 4k (0.53 / 0.67 vs 0.42 / 0.46). At 2k, dilation was not registered.
 - **Implicit composition fails for EVERY model, even with the pack in view:** no one takes v from the row when asked by key. The
   planner must substitute the value (amendment 2's assumption, now measured). Stated limit at 103M.
@@ -5316,5 +5316,15 @@ Generations (greedy; prompt tail `…27 -> 94 Record: lagtud | x: 7.\n\n7 ->`, g
   - explicit substitution is REQUIRED;
   - keep the 2k refresh + contrast default (A16);
   - for one read to 8k, dilation s = 8 + contrast.
-- Mind side: free generation at 2k loses a rule that ranks first among the candidates. That is an expression gap, cu3's business
-  (the answer format), not memory.
+- **Mind side** (diagnostic, b2p2, the same 2k explicit cell; `v13_sempty/tmp/rxk_miss.py`): free misses are almost never the wrong
+  TYPE.
+
+| 2k, b2p2 (of 50 per task) | right | right type, not a candidate | copies the fetched v | wrong candidate |
+|---|---|---|---|---|
+| affine, plain / contrast | 38 / 32 | 11 / 18 | 0 / 0 | 1 / 0 |
+| shift, plain / contrast | 17 / 29 | 19 / 18 | 12 / 2 | 2 / 1 |
+
+  - The contrast removes the COPY failure (shift 12 → 2): v is in both streams, so it cancels. It also costs some affine docs.
+  - What is left is the rule applied imprecisely (e.g. gold ` 34`, wrote ` 22` / ` 82`). That is memory fidelity at 2k, not answer
+    format, so a type mask in the package would not help.
+  - (Corrected 14:20 IST: I first wrote "an expression gap, cu3's business".)

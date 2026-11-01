@@ -18,6 +18,21 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 14:21 IST: STEP BACK after R × K.**
+  - *What surprised:*
+    - A fetched record between a rule and its query barely moves the state-held rule (b2p2 1.00 → 0.91), but wrecks T++'s
+      in-context rule (0.69 → 0.17). Interleaved retrieved content distracts attention; the state keeps the instruction.
+    - That is the real-world RAG pattern (instructions, then retrieved passages, then the question), and a benchmark cell MLB-1 lacks.
+    - *Bold angle:* "instruction persistence under retrieval" as an MLB-1 cell, with natural variants (A9: the rule as a written
+      instruction, passages as real docs). Closest prior work: Lost in the Middle (Liu et al. 2023), distractor robustness in RAG.
+      What differs: the rule is held in O(1) state and the passages arrive after it.
+  - *What it really says:*
+    - The 2k misses are wrong values of the right type: the trace is FUZZY, not absent.
+    - Contrast cancels the copy pull of the fetched value.
+    - If w1r replicates W1's s8 gain, the window may be sharpening rule fidelity, which would be the link to test.
+  - *Hazard for cu3:* a training format acts as an attractor at document start (cu2a reads any record as "copy the field"). cu3
+    needs records in many positions, with OTHER skills asked of them, as counter-examples.
+
 * **2026-11-01 10:53 IST: HANDOVER STATE.**
   **Running:**
   - **bud** on the 6000 (tmux `bud`, `~/Development/qllm_bud` @ `e96588b`): bud0 + bud1 side by side, then bud2, then
