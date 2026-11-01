@@ -435,6 +435,12 @@ def test_text_fetch():
             assert step is None or info['step'] == step
     print("  text_fetch: exact (token organ), plural + case variant and tool field (normalised organ), "
           "never-stored abstains")
+    row = tok.decode(doc)
+    assert P.field_cut(row, " Query: job: pelmet; region:") == " Result: job: pelmet; region: quartz."
+    assert P.field_cut(row, " Which owner does job pelmet have? It has") == " Result: job: pelmet; owner: onyx."
+    assert P.field_cut(row, " Query: job: pelmet; location:") is None          # a field synonym does not match
+    assert P.field_cut(" Definition: zorvak refers to amber.", " Query: zorvak refers to") is None
+    print("  field_cut: the asked field's clause re-rendered; a synonym field or a non-tool row -> None")
 
 
 def main():

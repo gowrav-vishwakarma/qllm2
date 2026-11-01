@@ -97,6 +97,31 @@ def text_fetch(ids, doc_end):
     return None, dict(organ_hit=0, step=None, abstain=1)
 
 
+_TOOL_ROW = None
+
+
+def field_cut(row_text, q_text):
+    """A19 (Lead): cut a fetched TOOL row down to the asked field. row_text holds "Result: job: K; f1: v1; ...;
+    fn: vn." (possibly after prose); the asked field is the row field name that appears as a word in the question
+    (the last one if several). Returns " Result: job: K; f: v." (re-rendered from the row's own text) or None when
+    the row is not a tool row or no field name matches. Text only; a field SYNONYM in the question does not match."""
+    import re
+    global _TOOL_ROW
+    if _TOOL_ROW is None:
+        _TOOL_ROW = re.compile(r'Result: job: (.+?); (.+?)\.')
+    m = _TOOL_ROW.search(row_text)
+    if not m:
+        return None
+    fields = [f.split(': ', 1) for f in m.group(2).split('; ') if ': ' in f]
+    qwords = re.findall(r"[A-Za-z]+", q_text.lower())
+    hits = [(qwords.index(f.lower()) if f.lower() in qwords else -1, f, v) for f, v in fields]
+    hits = [h for h in hits if h[0] >= 0]
+    if not hits:
+        return None
+    _, f, v = max(hits)
+    return f" Result: job: {m.group(1)}; {f}: {v}."
+
+
 def organ(ids, doc_end, qend):
     """position (the token after the match) of the LATEST exact match of the query's last NGRAM tokens."""
     g = tuple(ids[qend - NGRAM:qend])
