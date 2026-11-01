@@ -23,6 +23,22 @@ natqneg; scorer in my scratch dir, bars in EXPERIMENTS_V14 "A13"). Then the
 * **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
   tmux first.
 
+## Step back (2026-11-01 07:00 IST, after A14: compression kills the address)
+
+* **Surprise:** a PCA-64 basis that keeps 48 % of the variance kept almost
+  none of the synonym address (0.632 → 0.263). The meaning-matching signal
+  lives in LOW-variance directions; the big directions are what every token
+  shares (position, frequency, topic).
+* **What it says:** compress by keeping all directions coarsely, not the big
+  directions finely. A15 tests int8 / sign bits on the full 588-d. If those
+  fail too, a random projection (Johnson-Lindenstrauss: every direction kept
+  equally, e.g. 128-d, then sign bits = SimHash) is the next try; a learned
+  projection would be the "head" again, trained on the right target
+  (synonym pairs from outside the eval), which is plausible but training.
+* **Process:** my run was stopped by its own VRAM guard when cu2 took the
+  card, as intended; the bar was still decidable on syn. Lesson: put the
+  decisive cell FIRST in a run's cell order.
+
 ## Step back (2026-11-01 06:01 IST, after A13: surprise picks the key)
 
 * **Surprise:** the mind's own surprise, an untrained by-product of reading,
