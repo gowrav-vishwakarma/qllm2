@@ -15,7 +15,9 @@ What it does (v14/PACKAGE.md, each step measured in v14/EXPERIMENTS_V14.md):
      strict: abstain when the text organs miss (never-stored questions are then safe; words that differ are missed).
   3. ANSWER: the mind reads row + question on its own session state, with the no-row contrast on the answer tokens
      only (l + 4 (l - l_without_row)); greedy, stop at "." / newline / end-of-turn, at most max_new tokens.
-info = {path: text0 / text1 / text2 / text4 / F2 / None, row: (start, end), row_text, abstain, bytes_held}.
+     A record row ("Result: job: K; f1: v1; ...") is first cut to the asked field's clause (A19, labelled
+     "field-cut" in info; Mind's w1s showed a body window reader does not fix field selection).
+info = {path: text0 / text1 / text2 / text4 / F2 / None, row: (start, end), row_text, abstain, field_cut, bytes_held}.
 
 The question text is appended verbatim (the caller chooses the form, e.g. "\\n\\nQuestion: ...\\nAnswer:" or ChatML).
 """
@@ -34,7 +36,7 @@ for p in (str(ROOT), str(ROOT / 'scripts'), str(ROOT / 'v16')):
 from bench import Reader  # noqa: E402
 from v14.a6_reread import CKPT as B2P2, Mind  # noqa: E402
 from v14.a13_manykey import capture, maxsim_scores, sentence_rows  # noqa: E402
-from v14.package_fetch import text_fetch  # noqa: E402
+from v14.package_fetch import field_cut, text_fetch  # noqa: E402
 
 STOP_TOKENS = (13, 198)                       # "." and newline
 STATE_BYTES = {'b2p2': 1154832}               # the mind's fixed state, fp32 at decode (M2 body)
@@ -80,7 +82,7 @@ class Package:
             lb, sb, ob = self.mind.feed([t], sb, ob)
         return out
 
-    def answer(self, session_text: str, question_text: str, mode: str = 'lenient'):
+    def answer(self, session_text: str, question_text: str, mode: str = 'lenient', cut_fields: bool = True):
         s = self.read(session_text)
         base, end = s['ids'], len(s['ids'])
         q = self.tok.encode(question_text, add_special_tokens=False)
@@ -95,8 +97,11 @@ class Package:
         if row is None:
             return '', dict(info, row_text=None)
         span = base[row[0]:row[1]]
+        cut = field_cut(self.tok.decode(span), question_text) if cut_fields else None   # A19: a record row -> the asked field
+        if cut is not None:
+            span = self.tok.encode(cut, add_special_tokens=False)
         text = self.tok.decode(self._decode(span + q, q))
-        return text, dict(info, row_text=self.tok.decode(span))
+        return text, dict(info, row_text=self.tok.decode(span), field_cut=int(cut is not None))
 
 
 def _story(argv=None):
