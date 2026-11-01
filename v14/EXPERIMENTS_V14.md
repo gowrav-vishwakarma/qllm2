@@ -3481,6 +3481,24 @@ fitted threshold:
     - Natural keys of common words stay at 0.70-0.825 with 7-11 / 40 misses:
       text cannot separate them from the question's frame; that is the mind's
       salience (F2), Lead's pkgV run.
+- **A21: the question-time package on NATURAL variants (PRE-REGISTERED
+  2026-11-01 11:02 IST, before any number of it; the decisive salience test,
+  Lead's ask).** Fetch chain: token organ → word organ steps 1-2 → step 4
+  (A20) → F2 (A13: the 2 most surprising question tokens, block-8 max-sim over
+  sentence rows, full-precision states) ; the bigram step 3 is dropped (it sits
+  behind F2, which always returns a row). Read: b2p2 warm + no-row contrast
+  (A9). STRICT twin: the text steps only, abstain if they miss.
+  - bench's docs with `qstyle='varied'` (question wording from v14/styles.py);
+    seed 18000 (Lead's natural-variant arm); L = 32,768. Cells: kv, kv1,
+    kvupd, natq, neg × synthetic / natural (natq natural only), 40 docs; para,
+    tool × synthetic / natural as controls, 20 docs.
+  - Bars: (B1, fetch) natural-key kv: the chain's top row holds the fact ≥
+    the text chain (steps 0-4) + 0.10 on the same docs; (B2, answer) natural-key
+    kv package sentence (warm + contrast) ≥ 0.70.
+  - Reported: every cell's fetch rate and answer, the step that answered
+    (text step / F2), the never-stored cost of the F2 fallback (lenient answers
+    with a value word on neg) vs strict, F2's memory (1.18 GB / 1M at fp16;
+    int8 lossless at 590 MB / 1M: an open cost).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
