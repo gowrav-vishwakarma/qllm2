@@ -5785,3 +5785,7 @@ notebooks, not in place of reads). The plain arm is also PAM's 16nb 600M point o
 on the 6000. w1n still runs: W128 on 16nb is a finding either way, and it costs nothing (it runs while T++ trains).
 - W128 remains a candidate body unit with a modest, shrinking gain. A second 600M seed would settle the 0.028 miss; that is the
   user's / Lead's call, not launched.
+
+**w1m amendment (22:15 IST; Lead GO, board e11c35c): w1m2 = the same arm at SEED=44** (4090, beside Lead's BABILong pass).
+The bars are unchanged and are judged on the SEED MEAN of w1m + w1m2 (s8 D ≥ 0.80, holdout ≤ 3.4900, clk2 8k ≥ 0.74, far
+needles ≥ 0.379). This decides the 600M release body (W128 vs b2p2). t15pam stays 16nb plain.
