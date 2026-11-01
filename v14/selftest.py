@@ -413,10 +413,34 @@ def test_b2_splits(seeds=40):
     print(f"  B2: {n} episodes, splits disjoint, no parameter leak, answers out of context")
 
 
+def test_text_fetch():
+    """the body-agnostic text library: exact, case / plural variant, tool field, never stored."""
+    from v7.data import get_chat_tokenizer
+    from v14 import package_fetch as P
+    tok = get_chat_tokenizer()
+    enc = lambda x: tok.encode(x, add_special_tokens=False)  # noqa: E731
+    # several facts, as in a real stream: a frame bigram ("refers to") must not be rare, or step 3 fires on it
+    doc = enc(" The river was calm that day. Definition: zorvak refers to amber. Many people walked by the shore."
+              " Definition: kelmop refers to cedar. Definition: tarvin refers to onyx. Definition: gopdal refers to"
+              " ivory. Result: job: pelmet; status: cedar; owner: onyx; region: quartz; label: maple. The end came soon.")
+    cases = ((" Query: zorvak refers to", 'amber', 0), (" Query: Zorvaks refers to", 'amber', None),
+             (" Query: job: pelmet; region:", 'quartz', None), (" Query: blimtar refers to", None, None))
+    for q, want, step in cases:
+        ids = doc + enc(q)
+        row, info = P.text_fetch(ids, len(doc))
+        if want is None:
+            assert row is None and info['abstain'] == 1, f"text_fetch: never-stored key fetched {info}"
+        else:
+            assert row is not None and want in tok.decode(ids[row[0]:row[1]]), f"text_fetch: {q!r} -> {info}"
+            assert step is None or info['step'] == step
+    print("  text_fetch: exact (token organ), plural + case variant and tool field (normalised organ), "
+          "never-stored abstains")
+
+
 def main():
     torch.set_num_threads(8)
     for test in (test_off_is_v13, test_n7_lookup, test_n7_off_at_init,
-                 test_n7_decode_matches_prefill, test_n7_learns, test_n12, test_l1, test_opmem, test_hook, test_b2_splits):
+                 test_n7_decode_matches_prefill, test_n7_learns, test_n12, test_text_fetch, test_l1, test_opmem, test_hook, test_b2_splits):
         print(f"{test.__name__}:")
         test()
     print("ALL PASS")

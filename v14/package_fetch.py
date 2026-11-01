@@ -78,6 +78,25 @@ def norm_hit(ids, end, q0):
     return (step, n) + row_around(ids, a, b, end)
 
 
+def text_fetch(ids, doc_end):
+    """The TEXT-ONLY library, body-agnostic (no mind keys; Lead's "every body gets the same library" arm).
+
+    Token organ (the question's last NGRAM tokens, latest exact match), then the normalised-word organ on the
+    WHOLE question (A4); strict abstain = both miss. ids = document + question, doc_end = where the question
+    starts. Returns (row or None, info): row = (start, end) token span of the fetched sentence; info has
+    organ_hit, step (0 = token organ, 1-3 = normalised organ step) and abstain. Step 3 (a bigram holding a word
+    seen <= 2 times) assumes a real stream: in a very short document a frame bigram ("refers to") can be rare.
+    Measured never-stored false hits at 32k: 0.00 / 0.025 (A4)."""
+    end = int(doc_end)
+    hit = organ(ids, end, len(ids))
+    if hit is not None:
+        return row_around(ids, hit, hit, end), dict(organ_hit=1, step=0, abstain=0)
+    nh = norm_hit(ids, end, end)
+    if nh:
+        return tuple(nh[2:]), dict(organ_hit=1, step=int(nh[0]), abstain=0)
+    return None, dict(organ_hit=0, step=None, abstain=1)
+
+
 def organ(ids, doc_end, qend):
     """position (the token after the match) of the LATEST exact match of the query's last NGRAM tokens."""
     g = tuple(ids[qend - NGRAM:qend])
