@@ -3593,6 +3593,21 @@ fitted threshold:
       answers; multi-sentence questions, rule arithmetic, negation and
       summaries stay at zero, since the package hands the mind one row. The
       keyword scorer is lenient (lucky hits marked); outputs are in the report.
+  - **A22b, the same story through `v16/package.py` (12:50 IST; code 5da6bb5;
+    `logs/v16_story_package_{b2p2_main_38e3c29,cu2a_main_24b2969}_5da6bb5_*.md`), beside
+    Lead's mind-alone runs (`logs/v16_story_*_2026110112*.md`), keyword hits of 22 at
+    2k / 4k / 8k:**
+
+    | mind | alone (Lead) | package |
+    |---|---|---|
+    | b2p2 | 1 / 3 / 2 | **8 / 8 / 7** |
+    | cu2a | 1 / 1 / 1 | 6 / 5 / 5 |
+    | T++ / Mamba-2 (alone) | 1 / 0 / 0 · 0 / 0 / 0 | – |
+
+    - Same fetch paths for both minds (36 text, 30 F2 of 66); cu2a never says
+      " unknown" here; its lower score comes from F2 on its own states fetching
+      prose rows (e.g. "what H stood for" → a semiconductor passage), the weaker
+      own-state address A10 saw for cu1.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
