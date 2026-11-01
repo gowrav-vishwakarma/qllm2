@@ -27,7 +27,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     - **11:50 IST:** w0 done (holdout 3.7454). w128 never trained: the arm overrides split on commas, so SWA_LAYERS
       broke apart (exit 127). Fixed in 2b5937f.
     - Rerun of w128 alone: `bash v13_sempty/tmp/w1s_resume_w128.sh` in the worktree (untracked; SWA passed via BASE),
-      same tmux name `w1s`. Readouts done ~13:35 IST.
+      same tmux name `w1s`.
+    - **13:02 IST VERDICT: target FAIL.**
+      - Tool read 0.600 → 0.6125 (bar +0.15). Guards pass. Copy class unchanged. The reader stays in the package.
+      - Unexpected, one seed: s8 +0.17 and clk2 8k 20-way +0.22, with the decays unchanged.
+      - w1r (seed 44 replicate) is pre-registered and PROPOSED to Lead. The 4090 is free.
+      - Logs were copied into the main checkout and committed.
   - **rxk** on local CPU (`logs/diag/v13_sempty_rxk_{b2p2,cu2a,b2t2}_99d2951.jsonl`). Slower than estimated: ~155/400 rows
     per model at 11:50, done ~14:00 IST. Waiter prints the summary at 1200 rows.
 

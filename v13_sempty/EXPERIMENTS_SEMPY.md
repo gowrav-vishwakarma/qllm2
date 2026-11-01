@@ -5152,3 +5152,91 @@ warmup 100, batch 18 × 2048 as GRAD_ACCUM=2 (exact, same math; two arms fit sid
   Different scales: no 3B T++ text row exists.
 - **Consequence:** no r3p' until the 600M budget check (bud, running on the 6000 since 10:52 IST) states the mix cost on this body
   and whether ×20 synthetic answers (text share 0.951) keep the skills.
+
+## w1s VERDICT (13:02 IST, 2026-11-01): target FAIL. W1 (sliding-window attention, window 128, blocks 5 / 9 / 13) does not improve the read of a fetched row (tool +0.0125, bar +0.15). All guards pass. W1 lowers neither holdout nor copy-class loss. Unexpected: the reach and rule cells rose, one seed
+
+**Arms:**
+- `w1s_w0_508aaff` (102.88M) and `w1s_w128_508aaff` (107.04M, +4.15M = +4 %).
+- Both: 120M stage A (`c1m2a_pre_7ae6f1f`), then 100M stage B on b2p2's mix, seed 43; 220M tokens in total.
+- The first chain never started w128: the arm overrides were split on commas, so SWA_LAYERS=5,9,13 broke apart (env exit 127;
+  fixed in `2b5937f`). w128 was rerun alone from the same pinned worktree at 11:50 IST, with SWA passed via BASE (the config shows
+  swa_layers (5, 9, 13)).
+
+| readout | w0 | w128 | bar | |
+|---|---|---|---|---|
+| **tool cold free, syn / nat (mean)** | 0.575 / 0.625 (0.600) | 0.650 / 0.575 (0.6125) | ≥ +0.15 | **FAIL** |
+| holdout | 3.7454 | 3.7510 | ≤ +0.02 | pass |
+| s8 D = mean over 2k / 4k, scored / free | 0.559 / 0.334 | 0.730 / 0.464 | ≥ −0.05 | pass (higher) |
+| clk2 8k (echo s = 8 + contrast), free / 20-way | 0.12 / 0.31 | 0.21 / 0.53 | ≥ −0.05 | pass (higher) |
+
+**Other readouts:**
+- kv, syn / nat: 1.00 / 1.00 in both arms.
+- para, syn / nat: 0.925 / 1.00 (w0) and 0.90 / 0.95 (w128).
+- Skill pack, 20-way plain at 2k / 4k: 0.61 / 0.105 → 0.735 / 0.225.
+- Skill pack, free with contrast at 2k / 4k: 0.87 / 0.335 → 0.74 / 0.325.
+- WikiText val loss: 4.5376 → 4.5459.
+- PG-19 far_gain at 4–8k: +0.0432 → +0.0438.
+- **Copy class** (attr3b, w128 − w0; `logs/diag/v13_sempty_attr3b_w1s_w128_vs_w0_508aaff.txt`):
+  - PG-19: total +0.0035 (copy −0.009, seen +0.013, new +0.002);
+  - web: +0.0063 (copy −0.000, seen +0.007, new +0.009).
+- **Decays** (filler half-lives, affine L4096; `logs/diag/v13_sempty_halflives_w1s_*`):
+  - notebooks: unchanged, every head within ±20 %;
+  - echo memory: geomean 2201 → 1943, slightly SHORTER.
+- **W1 is in use:** its zero-init o_proj grew to rms 0.020–0.023, a normal trained scale.
+
+**Reference on the same cells and flags** (PACKAGE_STRICT=1 PACKAGE_NORM=1, seed 18000, 40 docs; tool free, syn / nat;
+`logs/v16_textarm_{tflr_lr1.2e-3_e072a8f,b2p2_main_38e3c29,b2t2_main_38e3c29}_32768_508aaff_tool_*.jsonl`):
+
+| model | tool free, syn / nat (mean) |
+|---|---|
+| T++ 100M from scratch (`tflr` LR 1.2e-3, holdout 4.07) | 0.50 / 0.40 (0.45) |
+| b2p2 (PAM 600M, 102.9M) | 0.475 / 0.40 (0.4375) |
+| T++ 600M (b2t2, 101.9M) | 0.80 / 0.675 (0.7375) |
+
+Lead's earlier T++ 0.90 / 0.90 used other package flags; b2p2 gives the same 0.475 / 0.40 either way.
+
+**Reading:**
+- **Skill, not view.** The fetched row sits inside the window (the read is 20–60 tokens) and the window is in use, yet field selection
+  does not improve. The miss is knowing WHICH field the question asks for, not seeing the row exactly. This matches cu2a: skills come
+  with formats in the data.
+- **Where the reader lives** (the rule stated beforehand in SCRATCHPAD): W1 lowers neither holdout nor copy-class loss, and it does
+  not help the read. So the reader stays in the PACKAGE (Library A19's field cut: 0.90 / 0.80).
+- **Screen power:** T++'s own tool read climbs 0.45 → 0.74 from 100M to 600M, so the skill grows with training, and a 600M W1
+  could differ. Nothing here points that way (no read, LM or copy gain). The 600M pair is not recommended for reading.
+- **Unexpected: reach and rule cells rose with W1:**
+  - s8 +0.17 scored / +0.13 free;
+  - clk2 8k 20-way +0.22;
+  - skill pack plain 20-way +0.12 at 2k and 4k;
+  - the decays did not change.
+
+  A 128 window cannot see across a 2–4k spread, so if this is real, the gain is in how the state is WRITTEN or READ. One guess:
+  local format work moves to the window and leaves cleaner rule traces. Probe noise is small (SE ≈ 0.025–0.05), but the training
+  spread between arms is unmeasured (b2p1 / 2 / 3 s8 spread 0.10 at 600M). One seed per arm: no claim.
+- **Aside:** w0 (220M tokens) reads tool rows better than b2p2 (600M): 0.60 vs 0.44. The recipes differ (ANSWER_IN_WINDOW, exact
+  accumulation, seed). Not chased.
+
+**Consequence:**
+- W1 is not a body unit for reading.
+- Proposed to Lead: a seed replicate of the pair (w1r, below) to test the reach gain.
+  - If it fails, W1's code is removed (index rule).
+  - If it holds, W1 as a reach unit goes to the user as a 600M decision.
+
+## w1r: is W1's reach gain real? Seed replicate (pre-registration, 2026-11-01 13:02 IST; PROPOSED, awaiting Lead's GPU call)
+
+**Why:** in w1s, W1 raised s8 D by +0.17 and clk2 8k 20-way by +0.22 with no change in the decays (one seed). s8 is bar 3
+(learning beyond recall). If the gain is real, a +4 % local-attention unit is a reach unit, not a reader.
+**Prior work:** Griffin / Hawk (RG-LRU + local attention) and Based (linear attention + sliding window) pair local attention with a
+recurrent state for LM quality and recall.
+**What differs:** the claim tested here is that local attention improves a recurrent state's rule retention ACROSS 2–8k (far
+outside its window) without changing its decays. No claim before replication.
+
+**Arms:** w0 and w128 exactly as w1s (same stage A, mix, 100M, `508aaff` worktree), SEED=44. 4090, one arm after the other
+(~35 min each at 46k tok/s, plus readouts).
+
+**Readouts:** holdout; s8 (b2 `_new`, 0 / 2k / 4k, 400 trials, probe seed 7000); clk2 8k; skill pack 0 / 2k / 4k. The text-arm
+tool read is also reported.
+
+**Bars:**
+- **Replicates if:** w128 − w0 ≥ +0.08 on s8 D (scored), AND ≥ +0.10 on clk2 8k 20-way, AND holdout w128 ≤ w0 + 0.02.
+- **Pooled report:** the mean over seeds 43 + 44.
+- **If it fails:** W1's code (`WindowRead`, `--swa_layers`, the SWA env) is removed and the index row names its last commit.

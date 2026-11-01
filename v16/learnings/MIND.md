@@ -112,8 +112,15 @@ Each entry gives: the idea (maths), the recipe, the numbers, the verdict and the
 - **cu2b ACh-1** (distil the contrast into the logits after an answer tag; teacher trusted only where its top token is gold):
   +0.038 LM at 180M, futility FAIL, removed. The first smoke without the gold filter collapsed tagged accuracy to 0.
 - **Read gap** (Lead's T++ + library arm, same library, cold): tool rows T++ 0.90 vs PAM 0.475 / Mamba-2 0.45 (the fixed-state
-  multi-item recall weakness, MQAR). The package field cut (Library A19) lifts PAM to 0.90 / 0.80. A window-reader repair (W1:
-  sliding-window attention, window 128, blocks 5 / 9 / 13, +4.15M params) is in a 100M screen (w1s).
+  multi-item recall weakness, MQAR). The package field cut (Library A19) lifts PAM to 0.90 / 0.80. 
+- **W1 window reader** (w1s, `508aaff`, 100M screen; 102.9M vs 107.0M; 220M tokens): sliding-window attention, window 128, in
+  blocks 5 / 9 / 13.
+  - Tool read 0.600 → 0.6125 (bar +0.15: FAIL); holdout +0.006; copy-class loss unchanged.
+  - Same cells and flags: T++ 600M 0.74, b2p2 0.44, T++ 100M 0.45.
+  - **Lesson:** the row sits inside the window and the window is used, yet field selection does not improve. The miss is a
+    SKILL (which field), not a view. The reader belongs in the package (A19's field cut).
+  - Unexpected, one seed: s8 D 0.559 → 0.730 and clk2 8k 20-way 0.31 → 0.53, with the decays unchanged. A seed replicate (w1r) is
+    proposed.
 
 ## 8. Budgets and data hygiene
 

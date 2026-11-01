@@ -1,0 +1,14 @@
+
+[pg19] tokens 122880; share copy 0.258 seen 0.377 new 0.365
+  loss  w1s_w128 4.0642  w1s_w0 4.0607
+  w1s_w128 - w1s_w0: total +0.0035
+     by class (gap / share of total): copy -0.009 / -63%  seen +0.013 / +142%  new +0.002 / +21%
+     by position:                     0-8 -0.018  8-64 -0.010  64-512 +0.008  512-2048 +0.003
+     new tokens by position:          0-8 -0.020  8-64 -0.050  64-512 +0.010  512-2048 +0.003
+
+[web] tokens 195046; share copy 0.227 seen 0.386 new 0.387
+  loss  w1s_w128 3.7271  w1s_w0 3.7209
+  w1s_w128 - w1s_w0: total +0.0063
+     by class (gap / share of total): copy -0.000 / -0%  seen +0.007 / +43%  new +0.009 / +57%
+     by position:                     0-8 -0.003  8-64 +0.015  64-512 +0.006  512-2048 +0.006
+     new tokens by position:          0-8 -0.012  8-64 +0.017  64-512 +0.005  512-2048 +0.012
