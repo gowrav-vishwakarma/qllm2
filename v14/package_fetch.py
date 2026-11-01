@@ -78,18 +78,18 @@ def _bg():
     return _S['bg']
 
 
-def norm_hit(ids, end, q0, step4=False):
+def norm_hit(ids, end, q0, step4=False, bigram=True):
     """A4: (step, n, row start, row end) of the normalised-word organ, or None. step4 (A20): add the
     rare-in-stream-and-in-English unigram step before the bigram step."""
     strs = _strs()
-    h = N.find(N.words(strs, ids, 0, end), N.words(strs, ids, q0, len(ids)), bg=_bg() if step4 else None)
+    h = N.find(N.words(strs, ids, 0, end), N.words(strs, ids, q0, len(ids)), bg=_bg() if step4 else None, bigram=bigram)
     if h is None:
         return None
     step, n, a, b = h
     return (step, n) + row_around(ids, a, b, end)
 
 
-def text_fetch(ids, doc_end, step4=False):
+def text_fetch(ids, doc_end, step4=False, bigram=True):
     """The TEXT-ONLY library, body-agnostic (no mind keys; Lead's "every body gets the same library" arm).
 
     Token organ (the question's last NGRAM tokens, latest exact match), then the normalised-word organ on the
@@ -103,7 +103,7 @@ def text_fetch(ids, doc_end, step4=False):
     hit = organ(ids, end, len(ids))
     if hit is not None:
         return row_around(ids, hit, hit, end), dict(organ_hit=1, step=0, abstain=0)
-    nh = norm_hit(ids, end, end, step4=step4)
+    nh = norm_hit(ids, end, end, step4=step4, bigram=bigram)
     if nh:
         return tuple(nh[2:]), dict(organ_hit=1, step=int(nh[0]), abstain=0)
     return None, dict(organ_hit=0, step=None, abstain=1)

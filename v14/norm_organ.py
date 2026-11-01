@@ -63,7 +63,7 @@ def _latest(sw, grams, n):
     return best
 
 
-def find(stream, query, bg=None, bg_max=3):
+def find(stream, query, bg=None, bg_max=3, bigram=True):
     sw = [w for w, _, _ in stream]
     qw = [w for w, _, _ in query]
     hit = None
@@ -84,7 +84,7 @@ def find(stream, query, bg=None, bg_max=3):
             w = min(cands)[3]
             last = max(i for i, x in enumerate(sw) if x == w)
             hit = (4, 1, last)
-    if hit is None:                                              # (3) rare-word bigram
+    if hit is None and bigram:                                   # (3) rare-word bigram (A21 can drop it)
         cnt = Counter(sw)
         grams = {tuple(qw[i:i + 2]) for i in range(len(qw) - 1)}
         grams = {g for g in grams if min(cnt[g[0]], cnt[g[1]]) <= RARE}
