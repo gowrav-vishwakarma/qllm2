@@ -5328,3 +5328,12 @@ Generations (greedy; prompt tail `…27 -> 94 Record: lagtud | x: 7.\n\n7 ->`, g
   - What is left is the rule applied imprecisely (e.g. gold ` 34`, wrote ` 22` / ` 82`). That is memory fidelity at 2k, not answer
     format, so a type mask in the package would not help.
   - (Corrected 14:20 IST: I first wrote "an expression gap, cu3's business".)
+- **Follow-up for Library's story check** (14:26 IST; `v13_sempty/tmp/pell_2x1.py`, b2p2, CPU). The rule 2x + 1 is a TRAINED affine
+  value (a ∈ 1–3, b ∈ 0–20 minus {7, 13, 17}). Demos in the trained format, then held-out web text, then "4 ->"; 20 random demo sets;
+  free:
+  - L = 0: 1.00 with 3 or 8 demos;
+  - 2k, 3 demos: 0.00;
+  - 2k, 8 demos: 0.45 plain, 0.30 with contrast. The contrast pulls " 41" in 12 / 20, though it is a demo answer in only 5 of those
+    sets: an unexplained attractor.
+
+  So few demos carry a rule at once but not across a 2k gap, and the contrast must stay gated (A16's refresh is the safe lever).
