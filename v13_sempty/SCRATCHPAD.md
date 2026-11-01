@@ -73,6 +73,11 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     - score with `.venv/bin/python v13_sempty/tmp/w1w_score.py` (guards g1–g4 + the gain, as pre-registered).
   - **Needle trade-off at W 128** (t40, both seeds; needle at the start): 4k 0.495 → 0.44, 8k 0.305 → 0.22; near needles better.
     Part of the w1w guard.
+  - **kb1 known benchmarks** (user's standing rule via Lead: known benchmarks, intelligence first, length claims capped at 128k):
+    - pre-registered e67664f; wrapper `scripts/lm_eval_bodies.py` (b170219), run with `~/.venvs/qllm311/bin/python` (lm_eval
+      0.4.9.1);
+    - chain `v13_sempty/tmp/kb1_chain.sh` (waits for w1w; 10 models; outputs `logs/kb1/`); awaiting Lead's GPU order;
+    - r3c copied to from_6000/r3cb_main_38e3c29.
   - Lead runs the 300k package rows today (text library + cold read, CPU). Library runs the full package at 300k after the sweep
     (chunked block-8 capture, distance bins <2k / 2–32k / 32–128k / 128–300k, MB per session).
   - bud verdict;
