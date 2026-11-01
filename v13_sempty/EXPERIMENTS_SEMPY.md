@@ -5423,3 +5423,54 @@ Other readouts:
   - clk2 8k 20-way ≥ b2p2's 0.74.
 - Cost: about 3 h on the 4090, or on the 6000 after bud.
 - The 3B body (r3c, 16nb) is a separate question.
+
+## w1w: window-size sweep, W = 512 and 1024 (pre-registration, 2026-11-01 15:06 IST; Lead GO; the user's question "why not a bit bigger?")
+
+**Why:**
+- The user asks whether a 128-token window is enough for long chats (128k–300k), and why not a bigger fixed window.
+- Far needles are the LIBRARY's job: no fixed window recalls a needle 100k back. Lead runs the 300k package rows today, and Library
+  runs them after this sweep.
+- A bigger window is cheap: the KV is about 7 KB per window token, so W = 1024 → ~7.2 MB, still O(1).
+- **Risk: a LAZY STATE.** If W nears the 2048 training length, the state has no work during training, and its rule and reach skills
+  (which live in the state) may weaken.
+- **A sign of it already at W = 128** (the t40 needle probe, both seeds pooled; needle at the start of the text):
+  - 4k: W0 0.495 vs W128 0.44; 8k: 0.305 vs 0.22;
+  - nearer needles improve (≤ 2k, all positions: up to +0.13).
+
+**Prior work:** Griffin (local attention 1024 + RG-LRU), Samba (SWA 2048 + Mamba). Window size is engineering; no claim.
+
+**Arms:**
+- `w1w_w512` and `w1w_w1024`: the w1s recipe exactly (c1m2a stage A, then 100M on b2p2's mix), SEED=43, SWA_LAYERS=5,9,13.
+- Reference arms: W0 and W128 exist on seeds 43 and 44 (w1s / w1r).
+- Code: model.py and config.py are identical to `508aaff`. The window kernel is exact at W = 512 / 1024 (chunked vs full mask
+  3e-8; nothing leaks past W).
+
+**Stacked reach:** three windows reach 3(W − 1) tokens: 381 / 1533 / 3069 for W = 128 / 512 / 1024. A "beyond the window" cell
+must be farther back than that.
+
+**Readouts** (new arms: all; old arms: only the new skill-pack 8k cell):
+- holdout;
+- t40 needle recall (the screen's own probe; contexts 128–8192, needle positions 0 / 0.5 / 1);
+- skill pack at 0 / 2k / 4k / 8k, plain + contrast (4k and 8k are beyond every W ≤ 1024);
+- clk2 8k (echo dilation s = 8 + contrast);
+- s8 at 0 / 2k / 4k, 400 trials;
+- the text-arm tool read (syn / nat).
+
+**Not used as a cell:** s8 spread to 2k with a 3.2k tail gap before the query (`--spread_tail`, new). It is at the floor at this
+scale: 40 trials, scored 0.10 (W0) / 0.15 (W128), chance 0.125.
+
+**Lazy-state GUARD** (Lead), per new W. Every one must hold, measured against W128's two-seed mean:
+- (g1) skill pack 4k + contrast, 20-way ≥ 0.5825 (W128 mean 0.6325 − 0.05);
+- (g2) clk2 8k, 20-way ≥ 0.44 (0.49 − 0.05);
+- (g3) t40 far needles (position 0, contexts 4096 + 8192, mean) ≥ 0.28 (0.33 − 0.05). Also reported against W0 (0.40).
+- (g4) holdout ≤ 3.7655 (W0 mean 3.7455 + 0.02).
+
+**GAIN and the pick:**
+- gain = the mean of (s8 D at 2k / 4k scored; skill pack 4k + contrast 20-way; clk2 8k 20-way; t40 near needles at contexts
+  512–2048, all positions), minus W128's mean of the same.
+- A W ≥ 512 is picked only if it passes every guard AND gain ≥ +0.03. If two W are within 0.03 of each other, the smaller wins.
+  Otherwise W = 128 stays.
+- New arms are a single seed. If the deciding margin is < 0.05, a seed-44 replicate of the top W runs before any 600M run.
+- **SEQ 4096** (more work for the state beyond W) only if W = 1024 wins.
+
+**Consequence:** the user's 600M decision becomes "which W", with these numbers.
