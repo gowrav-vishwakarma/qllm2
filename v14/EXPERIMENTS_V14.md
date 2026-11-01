@@ -3149,6 +3149,40 @@ fitted threshold:
     (max-sim over tokens, Khattab & Zaharia 2020). Difference: the query
     terms are chosen by the O(1) mind's OWN surprise and matched in its OWN
     states, with no trained encoder.
+  - **A13 VERDICT (2026-11-01 06:00 IST; code b34636e; `logs/v14_a13_manykey_b2p2_32768_b34636e_20261101_0514.jsonl` + .log, 160 rows):
+    B1 MET, B2 MET, B3 NOT met.**
+
+    | fetch: top-1 / top-5 holds the fact | syn (40) | natq, natural keys (40) |
+    |---|---|---|
+    | **F2: 2 surprise-chosen question tokens, block-8 max-sim** | **0.575 / 0.80** | **0.775 / 0.975** |
+    | F3: the same at block 2 | 0.40 / 0.65 | 0.55 / 0.85 |
+    | F1: the key's last token, block 8 (key position known) | 0.125 / 0.45 | 0.875 / 0.975 |
+    | MiniLM-L6 over sentences | 0.35 / 0.65 | 0.55 / 0.625 |
+    | (A12 BM25, seed 32000) | – | 0.525 / 0.825 |
+
+    | reads, warm + contrast, sentence scorer | syn | natq |
+    |---|---|---|
+    | F2 top-1 row | 0.55 | 0.475 |
+    | line-up (F2 top-5 together) | 0.275 | 0.125 |
+    | oracle fact row | 0.925 | 0.625 |
+
+    - B1: natq F2 top-1 0.775 ≥ 0.675 (natural keys; the synthetic half was
+      not run: the cells line named natural keys only). B2: syn F2 top-1 0.575
+      ≥ 0.50 (A5's L1 head 0.40 on seed 25000). B3: the line-up read HURTS
+      (0.275 < 0.55 + 0.10): five rows confuse the free answer.
+    - The mind's own surprise picks a key word first (" merchant", " cunning",
+      " sleek", " Texas"; the 2nd pick is often a frame word: " refers",
+      " Answer"), and max-sim in its own block-8 states finds synonym facts
+      better than a trained sentence encoder on the same docs (0.575 vs
+      0.35). Caveat: MiniLM is pooled per sentence, F2 is token-level late
+      interaction; one seed.
+    - Not solved: abstain. Top-1 score AUROC syn vs synneg 0.664, natq vs
+      natqneg 0.768; key-swap rel 0.41 / 0.57. (The neg reads' "wrong" field
+      scores a random bookkeeping value: not informative.)
+    - Package consequence: for words that differ, fetch by the mind's
+      surprise-chosen tokens (F2) and read warm + contrast: synonyms 0.55,
+      natq 0.475 (ceiling 0.625), lenient. Abstain there needs the trained
+      VERIFY (cu2).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
