@@ -5424,7 +5424,7 @@ Other readouts:
 - Cost: about 3 h on the 4090, or on the 6000 after bud.
 - The 3B body (r3c, 16nb) is a separate question.
 
-## w1w: window-size sweep, W = 512 and 1024 (pre-registration, 2026-11-01 15:20 IST; Lead GO; the user's question "why not a bit bigger?")
+## w1w: window-size sweep, W = 512 and 1024 (pre-registration, 2026-11-01 15:06 IST; Lead GO; the user's question "why not a bit bigger?")
 
 **Why:**
 - The user asks whether a 128-token window is enough for long chats (128k–300k), and why not a bigger fixed window.
