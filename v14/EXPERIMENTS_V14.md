@@ -3394,6 +3394,27 @@ fitted threshold:
     keys (within 0.05); T++ FULL below both (beyond its trained length);
     b2p2 warm + contrast ≥ T++ WINDOW on natural-key kv / para; all bodies
     equal on fetch (same text library).
+  - **A18 PARTIAL (2026-11-01 10:29 IST; code 5d08477;
+    `logs/v14_a18_tpp_warm_32768_5d08477_20261101_1016.jsonl` + .log): stopped by its
+    VRAM guard (1,478 MB free; a Mind training job + Lead's bench took the card)
+    at para/synthetic doc 2. kv done (40 docs each); para / tool / natq re-armed
+    on the same seed.**
+
+    | kv, 32k (syn / nat) | T++ cold | T++ window plain | T++ window + contrast | T++ FULL + contrast | b2p2 warm + contrast |
+    |---|---|---|---|---|---|
+    | sentence free | 1.00 / 0.90 | 0.975 / **0.475** | 0.95 / 0.95 | **0.00 / 0.00** (20 docs) | 0.975 / 0.925 |
+    | bytes held (mean) | 1.1 MB | 67 MB | 67 MB | 1,060 MB | **1.15 MB** |
+    | tokens run per answer | 37 | ~42 | 84 | 76 | 83 |
+
+    - Prediction check on kv: T++ WINDOW ≈ COLD (0.95 vs 1.00 / 0.90) ✓; T++
+      FULL below both ✓ (0.00: holding the whole 32k session, 16× its trained
+      length, it answers nothing); b2p2 ≥ T++ window on natural keys ✗ by 0.025
+      (0.925 vs 0.95, noise level at n = 40).
+    - T++'s 2k window without the contrast falls on natural keys (0.475) the
+      way b2p2's warm read did (A6): the context's prior outvotes the row in
+      a transformer too, and the same contrast fixes it.
+    - Memory: the mind holds the session at 1.15 MB and reads at T++-window
+      quality (67 MB); the transformer holding the session (1.06 GB) collapses.
 - **A19: field-cut tool rows (PRE-REGISTERED 2026-11-01 10:10 IST, before any
   number of it; Lead's package-side repair, agreed).** PLUMBING, labelled
   "field-cut rows": the LIBRARY picks the asked field's clause and the mind
