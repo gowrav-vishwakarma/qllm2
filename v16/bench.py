@@ -129,7 +129,31 @@ def natural_key(rng, tok, filler, avoid_lo, avoid_hi):
     return _recall_key(rng)
 
 
-def build(rng, tok, filler, L, task, n, keys='synthetic', shots=0):
+QSTYLES = [                      # A9 default pool; v14/styles.py (Library) replaces it when present
+    " Query: {k} refers to",
+    " Question: what does {k} refer to? Answer:",
+    " I forgot what {k} means. It refers to",
+    " hey, {k} was what again? It refers to",
+    " Remind me: {k} is the one that refers to",
+    " So in the notes above, {k} refers to",
+]
+try:
+    from v14.styles import QUESTIONS as _QS, SYN_PAIRS as _SP     # Library's pool (ca80fbd; index 0 = the template) and synonym pairs
+    QSTYLES = [fmt for _name, fmt in _QS]
+    _SYN = {}
+    for _a, _b in _SP:
+        _SYN.setdefault(_a, []).append(_b); _SYN.setdefault(_b, []).append(_a)
+except Exception:
+    _SYN = {}
+
+
+def synonym_of(key, rng):
+    """A9: a synonym phrase for a stored key (Library pairs); the key itself when none exists."""
+    alts = _SYN.get(key) if isinstance(_SYN, dict) else None
+    return rng.choice(list(alts)) if alts else key
+
+
+def build(rng, tok, filler, L, task, n, keys='synthetic', shots=0, qstyle='template', syn_keys=False):
     def enc(s): return tok.encode(s, add_special_tokens=False)
     if task in ('syn', 'synneg'):   # A5 (Library): synonym cell, docs built by v14/syn_cell (draws its own start)
         from v14.syn_cell import build_syn
@@ -151,7 +175,8 @@ def build(rng, tok, filler, L, task, n, keys='synthetic', shots=0):
         if task == 'kvupd':
             val = rng.choice([v for v in _RECALL_VALUE_NOUNS if v != vals[qi]])
             inserts.append(enc(f" Definition: {key} refers to {val}."))  # later = newer
-        query = enc(f" Query: {key} refers to")
+        qkey_a9 = synonym_of(key, rng) if syn_keys else key
+        query = enc(rng.choice(QSTYLES).format(k=qkey_a9)) if qstyle == "varied" else enc(f" Query: {qkey_a9} refers to")
         pos = sorted(rng.sample(range(0, max(1, L - 64)), len(inserts)))
         if task == 'kvupd':  # the update must come after the original
             pos = sorted(pos); pos_map = dict(zip(range(len(inserts) - 1), pos[:-1])); pos_map[len(inserts) - 1] = pos[-1]
@@ -288,6 +313,8 @@ def main():
     ap.add_argument('--centre_ref', default=None, help='with --centre: subtract a FIXED reference mean [D] (torch .pt) instead of the document mean; the deployed condition, where library and session come from different texts')
     ap.add_argument('--filler', default=None, help='token cache for the filler (default: the held-out prose cache = the EVAL pool; pass a pretrain-mix cache for TRAINING docs)')
     ap.add_argument('--skip_state', action='store_true', help='no full-document forward (A_state / B / vector fields omitted): the text-package cold reads alone, CPU-feasible for any body')
+    ap.add_argument('--qstyle', default='template', choices=['template', 'varied'], help="A9: 'varied' samples the question wording per doc from a style pool (direct / indirect / chat / embedded / prose); the trained template is 'template'")
+    ap.add_argument('--syn_keys', action='store_true', help='A9: ask the stored key by a synonym phrase (Library pairs; falls back to the key itself when no pair exists)')
     ap.add_argument('--text_package', action='store_true', help='body-agnostic TEXT-ONLY library (v14 organs: token organ, then the normalised-word organ if PACKAGE_NORM=1; strict abstain = organ miss) + a cold re-read of row + question; works for T++ / Mamba-2 / PAM alike (the T++ + library arm)')
     ap.add_argument('--key_fn', default=None, help='module:function(vecs[T,D], ids) -> keys[T,d]; replaces the frozen address in C2/C5 (v14 learned fetch)')
     ap.add_argument('--dump_rows', default=None, help='dir: per doc, save ids, candidate row positions/kinds, their vectors, query pos and the answer span (v14 training/eval interface)')
@@ -312,9 +339,9 @@ def main():
         rng = random.Random(a.seed * 1000 + L + zlib.crc32(a.task.encode()) % 997)   # stable across processes (A4; was hash(), randomized per process)
         for d in range(a.docs):
             t0 = time.time()
-            ids, ans, qlen, meta = build(rng, tok, filler, L, a.task, a.needles, keys=a.keys, shots=a.shots)
+            ids, ans, qlen, meta = build(rng, tok, filler, L, a.task, a.needles, keys=a.keys, shots=a.shots, qstyle=a.qstyle, syn_keys=a.syn_keys)
             T = len(ids); doc_end = T - qlen
-            rec = dict(arch=a.arch, ckpt=a.ckpt, task=a.task, keys=a.keys, needles=a.needles, L=L, doc=d, T=T,
+            rec = dict(arch=a.arch, ckpt=a.ckpt, task=a.task, qstyle=a.qstyle, syn_keys=int(a.syn_keys), keys=a.keys, needles=a.needles, L=L, doc=d, T=T,
                        vec_layer=a.vec_layer, centre=a.centre, centre_ref=a.centre_ref)
             n_ev = 4 if a.task == 'hop2' else 1 if a.task in ('kv1', 'instr') else a.needles + (1 if a.task == 'kvupd' else 0)
             try:
