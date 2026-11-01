@@ -3300,6 +3300,25 @@ fitted threshold:
     filler tokens in the last gap (R 8192, L 32k, the same seeds) with vs
     without echo dilation, in a small follow-up run (A16 itself started at
     08:43 without it).
+- **A17: render the fetched row in the mind's TRAINED template (PRE-REGISTERED
+  2026-11-01 08:47 IST, before any number of it; Mind's EUREKA d92c2cf: skills
+  are format-bound).** Plumbing on the library side (closest prior work:
+  prompt / template normalisation, e.g. instruction-format alignment for RAG;
+  program-aided rendering). The library knows the structure of what it stored,
+  so it can re-render a fetched row + the question in a format the mind was
+  trained on: tool " Result: job: X; f1: v1; ...; f4: v4." → " Record: X |
+  f1: v1 | ... | f4: v4." and " Query: job: X; f:" → " Q: What is the f of X?
+  A:"; kv / para " Definition: K refers to V." → " Record: K | meaning: V."
+  and " Q: What is the meaning of K? A:" ("meaning" is not a trained field).
+  - Answering minds: cu2a (`cu2a_main_24b2969`, trained on these formats) and
+    b2p2 (control, never trained on them). Rows = the strict organ chain's
+    (text, mind-independent). Read = warm + contrast (the package default;
+    the doc state is the answering mind's own); cold reported.
+  - Cells: tool, kv, para × synthetic / natural; L = 32,768; FRESH seed
+    36000; 30 docs each.
+  - Bar MET iff cu2a RENDERED ≥ cu2a RAW + 0.15 on tool (both key types,
+    sentence scorer). Reported: kv / para, b2p2 (the format effect without
+    training), run-on rate, cold reads.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
