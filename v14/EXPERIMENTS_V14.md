@@ -3210,6 +3210,35 @@ fitted threshold:
     2022), PLAID; token pruning for late interaction. Difference: the index
     keeps only the tokens the O(1) mind itself found surprising, and the
     query uses its own surprising tokens.
+  - **A14 VERDICT (2026-11-01 06:58 IST; code eef1c6f;
+    `logs/v14_a14_package_b2p2_32768_eef1c6f_20261101_0604.jsonl` + .log): PARTIAL
+    run, stopped by its own VRAM guard (667 MB free) when Mind's cu2 chain took
+    the card at 06:06; done: the 8 kv / para / tool / neg cells (30 docs each)
+    and syn 19 / 30; synneg / natq / natqneg NOT run. B1 NOT met (decisive on
+    syn); B2 MET.**
+
+    | cell (30 docs) | organ hit | strict | lenient (any form) |
+    |---|---|---|---|
+    | kv syn / nat | 1.00 / 1.00 | 0.967 / 0.833 | same |
+    | para syn / nat | 1.00 / 1.00 | 1.00 / 0.90 | same |
+    | tool syn / nat | 1.00 / 1.00 | 0.70 / 0.70 | same |
+    | neg syn / nat: answers with a value word | 0 / 0.07 | 0.00 / 0.03 | 0.40-0.57 / 0.43-0.60 |
+
+    | syn (19 docs): F2 top-1 / top-5 | memory per 1M tokens |
+    |---|---|
+    | V-full 0.632 / 0.84 | 1,176 MB |
+    | V-pca (PCA-64 int8, every token) 0.263 / 0.63 | 66 MB |
+    | V-sal (PCA-64 int8, top 1/16 surprising tokens) 0.211 / 0.42 | 4.4 MB |
+
+    - B1: V-sal 0.211 vs V-full 0.632 (−0.42; the 11 missing docs cannot close
+      it). The PCA-64 basis (47.9 % of the variance) destroys the semantic
+      address; pruning to surprising tokens costs a little more. B2: lenient =
+      strict on every organ cell (the organ answers first).
+    - The lenient cost on never-stored questions: a value word in 40-60 % of
+      answers vs 0-3 % strict.
+    - Next (needs its own pre-registration): keep the FULL 588-d direction at
+      low precision on the surprising tokens only (int8: 592 B × 62.5k tokens ≈
+      37 MB / 1M, inside the latitude) to tell PCA's loss from pruning's.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
