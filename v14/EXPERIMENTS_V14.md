@@ -3183,6 +3183,33 @@ fitted threshold:
       surprise-chosen tokens (F2) and read warm + contrast: synonyms 0.55,
       natq 0.475 (ceiling 0.625), lenient. Abstain there needs the trained
       VERIFY (cu2).
+- **A14: the 3-step lenient package, with its memory stated (PRE-REGISTERED
+  2026-11-01 06:02 IST, before any number of it).** Organ chain (token +
+  normalised) → if it misses, the surprise-keyed address (A13's F2) → read
+  warm + contrast. A13's F2 matched against EVERY token's 588-d state: 1.18 GB
+  per 1M tokens at fp16, far over the ≤ 50 MB / 1M latitude. So the address
+  is stored in three forms, all on the same docs:
+  - V-full: every token, 588-d fp16 (1,176 B / token; reference only);
+  - V-pca: every token, a fixed PCA-64 basis, int8 + one fp16 scale (66 B /
+    token ≈ 66 MB / 1M);
+  - V-sal (the package candidate): only the stream's own surprising tokens
+    (the top 1/16 by the mind's surprisal per doc; "surprise on both sides"),
+    PCA-64 int8 (≈ 4.1 MB / 1M) + their positions (4 B each ≈ 0.25 MB / 1M).
+    The PCA basis is fit ONCE on 65,536 held-out tokens (the FineWeb train
+    pool, not the eval prose) and shipped (588 × 64 fp16 = 75 KB).
+  - Cells: kv / para / tool / neg × synthetic / natural, syn, synneg, natq,
+    natqneg (natural); b2p2; L = 32,768; FRESH seed 34000; 30 docs per cell.
+  - Reported per cell: lenient answer accuracy (sentence scorer), strict
+    (organ only, abstain otherwise), and on neg cells the rate of answering
+    with any of the 20 value words (lenient's known cost); MB / 1M per form,
+    beside the organ's 11.4 MB.
+  - Bars: (B1) V-sal costs ≤ 0.075 vs V-full on F2 top-1 (syn and natq);
+    (B2) on kv / para / tool lenient = strict within 0.02 (the organ answers
+    first, no regression). Met → V-sal is the package's address (MB stated).
+  - Closest prior work: ColBERTv2 residual compression (Santhanam et al.
+    2022), PLAID; token pruning for late interaction. Difference: the index
+    keeps only the tokens the O(1) mind itself found surprising, and the
+    query uses its own surprising tokens.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
