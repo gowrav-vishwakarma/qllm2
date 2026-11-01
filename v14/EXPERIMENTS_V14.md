@@ -3694,6 +3694,34 @@ fitted threshold:
       lookup at 103M (Mind's cu1 finding), so the library should turn words
       into demonstrations (Lead's "words → demos" generator idea) before the
       mind sees them.
+- **A25: the package at 128k and 300k, by needle DISTANCE (REGISTERED
+  2026-11-01 15:03 IST, before any number; Lead's GO; the user's question "can
+  it recall a needle from more than 128 tokens back?").**
+  - Docs (my builder from bench's parts: held-out prose, bench keys / values /
+    templates): 8 facts per doc; the ASKED facts sit at fixed distances from
+    the question, one per bin: ~1k (<2k), ~16k (2-32k), ~100k (32-128k),
+    ~250k (128-300k; 300k docs only); the other facts at random positions.
+    Every asked fact is a separate question on the SAME streamed session
+    state. Cells: kv (template), kvV (varied wording, v14/styles.py), para,
+    tool, neg (never stored) × synthetic / natural keys; L = 131,072 and
+    307,200; 10 docs per cell; fresh seed 18500.
+  - Reads: PACKAGE = v16/package.py (stream the session; text fetch → F2 with
+    block-8 states captured CHUNK BY CHUNK with the state carried; warm +
+    contrast), lenient and strict; MIND ALONE (warm, no row); T++ 2k WINDOW
+    alone (last 2,048 session tokens + question); T++ 2k window + the
+    package's row + contrast (A18's arm). F2's address in two stored forms:
+    int8 every token (592 B / token) and sign bits on the top 1/16 surprising
+    tokens (~78 B per kept token).
+  - Bars (all at 300k): B1 package written answer on kv, both key types, in the
+    128-300k bin ≥ 0.85 and within 0.05 of its <2k bin (no decay with
+    distance); B2 kvV natural-key package in the 128-300k bin ≥ 0.65; B3 strict
+    abstain on neg ≥ 0.90; B4 bytes held per session excluding F2's address
+    (raw text + word / token indexes + mind state) ≤ 10 MB.
+  - Prediction (Lead's board): text 0.6 MB + indexes ~2.8 MB + state 1.15 MB vs
+    T++ KV ~11 GB at 300k; T++ 2k window alone ~0 beyond the <2k bin; mind
+    alone ~0 beyond a few k.
+  - Reported: 128k, every cell / bin / read, seconds per answer, F2's MB in
+    both forms.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
