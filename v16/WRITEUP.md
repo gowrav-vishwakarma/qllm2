@@ -18,8 +18,8 @@ tuning on the benchmark. Numbers are copied from the board / logs with their has
 3. **Holding beyond the training length at constant cost.** Package recall 1.00 (20-way) on needle / 8-needle /
    latest-wins / two-hop at 32k and 128k with ~3 MB held vs a 4.9 GB KV cache; one skill read carried to 8k on three
    minds with two query-time tools (free 0.43-0.58, 20-way 0.74-0.89; T++ 0.195, Mamba-2 0.015 at the same gap; prose
-   cost <= +0.021 nats); the text library alone finds template / made-up facts 1.00 at 300k and the mind writes them
-   0.65-0.90 cold (150x the trained length; ~4.5 MB vs ~11 GB KV).
+   cost <= +0.021 nats); the package recalls 0.90-1.00 at 1k / 16k / 100k back inside a 128k session (the cap); longer lengths
+   are out of scope by the user's rule.
 
 Honesty lines that travel with every claim: the recall win is the LIBRARY's (the exact-key 1.00 is a model-free text
 organ, identical for every body); a transformer given the same library and a cold read reads single facts as well and
@@ -61,14 +61,14 @@ summary) is unsolved by any body at 103M.
 | PAM package (warm + contrast) | 1.15 MB | 0.975 / 0.925 | 0.90 / 1.00 | 0.75 / 0.675 | 0.475 |
 
 ### 2.3b Needles by distance back (A25, package v0, b2p2; 128k; strict abstain on)
-| distance back | ~1k | ~16k | ~100k | 300k (pending) |
-|---|---|---|---|---|
-| package (template wording) | 0.90-1.00 | 0.90-1.00 | 0.90-1.00 | kv 1.00 at 250k so far |
-| package, varied wording, natural keys | 0.60-0.80 (strict 0.10-0.30) | | | |
-| mind alone | 0.00 | 0.00 | 0.00 | |
-| T++ 2k window alone | 0.00-0.20 | 0.00 | 0.00 | |
-| T++ window + the package's row | 0.90-1.00 | 0.90-1.00 | 0.90-1.00 | |
-| strict abstain on never-stored | 0.90-1.00 | | | |
+| distance back | ~1k | ~16k | ~100k |
+|---|---|---|---|
+| package (template wording) | 0.90-1.00 | 0.90-1.00 | 0.90-1.00 |
+| package, varied wording, natural keys | 0.60-0.80 (strict 0.10-0.30) | | |
+| mind alone | 0.00 | 0.00 | 0.00 |
+| T++ 2k window alone | 0.00-0.20 | 0.00 | 0.00 |
+| T++ window + the package's row | 0.90-1.00 | 0.90-1.00 | 0.90-1.00 |
+| strict abstain on never-stored | 0.90-1.00 | | |
 Cost (PACKAGE.md v0 §7): state per body (b2p2 1.15 MB, 16nb 3.92 MB) + text 2 B / token + indexes ~9.4 B / token + the
 F2 address (int8 592 B / token, or sign bits ~4.9 B / token); session read 11.4 s at 128k, an answer ~0.4 s; a T++ KV
 cache for the same session 4.8 GB at 128k.
