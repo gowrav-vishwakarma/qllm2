@@ -3300,6 +3300,24 @@ fitted threshold:
     filler tokens in the last gap (R 8192, L 32k, the same seeds) with vs
     without echo dilation, in a small follow-up run (A16 itself started at
     08:43 without it).
+  - **A16 VERDICT (2026-11-01 08:54 IST; code 02b3306; `logs/v14_a16_n11rd_b2p2_02b3306_20261101_0843.jsonl` + .log, 600 rows):
+    NOT met.** At 32k free(R 8192 + echo dilation + contrast) **0.42** < free(R
+    2048 plain) 0.63 − 0.05.
+
+    | 32k free (pooled) | plain | + contrast | + dilation | + dilation + contrast |
+    |---|---|---|---|---|
+    | R 2048 | 0.63 | **0.70** | – | – |
+    | R 4096 | 0.16 | 0.63 | 0.49 | **0.65** |
+    | R 8192 | 0.02 | 0.04 | 0.05 | 0.42 |
+
+    (8k: R 2048 0.59 / 0.70; R 4096 0.13 / 0.57 / 0.45 / 0.64; R 8192 0.01 / 0.03 /
+    0.07 / 0.45.) Per rule at 32k: affine R2k plain 0.84 vs R8k + dil + c 0.54;
+    shift 0.42 vs 0.30.
+    - One read does not reach 8k well enough even with dilation + contrast
+      (0.42); at 4k, dilation + contrast (0.65) matches 2k plain (0.63),
+      descriptive, and the dilation adds only +0.02 over the contrast alone
+      there. Best overall: R 2048 + contrast 0.70 (+1.6 % tokens).
+    - Prose cost of the dilation: the A16/1 follow-up (running next).
 - **A17: render the fetched row in the mind's TRAINED template (PRE-REGISTERED
   2026-11-01 08:47 IST, before any number of it; Mind's EUREKA d92c2cf: skills
   are format-bound).** Plumbing on the library side (closest prior work:
