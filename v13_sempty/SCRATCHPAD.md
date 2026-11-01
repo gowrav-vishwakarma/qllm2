@@ -63,7 +63,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   decision (with w1s + A19). The controller unit comes after R × K.
 
   **Next for Mind:**
-  - w1r verdict (tmux `w1r` on the 4090 since 13:04 IST; `bash v13_sempty/tmp/w1r_chain.sh` in `../qllm_w1s`; ~15:00 IST);
+  - **w1r DONE (14:28 IST): REPLICATES.**
+    - s8 D +0.32; beyond the windows' reach, s8 at 4k 0.416 → 0.771; clk2 +0.12; holdout +0.002.
+    - W1 is a reach unit (not a reader). The 600M run (b2p2 recipe + W1) is the USER's decision. The 4090 is free.
+    - Keep W1's code.
   - bud verdict;
   - then cu3 design:
     - open field vocabulary, held-out names, many formats, loss-weight budget;

@@ -119,8 +119,14 @@ Each entry gives: the idea (maths), the recipe, the numbers, the verdict and the
   - Same cells and flags, 600M: T++ 0.74 vs b2p2 0.44 (b2 mix); T++ tfc1b 0.89 vs c1m2 0.46 (aptitude recipe). T++ 100M: 0.45.
   - **Lesson:** the row sits inside the window and the window is used, yet field selection does not improve. The miss is a
     SKILL (which field), not a view. The reader belongs in the package (A19's field cut).
-  - Unexpected, one seed: s8 D 0.559 → 0.730 and clk2 8k 20-way 0.31 → 0.53, with the decays unchanged. A seed replicate (w1r) is
-    proposed.
+  - **Replicated as a REACH unit** (w1r, seed 44):
+    - s8 D +0.17 / +0.32;
+    - s8 at 4k, beyond the windows' reach (3 × 127 = 381 tokens; the last example is 510 back): 0.435 → 0.617 / 0.416 → 0.771;
+    - clk2 8k 20-way +0.22 / +0.12;
+    - holdout +0.006 / +0.002; decays unchanged.
+  - The largest gain is on rules inferred from SPREAD examples (letter shift most). Guess: the window computes each example's x → y
+    relation locally, and the state accumulates it.
+  - Known hybrid (Samba, Griffin), no mechanism claim. State 1.15 → ~2.05 MB, still O(1). 600M is the user's decision.
 
 ## 7b. Rule × fetched fact (R × K, the thesis cell)
 

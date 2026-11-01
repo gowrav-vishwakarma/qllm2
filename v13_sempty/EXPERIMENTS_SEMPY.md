@@ -5337,3 +5337,62 @@ Generations (greedy; prompt tail `…27 -> 94 Record: lagtud | x: 7.\n\n7 ->`, g
     sets: an unexplained attractor.
 
   So few demos carry a rule at once but not across a 2k gap, and the contrast must stay gated (A16's refresh is the safe lever).
+
+## w1r VERDICT (14:28 IST, 2026-11-01): REPLICATES on every pre-registered bar. W1 (window 128 in blocks 5 / 9 / 13, +4.15M = +4 %) raises in-context rule inference from spread examples (s8) on both seeds at holdout parity, including in the cell beyond the windows' reach. A REACH unit, not a reader
+
+**Arms:**
+- `w1r_w0_508aaff` (102.88M) and `w1r_w128_508aaff` (107.04M), as in w1s (120M stage A + 100M stage B), SEED=44.
+- 4090, 13:04–14:24 IST. Logs: `logs/v13_sempty_w1r_*`, `logs/learning_probes/v13_sempty_w1r_*`, `logs/diag/v13_sempty_{skillpack,clk2_echo}_w1r_*`.
+
+| bar (w128 − w0) | seed 43 (w1s) | **seed 44 (w1r)** | bar |
+|---|---|---|---|
+| s8 D (mean over 2k / 4k, scored) | 0.559 → 0.730 (+0.171) | **0.522 → 0.844 (+0.323)** | ≥ +0.08 |
+| clk2 8k (echo s = 8 + contrast), 20-way | 0.31 → 0.53 (+0.22) | **0.33 → 0.45 (+0.12)** | ≥ +0.10 |
+| holdout | 3.7454 → 3.7510 (+0.006) | **3.7456 → 3.7480 (+0.002)** | ≤ +0.02 |
+
+**Reach check (how far back W1 can see):**
+- Three stacked windows of 128 reach at most 3 × 127 = 381 tokens back.
+- In s8, the last example ends 254 tokens before the query at 2k, which is inside two windows. A single example fixes a letter shift,
+  so **the 2k cell is confounded.** At 4k it ends 510 tokens back, beyond all three windows.
+- The skill-pack and clk2 cells read the pack ≥ 2k back.
+
+| cell beyond the windows' reach, w0 → w128 | seed 43 | seed 44 |
+|---|---|---|
+| s8 at 4k, scored (shift + affine mean) | 0.435 → 0.617 | 0.416 → 0.771 |
+| s8 at 4k, free | 0.194 → 0.361 | 0.155 → 0.411 |
+| s8 at 4k, shift only, scored | 0.17 → 0.453 | 0.185 → 0.74 |
+| skill pack plain, 20-way, 2k / 4k | 0.61 / 0.105 → 0.735 / 0.225 | 0.63 / 0.14 → 0.67 / 0.22 |
+| skill pack + contrast, free, 2k / 4k | 0.87 / 0.335 → 0.74 / 0.325 | 0.79 / 0.23 → 0.73 / 0.36 |
+| clk2 8k, free | 0.12 → 0.21 | 0.18 → 0.16 |
+
+Other readouts:
+- Text-arm tool read (seed 44): 0.5125 → 0.5625; pooled over both seeds, +0.03. Still no reader gain.
+- WikiText val loss (seed 44): 4.5392 → 4.5191.
+
+**Reading:**
+- **Real, and where it lives:** the gain holds beyond the windows' reach on both seeds. It is largest when the rule must be INFERRED
+  from examples spread through text (s8 4k +0.18 / +0.36, shift most), and small for a contiguous pack read once (skill pack plain
+  +0.04 to +0.13).
+- **With the contrast:** W1 is lower at 2k free on both seeds (−0.13 / −0.06); mixed at 4k.
+- **The decays are unchanged** (w1s half-lives).
+- **A write-side guess:** each spread example "x -> y" sits inside a window. W1 can compute the pair's RELATION locally (a letter
+  offset) and hand the notebooks a cleaner feature to accumulate, instead of the recurrence having to bind x to y itself.
+  Testable: linear decodability of k from the state after the examples, w0 vs w128.
+- **Prior work:** Samba (Ren et al. 2024: Mamba + sliding-window attention, better length extrapolation and recall), Griffin / Hawk
+  (De et al. 2024), Based (Arora et al. 2024). The hybrid is KNOWN, so there is no mechanism claim.
+- **What is measured here:** in-context rule inference from examples 500 tokens apart, beyond the windows' reach, gains at +4 %
+  params with LM parity.
+- **Inference memory:** the window KV is fixed at 3 blocks × 128 × (k, v) × 588 × 2 bytes ≈ 0.9 MB (bf16), so the state is
+  1.15 → ~2.05 MB. Still O(1) in context length.
+
+**Consequence (pre-registered):**
+- W1 goes to the USER as a 600M decision, as a reach unit, never as a reader. Its code stays.
+- Proposed 600M run: b2p2's exact recipe + `SWA_LAYERS=5,9,13 SWA_WINDOW=128`, against b2p1 / 2 / 3 as the seed spread
+  (s8 D 0.645 / 0.691 / 0.741; holdout 3.4777 / 3.4800 / 3.4775).
+- Bars:
+  - s8 D ≥ 0.80 (the best b2p seed + 0.06);
+  - s8 at 4k reported separately;
+  - holdout ≤ 3.4900;
+  - clk2 8k 20-way ≥ b2p2's 0.74.
+- Cost: about 3 h on the 4090, or on the 6000 after bud.
+- The 3B body (r3c, 16nb) is a separate question.

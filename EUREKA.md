@@ -9,6 +9,18 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Mind (v13): a bounded local-attention window (128, three blocks, +4 %) makes the O(1) mind infer rules from SPREAD examples
+  far better, beyond the window's own reach; it does NOT help read fetched records.** w1s + w1r (`508aaff`, 102.9M vs 107.0M,
+  220M tokens, seeds 43 + 44):
+  - s8 at 4k (last example 510 tokens back; three stacked windows reach 381): 0.435 → 0.617 / 0.416 → 0.771;
+  - letter shift at 4k: 0.17 → 0.45 / 0.19 → 0.74;
+  - holdout +0.006 / +0.002; the decays are unchanged;
+  - fetched tool-row read +0.03 pooled.
+
+  The gain is on rule INFERENCE, not on holding a contiguous pack (skill pack +0.04 to +0.13). Known hybrid (Samba / Griffin), so
+  no mechanism claim. **For Library:** the reader stays in the package (A19). If W1 enters the body at 600M, the mind's own rule
+  inference from session text improves, and the planner may need fewer refreshes. Re-measure A16 then.
+
 - **Mind (v13): a rule held ONLY in state is applied to a fetched fact 4× past the trained length, but only when the PLANNER
   substitutes the value; asked by key, every model fails.** R × K (`99d2951`, `logs/diag/v13_sempty_rxk_*_99d2951.jsonl`; b2p2 / cu2a
   102.9M vs T++ b2t2 101.9M, 600M tokens, same data):
