@@ -3239,6 +3239,24 @@ fitted threshold:
     - Next (needs its own pre-registration): keep the FULL 588-d direction at
       low precision on the surprising tokens only (int8: 592 B × 62.5k tokens ≈
       37 MB / 1M, inside the latitude) to tell PCA's loss from pruning's.
+- **A15: which compression keeps the surprise-keyed address? (PRE-REGISTERED
+  2026-11-01 06:59 IST, before any number of it.)** A14 lost the synonym
+  address with PCA-64 (0.632 → 0.263). Keep the FULL 588-d direction, store
+  less precision:
+  - V-full: every token, fp16 (reference, 1,176 MB / 1M);
+  - V-all8: every token, 588-d int8 + fp16 scale (590 MB / 1M; reference);
+  - V-sal8 (candidate): the top 1/16 surprising stream tokens, 588-d int8 +
+    scale + position (596 B × 62.5k ≈ 37 MB / 1M, inside the latitude);
+  - V-sal1: the same tokens, sign bits only (74 B + 4 B position ≈ 4.9 MB /
+    1M; cosine on ±1 vectors).
+  - Cells: syn, synneg, natq, natqneg (natural); b2p2; 32k; FRESH seed
+    35000; 30 docs each. Fetch = A13's F2 (query tokens at full precision);
+    read = warm + contrast of each form's top-1.
+  - Bar: V-sal8 F2 top-1 ≥ V-full − 0.075 on syn AND on natq. Reported: V-sal1
+    and V-all8 the same way, the lenient answer accuracy per form, MB / 1M.
+  - Closest prior work: ColBERTv2 residual compression; binary embeddings /
+    SimHash (Charikar 2002). Difference: only the tokens the O(1) mind found
+    surprising are kept.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
