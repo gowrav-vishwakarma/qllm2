@@ -4819,3 +4819,25 @@ run.** N9s is Library's unit: its removal from the code is Library's call, with 
 - **Prior work:** Δ / dt scaling for SSM length extrapolation (DeciMamba, LongMamba; "Stuffed Mamba" on state
   collapse). The difference is the trigger: the package dilates after its own skill read, measured on
   one-read rule reach. No method claim.
+
+### clk1 result (05:56 IST, 2026-11-01): FAIL as pre-registered (LM cost); dilation + contrast carry one read to 8k (free 0.52, 20-way 0.76)
+
+b2p2, CPU, fresh seeds 8400–8449 (100 rows per L), `logs/diag/v13_sempty_clk1_b2p2_db43950.jsonl` + `..._clk1prose_b2p2_db43950.json`.
+
+| one read, then L filler | free 4k | 20-way 4k | free 8k | 20-way 8k | prose NLL (dilated span) |
+|---|---|---|---|---|---|
+| s = 1 (plain) | 0.13 | 0.34 | 0.01 | 0.09 | 3.899 |
+| s = 2 | 0.36 | 0.63 | 0.03 | 0.10 | 3.966 (+0.068) |
+| s = 4 | 0.49 | 0.74 | 0.08 | 0.31 | 4.081 (+0.182) |
+| **s = 4 + contrast a = 4** | **0.58** | **0.88** | **0.52** | **0.76** | (as s = 4 over the span; contrast only at the query) |
+
+Bar (some s ∈ {2, 4}: free 4k ≥ 0.45 AND prose NLL ≤ +0.05): s = 4 reaches 0.49 but costs +0.182; s = 2 costs
++0.068 and reaches 0.36. **FAIL.**
+
+**Reading.** Slowing forgetting after a read keeps the trace (20-way 4k 0.34 → 0.74), and the contrast makes it
+audible. Together they carry one read to 8k, 4× the training length: free 0.52 where each alone gives 0.08
+(dilation) or 0.045 (cd2's contrast). The price is the session text read during the dilation: +0.18 nats at
+s = 4, because every head keeps old context longer. The next cut is targeting: dilate only part of the
+memory (the echo heads, or the notebooks, or the heads that wrote the pack) to keep the trace at a fraction
+of the LM cost (clk2). Prior work as clk1 (Δ / dt scaling for SSM length extension); the combination with a
+query-time contrast, triggered by the package's own read, is the setting. No method claim.
