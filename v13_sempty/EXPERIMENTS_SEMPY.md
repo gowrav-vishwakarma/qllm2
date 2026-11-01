@@ -5093,3 +5093,17 @@ measurement; no method claim.
 - The thesis claim needs explicit + contrast clearly above the floor, and is read against the ceiling. Bars unchanged; the
   controls and the adaptive arm are reported.
 - Run on the 4090 beside w1s (probe memory cap 0.2), not on CPU.
+**rxk amendment 2 (10:28 IST, before any rxk number; Lead adopts Library's controls).**
+- **Exact formats** (for the package planner):
+  - fetched row: " Record: <K> | x: <v>." (affine) or " Record: <K> | letter: <v>." (shift), then a newline;
+  - explicit question: the trained query line "<v> ->" (the planner substitutes v from the row);
+  - implicit question: "<K> ->";
+  - K = the bench's synthetic `_recall_key`.
+- **Controls:** CEILING = the pack re-inserted right before the row (RAG + few-shot: if it equals the state-only row, the mind
+  added nothing); FLOOR = no pack anywhere.
+- **T++** (`b2t2_main_38e3c29`, seed 43, the s8 baseline) on the same cells, as it is: plain decode only. At 2k the rule is
+  inside its window; at 4k / 8k it is past its trained length.
+- **Prefix note** (for the write-up): a reader conditioned on a single PREFIX vector would likely drop the rule (Library's SR-0:
+  one vector does not carry a rule). In R × K the mind reads itself (warm + contrast); a reader organ, if ever built, is for
+  records and formats, not for applying held rules.
+- **Run on CPU:** the 4090 has ~2 GB free beside w1s and Library's jobs, so it is below the VRAM rule.
