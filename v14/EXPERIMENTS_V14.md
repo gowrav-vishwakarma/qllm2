@@ -3655,6 +3655,22 @@ fitted threshold:
       the contrast (an unexplained " 41" attractor in 12 / 20). Package rules:
       a register skill carries ≥ 8 demonstrations, is refreshed near the query
       (the 2k refresh), and its contrast is measured on vs off per skill.
+- **A24: do rules reach the mind as demonstrations, not words? (REGISTERED
+  2026-11-01 14:25 IST, before any number; Lead's spec + Mind's follow-up.)**
+  - 20 affine rules y = a·x + b, a ∈ {1, 2, 3}, b from the TRAINED offsets
+    (0-20 except 7 / 13 / 17; the story's 2x + 1 is inside, per Mind), 2
+    queries each (held-out x, y < 100) = 40 items per arm, fixed seed 24001.
+  - Arms (the rule, then 2,048 tokens of held-out web text, then "\n{x} ->"):
+    WORDS ("Rule: each output is {a} times the input plus {b}." in the
+    story's register of language), DEMO3 and DEMO8 ("Map rule." + "\nx -> y"
+    lines, the trained format); reported: DEMO8-NEAR (no rule at the start, the
+    8 demos read 256 tokens before the query = the package's refresh).
+  - Reads: `pkg.apply_value`, contrast a = 4 (the R x K read; twin = the same
+    session without the rule) and plain (a = 0). Minds: b2p2, cu2a. CPU.
+  - Bar (Lead's, on b2p2, contrast): DEMO8 ≥ WORDS + 0.30 AND DEMO8 ≥ 0.50.
+    Reported: DEMO3, DEMO8-NEAR, plain, cu2a, per-offset breakdown.
+  - Prior evidence (Mind, 20 demo sets of 2x + 1): 2k + 8 demos 0.45 plain /
+    0.30 contrast, so the bar may well fail on the contrast read.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
