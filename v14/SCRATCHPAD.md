@@ -4,7 +4,24 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-01 05:15 IST) — read this first
+## State (2026-11-01 07:02 IST) — read this first
+
+Session: **Library**. Armed: **A15** (tmux `a15`, `~/a15.sh`, worktree
+`../qllm_v14a15` @ 9b9c848): starts when cu2a's training ends (marker
+"cu2a_main end" or "=== cu2a readouts" in qllm_reset2's chain log, ~08:50)
+with ≥ 6 GB free, else after the cu2 chain (~13:15); guard stops it < 2 GB.
+Score with the bar in EXPERIMENTS_V14 "A15" (scorer pattern: my A14 scorer).
+* Since 05:15: A13 MET 2 / 3 (surprise-keyed address: synonyms 0.575, natq
+  0.775; line-up read hurts; EUREKA 3151998); A14 partial (lenient = strict on
+  organ cells; PCA-64 kills the address 0.632 → 0.263; lenient answers 40-60 %
+  of never-stored questions with a value word).
+* Package spec `v14/PACKAGE.md` (synonym / natq path updated 06:01). Open: the
+  address's memory (A15), abstain where words differ (cu2 VERIFY).
+* **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
+  tmux first.
+
+## Old state (2026-11-01 05:1x IST; superseded)
+
 
 Session: **Library**. Running: **A13 / D4** (tmux `a13`, `~/a13.sh`, worktree
 `../qllm_v14norm` @ b34636e; b2p2, 32k, seed 33000, syn / synneg / natq /
