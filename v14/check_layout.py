@@ -30,6 +30,7 @@ SKIP_FILES = frozenset({
     "a13_manykey.py",    # A13: many-key fetch eval (frozen states, max-sim, raw torch)
     "a14_pca.py",        # A14: PCA basis fit for the stored address (raw torch svd)
     "a14_package.py",    # A14: 3-step lenient package eval (raw torch)
+    "a16_span_nll.py",   # A16/1: span NLL with / without echo dilation (raw torch)
     "package_fetch.py",  # the package fetch as a harness key_fn (two organs, raw torch)
     "pack.py",           # library packs: text-first format + install tool (raw torch / numpy)
     "pack_check.py",     # cross-document check of the install tool
