@@ -321,12 +321,15 @@ def main():
             except Exception as e:
                 rec['mem'] = f'n/a: {e}'
             try:
-                vecs = R.vectors(ids)
-                keys_doc = R.last_keys          # captured now: later short re-reads overwrite R.last_keys
-                lg = R.last_logits(ids, vecs)
-                pa = cand[int(lg[cand].argmax())]
-                rec['A_state'] = int(pa == ans)
-                if a.task == 'hop2':  # one-hop exact: next token == first token of K2
+                if a.skip_state:                 # text arm on CPU (Nov 1): no full-document forward at all
+                    vecs = None; keys_doc = None; lg = None; pa = None; rec['A_state'] = None
+                else:
+                    vecs = R.vectors(ids)
+                    keys_doc = R.last_keys          # captured now: later short re-reads overwrite R.last_keys
+                    lg = R.last_logits(ids, vecs)
+                    pa = cand[int(lg[cand].argmax())]
+                    rec['A_state'] = int(pa == ans)
+                if a.task == 'hop2' and lg is not None:  # one-hop exact: next token == first token of K2
                     k2_first = tok.encode(f" {meta['hop_key']}", add_special_tokens=False)[0]
                     rec['A_hop1_exact'] = int(int(lg.argmax()) == k2_first)
                 # B: n-gram organ
