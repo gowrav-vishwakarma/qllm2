@@ -1,4 +1,5 @@
 """A14 (pre-registered 2026-11-01 06:02 IST): the 3-step lenient package with its memory stated.
+A15 (06:59 IST): --forms all8 / sal8 / sal1 keep the full 588-d direction at int8 / sign bits.
 
 Per doc (bench cells): (1) organ chain (token organ, then the normalised organ on the whole question); (2) if it
 misses, the surprise-keyed address (A13's F2: the 2 most surprising question tokens, block-8 max-sim over each
@@ -63,6 +64,7 @@ def main():
     ap.add_argument('--seed', type=int, default=34000); ap.add_argument('--L', type=int, default=32768)
     ap.add_argument('--docs', type=int, default=30); ap.add_argument('--needles', type=int, default=8)
     ap.add_argument('--cells', default=CELLS); ap.add_argument('--device', default='cuda')
+    ap.add_argument('--forms', default='full,pca,sal', help='A15 adds all8 / sal8 / sal1 (full 588-d at int8 / sign bits)')
     ap.add_argument('--out', required=True)
     a = ap.parse_args()
     dev = torch.device(a.device)
@@ -104,9 +106,16 @@ def main():
             k = max(1, int(round(end * SAL_FRAC)))
             keep = torch.zeros(len(ids), dtype=torch.bool, device=dev)
             keep[surp[:end].topk(k).indices.to(dev)] = True
-            ranks = {'full': rank_rows(full[:end], full[sal], rows),
-                     'pca': rank_rows(pca[:end], qp, rows),
-                     'sal': rank_rows(pca[:end], qp, rows, keep[:end])}
+            want = a.forms.split(',')
+            q8 = torch.nn.functional.normalize(c[sal], dim=-1)                          # query: full precision
+            make = {'full': lambda: rank_rows(full[:end], full[sal], rows),
+                    'pca': lambda: rank_rows(pca[:end], qp, rows),
+                    'sal': lambda: rank_rows(pca[:end], qp, rows, keep[:end]),
+                    'all8': lambda: rank_rows(torch.nn.functional.normalize(int8(c[:end]), dim=-1), q8, rows),
+                    'sal8': lambda: rank_rows(torch.nn.functional.normalize(int8(c[:end]), dim=-1), q8, rows, keep[:end]),
+                    'sal1': lambda: rank_rows(torch.nn.functional.normalize(torch.sign(c[:end]), dim=-1),
+                                              torch.nn.functional.normalize(torch.sign(c[sal]), dim=-1), rows, keep[:end])}
+            ranks = {name: make[name]() for name in want}
             for name, rk in ranks.items():
                 pos = [rk.index(i) for i in fact] if fact else []
                 rec[f'{name}_rank'] = min(pos) if pos else None
