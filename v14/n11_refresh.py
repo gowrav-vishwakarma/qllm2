@@ -41,6 +41,18 @@ def stream(pack, fill, q, sep, R):
     return out + sep + q, n_ins
 
 
+def last_gap(pack, fill, sep, R):
+    """(start of the last filler chunk in stream()'s ids, its offset in fill): the stretch after the last pack read."""
+    if R <= 0:
+        return len(pack) + len(sep), 0
+    n, start, off = len(pack), None, 0
+    for i in range(0, len(fill), R):
+        n += len(sep); start, off = n, i; n += len(fill[i:i + R])
+        if i + R < len(fill):
+            n += len(sep) + len(pack)
+    return start, off
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--ckpt', default=B2P2)
@@ -53,6 +65,9 @@ def main():
     ap.add_argument('--contrast', type=float, default=None,
                     help='A8 (N11-RC): also score l_R + a (l_R - l_nopack), nopack = filler + question, no pack')
     ap.add_argument('--device', default='cuda')
+    ap.add_argument('--dilate', type=float, default=None,
+                    help='A16: echo dilation s (retention ** 1/s) from the last pack read to the question, with the contrast')
+    ap.add_argument('--dilate_refresh', default='', help='A16: the R values that also get the dilated + contrast arm')
     a = ap.parse_args()
     if a.device == 'cuda':
         torch.cuda.set_per_process_memory_fraction(a.mem_frac)
@@ -80,6 +95,19 @@ def main():
                         cc, mc = score(ex, lgc); tc = int(lgc.argmax())
                         extra = dict(alpha=a.contrast, correct_c=cc, margin_c=mc,
                                      free_c=int(tc == ex.target_token_id), free_tok_c=tok.decode([tc]))
+                    if a.dilate is not None and str(R) in a.dilate_refresh.split(','):
+                        g0, off = last_gap(pack, fill, sep, R)                     # A16: echo dilation, then contrast
+                        nq = len(sep) + len(fill) + len(sep)
+                        mind.m._dilate = (g0, len(ids) - len(q), a.dilate, 'echo')
+                        lg_d = mind.forward(ids)[0]
+                        mind.m._dilate = (len(sep) + off, nq, a.dilate, 'echo')
+                        lg_nd = mind.forward(sep + fill + sep + q)[0]
+                        mind.m._dilate = None
+                        lgdc = lg_d + (a.contrast or 0.0) * (lg_d - lg_nd)
+                        cd, md = score(ex, lgdc); td = int(lgdc.argmax())
+                        extra.update(dilate=a.dilate, dilate_span=len(ids) - len(q) - g0, correct_dc=cd, margin_dc=md,
+                                     free_dc=int(td == ex.target_token_id), free_tok_dc=tok.decode([td]),
+                                     free_d=int(int(lg_d.argmax()) == ex.target_token_id))
                     out.write(json.dumps(dict(task=task, doc=seed, L=L, R=R, correct=c, margin=m,
                                               free=int(top == ex.target_token_id), free_tok=tok.decode([top]),
                                               inserts=n_ins,
