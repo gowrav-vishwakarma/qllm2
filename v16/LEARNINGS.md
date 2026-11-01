@@ -3,7 +3,7 @@
 Settled 2026-11-01 (the user asked Mind and Lead to discuss). The package code moves into `v16/` **once, at release**,
 taking only what survived. Until then each session keeps a short learnings file: the key results and lessons, so the
 new repo knows what was tried and why. This repo stays accessible (user, 2026-11-01), so the details and the code
-are one commit hash away:
+are one commit hash away. Each entry gives:
 
 - the idea, with its maths in two lines;
 - the exact recipe;
