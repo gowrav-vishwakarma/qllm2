@@ -1,0 +1,89 @@
+{
+ "meta": {
+  "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt",
+  "params": 102884948,
+  "arch": "LM",
+  "lm_eval": "0.4.9.1",
+  "limit": null,
+  "sec": 174.1
+ },
+ "results": {
+  "arc_challenge": {
+   "alias": "arc_challenge",
+   "acc,none": 0.19027303754266212,
+   "acc_stderr,none": 0.01147042417922571,
+   "acc_norm,none": 0.23293515358361774,
+   "acc_norm_stderr,none": 0.01235250704261738
+  },
+  "arc_easy": {
+   "alias": "arc_easy",
+   "acc,none": 0.4541245791245791,
+   "acc_stderr,none": 0.010216507710244105,
+   "acc_norm,none": 0.406986531986532,
+   "acc_norm_stderr,none": 0.010080695355466596
+  },
+  "hellaswag": {
+   "alias": "hellaswag",
+   "acc,none": 0.27106154152559253,
+   "acc_stderr,none": 0.004435993492583924,
+   "acc_norm,none": 0.2787293367855009,
+   "acc_norm_stderr,none": 0.0044745770545174725
+  },
+  "lambada_openai": {
+   "alias": "lambada_openai",
+   "perplexity,none": 578.259615950591,
+   "perplexity_stderr,none": 30.54280211643271,
+   "acc,none": 0.145934407141471,
+   "acc_stderr,none": 0.0049185437068291395
+  },
+  "openbookqa": {
+   "alias": "openbookqa",
+   "acc,none": 0.144,
+   "acc_stderr,none": 0.015716934945725767,
+   "acc_norm,none": 0.298,
+   "acc_norm_stderr,none": 0.02047511809298897
+  },
+  "piqa": {
+   "alias": "piqa",
+   "acc,none": 0.5903155603917302,
+   "acc_stderr,none": 0.01147393200718761,
+   "acc_norm,none": 0.5783460282916213,
+   "acc_norm_stderr,none": 0.011521722161800276
+  },
+  "winogrande": {
+   "alias": "winogrande",
+   "acc,none": 0.505130228887135,
+   "acc_stderr,none": 0.014051745961790516
+  }
+ },
+ "n_samples": {
+  "lambada_openai": {
+   "original": 5153,
+   "effective": 5153
+  },
+  "openbookqa": {
+   "original": 500,
+   "effective": 500
+  },
+  "winogrande": {
+   "original": 1267,
+   "effective": 1267
+  },
+  "piqa": {
+   "original": 1838,
+   "effective": 1838
+  },
+  "arc_challenge": {
+   "original": 1172,
+   "effective": 1172
+  },
+  "arc_easy": {
+   "original": 2376,
+   "effective": 2376
+  },
+  "hellaswag": {
+   "original": 10042,
+   "effective": 10042
+  }
+ }
+}

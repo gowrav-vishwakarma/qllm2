@@ -1,0 +1,59 @@
+{
+ "meta": {
+  "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/b2p2_main_38e3c29/best_model.pt",
+  "params": 102884948,
+  "arch": "LM",
+  "fp32": true,
+  "lm_eval": "0.4.9.1",
+  "limit": null,
+  "sec": 238.0
+ },
+ "results": {
+  "arc_easy": {
+   "alias": "arc_easy",
+   "acc,none": 0.4541245791245791,
+   "acc_stderr,none": 0.010216507710244103,
+   "acc_norm,none": 0.4074074074074074,
+   "acc_norm_stderr,none": 0.010082326627832861
+  },
+  "hellaswag": {
+   "alias": "hellaswag",
+   "acc,none": 0.2700657239593706,
+   "acc_stderr,none": 0.004430861033616665,
+   "acc_norm,none": 0.27833100975901215,
+   "acc_norm_stderr,none": 0.004472613148508965
+  },
+  "lambada_openai": {
+   "alias": "lambada_openai",
+   "perplexity,none": 578.5618034333276,
+   "perplexity_stderr,none": 30.553563660333964,
+   "acc,none": 0.14748690083446536,
+   "acc_stderr,none": 0.004940140812705919
+  },
+  "piqa": {
+   "alias": "piqa",
+   "acc,none": 0.588683351468988,
+   "acc_stderr,none": 0.011480860577192819,
+   "acc_norm,none": 0.5783460282916213,
+   "acc_norm_stderr,none": 0.011521722161800276
+  }
+ },
+ "n_samples": {
+  "hellaswag": {
+   "original": 10042,
+   "effective": 10042
+  },
+  "piqa": {
+   "original": 1838,
+   "effective": 1838
+  },
+  "arc_easy": {
+   "original": 2376,
+   "effective": 2376
+  },
+  "lambada_openai": {
+   "original": 5153,
+   "effective": 5153
+  }
+ }
+}

@@ -1,0 +1,135 @@
+kb1 chain: code 2577940, 2026-11-01T10:16:21Z
+=== b2p2 2026-11-01T11:10:21Z
+      |          ^~~~~~~~~~~~~~~
+arc_challenge {'acc,none': 0.1903, 'acc_norm,none': 0.2329}
+arc_easy {'acc,none': 0.4541, 'acc_norm,none': 0.407}
+hellaswag {'acc,none': 0.2711, 'acc_norm,none': 0.2787}
+lambada_openai {'perplexity,none': 578.2596, 'acc,none': 0.1459}
+openbookqa {'acc,none': 0.144, 'acc_norm,none': 0.298}
+piqa {'acc,none': 0.5903, 'acc_norm,none': 0.5783}
+winogrande {'acc,none': 0.5051}
+=== b2t2 2026-11-01T11:13:20Z
+arc_challenge {'acc,none': 0.1869, 'acc_norm,none': 0.2321}
+arc_easy {'acc,none': 0.439, 'acc_norm,none': 0.3927}
+hellaswag {'acc,none': 0.2658, 'acc_norm,none': 0.2719}
+lambada_openai {'perplexity,none': 1299.1965, 'acc,none': 0.1481}
+openbookqa {'acc,none': 0.148, 'acc_norm,none': 0.294}
+piqa {'acc,none': 0.5789, 'acc_norm,none': 0.5713}
+winogrande {'acc,none': 0.5201}
+=== b2m2 2026-11-01T11:15:44Z
+      |          ^~~~~~~~~~~~~~~
+arc_challenge {'acc,none': 0.2039, 'acc_norm,none': 0.2381}
+arc_easy {'acc,none': 0.4663, 'acc_norm,none': 0.4066}
+hellaswag {'acc,none': 0.2688, 'acc_norm,none': 0.2789}
+lambada_openai {'perplexity,none': 945.4447, 'acc,none': 0.1322}
+openbookqa {'acc,none': 0.136, 'acc_norm,none': 0.296}
+piqa {'acc,none': 0.5947, 'acc_norm,none': 0.5778}
+winogrande {'acc,none': 0.4964}
+=== cu2a 2026-11-01T11:18:39Z
+arc_challenge {'acc,none': 0.1749, 'acc_norm,none': 0.2278}
+arc_easy {'acc,none': 0.4583, 'acc_norm,none': 0.4053}
+hellaswag {'acc,none': 0.2698, 'acc_norm,none': 0.2801}
+lambada_openai {'perplexity,none': 757.7307, 'acc,none': 0.1422}
+openbookqa {'acc,none': 0.16, 'acc_norm,none': 0.292}
+piqa {'acc,none': 0.5751, 'acc_norm,none': 0.5669}
+winogrande {'acc,none': 0.5012}
+=== r3c 2026-11-01T11:21:46Z
+arc_challenge {'acc,none': 0.2014, 'acc_norm,none': 0.2432}
+arc_easy {'acc,none': 0.4886, 'acc_norm,none': 0.42}
+hellaswag {'acc,none': 0.2804, 'acc_norm,none': 0.2961}
+lambada_openai {'perplexity,none': 376.4351, 'acc,none': 0.1791}
+openbookqa {'acc,none': 0.168, 'acc_norm,none': 0.29}
+piqa {'acc,none': 0.5996, 'acc_norm,none': 0.5903}
+winogrande {'acc,none': 0.5107}
+=== tpp3b 2026-11-01T11:25:48Z
+arc_challenge {'acc,none': 0.2082, 'acc_norm,none': 0.2457}
+arc_easy {'acc,none': 0.5046, 'acc_norm,none': 0.4625}
+hellaswag {'acc,none': 0.2782, 'acc_norm,none': 0.2925}
+lambada_openai {'perplexity,none': 403.5131, 'acc,none': 0.1958}
+openbookqa {'acc,none': 0.156, 'acc_norm,none': 0.306}
+piqa {'acc,none': 0.611, 'acc_norm,none': 0.5925}
+winogrande {'acc,none': 0.4941}
+=== mamba3b 2026-11-01T11:28:07Z
+arc_challenge {'acc,none': 0.2116, 'acc_norm,none': 0.2491}
+arc_easy {'acc,none': 0.5173, 'acc_norm,none': 0.4617}
+hellaswag {'acc,none': 0.2843, 'acc_norm,none': 0.3031}
+lambada_openai {'perplexity,none': 304.6457, 'acc,none': 0.1764}
+openbookqa {'acc,none': 0.178, 'acc_norm,none': 0.3}
+piqa {'acc,none': 0.6072, 'acc_norm,none': 0.605}
+winogrande {'acc,none': 0.513}
+=== smollm2_135m 2026-11-01T11:31:02Z
+`torch_dtype` is deprecated! Use `dtype` instead!
+arc_challenge {'acc,none': 0.2816, 'acc_norm,none': 0.2935}
+arc_easy {'acc,none': 0.6448, 'acc_norm,none': 0.5871}
+hellaswag {'acc,none': 0.3564, 'acc_norm,none': 0.4317}
+lambada_openai {'perplexity,none': 19.044, 'acc,none': 0.4283}
+openbookqa {'acc,none': 0.22, 'acc_norm,none': 0.33}
+piqa {'acc,none': 0.6806, 'acc_norm,none': 0.6839}
+winogrande {'acc,none': 0.5383}
+=== pythia_160m 2026-11-01T11:33:46Z
+`torch_dtype` is deprecated! Use `dtype` instead!
+arc_challenge {'acc,none': 0.1852, 'acc_norm,none': 0.2261}
+arc_easy {'acc,none': 0.3868, 'acc_norm,none': 0.3699}
+hellaswag {'acc,none': 0.2833, 'acc_norm,none': 0.3047}
+lambada_openai {'perplexity,none': 105.1786, 'acc,none': 0.117}
+openbookqa {'acc,none': 0.154, 'acc_norm,none': 0.268}
+piqa {'acc,none': 0.5887, 'acc_norm,none': 0.5756}
+winogrande {'acc,none': 0.5028}
+=== gpt2_124m 2026-11-01T11:36:56Z
+`torch_dtype` is deprecated! Use `dtype` instead!
+arc_challenge {'acc,none': 0.1817, 'acc_norm,none': 0.2295}
+arc_easy {'acc,none': 0.4428, 'acc_norm,none': 0.3969}
+hellaswag {'acc,none': 0.2902, 'acc_norm,none': 0.313}
+lambada_openai {'perplexity,none': 38.5377, 'acc,none': 0.3068}
+openbookqa {'acc,none': 0.164, 'acc_norm,none': 0.27}
+piqa {'acc,none': 0.6192, 'acc_norm,none': 0.6208}
+winogrande {'acc,none': 0.5083}
+=== w1s_w0_508aaff 2026-11-01T11:40:10Z
+arc_challenge {'acc,none': 0.1817, 'acc_norm,none': 0.2244}
+arc_easy {'acc,none': 0.4411, 'acc_norm,none': 0.407}
+hellaswag {'acc,none': 0.268, 'acc_norm,none': 0.2706}
+lambada_openai {'perplexity,none': 1280.0303, 'acc,none': 0.1225}
+openbookqa {'acc,none': 0.142, 'acc_norm,none': 0.256}
+piqa {'acc,none': 0.5794, 'acc_norm,none': 0.5702}
+winogrande {'acc,none': 0.502}
+=== w1s_w128_508aaff 2026-11-01T11:43:07Z
+arc_challenge {'acc,none': 0.1843, 'acc_norm,none': 0.2321}
+arc_easy {'acc,none': 0.4373, 'acc_norm,none': 0.3977}
+hellaswag {'acc,none': 0.2667, 'acc_norm,none': 0.2712}
+lambada_openai {'perplexity,none': 1332.0111, 'acc,none': 0.1236}
+openbookqa {'acc,none': 0.146, 'acc_norm,none': 0.262}
+piqa {'acc,none': 0.5691, 'acc_norm,none': 0.5588}
+winogrande {'acc,none': 0.5178}
+=== w1r_w0_508aaff 2026-11-01T11:46:40Z
+arc_challenge {'acc,none': 0.1843, 'acc_norm,none': 0.2253}
+arc_easy {'acc,none': 0.4356, 'acc_norm,none': 0.4057}
+hellaswag {'acc,none': 0.2672, 'acc_norm,none': 0.275}
+lambada_openai {'perplexity,none': 1256.7197, 'acc,none': 0.1236}
+openbookqa {'acc,none': 0.154, 'acc_norm,none': 0.276}
+piqa {'acc,none': 0.5773, 'acc_norm,none': 0.574}
+winogrande {'acc,none': 0.5138}
+=== w1r_w128_508aaff 2026-11-01T11:49:54Z
+arc_challenge {'acc,none': 0.1826, 'acc_norm,none': 0.2295}
+arc_easy {'acc,none': 0.4276, 'acc_norm,none': 0.3927}
+hellaswag {'acc,none': 0.2667, 'acc_norm,none': 0.2708}
+lambada_openai {'perplexity,none': 1389.9762, 'acc,none': 0.1159}
+openbookqa {'acc,none': 0.146, 'acc_norm,none': 0.278}
+piqa {'acc,none': 0.5707, 'acc_norm,none': 0.5658}
+winogrande {'acc,none': 0.532}
+=== w1w_w512_f68ab64 2026-11-01T11:53:02Z
+arc_challenge {'acc,none': 0.1877, 'acc_norm,none': 0.2372}
+arc_easy {'acc,none': 0.4322, 'acc_norm,none': 0.3927}
+hellaswag {'acc,none': 0.2678, 'acc_norm,none': 0.2708}
+lambada_openai {'perplexity,none': 1241.6765, 'acc,none': 0.1273}
+openbookqa {'acc,none': 0.146, 'acc_norm,none': 0.276}
+piqa {'acc,none': 0.5664, 'acc_norm,none': 0.5615}
+winogrande {'acc,none': 0.5099}
+=== w1w_w1024_f68ab64 2026-11-01T11:55:44Z
+arc_challenge {'acc,none': 0.1852, 'acc_norm,none': 0.2372}
+arc_easy {'acc,none': 0.4339, 'acc_norm,none': 0.4028}
+hellaswag {'acc,none': 0.2673, 'acc_norm,none': 0.2711}
+lambada_openai {'perplexity,none': 1312.7489, 'acc,none': 0.1201}
+openbookqa {'acc,none': 0.146, 'acc_norm,none': 0.27}
+piqa {'acc,none': 0.5658, 'acc_norm,none': 0.5669}
+winogrande {'acc,none': 0.5075}
+=== kb1 chain DONE 2026-11-01T11:58:28Z

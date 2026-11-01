@@ -146,6 +146,14 @@ Each entry gives: the idea (maths), the recipe, the numbers, the verdict and the
   key → row → rule, so the planner substitutes. A record format learned in training can capture a held rule at document start
   (cu2a 1.00 → 0.02).
 
+## 7c. Known benchmarks (kb1)
+
+- lm-eval 0.4.9.1, zero-shot: HellaSwag, ARC-e / c, PIQA, Winogrande, OBQA (MC mean); LAMBADA.
+- **600M tokens:** PAM b2p2 0.391, T++ 0.388, Mamba-2 0.392 (level). **3B:** PAM r3c 0.403, T++ 0.406, Mamba-2 0.415.
+- Slope 600M → 3B: PAM +0.012, T++ +0.018, Mamba-2 +0.023 (PAM's body differs between tiers; t15 gives the clean slope).
+- References (no claim): SmolLM2-135M (2T) 0.487, GPT-2 0.397, Pythia-160M 0.396 (fp32; bf16 degrades Pythia, not our bodies).
+- **Lesson:** PAM's edge is rules in state, not general knowledge. On known tasks the bodies are level at equal data.
+
 ## 8. Budgets and data hygiene
 
 - **Orphaned answers:** the packer cuts docs at window edges, so an answer whose doc began in an earlier window has no evidence.

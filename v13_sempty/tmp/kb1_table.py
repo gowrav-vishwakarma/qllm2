@@ -15,7 +15,7 @@ BLOCKS = [
         ('w1s_w128_508aaff', 'PAM W128, seed 43', '220M', MIX, '107.0M'), ('w1r_w128_508aaff', 'PAM W128, seed 44', '220M', MIX, '107.0M'),
         ('w1w_w512_f68ab64', 'PAM W512, seed 43', '220M', MIX, '107.0M'), ('w1w_w1024_f68ab64', 'PAM W1024, seed 43', '220M', MIX, '107.0M')]),
     ('REFERENCE: different data and tokens, no claim', [
-        ('smollm2_135m', 'SmolLM2-135M', '2T', 'SmolLM corpus', '135M'), ('pythia_160m', 'Pythia-160M', '300B', 'the Pile', '162M'),
+        ('smollm2_135m', 'SmolLM2-135M', '2T', 'SmolLM corpus', '135M'), ('pythia_160m', 'Pythia-160M (fp32; bf16 degrades it)', '300B', 'the Pile', '162M'),
         ('gpt2_124m', 'GPT-2 124M', '~10B', 'WebText', '124M')])]
 for title, rows in BLOCKS:
     got = [(r, glob.glob(f'{D}/v13_sempty_kb1_{r[0]}_*.json')) for r in rows]

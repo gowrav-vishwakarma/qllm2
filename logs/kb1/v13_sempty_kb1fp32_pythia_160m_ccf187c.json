@@ -1,0 +1,88 @@
+{
+ "meta": {
+  "hf": "EleutherAI/pythia-160m",
+  "fp32": true,
+  "lm_eval": "0.4.9.1",
+  "limit": null,
+  "sec": 178.4
+ },
+ "results": {
+  "arc_challenge": {
+   "alias": "arc_challenge",
+   "acc,none": 0.1945392491467577,
+   "acc_stderr,none": 0.011567709174648728,
+   "acc_norm,none": 0.2363481228668942,
+   "acc_norm_stderr,none": 0.012414960524301837
+  },
+  "arc_easy": {
+   "alias": "arc_easy",
+   "acc,none": 0.4364478114478115,
+   "acc_stderr,none": 0.010176569980111043,
+   "acc_norm,none": 0.39646464646464646,
+   "acc_norm_stderr,none": 0.010037412763064529
+  },
+  "hellaswag": {
+   "alias": "hellaswag",
+   "acc,none": 0.28380800637323245,
+   "acc_stderr,none": 0.004499233874427503,
+   "acc_norm,none": 0.3027285401314479,
+   "acc_norm_stderr,none": 0.004584997935360479
+  },
+  "lambada_openai": {
+   "alias": "lambada_openai",
+   "perplexity,none": 37.25535476637691,
+   "perplexity_stderr,none": 1.4180183348098137,
+   "acc,none": 0.35358043857946825,
+   "acc_stderr,none": 0.006660601226776447
+  },
+  "openbookqa": {
+   "alias": "openbookqa",
+   "acc,none": 0.15,
+   "acc_stderr,none": 0.015984712135164926,
+   "acc_norm,none": 0.268,
+   "acc_norm_stderr,none": 0.019827714859587578
+  },
+  "piqa": {
+   "alias": "piqa",
+   "acc,none": 0.6229597388465724,
+   "acc_stderr,none": 0.011307569752543899,
+   "acc_norm,none": 0.6191512513601741,
+   "acc_norm_stderr,none": 0.011329743189016752
+  },
+  "winogrande": {
+   "alias": "winogrande",
+   "acc,none": 0.5130228887134964,
+   "acc_stderr,none": 0.01404771839399767
+  }
+ },
+ "n_samples": {
+  "lambada_openai": {
+   "original": 5153,
+   "effective": 5153
+  },
+  "openbookqa": {
+   "original": 500,
+   "effective": 500
+  },
+  "winogrande": {
+   "original": 1267,
+   "effective": 1267
+  },
+  "piqa": {
+   "original": 1838,
+   "effective": 1838
+  },
+  "arc_challenge": {
+   "original": 1172,
+   "effective": 1172
+  },
+  "arc_easy": {
+   "original": 2376,
+   "effective": 2376
+  },
+  "hellaswag": {
+   "original": 10042,
+   "effective": 10042
+  }
+ }
+}

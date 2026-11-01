@@ -1,0 +1,87 @@
+{
+ "meta": {
+  "hf": "HuggingFaceTB/SmolLM2-135M",
+  "lm_eval": "0.4.9.1",
+  "limit": null,
+  "sec": 159.0
+ },
+ "results": {
+  "arc_challenge": {
+   "alias": "arc_challenge",
+   "acc,none": 0.2815699658703072,
+   "acc_stderr,none": 0.013143376735009026,
+   "acc_norm,none": 0.2935153583617747,
+   "acc_norm_stderr,none": 0.01330725044494111
+  },
+  "arc_easy": {
+   "alias": "arc_easy",
+   "acc,none": 0.6447811447811448,
+   "acc_stderr,none": 0.009820245899287115,
+   "acc_norm,none": 0.5871212121212122,
+   "acc_norm_stderr,none": 0.010102837421104674
+  },
+  "hellaswag": {
+   "alias": "hellaswag",
+   "acc,none": 0.3564031069508066,
+   "acc_stderr,none": 0.0047795744027713865,
+   "acc_norm,none": 0.43168691495717987,
+   "acc_norm_stderr,none": 0.004942990623131115
+  },
+  "lambada_openai": {
+   "alias": "lambada_openai",
+   "perplexity,none": 19.04396232552945,
+   "perplexity_stderr,none": 0.6477568410264561,
+   "acc,none": 0.42829419755482245,
+   "acc_stderr,none": 0.006893971254195145
+  },
+  "openbookqa": {
+   "alias": "openbookqa",
+   "acc,none": 0.22,
+   "acc_stderr,none": 0.01854421137582033,
+   "acc_norm,none": 0.33,
+   "acc_norm_stderr,none": 0.021049612166134817
+  },
+  "piqa": {
+   "alias": "piqa",
+   "acc,none": 0.6806311207834603,
+   "acc_stderr,none": 0.010877964076613737,
+   "acc_norm,none": 0.6838955386289445,
+   "acc_norm_stderr,none": 0.010848148455700446
+  },
+  "winogrande": {
+   "alias": "winogrande",
+   "acc,none": 0.5382794001578532,
+   "acc_stderr,none": 0.014011242594964123
+  }
+ },
+ "n_samples": {
+  "lambada_openai": {
+   "original": 5153,
+   "effective": 5153
+  },
+  "openbookqa": {
+   "original": 500,
+   "effective": 500
+  },
+  "winogrande": {
+   "original": 1267,
+   "effective": 1267
+  },
+  "piqa": {
+   "original": 1838,
+   "effective": 1838
+  },
+  "arc_challenge": {
+   "original": 1172,
+   "effective": 1172
+  },
+  "arc_easy": {
+   "original": 2376,
+   "effective": 2376
+  },
+  "hellaswag": {
+   "original": 10042,
+   "effective": 10042
+  }
+ }
+}

@@ -1,0 +1,87 @@
+{
+ "meta": {
+  "hf": "EleutherAI/pythia-160m",
+  "lm_eval": "0.4.9.1",
+  "limit": null,
+  "sec": 184.1
+ },
+ "results": {
+  "arc_challenge": {
+   "alias": "arc_challenge",
+   "acc,none": 0.18515358361774745,
+   "acc_stderr,none": 0.011350774438389685,
+   "acc_norm,none": 0.22610921501706485,
+   "acc_norm_stderr,none": 0.012224202097063298
+  },
+  "arc_easy": {
+   "alias": "arc_easy",
+   "acc,none": 0.3867845117845118,
+   "acc_stderr,none": 0.009993308355370982,
+   "acc_norm,none": 0.369949494949495,
+   "acc_norm_stderr,none": 0.009906656266021139
+  },
+  "hellaswag": {
+   "alias": "hellaswag",
+   "acc,none": 0.2833100975901215,
+   "acc_stderr,none": 0.0044968477732506935,
+   "acc_norm,none": 0.30472017526389167,
+   "acc_norm_stderr,none": 0.00459348111167722
+  },
+  "lambada_openai": {
+   "alias": "lambada_openai",
+   "perplexity,none": 105.1785748469293,
+   "perplexity_stderr,none": 4.430248554540602,
+   "acc,none": 0.11701921210945081,
+   "acc_stderr,none": 0.004478331979526837
+  },
+  "openbookqa": {
+   "alias": "openbookqa",
+   "acc,none": 0.154,
+   "acc_stderr,none": 0.016158285192455348,
+   "acc_norm,none": 0.268,
+   "acc_norm_stderr,none": 0.01982771485958758
+  },
+  "piqa": {
+   "alias": "piqa",
+   "acc,none": 0.588683351468988,
+   "acc_stderr,none": 0.01148086057719282,
+   "acc_norm,none": 0.5756256800870512,
+   "acc_norm_stderr,none": 0.01153161275887105
+  },
+  "winogrande": {
+   "alias": "winogrande",
+   "acc,none": 0.5027624309392266,
+   "acc_stderr,none": 0.014052271211616445
+  }
+ },
+ "n_samples": {
+  "lambada_openai": {
+   "original": 5153,
+   "effective": 5153
+  },
+  "openbookqa": {
+   "original": 500,
+   "effective": 500
+  },
+  "winogrande": {
+   "original": 1267,
+   "effective": 1267
+  },
+  "piqa": {
+   "original": 1838,
+   "effective": 1838
+  },
+  "arc_challenge": {
+   "original": 1172,
+   "effective": 1172
+  },
+  "arc_easy": {
+   "original": 2376,
+   "effective": 2376
+  },
+  "hellaswag": {
+   "original": 10042,
+   "effective": 10042
+  }
+ }
+}

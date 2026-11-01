@@ -5713,3 +5713,44 @@ notebooks, not in place of reads). The plain arm is also PAM's 16nb 600M point o
 
 **Reported:** s8 at 4k; skill pack 0–8k; the tool read; near needles; the per-body slope (w1s / w1r 220M → 600M).
 **Prior work:** Griffin / Samba; no mechanism claim.
+
+## kb1 RESULT (17:54 IST, 2026-11-01): on the known small-LM suite PAM is LEVEL with Transformer++ and Mamba-2 at 600M tokens, level with T++ and 0.012 behind Mamba-2 at 3B, and gains the least from 600M → 3B. The window costs nothing on known tasks
+
+**Setup:**
+- lm-eval-harness 0.4.9.1, zero-shot, full sets; `scripts/lm_eval_bodies.py`; bf16 on the 4090; one run each.
+- Logs: `logs/kb1/v13_sempty_kb1_*_2577940.json`, chain `logs/v13_sempty_kb1_chain_2577940_*.log`.
+- Layout (the user): tiers by tokens trained on; claims only within a tier; references are context, no claim.
+- MC mean = the mean of the six headline metrics.
+
+| tier | PAM | T++ | Mamba-2 |
+|---|---|---|---|
+| 600M tokens: MC mean | b2p2 **0.391**, cu2a 0.388 | b2t2 0.388 | b2m2 0.392 |
+| 600M tokens: LAMBADA acc / ppl | 0.146 / 578 | 0.148 / 1299 | 0.132 / 945 |
+| 3B tokens: MC mean | r3c **0.403** | e072a8f 0.406 | b36e3a5 **0.415** |
+| 3B tokens: LAMBADA acc / ppl | 0.179 / 376 | 0.196 / 404 | 0.176 / 305 |
+| **slope 600M → 3B, MC mean** | **+0.012** | +0.018 | +0.023 |
+| slope 600M → 3B, LAMBADA acc | +0.033 | +0.048 | +0.044 |
+
+- **220M window arms** (MC mean): W0 0.377 / 0.383 (seeds 43 / 44); W128 0.380 / 0.384; W512 0.381; W1024 0.381. No language cost on
+  known tasks.
+- **References** (no claim): SmolLM2-135M (2T tokens) 0.487, LAMBADA 0.428; GPT-2 124M (~10B) 0.397, LAMBADA 0.307; Pythia-160M
+  (300B) 0.396, LAMBADA 0.354.
+  - Pythia is reported in fp32. In bf16 it degrades (LAMBADA 0.117 / ppl 105, ARC-e 0.387, PIQA 0.576); fp32 matches its published
+    numbers.
+  - **Our bodies are NOT dtype-sensitive:** b2p2 in fp32 gives LAMBADA 0.1475 / 578.6 (bf16 0.146 / 578), ARC-e 0.454 (0.454),
+    PIQA 0.578 (0.578). T++ and Mamba-2 likewise (`logs/kb1/v13_sempty_kb1fp32_*_ccf187c.json`).
+  - GPT-2 (0.307 vs published 0.325) and SmolLM2 (PIQA 0.684 = its card) were fine in bf16.
+
+**Reading** (diagnostics for what to improve, the user's framing):
+- **On general knowledge / commonsense, the body does not matter much at this size and data.** All three are within ±0.004 at 600M
+  (per-task stderr 0.005–0.02).
+- **At 3B, PAM is level with T++ (−0.003) and behind Mamba-2 (−0.012),** the same order as holdout (3.219 / 3.206 / 3.164).
+- **PAM gains the LEAST from data on this suite** (+0.012 vs +0.018 / +0.023).
+  - Caveat: PAM's body changed between tiers (M2 at 600M, 16nb at 3B), and the 3B mix had no b2 docs. The matched t15 tier
+    (running) gives the clean slope.
+- **PAM's LAMBADA perplexity is the LOWEST of the three at 600M** (578 vs 945 / 1299) and middle at 3B. The far-context last word
+  is where its state helps; its accuracy is level.
+- **PAM's edge is NOT here; it is in rules held in state** (s8: PAM 0.65–0.74 vs T++ 0.13 / Mamba-2 0.10; R × K: 0.61 / 0.45 vs
+  0.01–0.07). What to improve for the known suite: plain LM quality (the 0.04–0.06 holdout gap to Mamba-2 at 3B) and tokens.
+  SmolLM2's 2T tokens are 3,300× ours.
+- **The window:** no cost here, and no gain, as expected for short tasks.
