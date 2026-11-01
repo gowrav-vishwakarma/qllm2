@@ -18,6 +18,24 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 10:26 IST: STEP BACK (user via Lead: "how long have you not meditated… fresh air"; memory re-read).**
+  - *From far away:* every fix that worked tonight acted on TIME or on PRIORS, never on capacity: subtract the prior
+    (contrast; A9 +0.142), slow the clock (echo dilation: one read to 8k), refresh, cut the row to one field (A19). Every
+    training-time addition cost language (cu1 +0.045, cu1n9s +0.23, lg8r +0.08, cu2b +0.038; cu2a +0.0175 the cheapest).
+    The mind is a dynamical system whose query-time KNOBS (gain, clock) matter more than more training at 103M.
+  - *Bold angle:* a **mind controller** in the package that sets the knobs per query (contrast a, dilation s, refresh)
+    from the mind's own uncertainty, e.g. the entropy of l_pack, or the surprise of the question tokens that A13 already
+    uses for keys. The package as the mind's neuromodulator. Adaptive CAD (AdaCAD) is the transformer analogue;
+    eval-only to test.
+  - *Fresh air:* we measured each half of "mind + library" but never the COMPOSITION: a rule held in state applied
+    to a fact fetched at the query (Lead's R × K). That is the thesis in one row; measure it next.
+  - *Where the reader lives:* the 3B attribution said T++'s LM lead over PAM is mostly in-window COPY. If W1 (w1s) also
+    lowers holdout / copy-class loss, the window belongs in the BODY (it helps expression too). If it only helps
+    fetched-row reading, a package READER organ is equivalent and cleaner. Reading needs no gradient into the state;
+    the state as a prefix is enough.
+  - *The mind's job in the package:* hold (constant cost), keep rules (time), write the lookup key (surprise / own
+    states where words differ), write the answer; the package helps with records and formats.
+
 * **2026-11-01 10:07 IST: the read gap (Lead's T++ + library arm) and a candidate repair.** Same text library, cold read,
   free generation, T++ vs b2p2 (syn / nat):
   - kv 1.00 / 0.875 vs 0.90 / 0.775;
