@@ -7,7 +7,7 @@ export PATH=/usr/local/cuda/bin:$PATH
 H=${SCREEN_HASH:-$(git rev-parse --short HEAD)}; C=checkpoints_v13_sempty; PY=.venv/bin/python; X="symbolic\|Warning\|warn"
 echo "w1m2 chain: code $H in $PWD, $(date -u +%FT%TZ)"
 free_mb() { nvidia-smi --query-gpu=memory.total,memory.used --format=csv,noheader,nounits | awk -F", " '{print $1-$2}'; }
-until [ "$(free_mb)" -ge 18000 ]; do sleep 60; done
+until [ "$(free_mb)" -ge "${FREE_MB:-18000}" ]; do sleep 60; done  # FREE_MB: peak 13.9 GB + 3
 BASE="LR=1.2e-3 TARGET_TOKENS=480006144 WARMUP=100 VAL_EVERY=4883 SAVE_EVERY=500 KEEP_EVERY=0 KEEP_LAST=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2128 SEED=44 SOURCES=dclm,fineweb,smoltalk2_mid,recall,b2 WEIGHTS=0.43,0.40,0.10,0.04,0.03 INIT_FROM=$C/c1m2a_pre_7ae6f1f/best_model.pt BATCH=18 SEQ=2048 GRAD_ACCUM=3 MAX_RETRIES=5"
 SCREEN=w1m2 SCREEN_HASH=$H ARMS="w128:ECHO=1,SHARE_READS=1,SWA_LAYERS=5,9,13,SWA_WINDOW=128" BASE="$BASE" bash v13_sempty/tmp_scratch_screen.sh
 n=w1m2_w128_$H; B=$C/$n/best_model.pt
