@@ -134,6 +134,25 @@ def field_cut(row_text, q_text):
     return f" Result: job: {m.group(1)}; {f}: {v}."
 
 
+def row_value(row_text, q_text):
+    """A23: the VALUE in a fetched row, from the library's own row formats (the planner puts it into a skill's query
+    line; the mind never composes key -> row -> rule). Record " Record: K | f: v | ...": the field named in the
+    question, else the first; tool " Result: job: K; f: v; ...": the asked field (field_cut); definition " Definition:
+    K refers to V.": V. Returns the value string or None."""
+    import re
+    qw = set(re.findall(r"[A-Za-z]+", q_text.lower()))
+    m = re.search(r'Record: (.+?) \| (.+?)\.', row_text)
+    if m:
+        fields = [f.split(': ', 1) for f in m.group(2).split(' | ') if ': ' in f]
+        named = [v for f, v in fields if f.lower() in qw]
+        return (named or [fields[0][1]])[0].strip() if fields else None
+    cut = field_cut(row_text, q_text)
+    if cut is not None:
+        return cut.rsplit(': ', 1)[1].rstrip('.').strip()
+    m = re.search(r'Definition: (.+?) refers to (\w+)\.', row_text)
+    return m.group(2) if m else None
+
+
 def organ(ids, doc_end, qend):
     """position (the token after the match) of the LATEST exact match of the query's last NGRAM tokens."""
     g = tuple(ids[qend - NGRAM:qend])

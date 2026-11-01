@@ -36,7 +36,7 @@ for p in (str(ROOT), str(ROOT / 'scripts'), str(ROOT / 'v16')):
 from bench import Reader  # noqa: E402
 from v14.a6_reread import CKPT as B2P2, Mind  # noqa: E402
 from v14.a13_manykey import capture, maxsim_scores, sentence_rows  # noqa: E402
-from v14.package_fetch import field_cut, text_fetch  # noqa: E402
+from v14.package_fetch import field_cut, row_value, text_fetch  # noqa: E402
 
 STOP_TOKENS = (13, 198)                       # "." and newline
 STATE_BYTES = {'b2p2': 1154832}               # the mind's fixed state, fp32 at decode (M2 body)
@@ -59,6 +59,70 @@ class Package:
             _, st, off = self.mind.feed(ids)
             self._session = dict(text=session_text, ids=ids, state=st, off=off, rows=sentence_rows(ids, len(ids)))
         return self._session
+
+    @torch.no_grad()
+    def _state(self, ids, dil=None):
+        """the mind's state after ids, in ONE pass (so a dilation span (start, end, s, where) is in absolute positions)."""
+        self.mind.m._dilate = dil
+        try:
+            _, st, off = self.mind.feed(ids, chunk=max(1, len(ids)))
+        finally:
+            self.mind.m._dilate = None
+        return st, off
+
+    def apply(self, session, key_question: str, skill: dict, alpha: float = 4.0, dilate: float | None = None,
+              max_new: int = 4):
+        """R x K (A23): apply a SKILL held in the session (its demonstrations, read earlier) to a FACT the library
+        fetches. The planner fetches the key's row, takes the value out (row_value) and writes the skill's trained
+        query line skill['query'].format(v=value); the mind answers with the SKILL contrast: the twin is the same
+        session WITHOUT the skill's pack (a second full stream; 1.15 MB, 2x read compute). dilate = s: echo
+        retention ** (1/s) from the pack's end to the session's end, in both streams. session: text or token ids;
+        skill: {'pack': text or ids of the demonstrations as they appear in the session, 'query': e.g. "\\n{v} ->"}."""
+        enc = lambda x: self.tok.encode(x, add_special_tokens=False) if isinstance(x, str) else list(x)  # noqa: E731
+        S, pack = enc(session), enc(skill['pack'])
+        p0 = next((i for i in range(len(S) - len(pack) + 1) if S[i:i + len(pack)] == pack), None)
+        info = dict(skill_found=int(p0 is not None))
+        kq = enc(key_question)
+        row, finfo = text_fetch(S + kq, len(S), step4=True, bigram=False)
+        info.update(path=f"text{finfo['step']}" if row is not None else None, row=tuple(row) if row else None)
+        if row is None or p0 is None:
+            return '', dict(info, abstain=1, value=None)
+        row_text = self.tok.decode(S[row[0]:row[1]])
+        v = row_value(row_text, self.tok.decode(kq))
+        info.update(row_text=row_text, value=v)
+        if v is None:
+            return '', dict(info, abstain=1)
+        text, vinfo = self.apply_value(S, skill, v, alpha=alpha, dilate=dilate, max_new=max_new)
+        return text, dict(info, **vinfo)
+
+    def apply_value(self, session, skill: dict, v: str, alpha: float = 4.0, dilate: float | None = None, max_new: int = 4):
+        """the second half of apply: the skill's query line for a GIVEN value, answered with the skill contrast."""
+        enc = lambda x: self.tok.encode(x, add_special_tokens=False) if isinstance(x, str) else list(x)  # noqa: E731
+        if isinstance(session, str) and isinstance(skill['pack'], str) and skill['pack'] in session:
+            i = session.index(skill['pack'])                  # tokenise around the pack so its tokens match exactly
+            pre, pack, post = enc(session[:i]), enc(skill['pack']), enc(session[i + len(skill['pack']):])
+            S, p0 = pre + pack + post, len(pre)
+        else:
+            S, pack = enc(session), enc(skill['pack'])
+            p0 = next((i for i in range(len(S) - len(pack) + 1) if S[i:i + len(pack)] == pack), None)
+        if p0 is None:
+            return '', dict(abstain=1, skill_found=0)
+        info = {}
+        q = enc(skill['query'].format(v=v))
+        T = S[:p0] + S[p0 + len(pack):]                                       # the session without the skill pack
+        dS = (p0 + len(pack), len(S), dilate, 'echo') if dilate else None
+        dT = (p0, len(T), dilate, 'echo') if dilate else None
+        stS, offS = self._state(S, dS); stT, offT = self._state(T, dT)
+        la, sa, oa = self.mind.feed(q, stS, offS); lb, sb, ob = self.mind.feed(q, stT, offT)
+        out = []
+        for _ in range(max_new):
+            t = int((la + alpha * (la - lb)).argmax()); out.append(t)
+            if t in self.stops:
+                break
+            la, sa, oa = self.mind.feed([t], sa, oa); lb, sb, ob = self.mind.feed([t], sb, ob)
+        info.update(abstain=0, query_text=self.tok.decode(q), first_token=out[0],
+                    bytes_held=dict(mind_state=STATE_BYTES['b2p2'], no_pack_twin_state=STATE_BYTES['b2p2'], library_text=2 * len(S)))
+        return self.tok.decode(out), info
 
     def _f2(self, ids, end, rows):
         got, pre = capture(self.R, ids, (8,))
