@@ -5524,3 +5524,10 @@ and stderr).
 
 **Reading rule:** this becomes the "intelligence" line of the progress bar. An equal-data row is the claim; the reference rows
 are context, never a claim. No 128k+ length claims from this suite.
+
+**kb1 amendment (15:45 IST, before any number; Lead):**
+- Order: right after w1w, beside Library's A25. Each model is gated on free VRAM ≥ peak + 3 GB (7 GB).
+- Added: the 100M window arms on the same suite, so the window's language cost shows on known tasks, not only on holdout:
+  - w1s / w1r W0 and W128 (seeds 43 / 44, 220M tokens);
+  - w1w W512 / W1024 (seed 43).
+- Tokens beside every row: 220M (100M-stage arms) / 600M / 3B / SmolLM2 2T / Pythia 300B / GPT-2 WebText (~10B).

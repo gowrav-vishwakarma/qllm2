@@ -7,7 +7,8 @@ H=$(git rev-parse --short HEAD); P=/home/gowrav/.venvs/qllm311/bin/python; F=/me
 echo "kb1 chain: code $H, $(date -u +%FT%TZ)"
 until ! tmux has-session -t '=w1w' 2>/dev/null; do sleep 60; done
 mkdir -p logs/kb1
-run() { O=logs/kb1/v13_sempty_kb1_$1_$H.json; [ -s $O ] && return; echo "=== $1 $(date -u +%FT%TZ)"; $P scripts/lm_eval_bodies.py $2 --device cuda --batch_size 32 --out $O 2>&1 | grep -vE 'Warn|symbolic|it/s\]|%\||Overwriting|stddev' | tail -8; }
+free_mb() { nvidia-smi --query-gpu=memory.total,memory.used --format=csv,noheader,nounits | awk -F", " '{print $1-$2}'; }
+run() { O=logs/kb1/v13_sempty_kb1_$1_$H.json; [ -s $O ] && return; until [ "$(free_mb)" -ge 7000 ]; do sleep 30; done; echo "=== $1 $(date -u +%FT%TZ)"; $P scripts/lm_eval_bodies.py $2 --device cuda --batch_size 32 --out $O 2>&1 | grep -vE 'Warn|symbolic|it/s\]|%\||Overwriting|stddev' | tail -8; }
 run b2p2 "--ckpt $F/b2p2_main_38e3c29/best_model.pt"
 run b2t2 "--ckpt $F/b2t2_main_38e3c29/best_model.pt"
 run b2m2 "--ckpt $F/b2m2_main_38e3c29/best_model.pt"
@@ -18,4 +19,7 @@ run mamba3b "--ckpt $C/mix3b_mamba2_answ100_b36e3a5/best_model.pt"
 run smollm2_135m "--hf HuggingFaceTB/SmolLM2-135M"
 run pythia_160m "--hf EleutherAI/pythia-160m"
 run gpt2_124m "--hf openai-community/gpt2"
+for n in w1s_w0_508aaff w1s_w128_508aaff w1r_w0_508aaff w1r_w128_508aaff w1w_w512_f68ab64 w1w_w1024_f68ab64; do
+  [ -f $C/$n/best_model.pt ] && run $n "--ckpt $C/$n/best_model.pt"
+done
 echo "=== kb1 chain DONE $(date -u +%FT%TZ)"
