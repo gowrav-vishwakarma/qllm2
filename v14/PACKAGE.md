@@ -34,7 +34,15 @@ body (the 1.5B tier) must keep:
    counts are word-level, so any BPE works.
 
 State bytes are MEASURED from the state at read time, never a per-body constant: b2p2 1,154,928 B, 16nb (r3cb)
-3,921,168 B. The address moves with the mind: re-measure A13 / A21 on a new body before quoting its fetch numbers.
+3,921,168 B, W1 w1r_w128 2,947,152 B. That last figure is b2p2's 1.15 MB plus the window cache, 127 tokens × 3 blocks
+× (k, v) × 588 × fp32 = 1.79 MB. The cache is O(W), not O(L).
+
+State layout (Mind's 7d2c7f1): `[block states …] + [window caches: ONE extra entry, W1 models only] + [echo, LAST]`.
+The package never indexes or counts the states (it streams, deep-copies and measures them), so `n_blocks + 1` and
+`n_blocks + 2` entries both work unchanged. Checked 2026-11-01 17:14 IST on CPU at a7af87f with a 4,551-token toy:
+- w1r_w128 (18 entries): exact ' amber.', field ' cedar.', F2 picks the right row, apply_value ' 9' (2·4 + 1).
+- Chunked (1,024) vs one-pass read: last log-probs 2.7e-3 max abs, address states 1.2e-4 relative. b2p2 on the same
+  toy: 3.8e-3 / 9.9e-5, so the same level. The address moves with the mind: re-measure A13 / A21 on a new body before quoting its fetch numbers.
 
 ## 2. API (`v16/package.py`)
 
