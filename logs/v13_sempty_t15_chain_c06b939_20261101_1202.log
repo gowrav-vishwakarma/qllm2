@@ -1,0 +1,43 @@
+t15 chain: code c06b939 in /home/ubuntu/Development/qllm_t15, 2026-11-01T12:02:41Z
+=== t15_tpp start 2026-11-01T12:02:41Z
+=== t15_mamba start 2026-11-01T12:07:41Z
+=== w1n_n0 start 2026-11-01T12:12:41Z
+=== w1n_n128 start 2026-11-01T18:19:16Z
+=== w1n_n0_c06b939 readouts 2026-11-01T21:30:34Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.897, 'shift_wide_new@4096': 0.525, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.92, 'affine_map_new@4096': 0.728}  mean 0.845
+free (A7): {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.818, 'shift_wide_new@4096': 0.432, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.677, 'affine_map_new@4096': 0.412}  mean 0.723
+saved logs/learning_probes/v13_sempty_w1n_n0_c06b939_spread_s7000_t400.json
+  affine_map_new done
+  affine_map_new done
+{'arch': 'pam', 'ckpt': 'checkpoints_v13_sempty/w1n_n0_c06b939/best_model.pt', 'task': 'tool', 'qstyle': 'template', 'sy
+{'arch': 'pam', 'ckpt': 'checkpoints_v13_sempty/w1n_n0_c06b939/best_model.pt', 'task': 'tool', 'qstyle': 'template', 'sy
+  [val @ step 13021] val_loss=3.5662 val_ppl=35.38 *best* (best 35.38)
+=== w1n_n128_c06b939 readouts 2026-11-01T21:36:15Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.835, 'shift_wide_new@4096': 0.578, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.718, 'affine_map_new@4096': 0.535}  mean 0.777
+free (A7): {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.675, 'shift_wide_new@4096': 0.302, 'affine_map_new@0': 0.998, 'affine_map_new@2048': 0.297, 'affine_map_new@4096': 0.115}  mean 0.565
+saved logs/learning_probes/v13_sempty_w1n_n128_c06b939_spread_s7000_t400.json
+  affine_map_new done
+  affine_map_new done
+{'arch': 'pam', 'ckpt': 'checkpoints_v13_sempty/w1n_n128_c06b939/best_model.pt', 'task': 'tool', 'qstyle': 'template', '
+{'arch': 'pam', 'ckpt': 'checkpoints_v13_sempty/w1n_n128_c06b939/best_model.pt', 'task': 'tool', 'qstyle': 'template', '
+  [val @ step 13021] val_loss=3.5409 val_ppl=34.50 *best* (best 34.50)
+=== t15tpp_main_c06b939 readouts 2026-11-01T21:42:25Z
+per task: {'shift_wide_new@0': 0.145, 'shift_wide_new@2048': 0.01, 'shift_wide_new@4096': 0.045, 'affine_map_new@0': 0.915, 'affine_map_new@2048': 0.043, 'affine_map_new@4096': 0.09}  mean 0.208
+free (A7): {'shift_wide_new@0': 0.142, 'shift_wide_new@2048': 0.005, 'shift_wide_new@4096': 0.007, 'affine_map_new@0': 0.682, 'affine_map_new@2048': 0.0, 'affine_map_new@4096': 0.013}  mean 0.142
+saved logs/learning_probes/v13_sempty_t15tpp_main_c06b939_spread_s7000_t400.json
+  affine_map_new done
+  affine_map_new done
+{'arch': 'transformer', 'ckpt': 'checkpoints_v13_sempty/t15tpp_main_c06b939/best_model.pt', 'task': 'tool', 'qstyle': 't
+{'arch': 'transformer', 'ckpt': 'checkpoints_v13_sempty/t15tpp_main_c06b939/best_model.pt', 'task': 'tool', 'qstyle': 't
+  [val @ step 37435] val_loss=3.3593 val_ppl=28.77 *best* (best 28.77)
+=== t15mamba_main_c06b939 readouts 2026-11-01T21:44:03Z
+per task: {'shift_wide_new@0': 0.49, 'shift_wide_new@2048': 0.0, 'shift_wide_new@4096': 0.0, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.08, 'affine_map_new@4096': 0.052}  mean 0.27
+free (A7): {'shift_wide_new@0': 0.49, 'shift_wide_new@2048': 0.0, 'shift_wide_new@4096': 0.0, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.022, 'affine_map_new@4096': 0.01}  mean 0.254
+saved logs/learning_probes/v13_sempty_t15mamba_main_c06b939_spread_s7000_t400.json
+  affine_map_new done
+  affine_map_new done
+{'arch': 'mamba2', 'ckpt': 'checkpoints_v13_sempty/t15mamba_main_c06b939/best_model.pt', 'task': 'tool', 'qstyle': 'temp
+{'arch': 'mamba2', 'ckpt': 'checkpoints_v13_sempty/t15mamba_main_c06b939/best_model.pt', 'task': 'tool', 'qstyle': 'temp
+  [val @ step 37435] val_loss=3.3025 val_ppl=27.18 *best* (best 27.18)
+=== waiting for checkpoints_v13_sempty/t15_pam_body.txt (Mind writes w128 or plain after the w1m + w1n verdicts) 2026-11-01T21:46:18Z
+=== t15_pam start, body plain 2026-11-01T21:46:18Z

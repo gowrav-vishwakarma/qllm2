@@ -5807,3 +5807,41 @@ needles ≥ 0.379). This decides the 600M release body (W128 vs b2p2). t15pam st
   justified by this.
 - **Consequence:** the 600M release body stays b2p2 (pre-registered rule). t15pam = 16nb plain, unchanged. W1 remains in the code
   as a measured, modest reach unit (index row: "+0.09 rules at 600M, shrinking with data"). w1n (16nb) is still a finding.
+
+## w1n VERDICT (03:50 IST, 2026-11-02): FAIL. On the 16nb body the window HURTS the rule / reach skills (s8 −0.10, clk2 −0.14, far needles −0.06) while helping LM (−0.025). W1's rule gain is M2-specific
+
+**Arms:** `w1n_n0` / `w1n_n128_c06b939` (16nb + echo, the t15 mix, 600M tokens, seed 43; 103.2M / 107.4M; 6000).
+
+| readout | n0 (16nb plain) | n128 (16nb + W128) | bar |
+|---|---|---|---|
+| s8 D | 0.768 | 0.666 | ≥ n0 + 0.08 ✗ |
+| s8 at 4k | 0.626 | 0.556 | – |
+| clk2 8k, 20-way | 0.39 | 0.25 | ≥ n0 ✗ |
+| t40 far needles | 0.338 | 0.279 | ≥ n0 − 0.05 ✗ |
+| holdout | 3.5662 | **3.5409** | ≤ n0 + 0.01 ✓ |
+| skill pack 2k plain / + contrast; 4k + contrast | 0.76 / 0.995; 0.70 | 0.625 / 0.91; 0.74 | – |
+
+**Reading:**
+- **The window's effect depends on the body.**
+  - On M2 (4 notebooks + shared reads) it adds +0.09 rules.
+  - On 16nb (a notebook in every block) it takes −0.10 off. With notebooks everywhere, the window competes with the state's own
+    local work: the lazy state again.
+  - LM improves on both.
+- **PAM's 16nb 600M point on the tier mix:**
+  - s8 D 0.768, above the M2 b2p mean 0.692;
+  - holdout 3.5662, 0.088 behind M2 b2p2;
+  - so 16nb trades LM for rules at 600M.
+- **Consequence:** t15pam = 16nb plain was the right body. W1 is not for the 16nb body.
+
+## t15 INTERIM (same time): the 1.5B baselines are done. More data made T++ and Mamba-2 WORSE at rules at distance; their LM improved as expected. PAM 1.5B (16nb plain) runs since 03:16 IST, ETA ~11:00
+
+| body | holdout 600M → 1.5B | s8 D 600M → 1.5B | s8 4k at 1.5B | clk2 8k at 1.5B | skill pack 2k + contrast at 1.5B |
+|---|---|---|---|---|---|
+| T++ (b2t2 → t15tpp) | 3.5572 → **3.3593** (−0.198) | 0.134 → **0.047** | 0.068 | 0.29 | 0.02 |
+| Mamba-2 (b2m2 → t15mamba) | 3.4754 → **3.3025** (−0.173) | ~0.10 → **0.033** | 0.026 | 0.00 | 0.05 |
+| PAM 16nb (w1n_n0 → t15pam) | 3.5662 → (running) | 0.768 → (running) | | | |
+
+- **t15pam bars:** s8 D ≥ 0.147 (max baseline + 0.10); holdout ≤ 3.3225 (Mamba-2 + 0.02).
+- The rule bar is all but certain. **The LM bar is the open question:** 16nb starts 0.09 behind M2 at 600M.
+- Even at L = 0 the 1.5B baselines lose the letter rule (T++ shift 0.145, Mamba-2 0.49; affine 0.92 / 1.00). Their in-context rule
+  inference at distance falls with data, while PAM's held at 600M.
