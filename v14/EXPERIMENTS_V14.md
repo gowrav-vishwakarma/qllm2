@@ -3408,6 +3408,22 @@ fitted threshold:
     and uncut rows (4090).
   - Bar MET iff b2p2 cold sentence ≥ 0.80 on cut rows, both key types (T++
     cold on uncut rows 0.90 is the reference).
+  - **A19 VERDICT, cold part (2026-11-01 10:12 IST; code fac2750;
+    `logs/v14_a19_fieldcut_cold_fac2750_20261101_1011.jsonl` + .log, 80 docs; cut
+    found 1.00, fetch abstain 0.00): MET.**
+
+    | tool, cold read (syn / nat) | uncut row | field-cut row |
+    |---|---|---|
+    | b2p2 | 0.475 / 0.40 | **0.90 / 0.80** |
+    | T++ (tfc1b) | 0.90 / 0.90 | 0.825 / 0.85 |
+
+    - b2p2's uncut numbers reproduce Lead's text arm exactly (0.475 / 0.40). On
+      field-cut rows the two bodies are level (T++ slightly LOWER than on the
+      full row). The gap was the multi-field binding (Mind's diagnosis), and
+      the library can remove it by text, labelled "field-cut rows"; the
+      uncut headline (the mind reading a record) stays b2p2 0.475 / 0.40 vs
+      T++ 0.90. Open one level down: a field SYNONYM in the question.
+    - Warm + contrast part: on the 4090 after A18.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
