@@ -61,6 +61,28 @@ Code: `v14/package_fetch.py` (`key_fn` for v16/bench.py), `v14/norm_organ.py`.
 - Cost: the skill contrast needs the no-pack twin stream across the session (a second O(1) state, +1.15 MB, 2x read
   compute), unlike the fact read, whose twin runs on the answer tokens only.
 
+## 3c. Known benchmarks: who does what (user's rule, 2026-11-01: known benchmarks, lengths capped at 128k)
+
+TEXT = the library's organs / planner (plumbing, any body could use them); MIND = the O(1) mind's own work (state, address,
+reading, writing). An entry must say which column produced each number.
+
+| benchmark task | what it needs | fetch (who) | read / write (who) | our evidence |
+|---|---|---|---|---|
+| BABILong QA1 (single supporting fact: "Where is Mary?") | the latest fact about an entity | TEXT: name step (latest mention) | MIND: copy the location from the row | toy: right; A21 / A25 for scale |
+| BABILong QA2 / QA3 (2-3 facts: object → holder → place) | a chain of facts | TEXT: latest-content-word step + name hops (fetch_rows) | MIND: combine rows (fails today: "The milk there is there.") | the open reasoning gap |
+| BABILong QA4 / QA5 (two- / three-argument relations) | a relation lookup | TEXT: the two names / objects | MIND: read the relation | not measured |
+| RULER S-NIAH (word / number / UUID needle) | exact key → value | TEXT: token organ (1.00) | MIND: write the value; multi-token values (numbers, UUIDs) are its weak spot (S2) | kv 0.925 at 32k (A9) |
+| RULER MK-NIAH (look-alike distractor keys) | the exact key among similar ones | TEXT: exact organ (no key checking needed) | MIND: write | A11: the mind does NOT check keys; text does |
+| RULER MV-NIAH (one key, several values) | all rows of one key | TEXT: top-k rows of the key | MIND: list several values (multi-row reading is weak: A13 line-up 0.275) | open |
+| RULER MQ-NIAH (several keys in one question) | several fetches | TEXT: planner splits the question, one fetch per key | MIND: write each | not measured |
+| RULER VT (variable tracking, multi-hop) | follow X1 = X2 = ... | TEXT: chained fetch (hop2: 1.00 in the package table) | MIND: write the names | the chain is the library's, not the mind's |
+| RULER CWE / FWE (aggregation: frequent words) | counting over the whole context | TEXT: a counter tool (not built); the state cannot count | – | not covered: say so |
+| RULER QA (SQuAD / HotpotQA in distractors) | natural questions, 1-2 paragraphs | TEXT + MIND: word organ / step 4, else the surprise-keyed address (F2) | MIND: read and write (natq 0.475-0.525 at 32k) | A13 / A21 |
+
+Honesty line for any entry: retrieval-only tasks (S-NIAH, MK-NIAH, VT) are mostly the library's text organs; the mind's
+share is writing the value and, for natural wording, its own address (F2). Multi-fact reasoning (QA2 / QA3, MV) and
+aggregation are where the mind or a tool must still earn the number.
+
 ## 4. Shared library (text-first packs)
 
 - `qllm-pack/v1` JSONL (header, then entries `{id, text, source, sha256, time, trust}`); `v14/pack.py`.
