@@ -35,6 +35,10 @@ Code: `v14/package_fetch.py` (`key_fn` for v16/bench.py), `v14/norm_organ.py`.
 
 ## 3. Skills: refresh
 
+- **The refresh interval depends on the body.** Mind's w1r (ac0559a): a bounded window (W1, 128 tokens, three
+  blocks) lifts one-read skill reach at 4k 0.416 → 0.771 (seed 43: 0.435 → 0.617) at holdout parity, but does not help
+  reading fetched rows (+0.03; the A19 field cut stays the reader). If W1 enters the body, re-measure A16 (R = 2k / 4k /
+  8k) on the new mind before changing the refresh rule.
 - Standing skills are stored as **demonstrations** (header + demo lines), never words only (Mind's 3c7a7fa: a
   rule taught in words is learned as a lookup table).
 - Re-insert the skill pack every R = 2,048 tokens (N11-R: +1.6 % tokens) and read the question with the contrast
