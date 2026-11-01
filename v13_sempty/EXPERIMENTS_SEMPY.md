@@ -4901,3 +4901,27 @@ md5 checked), stage B 480M tokens, LR 1.2e-3, warmup 100, VAL_EVERY 4883; batch 
 
 **Consequences:** cu2a fails a guard → no fld / vfy in any release recipe. cu2b passes → ACh-1 enters the next 3B
 recipe (r3p's successor), GPU via Lead. Either failing → recorded and removed per the AGENTS rule.
+
+### r3p interim (2026-11-01 08:30 IST): r3p trails r3c by 0.10 → 0.15 nats from the first val. Cause: the answer-weighted synthetic data takes LOSS WEIGHT from text, not plumbing
+
+Val (step 3906 / 7812 / 11718 / 15624 / 19530 / 23436): r3p 4.0206 / 3.8953 / 3.8431 / 3.7731 / 3.6827 / 3.6665 vs r3c
+3.9172 / 3.7952 / 3.7181 / 3.6251 / 3.5624 / 3.5117 (gap +0.103 → +0.155).
+**Ruled out:**
+- (1) Code drift: r3c's checkpoint gives bit-identical val CE under its own code `38e3c29` and HEAD (3.19988 both, same logits).
+- (2) Data plumbing: same val cache, same stage-A cursor, the same fineweb-edu sample-10BT shards (local copy vs HF), same args.
+- (3) The blend: it over-serves smoltalk2 in both runs alike (~15 % vs 10 %).
+
+**What differs** (cursor token counts, r3p at step 24000 vs r3c's final):
+- r3p stage-B shares: b2 1.96 % (2× its weight), lab 1.14 %, hop 0.66 %, fsq 0.53 %, recall 3.5 %. Synthetic 7.8 % vs r3c's 4.4 %.
+- The loss is sum(w·CE)/sum(w) with ×100 on answers, so **the share of loss weight on ordinary text** falls:
+  r3c 0.975, r3p 0.85, b2p2 0.872, cu1 ≤ 0.768, cu2a 0.758 (measured answer density per source: recall 0.0057, b2 0.041,
+  lab 0.038, fsq 0.028, hop 0.029, fld 0.065, vfy 0.107 answer tokens per token).
+- At 600M this costs ~0.34 nats per unit of share lost (b2p2 +0.033, cu1 +0.078 vs c1m2 3.4473; lab alone +0.004).
+  That predicts r3p ≈ +0.04. The 3B gap is 2.5–3.5× that, so it is not fully explained (it may compound with
+  tokens, or interact with Adam's second moments, which large answer gradients dominate).
+
+**My error, recorded:** r3p A1 and cu2 budgeted synthetic data by TOKEN share. The unit that matters is LOSS-WEIGHT
+share. cu2a's text share 0.758 predicts ~+0.04 vs b2p2, so its 3.500 guard will likely fail. **Rule for every future
+recipe:** state the loss-weight share on ordinary text next to the token mix, and keep it ≥ ~0.95 (r3c's level), via a
+lower answer weight for dense sources or a two-term loss (LM mean + β × answer mean). Needs a 600M check before any 3B use.
+The r3p futility rule (3.431 at step 39060) decides at ~10:40 as pre-registered.
