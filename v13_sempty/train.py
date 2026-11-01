@@ -1367,9 +1367,9 @@ def main():
     if init_ck is not None:
         missing, unexpected = model.load_state_dict(init_ck['model_state_dict'],
                                                     strict=False)
-        # Names of identity-init modules a warm-started arm adds (empty now:
-        # R4 added salience_proj/store_gate_proj, removed with it).
-        new_ok: tuple = ()
+        # Names of identity-init modules a warm-started arm adds: W1's window reader (zero-init out-proj) and its
+        # pre-norm. (R4's salience_proj / store_gate_proj were removed with R4.)
+        new_ok: tuple = ('.window.', '.norm3.')
         bad = [k for k in missing if not any(t in k for t in new_ok)]
         if bad or unexpected:
             raise ValueError(f"--init_from mismatch: missing={bad} unexpected={unexpected}")
