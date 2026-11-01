@@ -3626,6 +3626,28 @@ fitted threshold:
     rule held as a register skill in the trained affine format ("Map rule.",
     "2 -> 5", "3 -> 7", "5 -> 11") with the weight fetched from the story
     ("weight four") answers 9.
+  - **A23 RESULT (14:24 IST; code ed4c84f; `logs/v16_rxk_package_ed4c84f_20261101_1422.json`
+    + .log): the reproduction is EXACT; the story check did not go as predicted.**
+
+    | R x K through `pkg.apply` (100 docs each) | package free | Mind's harness | value fetched right |
+    |---|---|---|---|
+    | b2p2 2k (contrast) / 8k (dilation s 8 + contrast) | 0.61 / 0.45 | 0.61 / 0.45 | 1.00 / 1.00 |
+    | cu2a 2k / 8k | 0.62 / 0.49 | 0.62 / 0.49 | 1.00 / 1.00 |
+
+    Doc-level agreement with the harness: 400 / 400. The keys are fetched by the
+    rare-word step (A20) and the value taken out of the record row.
+
+    | story check, Old Pell's rule (2w + 1), "4 ->" (target 9) | b2p2 | cu2a |
+    |---|---|---|
+    | the rule as the story's words | " 16" | " 18" |
+    | as 3 register demonstrations (trained affine format) | " 14" | " 18" |
+    | as 8 register demonstrations | " 14" | " 18" |
+
+    - Words fail as predicted; the demonstrations ALSO failed on this ONE item.
+      At 2k the R x K rate is 0.61, so a single item cannot support the story
+      line "rules reach the mind as demonstrations, from the register"; it
+      needs a set of story-rule items before it is written. Right type, wrong
+      value (Mind's rule-fidelity reading).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
