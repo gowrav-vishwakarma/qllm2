@@ -4925,3 +4925,7 @@ share. cu2a's text share 0.758 predicts ~+0.04 vs b2p2, so its 3.500 guard will 
 recipe:** state the loss-weight share on ordinary text next to the token mix, and keep it ≥ ~0.95 (r3c's level), via a
 lower answer weight for dense sources or a two-term loss (LM mean + β × answer mean). Needs a 600M check before any 3B use.
 The r3p futility rule (3.431 at step 39060) decides at ~10:40 as pre-registered.
+**Correction (08:31 IST):** cu2a finished (08:26 IST) with holdout **3.4975**, which PASSES its 3.500 guard (+0.0175 vs b2p2). The
+"+0.04, will likely fail" prediction above was wrong. The 600M per-share fit overstates the cost for fld / vfy (perhaps
+ANSWER_IN_WINDOW, or because short single-answer items weigh differently), and r3p's 3B gap stays only partly explained.
+The loss-weight-share rule stands as a reporting rule; its numeric fit does not.
