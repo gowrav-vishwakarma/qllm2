@@ -27,6 +27,50 @@ in my scratch dir; compare with the prediction in EXPERIMENTS_V14 "A18".
 * **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
   tmux first.
 
+## Step back (2026-11-01 10:26 IST; user via Lead: "how long have you not meditated... think in the void, fresh air")
+
+Re-read `meditate-before-next-step` and Lead's 10:25 block first.
+
+* **From far away, my lane today.** The library's text organs do all exact /
+  surface finding (1.00, any body). The mind earned two places I did not
+  plan: its SURPRISE picks a question's keys, and its OWN STATES match
+  meaning better than a trained sentence encoder (synonyms 0.575 vs 0.35).
+  The mind is a weak reader of RECORDS and of unfamiliar FORMATS (multi-field
+  0.40-0.475 like Mamba-2; untrained field names → " unknown"), but not a weak
+  reader of a fact row: warm + contrast reads exact / surface facts at 0.925,
+  level with T++ cold (1.00 / 0.875).
+* **What surprised me.** The address that works (every token's state) is
+  itself O(N), 1.2 GB / 1M at fp16: smaller than a KV cache (1/31) but not
+  free, and compression in the obvious direction (PCA) kills it. The library
+  is O(N) by design; the question is only how few bytes per token keep the
+  meaning.
+* **Where I see Lead's spine differently.** "The mind is not the reader" holds
+  for records and formats, not for facts; and for R × K the reading CANNOT be
+  fully moved out of the mind: the rule lives in the mind's state, so
+  whoever applies it must see that state. SR-0 already showed a single
+  vector (the mean residual at the demo arrows) does NOT carry a rule into
+  a state. So a reader conditioned on a prefix vector will likely drop the
+  rule; it would need cross-attention to the full state (the notebook
+  matrices), or the mind itself reads (warm + contrast, built, A9).
+* **The trap to avoid in R × K.** If the library re-inserts the rule's demos
+  at question time, a transformer reader does R × K with no mind at all:
+  that is RAG + few-shot, not "intelligence separate from knowledge". The
+  honest cell: the rule ONLY in the mind's state (read once, D tokens back),
+  the fact ONLY fetched (text organ), answer = rule(fact). Controls: rule
+  re-inserted (the few-shot ceiling), no rule (floor), T++ with the rule in
+  its window / beyond it.
+* **Bold angle that surfaced: the mind as the library's codec.** The mind's
+  two proven gifts (surprise = what is new / what I lack; states = what it
+  means) are exactly a WRITE gate and a QUERY key. A reader organ (if built)
+  should be versioned WITH the library (it reads text rows), so libraries
+  stay portable across mind versions, while the mind supplies salience and
+  the rule state. That also answers Q2's "the address moves with the mind":
+  text rows + a stable reader, the mind's keys only at query time.
+* **Process (agree with Lead):** the board became a ledger. Tomorrow's work
+  is three questions: the reader, R × K, the natural-variant headline
+  table. My lane's part in each: rows + question (+ surprise keys) for the
+  reader; the fetch-only half of R × K; styles.py and the fetch-path column.
+
 ## Old state (2026-11-01 09:2x IST; superseded)
 
 
