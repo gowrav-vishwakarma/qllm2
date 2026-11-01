@@ -156,11 +156,13 @@ The single most useful habit: measure each step on its own (an oracle row for "r
   - 128k: kv 0.90-1.00 at ~1k, ~16k and ~100k back, both key types. Mind alone 0.00; T++ window 0.00-0.20; T++
     window + the package's row 0.90-1.00.
   - Varied wording on natural keys: 0.60-0.80 (strict 0.10-0.30). Never stored: strict abstain 0.90-1.00.
-  - 300k: (filled when the run ends).
-  - Bytes per 300k session: mind state 1.15 MB, text 0.61 MB, indexes ~2.9 MB; F2 address 182 MB at int8, 1.5 MB as
+  - Pooled over distances: kv 0.967 / 0.933 (syn / nat); the one far miss was a written slip on the right row. No
+    trend with distance. Verdict: B2-B4 met, B1 not met by one document of 10.
+  - Beyond 128k: out of scope by the user's cap (the stopped run's 300k rows stay in its log, unquoted).
+  - Bytes per 128k session: mind state 1.15 MB, text 0.26 MB, indexes ~1.2 MB; F2 address 78 MB at int8, 0.64 MB as
     sign bits (the two forms tie at 128k on 24 F2 rows: 0.71 vs 0.62).
   - **Lesson:** distance does not matter to text organs; the mind's job is reading the fetched row on a long state,
-    and warm + contrast still works on a 128k state (300k: pending), 60× its trained 2k.
+    and warm + contrast still works on a 128k state, 64× its trained 2k.
 - **Story and BABILong (A22, Lead's entry):**
   - A four-chapter story (11 exam questions × 2 forms, keyword hits of 22 at 2k / 4k / 8k): b2p2 package 8 / 8 / 7 vs
     alone 1 / 3 / 2. The package answers single-sentence facts; order of events, rule arithmetic, negation and

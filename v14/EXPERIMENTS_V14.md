@@ -3722,6 +3722,37 @@ fitted threshold:
     alone ~0 beyond a few k.
   - Reported: 128k, every cell / bin / read, seconds per answer, F2's MB in
     both forms.
+  - **A25 VERDICT AT 128k (2026-11-01 17:23 IST; code 0a9aeb9; `logs/v14_a25_long_0a9aeb9_20261101_1622.jsonl`
+    + .log; 300 rows at 128k): B2, B3, B4 MET; B1 NOT met by one document.** The run was STOPPED at 17:22 IST during
+    300k, on the user's word via Lead ("why are we wasting resources on 300k when it is not the bar"; lengths are
+    capped at 128k since 15:35, and this unit was registered after the cap: my error, and Lead's). The bars were
+    registered at 300k's farthest bin; they are read here at 128k's farthest bin (~100k back). This is a re-scope
+    after the cap, stated as such. The 300k rows the run wrote (kv only) stay in the log, unquoted.
+
+    | 128k (package / strict / mind alone / T++ 2k window / T++ window + row) | ~1k back | ~16k | ~100k |
+    |---|---|---|---|
+    | kv synthetic | 1.00 / 1.00 / 0.00 / 0.20 / 1.00 | 1.00 / 1.00 / 0.00 / 0.00 / 1.00 | 0.90 / 0.90 / 0.00 / 0.00 / 0.90 |
+    | kv natural | 0.90 / 0.90 / 0.00 / 0.00 / 1.00 | 0.90 / 0.90 / 0.00 / 0.00 / 1.00 | 1.00 / 1.00 / 0.00 / 0.00 / 0.90 |
+    | kvV (varied wording) synthetic | 1.00 / 1.00 / 0 / 0 / 0.90 | 1.00 / 1.00 / 0 / 0 / 0.90 | 1.00 / 1.00 / 0 / 0 / 0.60 |
+    | kvV natural | 0.70 / 0.10 / 0 / 0 / 0.70 | 0.60 / 0.20 / 0 / 0 / 0.70 | **0.80** / 0.30 / 0 / 0 / 0.80 |
+    | para synthetic / natural | 0.90 · 0.90 | 1.00 · 1.00 | 0.90 · 0.80 |
+    | tool synthetic / natural | 1.00 · 1.00 | 1.00 · 1.00 | 1.00 · 1.00 |
+    | neg: strict abstain (syn / nat) | 1.00 / 0.90 | 1.00 / 0.90 | 1.00 / 0.90 |
+
+    - B1 (kv at ~100k ≥ 0.85 and within 0.05 of ~1k): synthetic 0.90 vs 1.00 ✗ by one document; natural 1.00 vs
+      0.90 ✓. The miss fetched the RIGHT row (text0, "... Definition: gefvef refers to onyx.") and wrote " (yx.".
+      That is a writing slip, not distance: pooled kv is 0.967 / 0.933, with no trend over 1k → 100k.
+    - B2 (kvV natural at ~100k ≥ 0.65): 0.80 ✓; pooled 0.70 lenient, 0.20 strict (F2 answered 23 of 30).
+    - B3 (strict abstain on never-stored ≥ 0.90): 0.95 pooled ✓. Lenient fetched a row for 60 / 60 never-stored
+      questions (57 by F2): F2 never abstains, as in A21.
+    - B4 (bytes excluding F2's address ≤ 10 MB): 2.65 MB ✓ (state 1.15 + text 0.26 + indexes ~1.23). F2's address:
+      78 MB at int8, 0.64 MB as sign bits. On 24 F2 rows of stored facts the two forms tie (sign bits 0.71 vs full
+      0.62).
+    - Mind alone answers 0.00 in every cell and bin, and the T++ 2k window 0.00-0.20 (0.20 only at ~1k, the needle
+      inside its window). This is the bench's untrained "Definition:" format; Mind's trained-format probes do recall
+      at distance. The T++ given the package's row reads 0.60-1.00, as in A18: on single-row cells the package's
+      edge over a windowed T++ is cost (1.15 MB vs 67 MB, 4.8 GB for the full 128k KV), not accuracy.
+    - Compute (4090, shared): read 11.4 s per 128k session; 0.38 s per answer including the fetch.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

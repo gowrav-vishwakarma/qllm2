@@ -137,16 +137,16 @@ returned in session order.
 
 | item | bytes | compute |
 |---|---|---|
-| mind state | measured: b2p2 1.15 MB, 16nb 3.92 MB; O(1) in length | one streaming pass over the session, carried in 2k chunks: 11.4 s at 128k, ~60 s at 300k (4090, shared with other jobs, with address capture and surprisal) |
-| raw text for rows | 2 B / token (0.26 MB at 128k, 0.61 MB at 300k) | – |
-| text indexes (word + token suffix arrays, estimate) | ~9.4 B / token (1.23 MB at 128k, 2.89 MB at 300k) | organ scans at question time: 0.02-0.05 s per 32k doc in Python |
+| mind state | measured: b2p2 1.15 MB, 16nb 3.92 MB; O(1) in length | one streaming pass over the session, carried in 2k chunks: 11.4 s at 128k (4090, shared with other jobs, with address capture and surprisal) |
+| raw text for rows | 2 B / token (0.26 MB at 128k) | – |
+| text indexes (word + token suffix arrays, estimate) | ~9.4 B / token (1.23 MB at 128k) | organ scans at question time: 0.02-0.05 s per 32k doc in Python |
 | background word counts (A20) | 1.47 MB JSON, fixed, shared by all sessions | – |
-| F2 address, every token int8 (lossless, A15) | 592 B / token (78 MB at 128k, 182 MB at 300k) | one max-sim over the rows per question |
-| F2 address, sign bits on the top 1/16 surprising tokens | ~4.9 B / token (0.64 MB at 128k, 1.50 MB at 300k) | the same; costs synonyms ~0.1 at 32k (A15), at 128k equal (0.71 vs 0.62 on 24 F2 rows, A25) |
+| F2 address, every token int8 (lossless, A15) | 592 B / token (78 MB at 128k) | one max-sim over the rows per question |
+| F2 address, sign bits on the top 1/16 surprising tokens | ~4.9 B / token (0.64 MB at 128k) | the same; costs synonyms ~0.1 at 32k (A15), at 128k equal (0.71 vs 0.62 on 24 F2 rows, A25) |
 | fact read | a second copy of the state during the answer only | two O(1) continuations of row + question (~30-60 tokens) + ≤ 40 answer tokens: 0.38-0.42 s per question incl. fetch (4090) |
 | skill contrast (`apply`) | a second full state for the no-pack twin | 2× the read compute |
 | refresh | +1.6 % tokens at R = 2,048 | – |
-| reference: T++ KV cache (tfc1b, 12 layers, d 768) | 36,864 B / token: 4.8 GB at 128k, 11.3 GB at 300k; the 2k window 67 MB measured (A18) | – |
+| reference: T++ KV cache (tfc1b, 12 layers, d 768) | 36,864 B / token: 4.8 GB at 128k; the 2k window 67 MB measured (A18) | – |
 
 ## 8. Measured (b2p2 unless stated; free generation, sentence scorer: decode to the stop, the value as a whole word)
 
@@ -164,7 +164,7 @@ returned in session order.
 | T++ holding the whole 32k session (1.06 GB) | 0.00 on every cell | – | A18 |
 | T++ 2k window + the same row + contrast (67 MB) | ≈ the package (kv 0.95 / 0.95, natq 0.425) | – | A18 |
 
-**128k and 300k by needle distance (A25, 10 docs per cell; package / mind alone / T++ 2k window / T++ window + row):**
+**128k by needle distance (A25, 10 docs per cell; package / mind alone / T++ 2k window / T++ window + row):**
 
 | 128k | ~1k back | ~16k | ~100k |
 |---|---|---|---|
@@ -174,7 +174,12 @@ returned in session order.
 | para · tool (both key types) | 0.80-1.00 · 1.00 | | |
 | never stored, strict abstain | 1.00 / 0.90 (syn / nat) | | |
 
-300k: (A25 in progress; filled when the run ends.)
+Pooled over the three distances (package / strict): kv 0.967 / 0.933 (syn / nat), varied wording 1.00 / 0.70 (strict
+1.00 / 0.20), para 0.933 / 0.90, tool 1.00 / 1.00. Mind alone 0.00 everywhere; T++ 2k window 0.00-0.07; T++ window +
+the package's row 0.73-1.00. No trend with distance: the one kv miss at ~100k was a written slip on the right row
+(" (yx." for "onyx"). Lenient mode fetched a row for all 60 never-stored questions (57 by F2). A25 verdict: B2-B4
+met, B1 not met by one document (EXPERIMENTS_V14). Lengths beyond 128k are out of scope by the user's 128k cap: the
+300k rows the stopped run wrote stay in its log, unquoted.
 
 **Other tests:**
 - **Story (A22):** a four-chapter story, 11 exam questions × 2 forms, keyword hits of 22 at 2k / 4k / 8k.
@@ -206,7 +211,7 @@ address, reading, writing). An entry must say which column produced each number.
 
 ## 10. Honesty lines (every write-up that quotes the package)
 
-1. Recall of stored facts at any distance (32k, 128k, 300k) is the library's text organs: plumbing that any body
+1. Recall of stored facts at any distance (32k, 128k) is the library's text organs: plumbing that any body
    could use. Alone, the mind and a 2k-window T++ answer ~0 beyond a few k (A25).
 2. A T++ holding a 2k window, given the same row with the contrast, matches the package on single-row cells (A18,
    A25). The difference is cost: the session in 1.15 MB vs a 67 MB window, or 4.8 GB at 128k for the full KV. T++

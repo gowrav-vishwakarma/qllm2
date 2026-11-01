@@ -14,11 +14,11 @@ lands on the 6000.
 * **v0 contract** sent to Lead (on the board, cbf2d6f): streaming API + chunked parity + deep-copyable states;
   `model.blocks` (z, state) with the address after block n_blocks // 2 (1a04b4c); per-position LM head; `_dilate`;
   tokenizer stops. No body constants left (7052e4a). Checked unchanged on the 16nb body (r3cb): state 3.92 MB.
-* **Running:** A25 in tmux `a25` (code 0a9aeb9, `logs/v14_a25_long_0a9aeb9_20261101_1622.{log,jsonl}`); 128k done,
-  300k ~2 of 10 groups at 17:03, ~19:00 IST end. Scorer:
-  `/tmp/claude-1000/-home-gowrav-Development-qllm2/fdbac1f0-c2c3-4b9c-8baf-2585a9e7b8eb/scratchpad/a25_score.py <jsonl>`
-  (bars B1-B4 at 300k). On end: verdict into EXPERIMENTS_V14 A25, the 300k rows into PACKAGE.md §8 + LIBRARY.md,
-  commit the logs, message Lead.
+* **Nothing of mine running.** A25 was STOPPED at 17:22 IST during 300k (user via Lead: 300k is not the bar; 128k
+  cap). Verdict at 128k (EXPERIMENTS_V14 A25): B2-B4 MET, B1 NOT met by one document (a written slip on the right
+  row). 300k rows stay in the log, unquoted. The 4090 is free for Lead's order: kb1 → BABILong → the M2 W128 pair.
+* W1 (Mind 7d2c7f1: window caches as one extra state entry before echo) needs no package change; checked on
+  w1r_w128 (PACKAGE.md §1, 7ec2a53).
 * BABILong / RULER: Lead's runner (`v16/babilong_eval.py`; my `--chain` column = TEXT planner); the package column is
   the headline (mind composes); reference block labelled by tokens.
 
