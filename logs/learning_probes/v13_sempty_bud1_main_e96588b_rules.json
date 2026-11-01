@@ -1,0 +1,184 @@
+{
+  "schema_version": "learning-probe-rules/v1",
+  "created_at": "2026-11-01T11:35:57.288774+00:00",
+  "model_type": "v13_sempty",
+  "model_identity": "checkpoints_v13_sempty/bud1_main_e96588b/best_model.pt",
+  "device": "cuda",
+  "platform": "Linux-7.0.0-1010-gcp-x86_64-with-glibc2.43",
+  "parameter_count": 103165814,
+  "protocol": {
+    "suite": "rules",
+    "spread": [],
+    "tasks": [
+      "letter_shift",
+      "number_step",
+      "reverse3",
+      "label_category",
+      "two_hop"
+    ],
+    "shots": [
+      2,
+      4,
+      8
+    ],
+    "seeds": [
+      5000,
+      5099
+    ],
+    "candidates": 8,
+    "chance": 0.125
+  },
+  "per_task_accuracy": {
+    "letter_shift": 1.0,
+    "number_step": 1.0,
+    "reverse3": 0.006666666666666667,
+    "label_category": 0.8866666666666666,
+    "two_hop": 0.2733333333333334
+  },
+  "mean_accuracy": 0.6333333333333334,
+  "per_task_free": {
+    "letter_shift": 1.0,
+    "number_step": 1.0,
+    "reverse3": 0.0,
+    "label_category": 0.75,
+    "two_hop": 0.24
+  },
+  "mean_free": 0.5980000000000001,
+  "aggregates": [
+    {
+      "task": "label_category",
+      "n_shots": 2,
+      "n": 100,
+      "accuracy": 0.88,
+      "mean_target_margin": 7.338737720102071,
+      "chance": 0.125,
+      "in_context_chance": 0.5
+    },
+    {
+      "task": "label_category",
+      "n_shots": 4,
+      "n": 100,
+      "accuracy": 0.94,
+      "mean_target_margin": 9.431132903397083,
+      "chance": 0.125,
+      "in_context_chance": 0.5
+    },
+    {
+      "task": "label_category",
+      "n_shots": 8,
+      "n": 100,
+      "accuracy": 0.84,
+      "mean_target_margin": 5.82294437199831,
+      "chance": 0.125,
+      "in_context_chance": 0.25
+    },
+    {
+      "task": "letter_shift",
+      "n_shots": 2,
+      "n": 100,
+      "accuracy": 1.0,
+      "mean_target_margin": 6.627132329940796,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "letter_shift",
+      "n_shots": 4,
+      "n": 100,
+      "accuracy": 1.0,
+      "mean_target_margin": 9.19850625038147,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "letter_shift",
+      "n_shots": 8,
+      "n": 100,
+      "accuracy": 1.0,
+      "mean_target_margin": 10.268068351745605,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "number_step",
+      "n_shots": 2,
+      "n": 100,
+      "accuracy": 1.0,
+      "mean_target_margin": 7.263898077011109,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "number_step",
+      "n_shots": 4,
+      "n": 100,
+      "accuracy": 1.0,
+      "mean_target_margin": 9.893191471099854,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "number_step",
+      "n_shots": 8,
+      "n": 100,
+      "accuracy": 1.0,
+      "mean_target_margin": 12.05833062171936,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    },
+    {
+      "task": "reverse3",
+      "n_shots": 2,
+      "n": 100,
+      "accuracy": 0.01,
+      "mean_target_margin": -6.83275018915534,
+      "chance": 0.125,
+      "in_context_chance": 0.3333333333333334
+    },
+    {
+      "task": "reverse3",
+      "n_shots": 4,
+      "n": 100,
+      "accuracy": 0.0,
+      "mean_target_margin": -7.391435552984476,
+      "chance": 0.125,
+      "in_context_chance": 0.3333333333333334
+    },
+    {
+      "task": "reverse3",
+      "n_shots": 8,
+      "n": 100,
+      "accuracy": 0.01,
+      "mean_target_margin": -7.073151053488255,
+      "chance": 0.125,
+      "in_context_chance": 0.3333333333333334
+    },
+    {
+      "task": "two_hop",
+      "n_shots": 2,
+      "n": 100,
+      "accuracy": 0.44,
+      "mean_target_margin": -0.02008451461791992,
+      "chance": 0.125,
+      "in_context_chance": 0.5
+    },
+    {
+      "task": "two_hop",
+      "n_shots": 4,
+      "n": 100,
+      "accuracy": 0.22,
+      "mean_target_margin": -1.0182380414009093,
+      "chance": 0.125,
+      "in_context_chance": 0.25
+    },
+    {
+      "task": "two_hop",
+      "n_shots": 8,
+      "n": 100,
+      "accuracy": 0.16,
+      "mean_target_margin": -1.6679057717323302,
+      "chance": 0.125,
+      "in_context_chance": 0.125
+    }
+  ]
+}

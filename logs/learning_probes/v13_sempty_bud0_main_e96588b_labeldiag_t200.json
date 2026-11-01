@@ -1,0 +1,94 @@
+{
+  "schema_version": "learning-probe-rules/v1",
+  "created_at": "2026-11-01T11:34:12.885951+00:00",
+  "model_type": "v13_sempty",
+  "model_identity": "checkpoints_v13_sempty/bud0_main_e96588b/best_model.pt",
+  "device": "cuda",
+  "platform": "Linux-7.0.0-1010-gcp-x86_64-with-glibc2.43",
+  "parameter_count": 103165814,
+  "protocol": {
+    "suite": "label_diag",
+    "spread": [],
+    "tasks": [
+      "label_category",
+      "label_exact"
+    ],
+    "shots": [
+      2,
+      4,
+      8
+    ],
+    "seeds": [
+      5000,
+      5199
+    ],
+    "candidates": 8,
+    "chance": 0.125
+  },
+  "per_task_accuracy": {
+    "label_category": 0.5383333333333334,
+    "label_exact": 0.5716666666666667
+  },
+  "mean_accuracy": 0.555,
+  "per_task_free": {
+    "label_category": 0.495,
+    "label_exact": 0.5333333333333333
+  },
+  "mean_free": 0.5141666666666667,
+  "aggregates": [
+    {
+      "task": "label_category",
+      "n_shots": 2,
+      "n": 200,
+      "accuracy": 0.555,
+      "mean_target_margin": 0.23893776804208755,
+      "chance": 0.125,
+      "in_context_chance": 0.5
+    },
+    {
+      "task": "label_category",
+      "n_shots": 4,
+      "n": 200,
+      "accuracy": 0.68,
+      "mean_target_margin": 1.053186545856297,
+      "chance": 0.125,
+      "in_context_chance": 0.5
+    },
+    {
+      "task": "label_category",
+      "n_shots": 8,
+      "n": 200,
+      "accuracy": 0.38,
+      "mean_target_margin": -0.693003298342228,
+      "chance": 0.125,
+      "in_context_chance": 0.25
+    },
+    {
+      "task": "label_exact",
+      "n_shots": 2,
+      "n": 200,
+      "accuracy": 0.56,
+      "mean_target_margin": 0.3659161826968193,
+      "chance": 0.125,
+      "in_context_chance": 0.5
+    },
+    {
+      "task": "label_exact",
+      "n_shots": 4,
+      "n": 200,
+      "accuracy": 0.7,
+      "mean_target_margin": 1.2508836080133916,
+      "chance": 0.125,
+      "in_context_chance": 0.5
+    },
+    {
+      "task": "label_exact",
+      "n_shots": 8,
+      "n": 200,
+      "accuracy": 0.455,
+      "mean_target_margin": -0.33722376853227615,
+      "chance": 0.125,
+      "in_context_chance": 0.25
+    }
+  ]
+}

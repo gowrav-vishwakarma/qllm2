@@ -5625,3 +5625,28 @@ INTELLIGENCE first (rules, reach), then the infrastructure saving.
 the 220M point is w1s / w1r (s8 D W128 0.787, W0 0.541).
 
 **Order on the 4090:** after kb1 → Library's A25 → Lead's BABILong pass (Lead's GPU order).
+
+## bud VERDICT (17:17 IST, 2026-11-01): bud2 FAILS on skills (two-hop 0.35 < 0.45; one-read reach at 2k 0.48 → 0.175). Lower answer weights save LM but do NOT teach two-hop or reach. The mix cost at 600M on the 16nb body is +0.036
+
+**Arms:** `bud0` / `bud1` / `bud2` `_main_e96588b`. r3c's 16nb body + echo, from `r3ca_pre_38e3c29`; 480M stage B; seed 42; 103.2M;
+6000. Logs: `logs/v13_sempty_bud*_e96588b*`, `logs/learning_probes/v13_sempty_bud*`, `logs/diag/v13_sempty_{curprobe,skillpack}_bud*`.
+
+| readout | bud0 (r3c's mix) | bud1 (r3p's mix, ×100) | bud2 (×20 synthetic) | bud2 bar |
+|---|---|---|---|---|
+| holdout | 3.5132 | 3.5487 (+0.0355) | 3.5266 (+0.0134) | ≤ 3.5332 ✓ |
+| WikiText val loss | 4.2997 | 4.3335 | 4.3105 | – |
+| B2 `_new` mean (shift / step / affine) | 0.03 | 0.973 (0.935 / 0.988 / 0.996) | 0.933 (0.965 / 0.838 / 0.995) | ≥ 0.923 ✓ |
+| label_diag mean | 0.555 | 0.927 | 0.923 | ≥ 0.877 ✓ |
+| fsq abstain (absent keys) | 0.00 | 1.00 | 0.99 | ≥ 0.95 ✓ |
+| **two-hop (cur probe), correct / free** | 0.135 / 0.00 | 0.50 / 0.25 | **0.35** / 0.25 | ≥ 0.45 **✗** |
+| skill pack 0 / 2k (reported) | 0.045 / 0.035 | 1.00 / 0.48 | 1.00 / **0.175** | – |
+| verify (cur probe, reported) | 0.33 | 0.998 | 0.757 | – |
+
+**Reading:**
+- **The mix cost at 600M on 16nb:** bud1 − bud0 = **+0.036**, against r3p's 3B-mix gap of 0.11 at 1.44B. The cost grows with
+  scale and tokens on this body, or r3p's 3B run amplified it.
+- **×20 answers keep the easy skills** (B2 at L = 0, labels, abstain), **but lose two-hop (−0.15) and one-read reach at 2k (0.48 →
+  0.175).** The skills that need the trace to be held (reach) or composed (two-hop) need their weight. That is the
+  pre-registered failure lesson: lower weights don't teach.
+- So r3p' and any tier carry FEWER synthetic tokens at full weight, not lighter weights.
+- **Per-body slope:** PAM 16nb only (one tier). bud0 vs r3c at 3B: 3.5132 → 3.2191 holdout with the same mix (r3c's).
