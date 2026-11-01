@@ -44,13 +44,21 @@ CONTENT_BG = 3000                            # fetch_rows: a question word is CO
 
 
 class Package:
-    def __init__(self, ckpt: str = B2P2, device: str = 'cuda', alpha: float = 4.0, max_new: int = 40):
+    def __init__(self, ckpt: str = B2P2, device: str = 'cuda', alpha: float = 4.0, max_new: int = 40,
+                 address_layer: int | None = None):
         self.mind = Mind(ckpt, torch.device(device))
         self.tok = self.mind.tok
+        # v0 interface rules (no b2p2 constants): the address is the residual after block n_blocks // 2 (b2p2: 8 of 16);
+        # the sentence end / stops come from the tokenizer; state bytes are measured from the state itself
+        self.address_layer = len(self.mind.m.blocks) // 2 if address_layer is None else address_layer
+        dot, nl = self.tok.encode('.', add_special_tokens=False)[0], self.tok.encode('\n', add_special_tokens=False)[0]
+        import v14.a13_manykey as _a13
+        import v14.package_fetch as _pf
+        _a13.DOT = _pf.DOT = dot
         self.R = Reader(self.mind.m, 'pam')
         self.alpha, self.max_new = alpha, max_new
         im_end = self.tok.convert_tokens_to_ids('<|im_end|>') if '<|im_end|>' in self.tok.get_vocab() else None
-        self.stops = STOP_TOKENS + ((im_end,) if im_end is not None else ())
+        self.stops = (dot, nl) + ((im_end,) if im_end is not None else ())
         self._session = None
 
     def read(self, session_text, chunk: int = 2048):
@@ -63,7 +71,7 @@ class Package:
         ids = self.tok.encode(session_text, add_special_tokens=False) if isinstance(session_text, str) else list(session_text)
         m = self.mind.m; dev = self.mind.dev
         caps, surp, prev = [], [], None
-        hook = m.blocks[8].register_forward_hook(lambda mod, i, o: caps.append((o[0] if isinstance(o, tuple) else o).data[0].half()))
+        hook = m.blocks[self.address_layer].register_forward_hook(lambda mod, i, o: caps.append((o[0] if isinstance(o, tuple) else o).data[0].half()))
         st, off = None, 0
         try:
             with torch.no_grad():
@@ -82,7 +90,8 @@ class Package:
             hook.remove()
         off = len(ids)
         V = torch.cat(caps).float(); mu = V.mean(0)
-        self._session = dict(key=key, text=session_text if isinstance(session_text, str) else None, ids=ids, state=st,
+        state_bytes = sum(t.numel() * t.element_size() for x in st for t in (x if isinstance(x, (list, tuple)) else [x]) if torch.is_tensor(t))
+        self._session = dict(key=key, text=session_text if isinstance(session_text, str) else None, ids=ids, state=st, state_bytes=state_bytes,
                              off=off, last_lp=prev, rows=sentence_rows(ids, len(ids)), V=V.half(), mu=mu,
                              surp=torch.cat(surp))
         return self._session
@@ -148,7 +157,7 @@ class Package:
                 break
             la, sa, oa = self.mind.feed([t], sa, oa); lb, sb, ob = self.mind.feed([t], sb, ob)
         info.update(abstain=0, query_text=self.tok.decode(q), first_token=out[0],
-                    bytes_held=dict(mind_state=STATE_BYTES['b2p2'], no_pack_twin_state=STATE_BYTES['b2p2'], library_text=2 * len(S)))
+                    bytes_held=dict(mind_state=STATE_BYTES['b2p2'], no_pack_twin_state=STATE_BYTES['b2p2'], library_text=2 * len(S), note='b2p2 state size'))
         return self.tok.decode(out), info
 
     @torch.no_grad()
@@ -159,7 +168,7 @@ class Package:
         session tokens only (A15's 4.9 MB / 1M form)."""
         s = self._session; m = self.mind.m; dev = self.mind.dev
         caps = []
-        hook = m.blocks[8].register_forward_hook(lambda mod, i, o: caps.append((o[0] if isinstance(o, tuple) else o).data[0].float()))
+        hook = m.blocks[self.address_layer].register_forward_hook(lambda mod, i, o: caps.append((o[0] if isinstance(o, tuple) else o).data[0].float()))
         try:
             x = torch.tensor([q], device=dev)
             logits, _, _ = m(x, states=copy.deepcopy(s['state']), step_offset=s['off'])
@@ -298,7 +307,7 @@ class Package:
         if row is None and mode == 'lenient':
             row, salient = self._f2(q, form=address); path = 'F2'
         info = dict(path=path, row=tuple(row) if row else None, abstain=int(row is None), salient=salient,
-                    bytes_held=dict(mind_state=STATE_BYTES.get('b2p2'), library_text=2 * end,
+                    bytes_held=dict(mind_state=s['state_bytes'], library_text=2 * end,
                                     word_token_indexes_est=int(9.4 * end),
                                     address_int8_all=592 * end, address_sal1=int(78 * end / 16)))
         if row is None:
