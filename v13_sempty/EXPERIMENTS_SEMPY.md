@@ -4964,3 +4964,7 @@ length extension); the setting is the package-triggered, memory-targeted dilatio
 fresh seeds 8600–8649, echo-only dilation s = 4 with and without the contrast, L = 4k / 8k, plus the prose cell (s = 1 / 2 / 4, echo).
 Bar: free 8k + contrast ≥ 0.40 AND prose ≤ s = 1 + 0.05, as clk2. If met on both checkpoints, the result is replicated across
 two independent 600M minds.
+**clk2r amendment (08:35 IST, before any clk2r number; Lead):** the replication runs on TWO checkpoints, cu2a AND b2p1
+(`b2p1_main_38e3c29`, seed 42), both on fresh seeds 8600–8649, with echo s ∈ {1, 4, 8} ± contrast. The prose cost is measured at
+s = 1 / 4 / 8 on cu2a, b2p1 and b2p2, so echo s = 8 can be stated or dropped. Bar unchanged, per checkpoint, at s = 4; s = 8 is
+claimed only where its own prose cost is ≤ +0.05.
