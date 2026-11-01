@@ -41,6 +41,12 @@ The single most useful habit: measure each step on its own (an oracle row for "r
   stream; latest occurrence wins. Bench 32k: right row 1.00 on kv / para / tool, never-stored false hit 0.00 / 0.025.
   Bug to avoid: read the question from its START, not from the key's last token (A4 v1 was invalid for this).
   Edge: in a very short document a frame bigram ("refers to") can be "rare" and fire.
+- **Rare-in-English word (A20, MET):** reworded questions ("I forgot what K means. It means") put a one-word key
+  between frame words never stored next to it, so no 2-3-word span matches (1 / 22). Step 4: a question word seen 1-2
+  times in the stream AND ≤ 3 times in a shipped background count (6M FineWeb tokens → 101,252 words, 1.47 MB): any
+  wording finds the key (0.225-0.275 → 1.00), never-stored unchanged; frame words are common English and never
+  qualify. Order: token organ → word steps 1-2 → step 4 → (F2) → step 3 (the bigram step attracts frame words:
+  "stand for", "that refers to").
 - **Strict mode:** abstain iff both organs miss (a rule). Never-stored abstain 0.975-1.00 at 32k.
   `text_fetch(ids, doc_end) → (row span | None, {organ_hit, step, abstain})` is this whole chain, body-agnostic (no
   mind keys): every body (T++, Mamba-2, PAM) gets the same library in Lead's comparison.
@@ -64,6 +70,10 @@ The single most useful habit: measure each step on its own (an oracle row for "r
   Seed spread on synonyms ≈ ±0.1 (0.575 / 0.632 / 0.433 over three seeds at n = 19-40). **Lesson:** the frame of a
   question is predictable to the mind, the key is not; text cannot tell them apart (A12: BM25 top-1 0.175 / 0.525,
   rarest-span 0.45 / 0.725, abstain 0.125), the mind's surprise can.
+- **A21, the question-time package on natural wording (32k, seed 18000):** text steps then F2, warm + contrast read.
+  Natural keys, right row (full text chain → with F2): kv 0.725 → 0.775, kv1 0.60 → 0.75, kvupd 0.55 → 0.70, natq 0.70
+  → 0.825; answers kv 0.725 (lenient) vs 0.20 strict; synthetic keys text-solved (1.00 fetch, 0.825-0.925 answer).
+  F2 never abstains: lenient answers 30 / 57 % of never-stored questions with a value word (strict 0 / 3 %).
 - **Memory of that address (A14, A15):** every token's 588-d state = 1,176 MB / 1M (fp16). int8 per vector (+ fp16
   scale) is lossless (A15: 0.433 = 0.433 on syn). A PCA-64 basis (fit on held-out web text, 47.9 % of variance)
   destroys the synonym signal (0.632 → 0.263): meaning lives in low-variance directions. Keeping only the top 1/16
@@ -111,6 +121,12 @@ The single most useful habit: measure each step on its own (an oracle row for "r
 
 ## 6. Comparison with T++ and Mamba-2 (same text library, Lead's arm; seed 18000, 32k)
 
+- **A18, holding the session (32k, same rows):** T++ holding the WHOLE session (1.06 GB KV, 16× its trained length)
+  answers 0.00 on every cell; T++ holding the last 2k (67 MB) + contrast reads kv 0.95 / 0.95, para 0.95 / 0.975, tool
+  0.75 / 0.825, natq 0.425; the PAM package holding the whole session (1.15 MB) reads kv 0.975 / 0.925, para 0.90 / 1.00,
+  tool 0.75 / 0.675, natq 0.475. A 2k window WITHOUT the contrast falls on natural keys (0.475-0.575) like the mind's
+  warm read: the context's prior outvotes the row in a transformer too. Limit: these cells need only the fetched row,
+  so a window loses nothing; R x K (a rule held in state applied to a fetched fact) is the cell that separates them.
 - Cold read of the same row, free (syn / nat): kv T++ 1.00 / 0.875, b2p2 0.90 / 0.775; para T++ 0.70 / 0.65, b2p2 0.775
   / 0.80; tool T++ 0.90 / 0.90, b2p2 0.475 / 0.40, Mamba-2 0.425 / 0.475; hop2 1.00 all. Memory to read ≈ equal (~35
   tokens). The difference is in holding the session: T++ 1.2 GB KV at 32k vs the mind's 1.15 MB (A18 measures T++

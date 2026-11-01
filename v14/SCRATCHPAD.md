@@ -4,7 +4,28 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-01 09:54 IST) — read this first
+## State (2026-11-01 12:34 IST) — read this first
+
+Session: **Library**. Nothing of mine is running or queued.
+* Today after 09:54 (EXPERIMENTS_V14): A18 complete (T++ full 32k 0.00 at 1.06
+  GB; T++ 2k window + contrast ≈ the package, 67 MB vs 1.15 MB; T++ cold best on
+  tool); A19 MET (field-cut rows: cold 0.90 / 0.80, warm + contrast 1.00 / 1.00);
+  A20 MET (rare-in-English step: reworded one-word keys 0.25 → 1.00); A21 B1 NOT
+  met / B2 MET (F2 adds +0.05-0.15 on natural keys, never abstains: 30-57 %
+  value words on never-stored).
+* Shipped for Lead: `text_fetch(ids, doc_end, step4=, bigram=)`, `field_cut`,
+  `v14/styles.py`, background counts (1.47 MB, d_drive). Learnings:
+  `v16/learnings/LIBRARY.md`. Package spec `v14/PACKAGE.md`.
+* Tomorrow's three questions (Lead): the reader (gated on R × K), R × K
+  (Mind builds; rule only in state, fact only fetched, controls), the
+  natural-variant headline table (Lead; my fetch steps + F2 in it).
+* Lessons: never pipe a check inside a commit chain; check a run's log
+  before killing its tmux (I stopped my own A18b at 11:05).
+* **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
+  tmux first.
+
+## Old state (2026-11-01 09:5x IST; superseded)
+
 
 Session: **Library**. Armed: **A18** (tmux `a18`, `~/a18.sh`, worktree
 `../qllm_v14a18` @ 5d08477): T++ + text library warm reads (cold / 2k window +
