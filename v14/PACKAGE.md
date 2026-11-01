@@ -43,6 +43,20 @@ Code: `v14/package_fetch.py` (`key_fn` for v16/bench.py), `v14/norm_organ.py`.
   R = 1,024 (+3.3 %) passes both rules plain.
 - Mind's cd3: an irrelevant pack costs +0.08 nats on the following prose (+0.92 over the next 64 tokens).
 
+## 3b. Rule x knowledge (R x K, Mind's 99d2951): the planner substitutes, the mind applies
+
+- A rule held ONLY in the mind's state is applied to a FETCHED fact past the trained length when the planner puts
+  the fetched VALUE into the rule's trained query line ("<v> ->"): free 0.61 / 0.62 at 2k (refresh + contrast), 0.45 /
+  0.49 at 8k (one read + echo dilation s = 8 + contrast); T++ as it is 0.01 / 0.07 (0.30 with the pack re-inserted).
+- **Planner rule:** never ask the mind to compose key -> row -> rule ("K ->" with the row in view: <= 0.07 for every
+  model). The library fetches the key's row, takes the value out of it (it knows its own row formats; field_cut for
+  records) and writes the rule's query line itself.
+- Each standing skill in the register keeps its trained query format beside its demonstrations.
+- Place a fetched record row AFTER some context, or render it in the rule's format: at the start of a document a
+  record row can capture a held rule (cu2a 1.00 -> 0.02, b2p2 1.00 -> 0.91).
+- Cost: the skill contrast needs the no-pack twin stream across the session (a second O(1) state, +1.15 MB, 2x read
+  compute), unlike the fact read, whose twin runs on the answer tokens only.
+
 ## 4. Shared library (text-first packs)
 
 - `qllm-pack/v1` JSONL (header, then entries `{id, text, source, sha256, time, trust}`); `v14/pack.py`.
