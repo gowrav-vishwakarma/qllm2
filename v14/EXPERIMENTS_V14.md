@@ -3347,6 +3347,35 @@ fitted threshold:
     run-on):** a reported arm WARMC1 = the contrast on the FIRST answer token
     only, then plain greedy from the warm stream (the trained stop can act
     after the value). The bar stays on WARMC as registered.
+  - **A17 VERDICT (2026-11-01 09:24 IST; code 8be7f47;
+    `logs/v14_a17_render_32768_8be7f47_20261101_0858.jsonl` + .log, 180 rows; organ
+    hit and parse 1.00 everywhere): NOT met (tool: cu2a rendered 0.767 / 0.767 vs
+    raw 0.833 / 0.70, syn / nat).**
+
+    | 32k (syn / nat) | cu2a raw → rendered, warm + contrast | cu2a raw → rendered, cold | b2p2 raw → rendered, warm + contrast |
+    |---|---|---|---|
+    | tool | 0.833 → 0.767 / 0.70 → 0.767 | 0.53 → 0.13 / 0.63 → 0.13 | 0.80 → 0.53 / 0.73 → 0.67 |
+    | kv | 1.00 → 0.967 / 0.767 → **1.00** | 1.00 → 0.10 / 0.767 → 0.167 | 0.933 → 1.00 / 0.967 → 0.933 |
+    | para | 0.967 → 0.967 / 0.933 → **1.00** | 0.90 → 0.067 / 0.70 → 0.167 | 0.967 → 0.967 / 0.933 → 0.967 |
+
+    - Read cold, cu2a answers a rendered row " unknown." 80-83 % of the time
+      even when the asked field IS in the row (" region: cedar", asked region):
+      Mind's field-level format effect (only colour / city / code / owner /
+      room / tool were trained; "region", "label", "meaning" read as "not this
+      row's field"). The warm + contrast read overrides it (it subtracts the
+      no-row " unknown" prior), so rendering is neutral on tool and helps cu2a
+      on natural kv / para (0.767 → 1.00, 0.933 → 1.00).
+    - WARMC1 (first-token contrast) cuts the run-on but lands below WARMC on
+      rendered tool rows (0.70 / 0.633). Run-on with full WARMC on rendered
+      tool rows 0.87-0.97.
+    - Trained-field split on tool (n 7 owner vs 23 others; small): natural
+      owner 0.857 → 1.00 rendered, others 0.652 → 0.696 (says " unknown" 30 %
+      in WARMC1); synthetic owner 1.00 → 0.714. Not decisive at this n.
+    - b2p2 (never trained on the template): rendering hurts tool (0.80 → 0.53).
+    - Says: rendering helps only inside the trained field vocabulary; the
+      fix is cu3's open field vocabulary (Mind), not a library field map.
+      The package keeps the raw row for tool; definitions rendered + warm +
+      contrast is a candidate for cu2a (descriptive, needs a fresh seed).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
