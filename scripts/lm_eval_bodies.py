@@ -30,8 +30,9 @@ EOT = 50256
 
 
 class BodyLM(LM):
-    def __init__(self, ckpt: str, device: str = 'cuda', batch_size: int = 32, max_len: int = 2048):
+    def __init__(self, ckpt: str, device: str = 'cuda', batch_size: int = 32, max_len: int = 2048, fp32: bool = False):
         super().__init__()
+        self.amp = device == 'cuda' and not fp32
         from run_memory_behavioral import _load_v13_sempty
         self.dev = torch.device(device)
         self.m, self.tok, self.cfg = _load_v13_sempty(Path(ckpt), 'baseline_real_pm', self.dev)
@@ -67,7 +68,7 @@ class BodyLM(LM):
             for b, j in enumerate(idx):
                 full = items[j][0]
                 x[b, :len(full) - 1] = torch.tensor(full[:-1])
-            with torch.autocast(device_type=self.dev.type, dtype=torch.bfloat16, enabled=self.dev.type == 'cuda'):
+            with torch.autocast(device_type=self.dev.type, dtype=torch.bfloat16, enabled=self.amp):
                 logits = self.m(x.to(self.dev))[0]
             for b, j in enumerate(idx):
                 full, nk = items[j]; n = len(full) - 1
@@ -92,16 +93,17 @@ def main():
     p.add_argument('--device', default='cuda')
     p.add_argument('--batch_size', type=int, default=32)
     p.add_argument('--limit', type=int, default=None, help='smoke only; never for a reported number')
+    p.add_argument('--fp32', action='store_true', help='no bf16 autocast (bodies) / dtype float32 (hf references)')
     p.add_argument('--out', required=True)
     a = p.parse_args()
     t0 = time.time()
     if a.ckpt:
-        model = BodyLM(a.ckpt, a.device, a.batch_size)
-        meta = {'ckpt': a.ckpt, 'params': model.n_params, 'arch': type(model.m).__name__}
+        model = BodyLM(a.ckpt, a.device, a.batch_size, fp32=a.fp32)
+        meta = {'ckpt': a.ckpt, 'params': model.n_params, 'arch': type(model.m).__name__, 'fp32': a.fp32}
         res = simple_evaluate(model=model, tasks=a.tasks.split(','), num_fewshot=0, limit=a.limit, bootstrap_iters=1000)
     else:
-        meta = {'hf': a.hf}
-        res = simple_evaluate(model='hf', model_args=f'pretrained={a.hf},dtype=bfloat16', tasks=a.tasks.split(','), num_fewshot=0,
+        meta = {'hf': a.hf, 'fp32': a.fp32}
+        res = simple_evaluate(model='hf', model_args=f'pretrained={a.hf},dtype={"float32" if a.fp32 else "bfloat16"}', tasks=a.tasks.split(','), num_fewshot=0,
                               device=a.device, batch_size=a.batch_size, limit=a.limit, bootstrap_iters=1000)
     import lm_eval
     rec = {'meta': {**meta, 'lm_eval': lm_eval.__version__, 'limit': a.limit, 'sec': round(time.time() - t0, 1)},
