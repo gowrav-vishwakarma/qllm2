@@ -64,19 +64,25 @@ def main():
     ap.add_argument('--lengths', default='2048,4096,8192'); ap.add_argument('--seed', type=int, default=1)
     ap.add_argument('--device', default='cuda'); ap.add_argument('--max_new', type=int, default=40)
     ap.add_argument('--forms', default='chat,plain')
+    ap.add_argument('--package', action='store_true', help='second column: the v16 PACKAGE (Library, 5da6bb5: text fetch + F2 + warm + contrast read) on the same prompt and question (PAM minds)')
+    ap.add_argument('--mode', default='lenient', choices=['lenient', 'strict'])
     a = ap.parse_args()
     model, tok, cfg = _load_v13_sempty(Path(a.ckpt), 'baseline_real_pm', torch.device(a.device)); model.eval()
     R = Reader(model, a.arch)
+    pkg = None
+    if a.package:
+        from v16.package import Package
+        pkg = Package(a.ckpt, device=a.device)
     fill = filler_tokens(str(ROOT / '.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt'))
     im_end = tok.convert_tokens_to_ids(IM_END) if IM_END in tok.get_vocab() else None
     name = Path(a.ckpt).parent.name; ts = time.strftime('%Y%m%d_%H%M')
     rep = ROOT / 'logs' / f'v16_story_{name}_{ts}.md'
-    out = [f"# Story comprehension, {name} ({a.arch}) ALONE (no library), seed {a.seed}, greedy, max_new {a.max_new}\n"]
+    out = [f"# Story comprehension, {name} ({a.arch}) ALONE (no library){' + PACKAGE (' + a.mode + ')' if pkg else ''}, seed {a.seed}, greedy, max_new {a.max_new}\n"]
     for L in [int(x) for x in a.lengths.split(',')]:
         text = build_prompt(tok, fill, L, a.seed)
         pf = ROOT / 'v16' / 'prompts' / f'story_L{L}_s{a.seed}.txt'; pf.parent.mkdir(exist_ok=True); pf.write_text(text)
         base = tok.encode(text, add_special_tokens=False)
-        out.append(f"\n## L = {L} (prompt {len(base)} tokens, file {pf.relative_to(ROOT)})\n\n| question | form | expected | generated |\n|---|---|---|---|")
+        out.append(f"\n## L = {L} (prompt {len(base)} tokens, file {pf.relative_to(ROOT)})\n\n| question | form | expected | mind alone | package |\n|---|---|---|---|---|")
         hits = {f: 0 for f in a.forms.split(',')}
         for qname, q, exp in QUESTIONS:
             for form in a.forms.split(','):
@@ -88,8 +94,14 @@ def main():
                 gen = R.greedy(ids, max_new=a.max_new, stops=stops)
                 txt = tok.decode(gen).replace('\n', ' / ').replace('|', '\\|').strip()
                 hit = exp.lower() in txt.lower(); hits[form] += int(hit)
-                out.append(f"| {qname} | {form} | {exp} | {'OK' if hit else '--'} `{txt}` |")
-                print(f"L={L} {qname:14s} {form:5s} exp={exp:10s} {'OK' if hit else '--'} {txt[:100]!r}", flush=True)
+                pcol = ''
+                if pkg is not None:
+                    ptxt, pinfo = pkg.answer(text, qt, mode=a.mode)
+                    ptxt = (ptxt or '').replace('\n', ' / ').replace('|', '\\|').strip()
+                    phit = exp.lower() in ptxt.lower(); hits.setdefault('package_' + form, 0); hits['package_' + form] += int(phit)
+                    pcol = f"{'OK' if phit else '--'} `{ptxt}` ({pinfo.get('path')}{', abstain' if pinfo.get('abstain') else ''})"
+                out.append(f"| {qname} | {form} | {exp} | {'OK' if hit else '--'} `{txt}` | {pcol} |")
+                print(f"L={L} {qname:14s} {form:5s} exp={exp:10s} alone {'OK' if hit else '--'} {txt[:70]!r}" + (f" | package {pcol[:90]}" if pcol else ''), flush=True)
         out.append(f"\nkeyword hits: " + ', '.join(f"{f} {hits[f]}/{len(QUESTIONS)}" for f in hits))
         print(f"L={L} keyword hits: " + ', '.join(f"{f} {hits[f]}/{len(QUESTIONS)}" for f in hits), flush=True)
         rep.write_text('\n'.join(out) + '\n')
