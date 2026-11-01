@@ -18,6 +18,19 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 10:07 IST: the read gap (Lead's T++ + library arm) and a candidate repair.** Same text library, cold read,
+  free generation, T++ vs b2p2 (syn / nat):
+  - kv 1.00 / 0.875 vs 0.90 / 0.775;
+  - TOOL 0.90 / 0.90 vs 0.475 / 0.40 (A9 warm + contrast 0.75 / 0.575: narrower, still behind);
+  - para 0.70 / 0.65 vs 0.775 / 0.80 (PAM ahead).
+
+  This is the known multi-item associative-recall weakness of fixed-state recurrent bodies (MQAR / Zoology; Based). The
+  mind's claim is NOT reading a fetched row better: it is the constant cost, rules in state, and own-state keys.
+  **Candidate repair (proposed to Lead):** bounded sliding-window attention (window 128–256) in 2–4 blocks, so the read of
+  a fetched row is exact copy, with KV fixed by the window (still O(1) in context length). Prior work: Griffin / Hawk,
+  Based, SWA hybrids; no method claim. Order: 100M LM screen, then a 600M pair (window vs none); readouts are the
+  text-arm tool cells, s8 and clk2r.
+
 * **2026-11-01 09:24 IST: cu3 design inputs (after cu2a and Library's A16 / A17), to pre-register after cu2b.**
   - **Open field vocabulary with held-out field NAMES.** cu2a's VERIFY treats an unfamiliar field name as "not this
     row's field": A17 shows 80–83 % " unknown." even when the field IS present ("region", "label", "meaning").
