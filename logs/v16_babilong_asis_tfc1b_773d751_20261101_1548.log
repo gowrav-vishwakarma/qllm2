@@ -1,0 +1,67 @@
+0k    qa1  n=100 as_is=0.14 (0.1 s/doc)
+0k    qa2  n=100 as_is=0.00 (0.1 s/doc)
+0k    qa3  n=100 as_is=0.00 (0.1 s/doc)
+0k    qa4  n=100 as_is=0.08 (0.1 s/doc)
+0k    qa5  n=100 as_is=0.38 (0.1 s/doc)
+1k    qa1  n=100 as_is=0.00 (0.1 s/doc)
+1k    qa2  n=100 as_is=0.01 (0.0 s/doc)
+1k    qa3  n=100 as_is=0.01 (0.1 s/doc)
+1k    qa4  n=100 as_is=0.00 (0.1 s/doc)
+1k    qa5  n=100 as_is=0.07 (0.1 s/doc)
+Token indices sequence length is longer than the specified maximum sequence length for this model (1711 > 1024). Running this sequence through the model will result in indexing errors
+2k    qa1  n=100 as_is=0.01 (0.1 s/doc)
+2k    qa2  n=100 as_is=0.00 (0.1 s/doc)
+2k    qa3  n=100 as_is=0.01 (0.1 s/doc)
+2k    qa4  n=100 as_is=0.01 (0.1 s/doc)
+2k    qa5  n=100 as_is=0.03 (0.1 s/doc)
+4k    qa1  n=100 as_is=0.00 (0.1 s/doc)
+4k    qa2  n=100 as_is=0.00 (0.1 s/doc)
+4k    qa3  n=100 as_is=0.00 (0.2 s/doc)
+4k    qa4  n=100 as_is=0.00 (0.2 s/doc)
+4k    qa5  n=100 as_is=0.01 (0.2 s/doc)
+Generating qa1 split: 0 examples [00:00, ? examples/s]Generating qa1 split: 100 examples [00:00, 1070.30 examples/s]
+Generating qa2 split: 0 examples [00:00, ? examples/s]Generating qa2 split: 100 examples [00:00, 1457.91 examples/s]
+Generating qa3 split: 0 examples [00:00, ? examples/s]Generating qa3 split: 100 examples [00:00, 1687.97 examples/s]
+Generating qa4 split: 0 examples [00:00, ? examples/s]Generating qa4 split: 100 examples [00:00, 2754.57 examples/s]
+Generating qa5 split: 0 examples [00:00, ? examples/s]Generating qa5 split: 100 examples [00:00, 2212.80 examples/s]
+Generating qa6 split: 0 examples [00:00, ? examples/s]Generating qa6 split: 100 examples [00:00, 3369.49 examples/s]
+Generating qa7 split: 0 examples [00:00, ? examples/s]Generating qa7 split: 100 examples [00:00, 3203.40 examples/s]
+Generating qa8 split: 0 examples [00:00, ? examples/s]Generating qa8 split: 100 examples [00:00, 1986.40 examples/s]
+Generating qa9 split: 0 examples [00:00, ? examples/s]Generating qa9 split: 100 examples [00:00, 4030.50 examples/s]
+Generating qa10 split: 0 examples [00:00, ? examples/s]Generating qa10 split: 100 examples [00:00, 1842.76 examples/s]
+8k    qa1  n=100 as_is=0.00 (0.1 s/doc)
+8k    qa2  n=100 as_is=0.00 (0.1 s/doc)
+8k    qa3  n=100 as_is=0.00 (0.2 s/doc)
+8k    qa4  n=100 as_is=0.00 (0.2 s/doc)
+8k    qa5  n=100 as_is=0.00 (0.2 s/doc)
+Generating qa1 split: 0 examples [00:00, ? examples/s]Generating qa1 split: 100 examples [00:00, 1000.01 examples/s]
+Generating qa2 split: 0 examples [00:00, ? examples/s]Generating qa2 split: 100 examples [00:00, 1687.81 examples/s]
+Generating qa3 split: 0 examples [00:00, ? examples/s]Generating qa3 split: 100 examples [00:00, 1913.49 examples/s]
+Generating qa4 split: 0 examples [00:00, ? examples/s]Generating qa4 split: 100 examples [00:00, 2260.48 examples/s]
+Generating qa5 split: 0 examples [00:00, ? examples/s]Generating qa5 split: 100 examples [00:00, 1961.68 examples/s]
+Generating qa6 split: 0 examples [00:00, ? examples/s]Generating qa6 split: 100 examples [00:00, 1560.99 examples/s]
+Generating qa7 split: 0 examples [00:00, ? examples/s]Generating qa7 split: 100 examples [00:00, 1930.45 examples/s]
+Generating qa8 split: 0 examples [00:00, ? examples/s]Generating qa8 split: 100 examples [00:00, 1572.76 examples/s]
+Generating qa9 split: 0 examples [00:00, ? examples/s]Generating qa9 split: 100 examples [00:00, 2004.92 examples/s]
+Generating qa10 split: 0 examples [00:00, ? examples/s]Generating qa10 split: 100 examples [00:00, 2081.85 examples/s]
+16k   qa1  n=100 as_is=0.00 (0.2 s/doc)
+16k   qa2  n=100 as_is=0.00 (0.1 s/doc)
+16k   qa3  n=100 as_is=0.00 (0.1 s/doc)
+16k   qa4  n=100 as_is=0.00 (0.1 s/doc)
+16k   qa5  n=100 as_is=0.00 (0.2 s/doc)
+Generating qa1 split: 0 examples [00:00, ? examples/s]Generating qa1 split: 100 examples [00:00, 779.56 examples/s]Generating qa1 split: 100 examples [00:00, 778.11 examples/s]
+Generating qa2 split: 0 examples [00:00, ? examples/s]Generating qa2 split: 100 examples [00:00, 1211.93 examples/s]
+Generating qa3 split: 0 examples [00:00, ? examples/s]Generating qa3 split: 100 examples [00:00, 1242.98 examples/s]
+Generating qa4 split: 0 examples [00:00, ? examples/s]Generating qa4 split: 100 examples [00:00, 1250.81 examples/s]
+Generating qa5 split: 0 examples [00:00, ? examples/s]Generating qa5 split: 100 examples [00:00, 1065.61 examples/s]
+Generating qa6 split: 0 examples [00:00, ? examples/s]Generating qa6 split: 100 examples [00:00, 1071.74 examples/s]
+Generating qa7 split: 0 examples [00:00, ? examples/s]Generating qa7 split: 100 examples [00:00, 1295.71 examples/s]
+Generating qa8 split: 0 examples [00:00, ? examples/s]Generating qa8 split: 100 examples [00:00, 1155.65 examples/s]
+Generating qa9 split: 0 examples [00:00, ? examples/s]Generating qa9 split: 100 examples [00:00, 1146.58 examples/s]
+Generating qa10 split: 0 examples [00:00, ? examples/s]Generating qa10 split: 100 examples [00:00, 1204.75 examples/s]
+32k   qa1  n=100 as_is=0.00 (0.3 s/doc)
+32k   qa2  n=100 as_is=0.00 (0.3 s/doc)
+32k   qa3  n=100 as_is=0.00 (0.3 s/doc)
+32k   qa4  n=100 as_is=0.00 (0.4 s/doc)
+32k   qa5  n=100 as_is=0.00 (0.3 s/doc)
+out logs/v16_babilong_asis_tfc1b_773d751_20261101_1548.jsonl

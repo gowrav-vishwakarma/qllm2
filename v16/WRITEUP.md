@@ -92,16 +92,22 @@ cache for the same session 4.8 GB at 128k.
 | cu2a alone / package | 1 / 6 | 1 / 5 | 1 / 5 |
 | T++ alone, Mamba-2 alone | 1, 0 | 0, 0 | 0, 0 |
 
-### 2.6 BABILong (as is + package; 100 docs per cell) — filling
-| task | b2p2 package 0k / 1k / 2k | cu2a package | as-is bodies | planner chain |
-|---|---|---|---|---|
-| qa1 | 0.85 / 0.74 / 0.77 | 0.99 / 0.69 / 0.69 | pending | pending |
-| qa2 | 0.05 / 0.11 / 0.13 | 0.00 / 0.09 / 0.09 | | |
-| qa3 | 0.01 / 0.07 / 0.06 | 0.00 / 0.00 / 0.08 | | |
-| qa4 | 0.45 / 0.37 / 0.25 | 0.08 / 0.30 / 0.22 | | |
-| qa5 | 0.53 / 0.46 / 0.54 | 0.52 / 0.47 / 0.53 | | |
-Reference block (different data / tokens, tuned on the benchmark): Mamba-130M fine-tuned 97.7 % mean to 128k; RMT-137M
-85 %; ARMT-137M 97.8 %; untuned GPT-4 Turbo 65.1, Llama-3.1-70B 67.8.
+### 2.6 BABILong (RMT-team/babilong, qa1-qa5, 100 docs per cell, 0k-32k; the 128k cap; 103M params, 600M tokens; no tuning on the benchmark; logs/v16_babilong_*_773d751_20261101_1548)
+Package = stream the input into the state, fetch top-3 rows by name / latest / F2, warm + contrast read; chain = planner sub-questions (TEXT, library plumbing).
+| task | T++ as is (tfc1b) | Mamba-2 as is (mbs2b) | PAM as is (b2p2 / cu2a) | PAM package b2p2: 0k / 4k / 32k | PAM package cu2a: 0k / 4k / 32k | chain b2p2 0k / 32k |
+|---|---|---|---|---|---|---|
+| qa1 single fact | 0.00 at every length | 0.00-0.03 beyond 4k | 0.00-0.06 | 0.85 / 0.71 / 0.59 | 0.99 / 0.58 / 0.53 | 0.85 / 0.59 |
+| qa2 two facts | 0.00 | 0.00-0.01 | 0.00-0.01 | 0.05 / 0.18 / 0.19 | 0.00 / 0.14 / 0.12 | 0.23 / 0.16 |
+| qa3 three facts | 0.00 | 0.00-0.01 | 0.00-0.02 | 0.01 / 0.06 / 0.07 | 0.00 / 0.04 / 0.07 | 0.08 / 0.04 |
+| qa4 two-arg relation | 0.00 | 0.00-0.03 | 0.00-0.04 | 0.45 / 0.32 / 0.19 | 0.08 / 0.25 / 0.11 | 0.37 / 0.18 |
+| qa5 three-arg relation | 0.00 | 0.00 | 0.40 at 0k, <= 0.04 beyond | 0.53 / 0.56 / 0.58 | 0.52 / 0.50 / 0.59 | 0.56 / 0.53 |
+| mean qa1-5 | 0.00 | ~0.01 | ~0.01-0.09 | 0.38 / 0.37 / 0.32 | 0.32 / 0.30 / 0.28 | 0.42 / 0.31 |
+Reading: at 103M / 600M tokens no body reads BABILong as it is beyond 0k (T++ 0.00 everywhere, Mamba-2 <= 0.03, PAM <= 0.06); the
+package carries single-fact and relation questions (qa1 0.53-0.85, qa5 0.52-0.59) to 32k with a flat-to-slow decline (qa1 0.85 ->
+0.59), while two- and three-fact composition (qa2, qa3) stays <= 0.20 for every column: a composition gap of the mind, not of
+the fetch (the chain finds the rows and gains only at 0k on qa2, 0.05 -> 0.23). Package cost per doc on a 4090: 0.7 s at 0k, 13 s
+at 32k, state 1.15 MB. Reference block (different data / tokens, tuned on the benchmark): Mamba-130M fine-tuned 97.7 % mean to
+128k; RMT-137M 85 %; ARMT-137M 97.8 %; untuned GPT-4 Turbo 65.1, Llama-3.1-70B 67.8. Our column is "as is, 600M tokens".
 
 ### 2.7 Known-benchmark suite (kb1, Mind 41e7002; logs/kb1/v13_sempty_kb1_table_ccf187c.md): MC mean over HellaSwag /
 ARC-e / ARC-c / PIQA / Winogrande / OpenBookQA, then LAMBADA acc / ppl; all bodies as is, bf16 (fp32 re-check: identical)
