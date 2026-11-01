@@ -2,7 +2,8 @@
 
 Rows come from the strict organ chain (text). The library parses what it stored (bench's tool / definition rows)
 and re-renders it in cu2's fld format: " Record: K | f: v | ...." and " Q: What is the f of K? A:". Each answering
-mind (cu2a, b2p2) reads RAW and RENDERED, warm + contrast (its own doc state) and cold.
+mind (cu2a, b2p2) reads RAW and RENDERED, warm + contrast (its own doc state), cold, and (A17/1) warm with the
+contrast on the first answer token only.
 
     python v14/a17_render.py --seed 36000 --docs 30 --out logs/v14_a17_render_<hash>_<stamp>.jsonl
 """
@@ -92,6 +93,8 @@ def main():
                         g = mind.greedy_contrast(sp + qq, copy.deepcopy(st), off, qq, copy.deepcopy(st), off, ALPHA)
                         txt = tok.decode(g); rec[f'{name}_{arm}_warmc'] = sent_ok(txt, val); rec[f'{name}_{arm}_warmc_text'] = txt
                         txt = tok.decode(mind.greedy(sp + qq)); rec[f'{name}_{arm}_cold'] = sent_ok(txt, val); rec[f'{name}_{arm}_cold_text'] = txt
+                        g = mind.greedy_contrast_first(sp + qq, copy.deepcopy(st), off, qq, copy.deepcopy(st), off, ALPHA)
+                        txt = tok.decode(g); rec[f'{name}_{arm}_warmc1'] = sent_ok(txt, val); rec[f'{name}_{arm}_warmc1_text'] = txt
             rec['sec'] = round(time.time() - t0, 1)
             outf.write(json.dumps(rec) + '\n'); outf.flush()
             print(cell, d, rec['organ_hit'], rec.get('parse_ok'), {k: rec[k] for k in rec if k.endswith('_warmc')}, rec['sec'], flush=True)

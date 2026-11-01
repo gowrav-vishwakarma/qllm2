@@ -75,6 +75,22 @@ class Mind:
         return out
 
 
+    @torch.no_grad()
+    def greedy_contrast_first(self, pa, sa, oa, pb, sb, ob, alpha, max_new=16):
+        """A17/1: the contrast picks the FIRST answer token only; then plain greedy on stream A."""
+        la, sa, oa = self.feed(pa, sa, oa)
+        lb, _, _ = self.feed(pb, sb, ob)
+        out = [int((la + alpha * (la - lb)).argmax())]
+        if out[0] in STOPS:
+            return out
+        la, sa, oa = self.feed(out[-1:], sa, oa)
+        for _ in range(max_new - 1):
+            t = int(la.argmax()); out.append(t)
+            if t in STOPS:
+                break
+            la, sa, oa = self.feed([t], sa, oa)
+        return out
+
 def fact_row(ids, end, tok, meta):
     """(start, end) of the sentence holding the asked fact: the key's tokens within 24 tokens of the value's."""
     kt = tok.encode(f" {meta['key']}", add_special_tokens=False)
