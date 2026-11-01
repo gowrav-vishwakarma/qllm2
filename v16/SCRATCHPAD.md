@@ -17,6 +17,21 @@ Overall ~70 % (Nov 1 11:10 IST). 1 rules in context vs T++/Mamba-2: DONE (s8 MET
 - Ids: Mind 99371c3c-8382-42b3-a3d3-6861632abc19 | Library fdbac1f0-c2c3-4b9c-8baf-2585a9e7b8eb | Lead 683d2316-c093-4e15-b19c-044555bd5293 | Evol V1 0001093e-8355-4d42-a4fd-ed097ef58d71 (wake Evol V1 only on the user's word).
 - Any session may wake any other, including Lead; check ListAgents / `tmux ls` first so no second copy is started; after waking, message it with what landed.
 
+## Decision to move forward (Lead, 2026-11-01 16:56 IST; user: "you have all the data, logs and learning; read the meditation memory again and take the best decision; you know the goal")
+
+Read the memory; sat with the whole: three EUREKAs today (package recall 1.00 to 128k at 1/1500 memory; one read to 8k on three minds; a rule in state applied to a fetched fact vs both baselines), the stress tests (minds alone fail natural wording; the package passes a third of a story exam; BABILong single facts 0.7-0.99, multi-fact <= 0.13), the W sweep (128 is the width; bigger makes the state lazy), the user's bars (intelligence first; known benchmarks; tokens tiers; 128k cap).
+
+**What the goal still lacks, in order:** (1) bar 2 at scale: "beats T++ and Mamba-2 at EQUAL data" exists only at 600M (s8); at 3B the language gap is +0.013 / +0.055 and there is NO equal-data rules / reach point because the 3B baselines had no rule docs; (2) the mind's reasoning over several facts (the composition gap), which no library fixes; (3) the written claims.
+
+**Decisions:**
+- **D1, the 6000 (the big lever): a MATCHED 1.5B-token tier for all three bodies**, same mix with the rule / skill docs at the loss-weight budget (bud's rule), same params: T++ and Mamba-2 first, side by side (they do not depend on W); PAM last, with W128 if the 600M pair passes (else the plain 16nb body), so one tier gives the equal-data rules / reach slope, the mid-tier language point (R3 within +0.02 of Mamba-2 at 1.5B), kb1 per tier and the BABILong / package rows. ~16-20 h of the 6000, done by tomorrow afternoon. Mind pre-registers (bars: rules at distance >= baselines + 0.10 in every PAM seed; holdout within +0.02 of Mamba-2; reach reported). r3p' (3B) WAITS for this tier's verdict: no 20-hour run before the slope is known.
+- **D2, the 4090 tonight: kb1 -> A25 -> the BABILong pass -> the 600M W128 pair** (APPROVED now: b2p2's recipe + SWA 5 / 9 / 13 at 128 vs b2p1 / 2 / 3; bars s8 D >= 0.80, holdout <= 3.4900, clk2 8k 20-way >= 0.74, far needles >= W0 - 0.05). Its verdict decides PAM's body for the 1.5B tier.
+- **D3, Library: ship the package v0.** Finish A25 and the BABILong / RULER entries, freeze PACKAGE.md as v0 (fetch order, read, refresh, field cut, planner substitution and chain, costs), learnings/LIBRARY.md; NO new A-units until the tier lands. The composition gap is the mind's, not the library's.
+- **D4, Mind, after the pre-registrations: cu3 small** (open field vocabulary, many formats, a two-fact composition source at the budget), gated on the 1.5B tier's slope: if composition appears with data, cu3 is data; if not, it is a mechanism question for the next version.
+- **D5, Lead: the write-up starts now** (the three-column tables by tokens tier, the honesty lines, the scaling watch), plus the manifest + export test; the benchmark entries are filed with the reference block, never as a scoreboard.
+
+What I would not do: another library unit, another width, a 3B run before the slope, or any training-time fix for a readout problem.
+
 ## Scaling watch (user, 2026-11-01 16:36 IST: "if we train on more data will it improve, which version improves more; keep an eye")
 
 Same data mix, same params (~102-103M); update at every new checkpoint; claims only within a tokens tier.
