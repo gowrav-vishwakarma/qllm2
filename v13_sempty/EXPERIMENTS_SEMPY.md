@@ -5754,3 +5754,34 @@ notebooks, not in place of reads). The plain arm is also PAM's 16nb 600M point o
   0.01–0.07). What to improve for the known suite: plain LM quality (the 0.04–0.06 holdout gap to Mamba-2 at 3B) and tokens.
   SmolLM2's 2T tokens are 3,300× ours.
 - **The window:** no cost here, and no gain, as expected for short tasks.
+
+## w1m VERDICT (22:14 IST, 2026-11-01): FAIL as pre-registered on s8 (0.772 < 0.80, by 0.028). Yet W128 at 600M is better than EVERY b2p seed on holdout, s8, s8 4k and clk2. By Lead's rule the 1.5B PAM runs the plain 16nb body
+
+**Arm:** `w1m_w128_a913e01` (107.0M; b2p2's exact recipe + SWA 5 / 9 / 13 at 128; 600M tokens; 4090, 17:46–22:11 IST).
+
+| readout | b2p1 / b2p2 / b2p3 | **w1m W128** | bar |
+|---|---|---|---|
+| s8 D (2k / 4k, scored) | 0.645 / 0.691 / 0.741 | **0.772** | ≥ 0.80 **✗** |
+| s8 at 4k (beyond the window) | 0.525 / 0.606 / 0.623 | **0.647** | (reported) |
+| holdout | 3.4777 / 3.4800 / 3.4775 | **3.4708** | ≤ 3.4900 ✓ |
+| clk2 8k (dilation + contrast), 20-way | b2p1 0.81, b2p2 0.74 | **0.830** | ≥ 0.74 ✓ |
+| t40 far needles | 0.521 / 0.263 / 0.504 | 0.446 | ≥ 0.379 ✓ |
+| skill pack 20-way at 2k / 4k, plain | b2p2 0.86 / 0.355 | 0.905 / 0.275 | (reported) |
+| skill pack 4k + contrast, 20-way | b2p2 0.78 | 0.87 | (reported) |
+| text-arm tool free (syn / nat) | b2p2 0.475 / 0.40 | 0.45 / 0.30 | (reported) |
+| WikiText val loss | – | 4.2142 | – |
+
+**Reading:**
+- **Gains:** above all three seeds on holdout (−0.007 vs the best), s8 (+0.03 vs the best, +0.08 vs the mean), s8 4k (+0.024) and
+  clk2 (+0.02). The bar was the best seed + 0.06; it missed by 0.028. One seed.
+- **Per-body slope (W128 − W0, M2 body):**
+  - 220M: s8 D +0.246 (two seeds);
+  - 600M: +0.081 vs the b2p mean;
+  - the window's advantage SHRINKS with data, as more tokens teach the plain body the same inference.
+  - On holdout it turns from a small cost (220M +0.004) to a small gain (600M −0.008 vs the mean).
+- **Not a reader:** tool 0.375 vs b2p2 0.4375.
+
+**Consequence** (Lead's decision rule): w1m fails, so t15pam = **16nb plain**. `checkpoints_v13_sempty/t15_pam_body.txt` = `plain`
+on the 6000. w1n still runs: W128 on 16nb is a finding either way, and it costs nothing (it runs while T++ trains).
+- W128 remains a candidate body unit with a modest, shrinking gain. A second 600M seed would settle the 0.028 miss; that is the
+  user's / Lead's call, not launched.
