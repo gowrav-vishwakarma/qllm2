@@ -3558,6 +3558,19 @@ fitted threshold:
       words differ remains the trained VERIFY's job.
     - Package on natural wording at 32k (lenient): kv 0.725, kv1 0.675, kvupd
       0.70, natq 0.525 natural; 0.825-0.925 synthetic; para 1.00, tool 0.75-0.85.
+- **A22: the package on the user's STORY test (registered 12:39 IST, before
+  any number; a DEMO with outputs shown, no bar; Lead's ask).** Lead's
+  v16/story_eval.py: a four-chapter story with real other text between the
+  chapters (L = 2,048 / 4,096 / 8,192, seed 1), 11 exam-style questions in
+  chat and plain forms, Lead's keyword scorer. Package: text fetch (steps 0,
+  1, 2, 4) → F2 → warm + contrast read (b2p2), up to 40 tokens, stops as
+  Lead's; strict twin (text only, abstain on a miss); b2p2 ALONE on the same
+  decoding beside it. The fetched row is shown with every answer.
+  - Prediction: the package helps the single-sentence questions (who found,
+    where the key, the promise, what H stood for, why the bridge closed);
+    it does NOT help questions that need several sentences (order of events,
+    summary, the weekday inference) or arithmetic on a rule (price of weight
+    four), because it hands the mind ONE row.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
