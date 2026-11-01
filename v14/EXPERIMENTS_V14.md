@@ -3257,6 +3257,25 @@ fitted threshold:
   - Closest prior work: ColBERTv2 residual compression; binary embeddings /
     SimHash (Charikar 2002). Difference: only the tokens the O(1) mind found
     surprising are kept.
+  - **A15 VERDICT (2026-11-01 08:44 IST; code 9b9c848;
+    `logs/v14_a15_address_b2p2_32768_9b9c848_20261101_0823.jsonl` + .log, 120 rows,
+    run 08:23-08:32): NOT met on syn (V-sal8 0.333 < V-full 0.433 − 0.075);
+    natq fine.**
+
+    | top-1 / top-5 (30 docs) | V-full 1,176 MB | V-all8 590 MB | V-sal8 37 MB | V-sal1 4.9 MB |
+    |---|---|---|---|---|
+    | syn | 0.433 / 0.933 | 0.433 / 0.933 | 0.333 / 0.733 | 0.433 / 0.767 |
+    | natq | 0.733 / 0.90 | 0.733 / 0.90 | 0.80 / 0.90 | 0.767 / 0.90 |
+    | answer (warm + contrast) syn / natq | 0.367 / 0.533 | same | 0.267 / 0.533 | 0.367 / 0.533 |
+
+    - Precision is free (int8 on every token = fp16 exactly); A14's loss was
+      the PCA projection. Keeping only the 1/16 surprising tokens costs on
+      synonyms (top-5 0.933 → 0.73-0.77), not on natq. Sign bits matched full
+      on top-1 (3-doc differences at n = 30: noise level).
+    - Seed spread of the full address on syn: 0.575 (A13), 0.632 (A14, 19
+      docs), 0.433 (A15): about ±0.1 at n = 30-40; bars on syn need more docs.
+    - Next: a token-fraction sweep at sign bits (1/16, 1/8, 1/4, 1/2 = 4.9 /
+      9.8 / 19.6 / 39 MB per 1M), with ≥ 80 docs on syn.
 - **A16 (N11-RD): refresh every 8k with echo dilation + contrast
   (PRE-REGISTERED 2026-11-01 08:33 IST, before any number of it; after Mind's
   clk2 EUREKA db43950 / c7c6e2b).** Design / cost, no novelty claim of its own
@@ -3276,6 +3295,11 @@ fitted threshold:
     plain) − 0.05. Met → the package refreshes every ~8k (~0.4 % tokens) with
     echo dilation on the stretch before a question; the dilation's prose cost
     (+0.013 nats, Mind) and the second stream go into PACKAGE.md's cost table.
+  - **Amendment A16/1 (08:44 IST, before any A16 number; Lead's ask):** the
+    prose cost is MEASURED, reported beside the free score: the NLL of the
+    filler tokens in the last gap (R 8192, L 32k, the same seeds) with vs
+    without echo dilation, in a small follow-up run (A16 itself started at
+    08:43 without it).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

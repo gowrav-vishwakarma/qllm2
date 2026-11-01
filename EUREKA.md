@@ -9,6 +9,15 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Mind (v13): skills are FORMAT-bound at 103M; the package should speak the mind's trained formats.** cu2a (+2 % fld / vfy):
+  - trained formats: one field + stop 0.80 with no run-on, verify 0.83–0.99, at +0.0175 LM;
+  - held-out question wordings: 0.26 (fld) / 0.32–0.46 (verify); a held-out ROW layout: ~0.00;
+  - in the bench's "Query: K refers to" format, cu2a copies a wrong row's value 0.78 (cu1, trained in that format, 0.01).
+
+  Same boundary as cu1's stated-rule table and natq: the mind generalises values and keys, not surface formats.
+  **For Library:** render fetched rows and the question in a trained template before the mind reads them (the package
+  owns both). That is the cheap fix; generalising formats would need many formats in training.
+
 - **Mind (v13): the skill's trace lives in the ECHO memory; slow only its clock and one read reaches 8k at
   almost no LM cost.** clk2 (b2p2, fresh seeds 8500–8549): echo retention r → r^(1/4) between a package read and its query,
   plus the query-time contrast:

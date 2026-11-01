@@ -1,0 +1,79 @@
+cu2 chain: code 24b2969 in /home/gowrav/Development/qllm_reset2, 2026-11-01T00:36:23Z
+=== cu2a start 2026-11-01T00:36:23Z, futility bar 3.7908 at step 4883
+=== cu2a start 2026-11-01T00:36:23Z SCREEN_HASH=24b2969 arms='main:ECHO=1,SHARE_READS=1' base='LR=1.2e-3 TARGET_TOKENS=480006144 VAL_EVERY=4883 SAVE_EVERY=500 KEEP_EVERY=0 KEEP_LAST=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2128 SEED=43 SOURCES=dclm,fineweb,smoltalk2_mid,recall,b2,fld,vfy WEIGHTS=0.42,0.39,0.10,0.04,0.03,0.01,0.01 INIT_FROM=checkpoints_v13_sempty/c1m2a_pre_7ae6f1f/best_model.pt BATCH=18 SEQ=2048 GRAD_ACCUM=3 ANSWER_IN_WINDOW=1 MAX_RETRIES=5 ' ===
+=== arm main (ECHO=1 SHARE_READS=1) ckpt=checkpoints_v13_sempty/cu2a_main_24b2969 log=logs/v13_sempty_cu2a_main_24b2969_20261101_0606.log 2026-11-01T00:36:23Z ===
+=== cu2a_main start 2026-11-01T00:36:23Z commit=24b2969 log=logs/v13_sempty_cu2a_main_24b2969_20261101_0606.log ckpt=checkpoints_v13_sempty/cu2a_main_24b2969 ===
+cu2a: futility check passed (3.7691 <= 3.7908) 2026-11-01T01:38:23Z
+=== cu2a_main end 1793501602 exit=0 attempts=1 ===
+=== arm main train exit=0 2026-11-01T02:53:22Z ===
+W1101 08:23:33.767088 2934395 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:23:34.580153 2934395 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:23:38.794080 2934395 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:23:39.613841 2934395 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:23:44.074974 2934395 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:23:45.148634 2934395 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/7] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:23:50.982468 2934395 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/8] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:23:52.489664 2934395 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/9] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:24:04.248632 2934395 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/10] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:24:06.056112 2934395 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/11] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:24:32.697227 2934395 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/12] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:24:35.911573 2934395 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/13] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+Results saved to logs/memory_probes/v13_sempty_cu2a_main_24b2969_t40_behavioral.json (aggregates, 2520 rows omitted)
+Token indices sequence length is longer than the specified maximum sequence length for this model (61281 > 1024). Running this sequence through the model will result in indexing errors
+50 docs x 8192 tokens from pg19
+W1101 08:25:47.919295 2935385 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:25:49.038855 2935385 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:25:49.853570 2935385 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+W1101 08:25:51.064785 2935385 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))), 0) | (784*(6*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 780*Max(1, (s65//((s25//64)))) <= 4704*((s25//64))*((s65//((s25//64)))))
+  10/50 docs (10s)
+  20/50 docs (13s)
+  30/50 docs (17s)
+  40/50 docs (20s)
+  50/50 docs (23s)
+  [    0,   64)  loss 4.2561  ppl   70.54
+  [   64,  128)  loss 3.9592  ppl   52.41
+  [  128,  256)  loss 3.7638  ppl   43.11
+  [  256,  512)  loss 3.7290  ppl   41.64
+  [  512, 1024)  loss 3.8215  ppl   45.67   short-ctx 3.8218  far_gain +0.0003
+  [ 1024, 2048)  loss 3.8414  ppl   46.59   short-ctx 3.8629  far_gain +0.0215
+  [ 2048, 4096)  loss 3.8334  ppl   46.22   short-ctx 3.8663  far_gain +0.0329
+  [ 4096, 8192)  loss 3.8665  ppl   47.78   short-ctx 3.9089  far_gain +0.0424
+wrote logs/pos_loss/v13_sempty_cu2a_main_24b2969_pg19.json
+--- final holdout val_loss (last val of each arm) ---
+  main: 3.4975
+=== cu2a DONE 2026-11-01T02:56:09Z ===
+=== cu2a readouts 2026-11-01T02:56:09Z
+  100/100 docs
+  affine_map_new done
+  affine_map_new done
+per task: {'shift_wide': 1.0, 'step_wide': 1.0, 'affine_map': 0.998, 'shift_wide_new': 0.999, 'step_wide_new': 0.945, 'affine_map_new': 1.0}  mean 0.99
+free (A7): {'shift_wide': 1.0, 'step_wide': 1.0, 'affine_map': 0.988, 'shift_wide_new': 0.999, 'step_wide_new': 0.82, 'affine_map_new': 0.991}  mean 0.966
+saved logs/learning_probes/v13_sempty_cu2a_main_24b2969_b2_t400.json
+cu2a_main_24b2969 {'pg19': 3.8102, 'web': 3.4675}
+  loss  cu2a_main_24b2969 3.8102  b2p2 3.7883
+  cu2a_main_24b2969 - b2p2: total +0.0219
+     by class (gap / share of total): copy +0.007 / +8%  seen +0.019 / +33%  new +0.035 / +59%
+  loss  cu2a_main_24b2969 3.4675  b2p2 3.4516
+  cu2a_main_24b2969 - b2p2: total +0.0159
+     by class (gap / share of total): copy +0.007 / +10%  seen +0.014 / +35%  new +0.023 / +55%
+shown, prompt tail: ' = 4 - 5.8%- sulfur based-check for allergy- stimulate beta cells to release endogenous insulin- 1'
+  a=0.0: '.8 HbA1C* 10.8 HbA1C* 10.8 HbA1C* 10.8 HbA1C* 10.8 Hb'
+  a=4.0: ' 58 19 47 71 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46 46'
+=== shown generations cu2a_main_24b2969
+The quarterly review covered hiring, the new office lease, travel budgets for the spring conference, and the plan to move the build servers to the new data centre before June.
+Question: who has the backup key? Answer:
+Generated: Note for the team: the storage room code is 4172, and the backup key is with Priya in room 18.
+The quarterly review covered hiring, the new office lease, travel budgets for the spring conference, and the plan to move the build servers to the new data centre before June.
+Question: who has the backup key? Answer: A. The owner of the new office is A. The
+--- prompt (free text, T 0.8 top-k 50 top-p 0.9 rep 1.2): The\ first\ printing\ presses\ in\ Europe
+Loading checkpoints_v13_sempty/cu2a_main_24b2969/best_model.pt ...
+device=cpu  vocab=50261  params=102.9M  step=13021  chrono=True
+
+Prompt: The first printing presses in Europe
+Generated: The first printing presses in Europe were a few years before the printing press, during which time new printing presses began to appear. In the early days of printing, most of the work was done by hand.
+In 1859, the printer's first print was issued for New York City. The first printed printing presses appeared on the
+=== cu2a DONE (chain) 2026-11-01T03:14:35Z
+=== cu2b start 2026-11-01T03:14:35Z, futility bar 3.7891 at step 4883
+=== cu2b start 2026-11-01T03:14:35Z SCREEN_HASH=24b2969 arms='main:ECHO=1,SHARE_READS=1' base='LR=1.2e-3 TARGET_TOKENS=480006144 VAL_EVERY=4883 SAVE_EVERY=500 KEEP_EVERY=0 KEEP_LAST=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=2128 SEED=43 SOURCES=dclm,fineweb,smoltalk2_mid,recall,b2,fld,vfy WEIGHTS=0.42,0.39,0.10,0.04,0.03,0.01,0.01 INIT_FROM=checkpoints_v13_sempty/c1m2a_pre_7ae6f1f/best_model.pt BATCH=18 SEQ=2048 GRAD_ACCUM=3 ANSWER_IN_WINDOW=1 MAX_RETRIES=5 ACH_LAMBDA=0.2 ACH_ALPHA=4.0 ACH_FILL=4096' ===
+=== arm main (ECHO=1 SHARE_READS=1) ckpt=checkpoints_v13_sempty/cu2b_main_24b2969 log=logs/v13_sempty_cu2b_main_24b2969_20261101_0844.log 2026-11-01T03:14:35Z ===
+=== cu2b_main start 2026-11-01T03:14:35Z commit=24b2969 log=logs/v13_sempty_cu2b_main_24b2969_20261101_0844.log ckpt=checkpoints_v13_sempty/cu2b_main_24b2969 ===

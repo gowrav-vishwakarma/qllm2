@@ -1,0 +1,14 @@
+
+[pg19] tokens 122880; share copy 0.258 seen 0.377 new 0.365
+  loss  cu2a_main_24b2969 3.8102  b2p2 3.7883
+  cu2a_main_24b2969 - b2p2: total +0.0219
+     by class (gap / share of total): copy +0.007 / +8%  seen +0.019 / +33%  new +0.035 / +59%
+     by position:                     0-8 -0.025  8-64 +0.053  64-512 +0.026  512-2048 +0.020
+     new tokens by position:          0-8 +0.012  8-64 +0.053  64-512 +0.036  512-2048 +0.034
+
+[web] tokens 195046; share copy 0.227 seen 0.386 new 0.387
+  loss  cu2a_main_24b2969 3.4675  b2p2 3.4516
+  cu2a_main_24b2969 - b2p2: total +0.0159
+     by class (gap / share of total): copy +0.007 / +10%  seen +0.014 / +35%  new +0.023 / +55%
+     by position:                     0-8 +0.040  8-64 +0.022  64-512 +0.014  512-2048 +0.016
+     new tokens by position:          0-8 +0.043  8-64 +0.021  64-512 +0.018  512-2048 +0.026
