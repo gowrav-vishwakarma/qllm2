@@ -3415,6 +3415,18 @@ fitted threshold:
       a transformer too, and the same contrast fixes it.
     - Memory: the mind holds the session at 1.15 MB and reads at T++-window
       quality (67 MB); the transformer holding the session (1.06 GB) collapses.
+  - **A18 continued, para (11:06 IST; `logs/v14_a18b_tpp_warm_32768_5d08477_20261101_1042.jsonl`
+    + .log; I stopped this run by mistake at tool/synthetic doc 22 while
+    re-ordering the queue, so tool / natq are re-queued after A21):**
+
+    | para, 32k (syn / nat), 40 docs | T++ cold | T++ window plain | T++ window + contrast | T++ FULL + contrast | b2p2 warm + contrast |
+    |---|---|---|---|---|---|
+    | sentence free | 0.70 / 0.675 | 0.85 / 0.575 | 0.95 / 0.975 | **0.00 / 0.00** | 0.90 / **1.00** |
+
+    The kv picture repeats: full-session T++ answers nothing; window + contrast
+    and the mind's package read are level (natural keys 0.975 vs 1.00, the
+    prediction holds on para); the window without the contrast falls on
+    natural keys (0.575).
 - **A19: field-cut tool rows (PRE-REGISTERED 2026-11-01 10:10 IST, before any
   number of it; Lead's package-side repair, agreed).** PLUMBING, labelled
   "field-cut rows": the LIBRARY picks the asked field's clause and the mind
