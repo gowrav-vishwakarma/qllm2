@@ -38,11 +38,11 @@ Same data mix, same params (~102-103M); update at every new checkpoint; claims o
 
 | body | holdout 600M -> 3B (gain) | body-alone recall 600M -> 3B | rules at distance (s8) | one-read reach | known benchmarks (kb1) |
 |---|---|---|---|---|---|
-| PAM | 3.478 -> 3.219 (0.26) | b2p2 0.83 (recall probe) -> r3c 0.792 63-cell; beyond 2k 0.661 | 0.65-0.74 at 600M (3 seeds); 3B: no equal-data point (the 3B runs had no rule docs); r3p 1.44B PAM-only point pending | ~2k, 4k with contrast, 8k with dilation (600M) | pending |
-| T++ | 3.555 -> 3.206 (0.35) | 0.539 at 3B; beyond 2k 0.153 | 0.13 at 600M | window-bound | pending |
-| Mamba-2 | 3.475 -> 3.164 (0.31) | 0.613 at 3B; beyond 2k 0.403 | 0.10 at 600M | ~0 at 8k | pending |
+| PAM | 3.478 -> 3.219 (0.26) | b2p2 0.83 (recall probe) -> r3c 0.792 63-cell; beyond 2k 0.661 | 0.65-0.74 at 600M (3 seeds); 3B: no equal-data point (the 3B runs had no rule docs); r3p 1.44B PAM-only point pending | ~2k, 4k with contrast, 8k with dilation (600M) | 0.391 (b2p2) / 0.388 (cu2a) -> 0.403 (r3c), slope +0.012 (body changed M2 -> 16nb) |
+| T++ | 3.555 -> 3.206 (0.35) | 0.539 at 3B; beyond 2k 0.153 | 0.13 at 600M | window-bound | 0.388 -> 0.406, slope +0.018 |
+| Mamba-2 | 3.475 -> 3.164 (0.31) | 0.613 at 3B; beyond 2k 0.403 | 0.10 at 600M | ~0 at 8k | 0.392 -> 0.415, slope +0.023 |
 
-Reading so far: on language the transformer gains most from data (PAM led by 0.08 at 600M, trails by 0.013 at 3B; the 2 -> 3B late slopes are equal, ~-0.08 nats per B, so the gap stopped widening); on body-alone recall PAM's lead GREW with data. Open: s8 / reach at 3B (run them on r3c), the budget-fixed 3B run (bud -> r3p'), the window arms at 600M, kb1 per tier.
+Reading so far: on language the transformer gains most from data (PAM led by 0.08 at 600M, trails by 0.013 at 3B; the 2 -> 3B late slopes are equal, ~-0.08 nats per B, so the gap stopped widening); on body-alone recall PAM's lead GREW with data. Open: s8 / reach at 3B (run them on r3c), the budget-fixed 3B run (bud -> r3p'), the window arms at 600M. kb1 landed (Mind 41e7002, 17:57 IST): level at 600M on known MC tasks; PAM gains the least to 3B (+0.012 vs +0.018 / +0.023, caveat: body change, no b2 stage) -> t15 gives the clean slope; the window arms cost nothing on kb1 (W0 0.377-0.383 vs W128 0.380-0.384). LAMBADA at 600M PAM 0.146 / ppl 578 vs T++ 0.148 / 1299, Mamba-2 0.132 / 945. Reading: PAM's edge is rules in state, not general knowledge; what to improve is plain LM quality and tokens.
 
 ## Direction after the meditation (Lead, 2026-11-01 05:02 IST; from the three step-back blocks: Lead a2e3820, Mind 90ab235, Library 718991b)
 
@@ -322,3 +322,4 @@ Popped by the others (23:55 IST):
   W0); n9th stops after seed 132 (~14:00); n9r FAIL (N9a recall +0.016/+0.014 vs bars +0.08/+0.15).
 - Next: MLB-1 v1 freeze (v13 merges; organiser sends the row format; v14 comments), then baselines
   on the suite with existing T++ / Mamba-2 data, then W0 -> L1.
+- 17:58 IST (Nov 1): kb1 RESULT (Mind 41e7002; logs/kb1/v13_sempty_kb1_table_ccf187c.md) filled into WRITEUP §2.7 and the scaling watch: MC mean at 600M PAM 0.391 / 0.388, T++ 0.388, Mamba-2 0.392 (LEVEL); 3B 0.403 / 0.406 / 0.415; slope +0.012 / +0.018 / +0.023 (PAM gains least; body-change caveat, t15 = clean slope); window arms cost nothing (W0 0.377-0.383, W128 0.380-0.384); references SmolLM2-135M 2T 0.487, GPT-2 0.397, Pythia-160M 0.396 (fp32; bf16 degrades Pythia, not our bodies). Intelligence line for the write-up: on general knowledge the bodies are level at equal data; the mind's edge is rules in state (s8, R x K); the lever is plain LM quality + tokens. Checkpoint cleanup on the 6000 (20 superseded dirs, ~24 GB, Mind: no strikes) NOT executed: the rm was blocked by the permission system; the exact command is with the user.

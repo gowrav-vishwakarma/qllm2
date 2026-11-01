@@ -103,7 +103,19 @@ cache for the same session 4.8 GB at 128k.
 Reference block (different data / tokens, tuned on the benchmark): Mamba-130M fine-tuned 97.7 % mean to 128k; RMT-137M
 85 %; ARMT-137M 97.8 %; untuned GPT-4 Turbo 65.1, Llama-3.1-70B 67.8.
 
-### 2.7 Known-benchmark suite (kb1) — pending; blocks: 600M tier, 3B tier, reference (SmolLM2-135M 2T, Pythia-160M 300B, GPT-2)
+### 2.7 Known-benchmark suite (kb1, Mind 41e7002; logs/kb1/v13_sempty_kb1_table_ccf187c.md): MC mean over HellaSwag /
+ARC-e / ARC-c / PIQA / Winogrande / OpenBookQA, then LAMBADA acc / ppl; all bodies as is, bf16 (fp32 re-check: identical)
+| tokens tier | PAM | T++ | Mamba-2 |
+|---|---|---|---|
+| 600M (103M params) | 0.391 (b2p2) / 0.388 (cu2a); LAMBADA 0.146 / 578 | 0.388; 0.148 / 1299 | 0.392; 0.132 / 945 |
+| 3B | 0.403 (r3c, 16nb body, no b2 stage); 0.179 / 376 | 0.406; 0.196 / 404 | 0.415; 0.176 / 305 |
+| slope 600M -> 3B | +0.012 | +0.018 | +0.023 |
+| window arms, 220M | W0 0.377-0.383, W128 0.380-0.384, W512 / W1024 0.381: the window costs nothing | | |
+Reference block (other data, far more tokens; no claim): SmolLM2-135M 2T 0.487 (LAMBADA 0.428); GPT-2 ~10B 0.397 (0.307);
+Pythia-160M 300B 0.396 (0.354), in fp32 (Pythia degrades in bf16, our bodies do not).
+Reading: on known general tasks the three bodies are LEVEL at equal data; PAM's edge is rules held in state (s8, R x K),
+not general knowledge. PAM gains the least from 600M -> 3B on this suite, with the body-change caveat; the matched 1.5B
+tier (t15) gives the clean slope. What to improve: plain LM quality and tokens.
 
 ### 2.8 Scaling watch — see the board; the matched 1.5B tier fills the rules / reach slope.
 
