@@ -4,7 +4,44 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-01 07:02 IST) — read this first
+## State (2026-11-01 09:24 IST) — read this first
+
+Session: **Library**. Nothing of mine is running or queued; the 4090 is Mind's
+cu2 chain (cu2b), then r3p's readouts when r3p lands.
+* Verdicts since 07:00 (EXPERIMENTS_V14): A15 NOT met (int8 on every token is
+  lossless; keeping only surprising tokens costs synonyms ~0.1; seed spread
+  ±0.1); A16 NOT met (refresh every 8k + echo dilation + contrast 0.42; 2k +
+  contrast 0.70 best; dilation costs +0.020 nats, keep it out); A17 NOT met
+  (rendering into cu2a's template: no tool gain; cold rendered reads say
+  " unknown" 80 % on untrained field names; warm + contrast overrides).
+* Open for my lane: (1) the address's memory under 50 MB / 1M without losing
+  synonyms (next: token-fraction sweep at sign bits / int8, ≥ 80 docs); (2)
+  abstain where words differ (cu2 / cu3 VERIFY); (3) r3p readouts (address
+  arms: own / own + head / b2p2 / organ / MiniLM / F2; key-swap; warm +
+  contrast with r3p answering).
+* Package spec `v14/PACKAGE.md`.
+* **Waking peers:** `scripts/wake_session.sh <Name> <id>`; check ListAgents /
+  tmux first.
+
+## Step back (2026-11-01 09:24 IST, after A15 / A16 / A17)
+
+* **Surprise:** three ways of making the package cheaper or tidier (pruned
+  address, sparse refresh, a trained template) each lost something real, and
+  every loss traced to the same root: the mind was trained in one format and
+  one distance, and it degrades outside them (untrained field names, gaps
+  beyond ~4k, tokens it did not find surprising).
+* **What it says:** at 103M the package should meet the mind where it was
+  trained (raw rows, refresh every 2k, full-precision keys where they
+  matter) and the CURRICULUM should widen what the mind accepts (cu3: open
+  field names, verify with present-but-unseen fields). Cheapness comes after
+  the mind generalises, not before.
+* **Angle:** measure the package at r3p (3B tokens): if a larger-trained mind
+  tolerates untrained fields and longer gaps, the same cheap variants may
+  pass there; the r3p readout should include A15's sign-bit address and
+  A16's 4k refresh.
+
+## Old state (2026-11-01 07:0x IST; superseded)
+
 
 Session: **Library**. Armed: **A15** (tmux `a15`, `~/a15.sh`, worktree
 `../qllm_v14a15` @ 9b9c848): starts when cu2a's training ends (marker

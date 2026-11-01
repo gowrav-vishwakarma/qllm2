@@ -32,8 +32,9 @@ Code: `v14/package_fetch.py` (`key_fn` for v16/bench.py), `v14/norm_organ.py`.
 
 - Standing skills are stored as **demonstrations** (header + demo lines), never words only (Mind's 3c7a7fa: a
   rule taught in words is learned as a lookup table).
-- Re-insert the skill pack every R = 2,048 tokens (N11-R: +1.6 % tokens). Free generation at 32k: affine 0.84,
-  shift 0.34 (N11-R/F); with a query-only contrast 0.79 pooled, shift 0.68 (A8, descriptive, to be confirmed).
+- Re-insert the skill pack every R = 2,048 tokens (N11-R: +1.6 % tokens) and read the question with the contrast
+  on the query token: free 0.70 pooled at 32k (A16; plain 0.63). Every 4k + contrast ≈ every 2k plain; every 8k fails
+  even with echo dilation (0.42), and dilation costs +0.020 nats on the gap: not used.
   R = 1,024 (+3.3 %) passes both rules plain.
 - Mind's cd3: an irrelevant pack costs +0.08 nats on the following prose (+0.92 over the next 64 tokens).
 
