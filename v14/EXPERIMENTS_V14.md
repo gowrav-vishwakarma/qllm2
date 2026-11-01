@@ -3427,6 +3427,29 @@ fitted threshold:
     and the mind's package read are level (natural keys 0.975 vs 1.00, the
     prediction holds on para); the window without the contrast falls on
     natural keys (0.575).
+  - **A18 COMPLETE (12:34 IST; tool / natq from
+    `logs/v14_a18b_tpp_warm_32768_5d08477_20261101_1213.jsonl` + .log, 40 docs each).
+    The whole comparison (32k, seed 18000, same text_fetch rows, free + sentence
+    scorer, syn / nat):**
+
+    | cell | T++ cold | T++ 2k window + contrast | T++ FULL 32k + contrast | b2p2 package (warm + contrast) |
+    |---|---|---|---|---|
+    | kv | 1.00 / 0.90 | 0.95 / 0.95 | 0.00 / 0.00 | 0.975 / 0.925 |
+    | para | 0.70 / 0.675 | 0.95 / 0.975 | 0.00 / 0.00 | 0.90 / 1.00 |
+    | tool | **0.90 / 0.90** | 0.75 / 0.825 | 0.00 / 0.00 | 0.75 / 0.675 |
+    | natq (nat; fetch abstain 0.12) | 0.075 | 0.425 | 0.00 | **0.475** |
+    | bytes held per session | ~1-1.5 MB (row only) | 67-68 MB | 1,060 MB | **1.15 MB** |
+
+    - Prediction: T++ window ≈ cold on exact keys ✓ (0.95 vs 1.00 / 0.90); FULL
+      below both ✓ (0.00 everywhere: a transformer holding the whole 32k
+      session, 16× its trained length, answers nothing); b2p2 ≥ T++ window on
+      natural kv / para ✗ / ✓ (0.925 vs 0.95; 1.00 vs 0.975).
+    - The mind's package is level with the transformer's 2k window on facts
+      (and better on natq) at 1/58 of its memory, while holding the WHOLE
+      session; the transformer is better at reading multi-field records cold
+      (tool 0.90). In these cells the answer needs only the fetched row, so
+      the window loses nothing by forgetting: the cell that would separate
+      "holding the session" from "a 2k window" is R × K (Mind's).
 - **A19: field-cut tool rows (PRE-REGISTERED 2026-11-01 10:10 IST, before any
   number of it; Lead's package-side repair, agreed).** PLUMBING, labelled
   "field-cut rows": the LIBRARY picks the asked field's clause and the mind
