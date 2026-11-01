@@ -136,7 +136,6 @@ def run(args):
     variants = [v for v in args.variants.split(',') if v]
     alphas = [float(x) for x in args.alphas.split(',') if x]
     dilations = [float(x) for x in args.dilations.split(',') if x]
-    tag_ids = tok.encode(' [answer]', add_special_tokens=False)
     out = open(args.out, 'a')
     S = body.state_bytes()
     for task in tasks + (['two_hop'] if 'replay_hop2' in variants else []):
@@ -153,7 +152,7 @@ def run(args):
                 fill = sep + filler_block(filler, L, seed, L) + sep if L else []
                 row = {'arch': body.arch, 'ckpt': str(args.checkpoint), 'sub': task, 'L': L, 'doc': seed}
                 if task != 'two_hop':
-                    pack = H + sum(U[:-1], []); q = U[-1] + (tag_ids if args.tag else [])   # cu2b: ACh-1 answer tag
+                    pack = H + sum(U[:-1], []); q = U[-1]
                     if 'skillpack' in variants:
                         ids = pack + fill + q; a, am, af = score(body, ex, ids)
                         refetch = pack + q; o, om, of = score(body, ex, refetch)
@@ -223,7 +222,6 @@ if __name__ == '__main__':
     p.add_argument('--alphas', default='0,0.5,1,2,4', help='contrast variant (cd1): l_pack + a (l_pack - l_nopack)')
     p.add_argument('--dilations', default='1,2,4', help='dilate variant (clk1): retention ** (1/s) over the filler')
     p.add_argument('--dilate_where', default='all', choices=['all', 'echo', 'notebook'], help='clk2: which memory is dilated')
-    p.add_argument('--tag', action='store_true', help="cu2b: append ACh-1's answer tag ' [answer]' after the query line")
     p.add_argument('--hop_facts', type=int, default=4, help='two_hop: owners (= pets = names) in the story')
     p.add_argument('--lengths', default='0,2048,8192,32768,131072')
     p.add_argument('--docs', type=int, default=100)

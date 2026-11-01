@@ -57,10 +57,7 @@ SEED="${SEED:-42}"            # init + data-mix seed (default 42 = every run so 
 ECHO="${ECHO:-0}"              # E1 echo (succession) memory into the head
 NGRAM_ORDERS="${NGRAM_ORDERS:-}"      # v14 N7 in-context n-gram memory orders, e.g. 2,3 (empty = off; builds V14LM)
 RESET_AT_EOS="${RESET_AT_EOS:-0}"      # lg8r: state reset at document separators
-ACH_LAMBDA="${ACH_LAMBDA:-0}"          # cu2b ACh-1 answer-mode distillation weight (0 = off)
 GRAD_ACCUM="${GRAD_ACCUM:-1}"          # micro-batches per step (exact accumulation; 1 = off)
-ACH_ALPHA="${ACH_ALPHA:-4.0}"          #   teacher contrast strength
-ACH_FILL="${ACH_FILL:-2048}"           #   max filler tokens in the long item
 COND_MEM="${COND_MEM:-0}"              # A4 hashed n-gram conditional memory (tables lr x5, no wd)
 ECHO_SURPRISE_TAU="${ECHO_SURPRISE_TAU:-0}" # v14 N12 surprise-selected echo writes, nats (0 = off; needs ECHO=1; builds V14LM)
 PAM_LAYERS="${PAM_LAYERS:-}"   # M1 blocks that keep a notebook, e.g. 3,7,11,15 (default all)
@@ -107,7 +104,6 @@ if [ "$SHORT_CONV" = "1" ]; then EXTRA+=(--short_conv); fi
 if [ "$ECHO" = "1" ]; then EXTRA+=(--echo); fi
 if [ "$COND_MEM" = "1" ]; then EXTRA+=(--cond_mem); fi
 if [ "$RESET_AT_EOS" = "1" ]; then EXTRA+=(--reset_at_eos); fi
-if [ "$ACH_LAMBDA" != "0" ]; then EXTRA+=(--ach_lambda "$ACH_LAMBDA" --ach_alpha "$ACH_ALPHA" --ach_fill "$ACH_FILL"); fi
 if [ "$GRAD_ACCUM" != "1" ]; then EXTRA+=(--grad_accum "$GRAD_ACCUM"); fi
 if [ -n "$NGRAM_ORDERS" ]; then EXTRA+=(--ngram_orders "$NGRAM_ORDERS"); fi
 if [ "$ECHO_SURPRISE_TAU" != "0" ]; then EXTRA+=(--echo_surprise_tau "$ECHO_SURPRISE_TAU"); fi
