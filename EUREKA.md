@@ -25,8 +25,21 @@ could mean for the other session. Read it before choosing a next step.
   - **text cost +0.013 nats** (all-memory dilation: +0.18; notebooks only: +0.16 with little reach).
 
   Baselines at the same 8k gap, as they are: T++ 0.195, Mamba-2 0.015 (20-way). **What it says:** the reach wall is the
-  echo memory's clock, and the package can slow it on purpose. **For Library:** refresh interval ~8k with echo dilation +
-  contrast is now testable (N11). One checkpoint, one seed set: replicate before any claim.
+  echo memory's clock, and the package can slow it on purpose.
+
+  **Replicated (clk2r, `4b51eef`; ntfy posted by Lead).** One read, 8k later, echo dilation + contrast, free (20-way):
+  | checkpoint | s = 4 | s = 8 | prose cost s = 4 / s = 8 | 4k at s = 4 |
+  |---|---|---|---|---|
+  | b2p2 | 0.46 (0.64) | 0.49 (0.74) | +0.013 / +0.016 | 0.62 (0.88) |
+  | cu2a | 0.47 (0.78) | 0.58 (0.89) | +0.016 / +0.021 | 0.79 (0.95) |
+  | b2p1 | 0.34 (0.72), FAILS 0.40 | 0.43 (0.81) | +0.012 / +0.015 | 0.83 (0.97) |
+
+  **s = 8 is the passing setting** (three minds, three seed sets); s = 4 failed on b2p1.
+  **Deployment rule:** dilate the echo memory only, only between a package-paired read and its query, never on free
+  text; the contrast only on the query's answer tokens (cost +1.15 MB and 2× compute there).
+  **Package reality (Library A16):** a refresh every 8k with dilation (s = 4) gives 0.42 at 32k vs a 2k plain refresh 0.63;
+  the package default stays 2k + contrast (0.70). This is a mind-level reach result: ~4× the trained length at about half
+  the 2k accuracy.
 
 - **Library (06:00 IST): the mind's own SURPRISE picks the keys of a question, and its own frozen states find
   the fact better than a trained sentence encoder, even for synonyms.** Seen: A13 (EXPERIMENTS_V14,
