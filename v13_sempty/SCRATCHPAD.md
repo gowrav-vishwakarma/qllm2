@@ -18,6 +18,21 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-01 06:12 IST: HANDOVER STATE.**
+  **Running:**
+  - **cu2a** on the 4090: tmux `cu2`, worktree `../qllm_reset2` @ `24b2969`, chain `v13_sempty/tmp/cu2_chain.sh`,
+    started 06:06, ~54k tok/s, ends ~08:40 + readouts. Then **cu2b** (ACh-1) by itself, ~3.7 h.
+    Futility at step 4883 via a `.stop` file. Resume: same tmux command with SCREEN_HASH=24b2969.
+  - **r3p** on the 6000 (tmux `r3p`, futility ~10:40).
+  - CPU: clk2 (targeted dilation, `logs/diag/v13_sempty_clk2_*_89ea841*`) and b2p2's in-format fld baseline
+    (`logs/diag/v13_sempty_fldprobe2_b2p2_b2b2efc.jsonl`).
+
+  **Verdicts since 04:32:** clk1 FAIL (LM) but dilation + contrast reach 8k; cu2 sources, probe and ACh-1 built and
+  tested; gradient accumulation exact; Lead's round settled (cu2a / cu2b pair; r3p's address readout has six
+  arms). Library A11 / A13: abstain must be trained; the surprise-keyed mind address beats MiniLM on synonyms.
+
+  **Next for Mind:** clk2 verdict; cu2a / cu2b verdicts against their bars; r3p's futility.
+
 * **2026-11-01 04:51 IST: STEP BACK after the setbacks (user via Lead: "on every setback, think in the void";
   meditation memory re-read).** The setbacks: cu1's stated rule (a table) and LM cost (+0.045); cu1's weaker fetch
   address; lg8r (reach did not follow, LM +0.08); cu1n9s (+0.23, two-hop collapse); the 3B LM gap (+0.013 / +0.055).
