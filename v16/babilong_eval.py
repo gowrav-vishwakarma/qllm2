@@ -27,6 +27,8 @@ def main():
     ap.add_argument('--docs', type=int, default=100); ap.add_argument('--device', default='cuda'); ap.add_argument('--max_new', type=int, default=16)
     ap.add_argument('--package', action='store_true'); ap.add_argument('--mode', default='lenient', choices=['lenient', 'strict']); ap.add_argument('--k', type=int, default=3)
     ap.add_argument('--skip_asis', action='store_true', help='package column only (no full-input forward of the body as is)')
+    ap.add_argument('--chain', action='store_true', help='also the PLANNER-CHAIN column pkg_chain (Library: the planner composes '
+                    'object -> holder -> sub-question; labelled TEXT in PACKAGE.md 3c; the mind-composes pkg column stays the headline)')
     ap.add_argument('--out', default=None)
     a = ap.parse_args()
     from datasets import load_dataset
@@ -58,6 +60,10 @@ def main():
                         ptxt, pinfo = pkg.answer_rows(text, PROMPT.format(q=q), k=a.k, mode=a.mode) if rows_k else ('', {'abstain': 1})
                         ptxt = (ptxt or '').strip(); rec['pkg'] = ptxt; rec['pkg_ok'] = int(tgt.lower() in ptxt.lower()); hit_pkg += rec['pkg_ok']
                         rec['pkg_rows'] = [(r[2], r[3][:100]) for r in rows_k]; rec['pkg_abstain'] = pinfo.get('abstain')
+                        if a.chain:                               # Library: planner chain (TEXT), a second package column
+                            ctxt, cinfo = pkg.answer_chain(text, q, PROMPT, k=a.k, mode=a.mode)
+                            ctxt = (ctxt or '').strip(); rec['pkg_chain'] = ctxt; rec['pkg_chain_ok'] = int(tgt.lower() in ctxt.lower())
+                            rec['pkg_chain_plan'] = cinfo.get('chain')
                 except Exception as e:
                     rec['error'] = f'{type(e).__name__}: {str(e)[:160]}'
                 f.write(json.dumps(rec) + '\n'); f.flush()

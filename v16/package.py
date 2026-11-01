@@ -252,6 +252,30 @@ class Package:
                 frontier += [w for w in re.findall(r'\b[A-Z][a-z]+\b', t) if w not in seen]
         return sorted(got)
 
+    def answer_chain(self, session_text, question: str, prompt: str = "\n\nQuestion: {q}\nAnswer:", k: int = 3,
+                     mode: str = 'lenient'):
+        """PLANNER CHAIN (labelled TEXT: the composition is the library's, not the mind's; R x K's substitution rule).
+        If the first fetched row was found by the question's object word ("latest:milk") and names a holder that is not
+        in the question ("John took the milk there."), the planner asks the SUB-question with the holder in place of
+        the object ("Where is John?") and the mind answers it from the holder's latest row; otherwise the plain
+        answer_rows. Returns (text, info) with info['chain'] = {holder, object, sub_question} or None."""
+        import re
+        rows = self.fetch_rows(session_text, question, k=k, mode=mode)
+        first = next((r for r in rows if not r[2].startswith('hop:')), None)
+        chain = None
+        if first is not None and first[2].startswith('latest:'):
+            w = first[2].split(':', 1)[1]
+            qnames = set(re.findall(r'\b[A-Z][a-z]+\b', question))
+            holders = [n for n in re.findall(r'\b[A-Z][a-z]+\b', first[3]) if n not in qnames]
+            if holders:
+                sub = re.sub(r'\b(the\s+)?' + re.escape(w) + r'\b', holders[0], question, count=1, flags=re.I)
+                chain = dict(holder=holders[0], object=w, sub_question=sub)
+        if chain is None:
+            text, info = self.answer_rows(session_text, prompt.format(q=question), k=k, mode=mode)
+            return text, dict(info, chain=None)
+        text, info = self.answer_rows(session_text, prompt.format(q=chain['sub_question']), k=1, mode=mode)
+        return text, dict(info, chain=chain)
+
     def answer_rows(self, session_text, question_text: str, k: int = 3, mode: str = 'lenient'):
         """read the top-k rows (session order) + the question on the session state, with the no-row contrast."""
         rows = self.fetch_rows(session_text, question_text, k=k, mode=mode)
