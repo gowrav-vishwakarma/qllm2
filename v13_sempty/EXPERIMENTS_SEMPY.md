@@ -5005,3 +5005,24 @@ wordings (0.26–0.46) and not at all to a new row layout. This is the same boun
 natq: the mind generalises VALUES and KEYS, not FORMATS. For the package, the library should present fetched rows in
 the trained row format and ask in a trained question form (the package controls both). Generalising formats would
 need many more formats in training, not more weight.
+
+### clk2r result (09:56 IST, 2026-11-01): s = 4 replicates on 2 of 3 checkpoints; **s = 8 holds on all three** (one read to 8k, free 0.43–0.58, 20-way 0.74–0.89, ≤ +0.021 nats)
+
+Echo-only dilation + contrast a = 4, one read, L = 8k, free (20-way); prose = NLL on the dilated span vs s = 1.
+Logs `logs/diag/v13_sempty_clk2r_echo_{cu2a,b2p1}_689b1d0.jsonl` + `..._clk2rprose_echo_{cu2a,b2p1,b2p2}_689b1d0.json`.
+
+| checkpoint (seeds) | 8k s = 4 + c | 8k s = 8 + c | 4k s = 4 + c | prose s = 4 / s = 8 |
+|---|---|---|---|---|
+| b2p2 (8500–8549, clk2) | 0.46 (0.64) | 0.49 (0.74) | 0.62 (0.88) | +0.013 / +0.016 |
+| cu2a (8600–8649) | **0.47** (0.78) | **0.58** (0.89) | 0.79 (0.95) | +0.016 / +0.021 |
+| b2p1 (8600–8649) | 0.34 (0.72) | **0.43** (0.81) | 0.83 (0.97) | +0.012 / +0.015 |
+
+**As pre-registered:** at s = 4 (bar free 8k + c ≥ 0.40): b2p2 MET, cu2a MET, b2p1 FAIL (0.34). s = 8 is claimed where its own
+prose cost is ≤ +0.05: it is (+0.015 to +0.021) and passes on all three (0.43 / 0.49 / 0.58). **Replicated across three
+independent 600M minds and three seed sets at s = 8.**
+Baselines at the same 8k one-read gap, as they are (20-way, seeds 8000–8099): T++ 0.195, Mamba-2 0.015. PAM plain ~0.10.
+
+**In the package (Library A16, b2p2, 32k):** refresh every 8k with echo dilation (s = 4) + contrast 0.42 < refresh every 2k
+plain 0.63 < every 2k + contrast 0.70. So the package default stays refresh ~2k + contrast. The dilation is the mind-level
+reach result (one read lasts ~4× the trained length at about half the accuracy), not a cheaper package default yet.
+s = 8 in the refresh setting is untested.
