@@ -39,7 +39,8 @@ from v14.a13_manykey import capture, maxsim_scores, sentence_rows  # noqa: E402
 from v14.package_fetch import field_cut, row_value, text_fetch  # noqa: E402
 
 STOP_TOKENS = (13, 198)                       # "." and newline
-STATE_BYTES = {'b2p2': 1154832}               # the mind's fixed state, fp32 at decode (M2 body)
+STATE_BYTES = {'b2p2': 1154832}
+CONTENT_BG = 3000                            # fetch_rows: a question word is CONTENT if seen <= 3,000 times in 4.2M background words               # the mind's fixed state, fp32 at decode (M2 body)
 
 
 class Package:
@@ -199,6 +200,68 @@ class Package:
             la, sa, oa = self.mind.feed([t], sa, oa)
             lb, sb, ob = self.mind.feed([t], sb, ob)
         return out
+
+    def fetch_rows(self, session_text, question_text: str, k: int = 3, mode: str = 'lenient', address: str = 'full'):
+        """Top-k rows for a question, each with its fetch path (BABILong QA2 / QA3 need 2-3 facts). Row 1: the usual
+        chain (token organ -> word organ steps 1-2 -> step 4 -> F2 in lenient mode). Then HOPS by name (library-side
+        multi-hop retrieval, plumbing): every capitalised name in a fetched row that is not in the question brings the
+        LATEST session sentence mentioning it ("John took the milk." -> "John went to the kitchen."). Returns rows in
+        session order: [(start, end, path, text)]."""
+        import re
+        s = self.read(session_text)
+        base, end = s['ids'], len(s['ids'])
+        q = self.tok.encode(question_text, add_special_tokens=False)
+        row, finfo = text_fetch(base + q, end, step4=True, bigram=False)
+        path = f"text{finfo['step']}" if row is not None else None
+        texts = s.setdefault('row_texts', [self.tok.decode(base[a:b]) for a, b in s['rows']])
+        if row is None:                                   # latest mention of a NAME in the question (mid-sentence capital)
+            names = [m.group(0) for m in re.finditer(r'(?<![.?!:]\s)(?<!^)\b[A-Z][a-z]+\b', question_text.strip())]
+            hits = [i for i, t in enumerate(texts) if any(re.search(r'\b' + n + r'\b', t) for n in names)]
+            if hits:
+                row, path = s['rows'][hits[-1]], 'name'
+        if row is None:                                   # latest mention of the question's rarest content word
+            from v14.package_fetch import _bg
+            from v14.norm_organ import norm
+            bg = _bg()
+            words = [w for w in re.findall(r'[A-Za-z]+', question_text) if norm(w) and bg.get(norm(w), 0) <= CONTENT_BG]
+            words = sorted(set(words), key=lambda w: bg.get(norm(w), 0))
+            for w in words:
+                hits = [i for i, t in enumerate(texts) if re.search(r'\b' + re.escape(w) + r'\b', t, re.I)]
+                if hits:
+                    row, path = s['rows'][hits[-1]], f'latest:{w}'
+                    break
+        if row is None and mode == 'lenient':
+            row, _ = self._f2(q, form=address); path = 'F2'
+        if row is None:
+            return []
+        got = [(row[0], row[1], path, self.tok.decode(base[row[0]:row[1]]))]
+        qnames = set(re.findall(r'\b[A-Z][a-z]+\b', question_text))
+        frontier = [w for w in re.findall(r'\b[A-Z][a-z]+\b', got[0][3]) if w not in qnames]
+        seen = set(qnames)
+        while frontier and len(got) < k:
+            name = frontier.pop(0)
+            if name in seen:
+                continue
+            seen.add(name)
+            hits = [i for i, t in enumerate(texts) if re.search(r'\b' + name + r'\b', t)
+                    and not any(s['rows'][i][0] < g[1] and g[0] < s['rows'][i][1] for g in got)]
+            if hits:
+                a, b = s['rows'][hits[-1]]
+                t = texts[hits[-1]]
+                got.append((a, b, f'hop:{name}', t))
+                frontier += [w for w in re.findall(r'\b[A-Z][a-z]+\b', t) if w not in seen]
+        return sorted(got)
+
+    def answer_rows(self, session_text, question_text: str, k: int = 3, mode: str = 'lenient'):
+        """read the top-k rows (session order) + the question on the session state, with the no-row contrast."""
+        rows = self.fetch_rows(session_text, question_text, k=k, mode=mode)
+        if not rows:
+            return '', dict(rows=[], abstain=1)
+        s = self._session
+        q = self.tok.encode(question_text, add_special_tokens=False)
+        span = [t for a, b, _, _ in rows for t in s['ids'][a:b]]
+        text = self.tok.decode(self._decode(span + q, q))
+        return text, dict(rows=[(a, b, p, t[-90:]) for a, b, p, t in rows], abstain=0)
 
     def answer(self, session_text, question_text: str, mode: str = 'lenient', cut_fields: bool = True,
                address: str = 'full'):
