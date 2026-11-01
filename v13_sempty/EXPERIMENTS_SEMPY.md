@@ -5026,3 +5026,33 @@ Baselines at the same 8k one-read gap, as they are (20-way, seeds 8000–8099): 
 plain 0.63 < every 2k + contrast 0.70. So the package default stays refresh ~2k + contrast. The dilation is the mind-level
 reach result (one read lasts ~4× the trained length at about half the accuracy), not a cheaper package default yet.
 s = 8 in the refresh setting is untested.
+
+## w1s: 100M LM screen of the W1 window reader (pre-registration, 2026-11-01 10:12 IST; Lead-approved as a screen; the 600M pair is the user's decision)
+
+**Why:** Lead's T++ + library arm: at equal size T++ reads a fetched multi-field row much better (tool 0.90 vs b2p2
+0.475, cold, free). This is the known fixed-state associative-recall weakness (MQAR / Zoology; Based). W1 = bounded
+sliding-window attention (window 128) in blocks 5, 9, 13 (`d028aab`, tests `v13_sempty/tmp/w1_test.py`), so a short
+fetched span is an exact-copy read. KV is fixed by the window, so the body stays O(1) in context length.
+**Prior work:** Griffin / Hawk (RG-LRU + local attention), Based (linear attention + sliding window). Repair, no claim.
+
+**Arms** (4090 after cu2b, same seed 43 and data; both warm-start from `c1m2a_pre_7ae6f1f`; stage B **100M tokens**,
+b2p2's mix dclm / fineweb / smoltalk2_mid / recall / b2 = 0.43 / 0.40 / 0.10 / 0.04 / 0.03, LR 1.2e-3 cosine over the 100M,
+GRAD_ACCUM 3, ANSWER_IN_WINDOW=1):
+- **w1s0**: none.
+- **w1s128**: SWA_LAYERS=5,9,13, SWA_WINDOW=128 (+4.15M params, ~4 %, stated; new params identity at start).
+
+**Readouts:**
+- holdout val;
+- Lead's text-library cold read (`v16/bench.py --text_package --skip_state`, tool / kv / para × syn / nat, 32k, seed
+  18000, 40 docs, free);
+- skill-pack 0 / 2k / 4k plain + contrast;
+- the s8 spread cell (b2 `_new`, 0 / 2k / 4k);
+- clk2's 8k cell (echo dilation s = 8 + contrast).
+
+**Bars:**
+- **Target:** text-library TOOL cold free (syn + nat mean), w1s128 ≥ w1s0 + 0.15.
+- **Guards (Lead):** holdout w1s128 ≤ w1s0 + 0.02; s8 spread D (mean of 2k / 4k) ≥ w1s0 − 0.05; clk2 8k free ≥ w1s0 − 0.05.
+- At 220M total tokens the skills are weaker than at 600M; the guards are relative, arm against arm.
+
+**Consequence:** the screen's numbers go to the user beside Library's package-side field-split result. The 600M pair is NOT
+launched from this screen.
