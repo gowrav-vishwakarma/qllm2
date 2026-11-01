@@ -5185,15 +5185,21 @@ warmup 100, batch 18 × 2048 as GRAD_ACCUM=2 (exact, same math; two arms fit sid
 - **W1 is in use:** its zero-init o_proj grew to rms 0.020–0.023, a normal trained scale.
 
 **Reference on the same cells and flags** (PACKAGE_STRICT=1 PACKAGE_NORM=1, seed 18000, 40 docs; tool free, syn / nat;
-`logs/v16_textarm_{tflr_lr1.2e-3_e072a8f,b2p2_main_38e3c29,b2t2_main_38e3c29}_32768_508aaff_tool_*.jsonl`):
+`logs/v16_textarm_{tflr_lr1.2e-3_e072a8f,b2p2_main_38e3c29,b2t2_main_38e3c29,c1m2b_main_7ae6f1f,tfc1b_main_b788731}_32768_508aaff_tool_*.jsonl`):
 
 | model | tool free, syn / nat (mean) |
 |---|---|
 | T++ 100M from scratch (`tflr` LR 1.2e-3, holdout 4.07) | 0.50 / 0.40 (0.45) |
 | b2p2 (PAM 600M, 102.9M) | 0.475 / 0.40 (0.4375) |
 | T++ 600M (b2t2, 101.9M) | 0.80 / 0.675 (0.7375) |
+| PAM 600M on the aptitude recipe (c1m2b, 102.9M) | 0.575 / 0.35 (0.4625) |
+| T++ 600M on the aptitude recipe (tfc1b, 101.9M) | 0.875 / 0.90 (0.8875) |
 
-Lead's earlier T++ 0.90 / 0.90 used other package flags; b2p2 gives the same 0.475 / 0.40 either way.
+- **Same-recipe pairs at 600M** (all rows use one flag set, the one above):
+  - b2 mix: T++ 0.7375 vs PAM 0.4375, gap 0.30;
+  - aptitude recipe: T++ 0.8875 vs PAM 0.4625, gap 0.425.
+- **Correction (13:06 IST):** Lead's T++ 0.90 / 0.90 is tfc1b, NOT b2t2. The flags are the same as here; tfc1b gives 0.875 / 0.90 on
+  them. The difference is the checkpoint, not the flags (I first wrote "other package flags", which was wrong).
 
 **Reading:**
 - **Skill, not view.** The fetched row sits inside the window (the read is 20–60 tokens) and the window is in use, yet field selection

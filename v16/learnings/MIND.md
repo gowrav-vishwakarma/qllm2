@@ -116,7 +116,7 @@ Each entry gives: the idea (maths), the recipe, the numbers, the verdict and the
 - **W1 window reader** (w1s, `508aaff`, 100M screen; 102.9M vs 107.0M; 220M tokens): sliding-window attention, window 128, in
   blocks 5 / 9 / 13.
   - Tool read 0.600 → 0.6125 (bar +0.15: FAIL); holdout +0.006; copy-class loss unchanged.
-  - Same cells and flags: T++ 600M 0.74, b2p2 0.44, T++ 100M 0.45.
+  - Same cells and flags, 600M: T++ 0.74 vs b2p2 0.44 (b2 mix); T++ tfc1b 0.89 vs c1m2 0.46 (aptitude recipe). T++ 100M: 0.45.
   - **Lesson:** the row sits inside the window and the window is used, yet field selection does not improve. The miss is a
     SKILL (which field), not a view. The reader belongs in the package (A19's field cut).
   - Unexpected, one seed: s8 D 0.559 → 0.730 and clk2 8k 20-way 0.31 → 0.53, with the decays unchanged. A seed replicate (w1r) is
