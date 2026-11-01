@@ -5085,3 +5085,11 @@ Then "a rule read once, applied to a fact fetched 4× the trained length later" 
 
 **Prior work:** none for this exact cell; the parts are CAD / contrastive decoding and Δ-scaling (clk1). The cell is the
 measurement; no method claim.
+**rxk amendment (10:27 IST, before any rxk number; Library's points):**
+- **Ceiling control** (the transformer path): the pack re-inserted right before the row + question (RAG + few-shot, no state needed).
+- **Floor:** no pack at all (the row + question alone).
+- **Adaptive contrast arm** (AdaCAD-style): a = 4 · JSD(p_pack ‖ p_nopack) / ln 2, beside the fixed a = 4.
+- The rule lives ONLY in the state (read once, L tokens back); the fact lives ONLY in the fetched row.
+- The thesis claim needs explicit + contrast clearly above the floor, and is read against the ceiling. Bars unchanged; the
+  controls and the adaptive arm are reported.
+- Run on the 4090 beside w1s (probe memory cap 0.2), not on CPU.
