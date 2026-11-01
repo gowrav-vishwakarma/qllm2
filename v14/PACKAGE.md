@@ -79,6 +79,11 @@ reading, writing). An entry must say which column produced each number.
 | RULER CWE / FWE (aggregation: frequent words) | counting over the whole context | TEXT: a counter tool (not built); the state cannot count | – | not covered: say so |
 | RULER QA (SQuAD / HotpotQA in distractors) | natural questions, 1-2 paragraphs | TEXT + MIND: word organ / step 4, else the surprise-keyed address (F2) | MIND: read and write (natq 0.475-0.525 at 32k) | A13 / A21 |
 
+**How comparisons are reported (user, 2026-11-01 16:30 IST):** by TOKENS trained on, not parameter count; benchmark runs
+are diagnostics. Our rows (103M minds, 600M tokens, no benchmark data; as-is and package) form one block; deltas are
+taken only against our own T++ / Mamba-2 trained on the SAME tokens. Leaderboard entries (fine-tuned 100-150M models,
+untuned LLMs) go in a separate REFERENCE block with their training tokens and "tuned on the benchmark" stated.
+
 Honesty line for any entry: retrieval-only tasks (S-NIAH, MK-NIAH, VT) are mostly the library's text organs; the mind's
 share is writing the value and, for natural wording, its own address (F2). Multi-fact reasoning (QA2 / QA3, MV) and
 aggregation are where the mind or a tool must still earn the number.
