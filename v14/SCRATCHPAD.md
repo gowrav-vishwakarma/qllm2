@@ -25,10 +25,12 @@ lands on the 6000.
 ## Step back (2026-11-01 17:07 IST, after A25's 128k half and the v0 freeze)
 
 - What surprised me: the mind ALONE answers 0.00 even with the needle only ~1k back in a 128k session, and the T++
-  with the needle inside its own 2k window answers 0.00-0.20. Neither 600M-token body recalls a fact it read 1k
-  tokens ago by free generation; both read well when the row sits next to the question (with the contrast). At this
-  token tier, "memory" is the library bringing a row ADJACENT; the mind's skill is reading what is adjacent on a long
-  state.
+  with the needle inside its own 2k window answers 0.00-0.20. In the bench's UNTRAINED fact format ("Definition: K
+  refers to V.", 8 facts, free generation), neither 600M-token body recalls a fact read 1k tokens ago; both read well
+  when the row sits next to the question (with the contrast). (Mind's probes in TRAINED recall formats do recall at
+  distance: far needles 0.379, clk2 8k 0.74, so this is format-bound, not a ceiling of the state.) For arbitrary
+  formats at this token tier, "memory" is the library bringing a row ADJACENT; the mind's skill is reading what is
+  adjacent on a long state.
 - What it says: distance is a text problem (solved: 0.9-1.0 at 100k back). Recall benchmarks therefore measure the
   library, not the mind. The cells where the mind's state carries something a windowed T++ cannot are the R × K one
   (a rule held only in state, 8k: 0.45 vs 0.07) and skills by refresh. The intelligence claim lives there, not in
