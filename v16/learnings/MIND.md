@@ -132,4 +132,5 @@ Each entry gives: the idea (maths), the recipe, the numbers, the verdict and the
 - Run from pinned worktrees.
 - Screen micro-bench winners at 100M LM before 600M (N9a failed three times).
 - Fine-tuning an annealed checkpoint pays a warm-restart cost: keep a stable-phase checkpoint (WSD) to branch from.
-- TODO: back-fill the pre-2026-10-31 failed paths (v13_sempty EXPERIMENT_INDEX "Failed and removed") in this format.
+- Older failed paths: v13_sempty/EXPERIMENT_INDEX.md "Failed and removed" (each with the last commit that has its code;
+  this repo stays accessible, so the hashes are enough to dig deeper).

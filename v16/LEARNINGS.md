@@ -1,16 +1,16 @@
 # v16 learnings: index
 
 Settled 2026-11-01 (the user asked Mind and Lead to discuss). The package code moves into `v16/` **once, at release**,
-taking only what survived. Until then each session keeps a **self-contained** learnings file, written so every
-experiment can be re-implemented in a new repo **without the old code**:
+taking only what survived. Until then each session keeps a short learnings file: the key results and lessons, so the
+new repo knows what was tried and why. This repo stays accessible (user, 2026-11-01), so the details and the code
+are one commit hash away:
 
 - the idea, with its maths in two lines;
 - the exact recipe;
 - the numbers, with params, tokens and MB;
 - the verdict and the lesson.
 
-The "code last at <hash>" pointers stay in each version's EXPERIMENT_INDEX while this repo exists; these files carry what
-a new repo needs.
+Every entry names its commit / log hash, so the full write-up (EXPERIMENTS) and the code can be found here later.
 
 | lane | file | covers |
 |---|---|---|
