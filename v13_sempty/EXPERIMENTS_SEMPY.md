@@ -4959,3 +4959,8 @@ span; the contrast is on only for the query's answer tokens. Cost while on: the 
 **Not yet shown:** a second checkpoint (e.g. b2p1 or cu2a); s between 4 and 8 with its prose cost; other skills
 (two-hop, recall); where a refresh fits (Library's N11 with dilation). Prior work as clk1 (Δ / dt scaling for SSM
 length extension); the setting is the package-triggered, memory-targeted dilation. No method claim.
+
+**clk2r: replication on a second checkpoint (pre-registration, 08:32 IST; CPU).** cu2a (`cu2a_main_24b2969`, its own 600M training),
+fresh seeds 8600–8649, echo-only dilation s = 4 with and without the contrast, L = 4k / 8k, plus the prose cell (s = 1 / 2 / 4, echo).
+Bar: free 8k + contrast ≥ 0.40 AND prose ≤ s = 1 + 0.05, as clk2. If met on both checkpoints, the result is replicated across
+two independent 600M minds.
