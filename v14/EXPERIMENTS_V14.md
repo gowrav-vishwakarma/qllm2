@@ -3511,6 +3511,30 @@ fitted threshold:
     (text step / F2), the never-stored cost of the F2 fallback (lenient answers
     with a value word on neg) vs strict, F2's memory (1.18 GB / 1M at fp16;
     int8 lossless at 590 MB / 1M: an open cost).
+  - **A21 VERDICT (2026-11-01 12:15 IST; code 53575aa;
+    `logs/v14_a21_package_b2p2_32768_53575aa_20261101_1105.jsonl` + .log, 440 rows):
+    B1 NOT met, B2 MET.** The runner printed "B1 MET" against the text chain
+    WITHOUT the bigram step (0.225); the registered baseline is the full text
+    chain (steps 0-4, with the bigram), computed on the same docs on CPU.
+
+    | varied wording, 32k, seed 18000 | full text chain: right row | package chain (text 0, 1, 2, 4 → F2): right row | package answer (warm + contrast) lenient / strict |
+    |---|---|---|---|
+    | kv syn / nat | 1.00 / **0.725** | 1.00 / **0.775** | 0.875 / 0.875 · **0.725** / 0.20 |
+    | kv1 syn / nat | – / 0.60 | 1.00 / 0.75 | 0.925 / 0.925 · 0.675 / 0.275 |
+    | kvupd syn / nat | – / 0.55 | 0.975 / 0.70 | 0.825 / 0.825 · 0.70 / 0.25 |
+    | natq nat | 0.70 | 0.825 | 0.525 / 0.20 |
+    | neg syn / nat: wrong fetch · answers with a value word | – / 0.075 | (F2 always fetches) | 0.30 / 0.57 lenient, 0.00 / 0.03 strict |
+    | para syn / nat (20) | 1.00 / 1.00 | 1.00 / 1.00 | 1.00 / 1.00 |
+    | tool syn / nat (20) | 1.00 / 1.00 | 1.00 / 1.00 | 0.85 / 0.75 |
+
+    - B1: natural kv 0.775 vs 0.725 + 0.10 (NOT met, +0.05). B2: 0.725 ≥ 0.70.
+    - F2 in place of the bigram step adds +0.05 (kv) to +0.15 (kv1, kvupd)
+      and +0.125 (natq) on natural keys; synthetic keys are text-solved (step 4).
+    - Its cost: it never abstains, so the lenient package says a value word
+      on 30 / 57 % of never-stored questions (strict 0 / 3 %). Abstain where
+      words differ remains the trained VERIFY's job.
+    - Package on natural wording at 32k (lenient): kv 0.725, kv1 0.675, kvupd
+      0.70, natq 0.525 natural; 0.825-0.925 synthetic; para 1.00, tool 0.75-0.85.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
