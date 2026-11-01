@@ -49,7 +49,11 @@ for spec in $ARMS; do
   LOG="${LOG:-logs/v13_sempty_${TAG}_${HASH}_$(date +%Y%m%d_%H%M).log}"
   ENVS=()
   IFS=',' read -ra _kv <<< "$ovr"
-  for kv in "${_kv[@]}"; do [ -n "$kv" ] && ENVS+=("$kv"); done
+  # A piece without "=" belongs to the previous value (SWA_LAYERS=5,9,13 stays whole).
+  for kv in "${_kv[@]}"; do
+    [ -z "$kv" ] && continue
+    if [[ "$kv" != *=* && ${#ENVS[@]} -gt 0 ]]; then ENVS[-1]+=",$kv"; else ENVS+=("$kv"); fi
+  done
   echo "=== arm $arm (${ENVS[*]:-no overrides}) ckpt=$CKPT_DIR log=$LOG $(date -u +%FT%TZ) ==="
   env TAG="$TAG" CKPT_DIR="$CKPT_DIR" RESUME_LOG="$LOG" PIN_HASH="$HASH" \
     SOURCES=dclm,fineweb,smoltalk2_mid,recall WEIGHTS=0.44,0.41,0.10,0.05 \
