@@ -4841,3 +4841,13 @@ s = 4, because every head keeps old context longer. The next cut is targeting: d
 memory (the echo heads, or the notebooks, or the heads that wrote the pack) to keep the trace at a fraction
 of the LM cost (clk2). Prior work as clk1 (Δ / dt scaling for SSM length extension); the combination with a
 query-time contrast, triggered by the package's own read, is the setting. No method claim.
+
+## clk2: targeted dilation (pre-registration, 2026-11-01 05:58 IST; eval only, CPU; approved by Lead)
+
+- **Cells:** as clk1 (b2p2, skill-pack affine + shift _new, one read, L = 4k / 8k), **fresh seeds 8500–8549**,
+  dilation on ONE memory only: `echo` (the echo / succession memory) or `notebook` (the delta notebooks), s ∈ {1, 4, 8},
+  each with and without the query-time contrast (a = 4). Cost: clk1's prose cell with the same target and s.
+- **Bar:** some target and s with free(8k) WITH contrast ≥ 0.40 AND prose NLL ≤ s = 1 + 0.05. Then targeted dilation
+  + contrast is a usable mind-level reach extender, gated by the package: on only between a package-paired read and
+  its query, never on free text (the contrast's rule, cd3).
+- Prior work as clk1. No method claim.
