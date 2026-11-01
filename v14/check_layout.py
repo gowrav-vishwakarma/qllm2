@@ -32,6 +32,7 @@ SKIP_FILES = frozenset({
     "a14_package.py",    # A14: 3-step lenient package eval (raw torch)
     "a16_span_nll.py",   # A16/1: span NLL with / without echo dilation (raw torch)
     "a17_render.py",     # A17: trained-template rendering eval (raw torch)
+    "a18_tpp_warm.py",   # A18: T++ + text library warm reads (raw torch)
     "package_fetch.py",  # the package fetch as a harness key_fn (two organs, raw torch)
     "pack.py",           # library packs: text-first format + install tool (raw torch / numpy)
     "pack_check.py",     # cross-document check of the install tool
