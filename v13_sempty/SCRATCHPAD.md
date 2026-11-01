@@ -71,6 +71,7 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     - tmux `w1w` on the 4090 since 15:07 IST, `../qllm_w1w` @ `f68ab64`; `bash v13_sempty/tmp/w1w_chain.sh`;
     - W 512, then W 1024, then the readouts, then skill pack 8k on the four old arms; done ~16:45 IST;
     - score with `.venv/bin/python v13_sempty/tmp/w1w_score.py` (guards g1–g4 + the gain, as pre-registered).
+    - **16:43 IST VERDICT: W512 / W1024 FAIL the lazy-state guard (gain −0.11 / −0.06). W = 128 stays.**
   - **Needle trade-off at W 128** (t40, both seeds; needle at the start): 4k 0.495 → 0.44, 8k 0.305 → 0.22; near needles better.
     Part of the w1w guard.
   - **kb1 known benchmarks** (user's standing rule via Lead: known benchmarks, intelligence first, length claims capped at 128k):

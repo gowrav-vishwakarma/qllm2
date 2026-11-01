@@ -5542,3 +5542,48 @@ are context, never a claim. No 128k+ length claims from this suite.
     no claim".
 - Tokens and data beside every row. Claims and deltas only within a block. The same layout for the write-up
   (`v13_sempty/tmp/kb1_table.py`).
+
+## w1w VERDICT (16:43 IST, 2026-11-01): both bigger windows FAIL the lazy-state guard; W = 128 stays. A bigger window makes the state LAZIER for reach and helps almost nothing it was hoped to help
+
+**Arms:**
+- `w1w_w512_f68ab64` and `w1w_w1024_f68ab64` (107.04M each; the window size adds no params), seed 43, the w1s recipe, 220M tokens.
+- 4090, 15:07–16:35 IST; peak 14.8 GB. Score: `v13_sempty/tmp/w1w_score.py`. W0 and W128 are two-seed means.
+
+| readout | W0 | **W128** | W512 | W1024 | guard |
+|---|---|---|---|---|---|
+| holdout | 3.7455 | 3.7495 | 3.7502 | **3.7430** | g4 ≤ 3.7655: all pass |
+| s8 D (2k / 4k, scored) | 0.541 | **0.787** | 0.679 | 0.676 | (gain) |
+| skill pack 4k + contrast, 20-way | 0.518 | **0.633** | 0.450 | 0.555 | g1 ≥ 0.5825: 512 FAIL, 1024 FAIL |
+| skill pack 8k + contrast, 20-way | 0.050 | **0.143** | 0.070 | 0.045 | (reported) |
+| clk2 8k (dilation + contrast), 20-way | 0.320 | **0.490** | 0.320 | 0.430 | g2 ≥ 0.44: 512 FAIL, 1024 FAIL |
+| t40 far needles (position 0, 4k + 8k) | 0.398 | 0.329 | **0.471** | 0.275 | g3 ≥ 0.28: 512 pass, 1024 FAIL |
+| t40 near needles (contexts 512–2048) | 0.787 | 0.865 | 0.873 | 0.888 | (gain) |
+| text-arm tool read (free) | 0.556 | 0.588 | 0.525 | 0.562 | (reported) |
+| **gain vs W128** (pre-registered mean) | – | 0 | **−0.113** | **−0.056** | pick needs ≥ +0.03 |
+
+s8 by task (scored, 2k / 4k):
+- shift: W512 0.713 / 0.343, W1024 0.652 / 0.320, vs W128 0.762–0.922 / 0.453–0.74;
+- affine: W512 0.907 / 0.755, W1024 0.932 / 0.80.
+
+At 2k the examples are 254 tokens apart, so W512 sees 2 and W1024 sees 4 of them at once. Shift is still worse than W128.
+
+**Reading:**
+- **A lazy state, as feared:** a bigger window lets the body lean on local attention.
+  - The state's one-read reach (pack 4k + contrast, clk2 8k) falls back toward W0.
+  - Rule inference from spread examples (s8) keeps only part of W128's gain, even where the bigger window SEES several examples
+    together.
+  - LM gains a little at W1024 (−0.0025 vs W0, within seed noise).
+- **Near needles barely move** (0.865 → 0.873 / 0.888), although W1024 can attend to every needle ≤ 1024 back. Far needles are noisy
+  (W512 0.471, W1024 0.275).
+- **So W128 is not a compromise; it is the best tested.** A short window does the local work (copying the row, the x → y pair) and
+  leaves the long range to the state. Prior work is consistent: Griffin / Samba use 1–2k windows for LM quality, not for the
+  state's rule reach, which they do not measure.
+- **One seed per new arm**, but both fail by margins larger than W128's own seed spread on g1 (0.62–0.645) and g2 (0.45–0.53), and
+  the gains are −0.11 / −0.06. Per the pre-registration, no replicate.
+- **For the user's question:** a bigger fixed window does not buy long-chat recall. Far needles stay the library's job. The window's
+  value is rule inference, and that is best at 128.
+- **Per-body slope:** no prior tier for this probe set (all 220M).
+
+**Consequence:**
+- The 600M W1 decision stays as proposed, at W = 128. That run is the user's call.
+- SEQ 4096 is not needed (W1024 did not win).

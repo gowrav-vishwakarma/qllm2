@@ -127,6 +127,11 @@ Each entry gives: the idea (maths), the recipe, the numbers, the verdict and the
   - The largest gain is on rules inferred from SPREAD examples (letter shift most). Guess: the window computes each example's x → y
     relation locally, and the state accumulates it.
   - Known hybrid (Samba, Griffin), no mechanism claim. State 1.15 → ~2.05 MB, still O(1). 600M is the user's decision.
+  - **Window sweep** (w1w, W 512 / 1024, seed 43): both FAIL the lazy-state guard. One-read reach falls back toward W0 (pack 4k +
+    contrast 0.45 / 0.555, clk2 8k 0.32 / 0.43 vs W128 0.633 / 0.49), and s8 keeps only part of the gain (0.68 vs 0.79). Near needles
+    barely move, and LM is −0.0025 at W1024.
+  - **Lesson:** a SHORT window (128) is best. It does the local work and leaves the long range to the state; a bigger window makes
+    the state lazy. Far needles stay the library's job.
 
 ## 7b. Rule × fetched fact (R × K, the thesis cell)
 
