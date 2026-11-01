@@ -180,6 +180,14 @@ class StreamingTokenChunkDataset(IterableDataset):
         weighted = self.answer_weight != 1.0
         wbuffer: List[float] = []  # per-token loss weights aligned with ``buffer``
         in_window = weighted and os.environ.get('ANSWER_IN_WINDOW', '0') == '1'
+        # ANSWER_W_SRC="b2:25,lab:25" (env, 2026-11-01 loss-weight budget): per-source answer weight; other sources keep
+        # answer_weight. Budget the share of the loss weight on ordinary text, not the token share (r3p lesson).
+        src_w = {}
+        for kv in os.environ.get('ANSWER_W_SRC', '').split(','):
+            if ':' in kv:
+                src_w[kv.split(':')[0].strip()] = float(kv.split(':')[1])
+        if src_w and weighted:
+            print(f'[data] ANSWER_W_SRC: per-source answer weights {src_w} (others {self.answer_weight})', flush=True)
         dbuffer: List[int] = []    # document ordinal per token (in_window only)
         doc_no, prev_last = 0, -1
         if in_window:
@@ -212,7 +220,7 @@ class StreamingTokenChunkDataset(IterableDataset):
                 continue
             text = str(text)
             if weighted:
-                ids, ws = encode_marked(self.tokenizer, text, self.answer_weight)
+                ids, ws = encode_marked(self.tokenizer, text, src_w.get(source, self.answer_weight))
             else:
                 ids = self.tokenizer.encode(strip_answer_marks(text), add_special_tokens=False)
             if not ids:
