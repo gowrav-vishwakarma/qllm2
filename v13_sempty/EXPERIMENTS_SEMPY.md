@@ -5131,3 +5131,24 @@ warmup 100, batch 18 × 2048 as GRAD_ACCUM=2 (exact, same math; two arms fit sid
 - **bud2 passes** if holdout ≤ bud0 + 0.02 AND each skill (B2 `_new` mean, label_diag mean, fsq abstain, two-hop) ≥ bud1's − 0.05.
 - If bud2 passes, the budget (synthetic sources at ×20 with text share ≥ 0.95) is the rule for r3p'. If it fails on skills,
   lower weights don't teach: the lesson is that the skills need their weight, and r3p' carries fewer synthetic tokens instead.
+
+## r3p VERDICT (10:53 IST, 2026-11-01): stopped by its pre-registered futility rule at 1.44B stage-B tokens (3.5104 vs 3.431). The cause is the answer-weighted synthetic mix (text share of the loss weight 0.86 vs 0.977), not code or plumbing
+
+`r3p_main_c13d8fe` (6000; r3c's body and stage A; stage B r3p A1 mix; 103.2M). Val at step 39060: **3.5104** (r3c 3.4010; futility
+3.431). The gap narrowed 0.155 → 0.11 before the stop.
+- **Per-source tokens at the stop** (all 1.56B incl. stage A): dclm 41.3 / fineweb 36.1 / smoltalk2 15.4 / recall 3.22 / b2 1.81 /
+  lab 1.05 / hop 0.61 / fsq 0.49 %. b2 was over-served about 2× its weight (the blend serves short docs in excess).
+- **Text share of the loss weight** (measured answer densities): ~0.86, vs r3c ~0.977.
+- **Ruled out** (see "r3p interim"): code drift (bit-identical val CE), the val set, cursors, shards, args.
+- **Cold text-library read** (Lead's harness, `--text_package --skip_state`, 32k, seed 18000, 40 docs; free; `logs/v16_textarm_r3p_32768_e21f58e_*.jsonl`):
+
+| cell, syn / nat | r3p (3B mix, stop) | b2p2 (600M) | T++ (600M) | Mamba-2 (600M) |
+|---|---|---|---|---|
+| kv | 1.00 / 0.925 | 0.90 / 0.775 | 1.00 / 0.875 | 1.00 / 1.00 |
+| para | 0.50 / 0.625 | 0.775 / 0.80 | 0.70 / 0.65 | 0.975 / 0.95 |
+| **tool** | **0.775 / 0.675** | 0.475 / 0.40 | 0.90 / 0.90 | 0.425 / 0.475 |
+
+  r3p reads multi-field tool rows far better than b2p2 (3B scale and / or its lab / fsq / hop docs), still below T++; para is lower.
+  Different scales: no 3B T++ text row exists.
+- **Consequence:** no r3p' until the 600M budget check (bud, running on the 6000 since 10:52 IST) states the mix cost on this body
+  and whether ×20 synthetic answers (text share 0.951) keep the skills.

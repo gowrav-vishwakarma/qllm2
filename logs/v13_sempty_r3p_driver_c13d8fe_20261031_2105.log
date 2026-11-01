@@ -1,0 +1,6 @@
+r3p chain: code c13d8fe in /home/ubuntu/Development/qllm_r3p, mix dclm,fineweb,smoltalk2_mid,recall,b2,lab,fsq,hop = 0.432,0.398,0.10,0.04,0.01,0.01,0.005,0.005, 2026-10-31T21:05:05Z
+r3p: disk 15G, VRAM free 97887 MiB, 2026-10-31T22:57:05Z
+=== r3p start 2026-10-31T22:57:05Z SCREEN_HASH=c13d8fe arms='main:ECHO=1' base='LR=1.2e-3 TARGET_TOKENS=2880000000 WARMUP=1000 VAL_EVERY=3906 SAVE_EVERY=1000 KEEP_EVERY=39062 KEEP_LAST=1 SEED=42 INIT_FROM=checkpoints_v13_sempty/r3ca_pre_38e3c29/best_model.pt SOURCES=dclm,fineweb,smoltalk2_mid,recall,b2,lab,fsq,hop WEIGHTS=0.432,0.398,0.10,0.04,0.01,0.01,0.005,0.005 ANSWER_IN_WINDOW=1 FINEWEB_LOCAL_DIR=data/fineweb-edu MAX_RETRIES=3' ===
+=== arm main (ECHO=1) ckpt=checkpoints_v13_sempty/r3p_main_c13d8fe log=logs/v13_sempty_r3p_main_c13d8fe_20261031_2257.log 2026-10-31T22:57:05Z ===
+=== r3p_main start 2026-10-31T22:57:05Z commit=c13d8fe log=logs/v13_sempty_r3p_main_c13d8fe_20261031_2257.log ckpt=checkpoints_v13_sempty/r3p_main_c13d8fe ===
+r3p: FUTILITY STOP (3.5104 > 3.431) 2026-11-01T05:17:05Z
