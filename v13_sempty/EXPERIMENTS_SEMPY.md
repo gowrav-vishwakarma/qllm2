@@ -5475,7 +5475,7 @@ scale: 40 trials, scored 0.10 (W0) / 0.15 (W128), chance 0.125.
 
 **Consequence:** the user's 600M decision becomes "which W", with these numbers.
 
-## kb1: KNOWN small-model benchmarks, our bodies and the baselines as they are (pre-registration, 2026-11-01 15:46 IST; the user's standing rule via Lead: "participate in known benchmarks; intelligence first, then the infrastructure saving")
+## kb1: KNOWN small-model benchmarks, our bodies and the baselines as they are (pre-registration, 2026-11-01 15:38 IST; the user's standing rule via Lead: "participate in known benchmarks; intelligence first, then the infrastructure saving")
 
 **What:** the standard zero-shot suite small LMs report, run through **lm-eval-harness 0.4.9.1** (its own task prompts, scoring
 and stderr).
