@@ -5056,3 +5056,14 @@ GRAD_ACCUM 3, ANSWER_IN_WINDOW=1):
 
 **Consequence:** the screen's numbers go to the user beside Library's package-side field-split result. The 600M pair is NOT
 launched from this screen.
+
+### cu2b result (10:14 IST, 2026-11-01): FAIL by its pre-registered futility rule. ACh-1 cost +0.038 nats at 180M tokens (bar +0.02); the run stopped at step 5000
+
+`cu2b_main_24b2969` (cu2a's data and seed + ACh-1, λ 0.2, α 4, fill ≤ 4096). Val at step 4883: **3.8069 vs cu2a 3.7691** (+0.038; bar
+cu2a + 0.02 = 3.7891). The chain wrote `.stop`, the launcher did not resume (the new stop file worked), and the chain moved on to w1s.
+During the run the ACh KL stayed ~0.000–0.001, tagged-answer accuracy 0.49–0.75, and the teacher was trusted on 0.40–0.65 of
+answer tokens. The direct gradient of the aux term was therefore small, and the LM cost is not explained by its size; arm-to-arm
+noise at 180M may be part of it (two seeds at 600M differ by ~0.003). Not separated: no GPU slot is spent on it.
+**Verdict:** ACh-1 (answer-mode distillation) does not pass its LM screen in this form. Per the pre-registration it is removed
+from the code (the index row names the last commit that has it). The query-time contrast stays the package's tool (A9, cd2,
+clk2). Exact gradient accumulation and the launcher's `.stop` file stay; they are general.
