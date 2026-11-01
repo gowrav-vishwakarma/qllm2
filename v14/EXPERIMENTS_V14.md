@@ -3445,6 +3445,23 @@ fitted threshold:
       uncut headline (the mind reading a record) stays b2p2 0.475 / 0.40 vs
       T++ 0.90. Open one level down: a field SYNONYM in the question.
     - Warm + contrast part: on the 4090 after A18.
+- **A20: a rare-in-English unigram step for reworded questions (PRE-REGISTERED
+  2026-11-01 10:32 IST, before any number of it).** Plumbing (closest prior
+  work: IDF weighting from a background corpus, BM25's idf, Robertson 1994).
+  Diagnosis on Lead's varied-wording docs (seed 18000, kv, seen): a one-word
+  key asked in 6 of the 8 wordings has no 2-3-word span shared with the stored
+  sentence (synthetic 1 / 22 hit, 0 right); common-word natural keys lose to
+  frame words ("stand for", "that refers to").
+  - Step 4 (after the word organ's steps 1-2, before step 3): the question word
+    (normalised) seen 1-2 times in the stream AND ≤ 3 times in a shipped
+    background count (6M tokens of the v14 FineWeb train pool, normalised
+    words); row = the sentence of its latest occurrence.
+  - Order tested: token organ → steps 1, 2 → step 4 → step 3 → abstain.
+  - Cells: kv, kv1, kvupd, neg × synthetic / natural, `--qstyle varied`; L =
+    32,768; FRESH seed 37000; 40 docs. Text only (CPU, bench's own docs).
+  - Bars: synthetic kv right row ≥ 0.90 (today 0.475 hit); neg any-hit ≤ 0.05
+    on both key types; natural kv right row not below today's chain − 0.05 on
+    the same docs. Reported: per-wording and per-step hits, kv1 / kvupd.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
