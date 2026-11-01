@@ -1,126 +1,229 @@
-# The mind + library package (Library's spec, 2026-11-01 03:38 IST)
+# The mind + library package, v0 (Library's spec; FROZEN 2026-11-01, code 7052e4a)
 
-What a frozen O(1) mind (b2p2, 102.9M params, 600M tokens) plus the library does today, its rules, its cost,
-and the measured numbers behind each line (EXPERIMENTS_V14 has the pre-registrations and verdicts).
+v0 is what a frozen O(1) mind plus the library does today, through ONE entry point (`v16/package.py`). This file gives
+its rules, its cost in MB and compute, and the measured number behind each line. Pre-registrations and verdicts are in
+`v14/EXPERIMENTS_V14.md`; the learnings for a new repo are in `v16/learnings/LIBRARY.md`. Changes after the freeze go in
+a v1 section, so the v0 numbers keep their code hash.
 
-## 1. Fetch (session library): text decides what is stored
+Minds measured: **b2p2** (102.9M params, 600M tokens, M2 body, trained at 2,048) and **cu2a** (Mind's curriculum
+checkpoint, same size and tokens). The contract (section 1) was also checked on the 16nb body (r3cb, the 1.5B tier's
+body family): it runs unchanged.
 
-1. **Token organ:** the latest exact match of the question's last 4 tokens in the stream; row = its sentence.
-2. **Normalised-word organ** (`PACKAGE_NORM=1`, A4, plumbing): words lower-cased, "a / an / the" dropped, one
-   plural "s" stripped; the question's longest suffix word n-gram (6..3), else any-position n-gram (6..3), else a
-   bigram holding a word seen ≤ 2 times; read over the WHOLE question (238c62e).
-2b. **Rare-in-English word (A20, `text_fetch(step4=True)`):** a question word seen 1-2 times in the stream and ≤ 3 times
-   in shipped background counts (1.47 MB) is the key in any wording: reworded one-word keys 0.25 → 1.00, never-stored
-   unchanged. Tried before the bigram step, which is where question-frame words cause false hits.
-2c. **Tool rows (A19, labelled "field-cut rows"):** the library cuts a multi-field row to the asked field's clause;
-   the package read then gives 1.00 / 1.00 (uncut 0.75 / 0.675; T++ cold uncut 0.90).
-3. **Strict mode** (`PACKAGE_STRICT=1`): abstain iff both organs miss (a rule, not a similarity threshold:
-   A2 showed similarity cannot separate "stored under other words" from "never stored").
-4. Where words differ (lenient): the mind's 2 most-surprising question tokens, matched by max cosine against each
-   sentence's tokens in its frozen block-8 states (A13: synonyms top-1 0.575, natural questions 0.775; a trained
-   sentence encoder 0.35 / 0.55 on the same docs). The L1 head is superseded here.
+## 0. How comparisons are reported (user, 2026-11-01)
 
-Code: `v14/package_fetch.py` (`key_fn` for v16/bench.py), `v14/norm_organ.py`.
+By TOKENS trained on, not parameter count; benchmark runs are diagnostics. Our rows (the mind as is, and the package)
+form one block. Deltas are taken only against our own T++ / Mamba-2 trained on the SAME tokens and data. Leaderboard
+entries (fine-tuned 100-150M models, untuned LLMs) go in a separate REFERENCE block, with their training tokens and
+"tuned on the benchmark" stated; never write "beats X" against that block. Every table gives params AND tokens.
 
-## 2. Read: warm + contrast (default since A9)
+## 1. The interface a mind must keep (the v0 contract)
 
-- The session's mind state after the document (it exists anyway) continues on **row + question** (stream A)
-  and on **question only** (stream B); each answer token is the argmax of `l_A + 4 (l_A − l_B)`.
-- **Rule (Mind's cd3):** the contrast is ON only for the answer tokens of a package-paired read, NEVER on free
-  text (on ordinary prose a = 4 takes NLL 3.90 → 8.56 and collapses to loops).
-- **Stop at the value:** first ".", ";" or newline (16 tokens cap); 25-55 % of contrast answers run on otherwise.
-- Fallback / reference: the cold read (row + question from a fresh state), today's bench re-read.
-- Reference implementation: `v14/a6_reread.py` (`Mind.feed`, `Mind.greedy_contrast`; chunked carried-state
-  prefill, parity with the one-pass logits 2e-3).
+The package needs nothing trained for it: no head and no index weights. It uses five things from the mind, which a new
+body (the 1.5B tier) must keep:
 
-## 3. Skills: refresh
+1. **Streaming:** `model(input_ids, states=, step_offset=) → (logits, new_states, aux)`. A chunked prefill must equal
+   one pass (parity). States are deep-copyable (tensors in lists / dicts). The contrast twin and every session read
+   depend on this.
+2. **Hookable blocks:** `model.blocks` is an indexable list whose outputs are `(z [batch, time, model_dim], state)`.
+   The address (F2) is the residual after block `n_blocks // 2` (b2p2: 8 of 16). That is a rule, settable as
+   `Package(address_layer=)`.
+3. **A trained LM head on every position:** per-token surprisal picks the question's keys and the address's kept
+   tokens.
+4. **The `_dilate` hook** (Mind's echo dilation), only if one-read skills at 8k are wanted (`apply(dilate=)`).
+5. **Tokenizer:** the sentence end, newline and `<|im_end|>` stops are read from the tokenizer. The background word
+   counts are word-level, so any BPE works.
 
-- **The refresh interval depends on the body.** Mind's w1r (ac0559a): a bounded window (W1, 128 tokens, three
-  blocks) lifts one-read skill reach at 4k 0.416 → 0.771 (seed 43: 0.435 → 0.617) at holdout parity, but does not help
-  reading fetched rows (+0.03; the A19 field cut stays the reader). If W1 enters the body, re-measure A16 (R = 2k / 4k /
-  8k) on the new mind before changing the refresh rule.
-- Standing skills are stored as **demonstrations** (header + demo lines), never words only (Mind's 3c7a7fa: a
-  rule taught in words is learned as a lookup table).
-- Re-insert the skill pack every R = 2,048 tokens (N11-R: +1.6 % tokens) and read the question with the contrast
-  on the query token: free 0.70 pooled at 32k (A16; plain 0.63). Every 4k + contrast ≈ every 2k plain; every 8k fails
-  even with echo dilation (0.42), and dilation costs +0.020 nats on the gap: not used.
-  R = 1,024 (+3.3 %) passes both rules plain.
-- Mind's cd3: an irrelevant pack costs +0.08 nats on the following prose (+0.92 over the next 64 tokens).
+State bytes are MEASURED from the state at read time, never a per-body constant: b2p2 1,154,928 B, 16nb (r3cb)
+3,921,168 B. The address moves with the mind: re-measure A13 / A21 on a new body before quoting its fetch numbers.
 
-## 3b. Rule x knowledge (R x K, Mind's 99d2951): the planner substitutes, the mind applies
+## 2. API (`v16/package.py`)
 
-- A rule held ONLY in the mind's state is applied to a FETCHED fact past the trained length when the planner puts
-  the fetched VALUE into the rule's trained query line ("<v> ->"): free 0.61 / 0.62 at 2k (refresh + contrast), 0.45 /
-  0.49 at 8k (one read + echo dilation s = 8 + contrast); T++ as it is 0.01 / 0.07 (0.30 with the pack re-inserted).
-- **Planner rule:** never ask the mind to compose key -> row -> rule ("K ->" with the row in view: <= 0.07 for every
-  model). The library fetches the key's row, takes the value out of it (it knows its own row formats; field_cut for
-  records) and writes the rule's query line itself.
-- Each standing skill in the register keeps its trained query format beside its demonstrations.
-- Place a fetched record row AFTER some context, or render it in the rule's format: at the start of a document a
-  record row can capture a held rule (cu2a 1.00 -> 0.02, b2p2 1.00 -> 0.91).
-- Cost: the skill contrast needs the no-pack twin stream across the session (a second O(1) state, +1.15 MB, 2x read
-  compute), unlike the fact read, whose twin runs on the answer tokens only.
+```python
+from v16.package import Package
+pkg = Package('<mind best_model.pt>', device='cuda')            # alpha 4.0, max_new 40, address_layer n_blocks // 2
+text, info = pkg.answer(session, question, mode='lenient')     # one fact; mode='strict' = text only, abstain on a miss
+rows = pkg.fetch_rows(session, question, k=3)                   # several rows (name / latest / F2 + hops by name)
+text, info = pkg.answer_rows(session, question, k=3)            # the mind reads the k rows together
+text, info = pkg.answer_chain(session, q, prompt, k=3)          # PLANNER chain (TEXT): object -> holder -> sub-question
+text, info = pkg.apply(session, key_question, skill)           # rule x knowledge: fetch the value, write "<v> ->", skill contrast
+text, info = pkg.apply_value(session, skill, v)                 # the same for a given value
+```
 
-## 3c. Known benchmarks: who does what (user's rule, 2026-11-01: known benchmarks, lengths capped at 128k)
+- `session` is text or token ids. It is read once and cached: `read()` streams it in 2,048-token chunks, carrying
+  the state, so memory is O(1) in length.
+- `info` holds the path (`text0 / text1 / text2 / text4 / F2 / None`), the row span, the row text, whether it
+  abstained, whether the field was cut, and `bytes_held` (mind state measured, library text, index estimate, address
+  int8 / sign-bit forms).
+- The question text is appended verbatim. The caller chooses its form (exam form "\n\nQuestion: …\nAnswer:" or chat).
 
-TEXT = the library's organs / planner (plumbing, any body could use them); MIND = the O(1) mind's own work (state, address,
-reading, writing). An entry must say which column produced each number.
+## 3. Fetch order
 
-| benchmark task | what it needs | fetch (who) | read / write (who) | our evidence |
-|---|---|---|---|---|
-| BABILong QA1 (single supporting fact: "Where is Mary?") | the latest fact about an entity | TEXT: name step (latest mention) | MIND: copy the location from the row | toy: right; A21 / A25 for scale |
-| BABILong QA2 / QA3 (2-3 facts: object → holder → place) | a chain of facts | TEXT: latest-content-word step + name hops (fetch_rows) | MIND: combine rows (fails today: "The milk there is there.") | the open reasoning gap |
-| BABILong QA4 / QA5 (two- / three-argument relations) | a relation lookup | TEXT: the two names / objects | MIND: read the relation | not measured |
-| RULER S-NIAH (word / number / UUID needle) | exact key → value | TEXT: token organ (1.00) | MIND: write the value; multi-token values (numbers, UUIDs) are its weak spot (S2) | kv 0.925 at 32k (A9) |
-| RULER MK-NIAH (look-alike distractor keys) | the exact key among similar ones | TEXT: exact organ (no key checking needed) | MIND: write | A11: the mind does NOT check keys; text does |
-| RULER MV-NIAH (one key, several values) | all rows of one key | TEXT: top-k rows of the key | MIND: list several values (multi-row reading is weak: A13 line-up 0.275) | open |
-| RULER MQ-NIAH (several keys in one question) | several fetches | TEXT: planner splits the question, one fetch per key | MIND: write each | not measured |
-| RULER VT (variable tracking, multi-hop) | follow X1 = X2 = ... | TEXT: chained fetch (hop2: 1.00 in the package table) | MIND: write the names | the chain is the library's, not the mind's |
-| RULER CWE / FWE (aggregation: frequent words) | counting over the whole context | TEXT: a counter tool (not built); the state cannot count | – | not covered: say so |
-| RULER QA (SQuAD / HotpotQA in distractors) | natural questions, 1-2 paragraphs | TEXT + MIND: word organ / step 4, else the surprise-keyed address (F2) | MIND: read and write (natq 0.475-0.525 at 32k) | A13 / A21 |
+**One fact (`answer`):** the first step that hits gives the row (the sentence around the match, ≤ 64 tokens).
 
-**How comparisons are reported (user, 2026-11-01 16:30 IST):** by TOKENS trained on, not parameter count; benchmark runs
-are diagnostics. Our rows (103M minds, 600M tokens, no benchmark data; as-is and package) form one block; deltas are
-taken only against our own T++ / Mamba-2 trained on the SAME tokens. Leaderboard entries (fine-tuned 100-150M models,
-untuned LLMs) go in a separate REFERENCE block with their training tokens and "tuned on the benchmark" stated.
+| step | rule | who | evidence |
+|---|---|---|---|
+| text0 token organ | the latest exact match of the question's last 4 tokens | TEXT | 1.00 on exact keys at every length |
+| text1 word suffix | words lower-cased, "a / an / the" dropped, one plural "s" stripped; the longest suffix word n-gram of the WHOLE question, n = 6..3 | TEXT | A4: 1.00 on kv / para / tool |
+| text2 word any-position | the longest any-position word n-gram, 6..3 | TEXT | A4 |
+| text4 rare-in-English | a question word seen 1-2 times in the stream AND ≤ 3 times in the shipped background counts | TEXT | A20: reworded made-up keys 0.25 → 1.00 |
+| F2 surprise address (lenient only) | the mind's 2 most surprising question tokens (after the first 2); each sentence row scored by Σ max cosine over its tokens' address states (block n//2, centred by the session mean) | MIND | A13: synonyms 0.575 vs a sentence encoder 0.35; natq 0.775 vs BM25 0.525 |
+| strict | abstain if text0-text4 all miss | rule | never stored: abstain 0.925-1.00 at 32k (A9, A21), 0.90-1.00 at 128k (A25) |
 
-Honesty line for any entry: retrieval-only tasks (S-NIAH, MK-NIAH, VT) are mostly the library's text organs; the mind's
-share is writing the value and, for natural wording, its own address (F2). Multi-fact reasoning (QA2 / QA3, MV) and
-aggregation are where the mind or a tool must still earn the number.
+- The bigram step (word step 3) is out of the package chain. Question-frame words ("stand for", "refers to") make it
+  hit wrongly, and F2 behind it always returns a row.
+- Abstain is a rule (text miss) or a trained skill (cu2 VERIFY). It is never a similarity threshold (A2), and never a
+  query-time key check on an untrained mind (A11: AUROC 0.70).
 
-## 4. Shared library (text-first packs)
+**Several rows (`fetch_rows`, k = 3), for multi-fact questions:** the first row comes from the first of these that hits:
+1. the text chain (text0-text4);
+2. NAME: the latest sentence holding a mid-sentence proper noun of the question;
+3. LATEST: the latest sentence holding the question's rarest content word (content = ≤ 3,000 background counts);
+4. F2 (lenient only).
 
-- `qllm-pack/v1` JSONL (header, then entries `{id, text, source, sha256, time, trust}`); `v14/pack.py`.
-- Fetch (SL2): normalised-word organ, then the token organ, then BM25; depth-limited suffix arrays,
-  **~11.4 MB per 1M tokens** (1.00 / 0.99 at 4,000 entries on exact + surface variants).
+Then come hops by name, up to k rows: each capitalised name in a fetched row that is not in the question brings the
+latest sentence mentioning it ("John took the milk." → "John went to the kitchen."). This is plumbing. The rows are
+returned in session order.
 
-## 5. Cost (per session, b2p2)
+## 4. Read: warm + contrast
 
-| item | cost |
-|---|---|
-| mind state | 1.15 MB, O(1) in context length |
-| raw text kept for rows | 2 bytes per token (2 MB per 1M tokens) |
-| background word counts (A20) | 1.47 MB, fixed (not per session) |
-| fetch | organ scans at question time (0.02-0.05 s per 32k doc in Python); indexed form = word suffix array ~5.4 MB per 1M tokens |
-| read (default) | no extra prefill (the session state exists); two short O(1) continuations of row + question (~30-60 tokens) + ≤ 16 answer tokens; a second 1.15 MB state during the answer only |
-| refresh | +1.6 % tokens at R = 2,048 |
-| vs a Transformer++ KV cache | 4.9 GB at 128k (Lead's package table) |
+- The session's own state continues on **row + question** (stream A) and on **question only** (stream B). Each answer
+  token is the argmax of `l_A + 4 (l_A − l_B)` (Shi et al. 2023 CAD on the answer tokens; Mind's cd1-cd3). A9 MET:
+  32k kv 0.925 / 0.925, para 0.925 / 0.925, tool 0.75 / 0.575 (syn / nat).
+- **Contrast only on the answer tokens of a package read, never on free text.** On prose, a = 4 takes NLL 3.90 → 8.56.
+- Decoding stops at the sentence end, a newline or the end of turn (`max_new` cap).
+- **Field cut (A19, labelled "field-cut", plumbing):** a record row (" Result: job: K; f1: v1; …") is cut to the asked
+  field's clause. Then b2p2 reads 0.90 / 0.80 cold and 1.00 / 1.00 warm (uncut 0.475 / 0.40).
+- Several rows read together hurt (A13 line-up 0.275 vs 0.55 for one row). `answer_rows` is for multi-fact questions
+  only.
 
-## 6. Measured (32k, b2p2, free generation, sentence scorer; synthetic / natural keys)
+## 5. Skills: refresh
 
-| cell | number | source |
+- A standing skill is stored as **≥ 8 demonstrations in its trained format**, with its trained query line ("<v> ->").
+  Words do not reach a 103M mind: A24 gives words 0.00-0.05; demos 2k back 0.40-0.60; demos 256 tokens back (the
+  refresh) 0.65-0.875.
+- **Re-insert the pack every R = 2,048 tokens** (+1.6 % tokens). Read the query with the contrast on the query token:
+  free 0.70 at 32k (A16; plain 0.63). R = 4k with contrast ≈ R = 2k plain. R = 8k fails even with echo dilation
+  (0.42), and dilation costs +0.020 nats on the gap text, so it is not used.
+- The skill contrast is not a uniform gain. A24 DEMO8: b2p2 0.60 → 0.425, cu2a 0.475 → 0.60. Measure it on vs off per
+  mind and skill before turning it on.
+- Body note (Mind's w1r): a bounded window W1 (128) lifts one-read skill reach at 4k (0.416 → 0.771). If W1 enters the
+  body, re-measure A16 before changing R.
+- Cd3 cost: an irrelevant pack adds +0.08 nats on the following prose (+0.92 over the next 64 tokens).
+
+## 6. Planner: substitution and chain
+
+- **Substitution (R × K, Mind's 99d2951; `apply`):** the library fetches the key's row and takes the value out (it
+  knows its own row formats; `field_cut` / `row_value` for records). The planner then writes the skill's trained query
+  line "<v> ->", and the mind answers with the skill contrast (the twin = the session without the pack).
+  - A23: the package reproduces Mind's harness exactly (400 / 400 docs). b2p2 scores 0.61 at 2k and 0.45 at 8k
+    (dilation s 8); cu2a 0.62 / 0.49; T++ as is 0.01 / 0.07.
+  - Never ask the mind to compose key → row → rule ("K ->" with the row in view: ≤ 0.07 for every model).
+  - Place a record row after some context: at a document's start it can capture a held rule (cu2a 1.00 → 0.02).
+- **Chain (`answer_chain`, labelled TEXT):** for "where is the object", if the first row was found by the object word
+  (LATEST) and names a holder not in the question, the planner asks the sub-question with the holder in the object's
+  place ("Where is John?"). The mind answers it from the holder's latest row; otherwise `answer_rows` runs. This is the library composing, not the mind. Its BABILong
+  column (`pkg_chain`) sits beside the mind-composes column (`pkg`), which stays the headline. Measured so far only as
+  a smoke (1 / 3).
+
+## 7. Cost (per session)
+
+| item | bytes | compute |
 |---|---|---|
-| exact facts | 0.925 / 0.925 | A9 (`logs/v14_a9_b2p2_32768_1b29b86_20261101_0327.jsonl`) |
-| case / plural / "the" variants | 0.925 / 0.925 | A9 |
-| tool-result fields | 0.75 / 0.575 | A9 |
-| never stored: abstain | 1.00 / 0.925 | A9 (strict, rule-based) |
-| exact-key recall, 20-way, vs T++ / Mamba-2 state | 1.00 vs 0.04-0.18 | Lead's package table |
+| mind state | measured: b2p2 1.15 MB, 16nb 3.92 MB; O(1) in length | one streaming pass over the session, carried in 2k chunks: 11.4 s at 128k, ~60 s at 300k (4090, shared with other jobs, with address capture and surprisal) |
+| raw text for rows | 2 B / token (0.26 MB at 128k, 0.61 MB at 300k) | – |
+| text indexes (word + token suffix arrays, estimate) | ~9.4 B / token (1.23 MB at 128k, 2.89 MB at 300k) | organ scans at question time: 0.02-0.05 s per 32k doc in Python |
+| background word counts (A20) | 1.47 MB JSON, fixed, shared by all sessions | – |
+| F2 address, every token int8 (lossless, A15) | 592 B / token (78 MB at 128k, 182 MB at 300k) | one max-sim over the rows per question |
+| F2 address, sign bits on the top 1/16 surprising tokens | ~4.9 B / token (0.64 MB at 128k, 1.50 MB at 300k) | the same; costs synonyms ~0.1 at 32k (A15), at 128k equal (0.71 vs 0.62 on 24 F2 rows, A25) |
+| fact read | a second copy of the state during the answer only | two O(1) continuations of row + question (~30-60 tokens) + ≤ 40 answer tokens: 0.38-0.42 s per question incl. fetch (4090) |
+| skill contrast (`apply`) | a second full state for the no-pack twin | 2× the read compute |
+| refresh | +1.6 % tokens at R = 2,048 | – |
+| reference: T++ KV cache (tfc1b, 12 layers, d 768) | 36,864 B / token: 4.8 GB at 128k, 11.3 GB at 300k; the 2k window 67 MB measured (A18) | – |
 
-## 7. Known limits (open)
+## 8. Measured (b2p2 unless stated; free generation, sentence scorer: decode to the stop, the value as a whole word)
 
-- **Synonyms / natural questions** (words differ): fetch by surprise-chosen keys (A13), read warm + contrast:
-  synonyms 0.55, natural questions 0.475 (ceiling 0.625), lenient. Abstain there is NOT solved by fetch scores
-  (AUROC 0.66-0.77) or a key-swap check (A11: 0.70 on b2p2); it needs the trained VERIFY skill (cu1: wrong value
-  on 3 % of wrong rows; cu2).
-- **Writing on multi-field rows** (tool 0.575 natural) and **plain-question comprehension** (natq oracle
-  20-way 0.45-0.55): the mind's side (Mind's cu2).
+**32k, bench docs, synthetic / natural keys:**
+
+| cell | package | strict | source |
+|---|---|---|---|
+| exact facts (template question) | 0.925 / 0.925 | same | A9 |
+| case / plural / "the" variants | 0.925 / 0.925 | same | A9 |
+| tool records, field-cut | 1.00 / 1.00 | same | A19 |
+| varied wording (v14/styles.py), kv | 0.875 / **0.725** | 0.875 / 0.20 | A21 |
+| varied wording, kv1 / kvupd | 0.925 / 0.675 · 0.825 / 0.70 | 0.925 / 0.275 · 0.825 / 0.25 | A21 |
+| natural questions (natq) | 0.525 | 0.20 | A21 |
+| never stored: answers with a value word | 0.30 / 0.57 (F2 never abstains) | **0.00 / 0.03** | A21 |
+| T++ holding the whole 32k session (1.06 GB) | 0.00 on every cell | – | A18 |
+| T++ 2k window + the same row + contrast (67 MB) | ≈ the package (kv 0.95 / 0.95, natq 0.425) | – | A18 |
+
+**128k and 300k by needle distance (A25, 10 docs per cell; package / mind alone / T++ 2k window / T++ window + row):**
+
+| 128k | ~1k back | ~16k | ~100k |
+|---|---|---|---|
+| kv synthetic | 1.00 / 0.00 / 0.20 / 1.00 | 1.00 / 0.00 / 0.00 / 1.00 | 0.90 / 0.00 / 0.00 / 0.90 |
+| kv natural | 0.90 / 0.00 / 0.00 / 1.00 | 0.90 / 0.00 / 0.00 / 1.00 | 1.00 / 0.00 / 0.00 / 0.90 |
+| varied wording, natural keys (strict) | 0.70 (0.10) | 0.60 (0.20) | 0.80 (0.30) |
+| para · tool (both key types) | 0.80-1.00 · 1.00 | | |
+| never stored, strict abstain | 1.00 / 0.90 (syn / nat) | | |
+
+300k: (A25 in progress; filled when the run ends.)
+
+**Other tests:**
+- **Story (A22):** a four-chapter story, 11 exam questions × 2 forms, keyword hits of 22 at 2k / 4k / 8k.
+  - b2p2 package 8 / 8 / 7 vs alone 1 / 3 / 2; cu2a 6 / 5 / 5 vs 1 / 1 / 1; T++ / Mamba-2 alone ~0.
+  - Single-sentence facts are answered. Order of events, rule arithmetic, negation and summaries stay at 0.
+- **R × K (A23):** see section 6.
+- **BABILong (Lead's entry, `v16/babilong_eval.py`, package column = the mind composes, 100 docs per cell, at 0k / 1k / 2k):**
+  - b2p2: qa1 0.85 / 0.74 / 0.77; qa2 0.05 / 0.11 / 0.13; qa3 0.01 / 0.07 / 0.06; qa4 0.45 / 0.37 / 0.25; qa5 0.53 / 0.46 / 0.54.
+  - cu2a: qa1 0.99 / 0.69 / 0.69; qa2 0.00 / 0.09 / 0.09; qa3 0.00 / 0.00 / 0.08.
+  - The mind-as-is column and longer lengths are on Lead's board.
+
+## 9. Known benchmarks: who does what
+
+TEXT = the library's organs / planner (plumbing; any body could use them). MIND = the O(1) mind's own work (state,
+address, reading, writing). An entry must say which column produced each number.
+
+| benchmark task | fetch (who) | read / write (who) | our evidence |
+|---|---|---|---|
+| BABILong QA1 (single supporting fact) | TEXT: name step (latest mention) | MIND: copy the location | b2p2 0.74-0.85 at 0-2k |
+| BABILong QA2 / QA3 (object → holder → place) | TEXT: latest-content-word step + name hops | MIND: combine rows (fails) / TEXT chain (`pkg_chain`) | 0.01-0.13: the open reasoning gap |
+| BABILong QA4 / QA5 (relations) | TEXT: the two names / objects | MIND: read the relation | 0.25-0.54 |
+| RULER S-NIAH (word / number / UUID) | TEXT: token organ | MIND: write the value; multi-token values are its weak spot | kv 0.925 at 32k (A9), 0.90-1.00 at 128k (A25) |
+| RULER MK-NIAH (look-alike keys) | TEXT: exact organ | MIND: write | A11: the mind does not check keys; text does |
+| RULER MV-NIAH (one key, several values) | TEXT: top-k rows | MIND: list several values (multi-row reading is weak) | open |
+| RULER MQ-NIAH (several keys) | TEXT: planner splits the question | MIND: write each | not measured |
+| RULER VT (variable tracking) | TEXT: chained fetch | MIND: write the names | the chain is the library's |
+| RULER CWE / FWE (frequent words) | a counter tool (not built); a state cannot count | – | not covered: say so |
+| RULER QA (SQuAD / HotpotQA in distractors) | TEXT + MIND: word steps, else F2 | MIND: read and write | natq 0.525 at 32k (A21) |
+
+## 10. Honesty lines (every write-up that quotes the package)
+
+1. Recall of stored facts at any distance (32k, 128k, 300k) is the library's text organs: plumbing that any body
+   could use. Alone, the mind and a 2k-window T++ answer ~0 beyond a few k (A25).
+2. A T++ holding a 2k window, given the same row with the contrast, matches the package on single-row cells (A18,
+   A25). The difference is cost: the session in 1.15 MB vs a 67 MB window, or 4.8 GB at 128k for the full KV. T++
+   holding the whole session at 32k answers 0.00.
+3. What the mind adds:
+   - reading a fetched row on its own long state (warm + contrast);
+   - the surprise-keyed address F2, its own (natural wording +0.05 to +0.15 over text);
+   - skills carried by demonstrations plus refresh;
+   - rule × knowledge through the planner (0.61 vs T++ 0.01).
+4. Lenient mode answers never-stored questions with a value word 30-57 % of the time. Strict is safe (0-3 %) but
+   misses reworded common-word keys (0.20 vs 0.725). Abstain where words differ needs the trained VERIFY skill
+   (cu2).
+5. Multi-fact reasoning (BABILong QA2 / QA3, MV-NIAH, the story's order of events) is NOT done by the mind (≤ 0.13).
+   A TEXT planner chain is labelled as such.
+6. Field cut and the planner's substitution are library plumbing and are labelled. The uncut record read stays the
+   headline for "reads a record".
+7. All numbers are 103M minds trained on 600M tokens, no benchmark data. The address and the read move with the mind:
+   re-measure on a new body.
+
+## 11. Known limits (open; for the mind's next version, not new library units)
+
+- Composition over several rows (QA2 / QA3): the mind's side (the 1.5B tier, cu3).
+- Abstain where words differ: trained VERIFY (cu2), not a library rule.
+- An F2 address under 50 MB / 1M that keeps synonyms: sign bits on 1/16 of tokens hold at 128k (A25) but lose ~0.1 on
+  synonyms at 32k (A15). PCA destroys it.
+- Writing multi-token values (numbers, UUIDs) and multi-field records without the cut.
+- Shared libraries (packs, `v14/pack.py`, SL2 text fetch 11.4 MB / 1M) cover surface variants only. Synonyms across
+  documents are untested (L3: the mind's address is a stream address, not an embedder).

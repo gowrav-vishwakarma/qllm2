@@ -4,7 +4,42 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-01 12:34 IST) — read this first
+## State (2026-11-01 17:15 IST) — read this first
+
+Session: **Library**. Lane (Lead's decision 16:5x): SHIP THE PACKAGE v0; NO new A-units until the matched 1.5B tier
+lands on the 6000.
+* **Package v0 frozen:** `v16/package.py` at 7052e4a (one entry point: answer / fetch_rows / answer_rows /
+  answer_chain / apply / apply_value); spec `v14/PACKAGE.md` v0 (contract, API, fetch order, read, refresh, planner,
+  cost in MB + compute, measured, benchmark map, honesty lines); learnings `v16/learnings/LIBRARY.md` (A22-A25 + v0).
+* **v0 contract** sent to Lead (on the board, cbf2d6f): streaming API + chunked parity + deep-copyable states;
+  `model.blocks` (z, state) with the address after block n_blocks // 2 (1a04b4c); per-position LM head; `_dilate`;
+  tokenizer stops. No body constants left (7052e4a). Checked unchanged on the 16nb body (r3cb): state 3.92 MB.
+* **Running:** A25 in tmux `a25` (code 0a9aeb9, `logs/v14_a25_long_0a9aeb9_20261101_1622.{log,jsonl}`); 128k done,
+  300k ~2 of 10 groups at 17:03, ~19:00 IST end. Scorer:
+  `/tmp/claude-1000/-home-gowrav-Development-qllm2/fdbac1f0-c2c3-4b9c-8baf-2585a9e7b8eb/scratchpad/a25_score.py <jsonl>`
+  (bars B1-B4 at 300k). On end: verdict into EXPERIMENTS_V14 A25, the 300k rows into PACKAGE.md §8 + LIBRARY.md,
+  commit the logs, message Lead.
+* BABILong / RULER: Lead's runner (`v16/babilong_eval.py`; my `--chain` column = TEXT planner); the package column is
+  the headline (mind composes); reference block labelled by tokens.
+
+## Step back (2026-11-01 17:15 IST, after A25's 128k half and the v0 freeze)
+
+- What surprised me: the mind ALONE answers 0.00 even with the needle only ~1k back in a 128k session, and the T++
+  with the needle inside its own 2k window answers 0.00-0.20. Neither 600M-token body recalls a fact it read 1k
+  tokens ago by free generation; both read well when the row sits next to the question (with the contrast). At this
+  token tier, "memory" is the library bringing a row ADJACENT; the mind's skill is reading what is adjacent on a long
+  state.
+- What it says: distance is a text problem (solved: 0.9-1.0 at 100k back). Recall benchmarks therefore measure the
+  library, not the mind. The cells where the mind's state carries something a windowed T++ cannot are the R × K one
+  (a rule held only in state, 8k: 0.45 vs 0.07) and skills by refresh. The intelligence claim lives there, not in
+  needles.
+- Bold angle (for Mind, not a new A-unit; closest prior work RETRO / kNN-LM): train the mind WITH the library in the
+  loop. Put fetched rows adjacent to the training targets the way the package does at test time, so the body learns to
+  compose 2-3 adjacent rows (the BABILong QA2 / QA3 gap) instead of far recall it never uses. The difference from RETRO:
+  the rows are the session's own sentences fetched by text + the mind's own surprise address, and the reader is an O(1)
+  state, not cross-attention over neighbours.
+
+## Old state (2026-11-01 12:34 IST; superseded)
 
 Session: **Library**. Nothing of mine is running or queued.
 * Today after 09:54 (EXPERIMENTS_V14): A18 complete (T++ full 32k 0.00 at 1.06

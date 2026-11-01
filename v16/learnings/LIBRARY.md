@@ -118,6 +118,23 @@ The single most useful habit: measure each step on its own (an oracle row for "r
 - **Skills are stored as demonstrations, never words only** (Mind: a rule taught in words is learned as a lookup table;
   one demonstration generalises).
 - **SR-0, injecting a rule vector (mean residual at the demo arrows) into the state: NOT met** (0.10 / 0.00 at L = 0).
+- **A24, rules as words vs demonstrations (40 items per cell, 20 affine rules y = a·x + b inside the trained family;
+  rule, then 2k of held-out web text, then "\nx ->"; free = first token right):**
+  - Words ("each output is a times the input plus b") reach neither mind: b2p2 0.05 / 0.025, cu2a 0.00 (contrast /
+    plain).
+  - Demos 2k back: 0.40-0.60. The same 8 demos 256 tokens back (the refresh): b2p2 0.65 / 0.775, cu2a 0.85 / 0.875.
+  - The skill contrast is mind-dependent. DEMO8: b2p2 0.60 plain → 0.425 contrast; cu2a 0.475 → 0.60.
+  - **Rule:** a register skill = ≥ 8 demonstrations in the trained format, refreshed near the query, contrast measured
+    per mind. A rule written in words must be turned into demonstrations by the library before the mind sees it.
+- **A23, rule × knowledge through the package (`apply`):** the library fetches the key's record row, takes the value
+  out (its own row format), and writes the skill's trained query line "<v> ->". The mind answers with the skill
+  contrast, whose twin is the whole session without the pack (a second O(1) state).
+  - Mind's R × K harness is reproduced exactly (400 / 400 docs): b2p2 0.61 at 2k, 0.45 at 8k (echo dilation s 8);
+    cu2a 0.62 / 0.49; T++ 0.01 / 0.07.
+  - **Rule:** the planner substitutes. Asking the mind "K ->" with the row in view (compose key → row → rule) gives
+    ≤ 0.07 for every model.
+  - One story rule ("twice its weight plus one", 4 → 9) failed even as 8 demos (" 14"): a single item at a 0.61 rate
+    proves nothing; A24 was the set.
 
 ## 6. Comparison with T++ and Mamba-2 (same text library, Lead's arm; seed 18000, 32k)
 
@@ -134,7 +151,46 @@ The single most useful habit: measure each step on its own (an oracle row for "r
 - **Honesty line:** exact / surface recall is the library's (text organs, plumbing); what the mind adds is reading
   with a fixed state (warm + contrast), skills carried by demonstrations and refresh, and the surprise-keyed address.
 
-## 7. Process lessons
+- **A25, long sessions by needle distance (one streamed session per doc, 8 facts, the asked ones at fixed distances
+  from the question; 10 docs per cell; package / mind alone / T++ 2k window / T++ window + row):**
+  - 128k: kv 0.90-1.00 at ~1k, ~16k and ~100k back, both key types. Mind alone 0.00; T++ window 0.00-0.20; T++
+    window + the package's row 0.90-1.00.
+  - Varied wording on natural keys: 0.60-0.80 (strict 0.10-0.30). Never stored: strict abstain 0.90-1.00.
+  - 300k: (filled when the run ends).
+  - Bytes per 300k session: mind state 1.15 MB, text 0.61 MB, indexes ~2.9 MB; F2 address 182 MB at int8, 1.5 MB as
+    sign bits (the two forms tie at 128k on 24 F2 rows: 0.71 vs 0.62).
+  - **Lesson:** distance does not matter to text organs; the mind's job is reading the fetched row on a long state,
+    and warm + contrast still works on a 128k state (300k: pending), 60× its trained 2k.
+- **Story and BABILong (A22, Lead's entry):**
+  - A four-chapter story (11 exam questions × 2 forms, keyword hits of 22 at 2k / 4k / 8k): b2p2 package 8 / 8 / 7 vs
+    alone 1 / 3 / 2. The package answers single-sentence facts; order of events, rule arithmetic, negation and
+    summaries stay at 0.
+  - BABILong at 0k-2k, the mind composing (package column): qa1 0.74-0.85, qa2 0.05-0.13, qa3 0.01-0.07, qa4 / qa5
+    0.25-0.54.
+  - **Lesson:** fetch is solved for one fact. Combining 2-3 rows (object → holder → place) is the mind's open gap. A
+    planner chain can do it in text, but it must be labelled TEXT.
+
+## 7. The package v0: one entry point (`v16/package.py`, frozen at 7052e4a)
+
+- `Package(ckpt).answer(session, question, mode)`: stream the session once (2k chunks, state carried), then fetch.
+  The fetch chain is token organ → word steps 1-2 → rare-in-English step → (lenient) F2. Then warm + contrast on the
+  answer tokens, with the field cut for records.
+- Also: `fetch_rows` / `answer_rows` (k rows: name / latest content word / F2 + hops by name), `answer_chain` (TEXT
+  planner), `apply` / `apply_value` (R × K).
+- **The contract a new mind must keep** (nothing in the library is trained for a body):
+  1. streaming `model(x, states, step_offset) → (logits, states, aux)` with chunked prefill = one pass and
+     deep-copyable states;
+  2. `model.blocks` with `(z, state)` outputs, the address hooked after block n_blocks // 2;
+  3. a per-position LM head (surprisal);
+  4. Mind's `_dilate` hook, if one-read skills are wanted;
+  5. tokenizer-derived stops.
+- State bytes are measured at read time: b2p2 1.15 MB, the 16nb body 3.92 MB.
+- Checked unchanged on the 16nb body (r3cb). The address moves with the mind, so A13 / A21 are re-measured on a new
+  body.
+- The full spec (fetch order, read, refresh, planner, every cost in MB and compute, honesty lines, the benchmark map)
+  is `v14/PACKAGE.md`.
+
+## 8. Process lessons
 
 - Pre-register with the decisive cell FIRST in the run order (a guard-stopped run still decides).
 - Put the control in the same pre-registration as any cause you plan to name (A6's "beyond the trained length" was
