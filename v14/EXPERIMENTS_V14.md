@@ -3671,6 +3671,29 @@ fitted threshold:
     Reported: DEMO3, DEMO8-NEAR, plain, cu2a, per-offset breakdown.
   - Prior evidence (Mind, 20 demo sets of 2x + 1): 2k + 8 demos 0.45 plain /
     0.30 contrast, so the bar may well fail on the contrast read.
+  - **A24 VERDICT (14:29 IST; code 2e03057; `logs/v14_a24_rules_2e03057_20261101_1426.json` + .log, 40 items per cell):
+    NOT met as registered (b2p2 DEMO8 contrast 0.425 < 0.50; +0.375 over words
+    met); the question itself is answered: rules reach the mind as
+    DEMONSTRATIONS, not words.**
+
+    | free (contrast / plain) | b2p2 | cu2a |
+    |---|---|---|
+    | WORDS ("each output is a times the input plus b") | 0.05 / 0.025 | 0.00 / 0.00 |
+    | DEMO3, 2k back | 0.525 / 0.40 | 0.45 / 0.40 |
+    | DEMO8, 2k back | **0.425** / 0.60 | 0.60 / 0.475 |
+    | DEMO8-NEAR (256 tokens back = the refresh) | 0.65 / **0.775** | **0.85 / 0.875** |
+
+    - Words reach neither mind (≤ 0.05); demonstrations do (0.40-0.875), most
+      when refreshed near the question. The contrast is not a uniform gain on
+      skills: it lowers b2p2's DEMO8 (0.60 → 0.425) and raises cu2a's (0.475 →
+      0.60): measure it per mind and skill.
+    - No offset pattern (b2p2 DEMO8 contrast by b: 0.0-1.0 at n = 2-4 each); the
+      offset is not the cause (Mind: all inside the trained family).
+    - Package rule confirmed: a register skill = ≥ 8 demonstrations in the
+      trained format, refreshed near the query; a rule stated in words is a
+      lookup at 103M (Mind's cu1 finding), so the library should turn words
+      into demonstrations (Lead's "words → demos" generator idea) before the
+      mind sees them.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

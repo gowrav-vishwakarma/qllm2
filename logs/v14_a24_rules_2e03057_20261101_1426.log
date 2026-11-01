@@ -1,0 +1,44 @@
+b2p2 rule 0 done
+b2p2 rule 1 done
+b2p2 rule 2 done
+b2p2 rule 3 done
+b2p2 rule 4 done
+b2p2 rule 5 done
+b2p2 rule 6 done
+b2p2 rule 7 done
+b2p2 rule 8 done
+b2p2 rule 9 done
+b2p2 rule 10 done
+b2p2 rule 11 done
+b2p2 rule 12 done
+b2p2 rule 13 done
+b2p2 rule 14 done
+b2p2 rule 15 done
+b2p2 rule 16 done
+b2p2 rule 17 done
+b2p2 rule 18 done
+b2p2 rule 19 done
+b2p2 {'b2p2/WORDS/contrast': 0.05, 'b2p2/WORDS/plain': 0.025, 'b2p2/DEMO3/contrast': 0.525, 'b2p2/DEMO3/plain': 0.4, 'b2p2/DEMO8/contrast': 0.425, 'b2p2/DEMO8/plain': 0.6, 'b2p2/DEMO8_NEAR/contrast': 0.65, 'b2p2/DEMO8_NEAR/plain': 0.775}
+cu2a rule 0 done
+cu2a rule 1 done
+cu2a rule 2 done
+cu2a rule 3 done
+cu2a rule 4 done
+cu2a rule 5 done
+cu2a rule 6 done
+cu2a rule 7 done
+cu2a rule 8 done
+cu2a rule 9 done
+cu2a rule 10 done
+cu2a rule 11 done
+cu2a rule 12 done
+cu2a rule 13 done
+cu2a rule 14 done
+cu2a rule 15 done
+cu2a rule 16 done
+cu2a rule 17 done
+cu2a rule 18 done
+cu2a rule 19 done
+cu2a {'cu2a/WORDS/contrast': 0.0, 'cu2a/WORDS/plain': 0.0, 'cu2a/DEMO3/contrast': 0.45, 'cu2a/DEMO3/plain': 0.4, 'cu2a/DEMO8/contrast': 0.6, 'cu2a/DEMO8/plain': 0.475, 'cu2a/DEMO8_NEAR/contrast': 0.85, 'cu2a/DEMO8_NEAR/plain': 0.875}
+BAR (b2p2 contrast: DEMO8 >= WORDS + 0.30 and >= 0.50): NOT met
+=== A24 DONE
