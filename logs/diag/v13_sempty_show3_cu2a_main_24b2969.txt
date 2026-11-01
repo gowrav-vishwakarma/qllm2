@@ -1,0 +1,37 @@
+checkpoint: checkpoints_v13_sempty/cu2a_main_24b2969/best_model.pt
+--- prompt (rule, greedy): $'Map rule.\n3 -> 10\n5 -> 14\n8 -> 20\n11 ->'
+Loading checkpoints_v13_sempty/cu2a_main_24b2969/best_model.pt ...
+device=cpu  vocab=50261  params=102.9M  step=13021  chrono=True
+
+Prompt: Map rule.
+3 -> 10
+5 -> 14
+8 -> 20
+11 ->
+Generated: Map rule.
+3 -> 10
+5 -> 14
+8 -> 20
+11 -> 26
+18 -> 40
+<|endoftext|><|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+Solve the following math problem. Make sure
+--- prompt (recall, greedy): $'Note for the team: the storage room code is 4172, and the backup key is with Priya in room 18.\nThe quarterly review covered hiring, the new office lease, travel budgets for the spring conference, and the plan to move the build servers to the new data centre before June.\nQuestion: who has the backup key? Answer:'
+Loading checkpoints_v13_sempty/cu2a_main_24b2969/best_model.pt ...
+device=cpu  vocab=50261  params=102.9M  step=13021  chrono=True
+
+Prompt: Note for the team: the storage room code is 4172, and the backup key is with Priya in room 18.
+The quarterly review covered hiring, the new office lease, travel budgets for the spring conference, and the plan to move the build servers to the new data centre before June.
+Question: who has the backup key? Answer:
+Generated: Note for the team: the storage room code is 4172, and the backup key is with Priya in room 18.
+The quarterly review covered hiring, the new office lease, travel budgets for the spring conference, and the plan to move the build servers to the new data centre before June.
+Question: who has the backup key? Answer: A. The owner of the new office is A. The
+--- prompt (free text, T 0.8 top-k 50 top-p 0.9 rep 1.2): The\ first\ printing\ presses\ in\ Europe
+Loading checkpoints_v13_sempty/cu2a_main_24b2969/best_model.pt ...
+device=cpu  vocab=50261  params=102.9M  step=13021  chrono=True
+
+Prompt: The first printing presses in Europe
+Generated: The first printing presses in Europe were a few years before the printing press, during which time new printing presses began to appear. In the early days of printing, most of the work was done by hand.
+In 1859, the printer's first print was issued for New York City. The first printed printing presses appeared on the

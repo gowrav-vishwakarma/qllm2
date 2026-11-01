@@ -4968,3 +4968,40 @@ two independent 600M minds.
 (`b2p1_main_38e3c29`, seed 42), both on fresh seeds 8600–8649, with echo s ∈ {1, 4, 8} ± contrast. The prose cost is measured at
 s = 1 / 4 / 8 on cu2a, b2p1 and b2p2, so echo s = 8 can be stated or dropped. Bar unchanged, per checkpoint, at s = 4; s = 8 is
 claimed only where its own prose cost is ≤ +0.05.
+
+### cu2a result (08:46 IST, 2026-11-01): the data teaches the TRAINED formats well (one field + stop 0.80, verify 0.83–0.99, no run-on) at +0.0175 LM, but transfer to new wordings is weak and abstain is format-bound
+
+`cu2a_main_24b2969` (4090; b2p2 recipe + fld 1 % + vfy 1 %, seed 43, 480M tokens, 102.9M params; val 3.4975). Free generation,
+`run_fld_probe` seed 31000 (100 docs per cell), held-out values and keys throughout.
+
+| bar | cu2a | bar | verdict |
+|---|---|---|---|
+| R-fld-in (natural keys, trained row + question formats; 1 / 3 rows) | 0.93 / 0.67 (mean 0.80) | ≥ 0.70 | **MET** (synthetic 1.00 / 0.76) |
+| R-fld-out (held-out question formats) | 0.35 / 0.16 (mean 0.26) | ≥ 0.40 | **FAIL** |
+| R-stop (run-on among answers that start with the value) | 0.00 in every cell | ≤ 0.10 | **MET** |
+| R-vfy-in (natural: prose / wrong-key / right row) | 0.99 / 0.83 / 0.98 | ≥ 0.70 each | **MET** (synthetic 1.00 / 0.84 / 0.98) |
+| guard holdout | 3.4975 | ≤ 3.500 | met (attr3b +0.016 web / +0.022 PG-19, mostly new tokens) |
+| guard B2 `_new` / skill-pack 2k (20-way) | 0.990 (free 0.966) / 0.835 | ≥ 0.894 / ≥ 0.81 | met |
+
+b2p2 baseline on the same probe: ≈ 0.00–0.03 on every cell (in and out).
+
+**Reported:**
+- held-out ROW format ("[key] f=v"): ≈ 0.00 in and out;
+- missing field → " unknown." 0.99 (in) / 0.41–0.46 (out);
+- verify with held-out questions: 0.32–0.46;
+- fld_doc (one read, 2k filler): 0.00;
+- the bench-format verify cell ("Query: K refers to"): cu2a says the WRONG value 0.78 free (cu1 0.01, b2p2 0.59).
+  vfy's abstain does not carry to a format cu2a never saw it in. cu1's fsq did, in its own format.
+- Skill pack: plain 2k 0.835 / 0.595, 4k 0.355 / 0.170; contrast 4k 0.795 / 0.545 (as b2p2).
+- The untrained " [answer]" tag breaks answering (free 0.00 even at L = 0): cu2b's baseline for the tag.
+
+**Shown generations (A7, cu2a):**
+- rule: "Map rule. 3 -> 10 … 11 ->" → " 26", then "18 -> 40" (right);
+- plain-language recall question: "A. The owner of the new office is A." (wrong);
+- free text: fluent, invented facts.
+
+**Reading.** At 103M a skill taught by examples is learned in its trained surface forms and transfers weakly to new
+wordings (0.26–0.46) and not at all to a new row layout. This is the same boundary as the stated-rule table (cu1) and
+natq: the mind generalises VALUES and KEYS, not FORMATS. For the package, the library should present fetched rows in
+the trained row format and ask in a trained question form (the package controls both). Generalising formats would
+need many more formats in training, not more weight.
