@@ -3648,6 +3648,13 @@ fitted threshold:
       line "rules reach the mind as demonstrations, from the register"; it
       needs a set of story-rule items before it is written. Right type, wrong
       value (Mind's rule-fidelity reading).
+    - Mind's follow-up (b2p2, CPU, 20 demo sets per cell, held-out web text as
+      the gap): 2w + 1 is INSIDE the trained affine family (a ∈ 1-3, b ∈ 0-20
+      except 7 / 13 / 17), so the miss is the GAP: L = 0 → 1.00 with 3 or 8
+      demos; 2k with 3 demos → 0.00; 2k with 8 demos → 0.45 plain, 0.30 with
+      the contrast (an unexplained " 41" attractor in 12 / 20). Package rules:
+      a register skill carries ≥ 8 demonstrations, is refreshed near the query
+      (the 2k refresh), and its contrast is measured on vs off per skill.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
