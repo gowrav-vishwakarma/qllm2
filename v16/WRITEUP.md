@@ -60,6 +60,19 @@ summary) is unsolved by any body at 103M.
 | T++ whole 32k session | 1,060 MB | 0.00 / 0.00 | 0.00 | 0.00 | 0.00 |
 | PAM package (warm + contrast) | 1.15 MB | 0.975 / 0.925 | 0.90 / 1.00 | 0.75 / 0.675 | 0.475 |
 
+### 2.3b Needles by distance back (A25, package v0, b2p2; 128k; strict abstain on)
+| distance back | ~1k | ~16k | ~100k | 300k (pending) |
+|---|---|---|---|---|
+| package (template wording) | 0.90-1.00 | 0.90-1.00 | 0.90-1.00 | kv 1.00 at 250k so far |
+| package, varied wording, natural keys | 0.60-0.80 (strict 0.10-0.30) | | | |
+| mind alone | 0.00 | 0.00 | 0.00 | |
+| T++ 2k window alone | 0.00-0.20 | 0.00 | 0.00 | |
+| T++ window + the package's row | 0.90-1.00 | 0.90-1.00 | 0.90-1.00 | |
+| strict abstain on never-stored | 0.90-1.00 | | | |
+Cost (PACKAGE.md v0 §7): state per body (b2p2 1.15 MB, 16nb 3.92 MB) + text 2 B / token + indexes ~9.4 B / token + the
+F2 address (int8 592 B / token, or sign bits ~4.9 B / token); session read 11.4 s at 128k, an answer ~0.4 s; a T++ KV
+cache for the same session 4.8 GB at 128k.
+
 ### 2.4 Realistic wording (A9 / A21 / step 4), 32k, seed 18000: the headline from here
 | | made-up keys (text fetch, step 4) | natural keys (text) | natural keys (package: F2 + warm + contrast) |
 |---|---|---|---|
