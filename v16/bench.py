@@ -315,6 +315,7 @@ def main():
     ap.add_argument('--skip_state', action='store_true', help='no full-document forward (A_state / B / vector fields omitted): the text-package cold reads alone, CPU-feasible for any body')
     ap.add_argument('--qstyle', default='template', choices=['template', 'varied'], help="A9: 'varied' samples the question wording per doc from a style pool (direct / indirect / chat / embedded / prose); the trained template is 'template'")
     ap.add_argument('--syn_keys', action='store_true', help='A9: ask the stored key by a synonym phrase (Library pairs; falls back to the key itself when no pair exists)')
+    ap.add_argument('--text_step4', action='store_true', help="A20 (Library): text_fetch step 4, a question word rare in the stream AND in English (shipped background counts); default off so earlier rows are unchanged")
     ap.add_argument('--text_package', action='store_true', help='body-agnostic TEXT-ONLY library (v14 organs: token organ, then the normalised-word organ if PACKAGE_NORM=1; strict abstain = organ miss) + a cold re-read of row + question; works for T++ / Mamba-2 / PAM alike (the T++ + library arm)')
     ap.add_argument('--key_fn', default=None, help='module:function(vecs[T,D], ids) -> keys[T,d]; replaces the frozen address in C2/C5 (v14 learned fetch)')
     ap.add_argument('--dump_rows', default=None, help='dir: per doc, save ids, candidate row positions/kinds, their vectors, query pos and the answer span (v14 training/eval interface)')
@@ -343,6 +344,7 @@ def main():
             T = len(ids); doc_end = T - qlen
             rec = dict(arch=a.arch, ckpt=a.ckpt, task=a.task, qstyle=a.qstyle, syn_keys=int(a.syn_keys), keys=a.keys, needles=a.needles, L=L, doc=d, T=T,
                        vec_layer=a.vec_layer, centre=a.centre, centre_ref=a.centre_ref)
+            rec['query_text'] = tok.decode(ids[doc_end:])      # A9: the question wording this row saw
             n_ev = 4 if a.task == 'hop2' else 1 if a.task in ('kv1', 'instr') else a.needles + (1 if a.task == 'kvupd' else 0)
             try:
                 rec['mem'] = mem_bytes(a.arch, cfg, L, n_ev, doc_end)
@@ -367,8 +369,8 @@ def main():
                 rec['B_ngram'] = int((ids[hit] if hit is not None else pa) == ans)
                 if a.text_package:   # TEXT-ONLY package for any body (user, Nov 1: the 'T++ + library' arm)
                     from v14.package_fetch import text_fetch          # Library's text-only fetch (63812b0): token organ, then the normalised-word organ; no mind keys
-                    tp_row, tp_info = text_fetch(ids, doc_end)
-                    tp_src = {0: 'organ', 1: 'norm', 2: 'norm', 3: 'norm'}.get(tp_info.get('step'), None) if tp_row is not None else None
+                    tp_row, tp_info = text_fetch(ids, doc_end, step4=True) if a.text_step4 else text_fetch(ids, doc_end)
+                    tp_src = {0: 'organ', 1: 'norm', 2: 'norm', 3: 'norm', 4: 'rare'}.get(tp_info.get('step'), None) if tp_row is not None else None
                     rec['TP_organ_hit'] = int(tp_row is not None); rec['TP_src'] = tp_src; rec['TP_step'] = tp_info.get('step')
                     rec['TP_abstain'] = int(tp_row is None)              # strict: no row, no answer
                     if tp_row is not None and a.task != 'hop2':
