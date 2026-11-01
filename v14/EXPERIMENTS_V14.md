@@ -3257,6 +3257,25 @@ fitted threshold:
   - Closest prior work: ColBERTv2 residual compression; binary embeddings /
     SimHash (Charikar 2002). Difference: only the tokens the O(1) mind found
     surprising are kept.
+- **A16 (N11-RD): refresh every 8k with echo dilation + contrast
+  (PRE-REGISTERED 2026-11-01 08:33 IST, before any number of it; after Mind's
+  clk2 EUREKA db43950 / c7c6e2b).** Design / cost, no novelty claim of its own
+  (prior work: Δ / dt scaling for state-space length extension, DeciMamba,
+  LongMamba; context-aware decoding; Mind's clk1-2 and cd1-3).
+  - Cell: N11-R's (Mind's skill pack, affine_map_new + shift_wide_new), b2p2,
+    FRESH seeds 8600-8649, L = 8,192 / 32,768.
+  - Arms: plain R = 2048; R = 2048 + contrast; R = 8192 plain; R = 8192 +
+    contrast; R = 8192 + echo dilation (s = 4) + contrast; R = 4096 + echo
+    dilation + contrast. Dilation = Mind's hook `model._dilate = (start, end,
+    4, 'echo')` on the filler from the LAST pack insert to the question, in
+    both the with-pack stream and the no-pack contrast stream (the same filler
+    tokens); contrast a = 4 on the query token only.
+  - Score: FREE (greedy token = target), primary; 20-way secondary; pooled
+    over the 2 rules (100 docs per arm).
+  - Bar MET iff at L = 32,768: free(R 8192 + dilation + contrast) ≥ free(R 2048
+    plain) − 0.05. Met → the package refreshes every ~8k (~0.4 % tokens) with
+    echo dilation on the stretch before a question; the dilation's prose cost
+    (+0.013 nats, Mind) and the second stream go into PACKAGE.md's cost table.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
