@@ -4,7 +4,7 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-01 17:15 IST) — read this first
+## State (2026-11-01 17:07 IST) — read this first
 
 Session: **Library**. Lane (Lead's decision 16:5x): SHIP THE PACKAGE v0; NO new A-units until the matched 1.5B tier
 lands on the 6000.
@@ -22,7 +22,7 @@ lands on the 6000.
 * BABILong / RULER: Lead's runner (`v16/babilong_eval.py`; my `--chain` column = TEXT planner); the package column is
   the headline (mind composes); reference block labelled by tokens.
 
-## Step back (2026-11-01 17:15 IST, after A25's 128k half and the v0 freeze)
+## Step back (2026-11-01 17:07 IST, after A25's 128k half and the v0 freeze)
 
 - What surprised me: the mind ALONE answers 0.00 even with the needle only ~1k back in a 128k session, and the T++
   with the needle inside its own 2k window answers 0.00-0.20. Neither 600M-token body recalls a fact it read 1k
