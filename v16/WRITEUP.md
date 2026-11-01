@@ -68,7 +68,13 @@ summary) is unsolved by any body at 103M.
 | mind alone | 0.00 | 0.00 | 0.00 |
 | T++ 2k window alone | 0.00-0.20 | 0.00 | 0.00 |
 | T++ window + the package's row | 0.90-1.00 | 0.90-1.00 | 0.90-1.00 |
-| strict abstain on never-stored | 0.90-1.00 | | |
+| strict abstain on never-stored | 0.95 (lenient fetches a row for every never-stored question: the mind's keys never abstain) | | |
+A25 verdict at 128k (cd55706): recall flat from 1k to 100k back (pooled kv 0.967 / 0.933; the one far miss fetched the
+right row and misspelled the value); varied wording on natural keys 0.80 at ~100k; 2.65 MB per 128k session excluding
+the address (state 1.15 + text 0.26 + indexes 1.23; the address 78 MB int8 or 0.64 MB sign bits, tied on accuracy);
+read 11.4 s per session, 0.38 s per answer on a 4090. The edge over a transformer with a 2k window plus the same row
+is COST, not accuracy (that transformer reads the row 0.60-1.00); the edge over a transformer holding the session is
+both (0.00 at 32k).
 Cost (PACKAGE.md v0 §7): state per body (b2p2 1.15 MB, 16nb 3.92 MB) + text 2 B / token + indexes ~9.4 B / token + the
 F2 address (int8 592 B / token, or sign bits ~4.9 B / token); session read 11.4 s at 128k, an answer ~0.4 s; a T++ KV
 cache for the same session 4.8 GB at 128k.
