@@ -5107,3 +5107,27 @@ measurement; no method claim.
   one vector does not carry a rule). In R × K the mind reads itself (warm + contrast); a reader organ, if ever built, is for
   records and formats, not for applying held rules.
 - **Run on CPU:** the 4090 has ~2 GB free beside w1s and Library's jobs, so it is below the VRAM rule.
+
+## bud: the loss-weight budget check at 600M on r3c's OWN body (pre-registration, 2026-11-01 10:51 IST; 6000; Lead-approved)
+
+**Why:** r3p (3B, r3c's 16nb body + ~4 % answer-dense synthetic data) trailed r3c by 0.10–0.15 and stopped by futility at
+1.44B (3.5104 vs 3.431). Its text share of the loss weight was ~0.86 vs r3c's ~0.977. The 600M fit (M2 runs) predicts only
+~+0.04, so the body or the scale may amplify it. No r3p' launches before this check.
+
+**Arms** (all from `r3ca_pre_38e3c29`; stage B 480M; seed 42; r3c's body: baseline_real_pm 16 notebooks + ECHO=1; LR 1.2e-3,
+warmup 100, batch 18 × 2048 as GRAD_ACCUM=2 (exact, same math; two arms fit side by side); FINEWEB_LOCAL_DIR; VAL_EVERY 4883):
+- **bud0**: r3c's mix (dclm / fineweb / smoltalk2_mid / recall = 0.44 / 0.41 / 0.10 / 0.05), as r3c (no ANSWER_IN_WINDOW).
+- **bud1**: r3p's mix as run (… / recall 0.04 / b2 0.01 / lab 0.01 / fsq 0.005 / hop 0.005, ×100 answers, ANSWER_IN_WINDOW=1;
+  text share ~0.86).
+- **bud2**: bud1 + ANSWER_W_SRC=b2:20,lab:20,fsq:20,hop:20 (recall stays ×100). Computed text share 0.951 (`8096623`,
+  parity test PASS).
+- Order: bud0 + bud1 side by side, then bud2 (gated on both arms' DONE log markers).
+
+**Readouts per arm:** holdout + WikiText; recall t40 + PG-19 (the screen's own); B2 `_new` t400; label_diag t200; rules;
+`run_cur_probe` fsq / hop; skill-pack 2k.
+
+**Bars (fixed now):**
+- bud1 − bud0 holdout STATES the mix cost at 600M on this body (reported; compare with r3p's 3B gap of 0.11 at 1.44B).
+- **bud2 passes** if holdout ≤ bud0 + 0.02 AND each skill (B2 `_new` mean, label_diag mean, fsq abstain, two-hop) ≥ bud1's − 0.05.
+- If bud2 passes, the budget (synthetic sources at ×20 with text share ≥ 0.95) is the rule for r3p'. If it fails on skills,
+  lower weights don't teach: the lesson is that the skills need their weight, and r3p' carries fewer synthetic tokens instead.
