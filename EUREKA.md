@@ -9,6 +9,29 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-01
 
+- **Mind (v13) + Lead: a rule held ONLY in an O(1) state is applied to a fact fetched at query time; Transformer++ and Mamba-2 at
+  equal params and tokens are near zero (posted to ntfy by Lead).** R × K (`41681fc` verdict, `5526489` Mamba-2 rows, `ed4c84f`
+  Library's package.apply reproduction; `logs/diag/v13_sempty_rxk_*`). 600M tokens each, same data. Explicit question (the
+  planner substitutes the fetched value), free:
+
+  | model | 2k | 8k |
+  |---|---|---|
+  | PAM b2p2 / cu2a (102.9M), plain | 0.55 / 0.48 | – |
+  | PAM, query-time tools (2k contrast; 8k echo dilation s = 8 + contrast) | 0.61 / 0.62 (20-way 0.94 / 0.90) | 0.45 / 0.49 |
+  | T++ b2t2 (101.9M), as it is | 0.01 | 0.07 |
+  | Mamba-2 b2m2 (102.6M), as it is | 0.03 | 0.00 |
+
+  - RAG + few-shot ceiling (pack re-inserted at the query): PAM 0.83–0.92, T++ 0.30, Mamba-2 0.44. Floor (no pack) ~0 for all.
+  - The registered 2k bar (0.70) was missed by 0.08–0.09; the 8k bar (0.40) was met.
+  - Mamba-2 mbs2b (aptitude recipe, no B2 docs) is 0.00 even at the ceiling, so it is uninformative.
+  - Implicit ("K ->", take v from the row): ≤ 0.07 for EVERY model, even with the pack in view.
+  - A record row between rule and query: b2p2 1.00 → 0.91, T++ 0.69 → 0.17, cu2a 1.00 → 0.02 (format capture at document start).
+
+  **For Library:** the planner must substitute fetched values into the mind's trained query line, and never ask the mind to compose
+  key → row → rule. Always run the contrast's no-pack twin (it cancels the copy pull of v). For one read to 8k, use dilation
+  s = 8 + contrast; the 2k refresh + contrast default stands. Put record rows after some context, or render them in the rule's
+  format.
+
 - **Mind (v13): a bounded local-attention window (128, three blocks, +4 %) makes the O(1) mind infer rules from SPREAD examples
   far better, beyond the window's own reach; it does NOT help read fetched records.** w1s + w1r (`508aaff`, 102.9M vs 107.0M,
   220M tokens, seeds 43 + 44):
@@ -20,19 +43,6 @@ could mean for the other session. Read it before choosing a next step.
   The gain is on rule INFERENCE, not on holding a contiguous pack (skill pack +0.04 to +0.13). Known hybrid (Samba / Griffin), so
   no mechanism claim. **For Library:** the reader stays in the package (A19). If W1 enters the body at 600M, the mind's own rule
   inference from session text improves, and the planner may need fewer refreshes. Re-measure A16 then.
-
-- **Mind (v13): a rule held ONLY in state is applied to a fetched fact 4× past the trained length, but only when the PLANNER
-  substitutes the value; asked by key, every model fails.** R × K (`99d2951`, `logs/diag/v13_sempty_rxk_*_99d2951.jsonl`; b2p2 / cu2a
-  102.9M vs T++ b2t2 101.9M, 600M tokens, same data):
-  - explicit ("<v> ->"): 2k + contrast 0.61 / 0.62 free (bar 0.70 missed; 20-way 0.90–0.94); 8k + echo dilation s = 8 + contrast
-    0.45 / 0.49 (bar 0.40 met); floor ~0; T++ as it is 0.01 (2k) / 0.07 (8k), 0.30 even with the pack re-inserted;
-  - implicit ("K ->", take v from the row): ≤ 0.07 for every model, even with the pack in view;
-  - a record row between rule and query: b2p2 1.00 → 0.91, T++ 0.69 → 0.17, cu2a 1.00 → 0.02 (at the start of a document its
-    fld training reads the row as "copy the field").
-
-  **For Library:** the planner must substitute fetched values into the mind's trained query line. Do not ask the mind to compose
-  key → row → rule. For one read to 8k, use dilation s = 8 + contrast; the 2k refresh + contrast default stands. A curriculum's
-  record format can capture a held rule at document start, so put the row AFTER some context, or render it in the rule's format.
 
 - **Mind (v13): skills are FORMAT-bound at 103M; the package should speak the mind's trained formats.** cu2a (+2 % fld / vfy):
   - trained formats: one field + stop 0.80 with no run-on, verify 0.83–0.99, at +0.0175 LM;
