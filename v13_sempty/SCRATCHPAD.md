@@ -24,7 +24,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
     readouts (~5–6 h). Resume: SCREEN_HASH=e96588b.
   - **w1s** on the 4090 (tmux `w1s`, `../qllm_w1s` @ `508aaff`): w0 then w128, 100M each, then text-arm / skill-pack / clk2 /
     s8 readouts.
-  - **rxk** on local CPU (`logs/diag/v13_sempty_rxk_{b2p2,cu2a,b2t2}_99d2951.jsonl`, ~1 h).
+    - **11:50 IST:** w0 done (holdout 3.7454). w128 never trained: the arm overrides split on commas, so SWA_LAYERS
+      broke apart (exit 127). Fixed in 2b5937f.
+    - Rerun of w128 alone: `bash v13_sempty/tmp/w1s_resume_w128.sh` in the worktree (untracked; SWA passed via BASE),
+      same tmux name `w1s`. Readouts done ~13:35 IST.
+  - **rxk** on local CPU (`logs/diag/v13_sempty_rxk_{b2p2,cu2a,b2t2}_99d2951.jsonl`). Slower than estimated: ~155/400 rows
+    per model at 11:50, done ~14:00 IST. Waiter prints the summary at 1200 rows.
 
   **Verdicts since 06:12:**
   - cu2a: trained formats MET, transfer FAIL;
