@@ -52,12 +52,38 @@ class Package:
         self.stops = STOP_TOKENS + ((im_end,) if im_end is not None else ())
         self._session = None
 
-    def read(self, session_text: str):
-        """stream the session into the mind's state once; the library keeps its tokens and sentence rows."""
-        if self._session is None or self._session['text'] != session_text:
-            ids = self.tok.encode(session_text, add_special_tokens=False)
-            _, st, off = self.mind.feed(ids)
-            self._session = dict(text=session_text, ids=ids, state=st, off=off, rows=sentence_rows(ids, len(ids)))
+    def read(self, session_text, chunk: int = 2048):
+        """stream the session into the mind's state once (chunks, state carried: O(1) memory in length). The library
+        keeps its tokens and sentence rows; the ADDRESS (F2) keeps each token's block-8 state (fp16 on the device,
+        592 B / token at int8 when stored) and its surprisal (for the sign-bit form on the surprising tokens)."""
+        key = session_text if isinstance(session_text, str) else tuple(session_text)
+        if self._session is not None and self._session['key'] == key:
+            return self._session
+        ids = self.tok.encode(session_text, add_special_tokens=False) if isinstance(session_text, str) else list(session_text)
+        m = self.mind.m; dev = self.mind.dev
+        caps, surp, prev = [], [], None
+        hook = m.blocks[8].register_forward_hook(lambda mod, i, o: caps.append((o[0] if isinstance(o, tuple) else o).data[0].half()))
+        st, off = None, 0
+        try:
+            with torch.no_grad():
+                for c0 in range(0, len(ids), chunk):
+                    x = torch.tensor([ids[c0:c0 + chunk]], device=dev)
+                    logits, st, _ = m(x, states=st, step_offset=c0)
+                    lp = torch.log_softmax(logits[0].float(), -1)
+                    tgt = x[0]
+                    s_chunk = torch.empty(len(tgt), device=dev)
+                    s_chunk[0] = -prev[tgt[0]] if prev is not None else 0.0
+                    if len(tgt) > 1:
+                        s_chunk[1:] = -lp[:-1].gather(1, tgt[1:, None])[:, 0]
+                    surp.append(s_chunk); prev = lp[-1]
+                    del logits, lp
+        finally:
+            hook.remove()
+        off = len(ids)
+        V = torch.cat(caps).float(); mu = V.mean(0)
+        self._session = dict(key=key, text=session_text if isinstance(session_text, str) else None, ids=ids, state=st,
+                             off=off, last_lp=prev, rows=sentence_rows(ids, len(ids)), V=V.half(), mu=mu,
+                             surp=torch.cat(surp))
         return self._session
 
     @torch.no_grad()
@@ -124,13 +150,41 @@ class Package:
                     bytes_held=dict(mind_state=STATE_BYTES['b2p2'], no_pack_twin_state=STATE_BYTES['b2p2'], library_text=2 * len(S)))
         return self.tok.decode(out), info
 
-    def _f2(self, ids, end, rows):
-        got, pre = capture(self.R, ids, (8,))
-        surp = self.R.surprisal(ids, pre.cpu())
-        qs = surp[end:].clone(); qs[:2] = -1.0
-        sal = [end + int(i) for i in qs.topk(min(2, len(qs))).indices]
-        v = got[8]; V = torch.nn.functional.normalize(v - v[:end].mean(0), dim=-1)
-        return rows[int(maxsim_scores(V[:end], V[sal], rows).argmax())], [self.tok.decode([ids[p]]) for p in sal]
+    @torch.no_grad()
+    def _f2(self, q, form='full', keep_frac=1 / 16):
+        """F2 from the stored address: the question continues the session state (its block-8 states and surprisal
+        come from that pass); its 2 most surprising tokens (after the first 2) are matched by max cosine against each
+        session sentence's tokens. form 'full' = every token; 'sal1' = sign bits of the top keep_frac surprising
+        session tokens only (A15's 4.9 MB / 1M form)."""
+        s = self._session; m = self.mind.m; dev = self.mind.dev
+        caps = []
+        hook = m.blocks[8].register_forward_hook(lambda mod, i, o: caps.append((o[0] if isinstance(o, tuple) else o).data[0].float()))
+        try:
+            x = torch.tensor([q], device=dev)
+            logits, _, _ = m(x, states=copy.deepcopy(s['state']), step_offset=s['off'])
+        finally:
+            hook.remove()
+        lp = torch.log_softmax(logits[0].float(), -1)
+        qs = torch.empty(len(q), device=dev)
+        qs[0] = -s['last_lp'][q[0]]
+        if len(q) > 1:
+            qs[1:] = -lp[:-1].gather(1, x[0, 1:, None])[:, 0]
+        qs[:2] = -1.0
+        sal = qs.topk(min(2, len(q))).indices.tolist()
+        Q = caps[0][sal] - s['mu']
+        V = s['V'].float() - s['mu']
+        rows = s['rows']
+        if form == 'sal1':
+            k = max(1, int(len(s['ids']) * keep_frac))
+            keep = torch.zeros(len(s['ids']), dtype=torch.bool, device=dev); keep[s['surp'].topk(k).indices] = True
+            Vn = torch.nn.functional.normalize(torch.sign(V), dim=-1); Qn = torch.nn.functional.normalize(torch.sign(Q), dim=-1)
+            sims = Vn @ Qn.T
+            sc = torch.stack([sims[a:b][keep[a:b]].max(0).values.sum() if bool(keep[a:b].any()) else torch.tensor(-1e9, device=dev)
+                              for a, b in rows])
+        else:
+            sims = torch.nn.functional.normalize(V, dim=-1) @ torch.nn.functional.normalize(Q, dim=-1).T
+            sc = torch.stack([sims[a:b].max(0).values.sum() for a, b in rows])
+        return rows[int(sc.argmax())], [self.tok.decode([q[i]]) for i in sal]
 
     @torch.no_grad()
     def _decode(self, prefix, twin):
@@ -146,7 +200,8 @@ class Package:
             lb, sb, ob = self.mind.feed([t], sb, ob)
         return out
 
-    def answer(self, session_text: str, question_text: str, mode: str = 'lenient', cut_fields: bool = True):
+    def answer(self, session_text, question_text: str, mode: str = 'lenient', cut_fields: bool = True,
+               address: str = 'full'):
         s = self.read(session_text)
         base, end = s['ids'], len(s['ids'])
         q = self.tok.encode(question_text, add_special_tokens=False)
@@ -154,10 +209,11 @@ class Package:
         row, finfo = text_fetch(ids, end, step4=True, bigram=False)
         path, salient = (f"text{finfo['step']}" if row is not None else None), None
         if row is None and mode == 'lenient':
-            row, salient = self._f2(ids, end, s['rows']); path = 'F2'
+            row, salient = self._f2(q, form=address); path = 'F2'
         info = dict(path=path, row=tuple(row) if row else None, abstain=int(row is None), salient=salient,
                     bytes_held=dict(mind_state=STATE_BYTES.get('b2p2'), library_text=2 * end,
-                                    address_if_stored_int8=592 * end if path == 'F2' else 0))
+                                    word_token_indexes_est=int(9.4 * end),
+                                    address_int8_all=592 * end, address_sal1=int(78 * end / 16)))
         if row is None:
             return '', dict(info, row_text=None)
         span = base[row[0]:row[1]]
