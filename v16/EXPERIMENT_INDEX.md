@@ -13,3 +13,5 @@
 | S8 | bar 3, distance form: held-out rules spread 2k + 4k, fresh probe seed 7000, 3 PAM seeds vs T++ / Mamba-2 (2 seeds each) | done | MET: PAM 0.645-0.741 vs <= 0.134; primary +0.607 (bar +0.10), worst pair +0.511; holdout parity with Mamba-2 | 38e3c29 (df0a44a) | EXPERIMENTS_SEMPY "s8 VERDICT" |
 | N11-R | skill-refresh rule for standing instructions: re-read the pack every R tokens (Library) | done | MET: R = 2048 keeps the skill at 32k (0.96 / 0.80 vs 0.10 / 0.00 without) for 1.6 % extra tokens; R = 1024 1.00 / 0.86 (3.3 %); R = 4096 fails (0.32) | see EXPERIMENTS_V14 | v14/n11_refresh.py |
 
+
+## Lineage (user rule, 2026-11-01): every row here also has a line in `v16/EXPERIMENT_LINEAGE.tsv` (id, parent = what it extended, date, what, verdict, run hash, code at, log / result file, section); `python3 scripts/exp_tree.py` renders the root `EXPERIMENT_TREE.md`.

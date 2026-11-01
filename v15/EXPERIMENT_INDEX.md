@@ -32,3 +32,5 @@ None yet.
 | id | idea | why | section |
 |---|---|---|---|
 | wheels | prime-period phases for time and numbers (CRT, exact rotations) | phases again, extends PAM; user direction 2026-10-31 | §5 |
+
+## Lineage (user rule, 2026-11-01): every row here also has a line in `v15/EXPERIMENT_LINEAGE.tsv` (id, parent = what it extended, date, what, verdict, run hash, code at, log / result file, section); `python3 scripts/exp_tree.py` renders the root `EXPERIMENT_TREE.md`.

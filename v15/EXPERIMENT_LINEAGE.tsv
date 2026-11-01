@@ -1,0 +1,11 @@
+id	parent	date	what	verdict	run_hash	code_at	log_or_result	section
+G0		2026-10-31	Grove selftest: parity, simplex, gradients, O(1), toy lookup	PASS (toy lookup 0.98)	8d60a55	current	stdout	"""G0"""
+G1	G0	2026-10-31	micro: Grove I (soft economy) vs echo, bars L, P	FAIL as built: grove at chance (season-start read)		current	logs/v14_v15g1*	"""G1"""
+G1r	G1	2026-10-31	G1 with ripening (within-season reads)	FAIL on L and P (2 of 3 pairs)		current	logs/v14_v15g1r*	"""G1r"""
+G1d	G1r	2026-10-31	diagnostic of the trained Grove I weights (share entropy, address overlap, traits)	traits did not learn (tau ~10); no sharp addresses		current	v15/tmp/probe_shares.py	"""G1d"""
+GII-0	G1d	2026-10-31	Grove II (hard landing + births) selftest	PASS: parity 1e-15, births, toy 1.000	b599a56	current	stdout	"""GII-0"""
+GII-1	GII-0	2026-10-31	big-vocab lookup toy (4096 keys)	PASS 1.000 (Grove I 0.955): exact cache by births		current	stdout	"""GII-1"""
+GII-2	GII-1	2026-10-31	G1 again with Grove II, bars L, P, R	FAIL (pair 1): reverse3 at chance; query born into an empty newborn		current	logs/v14_v15gii2*	"""GII-2"""
+GIV-0/1	GII-2	2026-10-31	Grove IV (soft economy + births, saplings unreadable): selftest, rule toy, lookup toy	PASS: rule 0.846 / 0.853 / 0.626, parity 5e-15		current	v15/tmp/toy_rule.py	"""GIV"""
+GIV-2	GIV-0/1	2026-10-31	G1 pairs with Grove IV, bars L, P, R, guard	prepared; pair ended Oct 31 18:40 (see v15 notebook)	dcd5c86	current	logs/v14_v15giv2p*_dcd5c86_*	"""GIV-2"""
+G2	GIV-2	2026-10-31	150M-token holdout on the r600 recipe, Grove 102.96M vs M1 3.9225	PREPARED, waits for G1 PASS		current	logs/v13_sempty_v15g2_*	"""G2"""

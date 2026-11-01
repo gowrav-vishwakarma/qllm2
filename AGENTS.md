@@ -129,3 +129,12 @@ logs/<version>_<tag>_<gitshorthash>_<YYYYMMDD_HHMM>.log
 
 ## Handover ready
 - We run this code on server (rtx pro 6000) and local (rtx 4090) and code is synced using pull push. so always keep scracth pad as handover ready notebook so any time we switch the running context is clear to other agents on server to local or vice versa.
+## Experiment lineage tree (user rule, 2026-11-01)
+- Every experiment (any version, any session) gets ONE line in its version's
+  `EXPERIMENT_LINEAGE.tsv` (tab-separated: id, parent, date, what, verdict,
+  run_hash, code_at, log_or_result, section) at pre-registration (verdict =
+  "running"), updated when the verdict lands. `parent` = the experiment it
+  extended or branched from (`<id>` or `<version>:<id>`); `?` if unknown.
+- Re-render with `python3 scripts/exp_tree.py` and commit the root
+  `EXPERIMENT_TREE.md` with the notes. The tree is the journey for the paper:
+  what branched from what, the result, the hash, the log / result file.

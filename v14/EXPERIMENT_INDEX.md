@@ -79,3 +79,5 @@ None yet.
 | N8 | self-opened memory: write strength set by the body's own maturity (prediction confidence) instead of a fixed two-stage cut (handed over by v13) | design only (2026-10-30) | "N8" |
 | N4 | living neuron: per-unit fast weight, written by surprise | design only | "N4" |
 | N5 | resonant binding: oscillator phases as binding tags | design only | "N5" |
+
+## Lineage (user rule, 2026-11-01): every row here also has a line in `v14/EXPERIMENT_LINEAGE.tsv` (id, parent = what it extended, date, what, verdict, run hash, code at, log / result file, section); `python3 scripts/exp_tree.py` renders the root `EXPERIMENT_TREE.md`.
