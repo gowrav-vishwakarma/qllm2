@@ -17,6 +17,18 @@ Overall ~70 % (Nov 1 11:10 IST). 1 rules in context vs T++/Mamba-2: DONE (s8 MET
 - Ids: Mind 99371c3c-8382-42b3-a3d3-6861632abc19 | Library fdbac1f0-c2c3-4b9c-8baf-2585a9e7b8eb | Lead 683d2316-c093-4e15-b19c-044555bd5293 | Evol V1 0001093e-8355-4d42-a4fd-ed097ef58d71 (wake Evol V1 only on the user's word).
 - Any session may wake any other, including Lead; check ListAgents / `tmux ls` first so no second copy is started; after waking, message it with what landed.
 
+## Scaling watch (user, 2026-11-01 16:36 IST: "if we train on more data will it improve, which version improves more; keep an eye")
+
+Same data mix, same params (~102-103M); update at every new checkpoint; claims only within a tokens tier.
+
+| body | holdout 600M -> 3B (gain) | body-alone recall 600M -> 3B | rules at distance (s8) | one-read reach | known benchmarks (kb1) |
+|---|---|---|---|---|---|
+| PAM | 3.478 -> 3.219 (0.26) | b2p2 0.83 (recall probe) -> r3c 0.792 63-cell; beyond 2k 0.661 | 0.65-0.74 at 600M (3 seeds); 3B: not measured | ~2k, 4k with contrast, 8k with dilation (600M) | pending |
+| T++ | 3.555 -> 3.206 (0.35) | 0.539 at 3B; beyond 2k 0.153 | 0.13 at 600M | window-bound | pending |
+| Mamba-2 | 3.475 -> 3.164 (0.31) | 0.613 at 3B; beyond 2k 0.403 | 0.10 at 600M | ~0 at 8k | pending |
+
+Reading so far: on language the transformer gains most from data (PAM led by 0.08 at 600M, trails by 0.013 at 3B; the 2 -> 3B late slopes are equal, ~-0.08 nats per B, so the gap stopped widening); on body-alone recall PAM's lead GREW with data. Open: s8 / reach at 3B (run them on r3c), the budget-fixed 3B run (bud -> r3p'), the window arms at 600M, kb1 per tier.
+
 ## Direction after the meditation (Lead, 2026-11-01 05:02 IST; from the three step-back blocks: Lead a2e3820, Mind 90ab235, Library 718991b)
 
 All three blocks say the same thing from three sides: **at 103M the mind's storage is better than its voice, and query-time beats training-time.** Every training-time addition cost language (cu1 +0.045, lg8r +0.08, cu1n9s +0.23) or did not transfer (N9, the trained key head 0.40 vs frozen 0.375); every query-time addition was free and worked (re-fetch, refresh, word organ, warm read + contrast +0.14, strict abstain). Library adds: every hypothesis that assumed the mind CHECKS what it reads failed (A3, A6, gain re-rank); every one that SUBTRACTED its prior worked.
