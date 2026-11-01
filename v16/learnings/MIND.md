@@ -135,7 +135,7 @@ Each entry gives: the idea (maths), the recipe, the numbers, the verdict and the
 - **Numbers** (free; b2p2 / cu2a 102.9M vs T++ b2t2 101.9M, 600M tokens; `99d2951`):
   - explicit 2k + contrast: 0.61 / 0.62 (20-way 0.90–0.94); bar 0.70 missed;
   - 8k + echo dilation s = 8 + contrast: 0.45 / 0.49; bar 0.40 met;
-  - floor ~0; ceiling 0.83–0.92; T++ 0.01 (2k) / 0.07 (8k), ceiling 0.30;
+  - floor ~0; ceiling 0.83–0.92; T++ 0.01 (2k) / 0.07 (8k), ceiling 0.30; Mamba-2 b2m2 (102.6M, same data) 0.03 / 0.00, ceiling 0.44;
   - implicit ≤ 0.07 for every model.
 - **Lesson:** the mind applies a held rule to a fact the planner hands it, far past the trained length. It does NOT compose
   key → row → rule, so the planner substitutes. A record format learned in training can capture a held rule at document start
