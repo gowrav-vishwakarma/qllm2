@@ -5067,3 +5067,21 @@ noise at 180M may be part of it (two seeds at 600M differ by ~0.003). Not separa
 **Verdict:** ACh-1 (answer-mode distillation) does not pass its LM screen in this form. Per the pre-registration it is removed
 from the code (the index row names the last commit that has it). The query-time contrast stays the package's tool (A9, cd2,
 clk2). Exact gradient accumulation and the launcher's `.stop` file stay; they are general.
+
+## rxk: a RULE held in state × a FACT fetched at the query (pre-registration, 2026-11-01 10:26 IST; eval only, CPU; the thesis in one row)
+
+**Idea:** the package's whole claim in one cell. A skill pack (B2 header + 8 demos, held-out rule values) is read ONCE at t0; L tokens
+of held-out prose follow; then the package hands over a fetched fact row " Record: K | x: <v>." and the question.
+- **explicit:** the package substitutes the fetched value, so the question is the trained query line "<v> ->".
+- **implicit:** the question names the key, "K ->", so the mind must take v from the row itself (an untrained composition).
+
+**Cells:** b2p2 and cu2a; affine_map_new + shift_wide_new; **fresh seeds 8800–8849** (50 docs per task); L = 0 / 2k / 4k / 8k.
+Synthetic keys (bench `_recall_key`). Decodes: plain; contrast a = 4 (pack vs no pack, same row + question); echo dilation s = 8 over
+the filler + contrast (for L ≥ 4k). Free primary, 20-way reported.
+
+**Bars:** explicit + contrast at 2k, free ≥ 0.70 AND explicit + echo dilation s = 8 + contrast at 8k, free ≥ 0.40, on BOTH checkpoints.
+Then "a rule read once, applied to a fact fetched 4× the trained length later" works as a package. Implicit: reported only
+(predicted near chance: the mind is format-bound, cu2a).
+
+**Prior work:** none for this exact cell; the parts are CAD / contrastive decoding and Δ-scaling (clk1). The cell is the
+measurement; no method claim.
