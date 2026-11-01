@@ -5789,3 +5789,21 @@ on the 6000. w1n still runs: W128 on 16nb is a finding either way, and it costs 
 **w1m amendment (22:15 IST; Lead GO, board e11c35c): w1m2 = the same arm at SEED=44** (4090, beside Lead's BABILong pass).
 The bars are unchanged and are judged on the SEED MEAN of w1m + w1m2 (s8 D ≥ 0.80, holdout ≤ 3.4900, clk2 8k ≥ 0.74, far
 needles ≥ 0.379). This decides the 600M release body (W128 vs b2p2). t15pam stays 16nb plain.
+
+## w1m2 / w1m two-seed VERDICT (02:31 IST, 2026-11-02): FAIL as pre-registered on s8 (seed mean 0.784 < 0.80, by 0.016); every other bar passes. W128 adds a steady +0.09 on rules from spread examples and +0.07 on one-read reach at 600M, at LM parity: a real, modest gain, short of the bar. The 600M release body stays b2p2 (no window)
+
+| readout | b2p1 / 2 / 3 (mean) | w1m (seed 43) | w1m2 (seed 44) | **two-seed mean** | bar |
+|---|---|---|---|---|---|
+| s8 D | 0.645 / 0.691 / 0.741 (0.692) | 0.772 | 0.796 | **0.784** | ≥ 0.80 ✗ |
+| s8 at 4k | 0.525 / 0.606 / 0.623 (0.585) | 0.647 | 0.704 | 0.676 | – |
+| holdout | 3.4777 / 3.4800 / 3.4775 (3.4784) | 3.4708 | 3.4810 | 3.4759 | ≤ 3.4900 ✓ |
+| clk2 8k, 20-way | b2p1 0.81 / b2p2 0.74 | 0.830 | 0.860 | 0.845 | ≥ 0.74 ✓ |
+| t40 far needles | 0.521 / 0.263 / 0.504 (0.429) | 0.446 | 0.396 | 0.421 | ≥ 0.379 ✓ |
+
+**Reading:**
+- Both seeds sit above every b2p seed on s8 and clk2. The mean gain is +0.092 on s8 D and +0.091 on s8 4k (beyond the window),
+  +0.07 on clk2, with holdout at parity (−0.003). The bar (the best seed + 0.06) asked for more than the gain delivers at 600M.
+- **Per-body slope of the window's s8 gain:** +0.246 at 220M, +0.092 at 600M. It shrinks with data. A W128 3B run is not
+  justified by this.
+- **Consequence:** the 600M release body stays b2p2 (pre-registered rule). t15pam = 16nb plain, unchanged. W1 remains in the code
+  as a measured, modest reach unit (index row: "+0.09 rules at 600M, shrinking with data"). w1n (16nb) is still a finding.
