@@ -2127,9 +2127,12 @@ def _b2_text_iter(
     n = 0
     while True:
         parts = []
+        skipping = n < skip_docs          # resume: draw the same rng values, but do not build (and tokenize) the doc
         for j in range(per_doc):
             task = rng.choice(B2_TASKS)
             shots = rng.choice((2, 4, 8))
+            if skipping:                  # build_example is seeded by its index, so the stream stays byte-identical
+                continue
             ex = build_example(tok, task, shots, 10_000_000 + n * per_doc + j)
             parts.append(ex.prompt_text + _ans(ex.target_text))
         n += 1
