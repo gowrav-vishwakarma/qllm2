@@ -227,3 +227,31 @@ def pysci_text_iter(*, skip_docs: int = 0, doc_counters=None, counter_key: str =
             return ()
         return (t,)
     yield from _jsonl_stream('pysci', py, extract, skip_docs=skip_docs, doc_counters=doc_counters, counter_key=counter_key)
+
+
+SMOLTALK1_REPO = 'HuggingFaceTB/smoltalk'
+CHATMT_SUBSETS = ('smol-magpie-ultra', 'everyday-conversations')   # 100 % 3+-turn conversations (Apache-2.0 on the card)
+
+
+def chatmt_text_iter(*, skip_docs: int = 0, doc_counters=None, counter_key: str = 'chatmt', exclude_holdout: bool = True,
+                     only_holdout: bool = False, holdout_pct: int = 5) -> Iterator[str]:
+    """SCI-1 multi-turn chat (Lead 2026-11-02): smoltalk v1's multi-turn subsets, every turn rendered in ChatML (system / user /
+    assistant), the same text the smoltalk2 blend produces; <think> blocks stripped, as for smoltalk2. Files interleaved round-robin
+    across the subsets; exact resume via _parquet_stream."""
+    import itertools
+    from v7.data import _hf_parquet_files, _parquet_stream, pretrain_holdout_bucket
+    per = [_hf_parquet_files(SMOLTALK1_REPO, f'data/{s}/train-*.parquet') for s in CHATMT_SUBSETS]
+    files = [f for g in itertools.zip_longest(*per) for f in g if f]
+
+    def extract(row):
+        msgs = row.get('messages') or []
+        if sum(1 for m in msgs if m.get('role') == 'user') < 1:
+            return ()
+        doc = ''.join(_turn(m['role'], re.sub(r'<think>.*?</think>', '', m.get('content') or '', flags=re.S)) for m in msgs
+                      if m.get('role') in ('system', 'user', 'assistant'))
+        hold = pretrain_holdout_bucket(doc, holdout_pct)
+        if (exclude_holdout and hold) or (only_holdout and not hold):
+            return ()
+        return (doc,)
+    yield from _parquet_stream('chatmt', files, extract, ['messages'], skip_docs=skip_docs, doc_counters=doc_counters,
+                               counter_key=counter_key)

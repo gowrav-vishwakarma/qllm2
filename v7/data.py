@@ -1620,6 +1620,9 @@ def source_holdout_tokens(name: str, tokenizer, n_tokens: int = 262_144, holdout
         return torch.load(cache)
     if name in SCI_JSONL_REPOS or name == 'cosmo':
         it = _sci_text_iter(name, only_holdout=True, holdout_pct=holdout_pct, counter_key=f'hold_{name}')
+    elif name == 'chatmt':
+        from v7 import sci_tools as _st
+        it = _st.chatmt_text_iter(only_holdout=True, exclude_holdout=False, holdout_pct=holdout_pct, counter_key='hold_chatmt')
     elif name in ('tools', 'think', 'pysci'):
         from v7 import sci_tools as _st
         it = (_st.pysci_text_iter(only_holdout=True, exclude_holdout=False, holdout_pct=holdout_pct, counter_key='hold_pysci')
@@ -2553,6 +2556,7 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     'tools':         {'schema': 'text',     'kind': 'scitool',   'hf': 'glaive-fc-v2 + ToolACE + library-fetch'},
     'think':         {'schema': 'text',     'kind': 'scitool',   'hf': 'MetaMathQA + GSM8K (short)'},
     'pysci':         {'schema': 'text',     'kind': 'scitool',   'hf': 'common-pile/stackv2_edu_filtered (python, sci imports)'},
+    'chatmt':        {'schema': 'text',     'kind': 'scitool',   'hf': 'HuggingFaceTB/smoltalk multi-turn (magpie-ultra, everyday)'},
 }
 
 
@@ -2592,6 +2596,9 @@ def _open_source_iter(
         if name == 'pysci':
             return _st.pysci_text_iter(skip_docs=skip, doc_counters=doc_counters, counter_key=name,
                                        exclude_holdout=exclude_holdout, holdout_pct=holdout_pct)
+        if name == 'chatmt':
+            return _st.chatmt_text_iter(skip_docs=skip, doc_counters=doc_counters, counter_key=name,
+                                        exclude_holdout=exclude_holdout, holdout_pct=holdout_pct)
         fn = _st.tools_text_iter if name == 'tools' else _st.think_text_iter
         return fn(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name, bump=_bump_counter,
                   exclude_holdout=exclude_holdout, holdout_pct=holdout_pct)
