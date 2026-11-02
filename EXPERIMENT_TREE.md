@@ -135,6 +135,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
     - **A8 refresh 4k + contrast** (2026-11-01) N11-RC: refresh half as often with a contrast stream -> **NOT met, just short: 0.58 < 0.61 (vs R 4096 plain 0.11)**; run `0ded954`, code at `current`; logs/v14_a8_n11rc_b2p2_0ded954_20261101_0324.jsonl; "A8"
       - **A16 refresh 8k + dilation** (2026-11-01) N11-RD: refresh every 8k with echo dilation + contrast -> **NOT met: 0.42 < 0.58; dilation costs +0.020 nats on the gap: out**; run `02b3306`, code at `current`; logs/v14_a16_n11rd_b2p2_02b3306_20261101_0843.jsonl; "A16"
 - **SR / S1 / I1 / K1 / N8 / N4 / N5** (2026-10-31) design-only units (skill register, skill packs in state, interference, install-time keys, self-opened memory, living neuron, resonant binding) -> **design only, no run**; code at `current`; -; "L", "N8", "N4", "N5"
+- **A27 decontamination audit** (2026-11-02) 13-gram audit of the SCI-1 training stream (20k docs per source via the real blend path) vs kb1 / GSM8K / MMLU / BABILong / decontam_items.json; clean-subset scores -> **running (pre-registered; runs within SCI-1 day 1; > 0.1 % per source x set -> stream filter at the first continuation)**; code at `current`; -; "A27"
 
 ## v15
 
@@ -153,4 +154,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-135 experiments: v13_sempty 60, v14 56, v15 10, v16 9.
+136 experiments: v13_sempty 60, v14 57, v15 10, v16 9.

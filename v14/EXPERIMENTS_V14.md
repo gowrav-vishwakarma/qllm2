@@ -3863,6 +3863,24 @@ fitted threshold:
       - Sample IDs came from a set, whose order depends on PYTHONHASHSEED. The day-0 docs are statistically the
         same but not byte-reproducible. Fixed at the next commit (sorted, then shuffled by the doc's rng); the same
         fix went into protocol_docs.py.
+- **A27: decontamination AUDIT of the SCI-1 training stream (PRE-REGISTERED 2026-11-02 13:20 IST; Lead: adopted; an
+  independent check of Mind's pre-launch stream-time 13-gram filter).**
+  - Test sets:
+    - kb1: HellaSwag val, ARC-e / ARC-c test, PIQA val, WinoGrande val, OBQA test, LAMBADA-openai test;
+    - GSM8K test; MMLU test;
+    - BABILong qa1-qa10 (facts + question + target only, not the PG19 haystack);
+    - `v14/decontam_items.json` (A26 / bench / styles / story + long prompts).
+  - Rule: lowercase, words only (letters and digits); a training doc is contaminated if it shares ≥ 1 13-gram with a
+    test item (question + answer text). 13-grams are stored as 64-bit hashes.
+  - Sample: ~20,000 docs per source drawn through the real blend path (`load_pretrain_mix`, SCI-1's exact args and
+    seed, the post-filter stream), CPU, within the first day of SCI-1.
+  - Report: % contaminated docs per source × test set, 5 examples each, and the 13-grams that hit most often
+    (boilerplate shows up there).
+  - Action rule: any source × test set > 0.1 % → a stream filter for it at the first continuation.
+  - Every reported benchmark also gets its CLEAN-SUBSET score (items with no 13-gram in the sampled stream) beside
+    the full score.
+  - Prediction: ≤ 0.1 % everywhere after Mind's filter. The risks are web sources × MMLU / ARC (verbatim exam pages)
+    and `think` × GSM8K test (MetaMathQA rewrites the TRAIN set).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
