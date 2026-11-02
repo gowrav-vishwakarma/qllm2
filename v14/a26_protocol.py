@@ -160,7 +160,7 @@ def make_doc(rng, tok, fill, cell, d, wording='a26'):
     q_cap = question[0].upper() + question[1:]
     return dict(held=build(sent), refresh=build(sent, refresh=True), noprot=build(None),
                 trained=build(enc('\n') + enc(pack) + enc('\n')), pack=pack, proto=proto, question=q_cap, q=q, wording=wording,
-                **asked)
+                rows_text=[tok.decode(r).strip() for r in rows], **asked)
 
 
 def num_re(v):
