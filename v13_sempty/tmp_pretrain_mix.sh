@@ -109,6 +109,11 @@ if [ -n "$NGRAM_ORDERS" ]; then EXTRA+=(--ngram_orders "$NGRAM_ORDERS"); fi
 if [ "$ECHO_SURPRISE_TAU" != "0" ]; then EXTRA+=(--echo_surprise_tau "$ECHO_SURPRISE_TAU"); fi
 if [ -n "$PAM_LAYERS" ]; then EXTRA+=(--pam_layers "$PAM_LAYERS"); fi
 if [ -n "${SWA_LAYERS:-}" ]; then EXTRA+=(--swa_layers "$SWA_LAYERS" --swa_window "${SWA_WINDOW:-128}"); fi
+if [ -n "${LR_SCHEDULE:-}" ]; then EXTRA+=(--lr_schedule "$LR_SCHEDULE"); fi
+if [ -n "${CONTINUE_FROM:-}" ]; then EXTRA+=(--continue_from "$CONTINUE_FROM"); fi
+if [ -n "${DIM:-}" ]; then EXTRA+=(--dim "$DIM"); fi
+if [ -n "${N_HEADS:-}" ]; then EXTRA+=(--n_heads "$N_HEADS"); fi
+if [ -n "${HEAD_DIM:-}" ]; then EXTRA+=(--head_dim "$HEAD_DIM"); fi
 if [ -n "${VAL_SOURCES:-}" ]; then EXTRA+=(--val_sources "$VAL_SOURCES" --val_source_tokens "${VAL_SOURCE_TOKENS:-262144}"); fi
 if [ "$MLP_HIDDEN" != "0" ]; then EXTRA+=(--mlp_hidden "$MLP_HIDDEN"); fi
 if [ "$SHARE_READS" = "1" ]; then EXTRA+=(--share_reads); fi

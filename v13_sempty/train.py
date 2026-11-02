@@ -297,12 +297,19 @@ def build_param_groups(model: nn.Module, weight_decay: float, learning_rate: flo
     return groups
 
 
-def build_lr_scheduler(optimizer, warmup_steps: int, total_steps: int):
+def build_lr_scheduler(optimizer, warmup_steps: int, total_steps: int, kind: str = 'cosine'):
+    """``cosine`` (default): warmup then cosine to 0. ``wsd_stable``: warmup then CONSTANT (the main line of a
+    warmup-stable-decay run; its checkpoints are continuation points). ``decay``: a separate short branch from a stable
+    checkpoint, linear from the full LR to 0 over ``total_steps`` (no warmup); its best_model.pt is the release point."""
     total_steps = max(total_steps, 1)
 
     def lr_lambda(step):
+        if kind == 'decay':
+            return max(0.0, 1.0 - step / total_steps)
         if step < warmup_steps:
             return step / max(warmup_steps, 1)
+        if kind == 'wsd_stable':
+            return 1.0
         progress = (step - warmup_steps) / max(total_steps - warmup_steps, 1)
         return 0.5 * (1.0 + math.cos(math.pi * progress))
 
@@ -333,6 +340,7 @@ class Trainer:
         weight_decay: float = 0.01,
         warmup_steps: int = 10,
         total_steps: int = 100,
+        lr_schedule: str = 'cosine',
         gradient_clip: float = 1.0,
         amp_dtype_str: str = 'off',
         fused_ce: bool = True,
@@ -377,7 +385,7 @@ class Trainer:
             groups, lr=learning_rate, betas=(0.9, 0.95),
             fused=(self.device.type == 'cuda'),
         )
-        self.scheduler = build_lr_scheduler(self.optimizer, warmup_steps, total_steps)
+        self.scheduler = build_lr_scheduler(self.optimizer, warmup_steps, total_steps, kind=lr_schedule)
         self.amp_dtype = resolve_amp_dtype(amp_dtype_str, self.device)
         self.use_amp = self.amp_dtype is not None
         self.scaler = (
@@ -618,14 +626,15 @@ class Trainer:
                 raise ValueError(f"{path} is not a resumable checkpoint (missing {k})")
         return ck
 
-    def load_resume(self, ck: dict, path) -> None:
+    def load_resume(self, ck: dict, path, fresh_schedule: bool = False) -> None:
         """Restore model, optimizer, LR schedule, AMP scaler, step/token
         counters, best-val bookkeeping and RNG streams. The data-stream cursor
         is restored by the caller when it builds the loader (it must exist
         before the Trainer does)."""
         self.model.load_state_dict(ck['model_state_dict'])
         self.optimizer.load_state_dict(ck['optimizer_state_dict'])
-        self.scheduler.load_state_dict(ck['scheduler_state_dict'])
+        if not fresh_schedule:                        # --continue_from keeps its own fresh schedule
+            self.scheduler.load_state_dict(ck['scheduler_state_dict'])
         if self.scaler is not None and ck.get('scaler_state_dict'):
             self.scaler.load_state_dict(ck['scaler_state_dict'])
         self.global_step = int(ck['global_step'])
@@ -1008,6 +1017,13 @@ def build_argparser():
                         'pretrain wants 0; the WikiText 10-epoch recipe uses the '
                         'preset 0.1)')
     p.add_argument('--warmup_steps', type=int, default=2)
+    p.add_argument('--lr_schedule', choices=('cosine', 'wsd_stable', 'decay'), default='cosine',
+                   help='cosine (default) | wsd_stable (warmup then constant: the continuable main line) | decay (a short '
+                        'branch from a stable checkpoint, linear to 0; used with --continue_from)')
+    p.add_argument('--continue_from', type=str, default='',
+                   help='SCI-1 continuation: start from a FULL checkpoint (weights + optimizer + RNG + per-source stream '
+                        'cursors) with a FRESH token budget (--target_tokens) and schedule (--lr_schedule), optionally a new mix '
+                        '(--pretrain_sources / --pretrain_weights; logged). A later crash resumes from this run\'s own latest.pt.')
     p.add_argument('--gradient_clip', type=float, default=1.0)
     p.add_argument('--amp_dtype', type=str, default='off',
                    choices=['off', 'auto', 'bf16', 'fp16'])
@@ -1124,6 +1140,9 @@ def build_argparser():
                    help='v14 N12: echo memory never fades and is written only where the body\'s own '
                         'pre-memory surprise -log p(x_t) > this many nats; builds v14.units.V14LM '
                         'through v14/hook.py (0 = off; needs --echo)')
+    p.add_argument('--dim', type=int, default=0, help='SCI-1 sizing: model width (0 = preset)')
+    p.add_argument('--n_heads', type=int, default=0, help='SCI-1 sizing: heads (0 = preset); head_dim = --head_dim or preset')
+    p.add_argument('--head_dim', type=int, default=0, help='SCI-1 sizing: per-head width (0 = preset)')
     p.add_argument('--n_layers', type=int, default=0,
                    help='main-stack block count (0 = preset)')
     p.add_argument('--base_dt_bias', type=float, default=None,
@@ -1199,6 +1218,12 @@ def main():
         cfg.share_reads = True
     if args.n_layers:
         cfg.n_layers = args.n_layers
+    if args.dim:
+        cfg.dim = args.dim
+    if args.n_heads:
+        cfg.n_heads = args.n_heads
+    if args.head_dim:
+        cfg.head_dim = args.head_dim
     if args.base_dt_bias is not None:
         cfg.base_dt_bias = args.base_dt_bias
     if args.dropout is not None:
@@ -1224,6 +1249,16 @@ def main():
             raise FileNotFoundError(f"--resume {cand} does not exist")
         else:
             print(f"[resume] auto: no {cand}; starting fresh", flush=True)
+    continue_mode = False
+    if resume_ck is None and args.continue_from:
+        resume_path = Path(args.continue_from)
+        resume_ck = Trainer.peek_resume(resume_path)
+        continue_mode = True
+        sa = resume_ck.get('args') or {}
+        print(f"[continue] from {resume_path}: step={resume_ck['global_step']:,} tokens={resume_ck['global_tokens']:,}; "
+              f"FRESH budget target_tokens={args.target_tokens:,} schedule={args.lr_schedule} lr={args.lr}; "
+              f"mix {sa.get('pretrain_sources')!r} {sa.get('pretrain_weights')!r} -> {args.pretrain_sources!r} {args.pretrain_weights!r}",
+              flush=True)
     init_ck = None
     if args.init_from and resume_ck is None:
         init_ck = torch.load(args.init_from, map_location='cpu', weights_only=False)
@@ -1273,7 +1308,14 @@ def main():
             doc_counters.update(cur.get('doc_counters') or {})
             token_counters.update(cur.get('token_counters') or {})
             skip_docs = dict(doc_counters)
-            consumed_tokens = int(resume_ck['global_tokens'])
+            # A continuation counts its budget from its own start; so does a crash-resume of one (its saved args).
+            _sa = resume_ck.get('args') or {}
+            if continue_mode:
+                consumed_tokens = 0
+            elif _sa.get('continue_start_tokens') is not None:
+                consumed_tokens = int(resume_ck['global_tokens']) - int(_sa['continue_start_tokens'])
+            else:
+                consumed_tokens = int(resume_ck['global_tokens'])
         elif init_ck is not None and init_ck.get('data_cursor'):
             # Warm start: fresh budget, but skip every doc the source run saw.
             cur = init_ck['data_cursor']
@@ -1390,6 +1432,7 @@ def main():
         weight_decay=args.weight_decay,
         warmup_steps=args.warmup_steps,
         total_steps=args.steps,
+        lr_schedule=args.lr_schedule,
         gradient_clip=args.gradient_clip,
         amp_dtype_str=args.amp_dtype,
         fused_ce=fused,
@@ -1428,9 +1471,17 @@ def main():
             if k in saved_args and saved_args[k] != getattr(args, k):
                 print(f"[resume] WARNING: --{k} differs from the checkpoint "
                       f"({saved_args[k]!r} -> {getattr(args, k)!r})", flush=True)
-        trainer.load_resume(resume_ck, resume_path)
+        trainer.load_resume(resume_ck, resume_path, fresh_schedule=continue_mode)
+        _sa = resume_ck.get('args') or {}
+        if continue_mode:
+            args.continue_start_step, args.continue_start_tokens = trainer.global_step, trainer.global_tokens
+        elif _sa.get('continue_start_step') is not None:          # crash-resume of a continuation run
+            args.continue_start_step, args.continue_start_tokens = _sa['continue_start_step'], _sa['continue_start_tokens']
+        trainer.run_args = vars(args)
         del resume_ck
-    losses = trainer.train(max_steps=args.steps)
+    start = getattr(args, 'continue_start_step', None)
+    max_steps = start + args.steps if start is not None else args.steps
+    losses = trainer.train(max_steps=max_steps)
     print(f"\nTraining complete. steps={trainer.global_step} "
           f"tokens={trainer.global_tokens:,} "
           f"best_val_ppl={trainer.best_val_ppl:.2f}")
