@@ -5883,3 +5883,16 @@ The PAM 600M point is w1n_n0 (16nb, the same mix). The baselines' 600M points ar
 - **Reading fetched rows stays T++'s** (0.875 vs PAM 0.30); the package's field cut is the reader.
 - **Consequence:** r3p' (3B PAM) is not launched on this evidence; it is Lead's / the user's call. The LM gap is the next problem
   (the bar order: intelligence first, met; LM, missed).
+
+## t15pam_m2: the M2 body at 1.5B, b2p2's exact recipe on the t15 mix (pre-registration, 2026-11-02 09:05 IST; Lead GO, board 913bc9c)
+
+**Why:** t15 met the rules bar and missed LM (16nb 3.3784 vs ≤ 3.3225). On this mix at 600M, M2 (b2p2 3.4800) beat 16nb (w1n_n0
+3.5662) by 0.086 on holdout while holding rules. This is the cheapest run that can close bar 2, and it decides which PAM body scales.
+
+**Arm:** `t15m2_main`. M2 (PAM_LAYERS 3,7,11,15, MLP 2128, SHARE_READS, ECHO; 102.9M), from `c1m2a_pre_7ae6f1f` (b2p2's own
+stage A, with aptitude docs, unlike 16nb's r3ca_pre: stated as part of the recipe). LR 1.2e-3 (b2p2's; M2 failed at 3B only at
+2e-4, r3b). The t15 mix, 1.50B tokens, seed 43, 6000 alone.
+
+**Bars** (as t15): holdout ≤ 3.3225 (Mamba-2 + 0.02) AND s8 D ≥ 0.147.
+**Reported:** skill pack 4k + contrast, clk2 8k, t40 far needles, the tool read, and the slope from b2p2 (600M).
+**Prior work / novelty:** as t15 (a measurement).
