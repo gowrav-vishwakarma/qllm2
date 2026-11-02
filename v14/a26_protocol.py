@@ -112,7 +112,7 @@ def make_doc(rng, tok, fill, cell, d, wording='a26'):
     ids = set()
     while len(ids) < 8:
         ids.add(rng.choice(LETTERS) + str(rng.randint(1, 29)))
-    samples = list(ids); rng.shuffle(samples)
+    samples = sorted(ids); rng.shuffle(samples)          # sorted first: set order depends on PYTHONHASHSEED
     mats = rng.sample(mat_list, 8)
     rows, asked = [], None
     for i, s in enumerate(samples):

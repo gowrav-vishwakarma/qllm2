@@ -112,7 +112,9 @@ def _sample_ids(rng, n):
     while len(out) < n:
         out.add(rng.choice('ABCDEFGHJKLMNPRSTUVWXYZ') + rng.choice(['', rng.choice('ABCDEFGHJKLMNPRSTUVWXYZ')])
                 + str(rng.randint(1, 99)))
-    return list(out)
+    out = sorted(out)                                  # a set's order depends on PYTHONHASHSEED: sort, then shuffle by rng
+    rng.shuffle(out)
+    return out
 
 
 def _round_half_up(x_milli: int, rule: str) -> str:

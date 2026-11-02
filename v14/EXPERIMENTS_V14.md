@@ -3831,6 +3831,38 @@ fitted threshold:
   - **Prediction (written before any number):** b2p2 MIND-HELD UNIT ≈ NOPROT (≤ +0.10) at 8k and beyond, since words
     do not reach a 103M mind (A24). REFRESH UNIT ≥ 0.6 for b2p2 (the protocol sits next to the question). ROUND ≈ 0.1-0.3
     (copying 3 decimals is the prior). CONVERT ≈ 0 for every body. T++ as is ≈ 0 beyond 2k.
+  - **A26 DAY-0 RESULT (2026-11-02 11:28 IST; no bars, a calibration):**
+    - Logs: `logs/v14_a26_protocol_d5da73d_20261102_1052.jsonl` + .log (every arm) and
+      `logs/v14_a26_refresh_e44b764_20261102_1119.jsonl` + .log (the refresh arms rerun, replacing d5da73d's).
+    - Docs: 20 per cell × 2k / 8k / 32k. Bodies (params / tokens):
+      - b2p2: 102.9M, 600M tokens, through the package;
+      - t15tpp (T++) and t15mamba (Mamba-2): 1.5B-token tier, as is and with the library's row + contrast.
+    - **Every body copies the fetched value and applies NO stated convention**, even with the protocol ~560-600
+      tokens back, inside every window. The "right" column is ≤ 0.05 everywhere, equal to the no-protocol control.
+
+    | right (value copied), pooled 2k / 8k / 32k | UNIT | ROUND | CONVERT |
+    |---|---|---|---|
+    | b2p2 package: held · refresh · noprot | 0.00 (0.65-0.80) · 0.00 (0.65-0.75) · 0.00 (0.65-0.80) | 0.00 (raw copied 0.15-0.30) | 0.00 |
+    | b2p2 alone (state only) · trained ("Report rule." demos, held 2-32k back) | 0.00 (0.00) · 0.00 (0.00) | 0.00 · 0.00 | 0.00 · 0.00 ("mg" said on 0.55 at 2k, wrong value) |
+    | t15tpp as is · lib_held · lib_refresh · lib_noprot | 0.00 · 0.00 (0.20-0.40) · 0.00 (0.35-0.50) · 0.00 (0.20-0.40) | 0.00-0.05 (raw 0.35-0.60) | 0.00 |
+    | t15mamba as is · lib_held · lib_refresh · lib_noprot | 0.00 · 0.00-0.05 (0.45-0.80) · 0.00 (0.50-0.70) · 0.00-0.05 (0.45-0.80) | 0.00 (raw 0.50-0.70) | 0.00 |
+
+    - **Prediction check:**
+      - b2p2 held ≈ NOPROT: ✓.
+      - REFRESH UNIT ≥ 0.6 for b2p2: ✗ (0.00). Having the protocol nearby is not enough.
+      - ROUND: rounded 0.00, raw value copied 0.15-0.70: ✓ in spirit.
+      - CONVERT ≈ 0: ✓. T++ as is ≈ 0: ✓.
+    - **What it says:** at the 600M / 1.5B-token tiers, applying a stated convention is a SKILL that no body has.
+      This is not a memory limit. The protocol is read; the answer copies the row's surface.
+    - **For SCI-1:** the B1-B3 bars need the trained skill (v14/protocol_docs.py, wired by Mind). The addendum's
+      G1 / G2 / G3 split separates "learned the format" from "transferred to unseen conventions". Any score above 0 is
+      above every day-0 reference.
+    - **Runner bugs found and fixed:**
+      - d5da73d anchored the refresh copies from the start, so the newest sat ~2.0-2.2k tokens back, outside the 2k
+        window for 7 of 9 checked docs. Fixed in e44b764; the rerun replaces those rows.
+      - Sample IDs came from a set, whose order depends on PYTHONHASHSEED. The day-0 docs are statistically the
+        same but not byte-reproducible. Fixed at the next commit (sorted, then shuffled by the doc's rng); the same
+        fix went into protocol_docs.py.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
