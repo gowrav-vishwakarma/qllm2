@@ -1,0 +1,95 @@
+{
+ "index_sha256": "08766210ac06dd67066aee27dc3c961f000fa078b62ee1c2991b3fa97bd2096d",
+ "dclm": {
+  "n": 2000,
+  "decon_drop": 0.001,
+  "dup_rate": 0.0,
+  "mean_chars": 6736
+ },
+ "fineweb": {
+  "n": 2000,
+  "decon_drop": 0.0005,
+  "dup_rate": 0.0,
+  "mean_chars": 5132
+ },
+ "arxiv": {
+  "n": 2000,
+  "decon_drop": 0.0005,
+  "dup_rate": 0.0,
+  "mean_chars": 44475
+ },
+ "pubmed": {
+  "n": 2000,
+  "decon_drop": 0.0,
+  "dup_rate": 0.0,
+  "mean_chars": 27364
+ },
+ "pes2o": {
+  "n": 2000,
+  "decon_drop": 0.0,
+  "dup_rate": 0.0,
+  "mean_chars": 29711
+ },
+ "cosmo": {
+  "n": 2000,
+  "decon_drop": 0.0005,
+  "dup_rate": 0.0,
+  "mean_chars": 3740
+ },
+ "finemath": {
+  "n": 2000,
+  "decon_drop": 0.0005,
+  "dup_rate": 0.0,
+  "mean_chars": 5033
+ },
+ "smoltalk2_mid": {
+  "n": 2000,
+  "decon_drop": 0.0,
+  "dup_rate": 0.0,
+  "mean_chars": 1627
+ },
+ "chatmt": {
+  "n": 2000,
+  "decon_drop": 0.0,
+  "dup_rate": 0.0,
+  "mean_chars": 7006
+ },
+ "tools": {
+  "n": 2000,
+  "decon_drop": 0.0,
+  "dup_rate": 0.02,
+  "mean_chars": 2171
+ },
+ "think": {
+  "n": 2000,
+  "decon_drop": 0.0035,
+  "dup_rate": 0.0025,
+  "mean_chars": 548
+ },
+ "pysci": {
+  "n": 2000,
+  "decon_drop": 0.0,
+  "dup_rate": 0.0,
+  "mean_chars": 6346
+ },
+ "b2s": {
+  "n": 2000,
+  "decon_drop": 0.0,
+  "dup_rate": 0.0,
+  "mean_chars": 5314
+ },
+ "recall4k": {
+  "n": 2000,
+  "decon_drop": 0.0,
+  "dup_rate": 0.0,
+  "mean_chars": 1939
+ },
+ "proto4k": {
+  "n": 2000,
+  "decon_drop": 0.0,
+  "dup_rate": 0.0,
+  "mean_chars": 4547
+ },
+ "pes2o_arxiv_dropped_fraction": 0.0228,
+ "pysci_kept_fraction_of_python": 0.2502
+}

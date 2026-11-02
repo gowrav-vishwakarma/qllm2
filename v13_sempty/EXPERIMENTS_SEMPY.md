@@ -5919,3 +5919,125 @@ stage A, with aptitude docs, unlike 16nb's r3ca_pre: stated as part of the recip
 - 16nb was the wrong scaling body on this mix. **SCI-1 uses M2** (Lead's rule: M2 if it meets the bar or beats 3.3784).
 - **Note:** M2's stage A (`c1m2a_pre`, with aptitude docs) differs from 16nb's (`r3ca_pre`). This is stated; the body comparison
   carries that difference.
+
+## SCI-1: the first product-size mind, a science / research assistant (pre-registration, 2026-11-02 14:30 IST; user GO 10:12 IST via Lead; Lead's frame on the v16 board, "SCI-1")
+
+**Why** (the user): "plan a bit big model with more data chosen for science and research; size for full utilisation of the 6000; a
+3-5 day run is OK; resumable; checkpoints in between to check". Then:
+- "include tool calling, thinking and coding, not to be a coder but to code and run as a scientist" (11:10);
+- continuable after 5–10B tokens.
+
+**Strength fit** (Lead):
+- What the mind does well: standing rules and protocols held in state across long sessions; a held rule applied to fetched results;
+  constant cost per session.
+- What it does badly: raw LM and composition (kb1, t15, R × K implicit). So NOT a coder, a scientist that calls tools.
+
+**Claims:** a PRODUCT run in its own tokens tier. No equal-data baselines exist at this size and token count on one card in the
+week. The reference block (SmolLM2-360M at 4T tokens, Pythia-410M at 300B) is context only, never a verdict. The equal-data
+claims stay at the 600M / 1.5B / 3B tiers.
+**Prior work:** small open science-heavy LMs (Galactica 125M; SmolLM2's mixes). A product, so no method claim.
+
+**Body:** **M2** (4 notebooks every 4th block + shared reads + echo + chrono + out_gate + delta) (t15pam_m2 verdict: t15m2 3.3255 vs 16nb 3.3784 at 1.5B; reach clk2 0.87 vs 0.47), no window (closed on both bodies: w1m / w1n). Package v0 contract checked by
+Library on the exact config: PASS (Library, CPU, random init, reset_at_eos on: chunked / decode / deep copy 7.7e-7 / 1.0e-6 / 1.0e-6, also across EOS resets; address at block 12; _dilate, head and stops OK).
+**Geometry** (chosen by the size smoke, measured, `v13_sempty/tmp/sci1_size_smoke.sh`): dim 1024 × 24 layers, 8 heads × 128, mlp_hidden 3704, notebooks in blocks 3 / 7 / 11 / 15 / 19 / 23 = 385.82M params; state
+3.67 MB (O(1) in length; optional F2 address 1,028 B/token int8 or 8.25 B/token sign bits).
+
+**Recipe:**
+- from scratch, one stage, the full mix from step 0; seed 43; AdamW (0.9, 0.95), wd 0.01, clip 1.0, bf16;
+- **SEQ 4096** (the user's ask via Lead; guard: stay at 2k if 4k is > 15 % slower; measured 37.8k vs 38.1k tok/s, −1 %), 16 × 4096 = 65,536 tokens / step (at SEQ 4096: 16 sequences, GRAD_ACCUM 2 (exact));
+- LR 8e-4 (the 103M runs used 1.2e-3; ~1 / width scaling 1.2e-3 × 588 / 1024 ≈ 7e-4, rounded up for WSD's constant phase; no screen at this size, stated) with warmup 2,000 steps, then CONSTANT (`--lr_schedule wsd_stable`): the main line;
+- decay branch: `--continue_from` the final stable state, LR linear to 0 over 1,000,013,824 tokens (10 % of the main line); its
+  best_model.pt is the release point.
+- **Main-line budget:** stage A 500,039,680 (7,630 steps, ~4 %) + stage B 9,999,998,976 (152,588 steps) tokens (~3.5 (+ CHECK and val overhead, ~3.8) days at the measured 37.8k tok/s); 30 (11.5B incl. the decay) tokens per param (≥ 20,
+  the Chinchilla floor).
+
+**Mix** (stage B = the main line; realized token-share targets, calibrated by streaming the real blend at SEQ 4096 with the filter
+on, `calib4`; the trainer header logs the weights):
+
+| block | sources (licence; quality filter) | share |
+|---|---|---|
+| web | dclm-edu (DCLM-baseline re-scored, edu ≥ 3), fineweb-edu (edu ≥ 3) | 39.1 % (20.0 / 19.1) |
+| science papers | Common Pile arxiv / pubmed / peS2o, *_filtered (per-doc open licences); peS2o minus its arXiv-sourced papers | 25 % (7.5 / 8.5 / 9) |
+| textbook | Cosmopedia v2 (smollm-corpus, ODC-BY; SmolLM2's set) | 9 % |
+| quantitative | FineMath-4plus (ODC-BY) | 3 % |
+| chat | smoltalk2 Mid (single-turn, think stripped) 3 % + smoltalk v1 multi-turn (magpie-ultra + everyday, Apache-2.0) 3 % | 6 % |
+| tool calling | glaive-fc-v2 + ToolACE (Apache-2.0) + library-fetch docs (half raw sentences), Hermes format | 4 % |
+| short thinking | MetaMathQA + GSM8K TRAIN (MIT), ≤ 1,200 chars, ON / OFF 50 / 50 | 2.5 % |
+| scientific python | Common Pile Stack-Edu (its edu filter) ∩ a scientific-import filter (keeps 25 % of Python files) | 9 % |
+| synthetic (answers ×100) | b2s rules 1.7 (half spread over the 4k window), proto4k 0.4 (Library; A26 families held out), recall4k 0.34 | 2.44 % of tokens = **~3.7 % of the loss weight** |
+
+- **Weight per token vs text** (answers ×100; measured): b2s 1.55×, proto4k 1.82×, recall4k 1.37× (compact b2 is 5.24×, which is why
+  the spread version needs more tokens for the same rule weight).
+- **The synthetic weight is a deliberate exception** to the default ≤ 3 % frame (Lead), for the thesis skill. Rules at distance fell
+  with data at 3 % b2 tokens (t15: PAM 0.768 → 0.545). bud's measured cost: a 4.9 % synthetic weight cost +0.013 holdout.
+- **Weights:** stage B `SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,think,pysci,b2s,recall4k,proto4k`, `WEIGHTS=0.21225,0.22533,0.05068,0.07697,0.09901,0.11376,0.02685,0.02258,0.03264,0.03433,0.02362,0.04893,0.02345,0.00426,0.00535`. Stage A (plain sources only, renormalized) `SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,pysci`, `WEIGHTS=0.2335,0.24789,0.05575,0.08468,0.10892,0.12515,0.02954,0.02484,0.03591,0.05383`.
+- **Data audit** (`v13_sempty/tmp/sci1_data_audit.py`, 2,000 train docs per source through the real iterators;
+  `logs/sci1/v13_sempty_sci1_data_audit.json`):
+  - decontamination drops: think 0.35 %, dclm 0.10 %, fineweb / arxiv / cosmo / finemath 0.05 %, every other source 0;
+  - within-source duplicates (first 1k chars): tools 2.0 %, think 0.25 %, every other source 0;
+  - peS2o arXiv-sourced dropped: 2.3 %.
+- **Decontamination** (mandatory for the arena): `v7/decontam.py`, word 13-grams.
+  - Sets: HellaSwag val + test, ARC-e / c val + test, PIQA val + test, Winogrande val + test, OBQA val + test, LAMBADA test,
+    GSM8K test, MMLU test + val, bAbI test (BABILong's base: facts + question + answer, never a haystack), and Library's
+    `v14/decontam_items.json` (A25 / A26 / bench / styles / v16 prompts / story texts; protocol_docs' training wordings are
+    deliberately not in it).
+  - 4,371,599 grams; index `.cache/decontam/v1.npy` sha256 `08766210ac06dd67066aee27dc3c961f000fa078b62ee1c2991b3fa97bd2096d`.
+  - A doc with any hit is dropped, counted as `<source>#decon` in the cursor. GSM8K test is never in the think source.
+  - Library owns a post-launch audit (`v14/decontam_audit.py`); any cell > 0.1 % gets a tighter filter at the first continuation.
+  - Every benchmark is reported with its clean-subset score beside the full one.
+- **Multi-turn, measured as streamed** (Lead's ask):
+  - before chatmt, 3+-turn dialogs were ~14 % of chat + tool tokens (smoltalk2 Mid 100 % single-turn; tools 1 / 2 / 3+ turns =
+    28 / 38 / 35 % of tool tokens);
+  - with chatmt (100 % 3+ turns): ~44 %;
+  - dialogs longer than the window are cut across windows by the packer; none are dropped.
+- **Two stages** (the C1-ctl lesson: the schedule caused the recall jump): stage A = ~4 % of tokens on plain sources (science
+  included); stage B = `--continue_from` stage A with the full mix and a 500-step re-warm; one lineage row each.
+- **Training-time ingredients ON** (SCI-1 is its own tier, so comparability with t15 is not a constraint):
+  - ANSWER_IN_WINDOW=1 (orphaned answers get weight 1);
+  - RESET_AT_EOS=1 (state reset at document separators). lg8r: the reset removed the forgetting that packed unrelated docs teach;
+    lg32 without it cut every echo half-life by 25–55 %. Sessions contain no EOS; Library's contract passes with resets crossed
+    by chunks and decode.
+- Holdout = the shared hash, 5 %, every source (probe filler never trains). Per-source val: dclm, fineweb, arxiv, pubmed, pes2o, cosmo,
+  tools, think, pysci, chatmt.
+
+**Checkpoints** (continuable, the user's amendment):
+- latest.pt every 500 steps;
+- a FULL milestone (weights + optimizer + schedule + per-source cursors + RNG) every 15,259 steps (~1B tokens), keeping
+  the last 4: these are the continuation points;
+- best_model.pt on holdout; stable_final.pt at the end of the main line; the decay branch in its own dir;
+- disk guard: refuse to start below 40 GB free. Budget ~41 GB of 62 at ~4.6 GB per full checkpoint (386M × 12 B).
+
+**CHECK at every milestone** (`v13_sempty/tmp/sci1_check.sh`, a watcher beside training):
+- holdout + per-source split + WikiText (from the val lines);
+- s8 D (2k / 4k, 400 trials);
+- skill pack 2k / 4k + contrast;
+- t40 far / near needles;
+- the known-suite subset (`scripts/mc_eval.py`: HellaSwag / ARC-e / PIQA, identical to lm-eval);
+- 5 shown generations (science, protocol, chat, a tool call + result, a short `<think>`) with step, tokens and hash;
+- Library's A26 / A26-T (protocol × fetched row) at milestones, run by Library.
+
+**Tripwires** (pre-registered responses at the FIRST continuation; a logged mix change + a new lineage segment):
+- **rules:** s8 D at milestone 2 < 0.40 → raise the b2 rule share;
+- **protocols:** A26 arm **G1** (Library: `--wording train`, UNIT on mass / volume in protocol_docs' own wordings, the package's
+  MIND-HELD arm at 2k, 20 docs) at milestone 2 ≤ its NOPROT arm + 0.05 → raise the proto share, within the ~4 % synthetic ceiling
+  and with its cost measured. Library reports G1 / G2 / G3 at every milestone, on copies on the 4090; the 6000 run is untouched. Day-0: no current body applies a stated convention (≤ 0.05 =
+  control).
+- **thinking** (the user's switch, via Lead):
+  - default OFF; the think docs are 50 / 50 ON (a 'Reasoning: on' system line + a short `<think>` trace + the answer) / OFF (the
+    answer only), so the marker is the only difference;
+  - `scripts/think_eval.py` scores GSM8K test ON vs OFF plus the OFF trace leak;
+  - ON ≤ OFF + 0.02 at milestone 2, OR OFF leak > 5 % → drop the think source at the first continuation (its 2.5 % returns to web);
+    the default stays OFF.
+- **LM** (mirror): holdout at milestone 2 > the projection + 0.02 → lower the synthetic weight. The projection is a fit
+  L(t) = a + b·t^(−c) to the run's own holdout vals from 0.25B to 1B tokens.
+
+**Predictions** (written first; no claim, its own tier):
+- the release holdout 2.95–3.05 (103M M2 at 1.5B tokens: 3.3255; this is 3.7× the params and 7.7× the tokens);
+- HellaSwag acc_norm 0.36–0.42 (Pythia-410M at 300B: ~0.40; our 386M at 11.5B) (SmolLM2-360M at 4T: 54.5 on its card);
+- s8 D at release ≥ 0.40;
+- the tool call well-formed in the shown generation by milestone 2.
+
+**Release:** `export_hf_release.py` + verify + push. The mind + package v0 + write-up + lineage tree; the name states params and
+tokens.
+
+**Lineage:** one row per segment (main line `sci1_main`, decay `sci1_decay`, each continuation); "running" at launch.
