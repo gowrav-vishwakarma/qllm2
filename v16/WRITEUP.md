@@ -29,6 +29,8 @@ natural questions 0.775 vs BM25 0.525 on the template wording); the bounded 128-
 hybrid part (Griffin / Samba / Based), the whole is the claim; reworded questions collapse cold reads for every body
 and the package answers them 0.68-0.73 on natural keys; multi-fact composition (BABILong QA2 / QA3, story order /
 summary) is unsolved by any body at 103M.
+Package v0.1 (d554d80): decimals were truncated by the row splitter for every body ("12.347" fetched and answered as
+"12."); earlier quoted values contained no decimals.
 
 ## 2. Tables (to fill from the logs; hashes in the board entries)
 
