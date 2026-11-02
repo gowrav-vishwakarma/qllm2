@@ -274,3 +274,42 @@ address, reading, writing). An entry must say which column produced each number.
     unchanged.
 - **Address bytes from the address width** (3886837): `Package.address_bytes(n, form)`, no b2p2 constant.
 
+## v1 design, NOT built: tool results as session rows + a sandboxed python executor (Lead / user 2026-11-02 11:10 IST)
+
+Goal: the SCI-1 claim becomes "a protocol held in state, applied to a TOOL result". The mind writes a call; the
+library runs it and writes the result into the session as a row. The text organs, F2 and the warm + contrast read
+then treat that row like any other.
+
+**Tool result as a session row (the format is fixed with Mind; it must be the trained format).**
+- Proposed (Hermes / Qwen style inside ChatML; plain text in GPT-2 BPE, no new tokens):
+  `<|im_start|>assistant\n<tool_call>\n{"name": "python", "arguments": {"code": "…"}}\n</tool_call><|im_end|>` then
+  `<|im_start|>tool\n<tool_response>\n{"name": "python", "content": "mass_g = 0.0123"}\n</tool_response><|im_end|>`.
+- Library rows: each `<tool_response>` block is ONE row (≤ 64 tokens; longer output is split by line, each piece
+  tagged with the call id). The call block is also a row, paired with its response, so a question naming the call's
+  subject hops call → result (as fetch_rows hops by name).
+- The library registers these spans when it writes them. It does not rely on "." sentence ends, since tool output
+  rarely has them.
+- The executor's wrapper asks for labelled prints (`name = value`), so a result row carries its own key words for
+  the text organs.
+
+**Executor (`Package.run_tool`; plumbing, labelled TOOL in `info`, never counted as the mind's own computation).**
+- **Loop:** the mind generates until `</tool_call>`. The planner parses the JSON (invalid → no call, labelled), runs
+  it, appends the `<tool_response>` block to the session (the O(1) state reads it; the library keeps its span), and
+  generation continues. At most 3 calls per answer.
+- **Sandbox:** bubblewrap, present on both boxes, checked 11:13 IST: `--unshare-all` gives no network (checked
+  locally: connect fails) and fresh pid / ipc / uts namespaces; also `--die-with-parent`, read-only /usr and the
+  venv's site-packages (numpy / scipy / sympy), tmpfs /tmp as the only writable directory, no home, no repo.
+- **Limits:** python `-I`; CPU 5 s, address space 1 GB, 32 files, 16 processes, 1 MB file size; wall clock 10 s;
+  stdout + stderr capped at 4 KB (truncation is marked). Exceptions become an error row, so the mind sees the
+  failure. Without bwrap the executor is DISABLED: it never runs unsandboxed.
+- **Cost:** ~0.1-0.3 s per call (process start + run); the result row's tokens enter the state (O(1) bytes); 2 B per
+  token of stored text.
+- **Tests before first use:**
+  - security: network blocked; writes outside /tmp fail; a fork bomb is capped; an infinite loop is killed at 5 s;
+    a memory bomb is killed;
+  - rows: the result is found by the text organs and by F2;
+  - A26-T, pre-registered before its numbers: A26's protocols with the result arriving as a `<tool_response>` row
+    (family split as in the addendum).
+- **Gate (Lead):** build it when the first SCI-1 milestone shows the call format is learned (e.g. ≥ 0.8 of held-out
+  prompts give a parseable call).
+
