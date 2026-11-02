@@ -280,8 +280,17 @@ Goal: the SCI-1 claim becomes "a protocol held in state, applied to a TOOL resul
 library runs it and writes the result into the session as a row. The text organs, F2 and the warm + contrast read
 then treat that row like any other.
 
-**Tool result as a session row (the format is fixed with Mind; it must be the trained format).**
-- Proposed (Hermes / Qwen style inside ChatML; plain text in GPT-2 BPE, no new tokens):
+**Tool result as a session row: format FIXED (Mind a9838ca, `v7/sci_tools.py`; ONE format for training data and the
+package; the package adapts to the data, never the reverse).**
+- Training sources: glaive-function-calling-v2 + ToolACE (Apache-2.0), converted to this format, plus Mind's
+  `library.fetch` docs (~11 % of tool docs). In those, the mind calls
+  `{"name": "library.fetch", "arguments": {"query": "K field"}}` and gets
+  `{"name": "library.fetch", "content": "Record: K | field: v."}`, then answers with v. The scientific-python data is
+  code only, with no outputs.
+- **Package tools:** `library.fetch` is the package's own fetch (text organs → F2), so the MIND can decide when to
+  fetch, beside the planner's always-fetch. Its `content` is the fetched session row VERBATIM. Training shows rendered
+  records, so raw sentences are a format shift: re-measure at milestones. `python` is the executor below.
+- The format (Hermes / Qwen style inside ChatML; plain text in GPT-2 BPE, no new tokens):
   `<|im_start|>assistant\n<tool_call>\n{"name": "python", "arguments": {"code": "…"}}\n</tool_call><|im_end|>` then
   `<|im_start|>tool\n<tool_response>\n{"name": "python", "content": "mass_g = 0.0123"}\n</tool_response><|im_end|>`.
 - Library rows: each `<tool_response>` block is ONE row (≤ 64 tokens; longer output is split by line, each piece
