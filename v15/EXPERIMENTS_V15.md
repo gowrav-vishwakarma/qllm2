@@ -384,6 +384,37 @@ sapling bears no fruit**: the read now excludes newborns nobody has credited
 yet (`dcd5c86`); seeds 2–4 give 0.846 / 0.853 / 0.626 with no collapse, lookup
 1.000. This is the bench candidate (GIV-2 = the G1 pairs again, same bars).
 
+### 6.2 GIV-2: Grove IV on the bench (pairs 1–2 ran Oct 31 13:00–18:29 IST; read Nov 2 22:45 IST)
+
+Logs `logs/v14_v15giv2p{1,2}_dcd5c86_*.{log,json}` (the session that queued
+them had exited before they landed). Grove IV (`dcd5c86`) vs echo, 27.67M vs
+27.61M, 6000 steps × B16:
+
+| pair | label_exact 2/4/8 (grove vs echo) | label_category 2/4/8 | letter_shift 8 | number_step 8 | reverse3 8 | train loss | ms/step |
+|---|---|---|---|---|---|---|---|
+| p1 (seed 21) | 0.28/0.20/0.13 vs 0.50/0.26/0.12 | **0.75/0.90/0.83 vs 0.50/0.49/0.25** | 0.70 vs 1.00 | 0.67 vs 1.00 | 0.95 vs 1.00 | **0.371 vs 0.377** | 1230 vs 653* |
+| p2 (seed 22) | 0.30/0.23/0.12 vs 0.48/0.25/0.12 | 0.35/0.49/0.28 vs 0.48/0.48/0.26 | 0.71 vs 1.00 | 0.61 vs 1.00 | 0.94 vs 1.00 | 0.625 vs 0.462 | 1180 vs 169 |
+
+(*shared card.) **Bars:** L (label_exact ≥ echo + 0.15 in ≥ 2 of 3) **FAIL**
+after two misses. P (label_category ≥ 0.9 in ≥ 2 of 3): **split**, pair 1
+met it (0.90 at 4-shot, +0.41; 8-shot 0.83 vs 0.25, +0.59: the first time
+a Grove beat echo on anything, and it is prototype formation, the thing the
+economy was built for), pair 2 did not (0.49). Guard: met in pair 1 (0.371
+vs 0.377), missed in pair 2 (0.625 vs 0.462). reverse3 is back (0.94–0.95;
+Grove II 0.12); letter_shift 0.70 is still below Grove I's 0.99.
+**Why the pairs differ:** not a plateau this time. The training-loss
+trajectories (grove / echo at steps 1000 / 3000 / 5000 / 6000): p1 1.55 /
+1.12 / 0.36 / 0.37 vs 0.47 / 0.47 / – / 0.38; p2 1.89 / 1.36 / 0.70 / 0.63
+vs 0.54 / 0.42 / – / 0.46. Grove IV learns slowly for ~3000 steps (the
+economy warms up while the soil is untrained: births and placements churn)
+and then drops fast; pair 1 reached echo's loss by step 5000, pair 2 was
+still descending at 6000. The split on P and on the guard is the same
+late convergence seen from two seeds. "A bit more training" is inside the
+user's bar-2 tolerance; it is also a cost to state next to every number.
+**Pair 3 (seed 23) runs now** (Nov 2 22:45 IST, 4090 handed to this lane)
+to decide P as registered; a longer-training variant would be a new,
+pre-registered row, not a re-roll.
+
 ## 5. Roads not taken (so they are not retaken)
 - Prime-period wheels / CRT phases for time and numbers (2026-10-31, 20
   minutes, code never committed): exact by construction and range-free, but

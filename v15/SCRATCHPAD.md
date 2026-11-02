@@ -12,25 +12,28 @@
 - Nothing has run on a GPU yet. 4090: v13's n9c was using ~15 GB at 00:30.
 
 ## Running
-- Nothing on a GPU (09:20 IST 2026-10-31). The 4090 is v14's until ~19:00,
-  the 6000 v13's until ~18:00; v15 asks before any GPU job (user, 07:30).
-- **Bench candidate: Grove IV + sapling mask (`dcd5c86`)**: soft economy
-  (Grove I) + births into starved niches, newborns unreadable until fed.
-  Rule toy 0.85/0.85/0.63 (Grove I 0.91/0.66/0.94), lookup toy 1.000.
-  GIV-2 (= G1 pairs, same bars) is prepared; worktree `../qllm_v15_giv2`;
-  driver `v15/tmp/giv2_chain.sh`; one pair ~2.3 h at ~8 GB. **Queued 09:19
-  IST in tmux `giv2_v15` behind the gate agreed with v14** (`v15/tmp/giv2_gate.sh`:
-  tmux `n9r` ended AND v13's a4f log shows training, then NEED_MB=8500);
-  expected start ~16:30 IST, two pairs (~5 h). Tell v14 when it ends.
+- **GIV-2 pair 3 RUNNING (Nov 2 22:45 IST)**: Grove IV (`dcd5c86`) vs echo,
+  seed 23, SAVE=1, tmux `giv2p3_v15`, worktree `../qllm_v15_giv2`, ~8 GB,
+  end ~01:00 IST Nov 3. Decides bar P (split 1/2 after pairs 1–2; L failed).
+  Logs `../qllm_v15_giv2/logs/v14_v15giv2p3_dcd5c86_*` -> copy to `logs/`.
+- GPU: the 4090 is this lane's since Nov 2 22:39 IST (Lead, from the user);
+  Library runs a <= 10 GB eval job 1–2 h every ~7.5 h: keep ~12 GB free or
+  checkpoint often. The 6000 needs Lead's OK. RAM: kill side jobs below
+  ~12 GB free.
+- Compile speed smoke (eager vs V15_COMPILE=1, bench shape) running beside
+  pair 3: result -> `v15/tmp/compile_speed.py` output, scratchpad speed note.
+- Probe of pair 1's saved grove (label_category / label_exact 8-shot):
+  `v15/tmp/probe_shares.py`, TASK env; result to EXPERIMENTS 6.2.
 
 ## Next action
-1. When v14 gives a slot: run GIV-2 pair 1 (grove vs echo, seed 21, SAVE=1),
-   read bars L, P, guard; probe the saved grove. Two agreeing pairs decide.
-2. If L and P pass: G2 (150M-token LM on the r600 recipe; `v15/hook.py`
-   ready) after a speed pass (torch.compile of the season body; Grove IV is
-   launch-bound, ~3.5x slower than Grove I).
-3. If they fail: the void again (satiety against generalist monopolies;
-   learned θ; the binding path).
+1. Read pair 3 (~01:00 IST): P decided as registered; record + lineage + tree.
+2. Pre-register the next row before any run: either GIV-2x (same pairs,
+   9000 steps: late convergence is the observed cause of the split; "a bit
+   more training" is within bar-2 tolerance, stated as cost) or G2 (the
+   150M-token LM holdout) if P passes. Compile smoke decides whether G2 is
+   affordable (eager Grove IV is ~3x echo's step time).
+3. Step back in writing before choosing (SCRATCHPAD notes).
+
 ## Speed note (06:40 IST 2026-10-31)
 - Grove II on the bench: 12.5k tok/s vs Grove I 43.8k (3.5x slower; echo
   ~80k alone). CPU profile of one forward+backward (bench shape, 8 seasons):
