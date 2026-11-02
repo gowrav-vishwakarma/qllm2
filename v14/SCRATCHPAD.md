@@ -18,13 +18,16 @@ science check cell, the protocol-doc training source, tools design. Nothing of m
   600M / 1.5B-tier body applies a stated convention (≤ 0.05), even with the protocol ~560-600 tokens back: a skill
   gap, not memory. Runner `v14/a26_protocol.py` (--wording train = G1, --arms subset). Next: run at every SCI-1
   milestone (G1 / G2 / G3 split), with the SCI-1 mind via --pam.
-  - **Milestone procedure:** Mind's CHECK log names the kept checkpoint paths. scp the weights-only checkpoint to
-    /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/<name>/ and run on the 4090 in tmux under
+  - **Milestone procedure:** Mind's CHECK log names the kept checkpoint paths. They are FULL checkpoints (~4.6 GB at
+    386M: weights + Adam; the run must be continuable). scp one to
+    /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/<name>/, then save a local weights-only copy
+    ({'config', 'model_state_dict'}, which is what _load_v13_sempty reads) and delete the local full copy (the 6000
+    keeps it). Run on the 4090 in tmux under
     /home/gowrav/.venvs/qllm311/bin/python (it has mamba_ssm):
     1. `v14/a26_protocol.py --pam sci=<ckpt> --lengths 8192,32768,2048 --docs 20` (G2 / G3, every arm);
     2. `--wording train --cells unit` (G1).
     Logs `logs/v14_a26_sci_<step>_<hash>_<stamp>`; results to the board + the lineage row.
-  - **Mind's tripwire** (proposed wording, 11:3x): G1 MIND-HELD at 2k ≤ its NOPROT + 0.05 at milestone 2 → raise
+  - **Mind's tripwire** (adopted by Mind): G1 MIND-HELD at 2k ≤ its NOPROT + 0.05 at milestone 2 → raise
     the proto share at the first continuation.
 * **Protocol-doc training source** `v14/protocol_docs.py` (Lead's YES 11:00; wired by Mind 9bf859c; determinism fix
   ccdf41f, Mind told to pull): train families only; held-out families never generated (leak_free 1).
