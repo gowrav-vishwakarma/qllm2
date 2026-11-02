@@ -223,7 +223,7 @@ Bars, written before the run:
 - **Guard:** train loss on the rule tasks within 0.1 nat of echo (the organ must not hurt the plain LM path).
 Pass = L and P. Fail = neither in 3 pairs → the design goes back to §0 (not to tuning).
 
-### G2 — the LM bar: Grove IV at 102.96M on the r600 recipe (pre-registered Nov 2 23:40 IST)
+### G2 — the LM bar: Grove IV at 102.96M on the r600 recipe (pre-registered Nov 2 23:32 IST)
 
 **Why now, after a failed micro-bench.** GIV-2 failed its lookup bars and
 split on prototypes, but the question the user asked ("can it be a model?")
