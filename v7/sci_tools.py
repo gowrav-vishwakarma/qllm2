@@ -105,6 +105,8 @@ FETCH_FIELDS = ('mass', 'temperature', 'pH', 'date', 'author', 'location', 'volt
                 'wavelength', 'pressure', 'duration', 'species', 'batch')
 FETCH_ASK = ('What was the {f} recorded for {k}?', 'Look up the {f} of {k}.', 'Find {k} in my notes and tell me its {f}.',
              'Which {f} did we log for {k}?', 'I need the {f} for {k}, please check the session notes.')
+FETCH_PROSE = ('For {k} the measured {f} was {v}.', 'We noted {v} as the {f} of {k} before lunch.', 'Entry for {k}: {f} came out at {v}, '
+               'checked twice.', 'The {f} for {k} ({b}) was {v}.', 'After calibration, {k} gave a {f} of {v}.')
 FETCH_SAY = ('The {f} recorded for {k} is {v}.', 'According to the notes, {k} has a {f} of {v}.', '{k}: {f} = {v}.',
              'The session record shows {v} as the {f} for {k}.')
 
@@ -123,7 +125,8 @@ def _fetch_docs(n: int, seed: int) -> List[str]:
     for _ in range(n):
         k, f = _recall_key(rng), rng.choice(FETCH_FIELDS)
         v = vals[f]() if f in vals else rng.choice(words)
-        row = f'Record: {k} | {f}: {v}.'
+        # Half the results are rendered records, half are raw session sentences (the package returns the session's raw text).
+        row = f'Record: {k} | {f}: {v}.' if rng.random() < 0.5 else rng.choice(FETCH_PROSE).format(k=k, f=f, v=v, b=rng.choice(words))
         out.append(_turn('user', rng.choice(FETCH_ASK).format(f=f, k=k))
                    + _turn('assistant', _call_block('library.fetch', {'query': f'{k} {f}'}))
                    + _turn('tool', _resp_block('library.fetch', row))
