@@ -5845,3 +5845,41 @@ needles ≥ 0.379). This decides the 600M release body (W128 vs b2p2). t15pam st
 - The rule bar is all but certain. **The LM bar is the open question:** 16nb starts 0.09 behind M2 at 600M.
 - Even at L = 0 the 1.5B baselines lose the letter rule (T++ shift 0.145, Mamba-2 0.49; affine 0.92 / 1.00). Their in-context rule
   inference at distance falls with data, while PAM's held at 600M.
+
+## t15 VERDICT (09:03 IST, 2026-11-02): rules bar MET by a wide margin (PAM s8 D 0.545 vs T++ 0.047 / Mamba-2 0.033); LM bar MISSED (PAM 3.3784 vs ≤ 3.3225, by 0.056). With data, all three bodies' LM improve at about the same rate, and all three bodies' rules at distance FALL
+
+**Arms:** `t15pam` / `t15tpp` / `t15mamba` `_main_c06b939` (103.2M / 101.9M / 102.6M). Same mix, own 120M stage A, 1.50B tokens,
+seed 43; 6000. PAM = 16nb plain (by the w1m / w1n rule).
+
+| readout | PAM 600M → **1.5B** | T++ 600M → **1.5B** | Mamba-2 600M → **1.5B** |
+|---|---|---|---|
+| holdout | 3.5662 → **3.3784** (−0.188) | 3.5572 → **3.3593** (−0.198) | 3.4754 → **3.3025** (−0.173) |
+| WikiText val loss | 4.360 → 4.107 | – → 4.028 | – → 4.013 |
+| s8 D (2k / 4k, scored) | 0.768 → **0.545** | 0.134 → **0.047** | ~0.10 → **0.033** |
+| s8 D, free | 0.585 → 0.367 | – → 0.006 | – → 0.008 |
+| s8 at 4k (scored) | 0.626 → 0.401 | → 0.068 | → 0.026 |
+| B2 at L = 0 (the rule with the examples adjacent) | 1.00 → 1.00 | → 0.53 | → 0.745 |
+| skill pack 4k + contrast, 20-way | 0.70 → **0.775** | → 0.105 | → 0.005 |
+| clk2 8k (PAM: dilation + contrast; baselines as they are), 20-way | 0.39 → **0.47** | → 0.29 | → 0.00 |
+| t40 far needles | 0.338 → 0.254 | → 0.154 | → 0.225 |
+| text-arm tool read (free, syn / nat mean) | 0.263 → 0.30 | → **0.875** | → 0.69 |
+
+The PAM 600M point is w1n_n0 (16nb, the same mix). The baselines' 600M points are b2t2 / b2m2 (the same mix and stage A).
+
+**Bars:**
+- rules: s8 D ≥ max(baselines) + 0.10 = 0.147: **MET (0.545)**;
+- LM: holdout ≤ Mamba-2 + 0.02 = 3.3225: **MISSED (3.3784)**.
+
+**Reading:**
+- **LM:** every body improves by about the same amount (−0.17 to −0.20) for 2.5× the tokens. PAM 16nb stays 0.019 behind T++ and
+  0.076 behind Mamba-2. This is plain modelling, and kb1 says the same.
+- **Rules at distance fall with data for EVERY body.** PAM −0.22, T++ −0.09, Mamba-2 −0.07.
+  - The baselines also lose the rules at L = 0 (T++ letter shift 0.145; they now follow priors).
+  - PAM's lead shrinks from +0.63 to +0.50 but stays enormous.
+  - Likely cause: the b2 share is fixed at 3 % while the web text grows; the model's priors strengthen against an in-context rule.
+    (A guess. Testable with a higher or ramped rule share at 1.5B.)
+- **Reach with query-time tools GROWS for PAM** (skill pack 4k + contrast 0.70 → 0.775; clk2 0.39 → 0.47). The trace is still
+  there; plain decoding loses it to stronger priors.
+- **Reading fetched rows stays T++'s** (0.875 vs PAM 0.30); the package's field cut is the reader.
+- **Consequence:** r3p' (3B PAM) is not launched on this evidence; it is Lead's / the user's call. The LM gap is the next problem
+  (the bar order: intelligence first, met; LM, missed).

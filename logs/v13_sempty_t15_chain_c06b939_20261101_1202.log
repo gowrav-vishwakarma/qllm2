@@ -41,3 +41,13 @@ saved logs/learning_probes/v13_sempty_t15mamba_main_c06b939_spread_s7000_t400.js
   [val @ step 37435] val_loss=3.3025 val_ppl=27.18 *best* (best 27.18)
 === waiting for checkpoints_v13_sempty/t15_pam_body.txt (Mind writes w128 or plain after the w1m + w1n verdicts) 2026-11-01T21:46:18Z
 === t15_pam start, body plain 2026-11-01T21:46:18Z
+=== t15pam_main_c06b939 readouts 2026-11-02T03:26:16Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.485, 'shift_wide_new@4096': 0.138, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.892, 'affine_map_new@4096': 0.665}  mean 0.697
+free (A7): {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.468, 'shift_wide_new@4096': 0.117, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.59, 'affine_map_new@4096': 0.292}  mean 0.578
+saved logs/learning_probes/v13_sempty_t15pam_main_c06b939_spread_s7000_t400.json
+  affine_map_new done
+  affine_map_new done
+{'arch': 'pam', 'ckpt': 'checkpoints_v13_sempty/t15pam_main_c06b939/best_model.pt', 'task': 'tool', 'qstyle': 'template'
+{'arch': 'pam', 'ckpt': 'checkpoints_v13_sempty/t15pam_main_c06b939/best_model.pt', 'task': 'tool', 'qstyle': 'template'
+  [val @ step 37435] val_loss=3.3784 val_ppl=29.32 *best* (best 29.32)
+=== t15 chain DONE 2026-11-02T03:31:50Z
