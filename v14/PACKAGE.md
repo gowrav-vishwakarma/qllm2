@@ -37,6 +37,17 @@ State bytes are MEASURED from the state at read time, never a per-body constant:
 3,921,168 B, W1 w1r_w128 2,947,152 B. That last figure is b2p2's 1.15 MB plus the window cache, 127 tokens × 3 blocks
 × (k, v) × 588 × fp32 = 1.79 MB. The cache is O(W), not O(L).
 
+**SCI-1 candidate sizes (random init, CPU, `v14/contract_check.py`, 2026-11-02 at 3886837):** the contract holds on
+both bodies with no package change. A random-init echo reads out ~0, so `_dilate` is judged on the state.
+
+| body (dim 980, 24 layers, 10 heads, mlp 3552) | params | address | state (measured) | address int8 / sign bits | parity: chunked / decode / deep copy |
+|---|---|---|---|---|---|
+| M2 (notebooks 5 / 11 / 17 / 23) | 348.3M | block 12 | **1.92 MB** | 984 / 7.9 B per token | 6e-7 / 1e-6 / 1e-6 |
+| 16nb (notebooks in every block) | 397.2M | block 12 | **9.61 MB** | 984 / 7.9 B per token | 7e-7 / 1e-6 / 1e-6 |
+| reference: b2p2 (trained) | 102.9M | block 8 | 1.15 MB | 592 / 4.9 | 6.1e-5 / 1.0e-5 / 1.4e-5 |
+
+Rerun it on Mind's final geometry with `--like <ref ckpt> --set dim=… n_layers=… n_heads=… mlp_hidden=… pam_layers=…`.
+
 State layout (Mind's 7d2c7f1): `[block states …] + [window caches: ONE extra entry, W1 models only] + [echo, LAST]`.
 The package never indexes or counts the states (it streams, deep-copies and measures them), so `n_blocks + 1` and
 `n_blocks + 2` entries both work unchanged. Checked 2026-11-01 17:14 IST on CPU at a7af87f with a 4,551-token toy:
@@ -137,12 +148,12 @@ returned in session order.
 
 | item | bytes | compute |
 |---|---|---|
-| mind state | measured: b2p2 1.15 MB, 16nb 3.92 MB; O(1) in length | one streaming pass over the session, carried in 2k chunks: 11.4 s at 128k (4090, shared with other jobs, with address capture and surprisal) |
+| mind state | measured: b2p2 1.15 MB, 16nb 3.92 MB; at ~350M (SCI-1 candidates) M2 1.92 MB, 16nb 9.61 MB; O(1) in length | one streaming pass over the session, carried in 2k chunks: 11.4 s at 128k (4090, shared with other jobs, with address capture and surprisal) |
 | raw text for rows | 2 B / token (0.26 MB at 128k) | – |
 | text indexes (word + token suffix arrays, estimate) | ~9.4 B / token (1.23 MB at 128k) | organ scans at question time: 0.02-0.05 s per 32k doc in Python |
 | background word counts (A20) | 1.47 MB JSON, fixed, shared by all sessions | – |
-| F2 address, every token int8 (lossless, A15) | 592 B / token (78 MB at 128k) | one max-sim over the rows per question |
-| F2 address, sign bits on the top 1/16 surprising tokens | ~4.9 B / token (0.64 MB at 128k) | the same; costs synonyms ~0.1 at 32k (A15), at 128k equal (0.71 vs 0.62 on 24 F2 rows, A25) |
+| F2 address, every token int8 (lossless, A15) | D + 4 B / token: 592 for b2p2 (78 MB at 128k), 984 at dim 980 (129 MB at 128k) | one max-sim over the rows per question |
+| F2 address, sign bits on the top 1/16 surprising tokens | (ceil(D / 8) + 4) / 16 B / token: 4.9 for b2p2 (0.64 MB at 128k), 7.9 at dim 980 (1.04 MB) | the same; costs synonyms ~0.1 at 32k (A15), at 128k equal (0.71 vs 0.62 on 24 F2 rows, A25) |
 | fact read | a second copy of the state during the answer only | two O(1) continuations of row + question (~30-60 tokens) + ≤ 40 answer tokens: 0.38-0.42 s per question incl. fetch (4090) |
 | skill contrast (`apply`) | a second full state for the no-pack twin | 2× the read compute |
 | refresh | +1.6 % tokens at R = 2,048 | – |
@@ -240,3 +251,16 @@ address, reading, writing). An entry must say which column produced each number.
 - Writing multi-token values (numbers, UUIDs) and multi-field records without the cut.
 - Shared libraries (packs, `v14/pack.py`, SL2 text fetch 11.4 MB / 1M) cover surface variants only. Synonyms across
   documents are untested (L3: the mind's address is a stream address, not an embedder).
+
+## v0.1 (after the freeze)
+
+- **Decimal-aware sentence ends (d554d80; A26's prerequisite):** a "." ends a row, and a decode, only when the next
+  token is not glued to it (it does not start with a letter or digit). GPT-2 splits "12.3" into " 12", ".", "3", so
+  v0 fetched "Sample K7: mass 12.347." as "… mass 12." and cut answers at "12.". Every science number was truncated
+  for every body.
+  - Decoding holds a "." that follows a digit for one token: a glued token continues the number; any other token
+    means the "." ended the sentence, and the look-ahead token is dropped.
+  - Regression: the A20 text check on its registered documents is identical (640 questions). The contract toy is
+    unchanged.
+- **Address bytes from the address width** (3886837): `Package.address_bytes(n, form)`, no b2p2 constant.
+
