@@ -4,7 +4,27 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-01 17:07 IST) — read this first
+## State (2026-11-02 11:31 IST) — read this first
+
+Session: **Library**. Lane today: SCI-1 support (Lead 10:12): the package contract at the new size, the A26
+science check cell, the protocol-doc training source, tools design. Nothing of mine is running; the 4090 is free.
+* **Package v0.1** (`v16/package.py`, d554d80 → d5da73d): a "." is kept inside a row / an answer only as a DECIMAL
+  POINT (digit . digit). v0 truncated "12.347" to "12." for every body (WRITEUP honesty line c7b8b85). Address bytes
+  come from the width (3886837). A20 regression identical.
+* **Contract tool** `v14/contract_check.py` (--ckpt or --like ref --set dim=… n_layers=…). It passes on Mind's SCI-1
+  candidates, with state M2 896 / 1024 / 1152 = 2.81 / 3.67 / 3.99 MB and 16nb 1024 = 13.11 MB (PACKAGE.md tables).
+  TODO: rerun on Mind's exact config when it lands (~14:30) and put the state MB in Mind's pre-registration cost line.
+* **A26** (EXPERIMENTS_V14 "A26": pre-registration 10:33, addendum 11:00, day-0 11:28; lineage row). Day-0: no
+  600M / 1.5B-tier body applies a stated convention (≤ 0.05), even with the protocol ~560-600 tokens back: a skill
+  gap, not memory. Runner `v14/a26_protocol.py` (--wording train = G1, --arms subset). Next: run at every SCI-1
+  milestone (G1 / G2 / G3 split), with the SCI-1 mind via --pam.
+* **Protocol-doc training source** `v14/protocol_docs.py` (Lead's YES 11:00; wired by Mind 9bf859c; determinism fix
+  ccdf41f, Mind told to pull): train families only; held-out families never generated (leak_free 1).
+* **Tools** (PACKAGE.md "v1 design, NOT built"): format FIXED with Mind (a9838ca; Hermes / Qwen in ChatML;
+  library.fetch docs half raw sentences, 2214c99 + reword). Executor = bwrap sandbox (works on both boxes). Build only
+  at Lead's gate (first milestone ≥ 0.8 parseable calls); security tests + A26-T pre-registered first.
+
+## Old state (2026-11-01 17:07 IST; superseded)
 
 Session: **Library**. Lane (Lead's decision 16:5x): SHIP THE PACKAGE v0; NO new A-units until the matched 1.5B tier
 lands on the 6000.
