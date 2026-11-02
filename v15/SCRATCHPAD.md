@@ -12,7 +12,7 @@
 - Nothing has run on a GPU yet. 4090: v13's n9c was using ~15 GB at 00:30.
 
 ## Running
-- **GIV-2 pair 3 RUNNING (Nov 2 22:45 IST)**: Grove IV (`dcd5c86`) vs echo,
+- **GIV-2 pair 3 RUNNING (Nov 2 22:41 IST)**: Grove IV (`dcd5c86`) vs echo,
   seed 23, SAVE=1, tmux `giv2p3_v15`, worktree `../qllm_v15_giv2`, ~8 GB,
   end ~01:00 IST Nov 3. Decides bar P (split 1/2 after pairs 1–2; L failed).
   Logs `../qllm_v15_giv2/logs/v14_v15giv2p3_dcd5c86_*` -> copy to `logs/`.
@@ -49,6 +49,23 @@
   pinned `dcd5c86` (same maths, eager).
 
 ## Step-back notes
+- 2026-11-02 22:50, back after the exit, pairs 1–2 of GIV-2 read. What
+  surprised me: the economy's first real win is the thing it was built for
+  (prototypes: label_category 0.90/0.83 vs 0.49/0.25) and it came in the
+  pair whose training *finished*; the other pair was simply still
+  descending. What it really says: Grove IV is a late learner. For ~3000
+  steps the soil is untrained, births and placements churn, and the read is
+  mostly noise the out-projection learns to ignore; once the soil makes
+  similar words land together, prototypes form and the loss drops fast.
+  That is a warm-up cost, and the user's bar-2 tolerance allows "a bit more
+  training", but it must be stated as cost on every row, not hidden by
+  longer runs. Bold different angle, not run: let the organ *start*
+  useful instead of learning to be: innate roots initialised from the
+  embedding's own structure (the soil of frequent tokens), so dawn trees are
+  real words on day one and the economy has something to select among
+  before any gradient. In the frame: a grove is planted, not sown from dust.
+  Decide after pair 3 and the compile smoke; a longer-training row only as
+  a pre-registered cost measurement, never as a re-roll.
 - 2026-10-31 09:35, after the sapling fix. The bimodal rule toy (0.09 vs
   0.95 by seed) was not noise: a loss trace showed a dead plateau from step
   250, and the cause was one line of the read (a newborn's empty fruit read
