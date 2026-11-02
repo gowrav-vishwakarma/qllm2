@@ -1,0 +1,157 @@
+B0 micro-bench @ dcd5c86: 6000 steps x B16, lr 0.0003, eval ctx (1024, 4096, 8192), 16 docs x 3 positions x 4 queries per cell, aux_weight 0.0, families rules, seed 23, init_seed 23, doc_seed0 600000000
+
+--- arm grove@hd64L4 ---
+  [grove] G=6 K=32 n=64 season=32 mlp=1408: 27.67M params (echo 27.61M), state 393 KB/seq
+/home/gowrav/Development/qllm_v15_giv2/v14/microbench.py:488: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  print(f"  [{label}] step {step:5d}/{len(plan)} L={L:5d} loss={float(loss):.4f} "
+  [grove@hd64L4] step     1/6000 L= 1024 loss=10.9307 | 13,736 tok/s
+  [grove@hd64L4] step   250/6000 L= 1024 loss=2.7716 | 33,850 tok/s
+  [grove@hd64L4] step   500/6000 L= 1024 loss=2.0657 | 33,786 tok/s
+  [grove@hd64L4] step   750/6000 L= 1024 loss=1.7908 | 33,949 tok/s
+  [grove@hd64L4] step  1000/6000 L= 1024 loss=1.7772 | 34,033 tok/s
+  [grove@hd64L4] step  1250/6000 L= 1024 loss=1.7454 | 33,996 tok/s
+  [grove@hd64L4] step  1500/6000 L= 1024 loss=1.5879 | 33,910 tok/s
+  [grove@hd64L4] step  1750/6000 L=  512 loss=1.6207 | 33,849 tok/s
+  [grove@hd64L4] step  2000/6000 L= 1024 loss=1.4809 | 33,806 tok/s
+  [grove@hd64L4] step  2250/6000 L= 1024 loss=1.5400 | 33,791 tok/s
+  [grove@hd64L4] step  2500/6000 L=  512 loss=1.4021 | 33,757 tok/s
+  [grove@hd64L4] step  2750/6000 L=  512 loss=1.4285 | 33,733 tok/s
+  [grove@hd64L4] step  3000/6000 L= 1024 loss=1.3929 | 33,734 tok/s
+  [grove@hd64L4] step  3250/6000 L=  512 loss=1.3391 | 33,701 tok/s
+  [grove@hd64L4] step  3500/6000 L= 1024 loss=1.0938 | 33,696 tok/s
+  [grove@hd64L4] step  3750/6000 L=  512 loss=0.7614 | 33,676 tok/s
+  [grove@hd64L4] step  4000/6000 L= 1024 loss=0.6732 | 33,683 tok/s
+  [grove@hd64L4] step  4250/6000 L= 1024 loss=0.6731 | 33,667 tok/s
+  [grove@hd64L4] step  4500/6000 L=  512 loss=0.6230 | 33,666 tok/s
+  [grove@hd64L4] step  4750/6000 L= 1024 loss=0.6694 | 33,648 tok/s
+  [grove@hd64L4] step  5000/6000 L=  512 loss=0.6559 | 33,639 tok/s
+  [grove@hd64L4] step  5250/6000 L=  512 loss=0.4804 | 33,624 tok/s
+  [grove@hd64L4] step  5500/6000 L= 1024 loss=0.5894 | 33,612 tok/s
+  [grove@hd64L4] step  5750/6000 L= 1024 loss=0.6419 | 33,616 tok/s
+  [grove@hd64L4] step  6000/6000 L= 1024 loss=0.5284 | 33,607 tok/s
+  [grove@hd64L4] trained 27.7M params in 2194s (366 ms/step)
+== grove@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          0.50    0.67    0.82
+number_step           0.21    0.38    0.55
+reverse3              0.97    0.98    0.95
+label_category        0.31    0.42    0.20
+two_hop               0.40    0.28    0.14
+letter_shift_ood      0.05    0.07    0.10
+number_step_ood       0.08    0.11    0.09
+label_marker          0.28    0.39    0.26
+label_marker_new      0.27    0.37    0.24
+shift_wide            0.16    0.17    0.24
+step_wide             0.15    0.23    0.25
+affine_map            0.12    0.15    0.13
+shift_wide_new        0.03    0.04    0.07
+step_wide_new         0.11    0.17    0.17
+affine_map_new        0.15    0.18    0.19
+repeat_copy           0.11    0.11    0.13
+label_exact           0.31    0.22    0.10
+label_exact_new       0.27    0.23    0.13
+label_gap             0.27    0.19    0.10
+label_gap_new         0.26    0.19    0.18
+
+--- arm echo@hd64L4 ---
+  [echo@hd64L4] step     1/6000 L= 1024 loss=10.8412 | 13,937 tok/s
+W1102 23:18:02.467508 3506605 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))), 0) | (512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))) <= 49152*((s25//64))*((s65//((s25//64)))))
+W1102 23:18:03.712175 3506605 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))), 0) | (512*(96*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 508*Max(1, (s65//((s25//64)))) <= 49152*((s25//64))*((s65//((s25//64)))))
+  [echo@hd64L4] step   250/6000 L= 1024 loss=2.4263 | 120,595 tok/s
+  [echo@hd64L4] step   500/6000 L= 1024 loss=0.8744 | 130,892 tok/s
+  [echo@hd64L4] step   750/6000 L= 1024 loss=0.5633 | 134,363 tok/s
+  [echo@hd64L4] step  1000/6000 L= 1024 loss=0.4867 | 136,469 tok/s
+  [echo@hd64L4] step  1250/6000 L= 1024 loss=0.4975 | 137,588 tok/s
+  [echo@hd64L4] step  1500/6000 L= 1024 loss=0.6009 | 138,248 tok/s
+  [echo@hd64L4] step  1750/6000 L=  512 loss=0.6650 | 138,250 tok/s
+  [echo@hd64L4] step  2000/6000 L= 1024 loss=0.4819 | 138,822 tok/s
+  [echo@hd64L4] step  2250/6000 L= 1024 loss=0.5005 | 139,253 tok/s
+  [echo@hd64L4] step  2500/6000 L=  512 loss=0.5585 | 139,557 tok/s
+  [echo@hd64L4] step  2750/6000 L=  512 loss=0.5691 | 139,812 tok/s
+  [echo@hd64L4] step  3000/6000 L= 1024 loss=0.4211 | 140,019 tok/s
+  [echo@hd64L4] step  3250/6000 L=  512 loss=0.4699 | 140,105 tok/s
+  [echo@hd64L4] step  3500/6000 L= 1024 loss=0.5177 | 139,887 tok/s
+  [echo@hd64L4] step  3750/6000 L=  512 loss=0.4243 | 140,007 tok/s
+  [echo@hd64L4] step  4000/6000 L= 1024 loss=0.4102 | 140,149 tok/s
+  [echo@hd64L4] step  4250/6000 L= 1024 loss=0.4432 | 140,211 tok/s
+  [echo@hd64L4] step  4500/6000 L=  512 loss=0.4389 | 140,262 tok/s
+  [echo@hd64L4] step  4750/6000 L= 1024 loss=0.4888 | 140,344 tok/s
+  [echo@hd64L4] step  5000/6000 L=  512 loss=0.5021 | 140,370 tok/s
+  [echo@hd64L4] step  5250/6000 L=  512 loss=0.3994 | 135,158 tok/s
+  [echo@hd64L4] step  5500/6000 L= 1024 loss=0.4851 | 120,024 tok/s
+  [echo@hd64L4] step  5750/6000 L= 1024 loss=0.5197 | 108,462 tok/s
+  [echo@hd64L4] step  6000/6000 L= 1024 loss=0.4279 | 105,660 tok/s
+  [echo@hd64L4] trained 27.6M params in 698s (116 ms/step)
+W1102 23:29:39.371144 3506605 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s27*s65)//(s37*((s25//64))))) + 4*(((s27*s65)//(s37*((s25//64))))) + 508*Max(1, ((s27*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s27*s65)//(s37*((s25//64))))))
+W1102 23:29:41.675055 3506605 /home/gowrav/Development/qllm2/.venv/lib/python3.9/site-packages/torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))), 0) | (512*(s37*((s25//64)) - 1)*Max(1, ((s26*s65)//(s37*((s25//64))))) + 4*(((s26*s65)//(s37*((s25//64))))) + 508*Max(1, ((s26*s65)//(s37*((s25//64))))) <= 512*s37*((s25//64))*(((s26*s65)//(s37*((s25//64))))))
+== echo@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        0.52    0.54    0.26
+two_hop               0.52    0.27    0.09
+letter_shift_ood      0.03    0.03    0.04
+number_step_ood       0.10    0.13    0.05
+label_marker          0.49    0.55    0.28
+label_marker_new      0.49    0.48    0.25
+shift_wide            0.38    0.36    0.43
+step_wide             0.58    0.53    0.52
+affine_map            0.15    0.15    0.14
+shift_wide_new        0.14    0.20    0.28
+step_wide_new         0.44    0.40    0.38
+affine_map_new        0.14    0.17    0.15
+repeat_copy           0.13    0.13    0.11
+label_exact           0.49    0.26    0.17
+label_exact_new       0.50    0.23    0.13
+label_gap             0.51    0.26    0.13
+label_gap_new         0.48    0.23    0.12
+
+================================================================
+== grove@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          0.50    0.67    0.82
+number_step           0.21    0.38    0.55
+reverse3              0.97    0.98    0.95
+label_category        0.31    0.42    0.20
+two_hop               0.40    0.28    0.14
+letter_shift_ood      0.05    0.07    0.10
+number_step_ood       0.08    0.11    0.09
+label_marker          0.28    0.39    0.26
+label_marker_new      0.27    0.37    0.24
+shift_wide            0.16    0.17    0.24
+step_wide             0.15    0.23    0.25
+affine_map            0.12    0.15    0.13
+shift_wide_new        0.03    0.04    0.07
+step_wide_new         0.11    0.17    0.17
+affine_map_new        0.15    0.18    0.19
+repeat_copy           0.11    0.11    0.13
+label_exact           0.31    0.22    0.10
+label_exact_new       0.27    0.23    0.13
+label_gap             0.27    0.19    0.10
+label_gap_new         0.26    0.19    0.18
+
+== echo@hd64L4  (accuracy over 8 candidates; chance 0.125)
+rule task           2-shot  4-shot  8-shot
+letter_shift          1.00    1.00    1.00
+number_step           1.00    1.00    1.00
+reverse3              1.00    1.00    1.00
+label_category        0.52    0.54    0.26
+two_hop               0.52    0.27    0.09
+letter_shift_ood      0.03    0.03    0.04
+number_step_ood       0.10    0.13    0.05
+label_marker          0.49    0.55    0.28
+label_marker_new      0.49    0.48    0.25
+shift_wide            0.38    0.36    0.43
+step_wide             0.58    0.53    0.52
+affine_map            0.15    0.15    0.14
+shift_wide_new        0.14    0.20    0.28
+step_wide_new         0.44    0.40    0.38
+affine_map_new        0.14    0.17    0.15
+repeat_copy           0.13    0.13    0.11
+label_exact           0.49    0.26    0.17
+label_exact_new       0.50    0.23    0.13
+label_gap             0.51    0.26    0.13
+label_gap_new         0.48    0.23    0.12
+

@@ -12,19 +12,14 @@
 - Nothing has run on a GPU yet. 4090: v13's n9c was using ~15 GB at 00:30.
 
 ## Running
-- **GIV-2 pair 3 RUNNING (Nov 2 22:41 IST)**: Grove IV (`dcd5c86`) vs echo,
-  seed 23, SAVE=1, tmux `giv2p3_v15`, worktree `../qllm_v15_giv2`, ~8 GB,
-  end ~01:00 IST Nov 3. Decides bar P (split 1/2 after pairs 1–2; L failed).
-  Logs `../qllm_v15_giv2/logs/v14_v15giv2p3_dcd5c86_*` -> copy to `logs/`.
-- GPU: the 4090 is this lane's since Nov 2 22:39 IST (Lead, from the user);
-  Library runs a <= 10 GB eval job 1–2 h every ~7.5 h: keep ~12 GB free or
-  checkpoint often. The 6000 needs Lead's OK. RAM: kill side jobs below
-  ~12 GB free.
-- Compile speed smoke (`v15/tmp/compile_speed.py`, needs PYTHONPATH=.) deferred
-  until pair 3 ends (keep the card's headroom for Library/Mind evals).
-  Alone, Grove IV trains at 33.9k tok/s (Grove I 43.8k): ~1.3x, not 3.5x.
-- Probe of pair 1's saved grove done (EXPERIMENTS 6.2): traits moved (τ to
-  13.9, b_born 0.4) but no exact re-selection in context (overlap 0.00).
+- Nothing training (Nov 2 23:32 IST). GIV-2 done: FAIL (L 0/3, P 1/3; the
+  converged pair formed prototypes). Logs in `logs/v14_v15giv2p{1,2,3}_dcd5c86_*`;
+  pair 1/3 weights on d_drive (`v15_giv2_checkpoints_v14`).
+- GPU: the 4090 is this lane's (Lead, Nov 2 22:39 IST); Library (<= 10 GB,
+  1-2 h / ~7.5 h) and Mind (~1 h / ~7.4 h, capped) run evals beside my jobs:
+  keep ~12 GB free or checkpoint every ~200 steps. 6000 via Lead only.
+- Next on the card: compile-speed smoke + G2 memory/speed dry run
+  (synthetic, B18 T2048, 102.96M, grad ckpt), then the G2 pre-registration.
 
 ## Next action
 1. Read pair 3 (~01:00 IST): P decided as registered; record + lineage + tree.

@@ -442,6 +442,18 @@ to decide P as registered; a longer-training variant would be a new,
 pre-registered row, not a re-roll. Alone on the card it trains at 33.9k
 tok/s (Grove I alone 43.8k; the 12.5k of GII-2 was a shared card), so
 Grove IV costs ~1.3× Grove I per step, not 3.5×.
+**Pair 3 (seed 23, Nov 2 22:41–23:30 IST, alone on the card):** label_exact
+0.31/0.22/0.10 vs echo 0.49/0.26/0.17; label_category 0.31/0.42/0.20 vs
+0.52/0.54/0.26; letter_shift 0.82, number_step 0.55, reverse3 0.95; train
+loss 0.528 vs 0.428 (still descending at 6000: 1.78 / 1.39 / 0.66 / 0.53 at
+1000 / 3000 / 5000 / 6000); 366 vs 116 ms/step.
+**GIV-2 verdict: FAIL on L (0 of 3) and on P (1 of 3); guard met in 1 of
+3.** The one pair that converged (p1, train loss 0.371) is the one that
+formed prototypes (0.90 / 0.83); the two that were still descending did
+not. Rules are at reverse3 1.00-level and letter_shift 0.70–0.82 (Grove I
+0.99, echo 1.00). The bench as registered says: not yet a better memory
+than echo at 6000 steps; a late learner whose one converged run shows the
+economy's intended behaviour. Logs `logs/v14_v15giv2p3_dcd5c86_*`.
 **Probe of pair 1's saved grove (label_exact 8-shot, 40 prompts; Nov 2
 22:50 IST):** this time the innate traits moved: τ rose in the strict
 groves (8.2 → 13.9 across layers) and the newborn bias b_born grew to

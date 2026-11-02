@@ -150,7 +150,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
           - **GII-1** (2026-10-31) big-vocab lookup toy (4096 keys) -> **PASS 1.000 (Grove I 0.955): exact cache by births**; code at `current`; stdout; "GII-1"
             - **GII-2** (2026-10-31) G1 again with Grove II, bars L, P, R -> **FAIL (pair 1): reverse3 at chance; query born into an empty newborn**; code at `current`; logs/v14_v15gii2*; "GII-2"
               - **GIV-0/1** (2026-10-31) Grove IV (soft economy + births, saplings unreadable): selftest, rule toy, lookup toy -> **PASS: rule 0.846 / 0.853 / 0.626, parity 5e-15**; code at `current`; v15/tmp/toy_rule.py; "GIV"
-                - **GIV-2** (2026-10-31) G1 pairs with Grove IV, bars L, P, R, guard -> **pairs 1-2: L FAIL; P split (p1 label_category 0.90/0.83 vs echo 0.49/0.25 met; p2 0.49 not); guard split; pair 3 running (Nov 2 22:45 IST)**; run `dcd5c86`, code at `current`; logs/v14_v15giv2p*_dcd5c86_*; "GIV-2"
+                - **GIV-2** (2026-10-31/11-02) G1 pairs with Grove IV, bars L, P, R, guard -> **FAIL: L 0/3, P 1/3 (p1 label_category 0.90/0.83 vs echo 0.49/0.25 met; p2 0.49, p3 0.42), guard 1/3; late convergence (loss still falling at 6000 in p2/p3)**; run `dcd5c86`, code at `current`; logs/v14_v15giv2p*_dcd5c86_*; "GIV-2"
                   - **G2** (2026-10-31) 150M-token holdout on the r600 recipe, Grove 102.96M vs M1 3.9225 -> **PREPARED, waits for G1 PASS**; code at `current`; logs/v13_sempty_v15g2_*; "G2"
 
 ## v16
