@@ -3807,6 +3807,27 @@ fitted threshold:
     - B3, product: REFRESH at 32k ≥ 0.80.
     - ROUND / CONVERT and the TRAINED wording are reported, no bar.
     - Day-0 calibration on the 600M-tier minds is reported with no bar (it sets what a milestone must beat).
+  - **ADDENDUM (2026-11-02 11:01 IST, before any SCI-1 number; Lead's YES to a protocol TRAINING source):**
+    - **Source:** `v14/protocol_docs.py` (`protocol_text_iter`; seed = Mind's mix seed, stream offset
+      SEED_OFFSET = 10**8). It sits inside the synthetic loss-weight budget (recall + b2 + skills + protocols ≤ 3 % of
+      the loss weight; protocols ~0.5 % of tokens at full answer weight; Mind sets the share).
+    - **Training families:** UNIT mass (mg / g / kg / ng / μg) and volume (mL / L / μL); ROUND to the nearest whole
+      number and to two decimal places (mass, volume, time, temperature); CONVERT L → mL and km → m.
+    - **Wordings:** 10 protocol wordings per family, 8 question styles, 5 row templates, 2 QA forms. Natural style
+      70 %, compact "Report rule." style 30 %. 20 % of docs have no protocol (answers copy the row).
+    - **Held out (never generated):** UNIT concentration / length; ROUND to one decimal; CONVERT g → mg and every mass
+      conversion. Also all of A26's protocol wordings, question styles and row templates.
+    - **Leak check** (`python -m v14.protocol_docs`, 20,000 docs): 0 held-out family / unit / quantity hits, 0 shared
+      template skeletons, 0 shared 5-word phrases with A26. Docs are 689 tokens median (p90 1,391), and answer
+      tokens are 1.1 %.
+    - **Reporting split for the SCI-1 mind** (Lead; cu2a showed trained formats 0.80-0.99 vs held-out wordings 0.26):
+      - G1, trained family + TRAINED wording: UNIT mass / volume with the generator's wordings (a runner option, the
+        in-distribution ceiling);
+      - G2, trained family + held-out wording: A26 NAT on UNIT mass / volume;
+      - G3, HELD-OUT family (+ held-out wording): A26 NAT on UNIT concentration / length, ROUND, CONVERT;
+      - the compact TRAINED arm, split the same way.
+    - The bars B1-B3 stand as registered (UNIT pooled); G1-G3 are reported beside them. The day-0 minds never saw
+      protocol docs, so for them the split is moot.
   - **Prediction (written before any number):** b2p2 MIND-HELD UNIT ≈ NOPROT (≤ +0.10) at 8k and beyond, since words
     do not reach a 103M mind (A24). REFRESH UNIT ≥ 0.6 for b2p2 (the protocol sits next to the question). ROUND ≈ 0.1-0.3
     (copying 3 decimals is the prior). CONVERT ≈ 0 for every body. T++ as is ≈ 0 beyond 2k.
