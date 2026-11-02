@@ -125,7 +125,22 @@ Reading: on known general tasks the three bodies are LEVEL at equal data; PAM's 
 not general knowledge. PAM gains the least from 600M -> 3B on this suite, with the body-change caveat; the matched 1.5B
 tier (t15) gives the clean slope. What to improve: plain LM quality and tokens.
 
-### 2.8 Scaling watch — see the board; the matched 1.5B tier fills the rules / reach slope.
+### 2.8 Scaling with data at equal params (~102-103M), same mix: the matched 600M and 1.5B tiers (Mind 9616861, t15m2 verdict; 3B from the earlier runs without rule docs)
+| body | holdout 600M -> 1.5B | rules at distance (s8 D) 600M -> 1.5B | one read used 8k later (clk2) 1.5B | rules at L = 0, 1.5B |
+|---|---|---|---|---|
+| PAM M2 (b2p2 recipe) | 3.4800 -> 3.3255 | 0.65-0.74 (3 seeds) -> 0.579 | 0.87 | 1.00 |
+| PAM 16nb (plain) | 3.5662 -> 3.3784 | 0.768 -> 0.545 | 0.47 | 1.00 |
+| Transformer++ | 3.5572 -> 3.3593 | 0.134 -> 0.047 | 0.29 | 0.53 |
+| Mamba-2 | 3.4754 -> 3.3025 | ~0.10 -> 0.033 | 0.00 | 0.745 |
+Reading: language improves alike with data (about -0.19 for every body; Mamba-2 keeps a 0.02-0.08 lead, PAM M2 passes T++
+at 1.5B); rules held at distance FALL with data for every body, the baselines most (they also lose the rule placed right
+before the question), while PAM keeps a +0.50 lead and its reach with the query-time tools GROWS (skill pack 4k + contrast
+0.70 -> 0.775 on 16nb; baselines 0.105 / 0.005). Pre-registered bars at 1.5B: rules MET (both PAM bodies), language bar
+3.3225 missed by 0.003 (M2) / 0.056 (16nb). Tool-record reading stays the package's job (T++ 0.875 / Mamba-2 0.69 / PAM
+0.30). The window (W128) is a modest reach unit on M2 (+0.09 rules, shrinking with data) and hurts 16nb; it is not in the
+release body. The 3B points (r3c 3.219 vs T++ 3.206 / Mamba-2 3.164) come from runs without rule docs, so they carry no
+rules column. The product-size run (SCI-1: 386M M2, 11.5B tokens, 4k, science mix) is its own tokens tier and is
+reported against public small models only as a reference block.
 
 ## 3. Limits stated
 - Rules from words alone: a lookup at 103M (unseen value 0.00; one demonstration 0.97); rules reach the mind as
