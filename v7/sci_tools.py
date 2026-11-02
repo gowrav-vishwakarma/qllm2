@@ -105,7 +105,7 @@ FETCH_FIELDS = ('mass', 'temperature', 'pH', 'date', 'author', 'location', 'volt
                 'wavelength', 'pressure', 'duration', 'species', 'batch')
 FETCH_ASK = ('What was the {f} recorded for {k}?', 'Look up the {f} of {k}.', 'Find {k} in my notes and tell me its {f}.',
              'Which {f} did we log for {k}?', 'I need the {f} for {k}, please check the session notes.')
-FETCH_PROSE = ('For {k} the measured {f} was {v}.', 'We noted {v} as the {f} of {k} before lunch.', 'Entry for {k}: {f} came out at {v}, '
+FETCH_PROSE = ('{k} showed a {f} reading of {v}.', 'We noted {v} as the {f} of {k} before lunch.', 'Entry for {k}: {f} came out at {v}, '
                'checked twice.', 'The {f} for {k} ({b}) was {v}.', 'After calibration, {k} gave a {f} of {v}.')
 FETCH_SAY = ('The {f} recorded for {k} is {v}.', 'According to the notes, {k} has a {f} of {v}.', '{k}: {f} = {v}.',
              'The session record shows {v} as the {f} for {k}.')
