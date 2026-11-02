@@ -27,6 +27,9 @@ science check cell, the protocol-doc training source, tools design. Nothing of m
     1. `v14/a26_protocol.py --pam sci=<ckpt> --lengths 8192,32768,2048 --docs 20` (G2 / G3, every arm);
     2. `--wording train --cells unit` (G1).
     Logs `logs/v14_a26_sci_<step>_<hash>_<stamp>`; results to the board + the lineage row.
+  - **4090 sharing (Lead, user 22:39 IST 2026-11-02):** the 4090 belongs to Evol V1's lane. A26 milestone runs keep a
+    1-2 h slot at ≤ 10 GB beside its job. Before launch, free VRAM must be ≥ the A26 peak (~10.3 GB measured on day-0)
+    + 3 GB. Message Evol V1 at START and FINISH with GPU timing ONLY: nothing about Mind / Library findings.
   - **Mind's tripwire** (adopted by Mind): G1 MIND-HELD at 2k ≤ its NOPROT + 0.05 at milestone 2 → raise
     the proto share at the first continuation.
 * **Protocol-doc training source** `v14/protocol_docs.py` (Lead's YES 11:00; wired by Mind 9bf859c; determinism fix
