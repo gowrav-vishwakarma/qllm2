@@ -223,19 +223,55 @@ Bars, written before the run:
 - **Guard:** train loss on the rule tasks within 0.1 nat of echo (the organ must not hurt the plain LM path).
 Pass = L and P. Fail = neither in 3 pairs → the design goes back to §0 (not to tuning).
 
-### G2 — 150M same-batch LM (after G1 passes; 4090)
-GroveLM param-matched to M1 (102.96M: dim 768, 12 blocks, G 12, K 32, n 64,
-season 32, MLP 1536; `v15/hook.py` DEFAULT_SPEC), v13 trainer data and
-schedule (`--arch grove`, launcher `ARCH=grove`), holdout at 150M tokens
-(step 4069 of the r600 protocol) vs M1 3.9225 and echo 3.9516. Bar: within
-+0.05 of M1 (a new body at its first LM run) and tok/s ≥ 0.8× M1. Pass → G3.
-Plumbing verified 2026-10-31 (CPU, no GPU): 4-step synthetic run with
-checkpoints; greedy `generate` through `step` == full forward; step logits
-vs season path 5e-16; checkpoint config round-trips. Launch (clean tree,
-tmux, 4090 when a whole-card slot is free, or the 6000):
+### G2 — the LM bar: Grove IV at 102.96M on the r600 recipe (pre-registered Nov 2 23:40 IST)
+
+**Why now, after a failed micro-bench.** GIV-2 failed its lookup bars and
+split on prototypes, but the question the user asked ("can it be a model?")
+is the LM bar, and Lead's paid-for lesson is that ~100M-token screens do
+not predict a recurrent body's LM behaviour (screen at ≥ 600M tokens). The
+micro-bench stays the organ's unit test; G2 is the first real measurement.
+
+**Body.** Grove IV + sapling mask, `v15/hook.py` DEFAULT_SPEC: dim 768,
+12 blocks, G 12 × K 32 × n 64, season 32, conv 4, MLP 1536 → 102.96M params
+(M1 102.9M, T++ 101.9M, Mamba-2 102.6M). State 2.3 MB/seq (vs PAM 1.2–3.7,
+Mamba-2 13.4). Code `a8fe35f` or later (the run's hash is in its log name).
+
+**Recipe (unchanged v13 r600, the same data and schedule as every row):**
+`tmp_pretrain_mix.sh` with ARCH=grove, CHRONO=0 OUT_GATE=0 DELTA=0,
+TARGET_TOKENS 600M, B 18 × T 2048, lr 2e-4 cosine, warmup 1000, bf16, seed
+42; milestones at 150M (step 4069), 300M, 450M, 600M tokens. 4090:
+GRAD_ACCUM as the dry run dictates (exact accumulation), SAVE_EVERY 200 so a
+neighbour's pause costs ≤ 200 steps.
+
+**Bars (fixed before the run).**
+- G2-a (150M tokens, step 4069): holdout ≤ M1 3.9225 + 0.05 (= 3.9725). Echo
+  at 150M was 3.9516.
+- G2-b (600M tokens): holdout ≤ T++ 3.4885 + 0.03 (= 3.5185); reference M1
+  3.4906, echo 3.4885, Mamba-2 (two-stage) 3.4393, T++ aptitude 3.4802.
+- Cost row: tok/s and ms/step next to every number (Grove IV alone was 366
+  ms/step at 27.7M vs echo 116; expected ~3× M1's step time here).
+- Beyond-training-length: the 63-cell recall probe and PG-19 far gain at
+  600M as in the v13 screens, scored with the shared tools once a Grove
+  loader branch exists (`scripts/run_memory_behavioral.py::_load_v13_sempty`,
+  `v16/bench.py` Reader); not a pass/fail bar for G2.
+Pass G2-a → continue to 600M; miss G2-a by > 0.15 → stop the run (it cannot
+reach G2-b) and go back to the void.
+
+**Closest prior work (novelty rule).** Online vector-quantised memories in a
+sequence layer (OVQ-attention, Alonso et al. 2026: centroids updated online
+by k-means in a layer) and competitive learning with a conscience (DeSieno
+1988; dead-unit recycling). Difference in one line: Grove's niches are
+*born from the token itself* when nothing fits and recycled by starvation,
+its read is the winner's *succession* fruit (what followed what it ate)
+ripening within a season, and selection runs on *accumulated evidence*
+(a reign), not a per-token match; seasons make it parallel with an exact
+O(1) decode.
+
+**Launch (after the dry run fills the budget):**
 `TAG=v15g2 ARCH=grove CHRONO=0 OUT_GATE=0 DELTA=0 TARGET_TOKENS=600000000
-GRAD_CKPT=1 bash v13_sempty/tmp_pretrain_mix.sh` (the M1 control ran on the
-6000 at B 18 × T 2048, SEED 42; GEN_EVERY may stay on: Grove decodes).
+GRAD_ACCUM=<n> SAVE_EVERY=200 bash v13_sempty/tmp_pretrain_mix.sh` in tmux
+`g2_v15`, log `logs/v13_sempty_v15g2_<hash>_*.log`; VRAM gate free ≥ peak + 3
+GB; expected end time written here once measured.
 
 ### Reference rows and scorers (facts handed by Lead, Nov 2 22:44 IST; no mechanism)
 Same data, ~102M params, 600M-token tier:
