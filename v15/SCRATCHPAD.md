@@ -20,10 +20,11 @@
   Library runs a <= 10 GB eval job 1–2 h every ~7.5 h: keep ~12 GB free or
   checkpoint often. The 6000 needs Lead's OK. RAM: kill side jobs below
   ~12 GB free.
-- Compile speed smoke (eager vs V15_COMPILE=1, bench shape) running beside
-  pair 3: result -> `v15/tmp/compile_speed.py` output, scratchpad speed note.
-- Probe of pair 1's saved grove (label_category / label_exact 8-shot):
-  `v15/tmp/probe_shares.py`, TASK env; result to EXPERIMENTS 6.2.
+- Compile speed smoke (`v15/tmp/compile_speed.py`, needs PYTHONPATH=.) deferred
+  until pair 3 ends (keep the card's headroom for Library/Mind evals).
+  Alone, Grove IV trains at 33.9k tok/s (Grove I 43.8k): ~1.3x, not 3.5x.
+- Probe of pair 1's saved grove done (EXPERIMENTS 6.2): traits moved (τ to
+  13.9, b_born 0.4) but no exact re-selection in context (overlap 0.00).
 
 ## Next action
 1. Read pair 3 (~01:00 IST): P decided as registered; record + lineage + tree.

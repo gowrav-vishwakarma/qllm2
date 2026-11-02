@@ -437,9 +437,21 @@ and then drops fast; pair 1 reached echo's loss by step 5000, pair 2 was
 still descending at 6000. The split on P and on the guard is the same
 late convergence seen from two seeds. "A bit more training" is inside the
 user's bar-2 tolerance; it is also a cost to state next to every number.
-**Pair 3 (seed 23) runs now** (Nov 2 22:45 IST, 4090 handed to this lane)
+**Pair 3 (seed 23) runs now** (Nov 2 22:41 IST, 4090 handed to this lane)
 to decide P as registered; a longer-training variant would be a new,
-pre-registered row, not a re-roll.
+pre-registered row, not a re-roll. Alone on the card it trains at 33.9k
+tok/s (Grove I alone 43.8k; the 12.5k of GII-2 was a shared card), so
+Grove IV costs ~1.3× Grove I per step, not 3.5×.
+**Probe of pair 1's saved grove (label_exact 8-shot, 40 prompts; Nov 2
+22:50 IST):** this time the innate traits moved: τ rose in the strict
+groves (8.2 → 13.9 across layers) and the newborn bias b_born grew to
+0.34–0.41 in layers 1–2 (the body learned to trust newborns' evidence).
+Births per token 0.35–0.67 in the strict groves, and the same-key overlap is
+still 0.00 there: a repeated key in a new context is a new state, so exact
+re-selection does not happen (bar L stays failed by mechanism, as in GII-2);
+the loose groves (θ 0.35, 0.2) re-select at 0.64–1.00 for same and other
+keys alike (prototype groves, no instance address). The label_category
+probe needs its own prompt parser (not done).
 
 ## 5. Roads not taken (so they are not retaken)
 - Prime-period wheels / CRT phases for time and numbers (2026-10-31, 20
