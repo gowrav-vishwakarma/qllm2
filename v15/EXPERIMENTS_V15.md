@@ -237,7 +237,7 @@ tmux, 4090 when a whole-card slot is free, or the 6000):
 GRAD_CKPT=1 bash v13_sempty/tmp_pretrain_mix.sh` (the M1 control ran on the
 6000 at B 18 × T 2048, SEED 42; GEN_EVERY may stay on: Grove decodes).
 
-### Reference rows and scorers (facts handed by Lead, Nov 2 23:00 IST; no mechanism)
+### Reference rows and scorers (facts handed by Lead, Nov 2 22:44 IST; no mechanism)
 Same data, ~102M params, 600M-token tier:
 
 | body | recipe | holdout NLL | WikiText | recall 63-cell | source |
