@@ -9,11 +9,11 @@
 #   tmux new-session -d -s sci1 "bash v13_sempty/tmp/sci1_chain.sh 2>&1 | tee -a logs/v13_sempty_sci1_chain_<hash>_<stamp>.log"
 cd "$(dirname "$0")/../.." || exit 1
 H=${SCREEN_HASH:-$(git rev-parse --short HEAD)}; C=checkpoints_v13_sempty
-: "${GEOM:?}" "${MAIN_TOKENS:?}" "${DECAY_TOKENS:?}" "${BATCH:?}" "${GRAD_ACCUM:?}" "${LR:?}" "${KEEP_EVERY:?}" "${SOURCES:?}" "${WEIGHTS:?}"
+: "${GEOM:?}" "${STAGEA_TOKENS:?}" "${MAIN_TOKENS:?}" "${DECAY_TOKENS:?}" "${BATCH:?}" "${GRAD_ACCUM:?}" "${LR:?}" "${KEEP_EVERY:?}" "${SOURCES:?}" "${WEIGHTS:?}" "${SOURCES_A:?}" "${WEIGHTS_A:?}"
 disk_gb() { df -BG / | awk 'NR==2{gsub("G","",$4); print $4}'; }
 [ "$(disk_gb)" -ge 40 ] || { echo "sci1: disk $(disk_gb)G < 40, REFUSE $(date -u +%FT%TZ)"; exit 1; }
 echo "sci1 chain: code $H in $PWD, $(date -u +%FT%TZ); GEOM=$GEOM MAIN=$MAIN_TOKENS DECAY=$DECAY_TOKENS BATCH=$BATCH x$GRAD_ACCUM LR=$LR KEEP_EVERY=$KEEP_EVERY"
-COMMON="ECHO=1 CHRONO=1 OUT_GATE=1 DELTA=1 ANSWER_W=100 SEED=43 SEQ=${SEQ:-4096} BLEND_WARMUP=0 FINEWEB_LOCAL_DIR=data/fineweb-edu GEN_EVERY=0 VAL_EVERY=2000 VAL_SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,think,pysci,chatmt MAX_RETRIES=20 SOURCES=$SOURCES WEIGHTS=$WEIGHTS"
+COMMON="ECHO=1 CHRONO=1 OUT_GATE=1 DELTA=1 ANSWER_W=100 SEED=43 SEQ=${SEQ:-4096} BLEND_WARMUP=0 FINEWEB_LOCAL_DIR=data/fineweb-edu GEN_EVERY=0 VAL_EVERY=2000 VAL_SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,think,pysci,chatmt MAX_RETRIES=20 ANSWER_IN_WINDOW=1 RESET_AT_EOS=1 DECONTAM_INDEX=.cache/decontam/v1.npy"
 MAIN=$C/sci1_main_$H; DEC=$C/sci1_decay_$H; CHK=logs/v13_sempty_sci1_checks_$H.log
 check_loop() {  # CHECK each new milestone once (before KEEP_LAST prunes it: milestones are ~1B tokens apart)
   while true; do
@@ -23,13 +23,23 @@ check_loop() {  # CHECK each new milestone once (before KEEP_LAST prunes it: mil
   done
 }
 check_loop & CL=$!
-env $COMMON $GEOM TAG=sci1_main CKPT_DIR=$MAIN PIN_HASH=$H LR=$LR WARMUP=2000 LR_SCHEDULE=wsd_stable TARGET_TOKENS=$MAIN_TOKENS \
-  BATCH=$BATCH GRAD_ACCUM=$GRAD_ACCUM SAVE_EVERY=500 KEEP_EVERY=$KEEP_EVERY KEEP_LAST=4 bash v13_sempty/tmp_pretrain_mix.sh
-RC=$?; echo "=== sci1 main line exit=$RC $(date -u +%FT%TZ)"; [ "$RC" -eq 0 ] || { kill $CL; exit $RC; }
+STA=$C/sci1_stageA_$H
+if [ ! -f $STA/.done ]; then   # stage A: plain sources only (no synthetic / skill / tool / think), warmup then stable
+  env $COMMON $GEOM SOURCES=$SOURCES_A WEIGHTS=$WEIGHTS_A TAG=sci1_stageA CKPT_DIR=$STA PIN_HASH=$H LR=$LR WARMUP=2000 \
+    LR_SCHEDULE=wsd_stable TARGET_TOKENS=$STAGEA_TOKENS BATCH=$BATCH GRAD_ACCUM=$GRAD_ACCUM SAVE_EVERY=500 KEEP_EVERY=0 KEEP_LAST=1 \
+    bash v13_sempty/tmp_pretrain_mix.sh
+  RC=$?; echo "=== sci1 stage A exit=$RC $(date -u +%FT%TZ)"; [ "$RC" -eq 0 ] || { kill $CL; exit $RC; }
+  cp $STA/latest.pt $STA/stageA_final.pt && touch $STA/.done
+fi
+# stage B = the main line: --continue_from stage A (fresh budget, the full mix logged, a short re-warm), constant LR
+env $COMMON $GEOM SOURCES=$SOURCES WEIGHTS=$WEIGHTS TAG=sci1_main CKPT_DIR=$MAIN PIN_HASH=$H LR=$LR WARMUP=500 LR_SCHEDULE=wsd_stable \
+  CONTINUE_FROM=$STA/stageA_final.pt TARGET_TOKENS=$MAIN_TOKENS BATCH=$BATCH GRAD_ACCUM=$GRAD_ACCUM SAVE_EVERY=500 \
+  KEEP_EVERY=$KEEP_EVERY KEEP_LAST=4 bash v13_sempty/tmp_pretrain_mix.sh
+RC=$?; echo "=== sci1 main line (stage B) exit=$RC $(date -u +%FT%TZ)"; [ "$RC" -eq 0 ] || { kill $CL; exit $RC; }
 cp $MAIN/latest.pt $MAIN/stable_final.pt && touch $MAIN/.done; wait $CL
 echo "=== sci1 decay branch start (from $MAIN/stable_final.pt) $(date -u +%FT%TZ)"
 [ "$(disk_gb)" -ge 12 ] || { echo "sci1: disk $(disk_gb)G < 12 before decay, STOP"; exit 1; }
-env $COMMON $GEOM TAG=sci1_decay CKPT_DIR=$DEC PIN_HASH=$H LR=$LR LR_SCHEDULE=decay CONTINUE_FROM=$MAIN/stable_final.pt \
+env $COMMON $GEOM SOURCES=$SOURCES WEIGHTS=$WEIGHTS TAG=sci1_decay CKPT_DIR=$DEC PIN_HASH=$H LR=$LR LR_SCHEDULE=decay CONTINUE_FROM=$MAIN/stable_final.pt \
   TARGET_TOKENS=$DECAY_TOKENS BATCH=$BATCH GRAD_ACCUM=$GRAD_ACCUM SAVE_EVERY=500 KEEP_EVERY=0 KEEP_LAST=1 bash v13_sempty/tmp_pretrain_mix.sh
 echo "=== sci1 decay exit=$? $(date -u +%FT%TZ)"
 bash v13_sempty/tmp/sci1_check.sh $DEC/best_model.pt sci1_release_$H >> $CHK 2>&1

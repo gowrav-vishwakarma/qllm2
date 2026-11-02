@@ -1517,8 +1517,10 @@ SCI_JSONL_REPOS = {
     'pubmed': ('common-pile/pubmed_filtered', 'licensed_pubmed-*.json.gz'),
     'pes2o':  ('common-pile/peS2o_filtered', 'peS2o-*.json.gz'),
 }
-COSMO_REPO = 'HuggingFaceTB/cosmopedia'
+COSMO_REPO = 'HuggingFaceTB/cosmopedia'          # v1 (kept for the record; SCI-1 uses v2 below)
 COSMO_SUBSETS = ('openstax', 'stanford', 'khanacademy', 'auto_math_text', 'web_samples_v1', 'web_samples_v2', 'wikihow')
+COSMO2 = ('HuggingFaceTB/smollm-corpus', 'cosmopedia-v2/train-*.parquet')   # SmolLM2's own textbook set (ODC-BY)
+FINEMATH = ('HuggingFaceTB/finemath', 'finemath-4plus/train-*.parquet')     # quantitative reasoning (ODC-BY), the 4+ cut
 
 
 def _hf_glob(repo: str, pattern: str) -> List[str]:
@@ -1584,6 +1586,8 @@ def _sci_text_iter(name: str, *, exclude_holdout: bool = False, only_holdout: bo
         text = row.get('text') or ''
         if len(text) < min_chars:
             return ()
+        if name == 'pes2o' and str((row.get('metadata') or {}).get('pdf_src', '')).lower() == 'arxiv':
+            return ()                                  # dedup: the arxiv source already covers these papers
         hold = pretrain_holdout_bucket(text, holdout_pct)
         if (exclude_holdout and hold) or (only_holdout and not hold):
             return ()
@@ -1598,11 +1602,9 @@ def _sci_text_iter(name: str, *, exclude_holdout: bool = False, only_holdout: bo
             start = end
         return tuple(pieces)
     key = counter_key or name
-    if name == 'cosmo':
-        import itertools
-        per = [_hf_parquet_files(COSMO_REPO, f'data/{s}/*.parquet') for s in COSMO_SUBSETS]
-        files = [f for group in itertools.zip_longest(*per) for f in group if f]
-        yield from _parquet_stream('cosmo_tb', files, extract, ['text'], skip_docs=skip_docs,
+    if name in ('cosmo', 'finemath'):
+        repo, pat = COSMO2 if name == 'cosmo' else FINEMATH
+        yield from _parquet_stream(f'{name}_v2', _hf_parquet_files(repo, pat), extract, ['text'], skip_docs=skip_docs,
                                    doc_counters=doc_counters, counter_key=key)
         return
     repo, pattern = SCI_JSONL_REPOS[name]
@@ -1618,7 +1620,7 @@ def source_holdout_tokens(name: str, tokenizer, n_tokens: int = 262_144, holdout
     cache = _P('.cache/v7_tokens') / f'srchold_{name}_v1_h{holdout_pct}_n{n_tokens}_v{len(tokenizer)}.pt'
     if cache.exists():
         return torch.load(cache)
-    if name in SCI_JSONL_REPOS or name == 'cosmo':
+    if name in SCI_JSONL_REPOS or name in ('cosmo', 'finemath'):
         it = _sci_text_iter(name, only_holdout=True, holdout_pct=holdout_pct, counter_key=f'hold_{name}')
     elif name == 'chatmt':
         from v7 import sci_tools as _st
@@ -1644,6 +1646,31 @@ def source_holdout_tokens(name: str, tokenizer, n_tokens: int = 262_144, holdout
     cache.parent.mkdir(parents=True, exist_ok=True)
     torch.save(t, cache)
     return t
+
+
+_DECONTAM = None
+
+
+def _decontam_wrap(name: str, it: Iterator[str], doc_counters: Optional[Dict[str, int]]) -> Iterator[str]:
+    """SCI-1: if DECONTAM_INDEX points at a v7/decontam index, drop every doc with a 13-gram hit on a protected test set; the
+    drop count rides in the cursor as '<source>#decon' (and is logged). Off (pass-through) when the env var is unset."""
+    global _DECONTAM
+    path = os.environ.get('DECONTAM_INDEX', '').strip()
+    if not path:
+        return it
+    if _DECONTAM is None:
+        from v7.decontam import DecontamFilter
+        _DECONTAM = DecontamFilter(path)
+        print(f'[decontam] index {path} sha256 {_DECONTAM.sha} ({_DECONTAM.idx.size:,} 13-grams)', flush=True)
+
+    def gen():
+        for text in it:
+            if _DECONTAM.hit(text):
+                if doc_counters is not None:
+                    doc_counters[f'{name}#decon'] = doc_counters.get(f'{name}#decon', 0) + 1
+                continue
+            yield text
+    return gen()
 
 
 def _tag_source(name: str, it: Iterator[str]) -> Iterator[Tuple[str, str]]:
@@ -2561,7 +2588,8 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     'arxiv':         {'schema': 'text',     'kind': 'sci',       'hf': 'common-pile/arxiv_papers_filtered'},
     'pubmed':        {'schema': 'text',     'kind': 'sci',       'hf': 'common-pile/pubmed_filtered'},
     'pes2o':         {'schema': 'text',     'kind': 'sci',       'hf': 'common-pile/peS2o_filtered'},
-    'cosmo':         {'schema': 'text',     'kind': 'sci',       'hf': 'HuggingFaceTB/cosmopedia'},
+    'cosmo':         {'schema': 'text',     'kind': 'sci',       'hf': 'HuggingFaceTB/smollm-corpus cosmopedia-v2'},
+    'finemath':      {'schema': 'text',     'kind': 'sci',       'hf': 'HuggingFaceTB/finemath finemath-4plus'},
     # SCI-1: Library's protocol docs (v14/protocol_docs.py): UNIT / ROUND / CONVERT conventions stated, then applied; the
     # A26 test families are never generated. Answers marked, so answer weighting applies as for b2.
     'proto':         {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-proto'},
@@ -2895,7 +2923,7 @@ def build_pretrain_mix_token_cache(
         )
         if spec['kind'] == 'web':
             web_sources.append(s)
-        tagged.append((s, it))
+        tagged.append((s, _decontam_wrap(s, it, doc_counters)))
 
     if len(tagged) > 1:
         text_iter = _blend_interleave_text_iters(
@@ -3125,7 +3153,7 @@ def load_pretrain_mix(
         )
         if spec['kind'] == 'web':
             web_sources.append(s)
-        tagged.append((s, it))
+        tagged.append((s, _decontam_wrap(s, it, doc_counters)))
 
     print(
         f"Streaming pretrain blend: sources={list(sources)} "
