@@ -93,22 +93,32 @@ def item(rng, cell):
     return f'{t / 10000:.4f}', f'{t / 10000:.4f}', f'{t / 10:.1f}'
 
 
-def make_doc(rng, tok, fill, cell, d):
+def make_doc(rng, tok, fill, cell, d, wording='a26'):
+    """wording 'a26' = the registered (held-out) wordings; 'train' = G1 of the addendum: UNIT on the TRAINED quantities
+    (mass / volume) with v14/protocol_docs.py's own protocol wordings, question styles and row templates."""
     enc = lambda s: tok.encode(s, add_special_tokens=False)  # noqa: E731
-    q = 'mass' if cell == 'convert' else rng.choice(list(QUANT))
-    qp, units = QUANT[q]
-    u = 'mg' if cell == 'convert' else rng.choice(units)
-    proto = rng.choice(PROTO[cell]).format(q=q, qp=qp, u=u)
+    if wording == 'train':
+        from v14 import protocol_docs as P
+        assert cell == 'unit', 'G1 (trained wording) is defined for the UNIT cell only'
+        q = rng.choice(list(P.UNIT_Q)); qp, Qp, units = P.UNIT_Q[q]; u = rng.choice(units)
+        proto = rng.choice(P.UNIT_W).format(q=q, qp=qp, Qp=Qp, u=u)
+        quest_t, rows_t, mat_list = P.QUESTIONS, P.ROW_T, P.MATERIALS
+    else:
+        q = 'mass' if cell == 'convert' else rng.choice(list(QUANT))
+        qp, units = QUANT[q]
+        u = 'mg' if cell == 'convert' else rng.choice(units)
+        proto = rng.choice(PROTO[cell]).format(q=q, qp=qp, u=u)
+        quest_t, rows_t, mat_list = QUEST, ROWS, MATERIALS
     ids = set()
     while len(ids) < 8:
         ids.add(rng.choice(LETTERS) + str(rng.randint(1, 29)))
     samples = list(ids); rng.shuffle(samples)
-    mats = rng.sample(MATERIALS, 8)
+    mats = rng.sample(mat_list, 8)
     rows, asked = [], None
     for i, s in enumerate(samples):
         rv, pv, tv = item(rng, cell)
         shown = rv if cell == 'unit' else f'{rv} {"g" if cell == "convert" else u}'
-        rows.append(enc(rng.choice(ROWS).format(s=s, m=mats[i], q=q, v=shown)))
+        rows.append(enc(rng.choice(rows_t).format(s=s, m=mats[i], q=q, v=shown)))
         if i == 0:
             asked = dict(sample=s, row_value=rv, planner_value=pv, target=tv, unit=u)
     L = d + LEAD
@@ -143,10 +153,11 @@ def make_doc(rng, tok, fill, cell, d):
             out += head if what == 'proto' else rows[what]
         return out + body[cur:]
     sent = enc(' ' + proto)
-    question = rng.choice(QUEST).format(q=q, s=asked['sample'])
+    question = rng.choice(quest_t).format(q=q, s=asked['sample'])
     q_cap = question[0].upper() + question[1:]
     return dict(held=build(sent), refresh=build(sent, refresh=True), noprot=build(None),
-                trained=build(enc('\n') + enc(pack) + enc('\n')), pack=pack, proto=proto, question=q_cap, q=q, **asked)
+                trained=build(enc('\n') + enc(pack) + enc('\n')), pack=pack, proto=proto, question=q_cap, q=q, wording=wording,
+                **asked)
 
 
 def num_re(v):
@@ -206,6 +217,7 @@ def main():
     ap.add_argument('--docs', type=int, default=20); ap.add_argument('--seed', type=int, default=26000)
     ap.add_argument('--device', default='cuda'); ap.add_argument('--out', required=True)
     ap.add_argument('--guard_mb', type=int, default=2000)
+    ap.add_argument('--wording', default='a26', choices=['a26', 'train'], help="'train' = addendum G1 (UNIT only)")
     a = ap.parse_args()
     head = dict(unit='A26', hash=subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True,
                                                 cwd=ROOT).stdout.strip(), started=time.strftime('%Y-%m-%d %H:%M'), args=vars(a))
@@ -233,10 +245,10 @@ def main():
                     if free < a.guard_mb:
                         print(f'GUARD: {free:.0f} MB free < {a.guard_mb}; stopping', flush=True)
                         return
-                doc = make_doc(rng, tok, fill, cell, d)
+                doc = make_doc(rng, tok, fill, cell, d, a.wording)
                 qi = enc(EXAM.format(q=doc['question']))
                 base = dict(cell=cell, d=d, doc=di, proto=doc['proto'], question=doc['question'], target=doc['target'],
-                            unit=doc['unit'], row_value=doc['row_value'])
+                            unit=doc['unit'], row_value=doc['row_value'], quantity=doc['q'], wording=doc['wording'])
                 t0 = time.time()
                 _, finfo = ref.answer(doc['held'], EXAM.format(q=doc['question']))
                 row = finfo['row']
