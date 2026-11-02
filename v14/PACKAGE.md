@@ -55,6 +55,11 @@ both bodies with no package change. A random-init echo reads out ~0, so `_dilate
 | M2 1024 × 24 | 386.4M | block 12 | 3.67 MB | 1,028 / 8.2 |
 | M2 1152 × 20 | 410.7M | block 10 | 3.99 MB | 1,156 / 9.2 |
 | 16nb 1024 × 24 | 431.1M | block 12 | **13.11 MB** | 1,028 / 8.2 |
+| **SCI-1 exact** (Mind 2026-11-02): M2, dim 1024 × 24, 8 heads × 128, mlp 3704, notebooks 3 / 7 / … / 23, reset_at_eos | **385.82M** | block 12 | **3.67 MB** (3,674,304 B; 25 entries) | 1,028 / 8.25 |
+
+SCI-1 exact config: the contract passes (parity chunked / decode / deep copy 7.7e-7 / 1.0e-6 / 1.0e-6), the same with
+two EOS separators inside the parity text (a state reset crossed by chunking and decoding). Checked that the reset
+acts: logits are identical before the EOS and differ after it. Sessions hold no EOS, so the package is unaffected.
 
 Rerun it on Mind's final geometry with `--like <ref ckpt> --set dim=… n_layers=… n_heads=… mlp_hidden=… pam_layers=…`.
 

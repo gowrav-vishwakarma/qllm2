@@ -70,13 +70,16 @@ def random_init_ckpt(like: str, sets: list[str], out_dir: str) -> tuple[str, dic
     """a checkpoint file holding a random-init body: the reference config with --set overrides (seed 0)."""
     from v14.hook import build_lm, config_from_raw
     raw = dict(torch.load(like, map_location='cpu', weights_only=False, mmap=True)['config'])
+    extra = {}
     for kv in sets:
         k, v = kv.split('=', 1)
-        if k not in raw:
-            sys.exit(f'--set {k}: not a config field ({sorted(raw)})')
-        raw[k] = _val(v)
+        (raw if k in raw else extra)[k] = _val(v)
     torch.manual_seed(0)
     cfg = config_from_raw(raw); cfg.dropout = 0.0; cfg.gradient_checkpointing = False
+    for k, v in extra.items():                     # real config fields the reference checkpoint did not save
+        if not hasattr(cfg, k):
+            sys.exit(f'--set {k}: not a config field')
+        setattr(cfg, k, v); raw[k] = v
     model = build_lm(cfg)
     path = os.path.join(out_dir, 'contract_random_init.pt')
     torch.save({'config': raw, 'model_state_dict': model.state_dict()}, path)
@@ -84,10 +87,13 @@ def random_init_ckpt(like: str, sets: list[str], out_dir: str) -> tuple[str, dic
 
 
 @torch.no_grad()
-def check(pkg: Package, n_tok: int = 4096, chunk: int = 1024) -> dict:
+def check(pkg: Package, n_tok: int = 4096, chunk: int = 1024, eos: int | None = None) -> dict:
     m, dev, tok = pkg.mind.m, pkg.mind.dev, pkg.tok
     from memory_probes.spread import filler_tokens
     ids = filler_tokens(str(HOLDOUT))[:n_tok].tolist()
+    if eos is not None:                            # document separators inside the text: parity across a state reset
+        for p_ in (n_tok // 3 + 7, 2 * n_tok // 3 + 3):
+            ids[p_] = eos
     x = torch.tensor([ids], device=dev)
     rel = lambda a, b: float((a.float() - b.float()).norm() / a.float().norm().clamp_min(1e-12))  # noqa: E731
     r = dict(params=sum(p.numel() for p in m.parameters()), n_blocks=len(m.blocks), address_layer=pkg.address_layer)
@@ -169,6 +175,7 @@ def main():
     ap.add_argument('--ckpt'); ap.add_argument('--like'); ap.add_argument('--set', nargs='*', default=[])
     ap.add_argument('--device', default='cpu'); ap.add_argument('--tokens', type=int, default=4096)
     ap.add_argument('--out', default=None)
+    ap.add_argument('--eos', type=int, default=None, help='put this token (e.g. 50256) at 2 positions inside the parity text')
     a = ap.parse_args()
     tmp = None
     if a.like:
@@ -178,7 +185,7 @@ def main():
         ck, raw = a.ckpt, None
     try:
         pkg = Package(ck, device=a.device)
-        res = dict(ckpt=a.ckpt or f'random init like {a.like} with {a.set}', **check(pkg, a.tokens), toy=toy(pkg))
+        res = dict(ckpt=a.ckpt or f'random init like {a.like} with {a.set}', **check(pkg, a.tokens, eos=a.eos), toy=toy(pkg))
     finally:
         if tmp:
             for f in Path(tmp).iterdir():
