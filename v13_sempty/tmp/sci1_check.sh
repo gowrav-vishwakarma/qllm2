@@ -9,7 +9,9 @@ echo "=== CHECK $n ($B) $(date -u +%FT%TZ)"
 LP=logs/learning_probes/v13_sempty_${n}_spread_s7000_t400.json
 [ -f $LP ] || $PY scripts/run_learning_probe.py --model-type v13_sempty --checkpoint $B --output $LP --suite b2 --tasks shift_wide_new,affine_map_new --shots 8 --trials 400 --seed 7000 --spread 0,2048,4096 2>&1 | grep -E "per task|free \(A7|saved"
 S=logs/diag/v13_sempty_skillpack_${n}.jsonl
-[ -s $S ] || $PY scripts/run_skillpack_probe.py --checkpoint $B --variants skillpack,contrast --alphas 0,4 --lengths 0,2048,4096 --docs 100 --mem_frac 0.12 --out $S 2>&1 | grep -v "$X" | tail -1
+[ -s $S ] || $PY scripts/run_skillpack_probe.py --checkpoint $B --variants skillpack,contrast --alphas 0,4 --lengths 0,2048,4096,8192 --docs 100 --mem_frac 0.12 --out $S 2>&1 | grep -v "$X" | tail -1
+D=logs/diag/v13_sempty_clk2_echo_${n}.jsonl
+[ -s $D ] || $PY scripts/run_skillpack_probe.py --checkpoint $B --variants dilate --dilations 1,8 --dilate_where echo --lengths 8192 --docs 50 --seed 8700 --mem_frac 0.12 --out $D 2>&1 | grep -v "$X" | tail -1
 T=logs/memory_probes/v13_sempty_${n}_t40_behavioral.json
 [ -f $T ] || $PY scripts/run_memory_behavioral.py --model-type v13_sempty --checkpoint $B --preset baseline_real_pm --context-lengths 128,256,512,1024,2048,4096,8192 --positions 0,0.5,1 --association-counts 1,4,8 --trials 40 --max-context 8192 --output $T 2>&1 | grep -v scored | tail -1
 M=logs/sci1/v13_sempty_mc_${n}.json
