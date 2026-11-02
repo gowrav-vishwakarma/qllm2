@@ -5896,3 +5896,26 @@ stage A, with aptitude docs, unlike 16nb's r3ca_pre: stated as part of the recip
 **Bars** (as t15): holdout ≤ 3.3225 (Mamba-2 + 0.02) AND s8 D ≥ 0.147.
 **Reported:** skill pack 4k + contrast, clk2 8k, t40 far needles, the tool read, and the slope from b2p2 (600M).
 **Prior work / novelty:** as t15 (a measurement).
+
+## t15pam_m2 VERDICT (13:20 IST, 2026-11-02): the M2 body at 1.5B is the better PAM body. LM bar MISSED by 0.003 (3.3255 vs ≤ 3.3225); rules bar MET (s8 D 0.579). It beats 16nb on LM by 0.053 and on reach; SCI-1's body = M2
+
+**Arm:** `t15m2_main_48a3bda` (M2: 4 notebooks + shared reads + echo, 102.9M), from `c1m2a_pre`, b2p2's recipe, the t15 mix,
+1.50B tokens, seed 43; 6000.
+
+| readout at 1.5B | **M2 (t15m2)** | 16nb (t15pam) | T++ | Mamba-2 |
+|---|---|---|---|---|
+| holdout | **3.3255** | 3.3784 | 3.3593 | **3.3025** |
+| WikiText val loss | 4.0408 | 4.1071 | 4.0275 | 4.0128 |
+| s8 D (scored) | 0.579 | 0.545 | 0.047 | 0.033 |
+| skill pack 4k + contrast, 20-way | **0.85** | 0.775 | 0.105 | 0.005 |
+| clk2 8k, 20-way | **0.87** | 0.47 | 0.29 | 0.00 |
+| tool read (free, syn / nat) | 0.55 / 0.40 | – | 0.875 mean | 0.69 mean |
+
+**Slope 600M → 1.5B** (M2: b2p2 → t15m2): holdout 3.4800 → 3.3255 (−0.155; T++ −0.198, Mamba-2 −0.173); s8 D 0.691 → 0.579.
+
+**Reading:**
+- M2 at 1.5B lands between Mamba-2 (−0.023) and T++ (+0.034) on LM, 0.003 short of the bar, and keeps a huge rules / reach lead.
+- Its LM slope is the smallest of the three (−0.155), but it started 0.083 ahead of T++ (b2p2 3.480 vs b2t2 3.557).
+- 16nb was the wrong scaling body on this mix. **SCI-1 uses M2** (Lead's rule: M2 if it meets the bar or beats 3.3784).
+- **Note:** M2's stage A (`c1m2a_pre`, with aptitude docs) differs from 16nb's (`r3ca_pre`). This is stated; the body comparison
+  carries that difference.
