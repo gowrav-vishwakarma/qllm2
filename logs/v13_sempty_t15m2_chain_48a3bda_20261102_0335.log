@@ -1,0 +1,10 @@
+t15m2 chain: code 48a3bda in /home/ubuntu/Development/qllm_t15m2, 2026-11-02T03:35:26Z
+=== t15m2_main_48a3bda readouts 2026-11-02T07:46:01Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.492, 'shift_wide_new@4096': 0.235, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.895, 'affine_map_new@4096': 0.693}  mean 0.719
+free (A7): {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.25, 'shift_wide_new@4096': 0.117, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.62, 'affine_map_new@4096': 0.343}  mean 0.555
+saved logs/learning_probes/v13_sempty_t15m2_main_48a3bda_spread_s7000_t400.json
+  affine_map_new done
+  affine_map_new done
+{'arch': 'pam', 'ckpt': 'checkpoints_v13_sempty/t15m2_main_48a3bda/best_model.pt', 'task': 'tool', '
+{'arch': 'pam', 'ckpt': 'checkpoints_v13_sempty/t15m2_main_48a3bda/best_model.pt', 'task': 'tool', '
+=== t15m2 chain DONE 2026-11-02T07:49:24Z
