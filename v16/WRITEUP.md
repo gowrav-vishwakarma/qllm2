@@ -134,3 +134,8 @@ tier (t15) gives the clean slope. What to improve: plain LM quality and tokens.
 - The mind generalises values and keys, not formats (cu2a: trained formats 0.80-0.99, held-out wordings 0.26).
 - Multi-fact composition and counting: not solved by any body at this size; the planner chain is library plumbing.
 - Language at 3B: +0.013 nats behind T++, +0.055 behind Mamba-2 on one seed; T++ gains most from data.
+- Stated conventions (A26 day-0, ccdf41f): applying one is a skill that no body has at 600M-1.5B tokens. The
+  fetch delivers the value, and the convention is dropped: units, rounding and unit conversion score right
+  0.00-0.05 (the value is copied 0.2-0.8), the same as without the protocol, even with the protocol ~600 tokens
+  back. Reference tiers: b2p2 (102.9M, 600M tokens) through the package; T++ / Mamba-2 at 1.5B tokens, as is and
+  with the library. SCI-1's scores are read against this.
