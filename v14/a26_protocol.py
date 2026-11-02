@@ -147,7 +147,10 @@ def make_doc(rng, tok, fill, cell, d, wording='a26'):
         events = sorted([(lead, 'proto')] * (head is not None) + [(pos[i], i) for i in order],
                         key=lambda e: e[0])
         if refresh and head is not None:
-            events = sorted(events + [(snap(p), 'proto') for p in range(lead + REFRESH, L - 64, REFRESH)], key=lambda e: e[0])
+            # copies anchored from the QUESTION backwards (d5da73d anchored them from the start, which left the newest
+            # copy ~2.0-2.2k tokens back: outside a 2k window); the newest now sits just before the asked row
+            newest = L - ASKED_BACK - 64
+            events = sorted(events + [(snap(p), 'proto') for p in range(newest, lead + 64, -REFRESH)], key=lambda e: e[0])
         for p_, what in events:
             out += body[cur:p_]; cur = p_
             out += head if what == 'proto' else rows[what]
@@ -218,6 +221,7 @@ def main():
     ap.add_argument('--device', default='cuda'); ap.add_argument('--out', required=True)
     ap.add_argument('--guard_mb', type=int, default=2000)
     ap.add_argument('--wording', default='a26', choices=['a26', 'train'], help="'train' = addendum G1 (UNIT only)")
+    ap.add_argument('--arms', default='all', help="comma list of arms to run (e.g. refresh,lib_refresh); 'all' = every arm")
     a = ap.parse_args()
     head = dict(unit='A26', hash=subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True,
                                                 cwd=ROOT).stdout.strip(), started=time.strftime('%Y-%m-%d %H:%M'), args=vars(a))
@@ -253,11 +257,14 @@ def main():
                 _, finfo = ref.answer(doc['held'], EXAM.format(q=doc['question']))
                 row = finfo['row']
                 rows_tok = {k: (doc[k][row[0]:row[1]] if row else []) for k in ('held',)}
+                want = (lambda arm: a.arms == 'all' or arm in a.arms.split(','))  # noqa: E731
                 for n, pkg in pk.items():
-                    for arm in ('held', 'refresh', 'noprot'):
+                    for arm in [x for x in ('held', 'refresh', 'noprot') if want(x)]:
                         ans, info = pkg.answer(doc[arm], EXAM.format(q=doc['question']))
                         outf.write(json.dumps(dict(base, body=n, arm=arm, answer=ans, path=info['path'],
                                                    row=(info.get('row_text') or '')[-90:], **score(cell, ans, doc))) + '\n')
+                    if not want('alone') and not want('trained'):
+                        continue
                     s = pkg.read(doc['held']); st = copy.deepcopy(s['state'])
                     la, sa, oa = pkg.mind.feed(qi, st, s['off'])
                     alone = tok.decode(pkg._gen(la, sa, oa, la, copy.deepcopy(sa), oa, 0.0, MAX_NEW))
@@ -273,9 +280,10 @@ def main():
                 for n, R in wr.items():
                     held = doc['held']
                     ctx = held if (R.arch == 'mamba2' or len(held) <= WINDOW) else held[-WINDOW:]
-                    ans = tok.decode(win_greedy(R, ref, ctx + qi))
-                    outf.write(json.dumps(dict(base, body=n, arm='asis', answer=ans, **score(cell, ans, doc))) + '\n')
-                    for arm in ('held', 'refresh', 'noprot'):
+                    if want('asis'):
+                        ans = tok.decode(win_greedy(R, ref, ctx + qi))
+                        outf.write(json.dumps(dict(base, body=n, arm='asis', answer=ans, **score(cell, ans, doc))) + '\n')
+                    for arm in [x for x in ('held', 'refresh', 'noprot') if want('lib_' + x)]:
                         win = doc[arm][-WINDOW:]
                         r_ = rows_tok['held']
                         ans = tok.decode(win_greedy(R, ref, win + r_ + qi, win + qi)) if r_ else ''
