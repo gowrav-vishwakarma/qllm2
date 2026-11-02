@@ -18,5 +18,5 @@ M=logs/sci1/v13_sempty_mc_${n}.json
 [ -f $M ] || $PY scripts/mc_eval.py --ckpt $B --out $M 2>&1 | grep -E '^(hellaswag|arc|piqa)'
 K=logs/sci1/v13_sempty_think_${n}.json
 [ -f $K ] || $PY scripts/think_eval.py --ckpt $B --n 200 --out $K 2>&1 | grep -E "^think_eval"
-$PY scripts/sci_gen.py --ckpt $B 2>&1 | grep -v "$X"
+$PY scripts/sci_gen.py --ckpt $B 2>&1 | grep -v "$X" | tee logs/sci1/v13_sempty_gens_${n}.txt   # the user reads these without the log
 echo "=== CHECK $n DONE $(date -u +%FT%TZ)"
