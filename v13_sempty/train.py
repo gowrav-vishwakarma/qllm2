@@ -342,6 +342,7 @@ class Trainer:
         log_interval: int = 1,
         val_loader=None,
         wiki_val_loader=None,
+        source_val_loaders=None,
         is_streaming: bool = False,
         tokenizer=None,
         gen_every: int = 0,
@@ -390,6 +391,8 @@ class Trainer:
         # Optional secondary eval: WikiText-103 val, the anchor comparable to
         # the 23.81 fair-run number (never mixed into training).
         self.wiki_val_loader = wiki_val_loader
+        # SCI-1: per-source holdout split (--val_sources), eval-only; does not gate best_model.
+        self.source_val_loaders = source_val_loaders or {}
         # Live IterableDataset stream => do not re-iterate across epochs.
         self.is_streaming = is_streaming
         self.tokenizer = tokenizer
@@ -872,6 +875,14 @@ class Trainer:
                             f"val_loss={wvl:.4f} val_ppl={math.exp(min(wvl, 20)):.2f}",
                             flush=True,
                         )
+                if self.source_val_loaders:
+                    parts = []
+                    for sname, sl in self.source_val_loaders.items():
+                        try:
+                            parts.append(f"{sname}={self._val_loss(sl):.4f}")
+                        except Exception as e:  # noqa: BLE001
+                            parts.append(f"{sname}=failed({type(e).__name__})")
+                    print(f"  [val_src @ step {self.global_step}] " + " ".join(parts), flush=True)
 
             if (
                 self.save_every_steps > 0 and self.global_step > 0
@@ -1039,6 +1050,11 @@ def build_argparser():
                    help='DataLoader workers (forced 0 for a live stream)')
     p.add_argument('--no_wiki_val', action='store_true',
                    help='skip the secondary WikiText-103 val anchor')
+    p.add_argument('--val_sources', type=str, default='',
+                   help='SCI-1: comma list of sources with a per-source holdout val (e.g. dclm,fineweb,arxiv,pubmed,pes2o,cosmo); '
+                        'logged as [val_src @ step N]; eval-only')
+    p.add_argument('--val_source_tokens', type=int, default=262144,
+                   help='tokens per source in the per-source holdout val')
     p.add_argument('--resume', type=str, default='',
                    help="resume a run: path to a checkpoint written by this "
                         "trainer, or 'auto' = <checkpoint_dir>/latest.pt if it "
@@ -1192,6 +1208,7 @@ def main():
 
     val_loader = None
     wiki_val_loader = None
+    source_val_loaders = {}
     is_streaming = False
     data_cursor = None
     # --- resume: read the checkpoint BEFORE the data pipeline is built so the
@@ -1305,6 +1322,11 @@ def main():
             wv, _ = load_wikitext103_val(seq_len=args.seq_len)
             wiki_val_loader = DataLoader(wv, batch_size=args.batch_size,
                                          shuffle=False)
+        for sname in [x.strip() for x in args.val_sources.split(',') if x.strip()]:
+            from v7.data import source_holdout_tokens, TextDataset as _TD
+            st = source_holdout_tokens(sname, tokenizer, n_tokens=args.val_source_tokens, holdout_pct=args.holdout_pct)
+            source_val_loaders[sname] = DataLoader(_TD(st, args.seq_len), batch_size=args.batch_size, shuffle=False)
+            print(f"[val_src] {sname}: {st.numel():,} holdout tokens", flush=True)
         print(f"streaming pretrain: sources={sources} weights={weights} "
               f"target_tokens={target} steps={args.steps} "
               f"cached={not is_streaming} chat_vocab={use_chat_vocab} "
@@ -1377,6 +1399,7 @@ def main():
         log_interval=args.log_interval,
         val_loader=val_loader,
         wiki_val_loader=wiki_val_loader,
+        source_val_loaders=source_val_loaders,
         is_streaming=is_streaming,
         tokenizer=tokenizer,
         gen_every=args.gen_every,
