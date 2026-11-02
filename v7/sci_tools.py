@@ -8,8 +8,8 @@ shared with the package (Library's v0: a tool result is read like a fetched row)
 
 - ``tools``  : glaive-function-calling-v2 (Apache-2.0) + ToolACE (Apache-2.0) + our own library-fetch docs (call -> one result
                row -> an answer that uses it). Normal LM weight (no answer marks).
-- ``think``  : MetaMathQA (MIT) + GSM8K train (MIT): user -> <think> a short rationale </think> -> the final answer; responses
-               longer than ``max_chars`` are skipped (short plans only at this size).
+- ``think``  : MetaMathQA (MIT) + GSM8K train (MIT), each item ONCE in THINK ON ('Reasoning: on' system line + <think> short
+               rationale </think> + answer) or OFF (answer only), ~50 / 50; responses > ``max_chars`` skipped.
 - ``pysci``  : Common Pile Stack-Edu (filtered, per-file permissive licences): Python files that import a scientific / analysis
                library (numpy, scipy, pandas, matplotlib, sklearn, ...); code only (no executed output in this source).
 Train / holdout split = v7.data.pretrain_holdout_bucket on the rendered text. In-memory sources are shuffled once with a fixed
@@ -134,23 +134,34 @@ def _fetch_docs(n: int, seed: int) -> List[str]:
     return out
 
 
-def _think_docs(max_chars: int = 1200) -> List[str]:
+THINK_ON = 'Reasoning: on'   # the user's switch (user 11:30 IST via Lead): present = think, absent = answer only; default OFF
+
+
+def _think_render(q: str, why: str, ans: str, on: bool) -> str:
+    if on:
+        return _turn('system', THINK_ON) + _turn('user', q) + _turn('assistant', f'<think>\n{why.strip()}\n</think>\nThe answer is {ans}.')
+    return _turn('user', q) + _turn('assistant', f'The answer is {ans}.')
+
+
+def _think_docs(max_chars: int = 1200, seed: int = 43) -> List[str]:
+    """Each item is rendered ONCE, in THINK ON (system line + <think> trace + answer) or OFF (same prompt, answer only), ~50 / 50
+    by a seeded draw, so the marker is the only difference. Nothing else in the mix carries <think> (smoltalk2's is stripped)."""
     from huggingface_hub import hf_hub_download
     from datasets import load_dataset
-    out = []
+    out, rng = [], random.Random(seed + 7)
     for r in json.load(open(hf_hub_download('meta-math/MetaMathQA', 'MetaMathQA-395K.json', repo_type='dataset'))):
         resp = r.get('response', '')
         if len(resp) > max_chars or 'The answer is:' not in resp:
             continue
         why, ans = resp.rsplit('The answer is:', 1)
-        out.append(_turn('user', r['query']) + _turn('assistant', f'<think>\n{why.strip()}\n</think>\nThe answer is {ans.strip()}.'))
+        out.append(_think_render(r['query'], why, ans.strip(), rng.random() < 0.5))
     for r in load_dataset('openai/gsm8k', 'main', split='train'):
         a = r['answer']
         if len(a) > max_chars or '####' not in a:
             continue
         why, ans = a.rsplit('####', 1)
         why = re.sub(r'<<[^>]*>>', '', why)              # GSM8K's calculator annotations
-        out.append(_turn('user', r['question']) + _turn('assistant', f'<think>\n{why.strip()}\n</think>\nThe answer is {ans.strip()}.'))
+        out.append(_think_render(r['question'], why, ans.strip(), rng.random() < 0.5))
     return out
 
 
