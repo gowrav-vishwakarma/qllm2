@@ -1,0 +1,18 @@
+#!/bin/bash
+# SCI-1 milestone CHECK (EXPERIMENTS_SEMPY "SCI-1"): one full checkpoint -> s8 D, skill pack 2k / 4k + contrast, far needles (t40),
+# the known-suite subset (scripts/mc_eval.py: HellaSwag / ARC-e / PIQA, = lm-eval), and 3 shown generations. Holdout, the
+# per-source split and WikiText come from the training log's val lines at the same step.
+#   bash v13_sempty/tmp/sci1_check.sh <ckpt.pt> <name>        (runs beside training; probes cap their VRAM)
+cd "$(dirname "$0")/../.." || exit 1
+B=$1; n=$2; PY=.venv/bin/python; X="symbolic\|Warning\|warn"; mkdir -p logs/diag logs/learning_probes logs/memory_probes logs/sci1
+echo "=== CHECK $n ($B) $(date -u +%FT%TZ)"
+LP=logs/learning_probes/v13_sempty_${n}_spread_s7000_t400.json
+[ -f $LP ] || $PY scripts/run_learning_probe.py --model-type v13_sempty --checkpoint $B --output $LP --suite b2 --tasks shift_wide_new,affine_map_new --shots 8 --trials 400 --seed 7000 --spread 0,2048,4096 2>&1 | grep -E "per task|free \(A7|saved"
+S=logs/diag/v13_sempty_skillpack_${n}.jsonl
+[ -s $S ] || $PY scripts/run_skillpack_probe.py --checkpoint $B --variants skillpack,contrast --alphas 0,4 --lengths 0,2048,4096 --docs 100 --mem_frac 0.12 --out $S 2>&1 | grep -v "$X" | tail -1
+T=logs/memory_probes/v13_sempty_${n}_t40_behavioral.json
+[ -f $T ] || $PY scripts/run_memory_behavioral.py --model-type v13_sempty --checkpoint $B --preset baseline_real_pm --context-lengths 128,256,512,1024,2048,4096,8192 --positions 0,0.5,1 --association-counts 1,4,8 --trials 40 --max-context 8192 --output $T 2>&1 | grep -v scored | tail -1
+M=logs/sci1/v13_sempty_mc_${n}.json
+[ -f $M ] || $PY scripts/mc_eval.py --ckpt $B --out $M 2>&1 | grep -E '^(hellaswag|arc|piqa)'
+$PY scripts/sci_gen.py --ckpt $B 2>&1 | grep -v "$X"
+echo "=== CHECK $n DONE $(date -u +%FT%TZ)"
