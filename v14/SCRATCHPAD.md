@@ -4,7 +4,7 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## State (2026-11-02 11:31 IST) — read this first
+## State (2026-11-02 11:29 IST) — read this first
 
 Session: **Library**. Lane today: SCI-1 support (Lead 10:12): the package contract at the new size, the A26
 science check cell, the protocol-doc training source, tools design. Nothing of mine is running; the 4090 is free.
