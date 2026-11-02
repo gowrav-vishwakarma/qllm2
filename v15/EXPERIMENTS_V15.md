@@ -237,6 +237,32 @@ tmux, 4090 when a whole-card slot is free, or the 6000):
 GRAD_CKPT=1 bash v13_sempty/tmp_pretrain_mix.sh` (the M1 control ran on the
 6000 at B 18 × T 2048, SEED 42; GEN_EVERY may stay on: Grove decodes).
 
+### Reference rows and scorers (facts handed by Lead, Nov 2 23:00 IST; no mechanism)
+Same data, ~102M params, 600M-token tier:
+
+| body | recipe | holdout NLL | WikiText | recall 63-cell | source |
+|---|---|---|---|---|---|
+| Transformer++ tfc1b | aptitude | 3.4802 | 63.83 | 0.648 | `checkpoints_v13_sempty/tfc1b_main_b788731` |
+| Mamba-2 mbs2b | two-stage r600 | 3.4393 | 65.04 | 0.762 (>2048: 0.46) | `checkpoints_v13_sempty/mbs2b_main_685de4e` |
+| T++ b2t / Mamba-2 b2m | b2 mix (rule docs 3 %) | 3.5572 / 3.4754 | – | – | v13 lineage rows "Baselines", "B2-in-training pair" |
+
+Rules at distance (s8, the learning probe `scripts/run_learning_probe.py
+--suite b2 --seed 7000 --trials 400 --spread 0,2048,4096`, b2 `_new` tasks):
+T++ 0.134, Mamba-2 0.10–0.116 (log `logs/v13_sempty_s8_driver_38e3c29_20261031_0100.log`).
+Known-benchmark MC mean at 600M (kb1): T++ 0.388, Mamba-2 0.392
+(`logs/kb1/v13_sempty_kb1_table_ccf187c.md`). Bench on a trainer
+checkpoint: `.venv/bin/python v16/bench.py --ckpt <dir>/best_model.pt --arch
+<arch> --task kv --needles 8 --keys synthetic --lengths 2048,8192 --docs 100
+--seed 18000 --out logs/<name>.jsonl` (tasks kv kv1 kvupd hop2 para tool neg
+instr natq natqneg syn synneg; `--device cpu` works); a new arch needs a
+loader branch in `scripts/run_memory_behavioral.py::_load_v13_sempty` and a
+Reader in `v16/bench.py` (both small; to do for Grove before G2 is scored).
+Recipe lessons (facts): screen at ≥ 600M tokens (100M screens cannot pick a
+learning rate for a recurrent body); answer-weighted synthetic docs ≤ 3–4 %
+of the loss weight; packed unrelated docs teach forgetting unless the state
+resets at separators; fine-tuning at 8k/32k did not grow reach; every
+pre-registration names a bar and a closest prior work.
+
 ### G3 — 600M on the 6000, then slope
 r600 protocol, two stages, vs T++ 600M 3.4885 / c1m2 3.4473 / Mamba-2 3.4349;
 recall 63-cell, learning probe, LCL past 2048. Bar: holdout ≤ T++ + 0.03 with
