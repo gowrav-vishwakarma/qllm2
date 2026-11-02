@@ -23,8 +23,9 @@ PROMPTS = {
              '<tool_call>\n{"name": "library.fetch", "arguments": {"query": "Q7 boiling point"}}\n</tool_call><|im_end|>\n'
              '<|im_start|>tool\n<tool_response>\n{"name": "library.fetch", "content": "Record: Q7 | boiling point: 78.4 C."}\n'
              '</tool_response><|im_end|>\n<|im_start|>assistant\n'),
-    'think': ('<|im_start|>user\nA solution has 0.25 mol of salt in 2.0 L of water. What is its concentration in mol/L?<|im_end|>\n'
-              '<|im_start|>assistant\n<think>\n'),
+    'think': ('<|im_start|>system\nReasoning: on<|im_end|>\n'
+              '<|im_start|>user\nA solution has 0.25 mol of salt in 2.0 L of water. What is its concentration in mol/L?<|im_end|>\n'
+              '<|im_start|>assistant\n'),
 }
 
 
