@@ -3807,7 +3807,7 @@ fitted threshold:
     - B3, product: REFRESH at 32k ≥ 0.80.
     - ROUND / CONVERT and the TRAINED wording are reported, no bar.
     - Day-0 calibration on the 600M-tier minds is reported with no bar (it sets what a milestone must beat).
-  - **ADDENDUM (2026-11-02 11:01 IST, before any SCI-1 number; Lead's YES to a protocol TRAINING source):**
+  - **ADDENDUM (2026-11-02 11:00 IST, before any SCI-1 number; Lead's YES to a protocol TRAINING source):**
     - **Source:** `v14/protocol_docs.py` (`protocol_text_iter`; seed = Mind's mix seed, stream offset
       SEED_OFFSET = 10**8). It sits inside the synthetic loss-weight budget (recall + b2 + skills + protocols ≤ 3 % of
       the loss weight; protocols ~0.5 % of tokens at full answer weight; Mind sets the share).

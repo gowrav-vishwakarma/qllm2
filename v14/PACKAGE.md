@@ -46,6 +46,16 @@ both bodies with no package change. A random-init echo reads out ~0, so `_dilate
 | 16nb (notebooks in every block) | 397.2M | block 12 | **9.61 MB** | 984 / 7.9 B per token | 7e-7 / 1e-6 / 1e-6 |
 | reference: b2p2 (trained) | 102.9M | block 8 | 1.15 MB | 592 / 4.9 | 6.1e-5 / 1.0e-5 / 1.4e-5 |
 
+**Mind's SCI-1 candidates (8 heads × dim / 8, notebooks every 4th block for M2, mlp ≈ 3.62 × dim; random init,
+2,048-token parity; 2026-11-02 ~11:00 IST at d5da73d):** every candidate passes, parity ≤ 1.2e-6.
+
+| body | params | address | state | address int8 / sign bits (B per token) |
+|---|---|---|---|---|
+| M2 896 × 24 | 301.5M | block 12 | 2.81 MB | 900 / 7.2 |
+| M2 1024 × 24 | 386.4M | block 12 | 3.67 MB | 1,028 / 8.2 |
+| M2 1152 × 20 | 410.7M | block 10 | 3.99 MB | 1,156 / 9.2 |
+| 16nb 1024 × 24 | 431.1M | block 12 | **13.11 MB** | 1,028 / 8.2 |
+
 Rerun it on Mind's final geometry with `--like <ref ckpt> --set dim=… n_layers=… n_heads=… mlp_hidden=… pam_layers=…`.
 
 State layout (Mind's 7d2c7f1): `[block states …] + [window caches: ONE extra entry, W1 models only] + [echo, LAST]`.
