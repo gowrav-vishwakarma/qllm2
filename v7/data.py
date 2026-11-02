@@ -2115,6 +2115,7 @@ def _b2_text_iter(
     doc_counters: Optional[Dict[str, int]] = None,
     counter_key: str = 'b2',
     per_doc: int = 6,
+    spread_max_sentences: int = 0,
 ) -> Iterator[str]:
     """Infinite stream of v14 B2 rule-inference documents (2026-10-30, v13
     "B2 in training at 600M"): each doc holds ``per_doc`` prompts of the BASE
@@ -2137,7 +2138,16 @@ def _b2_text_iter(
             if skipping:                  # build_example is seeded by its index, so the stream stays byte-identical
                 continue
             ex = build_example(tok, task, shots, 10_000_000 + n * per_doc + j)
-            parts.append(ex.prompt_text + _ans(ex.target_text))
+            text = ex.prompt_text
+            if spread_max_sentences:
+                # SCI-1 at SEQ 4096: half the prompts spread their demo lines over the window with recall-bank filler
+                # (log-uniform gap 1..max sentences per line break), seeded by the doc index, so the skip path stays byte-identical.
+                fr = _random.Random(1_000_003 * (n * per_doc + j) + 17)
+                if fr.random() < 0.5:
+                    lines = text.split('\n')
+                    text = lines[0] + ''.join('\n' + (_recall_filler(fr, int(round(spread_max_sentences ** fr.random()))) + '\n'
+                                                       if k < len(lines) - 1 else '') + ln for k, ln in enumerate(lines[1:], 1))
+            parts.append(text + _ans(ex.target_text))
         n += 1
         if n <= skip_docs:
             continue
@@ -2534,6 +2544,9 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     # v14 B2 base-task rule prompts with marked answers (held-out values never
     # appear; seeds >= 1e7, disjoint from the probes). v13 "B2 in training".
     'b2':            {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-b2'},
+    # SCI-1 at SEQ 4096: b2 with half its prompts spread over ~4k tokens; recall with gaps up to 300 filler sentences (~4k).
+    'b2s':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-b2', 'spread_max_sentences': 30},
+    'recall4k':      {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-recall', 'max_gap_sentences': 300},
     # Label-rule prompts in the probes' format, disjoint vocabulary (v13
     # "label-format source", 2026-10-31).
     'lab':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-lab'},
@@ -2617,8 +2630,8 @@ def _open_source_iter(
             from v14.protocol_docs import protocol_text_iter
             return protocol_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name,
                                       bump=_bump_counter)
-        if name == 'b2':
-            return _b2_text_iter(seed=mix_seed, skip_docs=skip,
+        if name in ('b2', 'b2s'):
+            return _b2_text_iter(spread_max_sentences=int(spec.get('spread_max_sentences', 0)), seed=mix_seed, skip_docs=skip,
                                  doc_counters=doc_counters, counter_key=name)
         if name == 'fsq':
             return _fsq_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
