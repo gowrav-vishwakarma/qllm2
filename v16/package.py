@@ -66,6 +66,7 @@ class Package:
         _a13.DOT = _pf.DOT = dot
         from v14.norm_organ import tok_strings
         _pf._S['strs'] = strs = tok_strings(self.tok)               # token texts from THIS tokenizer (row ends, stops)
+        _pf._S.pop('nl', None)                                         # newline-token set rebuilt for this tokenizer
         self.dot = dot
         self._digit_start = [s_[:1].isdigit() for s_ in strs]         # a digit right after '.' continues a number
         self._digit_end = [s_[-1:].isdigit() for s_ in strs]

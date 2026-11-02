@@ -43,10 +43,19 @@ def _load(dev):
     return _S['head'].to(dev), _S['mean'].to(dev)
 
 
+def _nl():
+    """ids of every token holding a newline (from the active tokenizer)."""
+    if 'nl' not in _S:
+        _S['nl'] = frozenset(i for i, t in enumerate(_strs()) if '\n' in t)
+    return _S['nl']
+
+
 def is_end(ids, j, end) -> bool:
-    """a '.' ends a sentence unless it is a DECIMAL POINT: the token before ends with a digit and the token after starts
+    """a newline token ends a row (v0.2); a '.' ends a sentence unless it is a DECIMAL POINT: the token before ends with a digit and the token after starts
     with a digit ('12' '.' '3'). Science rows keep their values whole (A26); everything else splits as in v0 (a wider
     "glued letter" rule fused rows with run-on web text such as 'mg.ate' / 'worldwide.The')."""
+    if ids[j] in _nl():                                # a line break ends a row too (tables, lists, tool output, code)
+        return True
     if ids[j] != DOT:
         return False
     if j + 1 >= end or j == 0:

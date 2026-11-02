@@ -321,4 +321,8 @@ package; the package adapts to the data, never the reverse).**
     (family split as in the addendum).
 - **Gate (Lead):** build it when the first SCI-1 milestone shows the call format is learned (e.g. ≥ 0.8 of held-out
   prompts give a parseable call).
+- **Newline row ends (v0.2, adopted by Lead 2026-11-02; the data keeps '\n', Mind confirmed):** a token holding a newline
+  also ends a row. Table lines, list items, tool-output lines and code lines each become a row instead of a 64-token
+  blob (checked: a results table → one row per line, decimals intact; a `<tool_response>` content line → its own row).
+  The A20 regression on its registered documents is identical again (640 questions).
 
