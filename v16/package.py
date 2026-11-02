@@ -70,10 +70,31 @@ class Package:
         self.stops = (dot, nl) + ((im_end,) if im_end is not None else ())
         self._session = None
 
+    def address_bytes(self, n_tokens: int, form: str = 'int8', keep_frac: float = 1 / 16) -> int:
+        """stored size of the F2 address for n_tokens, from the address width D (no body constant):
+        int8 = D bytes + a fp32 scale per token; sal1 = sign bits (ceil(D / 8) B) + a uint32 position per KEPT token."""
+        D = self._addr_dim()
+        if form == 'int8':
+            return n_tokens * (D + 4)
+        return int(n_tokens * keep_frac * (-(-D // 8) + 4))
+
+    def _addr_dim(self) -> int:
+        if getattr(self, '_D', None) is None:
+            caps = []
+            h = self.mind.m.blocks[self.address_layer].register_forward_hook(
+                lambda mod, i, o: caps.append((o[0] if isinstance(o, tuple) else o).data[0].shape[-1]))
+            try:
+                with torch.no_grad():
+                    self.mind.m(torch.tensor([[self.stops[0]]], device=self.mind.dev))
+            finally:
+                h.remove()
+            self._D = int(caps[0])
+        return self._D
+
     def read(self, session_text, chunk: int = 2048):
         """stream the session into the mind's state once (chunks, state carried: O(1) memory in length). The library
         keeps its tokens and sentence rows; the ADDRESS (F2) keeps each token's block-8 state (fp16 on the device,
-        592 B / token at int8 when stored) and its surprisal (for the sign-bit form on the surprising tokens)."""
+        D + 4 B / token at int8 when stored: 592 for b2p2) and its surprisal (for the sign-bit form on the surprising tokens)."""
         key = session_text if isinstance(session_text, str) else tuple(session_text)
         if self._session is not None and self._session['key'] == key:
             return self._session
@@ -318,7 +339,7 @@ class Package:
         info = dict(path=path, row=tuple(row) if row else None, abstain=int(row is None), salient=salient,
                     bytes_held=dict(mind_state=s['state_bytes'], library_text=2 * end,
                                     word_token_indexes_est=int(9.4 * end),
-                                    address_int8_all=592 * end, address_sal1=int(78 * end / 16)))
+                                    address_int8_all=self.address_bytes(end, 'int8'), address_sal1=self.address_bytes(end, 'sal1')))
         if row is None:
             return '', dict(info, row_text=None)
         span = base[row[0]:row[1]]

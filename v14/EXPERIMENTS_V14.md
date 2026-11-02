@@ -3753,6 +3753,63 @@ fitted threshold:
       at distance. The T++ given the package's row reads 0.60-1.00, as in A18: on single-row cells the package's
       edge over a windowed T++ is cost (1.15 MB vs 67 MB, 4.8 GB for the full 128k KV), not accuracy.
     - Compute (4090, shared): read 11.4 s per 128k session; 0.38 s per answer including the fetch.
+- **A26: a stated PROTOCOL applied to a FETCHED result (SCI-1 milestone CHECK cell; PRE-REGISTERED 2026-11-02
+  10:33 IST, before any number of it; Lead's ask for the science / research mind).**
+  - **Question:** does a mind hold a convention stated once early in a session (units, rounding, a target unit) and
+    apply it to a value the library fetches far later, in free generation? That is the SCI-1 strength claim ("standing
+    rules and protocols held in state, applied to fetched results"). It is A23's rule × knowledge in a research
+    notebook's words instead of the trained "x -> y" format.
+  - **Closest prior work:** IFEval (Zhou et al. 2023: verifiable format instructions) and long-context
+    instruction-following sets (e.g. LIFBench 2024). **Difference:** the instruction is a unit / rounding convention
+    stated 2k-32k tokens before the question and never repeated. The value it applies to sits in a row the library
+    fetches, and the held convention is read from an O(1) state, compared at equal tokens with window models.
+  - **Docs (my builder, fresh seed 26000, held-out prose as filler):** a research notebook. Near the start comes ONE
+    protocol sentence, then filler. Then 8 result rows ("Sample K7 (lysate B): mass 12.3."; IDs and materials
+    random), placed among the filler. The asked row sits at a fixed distance from the question; the PROTOCOL sits at
+    distance d = 2k / 8k / 32k from the question.
+  - **Cells (convention families):**
+    - **UNIT** (no arithmetic): "all masses here are recorded in {u}". The row has a bare number. Right = the value AND
+      the protocol's unit. Units are sampled per doc within the quantity (mass mg / g / kg / ng / μg; volume mL / L /
+      μL; concentration mM / μM / nM; length nm / mm / cm), so one prior unit cannot win.
+    - **ROUND:** "report values rounded to one decimal place". The row has 3 decimals; half the values round UP (12.36
+      → 12.4). Right = the rounded value, not the raw.
+    - **CONVERT:** "report masses in mg". The row is in g (0.0123 g → 12.3 mg). Right = the converted value + mg.
+      This is an arithmetic ceiling probe: expected ~0 at these sizes, no bar.
+  - **Wording:**
+    - NAT, the headline: the protocol in one of 5 natural wordings per family ("Note: all masses below are in mg.",
+      "Unless stated otherwise, masses are given in milligrams (mg).", …), asked in one of 5 natural question
+      styles ("What was the mass of sample K7?", "How heavy was K7?", "Report the mass of sample K7.", …), in
+      the exam form.
+    - TRAINED: the convention in the trained format. Mind's SCI-1 protocol-doc format if the mix has one (filled in
+      from Mind's reply before any number, with its test conventions held out); else the package skill format
+      ("Report rule." + 8 demos "v -> v u", query "\n{v} ->", value substituted by the planner, A23's path).
+  - **Arms:**
+    - **MIND-HELD:** the package fetches the RESULT ROW only (`answer`, lenient, warm + contrast); the protocol must
+      come from the state.
+    - **REFRESH**, labelled TEXT / product: the package also re-inserts the protocol sentence by the v0 refresh rule
+      (every 2k), so any body could use it.
+    - **NOPROT control:** the same session without the protocol (the prior unit / format).
+    - **AS IS:** each body alone on the whole session (window models: the whole session ≤ their trained length,
+      else the last 2k).
+  - **Bodies:**
+    - the SCI-1 mind at each kept checkpoint (subject);
+    - at the 600M tier: b2p2 (package), T++ b2t2 / tfc1b and Mamba-2 b2m2 (as is, and with the library's row +
+      contrast, A18's arm);
+    - at the 1.5B tier: t15pam_m2 (package), t15tpp / t15mamba (as is + library).
+    The 600M / 1.5B rows are REFERENCE ONLY next to a ~350M mind (different params and tokens; params + tokens stated
+    in every row).
+  - **Scoring:** free generation, decode to the stop (≤ 16 tokens). Right iff the value AND the convention are
+    right; value-right and convention-right are reported separately. 20 docs per cell × length × arm at milestones,
+    40 at the final check.
+  - **Bars** (SCI-1 mind, NAT wording, UNIT cell):
+    - B1, held in state at 8k: MIND-HELD ≥ 0.50 AND ≥ NOPROT + 0.25.
+    - B2, held at 32k (16× the trained 2k): MIND-HELD ≥ 0.40.
+    - B3, product: REFRESH at 32k ≥ 0.80.
+    - ROUND / CONVERT and the TRAINED wording are reported, no bar.
+    - Day-0 calibration on the 600M-tier minds is reported with no bar (it sets what a milestone must beat).
+  - **Prediction (written before any number):** b2p2 MIND-HELD UNIT ≈ NOPROT (≤ +0.10) at 8k and beyond, since words
+    do not reach a 103M mind (A24). REFRESH UNIT ≥ 0.6 for b2p2 (the protocol sits next to the question). ROUND ≈ 0.1-0.3
+    (copying 3 decimals is the prior). CONVERT ≈ 0 for every body. T++ as is ≈ 0 beyond 2k.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

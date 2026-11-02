@@ -53,6 +53,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
                             - **A23 R x K through the package** <- v13_sempty:R x K (rxk) (2026-11-01) pkg.apply: fetch the key's row, take the value, write "<v> ->", skill contrast -> **reproduced exactly (400 / 400): b2p2 0.61 / 0.45 at 2k / 8k, cu2a 0.62 / 0.49; T++ 0.01 / 0.07**; run `ed4c84f`, code at `current`; logs/v16_rxk_package_ed4c84f_20261101_1422.json; "A23"
                               - **A24 rules as demos vs words** (2026-11-01) 20 affine rules as words / 3 / 8 demos 2k back / 8 demos near, b2p2 + cu2a -> **NOT met as registered (b2p2 DEMO8 contrast 0.425 < 0.50); words <= 0.05, demos near 0.65-0.875**; run `2e03057`, code at `current`; logs/v14_a24_rules_2e03057_20261101_1426.json; "A24"
                               - **pkg chain (TEXT planner)** (2026-11-01) answer_chain: object -> holder -> sub-question (library composes; labelled TEXT) -> **smoke only (1 / 3 on BABILong qa2); the mind-composes column stays the headline (qa2 / qa3 <= 0.13)**; run `e05054a`, code at `current`; v16/babilong_eval.py --chain; PACKAGE.md section 6
+                              - **A26 protocol applied to a fetched result** (2026-11-02) SCI-1 check cell: a unit / rounding / conversion protocol stated once 2k-32k back, applied to a fetched result row; NAT + trained wording; mind-held vs refresh vs no-protocol -> **running (pre-registered 10:33 IST; bars B1-B3 on the SCI-1 mind; day-0 calibration on 600M-tier minds)**; code at `current`; -; "A26"
                       - **cu1 skill curriculum** (2026-10-31) b2p2 recipe + srd / fsq / hop docs, disjoint vocab -> **NOT a Win: R-fsq MET, R-hop MET (0.57), R6a/b FAIL (stated rule = lookup); holdout +0.045**; run `2efb422`, code at `current`; logs cu1; "cu1"
                         - **cu1n9s** (2026-10-31) cu1 stage B on its own N9s stage A (v14 unit) -> **FAIL: two-hop 0.090 vs 0.570; holdout +0.228**; run `fa9e410`, code at `see index`; logs cu1n9s; "cu1n9s"
                         - **cu2 (cu2a / cu2b)** (2026-11-01) b2p2 recipe + fld 1 % + vfy 1 %; cu2b + ACh-1 distillation -> **cu2a trained formats MET (field + stop 0.80, verify 0.83-0.99; holdout 3.4975); held-out wordings 0.26 FAIL; cu2b futility**; run `a7c4887`, code at `current`; logs cu2a; "cu2"
@@ -152,4 +153,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-134 experiments: v13_sempty 60, v14 55, v15 10, v16 9.
+135 experiments: v13_sempty 60, v14 56, v15 10, v16 9.
