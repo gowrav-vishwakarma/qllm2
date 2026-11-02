@@ -1620,6 +1620,12 @@ def source_holdout_tokens(name: str, tokenizer, n_tokens: int = 262_144, holdout
         return torch.load(cache)
     if name in SCI_JSONL_REPOS or name == 'cosmo':
         it = _sci_text_iter(name, only_holdout=True, holdout_pct=holdout_pct, counter_key=f'hold_{name}')
+    elif name in ('tools', 'think', 'pysci'):
+        from v7 import sci_tools as _st
+        it = (_st.pysci_text_iter(only_holdout=True, exclude_holdout=False, holdout_pct=holdout_pct, counter_key='hold_pysci')
+              if name == 'pysci' else
+              (_st.tools_text_iter if name == 'tools' else _st.think_text_iter)(seed=43, only_holdout=True, exclude_holdout=False,
+                                                                                 holdout_pct=holdout_pct, counter_key=f'hold_{name}'))
     elif name == 'dclm':
         it = _dclm_edu_text_iter(3, only_holdout=True, holdout_pct=holdout_pct, counter_key='hold_dclm')
     elif name == 'fineweb':
@@ -2540,6 +2546,10 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     # SCI-1: Library's protocol docs (v14/protocol_docs.py): UNIT / ROUND / CONVERT conventions stated, then applied; the
     # A26 test families are never generated. Answers marked, so answer weighting applies as for b2.
     'proto':         {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-proto'},
+    # SCI-1 (user 11:10 IST): a scientist that calls tools, thinks briefly and writes analysis code (v7/sci_tools.py).
+    'tools':         {'schema': 'text',     'kind': 'scitool',   'hf': 'glaive-fc-v2 + ToolACE + library-fetch'},
+    'think':         {'schema': 'text',     'kind': 'scitool',   'hf': 'MetaMathQA + GSM8K (short)'},
+    'pysci':         {'schema': 'text',     'kind': 'scitool',   'hf': 'common-pile/stackv2_edu_filtered (python, sci imports)'},
 }
 
 
@@ -2574,6 +2584,14 @@ def _open_source_iter(
             doc_counters=doc_counters, counter_key=name,
             min_chars=int(spec.get('min_chars', 0)), fresh_file=fresh_file,
         )
+    if spec['kind'] == 'scitool':
+        from v7 import sci_tools as _st
+        if name == 'pysci':
+            return _st.pysci_text_iter(skip_docs=skip, doc_counters=doc_counters, counter_key=name,
+                                       exclude_holdout=exclude_holdout, holdout_pct=holdout_pct)
+        fn = _st.tools_text_iter if name == 'tools' else _st.think_text_iter
+        return fn(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name, bump=_bump_counter,
+                  exclude_holdout=exclude_holdout, holdout_pct=holdout_pct)
     if spec['kind'] == 'sci':
         return _sci_text_iter(name, exclude_holdout=exclude_holdout, holdout_pct=holdout_pct, skip_docs=skip,
                               doc_counters=doc_counters, counter_key=name)
