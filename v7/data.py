@@ -2537,6 +2537,9 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     'pubmed':        {'schema': 'text',     'kind': 'sci',       'hf': 'common-pile/pubmed_filtered'},
     'pes2o':         {'schema': 'text',     'kind': 'sci',       'hf': 'common-pile/peS2o_filtered'},
     'cosmo':         {'schema': 'text',     'kind': 'sci',       'hf': 'HuggingFaceTB/cosmopedia'},
+    # SCI-1: Library's protocol docs (v14/protocol_docs.py): UNIT / ROUND / CONVERT conventions stated, then applied; the
+    # A26 test families are never generated. Answers marked, so answer weighting applies as for b2.
+    'proto':         {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-proto'},
 }
 
 
@@ -2582,6 +2585,10 @@ def _open_source_iter(
         if name == 'reason':
             return _reason_text_iter(seed=mix_seed, skip_docs=skip,
                                      doc_counters=doc_counters, counter_key=name)
+        if name == 'proto':
+            from v14.protocol_docs import protocol_text_iter
+            return protocol_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name,
+                                      bump=_bump_counter)
         if name == 'b2':
             return _b2_text_iter(seed=mix_seed, skip_docs=skip,
                                  doc_counters=doc_counters, counter_key=name)
