@@ -67,7 +67,7 @@ class Package:
         from v14.norm_organ import tok_strings
         _pf._S['strs'] = strs = tok_strings(self.tok)               # token texts from THIS tokenizer (row ends, stops)
         self.dot = dot
-        self._glued = [s_[:1].isalnum() for s_ in strs]               # continues the previous token without a space
+        self._digit_start = [s_[:1].isdigit() for s_ in strs]         # a digit right after '.' continues a number
         self._digit_end = [s_[-1:].isdigit() for s_ in strs]
         self.R = Reader(self.mind.m, 'pam')
         self.alpha, self.max_new = alpha, max_new
@@ -229,13 +229,13 @@ class Package:
     @torch.no_grad()
     def _gen(self, la, sa, oa, lb, sb, ob, alpha, max_new):
         """greedy over l_a + alpha (l_a - l_b), both streams fed the output. Stops at '.', newline or end of turn; a '.'
-        right after a digit is held one token: if the next token is glued ('12' '.' '3') the number goes on, else the
-        '.' was the sentence end and the look-ahead token is dropped."""
+        right after a digit is held one token: if the next token starts with a digit ('12' '.' '3') the number goes on,
+        else the '.' was the sentence end and the look-ahead token is dropped."""
         out, held = [], False
         for _ in range(max_new):
             t = int((la + alpha * (la - lb)).argmax())
             if held:
-                if not (t < len(self._glued) and self._glued[t]):
+                if not (t < len(self._digit_start) and self._digit_start[t]):
                     break
                 held = False
             out.append(t)

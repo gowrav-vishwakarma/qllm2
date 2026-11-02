@@ -27,6 +27,7 @@ SKIP_FILES = frozenset({
     "a5_text.py",        # A5: synonym-cell text eval (MiniLM CPU thread cap)
     "a6_reread.py",      # A6: warm / cold re-read eval (frozen-mind decode loop, raw torch)
     "contract_check.py", # package v0 contract: parity / state / hook checks on a mind body (raw torch)
+    "a26_protocol.py",   # A26: protocol-applied-to-fetched-row eval (window-body greedy, raw torch)
     "a11_keyswap.py",    # A11: key-swap relevance eval (frozen-mind short reads, raw torch)
     "a13_manykey.py",    # A13: many-key fetch eval (frozen states, max-sim, raw torch)
     "a14_pca.py",        # A14: PCA basis fit for the stored address (raw torch svd)

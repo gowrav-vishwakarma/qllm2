@@ -44,15 +44,16 @@ def _load(dev):
 
 
 def is_end(ids, j, end) -> bool:
-    """a '.' ends a sentence unless the next token is GLUED to it (starts with a letter or digit, no space): a decimal
-    point ('12' '.' '3'), an abbreviation ('e' '.' 'g'), a domain. Science rows keep their values whole (A26)."""
+    """a '.' ends a sentence unless it is a DECIMAL POINT: the token before ends with a digit and the token after starts
+    with a digit ('12' '.' '3'). Science rows keep their values whole (A26); everything else splits as in v0 (a wider
+    "glued letter" rule fused rows with run-on web text such as 'mg.ate' / 'worldwide.The')."""
     if ids[j] != DOT:
         return False
-    if j + 1 >= end:
+    if j + 1 >= end or j == 0:
         return True
     strs = _strs()
-    t = ids[j + 1]
-    return not (t < len(strs) and strs[t][:1].isalnum())
+    a, b = ids[j - 1], ids[j + 1]
+    return not (a < len(strs) and b < len(strs) and strs[a][-1:].isdigit() and strs[b][:1].isdigit())
 
 
 def sentence_end(ids, start, end):
