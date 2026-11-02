@@ -1,5 +1,5 @@
-"""SCI-1 milestone generations (the user's rule: show prompt + output + checkpoint). Three fixed prompts (science, protocol
-following, plain chat), sampled with the trainer's settings (temperature 0.8, top-k 50, top-p 0.9, repetition 1.2) at a fixed
+"""SCI-1 milestone generations (the user's rule: show prompt + output + checkpoint). Five fixed prompts (science, protocol
+following, plain chat, a tool call + result, a short <think>), sampled with the trainer's settings (temperature 0.8, top-k 50, top-p 0.9, repetition 1.2) at a fixed
 seed, plus a greedy line. Printed with the checkpoint, its step / tokens and the code hash.
 
   python scripts/sci_gen.py --ckpt <ckpt.pt> [--tokens 80]
@@ -18,6 +18,13 @@ PROMPTS = {
     'protocol': ('Lab protocol: report every mass in grams, rounded to one decimal place.\n'
                  'Sample A weighed 12.347 g and sample B weighed 8.912 g.\nReport: sample A ='),
     'chat': '<|im_start|>user\nWhat is the difference between a hypothesis and a theory?<|im_end|>\n<|im_start|>assistant\n',
+    # SCI-1 formats (v7/sci_tools.py): does it call the tool, and read the result like a fetched row?
+    'tool': ('<|im_start|>user\nLook up the boiling point recorded for sample Q7 in my notes.<|im_end|>\n<|im_start|>assistant\n'
+             '<tool_call>\n{"name": "library.fetch", "arguments": {"query": "Q7 boiling point"}}\n</tool_call><|im_end|>\n'
+             '<|im_start|>tool\n<tool_response>\n{"name": "library.fetch", "content": "Record: Q7 | boiling point: 78.4 C."}\n'
+             '</tool_response><|im_end|>\n<|im_start|>assistant\n'),
+    'think': ('<|im_start|>user\nA solution has 0.25 mol of salt in 2.0 L of water. What is its concentration in mol/L?<|im_end|>\n'
+              '<|im_start|>assistant\n<think>\n'),
 }
 
 
