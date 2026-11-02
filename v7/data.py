@@ -2565,6 +2565,7 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     # SCI-1: Library's protocol docs (v14/protocol_docs.py): UNIT / ROUND / CONVERT conventions stated, then applied; the
     # A26 test families are never generated. Answers marked, so answer weighting applies as for b2.
     'proto':         {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-proto'},
+    'proto4k':       {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-proto', 'max_gap': 300},
     # SCI-1 (user 11:10 IST): a scientist that calls tools, thinks briefly and writes analysis code (v7/sci_tools.py).
     'tools':         {'schema': 'text',     'kind': 'scitool',   'hf': 'glaive-fc-v2 + ToolACE + library-fetch'},
     'think':         {'schema': 'text',     'kind': 'scitool',   'hf': 'MetaMathQA + GSM8K (short)'},
@@ -2626,10 +2627,11 @@ def _open_source_iter(
         if name == 'reason':
             return _reason_text_iter(seed=mix_seed, skip_docs=skip,
                                      doc_counters=doc_counters, counter_key=name)
-        if name == 'proto':
+        if name in ('proto', 'proto4k'):
             from v14.protocol_docs import protocol_text_iter
+            kw = {'max_gap': int(spec['max_gap'])} if 'max_gap' in spec else {}
             return protocol_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name,
-                                      bump=_bump_counter)
+                                      bump=_bump_counter, **kw)
         if name in ('b2', 'b2s'):
             return _b2_text_iter(spread_max_sentences=int(spec.get('spread_max_sentences', 0)), seed=mix_seed, skip_docs=skip,
                                  doc_counters=doc_counters, counter_key=name)
