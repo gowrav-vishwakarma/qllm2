@@ -1508,6 +1508,135 @@ def _pg19_text_iter(
         doc_counters=doc_counters, counter_key=counter_key, fresh_file=fresh_file)
 
 
+# ── SCI-1 science sources (2026-11-02): openly licensed papers + textbook-style text ─────────────────────────────────────
+# Common Pile v0.1 "filtered" sets (every document carries its own open licence) as gzipped JSON lines, and Cosmopedia
+# (Apache-2.0) textbook subsets as parquet. Streamed from the Hub (HfFileSystem range reads: no local copy beyond the
+# block cache); holdout = the shared ``pretrain_holdout_bucket`` hash, so train never sees a holdout doc.
+SCI_JSONL_REPOS = {
+    'arxiv':  ('common-pile/arxiv_papers_filtered', 'arxiv-papers-*.json.gz'),
+    'pubmed': ('common-pile/pubmed_filtered', 'licensed_pubmed-*.json.gz'),
+    'pes2o':  ('common-pile/peS2o_filtered', 'peS2o-*.json.gz'),
+}
+COSMO_REPO = 'HuggingFaceTB/cosmopedia'
+COSMO_SUBSETS = ('openstax', 'stanford', 'khanacademy', 'auto_math_text', 'web_samples_v1', 'web_samples_v2', 'wikihow')
+
+
+def _hf_glob(repo: str, pattern: str) -> List[str]:
+    from huggingface_hub import HfFileSystem
+    return sorted(_stream_retry(lambda: HfFileSystem().glob(f'datasets/{repo}/**/{pattern}'), f'glob {repo}'))
+
+
+def _jsonl_stream(tag: str, files: List[str], extract, *, skip_docs: int = 0,
+                  doc_counters: Optional[Dict[str, int]] = None, counter_key: str = '') -> Iterator:
+    """Yield ``extract(row)`` items from gzipped JSON-lines ``files`` in order. Exact resume: ``@f`` = file index, ``@r`` =
+    lines consumed in it (set before a line's items are yielded, as in ``_parquet_stream``). A dropped connection reopens
+    the file and re-skips to the current line (up to 8 tries)."""
+    import gzip, json as _json, time as _time
+    from huggingface_hub import HfFileSystem
+    fs = HfFileSystem()
+    fkey, rkey = f'{counter_key}@f', f'{counter_key}@r'
+    start_f, start_r, skip_left = 0, 0, int(skip_docs)
+    if doc_counters is not None and fkey in doc_counters:
+        start_f, start_r, skip_left = int(doc_counters[fkey]), int(doc_counters[rkey]), 0
+        how = f'exact cursor file {start_f} line {start_r}'
+    else:
+        how = f'{skip_docs:,} docs to skip by reading'
+    print(f"  [stream] {tag}: {len(files)} files; {how}", flush=True)
+    for fi in range(start_f, len(files)):
+        line_no, tries = (start_r if fi == start_f else 0), 0
+        while True:
+            try:
+                with fs.open(files[fi], 'rb', block_size=8 << 20) as fh:
+                    g = gzip.GzipFile(fileobj=fh)
+                    for _ in range(line_no):
+                        g.readline()
+                    for raw in g:
+                        line_no += 1
+                        try:
+                            items = extract(_json.loads(raw))
+                        except ValueError:
+                            items = ()
+                        if skip_left > 0:
+                            take = min(skip_left, len(items))
+                            skip_left -= take
+                            items = items[take:]
+                        if doc_counters is not None and counter_key:
+                            doc_counters[fkey], doc_counters[rkey] = fi, line_no
+                        for item in items:
+                            _bump_counter(doc_counters, counter_key)
+                            yield item
+                break
+            except (OSError, EOFError, ConnectionError, TimeoutError, RuntimeError) as e:
+                tries += 1
+                if tries > 8:
+                    raise
+                print(f"  [stream] {tag}: file {fi} line {line_no}: {type(e).__name__}: {e}; retry {tries}/8", flush=True)
+                _time.sleep(min(60, 2 ** tries))
+
+
+def _sci_text_iter(name: str, *, exclude_holdout: bool = False, only_holdout: bool = False, holdout_pct: int = 5,
+                   skip_docs: int = 0, doc_counters: Optional[Dict[str, int]] = None, counter_key: str = '',
+                   max_chars_per_doc: int = 400_000, min_chars: int = 200) -> Iterator[str]:
+    """A SCI-1 science source: 'arxiv' / 'pubmed' / 'pes2o' (Common Pile JSON lines) or 'cosmo' (Cosmopedia textbook
+    subsets, files interleaved round-robin across subsets so the mix does not drift subset by subset). Long documents are
+    cut at paragraph boundaries into pieces of at most ``max_chars_per_doc`` (as PG-19)."""
+    def extract(row):
+        text = row.get('text') or ''
+        if len(text) < min_chars:
+            return ()
+        hold = pretrain_holdout_bucket(text, holdout_pct)
+        if (exclude_holdout and hold) or (only_holdout and not hold):
+            return ()
+        pieces, start, n = [], 0, len(text)
+        while start < n:
+            end = min(start + max_chars_per_doc, n)
+            if end < n:
+                cut = text.rfind('\n\n', start + max_chars_per_doc // 2, end)
+                end = cut if cut > start else end
+            if text[start:end].strip():
+                pieces.append(text[start:end])
+            start = end
+        return tuple(pieces)
+    key = counter_key or name
+    if name == 'cosmo':
+        import itertools
+        per = [_hf_parquet_files(COSMO_REPO, f'data/{s}/*.parquet') for s in COSMO_SUBSETS]
+        files = [f for group in itertools.zip_longest(*per) for f in group if f]
+        yield from _parquet_stream('cosmo_tb', files, extract, ['text'], skip_docs=skip_docs,
+                                   doc_counters=doc_counters, counter_key=key)
+        return
+    repo, pattern = SCI_JSONL_REPOS[name]
+    yield from _jsonl_stream(name, _hf_glob(repo, pattern), extract, skip_docs=skip_docs,
+                             doc_counters=doc_counters, counter_key=key)
+
+
+def source_holdout_tokens(name: str, tokenizer, n_tokens: int = 262_144, holdout_pct: int = 5) -> 'torch.Tensor':
+    """The first ``n_tokens`` of source ``name``'s HOLDOUT bucket (docs joined with EOS), cached under .cache/v7_tokens/, for
+    the per-source val split (``--val_sources``). Science sources read their holdout bucket; dclm / fineweb reuse their
+    holdout iterators."""
+    from pathlib import Path as _P
+    cache = _P('.cache/v7_tokens') / f'srchold_{name}_v1_h{holdout_pct}_n{n_tokens}_v{len(tokenizer)}.pt'
+    if cache.exists():
+        return torch.load(cache)
+    if name in SCI_JSONL_REPOS or name == 'cosmo':
+        it = _sci_text_iter(name, only_holdout=True, holdout_pct=holdout_pct, counter_key=f'hold_{name}')
+    elif name == 'dclm':
+        it = _dclm_edu_text_iter(3, only_holdout=True, holdout_pct=holdout_pct, counter_key='hold_dclm')
+    elif name == 'fineweb':
+        it = _fineweb_edu_text_iter(3, only_holdout=True, holdout_pct=holdout_pct, counter_key='hold_fineweb')
+    else:
+        raise ValueError(f'no holdout reader for source {name!r}')
+    eos, ids = tokenizer.eos_token_id or 50256, []
+    for text in it:
+        ids.extend(tokenizer.encode(text, add_special_tokens=False) + [eos])
+        if len(ids) >= n_tokens:
+            break
+    t = torch.tensor(ids[:n_tokens], dtype=torch.long)
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(t, cache)
+    return t
+
+
 def _tag_source(name: str, it: Iterator[str]) -> Iterator[Tuple[str, str]]:
     for text in it:
         yield name, text
@@ -2403,6 +2532,11 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     # Real aptitude / reasoning Q&A with worked answers, TRAIN splits only
     # (v7/aptitude.py; 2026-10-29 "reason first" curriculum, real data).
     'aptitude':      {'schema': 'text',     'kind': 'qa',        'hf': 'real-aptitude-qa'},
+    # SCI-1 (2026-11-02): openly licensed science papers (Common Pile v0.1) and Cosmopedia textbook subsets.
+    'arxiv':         {'schema': 'text',     'kind': 'sci',       'hf': 'common-pile/arxiv_papers_filtered'},
+    'pubmed':        {'schema': 'text',     'kind': 'sci',       'hf': 'common-pile/pubmed_filtered'},
+    'pes2o':         {'schema': 'text',     'kind': 'sci',       'hf': 'common-pile/peS2o_filtered'},
+    'cosmo':         {'schema': 'text',     'kind': 'sci',       'hf': 'HuggingFaceTB/cosmopedia'},
 }
 
 
@@ -2437,6 +2571,9 @@ def _open_source_iter(
             doc_counters=doc_counters, counter_key=name,
             min_chars=int(spec.get('min_chars', 0)), fresh_file=fresh_file,
         )
+    if spec['kind'] == 'sci':
+        return _sci_text_iter(name, exclude_holdout=exclude_holdout, holdout_pct=holdout_pct, skip_docs=skip,
+                              doc_counters=doc_counters, counter_key=name)
     if spec['kind'] == 'qa':
         from v7.aptitude import aptitude_text_iter
         return aptitude_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters,
