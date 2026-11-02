@@ -13,7 +13,7 @@ H=${SCREEN_HASH:-$(git rev-parse --short HEAD)}; C=checkpoints_v13_sempty
 disk_gb() { df -BG / | awk 'NR==2{gsub("G","",$4); print $4}'; }
 [ "$(disk_gb)" -ge 40 ] || { echo "sci1: disk $(disk_gb)G < 40, REFUSE $(date -u +%FT%TZ)"; exit 1; }
 echo "sci1 chain: code $H in $PWD, $(date -u +%FT%TZ); GEOM=$GEOM MAIN=$MAIN_TOKENS DECAY=$DECAY_TOKENS BATCH=$BATCH x$GRAD_ACCUM LR=$LR KEEP_EVERY=$KEEP_EVERY"
-COMMON="ECHO=1 CHRONO=1 OUT_GATE=1 DELTA=1 ANSWER_W=100 SEED=43 SEQ=2048 BLEND_WARMUP=0 FINEWEB_LOCAL_DIR=data/fineweb-edu GEN_EVERY=0 VAL_EVERY=2000 VAL_SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,think,pysci MAX_RETRIES=20 SOURCES=$SOURCES WEIGHTS=$WEIGHTS"
+COMMON="ECHO=1 CHRONO=1 OUT_GATE=1 DELTA=1 ANSWER_W=100 SEED=43 SEQ=2048 BLEND_WARMUP=0 FINEWEB_LOCAL_DIR=data/fineweb-edu GEN_EVERY=0 VAL_EVERY=2000 VAL_SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,think,pysci,chatmt MAX_RETRIES=20 SOURCES=$SOURCES WEIGHTS=$WEIGHTS"
 MAIN=$C/sci1_main_$H; DEC=$C/sci1_decay_$H; CHK=logs/v13_sempty_sci1_checks_$H.log
 check_loop() {  # CHECK each new milestone once (before KEEP_LAST prunes it: milestones are ~1B tokens apart)
   while true; do
