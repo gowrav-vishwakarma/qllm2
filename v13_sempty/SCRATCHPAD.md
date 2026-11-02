@@ -18,6 +18,23 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   extends `.cache/v7_tokens/stream_index/`). `scripts/build_stream_index.py
   --commit-copy` shares the index via git.
 
+* **2026-11-02 14:42 IST: SCI-1 RUNNING (handover).**
+  - **Run:** the 6000, tmux `sci1`, `~/Development/qllm_sci1` @ `59c3cf5`.
+    - Launch: `source v13_sempty/tmp/sci1_env.sh && bash v13_sempty/tmp/sci1_chain.sh`.
+    - Logs: `logs/v13_sempty_sci1_chain_59c3cf5_20261102_0901.log` (UTC stamp) and `logs/v13_sempty_sci1_stageA_59c3cf5_*.log`.
+  - **Pre-registration:** f11df39 (EXPERIMENTS_SEMPY "SCI-1"); Lead GO.
+    - M2 386M (1024 × 24), SEQ 4096, 65,536 tokens / step, LR 8e-4 wsd_stable.
+    - Stage A 0.5B (plain) → stage B 10B (the full mix, `--continue_from`) → decay 1B.
+  - **Speed:** 37.7k tok/s, 77.3 GB. Stage A ends ~18:25 IST; milestone 1 (1B into stage B) ~02:00 IST Nov 3; the end ~3.5–3.8 days.
+  - **Resume:** the launcher auto-resumes (MAX_RETRIES 20); stage A's `.done` skips it on a chain restart.
+    - To continue later: `CONTINUE_FROM=<a full step_*.pt / stable_final.pt>` with a fresh TARGET_TOKENS and an optional new
+      SOURCES / WEIGHTS (logged).
+  - **CHECK:** on each milestone, to `logs/v13_sempty_sci1_checks_59c3cf5.log`; generations in `logs/sci1/v13_sempty_gens_*.txt`.
+    Library runs A26 on 4090 copies.
+  - **Tripwires at milestone 2** (acted on at the first continuation): s8 D < 0.40; A26 G1 ≤ NOPROT + 0.05; think ON ≤ OFF + 0.02
+    or OFF leak > 5 %; holdout > projection + 0.02.
+  - **Watchdog:** a Mind background loop pings the 6000 every 30 min for stalls.
+
 * **2026-11-01 14:21 IST: STEP BACK after R × K.**
   - *What surprised:*
     - A fetched record between a rule and its query barely moves the state-held rule (b2p2 1.00 → 0.91), but wrecks T++'s
