@@ -43,10 +43,23 @@ def _load(dev):
     return _S['head'].to(dev), _S['mean'].to(dev)
 
 
+def is_end(ids, j, end) -> bool:
+    """a '.' ends a sentence unless the next token is GLUED to it (starts with a letter or digit, no space): a decimal
+    point ('12' '.' '3'), an abbreviation ('e' '.' 'g'), a domain. Science rows keep their values whole (A26)."""
+    if ids[j] != DOT:
+        return False
+    if j + 1 >= end:
+        return True
+    strs = _strs()
+    t = ids[j + 1]
+    return not (t < len(strs) and strs[t][:1].isalnum())
+
+
 def sentence_end(ids, start, end):
-    """index just after the first '.' at or after start (exclusive bound), capped at start + MAX_ROW and end."""
+    """index just after the first sentence-ending '.' at or after start (exclusive bound), capped at start + MAX_ROW
+    and end."""
     for j in range(start, min(end, start + MAX_ROW)):
-        if ids[j] == DOT:
+        if is_end(ids, j, end):
             return j + 1
     return min(end, start + MAX_ROW)
 
@@ -62,7 +75,7 @@ def row_around(ids, a, b, end):
     """the sentence holding tokens [a, b): from after the previous '.' (<= 64 back) to the next '.' at or after b."""
     s0 = max(0, a - 16)
     for j in range(a - 1, max(0, a - 64), -1):
-        if ids[j] == DOT:
+        if is_end(ids, j, end):
             s0 = j + 1
             break
     return s0, max(a + 1, sentence_end(ids, b, end))

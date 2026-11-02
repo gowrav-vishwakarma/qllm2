@@ -64,6 +64,11 @@ class Package:
         import v14.a13_manykey as _a13
         import v14.package_fetch as _pf
         _a13.DOT = _pf.DOT = dot
+        from v14.norm_organ import tok_strings
+        _pf._S['strs'] = strs = tok_strings(self.tok)               # token texts from THIS tokenizer (row ends, stops)
+        self.dot = dot
+        self._glued = [s_[:1].isalnum() for s_ in strs]               # continues the previous token without a space
+        self._digit_end = [s_[-1:].isdigit() for s_ in strs]
         self.R = Reader(self.mind.m, 'pam')
         self.alpha, self.max_new = alpha, max_new
         im_end = self.tok.convert_tokens_to_ids('<|im_end|>') if '<|im_end|>' in self.tok.get_vocab() else None
@@ -180,13 +185,8 @@ class Package:
         dT = (p0, len(T), dilate, 'echo') if dilate else None
         stS, offS = self._state(S, dS); stT, offT = self._state(T, dT)
         la, sa, oa = self.mind.feed(q, stS, offS); lb, sb, ob = self.mind.feed(q, stT, offT)
-        out = []
-        for _ in range(max_new):
-            t = int((la + alpha * (la - lb)).argmax()); out.append(t)
-            if t in self.stops:
-                break
-            la, sa, oa = self.mind.feed([t], sa, oa); lb, sb, ob = self.mind.feed([t], sb, ob)
-        info.update(abstain=0, query_text=self.tok.decode(q), first_token=out[0],
+        out = self._gen(la, sa, oa, lb, sb, ob, alpha, max_new)
+        info.update(abstain=0, query_text=self.tok.decode(q), first_token=out[0] if out else None,
                     bytes_held=dict(mind_state=_nbytes(stS), no_pack_twin_state=_nbytes(stT), library_text=2 * len(S)))
         return self.tok.decode(out), info
 
@@ -227,18 +227,33 @@ class Package:
         return rows[int(sc.argmax())], [self.tok.decode([q[i]]) for i in sal]
 
     @torch.no_grad()
+    def _gen(self, la, sa, oa, lb, sb, ob, alpha, max_new):
+        """greedy over l_a + alpha (l_a - l_b), both streams fed the output. Stops at '.', newline or end of turn; a '.'
+        right after a digit is held one token: if the next token is glued ('12' '.' '3') the number goes on, else the
+        '.' was the sentence end and the look-ahead token is dropped."""
+        out, held = [], False
+        for _ in range(max_new):
+            t = int((la + alpha * (la - lb)).argmax())
+            if held:
+                if not (t < len(self._glued) and self._glued[t]):
+                    break
+                held = False
+            out.append(t)
+            if t in self.stops:
+                if t == self.dot and len(out) >= 2 and out[-2] < len(self._digit_end) and self._digit_end[out[-2]]:
+                    held = True
+                else:
+                    break
+            la, sa, oa = self.mind.feed([t], sa, oa)
+            lb, sb, ob = self.mind.feed([t], sb, ob)
+        return out
+
+    @torch.no_grad()
     def _decode(self, prefix, twin):
         s = self._session
         la, sa, oa = self.mind.feed(prefix, copy.deepcopy(s['state']), s['off'])
         lb, sb, ob = self.mind.feed(twin, copy.deepcopy(s['state']), s['off'])
-        out = []
-        for _ in range(self.max_new):
-            t = int((la + self.alpha * (la - lb)).argmax()); out.append(t)
-            if t in self.stops:
-                break
-            la, sa, oa = self.mind.feed([t], sa, oa)
-            lb, sb, ob = self.mind.feed([t], sb, ob)
-        return out
+        return self._gen(la, sa, oa, lb, sb, ob, self.alpha, self.max_new)
 
     def fetch_rows(self, session_text, question_text: str, k: int = 3, mode: str = 'lenient', address: str = 'full'):
         """Top-k rows for a question, each with its fetch path (BABILong QA2 / QA3 need 2-3 facts). Row 1: the usual

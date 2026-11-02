@@ -59,8 +59,9 @@ def capture(R, ids, layers):
 
 def sentence_rows(ids, end):
     rows, s0 = [], 0
+    from v14.package_fetch import is_end
     for j in range(end):
-        if ids[j] == DOT or j == end - 1:
+        if is_end(ids, j, end) or j == end - 1:
             a, e = s0, j + 1
             while e - a > 64:                                   # long sentences: 64-token pieces from the END
                 rows.append((e - 64, e)); e -= 64              # (an inserted fact ends its sentence: keep it whole)
