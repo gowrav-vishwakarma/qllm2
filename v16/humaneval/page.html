@@ -1,0 +1,63 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SCI-1 Human Eval</title><style>
+:root{--bg:#fafaf8;--fg:#1c1c1c;--mut:#666;--card:#fff;--bd:#ddd;--ok:#2e7d32;--bad:#c62828;--acc:#1565c0;--pre:#f2f2ee}
+@media (prefers-color-scheme:dark){:root{--bg:#141414;--fg:#eaeaea;--mut:#9a9a9a;--card:#1e1e1e;--bd:#333;--ok:#66bb6a;--bad:#ef5350;--acc:#64b5f6;--pre:#262626}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px 40px}header{padding:16px 0 8px}h1{font-size:20px;margin:0 0 4px}h2{font-size:18px;margin:20px 0 6px}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:22px 0 8px}.m{color:var(--mut);font-size:14px}
+.note{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;font-size:14px;margin:10px 0}
+.sec{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card);color:var(--fg);
+ border:1px solid var(--bd);border-radius:10px;padding:12px;margin:6px 0;font:inherit;cursor:pointer}
+.sec small{display:block;color:var(--mut);font-size:13px}.badge{flex:0 0 auto;font-size:13px;color:var(--mut);text-align:right}
+.bar{position:sticky;top:0;z-index:2;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--bd)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.chip{padding:6px 12px;border:1px solid var(--bd);border-radius:999px;background:var(--card);color:var(--fg);font:inherit;font-size:14px;cursor:pointer}
+.chip.on{border-color:var(--acc);outline:1px solid var(--acc)}input[type=search]{flex:1 1 160px;min-width:0;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:inherit}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;margin:8px 0;padding:10px 12px}.card.ok{border-left:4px solid var(--ok)}.card.bad{border-left:4px solid var(--bad)}
+.sum{cursor:pointer}.pv{color:var(--mut);font-size:14px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--pre);padding:10px;border-radius:8px;font:13px/1.45 ui-monospace,Menlo,monospace;margin:4px 0 8px;max-height:60vh;overflow:auto}
+.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);margin-top:8px}
+.stop{display:inline-block;margin:0 4px;padding:0 6px;border-radius:4px;background:var(--ok);color:#fff;font:11px system-ui}.after{opacity:.4}
+ol{padding-left:22px;margin:6px 0}li{margin:4px 0;padding:4px 6px;border-radius:6px}li.gold{background:color-mix(in srgb,var(--ok) 22%,transparent)}li.pick{outline:2px solid var(--acc)}
+.sc{float:right;color:var(--mut);font-size:12px;margin-left:8px}.tag{display:inline-block;font-size:12px;color:var(--mut);margin-right:8px}
+.pager{display:flex;justify-content:space-between;align-items:center;margin:14px 0}.rate button{font-size:18px;margin-right:6px;padding:4px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--card)}
+.rate button.on{outline:2px solid var(--acc)}.cands span{display:inline-block;padding:1px 6px;margin:2px;border:1px solid var(--bd);border-radius:6px;font:13px ui-monospace,monospace}
+.cands .t{background:color-mix(in srgb,var(--ok) 25%,transparent)}.cands .p{outline:2px solid var(--acc)}
+</style></head><body><div class="wrap" id="app"></div>
+<script>
+const SECS=__SECS__, META=__META__, app=document.getElementById('app');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cut=t=>{t=String(t??'');const i=t.indexOf('<|im_end|>');return i<0?esc(t):esc(t.slice(0,i))+'<span class="stop">⏹ end of turn</span><span class="after">'+esc(t.slice(i+10))+'</span>'};
+const st={s:null,f:'all',q:'',p:0,open:null,req:0};
+function home(){st.s=null;st.open=null;let h=`<header><h1>SCI-1 · Human evaluation</h1><div class="m">386M-parameter O(1)-state model · ${esc(META.ckpt)} · step ${META.step.toLocaleString()} · ${(META.tokens/1e9).toFixed(1)}B tokens trained</div></header>
+<div class="note"><b>Greedy answer</b> = the model always takes its single most likely next word: one fixed answer, shows what it "believes".<br>
+<b>Sampled answer</b> = the model draws words at random in proportion to how likely it thinks they are (temperature 0.8): more varied and natural, sometimes wrong, closer to how a chat app runs it.<br>
+<b>Grey text after "⏹ end of turn"</b> = the model should have stopped there but kept writing.<br>Only the item you tap is downloaded; opening one closes the last. Ratings (👍😐👎) stay in your browser only.</div>`;
+let g=null;for(const s of SECS){if(s.group!==g){g=s.group;h+=`<h3>${esc(g)}</h3>`}
+h+=`<button class="sec" onclick="open_('${s.id}')"><span>${esc(s.title)}<small>${esc(s.intro).slice(0,110)}${s.intro.length>110?'…':''}</small></span><span class="badge">${s.n.toLocaleString()} items${s.ok!=null?`<br><b>${(100*s.ok/s.n).toFixed(1)} %</b> right`:''}</span></button>`}
+app.innerHTML=h;scrollTo(0,0)}
+function open_(id,nopush){st.s=SECS.find(x=>x.id===id);st.f='all';st.q='';st.p=0;st.open=null;if(!nopush)history.pushState({id},'','#'+id);load()}
+async function load(){const r=++st.req,s=st.s;const d=await (await fetch(`api/items?s=${s.id}&f=${st.f}&q=${encodeURIComponent(st.q)}&p=${st.p}`)).json();if(r!==st.req)return;st.p=d.page;
+const hasok=s.ok!=null;
+app.innerHTML=`<div class="bar"><div class="row"><button class="chip" onclick="history.back()">← All tests</button><b style="flex:1">${esc(s.title)}</b></div>
+<div class="row" style="margin-top:8px">${hasok?['all','ok','bad'].map(f=>`<button class="chip ${st.f===f?'on':''}" onclick="st.f='${f}';st.p=0;load()">${{all:'All',ok:'✅ Right',bad:'❌ Wrong'}[f]}</button>`).join(''):''}
+<input type="search" placeholder="Search…" value="${esc(st.q)}" oninput="st.q=this.value;st.p=0;clearTimeout(window._t);window._t=setTimeout(load,350)"></div></div>
+<p class="m">${esc(s.intro)}<br>${d.total.toLocaleString()} shown${hasok?` · overall ${s.ok}/${s.n} right (${(100*s.ok/s.n).toFixed(1)} %)`:''}</p>
+<div id="list">${d.items.map(x=>`<div class="card ${x.ok===true?'ok':x.ok===false?'bad':''}" data-i="${x.i}"><div class="sum" onclick="tap(${x.i})">${x.ok===true?'✅ ':x.ok===false?'❌ ':''}<b>#${x.i+1}</b> <span class="m">${esc(x.head)}</span><span class="pv">${esc(x.pv)}</span></div><div class="body"></div></div>`).join('')}</div>
+<div class="pager"><button class="chip" ${d.page?'':'disabled'} onclick="st.p--;load();scrollTo(0,0)">‹ Prev</button><span class="m">page ${d.page+1} / ${d.pages}</span><button class="chip" ${d.page<d.pages-1?'':'disabled'} onclick="st.p++;load();scrollTo(0,0)">Next ›</button></div>`;
+const se=app.querySelector('input[type=search]');if(st.q){se.focus();se.setSelectionRange(st.q.length,st.q.length)}}
+function closeOpen(){if(st.open==null)return;const c=document.querySelector(`.card[data-i="${st.open}"] .body`);if(c)c.innerHTML='';st.open=null}
+async function tap(i){const was=st.open;closeOpen();if(was===i)return;st.open=i;const c=document.querySelector(`.card[data-i="${i}"]`),b=c.querySelector('.body');b.innerHTML='<p class="m">Loading…</p>';
+const x=await (await fetch(`api/item?s=${st.s.id}&i=${i}`)).json();if(st.open!==i)return;b.innerHTML=body(x,i);
+b.querySelectorAll('.rate').forEach(r=>{const bt=[...r.querySelectorAll('button')],k='r_'+r.dataset.k;try{const v=localStorage.getItem(k);if(v!==null)bt[v].classList.add('on')}catch(e){}
+bt.forEach((y,j)=>y.onclick=()=>{bt.forEach(z=>z.classList.remove('on'));y.classList.add('on');try{localStorage.setItem(k,j)}catch(e){}})});
+const top=c.getBoundingClientRect().top;if(top<60||top>innerHeight)c.scrollIntoView({block:'start'});scrollBy(0,-56)}
+function body(x,i){const k=st.s.kind;
+if(k==='gen')return `<div class="lbl">Prompt</div><pre>${esc(x.prompt)}</pre><div class="lbl">Greedy answer (most likely words)</div><pre>${cut(x.greedy)}</pre><div class="lbl">Sampled answer (random draw, temperature 0.8)</div><pre>${cut(x.sampled)}</pre><div class="rate" data-k="${st.s.id}_${i}"><button>👍</button><button>😐</button><button>👎</button></div>`;
+if(k==='mc')return `<pre>${esc(x.prompt)}</pre><ol>${x.choices.map((c,j)=>`<li class="${j===x.gold?'gold':''} ${j===x.pick?'pick':''}">${esc(c)}<span class="sc">${x.score[j]}</span></li>`).join('')}</ol><p class="m">Green = correct answer · blue outline = model's pick · number = model's score (higher = preferred)</p>`;
+if(k==='math')return `<div class="lbl">Question</div><pre>${esc(x.prompt)}</pre><div class="lbl">Model answer (${esc(x.mode)})</div><pre>${cut(x.answer)}</pre><div class="lbl">Correct answer</div><pre>${esc(x.gold)}</pre>`;
+if(k==='cand')return `${x.arm?`<span class="tag">${esc(x.arm)}</span>`:''}<span class="tag">${x.n_tokens.toLocaleString()} tokens</span><div class="lbl">Prompt</div><pre>${esc(x.prompt)}</pre><div class="lbl">Candidates (green = correct, outline = model's pick)</div><div class="cands">${x.candidates.map(c=>`<span class="${c===x.target?'t':''} ${c===x.pick?'p':''}">${esc(c)}</span>`).join('')}</div>`;
+if(k==='proto')return `<span class="tag">${esc(x.tag)}</span><div class="lbl">Rule</div><pre>${esc(x.rule)}</pre><div class="lbl">Record</div><pre>${esc(x.row)}</pre><div class="lbl">Question</div><pre>${esc(x.prompt)}</pre><div class="lbl">Model answer</div><pre>${esc(x.answer)}</pre><div class="lbl">Expected</div><pre>${esc(x.expected)}</pre>`;
+return `<pre>${esc(x.text)}</pre>`}
+onpopstate=()=>{const id=location.hash.slice(1);id&&SECS.find(x=>x.id===id)?open_(id,1):home()};
+const h0=location.hash.slice(1);h0&&SECS.find(x=>x.id===h0)?open_(h0,1):home();
+</script></body></html>
