@@ -6065,6 +6065,30 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
+## SCI-1 milestone 3 (CHECK on the 4090, 14:09 IST, 2026-11-03; run `59c3cf5`, step 45,777 = 3.0B tokens; old mix, think still in)
+
+Same CHECK as M1 / M2. The full local copy was deleted mid-CHECK by Library's A26 script (same file name; fixed both sides:
+Library's temp name, my hard link bf23670), so everything after s8 ran on the stripped `m3_step_045777_weights.pt` (identical
+model weights). Logs: `logs/v13_sempty_sci1_checks_59c3cf5_local.log`, `logs/sci1/v13_sempty_gens_sci1_step_045777_59c3cf5.txt`.
+
+| readout | M1 (1.0B) | M2 (2.0B) | M3 (3.0B) |
+|---|---|---|---|
+| s8 D (scored) | 0.322 | 0.538 | **0.709** |
+| skill pack 2k / 4k / 8k + contrast, 20-way | 0.54 / 0.16 / 0.07 | 0.76 / 0.51 / 0.10 | **0.87 / 0.66** / 0.12 |
+| clk2 8k (dilation + contrast) | 0.08 | 0.34 | 0.37 |
+| t40 far needles (4k / 8k, position 0) | 0.80 | 0.91 | 0.95 |
+| HellaSwag (norm) / ARC-e / PIQA (norm) | 0.281 / 0.459 / 0.576 | 0.293 / 0.479 / 0.594 | 0.308 / 0.487 / 0.609 |
+| think ON / OFF acc; OFF leak | 0.005 / 0.03; 0.005 | 0.02 / 0.03; 0.24 | 0.015 / 0.04; 0.165 |
+| holdout val (blend) at the nearest val step | 3.524 (16k) | 3.358 (30k) | 3.275 (46k) |
+
+- Everything still climbs with data; s8 D +0.17 per 1B tokens, the skill pack at 4k +0.15. 8k stays near chance (0.12 vs 0.05
+  for 20-way): the reach past 4k (the trained SEQ) is the open gap, as at M2.
+- Think confirms the drop: ON is still not better than OFF; the leak falls (0.24 → 0.165) but stays far above 5 %.
+- Holdout falls 0.083 from 2.0B to 3.0B (0.166 from 1.0B to 2.0B), a normal slowing.
+- Generations (shown in the gens file): the tool prompt reads the fetched result ("Q7 … boiling point of 78.4 C") and then runs
+  past `<|im_end|>` into a new turn; the protocol prompt still copies "12.347 g" and does not round (the cont1 target); the new
+  quant prompt (no reasoning line) answers "The answer is 1.25." greedy (wrong; 0.125) and stops at `<|im_end|>`.
+
 ## SCI-1 first continuation (DRAFT 12:41 IST, 2026-11-03; FINAL pre-registration below, "cont1 FINAL")
 
 **Why** (milestones 1 and 2 CHECK; Library's A26 `EXPERIMENTS_V14` "A26 SCI-1 MILESTONE 2"):
