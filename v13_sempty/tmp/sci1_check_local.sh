@@ -17,11 +17,12 @@ fi
 [ -n "$m" ] || { echo "no unchecked milestone"; exit 0; }
 if [ ! -s $LD/$m.pt ]; then scp -q $R:$RD/$m.pt $LD/$m.pt.part; mv $LD/$m.pt.part $LD/$m.pt; fi
 echo "=== local CHECK $m $(date -u +%FT%TZ)"
+ln -f $LD/$m.pt $LD/.mind_$m.pt   # own hard link: Library's A26 script strips + rm's $m.pt in this dir (M3, 2026-11-03)
 cp /home/gowrav/Development/qllm2/v13_sempty/tmp/sci1_check.sh $W/v13_sempty/tmp/sci1_check.sh   # the master copy (MEM_FRAC for the 4090)
 cp /home/gowrav/Development/qllm2/scripts/sci_gen.py $W/scripts/sci_gen.py   # no reasoning switch (thinking off, 2026-11-03)
 cd $W
 # RAM guard (the local box hung 2026-11-02 23:35; cause unproven): kill the CHECK if MemAvailable < 12 GB
-( MEM_FRAC=0.5 setsid bash v13_sempty/tmp/sci1_check.sh $LD/$m.pt sci1_${m}_${RUN##*_} >> logs/v13_sempty_sci1_checks_59c3cf5_local.log 2>&1 ) &
+( MEM_FRAC=0.5 setsid bash v13_sempty/tmp/sci1_check.sh $LD/.mind_$m.pt sci1_${m}_${RUN##*_} >> logs/v13_sempty_sci1_checks_59c3cf5_local.log 2>&1 ) &
 CP=$!
 while kill -0 $CP 2>/dev/null; do
   a=$(awk '/MemAvailable/{print int($2/1048576)}' /proc/meminfo)
@@ -29,4 +30,5 @@ while kill -0 $CP 2>/dev/null; do
     pkill -TERM -f "sci1_${m}_${RUN##*_}"; exit 1; fi
   sleep 10
 done
+[ -e $LD/$m.pt ] && rm -f $LD/.mind_$m.pt || mv $LD/.mind_$m.pt $LD/$m.pt   # keep one full copy (the 6000 deletes against it)
 touch $LD/.checked_$m; echo "=== local CHECK $m DONE $(date -u +%FT%TZ)"
