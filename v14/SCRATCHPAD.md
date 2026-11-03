@@ -30,6 +30,10 @@ science check cell, the protocol-doc training source, tools design. Nothing of m
   - **4090 sharing (Lead, user 22:39 IST 2026-11-02):** the 4090 belongs to Evol V1's lane. A26 milestone runs keep a
     1-2 h slot at ≤ 10 GB beside its job. Before launch, free VRAM must be ≥ the A26 peak (~10.3 GB measured on day-0)
     + 3 GB. Message Evol V1 at START and FINISH with GPU timing ONLY: nothing about Mind / Library findings.
+  - **Unattended runner:** `bash v14/tmp/a26_milestone.sh <tag> <step> [run dir]` in tmux. It waits for the checkpoint on
+    the 6000, copies it to a PRIVATE temp name, strips it, and runs G1 then G2 / G3. Lesson (2026-11-03 13:46): the first
+    version did `rm step_<X>.pt` in the shared d_drive dir and deleted Mind's full M3 copy mid-CHECK. Never delete a file
+    you did not create in a shared dir (restored from the 6000 the same minute).
   - **Mind's tripwire** (adopted by Mind): G1 MIND-HELD at 2k ≤ its NOPROT + 0.05 at milestone 2 → raise
     the proto share at the first continuation.
 * **Protocol-doc training source** `v14/protocol_docs.py` (Lead's YES 11:00; wired by Mind 9bf859c; determinism fix
