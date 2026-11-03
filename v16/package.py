@@ -137,7 +137,9 @@ class Package:
         """the mind's state after ids, in ONE pass (so a dilation span (start, end, s, where) is in absolute positions)."""
         self.mind.m._dilate = dil
         try:
-            _, st, off = self.mind.feed(ids, chunk=max(1, len(ids)))
+            # one pass only when a dilation span is set (it uses absolute positions); else 2k chunks with the state carried
+            # (parity ~1e-6): a one-pass 32k session does not fit a 386M body on a 24 GB card
+            _, st, off = self.mind.feed(ids, chunk=max(1, len(ids)) if dil is not None else 2048)
         finally:
             self.mind.m._dilate = None
         return st, off
