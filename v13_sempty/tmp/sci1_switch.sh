@@ -18,7 +18,11 @@ echo "switch: stopping old chain $(date -u +%FT%TZ)"; tmux kill-session -t sci1
 for i in $(seq 60); do pgrep -f "v13_sempty.train .*sci1_main" >/dev/null || break; sleep 5; done
 pgrep -f "v13_sempty.train .*sci1_main" && { pkill -TERM -f "v13_sempty.train .*sci1_main"; sleep 30; }
 rm -f $OLD/latest.pt; for f in ${DROP_OK:-}; do rm -f $OLD/$f; done
-git fetch -q origin && git checkout -q $NEWH || { echo "switch: checkout $NEWH failed"; exit 1; }
+git fetch -q origin
+# untracked result files that the new commit tracks block the checkout (M4 switch 2026-11-03: three M1 CHECK files): move them aside
+B=~/sci1_untracked_backup_$(date -u +%Y%m%d_%H%M)
+for f in $(git checkout -q $NEWH 2>&1 | grep -E '^\s+\S' | awk '{print $1}'); do mkdir -p $B/$(dirname $f); mv $f $B/$f && echo "switch: moved untracked $f -> $B"; done
+git checkout -q $NEWH || { echo "switch: checkout $NEWH failed"; exit 1; }
 H=$(git rev-parse --short HEAD); T=$(date -u +%Y%m%d_%H%M); df -BG / | tail -1
 tmux new-session -d -s sci1 "source v13_sempty/tmp/sci1_env.sh && source v13_sempty/tmp/sci1_cont1_env.sh && bash v13_sempty/tmp/sci1_cont_chain.sh 2>&1 | tee -a logs/v13_sempty_sci1_cont1_chain_${H}_${T}.log"
 sleep 5; tmux ls; echo "switch: launched cont1 at $H $(date -u +%FT%TZ)"
