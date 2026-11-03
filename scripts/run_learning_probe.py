@@ -46,6 +46,7 @@ def main() -> int:
     p.add_argument('--model-type', choices=('v13_sempty', 'transformer', 'hf'), required=True)
     p.add_argument('--checkpoint', type=Path)
     p.add_argument('--model-id', default='state-spaces/mamba-130m-hf')
+    p.add_argument('--revision', default=None, help='HF revision for --model-type hf (e.g. Pythia step2000)')
     p.add_argument('--preset', default='baseline_real_pm')
     p.add_argument('--suite', choices=('rules', 'b2', 'label_diag'), default='rules',
                    help='rules = memory_probes/rules.py; b2 = v14/rules_ood.py; label_diag = '
@@ -71,8 +72,8 @@ def main() -> int:
         model, tokenizer, _ = _load_transformer(args.checkpoint, device)
         identity = str(args.checkpoint)
     else:
-        model, tokenizer, _ = _load_hf(args.model_id, device)
-        identity = args.model_id
+        model, tokenizer, _ = _load_hf(args.model_id, device, args.revision)
+        identity = args.model_id + (f'@{args.revision}' if args.revision else '')
     model.eval()
 
     tasks = tuple(t.strip() for t in args.tasks.split(',') if t.strip())
@@ -93,7 +94,13 @@ def main() -> int:
     lengths = tuple(int(x) for x in args.spread.split(',') if x.strip())
     if lengths:
         from memory_probes.spread import filler_tokens, spread_suite
-        examples = spread_suite(examples, tokenizer, lengths, filler_tokens(args.filler), args.spread_tail)
+        filler = filler_tokens(args.filler)
+        if args.model_type == 'hf' and tokenizer.encode(' The cat sat.', add_special_tokens=False) != [383, 3797, 3332, 13]:
+            from transformers import AutoTokenizer   # the cache is GPT-2 ids: re-tokenize the same text for this model's vocab
+            g2 = AutoTokenizer.from_pretrained('gpt2')
+            filler = np.asarray([t for k in range(0, len(filler), 2048)
+                                 for t in tokenizer.encode(g2.decode(filler[k:k + 2048].tolist()), add_special_tokens=False)], dtype=np.int64)
+        examples = spread_suite(examples, tokenizer, lengths, filler, args.spread_tail)
         tasks = tuple(dict.fromkeys(ex.task for ex in examples))
     rows = []
     with torch.no_grad():

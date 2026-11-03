@@ -158,16 +158,16 @@ def _load_transformer(checkpoint: Path, device: torch.device):
     return model, AutoTokenizer.from_pretrained('gpt2'), cfg
 
 
-def _load_hf(model_id: str, device: torch.device):
+def _load_hf(model_id: str, device: torch.device, revision=None):
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     try:
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        tokenizer = AutoTokenizer.from_pretrained(model_id, revision=revision)
     except Exception:
         # Matched-from-scratch Mamba dirs may only have weights; use GPT-2 (same vocab).
         tokenizer = AutoTokenizer.from_pretrained('gpt2')
         tokenizer.pad_token = tokenizer.eos_token
-    model = AutoModelForCausalLM.from_pretrained(model_id).to(device).eval()
+    model = AutoModelForCausalLM.from_pretrained(model_id, revision=revision).to(device).eval()   # fp32 (Pythia degrades in bf16)
     return model, tokenizer, model.config
 
 

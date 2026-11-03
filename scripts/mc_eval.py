@@ -45,10 +45,15 @@ def load_task(name: str):
 
 
 class Scorer:
-    def __init__(self, ckpt: str, device: str = 'cuda', batch_size: int = 32, max_len: int = 2048, fp32: bool = False):
-        from run_memory_behavioral import _load_v13_sempty
-        self.dev = torch.device(device)
-        self.m, self.tok, _ = _load_v13_sempty(Path(ckpt), 'baseline_real_pm', self.dev)
+    def __init__(self, ckpt: str, device: str = 'cuda', batch_size: int = 32, max_len: int = 2048, fp32: bool = False,
+                 hf: str = '', revision: str | None = None):
+        self.dev = torch.device(device); self.hf = bool(hf)
+        if hf:    # a HF reference (e.g. Pythia at a revision), fp32 unless asked otherwise; same prompts and scoring
+            from run_memory_behavioral import _load_hf
+            self.m, self.tok, _ = _load_hf(hf, self.dev, revision); self.bos = self.tok.eos_token_id
+        else:
+            from run_memory_behavioral import _load_v13_sempty
+            self.m, self.tok, _ = _load_v13_sempty(Path(ckpt), 'baseline_real_pm', self.dev); self.bos = 50256
         self.m.eval(); self.bs, self.max_len, self.V = batch_size, max_len, len(self.tok)
         self.amp = self.dev.type == 'cuda' and not fp32
 
@@ -60,7 +65,7 @@ class Scorer:
         if n:
             cont, ctx = ctx[-n:] + cont, ctx[:-n]
         if not ctx:
-            return [50256], self._enc(cont)
+            return [self.bos], self._enc(cont)
         whole, c = self._enc(ctx + cont), self._enc(ctx)
         return c, whole[len(c):]
 
@@ -74,7 +79,7 @@ class Scorer:
             for b, j in enumerate(idx):
                 x[b, :len(items[j][0]) - 1] = torch.tensor(items[j][0][:-1])
             with torch.autocast(device_type=self.dev.type, dtype=torch.bfloat16, enabled=self.amp):
-                logits = self.m(x.to(self.dev))[0]
+                logits = self.m(x.to(self.dev)).logits if self.hf else self.m(x.to(self.dev))[0]
             for b, j in enumerate(idx):
                 full, nk = items[j]; n = len(full) - 1
                 lg = logits[b, n - nk:n, :self.V].float().log_softmax(-1)
@@ -84,11 +89,12 @@ class Scorer:
 
 def main():
     p = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-    p.add_argument('--ckpt', required=True); p.add_argument('--out', required=True)
+    p.add_argument('--ckpt', default=''); p.add_argument('--out', required=True)
+    p.add_argument('--hf', default='', help='HF model id instead of --ckpt'); p.add_argument('--revision', default=None)
     p.add_argument('--tasks', default='hellaswag,arc_easy,piqa'); p.add_argument('--device', default='cuda')
     p.add_argument('--batch_size', type=int, default=32); p.add_argument('--limit', type=int, default=0)
     p.add_argument('--fp32', action='store_true')
-    a = p.parse_args(); t0 = time.time(); sc = Scorer(a.ckpt, a.device, a.batch_size, fp32=a.fp32); res = {}
+    a = p.parse_args(); t0 = time.time(); sc = Scorer(a.ckpt, a.device, a.batch_size, fp32=a.fp32, hf=a.hf, revision=a.revision); res = {}
     for task in a.tasks.split(','):
         docs = list(load_task(task)); docs = docs[:a.limit] if a.limit else docs
         reqs = [(q, ' ' + ch) for q, chs, _ in docs for ch in chs]
@@ -100,7 +106,7 @@ def main():
         res[task] = {'acc': acc / len(docs), 'acc_norm': accn / len(docs), 'n': len(docs)}
         print(task, {k: round(v, 4) if isinstance(v, float) else v for k, v in res[task].items()}, flush=True)
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    json.dump({'ckpt': a.ckpt, 'results': res, 'sec': round(time.time() - t0, 1), 'fp32': a.fp32}, open(a.out, 'w'), indent=1)
+    json.dump({'ckpt': a.ckpt or f'{a.hf}@{a.revision}', 'results': res, 'sec': round(time.time() - t0, 1), 'fp32': a.fp32}, open(a.out, 'w'), indent=1)
 
 
 if __name__ == '__main__':
