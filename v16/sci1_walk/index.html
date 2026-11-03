@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SCI-1 line walker</title>
+<style>
+:root {
+  --bg: #0e1116;
+  --panel: #151a21;
+  --line: #1c232d;
+  --ink: #e7edf4;
+  --muted: #93a0af;
+  --accent: #7ee0c6;
+  --gold: #e6c07b;
+  --h1: #79b8ff;
+  --h2: #d2a8ff;
+  --pos: #3fb950;
+  --neg: #f85149;
+  --border: #2a3340;
+  --mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --sans: "Segoe UI", Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--sans);
+  display: flex; flex-direction: column; font-size: 14px;
+}
+button, .chip, .cell { font-family: inherit; color: inherit; }
+#bar {
+  display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center;
+  padding: 8px 12px; border-bottom: 1px solid var(--border); background: #12171e;
+}
+#bar h1 { font-size: 14px; margin: 0 8px 0 0; color: var(--accent); font-weight: 650; }
+.group { display: flex; gap: 4px; align-items: center; }
+.group span.lbl { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+button.toggle, button.tok, button.sec {
+  background: transparent; border: 1px solid var(--border); border-radius: 999px;
+  padding: 3px 9px; cursor: pointer; font-size: 12px;
+}
+button.toggle.on, button.tok.on { background: var(--accent); color: #06241c; border-color: var(--accent); }
+button.sec { border-radius: 6px; color: var(--muted); }
+button.sec.on { color: var(--ink); border-color: var(--accent); }
+button.tok.h1.on { background: var(--h1); color: #041018; border-color: var(--h1); }
+button.tok.h2.on { background: var(--h2); color: #1a0a24; border-color: var(--h2); }
+#body { flex: 1; min-height: 0; display: flex; }
+#code {
+  width: 48%; border-right: 1px solid var(--border); overflow: auto;
+  background: #0c1015; font-family: var(--mono); font-size: 12px; line-height: 1.45;
+}
+#view { width: 52%; overflow: auto; padding: 14px 16px 28px; }
+.sec-h {
+  position: sticky; top: 0; background: #1a222c; color: var(--accent);
+  padding: 6px 10px; font-family: var(--sans); font-size: 12px; cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.sec-h small { color: var(--muted); font-weight: 400; }
+.line { display: flex; gap: 10px; padding: 0 8px; cursor: pointer; white-space: pre; }
+.line:hover { background: #17202a; }
+.line.on { background: #143028; box-shadow: inset 3px 0 var(--accent); }
+.line.hot .ln { color: var(--gold); }
+.ln { width: 46px; flex: none; text-align: right; color: #5c6b7a; user-select: none; }
+.gap { color: #3d4b5c; padding: 4px 0 4px 64px; }
+.kicker { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+h2 { margin: 4px 0 8px; font-size: 20px; }
+.sentence { color: var(--ink); line-height: 1.45; margin: 0 0 10px; }
+.note-scale, .banner {
+  color: var(--muted); font-size: 12px; line-height: 1.4; margin: 0 0 10px;
+}
+.banner {
+  border-left: 3px solid var(--gold); padding: 6px 10px; background: #241e12; color: var(--gold);
+}
+.legend { display: flex; gap: 14px; color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+.legend b.h1 { color: var(--h1); font-weight: 600; }
+.legend b.h2 { color: var(--h2); font-weight: 600; }
+.doc { display: flex; gap: 6px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.doc .arrow { color: var(--muted); }
+.pill {
+  border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; background: var(--panel);
+}
+.pill.on { border-color: var(--accent); }
+.pill small { display: block; color: var(--muted); font-size: 11px; }
+.block { margin: 0 0 14px; }
+.block h3 { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip, .cell {
+  background: #1b2430; border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 7px; cursor: pointer; font-size: 12px;
+}
+.chip.quiet, .cell.quiet { color: var(--muted); }
+.chip.neg, .cell.neg { color: #ffb4ae; }
+.chip.h1 { box-shadow: inset 2px 0 var(--h1); }
+.chip.h2 { box-shadow: inset 2px 0 var(--h2); }
+.gridwrap { overflow-x: auto; }
+table.grid { border-collapse: collapse; }
+table.grid th { font-size: 11px; color: var(--muted); font-weight: 500; padding: 3px; max-width: 88px; }
+table.grid td { padding: 2px; }
+.cell { display: block; min-width: 76px; max-width: 120px; text-align: left; line-height: 1.25; }
+.cell.pos { background: rgba(63, 185, 80, var(--a, .3)); }
+.cell.neg { background: rgba(248, 81, 73, var(--a, .3)); }
+.cols { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.frow { margin: 0 0 8px; }
+.lhs { font-family: var(--mono); color: var(--accent); margin-bottom: 3px; }
+.term { display: inline-flex; gap: 4px; align-items: center; margin: 2px 8px 2px 0; }
+.op { color: var(--muted); font-family: var(--mono); }
+.meter { margin: 0 0 8px; max-width: 420px; }
+.meter-label { font-size: 13px; margin-bottom: 3px; }
+.meter-track { height: 8px; background: #242c36; border-radius: 99px; overflow: hidden; }
+.meter-fill { height: 100%; background: var(--accent); }
+.dials { display: flex; flex-wrap: wrap; gap: 8px; }
+.dial { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px 8px; }
+.dial svg { display: block; }
+.dial p { margin: 4px 0 0; font-size: 12px; color: var(--muted); max-width: 220px; }
+.axis { stroke: #3c4a5a; stroke-width: 1; }
+.arr.before { stroke: #8b98a8; fill: #8b98a8; }
+.arr.after { stroke: var(--accent); fill: var(--accent); stroke-width: 2.4; }
+.arr.ghost { stroke: var(--gold); fill: none; stroke-dasharray: 4 3; }
+.dial text { fill: var(--muted); font-size: 11px; font-family: var(--sans); }
+.bars { display: flex; flex-direction: column; gap: 5px; max-width: 520px; }
+.bar { display: grid; grid-template-columns: 92px 1fr auto; gap: 8px; align-items: center; }
+.bar.mark .bar-name { color: var(--accent); }
+.bar-track { height: 10px; background: #242c36; border-radius: 99px; }
+.bar-fill { height: 100%; background: var(--h1); border-radius: 99px; }
+.bar-fill.neg { background: var(--neg); }
+.bar-name { font-family: var(--mono); }
+#prov {
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);
+  color: var(--gold); min-height: 1.3em; font-size: 13px;
+}
+@media (max-width: 980px) {
+  #body { flex-direction: column; }
+  #code, #view { width: 100%; height: 50%; }
+}
+</style>
+</head>
+<body>
+<div id="bar">
+  <h1>SCI-1</h1>
+  <div class="group" id="words"></div>
+  <div class="group" id="mode"></div>
+  <div class="group" id="tokens"></div>
+  <div class="group" id="heads"></div>
+</div>
+<div id="secs" style="display:flex;gap:4px;flex-wrap:wrap;padding:6px 12px;border-bottom:1px solid var(--border)"></div>
+<div id="body">
+  <div id="code"></div>
+  <div id="view"></div>
+</div>
+<script src="story.js"></script>
+<script>
+const DATA = window.SCI1;
+if (!DATA) {
+  document.body.textContent = "story.js did not load. Run python3 v16/sci1_walk/story.py beside this file.";
+  throw new Error("no data");
+}
+const slices = DATA.slices;
+const trace = DATA.trace;
+
+let words = true;
+let mode = "train";
+let token = 0;
+let head = "h1";
+let current = null;
+
+const codeEl = document.getElementById("code");
+const viewEl = document.getElementById("view");
+
+function h(tag, attrs) {
+  const n = document.createElement(tag);
+  const a = attrs || {};
+  for (const k of Object.keys(a)) {
+    if (k === "class") n.className = a[k];
+    else if (k === "style") n.setAttribute("style", a[k]);
+    else if (k === "title") n.title = a[k];
+    else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2), a[k]);
+    else n.setAttribute(k, a[k]);
+  }
+  for (let i = 2; i < arguments.length; i++) append(n, arguments[i]);
+  return n;
+}
+function append(n, kid) {
+  if (kid == null || kid === false) return;
+  if (Array.isArray(kid)) { kid.forEach(k => append(n, k)); return; }
+  n.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+}
+function num(x) {
+  const v = Number(x) || 0;
+  const a = Math.abs(v);
+  if (a !== 0 && a < 0.0005) return "0";
+  return v.toFixed(2);
+}
+function step() { return trace.steps[token]; }
+function grads() { return trace.grads[token]; }
+function headList() { return head === "both" ? ["h1", "h2"] : [head]; }
+function axes(hid) { return trace.axes[hid]; }
+function headName(hid) { return hid === "h1" ? "head 1" : "head 2"; }
+
+function mixPhrase(ax, values) {
+  const items = ax.map((a, i) => ({ a, v: values[i] })).filter(p => Math.abs(p.v) > 1e-6);
+  items.sort((p, q) => Math.abs(q.v) - Math.abs(p.v));
+  if (!items.length) return "empty";
+  const top = Math.abs(items[0].v);
+  const parts = [];
+  items.slice(0, 3).forEach((p, i) => {
+    const r = Math.abs(p.v) / top;
+    if (r < 0.18) return;
+    const name = (p.v < 0 ? "against " : "") + p.a;
+    if (i === 0) parts.push(name);
+    else if (r > 0.55) parts.push("and " + name);
+    else parts.push("a little " + name);
+  });
+  if (parts.length > 1 && Math.abs(items[1].v) / top < 0.75) parts[0] = "mostly " + parts[0];
+  return parts.join(", ").replace(", and ", " and ").replace(", a little ", ", a little ");
+}
+function speedWord(g) {
+  if (g > 1.15) return "fast";
+  if (g < 0.75) return "slow";
+  return "steady";
+}
+function retainPhrase(x) {
+  if (x > 0.9) return "keeps almost all";
+  if (x > 0.6) return "keeps most";
+  if (x > 0.25) return "fades a lot";
+  if (x > 0.02) return "almost forgets";
+  return "forgets the page";
+}
+function writePhrase(x) {
+  if (x > 0.8) return "writes strongly";
+  if (x > 0.4) return "writes some";
+  if (x > 0.05) return "writes a little";
+  return "writes nothing";
+}
+function erasePhrase(x) {
+  if (x > 0.7) return "clears this key";
+  if (x > 0.3) return "erases some of this key";
+  if (x > 0.08) return "erases a little";
+  return "barely erases";
+}
+function setProv(text) {
+  const el = document.getElementById("prov");
+  if (el) el.textContent = text || "";
+}
+
+function chips(ax, values, opt) {
+  const o = opt || {};
+  const max = Math.max.apply(null, values.map(v => Math.abs(v)).concat([1e-9]));
+  return h("div", { class: "chips" }, ax.map((a, i) => {
+    const v = values[i];
+    const mag = Math.abs(v) / max;
+    const quiet = mag < 0.12;
+    const which = o.colorHeads ? (i < 4 ? "h1" : "h2") : "";
+    const label = words ? ((v < -1e-9 ? "against " : "") + a) : (a + "  " + num(v));
+    return h("button", {
+      class: "chip" + (quiet ? " quiet" : "") + (v < 0 ? " neg" : "") + (which ? " " + which : ""),
+      style: "opacity:" + (quiet ? 0.4 : (0.45 + 0.55 * mag)).toFixed(3),
+      title: num(v),
+      onclick: () => setProv(a + " = " + num(v) + ". Mix: " + mixPhrase(ax, values) + (o.from ? ". " + o.from : ""))
+    }, label);
+  }));
+}
+
+function matrix(axR, axC, mat, opt) {
+  const o = opt || {};
+  const vals = mat.v;
+  let max = 1e-9;
+  vals.forEach(row => row.forEach(v => { max = Math.max(max, Math.abs(v)); }));
+  const table = h("table", { class: "grid" });
+  table.append(h("tr", {}, [h("th")].concat(axC.map(a => h("th", {}, a)))));
+  axR.forEach((ar, i) => {
+    const tr = h("tr", {}, h("th", {}, ar));
+    axC.forEach((ac, j) => {
+      const v = vals[i][j];
+      const from = (mat.from && mat.from[i] && mat.from[i][j]) || "";
+      const mag = Math.abs(v) / max;
+      const quiet = mag < 0.08 || from === "quiet" || from === "blank";
+      let text = "·";
+      if (!quiet) {
+        if (!words) text = num(v);
+        else if (o.grad) text = from.replace("want ", "");
+        else text = ar + " × " + ac;
+      }
+      tr.append(h("td", {}, h("button", {
+        class: "cell " + (v < 0 ? "neg" : "pos") + (quiet ? " quiet" : ""),
+        style: "--a:" + Math.max(0.12, mag).toFixed(3),
+        title: num(v) + (from ? " — " + from : ""),
+        onclick: () => setProv(from && from !== "blank" ? from + " (" + num(v) + ")" : ar + " × " + ac + " is empty (" + num(v) + ")")
+      }, text)));
+    });
+    table.append(tr);
+  });
+  return h("div", { class: "gridwrap" }, table);
+}
+
+function formula(lhs, axR, axC, terms) {
+  const box = h("div", { class: "block" });
+  axR.forEach((ra, i) => {
+    const total = terms[i].reduce((s, t) => s + t.prod, 0);
+    const bits = [h("div", { class: "lhs" }, lhs + "[" + ra + "]" + (words ? "" : " = " + num(total)))];
+    terms[i].forEach((t, j) => {
+      if (j) bits.push(h("span", { class: "op" }, "+"));
+      const sText = words ? (ra + " × " + axC[j]) : num(t.s);
+      const qText = words ? ("q " + axC[j]) : num(t.q);
+      const quiet = Math.abs(t.prod) < 1e-3;
+      bits.push(h("span", { class: "term" },
+        h("button", {
+          class: "cell " + (t.s < 0 ? "neg" : "pos") + (quiet ? " quiet" : ""),
+          title: num(t.s),
+          onclick: () => setProv((t.from || (ra + " × " + axC[j])) + " · query " + axC[j] + " (" + num(t.q) + ") = " + num(t.prod))
+        }, sText),
+        h("span", { class: "op" }, "·"),
+        h("button", {
+          class: "cell" + (quiet ? " quiet" : ""),
+          title: num(t.q),
+          onclick: () => setProv("query " + axC[j] + " = " + num(t.q))
+        }, qText)
+      ));
+    });
+    bits.push(h("span", { class: "op" }, words ? ("→ " + (Math.abs(total) < 0.05 ? "quiet" : ra)) : ("= " + num(total))));
+    box.append(h("div", { class: "frow" }, bits));
+  });
+  return box;
+}
+
+function termsOf(S, q) {
+  const scale = trace.sqrtD;
+  return S.v.map((row, i) => row.map((s, j) => ({
+    s: s, q: q[j], prod: s * q[j] / scale,
+    from: S.from && S.from[i] ? S.from[i][j] : ""
+  })));
+}
+
+function meter(label, value, phrase) {
+  const shown = words ? phrase : num(value);
+  return h("div", { class: "meter" },
+    h("div", { class: "meter-label" }, label + " — " + shown),
+    h("div", { class: "meter-track" }, h("div", { class: "meter-fill", style: "width:" + Math.max(0, Math.min(1, value)) * 100 + "%" }))
+  );
+}
+
+function dial(pair, ghost, caption) {
+  const C = 96, R = 68;
+  function pt(xy) {
+    const n = Math.hypot(xy[0], xy[1]) || 1;
+    return [C + xy[0] / n * R, C - xy[1] / n * R];
+  }
+  function line(xy, cls) {
+    const p = pt(xy);
+    return '<line x1="' + C + '" y1="' + C + '" x2="' + p[0].toFixed(1) + '" y2="' + p[1].toFixed(1) + '" class="arr ' + cls + '"/>' +
+      '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3.2" class="arr ' + cls + '"/>';
+  }
+  let svg = '<svg width="200" height="188" viewBox="0 0 192 188">';
+  svg += '<line x1="16" y1="' + C + '" x2="176" y2="' + C + '" class="axis"/>';
+  svg += '<line x1="' + C + '" y1="16" x2="' + C + '" y2="176" class="axis"/>';
+  svg += '<text x="148" y="' + (C - 6) + '">' + pair.axes[0] + '</text>';
+  svg += '<text x="' + (C + 6) + '" y="28">' + pair.axes[1] + '</text>';
+  if (ghost) svg += line(ghost, "ghost");
+  svg += line(pair.qBefore || pair.kBefore, "before");
+  svg += line(pair.qAfter || pair.kAfter, "after");
+  svg += "</svg>";
+  const node = h("div", { class: "dial" });
+  node.innerHTML = svg;
+  node.append(h("p", {}, caption));
+  return node;
+}
+
+function deg(phi) { return Math.round(phi * 180 / Math.PI); }
+function match(a, b) {
+  const na = Math.hypot(a[0], a[1]) || 1, nb = Math.hypot(b[0], b[1]) || 1;
+  return (a[0] * b[0] + a[1] * b[1]) / (na * nb);
+}
+
+function block(title, node) {
+  return h("div", { class: "block" }, h("h3", {}, title), node);
+}
+
+function eachHead(fn) {
+  return h("div", { class: "cols" }, headList().map(hid => {
+    const box = h("div", {}, h("h3", { class: hid }, headName(hid)));
+    append(box, fn(hid, step().heads[hid], grads().heads[hid]));
+    return box;
+  }));
+}
+
+function docStrip() {
+  const s = step();
+  return h("div", { class: "doc" }, trace.tokens.map((w, i) => {
+    const bits = [h("div", { class: "pill" + (i === token ? " on" : "") },
+      w,
+      mode === "train" && trace.steps[i].target ? h("small", {}, "asks for " + trace.steps[i].target) : null
+    )];
+    if (i < trace.tokens.length - 1) bits.push(h("span", { class: "arrow" }, "→"));
+    return bits;
+  }));
+}
+
+function banner(text) { return h("div", { class: "banner" }, text); }
+
+function showOff(ann) {
+  if (ann.off) return banner("This line is in the source and it does not run for SCI-1. The learned clock is the path that does.");
+  if (mode === "infer" && (ann.viz === "scan" || ann.viz === "loss"))
+    return banner("Inference does not run this. The notebook is only carried forward.");
+  if (mode === "infer" && ann.home === "train")
+    return banner("A long document uses this call. Inference repeats the one-token step and carries the notebook.");
+  if (mode === "train" && ann.home === "infer")
+    return banner("Training a whole document uses the chunked call. This step is the same update, one token at a time.");
+  return null;
+}
+
+const VIZ = {
+  note(ann) {
+    const s = step();
+    return h("div", {},
+      h("p", { class: "sentence" }, words
+        ? ("This token reads as " + mixPhrase(trace.allAxes, s.pamIn) + ".")
+        : "Numbers for this token are on the lines that do the work.")
+    );
+  },
+  embed() {
+    const s = step();
+    return h("div", {},
+      block(s.token + " in the table", chips(trace.allAxes, s.embedRaw, { colorHeads: true, from: "the " + s.token + " row of the embedding" })),
+      block("after the stem norm — same mix, length 1", chips(trace.allAxes, s.embed, { colorHeads: true }))
+    );
+  },
+  norm() {
+    const s = step();
+    return h("div", {},
+      block("before", chips(trace.allAxes, s.embedRaw, { colorHeads: true })),
+      block("after — " + (words ? mixPhrase(trace.allAxes, s.embed) : "length 1"), chips(trace.allAxes, s.embed, { colorHeads: true }))
+    );
+  },
+  swiglu() {
+    const g = step().swiglu;
+    return h("div", {},
+      h("p", { class: "note-scale" }, "down( silu(gate) · up ). Each word is gated by itself, so animal stays in head 1 and meow stays in head 2."),
+      block("gate  silu(word)", chips(trace.allAxes, g.gate, { colorHeads: true })),
+      block("up", chips(trace.allAxes, g.up, { colorHeads: true })),
+      block("product", chips(trace.allAxes, g.prod, { colorHeads: true })),
+      block("down — what gets added", chips(trace.allAxes, g.down, { colorHeads: true }))
+    );
+  },
+  residual() {
+    const s = step();
+    return h("div", {},
+      block("token", chips(trace.allAxes, s.embed, { colorHeads: true })),
+      block("plus the mix", chips(trace.allAxes, s.swiglu.down, { colorHeads: true })),
+      block("still " + s.token, chips(trace.allAxes, s.mixed, { colorHeads: true }))
+    );
+  },
+  project() {
+    const s = step();
+    return h("div", {},
+      block("token going in", chips(trace.allAxes, s.pamIn, { colorHeads: true, from: "head 1 reads the first four words, head 2 the last four" })),
+      eachHead((hid, hh) => h("div", {},
+        block("query — " + mixPhrase(axes(hid), hh.qRaw), chips(axes(hid), hh.qRaw)),
+        block("key — " + mixPhrase(axes(hid), hh.kRaw), chips(axes(hid), hh.kRaw)),
+        block("value — " + mixPhrase(axes(hid), hh.v), chips(axes(hid), hh.v, { from: hid === "h1" ? "head 1's value learned to carry sits, the word that follows an animal" : "head 2 stores the token's own meow and four-legs" }))
+      ))
+    );
+  },
+  rotate(ann) {
+    const cat = trace.steps[0];
+    return h("div", {},
+      ann.off ? null : h("p", { class: "note-scale" }, "Pale arrow: before the turn. Bright arrow: after. Gold dashed: cat's key, the one already stored."),
+      eachHead((hid, hh) => h("div", { class: "dials" }, hh.pairs.map((pair, p) => {
+        const catK = cat.heads[hid].pairs[p].kAfter;
+        const turned = Math.abs(pair.phi) > 0.01;
+        const cap = pair.axes[0] + "–" + pair.axes[1] + ": " +
+          (turned ? (speedWord(hh.g) + " clock, turned " + deg(pair.phi) + "°. Now " + mixPhrase(pair.axes, pair.kAfter) + ".") : "not turned yet. " + mixPhrase(pair.axes, pair.kAfter) + ".") +
+          (token > 0 ? " Match with cat's key: " + match(pair.kAfter, catK).toFixed(2) + "." : " Query and key share this angle, so " + step().token + " still matches itself.");
+        const d = {
+          axes: pair.axes,
+          kBefore: pair.kBefore,
+          kAfter: pair.kAfter
+        };
+        return dial(d, token > 0 ? catK : null, cap);
+      })))
+    );
+  },
+  chrono() {
+    return h("div", {},
+      eachHead((hid, hh) => h("div", {},
+        meter("speed", hh.g, speedWord(hh.g)),
+        h("p", { class: "note-scale" }, "Clock coming in " + (words ? (hh.tau < 0.02 ? "is still zero" : "has already moved") : num(hh.tau)) + ". Clock handed on includes this token's speed."),
+        h("div", { class: "dials" }, hh.pairs.map(pair => dial({
+          axes: pair.axes, kBefore: pair.kBefore, kAfter: pair.kAfter
+        }, null, pair.axes[0] + "–" + pair.axes[1] + " pace " + (pair.phi / (hh.tau || 1) > 0.5 || hh.tau < 1e-6 && pair.axes[0] === axes(hid)[0] ? "fast" : "slow") + ", turn " + deg(pair.phi) + "°")))
+      )),
+      h("p", { class: "note-scale" }, "The angle is the sum of speeds so far, times the pair's pace. It is not the token's index. animal–furry is the fast pair. sits–soft barely moves.")
+    );
+  },
+  decay() {
+    return eachHead((hid, hh) => h("div", {},
+      meter("retain", hh.retain, retainPhrase(hh.retain)),
+      block("page coming in", matrix(axes(hid), axes(hid), hh.Sprev)),
+      block("after the fade", matrix(axes(hid), axes(hid), hh.kept))
+    ));
+  },
+  unit() {
+    return eachHead((hid, hh) => h("div", {},
+      block("key before — length " + (words ? "whatever it was" : num(hh.kNorm)), chips(axes(hid), hh.k)),
+      block("key after — length 1, mix stays " + mixPhrase(axes(hid), hh.kHat), chips(axes(hid), hh.kHat, { from: "same direction, length brought to 1" }))
+    ));
+  },
+  gates() {
+    return eachHead((hid, hh) => h("div", {},
+      meter("erase", hh.erase, erasePhrase(hh.erase)),
+      meter("write", hh.write, writePhrase(hh.write)),
+      block("what write plants: value × key", matrix(axes(hid), axes(hid), hh.writeTerm))
+    ));
+  },
+  erase() {
+    return eachHead((hid, hh) => {
+      const erased = {
+        v: hh.Sprev.v.map((row, i) => row.map((v, j) => v - hh.eraseTerm.v[i][j])),
+        from: hh.S.from
+      };
+      return h("div", {},
+        meter("erase", hh.erase, erasePhrase(hh.erase)),
+        block("page coming in", matrix(axes(hid), axes(hid), hh.Sprev)),
+        block("removed along this key", matrix(axes(hid), axes(hid), hh.eraseTerm)),
+        block("page after the erase", matrix(axes(hid), axes(hid), erased))
+      );
+    });
+  },
+  delta(ann) {
+    const showGrad = mode === "train";
+    return h("div", {},
+      h("p", { class: "lhs" }, "S = retain × (previous − erase × key × key) + write × value × key"),
+      eachHead((hid, hh, gh) => h("div", {},
+        meter("retain", hh.retain, retainPhrase(hh.retain)),
+        block("previous", matrix(axes(hid), axes(hid), hh.Sprev)),
+        block("erase along this key", matrix(axes(hid), axes(hid), hh.eraseTerm)),
+        block("write  value × key", matrix(axes(hid), axes(hid), hh.writeTerm)),
+        block("notebook now", matrix(axes(hid), axes(hid), hh.S)),
+        showGrad ? block("loss asks", matrix(axes(hid), axes(hid), gh.dS, { grad: true })) : null
+      ))
+    );
+  },
+  read() {
+    return eachHead((hid, hh) => h("div", {},
+      formula("read", axes(hid), axes(hid), hh.terms),
+      h("p", { class: "note-scale" }, "Divided by √" + (trace.sqrtD * trace.sqrtD).toFixed(0) + " here. The real head divides by √128."),
+      block("the read — " + mixPhrase(axes(hid), hh.y), chips(axes(hid), hh.y))
+    ));
+  },
+  outgate() {
+    return eachHead((hid, hh) => h("div", {},
+      meter("output gate", hh.outGate, hh.outGate > 0.8 ? "open" : "shut"),
+      block("read", chips(axes(hid), hh.read)),
+      block("after the gate — " + mixPhrase(axes(hid), hh.y), chips(axes(hid), hh.y))
+    ));
+  },
+  oproj() {
+    const s = step();
+    return h("div", {},
+      h("p", { class: "note-scale" }, "In this picture the output projection is the identity, so the eight words stay in this order. The real one is a learned mix of them."),
+      block("head 1", chips(axes("h1"), s.heads.h1.y)),
+      block("head 2", chips(axes("h2"), s.heads.h2.y)),
+      block("one list", chips(trace.allAxes, s.concat, { colorHeads: true }))
+    );
+  },
+  branch() {
+    const trainOn = mode === "train";
+    return h("div", { class: "cols" },
+      h("div", { class: "pill" + (trainOn ? " on" : "") },
+        h("strong", {}, "Whole document"),
+        h("p", {}, "seq_len > 1. Training calls the chunked delta. The notebook you see is that result.")
+      ),
+      h("div", { class: "pill" + (!trainOn ? " on" : "") },
+        h("strong", {}, "One token"),
+        h("p", {}, "Inference carries the notebook and the clock in, updates them, and carries them out.")
+      )
+    );
+  },
+  eos() {
+    return eachHead((hid, hh) => {
+      const blank = hh.S.v.every(row => row.every(v => Math.abs(v) < 0.001));
+      return h("div", {},
+        meter("retain", hh.retain, retainPhrase(hh.retain)),
+        block("page before this token", matrix(axes(hid), axes(hid), hh.Sprev)),
+        block(blank ? "page after — blank" : "page after", matrix(axes(hid), axes(hid), hh.S))
+      );
+    });
+  },
+  "pam-add"() {
+    const s = step();
+    return h("div", {},
+      h("p", { class: "note-scale" }, "The add is scaled by " + (words ? "a small learned number (it starts at 0.1), so the token's own words still carry the sentence." : num(trace.pamScale) + ".")),
+      block("token's own words", chips(trace.allAxes, s.mixed, { colorHeads: true })),
+      block("notebook's read, scaled", chips(trace.allAxes, s.concat.map(v => v * trace.pamScale), { colorHeads: true })),
+      block("hidden after the norm — " + mixPhrase(trace.allAxes, s.hidden), chips(trace.allAxes, s.hidden, { colorHeads: true }))
+    );
+  },
+  shared() {
+    const s = step();
+    return eachHead((hid, hh) => {
+      const sh = s.shared.heads[hid];
+      const terms = termsOf(hh.S, sh.q);
+      return h("div", {},
+        block("writer's notebook", matrix(axes(hid), axes(hid), hh.S)),
+        h("div", { class: "dials" }, sh.pairs.map((pair, p) => dial({
+          axes: pair.axes, kBefore: pair.qBefore, kAfter: pair.qAfter
+        }, hh.pairs[p].kAfter, "reader's query on the writer's clock. Gold is the writer's key."))),
+        formula("read", axes(hid), axes(hid), terms)
+      );
+    });
+  },
+  echo() {
+    const s = step();
+    const prev = s.echo.prev;
+    return h("div", {},
+      h("p", { class: "note-scale" }, prev
+        ? ("Key is " + prev + "'s hidden words. Value is " + s.token + "'s embedding. The binding is the word that followed " + prev + ".")
+        : "The first token has no previous state, so the key is empty and nothing is filed."),
+      eachHead((hid, hh) => {
+        const eh = s.echo.heads[hid];
+        return h("div", {},
+          block("key — " + (prev || "nothing"), chips(axes(hid), eh.kHat)),
+          block("value — " + s.token + "'s embedding", chips(axes(hid), eh.v)),
+          meter("write", eh.write, writePhrase(eh.write)),
+          block("filed", matrix(axes(hid), axes(hid), eh.writeTerm)),
+          block("echo notebook", matrix(axes(hid), axes(hid), eh.S))
+        );
+      })
+    );
+  },
+  logits() { return scorePane(false); },
+  loss() { return scorePane(true); },
+  scan() {
+    if (mode === "infer") return h("p", { class: "sentence" }, "Decode keeps the notebook and does not run this kernel.");
+    return h("div", {},
+      h("p", { class: "note-scale" }, "These are the pushes from the next-word loss. The kernel returns the scan's version of them. The delta solve's autograd sits on top. A negative cell wants that association stronger."),
+      eachHead((hid, hh, gh) => h("div", {},
+        block("want on the notebook", matrix(axes(hid), axes(hid), gh.dS, { grad: true })),
+        block("push on the query — " + mixPhrase(axes(hid), gh.dq), chips(axes(hid), gh.dq)),
+        block("push on the key — " + mixPhrase(axes(hid), gh.dk), chips(axes(hid), gh.dk)),
+        block("push on the value — " + mixPhrase(axes(hid), gh.dv), chips(axes(hid), gh.dv)),
+        meter("push on retain", Math.min(1, Math.abs(gh.dRetain) * 20), (gh.dRetain < 0 ? "want the page kept more" : "want the page faded more"))
+      ))
+    );
+  }
+};
+
+function scorePane(isLoss) {
+  const s = step();
+  const win = s.logits.slice().sort((a, b) => b.score - a.score)[0].word;
+  const voteWin = s.vote.slice().sort((a, b) => b.score - a.score)[0].word;
+  const mark = mode === "train" && s.target ? s.target : win;
+  let picked = mark;
+  const box = h("div");
+  function draw() {
+    box.innerHTML = "";
+    append(box, block(mode === "train" ? "whole hidden state — the residual still looks like the current word" : "scores — the guess is the longest bar",
+      bars(s.logits, mark)));
+    append(box, block("notebook's own vote — " + (words ? ("it says " + voteWin) : ""), bars(s.vote, voteWin)));
+    const row = trace.embedTable[picked];
+    append(box, h("div", { class: "group" }, trace.vocab.map(w => h("button", {
+      class: "tok" + (w === picked ? " on" : ""),
+      onclick: () => { picked = w; draw(); setProv(""); }
+    }, w))));
+    append(box, block("score[" + picked + "] = hidden · " + picked, dotRow(s.hidden, row, picked)));
+    if (isLoss && mode === "train") {
+      append(box, h("p", { class: "note-scale" }, "The loss asks for " + (s.target || "nothing") + ". The grid is that ask, written into the notebook."));
+      append(box, eachHead((hid, hh, gh) => block("ask on " + headName(hid), matrix(axes(hid), axes(hid), gh.dS, { grad: true }))));
+    }
+  }
+  draw();
+  return box;
+}
+
+function bars(rows, mark) {
+  const max = Math.max.apply(null, rows.map(r => Math.abs(r.score)).concat([1e-6]));
+  return h("div", { class: "bars" }, rows.map(r => h("div", { class: "bar" + (r.word === mark ? " mark" : "") },
+    h("span", { class: "bar-name" }, r.word),
+    h("div", { class: "bar-track" }, h("div", { class: "bar-fill" + (r.score < 0 ? " neg" : ""), style: "width:" + (Math.abs(r.score) / max * 100) + "%" })),
+    h("span", { class: "op" }, words ? "" : num(r.score))
+  )));
+}
+
+function dotRow(hidden, embedRow, word) {
+  const bits = [h("div", { class: "lhs" }, "score[" + word + "]")];
+  let total = 0;
+  trace.allAxes.forEach((a, i) => {
+    const prod = hidden[i] * embedRow[i];
+    total += prod;
+    if (words && Math.abs(prod) < Math.max.apply(null, trace.allAxes.map((_, k) => Math.abs(hidden[k] * embedRow[k]))) * 0.15) return;
+    bits.push(h("span", { class: "term" },
+      h("button", {
+        class: "cell " + (prod < 0 ? "neg" : "pos"),
+        title: num(hidden[i]) + " · " + num(embedRow[i]),
+        onclick: () => setProv("hidden " + a + " (" + num(hidden[i]) + ") · " + word + "'s " + a + " (" + num(embedRow[i]) + ") = " + num(prod))
+      }, words ? (a + " · " + a) : num(prod)),
+    ));
+    bits.push(h("span", { class: "op" }, "+"));
+  });
+  if (bits[bits.length - 1] && bits[bits.length - 1].className === "op") bits.pop();
+  bits.push(h("span", { class: "op" }, "= " + (words ? mixPhrase(trace.allAxes, hidden.map((v, i) => v * embedRow[i])) : num(total))));
+  return h("div", { class: "frow" }, bits);
+}
+
+function findAnn(file, line) {
+  for (const sec of slices) {
+    if (sec.file !== file) continue;
+    for (const row of sec.lines) if (row.n === line) return { sec, row, ann: row.ann };
+  }
+  return null;
+}
+function findHome(which) {
+  for (const sec of slices) for (const row of sec.lines) if (row.ann.home === which) return row.ann;
+  return slices[0].lines[0].ann;
+}
+
+function renderViz() {
+  const found = findAnn(current.file, current.line);
+  const ann = found.ann;
+  viewEl.innerHTML = "";
+  const s = step();
+  viewEl.append(h("div", { class: "kicker" }, ann.file + ":" + ann.line));
+  viewEl.append(h("h2", {}, ann.title));
+  viewEl.append(h("div", { class: "legend" },
+    h("span", {}, [h("b", { class: "h1" }, "head 1 "), trace.axes.h1.join(", ")]),
+    h("span", {}, [h("b", { class: "h2" }, "head 2 "), trace.axes.h2.join(", ")])
+  ));
+  viewEl.append(docStrip());
+  viewEl.append(h("p", { class: "sentence" }, ann[mode] || ann.train));
+  const off = showOff(ann);
+  if (off) viewEl.append(off);
+  viewEl.append(h("p", { class: "note-scale" }, trace.note));
+  const fn = VIZ[ann.viz] || VIZ.note;
+  try {
+    viewEl.append(fn(ann));
+  } catch (err) {
+    viewEl.append(h("pre", {}, String(err && err.stack || err)));
+  }
+  viewEl.append(h("div", { id: "prov" }, "Click a cell or a word to see where it came from."));
+  document.querySelectorAll(".sec").forEach(b => {
+    b.classList.toggle("on", found.sec && b.dataset.id === found.sec.id);
+  });
+}
+
+function select(file, line, scroll) {
+  current = { file: file, line: line };
+  document.querySelectorAll(".line.on").forEach(n => n.classList.remove("on"));
+  const el = document.getElementById("ln-" + lineId(file, line));
+  if (el) {
+    el.classList.add("on");
+    if (scroll) el.scrollIntoView({ block: "center" });
+  }
+  renderViz();
+}
+function lineId(file, line) {
+  return file.replace(/[^a-z0-9]+/gi, "-") + "-" + line;
+}
+
+function renderCode() {
+  codeEl.innerHTML = "";
+  let prev = null;
+  slices.forEach(sec => {
+    codeEl.append(h("div", {
+      class: "sec-h",
+      onclick: () => {
+        const hot = sec.lines.find(r => r.ann.viz !== "note") || sec.lines[0];
+        select(sec.file, hot.n, true);
+      }
+    }, sec.title, " ", h("small", {}, sec.file)));
+    sec.lines.forEach(row => {
+      if (prev && (prev.file !== sec.file || row.n !== prev.n + 1)) {
+        codeEl.append(h("div", { class: "gap" }, "···"));
+      }
+      codeEl.append(h("div", {
+        class: "line" + (row.ann.viz !== "note" ? " hot" : ""),
+        id: "ln-" + lineId(sec.file, row.n),
+        onclick: () => select(sec.file, row.n, false)
+      }, h("span", { class: "ln" }, String(row.n)), row.text.length ? row.text : " "));
+      prev = { file: sec.file, n: row.n };
+    });
+  });
+}
+
+function paint() {
+  const w = document.getElementById("words");
+  w.innerHTML = "";
+  append(w, h("span", { class: "lbl" }, "show"));
+  [["words", true], ["numbers", false]].forEach(pair => {
+    w.append(h("button", { class: "toggle" + (words === pair[1] ? " on" : ""), onclick: () => { words = pair[1]; paint(); renderViz(); } }, pair[0]));
+  });
+  const m = document.getElementById("mode");
+  m.innerHTML = "";
+  append(m, h("span", { class: "lbl" }, "pass"));
+  ["train", "infer"].forEach(name => {
+    m.append(h("button", {
+      class: "toggle" + (mode === name ? " on" : ""),
+      onclick: () => {
+        const prev = mode;
+        mode = name;
+        const found = current && findAnn(current.file, current.line);
+        const id = found && found.sec.id;
+        if (name === "infer" && prev === "train" && (id === "chunk" || id === "wy" || id === "batched")) {
+          const home = findHome("infer");
+          paint(); select(home.file, home.line, true); return;
+        }
+        if (name === "train" && prev === "infer" && id === "step") {
+          const home = findHome("train");
+          paint(); select(home.file, home.line, true); return;
+        }
+        paint(); renderViz();
+      }
+    }, name));
+  });
+  const t = document.getElementById("tokens");
+  t.innerHTML = "";
+  append(t, h("span", { class: "lbl" }, "token"));
+  trace.tokens.forEach((wrd, i) => {
+    t.append(h("button", { class: "tok" + (token === i ? " on" : ""), onclick: () => { token = i; paint(); renderViz(); } }, wrd));
+  });
+  const hd = document.getElementById("heads");
+  hd.innerHTML = "";
+  append(hd, h("span", { class: "lbl" }, "head"));
+  [["h1", "1 animal"], ["h2", "2 meow"], ["both", "both"]].forEach(pair => {
+    hd.append(h("button", {
+      class: "tok " + (pair[0] === "h2" ? "h2" : "h1") + (head === pair[0] ? " on" : ""),
+      onclick: () => { head = pair[0]; paint(); renderViz(); }
+    }, pair[1]));
+  });
+}
+
+function renderSecs() {
+  const bar = document.getElementById("secs");
+  slices.forEach(sec => {
+    bar.append(h("button", {
+      class: "sec",
+      "data-id": sec.id,
+      onclick: () => {
+        const hot = sec.lines.find(r => r.ann.viz !== "note") || sec.lines[0];
+        select(sec.file, hot.n, true);
+      }
+    }, sec.title));
+  });
+}
+
+renderCode();
+renderSecs();
+paint();
+const home = findHome("train");
+select(home.file, home.line, true);
+</script>
+</body>
+</html>

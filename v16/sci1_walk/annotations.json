@@ -1,0 +1,732 @@
+{
+  "sections": [
+    {
+      "id": "embed",
+      "file": "v13_sempty/real_ops.py",
+      "start": 31,
+      "end": 49,
+      "title": "Embedding",
+      "blurb": "A token is a row of feature words. cat is animal, furry, meow and four-legs."
+    },
+    {
+      "id": "norm",
+      "file": "v13_sempty/real_ops.py",
+      "start": 52,
+      "end": 67,
+      "title": "RMSNorm",
+      "blurb": "RMSNorm keeps the mix of words and sets their overall length to 1."
+    },
+    {
+      "id": "swiglu",
+      "file": "v13_sempty/real_ops.py",
+      "start": 70,
+      "end": 88,
+      "title": "SwiGLU",
+      "blurb": "SwiGLU mixes words inside the token. It never reads or writes the notebook."
+    },
+    {
+      "id": "block",
+      "file": "v13_sempty/model.py",
+      "start": 1135,
+      "end": 1155,
+      "title": "Block",
+      "blurb": "The token keeps its own words. The notebook's read is added on top, softly."
+    },
+    {
+      "id": "project",
+      "file": "v13_sempty/model.py",
+      "start": 614,
+      "end": 672,
+      "title": "Split into heads",
+      "blurb": "One projection makes query, key and value. Head 1 keeps animal and furry. Head 2 keeps meow and four-legs.",
+      "after": {
+        "line": 642,
+        "text": "SCI-1 has the learned clock on, so this fixed-rope branch does not run. The turn is _rotate_learned."
+      }
+    },
+    {
+      "id": "rotate",
+      "file": "v13_sempty/model.py",
+      "start": 686,
+      "end": 737,
+      "title": "Learned clock",
+      "blurb": "Each head has a speed. The angle is the sum of speeds so far, times that pair's pace. Query and key turn together. Value does not."
+    },
+    {
+      "id": "decay",
+      "file": "v13_sempty/model.py",
+      "start": 739,
+      "end": 751,
+      "title": "Retention",
+      "blurb": "Retention is how much of the previous page survives. It sits in (0, 1)."
+    },
+    {
+      "id": "chunk",
+      "file": "v13_sempty/model.py",
+      "start": 829,
+      "end": 869,
+      "title": "Train: whole document",
+      "blurb": "A full document runs this call. The notebook update is the same one-token step, packed into a solve."
+    },
+    {
+      "id": "gates",
+      "file": "v13_sempty/model.py",
+      "start": 871,
+      "end": 880,
+      "title": "Erase and write",
+      "blurb": "Erase and write are two strengths read from this token."
+    },
+    {
+      "id": "step",
+      "file": "v13_sempty/model.py",
+      "start": 882,
+      "end": 923,
+      "title": "Infer: one token",
+      "blurb": "Inference carries the notebook in, updates it with this one token, and carries it out. The page does not grow with context."
+    },
+    {
+      "id": "forward",
+      "file": "v13_sempty/model.py",
+      "start": 953,
+      "end": 998,
+      "title": "Which path",
+      "blurb": "More than one token takes the chunked path. A single new token takes the step. Then a gate and the output projection."
+    },
+    {
+      "id": "shared",
+      "file": "v13_sempty/model.py",
+      "start": 1001,
+      "end": 1044,
+      "title": "Shared read",
+      "blurb": "A block with no notebook asks the notebook below, in that writer's own clock."
+    },
+    {
+      "id": "logits",
+      "file": "v13_sempty/model.py",
+      "start": 1260,
+      "end": 1269,
+      "title": "Tied scores",
+      "blurb": "Each vocab word is scored by a dot product of its embedding with the hidden words."
+    },
+    {
+      "id": "run",
+      "file": "v13_sempty/model.py",
+      "start": 1271,
+      "end": 1311,
+      "title": "Stack wiring",
+      "blurb": "EOS zeros retention so the old page stops at the document edge. The next reader receives the notebook the writer just exposed."
+    },
+    {
+      "id": "echo",
+      "file": "v13_sempty/model.py",
+      "start": 1313,
+      "end": 1378,
+      "title": "Echo",
+      "blurb": "Echo files this token's embedding under the previous token's hidden words: the word that followed a state like that one."
+    },
+    {
+      "id": "lm",
+      "file": "v13_sempty/model.py",
+      "start": 1380,
+      "end": 1415,
+      "title": "Head",
+      "blurb": "The tied head turns hidden words into vocab scores. Echo is added here and starts at zero."
+    },
+    {
+      "id": "loss",
+      "file": "v13_sempty/model.py",
+      "start": 1426,
+      "end": 1466,
+      "title": "Loss",
+      "blurb": "Training scores the next word. At cat the asked word is sat. Inference stops at the scores."
+    },
+    {
+      "id": "wy",
+      "file": "v13_sempty/triton_kernels.py",
+      "start": 504,
+      "end": 550,
+      "title": "Same update, solved",
+      "blurb": "The chunked form is the same fade, erase and write, packed as one triangular solve per window."
+    },
+    {
+      "id": "batched",
+      "file": "v13_sempty/triton_kernels.py",
+      "start": 553,
+      "end": 609,
+      "title": "Fast path",
+      "blurb": "Training calls this. It is the same recurrence, solved in a batch. Autograd flows through the torch ops."
+    },
+    {
+      "id": "scan",
+      "file": "v13_sempty/triton_kernels.py",
+      "start": 389,
+      "end": 427,
+      "title": "Scan backward",
+      "blurb": "Hand-written backward of the additive scan under the delta solve. It is not a line-by-line dS loop."
+    }
+  ],
+  "lines": [
+    {
+      "file": "v13_sempty/real_ops.py",
+      "line": 49,
+      "expect": "return at(table",
+      "title": "Look up the token's words",
+      "viz": "embed",
+      "train": "Every token in the document is looked up. cat's row is animal, furry, meow, four-legs.",
+      "infer": "Only the newest token is looked up. The notebook from earlier tokens is already in hand."
+    },
+    {
+      "file": "v13_sempty/real_ops.py",
+      "line": 67,
+      "expect": "return super().forward",
+      "title": "Length 1, mix unchanged",
+      "viz": "norm",
+      "train": "The mix of words stays. Their overall length becomes 1, so a loud token and a quiet one are comparable.",
+      "infer": "Same norm on the single new token."
+    },
+    {
+      "file": "v13_sempty/real_ops.py",
+      "line": 88,
+      "expect": "down_proj(silu",
+      "title": "Mix words inside the token",
+      "viz": "swiglu",
+      "train": "Gate, up, product, down. Animal stays animal. Nothing is written to a notebook.",
+      "infer": "The same mix, on this token only."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1137,
+      "expect": "self.cgu(self.norm1",
+      "title": "SwiGLU inside the block",
+      "viz": "swiglu",
+      "train": "The block normalises the token, then mixes its words. The notebook is the next add.",
+      "infer": "Same mix for the token that just arrived."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1140,
+      "expect": "cgu_out * self.cgu_scale",
+      "title": "Keep the token, add the mix",
+      "viz": "residual",
+      "train": "The original words stay. The SwiGLU mix is added on top.",
+      "infer": "The carried notebook is not in this add. It joins at the PAM line."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1144,
+      "expect": "self.reader",
+      "title": "No notebook here: read the one below",
+      "viz": "shared",
+      "train": "This block has no page of its own. It asks the nearest notebook underneath.",
+      "infer": "The ask uses the notebook the writer carried to this token."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1146,
+      "expect": "self.pam(",
+      "title": "Run the notebook",
+      "viz": "branch",
+      "train": "The whole document goes through the chunked notebook.",
+      "infer": "One token goes through the step, with the notebook handed in."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1148,
+      "expect": "pam_out * self.pam_scale",
+      "title": "Add the read, softly",
+      "viz": "pam-add",
+      "train": "The read is added with a small scale (it starts at 0.1) so the token's own words still carry the sentence.",
+      "infer": "Same add. The scale is a learned number, not a growing cache."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 625,
+      "expect": "qkv = self.qkv_proj",
+      "title": "Project the token",
+      "viz": "project",
+      "train": "One matrix makes query, key and value for every head.",
+      "infer": "The same matrix, on this token."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 629,
+      "expect": "queries, keys, values",
+      "title": "Three views of the same token",
+      "viz": "project",
+      "train": "Head 1's cat is animal and furry. Head 2's cat is meow and four-legs. Value on head 1 has learned to carry sits.",
+      "infer": "Same split. Only this token is projected; the clock and the notebook arrive from before."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 637,
+      "expect": "_rotate_learned",
+      "title": "Hand query and key to the clock",
+      "viz": "rotate",
+      "train": "Chrono is on, so this is the branch that runs. Value is not turned.",
+      "infer": "The clock is the number carried from the previous token, not the token's index."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 663,
+      "expect": "xs * cos_t - ys * sin_t",
+      "title": "Fixed rope, not this run",
+      "viz": "rotate",
+      "off": true,
+      "train": "This turns pairs by position index. SCI-1 has the learned clock on, so this line does not run.",
+      "infer": "Decode would use the same fixed table. This model uses the carried clock instead."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 712,
+      "expect": "g = torch.exp",
+      "title": "This token's speed",
+      "viz": "chrono",
+      "train": "A learned number per head, from the token's words. Slow keeps later keys close. Fast spins them apart.",
+      "infer": "The speed is computed from this token alone. The angle is the speed plus the clock handed in."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 718,
+      "expect": "tau = run - g",
+      "title": "Angle before this token",
+      "viz": "chrono",
+      "train": "The turn applied here is the sum of earlier speeds, not this token's own speed. The first token has not turned yet.",
+      "infer": "tau is the clock carried in. After the token, the clock handed on includes this speed."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 721,
+      "expect": "phi = tau",
+      "title": "Each pair has its own pace",
+      "viz": "chrono",
+      "train": "animal–furry turns quickly. sits–soft barely moves. The pace is 10000^(−i/2), the same table as rope.",
+      "infer": "The carried clock is multiplied by that same pace."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 732,
+      "expect": "qe * cos - qo * sin",
+      "title": "Turn the query",
+      "viz": "rotate",
+      "train": "The animal–furry pair is a pointer. The clock rotates it. A quarter turn would swap animal for furry.",
+      "infer": "Same turn. Query and key of this token share it, so this token still matches itself."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 733,
+      "expect": "ke * cos - ko * sin",
+      "title": "Turn the key by the same angle",
+      "viz": "rotate",
+      "train": "Key and query share the angle, so a token still matches itself. A later token, turned further, matches it less.",
+      "infer": "The key that gets stored is this turned key. A later query has to turn by the same clock to find it."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 748,
+      "expect": "retention = exp",
+      "title": "How much of the page survives",
+      "viz": "decay",
+      "train": "exp(−softplus(·)) is between 0 and 1. EOS will multiply this by 0.",
+      "infer": "The carried page is faded by this number, then the token writes."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 840,
+      "expect": "k = nn.functional.normalize",
+      "title": "Key length becomes 1",
+      "viz": "unit",
+      "train": "The direction of the key is the address. Its length is set to 1 so a loud token and a quiet one write equally hard.",
+      "infer": "Same unit key on the single token."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 846,
+      "expect": "retention = retention * keep",
+      "title": "EOS drops the old page",
+      "viz": "eos",
+      "train": "keep is 0 on the separator. Retention becomes 0, so the previous document does not cross the edge.",
+      "infer": "The next document starts from a blank carry. This line is what makes that true."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 852,
+      "expect": "_delta_gates",
+      "title": "Read the erase and write strengths",
+      "viz": "gates",
+      "train": "Both gates are read from the token, once, and shared by the chunked path and the step.",
+      "infer": "Same two numbers on the token that just arrived."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 858,
+      "expect": "pam_delta_batched",
+      "title": "Write the whole document",
+      "viz": "delta",
+      "home": "train",
+      "train": "This is the call a training document actually makes. The grids are the same fade, erase and write as the one-token step.",
+      "infer": "Inference does not run this whole-document call. It repeats the one-token step and carries the notebook."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 865,
+      "expect": "head_dim ** -0.5",
+      "title": "Read, then scale",
+      "viz": "read",
+      "train": "The read is the notebook dotted with the query. The real model divides by √128. This picture divides by √4.",
+      "infer": "Same dot product. The notebook is the one just written."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 875,
+      "expect": "be = torch.sigmoid",
+      "title": "Erase strength",
+      "viz": "gates",
+      "train": "sigmoid(· − 3), capped at 0.95. High erase clears the old value filed under this key.",
+      "infer": "Same gate on the new token."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 878,
+      "expect": "bw = torch.sigmoid",
+      "title": "Write strength",
+      "viz": "gates",
+      "train": "sigmoid of a projection of the token. High write plants this token's value on its key.",
+      "infer": "Same gate. EOS in this story writes almost nothing, so a zero retention leaves a blank page."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 897,
+      "expect": "k = nn.functional.normalize",
+      "title": "Key length becomes 1",
+      "viz": "unit",
+      "train": "The address is a direction. Training's chunked call normalises the same way.",
+      "infer": "The key carried into the update has length 1. The word mix is unchanged."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 911,
+      "expect": "Sk = torch.einsum",
+      "title": "What the page already says about this key",
+      "viz": "erase",
+      "train": "S times the key is the value currently filed under this address.",
+      "infer": "The carried page is asked: what did you store under this key?"
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 912,
+      "expect": "erased = S -",
+      "title": "Take the old value off this key",
+      "viz": "erase",
+      "train": "Subtract erase × (page · key) × key. Other addresses stay. In train mode the grid below shows what the loss asks of this page.",
+      "infer": "Same subtract, on the carried page, before the fade and the write."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 913,
+      "expect": "S = g[:, :, t",
+      "title": "Fade, then write the new value",
+      "viz": "delta",
+      "home": "infer",
+      "train": "S = retain × erased + write × value × key. The loss pushes the cells that would make the next word more likely.",
+      "infer": "This is the whole memory update. The result is the notebook handed to the next token."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 915,
+      "expect": "einsum('bhvk,bhk->bhv', S, qt)",
+      "title": "Read: notebook dot query",
+      "viz": "read",
+      "train": "Each output word is a sum of (value × key) · query-key. The cells below are those products.",
+      "infer": "The query asks the page that was just written, including this token's own write."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 916,
+      "expect": "head_dim ** -0.5",
+      "title": "Divide by √d",
+      "viz": "read",
+      "train": "The real head uses √128. The picture uses √4, so four terms stay readable.",
+      "infer": "Same scale on the one-token read."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 968,
+      "expect": "seq_len > 1",
+      "title": "Long document: chunked path",
+      "viz": "branch",
+      "train": "Training feeds the whole document, so this branch runs and calls the batched delta.",
+      "infer": "A decode step has length 1, so this branch does not run."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 978,
+      "expect": "_stepwise_delta",
+      "title": "One token: the step",
+      "viz": "branch",
+      "train": "Training does not use this branch for a full document. The math matches the chunked call.",
+      "infer": "This is the inference path. Notebook and clock come in, one token updates them, both go out."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 988,
+      "expect": "gate = silu",
+      "title": "How much of the read to let out",
+      "viz": "outgate",
+      "train": "A per-head gate. It starts open (silu of the bias is 1) and can learn to shut a head.",
+      "infer": "The gate is a word on this token: open, or shut."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 991,
+      "expect": "self.o_proj",
+      "title": "Heads back into one list of words",
+      "viz": "oproj",
+      "train": "Head 1's four words and head 2's four words are concatenated and mixed back to the token width.",
+      "infer": "Same projection. The notebook itself stays behind; only this read comes out."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1036,
+      "expect": "qe * cos - qo * sin",
+      "title": "Turn the reader's query into the writer's clock",
+      "viz": "shared",
+      "train": "The reader has no clock of its own. It uses the cos and sin the writer stored.",
+      "infer": "At decode the writer exposes its current rotation with the notebook."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1039,
+      "expect": "einsum('bvk,btk->btv'",
+      "title": "Dot the shared notebook",
+      "viz": "shared",
+      "train": "Same dot product as the writer's read. The page is the writer's page.",
+      "infer": "The carried notebook is dotted with this turned query."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1042,
+      "expect": "silu(self.gate",
+      "title": "Reader's output gate",
+      "viz": "shared",
+      "train": "The reader's out-projection starts at zero, so this add is off until it learns. The picture shows the read anyway.",
+      "infer": "Same gate. The notebook still belongs to the writer."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1268,
+      "expect": "logits = contract",
+      "title": "Score every vocab word",
+      "viz": "logits",
+      "train": "Hidden words dotted with cat, sat, mat, eos. The loss marks the next word. The residual still looks like the current word; the notebook's own vote is shown beside it.",
+      "infer": "The winning word is the guess. There is no target."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1286,
+      "expect": "reset_token_id",
+      "title": "Separator mask",
+      "viz": "eos",
+      "train": "1 on ordinary tokens, 0 on EOS. Multiplied into retention so the page cannot cross a document.",
+      "infer": "The carry after EOS is blank, so the next document does not see this one."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1300,
+      "expect": "shared=shared",
+      "title": "Hand the reader the current notebook",
+      "viz": "shared",
+      "train": "shared is whatever the last writer exposed. A block with its own notebook ignores it and writes a new one.",
+      "infer": "At decode, shared is the writer's state and rotation after this token."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1302,
+      "expect": "block.pam._shared",
+      "title": "A writer exposes its page",
+      "viz": "shared",
+      "train": "After a notebook block, the next readers see this page and this clock.",
+      "infer": "The exposed state is the carried notebook, not a growing cache."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1333,
+      "expect": "k_0 = 0",
+      "title": "Key is the previous token",
+      "viz": "echo",
+      "train": "The key at this token is the previous hidden state. The first token has no previous state, so its key is 0 and it writes nothing.",
+      "infer": "The previous hidden is part of the echo carry, next to the echo notebook."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1337,
+      "expect": "functional.embedding",
+      "title": "Value is this token's embedding",
+      "viz": "echo",
+      "train": "The value is the embedding words of the token that is here now. At sat, those words get filed under cat.",
+      "infer": "Same binding, one token at a time."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1338,
+      "expect": "torch.rsqrt",
+      "title": "Normalise the embedding value",
+      "viz": "echo",
+      "train": "The value's length is set by RMS, so the filed word is a direction.",
+      "infer": "Same norm on the new token's row."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1346,
+      "expect": "normalize(heads(k)",
+      "title": "Unit key, from the previous hidden",
+      "viz": "echo",
+      "train": "The address is the previous token's hidden words, length 1.",
+      "infer": "The address was carried as the previous hidden."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1356,
+      "expect": "retention * (~sep)",
+      "title": "EOS stops echo too",
+      "viz": "echo",
+      "train": "Retention is 0 on the separator, and the key is zeroed, so nothing is filed and nothing crosses.",
+      "infer": "The echo carry after EOS is a blank page."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1359,
+      "expect": "pam_delta_batched",
+      "title": "Echo uses the same delta rule",
+      "viz": "echo",
+      "train": "Fade, erase, write. The value is the embedding, the key is the previous hidden.",
+      "infer": "A one-token echo step does the same update just below, in the decode branch."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1372,
+      "expect": "* erased +",
+      "title": "File this word under the previous one",
+      "viz": "echo",
+      "train": "At sat, sits is written under cat's animal and furry. That is the word that followed cat.",
+      "infer": "The echo notebook carried out holds that binding."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1378,
+      "expect": "echo_out",
+      "title": "Echo's read, starting from zero",
+      "viz": "echo",
+      "train": "The out-projection starts at zero, so echo does not move the scores until it learns. The picture shows the page it is building.",
+      "infer": "The read is the embedding words recalled by a query that looks like the previous state."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1388,
+      "expect": "_echo_read",
+      "title": "Run echo on the hidden words",
+      "viz": "echo",
+      "train": "Echo sees the hidden state after the stack, and the token ids.",
+      "infer": "The echo notebook and the previous hidden are the extra carry."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1389,
+      "expect": "lm = lm + out",
+      "title": "Add echo onto the scores",
+      "viz": "echo",
+      "train": "Added after the tied projection. The add starts at zero because echo_out starts at zero.",
+      "infer": "Once it has learned, this is a recalled embedding added to the hidden words."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1413,
+      "expect": "_tied_logits",
+      "title": "Scores for the next word",
+      "viz": "logits",
+      "train": "cat is scored against sat, the word that should follow. The mark is the target, not the winner.",
+      "infer": "The largest score is the guess. No loss, no target."
+    },
+    {
+      "file": "v13_sempty/model.py",
+      "line": 1456,
+      "expect": "fused_linear_cross_entropy",
+      "title": "Push toward the next word",
+      "viz": "loss",
+      "train": "Cross-entropy on the next token. The push on the notebook is the grid of want-more and want-less.",
+      "infer": "Inference does not run the loss. The scores are the end of the step."
+    },
+    {
+      "file": "v13_sempty/triton_kernels.py",
+      "line": 509,
+      "expect": "S_t = g_t",
+      "title": "The recurrence the solve implements",
+      "viz": "delta",
+      "train": "Same formula as the one-token step. The solve is a fast way to run it on a window.",
+      "infer": "Decode does not use the solve. It runs the formula directly."
+    },
+    {
+      "file": "v13_sempty/triton_kernels.py",
+      "line": 547,
+      "expect": "solve_triangular",
+      "title": "One solve for the window",
+      "viz": "delta",
+      "train": "The triangular solve builds the written values for every token in the window at once. The page you see is that result.",
+      "infer": "A single token has nothing to solve. The step writes one outer product."
+    },
+    {
+      "file": "v13_sempty/triton_kernels.py",
+      "line": 600,
+      "expect": "_delta_prep_fn",
+      "title": "Batch the solve",
+      "viz": "delta",
+      "home": "train",
+      "train": "This is the speed rewrite of the same recurrence. Autograd goes through these torch ops.",
+      "infer": "Inference does not call this. Open the one-token step."
+    },
+    {
+      "file": "v13_sempty/triton_kernels.py",
+      "line": 601,
+      "expect": "fused_real_pam_read",
+      "title": "Scan the solved values",
+      "viz": "read",
+      "train": "After the solve, one scan reads the notebook. Its backward is the kernel below.",
+      "infer": "The step reads with a plain dot product instead of this scan."
+    },
+    {
+      "file": "v13_sempty/triton_kernels.py",
+      "line": 390,
+      "expect": "def backward",
+      "title": "Gradients of the scan",
+      "viz": "scan",
+      "train": "The loss walks back through the scan. These tensors are the pushes on query, key, value and retention.",
+      "infer": "Inference does not run backward."
+    },
+    {
+      "file": "v13_sempty/triton_kernels.py",
+      "line": 406,
+      "expect": "dq, dk, dv",
+      "title": "Pushes on query, key and value",
+      "viz": "scan",
+      "train": "dq, dk and dv are how the next-word loss wants those three vectors to change.",
+      "infer": "No loss, so these pushes are not computed."
+    },
+    {
+      "file": "v13_sempty/triton_kernels.py",
+      "line": 425,
+      "expect": "dret =",
+      "title": "Push on retention",
+      "viz": "scan",
+      "train": "How the loss wants the fade to change. EOS has retention 0, so the push stops at the document edge.",
+      "infer": "Not computed at decode."
+    },
+    {
+      "file": "v13_sempty/triton_kernels.py",
+      "line": 427,
+      "expect": "return dq, dk, dv, dret",
+      "title": "What the kernel hands back",
+      "viz": "scan",
+      "train": "dq, dk, dv, d(retention), and the push into the carried notebook. The delta solve's own autograd sits on top of this.",
+      "infer": "This return does not run in inference."
+    }
+  ]
+}
