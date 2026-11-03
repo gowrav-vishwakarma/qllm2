@@ -12,6 +12,10 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   best_model, step_045777, step_061036. Milestones every 15,259 (next 76,295 ~Nov 4 04:40 IST, 91,554 ~12:00 IST; the bars are read
   at 91,554). Local CHECK: `RUN=sci1_cont1_59d098d bash v13_sempty/tmp/sci1_check_local.sh step_076295` (the M4 CHECK ran with the
   default RUN). Library runs A26 at the same steps (its own temp names). Thinking is OFF.
+  Disk (01:30 IST 2026-11-04): 40 GB free after deleting `sci1_main_59c3cf5/step_045777.pt` on the 6000 (local d_drive copy sha256 922aabff…
+  verified; M4 `step_061036.pt` sha c95d2b52… also has a verified local copy, kept on the 6000 as cont1's parent). Budget: 4 cont1
+  milestones (18.4 GB) would bring it to ~21 GB; delete each cont1 milestone on the 6000 once its local copy is verified (sha) to
+  keep >= 25 GB before the decay.
 * **Fast stream resume (2026-10-27, after the R4 screen's 47-min skips).**
   `v7/data.py` now reads dclm / fineweb / smoltalk2 (blend) / pg19 file by file
   with pyarrow in the exact old order (verified doc-for-doc vs the old HF
