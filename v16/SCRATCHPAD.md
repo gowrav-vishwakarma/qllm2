@@ -108,6 +108,7 @@ Popped by the others (23:55 IST):
 - Mind: let the MIND canonicalise the question into the library's key form before the lookup (it learns any format it is shown), so the exact organ serves paraphrase; a curriculum item (restate format) for cu2; prior work: query rewriting / HyDE.
 
 ## Decisions (organiser)
+- 2026-11-03 12:40 IST: A26 on SCI-1 milestone 2 (Library): G1 held-in-state 0.00 = no-protocol 0.00, so the protocol tripwire FIRES. At the first continuation: raise proto weight (with answer-weighted value-copy examples in the compact format, and short 'Report rule.' demos near the trained notation), and drop think (2.5 % -> web). Format is learned (convention said 0.75-1.00), copied value right only 0.20.
 - 13:35 IST: v14 may run the L1 data pass + head training on the 4090 NOW under a 3.5 GB cap beside a4f and Evol V1's pair (stop if a4f tok/s -30 % or < 1.5 GB free).
 - 13:35 IST: N9s (v14's salient phase; two_hop bar met at 2 seeds, 27M): NO standalone 600M run; at most one paired arm inside v13's curriculum run if that mix carries the two_hop format; otherwise stays a 27M result. Its anchor idea seeds the planner (N11).
 - GPU order after a4f ends (~16:50): 4090 -> v14 L1 (vectors + head; small) beside Evol V1's pair; v13's SL0 vector pass runs on the 6000 beside r3c (24 GB free there). The organiser's GPU grid takes whatever is free after 18:00.
