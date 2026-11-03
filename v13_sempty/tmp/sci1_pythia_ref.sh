@@ -10,12 +10,12 @@ guard() {   # run "$@" with the RAM guard and the M4 yield
   ( setsid "$@" ) & local P=$!
   while kill -0 $P 2>/dev/null; do
     a=$(awk '/MemAvailable/{print int($2/1048576)}' /proc/meminfo)
-    if [ "$a" -lt 12 ] || pgrep -f "tmp/sci1_check.sh" >/dev/null; then
+    if [ "$a" -lt 12 ] || pgrep -f "^bash v13_sempty/tmp/sci1_check\.sh " >/dev/null; then
       echo "STOP ($a GB free or the M4 CHECK started) $(date -u +%FT%TZ)"; kill -TERM -- -$P 2>/dev/null; pkill -TERM -P $P; exit 3; fi
     sleep 10; done; wait $P
 }
 for rev in step1000 step2000 step5000 step143000; do
-  pgrep -f "tmp/sci1_check.sh" >/dev/null && { echo "yield to the M4 CHECK"; exit 3; }
+  pgrep -f "^bash v13_sempty/tmp/sci1_check\.sh " >/dev/null && { echo "yield to the M4 CHECK"; exit 3; }
   echo "=== pythia-410m $rev $(date -u +%FT%TZ)"
   M=$O/v13_sempty_pythia410m_${rev}_mc_${H}.json
   [ -f $M ] || guard $PY scripts/mc_eval.py --hf EleutherAI/pythia-410m --revision $rev --fp32 --batch_size 16 --out $M
