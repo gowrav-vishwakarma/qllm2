@@ -6065,6 +6065,38 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
+## SCI-1 reference block: Pythia-410M at matched token counts (REFERENCE, different data, no claim; 17:17 IST, 2026-11-03)
+
+Lead + user GO 16:25 IST. Same harness as the SCI-1 CHECK: `scripts/mc_eval.py --hf` (fp32; parity with lm-eval 0.4.9.1 to 4
+decimals on Pythia-160M, 59e9197) and the s8 spread probe (b2 suite, shift_wide_new + affine_map_new, 8 shots, 400 trials, seed
+7000; 8-way, chance 0.125; the GPT-2 filler re-tokenized for the NeoX vocab). Runner `v13_sempty/tmp/sci1_pythia_ref.sh` @ 78c98e6,
+log `logs/v13_sempty_sci1ref_pythia410m_78c98e6_20261103_1102.log`, results `logs/sci1ref/`. Pythia = 2,097,152 tokens per step.
+
+| model | params | tokens | data | HellaSwag acc_norm | ARC-e acc | PIQA acc_norm | s8 @0 | @2k | @4k | @8k | s8 D (2k + 4k) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| SCI-1 M1 | 386M | 1.0B | SCI-1 mix | 0.281 | 0.459 | 0.576 | 0.695 | 0.422 | 0.221 | – | 0.322 |
+| SCI-1 M2 | 386M | 2.0B | SCI-1 mix | 0.293 | 0.479 | 0.594 | 0.979 | 0.671 | 0.405 | – | 0.538 |
+| SCI-1 M3 | 386M | 3.0B | SCI-1 mix | **0.308** | **0.487** | **0.609** | 0.994 | 0.863 | 0.555 | 0.236 | **0.709** |
+| Pythia-410M step1000 | 405M | 2.10B | the Pile | 0.258 | 0.294 | 0.535 | 0.085 | 0.101 | 0.073 | 0.080 | 0.087 |
+| Pythia-410M step2000 | 405M | 4.19B | the Pile | 0.272 | 0.363 | 0.581 | 0.065 | 0.048 | 0.007 | 0.075 | 0.028 |
+| Pythia-410M step5000 | 405M | 10.49B | the Pile | 0.297 | 0.434 | 0.607 | 0.141 | 0.098 | 0.045 | 0.066 | 0.071 |
+| Pythia-410M step143000 (final) | 405M | 299.9B | the Pile | 0.406 | 0.519 | 0.672 | 0.191 | 0.109 | 0.090 | 0.098 | 0.099 |
+
+(acc / acc_norm both in the JSONs; Pythia acc: HS 0.260 / 0.266 / 0.281 / 0.337, ARC-e norm 0.289 / 0.335 / 0.391 / 0.457,
+PIQA acc 0.552 / 0.577 / 0.616 / 0.667; ours at M3 HS acc 0.287, ARC-e norm 0.446, PIQA acc 0.614.)
+
+What it says, honestly:
+- **Known benchmarks:** SCI-1 at 3.0B tokens is above Pythia-410M at 4.2B on all three and level with Pythia at 10.5B (HS 0.308
+  vs 0.297, ARC-e 0.487 vs 0.434, PIQA 0.609 vs 0.607). This is mostly DATA: DCLM / FineWeb-edu / Cosmopedia are filtered,
+  educational sources, the Pile is not (SmolLM / FineWeb papers show ~3-5x token efficiency from such data). It is not an
+  architecture result; the architecture claims stay in the equal-data tiers vs our own T++ / Mamba-2.
+- **s8 (rules from spread examples):** Pythia is near or below chance at every length and every checkpoint, even with no filler,
+  even at 300B tokens. SCI-1 trained on the B2 rule-doc format (b2s source; these two families are held out, the format is not), so
+  this also is mostly data. The architectural part is shown elsewhere: at equal data T++ falls to 0.047 at 1.5B (EUREKA 11-02).
+- **Past the trained length:** SCI-1 is trained at 4k; at 8k s8 drops 0.555 → 0.236 (still ~2x chance and above every Pythia
+  point). The reach past SEQ remains the open gap (skill pack 8k 0.12 at M3).
+- Use in the write-up: the reference block, labelled "different data (the Pile), no claim", params + tokens on every row.
+
 ## SCI-1 milestone 3 (CHECK on the 4090, 14:09 IST, 2026-11-03; run `59c3cf5`, step 45,777 = 3.0B tokens; old mix, think still in)
 
 Same CHECK as M1 / M2. The full local copy was deleted mid-CHECK by Library's A26 script (same file name; fixed both sides:

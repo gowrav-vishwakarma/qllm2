@@ -1,0 +1,29 @@
+=== pythia-410m step1000 2026-11-03T11:02:51Z
+hellaswag {'acc': 0.2598, 'acc_norm': 0.2583, 'n': 10042}
+arc_easy {'acc': 0.2938, 'acc_norm': 0.2891, 'n': 2376}
+piqa {'acc': 0.5517, 'acc_norm': 0.5348, 'n': 1838}
+per task: {'shift_wide_new@0': 0.045, 'shift_wide_new@2048': 0.052, 'shift_wide_new@4096': 0.062, 'shift_wide_new@8192': 0.098, 'affine_map_new@0': 0.125, 'affine_map_new@2048': 0.15, 'affine_map_new@4096': 0.083, 'affine_map_new@8192': 0.062}  mean 0.085
+free (A7): {'shift_wide_new@0': 0.02, 'shift_wide_new@2048': 0.015, 'shift_wide_new@4096': 0.013, 'shift_wide_new@8192': 0.003, 'affine_map_new@0': 0.013, 'affine_map_new@2048': 0.007, 'affine_map_new@4096': 0.007, 'affine_map_new@8192': 0.0}  mean 0.01
+saved logs/sci1ref/v13_sempty_pythia410m_step1000_spread_s7000_t400_78c98e6.json
+=== pythia-410m step2000 2026-11-03T11:12:32Z
+hellaswag {'acc': 0.2661, 'acc_norm': 0.2718, 'n': 10042}
+arc_easy {'acc': 0.3632, 'acc_norm': 0.3346, 'n': 2376}
+piqa {'acc': 0.5767, 'acc_norm': 0.5811, 'n': 1838}
+per task: {'shift_wide_new@0': 0.0, 'shift_wide_new@2048': 0.01, 'shift_wide_new@4096': 0.01, 'shift_wide_new@8192': 0.095, 'affine_map_new@0': 0.13, 'affine_map_new@2048': 0.085, 'affine_map_new@4096': 0.005, 'affine_map_new@8192': 0.055}  mean 0.049
+free (A7): {'shift_wide_new@0': 0.0, 'shift_wide_new@2048': 0.003, 'shift_wide_new@4096': 0.0, 'shift_wide_new@8192': 0.0, 'affine_map_new@0': 0.01, 'affine_map_new@2048': 0.007, 'affine_map_new@4096': 0.0, 'affine_map_new@8192': 0.0}  mean 0.003
+saved logs/sci1ref/v13_sempty_pythia410m_step2000_spread_s7000_t400_78c98e6.json
+=== pythia-410m step5000 2026-11-03T11:22:24Z
+hellaswag {'acc': 0.2814, 'acc_norm': 0.2974, 'n': 10042}
+arc_easy {'acc': 0.4343, 'acc_norm': 0.3914, 'n': 2376}
+piqa {'acc': 0.6159, 'acc_norm': 0.6072, 'n': 1838}
+per task: {'shift_wide_new@0': 0.043, 'shift_wide_new@2048': 0.018, 'shift_wide_new@4096': 0.062, 'shift_wide_new@8192': 0.08, 'affine_map_new@0': 0.24, 'affine_map_new@2048': 0.177, 'affine_map_new@4096': 0.028, 'affine_map_new@8192': 0.052}  mean 0.087
+free (A7): {'shift_wide_new@0': 0.018, 'shift_wide_new@2048': 0.003, 'shift_wide_new@4096': 0.0, 'shift_wide_new@8192': 0.0, 'affine_map_new@0': 0.03, 'affine_map_new@2048': 0.028, 'affine_map_new@4096': 0.0, 'affine_map_new@8192': 0.0}  mean 0.01
+saved logs/sci1ref/v13_sempty_pythia410m_step5000_spread_s7000_t400_78c98e6.json
+=== pythia-410m step143000 2026-11-03T11:31:55Z
+hellaswag {'acc': 0.3372, 'acc_norm': 0.4062, 'n': 10042}
+arc_easy {'acc': 0.5189, 'acc_norm': 0.4571, 'n': 2376}
+piqa {'acc': 0.667, 'acc_norm': 0.6719, 'n': 1838}
+per task: {'shift_wide_new@0': 0.117, 'shift_wide_new@2048': 0.035, 'shift_wide_new@4096': 0.083, 'shift_wide_new@8192': 0.105, 'affine_map_new@0': 0.265, 'affine_map_new@2048': 0.182, 'affine_map_new@4096': 0.098, 'affine_map_new@8192': 0.09}  mean 0.122
+free (A7): {'shift_wide_new@0': 0.048, 'shift_wide_new@2048': 0.0, 'shift_wide_new@4096': 0.0, 'shift_wide_new@8192': 0.0, 'affine_map_new@0': 0.062, 'affine_map_new@2048': 0.018, 'affine_map_new@4096': 0.0, 'affine_map_new@8192': 0.0}  mean 0.016
+saved logs/sci1ref/v13_sempty_pythia410m_step143000_spread_s7000_t400_78c98e6.json
+=== reference DONE 2026-11-03T11:41:36Z
