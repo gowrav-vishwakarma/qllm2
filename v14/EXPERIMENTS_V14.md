@@ -3881,7 +3881,7 @@ fitted threshold:
     the full score.
   - Prediction: ≤ 0.1 % everywhere after Mind's filter. The risks are web sources × MMLU / ARC (verbatim exam pages)
     and `think` × GSM8K test (MetaMathQA rewrites the TRAIN set).
-  - **A26 SCI-1 MILESTONE 1 (2026-11-03 ~12:20 IST; step 15,259 = 1.0B tokens in stage B; code 1584da2; logs
+  - **A26 SCI-1 MILESTONE 1 (2026-11-03 12:01 IST; step 15,259 = 1.0B tokens in stage B; code 1584da2; logs
     `logs/v14_a26_sci1m1_1584da2_20261103_1116.*` (A26 wordings, G2 / G3) and
     `logs/v14_a26_sci1m1_g1_1584da2_20261103_1116.*` (G1, trained wordings); 20 docs per cell; 386M, 1B stage-B tokens):**
     - Package fetch gives the value (value ok 0.35-1.00). The convention is applied by the MIND only in the
@@ -3903,7 +3903,7 @@ fitted threshold:
     - Tripwire (G1 MIND-HELD at 2k <= NOPROT + 0.05) is TRUE at this milestone (0.00 vs 0.00). It is judged at milestone 2.
     - The skill is learned in the notation it was trained in and does not yet cross notation or length: protocol in prose
       held from far away stays 0.00. Held-out quantities in compact form 0.09 vs trained 0.56 at 2k.
-  - **A27 RESULT (2026-11-03 ~12:20 IST; code 37c291d; `logs/v14_a27_decontam_37c291d_20261103_1104.{json,log}`; 20,000 docs per
+  - **A27 RESULT (2026-11-03 12:01 IST; code 37c291d; `logs/v14_a27_decontam_37c291d_20261103_1104.{json,log}`; 20,000 docs per
     source, the first docs of each stream, CPU):**
     - Positive control: 300 / 300 planted test strings flagged by the audit AND by Mind's filter (all 10 sets).
     - FILTERED view (what SCI-1 trains on): **0 hits in all 15 sources.** The action rule is not triggered.
