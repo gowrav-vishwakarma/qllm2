@@ -6065,6 +6065,28 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
+## SCI-1 milestone 4 (CHECK on the 4090, 21:47 IST, 2026-11-03; run `59c3cf5`, step 61,036 = 4.0B tokens; the LAST old-mix point, think still in)
+
+The baseline for cont1 (which starts from this checkpoint). Same CHECK; the full copy, own hard link (no interference).
+
+| readout | M2 (2.0B) | M3 (3.0B) | M4 (4.0B) |
+|---|---|---|---|
+| s8 D (scored) | 0.538 | 0.709 | **0.782** |
+| skill pack 2k / 4k / 8k + contrast, 20-way | 0.76 / 0.51 / 0.10 | 0.87 / 0.66 / 0.12 | 0.84 / **0.70 / 0.21** |
+| clk2 8k (dilation + contrast) | 0.34 | 0.37 | **0.62** |
+| t40 far needles | 0.91 | 0.95 | 0.95 |
+| HellaSwag (norm) / ARC-e / PIQA (norm) | 0.293 / 0.479 / 0.594 | 0.308 / 0.487 / 0.609 | 0.311 / **0.508** / 0.618 |
+| think ON / OFF acc; OFF leak | 0.02 / 0.03; 0.24 | 0.015 / 0.04; 0.165 | 0.055 / 0.04; **0.465** |
+| holdout val (blend), nearest val step | 3.358 (30k) | 3.275 (46k) | 3.218 (60k) |
+
+- Still climbing; the one-read reach to 8k jumped (clk2 0.37 → 0.62; skill pack 8k 0.12 → 0.21), the first real move past the
+  trained SEQ. ARC-e passes 0.50.
+- Think: the OFF leak rose to 0.465; dropping the source at cont1 was right (ON 0.055 ≈ OFF 0.04 still).
+- Generations: the protocol prompt now changes the value instead of copying ("12.87 g, sample B = 8.89 g" greedy; sampled
+  "8.91 g") but does not yet round to one decimal; the quant prompt answers **0.125** greedy (right; M3 said 1.25); the tool
+  prompt reads "78.4 C … for Q7" and still runs past `<|im_end|>` into a new turn.
+- Holdout vs projection is read with cont1 at 91,554 (this is the reference point: 3.218).
+
 ## SCI-1 reference block: Pythia-410M at matched token counts (REFERENCE, different data, no claim; 17:17 IST, 2026-11-03)
 
 Lead + user GO 16:25 IST. Same harness as the SCI-1 CHECK: `scripts/mc_eval.py --hf` (fp32; parity with lm-eval 0.4.9.1 to 4
