@@ -3903,6 +3903,28 @@ fitted threshold:
     - Tripwire (G1 MIND-HELD at 2k <= NOPROT + 0.05) is TRUE at this milestone (0.00 vs 0.00). It is judged at milestone 2.
     - The skill is learned in the notation it was trained in and does not yet cross notation or length: protocol in prose
       held from far away stays 0.00. Held-out quantities in compact form 0.09 vs trained 0.56 at 2k.
+  - **A26 SCI-1 MILESTONE 2 (2026-11-03 12:39 IST; step 30,518 = 2.0B stage-B tokens; code 7e71923; logs
+    `logs/v14_a26_sci1m2_7e71923_20261103_1202.*` (G2 / G3) and `logs/v14_a26_sci1m2_g1_7e71923_20261103_1202.*` (G1); 20 docs
+    per cell). THE MILESTONE-2 TRIPWIRE FIRES: G1 MIND-HELD at 2k = 0.00 <= NOPROT 0.00 + 0.05 → "raise proto at the first
+    continuation" (the pre-registered response).**
+
+    | right (value / convention) | 2k | 8k | 32k |
+    |---|---|---|---|
+    | G1 UNIT held · noprot | 0.00 · 0.00 | 0.00 · 0.00 | 0.00 · 0.00 |
+    | G1 refresh (TEXT) | 0.00 (0.90 / 0.00) | 0.05 | 0.00 |
+    | G1 compact "Report rule." | 0.20 (0.20 / 0.75) | 0.00 | 0.00 |
+    | A26 wordings UNIT: held · noprot | 0.00 · 0.00 | 0.05 · 0.05 | 0.05 · 0.05 |
+    | A26 wordings UNIT refresh · compact | 0.00 · 0.20 (0.20 / 0.95) | 0.10 · 0.15 | 0.05 · 0.00 |
+    | ROUND: held · refresh · compact | 0.00 · 0.00 · 0.05 | 0.00 · 0.00 · 0.00 | 0.00 · 0.00 · 0.05 |
+    | CONVERT compact (convention said / value) | 0.00 (1.00 / 0.00) | 0.00 | 0.00 |
+
+    - Against milestone 1 (1.0B): refresh on trained wordings fell from 0.10 / 0.25 / 0.15 to 0.00 / 0.05 / 0.00; compact at 2k
+      0.25 → 0.20. No improvement from the extra 1B tokens (proto is ~0.5 % of tokens).
+    - What is learned is the unit/format half: in the compact format the convention is said on 0.75-1.00 at 2k (even
+      CONVERT writes "mg" every time) but the copied value is right on only 0.20, so "right" stays low. Trained vs held-out
+      quantities (compact, 2k): 0.22 vs 0.18, so the format now crosses quantities.
+    - Mind-held prose protocol (the SCI-1 claim as stated) is 0.00 at every length: the skill has not appeared, so the
+      tripwire response stands (more proto weight; a fix for the value copy is a candidate).
   - **A27 RESULT (2026-11-03 12:01 IST; code 37c291d; `logs/v14_a27_decontam_37c291d_20261103_1104.{json,log}`; 20,000 docs per
     source, the first docs of each stream, CPU):**
     - Positive control: 300 / 300 planted test strings flagged by the audit AND by Mind's filter (all 10 sets).
