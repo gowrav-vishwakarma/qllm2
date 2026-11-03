@@ -3881,6 +3881,38 @@ fitted threshold:
     the full score.
   - Prediction: ≤ 0.1 % everywhere after Mind's filter. The risks are web sources × MMLU / ARC (verbatim exam pages)
     and `think` × GSM8K test (MetaMathQA rewrites the TRAIN set).
+  - **A26 SCI-1 MILESTONE 1 (2026-11-03 ~12:20 IST; step 15,259 = 1.0B tokens in stage B; code 1584da2; logs
+    `logs/v14_a26_sci1m1_1584da2_20261103_1116.*` (A26 wordings, G2 / G3) and
+    `logs/v14_a26_sci1m1_g1_1584da2_20261103_1116.*` (G1, trained wordings); 20 docs per cell; 386M, 1B stage-B tokens):**
+    - Package fetch gives the value (value ok 0.35-1.00). The convention is applied by the MIND only in the
+      refresh arm (TEXT: protocol re-inserted) and only a little.
+
+    | right (value / convention), UNIT | 2k | 8k | 32k |
+    |---|---|---|---|
+    | G1 trained wording: held · noprot | 0.00 · 0.00 | 0.00 · 0.00 | 0.00 · 0.00 |
+    | G1 refresh (TEXT) | 0.10 (0.90 / 0.10) | 0.25 (1.00 / 0.25) | 0.15 (0.85 / 0.15) |
+    | G1 compact "Report rule." (trained arm) | **0.25** (0.30 / 0.70) | 0.05 | 0.00 |
+    | A26 wordings (G2 / G3): held · noprot | 0.00 · 0.00 | 0.05 · 0.05 | 0.00 · 0.00 |
+    | A26 wordings refresh | 0.00 | 0.10 | 0.05 |
+    | A26 compact trained arm, mass / volume (trained) vs concentration / length (held out) | 0.56 · 0.09 | 0.00 · 0.00 | 0.00 · 0.00 |
+    | ROUND, CONVERT (any arm) | 0.00 | 0.00 | 0.00-0.05 |
+
+    - Versus day-0 (every body 0.00-0.05): the first non-zero scores are the refresh arm (0.10-0.25 on trained wordings) and
+      the compact format at 2k (0.25-0.56 on trained quantities; the convention is applied on 0.70-0.85, the copied value
+      is the weak part, 0.30).
+    - Tripwire (G1 MIND-HELD at 2k <= NOPROT + 0.05) is TRUE at this milestone (0.00 vs 0.00). It is judged at milestone 2.
+    - The skill is learned in the notation it was trained in and does not yet cross notation or length: protocol in prose
+      held from far away stays 0.00. Held-out quantities in compact form 0.09 vs trained 0.56 at 2k.
+  - **A27 RESULT (2026-11-03 ~12:20 IST; code 37c291d; `logs/v14_a27_decontam_37c291d_20261103_1104.{json,log}`; 20,000 docs per
+    source, the first docs of each stream, CPU):**
+    - Positive control: 300 / 300 planted test strings flagged by the audit AND by Mind's filter (all 10 sets).
+    - FILTERED view (what SCI-1 trains on): **0 hits in all 15 sources.** The action rule is not triggered.
+    - RAW view (what the filter removes), % of docs with a 13-gram hit: think 0.275 (MMLU 44, GSM8K-test 11 of 20,000);
+      fineweb 0.11; dclm 0.08; chatmt 0.065; arxiv 0.045; finemath 0.035; smoltalk2_mid 0.025; pubmed / cosmo 0.015; tools
+      0.005; pes2o, pysci, b2s, recall4k, proto4k 0. Mostly MMLU, then HellaSwag.
+    - Limits stated: the audit hashes Mind's own test-item definitions with an independent implementation (it tests the
+      filter's machinery, not whether an item set is missing); the sample is each stream's first 20,000 docs, not the middle of
+      the run; the clean-subset scores come with the benchmark entries (hit test strings are in the json).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

@@ -1,0 +1,331 @@
+Repo card metadata block was not found. Setting CardData to empty.
+[audit] index: 8,999,414 13-grams from 212,245 test strings, sets {'hellaswag': 80180, 'arc': 17663, 'piqa': 9844, 'winogrande': 6068, 'openbookqa': 4000, 'lambada': 5153, 'gsm8k_test': 1319, 'mmlu': 62292, 'babi': 20000, 'library_items': 3726, 'babilong': 2000} (54s)
+[audit] POSITIVE CONTROL: 300/300 planted docs flagged by the audit, 300 by Mind's filter
+  [stream] dclm_e3_h5_ex: 1769 files; 0 docs -> file 0, 0 docs to skip by reading
+  [dclm/raw] 2,000 docs, 2 hit, 13s
+  [dclm/raw] 4,000 docs, 5 hit, 16s
+  [dclm/raw] 6,000 docs, 7 hit, 20s
+  [dclm/raw] 8,000 docs, 10 hit, 24s
+  [dclm/raw] 10,000 docs, 11 hit, 27s
+  [dclm/raw] 12,000 docs, 12 hit, 31s
+  [dclm/raw] 14,000 docs, 13 hit, 34s
+  [dclm/raw] 16,000 docs, 15 hit, 38s
+  [dclm/raw] 18,000 docs, 16 hit, 41s
+[audit] dclm raw: 20,000 docs, 16 with a hit (0.08%) {'mmlu': 11, 'hellaswag': 4, 'arc': 1}
+[decontam] index .cache/decontam/v1.npy sha256 08766210ac06dd67066aee27dc3c961f000fa078b62ee1c2991b3fa97bd2096d (4,371,599 13-grams)
+  [stream] dclm_e3_h5_ex: 1769 files; 0 docs -> file 0, 0 docs to skip by reading
+  [dclm/filtered] 2,000 docs, 0 hit, 10s
+  [dclm/filtered] 4,000 docs, 0 hit, 15s
+  [dclm/filtered] 6,000 docs, 0 hit, 19s
+  [dclm/filtered] 8,000 docs, 0 hit, 23s
+  [dclm/filtered] 10,000 docs, 0 hit, 27s
+  [dclm/filtered] 12,000 docs, 0 hit, 32s
+  [dclm/filtered] 14,000 docs, 0 hit, 36s
+  [dclm/filtered] 16,000 docs, 0 hit, 40s
+  [dclm/filtered] 18,000 docs, 0 hit, 44s
+[audit] dclm filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] fineweb_sample-10BT_e3_h5_ex_m0: 14 files; 0 docs -> file 0, 0 docs to skip by reading
+  [fineweb/raw] 2,000 docs, 1 hit, 15s
+  [fineweb/raw] 4,000 docs, 2 hit, 30s
+  [fineweb/raw] 6,000 docs, 4 hit, 43s
+  [fineweb/raw] 8,000 docs, 5 hit, 57s
+  [fineweb/raw] 10,000 docs, 8 hit, 71s
+  [fineweb/raw] 12,000 docs, 12 hit, 84s
+  [fineweb/raw] 14,000 docs, 14 hit, 98s
+  [fineweb/raw] 16,000 docs, 16 hit, 112s
+  [fineweb/raw] 18,000 docs, 18 hit, 127s
+[audit] fineweb raw: 20,000 docs, 22 with a hit (0.11%) {'mmlu': 17, 'hellaswag': 4, 'piqa': 1}
+  [stream] fineweb_sample-10BT_e3_h5_ex_m0: 14 files; 0 docs -> file 0, 0 docs to skip by reading
+  [fineweb/filtered] 2,000 docs, 0 hit, 16s
+  [fineweb/filtered] 4,000 docs, 0 hit, 32s
+  [fineweb/filtered] 6,000 docs, 0 hit, 48s
+  [fineweb/filtered] 8,000 docs, 0 hit, 63s
+  [fineweb/filtered] 10,000 docs, 0 hit, 80s
+  [fineweb/filtered] 12,000 docs, 0 hit, 94s
+  [fineweb/filtered] 14,000 docs, 0 hit, 109s
+  [fineweb/filtered] 16,000 docs, 0 hit, 125s
+  [fineweb/filtered] 18,000 docs, 0 hit, 141s
+[audit] fineweb filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] arxiv: 8 files; 0 docs to skip by reading
+  [arxiv/raw] 2,000 docs, 1 hit, 21s
+  [arxiv/raw] 4,000 docs, 2 hit, 42s
+  [arxiv/raw] 6,000 docs, 2 hit, 64s
+  [arxiv/raw] 8,000 docs, 5 hit, 88s
+  [arxiv/raw] 10,000 docs, 6 hit, 113s
+  [arxiv/raw] 12,000 docs, 8 hit, 139s
+  [arxiv/raw] 14,000 docs, 8 hit, 166s
+  [arxiv/raw] 16,000 docs, 8 hit, 193s
+  [arxiv/raw] 18,000 docs, 8 hit, 220s
+[audit] arxiv raw: 20,000 docs, 9 with a hit (0.045%) {'mmlu': 7, 'babi': 1, 'arc': 1}
+  [stream] arxiv: 8 files; 0 docs to skip by reading
+  [arxiv/filtered] 2,000 docs, 0 hit, 34s
+  [arxiv/filtered] 4,000 docs, 0 hit, 70s
+  [arxiv/filtered] 6,000 docs, 0 hit, 107s
+  [arxiv/filtered] 8,000 docs, 0 hit, 146s
+  [arxiv/filtered] 10,000 docs, 0 hit, 186s
+  [arxiv/filtered] 12,000 docs, 0 hit, 228s
+  [arxiv/filtered] 14,000 docs, 0 hit, 271s
+  [arxiv/filtered] 16,000 docs, 0 hit, 314s
+  [arxiv/filtered] 18,000 docs, 0 hit, 355s
+[audit] arxiv filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] pubmed: 17 files; 0 docs to skip by reading
+  [pubmed/raw] 2,000 docs, 0 hit, 13s
+  [pubmed/raw] 4,000 docs, 0 hit, 24s
+  [pubmed/raw] 6,000 docs, 0 hit, 35s
+  [pubmed/raw] 8,000 docs, 1 hit, 45s
+  [pubmed/raw] 10,000 docs, 1 hit, 57s
+  [pubmed/raw] 12,000 docs, 2 hit, 70s
+  [pubmed/raw] 14,000 docs, 3 hit, 82s
+  [pubmed/raw] 16,000 docs, 3 hit, 94s
+  [pubmed/raw] 18,000 docs, 3 hit, 107s
+[audit] pubmed raw: 20,000 docs, 3 with a hit (0.015%) {'hellaswag': 1, 'mmlu': 2}
+  [stream] pubmed: 17 files; 0 docs to skip by reading
+  [pubmed/filtered] 2,000 docs, 0 hit, 20s
+  [pubmed/filtered] 4,000 docs, 0 hit, 39s
+  [pubmed/filtered] 6,000 docs, 0 hit, 59s
+  [pubmed/filtered] 8,000 docs, 0 hit, 77s
+  [pubmed/filtered] 10,000 docs, 0 hit, 96s
+  [pubmed/filtered] 12,000 docs, 0 hit, 117s
+  [pubmed/filtered] 14,000 docs, 0 hit, 137s
+  [pubmed/filtered] 16,000 docs, 0 hit, 158s
+  [pubmed/filtered] 18,000 docs, 0 hit, 180s
+[audit] pubmed filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] pes2o: 91 files; 0 docs to skip by reading
+  [pes2o/raw] 2,000 docs, 0 hit, 14s
+  [pes2o/raw] 4,000 docs, 0 hit, 26s
+  [pes2o/raw] 6,000 docs, 0 hit, 42s
+  [pes2o/raw] 8,000 docs, 0 hit, 56s
+  [pes2o/raw] 10,000 docs, 0 hit, 70s
+  [pes2o/raw] 12,000 docs, 0 hit, 86s
+  [pes2o/raw] 14,000 docs, 0 hit, 100s
+  [pes2o/raw] 16,000 docs, 0 hit, 115s
+  [pes2o/raw] 18,000 docs, 0 hit, 128s
+[audit] pes2o raw: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] pes2o: 91 files; 0 docs to skip by reading
+  [pes2o/filtered] 2,000 docs, 0 hit, 22s
+  [pes2o/filtered] 4,000 docs, 0 hit, 43s
+  [pes2o/filtered] 6,000 docs, 0 hit, 64s
+  [pes2o/filtered] 8,000 docs, 0 hit, 85s
+  [pes2o/filtered] 10,000 docs, 0 hit, 106s
+  [pes2o/filtered] 12,000 docs, 0 hit, 128s
+  [pes2o/filtered] 14,000 docs, 0 hit, 149s
+  [pes2o/filtered] 16,000 docs, 0 hit, 170s
+  [pes2o/filtered] 18,000 docs, 0 hit, 190s
+[audit] pes2o filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] cosmo_v2: 104 files; 0 docs -> file 0, 0 docs to skip by reading
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: f444b3c9-87b3-452a-87c1-e1b9323a4ad5)')' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/smollm-corpus/resolve/3ba9d605774198c5868892d7a8deda78031a781f/cosmopedia-v2/train-00000-of-00104.parquet
+Retrying in 1s [Retry 1/5].
+  [cosmo/raw] 2,000 docs, 1 hit, 26s
+  [cosmo/raw] 4,000 docs, 1 hit, 33s
+  [cosmo/raw] 6,000 docs, 1 hit, 41s
+  [cosmo/raw] 8,000 docs, 1 hit, 48s
+  [cosmo/raw] 10,000 docs, 1 hit, 57s
+  [cosmo/raw] 12,000 docs, 2 hit, 64s
+  [cosmo/raw] 14,000 docs, 2 hit, 72s
+  [cosmo/raw] 16,000 docs, 2 hit, 79s
+  [cosmo/raw] 18,000 docs, 3 hit, 87s
+[audit] cosmo raw: 20,000 docs, 3 with a hit (0.015%) {'hellaswag': 2, 'mmlu': 1}
+  [stream] cosmo_v2: 104 files; 0 docs -> file 0, 0 docs to skip by reading
+  [cosmo/filtered] 2,000 docs, 0 hit, 15s
+  [cosmo/filtered] 4,000 docs, 0 hit, 23s
+  [cosmo/filtered] 6,000 docs, 0 hit, 33s
+  [cosmo/filtered] 8,000 docs, 0 hit, 41s
+  [cosmo/filtered] 10,000 docs, 0 hit, 51s
+  [cosmo/filtered] 12,000 docs, 0 hit, 60s
+  [cosmo/filtered] 14,000 docs, 0 hit, 69s
+  [cosmo/filtered] 16,000 docs, 0 hit, 77s
+  [cosmo/filtered] 18,000 docs, 0 hit, 86s
+[audit] cosmo filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] finemath_v2: 64 files; 0 docs -> file 0, 0 docs to skip by reading
+  [finemath/raw] 2,000 docs, 1 hit, 11s
+  [finemath/raw] 4,000 docs, 2 hit, 16s
+  [finemath/raw] 6,000 docs, 2 hit, 23s
+  [finemath/raw] 8,000 docs, 3 hit, 29s
+  [finemath/raw] 10,000 docs, 3 hit, 35s
+  [finemath/raw] 12,000 docs, 3 hit, 42s
+  [finemath/raw] 14,000 docs, 4 hit, 47s
+  [finemath/raw] 16,000 docs, 4 hit, 54s
+  [finemath/raw] 18,000 docs, 6 hit, 60s
+[audit] finemath raw: 20,000 docs, 7 with a hit (0.035%) {'hellaswag': 2, 'mmlu': 4, 'piqa': 1}
+  [stream] finemath_v2: 64 files; 0 docs -> file 0, 0 docs to skip by reading
+  [finemath/filtered] 2,000 docs, 0 hit, 12s
+  [finemath/filtered] 4,000 docs, 0 hit, 20s
+  [finemath/filtered] 6,000 docs, 0 hit, 28s
+  [finemath/filtered] 8,000 docs, 0 hit, 35s
+  [finemath/filtered] 10,000 docs, 0 hit, 44s
+  [finemath/filtered] 12,000 docs, 0 hit, 53s
+  [finemath/filtered] 14,000 docs, 0 hit, 60s
+  [finemath/filtered] 16,000 docs, 0 hit, 68s
+  [finemath/filtered] 18,000 docs, 0 hit, 78s
+[audit] finemath filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] smoltalk2_Mid: 237 files; 0 docs -> file 0, 0 docs to skip by reading
+  [smoltalk2_mid/raw] 2,000 docs, 0 hit, 15s
+  [smoltalk2_mid/raw] 4,000 docs, 0 hit, 23s
+  [smoltalk2_mid/raw] 6,000 docs, 0 hit, 31s
+  [smoltalk2_mid/raw] 8,000 docs, 0 hit, 37s
+  [smoltalk2_mid/raw] 10,000 docs, 0 hit, 45s
+  [smoltalk2_mid/raw] 12,000 docs, 1 hit, 53s
+  [smoltalk2_mid/raw] 14,000 docs, 2 hit, 61s
+  [smoltalk2_mid/raw] 16,000 docs, 4 hit, 69s
+  [smoltalk2_mid/raw] 18,000 docs, 5 hit, 75s
+[audit] smoltalk2_mid raw: 20,000 docs, 5 with a hit (0.025%) {'mmlu': 5}
+  [stream] smoltalk2_Mid: 237 files; 0 docs -> file 0, 0 docs to skip by reading
+  [smoltalk2_mid/filtered] 2,000 docs, 0 hit, 13s
+  [smoltalk2_mid/filtered] 4,000 docs, 0 hit, 21s
+  [smoltalk2_mid/filtered] 6,000 docs, 0 hit, 30s
+  [smoltalk2_mid/filtered] 8,000 docs, 0 hit, 36s
+  [smoltalk2_mid/filtered] 10,000 docs, 0 hit, 44s
+  [smoltalk2_mid/filtered] 12,000 docs, 0 hit, 57s
+  [smoltalk2_mid/filtered] 14,000 docs, 0 hit, 65s
+  [smoltalk2_mid/filtered] 16,000 docs, 0 hit, 72s
+  [smoltalk2_mid/filtered] 18,000 docs, 0 hit, 80s
+[audit] smoltalk2_mid filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] chatmt: 7 files; 0 docs -> file 0, 0 docs to skip by reading
+  [chatmt/raw] 2,000 docs, 0 hit, 13s
+  [chatmt/raw] 4,000 docs, 1 hit, 21s
+  [chatmt/raw] 6,000 docs, 1 hit, 27s
+  [chatmt/raw] 8,000 docs, 2 hit, 35s
+  [chatmt/raw] 10,000 docs, 5 hit, 42s
+  [chatmt/raw] 12,000 docs, 8 hit, 50s
+  [chatmt/raw] 14,000 docs, 9 hit, 57s
+  [chatmt/raw] 16,000 docs, 9 hit, 63s
+  [chatmt/raw] 18,000 docs, 10 hit, 71s
+[audit] chatmt raw: 20,000 docs, 13 with a hit (0.065%) {'mmlu': 11, 'arc': 1, 'hellaswag': 1}
+  [stream] chatmt: 7 files; 0 docs -> file 0, 0 docs to skip by reading
+  [chatmt/filtered] 2,000 docs, 0 hit, 14s
+  [chatmt/filtered] 4,000 docs, 0 hit, 24s
+  [chatmt/filtered] 6,000 docs, 0 hit, 33s
+  [chatmt/filtered] 8,000 docs, 0 hit, 43s
+  [chatmt/filtered] 10,000 docs, 0 hit, 53s
+  [chatmt/filtered] 12,000 docs, 0 hit, 62s
+  [chatmt/filtered] 14,000 docs, 0 hit, 72s
+  [chatmt/filtered] 16,000 docs, 0 hit, 80s
+  [chatmt/filtered] 18,000 docs, 0 hit, 90s
+[audit] chatmt filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] tools: 139,792 docs in memory; skip 0
+  [tools/raw] 2,000 docs, 0 hit, 6s
+  [tools/raw] 4,000 docs, 0 hit, 7s
+  [tools/raw] 6,000 docs, 1 hit, 8s
+  [tools/raw] 8,000 docs, 1 hit, 8s
+  [tools/raw] 10,000 docs, 1 hit, 9s
+  [tools/raw] 12,000 docs, 1 hit, 9s
+  [tools/raw] 14,000 docs, 1 hit, 10s
+  [tools/raw] 16,000 docs, 1 hit, 11s
+  [tools/raw] 18,000 docs, 1 hit, 11s
+[audit] tools raw: 20,000 docs, 1 with a hit (0.005%) {'arc': 1}
+  [stream] tools: 139,792 docs in memory; skip 0
+  [tools/filtered] 2,000 docs, 0 hit, 6s
+  [tools/filtered] 4,000 docs, 0 hit, 7s
+  [tools/filtered] 6,000 docs, 0 hit, 9s
+  [tools/filtered] 8,000 docs, 0 hit, 10s
+  [tools/filtered] 10,000 docs, 0 hit, 11s
+  [tools/filtered] 12,000 docs, 0 hit, 13s
+  [tools/filtered] 14,000 docs, 0 hit, 14s
+  [tools/filtered] 16,000 docs, 0 hit, 15s
+  [tools/filtered] 18,000 docs, 0 hit, 16s
+[audit] tools filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] think: 392,830 docs in memory; skip 0
+  [think/raw] 2,000 docs, 7 hit, 5s
+  [think/raw] 4,000 docs, 12 hit, 5s
+  [think/raw] 6,000 docs, 15 hit, 5s
+  [think/raw] 8,000 docs, 22 hit, 5s
+  [think/raw] 10,000 docs, 29 hit, 6s
+  [think/raw] 12,000 docs, 31 hit, 6s
+  [think/raw] 14,000 docs, 40 hit, 6s
+  [think/raw] 16,000 docs, 43 hit, 6s
+  [think/raw] 18,000 docs, 48 hit, 6s
+[audit] think raw: 20,000 docs, 55 with a hit (0.275%) {'mmlu': 44, 'gsm8k_test': 11}
+  [stream] think: 392,830 docs in memory; skip 0
+  [think/filtered] 2,000 docs, 0 hit, 4s
+  [think/filtered] 4,000 docs, 0 hit, 4s
+  [think/filtered] 6,000 docs, 0 hit, 4s
+  [think/filtered] 8,000 docs, 0 hit, 5s
+  [think/filtered] 10,000 docs, 0 hit, 5s
+  [think/filtered] 12,000 docs, 0 hit, 6s
+  [think/filtered] 14,000 docs, 0 hit, 6s
+  [think/filtered] 16,000 docs, 0 hit, 7s
+  [think/filtered] 18,000 docs, 0 hit, 7s
+[audit] think filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] pysci: 12 files; 0 docs to skip by reading
+  [pysci/raw] 2,000 docs, 0 hit, 112s
+  [pysci/raw] 4,000 docs, 0 hit, 116s
+  [pysci/raw] 6,000 docs, 0 hit, 121s
+  [pysci/raw] 8,000 docs, 0 hit, 124s
+  [pysci/raw] 10,000 docs, 0 hit, 129s
+  [pysci/raw] 12,000 docs, 0 hit, 133s
+  [pysci/raw] 14,000 docs, 0 hit, 139s
+  [pysci/raw] 16,000 docs, 0 hit, 143s
+  [pysci/raw] 18,000 docs, 0 hit, 149s
+[audit] pysci raw: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] pysci: 12 files; 0 docs to skip by reading
+  [pysci/filtered] 2,000 docs, 0 hit, 99s
+  [pysci/filtered] 4,000 docs, 0 hit, 104s
+  [pysci/filtered] 6,000 docs, 0 hit, 110s
+  [pysci/filtered] 8,000 docs, 0 hit, 116s
+  [pysci/filtered] 10,000 docs, 0 hit, 122s
+  [pysci/filtered] 12,000 docs, 0 hit, 127s
+  [pysci/filtered] 14,000 docs, 0 hit, 134s
+  [pysci/filtered] 16,000 docs, 0 hit, 140s
+  [pysci/filtered] 18,000 docs, 0 hit, 146s
+[audit] pysci filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [b2s/raw] 2,000 docs, 0 hit, 9s
+  [b2s/raw] 4,000 docs, 0 hit, 17s
+  [b2s/raw] 6,000 docs, 0 hit, 23s
+  [b2s/raw] 8,000 docs, 0 hit, 30s
+  [b2s/raw] 10,000 docs, 0 hit, 37s
+  [b2s/raw] 12,000 docs, 0 hit, 45s
+  [b2s/raw] 14,000 docs, 0 hit, 52s
+  [b2s/raw] 16,000 docs, 0 hit, 59s
+  [b2s/raw] 18,000 docs, 0 hit, 66s
+[audit] b2s raw: 20,000 docs, 0 with a hit (0.0%) {}
+  [b2s/filtered] 2,000 docs, 0 hit, 10s
+  [b2s/filtered] 4,000 docs, 0 hit, 19s
+  [b2s/filtered] 6,000 docs, 0 hit, 27s
+  [b2s/filtered] 8,000 docs, 0 hit, 36s
+  [b2s/filtered] 10,000 docs, 0 hit, 44s
+  [b2s/filtered] 12,000 docs, 0 hit, 53s
+  [b2s/filtered] 14,000 docs, 0 hit, 62s
+  [b2s/filtered] 16,000 docs, 0 hit, 70s
+  [b2s/filtered] 18,000 docs, 0 hit, 78s
+[audit] b2s filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [recall4k/raw] 2,000 docs, 0 hit, 0s
+  [recall4k/raw] 4,000 docs, 0 hit, 1s
+  [recall4k/raw] 6,000 docs, 0 hit, 1s
+  [recall4k/raw] 8,000 docs, 0 hit, 2s
+  [recall4k/raw] 10,000 docs, 0 hit, 2s
+  [recall4k/raw] 12,000 docs, 0 hit, 3s
+  [recall4k/raw] 14,000 docs, 0 hit, 3s
+  [recall4k/raw] 16,000 docs, 0 hit, 4s
+  [recall4k/raw] 18,000 docs, 0 hit, 4s
+[audit] recall4k raw: 20,000 docs, 0 with a hit (0.0%) {}
+  [recall4k/filtered] 2,000 docs, 0 hit, 1s
+  [recall4k/filtered] 4,000 docs, 0 hit, 2s
+  [recall4k/filtered] 6,000 docs, 0 hit, 3s
+  [recall4k/filtered] 8,000 docs, 0 hit, 4s
+  [recall4k/filtered] 10,000 docs, 0 hit, 5s
+  [recall4k/filtered] 12,000 docs, 0 hit, 6s
+  [recall4k/filtered] 14,000 docs, 0 hit, 7s
+  [recall4k/filtered] 16,000 docs, 0 hit, 8s
+  [recall4k/filtered] 18,000 docs, 0 hit, 9s
+[audit] recall4k filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [proto4k/raw] 2,000 docs, 0 hit, 1s
+  [proto4k/raw] 4,000 docs, 0 hit, 3s
+  [proto4k/raw] 6,000 docs, 0 hit, 4s
+  [proto4k/raw] 8,000 docs, 0 hit, 6s
+  [proto4k/raw] 10,000 docs, 0 hit, 7s
+  [proto4k/raw] 12,000 docs, 0 hit, 9s
+  [proto4k/raw] 14,000 docs, 0 hit, 10s
+  [proto4k/raw] 16,000 docs, 0 hit, 12s
+  [proto4k/raw] 18,000 docs, 0 hit, 13s
+[audit] proto4k raw: 20,000 docs, 0 with a hit (0.0%) {}
+  [proto4k/filtered] 2,000 docs, 0 hit, 3s
+  [proto4k/filtered] 4,000 docs, 0 hit, 6s
+  [proto4k/filtered] 6,000 docs, 0 hit, 9s
+  [proto4k/filtered] 8,000 docs, 0 hit, 12s
+  [proto4k/filtered] 10,000 docs, 0 hit, 15s
+  [proto4k/filtered] 12,000 docs, 0 hit, 18s
+  [proto4k/filtered] 14,000 docs, 0 hit, 21s
+  [proto4k/filtered] 16,000 docs, 0 hit, 24s
+  [proto4k/filtered] 18,000 docs, 0 hit, 27s
+[audit] proto4k filtered: 20,000 docs, 0 with a hit (0.0%) {}
+A27 DONE
