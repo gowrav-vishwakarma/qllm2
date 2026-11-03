@@ -6064,3 +6064,36 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Not yet scored here: A26 G1 (Library) and the holdout-vs-projection tripwire (training log).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
+
+## SCI-1 first continuation (DRAFT, 12:41 IST, 2026-11-03; Lead decision 12:40; not pre-registered until Lead's GO and a hash)
+
+**Why** (milestones 1 and 2 CHECK; Library's A26 `EXPERIMENTS_V14` "A26 SCI-1 MILESTONE 2"):
+- the protocol tripwire fired: G1 mind-held at 2k = 0.00 = NOPROT (+0.05 bar);
+- what IS learned is the convention (compact format: the convention is said on 0.75–1.00 at 2k, even CONVERT writes "mg"), but the
+  copied VALUE is right on only 0.20: the failure is the value, not the format;
+- no gain from 1.0B → 2.0B tokens (proto is ~0.3 % of realized tokens);
+- the think tripwires fired too (ON 0.02 vs OFF 0.03; OFF leak 24 %).
+
+**Changes** (mix, logged in the header; one lineage row `sci1_cont1`):
+1. **think dropped** (2.4 % realized tokens) → web (dclm + fineweb, split as before).
+2. **proto4k raised** from ~0.3 % to ~1.0 % of tokens.
+3. **a compact value-copy source** (`protoc`, ~0.2 % of tokens; NEEDS Library: `protocol_text_iter(compact_only=True)`, short
+   "Report rule." demos with 2–8 demos near the trained notation, gap ≤ 20 filler sentences, 1–3 queries, the converted VALUE as
+   the marked answer, trained families only; the held-out families stay excluded).
+4. b2s lowered from ~1.2 % to ~0.7 % (s8 D is 0.538 against the 0.40 bar, so it has room).
+5. recall4k unchanged (~0.26 %).
+
+**Loss-weight check** (weight per token vs text: b2s 1.55×, proto4k 1.82×, recall4k 1.37×, protoc ≈ 5× ASSUMED like compact b2,
+to be measured): synthetic ≈ (0.007·1.55 + 0.0026·1.37 + 0.010·1.82 + 0.002·5) / (…+0.94) ≈ **4.1 % of the loss weight**, at the
+stated ~4 % ceiling (bud: a 4.9 % share cost +0.013 holdout). Tripwire kept: holdout > projection + 0.02 → lower the synthetic weight.
+
+**Schedule:** continue from the last full milestone before the switch (`--continue_from step_XXXXXX.pt`), constant LR (`wsd_stable`),
+fresh token budget, 500-step re-warm; the old segment's remaining plan is replaced by this one. The decay branch follows at the end
+as planned.
+
+**Bars for the next CHECK (2 milestones later):** G1 mind-held 2k ≥ NOPROT + 0.05 (Library); compact value right ≥ 0.50 at 2k;
+s8 D ≥ 0.50 (no regression); holdout within the projection + 0.02; the shown generations: round-to-one-decimal answered.
+If compact value-copy stays < 0.30 after the 2 milestones, the lesson is "this size does not copy-with-transform from a stated
+rule": state it as a limit and stop raising the share.
+
+**Prior work:** none for this exact cell (a measurement); data-mix response to a tripwire, not a method claim.
