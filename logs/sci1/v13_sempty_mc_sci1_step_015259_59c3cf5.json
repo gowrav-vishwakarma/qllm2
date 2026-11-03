@@ -1,0 +1,22 @@
+{
+ "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_main_59c3cf5/step_015259.pt",
+ "results": {
+  "hellaswag": {
+   "acc": 0.27384983071101376,
+   "acc_norm": 0.28052180840470026,
+   "n": 10042
+  },
+  "arc_easy": {
+   "acc": 0.4591750841750842,
+   "acc_norm": 0.4158249158249158,
+   "n": 2376
+  },
+  "piqa": {
+   "acc": 0.5843307943416758,
+   "acc_norm": 0.5756256800870512,
+   "n": 1838
+  }
+ },
+ "sec": 110.0,
+ "fp32": false
+}

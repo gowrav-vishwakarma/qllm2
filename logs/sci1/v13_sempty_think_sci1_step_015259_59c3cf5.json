@@ -1,0 +1,3212 @@
+{
+ "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_main_59c3cf5/step_015259.pt",
+ "summary": {
+  "n": 200,
+  "acc_on": 0.005,
+  "acc_off": 0.03,
+  "trace_rate_on": 1.0,
+  "leak_rate_off": 0.005
+ },
+ "rows": [
+  {
+   "mode": "on",
+   "gold": "18",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJanet eats 3 eggs every day for breakfast, so she eats 3 * 3 = 12 eggs every day.\nEach day, she eats bakes muffins for breakfast, so she eats 12 * 3 = 24 eggs every day.\nEach day, she eats bakes muffins for breakfast, so she eats 24 * 2 = 24 eggs every day.\nEach day, she eats bakes muffins for breakfast, so she eats 24 * 2 = 24 eggs every day.\nEach day, she eats bakes muffins for breakfast"
+  },
+  {
+   "mode": "off",
+   "gold": "18",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "3",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total number of bolts in the robe is 2 + 2 + 1 = 3\nThe total number of bolts in the robe is 3 + 3 + 1 = 4\nThe total number of bolts in the robe is 4 + 4 + 1 = 6\nThe total number of bolts in the robe is 6 + 6 + 6 = 12\nThe total number of bolts in the robe is 12 + 12 + 12 = 54\nThe total number of bolts in the robe is 54 + 54 = 96\nThe total number of bolts in the robe is 54 + 96 = 108\nThe"
+  },
+  {
+   "mode": "off",
+   "gold": "3",
+   "pred": "12",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 12.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "70000",
+   "pred": "50",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe original price of the house is $80,000, so the profit is $80,000 - $50,000 = $50,000.\nThe total value of the house is $80,000 + $50,000 + $50,000 = $150,000.\nThe profit is $150,000 - $50,000 = $50,000.\n#### 50\n</think>\nThe answer is 50.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "70000",
+   "pred": "160",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 160.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "540",
+   "pred": "740",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJames runs 3 times a week, so he runs 3 * 3 = 12 meters each week.\nHe runs 60 meters each week, so he runs 60 * 2 = 240 meters each week.\nTherefore, he runs a total of 12 + 240 = 740 meters each week.\n#### 740\n</think>\nThe answer is 740.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "540",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIn the morning, Wendi gives her chickens 15 cups of feed, so she gives away a total of 15 x 3 = 30 cups of feed.\nIn the afternoon, she gives away another 25 cups of feed, so she gives away a total of 30 x 2 = 40 cups of feed.\nIn the afternoon, she gives away another 25 cups of feed, so she gives away a total of 25 x 2 = 40 cups of feed.\nIn the afternoon, she gives away 40 cups of feed, so "
+  },
+  {
+   "mode": "off",
+   "gold": "20",
+   "pred": "15",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "64",
+   "pred": "4",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nKylar bought glasses for $5, so he needs to pay $5 x 16 = $<<5*5=120>>120 for glasses.\nKylar also needs to pay 60% of the price, which is $5 x 60 = $<<5*0.5=15>>15.\nKylar needs to pay $15 for the glasses, so he needs to pay $15 / $15 = 4 glasses.\n#### 4\n</think>\nThe answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "64",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "260",
+   "pred": "10",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Charleston has 20 sheep, then Charleston has 20/2 = 10 sheep.\nIf Charleston has 4 times as many sheep as Seattle, then Charleston has 10/4 = 3 sheep.\nTherefore, Toulouse has 10 sheep.\n#### 10\n</think>\nThe answer is 10.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "260",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "160",
+   "pred": "3",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe first 200 GB of file is equivalent to 2 GB of downloading, which is equivalent to 2.5 GB of downloading.\nThe second 200 GB of downloading is equivalent to 2.5 GB of downloading, which is equivalent to 2.5 GB of downloading.\nThe third 200 GB of downloading is equivalent to 2.5 GB of downloading, which is equivalent to 2.5 GB of downloading.\nTo find the total time it takes to download th"
+  },
+  {
+   "mode": "off",
+   "gold": "160",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "45",
+   "pred": "2",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJohn drives at a speed of 60 mph, so he drives at a speed of 60 mph / 4 hours = 3 hours per hour.\nHe then drives at a speed of 30 mph, so he drives at a speed of 30 mph / 30 mph = 4 hours per hour.\nHe then drives at a speed of the remaining 4 hours, so he drives at a speed of 4 hours per hour / 4 hours = 2 hours per hour.\nTherefore, John drives at a speed of 2 hours per hour.\n#### 2\n</thin"
+  },
+  {
+   "mode": "off",
+   "gold": "45",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "460",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nEliza works for 40 hours each week, so she works 40 * 40 = 400 hours in the week.\nShe works for a total of 400 hours, so she works 400 * $10 = $300 in the week.\nShe works for a total of 400 hours, so she works 400 * $10 = $300 in the week.\nShe works for a total of $300, so she works a total of $300 * $300 = $300 in the week.\nShe works for a total of $300, so she works a total of $300 * $30"
+  },
+  {
+   "mode": "off",
+   "gold": "460",
+   "pred": "40",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 40.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "366",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe first month had 60 downloads, so the total downloads in the first month were 60 * 3 = 240 downloads.\nThe second month had 30% as many downloads as the first month, so the total downloads in the third month were 30 * 0.30 = 40 downloads.\nThe total downloads in the third month were 240 + 40 = 180 downloads.\nThe total downloads in the third month were 240 + 180 = 360 downloads.\nThe total "
+  },
+  {
+   "mode": "off",
+   "gold": "366",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "694",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nToula bought 3 dozen donuts for $68 each, so she bought a total of 3 * $68 = $<<3*68=68>>68.\nShe bought 2 dozen mini cupcakes for $80 each, so she bought a total of 2 * $80 = $<<2*80=80>>80.\nShe bought 6 dozen mini cupcakes for $80 each, so she bought a total of 6 * $80 = $<<6*80=240>>240.\nShe bought 6 dozen mini cupcakes for $80 each, so she bought a total of 6 * $80 = $<<6*80=240>>240.\nT"
+  },
+  {
+   "mode": "off",
+   "gold": "694",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "13",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nCarlos will grow a total of $90 + $1 + $3 + $3 + $3 + $5 = $45\nHe will need to plant a total of $45 + $1 + $3 + $3 + $5 = $45\nHe will need to plant a total of $45 + $1 + $3 + $3 + $5 = $18\nHe will need to plant a total of $45 + $1 + $3 + $3 + $5 = $18\nHe will need to plant a total of $18 + $1 + $3 + $3 + $5 = $18\nHe will need to plant a total of $18 + $1 + $3 + $3 + $5 = $18\nHe will need t"
+  },
+  {
+   "mode": "off",
+   "gold": "13",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "18",
+   "pred": "21",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nMelanie sold a total of 5 + 2 = 8 vacuum cleaners at the green house.\nShe sold 2 more vacuum cleaners at the green house, so she sold a total of 8 + 2 = 12 vacuum cleaners at the green house.\nShe sold half of the vacuum cleaners at the green house, so she sold a total of 12 / 2 = 6 vacuum cleaners at the green house.\nTherefore, Melanie was able to start with a total of 8 + 6 + 12 = 21 vacu"
+  },
+  {
+   "mode": "off",
+   "gold": "18",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "60",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\n20% of 20 students in the dance class, which is 20/100 * 20 = 30 students.\nThe rest enrolled in hip-hop dance, which is 20 - 30 = 30 students.\nThe rest enrolled in hip-hop dance, which is 30 - 30 = 30 students.\nThe rest enrolled in hip-hop dance, which is 30 - 30 = 30 students.\nThe total number of students enrolled in hip-hop dance is 20 + 30 + 30 = 60 students.\nThe total number of student"
+  },
+  {
+   "mode": "off",
+   "gold": "60",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "125",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe merchant is making a choice of 2 purchase plans, and the total cost of the purchase is $5,000.\nThe total cost of the purchase is $5,000.\nThe total cost of the electronic gadgets is $8,000.\nThe total cost of the electronic gadgets is $8,000.\nThe total cost of the electronic gadgets is $8,000.\nThe total cost of the electronic gadgets is $8,000.\nThe total cost of the electronic gadgets is"
+  },
+  {
+   "mode": "off",
+   "gold": "125",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To determine the profit margin for the merchant, we need to calculate the total cost of the purchase and the selling price of the electronic gadgets. The total cost of the purchase and selling price is $5,000, and the selling price is $8,000.\n\nThe total cost of the purchase and selling price is $5,000, and the selling price is $8,000. This means that the total cost of the purchase and selling pric"
+  },
+  {
+   "mode": "on",
+   "gold": "230",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total distance covered by each train is $2 + $0.5 + $0.5 = $0.5\nThe total distance covered by each train is $0.5 + $0.5 = $0.5\nThe total distance covered by each train is $0.5 + $0.5 = $0.5\nThe total distance covered by each train is $0.5 + $0.5 = $0.5\nThe total distance covered by each train is $0.5 + $0.5 = $0.5\nThe total distance covered by each train is $0.5 + $0.5 = $0.5\nThe total"
+  },
+  {
+   "mode": "off",
+   "gold": "230",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "57500",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJill works 50 hours a week, so she works 50 * 2 = 60 hours a week.\nHer coach works 35 hours a week, so she works a total of 35 * 7 = 240 hours a week.\nHer coach works 60 hours a week, so she works a total of 60 * 7 = 240 hours a week.\nHer coach works 15 hours a week, so she works 240 * 15 = 240 hours a week.\nHer coach works 240 hours a week, so she works 240 * 240 = 240 hours a week.\nHer c"
+  },
+  {
+   "mode": "off",
+   "gold": "57500",
+   "pred": "40",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 40.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "7",
+   "pred": "115",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nClaire makes 3 eggs every morning for breakfast, so she makes a total of 3 x 4 = 12 eggs in a week.\nShe makes 12 eggs in a week, so she makes 12 x 12 = 96 eggs in a week.\nShe makes a total of 3 x 12 = 72 eggs in a week.\nTherefore, she will eat 72 eggs in a total of 72 + 96 = 115 eggs in a week.\n#### 115\n</think>\nThe answer is 115.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "7",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "6",
+   "pred": "38",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nMarissa took 1 hour to walk the first 4 miles, so she took a total of 4 x 1 = 6 miles.\nShe took 2 hours to walk the first 4 miles, so she took a total of 2 x 4 = 8 miles.\nTo find the total distance she needs to walk the remaining distance, we need to add the distance she took to the first 4 miles, so she took a total of 4 x 8 = 24 miles.\nTherefore, Marissa needs to walk a total of 24 + 24 "
+  },
+  {
+   "mode": "off",
+   "gold": "6",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "15",
+   "pred": "4",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf you have 10 liters of orange drink, then you have 10/3 = 4 liters of orange drink.\nIf you have 3-5 liters of orange drink, then you have 3-5 = 6 liters of orange drink.\nIf you have 6 liters of orange drink, then you have 6/6 = 4 liters of orange drink.\nTherefore, you have 4 liters of orange drink.\n#### 4\n</think>\nThe answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "15",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "14",
+   "pred": "6",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Raymond was born 6 years ago, then Samantha was born 6 + 6 = 12 years ago.\nIf Raymond was born 31, then Samantha was born 6 + 12 = 15 years ago.\nTherefore, Raymond was born 15 - 12 = 6 years ago.\n#### 6\n</think>\nThe answer is 6.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "14",
+   "pred": "11",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 11.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "7",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nBilly sold 8 DVDs on Tuesday.\nHis first 3 customers buy 2 DVDs each, so he sold a total of 8 x 2 = 24 DVDs.\nHis last 3 customers buy 2 DVDs each, so he sold a total of 2 x 2 = 4 DVDs.\nHis last 3 customers buy 2 DVDs each, so he sold a total of 2 x 2 = 4 DVDs.\nHis last 3 customers buy 4 DVDs each, so he sold a total of 4 x 2 = 6 DVDs.\nHis last 3 customers buy 2 DVDs each, so he sold a total"
+  },
+  {
+   "mode": "off",
+   "gold": "7",
+   "pred": "8",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 8.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "8",
+   "pred": "400",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf the candle burns for 1 hour every hour, then the candle will burn for a total of 1 hour x 2 hours = 2 hours.\nIf the candle burns for 5 hours every hour, then the candle will burn for a total of 2 hours x 5 hours = 10 hours.\nIf the candle burns for a total of 10 hours, then the candle will burn for a total of 10 hours x 10 hours = 40 hours.\nIf the candle burns for a total of 40 hours, th"
+  },
+  {
+   "mode": "off",
+   "gold": "8",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "26",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe original price of the book was $19.50.\n50% of $19 is (50/100) * $19.50 = $2.50.\nSo, the original price of the book was $19.50.\nThe original price of the book was $19.50.\nThe original price of the book was $19.50.\nSo, the original price of the book was $19.50.\nThe original price of the book was $19.50.\nThe original price of the book was $19.50.\nSo, the original price of the book was $19"
+  },
+  {
+   "mode": "off",
+   "gold": "26",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "2",
+   "pred": "3",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nMarie ordered one chicken meal that costs $12.50, so the cost of each chicken meal is $12.50 / $3.50 = $3.50.\nMarie ordered one chicken meal that costs $3.50, so the cost of each pizza is $3.50 / $3.50 = $3.50.\nMarie ordered one box of pizza, so the cost of each pizza is $3.50 / $3.50 = $3.50.\n#### 3\n</think>\nThe answer is 3.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "2",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "243",
+   "pred": "56",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nMishka bought 3 pairs of shorts, and each pair costs $16.50, so she spent 3 * $16 = $<<3*16=36>>36 on shorts.\nShe also bought 3 pairs of pants, and each pair costs $22.\nSo, she spent 3 * $22 = $<<3*22=24>>24 on the pants.\nShe also bought 3 pairs of shoes, and each pair costs $22.\nSo, she spent a total of $24 + $36 = $<<3*24=56>>56 on the shoes.\nTherefore, she spent a total of $24 + $56 = $"
+  },
+  {
+   "mode": "off",
+   "gold": "243",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nCynthia eats one serving of ice cream every night, so she eats a total of 1.2 * 15 = 15 servings of ice cream per night.\nShe also eats 60 servings of ice cream per night, so she eats a total of 60 * 15 = 400 servings of ice cream per night.\nTherefore, she will spend a total of 15 * 400 = $<<15*400=<<15*400=<<15*400=<<15*400=<<15*400=<<15*400=<<15*400=<<15*400=<<15*400=<<15*400=<<15*400=<<1"
+  },
+  {
+   "mode": "off",
+   "gold": "16",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "25",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nHenry traveled 60 miles in 60-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mile-long-mi"
+  },
+  {
+   "mode": "off",
+   "gold": "25",
+   "pred": "15",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "104",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total cost of the shoes is $33 + $33 + $2 + $3 + $4 + $5 = $24\nThe total cost of the shoes is $24 + $33 + $2 + $3 + $4 = $27\nThe total cost of the shoes is $24 + $33 + $2 + $3 + $4 = $27\nThe total cost of the shoes is $27 + $33 + $2 + $3 + $4 = $36\nThe total cost of the shoes is $27 + $33 + $2 + $3 + $4 = $36\nThe total cost of the shoes is $36 + $33 + $2 + $3 + $4 = $36\nThe total cost "
+  },
+  {
+   "mode": "off",
+   "gold": "104",
+   "pred": "15",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "109",
+   "pred": "56",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf their total ages are 7, 11, and 15, then their total ages are 7 + 11 + 15 = 27 years.\nIf their total ages are 162, then their total ages are 27 + 11 + 15 = 38 years.\nIf their total ages are 162, then their total ages are 162 + 38 = 56 years.\n#### 56\n</think>\nThe answer is 56.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "109",
+   "pred": "7",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 7.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "80",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe first one says 80% of the jelly beans, which is 80/100 * $0.80 = $0.80.\nThe second one says 20 more than the first one, which is 20 + $0.20 = $0.80.\nThe third one says 80% of the jelly beans, which is $0.80 * $0.80 = $0.80.\nThe fourth one says 80% of the jelly beans, which is $0.80 * $0.80 = $0.80.\nThe fourth one says 80% of the jelly beans, which is $0.80 * $0.80 = $0.80.\nThe fourth o"
+  },
+  {
+   "mode": "off",
+   "gold": "80",
+   "pred": "15",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "35",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nEach dog takes care of 10 dogs, so he takes care of 10 x 2 = 40 dogs.\nEach dog takes care of their business, so he takes care of 40 x 2 = 60 dogs.\nEach dog takes care of their business, so he takes care of 40 x 2 = 60 dogs.\nEach dog takes care of 60 x 2 = 60 dogs.\nEach dog takes care of 60 x 2 = 60 dogs.\nEach dog takes care of 60 x 2 = 60 dogs.\nEach dog takes care of 60 x 2 = 60 dogs.\nEach"
+  },
+  {
+   "mode": "off",
+   "gold": "35",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "70",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nGretchen has a total of 110 + 30 = 90 coins.\nHe has a total of 110 + 90 = 180 coins.\nHe has a total of 180 + 90 = 240 coins.\nHe has a total of 240 + 90 = 270 coins.\nHe has a total of 270 + 90 = 240 coins.\nHe has a total of 240 + 90 = 270 coins.\nHe has a total of 270 + 90 = 240 coins.\nHe has a total of 240 + 90 = 270 coins.\nHe has a total of 270 + 90 = 240 coins.\nHe has a total of 240 + 90 "
+  },
+  {
+   "mode": "off",
+   "gold": "70",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "23",
+   "pred": "6",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Aaron has 40 jewels, then Aaron has 40 - 2 = 30 jewels.\nIf Siobhan has 5 more jewels than Aaron, then Siobhan has 30 - 5 = 15 jewels.\nIf Siobhan has 15 more jewels than Aaron, then Siobhan has 15 - 15 = 15 jewels.\nTherefore, Siobhan has 15 - 30 = 6 jewels.\n#### 6\n</think>\nThe answer is 6.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "23",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "9",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nMike scores a total of 40 + 20 + 25 = 60 points.\nIn the second 20 minutes, he scores a total of 60 + 20 = 70 points.\nIn the third 20 minutes, he scores a total of 70 + 20 = 90 points.\nIn the fourth 20 minutes, he scores a total of 25 + 20 = 40 points.\nIn the fourth 20 minutes, he scores a total of 40 + 20 = 60 points.\nIn the fourth 20 minutes, he scores a total of 40 + 20 = 60 points.\nIn t"
+  },
+  {
+   "mode": "off",
+   "gold": "9",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "75",
+   "pred": "2",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nTerry eats 2 yogurts a day, so he eats 2 yogurts a day.\nEach yogur has 4 yogurts, so he eats 2 yogurts a day.\nSo, he eats 2 yogurts a day.\nEach yogur has 4 yogurts, so he eats 2 yogurts a day.\nTherefore, he eats 2 yogurts a day.\n#### 2\n</think>\nThe answer is 2.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "75",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "2",
+   "pred": "21",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJohn sells all his toys for $15 each, so he sells a total of $15 + $5 = $24.\nHe sells each video game for $20, so he sells a total of $24 / $20 = 2 video games.\nHe sells each video game for $20, so he sells a total of $20 / $20 = 2 video games.\nTherefore, John still has $24 - 2 = $21 left.\n#### 21\n</think>\nThe answer is 21.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "2",
+   "pred": "8",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 8.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "10",
+   "pred": "6",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJohn runs 3 days a week.\nHe runs 3 days a week.\nSo, he runs 3 * 3 = 12 miles a week.\nHe runs half as much as the first two days, so he runs 3 * 2 = 6 miles a week.\nTherefore, John runs 6 miles a week.\n#### 6\n</think>\nThe answer is 6.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "10",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "18",
+   "pred": "4",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf she can skip at a rate of speed four times, then she can skip at a rate of 3/4 * 4 = 1.5 miles per hour.\nIf she can skip at a rate of 2/3 * 6 = 1.5 miles per hour, then she can skip at a rate of 1.5 * 6 = 2 miles per hour.\nIf she can skip at a rate of 2 miles per hour, then she can skip at a rate of 2 * 2 = 3 miles per hour.\nTherefore, she can skip at a rate of 3 miles per hour, which i"
+  },
+  {
+   "mode": "off",
+   "gold": "18",
+   "pred": "3",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 3.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "8",
+   "pred": "2",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Suzy's iPhone is 1 year old, then Suzy's iPhone is 1 year old.\nIf Suzy's iPhone is 2 years old, then Suzy's iPhone is 2 * 1 = 2 years old.\nTherefore, Brandon's iPhone is 2 years old.\n#### 2\n</think>\nThe answer is 2.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "8",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "200",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Polly held the gemstone, and it was not far away, then the dragon's flames could not be extinguished.\nIf Polly held the gemstone, and it was not far away, then the dragon's flames could not be extinguished.\nIf Polly held the gemstone, and it was not far away, then the dragon's flames could not be extinguished.\nIf Polly held the gemstone, and it was not far away, then the dragon's flames"
+  },
+  {
+   "mode": "off",
+   "gold": "200",
+   "pred": "160",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 160.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "26",
+   "pred": "27",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nGrandma Jones baked 5 apple pies for the guests, so she made a total of 5 x 8 = 40 apple pies.\nShe also cut each pie into 8 pieces, so she made a total of 40 x 8 = 180 pieces of pie.\nTherefore, there were 40 - 180 = 27 pieces of pie remaining.\n#### 27\n</think>\nThe answer is 27.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "26",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "48",
+   "pred": "400",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf a bag has 250 calories, then a 300g bag has 250/300 = 500 calories.\nIf a 300g bag has 5 servings, then a 300g bag has 5 servings.\nIf a 300g bag has 5 servings, then a 300g bag has 5 servings.\nTherefore, the total amount of calories in the bag is 500 + 500 + 5 = 400 calories.\n#### 400\n</think>\nThe answer is 400.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "48",
+   "pred": "1500",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 1500.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf each beewax sells for $2.00, then the total cost of the beeswax candles is $10.00 * 2 = $20.00.\nIf each beewax sells for $2.00, then the total cost of the beeswax candles is $20.00 * 2 = $20.00.\nIf each beewax sells for $2.00, then the total cost of the beeswax candles is $20.00 * 2 = $20.00.\nIf each beewax sells for $2.00, then the total cost of the beeswax candles is $20.00 * 2 = $20."
+  },
+  {
+   "mode": "off",
+   "gold": "20",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "104",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nMeredith writes for a total of 4 hours, so she writes a total of 4 * 5 = 30 hours in the first week.\nShe writes 2/5 times more than Monday, so she writes 2 * 2 = 4 times more than Tuesday.\nShe writes twice the number of articles she wrote on Tuesday, so she writes 2 * 2 = 4 times more than Tuesday.\nThe total number of hours she spent writing articles is 30 + 4 + 4 + 4 + 4 + 2 + 4 + 2 + 4 +"
+  },
+  {
+   "mode": "off",
+   "gold": "104",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "163",
+   "pred": "56",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nCandice put 80 post-it notes in the first package, so she had 23 * 2 = 56 post-it notes.\nShe also put 56 post-it notes in the second package, so she had 56 * 2 = 56 post-it notes.\nTherefore, she had 56 Post-it notes in the package.\n#### 56\n</think>\nThe answer is 56.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "163",
+   "pred": "23",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 23.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "800",
+   "pred": "120",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe red cost $50 + $40 = $60\nThe red cost $40 + $40 = $60\nThe red cost $40 + $60 = $40\nThe total cost of all the ties is $60 + $60 + $40 = $120\n#### 120\n</think>\nThe answer is 120.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "800",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "8",
+   "pred": "12",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nTracy used a total of 4 + 6 + 4 + 4 + 2 = 12 pieces of wire.\nThe wire was cut into pieces 6 inches long, so the wire was 12 - 12 = 4 pieces.\nTracy used a total of 4 + 6 + 4 + 4 = 12 pieces of wire.\n#### 12\n</think>\nThe answer is 12.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "8",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "30",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nEach floor contains 8 units, so the total number of occupied units is 8 * 8 = 48 units.\nEach unit contains 3/4 of the building's total, so the total number of occupied units is 48 / 3 = 8 units.\nEach unit contains 3/4 of the building's total, so the total number of occupied units is 8 * 3 = 24 units.\nEach unit contains 3/4 of the building's total, so the total number of occupied units is 2"
+  },
+  {
+   "mode": "off",
+   "gold": "30",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "294",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nLloyd makes a total of 2 * 252 = $<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2*<<2"
+  },
+  {
+   "mode": "off",
+   "gold": "294",
+   "pred": "752",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 752.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": "2",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nTom travels at a speed of 1 mile per hour, so he travels at a speed of 1 mile per hour.\nHe then travels at a speed of 6 mph, so he travels at a speed of 6 mph / 6 mph = 2 miles per hour.\nTherefore, Tom travels at a speed of 2 miles per hour.\n#### 2\n</think>\nThe answer is 2.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "15",
+   "pred": "3",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nUriah needs to remove 15 pounds from the bag.\nHe needs to remove 30 pounds from the bag.\nSo, he needs to remove 15 - 30 = 5 pounds from the bag.\nHe needs to remove 1/2 pound each toy, so he needs to remove a total of 5 + 1/2 = 8 toy books.\nTherefore, he needs to remove 8 - 5 = 3 toys.\n#### 3\n</think>\nThe answer is 3.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "15",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "40",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe mechanic repaired 6 truck tires and 4 car tires, so the total revenue for the tires is 6 truck tires + 6 car tires + 4 car tires = 24 car tires.\nThe mechanic earned $60 on the mechanic and repaired the car tires, so the total revenue for the car tires is 24 car tires + $60 car tires + $40 car tires = $120.\nThe mechanic earned $40 on the car tires and $120 on the car tires, so the total"
+  },
+  {
+   "mode": "off",
+   "gold": "40",
+   "pred": "40",
+   "ok": true,
+   "trace": false,
+   "text": "The answer is 40.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "40",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe first cat has thrice the number of kittens, so the second cat has thrice the number of kittens, which is 2 * thrice the number of kittens, which is 2 * thrice the number of kittens, which is 2 * 3 = 6 kittens.\nThe third cat has 12 kittens, so the fourth cat has 12 - 6 = 12 kittens.\nThe fourth cat has 12 kittens, so the sixth cat has 12 - 12 = 12 kittens.\nThe fifth cat has 12 kittens, s"
+  },
+  {
+   "mode": "off",
+   "gold": "40",
+   "pred": "6",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 6.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "14",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJean has 30 lollipops.\nJean eats 2 lollipops, so Jean eats 2 * 30 = 60 lollipops.\nJean eats 2 lollipops, so Jean eats 2 * 60 = 90 lollipops.\nJean eats 1 lollipops, so Jean eats 1 * 60 = 90 lollipops.\nJean eats 2 * 90 = 90 lollipops.\nJean eats 2 * 90 = 90 lollipops.\nJean eats 2 * 90 = 90 lollipops.\nJean eats 2 * 90 = 90 lollipops.\nJean eats 2 * 90 = 90 lollipops.\nJean eats 2 * 90 = 90 lolli"
+  },
+  {
+   "mode": "off",
+   "gold": "14",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "3",
+   "pred": "67",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nPeter has 42 dollars for the week.\nHe has 7 tickets for $7 each, so he has a total of 7 * $7 = $72.\nHe also has a ticket for $8.\nTherefore, he can go to the movies in a total of $72 + $72 + $8 = $66.\n#### 67\n</think>\nThe answer is 67.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "3",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "83",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total weight of the wooden bridge is 375 pounds.\nThe empty truck weighs 15 pounds.\nThe empty truck weighs the same as the empty truck, so the weight of the empty truck is 15 * 15 = 150 pounds.\nThe total weight of the empty truck is 375 + 150 = 300 pounds.\nThe maximum weight of the empty truck is 300 pounds.\nThe maximum weight of the empty truck is 300 pounds.\nThe maximum weight of the "
+  },
+  {
+   "mode": "off",
+   "gold": "83",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "57",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe delivery fee for the order is $40.00, so the total cost for the delivery fee is $40.00 + $4.00 + $3.00 + $3.00 = $45.00\nThe delivery fee for the tip is $4.00, so the final price for the tip is $4.00 + $4.00 + $3.00 = $16.00\nThe delivery fee for the tip is $4.00, so the final price for the tip is $16.00 + $4.00 + $3.00 = $18.00\nThe delivery fee for the tip is $4.00, so the final price f"
+  },
+  {
+   "mode": "off",
+   "gold": "57",
+   "pred": "15",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "187",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThere are a total of 6 clusters of 20 fruit each, so there are a total of 6 * 20 = 60 fruit.\nThere are 67 individual fruit scattered across the bush, so there are 67 / 60 = 3 raspberries.\nThere are 67 individual fruit scattered across the bush, so there are 67 / 67 = 3 raspberries.\nThere are 3 raspberries, so there are 3 raspberries.\nThere are 3 raspberries, so there are 3 raspberries.\nThe"
+  },
+  {
+   "mode": "off",
+   "gold": "187",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "17",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThere are 25/2 = 12 oranges in the basket.\nThere are 20/2 = 12 sour and 12% are bad, so 12/100 * 12 = 12 sour and 12% are bad.\nThere are 2/3 * 12 = 6 sour and 12% are bad, so 12/100 * 12 = 6 sour and 12% are bad.\nThere are 6/100 * 12 = 6 sour and 12% are bad, so 6/100 * 12 = 6 sour and 12% are bad.\nThere are 6/100 * 12 = 6 sour and 12% are bad, so 6/100 * 12 = 6 sour and 12% are bad.\nThere"
+  },
+  {
+   "mode": "off",
+   "gold": "17",
+   "pred": "12",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 12.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "1430",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total amount of material to be made is $500 + $800 + $10 = $450\nShe pays $450 for the material to make it, so she pays $450 / $500 = $100\nShe pays $100 for the jeweler to make it, so she pays $100 / $100 = $100\nShe pays $100 for the jeweler to make it, so she pays $100 / $100 = $100\nShe pays $100 for the jeweler to make it, so she pays $100 / $100 = $100\nShe pays $100 for the jeweler t"
+  },
+  {
+   "mode": "off",
+   "gold": "1430",
+   "pred": "160",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 160.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "25000",
+   "pred": "5",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Marcy works 40 years, and she gets an annual pension of $50, then she will be entitled to 5% of the value of the pension.\nIf Marcy works 40 years, then she will be entitled to 5% of the value of the pension.\nSo, Marcy will be entitled to 5% of the value of the pension.\nTo find the annual pension, we need to calculate the total value of the pension.\n40% of $50 is (40/100) * $50 = $50\nSo,"
+  },
+  {
+   "mode": "off",
+   "gold": "25000",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "1596",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe initial amount for the streaming service is $140.\nThe initial amount for the first half of the year is $140.\nThe initial amount for the first half of the year is $140.\nThe initial amount for the first half of the year is $140.\nThe total amount for the first half of the year is $140 + $140 + $10 = $120.\nThe total amount for the first half of the year is $120 + $140 + $10 = $120.\nThe tot"
+  },
+  {
+   "mode": "off",
+   "gold": "1596",
+   "pred": "160",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 160.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "300",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nSophia's car is going to take a total of 100 + (100 + 4) + (100 + 4) = 150 miles.\nSophia's car is going to take a total of 150 + (100 + 4) + (100 + 4) = 150 miles.\nTo find the total distance Sophia drives on a single tank of gas, we need to divide the total distance traveled by the number of gallons of gas.\nSophia's car is going to take a total of 150 + (100 + 4) + (100 + 4) = 150 miles.\nS"
+  },
+  {
+   "mode": "off",
+   "gold": "300",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "36",
+   "pred": "8",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJim spends 2 hours watching TV and then 3 hours reading.\nHe then spends 2 hours watching TV and then 3 hours reading.\nSo, he spends 2 hours on TV and 3 hours on reading.\nHe then spends 4 hours on reading.\nSo, he spends a total of 2 hours + 2 hours = 6 hours on TV and reading.\nHe spends a total of 6 hours + 6 hours = 8 hours on TV and reading.\nHe spends a total of 2 hours + 8 hours = 8 hour"
+  },
+  {
+   "mode": "off",
+   "gold": "36",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "48",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThere are 4 girls and 4 boys in the basketball team, so there are 4 x 4 = 24 people in total.\nThere are 5 players in each team, so there are a total of 5 x 5 = 30 players.\nThere are 24 people in total, so there are 24 x 30 = 360 people in total.\nThere are also 30 players in total, so there are 30 x 30 = 360 players.\nThere are also 360 - 360 = 216 people in total.\nThere are also 216 - 216 ="
+  },
+  {
+   "mode": "off",
+   "gold": "48",
+   "pred": "15",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "595",
+   "pred": "160",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe treasure chest is located in the chest.\nThe treasure chest is located in the chest.\nThe total number of gems in the chest is 175 + 35 + 35 = 160.\nThe treasure chest is located in the chest.\n#### 160\n</think>\nThe answer is 160.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "595",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "36",
+   "pred": "40",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf there are 60 girls and 5 students to every teacher, then there are 60 * 5 = 180 boys.\nIf there are 5 students to every teacher, then there are 60 * 5 = 150 students.\nTherefore, there are 180 - 150 = 40 teachers.\n#### 40\n</think>\nThe answer is 40.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "36",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "60",
+   "pred": "50",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nBailey starts with $5.\nShe receives a weekly allowance of $5 for 8 weeks, so she has $5 x 8 = $20.\nShe then receives a weekly allowance of $100 for 8 weeks, so she has $100 x 8 = $100.\nTherefore,Bailey has $100 - $20 = $50.\n#### 50\n</think>\nThe answer is 50.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "60",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "7425",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJudy charges $15.00 per student, so she makes a total of 15 * $15.00 = $<<15*15=240>>240.00\nShe charges $30.00 per student, so she makes a total of $240.00 * $30 = $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*30= $<<240*3"
+  },
+  {
+   "mode": "off",
+   "gold": "7425",
+   "pred": "15",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "60",
+   "pred": "90",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nKelian has 20 instructions.\nShe has 2 instructions, so she has a total of 20 x 2 = 30 instructions.\nShe has twice as many instructions as the first one, so she has 30 x 2 = 60 instructions.\nTherefore, Kelian has a total of 20 + 60 = 90 instructions.\n#### 90\n</think>\nThe answer is 90.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "60",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "221",
+   "pred": "4",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nTommy sells brownies for $3 each, so he earns $3 x $3 = $8 from selling brownies.\nHe sells 23 brownies, so he earns 23 x $8 = $24 from selling brownies.\nTherefore, Tommy earns $24 - $8 = $4 from selling brownies.\n#### 4\n</think>\nThe answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "221",
+   "pred": "23",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 23.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "255",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total cost of the cell phones for 3 months is $150.\nThe total cost of the cell phones for 3 months is $150.\nThe total cost of the cell phones for 3 months is $150.\nThe total cost of the cell phones for 3 months is $150.\nThe total cost of the cell phones for 3 months is $150.\nThe total cost of the cell phones for 3 months is $150.\nThe total cost of the cell phones for 3 months is $150.\n"
+  },
+  {
+   "mode": "off",
+   "gold": "255",
+   "pred": "3",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 3.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "88",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Artie sells 12 pots of marigolds, and each pot of petunias costs $2, then he sells 12 / $2 = 3 pots of petunias.\nIf each pot of petunias costs $2, then he sells 3 / $2 = 3 pots of petunias.\nIf each pot of petunias costs $2, then he sells 3 / $2 = 3 pots of petunias.\nIf each pot of petunias costs $2, then he sells 3 / $2 = 3 pots of petunias.\nIf each pot of petunias costs $2, then he sel"
+  },
+  {
+   "mode": "off",
+   "gold": "88",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "60",
+   "pred": "30",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf the sandcastle is 4 feet tall, then the sandcastle is 4 * 16 = 60 square feet.\nIf the sandcastle is half the square footage of the level, then the sandcastle is 60 / 2 = 30 square feet.\nIf the sandcastle is 6 feet tall, then the sandcastle is 6 * 30 = 160 square feet.\nThe average square footage of a level is 30 / 2 = 30 square feet.\n#### 30\n</think>\nThe answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "60",
+   "pred": "16",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 16.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nCecilia has to feed the puppy 1 cup of dog food every day for the first 180 days.\nThe puppy eats 1 cup of dog food every day for the first 180 days, so she eats 1 cup of dog food every day for the first 180 days.\nThe puppy eats 2 cups of dog food every day for the first 180 days, so she eats 2 cups of dog food every day for the first 180 days.\nThe puppy eats 2 cups of dog food every day fo"
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "100",
+   "pred": "400",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Raymond does half as much laundry as Sarah, then David does half as much laundry as Sarah, which is $2/2 = $1.\nIf Raymond does 400 pounds of laundry, then he does 400 - $1.5 = $2.\nIf Raymond does 400 pounds of laundry, then he does 400 - $2.5 = $2.\n#### 400\n</think>\nThe answer is 400.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "100",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "6",
+   "pred": "2",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nVincent can buy 18 flowers at the better price, so he can buy 18 / 2 = 6 flowers at the better price.\nHe also can buy 6 packages of 2 for $1.50 each, so he can buy 6 / 2 = 2 packages at the better price.\nTherefore, he can buy 6 / 2 = 2 packages at the better price.\n#### 2\n</think>\nThe answer is 2.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "6",
+   "pred": "18",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 18.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "70",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe dog takes the dog to the groomer, which costs $100.\nThe discount for being a new customer is 30% of the original price, which is 30/100 * $100 = $100.\nThe grooming cost is 30% of the original price, which is 30/100 * $100 = $100.\nThe grooming costs $100.\nThe grooming costs $100.\nThe grooming costs $100.\nThe grooming costs $100.\nThe grooming costs $100.\nThe grooming costs $100.\nThe groo"
+  },
+  {
+   "mode": "off",
+   "gold": "70",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "10",
+   "pred": "15",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nTwo girls got 1/6 * 24 = 4 liters of water.\nTwo girls got 4 * 6 = 12 liters of water.\nSo, the total number of liters of water they were able to have is 12 + 4 + 6 = 15 liters.\n#### 15\n</think>\nThe answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "10",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "17",
+   "pred": "15",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nCharlie bought 21 stickers from the store, so he has 21 - 23 = 15 stickers left.\nHe bought 9 stickers from the store, so he has 15 - 9 = 15 stickers left.\nHe also bought 23 stickers from the store, so he has 15 - 23 = 15 stickers left.\nTherefore, Charlie has 15 stickers left.\n#### 15\n</think>\nThe answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "17",
+   "pred": "27",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 27.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "623",
+   "pred": "70",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Grace weighs 4 pounds less than what Grace weighs, then Alex weighs 2 pounds less.\nIf Grace weighs 125 pounds more than Alex, then Alex weighs 2 + 125 = 60 pounds.\nTherefore, their combined weight is 4 + 60 + 2 = 70 pounds.\n#### 70\n</think>\nThe answer is 70.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "623",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "600",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nDan plants 3 rose bushes, so each rose bush has 3 * 25 = 60 roses.\nDan plants 4 thorns, so each rose has 4 * 60 = 240 thorns.\nDan plants 8 thorns, so each thorn has 8 * 60 = 240 thorns.\nDan plants 6 thorns, so each thorn has 240 / 6 = 160 thorns.\nDan plants the same number of thorns asDan plants, so each thorn has 240 / 6 = 160 thorns.\nDan plants the same number of thorns asDan plants, so "
+  },
+  {
+   "mode": "off",
+   "gold": "600",
+   "pred": "15",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "15",
+   "pred": "56",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total number of games played is 22 + 8 + 8 = 28 games.\nThe team won a total of 28 + 8 = 38 games.\nThey won a total of 38 - 56 = 56 games.\n#### 56\n</think>\nThe answer is 56.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "15",
+   "pred": "8",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 8.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "44",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nEach year, each vacationer has a different number of quilt blocks.\nEach year, he has a total of 4 vacations, so he has a total of 4 x 4 = 16 quilt blocks.\nEach year, he has a total of 16 x 2 = 24 quilt blocks.\nEach year, he has a total of 24 x 2 = 24 quilt blocks.\nEach year, he has a total of 24 x 2 = 24 quilt blocks.\nEach year, he has a total of 24 x 2 = 24 quilt blocks.\nEach year, he has"
+  },
+  {
+   "mode": "off",
+   "gold": "44",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "22",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe first time it went off, it rang four times.\nThe second time it went off, it rang the alarm ring three times.\nThe total number of times it went off the first time is the sum of the first and second times: 4 + 3 + 2 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + "
+  },
+  {
+   "mode": "off",
+   "gold": "22",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "9360",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe company has a policy of increasing the salaries by 10% of the initial salary every year, which means it will increase $600 * 10% of $600, which is $600 * 10% = $300.\nThe company has a policy of increasing the salaries by 10% of $600, which means it will increase $600 * 10% of $300, which is $300 * 10% = $300.\nThe company has a policy of increasing the salaries by 10% of $300, which mea"
+  },
+  {
+   "mode": "off",
+   "gold": "9360",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "8000",
+   "pred": "12",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Marilyn sold 88 copies, and they sold 10 times as many as Marily, then Marilyn sold 88/10 = 12 copies.\nIf they sold the same number of copies as Marily, then Marilyn sold 12/10 = 6 copies.\nTherefore, Harald sold 12 copies.\n#### 12\n</think>\nThe answer is 12.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "8000",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "24",
+   "pred": "2",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nChristina needs to buy a total of $16 + $2 = $18.\nShe needs to buy a total of $18 + $2 = $24.\nShe needs to buy a total of $24 + $4 = $18.\nTherefore, she will spend $18 - $24 = $2.\n#### 2\n</think>\nThe answer is 2.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "24",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "225",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Ted will eat 10 lbs of potato salad, and he will eat half as much as an adult, then he will eat 10/2 = 1.5 pounds of potato salad.\nIf he will eat half as much as an adult, then he will eat 1.5 * 10 = 10 pounds of potato salad.\nIf he will eat 5 children at the picnic, then he will eat 10 * 5 = 30 pounds of potato salad.\nIf he will eat half as much as an adult, then he will eat 10 * 2 = 3"
+  },
+  {
+   "mode": "off",
+   "gold": "225",
+   "pred": "15",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "28",
+   "pred": "12",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Marcia has three times the number of pets as Marcia, then Marcia has 3 * 2 = 6 pets.\nIf Marcia has two more pets than Cindy, then Marcia has 6 + 2 = 8 pets.\nIf Marcia has four more pets than Cindy, then Marcia has 6 + 8 = 12 pets.\n#### 12\n</think>\nThe answer is 12.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "28",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "4",
+   "pred": "27",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Amy is 5 years older than Corey, then Corey is 5 + 5 = 8 years old.\nIf James is 1 year younger than Corey, then Corey is 8 + 1 = 16 years old.\nIf James is 2 years younger than Corey, then James is 2 + 16 = 18 years old.\nTherefore, James is 18 + 16 = 27 years old.\n#### 27\n</think>\nThe answer is 27.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "4",
+   "pred": "4",
+   "ok": true,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "36",
+   "pred": "38",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Lee runs the 400-meter hurdles in 38 seconds, then he runs the 400-meter hurdles in 38 seconds.\nIf Lee runs the 400-meter hurdles in 38 seconds, then he runs the 400-meter hurdles in 38 seconds.\nTherefore, Lee can run the 400-meter hurdles in 38 seconds.\n#### 38\n</think>\nThe answer is 38.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "36",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "348",
+   "pred": "240",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf the number of rabbits is twelve less than the combined number of pet and cats, then the number of pets is 60 - ( twelve + 1) = 60 pets.\nIf the number of pets is 60, then the number of pets is 60 - (60 + 1) = 60 pets.\nTherefore, the total number of pets in the neighborhood is 60 pets + 60 pets + 60 pets = 240 pets pets.\n#### 240\n</think>\nThe answer is 240.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "348",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "40",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThere are a total of 5 + 2 = 8 girls in the girl scout.\nThere are 2/5 of the girls, so there are a total of 2/5 * 8 = 4 girls.\nThere are 8 boys, so there are a total of 8 * 8 = 24 girls.\nThere are also 4 boys, so there are a total of 4 * 4 = 16 girls.\nThere are also 2/3 of the girls, so there are a total of 2/3 * 8 = 4 girls.\nThere are also 4 boys, so there are a total of 4 * 4 = 6 girls.\n"
+  },
+  {
+   "mode": "off",
+   "gold": "40",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "3",
+   "pred": "6",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nHarry slept 9 hours last night.\nHis friend James slept 2/3 of what Harry slept, so he slept 9/3 * 2 = 4 hours.\nHarry slept 4 hours more than Harry, so he slept 4 + 4 = 6 hours.\nTherefore, Harry slept 6 hours more than Harry.\n#### 6\n</think>\nThe answer is 6.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "3",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "12",
+   "pred": "18",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf each tomato that she uses contains three tomatoes, then each tomato that she uses contains 3 * 32 = 56 tomatoes.\nIf each tomato that she uses contains 56 * 16 = 96 tomatoes, then Freda uses 56 / 2 = 18 tomatoes.\nTherefore, Freda uses 18 tomatoes.\n#### 18\n</think>\nThe answer is 18.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "12",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total number of cars on the motorway is 30 + 20 + 20 = 60 cars.\nThe total number of cars on the motorway is 60 + 20 + 20 = 70 cars.\nThe total number of cars on the motorway is 30 + 70 + 20 = 90 cars.\nThe total number of cars on the motorway is the sum of the cars on the motorway, the cars on the road, and the cars on the motorway: 30 + 90 + 20 = 180 cars.\nThe total number of cars on th"
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": "5",
+   "ok": true,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "58",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nMary has 2 potted plants on each of the 40 window ledges, so she has a total of 2 * 40 = 60 potted plants.\nShe also has 2 potted plants on each of the 40 window ledges, so she has a total of 2 * 40 = 60 potted plants.\nShe has 1 potted plant from each of the 40 window ledges, so she has a total of 60 * 1 = 60 potted plants.\nShe has 1 potted plant from each of the 40 window ledges, so she ha"
+  },
+  {
+   "mode": "off",
+   "gold": "58",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "175",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe fourth friend pressed on the first friend's first friend's first friend's first friend's first friend's first friend's first friend's first friend's first friend's first friend's first friend's second friend's third friend's fourth friend's fourth friend's fifth friend's fourth friend's fifth friend's fifth friend's fifth friend's fifth friend's sixth friend's sixth friend's sixth frie"
+  },
+  {
+   "mode": "off",
+   "gold": "175",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "6",
+   "pred": "60",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nSolo read 4 pages on Monday, so he read a total of 4 x 4 = 16 pages.\nHe also read 15 pages on Tuesday, so he read a total of 15 x 5 = 60 pages.\nIn total, he read 16 + 60 + 60 = 90 pages.\nIf he has 4 more days to read, he needs to read a total of 16 + 90 = 60 pages.\n#### 60\n</think>\nThe answer is 60.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "6",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "26",
+   "pred": "4",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJohn has a total of 4 glasses of water, so he has a total of 4 + 4 = 8 glasses of water.\nHe also has a lunch with dinner, so he has a total of 8 - 8 = 6 glasses of water.\nIn total, John has 4 glasses of water.\nHe has a lunch with breakfast, so he has a total of 6 - 6 = 6 glasses of water.\nIn total, John has 4 glasses of water.\nHe has a lunch with breakfast, so he has a total of 6 - 6 = 6 g"
+  },
+  {
+   "mode": "off",
+   "gold": "26",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "140",
+   "pred": "600",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe time it takes for the fog to cover the city is 3 * 10 = 30 minutes.\nThe time it takes for the fog to cover the whole city is 30 * 10 = 400 minutes.\nThe time it takes for the fog to cover the whole city is 400 * 2 = 600 minutes.\nThe time it takes for the fog to cover the whole city is 600 * 2 = 400 minutes.\nThe total time it takes for the fog to cover the whole city is 400 + 400 + 400 ="
+  },
+  {
+   "mode": "off",
+   "gold": "140",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "500",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nPoppy is placed in a circle with a radius of 1 inch.\nThe area of the circle is $1.2^2=1.2$ square inches.\nThe area of the circle is $1.2^2=1.2$ square inches.\nThe area of the circle is $1.2^2=1.2$ square inches.\nThe area of the circle is $1.2^2=1.2$ square inches.\nThe area of the circle is $1.2^2=1.2$ square inches.\nThe area of the circle is $1.2^2=1.2$ square inches.\nThe area of the circl"
+  },
+  {
+   "mode": "off",
+   "gold": "500",
+   "pred": "12",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 12.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "20",
+   "pred": "30",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Amir eats 5 cookies, then Amir eats 3 * 5 = 10 cookies.\nIf Amir eats three times as many cookies as Amir, then Amir eats 3 * 10 = 30 cookies.\nTherefore, both of them eat together.\n#### 30\n</think>\nThe answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "20",
+   "pred": "27",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 27.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "72",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe volume of each box is 3 inches * 6 inches = 30 cubic inches.\nThe volume of each box is 3 inches * 6 inches = 30 cubic inches.\nThe total inner volume of all 3 boxes is 30 cubic inches * 30 cubic inches = 150 cubic inches.\nThe total inner volume of all 3 boxes is 30 cubic inches * 3 inches = 150 cubic inches.\nThe total inner volume of all 3 boxes is 30 cubic inches * 150 cubic inches = 1"
+  },
+  {
+   "mode": "off",
+   "gold": "72",
+   "pred": "3",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 3.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "3",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nOn Monday, he watched a 1-hour episode, so he watched a total of 1 + 1 + 1 = 2 hours of TV.\nOn Tuesday, he watched a 30-minute episode, so he watched a total of 2 + 1 = 3 hours of TV.\nOn Wednesday, he watched a 30-minute episode, so he watched a total of 3 + 30 = 40 hours of TV.\nOn Wednesday, he watched a 30-minute episode, so he watched a total of 40 + 30 = 60 hours of TV.\nOn Wednesday, h"
+  },
+  {
+   "mode": "off",
+   "gold": "3",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "50",
+   "pred": "40",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nHenry baked 15 cookies.\nHe made twice as many as he did last year, so he made 15 x 2 = 30 cookies.\nHe also made a total of 5 + 5 = 8 cookies.\nIn total, Henry baked 15 + 30 + 8 = 40 cookies last year.\n#### 40\n</think>\nThe answer is 40.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "50",
+   "pred": "15",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "28",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe local gas station offers a $3.00 a gallon gas station, so the cost of the gas station is $3.00 * 10 = $15.00.\nThe cost of the gas station is $15.00 * 0.20 = $0.20.\nThe cost of the gas station is $0.20 * 0.20 = $0.20.\nThe cost of the gas station is $0.20 * 0.20 = $0.20.\nThe cost of the gas station is $0.20 * 0.20 = $0.20.\nThe total cost of the gas station is $15.00 + $15.00 + $0.20 = $1"
+  },
+  {
+   "mode": "off",
+   "gold": "28",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The company's selling price for gas is $3.00. The company's selling price is $3.00. The company's selling price is $4.00. The company's selling price is $.20.00. The company's selling price is $.20.00.\n\nTo calculate the selling price, we need to calculate the total selling price for the gas station. The selling price for gas is $3.00. We can calculate the selling price for gas by dividing the sell"
+  },
+  {
+   "mode": "on",
+   "gold": "45",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nMarcell's was two roll-ups, so they ate a total of 2 * 2 = 4 rolls.\nMarcell's was two roll-ups, so they ate a total of 2 * 4 = 6 rolls.\nThe total number of rolls they ate on the first and second-hand is 6 + 6 + 6 + 6 + 3 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4"
+  },
+  {
+   "mode": "off",
+   "gold": "45",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe boat took on a total of sixteen + 64 + sixteen = 216 seconds.\nThe boat took on a total of 216 + 216 = 216 seconds.\nThe boat took on a total of 216 + 216 = 216 seconds.\nThe boat took on a total of 216 + 216 = 216 seconds.\nThe boat took on a total of 216 + 216 = 216 seconds.\nThe boat took on a total of 216 + 216 = 216 seconds.\nThe boat took on a total of 216 + 216 = 216 seconds.\nThe boat"
+  },
+  {
+   "mode": "off",
+   "gold": "16",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "24",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nEach teacher uses 2 lessons per day, so they use a total of 2 x 2 = 6 lessons per day.\nEach lesson is cleaned in a total of 6 x 2 = 12 lessons.\nEach lesson is cleaned in a total of 12 x 2 = 24 lessons.\nEach lesson is cleaned in a total of 12 x 24 = 96 lessons.\nEach lesson is cleaned in a total of 12 x 24 = 96 lessons.\nEach lesson is cleaned in a total of 96 x 24 = 96 lessons.\nEach lesson i"
+  },
+  {
+   "mode": "off",
+   "gold": "24",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "25",
+   "pred": "15",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nRyan plants 2 flowers a day, so he plants a total of 2 x 15 = 30 flowers.\nIf he plants 5 flowers a day, then he plants a total of 30 x 5 = 90 flowers.\nTherefore, he has 30 - 90 = 15 flowers left.\n#### 15\n</think>\nThe answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "25",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "6",
+   "pred": "40",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Jamal's phone can hold 1800 photographs, then the maximum number of photographs that can be held is 1800 / 6 = 30 times more photographs.\nIf Jamal's phone can hold 50 times more photographs than the maximum number of photographs, then the maximum number of photographs that can be held is 30 / 50 = 10 times more photographs.\nTherefore,Jamal can hold 30 + 10 = 40 times more photographs th"
+  },
+  {
+   "mode": "off",
+   "gold": "6",
+   "pred": "160",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 160.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "90",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nSasha bought some lumber for $10 each, so she made a total of $10 + $10 = $20.\nShe bought some lumber for $16 each, so she made a total of $16 + $20 = $18.\nShe sold all of the lumber, so she made a total of $18 - $18 = $24.\nShe sold all of the lumber, so she made a total of $24 - $18 = $24.\nShe sold all of the lumber, so she made a total of $24 - $18 = $24.\nShe sold all of the lumber, so s"
+  },
+  {
+   "mode": "off",
+   "gold": "90",
+   "pred": "40",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 40.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "42",
+   "pred": "6",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf she used a total of 120 teaspoons of sugar and cups of water, then she used a total of 120 / 7 = 15 teaspoons of sugar.\nIf she used a total of 15 teaspoons of sugar and cups of water, then she used 15 / 15 = 3 teaspoons of sugar.\nTherefore, the number of teaspoonfuls of sugar she used is 15 - 3 = 6 teaspoons.\n#### 6\n</think>\nThe answer is 6.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "42",
+   "pred": "7",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 7.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "360",
+   "pred": "70",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJohn buys 2 pairs of shoes for $60 each, so he buys 2 * $60 = $60 from the shoes.\nHe also buys 3 children's shoes, so he buys 3 * $60 = $120 from the shoes.\nTherefore, John paid $60 + $120 = $70 for the shoes.\n#### 70\n</think>\nThe answer is 70.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "360",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "4",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total number of vehicles at the port is 30 + 5 + 2 = 40 vehicles.\nThe total number of vehicles at the port is 40 + 40 + 40 = 60 vehicles.\nThe total number of vehicles at the port is the sum of the number of vehicles, the number of containers, and the number of vehicles.\nThe total number of vehicles at the port is the sum of the number of vehicles, the number of containers, and the numb"
+  },
+  {
+   "mode": "off",
+   "gold": "4",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "95200",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Adrien's salary increased by 30% four years ago, then Lylah's salary increased by 30% * 2 = $40000 four years ago.\nIf Adrien's salary increased four years later, then Lylah's salary increased by $40000 four years ago.\nTo find the total salary Adrien's salary, we need to calculate the total salary of Adrien's four years ago.\nLylah's salary increased by $40000 four years ago, so Lyl's sal"
+  },
+  {
+   "mode": "off",
+   "gold": "95200",
+   "pred": "40000",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 40000.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "240",
+   "pred": "240",
+   "ok": true,
+   "trace": true,
+   "text": "<think>\nMiguel uses 2 pads of paper a week, so he uses a total of 2 x 30 = 60 sheets of paper.\nIf he uses a pad of paper every month, he uses a total of 60 x 2 = 240 sheets of paper.\nIf he uses a pad of paper every month, he uses a total of 240 x 2 = 480 sheets of paper.\nIf he uses a pad of paper every month, he uses a total of 480 x 2 = 240 sheets of paper.\nTherefore, he uses 240 sheets of paper "
+  },
+  {
+   "mode": "off",
+   "gold": "240",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "27",
+   "pred": "180",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nMorisette brought 5 apples and 8 oranges, so she brought a total of 5 + 8 = 15 fruits.\nKael brought twice the amount of apples, so Kael brought 2 * 15 = 60 apples.\nKael brought half the number of fruits, so Kael brought 2 * 60 = 90 apples.\nTherefore, they have a total of 15 + 60 + 90 = 180 fruits.\n#### 180\n</think>\nThe answer is 180.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "27",
+   "pred": "12",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 12.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "48",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf the rest of the week is Monday, then the two days are Monday, Tuesday, and Wednesday.\nIf the rest of the week is Monday, then the two days are Tuesday, Wednesday, and Friday.\nIf the rest of the week is Monday, then the two days are Tuesday, Wednesday, and Friday.\nIf the rest of the week is Monday, then the two days are Tuesday, Wednesday, and Friday.\nIf the rest of the week is Monday, t"
+  },
+  {
+   "mode": "off",
+   "gold": "48",
+   "pred": "8",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 8.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "50",
+   "pred": "5",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nRosie can run 10 miles per hour for 3 hours, so she can run a total of 10 * 3 = 40 miles.\nTo run 40 miles per hour, she can run 40 / 40 = 5 miles.\nTherefore, Rosie can run 5 miles in 7 hours.\n#### 5\n</think>\nThe answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "50",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "10",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf there are 60 letters in the pile, then there are now 30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - (30 - ("
+  },
+  {
+   "mode": "off",
+   "gold": "10",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "10",
+   "pred": "56",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJulia bought a total of 12 spoons, so she bought a total of 12 x 5 = 48 spoons.\nShe also bought a total of 48 x 5 = 96 spoons.\nTherefore, Julia bought a total of 48 + 96 = 56 spoons.\n#### 56\n</think>\nThe answer is 56.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "10",
+   "pred": "12",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 12.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "82",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nDylan bought 38 chicken sausages and 6 fish sausages, so he bought a total of 38 + 6 = 56 sausages.\nHe bought 6 more fish sausages than chicken sausages, so he bought a total of 56 + 6 = 44 sausages.\nHe bought 56 sausages and 44 fish sausages, so he bought 44 - 56 = 44 sausages.\nHe bought 44 sausages and 44 fish sausages, so he bought 44 - 44 = 44 sausages.\nHe bought 44 sausages and 44 fis"
+  },
+  {
+   "mode": "off",
+   "gold": "82",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "120",
+   "pred": "60",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Amy made 50 friends, and Amy made 20 friends, then Amy made 50 - 20 = 30 friends.\nIf Amy made a total of x friends, then Amy made 30 - x friends.\nThe total number of friends they have together is 30 + 30 + 30 = 60 friends.\n#### 60\n</think>\nThe answer is 60.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "120",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "880",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe cost of each watermelon is $2.\nThe cost of each watermelon is $5.\nThe cost of each watermelon is $20.\nThe cost of each orange is $10.\nThe total cost of all the watermelons is $4 + $5 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 + $10 +"
+  },
+  {
+   "mode": "off",
+   "gold": "880",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "10000",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe hospital makes $200 an hour, so the hospital makes $200 * 0.5 = $300 from the hospital.\nThe hospital makes $150 an hour, so the hospital makes $150 * 0.5 = $300 from the hospital.\nThe hospital makes $300 an hour, so the hospital makes $300 * 0.5 = $300 from the hospital.\nThe hospital makes $300 an hour, so the hospital makes $300 * 0.5 = $300 from the hospital.\nThe hospital makes $300 "
+  },
+  {
+   "mode": "off",
+   "gold": "10000",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "30",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nNissa has 60 - (1/2) * 60 = 60 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 - 30 = 30 -"
+  },
+  {
+   "mode": "off",
+   "gold": "30",
+   "pred": "30",
+   "ok": true,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "940",
+   "pred": "300",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJoseph made $500 in May, so he made $500 * 0.5 = $300 in May.\nHis expenditure was $60 less than the expenditure of Joseph, so he made $300 - $60 = $100 in May.\nTherefore, his total expenditure for those two months was $500 + $100 = $300.\n#### 300\n</think>\nThe answer is 300.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "940",
+   "pred": "1500",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 1500.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "60",
+   "pred": "72",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nPam rode the roller coaster 2 times.\nPam rode the roller coaster 2 times.\nPam rode the roller coaster 2 times.\nSo, they rode the roller 2 x 2 = 6 times.\nEach ride cost 6 tickets.\nTherefore, they used 6 x 6 = 72 tickets.\n#### 72\n</think>\nThe answer is 72.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "60",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "13",
+   "pred": "24",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nOn Monday, Walt walked 4 miles.\nOn Tuesday, he walked 6 times as many as he walked on Monday, so he walked 4 * 6 = 24 miles.\nOn Wednesday, he walked 6 times as many as he walked on Tuesday, so he walked 6 * 6 = 24 miles.\nTherefore, Walt walked 24 miles on Wednesday.\n#### 24\n</think>\nThe answer is 24.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "13",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "720",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nTomheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshesheshe"
+  },
+  {
+   "mode": "off",
+   "gold": "720",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "40",
+   "pred": "4",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Brian has 5 video games, and the video games are 3 times as many as the video games, then the video games are 3 * 5 = 8 video games.\nIf the video games are lost, then the video games are 8 - 2 = 4 video games.\nTherefore, Bobby has 4 video games.\n#### 4\n</think>\nThe answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "40",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "6",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThere are 27 * 1/2 = 4 female Scottish unicorns.\nThere are 4 * 4 = 12 female Scottish unicorns.\nThere are 12 * 4 = 24 female Scottish unicorns.\nThere are 27 * 2 = 24 female Scottish unicorns.\nThere are 24 * 2 = 24 female Scottish unicorns.\nThere are 24 * 2 = 24 female Scottish unicorns.\nThere are 24 * 2 = 24 female Scottish unicorns.\nThere are 24 * 2 = 24 female Scottish unicorns.\nThere ar"
+  },
+  {
+   "mode": "off",
+   "gold": "6",
+   "pred": "27",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 27.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "29",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nRory orders 2 subs for $7.50 each, so she will need 2 * $7.50 = $7.50\nShe will need 2 * $7.50 = $16.50\nShe will need 2 * $16.50 = $18.50\nShe will need 2 * $18.50 = $18.50\nShe will need 2 * $18.50 = $18.50\nShe will need 2 * $18.50 = $18.50\nShe will need 2 * $18.50 = $18.50\nShe will need 2 * $18.50 = $18.50\nShe will need 2 * $18.50 = $18.50\nShe will need 2 * $18.50 = $18.50\nShe will need 2 *"
+  },
+  {
+   "mode": "off",
+   "gold": "29",
+   "pred": "7",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 7.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "105",
+   "pred": "216",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nMark completed a total of 75 + 5 + 6 = 60 questions in the first test.\nHe completed a total of 60 + 60 + 6 = 180 questions in the first test.\nHe completed a total of 180 + 60 + 6 = 240 questions in the second test.\nTherefore, Mark had 240 - 180 = 216 questions remaining.\n#### 216\n</think>\nThe answer is 216.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "105",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "70",
+   "pred": "27",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf there are 22 more than four times the number of pink gumballs as there are blue gumballs, then there are 12 + 4 = 27 pink gumballs.\nIf there are 12 more than four times the number of pink gumballs as there are blue gumballs, then there are 27 + 12 = 27 pink gumballs.\nIf there are 27 more than four times the number of pink gumballs as there are blue gumballs, then there are 27 + 27 = 27 "
+  },
+  {
+   "mode": "off",
+   "gold": "70",
+   "pred": "27",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 27.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThere are 20 cars in total.\nThere are 12 cars in total.\nThere are 4 manual cars, so there are a total of 12 x 4 = 24 cars.\nThere are semi-automatic cars, so there are a total of 24 x 4 = 72 cars.\nThere are semi-automatic cars, so there are a total of 72 x 4 = 96 semi-automatic cars.\nThere are semi-automatic cars, so there are a total of 72 x 4 = 96 semi-automatic cars.\nThere are semi-autom"
+  },
+  {
+   "mode": "off",
+   "gold": "20",
+   "pred": "12",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 12.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "400",
+   "pred": "600",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf there are 700 bees in the hive, then there are 700 * 2 = 600 bee colonies.\nIf there are twice as many worker bees as queens, then there are 600 * 2 = 400 bee colonies.\nIf there are twice as many worker bees as queens, then there are 400 * 2 = 600 bee colonies.\nTherefore, there are 600 * 2 = 600 bee colonies.\n#### 600\n</think>\nThe answer is 600.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "400",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "140",
+   "pred": "80",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJordan earns $10 an hour.\nHe earns $10 an hour.\nSo, he earns $10 x 2 = $20 from playing video games.\nHe earns $20 x 2 = $40 from playing video games.\nTherefore, Jordan would earn $40 x 2 = $80 from playing video games.\n#### 80\n</think>\nThe answer is 80.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "140",
+   "pred": "40",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 40.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "16",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf the tax is 10% of the total amount, then the tax is 10% of the total amount.\nIf the tax is light bulbs, then the tax is 10% of the total amount.\nIf the tax is light bulbs, then the tax is 10% of the total amount.\nIf the tax is light bulbs, then the tax is 10% of the total amount.\nIf the tax is light bulbs, then the tax is 10% of the total amount.\nIf the tax is light bulbs, then the tax "
+  },
+  {
+   "mode": "off",
+   "gold": "16",
+   "pred": "2",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 2.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf the total cost of the bleach and bleach is $92, then the total cost of the bleach and bleach will be $92 + $2 = $96.\nIf the total cost of the bleach and bleach is $5, then the total cost of the bleach and bleach will be $96 + $5 = $72.\nIf the total cost of the cloths and the bleach will be $72, then the total cost of the cloths and bleach will be $72 + $72 = $96.\nIf the total cost of th"
+  },
+  {
+   "mode": "off",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "To calculate the profit, we need to calculate the total expenses and divide by the total expenses. Since each week is $92, Lucas will make a total of $92.\n\nLet's break down the calculation:\n\nTotal expenses: $92\nTotal expenses: $92\nTotal expenses: $2\nTotal expenses: $5\nTotal expenses: $2\nTotal expenses: $5\nTotal expenses: $2\nTotal expenses: $2\nTotal expenses: $5\nTotal expenses: $2\nTotal expenses: $"
+  },
+  {
+   "mode": "on",
+   "gold": "4000",
+   "pred": "600",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJohn has 10 hectares of pineapple field.\nHe can harvest 100 pineapples per hectare, so he can harvest a total of 10 * 100 = 400 pineapples.\nHe can harvest a total of 3 * 400 = 600 pineapples.\nTherefore, John can harvest 600 pineapples within a year.\n#### 600\n</think>\nThe answer is 600.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "4000",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "2125",
+   "pred": "600",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJohnny picks up the 500 pieces of the 500 pieces, so he picks up a total of 500 x 3 = 600 pieces.\nHe picks up another one that had 3 times more pieces than the 500 pieces, so he picks up a total of 3 x 1/4 = 4 blocks.\nTherefore, Johnny picks up a total of 600 - 4 = 600 blocks.\n#### 600\n</think>\nThe answer is 600.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "2125",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "75",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nDebra sees 30 bees in the first 6 hours, so she sees 30/2 = 12 bees in the first 6 hours.\nShe sees 1/2 * 12 = 4 bees in the first 6 hours.\nShe sees 1/2 * 12 = 4 bees in the second 6 hours.\nSo Debra sees a total of 4 + 4 = 6 bees in the first 6 hours.\nShe sees 1/2 * 12 = 4 bees in the first 6 hours.\nSo Debra sees a total of 4 + 4 = 6 bees in the first 6 hours.\nDebra sees 1/2 * 12 = 4 bees i"
+  },
+  {
+   "mode": "off",
+   "gold": "75",
+   "pred": "6",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 6.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "30",
+   "pred": "24",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nBrittany received $12 in change.\nBrittany received $10 in change.\nBrittany received $10 in change.\nBrittany received $8 in change.\nSo, she received $8 + $10 = $12 in change.\nThe total amount she received is $12 + $10 + $12 + $8 = $24.\n#### 24\n</think>\nThe answer is 24.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "30",
+   "pred": "12",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 12.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "16",
+   "pred": "24",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Charlie has 12 friends on Facebook, and each friend has 4 times as many friends as Dorothy, then Charlie has 12 * 4 = 48 friends.\nIf James has three times as many friends as Dorothy, then James has 48 / 3 = 24 friends.\nTherefore, James has 24 friends.\n#### 24\n</think>\nThe answer is 24.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "16",
+   "pred": "12",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 12.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "4",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Tim can ride his bike at 440 feet per minute, then Tim can ride his bike at 440 / 2 = 160 feet per minute.\nIf Tim can ride his bike at 160 feet per minute, then Tim can ride his bike at 160 / 2 = 160 feet per minute.\nIf Tim can ride his bike at 160 feet per minute, then Tim can ride his bike at 160 / 2 = 160 feet per minute.\nIf Tim can ride his bike at 160 feet per minute, then Tim can "
+  },
+  {
+   "mode": "off",
+   "gold": "4",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Tim can ride his bike at 440 feet per minute, then Tim can ride his bike at 440 feet per minute.\nIf Tim can ride his bike at 440 feet per minute, then Tim can ride his bike at 440 feet per minute.\nIf Tim can ride his bike at 440 feet per minute, then Tim can ride his bike at 440 feet per minute.\nIf Tim can ride his bike at 440 feet per minute, then Tim can ride his bike at 440 feet per "
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nFirst, let's calculate the tire inflation for each tire:\n tire inflation = tire price / tire price\n tire inflation = tire price / tire price\n tire inflation = tire price / tire price\n tire inflation = tire price / tire price\n tire inflation = tire price / tire price\n tire inflation = tire price / tire price\n tire inflation = tire price / tire price\n tire inflation = tire price / tire price"
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": "5",
+   "ok": true,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "4",
+   "pred": "10",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nEach cookie costs $0.10, so the total cost of the cookies is $0.10 * $0.10 = $0.10.\nCarl also has a $10 bill, so he has $10 - $0.10 = $0.10.\nEach cookie costs $0.10, so Carl receives $0.10 * $0.10 = $0.10.\nTherefore, Carl receives $0.10 * $0.10 = $0.10.\n#### 10\n</think>\nThe answer is 10.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "4",
+   "pred": "10",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 10.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "48",
+   "pred": "27",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Dave bought a large pack of french fries, and each pigeon ate three fries, then the total number of fries in the pack is 3 * 2 = 8.\nIf each pigeon ate three fries, then the total number of fries in the pack is 8 * 3 = 24 fries.\nIf each pigeon ate three fries, then the total number of fries in the pack is 24 / 3 = 3.\nTherefore, Dave bought a total of 8 + 24 = 27 fries.\n#### 27\n</think>\nT"
+  },
+  {
+   "mode": "off",
+   "gold": "48",
+   "pred": "8",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 8.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "272",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIn one semester, Kimo has 2 classes each day, so he has 2 x 2 = 4 classes.\nIn one semester, he has 3 1-hour classes, so he has 4 x 3 = 16 classes.\nIn one semester, he has 16 weeks, so he has 16 x 16 = 96 classes.\nIn one semester, he has 16 weeks, so he has 16 x 16 = 96 classes.\nIn one semester, he has 96 weeks, so he has 96 x 16 = 96 classes.\nIn one semester, he has 96 weeks, so he has 96 "
+  },
+  {
+   "mode": "off",
+   "gold": "272",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "280",
+   "pred": "4",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nEach roll is 4 inches long, so 6 x 4 = 24 inches of each roll of each roll.\nEach baguette is 4 inches long, so 6 x 4 = 24 inches of each baguette will be in total.\nEach baguette is 2 inches long, so 6 x 2 = 12 inches of each baguette will be in total.\nEach baguette will be in a baguette for 24 / 12 = 4 days.\n#### 4\n</think>\nThe answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "280",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "1400",
+   "pred": "400",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe zookeeper orders all the bananas from the zoo every 2 months, so he orders a total of 2 * 200 = 400 bananas.\nThe gorillas need 400 bananas to last for 2 months, so they need 400 * 2 = 600 bananas.\nThe gorillas need 400 bananas to last for 2 months, so they need 400 * 2 = 600 bananas.\nThe total number of bananas they need to order for the zoo is 600 + 600 + 600 + 400 = 400 bananas.\n####"
+  },
+  {
+   "mode": "off",
+   "gold": "1400",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "80",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nBlake runs back and forth 15 times, so he runs back and forth 15 - 15 = 15 times.\nThe winner runs back and forth 15 - 15 = 15 times.\nBlake runs back and forth 15 - 15 = 15 times.\nThe winner runs back and forth 15 - 15 = 15 times.\nBlake runs back and forth 15 - 15 = 15 times.\nThe winner runs back and forth 15 - 15 = 15 times.\nThe winner runs back and forth 15 - 15 = 15 times.\nThe winner run"
+  },
+  {
+   "mode": "off",
+   "gold": "80",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "34",
+   "pred": "18",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nRaphael bought 4 pens which cost $1.5 each, so he spent 4 * $1.5 = $4 on pens.\nHe bought 2 notebooks which cost $4 each, so he spent 2 * $4 = $18 on notebooks.\nHe bought 2 notebooks which cost $20 each, so he spent 2 * $20 = $20 on notebooks.\nTherefore, Raphael spent $18 on everything.\n#### 18\n</think>\nThe answer is 18.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "34",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "15",
+   "pred": "2",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nFinn has 11 tadpoles in the pond.\nHe sees 6 of them, so he has 11 - 6 = 6 tadpoles left.\nHe sees 2 of them, so he has 6 - 2 = 2 tadpoles left.\nTherefore, Finn has 2 tadpoles.\n#### 2\n</think>\nThe answer is 2.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "15",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "16",
+   "pred": "15",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nOn Tuesday, the tank had a depth of 17 feet.\nOn Tuesday, the tank had a depth of 2 feet.\nOn Wednesday, the tank had a depth of 7 feet.\nOn Wednesday, the tank had a depth of 2 feet.\nSo, on Wednesday, the tank had a depth of 2 + 7 = 12 feet.\nOn Wednesday, the tank had a depth of 3 feet.\nSo, on Wednesday, the tank had a depth of 3 + 2 = 6 feet.\nOn Wednesday, the tank had a depth of 2 + 6 = 8 "
+  },
+  {
+   "mode": "off",
+   "gold": "16",
+   "pred": "21",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 21.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "32",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nAnakin caught 10 starfish.\nAnakin caught 6 fewer starfish than Anakin, so Anakin caught 10 - 6 = 6 sea horses.\nAnakin caught 3 fewer clownfish than Anakin, so Anakin caught 3 + 6 = 8 sea horses.\nThe total number of fish they caught is 10 + 6 + 6 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + "
+  },
+  {
+   "mode": "off",
+   "gold": "32",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "92",
+   "pred": "35",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf the price increases by 20% of the original price every two months, then the price increases by $20/100 * 2 = $20/100.\nIf the price increases by 20% of the original price every two months, then the price increases by $20/100 * 2 = $20/100.\nIf the price increases by $20/100 * 2 = $20/100, then the price increases by $20/100 * 2 = $20/100.\nTherefore, the bag of marbles after 36 months woul"
+  },
+  {
+   "mode": "off",
+   "gold": "92",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "50",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total cost of the toys is $5 + $3 + $4 + $4 = $18.\nThe total cost of the toys is $18 + $3 + $4 = $24.\nThe total cost of the toys is $18 + $24 = $72.\nThe total cost of the doll is $24 + $72 = $66.\nThe total cost of the doll is $66 + $72 = $72.\nThe total cost of the doll is $66 + $72 = $72.\nThe total cost of the doll is $72 + $72 = $72.\nThe total cost of the doll is $72 + $72 = $72.\nThe "
+  },
+  {
+   "mode": "off",
+   "gold": "50",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Jack hires the accountant, and the accountant charges $90.\nIf the accountant charges $90.\nIf the accountant charges $35.\nIf the accountant charges $35.\nIf the accountant hires the accountant, and the accountant hires the accountant, and the accountant hires the accountant, and the accountant hires the accountant, and the accountant hires the accountant, and the accountant hires the acco"
+  },
+  {
+   "mode": "off",
+   "gold": "15",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "77",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe cost of the computer is \u20ac1090.\nThe cost of the keyboard is \u20ac1090.\nThe cost of the printer is \u20ac7400.\nThe cost of the mouse is \u20ac7400.\nThe cost of the printer is \u20ac7400.\nThe cost of the scanner is \u20ac7400.\nThe cost of the printer is \u20ac7400.\nThe cost of the printer is \u20ac7400.\nThe cost of the printer is \u20ac7400.\nThe cost of the printer is \u20ac7400.\nThe cost of the printer is \u20ac7400.\nThe cost of the pr"
+  },
+  {
+   "mode": "off",
+   "gold": "77",
+   "pred": "160",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 160.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nSandra has 9 eggs.\nSandra has 3 eggs.\nTo make a Spanish flan, she needs 3 eggs.\nTo make a Spanish flan, she needs 3 eggs.\nTo make a Spanish flan, she needs 3 eggs.\nTo make a Spanish flan, she needs 3 eggs.\nTo make a Spanish flan, she needs 3 eggs.\nTo make a Spanish flan, she needs 3 eggs.\nTo make a Spanish flan, she needs 3 eggs.\nTo make a Spanish flan, she needs 3 eggs.\nTo make a Spanish "
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": "3",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 3.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "16",
+   "pred": "6",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Seth is twice as old as Brooke, then Seth is 2 * S + 2 = 4 + 2 = 12 years old.\nIf Seth is currently 12 years old, then Seth is 12 - 12 = 6 years old.\nTherefore, Seth is 6 years old.\n#### 6\n</think>\nThe answer is 6.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "16",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "18",
+   "pred": "2",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Ethel has $8, then Ethel has $2 * 8 = $16.\nIf Ethel has $6, then Ethel has $16 - $6 = $2.\nTherefore, Jimmy has $16 - $2 = $2.\n#### 2\n</think>\nThe answer is 2.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "18",
+   "pred": "8",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 8.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "120",
+   "pred": "400",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nPancho walks 20 miles a day.\nHe walks 10 miles a day.\nSo, in a week, he walks 10 * 20 = 150 miles.\nTherefore, in a week, he walks 150 * 10 = 400 miles.\n#### 400\n</think>\nThe answer is 400.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "120",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "150",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe cost of the hat is $25, so the cost of the jacket is $25 * $25 = $75.\nThe cost of the jacket is $75, so the cost of the jacket is $75 * $75 = $150.\nThe total cost of the jacket is $75 + $150 = $<<75+150=<<75+150=<<75+150=150>>150.\nThe total cost of the jacket is $25 + $150 = $<<75+150=150>>150.\nThe total cost of the jacket is $150 + $150 = $<<75+150=150>>150.\nThe total cost of the jack"
+  },
+  {
+   "mode": "off",
+   "gold": "150",
+   "pred": null,
+   "ok": false,
+   "trace": false,
+   "text": "The total cost of the marching band is $25.\nThe total cost of the hat and jacket is $25.\nThe total cost of the jacket and jacket is $25.\nThe total cost of the jacket and jacket is $75.\nThe total cost of the jacket and jacket is $25.\nThe total cost of the jacket and jacket is $75.\nThe total cost of the jacket and jacket is $25.\nThe total cost of the jacket and jacket is $75.\nThe total cost of the j"
+  },
+  {
+   "mode": "on",
+   "gold": "1210",
+   "pred": "240",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJake sees 80 spiders with 8 legs each, so he sees a total of 80 x 8 = 360 legs.\nHe sees 90 spiders with 6 legs each, so he sees a total of 360 x 6 = 240 legs.\nHe sees 3 rare mutant invertebrates with 10 legs each, so he sees a total of 3 x 10 = 60 legs.\nTherefore, Jake sees a total of 240 legs.\n#### 240\n</think>\nThe answer is 240.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "1210",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "51",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nLet's assume that the age of the four birds is x.\nAccording to the given information, the age of the four birds is 3 years.\nLet's assume that the age of the four birds is x.\nAccording to the given information, the age of the four birds is 3 years.\nThe age of the four birds is 3 years.\nThe age of the four birds is 8 years.\nThe age of the four birds is 8 years.\nThe age of the four birds is 8"
+  },
+  {
+   "mode": "off",
+   "gold": "51",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "18000",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe minimum payment for the loan is $300/month, so the total loan payment is $300/month x 0.50 = $300/month.\nThe total loan payment is $200/month x 0.50 = $300/month.\nThe total loan payment is $300/month x 0.50 = $300/month.\nThe total loan payment is $300/month x 0.50 = $300/month.\nThe total loan payment is $300/month x 0.50 = $300/month.\nThe total loan payment is $300/month x 0.50 = $300/"
+  },
+  {
+   "mode": "off",
+   "gold": "18000",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "95",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe time it takes to peel a potato is about 60 minutes, so it takes about 60 / 60 = 10 minutes to peel a potato.\nThe time it takes to peel a potato is about 5 minutes, so it takes about 5 / 60 = 3 minutes to peel a potato.\nThe time it takes to peel a potato is about 5 minutes, so it takes about 5 / 3 = 3 minutes to peel a potato.\nThe time it takes to peel a potato is about 5 minutes, so it"
+  },
+  {
+   "mode": "off",
+   "gold": "95",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "15",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJuan sold each lemonade for $3, so he sold a total of $3 + $2 = $8.\nThey sold each glass for $0.50, so they sold a total of $0.50 * $0.50 = $0.50.\nThey sold each glass for $0.50, so they sold a total of $0.50 * $0.50 = $0.50.\nThey sold each glass for $0.50, so they sold a total of $0.50 * $0.50 = $0.50.\nThey sold each glass for $0.50, so they sold a total of $0.50 * $0.50 = $0.50.\nThey sol"
+  },
+  {
+   "mode": "off",
+   "gold": "15",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "100",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total number of Asians and Japanese is 60 + 80 + 60 = 240.\nThe total number of Asians and Japanese is 240 + 240 = 160.\nThe total number of Chinese and Japanese is 240 + 160 = 160.\nThe total number of Chinese and Japanese is 240 + 160 = 160.\nThe total number of Chinese and Japanese is 160 + 160 = 160.\nThe total number of Chinese and Japanese is 160 + 160 = 160.\nThe total number of Chine"
+  },
+  {
+   "mode": "off",
+   "gold": "100",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "350",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nZaid earns $4,000, so he earns $4,000 * 1/4 * 200 = $<<4*200= $<<4*200=800>>800.\nHe also earns $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*200= $<<700*20"
+  },
+  {
+   "mode": "off",
+   "gold": "350",
+   "pred": "500",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 500.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "122",
+   "pred": "60",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Bo has 40 crabs, and Monic has 4 fewer crabs than Bo, then Bo has 40 - 4 = 30 crabs.\nIf Bo has 10 more crabs than Monic, then Bo has 30 - 10 = 30 crabs.\nThe total number of crabs the three have together is 40 + 30 + 30 = 60 crabs.\n#### 60\n</think>\nThe answer is 60.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "122",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "130",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nLloyd earns $10 an hour on Math tutoring, so he earned a total of $10 x 5 = $<<10*10=120>>120.\nLloyd earns 8 hours on Math tutoring, so he earned a total of $120 x 8 = $<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8=<<120*8"
+  },
+  {
+   "mode": "off",
+   "gold": "130",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "20",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total number of votes for the winner is 80 + (80 + 3/4) = 80 + 40 = 160.\nThe total number of votes for the winner is 80 + 160 = 180.\nThe total number of votes for the winner is the sum of the number of votes for the winner and the number of votes for the loser.\nThe total number of votes for the winner is 180 + 160 = 240.\nThe total number of votes for the loser is the sum of the number "
+  },
+  {
+   "mode": "off",
+   "gold": "20",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "160",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nSandra ordered four times as many red roses as white carnations, so she ordered 4 * 4 = 12 red roses.\nSandra also ordered 200 pink calla lilies, which were five times as many as white carnations, so she ordered 200 * 5 = 300 pink calla lilies.\nThe total number of red roses ordered by Sandra and Fred is 12 + 12 + 12 + 5 + 6 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7"
+  },
+  {
+   "mode": "off",
+   "gold": "160",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "23",
+   "pred": "15",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nIf Mark is 30 years old, then Mark is 30 - 2 = 15 years old.\nIf Jean is two years older than Mark, then Jean is 15 - 2 = 15 years old.\nIf Jean is 5 years older than Mark, then Jean is 15 - 5 = 15 years old.\nTherefore, Jean is 15 - 15 = 15 years old.\n#### 15\n</think>\nThe answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "23",
+   "pred": "15",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 15.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "2",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe first runner will run 400 meters in 4 seconds, so the second runner will run 400 meters in 2 seconds.\nThe second runner will run 400 meters in 2 seconds, so the third runner will run 400 meters in 2 seconds.\nThe third runner will run 400 meters in 2 seconds, so the fourth runner will run 400 meters in 2 seconds.\nThe fourth runner will run 400 meters in 2 seconds, so the fifth runner wi"
+  },
+  {
+   "mode": "off",
+   "gold": "2",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "25",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThere are a total of 3 die rolls, and each die rolls with a probability of 1.\nSo, the probability of rolling a number greater than 3 is 3/4.\nTo find the probability of rolling a number greater than 3, we need to multiply the probability of rolling a number greater than 3 by the probability of rolling a number greater than 3.\nSo, the probability of rolling a number greater than 3 is 3/4.\nTo"
+  },
+  {
+   "mode": "off",
+   "gold": "25",
+   "pred": "3",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 3.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "30",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJenna picked a total of 20 apples.\nHer mother picked half as many apples as her mom, so she picked 20/2 = 10 apples.\nHer mother picked a total of 10 + 10 = 15 apples.\nHer mother picked a total of 15 + 15 = 30 apples.\nHer mother picked a total of 30 + 15 = 40 apples.\nHer mother picked a total of 40 + 40 = 60 apples.\nHer mother picked a total of 60 + 40 = 90 apples.\nHer mother picked a total"
+  },
+  {
+   "mode": "off",
+   "gold": "30",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThere are a total of 3 cages, and each cage has 6 pieces of straw.\nThere are 10 hamsters, and each hamster has 6 pieces of straw.\nSo, each hamster has a total of 3 * 6 = 24 pieces of straw.\nThere are 10 hamsters, and each hamster has a total of 24 pieces of straw.\nSo, each hamster has 24 / 10 = 4 pieces of straw.\nThere are a total of 24 / 10 = 4 rats in each cage.\nThere are a total of 24 /"
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": "160",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 160.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "106",
+   "pred": "100",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nMandy owes $100 to Mandy.\nThey agreed to pay 2%.\nMandy was able to pay 2%.\nSo, Mandy should give 2% of $100 to Benedict.\nMandy should give 2% of $100 to Benedict, which is 2/100 * $100 = $1.\nSo, Mandy should give 2% of $100 to Benedict.\nTo find the value of $100, we need to calculate $100 * 0.1 * $100 = $100 * $100.\nMandy should give $100 to Benedict.\n#### 100\n</think>\nThe answer is 100.<|"
+  },
+  {
+   "mode": "off",
+   "gold": "106",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "50",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total cost of the wheat and the bags is $2 + $20 = $30.\nThe total cost of the bags is $30 + $30 = $50.\nThe total cost of the bags is $50 + $50 = $30.\nThe total cost of the bags is $30 + $30 = $50.\nThe total cost of the bags is $50 + $30 = $50.\nThe total cost of the bags is $50 + $50 = $30.\nThe total cost of the bags is $30 + $30 = $50.\nThe total cost of the bags is $50 + $30 = $50.\nThe"
+  },
+  {
+   "mode": "off",
+   "gold": "50",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "34",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total cost of the three tickets is $20 + $4 + $5 + $4 = $24.\nThe total cost of the three tickets is $24 + $33 + $4 = $36.\nThe total cost of the three tickets is $36 + $33 + $4 = $32.\nThe total cost of the three tickets is $36 + $32 + $4 = $32.\nThe total cost of the three tickets is $32 + $32 + $4 = $32.\nThe total cost of the three tickets is $32 + $32 + $4 = $32.\nThe total cost of the "
+  },
+  {
+   "mode": "off",
+   "gold": "34",
+   "pred": "3",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 3.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "360",
+   "pred": "54",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nJohn collects 2 peaches a minute, so he collects a total of 2 x 3 = 6 peaches.\nHe can collect 6 peaches a minute, so he collects a total of 6 x 2 = 12 peaches.\nHe can collect 12 peaches a minute, so he collects 12 x 6 = 54 peaches.\nTherefore, John collects 54 peaches.\n#### 54\n</think>\nThe answer is 54.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "360",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "5",
+   "pred": "54",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nDucks need to eat 3.5 pounds of insects each week, so they need to eat 3.5 * 3 = 12 pounds of insects.\nDucks need to eat 12 pounds of insects each week, so they need 12 * 12 = 96 pounds of insects.\nDucks need to eat a total of 12 * 3 = 48 pounds of insects.\nDucks need to eat 48 - 96 = 54 pounds of insects.\n#### 54\n</think>\nThe answer is 54.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "5",
+   "pred": "5",
+   "ok": true,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "91",
+   "pred": "30",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nTom started with 50 trees.\nHe then chops down 2 trees a year, so he has 50 - 2 = 30 trees left.\nHe then chops down 10 trees a year, so he has 30 - 10 = 30 trees left.\nTherefore, Tom has 30 trees left.\n#### 30\n</think>\nThe answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "91",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "24",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe neighbors placed 18 pink plastic flamingos out on Sue's front yard.\nThe neighbors placed 18 pink plastic flamingos out on Sue's front yard.\nThe neighbors placed 18 pink plastic flamingos out on Sue's front yard.\nThe neighbors placed 18 pink plastic flamingos out on Sue's front yard.\nThe neighbors placed 18 pink plastic flamingos out on Sue's front yard.\nThe neighbors placed 18 pink pla"
+  },
+  {
+   "mode": "off",
+   "gold": "24",
+   "pred": "9",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 9.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "10",
+   "pred": "180",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nVioletta needs to buy 5 crayons, so she needs to buy 5 x 5 = 30 crayons.\nShe needs to buy 30 x 2 = 60 crayons.\nShe needs to buy 60 x 2 = 180 crayons.\nTherefore, she needs to buy a total of 30 + 60 = 180 crayons.\n#### 180\n</think>\nThe answer is 180.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "10",
+   "pred": "4",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 4.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "12",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe cost of a pencil is $1.20 x 8 = $1.20\nThe cost of a pencil is $0.30 x 8 = $0.30\nThe cost of a pen is $0.30 x 8 = $0.30\nThe cost of a pen is $0.30 x 8 = $0.30\nThe cost of a pen is $0.30 x 8 = $0.30\nThe cost of a pen is $0.30 x 8 = $0.30\nThe cost of a pen is $0.30 x 8 = $0.30\nThe cost of a pen is $0.30 x 8 = $0.30\nThe cost of a pen is $0.30 x 8 = $0.30\nThe cost of a pen is $0.30 x 8 = $0"
+  },
+  {
+   "mode": "off",
+   "gold": "12",
+   "pred": "8",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 8.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "120",
+   "pred": "300",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThere are a total of $200$ pounds of carrots.\nEach restaurant is to receive 2 pounds of carrots, so the total amount of carrots is $200 / 2 = $150.\nEach pound of carrots is to be distributed to 40 restaurants, so the total amount of carrots is $150 / 40 = $10.\nTherefore, the total amount of carrots is $150 + $10 = $<<150*10=300>>300.\n#### 300\n</think>\nThe answer is 300.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "120",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "6277",
+   "pred": "9092",
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nThe total number of inhabitants of Soda is 23786.\nThe total number of inhabitants is 23786 + 9092 = 9092.\nThe total number of inhabitants is the sum of the number of inhabitants of each group: 23786 + 9092 = 9092.\nTherefore, there are 9092 kids in Soda.\n#### 9092\n</think>\nThe answer is 9092.<|im_end|>"
+  },
+  {
+   "mode": "off",
+   "gold": "6277",
+   "pred": "909",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 909.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "320",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nElaine collected 20 + 3 = 30 Pokemon cards in the first month.\nIn the second month, she collected 30 + 30 = 40 Pokemon cards.\nIn the third month, she collected twice the combined number of Pokemon cards she collected in the first month, so she collected 40 + 2 = 40 Pokemon cards in the second month.\nIn the third month, she collected twice the combined number of Pokemon cards she collected "
+  },
+  {
+   "mode": "off",
+   "gold": "320",
+   "pred": "30",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 30.<|im_end|>"
+  },
+  {
+   "mode": "on",
+   "gold": "7500",
+   "pred": null,
+   "ok": false,
+   "trace": true,
+   "text": "<think>\nMark edits a total of 1000 sentences each week, so he edits a total of 1000 x 2 = 2000 sentences.\nEach sentence is different, so Mark edits a total of 2000 x 2 = 2000 sentences.\nEach sentence is different, so Mark edits a total of 2000 x 2 = 2000 sentences.\nEach sentence is different, so Mark edits a total of 2000 x 2 = 2000 sentences.\nEach sentence is different, so Mark edits a total of 2"
+  },
+  {
+   "mode": "off",
+   "gold": "7500",
+   "pred": "5",
+   "ok": false,
+   "trace": false,
+   "text": "The answer is 5.<|im_end|>"
+  }
+ ]
+}

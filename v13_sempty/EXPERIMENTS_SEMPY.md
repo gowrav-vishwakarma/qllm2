@@ -6041,3 +6041,26 @@ on, `calib4`; the trainer header logs the weights):
 tokens.
 
 **Lineage:** one row per segment (main line `sci1_main`, decay `sci1_decay`, each continuation); "running" at launch.
+
+## SCI-1 milestones 1 and 2 (CHECK on the 4090, 11:48 IST, 2026-11-03; run `59c3cf5`, M2 386M, SEQ 4096)
+
+Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B). Logs: `logs/v13_sempty_sci1_checks_59c3cf5_local.log`,
+`logs/sci1/v13_sempty_gens_*` (the five generations per milestone).
+
+| readout | M1 (1.0B) | M2 (2.0B) | tripwire / bar |
+|---|---|---|---|
+| s8 D (scored) | 0.322 | **0.538** | < 0.40 at M2 → raise b2s: **not triggered** |
+| skill pack 2k / 4k / 8k + contrast, 20-way | 0.54 / 0.16 / 0.07 | 0.76 / 0.51 / 0.10 | – |
+| clk2 8k (dilation + contrast) | 0.08 | 0.34 | – |
+| t40 far needles | 0.80 | 0.91 | – |
+| HellaSwag / ARC-e / PIQA | 0.281 / 0.459 / 0.576 | 0.293 / 0.479 / 0.594 | – |
+| think ON / OFF accuracy (GSM8K test) | 0.005 / 0.03 | 0.02 / 0.03 | ON ≤ OFF + 0.02 at M2 → drop think: **TRIGGERED** |
+| think trace rate ON / OFF leak | 1.0 / 0.005 | 1.0 / **0.24** | OFF leak > 5 % at M2 → drop think: **TRIGGERED** |
+
+- The switch itself does not hold yet: at M2, 24 % of OFF answers still carry a trace. Thinking does not help at this size
+  (accuracy near zero in both modes).
+- Per the pre-registration, both thinking tripwires are acted on at the FIRST CONTINUATION (drop the think source, 2.5 % back to web),
+  not mid-run.
+- Not yet scored here: A26 G1 (Library) and the holdout-vs-projection tripwire (training log).
+- Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
+  `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).

@@ -1,0 +1,59 @@
+=== CHECK sci1_step_015259_59c3cf5 (/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_main_59c3cf5/step_015259.pt) 2026-11-02T17:55:16Z
+per task: {'shift_wide_new@0': 0.958, 'shift_wide_new@2048': 0.627, 'shift_wide_new@4096': 0.258, 'affine_map_new@0': 0.432, 'affine_map_new@2048': 0.217, 'affine_map_new@4096': 0.185}  mean 0.446
+free (A7): {'shift_wide_new@0': 0.953, 'shift_wide_new@2048': 0.562, 'shift_wide_new@4096': 0.215, 'affine_map_new@0': 0.175, 'affine_map_new@2048': 0.105, 'affine_map_new@4096': 0.06}  mean 0.345
+saved logs/learning_probes/v13_sempty_sci1_step_015259_59c3cf5_spread_s7000_t400.json
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 34.00 MiB. GPU 0 has a total capacity of 23.51 GiB of which 19.98 GiB is free. Process 3300334 has 97.11 MiB memory in use. Including non-PyTorch memory, this process has 3.27 GiB memory in use. 2.82 GiB allowed; Of the allocated memory 2.56 GiB is allocated by PyTorch, and 259.79 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 66.00 MiB. GPU 0 has a total capacity of 23.51 GiB of which 20.03 GiB is free. Process 3300334 has 97.11 MiB memory in use. Including non-PyTorch memory, this process has 3.22 GiB memory in use. 2.82 GiB allowed; Of the allocated memory 2.30 GiB is allocated by PyTorch, and 478.33 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+Results saved to logs/memory_probes/v13_sempty_sci1_step_015259_59c3cf5_t40_behavioral.json (aggregates, 2520 rows omitted)
+hellaswag {'acc': 0.2738, 'acc_norm': 0.2805, 'n': 10042}
+arc_easy {'acc': 0.4592, 'acc_norm': 0.4158, 'n': 2376}
+piqa {'acc': 0.5843, 'acc_norm': 0.5756, 'n': 1838}
+=== CHECK sci1_step_015259_59c3cf5 (/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_main_59c3cf5/step_015259.pt) 2026-11-03T05:30:54Z
+  affine_map_new done
+  affine_map_new done
+think_eval {'n': 200, 'acc_on': 0.005, 'acc_off': 0.03, 'trace_rate_on': 1.0, 'leak_rate_off': 0.005}
+=== generations: /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_main_59c3cf5/step_015259.pt step 15259 tokens 1,000,013,824 code 59c3cf5
+--- [science] prompt: 'Photosynthesis converts light energy into chemical energy. In the light-dependent reactions,'
+    sampled: ' the sun’s energy is converted to heat by light. A sunspot has a mass of 18 times that of a sunspot. The amount of sunspot activity depends on the concentration of sunspots and how much sunlight falls in the atmosphere. If a star is illuminated, the star will not be able to reach it due to the insufficient light intensity of its surface.\nIf there are'
+    greedy : ' the energy is converted into chemical energy. The energy is then converted into chemical energy.\n\nThe process of converting light energy into chemical energy is called photochemistry. Photochemistry is the study of the'
+--- [protocol] prompt: 'Lab protocol: report every mass in grams, rounded to one decimal place.\nSample A weighed 12.347 g and sample B weighed 8.912 g.\nReport: sample A ='
+    sampled: ' 20g (0.3 * 12)  + 1.45g (0.1 * 3) / 2.36g (0.1 * 0.2)  -3.35g (0.01 * 0.34).\nWe are not given a single value of n, so we do not know what the value of n is. We can try to solve this'
+    greedy : ' 12.35 g.\nReport: sample A = 12.35 g.\nReport: sample A = 12.35 g.\nReport: sample A = 12.35 g.\nReport'
+--- [chat] prompt: '<|im_start|>user\nWhat is the difference between a hypothesis and a theory?<|im_end|>\n<|im_start|>assistant\n'
+    sampled: 'A hypothesis or theory is an educated guess based on observations, evidence, and theories. It consists of two main types: a) a tentative account (in this case, the observed phenomenon), b) a theoretical hypothesis (the result of multiple trials over large quantities that converges to a certain value); and c) a philosophical account (however a hypothesis is not true). A good example of a'
+    greedy : 'A hypothesis is a tentative explanation of a phenomenon, while a theory is a tentative explanation of a phenomenon. A hypothesis is a tentative explanation of a phenomenon, while a theory is a tentative explanation of a'
+--- [tool] prompt: '<|im_start|>user\nLook up the boiling point recorded for sample Q7 in my notes.<|im_end|>\n<|im_start|>assistant\n<tool_call>\n{"name": "library.fetch", "arguments": {"query": "Q7 boiling point"}}\n</tool_call><|im_end|>\n<|im_start|>tool\n<tool_response>\n{"name": "library.fetch", "content": "Record: Q7 | boiling point: 78.4 C."}\n</tool_response><|im_end|>\n<|im_start|>assistant\n'
+    sampled: "The boiling point recorded for sample Q7 is 78.4 C.<|im_end|>\n<|endoftext|> Welcome to our latest online course! Today we're going to learn about one of its most fascinating topics - creating delicious meals using lasers and lasers! You might have heard of lasers before, but did you know that they can also help us make things better? Let's dive right in!\n\nFirst off, let"
+    greedy : 'The boiling point recorded for sample Q7 is 78.4 C.<|im_end|>\n<|endoftext|><|im_start|>user\nWhat is the value of unknown variable x?<|im_end|>\n<|im_start|>assistant\nThe answer is 5.'
+--- [think] prompt: '<|im_start|>system\nReasoning: on<|im_end|>\n<|im_start|>user\nA solution has 0.25 mol of salt in 2.0 L of water. What is its concentration in mol/L?<|im_end|>\n<|im_start|>assistant\n'
+    sampled: "<think>\nWe can set up the equation as follows:\n(2 * 0.25) + (0.25 * 0.25) = 2 * 0.25 mol/L\nTo solve for the concentration of salt, we need to divide both sides by 0.25.\nSince the problem does not have a solution, we must use the same analytical method as before. Let's"
+    greedy : '<think>\nThe concentration of salt in 2.0 L of water is 2.0 mol/L.\nThe concentration of salt in 2.0 L of water is 2.0 mol/L'
+=== CHECK sci1_step_015259_59c3cf5 DONE 2026-11-03T05:45:41Z
+=== CHECK sci1_step_030518_59c3cf5 (/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_main_59c3cf5/step_030518.pt) 2026-11-03T05:48:44Z
+per task: {'shift_wide_new@0': 0.99, 'shift_wide_new@2048': 0.675, 'shift_wide_new@4096': 0.36, 'affine_map_new@0': 0.968, 'affine_map_new@2048': 0.667, 'affine_map_new@4096': 0.45}  mean 0.685
+free (A7): {'shift_wide_new@0': 0.99, 'shift_wide_new@2048': 0.67, 'shift_wide_new@4096': 0.352, 'affine_map_new@0': 0.74, 'affine_map_new@2048': 0.333, 'affine_map_new@4096': 0.14}  mean 0.538
+saved logs/learning_probes/v13_sempty_sci1_step_030518_59c3cf5_spread_s7000_t400.json
+  affine_map_new done
+  affine_map_new done
+Results saved to logs/memory_probes/v13_sempty_sci1_step_030518_59c3cf5_t40_behavioral.json (aggregates, 2520 rows omitted)
+hellaswag {'acc': 0.2802, 'acc_norm': 0.2928, 'n': 10042}
+arc_easy {'acc': 0.479, 'acc_norm': 0.4306, 'n': 2376}
+piqa {'acc': 0.599, 'acc_norm': 0.5941, 'n': 1838}
+think_eval {'n': 200, 'acc_on': 0.02, 'acc_off': 0.03, 'trace_rate_on': 1.0, 'leak_rate_off': 0.24}
+=== generations: /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_main_59c3cf5/step_030518.pt step 30518 tokens 2,000,027,648 code 59c3cf5
+--- [science] prompt: 'Photosynthesis converts light energy into chemical energy. In the light-dependent reactions,'
+    sampled: ' the reaction takes place at a very low temperature and is therefore not able to produce light.\nThe most efficient way of producing electricity from sunlight is by using solar cells that produce less than 100 watts per square meter (which are usually called “Solar cells”).\nThis produces enough electricity to power the motors in order to turn a generator on or off. Solar cell plants have been used for'
+    greedy : ' the energy is converted into chemical energy.\n\nThe energy is then used to make chemical bonds.\n\nThe chemical bonds are formed when the energy is released in the form of chemical energy.\n'
+--- [protocol] prompt: 'Lab protocol: report every mass in grams, rounded to one decimal place.\nSample A weighed 12.347 g and sample B weighed 8.912 g.\nReport: sample A ='
+    sampled: ' 22.355 g\nConvergence Test for Mass-Based Lattice\nAssignment Time (h): 2 min 1 hr 1 hr 1 hr 1 hr 1 hr 3 hr 4 hr 5 hr 6 hr 7 hr 10 hr 11 hr 15 hr 14 hr 17 hr 15 hr 20 hr 21 hr 23 hr 25 hr 30 hr 30 hr 35 hr 38 hr 38 hr 40 hr\nTotal Work'
+    greedy : ' 12.347 g and sample B = 8.912 g.\n\nQuestion: Which mass did sample A have?\nAnswer: 12.347 g.\n\nQuestion: Which mass did'
+--- [chat] prompt: '<|im_start|>user\nWhat is the difference between a hypothesis and a theory?<|im_end|>\n<|im_start|>assistant\n'
+    sampled: 'A hypothesis refers to a proposed explanation for a particular phenomenon, while a theory explains a specific phenomenon or behavior. In other words, hypotheses are not based on empirical evidence but rather test-retest or falsification of theories. A hypothesis, on the other hand, is a proposal that explains an idea or concept through experimental research, analysis, or observation. It is often used as a way to test'
+    greedy : 'A hypothesis is a proposed explanation for a set of observations or phenomena that can be tested through experimentation or observation. It is a proposed explanation for a set of observations or phenomena that can be tested through experimentation'
+--- [tool] prompt: '<|im_start|>user\nLook up the boiling point recorded for sample Q7 in my notes.<|im_end|>\n<|im_start|>assistant\n<tool_call>\n{"name": "library.fetch", "arguments": {"query": "Q7 boiling point"}}\n</tool_call><|im_end|>\n<|im_start|>tool\n<tool_response>\n{"name": "library.fetch", "content": "Record: Q7 | boiling point: 78.4 C."}\n</tool_response><|im_end|>\n<|im_start|>assistant\n'
+    sampled: 'The boiling point of sample Q7 is 78.4 C.<|im_end|>\n<|endoftext|>How about this one? Its temperature is 93 degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees degrees'
+    greedy : 'The boiling point recorded for sample Q7 is 78.4 C.<|im_end|>\n<|endoftext|><|im_start|>user\nWhat is the temperature of sample sample E.coli?<|im_end|>\n<|im_start|>assistant\nThe temperature'
+--- [think] prompt: '<|im_start|>system\nReasoning: on<|im_end|>\n<|im_start|>user\nA solution has 0.25 mol of salt in 2.0 L of water. What is its concentration in mol/L?<|im_end|>\n<|im_start|>assistant\n'
+    sampled: '<think>\nWe can set up the equation $\\frac{1}{2} \\cdot 0.25 \\cdot mol = \\frac{3}{4} \\cdot 0.25 \\cdot mol$.\nSimplifying, we have $\\frac{3}{16} \\cdot 0.25 \\cdot mol = \\frac{3}{32} \\cdot 0'
+    greedy : '<think>\nThe concentration of salt in 2.0 L of water is 2.0 * 0.25 = 0.25 mol.\nSince the concentration of salt in 2.0 L of water'
+=== CHECK sci1_step_030518_59c3cf5 DONE 2026-11-03T06:18:12Z
