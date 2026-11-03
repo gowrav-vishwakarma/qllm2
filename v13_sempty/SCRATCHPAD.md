@@ -6,6 +6,14 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
+* **SCI-1 HANDOVER (12:59 IST 2026-11-03).** The 6000 is in tmux `sci1` in `~/Development/qllm_sci1` @ 59c3cf5, stage B (`sci1_main_59c3cf5`),
+  ~37.7k tok/s. M3 = step_045777 is due ~13:40 IST; when it lands, local bg task runs `sci1_check_local.sh step_045777`
+  on the 4090. **Switch at M4** (step_061036, ~21:00 IST): tmux `sci1sw` on the 6000 runs `~/sci1_switch_59d098d.sh step_061036 59d098d`
+  (log `logs/v13_sempty_sci1_switch_59d098d_*.log`). It stops the old chain and starts cont1 (`sci1_cont1_env.sh` + `sci1_cont_chain.sh`, dir
+  `checkpoints_v13_sempty/sci1_cont1_59d098d`, log `logs/v13_sempty_sci1_cont1_59d098d_*.log`). Its pre-registration is EXPERIMENTS_SEMPY
+  "cont1 FINAL". After the switch: re-arm the stall watchdog on the cont1 log; local CHECKs use `RUN=sci1_cont1_59d098d bash
+  v13_sempty/tmp/sci1_check_local.sh` (M4 itself: the default RUN). Thinking is OFF (no think source, no Reasoning switch).
+
 * **Fast stream resume (2026-10-27, after the R4 screen's 47-min skips).**
   `v7/data.py` now reads dclm / fineweb / smoltalk2 (blend) / pg19 file by file
   with pyarrow in the exact old order (verified doc-for-doc vs the old HF
