@@ -170,12 +170,12 @@ def _family(rng):
     return 'convert', q, (u1, u2), dict(q=q, qp=qp, Qp=Qp, u1=u1, u2=u2), rng.choice(CONVERT_W)
 
 
-def build_doc(rng, with_meta: bool = False, max_gap: int = 150):
+def build_doc(rng, with_meta: bool = False, max_gap: int = 150, compact_only: bool = False):
     fam, q, sub, slots, wording = _family(rng)
     meta = dict(family=fam, quantity=q, sub=sub, parts=[])
     fam_key = q if fam == 'convert' else fam
     has_proto = rng.random() >= 0.2
-    if rng.random() < 0.3:                             # compact style ("Report rule." demos + queries)
+    if compact_only or rng.random() < 0.3:             # compact style (compact_only short-circuits: the default stream's rng use is unchanged) ("Report rule." demos + queries)
         k = rng.randint(2, 8)
         lines = []
         for _ in range(k):
@@ -221,14 +221,18 @@ def build_doc(rng, with_meta: bool = False, max_gap: int = 150):
 
 
 def protocol_text_iter(*, seed: int = 0, skip_docs: int = 0, doc_counters: Optional[Dict[str, int]] = None,
-                       counter_key: str = 'proto', bump=None, max_gap: int = 150) -> Iterator[str]:
+                       counter_key: str = 'proto', bump=None, max_gap: Optional[int] = None,
+                       compact_only: bool = False) -> Iterator[str]:
     """Infinite, deterministic stream of protocol docs (marked answer spans). max_gap = the largest prose gap in filler
     sentences (log-uniform from 2; ~12 tokens each): 150 = the T 2048 recipe, 300 = 'proto4k' (protocol -> rows up to
-    ~3.5-4k tokens, for SEQ 4096)."""
+    ~3.5-4k tokens, for SEQ 4096). compact_only = 'protoc': ONLY the compact "Report rule." style (demos + 1-3 queries, the converted
+    value as the marked answer), prose gap <= 20 sentences unless max_gap is given; trained families only."""
+    if max_gap is None:
+        max_gap = 20 if compact_only else 150
     rng = random.Random((seed * 2654435761 + SEED_OFFSET + 31337) & 0xFFFFFFFF)
     n = 0
     while True:
-        doc = build_doc(rng, max_gap=max_gap)
+        doc = build_doc(rng, max_gap=max_gap, compact_only=compact_only)
         n += 1
         if n <= skip_docs:
             continue
