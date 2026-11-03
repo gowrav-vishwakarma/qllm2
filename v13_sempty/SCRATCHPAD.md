@@ -6,14 +6,12 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
 ## State of play
 
-* **SCI-1 HANDOVER (12:59 IST 2026-11-03).** The 6000 is in tmux `sci1` in `~/Development/qllm_sci1` @ 59c3cf5, stage B (`sci1_main_59c3cf5`),
-  ~37.7k tok/s. M3 = step_045777 is due ~13:40 IST; when it lands, local bg task runs `sci1_check_local.sh step_045777`
-  on the 4090. **Switch at M4** (step_061036, ~21:00 IST): tmux `sci1sw` on the 6000 runs `~/sci1_switch_59d098d.sh step_061036 59d098d`
-  (log `logs/v13_sempty_sci1_switch_59d098d_*.log`). It stops the old chain and starts cont1 (`sci1_cont1_env.sh` + `sci1_cont_chain.sh`, dir
-  `checkpoints_v13_sempty/sci1_cont1_59d098d`, log `logs/v13_sempty_sci1_cont1_59d098d_*.log`). Its pre-registration is EXPERIMENTS_SEMPY
-  "cont1 FINAL". After the switch: re-arm the stall watchdog on the cont1 log; local CHECKs use `RUN=sci1_cont1_59d098d bash
-  v13_sempty/tmp/sci1_check_local.sh` (M4 itself: the default RUN). Thinking is OFF (no think source, no Reasoning switch).
-
+* **SCI-1 HANDOVER (21:34 IST, 2026-11-03).** cont1 is TRAINING on the 6000: tmux `sci1` in `~/Development/qllm_sci1` @ 59d098d, dir
+  `checkpoints_v13_sempty/sci1_cont1_59d098d`, log `logs/v13_sempty_sci1_cont1_59d098d_20261103_1547.log`, 37.7k tok/s, from M4
+  (global 61,036) to 160,218 (~Nov 5 21:30 IST), then the decay (`sci1_decay_59d098d`). Old dir `sci1_main_59c3cf5` keeps
+  best_model, step_045777, step_061036. Milestones every 15,259 (next 76,295 ~Nov 4 04:40 IST, 91,554 ~12:00 IST; the bars are read
+  at 91,554). Local CHECK: `RUN=sci1_cont1_59d098d bash v13_sempty/tmp/sci1_check_local.sh step_076295` (the M4 CHECK ran with the
+  default RUN). Library runs A26 at the same steps (its own temp names). Thinking is OFF.
 * **Fast stream resume (2026-10-27, after the R4 screen's 47-min skips).**
   `v7/data.py` now reads dclm / fineweb / smoltalk2 (blend) / pg19 file by file
   with pyarrow in the exact old order (verified doc-for-doc vs the old HF

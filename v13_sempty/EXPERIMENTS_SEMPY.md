@@ -6192,3 +6192,12 @@ generations: the round-to-one-decimal prompt answered. Compact value copy < 0.30
 ("does not copy-with-transform from a stated rule"), no further share raise.
 
 **Prior work / claim:** a data-mix response to a tripwire, no method claim.
+
+**Launched (21:34 IST, 2026-11-03).** M4 written 21:12 IST; the switcher stopped the old chain at 21:13 (old `latest.pt` + `step_030518.pt`
+deleted as planned) but its `git checkout 59d098d` failed on three untracked M1 CHECK result files that the new commit tracks
+(the 6000 sat idle ~4 min). Moved them to `~/sci1_untracked_backup_20261103_1546` on the 6000 and launched cont1 by hand, exactly
+as the switcher would (tmux `sci1`, 59d098d, 21:17 IST); the switcher now moves such files itself (3ccf9f1). Log
+`logs/v13_sempty_sci1_cont1_59d098d_20261103_1547.log`: `[continue]` from step 61,036 / 4,000,055,296 tokens, fresh budget
+6,499,991,552, wsd_stable, warmup 500, new 15-source mix (think out, protoc in), decontam sha 08766210…, exact stream cursors; step
+61,150 at 37.7k tok/s (same as before). ETA: main to global 160,218 ~Nov 5 21:30 IST, then the 1B decay (~7.5 h). Next milestones
+76,295 (~Nov 4 04:40 IST) and 91,554 (~Nov 4 12:00 IST).
