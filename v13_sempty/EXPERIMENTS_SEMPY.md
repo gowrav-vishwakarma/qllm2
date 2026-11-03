@@ -6065,7 +6065,7 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
-## SCI-1 first continuation (DRAFT, 12:41 IST, 2026-11-03; Lead decision 12:40; not pre-registered until Lead's GO and a hash)
+## SCI-1 first continuation (DRAFT 12:41 IST, 2026-11-03; FINAL pre-registration below, "cont1 FINAL")
 
 **Why** (milestones 1 and 2 CHECK; Library's A26 `EXPERIMENTS_V14` "A26 SCI-1 MILESTONE 2"):
 - the protocol tripwire fired: G1 mind-held at 2k = 0.00 = NOPROT (+0.05 bar);
@@ -6097,3 +6097,42 @@ If compact value-copy stays < 0.30 after the 2 milestones, the lesson is "this s
 rule": state it as a limit and stop raising the share.
 
 **Prior work:** none for this exact cell (a measurement); data-mix response to a tripwire, not a method claim.
+
+### cont1 FINAL pre-registration (12:57 IST, 2026-11-03; Lead GO 12:40 with the protoc gate; thinking off by the user via Lead)
+
+**SCI-1 does not think.** The user switched thinking off completely: the `think` source is gone from the mix, there is no
+"Reasoning: on/off" switch in the chat template, the generations or the release notes, and the release says plainly that the
+model answers directly, with no reasoning trace. Lineage `think_off`: verdict **dropped** (ON 0.02 ≤ OFF 0.03, OFF leak 24 % at M2).
+- Leftover-trace check (5,000 docs per source, counts go in the run header notes): `<think>` 0 / 0 / 0 and "Reasoning: on|off"
+  0 / 0 / 0 in smoltalk2_mid / chatmt / tools; plain prose "Reasoning:" headings 42 / 7 / 0 are kept as normal text.
+- `scripts/sci_gen.py`: the `think` prompt is now a plain `quant` prompt (same question, no system line).
+
+**The protoc gate (passed):** `protoc` = `protocol_text_iter(compact_only=True)` (Library, 2bf4228; registered 0ed4db7): median
+94 tokens per doc, measured **8.05× loss weight per token** vs text (not the 5× assumed in the draft). Calibration (`calib5`,
+15.7M tokens, 3,839 batches of 4,096, mix seed 43): realized synthetic loss weight 3.67 % at pass 1; with the corrected weights
+the prediction is **3.82 %** (≤ ~4 % ceiling).
+
+| source | target share of tokens | sampler weight |
+|---|---|---|
+| dclm / fineweb | 0.2156 / 0.2065 | 0.23538 / 0.24337 |
+| arxiv / pubmed / pes2o / cosmo / finemath | 0.075 / 0.085 / 0.09 / 0.09 / 0.03 | 0.04951 / 0.07549 / 0.10178 / 0.11172 / 0.02436 |
+| smoltalk2_mid / chatmt / tools / pysci | 0.03 / 0.03 / 0.04 / 0.09 | 0.02232 / 0.03308 / 0.03257 / 0.04891 |
+| b2s / recall4k / proto4k / protoc | 0.005 / 0.0034 / 0.008 / 0.0015 | 0.00712 / 0.00376 / 0.00957 / 0.00108 |
+
+(think 0.025 → 0; b2s 0.017 → 0.005; proto4k 0.004 → 0.008; protoc new. The draft's "~1.0 %" proto4k became 0.8 % so that
+protoc's real 8.05× weight keeps the total under 4 %.)
+
+**Launch:** `v13_sempty/tmp/sci1_cont1_env.sh` + `sci1_cont_chain.sh`, from M4 `sci1_main_59c3cf5/step_061036.pt`,
+`--continue_from` with 6,499,991,552 tokens (99,182 steps of 65,536 = the rest of planned stage B, to global 160,218), constant
+LR 8e-4 (`wsd_stable`, 500-step re-warm), same geometry / SEQ 4096 / batch 16×2 / decontam index / per-source holdout val
+(think removed from VAL_SOURCES), FULL milestones every 15,259 global steps (next 76,295), last 4 kept; then the 1B decay.
+Switch: `v13_sempty/tmp/sci1_switch.sh step_061036 <hash>` in tmux on the 6000 waits until M4 is written and the log passes it,
+checks it loads, stops the old chain, deletes the superseded old `latest.pt`, checks out the hash and starts cont1 (~64 steps of
+the old segment past M4 are discarded). Expected switch ~21:00 IST tonight.
+
+**Bars (the CHECK 2 milestones after the switch, i.e. at global 91,554; also read at 76,295):** G1 mind-held 2k ≥ NOPROT + 0.05
+(Library); compact value right ≥ 0.50 at 2k; s8 D ≥ 0.50; holdout within the projection + 0.02 (else lower the synthetic weight);
+generations: the round-to-one-decimal prompt answered. Compact value copy < 0.30 after 2 milestones → a stated limit of this size
+("does not copy-with-transform from a stated rule"), no further share raise.
+
+**Prior work / claim:** a data-mix response to a tripwire, no method claim.

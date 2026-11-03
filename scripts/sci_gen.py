@@ -1,5 +1,5 @@
 """SCI-1 milestone generations (the user's rule: show prompt + output + checkpoint). Five fixed prompts (science, protocol
-following, plain chat, a tool call + result, a short <think>), sampled with the trainer's settings (temperature 0.8, top-k 50, top-p 0.9, repetition 1.2) at a fixed
+following, plain chat, a tool call + result, a quantitative question; SCI-1 does not think, so no reasoning switch), sampled with the trainer's settings (temperature 0.8, top-k 50, top-p 0.9, repetition 1.2) at a fixed
 seed, plus a greedy line. Printed with the checkpoint, its step / tokens and the code hash.
 
   python scripts/sci_gen.py --ckpt <ckpt.pt> [--tokens 80]
@@ -23,8 +23,7 @@ PROMPTS = {
              '<tool_call>\n{"name": "library.fetch", "arguments": {"query": "Q7 boiling point"}}\n</tool_call><|im_end|>\n'
              '<|im_start|>tool\n<tool_response>\n{"name": "library.fetch", "content": "Record: Q7 | boiling point: 78.4 C."}\n'
              '</tool_response><|im_end|>\n<|im_start|>assistant\n'),
-    'think': ('<|im_start|>system\nReasoning: on<|im_end|>\n'
-              '<|im_start|>user\nA solution has 0.25 mol of salt in 2.0 L of water. What is its concentration in mol/L?<|im_end|>\n'
+    'quant': ('<|im_start|>user\nA solution has 0.25 mol of salt in 2.0 L of water. What is its concentration in mol/L?<|im_end|>\n'
               '<|im_start|>assistant\n'),
 }
 
