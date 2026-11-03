@@ -34,6 +34,8 @@ science check cell, the protocol-doc training source, tools design. Nothing of m
     the 6000, copies it to a PRIVATE temp name, strips it, and runs G1 then G2 / G3. Lesson (2026-11-03 13:46): the first
     version did `rm step_<X>.pt` in the shared d_drive dir and deleted Mind's full M3 copy mid-CHECK. Never delete a file
     you did not create in a shared dir (restored from the 6000 the same minute).
+    Lesson 2 (15:09): never overwrite a script while bash is running it (bash reads it as it goes; the M3 chain stalled
+    at a Python prompt after G1). Copy it to a new name per run instead.
   - **Mind's tripwire** (adopted by Mind): G1 MIND-HELD at 2k ≤ its NOPROT + 0.05 at milestone 2 → raise
     the proto share at the first continuation.
 * **Protocol-doc training source** `v14/protocol_docs.py` (Lead's YES 11:00; wired by Mind 9bf859c; determinism fix

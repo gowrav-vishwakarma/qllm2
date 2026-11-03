@@ -3925,6 +3925,23 @@ fitted threshold:
       quantities (compact, 2k): 0.22 vs 0.18, so the format now crosses quantities.
     - Mind-held prose protocol (the SCI-1 claim as stated) is 0.00 at every length: the skill has not appeared, so the
       tripwire response stands (more proto weight; a fix for the value copy is a candidate).
+  - **A26 SCI-1 MILESTONE 3 (2026-11-03 15:36 IST; step 45,777 = 3.0B stage-B tokens; still the pre-continuation mix; logs
+    `logs/v14_a26_sci1m3_g1_cf4fa17_20261103_1346.*` (G1) and `logs/v14_a26_sci1m3_f3e02a6_20261103_1509.*` (G2 / G3); 20 docs per
+    cell; the G2 / G3 half was relaunched by hand after the unattended chain stalled (I overwrote the running script)):**
+
+    | right (value / convention) | 2k | 8k | 32k |
+    |---|---|---|---|
+    | G1 UNIT held · noprot | 0.00 · 0.00 | 0.00 · 0.00 | 0.00 · 0.00 |
+    | G1 refresh (TEXT) | 0.00 | 0.10 | 0.00 |
+    | G1 compact "Report rule." | **0.40** (0.40 / 0.90) | 0.00 | 0.00 |
+    | A26 wordings UNIT: held · noprot · refresh | 0.00 · 0.00 · 0.00 | 0.05 · 0.05 · 0.05 | 0.00 · 0.00 · 0.00 |
+    | A26 wordings UNIT compact (trained / held-out quantities at 2k: 0.11 / 0.18) | 0.15 (0.15 / 0.95) | 0.10 | 0.00 |
+    | ROUND (any arm) · CONVERT compact (convention said / value) | 0.00-0.05 · 0.00 (0.85 / 0.00) | 0.00 | 0.00-0.05 |
+
+    - Trend M1 → M2 → M3 (1 → 2 → 3B, the same mix): G1 compact at 2k 0.25 → 0.20 → 0.40. Mind-held prose stays 0.00 at every
+      milestone. The refresh arm is 0.00-0.10, noise-level.
+    - The same reading: the convention (unit) is said on 0.85-0.95 in the compact format; the copied value is the limit
+      (0.15-0.40). That is what the first continuation's protoc targets.
   - **A27 RESULT (2026-11-03 12:01 IST; code 37c291d; `logs/v14_a27_decontam_37c291d_20261103_1104.{json,log}`; 20,000 docs per
     source, the first docs of each stream, CPU):**
     - Positive control: 300 / 300 planted test strings flagged by the audit AND by Mind's filter (all 10 sets).
