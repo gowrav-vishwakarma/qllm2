@@ -89,6 +89,9 @@ text, info = pkg.apply_value(session, skill, v)                 # the same for a
   abstained, whether the field was cut, and `bytes_held` (mind state measured, library text, index estimate, address
   int8 / sign-bit forms).
 - The question text is appended verbatim. The caller chooses its form (exam form "\n\nQuestion: …\nAnswer:" or chat).
+- **No thinking mode** (user's decision for SCI-1, 2026-11-03): the package has no "Reasoning: on / off" line and no
+  thinking switch. The model answers directly, without a reasoning trace; the chat form is plain ChatML
+  (`<|im_start|>user … <|im_end|>` then `<|im_start|>assistant`).
 
 ## 3. Fetch order
 
