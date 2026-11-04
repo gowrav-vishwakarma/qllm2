@@ -6109,6 +6109,16 @@ proto4k 0.65 % (target 0.8; kept, no unmeasured re-weighting), recall4k 0.32 % �
   source (if the user allows it) is the next one-cause test; the synaptic-tag screen tests (c) on the 4090 after ctl.
 - Also read at 122,072: reach (clk2 8k ≥ 0.62 = back to M4, skill pack 8k, far needles), A26 compact (Library), holdout ≤ projection
   + 0.02. Clean capacity check in parallel: the ctl PAM s8 at 1B on the cont2 mix (from scratch, protoc in).
+
+**cont4 PRE-REGISTRATION: the test of cause (b) (14:27 IST, 2026-11-04; the user said YES via Lead, "as a test").** At the switch after cont3
+(global 122,072, once cont3's protoc readout is in; one cause at a time), add source **`worked`**: the same MetaMathQA + GSM8K train
+items as the dropped `think` (same 1,200-char cap), each rendered as a PLAIN worked solution + "The answer is X." (no `<think>`,
+no system switch, the direct answer kept). 392,830 docs, median 215 tokens (max 1,030); 0.25 % of a 2,000-doc sample hit the
+decontam index (dropped by the blend; GSM8K test is in the index). **~2 % of tokens**, launched from a measured calibration row.
+- **Keep it only if** s8 D rises **≥ +0.10** over its value at 122,072 within the next 2 milestones (137,331 / 152,590) **AND** the
+  thinking-style leak stays **< 5 %** (think_eval's leak check, re-added to the CHECK for these milestones). Otherwise drop it.
+- Prior (honest): these docs are short (median 215 tokens), so they are a weak candidate for a long-span trainer; the old think
+  source was half answer-only. A null here would point to (c), true erasure, and to the synaptic-tag screen.
 ## ctl: matched control at the SCI-1 recipe (PRE-REGISTRATION, 08:41 IST, 2026-11-04; Lead + user GO 08:45 IST; on the 4090)
 
 **Question:** does the architecture gap (rules in state, reach past the trained length) survive when all three bodies get the SCI-1

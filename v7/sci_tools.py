@@ -165,6 +165,33 @@ def _think_docs(max_chars: int = 1200, seed: int = 43) -> List[str]:
     return out
 
 
+def _worked_render(q: str, why: str, ans: str) -> str:
+    """SCI-1 'worked' (user via Lead 2026-11-04, the test of cause (b)): the think items as PLAIN worked solutions, no <think>, no
+    system switch, the direct answer line kept at the end."""
+    return _turn('user', q) + _turn('assistant', f'{why.strip()}\nThe answer is {ans}.')
+
+
+def _worked_docs(max_chars: int = 1200, seed: int = 43) -> List[str]:
+    """The same MetaMathQA + GSM8K train items as ``think`` (same max_chars, so the only change is the rendering: every item shows
+    its worked steps in plain text, then the answer). GSM8K TEST is never used; the blend's decontam index drops any 13-gram hit."""
+    from huggingface_hub import hf_hub_download
+    from datasets import load_dataset
+    out = []
+    for r in json.load(open(hf_hub_download('meta-math/MetaMathQA', 'MetaMathQA-395K.json', repo_type='dataset'))):
+        resp = r.get('response', '')
+        if len(resp) > max_chars or 'The answer is:' not in resp:
+            continue
+        why, ans = resp.rsplit('The answer is:', 1)
+        out.append(_worked_render(r['query'], why, ans.strip()))
+    for r in load_dataset('openai/gsm8k', 'main', split='train'):
+        a = r['answer']
+        if len(a) > max_chars or '####' not in a:
+            continue
+        why, ans = a.rsplit('####', 1)
+        out.append(_worked_render(r['question'], re.sub(r'<<[^>]*>>', '', why), ans.strip()))
+    return out
+
+
 def _memory_iter(name: str, build, *, seed: int, exclude_holdout: bool, only_holdout: bool, holdout_pct: int, skip_docs: int,
                  doc_counters: Optional[Dict[str, int]], counter_key: str, bump) -> Iterator[str]:
     from v7.data import pretrain_holdout_bucket
@@ -199,6 +226,12 @@ def tools_text_iter(*, seed: int, skip_docs: int = 0, doc_counters=None, counter
 def think_text_iter(*, seed: int, skip_docs: int = 0, doc_counters=None, counter_key: str = 'think', bump=None,
                     exclude_holdout: bool = True, only_holdout: bool = False, holdout_pct: int = 5) -> Iterator[str]:
     return _memory_iter('think', _think_docs, seed=seed, exclude_holdout=exclude_holdout, only_holdout=only_holdout,
+                        holdout_pct=holdout_pct, skip_docs=skip_docs, doc_counters=doc_counters, counter_key=counter_key, bump=bump)
+
+
+def worked_text_iter(*, seed: int, skip_docs: int = 0, doc_counters=None, counter_key: str = 'worked', bump=None,
+                     exclude_holdout: bool = True, only_holdout: bool = False, holdout_pct: int = 5) -> Iterator[str]:
+    return _memory_iter('worked', _worked_docs, seed=seed, exclude_holdout=exclude_holdout, only_holdout=only_holdout,
                         holdout_pct=holdout_pct, skip_docs=skip_docs, doc_counters=doc_counters, counter_key=counter_key, bump=bump)
 
 
