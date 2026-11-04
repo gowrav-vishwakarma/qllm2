@@ -3997,6 +3997,20 @@ fitted threshold:
     - Beyond 2k (8k / 32k) it is 0.00-0.05 under every read: the limit there is the rule's REACH, not the read.
     - Consequences (pre-registered): every A26 held number since M1 is re-read with the protocol twin; the package's
       contrast twin is chosen per question part (a no-training unit, pre-registered next); EUREKA entry written.
+  - **A28 REPLICATION at 100 docs (2026-11-04 08:46 IST; code a69cafa; `logs/v14_a28_rep100_{c1a,m4}_a69cafa_20261104_0842.*`; G1,
+    UNIT, 2k; Lead's condition before anything is built on it): REPLICATED.**
+
+    | right ± SE (unit right) | c1a (step 76,295, 5.0B) | M4 (step 61,036, 4.0B) | T++ t15tpp (1.5B-token tier), same docs / row |
+    |---|---|---|---|
+    | A9 read | 0.00 (0.00) | 0.00 (0.00) | 0.00 (0.01) |
+    | plain | 0.01 (0.01) | 0.01 (0.03) | 0.00 (0.01) |
+    | **protocol twin** | **0.65 ± 0.05 (0.67)** | **0.26 ± 0.04 (0.40)** | 0.00 (0.01) |
+    | noprot | 0.00 | 0.00 | 0.00 |
+
+    - The prose protocol is stored in the SCI-1 state at 2k and grew from M4 to c1a (0.26 → 0.65; cont1 added protoc and other
+      changes, so the cause is not isolated).
+    - T++ shows nothing under any read. That is not a matched comparison: other data, never trained on protocol docs, and
+      a 2.4k session just past its 2,048 trained length. It shows the twin read does not create the unit by itself.
 - **A29: the package compiles a prose protocol into compact demos at QUERY time (PRE-REGISTERED 2026-11-04 08:39 IST, before any
   number; Mind's ask, Lead's plan item 3).** `v14/a29_rewrite.py`, code d3a71d6+.
   - Steps: a text parser finds the protocol's unit for the asked quantity (cues "in / is / as / use / means" + a unit list;
