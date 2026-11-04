@@ -4076,6 +4076,22 @@ fitted threshold:
     - Next angle (idea only, not registered): switch twins per answer TOKEN (the fact twin while the value is written, the
       rule twin after it), or a = 8 (the grid's edge). The package default is unchanged: the rule twin for rule-in-state
       questions, the A9 read for facts.
+  - **A26 + A28 at cont2 step 91,554 (2026-11-04 15:00 IST; c2a = 6.0B tokens; cont2 = protoc 0.15 %, b2s ~1.4 %, proto4k 0.45 %;
+    logs `logs/v14_a26_sci1c2a{,_g1}_ae6e50a_20261104_1404.*`, `logs/v14_a28_{rep100,reread}_c2a_*_3bbd02e_20261104_1451.*`):**
+
+    | right | M4 (4.0B) | c1a (5.0B) | c2a (6.0B) |
+    |---|---|---|---|
+    | compact, G1 2k (value) | 0.00 | 0.45 | **0.00** (unit said 0.90) |
+    | compact, A26 wording 2k / 8k | 0.00 / 0.00 | 0.35 / 0.60 | 0.05 / 0.05 |
+    | prose held, twin read, G1 2k (100 docs) | 0.26 ± 0.04 | 0.65 ± 0.05 | **0.81** |
+    | prose held, plain read, G1 2k | 0.01 | 0.01 | 0.33 |
+    | prose held, twin read, G1 8k / 32k (20 docs) | 0.00 / 0.00 | ≤ 0.05 | 0.20 / 0.20 |
+    | A9 read (held) · refresh (A9 read), G1 2k | 0.00 · 0.00 | 0.00 · 0.10 | 0.05 · 0.25 |
+
+    - The compact value oscillates (M3 0.40 → M4 0.00 → c1a 0.45 → c2a 0.00) while the unit stays said (0.80-0.95); it is not a
+      stable skill even with protoc in the mix.
+    - The prose protocol held in state rises steadily (0.26 → 0.65 → 0.81 at 2k) and starts to reach (0.20 at 8k / 32k); the plain
+      read now shows it (0.33). One checkpoint cannot attribute this to protoc, proto4k or b2s.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
