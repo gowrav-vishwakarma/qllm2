@@ -4,6 +4,60 @@ Read this first if you are picking up the real-arm training. Everything below
 is committed (`git log --oneline 4740d65..HEAD -- v13_sempty/`); the lab
 notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
 
+## Step back (Mind, 08:29 IST, 2026-11-04; user via Lead: "read the meditation memory, step back, see all again, discuss")
+
+Since SCI-1 began: 5 milestones; think tried and dropped; cont1 lost s8 (0.78 → 0.44 in 1B); A26 compact 0.40 → 0.00 (M4, old
+mix) → 0.45 / 0.60 (protoc); Pythia reference; reach past 4k grew with plain data; two of my own process errors (b2s over-cut,
+the switcher's checkout).
+
+**What surprised me.**
+1. What decayed is only the rule CARRIED ACROSS FILLER. With the examples adjacent (@0) s8 stayed 0.96–0.98. So the induction
+   itself was not lost; the state's willingness to KEEP it through unrelated text was. That is a retention habit of the write /
+   erase gates, which text trains toward "forget", and rule docs train toward "keep".
+2. It is not only the cut. In the matched 1.5B tier, s8 also fell with data at a constant 3 % b2 share (0.768 → 0.545), and A26
+   compact went 0.40 → 0.00 between M3 and M4 on an unchanged mix. These skills track how RECENT and how DENSE their docs are,
+   not the cumulative dose. They behave like working-memory habits under interference, not like stored knowledge.
+3. The query-time tools did not decay at all: skill pack + contrast and clk2 (dilation + contrast) held or grew while s8 fell.
+   What the mind does when TOLD at query time is robust; what it must keep doing on its own drifts. This is the Oct 31 meditation
+   again ("query-time beats training-time"), seen from the forgetting side.
+
+**Arguing with Lead's five.**
+- (1) Architectural or habit: both. The capacity is architectural (T++ at equal data never has it: 0.134 → 0.047, it ALSO fell
+  with data). The level is habitual. Before buying a protected path, measure SAVINGS, which costs nothing: cont2 restored b2s at
+  76,295. If s8 D is back to ≥ 0.70 by 91,554 (1B tokens; the first acquisition took 2B, M1 0.32 → M3 0.71), the skill was
+  suppressed, not erased, and a cheap schedule (spaced rehearsal) is the lever. If it crawls back, it was erased and a protected
+  path earns a test. A protected path is not new here: A2b's vault (pinned state + protect gate) was tried for retention and not
+  adopted, so a new attempt needs a new reason.
+- (2) Compiling prose: agree that this is the gap; disagree with training it first. Every training-time addition has cost
+  language (cu1, lg8r, cu2). We already decided "words → demonstrations lives in the LIBRARY" (Nov 1 D3): the planner rewrites
+  the prose rule into the compact demo form the state already keeps. Cheapest test, no GPU training: A26 G1 with a
+  prose → compact rewrite step in the package (rule text → 2–3 worked compact lines). If G1 goes 0.00 → ~0.45, the gap is
+  solved at query time.
+- (3) A matched control at the product recipe: needed for the PRODUCT claim, but the species claim already has matched controls
+  WITH the same rule docs (600M 3 seeds, 1.5B tier). A 125M × 1B SCI-recipe pair on the 4090 is one or two nights. I'd do it
+  after the decay, not now, and with the s8 + reach curve as its only bars.
+- (4) Reach as the cleanest claim: agree, but word it carefully. clk2 uses a query-time operator (echo dilation + contrast) on
+  the state. The clean sentence is: "a state trained at 4k is read at 8k+ by an O(1) operator, and the read improves with plain
+  data; a windowed T++ cannot run that operator". Yes to the 16k / 32k curve at the next CHECK (t40 + clk2 at 16k / 32k; the
+  4090 has room).
+- (5) Agree. Add: the trainer should print REALIZED per-source token shares at every val step (calib6 said b2s 1.41 % vs 1.2 %
+  target; long docs make 15M-token calibrations noisy). Then a mix is checked by the run itself, not predicted.
+
+**What I would stop.** Reading 20-doc A26 cells as trends (SE ~0.11; at least 100 docs for a bar cell). think_eval in the CHECK
+(thinking is gone). Single shown generations as evidence (they flip every milestone; keep them for the user, not for verdicts).
+Changing the mix at every milestone: one change per 2 milestones, from a measured row.
+
+**One bold idea: use-dependent plasticity (a "synaptic tag" for the notebooks).** Brains keep a skill through unrelated activity
+because plasticity is local: a synapse changes only where it was recently used ("synaptic tagging and capture"). Our gates
+change everywhere, on every token. Mechanism: each notebook head carries a tag = its running write activity on the current doc.
+The gradients into that head's retention / erase parameters are scaled by its tag, so a head that held a rule through a b2 doc
+is only re-tuned by documents that USE it, and plain text cannot slowly re-teach it to forget. O(1), no extra state at inference,
+and it is a training rule, not a new block. Closest prior work: EWC / synaptic intelligence (per-parameter importance from
+task-level Fisher), gradient masking in continual learning, and Hebbian tags. Difference: the tag is per-head and per-token,
+computed from the state's own write activity, with no task boundaries.
+Cheapest honest test (4090, 125M): train on rules + text, then 0.5B tokens of text only, with vs without tags; bar: s8 D
+retained ≥ +0.2 over the untagged arm, holdout ≤ +0.01.
+
 ## State of play
 
 * **SCI-1 HANDOVER (06:08 IST, 2026-11-04).** cont2 is TRAINING on the 6000: tmux `sci1` in `~/Development/qllm_sci1` @ e61cd92, dir
