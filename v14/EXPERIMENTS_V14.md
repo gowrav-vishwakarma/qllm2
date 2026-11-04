@@ -4023,6 +4023,30 @@ fitted threshold:
     twin's 8k (A28: 0.00-0.05) + 0.25 ("a rewrite near the question fixes the reach gap").
   - Honesty line: for UNIT the library could append the unit itself; the mind's share is the value copy + following the
     demos. This tests the package path, not the mind's own understanding.
+  - **A28 RE-READ of M1-M4 (2026-11-04 09:20 IST; code a69cafa; `logs/v14_a28_reread_m{1,2,3,4}_{train,a26}_a69cafa_20261104_0842.*`; 20
+    docs per cell): the prose protocol is in the state at 2k from M1 on; the A9 read hid it at every milestone.**
+
+    | protocol-twin read, right at 2k (8k / 32k) | M1 | M2 | M3 | M4 | c1a (100 docs) |
+    |---|---|---|---|---|---|
+    | G1 trained wording | 0.35 | 0.55 | 0.55 | 0.30 | 0.65 |
+    | A26 wording | 0.20 | 0.30 | 0.20 | 0.00 | 0.20 |
+    | 8k / 32k (both wordings) | ≤ 0.05 | ≤ 0.05 | ≤ 0.10 | ≤ 0.05 | ≤ 0.05 |
+
+    A9 read and noprot ≤ 0.05 everywhere. The A26 "held" rows above (M1-c1a) stay valid as A9-read numbers; the twin read is
+    the right read for a rule-in-state question.
+  - **A29 RESULT (2026-11-04 09:20 IST; code a69cafa; `logs/v14_a29_rewrite_{train,a26}_a69cafa_20261104_0842.*`; c1a; 100 docs per
+    cell): BOTH BARS MET.**
+
+    | right (value / unit) | 2k | 8k |
+    |---|---|---|
+    | A26 wording: rewrite · A9 read | **0.93** (0.93 / 0.98) · 0.00 | **0.91** (0.91 / 0.98) · 0.00 |
+    | G1 trained wording: rewrite · A9 read | **0.72** (0.72 / 0.95) · 0.00 | **0.68** (0.68 / 0.93) · 0.00 |
+
+    - Parser hit 1.00 on every doc (in-sample: its cues were tuned on these wordings).
+    - Bar 1 (≥ 0.45 at 2k, both wordings): 0.93 / 0.72 MET. Bar 2 (8k ≥ the twin's 8k + 0.25): 0.91 / 0.68 vs ≤ 0.05 MET.
+    - Honesty: TEXT + MIND. The library compiles the prose rule and puts demos next to the question; the mind copies the
+      value (0.68-0.93) and follows the demos. For UNIT the library could append the unit itself; the package path is shown
+      to work at query time with no training, and distance no longer matters.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

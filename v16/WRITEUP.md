@@ -154,3 +154,6 @@ reported against public small models only as a reference block.
   0.00-0.05 (the value is copied 0.2-0.8), the same as without the protocol, even with the protocol ~600 tokens
   back. Reference tiers: b2p2 (102.9M, 600M tokens) through the package; T++ / Mamba-2 at 1.5B tokens, as is and
   with the library. SCI-1's scores are read against this.
+  Caveat (A28, 2026-11-04): those day-0 'held' numbers used the package's row-vs-no-row contrast, which cancels a rule held
+  in state; read against a no-protocol twin, SCI-1 applies a prose protocol 0.65 ± 0.05 at 2k (0 beyond 2k). Day-0 minds
+  are not yet re-read with the twin.
