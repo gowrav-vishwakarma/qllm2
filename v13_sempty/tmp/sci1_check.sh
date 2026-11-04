@@ -16,7 +16,10 @@ T=logs/memory_probes/v13_sempty_${n}_t40_behavioral.json
 [ -f $T ] || $PY scripts/run_memory_behavioral.py --model-type v13_sempty --checkpoint $B --preset baseline_real_pm --context-lengths 128,256,512,1024,2048,4096,8192 --positions 0,0.5,1 --association-counts 1,4,8 --trials 40 --max-context 8192 --output $T 2>&1 | grep -v scored | tail -1
 M=logs/sci1/v13_sempty_mc_${n}.json
 [ -f $M ] || $PY scripts/mc_eval.py --ckpt $B --out $M 2>&1 | grep -E '^(hellaswag|arc|piqa)'
-K=logs/sci1/v13_sempty_think_${n}.json
-[ -f $K ] || $PY scripts/think_eval.py --ckpt $B --n 200 --out $K 2>&1 | grep -E "^think_eval"
+# think_eval dropped 2026-11-04 (thinking is off since cont1). Reach curve past the trained SEQ 4096 (Lead + Mind step back 11-04):
+D2=logs/diag/v13_sempty_clk2_echo_long_${n}.jsonl
+[ -s $D2 ] || $PY scripts/run_skillpack_probe.py --checkpoint $B --variants dilate --dilations 1,8 --dilate_where echo --lengths 16384,32768 --docs 25 --seed 8700 --mem_frac ${MEM_FRAC:-0.12} --out $D2 2>&1 | grep -v "$X" | tail -1
+T2=logs/memory_probes/v13_sempty_${n}_t40_long_behavioral.json
+[ -f $T2 ] || $PY scripts/run_memory_behavioral.py --model-type v13_sempty --checkpoint $B --preset baseline_real_pm --context-lengths 16384 --positions 0,0.5,1 --association-counts 1,4,8 --trials 40 --max-context 16384 --output $T2 2>&1 | grep -v scored | tail -1
 $PY scripts/sci_gen.py --ckpt $B 2>&1 | grep -v "$X" | tee logs/sci1/v13_sempty_gens_${n}.txt   # the user reads these without the log
 echo "=== CHECK $n DONE $(date -u +%FT%TZ)"
