@@ -3973,6 +3973,13 @@ fitted threshold:
     - Limits stated: the audit hashes Mind's own test-item definitions with an independent implementation (it tests the
       filter's machinery, not whether an item set is missing); the sample is each stream's first 20,000 docs, not the middle of
       the run; the clean-subset scores come with the benchmark entries (hit test strings are in the json).
+- **A28: is A26's "prose held = 0.00" a read artefact? (PRE-REGISTERED 2026-11-04 08:29 IST, Lead's GO, before any number.)**
+  The A9 read (`l_row + 4 (l_row − l_norow)`) cancels anything held in state in both streams. On the c1a weights (step 76,295),
+  A26 docs (seed 26000, UNIT cell, G1 trained wording and A26 wording, 2k / 8k / 32k, 20 docs) with the SAME fetched row,
+  the held session is read as (a) PLAIN (warm, row + question, no contrast) and (b) PTWIN (contrast against the no-protocol
+  session + the same row: `l_A + 4 (l_A − l_B)`), beside the A9 read and NOPROT. **Rule:** if held ≤ NOPROT + 0.05 under
+  both (a) and (b) at every length, "prose held = 0" stands as real; otherwise every A26 held number since M1 is re-read with
+  the better read. ROUND / CONVERT leave the mind scorecard (the executor's job, Lead).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
