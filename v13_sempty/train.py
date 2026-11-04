@@ -521,6 +521,27 @@ class Trainer:
             norms.append(g ** 0.5)
         return norms
 
+    def _print_realized_mix(self) -> None:
+        """[mix @ step N]: REALIZED per-source token shares since the last val line (and since this process started), from the
+        stream's own token counters, so a mix is checked by the run itself, not predicted (Mind + Lead step back, 2026-11-04:
+        calib6 realized b2s 1.41 % vs a 1.2 % target)."""
+        cur = self._cursor_snap if self._cursor_snap is not None else self.data_cursor
+        tc = {k: v for k, v in ((cur or {}).get('token_counters') or {}).items() if '@' not in k and '#' not in k}
+        if not tc:
+            return
+        if not hasattr(self, '_mix_start'):
+            self._mix_start, self._mix_prev = dict(tc), dict(tc)
+            return
+        def shares(a, b):
+            d = {k: tc.get(k, 0) - b.get(k, 0) for k in tc}
+            tot = sum(v for v in d.values() if v > 0)
+            return {k: v / tot for k, v in d.items() if v > 0} if tot else {}
+        win, run = shares(tc, self._mix_prev), shares(tc, self._mix_start)
+        self._mix_prev = dict(tc)
+        fmt = lambda s: " ".join(f"{k}={100 * v:.2f}%" for k, v in sorted(s.items(), key=lambda kv: -kv[1]))
+        print(f"  [mix @ step {self.global_step}] window: {fmt(win)}", flush=True)
+        print(f"  [mix_run @ step {self.global_step}] since start: {fmt(run)}", flush=True)
+
     @torch.no_grad()
     def _val_loss(self, loader=None) -> Optional[float]:
         """Token-weighted val NLL over up to max_val_batches batches."""
@@ -892,6 +913,7 @@ class Trainer:
                         except Exception as e:  # noqa: BLE001
                             parts.append(f"{sname}=failed({type(e).__name__})")
                     print(f"  [val_src @ step {self.global_step}] " + " ".join(parts), flush=True)
+                self._print_realized_mix()
 
             if (
                 self.save_every_steps > 0 and self.global_step > 0
