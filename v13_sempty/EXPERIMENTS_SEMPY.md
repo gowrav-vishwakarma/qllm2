@@ -6156,8 +6156,8 @@ tokens), stopped cont2, deleted cont2's superseded latest.pt, checked out 449e32
 106,813 with a fresh budget of 3,499,950,080 tokens to global 160,218, wsd_stable, the calib7 weights (protoc out). Next
 milestones 122,072 (~Nov 5 04:00 IST: the cont3 readout + the cont4 switch), 137,331, 152,590; then the decay.
 
-**cont4 PRE-REGISTRATION: the test of cause (b) (14:27 IST, 2026-11-04; the user said YES via Lead, "as a test").** At the switch after cont3
-(global 122,072, once cont3's protoc readout is in; one cause at a time), add source **`worked`**: the same MetaMathQA + GSM8K train
+**cont4 PRE-REGISTRATION: the test of cause (b) (14:27 IST, 2026-11-04; the user said YES via Lead, "as a test").** At the switch after cont3,
+**moved to global 137,331** (Lead, after the M7 lag finding: cont3 gets its 2 milestones; one cause at a time), add source **`worked`**: the same MetaMathQA + GSM8K train
 items as the dropped `think` (same 1,200-char cap), each rendered as a PLAIN worked solution + "The answer is X." (no `<think>`,
 no system switch, the direct answer kept). 392,830 docs, median 215 tokens (max 1,030); 0.25 % of a 2,000-doc sample hit the
 decontam index (dropped by the blend; GSM8K test is in the index). **~2 % of tokens**, launched from a measured calibration row.
@@ -6167,6 +6167,9 @@ decontam index (dropped by the blend; GSM8K test is in the index). **~2 % of tok
   source was half answer-only. A null here would point to (c), true erasure, and to the synaptic-tag screen. Caveat (Lead): a null from
   215-token docs does not rule out long-span reasoning text in general.
 ## ctl: matched control at the SCI-1 recipe (PRE-REGISTRATION, 08:41 IST, 2026-11-04; Lead + user GO 08:45 IST; on the 4090)
+- **Moved and downgraded (Lead + Mind, after M7):** at 137,331 cont4 gets only ~1.5B tokens before the main budget ends at
+  160,218, i.e. ONE milestone (152,590) inside the ~1B-token lag window. The SCI-1 worked test is therefore **indicative only**
+  (underpowered); the clean test of worked text is planned on the matched ~103M bodies after ctl, if it matters.
 
 **Question:** does the architecture gap (rules in state, reach past the trained length) survive when all three bodies get the SCI-1
 product recipe, rule docs included? The SCI-1 vs Pythia gaps are mostly data; the earlier matched tiers (600M × 3 seeds, 1.5B)

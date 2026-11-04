@@ -43,6 +43,9 @@ the switcher's checkout).
 - (5) Agree. Add: the trainer should print REALIZED per-source token shares at every val step (calib6 said b2s 1.41 % vs 1.2 %
   target; long docs make 15M-token calibrations noisy). Then a mix is checked by the run itself, not predicted.
 
+**Added after M7 (Lead + Mind):** the lag. A mix change shows nothing in its first 1B tokens (s8 0.435 → 0.436) and moves in the
+second (→ 0.588). Savings / mix readouts need TWO milestones, not one; the M6 "erased" verdict was premature.
+
 **What I would stop.** Reading 20-doc A26 cells as trends (SE ~0.11; at least 100 docs for a bar cell). think_eval in the CHECK
 (thinking is gone). Single shown generations as evidence (they flip every milestone; keep them for the user, not for verdicts).
 Changing the mix at every milestone: one change per 2 milestones, from a measured row.
