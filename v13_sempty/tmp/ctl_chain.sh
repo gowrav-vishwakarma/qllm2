@@ -64,7 +64,7 @@ segment() {  # $1 tag, $2 ckpt dir, $3 env (arm spec + schedule), $4 arm name (V
   done
 }
 readouts() {  # $1 run dir, $2 name
-  local B=$1/latest.pt n=$2; [ -f $B ] || { echo "$n: no checkpoint"; return; }
+  local B=$1/latest.pt n=$2 LP D T M; [ -f $B ] || { echo "$n: no checkpoint"; return; }   # local: D / T must not clobber the caller's
   quiet ${NEED[readouts]}
   echo "=== $n readouts $(date -u +%FT%TZ)"; mkdir -p logs/ctl
   LP=logs/ctl/v13_sempty_${n}_spread_s7000_t400.json
