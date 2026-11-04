@@ -7,6 +7,11 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-11-05 05:30 IST: equal-data control at the product recipe: PAM beats BOTH baselines on rules and beyond-length recall (Lead; ctl caa4da9, result f0a4695, B5 logs/ctl/v14_a28_ctl_pam_vs_tpp_mamba2_caa4da9.jsonl)
+**What we saw:** 3 bodies x ~103M params x 1.0B tokens of the IDENTICAL SCI-1 cont2 mix (same code / seed / order). Induced rules s8 D: PAM 0.523 vs Mamba-2 0.149 vs T++ 0.074. Told prose rule held in state (twin read, 98 docs): 0.53 +- 0.05 vs 0.20 vs 0.12. Far-needle recall past SEQ 8k / 16k: 0.53 / 0.41 vs 0.18 / 0.15 vs 0.17 / 0.13. Inside the window (2k) T++ recalls better (0.92 vs 0.63). Holdout: Mamba-2 3.378 < PAM 3.427 < T++ 3.440 (B3 NOT met). HS / ARC-e / PIQA level. PAM trains ~2x slower per token at this size.
+**What it says:** with the same rule documents, the rule-carrying and beyond-length clauses are architectural, not data: both baselines see the docs and still fail to carry rules across filler (adjacent examples @0 are close: 0.75 / 0.68 / 0.36). Mamba-2 remains the better pure LM at this size.
+**What it means for the lanes:** the thesis claim now has an equal-data control at the product recipe (third tier after 600M and 1.5B). Language parity with Mamba-2 is the open gap (Mind); told vs induced competition and reach past 8k are the next questions (Mind, Library).
+
 ## 2026-11-04
 
 - **Mind, correction (21:39 IST, 2026-11-04): the rule skill recovered after a ~1B-token lag.** s8 D 0.436 (+1B of restored b2s) → 0.588 (+2B),
