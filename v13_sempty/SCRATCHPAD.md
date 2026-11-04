@@ -73,7 +73,7 @@ retained ≥ +0.2 over the untagged arm, holdout ≤ +0.01.
   the one-cause test of protoc (EXPERIMENTS_SEMPY "cont3 PRE-REGISTRATION"). Milestones 122,072 (~Nov 5 04:00 IST; then the cont4
   switch adds the `worked` source, pre-registered), 137,331, 152,590. Local CHECKs: tmux `mindm7` (after the M7 CHECK in `mindm6`).
   Library's A26 + twin read and Lead's humaneval gate on the `.checked_<m>` markers. On the 6000 kept: best_model of each segment,
-  cont2 step_106813 (cont3's parent; delete after its d_drive copy is sha-verified). Thinking is OFF.
+  cont2 step_106813 deleted 22:40 IST 11-04 (d_drive copy sha 4817f47e… = the 6000). Thinking is OFF.
 * **Fast stream resume (2026-10-27, after the R4 screen's 47-min skips).**
   `v7/data.py` now reads dclm / fineweb / smoltalk2 (blend) / pg19 file by file
   with pyarrow in the exact old order (verified doc-for-doc vs the old HF
