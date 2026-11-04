@@ -6065,7 +6065,7 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
-## ctl RESULT: matched control at the SCI-1 recipe (B1–B4, 04:56 IST, 2026-11-05; B5 pending)
+## ctl RESULT: matched control at the SCI-1 recipe (B1–B5, 04:56 IST, 2026-11-05)
 
 All three ~103M bodies, **1.0B tokens each** of the identical cont2 mix (SEQ 4096, seed 43, decontam, same code caa4da9, same
 venv), 0.9B wsd_stable + 0.1B decay. Logs `logs/v13_sempty_ctl_{pam,tpp,mamba2}_{main,decay}_caa4da9_*.log`, readouts `logs/ctl/`.
@@ -6084,10 +6084,14 @@ Verdicts (pre-registered):
 - **B3 language: NOT MET.** Holdout PAM 3.427 vs Mamba-2 3.378 (+0.049 nats; bar ≤ +0.03); PAM beats T++ (3.440). Per source,
   Mamba-2 leads on every web / science source by 0.03–0.06; PAM leads T++ on web and trails it on arxiv / pubmed / pysci.
 - **B4 known benchmarks:** level (all within 0.004).
+- **B5 prose rule held in state (Library's A26 G1 at 2k, protocol-twin read; 05:18 IST, 2026-11-05): MET.** Right (value + unit), 98 docs per arm:
+  PAM **0.53 ± 0.05**, Mamba-2 0.20 ± 0.04, T++ 0.12 ± 0.03 → +0.33 over the best baseline (bar +0.20). Under the package's A9 read,
+  the plain read and the no-protocol control, every body is 0.00, so the told rule is visible only against the no-protocol twin,
+  as A28 found on SCI-1. Log `logs/ctl/v14_a28_ctl_pam_vs_tpp_mamba2_caa4da9.jsonl`.
 - clk2 with the O(1) read operator (dilation 8 + contrast): PAM 0.59 at 8k; the operator is PAM-only by construction (no claim
   against the baselines on clk2 itself; without the operator PAM is 0.11).
-**Reading:** on the product recipe, at equal params, tokens and data (rule docs included), the two thesis clauses hold against
-both baselines (rules carried in the state; recall beyond the trained length), while Mamba-2 is the better pure language model at
+**Reading:** on the product recipe, at equal params, tokens and data (rule docs included), the thesis clauses hold against
+both baselines (rules INDUCED and rules TOLD, both carried in the state; recall beyond the trained length), while Mamba-2 is the better pure language model at
 this size and budget (consistent with the 3B tier, where Mamba-2's holdout also led). Prior work: Transformer++ / Mamba-2 (Gu &
 Dao 2024) as baselines; our matched 600M / 1.5B tiers. The SCI-1 vs Pythia gaps were data; THIS table is the architecture evidence
 at the SCI recipe.
