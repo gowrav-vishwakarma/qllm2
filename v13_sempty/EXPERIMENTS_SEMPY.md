@@ -6095,6 +6095,13 @@ resumes from latest.pt, saves every 200 steps).
   100 docs, on all three: PAM ≥ max(baselines) + 0.20. Reference: SCI-1 c1a 0.65 ± 0.05, M4 0.26 (old read 0.00); t15tpp
   (unmatched) 0.00. Script `v14/a28_twin.py --ckpt <PAM> --win <T++>,<Mamba-2> --wording train --lengths 2048 --docs 100`
   (same docs and fetched row for all three). Run at the chain's end.
+
+**Launched (10:14 IST 2026-11-04; recorded 10:49 IST, 2026-11-04).** Worktree `../qllm_ctl` @ caa4da9 (fixed hash: master commits cannot break the
+run's log names or trip the drift guard), venv qllm311 (Python 3.11, torch 2.8, mamba_ssm) for ALL three arms, tmux `mindctl`,
+chain log `logs/v13_sempty_ctl_chain_caa4da9_20261104_0444.log` (in the worktree). Smoke (200 steps, 65,536 tokens / step): PAM
+102,884,948 params, 16.1 GB peak (~40k tok/s on py3.9; 63.8k on py3.11 at the chain's step 100); T++ 101,916,864, 82.7k tok/s,
+10.6 GB; Mamba-2 102,613,960, 113k tok/s, 7.0 GB. Stream startup 20–35 min per segment. ETA: PAM ~16:00 IST, T++ ~Nov 4 23:00,
+Mamba-2 ~Nov 5 02:30 (plus yields to the 91,554 and 106,813 CHECKs), readouts + B5 by ~Nov 5 06:00 IST.
 **Closest prior work:** Transformer++ and Mamba-2 (Gu & Dao 2024) as the standard baselines; our matched 600M / 1.5B tiers.
 Difference: the same product recipe (science + chat + tools + rule docs), so the SCI-1 claims have an equal-data control.
 
