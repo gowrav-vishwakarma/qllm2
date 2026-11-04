@@ -152,6 +152,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 - **A27 decontamination audit** (2026-11-02) 13-gram audit of the SCI-1 training stream (20k docs per source via the real blend path) vs kb1 / GSM8K / MMLU / BABILong / decontam_items.json; clean-subset scores -> **DONE 2026-11-03: filtered stream 0 hits in 15 sources (positive control 300/300); raw: think 0.275 %, fineweb 0.11 %, dclm 0.08 %, others <= 0.065 %; action rule not triggered**; run `37c291d`, code at `current`; logs/v14_a27_decontam_37c291d_20261103_1104.json; "A27"
 - **A29 query-time prose to compact rewrite** <- A28 held read: plain vs protocol twin (2026-11-04) planner parses the prose protocol and writes 3 compact demos before the question; mind applies (skill contrast); c1a, UNIT, G1 + A26 wordings, 2k / 8k, 100 docs -> **MET 11-04 09:20: rewrite 0.93 / 0.91 (A26 wording, 2k / 8k), 0.72 / 0.68 (trained wording); A9 read 0.00; parser 1.00 in-sample; TEXT + MIND**; run `a69cafa`, code at `current`; logs/v14_a29_rewrite_a26_a69cafa_20261104_0842.jsonl; logs/v14_a29_rewrite_train_a69cafa_20261104_0842.jsonl; "A29"
 - **A30 compositional contrast** <- A28 held read: plain vs protocol twin (2026-11-04) decode against a rule twin AND a fact twin: l(R,K) + a(l(R,K)-l(notR,K)) + b(l(R,K)-l(R,notK)); A26 UNIT c1a 2k, a,b grid; fresh-seed confirm -> **NOT met 11-04 09:31: best a,b>0 (4,2) 0.13 A26 / 0.30 G1 vs rule twin alone 0.22 / 0.65; the fact twin raises value but cancels the unit**; run `531ad61`, code at `current`; logs/v14_a30_compose_a26_531ad61_20261104_0923.jsonl; logs/v14_a30_compose_train_531ad61_20261104_0923.jsonl; "A30"
+- **A28b matched control held-out wording and 8k** <- A28 held read: plain vs protocol twin (2026-11-05) ctl bodies (PAM / T++ / Mamba-2, ~103M, 1B tokens same mix, one seed each): twin read on the A26 (held-out) wording at 2k and the trained wording at 8k, 100 docs -> **running (pre-registered; bar (a): PAM >= best baseline + 0.20 at 2k; (b) descriptive)**; code at `current`; -; "A28b"
 
 ## v15
 
@@ -170,4 +171,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-152 experiments: v13_sempty 73, v14 60, v15 10, v16 9.
+153 experiments: v13_sempty 73, v14 61, v15 10, v16 9.

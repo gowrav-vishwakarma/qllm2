@@ -4118,6 +4118,10 @@ fitted threshold:
       All three show the A28 signature: nothing under the row-vs-no-row read, the rule only under the rule twin.
     - Limits stated: one seed per body, 1B tokens, 2k only (inside every body's trained 4k), the trained wording. The
       held-out wording and lengths > 2k are not yet in the matched comparison.
+- **A28b: the matched control on the HELD-OUT wording and at 8k (PRE-REGISTERED 2026-11-05 05:20 IST, before any number; Lead's GO).**
+  Mind's three ctl bodies (caa4da9; ~103M each, 1B tokens of the same SCI-1 mix; ONE SEED PER BODY), `v14/a28_twin.py --win
+  <T++>,<Mamba-2>`, 100 docs: (a) A26 wording at 2k; (b) trained wording at 8k. **Bar (a): MET if PAM's twin read ≥ the best
+  baseline's twin read + 0.20 at 2k.** (b) is descriptive (reach past 2k is weak on SCI-1).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
