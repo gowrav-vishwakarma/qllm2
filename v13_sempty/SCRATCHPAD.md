@@ -11,8 +11,8 @@ notebook entry is `EXPERIMENTS_SEMPY.md` → "Speed: fused real arm".
   76,295) to 160,218 (~Nov 5 21:40 IST), then the decay (`sci1_decay_e61cd92`). Why: cont1 lost the s8 skill after the b2s cut
   (EXPERIMENTS_SEMPY "SCI-1 cont1 milestone 5"). Milestones 91,554 (~13:15 IST) and 106,813 (~20:40); bars: s8 D >= 0.70, reach not
   below M5, holdout <= proj + 0.02. Local CHECK: `RUN=sci1_cont2_e61cd92 bash v13_sempty/tmp/sci1_check_local.sh step_091554`; Lead's
-  humaneval runs after each CHECK (gated on the `.checked_<m>` marker). On the 6000 kept: sci1_main best + step_061036 (M4), cont1
-  best + step_076295 (M5); local sha-verified copies exist for M1-M4 (M5 copy on d_drive, not yet sha-checked). Thinking is OFF.
+  humaneval runs after each CHECK (gated on the `.checked_<m>` marker). On the 6000 kept: sci1_main best, cont1 best + step_076295 (M5; M4
+  deleted 07:50 IST 11-04 after a sha match with its d_drive copy); local sha-verified copies exist for M1-M4 (M5 copy on d_drive, not yet sha-checked). Thinking is OFF.
 * **Fast stream resume (2026-10-27, after the R4 screen's 47-min skips).**
   `v7/data.py` now reads dclm / fineweb / smoltalk2 (blend) / pg19 file by file
   with pyarrow in the exact old order (verified doc-for-doc vs the old HF
