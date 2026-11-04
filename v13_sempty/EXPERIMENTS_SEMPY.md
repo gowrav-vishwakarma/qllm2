@@ -6093,8 +6093,8 @@ resumes from latest.pt, saves every 200 steps).
 - **B4 known benchmarks:** HellaSwag / ARC-e / PIQA reported, no bar (kb1: level at 600M).
 - **B5 prose rule held in state (Lead, added before launch):** Library's A26 G1 cell at 2k with the protocol-twin read (A28),
   100 docs, on all three: PAM ≥ max(baselines) + 0.20. Reference: SCI-1 c1a 0.65 ± 0.05, M4 0.26 (old read 0.00); t15tpp
-  (unmatched) 0.00. Script `v14/a28_twin.py --ckpt <PAM> --win <T++> --wording train --lengths 2048 --docs 100` (same docs
-  and row for both); it has no Mamba-2 path, so B5 is PAM vs the matched T++. Run at the chain's end.
+  (unmatched) 0.00. Script `v14/a28_twin.py --ckpt <PAM> --win <T++>,<Mamba-2> --wording train --lengths 2048 --docs 100`
+  (same docs and fetched row for all three). Run at the chain's end.
 **Closest prior work:** Transformer++ and Mamba-2 (Gu & Dao 2024) as the standard baselines; our matched 600M / 1.5B tiers.
 Difference: the same product recipe (science + chat + tools + rule docs), so the SCI-1 claims have an equal-data control.
 
