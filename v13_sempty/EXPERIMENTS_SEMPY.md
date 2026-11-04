@@ -6065,6 +6065,38 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
+## SCI-1 cont2 milestone 6 (CHECK on the 4090, 14:11 IST, 2026-11-04; run `e61cd92`, step 91,554 = 6.0B tokens; 1.0B of the cont2 mix)
+
+**The SAVINGS readout: NO recovery.** s8 D 0.435 (M5) → **0.436** after 1B tokens with b2s restored to ~1.4 %. By the
+pre-registered rule (< 0.50) this reads "erased", but the result also weakens the explanation it was built on.
+
+| readout | M4 (4.0B, old mix) | M5 (5.0B, cont1) | M6 (6.0B, cont2) |
+|---|---|---|---|
+| s8 D | 0.782 | 0.435 | **0.436** |
+| s8 shift_wide @0 / 2k / 4k | 1.00 / 0.935 / 0.595 | 0.955 / 0.540 / 0.285 | 1.00 / 0.580 / 0.188 |
+| s8 affine_map @0 / 2k / 4k | 0.988 / 0.885 / 0.713 | 0.975 / 0.583 / 0.333 | 0.988 / 0.647 / 0.330 |
+| skill pack 2k / 4k / 8k + contrast | 0.84 / 0.70 / 0.21 | 0.84 / 0.68 / 0.26 | 0.86 / 0.68 / **0.18** |
+| clk2 8k (dilation 8 + contrast) | 0.62 | 0.67 | **0.55** |
+| clk2 16k / 32k (new) | – | – | 0.08 / 0.04 (20-way chance 0.05; dilation 1: 0.06 / 0.04) |
+| t40 far needles 4k + 8k (position 0) | 0.95 | 0.89 | **0.81** |
+| t40 at 16k, position 0 / 0.5 / 1 (new) | – | – | 0.47 / 0.78 / 1.00 |
+| HellaSwag (norm) / ARC-e / PIQA (norm) | 0.311 / 0.508 / 0.618 | 0.321 / 0.500 / 0.612 | 0.320 / 0.514 / 0.617 |
+| holdout val (blend) | 3.218 (60k) | 3.177 (76k) | **3.139** (92k, best) |
+
+What it says:
+- The b2s cut ALONE is not the cause: putting b2s back (0.5 → ~1.4 % realized) recovered nothing in 1B tokens. Two other
+  changes made at the cont1 switch are still in place: **think dropped** (2.4 % of tokens; long chain-of-thought documents, the
+  user's decision) and **protoc added** (median 94-token compact rule docs at 8.05× loss weight per token: ~1.2 % of the loss,
+  all of it a rule used within ≤ 20 sentences). Mechanism to test: protoc trains the same rule pathway as b2s but at SHORT range
+  and at high weight, so the pathway specialises to short range; or the think docs were the main natural trainer of carrying
+  information across long spans. A third reading (true erasure, slow relearning at a late, constant-LR stage) cannot be excluded:
+  the first acquisition (M1 → M3) happened early, when everything is learned fast.
+- Reach is now slipping too (clk2 8k 0.67 → 0.55, skill pack 8k 0.26 → 0.18, far needles 0.89 → 0.81) while the holdout keeps
+  improving: the "holds beyond the trained length" clause is degrading on this mix. Past 8k nothing holds at this size (clk2
+  16k / 32k at chance; t40 at 16k 0.47 at position 0).
+- The `--continue_from` restarts are not the cause: the optimizer state is kept; only the LR schedule restarts (500-step warmup).
+- Generations: the protocol prompt copies "12.347 g" again; the tool prompt reads "78.4 C" right and runs past `<|im_end|>`.
+
 ## ctl: matched control at the SCI-1 recipe (PRE-REGISTRATION, 08:41 IST, 2026-11-04; Lead + user GO 08:45 IST; on the 4090)
 
 **Question:** does the architecture gap (rules in state, reach past the trained length) survive when all three bodies get the SCI-1

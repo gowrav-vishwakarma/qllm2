@@ -1,0 +1,22 @@
+{
+ "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont2_e61cd92/.mind_step_091554.pt",
+ "results": {
+  "hellaswag": {
+   "acc": 0.29336785500896234,
+   "acc_norm": 0.31955785700059747,
+   "n": 10042
+  },
+  "arc_easy": {
+   "acc": 0.5138888888888888,
+   "acc_norm": 0.4663299663299663,
+   "n": 2376
+  },
+  "piqa": {
+   "acc": 0.6202393906420022,
+   "acc_norm": 0.6169749727965179,
+   "n": 1838
+  }
+ },
+ "sec": 100.6,
+ "fp32": false
+}
