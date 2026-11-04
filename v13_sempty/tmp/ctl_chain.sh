@@ -56,7 +56,9 @@ segment() {  # $1 tag, $2 ckpt dir, $3 env (arm spec + schedule), $4 arm name (V
       continue
     fi
     sleep 20   # the trainer exited by itself: done if its log shows the last step at 100 %, else a crash -> resume
-    if grep -qE "^step ([0-9]+) \[\1/\1 100%\]" "$log" 2>/dev/null && [ -s $dir/latest.pt ]; then
+    # done = the trainer's own final line (the step log prints every 50 steps, so "N/N 100%" is missing when N is not a multiple of 50:
+    # the T++ main, 13,733 steps, was misread as a crash 2026-11-04 19:14 IST)
+    if grep -qE "^Training complete\. steps=" "$log" 2>/dev/null && [ -s $dir/latest.pt ]; then
       touch $dir/.done; echo "=== $tag done $(date -u +%FT%TZ)"; return 0; fi
     echo "=== $tag trainer exited before 100 % (crash?), resuming $(date -u +%FT%TZ)"; sleep 60
   done
