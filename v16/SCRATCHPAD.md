@@ -82,6 +82,14 @@ Two days of SCI-1 since the last one: 5 milestones, think tried and dropped, the
 
 What surprised me most: a skill we called architectural behaved like a muscle. What I would stop: treating mix percentages as the lever; the lever may be rehearsal schedule or a protected path.
 
+*Joint conclusion (08:29 IST, after Mind's and Library's blocks):* (a) the CAPACITY is architectural (T++ never has it at equal data), the LEVEL is a habit: it tracks how recent and dense its docs are, not cumulative dose (1.5B tier fell at constant 3 %; A26 compact 0.40 -> 0.00 -> 0.45 on an unchanged mix); query-time tools never decayed. (b) Library: our A26 "held" read may cancel the very thing it measures (the contrast twin removes the row, so a rule in state sits in both streams); A28 re-reads it. Plan, in order:
+1. A28 now (Library, 4090, ~30 min): held arm with a warm read and a no-protocol twin. If held <= noprot + 0.05 under both, "prose held = 0" stands; else all A26 held numbers are re-read.
+2. SAVINGS readout at 91,554 (~13:15): s8 D back >= 0.70 => suppressed, not erased => spaced rehearsal is the lever. Else Mind's per-head synaptic tag (gradient scaling on retention/erase by the head's own write activity; prior EWC/SI, diff: per head per token from state writes, no task boundaries) at 125M on the 4090.
+3. Prose -> compact rewrite at QUERY time (Library, after A28, no training): A26 G1 with the rewrite step; 0.00 -> ~0.45 means compiling is solved in the package.
+4. Reach claim, worded as "a state trained at 4k read at 8k+ by an O(1) operator, improving with plain data": t40 + clk2 to 16k / 32k added to the 91,554 CHECK, with and without the read tools.
+5. Matched control at the SCI recipe (125M x 1B, T++ / Mamba-2 / PAM, bars s8 + reach) after the savings readout.
+6. Process: mix changes launch only from a measured calibration, at most every 2 milestones; trainer prints realized per-source shares per val; bar cells >= 100 docs; think_eval and ROUND / CONVERT leave the CHECK / mind scorecard (executor's job).
+
 ## Step back (Lead, 2026-11-01 10:25 IST; user: "how long have you not meditated... read the memory again, think in the void, step back, fresh air")
 
 Six hours since the last one; since then: cu2a (skills learned in trained formats only), cu2b (stopped by futility), clk2r (one read to 8k, three minds), the T++ + library arm (a transformer reads a fetched record as well or better; both fixed-state bodies fail multi-field rows), the field cut (bodies level when the library picks the clause), A16 / A17 (dilation out of the refresh; rendering hurts), the first realistic-test numbers (reworded questions collapse the cold read for every body), r3p trailing by a loss-weight share. Looked at from far away:
