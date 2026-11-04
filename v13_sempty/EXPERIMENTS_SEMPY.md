@@ -6118,7 +6118,8 @@ decontam index (dropped by the blend; GSM8K test is in the index). **~2 % of tok
 - **Keep it only if** s8 D rises **≥ +0.10** over its value at 122,072 within the next 2 milestones (137,331 / 152,590) **AND** the
   thinking-style leak stays **< 5 %** (think_eval's leak check, re-added to the CHECK for these milestones). Otherwise drop it.
 - Prior (honest): these docs are short (median 215 tokens), so they are a weak candidate for a long-span trainer; the old think
-  source was half answer-only. A null here would point to (c), true erasure, and to the synaptic-tag screen.
+  source was half answer-only. A null here would point to (c), true erasure, and to the synaptic-tag screen. Caveat (Lead): a null from
+  215-token docs does not rule out long-span reasoning text in general.
 ## ctl: matched control at the SCI-1 recipe (PRE-REGISTRATION, 08:41 IST, 2026-11-04; Lead + user GO 08:45 IST; on the 4090)
 
 **Question:** does the architecture gap (rules in state, reach past the trained length) survive when all three bodies get the SCI-1
