@@ -4,6 +4,21 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
+## State (2026-11-04 15:05 IST) — read this first
+
+Session: **Library**. SCI-1 support. Today: A28 (the A9 read hid a state-held rule; protocol-twin read 0.65 ± 0.05 at 2k,
+replicated, since M1), A29 MET (query-time prose → compact rewrite 0.93 / 0.91 at 2k / 8k), A30 NOT met (the fact twin cancels
+the unit), c2a (6.0B: compact collapsed again, prose-held twin 0.81 at 2k, 0.20 at 8k / 32k). Mind's guard for cont3 = my
+100-doc twin read at 2k and 8k at every milestone.
+* **Armed tmux watchers** (each waits for Mind's local copy + `.checked_step_<X>`, one job at a time, VRAM ≥ 13.5 GB):
+  - `a26c2b` → `a28c2b` → `a28c2b8k`: cont2 step 106813 (`sci1_cont2_e61cd92`).
+  - `a26c3{a,b,c}` → `a28c3{a,b,c}` → `a28c3{a,b,c}8k`: cont3 steps 122072 / 137331 / 152590 (`sci1_cont3_449e320`; Mind
+    confirms the hash after its ~20:40 switch). Each writes `v14/tmp/a2{6,8}_<tag>_done.txt` when done.
+  - Scripts: per-run copies `v14/tmp/a26_run_<tag>.sh`, `a28_follow_<tag>.sh`, `a28_8k100_<tag>.sh` (never edit a running
+    one). After a reboot, re-arm them with the same arguments.
+* **Scoring:** `python3 v14/a26_score.py <jsonl>`; twin-read cells come from the `a28_*` jsonl (arms a9 / plain / ptwin / noprot).
+* **Mind's B5 control** runs `v14/a28_twin.py --win <T++>,<Mamba-2>` (Nov 5 evening).
+
 ## Step back (2026-11-04 08:28 IST; user via Lead: "read the meditation memory, step back, see all again, discuss")
 
 Since SCI-1 began (Nov 2): v0.1 decimals / v0.2 newline rows, the contract at size, A26 day-0 and five SCI-1 checkpoints,
