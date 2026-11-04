@@ -4047,6 +4047,19 @@ fitted threshold:
     - Honesty: TEXT + MIND. The library compiles the prose rule and puts demos next to the question; the mind copies the
       value (0.68-0.93) and follows the demos. For UNIT the library could append the unit itself; the package path is shown
       to work at query time with no training, and distance no longer matters.
+- **A30: compositional contrast: decode against a twin per question part (PRE-REGISTERED 2026-11-04 09:22 IST, before any code or
+  number; Lead's plan, after A28).**
+  - Read: `l = l(R,K) + a (l(R,K) − l(¬R,K)) + b (l(R,K) − l(R,¬K))`. R = the rule / protocol held in state (twin: the same
+    session read WITHOUT it); K = the fetched row (twin: the same prefix without the row). a = 0 is the A9 read; b = 0 is
+    A28's protocol twin.
+  - **Closest prior work:** Context-Aware Decoding (Shi et al. 2023: one context ablated, the retrieved passage) and
+    Instructive Decoding (Kim et al. 2023: a noisy instruction as the twin). **Difference:** the rule twin is the same
+    session read without the rule, held as a second O(1) state thousands of tokens back, and the two ablations are composed
+    per component of the question (rule × fact).
+  - Cells: A26 UNIT, c1a (step 76,295), G1 and A26 wordings, 2k, 100 docs; a, b ∈ {0, 2, 4} (grid; (4, 0) = A28, (0, 4) = A9).
+  - Bar: the best (a, b) with both > 0 ≥ max(A28 twin, A9) + 0.10 on the A26 wording at 2k (A28: 0.20, value-limited), and not
+    below the A28 twin − 0.05 on G1 (0.65). Reported: the full grid, value and unit separately. The grid is chosen on these
+    docs, so a fresh seed (26100) confirms the chosen (a, b) before any package default changes.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
