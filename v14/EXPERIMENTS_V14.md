@@ -4105,6 +4105,19 @@ fitted threshold:
 
     - On one mix (cont2), the prose-held skill fell back from 6.0B to 7.0B (0.81 → 0.49 at 2k; the 8k reach 0.20 → 0.04). It
       oscillates like the compact value; a single milestone does not set a trend. Both guard cells are now at 100 docs.
+  - **A28 MATCHED CONTROL (2026-11-05 ~05:30 IST; run by Mind as ctl's B5, code caa4da9; `logs/ctl/v14_a28_ctl_pam_vs_tpp_mamba2_caa4da9.jsonl`;
+    three bodies ~103M each, 1B tokens of the SAME SCI-1 mix; A26 UNIT, G1 trained wording, 2k, 98 docs per arm; numbers re-checked
+    by Library from the jsonl):** the state-held prose rule is the PAM body's, not every model's.
+
+    | right ± SE (unit right) | PAM | Mamba-2 | T++ |
+    |---|---|---|---|
+    | protocol twin | **0.53 ± 0.05** (0.66) | 0.20 ± 0.04 (0.39) | 0.12 ± 0.03 (0.12) |
+    | A9 read · plain · noprot | 0.00 · 0.00 · 0.00 | 0.00 · 0.00 · 0.00 | 0.00 · 0.00 · 0.00 |
+
+    - At equal params, tokens and data, PAM's state carries the prose protocol 2.7× Mamba-2 and 4.4× T++ (+0.33 / +0.41).
+      All three show the A28 signature: nothing under the row-vs-no-row read, the rule only under the rule twin.
+    - Limits stated: one seed per body, 1B tokens, 2k only (inside every body's trained 4k), the trained wording. The
+      held-out wording and lengths > 2k are not yet in the matched comparison.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
