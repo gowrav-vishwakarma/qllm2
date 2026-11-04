@@ -60,6 +60,11 @@ retained ≥ +0.2 over the untagged arm, holdout ≤ +0.01.
 
 ## State of play
 
+* **ctl HANDOVER (2026-11-04 10:50 IST).** The matched control (PAM M2 / T++ / Mamba-2 ~103M, 1B tokens each of the cont2 mix)
+  runs on the 4090 in tmux `mindctl`, worktree `/home/gowrav/Development/qllm_ctl` @ caa4da9 (its `.venv` -> qllm311; checkpoints
+  -> d_drive `ctl_<arm>_{main,decay}_caa4da9`). `ctl_chain.sh` yields to CHECK / humaneval / Library python jobs and RAM < 12 GB, then
+  resumes from latest.pt; restart after a box crash: rerun the same tmux command (it skips arms with `.done`). Pre-registration
+  EXPERIMENTS_SEMPY "ctl: matched control". Readouts land in the worktree's `logs/ctl/`; copy them to master to commit.
 * **SCI-1 HANDOVER (06:08 IST, 2026-11-04).** cont2 is TRAINING on the 6000: tmux `sci1` in `~/Development/qllm_sci1` @ e61cd92, dir
   `checkpoints_v13_sempty/sci1_cont2_e61cd92`, log `logs/v13_sempty_sci1_cont2_e61cd92_20261104_0027.log`, from cont1 M5 (global
   76,295) to 160,218 (~Nov 5 21:40 IST), then the decay (`sci1_decay_e61cd92`). Why: cont1 lost the s8 skill after the b2s cut
