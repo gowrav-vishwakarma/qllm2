@@ -4060,6 +4060,22 @@ fitted threshold:
   - Bar: the best (a, b) with both > 0 ≥ max(A28 twin, A9) + 0.10 on the A26 wording at 2k (A28: 0.20, value-limited), and not
     below the A28 twin − 0.05 on G1 (0.65). Reported: the full grid, value and unit separately. The grid is chosen on these
     docs, so a fresh seed (26100) confirms the chosen (a, b) before any package default changes.
+  - **A30 VERDICT (2026-11-04 09:31 IST; code 531ad61; `logs/v14_a30_compose_{a26,train}_531ad61_20261104_0923.*`; c1a, UNIT, 2k, 100
+    docs per cell): NOT met. The rule twin alone stays best; adding the fact twin cancels the unit again.**
+
+    | right (value / unit) | b = 0 | b = 2 | b = 4 |
+    |---|---|---|---|
+    | A26 wording, a = 0 · 2 · 4 | 0.00 · 0.10 · **0.22** (0.46 / 0.52) | 0.00 · 0.03 · 0.13 (0.76 / 0.17) | 0.00 (= A9) · 0.01 · 0.05 |
+    | G1 trained wording, a = 0 · 2 · 4 | 0.01 · 0.33 · **0.65** (0.94 / 0.67) | 0.00 · 0.08 · 0.30 | 0.00 · 0.06 · 0.16 |
+
+    - Bar: best (a, b > 0) = (4, 2): 0.13 vs max(0.22, 0.00) + 0.10 = 0.32 on the A26 wording → NOT met; 0.30 vs 0.65 − 0.05 on G1
+      → NOT met. The fresh-seed confirm is not run (nothing to confirm).
+    - What it says: the fact twin raises the VALUE (A26 wording 0.46 → 0.76) and lowers the UNIT (0.52 → 0.17). The unit is not
+      in the row, so any row-vs-no-row term counts it as "not from the fact" and penalises it: the A28 cancellation, inside
+      the composition. One logit sum cannot serve both parts.
+    - Next angle (idea only, not registered): switch twins per answer TOKEN (the fact twin while the value is written, the
+      rule twin after it), or a = 8 (the grid's edge). The package default is unchanged: the rule twin for rule-in-state
+      questions, the A9 read for facts.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

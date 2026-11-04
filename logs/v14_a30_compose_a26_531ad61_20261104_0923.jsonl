@@ -1,0 +1,900 @@
+{"d": 2048, "doc": 0, "wording": "a26", "seed": 26000, "unit": "nM", "target": "85.4", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 85.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 0, "wording": "a26", "seed": 26000, "unit": "nM", "target": "85.4", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 85.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 0, "wording": "a26", "seed": 26000, "unit": "nM", "target": "85.4", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 85.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 0, "wording": "a26", "seed": 26000, "unit": "nM", "target": "85.4", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 85.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 0, "wording": "a26", "seed": 26000, "unit": "nM", "target": "85.4", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 85.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 0, "wording": "a26", "seed": 26000, "unit": "nM", "target": "85.4", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 85.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 0, "wording": "a26", "seed": 26000, "unit": "nM", "target": "85.4", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 85.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 0, "wording": "a26", "seed": 26000, "unit": "nM", "target": "85.4", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 85.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 0, "wording": "a26", "seed": 26000, "unit": "nM", "target": "85.4", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 85.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 1, "wording": "a26", "seed": 26000, "unit": "mm", "target": "0.8", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 1.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 1, "wording": "a26", "seed": 26000, "unit": "mm", "target": "0.8", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 0.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 1, "wording": "a26", "seed": 26000, "unit": "mm", "target": "0.8", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 1, "wording": "a26", "seed": 26000, "unit": "mm", "target": "0.8", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 1.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 1, "wording": "a26", "seed": 26000, "unit": "mm", "target": "0.8", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 0.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 1, "wording": "a26", "seed": 26000, "unit": "mm", "target": "0.8", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 1, "wording": "a26", "seed": 26000, "unit": "mm", "target": "0.8", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 1.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 1, "wording": "a26", "seed": 26000, "unit": "mm", "target": "0.8", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 0.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 1, "wording": "a26", "seed": 26000, "unit": "mm", "target": "0.8", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 2, "wording": "a26", "seed": 26000, "unit": "nM", "target": "68.9", "path": "text2", "a": 0.0, "b": 0.0, "answer": " 68.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 2, "wording": "a26", "seed": 26000, "unit": "nM", "target": "68.9", "path": "text2", "a": 0.0, "b": 2.0, "answer": " 68.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 2, "wording": "a26", "seed": 26000, "unit": "nM", "target": "68.9", "path": "text2", "a": 0.0, "b": 4.0, "answer": " 68.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 2, "wording": "a26", "seed": 26000, "unit": "nM", "target": "68.9", "path": "text2", "a": 2.0, "b": 0.0, "answer": " 68.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 2, "wording": "a26", "seed": 26000, "unit": "nM", "target": "68.9", "path": "text2", "a": 2.0, "b": 2.0, "answer": " 68.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 2, "wording": "a26", "seed": 26000, "unit": "nM", "target": "68.9", "path": "text2", "a": 2.0, "b": 4.0, "answer": " 68.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 2, "wording": "a26", "seed": 26000, "unit": "nM", "target": "68.9", "path": "text2", "a": 4.0, "b": 0.0, "answer": " 68.9 nM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 2, "wording": "a26", "seed": 26000, "unit": "nM", "target": "68.9", "path": "text2", "a": 4.0, "b": 2.0, "answer": " 68.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 2, "wording": "a26", "seed": 26000, "unit": "nM", "target": "68.9", "path": "text2", "a": 4.0, "b": 4.0, "answer": " 68.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 3, "wording": "a26", "seed": 26000, "unit": "cm", "target": "4.4", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 4.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 3, "wording": "a26", "seed": 26000, "unit": "cm", "target": "4.4", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 4.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 3, "wording": "a26", "seed": 26000, "unit": "cm", "target": "4.4", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 4.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 3, "wording": "a26", "seed": 26000, "unit": "cm", "target": "4.4", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 4.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 3, "wording": "a26", "seed": 26000, "unit": "cm", "target": "4.4", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 4.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 3, "wording": "a26", "seed": 26000, "unit": "cm", "target": "4.4", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 4.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 3, "wording": "a26", "seed": 26000, "unit": "cm", "target": "4.4", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 4.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 3, "wording": "a26", "seed": 26000, "unit": "cm", "target": "4.4", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 4.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 3, "wording": "a26", "seed": 26000, "unit": "cm", "target": "4.4", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 4.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 4, "wording": "a26", "seed": 26000, "unit": "cm", "target": "45.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 5.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 4, "wording": "a26", "seed": 26000, "unit": "cm", "target": "45.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 45.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 4, "wording": "a26", "seed": 26000, "unit": "cm", "target": "45.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 45.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 4, "wording": "a26", "seed": 26000, "unit": "cm", "target": "45.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 5.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 4, "wording": "a26", "seed": 26000, "unit": "cm", "target": "45.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 45.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 4, "wording": "a26", "seed": 26000, "unit": "cm", "target": "45.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 45.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 4, "wording": "a26", "seed": 26000, "unit": "cm", "target": "45.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 5.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 4, "wording": "a26", "seed": 26000, "unit": "cm", "target": "45.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 45.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 4, "wording": "a26", "seed": 26000, "unit": "cm", "target": "45.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 45.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 5, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.8", "path": "F2", "a": 0.0, "b": 0.0, "answer": " 65.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 5, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.8", "path": "F2", "a": 0.0, "b": 2.0, "answer": " 65.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 5, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.8", "path": "F2", "a": 0.0, "b": 4.0, "answer": " 65.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 5, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.8", "path": "F2", "a": 2.0, "b": 0.0, "answer": " 65.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 5, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.8", "path": "F2", "a": 2.0, "b": 2.0, "answer": " 65.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 5, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.8", "path": "F2", "a": 2.0, "b": 4.0, "answer": " 65.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 5, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.8", "path": "F2", "a": 4.0, "b": 0.0, "answer": " 65.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 5, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.8", "path": "F2", "a": 4.0, "b": 2.0, "answer": " 65.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 5, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.8", "path": "F2", "a": 4.0, "b": 4.0, "answer": " 65.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 6, "wording": "a26", "seed": 26000, "unit": "L", "target": "38.3", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 1.6.3.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 6, "wording": "a26", "seed": 26000, "unit": "L", "target": "38.3", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 38.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 6, "wording": "a26", "seed": 26000, "unit": "L", "target": "38.3", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 38.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 6, "wording": "a26", "seed": 26000, "unit": "L", "target": "38.3", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 1.6 L.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 6, "wording": "a26", "seed": 26000, "unit": "L", "target": "38.3", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 38.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 6, "wording": "a26", "seed": 26000, "unit": "L", "target": "38.3", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 38.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 6, "wording": "a26", "seed": 26000, "unit": "L", "target": "38.3", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 1.6 L.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 6, "wording": "a26", "seed": 26000, "unit": "L", "target": "38.3", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 38.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 6, "wording": "a26", "seed": 26000, "unit": "L", "target": "38.3", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 38.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 7, "wording": "a26", "seed": 26000, "unit": "mL", "target": "53.6", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 2.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 7, "wording": "a26", "seed": 26000, "unit": "mL", "target": "53.6", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 92.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 7, "wording": "a26", "seed": 26000, "unit": "mL", "target": "53.6", "path": "text4", "a": 0.0, "b": 4.0, "answer": "serum A): volume 53.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 7, "wording": "a26", "seed": 26000, "unit": "mL", "target": "53.6", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 2.4 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 7, "wording": "a26", "seed": 26000, "unit": "mL", "target": "53.6", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 92.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 7, "wording": "a26", "seed": 26000, "unit": "mL", "target": "53.6", "path": "text4", "a": 2.0, "b": 4.0, "answer": "serum A): volume 53.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 7, "wording": "a26", "seed": 26000, "unit": "mL", "target": "53.6", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 6.4 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 7, "wording": "a26", "seed": 26000, "unit": "mL", "target": "53.6", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 92.6 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 7, "wording": "a26", "seed": 26000, "unit": "mL", "target": "53.6", "path": "text4", "a": 4.0, "b": 4.0, "answer": "serum A): volume 53.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 8, "wording": "a26", "seed": 26000, "unit": "mM", "target": "85.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 5.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 8, "wording": "a26", "seed": 26000, "unit": "mM", "target": "85.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 85.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 8, "wording": "a26", "seed": 26000, "unit": "mM", "target": "85.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 85.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 8, "wording": "a26", "seed": 26000, "unit": "mM", "target": "85.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 5.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 8, "wording": "a26", "seed": 26000, "unit": "mM", "target": "85.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 85.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 8, "wording": "a26", "seed": 26000, "unit": "mM", "target": "85.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 85.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 8, "wording": "a26", "seed": 26000, "unit": "mM", "target": "85.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 5.4 mM.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 8, "wording": "a26", "seed": 26000, "unit": "mM", "target": "85.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 85.7 mM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 8, "wording": "a26", "seed": 26000, "unit": "mM", "target": "85.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 85.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 9, "wording": "a26", "seed": 26000, "unit": "nM", "target": "53.1", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 53.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 9, "wording": "a26", "seed": 26000, "unit": "nM", "target": "53.1", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 53.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 9, "wording": "a26", "seed": 26000, "unit": "nM", "target": "53.1", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 53.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 9, "wording": "a26", "seed": 26000, "unit": "nM", "target": "53.1", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 53.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 9, "wording": "a26", "seed": 26000, "unit": "nM", "target": "53.1", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 53.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 9, "wording": "a26", "seed": 26000, "unit": "nM", "target": "53.1", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 53.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 9, "wording": "a26", "seed": 26000, "unit": "nM", "target": "53.1", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 53.1 nM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 9, "wording": "a26", "seed": 26000, "unit": "nM", "target": "53.1", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 53.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 9, "wording": "a26", "seed": 26000, "unit": "nM", "target": "53.1", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 53.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 10, "wording": "a26", "seed": 26000, "unit": "mL", "target": "44.6", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 78.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 10, "wording": "a26", "seed": 26000, "unit": "mL", "target": "44.6", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 44.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 10, "wording": "a26", "seed": 26000, "unit": "mL", "target": "44.6", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 53.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 10, "wording": "a26", "seed": 26000, "unit": "mL", "target": "44.6", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 11.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 10, "wording": "a26", "seed": 26000, "unit": "mL", "target": "44.6", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 44.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 10, "wording": "a26", "seed": 26000, "unit": "mL", "target": "44.6", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 53.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 10, "wording": "a26", "seed": 26000, "unit": "mL", "target": "44.6", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 11.6 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 10, "wording": "a26", "seed": 26000, "unit": "mL", "target": "44.6", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 11.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 10, "wording": "a26", "seed": 26000, "unit": "mL", "target": "44.6", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 53.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 11, "wording": "a26", "seed": 26000, "unit": "g", "target": "59.9", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 6.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 11, "wording": "a26", "seed": 26000, "unit": "g", "target": "59.9", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 59.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 11, "wording": "a26", "seed": 26000, "unit": "g", "target": "59.9", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 59.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 11, "wording": "a26", "seed": 26000, "unit": "g", "target": "59.9", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 6.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 11, "wording": "a26", "seed": 26000, "unit": "g", "target": "59.9", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 59.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 11, "wording": "a26", "seed": 26000, "unit": "g", "target": "59.9", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 59.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 11, "wording": "a26", "seed": 26000, "unit": "g", "target": "59.9", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 6.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 11, "wording": "a26", "seed": 26000, "unit": "g", "target": "59.9", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 59.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 11, "wording": "a26", "seed": 26000, "unit": "g", "target": "59.9", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 59.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 12, "wording": "a26", "seed": 26000, "unit": "kg", "target": "27.1", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 27.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 12, "wording": "a26", "seed": 26000, "unit": "kg", "target": "27.1", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 27.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 12, "wording": "a26", "seed": 26000, "unit": "kg", "target": "27.1", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 27.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 12, "wording": "a26", "seed": 26000, "unit": "kg", "target": "27.1", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 27.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 12, "wording": "a26", "seed": 26000, "unit": "kg", "target": "27.1", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 27.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 12, "wording": "a26", "seed": 26000, "unit": "kg", "target": "27.1", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 27.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 12, "wording": "a26", "seed": 26000, "unit": "kg", "target": "27.1", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 27.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 12, "wording": "a26", "seed": 26000, "unit": "kg", "target": "27.1", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 27.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 12, "wording": "a26", "seed": 26000, "unit": "kg", "target": "27.1", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 27.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 13, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "10.8", "path": "F2", "a": 0.0, "b": 0.0, "answer": " 58.8.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 13, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "10.8", "path": "F2", "a": 0.0, "b": 2.0, "answer": " 58.8.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 13, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "10.8", "path": "F2", "a": 0.0, "b": 4.0, "answer": " 58.8.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 13, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "10.8", "path": "F2", "a": 2.0, "b": 0.0, "answer": " 58.8 \u03bcM.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 13, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "10.8", "path": "F2", "a": 2.0, "b": 2.0, "answer": " 58.8 \u03bcM.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 13, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "10.8", "path": "F2", "a": 2.0, "b": 4.0, "answer": " 58.8 \u03bcM\n", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 13, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "10.8", "path": "F2", "a": 4.0, "b": 0.0, "answer": " 58.8 \u03bcM.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 13, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "10.8", "path": "F2", "a": 4.0, "b": 2.0, "answer": " 58.8 \u03bcM.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 13, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "10.8", "path": "F2", "a": 4.0, "b": 4.0, "answer": " 58.8 \u03bcM\n", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 14, "wording": "a26", "seed": 26000, "unit": "mm", "target": "65.1", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 5.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 14, "wording": "a26", "seed": 26000, "unit": "mm", "target": "65.1", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 65.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 14, "wording": "a26", "seed": 26000, "unit": "mm", "target": "65.1", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 65.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 14, "wording": "a26", "seed": 26000, "unit": "mm", "target": "65.1", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 5.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 14, "wording": "a26", "seed": 26000, "unit": "mm", "target": "65.1", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 65.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 14, "wording": "a26", "seed": 26000, "unit": "mm", "target": "65.1", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 65.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 14, "wording": "a26", "seed": 26000, "unit": "mm", "target": "65.1", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 5.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 14, "wording": "a26", "seed": 26000, "unit": "mm", "target": "65.1", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 65.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 14, "wording": "a26", "seed": 26000, "unit": "mm", "target": "65.1", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 65.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 15, "wording": "a26", "seed": 26000, "unit": "mM", "target": "71.6", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 71.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 15, "wording": "a26", "seed": 26000, "unit": "mM", "target": "71.6", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 71.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 15, "wording": "a26", "seed": 26000, "unit": "mM", "target": "71.6", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 71.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 15, "wording": "a26", "seed": 26000, "unit": "mM", "target": "71.6", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 71.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 15, "wording": "a26", "seed": 26000, "unit": "mM", "target": "71.6", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 71.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 15, "wording": "a26", "seed": 26000, "unit": "mM", "target": "71.6", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 71.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 15, "wording": "a26", "seed": 26000, "unit": "mM", "target": "71.6", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 71.6 mM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 15, "wording": "a26", "seed": 26000, "unit": "mM", "target": "71.6", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 71.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 15, "wording": "a26", "seed": 26000, "unit": "mM", "target": "71.6", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 71.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 16, "wording": "a26", "seed": 26000, "unit": "cm", "target": "47.8", "path": "text2", "a": 0.0, "b": 0.0, "answer": " 47.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 16, "wording": "a26", "seed": 26000, "unit": "cm", "target": "47.8", "path": "text2", "a": 0.0, "b": 2.0, "answer": " 47.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 16, "wording": "a26", "seed": 26000, "unit": "cm", "target": "47.8", "path": "text2", "a": 0.0, "b": 4.0, "answer": " 47.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 16, "wording": "a26", "seed": 26000, "unit": "cm", "target": "47.8", "path": "text2", "a": 2.0, "b": 0.0, "answer": " 47.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 16, "wording": "a26", "seed": 26000, "unit": "cm", "target": "47.8", "path": "text2", "a": 2.0, "b": 2.0, "answer": " 47.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 16, "wording": "a26", "seed": 26000, "unit": "cm", "target": "47.8", "path": "text2", "a": 2.0, "b": 4.0, "answer": " 47.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 16, "wording": "a26", "seed": 26000, "unit": "cm", "target": "47.8", "path": "text2", "a": 4.0, "b": 0.0, "answer": " 47.8 cm.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 16, "wording": "a26", "seed": 26000, "unit": "cm", "target": "47.8", "path": "text2", "a": 4.0, "b": 2.0, "answer": " 47.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 16, "wording": "a26", "seed": 26000, "unit": "cm", "target": "47.8", "path": "text2", "a": 4.0, "b": 4.0, "answer": " 47.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 17, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.1", "path": "F2", "a": 0.0, "b": 0.0, "answer": " 1.6.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 17, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.1", "path": "F2", "a": 0.0, "b": 2.0, "answer": " 1.5 kg.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 17, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.1", "path": "F2", "a": 0.0, "b": 4.0, "answer": " 1.9 kg.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 17, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.1", "path": "F2", "a": 2.0, "b": 0.0, "answer": " 1.6.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 17, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.1", "path": "F2", "a": 2.0, "b": 2.0, "answer": " 1.5 g.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 17, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.1", "path": "F2", "a": 2.0, "b": 4.0, "answer": " 1.9 g.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 17, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.1", "path": "F2", "a": 4.0, "b": 0.0, "answer": " 1.6.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 17, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.1", "path": "F2", "a": 4.0, "b": 2.0, "answer": " 1.5 g.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 17, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.1", "path": "F2", "a": 4.0, "b": 4.0, "answer": " 1.9 ng.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 18, "wording": "a26", "seed": 26000, "unit": "ng", "target": "72.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 72.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 18, "wording": "a26", "seed": 26000, "unit": "ng", "target": "72.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 72.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 18, "wording": "a26", "seed": 26000, "unit": "ng", "target": "72.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 72.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 18, "wording": "a26", "seed": 26000, "unit": "ng", "target": "72.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 72.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 18, "wording": "a26", "seed": 26000, "unit": "ng", "target": "72.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 72.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 18, "wording": "a26", "seed": 26000, "unit": "ng", "target": "72.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 72.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 18, "wording": "a26", "seed": 26000, "unit": "ng", "target": "72.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 72.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 18, "wording": "a26", "seed": 26000, "unit": "ng", "target": "72.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 72.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 18, "wording": "a26", "seed": 26000, "unit": "ng", "target": "72.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 72.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 19, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "6.5", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 6.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 19, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "6.5", "path": "text4", "a": 0.0, "b": 2.0, "answer": " mass: 6.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 19, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "6.5", "path": "text4", "a": 0.0, "b": 4.0, "answer": " mass: 6.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 19, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "6.5", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 6.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 19, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "6.5", "path": "text4", "a": 2.0, "b": 2.0, "answer": " mass: 6.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 19, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "6.5", "path": "text4", "a": 2.0, "b": 4.0, "answer": " mass: 6.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 19, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "6.5", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 6.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 19, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "6.5", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 6.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 19, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "6.5", "path": "text4", "a": 4.0, "b": 4.0, "answer": " mass: 6.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 20, "wording": "a26", "seed": 26000, "unit": "nm", "target": "26.5", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 7.0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 20, "wording": "a26", "seed": 26000, "unit": "nm", "target": "26.5", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 26.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 20, "wording": "a26", "seed": 26000, "unit": "nm", "target": "26.5", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 26.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 20, "wording": "a26", "seed": 26000, "unit": "nm", "target": "26.5", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 7.0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 20, "wording": "a26", "seed": 26000, "unit": "nm", "target": "26.5", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 26.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 20, "wording": "a26", "seed": 26000, "unit": "nm", "target": "26.5", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 26.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 20, "wording": "a26", "seed": 26000, "unit": "nm", "target": "26.5", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 7.0 nm.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 20, "wording": "a26", "seed": 26000, "unit": "nm", "target": "26.5", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 26.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 20, "wording": "a26", "seed": 26000, "unit": "nm", "target": "26.5", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 26.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 21, "wording": "a26", "seed": 26000, "unit": "mL", "target": "48.8", "path": "F2", "a": 0.0, "b": 0.0, "answer": " 78.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 21, "wording": "a26", "seed": 26000, "unit": "mL", "target": "48.8", "path": "F2", "a": 0.0, "b": 2.0, "answer": " 82.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 21, "wording": "a26", "seed": 26000, "unit": "mL", "target": "48.8", "path": "F2", "a": 0.0, "b": 4.0, "answer": " 82.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 21, "wording": "a26", "seed": 26000, "unit": "mL", "target": "48.8", "path": "F2", "a": 2.0, "b": 0.0, "answer": " 78.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 21, "wording": "a26", "seed": 26000, "unit": "mL", "target": "48.8", "path": "F2", "a": 2.0, "b": 2.0, "answer": " 82.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 21, "wording": "a26", "seed": 26000, "unit": "mL", "target": "48.8", "path": "F2", "a": 2.0, "b": 4.0, "answer": " 82.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 21, "wording": "a26", "seed": 26000, "unit": "mL", "target": "48.8", "path": "F2", "a": 4.0, "b": 0.0, "answer": " 78.2 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 21, "wording": "a26", "seed": 26000, "unit": "mL", "target": "48.8", "path": "F2", "a": 4.0, "b": 2.0, "answer": " 82.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 21, "wording": "a26", "seed": 26000, "unit": "mL", "target": "48.8", "path": "F2", "a": 4.0, "b": 4.0, "answer": " 82.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 22, "wording": "a26", "seed": 26000, "unit": "nM", "target": "14.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 14.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 22, "wording": "a26", "seed": 26000, "unit": "nM", "target": "14.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 14.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 22, "wording": "a26", "seed": 26000, "unit": "nM", "target": "14.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 14.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 22, "wording": "a26", "seed": 26000, "unit": "nM", "target": "14.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 14.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 22, "wording": "a26", "seed": 26000, "unit": "nM", "target": "14.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 14.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 22, "wording": "a26", "seed": 26000, "unit": "nM", "target": "14.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 14.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 22, "wording": "a26", "seed": 26000, "unit": "nM", "target": "14.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 14.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 22, "wording": "a26", "seed": 26000, "unit": "nM", "target": "14.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 14.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 22, "wording": "a26", "seed": 26000, "unit": "nM", "target": "14.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 14.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 23, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "40.5", "path": "text4", "a": 0.0, "b": 0.0, "answer": " (a) The measured volume is 1.5 kg/ha.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 23, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "40.5", "path": "text4", "a": 0.0, "b": 2.0, "answer": " (blank G):\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 23, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "40.5", "path": "text4", "a": 0.0, "b": 4.0, "answer": " (blank G):\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 23, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "40.5", "path": "text4", "a": 2.0, "b": 0.0, "answer": " (a) The measured volume is 1.5 \u03bcL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 23, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "40.5", "path": "text4", "a": 2.0, "b": 2.0, "answer": " (blank G):\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 23, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "40.5", "path": "text4", "a": 2.0, "b": 4.0, "answer": " (blank G):\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 23, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "40.5", "path": "text4", "a": 4.0, "b": 0.0, "answer": " (a) The area of the tumpangsari method is 10.5", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 23, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "40.5", "path": "text4", "a": 4.0, "b": 2.0, "answer": " (blank G):\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 23, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "40.5", "path": "text4", "a": 4.0, "b": 4.0, "answer": " (blank G):\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 24, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "32.3", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 32.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 24, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "32.3", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 32.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 24, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "32.3", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 32.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 24, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "32.3", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 32.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 24, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "32.3", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 32.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 24, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "32.3", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 32.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 24, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "32.3", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 32.3 \u03bcM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 24, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "32.3", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 32.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 24, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "32.3", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 32.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 25, "wording": "a26", "seed": 26000, "unit": "ng", "target": "57.9", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 57.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 25, "wording": "a26", "seed": 26000, "unit": "ng", "target": "57.9", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 57.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 25, "wording": "a26", "seed": 26000, "unit": "ng", "target": "57.9", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 57.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 25, "wording": "a26", "seed": 26000, "unit": "ng", "target": "57.9", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 57.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 25, "wording": "a26", "seed": 26000, "unit": "ng", "target": "57.9", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 57.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 25, "wording": "a26", "seed": 26000, "unit": "ng", "target": "57.9", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 57.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 25, "wording": "a26", "seed": 26000, "unit": "ng", "target": "57.9", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 57.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 25, "wording": "a26", "seed": 26000, "unit": "ng", "target": "57.9", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 57.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 25, "wording": "a26", "seed": 26000, "unit": "ng", "target": "57.9", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 57.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 26, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "10.6", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 10.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 26, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "10.6", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 10.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 26, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "10.6", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 10.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 26, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "10.6", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 10.6 \u03bcL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 26, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "10.6", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 10.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 26, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "10.6", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 10.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 26, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "10.6", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 10.6 \u03bcL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 26, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "10.6", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 10.6 \u03bcL\n", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 26, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "10.6", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 10.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 27, "wording": "a26", "seed": 26000, "unit": "nm", "target": "10.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 40.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 27, "wording": "a26", "seed": 26000, "unit": "nm", "target": "10.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": "eluate 4), length: 10.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 27, "wording": "a26", "seed": 26000, "unit": "nm", "target": "10.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": "eluate 4), length: 10.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 27, "wording": "a26", "seed": 26000, "unit": "nm", "target": "10.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " (a) Length: 6.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 27, "wording": "a26", "seed": 26000, "unit": "nm", "target": "10.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": "eluate 4), length: 10.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 27, "wording": "a26", "seed": 26000, "unit": "nm", "target": "10.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": "eluate 4), length: 10.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 27, "wording": "a26", "seed": 26000, "unit": "nm", "target": "10.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " (a) The length of the response is 10.2 nm.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 27, "wording": "a26", "seed": 26000, "unit": "nm", "target": "10.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": "eluate 4), length: 10.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 27, "wording": "a26", "seed": 26000, "unit": "nm", "target": "10.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": "eluate 4), length: 10.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 28, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "57.6", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 57.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 28, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "57.6", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 57.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 28, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "57.6", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 57.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 28, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "57.6", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 57.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 28, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "57.6", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 57.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 28, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "57.6", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 57.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 28, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "57.6", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 57.6 \u03bcL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 28, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "57.6", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 57.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 28, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "57.6", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 57.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 29, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "86.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 92.7 L.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 29, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "86.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": "stock solution E): volume 86.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 29, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "86.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": "stock solution E): volume 86.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 29, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "86.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 92.7 \u03bcL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 29, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "86.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": "stock solution E): volume 86.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 29, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "86.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": "stock solution E): volume 86.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 29, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "86.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 92.7 \u03bcL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 29, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "86.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": "stock solution E): volume 86.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 29, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "86.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": "stock solution E): volume 86.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 30, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 58.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 30, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 58.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 30, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 58.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 30, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 58.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 30, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 58.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 30, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 58.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 30, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 1.0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 30, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 58.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 30, "wording": "a26", "seed": 26000, "unit": "ng", "target": "58.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 58.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 31, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "5.5", "path": "text4", "a": 0.0, "b": 0.0, "answer": " concentration 5.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 31, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "5.5", "path": "text4", "a": 0.0, "b": 2.0, "answer": " concentration 5.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 31, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "5.5", "path": "text4", "a": 0.0, "b": 4.0, "answer": " concentration 5.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 31, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "5.5", "path": "text4", "a": 2.0, "b": 0.0, "answer": " concentration 5.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 31, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "5.5", "path": "text4", "a": 2.0, "b": 2.0, "answer": " concentration 5.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 31, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "5.5", "path": "text4", "a": 2.0, "b": 4.0, "answer": " concentration 5.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 31, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "5.5", "path": "text4", "a": 4.0, "b": 0.0, "answer": " concentration 5.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 31, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "5.5", "path": "text4", "a": 4.0, "b": 2.0, "answer": " concentration 5.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 31, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "5.5", "path": "text4", "a": 4.0, "b": 4.0, "answer": " concentration 5.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 32, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.3", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 1.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 32, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.3", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 66.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 32, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.3", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 66.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 32, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.3", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 3.0 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 32, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.3", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 66.3 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 32, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.3", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 66.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 32, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.3", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 3.0 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 32, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.3", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 66.3 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 32, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.3", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 66.3 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 33, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "47.8", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 78.8.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 33, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "47.8", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 78.8.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 33, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "47.8", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 47.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 33, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "47.8", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 78.8.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 33, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "47.8", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 78.8.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 33, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "47.8", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 47.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 33, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "47.8", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 78.8 \u03bcg.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 33, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "47.8", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 78.8.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 33, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "47.8", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 47.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 34, "wording": "a26", "seed": 26000, "unit": "L", "target": "61.9", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 61.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 34, "wording": "a26", "seed": 26000, "unit": "L", "target": "61.9", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 61.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 34, "wording": "a26", "seed": 26000, "unit": "L", "target": "61.9", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 61.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 34, "wording": "a26", "seed": 26000, "unit": "L", "target": "61.9", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 61.9 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 34, "wording": "a26", "seed": 26000, "unit": "L", "target": "61.9", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 61.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 34, "wording": "a26", "seed": 26000, "unit": "L", "target": "61.9", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 61.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 34, "wording": "a26", "seed": 26000, "unit": "L", "target": "61.9", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 61.9 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 34, "wording": "a26", "seed": 26000, "unit": "L", "target": "61.9", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 61.9 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 34, "wording": "a26", "seed": 26000, "unit": "L", "target": "61.9", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 61.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 35, "wording": "a26", "seed": 26000, "unit": "L", "target": "26.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 5.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 35, "wording": "a26", "seed": 26000, "unit": "L", "target": "26.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 26.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 35, "wording": "a26", "seed": 26000, "unit": "L", "target": "26.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 26.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 35, "wording": "a26", "seed": 26000, "unit": "L", "target": "26.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 26.2 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 35, "wording": "a26", "seed": 26000, "unit": "L", "target": "26.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 26.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 35, "wording": "a26", "seed": 26000, "unit": "L", "target": "26.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 26.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 35, "wording": "a26", "seed": 26000, "unit": "L", "target": "26.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 26.2 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 35, "wording": "a26", "seed": 26000, "unit": "L", "target": "26.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 26.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 35, "wording": "a26", "seed": 26000, "unit": "L", "target": "26.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 26.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 36, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.1", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 79.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 36, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.1", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 79.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 36, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.1", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 79.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 36, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.1", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 79.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 36, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.1", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 79.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 36, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.1", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 79.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 36, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.1", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 79.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 36, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.1", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 79.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 36, "wording": "a26", "seed": 26000, "unit": "kg", "target": "79.1", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 79.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 37, "wording": "a26", "seed": 26000, "unit": "nM", "target": "42.3", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 37, "wording": "a26", "seed": 26000, "unit": "nM", "target": "42.3", "path": "text4", "a": 0.0, "b": 2.0, "answer": " concentration 42.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 37, "wording": "a26", "seed": 26000, "unit": "nM", "target": "42.3", "path": "text4", "a": 0.0, "b": 4.0, "answer": "supernat C C concentration 42.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 37, "wording": "a26", "seed": 26000, "unit": "nM", "target": "42.3", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 0.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 37, "wording": "a26", "seed": 26000, "unit": "nM", "target": "42.3", "path": "text4", "a": 2.0, "b": 2.0, "answer": " concentration 42.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 37, "wording": "a26", "seed": 26000, "unit": "nM", "target": "42.3", "path": "text4", "a": 2.0, "b": 4.0, "answer": "supernat C C concentration 42.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 37, "wording": "a26", "seed": 26000, "unit": "nM", "target": "42.3", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 0.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 37, "wording": "a26", "seed": 26000, "unit": "nM", "target": "42.3", "path": "text4", "a": 4.0, "b": 2.0, "answer": " concentration 42.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 37, "wording": "a26", "seed": 26000, "unit": "nM", "target": "42.3", "path": "text4", "a": 4.0, "b": 4.0, "answer": "supernat C): concentration 42.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 38, "wording": "a26", "seed": 26000, "unit": "mg", "target": "60.9", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 60.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 38, "wording": "a26", "seed": 26000, "unit": "mg", "target": "60.9", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 60.9.16Baana son of Hushai was governor of As", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 38, "wording": "a26", "seed": 26000, "unit": "mg", "target": "60.9", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 60.9.16Baana son Hushai was governor of Asher", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 38, "wording": "a26", "seed": 26000, "unit": "mg", "target": "60.9", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 60.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 38, "wording": "a26", "seed": 26000, "unit": "mg", "target": "60.9", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 60.9.16Baana son of Hushai was governor of As", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 38, "wording": "a26", "seed": 26000, "unit": "mg", "target": "60.9", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 60.9.16Baana son Hushai was governor of Asher", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 38, "wording": "a26", "seed": 26000, "unit": "mg", "target": "60.9", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 60.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 38, "wording": "a26", "seed": 26000, "unit": "mg", "target": "60.9", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 60.9.16Baana son of Hushai was governor of As", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 38, "wording": "a26", "seed": 26000, "unit": "mg", "target": "60.9", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 60.9.16Baana son Hushai was governor of Asher", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 39, "wording": "a26", "seed": 26000, "unit": "nM", "target": "1.9", "path": "text4", "a": 0.0, "b": 0.0, "answer": " concentration 1.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 39, "wording": "a26", "seed": 26000, "unit": "nM", "target": "1.9", "path": "text4", "a": 0.0, "b": 2.0, "answer": " concentration 1.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 39, "wording": "a26", "seed": 26000, "unit": "nM", "target": "1.9", "path": "text4", "a": 0.0, "b": 4.0, "answer": " concentration 1.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 39, "wording": "a26", "seed": 26000, "unit": "nM", "target": "1.9", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 1.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 39, "wording": "a26", "seed": 26000, "unit": "nM", "target": "1.9", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 1.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 39, "wording": "a26", "seed": 26000, "unit": "nM", "target": "1.9", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 1.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 39, "wording": "a26", "seed": 26000, "unit": "nM", "target": "1.9", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 1.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 39, "wording": "a26", "seed": 26000, "unit": "nM", "target": "1.9", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 1.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 39, "wording": "a26", "seed": 26000, "unit": "nM", "target": "1.9", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 1.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 40, "wording": "a26", "seed": 26000, "unit": "nM", "target": "3.6", "path": "F2", "a": 0.0, "b": 0.0, "answer": " concentration concentration.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 40, "wording": "a26", "seed": 26000, "unit": "nM", "target": "3.6", "path": "F2", "a": 0.0, "b": 2.0, "answer": " concentration 36.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 40, "wording": "a26", "seed": 26000, "unit": "nM", "target": "3.6", "path": "F2", "a": 0.0, "b": 4.0, "answer": " 36.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 40, "wording": "a26", "seed": 26000, "unit": "nM", "target": "3.6", "path": "F2", "a": 2.0, "b": 0.0, "answer": " concentration concentration.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 40, "wording": "a26", "seed": 26000, "unit": "nM", "target": "3.6", "path": "F2", "a": 2.0, "b": 2.0, "answer": " 36.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 40, "wording": "a26", "seed": 26000, "unit": "nM", "target": "3.6", "path": "F2", "a": 2.0, "b": 4.0, "answer": " 36.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 40, "wording": "a26", "seed": 26000, "unit": "nM", "target": "3.6", "path": "F2", "a": 4.0, "b": 0.0, "answer": " concentration concentration.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 40, "wording": "a26", "seed": 26000, "unit": "nM", "target": "3.6", "path": "F2", "a": 4.0, "b": 2.0, "answer": " 36.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 40, "wording": "a26", "seed": 26000, "unit": "nM", "target": "3.6", "path": "F2", "a": 4.0, "b": 4.0, "answer": " 36.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 41, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "96.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 1.8.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 41, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "96.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 99.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 41, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "96.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 96.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 41, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "96.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 99.6 \u03bcM.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 41, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "96.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 99.7 \u03bcM.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 41, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "96.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 96.7 \u03bcM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 41, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "96.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 99.7 \u03bcM.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 41, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "96.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 99.7 \u03bcM.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 41, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "96.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 96.7 \u03bcM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 42, "wording": "a26", "seed": 26000, "unit": "mL", "target": "38.4", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 30.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 42, "wording": "a26", "seed": 26000, "unit": "mL", "target": "38.4", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 38.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 42, "wording": "a26", "seed": 26000, "unit": "mL", "target": "38.4", "path": "text4", "a": 0.0, "b": 4.0, "answer": "digest 7 D27 (digest 7) volume: 38.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 42, "wording": "a26", "seed": 26000, "unit": "mL", "target": "38.4", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 30.4 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 42, "wording": "a26", "seed": 26000, "unit": "mL", "target": "38.4", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 38.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 42, "wording": "a26", "seed": 26000, "unit": "mL", "target": "38.4", "path": "text4", "a": 2.0, "b": 4.0, "answer": "digest 7 volume: 38.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 42, "wording": "a26", "seed": 26000, "unit": "mL", "target": "38.4", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 30.4 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 42, "wording": "a26", "seed": 26000, "unit": "mL", "target": "38.4", "path": "text4", "a": 4.0, "b": 2.0, "answer": "digest 7 volume: 38.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 42, "wording": "a26", "seed": 26000, "unit": "mL", "target": "38.4", "path": "text4", "a": 4.0, "b": 4.0, "answer": "digest 7 volume: 38.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 43, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "27.6", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 27.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 43, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "27.6", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 27.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 43, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "27.6", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 27.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 43, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "27.6", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 27.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 43, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "27.6", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 27.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 43, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "27.6", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 27.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 43, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "27.6", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 27.6 \u03bcL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 43, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "27.6", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 27.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 43, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "27.6", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 27.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 44, "wording": "a26", "seed": 26000, "unit": "kg", "target": "78.6", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 78.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 44, "wording": "a26", "seed": 26000, "unit": "kg", "target": "78.6", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 78.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 44, "wording": "a26", "seed": 26000, "unit": "kg", "target": "78.6", "path": "text4", "a": 0.0, "b": 4.0, "answer": "eluate 4): mass 78.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 44, "wording": "a26", "seed": 26000, "unit": "kg", "target": "78.6", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 78.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 44, "wording": "a26", "seed": 26000, "unit": "kg", "target": "78.6", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 78.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 44, "wording": "a26", "seed": 26000, "unit": "kg", "target": "78.6", "path": "text4", "a": 2.0, "b": 4.0, "answer": "eluate 4): mass 78.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 44, "wording": "a26", "seed": 26000, "unit": "kg", "target": "78.6", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 78.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 44, "wording": "a26", "seed": 26000, "unit": "kg", "target": "78.6", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 78.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 44, "wording": "a26", "seed": 26000, "unit": "kg", "target": "78.6", "path": "text4", "a": 4.0, "b": 4.0, "answer": "eluate 4): mass 78.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 45, "wording": "a26", "seed": 26000, "unit": "g", "target": "19.2", "path": "text2", "a": 0.0, "b": 0.0, "answer": " 9.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 45, "wording": "a26", "seed": 26000, "unit": "g", "target": "19.2", "path": "text2", "a": 0.0, "b": 2.0, "answer": " 19.2.284.7.861.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 45, "wording": "a26", "seed": 26000, "unit": "g", "target": "19.2", "path": "text2", "a": 0.0, "b": 4.0, "answer": " 19.2.284.7861.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 45, "wording": "a26", "seed": 26000, "unit": "g", "target": "19.2", "path": "text2", "a": 2.0, "b": 0.0, "answer": " 9.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 45, "wording": "a26", "seed": 26000, "unit": "g", "target": "19.2", "path": "text2", "a": 2.0, "b": 2.0, "answer": " 19.2.284.7.861.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 45, "wording": "a26", "seed": 26000, "unit": "g", "target": "19.2", "path": "text2", "a": 2.0, "b": 4.0, "answer": " 19.2.284.7861.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 45, "wording": "a26", "seed": 26000, "unit": "g", "target": "19.2", "path": "text2", "a": 4.0, "b": 0.0, "answer": " 9.6 g.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 45, "wording": "a26", "seed": 26000, "unit": "g", "target": "19.2", "path": "text2", "a": 4.0, "b": 2.0, "answer": " 19.2.284.7.861.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 45, "wording": "a26", "seed": 26000, "unit": "g", "target": "19.2", "path": "text2", "a": 4.0, "b": 4.0, "answer": " 19.2.284.7861.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 46, "wording": "a26", "seed": 26000, "unit": "mm", "target": "81.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 46, "wording": "a26", "seed": 26000, "unit": "mm", "target": "81.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 46, "wording": "a26", "seed": 26000, "unit": "mm", "target": "81.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 46, "wording": "a26", "seed": 26000, "unit": "mm", "target": "81.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 46, "wording": "a26", "seed": 26000, "unit": "mm", "target": "81.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 46, "wording": "a26", "seed": 26000, "unit": "mm", "target": "81.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 46, "wording": "a26", "seed": 26000, "unit": "mm", "target": "81.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 46, "wording": "a26", "seed": 26000, "unit": "mm", "target": "81.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 46, "wording": "a26", "seed": 26000, "unit": "mm", "target": "81.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 47, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.8", "path": "F2", "a": 0.0, "b": 0.0, "answer": " 92.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 47, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.8", "path": "F2", "a": 0.0, "b": 2.0, "answer": " 93.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 47, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.8", "path": "F2", "a": 0.0, "b": 4.0, "answer": " 93.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 47, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.8", "path": "F2", "a": 2.0, "b": 0.0, "answer": " 92.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 47, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.8", "path": "F2", "a": 2.0, "b": 2.0, "answer": " 93.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 47, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.8", "path": "F2", "a": 2.0, "b": 4.0, "answer": " 93.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 47, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.8", "path": "F2", "a": 4.0, "b": 0.0, "answer": " 92.1 ng.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 47, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.8", "path": "F2", "a": 4.0, "b": 2.0, "answer": " 93.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 47, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.8", "path": "F2", "a": 4.0, "b": 4.0, "answer": " 93.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 48, "wording": "a26", "seed": 26000, "unit": "cm", "target": "86.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 78.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 48, "wording": "a26", "seed": 26000, "unit": "cm", "target": "86.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 78.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 48, "wording": "a26", "seed": 26000, "unit": "cm", "target": "86.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 78.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 48, "wording": "a26", "seed": 26000, "unit": "cm", "target": "86.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 78.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 48, "wording": "a26", "seed": 26000, "unit": "cm", "target": "86.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 78.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 48, "wording": "a26", "seed": 26000, "unit": "cm", "target": "86.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 78.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 48, "wording": "a26", "seed": 26000, "unit": "cm", "target": "86.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 78.7 cm.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 48, "wording": "a26", "seed": 26000, "unit": "cm", "target": "86.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 78.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 48, "wording": "a26", "seed": 26000, "unit": "cm", "target": "86.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 78.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 49, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "5.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 5.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 49, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "5.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 5.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 49, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "5.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 5.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 49, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "5.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 5.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 49, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "5.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 5.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 49, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "5.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 5.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 49, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "5.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 5.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 49, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "5.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 5.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 49, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "5.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 5.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 50, "wording": "a26", "seed": 26000, "unit": "nm", "target": "93.8", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 93.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 50, "wording": "a26", "seed": 26000, "unit": "nm", "target": "93.8", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 93.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 50, "wording": "a26", "seed": 26000, "unit": "nm", "target": "93.8", "path": "text4", "a": 0.0, "b": 4.0, "answer": "lys 65-78.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 50, "wording": "a26", "seed": 26000, "unit": "nm", "target": "93.8", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 93.8 nm.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 50, "wording": "a26", "seed": 26000, "unit": "nm", "target": "93.8", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 93.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 50, "wording": "a26", "seed": 26000, "unit": "nm", "target": "93.8", "path": "text4", "a": 2.0, "b": 4.0, "answer": "lys 65-78.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 50, "wording": "a26", "seed": 26000, "unit": "nm", "target": "93.8", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 93.8 nm.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 50, "wording": "a26", "seed": 26000, "unit": "nm", "target": "93.8", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 93.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 50, "wording": "a26", "seed": 26000, "unit": "nm", "target": "93.8", "path": "text4", "a": 4.0, "b": 4.0, "answer": "lys 65-78.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 51, "wording": "a26", "seed": 26000, "unit": "ng", "target": "26.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 0.039.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 51, "wording": "a26", "seed": 26000, "unit": "ng", "target": "26.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 51, "wording": "a26", "seed": 26000, "unit": "ng", "target": "26.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 51, "wording": "a26", "seed": 26000, "unit": "ng", "target": "26.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 0.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 51, "wording": "a26", "seed": 26000, "unit": "ng", "target": "26.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 51, "wording": "a26", "seed": 26000, "unit": "ng", "target": "26.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 51, "wording": "a26", "seed": 26000, "unit": "ng", "target": "26.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 0.9 ng.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 51, "wording": "a26", "seed": 26000, "unit": "ng", "target": "26.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 51, "wording": "a26", "seed": 26000, "unit": "ng", "target": "26.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 52, "wording": "a26", "seed": 26000, "unit": "mL", "target": "24.1", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 50.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 52, "wording": "a26", "seed": 26000, "unit": "mL", "target": "24.1", "path": "text4", "a": 0.0, "b": 2.0, "answer": " volume 24.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 52, "wording": "a26", "seed": 26000, "unit": "mL", "target": "24.1", "path": "text4", "a": 0.0, "b": 4.0, "answer": " volume 24.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 52, "wording": "a26", "seed": 26000, "unit": "mL", "target": "24.1", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 50.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 52, "wording": "a26", "seed": 26000, "unit": "mL", "target": "24.1", "path": "text4", "a": 2.0, "b": 2.0, "answer": " volume 24.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 52, "wording": "a26", "seed": 26000, "unit": "mL", "target": "24.1", "path": "text4", "a": 2.0, "b": 4.0, "answer": " volume 24.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 52, "wording": "a26", "seed": 26000, "unit": "mL", "target": "24.1", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 3.9 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 52, "wording": "a26", "seed": 26000, "unit": "mL", "target": "24.1", "path": "text4", "a": 4.0, "b": 2.0, "answer": " volume 24.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 52, "wording": "a26", "seed": 26000, "unit": "mL", "target": "24.1", "path": "text4", "a": 4.0, "b": 4.0, "answer": " volume 24.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 53, "wording": "a26", "seed": 26000, "unit": "mL", "target": "36.4", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 36.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 53, "wording": "a26", "seed": 26000, "unit": "mL", "target": "36.4", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 36.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 53, "wording": "a26", "seed": 26000, "unit": "mL", "target": "36.4", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 36.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 53, "wording": "a26", "seed": 26000, "unit": "mL", "target": "36.4", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 36.4 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 53, "wording": "a26", "seed": 26000, "unit": "mL", "target": "36.4", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 36.4 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 53, "wording": "a26", "seed": 26000, "unit": "mL", "target": "36.4", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 36.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 53, "wording": "a26", "seed": 26000, "unit": "mL", "target": "36.4", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 36.4 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 53, "wording": "a26", "seed": 26000, "unit": "mL", "target": "36.4", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 36.4 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 53, "wording": "a26", "seed": 26000, "unit": "mL", "target": "36.4", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 36.4 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 54, "wording": "a26", "seed": 26000, "unit": "mm", "target": "19.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 19.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 54, "wording": "a26", "seed": 26000, "unit": "mm", "target": "19.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 19.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 54, "wording": "a26", "seed": 26000, "unit": "mm", "target": "19.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 19.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 54, "wording": "a26", "seed": 26000, "unit": "mm", "target": "19.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 19.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 54, "wording": "a26", "seed": 26000, "unit": "mm", "target": "19.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 19.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 54, "wording": "a26", "seed": 26000, "unit": "mm", "target": "19.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 19.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 54, "wording": "a26", "seed": 26000, "unit": "mm", "target": "19.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 19.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 54, "wording": "a26", "seed": 26000, "unit": "mm", "target": "19.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 19.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 54, "wording": "a26", "seed": 26000, "unit": "mm", "target": "19.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 19.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 55, "wording": "a26", "seed": 26000, "unit": "mm", "target": "70.1", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 36.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 55, "wording": "a26", "seed": 26000, "unit": "mm", "target": "70.1", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 70.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 55, "wording": "a26", "seed": 26000, "unit": "mm", "target": "70.1", "path": "text4", "a": 0.0, "b": 4.0, "answer": "fraction 9), length: 70.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 55, "wording": "a26", "seed": 26000, "unit": "mm", "target": "70.1", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 36.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 55, "wording": "a26", "seed": 26000, "unit": "mm", "target": "70.1", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 70.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 55, "wording": "a26", "seed": 26000, "unit": "mm", "target": "70.1", "path": "text4", "a": 2.0, "b": 4.0, "answer": "fraction 9), length: 70.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 55, "wording": "a26", "seed": 26000, "unit": "mm", "target": "70.1", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 36.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 55, "wording": "a26", "seed": 26000, "unit": "mm", "target": "70.1", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 70.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 55, "wording": "a26", "seed": 26000, "unit": "mm", "target": "70.1", "path": "text4", "a": 4.0, "b": 4.0, "answer": "fraction 9), length: 70.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 56, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "31.9", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 31.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 56, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "31.9", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 31.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 56, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "31.9", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 31.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 56, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "31.9", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 31.9 \u03bcM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 56, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "31.9", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 31.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 56, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "31.9", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 31.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 56, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "31.9", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 31.9 \u03bcM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 56, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "31.9", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 31.9 \u03bcM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 56, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "31.9", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 31.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 57, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "87.3", "path": "text4", "a": 0.0, "b": 0.0, "answer": " concentration 87.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 57, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "87.3", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 97.3.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 57, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "87.3", "path": "text4", "a": 0.0, "b": 4.0, "answer": "blank G): concentration 87.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 57, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "87.3", "path": "text4", "a": 2.0, "b": 0.0, "answer": " concentration 87.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 57, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "87.3", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 97.3.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 57, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "87.3", "path": "text4", "a": 2.0, "b": 4.0, "answer": "blank G): concentration 87.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 57, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "87.3", "path": "text4", "a": 4.0, "b": 0.0, "answer": " concentration 87.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 57, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "87.3", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 97.3.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 57, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "87.3", "path": "text4", "a": 4.0, "b": 4.0, "answer": "blank G): concentration 87.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 58, "wording": "a26", "seed": 26000, "unit": "nm", "target": "83.1", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 78.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 58, "wording": "a26", "seed": 26000, "unit": "nm", "target": "83.1", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 83.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 58, "wording": "a26", "seed": 26000, "unit": "nm", "target": "83.1", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 83.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 58, "wording": "a26", "seed": 26000, "unit": "nm", "target": "83.1", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 78.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 58, "wording": "a26", "seed": 26000, "unit": "nm", "target": "83.1", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 83.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 58, "wording": "a26", "seed": 26000, "unit": "nm", "target": "83.1", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 83.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 58, "wording": "a26", "seed": 26000, "unit": "nm", "target": "83.1", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 78.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 58, "wording": "a26", "seed": 26000, "unit": "nm", "target": "83.1", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 83.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 58, "wording": "a26", "seed": 26000, "unit": "nm", "target": "83.1", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 83.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 59, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "48.8", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 4.8.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 59, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "48.8", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 48.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 59, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "48.8", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 48.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 59, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "48.8", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 3.4 \u03bcL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 59, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "48.8", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 48.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 59, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "48.8", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 48.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 59, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "48.8", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 3.4 \u03bcL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 59, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "48.8", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 48.8 \u03bcL\n", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 59, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "48.8", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 48.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 60, "wording": "a26", "seed": 26000, "unit": "cm", "target": "9.5", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 9.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 60, "wording": "a26", "seed": 26000, "unit": "cm", "target": "9.5", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 9.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 60, "wording": "a26", "seed": 26000, "unit": "cm", "target": "9.5", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 9.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 60, "wording": "a26", "seed": 26000, "unit": "cm", "target": "9.5", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 9.5 cm.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 60, "wording": "a26", "seed": 26000, "unit": "cm", "target": "9.5", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 9.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 60, "wording": "a26", "seed": 26000, "unit": "cm", "target": "9.5", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 9.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 60, "wording": "a26", "seed": 26000, "unit": "cm", "target": "9.5", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 10.5 cm.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 60, "wording": "a26", "seed": 26000, "unit": "cm", "target": "9.5", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 9.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 60, "wording": "a26", "seed": 26000, "unit": "cm", "target": "9.5", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 9.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 61, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.9", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 1.0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 61, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.9", "path": "text4", "a": 0.0, "b": 2.0, "answer": "culture 5), mass: 85.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 61, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.9", "path": "text4", "a": 0.0, "b": 4.0, "answer": "culture 5), mass: 85.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 61, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.9", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 1.0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 61, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.9", "path": "text4", "a": 2.0, "b": 2.0, "answer": "culture 5), mass: 85.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 61, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.9", "path": "text4", "a": 2.0, "b": 4.0, "answer": "culture 5), mass: 85.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 61, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.9", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 1.0.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 61, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.9", "path": "text4", "a": 4.0, "b": 2.0, "answer": "culture 5), mass: 85.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 61, "wording": "a26", "seed": 26000, "unit": "ng", "target": "85.9", "path": "text4", "a": 4.0, "b": 4.0, "answer": "culture 5), mass: 85.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 62, "wording": "a26", "seed": 26000, "unit": "L", "target": "69.8", "path": "text2", "a": 0.0, "b": 0.0, "answer": " 27.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 62, "wording": "a26", "seed": 26000, "unit": "L", "target": "69.8", "path": "text2", "a": 0.0, "b": 2.0, "answer": " 69.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 62, "wording": "a26", "seed": 26000, "unit": "L", "target": "69.8", "path": "text2", "a": 0.0, "b": 4.0, "answer": " 69.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 62, "wording": "a26", "seed": 26000, "unit": "L", "target": "69.8", "path": "text2", "a": 2.0, "b": 0.0, "answer": " 27.9 L.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 62, "wording": "a26", "seed": 26000, "unit": "L", "target": "69.8", "path": "text2", "a": 2.0, "b": 2.0, "answer": " 69.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 62, "wording": "a26", "seed": 26000, "unit": "L", "target": "69.8", "path": "text2", "a": 2.0, "b": 4.0, "answer": " 69.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 62, "wording": "a26", "seed": 26000, "unit": "L", "target": "69.8", "path": "text2", "a": 4.0, "b": 0.0, "answer": " 27.9 L.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 62, "wording": "a26", "seed": 26000, "unit": "L", "target": "69.8", "path": "text2", "a": 4.0, "b": 2.0, "answer": " 69.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 62, "wording": "a26", "seed": 26000, "unit": "L", "target": "69.8", "path": "text2", "a": 4.0, "b": 4.0, "answer": " 69.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 63, "wording": "a26", "seed": 26000, "unit": "g", "target": "16.3", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 16.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 63, "wording": "a26", "seed": 26000, "unit": "g", "target": "16.3", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 16.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 63, "wording": "a26", "seed": 26000, "unit": "g", "target": "16.3", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 16.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 63, "wording": "a26", "seed": 26000, "unit": "g", "target": "16.3", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 16.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 63, "wording": "a26", "seed": 26000, "unit": "g", "target": "16.3", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 16.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 63, "wording": "a26", "seed": 26000, "unit": "g", "target": "16.3", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 16.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 63, "wording": "a26", "seed": 26000, "unit": "g", "target": "16.3", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 16.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 63, "wording": "a26", "seed": 26000, "unit": "g", "target": "16.3", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 16.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 63, "wording": "a26", "seed": 26000, "unit": "g", "target": "16.3", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 16.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 64, "wording": "a26", "seed": 26000, "unit": "mg", "target": "65.8", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 65.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 64, "wording": "a26", "seed": 26000, "unit": "mg", "target": "65.8", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 65.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 64, "wording": "a26", "seed": 26000, "unit": "mg", "target": "65.8", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 65.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 64, "wording": "a26", "seed": 26000, "unit": "mg", "target": "65.8", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 65.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 64, "wording": "a26", "seed": 26000, "unit": "mg", "target": "65.8", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 65.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 64, "wording": "a26", "seed": 26000, "unit": "mg", "target": "65.8", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 65.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 64, "wording": "a26", "seed": 26000, "unit": "mg", "target": "65.8", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 65.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 64, "wording": "a26", "seed": 26000, "unit": "mg", "target": "65.8", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 65.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 64, "wording": "a26", "seed": 26000, "unit": "mg", "target": "65.8", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 65.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 65, "wording": "a26", "seed": 26000, "unit": "mg", "target": "94.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 78.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 65, "wording": "a26", "seed": 26000, "unit": "mg", "target": "94.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": " mass 94.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 65, "wording": "a26", "seed": 26000, "unit": "mg", "target": "94.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": " mass 94.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 65, "wording": "a26", "seed": 26000, "unit": "mg", "target": "94.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 78.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 65, "wording": "a26", "seed": 26000, "unit": "mg", "target": "94.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": " mass 94.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 65, "wording": "a26", "seed": 26000, "unit": "mg", "target": "94.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": " mass 94.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 65, "wording": "a26", "seed": 26000, "unit": "mg", "target": "94.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 78.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 65, "wording": "a26", "seed": 26000, "unit": "mg", "target": "94.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": " mass 94.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 65, "wording": "a26", "seed": 26000, "unit": "mg", "target": "94.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": " mass 94.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 66, "wording": "a26", "seed": 26000, "unit": "mL", "target": "81.1", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 81.1.3 Vrmsb) Calculate the measured volume for", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 66, "wording": "a26", "seed": 26000, "unit": "mL", "target": "81.1", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 81.1.3 Vrmsb) Calculate desired voltage boost ratio", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 66, "wording": "a26", "seed": 26000, "unit": "mL", "target": "81.1", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 81.1.3 Vrmsb) Calculate desired voltage boost ratio", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 66, "wording": "a26", "seed": 26000, "unit": "mL", "target": "81.1", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 81.1.3 Vrmsb) Calculate the measured volume for", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 66, "wording": "a26", "seed": 26000, "unit": "mL", "target": "81.1", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 81.1.3 Vrmsb) Calculate desired voltage boost ratio", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 66, "wording": "a26", "seed": 26000, "unit": "mL", "target": "81.1", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 81.1.3 Vrmsb) Calculate desired voltage boost ratio", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 66, "wording": "a26", "seed": 26000, "unit": "mL", "target": "81.1", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 81.1.3 Vrmsb) Calculate the measured volume for", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 66, "wording": "a26", "seed": 26000, "unit": "mL", "target": "81.1", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 81.1.3 Vrmsb) Calculate desired voltage boost ratio", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 66, "wording": "a26", "seed": 26000, "unit": "mL", "target": "81.1", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 81.1.3 Vrmsb) Calculate desired voltage boost ratio", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 67, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "64.9", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 64.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 67, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "64.9", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 64.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 67, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "64.9", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 64.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 67, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "64.9", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 64.9 \u03bcg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 67, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "64.9", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 64.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 67, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "64.9", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 64.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 67, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "64.9", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 64.9 \u03bcg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 67, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "64.9", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 64.9 \u03bcg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 67, "wording": "a26", "seed": 26000, "unit": "\u03bcg", "target": "64.9", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 64.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 68, "wording": "a26", "seed": 26000, "unit": "g", "target": "95.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 95.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 68, "wording": "a26", "seed": 26000, "unit": "g", "target": "95.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 95.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 68, "wording": "a26", "seed": 26000, "unit": "g", "target": "95.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 95.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 68, "wording": "a26", "seed": 26000, "unit": "g", "target": "95.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 95.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 68, "wording": "a26", "seed": 26000, "unit": "g", "target": "95.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 95.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 68, "wording": "a26", "seed": 26000, "unit": "g", "target": "95.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 95.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 68, "wording": "a26", "seed": 26000, "unit": "g", "target": "95.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 95.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 68, "wording": "a26", "seed": 26000, "unit": "g", "target": "95.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 95.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 68, "wording": "a26", "seed": 26000, "unit": "g", "target": "95.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 95.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 69, "wording": "a26", "seed": 26000, "unit": "mL", "target": "56.8", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 3.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 69, "wording": "a26", "seed": 26000, "unit": "mL", "target": "56.8", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 56.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 69, "wording": "a26", "seed": 26000, "unit": "mL", "target": "56.8", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 56.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 69, "wording": "a26", "seed": 26000, "unit": "mL", "target": "56.8", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 44.9 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 69, "wording": "a26", "seed": 26000, "unit": "mL", "target": "56.8", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 56.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 69, "wording": "a26", "seed": 26000, "unit": "mL", "target": "56.8", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 56.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 69, "wording": "a26", "seed": 26000, "unit": "mL", "target": "56.8", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 34.9 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 69, "wording": "a26", "seed": 26000, "unit": "mL", "target": "56.8", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 44.8 mL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 69, "wording": "a26", "seed": 26000, "unit": "mL", "target": "56.8", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 56.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 70, "wording": "a26", "seed": 26000, "unit": "L", "target": "75.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 75.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 70, "wording": "a26", "seed": 26000, "unit": "L", "target": "75.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 75.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 70, "wording": "a26", "seed": 26000, "unit": "L", "target": "75.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 75.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 70, "wording": "a26", "seed": 26000, "unit": "L", "target": "75.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 75.7 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 70, "wording": "a26", "seed": 26000, "unit": "L", "target": "75.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 75.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 70, "wording": "a26", "seed": 26000, "unit": "L", "target": "75.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 75.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 70, "wording": "a26", "seed": 26000, "unit": "L", "target": "75.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 75.7 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 70, "wording": "a26", "seed": 26000, "unit": "L", "target": "75.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 75.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 70, "wording": "a26", "seed": 26000, "unit": "L", "target": "75.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 75.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 71, "wording": "a26", "seed": 26000, "unit": "nm", "target": "80.5", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 80.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 71, "wording": "a26", "seed": 26000, "unit": "nm", "target": "80.5", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 80.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 71, "wording": "a26", "seed": 26000, "unit": "nm", "target": "80.5", "path": "text4", "a": 0.0, "b": 4.0, "answer": "blank G\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 71, "wording": "a26", "seed": 26000, "unit": "nm", "target": "80.5", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 80.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 71, "wording": "a26", "seed": 26000, "unit": "nm", "target": "80.5", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 80.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 71, "wording": "a26", "seed": 26000, "unit": "nm", "target": "80.5", "path": "text4", "a": 2.0, "b": 4.0, "answer": "blank G\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 71, "wording": "a26", "seed": 26000, "unit": "nm", "target": "80.5", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 80.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 71, "wording": "a26", "seed": 26000, "unit": "nm", "target": "80.5", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 80.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 71, "wording": "a26", "seed": 26000, "unit": "nm", "target": "80.5", "path": "text4", "a": 4.0, "b": 4.0, "answer": "blank G\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 72, "wording": "a26", "seed": 26000, "unit": "mg", "target": "17.1", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 17.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 72, "wording": "a26", "seed": 26000, "unit": "mg", "target": "17.1", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 17.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 72, "wording": "a26", "seed": 26000, "unit": "mg", "target": "17.1", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 17.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 72, "wording": "a26", "seed": 26000, "unit": "mg", "target": "17.1", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 17.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 72, "wording": "a26", "seed": 26000, "unit": "mg", "target": "17.1", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 17.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 72, "wording": "a26", "seed": 26000, "unit": "mg", "target": "17.1", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 17.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 72, "wording": "a26", "seed": 26000, "unit": "mg", "target": "17.1", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 17.1 mg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 72, "wording": "a26", "seed": 26000, "unit": "mg", "target": "17.1", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 17.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 72, "wording": "a26", "seed": 26000, "unit": "mg", "target": "17.1", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 17.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 73, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "14.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 3.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 73, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "14.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 3.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 73, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "14.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 14.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 73, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "14.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 3.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 73, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "14.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 3.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 73, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "14.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 14.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 73, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "14.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 3.1 \u03bcL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 73, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "14.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 3.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 73, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "14.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 14.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 74, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "29.8", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 9.8.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 74, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "29.8", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 29.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 74, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "29.8", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 29.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 74, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "29.8", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 9.8.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 74, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "29.8", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 29.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 74, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "29.8", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 29.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 74, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "29.8", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 9.8 \u03bcM.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 74, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "29.8", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 29.8 \u03bcM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 74, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "29.8", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 29.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 75, "wording": "a26", "seed": 26000, "unit": "nm", "target": "2.6", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 7.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 75, "wording": "a26", "seed": 26000, "unit": "nm", "target": "2.6", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 2.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 75, "wording": "a26", "seed": 26000, "unit": "nm", "target": "2.6", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 2.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 75, "wording": "a26", "seed": 26000, "unit": "nm", "target": "2.6", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 7.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 75, "wording": "a26", "seed": 26000, "unit": "nm", "target": "2.6", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 2.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 75, "wording": "a26", "seed": 26000, "unit": "nm", "target": "2.6", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 2.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 75, "wording": "a26", "seed": 26000, "unit": "nm", "target": "2.6", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 7.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 75, "wording": "a26", "seed": 26000, "unit": "nm", "target": "2.6", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 2.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 75, "wording": "a26", "seed": 26000, "unit": "nm", "target": "2.6", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 2.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 76, "wording": "a26", "seed": 26000, "unit": "mM", "target": "57.6", "path": "F2", "a": 0.0, "b": 0.0, "answer": " The concentration of the oil in the river Oboo, which is the river", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 76, "wording": "a26", "seed": 26000, "unit": "mM", "target": "57.6", "path": "F2", "a": 0.0, "b": 2.0, "answer": " C18: concentration.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 76, "wording": "a26", "seed": 26000, "unit": "mM", "target": "57.6", "path": "F2", "a": 0.0, "b": 4.0, "answer": "  Just what isrequired sufficiency is a philosophicalissue known as induction.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 76, "wording": "a26", "seed": 26000, "unit": "mM", "target": "57.6", "path": "F2", "a": 2.0, "b": 0.0, "answer": " The concentration of the oil in the river Oboo, which is the river", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 76, "wording": "a26", "seed": 26000, "unit": "mM", "target": "57.6", "path": "F2", "a": 2.0, "b": 2.0, "answer": " C18: concentration.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 76, "wording": "a26", "seed": 26000, "unit": "mM", "target": "57.6", "path": "F2", "a": 2.0, "b": 4.0, "answer": "  Just what isrequired sufficiency is a philosophicalissue known as induction.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 76, "wording": "a26", "seed": 26000, "unit": "mM", "target": "57.6", "path": "F2", "a": 4.0, "b": 0.0, "answer": " 1.9 mM.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 76, "wording": "a26", "seed": 26000, "unit": "mM", "target": "57.6", "path": "F2", "a": 4.0, "b": 2.0, "answer": " C18: concentration.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 76, "wording": "a26", "seed": 26000, "unit": "mM", "target": "57.6", "path": "F2", "a": 4.0, "b": 4.0, "answer": "  Just what isrequired sufficiency is a philosophicalissue known as induction.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 77, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "75.5", "path": "text2", "a": 0.0, "b": 0.0, "answer": " \\[ \\int_0^{2\\pi}\\int_0^{2", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 77, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "75.5", "path": "text2", "a": 0.0, "b": 2.0, "answer": " 75.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 77, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "75.5", "path": "text2", "a": 0.0, "b": 4.0, "answer": " 75.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 77, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "75.5", "path": "text2", "a": 2.0, "b": 0.0, "answer": " \\[ \\int_0^\\infty \\int_0^\\", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 77, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "75.5", "path": "text2", "a": 2.0, "b": 2.0, "answer": " 75.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 77, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "75.5", "path": "text2", "a": 2.0, "b": 4.0, "answer": " 75.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 77, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "75.5", "path": "text2", "a": 4.0, "b": 0.0, "answer": " \\[ \\int_0^\\infty \\int_0^\\", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 77, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "75.5", "path": "text2", "a": 4.0, "b": 2.0, "answer": " 75.5 \u03bcL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 77, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "75.5", "path": "text2", "a": 4.0, "b": 4.0, "answer": " 75.5 \u03bcL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 78, "wording": "a26", "seed": 26000, "unit": "g", "target": "90.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 90.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 78, "wording": "a26", "seed": 26000, "unit": "g", "target": "90.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 90.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 78, "wording": "a26", "seed": 26000, "unit": "g", "target": "90.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 90.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 78, "wording": "a26", "seed": 26000, "unit": "g", "target": "90.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 90.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 78, "wording": "a26", "seed": 26000, "unit": "g", "target": "90.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 90.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 78, "wording": "a26", "seed": 26000, "unit": "g", "target": "90.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 90.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 78, "wording": "a26", "seed": 26000, "unit": "g", "target": "90.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 90.2 g.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 78, "wording": "a26", "seed": 26000, "unit": "g", "target": "90.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 90.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 78, "wording": "a26", "seed": 26000, "unit": "g", "target": "90.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 90.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 79, "wording": "a26", "seed": 26000, "unit": "g", "target": "49.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 49.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 79, "wording": "a26", "seed": 26000, "unit": "g", "target": "49.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 49.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 79, "wording": "a26", "seed": 26000, "unit": "g", "target": "49.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 49.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 79, "wording": "a26", "seed": 26000, "unit": "g", "target": "49.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 49.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 79, "wording": "a26", "seed": 26000, "unit": "g", "target": "49.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 49.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 79, "wording": "a26", "seed": 26000, "unit": "g", "target": "49.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 49.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 79, "wording": "a26", "seed": 26000, "unit": "g", "target": "49.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 49.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 79, "wording": "a26", "seed": 26000, "unit": "g", "target": "49.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 49.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 79, "wording": "a26", "seed": 26000, "unit": "g", "target": "49.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 49.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 80, "wording": "a26", "seed": 26000, "unit": "nm", "target": "91.9", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 50.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 80, "wording": "a26", "seed": 26000, "unit": "nm", "target": "91.9", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 91.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 80, "wording": "a26", "seed": 26000, "unit": "nm", "target": "91.9", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 91.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 80, "wording": "a26", "seed": 26000, "unit": "nm", "target": "91.9", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 50.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 80, "wording": "a26", "seed": 26000, "unit": "nm", "target": "91.9", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 91.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 80, "wording": "a26", "seed": 26000, "unit": "nm", "target": "91.9", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 91.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 80, "wording": "a26", "seed": 26000, "unit": "nm", "target": "91.9", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 50.9 nm.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 80, "wording": "a26", "seed": 26000, "unit": "nm", "target": "91.9", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 91.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 80, "wording": "a26", "seed": 26000, "unit": "nm", "target": "91.9", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 91.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 81, "wording": "a26", "seed": 26000, "unit": "ng", "target": "46.6", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 78.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 81, "wording": "a26", "seed": 26000, "unit": "ng", "target": "46.6", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 46.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 81, "wording": "a26", "seed": 26000, "unit": "ng", "target": "46.6", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 46.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 81, "wording": "a26", "seed": 26000, "unit": "ng", "target": "46.6", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 78.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 81, "wording": "a26", "seed": 26000, "unit": "ng", "target": "46.6", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 46.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 81, "wording": "a26", "seed": 26000, "unit": "ng", "target": "46.6", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 46.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 81, "wording": "a26", "seed": 26000, "unit": "ng", "target": "46.6", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 78.6 ng.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 81, "wording": "a26", "seed": 26000, "unit": "ng", "target": "46.6", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 46.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 81, "wording": "a26", "seed": 26000, "unit": "ng", "target": "46.6", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 46.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 82, "wording": "a26", "seed": 26000, "unit": "kg", "target": "76.4", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 78.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 82, "wording": "a26", "seed": 26000, "unit": "kg", "target": "76.4", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 76.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 82, "wording": "a26", "seed": 26000, "unit": "kg", "target": "76.4", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 76.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 82, "wording": "a26", "seed": 26000, "unit": "kg", "target": "76.4", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 78.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 82, "wording": "a26", "seed": 26000, "unit": "kg", "target": "76.4", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 76.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 82, "wording": "a26", "seed": 26000, "unit": "kg", "target": "76.4", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 76.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 82, "wording": "a26", "seed": 26000, "unit": "kg", "target": "76.4", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 78.4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 82, "wording": "a26", "seed": 26000, "unit": "kg", "target": "76.4", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 76.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 82, "wording": "a26", "seed": 26000, "unit": "kg", "target": "76.4", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 76.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 83, "wording": "a26", "seed": 26000, "unit": "mL", "target": "62.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 62.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 83, "wording": "a26", "seed": 26000, "unit": "mL", "target": "62.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 62.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 83, "wording": "a26", "seed": 26000, "unit": "mL", "target": "62.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 62.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 83, "wording": "a26", "seed": 26000, "unit": "mL", "target": "62.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 62.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 83, "wording": "a26", "seed": 26000, "unit": "mL", "target": "62.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 62.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 83, "wording": "a26", "seed": 26000, "unit": "mL", "target": "62.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 62.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 83, "wording": "a26", "seed": 26000, "unit": "mL", "target": "62.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 62.2 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 83, "wording": "a26", "seed": 26000, "unit": "mL", "target": "62.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 62.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 83, "wording": "a26", "seed": 26000, "unit": "mL", "target": "62.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 62.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 84, "wording": "a26", "seed": 26000, "unit": "mM", "target": "36.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 36.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 84, "wording": "a26", "seed": 26000, "unit": "mM", "target": "36.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 36.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 84, "wording": "a26", "seed": 26000, "unit": "mM", "target": "36.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 36.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 84, "wording": "a26", "seed": 26000, "unit": "mM", "target": "36.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 36.7 mM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 84, "wording": "a26", "seed": 26000, "unit": "mM", "target": "36.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 36.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 84, "wording": "a26", "seed": 26000, "unit": "mM", "target": "36.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 36.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 84, "wording": "a26", "seed": 26000, "unit": "mM", "target": "36.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 36.7 mM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 84, "wording": "a26", "seed": 26000, "unit": "mM", "target": "36.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 36.7 mM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 84, "wording": "a26", "seed": 26000, "unit": "mM", "target": "36.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 36.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 85, "wording": "a26", "seed": 26000, "unit": "nM", "target": "89.5", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 9.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 85, "wording": "a26", "seed": 26000, "unit": "nM", "target": "89.5", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 89.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 85, "wording": "a26", "seed": 26000, "unit": "nM", "target": "89.5", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 89.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 85, "wording": "a26", "seed": 26000, "unit": "nM", "target": "89.5", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 9.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 85, "wording": "a26", "seed": 26000, "unit": "nM", "target": "89.5", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 89.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 85, "wording": "a26", "seed": 26000, "unit": "nM", "target": "89.5", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 89.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 85, "wording": "a26", "seed": 26000, "unit": "nM", "target": "89.5", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 9.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 85, "wording": "a26", "seed": 26000, "unit": "nM", "target": "89.5", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 89.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 85, "wording": "a26", "seed": 26000, "unit": "nM", "target": "89.5", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 89.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 86, "wording": "a26", "seed": 26000, "unit": "nm", "target": "11.8", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 93.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 86, "wording": "a26", "seed": 26000, "unit": "nm", "target": "11.8", "path": "text4", "a": 0.0, "b": 2.0, "answer": " length 11.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 86, "wording": "a26", "seed": 26000, "unit": "nm", "target": "11.8", "path": "text4", "a": 0.0, "b": 4.0, "answer": " length 11.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 86, "wording": "a26", "seed": 26000, "unit": "nm", "target": "11.8", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 93.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 86, "wording": "a26", "seed": 26000, "unit": "nm", "target": "11.8", "path": "text4", "a": 2.0, "b": 2.0, "answer": " length 11.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 86, "wording": "a26", "seed": 26000, "unit": "nm", "target": "11.8", "path": "text4", "a": 2.0, "b": 4.0, "answer": " length 11.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 86, "wording": "a26", "seed": 26000, "unit": "nm", "target": "11.8", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 93.9 nm.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 86, "wording": "a26", "seed": 26000, "unit": "nm", "target": "11.8", "path": "text4", "a": 4.0, "b": 2.0, "answer": " length 11.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 86, "wording": "a26", "seed": 26000, "unit": "nm", "target": "11.8", "path": "text4", "a": 4.0, "b": 4.0, "answer": " length 11.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 87, "wording": "a26", "seed": 26000, "unit": "nm", "target": "49.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 30.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 87, "wording": "a26", "seed": 26000, "unit": "nm", "target": "49.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 44.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 87, "wording": "a26", "seed": 26000, "unit": "nm", "target": "49.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 44.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 87, "wording": "a26", "seed": 26000, "unit": "nm", "target": "49.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 30.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 87, "wording": "a26", "seed": 26000, "unit": "nm", "target": "49.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 44.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 87, "wording": "a26", "seed": 26000, "unit": "nm", "target": "49.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 44.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 87, "wording": "a26", "seed": 26000, "unit": "nm", "target": "49.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 30.1 nm.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 87, "wording": "a26", "seed": 26000, "unit": "nm", "target": "49.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 44.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 87, "wording": "a26", "seed": 26000, "unit": "nm", "target": "49.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 44.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 88, "wording": "a26", "seed": 26000, "unit": "nM", "target": "30.8", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 30.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 88, "wording": "a26", "seed": 26000, "unit": "nM", "target": "30.8", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 30.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 88, "wording": "a26", "seed": 26000, "unit": "nM", "target": "30.8", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 30.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 88, "wording": "a26", "seed": 26000, "unit": "nM", "target": "30.8", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 30.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 88, "wording": "a26", "seed": 26000, "unit": "nM", "target": "30.8", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 30.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 88, "wording": "a26", "seed": 26000, "unit": "nM", "target": "30.8", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 30.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 88, "wording": "a26", "seed": 26000, "unit": "nM", "target": "30.8", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 30.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 88, "wording": "a26", "seed": 26000, "unit": "nM", "target": "30.8", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 30.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 88, "wording": "a26", "seed": 26000, "unit": "nM", "target": "30.8", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 30.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 89, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "81.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 89, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "81.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 89, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "81.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 81.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 89, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "81.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 89, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "81.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 89, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "81.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 81.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 89, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "81.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 81.7 \u03bcM.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 89, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "81.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 89, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "81.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 81.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 90, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.6", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 66.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 90, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.6", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 66.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 90, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.6", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 66.6 is the measured volume for Christ.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 90, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.6", "path": "text4", "a": 2.0, "b": 0.0, "answer": " (A6) volume: 66.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 90, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.6", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 66.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 90, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.6", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 66.6 is the measured volume for Christ.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 90, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.6", "path": "text4", "a": 4.0, "b": 0.0, "answer": " (A6) volume: 66.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 90, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.6", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 66.6 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 90, "wording": "a26", "seed": 26000, "unit": "mL", "target": "66.6", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 66.6 is the measured volume for Christ.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 91, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "88.1", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 78.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 91, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "88.1", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 78.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 91, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "88.1", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 88.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 91, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "88.1", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 78.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 91, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "88.1", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 78.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 91, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "88.1", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 88.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 91, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "88.1", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 78.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 91, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "88.1", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 78.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 91, "wording": "a26", "seed": 26000, "unit": "\u03bcM", "target": "88.1", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 88.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 92, "wording": "a26", "seed": 26000, "unit": "g", "target": "76.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 76.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 92, "wording": "a26", "seed": 26000, "unit": "g", "target": "76.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 76.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 92, "wording": "a26", "seed": 26000, "unit": "g", "target": "76.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": " mass 76.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 92, "wording": "a26", "seed": 26000, "unit": "g", "target": "76.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 76.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 92, "wording": "a26", "seed": 26000, "unit": "g", "target": "76.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 76.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 92, "wording": "a26", "seed": 26000, "unit": "g", "target": "76.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 76.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 92, "wording": "a26", "seed": 26000, "unit": "g", "target": "76.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 76.2 g.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 92, "wording": "a26", "seed": 26000, "unit": "g", "target": "76.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 76.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 92, "wording": "a26", "seed": 26000, "unit": "g", "target": "76.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 76.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 93, "wording": "a26", "seed": 26000, "unit": "mM", "target": "72.3", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 72.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 93, "wording": "a26", "seed": 26000, "unit": "mM", "target": "72.3", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 72.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 93, "wording": "a26", "seed": 26000, "unit": "mM", "target": "72.3", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 72.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 93, "wording": "a26", "seed": 26000, "unit": "mM", "target": "72.3", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 72.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 93, "wording": "a26", "seed": 26000, "unit": "mM", "target": "72.3", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 72.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 93, "wording": "a26", "seed": 26000, "unit": "mM", "target": "72.3", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 72.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 93, "wording": "a26", "seed": 26000, "unit": "mM", "target": "72.3", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 78.3 mM.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 93, "wording": "a26", "seed": 26000, "unit": "mM", "target": "72.3", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 72.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 93, "wording": "a26", "seed": 26000, "unit": "mM", "target": "72.3", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 72.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 94, "wording": "a26", "seed": 26000, "unit": "mm", "target": "4.7", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 4.7\u00a0min.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 94, "wording": "a26", "seed": 26000, "unit": "mm", "target": "4.7", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 4.7\u00a0Hz.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 94, "wording": "a26", "seed": 26000, "unit": "mm", "target": "4.7", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 4.7\u00a0Hz.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 94, "wording": "a26", "seed": 26000, "unit": "mm", "target": "4.7", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 4.7\u00a0min.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 94, "wording": "a26", "seed": 26000, "unit": "mm", "target": "4.7", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 4.7\u00a0Hz.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 94, "wording": "a26", "seed": 26000, "unit": "mm", "target": "4.7", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 4.7\u00a0Hz.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 94, "wording": "a26", "seed": 26000, "unit": "mm", "target": "4.7", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 4.7\u00a0min.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 94, "wording": "a26", "seed": 26000, "unit": "mm", "target": "4.7", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 4.7\u00a0Hz.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 94, "wording": "a26", "seed": 26000, "unit": "mm", "target": "4.7", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 4.7\u00a0Hz.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 95, "wording": "a26", "seed": 26000, "unit": "mm", "target": "37.5", "path": "F2", "a": 0.0, "b": 0.0, "answer": " 36.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 95, "wording": "a26", "seed": 26000, "unit": "mm", "target": "37.5", "path": "F2", "a": 0.0, "b": 2.0, "answer": " 37.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 95, "wording": "a26", "seed": 26000, "unit": "mm", "target": "37.5", "path": "F2", "a": 0.0, "b": 4.0, "answer": " 37.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 95, "wording": "a26", "seed": 26000, "unit": "mm", "target": "37.5", "path": "F2", "a": 2.0, "b": 0.0, "answer": " 36.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 95, "wording": "a26", "seed": 26000, "unit": "mm", "target": "37.5", "path": "F2", "a": 2.0, "b": 2.0, "answer": " 37.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 95, "wording": "a26", "seed": 26000, "unit": "mm", "target": "37.5", "path": "F2", "a": 2.0, "b": 4.0, "answer": " 37.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 95, "wording": "a26", "seed": 26000, "unit": "mm", "target": "37.5", "path": "F2", "a": 4.0, "b": 0.0, "answer": " 36.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 95, "wording": "a26", "seed": 26000, "unit": "mm", "target": "37.5", "path": "F2", "a": 4.0, "b": 2.0, "answer": " 37.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 95, "wording": "a26", "seed": 26000, "unit": "mm", "target": "37.5", "path": "F2", "a": 4.0, "b": 4.0, "answer": " 37.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 96, "wording": "a26", "seed": 26000, "unit": "mg", "target": "1.8", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 1.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 96, "wording": "a26", "seed": 26000, "unit": "mg", "target": "1.8", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 1.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 96, "wording": "a26", "seed": 26000, "unit": "mg", "target": "1.8", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 1.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 96, "wording": "a26", "seed": 26000, "unit": "mg", "target": "1.8", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 1.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 96, "wording": "a26", "seed": 26000, "unit": "mg", "target": "1.8", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 1.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 96, "wording": "a26", "seed": 26000, "unit": "mg", "target": "1.8", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 1.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 96, "wording": "a26", "seed": 26000, "unit": "mg", "target": "1.8", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 1.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 96, "wording": "a26", "seed": 26000, "unit": "mg", "target": "1.8", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 1.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 96, "wording": "a26", "seed": 26000, "unit": "mg", "target": "1.8", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 1.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 97, "wording": "a26", "seed": 26000, "unit": "mg", "target": "52.6", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 4.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 97, "wording": "a26", "seed": 26000, "unit": "mg", "target": "52.6", "path": "text4", "a": 0.0, "b": 2.0, "answer": "extract D): mass 52.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 97, "wording": "a26", "seed": 26000, "unit": "mg", "target": "52.6", "path": "text4", "a": 0.0, "b": 4.0, "answer": "extract D): mass 52.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 97, "wording": "a26", "seed": 26000, "unit": "mg", "target": "52.6", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 4.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 97, "wording": "a26", "seed": 26000, "unit": "mg", "target": "52.6", "path": "text4", "a": 2.0, "b": 2.0, "answer": "extract D): mass 52.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 97, "wording": "a26", "seed": 26000, "unit": "mg", "target": "52.6", "path": "text4", "a": 2.0, "b": 4.0, "answer": "extract D): mass 52.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 97, "wording": "a26", "seed": 26000, "unit": "mg", "target": "52.6", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 4.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 97, "wording": "a26", "seed": 26000, "unit": "mg", "target": "52.6", "path": "text4", "a": 4.0, "b": 2.0, "answer": "extract D): mass 52.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 97, "wording": "a26", "seed": 26000, "unit": "mg", "target": "52.6", "path": "text4", "a": 4.0, "b": 4.0, "answer": "extract D): mass 52.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 98, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "59.9", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 68.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 98, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "59.9", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 59.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 98, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "59.9", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 59.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 98, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "59.9", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 68.9 \u03bcL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 98, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "59.9", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 59.9 \u03bcL\n", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 98, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "59.9", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 59.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 98, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "59.9", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 68.9 \u03bcL.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"d": 2048, "doc": 98, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "59.9", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 59.9 \u03bcL\n", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 98, "wording": "a26", "seed": 26000, "unit": "\u03bcL", "target": "59.9", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 59.9 \u03bcL\n", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"d": 2048, "doc": 99, "wording": "a26", "seed": 26000, "unit": "kg", "target": "24.2", "path": "text4", "a": 0.0, "b": 0.0, "answer": " 7.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 99, "wording": "a26", "seed": 26000, "unit": "kg", "target": "24.2", "path": "text4", "a": 0.0, "b": 2.0, "answer": " 7.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 99, "wording": "a26", "seed": 26000, "unit": "kg", "target": "24.2", "path": "text4", "a": 0.0, "b": 4.0, "answer": " 7.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 99, "wording": "a26", "seed": 26000, "unit": "kg", "target": "24.2", "path": "text4", "a": 2.0, "b": 0.0, "answer": " 7.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 99, "wording": "a26", "seed": 26000, "unit": "kg", "target": "24.2", "path": "text4", "a": 2.0, "b": 2.0, "answer": " 7.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 99, "wording": "a26", "seed": 26000, "unit": "kg", "target": "24.2", "path": "text4", "a": 2.0, "b": 4.0, "answer": " 7.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 99, "wording": "a26", "seed": 26000, "unit": "kg", "target": "24.2", "path": "text4", "a": 4.0, "b": 0.0, "answer": " 7.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 99, "wording": "a26", "seed": 26000, "unit": "kg", "target": "24.2", "path": "text4", "a": 4.0, "b": 2.0, "answer": " 7.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"d": 2048, "doc": 99, "wording": "a26", "seed": 26000, "unit": "kg", "target": "24.2", "path": "text4", "a": 4.0, "b": 4.0, "answer": " 7.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
