@@ -4,6 +4,36 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
+## Step back (2026-11-04 08:28 IST; user via Lead: "read the meditation memory, step back, see all again, discuss")
+
+Since SCI-1 began (Nov 2): v0.1 decimals / v0.2 newline rows, the contract at size, A26 day-0 and five SCI-1 checkpoints,
+protocol_docs / protoc, A27 decontamination (clean), tools designed, two of my own operational errors (deleted Mind's M3
+copy; overwrote a running script).
+
+1. **What surprised me most: our own read may be blind to the claim.** The package read is `l_row + 4 (l_row − l_norow)`. A
+   protocol held in STATE is present in both streams, so the contrast cancels it and amplifies only what the ROW adds (the
+   bare value, then the row's own "."). Evidence (G1, the same docs): the state-only arm says the protocol's unit on
+   0.10-0.15 (M3, c1a), the contrast arm on 0.00-0.02. The compact arm works because ITS twin removes the pack (A23's skill
+   contrast). So "prose held in state = 0.00 at every milestone" may be partly a measurement artefact. Check before
+   theorising (A28 proposal): the held arm with (a) a plain warm read, (b) a twin = the no-protocol session + the same row.
+2. **What it really says for the package: decode against what the claim is about.** A fact question wants the twin without
+   the ROW; a rule-on-fact question wants the twin without the RULE, and the R x K answer wants both. Compositional
+   contrast: l(R,K) + a (l(R,K) − l(¬R,K)) + b (l(R,K) − l(R,¬K)). Closest prior work: Context-Aware Decoding (Shi et al.
+   2023, one context ablated); Instructive Decoding (Kim et al. 2023, a noisy instruction as the twin). Difference: the rule
+   is held in an O(1) state thousands of tokens back, its twin is the same session read without it (a second O(1) state),
+   and the two ablations are composed per component of the question.
+3. **Value failures are partly a tokenizer fact.** GPT-2 splits "12.347" into " 12" "." "347": copying a decimal is three
+   exact tokens, and rounding or converting needs digit arithmetic on irregular chunks. M4 kept the unit (0.80) and lost the
+   value (0.00). At 386M, ROUND / CONVERT belong to the executor (a python call), not the weights. The mind's job is to
+   RECOGNISE that a held convention applies (say the unit, emit the call).
+4. **Skills are habits** (agree with Lead): M3 0.40 → M4 0.00 → c1a 0.45 on the compact value; Mind's s8 decay. A
+   single-checkpoint verdict is noise-prone: read two checkpoints or report the swing.
+5. **What I would stop:** scoring arithmetic conventions as a mind skill; using the no-row contrast for rule-in-state
+   questions; my own unattended shell automation that edits or deletes files in shared dirs.
+
+Bold idea: the package decodes against twins chosen per question component (rule twin, fact twin), so the O(1) state's
+content shows in the answer instead of being cancelled. Cost: one extra O(1) state per held rule; no training.
+
 ## State (2026-11-02 11:29 IST) — read this first
 
 Session: **Library**. Lane today: SCI-1 support (Lead 10:12): the package contract at the new size, the A26
