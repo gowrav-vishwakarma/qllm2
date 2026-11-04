@@ -1,0 +1,103 @@
+ctl chain: code caa4da9 in /home/gowrav/Development/qllm_ctl, 2026-11-04T04:44:28Z; SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc WEIGHTS=0.23324,0.24116,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112
+=== ctl_pam_main run 1 2026-11-04T04:44:28Z
+=== ctl_pam_main start 2026-11-04T04:44:28Z commit=caa4da9 log=logs/v13_sempty_ctl_pam_main_caa4da9_20261104_1014.log ckpt=checkpoints_v13_sempty/ctl_pam_main_caa4da9 ===
+=== ctl_pam_main: yield to a CHECK / eval, stopping the trainer 2026-11-04T08:15:04Z
+Terminated                 .venv/bin/python -u -m v13_sempty.train --preset "$PRESET" --dataset mix --pretrain_sources "$SOURCES" --pretrain_weights "$WEIGHTS" --target_tokens "$TARGET_TOKENS" --blend_warmup_tokens "$BLEND_WARMUP" --device cuda --batch_size "$BATCH" --seq_len "$SEQ" --lr "$LR" --warmup_steps "$WARMUP" --dropout "$DROPOUT" --amp_dtype bf16 --fused_ce --fused_pam --ce_gemm_dtype auto --seed "$SEED" --log_interval 50 --val_every "$VAL_EVERY" --gen_every "$GEN_EVERY" --gen_max_tokens 80 --save_every_steps "$SAVE_EVERY" --keep_every_steps "$KEEP_EVERY" --keep_last "$KEEP_LAST" --diag_every 2000 --max_val_batches 0 --resume auto "${EXTRA[@]}" --checkpoint_dir "$CKPT_DIR" >> "$LOG" 2>&1
+=== ctl_pam_main attempt 1 died exit=143 2026-11-04T08:15:04Z ===
+=== ctl_pam_main end 1793780104 exit=143 attempts=1 ===
+=== ctl_pam_main run 2 2026-11-04T08:33:35Z
+=== ctl_pam_main start 2026-11-04T08:33:35Z commit=caa4da9 log=logs/v13_sempty_ctl_pam_main_caa4da9_20261104_1014.log ckpt=checkpoints_v13_sempty/ctl_pam_main_caa4da9 ===
+=== ctl_pam_main: yield to a CHECK / eval, stopping the trainer 2026-11-04T08:35:05Z
+Terminated                 .venv/bin/python -u -m v13_sempty.train --preset "$PRESET" --dataset mix --pretrain_sources "$SOURCES" --pretrain_weights "$WEIGHTS" --target_tokens "$TARGET_TOKENS" --blend_warmup_tokens "$BLEND_WARMUP" --device cuda --batch_size "$BATCH" --seq_len "$SEQ" --lr "$LR" --warmup_steps "$WARMUP" --dropout "$DROPOUT" --amp_dtype bf16 --fused_ce --fused_pam --ce_gemm_dtype auto --seed "$SEED" --log_interval 50 --val_every "$VAL_EVERY" --gen_every "$GEN_EVERY" --gen_max_tokens 80 --save_every_steps "$SAVE_EVERY" --keep_every_steps "$KEEP_EVERY" --keep_last "$KEEP_LAST" --diag_every 2000 --max_val_batches 0 --resume auto "${EXTRA[@]}" --checkpoint_dir "$CKPT_DIR" >> "$LOG" 2>&1
+=== ctl_pam_main attempt 1 died exit=143 2026-11-04T08:35:05Z ===
+=== ctl_pam_main end 1793781305 exit=143 attempts=1 ===
+=== ctl_pam_main run 3 2026-11-04T09:19:36Z
+=== ctl_pam_main start 2026-11-04T09:19:36Z commit=caa4da9 log=logs/v13_sempty_ctl_pam_main_caa4da9_20261104_1014.log ckpt=checkpoints_v13_sempty/ctl_pam_main_caa4da9 ===
+=== ctl_pam_main: yield to a CHECK / eval, stopping the trainer 2026-11-04T09:22:06Z
+Terminated                 .venv/bin/python -u -m v13_sempty.train --preset "$PRESET" --dataset mix --pretrain_sources "$SOURCES" --pretrain_weights "$WEIGHTS" --target_tokens "$TARGET_TOKENS" --blend_warmup_tokens "$BLEND_WARMUP" --device cuda --batch_size "$BATCH" --seq_len "$SEQ" --lr "$LR" --warmup_steps "$WARMUP" --dropout "$DROPOUT" --amp_dtype bf16 --fused_ce --fused_pam --ce_gemm_dtype auto --seed "$SEED" --log_interval 50 --val_every "$VAL_EVERY" --gen_every "$GEN_EVERY" --gen_max_tokens 80 --save_every_steps "$SAVE_EVERY" --keep_every_steps "$KEEP_EVERY" --keep_last "$KEEP_LAST" --diag_every 2000 --max_val_batches 0 --resume auto "${EXTRA[@]}" --checkpoint_dir "$CKPT_DIR" >> "$LOG" 2>&1
+=== ctl_pam_main attempt 1 died exit=143 2026-11-04T09:22:06Z ===
+=== ctl_pam_main end 1793784126 exit=143 attempts=1 ===
+=== ctl_pam_main run 4 2026-11-04T09:29:36Z
+=== ctl_pam_main start 2026-11-04T09:29:36Z commit=caa4da9 log=logs/v13_sempty_ctl_pam_main_caa4da9_20261104_1014.log ckpt=checkpoints_v13_sempty/ctl_pam_main_caa4da9 ===
+=== ctl_pam_main attempt 1 died exit=1 2026-11-04T09:47:54Z ===
+=== ctl_pam_main end 1793785674 exit=1 attempts=1 ===
+=== ctl_pam_main exit rc=1 (crash?), resuming 2026-11-04T09:48:08Z
+ctl chain: code caa4da9 in /home/gowrav/Development/qllm_ctl, 2026-11-04T09:52:08Z; SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc WEIGHTS=0.23324,0.24116,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112
+=== ctl_pam_main: blocked (VRAM / busy) 10 min, trying another arm 2026-11-04T10:01:09Z
+=== ctl_tpp_main run 1 2026-11-04T10:06:09Z
+=== ctl_tpp_main start 2026-11-04T10:06:09Z commit=caa4da9 log=logs/v13_sempty_ctl_tpp_main_caa4da9_20261104_1536.log ckpt=checkpoints_v13_sempty/ctl_tpp_main_caa4da9 ===
+=== ctl_tpp_main end 1793799819 exit=0 attempts=1 ===
+=== ctl_tpp_main trainer exited before 100 % (crash?), resuming 2026-11-04T13:44:07Z
+ctl chain: code caa4da9 in /home/gowrav/Development/qllm_ctl, 2026-11-04T13:49:20Z; SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc WEIGHTS=0.23324,0.24116,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112
+=== ctl_pam_main run 1 2026-11-04T13:54:20Z
+=== ctl_pam_main start 2026-11-04T13:54:20Z commit=caa4da9 log=logs/v13_sempty_ctl_pam_main_caa4da9_20261104_1014.log ckpt=checkpoints_v13_sempty/ctl_pam_main_caa4da9 ===
+=== ctl_pam_main end 1793806196 exit=0 attempts=1 ===
+=== ctl_pam_main done 2026-11-04T15:30:19Z
+=== ctl_tpp_decay run 1 2026-11-04T15:35:19Z
+=== ctl_tpp_decay start 2026-11-04T15:35:19Z commit=caa4da9 log=logs/v13_sempty_ctl_tpp_decay_caa4da9_20261104_2105.log ckpt=checkpoints_v13_sempty/ctl_tpp_decay_caa4da9 ===
+=== ctl_tpp_decay: yield to a CHECK / eval, stopping the trainer 2026-11-04T15:50:21Z
+Terminated                 .venv/bin/python -u -m v13_sempty.train --preset "$PRESET" --dataset mix --pretrain_sources "$SOURCES" --pretrain_weights "$WEIGHTS" --target_tokens "$TARGET_TOKENS" --blend_warmup_tokens "$BLEND_WARMUP" --device cuda --batch_size "$BATCH" --seq_len "$SEQ" --lr "$LR" --warmup_steps "$WARMUP" --dropout "$DROPOUT" --amp_dtype bf16 --fused_ce --fused_pam --ce_gemm_dtype auto --seed "$SEED" --log_interval 50 --val_every "$VAL_EVERY" --gen_every "$GEN_EVERY" --gen_max_tokens 80 --save_every_steps "$SAVE_EVERY" --keep_every_steps "$KEEP_EVERY" --keep_last "$KEEP_LAST" --diag_every 2000 --max_val_batches 0 --resume auto "${EXTRA[@]}" --checkpoint_dir "$CKPT_DIR" >> "$LOG" 2>&1
+=== ctl_tpp_decay attempt 1 died exit=143 2026-11-04T15:50:21Z ===
+=== ctl_tpp_decay end 1793807421 exit=143 attempts=1 ===
+=== ctl_tpp_decay: adopting running trainer 1536558 2026-11-04T15:50:56Z
+=== ctl_tpp_decay: yield to a CHECK / eval, stopping the trainer 2026-11-04T15:50:56Z
+=== ctl_tpp_decay: blocked (VRAM / busy) 10 min, trying another arm 2026-11-04T16:00:31Z
+=== ctl_mamba2_main: blocked (VRAM / busy) 10 min, trying another arm 2026-11-04T16:09:31Z
+=== ctl_pam_decay: blocked (VRAM / busy) 10 min, trying another arm 2026-11-04T16:18:32Z
+=== ctl_tpp_decay: blocked (VRAM / busy) 10 min, trying another arm 2026-11-04T16:27:32Z
+=== ctl_mamba2_main: blocked (VRAM / busy) 10 min, trying another arm 2026-11-04T16:36:32Z
+=== all arms blocked, waiting 5 min 2026-11-04T16:36:32Z
+=== ctl_pam_decay: blocked (VRAM / busy) 10 min, trying another arm 2026-11-04T16:50:32Z
+=== ctl_tpp_decay: blocked (VRAM / busy) 10 min, trying another arm 2026-11-04T16:59:33Z
+=== ctl_mamba2_main: blocked (VRAM / busy) 10 min, trying another arm 2026-11-04T17:08:33Z
+=== all arms blocked, waiting 5 min 2026-11-04T17:08:33Z
+=== ctl_pam_decay run 1 2026-11-04T17:18:33Z
+=== ctl_pam_decay start 2026-11-04T17:18:33Z commit=caa4da9 log=logs/v13_sempty_ctl_pam_decay_caa4da9_20261104_2248.log ckpt=checkpoints_v13_sempty/ctl_pam_decay_caa4da9 ===
+=== ctl_pam_decay end 1793815495 exit=0 attempts=1 ===
+=== ctl_pam_decay done 2026-11-04T18:05:27Z
+=== ctl_tpp_decay run 1 2026-11-04T18:10:28Z
+=== ctl_tpp_decay start 2026-11-04T18:10:28Z commit=caa4da9 log=logs/v13_sempty_ctl_tpp_decay_caa4da9_20261104_2105.log ckpt=checkpoints_v13_sempty/ctl_tpp_decay_caa4da9 ===
+=== ctl_tpp_decay end 1793818255 exit=0 attempts=1 ===
+=== ctl_tpp_decay done 2026-11-04T18:51:21Z
+=== ctl_mamba2_main run 1 2026-11-04T18:56:21Z
+=== ctl_mamba2_main start 2026-11-04T18:56:21Z commit=caa4da9 log=logs/v13_sempty_ctl_mamba2_main_caa4da9_20261105_0026.log ckpt=checkpoints_v13_sempty/ctl_mamba2_main_caa4da9 ===
+=== ctl_mamba2_main end 1793828123 exit=0 attempts=1 ===
+=== ctl_mamba2_main done 2026-11-04T21:35:56Z
+=== ctl_pam_caa4da9 readouts 2026-11-04T21:45:56Z
+per task: {'shift_wide_new@0': 0.765, 'shift_wide_new@2048': 0.63, 'shift_wide_new@4096': 0.393, 'shift_wide_new@8192': 0.265, 'affine_map_new@0': 0.733, 'affine_map_new@2048': 0.6, 'affine_map_new@4096': 0.47, 'affine_map_new@8192': 0.29}  mean 0.518
+free (A7): {'shift_wide_new@0': 0.765, 'shift_wide_new@2048': 0.63, 'shift_wide_new@4096': 0.393, 'shift_wide_new@8192': 0.263, 'affine_map_new@0': 0.345, 'affine_map_new@2048': 0.247, 'affine_map_new@4096': 0.16, 'affine_map_new@8192': 0.065}  mean 0.358
+saved logs/ctl/v13_sempty_ctl_pam_caa4da9_spread_s7000_t400.json
+  affine_map_new done
+Results saved to logs/ctl/v13_sempty_ctl_pam_caa4da9_t40_behavioral.json (aggregates, 1440 rows omitted)
+hellaswag {'acc': 0.2738, 'acc_norm': 0.2823, 'n': 10042}
+arc_easy {'acc': 0.4554, 'acc_norm': 0.4057, 'n': 2376}
+piqa {'acc': 0.6055, 'acc_norm': 0.5881, 'n': 1838}
+touch: setting times of 'logs/ctl/v13_sempty_clk2_echo_ctl_pam_caa4da9.jsonl/.readouts': Not a directory
+=== ctl_tpp_caa4da9 readouts 2026-11-04T22:04:55Z
+per task: {'shift_wide_new@0': 0.087, 'shift_wide_new@2048': 0.01, 'shift_wide_new@4096': 0.003, 'shift_wide_new@8192': 0.037, 'affine_map_new@0': 0.627, 'affine_map_new@2048': 0.182, 'affine_map_new@4096': 0.102, 'affine_map_new@8192': 0.072}  mean 0.14
+free (A7): {'shift_wide_new@0': 0.087, 'shift_wide_new@2048': 0.01, 'shift_wide_new@4096': 0.003, 'shift_wide_new@8192': 0.0, 'affine_map_new@0': 0.188, 'affine_map_new@2048': 0.033, 'affine_map_new@4096': 0.015, 'affine_map_new@8192': 0.003}  mean 0.042
+saved logs/ctl/v13_sempty_ctl_tpp_caa4da9_spread_s7000_t400.json
+  affine_map_new done
+Results saved to logs/ctl/v13_sempty_ctl_tpp_caa4da9_t40_behavioral.json (aggregates, 1440 rows omitted)
+hellaswag {'acc': 0.27, 'acc_norm': 0.2811, 'n': 10042}
+arc_easy {'acc': 0.4571, 'acc_norm': 0.4082, 'n': 2376}
+piqa {'acc': 0.5958, 'acc_norm': 0.5898, 'n': 1838}
+touch: setting times of 'logs/ctl/v13_sempty_clk2_echo_ctl_tpp_caa4da9.jsonl/.readouts': Not a directory
+=== ctl_mamba2_decay run 1 2026-11-04T22:17:17Z
+=== ctl_mamba2_decay start 2026-11-04T22:17:17Z commit=caa4da9 log=logs/v13_sempty_ctl_mamba2_decay_caa4da9_20261105_0347.log ckpt=checkpoints_v13_sempty/ctl_mamba2_decay_caa4da9 ===
+=== ctl_mamba2_decay end 1793832556 exit=0 attempts=1 ===
+=== ctl_mamba2_decay done 2026-11-04T22:49:40Z
+=== ctl_pam_caa4da9 readouts 2026-11-04T22:59:40Z
+touch: setting times of 'logs/ctl/v13_sempty_clk2_echo_ctl_pam_caa4da9.jsonl/.readouts': Not a directory
+=== ctl_tpp_caa4da9 readouts 2026-11-04T23:09:40Z
+touch: setting times of 'logs/ctl/v13_sempty_clk2_echo_ctl_tpp_caa4da9.jsonl/.readouts': Not a directory
+=== ctl_mamba2_caa4da9 readouts 2026-11-04T23:19:41Z
+per task: {'shift_wide_new@0': 0.388, 'shift_wide_new@2048': 0.0, 'shift_wide_new@4096': 0.0, 'shift_wide_new@8192': 0.0, 'affine_map_new@0': 0.975, 'affine_map_new@2048': 0.352, 'affine_map_new@4096': 0.245, 'affine_map_new@8192': 0.165}  mean 0.266
+free (A7): {'shift_wide_new@0': 0.388, 'shift_wide_new@2048': 0.0, 'shift_wide_new@4096': 0.0, 'shift_wide_new@8192': 0.0, 'affine_map_new@0': 0.522, 'affine_map_new@2048': 0.033, 'affine_map_new@4096': 0.013, 'affine_map_new@8192': 0.015}  mean 0.121
+saved logs/ctl/v13_sempty_ctl_mamba2_caa4da9_spread_s7000_t400.json
+  affine_map_new done
+Results saved to logs/ctl/v13_sempty_ctl_mamba2_caa4da9_t40_behavioral.json (aggregates, 1440 rows omitted)
+hellaswag {'acc': 0.272, 'acc_norm': 0.2842, 'n': 10042}
+arc_easy {'acc': 0.4592, 'acc_norm': 0.4104, 'n': 2376}
+piqa {'acc': 0.5914, 'acc_norm': 0.5876, 'n': 1838}
+touch: setting times of 'logs/ctl/v13_sempty_clk2_echo_ctl_mamba2_caa4da9.jsonl/.readouts': Not a directory

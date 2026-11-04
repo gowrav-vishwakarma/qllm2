@@ -1,0 +1,450 @@
+=== ctl_mamba2_main start 2026-11-04T18:56:21Z commit=caa4da9 log=logs/v13_sempty_ctl_mamba2_main_caa4da9_20261105_0026.log ckpt=checkpoints_v13_sempty/ctl_mamba2_main_caa4da9 ===
+[resume] auto: no checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt; starting fresh
+[decontam] index .cache/decontam/v1.npy sha256 08766210ac06dd67066aee27dc3c961f000fa078b62ee1c2991b3fa97bd2096d (4,371,599 13-grams)
+Streaming pretrain blend: sources=['dclm', 'fineweb', 'arxiv', 'pubmed', 'pes2o', 'cosmo', 'finemath', 'smoltalk2_mid', 'chatmt', 'tools', 'pysci', 'b2s', 'recall4k', 'proto4k', 'protoc'] weights=[0.23324, 0.24116, 0.04942, 0.07532, 0.10153, 0.11154, 0.02428, 0.02231, 0.03302, 0.03252, 0.04883, 0.01715, 0.00379, 0.00478, 0.00112] edu>=3 budget=900005888 vocab=50261 holdout_pct=5 exclude_holdout=True mix_seed=43 warmup=0 answer_weight=100.0 skips={'dclm': 0, 'fineweb': 0, 'arxiv': 0, 'pubmed': 0, 'pes2o': 0, 'cosmo': 0, 'finemath': 0, 'smoltalk2_mid': 0, 'chatmt': 0, 'tools': 0, 'pysci': 0, 'b2s': 0, 'recall4k': 0, 'proto4k': 0, 'protoc': 0}
+[cache] Pretrain holdout val from .cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt (500,000 tokens)
+[cache] Loaded WikiText-103 validation from .cache/v7_tokens/wikitext103_validation_v2_full_sl4096.pt (248,461 tokens)
+Val chunks: 60
+[val_src] dclm: 262,144 holdout tokens
+[val_src] fineweb: 262,144 holdout tokens
+[val_src] arxiv: 262,144 holdout tokens
+[val_src] pubmed: 262,144 holdout tokens
+[val_src] pes2o: 262,144 holdout tokens
+[val_src] cosmo: 262,144 holdout tokens
+[val_src] tools: 262,144 holdout tokens
+[val_src] pysci: 262,144 holdout tokens
+[val_src] chatmt: 262,144 holdout tokens
+streaming pretrain: sources=('dclm', 'fineweb', 'arxiv', 'pubmed', 'pes2o', 'cosmo', 'finemath', 'smoltalk2_mid', 'chatmt', 'tools', 'pysci', 'b2s', 'recall4k', 'proto4k', 'protoc') weights=(0.23324, 0.24116, 0.04942, 0.07532, 0.10153, 0.11154, 0.02428, 0.02231, 0.03302, 0.03252, 0.04883, 0.01715, 0.00379, 0.00478, 0.00112) target_tokens=900005888 steps=13733 cached=False chat_vocab=True wiki_val=True
+========================================================================
+  v13_sempty trainer  (real-arm PAM, O(1) memory)
+  wall clock start : 2026-11-05 00:26:27
+  commit           : caa4da9
+  preset / dataset : baseline_real_pm / mix
+  arch             : mamba2
+========================================================================
+[env]
+  device=cuda gpu=NVIDIA GeForce RTX 4090 torch=2.8.0+cu128
+  fused_pam=True fused_ce=True ce_gemm_dtype=auto amp=bf16 grad_ckpt=False
+[geometry]
+  batch_size=16 seq_len=4096 tokens/step=65,536
+  steps=13,733 steps/epoch=None epochs_implied=n/a
+  planned_tokens=900,005,888  lr=0.0012 warmup=500 wd=0.01 grad_clip=1.0
+  checkpoints: dir=checkpoints_v13_sempty/ctl_mamba2_main_caa4da9 latest_every=200 keep_every=0 keep_last=1 best=on val_every=2000 resume=auto
+[data]
+  train_chunks=None val_chunks=122 recall_frac=0.0 vocab=50261 tokenizer=gpt2
+[params]
+  total=102,613,960 (102.61M dense)
+[config] {'arch': 'mamba2', 'vocab_size': 50261, 'd_model': 768, 'n_layer': 17, 'd_state': 128, 'headdim': 64, 'expand': 2, 'd_conv': 4, 'chunk_size': 256, 'ngroups': 1}
+[args] {'preset': 'baseline_real_pm', 'dataset': 'mix', 'device': 'cuda', 'steps': 13733, 'epochs': 1, 'batch_size': 16, 'seq_len': 4096, 'lr': 0.0012, 'weight_decay': 0.01, 'dropout': 0.0, 'warmup_steps': 500, 'lr_schedule': 'wsd_stable', 'continue_from': '', 'gradient_clip': 1.0, 'amp_dtype': 'bf16', 'fused_ce': True, 'no_fused_ce': False, 'fused_ce_chunk': 4096, 'ce_gemm_dtype': 'auto', 'fused_pam': True, 'max_samples': 64, 'seed': 43, 'target_tokens': 900005888, 'pretrain_sources': 'dclm,fineweb,arxiv,pubmed,pes2o,cosmo,finemath,smoltalk2_mid,chatmt,tools,pysci,b2s,recall4k,proto4k,protoc', 'pretrain_weights': '0.23324,0.24116,0.04942,0.07532,0.10153,0.11154,0.02428,0.02231,0.03302,0.03252,0.04883,0.01715,0.00379,0.00478,0.00112', 'edu_score_min': 3, 'fineweb_name': 'sample-10BT', 'holdout_pct': 5, 'blend_warmup_tokens': 0, 'answer_weight': 100.0, 'num_workers': 2, 'no_wiki_val': False, 'val_sources': 'dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,pysci,chatmt', 'val_source_tokens': 262144, 'resume': 'auto', 'keep_every_steps': 0, 'keep_last': 1, 'no_chat_vocab': False, 'checkpoint_dir': 'checkpoints_v13_sempty/ctl_mamba2_main_caa4da9', 'gradient_checkpointing': False, 'log_interval': 50, 'val_every': 2000, 'gen_every': 0, 'gen_prompt': 'In 1923, the University of', 'gen_max_tokens': 80, 'save_every_steps': 200, 'diag_every': 2000, 'max_val_batches': 0, 'recall_frac': 0.0, 'n_states': None, 'vault': False, 'delta': False, 'cond_mem': False, 'reset_at_eos': True, 'grad_accum': 4, 'chrono': False, 'out_gate': False, 'short_conv': False, 'swa_layers': '', 'swa_window': 128, 'pam_layers': '', 'mlp_hidden': 0, 'share_reads': False, 'echo': False, 'ngram_orders': '', 'echo_surprise_tau': 0.0, 'dim': 0, 'n_heads': 0, 'head_dim': 0, 'n_layers': 0, 'base_dt_bias': None, 'stream_worker': 1, 'prefetch': 64, 'arch': 'mamba2', 'mamba_d_model': 768, 'grove_spec': '', 'mamba_n_layer': 17, 'init_from': ''}
+========================================================================
+[accum] 4 micro-batches of 4 per step
+[data] ANSWER_IN_WINDOW=1: answer weights only for docs that start in the window
+  [stream] dclm_e3_h5_ex: 1769 files; 0 docs -> file 0, 0 docs to skip by reading
+Token indices sequence length is longer than the specified maximum sequence length for this model (1053 > 1024). Running this sequence through the model will result in indexing errors
+  [stream] fineweb_sample-10BT_e3_h5_ex_m0: 14 files; 0 docs -> file 0, 0 docs to skip by reading
+  [stream] cosmo_v2: 104 files; 0 docs -> file 0, 0 docs to skip by reading
+  [stream] pes2o: 91 files; 0 docs to skip by reading
+  [stream] pubmed: 17 files; 0 docs to skip by reading
+  [stream] arxiv: 8 files; 0 docs to skip by reading
+  [stream] pysci: 12 files; 0 docs to skip by reading
+  [stream] chatmt: 7 files; 0 docs -> file 0, 0 docs to skip by reading
+  [stream] tools: 139,792 docs in memory; skip 0
+  [stream] finemath_v2: 64 files; 0 docs -> file 0, 0 docs to skip by reading
+  [stream] smoltalk2_Mid: 237 files; 0 docs -> file 0, 0 docs to skip by reading
+step 50 [50/13733   0%]  loss=7.7889 ppl=2413.7 lr=1.20e-04 | 3080 tok/s (avg 3080) ETA 4852m25s | gtok=3,276,800 | GPU 1.3/7.0GB
+step 100 [100/13733   1%]  loss=6.2113 ppl=498.4 lr=2.40e-04 | 113616 tok/s (avg 5997) ETA 2482m52s | gtok=6,553,600 | GPU 1.3/7.0GB
+step 150 [150/13733   1%]  loss=5.7066 ppl=300.8 lr=3.60e-04 | 113476 tok/s (avg 8765) ETA 1692m45s | gtok=9,830,400 | GPU 1.3/7.0GB
+step 200 [200/13733   1%]  loss=5.5058 ppl=246.1 lr=4.80e-04 | 113341 tok/s (avg 11392) ETA 1297m30s | gtok=13,107,200 | GPU 1.3/7.0GB
+  [checkpoint] step 200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 250 [250/13733   2%]  loss=5.3305 ppl=206.5 lr=6.00e-04 | 111033 tok/s (avg 13884) ETA 1060m41s | gtok=16,384,000 | GPU 1.3/7.0GB
+step 300 [300/13733   2%]  loss=4.7282 ppl=113.1 lr=7.20e-04 | 113138 tok/s (avg 16262) ETA 902m14s | gtok=19,660,800 | GPU 1.3/7.0GB
+step 350 [350/13733   3%]  loss=4.3948 ppl=81.0 lr=8.40e-04 | 113078 tok/s (avg 18528) ETA 788m56s | gtok=22,937,600 | GPU 1.3/7.0GB
+step 400 [400/13733   3%]  loss=4.5987 ppl=99.4 lr=9.60e-04 | 113123 tok/s (avg 20691) ETA 703m50s | gtok=26,214,400 | GPU 1.3/7.0GB
+  [checkpoint] step 400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 450 [450/13733   3%]  loss=4.4519 ppl=85.8 lr=1.08e-03 | 105793 tok/s (avg 22722) ETA 638m31s | gtok=29,491,200 | GPU 1.3/7.0GB
+step 500 [500/13733   4%]  loss=4.2159 ppl=67.8 lr=1.20e-03 | 113194 tok/s (avg 24696) ETA 585m16s | gtok=32,768,000 | GPU 1.3/7.0GB
+step 550 [550/13733   4%]  loss=4.5986 ppl=99.3 lr=1.20e-03 | 113040 tok/s (avg 26585) ETA 541m38s | gtok=36,044,800 | GPU 1.3/7.0GB
+step 600 [600/13733   4%]  loss=4.1428 ppl=63.0 lr=1.20e-03 | 113103 tok/s (avg 28395) ETA 505m11s | gtok=39,321,600 | GPU 1.3/7.0GB
+  [checkpoint] step 600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 650 [650/13733   5%]  loss=4.2596 ppl=70.8 lr=1.20e-03 | 109555 tok/s (avg 30110) ETA 474m35s | gtok=42,598,400 | GPU 1.3/7.0GB
+step 700 [700/13733   5%]  loss=4.0144 ppl=55.4 lr=1.20e-03 | 113144 tok/s (avg 31776) ETA 447m59s | gtok=45,875,200 | GPU 1.3/7.0GB
+step 750 [750/13733   5%]  loss=3.9771 ppl=53.4 lr=1.20e-03 | 113111 tok/s (avg 33376) ETA 424m52s | gtok=49,152,000 | GPU 1.3/7.0GB
+step 800 [800/13733   6%]  loss=3.3231 ppl=27.7 lr=1.20e-03 | 113118 tok/s (avg 34914) ETA 404m35s | gtok=52,428,800 | GPU 1.3/7.0GB
+  [checkpoint] step 800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 850 [850/13733   6%]  loss=3.7795 ppl=43.8 lr=1.20e-03 | 92799 tok/s (avg 36244) ETA 388m14s | gtok=55,705,600 | GPU 1.3/7.0GB
+step 900 [900/13733   7%]  loss=3.7211 ppl=41.3 lr=1.20e-03 | 113117 tok/s (avg 37666) ETA 372m08s | gtok=58,982,400 | GPU 1.3/7.0GB
+step 950 [950/13733   7%]  loss=3.6514 ppl=38.5 lr=1.20e-03 | 113039 tok/s (avg 39036) ETA 357m40s | gtok=62,259,200 | GPU 1.3/7.0GB
+step 1000 [1000/13733   7%]  loss=4.0167 ppl=55.5 lr=1.20e-03 | 113084 tok/s (avg 40358) ETA 344m36s | gtok=65,536,000 | GPU 1.3/7.0GB
+  [checkpoint] step 1000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 1050 [1050/13733   8%]  loss=3.7663 ppl=43.2 lr=1.20e-03 | 109507 tok/s (avg 41609) ETA 332m56s | gtok=68,812,800 | GPU 1.3/7.0GB
+step 1100 [1100/13733   8%]  loss=3.2952 ppl=27.0 lr=1.20e-03 | 112995 tok/s (avg 42839) ETA 322m06s | gtok=72,089,600 | GPU 1.3/7.0GB
+step 1150 [1150/13733   8%]  loss=3.7274 ppl=41.6 lr=1.20e-03 | 112943 tok/s (avg 44027) ETA 312m10s | gtok=75,366,400 | GPU 1.3/7.0GB
+step 1200 [1200/13733   9%]  loss=3.6242 ppl=37.5 lr=1.20e-03 | 112975 tok/s (avg 45176) ETA 303m01s | gtok=78,643,200 | GPU 1.3/7.0GB
+  [checkpoint] step 1200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 1250 [1250/13733   9%]  loss=3.6143 ppl=37.1 lr=1.20e-03 | 84815 tok/s (avg 46037) ETA 296m10s | gtok=81,920,000 | GPU 1.3/7.0GB
+step 1300 [1300/13733   9%]  loss=3.4429 ppl=31.3 lr=1.20e-03 | 113126 tok/s (avg 47111) ETA 288m15s | gtok=85,196,800 | GPU 1.3/7.0GB
+step 1350 [1350/13733  10%]  loss=3.3725 ppl=29.2 lr=1.20e-03 | 112980 tok/s (avg 48151) ETA 280m53s | gtok=88,473,600 | GPU 1.3/7.0GB
+step 1400 [1400/13733  10%]  loss=3.3772 ppl=29.3 lr=1.20e-03 | 113030 tok/s (avg 49159) ETA 274m01s | gtok=91,750,400 | GPU 1.3/7.0GB
+  [checkpoint] step 1400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 1450 [1450/13733  11%]  loss=3.5084 ppl=33.4 lr=1.20e-03 | 109433 tok/s (avg 50110) ETA 267m44s | gtok=95,027,200 | GPU 1.3/7.0GB
+step 1500 [1500/13733  11%]  loss=3.3024 ppl=27.2 lr=1.20e-03 | 112911 tok/s (avg 51057) ETA 261m42s | gtok=98,304,000 | GPU 1.3/7.0GB
+step 1550 [1550/13733  11%]  loss=3.4041 ppl=30.1 lr=1.20e-03 | 112854 tok/s (avg 51975) ETA 256m01s | gtok=101,580,800 | GPU 1.3/7.0GB
+step 1600 [1600/13733  12%]  loss=2.9529 ppl=19.2 lr=1.20e-03 | 112931 tok/s (avg 52867) ETA 250m40s | gtok=104,857,600 | GPU 1.3/7.0GB
+  [checkpoint] step 1600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 1650 [1650/13733  12%]  loss=3.2621 ppl=26.1 lr=1.20e-03 | 74987 tok/s (avg 53344) ETA 247m24s | gtok=108,134,400 | GPU 1.3/7.0GB
+step 1700 [1700/13733  12%]  loss=3.4540 ppl=31.6 lr=1.20e-03 | 113106 tok/s (avg 54186) ETA 242m33s | gtok=111,411,200 | GPU 1.3/7.0GB
+step 1750 [1750/13733  13%]  loss=2.6859 ppl=14.7 lr=1.20e-03 | 113038 tok/s (avg 55004) ETA 237m57s | gtok=114,688,000 | GPU 1.3/7.0GB
+step 1800 [1800/13733  13%]  loss=3.4284 ppl=30.8 lr=1.20e-03 | 113082 tok/s (avg 55800) ETA 233m35s | gtok=117,964,800 | GPU 1.3/7.0GB
+  [checkpoint] step 1800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 1850 [1850/13733  13%]  loss=3.1562 ppl=23.5 lr=1.20e-03 | 108776 tok/s (avg 56544) ETA 229m32s | gtok=121,241,600 | GPU 1.3/7.0GB
+step 1900 [1900/13733  14%]  loss=3.1367 ppl=23.0 lr=1.20e-03 | 113032 tok/s (avg 57298) ETA 225m34s | gtok=124,518,400 | GPU 1.3/7.0GB
+step 1950 [1950/13733  14%]  loss=3.5533 ppl=34.9 lr=1.20e-03 | 112929 tok/s (avg 58031) ETA 221m46s | gtok=127,795,200 | GPU 1.3/7.0GB
+step 2000 [2000/13733  15%]  loss=3.2048 ppl=24.6 lr=1.20e-03 | 112897 tok/s (avg 58744) ETA 218m09s | gtok=131,072,000 | GPU 1.3/7.0GB
+  [checkpoint] step 2000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/best_model.pt
+  [val @ step 2000] val_loss=4.0987 val_ppl=60.26 *best* (best 60.26)
+  [wiki_val @ step 2000] val_loss=5.1427 val_ppl=171.17
+  [val_src @ step 2000] dclm=4.1074 fineweb=4.1743 arxiv=2.3151 pubmed=2.6755 pes2o=3.8661 cosmo=3.3925 tools=1.1931 pysci=1.6617 chatmt=2.6936
+  [checkpoint] step 2000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 2050 [2050/13733  15%]  loss=3.3062 ppl=27.3 lr=1.20e-03 | 58720 tok/s (avg 58744) ETA 217m13s | gtok=134,348,800 | GPU 1.3/7.0GB
+step 2100 [2100/13733  15%]  loss=3.3382 ppl=28.2 lr=1.20e-03 | 112951 tok/s (avg 59423) ETA 213m49s | gtok=137,625,600 | GPU 1.3/7.0GB
+step 2150 [2150/13733  16%]  loss=3.3901 ppl=29.7 lr=1.20e-03 | 112925 tok/s (avg 60085) ETA 210m33s | gtok=140,902,400 | GPU 1.3/7.0GB
+step 2200 [2200/13733  16%]  loss=3.0636 ppl=21.4 lr=1.20e-03 | 112985 tok/s (avg 60731) ETA 207m25s | gtok=144,179,200 | GPU 1.3/7.0GB
+  [checkpoint] step 2200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 2250 [2250/13733  16%]  loss=3.1645 ppl=23.7 lr=1.20e-03 | 109340 tok/s (avg 61337) ETA 204m29s | gtok=147,456,000 | GPU 1.3/7.0GB
+step 2300 [2300/13733  17%]  loss=3.1094 ppl=22.4 lr=1.20e-03 | 112926 tok/s (avg 61952) ETA 201m34s | gtok=150,732,800 | GPU 1.3/7.0GB
+step 2350 [2350/13733  17%]  loss=3.1412 ppl=23.1 lr=1.20e-03 | 112971 tok/s (avg 62553) ETA 198m45s | gtok=154,009,600 | GPU 1.3/7.0GB
+step 2400 [2400/13733  17%]  loss=2.8588 ppl=17.4 lr=1.20e-03 | 112910 tok/s (avg 63140) ETA 196m03s | gtok=157,286,400 | GPU 1.3/7.0GB
+  [checkpoint] step 2400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 2450 [2450/13733  18%]  loss=2.7883 ppl=16.3 lr=1.20e-03 | 82473 tok/s (avg 63444) ETA 194m15s | gtok=160,563,200 | GPU 1.3/7.0GB
+step 2500 [2500/13733  18%]  loss=3.2699 ppl=26.3 lr=1.20e-03 | 112917 tok/s (avg 64004) ETA 191m41s | gtok=163,840,000 | GPU 1.3/7.0GB
+step 2550 [2550/13733  19%]  loss=3.1875 ppl=24.2 lr=1.20e-03 | 112883 tok/s (avg 64552) ETA 189m13s | gtok=167,116,800 | GPU 1.3/7.0GB
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 9f628a57-44d8-449f-bcd1-9c75a2f73458)')' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu/resolve/87f09149ef4734204d70ed1d046ddc9ca3f2b8f9/sample/10BT/000_00000.parquet
+Retrying in 1s [Retry 1/5].
+step 2600 [2600/13733  19%]  loss=3.3373 ppl=28.1 lr=1.20e-03 | 112909 tok/s (avg 65089) ETA 186m49s | gtok=170,393,600 | GPU 1.3/7.0GB
+  [checkpoint] step 2600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 2650 [2650/13733  19%]  loss=2.8416 ppl=17.1 lr=1.20e-03 | 109378 tok/s (avg 65590) ETA 184m33s | gtok=173,670,400 | GPU 1.3/7.0GB
+step 2700 [2700/13733  20%]  loss=2.9449 ppl=19.0 lr=1.20e-03 | 112848 tok/s (avg 66102) ETA 182m18s | gtok=176,947,200 | GPU 1.3/7.0GB
+step 2750 [2750/13733  20%]  loss=2.6287 ppl=13.9 lr=1.20e-03 | 112946 tok/s (avg 66604) ETA 180m06s | gtok=180,224,000 | GPU 1.3/7.0GB
+step 2800 [2800/13733  20%]  loss=3.0711 ppl=21.6 lr=1.20e-03 | 112879 tok/s (avg 67096) ETA 177m58s | gtok=183,500,800 | GPU 1.3/7.0GB
+  [checkpoint] step 2800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 2850 [2850/13733  21%]  loss=3.1045 ppl=22.3 lr=1.20e-03 | 78751 tok/s (avg 67270) ETA 176m42s | gtok=186,777,600 | GPU 1.3/7.0GB
+step 2900 [2900/13733  21%]  loss=3.2793 ppl=26.6 lr=1.20e-03 | 113065 tok/s (avg 67743) ETA 174m40s | gtok=190,054,400 | GPU 1.3/7.0GB
+step 2950 [2950/13733  21%]  loss=2.6714 ppl=14.5 lr=1.20e-03 | 112926 tok/s (avg 68206) ETA 172m40s | gtok=193,331,200 | GPU 1.3/7.0GB
+step 3000 [3000/13733  22%]  loss=3.0371 ppl=20.8 lr=1.20e-03 | 112949 tok/s (avg 68659) ETA 170m44s | gtok=196,608,000 | GPU 1.3/7.0GB
+  [checkpoint] step 3000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 3050 [3050/13733  22%]  loss=3.4701 ppl=32.1 lr=1.20e-03 | 109321 tok/s (avg 69080) ETA 168m54s | gtok=199,884,800 | GPU 1.3/7.0GB
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 39b88584-6554-4633-8999-cd4f61d33905)')' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu/resolve/87f09149ef4734204d70ed1d046ddc9ca3f2b8f9/sample/10BT/000_00000.parquet
+Retrying in 1s [Retry 1/5].
+step 3100 [3100/13733  23%]  loss=2.9693 ppl=19.5 lr=1.20e-03 | 112887 tok/s (avg 69516) ETA 167m04s | gtok=203,161,600 | GPU 1.3/7.0GB
+step 3150 [3150/13733  23%]  loss=3.0314 ppl=20.7 lr=1.20e-03 | 112825 tok/s (avg 69942) ETA 165m16s | gtok=206,438,400 | GPU 1.3/7.0GB
+step 3200 [3200/13733  23%]  loss=2.9486 ppl=19.1 lr=1.20e-03 | 112873 tok/s (avg 70360) ETA 163m30s | gtok=209,715,200 | GPU 1.3/7.0GB
+  [checkpoint] step 3200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 3250 [3250/13733  24%]  loss=2.7529 ppl=15.7 lr=1.20e-03 | 81405 tok/s (avg 70507) ETA 162m23s | gtok=212,992,000 | GPU 1.3/7.0GB
+step 3300 [3300/13733  24%]  loss=2.9711 ppl=19.5 lr=1.20e-03 | 113036 tok/s (avg 70911) ETA 160m42s | gtok=216,268,800 | GPU 1.3/7.0GB
+step 3350 [3350/13733  24%]  loss=2.9078 ppl=18.3 lr=1.20e-03 | 112956 tok/s (avg 71307) ETA 159m02s | gtok=219,545,600 | GPU 1.3/7.0GB
+step 3400 [3400/13733  25%]  loss=2.9034 ppl=18.2 lr=1.20e-03 | 112890 tok/s (avg 71696) ETA 157m25s | gtok=222,822,400 | GPU 1.3/7.0GB
+  [checkpoint] step 3400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 3450 [3450/13733  25%]  loss=3.0030 ppl=20.1 lr=1.20e-03 | 109421 tok/s (avg 72056) ETA 155m52s | gtok=226,099,200 | GPU 1.3/7.0GB
+step 3500 [3500/13733  25%]  loss=3.2888 ppl=26.8 lr=1.20e-03 | 112892 tok/s (avg 72430) ETA 154m18s | gtok=229,376,000 | GPU 1.3/7.0GB
+step 3550 [3550/13733  26%]  loss=2.7967 ppl=16.4 lr=1.20e-03 | 112863 tok/s (avg 72797) ETA 152m47s | gtok=232,652,800 | GPU 1.3/7.0GB
+step 3600 [3600/13733  26%]  loss=2.8814 ppl=17.8 lr=1.20e-03 | 112880 tok/s (avg 73158) ETA 151m17s | gtok=235,929,600 | GPU 1.3/7.0GB
+  [checkpoint] step 3600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 3650 [3650/13733  27%]  loss=2.7228 ppl=15.2 lr=1.20e-03 | 83150 tok/s (avg 73279) ETA 150m17s | gtok=239,206,400 | GPU 1.3/7.0GB
+step 3700 [3700/13733  27%]  loss=3.0999 ppl=22.2 lr=1.20e-03 | 113086 tok/s (avg 73629) ETA 148m50s | gtok=242,483,200 | GPU 1.3/7.0GB
+step 3750 [3750/13733  27%]  loss=3.0865 ppl=21.9 lr=1.20e-03 | 112981 tok/s (avg 73973) ETA 147m24s | gtok=245,760,000 | GPU 1.3/7.0GB
+step 3800 [3800/13733  28%]  loss=2.6018 ppl=13.5 lr=1.20e-03 | 112883 tok/s (avg 74310) ETA 146m00s | gtok=249,036,800 | GPU 1.3/7.0GB
+  [checkpoint] step 3800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 3850 [3850/13733  28%]  loss=3.0224 ppl=20.5 lr=1.20e-03 | 109383 tok/s (avg 74620) ETA 144m39s | gtok=252,313,600 | GPU 1.3/7.0GB
+step 3900 [3900/13733  28%]  loss=2.9110 ppl=18.4 lr=1.20e-03 | 112893 tok/s (avg 74946) ETA 143m18s | gtok=255,590,400 | GPU 1.3/7.0GB
+step 3950 [3950/13733  29%]  loss=2.8811 ppl=17.8 lr=1.20e-03 | 112877 tok/s (avg 75266) ETA 141m58s | gtok=258,867,200 | GPU 1.3/7.0GB
+step 4000 [4000/13733  29%]  loss=3.0123 ppl=20.3 lr=1.20e-03 | 112826 tok/s (avg 75581) ETA 140m39s | gtok=262,144,000 | GPU 1.3/7.0GB
+  [checkpoint] step 4000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/best_model.pt
+  [val @ step 4000] val_loss=3.8433 val_ppl=46.68 *best* (best 46.68)
+  [wiki_val @ step 4000] val_loss=4.6728 val_ppl=106.99
+  [val_src @ step 4000] dclm=3.8520 fineweb=3.8940 arxiv=2.0581 pubmed=2.4366 pes2o=3.5455 cosmo=3.0587 tools=0.9902 pysci=1.4229 chatmt=2.3604
+  [mix @ step 4000] window: dclm=21.16% fineweb=20.94% pysci=9.07% pes2o=8.98% cosmo=8.79% pubmed=8.75% arxiv=7.25% tools=3.79% chatmt=3.05% smoltalk2_mid=3.00% finemath=2.95% b2s=1.42% proto4k=0.40% recall4k=0.31% protoc=0.15%
+  [mix_run @ step 4000] since start: dclm=21.16% fineweb=20.94% pysci=9.07% pes2o=8.98% cosmo=8.79% pubmed=8.75% arxiv=7.25% tools=3.79% chatmt=3.05% smoltalk2_mid=3.00% finemath=2.95% b2s=1.42% proto4k=0.40% recall4k=0.31% protoc=0.15%
+  [checkpoint] step 4000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 4050 [4050/13733  29%]  loss=3.2069 ppl=24.7 lr=1.20e-03 | 49772 tok/s (avg 75100) ETA 140m49s | gtok=265,420,800 | GPU 1.3/7.0GB
+step 4100 [4100/13733  30%]  loss=2.9500 ppl=19.1 lr=1.20e-03 | 113040 tok/s (avg 75409) ETA 139m31s | gtok=268,697,600 | GPU 1.3/7.0GB
+step 4150 [4150/13733  30%]  loss=3.1776 ppl=24.0 lr=1.20e-03 | 113001 tok/s (avg 75712) ETA 138m14s | gtok=271,974,400 | GPU 1.3/7.0GB
+step 4200 [4200/13733  31%]  loss=2.8754 ppl=17.7 lr=1.20e-03 | 112952 tok/s (avg 76010) ETA 136m59s | gtok=275,251,200 | GPU 1.3/7.0GB
+  [checkpoint] step 4200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 4250 [4250/13733  31%]  loss=2.6500 ppl=14.2 lr=1.20e-03 | 109328 tok/s (avg 76284) ETA 135m46s | gtok=278,528,000 | GPU 1.3/7.0GB
+step 4300 [4300/13733  31%]  loss=2.5502 ppl=12.8 lr=1.20e-03 | 112827 tok/s (avg 76572) ETA 134m33s | gtok=281,804,800 | GPU 1.3/7.0GB
+step 4350 [4350/13733  32%]  loss=2.6935 ppl=14.8 lr=1.20e-03 | 112880 tok/s (avg 76856) ETA 133m20s | gtok=285,081,600 | GPU 1.3/7.0GB
+step 4400 [4400/13733  32%]  loss=2.6679 ppl=14.4 lr=1.20e-03 | 112820 tok/s (avg 77136) ETA 132m09s | gtok=288,358,400 | GPU 1.3/7.0GB
+  [checkpoint] step 4400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 4450 [4450/13733  32%]  loss=2.9091 ppl=18.3 lr=1.20e-03 | 109143 tok/s (avg 77391) ETA 131m01s | gtok=291,635,200 | GPU 1.3/7.0GB
+step 4500 [4500/13733  33%]  loss=2.9951 ppl=20.0 lr=1.20e-03 | 112799 tok/s (avg 77662) ETA 129m51s | gtok=294,912,000 | GPU 1.3/7.0GB
+step 4550 [4550/13733  33%]  loss=2.8017 ppl=16.5 lr=1.20e-03 | 112795 tok/s (avg 77928) ETA 128m42s | gtok=298,188,800 | GPU 1.3/7.0GB
+step 4600 [4600/13733  33%]  loss=2.7038 ppl=14.9 lr=1.20e-03 | 112781 tok/s (avg 78191) ETA 127m34s | gtok=301,465,600 | GPU 1.3/7.0GB
+  [checkpoint] step 4600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 4650 [4650/13733  34%]  loss=3.1863 ppl=24.2 lr=1.20e-03 | 91120 tok/s (avg 78311) ETA 126m41s | gtok=304,742,400 | GPU 1.3/7.0GB
+step 4700 [4700/13733  34%]  loss=2.9297 ppl=18.7 lr=1.20e-03 | 113000 tok/s (avg 78567) ETA 125m34s | gtok=308,019,200 | GPU 1.3/7.0GB
+step 4750 [4750/13733  35%]  loss=3.1075 ppl=22.4 lr=1.20e-03 | 112996 tok/s (avg 78820) ETA 124m29s | gtok=311,296,000 | GPU 1.3/7.0GB
+step 4800 [4800/13733  35%]  loss=2.8416 ppl=17.1 lr=1.20e-03 | 112867 tok/s (avg 79068) ETA 123m24s | gtok=314,572,800 | GPU 1.3/7.0GB
+  [checkpoint] step 4800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 4850 [4850/13733  35%]  loss=2.7549 ppl=15.7 lr=1.20e-03 | 109357 tok/s (avg 79295) ETA 122m21s | gtok=317,849,600 | GPU 1.3/7.0GB
+step 4900 [4900/13733  36%]  loss=3.0819 ppl=21.8 lr=1.20e-03 | 112846 tok/s (avg 79536) ETA 121m18s | gtok=321,126,400 | GPU 1.3/7.0GB
+step 4950 [4950/13733  36%]  loss=3.0534 ppl=21.2 lr=1.20e-03 | 112842 tok/s (avg 79774) ETA 120m15s | gtok=324,403,200 | GPU 1.3/7.0GB
+step 5000 [5000/13733  36%]  loss=2.8104 ppl=16.6 lr=1.20e-03 | 112848 tok/s (avg 80008) ETA 119m13s | gtok=327,680,000 | GPU 1.3/7.0GB
+  [checkpoint] step 5000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 5050 [5050/13733  37%]  loss=2.7847 ppl=16.2 lr=1.20e-03 | 51145 tok/s (avg 79564) ETA 119m12s | gtok=330,956,800 | GPU 1.3/7.0GB
+step 5100 [5100/13733  37%]  loss=3.1443 ppl=23.2 lr=1.20e-03 | 113129 tok/s (avg 79796) ETA 118m10s | gtok=334,233,600 | GPU 1.3/7.0GB
+step 5150 [5150/13733  38%]  loss=2.7304 ppl=15.3 lr=1.20e-03 | 113165 tok/s (avg 80025) ETA 117m08s | gtok=337,510,400 | GPU 1.3/7.0GB
+step 5200 [5200/13733  38%]  loss=2.8479 ppl=17.3 lr=1.20e-03 | 113051 tok/s (avg 80250) ETA 116m08s | gtok=340,787,200 | GPU 1.3/7.0GB
+  [checkpoint] step 5200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 5250 [5250/13733  38%]  loss=2.9518 ppl=19.1 lr=1.20e-03 | 90409 tok/s (avg 80336) ETA 115m20s | gtok=344,064,000 | GPU 1.3/7.0GB
+step 5300 [5300/13733  39%]  loss=2.9177 ppl=18.5 lr=1.20e-03 | 112899 tok/s (avg 80556) ETA 114m20s | gtok=347,340,800 | GPU 1.3/7.0GB
+step 5350 [5350/13733  39%]  loss=2.8996 ppl=18.2 lr=1.20e-03 | 112979 tok/s (avg 80772) ETA 113m21s | gtok=350,617,600 | GPU 1.3/7.0GB
+step 5400 [5400/13733  39%]  loss=2.6614 ppl=14.3 lr=1.20e-03 | 112958 tok/s (avg 80986) ETA 112m23s | gtok=353,894,400 | GPU 1.3/7.0GB
+  [checkpoint] step 5400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 457f92b9-42e2-4146-aa19-fd8c043daa05)')' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/smoltalk/resolve/5feaf2fd3ffca7c237fc38d1861bc30365d48ffa/data/smol-magpie-ultra/train-00000-of-00006.parquet
+Retrying in 1s [Retry 1/5].
+step 5450 [5450/13733  40%]  loss=2.8233 ppl=16.8 lr=1.20e-03 | 109452 tok/s (avg 81180) ETA 111m26s | gtok=357,171,200 | GPU 1.3/7.0GB
+step 5500 [5500/13733  40%]  loss=2.8734 ppl=17.7 lr=1.20e-03 | 112884 tok/s (avg 81387) ETA 110m29s | gtok=360,448,000 | GPU 1.3/7.0GB
+step 5550 [5550/13733  40%]  loss=2.5175 ppl=12.4 lr=1.20e-03 | 112906 tok/s (avg 81593) ETA 109m32s | gtok=363,724,800 | GPU 1.3/7.0GB
+step 5600 [5600/13733  41%]  loss=3.2207 ppl=25.0 lr=1.20e-03 | 112878 tok/s (avg 81795) ETA 108m36s | gtok=367,001,600 | GPU 1.3/7.0GB
+  [checkpoint] step 5600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 5650 [5650/13733  41%]  loss=3.0725 ppl=21.6 lr=1.20e-03 | 105831 tok/s (avg 81960) ETA 107m43s | gtok=370,278,400 | GPU 1.3/7.0GB
+step 5700 [5700/13733  42%]  loss=2.7303 ppl=15.3 lr=1.20e-03 | 112856 tok/s (avg 82157) ETA 106m47s | gtok=373,555,200 | GPU 1.3/7.0GB
+step 5750 [5750/13733  42%]  loss=2.9977 ppl=20.0 lr=1.20e-03 | 112788 tok/s (avg 82352) ETA 105m52s | gtok=376,832,000 | GPU 1.3/7.0GB
+step 5800 [5800/13733  42%]  loss=2.6109 ppl=13.6 lr=1.20e-03 | 112776 tok/s (avg 82543) ETA 104m58s | gtok=380,108,800 | GPU 1.3/7.0GB
+  [checkpoint] step 5800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 5850 [5850/13733  43%]  loss=2.9977 ppl=20.0 lr=1.20e-03 | 109390 tok/s (avg 82717) ETA 104m05s | gtok=383,385,600 | GPU 1.3/7.0GB
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 39967f99-ebf4-4382-8b68-20a803367c14)')' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceTB/smollm-corpus/resolve/3ba9d605774198c5868892d7a8deda78031a781f/cosmopedia-v2/train-00000-of-00104.parquet
+Retrying in 1s [Retry 1/5].
+step 5900 [5900/13733  43%]  loss=2.7878 ppl=16.2 lr=1.20e-03 | 112846 tok/s (avg 82905) ETA 103m11s | gtok=386,662,400 | GPU 1.3/7.0GB
+step 5950 [5950/13733  43%]  loss=2.8844 ppl=17.9 lr=1.20e-03 | 112869 tok/s (avg 83090) ETA 102m18s | gtok=389,939,200 | GPU 1.3/7.0GB
+step 6000 [6000/13733  44%]  loss=2.6062 ppl=13.5 lr=1.20e-03 | 112802 tok/s (avg 83273) ETA 101m25s | gtok=393,216,000 | GPU 1.3/7.0GB
+  [checkpoint] step 6000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/best_model.pt
+  [val @ step 6000] val_loss=3.7009 val_ppl=40.48 *best* (best 40.48)
+  [wiki_val @ step 6000] val_loss=4.5196 val_ppl=91.80
+  [val_src @ step 6000] dclm=3.7131 fineweb=3.7495 arxiv=1.9658 pubmed=2.3287 pes2o=3.4338 cosmo=2.9101 tools=0.9105 pysci=1.3224 chatmt=2.2236
+  [mix @ step 6000] window: dclm=21.21% fineweb=21.07% pysci=9.26% pes2o=8.93% cosmo=8.74% pubmed=8.73% arxiv=7.15% tools=3.77% chatmt=3.01% smoltalk2_mid=2.92% finemath=2.92% b2s=1.45% proto4k=0.37% recall4k=0.32% protoc=0.15%
+  [mix_run @ step 6000] since start: dclm=21.19% fineweb=21.01% pysci=9.16% pes2o=8.95% cosmo=8.77% pubmed=8.74% arxiv=7.20% tools=3.78% chatmt=3.03% smoltalk2_mid=2.96% finemath=2.93% b2s=1.44% proto4k=0.39% recall4k=0.31% protoc=0.15%
+  [checkpoint] step 6000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 6050 [6050/13733  44%]  loss=2.7327 ppl=15.4 lr=1.20e-03 | 60645 tok/s (avg 83017) ETA 101m05s | gtok=396,492,800 | GPU 1.3/7.0GB
+step 6100 [6100/13733  44%]  loss=2.3900 ppl=10.9 lr=1.20e-03 | 112917 tok/s (avg 83197) ETA 100m12s | gtok=399,769,600 | GPU 1.3/7.0GB
+step 6150 [6150/13733  45%]  loss=2.4161 ppl=11.2 lr=1.20e-03 | 112832 tok/s (avg 83375) ETA 99m20s | gtok=403,046,400 | GPU 1.3/7.0GB
+step 6200 [6200/13733  45%]  loss=2.8265 ppl=16.9 lr=1.20e-03 | 112859 tok/s (avg 83551) ETA 98m28s | gtok=406,323,200 | GPU 1.3/7.0GB
+  [checkpoint] step 6200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 6250 [6250/13733  46%]  loss=2.7276 ppl=15.3 lr=1.20e-03 | 109334 tok/s (avg 83709) ETA 97m38s | gtok=409,600,000 | GPU 1.3/7.0GB
+step 6300 [6300/13733  46%]  loss=2.7962 ppl=16.4 lr=1.20e-03 | 112818 tok/s (avg 83881) ETA 96m47s | gtok=412,876,800 | GPU 1.3/7.0GB
+step 6350 [6350/13733  46%]  loss=2.8218 ppl=16.8 lr=1.20e-03 | 112716 tok/s (avg 84050) ETA 95m56s | gtok=416,153,600 | GPU 1.3/7.0GB
+step 6400 [6400/13733  47%]  loss=3.0154 ppl=20.4 lr=1.20e-03 | 112691 tok/s (avg 84218) ETA 95m06s | gtok=419,430,400 | GPU 1.3/7.0GB
+  [checkpoint] step 6400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 6450 [6450/13733  47%]  loss=2.4022 ppl=11.0 lr=1.20e-03 | 91939 tok/s (avg 84272) ETA 94m23s | gtok=422,707,200 | GPU 1.3/7.0GB
+step 6500 [6500/13733  47%]  loss=2.6902 ppl=14.7 lr=1.20e-03 | 112988 tok/s (avg 84437) ETA 93m33s | gtok=425,984,000 | GPU 1.3/7.0GB
+step 6550 [6550/13733  48%]  loss=2.9969 ppl=20.0 lr=1.20e-03 | 112887 tok/s (avg 84600) ETA 92m44s | gtok=429,260,800 | GPU 1.3/7.0GB
+step 6600 [6600/13733  48%]  loss=2.8198 ppl=16.8 lr=1.20e-03 | 112866 tok/s (avg 84761) ETA 91m55s | gtok=432,537,600 | GPU 1.3/7.0GB
+  [checkpoint] step 6600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 6650 [6650/13733  48%]  loss=2.9033 ppl=18.2 lr=1.20e-03 | 109278 tok/s (avg 84904) ETA 91m07s | gtok=435,814,400 | GPU 1.3/7.0GB
+step 6700 [6700/13733  49%]  loss=2.5836 ppl=13.2 lr=1.20e-03 | 112857 tok/s (avg 85061) ETA 90m18s | gtok=439,091,200 | GPU 1.3/7.0GB
+step 6750 [6750/13733  49%]  loss=3.0031 ppl=20.1 lr=1.20e-03 | 112825 tok/s (avg 85217) ETA 89m30s | gtok=442,368,000 | GPU 1.3/7.0GB
+step 6800 [6800/13733  50%]  loss=2.7568 ppl=15.7 lr=1.20e-03 | 112808 tok/s (avg 85370) ETA 88m42s | gtok=445,644,800 | GPU 1.3/7.0GB
+  [checkpoint] step 6800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 6850 [6850/13733  50%]  loss=2.7326 ppl=15.4 lr=1.20e-03 | 109386 tok/s (avg 85507) ETA 87m55s | gtok=448,921,600 | GPU 1.3/7.0GB
+step 6900 [6900/13733  50%]  loss=2.5906 ppl=13.3 lr=1.20e-03 | 112854 tok/s (avg 85658) ETA 87m07s | gtok=452,198,400 | GPU 1.3/7.0GB
+step 6950 [6950/13733  51%]  loss=3.0013 ppl=20.1 lr=1.20e-03 | 112749 tok/s (avg 85806) ETA 86m20s | gtok=455,475,200 | GPU 1.3/7.0GB
+step 7000 [7000/13733  51%]  loss=2.5839 ppl=13.2 lr=1.20e-03 | 112773 tok/s (avg 85953) ETA 85m33s | gtok=458,752,000 | GPU 1.3/7.0GB
+  [checkpoint] step 7000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 7050 [7050/13733  51%]  loss=2.5922 ppl=13.4 lr=1.20e-03 | 109276 tok/s (avg 86083) ETA 84m47s | gtok=462,028,800 | GPU 1.3/7.0GB
+step 7100 [7100/13733  52%]  loss=2.9461 ppl=19.0 lr=1.20e-03 | 112686 tok/s (avg 86227) ETA 84m01s | gtok=465,305,600 | GPU 1.3/7.0GB
+step 7150 [7150/13733  52%]  loss=2.5787 ppl=13.2 lr=1.20e-03 | 112744 tok/s (avg 86369) ETA 83m15s | gtok=468,582,400 | GPU 1.3/7.0GB
+step 7200 [7200/13733  52%]  loss=2.8416 ppl=17.1 lr=1.20e-03 | 112718 tok/s (avg 86509) ETA 82m29s | gtok=471,859,200 | GPU 1.3/7.0GB
+  [checkpoint] step 7200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 7250 [7250/13733  53%]  loss=2.4525 ppl=11.6 lr=1.20e-03 | 108092 tok/s (avg 86628) ETA 81m44s | gtok=475,136,000 | GPU 1.3/7.0GB
+step 7300 [7300/13733  53%]  loss=2.3587 ppl=10.6 lr=1.20e-03 | 112809 tok/s (avg 86766) ETA 80m58s | gtok=478,412,800 | GPU 1.3/7.0GB
+step 7350 [7350/13733  54%]  loss=2.8338 ppl=17.0 lr=1.20e-03 | 112852 tok/s (avg 86903) ETA 80m13s | gtok=481,689,600 | GPU 1.3/7.0GB
+step 7400 [7400/13733  54%]  loss=2.4433 ppl=11.5 lr=1.20e-03 | 112740 tok/s (avg 87038) ETA 79m28s | gtok=484,966,400 | GPU 1.3/7.0GB
+  [checkpoint] step 7400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 7450 [7450/13733  54%]  loss=2.6545 ppl=14.2 lr=1.20e-03 | 80507 tok/s (avg 86990) ETA 78m53s | gtok=488,243,200 | GPU 1.3/7.0GB
+step 7500 [7500/13733  55%]  loss=2.4014 ppl=11.0 lr=1.20e-03 | 112998 tok/s (avg 87124) ETA 78m08s | gtok=491,520,000 | GPU 1.3/7.0GB
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 412b314e-074b-4cc6-ab58-359cb9444317)')' thrown while requesting GET https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu/resolve/87f09149ef4734204d70ed1d046ddc9ca3f2b8f9/sample/10BT/000_00000.parquet
+Retrying in 1s [Retry 1/5].
+step 7550 [7550/13733  55%]  loss=2.4503 ppl=11.6 lr=1.20e-03 | 112946 tok/s (avg 87256) ETA 77m23s | gtok=494,796,800 | GPU 1.3/7.0GB
+step 7600 [7600/13733  55%]  loss=2.6110 ppl=13.6 lr=1.20e-03 | 112864 tok/s (avg 87387) ETA 76m39s | gtok=498,073,600 | GPU 1.3/7.0GB
+  [checkpoint] step 7600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 7650 [7650/13733  56%]  loss=2.9253 ppl=18.6 lr=1.20e-03 | 109333 tok/s (avg 87501) ETA 75m55s | gtok=501,350,400 | GPU 1.3/7.0GB
+step 7700 [7700/13733  56%]  loss=3.0187 ppl=20.5 lr=1.20e-03 | 112801 tok/s (avg 87629) ETA 75m11s | gtok=504,627,200 | GPU 1.3/7.0GB
+step 7750 [7750/13733  56%]  loss=2.8567 ppl=17.4 lr=1.20e-03 | 112769 tok/s (avg 87755) ETA 74m28s | gtok=507,904,000 | GPU 1.3/7.0GB
+step 7800 [7800/13733  57%]  loss=2.9441 ppl=19.0 lr=1.20e-03 | 112801 tok/s (avg 87880) ETA 73m44s | gtok=511,180,800 | GPU 1.3/7.0GB
+  [checkpoint] step 7800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 7850 [7850/13733  57%]  loss=2.7354 ppl=15.4 lr=1.20e-03 | 109373 tok/s (avg 87990) ETA 73m01s | gtok=514,457,600 | GPU 1.3/7.0GB
+step 7900 [7900/13733  58%]  loss=2.7698 ppl=16.0 lr=1.20e-03 | 112766 tok/s (avg 88113) ETA 72m18s | gtok=517,734,400 | GPU 1.3/7.0GB
+step 7950 [7950/13733  58%]  loss=2.7471 ppl=15.6 lr=1.20e-03 | 112761 tok/s (avg 88234) ETA 71m35s | gtok=521,011,200 | GPU 1.3/7.0GB
+step 8000 [8000/13733  58%]  loss=2.5008 ppl=12.2 lr=1.20e-03 | 112740 tok/s (avg 88354) ETA 70m52s | gtok=524,288,000 | GPU 1.3/7.0GB
+  [checkpoint] step 8000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/best_model.pt
+  [val @ step 8000] val_loss=3.6297 val_ppl=37.70 *best* (best 37.70)
+  [wiki_val @ step 8000] val_loss=4.3684 val_ppl=78.92
+  [val_src @ step 8000] dclm=3.6425 fineweb=3.6746 arxiv=1.9057 pubmed=2.2721 pes2o=3.3470 cosmo=2.8182 tools=0.8689 pysci=1.2611 chatmt=2.1353
+  [mix @ step 8000] window: dclm=21.29% fineweb=20.94% pysci=9.21% pes2o=8.81% cosmo=8.77% pubmed=8.61% arxiv=7.27% tools=3.79% chatmt=3.04% finemath=3.03% smoltalk2_mid=2.95% b2s=1.43% proto4k=0.40% recall4k=0.31% protoc=0.15%
+  [mix_run @ step 8000] since start: dclm=21.22% fineweb=20.98% pysci=9.18% pes2o=8.90% cosmo=8.77% pubmed=8.69% arxiv=7.22% tools=3.78% chatmt=3.03% finemath=2.96% smoltalk2_mid=2.95% b2s=1.43% proto4k=0.39% recall4k=0.31% protoc=0.15%
+  [checkpoint] step 8000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 8050 [8050/13733  59%]  loss=2.6738 ppl=14.5 lr=1.20e-03 | 50993 tok/s (avg 87954) ETA 70m34s | gtok=527,564,800 | GPU 1.3/7.0GB
+step 8100 [8100/13733  59%]  loss=2.8549 ppl=17.4 lr=1.20e-03 | 113082 tok/s (avg 88075) ETA 69m51s | gtok=530,841,600 | GPU 1.3/7.0GB
+step 8150 [8150/13733  59%]  loss=2.4626 ppl=11.7 lr=1.20e-03 | 112988 tok/s (avg 88194) ETA 69m08s | gtok=534,118,400 | GPU 1.3/7.0GB
+step 8200 [8200/13733  60%]  loss=2.9406 ppl=18.9 lr=1.20e-03 | 112948 tok/s (avg 88312) ETA 68m26s | gtok=537,395,200 | GPU 1.3/7.0GB
+  [checkpoint] step 8200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 8250 [8250/13733  60%]  loss=2.8341 ppl=17.0 lr=1.20e-03 | 90324 tok/s (avg 88324) ETA 67m48s | gtok=540,672,000 | GPU 1.3/7.0GB
+step 8300 [8300/13733  60%]  loss=3.0799 ppl=21.8 lr=1.20e-03 | 112968 tok/s (avg 88440) ETA 67m05s | gtok=543,948,800 | GPU 1.3/7.0GB
+step 8350 [8350/13733  61%]  loss=2.3080 ppl=10.1 lr=1.20e-03 | 112970 tok/s (avg 88555) ETA 66m23s | gtok=547,225,600 | GPU 1.3/7.0GB
+step 8400 [8400/13733  61%]  loss=2.7700 ppl=16.0 lr=1.20e-03 | 112943 tok/s (avg 88669) ETA 65m41s | gtok=550,502,400 | GPU 1.3/7.0GB
+  [checkpoint] step 8400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 8450 [8450/13733  62%]  loss=2.9460 ppl=19.0 lr=1.20e-03 | 109397 tok/s (avg 88769) ETA 65m00s | gtok=553,779,200 | GPU 1.3/7.0GB
+step 8500 [8500/13733  62%]  loss=3.0803 ppl=21.8 lr=1.20e-03 | 112784 tok/s (avg 88880) ETA 64m18s | gtok=557,056,000 | GPU 1.3/7.0GB
+step 8550 [8550/13733  62%]  loss=2.5131 ppl=12.3 lr=1.20e-03 | 112824 tok/s (avg 88991) ETA 63m36s | gtok=560,332,800 | GPU 1.3/7.0GB
+step 8600 [8600/13733  63%]  loss=2.3195 ppl=10.2 lr=1.20e-03 | 112734 tok/s (avg 89100) ETA 62m55s | gtok=563,609,600 | GPU 1.3/7.0GB
+  [checkpoint] step 8600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 8650 [8650/13733  63%]  loss=2.8530 ppl=17.3 lr=1.20e-03 | 83382 tok/s (avg 89064) ETA 62m20s | gtok=566,886,400 | GPU 1.3/7.0GB
+step 8700 [8700/13733  63%]  loss=2.7539 ppl=15.7 lr=1.20e-03 | 112995 tok/s (avg 89173) ETA 61m38s | gtok=570,163,200 | GPU 1.3/7.0GB
+step 8750 [8750/13733  64%]  loss=2.7402 ppl=15.5 lr=1.20e-03 | 113010 tok/s (avg 89281) ETA 60m57s | gtok=573,440,000 | GPU 1.3/7.0GB
+step 8800 [8800/13733  64%]  loss=2.5055 ppl=12.2 lr=1.20e-03 | 112922 tok/s (avg 89387) ETA 60m16s | gtok=576,716,800 | GPU 1.3/7.0GB
+  [checkpoint] step 8800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 8850 [8850/13733  64%]  loss=2.7274 ppl=15.3 lr=1.20e-03 | 109335 tok/s (avg 89479) ETA 59m36s | gtok=579,993,600 | GPU 1.3/7.0GB
+step 8900 [8900/13733  65%]  loss=2.4634 ppl=11.7 lr=1.20e-03 | 112848 tok/s (avg 89583) ETA 58m55s | gtok=583,270,400 | GPU 1.3/7.0GB
+step 8950 [8950/13733  65%]  loss=2.9547 ppl=19.2 lr=1.20e-03 | 112849 tok/s (avg 89687) ETA 58m15s | gtok=586,547,200 | GPU 1.3/7.0GB
+step 9000 [9000/13733  66%]  loss=2.6489 ppl=14.1 lr=1.20e-03 | 112848 tok/s (avg 89789) ETA 57m34s | gtok=589,824,000 | GPU 1.3/7.0GB
+  [checkpoint] step 9000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 9050 [9050/13733  66%]  loss=2.8333 ppl=17.0 lr=1.20e-03 | 99319 tok/s (avg 89837) ETA 56m56s | gtok=593,100,800 | GPU 1.3/7.0GB
+step 9100 [9100/13733  66%]  loss=2.7539 ppl=15.7 lr=1.20e-03 | 112996 tok/s (avg 89938) ETA 56m15s | gtok=596,377,600 | GPU 1.3/7.0GB
+step 9150 [9150/13733  67%]  loss=2.4046 ppl=11.1 lr=1.20e-03 | 112932 tok/s (avg 90038) ETA 55m35s | gtok=599,654,400 | GPU 1.3/7.0GB
+step 9200 [9200/13733  67%]  loss=3.0793 ppl=21.7 lr=1.20e-03 | 112848 tok/s (avg 90137) ETA 54m55s | gtok=602,931,200 | GPU 1.3/7.0GB
+  [checkpoint] step 9200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 9250 [9250/13733  67%]  loss=2.2252 ppl=9.3 lr=1.20e-03 | 109336 tok/s (avg 90223) ETA 54m16s | gtok=606,208,000 | GPU 1.3/7.0GB
+step 9300 [9300/13733  68%]  loss=2.2755 ppl=9.7 lr=1.20e-03 | 112748 tok/s (avg 90320) ETA 53m36s | gtok=609,484,800 | GPU 1.3/7.0GB
+step 9350 [9350/13733  68%]  loss=2.7151 ppl=15.1 lr=1.20e-03 | 112797 tok/s (avg 90416) ETA 52m56s | gtok=612,761,600 | GPU 1.3/7.0GB
+step 9400 [9400/13733  68%]  loss=2.5590 ppl=12.9 lr=1.20e-03 | 112747 tok/s (avg 90511) ETA 52m17s | gtok=616,038,400 | GPU 1.3/7.0GB
+  [checkpoint] step 9400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 9450 [9450/13733  69%]  loss=2.8954 ppl=18.1 lr=1.20e-03 | 101259 tok/s (avg 90562) ETA 51m39s | gtok=619,315,200 | GPU 1.3/7.0GB
+step 9500 [9500/13733  69%]  loss=2.9319 ppl=18.8 lr=1.20e-03 | 112812 tok/s (avg 90656) ETA 51m00s | gtok=622,592,000 | GPU 1.3/7.0GB
+step 9550 [9550/13733  70%]  loss=2.5941 ppl=13.4 lr=1.20e-03 | 112829 tok/s (avg 90750) ETA 50m20s | gtok=625,868,800 | GPU 1.3/7.0GB
+step 9600 [9600/13733  70%]  loss=2.9904 ppl=19.9 lr=1.20e-03 | 112664 tok/s (avg 90842) ETA 49m41s | gtok=629,145,600 | GPU 1.3/7.0GB
+  [checkpoint] step 9600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 9650 [9650/13733  70%]  loss=2.8553 ppl=17.4 lr=1.20e-03 | 109311 tok/s (avg 90921) ETA 49m03s | gtok=632,422,400 | GPU 1.3/7.0GB
+step 9700 [9700/13733  71%]  loss=2.9313 ppl=18.8 lr=1.20e-03 | 112731 tok/s (avg 91012) ETA 48m24s | gtok=635,699,200 | GPU 1.3/7.0GB
+step 9750 [9750/13733  71%]  loss=2.6108 ppl=13.6 lr=1.20e-03 | 112719 tok/s (avg 91102) ETA 47m45s | gtok=638,976,000 | GPU 1.3/7.0GB
+step 9800 [9800/13733  71%]  loss=2.3679 ppl=10.7 lr=1.20e-03 | 112673 tok/s (avg 91191) ETA 47m06s | gtok=642,252,800 | GPU 1.3/7.0GB
+  [checkpoint] step 9800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 9850 [9850/13733  72%]  loss=2.4130 ppl=11.2 lr=1.20e-03 | 109262 tok/s (avg 91268) ETA 46m28s | gtok=645,529,600 | GPU 1.3/7.0GB
+step 9900 [9900/13733  72%]  loss=2.6508 ppl=14.2 lr=1.20e-03 | 112718 tok/s (avg 91356) ETA 45m49s | gtok=648,806,400 | GPU 1.3/7.0GB
+step 9950 [9950/13733  72%]  loss=2.6494 ppl=14.1 lr=1.20e-03 | 112529 tok/s (avg 91442) ETA 45m11s | gtok=652,083,200 | GPU 1.3/7.0GB
+step 10000 [10000/13733  73%]  loss=3.0416 ppl=20.9 lr=1.20e-03 | 112648 tok/s (avg 91528) ETA 44m32s | gtok=655,360,000 | GPU 1.3/7.0GB
+  [checkpoint] step 10000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/best_model.pt
+  [val @ step 10000] val_loss=3.5690 val_ppl=35.48 *best* (best 35.48)
+  [wiki_val @ step 10000] val_loss=4.3021 val_ppl=73.85
+  [val_src @ step 10000] dclm=3.5806 fineweb=3.6168 arxiv=1.8622 pubmed=2.2353 pes2o=3.2997 cosmo=2.7585 tools=0.8381 pysci=1.2233 chatmt=2.0821
+  [mix @ step 10000] window: dclm=21.09% fineweb=20.92% pubmed=9.18% pysci=9.08% pes2o=8.92% cosmo=8.71% arxiv=7.06% tools=3.81% chatmt=3.06% finemath=2.98% smoltalk2_mid=2.93% b2s=1.44% proto4k=0.39% recall4k=0.30% protoc=0.14%
+  [mix_run @ step 10000] since start: dclm=21.19% fineweb=20.97% pysci=9.15% pes2o=8.91% pubmed=8.82% cosmo=8.75% arxiv=7.18% tools=3.79% chatmt=3.04% finemath=2.97% smoltalk2_mid=2.95% b2s=1.43% proto4k=0.39% recall4k=0.31% protoc=0.15%
+  [checkpoint] step 10000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 10050 [10050/13733  73%]  loss=2.6196 ppl=13.7 lr=1.20e-03 | 54848 tok/s (avg 91225) ETA 44m05s | gtok=658,636,800 | GPU 1.3/7.0GB
+step 10100 [10100/13733  74%]  loss=2.4121 ppl=11.2 lr=1.20e-03 | 112982 tok/s (avg 91312) ETA 43m27s | gtok=661,913,600 | GPU 1.3/7.0GB
+step 10150 [10150/13733  74%]  loss=2.8194 ppl=16.8 lr=1.20e-03 | 112939 tok/s (avg 91398) ETA 42m49s | gtok=665,190,400 | GPU 1.3/7.0GB
+step 10200 [10200/13733  74%]  loss=3.0195 ppl=20.5 lr=1.20e-03 | 112861 tok/s (avg 91483) ETA 42m10s | gtok=668,467,200 | GPU 1.3/7.0GB
+  [checkpoint] step 10200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 10250 [10250/13733  75%]  loss=2.5887 ppl=13.3 lr=1.20e-03 | 103546 tok/s (avg 91535) ETA 41m33s | gtok=671,744,000 | GPU 1.3/7.0GB
+step 10300 [10300/13733  75%]  loss=2.9301 ppl=18.7 lr=1.20e-03 | 112817 tok/s (avg 91619) ETA 40m55s | gtok=675,020,800 | GPU 1.3/7.0GB
+step 10350 [10350/13733  75%]  loss=2.8111 ppl=16.6 lr=1.20e-03 | 112821 tok/s (avg 91702) ETA 40m17s | gtok=678,297,600 | GPU 1.3/7.0GB
+step 10400 [10400/13733  76%]  loss=2.5144 ppl=12.4 lr=1.20e-03 | 112774 tok/s (avg 91785) ETA 39m39s | gtok=681,574,400 | GPU 1.3/7.0GB
+  [checkpoint] step 10400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 10450 [10450/13733  76%]  loss=2.9491 ppl=19.1 lr=1.20e-03 | 109346 tok/s (avg 91855) ETA 39m02s | gtok=684,851,200 | GPU 1.3/7.0GB
+step 10500 [10500/13733  76%]  loss=2.4099 ppl=11.1 lr=1.20e-03 | 112684 tok/s (avg 91936) ETA 38m24s | gtok=688,128,000 | GPU 1.3/7.0GB
+step 10550 [10550/13733  77%]  loss=2.0408 ppl=7.7 lr=1.20e-03 | 112693 tok/s (avg 92017) ETA 37m46s | gtok=691,404,800 | GPU 1.3/7.0GB
+step 10600 [10600/13733  77%]  loss=2.5217 ppl=12.4 lr=1.20e-03 | 112676 tok/s (avg 92096) ETA 37m09s | gtok=694,681,600 | GPU 1.3/7.0GB
+  [checkpoint] step 10600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 10650 [10650/13733  78%]  loss=2.9805 ppl=19.7 lr=1.20e-03 | 109237 tok/s (avg 92164) ETA 36m32s | gtok=697,958,400 | GPU 1.3/7.0GB
+step 10700 [10700/13733  78%]  loss=2.7830 ppl=16.2 lr=1.20e-03 | 112679 tok/s (avg 92243) ETA 35m54s | gtok=701,235,200 | GPU 1.3/7.0GB
+step 10750 [10750/13733  78%]  loss=2.8808 ppl=17.8 lr=1.20e-03 | 112679 tok/s (avg 92321) ETA 35m17s | gtok=704,512,000 | GPU 1.3/7.0GB
+step 10800 [10800/13733  79%]  loss=3.0020 ppl=20.1 lr=1.20e-03 | 112644 tok/s (avg 92398) ETA 34m40s | gtok=707,788,800 | GPU 1.3/7.0GB
+  [checkpoint] step 10800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 10850 [10850/13733  79%]  loss=2.8637 ppl=17.5 lr=1.20e-03 | 88260 tok/s (avg 92378) ETA 34m05s | gtok=711,065,600 | GPU 1.3/7.0GB
+step 10900 [10900/13733  79%]  loss=2.5210 ppl=12.4 lr=1.20e-03 | 113021 tok/s (avg 92455) ETA 33m28s | gtok=714,342,400 | GPU 1.3/7.0GB
+step 10950 [10950/13733  80%]  loss=2.2127 ppl=9.1 lr=1.20e-03 | 112901 tok/s (avg 92532) ETA 32m51s | gtok=717,619,200 | GPU 1.3/7.0GB
+step 11000 [11000/13733  80%]  loss=2.5164 ppl=12.4 lr=1.20e-03 | 112777 tok/s (avg 92607) ETA 32m14s | gtok=720,896,000 | GPU 1.3/7.0GB
+  [checkpoint] step 11000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 11050 [11050/13733  80%]  loss=2.5435 ppl=12.7 lr=1.20e-03 | 109390 tok/s (avg 92672) ETA 31m37s | gtok=724,172,800 | GPU 1.3/7.0GB
+step 11100 [11100/13733  81%]  loss=2.7154 ppl=15.1 lr=1.20e-03 | 112733 tok/s (avg 92746) ETA 31m00s | gtok=727,449,600 | GPU 1.3/7.0GB
+step 11150 [11150/13733  81%]  loss=2.7688 ppl=15.9 lr=1.20e-03 | 112721 tok/s (avg 92820) ETA 30m23s | gtok=730,726,400 | GPU 1.3/7.0GB
+step 11200 [11200/13733  82%]  loss=2.4368 ppl=11.4 lr=1.20e-03 | 112677 tok/s (avg 92893) ETA 29m47s | gtok=734,003,200 | GPU 1.3/7.0GB
+  [checkpoint] step 11200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 11250 [11250/13733  82%]  loss=2.5866 ppl=13.3 lr=1.20e-03 | 109335 tok/s (avg 92955) ETA 29m10s | gtok=737,280,000 | GPU 1.3/7.0GB
+step 11300 [11300/13733  82%]  loss=2.4670 ppl=11.8 lr=1.20e-03 | 112703 tok/s (avg 93027) ETA 28m34s | gtok=740,556,800 | GPU 1.3/7.0GB
+step 11350 [11350/13733  83%]  loss=2.5048 ppl=12.2 lr=1.20e-03 | 112722 tok/s (avg 93099) ETA 27m57s | gtok=743,833,600 | GPU 1.3/7.0GB
+step 11400 [11400/13733  83%]  loss=2.3477 ppl=10.5 lr=1.20e-03 | 112704 tok/s (avg 93170) ETA 27m21s | gtok=747,110,400 | GPU 1.3/7.0GB
+  [checkpoint] step 11400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 11450 [11450/13733  83%]  loss=2.3630 ppl=10.6 lr=1.20e-03 | 75850 tok/s (avg 93077) ETA 26m47s | gtok=750,387,200 | GPU 1.3/7.0GB
+step 11500 [11500/13733  84%]  loss=2.8859 ppl=17.9 lr=1.20e-03 | 113042 tok/s (avg 93149) ETA 26m11s | gtok=753,664,000 | GPU 1.3/7.0GB
+step 11550 [11550/13733  84%]  loss=2.6347 ppl=13.9 lr=1.20e-03 | 112986 tok/s (avg 93219) ETA 25m34s | gtok=756,940,800 | GPU 1.3/7.0GB
+step 11600 [11600/13733  84%]  loss=2.1840 ppl=8.9 lr=1.20e-03 | 112885 tok/s (avg 93289) ETA 24m58s | gtok=760,217,600 | GPU 1.3/7.0GB
+  [checkpoint] step 11600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 11650 [11650/13733  85%]  loss=2.4374 ppl=11.4 lr=1.20e-03 | 109445 tok/s (avg 93349) ETA 24m22s | gtok=763,494,400 | GPU 1.3/7.0GB
+step 11700 [11700/13733  85%]  loss=2.8449 ppl=17.2 lr=1.20e-03 | 112842 tok/s (avg 93418) ETA 23m46s | gtok=766,771,200 | GPU 1.3/7.0GB
+step 11750 [11750/13733  86%]  loss=2.8222 ppl=16.8 lr=1.20e-03 | 112795 tok/s (avg 93486) ETA 23m10s | gtok=770,048,000 | GPU 1.3/7.0GB
+step 11800 [11800/13733  86%]  loss=2.7133 ppl=15.1 lr=1.20e-03 | 112791 tok/s (avg 93554) ETA 22m34s | gtok=773,324,800 | GPU 1.3/7.0GB
+  [checkpoint] step 11800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 11850 [11850/13733  86%]  loss=2.7800 ppl=16.1 lr=1.20e-03 | 109436 tok/s (avg 93611) ETA 21m58s | gtok=776,601,600 | GPU 1.3/7.0GB
+step 11900 [11900/13733  87%]  loss=3.0259 ppl=20.6 lr=1.20e-03 | 112792 tok/s (avg 93678) ETA 21m22s | gtok=779,878,400 | GPU 1.3/7.0GB
+step 11950 [11950/13733  87%]  loss=2.9900 ppl=19.9 lr=1.20e-03 | 112714 tok/s (avg 93744) ETA 20m46s | gtok=783,155,200 | GPU 1.3/7.0GB
+step 12000 [12000/13733  87%]  loss=2.1967 ppl=9.0 lr=1.20e-03 | 112735 tok/s (avg 93810) ETA 20m10s | gtok=786,432,000 | GPU 1.3/7.0GB
+  [checkpoint] step 12000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/best_model.pt
+  [val @ step 12000] val_loss=3.5321 val_ppl=34.19 *best* (best 34.19)
+  [wiki_val @ step 12000] val_loss=4.2654 val_ppl=71.20
+  [val_src @ step 12000] dclm=3.5463 fineweb=3.5812 arxiv=1.8415 pubmed=2.2097 pes2o=3.2538 cosmo=2.7107 tools=0.8150 pysci=1.1877 chatmt=2.0326
+  [mix @ step 12000] window: dclm=21.54% fineweb=20.99% pysci=9.26% pes2o=8.83% pubmed=8.74% cosmo=8.69% arxiv=7.00% tools=3.75% chatmt=3.00% smoltalk2_mid=2.96% finemath=2.94% b2s=1.45% proto4k=0.40% recall4k=0.30% protoc=0.15%
+  [mix_run @ step 12000] since start: dclm=21.26% fineweb=20.97% pysci=9.18% pes2o=8.89% pubmed=8.80% cosmo=8.74% arxiv=7.14% tools=3.78% chatmt=3.03% finemath=2.96% smoltalk2_mid=2.95% b2s=1.44% proto4k=0.39% recall4k=0.31% protoc=0.15%
+  [checkpoint] step 12000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 12050 [12050/13733  88%]  loss=2.4712 ppl=11.8 lr=1.20e-03 | 53449 tok/s (avg 93517) ETA 19m39s | gtok=789,708,800 | GPU 1.3/7.0GB
+step 12100 [12100/13733  88%]  loss=2.7370 ppl=15.4 lr=1.20e-03 | 112918 tok/s (avg 93584) ETA 19m03s | gtok=792,985,600 | GPU 1.3/7.0GB
+step 12150 [12150/13733  88%]  loss=2.5033 ppl=12.2 lr=1.20e-03 | 112875 tok/s (avg 93649) ETA 18m27s | gtok=796,262,400 | GPU 1.3/7.0GB
+step 12200 [12200/13733  89%]  loss=2.5093 ppl=12.3 lr=1.20e-03 | 112862 tok/s (avg 93715) ETA 17m52s | gtok=799,539,200 | GPU 1.3/7.0GB
+  [checkpoint] step 12200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 12250 [12250/13733  89%]  loss=2.6020 ppl=13.5 lr=1.20e-03 | 51162 tok/s (avg 93398) ETA 17m20s | gtok=802,816,000 | GPU 1.3/7.0GB
+step 12300 [12300/13733  90%]  loss=2.4507 ppl=11.6 lr=1.20e-03 | 113230 tok/s (avg 93464) ETA 16m44s | gtok=806,092,800 | GPU 1.3/7.0GB
+step 12350 [12350/13733  90%]  loss=2.7777 ppl=16.1 lr=1.20e-03 | 113130 tok/s (avg 93530) ETA 16m09s | gtok=809,369,600 | GPU 1.3/7.0GB
+step 12400 [12400/13733  90%]  loss=2.6205 ppl=13.7 lr=1.20e-03 | 113057 tok/s (avg 93595) ETA 15m33s | gtok=812,646,400 | GPU 1.3/7.0GB
+  [checkpoint] step 12400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 12450 [12450/13733  91%]  loss=2.3488 ppl=10.5 lr=1.20e-03 | 72341 tok/s (avg 93485) ETA 14m59s | gtok=815,923,200 | GPU 1.3/7.0GB
+step 12500 [12500/13733  91%]  loss=2.7249 ppl=15.3 lr=1.20e-03 | 113099 tok/s (avg 93550) ETA 14m23s | gtok=819,200,000 | GPU 1.3/7.0GB
+step 12550 [12550/13733  91%]  loss=3.0845 ppl=21.9 lr=1.20e-03 | 113037 tok/s (avg 93614) ETA 13m48s | gtok=822,476,800 | GPU 1.3/7.0GB
+step 12600 [12600/13733  92%]  loss=2.7455 ppl=15.6 lr=1.20e-03 | 112980 tok/s (avg 93678) ETA 13m12s | gtok=825,753,600 | GPU 1.3/7.0GB
+  [checkpoint] step 12600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 12650 [12650/13733  92%]  loss=2.3497 ppl=10.5 lr=1.20e-03 | 109290 tok/s (avg 93731) ETA 12m37s | gtok=829,030,400 | GPU 1.3/7.0GB
+step 12700 [12700/13733  92%]  loss=2.4803 ppl=11.9 lr=1.20e-03 | 112873 tok/s (avg 93793) ETA 12m01s | gtok=832,307,200 | GPU 1.3/7.0GB
+step 12750 [12750/13733  93%]  loss=2.3575 ppl=10.6 lr=1.20e-03 | 112883 tok/s (avg 93856) ETA 11m26s | gtok=835,584,000 | GPU 1.3/7.0GB
+step 12800 [12800/13733  93%]  loss=2.7451 ppl=15.6 lr=1.20e-03 | 112862 tok/s (avg 93917) ETA 10m51s | gtok=838,860,800 | GPU 1.3/7.0GB
+  [checkpoint] step 12800 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 12850 [12850/13733  94%]  loss=3.0745 ppl=21.6 lr=1.20e-03 | 84355 tok/s (avg 93876) ETA 10m16s | gtok=842,137,600 | GPU 1.3/7.0GB
+step 12900 [12900/13733  94%]  loss=2.6318 ppl=13.9 lr=1.20e-03 | 112977 tok/s (avg 93938) ETA 9m41s | gtok=845,414,400 | GPU 1.3/7.0GB
+step 12950 [12950/13733  94%]  loss=2.5392 ppl=12.7 lr=1.20e-03 | 112941 tok/s (avg 93999) ETA 9m05s | gtok=848,691,200 | GPU 1.3/7.0GB
+step 13000 [13000/13733  95%]  loss=3.0295 ppl=20.7 lr=1.20e-03 | 112886 tok/s (avg 94059) ETA 8m30s | gtok=851,968,000 | GPU 1.3/7.0GB
+  [checkpoint] step 13000 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 13050 [13050/13733  95%]  loss=2.4028 ppl=11.1 lr=1.20e-03 | 109448 tok/s (avg 94110) ETA 7m55s | gtok=855,244,800 | GPU 1.3/7.0GB
+step 13100 [13100/13733  95%]  loss=2.4847 ppl=12.0 lr=1.20e-03 | 112826 tok/s (avg 94169) ETA 7m20s | gtok=858,521,600 | GPU 1.3/7.0GB
+step 13150 [13150/13733  96%]  loss=2.8909 ppl=18.0 lr=1.20e-03 | 112809 tok/s (avg 94229) ETA 6m45s | gtok=861,798,400 | GPU 1.3/7.0GB
+step 13200 [13200/13733  96%]  loss=2.7581 ppl=15.8 lr=1.20e-03 | 112796 tok/s (avg 94287) ETA 6m10s | gtok=865,075,200 | GPU 1.3/7.0GB
+  [checkpoint] step 13200 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 13250 [13250/13733  96%]  loss=2.7598 ppl=15.8 lr=1.20e-03 | 109354 tok/s (avg 94337) ETA 5m35s | gtok=868,352,000 | GPU 1.3/7.0GB
+step 13300 [13300/13733  97%]  loss=2.6718 ppl=14.5 lr=1.20e-03 | 112713 tok/s (avg 94394) ETA 5m00s | gtok=871,628,800 | GPU 1.3/7.0GB
+step 13350 [13350/13733  97%]  loss=2.9469 ppl=19.0 lr=1.20e-03 | 112749 tok/s (avg 94452) ETA 4m25s | gtok=874,905,600 | GPU 1.3/7.0GB
+step 13400 [13400/13733  98%]  loss=2.4693 ppl=11.8 lr=1.20e-03 | 112694 tok/s (avg 94509) ETA 3m50s | gtok=878,182,400 | GPU 1.3/7.0GB
+  [checkpoint] step 13400 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 13450 [13450/13733  98%]  loss=2.6893 ppl=14.7 lr=1.20e-03 | 82249 tok/s (avg 94457) ETA 3m16s | gtok=881,459,200 | GPU 1.3/7.0GB
+step 13500 [13500/13733  98%]  loss=2.5479 ppl=12.8 lr=1.20e-03 | 112885 tok/s (avg 94514) ETA 2m41s | gtok=884,736,000 | GPU 1.3/7.0GB
+step 13550 [13550/13733  99%]  loss=2.9287 ppl=18.7 lr=1.20e-03 | 112927 tok/s (avg 94571) ETA 2m06s | gtok=888,012,800 | GPU 1.3/7.0GB
+step 13600 [13600/13733  99%]  loss=2.8358 ppl=17.0 lr=1.20e-03 | 112805 tok/s (avg 94627) ETA 1m32s | gtok=891,289,600 | GPU 1.3/7.0GB
+  [checkpoint] step 13600 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+step 13650 [13650/13733  99%]  loss=2.7774 ppl=16.1 lr=1.20e-03 | 109365 tok/s (avg 94674) ETA 0m57s | gtok=894,566,400 | GPU 1.3/7.0GB
+step 13700 [13700/13733 100%]  loss=2.5818 ppl=13.2 lr=1.20e-03 | 112809 tok/s (avg 94729) ETA 0m22s | gtok=897,843,200 | GPU 1.3/7.0GB
+  [checkpoint] step 13733 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/best_model.pt
+  [val @ step 13733] val_loss=3.5153 val_ppl=33.63 *best* (best 33.63)
+  [wiki_val @ step 13733] val_loss=4.2466 val_ppl=69.87
+  [val_src @ step 13733] dclm=3.5282 fineweb=3.5586 arxiv=1.8227 pubmed=2.1821 pes2o=3.2295 cosmo=2.6806 tools=0.7995 pysci=1.1724 chatmt=2.0004
+  [mix @ step 13733] window: fineweb=21.06% dclm=20.97% pysci=9.26% pubmed=8.96% pes2o=8.83% cosmo=8.76% arxiv=7.07% tools=3.77% chatmt=3.04% finemath=3.04% smoltalk2_mid=2.97% b2s=1.42% proto4k=0.39% recall4k=0.31% protoc=0.15%
+  [mix_run @ step 13733] since start: dclm=21.22% fineweb=20.99% pysci=9.19% pes2o=8.88% pubmed=8.82% cosmo=8.74% arxiv=7.13% tools=3.78% chatmt=3.03% finemath=2.97% smoltalk2_mid=2.95% b2s=1.43% proto4k=0.39% recall4k=0.31% protoc=0.15%
+
+Training complete. steps=13733 tokens=900,005,888 best_val_ppl=33.63
+train loss: 10.9528 -> 2.5012 (delta -8.4517)
+  [checkpoint] step 13733 -> checkpoints_v13_sempty/ctl_mamba2_main_caa4da9/latest.pt
+=== ctl_mamba2_main end 1793828123 exit=0 attempts=1 ===

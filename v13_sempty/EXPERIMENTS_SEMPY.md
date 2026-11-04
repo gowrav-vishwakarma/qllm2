@@ -6065,6 +6065,33 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
+## ctl RESULT: matched control at the SCI-1 recipe (B1–B4, 04:56 IST, 2026-11-05; B5 pending)
+
+All three ~103M bodies, **1.0B tokens each** of the identical cont2 mix (SEQ 4096, seed 43, decontam, same code caa4da9, same
+venv), 0.9B wsd_stable + 0.1B decay. Logs `logs/v13_sempty_ctl_{pam,tpp,mamba2}_{main,decay}_caa4da9_*.log`, readouts `logs/ctl/`.
+
+| body | params | tokens | s8 D (B1) | s8 @0 / 2k / 4k / 8k | far needle 2k / 4k / 8k / 16k (B2: 8k, 16k) | clk2 8k / 16k: dilation 1; 8 + contrast | holdout (B3) | HS / ARC-e / PIQA (B4) |
+|---|---|---|---|---|---|---|---|---|
+| PAM M2 | 102.88M | 1.0B | **0.523** | 0.75 / 0.61 / 0.43 / 0.28 | 0.63 / 0.63 / **0.53 / 0.41** | 0.11 / 0.04; **0.59 / 0.15** | 3.427 | 0.282 / 0.455 / 0.588 |
+| Transformer++ | 101.92M | 1.0B | 0.074 | 0.36 / 0.10 / 0.05 / 0.05 | **0.92** / 0.12 / 0.17 / 0.13 | 0.08 / 0.07; 0.09 / 0.06 | 3.440 | 0.281 / 0.457 / 0.590 |
+| Mamba-2 | 102.61M | 1.0B | 0.149 | 0.68 / 0.18 / 0.12 / 0.08 | 0.66 / 0.27 / 0.18 / 0.15 | 0.03 / 0.03; 0.05 / 0.05 | **3.378** | 0.284 / 0.459 / 0.588 |
+
+Verdicts (pre-registered):
+- **B1 rules (s8 D): MET.** PAM 0.523 vs the best baseline 0.149 (Mamba-2): +0.374 (bar +0.20). At every distance PAM leads;
+  with the examples adjacent (@0) the gap is small (0.75 vs 0.68 / 0.36), so the difference is CARRYING the rule across filler.
+- **B2 far needles past the trained SEQ (8k / 16k): MET.** PAM 0.53 / 0.41 vs the best baseline 0.18 / 0.15: +0.35 / +0.26 (bar
+  +0.10). Inside its window (2k) the transformer is better (0.92 vs 0.63), as expected.
+- **B3 language: NOT MET.** Holdout PAM 3.427 vs Mamba-2 3.378 (+0.049 nats; bar ≤ +0.03); PAM beats T++ (3.440). Per source,
+  Mamba-2 leads on every web / science source by 0.03–0.06; PAM leads T++ on web and trails it on arxiv / pubmed / pysci.
+- **B4 known benchmarks:** level (all within 0.004).
+- clk2 with the O(1) read operator (dilation 8 + contrast): PAM 0.59 at 8k; the operator is PAM-only by construction (no claim
+  against the baselines on clk2 itself; without the operator PAM is 0.11).
+**Reading:** on the product recipe, at equal params, tokens and data (rule docs included), the two thesis clauses hold against
+both baselines (rules carried in the state; recall beyond the trained length), while Mamba-2 is the better pure language model at
+this size and budget (consistent with the 3B tier, where Mamba-2's holdout also led). Prior work: Transformer++ / Mamba-2 (Gu &
+Dao 2024) as baselines; our matched 600M / 1.5B tiers. The SCI-1 vs Pythia gaps were data; THIS table is the architecture evidence
+at the SCI recipe.
+
 ## SCI-1 cont2 milestone 7 (CHECK on the 4090, 21:39 IST, 2026-11-04; run `e61cd92`, step 106,813 = 7.0B tokens; 2.0B of the cont2 mix)
 
 **The skill came back with a ~1B-token lag; the M6 "erased" reading was premature.**
