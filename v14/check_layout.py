@@ -30,6 +30,7 @@ SKIP_FILES = frozenset({
     "a26_protocol.py",   # A26: protocol-applied-to-fetched-row eval (window-body greedy, raw torch)
     "a28_twin.py",       # A28: A26 held arm read plain / with a no-protocol twin (raw torch state copies)
     "a29_rewrite.py",    # A29: query-time prose -> compact rewrite (parser + apply_value)
+    "a30_compose.py",    # A30: compositional contrast decode (three state streams, raw torch)
     "a11_keyswap.py",    # A11: key-swap relevance eval (frozen-mind short reads, raw torch)
     "a13_manykey.py",    # A13: many-key fetch eval (frozen states, max-sim, raw torch)
     "a14_pca.py",        # A14: PCA basis fit for the stored address (raw torch svd)
