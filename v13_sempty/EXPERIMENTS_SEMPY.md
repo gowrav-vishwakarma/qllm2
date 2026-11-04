@@ -6103,6 +6103,12 @@ proto4k 0.45 %, protoc 0.14 %, recall4k 0.34 % → synthetic loss weight **4.52 
 the s8 recovery is the point, and the holdout tripwire (≤ projection + 0.02) guards the language cost. Milestones: 91,554
 (~Nov 4 13:15 IST), 106,813 (~20:40 IST); bars within those two: s8 D ≥ 0.70, reach not below M5, holdout ≤ projection + 0.02.
 
+**A26 at cont1 M5 (Library, 06:14 IST; logs `logs/v14_a26_sci1c1a{,_g1}_850ab5e_20261104_0529.*`; 20 docs per cell; reference M3 until
+Library's M4 run lands):** G1 held-in-state 2k / 8k / 32k = 0.00 / 0.00 / 0.00 = NOPROT (bar G1 ≥ NOPROT + 0.05 **not met**);
+G1 compact 2k 0.45 (M3 0.40; bar ≥ 0.50, just short), 8k 0.15 (M3 0.00); A26-wording compact 0.35 at 2k / **0.60 at 8k** (M3
+0.15 / 0.10), held-out quantities 0.45 / 0.60; CONVERT compact 0.10 (first non-zero), ROUND 0. Reading: protoc moves the COMPACT
+value copy and its reach; the prose protocol held in state is untouched. Supports B (protoc kept), pending the M4 comparison.
+
 ## SCI-1 milestone 4 (CHECK on the 4090, 21:47 IST, 2026-11-03; run `59c3cf5`, step 61,036 = 4.0B tokens; the LAST old-mix point, think still in)
 
 The baseline for cont1 (which starts from this checkpoint). Same CHECK; the full copy, own hard link (no interference).
