@@ -3997,6 +3997,18 @@ fitted threshold:
     - Beyond 2k (8k / 32k) it is 0.00-0.05 under every read: the limit there is the rule's REACH, not the read.
     - Consequences (pre-registered): every A26 held number since M1 is re-read with the protocol twin; the package's
       contrast twin is chosen per question part (a no-training unit, pre-registered next); EUREKA entry written.
+- **A29: the package compiles a prose protocol into compact demos at QUERY time (PRE-REGISTERED 2026-11-04 08:39 IST, before any
+  number; Mind's ask, Lead's plan item 3).** `v14/a29_rewrite.py`, code d3a71d6+.
+  - Steps: a text parser finds the protocol's unit for the asked quantity (cues "in / is / as / use / means" + a unit list;
+    tuned on the A26 + training wordings, so its 100 % hit rate is in-sample and is reported, not claimed); the planner writes
+    "Report rule." + 3 worked lines "x -> x u" right before the question, takes the value out of the fetched row, and the mind
+    answers "\n{v} ->" with the skill contrast (twin = the session without the inserted pack).
+  - Arms: rewrite vs the A9 read, on c1a (step 76,295), A26 UNIT, G1 and A26 wordings, 2k / 8k, **100 docs per cell**.
+  - Label: TEXT (the library compiles) + MIND (copies the value, writes the unit).
+  - Bars: rewrite ≥ 0.45 at 2k on both wordings ("compiling solved in the package", Lead); and rewrite at 8k ≥ the protocol
+    twin's 8k (A28: 0.00-0.05) + 0.25 ("a rewrite near the question fixes the reach gap").
+  - Honesty line: for UNIT the library could append the unit itself; the mind's share is the value copy + following the
+    demos. This tests the package path, not the mind's own understanding.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

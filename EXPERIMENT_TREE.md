@@ -145,6 +145,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
       - **A16 refresh 8k + dilation** (2026-11-01) N11-RD: refresh every 8k with echo dilation + contrast -> **NOT met: 0.42 < 0.58; dilation costs +0.020 nats on the gap: out**; run `02b3306`, code at `current`; logs/v14_a16_n11rd_b2p2_02b3306_20261101_0843.jsonl; "A16"
 - **SR / S1 / I1 / K1 / N8 / N4 / N5** (2026-10-31) design-only units (skill register, skill packs in state, interference, install-time keys, self-opened memory, living neuron, resonant binding) -> **design only, no run**; code at `current`; -; "L", "N8", "N4", "N5"
 - **A27 decontamination audit** (2026-11-02) 13-gram audit of the SCI-1 training stream (20k docs per source via the real blend path) vs kb1 / GSM8K / MMLU / BABILong / decontam_items.json; clean-subset scores -> **DONE 2026-11-03: filtered stream 0 hits in 15 sources (positive control 300/300); raw: think 0.275 %, fineweb 0.11 %, dclm 0.08 %, others <= 0.065 %; action rule not triggered**; run `37c291d`, code at `current`; logs/v14_a27_decontam_37c291d_20261103_1104.json; "A27"
+- **A29 query-time prose to compact rewrite** <- A28 held read: plain vs protocol twin (2026-11-04) planner parses the prose protocol and writes 3 compact demos before the question; mind applies (skill contrast); c1a, UNIT, G1 + A26 wordings, 2k / 8k, 100 docs -> **running (pre-registered; bars: >= 0.45 at 2k both wordings; 8k >= twin 8k + 0.25)**; code at `current`; -; "A29"
 
 ## v15
 
@@ -163,4 +164,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-145 experiments: v13_sempty 68, v14 58, v15 10, v16 9.
+146 experiments: v13_sempty 68, v14 59, v15 10, v16 9.
