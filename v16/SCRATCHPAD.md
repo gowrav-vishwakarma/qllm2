@@ -135,11 +135,12 @@ Popped by the others (23:55 IST):
 | M4 (61,036) | 4.0B | 0.782 | 0.26 / ~0 |
 | M5 (76,295, cont1) | 5.0B | 0.435 | 0.65 / ~0 |
 | M6 (91,554, cont2) | 6.0B | 0.436 | 0.81 / 0.20 |
-| M7 (106,813) | 7.0B | pending | pending |
+| M7 (106,813, cont2 end) | 7.0B | 0.588 | (A26 pending) |
 | 122,072 (cont3, protoc out) | 8.0B | pending | pending |
 cont3 read: s8 +0.10 AND told -0.10 = competition; s8 up + told +-0.10 = protoc-specific; s8 flat + told holds = (b)/(c); s8 flat + told falls = protoc helped told.
 
 ## Decisions (organiser)
+- 2026-11-04 21:39 IST: M7 (7.0B, cont2): s8 D 0.436 -> 0.588 = SUPPRESSION then relearning with a ~1B-token LAG (M6 'erased' was premature; EUREKA correction). Reach best yet: skill pack 4k/8k 0.77/0.35, clk2 8k/16k 0.68/0.22, far needle 16k 0.70; ARC-e 0.534, HS 0.327 (best), PIQA 0.613; holdout 3.117 (best). cont3 read revised BEFORE its data: protoc suppressor only if s8 >= 0.84. cont4 worked moved to 137,331 (indicative only: ~1.5B before budget end). LESSON: judge a mix change only after >= 2B tokens / two milestones.
 - 2026-11-04 15:02 IST: HYPOTHESIS (Mind, EUREKA.md): told and induced rules COMPETE for the same state. Since the cont1 switch: induced s8 0.78 -> 0.44 while told prose rule (twin, 2k) 0.26 -> 0.65 -> 0.81; 8k reach of told rule starting 0.20. One switch, correlational. cont3 test: competition => s8 up AND told down at 122,072; s8 up + told held => protoc-specific. Told + induced reported side by side from now. If competition holds: per-use notebooks / synaptic tag = lead architecture experiment after ctl.
 - 2026-11-04 14:25 IST: USER YES (as a test): worked multi-step solutions as PLAIN TEXT (~2 %, no <think>, no switch, decontaminated) enter at the switch after cont3 (122,072), one cause at a time; keep only if s8 D +0.10 over 2 milestones AND OFF-mode thinking-style leak < 5 %. cont3 armed (449e320, calib7 synthetic 3.87 %, switch ~20:40). 6000 disk 39 GB (M5/M6 deleted, sha-verified on d_drive).
 - 2026-11-04 14:11 IST: SCI-1 91,554 (6.0B, cont2): SAVINGS = NO RECOVERY (s8 D 0.435 -> 0.436 with b2s back): the b2s cut alone is NOT the cause. Reach slipping (clk2 8k 0.67 -> 0.55, skill 8k 0.26 -> 0.18, needles 0.89 -> 0.81); past-SEQ clk2 16k/32k 0.08/0.04 (nothing holds past 8k at this size). Holdout best 3.139; HS/ARC-e/PIQA 0.320/0.514/0.617. Suspects: (a) protoc specialising the rule path to short range, (b) think drop removed the natural long-span trainer, (c) erasure. LEAD CALL: cont3 at 106,813 drops protoc (b2s 1.4, proto4k 0.8, measured calib); s8 D >= 0.60 by 122,072 => protoc. (b) put to the user (worked multi-step solutions as plain text, no <think>).
