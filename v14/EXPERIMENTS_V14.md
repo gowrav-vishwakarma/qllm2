@@ -3942,6 +3942,27 @@ fitted threshold:
       milestone. The refresh arm is 0.00-0.10, noise-level.
     - The same reading: the convention (unit) is said on 0.85-0.95 in the compact format; the copied value is the limit
       (0.15-0.40). That is what the first continuation's protoc targets.
+  - **A26 SCI-1 M4 vs cont1 step 76,295 (2026-11-04 06:50 IST; code 850ab5e; 20 docs per cell):**
+    - Logs: `logs/v14_a26_sci1m4{,_g1}_850ab5e_20261104_0613.*` (M4 = step 61,036, 4.0B tokens, the pre-cont1 mix, where cont1
+      started) and `logs/v14_a26_sci1c1a{,_g1}_850ab5e_20261104_0529.*` (c1a = step 76,295, 5.0B: 1B of cont1, protoc 0.15 %).
+    - Cont1 also changed other shares (b2s 1.7 → 0.5 %, think removed).
+
+    | right (value / convention) | M3 (3.0B) | M4 (4.0B) | c1a (5.0B, protoc) |
+    |---|---|---|---|
+    | G1 held-in-state UNIT 2k / 8k / 32k | 0.00 / 0.00 / 0.00 | 0.00 / 0.00 / 0.00 | 0.00 / 0.00 / 0.00 |
+    | G1 compact, 2k | 0.40 (0.40 / 0.90) | **0.00** (0.00 / 0.80) | **0.45** (0.45 / 0.85) |
+    | G1 compact, 8k | 0.00 | 0.10 | 0.15 |
+    | A26-wording compact 2k / 8k | 0.15 / 0.10 | 0.00 / 0.00 | **0.35 / 0.60** |
+    | held-out quantities (concentration / length), compact 2k / 8k | 0.18 / 0.00 | 0.00 / 0.00 | 0.45 / 0.60 |
+    | CONVERT compact 2k (unit said) | 0.00 (0.85) | 0.00 (0.95) | **0.10** (1.00) |
+    | ROUND (any arm) | 0.00-0.05 | 0.00-0.05 | 0.00 |
+
+    - **Verdict for Mind's B vs C: protoc helped.** The compact value went from 0.00 at M4 to 0.45 at 2k (G1) and 0.60 at 8k
+      (A26 wordings). It crosses to held-out quantities and gives the first CONVERT value (0.10).
+    - M4's collapse (M3 0.40 → 0.00 on the same mix) shows the compact value skill was unstable before protoc.
+    - **Unchanged:** a protocol held as PROSE in state is 0.00 at every checkpoint (M1-c1a). The refresh arm stays ≤ 0.10.
+    - Mind's cont1 bars at 76,295: G1 held ≥ NOPROT + 0.05 NOT met (0.00); compact value ≥ 0.50 at 2k just short (0.45 G1;
+      0.35 A26 wordings, 0.75 value at 8k).
   - **A27 RESULT (2026-11-03 12:01 IST; code 37c291d; `logs/v14_a27_decontam_37c291d_20261103_1104.{json,log}`; 20,000 docs per
     source, the first docs of each stream, CPU):**
     - Positive control: 300 / 300 planted test strings flagged by the audit AND by Mind's filter (all 10 sets).

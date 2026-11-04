@@ -1,0 +1,68 @@
+HEADER {"unit": "A26", "hash": "850ab5e", "started": "2026-11-04 05:29", "args": {"pam": "sci1c1a=/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont1_59d098d/c1a_step_076295_weights.pt", "win": "", "cells": "unit", "lengths": "2048,8192,32768", "docs": 20, "seed": 26000, "device": "cuda", "out": "logs/v14_a26_sci1c1a_g1_850ab5e_20261104_0529.jsonl", "guard_mb": 2000, "wording": "train", "arms": "all"}, "bodies": {"sci1c1a": {"ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont1_59d098d/c1a_step_076295_weights.pt", "params": 385817038, "best_val_loss": 3.172638760238397, "arch": "pam"}}}
+W1104 05:30:00.229000 384669 torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1104 05:30:01.945000 384669 torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1104 05:30:03.129000 384669 torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+2048 unit 0 5.9 s
+2048 unit 1 1.9 s
+W1104 05:30:06.374000 384669 torch/fx/experimental/symbolic_shapes.py:6823] [0/6] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+2048 unit 2 2.6 s
+2048 unit 3 1.8 s
+2048 unit 4 1.7 s
+2048 unit 5 1.7 s
+2048 unit 6 1.7 s
+2048 unit 7 1.9 s
+2048 unit 8 1.7 s
+2048 unit 9 1.7 s
+2048 unit 10 1.7 s
+2048 unit 11 1.7 s
+2048 unit 12 1.8 s
+2048 unit 13 1.4 s
+2048 unit 14 1.7 s
+2048 unit 15 1.7 s
+2048 unit 16 1.7 s
+2048 unit 17 2.0 s
+2048 unit 18 1.9 s
+2048 unit 19 1.7 s
+8192 unit 0 6.3 s
+8192 unit 1 6.4 s
+8192 unit 2 6.2 s
+8192 unit 3 6.3 s
+8192 unit 4 6.1 s
+8192 unit 5 6.3 s
+8192 unit 6 6.0 s
+8192 unit 7 6.4 s
+8192 unit 8 6.0 s
+8192 unit 9 6.3 s
+8192 unit 10 6.4 s
+8192 unit 11 6.7 s
+8192 unit 12 6.5 s
+8192 unit 13 6.3 s
+8192 unit 14 6.2 s
+8192 unit 15 6.0 s
+8192 unit 16 6.1 s
+8192 unit 17 6.1 s
+8192 unit 18 6.1 s
+8192 unit 19 6.4 s
+W1104 05:32:49.982000 384669 torch/fx/experimental/symbolic_shapes.py:6823] [0/7] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+32768 unit 0 24.8 s
+32768 unit 1 26.9 s
+W1104 05:33:41.724000 384669 torch/fx/experimental/symbolic_shapes.py:6823] [0/8] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+32768 unit 2 24.8 s
+32768 unit 3 24.0 s
+32768 unit 4 24.0 s
+32768 unit 5 23.9 s
+32768 unit 6 24.4 s
+32768 unit 7 24.0 s
+32768 unit 8 23.9 s
+32768 unit 9 23.6 s
+32768 unit 10 24.1 s
+32768 unit 11 23.6 s
+32768 unit 12 24.0 s
+32768 unit 13 23.7 s
+32768 unit 14 23.6 s
+32768 unit 15 24.1 s
+32768 unit 16 24.0 s
+32768 unit 17 23.9 s
+32768 unit 18 24.1 s
+32768 unit 19 24.2 s
+A26 DONE
