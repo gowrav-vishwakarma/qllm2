@@ -67,4 +67,10 @@ for a in "${ARMS[@]}"; do
   segment ctl_${name}_decay $D "$spec LR_SCHEDULE=decay CONTINUE_FROM=$S/stable_final.pt TARGET_TOKENS=$DECAY_TOKENS" || exit 1
   readouts $D ctl_${name}_$H
 done
+# B5 (Lead + Library): the prose rule held in state, A26 G1 at 2k with the protocol-twin read, PAM vs the matched T++ on the same docs
+# and row (v14/a28_twin.py has no Mamba-2 path, so B5 is PAM vs T++)
+B5=logs/ctl/v14_a28_ctl_pam_vs_tpp_$H.jsonl
+until ! busy && memok 20; do sleep 60; done
+[ -s $B5 ] || /home/gowrav/.venvs/qllm311/bin/python v14/a28_twin.py --ckpt $C/ctl_pam_decay_$H/latest.pt --win $C/ctl_tpp_decay_$H/latest.pt \
+  --wording train --lengths 2048 --docs 100 --out $B5 2>&1 | tail -3
 echo "=== ctl chain DONE $(date -u +%FT%TZ)"
