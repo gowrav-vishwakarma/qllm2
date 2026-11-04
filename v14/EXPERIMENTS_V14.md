@@ -3980,6 +3980,23 @@ fitted threshold:
   session + the same row: `l_A + 4 (l_A − l_B)`), beside the A9 read and NOPROT. **Rule:** if held ≤ NOPROT + 0.05 under
   both (a) and (b) at every length, "prose held = 0" stands as real; otherwise every A26 held number since M1 is re-read with
   the better read. ROUND / CONVERT leave the mind scorecard (the executor's job, Lead).
+  - **A28 RESULT (2026-11-04 08:38 IST; code be66f2d; `logs/v14_a28_twin_{g1,a26w}_be66f2d_20261104_0830.*`; c1a weights, step
+    76,295; 20 docs per cell): the rule is MET for "not real" → "prose held = 0" is an ARTEFACT at 2k; real beyond 2k.**
+
+    | right (value / unit) | 2k | 8k | 32k |
+    |---|---|---|---|
+    | G1 A9 read (= A26 held) | 0.00 (0.95 / 0.00) | 0.00 | 0.00 |
+    | G1 plain | 0.00 (1.00 / 0.00) | 0.00 | 0.05 |
+    | **G1 protocol twin** | **0.65 (1.00 / 0.65)** | 0.00 | 0.05 |
+    | G1 noprot (A9 read) | 0.00 | 0.00 | 0.00 |
+    | A26 wordings: A9 · plain · protocol twin · noprot | 0.00 · 0.00 · **0.20** (unit 0.45) · 0.00 | 0.00 · 0.00 · 0.05 · 0.00 | 0.00 under all |
+
+    - The plain read copies the row and does not add the unit either; only the protocol twin brings the unit out. At 2k, a
+      state-held prose protocol is readable (0.65 on the trained wordings, 0.20 on held-out wordings) and higher than the
+      compact pack arm at the same checkpoint (0.45).
+    - Beyond 2k (8k / 32k) it is 0.00-0.05 under every read: the limit there is the rule's REACH, not the read.
+    - Consequences (pre-registered): every A26 held number since M1 is re-read with the protocol twin; the package's
+      contrast twin is chosen per question part (a no-training unit, pre-registered next); EUREKA entry written.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

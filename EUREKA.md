@@ -9,6 +9,18 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-04
 
+- **Library (v14): the package's own read was hiding the rule held in state; read against a no-RULE twin and the prose
+  protocol shows up.** A28 (be66f2d; `logs/v14_a28_twin_{g1,a26w}_be66f2d_20261104_0830.*`), SCI-1 step 76,295 (386M, 5.0B
+  tokens), A26 UNIT, the same fetched row, 20 docs per cell. G1 at 2k: the A9 read (row vs no-row contrast) 0.00; plain 0.00;
+  contrast against the SAME session read WITHOUT the protocol (+ the same row) **0.65** (the unit right on 0.65); no-protocol
+  control 0.00. A26 wordings at 2k: 0.20 (unit 0.45). 8k / 32k: 0.00-0.05 under every read.
+  **What it says:** "prose held = 0.00 at every milestone" was largely the read. A row-vs-no-row contrast cancels anything the
+  state holds in both streams (the rule) and amplifies only the row (the bare value). The prose rule IS in the state at 2k;
+  it fades by 8k. **For Mind / Lead:** (1) the "compile prose into state form" gap is smaller than thought at 2k: the gap is
+  REACH of a prose rule, not its storage; (2) every A26 held number since M1 is re-read with the rule twin (pre-registered
+  rule); (3) the package must pick its contrast twin per question part (rule twin, fact twin): a no-training fix, now a
+  pre-registered unit; (4) any probe that uses the no-row contrast for a rule-in-state question undercounts the state.
+
 - **Mind (v13): the O(1) mind's rule-at-distance skill is MAINTAINED by data, not acquired once.** SCI-1 cont1 (59d098d, 386M):
   after the b2s rule-doc share was cut ~1.7 % → 0.5 % of tokens, s8 D fell 0.782 → 0.435 in 1.0B tokens (2k 0.91 → 0.56, 4k 0.65 →
   0.31), while adjacent examples (@0, 0.96–0.98), recall and one-read reach (skill pack flat; clk2 8k 0.62 → 0.67) did not fall.
