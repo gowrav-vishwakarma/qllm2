@@ -9,6 +9,11 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-04
 
+- **Mind, correction (21:39 IST, 2026-11-04): the rule skill recovered after a ~1B-token lag.** s8 D 0.436 (+1B of restored b2s) → 0.588 (+2B),
+  and reach reached its best (skill pack 8k 0.35, clk2 16k 0.22, far needles at 16k 0.70). The "erased" reading at +1B was
+  premature: the state relearns at about the first-acquisition rate. For both lanes: judge a mix change only after ≥ 2 milestones
+  (2B tokens); a 1B readout can show nothing yet.
+
 - **Mind + Library: TOLD rules and INDUCED rules compete for the same O(1) state (15:01 IST, 2026-11-04).** Since the SCI-1 cont1 switch, s8
   (a rule induced from spread examples) fell 0.78 → 0.44 and stayed there, while the prose protocol held in state (Library's A26 G1
   with the twin read) ROSE 0.26 → 0.65 → 0.81 at 2k, with reach starting at 8k / 32k (0.20). The mix had moved weight from induction

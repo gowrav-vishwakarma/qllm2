@@ -6065,6 +6065,32 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
+## SCI-1 cont2 milestone 7 (CHECK on the 4090, 21:39 IST, 2026-11-04; run `e61cd92`, step 106,813 = 7.0B tokens; 2.0B of the cont2 mix)
+
+**The skill came back with a ~1B-token lag; the M6 "erased" reading was premature.**
+
+| readout | M4 (4.0B, old mix) | M5 (cont1) | M6 (cont2, +1B) | **M7 (cont2, +2B)** |
+|---|---|---|---|---|
+| s8 D | 0.782 | 0.435 | 0.436 | **0.588** |
+| s8 shift_wide 2k / 4k | 0.935 / 0.595 | 0.540 / 0.285 | 0.580 / 0.188 | 0.765 / 0.370 |
+| s8 affine_map 2k / 4k | 0.885 / 0.713 | 0.583 / 0.333 | 0.647 / 0.330 | 0.780 / 0.435 |
+| skill pack 2k / 4k / 8k + contrast | 0.84 / 0.70 / 0.21 | 0.84 / 0.68 / 0.26 | 0.86 / 0.68 / 0.18 | **0.88 / 0.77 / 0.35** |
+| clk2 8k / 16k / 32k | 0.62 / – / – | 0.67 / – / – | 0.55 / 0.08 / 0.04 | **0.68 / 0.22** / 0.02 |
+| t40 far needles 4k + 8k; at 16k (position 0) | 0.95; – | 0.89; – | 0.81; 0.47 | 0.88; **0.70** |
+| HellaSwag (norm) / ARC-e / PIQA (norm) | 0.311 / 0.508 / 0.618 | 0.321 / 0.500 / 0.612 | 0.320 / 0.514 / 0.617 | **0.327 / 0.534** / 0.613 |
+| holdout val (blend) | 3.218 | 3.177 | 3.139 | **3.117** (104k, best) |
+
+- The restored b2s (~1.4 %) did work, but only in the second billion tokens: s8 D +0.152 from M6 to M7. Relearning ran at
+  about the first-acquisition rate (M1 → M3: +0.39 in 2B), so this is suppression with no savings speed-up, not erasure.
+- Reach recovered with it and is the best yet: skill pack 8k 0.35, clk2 16k 0.22, t40 at 16k 0.70. ARC-e 0.534 and HS 0.327 are
+  also bests. The told-rule side (Library's twin read) is read on this checkpoint next.
+- **Consequence for cont3 (honest):** cont3 started from a point where s8 is RISING under the cont2 mix with protoc IN. Its
+  pre-registered bar (s8 D ≥ 0.60 by 122,072 → "protoc was the suppressor") is now almost met by the trend alone and can no longer
+  separate protoc from the lagged b2s effect. Revised read (written before the 122,072 data): an s8 rise at 122,072 is NOT
+  attributed to protoc; protoc is called a suppressor only if s8 rises clearly ABOVE the cont2 trend (≥ 0.588 + 0.15 + 0.10 =
+  **0.84**). The told side keeps its pre-registered read (told G1 falls ≥ 0.10 → protoc was helping it).
+- Generations: the protocol prompt answers "1.912 g" (wrong, but a changed value); the tool prompt reads "78.4 C" right.
+
 ## SCI-1 cont2 milestone 6 (CHECK on the 4090, 14:11 IST, 2026-11-04; run `e61cd92`, step 91,554 = 6.0B tokens; 1.0B of the cont2 mix)
 
 **The SAVINGS readout: NO recovery.** s8 D 0.435 (M5) → **0.436** after 1B tokens with b2s restored to ~1.4 %. By the
