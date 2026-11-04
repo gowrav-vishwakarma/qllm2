@@ -132,3 +132,31 @@ think_eval {'n': 200, 'acc_on': 0.055, 'acc_off': 0.04, 'trace_rate_on': 1.0, 'l
     sampled: 'The answer is 8.0.<|im_end|>\n<|endoftext|>What is the density of denser liquids than denser liquids than denser liquids than denser liquids than denser liquids than denser liquids than denser liquids than denser liquids than denser liquids than denser liquids than denser liquids than denser liquids than denser liquids than denser liquids than denser liquids than denser liquids than dens'
     greedy : 'The answer is 0.125.<|im_end|>\n<|endoftext|><|im_start|>user\nWhat is the value of the expression $\\frac{1}{4} + \\frac{1}{6} + \\frac{1'
 === CHECK sci1_step_061036_59c3cf5 DONE 2026-11-03T16:16:03Z
+=== CHECK sci1_step_076295_59d098d (/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont1_59d098d/.mind_step_076295.pt) 2026-11-03T23:44:55Z
+per task: {'shift_wide_new@0': 0.955, 'shift_wide_new@2048': 0.54, 'shift_wide_new@4096': 0.285, 'affine_map_new@0': 0.975, 'affine_map_new@2048': 0.583, 'affine_map_new@4096': 0.333}  mean 0.612
+free (A7): {'shift_wide_new@0': 0.955, 'shift_wide_new@2048': 0.487, 'shift_wide_new@4096': 0.23, 'affine_map_new@0': 0.835, 'affine_map_new@2048': 0.203, 'affine_map_new@4096': 0.08}  mean 0.465
+saved logs/learning_probes/v13_sempty_sci1_step_076295_59d098d_spread_s7000_t400.json
+  affine_map_new done
+  affine_map_new done
+Results saved to logs/memory_probes/v13_sempty_sci1_step_076295_59d098d_t40_behavioral.json (aggregates, 2520 rows omitted)
+hellaswag {'acc': 0.2896, 'acc_norm': 0.3209, 'n': 10042}
+arc_easy {'acc': 0.5004, 'acc_norm': 0.4533, 'n': 2376}
+piqa {'acc': 0.6251, 'acc_norm': 0.6121, 'n': 1838}
+think_eval {'n': 200, 'acc_on': 0.0, 'acc_off': 0.0, 'trace_rate_on': 0.0, 'leak_rate_off': 0.0}
+=== generations: /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont1_59d098d/.mind_step_076295.pt step 76295 tokens 5,000,069,120 code 59c3cf5
+--- [science] prompt: 'Photosynthesis converts light energy into chemical energy. In the light-dependent reactions,'
+    sampled: " the light energy is converted into heat, and this energy is transferred to the atmosphere by absorption of infrared radiation. These reactions require the presence of light. Thus, light is the source of most of the photosynthesis in plants.\n1) It also takes a very long time for a plant to produce its own food. During the course of the plant's life, it will not be able to make"
+    greedy : ' the light energy is converted into chemical energy.\n\nThe light energy is converted into chemical energy.\n\nThe light energy is converted into chemical energy.\n\nThe light energy is converted into chemical'
+--- [protocol] prompt: 'Lab protocol: report every mass in grams, rounded to one decimal place.\nSample A weighed 12.347 g and sample B weighed 8.912 g.\nReport: sample A ='
+    sampled: ' 20.039 g and sample B = 9.982 g. The mass of PX (aliquot) was 27.084 g. The mass of PY (aliquot) was 0.922 g.\nThe mass of S100 (tissue digest) was 13.842 g. The mass of PY (pigment) was 9.'
+    greedy : ' 12.347 g and sample B = 8.912 g.\nCalculation: (A)\nCalculation: (B)\nCalculation: (C)\nCalculation: ('
+--- [chat] prompt: '<|im_start|>user\nWhat is the difference between a hypothesis and a theory?<|im_end|>\n<|im_start|>assistant\n'
+    sampled: "A hypothesis is an explanation for a phenomenon that has not been supported by any evidence. It's a tentative, unproven statement or prediction that can be tested through experimentation, observation, or other means. A theory, on the other hand, describes a well-established model of how a phenomenon works in the real world.\n\nOn the other hand, a theory is a proposed framework or set of"
+    greedy : 'A hypothesis is a proposed explanation for a phenomenon that is based on the available evidence. It is a tentative explanation that can be tested through experimentation or observation. A theory, on the other hand, is'
+--- [tool] prompt: '<|im_start|>user\nLook up the boiling point recorded for sample Q7 in my notes.<|im_end|>\n<|im_start|>assistant\n<tool_call>\n{"name": "library.fetch", "arguments": {"query": "Q7 boiling point"}}\n</tool_call><|im_end|>\n<|im_start|>tool\n<tool_response>\n{"name": "library.fetch", "content": "Record: Q7 | boiling point: 78.4 C."}\n</tool_response><|im_end|>\n<|im_start|>assistant\n'
+    sampled: 'The session record shows 78.4 C as the boiling point for vivnif.<|im_end|>\n<|endoftext|>How many times does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does does'
+    greedy : "The session record shows 78.4 C as the boiling point for Q7.<|im_end|>\n<|endoftext|><|im_start|>user\nThat's great! Now, can you tell me about the chemistry of chemistry?<|im_end|>\n"
+--- [quant] prompt: '<|im_start|>user\nA solution has 0.25 mol of salt in 2.0 L of water. What is its concentration in mol/L?<|im_end|>\n<|im_start|>assistant\n'
+    sampled: "To solve this problem, we need to find the concentration of salt in 1.0 L of water. We know that 1 mol of salt can have a concentration of 0.25 mol of salt. \n\nWe can also use this information to calculate the concentration by dividing the total mass of the solution by the initial concentration of salt. Let's denote the initial concentration as Cinitial and the concentration"
+    greedy : 'To solve this problem, we need to use the concentration formula, which states that the concentration of a solution of a substance in a solution is equal to the concentration of the solution in the solution.\n'
+=== CHECK sci1_step_076295_59d098d DONE 2026-11-04T00:14:09Z

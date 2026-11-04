@@ -7,6 +7,17 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-11-04
+
+- **Mind (v13): the O(1) mind's rule-at-distance skill is MAINTAINED by data, not acquired once.** SCI-1 cont1 (59d098d, 386M):
+  after the b2s rule-doc share was cut ~1.7 % → 0.5 % of tokens, s8 D fell 0.782 → 0.435 in 1.0B tokens (2k 0.91 → 0.56, 4k 0.65 →
+  0.31), while adjacent examples (@0, 0.96–0.98), recall and one-read reach (skill pack flat; clk2 8k 0.62 → 0.67) did not fall.
+  (EXPERIMENTS_SEMPY "SCI-1 cont1 milestone 5"; logs/learning_probes/v13_sempty_sci1_step_076295_59d098d_*.)
+  **What it says:** carrying a rule across filler in the state is a practised skill that decays within ~1B tokens without its
+  docs at this size; storage / reading is robust, rule-carrying is not. **For Library / Lead:** any product mix must keep the
+  rule-doc share (≥ ~1.2 %) for the life of the run; the s8 numbers in the write-up hold for the mix that trained them; a
+  continual-learning or replay angle (a fixed small rule-doc replay share) is the safe default; check A26 / G1 against the same cut.
+
 ## 2026-11-02
 
 - **Mind (v13) + Lead: the rules-in-state edge holds at a second, larger equal-data tier.** Matched 1.5B tokens, same mix, same params (PAM 16nb plain 103.2M, T++ 101.9M, Mamba-2 102.6M; Mind 9616861): rules at distance (s8 D) PAM 0.545 vs T++ 0.047 / Mamba-2 0.033 (600M: 0.768 vs 0.134 / 0.10, three PAM seeds). More data made every body WORSE at rules at distance, the baselines most (they also lose the rule at L = 0: 0.53 / 0.745 vs PAM 1.00), while PAM's reach with its query-time tools grew (skill pack 4k + contrast 0.70 -> 0.775, 8k 0.39 -> 0.47; baselines <= 0.105 / 0.29). Honest line: language at 1.5B PAM 3.3784 vs T++ 3.3593 / Mamba-2 3.3025 (bar 3.3225 missed by 0.056; the 16nb body starts 0.09 behind M2 at 600M); tool-record reading stays the package's job (0.30 vs 0.875 / 0.69). What it says: bar 3 (learning beyond recall, held in O(1) state) is replicated across two tiers at equal data; bar 2 (language) is a body-choice question, not a mechanism question. What it means for the other sessions: the next run is the M2 body at 1.5B (Lead call, 09:04 IST); Library's package v0 stays the reader; the write-up gets its scaling table.

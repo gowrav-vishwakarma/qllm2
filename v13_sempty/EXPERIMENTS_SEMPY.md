@@ -6065,6 +6065,36 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
+## SCI-1 cont1 milestone 5 (CHECK on the 4090, 05:50 IST, 2026-11-04; run `59d098d`, step 76,295 = 5.0B tokens; 1.0B tokens of the cont1 mix)
+
+**The s8 bar FAILS: rules from spread examples fell 0.782 → 0.435 in 1B tokens after b2s was cut 1.7 % → 0.5 %.**
+
+| readout | M4 (4.0B, old mix) | M5 (5.0B, cont1 mix) |
+|---|---|---|
+| s8 D (scored) | 0.782 | **0.435** (bar ≥ 0.50) |
+| s8 shift_wide @0 / 2k / 4k | 1.000 / 0.935 / 0.595 | 0.955 / **0.540 / 0.285** |
+| s8 affine_map @0 / 2k / 4k | 0.988 / 0.885 / 0.713 | 0.975 / **0.583 / 0.333** |
+| skill pack 2k / 4k / 8k + contrast | 0.84 / 0.70 / 0.21 | 0.84 / 0.68 / **0.26** |
+| clk2 8k | 0.62 | **0.67** |
+| t40 far needles | 0.95 | 0.89 |
+| HellaSwag (norm) / ARC-e / PIQA (norm) | 0.311 / 0.508 / 0.618 | **0.321** / 0.500 / 0.612 |
+| think ON / OFF; leak | 0.055 / 0.04; 0.465 | 0.0 / 0.0; trace 0.0 (source dropped, as intended) |
+| holdout val (blend) | 3.218 (60k) | 3.177 (76k; best 3.174) |
+
+- What fell is ONLY the rule carried across distance: adjacent examples (@0) still 0.96–0.98, while 2k / 4k lost ~0.35 each.
+  Recall and one-read reach did not fall (skill pack flat, clk2 8k and skill pack 8k up). So the in-state rule-at-distance
+  skill at this size is MAINTAINED by the rule-doc share, not acquired once: a 3.4x cut of b2s (realized ~1.7 % → 0.5 %; the
+  draft said 1.2 → 0.7, the final calibration cut further to fit protoc's 8.05x weight, my error) lost half of it in 1B tokens.
+- Confound: proto4k (×2) and protoc (new, "Report rule." compact demos) were added at the same switch; they are also rule docs in a
+  nearby format and could interfere. Not separable from this run alone; A26 (Library) at the same step says whether protoc helped.
+- Generations: the protocol prompt copies again ("12.347 g" greedy; M4 changed the value); the quant prompt answers with a long
+  wrong derivation (M4 greedy 0.125). Single samples; the scored probes above are the evidence.
+- Pre-registered: s8 D ≥ 0.50 read at 76,295 and 91,554. Action proposed to Lead (a cont2 mix from this milestone, below).
+
+**Proposed cont2 (Lead's call; synthetic loss-weight share computed with the measured per-token weights):** b2s back to 1.2 %,
+proto4k back to 0.4 %, keep protoc 0.15 % and recall4k 0.34 % → **4.17 %** (B). If A26 shows protoc did nothing, drop it and
+restore b2s 1.7 % with proto4k 0.8 % → 4.48 % (C). Restoring everything (b2s 1.7 + protoc) is 4.92 % (A), over the ceiling.
+
 ## SCI-1 milestone 4 (CHECK on the 4090, 21:47 IST, 2026-11-03; run `59c3cf5`, step 61,036 = 4.0B tokens; the LAST old-mix point, think still in)
 
 The baseline for cont1 (which starts from this checkpoint). Same CHECK; the full copy, own hard link (no interference).
