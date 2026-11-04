@@ -6065,6 +6065,38 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
+## ctl: matched control at the SCI-1 recipe (PRE-REGISTRATION, 08:41 IST, 2026-11-04; Lead + user GO 08:45 IST; on the 4090)
+
+**Question:** does the architecture gap (rules in state, reach past the trained length) survive when all three bodies get the SCI-1
+product recipe, rule docs included? The SCI-1 vs Pythia gaps are mostly data; the earlier matched tiers (600M × 3 seeds, 1.5B)
+used the tier mix, not this one.
+
+**Arms** (params from the smoke, `v13_sempty/tmp/ctl_smoke.sh`): PAM M2 (4 notebooks every 4th block + shared reads + echo + chrono +
+out_gate + delta, MLP 2128) **102.88M**; Transformer++ (the tier's) ~101.9M; Mamba-2 17 × 768 ~102.6M. The ~103M tier geometries
+rather than a new ~125M size: known-good, already param-matched, and comparable to the 600M / 1.5B tiers.
+
+**Recipe (identical for all three):** the cont2 mix (sampler weights of `sci1_cont2_env.sh`; realized shares printed at every val
+by the trainer's new `[mix]` line), GPT-2 + chat tokenizer, SEQ 4096, BATCH 16 × 4096 = 65,536 tokens per step (4 micro-batches of 4), LR 1.2e-3 (the
+tier's for this size), warmup 500, `wsd_stable` 0.9B tokens (13,733 steps) then a linear decay 0.1B (1,526 steps) = **1.0B tokens
+each**, seed 43 (same stream order), decontam index sha 08766210…, answer weight 100, ANSWER_IN_WINDOW, RESET_AT_EOS, per-source
+holdout val. From scratch (no stage A). Data note: on this box every source streams from the Hub (HfFileSystem), fineweb included
+(the 6000 reads a local copy of the same sample-10BT); calib6 read all 15 sources here. The same for all three arms.
+Runner `v13_sempty/tmp/ctl_chain.sh` (sequential; yields the card to every CHECK / humaneval / Library eval and on RAM < 12 GB,
+resumes from latest.pt, saves every 200 steps).
+
+**Bars at the decay end (claims only inside this block; params + tokens on every row):**
+- **B1 rules (s8 D, mean of 2k + 4k):** PAM ≥ max(T++, Mamba-2) + 0.20. Also reported @0 and @8k (8k = past
+  the trained SEQ 4096).
+- **B2 reach past SEQ:** t40 far needles at 8k and 16k: PAM ≥ max(baselines) + 0.10; clk2 at 8k / 16k reported with dilation 1
+  (no tool) and 8 + contrast (the O(1) read operator; PAM only by construction, stated as such).
+- **B3 language:** holdout (blend + per source) of PAM within +0.03 nats of the best baseline (bar-2 tolerance), reported.
+- **B4 known benchmarks:** HellaSwag / ARC-e / PIQA reported, no bar (kb1: level at 600M).
+- **B5 prose rule held in state (Lead, added before launch):** Library's A26 G1 cell at 2k with the protocol-twin read (A28),
+  100 docs, on all three: PAM ≥ max(baselines) + 0.20. Reference: SCI-1 c1a 0.65 ± 0.05, M4 0.26 (old read 0.00); t15tpp
+  (unmatched) 0.00. Script from Library; run in the readouts after mc_eval.
+**Closest prior work:** Transformer++ and Mamba-2 (Gu & Dao 2024) as the standard baselines; our matched 600M / 1.5B tiers.
+Difference: the same product recipe (science + chat + tools + rule docs), so the SCI-1 claims have an equal-data control.
+
 ## SCI-1 cont1 milestone 5 (CHECK on the 4090, 05:50 IST, 2026-11-04; run `59d098d`, step 76,295 = 5.0B tokens; 1.0B tokens of the cont1 mix)
 
 **The s8 bar FAILS: rules from spread examples fell 0.782 → 0.435 in 1B tokens after b2s was cut 1.7 % → 0.5 %.**
