@@ -132,12 +132,12 @@ Popped by the others (23:55 IST):
 ## SCI-1 told vs induced rules (side by side at every milestone; cont3 read pre-registered in bd43d39)
 | milestone | tokens | induced: s8 D | told: prose rule held, twin read, 2k / 8k |
 |---|---|---|---|
-| M4 (61,036) | 4.0B | 0.782 | 0.26 / ~0 |
-| M5 (76,295, cont1) | 5.0B | 0.435 | 0.65 / ~0 |
+| M4 (61,036) | 4.0B | 0.782 | 0.26 / - |
+| M5 (76,295, cont1) | 5.0B | 0.435 | 0.65 / <=0.05 |
 | M6 (91,554, cont2) | 6.0B | 0.436 | 0.81 / 0.20 |
-| M7 (106,813, cont2 end) | 7.0B | 0.588 | (A26 pending) |
+| M7 (106,813, cont2 end) | 7.0B | 0.588 | 0.49 / 0.04 |
 | 122,072 (cont3, protoc out) | 8.0B | pending | pending |
-cont3 read: s8 +0.10 AND told -0.10 = competition; s8 up + told +-0.10 = protoc-specific; s8 flat + told holds = (b)/(c); s8 flat + told falls = protoc helped told.
+Opposite moves in 2 of 3 intervals (M6->M7 within one mix: told 0.81 -> 0.49, induced 0.44 -> 0.59): supports competition; skills swing +-0.3 between milestones, so cont3 is judged on 122,072 AND 137,331. cont3 read: s8 +0.10 AND told -0.10 = competition; s8 up + told +-0.10 = protoc-specific; s8 flat + told holds = (b)/(c); s8 flat + told falls = protoc helped told.
 
 ## Decisions (organiser)
 - 2026-11-04 21:39 IST: M7 (7.0B, cont2): s8 D 0.436 -> 0.588 = SUPPRESSION then relearning with a ~1B-token LAG (M6 'erased' was premature; EUREKA correction). Reach best yet: skill pack 4k/8k 0.77/0.35, clk2 8k/16k 0.68/0.22, far needle 16k 0.70; ARC-e 0.534, HS 0.327 (best), PIQA 0.613; holdout 3.117 (best). cont3 read revised BEFORE its data: protoc suppressor only if s8 >= 0.84. cont4 worked moved to 137,331 (indicative only: ~1.5B before budget end). LESSON: judge a mix change only after >= 2B tokens / two milestones.
