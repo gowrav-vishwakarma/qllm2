@@ -4092,6 +4092,19 @@ fitted threshold:
       stable skill even with protoc in the mix.
     - The prose protocol held in state rises steadily (0.26 → 0.65 → 0.81 at 2k) and starts to reach (0.20 at 8k / 32k); the plain
       read now shows it (0.33). One checkpoint cannot attribute this to protoc, proto4k or b2s.
+  - **A26 + A28 at cont2 step 106,813 (2026-11-04 22:36 IST; c2b = 7.0B tokens, the last checkpoint WITH protoc; logs
+    `logs/v14_a26_sci1c2b{,_g1}_efe3d81_20261104_2139.*`, `logs/v14_a28_{rep100,rep100_8k,reread}_c2b_*_5cea3a4_20261104_22*.*`):**
+    cont3's guard baseline.
+
+    | right | c1a (5.0B) | c2a (6.0B) | c2b (7.0B) |
+    |---|---|---|---|
+    | prose held, twin read, G1 2k (100 docs) | 0.65 ± 0.05 | 0.81 | **0.49 ± 0.05** |
+    | prose held, twin read, G1 8k | ≤ 0.05 (20) | 0.20 (20) | **0.04 ± 0.02** (100) |
+    | prose held, plain read, G1 2k | 0.01 | 0.33 | 0.01 |
+    | compact, G1 2k · A26 wording 2k | 0.45 · 0.35 | 0.00 · 0.05 | 0.10 · 0.05 |
+
+    - On one mix (cont2), the prose-held skill fell back from 6.0B to 7.0B (0.81 → 0.49 at 2k; the 8k reach 0.20 → 0.04). It
+      oscillates like the compact value; a single milestone does not set a trend. Both guard cells are now at 100 docs.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
