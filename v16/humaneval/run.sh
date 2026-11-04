@@ -8,10 +8,10 @@
 set -e
 H=$(cd "$(dirname "$0")" && pwd); W=${W:-/home/gowrav/Development/qllm_sci1check}; PY=$W/.venv/bin/python
 BASE=/media/gowrav/d_drive/qllm2/humaneval; PORT=${PORT:-8765}
-if [ "$1" = stop ]; then tmux kill-session -t he_ngrok 2>/dev/null; tmux kill-session -t he_web 2>/dev/null; echo stopped; exit 0; fi
+if [ "$1" = stop ]; then tmux kill-session -t he_ngrok 2>/dev/null || true; tmux kill-session -t he_web 2>/dev/null || true; echo stopped; exit 0; fi
 if [ "$1" = serve ]; then
   O=$BASE/${2:+step_$2}; [ -n "$2" ] || O=$(ls -dt $BASE/step_* | head -1)
-  tmux kill-session -t he_web 2>/dev/null; tmux kill-session -t he_ngrok 2>/dev/null
+  tmux kill-session -t he_web 2>/dev/null || true; tmux kill-session -t he_ngrok 2>/dev/null || true
   tmux new-session -d -s he_web "python3 $H/server.py $PORT $O/site"
   tmux new-session -d -s he_ngrok "ngrok http $PORT --log stdout > $O/ngrok.log"
   for i in $(seq 20); do U=$(curl -s localhost:4040/api/tunnels | grep -o '"public_url":"[^"]*' | cut -d'"' -f4); [ -n "$U" ] && break; sleep 1; done
