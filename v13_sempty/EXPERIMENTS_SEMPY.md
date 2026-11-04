@@ -6124,6 +6124,12 @@ proto4k 0.65 % (target 0.8; kept, no unmeasured re-weighting), recall4k 0.32 % �
   - s8 flat AND told holds → neither; cause (b) / (c) remain (cont4 tests (b)).
   - s8 flat AND told falls → protoc helped told, did not hurt induction; keep protoc out only if told recovers.
 
+**cont3 launched (21:14 IST 2026-11-04; recorded 21:30 IST, 2026-11-04).** The switcher (sci1sw, 449e320) checked milestone 106,813 (7,000,096,768
+tokens), stopped cont2, deleted cont2's superseded latest.pt, checked out 449e320 (no untracked blockers) and started cont3: tmux
+`sci1`, dir `checkpoints_v13_sempty/sci1_cont3_449e320`, log `logs/v13_sempty_sci1_cont3_449e320_*.log`; `[continue]` from
+106,813 with a fresh budget of 3,499,950,080 tokens to global 160,218, wsd_stable, the calib7 weights (protoc out). Next
+milestones 122,072 (~Nov 5 04:00 IST: the cont3 readout + the cont4 switch), 137,331, 152,590; then the decay.
+
 **cont4 PRE-REGISTRATION: the test of cause (b) (14:27 IST, 2026-11-04; the user said YES via Lead, "as a test").** At the switch after cont3
 (global 122,072, once cont3's protoc readout is in; one cause at a time), add source **`worked`**: the same MetaMathQA + GSM8K train
 items as the dropped `think` (same 1,200-char cap), each rendered as a PLAIN worked solution + "The answer is X." (no `<think>`,

@@ -65,13 +65,12 @@ retained ≥ +0.2 over the untagged arm, holdout ≤ +0.01.
   -> d_drive `ctl_<arm>_{main,decay}_caa4da9`). `ctl_chain.sh` yields to CHECK / humaneval / Library python jobs and RAM < 12 GB, then
   resumes from latest.pt; restart after a box crash: rerun the same tmux command (it skips arms with `.done`). Pre-registration
   EXPERIMENTS_SEMPY "ctl: matched control". Readouts land in the worktree's `logs/ctl/`; copy them to master to commit.
-* **SCI-1 HANDOVER (06:08 IST, 2026-11-04).** cont2 is TRAINING on the 6000: tmux `sci1` in `~/Development/qllm_sci1` @ e61cd92, dir
-  `checkpoints_v13_sempty/sci1_cont2_e61cd92`, log `logs/v13_sempty_sci1_cont2_e61cd92_20261104_0027.log`, from cont1 M5 (global
-  76,295) to 160,218 (~Nov 5 21:40 IST), then the decay (`sci1_decay_e61cd92`). Why: cont1 lost the s8 skill after the b2s cut
-  (EXPERIMENTS_SEMPY "SCI-1 cont1 milestone 5"). Milestones 91,554 (~13:15 IST) and 106,813 (~20:40); bars: s8 D >= 0.70, reach not
-  below M5, holdout <= proj + 0.02. Local CHECK: `RUN=sci1_cont2_e61cd92 bash v13_sempty/tmp/sci1_check_local.sh step_091554`; Lead's
-  humaneval runs after each CHECK (gated on the `.checked_<m>` marker). On the 6000 kept: sci1_main best, cont1 best + step_076295 (M5; M4
-  deleted 07:50 IST 11-04 after a sha match with its d_drive copy); local sha-verified copies exist for M1-M4 (M5 `step_076295.pt` d_drive copy sha f57492b4… = the 6000; cont2 parent, delete on the 6000 when space is needed). Thinking is OFF.
+* **SCI-1 HANDOVER (21:30 IST, 2026-11-04).** cont3 is TRAINING on the 6000: tmux `sci1` in `~/Development/qllm_sci1` @ 449e320, dir
+  `checkpoints_v13_sempty/sci1_cont3_449e320`, from cont2 M7 (global 106,813) to 160,218, then the decay (`sci1_decay_449e320`). Why:
+  the one-cause test of protoc (EXPERIMENTS_SEMPY "cont3 PRE-REGISTRATION"). Milestones 122,072 (~Nov 5 04:00 IST; then the cont4
+  switch adds the `worked` source, pre-registered), 137,331, 152,590. Local CHECKs: tmux `mindm7` (after the M7 CHECK in `mindm6`).
+  Library's A26 + twin read and Lead's humaneval gate on the `.checked_<m>` markers. On the 6000 kept: best_model of each segment,
+  cont2 step_106813 (cont3's parent; delete after its d_drive copy is sha-verified). Thinking is OFF.
 * **Fast stream resume (2026-10-27, after the R4 screen's 47-min skips).**
   `v7/data.py` now reads dclm / fineweb / smoltalk2 (blend) / pg19 file by file
   with pyarrow in the exact old order (verified doc-for-doc vs the old HF
