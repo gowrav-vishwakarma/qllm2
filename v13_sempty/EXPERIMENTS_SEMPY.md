@@ -6090,7 +6090,19 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
   attributed to protoc; protoc is called a suppressor only if s8 rises clearly ABOVE the cont2 trend (≥ 0.588 + 0.15 + 0.10 =
   **0.84**). The told side keeps its pre-registered read (told G1 falls ≥ 0.10 → protoc was helping it).
 - Generations: the protocol prompt answers "1.912 g" (wrong, but a changed value); the tool prompt reads "78.4 C" right.
+- **Told vs induced side by side (Library's twin read, 100 docs; 22:37 IST):**
 
+  | milestone (mix) | induced: s8 D | told: twin-read G1 2k / 8k | compact G1 2k |
+  |---|---|---|---|
+  | M4 (old mix) | 0.782 | 0.26 / – | 0.00 |
+  | M5 (cont1) | 0.435 | 0.65 / ≤ 0.05 | 0.45 |
+  | M6 (cont2) | 0.436 | 0.81 / 0.20 (20 docs) | 0.00 |
+  | M7 (cont2) | 0.588 | **0.49 / 0.04** | 0.10 |
+
+  On the SAME mix (M6 → M7) told fell −0.32 while induced rose +0.15; M4 → M5 was the mirror (told +0.39, induced −0.35); M5 → M6
+  moved told only. Two of three intervals are a seesaw. This strengthens the competition HYPOTHESIS (still 4 points, one run).
+  It also means every skill here swings ±0.3 between milestones even at a fixed mix, so single-milestone reads of any of them are
+  weak; cont3 is judged on 122,072 AND 137,331 (Library + Lead). Guard baseline for cont3: told 2k 0.49, 8k 0.04.
 ## SCI-1 cont2 milestone 6 (CHECK on the 4090, 14:11 IST, 2026-11-04; run `e61cd92`, step 91,554 = 6.0B tokens; 1.0B of the cont2 mix)
 
 **The SAVINGS readout: NO recovery.** s8 D 0.435 (M5) → **0.436** after 1B tokens with b2s restored to ~1.4 %. By the
