@@ -6097,6 +6097,18 @@ What it says:
 - The `--continue_from` restarts are not the cause: the optimizer state is kept; only the LR schedule restarts (500-step warmup).
 - Generations: the protocol prompt copies "12.347 g" again; the tool prompt reads "78.4 C" right and runs past `<|im_end|>`.
 
+**cont3 PRE-REGISTRATION (14:13 IST, 2026-11-04; Lead decision 14:30): the one-cause test of protoc.** At cont2 milestone 7 (global 106,813,
+~20:40 IST; two milestones per mix holds), continue with **protoc dropped**, b2s ~1.4 %, proto4k 0.8 %, recall4k 0.34 %, no think
+(no think-like source at this switch, so the read stays one-cause; the user is asked separately about a plain-text worked-solution
+source for the switch after). Launched only from a measured calibration row: **calib7** (31.5M tokens, exactly the launched weights) realized b2s **1.49 %**,
+proto4k 0.65 % (target 0.8; kept, no unmeasured re-weighting), recall4k 0.32 % → synthetic loss weight **3.87 %**.
+`sci1_cont3_env.sh`, `NEWSEG=cont3 sci1_switch.sh step_106813 <hash> checkpoints_v13_sempty/sci1_cont2_e61cd92`.
+- **s8 D ≥ 0.60 by 122,072** (1B tokens of cont3) → **protoc was the suppressor** (short-range rule docs at high weight specialise
+  the rule pathway); then a trade with Library's A26 compact gains is made explicitly.
+- **s8 D < 0.60 by 122,072** → protoc is not the cause: (b) the think drop or (c) true erasure; the plain-text worked-solution
+  source (if the user allows it) is the next one-cause test; the synaptic-tag screen tests (c) on the 4090 after ctl.
+- Also read at 122,072: reach (clk2 8k ≥ 0.62 = back to M4, skill pack 8k, far needles), A26 compact (Library), holdout ≤ projection
+  + 0.02. Clean capacity check in parallel: the ctl PAM s8 at 1B on the cont2 mix (from scratch, protoc in).
 ## ctl: matched control at the SCI-1 recipe (PRE-REGISTRATION, 08:41 IST, 2026-11-04; Lead + user GO 08:45 IST; on the 4090)
 
 **Question:** does the architecture gap (rules in state, reach past the trained length) survive when all three bodies get the SCI-1
