@@ -6116,6 +6116,13 @@ proto4k 0.65 % (target 0.8; kept, no unmeasured re-weighting), recall4k 0.32 % �
   source (if the user allows it) is the next one-cause test; the synaptic-tag screen tests (c) on the 4090 after ctl.
 - Also read at 122,072: reach (clk2 8k ≥ 0.62 = back to M4, skill pack 8k, far needles), A26 compact (Library), holdout ≤ projection
   + 0.02. Clean capacity check in parallel: the ctl PAM s8 at 1B on the cont2 mix (from scratch, protoc in).
+- **Competition vs protoc-specific (Lead, added before the switch; the competition reading is a HYPOTHESIS, one switch moved both):**
+  at 122,072 read induced (s8 D) and told (Library's twin-read G1 at 2k and 8k, 100 docs) side by side against 106,813:
+  - s8 rises (≥ +0.10) AND told G1 2k falls (≥ −0.10) → **competition** supported; the per-use notebook / synaptic-tag experiment
+    becomes the lead architecture experiment after ctl.
+  - s8 rises AND told holds (within ±0.10) → **protoc specifically** suppressed induction; no competition claim.
+  - s8 flat AND told holds → neither; cause (b) / (c) remain (cont4 tests (b)).
+  - s8 flat AND told falls → protoc helped told, did not hurt induction; keep protoc out only if told recovers.
 
 **cont4 PRE-REGISTRATION: the test of cause (b) (14:27 IST, 2026-11-04; the user said YES via Lead, "as a test").** At the switch after cont3
 (global 122,072, once cont3's protoc readout is in; one cause at a time), add source **`worked`**: the same MetaMathQA + GSM8K train
