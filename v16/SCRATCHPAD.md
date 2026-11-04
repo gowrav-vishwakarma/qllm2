@@ -129,6 +129,16 @@ Popped by the others (23:55 IST):
 - Library: use the GAIN a fetched row gives (log p with the row minus without) as the selector / "nothing stored" signal, since it cancels the mind's prior. Instrumented in P_cands (7f49c7b). First 2-doc smoke does NOT separate (right rows 0.7-2.5, wrong 1.9-5.9, never-stored 0.5-8.0: a wrong row also boosts its own answer); variants (gain vs a null row; gain spread across the top-5) to be tested offline on the table's rows.
 - Mind: let the MIND canonicalise the question into the library's key form before the lookup (it learns any format it is shown), so the exact organ serves paraphrase; a curriculum item (restate format) for cu2; prior work: query rewriting / HyDE.
 
+## SCI-1 told vs induced rules (side by side at every milestone; cont3 read pre-registered in bd43d39)
+| milestone | tokens | induced: s8 D | told: prose rule held, twin read, 2k / 8k |
+|---|---|---|---|
+| M4 (61,036) | 4.0B | 0.782 | 0.26 / ~0 |
+| M5 (76,295, cont1) | 5.0B | 0.435 | 0.65 / ~0 |
+| M6 (91,554, cont2) | 6.0B | 0.436 | 0.81 / 0.20 |
+| M7 (106,813) | 7.0B | pending | pending |
+| 122,072 (cont3, protoc out) | 8.0B | pending | pending |
+cont3 read: s8 +0.10 AND told -0.10 = competition; s8 up + told +-0.10 = protoc-specific; s8 flat + told holds = (b)/(c); s8 flat + told falls = protoc helped told.
+
 ## Decisions (organiser)
 - 2026-11-04 15:02 IST: HYPOTHESIS (Mind, EUREKA.md): told and induced rules COMPETE for the same state. Since the cont1 switch: induced s8 0.78 -> 0.44 while told prose rule (twin, 2k) 0.26 -> 0.65 -> 0.81; 8k reach of told rule starting 0.20. One switch, correlational. cont3 test: competition => s8 up AND told down at 122,072; s8 up + told held => protoc-specific. Told + induced reported side by side from now. If competition holds: per-use notebooks / synaptic tag = lead architecture experiment after ctl.
 - 2026-11-04 14:25 IST: USER YES (as a test): worked multi-step solutions as PLAIN TEXT (~2 %, no <think>, no switch, decontaminated) enter at the switch after cont3 (122,072), one cause at a time; keep only if s8 D +0.10 over 2 milestones AND OFF-mode thinking-style leak < 5 %. cont3 armed (449e320, calib7 synthetic 3.87 %, switch ~20:40). 6000 disk 39 GB (M5/M6 deleted, sha-verified on d_drive).
