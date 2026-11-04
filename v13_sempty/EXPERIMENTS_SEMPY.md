@@ -6114,6 +6114,16 @@ milestone. Verdict: protoc helped (likely cause, not isolated: cont1 also change
 finding: on the old mix (proto ~0.4 %) the compact value skill went 0.40 → 0.00 between M3 and M4. Skills held in state at this
 size come and go with their data share.
 
+**Pre-registered: the SAVINGS readout at cont2 milestone 91,554 (08:30 IST, 2026-11-04; from the Mind step back).** The first acquisition of s8 D
+took 2B tokens (M1 0.322 → M3 0.709). cont2 restores b2s (realized ~1.4 %) from 0.435 at 76,295. At 91,554 (1.0B tokens later):
+- s8 D ≥ 0.70 → **suppressed, not erased** (relearning savings: faster than first acquisition). The lever is rehearsal schedule
+  (dose / spacing); no protected path is needed.
+- 0.50 ≤ s8 D < 0.70 → partial savings; read again at 106,813.
+- s8 D < 0.50 → **erased**; a protected path (the use-dependent plasticity tag, SCRATCHPAD step back) earns a 125M screen.
+Also read at 91,554: the reach curve past SEQ (clk2 + t40 at 16k / 32k, added to the CHECK) next to M5's 8k.
+Closest prior work: savings in relearning (Ebbinghaus; McCloskey & Cohen on catastrophic interference; "relearning savings" in
+continual-learning nets). This is a measurement, not a method claim.
+
 ## SCI-1 milestone 4 (CHECK on the 4090, 21:47 IST, 2026-11-03; run `59c3cf5`, step 61,036 = 4.0B tokens; the LAST old-mix point, think still in)
 
 The baseline for cont1 (which starts from this checkpoint). Same CHECK; the full copy, own hard link (no interference).
