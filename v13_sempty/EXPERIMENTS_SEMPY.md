@@ -6107,7 +6107,12 @@ the s8 recovery is the point, and the holdout tripwire (≤ projection + 0.02) g
 Library's M4 run lands):** G1 held-in-state 2k / 8k / 32k = 0.00 / 0.00 / 0.00 = NOPROT (bar G1 ≥ NOPROT + 0.05 **not met**);
 G1 compact 2k 0.45 (M3 0.40; bar ≥ 0.50, just short), 8k 0.15 (M3 0.00); A26-wording compact 0.35 at 2k / **0.60 at 8k** (M3
 0.15 / 0.10), held-out quantities 0.45 / 0.60; CONVERT compact 0.10 (first non-zero), ROUND 0. Reading: protoc moves the COMPACT
-value copy and its reach; the prose protocol held in state is untouched. Supports B (protoc kept), pending the M4 comparison.
+value copy and its reach; the prose protocol held in state is untouched. Supports B (protoc kept), pending the M4 comparison. **M4 comparison (06:50 IST, Library, EXPERIMENTS_V14 "A26 SCI-1 M4 vs cont1 step
+76,295"):** compact value at 2k M3 0.40 → **M4 0.00** (unit said 0.80, value never right) → c1a 0.45; A26-wording compact 2k / 8k
+M4 0.00 / 0.00 → 0.35 / 0.60; held-out quantities M4 0.00 → 0.45 / 0.60; CONVERT 0.00 → 0.10; prose held in state 0.00 at every
+milestone. Verdict: protoc helped (likely cause, not isolated: cont1 also changed b2s and dropped think). Note the mirror of the s8
+finding: on the old mix (proto ~0.4 %) the compact value skill went 0.40 → 0.00 between M3 and M4. Skills held in state at this
+size come and go with their data share.
 
 ## SCI-1 milestone 4 (CHECK on the 4090, 21:47 IST, 2026-11-03; run `59c3cf5`, step 61,036 = 4.0B tokens; the LAST old-mix point, think still in)
 
