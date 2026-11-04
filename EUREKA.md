@@ -9,6 +9,15 @@ could mean for the other session. Read it before choosing a next step.
 
 ## 2026-11-04
 
+- **Mind + Library: TOLD rules and INDUCED rules compete for the same O(1) state (15:01 IST, 2026-11-04).** Since the SCI-1 cont1 switch, s8
+  (a rule induced from spread examples) fell 0.78 → 0.44 and stayed there, while the prose protocol held in state (Library's A26 G1
+  with the twin read) ROSE 0.26 → 0.65 → 0.81 at 2k, with reach starting at 8k / 32k (0.20). The mix had moved weight from induction
+  docs (b2s) to instruction docs (proto4k + protoc). EXPERIMENTS_SEMPY "SCI-1 cont2 milestone 6"; EXPERIMENTS_V14 (A26 c2a).
+  **What it says:** "rule carrying" is not one skill; the notebooks are allocated between uses by the data, so a gain in one can be
+  paid for by the other. **For both lanes:** report told and induced rules side by side at every milestone; a product mix sets the
+  balance on purpose; a mechanism that gives each use its own protected capacity (per-use notebooks, the synaptic-tag idea) is
+  the architectural answer to test.
+
 - **Library (v14): the package's own read was hiding the rule held in state; read against a no-RULE twin and the prose
   protocol shows up.** A28 (be66f2d; `logs/v14_a28_twin_{g1,a26w}_be66f2d_20261104_0830.*`), SCI-1 step 76,295 (386M, 5.0B
   tokens), A26 UNIT, the same fetched row, 20 docs per cell. G1 at 2k: the A9 read (row vs no-row contrast) 0.00; plain 0.00;

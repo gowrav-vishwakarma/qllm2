@@ -6095,6 +6095,13 @@ What it says:
   improving: the "holds beyond the trained length" clause is degrading on this mix. Past 8k nothing holds at this size (clk2
   16k / 32k at chance; t40 at 16k 0.47 at position 0).
 - The `--continue_from` restarts are not the cause: the optimizer state is kept; only the LR schedule restarts (500-step warmup).
+- **Library's A26 + twin read at the same step (15:01 IST, 2026-11-04; EXPERIMENTS_V14):** the prose protocol HELD IN STATE kept rising while s8
+  fell: twin-read G1 at 2k M4 0.26 → c1a 0.65 → **c2a 0.81** (100 docs), plain read 0.33 (c1a 0.01), and reach starting (8k / 32k
+  0.20 / 0.20). The compact format oscillates (M3 0.40 → M4 0.00 → c1a 0.45 → c2a 0.00) with protoc in. So the state is not
+  losing "rule carrying" in general: since the cont1 switch it holds TOLD rules (prose instructions) better and INDUCES rules from
+  spread examples worse. Reading: the two uses compete for the same notebooks, and the mix decides which wins (cont1 / cont2 moved
+  weight from induction docs, b2s, to instruction docs, proto4k + protoc). cont3 (protoc out, proto4k 0.65 %, b2s 1.49 %) tests one
+  side of that; the guard is that twin-read G1 at 2k / 8k must not fall.
 - Generations: the protocol prompt copies "12.347 g" again; the tool prompt reads "78.4 C" right and runs past `<|im_end|>`.
 
 **cont3 PRE-REGISTRATION (14:13 IST, 2026-11-04; Lead decision 14:30): the one-cause test of protoc.** At cont2 milestone 7 (global 106,813,
