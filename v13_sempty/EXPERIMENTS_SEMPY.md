@@ -6095,6 +6095,14 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 proto4k back to 0.4 %, keep protoc 0.15 % and recall4k 0.34 % → **4.17 %** (B). If A26 shows protoc did nothing, drop it and
 restore b2s 1.7 % with proto4k 0.8 % → 4.48 % (C). Restoring everything (b2s 1.7 + protoc) is 4.92 % (A), over the ceiling.
 
+**cont2 launched (06:08 IST, 2026-11-04; Lead decision B at 06:00).** From `sci1_cont1_59d098d/step_076295.pt` (5.0B tokens), code e61cd92, tmux
+`sci1` on the 6000, log `logs/v13_sempty_sci1_cont2_e61cd92_20261104_0027.log`; `[continue]` header shows the new weights; 37.8k
+tok/s at step 76,350. The untracked-file check was run by hand first (none). cont1's ~1,600 steps past M5 were discarded; its
+`latest.pt` deleted (superseded). Calibration `calib6` (15.7M tokens, the launched weights): realized b2s **1.41 %** (target 1.2),
+proto4k 0.45 %, protoc 0.14 %, recall4k 0.34 % → synthetic loss weight **4.52 %** (predicted 4.17; b2s overshoots). Kept as is:
+the s8 recovery is the point, and the holdout tripwire (≤ projection + 0.02) guards the language cost. Milestones: 91,554
+(~Nov 4 13:15 IST), 106,813 (~20:40 IST); bars within those two: s8 D ≥ 0.70, reach not below M5, holdout ≤ projection + 0.02.
+
 ## SCI-1 milestone 4 (CHECK on the 4090, 21:47 IST, 2026-11-03; run `59c3cf5`, step 61,036 = 4.0B tokens; the LAST old-mix point, think still in)
 
 The baseline for cont1 (which starts from this checkpoint). Same CHECK; the full copy, own hard link (no interference).
