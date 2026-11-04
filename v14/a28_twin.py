@@ -24,7 +24,7 @@ for p in (str(ROOT), str(ROOT / 'scripts'), str(ROOT / 'v16')):
     if p not in sys.path:
         sys.path.insert(0, p)
 from memory_probes.spread import filler_tokens  # noqa: E402
-from v14.a26_protocol import EXAM, FILL, MAX_NEW, make_doc, score  # noqa: E402
+from v14.a26_protocol import EXAM, FILL, MAX_NEW, make_doc, score, win_greedy  # noqa: E402
 from v16.package import Package  # noqa: E402
 
 
@@ -42,11 +42,19 @@ def main():
     ap.add_argument('--ckpt', required=True); ap.add_argument('--wording', default='a26', choices=['a26', 'train'])
     ap.add_argument('--lengths', default='2048,8192,32768'); ap.add_argument('--docs', type=int, default=20)
     ap.add_argument('--seed', type=int, default=26000); ap.add_argument('--device', default='cuda'); ap.add_argument('--out', required=True)
+    ap.add_argument('--win', default=None, help='a transformer checkpoint: add its reads on the same docs and row (whole session as context)')
+    ap.add_argument('--skip_pam', action='store_true', help='only the transformer arms (the row still comes from the package fetch)')
     a = ap.parse_args()
     import subprocess
     print('HEADER ' + json.dumps(dict(unit='A28', hash=subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True,
                                                                       cwd=ROOT).stdout.strip(), args=vars(a))), flush=True)
     pkg = Package(a.ckpt, device=a.device); tok = pkg.tok
+    R = None
+    if a.win:
+        from run_memory_behavioral import _load_v13_sempty
+        from v16.bench import Reader
+        wm, _, _ = _load_v13_sempty(Path(a.win), 'baseline_real_pm', torch.device(a.device)); wm.eval()
+        R = Reader(wm, 'transformer')
     enc = lambda s: tok.encode(s, add_special_tokens=False)  # noqa: E731
     fill = filler_tokens(str(FILL)); outf = open(a.out, 'a')
     for d in [int(x) for x in a.lengths.split(',')]:
@@ -64,7 +72,14 @@ def main():
             ptwin = read(pkg, st_h, off_h, row + qi, st_n, off_n, row + qi)
             base = dict(d=d, doc=di, wording=a.wording, quantity=doc['q'], unit=doc['unit'], target=doc['target'],
                         proto=doc['proto'], question=doc['question'], path=info['path'], row=tok.decode(row)[-90:])
-            for arm, ans in (('a9', ans9), ('plain', plain), ('ptwin', ptwin), ('noprot', ansn)):
+            arms = [] if a.skip_pam else [('a9', ans9), ('plain', plain), ('ptwin', ptwin), ('noprot', ansn)]
+            if R is not None:                                            # the transformer on the SAME docs / row, whole session
+                H, N = doc['held'], doc['noprot']
+                arms += [('tpp_a9', tok.decode(win_greedy(R, pkg, H + row + qi, H + qi))),
+                         ('tpp_plain', tok.decode(win_greedy(R, pkg, H + row + qi))),
+                         ('tpp_ptwin', tok.decode(win_greedy(R, pkg, H + row + qi, N + row + qi))),
+                         ('tpp_noprot', tok.decode(win_greedy(R, pkg, N + row + qi, N + qi)))]
+            for arm, ans in arms:
                 outf.write(json.dumps(dict(base, arm=arm, answer=ans, **score('unit', ans, doc))) + '\n')
             outf.flush()
             print(d, di, f'{time.time() - t0:.1f} s', flush=True)
