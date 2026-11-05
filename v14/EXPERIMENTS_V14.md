@@ -4443,6 +4443,24 @@ fitted threshold:
       pack (told, R×K). The no-row contrast (A9) is retired.
       - §7.6 / Fig 9's R×K and told numbers stand (they already use the rule twin).
       - The needle / recall rows would move to warm (needle 0.927 → 1.000).
+- **A32: self-compiled state forks, and its PRE-CHECK first (PRE-REGISTERED 2026-11-05 17:06 IST, before any number;
+  outsider plan, Lead adopted the pre-check gate).**
+  - Idea: when a prose rule is read (t0), the mind writes 2-3 demos of it right away, through a read that sees the rule
+    (S_with vs S_without, or plainly), and streams them into S_with before the filler. A fading verbal trace becomes a demo
+    trace, with no regex parser (A29's).
+  - Closest prior work: SG-ICL (Kim et al. 2022, self-generated in-context examples). Difference: generated through the
+    O(1) state's rule fork and written into that state.
+  - Caveat named up front: the demo template ("{v} ->", the asked quantity) is the task family's query form. It is not a
+    parser, but the claim is "the mind extracts the convention", not "no prior format".
+  - **Pre-check (`v14/a32_precheck.py`, c3b, 100 docs per wording):** the demo-writing step itself.
+    - Uses A28's 2k docs (the same protocols / rows), with only the distance changed: 256 filler tokens + the protocol +
+      the asked row + the A26 exam question.
+    - Arms: twin (vs the same session without the protocol, alpha 4) and plain (warm).
+    - **Gate:** the better of twin / plain on the HELD-OUT wording (a26) ≥ 0.60 → run A32 with that read (bars below);
+      < 0.50 → stop (A32 cannot lift held-out 2k from 0.12 to 0.45 by writing wrong demos); 0.50-0.60 → Lead decides.
+    - Choosing the better of two reads on the same 100 docs inflates it slightly; stated, accepted.
+  - **A32 bars (only if the gate passes):** A28b held-out wording at 2k 0.12 → ≥ 0.45; trained wording at 8k 0.22 →
+    ≥ 0.55.
 - **BENCH-LIB (a): the library arm on ARC-e / ARC-c / HellaSwag / PIQA, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before
   any number; Lead, user 14:40; extends ARC-LIB).** SCI-1 first (c3b now for the page, then the final model), then the three ctl
   bodies with the IDENTICAL library and scorer (the paper rows; ARC-LIB's bar applies to the ctl rows).

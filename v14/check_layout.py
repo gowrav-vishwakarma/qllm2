@@ -41,6 +41,7 @@ SKIP_FILES = frozenset({
     "gate_read.py",      # GATE offline read choice (numpy only)
     "benchtool_gsm8k.py", # BENCH-TOOL (raw torch generate + ckpt meta)
     "benchlib_eval.py",  # BENCH-LIB scorer (ckpt meta)
+    "a32_precheck.py",   # A32 pre-check (raw torch state copies)
     "ruler_pkg.py",      # BENCH-PKG RULER-style generator (bare vs package, raw torch state copies + ckpt meta)
     "a11_keyswap.py",    # A11: key-swap relevance eval (frozen-mind short reads, raw torch)
     "a13_manykey.py",    # A13: many-key fetch eval (frozen states, max-sim, raw torch)
