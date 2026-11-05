@@ -49,7 +49,7 @@ put('s8', 'Our intelligence tests', 'Learning a rule from 8 examples (s8)', 'The
     '(letter shift / affine number map), sometimes with 2k–4k tokens of unrelated text in between, then must answer a new case. '
     'Picks among 8 candidates (chance 12.5 %).', 'cand', jl(S / 'rec_s8.jsonl'))
 put('skill', 'Our intelligence tests', 'Skill pack: remember a skill over long text', 'A skill (rule + examples) is shown once at '
-    'the start, then 0–8k tokens of unrelated text, then a question. Two arms: pack held in memory vs pack placed right before the question.',
+    'the start, then 0–8k tokens of unrelated text, then a question. Two arms per item: MODEL ALONE = pack held in memory; WITH LIBRARY = the library re-reads the pack right before the question (see the arm tag).',
     'cand', jl(S / 'rec_skill.jsonl'))
 put('needle', 'Our intelligence tests', 'Needles: recall a fact from far back', 'Facts (key → value) are hidden at the start / '
     'middle / end of 128–8192 tokens of text; the model must recall the value. Picks among 8 candidates.', 'cand', jl(S / 'rec_needle.jsonl'))
@@ -57,11 +57,12 @@ put('needle', 'Our intelligence tests', 'Needles: recall a fact from far back', 
 a26 = sorted(glob.glob(str(R / 'logs/v14_a26_sci1m*_*.jsonl')), key=lambda f: re.search(r'sci1m(\d+)', f).group(1))
 last = re.search(r'sci1m\d+', a26[-1]).group(0) if a26 else ''; a26_name = last
 rows = [json.loads(l) for f in a26 if last in f for l in open(f)]
-put('protocol', 'Our intelligence tests', f'Following a stated rule (latest A26 run: {a26_name})', 'Library\'s test: a lab rule is stated, a record '
-    'follows (sometimes far later), then a question. Right = value AND unit / rounding as the rule says.', 'proto',
-    [dict(prompt=r.get('question', ''), rule=r.get('proto', ''), row=r.get('row', ''), answer=r.get('answer', ''),
-          expected=f"{r.get('target', '')} {r.get('unit', '')}", ok=bool(r.get('right')),
-          tag=f"distance {r.get('d')} tokens · {r.get('arm')} · {r.get('cell')}") for r in rows])
+if not (S / 'pairs.jsonl').exists():
+  put('protocol', 'Our intelligence tests', f'Following a stated rule (OLD read, hides the stored rule; latest A26 run: {a26_name})', 'Library\'s test: a lab rule is stated, a record '
+      'follows (sometimes far later), then a question. Right = value AND unit / rounding as the rule says.', 'proto',
+      [dict(prompt=r.get('question', ''), rule=r.get('proto', ''), row=r.get('row', ''), answer=r.get('answer', ''),
+            expected=f"{r.get('target', '')} {r.get('unit', '')}", ok=bool(r.get('right')),
+            tag=f"distance {r.get('d')} tokens · {r.get('arm')} · {r.get('cell')}") for r in rows])
 # Model alone vs model + library (Library's per-item package rows, if present for this step)
 pf = S / 'pairs.jsonl'
 if not pf.exists():
