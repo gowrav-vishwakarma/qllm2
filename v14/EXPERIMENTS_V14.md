@@ -4330,6 +4330,28 @@ fitted threshold:
     clearly. Claim only the comparison.
   - Outside scope: told (its read is the protocol twin, not this contrast) and recall-32k (60 items; the pkg_suite cell
     saves no logits yet).
+- **WRITE-IN: stream the evidence through the mind's own delta write and read plainly (PRE-REGISTERED 2026-11-05 15:53 IST,
+  before any GATE number; Lead agreed; from the three step-backs: "the contrast read is a global fade of the prior").**
+  - Read: state(session) + evidence (fetched row / re-shown examples) + query, plain read, no subtraction. The trained
+    delta update arbitrates (erase-at-key, then write). This is the `warm` column.
+  - Cells and data:
+    - needle / s8 / skill: GATE's rows (warm, contrast, agree).
+    - recall-32k: the pkg_suite recall cell (kv / kvupd / hop2, 20 docs each, 20-way first token) re-run with the warm read
+      added. Next pause, 60 items.
+    - told: A26 UNIT, train wording, 2k and 8k, 100 docs.
+      - Write-in = A28 `plain` (fetched row + question on the held state); against the twin read (the current package)
+        and agree (twin when plain and twin disagree on the first token).
+      - **Counter-case named up front:** c3b already measured plain 0.22 vs twin 0.83 at 2k (A28 rep100). On a rule held
+        in state, the write-in alone loses; the row's literal value seems to win over the rule.
+  - **Bar:** write-in (warm) loses on NO cell vs the current package read (≥ package − 0.01 per cell × length), told
+    included.
+    - If told is the only exception and the agree gate keeps every cell (≥ max(warm, package) − 0.01), the verdict is the
+      map "facts write in; rules held in state need the twin; the agree gate chooses". That's a package design, no new
+      mechanism.
+    - Any other loss = NOT met.
+  - Closest prior work: kNN-LM (mixes a retrieved distribution with a weight); Titans / test-time training (gradient
+    updates of the memory). Difference: the evidence enters through the trained delta write itself, with no gradient and
+    no mixing weight.
 - **BENCH-LIB (a): the library arm on ARC-e / ARC-c / HellaSwag / PIQA, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before
   any number; Lead, user 14:40; extends ARC-LIB).** SCI-1 first (c3b now for the page, then the final model), then the three ctl
   bodies with the IDENTICAL library and scorer (the paper rows; ARC-LIB's bar applies to the ctl rows).
