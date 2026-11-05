@@ -74,13 +74,17 @@ if pf and pf.exists():
     names = {'rxk': ('Rule held in memory x fact fetched by the library', 'The rule (8 examples) is in memory; the record with the value is fetched at question time.'),
              'rewrite': ('Told rule rewritten next to the question', 'The library turns the prose rule into worked lines placed next to the question.'),
              'told': ('Told rule held in memory (twin / fork read)', 'Model alone = plain read; with library = read against the forked no-rule twin.'),
-             'recall': ('Recall 32k tokens back', 'Model alone = memory only; with library = the exact-text organ and planner.')}
+             'recall': ('Recall 32k tokens back', 'Model alone = memory only; with library = the exact-text organ and planner.'),
+             's8': ('Rule from 8 examples, across filler (examples re-shown)', 'Model alone = rule held in memory across the filler; with library = the examples are re-shown before the question (not fetched knowledge).'),
+             'skill': ('Skill pack, across filler (examples re-shown)', 'Model alone = memory only; with library = the pack is re-shown before the question, session state kept.'),
+             'needle': ('Far needles (library fetch + contrast read)', 'Model alone = memory only; with library = the record is fetched (right on every item) and read with the contrast read. NOT met: the contrast read cancels a fact already held in memory and boosts the decoys (the A28 effect on a stored fact); an agreement-gated read is the next unit.'),
+             'gsm8k': ('GSM8K grade-school maths (calculator tool)', 'Model alone = plain answer; with library = the model may call a sandboxed calculator. 0/200 in both: it calls tools with invented names (well-formed calls are rare), so this is format, not maths skill, at this size.')}
     for cell, (title, intro) in names.items():
         it = [dict(prompt=r.get('question', ''), context=r.get('context', ''), gold=r.get('gold', ''),
                    bare=r.get('bare_answer', ''), bare_ok=r.get('bare_ok') in (1, '1', True),
                    pkg=r.get('package_answer', ''), pkg_ok=r.get('package_ok') in (1, '1', True),
                    ok=r.get('package_ok') in (1, '1', True),
-                   tag=f"{r.get('task', '')} · {int(r.get('L', 0)):,} tokens") for r in rows if r.get('cell') == cell]
+                   tag=' · '.join(x for x in (r.get('task', ''), f"{int(r['L']):,} tokens" if str(r.get('L', '')).isdigit() else '', r.get('package_path', '')) if x)) for r in rows if r.get('cell') == cell]
         if it:
             nb = sum(x['bare_ok'] for x in it); npk = sum(x['pkg_ok'] for x in it)
             put('pair_' + cell, 'Model alone vs model + library (same items)', title,
