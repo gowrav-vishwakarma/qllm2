@@ -15,6 +15,8 @@ Status: `[ ]` open · `[~]` running · `[x]` done and in the paper. Owner in bra
 - [ ] **SCI-1 final milestones + decay** (137,331 / 152,590 / 160,218 + 1B decay): the last column of Fig 4; the protoc verdict (cont3) and the worked-solutions readout (cont4, indicative only). → §7, §7.5. [Mind]
 - [x] **Told vs induced competition**: the 4-way read at 137,331 did NOT support it (both rose: told 0.54 → 0.83 at 2k, induced 0.589 → 0.770). §7.2 rewritten as "co-vary with rehearsal, lagged"; EUREKA 11-04 entry withdrawn as a claim; per-use-notebook idea loses its motivation. [Mind, Library]
 
+- [ ] **Package suite on every milestone** (user, Nov 5 13:40): R x K with the library fetch, A29 rewrite, recall through the organ at 32k / 128k with MB held, twin-fork read; one row per milestone, bare vs package side by side; backfill M4 / M7 if cheap; BABILong + package on the final SCI-1 model on the 6000 after the decay. → new §7.6 / Fig: "the same checkpoint, bare and with the library". [Library; Mind yields]
+
 ## B. Findings from the step-backs that are IN the paper (check wording at review)
 - [x] "Stored but not expressed in every body": a told rule is 0.00 under the record-contrast / plain / no-rule reads for all three matched bodies and visible only under the twin (§5, §7.3).
 - [x] The rule skill is maintained by data, not acquired once; ~1B-token lag; judge mix changes after two milestones (§7.1).
