@@ -4140,6 +4140,23 @@ fitted threshold:
     `logs/v14_a26_sci1c3a{,_g1}_f56d4e6_20261105_0532.*`, `logs/v14_a28_{rep100,rep100_8k,reread}_c3a_*_14c0271_*.*`):** the guard holds.
     Twin read G1 2k 0.54 ± 0.05 (c2b 0.49 ± 0.05); 8k 0.04 ± 0.02 (c2b 0.04 ± 0.02); A26 wording 8k / 32k ≤ 0.05; compact G1 2k
     0.20 (c2b 0.10). Dropping protoc did not lower the told-rule side at the first milestone.
+- **A31: state FORKS: the rule twin held from read time at O(1) (PRE-REGISTERED 2026-11-05 08:22 IST, before any code or number;
+  Lead's GO).**
+  - Op: when the session stream reaches the protocol, the package forks the O(1) state. Copy A reads the protocol and the
+    rest of the session; copy B reads the rest WITHOUT it (both fed every later token; the step offsets of B shift by the
+    protocol's length). At the question both forks continue on row + question and the answer is `l_A + 4 (l_A − l_B)`.
+  - Same docs as A28 (seed 26000, UNIT, G1 trained wording, 2k, 100 docs), the current SCI-1 checkpoint, and A28's twin read
+    run beside it on the same docs.
+  - **Bar:** fork-read G1 2k ≥ A28's twin read on the same docs (≥ that number − 0.02, since the fork is mathematically the
+    same twin: B = the no-protocol session); every answer pair is compared for identity.
+  - Reported: memory per fork (MB, measured from B's state); compute (B streams every later token: +1× streaming per
+    standing fork, versus A28's re-read of the whole session at question time).
+  - **Closest prior work:** CAD (Shi et al. 2023) and Instructive Decoding (Kim et al. 2023), which re-run the context with
+    the instruction ablated at question time (double the KV / compute). **Difference:** one fork taken when the instruction
+    is read, kept alongside at O(1) state cost. For a transformer, the equivalent fork is a second KV cache that grows with
+    the context.
+  - Honesty line: accuracy is A28's by construction. The claim is cost and the operation (attribution, on / off per
+    standing instruction), not a new accuracy.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

@@ -156,6 +156,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 - **A29 query-time prose to compact rewrite** <- A28 held read: plain vs protocol twin (2026-11-04) planner parses the prose protocol and writes 3 compact demos before the question; mind applies (skill contrast); c1a, UNIT, G1 + A26 wordings, 2k / 8k, 100 docs -> **MET 11-04 09:20: rewrite 0.93 / 0.91 (A26 wording, 2k / 8k), 0.72 / 0.68 (trained wording); A9 read 0.00; parser 1.00 in-sample; TEXT + MIND**; run `a69cafa`, code at `current`; logs/v14_a29_rewrite_a26_a69cafa_20261104_0842.jsonl; logs/v14_a29_rewrite_train_a69cafa_20261104_0842.jsonl; "A29"
 - **A30 compositional contrast** <- A28 held read: plain vs protocol twin (2026-11-04) decode against a rule twin AND a fact twin: l(R,K) + a(l(R,K)-l(notR,K)) + b(l(R,K)-l(R,notK)); A26 UNIT c1a 2k, a,b grid; fresh-seed confirm -> **NOT met 11-04 09:31: best a,b>0 (4,2) 0.13 A26 / 0.30 G1 vs rule twin alone 0.22 / 0.65; the fact twin raises value but cancels the unit**; run `531ad61`, code at `current`; logs/v14_a30_compose_a26_531ad61_20261104_0923.jsonl; logs/v14_a30_compose_train_531ad61_20261104_0923.jsonl; "A30"
 - **A28b matched control held-out wording and 8k** <- A28 held read: plain vs protocol twin (2026-11-05) ctl bodies (PAM / T++ / Mamba-2, ~103M, 1B tokens same mix, one seed each): twin read on the A26 (held-out) wording at 2k and the trained wording at 8k, 100 docs -> **NOT met 11-05 06:50: held-out wording 2k PAM 0.12 vs Mamba-2 0.06 vs T++ 0.05 (+0.06 < +0.20); 8k 0.00 all; one seed per body**; run `f56d4e6`, code at `current`; logs/v14_a28b_ctl_a26w_2k_f56d4e6_20261105_0625.jsonl; logs/v14_a28b_ctl_g1_8k_f56d4e6_20261105_0625.jsonl; "A28b"
+- **A31 state forks** <- A28 held read: plain vs protocol twin (2026-11-05) fork the O(1) state where a standing instruction is read (with / without), keep both; question read = rule twin at constant cost; memory per fork stated -> **running (pre-registered; bar: fork read >= A28 twin on the same docs - 0.02; answers identical; MB per fork)**; code at `current`; -; "A31"
 
 ## v15
 
@@ -174,4 +175,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-156 experiments: v13_sempty 76, v14 61, v15 10, v16 9.
+157 experiments: v13_sempty 76, v14 62, v15 10, v16 9.
