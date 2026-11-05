@@ -4330,6 +4330,34 @@ fitted threshold:
     clearly. Claim only the comparison.
   - Outside scope: told (its read is the protocol twin, not this contrast) and recall-32k (60 items; the pkg_suite cell
     saves no logits yet).
+  - **RESULT c3b (2026-11-05 16:21 IST; code 20a770c; held-out logs/v14_gate_heldout_c3b_20a770c_20261105_1551.jsonl;
+    main rows in logs/v14_pkg_suite_c3b_c93e3b7_20261105_1347_pairsx.jsonl, committed 33d4376).**
+    - Sanity passed: the offline contrast reproduces the run's package_ok on 5,720 / 5,720.
+    - tau = 0.98 (held-out pooled conf accuracy 0.9987).
+
+    | cell | L | n | bare | warm | contrast | agree | conf | adacad | keyed |
+    |---|---|---|---|---|---|---|---|---|---|
+    | needle | 128-1,024 | 1,440 | 1.000 | 1.000 | 0.897 | 1.000 | 1.000 | 1.000 | 0.922 |
+    | needle | 2,048-8,192 | 1,080 | 0.996 | 1.000 | 0.968 | 1.000 | 0.998 | 1.000 | 0.988 |
+    | s8 | 0 | 800 | 1.000 | 1.000 | 0.995 | 1.000 | 1.000 | 1.000 | – |
+    | s8 | 2,048 | 800 | 0.906 | 1.000 | 1.000 | 1.000 | 0.999 | 1.000 | – |
+    | s8 | 4,096 | 800 | 0.634 | 1.000 | 1.000 | 1.000 | 0.999 | 1.000 | – |
+    | skill | 0 | 200 | 1.000 | 1.000 | 0.995 | 1.000 | 0.995 | 1.000 | – |
+    | skill | 2,048 | 200 | 0.680 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | – |
+    | skill | 4,096 | 200 | 0.300 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | – |
+    | skill | 8,192 | 200 | 0.055 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | – |
+    | pooled | | 5,720 | 0.866 | **1.000** | 0.967 | **1.000** | 0.999 | 1.000 | – |
+
+    - **Bar (agree): MET.** In every group agree ≥ max(bare, contrast) − 0.01, and pooled 1.000 ≥ 0.967 + 0.02.
+    - What it really says:
+      - The WARM read alone, with the evidence streamed through the delta write and read plainly, is 1.000 on all 5,720.
+      - The contrast never helped on these cells; it only lost, by cancelling the prior on needle (and 0.005 at spread 0).
+      - agree = adacad = warm = 1.000: the cells are at ceiling for any read that keeps the warm stream, so they cannot
+        tell the gates apart.
+      - By the novelty rule the gate is plumbing here. The sharper finding is WRITE-IN's: evidence through the write
+        beats evidence by subtraction.
+    - keyed (exploratory, needle): 0.922 / 0.988, better than contrast, worse than warm. The candidate mask is the wrong key.
+    - The discriminating cells are WRITE-IN's told (plain 0.22 vs twin 0.83 already measured) and recall-32k (next).
 - **WRITE-IN: stream the evidence through the mind's own delta write and read plainly (PRE-REGISTERED 2026-11-05 15:53 IST,
   before any GATE number; Lead agreed; from the three step-backs: "the contrast read is a global fade of the prior").**
   - Read: state(session) + evidence (fetched row / re-shown examples) + query, plain read, no subtraction. The trained
