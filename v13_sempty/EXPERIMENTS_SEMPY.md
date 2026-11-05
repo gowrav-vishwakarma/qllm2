@@ -6109,6 +6109,14 @@ Frame: `v16/PLAN_LONGRUN.md` (rules R1–R7). This is mix-schedule step 2; the r
   ≥ −0.05; HS / ARC-e / PIQA ≥ −0.01; per-source science holdout ≤ +0.03. Judged at ramp end + 1B (the lag rule); a guard falling at
   two consecutive milestones freezes the ramp at its current share.
 - **Release (R4):** the chat variant is a 0.5B decay branch from ramp end + 1B; base and chat both tagged by token count.
+- **Tool data (Library's GSM8K tool arm on c3b, 15:10 IST 11-05):** with `calculate(expression)` offered, the model calls a tool on
+  97 % of items in the trained `<tool_call>` format but invents glaive-style names (calculate_number 47, calculate_percentage 23,
+  calculate_distance 13 vs calculate 24); 19 / 206 calls well-formed, 3 compute a number; arguments are words. It has the FORMAT,
+  not the schema-reading or argument grounding: the glaive part of `tools` is a small set of recurring function names (memorised
+  templates; R7). For the ramp: (i) cap `tools`' epochs (R7) and down-weight glaive; (ii) add a schema-grounded tool source where
+  the offered function's exact name and typed arguments must be copied from the system prompt and filled from the question (e.g.
+  ToolACE's varied schemas, plus a synthetic "offered-schema" set with randomised function names and arithmetic / lookup
+  arguments taken from the question); (iii) a probe cell: call accuracy = right name + parseable args + correct result.
 
 ## SCI-1 cont3 milestone 9 (CHECK on the 4090, 13:16 IST, 2026-11-05; run `449e320`, step 137,331 = 9.0B tokens; 2.0B of cont3, protoc out)
 
