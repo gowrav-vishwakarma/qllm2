@@ -136,10 +136,11 @@ Popped by the others (23:55 IST):
 | M5 (76,295, cont1) | 5.0B | 0.435 | 0.65 / <=0.05 |
 | M6 (91,554, cont2) | 6.0B | 0.436 | 0.81 / 0.20 |
 | M7 (106,813, cont2 end) | 7.0B | 0.588 | 0.49 / 0.04 |
-| 122,072 (cont3, protoc out) | 8.0B | pending | pending |
+| 122,072 (cont3 +1B, protoc out) | 8.0B | 0.589 | (A26 pending) |
 Opposite moves in 2 of 3 intervals (M6->M7 within one mix: told 0.81 -> 0.49, induced 0.44 -> 0.59): supports competition; skills swing +-0.3 between milestones, so cont3 is judged on 122,072 AND 137,331. cont3 read: s8 +0.10 AND told -0.10 = competition; s8 up + told +-0.10 = protoc-specific; s8 flat + told holds = (b)/(c); s8 flat + told falls = protoc helped told.
 
 ## Decisions (organiser)
+- 2026-11-05 05:48 IST: M8 (122,072, 8.0B, cont3 +1B): s8 D flat 0.589 (verdict at 137,331 per lag rule); far needle past SEQ 16k 0.88 (best; 4k/8k 0.99); clk2 8k 0.57 (dip), skill pack 8k 0.31; holdout 3.093, HS/ARC-e/PIQA 0.331/0.535/0.619 (all bests). Told twin read pending. 6000 disk 30 GB.
 - 2026-11-05 04:57 IST: CTL RESULT (Mind f0a4695; 3 x ~103M, 1.0B tok each, identical cont2 mix, same code/seed): B1 rules s8 D PAM 0.523 vs Mamba-2 0.149 / T++ 0.074 MET (+0.37 over best; adjacent @0 0.75/0.68/0.36: the gap is carrying across filler). B2 far needle past SEQ 8k/16k PAM 0.53/0.41 vs M2 0.18/0.15, T++ 0.17/0.13 MET (T++ better inside window 0.92 vs 0.63). B3 holdout NOT MET: PAM 3.427 vs Mamba-2 3.378 (+0.049, bar +0.03); beats T++ 3.440. B4 level. Both thesis clauses hold vs both baselines at equal params/tokens/data; Mamba-2 is the better pure LM at this size. B5 queued (mindb5). EUREKA post held until B5 (Lead).
 - 2026-11-05 04:10 IST: CTL PROVISIONAL (2 of 3 arms; ~102M, 1.0B tok, identical SCI-1 cont2 mix): PAM vs T++. B1 s8 D 0.523 vs 0.074 (+0.45, bar +0.20) PASS; @0/2k/4k/8k PAM 0.75/0.61/0.43/0.28 vs T++ 0.36/0.10/0.05/0.05. B2 far needle past SEQ 8k/16k 0.53/0.41 vs 0.17/0.13 PASS (T++ better inside window at 2k: 0.92 vs 0.63). B3 holdout 3.427 vs 3.440 (PAM better). B4 HS/ARC-e/PIQA level. Cost: PAM trains ~2x slower per token at this size. Mamba-2 + B5 pending; EUREKA decision after Mamba-2.
 - 2026-11-05 03:45 IST: CTL PAM (102.9M, 1.0B tok of the cont2 mix, from scratch) readouts: s8 D 0.523 (shift 2k/4k/8k 0.63/0.39/0.27, affine 0.60/0.47/0.29); clk2 8k/16k (dil 8 + contrast) 0.59/0.15; far needles 2k/8k/16k 0.63/0.53/0.41; HS/ARC-e/PIQA 0.282/0.455/0.588; holdout 3.427. T++ / Mamba-2 readouts + B5 pending, bars judged ~07:00-08:00. Chain readout-marker bug fixed (0787af4).
