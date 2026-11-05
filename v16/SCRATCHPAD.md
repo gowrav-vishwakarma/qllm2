@@ -79,6 +79,12 @@ What I saw today from far away: everything the package does that works is "put t
 3. **GSM8K is a registry problem first.** Standard tool use states the tool list in the prompt; the model invents names because it never saw one. One prompt line before any data change; the chat ramp then teaches the schema.
 4. **What did not move:** one seed per control body and the language gap to Mamba-2 are still the paper's weakest lines; the ladder + second seed on the 6000 after the decay stay first.
 
+*Joint conclusion (Lead + Mind v13_sempty/SCRATCHPAD.md step back #2 + Library v14/SCRATCHPAD.md 179adc6, 16:05 IST):* all three found the same SEAM, independently: the mind keeps and reads well; the interface addresses by words (BM25 +0.001 on ARC-c) and arbitrates by a global fade. Library: the contrast read w + 4(w - b) IS a global fade of the prior, so the needle loss (0.998 -> 0.927) is the knockout law (local erase beats global fade) at read time; re-shown examples (1.00) are already "stream the evidence through the mind's own delta write". Mind: facts live along unit notebook keys, so the notebook already has an address scheme and it is not word overlap. Units, eval-only (no training), one 4090 pause after Library's GATE / ctl BENCH-LIB chain, each pre-registered with closest prior + difference:
+  1. Library: GATE (agreement / keyed) numbers, then the WRITE-IN read (fetched row streamed into the state through the trained delta write, plain read) on needle / recall / s8 / skill / told. Prior: kNN-LM (mixing weight), Titans (test-time gradient). Difference: the trained write, no gradient, no weight.
+  2. Mind: notebook-key retrieval for ARC-c, first as a rerank of BM25's top-100 by the notebook's q·k (vs BM25 0.278, stated answer 0.835). Prior: HyDE, RETRO, Memorizing Transformers. Difference: the delta notebook's unit-key space read by its own query.
+  3. Mind after M10: Lead's eviction log on ctl PAM (s8 8k, needles 16k / 32k, told twin 8k; log MB stated).
+  Next after those: the mind writes its own query (HyDE-like); "fetch" as a tool the mind calls (it already calls a tool on 97 % of GSM8K items unasked), after the schema-grounded tool source.
+
 ## Step back (Lead, 2026-11-05 08:20 IST; user: "read the meditation memory again, go in the void, then step back; ask Mind and Library")
 
 Since yesterday's block: the equal-data control (the EUREKA), the A28b caveat, the lag and the seesaw, the paper draft, and a complex twin ported in under two hours.
