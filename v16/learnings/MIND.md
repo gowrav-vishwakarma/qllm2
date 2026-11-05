@@ -214,4 +214,5 @@ recipe (16 × 1, c17775a), paused for Library's GPU pieces; the 1-line v13 fix f
 **The interface (step backs, nkr).** What works re-presents the right thing at query time (re-shown examples, a stated answer:
 ARC-c 0.28 → 0.84); what fails asks the model to address (BM25 adds nothing; offered tool schemas lose to trained names; the
 contrast read cancels a fact already in state). nkr (pre-registered 6c9fb4f, runner b4b7499) reranks BM25's top-100 by the
-notebook's own query·key: does the mind address its library better than words?
+notebook's own query·key: it FAILED (ARC-c 0.260 vs BM25 0.278 vs random-of-100 0.266): the notebook keys are not a
+corpus address at this size; the retriever, not the mind, is the next lever.

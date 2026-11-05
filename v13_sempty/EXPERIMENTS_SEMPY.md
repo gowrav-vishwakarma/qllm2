@@ -6105,6 +6105,23 @@ keys are not an address space for a corpus at this size. ARC-e reported with the
 (kNN over attention keys), HyDE. Difference: no retriever is trained; the scores are the frozen LM's own delta-notebook query / key
 projections, i.e. the address its erase-at-key memory already uses.
 
+**nkr RESULT (16:41 IST, 2026-11-05; `logs/v13_sempty_nkr_{nk,rand}_c3b_*.jsonl`, `logs/v13_sempty_nkr_run.log`; c3b, acc_norm, mc_eval's scorer).**
+
+| arm | ARC-c | ARC-e |
+|---|---|---|
+| bare | 0.277 | 0.463 |
+| BM25 top-3 (BENCH-LIB) | 0.278 | 0.526 |
+| random 3 of BM25's top-100 | 0.266 | 0.501 |
+| **notebook-key top-3 (NK)** | **0.260** | **0.484** |
+| oracle (stated answer) | 0.837 | 0.875 |
+
+**Verdict: FAILED, closed.** NK is below BM25 (−0.018 / −0.042) and below RANDOM picks from the same 100 (−0.006 / −0.017): the
+notebook's raw query·key max-sim (pre-Chrono, at the prompt's last token) is not an address space for a corpus at this size; it
+is anti-informative. Reading: the trained notebook keys encode what to retrieve WITHIN a context (successions, rules, recent
+tokens), not topical relevance across documents; the query at "Answer:" seeks a continuation, not a source. The full key index is
+not earned. The interface gap stands at the RETRIEVER: a trained / topical retriever (dense or HyDE-style) is the next lever, as
+plumbing, not a claim.
+
 ## sci1_chat: the chat ramp, the opening of the long run (DRAFT pre-registration, 13:59 IST, 2026-11-05; final with measured rows after the Nov 6 decay)
 
 Frame: `v16/PLAN_LONGRUN.md` (rules R1–R7). This is mix-schedule step 2; the run does not end on a decay.
