@@ -61,6 +61,46 @@ computed from the state's own write activity, with no task boundaries.
 Cheapest honest test (4090, 125M): train on rules + text, then 0.5B tokens of text only, with vs without tags; bar: s8 D
 retained ≥ +0.2 over the untagged arm, holdout ≤ +0.01.
 
+## Step back (Mind, 08:32 IST, 2026-11-05; user via Lead: "re-read the meditation memory, go in the void, step back")
+
+Since the last block: the equal-data control (B1 / B2 / B5 met, B3 not), the lag (a mix change shows nothing for 1B tokens), the
+told / induced seesaw, the paper draft, and the complex twin ported with every part (delta, clock, gate, sparse notebooks, shared
+reads, echo) in about two hours, now training as cx_m2.
+
+**What surprised me.**
+1. At the matched control, with the examples adjacent, the three bodies are close (PAM 0.75, Mamba-2 0.68, T++ 0.36), and 2k
+   tokens of filler separate them (0.61 / 0.18 / 0.10). Induction is cheap; KEEPING the induced rule while unrelated text passes
+   is the whole difference. That is a statement about forgetting, not about learning.
+2. Mamba-2 keeps 12x the state (13.9 vs 1.15 MB) and still loses the rule and holds the told rule worse (0.20 vs 0.53). Size is not
+   it; how a state is overwritten is.
+3. The "expensive" complex question took two hours. I had treated it as a week's work for a week.
+4. My own recurring bug: four times this week a `pgrep -f` / `pkill -f` pattern matched the shell that ran it (a waiter that never
+   started, a pkill that killed its own command). That is a habit to stop, not a one-off.
+
+**Which part carries the rule across filler (Lead's question).** My prior, from what each part does:
+- **delta erase-at-key**: the strongest candidate. A filler token erases only along ITS unit key; a rule stored along other keys
+  is untouched. Mamba-2's update fades and overwrites along every direction the input touches. This is exactly "forget locally,
+  not globally".
+- **Chrono clock**: the second candidate. The warp g_t can slow the clock during filler, so the rule's phase still matches the
+  query after 2k tokens; with plain RoPE the relative phase drifts with every token.
+- **echo**: unlikely for s8. It recalls the token that FOLLOWED a similar context; a rule applied to a new input has no stored
+  successor. It should matter for copy / needle reach, not induction.
+- **shared reads**: unlikely to carry; they add read points to the same four notebooks, not storage.
+
+**Bold, cheap step before the ladder: eval-time knockouts on the trained ctl PAM checkpoint (minutes on the 4090, no training).**
+On the s8 spread probe, switch one mechanism off ONLY during the filler spans (the examples and the query untouched):
+(a) erase gate b_e = 0 (pure additive writes, i.e. no erase-at-key); (b) b_e = 1 with global decay (Mamba-like overwrite);
+(c) clock frozen at g = 1 (plain RoPE); (d) echo out-proj zeroed; (e) readers zeroed. The drop in s8 D at 2k / 4k per knockout says
+which mechanism the TRAINED model uses to carry. It is not a training ablation (a model trained without a part may compensate), so
+it does not replace the ladder; it decides which rungs are worth 1B tokens each and gives the paper a mechanism figure today. The
+dilation hook already edits retention per span, so this is ~40 lines.
+
+**On the ladder and the state budget.** Agree with both, in the order knockouts → ladder (only the parts the knockouts flag, plus
+one "all on" seed) → second seed → state budget. A second seed matters more than I said before: every bar is one seed.
+
+**What I would stop.** pgrep / pkill by pattern (use pid files or tmux session names); judging any mix change in under 2B tokens;
+and new SCI-1 mix segments (agree with Lead: let it finish and decay).
+
 ## State of play
 
 * **ctl HANDOVER (2026-11-04 10:50 IST).** The matched control (PAM M2 / T++ / Mamba-2 ~103M, 1B tokens each of the cont2 mix)
