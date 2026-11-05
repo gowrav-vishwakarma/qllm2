@@ -6065,6 +6065,26 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
+## cxre: complex vs real PAM at the ctl recipe, PLAIN body (PRE-REGISTRATION, 07:58 IST, 2026-11-05; user GO via Lead 07:56 IST)
+
+**Question:** at matched params and the identical product recipe, does the complex-arithmetic PAM learn differently from the real
+one? **This isolates the arithmetic; it is NOT the paper's body**: the complex `PAMLayer` has no delta / chrono / out_gate /
+share_reads / echo (Lead read model.py; the last two and PAM_LAYERS are asserted real-only), so both arms run the PLAIN body
+where both heads have identical logic.
+- **Arms:** `cx_plain` = complex `baseline` (100.36M: dim 384 complex, 6 heads × 64, 16 layers, a notebook in every layer);
+  `re_plain` = real `baseline_real_pm` (101.89M: dim 588, 6 × 98, 16 layers). Both: DELTA = CHRONO = OUT_GATE = ECHO = 0, no
+  PAM_LAYERS / SHARE_READS; RESET_AT_EOS = ANSWER_IN_WINDOW = 1, the same.
+- **Recipe = ctl's exactly:** the cont2 mix (sampler weights of `sci1_cont2_env.sh`), SEQ 4096, BATCH 16 × 4096 = 65,536 tokens per
+  step, LR 1.2e-3, warmup 500, 0.9B wsd_stable + 0.1B decay = 1.0B tokens each, seed 43, decontam index, code caa4da9 (worktree
+  `../qllm_ctl`, venv qllm311). Runner `v13_sempty/tmp/cxre_chain.sh` (the ctl scheduler).
+- **Bars (ctl's B1–B5, read as differences, |Δ| beyond noise = a difference):** B1 s8 D (Δ ≥ 0.10 either way is a difference);
+  B2 far needles 8k / 16k (Δ ≥ 0.10); B3 holdout (Δ ≥ 0.03 nats); B4 HS / ARC-e / PIQA (reported); B5 told rule (A26 G1 2k twin
+  read, if the package path supports the complex state; else reported as not run). Context: ctl's PAM M2 (the full body) on the
+  same recipe: s8 D 0.523, needles 0.53 / 0.41, holdout 3.427.
+- **Prior record:** ledger row 3 (EXPERIMENTS_SEMPY:209; Sept 2026): real 101.9M vs complex 100.4M, parity on WikiText-103 at 100M
+  tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
+- Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
+
 ## SCI-1 cont3 milestone 8 (CHECK on the 4090, 05:48 IST, 2026-11-05; run `449e320`, step 122,072 = 8.0B tokens; 1.0B of cont3, protoc out)
 
 First of the two cont3 readouts (judged with 137,331; the lag rule).
