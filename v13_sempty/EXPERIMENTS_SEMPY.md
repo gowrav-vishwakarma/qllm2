@@ -6065,6 +6065,25 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
+## SCI-1 cont3 milestone 8 (CHECK on the 4090, 05:48 IST, 2026-11-05; run `449e320`, step 122,072 = 8.0B tokens; 1.0B of cont3, protoc out)
+
+First of the two cont3 readouts (judged with 137,331; the lag rule).
+
+| readout | M6 (cont2 +1B) | M7 (cont2 +2B) | **M8 (cont3 +1B)** |
+|---|---|---|---|
+| s8 D | 0.436 | 0.588 | **0.589** |
+| s8 shift_wide 2k / 4k; affine 2k / 4k | 0.58 / 0.19; 0.65 / 0.33 | 0.77 / 0.37; 0.78 / 0.43 | 0.82 / 0.37; 0.71 / 0.46 |
+| skill pack 2k / 4k / 8k + contrast | 0.86 / 0.68 / 0.18 | 0.88 / 0.77 / 0.35 | 0.90 / 0.70 / 0.31 |
+| clk2 8k / 16k / 32k | 0.55 / 0.08 / 0.04 | 0.68 / 0.22 / 0.02 | 0.57 / 0.14 / 0.02 |
+| t40 far needles 4k + 8k; at 16k (position 0) | 0.81; 0.47 | 0.88; 0.70 | **0.99; 0.88** |
+| HellaSwag (norm) / ARC-e / PIQA (norm) | 0.320 / 0.514 / 0.617 | 0.327 / 0.534 / 0.613 | **0.331 / 0.535 / 0.619** |
+| holdout val (blend) | 3.139 | 3.117 | **3.093** (122k, best) |
+
+- s8 D is flat (0.589), far below the revised protoc bar (0.84): no sign yet that protoc was the suppressor. Per the lag rule
+  the verdict waits for 137,331. Told side (Library's twin read) pending at this step.
+- Far-needle recall past the trained SEQ is the best of the run (16k 0.88, 4k + 8k 0.99); clk2 with the read operator dipped
+  (8k 0.57). Language and benchmarks keep improving (holdout 3.093, HS 0.331, PIQA 0.619).
+
 ## ctl RESULT: matched control at the SCI-1 recipe (B1–B5, 04:56 IST, 2026-11-05)
 
 All three ~103M bodies, **1.0B tokens each** of the identical cont2 mix (SEQ 4096, seed 43, decontam, same code caa4da9, same
