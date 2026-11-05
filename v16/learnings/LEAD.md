@@ -142,3 +142,46 @@ filler text. Bodies: PAM b2p2 (M2 body, 102.9M, 600M tokens, 2k windows), PAM c1
   with a 100M screen and the package-side cut side by side; the package repair comes first because it is free.
 - **Code safety.** All worktrees and the remote box's checkouts audited at each stall check; local-only chains pushed as
   `save/` branches; package code moves to v16 once, at release; these learnings files are the record that survives.
+
+## 7. Nov 2-5: SCI-1, the equal-data control, the paper (added 2026-11-05 16:40 IST)
+
+Details live in the lanes' notebooks (v13_sempty/EXPERIMENTS_SEMPY.md for Mind, v14/EXPERIMENTS_V14.md for Library); the
+day-by-day decisions are in v16/SCRATCHPAD.md "Decisions"; every paper number with its source in v16/paper/data/numbers.json.
+
+- **SCI-1 (386M, SEQ 4096, the first product-size mind).** Segments base 59c3cf5 -> cont1 59d098d -> cont2 e61cd92 -> cont3
+  449e320 -> cont4 8284510 (worked text). Milestone every 1B tokens. s8 D (rule from 8 examples across filler, chance
+  0.125): M4 0.782, M5 0.435, M6 0.436, M7 0.588, M8 0.589, M9 (137,331, 9.0B) 0.770. Lesson: the rule skill is MAINTAINED by
+  its documents and moves with a ~1B-token lag; judge a mix change only after 2 milestones. Told and induced rules
+  co-vary with rehearsal (the "compete for one state" hypothesis was tested over five intervals and dropped at M9).
+- **Equal-data control (ctl caa4da9, result f0a4695; EUREKA 11-05 05:30).** PAM / T++ / Mamba-2, ~103M each, 1.0B tokens
+  of the IDENTICAL SCI-1 cont2 mix. s8 D 0.523 / 0.074 / 0.149; told rule (twin read, 98 docs) 0.53 / 0.12 / 0.20 (held-out
+  wording only +0.06: one seed, caveat kept); needles past SEQ at 8k / 16k 0.53 / 0.41 vs <= 0.18; inside the window T++
+  recalls better (0.92 vs 0.63); holdout Mamba-2 3.378 < PAM 3.427 < T++ 3.440 (B3 not met). Lesson: rule-carrying and
+  beyond-length recall are architectural, not data; Mamba-2 induces adjacent rules (0.68) and LOSES them over 2k (0.18),
+  so the difference is retention under interference, not induction, and not state size (Mamba-2 holds 12x more).
+- **Knockouts (Mind, eval time on the trained ctl PAM, filler spans only).** all-on 0.523; no erase-at-key 0.197; an
+  equal-energy global fade (Mamba-like) 0.136, worse than no erase at all. The delta rule's LOCAL erase carries the rule.
+- **Package on SCI-1 M9 (Library).** A31 state forks met (fork read = twin read, 100/100 identical, 3.674 MB per fork);
+  PKG-SUITE row 1 (R x K 0.01 -> 0.67, rewrite 0.92, recall 32k -> 1.00, ~4 MB per session); per item: s8 at 4k 0.63 -> 1.00 and
+  skill at 8k 0.055 -> 1.00 (examples re-shown, not fetched); needle LOST 0.998 -> 0.927 (fetch right on all 2,520; the
+  contrast read cancels a fact the state already holds); GSM8K calculator 0/200 both arms (invented tool names: format).
+- **Knowledge library on benchmarks.** BENCH-LIB on M9 (14.87M decontaminated passages, BM25 top-3): ARC-e +0.063, ARC-c
+  +0.001, HellaSwag +0.015, PIQA +0.012 n.s.; with the answer passage given ARC-c 0.28 -> 0.84 (the mind reads; search is
+  the limit). ARC-LIB on the three ctl bodies NOT met: gain PAM +0.058 vs T++ +0.055 vs Mamba-2 +0.054 (+- 0.014); the
+  answer-passage ceiling favours attention (T++ 0.96, PAM 0.87). Lesson: never claim "uses fetched knowledge better";
+  every body reads a fetched passage; PAM's edge is the state (rules held, reach), not the reading.
+- **GATE (Library 747e24f).** Evidence streamed through the mind's own delta write and read plainly ("warm") = 1.000 on
+  all 5,720 needle / s8 / skill items vs the contrast read 0.967. Joint step-back (15:52): the contrast read IS a global
+  fade of the prior, so the needle loss is the knockout law at read time. Open: told (plain 0.22 vs twin 0.83), recall-32k,
+  R x K, rewrite decide the package's default read.
+- **Complex twin (cx_m2, c17775a).** Every part of the real body ported to complex heads in v16/complex/ (102.95M); 10.9k
+  tok/s vs the real body's 63k (~5.8x slower, ~3x memory per sequence); training on the 4090, paused only for short eval
+  pieces. Lesson: we parked "complex vs real at equal data" for a week as expensive; the port took a morning. Ask "how many
+  hours, really?" before parking a question.
+- **Harness built by Lead.** The review page (v16/humaneval/: every prompt and answer per checkpoint, mobile, server
+  sends only the tapped item, model alone vs with library on 12 cells); the paper (v16/paper/, 16 pp, every number from
+  numbers.json, TODO.md the one pre-arXiv list); PLAN_LONGRUN.md (open-ended run, rules R1-R7, chat ramp); the
+  architecture pseudocode (v16/SCI1_ARCHITECTURE_PSEUDOCODE.md).
+- **Decisions.** Pause a long 4090 run only per GPU piece and batch pieces (each restart costs ~25 min of stream startup);
+  the oracle column is a ceiling row, never a headline; a claim needs the identical library / tool on all three matched
+  bodies; the ablation ladder + second seed are the paper's first 6000 use after SCI-1's decay.
