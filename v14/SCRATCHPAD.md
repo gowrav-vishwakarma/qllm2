@@ -4,6 +4,28 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
+## RE-ARM AFTER A REBOOT (written 2026-11-05 07:26 IST for the ~10:30 restart) — do this FIRST
+
+Scripts are on disk in this worktree (`/home/gowrav/Development/qllm_v14norm/v14/tmp/`, not in git). Paste as one block:
+
+```bash
+cd /home/gowrav/Development/qllm_v14norm
+# RAM guard (stops my a2x runs if available RAM < 12 GB)
+tmux new-session -d -s libramguard "bash v14/tmp/ram_guard.sh >> v14/tmp/ram_guard.log 2>&1"
+# step 137,331 (cont3, sci1_cont3_449e320) and 152,590 (cont4, sci1_cont4_8284510): A26 -> twin read 2k@100 + 8k/32k@20 -> 8k@100
+for spec in c3b:137331:sci1_cont3_449e320 c4a:152590:sci1_cont4_8284510; do
+  IFS=: read t st run <<< "$spec"
+  for f in a26_local a28_follow a28_8k100; do cp v14/tmp/$f.sh v14/tmp/${f}_run_$t.sh; done
+  [ -f v14/tmp/a26_${t}_done.txt ]    || tmux new-session -d -s a26$t    "bash v14/tmp/a26_local_run_$t.sh $t $st $run > v14/tmp/a26_${t}_chain.log 2>&1"
+  [ -f v14/tmp/a28_${t}_done.txt ]    || tmux new-session -d -s a28$t    "bash v14/tmp/a28_follow_run_$t.sh $t $st $run > v14/tmp/a28_${t}_chain.log 2>&1"
+  [ -f v14/tmp/a28_8k_${t}_done.txt ] || tmux new-session -d -s a28${t}8k "bash v14/tmp/a28_8k100_run_$t.sh $t $st $run > v14/tmp/a28_8k_${t}_chain.log 2>&1"
+done
+tmux ls | grep -E 'libramguard|a2[68]c'
+```
+- If a run was interrupted mid-way (a partial `logs/v14_a2*_<tag>_*` without its done file), delete those partial logs
+  before re-arming, so the chain reruns cleanly.
+- Score: `python3 v14/a26_score.py <jsonl>`; the twin cells come from `logs/v14_a28_rep100{,_8k}_<tag>_*.jsonl`.
+
 ## State (2026-11-04 15:05 IST) — read this first
 
 Session: **Library**. SCI-1 support. Today: A28 (the A9 read hid a state-held rule; protocol-twin read 0.65 ± 0.05 at 2k,
