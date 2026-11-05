@@ -78,13 +78,17 @@ if pf and pf.exists():
              's8': ('Rule from 8 examples, across filler (examples re-shown)', 'Model alone = rule held in memory across the filler; with library = the examples are re-shown before the question (not fetched knowledge).'),
              'skill': ('Skill pack, across filler (examples re-shown)', 'Model alone = memory only; with library = the pack is re-shown before the question, session state kept.'),
              'needle': ('Far needles (library fetch + contrast read)', 'Model alone = memory only; with library = the record is fetched (right on every item) and read with the contrast read. NOT met: the contrast read cancels a fact already held in memory and boosts the decoys (the A28 effect on a stored fact); an agreement-gated read is the next unit.'),
-             'gsm8k': ('GSM8K grade-school maths (calculator tool)', 'Model alone = plain answer; with library = the model may call a sandboxed calculator. 0/200 in both: it calls tools with invented names (well-formed calls are rare), so this is format, not maths skill, at this size.')}
+             'gsm8k': ('GSM8K grade-school maths (calculator tool)', 'Model alone = plain answer; with library = the model may call a sandboxed calculator. 0/200 in both: it calls tools with invented names (well-formed calls are rare), so this is format, not maths skill, at this size.'),
+             'arc_e': ('ARC-Easy with the knowledge library', 'Model alone = plain question; with library = 3 passages found by BM25 search over a filtered, decontaminated library (82 % ARC Corpus), shown above. The tag also shows the ceiling: the answer passage given. Library gain +0.063 ± 0.018.'),
+             'arc_c': ('ARC-Challenge with the knowledge library', 'Same library and search. Gain +0.001 ± 0.024 (not significant); with the answer passage given 0.84: the model reads a stated answer, the search is the limit.'),
+             'hellaswag': ('HellaSwag with the knowledge library', 'Same library (mostly ARC Corpus passages, a library limit). Gain +0.015 ± 0.005.'),
+             'piqa': ('PIQA with the knowledge library', 'Same library. Gain +0.012 ± 0.017 (not significant).')}
     for cell, (title, intro) in names.items():
         it = [dict(prompt=r.get('question', ''), context=r.get('context', ''), gold=r.get('gold', ''),
                    bare=r.get('bare_answer', ''), bare_ok=r.get('bare_ok') in (1, '1', True),
                    pkg=r.get('package_answer', ''), pkg_ok=r.get('package_ok') in (1, '1', True),
                    ok=r.get('package_ok') in (1, '1', True),
-                   tag=' · '.join(x for x in (r.get('task', ''), f"{int(r['L']):,} tokens" if str(r.get('L', '')).isdigit() else '', r.get('package_path', '')) if x)) for r in rows if r.get('cell') == cell]
+                   tag=' · '.join(x for x in (r.get('task', ''), f"{int(r['L']):,} tokens" if str(r.get('L', '')).isdigit() else '', r.get('package_path', ''), ('answer passage given ' + ('✅' if r['oracle_ok'] in ('1', 1, True) else '❌')) if 'oracle_ok' in r else '') if x)) for r in rows if r.get('cell') == cell]
         if it:
             nb = sum(x['bare_ok'] for x in it); npk = sum(x['pkg_ok'] for x in it)
             put('pair_' + cell, 'Model alone vs model + library (same items)', title,
