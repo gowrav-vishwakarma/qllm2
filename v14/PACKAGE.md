@@ -121,12 +121,21 @@ Then come hops by name, up to k rows: each capitalised name in a fetched row tha
 latest sentence mentioning it ("John took the milk." → "John went to the kitchen."). This is plumbing. The rows are
 returned in session order.
 
-## 4. Read: warm + contrast
+## 4. Read (v0.3, 2026-11-05): warm by default; the rule twin only for a held rule
 
-- The session's own state continues on **row + question** (stream A) and on **question only** (stream B). Each answer
-  token is the argmax of `l_A + 4 (l_A − l_B)` (Shi et al. 2023 CAD on the answer tokens; Mind's cd1-cd3). A9 MET:
-  32k kv 0.925 / 0.925, para 0.925 / 0.925, tool 0.75 / 0.575 (syn / nat).
-- **Contrast only on the answer tokens of a package read, never on free text.** On prose, a = 4 takes NLL 3.90 → 8.56.
+- **Evidence in view (a fetched row, re-shown examples, compiled demos): the warm read.** The session's own state
+  continues on row + question, and each answer token is its plain argmax. The row enters through the mind's own delta
+  write, which arbitrates against what the state already holds.
+  - WRITE-IN (c3b): needle 1.000, s8 / skill 1.000, recall-32k 1.00, rewrite 0.95 / 0.92.
+- **A rule HELD in the state from far back: the rule twin.**
+  - R×K: `apply` / `apply_value`, against the session without the skill pack, alpha 4.
+  - told: the protocol twin / fork (`v14/a28_twin.py`, `a31_fork.py`), against the session without the protocol.
+  - The plain read loses there: R×K 0.50 / 0.05 vs 0.67 / 0.42; told 0.22 vs 0.83.
+- **Retired: the no-row contrast `l_A + 4 (l_A − l_no-row)` (A9, v0-v0.2; CAD, Shi et al. 2023).** It subtracts the
+  evidence's own absence, so it cancels facts the state already holds: needle 0.998 → 0.927.
+  - Last code `6b6c99c`; the index row "A9 no-row contrast read" has the rerun.
+  - A9's old numbers (32k kv 0.925, para 0.925, tool 0.75 / 0.575) were measured under it.
+- **Any contrast only on the answer tokens, never on free text.** On prose, a = 4 takes NLL 3.90 → 8.56.
 - Decoding stops at the sentence end, a newline or the end of turn (`max_new` cap).
 - **Field cut (A19, labelled "field-cut", plumbing):** a record row (" Result: job: K; f1: v1; …") is cut to the asked
   field's clause. Then b2p2 reads 0.90 / 0.80 cold and 1.00 / 1.00 warm (uncut 0.475 / 0.40).

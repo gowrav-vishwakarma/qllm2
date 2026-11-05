@@ -4,8 +4,8 @@
                  in the provided text is"; value = a word / a 7-digit number / a uuid.
   niah_multikey  the same with 3 look-alike distractor keys (same first word, other value).
   vt             "VAR A = 48213." "VAR B = VAR A." ... a chain of 4 + a distractor chain of 4; "which variables are assigned 48213?"
-Bare = the model alone (state + question, greedy). Package: niah = v16/package.py answer (text fetch -> warm + contrast);
-vt = the library follows the chain in TEXT (labelled) and the mind writes the names from the chain rows (warm + contrast).
+Bare = the model alone (state + question, greedy). Package: niah = v16/package.py answer (text fetch -> the warm read, v0.3);
+vt = the library follows the chain in TEXT (labelled) and the mind writes the names from the chain rows (the package's warm read).
 Right: niah = the exact value in the answer; vt = all 4 chain names and no distractor name.
     python v14/ruler_pkg.py --ckpt <weights> --lengths 4096,8192,16384,32768 --docs 50 --out logs/v14_ruler_pkg_<tag>_<hash>_<stamp>.jsonl
 """
@@ -134,8 +134,7 @@ def main():
                     rows_ids = enc(' ' + ' '.join(rows)) if rows else []
                     s = pkg.read(sess)
                     la, sa, oa = pkg.mind.feed(rows_ids + qi, copy.deepcopy(s['state']), s['off'])
-                    lb, sb, ob = pkg.mind.feed(qi, copy.deepcopy(s['state']), s['off'])
-                    ptxt = tok.decode(pkg._gen(la, sa, oa, lb, sb, ob, pkg.alpha, mx))
+                    ptxt = tok.decode(pkg._gen(la, sa, oa, None, None, None, 0.0, mx))   # the package's read (v0.3 warm)
                     extra = dict(planner_ok=int(names[:4] == gold['names']), path='TEXT chain')
                     mb = dict(mind_state=s['state_bytes'], library_text=2 * len(sess))
                 else:

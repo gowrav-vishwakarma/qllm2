@@ -7,7 +7,7 @@ package path for that cell) on the same docs:
   rewrite  a told rule (A26 UNIT prose protocol) compiled next to the question (A29); bare = state + question.
   told     a told rule held in state (A28 / A31): package = fetched row + question, rule twin (= the state fork); bare = alone.
   recall   needle among 8 (kv), latest-wins (kvupd), two-hop (hop2) through the text organ (v16/bench.py docs): package =
-           v16/package.py answer (text fetch -> warm + contrast; hop2 = a TEXT planner chain of two answers); bare = state
+           v16/package.py answer (text fetch -> the warm read, v0.3; hop2 = a TEXT planner chain of two answers); bare = state
            only. 20-way (first answer token over bench's 20 value nouns) and free (value in the sentence). MB held per doc.
     python v14/pkg_suite.py --ckpt <weights> --tag c4a --cells rxk,rewrite,told,recall --out logs/v14_pkg_suite_<tag>_<hash>_<stamp>.jsonl
 """
@@ -53,13 +53,12 @@ def bare(pkg, session, q_ids):
 
 
 @torch.no_grad()
-def pkg_first(pkg, session, row, q_ids, warm=False):
-    """the package read's first-step logits (warm + no-row contrast, as Package._decode); warm=True also returns the warm
-    read alone (row + query on the state, no contrast: WRITE-IN)."""
+def pkg_first(pkg, session, row, q_ids):
+    """the package read's first-step logits (v0.3: warm, row + query on the session state, no contrast; the retired no-row
+    contrast is recomputable from the saved cand_bare / cand_warm)."""
     s = pkg.read(session)
     la, _, _ = pkg.mind.feed(row + q_ids, copy.deepcopy(s['state']), s['off'])
-    lb, _, _ = pkg.mind.feed(q_ids, copy.deepcopy(s['state']), s['off'])
-    return (la + pkg.alpha * (la - lb), la) if warm else la + pkg.alpha * (la - lb)
+    return la
 
 
 def cell_rxk(pkg, out, base, lengths, docs, seed, filler, writein=False):
@@ -154,16 +153,15 @@ def cell_recall(pkg, out, base, lengths, docs_by_len, seed, filler):
                     q2 = f' Query: {k2} maps to'
                     ptxt, info = pkg.answer(sess, q2)
                     row = sess[info['row'][0]:info['row'][1]] if info['row'] else []
-                    pl, pw = pkg_first(pkg, sess, row, enc(q2), warm=True) if row else (None, None)
+                    pl = pw = pkg_first(pkg, sess, row, enc(q2)) if row else None
                 else:
                     ptxt, info = pkg.answer(sess, qtext)
                     row = sess[info['row'][0]:info['row'][1]] if info['row'] else []
-                    pl, pw = pkg_first(pkg, sess, row, q, warm=True) if row else (None, None)
+                    pl = pw = pkg_first(pkg, sess, row, q) if row else None
                 rec = dict(base, cell='recall', task=task, doc=di, L=L, mb=info.get('bytes_held'), sec=round(time.time() - t0, 1))
                 r4 = lambda x: [round(float(v), 4) for v in x[cand].float().tolist()]  # noqa: E731
                 out.write(json.dumps(dict(rec, arm='package', answer=ptxt, free=sent_ok(ptxt, meta['val']), path=info.get('path'),
                                           w20=int(pl is not None and cand[int(pl[cand].argmax())] == ans_tok),
-                                          w20_warm=int(pw is not None and cand[int(pw[cand].argmax())] == ans_tok),
                                           gold_index=cand.index(ans_tok) if ans_tok in cand else None,
                                           cand_warm=r4(pw) if pw is not None else None, cand_bare=r4(bl))) + '\n')
                 out.write(json.dumps(dict(rec, arm='bare', answer=btxt, free=sent_ok(btxt, meta['val']),

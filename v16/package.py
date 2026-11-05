@@ -13,8 +13,11 @@ What it does (v14/PACKAGE.md, each step measured in v14/EXPERIMENTS_V14.md):
        then (lenient only) F2: the 2 question tokens the mind finds most surprising, matched by max cosine against
        each session sentence's tokens in the mind's block-8 states.
      strict: abstain when the text organs miss (never-stored questions are then safe; words that differ are missed).
-  3. ANSWER: the mind reads row + question on its own session state, with the no-row contrast on the answer tokens
-     only (l + 4 (l - l_without_row)); greedy, stop at "." / newline / end-of-turn, at most max_new tokens.
+  3. ANSWER (v0.3, WRITE-IN 2026-11-05): the fetched row is streamed through the mind's own delta write right before the
+     question and read PLAINLY (warm: no contrast); greedy, stop at "." / newline / end-of-turn, at most max_new tokens.
+     The no-row contrast of v0-v0.2 (l + 4 (l - l_without_row), "A9") is retired: it cancels facts the state already
+     holds (needle 0.998 -> 0.927; warm 1.000). A rule HELD in the state keeps its rule twin: apply / apply_value
+     (R x K, the no-pack twin, alpha 4) and the protocol twin / fork (v14/a28_twin.py, a31_fork.py).
      A record row ("Result: job: K; f1: v1; ...") is first cut to the asked field's clause (A19, labelled
      "field-cut" in info; Mind's w1s showed a body window reader does not fix field selection).
 info = {path: text0 / text1 / text2 / text4 / F2 / None, row: (start, end), row_text, abstain, field_cut, bytes_held}.
@@ -53,8 +56,7 @@ def _nbytes(st) -> int:
 
 
 class Package:
-    def __init__(self, ckpt: str = B2P2, device: str = 'cuda', alpha: float = 4.0, max_new: int = 40,
-                 address_layer: int | None = None):
+    def __init__(self, ckpt: str = B2P2, device: str = 'cuda', max_new: int = 40, address_layer: int | None = None):
         self.mind = Mind(ckpt, torch.device(device))
         self.tok = self.mind.tok
         # v0 interface rules (no b2p2 constants): the address is the residual after block n_blocks // 2 (b2p2: 8 of 16);
@@ -71,7 +73,7 @@ class Package:
         self._digit_start = [s_[:1].isdigit() for s_ in strs]         # a digit right after '.' continues a number
         self._digit_end = [s_[-1:].isdigit() for s_ in strs]
         self.R = Reader(self.mind.m, 'pam')
-        self.alpha, self.max_new = alpha, max_new
+        self.max_new = max_new
         im_end = self.tok.convert_tokens_to_ids('<|im_end|>') if '<|im_end|>' in self.tok.get_vocab() else None
         self.stops = (dot, nl) + ((im_end,) if im_end is not None else ())
         self._session = None
@@ -231,12 +233,13 @@ class Package:
 
     @torch.no_grad()
     def _gen(self, la, sa, oa, lb, sb, ob, alpha, max_new):
-        """greedy over l_a + alpha (l_a - l_b), both streams fed the output. Stops at '.', newline or end of turn; a '.'
-        right after a digit is held one token: if the next token starts with a digit ('12' '.' '3') the number goes on,
-        else the '.' was the sentence end and the look-ahead token is dropped."""
+        """greedy over l_a + alpha (l_a - l_b), both streams fed the output; lb = None is the plain read of stream a
+        alone (the warm read). Stops at '.', newline or end of turn; a '.' right after a digit is held one token: if the
+        next token starts with a digit ('12' '.' '3') the number goes on, else the '.' was the sentence end and the
+        look-ahead token is dropped."""
         out, held = [], False
         for _ in range(max_new):
-            t = int((la + alpha * (la - lb)).argmax())
+            t = int((la if lb is None else la + alpha * (la - lb)).argmax())
             if held:
                 if not (t < len(self._digit_start) and self._digit_start[t]):
                     break
@@ -248,15 +251,16 @@ class Package:
                 else:
                     break
             la, sa, oa = self.mind.feed([t], sa, oa)
-            lb, sb, ob = self.mind.feed([t], sb, ob)
+            if lb is not None:
+                lb, sb, ob = self.mind.feed([t], sb, ob)
         return out
 
     @torch.no_grad()
-    def _decode(self, prefix, twin):
+    def _decode(self, prefix):
+        """the warm read: row + question streamed on the session state, greedy, no contrast (v0.3)."""
         s = self._session
         la, sa, oa = self.mind.feed(prefix, copy.deepcopy(s['state']), s['off'])
-        lb, sb, ob = self.mind.feed(twin, copy.deepcopy(s['state']), s['off'])
-        return self._gen(la, sa, oa, lb, sb, ob, self.alpha, self.max_new)
+        return self._gen(la, sa, oa, None, None, None, 0.0, self.max_new)
 
     def fetch_rows(self, session_text, question_text: str, k: int = 3, mode: str = 'lenient', address: str = 'full'):
         """Top-k rows for a question, each with its fetch path (BABILong QA2 / QA3 need 2-3 facts). Row 1: the usual
@@ -341,7 +345,7 @@ class Package:
         s = self._session
         q = self.tok.encode(question_text, add_special_tokens=False)
         span = [t for a, b, _, _ in rows for t in s['ids'][a:b]]
-        text = self.tok.decode(self._decode(span + q, q))
+        text = self.tok.decode(self._decode(span + q))
         return text, dict(rows=[(a, b, p, t[-90:]) for a, b, p, t in rows], abstain=0)
 
     def answer(self, session_text, question_text: str, mode: str = 'lenient', cut_fields: bool = True,
@@ -364,7 +368,7 @@ class Package:
         cut = field_cut(self.tok.decode(span), question_text) if cut_fields else None   # A19: a record row -> the asked field
         if cut is not None:
             span = self.tok.encode(cut, add_special_tokens=False)
-        text = self.tok.decode(self._decode(span + q, q))
+        text = self.tok.decode(self._decode(span + q))
         return text, dict(info, row_text=self.tok.decode(span), field_cut=int(cut is not None))
 
 

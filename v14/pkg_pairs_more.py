@@ -3,14 +3,13 @@ pkg_suite_pairs.py's row format, on the EXACT items the page's probes score (v16
   s8      run_learning_probe --suite b2 --tasks shift_wide_new,affine_map_new --shots 8 --trials 400 --seed 7000
           --spread 0,2048,4096 (2,400 items). Package: the session (examples spread through filler, query cut off) is read into
           the state, the library re-shows the header + 8 examples right before the query (placed by the harness, as MLB-1's
-          skill pack v1; fetching a pack by key is R x K's path), read = warm + contrast (re-shown + query vs query alone,
-          alpha = the package's 4).
+          skill pack v1; fetching a pack by key is R x K's path), read = the package's (v0.3 warm; was warm + contrast to 2026-11-05).
   needle  run_memory_behavioral --context-lengths 128..8192 --positions 0,0.5,1 --association-counts 1,4,8 --trials 40
-          (seed 1000; 2,520 items). Package: v16/package.py answer's text fetch of the record row, read = warm + contrast;
+          (seed 1000; 2,520 items). Package: v16/package.py answer's text fetch of the record row, read = the package's (v0.3 warm);
           when the library fetches nothing the package answers as the model alone (path None, labelled).
   skill   run_skillpack_probe --variants skillpack --lengths 0,2048,4096,8192 --docs 100 (seed 8000; 800 items). The probe's
           "re-read" arm is pack + query in a FRESH context (no session), so it is not the package's read; the package arm here
-          is the s8 read: session state (pack + filler), pack re-shown before the query, warm + contrast.
+          is the s8 read: session state (pack + filler), pack re-shown before the query, the package's warm read.
 Bare = the model alone on the session + query (the same last-position logits as the probe's whole-prompt forward).
 Both arms: pick among the probe's candidates (ok) and free (argmax over the whole vocab == the answer).
 Writes <suite_log>_pairsx.jsonl and merges its cells into <suite_log>_pairs.jsonl (pkg_suite_pairs.py merges it back too).
@@ -45,14 +44,15 @@ HELDOUT = dict(s8=range(7400, 7500), needle=range(2000, 2020), skill=range(8100,
 
 @torch.no_grad()
 def arms(pkg, sess, q, shown):
-    """(bare logits, package logits) at the query's last position. bare = state(sess) + q; package = state(sess) +
-    shown + q against state(sess) + q (warm + contrast); shown = [] -> the package answers as the model alone."""
+    """(bare, package, warm) logits at the query's last position. bare = state(sess) + q; package = the package's read
+    (v0.3: warm, state(sess) + shown + q, no contrast; the retired no-row contrast w + 4 (w - b) is recomputable from the
+    saved cand_bare / cand_warm); shown = [] -> the package answers as the model alone."""
     s = pkg.read(sess)
     lb, _, _ = pkg.mind.feed(q, copy.deepcopy(s['state']), s['off'])
     if not shown:
         return lb, lb, lb
     la, _, _ = pkg.mind.feed(shown + q, copy.deepcopy(s['state']), s['off'])
-    return lb, la + pkg.alpha * (la - lb), la
+    return lb, la, la
 
 
 def judge(tok, logits, cand, target):
