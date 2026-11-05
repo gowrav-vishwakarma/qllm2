@@ -35,6 +35,7 @@ SKIP_FILES = frozenset({
     "pkg_suite.py",      # per-milestone package suite (bare vs package, raw torch state copies)
     "simple_chat.py",    # SIMPLE-CHAT probe (greedy chat decode, raw torch)
     "pkg_suite_pairs.py", # PKG-SUITE per-item pairs for the review page (doc rebuild, no model)
+    "ruler_pkg.py",      # BENCH-PKG RULER-style generator (bare vs package, raw torch state copies + ckpt meta)
     "a11_keyswap.py",    # A11: key-swap relevance eval (frozen-mind short reads, raw torch)
     "a13_manykey.py",    # A13: many-key fetch eval (frozen states, max-sim, raw torch)
     "a14_pca.py",        # A14: PCA basis fit for the stored address (raw torch svd)

@@ -60,6 +60,8 @@ def main():
                         ptxt, pinfo = pkg.answer_rows(text, PROMPT.format(q=q), k=a.k, mode=a.mode) if rows_k else ('', {'abstain': 1})
                         ptxt = (ptxt or '').strip(); rec['pkg'] = ptxt; rec['pkg_ok'] = int(tgt.lower() in ptxt.lower()); hit_pkg += rec['pkg_ok']
                         rec['pkg_rows'] = [(r[2], r[3][:100]) for r in rows_k]; rec['pkg_abstain'] = pinfo.get('abstain')
+                        s_ = pkg._session                         # MB held (BENCH-PKG): mind state + the library's token text
+                        rec['mb'] = dict(mind_state=s_['state_bytes'], library_text=2 * len(s_['ids'])) if s_ else None
                         if a.chain:                               # Library: planner chain (TEXT), a second package column
                             ctxt, cinfo = pkg.answer_chain(text, q, PROMPT, k=a.k, mode=a.mode)
                             ctxt = (ctxt or '').strip(); rec['pkg_chain'] = ctxt; rec['pkg_chain_ok'] = int(tgt.lower() in ctxt.lower())
