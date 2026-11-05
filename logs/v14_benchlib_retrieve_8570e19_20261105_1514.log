@@ -1,0 +1,6 @@
+[retrieve] index loaded (11 s)
+[retrieve] arc_easy: 2376 items -> /media/gowrav/d_drive/qllm2/arc_lib/lib_v1_d7841c4/retrieved_arc_easy.jsonl (201 s)
+[retrieve] arc_challenge: 1172 items -> /media/gowrav/d_drive/qllm2/arc_lib/lib_v1_d7841c4/retrieved_arc_challenge.jsonl (299 s)
+[retrieve] hellaswag: 10042 items -> /media/gowrav/d_drive/qllm2/arc_lib/lib_v1_d7841c4/retrieved_hellaswag.jsonl (1183 s)
+[retrieve] piqa: 1838 items -> /media/gowrav/d_drive/qllm2/arc_lib/lib_v1_d7841c4/retrieved_piqa.jsonl (1303 s)
+RETRIEVE_EXIT 0

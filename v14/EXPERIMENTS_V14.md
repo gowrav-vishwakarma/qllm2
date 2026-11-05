@@ -4334,6 +4334,25 @@ fitted threshold:
   - Pairs rows: cells arc_e / arc_c / hellaswag / piqa; the context is the 3 passages.
   - Stated in advance: BM25 passages often miss or mislead, so +library can be below no library on some sets. Every
     passage is shown on the page so a reader can judge.
+  - **RESULT SCI-1 c3b (137,331; 386M; 2026-11-05 15:42 IST; code 7a4e123; library lib_v1_d7841c4;
+    logs/v14_benchlib_c3b_7a4e123_20261105_1536.jsonl; rows in the c3b pairs file, cells arc_e / arc_c / hellaswag /
+    piqa).** acc_norm. Δ ± is a 95 % interval from the discordant items (paired).
+
+    | set | n | no library | + library | Δ (± 95 %) | flips +/− | + oracle |
+    |---|---|---|---|---|---|---|
+    | ARC-e | 2,376 | 0.463 | 0.526 | +0.063 ± 0.018 | 321 / 172 | 0.876 |
+    | ARC-c | 1,172 | 0.277 | 0.278 | +0.001 ± 0.024 | 107 / 106 | 0.835 |
+    | HellaSwag | 10,042 | 0.333 | 0.348 | +0.015 ± 0.005 | 459 / 308 | — |
+    | PIQA | 1,838 | 0.622 | 0.634 | +0.012 ± 0.017 | 132 / 110 | — |
+
+    - The model USES a passage: the oracle takes ARC-e 0.46 → 0.88 and ARC-c 0.28 → 0.84.
+    - Retrieval is the limit. BM25 lifts ARC-e clearly, HellaSwag a little, PIQA within noise, and ARC-c not at all;
+      many passages only share words with the question.
+    - Passage sources: the ARC Corpus dominates even for HellaSwag (19,677 of 30,126 passages) and PIQA (4,711 of
+      5,514), since it is 82 % of the library. The everyday slices are small; a larger everyday share is the obvious
+      next library, not a tuning of this one.
+    - These are SCI-1 rows for the page (no bar). ARC-LIB's bar applies to the three ctl bodies with this identical
+      library; that comes next.
 - **BENCH-TOOL (b): GSM8K with a calculator tool, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before any code or number).**
   - Plain = today's direct answer (the page's GSM8K items and prompt).
   - Tool arm (AMENDED 14:50 IST, before any number: SCI-1's think source strips GSM8K's `<<expr=>>` marks, so the model
