@@ -42,3 +42,32 @@ Budget: the 6000 trains the 386M body at ~37.7k tok/s = ~3.3B tokens/day → ~10
 - Mix changes only from measured rows; judge after 2B tokens; never cut a skill source below its maintenance share.
 - Watchdogs and resumable launchers as now; the local box's crashes never touch the 6000.
 - Lineage rows per segment; the paper's numbers.json stays the one source for published numbers.
+
+## Mind: disk budget, the 6000 keep routine, and three amendments (13:58 IST 2026-11-05)
+
+**Full-copy disk budget (d_drive, set by Mind).** d_drive: 916 GB, 156 GB free (HF cache 216 GB, from_6000 75 GB). A FULL milestone
+is 4.6 GB, weights-only 1.54 GB, so one full copy per 1B would be 460 GB per 100B: impossible. Rule:
+- FULL local copies are kept only for: (i) the newest 2 milestones (the sha-verified backup that lets the 6000 delete them; also
+  a release branch's source); (ii) every release's stable source + its decayed branch, for the newest 2 releases; (iii) the
+  paper's checkpoint (Nov 6 decay) and its stable_final, forever. Everything older is reduced to weights-only (Library's every-5B set).
+- **Cap: SCI-1 full copies ≤ 50 GB; SCI-1 total on d_drive (full + weights-only) ≤ 120 GB.** If d_drive free < 60 GB, prune in
+  that order before any new run writes (and the HF datasets cache, 216 GB, is the next lever, by the owner's call).
+
+**The 6000 keep routine.** "keep_last 4" does not fit: 4 × 4.6 + latest + best (9.2) + stable_final (4.6) + a decay branch's
+latest + best (9.2) ≈ 41 GB vs 30 GB free. So: **KEEP_LAST = 2 on the 6000**, and after every local CHECK the waiter
+sha-compares the newest milestone's d_drive copy and deletes the 6000's older milestones (never latest / best of the current
+segment, never stable_final or a release branch until its copy is verified). Floor: free ≥ 30 GB (the chain refuses < 25, a decay
+< 12). Old segments' best_model.pt files (stageA, main, cont1-3: 22 GB) move to d_drive (full, kept) and leave the 6000. The 72 GB of
+non-SCI-1 tier checkpoints in qllm-private on the 6000 are not mine: Lead's call (most have from_6000 copies).
+
+**Amendment A (new rule R7, data repetition).** At 100B+ tokens at fixed shares, small sources repeat many epochs; the plan has no
+cap. Estimates to be measured: tools (~140k docs, ~0.1B tokens) at 4 % = 4B per 100B ≈ 36 epochs; worked (~0.09B) at 2 % ≈ 20 epochs;
+fineweb-edu sample-10BT at ~20 % ≈ 3-4 passes per 100B. **R7: no source beyond 4 epochs**: the trainer's [mix] line also prints
+per-source epochs; a source reaching its cap is replaced by a fresh source or its share is ramped down (R2); fineweb moves to the
+full fineweb-edu before 20B more tokens. Memorized tool / instruction templates would also inflate the chat probe falsely.
+
+**Amendment B (interim release cost).** A 1B decay is 7.5 h of the 6000 (~10 % of its time at one release per ~10B). Interim
+releases: 0.5B decays (3.75 h); 1B decays for the named ones (paper, scale decision).
+
+**Amendment C (LR, an option to pre-register, not a change now).** 8e-4 constant for 100B+ tokens: if the blend holdout's slope
+over the last 5B falls below its noise, step the stable LR to 4e-4 (a WSD "stable-2" stage), judged by R3's bars.
