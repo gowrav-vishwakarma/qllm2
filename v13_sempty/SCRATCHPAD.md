@@ -132,6 +132,15 @@ and new SCI-1 mix segments (agree with Lead: let it finish and decay).
   decontaminated) with their share from a measured calibration row; (b) the rule-doc share kept (maintenance lesson); (c) re-warm
   from the final checkpoint; (d) bars after 2 milestones: Library's simple-chat probe rises, s8 / told / reach / HS-ARC-PIQA do not
   fall; (e) a recommendation: release model vs a separate chat variant.
+  Design (user via Lead 14:05: keep science and the rest IN, raise chat GRADUALLY 6 % -> ~20-25 %, each step measured, rule-docs
+  fixed): (1) branch from the main segment's `stable_final.pt` (pre-decay, WSD practice), not from the decayed end; (2) ONE run with
+  an in-sampler linear ramp of the per-source targets W0 -> W1 over the first 2B tokens, then hold W1 for 1B, then the 1B decay on
+  W1 (sampler change ~15 lines in `v7/data.py`'s token-deficit blend: target(t) = (1 - a) W0 + a W1, a = min(1, consumed / N); env
+  RAMP_WEIGHTS / RAMP_TOKENS); (3) measured calibration rows at W0, the midpoint and W1, plus the trainer's [mix] line every val as
+  the run's own measured ramp; (4) the chat gain taken from web first, science shares and the rule-doc block (b2s / proto4k /
+  recall4k) fixed; (5) bars at each 1B milestone and final at ramp end + 1B (the lag rule): Library's simple-chat probe up; s8 D
+  >= decay-end - 0.05; told 2k >= decay-end - 0.10; far needles 16k and clk2 8k >= decay-end - 0.05; HS / ARC-e / PIQA >= -0.01;
+  per-source science holdout <= +0.03.
 
 * **SCI-1 HANDOVER (21:30 IST, 2026-11-04).** cont3 is TRAINING on the 6000: tmux `sci1` in `~/Development/qllm_sci1` @ 449e320, dir
   `checkpoints_v13_sempty/sci1_cont3_449e320`, from cont2 M7 (global 106,813) to 160,218, then the decay (`sci1_decay_449e320`). Why:
