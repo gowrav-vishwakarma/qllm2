@@ -6085,6 +6085,16 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## SCI-1 cont4 milestone 10 (CHECK on the 4090, 21:10 IST, 2026-11-05; run `8284510`, step 152,590 = 10.0B tokens; 1.0B of + `worked`)
+
+**The `worked` source fails its keep rule (indicative, but large):** s8 D **0.770 → 0.418**, far needles 4k + 8k **0.98 → 0.57**,
+t40 at 16k **0.87 → 0.33**, clk2 8k 0.61 → 0.51; skill pack 8k 0.30 → 0.36; GSM8K ON / OFF 0.00 → 0.05 / 0.06; `<think>` leak
+0.00; HS / ARC-e / PIQA 0.333 / 0.532 / 0.617 (flat). Keep rule: s8 +0.10 → it fell 0.35: **`worked` dropped.** Reading: plain
+worked solutions (2 % of tokens, chat-formatted, 392k short docs ~20 epochs at this share) taught the readout to answer from local
+arithmetic text and cost the long-range carry (the lag rule says 1B is early, but the drop is 3x the noise). Consequence: the main
+ends on the cont4 mix at 160,218, so a decay from its end would carry the damage; Lead decides between decaying from M9 (the best
+checked point) and finishing the main on the cont3 mix.
+
 ## clk3: eval-time dilation of only the slow notebook heads (PRE-REGISTRATION, 17:08 IST, 2026-11-05; outside plan + Lead + Mind review; eval only)
 
 **Question:** clk1 dilated every notebook head (prose cost) and clk2 whole memories; does dilating only the heads that ALREADY hold

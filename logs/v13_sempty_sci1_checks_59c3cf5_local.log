@@ -277,3 +277,33 @@ Results saved to logs/memory_probes/v13_sempty_sci1_step_137331_449e320_t40_long
     sampled: 'To find the concentration of salt, we can use the formula for a concentration:\n\nConcentration = \\frac{M}{V} x (X - T) / V\n\nwhere X is the amount of salt in moles, M is the number of moles of salt, and V is the volume in cubic meters.\n\nPlugging in the values we know from the'
     greedy : 'To solve this problem, we need to convert the given values to a common unit, which is the percentage concentration. \n\nFirst, we convert the given values to a common unit, which is'
 === CHECK sci1_step_137331_449e320 DONE 2026-11-05T07:45:19Z
+=== CHECK sci1_step_152590_8284510 (/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont4_8284510/.mind_step_152590.pt) 2026-11-05T15:05:57Z
+per task: {'shift_wide_new@0': 0.998, 'shift_wide_new@2048': 0.54, 'shift_wide_new@4096': 0.152, 'affine_map_new@0': 0.998, 'affine_map_new@2048': 0.635, 'affine_map_new@4096': 0.345}  mean 0.611
+free (A7): {'shift_wide_new@0': 0.995, 'shift_wide_new@2048': 0.477, 'shift_wide_new@4096': 0.102, 'affine_map_new@0': 0.985, 'affine_map_new@2048': 0.13, 'affine_map_new@4096': 0.04}  mean 0.455
+saved logs/learning_probes/v13_sempty_sci1_step_152590_8284510_spread_s7000_t400.json
+  affine_map_new done
+  affine_map_new done
+Results saved to logs/memory_probes/v13_sempty_sci1_step_152590_8284510_t40_behavioral.json (aggregates, 2520 rows omitted)
+hellaswag {'acc': 0.2981, 'acc_norm': 0.3331, 'n': 10042}
+arc_easy {'acc': 0.532, 'acc_norm': 0.4882, 'n': 2376}
+piqa {'acc': 0.6262, 'acc_norm': 0.617, 'n': 1838}
+think_eval {'n': 200, 'acc_on': 0.05, 'acc_off': 0.06, 'trace_rate_on': 0.0, 'leak_rate_off': 0.0}
+  affine_map_new done
+Results saved to logs/memory_probes/v13_sempty_sci1_step_152590_8284510_t40_long_behavioral.json (aggregates, 360 rows omitted)
+=== generations: /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont4_8284510/.mind_step_152590.pt step 152590 tokens 10,000,138,240 code 59c3cf5
+--- [science] prompt: 'Photosynthesis converts light energy into chemical energy. In the light-dependent reactions,'
+    sampled: " photosystem II combines light energy with electrons to form a complex molecule called chlorophyll. It's like building a house made entirely of atoms – it takes energy from sunlight and converts it into chemical energy through photosynthesis!\n* **Carbohydrates:** These are sugar molecules found in food sources such as bread, pasta, fruits, vegetables...you guessed it! They combine with oxygen during"
+    greedy : ' the electron transport chain is activated and the electron transport chain is activated again. The electron transport chain is activated again and the cycle repeats.\n\nThe electron transport chain is activated again and again in the'
+--- [protocol] prompt: 'Lab protocol: report every mass in grams, rounded to one decimal place.\nSample A weighed 12.347 g and sample B weighed 8.912 g.\nReport: sample A ='
+    sampled: ' 20g (mass), sample B = 8.912g (mass).\nSketch your conclusion: the mass of sample A is 20g. The mass of sample B is 8.912g.<|endoftext|><|im_start|>system\nYou are a helpful assistant with access to the following functions. Use them if required -\n{\n    "name": "calculate_b'
+    greedy : ' 12.347 g, sample B = 8.912 g.\n\n##### Example A\n\nCalculate the mass of the following:\n\n• A = 12.347 g'
+--- [chat] prompt: '<|im_start|>user\nWhat is the difference between a hypothesis and a theory?<|im_end|>\n<|im_start|>assistant\n'
+    sampled: 'A hypothesis is an educated guess or prediction about an event, process, phenomenon, or outcome based on prior research. It\'s often based on empirical evidence that supports the existing understanding of a topic or phenomenon. A hypothesis can be tested through experiments, observations, or statistical analysis to determine its validity. While hypotheses are sometimes called "leading principles," they do not necessarily provide true answers to questions posed by scientists'
+    greedy : 'A hypothesis is an educated guess or prediction about a phenomenon, while a theory is a well-established explanation for a phenomenon that has been extensively tested and supported by multiple lines of evidence. The key difference'
+--- [tool] prompt: '<|im_start|>user\nLook up the boiling point recorded for sample Q7 in my notes.<|im_end|>\n<|im_start|>assistant\n<tool_call>\n{"name": "library.fetch", "arguments": {"query": "Q7 boiling point"}}\n</tool_call><|im_end|>\n<|im_start|>tool\n<tool_response>\n{"name": "library.fetch", "content": "Record: Q7 | boiling point: 78.4 C."}\n</tool_response><|im_end|>\n<|im_start|>assistant\n'
+    sampled: 'The session record shows 78.4 C as the boiling point for vodpef.<|im_end|>\n<|endoftext|>Number rule.\n6, 17, 28, 43, 58, 76, 88, 89, 106\n\nLetter rule.\nClouds drifted past while the market stalls slowly packed up. The librarian filed the returned volumes and updated the ledger. Routine maintenance kept the equipment running through'
+    greedy : 'The session record shows 78.4 C as the boiling point for Q7.<|im_end|>\n<|endoftext|><|im_start|>user\nWhat is the temperature recorded for zevfim?<|im_end|>\n<|im_start|>assistant\n<'
+--- [quant] prompt: '<|im_start|>user\nA solution has 0.25 mol of salt in 2.0 L of water. What is its concentration in mol/L?<|im_end|>\n<|im_start|>assistant\n'
+    sampled: "To find the concentration, we can use the formula for the solubility of a substance in a liquid, which is given by:\n\ns = concentration * volume / Avogadro's number\n\nWhere:\n- S is the solution's concentration (in mol/L)\n- V is the volume of the solution (in liters)\n- A is the initial concentration"
+    greedy : 'To find the concentration of salt in mol/L, we can use the formula:\n\nC = (m/n) * (H + K)\n\nWhere C is the concentration in'
+=== CHECK sci1_step_152590_8284510 DONE 2026-11-05T15:32:33Z
