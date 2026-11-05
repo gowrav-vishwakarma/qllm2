@@ -22,7 +22,7 @@ ARMS=("pam:ECHO=1 CHRONO=1 OUT_GATE=1 DELTA=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=21
       "tpp:ARCH=transformer $BASELINE"
       "mamba2:ARCH=mamba2 MAMBA_N_LAYER=17 $BASELINE")
 echo "ctl chain: code $H in $PWD, $(date -u +%FT%TZ); SOURCES=$SOURCES WEIGHTS=$WEIGHTS"
-busy() { pgrep -f '^[^ ]*python[^ ]* (-u )?(-m v14\.|([^ ]*/)?(scripts/(run_|mc_eval|sci_gen|think_eval)|v14/a[0-9]|v16/humaneval/(dump|think_eval_full|rec)|v16/bench))' >/dev/null; }
+busy() { pgrep -f '^[^ ]*python[^ ]* (-u )?(-m v14\.|([^ ]*/)?(scripts/(run_|mc_eval|sci_gen|think_eval)|v14/a[0-9]|v14/pkg_|v16/humaneval/(dump|think_eval_full|rec)|v16/bench))' >/dev/null; }
 memok() { [ "$(awk '/MemAvailable/{print int($2/1048576)}' /proc/meminfo)" -ge "${1:-12}" ]; }
 free_mb() { nvidia-smi --query-gpu=memory.total,memory.used --format=csv,noheader,nounits | awk -F", " '{print $1-$2}'; }
 declare -A NEED=([pam]=18800 [tpp]=12600 [mamba2]=9000 [readouts]=12000)
