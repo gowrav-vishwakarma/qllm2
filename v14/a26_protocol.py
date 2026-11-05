@@ -64,6 +64,20 @@ QUEST = ["What was the {q} of sample {s}?", "Report the {q} of sample {s}.", "Wh
          "Give the measured {q} for {s}.", "{s}: what was its {q}?"]
 ROWS = [" Sample {s} ({m}): {q} {v}.", " For sample {s} ({m}) the measured {q} was {v}.", " {s} ({m}), {q}: {v}."]
 EXAM = "\n\nQuestion: {q}\nAnswer:"
+# A29b (pre-registered 2026-11-05): FRESH UNIT wordings, never used in A26, protocol_docs.py or the parser's tuning (written after
+# the parser was frozen; some are deliberately outside its cues, so parser misses count against the library).
+PROTO_FRESH = ["Quick reminder for anyone reading this log: {qp} are noted in {u}.", "{Qp} \u2014 unit: {u}.",
+               "Every {q} entry here carries the unit {u} implicitly.",
+               "All {q} figures below were recorded with the instrument set to {u}.",
+               "Assume {u} whenever a {q} is given without a unit.", "The default unit for {qp} in these pages is {u}.",
+               "{Qp} reported here should be read in {u}.", "Our team writes down {qp} in {u} and leaves the unit out.",
+               "Bear in mind that a bare {q} number in these notes means {u}.", "For every {q} below, think {u}."]
+QUEST_FRESH = ["Could you tell me the {q} of {s}?", "What did {s} measure for {q}?", "{q} for sample {s}, please?",
+               "I need the {q} recorded for {s}.", "Remind me: what {q} did we get for {s}?",
+               "How much {q} was logged against {s}?", "Sample {s}'s {q} was what?", "Find the {q} value of {s}."]
+ROWS_FRESH = [" Measured on {s} ({m}): {q} = {v}.", " {s}/{m} gives {q} {v}.", " Log line for {s} ({m}) shows {q} {v}.",
+              " {q} of {s}, taken from {m}: {v}."]
+
 LEAD, REFRESH, ASKED_BACK, WINDOW, MAX_NEW, ALPHA = 256, 2048, 512, 2048, 16, 4.0
 LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
 
@@ -97,7 +111,11 @@ def make_doc(rng, tok, fill, cell, d, wording='a26'):
     """wording 'a26' = the registered (held-out) wordings; 'train' = G1 of the addendum: UNIT on the TRAINED quantities
     (mass / volume) with v14/protocol_docs.py's own protocol wordings, question styles and row templates."""
     enc = lambda s: tok.encode(s, add_special_tokens=False)  # noqa: E731
-    if wording == 'train':
+    if wording == 'fresh':
+        q = rng.choice(list(QUANT)); qp, units = QUANT[q]; u = rng.choice(units)
+        proto = rng.choice(PROTO_FRESH).format(q=q, qp=qp, Qp=qp[0].upper() + qp[1:], u=u)
+        quest_t, rows_t, mat_list = QUEST_FRESH, ROWS_FRESH, MATERIALS
+    elif wording == 'train':
         from v14 import protocol_docs as P
         assert cell == 'unit', 'G1 (trained wording) is defined for the UNIT cell only'
         q = rng.choice(list(P.UNIT_Q)); qp, Qp, units = P.UNIT_Q[q]; u = rng.choice(units)
@@ -220,7 +238,7 @@ def main():
     ap.add_argument('--docs', type=int, default=20); ap.add_argument('--seed', type=int, default=26000)
     ap.add_argument('--device', default='cuda'); ap.add_argument('--out', required=True)
     ap.add_argument('--guard_mb', type=int, default=2000)
-    ap.add_argument('--wording', default='a26', choices=['a26', 'train'], help="'train' = addendum G1 (UNIT only)")
+    ap.add_argument('--wording', default='a26', choices=['a26', 'train', 'fresh'], help="'train' = addendum G1; 'fresh' = A29b (UNIT only)")
     ap.add_argument('--arms', default='all', help="comma list of arms to run (e.g. refresh,lib_refresh); 'all' = every arm")
     a = ap.parse_args()
     head = dict(unit='A26', hash=subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True,

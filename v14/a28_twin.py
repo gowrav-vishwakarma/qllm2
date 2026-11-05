@@ -39,7 +39,7 @@ def read(pkg, state, off, prefix, twin_state=None, twin_off=None, twin_prefix=No
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--ckpt', required=True); ap.add_argument('--wording', default='a26', choices=['a26', 'train'])
+    ap.add_argument('--ckpt', required=True); ap.add_argument('--wording', default='a26', choices=['a26', 'train', 'fresh'])
     ap.add_argument('--lengths', default='2048,8192,32768'); ap.add_argument('--docs', type=int, default=20)
     ap.add_argument('--seed', type=int, default=26000); ap.add_argument('--device', default='cuda'); ap.add_argument('--out', required=True)
     ap.add_argument('--win', default=None, help='baseline checkpoint(s), comma-separated (transformer -> tpp_* arms, Mamba-2 -> m2_* arms): their reads on the same docs and row, whole session as context')

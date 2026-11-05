@@ -44,6 +44,9 @@ def items() -> list:
     for name in ('STATEMENTS', 'QUESTIONS', 'FIELD_QUESTIONS'):
         for x in getattr(S, name):
             out += [x] if isinstance(x, str) else [y for y in x if isinstance(y, str)]
+    out += A.PROTO_FRESH + A.QUEST_FRESH + [r.strip() for r in A.ROWS_FRESH]          # A29b fresh wordings (test only)
+    from v14 import simple_chat as SC                                                    # the SIMPLE-CHAT items (test only)
+    out += [it[0] if isinstance(it, tuple) else ' '.join(it) for _, it, _ in SC.items()]
     for f in sorted((ROOT / 'v16' / 'prompts').glob('*.txt')):
         out.append(f.read_text())
     seen, uniq = set(), []

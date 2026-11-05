@@ -49,7 +49,7 @@ def parse_protocol(text: str, quantity_word: str):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--ckpt', required=True); ap.add_argument('--wording', default='a26', choices=['a26', 'train'])
+    ap.add_argument('--ckpt', required=True); ap.add_argument('--wording', default='a26', choices=['a26', 'train', 'fresh'])
     ap.add_argument('--lengths', default='2048,8192'); ap.add_argument('--docs', type=int, default=100)
     ap.add_argument('--seed', type=int, default=26000); ap.add_argument('--device', default='cuda'); ap.add_argument('--out', required=True)
     a = ap.parse_args()
