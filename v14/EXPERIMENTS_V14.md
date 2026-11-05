@@ -4366,6 +4366,15 @@ fitted threshold:
     - needle / s8 / skill: GATE's rows (warm, contrast, agree).
     - recall-32k: the pkg_suite recall cell (kv / kvupd / hop2, 20 docs each, 20-way first token) re-run with the warm read
       added. Next pause, 60 items.
+    - **R×K and rewrite (ADDED 16:22 IST, before any WRITE-IN number; Lead: needle / s8 / skill are ceiling cells, "write-in
+      beats subtraction" is so far shown only where subtraction hurts):** the pkg_suite cells, 100 docs, 2k / 8k, the same
+      seeds.
+      - Warm = the package path with alpha 0: the fetched value written into the skill's query line, read on the state
+        that holds the rule, no skill contrast against the no-pack twin.
+      - Package = today's (alpha 4: the 0.67 / 0.42 R×K and 0.92 / 0.85 rewrite in PKG-SUITE row 1 and paper §7.6).
+      - These are the discriminating cells with told: a rule held in state must combine with fetched evidence.
+      - If warm loses here, the map is "facts write in; held rules (told, R×K, rewrite) keep the twin / contrast", and §7.6
+        stands as is. If warm wins, the package default changes and §7.6 / Fig 9 are re-read under warm.
     - told: A26 UNIT, train wording, 2k and 8k, 100 docs.
       - Write-in = A28 `plain` (fetched row + question on the held state); against the twin read (the current package)
         and agree (twin when plain and twin disagree on the first token).

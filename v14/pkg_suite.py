@@ -62,7 +62,7 @@ def pkg_first(pkg, session, row, q_ids, warm=False):
     return (la + pkg.alpha * (la - lb), la) if warm else la + pkg.alpha * (la - lb)
 
 
-def cell_rxk(pkg, out, base, lengths, docs, seed, filler):
+def cell_rxk(pkg, out, base, lengths, docs, seed, filler, writein=False):
     tok = pkg.tok; enc = lambda s: tok.encode(s, add_special_tokens=False)  # noqa: E731
     sep, nl = enc(_SEP), enc('\n')
     for task in ('affine_map_new', 'shift_wide_new'):
@@ -81,10 +81,15 @@ def cell_rxk(pkg, out, base, lengths, docs, seed, filler):
                 out.write(json.dumps(dict(rec, arm='package', right=int(info.get('first_token') == ex.target_token_id), answer=ans,
                                           value_fetched=int(info.get('value') == v))) + '\n')
                 out.write(json.dumps(dict(rec, arm='bare', right=int(int(bl.argmax()) == ex.target_token_id), answer=btxt)) + '\n')
+                if writein:                                   # WRITE-IN: the same path, alpha 0 (no skill contrast)
+                    aw, iw = pkg.apply(sess, f'{lead}{K}{tail}', {'pack': pack, 'query': lead + '{v}' + tail},
+                                       alpha=0.0, dilate=8.0 if L >= 4096 else None)
+                    out.write(json.dumps(dict(rec, arm='warm', right=int(iw.get('first_token') == ex.target_token_id), answer=aw,
+                                              value_fetched=int(iw.get('value') == v))) + '\n')
             out.flush()
 
 
-def cell_rewrite(pkg, out, base, lengths, docs, seed, filler, wording):
+def cell_rewrite(pkg, out, base, lengths, docs, seed, filler, wording, writein=False):
     tok = pkg.tok; enc = lambda s: tok.encode(s, add_special_tokens=False)  # noqa: E731
     for L in lengths:
         rng = random.Random(seed * 1000 + L + 0)
@@ -93,16 +98,22 @@ def cell_rewrite(pkg, out, base, lengths, docs, seed, filler, wording):
             q = EXAM.format(q=doc['question'])
             _, info = pkg.answer(doc['held'], q); row_text = info.get('row_text') or ''
             unit = parse_protocol(tok.decode(doc['held']), doc['q']); v = planner_value(row_text, doc['q'])
+            ans_w = ''
             if unit is None or v is None:
                 ans = ''
             else:
                 drng = random.Random(di * 7919 + L)
                 pack = 'Report rule.' + ''.join(f'\n{x / 10:.1f} -> {x / 10:.1f} {unit}' for x in drng.sample(range(11, 999), 3))
                 ans, _ = pkg.apply_value(doc['held'] + enc('\n\n') + enc(pack), {'pack': pack, 'query': '\n{v} ->'}, v, max_new=MAX_NEW)
+                if writein:                                   # WRITE-IN: the same compiled pack, alpha 0
+                    ans_w, _ = pkg.apply_value(doc['held'] + enc('\n\n') + enc(pack), {'pack': pack, 'query': '\n{v} ->'}, v,
+                                               alpha=0.0, max_new=MAX_NEW)
             btxt, _ = bare(pkg, doc['held'], enc(q))
             rec = dict(base, cell='rewrite', wording=wording, doc=di, L=L, unit=doc['unit'], target=doc['target'])
             out.write(json.dumps(dict(rec, arm='package', answer=ans, parser_ok=int(unit == doc['unit']), **score('unit', ans, doc))) + '\n')
             out.write(json.dumps(dict(rec, arm='bare', answer=btxt, **score('unit', btxt, doc))) + '\n')
+            if writein:
+                out.write(json.dumps(dict(rec, arm='warm', answer=ans_w, **score('unit', ans_w, doc))) + '\n')
             out.flush()
 
 
@@ -166,6 +177,7 @@ def main():
     ap.add_argument('--cells', default='rxk,rewrite,told,recall'); ap.add_argument('--docs', type=int, default=100)
     ap.add_argument('--recall_docs', default='32768:20'); ap.add_argument('--rewrite_wording', default='a26')
     ap.add_argument('--device', default='cuda'); ap.add_argument('--out', required=True)
+    ap.add_argument('--writein', action='store_true', help='WRITE-IN: also the warm arm (alpha 0) in rxk / rewrite')
     a = ap.parse_args()
     import subprocess
     h = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True, cwd=ROOT).stdout.strip()
@@ -178,9 +190,9 @@ def main():
     for cell in a.cells.split(','):
         t0 = time.time()
         if cell == 'rxk':
-            cell_rxk(pkg, out, base, [2048, 8192], a.docs, 8800, filler)
+            cell_rxk(pkg, out, base, [2048, 8192], a.docs, 8800, filler, a.writein)
         elif cell == 'rewrite':
-            cell_rewrite(pkg, out, base, [2048, 8192], a.docs, 26000, filler, a.rewrite_wording)
+            cell_rewrite(pkg, out, base, [2048, 8192], a.docs, 26000, filler, a.rewrite_wording, a.writein)
         elif cell == 'told':
             cell_told(pkg, out, base, [2048, 8192], a.docs, 26000, filler)
         elif cell == 'recall':
