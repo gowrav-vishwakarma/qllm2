@@ -58,6 +58,8 @@ def patch(layers):
                 B, Hh, T, K = batch.size, _L.heads.size, time.size, _L.head_dim; P = K // 2
                 q = queries.raw(batch, _L.heads, time, _L.head_feature); k = keys.raw(batch, _L.heads, time, _L.head_feature)
                 g = torch.exp(_L.warp_proj(tokens).alias(_L.decay_out, _L.heads).raw(batch, _L.heads, time).float().clamp(-3.0, 3.0))
+                if ST.get('glog') is not None:
+                    ST['glog'][_li].append(g.mean(dim=(0, 2)).cpu())
                 if ST.get('couple') and ST['heads'] is not None and ST['mask'] is not None and ST['s'] != 1.0:
                     sel = torch.zeros(Hh, dtype=torch.bool, device=g.device)
                     for (l, h) in ST['heads']:
@@ -88,7 +90,7 @@ def main():
     layers = [b.pam for b in model.blocks if getattr(b, 'pam', None) is not None]; patch(layers)
     H = layers[0].heads.size; filler = filler_tokens(a.filler)
     # 1. realized retention on held-out text
-    ST['logr'] = [[] for _ in layers]
+    ST['logr'] = [[] for _ in layers]; ST['glog'] = [[] for _ in layers]
     rng = np.random.default_rng(0)
     seqs = [filler[s:s + a.seq_len] for s in rng.integers(0, len(filler) - a.seq_len, size=a.n_seq)]
     with torch.no_grad():
@@ -100,11 +102,13 @@ def main():
         bias = (L.dt_bias.detach().float() + L.dt_proj.bias.detach().float()).cpu() if getattr(L.dt_proj, 'bias', None) is not None else L.dt_bias.detach().float().cpu()
         for h in range(H):
             real_h = math.log(0.5) / float(lr[h]); bias_h = math.log(0.5) / -float(torch.nn.functional.softplus(bias[h]))
-            heads.append(dict(layer=li, head=h, realized_half_life=round(real_h, 1), bias_half_life=round(bias_h, 1)))
-    ST['logr'] = None
+            gm = float(torch.stack(ST['glog'][li]).mean(0)[h]) if ST['glog'][li] else float('nan')
+            heads.append(dict(layer=li, head=h, realized_half_life=round(real_h, 1), bias_half_life=round(bias_h, 1),
+                              warp_g=round(gm, 3), at_floor=bool(gm < 0.06)))
+    ST['logr'] = None; ST['glog'] = None
     slow = sorted(heads, key=lambda d: -d['realized_half_life'])[:a.K]
     slow_set = [(d['layer'], d['head']) for d in slow]; all_set = [(d['layer'], d['head']) for d in heads]
-    print('slow heads (realized):', [(d['layer'], d['head'], d['realized_half_life'], d['bias_half_life']) for d in slow], flush=True)
+    print('slow heads (layer, head, realized, bias-only, warp g):', [(d['layer'], d['head'], d['realized_half_life'], d['bias_half_life'], d['warp_g']) for d in slow], flush=True)
     print('realized half-life median %.1f, max %.1f' % (np.median([d['realized_half_life'] for d in heads]), slow[0]['realized_half_life']), flush=True)
     arms = {'base': (None, 1.0, False, False), 'slow_s4': (slow_set, 4.0, False, False), 'slow_s8': (slow_set, 8.0, False, False),
             'all_s4': (all_set, 4.0, False, False), 'echo_s4': (None, 4.0, True, False), 'slow_echo_s4': (slow_set, 4.0, True, False),
