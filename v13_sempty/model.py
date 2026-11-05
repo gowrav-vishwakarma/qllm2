@@ -449,6 +449,8 @@ class Block(nn.Module):
                             model_dim=self.model_dim, complex_pair=self.complex_pair)
         # PAM starts soft: the memory path learns while the residual carries.
         self.pam_scale = nn.Parameter(torch.tensor(0.1))
+        # LM._run_blocks reads `block.window` (W1, real arm only); the complex Block has none.
+        self.window = None
 
     def forward(self, x: NamedTensor, pam_state=None, step_offset: int = 0):
         cgu_out = self.cgu(self.norm1(x))
