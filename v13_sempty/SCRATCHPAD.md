@@ -61,6 +61,38 @@ computed from the state's own write activity, with no task boundaries.
 Cheapest honest test (4090, 125M): train on rules + text, then 0.5B tokens of text only, with vs without tags; bar: s8 D
 retained ≥ +0.2 over the untagged arm, holdout ≤ +0.01.
 
+## Step back (Mind, 15:52 IST, 2026-11-05, second today; user via Lead: "sit in the void after reading all the history, then come back")
+
+Today: the equal-data control (rules / told rules / recall beyond the trained length beat both baselines; Mamba-2 the better pure
+LM); the knockouts (erase-at-key carries, a global fade is worse than no erase, echo + readers are the read path); the lag and the
+withdrawn seesaw; the package arms (skill 1.00 with the examples re-shown; needle 0.998 → 0.927 because the contrast read cancels a
+fact already in state); GSM8K tools (format without schema; trained names invented); ARC-c 0.28 → 0.84 with the answer stated, BM25
+top-3 adds nothing; the complex twin (2 h to port, 3x memory per sequence).
+
+**What surprised me.** One pattern under all of it. Everything that WORKS re-presents the right thing at query time: re-shown
+examples (1.00), a stated answer (0.84), Library's rewrite (0.93), the rule held in a state that forgets only locally. Everything
+that FAILS asks the model to decide or find on its own: BM25 on question words finds nothing for ARC-c; the offered schema loses to
+the most frequent training name; the contrast assumes the state does NOT already know. The mind reads and keeps well; it does not
+address well. Its weakness is the address, not the memory.
+
+**What it really says.** The thesis is "an O(1) mind + a library", and today's numbers say the interface between them is the
+bottleneck: what to fetch, and whether to fetch at all. Two failures are the same mistake from opposite sides: retrieval keyed on
+surface words (BM25) ignores what the mind wants; the contrast read ignores what the mind already has.
+
+**Practical, cheap (no training): a knowledge-gated contrast.** Read the question with and without the fetched row; if the no-row read
+already puts the answer above its competitors with margin m, skip the contrast (the state knows it). Prediction: the needle loss
+(0.998 → 0.927) closes, skill / R × K unchanged. A package change for Library; CPU / 4090 minutes.
+
+**Bold, different angle: retrieve in the mind's own key space** (Lead's 16:00 block reached the same place: an eviction-log library
+in the notebook's key space). The knockouts say each fact is written along a unit KEY and kept by erasing only along keys, so the
+notebook already has an address scheme, and it is not word overlap. Index the library corpus by the keys the trained notebooks write
+when they read each passage (per sentence / passage end, the four notebook layers), and retrieve with the QUERY vector the notebook
+forms at the question: retrieval becomes the same operation as reading memory, done outside the O(1) state; the library is an
+unbounded notebook in the same key space. Cheapest honest test: ARC-c with the current package, passages = Library's science library,
+(a) BM25 top-3 (0.278), (b) notebook-key top-3, (c) the stated answer (0.835). If (b) moves ARC-c clearly above (a), the mind can
+address its own library. Closest prior work: kNN-LM, Memorizing Transformers (kNN over attention keys), RETRO; HyDE (a generated
+answer as the query). Difference: the keys are the delta notebook's unit keys (the space its erase works in), read with its own query.
+
 ## Step back (Mind, 08:32 IST, 2026-11-05; user via Lead: "re-read the meditation memory, go in the void, step back")
 
 Since the last block: the equal-data control (B1 / B2 / B5 met, B3 not), the lag (a mix change shows nothing for 1B tokens), the
