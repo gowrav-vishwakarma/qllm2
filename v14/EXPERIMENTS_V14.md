@@ -4315,6 +4315,18 @@ fitted threshold:
       audit's independent hash.
     - A positive control (300 planted test strings) must be flagged by both. The CPU smoke passed: 300 / 300 each.
     - Drop counts per source and set go in meta.json and here.
+    - **Built 2026-11-05 15:14 IST** (code d7841c4, logs/v14_benchlib_build_d7841c4_20261105_1440.log;
+      /media/gowrav/d_drive/qllm2/arc_lib/lib_v1_d7841c4, 14,868,445 passages, 34 min on CPU). Positive control
+      300 / 300 on both filters.
+
+      | source | read | length drop | dup drop | dropped by Mind's filter | dropped by audit (by set) | kept |
+      |---|---|---|---|---|---|---|
+      | ARC Corpus | 14,621,856 | 2,317,091 | 142,359 | 385 | 166 (HellaSwag 120, ARC 29, LAMBADA 15, PIQA 2) | 12,162,021 |
+      | cosmo (100k docs) | 1,129,173 | 12,969 | 963 | 19 | 8 (HellaSwag 7, ARC 1) | 1,115,222 |
+      | fineweb (100k docs) | 1,644,084 | 43,489 | 9,300 | 93 | 20 (HellaSwag 17, ARC 2, PIQA 1) | 1,591,202 |
+
+      BM25: 190M nonzeros, avgdl 13.7 terms, 0.07 s per query. The audit index loaded every set except OpenBookQA / MMLU
+      (a datasets-version error in this env); Mind's v1.npy covers those two, and neither is scored here.
   - Retrieval: BM25 (`v14/arclib_index.py`), top-3 passages; the query is the question / context + all choices.
   - Scoring: mc_eval's own scorer (the same prompts and normalisation as the page) with the passages prepended. Arms per
     item: no library, + library, and + oracle on ARC only (oracle = "The answer is <gold choice>.", an upper bound on use;

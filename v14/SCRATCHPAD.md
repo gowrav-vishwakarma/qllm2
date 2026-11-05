@@ -4,6 +4,28 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
+## Step back (Library, 2026-11-05 15:20 IST, after PAIRS-MORE + BENCH-TOOL on c3b)
+- **What surprised us.** On needle the fetch was right 2,520 / 2,520, yet the package lost 7 points (0.998 → 0.927).
+  On s8 / skill the same read took 0.06-0.63 up to 1.000.
+  - One read, two signs. The contrast l_row + 4 (l_row − l_norow) is a difference against what the mind already says.
+  - When the mind already knows (needle in state; s8 / skill at spread 0, 0.995), the difference is noise and gets
+    amplified. When the mind has forgotten (s8 4k, skill 8k), the difference IS the answer.
+  - A28 saw this on a told rule; this is the same law on a stored fact.
+- **What it really says.** The package reads without asking the mind what it already knows. A good library user consults
+  the book when unsure, and trusts memory when sure.
+- **Bold angle.**
+  - Let the O(1) mind's own uncertainty at the answer position (entropy or margin of l_norow) gate the read: confident →
+    the warm read alone (or the mind as is); unsure → the contrast.
+  - Further: the same uncertainty decides whether to fetch at all. That is metacognition as the router between mind
+    and library, with no text-matching rule.
+  - Closest prior work: FLARE (Jiang et al. 2023: retrieve when a generated token has low probability) and Self-RAG
+    (learned retrieve tokens). Difference: here the gate picks the READ (contrast vs warm) of an O(1) state against its
+    own forked twin, untrained, at answer time.
+  - Test (to pre-register): needle, recall, s8, skill and told together, on c3b, from saved first-step logits. The gate
+    threshold is fixed on a held-out seed range before scoring.
+- **Tool finding (for Mind).** The model has the call format but not the schema. It replays glaive's function names.
+  Mind's sci1_chat draft now carries a schema-grounded source (randomised names) and a probe cell.
+
 ## Standing duties (Library, 2026-11-05 14:20 IST; Lead / user decisions)
 - **Every 1B SCI-1 milestone:** light guard: told twin 2k + R×K 2k, ~8 min.
 - **Every 5B and every release:** the full `v14/pkg_suite.py`, then `v14/pkg_suite_pairs.py <jsonl>` for the review page.

@@ -1,0 +1,14 @@
+  [decontam] could not load ('allenai/openbookqa', 'main') {'split': 'validation'}: ValueError: Feature type 'List' not found. Available feature types: ['Value', 'ClassLabel', 'Translation', 'TranslationVariableLanguages', 'LargeList', 'Sequence', 'Array2D', 'Array3D', 'Array4D', 'Array5D', 'Audio', 'Image', 'Video', 'Pdf']
+  [decontam] could not load ('allenai/openbookqa', 'main') {'split': 'test'}: ValueError: Feature type 'List' not found. Available feature types: ['Value', 'ClassLabel', 'Translation', 'TranslationVariableLanguages', 'LargeList', 'Sequence', 'Array2D', 'Array3D', 'Array4D', 'Array5D', 'Audio', 'Image', 'Video', 'Pdf']
+  [decontam] could not load ('cais/mmlu', 'all') {'split': 'test'}: ValueError: Feature type 'List' not found. Available feature types: ['Value', 'ClassLabel', 'Translation', 'TranslationVariableLanguages', 'LargeList', 'Sequence', 'Array2D', 'Array3D', 'Array4D', 'Array5D', 'Audio', 'Image', 'Video', 'Pdf']
+  [decontam] could not load ('cais/mmlu', 'all') {'split': 'validation'}: ValueError: Feature type 'List' not found. Available feature types: ['Value', 'ClassLabel', 'Translation', 'TranslationVariableLanguages', 'LargeList', 'Sequence', 'Array2D', 'Array3D', 'Array4D', 'Array5D', 'Audio', 'Image', 'Video', 'Pdf']
+Repo card metadata block was not found. Setting CardData to empty.
+[lib] positive control {'planted': 300, 'mind': 300, 'audit': 300}
+[lib] arc {'read': 14621856, 'length_drop': 2317091, 'dup_drop': 142359, 'decontam_drop_mind': 385, 'decontam_drop_audit': 166, 'decontam_drop_by_set_audit': {'arc': 29, 'hellaswag': 120, 'lambada': 15, 'piqa': 2}, 'kept': 12162021} (160 s)
+  [stream] cosmo_v2: 104 files; 0 docs -> file 0, 0 docs to skip by reading
+[lib] cosmo {'read': 1129173, 'length_drop': 12969, 'dup_drop': 963, 'decontam_drop_mind': 19, 'decontam_drop_audit': 8, 'decontam_drop_by_set_audit': {'hellaswag': 7, 'arc': 1}, 'kept': 1115222} (1328 s)
+  [stream] fineweb_sample-10BT_e3_h5_ex_m0: 14 files; 0 docs -> file 0, 0 docs to skip by reading
+[lib] fineweb {'read': 1644084, 'length_drop': 43489, 'dup_drop': 9300, 'decontam_drop_mind': 93, 'decontam_drop_audit': 20, 'decontam_drop_by_set_audit': {'hellaswag': 17, 'piqa': 1, 'arc': 2}, 'kept': 1591202} (1915 s)
+[lib] 14,868,445 passages; BM25 ... (1918 s)
+[lib] DONE {"n_passages": 14868445, "control": {"planted": 300, "mind": 300, "audit": 300}, "sec": 2017}
+build exited 2026-11-05T09:44:33Z
