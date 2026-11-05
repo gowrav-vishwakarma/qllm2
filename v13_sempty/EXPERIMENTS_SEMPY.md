@@ -6085,6 +6085,25 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## lad: the mechanism ablation ladder at the ctl recipe (PRE-REGISTRATION, 08:44 IST, 2026-11-05; Lead decision; on the 6000 after SCI-1's decay)
+
+**Question:** which parts does TRAINING need for a rule to be carried across filler (the knockouts showed what the trained model
+uses)? Each rung is ctl's PAM M2 (102.88M, the ctl recipe: 1.0B tokens of the cont2 mix, SEQ 4096, seed 43, 0.9B wsd_stable + 0.1B
+decay) with ONE part removed and the MLP width re-matched to ±1 % params:
+- `lad_all`: all on (the same body as ctl PAM, on the 6000: a hardware / run replicate of 0.523);
+- `lad_nodelta`: DELTA = 0 (additive notebook writes; SHARE_READS needs delta, so the readers read the additive write);
+- `lad_nochrono`: CHRONO = 0 (plain RoPE);
+- `lad_noecho`: ECHO = 0;
+- `lad_noread`: SHARE_READS = 0 (the 12 notebook-less blocks are pure MLP).
+**Readouts per rung (ctl's set + the told side):** s8 D (@0 / 2k / 4k / 8k), far needles 8k / 16k, clk2 8k / 16k, holdout, HS /
+ARC-e / PIQA, and Library's told-twin cells (A26 G1 twin read at 2k and 8k, trained and held-out wording, 100 docs).
+**Rules:** a part is NEEDED for carrying if its rung's s8 D is ≥ 0.15 below `lad_all` with @0 within 0.10 (induction intact); a
+rung whose @0 also falls ≥ 0.15 is "needed for inducing / expressing", not carrying. Same rule on the told 2k / 8k cells. Language:
+report holdout Δ vs `lad_all`. Prediction from kn: no-delta carries least; no-chrono costs ~0.1–0.15; no-echo / no-readers either
+re-learn a read path (small loss) or lose the rule at @0 too.
+**Note:** the SHARE_READS assertion needs delta + chrono + pam_layers; `lad_nodelta` / `lad_nochrono` therefore need the readers'
+assertion relaxed or the rung run without readers; decided at the launch, stated in the rung's row.
+
 ## kn: eval-time knockouts on the trained ctl PAM: which mechanism carries the rule across filler? (PRE-REGISTRATION, 08:34 IST, 2026-11-05; Lead GO)
 
 **Question:** in the trained ctl PAM M2 (102.88M, 1.0B tokens, s8 D 0.523), which part is USED to carry an induced rule across
