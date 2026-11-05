@@ -4,6 +4,34 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
+## STATE NOW (Library, 2026-11-05 17:08 IST) — read first
+- **Package is v0.3 (89fe764).** The default read is warm. The rule twin stays only for held rules (apply / apply_value,
+  protocol twin / fork). A9 is retired (index row, last code 6b6c99c).
+- **Today's verdicts:**
+  - PAIRS-MORE: s8 / skill met; needle loss = A9.
+  - GATE: met, at ceiling.
+  - WRITE-IN: the map ("evidence in view → warm; held rule → rule twin").
+  - BENCH-TOOL: 0 / 200, format not schema.
+  - BENCH-LIB: SCI-1 ARC-e +0.063.
+  - ARC-LIB: NOT met; all bodies gain about +0.055.
+  - All in EXPERIMENTS_V14, lineage and v16/learnings/LIBRARY.md §9.
+- **Armed for the M10 window (step 152,590, ~19:50 IST), one cx_m2 pause by Mind, all in tmux, each waiting for the
+  last:**
+  1. `winc4a` (v14/tmp/window_run_c4a2.sh): twin cells + compact + PKG-SUITE on c4a. `pairsc4a` writes the c4a pairs
+     after it.
+  2. `morec4a` (v14/tmp/window_more_c4a.sh): PAIRS-MORE, BENCH-LIB and BENCH-TOOL on c4a (merged into the c4a pairs) +
+     the c3b PKG-SUITE re-run under v0.3 (tag c3b_v03). Log logs/v14_window_more_c4a_*.log ends "MORE-c4a-DONE".
+     → Tell Lead "c4a pairs final".
+  3. `a32pre` (v14/tmp/window_a32pre.sh): the A32 pre-check + c3b's a26-wording twin baseline at 2k. Log
+     logs/v14_window_a32pre_*.log ends "M10-WINDOW-DONE". → Send Mind AND Lead "M10 window done" (cx_m2 resumes
+     after Mind's clk3).
+- **After the window:**
+  - Record the c4a rows (PKG-SUITE row 2, pairs cells).
+  - Compare c3b_v03 vs c3b (needle / recall should move to warm; R×K / told / rewrite unchanged).
+  - A32 gate: the better of twin / plain on held-out at t0 ≥ 0.60 → build A32; < 0.50 → stop.
+- **Nov 6 (after the SCI-1 decay):** BENCH-PKG (ruler_pkg.py + babilong --package), simple-chat, A29b. Then the board's
+  next: the mind writes the query (HyDE-like), "fetch" as a tool.
+
 ## Step back in the void (Library, 2026-11-05 15:50 IST; user via Lead: "read the meditation memory again, sit in the void")
 Re-read: the meditation memory, EUREKA (the equal-data control; told vs induced withdrawn), Mind's M9 table and the eval-time
 knockouts, and my day (PAIRS-MORE, BENCH-TOOL, BENCH-LIB, GATE).
