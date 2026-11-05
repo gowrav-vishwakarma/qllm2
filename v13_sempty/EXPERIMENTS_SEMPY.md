@@ -6065,7 +6065,7 @@ Milestone 1 = step 15,259 (1.0B tokens total), milestone 2 = step 30,518 (2.0B).
 - Generations at M2 (shown): the tool-call prompt reads the result correctly ("The boiling point … is 78.4 C") and then runs on past
   `<|im_end|>` (repetition); the protocol prompt copies the row instead of applying "one decimal place" (as Library's day-0 predicted).
 
-## cxre: complex vs real PAM at the ctl recipe, PLAIN body (PRE-REGISTRATION, 07:58 IST, 2026-11-05; user GO via Lead 07:56 IST)
+## cxre: complex vs real PAM at the ctl recipe, PLAIN body (CANCELLED before launch 08:02 IST 2026-11-05 by the user via Lead: port the paper body's parts to the complex head instead, then a fair cx_m2 run; pre-registration kept for the record; 07:58 IST, 2026-11-05; user GO via Lead 07:56 IST)
 
 **Question:** at matched params and the identical product recipe, does the complex-arithmetic PAM learn differently from the real
 one? **This isolates the arithmetic; it is NOT the paper's body**: the complex `PAMLayer` has no delta / chrono / out_gate /
