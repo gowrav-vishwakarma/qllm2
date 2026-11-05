@@ -107,6 +107,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
               - **SL0 shared library (kNN-LM)** (2026-10-31) kNN over the frozen 3B PAM pre-logit state (5M / 20M rows) -> **FAIL rule 1: 20M -0.012 vs bar -0.05; still +0.10 behind Mamba-2**; code at `current`; logs/diag/v13_sempty_sl0_*; "SL0 verdict"
               - **kb1** (2026-11-01) known small-LM suite (HellaSwag, ARC, PIQA, Winogrande, OBQA, LAMBADA) per tokens tier -> **level at 600M (0.391 / 0.388 / 0.392); 3B 0.403 / 0.406 / 0.415; slopes +0.012 / +0.018 / +0.023; window costs nothing**; run `2577940`, code at `current`; logs/kb1/v13_sempty_kb1_table_ccf187c.md; "kb1"
                 - **Scaling watch** <- v13_sempty:kb1 (2026-11-01) per-body slopes 600M -> 3B (language, recall, rules, reach, kb1) -> **language: T++ gains most; body-alone recall: PAM lead grew; kb1: PAM +0.012 least; t15 fills the matched slope**; code at `current`; v16/SCRATCHPAD "Scaling watch"; board
+- **clk3** (2026-11-05) eval-time dilation of only the 6 slowest notebook heads by MEASURED realized retention (+ echo) on SCI-1 M9, s8 to 8k, prose NLL guard -> **planned (pre-registered; in the M10 pause after Library). Works if D_far +0.05 with NLL <= +0.01**; code at `pending`; -; EXPERIMENTS_SEMPY "clk3"
 
 ## v14
 
@@ -197,4 +198,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-179 experiments: v13_sempty 84, v14 73, v15 10, v16 12.
+180 experiments: v13_sempty 85, v14 73, v15 10, v16 12.

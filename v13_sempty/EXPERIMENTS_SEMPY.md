@@ -6085,6 +6085,23 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## clk3: eval-time dilation of only the slow notebook heads (PRE-REGISTRATION, 17:08 IST, 2026-11-05; outside plan + Lead + Mind review; eval only)
+
+**Question:** clk1 dilated every notebook head (prose cost) and clk2 whole memories; does dilating only the heads that ALREADY hold
+long (selected by MEASURED realized retention, not by bias) extend rule-carrying past 4k without the prose cost?
+**Model:** SCI-1 M9 (c3b, 386M, 6 notebook layers × 8 heads). Runner `v13_sempty/tmp/clk3_slowheads.py`.
+**Measured first (dry run, 2 held-out seqs of 2048):** realized half-life (ln 0.5 / mean ln r over tokens) median **8.1 tokens**;
+the six slowest (layer index among the notebook layers, head, realized / bias-only half-life): (4,0) 5,241 / 540; (2,1) 2,991 / 137;
+(3,2) 1,343 / 152; (5,3) 758 / 74; (3,3) 737 / 134; (3,1) 621 / 126. So the outside plan's "stuck at 18–76" is wrong in both
+directions: most heads forget within ~8 tokens in practice, the slow few hold far longer than their bias says.
+**Arms** (retention r → r^(1/s) on the s8 probe's FILLER tokens only; echo via the model's span hook): base, slow_s4, slow_s8,
+all_s4 (clk1-like), echo_s4 (clk2-like), slow_echo_s4. s8 spread probe, 200 trials, 0 / 2k / 4k / 8k; prose guard = held-out NLL
+(24 × 2048) with the same dilation on positions ≥ 256.
+**Rule:** clk3 works if an arm with the slow set raises D_far (mean of @4k and @8k) by ≥ **0.05** over base with prose NLL Δ ≤
+**+0.01**; all_s4 is the comparison (dry run: NLL +0.11 vs slow +0.006).
+**Prior work / difference:** test-time decay / timescale scaling in SSMs (e.g. Mamba's Δ, LongMamba-style dt scaling); the
+difference is a head subset chosen by measured realized retention in a delta notebook, plus echo.
+
 ## nkr: notebook-key retrieval for ARC-c (PRE-REGISTRATION, 15:53 IST, 2026-11-05; the three step-backs' synthesis, Lead; eval only)
 
 **Question:** can the trained mind ADDRESS its own library better than word overlap? BENCH-LIB on c3b (SCI-1 M9, 386M) found the
