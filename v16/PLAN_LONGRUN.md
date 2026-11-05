@@ -75,4 +75,4 @@ releases: 0.5B decays (3.75 h); 1B decays for the named ones (paper, scale decis
 over the last 5B falls below its noise, step the stable LR to 4e-4 (a WSD "stable-2" stage), judged by R3's bars.
 
 ## Lead decisions 2026-11-05 14:45 IST
-- 6000 disk: old segments' best_model.pt (22 GB) and the old tier checkpoints (72 GB, paper evidence) move to d_drive sha-verified, then are deleted on the 6000; the d_drive HF model cache is pruned first to keep ≥ 60 GB free there. KEEP_LAST 2 + sha-gated deletes + 30 GB floor on the 6000.
+- 6000 disk: old SCI-1 segments' best_model.pt + stageA_final (22 GB, moving now) and the non-SCI-1 tier checkpoints (b2p2 / t15 / r3c ..., ~37 GB, paper evidence) move to d_drive sha-verified, then are deleted on the 6000 (expected: 6000 ~89 GB free, d_drive ~97 GB free). NO pruning of the user's HF cache: if d_drive runs short, ask the user directly. KEEP_LAST 2 + sha-gated deletes + 30 GB floor on the 6000.
