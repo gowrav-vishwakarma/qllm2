@@ -13,7 +13,7 @@ SCI-1 both run with echo, and the clk2 reach read dilates the echo memory), comp
 (ctl PAM M2: 102,884,948; +0.06 %). **Every part of the paper's real body is ported**; only the arithmetic differs.
 
 **Recipe = ctl's exactly:** the cont2 mix (`sci1_cont2_env.sh` sampler weights), SEQ 4096, BATCH 16 × 4096 = 65,536 tokens per
-step (4 micro-batches), LR 1.2e-3, warmup 500, 0.9B wsd_stable + 0.1B decay = 1.0B tokens, seed 43, decontam index sha 08766210…,
+step (**8 micro-batches of 2**: the first launch at 4 × 4 OOM'd on the 4090, 21+ GB; exact accumulation, same step), LR 1.2e-3, warmup 500, 0.9B wsd_stable + 0.1B decay = 1.0B tokens, seed 43, decontam index sha 08766210…,
 answer weight 100, ANSWER_IN_WINDOW, per-source holdout val, venv qllm311 (as ctl). Code: ctl ran caa4da9, cx_m2 runs the launch hash (≥ 5c0b766);
 the real-arm code is identical between them (v13 model restored; only v16/complex + the 2-line build_lm route + an unused data
 source differ). Runner `v16/complex/cx_chain.sh` (the ctl scheduler: yields, resumes from latest.pt, VRAM gate).
