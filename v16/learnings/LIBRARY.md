@@ -201,3 +201,57 @@ The single most useful habit: measure each step on its own (an oracle row for "r
 - Text checks must call the harness's own entry point with the harness's own inputs (A4 v1).
 - Never pipe a check into grep / tail inside a commit chain; read the exit code first.
 - Seeds on n = 30-40 docs move synonym numbers by ±0.1: decide on ≥ 80 docs or several seeds.
+
+## 9. Nov 2-5: the read, the package suite, and the standard benchmarks (Library, written 2026-11-05)
+
+Body for all rows unless named: SCI-1 386M, step 137,331 (9.0B tokens), state 3.67 MB. Details and per-cell tables:
+`v14/EXPERIMENTS_V14.md`; one line per unit in `v14/EXPERIMENT_LINEAGE.tsv`.
+
+- **A26 (protocol applied to a fetched value).** At DAY-0 no 600M / 1.5B body applied a stated convention to a fetched
+  value (≤ 0.05).
+- **A27 (decontamination audit, 37c291d).** An independent 13-gram audit: the filtered SCI-1 stream has 0 hits in 15
+  sources (positive control 300 / 300).
+- **A28 (be66f2d; replicated e2a87db).** "Prose rule held = 0.00" was the READ, not the state.
+  - The row-vs-no-row contrast cancels anything both streams hold, including the rule.
+  - Against a no-protocol twin the rule shows: 0.65 at the first milestone, 0.83 ± 0.04 at 137,331 (2k), 0.22 at 8k.
+  - A28b (f56d4e6): on a held-out wording the edge over T++ / Mamba-2 is small (0.12 vs 0.05 / 0.06), not met.
+- **A29 (a69cafa).** Rewrite the prose rule into 3 compact demos next to the question: 0.93 / 0.91 (2k / 8k).
+  A30 (composed contrast, 531ad61): not met.
+- **A31 (e2a87db).** Forking the O(1) state at the instruction (with / without) equals the twin read exactly (100 / 100
+  answers) at 3.674 MB per fork.
+- **PKG-SUITE (c93e3b7).** Per milestone, model alone vs model + library, at 137,331:
+  - R×K 0.01 → 0.67 / 0.42 (2k / 8k);
+  - rewrite 0.01 → 0.92 / 0.85;
+  - told twin 0.13 → 0.83 (2k);
+  - recall at 32k, 20-way, 0.10-0.45 → 1.00.
+  - Per-item pairs feed the review page.
+- **PAIRS-MORE (18f33af).** The page's own probe items:
+  - s8 0.63 → 1.000 (4k); skill pack 0.055 → 1.000 (8k), examples re-shown.
+  - **Needle 0.998 → 0.927, NOT met.** The fetch was right on 2,520 / 2,520, but the contrast read cancelled what the
+    state already held.
+- **GATE (20a770c).** The warm read (evidence streamed through the mind's own delta write, read plainly) is 1.000 on
+  all 5,720 needle / s8 / skill items; the contrast 0.967. The agree gate meets its bar, but at ceiling it is plumbing.
+  - **WRITE-IN** (running) decides on the cells that discriminate: told (plain 0.22 vs twin 0.83 already), R×K, rewrite
+    and recall-32k.
+- **BENCH-TOOL (be77c55).** GSM8K with a sandboxed calculator: 0 / 200 plain and tool.
+  - The model calls a tool on 97 % of items, in the trained format, with invented glaive names: format, not schema.
+  - Fed to Mind's chat ramp: a schema-grounded tool source.
+- **BENCH-LIB (7a4e123).** One library for all bodies: the ARC Corpus + cosmo / fineweb, 14.87M passages, two
+  independent 13-gram filters, BM25 top-3.
+  - SCI-1: ARC-e 0.463 → 0.526, ARC-c +0.00, HellaSwag +0.015, PIQA n.s.
+  - The answer-passage ceiling is ARC-c 0.28 → 0.84: the mind reads, retrieval is the limit.
+- **ARC-LIB (20a770c), NOT met.** On the three ~103M ctl bodies with that identical library, the ARC gain is PAM
+  +0.058, T++ +0.055, Mamba-2 +0.054 (± 0.014).
+  - Every body uses fetched passages equally; with the answer passage in view T++ copies best (0.96 vs PAM 0.87).
+  - The paper does NOT claim a library-use edge. PAM's edge stays at carrying rules across filler and reach past the
+    trained length.
+- **What these days taught (step back 15:50, 11-05).** Every failure sat at the seam between mind and library: who wins
+  when the prior and the evidence disagree.
+  - Mind's knockouts found the delta erase-at-key carries the rule, and that a global fade is worse than none.
+  - The contrast read is such a global fade of the prior. Evidence streamed through the mind's own write (warm) was the
+    better read wherever tested so far.
+
+Process lessons added:
+- Read the clock before writing a time (one estimate slipped in 11-05 and was fixed).
+- Never rebase a worktree while a run is rewriting a tracked file there (the push waits for the run).
+- A read that subtracts the mind's own prediction must be tested on cells where the mind is already right.
