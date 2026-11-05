@@ -68,6 +68,19 @@ retained ≥ +0.2 over the untagged arm, holdout ≤ +0.01.
   -> d_drive `ctl_<arm>_{main,decay}_caa4da9`). `ctl_chain.sh` yields to CHECK / humaneval / Library python jobs and RAM < 12 GB, then
   resumes from latest.pt; restart after a box crash: rerun the same tmux command (it skips arms with `.done`). Pre-registration
   EXPERIMENTS_SEMPY "ctl: matched control". Readouts land in the worktree's `logs/ctl/`; copy them to master to commit.
+* **AFTER A LOCAL REBOOT (written 07:26 IST 2026-11-05; the 4090 box restarts ~10:30 IST 11-05).** The 6000 is unaffected (cont3 trains in tmux
+  `sci1`; the cont4 switch at 137,331 runs alone in tmux `sci1sw`). The local waiters live in tmux and die with the box, and the
+  scratchpad copies are lost. Re-arm from the repo (the CHECK copies the milestone itself; it skips anything already `.checked`):
+  ```
+  cd /home/gowrav/Development/qllm2
+  tmux new-session -d -s mindm9 "bash v13_sempty/tmp/sci1_milestone_waiter.sh sci1_cont3_449e320 step_137331 2>&1 | tee -a logs/v13_sempty_sci1_waiter_local.log"
+  tmux new-session -d -s mindm10 "bash v13_sempty/tmp/sci1_milestone_waiter.sh sci1_cont4_8284510 step_152590 2>&1 | tee -a logs/v13_sempty_sci1_waiter_local.log"
+  ```
+  (If cont4's hash changes at the switch, use the dir printed in the 6000's `logs/v13_sempty_sci1_switch_8284510_*.log`.) Then
+  check: `tmux ls | grep mindm`; and that `/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/*/` holds no `*.part`
+  (an interrupted copy; delete it, the waiter re-copies). ctl is finished (no re-arm). The control worktree `../qllm_ctl` and the
+  CHECK worktree `../qllm_sci1check` are on disk and survive.
+
 * **SCI-1 HANDOVER (21:30 IST, 2026-11-04).** cont3 is TRAINING on the 6000: tmux `sci1` in `~/Development/qllm_sci1` @ 449e320, dir
   `checkpoints_v13_sempty/sci1_cont3_449e320`, from cont2 M7 (global 106,813) to 160,218, then the decay (`sci1_decay_449e320`). Why:
   the one-cause test of protoc (EXPERIMENTS_SEMPY "cont3 PRE-REGISTRATION"). Milestones 122,072 (~Nov 5 04:00 IST; then the cont4
