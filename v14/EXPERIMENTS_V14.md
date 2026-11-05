@@ -4268,6 +4268,32 @@ fitted threshold:
   - Expected (stated in advance): s8 / skill package ≥ bare at every L (the examples are next to the query); at spread 0
     the gain is small (the examples are already close). Needle: package near 1.0 wherever the fetch finds the key; the
     abstain rate is reported.
+  - **RESULT c3b (137,331; 2026-11-05 15:12 IST; code 18f33af; logs/v14_pairs_more_c3b_18f33af_20261105_1449.log;
+    rows in logs/v14_pkg_suite_c3b_c93e3b7_20261105_1347_pairs.jsonl, cells s8 / needle / skill).** Pick among the
+    probe's candidates, bare → package:
+
+    | cell | L | n | bare | package |
+    |---|---|---|---|---|
+    | s8 | 0 | 800 | 1.000 | 0.995 |
+    | s8 | 2,048 | 800 | 0.906 | 1.000 |
+    | s8 | 4,096 | 800 | 0.634 | 1.000 |
+    | skill | 0 | 200 | 1.000 | 0.995 |
+    | skill | 2,048 | 200 | 0.680 | 1.000 |
+    | skill | 4,096 | 200 | 0.300 | 1.000 |
+    | skill | 8,192 | 200 | 0.055 | 1.000 |
+    | needle | 128-1,024 | 1,440 | 1.000 | 0.897 |
+    | needle | 2,048-8,192 | 1,080 | 0.996 | 0.968 |
+
+    - s8 / skill: met. The re-shown examples carry the rule at every length; the model alone fades with distance.
+    - **Needle: NOT met.** The fetch was right on 2,520 / 2,520 (path text0, the asked record, 0 abstains), but the
+      package scores 0.927 against bare 0.998.
+      - The warm + contrast read (l_row + 4 (l_row − l_norow)) cancels what the state already holds. With the needle
+        already in state (bare ≈ 1.0), subtracting l_norow removes the right value and amplifies the decoys.
+      - This is the A28 signature again: A28 found it on a told rule, this is a stored fact.
+    - Next (a new unit, pre-registered before any number): a read that keeps the contrast only where the model's own
+      read and the fetched row disagree (an agreement gate), or the warm read alone. It is tested on needle, recall,
+      s8 and skill together.
+    - The skill probe's own "re-read" arm (pack + query in a fresh context) is not this arm; the page shows this one.
 - **ARC-LIB: does the mind use FETCHED KNOWLEDGE better? (PRE-REGISTERED 2026-11-05 14:10 IST, before any code or number; Lead's
   order (2b)).** The three ctl bodies (~103M, 1B tokens of the same mix; one seed each), the IDENTICAL library.
   - Library: a filtered science sentence corpus (the AI2 ARC Corpus if obtainable, else a slice of the SCI-1 science
@@ -4310,6 +4336,17 @@ fitted threshold:
   - Rows: plain and tool, plus calls_made / well_formed / executor errors per item.
   - Stated in advance: at 386M with no tool training the model may rarely write a well-formed calculation; then the
     tool arm ≈ plain, and that is the finding.
+  - **RESULT c3b (137,331; 2026-11-05 15:05 IST; code be77c55; logs/v14_benchtool_gsm8k_c3b_be77c55_20261105_1450.jsonl;
+    cell gsm8k in the c3b pairs file).** As stated in advance: plain 0 / 200, tool 0 / 200.
+    - Plain matches the page's OFF run (0 / 200, no "The answer is" in any answer; identical text on item 0).
+    - Tool calls:
+      - Made on 97 % of items (206 calls) in the trained `<tool_call>` JSON.
+      - Names are invented glaive-style ones: calculate_number 47, calculate_percentage 23, calculate_distance 13,
+        calculate_calculator 12, calculate_interest 11, against the offered calculate 24.
+      - 19 calls were well-formed; 3 computed a number. Arguments are words ("Billy", "60% of 60").
+      - No final "The answer is".
+    - Reading: SCI-1 learned the call FORMAT, not to read the offered schema or ground the arguments in the problem.
+      Sent to Mind (tools data).
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
