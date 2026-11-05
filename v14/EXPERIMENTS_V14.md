@@ -4278,6 +4278,34 @@ fitted threshold:
   - **Bar:** PAM's gain from the library (+library − no library, ARC-e and ARC-c pooled) ≥ the best baseline's gain + 0.02.
   - **Stated in advance:** at ~103M / 1B tokens every body may gain ~0 ("no body uses them"); that is reported as the
     outcome, not hidden.
+- **BENCH-LIB (a): the library arm on ARC-e / ARC-c / HellaSwag / PIQA, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before
+  any number; Lead, user 14:40; extends ARC-LIB).** SCI-1 first (c3b now for the page, then the final model), then the three ctl
+  bodies with the IDENTICAL library and scorer (the paper rows; ARC-LIB's bar applies to the ctl rows).
+  - Library (`v14/arclib_build.py`, one for all four):
+    - Sources: the AI2 ARC Corpus (14.6M science sentences), plus everyday / physical passages from Mind's cosmo and
+      fineweb streams (holdout excluded; whole sentences, ≤ 60 words).
+    - Kept: 6-80 words, deduplicated.
+    - Dropped when EITHER 13-gram filter hits: Mind's index (v1.npy: HellaSwag / ARC / PIQA val + test, …) or the A27
+      audit's independent hash.
+    - A positive control (300 planted test strings) must be flagged by both. The CPU smoke passed: 300 / 300 each.
+    - Drop counts per source and set go in meta.json and here.
+  - Retrieval: BM25 (`v14/arclib_index.py`), top-3 passages; the query is the question / context + all choices.
+  - Scoring: mc_eval's own scorer (the same prompts and normalisation as the page) with the passages prepended. Arms per
+    item: no library, + library, and + oracle on ARC only (oracle = "The answer is <gold choice>.", an upper bound on use;
+    HellaSwag / PIQA have no oracle passage).
+  - Pairs rows: cells arc_e / arc_c / hellaswag / piqa; the context is the 3 passages.
+  - Stated in advance: BM25 passages often miss or mislead, so +library can be below no library on some sets. Every
+    passage is shown on the page so a reader can judge.
+- **BENCH-TOOL (b): GSM8K with a calculator tool, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before any code or number).**
+  - Plain = today's direct answer (the page's GSM8K items and prompt).
+  - Tool arm:
+    - The model writes its working; whenever it writes GSM8K's calculator form `<<expr=`, decoding pauses.
+    - A sandboxed executor (bwrap: no network, read-only fs, timeout, arithmetic only; the tools v1 design) computes
+      expr, and `value>>` is inserted.
+    - The final number is scored as the page scores it.
+  - Rows: plain and tool, plus calls_made / well_formed / executor errors per item.
+  - Stated in advance: at 386M with no tool training the model may rarely write a well-formed calculation; then the
+    tool arm ≈ plain, and that is the finding.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

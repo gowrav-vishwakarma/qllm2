@@ -169,6 +169,8 @@ Params and tokens are in the verdict where they matter; claims only within a tok
     - **BENCH-PKG BABILong + RULER-style with the package** (2026-11-05) final SCI-1 model, bare vs package, BABILong qa1-5 to 32k + RULER-style (our generator: niah single / multikey, VT) to 32k, MB per row -> **running (pre-registered, descriptive; after the Nov 6 decay)**; code at `current`; -; "BENCH-PKG"
     - **PAIRS-MORE s8 / needle / skill library arm** (2026-11-05) per-item model alone vs + library on the review page probe items (s8 2,400, needle 2,520, skill 800); s8 / skill = examples re-shown, needle = text fetch; warm + contrast -> **running (pre-registered, descriptive)**; code at `current`; -; "PAIRS-MORE"
 - **ARC-LIB knowledge library on ARC** <- A28 held read: plain vs protocol twin (2026-11-05) ctl bodies with an identical decontaminated science library (BM25 top-3), no-library / +library / +oracle rows on ARC-e / ARC-c -> **running (pre-registered; bar PAM gain >= best baseline gain + 0.02)**; code at `current`; -; "ARC-LIB"
+  - **BENCH-LIB library arm on ARC-e / ARC-c / HellaSwag / PIQA** (2026-11-05) one decontaminated library (ARC Corpus + cosmo / fineweb passages, two 13-gram filters), BM25 top-3 prepended, mc_eval scorer, no library / + library / + oracle (ARC), per-item pairs; SCI-1 then ctl bodies -> **running (pre-registered, descriptive; ctl rows under ARC-LIB bar)**; code at `current`; -; "BENCH-LIB"
+    - **BENCH-TOOL GSM8K calculator tool arm** (2026-11-05) model writes <<expr=, sandboxed bwrap executor fills the value, scored as the page; plain vs tool per item -> **running (pre-registered, descriptive)**; code at `current`; -; "BENCH-TOOL"
 - **SIMPLE-CHAT probe** (2026-11-05) yes/no (strict), short direct answers, verifiable instruction formats, 2-3 turn small talk; held-out items; baseline on the decay checkpoint; chat-ramp bars -> **running (pre-registered; baseline Nov 6)**; code at `current`; -; "SIMPLE-CHAT"
 
 ## v15
@@ -188,4 +190,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-170 experiments: v13_sempty 83, v14 68, v15 10, v16 9.
+172 experiments: v13_sempty 83, v14 70, v15 10, v16 9.

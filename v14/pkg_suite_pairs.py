@@ -5,6 +5,7 @@ bare and package answers from a suite jsonl. Fields per row:
   tag, step, tokens, cell (rxk / rewrite / told / recall), task, L, doc,
   context (the short text the item is about: the rule / protocol, the record row; not the filler),
   question, gold, bare_answer, bare_ok, package_answer, package_ok, package_path (recall), mb (recall)
+Rows of <log>_pairsx.jsonl (s8 / needle / skill, written by v14/pkg_pairs_more.py) are appended when present.
     python v14/pkg_suite_pairs.py logs/v14_pkg_suite_<tag>_<hash>_<stamp>.jsonl   -> writes <same>_pairs.jsonl
 """
 from __future__ import annotations
@@ -75,6 +76,10 @@ def main(path):
         if k[0] == 'recall':
             row.update(package_path=p.get('path'), mb=p.get('mb'), bare_w20=b.get('w20'), package_w20=p.get('w20'))
         out.write(json.dumps(row, ensure_ascii=False) + '\n'); n += 1
+    more = Path(str(path).replace('.jsonl', '_pairsx.jsonl'))       # s8 / needle / skill rows (v14/pkg_pairs_more.py)
+    if more.exists():
+        for l in open(more):
+            out.write(l); n += 1
     print(f'{n} pairs -> {out.name}')
 
 
