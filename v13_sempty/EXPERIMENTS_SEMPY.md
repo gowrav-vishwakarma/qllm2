@@ -6085,6 +6085,13 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## SCI-1 decay from M9 (Lead GO 21:12 IST 2026-11-05)
+
+`worked` dropped by the keep rule at M10 (s8 0.770 -> 0.418, needles 0.98 -> 0.57); **the decay branches from M9** (cont3
+step_137331, 9.0B, sha256 218922f9), cont3 mix (the one that produced M9), the pre-registered decay recipe (1.0B, LR 8e-4 -> 0 linear),
+launcher `v13_sempty/tmp/sci1_decay_from.sh`, dir `sci1_decay_m9_<hash>`. cont4 stopped after a clean save; its step_152590 and
+latest.pt are kept (the long run may resume from them with another mix). M10 stays recorded as a failed segment (section below).
+
 ## SCI-1 cont4 milestone 10 (CHECK on the 4090, 21:10 IST, 2026-11-05; run `8284510`, step 152,590 = 10.0B tokens; 1.0B of + `worked`)
 
 **The `worked` source fails its keep rule (indicative, but large):** s8 D **0.770 → 0.418**, far needles 4k + 8k **0.98 → 0.57**,
