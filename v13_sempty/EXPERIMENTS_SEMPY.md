@@ -6095,6 +6095,8 @@ decay) with ONE part removed and the MLP width re-matched to ±1 % params:
 - `lad_nochrono`: CHRONO = 0 (plain RoPE);
 - `lad_noecho`: ECHO = 0;
 - `lad_noread`: SHARE_READS = 0 (the 12 notebook-less blocks are pure MLP).
+**Order on the 6000 (Lead): `lad_all` FIRST**, and it must reproduce ctl PAM (s8 D 0.523 ± 0.05, holdout 3.427 ± 0.02) on that
+box before any minus-one rung is read (a box confound bit us once: g1c). If it does not, the ladder pauses and the gap is the finding.
 **Readouts per rung (ctl's set + the told side):** s8 D (@0 / 2k / 4k / 8k), far needles 8k / 16k, clk2 8k / 16k, holdout, HS /
 ARC-e / PIQA, and Library's told-twin cells (A26 G1 twin read at 2k and 8k, trained and held-out wording, 100 docs).
 **Rules:** a part is NEEDED for carrying if its rung's s8 D is ≥ 0.15 below `lad_all` with @0 within 0.10 (induction intact); a

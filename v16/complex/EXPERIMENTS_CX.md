@@ -31,4 +31,5 @@ TinyStories. Prior work: complex-valued / unitary RNNs (Arjovsky 2016, Wisdom 20
 `checkpoints_v13_sempty/cx_m2_{main,decay}_c17775a` (d_drive). Two earlier launches (1555b2c at 4 × 4, cb49762 at 8 × 2) OOM'd before
 any save and were discarded. Step 100: loss 6.47, **10.9k tok/s** steady, peak 15.9 GB → ~25.5 h for 1.0B tokens, ~28–29 h with the
 yields; expected done ~Nov 6 14:00 IST. **Cost line (paper):** the complex body peaks at 12.9 GB per 4096-token sequence (fwd + bwd)
-vs ~4 GB for the real body (~3x, independent of the delta port), and trains at 10.9k vs 63k tok/s on the 4090 (~5.8x slower).
+vs ~4 GB for the real body (~3x, independent of the delta port), and trains at 10.9k tok/s (16 x 1) vs the real PAM M2's 63k tok/s in the ctl run (4 x 4, py3.11; ~40k in the py3.9
+smoke): ~5.8x slower at its own best micro-batch (the micro-batch is forced by memory). Peak 15.9 GB.
