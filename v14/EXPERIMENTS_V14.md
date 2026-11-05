@@ -4157,6 +4157,20 @@ fitted threshold:
     the context.
   - Honesty line: accuracy is A28's by construction. The claim is cost and the operation (attribution, on / off per
     standing instruction), not a new accuracy.
+  - **A31 VERDICT (2026-11-05 13:29 IST; code e2a87db; `logs/v14_a31_fork_c3b_e2a87db_20261105_1316.*`; SCI-1 step 137,331 (9.0B), G1,
+    2k, 100 docs): MET.** Fork read 0.83 ± 0.04 = A28's twin read on the same docs 0.83 ± 0.04; **answers identical 100 / 100**;
+    session minus protocol = the no-protocol session 100 / 100; **3.674 MB per fork** (measured from the fork's state).
+    The rule twin can be held from the moment the instruction is read, at O(1) cost per standing instruction (+1× streaming
+    per fork), with no re-read of the context at question time. Accuracy is A28's by construction; the claim is cost and the
+    operation.
+  - **A26 + A28 at cont3 step 137,331 (2026-11-05 13:29 IST; c3b = 9.0B, cont3 +2B, no protoc; gap-free window chain e2a87db;
+    `logs/v14_a28_rep100{,_8k}_c3b_*`, `logs/v14_a26_compact_c3b_{train,a26}_*`):**
+    - Twin read G1 2k **0.83 ± 0.04** (c3a 0.54 ± 0.05); 8k **0.22 ± 0.04** (c3a 0.04 ± 0.02), the best 8k told reach so far.
+      Plain read 0.22; A9 read 0.08; noprot 0.03.
+    - Compact G1 / A26 wording 2k 0.20 / 0.20 (8k 0.10 / 0.10).
+    - Mind's s8 D rose 0.589 → 0.770 over the same 1B, so told and induced rules rose TOGETHER. Not the competition signature
+      (told did not fall ≥ 0.10); with cont2's opposite moves, "compete" is not consistent across intervals. Dropping protoc did
+      not hurt the told rule.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
