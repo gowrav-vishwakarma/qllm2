@@ -4122,6 +4122,24 @@ fitted threshold:
   Mind's three ctl bodies (caa4da9; ~103M each, 1B tokens of the same SCI-1 mix; ONE SEED PER BODY), `v14/a28_twin.py --win
   <T++>,<Mamba-2>`, 100 docs: (a) A26 wording at 2k; (b) trained wording at 8k. **Bar (a): MET if PAM's twin read ≥ the best
   baseline's twin read + 0.20 at 2k.** (b) is descriptive (reach past 2k is weak on SCI-1).
+  - **A28b VERDICT (2026-11-05 06:50 IST; code f56d4e6; `logs/v14_a28b_ctl_{a26w_2k,g1_8k}_f56d4e6_20261105_0625.*`; ctl bodies, ONE SEED
+    PER BODY, 100 docs): bar (a) NOT met.**
+
+    | protocol-twin read, right ± SE | PAM | Mamba-2 | T++ |
+    |---|---|---|---|
+    | (a) A26 held-out wording, 2k | 0.12 ± 0.03 | 0.06 ± 0.02 | 0.05 ± 0.02 |
+    | trained wording, 2k (A28 matched control) | 0.53 ± 0.05 | 0.20 ± 0.04 | 0.12 ± 0.03 |
+    | (b) trained wording, 8k | 0.00 | 0.00 | 0.00 |
+
+    - (a): PAM 0.12 vs the best baseline 0.06, i.e. +0.06 < +0.20 → NOT met. PAM is still ahead, but on held-out wordings all three
+      bodies hold the told rule weakly at 1B tokens.
+    - (b): 0.00 for all three at 8k (twice the trained 4k). The rule's reach is the common limit.
+    - Paper row: the equal-data advantage is clear on the TRAINED wording (0.53 vs 0.20 / 0.12) and small on held-out wordings
+      (0.12 vs 0.06 / 0.05); one seed per body.
+  - **A26 + A28 at cont3 step 122,072 (2026-11-05 06:50 IST; c3a = 8.0B tokens, the first checkpoint WITHOUT protoc; logs
+    `logs/v14_a26_sci1c3a{,_g1}_f56d4e6_20261105_0532.*`, `logs/v14_a28_{rep100,rep100_8k,reread}_c3a_*_14c0271_*.*`):** the guard holds.
+    Twin read G1 2k 0.54 ± 0.05 (c2b 0.49 ± 0.05); 8k 0.04 ± 0.02 (c2b 0.04 ± 0.02); A26 wording 8k / 32k ≤ 0.05; compact G1 2k
+    0.20 (c2b 0.10). Dropping protoc did not lower the told-rule side at the first milestone.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
