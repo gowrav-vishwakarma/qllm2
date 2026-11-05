@@ -173,3 +173,45 @@ Each entry gives: the idea (maths), the recipe, the numbers, the verdict and the
 - Fine-tuning an annealed checkpoint pays a warm-restart cost: keep a stable-phase checkpoint (WSD) to branch from.
 - Older failed paths: v13_sempty/EXPERIMENT_INDEX.md "Failed and removed" (each with the last commit that has its code;
   this repo stays accessible, so the hashes are enough to dig deeper).
+
+## 10. Nov 2-5: SCI-1, the equal-data control, the mechanism, the complex twin
+
+Detail and every number: `v13_sempty/EXPERIMENTS_SEMPY.md` (sections named below); lineage `v13_sempty/EXPERIMENT_LINEAGE.tsv`.
+
+**SCI-1 (386M real M2 body, SEQ 4096, the 6000; "SCI-1", f11df39).** Stage A 0.5B plain → stage B the science + chat + tools +
+rule-doc mix with decontamination (13-gram index, sha 08766210…) and per-source holdout. Segments (each from a measured calibration
+row after cont1):
+
+| segment | from | change | finding |
+|---|---|---|---|
+| main (59c3cf5) | stage A | full mix, think on | M1-M4: s8 D 0.32 → 0.54 → 0.71 → 0.78; HS / ARC-e / PIQA 0.31 / 0.51 / 0.62 at M4; think ON ≤ OFF, leak 24-47 % → dropped |
+| cont1 (59d098d) | M4 | think out, protoc in, b2s 1.7 → 0.5 % | s8 D 0.78 → 0.44 in 1B: the rule-doc cut |
+| cont2 (e61cd92) | M5 | b2s back ~1.4 % | s8 0.44 (+1B) → 0.59 (+2B): recovery with a ~1B LAG |
+| cont3 (449e320) | M7 | protoc out | s8 0.59 → 0.77 (+2B; below the pre-set protoc bar 0.84: the lag, not protoc); told twin 2k 0.54 → 0.83 |
+| cont4 (8284510) | M9 | + `worked` (plain worked solutions, no think) | one milestone, indicative only; then the decay (Nov 6) |
+
+Lessons: a skill held in state is MAINTAINED by its docs and returns ~1B tokens after they are restored, so judge a mix change only
+after 2B; told and induced rules do not consistently compete (withdrawn; EUREKA 11-05); never launch a mix change without a
+measured calibration row (two predicted mixes missed: think, b2s). Reference: SCI-1 at 3B = Pythia-410M at 10.5B on HS / ARC-e /
+PIQA, which is data quality, not architecture (948affe).
+
+**The equal-data control at the product recipe ("ctl RESULT", f0a4695 + 87736fe).** Three ~103M bodies, 1.0B tokens each of the
+same SCI-1 mix, same seed / code / venv (worktree caa4da9): s8 D PAM 0.523 vs Mamba-2 0.149 / T++ 0.074 (B1 met); far needle at
+8k / 16k 0.53 / 0.41 vs ≤ 0.18 / 0.15 (B2 met); told rule held in state (Library's twin read) 0.53 vs 0.20 / 0.12 (B5 met);
+holdout PAM 3.427 vs Mamba-2 3.378 (B3 NOT met: Mamba-2 is the better pure LM at this size); HS / ARC / PIQA level.
+
+**The mechanism ("kn", af9db30).** Eval-time knockouts on the trained ctl PAM: no erase-at-key on filler −0.33 s8 D; a global fade
+of equal erased energy −0.39 (worse than no erase); plain-RoPE clock −0.14; echo / readers collapse even the adjacent case (the
+read path). The rule is carried by forgetting LOCALLY, along each filler token's own key. The ablation ladder (what TRAINING needs)
+is pre-registered ("lad"), all-on rung first as a box control.
+
+**The complex twin (`v16/complex/`, 5c0b766 / 1555b2c; "cx_m2").** Every part of the real body ported to the complex arm: the
+complex delta runs the real fused kernel on the realified notebook (a unit complex key = two orthonormal real rank-1 sub-steps),
+plus chrono, out_gate, sparse notebooks, shared reads, echo, reset; parity 1e-5 to 0 against complex references. 102.95M (+0.06 %
+vs ctl PAM). Cost: ~3x memory per sequence (12.9 GB at 4096) and ~5.8x slower on the 4090 (10.9k vs 63k tok/s). Training at the ctl
+recipe (16 × 1, c17775a), paused for Library's GPU pieces; the 1-line v13 fix for the plain complex LM is 06fa75f.
+
+**The interface (step backs, nkr).** What works re-presents the right thing at query time (re-shown examples, a stated answer:
+ARC-c 0.28 → 0.84); what fails asks the model to address (BM25 adds nothing; offered tool schemas lose to trained names; the
+contrast read cancels a fact already in state). nkr (pre-registered 6c9fb4f, runner b4b7499) reranks BM25's top-100 by the
+notebook's own query·key: does the mind address its library better than words?
