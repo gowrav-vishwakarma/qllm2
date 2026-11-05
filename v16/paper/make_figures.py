@@ -151,7 +151,7 @@ def fig8_knockouts():
     cols = ["#1565c0", "#c62828", "#c62828", "#ef6c00", "#9e9e9e", "#9e9e9e"]
     ax.barh(names[::-1], v[::-1], color=cols[::-1]); ax.axvline(0.125, ls=":", c="k", lw=0.8); ax.set_xlim(0, 0.7)
     for i, x in enumerate(v[::-1]): ax.text(x + 0.01, i, f"{x:.2f}", va="center", fontsize=8)
-    ax.set_xlabel("s8 D: rule carried across 2k-4k of filler (dotted = chance)"); ax.tick_params(axis="y", labelsize=7.5)
+    ax.set_xlabel("s8 D, rule carried across filler (dotted: chance)"); ax.tick_params(axis="y", labelsize=7.5)
     ax.set_title("Knockouts on the trained control model\n(one part switched off during the filler only)", fontsize=8.5)
     save(fig, "fig8_knockouts")
 
