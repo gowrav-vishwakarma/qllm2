@@ -26,6 +26,34 @@ tmux ls | grep -E 'libramguard|a2[68]c'
   before re-arming, so the chain reruns cleanly.
 - Score: `python3 v14/a26_score.py <jsonl>`; the twin cells come from `logs/v14_a28_rep100{,_8k}_<tag>_*.jsonl`.
 
+## Step back (Library, 2026-11-05 08:21 IST; user via Lead: "read the meditation memory again, step back")
+
+Since yesterday's block: A28 (the read was hiding the rule), its replication and re-read, A29 (rewrite MET), A30 (NOT met),
+the matched control (PAM 0.53 / Mamba-2 0.20 / T++ 0.12), A28b (held-out wording 0.12 / 0.06 / 0.05, NOT met), the seesaw
+(twin 0.65 → 0.81 → 0.49 → 0.54 at 2k across milestones; 8k ≤ 0.20 always).
+
+1. **What surprised me: all three bodies show the SAME A28 signature.** Under the A9 / plain / no-protocol reads a told rule is
+   0.00 for PAM, Mamba-2 AND T++; only the rule twin brings it out. So the twin read is not a PAM trick: it is a measurement
+   of "stored but not expressed" that works for any body. Many "the model ignored the instruction" results may be "stored,
+   outvoted by the copy prior".
+2. **The architecture edge is mostly on the trained wording.** 0.53 vs 0.20 (trained) shrinks to 0.12 vs 0.06 (held-out), one seed.
+   It is the cu2a lesson again (formats generalise weakly at this size). And the 12× larger Mamba-2 state holds the told rule
+   WORSE (0.20 vs 0.53): state size is not the lever; how the state is kept is. That argues for Lead's ablation ladder, not
+   for the state-budget test first.
+3. **What I would stop:**
+   - running A26's original arms (A9 held / refresh / trained) at every milestone; they are blind or noisy. Keep the twin
+     cells (2k + 8k, 100 docs) plus the compact arm.
+   - reading A29's parser hit rate (in-sample) as anything; A29 needs fresh protocol wordings the parser never saw before
+     it is a product claim.
+   - quoting the told-rule result without the held-out-wording row and "one seed per body".
+4. **Bold idea: state FORKS as a package operation.** When a standing instruction is read, the package forks the O(1)
+   state: one copy with it, one without, 3.67 MB each at SCI-1 size. Every later question about it reads the rule twin at
+   constant cost, with per-instruction attribution and an on / off switch.
+   - For a transformer the same needs a second full KV cache (GBs at 128k). Counterfactual state is cheap only for O(1) minds.
+   - Closest prior work: Instructive Decoding / CAD (they re-run the context with the instruction ablated: double the KV
+     and the compute). Difference: the fork is taken once, when the instruction is read, and kept alongside at O(1) cost.
+   - A testable product claim: the same twin result as A28 (0.65 at 2k), with the fork kept from the moment the rule was read.
+
 ## State (2026-11-04 15:05 IST) — read this first
 
 Session: **Library**. SCI-1 support. Today: A28 (the A9 read hid a state-held rule; protocol-twin read 0.65 ± 0.05 at 2k,
