@@ -53,12 +53,13 @@ def bare(pkg, session, q_ids):
 
 
 @torch.no_grad()
-def pkg_first(pkg, session, row, q_ids):
-    """the package read's first-step logits (warm + no-row contrast, as Package._decode)."""
+def pkg_first(pkg, session, row, q_ids, warm=False):
+    """the package read's first-step logits (warm + no-row contrast, as Package._decode); warm=True also returns the warm
+    read alone (row + query on the state, no contrast: WRITE-IN)."""
     s = pkg.read(session)
     la, _, _ = pkg.mind.feed(row + q_ids, copy.deepcopy(s['state']), s['off'])
     lb, _, _ = pkg.mind.feed(q_ids, copy.deepcopy(s['state']), s['off'])
-    return la + pkg.alpha * (la - lb)
+    return (la + pkg.alpha * (la - lb), la) if warm else la + pkg.alpha * (la - lb)
 
 
 def cell_rxk(pkg, out, base, lengths, docs, seed, filler):
@@ -142,14 +143,18 @@ def cell_recall(pkg, out, base, lengths, docs_by_len, seed, filler):
                     q2 = f' Query: {k2} maps to'
                     ptxt, info = pkg.answer(sess, q2)
                     row = sess[info['row'][0]:info['row'][1]] if info['row'] else []
-                    pl = pkg_first(pkg, sess, row, enc(q2)) if row else None
+                    pl, pw = pkg_first(pkg, sess, row, enc(q2), warm=True) if row else (None, None)
                 else:
                     ptxt, info = pkg.answer(sess, qtext)
                     row = sess[info['row'][0]:info['row'][1]] if info['row'] else []
-                    pl = pkg_first(pkg, sess, row, q) if row else None
+                    pl, pw = pkg_first(pkg, sess, row, q, warm=True) if row else (None, None)
                 rec = dict(base, cell='recall', task=task, doc=di, L=L, mb=info.get('bytes_held'), sec=round(time.time() - t0, 1))
+                r4 = lambda x: [round(float(v), 4) for v in x[cand].float().tolist()]  # noqa: E731
                 out.write(json.dumps(dict(rec, arm='package', answer=ptxt, free=sent_ok(ptxt, meta['val']), path=info.get('path'),
-                                          w20=int(pl is not None and cand[int(pl[cand].argmax())] == ans_tok))) + '\n')
+                                          w20=int(pl is not None and cand[int(pl[cand].argmax())] == ans_tok),
+                                          w20_warm=int(pw is not None and cand[int(pw[cand].argmax())] == ans_tok),
+                                          gold_index=cand.index(ans_tok) if ans_tok in cand else None,
+                                          cand_warm=r4(pw) if pw is not None else None, cand_bare=r4(bl))) + '\n')
                 out.write(json.dumps(dict(rec, arm='bare', answer=btxt, free=sent_ok(btxt, meta['val']),
                                           w20=int(cand[int(bl[cand].argmax())] == ans_tok))) + '\n')
                 out.flush()
