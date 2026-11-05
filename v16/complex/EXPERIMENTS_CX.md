@@ -5,15 +5,16 @@
 **Question:** at matched params and the identical product recipe, does the complex-arithmetic PAM, carrying the same parts as the
 paper's (real) body, differ from it? The parts were ported first (user: "the complex head carries the same parts, then a fair run").
 
-**Arm cx_m2** (`v16/complex/model.py`, code b830731): complex `baseline` geometry (dim 384 complex, 6 heads × 64, 16 layers),
+**Arm cx_m2** (`v16/complex/model.py`, code 5c0b766 + this note): complex `baseline` geometry (dim 384 complex, 6 heads × 64, 16 layers),
 **notebooks at 3 / 7 / 11 / 15** with **A3 delta** (realified fused kernel; parity 1.5e-5 vs a true-complex reference), **N1
 chrono**, **N4 out_gate**, **M2 shared reads** in the other blocks (complex reader of the writer's WY write, writer's clock),
-**RESET_AT_EOS**, complex MLP width **1460** → **102,934,362 params** (ctl PAM M2: 102,884,948; +0.05 %). **Not ported: E1 echo**
-(ctl's PAM M2 has echo; this is the one known body difference, stated with every number).
+**RESET_AT_EOS**, **E1 echo** (complex succession memory at the head; ported 08:19 IST at the user's request because ctl's PAM M2 and
+SCI-1 both run with echo, and the clk2 reach read dilates the echo memory), complex MLP width **1436** → **102,947,436 params**
+(ctl PAM M2: 102,884,948; +0.06 %). **Every part of the paper's real body is ported**; only the arithmetic differs.
 
 **Recipe = ctl's exactly:** the cont2 mix (`sci1_cont2_env.sh` sampler weights), SEQ 4096, BATCH 16 × 4096 = 65,536 tokens per
 step (4 micro-batches), LR 1.2e-3, warmup 500, 0.9B wsd_stable + 0.1B decay = 1.0B tokens, seed 43, decontam index sha 08766210…,
-answer weight 100, ANSWER_IN_WINDOW, per-source holdout val, venv qllm311 (as ctl). Code: ctl ran caa4da9, cx_m2 runs b830731;
+answer weight 100, ANSWER_IN_WINDOW, per-source holdout val, venv qllm311 (as ctl). Code: ctl ran caa4da9, cx_m2 runs the launch hash (≥ 5c0b766);
 the real-arm code is identical between them (v13 model restored; only v16/complex + the 2-line build_lm route + an unused data
 source differ). Runner `v16/complex/cx_chain.sh` (the ctl scheduler: yields, resumes from latest.pt, VRAM gate).
 

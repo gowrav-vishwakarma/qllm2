@@ -1,6 +1,6 @@
 #!/bin/bash
 # cx_m2: the complex PAM with the paper body's parts (v16/complex/model.py: delta, chrono, out_gate, sparse notebooks 3/7/11/15,
-# shared reads, MLP width 1460 -> 102.93M; E1 echo NOT ported) at the ctl recipe (1.0B tokens of the cont2 mix, SEQ 4096, seed 43,
+# shared reads, E1 echo, MLP width 1436 -> 102.95M: every part of the paper body) at the ctl recipe (1.0B tokens of the cont2 mix, SEQ 4096, seed 43,
 # 0.9B wsd_stable + 0.1B decay), read against ctl's PAM M2 (102.88M). Pre-registration: v16/complex/EXPERIMENTS_CX.md.
 # The ctl scheduler (yields to CHECK / humaneval / Library evals, resumes from latest.pt on any kill, VRAM gate). Run from the
 # pinned port worktree (../qllm_cx @ the launch hash, .venv -> qllm311, the venv ctl used):
@@ -13,7 +13,7 @@ COMMON="SOURCES=$SOURCES WEIGHTS=$WEIGHTS ANSWER_W=100 SEED=43 SEQ=4096 BATCH=16
 VAL_EVERY=2000 VAL_SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,pysci,chatmt NO_WIKI_VAL=1 SAVE_EVERY=200 KEEP_EVERY=0 KEEP_LAST=1 \
 MAX_RETRIES=0 ANSWER_IN_WINDOW=1 RESET_AT_EOS=1 DECONTAM_INDEX=.cache/decontam/v1.npy PIN_HASH=$H"
 BASELINE="CHRONO=0 OUT_GATE=0 DELTA=0 ECHO=0"
-ARMS=("cx_m2:PRESET=baseline DELTA=1 CHRONO=1 OUT_GATE=1 ECHO=0 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=1460 SHARE_READS=1")
+ARMS=("cx_m2:PRESET=baseline DELTA=1 CHRONO=1 OUT_GATE=1 ECHO=1 PAM_LAYERS=3,7,11,15 MLP_HIDDEN=1436 SHARE_READS=1")
 echo "cx chain: code $H in $PWD, $(date -u +%FT%TZ); SOURCES=$SOURCES WEIGHTS=$WEIGHTS"
 busy() { pgrep -f '^[^ ]*python[^ ]* (-u )?(-m v14\.|([^ ]*/)?(scripts/(run_|mc_eval|sci_gen|think_eval)|v14/a2|v16/humaneval/(dump|think_eval_full|rec)|v16/bench))' >/dev/null; }
 memok() { [ "$(awk '/MemAvailable/{print int($2/1048576)}' /proc/meminfo)" -ge "${1:-12}" ]; }
