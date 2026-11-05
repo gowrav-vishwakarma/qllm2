@@ -26,6 +26,8 @@ Status: `[ ]` open · `[~]` running · `[x]` done and in the paper. Owner in bra
 
 - [ ] **Reference block vs public small models (user, Nov 5 14:30; after the final SCI-1 checkpoint):** Qwen ~0.5B and SmolLM2-360M through OUR harness on: (1) long context past the trained length (RULER-style + BABILong, 4k-32k, accuracy AND MB held per session), (2) in-context learning (s8 rule from examples, told rule twin read), (3) accuracy vs memory-per-session chart, (4) ARC with the shared science library; plus the standard suite (HellaSwag, ARC-e/c, PIQA, WinoGrande, OBQA) always with tokens trained. Framing: "~100x+ fewer tokens and smaller, and still competing HERE"; reference block, no verdict on knowledge benchmarks. [Lead runs on the 4090; Library's runners]
 
+- [ ] **Outside review (Gemini plan, user Nov 5 17:00; reviewed by Lead / Mind / Library):** adopted, eval-only first: (1) two-regime read in v16/package.py (warm for evidence in view, rule twin for held rules; A9 removed) [Library, now]; (2) A32 self-compiled forks, gated by a 10-min pre-check (twin read at L = 0 on A28b held-out wording, 100 docs: >= 0.6 run, < 0.5 stop) [Library, M10 window]; (3) clk3: dilate only the heads with slow MEASURED retention (capture_decay on held-out text, not bias) + echo, told / s8 at 8k, prose NLL guard [Mind, after M10]; (4) two-bounce SharedRead for 2-hop: micro-bench, then a 103M screen, after the ladder + second seed [Mind]. Rejected: cgu_scale as the B3 cause (T++ has no scalar and is the worst LM; scale x ||down|| grows smoothly with depth; a reparametrisation; optional rung only if GPU time is left); ARC rerank (body-neutral plumbing after ARC-LIB). Fixed: contribution 4 wording (6b6c99c).
+
 ## B. Findings from the step-backs that are IN the paper (check wording at review)
 - [x] "Stored but not expressed in every body": a told rule is 0.00 under the record-contrast / plain / no-rule reads for all three matched bodies and visible only under the twin (§5, §7.3).
 - [x] The rule skill is maintained by data, not acquired once; ~1B-token lag; judge mix changes after two milestones (§7.1).
@@ -44,4 +46,4 @@ Status: `[ ]` open · `[~]` running · `[x]` done and in the paper. Owner in bra
 - [ ] Replace every remaining `\todo{}` in main.tex; re-run `make`; proofread for claims outside a tier. [Lead]
 
 ## D. Order on the GPUs (agreed by all three, 2026-11-05)
-4090 now: cx_m2 → A31 forks → knockout told-twin cells. 6000 after SCI-1's decay (~Nov 6 05:30): ablation ladder (all-on rung FIRST, to reproduce ctl PAM on that box) → second seed (3 bodies) → cx_m2 if moved → state budget.
+4090 now: cx_m2 → A31 forks → knockout told-twin cells. 6000 after SCI-1's decay: the open-ended long run (PLAN_LONGRUN). 4090 after cx_m2 (Mind, 11-05 17:05): clk3 (eval) → eviction log (eval) → ablation ladder (lad_all first) → second seed (3 bodies) → two-bounce micro-bench / screen → state budget.
