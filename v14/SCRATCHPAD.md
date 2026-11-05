@@ -4,6 +4,42 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
+## Step back in the void (Library, 2026-11-05 15:50 IST; user via Lead: "read the meditation memory again, sit in the void")
+Re-read: the meditation memory, EUREKA (the equal-data control; told vs induced withdrawn), Mind's M9 table and the eval-time
+knockouts, and my day (PAIRS-MORE, BENCH-TOOL, BENCH-LIB, GATE).
+- **What surprised me.** Every failure today sits at the SEAM between mind and library, never inside either:
+  - needle: the fetch was right 2,520 / 2,520, and the read threw away what the mind knew (0.998 → 0.927);
+  - ARC: the mind READS a passage fine (oracle ARC-c 0.28 → 0.84), but BM25 fetches by word overlap, not by need (+0.00);
+  - tools: the mind knows the call FORMAT, yet replays glaive's function names over the schema in its own context.
+  Each is one question: who wins when the prior (weights / state) and the evidence (row, passage, schema) disagree?
+  needle: evidence wrongly beat a right prior. Tools: a habit-prior beat the evidence. ARC: the evidence never arrived.
+- **What it really says (from inside).** The knockouts found the carrier: the delta rule's erase-at-key. Forgetting LOCALLY,
+  along the incoming token's own key, keeps the rule; a global fade of equal energy is worse than no erase at all.
+  - The package read w + 4 (w − b) is a global fade of the mind's prior: every candidate is pushed away from what the
+    mind believed. The needle loss is the knockout's law, seen at read time.
+  - The state already does arbitration right (erase the old value only along the new key, then write). The package does
+    it wrong.
+- **Bold angle: read the way the state writes.** Arbitration between mind and evidence should be KEYED, not global: the
+  evidence overrides the prior only on what it is about.
+  - First, crude try (GATE "keyed", exploratory): contrast only the candidates that occur in the fetched span. The 2-item
+    plumbing smoke already showed its limit: on rule cells the answer is computed, never in the shown examples, so a
+    candidate mask boosts the wrong ones. In logit space the "key" of a rule example is its INPUT, not an output candidate.
+  - The real version lives in the state, not the logits: write the fetched row INTO the state with the delta rule
+    (erase-at-key, then write), instead of reading it next to the state and subtracting. That is a library write through the
+    mind's own trained update, which already keeps what the row does not touch and replaces what it does.
+    - Closest prior work: Titans / test-time memorisation (gradient updates at test time), kNN-LM (mixes a retrieved
+      distribution).
+    - Difference: no gradient and no mixing weight. The fetched text is streamed through the trained delta update, with no
+      twin needed for facts.
+    - Test, cheapest first: needle + recall + s8 + skill on c3b. Arms: stream the row just before the query with the plain
+      read (no contrast); the GATE agree read; contrast. Pre-register after the GATE numbers land.
+  - Second angle, ARC (retrieval is the limit): let the mind write the QUERY. Its own first answer or explanation becomes
+    the BM25 / F2 query (HyDE, Gao et al. 2022, is the closest prior work; ours uses the O(1) mind and one library for all
+    three bodies). A cheap check on ARC-c, where the oracle says reading is not the limit.
+- **Accident worth chasing.** The tool arm: 97 % of items call a tool unasked, so the call is a strong habit. If that habit
+  can be pointed at the library ("fetch" as a function the mind emits), the mind could ASK the library itself, instead of
+  a text-match rule deciding for it. Mind's schema-grounded source makes this testable after the chat ramp.
+
 ## Step back (Library, 2026-11-05 15:20 IST, after PAIRS-MORE + BENCH-TOOL on c3b)
 - **What surprised us.** On needle the fetch was right 2,520 / 2,520, yet the package lost 7 points (0.998 → 0.927).
   On s8 / skill the same read took 0.06-0.63 up to 1.000.

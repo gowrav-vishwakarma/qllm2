@@ -4316,7 +4316,7 @@ fitted threshold:
     - conf: bare's pick if max softmax(b) ≥ tau, else contrast. tau is the best pooled held-out accuracy on a 0.30-1.00
       grid (step 0.02), fixed before the main rows are scored.
     - adacad: w + a (w − b) with a = 4 · JSD(w, b) / ln 2.
-    - keyed (ADDED 16:05 IST, before any number; from the step back, no bar, EXPLORATORY, needle only):
+    - keyed (ADDED 15:50 IST, before any number; from the step back, no bar, EXPLORATORY, needle only):
       w + 4 m (w − b), m = 1 for candidates in the fetched row. The 2-item plumbing smoke showed it boosts wrong
       candidates on rule cells (the answer is computed, never in the shown examples), so it is reported for needle only.
   - Sanity: the offline contrast must reproduce the run's package_ok exactly, else the logits are wrong and nothing is
