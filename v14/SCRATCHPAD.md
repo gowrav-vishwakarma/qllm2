@@ -14,9 +14,10 @@ cd /home/gowrav/Development/qllm_v14norm
 tmux new-session -d -s libramguard "bash v14/tmp/ram_guard.sh >> v14/tmp/ram_guard.log 2>&1"
 # milestone windows (2026-11-05 12:10: gap-free chains, because cx_m2 resumes after 5 quiet minutes):
 # twin G1 2k@100 -> twin G1 8k@100 -> A26 compact arm -> [A31 at 137,331]
-cp v14/tmp/window_chain.sh v14/tmp/window_run_c3b.sh; cp v14/tmp/window_chain.sh v14/tmp/window_run_c4a.sh
-[ -f v14/tmp/window_c3b_done.txt ] || tmux new-session -d -s winc3b "bash v14/tmp/window_run_c3b.sh c3b 137331 sci1_cont3_449e320 a31 > v14/tmp/window_c3b_chain.log 2>&1"
-[ -f v14/tmp/window_c4a_done.txt ] || tmux new-session -d -s winc4a "bash v14/tmp/window_run_c4a.sh c4a 152590 sci1_cont4_8284510 > v14/tmp/window_c4a_chain.log 2>&1"
+# (c3b at 137,331 is DONE incl. A31 and its PKG-SUITE.) From 152,590 on: window_chain2.sh = the window chain + PKG-SUITE
+cp v14/tmp/window_chain2.sh v14/tmp/window_run_c4a2.sh
+[ -f v14/tmp/window_c4a_done.txt ] || tmux new-session -d -s winc4a "bash v14/tmp/window_run_c4a2.sh c4a 152590 sci1_cont4_8284510 > v14/tmp/window_c4a_chain.log 2>&1"
+# cx_m2 (Mind) yields to my jobs at ANY time, but an out-of-window yield costs it ~45 min: keep jobs in milestone windows, back-to-back
 tmux ls | grep -E 'libramguard|win'
 ```
 - If a run was interrupted mid-way (a partial `logs/v14_a2*_<tag>_*` without its done file), delete those partial logs
