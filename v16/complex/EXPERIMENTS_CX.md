@@ -33,3 +33,8 @@ any save and were discarded. Step 100: loss 6.47, **10.9k tok/s** steady, peak 1
 yields; expected done ~Nov 6 14:00 IST. **Cost line (paper):** the complex body peaks at 12.9 GB per 4096-token sequence (fwd + bwd)
 vs ~4 GB for the real body (~3x, independent of the delta port), and trains at 10.9k tok/s (16 x 1) vs the real PAM M2's 63k tok/s in the ctl run (4 x 4, py3.11; ~40k in the py3.9
 smoke): ~5.8x slower at its own best micro-batch (the micro-batch is forced by memory). Peak 15.9 GB.
+
+**Paused (user via Lead, 14:47 IST 2026-11-05) at step 2000 / 13,733 (~131M tokens)** so Library's GPU pieces get the 4090; resumes
+from latest.pt on Library's "done" (`tmux new-session -d -s mindcxm2 "cd /home/gowrav/Development/qllm_cx && SCREEN_HASH=c17775a
+NEED_CX=16000 bash v16/complex/cx_chain_live.sh 2>&1 | tee -a logs/v16_cx_chain_c17775a.log"`); `.PAUSED` marks the hold. Each later
+pause the same way (clean save first). The ETA moves by the pause length + ~25 min stream restart.
