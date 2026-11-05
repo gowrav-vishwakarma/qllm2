@@ -6085,6 +6085,25 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## SCI-1 cont3 milestone 9 (CHECK on the 4090, 13:16 IST, 2026-11-05; run `449e320`, step 137,331 = 9.0B tokens; 2.0B of cont3, protoc out)
+
+**cont3 verdict (pre-registered, revised before its data):** s8 D **0.770** (M8 0.589, M7 0.588) is below the revised protoc bar
+(0.84 = the cont2 trend + 0.10), so the rise is **not attributed to dropping protoc**; it is the lagged b2s recovery continuing (b2s
+~1.4–1.5 % realized in both cont2 and cont3). Told side (Library's twin read at this step) pending.
+
+| readout | M7 (7.0B) | M8 (8.0B) | **M9 (9.0B)** |
+|---|---|---|---|
+| s8 D | 0.588 | 0.589 | **0.770** |
+| s8 shift 2k / 4k; affine 2k / 4k; @0 | 0.77 / 0.37; 0.78 / 0.43; 0.94 / 1.00 | 0.82 / 0.37; 0.71 / 0.46; 1.00 / 0.99 | **0.90 / 0.53; 0.92 / 0.74**; 1.00 / 1.00 |
+| skill pack 2k / 4k / 8k | 0.88 / 0.77 / 0.35 | 0.90 / 0.70 / 0.31 | 0.84 / 0.69 / 0.30 |
+| clk2 8k / 16k / 32k | 0.68 / 0.22 / 0.02 | 0.57 / 0.14 / 0.02 | 0.61 / 0.12 / 0.04 |
+| far needles 4k + 8k; 16k | 0.88; 0.70 | 0.99; 0.88 | 0.98; 0.87 |
+| HellaSwag / ARC-e / PIQA | 0.327 / 0.534 / 0.613 | 0.331 / 0.535 / 0.619 | 0.333 / 0.519 / 0.621 |
+| think_eval (cont4 leak baseline) | – | – | ON / OFF acc 0.00 / 0.00, `<think>` leak 0.00 |
+
+- s8 D is now near its M4 peak (0.782): the skill recovered fully about 2B tokens after b2s was restored, the lag again.
+- The cont4 (`worked`) leak rule starts from 0.00; GSM8K accuracy is 0.00 in both modes at this size (no "The answer is" line).
+
 ## lad: the mechanism ablation ladder at the ctl recipe (PRE-REGISTRATION, 08:44 IST, 2026-11-05; Lead decision; on the 6000 after SCI-1's decay)
 
 **Question:** which parts does TRAINING need for a rule to be carried across filler (the knockouts showed what the trained model

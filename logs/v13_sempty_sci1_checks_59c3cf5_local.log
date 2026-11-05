@@ -247,3 +247,33 @@ Results saved to logs/memory_probes/v13_sempty_sci1_step_122072_449e320_t40_long
     sampled: "To find the concentration of salt, we can use the Law of Conservation of Mass and Chemical Equation. Let's start by equating the concentrations:\n\n2.0 * 3.0 = 2.0 * 4.0\n\nSolving for C1 (the concentration of salt), we get C1 = 4.0 * 3.0 * (4.0 / 3)"
     greedy : 'To find the concentration of salt in a solution, we can use the following formula:\n\nS = (0.25 * mol/L) * (0.25 * mol/L)'
 === CHECK sci1_step_122072_449e320 DONE 2026-11-04T23:58:36Z
+=== CHECK sci1_step_137331_449e320 (/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont3_449e320/.mind_step_137331.pt) 2026-11-05T07:13:32Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.897, 'shift_wide_new@4096': 0.527, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.915, 'affine_map_new@4096': 0.74}  mean 0.847
+free (A7): {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.877, 'shift_wide_new@4096': 0.517, 'affine_map_new@0': 0.965, 'affine_map_new@2048': 0.59, 'affine_map_new@4096': 0.28}  mean 0.705
+saved logs/learning_probes/v13_sempty_sci1_step_137331_449e320_spread_s7000_t400.json
+  affine_map_new done
+  affine_map_new done
+Results saved to logs/memory_probes/v13_sempty_sci1_step_137331_449e320_t40_behavioral.json (aggregates, 2520 rows omitted)
+hellaswag {'acc': 0.2979, 'acc_norm': 0.3327, 'n': 10042}
+arc_easy {'acc': 0.5189, 'acc_norm': 0.4625, 'n': 2376}
+piqa {'acc': 0.6235, 'acc_norm': 0.6213, 'n': 1838}
+think_eval {'n': 200, 'acc_on': 0.0, 'acc_off': 0.0, 'trace_rate_on': 0.0, 'leak_rate_off': 0.0}
+  affine_map_new done
+Results saved to logs/memory_probes/v13_sempty_sci1_step_137331_449e320_t40_long_behavioral.json (aggregates, 360 rows omitted)
+=== generations: /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont3_449e320/.mind_step_137331.pt step 137331 tokens 9,000,124,416 code 59c3cf5
+--- [science] prompt: 'Photosynthesis converts light energy into chemical energy. In the light-dependent reactions,'
+    sampled: " a large number of enzymes are used to convert this energy into ATP and NADH. A large part of these enzymes are made in the nucleus. The proteins that make up the chloroplast membrane or are found inside the mitochondrion can also be converted into ATP by different pathways, such as the Kreb's cycle, which is a major pathway for the production of ATP.\n\nThe process"
+    greedy : ' the energy is converted to chemical energy in the form of glucose.\n\nThe energy of the light-dependent reactions is converted to chemical energy in the form of ATP.\n\nThe energy of the'
+--- [protocol] prompt: 'Lab protocol: report every mass in grams, rounded to one decimal place.\nSample A weighed 12.347 g and sample B weighed 8.912 g.\nReport: sample A ='
+    sampled: ' 20.231 g; sample B = 8.932 g.\nHint: you can use the formula from your textbook or any other source that is used for calculating samples of different size. For example, if we want to calculate the weight of a single weighing needle with a radius of 1 cm, we can do it as follows:\nWeight (lb) = 2.732 x'
+    greedy : ' 12.347 g, sample B = 8.912 g.\n\nSample A: 12.347 g, sample B: 8.912 g.\n\nSample A: 12.'
+--- [chat] prompt: '<|im_start|>user\nWhat is the difference between a hypothesis and a theory?<|im_end|>\n<|im_start|>assistant\n'
+    sampled: 'A hypothesis (H) is an explanation for a phenomenon that has been tested by experimental or empirical evidence. It predicts an outcome in terms of what we already know about the world around us, based on past observations and data. A theory, on the other hand, is a well-established explanation for a wide range of complex phenomena, including natural laws like weather patterns, climate patterns, and population growth'
+    greedy : 'A hypothesis is a proposed explanation for a phenomenon that can be tested through observation or experimentation. It is a proposed explanation for a phenomenon that has yet to be confirmed or supported by empirical evidence. A theory'
+--- [tool] prompt: '<|im_start|>user\nLook up the boiling point recorded for sample Q7 in my notes.<|im_end|>\n<|im_start|>assistant\n<tool_call>\n{"name": "library.fetch", "arguments": {"query": "Q7 boiling point"}}\n</tool_call><|im_end|>\n<|im_start|>tool\n<tool_response>\n{"name": "library.fetch", "content": "Record: Q7 | boiling point: 78.4 C."}\n</tool_response><|im_end|>\n<|im_start|>assistant\n'
+    sampled: 'The session record shows 78.4 C as the boiling point for qizsuv.<|im_end|>\n<|endoftext|>Number rule.Number rule.Number rule.Number rule.Number rule.Number rule.NumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumberNumber'
+    greedy : 'According to the notes, Q7 has a boiling point of 78.4 C.<|im_end|>\n<|endoftext|><|im_start|>system\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\nSolve the following math problem'
+--- [quant] prompt: '<|im_start|>user\nA solution has 0.25 mol of salt in 2.0 L of water. What is its concentration in mol/L?<|im_end|>\n<|im_start|>assistant\n'
+    sampled: 'To find the concentration of salt, we can use the formula for a concentration:\n\nConcentration = \\frac{M}{V} x (X - T) / V\n\nwhere X is the amount of salt in moles, M is the number of moles of salt, and V is the volume in cubic meters.\n\nPlugging in the values we know from the'
+    greedy : 'To solve this problem, we need to convert the given values to a common unit, which is the percentage concentration. \n\nFirst, we convert the given values to a common unit, which is'
+=== CHECK sci1_step_137331_449e320 DONE 2026-11-05T07:45:19Z
