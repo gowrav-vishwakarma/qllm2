@@ -6232,6 +6232,10 @@ decontam index (dropped by the blend; GSM8K test is in the index). **~2 % of tok
 - **Moved and downgraded (Lead + Mind, after M7):** at 137,331 cont4 gets only ~1.5B tokens before the main budget ends at
   160,218, i.e. ONE milestone (152,590) inside the ~1B-token lag window. The SCI-1 worked test is therefore **indicative only**
   (underpowered); the clean test of worked text is planned on the matched ~103M bodies after ctl, if it matters.
+- **Measured row (calib8, 31.5M tokens, exactly the launch weights; 07:16 IST 11-05):** worked **2.16 %**, b2s 1.45 %, proto4k
+  0.61 %, recall4k 0.30 % (all others at cont3's realized shares, the 2 points taken from web) → synthetic loss weight 3.71 %.
+  `sci1_cont4_env.sh`; switch `NEWSEG=cont4 sci1_switch.sh step_137331 <hash> checkpoints_v13_sempty/sci1_cont3_449e320`.
+  think_eval is back in the CHECK from 137,331 (the cont4 baseline for the leak rule).
 
 **Question:** does the architecture gap (rules in state, reach past the trained length) survive when all three bodies get the SCI-1
 product recipe, rule docs included? The SCI-1 vs Pythia gaps are mostly data; the earlier matched tiers (600M × 3 seeds, 1.5B)
