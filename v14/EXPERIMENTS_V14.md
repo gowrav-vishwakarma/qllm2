@@ -4304,6 +4304,26 @@ fitted threshold:
   - **Bar:** PAM's gain from the library (+library − no library, ARC-e and ARC-c pooled) ≥ the best baseline's gain + 0.02.
   - **Stated in advance:** at ~103M / 1B tokens every body may gain ~0 ("no body uses them"); that is reported as the
     outcome, not hidden.
+  - **RESULT (2026-11-05 16:30 IST; code 20a770c; library lib_v1_d7841c4, the ARC Corpus + cosmo / fineweb, BM25 top-3,
+    the same for every body; logs/v14_benchlib_ctl_{pam,tpp,mamba2}_20a770c_20261105_1551.jsonl).** The three ctl bodies
+    (~103M params, 1.0B tokens of the identical mix, decay checkpoints, one seed each). acc_norm, no library → + library
+    (oracle in brackets):
+
+    | body | ARC-e | ARC-c | HellaSwag | PIQA | ARC pooled gain (± 95 %, n 3,548) |
+    |---|---|---|---|---|---|
+    | PAM | 0.406 → 0.478 (0.868) | 0.235 → 0.265 (0.856) | 0.282 → 0.295 | 0.588 → 0.613 | +0.058 ± 0.014 |
+    | T++ | 0.408 → 0.483 (0.957) | 0.232 → 0.247 (0.935) | 0.281 → 0.292 | 0.590 → 0.608 | +0.055 ± 0.014 |
+    | Mamba-2 | 0.411 → 0.480 (0.923) | 0.240 → 0.262 (0.920) | 0.284 → 0.295 | 0.587 → 0.612 | +0.054 ± 0.014 |
+
+    - **Bar: NOT met.** PAM's gain +0.058 vs the best baseline +0.055: +0.003, bar +0.02. Every body uses the fetched
+      passages about equally. "The mind uses fetched knowledge better" is not supported at this size.
+    - The ceiling row goes the other way: with the answer passage in view T++ uses it most (0.957 / 0.935), then Mamba-2,
+      then PAM (0.868 / 0.856). Copying from text right next to the question favours attention, as in the
+      equal-data control (inside the window T++ recalled better, 0.92 vs 0.63).
+    - Unlike the stated-in-advance worry, the bodies do use the library (+0.05 each, ~4σ). They use it equally.
+    - What PAM's edge is NOT: reading a passage placed next to the question. What it still is (equal-data control):
+      carrying a rule across filler and recall beyond the trained length. The package should send PAM the far / held work,
+      and give the reading of fresh passages no special claim.
 - **GATE: let the mind's own read decide when to contrast (PRE-REGISTERED 2026-11-05 15:47 IST, before any number; from
   PAIRS-MORE's needle loss and the 15:20 step back).** On c3b, untrained, offline from saved candidate logits.
   - Data: `v14/pkg_pairs_more.py` now saves per row the candidate logits of the model alone (b) and of the warm read with

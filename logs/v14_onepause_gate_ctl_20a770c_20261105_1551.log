@@ -1,0 +1,10 @@
+=== start 2026-11-05T10:21:15Z code 20a770c
+heldout done 2026-11-05T10:30:10Z
+main done 2026-11-05T10:51:12Z
+mamba2 smoke ok 2026-11-05T10:51:30Z
+ctl_pam done 2026-11-05T10:54:18Z
+ctl_tpp done 2026-11-05T10:56:14Z
+ctl_mamba2 done 2026-11-05T10:58:29Z
+GPU FREE 2026-11-05T10:58:29Z
+=== all done 2026-11-05T10:58:34Z
+CHAIN_EXIT 0

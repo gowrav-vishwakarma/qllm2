@@ -1,0 +1,12 @@
+HEADER {"unit": "BENCH-LIB", "hash": "747e24f", "args": {"step": "score", "lib": "/media/gowrav/d_drive/qllm2/arc_lib/lib_v1_d7841c4", "tasks": "arc_easy,arc_challenge,hellaswag,piqa", "limit": null, "ckpt": "/home/gowrav/Development/qllm_ctl/checkpoints_v13_sempty/ctl_mamba2_decay_caa4da9/latest.pt", "tag": "ctl_mamba2", "out": "logs/v14_benchlib_ctl_mamba2_20a770c_20261105_1551.jsonl", "suite_log": null, "device": "cuda", "batch_size": 32}}
+[score] arc_easy bare: acc_norm 0.4108 (15 s)
+[score] arc_easy library: acc_norm 0.4798 (23 s)
+[score] arc_easy oracle: acc_norm 0.9234 (29 s)
+[score] arc_challenge bare: acc_norm 0.2398 (6 s)
+[score] arc_challenge library: acc_norm 0.2619 (9 s)
+[score] arc_challenge oracle: acc_norm 0.9198 (12 s)
+[score] hellaswag bare: acc_norm 0.2840 (31 s)
+[score] hellaswag library: acc_norm 0.2947 (76 s)
+[score] piqa bare: acc_norm 0.5871 (8 s)
+[score] piqa library: acc_norm 0.6115 (11 s)
+BENCH-LIB DONE

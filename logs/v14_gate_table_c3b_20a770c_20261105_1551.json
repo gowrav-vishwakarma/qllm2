@@ -1,0 +1,97 @@
+{
+ "tau": 0.98,
+ "heldout_n": 2260,
+ "cells": {
+  "needle@2k-8k": {
+   "n": 1080,
+   "bare": 0.9963,
+   "warm": 1.0,
+   "contrast": 0.9676,
+   "agree": 1.0,
+   "conf": 0.9981,
+   "adacad": 1.0,
+   "keyed": 0.988
+  },
+  "needle@<=1k": {
+   "n": 1440,
+   "bare": 1.0,
+   "warm": 1.0,
+   "contrast": 0.8972,
+   "agree": 1.0,
+   "conf": 1.0,
+   "adacad": 1.0,
+   "keyed": 0.9215
+  },
+  "s8@0": {
+   "n": 800,
+   "bare": 1.0,
+   "warm": 1.0,
+   "contrast": 0.995,
+   "agree": 1.0,
+   "conf": 1.0,
+   "adacad": 1.0
+  },
+  "s8@2048": {
+   "n": 800,
+   "bare": 0.9062,
+   "warm": 1.0,
+   "contrast": 1.0,
+   "agree": 1.0,
+   "conf": 0.9988,
+   "adacad": 1.0
+  },
+  "s8@4096": {
+   "n": 800,
+   "bare": 0.6338,
+   "warm": 1.0,
+   "contrast": 1.0,
+   "agree": 1.0,
+   "conf": 0.9988,
+   "adacad": 1.0
+  },
+  "skill@0": {
+   "n": 200,
+   "bare": 1.0,
+   "warm": 1.0,
+   "contrast": 0.995,
+   "agree": 1.0,
+   "conf": 0.995,
+   "adacad": 1.0
+  },
+  "skill@2048": {
+   "n": 200,
+   "bare": 0.68,
+   "warm": 1.0,
+   "contrast": 1.0,
+   "agree": 1.0,
+   "conf": 1.0,
+   "adacad": 1.0
+  },
+  "skill@4096": {
+   "n": 200,
+   "bare": 0.3,
+   "warm": 1.0,
+   "contrast": 1.0,
+   "agree": 1.0,
+   "conf": 1.0,
+   "adacad": 1.0
+  },
+  "skill@8192": {
+   "n": 200,
+   "bare": 0.055,
+   "warm": 1.0,
+   "contrast": 1.0,
+   "agree": 1.0,
+   "conf": 1.0,
+   "adacad": 1.0
+  }
+ },
+ "pooled": {
+  "bare": 0.8663,
+  "warm": 1.0,
+  "contrast": 0.9671,
+  "agree": 1.0,
+  "conf": 0.9991,
+  "adacad": 1.0
+ }
+}

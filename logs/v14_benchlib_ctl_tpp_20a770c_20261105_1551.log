@@ -1,0 +1,12 @@
+HEADER {"unit": "BENCH-LIB", "hash": "747e24f", "args": {"step": "score", "lib": "/media/gowrav/d_drive/qllm2/arc_lib/lib_v1_d7841c4", "tasks": "arc_easy,arc_challenge,hellaswag,piqa", "limit": null, "ckpt": "/home/gowrav/Development/qllm_ctl/checkpoints_v13_sempty/ctl_tpp_decay_caa4da9/latest.pt", "tag": "ctl_tpp", "out": "logs/v14_benchlib_ctl_tpp_20a770c_20261105_1551.jsonl", "suite_log": null, "device": "cuda", "batch_size": 32}}
+[score] arc_easy bare: acc_norm 0.4082 (8 s)
+[score] arc_easy library: acc_norm 0.4827 (14 s)
+[score] arc_easy oracle: acc_norm 0.9575 (18 s)
+[score] arc_challenge bare: acc_norm 0.2321 (4 s)
+[score] arc_challenge library: acc_norm 0.2466 (8 s)
+[score] arc_challenge oracle: acc_norm 0.9352 (10 s)
+[score] hellaswag bare: acc_norm 0.2811 (27 s)
+[score] hellaswag library: acc_norm 0.2916 (72 s)
+[score] piqa bare: acc_norm 0.5898 (6 s)
+[score] piqa library: acc_norm 0.6083 (9 s)
+BENCH-LIB DONE
