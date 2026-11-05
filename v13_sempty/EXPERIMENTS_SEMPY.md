@@ -6085,6 +6085,31 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## sci1_chat: the chat ramp, the opening of the long run (DRAFT pre-registration, 13:59 IST, 2026-11-05; final with measured rows after the Nov 6 decay)
+
+Frame: `v16/PLAN_LONGRUN.md` (rules R1–R7). This is mix-schedule step 2; the run does not end on a decay.
+- **Branch:** `--continue_from` the main line's pre-decay `stable_final.pt` (global 160,218, ~10.5B tokens), constant LR 8e-4
+  (`wsd_stable`), 500-step re-warm; the Nov 6 decay stays the base release (paper checkpoint). Same geometry, SEQ 4096, 16 × 4096.
+- **Ramp (R2):** one in-sampler linear ramp of the per-source targets W0 → W1 over the first **2B tokens**, then hold W1 (new env
+  RAMP_WEIGHTS / RAMP_TOKENS: target(t) = (1 − a) W0 + a W1, a = min(1, consumed / RAMP_TOKENS); code + parity test before launch).
+  W0 = the cont4 / final main mix; W1 = chat block ~6 % → **~22 %**, of which a named **instruction-following share ~6 %** (strict
+  formats: yes / no, one word, a number only, multi-step instructions, format constraints), the gain taken from web (dclm /
+  fineweb) first; science shares and the rule-doc block (b2s ~1.5 %, proto4k ~0.65 %, recall4k ~0.3 %) **fixed (R1)**; `worked`
+  kept or dropped per the cont4 read.
+- **Candidate sources (licence check + R5 13-gram audit on the first 20k docs BEFORE the first step, drop counts in the row):**
+  SmolTalk subsets (everyday-conversations, smol-constraints for instruction following, smol-rewrite / smol-summarize), a
+  Tulu-3-style SFT mixture (permissive subsets only), and an IFEval-like constraint set; decontaminated against IFEval and our probes
+  as well as the current index.
+- **Measured calibration rows** at W0, the midpoint and W1 (≥ 30M tokens each); the trainer's [mix] line (with per-source epochs,
+  R7) is the run's own measured ramp. **R7:** no source beyond 4 epochs over the planned horizon; tools / worked / chat sources
+  sized accordingly.
+- **Target probe:** Library's simple-chat probe with an instruction-following cell (incl. "answer only YES or NO", one word, number
+  only, multi-step) + the user's prompts; it must RISE.
+- **Guards (R3, vs the decay-end readings):** s8 D ≥ −0.05; told twin 2k and held-out wording ≥ −0.10; far needles 16k and clk2 8k
+  ≥ −0.05; HS / ARC-e / PIQA ≥ −0.01; per-source science holdout ≤ +0.03. Judged at ramp end + 1B (the lag rule); a guard falling at
+  two consecutive milestones freezes the ramp at its current share.
+- **Release (R4):** the chat variant is a 0.5B decay branch from ramp end + 1B; base and chat both tagged by token count.
+
 ## SCI-1 cont3 milestone 9 (CHECK on the 4090, 13:16 IST, 2026-11-05; run `449e320`, step 137,331 = 9.0B tokens; 2.0B of cont3, protoc out)
 
 **cont3 verdict (pre-registered, revised before its data):** s8 D **0.770** (M8 0.589, M7 0.588) is below the revised protoc bar
