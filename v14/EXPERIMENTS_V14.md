@@ -4248,6 +4248,26 @@ fitted threshold:
     - 14:15 IST: both runners smoked end to end on c3b (2-3 docs per cell; plumbing check, not a result).
   - Reference block: published BABILong / RULER numbers of other models only with their training tokens stated, never a
     verdict.
+- **PAIRS-MORE: s8 / needle / skill with a library arm, per item (PRE-REGISTERED 2026-11-05 14:33 IST, before any number;
+  Lead, user 14:35).** Descriptive, for the review page; no bar. `v14/pkg_pairs_more.py`, first on c3b (137,331), then
+  at every milestone after pkg_suite_pairs.
+  - Items: exactly the page's probe items (v16/humaneval/run.sh).
+    - s8: b2 shift_wide_new / affine_map_new, 8 shots, seeds 7000-7399, spread 0 / 2048 / 4096; 2,400 items.
+    - needle: 128-8192 tokens, positions 0 / 0.5 / 1, 1 / 4 / 8 records, seeds 1000-1039; 2,520 items.
+    - skill: skillpack, the same two tasks, seeds 8000-8099, L 0 / 2048 / 4096 / 8192; 800 items.
+  - Bare = the model alone (the session state + the query; the same last-position logits as the probes).
+  - Package:
+    - s8 and skill: the library re-shows the header + 8 examples right before the query. The harness places them (as
+      MLB-1 skillpack v1); fetching a pack by key is R×K's path, so this cell is labelled "re-shown", not "fetched".
+    - needle: the package's own text fetch of the record row; on abstain the package answers as the model alone (path
+      None, counted).
+    - Read for all three = warm + contrast (re-shown / fetched + query vs query alone on the same state; alpha 4).
+  - Scored: pick among the probe's candidates (ok, the page's number) and free (argmax over the vocab).
+  - The skill probe's own "re-read" arm is pack + query in a FRESH context (no session state), so it is NOT the package's
+    read; the page shows this package arm instead.
+  - Expected (stated in advance): s8 / skill package ≥ bare at every L (the examples are next to the query); at spread 0
+    the gain is small (the examples are already close). Needle: package near 1.0 wherever the fetch finds the key; the
+    abstain rate is reported.
 - **ARC-LIB: does the mind use FETCHED KNOWLEDGE better? (PRE-REGISTERED 2026-11-05 14:10 IST, before any code or number; Lead's
   order (2b)).** The three ctl bodies (~103M, 1B tokens of the same mix; one seed each), the IDENTICAL library.
   - Library: a filtered science sentence corpus (the AI2 ARC Corpus if obtainable, else a slice of the SCI-1 science
