@@ -4304,6 +4304,29 @@ fitted threshold:
   - **Bar:** PAM's gain from the library (+library − no library, ARC-e and ARC-c pooled) ≥ the best baseline's gain + 0.02.
   - **Stated in advance:** at ~103M / 1B tokens every body may gain ~0 ("no body uses them"); that is reported as the
     outcome, not hidden.
+- **GATE: let the mind's own read decide when to contrast (PRE-REGISTERED 2026-11-05 15:47 IST, before any number; from
+  PAIRS-MORE's needle loss and the 15:20 step back).** On c3b, untrained, offline from saved candidate logits.
+  - Data: `v14/pkg_pairs_more.py` now saves per row the candidate logits of the model alone (b) and of the warm read with
+    the row / examples shown (w).
+    - Main rows: the page's items (s8 2,400, needle 2,520, skill 800); this rerun replaces the page rows, same answers.
+    - Held-out rows (never on the page): s8 seeds 7400-7499 (600), needle 2000-2019 (1,260), skill 8100-8149 (400).
+  - Reads (`v14/gate_read.py`):
+    - bare = argmax b; warm = argmax w; contrast = argmax w + 4 (w − b), the package today.
+    - **agree** (headline, no parameter): bare's pick if bare and warm pick the same candidate, else contrast.
+    - conf: bare's pick if max softmax(b) ≥ tau, else contrast. tau is the best pooled held-out accuracy on a 0.30-1.00
+      grid (step 0.02), fixed before the main rows are scored.
+    - adacad: w + a (w − b) with a = 4 · JSD(w, b) / ln 2.
+  - Sanity: the offline contrast must reproduce the run's package_ok exactly, else the logits are wrong and nothing is
+    read.
+  - **Bar (agree):** met if, in every cell × length group, agree ≥ max(bare, contrast) − 0.01, AND pooled agree ≥ pooled
+    contrast + 0.02 (the needle loss is recovered without giving up s8 / skill).
+  - Novelty (closest prior work): context-aware decoding (CAD, Shi et al. 2023) is the same w + α (w − b) form; AdaCAD
+    (Wang et al. 2024) adapts α by the JSD conflict between the two; FLARE (Jiang et al. 2023) retrieves on low
+    confidence. Difference here: b is the O(1) state's own read and w the same state with the fetched row, so the gate is
+    the mind's agreement with its library. The gate itself is close to AdaCAD, so plumbing unless agree beats adacad
+    clearly. Claim only the comparison.
+  - Outside scope: told (its read is the protocol twin, not this contrast) and recall-32k (60 items; the pkg_suite cell
+    saves no logits yet).
 - **BENCH-LIB (a): the library arm on ARC-e / ARC-c / HellaSwag / PIQA, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before
   any number; Lead, user 14:40; extends ARC-LIB).** SCI-1 first (c3b now for the page, then the final model), then the three ctl
   bodies with the IDENTICAL library and scorer (the paper rows; ARC-LIB's bar applies to the ctl rows).
