@@ -4298,11 +4298,15 @@ fitted threshold:
     passage is shown on the page so a reader can judge.
 - **BENCH-TOOL (b): GSM8K with a calculator tool, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before any code or number).**
   - Plain = today's direct answer (the page's GSM8K items and prompt).
-  - Tool arm:
-    - The model writes its working; whenever it writes GSM8K's calculator form `<<expr=`, decoding pauses.
-    - A sandboxed executor (bwrap: no network, read-only fs, timeout, arithmetic only; the tools v1 design) computes
-      expr, and `value>>` is inserted.
-    - The final number is scored as the page scores it.
+  - Tool arm (AMENDED 14:50 IST, before any number: SCI-1's think source strips GSM8K's `<<expr=>>` marks, so the model
+    never saw them; it did learn glaive / ToolACE calls in the `<tool_call>{"name", "arguments"}</tool_call>` +
+    `<|im_start|>tool <tool_response>` format, v7/sci_tools.py, so the arm uses that format):
+    - A glaive-style system turn offers one function, `calculate(expression)`.
+    - When an assistant turn holds a `<tool_call>`, the sandboxed executor (`v14/tool_exec.py`: bwrap, no network,
+      read-only /usr, 2 s timeout, whitelist arithmetic AST) computes it.
+    - A tool turn carries the result and the assistant continues; at most 6 calls and 512 new tokens.
+    - Items, plain prompt, greedy `m.generate` and "The answer is" scoring = scripts/think_eval.py OFF mode (the page's
+      first 200 test items).
   - Rows: plain and tool, plus calls_made / well_formed / executor errors per item.
   - Stated in advance: at 386M with no tool training the model may rarely write a well-formed calculation; then the
     tool arm ≈ plain, and that is the finding.
