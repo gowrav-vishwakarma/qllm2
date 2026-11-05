@@ -4,6 +4,23 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
+## Standing duties (Library, 2026-11-05 14:20 IST; Lead / user decisions)
+- **Every 1B SCI-1 milestone:** light guard: told twin 2k + R×K 2k, ~8 min.
+- **Every 5B and every release:** the full `v14/pkg_suite.py`, then `v14/pkg_suite_pairs.py <jsonl>` for the review page.
+  One batched check window per day.
+- **Now armed for step 152,590:** tmux winc4a (window_chain2: twin cells + compact + full suite) and pairsc4a (writes the
+  pairs). libramguard stops my jobs when available RAM < 12 GB.
+- **On the final model after the Nov 6 decay**, in this order:
+  - BENCH-PKG (2a): `v14/ruler_pkg.py --lengths 4096,8192,16384,32768 --docs 50`, about 30 min.
+  - `v16/babilong_eval.py --package --skip_asis` qa1-5 at 0k-32k, 100 docs.
+  - Simple-chat probe (`v14/simple_chat.py`).
+  - A29b fresh wordings (2k / 8k, seed 26100).
+  - Then ARC-LIB (2b): pre-registered; not started, estimated 10-12 h of work.
+- **BABILong (package) at 32k on every release.**
+- **A27 decontam audit** on every new source Mind adds, BEFORE its first step; the drop count goes in the calibration row.
+- **Disk:** keep my weights-only copies for every 5B and every release; delete only my own other copies, after their rows
+  are committed.
+
 ## RE-ARM AFTER A REBOOT (written 2026-11-05 07:26 IST for the ~10:30 restart) — do this FIRST
 
 Scripts are on disk in this worktree (`/home/gowrav/Development/qllm_v14norm/v14/tmp/`, not in git). Paste as one block:
