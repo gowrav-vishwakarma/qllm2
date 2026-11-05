@@ -1,0 +1,77 @@
+{
+ "checkpoint": "/home/gowrav/Development/qllm_ctl/checkpoints_v13_sempty/ctl_pam_decay_caa4da9/latest.pt",
+ "arms": {
+  "on": {
+   "per_task": {
+    "affine_map_new@0": 0.7325,
+    "affine_map_new@2048": 0.6,
+    "affine_map_new@4096": 0.47,
+    "shift_wide_new@0": 0.765,
+    "shift_wide_new@2048": 0.63,
+    "shift_wide_new@4096": 0.3925
+   },
+   "s8_D": 0.5231250000000001,
+   "sec": 68.3
+  },
+  "erase0": {
+   "per_task": {
+    "affine_map_new@0": 0.7325,
+    "affine_map_new@2048": 0.3425,
+    "affine_map_new@4096": 0.135,
+    "shift_wide_new@0": 0.765,
+    "shift_wide_new@2048": 0.1925,
+    "shift_wide_new@4096": 0.1175
+   },
+   "s8_D": 0.19687500000000002,
+   "sec": 64.5
+  },
+  "globfade": {
+   "per_task": {
+    "affine_map_new@0": 0.7325,
+    "affine_map_new@2048": 0.2325,
+    "affine_map_new@4096": 0.0975,
+    "shift_wide_new@0": 0.765,
+    "shift_wide_new@2048": 0.1475,
+    "shift_wide_new@4096": 0.065
+   },
+   "s8_D": 0.135625,
+   "sec": 65.0
+  },
+  "clock1": {
+   "per_task": {
+    "affine_map_new@0": 0.7325,
+    "affine_map_new@2048": 0.485,
+    "affine_map_new@4096": 0.345,
+    "shift_wide_new@0": 0.765,
+    "shift_wide_new@2048": 0.435,
+    "shift_wide_new@4096": 0.2575
+   },
+   "s8_D": 0.380625,
+   "sec": 64.5
+  },
+  "noecho": {
+   "per_task": {
+    "affine_map_new@0": 0.16,
+    "affine_map_new@2048": 0.1075,
+    "affine_map_new@4096": 0.115,
+    "shift_wide_new@0": 0.0625,
+    "shift_wide_new@2048": 0.06,
+    "shift_wide_new@4096": 0.06
+   },
+   "s8_D": 0.08562499999999999,
+   "sec": 64.6
+  },
+  "noread": {
+   "per_task": {
+    "affine_map_new@0": 0.375,
+    "affine_map_new@2048": 0.1125,
+    "affine_map_new@4096": 0.0675,
+    "shift_wide_new@0": 0.0025,
+    "shift_wide_new@2048": 0.025,
+    "shift_wide_new@4096": 0.0325
+   },
+   "s8_D": 0.059375000000000004,
+   "sec": 64.1
+  }
+ }
+}

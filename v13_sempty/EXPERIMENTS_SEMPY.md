@@ -6101,6 +6101,31 @@ speed through the filler); `noecho` (E1 echo read zeroed everywhere); `noread` (
 induction itself) and per length. Told-twin cell (Library's A26 G1 2k) under the same knockouts if it costs < 10 min more (not in
 this runner yet). Prior (Mind's step back): erase-at-key most likely, then the clock; echo and readers unlikely.
 
+**kn RESULT (08:43 IST, 2026-11-05; `logs/ctl/v13_sempty_kn_s8_ctl_pam_44342fd.{json,log}`, 400 trials per cell).** The control reproduces the
+ctl readout exactly (s8 D 0.523), so the run is valid.
+
+| arm | s8 D | Δ vs on | @0 shift / affine | shift 2k / 4k | affine 2k / 4k | verdict (Δ ≥ 0.15) |
+|---|---|---|---|---|---|---|
+| on | 0.523 | – | 0.765 / 0.733 | 0.630 / 0.393 | 0.600 / 0.470 | control reproduced |
+| erase0 (no erase-at-key on filler) | 0.197 | **−0.326** | 0.765 / 0.733 | 0.193 / 0.117 | 0.343 / 0.135 | **carries** |
+| globfade (global fade, equal energy) | 0.136 | **−0.387** | 0.765 / 0.733 | 0.147 / 0.065 | 0.233 / 0.098 | **carries** |
+| clock1 (plain-RoPE clock on filler) | 0.381 | −0.142 | 0.765 / 0.733 | 0.435 / 0.258 | 0.485 / 0.345 | below the bar (contributes) |
+| noecho (echo read zeroed) | 0.086 | −0.437 | **0.062 / 0.160** | 0.060 / 0.060 | 0.107 / 0.115 | needed to EXPRESS the rule |
+| noread (M2 readers zeroed) | 0.059 | −0.464 | **0.003 / 0.375** | 0.025 / 0.033 | 0.113 / 0.068 | needed to EXPRESS the rule |
+
+What it says (what the trained model uses, not what training needs):
+- **The delta erase-at-key is the carrier.** With the examples adjacent nothing changes; through filler, removing the erase loses
+  0.33, and replacing it by a global fade of the SAME erased energy loses more (0.39). Forgetting LOCALLY, along each filler token's
+  own key, is what keeps the rule; a Mamba-like global fade is worse than not erasing at all.
+- **The clock helps but is not the carrier** (−0.14, just under the bar): the learned warp keeps the rule's phase usable through
+  filler; plain RoPE speed costs about a quarter of the carried rule.
+- **Echo and the readers are on the READ path, not the storage path:** zeroing either collapses even the adjacent case (@0), so the
+  trained M2 body expresses the induced rule through them (the four notebooks sit in blocks 3 / 7 / 11 / 15; the answer reaches the
+  head through the readers and echo). Their carry role cannot be separated by an eval-time knockout; the ladder (trained without
+  them) is the test.
+- For the ladder: rungs "no delta" and "no chrono" are the informative ones for carrying; "no echo" / "no readers" test whether
+  another read path can be learned.
+
 ## SCI-1 cont3 milestone 8 (CHECK on the 4090, 05:48 IST, 2026-11-05; run `449e320`, step 122,072 = 8.0B tokens; 1.0B of cont3, protoc out)
 
 First of the two cont3 readouts (judged with 137,331; the lag rule).
