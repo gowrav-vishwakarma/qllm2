@@ -4203,6 +4203,32 @@ fitted threshold:
       bits). Recall is reported to 32k on the 386M body (Lead's line: 128k ran on 103M; the 24 GB card is the limit here).
     - Two-hop is a TEXT planner chain (two package answers). Free recall < 20-way on kv / kvupd: the right value is ranked
       first, but the sentence sometimes runs on with other words.
+- **A29b: the rewrite on FRESH protocol wordings (PRE-REGISTERED 2026-11-05 14:04 IST, before the wordings are written into code or
+  any number; the stop list: A29 is not a product claim until fresh wordings pass).**
+  - A new set (UNIT family): 10 protocol wordings, 8 question styles, 4 row templates, none used in A26, in
+    protocol_docs.py, or in tuning the parser.
+    - Checked before use: 0 shared 5-grams with either set, and added to decontam_items.json as test data (Mind's
+      stream filter picks them up at its next index rebuild).
+  - **The parser is FROZEN at its A29 state** (cues in / is / as / use / means + the unit list; d3a71d6 + the cue fix). No change
+    after seeing the fresh wordings.
+  - Cells: A26 UNIT docs, seed 26100, 2k and 8k, 100 docs, on the SCI-1 decay checkpoint (Nov 6) and every release.
+  - Reported: rewrite vs bare, and the parser's hit rate.
+  - **Bar:** rewrite ≥ 0.45 at 2k (A29's bar), with the parser hit reported. A low parser hit is the library's failure,
+    stated as such.
+- **SIMPLE-CHAT probe (PRE-REGISTERED 2026-11-05 14:04 IST, before any item is written; Lead / user 13:55: for the chat-ramp phase
+  of the long run).** `v14/simple_chat.py`; items written by Library, held out from every chat source (added to
+  decontam_items.json). ChatML user / assistant, greedy, ≤ 48 new tokens, stop at <|im_end|>.
+  - **Yes / no** (60): a plain fact question + "Answer only YES or NO." Right iff the whole answer is YES or NO (case-insensitive,
+    an optional final period) AND correct.
+  - **Short direct answer** (40): one-word / one-number facts ("What is the capital of France?"). Right iff the first line,
+    normalised, equals a gold form, with nothing else beyond 5 words.
+  - **Instruction following** (40), verifiable formats: exactly N words, all lowercase, a comma-separated list of N items,
+    start with a given word, a single number. Right iff the check passes.
+  - **Small talk** (30, 2-3 turns). Right iff the reply is non-empty, ≤ 40 words, has no role-token leak and no repeated
+    trigram ×3, and ends at a sentence end.
+  - Reported: per-type accuracy and the overall mean.
+  - **Baseline** on the SCI-1 decay checkpoint (Nov 6). Bar for the chat ramp (R3): each type up, and none of s8 / told twin
+    (trained AND held-out wording) / reach / HS-ARC-PIQA down beyond its noise (Mind's CHECK). Descriptive per milestone.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
