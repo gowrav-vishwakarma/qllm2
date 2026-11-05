@@ -3,14 +3,14 @@
   (b) prefill of the first part + token-by-token decode (carried notebook + clock) == the full prefill;
   (c) chrono + out_gate at init (zero-init) == the plain complex layer with the same weights (exact identity parts);
   (d) RESET_AT_EOS: a keep mask that zeroes retention gives the same read as two separate documents.
-    python v13_sempty/tmp/cx_delta_parity.py
+    python v16/complex/tests/cx_parity.py
 """
 import sys, copy, torch, torch.nn as nn
 sys.path.insert(0, '.')
 from sempyt.dim import Dim
 from sempyt.tensor import named
 from v13_sempty.config import get_config
-from v13_sempty.model import PAMLayer
+from v16.complex.model import CxPAMLayer as PAMLayer
 torch.manual_seed(0); dev = 'cuda'
 
 def mk_cfg(**kw):

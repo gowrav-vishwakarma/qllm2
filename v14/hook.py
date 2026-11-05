@@ -63,5 +63,9 @@ def build_lm(cfg):
     if is_v14(cfg):
         from v14.units import V14LM
         return V14LM(cfg)
+    from v16.complex.model import wants_cx           # complex arm with the ported parts (cx_m2): v16/complex/model.py
+    if wants_cx(cfg):
+        from v16.complex.model import CxLM
+        return CxLM(cfg)
     from v13_sempty.model import LM
     return LM(cfg)

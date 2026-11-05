@@ -248,32 +248,6 @@ class PAMLayer(nn.Module):
         # forward so the trainer can report it. Off by default (zero cost).
         self.capture_decay = False
 
-        # Complex ports of the real arm's parts (cx_m2, user via Lead 2026-11-05), each identity / off at init like its twin.
-        # The gates read the token's real+imag concat (like dt_proj). A3 delta: unit complex keys,
-        # S_t = g_t S (I - b_e k k^H) + b_w v k^H, y = S q; prefill runs the REAL fused delta kernel on the realified notebook
-        # (two orthonormal rank-1 sub-steps per token: keys r(k), J r(k)), decode is a true complex stepwise reference.
-        self.delta = cfg.delta
-        if self.delta:
-            self.erase_proj = NamedLinear(self.real_imag_feature, self.decay_out)
-            self.write_proj = NamedLinear(self.real_imag_feature, self.decay_out)
-        # N1 Chrono: per-head warp g = exp(clamp(W x, +/-3)) on the complex RoPE angle; exclusive cumulative clock; zero-init W
-        # => exactly the complex RoPE (same inv_freq as build_rope_cache).
-        self.chrono = cfg.chrono
-        if self.chrono:
-            self.register_buffer(
-                'chrono_inv_freq',
-                1.0 / (10000.0 ** (torch.arange(cfg.head_dim).float() / cfg.head_dim)),
-                persistent=False,
-            )
-            self.warp_proj = NamedLinear(self.real_imag_feature, self.decay_out)
-            self.warp_proj._zero_init = True
-        # N4 read-out gate silu(W x + b), zero-init W, b = silu^-1(1): exactly 1 at start.
-        self.out_gate = cfg.out_gate
-        if self.out_gate:
-            self.gate_proj = NamedLinear(self.real_imag_feature, self.decay_out)
-            self.gate_proj._zero_init = True
-            self.gate_proj._init_bias = 1.2785
-
     # ── small named helpers ──────────────────────────────────────────────────
 
     def _as_token(self, x: NamedTensor) -> NamedTensor:
@@ -293,48 +267,19 @@ class PAMLayer(nn.Module):
         data = state.data if isinstance(state, NamedTensor) else state  # named-exit: restate
         return named(data, layout, self.policy)
 
-    def _real_imag(self, tokens: NamedTensor) -> NamedTensor:
-        return to_real_concat(tokens, into=self.real_imag_feature)
-
-    def _head_gate(self, proj, tokens: NamedTensor) -> torch.Tensor:
-        """A per-token, per-head scalar from the token's real+imag, raw [B, H, T]."""
-        batch, time = tokens.layout[0], tokens.layout[1]
-        return proj(self._real_imag(tokens)).alias(self.decay_out, self.heads).raw(batch, self.heads, time)
-
-    def _project(self, tokens: NamedTensor, step_offset: int, clock=None):
-        """Query, key, value on (batch, heads, time, head_feature, complex_pair), + the Chrono clock out.
+    def _project(self, tokens: NamedTensor, step_offset: int):
+        """Query, key, value on (batch, heads, time, head_feature, complex_pair).
 
         The fused QKV axis splits with its factors at the end of the layout —
         the one order sempty's named split accepts — then heads move before
         time for the notebook. RoPE rotates query and key by their position,
-        so the notebook's associations carry word order. With ``chrono`` the
-        rotation angle is the learned clock (identical to RoPE at init).
+        so the notebook's associations carry word order.
         """
         batch, time = tokens.layout[0], tokens.layout[1]
         qkv = self.qkv_proj(tokens)
         qkv = qkv.to(batch, time, self.qkv_slot, self.heads, self.head_feature,
                      self.complex_pair)
         queries, keys, values = (qkv.select(self.qkv_slot, slot) for slot in (0, 1, 2))
-
-        if self.use_rope and self.chrono:
-            # Raw-torch boundary (cumsum over time), mirrors RealPAMLayer._rotate_learned in complex form: e^{i phi} q.
-            B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
-            g = torch.exp(self._head_gate(self.warp_proj, tokens).float().clamp(-3.0, 3.0))   # [B,H,T]
-            run = torch.cumsum(g, dim=2)
-            if clock is not None:
-                run = run + clock.to(run.dtype).unsqueeze(-1)
-            tau = run - g                                                     # exclusive: tau_0 = clock
-            clock_out = run[:, :, -1]
-            phi = tau.unsqueeze(-1) * self.chrono_inv_freq.to(tau.device).view(1, 1, 1, K)   # [B,H,T,K]
-            cos = torch.cos(phi).to(tokens.dtype).permute(0, 2, 1, 3)        # [B,T,H,K]
-            sin = torch.sin(phi).to(tokens.dtype).permute(0, 2, 1, 3)
-            def _rot(x):
-                r = x.raw(batch, time, self.heads, self.head_feature, self.complex_pair)
-                a, b = r[..., 0], r[..., 1]
-                out = torch.stack((a * cos - b * sin, a * sin + b * cos), dim=-1)
-                return named(out, (batch, time, self.heads, self.head_feature, self.complex_pair), self.policy)  # named-exit
-            layout = (batch, self.heads, time, self.head_feature, self.complex_pair)
-            return (_rot(queries).to(*layout), _rot(keys).to(*layout), values.to(*layout), clock_out)
 
         if self.use_rope:
             position_end = step_offset + tokens.size(time)
@@ -352,7 +297,7 @@ class PAMLayer(nn.Module):
             keys = keys * rotation
 
         layout = (batch, self.heads, time, self.head_feature, self.complex_pair)
-        return (queries.to(*layout), keys.to(*layout), values.to(*layout), None)
+        return (queries.to(*layout), keys.to(*layout), values.to(*layout))
 
     def _decay(self, tokens: NamedTensor) -> NamedTensor:
         """Per-head retention in (0, 1): exp(-softplus(linear(token) + bias))."""
@@ -462,118 +407,23 @@ class PAMLayer(nn.Module):
         output = stack(reads, into=time, at=self.head_row)
         return output, notebook
 
-    # ── A3 delta, complex (raw-torch boundary) ───────────────────────────────
-    # Realified notebook R(S) [2K, 2K] on interleaved (re, im) vectors r(z): for a unit complex key k, the complex projector k k^H
-    # realifies to r(k) r(k)^T + Jr(k) Jr(k)^T (J = multiplication by i), two ORTHONORMAL rank-1 projectors, so one complex
-    # erase/write step equals two real delta sub-steps (decay g on the first, 1 on the second; keys r(k), Jr(k); values r(v),
-    # Jr(v)); the read y = R(S) r(q) of the second sub-step is the complex read. Exact; parity: v13_sempty/tmp/cx_delta_parity.py.
-
-    @staticmethod
-    def _cx_J(x):                    # [..., K, 2] -> i * x, same layout
-        return torch.stack((-x[..., 1], x[..., 0]), dim=-1)
-
-    @staticmethod
-    def _cx_unit(k):                 # unit complex vectors over (K, pair)
-        n = k.float().pow(2).sum(dim=(-1, -2), keepdim=True).clamp_min(1e-12).sqrt()
-        return (k.float() / n).to(k.dtype)
-
-    @staticmethod
-    def _realify(S):                 # complex [..., K, K] -> realified [..., 2K, 2K] (interleaved)
-        *lead, K, _ = S.shape
-        R = torch.zeros(*lead, 2 * K, 2 * K, dtype=S.real.dtype, device=S.device)
-        R[..., 0::2, 0::2] = S.real; R[..., 0::2, 1::2] = -S.imag
-        R[..., 1::2, 0::2] = S.imag; R[..., 1::2, 1::2] = S.real
-        return R
-
-    @staticmethod
-    def _complexify(R):              # realified [..., 2K, 2K] -> complex [..., K, K]
-        return torch.complex(R[..., 0::2, 0::2].float(), R[..., 1::2, 0::2].float())
-
-    def _cx_inputs(self, tokens, queries, keys, values, decay):
-        batch, time = tokens.layout[0], tokens.layout[1]
-        lay = (batch, self.heads, time, self.head_feature, self.complex_pair)
-        q, k, v = queries.raw(*lay), self._cx_unit(keys.raw(*lay)), values.raw(*lay)     # [B,H,T,K,2]
-        g = decay.raw(batch, self.heads, time)
-        keep = getattr(self, '_keep', None)          # RESET_AT_EOS: retention 0 at document separators
-        if keep is not None:
-            B, H, T = g.shape
-            g = g * keep[:, None, :].expand(B, H, T).to(g.dtype)
-        be = torch.sigmoid(self._head_gate(self.erase_proj, tokens) - 3.0).clamp(max=0.95)
-        bw = torch.sigmoid(self._head_gate(self.write_proj, tokens))
-        return q, k, v, g, bw, be
-
-    def _chunked_delta(self, tokens, queries, keys, values, decay, state=None):
-        batch, time = tokens.layout[0], tokens.layout[1]
-        B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
-        q, k, v, g, bw, be = self._cx_inputs(tokens, queries, keys, values, decay)
-        r = lambda x: x.reshape(B, H, T, 2 * K)
-        two = lambda a, b: torch.stack((a, b), dim=3).reshape(B * H, 2 * T, *a.shape[3:])
-        Q2 = two(r(q), r(q)); K2 = two(r(k), r(self._cx_J(k))); V2 = two(r(v), r(self._cx_J(v)))
-        g2 = two(g.unsqueeze(-1), torch.ones_like(g).unsqueeze(-1)).squeeze(-1)
-        bw2 = two(bw.unsqueeze(-1), bw.unsqueeze(-1)).squeeze(-1)
-        be2 = two(be.unsqueeze(-1), be.unsqueeze(-1)).squeeze(-1)
-        carry = state.reshape(B * H, 2 * K, 2 * K).float() if state is not None else None
-        read, S = pam_delta_batched(Q2, K2, V2, g2, bw2, be2, carry)
-        read = read.reshape(B, H, T, 2, 2 * K)[:, :, :, 1].reshape(B, H, T, K, 2)
-        output = named(read * (self.head_dim ** -0.5),
-                       (batch, self.heads, time, self.head_row, self.complex_pair), self.policy)  # named-exit
-        return output, S.reshape(B, H, 2 * K, 2 * K)
-
-    def _stepwise_delta(self, tokens, queries, keys, values, decay, state):
-        """True complex reference: S <- g S (I - b_e k k^H) + b_w v k^H, y = S q (fp32), state carried realified."""
-        batch, time = tokens.layout[0], tokens.layout[1]
-        B, H, T, K = batch.size, self.heads.size, time.size, self.head_dim
-        q, k, v, g, bw, be = self._cx_inputs(tokens, queries, keys, values, decay)
-        c = lambda x: torch.view_as_complex(x.float().contiguous())                     # [B,H,T,K]
-        qc, kc, vc = c(q), c(k), c(v)
-        S = (self._complexify(state.reshape(B, H, 2 * K, 2 * K)) if state is not None
-             else torch.zeros(B, H, K, K, dtype=torch.complex64, device=q.device))
-        reads = []
-        for t in range(T):
-            kt, vt, qt = kc[:, :, t], vc[:, :, t], qc[:, :, t]
-            Sk = torch.einsum('bhvk,bhk->bhv', S, kt)
-            S = g[:, :, t, None, None].float() * (S - be[:, :, t, None, None].float() * Sk.unsqueeze(-1) * kt.conj().unsqueeze(-2)) \
-                + bw[:, :, t, None, None].float() * vt.unsqueeze(-1) * kt.conj().unsqueeze(-2)
-            reads.append(torch.einsum('bhvk,bhk->bhv', S, qt))
-        y = torch.view_as_real(torch.stack(reads, dim=2)).to(q.dtype) * (self.head_dim ** -0.5)   # [B,H,T,K,2]
-        output = named(y, (batch, self.heads, time, self.head_row, self.complex_pair), self.policy)  # named-exit
-        return output, self._realify(S)
-
     def forward(self, x: NamedTensor, state=None, step_offset: int = 0):
         tokens = self._as_token(x)
         seq_len = tokens.size(tokens.layout[1])
-        if self.chrono and state is not None:          # Chrono carries (notebook, clock)
-            state, clock = state
-        else:
-            clock = None
-        queries, keys, values, clock_out = self._project(tokens, step_offset, clock)
+        queries, keys, values = self._project(tokens, step_offset)
         decay = self._decay(tokens)
 
-        if self.delta and seq_len > 1:
-            output, new_state = self._chunked_delta(tokens, queries, keys, values, decay, state)
-        elif self.delta:
-            output, new_state = self._stepwise_delta(tokens, queries, keys, values, decay, state)
-        elif state is None and seq_len > 1:
+        if state is None and seq_len > 1:
             output, new_state = self._chunked(tokens, queries, keys, values, decay)
         else:
             output, new_state = self._stepwise(tokens, queries, keys, values, decay, state)
-
-        if self.out_gate:                              # N4: per-token, per-head real gate on the complex read
-            batch, time = tokens.layout[0], tokens.layout[1]
-            gate = torch.nn.functional.silu(self._head_gate(self.gate_proj, tokens))      # [B,H,T]
-            out_raw = output.raw(batch, self.heads, time, self.head_row, self.complex_pair)
-            output = named(out_raw * gate[..., None, None].to(out_raw.dtype),
-                           (batch, self.heads, time, self.head_row, self.complex_pair), self.policy)  # named-exit
 
         out = self.o_proj(output.alias(self.head_row, self.head_feature)
                           .to(tokens.layout[0], tokens.layout[1], self.inner,
                               self.complex_pair))
         if self.training:
             out = out * as_complex_dropout_mask(self.out_dropout, out)
-        carried = new_state if isinstance(new_state, torch.Tensor) or new_state is None else new_state.data  # named-exit
-        if self.chrono:
-            return out, (carried, clock_out)
-        return out, carried
+        return out, (new_state.data if new_state is not None else None)  # named-exit: state hand-off
 
 
 # ── Block ────────────────────────────────────────────────────────────────────
