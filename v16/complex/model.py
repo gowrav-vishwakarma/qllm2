@@ -11,7 +11,9 @@ real twin in ``v13_sempty/model.py``:
 - RESET_AT_EOS: the keep mask zeroes retention at document separators (delta path).
 - M1 sparse notebooks (pam_layers) + an explicit gated-MLP width (mlp_hidden) for param matching.
 - M2 shared reads: a complex reader of the writer's realified WY write, query rotated by the writer's clock; zero-init out-proj.
-Not ported: E1 echo. ``v14/hook.py:build_lm`` routes a complex config with any of these on to ``CxLM``.
+- E1 echo: the succession memory at the head in complex form (keys from h_{t-1}, values = the RMS-unit complex token embedding,
+  the same realified delta kernel, zero-init complex out-proj).
+``v14/hook.py:build_lm`` routes a complex config with any of these on to ``CxLM``.
 Parity: ``v16/complex/tests/cx_parity.py``.
 """
 from __future__ import annotations
@@ -31,12 +33,64 @@ from v13_sempty.complex_ops import (ComplexGatedUnit, ComplexLinear, ComplexNorm
 from v13_sempty.model import LM, PAMLayer
 from v13_sempty.triton_kernels import pam_delta_batched, pam_shared_read
 
-PORTED = ('delta', 'chrono', 'out_gate', 'pam_layers', 'share_reads', 'mlp_hidden')
+PORTED = ('delta', 'chrono', 'out_gate', 'pam_layers', 'share_reads', 'mlp_hidden', 'echo')
 
 
 def wants_cx(cfg) -> bool:
     """A complex config that uses any ported part (routes build_lm to CxLM)."""
     return bool(getattr(cfg, 'is_complex', False)) and any(getattr(cfg, k, None) for k in PORTED)
+
+
+# ── realified complex delta, shared by the notebooks' twin (CxPAMLayer has its own copy) and E1 echo ─────────────────────────────
+
+def _cx_J(x):                                     # [..., K, 2] -> i * x
+    return torch.stack((-x[..., 1], x[..., 0]), dim=-1)
+
+
+def _cx_unit(k):                                  # unit complex vectors over (K, pair)
+    n = k.float().pow(2).sum(dim=(-1, -2), keepdim=True).clamp_min(1e-12).sqrt()
+    return (k.float() / n).to(k.dtype)
+
+
+def _realify(S):                                  # complex [..., K, K] -> realified [..., 2K, 2K]
+    *lead, K, _ = S.shape
+    R = torch.zeros(*lead, 2 * K, 2 * K, dtype=torch.float32, device=S.device)
+    R[..., 0::2, 0::2] = S.real; R[..., 0::2, 1::2] = -S.imag
+    R[..., 1::2, 0::2] = S.imag; R[..., 1::2, 1::2] = S.real
+    return R
+
+
+def _complexify(R):                               # realified [..., 2K, 2K] -> complex [..., K, K]
+    return torch.complex(R[..., 0::2, 0::2].float(), R[..., 1::2, 0::2].float())
+
+
+def cx_delta_chunked(q, k, v, g, bw, be, carry=None):
+    """q, k (unit), v [N, T, K, 2]; g, bw, be [N, T]; carry realified [N, 2K, 2K] or None -> (read [N, T, K, 2], S realified)."""
+    N, T, K, _ = q.shape
+    two = lambda a, b: torch.stack((a, b), dim=2).reshape(N, 2 * T, *a.shape[2:])
+    r = lambda x: x.reshape(N, T, 2 * K)
+    Q2, K2, V2 = two(r(q), r(q)), two(r(k), r(_cx_J(k))), two(r(v), r(_cx_J(v)))
+    g2 = two(g.unsqueeze(-1), torch.ones_like(g).unsqueeze(-1)).squeeze(-1)
+    bw2 = two(bw.unsqueeze(-1), bw.unsqueeze(-1)).squeeze(-1)
+    be2 = two(be.unsqueeze(-1), be.unsqueeze(-1)).squeeze(-1)
+    read, S = pam_delta_batched(Q2, K2, V2, g2, bw2, be2, carry)
+    return read.reshape(N, T, 2, 2 * K)[:, :, 1].reshape(N, T, K, 2), S
+
+
+def cx_delta_step(q, k, v, g, bw, be, carry=None):
+    """The true-complex reference: S <- g S (I - b_e k k^H) + b_w v k^H, y = S q, fp32; carry / returned S realified."""
+    N, T, K, _ = q.shape
+    c = lambda x: torch.view_as_complex(x.float().contiguous())
+    qc, kc, vc = c(q), c(k), c(v)
+    S = _complexify(carry) if carry is not None else torch.zeros(N, K, K, dtype=torch.complex64, device=q.device)
+    reads = []
+    for t in range(T):
+        kt, vt, qt = kc[:, t], vc[:, t], qc[:, t]
+        Sk = torch.einsum('nvk,nk->nv', S, kt)
+        S = g[:, t, None, None].float() * (S - be[:, t, None, None].float() * Sk.unsqueeze(-1) * kt.conj().unsqueeze(-2)) \
+            + bw[:, t, None, None].float() * vt.unsqueeze(-1) * kt.conj().unsqueeze(-2)
+        reads.append(torch.einsum('nvk,nk->nv', S, qt))
+    return torch.view_as_real(torch.stack(reads, dim=1)), _realify(S)
 
 
 class CxGatedUnit(ComplexGatedUnit):
@@ -378,15 +432,78 @@ class CxLM(LM):
 
     def __init__(self, cfg: PAMConfig):
         assert cfg.is_complex, "CxLM is the complex arm"
-        assert not cfg.echo, "E1 echo is not ported to the complex arm"
         base = copy.copy(cfg)
-        base.pam_layers, base.share_reads, base.mlp_hidden = (), False, 0
+        base.pam_layers, base.share_reads, base.mlp_hidden, base.echo = (), False, 0, False
         super().__init__(base)
         self.config = cfg
+        # E1 echo, complex: q, k = complex W h; gates from h's real+imag; values = the token's complex embedding (RMS-unit).
+        self.echo = cfg.echo
+        if self.echo:
+            assert cfg.dim == cfg.n_heads * cfg.head_dim, "echo heads must tile dim"
+            self.echo_qk_out = Dim("echo_qk_out", 2 * cfg.dim)
+            self.echo_qk = ComplexLinear(self.model_dim, self.echo_qk_out, bias=False, pair=self.complex_pair)
+            self.echo_gate_out = Dim("echo_gate_out", 3 * cfg.n_heads)        # dt | write | erase
+            self.echo_gates = NamedLinear(self.real_imag_feature, self.echo_gate_out)
+            self.echo_inner = Dim("echo_inner", cfg.dim)
+            self.echo_out = ComplexLinear(self.echo_inner, self.model_dim, bias=False, pair=self.complex_pair)
         self.blocks = nn.ModuleList([CxBlock(cfg, layer_idx=i, model_dim=self.model_dim, complex_pair=self.complex_pair)
                                      for i in range(cfg.n_layers)])
         self._init_weights()
-        for b in self.blocks:                     # CxSharedRead's complex out-proj: zero (identity) again after _init_weights
-            if b.reader is not None:
-                with torch.no_grad():
+        with torch.no_grad():
+            for b in self.blocks:                 # CxSharedRead's complex out-proj: zero (identity) again after _init_weights
+                if b.reader is not None:
                     b.reader.o_proj.weight_real.zero_(); b.reader.o_proj.weight_imag.zero_()
+            if self.echo:                         # echo starts as the identity (zero complex out-proj), retention ~ 0.9975
+                self.echo_out.weight_real.zero_(); self.echo_out.weight_imag.zero_()
+                self.echo_gates.bias[:cfg.n_heads].fill_(cfg.echo_dt_bias)
+
+    def _echo_read(self, hidden: NamedTensor, input_ids, batch: Dim, time: Dim, state=None):
+        """E1 echo, complex (raw-torch boundary), the real arm's _echo_read with complex q / k / v:
+
+            S_t = g_t S_{t-1} (I - b_e k_t k_t^H) + b_w v_t k_t^H,  r_t = S_t q_t
+            k_t = unit(W_k h_{t-1}),  v_t = rms_unit(E_r[x_t] + i E_i[x_t]),  q_t = W_q h_t
+
+        Prefill: the realified fused delta kernel (cx_delta_chunked); decode: the complex reference (cx_delta_step). ``state`` =
+        (S realified [B, H, 2K, 2K] fp32, h_prev [B, D, 2]). Per-head complex RMS-norm, then the zero-init complex echo_out.
+        """
+        cfg = self.config
+        h = hidden.raw(batch, time, self.model_dim, self.complex_pair)            # [B,T,D,2]
+        B, T, D, _ = h.shape
+        H, K = cfg.n_heads, cfg.head_dim
+        qk = self.echo_qk(hidden).raw(batch, time, self.echo_qk_out, self.complex_pair)
+        q, k = qk[:, :, :D], qk[:, :, D:]                                           # [B,T,D,2]
+        if state is None:
+            k = nn.functional.pad(k, (0, 0, 0, 0, 1, 0))[:, :T]                     # k_t from h_{t-1}; k_0 = 0
+        else:
+            hp = named(state[1].to(h.dtype)[:, None], (batch, Dim("time1", 1), self.model_dim, self.complex_pair), self.policy)
+            k_prev = self.echo_qk(hp).raw(batch, hp.layout[1], self.echo_qk_out, self.complex_pair)[:, 0, D:]
+            k = torch.cat([k_prev[:, None], k[:, :T - 1]], dim=1)
+        v = torch.stack((self.embed.embed_real(input_ids), self.embed.embed_imag(input_ids)), dim=-1).to(h.dtype)   # [B,T,D,2]
+        v = v * torch.rsqrt(v.float().pow(2).sum(-1).mean(-1, keepdim=True) + 1e-6)[..., None].to(h.dtype)
+        heads = lambda x: x.reshape(B, T, H, K, 2).transpose(1, 2).reshape(B * H, T, K, 2)
+        per_head = lambda x: x.transpose(1, 2).reshape(B * H, T)
+        gates = self.echo_gates(to_real_concat(hidden, into=self.real_imag_feature)).raw(batch, time, self.echo_gate_out)
+        dt, wr, er = gates.split(H, dim=-1)
+        retention = per_head(torch.exp(-nn.functional.softplus(dt)))
+        bw = per_head(torch.sigmoid(wr))
+        be = per_head(torch.sigmoid(er - 3.0).clamp(max=0.95))
+        kn = _cx_unit(heads(k))
+        dil = getattr(self, '_dilate', None)                                         # clk eval hook on the echo memory too
+        if dil is not None and (len(dil) < 4 or dil[3] in ('all', 'echo')):
+            d0, d1, sc = dil[:3]
+            retention = retention.clone()
+            retention[:, d0:d1] = retention[:, d0:d1].clamp_min(1e-12) ** (1.0 / sc)
+        if getattr(cfg, 'reset_at_eos', False):
+            sep = (input_ids == cfg.reset_token_id)
+            retention = retention * (~sep).to(retention.dtype)[:, None, :].expand(B, H, T).reshape(B * H, T)
+            kn = kn * (~sep).to(kn.dtype)[:, None, :, None, None].expand(B, H, T, 1, 1).reshape(B * H, T, 1, 1)
+        carry = state[0].reshape(B * H, 2 * K, 2 * K).float() if state is not None else None
+        if state is None:
+            read, S = cx_delta_chunked(heads(q), kn, heads(v), retention, bw, be, None)
+        else:
+            read, S = cx_delta_step(heads(q), kn, heads(v), retention, bw, be, carry)
+        read = read.float()
+        read = read * torch.rsqrt(read.pow(2).sum(-1).mean(-1, keepdim=True) + 1e-6)[..., None]   # complex RMS over K
+        read = read.to(h.dtype).reshape(B, H, T, K, 2).transpose(1, 2).reshape(B, T, D, 2)
+        out = self.echo_out(named(read, (batch, time, self.echo_inner, self.complex_pair), self.policy))  # named-exit: echo
+        return out, (S.reshape(B, H, 2 * K, 2 * K), h[:, -1].detach().float())
