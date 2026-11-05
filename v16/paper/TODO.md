@@ -13,12 +13,12 @@ Status: `[ ]` open · `[~]` running · `[x]` done and in the paper. Owner in bra
 - [ ] **Told-twin cells on the knockouts** (what the trained model uses for TOLD rules): ~30 min once a28_twin is wired for the knockout patches; comes with the ladder. [Mind + Library]
 - [ ] **A29 with fresh protocol wordings**: today's 0.93 / 0.91 uses an in-sample parser; not a product claim until held-out wordings pass. → §7.4 wording. [Library]
 - [ ] **SCI-1 final milestones + decay** (137,331 / 152,590 / 160,218 + 1B decay): the last column of Fig 4; the protoc verdict (cont3) and the worked-solutions readout (cont4, indicative only). → §7, §7.5. [Mind]
-- [ ] **Told vs induced competition**: the pre-registered 4-way read at 137,331 (s8 vs told). Stated as a hypothesis in §7.2 until then. [Mind, Library]
+- [x] **Told vs induced competition**: the 4-way read at 137,331 did NOT support it (both rose: told 0.54 → 0.83 at 2k, induced 0.589 → 0.770). §7.2 rewritten as "co-vary with rehearsal, lagged"; EUREKA 11-04 entry withdrawn as a claim; per-use-notebook idea loses its motivation. [Mind, Library]
 
 ## B. Findings from the step-backs that are IN the paper (check wording at review)
 - [x] "Stored but not expressed in every body": a told rule is 0.00 under the record-contrast / plain / no-rule reads for all three matched bodies and visible only under the twin (§5, §7.3).
 - [x] The rule skill is maintained by data, not acquired once; ~1B-token lag; judge mix changes after two milestones (§7.1).
-- [x] Told and induced rules seesaw (§7.2, hypothesis).
+- [x] Told and induced rules co-vary with rehearsal (§7.2); the seesaw hypothesis was tested and dropped.
 - [x] Mamba-2 induces the adjacent rule (0.68) and loses it over 2k (0.18): the gap is retention under interference, not induction (§6.1, Fig 2).
 - [x] The library closes the reach gap at query time (§7.4) with the honesty line (package path, not understanding).
 - [x] Thinking traces: finish but reason wrongly at this size (§7.5).
