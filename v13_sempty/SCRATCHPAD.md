@@ -80,6 +80,13 @@ retained ≥ +0.2 over the untagged arm, holdout ≤ +0.01.
   check: `tmux ls | grep mindm`; and that `/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/*/` holds no `*.part`
   (an interrupted copy; delete it, the waiter re-copies). ctl is finished (no re-arm). The control worktree `../qllm_ctl` and the
   CHECK worktree `../qllm_sci1check` are on disk and survive.
+  **Queued after the reboot (Lead, in order):** (1) re-arm mindm9 / mindm10 (above); (2) the paper review: every number in
+  `v16/paper/data/numbers.json` vs the notebooks (ctl, t15, 600M seeds, SCI-1 M1-M8, ablation rows, Pythia block) and §3 +
+  Appendix A (backward pass) vs `v13_sempty/model.py`, corrections sent as "file:line → fix" (Lead merges); the complex-vs-real
+  footnote answer was already sent (ledger row 3, EXPERIMENTS_SEMPY:209); (3) a FEASIBILITY note, no launch, for a complex-vs-real
+  PAM pair at the ctl recipe: which current flags (delta, chrono, out_gate, share_reads, echo, reset_at_eos) the complex PAMLayer
+  lacks; a 5-min 4090 smoke of the complex arm (tok/s, peak VRAM) AFTER the 137,331 CHECK; recommendation (plain body where both
+  heads exist vs porting the parts to the complex head) with hours each.
 
 * **SCI-1 HANDOVER (21:30 IST, 2026-11-04).** cont3 is TRAINING on the 6000: tmux `sci1` in `~/Development/qllm_sci1` @ 449e320, dir
   `checkpoints_v13_sempty/sci1_cont3_449e320`, from cont2 M7 (global 106,813) to 160,218, then the decay (`sci1_decay_449e320`). Why:
