@@ -4409,6 +4409,40 @@ fitted threshold:
   - Closest prior work: kNN-LM (mixes a retrieved distribution with a weight); Titans / test-time training (gradient
     updates of the memory). Difference: the evidence enters through the trained delta write itself, with no gradient and
     no mixing weight.
+  - **RESULT c3b (137,331; 2026-11-05 16:57 IST; code 3b4da9c; logs/v14_writein_recall_c3b_3b4da9c_20261105_1641.jsonl
+    for recall / R×K / rewrite; GATE rows for needle / s8 / skill; A28 rep100 e2a87db for told).** Warm = write-in,
+    package = today's read.
+
+    | cell | where the knowledge sits | L | bare | package | **warm** |
+    |---|---|---|---|---|---|
+    | needle (2,520) | fact fetched, shown next to the question | 128-8k | 0.998 | 0.927 | **1.000** |
+    | s8 (2,400) | examples re-shown next to the question | 0-4k | 0.847 | 0.998 | **1.000** |
+    | skill (800) | pack re-shown next to the question | 0-8k | 0.509 | 0.999 | **1.000** |
+    | recall-32k (60) | fact fetched (kv / kvupd / hop2) | 32k | 0.22 | 1.00 | 1.00 |
+    | rewrite (100 / L) | rule compiled into demos next to the question | 2k / 8k | 0.01 / 0.00 | 0.92 / 0.85 | **0.95 / 0.92** |
+    | **R×K** (100 / L) | rule HELD in state, fact fetched | 2k / 8k | 0.01 / 0.01 | **0.67 / 0.42** | 0.50 / 0.05 |
+    | **told** (100) | rule HELD in state, row fetched | 2k | 0.13 | **0.83** (twin) | 0.22 (plain) |
+
+    - **Bar: NOT met.** Write-in loses on two cells, R×K (−0.17 / −0.37) and told (−0.61). Both are cells where the rule
+      is held in the state from far back.
+    - **The map, which the pre-registration named as the alternative outcome (amended 16:22), holds cleanly:**
+      - Evidence in VIEW (a fetched fact, re-shown examples, a rule compiled next to the question): write it in and read
+        plainly. Warm ties or beats the contrast on every such cell (+0.07 needle, +0.03 / +0.07 rewrite).
+      - A rule HELD in the state from far back: keep the rule twin. The contrast against the same session without the
+        rule (R×K's no-pack twin, told's no-protocol twin) is what lifts the held rule out. The plain read loses it,
+        steeply with distance (R×K 8k 0.42 → 0.05).
+    - What it really says: the two contrasts were different all along.
+      - Subtracting the no-ROW read (A9) removes what the state holds, which is wrong for facts the state already has.
+      - Subtracting the no-RULE twin removes everything EXCEPT the held rule, which is right for rules.
+      - The package should never subtract the evidence's own absence. It should subtract the held rule's absence, and
+        only when a held rule is in play.
+    - The agree gate was not tested on R×K / told (no logits saved there), so "agree chooses" is untested on the cells
+      where it matters. The package rule follows the knowledge's place, which the planner knows (it placed the
+      evidence, or found a held protocol / pack), not a learned gate.
+    - **Package change (pending Lead):** default read = warm. The rule twin applies when the planner found a held rule /
+      pack (told, R×K). The no-row contrast (A9) is retired.
+      - §7.6 / Fig 9's R×K and told numbers stand (they already use the rule twin).
+      - The needle / recall rows would move to warm (needle 0.927 → 1.000).
 - **BENCH-LIB (a): the library arm on ARC-e / ARC-c / HellaSwag / PIQA, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before
   any number; Lead, user 14:40; extends ARC-LIB).** SCI-1 first (c3b now for the page, then the final model), then the three ctl
   bodies with the IDENTICAL library and scorer (the paper rows; ARC-LIB's bar applies to the ctl rows).

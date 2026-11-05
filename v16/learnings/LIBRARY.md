@@ -255,3 +255,10 @@ Process lessons added:
 - Read the clock before writing a time (one estimate slipped in 11-05 and was fixed).
 - Never rebase a worktree while a run is rewriting a tracked file there (the push waits for the run).
 - A read that subtracts the mind's own prediction must be tested on cells where the mind is already right.
+- **WRITE-IN verdict (3b4da9c, 16:57 IST): not met as a single read, but a clean map.** Evidence in view (a fetched fact,
+  re-shown examples, a rule compiled next to the question) → stream it in and read plainly. That ties or wins
+  everywhere: needle 1.000 vs 0.927, rewrite 0.95 / 0.92 vs 0.92 / 0.85, recall-32k 1.00.
+  A rule held in the state from far back (R×K, told) → the rule twin. Warm loses there: R×K 0.50 / 0.05 vs 0.67 / 0.42,
+  told 0.22 vs 0.83.
+  The no-row contrast (A9) subtracts the evidence's own absence and is retired; the rule twin subtracts the held rule's
+  absence and stays.
