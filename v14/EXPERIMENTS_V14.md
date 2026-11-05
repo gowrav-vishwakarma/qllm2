@@ -4171,6 +4171,23 @@ fitted threshold:
     - Mind's s8 D rose 0.589 → 0.770 over the same 1B, so told and induced rules rose TOGETHER. Not the competition signature
       (told did not fall ≥ 0.10); with cont2's opposite moves, "compete" is not consistent across intervals. Dropping protoc did
       not hurt the told rule.
+- **PKG-SUITE: the package measured at every SCI-1 milestone, bare vs package on the same docs (PRE-REGISTERED 2026-11-05
+  13:46 IST, before any number; Lead / user decision 13:40, scope 13:50).** `v14/pkg_suite.py`; descriptive (no bars); one table row
+  per milestone, from 137,331 (checkpoint 9) on; no backfill.
+  - **BARE** everywhere = the model alone on the session + question, plain greedy, no fetch, no contrast.
+  - Cells:
+    - (1) **R × K** (Mind's docs, seeds 8800-8849 × affine_map_new / shift_wide_new = 100 docs, 2k and 8k). Package = A23
+      (fetch the record, write "<v> ->", skill contrast; 8k echo dilation s 8). Bare = "K ->" with the record in view.
+      Scored on the first token.
+    - (2) **Rewrite** (A29: the prose protocol compiled next to the question), A26 UNIT, A26 wording now (the held-out set
+      once it exists), 2k and 8k, 100 docs; value + unit.
+    - (3) **Told rule in state** (A28 / A31 twin = fork read), A26 UNIT, trained wording, 2k and 8k, 100 docs.
+    - (4) **Recall** through the organ: needle among 8 (kv), latest-wins (kvupd), two-hop (hop2, a TEXT planner chain of two
+      answers), bench docs, 32k, 20 docs per task. 20-way (first token over 20 value nouns) and free (value in the
+      sentence); MB held per doc.
+  - Limits stated: recall is reported to 32k on the 386M body; 128k was run on the 103M body (1.00), and the 24 GB card is
+    the limit here, not the method (Lead's line for the paper). The rewrite parser is in-sample until fresh wordings exist.
+  - CPU smoke (b2p2, 2 docs per cell): every cell writes bare and package rows.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
