@@ -6097,6 +6097,12 @@ directions: most heads forget within ~8 tokens in practice, the slow few hold fa
 **Arms** (retention r → r^(1/s) on the s8 probe's FILLER tokens only; echo via the model's span hook): base, slow_s4, slow_s8,
 all_s4 (clk1-like), echo_s4 (clk2-like), slow_echo_s4. s8 spread probe, 200 trials, 0 / 2k / 4k / 8k; prose guard = held-out NLL
 (24 × 2048) with the same dilation on positions ≥ 256.
+**Added before any numbers (Lead / outside plan, 17:2x IST):** `coupled_s4`, `coupled_s8`, `coupled_echo_s4` = retention r^(1/s)
+AND the Chrono warp g / s after its clamp, on the same heads and filler tokens (the clock slows with the decay; retention-only
+dilation keeps the amplitude but lets the query rotate out of phase over 8k). Head selection reads ln r from each layer's own
+`_decay` output after its `.to(batch, heads, time)`, not the trainer's `capture_decay` hook (which averages the wrong axis on the
+real arm, Lead's finding; the trainer's retention panel is therefore suspect, a separate fix). The full run also logs the warp g
+per slow head (clamp saturation at the −3 floor = a body question for the ladder).
 **Rule:** clk3 works if an arm with the slow set raises D_far (mean of @4k and @8k) by ≥ **0.05** over base with prose NLL Δ ≤
 **+0.01**; all_s4 is the comparison (dry run: NLL +0.11 vs slow +0.006).
 **Prior work / difference:** test-time decay / timescale scaling in SSMs (e.g. Mamba's Δ, LongMamba-style dt scaling); the

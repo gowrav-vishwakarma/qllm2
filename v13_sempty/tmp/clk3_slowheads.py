@@ -8,7 +8,9 @@ notebook), never a head subset.
 3. s8 spread probe (b2 suite, shift_wide_new + affine_map_new, 8 shots, seed 7000, --trials, spread 0 / 2048 / 4096 / 8192) with
    retention r -> r^(1/s) on FILLER tokens only (the knockout mask), for the arms below; echo via the model's own span hook.
 4. Prose guard: held-out NLL (the probe's filler cache, n_seq x seq_len) with the same dilation on positions >= 256.
-Arms: base | slow_s4 | slow_s8 | all_s4 (every notebook head, clk1-like) | echo_s4 (clk2-like) | slow_echo_s4.
+Arms: base | slow_s4 | slow_s8 | all_s4 (every notebook head, clk1-like) | echo_s4 (clk2-like) | slow_echo_s4 | coupled_s4 / s8 /
+coupled_echo_s4 (retention r^(1/s) AND the Chrono warp g / s after its clamp, same heads and tokens: the clock slows with the decay).
+Head selection reads ln r from the layer's own _decay output AFTER its .to(batch, heads, time) (not the trainer's capture hook).
     python v13_sempty/tmp/clk3_slowheads.py --checkpoint <weights> --out <json> [--trials 200] [--K 6]
 """
 from __future__ import annotations
@@ -50,6 +52,30 @@ def patch(layers):
                     r = torch.where(m, r.float().clamp_min(1e-12) ** (1.0 / ST['s']), r.float()).to(r.dtype)
             return named(r, (batch, _L.heads, time))
         L._decay = dec
+        if getattr(L, 'chrono', False):
+            def rot(queries, keys, tokens, batch, time, clock=None, _L=L, _li=li):
+                # RealPAMLayer._rotate_learned with the warp g scaled by 1/s AFTER the clamp on the selected heads / filler tokens
+                B, Hh, T, K = batch.size, _L.heads.size, time.size, _L.head_dim; P = K // 2
+                q = queries.raw(batch, _L.heads, time, _L.head_feature); k = keys.raw(batch, _L.heads, time, _L.head_feature)
+                g = torch.exp(_L.warp_proj(tokens).alias(_L.decay_out, _L.heads).raw(batch, _L.heads, time).float().clamp(-3.0, 3.0))
+                if ST.get('couple') and ST['heads'] is not None and ST['mask'] is not None and ST['s'] != 1.0:
+                    sel = torch.zeros(Hh, dtype=torch.bool, device=g.device)
+                    for (l, h) in ST['heads']:
+                        if l == _li: sel[h] = True
+                    m = (ST['mask'].to(g.device)[:, None, :] > 0) & sel[None, :, None]
+                    g = torch.where(m, g / ST['s'], g)
+                run = torch.cumsum(g, dim=2)
+                if clock is not None: run = run + clock.to(run.dtype).unsqueeze(-1)
+                tau = run - g; clock_out = run[:, :, -1]
+                phi = tau.unsqueeze(-1) * _L.chrono_inv_freq.to(q.device).view(1, 1, 1, P)
+                cos = torch.cos(phi).to(q.dtype); sin = torch.sin(phi).to(q.dtype)
+                if _L.expose: _L._rot = (cos, sin)
+                qe, qo = q.reshape(B, Hh, T, P, 2).unbind(-1); ke, ko = k.reshape(B, Hh, T, P, 2).unbind(-1)
+                qr = torch.stack((qe * cos - qo * sin, qe * sin + qo * cos), dim=-1)
+                kr = torch.stack((ke * cos - ko * sin, ke * sin + ko * cos), dim=-1)
+                lay = (batch, _L.heads, time, _L.head_feature)
+                return named(qr.reshape(B, Hh, T, K), lay), named(kr.reshape(B, Hh, T, K), lay), clock_out
+            L._rotate_learned = rot
 
 
 def main():
@@ -80,16 +106,18 @@ def main():
     slow_set = [(d['layer'], d['head']) for d in slow]; all_set = [(d['layer'], d['head']) for d in heads]
     print('slow heads (realized):', [(d['layer'], d['head'], d['realized_half_life'], d['bias_half_life']) for d in slow], flush=True)
     print('realized half-life median %.1f, max %.1f' % (np.median([d['realized_half_life'] for d in heads]), slow[0]['realized_half_life']), flush=True)
-    arms = {'base': (None, 1.0, False), 'slow_s4': (slow_set, 4.0, False), 'slow_s8': (slow_set, 8.0, False),
-            'all_s4': (all_set, 4.0, False), 'echo_s4': (None, 4.0, True), 'slow_echo_s4': (slow_set, 4.0, True)}
+    arms = {'base': (None, 1.0, False, False), 'slow_s4': (slow_set, 4.0, False, False), 'slow_s8': (slow_set, 8.0, False, False),
+            'all_s4': (all_set, 4.0, False, False), 'echo_s4': (None, 4.0, True, False), 'slow_echo_s4': (slow_set, 4.0, True, False),
+            'coupled_s4': (slow_set, 4.0, False, True), 'coupled_s8': (slow_set, 8.0, False, True),
+            'coupled_echo_s4': (slow_set, 4.0, True, True)}
     # 2. s8 probe items with the filler mask
     from v14.rules_ood import build_example
     tasks, lengths = ('shift_wide_new', 'affine_map_new'), [int(x) for x in a.lengths.split(',')]
     exs = [build_example(tok, t, 8, sd) for t in tasks for sd in range(a.seed, a.seed + a.trials)]
     items = [r for ex in exs for L in lengths for r in [spread_with_mask(ex, tok, L, filler)] if r is not None]
     res = {}
-    for arm, (hs, s, echo) in arms.items():
-        ST['heads'], ST['s'] = hs, s; rows = []; t1 = time.time()
+    for arm, (hs, s, echo, couple) in arms.items():
+        ST['heads'], ST['s'], ST['couple'] = hs, s, couple; rows = []; t1 = time.time()
         with torch.no_grad():
             for ex, mask in items:
                 ST['mask'] = torch.tensor([mask], dtype=torch.float32)
