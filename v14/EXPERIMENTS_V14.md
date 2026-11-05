@@ -4188,6 +4188,21 @@ fitted threshold:
   - Limits stated: recall is reported to 32k on the 386M body; 128k was run on the 103M body (1.00), and the 24 GB card is
     the limit here, not the method (Lead's line for the paper). The rewrite parser is in-sample until fresh wordings exist.
   - CPU smoke (b2p2, 2 docs per cell): every cell writes bare and package rows.
+  - **PKG-SUITE ROW: checkpoint 9 = step 137,331 (2026-11-05 14:03 IST; 9.0B tokens; code c93e3b7; `logs/v14_pkg_suite_c3b_c93e3b7_20261105_1347.*`;
+    100 docs per cell, recall 20 per task; 16 min on the 4090):**
+
+    | cell | bare | package |
+    |---|---|---|
+    | R × K, 2k / 8k (first token) | 0.01 / 0.01 | **0.67 / 0.42** (value fetched 1.00) |
+    | told rule compiled next to the question (rewrite), 2k / 8k | 0.01 / 0.00 | **0.92 / 0.85** (parser 1.00, in-sample) |
+    | told rule held in state (twin = fork read), 2k / 8k | 0.13 / 0.05 | **0.83 / 0.22** |
+    | recall at 32k, free: needle among 8 / latest-wins / two-hop | 0.05 / 0.30 / 0.00 | **0.85 / 0.85 / 1.00** |
+    | recall at 32k, 20-way | 0.10 / 0.45 / 0.10 | **1.00 / 1.00 / 1.00** |
+
+    - MB held per 32k session: mind state 3.67, library text 0.07, indexes ~0.31; optional F2 address 33.8 (int8) or 0.27 (sign
+      bits). Recall is reported to 32k on the 386M body (Lead's line: 128k ran on 103M; the 24 GB card is the limit here).
+    - Two-hop is a TEXT planner chain (two package answers). Free recall < 20-way on kv / kvupd: the right value is ranked
+      first, but the sentence sometimes runs on with other words.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);
