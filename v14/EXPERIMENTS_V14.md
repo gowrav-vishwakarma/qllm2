@@ -4461,6 +4461,10 @@ fitted threshold:
     - Choosing the better of two reads on the same 100 docs inflates it slightly; stated, accepted.
   - **A32 bars (only if the gate passes):** A28b held-out wording at 2k 0.12 → ≥ 0.45; trained wording at 8k 0.22 →
     ≥ 0.55.
+  - **AMENDED 17:08 IST, before any number:** the plan's 0.12 is the ctl PAM (103M, A28b), while 0.22 is c3b.
+    - A32 runs on c3b, so its held-out baseline is c3b's own: the twin read on the a26 wording at 2k, 100 docs
+      (`a28_twin.py`), measured in the same M10 window.
+    - Held-out bar = ≥ max(0.45, c3b baseline + 0.25). Trained 8k bar: ≥ 0.55 (baseline 0.22, c3b rep100).
 - **BENCH-LIB (a): the library arm on ARC-e / ARC-c / HellaSwag / PIQA, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before
   any number; Lead, user 14:40; extends ARC-LIB).** SCI-1 first (c3b now for the page, then the final model), then the three ctl
   bodies with the IDENTICAL library and scorer (the paper rows; ARC-LIB's bar applies to the ctl rows).
