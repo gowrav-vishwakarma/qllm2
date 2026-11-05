@@ -1,0 +1,63 @@
+MOVED sci1_stageA_59c3cf5/stageA_final.pt sha 6167bb9cdec1d2d0
+MOVED sci1_main_59c3cf5/best_model.pt sha ac8e3a914c67bc24
+MOVED sci1_cont1_59d098d/best_model.pt sha 42a745ae8632def3
+MOVED sci1_cont2_e61cd92/best_model.pt sha fc8fbdd0e9440f1c
+MOVED sci1_cont3_449e320/best_model.pt sha 0c4a05a61bc20646
+/dev/root           484G  433G       52G  90% /
+/dev/nvme1n1        916G  736G      135G  85% /media/gowrav/d_drive
+MOVE DONE Thu Nov  5 02:17:59 PM IST 2026
+=== tier set start Thu Nov  5 02:18:01 PM IST 2026
+MOVED b2m2_main_38e3c29/best_model.pt sha 49a37f4906272b8e
+/dev/root           484G  432G       53G  90% /
+/dev/nvme1n1        916G  736G      135G  85% /media/gowrav/d_drive
+TIER DONE Thu Nov  5 02:18:10 PM IST 2026
+=== tier set start Thu Nov  5 02:18:49 PM IST 2026
+sha256sum: Development/qllm-private/checkpoints_v13_sempty/b2m2_main_38e3c29/best_model.pt: No such file or directory
+SHA MISMATCH b2m2_main_38e3c29/best_model.pt local 49a37f4906272b8e remote : kept on the 6000
+MOVED b2ma_pre_38e3c29/best_model.pt sha d85a00a604c36135
+MOVED b2p1_main_38e3c29/best_model.pt sha 694516f5df3d027c
+MOVED b2p2_main_38e3c29/best_model.pt sha bf4ac2d675c1b6ae
+MOVED b2p3_main_38e3c29/best_model.pt sha 3c27a37f47f07aa9
+MOVED b2t2_main_38e3c29/best_model.pt sha 489eb4d75e2a484f
+MOVED b2t_main_38e3c29/best_model.pt sha 310fb1db9fb67f7a
+MOVED bud0_main_e96588b/best_model.pt sha 326eb835b4ec0e6a
+MOVED c1ctla_pre_7ae6f1f/best_model.pt sha 6349673785322a77
+MOVED c1ctlb_main_7ae6f1f/best_model.pt sha 62780ce33a8e5d55
+MOVED c1m2a_pre_7ae6f1f/best_model.pt sha 713e1d125fd1287d
+MOVED c1m2b_main_7ae6f1f/best_model.pt sha bbb5808935d1db75
+MOVED c2m2b_main_b788731/MOVED_TO_D_DRIVE.txt sha 2083d8cd3f5a25d7
+MOVED cu1_main_2efb422/best_model.pt sha 096758850897ab4c
+MOVED e1g_conv_a0fab65/SKIPPED sha 6de7e4d91a202d07
+MOVED e1g_echo_a0fab65/MOVED_TO_D_DRIVE.txt sha c07869b2c86f7522
+MOVED gscreen_both_3cc2b72/SKIPPED sha 0098eb5f5dc73e2a
+MOVED lbp_main_c4173be/best_model.pt sha bbc063c18ef8dfc2
+MOVED lbt_main_c4173be/best_model.pt sha 218cf269ef58e732
+MOVED m1_m1echo_ccbf028/MOVED_TO_D_DRIVE.txt sha 0d67c22c012c8804
+MOVED m2_m2echo_ed326a1/MOVED_TO_D_DRIVE.txt sha 88b71f95b281f723
+MOVED mbs2a_pre_685de4e/best_model.pt sha 43fdd96ac64bb16b
+MOVED mbs2b_main_685de4e/best_model.pt sha e568bce935ce3c15
+MOVED mix3b_delta_answ100_1c913ef/best_model.pt sha 7a5fce21dd0d86b2
+MOVED mix3b_delta_answ100_long2h9_5c87148/MOVED_TO_D_DRIVE.txt sha 0c46b0ecccd9de82
+MOVED mix3b_mamba2_answ100_b36e3a5/best_model.pt sha 6b7da2137431ab1e
+MOVED mix3b_transformer_answ100_e072a8f/best_model.pt sha 694b514dff07d933
+MOVED r3ca_pre_38e3c29/best_model.pt sha 7410bd199b842e4d
+MOVED r3cb_main_38e3c29/best_model.pt sha d14e29ba04400ae3
+MOVED r3p_main_c13d8fe/best_model.pt sha 069d816f33cbfbdb
+MOVED r4screen_store_0868a1b/MOVED_TO_D_DRIVE.txt sha a63c93f46f70e479
+MOVED r600_ctl_91daf0a/MOVED_TO_D_DRIVE.txt sha 15edbad84f52b0cc
+MOVED t15m2_main_48a3bda/best_model.pt sha a0bfc2a4bdde0c75
+MOVED t15mamba_main_c06b939/best_model.pt sha f5a3c776a7cbea88
+MOVED t15pam_main_c06b939/best_model.pt sha 5889668447cdd923
+MOVED t15tpp_main_c06b939/best_model.pt sha 7901bcbefbdfd0a7
+MOVED tfc1a_pre_b788731/best_model.pt sha c32b0948d70f0590
+MOVED tfc1b_main_b788731/MOVED_TO_D_DRIVE.txt sha bca88149d0eb6e6e
+MOVED tfs1_tf_b788731/MOVED_TO_D_DRIVE.txt sha d1b1ba225bce4624
+MOVED tfs2a_pre_b788731/best_model.pt sha 911fe5610331e135
+MOVED tfs2b_main_b788731/MOVED_TO_D_DRIVE.txt sha b2b65960f6e73535
+MOVED w1n_n0_c06b939/best_model.pt sha b9b9180eaee8c28d
+MOVED w1n_n128_c06b939/best_model.pt sha 4b801dbe135d0067
+MOVED wikitext_chrono_fair_7b24e44/best_model.pt sha 9f2a923d0b0983dd
+MOVED wikitext_chrono_n4gate_fair_2537782/MOVED_TO_D_DRIVE.txt sha 8b961681c881c1bf
+/dev/root           484G  396G       89G  82% /
+/dev/nvme1n1        916G  765G      105G  88% /media/gowrav/d_drive
+TIER DONE Thu Nov  5 02:41:53 PM IST 2026

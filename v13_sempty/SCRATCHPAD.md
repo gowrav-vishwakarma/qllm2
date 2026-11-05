@@ -147,7 +147,10 @@ and new SCI-1 mix segments (agree with Lead: let it finish and decay).
   the one-cause test of protoc (EXPERIMENTS_SEMPY "cont3 PRE-REGISTRATION"). Milestones 122,072 (~Nov 5 04:00 IST; then the cont4
   switch adds the `worked` source, pre-registered), 137,331, 152,590. Local CHECKs: tmux `mindm7` (after the M7 CHECK in `mindm6`).
   Library's A26 + twin read and Lead's humaneval gate on the `.checked_<m>` markers. On the 6000 kept: best_model of each segment,
-  cont2 step_106813 deleted 22:40 IST 11-04 (d_drive copy sha 4817f47e… = the 6000). cont3 step_122072 deleted 06:00 IST 11-05 (sha dad8741d… = the 6000). Thinking is OFF.
+  cont2 step_106813 deleted 22:40 IST 11-04 (d_drive copy sha 4817f47e… = the 6000). cont3 step_122072 deleted 06:00 IST 11-05 (sha dad8741d… = the 6000). 14:42 IST 11-05 (Lead decision): the old SCI-1 best_model / stageA_final files (22 GB) and the 45 non-SCI-1
+  tier checkpoints (36.8 GB: b2*, t15*, r3c*, mix3b*, c1*, tf*, w1n* …) moved to d_drive `from_6000/checkpoints_v13_sempty/<run>/`,
+  sha256-gated (v13_sempty/tmp/move_6000_to_d.sh; log logs/v13_sempty_move_6000_to_d.log: 50 moved, 0 real mismatches); 6000 89 GB
+  free, d_drive 105 GB. The 6000 keeps only SCI-1's current segment + its newest 2 milestones (KEEP_LAST 2, sha-gated deletes). Thinking is OFF.
 * **Fast stream resume (2026-10-27, after the R4 screen's 47-min skips).**
   `v7/data.py` now reads dclm / fineweb / smoltalk2 (blend) / pg19 file by file
   with pyarrow in the exact old order (verified doc-for-doc vs the old HF
