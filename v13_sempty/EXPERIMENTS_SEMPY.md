@@ -6085,6 +6085,22 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## kn: eval-time knockouts on the trained ctl PAM: which mechanism carries the rule across filler? (PRE-REGISTRATION, 08:34 IST, 2026-11-05; Lead GO)
+
+**Question:** in the trained ctl PAM M2 (102.88M, 1.0B tokens, s8 D 0.523), which part is USED to carry an induced rule across
+2k / 4k of filler? **This measures what the trained model uses, not what training needs** (a model trained without a part may
+compensate); the ablation ladder (1B per rung, on the 6000) answers the second.
+**Probe:** the s8 spread probe exactly as the ctl readout (b2 suite, shift_wide_new + affine_map_new, 8 shots, 400 trials, seed
+7000, spread 0 / 2048 / 4096, the holdout filler cache), checkpoint `ctl_pam_decay_caa4da9/latest.pt`. Runner
+`v13_sempty/tmp/s8_knockouts.py` (the probe's own builders + a filler mask; examples, separators and the query untouched).
+**Arms:** `on` (control: must reproduce s8 D 0.523, else the run is void); `erase0` (notebook erase gate b_e = 0 on filler tokens:
+no erase-at-key there); `globfade` (on filler tokens the key-selective erase is replaced by a global fade of equal erased energy on
+an isotropic notebook: b_e = 0, g ← g (1 − b_e / K)); `clock1` (Chrono warp g = 1 on filler tokens: the clock runs at plain RoPE
+speed through the filler); `noecho` (E1 echo read zeroed everywhere); `noread` (M2 readers zeroed everywhere).
+**Rule:** a part "carries the rule" if its knockout drops s8 D by **≥ 0.15** vs `on`. Read also @0 (whole-model switches can hurt
+induction itself) and per length. Told-twin cell (Library's A26 G1 2k) under the same knockouts if it costs < 10 min more (not in
+this runner yet). Prior (Mind's step back): erase-at-key most likely, then the clock; echo and readers unlikely.
+
 ## SCI-1 cont3 milestone 8 (CHECK on the 4090, 05:48 IST, 2026-11-05; run `449e320`, step 122,072 = 8.0B tokens; 1.0B of cont3, protoc out)
 
 First of the two cont3 readouts (judged with 137,331; the lag rule).
