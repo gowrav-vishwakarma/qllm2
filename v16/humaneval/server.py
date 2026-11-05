@@ -23,6 +23,7 @@ def summary(x, i):
     if 'gold' in x and 'pred' in x: k.append(f"gold {x['gold']} · model {x['pred']}")
     if 'target' in x and 'pick' in x: k.append(f"answer “{x['target'].strip()}” · model “{x['pick'].strip()}”")
     if 'n_tokens' in x: k.append(f"{x['n_tokens']:,} tokens")
+    if 'bare_ok' in x: k.append(f"alone {'✅' if x['bare_ok'] else '❌'} · library {'✅' if x['pkg_ok'] else '❌'}")
     pv = str(x.get('prompt') or x.get('text') or '')
     pv = pv[-110:] if x.get('greedy') is not None else pv[:110]
     return dict(i=i, ok=x.get('ok'), head=' · '.join(k), pv=' '.join(pv.split()))

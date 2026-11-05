@@ -62,6 +62,29 @@ put('protocol', 'Our intelligence tests', f'Following a stated rule (latest A26 
     [dict(prompt=r.get('question', ''), rule=r.get('proto', ''), row=r.get('row', ''), answer=r.get('answer', ''),
           expected=f"{r.get('target', '')} {r.get('unit', '')}", ok=bool(r.get('right')),
           tag=f"distance {r.get('d')} tokens · {r.get('arm')} · {r.get('cell')}") for r in rows])
+# Model alone vs model + library (Library's per-item package rows, if present for this step)
+pf = S / 'pairs.jsonl'
+if not pf.exists():
+    cand = sorted(glob.glob(str(R / f'logs/v14_pkg_suite_*_pairs.jsonl')))
+    cand = [c for c in cand if any(json.loads(l).get('step') == str(int(STEP)) for l in open(c).readlines()[:1])]
+    pf = Path(cand[-1]) if cand else None
+if pf and pf.exists():
+    rows = [json.loads(l) for l in open(pf)]
+    names = {'rxk': ('Rule held in memory x fact fetched by the library', 'The rule (8 examples) is in memory; the record with the value is fetched at question time.'),
+             'rewrite': ('Told rule rewritten next to the question', 'The library turns the prose rule into worked lines placed next to the question.'),
+             'told': ('Told rule held in memory (twin / fork read)', 'Model alone = plain read; with library = read against the forked no-rule twin.'),
+             'recall': ('Recall 32k tokens back', 'Model alone = memory only; with library = the exact-text organ and planner.')}
+    for cell, (title, intro) in names.items():
+        it = [dict(prompt=r.get('question', ''), context=r.get('context', ''), gold=r.get('gold', ''),
+                   bare=r.get('bare_answer', ''), bare_ok=r.get('bare_ok') in (1, '1', True),
+                   pkg=r.get('package_answer', ''), pkg_ok=r.get('package_ok') in (1, '1', True),
+                   ok=r.get('package_ok') in (1, '1', True),
+                   tag=f"{r.get('task', '')} · {int(r.get('L', 0)):,} tokens") for r in rows if r.get('cell') == cell]
+        if it:
+            nb = sum(x['bare_ok'] for x in it); npk = sum(x['pkg_ok'] for x in it)
+            put('pair_' + cell, 'Model alone vs model + library (same items)', title,
+                intro + f' Model alone right {nb}/{len(it)}, with library {npk}/{len(it)}. Green border = right with the library.', 'pair', it)
+
 # Progress
 items = []
 for fn in sorted(glob.glob(str(R / 'logs/sci1/v13_sempty_gens_sci1_step_*.txt'))):
