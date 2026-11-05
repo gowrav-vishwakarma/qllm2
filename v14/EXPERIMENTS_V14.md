@@ -4229,6 +4229,29 @@ fitted threshold:
   - Reported: per-type accuracy and the overall mean.
   - **Baseline** on the SCI-1 decay checkpoint (Nov 6). Bar for the chat ramp (R3): each type up, and none of s8 / told twin
     (trained AND held-out wording) / reach / HS-ARC-PIQA down beyond its noise (Mind's CHECK). Descriptive per milestone.
+- **BENCH-PKG: BABILong + RULER-style with the package, on the FINAL SCI-1 model (PRE-REGISTERED 2026-11-05 14:10 IST, before any code or
+  number; Lead's order (2a)).** Descriptive, bare vs package per cell, MB held per row, lengths ≤ 32k (the 4090).
+  - **BABILong** qa1-qa5 at 0k / 2k / 4k / 8k / 16k / 32k, 100 docs per cell (`v16/babilong_eval.py --package`). Bare = the
+    model as is on the whole input; package = fetch rows (text organs / name / latest / F2) + read; `--chain` (TEXT planner)
+    as a labelled extra column.
+  - **RULER-style, our generator** (labelled as such; not the official RULER suite): niah_single (one key → value: word /
+    number / uuid), niah_multikey (the key among 3 look-alike distractor keys), variable tracking (X1 = v, X2 = X1, … chains
+    of 4; "which variables equal v?").
+    - At 4k / 8k / 16k / 32k, 50 docs per cell.
+    - Package = text fetch + read; for VT the library follows the chain in text (TEXT) and the mind writes the names.
+    - Right = the exact value / every name, nothing extra.
+  - Reference block: published BABILong / RULER numbers of other models only with their training tokens stated, never a
+    verdict.
+- **ARC-LIB: does the mind use FETCHED KNOWLEDGE better? (PRE-REGISTERED 2026-11-05 14:10 IST, before any code or number; Lead's
+  order (2b)).** The three ctl bodies (~103M, 1B tokens of the same mix; one seed each), the IDENTICAL library.
+  - Library: a filtered science sentence corpus (the AI2 ARC Corpus if obtainable, else a slice of the SCI-1 science
+    sources), 13-gram decontaminated against ARC-e / ARC-c test + the kb1 sets (A27 machinery), a BM25 sentence index, top-3
+    passages per question (question + all choices as the query).
+  - Scoring: lm-eval-style log-likelihood over the choices (mc_eval), with the passages prepended. Rows per body: no
+    library, + library, + ORACLE passage (a passage that states the answer; an upper bound on use).
+  - **Bar:** PAM's gain from the library (+library − no library, ARC-e and ARC-c pooled) ≥ the best baseline's gain + 0.02.
+  - **Stated in advance:** at ~103M / 1B tokens every body may gain ~0 ("no body uses them"); that is reported as the
+    outcome, not hidden.
 - **Honesty line (proposed to Lead):** the exact-key recall win is the
   package's (its exact organ: plumbing); the mind's own key contributes on
   paraphrase in the session (0.46-0.66 vs organ 0.26-0.35, lenient mode);

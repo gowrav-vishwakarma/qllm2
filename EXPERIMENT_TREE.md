@@ -166,6 +166,8 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 - **A28b matched control held-out wording and 8k** <- A28 held read: plain vs protocol twin (2026-11-05) ctl bodies (PAM / T++ / Mamba-2, ~103M, 1B tokens same mix, one seed each): twin read on the A26 (held-out) wording at 2k and the trained wording at 8k, 100 docs -> **NOT met 11-05 06:50: held-out wording 2k PAM 0.12 vs Mamba-2 0.06 vs T++ 0.05 (+0.06 < +0.20); 8k 0.00 all; one seed per body**; run `f56d4e6`, code at `current`; logs/v14_a28b_ctl_a26w_2k_f56d4e6_20261105_0625.jsonl; logs/v14_a28b_ctl_g1_8k_f56d4e6_20261105_0625.jsonl; "A28b"
 - **A31 state forks** <- A28 held read: plain vs protocol twin (2026-11-05) fork the O(1) state where a standing instruction is read (with / without), keep both; question read = rule twin at constant cost; memory per fork stated -> **MET 11-05 13:29: fork 0.83 +/- 0.04 = twin 0.83 +/- 0.04 on the same docs, answers identical 100/100, 3.674 MB per fork (SCI-1 386M, step 137,331)**; run `e2a87db`, code at `current`; logs/v14_a31_fork_c3b_e2a87db_20261105_1316.jsonl; "A31"
   - **PKG-SUITE per-milestone package suite** (2026-11-05) bare vs package at every SCI-1 milestone from 137,331: R x K, rewrite, told rule (twin / fork), recall to 32k (kv / kvupd / hop2), MB held -> **running (rows per milestone) | checkpoint 9 (137,331, 9.0B): R x K 0.67 / 0.42 vs bare 0.01; rewrite 0.92 / 0.85 vs 0.01; told twin 0.83 / 0.22 vs 0.13 / 0.05; recall 32k 20-way 1.00 x3 vs 0.10-0.45; 3.67 MB state**; run `c93e3b7`, code at `current`; logs/v14_pkg_suite_c3b_c93e3b7_20261105_1347.jsonl; "PKG-SUITE"
+    - **BENCH-PKG BABILong + RULER-style with the package** (2026-11-05) final SCI-1 model, bare vs package, BABILong qa1-5 to 32k + RULER-style (our generator: niah single / multikey, VT) to 32k, MB per row -> **running (pre-registered, descriptive; after the Nov 6 decay)**; code at `current`; -; "BENCH-PKG"
+- **ARC-LIB knowledge library on ARC** <- A28 held read: plain vs protocol twin (2026-11-05) ctl bodies with an identical decontaminated science library (BM25 top-3), no-library / +library / +oracle rows on ARC-e / ARC-c -> **running (pre-registered; bar PAM gain >= best baseline gain + 0.02)**; code at `current`; -; "ARC-LIB"
 - **SIMPLE-CHAT probe** (2026-11-05) yes/no (strict), short direct answers, verifiable instruction formats, 2-3 turn small talk; held-out items; baseline on the decay checkpoint; chat-ramp bars -> **running (pre-registered; baseline Nov 6)**; code at `current`; -; "SIMPLE-CHAT"
 
 ## v15
@@ -185,4 +187,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-167 experiments: v13_sempty 83, v14 65, v15 10, v16 9.
+169 experiments: v13_sempty 83, v14 67, v15 10, v16 9.
