@@ -25,3 +25,10 @@ HS / ARC-e / PIQA 0.282 / 0.455 / 0.588, B5 0.53. Also reported against ctl's T+
 
 **Prior record:** EXPERIMENTS_SEMPY:209 (Sept 2026, plain bodies, different recipes): real ≈ complex on WikiText-103, real better on
 TinyStories. Prior work: complex-valued / unitary RNNs (Arjovsky 2016, Wisdom 2016), complex Transformers; our v11 complex PAM.
+
+**Launched (09:12 IST 2026-11-05; recorded 09:41 IST, 2026-11-05).** Worktree `../qllm_cx` @ c17775a (venv qllm311), tmux `mindcxm2`, chain log
+`logs/v16_cx_chain_c17775a.log`, train log `logs/v13_sempty_cx_m2_main_c17775a_*.log`, checkpoints
+`checkpoints_v13_sempty/cx_m2_{main,decay}_c17775a` (d_drive). Two earlier launches (1555b2c at 4 × 4, cb49762 at 8 × 2) OOM'd before
+any save and were discarded. Step 100: loss 6.47, **10.9k tok/s** steady, peak 15.9 GB → ~25.5 h for 1.0B tokens, ~28–29 h with the
+yields; expected done ~Nov 6 14:00 IST. **Cost line (paper):** the complex body peaks at 12.9 GB per 4096-token sequence (fwd + bwd)
+vs ~4 GB for the real body (~3x, independent of the delta port), and trains at 10.9k vs 63k tok/s on the 4090 (~5.8x slower).
