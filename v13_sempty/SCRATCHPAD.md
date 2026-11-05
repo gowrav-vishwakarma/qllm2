@@ -127,6 +127,11 @@ and new SCI-1 mix segments (agree with Lead: let it finish and decay).
   PAM pair at the ctl recipe: which current flags (delta, chrono, out_gate, share_reads, echo, reset_at_eos) the complex PAMLayer
   lacks; a 5-min 4090 smoke of the complex arm (tok/s, peak VRAM) AFTER the 137,331 CHECK; recommendation (plain body where both
   heads exist vs porting the parts to the complex head) with hours each.
+  **Queued for AFTER SCI-1's final run + decay (user via Lead, 13:55 IST 11-05; v16/paper/TODO.md):** pre-register a CHAT continuation
+  from the final checkpoint: (a) everyday chat / short direct answers / yes-no / instruction-following sources (public, filtered,
+  decontaminated) with their share from a measured calibration row; (b) the rule-doc share kept (maintenance lesson); (c) re-warm
+  from the final checkpoint; (d) bars after 2 milestones: Library's simple-chat probe rises, s8 / told / reach / HS-ARC-PIQA do not
+  fall; (e) a recommendation: release model vs a separate chat variant.
 
 * **SCI-1 HANDOVER (21:30 IST, 2026-11-04).** cont3 is TRAINING on the 6000: tmux `sci1` in `~/Development/qllm_sci1` @ 449e320, dir
   `checkpoints_v13_sempty/sci1_cont3_449e320`, from cont2 M7 (global 106,813) to 160,218, then the decay (`sci1_decay_449e320`). Why:
