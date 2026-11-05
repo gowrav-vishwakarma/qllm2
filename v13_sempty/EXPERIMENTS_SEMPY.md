@@ -6085,6 +6085,26 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## nkr: notebook-key retrieval for ARC-c (PRE-REGISTRATION, 15:53 IST, 2026-11-05; the three step-backs' synthesis, Lead; eval only)
+
+**Question:** can the trained mind ADDRESS its own library better than word overlap? BENCH-LIB on c3b (SCI-1 M9, 386M) found the
+model reads a stated answer (ARC-c acc_norm 0.835) but BM25 top-3 adds nothing (0.278 vs bare 0.277): the limit is the address.
+**Method (cheap rerank, no index build):** for each ARC-c test question, Library's BM25 top-**100** from the same science library
+(`v14/arclib_index.py`, the BENCH-LIB library and query: question + all choices); rerank the 100 by the notebook's own match and
+prepend the new top-3 exactly as BENCH-LIB's `library` arm (`"<p1>\n<p2>\n<p3>\n\n" + prompt`, mc_eval's scorer, acc_norm).
+Score(passage) = Σ over the notebook layers and their heads of max over the passage's tokens of cos(q_head, k_head,t), with q = the
+notebook's query projection at the question's last token and k = its unit key projections over the passage, both BEFORE the
+Chrono rotation (position is meaningless across documents). One forward of the question and of each passage (100 passages × 1,172
+questions; batched; within one 4090 pause).
+**Arms:** bare (0.277), BM25 top-3 (0.278), **NK top-3** (the rerank), random-3 of the BM25 top-100 (control: does any reorder
+help?), oracle (0.835).
+**Rule:** NK top-3 ≥ BM25 top-3 + **0.05** (i.e. ≥ 0.33) AND ≥ random-3 + 0.03 → "the mind addresses its library better than
+words", which earns the full key index (all passages keyed) as the next unit. Otherwise the rerank is closed and the notebook's
+keys are not an address space for a corpus at this size. ARC-e reported with the same arms.
+**Closest prior work / difference:** dense retrieval (DPR) and late-interaction max-sim (ColBERT), kNN-LM / Memorizing Transformers
+(kNN over attention keys), HyDE. Difference: no retriever is trained; the scores are the frozen LM's own delta-notebook query / key
+projections, i.e. the address its erase-at-key memory already uses.
+
 ## sci1_chat: the chat ramp, the opening of the long run (DRAFT pre-registration, 13:59 IST, 2026-11-05; final with measured rows after the Nov 6 decay)
 
 Frame: `v16/PLAN_LONGRUN.md` (rules R1–R7). This is mix-schedule step 2; the run does not end on a decay.
