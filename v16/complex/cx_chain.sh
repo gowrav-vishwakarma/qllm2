@@ -9,7 +9,7 @@ cd "$(dirname "$0")/../.." || exit 1
 H=${SCREEN_HASH:-$(git rev-parse --short HEAD)}; C=checkpoints_v13_sempty; PY=.venv/bin/python; X="symbolic\|Warning\|warn"
 source v13_sempty/tmp/sci1_cont2_env.sh            # SOURCES / WEIGHTS = the cont2 mix (only these two are used)
 STABLE_TOKENS=900005888; DECAY_TOKENS=100007936     # 13,733 + 1,526 steps of 65,536 = 15,259 steps = 1.0B tokens
-COMMON="SOURCES=$SOURCES WEIGHTS=$WEIGHTS ANSWER_W=100 SEED=43 SEQ=4096 BATCH=16 GRAD_ACCUM=8 LR=1.2e-3 BLEND_WARMUP=0 GEN_EVERY=0 \
+COMMON="SOURCES=$SOURCES WEIGHTS=$WEIGHTS ANSWER_W=100 SEED=43 SEQ=4096 BATCH=16 GRAD_ACCUM=16 LR=1.2e-3 BLEND_WARMUP=0 GEN_EVERY=0 \
 VAL_EVERY=2000 VAL_SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,pysci,chatmt NO_WIKI_VAL=1 SAVE_EVERY=200 KEEP_EVERY=0 KEEP_LAST=1 \
 MAX_RETRIES=0 ANSWER_IN_WINDOW=1 RESET_AT_EOS=1 DECONTAM_INDEX=.cache/decontam/v1.npy PIN_HASH=$H"
 BASELINE="CHRONO=0 OUT_GATE=0 DELTA=0 ECHO=0"
