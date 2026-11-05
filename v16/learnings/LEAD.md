@@ -143,7 +143,7 @@ filler text. Bodies: PAM b2p2 (M2 body, 102.9M, 600M tokens, 2k windows), PAM c1
 - **Code safety.** All worktrees and the remote box's checkouts audited at each stall check; local-only chains pushed as
   `save/` branches; package code moves to v16 once, at release; these learnings files are the record that survives.
 
-## 7. Nov 2-5: SCI-1, the equal-data control, the paper (added 2026-11-05 16:40 IST)
+## 7. Nov 2-5: SCI-1, the equal-data control, the paper (added 2026-11-05 16:38 IST)
 
 Details live in the lanes' notebooks (v13_sempty/EXPERIMENTS_SEMPY.md for Mind, v14/EXPERIMENTS_V14.md for Library); the
 day-by-day decisions are in v16/SCRATCHPAD.md "Decisions"; every paper number with its source in v16/paper/data/numbers.json.
