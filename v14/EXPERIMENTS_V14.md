@@ -4240,6 +4240,12 @@ fitted threshold:
     - At 4k / 8k / 16k / 32k, 50 docs per cell.
     - Package = text fetch + read; for VT the library follows the chain in text (TEXT) and the mind writes the names.
     - Right = the exact value / every name, nothing extra.
+    - Runner `v14/ruler_pkg.py` (068e800; seed 28000; the haystack is the A26 held-out prose; insert order shuffled so the
+      asked key is not always first). Columns: bare, package, planner (VT: the TEXT chain found, a library-only number,
+      labelled), mind MB (state) and library MB (token text + word indexes + the int8 address where the path keeps one; the
+      sal1 address form is the alternative and is not added). `--summary <jsonl>` prints the table.
+    - BABILong rows now carry `mb` (mind state + library token text) from the package's session.
+    - 14:15 IST: both runners smoked end to end on c3b (2-3 docs per cell; plumbing check, not a result).
   - Reference block: published BABILong / RULER numbers of other models only with their training tokens stated, never a
     verdict.
 - **ARC-LIB: does the mind use FETCHED KNOWLEDGE better? (PRE-REGISTERED 2026-11-05 14:10 IST, before any code or number; Lead's
