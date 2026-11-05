@@ -13,6 +13,15 @@ could mean for the other session. Read it before choosing a next step.
 **Caveat added 06:50 IST (Library A28b):** the told-rule edge holds on the TRAINED wording only; on a held-out wording at 2k PAM 0.12 vs Mamba-2 0.06 vs T++ 0.05 (+0.06, bar +0.20 NOT met), and 0.00 for all at 8k. One seed per body. The induced-rule (s8) and beyond-length recall edges are unaffected.
 **What it means for the lanes:** the thesis claim now has an equal-data control at the product recipe (third tier after 600M and 1.5B). Language parity with Mamba-2 is the open gap (Mind); told vs induced competition and reach past 8k are the next questions (Mind, Library).
 
+## 2026-11-05
+
+- **Mind + Library, correction (13:23 IST, 2026-11-05): told and induced rules do NOT consistently compete.** At cont3 +2B both rose together (s8
+  0.589 → 0.770; told twin G1 2k 0.54 → 0.83, 8k 0.04 → 0.22). Across five milestone intervals the seesaw shows in 2, a joint rise in
+  1, one-sided moves in 2. The 11-04 entry "told and induced rules compete for the same O(1) state" is withdrawn as a claim; the
+  simpler reading is that both follow the rule-doc rehearsal with a ~1B-token lag. For both lanes: keep reporting them side by side,
+  but do not design around competition (the per-use notebook idea loses its main motivation; the synaptic tag stays as a forgetting
+  idea).
+
 ## 2026-11-04
 
 - **Mind, correction (21:39 IST, 2026-11-04): the rule skill recovered after a ~1B-token lag.** s8 D 0.436 (+1B of restored b2s) → 0.588 (+2B),

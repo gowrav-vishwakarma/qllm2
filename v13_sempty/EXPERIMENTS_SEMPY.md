@@ -6089,7 +6089,13 @@ where both heads have identical logic.
 
 **cont3 verdict (pre-registered, revised before its data):** s8 D **0.770** (M8 0.589, M7 0.588) is below the revised protoc bar
 (0.84 = the cont2 trend + 0.10), so the rise is **not attributed to dropping protoc**; it is the lagged b2s recovery continuing (b2s
-~1.4–1.5 % realized in both cont2 and cont3). Told side (Library's twin read at this step) pending.
+~1.4–1.5 % realized in both cont2 and cont3). **Told side (Library, 13:23 IST, 2026-11-05; `logs/v14_a28_rep100{,_8k}_c3b_e2a87db_20261105_1316.*`, 100 docs, twin read):** G1 2k **0.83 ±
+0.04** (M8 0.54 ± 0.05: +0.29), 8k **0.22 ± 0.04** (M8 0.04: the best told reach so far); plain read 2k 0.22, A9 0.08, noprot 0.03.
+**Competition read (pre-registered table):** told did NOT fall; it ROSE with induced (+0.29 with s8 +0.18). "Both rise" was not one
+of the four pre-registered outcomes; it rules out competition at this interval, and across the five intervals the seesaw is not
+consistent (opposite moves in 2, joint rise in 1, one-sided in 2). **The competition hypothesis is not supported**; the simpler
+reading (Library) is that both ride the same rule-doc rehearsal (b2s ~1.5 %, proto4k ~0.65 %) with lags. Dropping protoc did not
+hurt the told rule.
 
 | readout | M7 (7.0B) | M8 (8.0B) | **M9 (9.0B)** |
 |---|---|---|---|
