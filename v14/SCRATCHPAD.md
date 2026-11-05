@@ -25,6 +25,11 @@ tmux ls | grep -E 'libramguard|a2[68]c'
 - If a run was interrupted mid-way (a partial `logs/v14_a2*_<tag>_*` without its done file), delete those partial logs
   before re-arming, so the chain reruns cleanly.
 - Score: `python3 v14/a26_score.py <jsonl>`; the twin cells come from `logs/v14_a28_rep100{,_8k}_<tag>_*.jsonl`.
+- **Then (Lead's GO, after cx_m2 is launched AND Mind's 137,331 CHECK is done):** A31 state forks, one job:
+  `H=$(git rev-parse --short HEAD); TS=$(date +%Y%m%d_%H%M); /home/gowrav/.venvs/qllm311/bin/python v14/a31_fork.py --ckpt /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont3_449e320/c3b_step_137331_weights.pt --wording train --lengths 2048 --docs 100 --out logs/v14_a31_fork_c3b_${H}_${TS}.jsonl > logs/v14_a31_fork_c3b_${H}_${TS}.log 2>&1`
+  (in tmux, after the c3b chain's twin cells, which give the same-docs twin number).
+- **Paper review** (Lead): v16/paper/main.tex §5, §7.3, §7.4, §8, the A28b caveat, Table 2's told-rule rows, related work on
+  CAD / retrieval; corrections as "file:line → fix".
 
 ## Step back (Library, 2026-11-05 08:21 IST; user via Lead: "read the meditation memory again, step back")
 
