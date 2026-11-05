@@ -156,6 +156,21 @@ def fig8_knockouts():
     save(fig, "fig8_knockouts")
 
 
+def fig9_package():
+    c = D["pkg_suite_m9"]["cells"]; names = list(c)
+    bare = [c[n]["bare"] for n in names]; pk = [c[n]["package"] for n in names]
+    y = np.arange(len(names)); h = 0.38
+    fig, ax = plt.subplots(figsize=(6.6, 3.4))
+    ax.barh(y + h / 2, bare, h, color="#90caf9", label="model alone")
+    ax.barh(y - h / 2, pk, h, color="#1565c0", label="model + library")
+    for i, (b, p) in enumerate(zip(bare, pk)):
+        ax.text(p + 0.01, i - h / 2, f"{p:.2f}", va="center", fontsize=7); ax.text(b + 0.01, i + h / 2, f"{b:.2f}", va="center", fontsize=7, color="#555")
+    ax.set_yticks(y); ax.set_yticklabels(names, fontsize=7.5); ax.invert_yaxis(); ax.set_xlim(0, 1.1)
+    ax.set_xlabel("accuracy (100 documents per cell; recall 20 per task)"); ax.legend(frameon=False, fontsize=7.5, loc="lower right")
+    ax.set_title("The same checkpoint, alone and with the library (386M, 9B tokens)", fontsize=8.5)
+    save(fig, "fig9_package")
+
+
 if __name__ == "__main__":
-    for f in (fig1_control, fig2_distance, fig3_tiers, fig4_sci1, fig5_memory, fig6_babilong, fig7_pythia, fig8_knockouts):
+    for f in (fig1_control, fig2_distance, fig3_tiers, fig4_sci1, fig5_memory, fig6_babilong, fig7_pythia, fig8_knockouts, fig9_package):
         f(); print("ok", f.__name__)
