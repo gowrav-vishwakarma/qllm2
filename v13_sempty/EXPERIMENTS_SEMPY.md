@@ -6245,6 +6245,9 @@ on the 6000 by `s8reg_c3.sh` (disk floor). Reads per point as C2 (s8 D + margin,
 s8 D >= 0.70; ties by needles 16k; the margin is reported beside every s8. **Expectation (from C2):** s8 stays near M9's level (C2 held
 its start within -0.06) while NLL / ARC-e approach the decay's; the end point is the most likely to pass ARC-e and NLL, the middle ones
 to pass s8.
+**C3-A3 (added 22:27 IST, BEFORE C3 started; outside reviewer via Lead):** the equal-weight average of C3's last three saves (+0.15B / +0.20B /
+end) as one more candidate, same reads; strict rule with the margin clause of LAWA-lite (no adjacent saves exist for an average):
+s8 D >= 0.70 AND margin >= +1.0 AND ARC-e >= 0.55 AND NLL <= 3.413.
 
 **LAWA-lite (PRE-REGISTERED 21:23 IST 2026-11-06, before any number; outside reviewer + Lead; release engineering, no claim; closest prior:
 LAWA / checkpoint averaging, model soups).** Weight averages of saves already on disk, no training (`s8reg_d.py avg`, built on CPU):

@@ -28,7 +28,11 @@ until ssh -o ConnectTimeout=20 $R "grep -q '^Training complete' \$(ls -t ~/Devel
 wait $FP
 fetch latest.pt step_141146_end.pt || exit 1
 for s in 137334 138097 138860 139623 140386; do probe $LD/step_$s.pt $s; done; probe $LD/step_141146_end.pt 141146end
-ALL=$(ls $LD/step_1*.pt | tr '\n' ',' | sed 's/,$//')
+# A3 (pre-registered before C3 started, outside reviewer via Lead): equal-weight average of the last three saves, same reads
+[ -s $LD/c3avg3_weights.pt ] || /home/gowrav/.venvs/qllm311/bin/python /home/gowrav/Development/qllm2/v13_sempty/tmp/s8reg_d.py avg \
+  --ckpts $LD/step_139623.pt,$LD/step_140386.pt,$LD/step_141146_end.pt --out $LD/c3avg3_weights.pt
+probe $LD/c3avg3_weights.pt avg3
+ALL=$(ls $LD/step_1*.pt $LD/c3avg3_weights.pt | tr '\n' ',' | sed 's/,$//')
 cd $W; f=$O/v13_sempty_s8reg_C3_nll_$RUN.json; [ -s $f ] || $PY /home/gowrav/Development/qllm2/v13_sempty/tmp/s8reg_d.py nll --out $f \
   --filler /home/gowrav/Development/qllm2/.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt --ckpts $M9,$ALL
 f=$O/v13_sempty_s8reg_C3_wdelta_$RUN.json; [ -s $f ] || $PY /home/gowrav/Development/qllm2/v13_sempty/tmp/s8reg_d.py wdelta --ref $M9 --ckpts $ALL --out $f
