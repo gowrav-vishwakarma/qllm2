@@ -28,6 +28,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--ckpt', required=True); ap.add_argument('--wordings', default='a26,train')
     ap.add_argument('--docs', type=int, default=100); ap.add_argument('--device', default='cuda'); ap.add_argument('--out', required=True)
+    ap.add_argument('--seed', type=int, default=26000, help='make_doc seed base (A32b gate: 26500, fresh docs)')
     a = ap.parse_args()
     import subprocess
     h = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True, cwd=ROOT).stdout.strip()
@@ -36,7 +37,7 @@ def main():
     enc = lambda s: tok.encode(s, add_special_tokens=False)  # noqa: E731
     fill = filler_tokens(str(FILL)); out = open(a.out, 'w')
     for wording in a.wordings.split(','):
-        rng = random.Random(26000 * 1000 + 2048 + 0)                     # A28's docs at 2k: the same protocols / rows
+        rng = random.Random(a.seed * 1000 + 2048 + 0)                     # 26000 = A28's docs at 2k; 26500 = A32b's fresh docs
         n = {'twin': 0, 'plain': 0}
         for di in range(a.docs):
             doc = make_doc(rng, tok, fill, 'unit', 2048, wording)
@@ -53,7 +54,10 @@ def main():
                 out.write(json.dumps(dict(wording=wording, doc=di, arm=arm, answer=ans, unit=doc['unit'], target=doc['target'],
                                           proto=doc['proto'], row=doc['rows_text'][0], hash=h, **sc)) + '\n')
             out.flush()
-        print(f"{wording}: twin {n['twin'] / a.docs:.3f} plain {n['plain'] / a.docs:.3f} (n {a.docs})", flush=True)
+        cv = {arm: sum(json.loads(l)['conv_ok'] for l in open(a.out) if json.loads(l)['wording'] == wording and json.loads(l)['arm'] == arm)
+              for arm in ('twin', 'plain')}
+        print(f"{wording}: right twin {n['twin'] / a.docs:.3f} plain {n['plain'] / a.docs:.3f}; unit (conv_ok) twin "
+              f"{cv['twin'] / a.docs:.3f} plain {cv['plain'] / a.docs:.3f} (n {a.docs})", flush=True)
     print('A32 PRE-CHECK DONE', flush=True)
 
 
