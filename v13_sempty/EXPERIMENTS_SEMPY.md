@@ -6085,6 +6085,18 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## s8 checkpoint jitter (found 21:10 IST 2026-11-06 in C2's first point; Lead's rules adopted)
+
+**Seen:** C2's first save is M10 + 10 optimizer steps (LR ~8e-4): s8 D 0.423 -> **0.331** with the same deterministic probe (400 trials,
+seed 7000). Where margins sit near 0 (2k / 4k), single-checkpoint s8 carries ~**±0.1 jitter** from trivial weight noise. The
+milestone swings (0.78 / 0.44 / ... / 0.77 / 0.42) are within reach of that; the ctl gaps (PAM 0.523 vs T++ 0.149 vs Mamba-2 0.074)
+are far outside it.
+**Rules from now (Lead):** (1) s8 is reported as the mean over 3 adjacent saves where they exist, always with the mean target margin
+beside the accuracy. (2) C2's pre-registered bar stays and is only made STRICTER: a point passes if it meets all three bars AND its
+adjacent saved points' mean s8 is >= 0.70 too. (3) Before a C3 from M9: measure M9's neighbourhood. On disk near 137,331 there is only
+138,500 (+1,169 steps after the re-warm: 0.667); best_model is at 128,000. Plan: M9 + 10 / 20 / 50 steps at constant LR 8e-4
+(WARMUP 0, the cont3 stream from M9's cursor) on the 4090 at micro-batch 1, then s8 on each: was 0.77 the trend or a high draw?
+
 ## SCI-1 milestone 10 (official; CHECK re-run on the 4090, done 20:32 IST 2026-11-06; `sci1_long_3c2bf1f` step 152,590 = 10.0B = M9 + 1.0B, cont3 mix, constant LR)
 
 | | M9 (9.0B) | **M10 (10.0B)** | M10-worked (failed segment) |

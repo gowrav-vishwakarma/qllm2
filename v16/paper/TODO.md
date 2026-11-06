@@ -49,3 +49,4 @@ Status: `[ ]` open · `[~]` running · `[x]` done and in the paper. Owner in bra
 
 ## D. Order on the GPUs (agreed by all three, 2026-11-05)
 4090 now: cx_m2 → A31 forks → knockout told-twin cells. 6000 after SCI-1's decay: the open-ended long run (PLAN_LONGRUN). 4090 after cx_m2 (Mind, 11-05 17:05): clk3 (eval) → eviction log (eval) → ablation ladder (lad_all first) → second seed (3 bodies) → two-bounce micro-bench / screen → state budget.
+- [ ] **s8 checkpoint jitter (Mind, 11-06):** 10 optimizer steps moved s8 D 0.423 -> 0.331 (C2 first save). Re-read the SCI-1 milestone series and the tier tables for ~±0.1 single-checkpoint jitter: report s8 as the mean over 3 adjacent saves + the mean target margin; the ctl gaps (0.523 / 0.149 / 0.074) are far outside it, the milestone swings are not. [Mind]
