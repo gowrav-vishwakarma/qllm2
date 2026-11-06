@@ -4133,6 +4133,19 @@ fitted threshold:
 
     - (a): PAM 0.12 vs the best baseline 0.06, i.e. +0.06 < +0.20 → NOT met. PAM is still ahead, but on held-out wordings all three
       bodies hold the told rule weakly at 1B tokens.
+  - **G2 / G3 split of (a), with the unit beside right (added 2026-11-06; outside reviewer + Lead asked, I verified).** This is
+    A26's PRE-REGISTERED reporting split (Nov 2: G2 = trained quantity, held-out wording; G3 = held-out quantity), applied to
+    A28b, whose own registration did not list it. The bar stays the pooled one, NOT met. One seed per body; n 56 / 44.
+
+    | protocol twin, A26 wording, 2k: right · unit | PAM | Mamba-2 | T++ |
+    |---|---|---|---|
+    | G2 mass / volume (trained quantities), n 56 | 0.20 · 0.39 | 0.07 · 0.30 | 0.09 · 0.16 |
+    | G3 concentration / length (never in protocol_docs), n 44 | 0.02 · 0.11 | 0.05 · 0.11 | 0.00 · 0.00 |
+
+    - Reading: at 103M / 1B the PAM edge on a held-out WORDING is on trained quantities (G2 right 0.20 vs 0.07 / 0.09,
+      ± ~0.05). On unseen quantities (G3) all three bodies are near zero; pooled +0.06 mixes the two.
+    - At 386M the release-path body (Decay_M9, the same docs, 100) has G2 0.39 · 0.79 and G3 0.32 · 0.55: G3 transfer
+      appears with scale / data. No baselines exist at that size, so this is no equal-data claim.
     - (b): 0.00 for all three at 8k (twice the trained 4k). The rule's reach is the common limit.
     - Paper row: the equal-data advantage is clear on the TRAINED wording (0.53 vs 0.20 / 0.12) and small on held-out wordings
       (0.12 vs 0.06 / 0.05); one seed per body.
