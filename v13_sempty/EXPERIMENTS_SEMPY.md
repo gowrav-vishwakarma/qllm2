@@ -6215,6 +6215,27 @@ is read from the trainer's [mix] line at the first val.
 **Paper finding (Lead):** the s8reg D lerp curve (s8 falls ~linearly in l, the NLL gain arrives late) = prose sharpening and rule loss
 are separate directions in weight space.
 
+**C2 RESULT (22:21 IST 2026-11-06; logs/s8reg/*C2*; NO release candidate):**
+
+| point (from M10) | s8 D | margin | t40 16k | HS | ARC-e | PIQA | NLL | wdelta vs M10 (embed+head / cgu / pam / reader+echo) |
+|---|---|---|---|---|---|---|---|---|
+| M10 (start) | 0.423 | −0.36 | 0.803 | 0.332 | 0.539 | 0.616 | 3.546 | 0 |
+| +10 steps | 0.331 | −0.69 | 0.794 | 0.332 | 0.533 | 0.614 | 3.540 | 0.012 / 0.008 / 0.008 / 0.009 |
+| +0.05B | 0.261 | −0.91 | 0.900 | 0.335 | 0.528 | 0.622 | 3.503 | 0.138 / 0.087 / 0.087 / 0.092 |
+| +0.10B | 0.266 | −0.94 | 0.908 | 0.335 | 0.545 | 0.621 | 3.461 | 0.169 / 0.105 / 0.106 / 0.113 |
+| +0.15B | 0.416 | −0.32 | 0.906 | 0.338 | 0.552 | 0.621 | 3.441 | 0.183 / 0.113 / 0.113 / 0.121 |
+| +0.20B | 0.407 | −0.33 | 0.869 | 0.338 | 0.554 | 0.623 | 3.415 | 0.189 / 0.115 / 0.116 / 0.123 |
+| end 0.25B | 0.359 | −0.56 | 0.886 | 0.338 | 0.557 | 0.626 | 3.396 | 0.190 / 0.115 / 0.116 / 0.123 |
+
+No point meets s8 >= 0.70. **Reading:** the rule-x2 decay roughly HOLDS s8 at its start level (0.42 -> 0.36 at the end, margin
+dipping then recovering mid-decay), where the plain 1B decay from M9 lost 0.54 (0.77 -> 0.23), while it still buys most of the NLL /
+ARC-e gain (end NLL 3.396 vs Decay_M9 3.383; ARC-e 0.557 vs 0.567); needles 16k rise (0.80 -> 0.89). So rule x2 plausibly protects the
+rule carry through a decay, but it can only keep what the start point has, and M10 starts at 0.42. Caveat: one run, a different start
+point and a 4x shorter decay than Decay_M9. **Next release candidate: C3** = the same 0.25B rule-x2 decay from M9 (margin +1.86).
+**Long-run mix (pre-registered rule above):** C2 did not LIFT s8 from 0.42 -> option (b) `b2s_far` (to be pre-registered with numbers).
+The 6000: the long run's restart REFUSED at 21:54 IST (disk 23 GB < 25 after C2's saves); C2's six saves sha-verified on d_drive and
+deleted on the 6000 (49 GB free); long run relaunched 22:10 IST from M10.
+
 **LAWA-lite (PRE-REGISTERED 21:23 IST 2026-11-06, before any number; outside reviewer + Lead; release engineering, no claim; closest prior:
 LAWA / checkpoint averaging, model soups).** Weight averages of saves already on disk, no training (`s8reg_d.py avg`, built on CPU):
 - **L1** = mean(M9 137,331, 138,500 [M9 + re-warm + 669 steps]); wdelta between them 0.10-0.16 per group.

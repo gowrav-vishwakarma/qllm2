@@ -1,0 +1,41 @@
+{
+ "ref": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_long_3c2bf1f/step_152590.pt",
+ "rows": {
+  "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c2_1b8607d/step_152600.pt": {
+   "embed_head": 0.011988,
+   "cgu": 0.008221,
+   "pam": 0.008282,
+   "reader_echo": 0.008544
+  },
+  "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c2_1b8607d/step_153363.pt": {
+   "embed_head": 0.13753,
+   "cgu": 0.086556,
+   "pam": 0.086841,
+   "reader_echo": 0.092087
+  },
+  "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c2_1b8607d/step_154126.pt": {
+   "embed_head": 0.168829,
+   "cgu": 0.105253,
+   "pam": 0.105794,
+   "reader_echo": 0.112634
+  },
+  "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c2_1b8607d/step_154889.pt": {
+   "embed_head": 0.183042,
+   "cgu": 0.11266,
+   "pam": 0.113312,
+   "reader_echo": 0.12087
+  },
+  "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c2_1b8607d/step_155652.pt": {
+   "embed_head": 0.188971,
+   "cgu": 0.114748,
+   "pam": 0.115577,
+   "reader_echo": 0.123282
+  },
+  "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c2_1b8607d/step_156405_end.pt": {
+   "embed_head": 0.19043,
+   "cgu": 0.114781,
+   "pam": 0.115699,
+   "reader_echo": 0.12337
+  }
+ }
+}
