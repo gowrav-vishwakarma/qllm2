@@ -7,6 +7,14 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-11-06 15:31 IST: the slow notebook heads want slower clocks than the Chrono warp clamp allows
+**What we saw:** clk3 on SCI-1 M9 (`7a9eecd`, logs/diag/v13_sempty_clk3_m9_7a9eecd.json): 3 of the 6 heads with the longest realized
+retention (half-lives 4,204 / 746 / 742 tokens) sit at the warp clamp floor g = exp(−3); slowing the clock WITH the retention at eval
+raises far rule-carry 2.6x more than retention alone (+0.087 vs +0.033 D_far at 4k+8k).
+**What it says:** long memory in a delta notebook needs both a slow decay and a slow rotary clock; the clamp, not the data, caps the
+slowest heads. **For Library / v14 / the ladder:** a body with a wider warp floor (−6) is a cheap rung; any unit that reads from slow
+heads should expect phase drift beyond ~4k unless the clock slows with it.
+
 ## 2026-11-06 12:50 IST: the induced-rule carry (s8) falls at every LR / segment change; recall and benchmarks do not
 **What we saw:** SCI-1 s8 D over 11 checks: 0.32 / 0.54 / 0.71 / 0.78 / 0.44 / 0.44 / 0.59 / 0.59 / 0.77 / 0.42 / 0.23. The drops
 are at the cont1 start (76k), the cont4 start (152k) and the 1B decay from M9 (`8290f7d`: s8 0.770 -> 0.231 while HS 0.333 -> 0.343,

@@ -1,0 +1,17 @@
+slow heads (layer, head, realized, bias-only, warp g): [(4, 0, 4204.1, 540.2, 0.056), (2, 1, 2743.1, 137.1, 0.38), (3, 2, 993.2, 152.0, 0.235), (5, 3, 745.6, 73.7, 0.05), (3, 3, 742.0, 133.8, 0.055), (3, 1, 639.8, 125.6, 0.769)]
+realized half-life median 8.7, max 4204.1
+W1106 15:02:26.233000 134710 torch/fx/experimental/symbolic_shapes.py:6823] [0/3] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1106 15:02:27.625000 134710 torch/fx/experimental/symbolic_shapes.py:6823] [0/4] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+/home/gowrav/.venvs/qllm311/lib/python3.11/site-packages/torch/_inductor/compile_fx.py:282: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+  warnings.warn(
+W1106 15:02:32.729000 134710 torch/fx/experimental/symbolic_shapes.py:6823] [0/5] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+base          s8 D 0.760  far(4k+8k) 0.444  @0/2k/4k/8k 1.000/0.913/0.607/0.280  NLL 3.5549
+slow_s4       s8 D 0.789  far(4k+8k) 0.477  @0/2k/4k/8k 1.000/0.917/0.660/0.295  NLL 3.5631
+slow_s8       s8 D 0.789  far(4k+8k) 0.471  @0/2k/4k/8k 1.000/0.920/0.657/0.285  NLL 3.5653
+all_s4        s8 D 0.662  far(4k+8k) 0.316  @0/2k/4k/8k 1.000/0.867/0.458/0.175  NLL 3.6511
+echo_s4       s8 D 0.820  far(4k+8k) 0.549  @0/2k/4k/8k 1.000/0.917/0.722/0.375  NLL 3.5595
+slow_echo_s4  s8 D 0.836  far(4k+8k) 0.564  @0/2k/4k/8k 1.000/0.927/0.745/0.383  NLL 3.5678
+coupled_s4    s8 D 0.823  far(4k+8k) 0.531  @0/2k/4k/8k 1.000/0.930/0.715/0.347  NLL 3.5713
+coupled_s8    s8 D 0.830  far(4k+8k) 0.547  @0/2k/4k/8k 1.000/0.930/0.730/0.365  NLL 3.5786
+coupled_echo_s4 s8 D 0.846  far(4k+8k) 0.589  @0/2k/4k/8k 1.000/0.933/0.760/0.417  NLL 3.5762
+clk3 DONE (1694 s)

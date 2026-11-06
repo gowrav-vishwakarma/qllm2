@@ -6222,6 +6222,26 @@ per slow head (clamp saturation at the −3 floor = a body question for the ladd
 **Prior work / difference:** test-time decay / timescale scaling in SSMs (e.g. Mamba's Δ, LongMamba-style dt scaling); the
 difference is a head subset chosen by measured realized retention in a delta notebook, plus echo.
 
+**clk3 RESULT (15:31 IST 2026-11-06; logs/diag/v13_sempty_clk3_m9_7a9eecd.json; 200 trials; NOT MET by its rule, narrowly):**
+
+| arm | s8 D | D_far (4k+8k) | Δ D_far | NLL | Δ NLL |
+|---|---|---|---|---|---|
+| base | 0.760 | 0.444 | | 3.5549 | |
+| slow_s4 / slow_s8 | 0.789 / 0.789 | 0.477 / 0.471 | +0.033 / +0.027 | 3.5631 / 3.5653 | +0.008 / +0.010 |
+| all_s4 (clk1-like) | 0.662 | 0.316 | −0.128 | 3.6511 | +0.096 |
+| echo_s4 (clk2-like) | 0.820 | 0.549 | +0.105 | 3.5595 | +0.005 |
+| slow_echo_s4 | 0.836 | 0.564 | +0.120 | 3.5678 | +0.013 |
+| coupled_s4 / s8 | 0.823 / 0.830 | 0.531 / 0.547 | +0.087 / +0.103 | 3.5713 / 3.5786 | +0.016 / +0.024 |
+| coupled_echo_s4 | 0.846 | 0.589 | **+0.145** | 3.5762 | +0.021 |
+
+Rule (a slow-set arm: Δ D_far >= +0.05 with Δ NLL <= +0.01): the slow-head retention arms stay under +0.05; every slow-set arm that clears
++0.05 costs NLL +0.013 to +0.024. **Not met.** What it says: (1) **the clock matters:** slowing the Chrono warp WITH the retention (coupled)
+nearly triples the retention-only gain (+0.087 vs +0.033): with retention alone, the query rotates out of phase over 8k. (2) **3 of the 6
+slowest heads sit at the warp clamp floor** (g = exp(−3) ≈ 0.05; 4 of 48 heads overall): the trained body asks for slower clocks than the
+clamp allows. (3) Echo dilation alone remains the cheapest reach lever (+0.105 at +0.005). For the body (ladder / next body, not an eval
+trick): widen the warp clamp floor (−3 → e.g. −6) and let the slow heads train slower clocks; closest prior: learned timescales in SSMs
+(Mamba Δ, LongMamba); difference: a learned rotary clock in a delta notebook. Realized half-life median 8.7 tokens (dry run 8.1).
+
 ## nkr: notebook-key retrieval for ARC-c (PRE-REGISTRATION, 15:53 IST, 2026-11-05; the three step-backs' synthesis, Lead; eval only)
 
 **Question:** can the trained mind ADDRESS its own library better than word overlap? BENCH-LIB on c3b (SCI-1 M9, 386M) found the
