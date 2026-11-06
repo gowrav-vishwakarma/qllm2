@@ -6085,6 +6085,14 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## SCI-1 milestone naming (user via Lead, 14:20 IST 2026-11-06)
+
+**M10 = the long run's first milestone** (`sci1_long_3c2bf1f`, global step 152,590 = 10.0B tokens = M9 + 1.0B on the cont3 mix,
+~19:30 IST): the official 10th point of the SCI-1 series (paper Fig 4, the milestone table, the review page), with the full CHECK +
+Library's suite + Lead's review page. The cont4 checkpoint (`sci1_cont4_8284510` step 152,590, + `worked`) is **M10-worked (failed
+segment)**: kept only as that record, out of the series. Mentions of "M10" in sections written before 14:17 IST 2026-11-06 mean
+M10-worked. Release path: arm D now; if none passes, a short decay saved every 0.05B, preferably from the new M10.
+
 ## s8reg: is the s8 drop LR-driven, a re-warm transient or a mix effect? (PRE-REGISTERED 2026-11-06 12:51 IST, before any number; Lead GO)
 
 **Facts first.** `--continue_from` keeps the model AND the optimizer state; only the LR schedule is fresh (500-step warmup 0 -> 8e-4).
@@ -6152,7 +6160,7 @@ step_137331, 9.0B, sha256 218922f9), cont3 mix (the one that produced M9), the p
 launcher `v13_sempty/tmp/sci1_decay_from.sh`, dir `sci1_decay_m9_<hash>`. cont4 stopped after a clean save; its step_152590 and
 latest.pt are kept (the long run may resume from them with another mix). M10 stays recorded as a failed segment (section below).
 
-## SCI-1 cont4 milestone 10 (CHECK on the 4090, 21:10 IST, 2026-11-05; run `8284510`, step 152,590 = 10.0B tokens; 1.0B of + `worked`)
+## SCI-1 M10-worked (FAILED SEGMENT, not in the milestone series; cont4 CHECK on the 4090, 21:10 IST, 2026-11-05; run `8284510`, step 152,590 = 10.0B tokens; 1.0B of + `worked`)
 
 **The `worked` source fails its keep rule (indicative, but large):** s8 D **0.770 → 0.418**, far needles 4k + 8k **0.98 → 0.57**,
 t40 at 16k **0.87 → 0.33**, clk2 8k 0.61 → 0.51; skill pack 8k 0.30 → 0.36; GSM8K ON / OFF 0.00 → 0.05 / 0.06; `<think>` leak

@@ -12,7 +12,7 @@ Status: `[ ]` open · `[~]` running · `[x]` done and in the paper. Owner in bra
 - [x] **State forks (A31)**: MET on SCI-1 386M at 9B (fork read 0.83 = twin read, answers identical 100/100, 3.674 MB per fork). In §8 as a package operation. [Library]
 - [ ] **Told-twin cells on the knockouts** (what the trained model uses for TOLD rules): ~30 min once a28_twin is wired for the knockout patches; comes with the ladder. [Mind + Library]
 - [ ] **A29 with fresh protocol wordings**: today's 0.93 / 0.91 uses an in-sample parser; not a product claim until held-out wordings pass. → §7.4 wording. [Library]
-- [ ] **SCI-1 final milestones + decay** (137,331 / 152,590 / 160,218 + 1B decay): the last column of Fig 4; the protoc verdict (cont3) and the worked-solutions readout (cont4, indicative only). → §7, §7.5. [Mind]
+- [ ] **SCI-1 final milestones + decay** (M9 137,331; M10 = the long run at 152,590 (sci1_long_3c2bf1f, cont3 mix; user 11-06); the release decay after s8reg): the last column of Fig 4; the protoc verdict (cont3); M10-worked (cont4) only as a failed-segment note. → §7, §7.5. [Mind]
 - [x] **Told vs induced competition**: the 4-way read at 137,331 did NOT support it (both rose: told 0.54 → 0.83 at 2k, induced 0.589 → 0.770). §7.2 rewritten as "co-vary with rehearsal, lagged"; EUREKA 11-04 entry withdrawn as a claim; per-use-notebook idea loses its motivation. [Mind, Library]
 
 - [ ] **Library arms for s8, needles, skill pack per item** (user, 14:35): pairs jsonl cells s8 / needle / skill from 152,590 on; old A26 section hidden where pairs exist (done). [Library]
