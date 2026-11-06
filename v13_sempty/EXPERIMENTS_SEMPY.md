@@ -6085,6 +6085,33 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## far block: distance-supervised rule data in the long run (PRE-REGISTERED 01:46 IST 2026-11-07, before any number; Lead GO for option (b) + Library's proto_far)
+
+**Why:** "FINDING: the far rule margin is the decay's first casualty": nothing trains the far carry (b2s: 0 / 600 prompts reach 2k;
+proto4k: 13 % reach 2k, none 4k). **What:** segment 2 of the long run, from its M11 (`sci1_long_3c2bf1f/step_167849`, ~08:20 IST),
+cont3 mix + the FAR BLOCK ramped in (R2: one ramp, 2B tokens, linear in cumulative tokens, `sci1_long2_env.sh`):
+- `b2s_far` 0 -> 1.2 % of tokens (`v7/data.py _b2far_text_iter`): one B2 rule prompt per doc (base tasks; `_new` never; seeds 2e7+)
+  in the probes' spread layout, 4 or 8 shots, total uniform 1,800-3,200 tokens of DCLM TRAIN filler (exclude_holdout; pool
+  sha 78b23877). Measured (600 docs): median 2,531 / p90 3,044 / max 3,194 tokens; 500 / 600 >= 2,048; 0 >= 4,096.
+- `proto_far` 0 -> 0.8 % (Library, b502422): one stated protocol per doc, first answer 2,061-3,012 tokens after it (600 / 600 >= 2k),
+  doc <= 3,093 tokens; leak-free vs A26 wordings.
+- Taken from dclm / fineweb in proportion (0.23083 / 0.24033 -> 0.22103 / 0.23013); b2s / proto4k / recall4k unchanged (R1).
+- Packer hold: both sources are placed whole inside one 4096 window (training state does not cross windows; ANSWER_IN_WINDOW).
+  Measured: far docs kept whole with their answer weight 37.8 % (no hold) -> 100 %; streams without far sources bit-identical.
+- WARMUP 0 at the switch (optimizer kept; s8reg B: a 500-step re-warm cost s8 ~0.10); constant LR 8e-4.
+**Reads (each 1B milestone, s8 as the 3-save mean where saves exist + the margin):** s8 @2k / @4k (labelled TRAINED DISTANCE from
+this segment on), **s8 @8k = the headline (beyond the 4096 window, never trained)**, told twin 2k / 8k (Library), needles t40 16k,
+clk2 8k, HS / ARC-e / PIQA, per-source holdout, the realized far-block token share and answer-token loss-weight share ([mix] line).
+**Keep rule (R3, judged at ramp end + 1B = 3B after the switch, read every milestone):** keep the far block if s8 @8k rises by
+>= +0.05 over M11's (3-save mean) AND told 8k rises; guards: needles 16k and clk2 8k >= -0.05, HS / ARC-e / PIQA >= -0.01, per-source
+science holdout <= +0.03. If a guard falls at two consecutive milestones, the ramp freezes at its current share. A short decay is then
+tested from the first milestone after ramp end (release path, strict rule).
+**Prediction:** s8 @2k / @4k rise to >= 0.8 within 1-2B (trained distance); @8k moves less (+0.05-0.15); the decay's far-margin loss
+shrinks because the far carry is now in the trained distribution.
+**Closest prior:** long-context data engineering / length curricula (e.g. Fu et al. 2024 "Data Engineering for Scaling LMs to 128K",
+LongAlign) and synthetic long-dependency data; difference: distance-supervised IN-CONTEXT RULE induction for an O(1)-state body, with
+an untrained 8k cell as the headline.
+
 ## FINDING: the far rule margin is the decay's first casualty (01:29 IST 2026-11-07; four-way, Lead + outside reviewer + Mind)
 
 **Evidence (all SCI-1 386M, same s8 protocol, logs/s8reg/):**
