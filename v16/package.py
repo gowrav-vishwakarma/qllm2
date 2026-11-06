@@ -17,7 +17,8 @@ What it does (v14/PACKAGE.md, each step measured in v14/EXPERIMENTS_V14.md):
      question and read PLAINLY (warm: no contrast); greedy, stop at "." / newline / end-of-turn, at most max_new tokens.
      The no-row contrast of v0-v0.2 (l + 4 (l - l_without_row), "A9") is retired: it cancels facts the state already
      holds (needle 0.998 -> 0.927; warm 1.000). A rule HELD in the state keeps its rule twin: apply / apply_value
-     (R x K, the no-pack twin, alpha 4) and the protocol twin / fork (v14/a28_twin.py, a31_fork.py).
+     (R x K, the no-pack twin, alpha 4) and the protocol twin / fork (v14/a28_twin.py, a31_fork.py). v0.3.1: apply_value
+     reads a pack placed ADJACENT to the query (A29 rewrite) warm too; the rule twin only for a pack held further back.
      A record row ("Result: job: K; f1: v1; ...") is first cut to the asked field's clause (A19, labelled
      "field-cut" in info; Mind's w1s showed a body window reader does not fix field selection).
 info = {path: text0 / text1 / text2 / text4 / F2 / None, row: (start, end), row_text, abstain, field_cut, bytes_held}.
@@ -41,6 +42,7 @@ from v14.a6_reread import CKPT as B2P2, Mind  # noqa: E402
 from v14.a13_manykey import capture, maxsim_scores, sentence_rows  # noqa: E402
 from v14.package_fetch import field_cut, row_value, text_fetch  # noqa: E402
 
+PACK_ADJ = 8                                 # apply_value: a pack ending <= 8 tokens before the query is "in view" (warm read)
 CONTENT_BG = 3000                            # fetch_rows: a question word is CONTENT if seen <= 3,000 times in 4.2M background words
 
 
@@ -146,7 +148,7 @@ class Package:
             self.mind.m._dilate = None
         return st, off
 
-    def apply(self, session, key_question: str, skill: dict, alpha: float = 4.0, dilate: float | None = None,
+    def apply(self, session, key_question: str, skill: dict, alpha: float | None = None, dilate: float | None = None,
               max_new: int = 4):
         """R x K (A23): apply a SKILL held in the session (its demonstrations, read earlier) to a FACT the library
         fetches. The planner fetches the key's row, takes the value out (row_value) and writes the skill's trained
@@ -171,8 +173,11 @@ class Package:
         text, vinfo = self.apply_value(S, skill, v, alpha=alpha, dilate=dilate, max_new=max_new)
         return text, dict(info, **vinfo)
 
-    def apply_value(self, session, skill: dict, v: str, alpha: float = 4.0, dilate: float | None = None, max_new: int = 4):
-        """the second half of apply: the skill's query line for a GIVEN value, answered with the skill contrast."""
+    def apply_value(self, session, skill: dict, v: str, alpha: float | None = None, dilate: float | None = None, max_new: int = 4):
+        """the second half of apply: the skill's query line for a GIVEN value. The read follows where the pack sits (v0.3.1,
+        WRITE-IN): a pack ADJACENT to the query (at most PACK_ADJ tokens after it) is evidence in view -> the warm read
+        (alpha 0); a pack held further back -> the rule twin (the same session without the pack, alpha 4). alpha given =
+        forced."""
         enc = lambda x: self.tok.encode(x, add_special_tokens=False) if isinstance(x, str) else list(x)  # noqa: E731
         if isinstance(session, str) and isinstance(skill['pack'], str) and skill['pack'] in session:
             i = session.index(skill['pack'])                  # tokenise around the pack so its tokens match exactly
@@ -188,11 +193,19 @@ class Package:
         T = S[:p0] + S[p0 + len(pack):]                                       # the session without the skill pack
         dS = (p0 + len(pack), len(S), dilate, 'echo') if dilate else None
         dT = (p0, len(T), dilate, 'echo') if dilate else None
-        stS, offS = self._state(S, dS); stT, offT = self._state(T, dT)
-        la, sa, oa = self.mind.feed(q, stS, offS); lb, sb, ob = self.mind.feed(q, stT, offT)
-        out = self._gen(la, sa, oa, lb, sb, ob, alpha, max_new)
-        info.update(abstain=0, query_text=self.tok.decode(q), first_token=out[0] if out else None,
-                    bytes_held=dict(mind_state=_nbytes(stS), no_pack_twin_state=_nbytes(stT), library_text=2 * len(S)))
+        gap = len(S) - (p0 + len(pack))
+        if alpha is None:
+            alpha = 0.0 if gap <= PACK_ADJ else 4.0
+        stS, offS = self._state(S, dS)
+        la, sa, oa = self.mind.feed(q, stS, offS)
+        if alpha == 0.0:                                                      # warm: no twin needed
+            out = self._gen(la, sa, oa, None, None, None, 0.0, max_new); twin_bytes = 0
+        else:
+            stT, offT = self._state(T, dT); lb, sb, ob = self.mind.feed(q, stT, offT); twin_bytes = _nbytes(stT)
+            out = self._gen(la, sa, oa, lb, sb, ob, alpha, max_new)
+        info.update(abstain=0, query_text=self.tok.decode(q), first_token=out[0] if out else None, pack_gap=gap,
+                    read='warm' if alpha == 0.0 else 'rule twin',
+                    bytes_held=dict(mind_state=_nbytes(stS), no_pack_twin_state=twin_bytes, library_text=2 * len(S)))
         return self.tok.decode(out), info
 
     @torch.no_grad()
