@@ -6148,6 +6148,18 @@ none on NLL. **Reading:** s8 falls about linearly along the path (-0.11 per 0.2 
 large") is NOT supported. The graft is incompatible (NLL worse than either end), so it says nothing about where the rule lives. Needles
 16k are higher at every mid point (0.96-0.97) than at both ends. Next: the short decay curve (C), Lead's call on the 6000.
 
+**C2 (PRE-REGISTERED 15:04 IST 2026-11-06, Lead GO; release engineering, no claim; closest prior: MiniCPM / OLMo-2 anneal mixes).**
+From the new M10 (`sci1_long_3c2bf1f/step_152590.pt`, 10.0B), a 0.25B decay (LR 8e-4 -> 0 linear, 3,815 steps) on the cont3 mix with
+the rule block x2 (doc weights b2s 0.01696 -> 0.03392, recall4k 0.00377 -> 0.00754, proto4k 0.00846 -> 0.01692; the added 0.02919 from
+dclm / fineweb in proportion: 0.21653 / 0.22544); env `v13_sempty/tmp/sci1_c2_env.sh`, orchestrator `sci1_c2_orchestrate.sh` (pauses
+the long run at M10, runs C2, resumes the long run exactly at M10). Saves at global multiples of 763 (~0.05B): M10 + 10 / 773 / 1,536 /
+2,299 / 3,062 steps and the end (+3,815). Each point gets s8 D (2k + 4k), t40 16k, HS / ARC-e / PIQA and the held-out NLL (s8reg D's
+protocol). **Release candidate = the FIRST saved point with s8 D >= 0.70 AND ARC-e >= 0.55 AND NLL <= 3.413 (decay_M9 3.383 + 0.03);
+ties broken by needles 16k.** If none passes: C1 (plain curve) next, as paper data or a fallback. The realized rule-block token share
+is read from the trainer's [mix] line at the first val.
+**Paper finding (Lead):** the s8reg D lerp curve (s8 falls ~linearly in l, the NLL gain arrives late) = prose sharpening and rule loss
+are separate directions in weight space.
+
 **Needles (Lead):** this decay KEPT t40 (8k 0.978, 16k 0.908) while M10 lost it (8k 0.69, 16k 0.62), so the regime switch does not
 explain M10's needle loss: "`worked` hurt needles" stays the live reading; only the s8 part is unresolved.
 
