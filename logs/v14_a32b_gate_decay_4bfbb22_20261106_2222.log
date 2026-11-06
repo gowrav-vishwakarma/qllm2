@@ -1,0 +1,6 @@
+HEADER {"unit": "A32 pre-check", "hash": "4bfbb22", "args": {"ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_decay_m9_8290f7d/decay_m9_library_weights.pt", "wordings": "a26,train", "docs": 100, "device": "cuda", "out": "logs/v14_a32b_gate_decay_4bfbb22_20261106_2222.jsonl", "seed": 26500}}
+W1106 22:31:40.647000 303803 torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1106 22:31:41.468000 303803 torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+a26: right twin 0.070 plain 0.550; unit (conv_ok) twin 0.940 plain 0.630 (n 100)
+train: right twin 0.100 plain 0.790; unit (conv_ok) twin 0.980 plain 0.790 (n 100)
+A32 PRE-CHECK DONE

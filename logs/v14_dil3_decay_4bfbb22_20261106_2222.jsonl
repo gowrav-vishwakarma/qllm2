@@ -1,0 +1,601 @@
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "meta", "slow": [{"layer": 4, "head": 0, "realized_half_life": 3756.0, "warp_g": 0.056, "at_floor": true}, {"layer": 2, "head": 1, "realized_half_life": 2821.7, "warp_g": 0.271, "at_floor": false}, {"layer": 3, "head": 2, "realized_half_life": 1229.0, "warp_g": 0.153, "at_floor": false}, {"layer": 3, "head": 1, "realized_half_life": 823.4, "warp_g": 0.298, "at_floor": false}, {"layer": 3, "head": 3, "realized_half_life": 779.8, "warp_g": 0.052, "at_floor": true}, {"layer": 5, "head": 3, "realized_half_life": 697.8, "warp_g": 0.05, "at_floor": true}]}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8800, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8800, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8800, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8801, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8801, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8801, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8802, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8802, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8802, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8803, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8803, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8803, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8804, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8804, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8804, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8805, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8805, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8805, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8806, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8806, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8806, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8807, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8807, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8807, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8808, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8808, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8808, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8809, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8809, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8809, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8810, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8810, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8810, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8811, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8811, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8811, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8812, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8812, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8812, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8813, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8813, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8813, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8814, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8814, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8814, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8815, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8815, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8815, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8816, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8816, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8816, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8817, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8817, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8817, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8818, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8818, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8818, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8819, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8819, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8819, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8820, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8820, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8820, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8821, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8821, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8821, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8822, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8822, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8822, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8823, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8823, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8823, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8824, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8824, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8824, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8825, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8825, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8825, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8826, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8826, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8826, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8827, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8827, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8827, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8828, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8828, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8828, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8829, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8829, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8829, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8830, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8830, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8830, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8831, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8831, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8831, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8832, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8832, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8832, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8833, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8833, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8833, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8834, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8834, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8834, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8835, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8835, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8835, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8836, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8836, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8836, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8837, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8837, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8837, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8838, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8838, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8838, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8839, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8839, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8839, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8840, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8840, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8840, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8841, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8841, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8841, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8842, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8842, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8842, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8843, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8843, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8843, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8844, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8844, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8844, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8845, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8845, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8845, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8846, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8846, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8846, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8847, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8847, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8847, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8848, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8848, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8848, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8849, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8849, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "affine_map_new", "doc": 8849, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8800, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8800, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8800, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8801, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8801, "L": 8192, "arm": "b", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8801, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8802, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8802, "L": 8192, "arm": "b", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8802, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8803, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8803, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8803, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8804, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8804, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8804, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8805, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8805, "L": 8192, "arm": "b", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8805, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8806, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8806, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8806, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8807, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8807, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8807, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8808, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8808, "L": 8192, "arm": "b", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8808, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8809, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8809, "L": 8192, "arm": "b", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8809, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8810, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8810, "L": 8192, "arm": "b", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8810, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8811, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8811, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8811, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8812, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8812, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8812, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8813, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8813, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8813, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8814, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8814, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8814, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8815, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8815, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8815, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8816, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8816, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8816, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8817, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8817, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8817, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8818, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8818, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8818, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8819, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8819, "L": 8192, "arm": "b", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8819, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8820, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8820, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8820, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8821, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8821, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8821, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8822, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8822, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8822, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8823, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8823, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8823, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8824, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8824, "L": 8192, "arm": "b", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8824, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8825, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8825, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8825, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8826, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8826, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8826, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8827, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8827, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8827, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8828, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8828, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8828, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8829, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8829, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8829, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8830, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8830, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8830, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8831, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8831, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8831, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8832, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8832, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8832, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8833, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8833, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8833, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8834, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8834, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8834, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8835, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8835, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8835, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8836, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8836, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8836, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8837, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8837, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8837, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8838, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8838, "L": 8192, "arm": "b", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8838, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8839, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8839, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8839, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8840, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8840, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8840, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8841, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8841, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8841, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8842, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8842, "L": 8192, "arm": "b", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8842, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8843, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8843, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8843, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8844, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8844, "L": 8192, "arm": "b", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8844, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8845, "L": 8192, "arm": "a", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8845, "L": 8192, "arm": "b", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8845, "L": 8192, "arm": "c", "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8846, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8846, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8846, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8847, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8847, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8847, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8848, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8848, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8848, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8849, "L": 8192, "arm": "a", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8849, "L": 8192, "arm": "b", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "rxk", "sub": "shift_wide_new", "doc": 8849, "L": 8192, "arm": "c", "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 0, "L": 8192, "unit": "mg", "target": "56.2", "arm": "a", "answer": " 56.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 0, "L": 8192, "unit": "mg", "target": "56.2", "arm": "b", "answer": " 56.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 0, "L": 8192, "unit": "mg", "target": "56.2", "arm": "c", "answer": " 56.2 kg.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 1, "L": 8192, "unit": "mL", "target": "76.9", "arm": "a", "answer": " volume reading 76.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 1, "L": 8192, "unit": "mL", "target": "76.9", "arm": "b", "answer": " volume reading 76.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 1, "L": 8192, "unit": "mL", "target": "76.9", "arm": "c", "answer": " 1.0 L.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 2, "L": 8192, "unit": "g", "target": "62.9", "arm": "a", "answer": " The mass of W4 is a mass of W4, which is the mass", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 2, "L": 8192, "unit": "g", "target": "62.9", "arm": "b", "answer": " The mass of W4 is a mass of W4, which is the mass", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 2, "L": 8192, "unit": "g", "target": "62.9", "arm": "c", "answer": " 62.9\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 3, "L": 8192, "unit": "kg", "target": "2.2", "arm": "a", "answer": " 2.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 3, "L": 8192, "unit": "kg", "target": "2.2", "arm": "b", "answer": " 2.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 3, "L": 8192, "unit": "kg", "target": "2.2", "arm": "c", "answer": " 1.2 kg.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 4, "L": 8192, "unit": "L", "target": "17.9", "arm": "a", "answer": " 17.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 4, "L": 8192, "unit": "L", "target": "17.9", "arm": "b", "answer": " 17.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 4, "L": 8192, "unit": "L", "target": "17.9", "arm": "c", "answer": " 17.9 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 5, "L": 8192, "unit": "g", "target": "73.9", "arm": "a", "answer": " 73.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 5, "L": 8192, "unit": "g", "target": "73.9", "arm": "b", "answer": " 73.9 g.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 5, "L": 8192, "unit": "g", "target": "73.9", "arm": "c", "answer": " 73.9 g.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 6, "L": 8192, "unit": "mL", "target": "98.4", "arm": "a", "answer": " 98.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 6, "L": 8192, "unit": "mL", "target": "98.4", "arm": "b", "answer": " 98.4 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 6, "L": 8192, "unit": "mL", "target": "98.4", "arm": "c", "answer": " volume 1,000\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 7, "L": 8192, "unit": "kg", "target": "96.7", "arm": "a", "answer": " 96.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 7, "L": 8192, "unit": "kg", "target": "96.7", "arm": "b", "answer": " 96.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 7, "L": 8192, "unit": "kg", "target": "96.7", "arm": "c", "answer": " 96.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 8, "L": 8192, "unit": "kg", "target": "40.7", "arm": "a", "answer": " 40.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 8, "L": 8192, "unit": "kg", "target": "40.7", "arm": "b", "answer": " 40.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 8, "L": 8192, "unit": "kg", "target": "40.7", "arm": "c", "answer": " 40.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 9, "L": 8192, "unit": "mL", "target": "13.8", "arm": "a", "answer": " 13.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 9, "L": 8192, "unit": "mL", "target": "13.8", "arm": "b", "answer": " 13.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 9, "L": 8192, "unit": "mL", "target": "13.8", "arm": "c", "answer": " 13.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 10, "L": 8192, "unit": "\u03bcL", "target": "7.9", "arm": "a", "answer": " volume reading 7.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 10, "L": 8192, "unit": "\u03bcL", "target": "7.9", "arm": "b", "answer": " 7.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 10, "L": 8192, "unit": "\u03bcL", "target": "7.9", "arm": "c", "answer": " 7.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 11, "L": 8192, "unit": "mg", "target": "41.3", "arm": "a", "answer": " 41.3.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 11, "L": 8192, "unit": "mg", "target": "41.3", "arm": "b", "answer": " 41.3.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 11, "L": 8192, "unit": "mg", "target": "41.3", "arm": "c", "answer": " 4.0 T.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 12, "L": 8192, "unit": "mL", "target": "92.7", "arm": "a", "answer": " 92.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 12, "L": 8192, "unit": "mL", "target": "92.7", "arm": "b", "answer": " 92.7 mL (1.5 L)\n", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 12, "L": 8192, "unit": "mL", "target": "92.7", "arm": "c", "answer": " 92.7 mL\n", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 13, "L": 8192, "unit": "kg", "target": "93.8", "arm": "a", "answer": " 0.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 13, "L": 8192, "unit": "kg", "target": "93.8", "arm": "b", "answer": " 0.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 13, "L": 8192, "unit": "kg", "target": "93.8", "arm": "c", "answer": " 0.9\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 14, "L": 8192, "unit": "mL", "target": "84.6", "arm": "a", "answer": " 84.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 14, "L": 8192, "unit": "mL", "target": "84.6", "arm": "b", "answer": " 84.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 14, "L": 8192, "unit": "mL", "target": "84.6", "arm": "c", "answer": " 84.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 15, "L": 8192, "unit": "\u03bcL", "target": "67.6", "arm": "a", "answer": " 4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 15, "L": 8192, "unit": "\u03bcL", "target": "67.6", "arm": "b", "answer": " 4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 15, "L": 8192, "unit": "\u03bcL", "target": "67.6", "arm": "c", "answer": " 4.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 16, "L": 8192, "unit": "\u03bcL", "target": "72.8", "arm": "a", "answer": " 72.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 16, "L": 8192, "unit": "\u03bcL", "target": "72.8", "arm": "b", "answer": " 72.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 16, "L": 8192, "unit": "\u03bcL", "target": "72.8", "arm": "c", "answer": " 72.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 17, "L": 8192, "unit": "ng", "target": "7.8", "arm": "a", "answer": " 7.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 17, "L": 8192, "unit": "ng", "target": "7.8", "arm": "b", "answer": " 7.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 17, "L": 8192, "unit": "ng", "target": "7.8", "arm": "c", "answer": " 7.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 18, "L": 8192, "unit": "g", "target": "71.4", "arm": "a", "answer": " 71.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 18, "L": 8192, "unit": "g", "target": "71.4", "arm": "b", "answer": " 71.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 18, "L": 8192, "unit": "g", "target": "71.4", "arm": "c", "answer": " 71.4 g.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 19, "L": 8192, "unit": "L", "target": "37.3", "arm": "a", "answer": " The volume of A23 is 9.3 L.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 19, "L": 8192, "unit": "L", "target": "37.3", "arm": "b", "answer": " The volume of A23 is 9.3 L.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 19, "L": 8192, "unit": "L", "target": "37.3", "arm": "c", "answer": " The volume of A23 is approximately 1,000,000,000,000", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 20, "L": 8192, "unit": "mL", "target": "82.7", "arm": "a", "answer": " 82.7 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 20, "L": 8192, "unit": "mL", "target": "82.7", "arm": "b", "answer": " 82.7 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 20, "L": 8192, "unit": "mL", "target": "82.7", "arm": "c", "answer": " 82.7 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 21, "L": 8192, "unit": "L", "target": "12.9", "arm": "a", "answer": " 12.9.1.1.1.1.1.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 21, "L": 8192, "unit": "L", "target": "12.9", "arm": "b", "answer": " 12.9.1.1.1.1.1.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 21, "L": 8192, "unit": "L", "target": "12.9", "arm": "c", "answer": " 12.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 22, "L": 8192, "unit": "\u03bcL", "target": "56.9", "arm": "a", "answer": " 56.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 22, "L": 8192, "unit": "\u03bcL", "target": "56.9", "arm": "b", "answer": " 56.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 22, "L": 8192, "unit": "\u03bcL", "target": "56.9", "arm": "c", "answer": " 1.5 x 10-3 L.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 23, "L": 8192, "unit": "\u03bcL", "target": "62.6", "arm": "a", "answer": " 62.6 g\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 23, "L": 8192, "unit": "\u03bcL", "target": "62.6", "arm": "b", "answer": " 62.6 g\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 23, "L": 8192, "unit": "\u03bcL", "target": "62.6", "arm": "c", "answer": " 1.8 M25\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 24, "L": 8192, "unit": "L", "target": "67.7", "arm": "a", "answer": " 67.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 24, "L": 8192, "unit": "L", "target": "67.7", "arm": "b", "answer": " 67.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 24, "L": 8192, "unit": "L", "target": "67.7", "arm": "c", "answer": " 69.7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 25, "L": 8192, "unit": "\u03bcL", "target": "1.4", "arm": "a", "answer": " 1.4\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 25, "L": 8192, "unit": "\u03bcL", "target": "1.4", "arm": "b", "answer": " 1.4\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 25, "L": 8192, "unit": "\u03bcL", "target": "1.4", "arm": "c", "answer": " 1.4\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 26, "L": 8192, "unit": "\u03bcg", "target": "5.6", "arm": "a", "answer": " 5.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 26, "L": 8192, "unit": "\u03bcg", "target": "5.6", "arm": "b", "answer": " 5.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 26, "L": 8192, "unit": "\u03bcg", "target": "5.6", "arm": "c", "answer": " 5.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 27, "L": 8192, "unit": "mL", "target": "58.5", "arm": "a", "answer": " 58.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 27, "L": 8192, "unit": "mL", "target": "58.5", "arm": "b", "answer": " 58.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 27, "L": 8192, "unit": "mL", "target": "58.5", "arm": "c", "answer": " 58.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 28, "L": 8192, "unit": "ng", "target": "82.1", "arm": "a", "answer": " 82.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 28, "L": 8192, "unit": "ng", "target": "82.1", "arm": "b", "answer": " 82.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 28, "L": 8192, "unit": "ng", "target": "82.1", "arm": "c", "answer": " 1.5 x 10-3 kg.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 29, "L": 8192, "unit": "\u03bcg", "target": "60.9", "arm": "a", "answer": " 60.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 29, "L": 8192, "unit": "\u03bcg", "target": "60.9", "arm": "b", "answer": " 60.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 29, "L": 8192, "unit": "\u03bcg", "target": "60.9", "arm": "c", "answer": " 60.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 30, "L": 8192, "unit": "mg", "target": "70.7", "arm": "a", "answer": " 70.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 30, "L": 8192, "unit": "mg", "target": "70.7", "arm": "b", "answer": " 1.0 mg.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 30, "L": 8192, "unit": "mg", "target": "70.7", "arm": "c", "answer": " 1.0 mg.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 31, "L": 8192, "unit": "L", "target": "61.9", "arm": "a", "answer": " 61.9 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 31, "L": 8192, "unit": "L", "target": "61.9", "arm": "b", "answer": " 61.9 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 31, "L": 8192, "unit": "L", "target": "61.9", "arm": "c", "answer": " 61.9 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 32, "L": 8192, "unit": "kg", "target": "82.2", "arm": "a", "answer": " 82.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 32, "L": 8192, "unit": "kg", "target": "82.2", "arm": "b", "answer": " 82.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 32, "L": 8192, "unit": "kg", "target": "82.2", "arm": "c", "answer": " 82.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 33, "L": 8192, "unit": "g", "target": "82.3", "arm": "a", "answer": " 1.3 million\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 33, "L": 8192, "unit": "g", "target": "82.3", "arm": "b", "answer": " 1.3 million\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 33, "L": 8192, "unit": "g", "target": "82.3", "arm": "c", "answer": " 1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 34, "L": 8192, "unit": "\u03bcg", "target": "40.1", "arm": "a", "answer": " 1.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 34, "L": 8192, "unit": "\u03bcg", "target": "40.1", "arm": "b", "answer": " 1.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 34, "L": 8192, "unit": "\u03bcg", "target": "40.1", "arm": "c", "answer": " 1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 35, "L": 8192, "unit": "\u03bcL", "target": "28.3", "arm": "a", "answer": " volume reading 28.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 35, "L": 8192, "unit": "\u03bcL", "target": "28.3", "arm": "b", "answer": " volume reading 28.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 35, "L": 8192, "unit": "\u03bcL", "target": "28.3", "arm": "c", "answer": " volume reading 28.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 36, "L": 8192, "unit": "\u03bcL", "target": "43.2", "arm": "a", "answer": " 1.5 x 10^6 kg.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 36, "L": 8192, "unit": "\u03bcL", "target": "43.2", "arm": "b", "answer": " 1.5 x 10^3 kg.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 36, "L": 8192, "unit": "\u03bcL", "target": "43.2", "arm": "c", "answer": " The volume of the universe is about 3.14 x 10^20 cubic meters", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 37, "L": 8192, "unit": "\u03bcL", "target": "71.6", "arm": "a", "answer": " 71.6 mL.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 37, "L": 8192, "unit": "\u03bcL", "target": "71.6", "arm": "b", "answer": " 1.5 L.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 37, "L": 8192, "unit": "\u03bcL", "target": "71.6", "arm": "c", "answer": " 1.5 L.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 38, "L": 8192, "unit": "\u03bcg", "target": "72.9", "arm": "a", "answer": " 72.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 38, "L": 8192, "unit": "\u03bcg", "target": "72.9", "arm": "b", "answer": " 72.9\u00a0kg.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 38, "L": 8192, "unit": "\u03bcg", "target": "72.9", "arm": "c", "answer": " 72.9\u00a0kg.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 39, "L": 8192, "unit": "\u03bcL", "target": "57.1", "arm": "a", "answer": " Volume 1, sample J7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 39, "L": 8192, "unit": "\u03bcL", "target": "57.1", "arm": "b", "answer": " Volume 1, sample J7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 39, "L": 8192, "unit": "\u03bcL", "target": "57.1", "arm": "c", "answer": " Volume 1, sample J7.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 40, "L": 8192, "unit": "\u03bcL", "target": "67.4", "arm": "a", "answer": " 67.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 40, "L": 8192, "unit": "\u03bcL", "target": "67.4", "arm": "b", "answer": " 67.4 \u03bcL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 40, "L": 8192, "unit": "\u03bcL", "target": "67.4", "arm": "c", "answer": " 67.4 \u03bcL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 41, "L": 8192, "unit": "\u03bcL", "target": "26.6", "arm": "a", "answer": " 26.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 41, "L": 8192, "unit": "\u03bcL", "target": "26.6", "arm": "b", "answer": " 26.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 41, "L": 8192, "unit": "\u03bcL", "target": "26.6", "arm": "c", "answer": " 1.1-1.2.1-1.2-1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 42, "L": 8192, "unit": "\u03bcL", "target": "9.4", "arm": "a", "answer": " 9.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 42, "L": 8192, "unit": "\u03bcL", "target": "9.4", "arm": "b", "answer": " 9.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 42, "L": 8192, "unit": "\u03bcL", "target": "9.4", "arm": "c", "answer": " 9.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 43, "L": 8192, "unit": "kg", "target": "51.2", "arm": "a", "answer": " 51.2 g\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 43, "L": 8192, "unit": "kg", "target": "51.2", "arm": "b", "answer": " 1.6 gigatonnes CO2 in 1990 to 1.6 gigaton", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 43, "L": 8192, "unit": "kg", "target": "51.2", "arm": "c", "answer": " 1.6 gigatonnes W21 (sample pool 2)\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 44, "L": 8192, "unit": "ng", "target": "5.9", "arm": "a", "answer": " 5.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 44, "L": 8192, "unit": "ng", "target": "5.9", "arm": "b", "answer": " 5.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 44, "L": 8192, "unit": "ng", "target": "5.9", "arm": "c", "answer": " 5.9\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 45, "L": 8192, "unit": "ng", "target": "75.5", "arm": "a", "answer": " mass 75.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 45, "L": 8192, "unit": "ng", "target": "75.5", "arm": "b", "answer": " 75.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 45, "L": 8192, "unit": "ng", "target": "75.5", "arm": "c", "answer": " mass 75.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 46, "L": 8192, "unit": "mL", "target": "4.8", "arm": "a", "answer": " 4.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 46, "L": 8192, "unit": "mL", "target": "4.8", "arm": "b", "answer": " 4.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 46, "L": 8192, "unit": "mL", "target": "4.8", "arm": "c", "answer": " 4.8\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 47, "L": 8192, "unit": "kg", "target": "38.5", "arm": "a", "answer": " 22.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 47, "L": 8192, "unit": "kg", "target": "38.5", "arm": "b", "answer": " 22.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 47, "L": 8192, "unit": "kg", "target": "38.5", "arm": "c", "answer": " 22.5 g.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 48, "L": 8192, "unit": "L", "target": "6.9", "arm": "a", "answer": " volume reading 6.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 48, "L": 8192, "unit": "L", "target": "6.9", "arm": "b", "answer": " 6.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 48, "L": 8192, "unit": "L", "target": "6.9", "arm": "c", "answer": " 6.9\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 49, "L": 8192, "unit": "mL", "target": "58.1", "arm": "a", "answer": " 58.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 49, "L": 8192, "unit": "mL", "target": "58.1", "arm": "b", "answer": " 58.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 49, "L": 8192, "unit": "mL", "target": "58.1", "arm": "c", "answer": " 58.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 50, "L": 8192, "unit": "mg", "target": "79.7", "arm": "a", "answer": " 79.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 50, "L": 8192, "unit": "mg", "target": "79.7", "arm": "b", "answer": " 79.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 50, "L": 8192, "unit": "mg", "target": "79.7", "arm": "c", "answer": " 79.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 51, "L": 8192, "unit": "mg", "target": "41.6", "arm": "a", "answer": " 41.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 51, "L": 8192, "unit": "mg", "target": "41.6", "arm": "b", "answer": " 41.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 51, "L": 8192, "unit": "mg", "target": "41.6", "arm": "c", "answer": " 41.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 52, "L": 8192, "unit": "\u03bcL", "target": "99.5", "arm": "a", "answer": " 99.5\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 52, "L": 8192, "unit": "\u03bcL", "target": "99.5", "arm": "b", "answer": " 99.5 \u03bcL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 52, "L": 8192, "unit": "\u03bcL", "target": "99.5", "arm": "c", "answer": " 99.5 \u03bcL (\u03bcL)\n", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 53, "L": 8192, "unit": "kg", "target": "94.3", "arm": "a", "answer": " 94.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 53, "L": 8192, "unit": "kg", "target": "94.3", "arm": "b", "answer": " The mass of X15 is 94.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 53, "L": 8192, "unit": "kg", "target": "94.3", "arm": "c", "answer": " The mass of X15 is 15.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 54, "L": 8192, "unit": "mL", "target": "78.4", "arm": "a", "answer": " 1.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 54, "L": 8192, "unit": "mL", "target": "78.4", "arm": "b", "answer": " 1.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 54, "L": 8192, "unit": "mL", "target": "78.4", "arm": "c", "answer": " 1.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 55, "L": 8192, "unit": "\u03bcL", "target": "75.2", "arm": "a", "answer": " 1,000,000.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 55, "L": 8192, "unit": "\u03bcL", "target": "75.2", "arm": "b", "answer": " 1,000,000.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 55, "L": 8192, "unit": "\u03bcL", "target": "75.2", "arm": "c", "answer": " 1,000,000,000,000,000,000,000,", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 56, "L": 8192, "unit": "g", "target": "79.2", "arm": "a", "answer": " 79.2 g.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 56, "L": 8192, "unit": "g", "target": "79.2", "arm": "b", "answer": " 79.2 g.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 56, "L": 8192, "unit": "g", "target": "79.2", "arm": "c", "answer": " The mass of sample V18 is 79.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 57, "L": 8192, "unit": "kg", "target": "66.5", "arm": "a", "answer": " 47.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 57, "L": 8192, "unit": "kg", "target": "66.5", "arm": "b", "answer": " 47.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 57, "L": 8192, "unit": "kg", "target": "66.5", "arm": "c", "answer": " 1.5 kg\n", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 58, "L": 8192, "unit": "mL", "target": "63.9", "arm": "a", "answer": " 63.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 58, "L": 8192, "unit": "mL", "target": "63.9", "arm": "b", "answer": " 63.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 58, "L": 8192, "unit": "mL", "target": "63.9", "arm": "c", "answer": " The volume of the book is 63.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 59, "L": 8192, "unit": "L", "target": "39.8", "arm": "a", "answer": " 39.8 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 59, "L": 8192, "unit": "L", "target": "39.8", "arm": "b", "answer": " 39.8 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 59, "L": 8192, "unit": "L", "target": "39.8", "arm": "c", "answer": " volume of sample is the volume of the sample in L.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 60, "L": 8192, "unit": "kg", "target": "89.9", "arm": "a", "answer": " 89.9 kg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 60, "L": 8192, "unit": "kg", "target": "89.9", "arm": "b", "answer": " 89.9 kg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 60, "L": 8192, "unit": "kg", "target": "89.9", "arm": "c", "answer": " 89.9 kg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 61, "L": 8192, "unit": "\u03bcg", "target": "75.5", "arm": "a", "answer": " 75.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 61, "L": 8192, "unit": "\u03bcg", "target": "75.5", "arm": "b", "answer": " 75.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 61, "L": 8192, "unit": "\u03bcg", "target": "75.5", "arm": "c", "answer": " 75.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 62, "L": 8192, "unit": "mL", "target": "55.1", "arm": "a", "answer": " 55.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 62, "L": 8192, "unit": "mL", "target": "55.1", "arm": "b", "answer": " 55.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 62, "L": 8192, "unit": "mL", "target": "55.1", "arm": "c", "answer": " 1,000,000,000,000,000,000,000,", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 63, "L": 8192, "unit": "mg", "target": "31.4", "arm": "a", "answer": " 31.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 63, "L": 8192, "unit": "mg", "target": "31.4", "arm": "b", "answer": " 31.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 63, "L": 8192, "unit": "mg", "target": "31.4", "arm": "c", "answer": " 31.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 64, "L": 8192, "unit": "mg", "target": "48.4", "arm": "a", "answer": " 48.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 64, "L": 8192, "unit": "mg", "target": "48.4", "arm": "b", "answer": " 0.5 mg.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 64, "L": 8192, "unit": "mg", "target": "48.4", "arm": "c", "answer": " 0.5 mg.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 65, "L": 8192, "unit": "L", "target": "82.6", "arm": "a", "answer": " 82.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 65, "L": 8192, "unit": "L", "target": "82.6", "arm": "b", "answer": " 82.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 65, "L": 8192, "unit": "L", "target": "82.6", "arm": "c", "answer": " 82.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 66, "L": 8192, "unit": "g", "target": "57.4", "arm": "a", "answer": " 57.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 66, "L": 8192, "unit": "g", "target": "57.4", "arm": "b", "answer": " 57.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 66, "L": 8192, "unit": "g", "target": "57.4", "arm": "c", "answer": " 57.4.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 67, "L": 8192, "unit": "mg", "target": "11.6", "arm": "a", "answer": " 11.6 mg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 67, "L": 8192, "unit": "mg", "target": "11.6", "arm": "b", "answer": " 11.6 mg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 67, "L": 8192, "unit": "mg", "target": "11.6", "arm": "c", "answer": " 11.6 mg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 68, "L": 8192, "unit": "\u03bcg", "target": "34.6", "arm": "a", "answer": " 1.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 68, "L": 8192, "unit": "\u03bcg", "target": "34.6", "arm": "b", "answer": " 1.9.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 68, "L": 8192, "unit": "\u03bcg", "target": "34.6", "arm": "c", "answer": " 4.6.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 69, "L": 8192, "unit": "L", "target": "3.6", "arm": "a", "answer": " 3.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 69, "L": 8192, "unit": "L", "target": "3.6", "arm": "b", "answer": " 3.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 69, "L": 8192, "unit": "L", "target": "3.6", "arm": "c", "answer": " 3.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 70, "L": 8192, "unit": "\u03bcg", "target": "61.3", "arm": "a", "answer": " Mass 61.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 70, "L": 8192, "unit": "\u03bcg", "target": "61.3", "arm": "b", "answer": " 1.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 70, "L": 8192, "unit": "\u03bcg", "target": "61.3", "arm": "c", "answer": " 1.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 71, "L": 8192, "unit": "g", "target": "49.2", "arm": "a", "answer": " 1.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 71, "L": 8192, "unit": "g", "target": "49.2", "arm": "b", "answer": " 1.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 71, "L": 8192, "unit": "g", "target": "49.2", "arm": "c", "answer": " 1.2.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 72, "L": 8192, "unit": "\u03bcL", "target": "47.2", "arm": "a", "answer": " volume reading 47.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 72, "L": 8192, "unit": "\u03bcL", "target": "47.2", "arm": "b", "answer": " volume reading 47.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 72, "L": 8192, "unit": "\u03bcL", "target": "47.2", "arm": "c", "answer": " volume 1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 73, "L": 8192, "unit": "\u03bcL", "target": "13.6", "arm": "a", "answer": " 13.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 73, "L": 8192, "unit": "\u03bcL", "target": "13.6", "arm": "b", "answer": " 13.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 73, "L": 8192, "unit": "\u03bcL", "target": "13.6", "arm": "c", "answer": " 13.6.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 74, "L": 8192, "unit": "mL", "target": "0.9", "arm": "a", "answer": " 0.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 74, "L": 8192, "unit": "mL", "target": "0.9", "arm": "b", "answer": " 0.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 74, "L": 8192, "unit": "mL", "target": "0.9", "arm": "c", "answer": " 0.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 75, "L": 8192, "unit": "mg", "target": "79.2", "arm": "a", "answer": " 79.2 g.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 75, "L": 8192, "unit": "mg", "target": "79.2", "arm": "b", "answer": " 79.2 g.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 75, "L": 8192, "unit": "mg", "target": "79.2", "arm": "c", "answer": " 79.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 76, "L": 8192, "unit": "\u03bcL", "target": "71.3", "arm": "a", "answer": " 71.3 mL.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 76, "L": 8192, "unit": "\u03bcL", "target": "71.3", "arm": "b", "answer": " 71.3 mL.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 76, "L": 8192, "unit": "\u03bcL", "target": "71.3", "arm": "c", "answer": " 71.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 77, "L": 8192, "unit": "\u03bcg", "target": "96.2", "arm": "a", "answer": " 96.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 77, "L": 8192, "unit": "\u03bcg", "target": "96.2", "arm": "b", "answer": " 96.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 77, "L": 8192, "unit": "\u03bcg", "target": "96.2", "arm": "c", "answer": " 96.2 kg\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 78, "L": 8192, "unit": "\u03bcg", "target": "15.1", "arm": "a", "answer": " 15.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 78, "L": 8192, "unit": "\u03bcg", "target": "15.1", "arm": "b", "answer": " 15.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 78, "L": 8192, "unit": "\u03bcg", "target": "15.1", "arm": "c", "answer": " 15.1 \u03bcg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 79, "L": 8192, "unit": "L", "target": "50.4", "arm": "a", "answer": " 50.4 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 79, "L": 8192, "unit": "L", "target": "50.4", "arm": "b", "answer": " 50.4 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 79, "L": 8192, "unit": "L", "target": "50.4", "arm": "c", "answer": " 50.4 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 80, "L": 8192, "unit": "L", "target": "39.3", "arm": "a", "answer": " 39.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 80, "L": 8192, "unit": "L", "target": "39.3", "arm": "b", "answer": " 39.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 80, "L": 8192, "unit": "L", "target": "39.3", "arm": "c", "answer": " 39.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 81, "L": 8192, "unit": "mL", "target": "22.5", "arm": "a", "answer": " 22.5 cm3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 81, "L": 8192, "unit": "mL", "target": "22.5", "arm": "b", "answer": " 22.5 cm3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 81, "L": 8192, "unit": "mL", "target": "22.5", "arm": "c", "answer": " 22.5 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 82, "L": 8192, "unit": "kg", "target": "85.2", "arm": "a", "answer": " 85.2 kg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 82, "L": 8192, "unit": "kg", "target": "85.2", "arm": "b", "answer": " 85.2 kg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 82, "L": 8192, "unit": "kg", "target": "85.2", "arm": "c", "answer": " 85.2 kg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 83, "L": 8192, "unit": "L", "target": "54.8", "arm": "a", "answer": " 54.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 83, "L": 8192, "unit": "L", "target": "54.8", "arm": "b", "answer": " 54.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 83, "L": 8192, "unit": "L", "target": "54.8", "arm": "c", "answer": " 54.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 84, "L": 8192, "unit": "mL", "target": "60.9", "arm": "a", "answer": " 60.9.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 84, "L": 8192, "unit": "mL", "target": "60.9", "arm": "b", "answer": " 60.9 mL\n", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 84, "L": 8192, "unit": "mL", "target": "60.9", "arm": "c", "answer": " 60.9 mL\n", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 85, "L": 8192, "unit": "L", "target": "81.7", "arm": "a", "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 85, "L": 8192, "unit": "L", "target": "81.7", "arm": "b", "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 85, "L": 8192, "unit": "L", "target": "81.7", "arm": "c", "answer": " 81.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 86, "L": 8192, "unit": "kg", "target": "64.9", "arm": "a", "answer": " 64.9 kg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 86, "L": 8192, "unit": "kg", "target": "64.9", "arm": "b", "answer": " 64.9 kg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 86, "L": 8192, "unit": "kg", "target": "64.9", "arm": "c", "answer": " 64.1\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 87, "L": 8192, "unit": "L", "target": "22.6", "arm": "a", "answer": " 22.6 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 87, "L": 8192, "unit": "L", "target": "22.6", "arm": "b", "answer": " 22.6 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 87, "L": 8192, "unit": "L", "target": "22.6", "arm": "c", "answer": " 22.6 L.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 88, "L": 8192, "unit": "kg", "target": "18.1", "arm": "a", "answer": " mass 18.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 88, "L": 8192, "unit": "kg", "target": "18.1", "arm": "b", "answer": " mass 18.1.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 88, "L": 8192, "unit": "kg", "target": "18.1", "arm": "c", "answer": " 8.1.1.1.1.1.1.1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 89, "L": 8192, "unit": "L", "target": "52.4", "arm": "a", "answer": " 52.4\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 89, "L": 8192, "unit": "L", "target": "52.4", "arm": "b", "answer": " 52.4\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 89, "L": 8192, "unit": "L", "target": "52.4", "arm": "c", "answer": " 52.4\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 90, "L": 8192, "unit": "mL", "target": "1.8", "arm": "a", "answer": " 1.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 90, "L": 8192, "unit": "mL", "target": "1.8", "arm": "b", "answer": " 1.8.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 90, "L": 8192, "unit": "mL", "target": "1.8", "arm": "c", "answer": " 1.8 mL (mL)\n", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 91, "L": 8192, "unit": "\u03bcg", "target": "97.5", "arm": "a", "answer": " 1.5g\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 91, "L": 8192, "unit": "\u03bcg", "target": "97.5", "arm": "b", "answer": " 1.5g\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 91, "L": 8192, "unit": "\u03bcg", "target": "97.5", "arm": "c", "answer": " 1.5\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 92, "L": 8192, "unit": "ng", "target": "90.6", "arm": "a", "answer": " 90.6\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 92, "L": 8192, "unit": "ng", "target": "90.6", "arm": "b", "answer": " 90.6\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 92, "L": 8192, "unit": "ng", "target": "90.6", "arm": "c", "answer": " 90.6\n", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 93, "L": 8192, "unit": "kg", "target": "28.3", "arm": "a", "answer": " 28.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 93, "L": 8192, "unit": "kg", "target": "28.3", "arm": "b", "answer": " 28.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 93, "L": 8192, "unit": "kg", "target": "28.3", "arm": "c", "answer": " The mass of the sample W7 is 28.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 94, "L": 8192, "unit": "mg", "target": "75.5", "arm": "a", "answer": " 75.5.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 94, "L": 8192, "unit": "mg", "target": "75.5", "arm": "b", "answer": " 75.5 mg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 94, "L": 8192, "unit": "mg", "target": "75.5", "arm": "c", "answer": " 75.5 mg.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 95, "L": 8192, "unit": "kg", "target": "77.2", "arm": "a", "answer": " 77.2.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 95, "L": 8192, "unit": "kg", "target": "77.2", "arm": "b", "answer": " 1.5 kg.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 95, "L": 8192, "unit": "kg", "target": "77.2", "arm": "c", "answer": " 1.5 kg.", "value_ok": 0, "conv_ok": 1, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 96, "L": 8192, "unit": "mL", "target": "17.9", "arm": "a", "answer": " 70.9m3\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 96, "L": 8192, "unit": "mL", "target": "17.9", "arm": "b", "answer": " 70.9m3\n", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 96, "L": 8192, "unit": "mL", "target": "17.9", "arm": "c", "answer": " X3, the volume of the building.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 97, "L": 8192, "unit": "kg", "target": "97.7", "arm": "a", "answer": " 97.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 97, "L": 8192, "unit": "kg", "target": "97.7", "arm": "b", "answer": " 97.7.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 97, "L": 8192, "unit": "kg", "target": "97.7", "arm": "c", "answer": " K7 is the fourth-highest-selling drug in the world.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 98, "L": 8192, "unit": "mL", "target": "81.3", "arm": "a", "answer": " 81.3.", "value_ok": 1, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 98, "L": 8192, "unit": "mL", "target": "81.3", "arm": "b", "answer": " 81.3 mL.", "value_ok": 1, "conv_ok": 1, "right": 1}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 98, "L": 8192, "unit": "mL", "target": "81.3", "arm": "c", "answer": " 1.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 99, "L": 8192, "unit": "kg", "target": "30.6", "arm": "a", "answer": " 1.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 99, "L": 8192, "unit": "kg", "target": "30.6", "arm": "b", "answer": " 1.5.", "value_ok": 0, "conv_ok": 0, "right": 0}
+{"step": 152590, "tokens": 10000138240, "hash": "4bfbb22", "cell": "told", "doc": 99, "L": 8192, "unit": "kg", "target": "30.6", "arm": "c", "answer": " 1.", "value_ok": 0, "conv_ok": 0, "right": 0}

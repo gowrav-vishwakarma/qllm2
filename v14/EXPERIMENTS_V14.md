@@ -4544,6 +4544,10 @@ fitted threshold:
     body's 8k baseline + 0.25 if higher).
   - Closest prior work: SG-ICL (Kim et al. 2022). Difference: demos written through the O(1) state's rule fork into that
     state, the unit decoded by the mind and the value by a template.
+  - **GATE RESULT (2026-11-06 22:35 IST; Decay_M9, fresh docs seed 26500; code 4bfbb22;
+    logs/v14_a32b_gate_decay_4bfbb22_20261106_2222.*; 100 docs per wording): PASS → build A32b.** At t0, unit right
+    (conv_ok): twin 0.94 held-out / 0.98 trained; plain 0.63 / 0.79. Right: twin 0.07 / 0.10 (the copy cancel, as
+    expected), plain 0.55 / 0.79. The post-hoc 0.94 replicates on fresh docs.
 - **DIL3: slow-head clock + retention dilation for held rules read far back (PRE-REGISTERED 2026-11-06 15:32 IST, before any
   code or number; from Mind's clk3 EUREKA 17089b6, hook 7cb3ef0).** Eval-time lever, not a body result.
   - Body: the release checkpoint (SCI-1 decay, 10B). Held-rule cells at 8k, 100 docs:
@@ -4565,6 +4569,20 @@ fitted threshold:
     (5,3). Only the order after the top three changed, and half-lives moved 10-30 %. The slow heads look like a stable
     property of the body (Mind; my first message wrongly said the decay moved the set). Still re-measured per body.
   - Body (Lead, 2026-11-06): the release candidate picked from Mind's C2 points tonight; Decay_M9 if none passes.
+  - **RESULT on Decay_M9 (2026-11-06 22:31 IST; no C2 point passed, so Lead's standing call; code 4bfbb22;
+    logs/v14_dil3_decay_4bfbb22_20261106_2222.*; 100 docs per cell, 8k):**
+
+    | cell | a today | b echo s 4 on the gap | c echo + clk3 slow heads |
+    |---|---|---|---|
+    | R×K (first token) | 0.16 | 0.12 | 0.15 |
+    | told (right · unit) | 0.10 · 0.11 | 0.18 · 0.22 | 0.18 · 0.24 |
+
+    - **Bar: NOT met.** (c) − (a) = −0.01 (R×K) and +0.08 (told), against +0.10 on both. (c) − (b) = +0.03 / +0.00,
+      against +0.05 on one.
+    - Echo dilation alone helps the told rule a little (+0.08). On this decayed body the slow-head clock adds nothing
+      over it, and R×K does not move.
+    - The slow set re-measured here equals M9's six again.
+    - The release-point run (C3 / LAWA) stays scheduled (Lead), so the decay's rule loss is not the final word.
 - **BENCH-LIB (a): the library arm on ARC-e / ARC-c / HellaSwag / PIQA, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before
   any number; Lead, user 14:40; extends ARC-LIB).** SCI-1 first (c3b now for the page, then the final model), then the three ctl
   bodies with the IDENTICAL library and scorer (the paper rows; ARC-LIB's bar applies to the ctl rows).
