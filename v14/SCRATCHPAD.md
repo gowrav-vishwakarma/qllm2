@@ -4,33 +4,37 @@ Read `README.md` (rules), `EXPERIMENT_INDEX.md` (one row per idea) and
 `EXPERIMENTS_V14.md` (do-not-repeat digest and pre-registered bars) first.
 Keep all three current as things happen (user rule, 2026-10-29).
 
-## STATE NOW (Library, 2026-11-05 17:08 IST) — read first
-- **Package is v0.3 (89fe764).** The default read is warm. The rule twin stays only for held rules (apply / apply_value,
-  protocol twin / fork). A9 is retired (index row, last code 6b6c99c).
+## STATE NOW (Library, 2026-11-06 23:35 IST) — read first
+- **Package is v0.3.1 (324cb6c).**
+  - The default read is warm.
+  - apply_value reads a pack ADJACENT to the query warm (rewrite), and uses the rule twin only for a pack held further
+    back (R×K).
+  - The protocol twin / fork is used for told.
+  - A9 is retired.
+- **Release model:** NOT picked yet. C2: none passed. C3 (6000) and Mind's LAWA-lite (4090) are the candidates. Decay_M9
+  (sci1_decay_m9_8290f7d, my copy decay_m9_library_weights.pt) is the interim reference.
+- **Rows done (EXPERIMENTS_V14 PKG-SUITE):**
+  - c3b (9B);
+  - Decay_M9, the full 12-cell pairs file for the page;
+  - official M10 (m10long, sci1_long_3c2bf1f/m10_library_weights.pt).
 - **Today's verdicts:**
-  - PAIRS-MORE: s8 / skill met; needle loss = A9.
-  - GATE: met, at ceiling.
-  - WRITE-IN: the map ("evidence in view → warm; held rule → rule twin").
-  - BENCH-TOOL: 0 / 200, format not schema.
-  - BENCH-LIB: SCI-1 ARC-e +0.063.
-  - ARC-LIB: NOT met; all bodies gain about +0.055.
-  - All in EXPERIMENTS_V14, lineage and v16/learnings/LIBRARY.md §9.
-- **Armed for the M10 window (step 152,590, ~19:50 IST), one cx_m2 pause by Mind, all in tmux, each waiting for the
-  last:**
-  1. `winc4a` (v14/tmp/window_run_c4a2.sh): twin cells + compact + PKG-SUITE on c4a. `pairsc4a` writes the c4a pairs
-     after it.
-  2. `morec4a` (v14/tmp/window_more_c4a.sh): PAIRS-MORE, BENCH-LIB and BENCH-TOOL on c4a (merged into the c4a pairs) +
-     the c3b PKG-SUITE re-run under v0.3 (tag c3b_v03). Log logs/v14_window_more_c4a_*.log ends "MORE-c4a-DONE".
-     → Tell Lead "c4a pairs final".
-  3. `a32pre` (v14/tmp/window_a32pre.sh): the A32 pre-check + c3b's a26-wording twin baseline at 2k. Log
-     logs/v14_window_a32pre_*.log ends "M10-WINDOW-DONE". → Send Mind AND Lead "M10 window done" (cx_m2 resumes
-     after Mind's clk3).
-- **After the window:**
-  - Record the c4a rows (PKG-SUITE row 2, pairs cells).
-  - Compare c3b_v03 vs c3b (needle / recall should move to warm; R×K / told / rewrite unchanged).
-  - A32 gate: the better of twin / plain on held-out at t0 ≥ 0.60 → build A32; < 0.50 → stop.
-- **Nov 6 (after the SCI-1 decay):** BENCH-PKG (ruler_pkg.py + babilong --package), simple-chat, A29b. Then the board's
-  next: the mind writes the query (HyDE-like), "fetch" as a tool.
+  - The A32 STOP stands (its gate scored value + unit; the twin reads the unit 0.94 at t0, post-hoc).
+  - A32b's gate PASSED on fresh docs (0.94 / 0.98), and its build spec is fixed (EXPERIMENTS_V14 "A32b").
+  - DIL3 NOT met on Decay_M9 (echo helps told +0.08, the clock adds nothing).
+  - The A28b G2 / G3 split is recorded.
+- **Next:**
+  1. Code A32b: `v14/a32b.py`, per the BUILD SPEC.
+     - Unit = the first non-header alphabetic token of the twin's t0 answer on rows_text[1] + its own question.
+     - Demos "Report rule.\n{x} -> {x} {u}" ×3 right after the protocol.
+     - Arms twin / a32b / oracle on A28's docs, a26 at 2k + train at 8k, 100 each.
+     - CPU smoke, commit, then the GPU.
+  2. **4090 collision guard (Lead, 23:2x):** launch every 4090 job inside a tmux session named exactly `slotdil3`; Mind's
+     C3 prober (v13_sempty/tmp/s8reg_c3.sh) yields only while `slotdil3` or `mindlawa` exists. Inside it, first wait for
+     any running C3 probe (run_learning_probe / run_memory_behavioral / mc_eval on a sci1_c3 ckpt) to exit. Or ask Mind.
+  3. When the release point is picked: DIL3 + A32b on it, then on the three ctl bodies (A32b is the fair equal-data arm;
+     T++ / Mamba-2 have no slow heads, so DIL3 is today's read only). Pre-register the ctl run first.
+- **Standing duties:** see "Standing duties" below (PKG-SUITE every 5B / release; light guard every 1B; A27 per new
+  source; BENCH-PKG on the release).
 
 ## Step back in the void (Library, 2026-11-05 15:50 IST; user via Lead: "read the meditation memory again, sit in the void")
 Re-read: the meditation memory, EUREKA (the equal-data control; told vs induced withdrawn), Mind's M9 table and the eval-time
