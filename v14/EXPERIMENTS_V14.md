@@ -4199,6 +4199,26 @@ fitted threshold:
     | recall at 32k, free: needle among 8 / latest-wins / two-hop | 0.05 / 0.30 / 0.00 | **0.85 / 0.85 / 1.00** |
     | recall at 32k, 20-way | 0.10 / 0.45 / 0.10 | **1.00 / 1.00 / 1.00** |
 
+  - **PKG-SUITE ROW: the RELEASE checkpoint = SCI-1 1B decay from M9 (step 152,590, 10.0B tokens; 2026-11-06 13:56 IST;
+    code 178be1d, rewrite / R×K re-run under package v0.3.1 at 324cb6c; `logs/v14_pkg_suite_decay_178be1d_20261106_1249.*`,
+    fix rows `logs/v14_pkg_suite_decay_fix_324cb6c_20261106_1347.*`; the v0.3.0 rewrite rows kept in `*_v030.jsonl` for the
+    record only):**
+
+    | cell | bare | package (v0.3.1) |
+    |---|---|---|
+    | R × K, 2k / 8k (first token) | 0.00 / 0.00 | **0.46 / 0.16** (warm 0.27 / 0.04) |
+    | told rule compiled next to the question (rewrite), 2k / 8k | 0.00 / 0.02 | **0.94 / 0.94** (= warm) |
+    | told rule held in state (twin = fork read), 2k / 8k | 0.07 / 0.00 | **0.74 / 0.10** |
+    | recall at 32k, free: needle among 8 / latest-wins / two-hop | 0.00 / 0.20 / 0.00 | **1.00 / 1.00 / 0.95** |
+    | recall at 32k, 20-way (pooled) | 0.25 | **0.98** |
+
+    - **The v0.3.0 rewrite read dropped decimals on this body** (0.35 / 0.37: unit 0.93, value 0.40; "68.9" → "68 nM").
+      The no-pack twin's contrast cancelled the "." of a pack placed ADJACENT to the query. Fixed in v0.3.1 (an adjacent
+      pack reads warm), after Lead / the outside review flagged it. The 0.35 never enters a table.
+    - Held rules fell over the decay (R×K 0.67 / 0.42 → 0.46 / 0.16; told 0.83 / 0.22 → 0.74 / 0.10). The rule twin still
+      beats warm on R×K, so the READ is right and the model lost rule skill, in line with Mind's s8 D 0.77 → 0.23 over
+      the decay. Facts and in-view rules held or rose (recall 1.00 / 1.00 / 0.95; rewrite 0.94).
+
     - MB held per 32k session: mind state 3.67, library text 0.07, indexes ~0.31; optional F2 address 33.8 (int8) or 0.27 (sign
       bits). Recall is reported to 32k on the 386M body (Lead's line: 128k ran on 103M; the 24 GB card is the limit here).
     - Two-hop is a TEXT planner chain (two package answers). Free recall < 20-way on kv / kvupd: the right value is ranked
