@@ -78,12 +78,23 @@ def wdelta(a):
     json.dump({'ref': a.ref, 'rows': res}, open(a.out, 'w'), indent=1)
 
 
+def avg(a):
+    """LAWA-lite: weighted mean of full checkpoints (--ckpts a,b,c --wts 1,1,1, normalised) -> one weights-only file (--out)."""
+    fs = a.ckpts.split(','); w = [float(x) for x in (a.wts.split(',') if a.wts else ['1'] * len(fs))]; w = [x / sum(w) for x in w]
+    cks = [torch.load(f, map_location='cpu', weights_only=False, mmap=True) for f in fs]; S = [c['model_state_dict'] for c in cks]
+    assert all(x.keys() == S[0].keys() for x in S)
+    sd = {k: (sum(wi * x[k].float() for wi, x in zip(w, S))).to(S[0][k].dtype) if S[0][k].is_floating_point() else S[-1][k] for k in S[0]}
+    meta = {k: cks[-1][k] for k in ('global_step', 'global_tokens', 'best_val_loss', 'config', 'args') if k in cks[-1]}
+    torch.save({'model_state_dict': sd, **meta, 's8reg': 'avg ' + ' + '.join(f'{wi:.3f}*{Path(f).parent.name}/{Path(f).name}' for wi, f in zip(w, fs))}, a.out)
+    print(f'[avg] {a.out}: weights {[round(x, 3) for x in w]}', flush=True)
+
+
 def main():
-    p = argparse.ArgumentParser(); p.add_argument('step', choices=['build', 'nll', 'wdelta'])
+    p = argparse.ArgumentParser(); p.add_argument('step', choices=['build', 'nll', 'wdelta', 'avg'])
     p.add_argument('--m9'); p.add_argument('--decay'); p.add_argument('--out_dir'); p.add_argument('--lams', default='0.3,0.5,0.7')
-    p.add_argument('--ckpts'); p.add_argument('--out'); p.add_argument('--ref')
+    p.add_argument('--ckpts'); p.add_argument('--out'); p.add_argument('--ref'); p.add_argument('--wts')
     p.add_argument('--filler', default='.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt')
-    a = p.parse_args(); {'build': build, 'nll': nll, 'wdelta': wdelta}[a.step](a)
+    a = p.parse_args(); {'build': build, 'nll': nll, 'wdelta': wdelta, 'avg': avg}[a.step](a)
 
 
 if __name__ == '__main__':

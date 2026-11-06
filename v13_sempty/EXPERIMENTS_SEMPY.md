@@ -6215,6 +6215,16 @@ is read from the trainer's [mix] line at the first val.
 **Paper finding (Lead):** the s8reg D lerp curve (s8 falls ~linearly in l, the NLL gain arrives late) = prose sharpening and rule loss
 are separate directions in weight space.
 
+**LAWA-lite (PRE-REGISTERED 21:23 IST 2026-11-06, before any number; outside reviewer + Lead; release engineering, no claim; closest prior:
+LAWA / checkpoint averaging, model soups).** Weight averages of saves already on disk, no training (`s8reg_d.py avg`, built on CPU):
+- **L1** = mean(M9 137,331, 138,500 [M9 + re-warm + 669 steps]); wdelta between them 0.10-0.16 per group.
+- **L2** = mean(cont3 best_model 128,000, M9, 138,500).
+- **L3** = 0.6 M9 + 0.25 x 138,500 + 0.15 Decay_M9 (= mean(L1, lerp30)).
+Reads per point as arm D (s8 D + margin, t40 16k, HS / ARC-e / PIQA, held-out NLL). **Release rule unchanged and strict:** s8 D >= 0.70
+AND ARC-e >= 0.55 AND NLL <= 3.413, plus Lead's jitter rule (here: the margin must stay clearly positive, >= +1.0, since no adjacent
+saves exist). **Expectation, stated now:** the averages keep s8 near M9's but buy only a small part of the decay's NLL / ARC-e gain, because
+the averaged saves sit on the constant-LR plateau; L3 is the best NLL of the three and the most likely to fail s8.
+
 **Needles (Lead):** this decay KEPT t40 (8k 0.978, 16k 0.908) while M10 lost it (8k 0.69, 16k 0.62), so the regime switch does not
 explain M10's needle loss: "`worked` hurt needles" stays the live reading; only the s8 part is unresolved.
 
