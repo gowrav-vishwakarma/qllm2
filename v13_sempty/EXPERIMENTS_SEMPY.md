@@ -6236,6 +6236,16 @@ point and a 4x shorter decay than Decay_M9. **Next release candidate: C3** = the
 The 6000: the long run's restart REFUSED at 21:54 IST (disk 23 GB < 25 after C2's saves); C2's six saves sha-verified on d_drive and
 deleted on the 6000 (49 GB free); long run relaunched 22:10 IST from M10.
 
+**C3 (PRE-REGISTERED 22:23 IST 2026-11-06, before any number; Lead GO; release engineering, no claim).** C2's recipe from M9 (cont3
+step_137331, sha 218922f9, s8 0.770, margin +1.86): 0.25B decay to LR 0 with the rule block x2 (`sci1_c3_env.sh`), saves at global
+multiples of 763 (M9 + 3 / 766 / 1,529 / 2,292 / 3,055, end +3,815 = 141,146), a val + [mix] line at each. The long run pauses after
+its next latest.pt save and resumes from its own latest.pt (`sci1_c3_orchestrate.sh`); each save is copied, sha-verified and deleted
+on the 6000 by `s8reg_c3.sh` (disk floor). Reads per point as C2 (s8 D + margin, t40 16k, HS / ARC-e / PIQA, NLL, wdelta vs M9).
+**Release rule (strict, Lead):** the FIRST point with s8 D >= 0.70 AND ARC-e >= 0.55 AND NLL <= 3.413 AND its adjacent saves' mean
+s8 D >= 0.70; ties by needles 16k; the margin is reported beside every s8. **Expectation (from C2):** s8 stays near M9's level (C2 held
+its start within -0.06) while NLL / ARC-e approach the decay's; the end point is the most likely to pass ARC-e and NLL, the middle ones
+to pass s8.
+
 **LAWA-lite (PRE-REGISTERED 21:23 IST 2026-11-06, before any number; outside reviewer + Lead; release engineering, no claim; closest prior:
 LAWA / checkpoint averaging, model soups).** Weight averages of saves already on disk, no training (`s8reg_d.py avg`, built on CPU):
 - **L1** = mean(M9 137,331, 138,500 [M9 + re-warm + 669 steps]); wdelta between them 0.10-0.16 per group.

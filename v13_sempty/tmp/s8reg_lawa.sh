@@ -11,7 +11,4 @@ done
 f=$O/v13_sempty_s8reg_LAWA_nll.json; [ -s $f ] || $PY /home/gowrav/Development/qllm2/v13_sempty/tmp/s8reg_d.py nll --out $f --filler /home/gowrav/Development/qllm2/.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt \
   --ckpts $L/sci1_cont3_449e320/c3b_step_137331_weights.pt,$L/sci1_decay_m9_8290f7d/decay_m9_library_weights.pt,$D/L1_weights.pt,$D/L2_weights.pt,$D/L3_weights.pt
 echo "=== s8reg LAWA DONE $(date -u +%FT%TZ)"
-# then cx_m2 resumes (Lead 2026-11-06): remove .PAUSED and restart its chain
-rm -f /home/gowrav/Development/qllm_cx/checkpoints_v13_sempty/cx_m2_main_c17775a/.PAUSED
-tmux new-session -d -s mindcxm2 "cd /home/gowrav/Development/qllm_cx && SCREEN_HASH=c17775a NEED_CX=16000 bash v16/complex/cx_chain_live.sh 2>&1 | tee -a logs/v16_cx_chain_c17775a.log"
-echo "=== cx_m2 chain restarted $(date -u +%FT%TZ)"
+# cx_m2 resumes at the end of the C3 probes (v13_sempty/tmp/s8reg_c3.sh), not here (Lead 2026-11-06: C3 GO)
