@@ -10,5 +10,13 @@ for m in "$@"; do
   [ -f $L/.checked_$m ] && { echo "$RUN $m already checked"; continue; }
   echo "waiting for $RUN/$m.pt on the 6000 $(TZ=Asia/Kolkata date)"
   until ssh -o ConnectTimeout=20 ubuntu@34.131.203.207 "ls ~/Development/qllm_sci1/checkpoints_v13_sempty/$RUN/$m.pt" >/dev/null 2>&1; do sleep 300; done
-  sleep 180; RUN=$RUN bash v13_sempty/tmp/sci1_check_local.sh $m; echo "$RUN $m exit $? $(TZ=Asia/Kolkata date)"
+  sleep 180
+  # free the 4090 first (2026-11-06: the M10 CHECK OOM'd beside cx_m2): pause cx_m2, wait for >= 20 GB free, resume it after
+  CX=/home/gowrav/Development/qllm_cx/checkpoints_v13_sempty/cx_m2_main_c17775a; cxp=0
+  if tmux has-session -t "=mindcxm2" 2>/dev/null; then cxp=1; touch $CX/.PAUSED; tmux kill-session -t "=mindcxm2"; sleep 5
+    P=$(pgrep -f "v13_sempty.train .*--checkpoint_dir checkpoints_v13_sempty/cx_m2_main_c17775a( |$)" | head -1)
+    [ -n "$P" ] && { kill -TERM $P; sleep 30; kill -KILL $P 2>/dev/null; }; fi
+  until [ "$(nvidia-smi --query-gpu=memory.total,memory.used --format=csv,noheader,nounits | awk -F", " '{print $1-$2}')" -ge 20000 ]; do sleep 30; done
+  RUN=$RUN bash v13_sempty/tmp/sci1_check_local.sh $m; echo "$RUN $m exit $? $(TZ=Asia/Kolkata date)"
+  if [ $cxp = 1 ]; then rm -f $CX/.PAUSED; tmux new-session -d -s mindcxm2 "cd /home/gowrav/Development/qllm_cx && SCREEN_HASH=c17775a NEED_CX=16000 bash v16/complex/cx_chain_live.sh 2>&1 | tee -a logs/v16_cx_chain_c17775a.log"; echo "cx_m2 resumed"; fi
 done
