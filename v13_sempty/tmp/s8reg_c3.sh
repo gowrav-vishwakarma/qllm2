@@ -20,14 +20,15 @@ probe() {  # $1 local ckpt, $2 name
   f=$O/v13_sempty_${n}_spread_s7000_t400.json; [ -s $f ] || $PY scripts/run_learning_probe.py --model-type v13_sempty --checkpoint $1 --output $f --suite b2 --tasks shift_wide_new,affine_map_new --shots 8 --trials 400 --seed 7000 --spread 0,2048,4096,8192 2>&1 | grep -E "per task|saved|Error"
   f=$O/v13_sempty_${n}_t40_long_behavioral.json; [ -s $f ] || $PY scripts/run_memory_behavioral.py --model-type v13_sempty --checkpoint $1 --preset baseline_real_pm --context-lengths 16384 --positions 0,0.5,1 --association-counts 1,4,8 --trials 40 --max-context 16384 --output $f 2>&1 | grep -v scored | tail -1
   f=$O/v13_sempty_mc_${n}.json; [ -s $f ] || $PY scripts/mc_eval.py --ckpt $1 --out $f 2>&1 | grep -E '^(hellaswag|arc|piqa)'; }
-ALL=""
-for s in 137340 138103 138866 139629 140392; do echo "=== C3 point $s $(date -u +%FT%TZ)"; fetch step_$s.pt step_$s.pt || exit 1; ALL+="$LD/step_$s.pt,"; done &
+# fetch (copy + sha + delete on the 6000) in the background; probe each point as soon as its verified copy exists
+( for s in 137340 138103 138866 139629 140392; do echo "=== C3 point $s fetch $(date -u +%FT%TZ)"; fetch step_$s.pt step_$s.pt || exit 1; touch $LD/.ok_$s; done ) &
 FP=$!
+for s in 137340 138103 138866 139629 140392; do until [ -e $LD/.ok_$s ]; do sleep 60; kill -0 $FP 2>/dev/null || [ -e $LD/.ok_$s ] || { echo "fetcher died"; exit 1; }; done
+  echo "=== C3 point $s probe $(date -u +%FT%TZ)"; probe $LD/step_$s.pt $s; done
 echo "=== C3 end: waiting for Training complete $(date -u +%FT%TZ)"
 until ssh -o ConnectTimeout=20 $R "grep -q '^Training complete' \$(ls -t ~/Development/qllm_c2/logs/v13_sempty_sci1_c3_*_2026*.log 2>/dev/null | head -1)" 2>/dev/null; do sleep 120; done
 wait $FP
-fetch latest.pt step_141146_end.pt || exit 1
-for s in 137340 138103 138866 139629 140392; do probe $LD/step_$s.pt $s; done; probe $LD/step_141146_end.pt 141146end
+fetch latest.pt step_141146_end.pt || exit 1; probe $LD/step_141146_end.pt 141146end
 # A3 (pre-registered before C3 started, outside reviewer via Lead): equal-weight average of the last three saves, same reads
 [ -s $LD/c3avg3_weights.pt ] || /home/gowrav/.venvs/qllm311/bin/python /home/gowrav/Development/qllm2/v13_sempty/tmp/s8reg_d.py avg \
   --ckpts $LD/step_139629.pt,$LD/step_140392.pt,$LD/step_141146_end.pt --out $LD/c3avg3_weights.pt
