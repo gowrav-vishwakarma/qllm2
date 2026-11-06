@@ -4524,6 +4524,10 @@ fitted threshold:
   - Closest prior work: inference-time positional / clock scaling for length (e.g. RoPE scaling / YaRN); Mind's clk2 /
     clk3. Difference: applied only to the O(1) notebook's slow heads over a gap the package knows (it placed the rule).
   - Plumbing unless the bar holds on both cells.
+  - Note (2026-11-06, CPU smoke): the slow set on Decay_M9 is EXACTLY M9's six heads, (4,0), (2,1), (3,2), (3,1), (3,3),
+    (5,3). Only the order after the top three changed, and half-lives moved 10-30 %. The slow heads look like a stable
+    property of the body (Mind; my first message wrongly said the decay moved the set). Still re-measured per body.
+  - Body (Lead, 2026-11-06): the release candidate picked from Mind's C2 points tonight; Decay_M9 if none passes.
 - **BENCH-LIB (a): the library arm on ARC-e / ARC-c / HellaSwag / PIQA, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before
   any number; Lead, user 14:40; extends ARC-LIB).** SCI-1 first (c3b now for the page, then the final model), then the three ctl
   bodies with the IDENTICAL library and scorer (the paper rows; ARC-LIB's bar applies to the ctl rows).
