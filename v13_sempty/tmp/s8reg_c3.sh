@@ -1,6 +1,6 @@
 #!/bin/bash
-# s8reg C3 probes + disk keeper (EXPERIMENTS_SEMPY "s8reg" C3): for each C3 save (global 137,334 / 138,097 / 138,860 / 139,623 /
-# 140,386 and the end = latest.pt), copy it to d_drive, sha-verify against the 6000 and DELETE it there (the 6000's 25 GB floor), then,
+# s8reg C3 probes + disk keeper (EXPERIMENTS_SEMPY "s8reg" C3): for each C3 save (global 137,340 / 138,103 / 138,866 / 139,629 /
+# 140,392 and the end = latest.pt), copy it to d_drive, sha-verify against the 6000 and DELETE it there (the 6000's 25 GB floor), then,
 # once the 4090 is free of Library's slot and LAWA-lite, s8 (+ margins) / t40 16k / MC at the CHECK's code; at the end held-out NLL
 # for M9 + all points and the per-group weight delta vs M9; finally cx_m2 resumes.
 R=ubuntu@34.131.203.207; RD=Development/qllm_sci1/checkpoints_v13_sempty; RUN=sci1_c3_${C3H:?set C3H = the C3 run hash}
@@ -21,16 +21,16 @@ probe() {  # $1 local ckpt, $2 name
   f=$O/v13_sempty_${n}_t40_long_behavioral.json; [ -s $f ] || $PY scripts/run_memory_behavioral.py --model-type v13_sempty --checkpoint $1 --preset baseline_real_pm --context-lengths 16384 --positions 0,0.5,1 --association-counts 1,4,8 --trials 40 --max-context 16384 --output $f 2>&1 | grep -v scored | tail -1
   f=$O/v13_sempty_mc_${n}.json; [ -s $f ] || $PY scripts/mc_eval.py --ckpt $1 --out $f 2>&1 | grep -E '^(hellaswag|arc|piqa)'; }
 ALL=""
-for s in 137334 138097 138860 139623 140386; do echo "=== C3 point $s $(date -u +%FT%TZ)"; fetch step_$s.pt step_$s.pt || exit 1; ALL+="$LD/step_$s.pt,"; done &
+for s in 137340 138103 138866 139629 140392; do echo "=== C3 point $s $(date -u +%FT%TZ)"; fetch step_$s.pt step_$s.pt || exit 1; ALL+="$LD/step_$s.pt,"; done &
 FP=$!
 echo "=== C3 end: waiting for Training complete $(date -u +%FT%TZ)"
 until ssh -o ConnectTimeout=20 $R "grep -q '^Training complete' \$(ls -t ~/Development/qllm_c2/logs/v13_sempty_sci1_c3_*_2026*.log 2>/dev/null | head -1)" 2>/dev/null; do sleep 120; done
 wait $FP
 fetch latest.pt step_141146_end.pt || exit 1
-for s in 137334 138097 138860 139623 140386; do probe $LD/step_$s.pt $s; done; probe $LD/step_141146_end.pt 141146end
+for s in 137340 138103 138866 139629 140392; do probe $LD/step_$s.pt $s; done; probe $LD/step_141146_end.pt 141146end
 # A3 (pre-registered before C3 started, outside reviewer via Lead): equal-weight average of the last three saves, same reads
 [ -s $LD/c3avg3_weights.pt ] || /home/gowrav/.venvs/qllm311/bin/python /home/gowrav/Development/qllm2/v13_sempty/tmp/s8reg_d.py avg \
-  --ckpts $LD/step_139623.pt,$LD/step_140386.pt,$LD/step_141146_end.pt --out $LD/c3avg3_weights.pt
+  --ckpts $LD/step_139629.pt,$LD/step_140392.pt,$LD/step_141146_end.pt --out $LD/c3avg3_weights.pt
 probe $LD/c3avg3_weights.pt avg3
 ALL=$(ls $LD/step_1*.pt $LD/c3avg3_weights.pt | tr '\n' ',' | sed 's/,$//')
 cd $W; f=$O/v13_sempty_s8reg_C3_nll_$RUN.json; [ -s $f ] || $PY /home/gowrav/Development/qllm2/v13_sempty/tmp/s8reg_d.py nll --out $f \

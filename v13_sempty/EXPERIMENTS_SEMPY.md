@@ -6238,7 +6238,7 @@ deleted on the 6000 (49 GB free); long run relaunched 22:10 IST from M10.
 
 **C3 (PRE-REGISTERED 22:23 IST 2026-11-06, before any number; Lead GO; release engineering, no claim).** C2's recipe from M9 (cont3
 step_137331, sha 218922f9, s8 0.770, margin +1.86): 0.25B decay to LR 0 with the rule block x2 (`sci1_c3_env.sh`), saves at global
-multiples of 763 (M9 + 3 / 766 / 1,529 / 2,292 / 3,055, end +3,815 = 141,146), a val + [mix] line at each. The long run pauses after
+multiples of 763 (CORRECTED: global 137,340 / 138,103 / 138,866 / 139,629 / 140,392 = M9 + 9 / 772 / 1,535 / 2,298 / 3,061; end +3,815 = 141,146), a val + [mix] line at each. The long run pauses after
 its next latest.pt save and resumes from its own latest.pt (`sci1_c3_orchestrate.sh`); each save is copied, sha-verified and deleted
 on the 6000 by `s8reg_c3.sh` (disk floor). Reads per point as C2 (s8 D + margin, t40 16k, HS / ARC-e / PIQA, NLL, wdelta vs M9).
 **Release rule (strict, Lead):** the FIRST point with s8 D >= 0.70 AND ARC-e >= 0.55 AND NLL <= 3.413 AND its adjacent saves' mean
