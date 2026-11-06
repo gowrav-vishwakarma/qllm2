@@ -1,0 +1,809 @@
+{
+ "_note": "Every number in the paper comes from this file; each block names its source (notebook section, run hash, log). Update here, re-run make_figures.py.",
+ "ctl_1B": {
+  "source": "v13_sempty/EXPERIMENTS_SEMPY.md 'ctl RESULT' (code caa4da9, result f0a4695); logs/v13_sempty_ctl_{pam,tpp,mamba2}_{main,decay}_caa4da9_*.log; logs/ctl/; B5 logs/ctl/v14_a28_ctl_pam_vs_tpp_mamba2_caa4da9.jsonl; A28b EXPERIMENTS_V14",
+  "tokens": "1.0B (0.9B stable + 0.1B decay), identical SCI-1 cont2 mix, SEQ 4096, seed 43, same code",
+  "bodies": {
+   "PAM-2": {
+    "params_M": 102.88,
+    "s8_D": 0.523,
+    "s8_by_L": [
+     0.75,
+     0.61,
+     0.43,
+     0.28
+    ],
+    "needle": [
+     0.63,
+     0.63,
+     0.53,
+     0.41
+    ],
+    "clk2_8k_16k_op": [
+     0.59,
+     0.15
+    ],
+    "clk2_8k_16k_plain": [
+     0.11,
+     0.04
+    ],
+    "holdout": 3.427,
+    "hs": 0.282,
+    "arce": 0.455,
+    "piqa": 0.588,
+    "told_trained_2k": 0.53,
+    "told_trained_2k_se": 0.05,
+    "told_heldout_2k": 0.12,
+    "told_heldout_2k_se": 0.03,
+    "told_trained_8k": 0.0,
+    "tok_per_s_4090": 63000,
+    "peak_vram_GB": 16.1,
+    "tok_per_s_note": "ctl run steady (4 x 4, py3.11 venv); the earlier 40k was the py3.9 smoke"
+   },
+   "Transformer++": {
+    "params_M": 101.92,
+    "s8_D": 0.074,
+    "s8_by_L": [
+     0.36,
+     0.1,
+     0.05,
+     0.05
+    ],
+    "needle": [
+     0.92,
+     0.12,
+     0.17,
+     0.13
+    ],
+    "clk2_8k_16k_op": [
+     0.09,
+     0.06
+    ],
+    "clk2_8k_16k_plain": [
+     0.08,
+     0.07
+    ],
+    "holdout": 3.44,
+    "hs": 0.281,
+    "arce": 0.457,
+    "piqa": 0.59,
+    "told_trained_2k": 0.12,
+    "told_trained_2k_se": 0.03,
+    "told_heldout_2k": 0.05,
+    "told_heldout_2k_se": 0.02,
+    "told_trained_8k": 0.0,
+    "tok_per_s_4090": 82700,
+    "peak_vram_GB": 10.6
+   },
+   "Mamba-2": {
+    "params_M": 102.61,
+    "s8_D": 0.149,
+    "s8_by_L": [
+     0.68,
+     0.18,
+     0.12,
+     0.08
+    ],
+    "needle": [
+     0.66,
+     0.27,
+     0.18,
+     0.15
+    ],
+    "clk2_8k_16k_op": [
+     0.05,
+     0.05
+    ],
+    "clk2_8k_16k_plain": [
+     0.03,
+     0.03
+    ],
+    "holdout": 3.378,
+    "hs": 0.284,
+    "arce": 0.459,
+    "piqa": 0.588,
+    "told_trained_2k": 0.2,
+    "told_trained_2k_se": 0.04,
+    "told_heldout_2k": 0.06,
+    "told_heldout_2k_se": 0.02,
+    "told_trained_8k": 0.0,
+    "tok_per_s_4090": 113000,
+    "peak_vram_GB": 7.0
+   }
+  },
+  "s8_L_labels": [
+   "0",
+   "2k",
+   "4k",
+   "8k"
+  ],
+  "needle_L_labels": [
+   "2k",
+   "4k",
+   "8k",
+   "16k"
+  ],
+  "bars": {
+   "B1_s8_margin": 0.2,
+   "B2_needle_margin": 0.1,
+   "B3_holdout_slack": 0.03,
+   "B5_told_margin": 0.2
+  }
+ },
+ "tier_600M": {
+  "source": "v16/WRITEUP.md s2.7, s2.8, claim 1; EXPERIMENTS_SEMPY (b2p2 three seeds, s8 D 0.645/0.691/0.741; holdout 3.4777/3.4800/3.4775); kb1 logs/kb1/v13_sempty_kb1_table_ccf187c.md; R x K 41681fc / 5526489 / ed4c84f",
+  "params_M": {
+   "PAM-2": 102.9,
+   "Transformer++": 101.9,
+   "Mamba-2": 102.6
+  },
+  "s8_D": {
+   "PAM-2": [
+    0.645,
+    0.691,
+    0.741
+   ],
+   "Transformer++": [
+    0.134,
+    0.134
+   ],
+   "Mamba-2": [
+    0.116,
+    0.098
+   ]
+  },
+  "holdout": {
+   "PAM-2": 3.48,
+   "Transformer++": 3.5572,
+   "Mamba-2": 3.4754
+  },
+  "kb1_mc_mean": {
+   "PAM-2": 0.391,
+   "Transformer++": 0.388,
+   "Mamba-2": 0.392
+  },
+  "lambada_acc": {
+   "PAM-2": 0.146,
+   "Transformer++": 0.148,
+   "Mamba-2": 0.132
+  },
+  "RxK_plain_2k": {
+   "PAM-2": [
+    0.55,
+    0.48
+   ],
+   "Transformer++": [
+    0.01,
+    0.07
+   ],
+   "Mamba-2": [
+    0.03,
+    0.0
+   ]
+  },
+  "RxK_contrast_2k": {
+   "PAM-2": [
+    0.61,
+    0.62
+   ]
+  },
+  "RxK_8k": {
+   "PAM-2": [
+    0.45,
+    0.49
+   ]
+  },
+  "RxK_norule": 0.0,
+  "RxK_rag_fewshot_ceiling": {
+   "PAM-2": [
+    0.83,
+    0.92
+   ],
+   "Transformer++": 0.3,
+   "Mamba-2": 0.44
+  }
+ },
+ "tier_1p5B": {
+  "source": "v16/WRITEUP.md s2.8 (Mind 9616861; t15pam_m2 verdict); EUREKA.md 2026-11-02",
+  "holdout": {
+   "PAM-2 (M2)": 3.3255,
+   "PAM 16nb": 3.3784,
+   "Transformer++": 3.3593,
+   "Mamba-2": 3.3025
+  },
+  "s8_D": {
+   "PAM-2 (M2)": 0.579,
+   "PAM 16nb": 0.545,
+   "Transformer++": 0.047,
+   "Mamba-2": 0.033
+  },
+  "rules_at_L0": {
+   "PAM-2 (M2)": 1.0,
+   "PAM 16nb": 1.0,
+   "Transformer++": 0.53,
+   "Mamba-2": 0.745
+  },
+  "clk2_8k": {
+   "PAM-2 (M2)": 0.87,
+   "PAM 16nb": 0.47,
+   "Transformer++": 0.29,
+   "Mamba-2": 0.0
+  }
+ },
+ "tier_3B_no_rule_docs": {
+  "source": "v16/WRITEUP.md s2.7, s2.8 (r3c 16nb body, no b2 stage)",
+  "holdout": {
+   "PAM 16nb": 3.219,
+   "Transformer++": 3.206,
+   "Mamba-2": 3.164
+  },
+  "kb1_mc_mean": {
+   "PAM 16nb": 0.403,
+   "Transformer++": 0.406,
+   "Mamba-2": 0.415
+  },
+  "lambada_acc": {
+   "PAM 16nb": 0.179,
+   "Transformer++": 0.196,
+   "Mamba-2": 0.176
+  }
+ },
+ "sci1": {
+  "source": "EXPERIMENTS_SEMPY 'SCI-1 milestones ...' sections; logs/sci1/, logs/diag/, logs/learning_probes/, logs/memory_probes/; told = Library A26 twin read (EXPERIMENTS_V14), M1-M4 20 docs, M5+ 100 docs",
+  "params_M": 385.82,
+  "seq": 4096,
+  "tokens_per_step": 65536,
+  "milestones": [
+   "M1",
+   "M2",
+   "M3",
+   "M4",
+   "M5",
+   "M6",
+   "M7",
+   "M8",
+   "M9"
+  ],
+  "tokens_B": [
+   1.0,
+   2.0,
+   3.0,
+   4.0,
+   5.0,
+   6.0,
+   7.0,
+   8.0,
+   9.0
+  ],
+  "mix": [
+   "base",
+   "base",
+   "base",
+   "base",
+   "cont1",
+   "cont2",
+   "cont2",
+   "cont3",
+   "cont3"
+  ],
+  "s8_D": [
+   0.322,
+   0.538,
+   0.709,
+   0.782,
+   0.435,
+   0.436,
+   0.588,
+   0.589,
+   0.77
+  ],
+  "told_2k": [
+   0.35,
+   0.55,
+   0.55,
+   0.26,
+   0.65,
+   0.81,
+   0.49,
+   0.54,
+   0.83
+  ],
+  "told_8k": [
+   null,
+   null,
+   null,
+   null,
+   0.05,
+   0.2,
+   0.04,
+   0.04,
+   0.22
+  ],
+  "skill_4k": [
+   0.16,
+   0.51,
+   0.66,
+   0.7,
+   0.68,
+   0.68,
+   0.77,
+   0.7,
+   null
+  ],
+  "skill_8k": [
+   0.07,
+   0.1,
+   0.12,
+   0.21,
+   0.26,
+   0.18,
+   0.35,
+   0.31,
+   0.3
+  ],
+  "clk2_8k": [
+   0.08,
+   0.34,
+   0.37,
+   0.62,
+   0.67,
+   0.55,
+   0.68,
+   0.57,
+   0.61
+  ],
+  "clk2_16k": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   0.08,
+   0.22,
+   0.14,
+   0.12
+  ],
+  "needle_16k": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   0.47,
+   0.7,
+   0.88,
+   0.87
+  ],
+  "hellaswag": [
+   0.281,
+   0.293,
+   0.308,
+   0.311,
+   0.321,
+   0.32,
+   0.327,
+   0.331,
+   0.333
+  ],
+  "arc_e": [
+   0.459,
+   0.479,
+   0.487,
+   0.508,
+   0.5,
+   0.514,
+   0.534,
+   0.535,
+   0.519
+  ],
+  "piqa": [
+   0.576,
+   0.594,
+   0.609,
+   0.618,
+   0.612,
+   0.617,
+   0.613,
+   0.619,
+   0.621
+  ],
+  "holdout": [
+   null,
+   3.358,
+   3.275,
+   3.218,
+   3.177,
+   3.139,
+   3.117,
+   3.093,
+   null
+  ],
+  "think": {
+   "source": "think_eval M2 and M4; recheck max_new 1024 (v16/humaneval/think_eval_full.py)",
+   "on_acc_M4": 0.055,
+   "off_acc_M4": 0.04,
+   "leak_off_M4": 0.465,
+   "on_acc_M4_1024": 0.055,
+   "traces_closed_M4_1024": "173/200"
+  },
+  "b2s_share_pct": {
+   "base": 1.7,
+   "cont1": 0.5,
+   "cont2": 1.41,
+   "cont3": 1.49
+  },
+  "holdout_note": "M9 holdout reported as ppl 21.79 (best); nats pending",
+  "milestone_naming": "M10 = the long run sci1_long_3c2bf1f at 10.0B (M9 + 1B, cont3 mix; user 2026-11-06); the cont4 checkpoint (8284510, step 152,590, + worked) is M10-worked, a failed segment, not in this series"
+ },
+ "pythia_ref": {
+  "source": "EXPERIMENTS_SEMPY 'SCI-1 reference block' (78c98e6; logs/sci1ref/); same harness, fp32; different data (the Pile): REFERENCE ONLY",
+  "rows": [
+   {
+    "model": "SCI-1 M3 (PAM-2)",
+    "params_M": 386,
+    "tokens_B": 3.0,
+    "hs": 0.308,
+    "arce": 0.487,
+    "piqa": 0.609,
+    "s8_D": 0.709
+   },
+   {
+    "model": "Pythia-410M step1000",
+    "params_M": 405,
+    "tokens_B": 2.1,
+    "hs": 0.258,
+    "arce": 0.294,
+    "piqa": 0.535,
+    "s8_D": 0.087
+   },
+   {
+    "model": "Pythia-410M step2000",
+    "params_M": 405,
+    "tokens_B": 4.19,
+    "hs": 0.272,
+    "arce": 0.363,
+    "piqa": 0.581,
+    "s8_D": 0.028
+   },
+   {
+    "model": "Pythia-410M step5000",
+    "params_M": 405,
+    "tokens_B": 10.49,
+    "hs": 0.297,
+    "arce": 0.434,
+    "piqa": 0.607,
+    "s8_D": 0.071
+   },
+   {
+    "model": "Pythia-410M final",
+    "params_M": 405,
+    "tokens_B": 299.9,
+    "hs": 0.406,
+    "arce": 0.519,
+    "piqa": 0.672,
+    "s8_D": 0.099
+   }
+  ]
+ },
+ "package": {
+  "source": "v16/WRITEUP.md s2.1, s2.6 (logs/v16_babilong_*_773d751_20261101_1548; 103M, 600M tokens)",
+  "memory_128k_MB": {
+   "PAM-2 state": 1.15,
+   "rows": 0.26,
+   "text": 0.26,
+   "organ": 1.5,
+   "Transformer++ KV": 4932,
+   "Mamba-2 state": 13.9
+  },
+  "babilong": {
+   "tasks": [
+    "qa1",
+    "qa2",
+    "qa3",
+    "qa4",
+    "qa5"
+   ],
+   "tpp_asis": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mamba_asis_beyond4k": [
+    0.03,
+    0.01,
+    0.01,
+    0.03,
+    0.0
+   ],
+   "pam_asis": [
+    0.06,
+    0.01,
+    0.02,
+    0.04,
+    0.04
+   ],
+   "pam_package_0k": [
+    0.85,
+    0.05,
+    0.01,
+    0.45,
+    0.53
+   ],
+   "pam_package_4k": [
+    0.71,
+    0.18,
+    0.06,
+    0.32,
+    0.56
+   ],
+   "pam_package_32k": [
+    0.59,
+    0.19,
+    0.07,
+    0.19,
+    0.58
+   ],
+   "reference_tuned": {
+    "Mamba-130M ft": 0.977,
+    "RMT-137M": 0.85,
+    "ARMT-137M": 0.978,
+    "GPT-4 Turbo": 0.651,
+    "Llama-3.1-70B": 0.678
+   }
+  },
+  "recall_cells_32k_128k": {
+   "needle": 1.0,
+   "8-needle": 1.0,
+   "latest-wins": 1.0,
+   "two-hop": 1.0,
+   "tpp_asis": 0.04,
+   "mamba_asis": 0.14,
+   "pam_asis": 0.1
+  }
+ },
+ "ablations": {
+  "source": "v13_sempty/EXPERIMENT_INDEX.md rows N1, N4, A3, E1, M1, M2, W1, A2/A2b, A2r, G1",
+  "wikitext_ppl_102M": {
+   "base": 23.81,
+   "+Chrono (N1)": 23.14,
+   "+read-out gate (N4)": 22.96
+  },
+  "delta_microbench_a1": {
+   "no delta": 0.46,
+   "delta (A3)": 1.0
+  },
+  "echo_600M": {
+   "holdout_without": 3.5408,
+   "holdout_with": 3.4885,
+   "wikitext_without": 75.9,
+   "wikitext_with": 71.1,
+   "recall_without": 0.343,
+   "recall_with": 0.401,
+   "pg19_far_gain": "2.4x"
+  },
+  "sparse_M1_600M": {
+   "holdout": 3.4906,
+   "recall": 0.615,
+   "speed_vs_dense": "1.8x faster"
+  },
+  "shared_reads_M2_600M": {
+   "holdout": 3.4697,
+   "recall": 0.522,
+   "speed_vs_M1": "1.18x slower"
+  },
+  "window_W128_M2_600M": {
+   "s8_gain": 0.09,
+   "verdict": "modest, shrinks with data; not in the release body"
+  },
+  "not_adopted": [
+   "A2/A2b multi-state + vault (cost, no decode)",
+   "A2r content-routed memories (chance, 4-8x cost)",
+   "G1 short conv (open; box-control confound)",
+   "W1 window reader (fail as reader)"
+  ]
+ },
+ "a28_a29": {
+  "source": "EXPERIMENTS_V14 'A28', 'A28 REPLICATION', 'A29', 'A30 VERDICT'; EUREKA.md 2026-11-04",
+  "twin_read_c1a_2k": {
+   "twin": 0.65,
+   "twin_se": 0.05,
+   "A9_read": 0.0,
+   "plain": 0.01,
+   "noprot": 0.0
+  },
+  "twin_read_M4_2k": {
+   "twin": 0.26,
+   "twin_se": 0.04
+  },
+  "beyond_2k": "0.00-0.10 at 8k / 32k under every read",
+  "a29_query_time_rewrite_100docs": {
+   "a26_wording_2k": 0.93,
+   "a26_wording_8k": 0.91,
+   "trained_wording_2k": 0.72,
+   "trained_wording_8k": 0.68,
+   "A9_read": 0.0
+  },
+  "a30_compositional_contrast": "not met: fact twin raises the value, cuts the unit"
+ },
+ "complex_vs_real": {
+  "source": "EXPERIMENTS_SEMPY.md:209 ledger row 3 (96513c0, 87f7b42); logs/v13_sempty_wikitext_real_fair_7af42eb_20260903_1628.log",
+  "real_params_M": 101.89,
+  "complex_params_M": 100.36,
+  "tinystories_nll_final200": {
+   "complex": 3.222,
+   "real": 2.981
+  },
+  "wikitext103_100M_tokens_nats": {
+   "real": 4.38,
+   "complex": 4.36
+  },
+  "caveat": "real arm lr 5e-5 / T256 vs complex 3e-4 / T2048: not one-variable; earlier body, Sept 2026"
+ },
+ "a28_matched_told_rule": {
+  "source": "logs/ctl/v14_a28_ctl_pam_vs_tpp_mamba2_caa4da9.jsonl; logs/v14_a28b_ctl_a26w_2k_f56d4e6_20261105_0625.jsonl (Library)",
+  "n_docs": 98,
+  "seeds_per_body": 1,
+  "tokens": "1B",
+  "length": 2048,
+  "wording": "trained",
+  "PAM": {
+   "a9": 0.0,
+   "plain": 0.0,
+   "noprot": 0.0,
+   "twin": 0.53,
+   "twin_se": 0.05,
+   "twin_heldout_wording": 0.12,
+   "twin_heldout_se": 0.03
+  },
+  "Mamba2": {
+   "a9": 0.0,
+   "plain": 0.0,
+   "noprot": 0.0,
+   "twin": 0.2,
+   "twin_se": 0.04,
+   "twin_heldout_wording": 0.06,
+   "twin_heldout_se": 0.02
+  },
+  "TPP": {
+   "a9": 0.0,
+   "plain": 0.0,
+   "noprot": 0.0,
+   "twin": 0.12,
+   "twin_se": 0.03,
+   "twin_heldout_wording": 0.05,
+   "twin_heldout_se": 0.02
+  },
+  "twin_8k_trained_wording": {
+   "PAM": 0.0,
+   "Mamba2": 0.0,
+   "TPP": 0.0
+  },
+  "reading": "stored but not expressed in EVERY body: a9/plain/noprot are 0.00 for all three; the twin read is > 0 for all three"
+ },
+ "knockouts_ctl_pam": {
+  "source": "Mind, eval-time knockouts on the trained ctl PAM (caa4da9), s8 spread probe, 400 trials; EXPERIMENTS_SEMPY 'knockouts'",
+  "note": "a part is switched off ONLY during the filler spans; measures what the trained model USES, not what training needs",
+  "arms": {
+   "all on": {
+    "s8_D": 0.523,
+    "at0_shift": 0.77,
+    "at0_affine": 0.73
+   },
+   "no erase-at-key on filler": {
+    "s8_D": 0.197,
+    "at0_shift": 0.77,
+    "at0_affine": 0.73
+   },
+   "equal-energy global fade instead of erase (Mamba-like)": {
+    "s8_D": 0.136,
+    "at0_shift": 0.77,
+    "at0_affine": 0.73
+   },
+   "clock frozen (plain RoPE) through filler": {
+    "s8_D": 0.381,
+    "at0_shift": 0.77,
+    "at0_affine": 0.73
+   },
+   "echo zeroed": {
+    "s8_D": 0.086,
+    "at0_shift": 0.06,
+    "at0_affine": 0.16
+   },
+   "readers zeroed": {
+    "s8_D": 0.059,
+    "at0_shift": 0.0,
+    "at0_affine": 0.38
+   }
+  }
+ },
+ "complex_twin_cost": {
+  "source": "v16/complex/EXPERIMENTS_CX.md (Mind)",
+  "complex_tok_per_s": 10900,
+  "complex_batch": "16 x 1 (forced by memory)",
+  "real_tok_per_s": 63000,
+  "real_batch": "4 x 4",
+  "slowdown": "~5.8x",
+  "complex_peak_GB": 15.9,
+  "complex_GB_per_seq": 12.9,
+  "real_GB_per_seq": 4.0
+ },
+ "a31_state_forks": {
+  "source": "EXPERIMENTS_V14 'A31' (Library); SCI-1 386M step 137,331, G1 2k, 100 docs",
+  "fork_read": 0.83,
+  "fork_read_se": 0.04,
+  "twin_read_same_docs": 0.83,
+  "answers_identical": "100/100",
+  "MB_per_fork_386M": 3.674,
+  "MB_per_fork_103M": 1.155,
+  "claim": "cost + operation; accuracy = twin read by construction"
+ },
+ "pkg_suite_m9": {
+  "source": "logs/v14_pkg_suite_c3b_c93e3b7_20261105_1347.jsonl; EXPERIMENTS_V14 'PKG-SUITE ROW' (Library); SCI-1 386M step 137,331 (9.0B tokens)",
+  "n_docs": "100 per cell (recall 20 per task)",
+  "cells": {
+   "Rule in state x fact fetched, 2k": {
+    "bare": 0.01,
+    "package": 0.67
+   },
+   "Rule in state x fact fetched, 8k": {
+    "bare": 0.01,
+    "package": 0.42
+   },
+   "Told rule rewritten next to question, 2k": {
+    "bare": 0.01,
+    "package": 0.92
+   },
+   "Told rule rewritten next to question, 8k": {
+    "bare": 0.0,
+    "package": 0.85
+   },
+   "Told rule held in state, 2k": {
+    "bare": 0.13,
+    "package": 0.83
+   },
+   "Told rule held in state, 8k": {
+    "bare": 0.05,
+    "package": 0.22
+   },
+   "Recall at 32k: needle (free)": {
+    "bare": 0.05,
+    "package": 0.85
+   },
+   "Recall at 32k: latest wins (free)": {
+    "bare": 0.3,
+    "package": 0.85
+   },
+   "Recall at 32k: two-hop (free)": {
+    "bare": 0.0,
+    "package": 1.0
+   }
+  },
+  "recall_32k_20way": {
+   "bare": [
+    0.1,
+    0.45,
+    0.1
+   ],
+   "package": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "MB_per_32k_session": {
+   "state": 3.67,
+   "text": 0.07,
+   "indexes": 0.31,
+   "optional_F2_int8": 33.8,
+   "optional_F2_signbits": 0.27
+  },
+  "caveats": [
+   "rewrite parser in-sample (fresh wordings pending)",
+   "two-hop is a TEXT planner chain",
+   "value fetch 1.00 is the library's",
+   "recall reported to 32k on the 386M model; 128k (1.00) measured on the 103M model; 24 GB card limit"
+  ]
+ }
+}
