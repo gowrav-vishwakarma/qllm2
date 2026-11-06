@@ -7,6 +7,13 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-11-07 01:29 IST: an LR decay erases far rule carry first; the training data never taught that distance
+**What we saw:** four SCI-1 tests (plain 1B decay, M9 <-> decay interpolation, rule-x2 decays from M10 and from M9; logs/s8reg/, EXPERIMENTS_SEMPY
+"FINDING: the far rule margin is the decay's first casualty"): s8 at 2k / 4k falls with the LR every time (M9 0.77 -> 0.23 plain;
+-> 0.46 with the rule docs doubled), while benchmarks and NLL improve. b2s spread prompts never reach 2k tokens (0 / 600).
+**What it says:** the far carry is an untrained extrapolation; decays sharpen it away. **For Library / Lead:** read any held-rule cell on
+a decayed checkpoint as this effect first; units that rely on far rules need data at that distance (b2s_far) before a release decay.
+
 ## 2026-11-06 15:31 IST: the slow notebook heads want slower clocks than the Chrono warp clamp allows
 **What we saw:** clk3 on SCI-1 M9 (`7a9eecd`, logs/diag/v13_sempty_clk3_m9_7a9eecd.json): 3 of the 6 heads with the longest realized
 retention (half-lives 4,204 / 746 / 742 tokens) sit at the warp clamp floor g = exp(−3); slowing the clock WITH the retention at eval

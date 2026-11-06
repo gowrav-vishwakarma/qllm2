@@ -6085,6 +6085,23 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## FINDING: the far rule margin is the decay's first casualty (01:29 IST 2026-11-07; four-way, Lead + outside reviewer + Mind)
+
+**Evidence (all SCI-1 386M, same s8 protocol, logs/s8reg/):**
+1. Plain 1B decay from M9 (`8290f7d`): s8 D 0.770 -> 0.231 while NLL 3.555 -> 3.383, ARC-e 0.519 -> 0.567 (same stream as the
+   constant-LR M10: an LR-only comparison, 0.231 vs 0.423).
+2. Weight interpolation M9 <-> Decay_M9: s8 falls ~linearly in l (0.77 / 0.69 / 0.57 / 0.43 / 0.23); the NLL gain arrives late.
+3. Rule-block x2 decay from M10 (C2, `1b8607d`): 0.423 -> 0.359 (low start, little to lose).
+4. Rule-block x2 decay from M9 (C3, `95498f3`): 0.770 -> 0.457, margin +1.86 -> −0.17 over 0.25B, about linear in the LR fall.
+**Cause candidate (measured):** b2s, the only rule-induction source, joins 6 prompts per doc; its spread prompts reach at most 1,572
+tokens and **0 of 600 reach the probe's 2k distance**; 24 % lose the answer weight (ANSWER_IN_WINDOW). Nothing in the stream trains the
+far carry; a decay sharpens the model toward the trained distribution and the untrained far margin goes first.
+**What it means:** the fix is in the data (b2s_far, pre-registered next), not in the decay recipe. No interim release (Lead): the paper
+states M9 (rules: s8 0.770, margin +1.86) and Decay_M9 (benchmarks) side by side; the release waits for a b2s_far point after >= 2B + a
+short decay, judged by the strict rule (3-save s8 mean + margin). Closest prior: catastrophic forgetting of rare skills under LR
+annealing / annealing-phase data curation (MiniCPM, OLMo-2); difference: the skill is in-context rule carry over distance in an O(1)
+state, measured by margin through the decay.
+
 ## s8 checkpoint jitter (found 21:10 IST 2026-11-06 in C2's first point; Lead's rules adopted)
 
 **Seen:** C2's first save is M10 + 10 optimizer steps (LR ~8e-4): s8 D 0.423 -> **0.331** with the same deterministic probe (400 trials,
