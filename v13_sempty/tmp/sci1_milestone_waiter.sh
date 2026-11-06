@@ -18,5 +18,9 @@ for m in "$@"; do
     [ -n "$P" ] && { kill -TERM $P; sleep 30; kill -KILL $P 2>/dev/null; }; fi
   until [ "$(nvidia-smi --query-gpu=memory.total,memory.used --format=csv,noheader,nounits | awk -F", " '{print $1-$2}')" -ge 20000 ]; do sleep 30; done
   RUN=$RUN bash v13_sempty/tmp/sci1_check_local.sh $m; echo "$RUN $m exit $? $(TZ=Asia/Kolkata date)"
+  # then Library's FAR-TOLD for this milestone runs on the free card (Library 2026-11-07); cx_m2 resumes after its DONE line (<= 60 min)
+  K=$(( ${m#step_} / 15259 )); FT=/home/gowrav/Development/qllm_v14norm/logs/v14_fartold_watch.log; t=0
+  until grep -q "FAR-TOLD-m${K}far-DONE" $FT 2>/dev/null || [ $t -ge 120 ]; do sleep 30; t=$((t + 1)); done
+  grep -q "FAR-TOLD-m${K}far-DONE" $FT 2>/dev/null && echo "FAR-TOLD m$K done" || echo "FAR-TOLD m$K not done after 60 min, resuming cx_m2 anyway"
   if [ $cxp = 1 ]; then rm -f $CX/.PAUSED; tmux new-session -d -s mindcxm2 "cd /home/gowrav/Development/qllm_cx && SCREEN_HASH=c17775a NEED_CX=16000 bash v16/complex/cx_chain_live.sh 2>&1 | tee -a logs/v16_cx_chain_c17775a.log"; echo "cx_m2 resumed"; fi
 done
