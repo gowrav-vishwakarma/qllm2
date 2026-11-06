@@ -6085,6 +6085,30 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## s8reg: is the s8 drop LR-driven, a re-warm transient or a mix effect? (PRE-REGISTERED 2026-11-06 12:51 IST, before any number; Lead GO)
+
+**Facts first.** `--continue_from` keeps the model AND the optimizer state; only the LR schedule is fresh (500-step warmup 0 -> 8e-4).
+So a "segment switch" = an LR dip to ~0 and back + the new mix / stream. The decay kept no mid-point checkpoint (KEEP_EVERY 0), so
+Lead's arm (a) needs a new run. ctl_pam_main's `stable_final.pt` (before its 0.1B decay) exists, and its stable s8 was never read: the
+ctl result "decayed PAM kept s8 0.523" does NOT show that its decay was harmless.
+
+**Arms (s8 spread probe, the CHECK protocol: b2, shift_wide_new + affine_map_new, 8 shots, 400 trials, seed 7000, 0/2k/4k/8k):**
+- **A** ctl_pam_main stable_final (103M, 0.9B stable) vs its 0.1B decay (0.523, read).
+- **B** SCI-1 long run step 138,500 = M9 + 500 re-warm steps + 669 stable steps on the SAME cont3 mix (snapshot, sha-checked).
+- **C** (needs the 6000; Lead's call) a 0.25B decay from M9 to LR 0, saving every 0.05B -> s8 against LR along the decay.
+- (optimizer reset vs kept: only if A-C leave it open)
+
+**Readings, fixed now:**
+- A: stable within 0.05 of 0.523 -> a short decay is harmless at 103M; SCI-1's drop is tied to its 1B length / floor -> C decides.
+  A >= 0.60 -> decays cost s8 in general (ctl too).
+- B: >= 0.65 -> the re-warm alone is harmless: segment drops come from the mix change (cont1 / cont4 both changed the mix) and
+  M10's s8 loss goes back to the `worked` mix change. B <= 0.45 -> the LR dip itself costs s8 (a transient); the long run's 19:30
+  milestone (same mix, stable LR) shows whether it recovers.
+- C: s8 falls steadily as the LR falls -> LR-driven: the release decays to a non-zero floor or is shorter (picked by C's curve).
+  s8 falls early, then rises -> a transient.
+**Needles (Lead):** this decay KEPT t40 (8k 0.978, 16k 0.908) while M10 lost it (8k 0.69, 16k 0.62), so the regime switch does not
+explain M10's needle loss: "`worked` hurt needles" stays the live reading; only the s8 part is unresolved.
+
 ## SCI-1 decay-from-M9 CHECK (2026-11-06 12:50 IST; `sci1_decay_m9_8290f7d/latest.pt`, 10.0B tokens = M9 9.0B + 1.0B decay on the cont3 mix)
 
 | | M9 (stable, 9.0B) | decay (10.0B) |
@@ -6115,7 +6139,7 @@ latest.pt are kept (the long run may resume from them with another mix). M10 sta
 
 **The `worked` source fails its keep rule (indicative, but large):** s8 D **0.770 → 0.418**, far needles 4k + 8k **0.98 → 0.57**,
 t40 at 16k **0.87 → 0.33**, clk2 8k 0.61 → 0.51; skill pack 8k 0.30 → 0.36; GSM8K ON / OFF 0.00 → 0.05 / 0.06; `<think>` leak
-0.00; HS / ARC-e / PIQA 0.333 / 0.532 / 0.617 (flat). Keep rule: s8 +0.10 → it fell 0.35: **`worked` dropped.** (CORRECTED 2026-11-06: confounded with the segment switch, see the decay-from-M9 CHECK; verdict unresolved.) Reading: plain
+0.00; HS / ARC-e / PIQA 0.333 / 0.532 / 0.617 (flat). Keep rule: s8 +0.10 → it fell 0.35: **`worked` dropped.** (CORRECTED 2026-11-06: the s8 part is confounded with the segment switch, unresolved; the needle loss is NOT explained by it (the decay kept needles): `worked` hurt needles stays the live reading.) Reading: plain
 worked solutions (2 % of tokens, chat-formatted, 392k short docs ~20 epochs at this share) taught the readout to answer from local
 arithmetic text and cost the long-range carry (the lag rule says 1B is early, but the drop is 3x the noise). Consequence: the main
 ends on the cont4 mix at 160,218, so a decay from its end would carry the damage; Lead decides between decaying from M9 (the best
