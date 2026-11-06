@@ -30,7 +30,8 @@ for t, rows in full['bench'].items():
         'Every question of the test split. Green = correct answer; blue outline = model\'s pick (score per character, higher = preferred).',
         'mc', [dict(prompt=r['q'], choices=r['choices'], gold=r['gold'], pick=r['pick'], ok=r['ok'], score=r['score']) for r in rows])
 # Math (GSM8K, think_eval rows; questions re-attached from the same test split, same order)
-kf = sorted(glob.glob(str(R / f'logs/sci1/v13_sempty_think_sci1_step_{STEP}_*.json')))
+KEY = sys.argv[3] if len(sys.argv) > 3 else f'step_{STEP}'   # think-file key: step_<N> for milestones, e.g. latest_8290f7d for the decay
+kf = sorted(glob.glob(str(R / f'logs/sci1/v13_sempty_think_sci1_{KEY}*.json')))
 k = json.load(open(kf[-1])) if kf else {'rows': []}
 try:
     from datasets import load_dataset
