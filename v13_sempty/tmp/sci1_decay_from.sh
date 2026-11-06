@@ -12,7 +12,7 @@ disk_gb() { df -BG / | awk 'NR==2{gsub("G","",$4); print $4}'; }
 [ "$(disk_gb)" -ge 12 ] || { echo "sci1 decay: disk $(disk_gb)G < 12, STOP"; exit 1; }
 [ -s "$DECAY_FROM" ] || { echo "sci1 decay: no $DECAY_FROM"; exit 1; }
 echo "=== $DECAY_TAG start from $DECAY_FROM: code $H, $(date -u +%FT%TZ); tokens $DECAY_TOKENS; SOURCES=$SOURCES WEIGHTS=$WEIGHTS"
-COMMON="ECHO=1 CHRONO=1 OUT_GATE=1 DELTA=1 ANSWER_W=100 SEED=43 SEQ=${SEQ:-4096} BLEND_WARMUP=0 FINEWEB_LOCAL_DIR=data/fineweb-edu GEN_EVERY=0 VAL_EVERY=2000 VAL_SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,pysci,chatmt MAX_RETRIES=20 ANSWER_IN_WINDOW=1 RESET_AT_EOS=1 DECONTAM_INDEX=.cache/decontam/v1.npy"
+COMMON="ECHO=1 CHRONO=1 OUT_GATE=1 DELTA=1 ANSWER_W=100 SEED=43 SEQ=${SEQ:-4096} BLEND_WARMUP=0 FINEWEB_LOCAL_DIR=data/fineweb-edu GEN_EVERY=0 VAL_EVERY=${VAL_EVERY_D:-2000} VAL_SOURCES=dclm,fineweb,arxiv,pubmed,pes2o,cosmo,tools,pysci,chatmt MAX_RETRIES=20 ANSWER_IN_WINDOW=1 RESET_AT_EOS=1 DECONTAM_INDEX=.cache/decontam/v1.npy"
 env $COMMON $GEOM SOURCES=$SOURCES WEIGHTS=$WEIGHTS TAG=$DECAY_TAG CKPT_DIR=$C/${DECAY_TAG}_$H PIN_HASH=$H LR=$LR LR_SCHEDULE=decay CONTINUE_FROM=$DECAY_FROM \
   TARGET_TOKENS=$DECAY_TOKENS BATCH=$BATCH GRAD_ACCUM=$GRAD_ACCUM SAVE_EVERY=500 KEEP_EVERY=${KEEP_EVERY_D:-0} KEEP_LAST=${KEEP_LAST_D:-1} bash v13_sempty/tmp_pretrain_mix.sh
 echo "=== $DECAY_TAG exit=$? $(date -u +%FT%TZ)"

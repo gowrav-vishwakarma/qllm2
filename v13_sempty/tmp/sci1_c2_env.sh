@@ -4,4 +4,4 @@
 # (closest prior: MiniCPM / OLMo-2 anneal mixes). Source AFTER sci1_env.sh and sci1_cont3_env.sh.
 export WEIGHTS=0.21653,0.22544,0.05043,0.07254,0.10145,0.11762,0.02232,0.02244,0.03152,0.03501,0.04631,0.03392,0.00754,0.01692
 export DECAY_FROM=checkpoints_v13_sempty/sci1_long_3c2bf1f/step_152590.pt DECAY_TAG=sci1_c2 DECAY_TOKENS=250019840
-export KEEP_EVERY_D=763 KEEP_LAST_D=8
+export KEEP_EVERY_D=763 KEEP_LAST_D=8 VAL_EVERY_D=763   # a val + [mix] line at every save (outside reviewer via Lead)

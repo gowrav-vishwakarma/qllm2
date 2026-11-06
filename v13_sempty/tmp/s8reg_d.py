@@ -60,12 +60,30 @@ def nll(a):
     json.dump(res, open(a.out, 'w'), indent=1)
 
 
+GROUPS = {'embed_head': lambda k: k.startswith(('embed', 'lm_head')), 'cgu': lambda k: '.cgu.' in k,
+          'pam': lambda k: '.pam.' in k, 'reader_echo': lambda k: '.reader.' in k or k.startswith('echo_')}
+
+
+def wdelta(a):
+    """||theta_t - theta_ref|| / ||theta_ref|| per group (embed + lm_head, MLP .cgu., notebook .pam., reader + echo), per checkpoint."""
+    ld = lambda f: (lambda c: c.get('model_state_dict', c))(torch.load(f, map_location='cpu', weights_only=False, mmap=True))
+    R = ld(a.ref); res = {}
+    for c in a.ckpts.split(','):
+        T = ld(c); row = {}
+        for g, f in GROUPS.items():
+            ks = [k for k in R if f(k) and R[k].is_floating_point()]
+            num = sum(float((T[k].float() - R[k].float()).pow(2).sum()) for k in ks); den = sum(float(R[k].float().pow(2).sum()) for k in ks)
+            row[g] = round((num / den) ** 0.5, 6)
+        res[c] = row; print(f'[wdelta] {Path(c).name}: {row}', flush=True)
+    json.dump({'ref': a.ref, 'rows': res}, open(a.out, 'w'), indent=1)
+
+
 def main():
-    p = argparse.ArgumentParser(); p.add_argument('step', choices=['build', 'nll'])
+    p = argparse.ArgumentParser(); p.add_argument('step', choices=['build', 'nll', 'wdelta'])
     p.add_argument('--m9'); p.add_argument('--decay'); p.add_argument('--out_dir'); p.add_argument('--lams', default='0.3,0.5,0.7')
-    p.add_argument('--ckpts'); p.add_argument('--out')
+    p.add_argument('--ckpts'); p.add_argument('--out'); p.add_argument('--ref')
     p.add_argument('--filler', default='.cache/v7_tokens/pretrain_holdout_v1_v50261_t500000_e3_p5.pt')
-    a = p.parse_args(); {'build': build, 'nll': nll}[a.step](a)
+    a = p.parse_args(); {'build': build, 'nll': nll, 'wdelta': wdelta}[a.step](a)
 
 
 if __name__ == '__main__':
