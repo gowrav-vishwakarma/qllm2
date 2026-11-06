@@ -66,10 +66,8 @@ if not (S / 'pairs.jsonl').exists():
             tag=f"distance {r.get('d')} tokens · {r.get('arm')} · {r.get('cell')}") for r in rows])
 # Model alone vs model + library (Library's per-item package rows, if present for this step)
 pf = S / 'pairs.jsonl'
-if not pf.exists():
-    cand = sorted(glob.glob(str(R / f'logs/v14_pkg_suite_*_pairs.jsonl')))
-    cand = [c for c in cand if any(json.loads(l).get('step') == str(int(STEP)) for l in open(c).readlines()[:1])]
-    pf = Path(cand[-1]) if cand else None
+if not pf.exists():   # no guessing by step: three different checkpoints share step 152590 (M10-worked, Decay_M9, M10); copy the right pairs file in
+    pf = None
 if pf and pf.exists():
     rows = [json.loads(l) for l in open(pf)]
     names = {'rxk': ('Rule held in memory x fact fetched by the library', 'The rule (8 examples) is in memory; the record with the value is fetched at question time.'),
