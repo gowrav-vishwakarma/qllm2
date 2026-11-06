@@ -189,6 +189,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
   - **BENCH-LIB library arm on ARC-e / ARC-c / HellaSwag / PIQA** (2026-11-05) one decontaminated library (ARC Corpus + cosmo / fineweb passages, two 13-gram filters), BM25 top-3 prepended, mc_eval scorer, no library / + library / + oracle (ARC), per-item pairs; SCI-1 then ctl bodies -> **SCI-1 c3b rows landed (ARC-e +0.063, ARC-c +0.001, HellaSwag +0.015, PIQA +0.012 n.s.; oracle ARC-e 0.876 / ARC-c 0.835: the model uses passages, BM25 is the limit); ctl bodies next**; run `7a4e123`, code at `current`; logs/v14_benchlib_c3b_7a4e123_20261105_1536.jsonl; "BENCH-LIB"
     - **BENCH-TOOL GSM8K calculator tool arm** (2026-11-05) model writes <<expr=, sandboxed bwrap executor fills the value, scored as the page; plain vs tool per item -> **c3b: plain 0/200, tool 0/200 as stated; calls on 97 % of items but invented glaive names, 19/206 well-formed, 3 computed**; run `be77c55`, code at `current`; logs/v14_benchtool_gsm8k_c3b_be77c55_20261105_1450.jsonl; "BENCH-TOOL"
 - **SIMPLE-CHAT probe** (2026-11-05) yes/no (strict), short direct answers, verifiable instruction formats, 2-3 turn small talk; held-out items; baseline on the decay checkpoint; chat-ramp bars -> **running (pre-registered; baseline Nov 6)**; code at `current`; -; "SIMPLE-CHAT"
+- **FAR-TOLD told rule under the far block** <- A28 held read: plain vs protocol twin (2026-11-07) protocol twin, train wording 2k / 8k + a26 2k, 100 docs, at M11 (baseline) and every milestone from M12 while proto_far / b2s_far ramp -> **pre-registered (descriptive; Mind's keep rule decides)**; code at `current`; -; "FAR-TOLD"
 
 ## v15
 
@@ -207,4 +208,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-189 experiments: v13_sempty 92, v14 75, v15 10, v16 12.
+190 experiments: v13_sempty 92, v14 76, v15 10, v16 12.

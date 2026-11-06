@@ -4549,6 +4549,15 @@ fitted threshold:
     b2s (0 / 600 ≥ 2k).
   - Proposed to Mind: a proto_far variant (protocol → question near the window, 4k+) beside b2s_far. Whether a doc can
     carry its state across windows (SEQ 4096, RESET_AT_EOS) sets the true ceiling.
+- **FAR-TOLD: the told rule under Mind's far block (PRE-REGISTERED 2026-11-07, before any number; Mind's EXPERIMENTS_SEMPY
+  "far block" 1327fb4: proto_far 0 → 0.8 % + b2s_far 0 → 1.2 % over 2B from M11).** Descriptive on my side; the decision is
+  Mind's keep rule (s8 @8k headline, told 8k the other half, judged at ramp end + 1B).
+  - Cells per milestone, the protocol-twin read (`v14/a28_twin.py`), 100 docs, A28's seeds (26000):
+    - trained wording at 2k and 8k (8k = past every trained distance, the clean headline);
+    - the held-out a26 wording at 2k (G2 / G3 split + unit reported).
+  - Milestones: M11 (step 167,849) = the baseline before the ramp; then M12, M13, … each, from Mind's milestone copies
+    after Mind's CHECK flag (.checked_step_N).
+  - Runner `v14/tmp/far_told_watch.sh`: each GPU job inside a tmux session named `slotdil3` (Lead's collision guard).
 - **A32b: self-compiled state forks, gate on the convention (PRE-REGISTERED 2026-11-06 15:49 IST, before any A32b number; the
   cause above was found after the A32 data, labelled so).**
   - Body: the release candidate (as DIL3; Decay_M9 if none passes). FRESH docs: make_doc seed 26500 · 1000 + L (never
