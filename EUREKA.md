@@ -7,6 +7,14 @@ other's design goes here AND is sent at once by message, first line starting
 what we saw (with the run hash / log), what it really says, and what it
 could mean for the other session. Read it before choosing a next step.
 
+## 2026-11-06 12:50 IST: the induced-rule carry (s8) falls at every LR / segment change; recall and benchmarks do not
+**What we saw:** SCI-1 s8 D over 11 checks: 0.32 / 0.54 / 0.71 / 0.78 / 0.44 / 0.44 / 0.59 / 0.59 / 0.77 / 0.42 / 0.23. The drops
+are at the cont1 start (76k), the cont4 start (152k) and the 1B decay from M9 (`8290f7d`: s8 0.770 -> 0.231 while HS 0.333 -> 0.343,
+ARC-e 0.519 -> 0.567, needles 16k 0.93 -> 0.91). Log: logs/learning_probes/v13_sempty_sci1_latest_8290f7d_spread_s7000_t400.json.
+**What it says:** rule induction across filler is the most LR-fragile skill the body has; a mix verdict read across a segment switch is
+confounded (the M10 `worked` "fail" is withdrawn to unresolved). **For Library / Lead:** read rule-cell drops on fresh segments and
+decays as regime effects first; judge mix changes only inside one segment (in-sampler ramps, no restart), which the chat ramp does.
+
 ## 2026-11-05 05:30 IST: equal-data control at the product recipe: PAM beats BOTH baselines on rules and beyond-length recall (Lead; ctl caa4da9, result f0a4695, B5 logs/ctl/v14_a28_ctl_pam_vs_tpp_mamba2_caa4da9.jsonl)
 **What we saw:** 3 bodies x ~103M params x 1.0B tokens of the IDENTICAL SCI-1 cont2 mix (same code / seed / order). Induced rules s8 D: PAM 0.523 vs Mamba-2 0.149 vs T++ 0.074. Told prose rule held in state (twin read, 98 docs): 0.53 +- 0.05 vs 0.20 vs 0.12. Far-needle recall past SEQ 8k / 16k: 0.53 / 0.41 vs 0.18 / 0.15 vs 0.17 / 0.13. Inside the window (2k) T++ recalls better (0.92 vs 0.63). Holdout: Mamba-2 3.378 < PAM 3.427 < T++ 3.440 (B3 NOT met). HS / ARC-e / PIQA level. PAM trains ~2x slower per token at this size.
 **What it says:** with the same rule documents, the rule-carrying and beyond-length clauses are architectural, not data: both baselines see the docs and still fail to carry rules across filler (adjacent examples @0 are close: 0.75 / 0.68 / 0.36). Mamba-2 remains the better pure LM at this size.

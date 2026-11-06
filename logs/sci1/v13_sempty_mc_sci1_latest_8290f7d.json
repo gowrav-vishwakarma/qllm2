@@ -1,0 +1,22 @@
+{
+ "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_decay_m9_8290f7d/.mind_latest.pt",
+ "results": {
+  "hellaswag": {
+   "acc": 0.304919338777136,
+   "acc_norm": 0.3430591515634336,
+   "n": 10042
+  },
+  "arc_easy": {
+   "acc": 0.5669191919191919,
+   "acc_norm": 0.5046296296296297,
+   "n": 2376
+  },
+  "piqa": {
+   "acc": 0.6365614798694232,
+   "acc_norm": 0.6311207834602829,
+   "n": 1838
+  }
+ },
+ "sec": 111.5,
+ "fp32": false
+}

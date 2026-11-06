@@ -6085,6 +6085,25 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## SCI-1 decay-from-M9 CHECK (2026-11-06 12:50 IST; `sci1_decay_m9_8290f7d/latest.pt`, 10.0B tokens = M9 9.0B + 1.0B decay on the cont3 mix)
+
+| | M9 (stable, 9.0B) | decay (10.0B) |
+|---|---|---|
+| s8 D (2k+4k) | 0.770 | **0.231** (shift_wide 2k 0.13 = chance) |
+| t40 needles 8k / 16k | 0.989 / 0.931 | 0.978 / 0.908 |
+| HellaSwag acc_norm | 0.333 | **0.343** |
+| ARC-e acc | 0.519 | **0.567** |
+| PIQA acc_norm | 0.621 | **0.631** |
+| GSM8K ON / OFF, leak | 0.00 / 0.00, 0 | 0.00 / 0.00, 0 |
+
+**The s8 series over all SCI-1 checks:** 0.32 / 0.54 / 0.71 / **0.78** (61k) / 0.44 (76k, cont1 start) / 0.44 / 0.59 / 0.59 /
+**0.77** (137k) / 0.42 (152k, cont4 start) / **0.23** (decay). Every large drop sits at an LR / optimizer regime change (a new segment
+= fresh budget + 500-step re-warm, or the decay), then climbs back over 2-3B tokens. **Correction:** the M10 verdict "`worked` failed
+its keep rule" is CONFOUNDED with the cont4 segment switch -> downgraded to **unresolved** (not re-run). The induced-rule carry
+across filler is fragile to LR changes while recall, needles and the benchmarks are not. Release: decided by Lead (base = this decay;
+the rule-induction claim cites M9, both stated). Next (cheap, 4090): s8 on M9 + a few hundred re-warm steps vs M9 at the decay's
+midpoint, separating the LR from the optimizer state.
+
 ## SCI-1 decay from M9 (Lead GO 21:12 IST 2026-11-05)
 
 `worked` dropped by the keep rule at M10 (s8 0.770 -> 0.418, needles 0.98 -> 0.57); **the decay branches from M9** (cont3
@@ -6096,7 +6115,7 @@ latest.pt are kept (the long run may resume from them with another mix). M10 sta
 
 **The `worked` source fails its keep rule (indicative, but large):** s8 D **0.770 → 0.418**, far needles 4k + 8k **0.98 → 0.57**,
 t40 at 16k **0.87 → 0.33**, clk2 8k 0.61 → 0.51; skill pack 8k 0.30 → 0.36; GSM8K ON / OFF 0.00 → 0.05 / 0.06; `<think>` leak
-0.00; HS / ARC-e / PIQA 0.333 / 0.532 / 0.617 (flat). Keep rule: s8 +0.10 → it fell 0.35: **`worked` dropped.** Reading: plain
+0.00; HS / ARC-e / PIQA 0.333 / 0.532 / 0.617 (flat). Keep rule: s8 +0.10 → it fell 0.35: **`worked` dropped.** (CORRECTED 2026-11-06: confounded with the segment switch, see the decay-from-M9 CHECK; verdict unresolved.) Reading: plain
 worked solutions (2 % of tokens, chat-formatted, 392k short docs ~20 epochs at this share) taught the readout to answer from local
 arithmetic text and cost the long-range carry (the lag rule says 1B is early, but the drop is 3x the noise). Consequence: the main
 ends on the cont4 mix at 160,218, so a decay from its end would carry the damage; Lead decides between decaying from M9 (the best
