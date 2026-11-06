@@ -6102,6 +6102,9 @@ every check); nothing in the stream holds it, so it drifts. **Long-run mix propo
 milestone, C2 picks):** (a) if C2 lifts s8 from 0.42: rule block x2 (C2's weights); (b) else a new ramped source `b2s_far`
 (every prompt spread, per-gap log-uniform 50-600 tokens of web-train filler, one prompt per doc, 0.5 -> 1.5 % over 2B from web, b2s
 kept); paper caveat for (b): s8 at 2k / 4k becomes a trained distance, the beyond-length claim moves to the 8k cell.
+**Lead's condition on (b), adopted:** the probe's held-out task values (`_new`) and held-out filler stay out of training; the
+headline far cell is s8 @8k (beyond the 4096 window, never trained by b2s_far); 2k / 4k are labelled "trained distance" from that
+milestone on in the paper.
 
 ## SCI-1 milestone naming (user via Lead, 14:20 IST 2026-11-06)
 
