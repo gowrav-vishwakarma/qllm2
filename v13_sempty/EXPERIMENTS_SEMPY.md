@@ -6215,6 +6215,27 @@ is read from the trainer's [mix] line at the first val.
 **Paper finding (Lead):** the s8reg D lerp curve (s8 falls ~linearly in l, the NLL gain arrives late) = prose sharpening and rule loss
 are separate directions in weight space.
 
+**C3 RESULT (01:28 IST 2026-11-07; logs/s8reg/*C3*; NO release candidate):**
+
+| point (from M9) | s8 D | margin | s8 @8k | t40 16k | HS | ARC-e | PIQA | NLL | wdelta pam vs M9 |
+|---|---|---|---|---|---|---|---|---|---|
+| M9 | 0.770 | +1.86 | 0.29 | 0.931 | 0.333 | 0.519 | 0.621 | 3.555 | 0 |
+| +9 steps (137,340) | 0.737 | +1.57 | 0.256 | 0.900 | 0.334 | 0.523 | 0.624 | 3.551 | 0.009 |
+| +0.05B (138,103) | 0.732 | +1.28 | 0.272 | 0.792 | 0.332 | 0.531 | 0.627 | 3.531 | 0.088 |
+| +0.10B (138,866) | 0.593 | +0.62 | 0.167 | 0.956 | 0.330 | 0.547 | 0.624 | 3.501 | 0.107 |
+| +0.15B (139,629) | 0.629 | +0.74 | 0.164 | 0.839 | 0.336 | 0.555 | 0.626 | 3.478 | 0.114 |
+| +0.20B (140,392) | 0.565 | +0.35 | 0.136 | 0.822 | 0.335 | 0.548 | 0.622 | 3.452 | 0.116 |
+| end 0.25B (141,146) | 0.457 | −0.17 | 0.094 | 0.836 | 0.335 | 0.560 | 0.626 | 3.431 | 0.117 |
+| A3 = avg(last three) | 0.561 | +0.32 | 0.130 | 0.836 | 0.335 | 0.556 | 0.624 | 3.435 | 0.115 |
+
+No point meets the strict rule (s8 >= 0.70 only at +9 / +0.05B, where ARC-e and NLL miss; NLL never reaches 3.413). **Reading:** from a
+HIGH start, the rule-x2 decay does NOT hold s8: 0.77 -> 0.46 (margin +1.86 -> −0.17) over 0.25B, about linear in the LR fall, as in
+the lerp curve; C2's "held" (0.42 -> 0.36) was partly a low start with little left to lose. Three decays (M9 plain 1B, M10 rule x2, M9
+rule x2) and the lerp now agree: **the far rule margin is the decay's first casualty, and doubling the short-gap rule docs does not
+protect it.** Consistent with the b2s measurement (0 of 600 training prompts reach the probe's 2k distance): nothing in the stream
+trains the far carry, so a decay that sharpens the trained distribution sharpens it away. **Implication:** the fix is in the data
+(b2s_far, pre-registered next), not in the decay recipe; the release waits for a b2s_far-trained point (Lead's call).
+
 **LAWA-lite RESULT (23:31 IST 2026-11-06; logs/s8reg/*LAWA*; NO release candidate):**
 
 | point | s8 D | margin | t40 16k | HS | ARC-e | PIQA | NLL |

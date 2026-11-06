@@ -1,0 +1,77 @@
+=== C3 point 137340 fetch 2026-11-06T18:00:07Z
+  step_137340.pt sha ok 170035960203, deleted on the 6000
+=== C3 point 138103 fetch 2026-11-06T18:09:10Z
+=== C3 point 137340 probe 2026-11-06T18:10:07Z
+  step_138103.pt sha ok 3735b171c63e, deleted on the 6000
+=== C3 point 138866 fetch 2026-11-06T18:13:06Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.88, 'shift_wide_new@4096': 0.455, 'shift_wide_new@8192': 0.135, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.897, 'affine_map_new@4096': 0.715, 'affine_map_new@8192': 0.378}  mean 0.682
+saved /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_137340_sci1_c3_95498f3_spread_s7000_t400.json
+Results saved to /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_137340_sci1_c3_95498f3_t40_long_behavioral.json (aggregates, 360 rows omitted)
+  step_138866.pt sha ok 8b4dcd97a560, deleted on the 6000
+=== C3 point 139629 fetch 2026-11-06T18:20:50Z
+hellaswag {'acc': 0.2975, 'acc_norm': 0.3338, 'n': 10042}
+arc_easy {'acc': 0.5227, 'acc_norm': 0.4684, 'n': 2376}
+piqa {'acc': 0.6213, 'acc_norm': 0.6235, 'n': 1838}
+=== C3 point 138103 probe 2026-11-06T18:21:14Z
+per task: {'shift_wide_new@0': 0.998, 'shift_wide_new@2048': 0.902, 'shift_wide_new@4096': 0.542, 'shift_wide_new@8192': 0.175, 'affine_map_new@0': 0.998, 'affine_map_new@2048': 0.843, 'affine_map_new@4096': 0.64, 'affine_map_new@8192': 0.37}  mean 0.683
+saved /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_138103_sci1_c3_95498f3_spread_s7000_t400.json
+Results saved to /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_138103_sci1_c3_95498f3_t40_long_behavioral.json (aggregates, 360 rows omitted)
+hellaswag {'acc': 0.2989, 'acc_norm': 0.3321, 'n': 10042}
+arc_easy {'acc': 0.5307, 'acc_norm': 0.4701, 'n': 2376}
+piqa {'acc': 0.6306, 'acc_norm': 0.6273, 'n': 1838}
+=== C3 point 138866 probe 2026-11-06T18:32:20Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.787, 'shift_wide_new@4096': 0.292, 'shift_wide_new@8192': 0.092, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.815, 'affine_map_new@4096': 0.477, 'affine_map_new@8192': 0.242}  mean 0.588
+saved /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_138866_sci1_c3_95498f3_spread_s7000_t400.json
+Results saved to /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_138866_sci1_c3_95498f3_t40_long_behavioral.json (aggregates, 360 rows omitted)
+hellaswag {'acc': 0.2992, 'acc_norm': 0.3301, 'n': 10042}
+arc_easy {'acc': 0.5471, 'acc_norm': 0.4832, 'n': 2376}
+piqa {'acc': 0.6398, 'acc_norm': 0.624, 'n': 1838}
+  step_139629.pt sha ok 204575d1bf4c, deleted on the 6000
+=== C3 point 140392 fetch 2026-11-06T18:45:16Z
+=== C3 point 139629 probe 2026-11-06T18:45:26Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.782, 'shift_wide_new@4096': 0.275, 'shift_wide_new@8192': 0.068, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.885, 'affine_map_new@4096': 0.573, 'affine_map_new@8192': 0.26}  mean 0.605
+saved /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_139629_sci1_c3_95498f3_spread_s7000_t400.json
+Results saved to /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_139629_sci1_c3_95498f3_t40_long_behavioral.json (aggregates, 360 rows omitted)
+hellaswag {'acc': 0.3003, 'acc_norm': 0.3356, 'n': 10042}
+arc_easy {'acc': 0.5547, 'acc_norm': 0.492, 'n': 2376}
+piqa {'acc': 0.6338, 'acc_norm': 0.6257, 'n': 1838}
+  step_140392.pt sha ok 120f9b8435bf, deleted on the 6000
+=== C3 point 140392 probe 2026-11-06T19:07:31Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.677, 'shift_wide_new@4096': 0.195, 'shift_wide_new@8192': 0.05, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.875, 'affine_map_new@4096': 0.512, 'affine_map_new@8192': 0.223}  mean 0.567
+saved /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_140392_sci1_c3_95498f3_spread_s7000_t400.json
+Results saved to /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_140392_sci1_c3_95498f3_t40_long_behavioral.json (aggregates, 360 rows omitted)
+hellaswag {'acc': 0.3021, 'acc_norm': 0.335, 'n': 10042}
+arc_easy {'acc': 0.5476, 'acc_norm': 0.4907, 'n': 2376}
+piqa {'acc': 0.6328, 'acc_norm': 0.6219, 'n': 1838}
+=== C3 end: waiting for Training complete 2026-11-06T19:18:35Z
+  latest.pt sha ok 0c5731522270, deleted on the 6000
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.48, 'shift_wide_new@4096': 0.105, 'shift_wide_new@8192': 0.01, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.812, 'affine_map_new@4096': 0.43, 'affine_map_new@8192': 0.177}  mean 0.502
+saved /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_141146end_sci1_c3_95498f3_spread_s7000_t400.json
+Results saved to /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_141146end_sci1_c3_95498f3_t40_long_behavioral.json (aggregates, 360 rows omitted)
+hellaswag {'acc': 0.302, 'acc_norm': 0.3351, 'n': 10042}
+arc_easy {'acc': 0.5598, 'acc_norm': 0.4945, 'n': 2376}
+piqa {'acc': 0.6349, 'acc_norm': 0.6262, 'n': 1838}
+[avg] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c3_95498f3/c3avg3_weights.pt: weights [0.333, 0.333, 0.333]
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.682, 'shift_wide_new@4096': 0.177, 'shift_wide_new@8192': 0.04, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.87, 'affine_map_new@4096': 0.515, 'affine_map_new@8192': 0.22}  mean 0.563
+saved /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_avg3_sci1_c3_95498f3_spread_s7000_t400.json
+Results saved to /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_C3_avg3_sci1_c3_95498f3_t40_long_behavioral.json (aggregates, 360 rows omitted)
+hellaswag {'acc': 0.3015, 'acc_norm': 0.3349, 'n': 10042}
+arc_easy {'acc': 0.556, 'acc_norm': 0.4937, 'n': 2376}
+piqa {'acc': 0.6355, 'acc_norm': 0.6235, 'n': 1838}
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont3_449e320/step_137331.pt: 3.5549 (16 s)
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c3_95498f3/c3avg3_weights.pt: 3.4353 (4 s)
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c3_95498f3/step_137340.pt: 3.5505 (16 s)
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c3_95498f3/step_138103.pt: 3.5310 (16 s)
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c3_95498f3/step_138866.pt: 3.5007 (16 s)
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c3_95498f3/step_139629.pt: 3.4784 (11 s)
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c3_95498f3/step_140392.pt: 3.4515 (12 s)
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_c3_95498f3/step_141146_end.pt: 3.4313 (11 s)
+[wdelta] c3avg3_weights.pt: {'embed_head': 0.185959, 'cgu': 0.114476, 'pam': 0.114591, 'reader_echo': 0.122968}
+[wdelta] step_137340.pt: {'embed_head': 0.010573, 'cgu': 0.008304, 'pam': 0.008831, 'reader_echo': 0.00897}
+[wdelta] step_138103.pt: {'embed_head': 0.137217, 'cgu': 0.087862, 'pam': 0.087749, 'reader_echo': 0.093401}
+[wdelta] step_138866.pt: {'embed_head': 0.168587, 'cgu': 0.106675, 'pam': 0.106569, 'reader_echo': 0.114068}
+[wdelta] step_139629.pt: {'embed_head': 0.183042, 'cgu': 0.11416, 'pam': 0.114175, 'reader_echo': 0.122468}
+[wdelta] step_140392.pt: {'embed_head': 0.189458, 'cgu': 0.116306, 'pam': 0.11648, 'reader_echo': 0.124936}
+[wdelta] step_141146_end.pt: {'embed_head': 0.191098, 'cgu': 0.116359, 'pam': 0.116577, 'reader_echo': 0.125039}
+=== s8reg C3 probes DONE 2026-11-06T19:56:28Z
+=== cx_m2 chain restarted 2026-11-06T19:56:28Z
