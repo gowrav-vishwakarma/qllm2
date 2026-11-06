@@ -4507,6 +4507,30 @@ fitted threshold:
       - So the rule twin is a FAR read, as the package now encodes.
     - Caveat: this decayed checkpoint lost much of its rule skill (Mind: s8 D 0.77 → 0.23 over the decay). The
       held-out t0 number may be higher on a body that kept it, but no A32 run without a new pre-registration.
+  - **POST-HOC FINDING (2026-11-06 15:49 IST; found AFTER the data by the outside reviewer, verified by Lead and me; the STOP
+    stands as recorded).** The gate scored value + unit, but A32 needs only the CONVENTION at t0: the value comes from the
+    demo's own prefix.
+    - Unit right (conv_ok) at t0: twin 0.94 held-out / 0.95 trained; plain 0.54 / 0.76.
+    - The twin's low "right" (0.07) is the rewrite artefact again: both streams fed row + question, so the contrast
+      cancels the copied number (49 docs had the unit only, 38 an integer + unit).
+    - So the rule twin DOES see the rule at t0, on the unit. The gate measured the wrong thing.
+- **A32b: self-compiled state forks, gate on the convention (PRE-REGISTERED 2026-11-06 15:49 IST, before any A32b number; the
+  cause above was found after the A32 data, labelled so).**
+  - Body: the release candidate (as DIL3; Decay_M9 if none passes). FRESH docs: make_doc seed 26500 · 1000 + L (never
+    used), 100 docs, held-out (a26) and trained wordings.
+  - **Gate:** conv_ok (unit right) of the rule-twin read at t0 on the held-out wording ≥ 0.80 → build A32b; < 0.70 → stop;
+    between → Lead.
+  - Demo writing at t0 (only if the gate passes):
+    - Right after the protocol, for 3 random values x (the cell's own format), the twin read decodes the unit after the
+      prefix "\n{x} ->" + " {x}".
+    - The demo line "\n{x} -> {x} {unit}" is written into S_with (the value copied by the template, the unit by the mind;
+      no regex parser), then the filler, the row and the question follow as in A26.
+    - Read at the question: package v0.3.1 (the demos sit far back, so the rule twin against the same session without
+      the protocol AND without the demos).
+  - **Bars:** held-out wording at 2k ≥ max(0.45, this body's twin baseline + 0.25); trained wording at 8k ≥ 0.55 (or the
+    body's 8k baseline + 0.25 if higher).
+  - Closest prior work: SG-ICL (Kim et al. 2022). Difference: demos written through the O(1) state's rule fork into that
+    state, the unit decoded by the mind and the value by a template.
 - **DIL3: slow-head clock + retention dilation for held rules read far back (PRE-REGISTERED 2026-11-06 15:32 IST, before any
   code or number; from Mind's clk3 EUREKA 17089b6, hook 7cb3ef0).** Eval-time lever, not a body result.
   - Body: the release checkpoint (SCI-1 decay, 10B). Held-rule cells at 8k, 100 docs:
