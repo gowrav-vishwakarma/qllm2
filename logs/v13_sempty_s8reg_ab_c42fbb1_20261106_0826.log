@@ -1,0 +1,9 @@
+=== s8reg A 2026-11-06T08:26:37Z
+per task: {'shift_wide_new@0': 0.555, 'shift_wide_new@2048': 0.43, 'shift_wide_new@4096': 0.31, 'shift_wide_new@8192': 0.18, 'affine_map_new@0': 0.603, 'affine_map_new@2048': 0.383, 'affine_map_new@4096': 0.31, 'affine_map_new@8192': 0.195}  mean 0.371
+free (A7): {'shift_wide_new@0': 0.552, 'shift_wide_new@2048': 0.43, 'shift_wide_new@4096': 0.307, 'shift_wide_new@8192': 0.177, 'affine_map_new@0': 0.215, 'affine_map_new@2048': 0.152, 'affine_map_new@4096': 0.08, 'affine_map_new@8192': 0.045}  mean 0.245
+saved /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_A_ctl_pam_stable_caa4da9_spread_s7000_t400.json
+=== s8reg B 2026-11-06T08:29:55Z
+per task: {'shift_wide_new@0': 0.998, 'shift_wide_new@2048': 0.72, 'shift_wide_new@4096': 0.325, 'shift_wide_new@8192': 0.087, 'affine_map_new@0': 0.998, 'affine_map_new@2048': 0.932, 'affine_map_new@4096': 0.69, 'affine_map_new@8192': 0.352}  mean 0.638
+free (A7): {'shift_wide_new@0': 0.998, 'shift_wide_new@2048': 0.685, 'shift_wide_new@4096': 0.282, 'shift_wide_new@8192': 0.062, 'affine_map_new@0': 0.985, 'affine_map_new@2048': 0.588, 'affine_map_new@4096': 0.247, 'affine_map_new@8192': 0.052}  mean 0.487
+saved /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_B_sci1_step_138500_3c2bf1f_spread_s7000_t400.json
+=== s8reg DONE 2026-11-06T08:40:22Z

@@ -12,7 +12,9 @@ could mean for the other session. Read it before choosing a next step.
 are at the cont1 start (76k), the cont4 start (152k) and the 1B decay from M9 (`8290f7d`: s8 0.770 -> 0.231 while HS 0.333 -> 0.343,
 ARC-e 0.519 -> 0.567, needles 16k 0.93 -> 0.91). Log: logs/learning_probes/v13_sempty_sci1_latest_8290f7d_spread_s7000_t400.json.
 **What it says:** rule induction across filler is the most LR-fragile skill the body has; a mix verdict read across a segment switch is
-confounded (the M10 `worked` "fail" is withdrawn to unresolved). **For Library / Lead:** read rule-cell drops on fresh segments and
+confounded (the M10 `worked` "fail" is withdrawn to unresolved). **UPDATE same day (s8reg A/B): the re-warm alone costs only -0.10
+(M9 + 1.2k steps 0.667), and a short 0.1B decay at 103M RAISES s8 (0.358 -> 0.523): it is the SCI-1 1B decay itself, not LR changes in
+general; the M10 `worked` fail stands again.** **For Library / Lead:** read rule-cell drops on fresh segments and
 decays as regime effects first; judge mix changes only inside one segment (in-sampler ramps, no restart), which the chat ramp does.
 
 ## 2026-11-05 05:30 IST: equal-data control at the product recipe: PAM beats BOTH baselines on rules and beyond-length recall (Lead; ctl caa4da9, result f0a4695, B5 logs/ctl/v14_a28_ctl_pam_vs_tpp_mamba2_caa4da9.jsonl)

@@ -6106,6 +6106,14 @@ ctl result "decayed PAM kept s8 0.523" does NOT show that its decay was harmless
   milestone (same mix, stable LR) shows whether it recovers.
 - C: s8 falls steadily as the LR falls -> LR-driven: the release decays to a non-zero floor or is shorter (picked by C's curve).
   s8 falls early, then rises -> a transient.
+**A + B RESULT (14:11 IST; logs/s8reg/, same protocol, each at its reference code):**
+- **A:** ctl_pam stable_final s8 D **0.358** -> its 0.1B decay 0.523 (**+0.165**). Neither pre-registered reading (it was "within 0.05"
+  or ">= 0.60"): at 103M a short decay RAISES s8. Decays do not cost s8 in general; the SCI-1 drop is specific to that decay
+  (1B long, LR to 0, 386M, cont3 mix) -> C (or D) decides.
+- **B:** SCI-1 step 138,500 (M9 + re-warm + 669 stable steps, same mix) s8 D **0.667** (M9 0.770; 2k 0.83, 4k 0.51). >= 0.65 ->
+  by the fixed reading the re-warm alone is harmless (a -0.10 dip, against -0.54 in the decay); the large segment drops (76k, 152k)
+  go back to their MIX changes. So M10's s8 loss is again read as `worked` (the confound is mostly removed), with needles.
+
 **Arm D (added 13:27 IST, Lead + outside reviewer; pre-registered before any number):** weight-space points between M9 and its decay,
 no training. theta = (1 - l) M9 + l decay for l = 0.3 / 0.5 / 0.7, and a graft = M9's notebook / reader / echo params (blocks.*.pam*,
 blocks.*.reader, echo_*: 60.2M of 385.8M = 15.6 %) + the decay's MLP / embeddings / norms / head. Read per point: s8 D (2k + 4k),
@@ -6148,7 +6156,7 @@ latest.pt are kept (the long run may resume from them with another mix). M10 sta
 
 **The `worked` source fails its keep rule (indicative, but large):** s8 D **0.770 → 0.418**, far needles 4k + 8k **0.98 → 0.57**,
 t40 at 16k **0.87 → 0.33**, clk2 8k 0.61 → 0.51; skill pack 8k 0.30 → 0.36; GSM8K ON / OFF 0.00 → 0.05 / 0.06; `<think>` leak
-0.00; HS / ARC-e / PIQA 0.333 / 0.532 / 0.617 (flat). Keep rule: s8 +0.10 → it fell 0.35: **`worked` dropped.** (CORRECTED 2026-11-06: the s8 part is confounded with the segment switch, unresolved; the needle loss is NOT explained by it (the decay kept needles): `worked` hurt needles stays the live reading.) Reading: plain
+0.00; HS / ARC-e / PIQA 0.333 / 0.532 / 0.617 (flat). Keep rule: s8 +0.10 → it fell 0.35: **`worked` dropped.** (CORRECTED 2026-11-06, then s8reg B: the re-warm alone costs s8 only -0.10, so the s8 loss is again read as `worked`; the needle loss is NOT explained by it (the decay kept needles): `worked` hurt needles stays the live reading.) Reading: plain
 worked solutions (2 % of tokens, chat-formatted, 392k short docs ~20 epochs at this share) taught the readout to answer from local
 arithmetic text and cost the long-range carry (the lag rule says 1B is early, but the drop is 3x the noise). Consequence: the main
 ends on the cont4 mix at 160,218, so a decay from its end would carry the damage; Lead decides between decaying from M9 (the best
