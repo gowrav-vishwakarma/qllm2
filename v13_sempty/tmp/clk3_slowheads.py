@@ -80,6 +80,31 @@ def patch(layers):
             L._rotate_learned = rot
 
 
+def select_slow(model, layers, filler, K=6, n_seq=24, seq_len=2048):
+    """Realized retention per (notebook layer, head) on held-out text; returns (all heads as dicts, the K slowest as (layer, head)).
+    Library hook (2026-11-06): patch(layers) once, then select_slow(...), then set ST['heads'] / ST['s'] / ST['couple'] / ST['mask']
+    ([1, T] float, 1 where to dilate) before each forward; ST['heads'] = None turns it off."""
+    import math
+    dev = next(model.parameters()).device; H = layers[0].heads.size
+    ST['logr'] = [[] for _ in layers]; ST['glog'] = [[] for _ in layers]
+    rng = np.random.default_rng(0)
+    seqs = [filler[s:s + seq_len] for s in rng.integers(0, len(filler) - seq_len, size=n_seq)]
+    with torch.no_grad():
+        for sq in seqs:
+            model._hidden_to_lm(torch.tensor([sq.tolist()], device=dev))
+    heads = []
+    for li, L in enumerate(layers):
+        lr = torch.stack(ST['logr'][li]).mean(0)
+        g = torch.stack(ST['glog'][li]).mean(0) if ST['glog'][li] else None
+        for h in range(H):
+            gm = float(g[h]) if g is not None else float('nan')
+            heads.append(dict(layer=li, head=h, realized_half_life=round(math.log(0.5) / float(lr[h]), 1), warp_g=round(gm, 3),
+                              at_floor=bool(gm < 0.06)))
+    ST['logr'] = None; ST['glog'] = None
+    slow = sorted(heads, key=lambda d: -d['realized_half_life'])[:K]
+    return heads, [(d['layer'], d['head']) for d in slow]
+
+
 def main():
     p = argparse.ArgumentParser(); p.add_argument('--checkpoint', required=True); p.add_argument('--out', required=True)
     p.add_argument('--trials', type=int, default=200); p.add_argument('--K', type=int, default=6); p.add_argument('--seed', type=int, default=7000)
