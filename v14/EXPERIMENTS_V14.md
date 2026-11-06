@@ -4542,6 +4542,13 @@ fitted threshold:
     - The twin's low "right" (0.07) is the rewrite artefact again: both streams fed row + question, so the contrast
       cancels the copied number (49 docs had the unit only, 38 an integer + unit).
     - So the rule twin DOES see the rule at t0, on the unit. The gate measured the wrong thing.
+- **FINDING (2026-11-07 01:30 IST; with Mind's "far rule margin is the decay's first casualty"): the told rule's training
+  distance never reaches 4k.** proto4k (`protocol_text_iter(max_gap=300)`), 600 docs, protocol → first answer in tokens:
+  median 729, p90 2,279, max 3,815; 77 / 600 (13 %) ≥ 2k, 0 ≥ 4k.
+  - Every told 8k cell (c3b 0.22, M10 0.21, Decay_M9 0.10) is outside the trained range, the same cause Mind found for
+    b2s (0 / 600 ≥ 2k).
+  - Proposed to Mind: a proto_far variant (protocol → question near the window, 4k+) beside b2s_far. Whether a doc can
+    carry its state across windows (SEQ 4096, RESET_AT_EOS) sets the true ceiling.
 - **A32b: self-compiled state forks, gate on the convention (PRE-REGISTERED 2026-11-06 15:49 IST, before any A32b number; the
   cause above was found after the A32 data, labelled so).**
   - Body: the release candidate (as DIL3; Decay_M9 if none passes). FRESH docs: make_doc seed 26500 · 1000 + L (never
