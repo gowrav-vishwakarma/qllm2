@@ -1078,6 +1078,12 @@ def build_argparser():
                    help='%% of corpus reserved as the primary streaming val holdout')
     p.add_argument('--blend_warmup_tokens', type=int, default=0,
                    help='tokens to draw web-only before non-web sources enter the mix')
+    p.add_argument('--ramp_weights', type=str, default='',
+                   help='R2 ramp (v16/PLAN_LONGRUN.md): comma TARGET weights matching --pretrain_sources; the blend moves '
+                        'linearly from --pretrain_weights to these over --ramp_tokens, starting at cumulative --ramp_from_tokens '
+                        '(empty = no ramp, the old blend)')
+    p.add_argument('--ramp_from_tokens', type=int, default=0)
+    p.add_argument('--ramp_tokens', type=int, default=0)
     p.add_argument('--answer_weight', type=float, default=1.0,
                    help='per-token CE weight on the ANSWER tokens of synthetic recall/'
                         'reason docs (v7.data.ANSWER_MARK); 1.0 = plain LM loss. The '
@@ -1361,6 +1367,8 @@ def main():
             # warm start: begin each source at the first never-read file
             # (no stream skip; a crash-resume uses the exact @f/@r cursor)
             stream_fresh_file=init_ck is not None,
+            ramp_weights=(tuple(float(w) for w in args.ramp_weights.split(',')) if args.ramp_weights else None),
+            ramp_from_tokens=args.ramp_from_tokens, ramp_tokens=args.ramp_tokens,
         )
         cfg.vocab_size = len(tokenizer)
         is_streaming = not getattr(train_ds, 'pretrain_cached', False)

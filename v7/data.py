@@ -118,6 +118,12 @@ class StackedChunkDataset(Dataset):
         return {'input_ids': self.input_ids[idx], 'labels': self.labels[idx]}
 
 
+# Sources whose docs must sit whole inside one training window (StreamingTokenChunkDataset holds them; 2026-11-07, far rule
+# carry: b2s_far / proto_far docs are 1.8k-3.2k tokens and lose their early examples + answer weight when they cross a window).
+WHOLE_WINDOW_SOURCES = ('b2s_far', 'proto_far')
+HOLD_MAX = 8
+
+
 class StreamingTokenChunkDataset(IterableDataset):
     """Stream tokenized text and yield non-overlapping (seq_len+1) chunks.
 
@@ -211,6 +217,21 @@ class StreamingTokenChunkDataset(IterableDataset):
                     runs[0] = (src, cnt - take)
             return out
 
+        # Whole-window sources (2026-11-07, far rule carry): a doc of WHOLE_WINDOW_SOURCES that would cross the current window's
+        # boundary is held and placed at the next doc boundary where it fits whole (training state does not cross windows, and
+        # ANSWER_IN_WINDOW drops a crossing doc's answer weight). Only those sources are ever held: streams without them are
+        # bit-identical. At most HOLD_MAX docs wait; on overflow the oldest goes in anyway.
+        held: deque = deque()
+
+        def _place(source, ids, ws):
+            nonlocal doc_no
+            buffer.extend(ids)
+            if weighted:
+                wbuffer.extend(ws)
+            if in_window:
+                dbuffer.extend([doc_no] * len(ids)); doc_no += 1
+            runs.append((source, len(ids)))
+
         for item in self.text_iterator:
             if isinstance(item, tuple):
                 source, text = item
@@ -222,17 +243,20 @@ class StreamingTokenChunkDataset(IterableDataset):
             if weighted:
                 ids, ws = encode_marked(self.tokenizer, text, src_w.get(source, self.answer_weight))
             else:
-                ids = self.tokenizer.encode(strip_answer_marks(text), add_special_tokens=False)
+                ids, ws = self.tokenizer.encode(strip_answer_marks(text), add_special_tokens=False), None
             if not ids:
                 continue
             ids.append(self.tokenizer.eos_token_id)
-            buffer.extend(ids)
             if weighted:
                 ws.append(1.0)
-                wbuffer.extend(ws)
-            if in_window:
-                dbuffer.extend([doc_no] * len(ids)); doc_no += 1
-            runs.append((source, len(ids)))
+            while held and len(buffer) % step + len(held[0][1]) <= step:     # a held doc fits whole here
+                _place(*held.popleft())
+            if source in WHOLE_WINDOW_SOURCES and len(ids) <= step and len(buffer) % step + len(ids) > step:
+                held.append((source, ids, ws))
+                if len(held) > HOLD_MAX:
+                    _place(*held.popleft())
+                continue
+            _place(source, ids, ws)
 
             while len(buffer) >= step:
                 chunk = buffer[:step]
@@ -1710,8 +1734,18 @@ def _blend_interleave_text_iters(
     warmup_sources: Tuple[str, ...] = (),
     token_counters: Optional[Dict[str, int]] = None,
     seed: int = 42,
+    ramp_weights=None,
+    ramp_from_tokens: int = 0,
+    ramp_tokens: int = 0,
+    ramp_window: float = 4_000_000.0,
 ) -> Iterator[Tuple[str, str]]:
-    """Token-weighted blend with a grammar warmup.
+    """Token-weighted blend with a grammar warmup and an optional linear ramp.
+
+    Ramp (R2 of v16/PLAN_LONGRUN.md, 2026-11-07): with ``ramp_weights`` the target shares move linearly from ``weights`` to
+    ``ramp_weights`` while the CUMULATIVE consumed tokens (``sum(token_counters)``, restored on resume, so a resume continues
+    the same ramp) go from ``ramp_from_tokens`` to ``ramp_from_tokens + ramp_tokens``. While a ramp is set, the served
+    estimates are halved whenever their sum passes ``ramp_window`` tokens, so the deficit tracks the CURRENT shares (without
+    it, raising a weight after 1B served tokens fires a ~10M-token burst of that source). No ramp = the old blend, bit-identical.
 
     ``weights`` are TOKEN shares, not document shares. Each pick goes to the
     alive source with the largest token deficit ``w_i * total - served_i``
@@ -1734,12 +1768,22 @@ def _blend_interleave_text_iters(
     names = [n for n, _ in tagged_iters]
     iters = [iter(it) for _, it in tagged_iters]
     weights = list(weights) if weights else [1.0] * len(iters)
+    w0 = list(weights)
+    if ramp_weights is not None:
+        ramp_weights = list(ramp_weights)
+        if len(ramp_weights) != len(w0) or ramp_tokens <= 0 or token_counters is None:
+            raise ValueError('ramp needs one target weight per source, ramp_tokens > 0 and token_counters')
     alive = [True] * len(iters)
     served = [0.0] * len(iters)          # estimated tokens handed out per source
     warmup_set = set(warmup_sources)
     can_warmup = warmup_tokens > 0 and token_counters is not None and bool(warmup_set)
     while any(alive):
         consumed = sum(token_counters.values()) if token_counters else 0
+        if ramp_weights is not None:
+            f = min(1.0, max(0.0, (consumed - ramp_from_tokens) / ramp_tokens))
+            weights = [(1.0 - f) * a + f * b for a, b in zip(w0, ramp_weights)]
+            if sum(served) > ramp_window:
+                served = [s * 0.5 for s in served]
         in_warmup = can_warmup and consumed < warmup_tokens
         if in_warmup:
             cand = [i for i, a in enumerate(alive) if a and names[i] in warmup_set]
@@ -2182,6 +2226,79 @@ def _b2_text_iter(
         yield '\n\n'.join(parts) + '\n'
 
 
+_B2FAR_FILLER_PATH = Path('.cache/v7_tokens/b2far_filler_dclm_train_e3_p5_20k_v1.npy')
+
+
+def _b2far_filler(tok, n_docs: int = 20_000):
+    """Filler token pool for b2s_far: the first ``n_docs`` DCLM-Edu (edu >= 3) TRAIN docs (exclude_holdout, holdout_pct 5:
+    disjoint from the probes' pretrain_holdout_v1 filler), tokenized, bare newline tokens dropped (as the probes' filler).
+    Built once and cached on disk, so every process (and every resume) draws from the same pool."""
+    import numpy as _np
+    if _B2FAR_FILLER_PATH.exists():
+        return _np.load(_B2FAR_FILLER_PATH)
+    ids = []
+    for i, text in enumerate(_dclm_edu_text_iter(3, exclude_holdout=True, holdout_pct=5)):
+        if i >= n_docs:
+            break
+        ids.extend(t for t in tok.encode(text, add_special_tokens=False) if t != 198 and t != 628)
+    arr = _np.asarray(ids, dtype=_np.int32)
+    _B2FAR_FILLER_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _np.save(_B2FAR_FILLER_PATH, arr)
+    return arr
+
+
+def _b2far_text_iter(
+    *,
+    seed: int = 0,
+    skip_docs: int = 0,
+    doc_counters: Optional[Dict[str, int]] = None,
+    counter_key: str = 'b2s_far',
+    max_tokens: int = 3200,
+    min_gap: int = 50,
+    min_total: int = 1800,
+) -> Iterator[str]:
+    """b2s_far (2026-11-07, EXPERIMENTS_SEMPY "FINDING: the far rule margin is the decay's first casualty"): ONE B2 rule
+    prompt per document (base tasks only; the probes' ``_new`` values never appear; example seeds from 2*10**7, b2s uses 10**7,
+    the probes 5000-5399 / 7000+), with ALL its examples pulled apart by equal blocks of train-side web prose exactly in the
+    probes' spread layout (``memory_probes.spread``: header, ex, \\n\\n filler \\n\\n, ex, ..., query), 4 or 8 shots, to a total length
+    drawn UNIFORM in [``min_total`` 1,800, ``max_tokens``] (outside reviewer 11-07: log-uniform from ~170 left 82 % of docs < 2k) (3,200: the doc + its answer fit one 4096 training window, so
+    ANSWER_IN_WINDOW keeps the answer weight; nothing trains past the window, so the 8k probe cell stays untrained).
+    Measured cause it targets: b2s spread prompts reach at most 1,572 tokens, 0 / 600 reach the probe's 2k distance."""
+    import math as _math
+    import random as _random
+    from transformers import AutoTokenizer
+    from v14.rules_ood import B2_TASKS, build_example
+    from memory_probes.spread import split_units, _SEP
+    tok = AutoTokenizer.from_pretrained('gpt2')
+    fill = _b2far_filler(tok)
+    nsep = len(tok.encode(_SEP, add_special_tokens=False))
+    rng = _random.Random((seed * 2654435761 + 777_777) & 0xFFFFFFFF)
+    n = 0
+    while True:
+        task = rng.choice(B2_TASKS)
+        shots = rng.choice((4, 8))
+        u = rng.random()
+        n += 1
+        if n <= skip_docs:            # resume: same rng draws, nothing built
+            continue
+        ex = build_example(tok, task, shots, 20_000_000 + n)
+        header, units = split_units(ex)
+        base = len(tok.encode(header, add_special_tokens=False)) + sum(len(tok.encode(x, add_special_tokens=False)) for x in units)
+        gaps = len(units) - 1
+        ans = len(tok.encode(ex.target_text, add_special_tokens=False))
+        lo = base + gaps * (min_gap + 2 * nsep)
+        hi = max_tokens - ans - 2
+        lo = max(lo, min_total)
+        L = lo if hi <= lo else int(round(lo + u * (hi - lo)))       # uniform in [max(lo, 1,800), 3,200 - answer]
+        per_gap = max(min_gap, (L - base) // gaps - 2 * nsep)
+        frng = _random.Random(1_000_003 * n + 99)     # filler spans seeded by the doc index: resume-exact
+        text = header + units[0]
+        for unit in units[1:]:
+            st = frng.randrange(0, len(fill) - per_gap)
+            text += _SEP + tok.decode(fill[st:st + per_gap].tolist()) + _SEP + unit
+        _bump_counter(doc_counters, counter_key)
+        yield text + _ans(ex.target_text) + '\n'
+
 
 # Curriculum sources (2026-10-31, v13 "curriculum run cu1"): formats of v16/bench.py's
 # cells with TRAINED values / DISJOINT vocabularies, so the bench measures transfer.
@@ -2573,6 +2690,8 @@ SOURCE_REGISTRY: Dict[str, Dict[str, str]] = {
     'b2':            {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-b2'},
     # SCI-1 at SEQ 4096: b2 with half its prompts spread over ~4k tokens; recall with gaps up to 300 filler sentences (~4k).
     'b2s':           {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-b2', 'spread_max_sentences': 30},
+    # far rule carry (2026-11-07): one B2 prompt per doc spread to 2k-3.2k tokens of train-side web prose (_b2far_text_iter)
+    'b2s_far':       {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-b2-far'},
     'recall4k':      {'schema': 'text',     'kind': 'synthetic', 'hf': 'synthetic-recall', 'max_gap_sentences': 300},
     # Label-rule prompts in the probes' format, disjoint vocabulary (v13
     # "label-format source", 2026-10-31).
@@ -2669,6 +2788,8 @@ def _open_source_iter(
                 kw['far'] = True
             return protocol_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name,
                                       bump=_bump_counter, **kw)
+        if name == 'b2s_far':
+            return _b2far_text_iter(seed=mix_seed, skip_docs=skip, doc_counters=doc_counters, counter_key=name)
         if name in ('b2', 'b2s'):
             return _b2_text_iter(spread_max_sentences=int(spec.get('spread_max_sentences', 0)), seed=mix_seed, skip_docs=skip,
                                  doc_counters=doc_counters, counter_key=name)
@@ -3079,6 +3200,9 @@ def load_pretrain_mix(
     use_cache: bool = True,
     answer_weight: float = 1.0,
     stream_fresh_file: bool = False,
+    ramp_weights: Optional[Tuple[float, ...]] = None,
+    ramp_from_tokens: int = 0,
+    ramp_tokens: int = 0,
 ):
     """Stream a blended corpus for from-scratch pretrain (knowledge+reasoning+chat).
 
@@ -3174,10 +3298,14 @@ def load_pretrain_mix(
         f"skips={ {s: skip_map.get(s, 0) for s in sources} }"
     )
     if len(tagged) > 1:
+        if ramp_weights is not None:
+            print(f"[ramp] weights {list(weights)} -> {list(ramp_weights)} over {ramp_tokens:,} tokens "
+                  f"from cumulative {ramp_from_tokens:,}", flush=True)
         text_iter = _blend_interleave_text_iters(
             tagged, weights,
             warmup_tokens=blend_warmup_tokens, warmup_sources=tuple(web_sources),
             token_counters=token_counters, seed=mix_seed,
+            ramp_weights=ramp_weights, ramp_from_tokens=ramp_from_tokens, ramp_tokens=ramp_tokens,
         )
     else:
         text_iter = _tag_source(tagged[0][0], tagged[0][1])
