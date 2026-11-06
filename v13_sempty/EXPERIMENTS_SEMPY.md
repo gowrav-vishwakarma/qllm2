@@ -6105,6 +6105,14 @@ kept); paper caveat for (b): s8 at 2k / 4k becomes a trained distance, the beyon
 **Lead's condition on (b), adopted:** the probe's held-out task values (`_new`) and held-out filler stay out of training; the
 headline far cell is s8 @8k (beyond the 4096 window, never trained by b2s_far); 2k / 4k are labelled "trained distance" from that
 milestone on in the paper.
+**b2s measured (outside reviewer, Lead checked the code; 200 docs / 1,200 prompts):** `_b2_text_iter` joins its 6 prompts with
+'\n\n' into ONE document (no <|endoftext|>, so RESET_AT_EOS never resets between the 6 rules: prompts 2-6 train overwriting the previous
+rule in-doc). Unspread prompts ~23 tokens; spread prompts median 472, p90 969, max 1,572 tokens: **0 of 600 spread prompts reach
+2,048** (the probe's 2k cell). ANSWER_IN_WINDOW=1 drops the 100x answer weight to 1x on ~24 % of spread prompts. This is the measured
+cause candidate for the weak far anchoring. **b2s_far design adds:** per_doc = 1 (no in-doc overwrite; ends with EOS), every prompt
+spread, a single prompt capped at <= 3,200 tokens so it lands inside one 4096 window with its answer weight. **b2s itself is kept
+unchanged (R1):** its in-doc rule switching plausibly trains erase-at-key (the kn knockout: erase-at-key carries the rule), and the probe
+needs one rule per prompt, so it is not in conflict.
 
 ## SCI-1 milestone naming (user via Lead, 14:20 IST 2026-11-06)
 
