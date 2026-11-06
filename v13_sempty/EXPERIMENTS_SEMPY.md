@@ -6106,6 +6106,15 @@ ctl result "decayed PAM kept s8 0.523" does NOT show that its decay was harmless
   milestone (same mix, stable LR) shows whether it recovers.
 - C: s8 falls steadily as the LR falls -> LR-driven: the release decays to a non-zero floor or is shorter (picked by C's curve).
   s8 falls early, then rises -> a transient.
+**Arm D (added 13:27 IST, Lead + outside reviewer; pre-registered before any number):** weight-space points between M9 and its decay,
+no training. theta = (1 - l) M9 + l decay for l = 0.3 / 0.5 / 0.7, and a graft = M9's notebook / reader / echo params (blocks.*.pam*,
+blocks.*.reader, echo_*: 60.2M of 385.8M = 15.6 %) + the decay's MLP / embeddings / norms / head. Read per point: s8 D (2k + 4k),
+t40 16k, HS / ARC-e / PIQA (the CHECK's code, ../qllm_sci1check), held-out NLL (24 x 2048, pretrain_holdout_v1, also for M9 and the
+decay). **Release candidate = a point with s8 D >= 0.70 AND ARC-e >= 0.55 AND NLL within +0.03 of the decay's.** Closest prior:
+WiSE-FT / model soups / checkpoint averaging; release engineering, no claim. Scripts `v13_sempty/tmp/s8reg_d.py` / `s8reg_d.sh`.
+Outside hypothesis it tests: the decay's sharper LM prior outvotes a faint 2k-4k trace (M9 margin +0.23 nats); if so, lerp points
+keep s8 near M9's until l is large, and the graft (old notebook, new prior) does NOT restore s8.
+
 **Needles (Lead):** this decay KEPT t40 (8k 0.978, 16k 0.908) while M10 lost it (8k 0.69, 16k 0.62), so the regime switch does not
 explain M10's needle loss: "`worked` hurt needles" stays the live reading; only the s8 part is unresolved.
 
