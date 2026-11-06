@@ -4548,6 +4548,19 @@ fitted threshold:
     logs/v14_a32b_gate_decay_4bfbb22_20261106_2222.*; 100 docs per wording): PASS → build A32b.** At t0, unit right
     (conv_ok): twin 0.94 held-out / 0.98 trained; plain 0.63 / 0.79. Right: twin 0.07 / 0.10 (the copy cancel, as
     expected), plain 0.55 / 0.79. The post-hoc 0.94 replicates on fresh docs.
+  - **BUILD SPEC (fixed 2026-11-06 22:44 IST, after the gate's outputs and before any A32b run number; reviewer tips, verified
+    on the gate jsonl):**
+    - Unit decoding at t0: the twin read answers a DISTRACTOR row of the doc (rows_text[1], its own question; never the
+      asked row) right after the protocol. Its greedy answer runs on (40 % / 37 % of docs > 3 words) and often starts
+      with a number (27 % / 68 %). The unit = the FIRST alphabetic token that is not a protocol / header word. On the
+      gate data that rule gives the right unit 0.87 held-out / 0.98 trained.
+    - Demo block written into S_with right after the protocol, in the trained compact format: "Report rule.\n{x1} ->
+      {x1} {u}\n{x2} -> {x2} {u}\n{x3} -> {x3} {u}", x random in the cell's value format.
+    - Arms, same docs, 100 per cell (A28's docs, seed 26000: the body's own twin baseline on the same items):
+      - twin = today's told read;
+      - a32b = S_with (protocol + self-written demos) vs the no-protocol, no-demo twin;
+      - oracle = the same block with the TRUE unit (a ceiling on how much right demos help; no bar).
+    - Cells: held-out (a26) wording at 2k, trained wording at 8k.
 - **DIL3: slow-head clock + retention dilation for held rules read far back (PRE-REGISTERED 2026-11-06 15:32 IST, before any
   code or number; from Mind's clk3 EUREKA 17089b6, hook 7cb3ef0).** Eval-time lever, not a body result.
   - Body: the release checkpoint (SCI-1 decay, 10B). Held-rule cells at 8k, 100 docs:
