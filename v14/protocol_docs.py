@@ -220,19 +220,66 @@ def build_doc(rng, with_meta: bool = False, max_gap: int = 150, compact_only: bo
     return (text + '\n', meta) if with_meta else text + '\n'
 
 
+FAR_Q = (2048, 3000)        # proto_far: protocol end -> first marked answer, in tokens (Mind: the doc must fit one 4096 window)
+FAR_MAX = 3200              # proto_far: whole doc <= 3,200 tokens (ANSWER_IN_WINDOW: the answer must sit in the window)
+_TOK = {}
+
+
+def _ntok(text):
+    if 'tok' not in _TOK:
+        from v7.data import get_chat_tokenizer
+        _TOK['tok'] = get_chat_tokenizer()
+    return len(_TOK['tok'].encode(text.replace(ANSWER_MARK, ''), add_special_tokens=False))
+
+
+def build_far_doc(rng, with_meta: bool = False):
+    """proto_far (2026-11-07, Mind's far block): ONE protocol (natural style, trained families / wordings only, always stated),
+    then a filler gap sized so the FIRST marked answer sits FAR_Q tokens after the protocol, then 3-6 rows (short filler
+    between) and 1-3 questions; the whole doc <= FAR_MAX tokens. Lengths are measured with the chat tokenizer while building
+    (exact, deterministic given rng)."""
+    fam, q, sub, slots, wording = _family(rng)
+    fam_key = q if fam == 'convert' else fam
+    n_rows = rng.randint(3, 6)
+    ids = _sample_ids(rng, n_rows); mats = rng.sample(MATERIALS, n_rows)
+    rows, answers = [], []
+    for i in range(n_rows):
+        rv, ap, _ = item(rng, fam_key, sub)
+        rows.append(rng.choice(ROW_T).format(s=ids[i], m=mats[i], q=q, v=rv).strip())
+        answers.append(ap)
+    proto = wording.format(**slots)
+    lead = _filler(rng, rng.randint(1, 3)) if rng.random() < 0.5 else ''
+    tail_rows = ' '.join(r + (' ' + _filler(rng, rng.randint(1, 4)) if rng.random() < 0.6 else '') for r in rows)
+    qa = rng.choice(QA_FORMS)
+    asked = rng.sample(range(n_rows), rng.randint(1, min(3, n_rows)))
+    qtext = ''.join(qa.format(q=rng.choice(QUESTIONS).format(q=q, s=ids[i])) + _ans(f' {answers[i]}') + '.' for i in asked)
+    target = rng.randint(*FAR_Q)
+    head = (lead + ' ' + proto).strip()
+    fixed_after = _ntok(' ' + tail_rows + qa.format(q='x'))          # rows + the first question's lead-in
+    gap, used = [], 0
+    while used + fixed_after < target and len(gap) < 600:            # grow the gap a sentence at a time (running count)
+        g = _filler(rng, 1); gap.append(g); used += _ntok(' ' + g)
+    text = ' '.join(p for p in (head, ' '.join(gap), tail_rows) if p) + qtext
+    while _ntok(text) > FAR_MAX and gap:                             # cap the whole doc (drop gap sentences from the end)
+        gap.pop()
+        text = ' '.join(p for p in (head, ' '.join(gap), tail_rows) if p) + qtext
+    meta = dict(family=fam, quantity=q, sub=sub, style='far', protocol=True, parts=[proto] + rows)
+    return (text + '\n', meta) if with_meta else text + '\n'
+
+
 def protocol_text_iter(*, seed: int = 0, skip_docs: int = 0, doc_counters: Optional[Dict[str, int]] = None,
                        counter_key: str = 'proto', bump=None, max_gap: Optional[int] = None,
-                       compact_only: bool = False) -> Iterator[str]:
+                       compact_only: bool = False, far: bool = False) -> Iterator[str]:
     """Infinite, deterministic stream of protocol docs (marked answer spans). max_gap = the largest prose gap in filler
     sentences (log-uniform from 2; ~12 tokens each): 150 = the T 2048 recipe, 300 = 'proto4k' (protocol -> rows up to
     ~3.5-4k tokens, for SEQ 4096). compact_only = 'protoc': ONLY the compact "Report rule." style (demos + 1-3 queries, the converted
-    value as the marked answer), prose gap <= 20 sentences unless max_gap is given; trained families only."""
+    value as the marked answer), prose gap <= 20 sentences unless max_gap is given; trained families only. far = 'proto_far':
+    build_far_doc only (protocol -> first answer 2,048-3,000 tokens, doc <= 3,200), its own rng stream."""
     if max_gap is None:
         max_gap = 20 if compact_only else 150
-    rng = random.Random((seed * 2654435761 + SEED_OFFSET + 31337) & 0xFFFFFFFF)
+    rng = random.Random((seed * 2654435761 + SEED_OFFSET + 31337 + (7777 if far else 0)) & 0xFFFFFFFF)
     n = 0
     while True:
-        doc = build_doc(rng, max_gap=max_gap, compact_only=compact_only)
+        doc = build_far_doc(rng) if far else build_doc(rng, max_gap=max_gap, compact_only=compact_only)
         n += 1
         if n <= skip_docs:
             continue
@@ -252,9 +299,9 @@ def _ngrams(t: str, n=5):
     return {' '.join(w[i:i + n]) for i in range(len(w) - n + 1)}
 
 
-def check(n_docs: int = 20000) -> dict:
+def check(n_docs: int = 20000, far: bool = False) -> dict:
     """leak check against A26's held-out families and wordings (on the generated protocol / rows / questions / answers,
-    not on filler prose) + the share of answer characters."""
+    not on filler prose) + the share of answer characters. far = the proto_far docs (build_far_doc)."""
     from v7.data import ANSWER_MARK as AM
     from v14 import a26_protocol as A
     assert AM == ANSWER_MARK
@@ -266,7 +313,7 @@ def check(n_docs: int = 20000) -> dict:
     rng = random.Random(1)
     bad, fams, styles, chars_ans, chars = [], {}, {}, 0, 0
     for _ in range(n_docs):
-        d, m = build_doc(rng, with_meta=True)
+        d, m = build_far_doc(rng, with_meta=True) if far else build_doc(rng, with_meta=True)
         k = f"{m['family']}:{m['quantity']}:{m['sub'][0] if m['family'] == 'round' else m['sub']}"
         fams[k] = fams.get(k, 0) + 1
         styles[m['style']] = styles.get(m['style'], 0) + 1
