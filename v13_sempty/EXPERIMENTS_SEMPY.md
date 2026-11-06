@@ -6085,6 +6085,19 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## SCI-1 milestone 10 (official; CHECK re-run on the 4090, done 20:32 IST 2026-11-06; `sci1_long_3c2bf1f` step 152,590 = 10.0B = M9 + 1.0B, cont3 mix, constant LR)
+
+| | M9 (9.0B) | **M10 (10.0B)** | M10-worked (failed segment) |
+|---|---|---|---|
+| s8 D (2k+4k) | 0.770 | **0.423** (affine 0.75 / 0.36, shift 0.46 / 0.12) | 0.418 |
+| t40 needles 4k / 8k / 16k | 1.000 / 0.989 / 0.931 | **0.961 / 0.850 / 0.803** | 0.836 / 0.692 / 0.622 |
+| HS acc_norm / ARC-e acc / PIQA acc_norm | 0.333 / 0.519 / 0.621 | **0.332 / 0.539 / 0.616** | 0.333 / 0.532 / 0.617 |
+| GSM8K ON / OFF, leak | 0 / 0, 0 | 0 / 0, 0 | 0.05 / 0.06, 0 |
+
+The s8 drop (0.770 -> 0.423) confirms Lead's review-page run exactly; **needles also fell on the unchanged mix** (8k 0.99 -> 0.85,
+16k 0.93 -> 0.80), so reach drifts too, and `worked` made it worse (8k 0.69). The first CHECK attempt (19:44 IST) OOM'd beside cx_m2
+and flagged itself done; fixed (22884db: .checked only when all outputs exist).
+
 ## s8 drifts on an UNCHANGED mix; two clean comparisons from M9 (20:05 IST 2026-11-06; Lead + outside reviewer; Mind checked)
 
 **Same stream, checked:** every per-source token counter of `sci1_decay_m9_8290f7d/latest.pt` equals the new M10's
