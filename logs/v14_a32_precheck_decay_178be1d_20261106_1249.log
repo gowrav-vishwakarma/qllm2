@@ -1,0 +1,56 @@
+HEADER {"unit": "A32 pre-check", "hash": "324cb6c", "args": {"ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_decay_m9_8290f7d/decay_m9_library_weights.pt", "wordings": "a26,train", "docs": 100, "device": "cuda", "out": "logs/v14_a32_precheck_decay_178be1d_20261106_1249.jsonl"}}
+/home/gowrav/.venvs/qllm311/lib/python3.11/site-packages/torch/_inductor/compile_fx.py:282: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+  warnings.warn(
+In file included from /home/gowrav/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/include/python3.11/Python.h:12,
+                 from /tmp/tmp_em2pz98/__triton_launcher.c:4:
+/home/gowrav/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/include/python3.11/pyconfig.h:1793:9: warning: ‘_POSIX_C_SOURCE’ redefined
+ 1793 | #define _POSIX_C_SOURCE 200809L
+      |         ^~~~~~~~~~~~~~~
+In file included from /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:33,
+                 from /usr/include/stdlib.h:26,
+                 from /home/gowrav/.venvs/qllm311/lib/python3.11/site-packages/triton/backends/nvidia/include/cuda.h:56,
+                 from /tmp/tmp_em2pz98/__triton_launcher.c:2:
+/usr/include/features.h:319:10: note: this is the location of the previous definition
+  319 | # define _POSIX_C_SOURCE        202405L
+      |          ^~~~~~~~~~~~~~~
+In file included from /home/gowrav/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/include/python3.11/Python.h:12,
+                 from /tmp/tmp9bx3xns3/__triton_launcher.c:4:
+/home/gowrav/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/include/python3.11/pyconfig.h:1793:9: warning: ‘_POSIX_C_SOURCE’ redefined
+ 1793 | #define _POSIX_C_SOURCE 200809L
+      |         ^~~~~~~~~~~~~~~
+In file included from /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:33,
+                 from /usr/include/stdlib.h:26,
+                 from /home/gowrav/.venvs/qllm311/lib/python3.11/site-packages/triton/backends/nvidia/include/cuda.h:56,
+                 from /tmp/tmp9bx3xns3/__triton_launcher.c:2:
+/usr/include/features.h:319:10: note: this is the location of the previous definition
+  319 | # define _POSIX_C_SOURCE        202405L
+      |          ^~~~~~~~~~~~~~~
+W1106 13:44:51.523000 105653 torch/fx/experimental/symbolic_shapes.py:6823] [0/1] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+W1106 13:44:52.366000 105653 torch/fx/experimental/symbolic_shapes.py:6823] [0/2] _maybe_guard_rel() was called on non-relation expression Eq(1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))), 0) | (1024*(8*((s25//64)) - 1)*Max(1, (s65//((s25//64)))) + 4*((s65//((s25//64)))) + 1020*Max(1, (s65//((s25//64)))) <= 8192*((s25//64))*((s65//((s25//64)))))
+In file included from /home/gowrav/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/include/python3.11/Python.h:12,
+                 from /tmp/tmp0ew4140x/__triton_launcher.c:4:
+/home/gowrav/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/include/python3.11/pyconfig.h:1793:9: warning: ‘_POSIX_C_SOURCE’ redefined
+ 1793 | #define _POSIX_C_SOURCE 200809L
+      |         ^~~~~~~~~~~~~~~
+In file included from /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:33,
+                 from /usr/include/stdlib.h:26,
+                 from /home/gowrav/.venvs/qllm311/lib/python3.11/site-packages/triton/backends/nvidia/include/cuda.h:56,
+                 from /tmp/tmp0ew4140x/__triton_launcher.c:2:
+/usr/include/features.h:319:10: note: this is the location of the previous definition
+  319 | # define _POSIX_C_SOURCE        202405L
+      |          ^~~~~~~~~~~~~~~
+In file included from /home/gowrav/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/include/python3.11/Python.h:12,
+                 from /tmp/tmprfial2io/__triton_launcher.c:4:
+/home/gowrav/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/include/python3.11/pyconfig.h:1793:9: warning: ‘_POSIX_C_SOURCE’ redefined
+ 1793 | #define _POSIX_C_SOURCE 200809L
+      |         ^~~~~~~~~~~~~~~
+In file included from /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:33,
+                 from /usr/include/stdlib.h:26,
+                 from /home/gowrav/.venvs/qllm311/lib/python3.11/site-packages/triton/backends/nvidia/include/cuda.h:56,
+                 from /tmp/tmprfial2io/__triton_launcher.c:2:
+/usr/include/features.h:319:10: note: this is the location of the previous definition
+  319 | # define _POSIX_C_SOURCE        202405L
+      |          ^~~~~~~~~~~~~~~
+a26: twin 0.070 plain 0.420 (n 100)
+train: twin 0.070 plain 0.740 (n 100)
+A32 PRE-CHECK DONE

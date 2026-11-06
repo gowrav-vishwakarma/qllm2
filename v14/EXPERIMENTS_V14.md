@@ -4465,6 +4465,28 @@ fitted threshold:
     - A32 runs on c3b, so its held-out baseline is c3b's own: the twin read on the a26 wording at 2k, 100 docs
       (`a28_twin.py`), measured in the same M10 window.
     - Held-out bar = ≥ max(0.45, c3b baseline + 0.25). Trained 8k bar: ≥ 0.55 (baseline 0.22, c3b rep100).
+  - **Body moved, 2026-11-06 (Lead):** the M10 window died in the reboot before the pre-check ran. It ran on the
+    release checkpoint instead (SCI-1 1B decay from M9, step 152,590, 10.0B tokens), the body A32 would use.
+  - **PRE-CHECK RESULT (2026-11-06 13:47 IST; code 178be1d;
+    logs/v14_a32_precheck_decay_178be1d_20261106_1249.jsonl; baseline logs/v14_a28_a26w_2k_decay_178be1d_20261106_1249.jsonl;
+    100 docs each).** At t0:
+
+    | wording | twin | plain |
+    |---|---|---|
+    | held-out (a26) | 0.07 | **0.42** |
+    | trained | 0.07 | 0.74 |
+
+    Baseline at 2k (a26 wording, 100 docs): twin 0.36, plain 0.04, A9 0.04, no-protocol 0.00.
+    - **Gate: STOP.** The better read on held-out is 0.42 < 0.50. More than half the self-written demos would be wrong, so
+      A32 is not built.
+    - What it shows:
+      - At t0 the PLAIN read is the one that sees the rule (0.42 / 0.74). The twin read is near zero there (0.07): with
+        the protocol as the last thing read, the no-protocol twin's contrast cancels the rule's tokens too. That's the
+        WRITE-IN law again, at t0: the rule is evidence in view.
+      - By 2k the twin is the only read that keeps it (0.36 vs plain 0.04).
+      - So the rule twin is a FAR read, as the package now encodes.
+    - Caveat: this decayed checkpoint lost much of its rule skill (Mind: s8 D 0.77 → 0.23 over the decay). The
+      held-out t0 number may be higher on a body that kept it, but no A32 run without a new pre-registration.
 - **BENCH-LIB (a): the library arm on ARC-e / ARC-c / HellaSwag / PIQA, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before
   any number; Lead, user 14:40; extends ARC-LIB).** SCI-1 first (c3b now for the page, then the final model), then the three ctl
   bodies with the IDENTICAL library and scorer (the paper rows; ARC-LIB's bar applies to the ctl rows).
