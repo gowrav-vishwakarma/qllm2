@@ -4548,7 +4548,7 @@ fitted threshold:
     logs/v14_a32b_gate_decay_4bfbb22_20261106_2222.*; 100 docs per wording): PASS → build A32b.** At t0, unit right
     (conv_ok): twin 0.94 held-out / 0.98 trained; plain 0.63 / 0.79. Right: twin 0.07 / 0.10 (the copy cancel, as
     expected), plain 0.55 / 0.79. The post-hoc 0.94 replicates on fresh docs.
-  - **BUILD SPEC (fixed 2026-11-06 22:44 IST, after the gate's outputs and before any A32b run number; reviewer tips, verified
+  - **BUILD SPEC (fixed 2026-11-06 22:41 IST, after the gate's outputs and before any A32b run number; reviewer tips, verified
     on the gate jsonl):**
     - Unit decoding at t0: the twin read answers a DISTRACTOR row of the doc (rows_text[1], its own question; never the
       asked row) right after the protocol. Its greedy answer runs on (40 % / 37 % of docs > 3 words) and often starts
