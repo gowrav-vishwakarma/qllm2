@@ -6131,6 +6131,23 @@ WiSE-FT / model soups / checkpoint averaging; release engineering, no claim. Scr
 Outside hypothesis it tests: the decay's sharper LM prior outvotes a faint 2k-4k trace (M9 margin +0.23 nats); if so, lerp points
 keep s8 near M9's until l is large, and the graft (old notebook, new prior) does NOT restore s8.
 
+**D RESULT (15:01 IST; logs/s8reg/; NO release candidate):**
+
+| point | s8 D | t40 16k | HS | ARC-e | PIQA | held-out NLL |
+|---|---|---|---|---|---|---|
+| M9 (l = 0) | 0.770 | 0.931 | 0.333 | 0.519 | 0.621 | 3.555 |
+| lerp30 | 0.689 | 0.964 | 0.340 | 0.532 | 0.625 | 3.529 |
+| lerp50 | 0.571 | 0.969 | 0.341 | 0.545 | 0.627 | 3.519 |
+| lerp70 | 0.426 | 0.964 | 0.342 | 0.557 | 0.628 | 3.463 |
+| decay (l = 1) | 0.231 | 0.908 | 0.343 | 0.567 | 0.631 | 3.383 |
+| graft (M9 notebook + decay rest) | 0.338 | 0.847 | 0.340 | 0.532 | 0.618 | **3.916** (broken) |
+
+Rule (s8 >= 0.70 AND ARC-e >= 0.55 AND NLL <= decay + 0.03 = 3.413): no point passes; lerp30 is the closest on s8, lerp70 on ARC-e,
+none on NLL. **Reading:** s8 falls about linearly along the path (-0.11 per 0.2 of l) while most of the NLL gain sits at the end
+(l 0.7 -> 1: -0.08 of -0.17): the decay's prose gain and its rule loss are separate directions. The outside hypothesis ("s8 holds until l is
+large") is NOT supported. The graft is incompatible (NLL worse than either end), so it says nothing about where the rule lives. Needles
+16k are higher at every mid point (0.96-0.97) than at both ends. Next: the short decay curve (C), Lead's call on the 6000.
+
 **Needles (Lead):** this decay KEPT t40 (8k 0.978, 16k 0.908) while M10 lost it (8k 0.69, 16k 0.62), so the regime switch does not
 explain M10's needle loss: "`worked` hurt needles" stays the live reading; only the s8 part is unresolved.
 

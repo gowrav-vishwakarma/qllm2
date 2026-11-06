@@ -1,0 +1,22 @@
+{
+ "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/s8reg_d/graft_weights.pt",
+ "results": {
+  "hellaswag": {
+   "acc": 0.3074088826926907,
+   "acc_norm": 0.33957379008165706,
+   "n": 10042
+  },
+  "arc_easy": {
+   "acc": 0.5324074074074074,
+   "acc_norm": 0.48063973063973064,
+   "n": 2376
+  },
+  "piqa": {
+   "acc": 0.6218715995647442,
+   "acc_norm": 0.6180631120783461,
+   "n": 1838
+  }
+ },
+ "sec": 96.6,
+ "fp32": false
+}
