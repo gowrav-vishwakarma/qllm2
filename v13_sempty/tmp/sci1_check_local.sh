@@ -31,4 +31,9 @@ while kill -0 $CP 2>/dev/null; do
   sleep 10
 done
 [ -e $LD/$m.pt ] && rm -f $LD/.mind_$m.pt || mv $LD/.mind_$m.pt $LD/$m.pt   # keep one full copy (the 6000 deletes against it)
+n=sci1_${m}_${RUN##*_}; miss=""   # touch .checked ONLY when every probe output exists (M10 2026-11-06: an OOM'd CHECK flagged itself done)
+for f in logs/learning_probes/v13_sempty_${n}_spread_s7000_t400.json logs/memory_probes/v13_sempty_${n}_t40_behavioral.json \
+         logs/memory_probes/v13_sempty_${n}_t40_long_behavioral.json logs/sci1/v13_sempty_mc_${n}.json logs/diag/v13_sempty_skillpack_${n}.jsonl; do
+  [ -s $W/$f ] || miss+=" $f"; done
+if [ -n "$miss" ]; then echo "=== local CHECK $m INCOMPLETE (no .checked):$miss $(date -u +%FT%TZ)"; exit 1; fi
 touch $LD/.checked_$m; echo "=== local CHECK $m DONE $(date -u +%FT%TZ)"
