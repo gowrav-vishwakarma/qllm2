@@ -4232,6 +4232,21 @@ fitted threshold:
       beats warm on R×K, so the READ is right and the model lost rule skill, in line with Mind's s8 D 0.77 → 0.23 over
       the decay. Facts and in-view rules held or rose (recall 1.00 / 1.00 / 0.95; rewrite 0.94).
 
+  - **PKG-SUITE ROW: official M10 = sci1_long_3c2bf1f step 152,590 (10.0B tokens; 2026-11-06 22:50 IST; package v0.3.1, code
+    4bfbb22; `logs/v14_pkg_suite_m10long_4bfbb22_20261106_2236.*`; the first attempt segfaulted at 22:2x and its partial files
+    were deleted):**
+
+    | cell | bare | package |
+    |---|---|---|
+    | R × K, 2k / 8k | 0.01 / 0.01 | **0.62 / 0.27** |
+    | rewrite, 2k / 8k | 0.00 / 0.00 | **0.94 / 0.92** |
+    | told (twin), 2k / 8k | 0.09 / 0.02 | **0.80 / 0.21** |
+    | recall 32k free: needle / latest / two-hop | 0.05 / 0.10 / 0.05 | **1.00 / 1.00 / 1.00** |
+    | recall 32k 20-way (pooled) | 0.22 | **1.00** |
+
+    - Held rules at M10 sit between c3b (0.67 / 0.42; 0.83 / 0.22) and the decay (0.46 / 0.16; 0.74 / 0.10), in line with
+      Mind's s8 (M10 0.42).
+
     - MB held per 32k session: mind state 3.67, library text 0.07, indexes ~0.31; optional F2 address 33.8 (int8) or 0.27 (sign
       bits). Recall is reported to 32k on the 386M body (Lead's line: 128k ran on 103M; the 24 GB card is the limit here).
     - Two-hop is a TEXT planner chain (two package answers). Free recall < 20-way on kv / kvupd: the right value is ranked
