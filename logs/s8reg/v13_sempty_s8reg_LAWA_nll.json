@@ -1,0 +1,7 @@
+{
+ "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont3_449e320/c3b_step_137331_weights.pt": 3.554872860511144,
+ "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_decay_m9_8290f7d/decay_m9_library_weights.pt": 3.383348842461904,
+ "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/s8reg_lawa/L1_weights.pt": 3.4817107121149697,
+ "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/s8reg_lawa/L2_weights.pt": 3.5092433194319406,
+ "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/s8reg_lawa/L3_weights.pt": 3.4810654620329538
+}

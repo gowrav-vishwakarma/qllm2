@@ -6215,6 +6215,21 @@ is read from the trainer's [mix] line at the first val.
 **Paper finding (Lead):** the s8reg D lerp curve (s8 falls ~linearly in l, the NLL gain arrives late) = prose sharpening and rule loss
 are separate directions in weight space.
 
+**LAWA-lite RESULT (23:31 IST 2026-11-06; logs/s8reg/*LAWA*; NO release candidate):**
+
+| point | s8 D | margin | t40 16k | HS | ARC-e | PIQA | NLL |
+|---|---|---|---|---|---|---|---|
+| M9 | 0.770 | +1.86 | 0.931 | 0.333 | 0.519 | 0.621 | 3.555 |
+| L1 = mean(M9, 138,500) | **0.777** | +1.65 | 0.875 | 0.333 | 0.524 | 0.621 | **3.482** |
+| L2 = mean(128,000, M9, 138,500) | 0.688 | +1.18 | 0.928 | 0.333 | 0.542 | 0.631 | 3.509 |
+| L3 = 0.6 M9 + 0.25 x 138,500 + 0.15 decay | 0.744 | +1.46 | 0.939 | 0.336 | 0.530 | 0.627 | 3.481 |
+| Decay_M9 | 0.231 | | 0.908 | 0.343 | 0.567 | 0.631 | 3.383 |
+
+All miss ARC-e >= 0.55 and NLL <= 3.413. As expected (pre-registered): the averages keep s8 near M9's while buying part of the decay's NLL
+gain. Notable: **L1, a plain average of two constant-LR saves 1,169 steps apart, keeps s8 (0.777, margin +1.65) and buys ~43 % of the
+1B decay's NLL gain (3.555 -> 3.482 vs 3.383)**, no training: averaging removes the noise the decay removes, without the decay's rule
+loss. Paper line candidate (no claim beyond LAWA's).
+
 **C2 RESULT (22:21 IST 2026-11-06; logs/s8reg/*C2*; NO release candidate):**
 
 | point (from M10) | s8 D | margin | t40 16k | HS | ARC-e | PIQA | NLL | wdelta vs M10 (embed+head / cgu / pam / reader+echo) |

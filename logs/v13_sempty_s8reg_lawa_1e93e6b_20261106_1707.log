@@ -1,0 +1,28 @@
+=== LAWA start 2026-11-06T17:23:07Z
+=== LAWA L1 2026-11-06T17:23:07Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.88, 'shift_wide_new@4096': 0.487, 'shift_wide_new@8192': 0.13, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.95, 'affine_map_new@4096': 0.79, 'affine_map_new@8192': 0.412}  mean 0.706
+saved /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_LAWA_L1_spread_s7000_t400.json
+Results saved to /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_LAWA_L1_t40_long_behavioral.json (aggregates, 360 rows omitted)
+hellaswag {'acc': 0.2987, 'acc_norm': 0.3328, 'n': 10042}
+arc_easy {'acc': 0.524, 'acc_norm': 0.4705, 'n': 2376}
+piqa {'acc': 0.6224, 'acc_norm': 0.6213, 'n': 1838}
+=== LAWA L2 2026-11-06T17:34:13Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.835, 'shift_wide_new@4096': 0.32, 'shift_wide_new@8192': 0.052, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.94, 'affine_map_new@4096': 0.657, 'affine_map_new@8192': 0.27}  mean 0.634
+saved /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_LAWA_L2_spread_s7000_t400.json
+Results saved to /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_LAWA_L2_t40_long_behavioral.json (aggregates, 360 rows omitted)
+hellaswag {'acc': 0.2982, 'acc_norm': 0.3335, 'n': 10042}
+arc_easy {'acc': 0.5417, 'acc_norm': 0.4811, 'n': 2376}
+piqa {'acc': 0.6257, 'acc_norm': 0.6311, 'n': 1838}
+=== LAWA L3 2026-11-06T17:45:20Z
+per task: {'shift_wide_new@0': 1.0, 'shift_wide_new@2048': 0.858, 'shift_wide_new@4096': 0.435, 'shift_wide_new@8192': 0.102, 'affine_map_new@0': 1.0, 'affine_map_new@2048': 0.94, 'affine_map_new@4096': 0.743, 'affine_map_new@8192': 0.385}  mean 0.683
+saved /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_LAWA_L3_spread_s7000_t400.json
+Results saved to /home/gowrav/Development/qllm2/logs/s8reg/v13_sempty_s8reg_LAWA_L3_t40_long_behavioral.json (aggregates, 360 rows omitted)
+hellaswag {'acc': 0.2998, 'acc_norm': 0.3359, 'n': 10042}
+arc_easy {'acc': 0.5299, 'acc_norm': 0.4773, 'n': 2376}
+piqa {'acc': 0.6257, 'acc_norm': 0.6273, 'n': 1838}
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_cont3_449e320/c3b_step_137331_weights.pt: 3.5549 (8 s)
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/sci1_decay_m9_8290f7d/decay_m9_library_weights.pt: 3.3833 (4 s)
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/s8reg_lawa/L1_weights.pt: 3.4817 (4 s)
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/s8reg_lawa/L2_weights.pt: 3.5092 (3 s)
+[nll] /media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/s8reg_lawa/L3_weights.pt: 3.4811 (3 s)
+=== s8reg LAWA DONE 2026-11-06T17:56:52Z

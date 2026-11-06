@@ -1,0 +1,22 @@
+{
+ "ckpt": "/media/gowrav/d_drive/qllm2/from_6000/checkpoints_v13_sempty/s8reg_lawa/L1_weights.pt",
+ "results": {
+  "hellaswag": {
+   "acc": 0.29874526986656047,
+   "acc_norm": 0.33280223063134834,
+   "n": 10042
+  },
+  "arc_easy": {
+   "acc": 0.523989898989899,
+   "acc_norm": 0.47053872053872053,
+   "n": 2376
+  },
+  "piqa": {
+   "acc": 0.6224156692056583,
+   "acc_norm": 0.6213275299238302,
+   "n": 1838
+  }
+ },
+ "sec": 94.5,
+ "fp32": false
+}
