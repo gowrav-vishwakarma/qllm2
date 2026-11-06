@@ -6085,6 +6085,24 @@ where both heads have identical logic.
   tokens (4.38 vs 4.36), real −0.24 NLL on TinyStories, with different recipes per arm. This run fixes the recipe.
 - Prior work: complex-valued / unitary RNNs (Arjovsky 2016; Wisdom 2016), complex-valued Transformers; our own v11 complex PAM.
 
+## s8 drifts on an UNCHANGED mix; two clean comparisons from M9 (20:05 IST 2026-11-06; Lead + outside reviewer; Mind checked)
+
+**Same stream, checked:** every per-source token counter of `sci1_decay_m9_8290f7d/latest.pt` equals the new M10's
+(`sci1_long_3c2bf1f/step_152590.pt`; b2s 145,132,567, dclm 2,054,762,271, ...): both read the same 1B after M9 (cont3, seed 43).
+- **LR only (decay vs constant LR, same 1B):** s8 D 0.231 vs 0.423; ARC-e 0.567 vs 0.540; HS 0.343 vs 0.333.
+- **Mix only (`worked` ~2 % vs none, same start, LR and 1B):** M10-worked vs new M10: s8 D 0.418 vs 0.423 -> **`worked` is neutral on
+  s8**; t40 8k 0.69 vs 0.85 -> **`worked` hurt needles**. Final `worked` verdict: it costs reach, not rules (not used).
+- **s8 on the unchanged cont3 mix at constant LR:** M9 0.770 -> +0.08B 0.667 (s8reg B) -> +1.0B 0.423 (new M10; Lead's review-page
+  run, 400 trials; my CHECK re-run confirms). So s8reg B's reading "the big drops are mix changes" is withdrawn: s8 at 2k / 4k rises
+  and falls on a constant mix too (M4 -> M5, M9 -> M10).
+**Why (generator, `v7/data.py` `_b2_text_iter`):** b2s spreads only half its prompts, with log-uniform 1-30-sentence gaps of
+recall-bank filler; the probe's per-gap distance is ~290 tokens at 2k and ~585 at 4k on held-out web filler: the 2k cell is in ~10 %
+of training prompts, the 4k cell at the edge, with another filler. s8 at 2-4k is a weakly anchored extrapolation (s8 @0 = 1.00 at
+every check); nothing in the stream holds it, so it drifts. **Long-run mix proposal (to Lead; pre-registered before the next
+milestone, C2 picks):** (a) if C2 lifts s8 from 0.42: rule block x2 (C2's weights); (b) else a new ramped source `b2s_far`
+(every prompt spread, per-gap log-uniform 50-600 tokens of web-train filler, one prompt per doc, 0.5 -> 1.5 % over 2B from web, b2s
+kept); paper caveat for (b): s8 at 2k / 4k becomes a trained distance, the beyond-length claim moves to the 8k cell.
+
 ## SCI-1 milestone naming (user via Lead, 14:20 IST 2026-11-06)
 
 **M10 = the long run's first milestone** (`sci1_long_3c2bf1f`, global step 152,590 = 10.0B tokens = M9 + 1.0B on the cont3 mix,
@@ -6121,6 +6139,7 @@ ctl result "decayed PAM kept s8 0.523" does NOT show that its decay was harmless
 - **B:** SCI-1 step 138,500 (M9 + re-warm + 669 stable steps, same mix) s8 D **0.667** (M9 0.770; 2k 0.83, 4k 0.51). >= 0.65 ->
   by the fixed reading the re-warm alone is harmless (a -0.10 dip, against -0.54 in the decay); the large segment drops (76k, 152k)
   go back to their MIX changes. So M10's s8 loss is again read as `worked` (the confound is mostly removed), with needles.
+  (WITHDRAWN later the same day: the new M10 fell to 0.423 on the UNCHANGED mix; see "s8 drifts on an UNCHANGED mix".)
 
 **Arm D (added 13:27 IST, Lead + outside reviewer; pre-registered before any number):** weight-space points between M9 and its decay,
 no training. theta = (1 - l) M9 + l decay for l = 0.3 / 0.5 / 0.7, and a graft = M9's notebook / reader / echo params (blocks.*.pam*,
