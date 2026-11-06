@@ -112,6 +112,7 @@ Params and tokens are in the verdict where they matter; claims only within a tok
               - **kb1** (2026-11-01) known small-LM suite (HellaSwag, ARC, PIQA, Winogrande, OBQA, LAMBADA) per tokens tier -> **level at 600M (0.391 / 0.388 / 0.392); 3B 0.403 / 0.406 / 0.415; slopes +0.012 / +0.018 / +0.023; window costs nothing**; run `2577940`, code at `current`; logs/kb1/v13_sempty_kb1_table_ccf187c.md; "kb1"
                 - **Scaling watch** <- v13_sempty:kb1 (2026-11-01) per-body slopes 600M -> 3B (language, recall, rules, reach, kb1) -> **language: T++ gains most; body-alone recall: PAM lead grew; kb1: PAM +0.012 least; t15 fills the matched slope**; code at `current`; v16/SCRATCHPAD "Scaling watch"; board
 - **clk3** (2026-11-05) eval-time dilation of only the 6 slowest notebook heads by MEASURED realized retention (+ echo) on SCI-1 M9, s8 to 8k, prose NLL guard -> **NOT MET (narrowly): slow-only D_far +0.03; slow+echo +0.12 at NLL +0.013; coupled clock+retention +0.087 (clock matters); 3 of 6 slow heads at the warp clamp floor**; run `7a9eecd`; logs/diag/v13_sempty_clk3_m9_7a9eecd.json; EXPERIMENTS_SEMPY "clk3"
+  - **DIL3 slow-head clock + retention dilation for held rules** <- v13_sempty:clk3 (2026-11-06) release ckpt, R x K and told at 8k: today's read vs echo dilation vs echo + clk3 slow heads (clock + retention), mask on the filler gap only -> **pre-registered (bar: clk3 >= today + 0.10 on both, >= echo + 0.05 on one)**; code at `current`; -; "DIL3"
 
 ## v14
 
@@ -202,4 +203,4 @@ Params and tokens are in the verdict where they matter; claims only within a tok
 
 (every v16 experiment branches from another version; find them by `<- v16:` is not used, look for ids under their parents above)
 
-184 experiments: v13_sempty 89, v14 73, v15 10, v16 12.
+185 experiments: v13_sempty 89, v14 74, v15 10, v16 12.

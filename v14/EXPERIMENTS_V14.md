@@ -4507,6 +4507,23 @@ fitted threshold:
       - So the rule twin is a FAR read, as the package now encodes.
     - Caveat: this decayed checkpoint lost much of its rule skill (Mind: s8 D 0.77 → 0.23 over the decay). The
       held-out t0 number may be higher on a body that kept it, but no A32 run without a new pre-registration.
+- **DIL3: slow-head clock + retention dilation for held rules read far back (PRE-REGISTERED 2026-11-06 15:32 IST, before any
+  code or number; from Mind's clk3 EUREKA 17089b6, hook 7cb3ef0).** Eval-time lever, not a body result.
+  - Body: the release checkpoint (SCI-1 decay, 10B). Held-rule cells at 8k, 100 docs:
+    - R×K: the rule twin read, today echo-only dilation s 8: 0.16;
+    - told: the protocol twin, no dilation: 0.10.
+  - Arms per cell, same docs:
+    - (a) today's read;
+    - (b) echo-only dilation s 4 over the filler gap (Mind's cheapest reach lever);
+    - (c) (b) + clk3: the slow notebook heads, re-measured on THIS body with Mind's select_slow (K 6, 24 × 2048 held-out),
+      clock + retention coupled, s 4.
+  - The mask is 1 ONLY on the filler between the rule / pack and the asked row. The rule span, row and question are 0, so
+    the read itself is never dilated.
+  - **Bar:** (c) ≥ (a) + 0.10 on BOTH cells, and (c) ≥ (b) + 0.05 on at least one (the clock adds over echo alone).
+    Prose NLL cost reported from Mind's clk3 (+0.013 to +0.021), stated as an eval-time lever.
+  - Closest prior work: inference-time positional / clock scaling for length (e.g. RoPE scaling / YaRN); Mind's clk2 /
+    clk3. Difference: applied only to the O(1) notebook's slow heads over a gap the package knows (it placed the rule).
+  - Plumbing unless the bar holds on both cells.
 - **BENCH-LIB (a): the library arm on ARC-e / ARC-c / HellaSwag / PIQA, per item (PRE-REGISTERED 2026-11-05 14:40 IST, before
   any number; Lead, user 14:40; extends ARC-LIB).** SCI-1 first (c3b now for the page, then the final model), then the three ctl
   bodies with the IDENTICAL library and scorer (the paper rows; ARC-LIB's bar applies to the ctl rows).
