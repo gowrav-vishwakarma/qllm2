@@ -1,0 +1,32 @@
+  [decontam] could not load ('allenai/openbookqa', 'main') {'split': 'validation'}: ValueError: Feature type 'List' not found. Available feature types: ['Value', 'ClassLabel', 'Translation', 'TranslationVariableLanguages', 'LargeList', 'Sequence', 'Array2D', 'Array3D', 'Array4D', 'Array5D', 'Audio', 'Image', 'Video', 'Pdf']
+  [decontam] could not load ('allenai/openbookqa', 'main') {'split': 'test'}: ValueError: Feature type 'List' not found. Available feature types: ['Value', 'ClassLabel', 'Translation', 'TranslationVariableLanguages', 'LargeList', 'Sequence', 'Array2D', 'Array3D', 'Array4D', 'Array5D', 'Audio', 'Image', 'Video', 'Pdf']
+  [decontam] could not load ('cais/mmlu', 'all') {'split': 'test'}: ValueError: Feature type 'List' not found. Available feature types: ['Value', 'ClassLabel', 'Translation', 'TranslationVariableLanguages', 'LargeList', 'Sequence', 'Array2D', 'Array3D', 'Array4D', 'Array5D', 'Audio', 'Image', 'Video', 'Pdf']
+  [decontam] could not load ('cais/mmlu', 'all') {'split': 'validation'}: ValueError: Feature type 'List' not found. Available feature types: ['Value', 'ClassLabel', 'Translation', 'TranslationVariableLanguages', 'LargeList', 'Sequence', 'Array2D', 'Array3D', 'Array4D', 'Array5D', 'Audio', 'Image', 'Video', 'Pdf']
+Repo card metadata block was not found. Setting CardData to empty.
+[audit] index: 6,348,184 13-grams from 146,686 test strings, sets {'hellaswag': 80180, 'arc': 17663, 'piqa': 9844, 'winogrande': 6068, 'lambada': 5153, 'gsm8k_test': 1319, 'babi': 20000, 'library_items': 3918, 'babilong': 2000, 'ifeval': 541} (71s)
+[audit] POSITIVE CONTROL: 300/300 planted docs flagged by the audit, 300 by Mind's filter
+  [stream] fineweb_sample-100BT_e3_h5_ex_m0: 140 files; 0 docs -> file 0, 0 docs to skip by reading
+Token indices sequence length is longer than the specified maximum sequence length for this model (2445 > 1024). Running this sequence through the model will result in indexing errors
+  [fineweb/raw] 2,000 docs, 0 hit, 20s
+  [fineweb/raw] 4,000 docs, 0 hit, 35s
+  [fineweb/raw] 6,000 docs, 0 hit, 50s
+  [fineweb/raw] 8,000 docs, 0 hit, 63s
+  [fineweb/raw] 10,000 docs, 0 hit, 73s
+  [fineweb/raw] 12,000 docs, 1 hit, 85s
+  [fineweb/raw] 14,000 docs, 1 hit, 98s
+  [fineweb/raw] 16,000 docs, 1 hit, 112s
+  [fineweb/raw] 18,000 docs, 1 hit, 126s
+[audit] fineweb raw: 20,000 docs, 1 with a hit (0.005%) {'hellaswag': 1}
+[decontam] index .cache/decontam/v1.npy sha256 08766210ac06dd67066aee27dc3c961f000fa078b62ee1c2991b3fa97bd2096d (4,371,599 13-grams)
+  [stream] fineweb_sample-100BT_e3_h5_ex_m0: 140 files; 0 docs -> file 0, 0 docs to skip by reading
+  [fineweb/filtered] 2,000 docs, 0 hit, 17s
+  [fineweb/filtered] 4,000 docs, 0 hit, 33s
+  [fineweb/filtered] 6,000 docs, 0 hit, 48s
+  [fineweb/filtered] 8,000 docs, 0 hit, 62s
+  [fineweb/filtered] 10,000 docs, 0 hit, 74s
+  [fineweb/filtered] 12,000 docs, 0 hit, 88s
+  [fineweb/filtered] 14,000 docs, 0 hit, 103s
+  [fineweb/filtered] 16,000 docs, 0 hit, 118s
+  [fineweb/filtered] 18,000 docs, 0 hit, 131s
+[audit] fineweb filtered: 20,000 docs, 0 with a hit (0.0%) {}
+A27 DONE

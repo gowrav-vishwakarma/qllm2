@@ -1,0 +1,160 @@
+  [decontam] could not load ('allenai/openbookqa', 'main') {'split': 'validation'}: ValueError: Feature type 'List' not found. Available feature types: ['Value', 'ClassLabel', 'Translation', 'TranslationVariableLanguages', 'LargeList', 'Sequence', 'Array2D', 'Array3D', 'Array4D', 'Array5D', 'Audio', 'Image', 'Video', 'Pdf']
+  [decontam] could not load ('allenai/openbookqa', 'main') {'split': 'test'}: ValueError: Feature type 'List' not found. Available feature types: ['Value', 'ClassLabel', 'Translation', 'TranslationVariableLanguages', 'LargeList', 'Sequence', 'Array2D', 'Array3D', 'Array4D', 'Array5D', 'Audio', 'Image', 'Video', 'Pdf']
+  [decontam] could not load ('cais/mmlu', 'all') {'split': 'test'}: ValueError: Feature type 'List' not found. Available feature types: ['Value', 'ClassLabel', 'Translation', 'TranslationVariableLanguages', 'LargeList', 'Sequence', 'Array2D', 'Array3D', 'Array4D', 'Array5D', 'Audio', 'Image', 'Video', 'Pdf']
+  [decontam] could not load ('cais/mmlu', 'all') {'split': 'validation'}: ValueError: Feature type 'List' not found. Available feature types: ['Value', 'ClassLabel', 'Translation', 'TranslationVariableLanguages', 'LargeList', 'Sequence', 'Array2D', 'Array3D', 'Array4D', 'Array5D', 'Audio', 'Image', 'Video', 'Pdf']
+Repo card metadata block was not found. Setting CardData to empty.
+[audit] index: 6,348,184 13-grams from 146,686 test strings, sets {'hellaswag': 80180, 'arc': 17663, 'piqa': 9844, 'winogrande': 6068, 'lambada': 5153, 'gsm8k_test': 1319, 'babi': 20000, 'library_items': 3918, 'babilong': 2000, 'ifeval': 541} (100s)
+[audit] POSITIVE CONTROL: 300/300 planted docs flagged by the audit, 300 by Mind's filter
+  [stream] smoltalk2_Mid: 237 files; 0 docs -> file 0, 0 docs to skip by reading
+Token indices sequence length is longer than the specified maximum sequence length for this model (1336 > 1024). Running this sequence through the model will result in indexing errors
+  [smoltalk2_mid/raw] 2,000 docs, 0 hit, 15s
+  [smoltalk2_mid/raw] 4,000 docs, 0 hit, 22s
+  [smoltalk2_mid/raw] 6,000 docs, 0 hit, 28s
+  [smoltalk2_mid/raw] 8,000 docs, 0 hit, 34s
+  [smoltalk2_mid/raw] 10,000 docs, 0 hit, 40s
+  [smoltalk2_mid/raw] 12,000 docs, 0 hit, 46s
+  [smoltalk2_mid/raw] 14,000 docs, 0 hit, 53s
+  [smoltalk2_mid/raw] 16,000 docs, 0 hit, 59s
+  [smoltalk2_mid/raw] 18,000 docs, 0 hit, 65s
+[audit] smoltalk2_mid raw: 20,000 docs, 0 with a hit (0.0%) {}
+[decontam] index .cache/decontam/v1.npy sha256 08766210ac06dd67066aee27dc3c961f000fa078b62ee1c2991b3fa97bd2096d (4,371,599 13-grams)
+  [stream] smoltalk2_Mid: 237 files; 0 docs -> file 0, 0 docs to skip by reading
+  [smoltalk2_mid/filtered] 2,000 docs, 0 hit, 12s
+  [smoltalk2_mid/filtered] 4,000 docs, 0 hit, 20s
+  [smoltalk2_mid/filtered] 6,000 docs, 0 hit, 27s
+  [smoltalk2_mid/filtered] 8,000 docs, 0 hit, 33s
+  [smoltalk2_mid/filtered] 10,000 docs, 0 hit, 39s
+  [smoltalk2_mid/filtered] 12,000 docs, 0 hit, 49s
+  [smoltalk2_mid/filtered] 14,000 docs, 0 hit, 56s
+  [smoltalk2_mid/filtered] 16,000 docs, 0 hit, 62s
+  [smoltalk2_mid/filtered] 18,000 docs, 0 hit, 68s
+[audit] smoltalk2_mid filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] chatmt: 7 files; 0 docs -> file 0, 0 docs to skip by reading
+  [chatmt/raw] 2,000 docs, 0 hit, 14s
+  [chatmt/raw] 4,000 docs, 0 hit, 22s
+  [chatmt/raw] 6,000 docs, 0 hit, 27s
+  [chatmt/raw] 8,000 docs, 1 hit, 34s
+  [chatmt/raw] 10,000 docs, 1 hit, 40s
+  [chatmt/raw] 12,000 docs, 2 hit, 47s
+  [chatmt/raw] 14,000 docs, 2 hit, 53s
+  [chatmt/raw] 16,000 docs, 2 hit, 59s
+  [chatmt/raw] 18,000 docs, 2 hit, 65s
+[audit] chatmt raw: 20,000 docs, 2 with a hit (0.01%) {'arc': 1, 'hellaswag': 1}
+  [stream] chatmt: 7 files; 0 docs -> file 0, 0 docs to skip by reading
+  [chatmt/filtered] 2,000 docs, 0 hit, 16s
+  [chatmt/filtered] 4,000 docs, 0 hit, 27s
+  [chatmt/filtered] 6,000 docs, 0 hit, 36s
+  [chatmt/filtered] 8,000 docs, 0 hit, 44s
+  [chatmt/filtered] 10,000 docs, 0 hit, 53s
+  [chatmt/filtered] 12,000 docs, 0 hit, 62s
+  [chatmt/filtered] 14,000 docs, 0 hit, 70s
+  [chatmt/filtered] 16,000 docs, 0 hit, 78s
+  [chatmt/filtered] 18,000 docs, 0 hit, 86s
+[audit] chatmt filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [stream] smoltalk2_SFT: 150 files; 0 docs -> file 0, 0 docs to skip by reading
+  [smoltalk2_sft/raw] 2,000 docs, 1 hit, 64s
+  [smoltalk2_sft/raw] 4,000 docs, 1 hit, 107s
+  [smoltalk2_sft/raw] 6,000 docs, 1 hit, 129s
+  [smoltalk2_sft/raw] 8,000 docs, 3 hit, 152s
+  [smoltalk2_sft/raw] 10,000 docs, 4 hit, 177s
+  [smoltalk2_sft/raw] 12,000 docs, 4 hit, 202s
+  [smoltalk2_sft/raw] 14,000 docs, 6 hit, 225s
+  [smoltalk2_sft/raw] 16,000 docs, 6 hit, 229s
+  [smoltalk2_sft/raw] 18,000 docs, 6 hit, 233s
+[audit] smoltalk2_sft raw: 20,000 docs, 6 with a hit (0.03%) {'hellaswag': 6}
+  [stream] smoltalk2_SFT: 150 files; 0 docs -> file 0, 0 docs to skip by reading
+  [smoltalk2_sft/filtered] 2,000 docs, 0 hit, 77s
+  [smoltalk2_sft/filtered] 4,000 docs, 0 hit, 123s
+  [smoltalk2_sft/filtered] 6,000 docs, 0 hit, 155s
+  [smoltalk2_sft/filtered] 8,000 docs, 0 hit, 187s
+  [smoltalk2_sft/filtered] 10,000 docs, 0 hit, 225s
+  [smoltalk2_sft/filtered] 12,000 docs, 0 hit, 261s
+  [smoltalk2_sft/filtered] 14,000 docs, 0 hit, 294s
+  [smoltalk2_sft/filtered] 16,000 docs, 0 hit, 299s
+  [smoltalk2_sft/filtered] 18,000 docs, 0 hit, 303s
+[audit] smoltalk2_sft filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/raw] 2,000 docs, 953 hit, 7s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/raw] 4,000 docs, 1903 hit, 7s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/raw] 6,000 docs, 2820 hit, 8s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/raw] 8,000 docs, 3771 hit, 8s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/raw] 10,000 docs, 4718 hit, 8s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/raw] 12,000 docs, 5721 hit, 9s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/raw] 14,000 docs, 6651 hit, 9s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/raw] 16,000 docs, 7604 hit, 10s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/raw] 18,000 docs, 8547 hit, 10s
+[audit] hf:HuggingFaceTB/smoltalk:smol-constraints:train raw: 20,000 docs, 9526 with a hit (47.63%) {'ifeval': 9526, 'hellaswag': 1}
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/filtered] 2,000 docs, 953 hit, 5s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/filtered] 4,000 docs, 1903 hit, 6s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/filtered] 6,000 docs, 2820 hit, 7s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/filtered] 8,000 docs, 3771 hit, 8s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/filtered] 10,000 docs, 4718 hit, 9s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/filtered] 12,000 docs, 5721 hit, 9s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/filtered] 14,000 docs, 6651 hit, 10s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/filtered] 16,000 docs, 7604 hit, 11s
+  [hf:HuggingFaceTB/smoltalk:smol-constraints:train/filtered] 18,000 docs, 8547 hit, 11s
+[audit] hf:HuggingFaceTB/smoltalk:smol-constraints:train filtered: 20,000 docs, 9526 with a hit (47.63%) {'ifeval': 9526}
+  [hf:HuggingFaceTB/smoltalk:everyday-conversations:train/raw] 2,000 docs, 2 hit, 5s
+[audit] hf:HuggingFaceTB/smoltalk:everyday-conversations:train raw: 2,260 docs, 2 with a hit (0.0885%) {'hellaswag': 2}
+  [hf:HuggingFaceTB/smoltalk:everyday-conversations:train/filtered] 2,000 docs, 0 hit, 4s
+[audit] hf:HuggingFaceTB/smoltalk:everyday-conversations:train filtered: 2,258 docs, 0 with a hit (0.0%) {}
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/raw] 2,000 docs, 0 hit, 6s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/raw] 4,000 docs, 0 hit, 7s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/raw] 6,000 docs, 0 hit, 8s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/raw] 8,000 docs, 0 hit, 8s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/raw] 10,000 docs, 0 hit, 9s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/raw] 12,000 docs, 0 hit, 9s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/raw] 14,000 docs, 0 hit, 10s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/raw] 16,000 docs, 0 hit, 10s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/raw] 18,000 docs, 0 hit, 11s
+[audit] hf:HuggingFaceTB/smoltalk:smol-rewrite:train raw: 20,000 docs, 0 with a hit (0.0%) {}
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/filtered] 2,000 docs, 0 hit, 7s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/filtered] 4,000 docs, 0 hit, 9s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/filtered] 6,000 docs, 0 hit, 10s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/filtered] 8,000 docs, 0 hit, 11s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/filtered] 10,000 docs, 0 hit, 12s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/filtered] 12,000 docs, 0 hit, 13s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/filtered] 14,000 docs, 0 hit, 14s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/filtered] 16,000 docs, 0 hit, 15s
+  [hf:HuggingFaceTB/smoltalk:smol-rewrite:train/filtered] 18,000 docs, 0 hit, 16s
+[audit] hf:HuggingFaceTB/smoltalk:smol-rewrite:train filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/raw] 2,000 docs, 0 hit, 8s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/raw] 4,000 docs, 0 hit, 9s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/raw] 6,000 docs, 0 hit, 10s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/raw] 8,000 docs, 0 hit, 11s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/raw] 10,000 docs, 0 hit, 12s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/raw] 12,000 docs, 0 hit, 12s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/raw] 14,000 docs, 0 hit, 13s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/raw] 16,000 docs, 0 hit, 14s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/raw] 18,000 docs, 0 hit, 14s
+[audit] hf:HuggingFaceTB/smoltalk:smol-summarize:train raw: 20,000 docs, 0 with a hit (0.0%) {}
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/filtered] 2,000 docs, 0 hit, 8s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/filtered] 4,000 docs, 0 hit, 10s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/filtered] 6,000 docs, 0 hit, 12s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/filtered] 8,000 docs, 0 hit, 13s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/filtered] 10,000 docs, 0 hit, 15s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/filtered] 12,000 docs, 0 hit, 16s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/filtered] 14,000 docs, 0 hit, 18s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/filtered] 16,000 docs, 0 hit, 19s
+  [hf:HuggingFaceTB/smoltalk:smol-summarize:train/filtered] 18,000 docs, 0 hit, 21s
+[audit] hf:HuggingFaceTB/smoltalk:smol-summarize:train filtered: 20,000 docs, 0 with a hit (0.0%) {}
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/raw] 2,000 docs, 0 hit, 9s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/raw] 4,000 docs, 1 hit, 10s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/raw] 6,000 docs, 1 hit, 10s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/raw] 8,000 docs, 3 hit, 11s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/raw] 10,000 docs, 3 hit, 11s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/raw] 12,000 docs, 4 hit, 12s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/raw] 14,000 docs, 4 hit, 13s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/raw] 16,000 docs, 4 hit, 13s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/raw] 18,000 docs, 4 hit, 14s
+[audit] hf:allenai/tulu-3-sft-personas-instruction-following:-:train raw: 20,000 docs, 5 with a hit (0.025%) {'ifeval': 5}
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/filtered] 2,000 docs, 0 hit, 8s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/filtered] 4,000 docs, 1 hit, 10s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/filtered] 6,000 docs, 1 hit, 11s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/filtered] 8,000 docs, 3 hit, 12s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/filtered] 10,000 docs, 3 hit, 13s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/filtered] 12,000 docs, 4 hit, 15s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/filtered] 14,000 docs, 4 hit, 16s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/filtered] 16,000 docs, 4 hit, 17s
+  [hf:allenai/tulu-3-sft-personas-instruction-following:-:train/filtered] 18,000 docs, 4 hit, 18s
+[audit] hf:allenai/tulu-3-sft-personas-instruction-following:-:train filtered: 20,000 docs, 5 with a hit (0.025%) {'ifeval': 5}
+A27 DONE

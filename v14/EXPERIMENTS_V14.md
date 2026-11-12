@@ -4549,6 +4549,33 @@ fitted threshold:
     b2s (0 / 600 ≥ 2k).
   - Proposed to Mind: a proto_far variant (protocol → question near the window, 4k+) beside b2s_far. Whether a doc can
     carry its state across windows (SEQ 4096, RESET_AT_EOS) sets the true ceiling.
+- **R5 AUDIT for Mind's chat ramp (segment 3) + fineweb-edu sample-100BT (2026-11-12, Lead; code 9ac3fc8 = 47f8f08 before the rebase;
+  `logs/v14_r5_chatramp_audit_47f8f08_20261112_1011.*`, `logs/v14_r5_fineweb100bt_audit_47f8f08_20261112_1011.*`).** 20k docs per source
+  (everyday-conversations has 2,260 in all). Raw 13-gram hits vs the audit index (Mind's sets + BABILong + Library items + IFEval 541
+  prompts; MMLU / OpenBookQA not loadable here, Mind's v1 index covers them). Then through Mind's stream filter (v1.npy). Positive
+  control 300 / 300 for both.
+
+  | source | licence | raw hits (% of docs, by set) | after Mind's filter | tokens median / p90 |
+  |---|---|---|---|---|
+  | smoltalk2_mid | Apache-2.0 | 0 | 0 | 498 / 886 |
+  | chatmt (smoltalk magpie / everyday) | Apache-2.0 | 0.010 % (ARC 1, HS 1) | 0 | 1,473 / 2,289 |
+  | smoltalk2_sft (allowlist) | Apache-2.0 | 0.030 % (HS 6) | 0 | 20,611 / 49,513 |
+  | **smoltalk smol-constraints** | Apache-2.0 | **47.6 % (IFEval 9,526)**, HS 1 | **47.6 % (IFEval not in v1)** | 171 / 371 |
+  | smoltalk everyday-conversations | Apache-2.0 | 0.089 % (HS 2) | 0 | 158 / 201 |
+  | smoltalk smol-rewrite | Apache-2.0 | 0 | 0 | 313 / 499 |
+  | smoltalk smol-summarize | Apache-2.0 | 0 | 0 | 258 / 1,186 |
+  | tulu-3-sft-personas-instruction-following | ODC-BY | 0.025 % (IFEval 5) | 0.025 % (IFEval 5) | 351 / 746 |
+  | fineweb-edu sample-100BT (edu ≥ 3, holdout) | ODC-BY | 0.005 % (HS 1) | 0 | 635 / 2,143 |
+
+  - smol-constraints shares IFEval's VERBATIM instruction templates ("your entire response should be in english and in all
+    lowercase letters", "at the end of your response please explicitly add a postscript starting with", "your answer must contain
+    a title wrapped in double angular brackets"). It touches 29 of IFEval's 541 prompts. Training on it teaches IFEval's exact
+    constraint phrasings, so any IFEval number would be inflated.
+  - Mind's v1 filter has no IFEval items, so it passes all of these.
+  - Every other source is below the 0.1 % action line raw, and 0 after Mind's filter (except the 5 tulu IFEval hits, for the
+    same reason).
+  - smoltalk2_sft docs are long (median 20.6k tokens), so they mostly split across 4096 windows; this matters for the ramp's
+    share math.
 - **FAR-TOLD: the told rule under Mind's far block (PRE-REGISTERED 2026-11-07, before any number; Mind's EXPERIMENTS_SEMPY
   "far block" 1327fb4: proto_far 0 → 0.8 % + b2s_far 0 → 1.2 % over 2B from M11).** Descriptive on my side; the decision is
   Mind's keep rule (s8 @8k headline, told 8k the other half, judged at ramp end + 1B).

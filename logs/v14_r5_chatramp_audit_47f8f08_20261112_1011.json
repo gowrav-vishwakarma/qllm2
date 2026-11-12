@@ -1,0 +1,614 @@
+{
+ "args": {
+  "sources": "smoltalk2_mid,chatmt,smoltalk2_sft,hf:HuggingFaceTB/smoltalk:smol-constraints:train,hf:HuggingFaceTB/smoltalk:everyday-conversations:train,hf:HuggingFaceTB/smoltalk:smol-rewrite:train,hf:HuggingFaceTB/smoltalk:smol-summarize:train,hf:allenai/tulu-3-sft-personas-instruction-following:-:train",
+  "docs": 20000,
+  "out": "logs/v14_r5_chatramp_audit_47f8f08_20261112_1011.json",
+  "views": "raw,filtered",
+  "mix_seed": 43,
+  "fineweb_name": "sample-10BT"
+ },
+ "n_items": {
+  "hellaswag": 80180,
+  "arc": 17663,
+  "piqa": 9844,
+  "winogrande": 6068,
+  "lambada": 5153,
+  "gsm8k_test": 1319,
+  "babi": 20000,
+  "library_items": 3918,
+  "babilong": 2000,
+  "ifeval": 541
+ },
+ "n_grams": 6348184,
+ "decontam_index": ".cache/decontam/v1.npy",
+ "sources": {
+  "smoltalk2_mid": {
+   "raw": {
+    "docs": 20000,
+    "words": 5487592,
+    "docs_hit_any": 0,
+    "tokens_median": 498,
+    "tokens_p90": 886,
+    "pct_any": 0.0,
+    "pct_by_set": {},
+    "examples": {},
+    "top_gram_hits": [],
+    "dropped_by_filter": 0
+   },
+   "filtered": {
+    "docs": 20000,
+    "words": 5488102,
+    "docs_hit_any": 0,
+    "tokens_median": 498,
+    "tokens_p90": 886,
+    "pct_any": 0.0,
+    "pct_by_set": {},
+    "examples": {},
+    "top_gram_hits": [],
+    "dropped_by_filter": 5
+   }
+  },
+  "chatmt": {
+   "raw": {
+    "docs": 20000,
+    "words": 22578432,
+    "docs_hit_any": 2,
+    "tokens_median": 1473,
+    "tokens_p90": 2289,
+    "pct_any": 0.01,
+    "pct_by_set": {
+     "arc": 0.005,
+     "hellaswag": 0.005
+    },
+    "examples": {
+     "arc": [
+      {
+       "doc": 7974,
+       "ngram": "deflected to the right in the northern hemisphere and to the left in",
+       "test": "Air that travels away from the equator fails to maintain a straight path. The path of the air is deflected to the right "
+      }
+     ],
+     "hellaswag": [
+      {
+       "doc": 11038,
+       "ngram": "on the present moment letting go of worries about the past or future",
+       "test": "Hobbies and Crafts: [header] How to practice non attachment [title] Understand what non-attachment means. [step] Meditat"
+      }
+     ]
+    },
+    "top_gram_hits": [
+     [
+      1688878174953772925,
+      1
+     ],
+     [
+      9319384483047205947,
+      1
+     ],
+     [
+      16756651761753970842,
+      1
+     ],
+     [
+      3242837849832451845,
+      1
+     ],
+     [
+      3408497430018159428,
+      1
+     ]
+    ],
+    "dropped_by_filter": 0
+   },
+   "filtered": {
+    "docs": 20000,
+    "words": 22581099,
+    "docs_hit_any": 0,
+    "tokens_median": 1473,
+    "tokens_p90": 2289,
+    "pct_any": 0.0,
+    "pct_by_set": {},
+    "examples": {},
+    "top_gram_hits": [],
+    "dropped_by_filter": 13
+   }
+  },
+  "smoltalk2_sft": {
+   "raw": {
+    "docs": 20000,
+    "words": 119725475,
+    "docs_hit_any": 6,
+    "tokens_median": 20611,
+    "tokens_p90": 49513,
+    "pct_any": 0.03,
+    "pct_by_set": {
+     "hellaswag": 0.03
+    },
+    "examples": {
+     "hellaswag": [
+      {
+       "doc": 1986,
+       "ngram": "in the name of the father and of the son and of the",
+       "test": "Philosophy and Religion: [header] How to believe in jesus [title] Attend church regularly. [step] It may help you to com"
+      },
+      {
+       "doc": 6072,
+       "ngram": "if you wake up in the middle of the night and can t",
+       "test": "Health: [header] How to sleep with broken ribs [title] Pick the most comfortable position for you. [step] You may find t"
+      },
+      {
+       "doc": 6604,
+       "ngram": "in the name of the father and of the son and of the",
+       "test": "Philosophy and Religion: [header] How to believe in jesus [title] Attend church regularly. [step] It may help you to com"
+      }
+     ]
+    },
+    "top_gram_hits": [
+     [
+      10745428519585752312,
+      4
+     ],
+     [
+      2849065014535589224,
+      4
+     ],
+     [
+      17794828350881776988,
+      2
+     ],
+     [
+      4960571241557841921,
+      2
+     ]
+    ],
+    "dropped_by_filter": 0
+   },
+   "filtered": {
+    "docs": 20000,
+    "words": 119554138,
+    "docs_hit_any": 0,
+    "tokens_median": 20611,
+    "tokens_p90": 49513,
+    "pct_any": 0.0,
+    "pct_by_set": {},
+    "examples": {},
+    "top_gram_hits": [],
+    "dropped_by_filter": 15
+   }
+  },
+  "hf:HuggingFaceTB/smoltalk:smol-constraints:train": {
+   "raw": {
+    "docs": 20000,
+    "words": 3205319,
+    "docs_hit_any": 9526,
+    "tokens_median": 171,
+    "tokens_p90": 371,
+    "pct_any": 47.63,
+    "pct_by_set": {
+     "hellaswag": 0.005,
+     "ifeval": 47.63
+    },
+    "examples": {
+     "ifeval": [
+      {
+       "doc": 0,
+       "ngram": "your entire response should be in english and in all lowercase letters no",
+       "test": "Write a detailed proposal in list format for the university's ethics board for a research project that investigates the "
+      },
+      {
+       "doc": 1,
+       "ngram": "at the end of your response please explicitly add a postscript starting with",
+       "test": "Which one is a better brand for sneakers: Prada or Nike? Your entire response should be in English, and in all capital l"
+      },
+      {
+       "doc": 3,
+       "ngram": "your answer must contain a title wrapped in double angular brackets such as",
+       "test": "I've got a collection of military insignia that I'd like to get rid of, but I don't know how. Can you help me? Give exac"
+      }
+     ],
+     "hellaswag": [
+      {
+       "doc": 19383,
+       "ngram": "on the present moment letting go of worries about the past or future",
+       "test": "Hobbies and Crafts: [header] How to practice non attachment [title] Understand what non-attachment means. [step] Meditat"
+      }
+     ]
+    },
+    "top_gram_hits": [
+     [
+      17795166038971872554,
+      4641
+     ],
+     [
+      8014976664166635439,
+      4517
+     ],
+     [
+      7398491230000771632,
+      4185
+     ],
+     [
+      17337910376626483548,
+      3578
+     ],
+     [
+      6551345300239386020,
+      2694
+     ]
+    ],
+    "dropped_by_filter": 0
+   },
+   "filtered": {
+    "docs": 20000,
+    "words": 3205198,
+    "docs_hit_any": 9526,
+    "tokens_median": 171,
+    "tokens_p90": 371,
+    "pct_any": 47.63,
+    "pct_by_set": {
+     "ifeval": 47.63
+    },
+    "examples": {
+     "ifeval": [
+      {
+       "doc": 0,
+       "ngram": "your entire response should be in english and in all lowercase letters no",
+       "test": "Write a detailed proposal in list format for the university's ethics board for a research project that investigates the "
+      },
+      {
+       "doc": 1,
+       "ngram": "at the end of your response please explicitly add a postscript starting with",
+       "test": "Which one is a better brand for sneakers: Prada or Nike? Your entire response should be in English, and in all capital l"
+      },
+      {
+       "doc": 3,
+       "ngram": "your answer must contain a title wrapped in double angular brackets such as",
+       "test": "I've got a collection of military insignia that I'd like to get rid of, but I don't know how. Can you help me? Give exac"
+      }
+     ]
+    },
+    "top_gram_hits": [
+     [
+      17795166038971872554,
+      4642
+     ],
+     [
+      8014976664166635439,
+      4518
+     ],
+     [
+      7398491230000771632,
+      4186
+     ],
+     [
+      17337910376626483548,
+      3578
+     ],
+     [
+      6551345300239386020,
+      2695
+     ]
+    ],
+    "dropped_by_filter": 1
+   }
+  },
+  "hf:HuggingFaceTB/smoltalk:everyday-conversations:train": {
+   "raw": {
+    "docs": 2260,
+    "words": 284829,
+    "docs_hit_any": 2,
+    "tokens_median": 158,
+    "tokens_p90": 201,
+    "pct_any": 0.0885,
+    "pct_by_set": {
+     "hellaswag": 0.0885
+    },
+    "examples": {
+     "hellaswag": [
+      {
+       "doc": 1631,
+       "ngram": "new moon waxing crescent first quarter waxing gibbous full moon waning gibbous last",
+       "test": "Hobbies and Crafts: [header] How to make a moon phases chart [title] Know the phases of the moon. [step] This is vital t"
+      },
+      {
+       "doc": 1943,
+       "ngram": "new moon waxing crescent first quarter waxing gibbous full moon waning gibbous last",
+       "test": "Hobbies and Crafts: [header] How to make a moon phases chart [title] Know the phases of the moon. [step] This is vital t"
+      }
+     ]
+    },
+    "top_gram_hits": [
+     [
+      4551808518977500338,
+      2
+     ],
+     [
+      13477600038375774076,
+      2
+     ]
+    ],
+    "dropped_by_filter": 0
+   },
+   "filtered": {
+    "docs": 2258,
+    "words": 284577,
+    "docs_hit_any": 0,
+    "tokens_median": 158,
+    "tokens_p90": 201,
+    "pct_any": 0.0,
+    "pct_by_set": {},
+    "examples": {},
+    "top_gram_hits": [],
+    "dropped_by_filter": 2
+   }
+  },
+  "hf:HuggingFaceTB/smoltalk:smol-rewrite:train": {
+   "raw": {
+    "docs": 20000,
+    "words": 5294272,
+    "docs_hit_any": 0,
+    "tokens_median": 313,
+    "tokens_p90": 499,
+    "pct_any": 0.0,
+    "pct_by_set": {},
+    "examples": {},
+    "top_gram_hits": [],
+    "dropped_by_filter": 0
+   },
+   "filtered": {
+    "docs": 20000,
+    "words": 5294272,
+    "docs_hit_any": 0,
+    "tokens_median": 313,
+    "tokens_p90": 499,
+    "pct_any": 0.0,
+    "pct_by_set": {},
+    "examples": {},
+    "top_gram_hits": [],
+    "dropped_by_filter": 0
+   }
+  },
+  "hf:HuggingFaceTB/smoltalk:smol-summarize:train": {
+   "raw": {
+    "docs": 20000,
+    "words": 7845297,
+    "docs_hit_any": 0,
+    "tokens_median": 258,
+    "tokens_p90": 1186,
+    "pct_any": 0.0,
+    "pct_by_set": {},
+    "examples": {},
+    "top_gram_hits": [],
+    "dropped_by_filter": 0
+   },
+   "filtered": {
+    "docs": 20000,
+    "words": 7845446,
+    "docs_hit_any": 0,
+    "tokens_median": 258,
+    "tokens_p90": 1186,
+    "pct_any": 0.0,
+    "pct_by_set": {},
+    "examples": {},
+    "top_gram_hits": [],
+    "dropped_by_filter": 1
+   }
+  },
+  "hf:allenai/tulu-3-sft-personas-instruction-following:-:train": {
+   "raw": {
+    "docs": 20000,
+    "words": 5698707,
+    "docs_hit_any": 5,
+    "tokens_median": 351,
+    "tokens_p90": 746,
+    "pct_any": 0.025,
+    "pct_by_set": {
+     "ifeval": 0.025
+    },
+    "examples": {
+     "ifeval": [
+      {
+       "doc": 2911,
+       "ngram": "bullet point 1 bullet point 2 bullet point 3 bullet point 4 bullet",
+       "test": "Write a rubric, in the form of a list of bullet points, for evaluating the performance of a customer service representat"
+      },
+      {
+       "doc": 6130,
+       "ngram": "add a postscript starting with p s at the end of your response",
+       "test": "Explain to a group of elementary school students why we have seasons. You should add a postscript starting with P.S. at "
+      },
+      {
+       "doc": 7269,
+       "ngram": "add a postscript starting with p s at the end of your response",
+       "test": "Explain to a group of elementary school students why we have seasons. You should add a postscript starting with P.S. at "
+      }
+     ]
+    },
+    "top_gram_hits": [
+     [
+      15617177427582545589,
+      3
+     ],
+     [
+      7943271976184638140,
+      1
+     ],
+     [
+      7459251133859113807,
+      1
+     ],
+     [
+      3438193149358306033,
+      1
+     ],
+     [
+      11332261362916522051,
+      1
+     ]
+    ],
+    "dropped_by_filter": 0
+   },
+   "filtered": {
+    "docs": 20000,
+    "words": 5698632,
+    "docs_hit_any": 5,
+    "tokens_median": 351,
+    "tokens_p90": 746,
+    "pct_any": 0.025,
+    "pct_by_set": {
+     "ifeval": 0.025
+    },
+    "examples": {
+     "ifeval": [
+      {
+       "doc": 2911,
+       "ngram": "bullet point 1 bullet point 2 bullet point 3 bullet point 4 bullet",
+       "test": "Write a rubric, in the form of a list of bullet points, for evaluating the performance of a customer service representat"
+      },
+      {
+       "doc": 6129,
+       "ngram": "add a postscript starting with p s at the end of your response",
+       "test": "Explain to a group of elementary school students why we have seasons. You should add a postscript starting with P.S. at "
+      },
+      {
+       "doc": 7268,
+       "ngram": "add a postscript starting with p s at the end of your response",
+       "test": "Explain to a group of elementary school students why we have seasons. You should add a postscript starting with P.S. at "
+      }
+     ]
+    },
+    "top_gram_hits": [
+     [
+      15617177427582545589,
+      3
+     ],
+     [
+      7943271976184638140,
+      1
+     ],
+     [
+      7459251133859113807,
+      1
+     ],
+     [
+      3438193149358306033,
+      1
+     ],
+     [
+      11332261362916522051,
+      1
+     ]
+    ],
+    "dropped_by_filter": 2
+   }
+  }
+ },
+ "hit_strings": {
+  "raw": {
+   "hellaswag": {
+    "n_hit": 4,
+    "of": 80180,
+    "strings": [
+     "Health: [header] How to sleep with broken ribs [title] Pick the most comfortable position for you. [step] You may find that sleeping on your back is the most comfortable position when you have broken ribs, or you may find it more comfortable to sleep on your side. Both of these sleep positions are okay to use when you have broken ribs. If you wake up in the middle of the night and can't sleep on your side, pick a comfortable position to sleep on. [substeps] You can also avoid sleeping on your stomach if you have broken ribs, since the resting position will help you get closer to your ribs.",
+     "Hobbies and Crafts: [header] How to practice non attachment [title] Understand what non-attachment means. [step] Meditation asks you to focus solely on the present moment, letting go of worries about the past or future. These thoughts are attachments that are drawing you away from your center. To work at releasing them, find some time each day to be alone in a quiet space. Try to meditate for at least ten minutes initially, but extend this time daily.",
+     "Hobbies and Crafts: [header] How to make a moon phases chart [title] Know the phases of the moon. [step] This is vital to being able to create an accurate chart. There are eight main phases of the moon, each lasting roughly 3.5 days. The phase of the moon depends upon the way in which the moon is positioned in relation to the sun and earth at any given time. The eight phases are : [substeps] New moon waxing crescent first quarter waxing gibbous full moon waning gibbous last quarter waning crescent [title] Place earth in the center of your chart.",
+     "Philosophy and Religion: [header] How to believe in jesus [title] Attend church regularly. [step] It may help you to come to faith. He lives in our hearts by faith. When you come to the point of trusting him enough to ask him for your salvation, he will live in your heart, also. [title] If you are not already, become baptized in the name of the father, and of the son, and of the holy spirit."
+    ]
+   },
+   "arc": {
+    "n_hit": 1,
+    "of": 17663,
+    "strings": [
+     "Air that travels away from the equator fails to maintain a straight path. The path of the air is deflected to the right in the Northern Hemisphere and to the left in the Southern Hemisphere. The apparent deflection of air to either the right or left is known as the Coriolis Effect. Which factor produces the Coriolis Effect? the gravity of Earth"
+    ]
+   },
+   "ifeval": {
+    "n_hit": 29,
+    "of": 541,
+    "strings": [
+     "Given the sentence \"Two young boys with toy guns and horns.\" can you ask a question? Please ensure that your response is in English, and in all lowercase letters. No capital letters are allowed.",
+     "Which one is a better brand for sneakers: Prada or Nike? Your entire response should be in English, and in all capital letters. At the end of your response, please explicitly add a postscript starting with P.S. The word sneaker should appear 10 or more times in your response.",
+     "Write a poem about two people who meet in a coffee shop and end your entire response with the exact phrase \"Is there anything else I can help with?\"",
+     "A colt is 5 feet tall. It will grow 6 inches every month. How tall will it be in 3 years? Think step-by-step, then give your answer. Separate your thinking and the final answer by a line with just three \"*\" symbols: ***\nAt the end of your response, please explicitly add a postscript starting with P.P.S",
+     "Write an article about the reality of disability. Your article must end with the exact phrase \"Is there anything else I can help with?\". No other words should follow this phrase.",
+     "Write an extremely short essay on the role of mythology in the work of Jordan Peterson. Keep your entire response 100 words or less. Be general in your writing. Make sure to highlight at least 2 sections in your answer with markdown, i.e. use *highlighted section*.",
+     "Write a rap about a new smartphone. At the end of your response add a postscript starting with P.P.S The response must contain at least 6 placeholders represented by square brackets.",
+     "Write a professional email that you could send to ask your boss for a raise. At the end of your response, explicitly add a postscript starting with P.P.S\n\nFinish your entire response with this exact phrase: Hope you agree with me.",
+     "Explain to a group of elementary school students why we have seasons. You should add a postscript starting with P.S. at the end of your response.",
+     "Write a rubric, in the form of a list of bullet points, for evaluating the performance of a customer service representative. Your answer must not include keywords ['bad', 'underperform'] and must contain exactly 6 bullet points in the following form:\n* Bullet point 1\n* Bullet point 2\n* Bullet point 3\n* Bullet point 4\n* Bullet point 5\n* Bullet point 6",
+     "What kind of fashion would Frankenstein's bride wear? Make your answer weird or interesting and use only lowercase letters. Your answer must contain exactly 3 bullet points using the markdown bullet points format, such as:\n* Bullet point 1",
+     "Write a product description for a new line of dog toys, called \"the squeaker\". It's made of latex, and is designed for dogs of all ages and species. It's also available in a variety of colors and shapes. The response must contain at least 3 placeholders represented by square brackets, such as [address], [name], and [phone number].",
+     "Write a detailed proposal in list format for the university's ethics board for a research project that investigates the effect of eye colour on the likelihood of being a successful salesperson. Remember that the customer is always right. Your entire response should be in English, and in all lowercase letters. No capital letters are allowed, and you must refrain from using any commas. At the end of your response, please explicitly add a postscript starting with P.P.S",
+     "Make this text weird: \"The new version of the app will be available in the App Store soon. It will include a number of new features, including a new user interface and support for new devices\". Don't use any commas. Highlight at least 2 sections in your answer with markdown, i.e. *highlighted section*.",
+     "Can you tell me about the Hamptons? Your answer must be at least 300 words, must contain at least 3 placeholders represented by square brackets, such as [address] and exactly 2 bullet points using the markdown bullet points such as:\n* Bullet point 1\n* Bullet point 2",
+     "Write an essay as if you are the president of the United States targeting moms as your audience. The subject is how the float from the movie \"It\" symbolizes the spirit of the nineteen-fifties. The response must contain at least 1 placeholders represented by square brackets, such as [address].",
+     "Write a product description for a new product called the \"AirPods Max\". Make sure to use markdown to highlight at least two sections, i.e. *highlighted section*. Your entire response should be in English and in all lowercase letters.",
+     "Write a joke about a startup that sells dog food in a song. Your entire response should be in English, and in all capital letters. Your answer must contain a title, wrapped in double angular brackets, i.e. <<title>>.",
+     "Rewrite the following sentence to exactly 3 paragraphs, separated by two new lines and without using any commas: \"Offences are not the only things that are grasped by the police.\". Paragraph 1 must start with word punched. The response must contain at least 2 placeholders represented by square brackets, such as [address].",
+     "Melbourne has a newspaper called the Herald Sun. Can you suggest a name for a new newspaper for Melbourne teenagers? Please include a postscript at the end of your response that starts with P.S.",
+     "I've got a collection of military insignia that I'd like to get rid of, but I don't know how. Can you help me? Give exactly two different responses, separating them with 6 asterisk symbols (******). Your answer must contain a title, wrapped in double angular brackets, such as <<my title>>. Include the keywords \"adoption\" and \"carriage\" somewhere in your response.",
+     "Write a haiku about foolish behavior in the form of a question, for an audience of young readers. It should include the topic of not studying. Give exactly two different responses, separated by 6 asterisk symbols (******), and include a title wrapped in double angular brackets, i.e. <<title>>. Do not use commas.",
+     "Rewrite the following blog as a list of exactly 4 bullet points: \"The world is a beautiful place. The sun is shining, the birds are singing, and the flowers are blooming. It's a perfect day to go outside and enjoy all that nature has to offer.\" The bullet points should be in markdown such as:\n* Bullet point 1\n* Bullet point 2",
+     "Write a brief about limping in ASEAN countries. Your answer must contain a title, wrapped in double angular brackets, such as <<title of the brief>>. Make sure the letter m appears at least 5 times.",
+     "What are the components that make a successful person? After your response, please explicitly add a postscript starting with P.P.S Your entire response should be in English and in all capital letters.",
+     "Write a text ad for an adult website that is not pornographic, and at the end of your response, add a postscript starting with P.S.",
+     "Write a cover letter for a job application to a company which perhaps has a bad reputation. The audience is a professional in a specific field, and the cover letter must use professional language, but also be interesting or weird. The letter j should appear at least 20 times. Your entire response should be in English, and lowercase letters. No capital letters are allowed.",
+     "I need a rap that tells professionals how to get babies to sleep through the night. Your answer must contain a title, wrapped in double angular brackets, such as <<title>>. Additionally, you need to highlight at least 2 sections with markdown, i.e. *highlighted section*. Finally, at the end of your response, please explicitly add a postscript starting with P.P.S",
+     "Is Pikachu one of the Avengers? Think out loud, then answer with one of the following options: \u201dMy answer is yes.\", \"My answer is no.\", \"My answer is maybe.\""
+    ]
+   }
+  },
+  "filtered": {
+   "ifeval": {
+    "n_hit": 29,
+    "of": 541,
+    "strings": [
+     "Given the sentence \"Two young boys with toy guns and horns.\" can you ask a question? Please ensure that your response is in English, and in all lowercase letters. No capital letters are allowed.",
+     "Which one is a better brand for sneakers: Prada or Nike? Your entire response should be in English, and in all capital letters. At the end of your response, please explicitly add a postscript starting with P.S. The word sneaker should appear 10 or more times in your response.",
+     "Write a poem about two people who meet in a coffee shop and end your entire response with the exact phrase \"Is there anything else I can help with?\"",
+     "A colt is 5 feet tall. It will grow 6 inches every month. How tall will it be in 3 years? Think step-by-step, then give your answer. Separate your thinking and the final answer by a line with just three \"*\" symbols: ***\nAt the end of your response, please explicitly add a postscript starting with P.P.S",
+     "Write an article about the reality of disability. Your article must end with the exact phrase \"Is there anything else I can help with?\". No other words should follow this phrase.",
+     "Write an extremely short essay on the role of mythology in the work of Jordan Peterson. Keep your entire response 100 words or less. Be general in your writing. Make sure to highlight at least 2 sections in your answer with markdown, i.e. use *highlighted section*.",
+     "Write a rap about a new smartphone. At the end of your response add a postscript starting with P.P.S The response must contain at least 6 placeholders represented by square brackets.",
+     "Write a professional email that you could send to ask your boss for a raise. At the end of your response, explicitly add a postscript starting with P.P.S\n\nFinish your entire response with this exact phrase: Hope you agree with me.",
+     "Explain to a group of elementary school students why we have seasons. You should add a postscript starting with P.S. at the end of your response.",
+     "Write a rubric, in the form of a list of bullet points, for evaluating the performance of a customer service representative. Your answer must not include keywords ['bad', 'underperform'] and must contain exactly 6 bullet points in the following form:\n* Bullet point 1\n* Bullet point 2\n* Bullet point 3\n* Bullet point 4\n* Bullet point 5\n* Bullet point 6",
+     "What kind of fashion would Frankenstein's bride wear? Make your answer weird or interesting and use only lowercase letters. Your answer must contain exactly 3 bullet points using the markdown bullet points format, such as:\n* Bullet point 1",
+     "Write a product description for a new line of dog toys, called \"the squeaker\". It's made of latex, and is designed for dogs of all ages and species. It's also available in a variety of colors and shapes. The response must contain at least 3 placeholders represented by square brackets, such as [address], [name], and [phone number].",
+     "Write a detailed proposal in list format for the university's ethics board for a research project that investigates the effect of eye colour on the likelihood of being a successful salesperson. Remember that the customer is always right. Your entire response should be in English, and in all lowercase letters. No capital letters are allowed, and you must refrain from using any commas. At the end of your response, please explicitly add a postscript starting with P.P.S",
+     "Make this text weird: \"The new version of the app will be available in the App Store soon. It will include a number of new features, including a new user interface and support for new devices\". Don't use any commas. Highlight at least 2 sections in your answer with markdown, i.e. *highlighted section*.",
+     "Can you tell me about the Hamptons? Your answer must be at least 300 words, must contain at least 3 placeholders represented by square brackets, such as [address] and exactly 2 bullet points using the markdown bullet points such as:\n* Bullet point 1\n* Bullet point 2",
+     "Write an essay as if you are the president of the United States targeting moms as your audience. The subject is how the float from the movie \"It\" symbolizes the spirit of the nineteen-fifties. The response must contain at least 1 placeholders represented by square brackets, such as [address].",
+     "Write a product description for a new product called the \"AirPods Max\". Make sure to use markdown to highlight at least two sections, i.e. *highlighted section*. Your entire response should be in English and in all lowercase letters.",
+     "Write a joke about a startup that sells dog food in a song. Your entire response should be in English, and in all capital letters. Your answer must contain a title, wrapped in double angular brackets, i.e. <<title>>.",
+     "Rewrite the following sentence to exactly 3 paragraphs, separated by two new lines and without using any commas: \"Offences are not the only things that are grasped by the police.\". Paragraph 1 must start with word punched. The response must contain at least 2 placeholders represented by square brackets, such as [address].",
+     "Melbourne has a newspaper called the Herald Sun. Can you suggest a name for a new newspaper for Melbourne teenagers? Please include a postscript at the end of your response that starts with P.S.",
+     "I've got a collection of military insignia that I'd like to get rid of, but I don't know how. Can you help me? Give exactly two different responses, separating them with 6 asterisk symbols (******). Your answer must contain a title, wrapped in double angular brackets, such as <<my title>>. Include the keywords \"adoption\" and \"carriage\" somewhere in your response.",
+     "Write a haiku about foolish behavior in the form of a question, for an audience of young readers. It should include the topic of not studying. Give exactly two different responses, separated by 6 asterisk symbols (******), and include a title wrapped in double angular brackets, i.e. <<title>>. Do not use commas.",
+     "Rewrite the following blog as a list of exactly 4 bullet points: \"The world is a beautiful place. The sun is shining, the birds are singing, and the flowers are blooming. It's a perfect day to go outside and enjoy all that nature has to offer.\" The bullet points should be in markdown such as:\n* Bullet point 1\n* Bullet point 2",
+     "Write a brief about limping in ASEAN countries. Your answer must contain a title, wrapped in double angular brackets, such as <<title of the brief>>. Make sure the letter m appears at least 5 times.",
+     "What are the components that make a successful person? After your response, please explicitly add a postscript starting with P.P.S Your entire response should be in English and in all capital letters.",
+     "Write a text ad for an adult website that is not pornographic, and at the end of your response, add a postscript starting with P.S.",
+     "Write a cover letter for a job application to a company which perhaps has a bad reputation. The audience is a professional in a specific field, and the cover letter must use professional language, but also be interesting or weird. The letter j should appear at least 20 times. Your entire response should be in English, and lowercase letters. No capital letters are allowed.",
+     "I need a rap that tells professionals how to get babies to sleep through the night. Your answer must contain a title, wrapped in double angular brackets, such as <<title>>. Additionally, you need to highlight at least 2 sections with markdown, i.e. *highlighted section*. Finally, at the end of your response, please explicitly add a postscript starting with P.P.S",
+     "Is Pikachu one of the Avengers? Think out loud, then answer with one of the following options: \u201dMy answer is yes.\", \"My answer is no.\", \"My answer is maybe.\""
+    ]
+   }
+  }
+ },
+ "control": {
+  "planted": 300,
+  "flagged_by_audit": 300,
+  "flagged_by_mind_filter": 300,
+  "by_set": {
+   "piqa": 14,
+   "lambada": 8,
+   "hellaswag": 184,
+   "babi": 39,
+   "winogrande": 12,
+   "arc": 37,
+   "babilong": 5,
+   "gsm8k_test": 1
+  }
+ }
+}
