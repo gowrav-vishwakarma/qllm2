@@ -6114,7 +6114,7 @@ the web holdout loss, little in the thesis cells.
 | 26B | 0.03 | 0.58 | 0.20 |
 | 27B | 0.45 | 0.79 | 0.22 |
 
-- 344k vs 27B on told 8k: +0.08 at n 100 (~1.6 sigma), within jitter; 26B's 0.03 shows single-checkpoint noise.
+- 344k vs 27B on told 8k: +0.08 at n 100 (~1.6 sigma), within jitter; 26B's 0.03 is a real dip, not a broken file (Library verified files complete and the step correct; plain is 0.00 at 26B vs 0.37 at 27B). Unit-scored told 8k: 344k 0.59 vs 27B 0.50 (ce27cf6).
 - Pre-stated rule: roll back only if told 8k ALSO favours 344k clearly. It does not, so **FROM = 28B** (step 427,252). Segment 3 switch armed on the 6000 at 13:36 IST (tmux sci1s3, log v13_sempty_sci1_seg3switch_91bdc49_20261112_0806.log).
 - Honest record: every far cell leans to 344k (reach cells 3.5-4 sigma, told cells +0.06-0.09). The dry stretch most likely cost them.
 - **Check at segment 3's next two milestones:** skill @8k, clk2 @16k, told 8k / 2k must recover toward 344k. If not, revisit the rollback (344k kept on d_drive).
