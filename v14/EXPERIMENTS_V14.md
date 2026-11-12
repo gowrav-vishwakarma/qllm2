@@ -5045,3 +5045,18 @@ Updated 2026-10-29 23:50 IST.
 4. **N2** LM check (complex arm) on the 4090.
 5. Anything that passes stage 3 queues on the 6000. The v13 session's chain
    holds it until ~03:30 IST 2026-10-30 (C1 control, then C1 on M2).
+
+### FAR-TOLD result (2026-11-12 13:00 IST, code d0e333c, logs/v14_fartold_<tag>_<cell>_d0e333c_20261112_*.jsonl)
+Told rule, A28 docs seed 26000, 100 docs per cell; ptwin = protocol twin read, plain = warm read; right / unit (conv_ok).
+
+| point | train 2k ptwin | train 8k ptwin | a26 2k ptwin | train 2k plain | train 8k plain |
+|---|---|---|---|---|---|
+| M11 (step 167849) | 0.67 / 0.81 | 0.10 / 0.12 | 0.20 / 0.52 | 0.05 | 0.02 |
+| 26B (step 396734) | 0.58 / 0.86 | 0.03 / 0.06 | 0.20 / 0.68 | 0.00 | 0.00 |
+| 27B (step 411993) | 0.79 / 0.98 | 0.45 / 0.50 | 0.22 / 0.74 | 0.37 | 0.12 |
+| 344k (best_model) | 0.85 / 0.99 | 0.53 / 0.59 | 0.31 / 0.90 | 0.46 | 0.14 |
+
+Audit of the 26B dip (Lead asked): all 12 files have 400 rows (4 arms x 100), every run printed A28 DONE, and the 26B weights copy
+reads global_step 396734 / 26.0B tokens, the same as the source step_396734.pt. Not a run problem, so the dip is real. The plain
+read is also 0.00 at 26B and 0.37 at 27B, so the told 8k ability appears between 26B and 27B. It is not monotone in tokens.
+Lead's decision: FROM = 28b (344k vs 27B told 8k is +0.08, within jitter).
